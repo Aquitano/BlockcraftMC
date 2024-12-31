@@ -1,0 +1,15 @@
+SJMap:
+  1: 'Bahnhof'
+  2: 'FrozenRiver'
+  3: 'Hölle'
+  4: 'Cave'
+  5: 'Bergwerk'
+SGMap:
+  1: 'Gefängnis'
+  2: 'Hafen'
+  3: 'Höhle'
+1vs1Map:
+  1: 'Gefängnis'
+  2: 'Western'
+  3: 'Mondbasis'
+  4: 'Mondbasis'

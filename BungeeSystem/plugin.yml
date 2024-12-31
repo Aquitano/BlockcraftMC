@@ -1,0 +1,119 @@
+name: BungeeSystem
+author: Aquitano
+version: 1.0
+main: de.Blockcraft.BungeeSystem.Main
+commands:
+  ban:
+    description: "Ban a player"
+    usage: "Use /strafe instead"
+  unban:
+    description: "Unban a player"
+    usage: "/unban <player>"
+  tempban:
+    description: "Temporarily ban a player"
+    usage: "/tempban <player> <time> <reason>"
+  check:
+    description: "Check if player is banned, muted or striked"
+    usage: "/check <player>"
+  banlist:
+    description: "Get a list of all banned players"
+    usage: "/banlist"
+  mute:
+    description: "Mute a player"
+    usage: "Use /strafe instead"
+  unmute:
+    description: "Unmute a player"
+    usage: "/unmute <player>"
+  tempmute:
+    description: "Temporarily mute a player"
+    usage: "/tempmute <player> <time> <reason>"
+  mutelist:
+    description: "Get a list of all muted players"
+    usage: "/mutelist"
+  youtuber:
+    description: "Get requirements for YouTuber"
+    usage: "/youtuber"
+    aliases: [ yt, youtube ]
+  restart:
+    description: "Restart the server"
+    usage: "/restart"
+  wartungen:
+    description: "Start maintenance mode"
+    usage: "/wartungen"
+  tc:
+    description: "Team Chat"
+    usage: "/tc <message>"
+  find:
+    description: "Find a player"
+    usage: "/find <player>"
+  goto:
+    description: "Teleport to a player"
+    usage: "/goto <player>"
+  motd:
+    description: "All commands for the MOTD"
+    usage: "/motd"
+  strike:
+    description: "Strike a player"
+    usage: "/strike <player> <reason>"
+  strikes:
+    description: "Get a list of all striked players"
+    usage: "/strikes"
+  delstrike:
+    description: "Delete a strike from a player"
+    usage: "/delstrike <player>"
+  showstrikes:
+    description: "Show all strikes of a player"
+    usage: "/showstrikes <player>"
+  setmax:
+    description: "Set the maximum amount of players"
+    usage: "/setmax <amount>"
+  werbung:
+    description: "---"
+    usage: "---"
+  ping:
+    description: "Get the ping"
+    usage: "/ping"
+  report:
+    description: "Report a player"
+    usage: "/report <player> <reason>"
+  reports:
+    description: "Get a list of all reports"
+    usage: "/reports"
+  list:
+    description: "Get a list of all players on each server"
+    usage: "/list"
+  cc:
+    description: "Clear Chat"
+    usage: "/cc"
+    aliases: [ clearchat ]
+  globalmute:
+    description: "Mute the whole server"
+    usage: "/globalmute"
+  bc:
+    description: "Broadcast a message"
+    usage: "/bc <message>"
+  addpremium:
+    description: "Add premium to a player"
+    usage: "/addpremium <player>"
+  joinme:
+    description: "Broadcast a message to join you"
+    usage: "/joinme"
+  support:
+    description: "Get support"
+    usage: "/support"
+  party:
+    description: "Party System"
+    usage: "/party"
+  pc:
+    description: "Party Chat"
+    usage: "/pc <message>"
+  mod:
+    description: "See amount of mods"
+    usage: "/mod"
+  online:
+    description: "See amount of online players"
+    usage: "/online"
+  premium:
+    description: "See information about premium"
+    usage: "/premium"
+    aliases: [ shop ]

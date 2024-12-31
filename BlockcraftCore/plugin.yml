@@ -1,0 +1,75 @@
+name: BlockcraftCore
+author: Aquitano
+version: 1.0.0
+main: me.blockcraft.core.Main
+commands:
+  enchant:
+    description: Open enchantment GUI
+    usage: /enchant
+  fly:
+    description: Fly mode
+    usage: /fly
+  flyspeed:
+    description: Fly speed
+    usage: /flyspeed <speed>
+  food:
+    description: Set food level
+    usage: /<command> <level>
+  gm:
+    description: Change gamemode
+    usage: /gm <mode>
+  heal:
+    description: Heal player
+    usage: /heal <player>
+  invsee:
+    description: Open inventory of player
+    usage: /invsee <player>
+  sethealth:
+    description: Set health level
+    usage: /sethealth <level>
+  kill:
+    description: Kill player
+    usage: /kill [player]
+  rain:
+    description: Change weather to rain
+    usage: /rain
+  sun:
+    description: Change weather to sun
+    usage: /sun
+  time:
+    description: Change time
+    usage: /time <time>
+  tp:
+    description: Teleport player
+    usage: /tp <player> <player>
+  xp:
+    description: Set experience level
+    usage: /xp <level>
+  team:
+    description: Team management
+    usage: /team
+  skull:
+    description: Get player head
+    usage: /skull <player>
+  speed:
+    description: Set player speed
+    usage: /speed <speed>
+  msg:
+    description: Send message to player
+    usage: /msg <player> <message>
+  sudo:
+    description: Execute command as player
+    usage: /sudo <player> <command>
+  item:
+    description: Get item
+    usage: /item <item>
+  serverinfo:
+    description: Get server information
+    usage: /serverinfo
+  v:
+    description: Vanish mode
+    usage: /v
+    aliases: [ vanish ]
+  clear:
+    description: Clear player inventory
+    usage: /clear [player]

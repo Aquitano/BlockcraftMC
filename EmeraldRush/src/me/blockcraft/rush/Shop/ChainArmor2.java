@@ -1,0 +1,90 @@
+package me.blockcraft.rush.Shop;
+
+import org.bukkit.Material;
+import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.Player;
+import org.bukkit.event.Listener;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+
+import java.util.ArrayList;
+
+public class ChainArmor2 implements Listener {
+    @SuppressWarnings("deprecation")
+    public static void openInventory(final Player p) {
+        final Inventory SetupInv = p.getServer().createInventory(null, 18, "\u00a73Shop \u00a77» \u00a78Chain Rüstung");
+        final ItemStack MenuBlcke = new ItemStack(Material.CHAINMAIL_CHESTPLATE);
+        final ItemMeta MenuBlckeMeta = MenuBlcke.getItemMeta();
+        MenuBlckeMeta.setDisplayName("\u00a78» \u00a7bChain");
+        MenuBlckeMeta.addEnchant(Enchantment.DURABILITY, 1, true);
+        MenuBlcke.setItemMeta(MenuBlckeMeta);
+        final ItemStack MenuSpitzhacken = new ItemStack(Material.IRON_CHESTPLATE);
+        final ItemMeta MenuSpitzhackenMeta = MenuSpitzhacken.getItemMeta();
+        MenuSpitzhackenMeta.setDisplayName("\u00a78» \u00a7bEisen");
+        MenuSpitzhacken.setItemMeta(MenuSpitzhackenMeta);
+        final ItemStack MenuRuestung = new ItemStack(Material.IRON_SWORD);
+        final ItemMeta MenuRuestungMeta = MenuRuestung.getItemMeta();
+        MenuRuestungMeta.setDisplayName("\u00a78» \u00a7bWaffen");
+        MenuRuestung.setItemMeta(MenuRuestungMeta);
+        final ItemStack MenuSpecial = new ItemStack(Material.FIREWORK_CHARGE);
+        final ItemMeta MenuSpecialMeta = MenuSpecial.getItemMeta();
+        MenuSpecialMeta.setDisplayName("\u00a78» \u00a7bSpezial");
+        MenuSpecial.setItemMeta(MenuSpecialMeta);
+        final ItemStack MenuTraenke = new ItemStack(Material.ENCHANTMENT_TABLE);
+        final ItemMeta MenuTraenkeMeta = MenuTraenke.getItemMeta();
+        MenuTraenkeMeta.setDisplayName("\u00a78» \u00a7bVerzaubern");
+        MenuTraenke.setItemMeta(MenuTraenkeMeta);
+        final ItemStack MenuTr = new ItemStack(Material.POTION);
+        final ItemMeta MenuTrM = MenuTr.getItemMeta();
+        MenuTrM.setDisplayName("\u00a78» \u00a7bTränke");
+        MenuTr.setItemMeta(MenuTrM);
+        final ItemStack WeissesGlas = new ItemStack(160, 1, (short) 0, (byte) 0);
+        final ItemMeta WeissesGlasMeta = WeissesGlas.getItemMeta();
+        WeissesGlasMeta.setDisplayName("\u00a7o");
+        WeissesGlas.setItemMeta(WeissesGlasMeta);
+        SetupInv.setItem(1, WeissesGlas);
+        SetupInv.setItem(0, MenuRuestung);
+        SetupInv.setItem(4, WeissesGlas);
+        SetupInv.setItem(2, MenuBlcke);
+        SetupInv.setItem(3, MenuSpitzhacken);
+        SetupInv.setItem(5, MenuTr);
+        SetupInv.setItem(6, MenuSpecial);
+        SetupInv.setItem(7, WeissesGlas);
+        SetupInv.setItem(8, MenuTraenke);
+        final ItemStack MenuBlocksClay = new ItemStack(Material.CHAINMAIL_HELMET, 1);
+        final ItemMeta MenuBlocksClayMeta = MenuBlocksClay.getItemMeta();
+        MenuBlocksClayMeta.setDisplayName("\u00a78» \u00a79Chain Helm");
+        final ArrayList<String> lore1 = new ArrayList<>();
+        lore1.add("\u00a78» \u00a7750 Emeralds");
+        MenuBlocksClayMeta.setLore(lore1);
+        MenuBlocksClay.setItemMeta(MenuBlocksClayMeta);
+        MenuBlocksClay.setItemMeta(MenuBlocksClayMeta);
+        final ItemStack MenuBlocksEndStein = new ItemStack(Material.CHAINMAIL_CHESTPLATE);
+        final ItemMeta MenuBlocksEndSteinMeta = MenuBlocksEndStein.getItemMeta();
+        MenuBlocksEndSteinMeta.setDisplayName("\u00a78» \u00a79Chain Chestplate");
+        final ArrayList<String> lore2 = new ArrayList<>();
+        lore2.add("\u00a78» \u00a7750 Emeralds");
+        MenuBlocksEndSteinMeta.setLore(lore2);
+        MenuBlocksEndStein.setItemMeta(MenuBlocksEndSteinMeta);
+        final ItemStack MenuBlocksIronBlock = new ItemStack(Material.CHAINMAIL_LEGGINGS);
+        final ItemMeta MenuBlocksIronBlockMeta = MenuBlocksIronBlock.getItemMeta();
+        MenuBlocksIronBlockMeta.setDisplayName("\u00a78» \u00a79Chain Hose");
+        final ArrayList<String> lore3 = new ArrayList<>();
+        lore3.add("\u00a78» \u00a7750 Emeralds");
+        MenuBlocksIronBlockMeta.setLore(lore3);
+        MenuBlocksIronBlock.setItemMeta(MenuBlocksIronBlockMeta);
+        final ItemStack MenuBlocksKohleBlock = new ItemStack(Material.CHAINMAIL_BOOTS);
+        final ItemMeta MenuBlocksKohleBlockMeta = MenuBlocksKohleBlock.getItemMeta();
+        MenuBlocksKohleBlockMeta.setDisplayName("\u00a78» \u00a79Chain Schuhe");
+        final ArrayList<String> lore4 = new ArrayList<>();
+        lore4.add("\u00a78» \u00a7750 Emeralds");
+        MenuBlocksKohleBlockMeta.setLore(lore4);
+        MenuBlocksKohleBlock.setItemMeta(MenuBlocksKohleBlockMeta);
+        SetupInv.setItem(9, MenuBlocksClay);
+        SetupInv.setItem(10, MenuBlocksEndStein);
+        SetupInv.setItem(11, MenuBlocksIronBlock);
+        SetupInv.setItem(12, MenuBlocksKohleBlock);
+        p.openInventory(SetupInv);
+    }
+}

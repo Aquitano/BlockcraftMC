@@ -1,0 +1,8 @@
+name: Perms
+author: Aquitano
+version: 1.0
+main: me.blockcraft.perms.Main
+commands:
+  set:
+    description: Set rank of player
+    usage: /set <player> <rank>

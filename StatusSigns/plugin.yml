@@ -1,0 +1,8 @@
+name: StatusSigns
+author: Aquitano
+version: 1.0
+main: me.blockcraft.signs.StatusSigns
+commands:
+  createsign:
+    description: Create a join sign
+    usage: /createsign <IP> <Port> <ServerName>

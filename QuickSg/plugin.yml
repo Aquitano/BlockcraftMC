@@ -1,0 +1,20 @@
+name: QuickSG
+author: Aquitano
+version: 1.0
+main: me.blockcraft.QuickSG.Main
+commands:
+  start:
+    description: Start a QuickSG
+    usage: /start
+  stats:
+    description: Get the stats of a player
+    usage: /stats <player>
+  build:
+    description: Enable/Disable building
+    usage: /build
+  qsgset:
+    description: Set the spawn of the QuickSG
+    usage: /qsgset
+  top:
+    description: Get the top players of certain category
+    usage: /top <category>

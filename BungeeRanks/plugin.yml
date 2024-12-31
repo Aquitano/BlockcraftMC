@@ -1,0 +1,8 @@
+name: BungeeRanks
+author: Aquitano
+version: 1.0
+main: de.Blockcraft.BungeeRanks.BungeeRanks
+commands:
+  rank:
+    description: "Set rank of a player"
+    usage: "/rank <player> <rank>"

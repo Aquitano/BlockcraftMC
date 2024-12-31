@@ -1,0 +1,17 @@
+name: Lobby
+author: Aquitano
+version: 1.0
+main: me.blockcraft.lobby.Lobby
+commands:
+  setspawn:
+    description: Set spawn for lobby
+    usage: /setspawn
+  setholo:
+    description: Set hologram for lobby
+    usage: /setholo
+  baloon:
+    description: Spawn a baloon
+    usage: /baloon
+  globalmute:
+    description: Mute the chat
+    usage: /globalmute

@@ -1,0 +1,8 @@
+name: Reports
+author: Aquitano
+version: 1.0
+main: me.blockcraft.reports.Main
+commands:
+  report:
+    description: Report a player
+    usage: /report <player> <reason>

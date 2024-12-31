@@ -1,0 +1,29 @@
+name: EmeraldRush
+author: Aquitano
+version: 1.0
+main: me.blockcraft.rush.Main
+commands:
+  start:
+    description: Start a new game
+    usage: /start
+  stats:
+    description: Get the stats of a player
+    usage: /stats <player>
+  build:
+    description: Enable/Disable building
+    usage: /build
+  rushset:
+    description: Set the spawn of the rush
+    usage: /rushset
+  top:
+    description: Get the top players of certain category
+    usage: /top <category>
+  chest:
+    description: Open a chest
+    usage: /chest
+  rush:
+    description: Join the rush
+    usage: /rush
+  rushcoins:
+    description: Set the coins of a player
+    usage: /rushcoins <player> <coins>

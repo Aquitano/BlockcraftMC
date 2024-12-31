@@ -1,0 +1,8 @@
+name: Duell
+author: Aquitano
+version: 1.0
+main: me.blockcraft.duell.Duell
+commands:
+  setspawn:
+    description: Set spawn for duell
+    usage: /setspawn

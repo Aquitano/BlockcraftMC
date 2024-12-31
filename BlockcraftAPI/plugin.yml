@@ -1,0 +1,8 @@
+name: API
+author: Aquitano
+version: 1.0
+main: me.blockcraft.coins.CoinsAPI
+commands:
+  coins:
+    description: Get the coins of a player
+    usage: /coins

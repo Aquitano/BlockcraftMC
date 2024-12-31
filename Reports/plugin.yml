@@ -1,0 +1,8 @@
+name: ReportsMenu
+author: Aquitano
+version: 1.0
+main: me.blockcraft.reportsmenu.Main
+commands:
+  reports:
+    description: Open the reports menu
+    usage: /reports
