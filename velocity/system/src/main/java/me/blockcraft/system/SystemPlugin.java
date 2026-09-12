@@ -64,6 +64,7 @@ import me.blockcraft.system.moderation.PunishmentService;
 import me.blockcraft.system.motd.MotdListener;
 import me.blockcraft.system.party.PartyListener;
 import me.blockcraft.system.party.PartyManager;
+import me.blockcraft.system.support.SupportListener;
 import me.blockcraft.system.support.SupportSessions;
 import me.blockcraft.system.task.AutoBroadcast;
 import me.blockcraft.system.task.DailySchedule;
@@ -106,13 +107,14 @@ public final class SystemPlugin {
 
         var events = proxy.getEventManager();
         events.register(this, new LoginListener(this, proxy, config, settings, repositories.players(), repositories.punishments(),
-                punishments, lobby, messages));
+                punishments, lobby, messages, logger));
         events.register(this, new TabHeaderListener(proxy, config, messages));
         events.register(this, new CommandListener(config, messages));
         events.register(this, new KickListener(lobby, messages));
         events.register(this, new TabCompleteListener());
         events.register(this, new MotdListener(proxy, config, settings, messages));
         events.register(this, new PartyListener(parties));
+        events.register(this, new SupportListener(supportSessions));
 
         register(new BanCommand(support).create());
         register(new TempBanCommand(support, lookup, punishments, config, messages).create());

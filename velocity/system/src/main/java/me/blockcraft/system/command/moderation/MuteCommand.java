@@ -1,5 +1,6 @@
 package me.blockcraft.system.command.moderation;
 
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.velocitypowered.api.command.BrigadierCommand;
 import me.blockcraft.system.SystemPermissions;
 import me.blockcraft.system.command.CommandSupport;
@@ -15,6 +16,8 @@ public final class MuteCommand {
     public BrigadierCommand create() {
         return new BrigadierCommand(BrigadierCommand.literalArgumentBuilder("mute")
                 .requires(CommandSupport.permission(SystemPermissions.MUTE))
-                .executes(support.usage("mute.use-strafe")));
+                .executes(support.usage("mute.use-strafe"))
+                .then(BrigadierCommand.requiredArgumentBuilder("ignored", StringArgumentType.greedyString())
+                        .executes(support.usage("mute.use-strafe"))));
     }
 }

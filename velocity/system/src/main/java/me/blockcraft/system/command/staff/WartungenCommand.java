@@ -3,6 +3,7 @@ package me.blockcraft.system.command.staff;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
+import com.velocitypowered.api.scheduler.ScheduledTask;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.system.ProxySettings;
 import me.blockcraft.system.SystemConfig;
@@ -13,9 +14,14 @@ import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-/** Maintenance mode: announced over a minute (or immediately with "now"), toggled off by running it again. */
+/**
+ * Maintenance mode: announced over a minute (or immediately with "now"), toggled off by running it again.
+ * Running it during the announcement cancels the pending switch instead.
+ */
 public final class WartungenCommand {
 
     private final Object plugin;
@@ -24,6 +30,7 @@ public final class WartungenCommand {
     private final ProxySettings settings;
     private final SystemConfig config;
     private final Messages messages;
+    private final List<ScheduledTask> pending = new ArrayList<>();
 
     public WartungenCommand(Object plugin, CommandSupport support, ProxyServer proxy, ProxySettings settings, SystemConfig config,
                             Messages messages) {
@@ -43,7 +50,7 @@ public final class WartungenCommand {
                         .executes(support.run((source, context) -> toggle(true)))));
     }
 
-    private void toggle(boolean now) {
+    private synchronized void toggle(boolean now) {
         if (settings.maintenance()) {
             settings.setMaintenance(false);
             proxy.sendMessage(messages.get("wartungen.disabled"));
@@ -53,15 +60,26 @@ public final class WartungenCommand {
             enable(messages.get("wartungen.enabled-now"));
             return;
         }
+        if (!pending.isEmpty()) {
+            cancelPending();
+            proxy.sendMessage(messages.get("wartungen.cancelled"));
+            return;
+        }
         var scheduler = proxy.getScheduler();
         proxy.sendMessage(countdown("wartungen.countdown-60"));
-        scheduler.buildTask(plugin, () -> proxy.sendMessage(countdown("wartungen.countdown-30"))).delay(30, TimeUnit.SECONDS).schedule();
-        scheduler.buildTask(plugin, () -> proxy.sendMessage(countdown("wartungen.countdown-10"))).delay(50, TimeUnit.SECONDS).schedule();
-        scheduler.buildTask(plugin, () -> proxy.sendMessage(countdown("wartungen.countdown-5"))).delay(55, TimeUnit.SECONDS).schedule();
-        scheduler.buildTask(plugin, () -> enable(countdown("wartungen.enabled"))).delay(60, TimeUnit.SECONDS).schedule();
+        pending.add(scheduler.buildTask(plugin, () -> proxy.sendMessage(countdown("wartungen.countdown-30"))).delay(30, TimeUnit.SECONDS).schedule());
+        pending.add(scheduler.buildTask(plugin, () -> proxy.sendMessage(countdown("wartungen.countdown-10"))).delay(50, TimeUnit.SECONDS).schedule());
+        pending.add(scheduler.buildTask(plugin, () -> proxy.sendMessage(countdown("wartungen.countdown-5"))).delay(55, TimeUnit.SECONDS).schedule());
+        pending.add(scheduler.buildTask(plugin, () -> enable(countdown("wartungen.enabled"))).delay(60, TimeUnit.SECONDS).schedule());
     }
 
-    private void enable(Component announcement) {
+    private synchronized void cancelPending() {
+        pending.forEach(ScheduledTask::cancel);
+        pending.clear();
+    }
+
+    private synchronized void enable(Component announcement) {
+        cancelPending();
         settings.setMaintenance(true);
         proxy.sendMessage(announcement);
         var screen = Component.join(JoinConfiguration.newlines(), messages.getLines("wartungen.kick-screen", ip()));

@@ -1,6 +1,7 @@
 package me.blockcraft.system.command.staff;
 
 import com.velocitypowered.api.command.BrigadierCommand;
+import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import me.blockcraft.common.message.Messages;
@@ -11,6 +12,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /** Announces a restart over one minute, kicks everyone, then stops the proxy. */
 public final class RestartCommand {
@@ -20,6 +22,7 @@ public final class RestartCommand {
     private final ProxyServer proxy;
     private final SystemConfig config;
     private final Messages messages;
+    private final AtomicBoolean pending = new AtomicBoolean();
 
     public RestartCommand(Object plugin, CommandSupport support, ProxyServer proxy, SystemConfig config, Messages messages) {
         this.plugin = plugin;
@@ -32,10 +35,14 @@ public final class RestartCommand {
     public BrigadierCommand create() {
         return new BrigadierCommand(BrigadierCommand.literalArgumentBuilder("restart")
                 .requires(CommandSupport.permission(SystemPermissions.RESTART))
-                .executes(support.run((source, context) -> restart())));
+                .executes(support.run((source, context) -> restart(source))));
     }
 
-    private void restart() {
+    private void restart(CommandSource source) {
+        if (!pending.compareAndSet(false, true)) {
+            source.sendMessage(messages.get("restart.already-pending"));
+            return;
+        }
         var scheduler = proxy.getScheduler();
         proxy.sendMessage(countdown("restart.countdown-60"));
         scheduler.buildTask(plugin, () -> proxy.sendMessage(countdown("restart.countdown-30"))).delay(30, TimeUnit.SECONDS).schedule();

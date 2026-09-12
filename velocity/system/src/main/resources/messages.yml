@@ -40,6 +40,9 @@ login:
     - "<red>"
     - "<gray>Nur noch <red>Spieler <gray>mit dem <red>PremiumRang <gray>können noch <red>Joinen!"
     - "<gray>Discord: <red><discord>"
+  error:
+    - "<prefix><gray>Die Datenbank von <red><ip> <gray>ist derzeit nicht erreichbar."
+    - " <gray>Bitte versuche es in ein paar Minuten erneut."
   welcome:
     - "<dark_aqua><strikethrough>-------------------------------------------"
     - ""
@@ -383,6 +386,7 @@ wartungen:
   countdown-5: "<prefix><gray>Das <red><ip> Netzwerk <gray>wird in <red>5 Sekunden <gray>in den <red>Wartungsmodus <gray>versetzt."
   enabled: "<prefix><gray>Das <red><ip> Netzwerk <gray>befindet sich <red>nun <gray>im <red>Wartungsmodus<gray>."
   enabled-now: "<prefix><gold>Wartungsmodus wurde aktiviert."
+  cancelled: "<prefix><gold>Der angekündigte Wartungsmodus wurde abgebrochen."
   disabled: "<prefix><gold>Wartungsmodus wurde deaktiviert."
   kick-screen:
     - "<prefix><gray>Das <red><ip> Netzwerk <gray>befindet sich nun im <red>Wartungsmodus. "
@@ -393,11 +397,13 @@ restart:
   countdown-10: "<prefix><gray>Das <red><ip> Netzwerk <gray>startet in <red>10 Sekunden <gray>neu."
   countdown-5: "<prefix><gray>Das <red><ip> Netzwerk <gray>startet in <red>5 Sekunden <gray>neu."
   kick-screen: "<prefix><gray>Der Server restartet."
+  already-pending: "<prefix><red>Ein Neustart läuft bereits."
 addpremium:
   usage: "<prefix><red>/addpremium \\<Spieler>"
   done: "<prefix><dark_aqua>Du hast die <yellow>Berechtigung <dark_aqua>erfolgreich hinzugefügt."
   has-rights: "<prefix><yellow><player><dark_aqua> hat nun die <yellow>Rechte<dark_aqua>."
   unavailable: "<prefix><red>LuckPerms ist nicht verfügbar."
+  failed: "<prefix><red>Die Rechte für <yellow><player> <red>konnten nicht gesetzt werden. Siehe Konsole."
 serverjoin:
   unknown: "<prefix><red>Der Server ist nicht verfügbar."
 list:
@@ -508,6 +514,7 @@ party:
   target-offline: "<gold>Party <dark_gray>» <reset><red>Dieser Spieler ist nicht online."
   target-not-leader: "<gold>Party <dark_gray>» <reset><red>Dieser Spieler ist kein Party-Leader."
   target-in-party: "<gold>Party <dark_gray>» <reset><red>Dieser Spieler ist bereits in einer Party."
+  invite-self: "<gold>Party <dark_gray>» <reset><red>Du kannst dich nicht selbst einladen."
   already-in-party: "<gold>Party <dark_gray>» <reset><yellow>Du bist bereits in einer Party."
   not-in-party: "<gold>Party <dark_gray>» <reset><yellow>Du bist in keiner Party."
   only-leader-invites: "<gold>Party <dark_gray>» <reset><red>Nur Party-Leader können Spieler einladen."

@@ -21,7 +21,7 @@ public final class KickListener {
 
     @Subscribe
     public void onKicked(KickedFromServerEvent event) {
-        if (lobby.isLobby(event.getServer())) {
+        if (event.kickedDuringServerConnect() || lobby.isLobby(event.getServer())) {
             return;
         }
         lobby.lobby().ifPresent(target -> event.setResult(RedirectPlayer.create(target, messages.get("kicked-to-lobby",

@@ -7,6 +7,7 @@ import com.velocitypowered.api.event.connection.LoginEvent;
 import com.velocitypowered.api.event.connection.PostLoginEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
+import me.blockcraft.common.db.DatabaseException;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.moderation.PlayerRepository;
 import me.blockcraft.common.moderation.PunishmentRepository;
@@ -20,6 +21,7 @@ import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
+import org.slf4j.Logger;
 
 import java.util.Set;
 import java.util.UUID;
@@ -41,10 +43,12 @@ public final class LoginListener {
     private final PunishmentService punishmentService;
     private final LobbyConnector lobby;
     private final Messages messages;
+    private final Logger logger;
     private final Set<UUID> firstJoins = ConcurrentHashMap.newKeySet();
 
     public LoginListener(Object plugin, ProxyServer proxy, SystemConfig config, ProxySettings settings, PlayerRepository players,
-                         PunishmentRepository punishments, PunishmentService punishmentService, LobbyConnector lobby, Messages messages) {
+                         PunishmentRepository punishments, PunishmentService punishmentService, LobbyConnector lobby, Messages messages,
+                         Logger logger) {
         this.plugin = plugin;
         this.proxy = proxy;
         this.config = config;
@@ -54,6 +58,7 @@ public final class LoginListener {
         this.punishmentService = punishmentService;
         this.lobby = lobby;
         this.messages = messages;
+        this.logger = logger;
     }
 
     @Subscribe
@@ -68,15 +73,21 @@ public final class LoginListener {
                 event.setResult(ComponentResult.denied(screen("login.full", network(), Formatter.number("max", config.maxPlayers()))));
                 return;
             }
-            var ban = punishments.activeBan(player.getUniqueId());
-            if (ban.isPresent()) {
-                event.setResult(ComponentResult.denied(punishmentService.banScreen(ban.get())));
-                return;
+            try {
+                var ban = punishments.activeBan(player.getUniqueId());
+                if (ban.isPresent()) {
+                    event.setResult(ComponentResult.denied(punishmentService.banScreen(ban.get())));
+                    return;
+                }
+                if (!players.exists(player.getUniqueId())) {
+                    firstJoins.add(player.getUniqueId());
+                }
+                players.upsert(player.getUniqueId(), player.getUsername());
+            } catch (DatabaseException e) {
+                // Velocity would log the exception and let the login through, ban check included.
+                logger.error("Could not check {} against the database, refusing the login", player.getUsername(), e);
+                event.setResult(ComponentResult.denied(screen("login.error", network())));
             }
-            if (!players.exists(player.getUniqueId())) {
-                firstJoins.add(player.getUniqueId());
-            }
-            players.upsert(player.getUniqueId(), player.getUsername());
         });
     }
 

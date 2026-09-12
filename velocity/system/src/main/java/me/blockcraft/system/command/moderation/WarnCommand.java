@@ -90,6 +90,7 @@ public final class WarnCommand {
             return;
         }
         if (!forced) {
+            lastForcedWarn = "";
             source.sendMessage(messages.get("warn.offline"));
             var placeholders = Placeholder.unparsed("player", target.get().name());
             source.sendMessage(messages.get("warn.offline-click", placeholders)

@@ -59,6 +59,10 @@ public final class AddPremiumCommand {
                     if (granted) {
                         source.sendMessage(messages.get("addpremium.has-rights", Placeholder.unparsed("player", target.name())));
                     }
+                })
+                .exceptionally(failure -> {
+                    source.sendMessage(messages.get("addpremium.failed", Placeholder.unparsed("player", target.name())));
+                    return null;
                 });
     }
 }

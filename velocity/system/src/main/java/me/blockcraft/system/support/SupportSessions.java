@@ -39,4 +39,11 @@ public final class SupportSessions {
     public void close(UUID requester) {
         supporterByRequester.remove(requester);
     }
+
+    /** A leaving requester drops the request; a leaving supporter hands their requests back to the queue. */
+    public void onDisconnect(UUID player) {
+        supporterByRequester.remove(player);
+        supporterByRequester.replaceAll((requester, supporter) ->
+                supporter.filter(player::equals).isPresent() ? Optional.empty() : supporter);
+    }
 }

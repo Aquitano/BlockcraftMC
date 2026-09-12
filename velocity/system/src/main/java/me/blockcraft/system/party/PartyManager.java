@@ -99,6 +99,10 @@ public final class PartyManager {
     }
 
     public void invite(Player inviter, Player invitee) {
+        if (inviter.getUniqueId().equals(invitee.getUniqueId())) {
+            inviter.sendMessage(messages.get("party.invite-self"));
+            return;
+        }
         if (!isInParty(inviter.getUniqueId())) {
             create(inviter);
         }
@@ -141,6 +145,10 @@ public final class PartyManager {
         }
         if (Duration.between(invite.sentAt(), Instant.now()).compareTo(INVITE_TTL) > 0) {
             player.sendMessage(messages.get("party.invite-expired"));
+            return;
+        }
+        if (party.members().size() >= MAX_MEMBERS) {
+            player.sendMessage(messages.get("party.full"));
             return;
         }
         party.members().add(player.getUniqueId());
@@ -186,10 +194,12 @@ public final class PartyManager {
         var serverName = Placeholder.unparsed("server", server.getServerInfo().getName());
         leader.sendMessage(messages.get("party.leader-moved", serverName));
         for (UUID memberId : party.members()) {
-            proxy.getPlayer(memberId).ifPresent(member -> {
-                member.sendMessage(messages.get("party.following", serverName));
-                member.createConnectionRequest(server).fireAndForget();
-            });
+            proxy.getPlayer(memberId)
+                    .filter(member -> !member.getCurrentServer().map(current -> current.getServer().equals(server)).orElse(false))
+                    .ifPresent(member -> {
+                        member.sendMessage(messages.get("party.following", serverName));
+                        member.createConnectionRequest(server).fireAndForget();
+                    });
         }
     }
 
