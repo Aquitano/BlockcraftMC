@@ -42,7 +42,7 @@ public final class StatsMenu extends Menu {
                         Formatter.number("kills", stats.kills()),
                         Formatter.number("wins", stats.wins()),
                         Formatter.number("deaths", stats.deaths()),
-                        Placeholder.unparsed("kdr", stats.deaths() > 1 ? String.valueOf(kdr) : "-")))
+                        Placeholder.unparsed("kdr", stats.deaths() > 0 ? String.valueOf(kdr) : "-")))
                 .build();
     }
 

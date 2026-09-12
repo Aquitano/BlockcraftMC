@@ -109,5 +109,6 @@ public final class ProtectionListener implements Listener {
     @EventHandler
     public void onDeath(PlayerDeathEvent event) {
         event.setKeepInventory(true);
+        event.setKeepLevel(true);
     }
 }
