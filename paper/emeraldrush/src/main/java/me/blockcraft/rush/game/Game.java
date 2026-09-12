@@ -4,6 +4,7 @@ import me.blockcraft.api.coins.CoinsRepository;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.task.Countdown;
 import me.blockcraft.api.task.Tasks;
+import me.blockcraft.api.world.Worlds;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.rush.Permissions;
 import me.blockcraft.rush.config.RushConfig;
@@ -155,9 +156,8 @@ public final class Game {
 
     public void join(Player player) {
         for (var world : Bukkit.getWorlds()) {
-            world.setThundering(false);
-            world.setStorm(false);
-            world.setTime(1000L);
+            Worlds.clearWeather(world);
+            Worlds.setTime(world, 1000L);
         }
         if (phase != GamePhase.LOBBY) {
             makeSpectator(player);

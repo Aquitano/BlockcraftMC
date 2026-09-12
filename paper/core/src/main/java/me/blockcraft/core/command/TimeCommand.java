@@ -6,6 +6,7 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.api.world.Worlds;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 
 import java.util.OptionalLong;
@@ -36,11 +37,11 @@ public final class TimeCommand {
                             String input = StringArgumentType.getString(context, "time");
                             switch (input.toLowerCase()) {
                                 case "day", "tag" -> {
-                                    world.setTime(DAY);
+                                    Worlds.setTime(world, DAY);
                                     player.sendMessage(messages.get("time.day"));
                                 }
                                 case "night", "nacht" -> {
-                                    world.setTime(NIGHT);
+                                    Worlds.setTime(world, NIGHT);
                                     player.sendMessage(messages.get("time.night"));
                                 }
                                 default -> {
@@ -48,7 +49,7 @@ public final class TimeCommand {
                                     if (ticks.isEmpty()) {
                                         player.sendMessage(messages.get("time.invalid"));
                                     } else {
-                                        world.setTime(ticks.getAsLong());
+                                        Worlds.setTime(world, ticks.getAsLong());
                                         player.sendMessage(messages.get("time.set", Formatter.number("time", ticks.getAsLong())));
                                     }
                                 }

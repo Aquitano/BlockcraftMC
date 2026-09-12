@@ -2,6 +2,7 @@ package me.blockcraft.quicksg.listener;
 
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.quicksg.game.Game;
+import me.blockcraft.api.world.Worlds;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
@@ -24,9 +25,8 @@ public final class ConnectionListener implements Listener {
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
         for (var world : Bukkit.getWorlds()) {
-            world.setThundering(false);
-            world.setStorm(false);
-            world.setTime(LOBBY_TIME);
+            Worlds.clearWeather(world);
+            Worlds.setTime(world, LOBBY_TIME);
         }
         event.joinMessage(null);
         game.join(event.getPlayer());
