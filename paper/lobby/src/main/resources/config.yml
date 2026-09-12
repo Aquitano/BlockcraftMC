@@ -1,0 +1,23 @@
+max-players: 100
+allowed-commands:
+  - coins
+prices:
+  premium: 15000
+  head: 300
+  shirt: 500
+secrets:
+  reward: 50
+shop-npc:
+  respawn-seconds: 500
+fireworks:
+  - { x: -65, y: 22.5, z: 56 }
+  - { x: -69, y: 22.5, z: 56 }
+double-jump:
+  height: 0.6
+  multiply: 1.0
+jump-pad:
+  y: 0.18
+  multiply: 5.0
+  max-length: 6.0
+player-hider:
+  cooldown-millis: 3000
