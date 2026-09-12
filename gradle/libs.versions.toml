@@ -1,0 +1,27 @@
+[versions]
+java = "25"
+minecraft = "26.2"
+paper-api = "26.2.build.123-stable"
+velocity-api = "4.1.1"
+hikaricp = "7.1.0"
+mariadb-client = "3.5.10"
+run-task = "3.1.0"
+shadow = "9.6.1"
+adventure = "5.2.0"
+snakeyaml = "2.2"
+slf4j = "2.0.18"
+luckperms = "5.5"
+
+[libraries]
+paper-api = { module = "io.papermc.paper:paper-api", version.ref = "paper-api" }
+velocity-api = { module = "com.velocitypowered:velocity-api", version.ref = "velocity-api" }
+hikaricp = { module = "com.zaxxer:HikariCP", version.ref = "hikaricp" }
+mariadb-client = { module = "org.mariadb.jdbc:mariadb-java-client", version.ref = "mariadb-client" }
+adventure-minimessage = { module = "net.kyori:adventure-text-minimessage", version.ref = "adventure" }
+snakeyaml = { module = "org.yaml:snakeyaml", version.ref = "snakeyaml" }
+slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
+luckperms-api = { module = "net.luckperms:api", version.ref = "luckperms" }
+
+# Gradle plugins consumed by buildSrc convention plugins
+run-task = { module = "xyz.jpenilla:run-task", version.ref = "run-task" }
+shadow = { module = "com.gradleup.shadow:shadow-gradle-plugin", version.ref = "shadow" }
