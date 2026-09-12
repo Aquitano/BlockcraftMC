@@ -9,8 +9,10 @@ x-luckperms: &luckperms
   LUCKPERMS_DATA_PASSWORD: blockcraft
   LUCKPERMS_MESSAGING_SERVICE: sql
 
+# Game servers restart themselves after a round (Bukkit.shutdown), so the container has to come back on its own.
 x-paper: &paper
   image: itzg/minecraft-server:java25
+  restart: unless-stopped
   stop_grace_period: 1m
   depends_on:
     mariadb:
@@ -50,6 +52,7 @@ services:
 
   velocity:
     image: itzg/mc-proxy:java25
+    restart: unless-stopped
     stop_grace_period: 1m
     depends_on:
       mariadb:
