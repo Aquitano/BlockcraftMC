@@ -5,31 +5,19 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import me.blockcraft.common.message.Messages;
-import org.bukkit.Bukkit;
-import org.bukkit.plugin.Plugin;
-
-import java.util.HashSet;
-import java.util.UUID;
+import me.blockcraft.core.listener.VanishListener;
 
 public final class VanishCommand {
 
     private VanishCommand() {
     }
 
-    public static LiteralCommandNode<CommandSourceStack> create(Plugin plugin, Messages messages) {
-        var vanished = new HashSet<UUID>();
+    public static LiteralCommandNode<CommandSourceStack> create(VanishListener vanish, Messages messages) {
         return Commands.literal("v")
                 .requires(CorePermission.player("vanish"))
                 .executes(context -> {
                     var player = context.getSource().getPlayerOrThrow();
-                    if (vanished.remove(player.getUniqueId())) {
-                        player.sendMessage(messages.get("vanish.disabled"));
-                        Bukkit.getOnlinePlayers().forEach(other -> other.showPlayer(plugin, player));
-                    } else {
-                        vanished.add(player.getUniqueId());
-                        player.sendMessage(messages.get("vanish.enabled"));
-                        Bukkit.getOnlinePlayers().forEach(other -> other.hidePlayer(plugin, player));
-                    }
+                    player.sendMessage(messages.get(vanish.toggle(player) ? "vanish.enabled" : "vanish.disabled"));
                     return Command.SINGLE_SUCCESS;
                 })
                 .build();

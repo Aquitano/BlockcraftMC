@@ -60,7 +60,7 @@ public final class ChatFilterListener implements Listener {
             notifyStaff(player, text);
             return;
         }
-        if (!player.hasPermission(ChatPermissions.ADS_BYPASS) && isAdvertisement(text, lowercase)) {
+        if (!player.hasPermission(ChatPermissions.ADS_BYPASS) && isAdvertisement(withoutAllowedDomain(lowercase))) {
             event.setCancelled(true);
             notifyStaff(player, text);
             adLog.add(player.getUniqueId(), config.serverName(), text);
@@ -69,14 +69,13 @@ public final class ChatFilterListener implements Listener {
         }
     }
 
-    private boolean isAdvertisement(String text, String lowercase) {
-        if (URL.matcher(text).find() || IP.matcher(text).find()) {
-            return true;
-        }
-        if (!config.allowedDomain().isEmpty() && lowercase.contains(config.allowedDomain())) {
-            return false;
-        }
-        return config.advertisementTerms().stream().anyMatch(lowercase::contains);
+    private String withoutAllowedDomain(String lowercase) {
+        return config.allowedDomain().isEmpty() ? lowercase : lowercase.replace(config.allowedDomain(), " ");
+    }
+
+    private boolean isAdvertisement(String lowercase) {
+        return URL.matcher(lowercase).find() || IP.matcher(lowercase).find()
+                || config.advertisementTerms().stream().anyMatch(lowercase::contains);
     }
 
     private void warn(Player player) {

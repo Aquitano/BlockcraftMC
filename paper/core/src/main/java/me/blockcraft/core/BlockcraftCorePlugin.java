@@ -34,6 +34,7 @@ import me.blockcraft.core.listener.ChatFilterConfig;
 import me.blockcraft.core.listener.ChatFilterListener;
 import me.blockcraft.core.listener.GlobalMuteListener;
 import me.blockcraft.core.listener.MuteListener;
+import me.blockcraft.core.listener.VanishListener;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.List;
@@ -60,6 +61,8 @@ public final class BlockcraftCorePlugin extends JavaPlugin {
         pluginManager.registerEvents(new ChatCooldownListener(chatFilter.cooldown(), messages), this);
         pluginManager.registerEvents(new ChatFilterListener(this, chatFilter, moderation.warns(), moderation.punishments(),
                 moderation.adLog(), messages), this);
+        var vanish = new VanishListener(this);
+        pluginManager.registerEvents(vanish, this);
 
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             var registrar = event.registrar();
@@ -83,7 +86,7 @@ public final class BlockcraftCorePlugin extends JavaPlugin {
             registrar.register(TpCommand.create(messages), "Teleportiert Spieler");
             registrar.register(XpCommand.create(messages), "Setzt das Level eines Spielers");
             registrar.register(MsgCommand.create(messages), "Private Nachricht");
-            registrar.register(VanishCommand.create(this, messages), "Unsichtbarkeit", List.of("vanish"));
+            registrar.register(VanishCommand.create(vanish, messages), "Unsichtbarkeit", List.of("vanish"));
             registrar.register(ClearCommand.create(messages), "Leert das Inventar eines Spielers");
             registrar.register(ConnectCommand.create(this, messages), "Wechselt den Server");
             registrar.register(ReflashCommand.create(this, messages), "Aktualisiert die Spielerliste");
