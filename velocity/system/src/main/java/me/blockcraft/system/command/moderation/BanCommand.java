@@ -5,7 +5,7 @@ import com.velocitypowered.api.command.BrigadierCommand;
 import me.blockcraft.system.SystemPermissions;
 import me.blockcraft.system.command.CommandSupport;
 
-/** Bans are issued through /strafe or /tempban; this only points there (the /warn click action still runs it). */
+/** Bans are issued through /strafe or /tempban; this only points there. */
 public final class BanCommand {
 
     private final CommandSupport support;

@@ -123,7 +123,7 @@ public final class WarnCommand {
         if (limitReached) {
             messages.getLines("warn.ban-hint", placeholders).forEach(source::sendMessage);
             source.sendMessage(messages.get("warn.ban-click", placeholders)
-                    .clickEvent(ClickEvent.runCommand("/ban " + target.name() + "**"))
+                    .clickEvent(ClickEvent.runCommand("/strafe " + target.name()))
                     .hoverEvent(HoverEvent.showText(messages.get("warn.ban-hover", placeholders))));
         }
     }

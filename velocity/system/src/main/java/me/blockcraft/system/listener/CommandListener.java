@@ -26,7 +26,7 @@ public final class CommandListener {
         if (!(event.getCommandSource() instanceof Player player)) {
             return;
         }
-        String command = event.getCommand().strip();
+        String command = event.getCommand().strip().split("\\s+", 2)[0];
         if (command.equalsIgnoreCase(HELP)) {
             event.setResult(CommandResult.denied());
             messages.getLines("help").forEach(player::sendMessage);

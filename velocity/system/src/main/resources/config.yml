@@ -42,7 +42,7 @@ joinme-games:
 unbannable:
   - Aquitano
 
-# Exact commands (without the slash) players need blockcraft.system.blockedcommands.bypass to run.
+# Command names (without the slash) players need blockcraft.system.blockedcommands.bypass to run.
 blocked-commands:
   - plugins
   - demote

@@ -334,8 +334,8 @@ warn:
     - ""
     - "<prefix><red>Der Spieler <gold><player><red> sollte jetzt, wegen"
     - "<prefix><red>zuvielen <yellow>Warns<dark_red> gebannt <red>werden."
-  ban-click: "<green>Hier klicken<red>, um das Bannen von \"<gold><player><red>\" zu bestätigen."
-  ban-hover: "<green><player> vom Server bannen..."
+  ban-click: "<green>Hier klicken<red>, um eine Strafe für \"<gold><player><red>\" zu wählen."
+  ban-hover: "<green>/strafe <player> öffnen..."
 warns:
   usage: "<prefix><red>/warns \\<clear|get|list> [player]"
   clear-all-confirm: "<green>Hier klicken<red>, um das Zurücksetzen aller Warns zu bestätigen."
