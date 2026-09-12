@@ -1,0 +1,46 @@
+hub-server: lobby
+global-stats-head: Kevos
+countdown:
+  lobby: 30
+  freeze: 5
+  round: 600
+  restart: 10
+rewards:
+  win: 10
+vs:
+  kills-to-end: 3
+maps:
+  vs: [Gefängnis, Western, Mondbasis, Mondbasis]
+  sg: [Gefängnis, Hafen, Höhle]
+  superjump: [Bahnhof, FrozenRiver, Hölle, Cave, Bergwerk]
+sg-chest:
+  min-items: 1
+  max-items: 6
+  loot:
+    - {item: POTATO, amount: 4}
+    - {item: MELON_SLICE}
+    - {item: PUMPKIN_PIE}
+    - {item: BREAD}
+    - {item: IRON_INGOT, weight: 2}
+    - {item: IRON_INGOT, amount: 2, weight: 2}
+    - {item: BOW}
+    - {item: ARROW}
+    - {item: ARROW, amount: 5}
+    - {item: ARROW, amount: 11}
+    - {item: COOKED_BEEF}
+    - {item: COOKED_BEEF, amount: 2}
+    - {item: IRON_LEGGINGS}
+    - {item: IRON_BOOTS}
+    - {item: IRON_HELMET}
+    - {item: CHAINMAIL_BOOTS}
+    - {item: CHAINMAIL_HELMET}
+    - {item: CHAINMAIL_CHESTPLATE}
+    - {item: CHAINMAIL_LEGGINGS}
+    - {item: LEATHER_BOOTS}
+    - {item: LEATHER_HELMET}
+    - {item: LEATHER_CHESTPLATE}
+    - {item: LEATHER_LEGGINGS}
+    - {item: WOODEN_AXE}
+    - {item: WOODEN_SWORD}
+    - {item: STONE_SWORD}
+    - {item: STONE_AXE}

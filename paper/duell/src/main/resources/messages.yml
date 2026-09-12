@@ -1,0 +1,105 @@
+prefix: "<blue>Duell <dark_gray>» <reset>"
+
+motd:
+  lobby: "<green>-------------"
+  ingame: "<gold>-------------"
+
+mode:
+  vs: "1vs1"
+  sg: "SurvivalGames"
+  superjump: "SuperJump"
+
+join:
+  spectator: "<prefix><gray>Du bist als Spectator gejoint."
+  broadcast: "<prefix><reset><player> <gray>hat den Server betreten. <reset><online>/<max>"
+quit:
+  broadcast: "<prefix><reset><player> <gray>hat den Server verlassen. <reset><online>/<max>"
+
+vote:
+  ended: "<prefix><gray>Das Voting wurde beendet."
+  already-ended: "<prefix><gray>Das Voting wurde bereits beendet."
+
+lobby:
+  starting-in: "<prefix><gray>Die Runde startet in <reset><seconds> <gray>Sekunden."
+  started: "<prefix><gray>Die Runde wurde gestartet."
+  not-enough-players: "<prefix><red>Es sind nicht genügend Spieler online."
+
+round:
+  won: "<prefix><reset><player> <gray>hat das Duell gewonnen."
+  coins: "<prefix><reset><player> <gray>erhält <green><coins> Coins<white>."
+  died: "<prefix><reset><player> <gray>ist gestorben."
+  ended: "<prefix><gray>Die Runde wurde beendet."
+  restart-in: "<prefix><gray>Der Server startet in <red><seconds> <gray>Sekunden neu."
+
+superjump:
+  checkpoint: "<prefix><reset><player><gray> hat Checkpoint <reset><checkpoint> <gray>erreicht!"
+  goal: "<prefix><reset><player><gray> hat das <aqua>Ziel <gray>erreicht!"
+
+title:
+  freeze: "<blue><seconds>"
+  start: "<gray>Start!"
+  vs-round: "<blue>Runde <round>"
+  sg: "<blue>SurvivalGames"
+  superjump: "<blue>SuperJump"
+  map: "<gray><map>"
+  won: "<green>Gewonnen!"
+  won-subtitle: "<reset><player> <gray>hat das Duell gewonnen."
+  game-over: "<green>Spiel vorbei!"
+
+setspawn:
+  spawn: "<prefix><gray>Spawn gesetzt."
+  map: "<prefix><gray><mode> Spawn, Map <gold><map><gray> Spieler<gold> <player> <gray>gesetzt."
+  usage: "<prefix><red>/setspawn <spawn|1vs1<map>p<1-2>|SG<map>p<1-2>|SJ<map>p<1-2>>"
+
+top:
+  separator: "<gray><strikethrough>---------------------------------"
+  first: "<yellow><bold>#1 <reset><blue><name><gray> ( <white><value><gray> ) "
+  entry: "<reset>#<rank> <blue><name> <gray>( <white><value><gray> ) "
+
+item:
+  style: "<dark_gray>● <blue>Style"
+  hub: "<dark_gray>● <blue>Hub"
+  stats: "<dark_gray>● <blue>Stats"
+  vs-kit:
+    helmet: "<blue>Helm"
+    chestplate: "<blue>Harnisch"
+    leggings: "<blue>Hose"
+    boots: "<blue>Schuhe"
+    sword: "<blue>Schwert"
+    rod: "<blue>Angel"
+    bow: "<blue>Bogen"
+    arrows: "<blue>Pfeile"
+
+menu:
+  modes:
+    title: "Spielmodi"
+    vs: "<dark_gray>● <blue>1vs1 <dark_gray>●"
+    vs-lore: "<dark_gray>» <gray>Normales 1vs1"
+    sg: "<dark_gray>● <blue>SurvivalGames <dark_gray>●"
+    sg-lore: "<dark_gray>» <gray>Syndicate Stil"
+    superjump: "<dark_gray>● <blue>SuperJump <dark_gray>●"
+    superjump-lore: "<dark_gray>» <gray>Jump 1vs1"
+    voted: "<dark_gray>● <red>VOTING BEENDET <dark_gray>●"
+    voted-lore: "<dark_gray>» <gray>Das Voting wurde bereits beendet"
+  stats:
+    title: "Stats"
+    player: "<yellow><player>"
+    player-lore:
+      - "<dark_gray>● <blue>Kills<dark_gray>: <gray><kills>"
+      - "<dark_gray>● <blue>Gewonnen<dark_gray>: <gray><wins>"
+      - "<dark_gray>● <blue>Tode<dark_gray>: <gray><deaths>"
+      - "<dark_gray>● <blue>KD/R<dark_gray>: <gray><kdr>"
+    global: "<dark_gray>● <aqua>GLOBAL WINS <dark_gray>●"
+    global-lore: "<gray>Klicke zum anzeigen"
+
+scoreboard:
+  title: "<dark_gray>● <blue>BlockcraftMC.de <dark_gray>●"
+  mode: "<gray>MODUS"
+  mode-value: "<dark_gray>» <reset><mode>"
+  mode-none: "-/-"
+  map: "<gray>MAP"
+  map-value: "<dark_gray>» <reset><map>"
+  map-random: "Random"
+  opponent: "<gray>GEGNER"
+  opponent-value: "<dark_gray>» <reset><player>"
+  opponent-none: "-/-"
