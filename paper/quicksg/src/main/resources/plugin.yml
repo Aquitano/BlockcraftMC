@@ -1,0 +1,6 @@
+name: QuickSG
+version: '${version}'
+main: me.blockcraft.quicksg.QuickSGPlugin
+api-version: '26.2'
+author: Aquitano
+depend: [BlockcraftAPI]

@@ -1,0 +1,162 @@
+prefix: "<blue>QuickSG <dark_gray>» <reset>"
+
+motd:
+  lobby: "<green><strikethrough>-------------"
+
+actionbar: "<dark_red>Teams Verboten"
+
+join:
+  broadcast: "<prefix><white><player> <gray>hat das Spiel betreten!"
+quit:
+  broadcast: "<prefix><white><player> <gray>hat die Runde verlassen!"
+
+lobby:
+  starting-in: "<prefix><gray>Die Runde startet in <reset><seconds> <gray>Sekunden."
+  started: "<prefix><gray>Die Runde wurde gestartet."
+  freeze-title: "<blue><seconds>"
+
+protection:
+  ends-in: "<prefix><gray>Die Schutzzeit endet in<white> <seconds><gray> Sekunden!"
+  over: "<prefix><red>Die Schutzzeit ist vorbei!"
+
+game:
+  tracker: "<prefix><gray><minutes> Minuten sind vorbei, alle Spieler bekommen einen Tracker!"
+  ends-in-minutes: "<prefix><red>Das Spiel endet in <minutes> Minuten!"
+  ends-in-one-minute: "<prefix><red>Das Spiel endet in 1 Minute!"
+  draw: "<prefix><red>Unentschieden, die Runde wird Restartet!"
+  killed: "<prefix><white><player><gray> wurde von <white><killer><gray> getötet."
+  died: "<prefix><white><player> <gray>ist gestorben"
+  winner: "<prefix><gray>Der Spieler <white><player><gray> hat die Runde gewonnen!"
+
+restart:
+  in: "<prefix><gray>Der Server startet in <red><seconds> <gray>Sekunden neu!"
+  now: "<prefix><red>Der Server Restartet Jetzt!"
+
+tracker:
+  found: "<prefix><white><player> <gray>» <white><distance><gray> Blöcke"
+
+start:
+  not-enough-players: "<prefix><red>Es müssen mindesten 2 Spieler Online sein!"
+  only-in-lobby: "<prefix><red>Du kannst die Runde nur im Lobby Modus starten!"
+  already-started: "<prefix><red>Die Runde wurde bereits gestartet!"
+  coins-added: "<prefix>Du hast diesem Spieler <coins> Coins hinzugefügt!"
+
+build:
+  enabled: "<prefix><gray>Build Modus <white>aktivert!"
+  disabled: "<prefix><gray>Build Modus <white>deaktiviert!"
+
+setup:
+  help:
+    - ""
+    - "<gray>/qsgset lobby, Spectator, Pos1(-8), DM1(-4), Lobbymitte, InGamemitte"
+    - ""
+  set: "<prefix><gray>Du hast die Location<white> <location> <gray>gesetzt!"
+  unknown: "<prefix><red>Unbekannte Location. Siehe /qsgset help"
+
+stats:
+  header: "<gray><player>`s Stats"
+  lines:
+    - "<white>» <blue>Wins: <gray><wins>"
+    - "<white>» <blue>Loses: <gray><losses>"
+    - "<white>» <blue>Deaths: <gray><deaths>"
+    - "<white>» <blue>Kills: <gray><kills>"
+    - "<white>» <blue>QSG Points: <gray><points>"
+
+top:
+  separator: "<gray><strikethrough>---------------------------------"
+  first: "<yellow><bold>#1 <reset><blue><name><gray> ( <white><value><gray> ) "
+  entry: "<reset>#<rank> <blue><name> <gray>( <white><value><gray> ) "
+  unknown-category: "<prefix><red>/top <wins|deaths|kills|loses|points>"
+
+kit:
+  selected: "<prefix><gray>Du hast das <white><kit><gray> ausgewählt!"
+  not-owned: "<prefix><red>Du hast dieses Kit noch nicht gekauft!"
+  bought: "<prefix><gray>Du hast das <white><kit> <white>gekauft!"
+  bought-cost: " <white>» <gray>- <price> Coins!"
+  already-owned: "<prefix><red>Du hast dieses Kit bereits gekauft!"
+  not-enough-coins: "<prefix><red>Du hast nicht genug Coins!"
+  starter:
+    name: "Starter Kit"
+    contents:
+      - " <white>» <gray>1 Holz Schwert"
+  bow:
+    name: "Bogen Kit"
+    contents:
+      - " <white>» <gray>1 Bogen"
+      - " <white>» <gray>12 Pfeile"
+  hearts:
+    name: "Herzen Kit"
+    contents:
+      - " <white>» <gray>3 Herzen mehr"
+  chain:
+    name: "Chain Kit"
+    contents:
+      - " <white>» <gray>1 Chain Helm"
+      - " <white>» <gray>1 Chain Leggings"
+      - " <white>» <gray>1 Chain Boots"
+  diamond:
+    name: "Diamant Kit"
+    contents:
+      - " <white>» <gray>1 Diamanten Chestplate"
+      - " <white>» <gray>1 Holz Schwert"
+
+menu:
+  kits:
+    title: "<dark_gray>Kits"
+    entry: "<white>» <aqua><kit>"
+  kit-detail:
+    title: "<dark_gray>Kits » <kit>"
+    price: "<gray>Preis"
+    price-free: "<green>kostenlos"
+    price-coins: "<white><price> Coins"
+    select: "<gray>Auswählen?"
+    buy: "<green>Kaufen?"
+    bought: "<green>bereits gekauft!"
+    back: "<red>Abrechen? / Zurück?"
+  stats:
+    title: "<dark_gray>Stats"
+    player: "<yellow><player>"
+    player-lore:
+      - "<white>» <blue><bold>Wins: <reset><gray><wins>"
+      - "<white>» <blue><bold>Loses: <reset><gray><losses>"
+      - "<white>» <blue><bold>Deaths: <reset><gray><deaths>"
+      - "<white>» <blue><bold>Kills: <reset><gray><kills>"
+    global: "<white>» <aqua>Global Stats"
+  global-stats:
+    title: "<dark_gray>Stats » Global"
+    wins: "<white>» <aqua>Wins"
+    deaths: "<white>» <aqua>Deaths"
+    kills: "<white>» <aqua>Kills"
+    losses: "<white>» <aqua>Verlorene Spiele"
+    points: "<white>» <aqua>QuickSG Points"
+
+item:
+  kits: "<white>» <blue>Kits"
+  hub: "<white>» <blue>Hub"
+  stats: "<white>» <blue>Stats"
+  start: "<white>» <blue>Spiel Starten"
+  level-up:
+    name: "<yellow>+1 Level"
+    lore: "<gray>Rechtsklick"
+  heart:
+    name: "<yellow>+1 Herz"
+    lore: "<gray>Rechtsklick"
+  full-food:
+    name: "<yellow>Full Food"
+    lore: "<gray>Dein Hunger wird sofort gefüllt!"
+  tracker:
+    name: "<blue>Kompass"
+    lore: "<gray>Tracke Spieler in deiner Nähe"
+
+scoreboard:
+  title: "<white>» <blue>BlockcraftMC.net <white>«"
+  online: "<gray>ONLINE:"
+  online-value: "<dark_gray>» <white><online> <dark_gray>/<white> <max>"
+  map: "<gray>MAP:"
+  map-value: "<dark_gray>» <white><map>"
+  kit: "<gray>KIT:"
+  kit-value: "<dark_gray>» <white><kit>"
+  spectator: "<gray>SPECTATOR:"
+  spectator-value: "<dark_gray>» <white><spectators>"
+  winner: "<dark_gray>»<gray>WINNER:"
+  winner-value: "<dark_gray>» <white><player>"
