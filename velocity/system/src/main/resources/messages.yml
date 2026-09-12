@@ -1,0 +1,544 @@
+prefix: "<gold>Blockcraft <dark_gray>» <reset>"
+player-only: "<red>Nur ein Spieler kann diesen Befehl verwenden!"
+player-unknown: "<prefix><red>Der Spieler <gold><player> <red>ist unbekannt."
+command-blocked: "<prefix><red>Nicht verfügbar!"
+kicked-to-lobby: "<prefix><gray>Deine <red>Verbindung <gray>zum Server <red><server><gray> wurde getrennt. Grund: <red><reason>"
+help:
+  - "<dark_gray>● <blue>INFORMATIONEN ZUM SERVER <dark_gray>●"
+  - ""
+  - "  <blue>/lobby <gray>- <white>Kehre in die Lobby zurück!"
+  - "  <blue>/report <gray>- <white>Reporte einen verdächtigen Spieler!"
+  - "  <blue>/msg <gray>- <white>Sende einem Spieler eine private Nachricht!"
+  - "  <blue>/party <gray>- <white>Erstelle eine Party!"
+  - "  <blue>/premium /yt <gray>- <white>Erhalte Infos zu den Rängen!"
+  - ""
+
+duration:
+  second: Sekunde
+  seconds: Sekunden
+  minute: Minute
+  minutes: Minuten
+  hour: Stunde
+  hours: Stunden
+  day: Tag
+  days: Tage
+  week: Woche
+  weeks: Wochen
+  month: Monat
+  months: Monate
+  year: Jahr
+  years: Jahre
+  remaining: "<time>"
+  permanent: "<dark_red>Permanent"
+
+login:
+  maintenance:
+    - "<prefix><gray>Du kannst <red><ip> <gray>derzeit nicht betreten."
+    - " <gray>Derzeit sind <red>Wartungsarbeiten<gray>."
+  full:
+    - "<prefix><gray>Das maximale <red>Spielerlimit <gray>von <red><max> <gray>ist erreicht."
+    - "<red>"
+    - "<gray>Nur noch <red>Spieler <gray>mit dem <red>PremiumRang <gray>können noch <red>Joinen!"
+    - "<gray>Discord: <red><discord>"
+  welcome:
+    - "<dark_aqua><strikethrough>-------------------------------------------"
+    - ""
+    - ""
+    - "<prefix><yellow><player><gray> ist neu auf <blue><ip><gray>! <dark_aqua>[#<number>]"
+    - ""
+    - ""
+    - "<dark_aqua><strikethrough>-------------------------------------------"
+
+tab:
+  header:
+    - "<gray>"
+    - " <gray>» <green><ip> <dark_gray>✘ <gold>Dein Netzwerk <gray>« "
+    - " <gold>Derzeit spielen<green> <online>/<max> <gold>Spieler "
+    - " <gray>"
+  footer:
+    - "<gray>"
+    - " <green>Server <dark_gray>» <gold><server> <dark_gray>"
+    - " <green>Discord <dark_gray>» <gold><discord><dark_gray> "
+    - " <green>Forum <dark_gray>» <gold><website> "
+    - "<gray>"
+
+broadcast:
+  teamspeak:
+    - " "
+    - "          <gray>Unsere <green>TeamSpeak<gray> IP:"
+    - "               <green><teamspeak>"
+    - " "
+  youtuber:
+    - " "
+    - "          <gray>Interesse am <dark_purple>YouTuber <gray>Rang?"
+    - "                  <green>/youtuber"
+    - " "
+  discord:
+    - " "
+    - "           <gray>Unser <green>Discord<gray>:"
+    - "                  <green><discord>"
+    - " "
+  premium:
+    - " "
+    - "           <gray>Interesse an einem Rang (<gold>Premium<gray>)?"
+    - "                   <gray>Besuche <green><shop>"
+    - " "
+  report:
+    - " "
+    - "           <gray>Du hast einen <red>Hacker <gray>gesehen?"
+    - "                   <gray>Reporte ihn mit <aqua>/report \\<Spieler> \\<Grund>"
+    - " "
+  support:
+    - " "
+    - "          <gray>Du hast <red>Fragen <gray>oder <red>Probleme?"
+    - "               <gray> Nutze <green>/support"
+    - " "
+
+motd:
+  maintenance-version: "<red>Wartungsmodus <gray><online><dark_gray>/<gray><max>"
+  maintenance-line: "<gray>Der <red>Wartungsmodus<gray> ist derzeit aktiviert!"
+  wrong-version: "<dark_red><bold>Falsche Version!"
+  usage:
+    - "<prefix><red>/motd setdefault \\<motd>"
+    - "<prefix><red>/motd add \\<motd>"
+    - "<prefix><red>/motd del \\<zahl>"
+    - "<prefix><red>/motd clear"
+    - "<prefix><red>/motd list"
+  del-usage: "<prefix><red>/motd del \\<zahl>"
+  del-range: "<prefix><red>/motd del \\<zahl 1-<max>>"
+  list-header: "<prefix><dark_aqua>----------<gold>Motds<dark_aqua>----------"
+  list-default: "<prefix><blue>Default-Motd: <gray><motd>"
+  list-empty: "<prefix>-"
+  list-entry: "<prefix><number>: <gray><motd>"
+  cleared: "<prefix><count> Random-Motds wurden erfolgreich gelöscht!"
+  default-set: "<prefix><gold>Die Default-Motd wurde erfolgreich zu \"<gray><motd><gold>\" geändert!"
+  added: "<prefix><gold>Die Motd \"<gray><motd><gold>\" wurde erfolgreich hinzugefügt!"
+  removed: "<prefix><gold>Die Motd \"<gray><motd><gold>\" wurde erfolgreich gelöscht!"
+
+setmax:
+  current: "<prefix><gray>Es können maximal <aqua><max><gray> Spieler online!"
+  done: "<prefix><gray>Die maximale <aqua>Spieleranzahl<gray> wurde zu <aqua><max><gray> gesetzt!"
+
+ban:
+  use-strafe: "<prefix><red>Nutze Folgendes: <dark_aqua>/strafe"
+  notify:
+    - "<dark_red><bold>Strafe <dark_gray>» <reset><red><player><gray> wurde vom <red>Netzwerk <gray>gesperrt."
+    - "<dark_red><bold>Strafe <dark_gray>» <reset><gray>Grund: <red><reason>"
+    - "<dark_red><bold>Strafe <dark_gray>» <reset><gray>Von: <red><issuer>"
+    - "<dark_red><bold>Strafe <dark_gray>» <reset><gray>Länge: <red><remaining>"
+  screen-temporary:
+    - "<gray>Du wurdest vom <dark_aqua><ip> Netzwerk <gray>gebannt."
+    - " <gray>Grund: <green><reason> "
+    - " "
+    - " <gray>Verbleibende Zeit: <green>"
+    - "<green><remaining>"
+    - " "
+    - " <gray>Unrechter Ban? Stelle einen <dark_aqua>Entbannungsantrag<gray> im Forum:"
+    - " <dark_aqua><website>/Forum "
+    - " <gray>oder auf dem TeamSpeak:"
+    - " <dark_aqua><teamspeak>"
+  screen-permanent:
+    - "<gray>Du wurdest vom <dark_aqua><ip> Netzwerk <gray>gebannt."
+    - " <gray>Grund: <green><reason> "
+    - " "
+    - " <gray>Verbleibende Zeit: <green>"
+    - "<green><remaining>"
+    - " "
+    - " <gray>Unrechter Ban? Stelle einen <dark_aqua>Entbannungsantrag<gray> im Forum:"
+    - " <dark_aqua><website> "
+    - " <gray>oder auf dem TeamSpeak:"
+    - " <dark_aqua><teamspeak>"
+unban:
+  usage: "<prefix><gray>Ausführung:<red> /unban \\<Spieler>"
+  not-banned: "<prefix><gray>Dieser <red>Spieler <gray>ist nicht gebannt."
+  done: "<prefix><gray>Der <red>Spieler <gray>wurde entbannt."
+  notify:
+    - "<dark_red><bold>Strafe <dark_gray>» <reset><gray>Der Spieler <aqua><player> <gray>wurde von <red><issuer> <gray>entbannt."
+tempban:
+  usage: "<prefix><gray>Ausführung:<red> /tempban \\<Spieler> \\<Zeit> \\<Zeitform> \\<Grund>"
+  unbannable: "<prefix><dark_red>Du kannst diesen Spieler nicht bannen!"
+  already-banned: "<prefix><gray>Dieser <red>Spieler <gray>ist bereits gebannt."
+  units:
+    - "<prefix><gray>Verwende folgende Zeitformen"
+    - "<prefix><red>\\<s | m | h | d | w | mon | y>"
+  done: "<prefix><gray>Der Spieler <red><player><gray> wurde erfolgreich gebannt."
+
+mute:
+  use-strafe: "<prefix><gray>Nutze <red>/strafe \\<Name> \\<Grund>"
+  notify:
+    - "<prefix><gray>Der Spieler <red><player> <gray>wurde <gray>gemuted."
+    - "<prefix><gray>Grund: <red><reason>"
+    - "<prefix><gray>Von: <red><issuer>"
+    - "<prefix><gray>Verbleibende Zeit: <red><remaining>"
+  screen-temporary:
+    - "<gray>Du wurdest vom <dark_aqua><ip> Netzwerk <gray>gemuted."
+    - " <gray>Grund: <green><reason> "
+    - " "
+    - " <gray>Verbleibende Zeit: <green>"
+    - "<green><remaining>"
+    - " "
+    - " <gray>Unrechter Mute? Stelle einen <dark_aqua>Entmutungsantrag<gray> im Forum:"
+    - " <dark_aqua><website>/Forum "
+    - " <gray>oder auf dem TeamSpeak:"
+    - " <dark_aqua><teamspeak>"
+  screen-permanent:
+    - "<gray>Du wurdest vom <dark_aqua><ip> Netzwerk <gray>gemuted."
+    - " <gray>Grund: <green><reason> "
+    - " "
+    - " <gray>Verbleibende Zeit: <green>"
+    - "<green><remaining>"
+    - " "
+    - " <gray>Unrechter Mute? Stelle einen <dark_aqua>Entmutungsantrag<gray> im Forum:"
+    - " <dark_aqua><website> "
+    - " <gray>oder auf dem TeamSpeak:"
+    - " <dark_aqua><teamspeak>"
+unmute:
+  usage: "<prefix><gray>Ausführung:<red> /unmute \\<Spieler>"
+  not-muted: "<prefix><gray>Dieser <red>Spieler<gray> ist nicht gemuted."
+  done: "<prefix><gray>Dieser <red>Spieler <gray>wurde erfolgreich entmuted."
+  notify:
+    - "<prefix>Der Spieler <red><player> <gray>wurde von <red><issuer> <gray>entmuted."
+tempmute:
+  usage: "<prefix><red>Ausführung: /tempmute \\<Spieler> \\<Zeit> \\<Zeitform> \\<Grund>"
+  already-muted: "<prefix><red>Dieser Spieler ist bereits gemuted."
+  units:
+    - "<prefix><red>Verwende folgende Zeitformen"
+    - "<prefix><red>\\< s | m | h | d | w >"
+  done: "<prefix><gray>Du hast den Spieler <red><player><gray> erfolgreich gemuted."
+
+banlist:
+  empty: "<prefix><yellow>Derzeit sind keine Spieler gebannt."
+  header: "<prefix><gold>Folgende Spieler sind gebannt: "
+  entry: "<prefix><red><player> <dark_gray>| <gray>/check<red> <player>"
+  count: "<prefix><gold>Gebannte Spieler: <dark_aqua><count>"
+mutelist:
+  empty: "<prefix><gray>Es sind derzeit keine <red>Spieler <gray>gemuted."
+  header: "<prefix><gray>Diese <red>Spieler <gray>sind derzeit Gemuted:"
+  entry: "<prefix><red><player> <dark_gray>| <gray>/check <player>"
+
+kick:
+  usage: "<prefix><gray>Verwende <red>/kick \\<Spieler> \\<Grund>"
+  offline: "<prefix><gray>Dieser <red>Spieler <gray>ist nicht online."
+  done: "<prefix><gray>Du hast den <red>Spieler <gray>erfolgreich vom Netzwerk geworfen."
+  notify:
+    - "<prefix><red><player><gray> wurde von <red><issuer><gray> vom <dark_aqua><ip> Netzwerk <gray>gekickt."
+    - "<prefix><gray>Grund: <green><reason>"
+  screen:
+    - "<gray>Du wurdest vom <dark_aqua><ip> Netzwerk <gray>gekickt. "
+    - " <gray>Grund: <green><reason>"
+
+check:
+  usage: "<prefix><gray>Ausführung: <red>/check \\<Spieler>"
+  banned:
+    - "<prefix><dark_green><strikethrough>---------------------------------"
+    - ""
+    - "<prefix><yellow>Spieler: <green><player>"
+    - "<prefix><yellow>Gebannt von: <dark_aqua><issuer>"
+    - "<prefix><yellow>Grund: <dark_aqua><reason>"
+    - "<prefix><yellow>Verbleibende Zeit: <dark_aqua><remaining>"
+    - ""
+  not-banned:
+    - "<prefix><dark_green><strikethrough>---------------------------------"
+    - ""
+    - "<prefix><gold>Der Spieler ist nicht gebannt."
+    - ""
+  muted:
+    - "<prefix><dark_aqua><strikethrough>---------------------------------"
+    - ""
+    - "<prefix><yellow>Spieler: <green><player>"
+    - "<prefix><yellow>Gemuted von: <dark_aqua><issuer>"
+    - "<prefix><yellow>Grund: <dark_aqua><reason>"
+    - "<prefix><yellow>Verbleibende Zeit: <dark_aqua><remaining>"
+    - ""
+    - "<prefix><dark_green><strikethrough>---------------------------------"
+  not-muted:
+    - "<prefix><dark_aqua><strikethrough>---------------------------------"
+    - ""
+    - "<prefix><gold>Der Spieler ist nicht gemuted."
+    - ""
+    - "<prefix><dark_green><strikethrough>---------------------------------"
+    - ""
+
+strafe:
+  unknown-number: "<dark_red><bold>Strafe <dark_gray>» <reset><red>Diese Nummer ist unbekannt."
+  unbannable: "<dark_red><bold>Strafe <dark_gray>» <reset><red>Du kannst diesen Spieler nicht bannen!"
+  overwrite: "<dark_red><bold>Strafe <dark_gray>» <reset><red>Dieser Spieler wurde bereits bestraft. Seine Strafe wird nun überschrieben..."
+  done: "<dark_red><bold>Strafe <dark_gray>» <reset><green>Du hast den Spieler erfolgreich bestraft."
+  list:
+    - "<red><bold>Hack Strafen"
+    - " <gray><italic>Hacks <dark_gray>| <red>AntiKnockback : <aqua>1"
+    - " <gray><italic>Hacks <dark_gray>| <red>KillAura : <aqua>2"
+    - " <gray><italic>Hacks <dark_gray>| <red>Fly : <aqua>3"
+    - " <gray><italic>Hacks <dark_gray>| <red>Autoclicker : <aqua>4"
+    - " <gray><italic>Hacks <dark_gray>| <red>Speed : <aqua>5"
+    - " <gray><italic>Hacks <dark_gray>| <red>Sonstiges : <aqua>6"
+    - "<green><bold>Beleidigungs Strafen"
+    - " <gray><italic>Beleidigungen <dark_gray>| <red>Team : <aqua>7"
+    - " <gray><italic>Beleidigungen <dark_gray>| <red>Spieler : <aqua>8"
+    - " <gray><italic>Beleidigungen <dark_gray>| <red>Netzwerk : <aqua>9"
+    - "<yellow><bold>Sonstige Strafen"
+    - " <gray><italic>Sonstiges <dark_gray>| <red>Bugusing : <aqua>10"
+    - " <gray><italic>Sonstiges <dark_gray>| <red>Drohung : <aqua>11"
+    - " <gray><italic>Sonstiges <dark_gray>| <red>Radikalismus : <aqua>12"
+    - " <gray><italic>Sonstiges <dark_gray>| <red>Werbung : <aqua>13"
+    - " <gray><italic>Sonstiges <dark_gray>| <red>Combat-Log : <aqua>14"
+    - "<dark_aqua><bold>Weitere Strafen"
+    - " <gray><italic>Weiteres <dark_gray>| <red>Teaming : <aqua>15"
+    - " <gray><italic>Weiteres <dark_gray>| <red>Leichte Beleidigung : <aqua>16"
+    - " <gray><italic>Weiteres <dark_gray>| <red>Respektloses Verhalten: <aqua>17"
+    - " <gray><italic>Weiteres <dark_gray>| <red>Report-Abuse: <aqua>18"
+    - " <gray><italic>Weiteres <dark_gray>| <red>Provokation-Beleidigung: <aqua>19"
+    - " <gray><italic>Weiteres <dark_gray>| <red>Provokation-Allgemein: <aqua>20"
+    - " <gray><italic>Weiteres <dark_gray>| <red>Alt-Account: <aqua>21"
+    - " <gray><italic>Weiteres <dark_gray>| <red>Banumgehung: <aqua>22"
+    - " <gray><italic>Weiteres <dark_gray>| <red>Griefing: <aqua>23"
+    - " <gray><italic>Weiteres <dark_gray>| <red>Extrem : <aqua>24"
+
+strike:
+  usage: "<prefix><red>Falsche Benutzung! <gold>Nutze: <dark_aqua>/strike [Spieler] [Grund]"
+  offline: "<prefix><red>Der Spieler ist nicht online!"
+  target-needs-permission: "<prefix><red>Du musst der Gruppe von <gold><player><red> die Permission geben: <gold><permission>"
+  received: "<prefix><red>Du hast einen <gold><bold>Strike <reset><red>erhalten! <dark_gray>[<aqua>#<count><dark_gray>]"
+  done: "<prefix><gold>Das Teammitglied <dark_red><player><gold> hat einen Strike erhalten!"
+  max-reached: "<prefix><dark_aqua>Der Spieler <gold><player><dark_aqua> hat die maximale Anzahl an Strikes erreicht und wurde gebannt <dark_red>[#<count>]"
+  ban-reason: "Strike-Überschreitung"
+  ban-issuer: "StrikeSystem"
+strikes:
+  not-collected: "<prefix><red>Es werden keine Informationen über dich gesammelt..."
+  header: "<prefix><dark_red>Die Strikes von <player>"
+  count: "<prefix><yellow>Strikes: <dark_red><count>"
+  entry: "<prefix><yellow>Grund<number>: <dark_red><reason> <gray>(<issuer>)"
+  footer: "<prefix><dark_aqua><strikethrough>-----------------------------"
+showstrikes:
+  usage: "<prefix><red>Benutzung: <gold>/showstrikes [Spieler]"
+delstrike:
+  usage: "<prefix><red>Benutzung: <gold>/delstrike [Spieler]"
+  none: "<prefix><red>Der Spieler hat keine Strikes!"
+  done: "<prefix><dark_aqua>Dem Spieler <gold><player><dark_aqua> wurde ein Strike entzogen <dark_red>[#<number>]"
+  received: "<prefix><dark_aqua>Dir wurde ein Strike entzogen! <dark_red>[#<number>]"
+  remaining: "<prefix><gray>Verbleibende Strikes: <gold><remaining>"
+
+warn:
+  usage: "<prefix><red>/warn \\<player> [reason]"
+  self: "<prefix><gray>Du kannst dich nicht selbst warnen!"
+  protected: "<prefix><gray>Du kannst diesen<red> Spieler<gray> nicht warnen."
+  offline: "<prefix><gray>Der <red>Spieler<gray> wurde nicht gefunden oder ist offline! "
+  offline-click: "<green>Hier klicken<red>, um \"<gold><player><red>\" trotzdem zu warnen."
+  offline-hover: "<green><player> trotzdem warnen..."
+  broadcast: "<dark_aqua>Der Spieler <red><bold>\"<player>\"<reset><dark_aqua> bekam einen <gold>Warn <dark_aqua>(<yellow><count><dark_aqua>/<yellow><max><dark_aqua>)."
+  broadcast-reason: "<dark_aqua>Der Spieler <red><bold>\"<player>\"<reset><dark_aqua> bekam einen <gold>Warn <dark_aqua>(<yellow><count><dark_aqua>/<yellow><max><dark_aqua>). <red>Grund: <yellow><reason>"
+  you-have: "<prefix><gold>Du hast <red><count><gold>/<gold><max><red> Warns."
+  kick-screen:
+    - "<red>Du wurdest wegen <gold><count><red>/<red><max><gold> Warns vom Server geworfen."
+  ban-hint:
+    - ""
+    - "<prefix><red>Der Spieler <gold><player><red> sollte jetzt, wegen"
+    - "<prefix><red>zuvielen <yellow>Warns<dark_red> gebannt <red>werden."
+  ban-click: "<green>Hier klicken<red>, um das Bannen von \"<gold><player><red>\" zu bestätigen."
+  ban-hover: "<green><player> vom Server bannen..."
+warns:
+  usage: "<prefix><red>/warns \\<clear|get|list> [player]"
+  clear-all-confirm: "<green>Hier klicken<red>, um das Zurücksetzen aller Warns zu bestätigen."
+  clear-confirm: "<green>Hier klicken<red>, um das Zurücksetzen der Warns von \"<gold><player><red>\" zu bestätigen."
+  clear-hover: "<green>Alle Warns zurücksetzen..."
+  cleared-all: "<prefix><green>Alle Warns wurden erfolgreich resetet."
+  cleared: "<prefix><green>Die <yellow>Warns (<count> Warns) <green>von \"<gold><player><green>\", wurden erfolgreich resetet."
+  get: "<prefix><green>Verwarnungen von <gold><player><green>: <yellow><count><green>."
+  too-many: "<prefix><red>Die Spieler können nicht angezeigt werden. Grund:<yellow> Zu viele Spieler."
+  list-header: "<dark_aqua>----------<gold>Verwarnungen (<count>)<dark_aqua>----------"
+  list-entry: "<prefix><yellow>  <player>: <red><count>"
+werbung:
+  too-many: "<prefix><red>Die Server können nicht angezeigt werden. Grund:<yellow> Zu viele Server."
+  header: "<prefix><dark_aqua>---------<gold>Es sind <count> Server gefunden.<dark_aqua>----------"
+  entry: "<prefix><dark_red><player> <gray>(<server>): <dark_red><message>"
+  cleared: "<prefix><count> Server wurden gefunden."
+
+tc:
+  online-header: "<red>TeamChat <dark_gray>» <reset><gray>Im TeamChat sind gerade diese Spieler:"
+  online-entry: "<gray>   - <red><player><gray> -<red> <server>"
+  usage: "<red>TeamChat <dark_gray>» <reset><gray>Verwende bitte <aqua>/tc \\<message> <gray>um eine Nachricht an alle Team-Mitglieder zu senden."
+  format: "<red>TeamChat <dark_gray>» <reset><aqua><player><reset> (<server>): <blue><message>"
+find:
+  usage: "<prefix>Syntax: /find \\<Spieler>"
+  found: "<prefix><green>Der Spieler befindet sich auf dem Server <dark_aqua><server><green>."
+  offline: "<prefix><yellow>Der Spieler ist nicht online."
+goto:
+  usage: "<prefix>Syntax: /goto \\<Spieler>"
+  offline: "<prefix><yellow>Der Spieler ist nicht online."
+cc:
+  cleared: "<prefix><gray>Der <green>Chat <gray>wurde geleert!"
+globalmute:
+  enabled: "<prefix><gray>Der <yellow>GlobalMute <gray>wurde <green>aktiviert<gray>."
+  disabled: "<prefix><gray>Der <yellow>GlobalMute <gray>wurde <red>deaktiviert<gray>."
+bc:
+  usage: "<prefix><gray>Verwende <red>/bc \\<Nachricht>"
+  format:
+    - ""
+    - "<red>BlockCast <dark_gray><bold>•» <reset><gray><message>"
+    - ""
+wartungen:
+  countdown-60: "<prefix><gray>Das <red><ip> Netzwerk <gray>wird in <red>einer Minute <gray>in den <red>Wartungsmodus <gray>versetzt."
+  countdown-30: "<prefix><gray>Das <red><ip> Netzwerk <gray>wird in <red>30 Sekunden <gray>in den <red>Wartungsmodus <gray>versetzt."
+  countdown-10: "<prefix><gray>Das <red><ip> Netzwerk <gray>wird in <red>10 Sekunden <gray>in den <red>Wartungsmodus <gray>versetzt."
+  countdown-5: "<prefix><gray>Das <red><ip> Netzwerk <gray>wird in <red>5 Sekunden <gray>in den <red>Wartungsmodus <gray>versetzt."
+  enabled: "<prefix><gray>Das <red><ip> Netzwerk <gray>befindet sich <red>nun <gray>im <red>Wartungsmodus<gray>."
+  enabled-now: "<prefix><gold>Wartungsmodus wurde aktiviert."
+  disabled: "<prefix><gold>Wartungsmodus wurde deaktiviert."
+  kick-screen:
+    - "<prefix><gray>Das <red><ip> Netzwerk <gray>befindet sich nun im <red>Wartungsmodus. "
+    - " <gray>Das <red>Betreten <gray>des <red>Netzwerkes<gray> ist derzeit nicht möglich."
+restart:
+  countdown-60: "<prefix><gray>Das <red><ip> Netzwerk <gray>startet in <red>einer Minute <gray>neu."
+  countdown-30: "<prefix><gray>Das <red><ip> Netzwerk <gray>startet in <red>30 Sekunden <gray>neu."
+  countdown-10: "<prefix><gray>Das <red><ip> Netzwerk <gray>startet in <red>10 Sekunden <gray>neu."
+  countdown-5: "<prefix><gray>Das <red><ip> Netzwerk <gray>startet in <red>5 Sekunden <gray>neu."
+  kick-screen: "<prefix><gray>Der Server restartet."
+addpremium:
+  usage: "<prefix><red>/addpremium \\<Spieler>"
+  done: "<prefix><dark_aqua>Du hast die <yellow>Berechtigung <dark_aqua>erfolgreich hinzugefügt."
+  has-rights: "<prefix><yellow><player><dark_aqua> hat nun die <yellow>Rechte<dark_aqua>."
+  unavailable: "<prefix><red>LuckPerms ist nicht verfügbar."
+serverjoin:
+  unknown: "<prefix><red>Der Server ist nicht verfügbar."
+list:
+  lines:
+    - "<gray><bold><strikethrough>------------  <yellow><bold><ip> Netzwerk <dark_gray><bold>- <gray><bold>List <gray><bold><strikethrough>------------"
+    - " "
+    - "<gray>Spieler auf dem Netzwerk: <green><network>"
+    - "<gray>Spieler auf <red><server><gray>:<green> <count>"
+    - " "
+    - "<gray><bold><strikethrough>------------  <yellow><bold><ip> Netzwerk <dark_gray><bold>- <gray><bold>List <gray><bold><strikethrough>------------"
+
+hub:
+  unavailable: "<prefix><red>Derzeit sind keine Lobby-Server verfügbar."
+  already: "<prefix><red>Du bist bereits auf der Lobby."
+  connecting: "<prefix><green>Du wirst zur <aqua>Lobby <green>verbunden."
+ping: "<prefix><gray>Dein Ping beträgt: <green><ping><gray>ms."
+online: "<prefix><gray>Es sind momentan <yellow><count> <gray>Spieler online."
+mod: "<prefix><gray>Es sind <yellow><count> <gray>Teammitglieder online."
+premium:
+  - "<dark_gray>● <blue>INFORMATIONEN ZUM <gold>PREMIUM<dark_gray>-<blue>RANG <dark_gray>●"
+  - "  <gray>Du möchtest den <gold>Premium<dark_gray>-<gray>Rang kaufen und uns so unterstützen?"
+  - "  <gray>Dann besuche unseren Shop: <underlined><shop>"
+  - "  <gray>Unsere Preise<dark_gray>:"
+  - "  <dark_gray>» <white>3 Monate<dark_gray>: <gray>10€"
+  - "  <dark_gray>» <white>Lifetime<dark_gray>: <gray>30€"
+youtuber:
+  info:
+    - "<dark_gray>● <blue>INFORMATIONEN ZUM <dark_purple>YOUTUBER<dark_gray>-<blue>RANG <dark_gray>●"
+    - ""
+    - "<gray>Verwende <red>/youtuber 250 <gray>um die <red>Anforderungen <gray>für <red>Premium+ <gray>zu sehen."
+    - "<gray>Verwende <red>/youtuber 500 <gray>um die <red>Anforderungen <gray>für <red>YouTuber <gray>zu sehen."
+  requirements-500:
+    - "<dark_gray>● <blue>Vorraussetzungen für <red>YOUTUBER<dark_gray>-<blue>RANG <dark_gray>●"
+    - ""
+    - "<dark_gray>» <gray>Dein <red>Kanal <gray>muss mindestens <red>500 Abonnenten<gray> besitzen."
+    - "<dark_gray>» <gray>Du benötigst eine angemessene <red>Klickzahl<gray>."
+    - "<dark_gray>» <gray>Ebenfalls musst du mindestens <red>1 Video <gray>aufnehmen."
+    - "<dark_gray>» <gray>Dieses <red>Video <gray>muss in angemessener <red>Qualität <gray>und <red>Länge <gray>sein."
+    - "<gray>Alles erfüllt? Beantrage den <red>YouTuber <gray>Rang im Forum <red><website>"
+  requirements-250:
+    - "<dark_gray>● <blue>Vorraussetzungen für <red>PREMIUM+<dark_gray>-<blue>RANG <dark_gray>●"
+    - ""
+    - "<dark_gray>» <gray>Dein <red>Kanal <gray>muss mindestens <red>250 Abonnenten<gray> besitzen."
+    - "<dark_gray>» <gray>Du benötigst eine angemessene <red>Klickzahl<gray>."
+    - "<dark_gray>» <gray>Ebenfalls musst du mindestens <red>1 Video <gray>aufnehmen."
+    - "<dark_gray>» <gray>Dieses <red>Video <gray>muss in angemessener <red>Qualität <gray>und <red>Länge <gray>sein."
+    - "<gray>Alles erfüllt? Beantrage den <red>Premium+ <gray>Rang im Forum <red><website>"
+joinme:
+  limit: "<prefix><red>Du hast diesen Befehl schon zu oft benutzt."
+  cleared: "<prefix><red>Du hast alle JoinMe Einträge geleert!"
+  frame: "<gold><obfuscated>|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||"
+  click: "<dark_gray>» <gray>KLICKE HIER, um den <yellow>Server <gray>zu <yellow>betreten<gray>!"
+  click-hover: "<red>Verbinden"
+  game:
+    default: "<dark_gray>» <gold><player><gray> spielt jetzt!"
+    knockbackffa: "<dark_gray>» <gold><player><gray> spielt <yellow>KnockbackFFA<gray>!"
+    pvp: "<dark_gray>» <gold><player><gray> spielt <yellow>PVP<gray>!"
+    bedwars: "<dark_gray>» <gold><player><gray> spielt <yellow>Bedwars<gray>!"
+    skywars: "<dark_gray>» <gold><player><gray> spielt <yellow>Skywars<gray>!"
+    tradewars: "<dark_gray>» <gold><player><gray> spielt <yellow>Tradewars<gray>!"
+    bauserver: "<dark_gray>» <gold><player><gray> spielt auf dem <yellow>Bauserver<gray>!"
+
+support:
+  already-open: "<gold>Support <dark_gray>» <reset><red>Du hast bereits einen offenen Supportantrag. Bitte warte, bis ein Supporter diesen bearbeitet."
+  opened:
+    - "<gold>Support <dark_gray>» <reset><green>Du hast Support erfolgreich beantragt!"
+    - "<gold>Support <dark_gray>» <reset><aqua>Verwende /support \\<Nachricht> um eine Nachricht an einen Supporter zu senden, sobald ein Supporter dem Chat beigetreten ist."
+  staff-notify:
+    - "<dark_green><strikethrough>---------------------------------"
+    - "<gold>Support <dark_gray>» <reset><yellow>Der Spieler <gold><player><yellow> hat Support beantragt."
+    - "<gold>Support <dark_gray>» <reset><yellow>Nutze <gold>/support accept <player><yellow> um den Supportantrag zu übernehmen."
+  staff-click: "<gold>Support <dark_gray>» <reset><yellow>Klicke <aqua><bold>HIER<reset><yellow> um den Supportantrag zu bearbeiten!"
+  staff-click-hover: "<red>Klicke, um den Supportantrag zu bearbeiten."
+  staff-footer: "<dark_green><strikethrough>---------------------------------"
+  accept-usage: "<gold>Support <dark_gray>» <reset><red>Bitte verwende: /support accept \\<Spieler>"
+  close-usage: "<gold>Support <dark_gray>» <reset><red>Bitte verwende: /support close \\<Spieler>"
+  target-offline: "<gold>Support <dark_gray>» <reset><red>Der Spieler <gold><player><red> ist nicht online."
+  no-request: "<gold>Support <dark_gray>» <reset><red>Dieser Spieler hat keinen offenen Supportantrag."
+  already-assigned: "<gold>Support <dark_gray>» <reset><red>Der Supportantrag des Spielers <gold><player><red> wird bereits von einem anderen Supporter bearbeitet."
+  accepted: "<gold>Support <dark_gray>» <reset><green>Du bist nun im Support für <gold><player><green>."
+  accepted-notify: "<gold>Support <dark_gray>» <reset><green><staff> hat deinen Supportantrag angenommen. Bitte schildere dein Anliegen mit /support \\<Nachricht>."
+  not-yours: "<gold>Support <dark_gray>» <reset><red>Du bearbeitest derzeit keinen Supportantrag für diesen Spieler."
+  closed: "<gold>Support <dark_gray>» <reset><green>Du hast den Support für <gold><player><green> beendet."
+  closed-notify: "<gold>Support <dark_gray>» <reset><green><staff> hat den Support beendet. Danke für deine Geduld."
+  no-own-request: "<gold>Support <dark_gray>» <reset><red>Du hast keinen aktiven Supportantrag. Verwende /support um einen zu erstellen."
+  wait: "<gold>Support <dark_gray>» <reset><red>Bitte warte, bis ein Supporter deinen Antrag angenommen hat."
+  supporter-offline: "<gold>Support <dark_gray>» <reset><red>Der Supporter, der deinen Antrag angenommen hat, ist nicht mehr online."
+  empty-message: "<gold>Support <dark_gray>» <reset><red>Bitte gib eine gültige Nachricht ein."
+  chat: "<red><player> : <gray><message>"
+
+party:
+  help:
+    - "<dark_gray>● <blue>INFORMATIONEN ZUR PARTY <dark_gray>●"
+    - ""
+    - "<gold>Party <dark_gray>» <reset><yellow>Zeige diese Liste: <aqua>/party help"
+    - "<gold>Party <dark_gray>» <reset><yellow>Lade Spieler ein: <aqua>/party invite \\<Player>"
+    - "<gold>Party <dark_gray>» <reset><yellow>Zeige alle Member: <aqua>/party list"
+    - "<gold>Party <dark_gray>» <reset><yellow>Verlasse die Party: <aqua>/party leave"
+    - "<gold>Party <dark_gray>» <reset><yellow>Nehme Einladungen an: <aqua>/party accept"
+    - "<gold>Party <dark_gray>» <reset><yellow>Kicke einen Spieler: <aqua>/party kick \\<Player>"
+    - "<gold>Party <dark_gray>» <reset><yellow>Springe auf den Server: <aqua>/party join \\<Leader>"
+    - "<gold>Party <dark_gray>» <reset><yellow>Party-Chat: <aqua>/pc \\<Message>"
+  join-usage: "<gold>Party <dark_gray>» <reset><yellow>Verwende: <aqua>/party join \\<Leader>"
+  invite-usage: "<gold>Party <dark_gray>» <reset><yellow>Verwende: <aqua>/party invite \\<Player>"
+  invite-no-permission: "<gold>Party <dark_gray>» <reset><red>Du hast keine Berechtigung, Spieler einzuladen."
+  kick-usage: "<gold>Party <dark_gray>» <reset><yellow>Verwende: <aqua>/party kick \\<Player>"
+  kick-no-permission: "<gold>Party <dark_gray>» <reset><red>Du hast keine Berechtigung, Spieler zu kicken."
+  target-offline: "<gold>Party <dark_gray>» <reset><red>Dieser Spieler ist nicht online."
+  target-not-leader: "<gold>Party <dark_gray>» <reset><red>Dieser Spieler ist kein Party-Leader."
+  target-in-party: "<gold>Party <dark_gray>» <reset><red>Dieser Spieler ist bereits in einer Party."
+  already-in-party: "<gold>Party <dark_gray>» <reset><yellow>Du bist bereits in einer Party."
+  not-in-party: "<gold>Party <dark_gray>» <reset><yellow>Du bist in keiner Party."
+  only-leader-invites: "<gold>Party <dark_gray>» <reset><red>Nur Party-Leader können Spieler einladen."
+  only-leader-kicks: "<gold>Party <dark_gray>» <reset><red>Nur Party-Leader können Spieler kicken."
+  not-leader: "<gold>Party <dark_gray>» <reset><yellow>Du bist kein Party-Leader."
+  not-your-member: "<gold>Party <dark_gray>» <reset><yellow>Dieser Spieler ist nicht in deiner Party."
+  created: "<gold>Party <dark_gray>» <reset><green>Du hast eine neue Party erstellt."
+  list-leader: "<gold>Party <dark_gray>» <reset><green>Leader: <gold><player> <green>- <aqua><server>"
+  list-members: "<gold>Party <dark_gray>» <reset><green>Mitglieder:"
+  list-member: "<gold>Party <dark_gray>» <reset><gold><player> <green>- <aqua><server>"
+  leader-offline: "<gold>Party <dark_gray>» <reset><red>Der Party-Leader ist nicht online."
+  disbanded-by-leave: "<gold>Party <dark_gray>» <reset><red>Der Party-Leader hat die Party verlassen. Die Party wurde aufgelöst."
+  disbanded-by-disconnect: "<gold>Party <dark_gray>» <reset><red>Die Party wurde aufgelöst, da der Leader die Verbindung getrennt hat."
+  left-and-disbanded: "<gold>Party <dark_gray>» <reset><red>Du hast die Party verlassen und sie wurde aufgelöst."
+  left: "<gold>Party <dark_gray>» <reset><red>Du hast die Party verlassen."
+  member-left: "<gold>Party <dark_gray>» <reset><gold><player> <red>hat die Party verlassen."
+  full: "<gold>Party <dark_gray>» <reset><red>Die Party ist voll."
+  invited: "<gold>Party <dark_gray>» <reset><green>Du hast <gold><player><green> zur Party eingeladen."
+  invite-received: "<gold>Party <dark_gray>» <reset><gold><player><green> hat dich zur Party eingeladen."
+  invite-accept: "<gold>Party <dark_gray>» <reset><green>Betrete die Party mit <aqua>/party accept<green>."
+  invite-accept-hover: "<yellow>Klicke, um die Einladung anzunehmen."
+  not-invited: "<gold>Party <dark_gray>» <reset><yellow>Du wurdest nicht eingeladen."
+  invite-expired: "<gold>Party <dark_gray>» <reset><red>Diese Einladung ist abgelaufen."
+  joined: "<gold>Party <dark_gray>» <reset><green>Du hast die Party von <gold><player><green> betreten."
+  member-joined-leader: "<gold>Party <dark_gray>» <reset><gold><player><green> hat die Party betreten."
+  member-joined: "<gold>Party <dark_gray>» <reset><gold><player><green> ist der Party beigetreten."
+  kicked: "<gold>Party <dark_gray>» <reset><red>Du wurdest aus der Party von <gold><player><red> entfernt."
+  kicked-leader: "<gold>Party <dark_gray>» <reset><green>Du hast <gold><player><green> aus der Party entfernt."
+  kicked-members: "<gold>Party <dark_gray>» <reset><gold><player><red> wurde aus der Party entfernt."
+  chat: "<gold>Party <dark_gray>» <reset><red><player> <white>: <gray><yellow><message>"
+  chat-usage: "<gold>Party <dark_gray>» <reset><yellow>Bitte gib eine Nachricht ein, um sie an deine Party zu senden."
+  chat-empty: "<gold>Party <dark_gray>» <reset><yellow>Die Nachricht darf nicht leer sein."
+  leader-moved: "<gold>Party <dark_gray>» <reset><green>Die Party hat den Server <aqua><server><green> betreten."
+  following: "<gold>Party <dark_gray>» <reset><green>Die Party betritt den Server <aqua><server><green>."

@@ -1,0 +1,90 @@
+database:
+  host: localhost
+  port: 3306
+  database: blockcraft
+  username: blockcraft
+  password: blockcraft
+
+network:
+  ip: BlockcraftMC.net
+  website: https://BlockcraftMC.net
+  shop: https://shop.BlockcraftMC.net
+  teamspeak: ts.BlockcraftMC.net
+  discord: https://discord.gg/kh3xaQ3
+
+lobby-server: lobby
+
+# Edited in-game by /setmax and /motd; MOTD lines use legacy & colour codes.
+max-players: 100
+motd:
+  default: "&cBlockcraft.net"
+  random: []
+
+max-warns: 8
+max-strikes: 5
+auto-broadcast-minutes: 5
+
+joinme:
+  daily-limit: 6
+  reset-hour: 0
+
+# Server name prefix -> messages.yml key joinme.game.<value>
+joinme-games:
+  KFFA: knockbackffa
+  1vs1: pvp
+  NoHitDelay: pvp
+  SoupPvP: pvp
+  BW: bedwars
+  SW: skywars
+  EM: tradewars
+  BauServer: bauserver
+
+unbannable:
+  - Aquitano
+
+# Exact commands (without the slash) players need blockcraft.system.blockedcommands.bypass to run.
+blocked-commands:
+  - plugins
+  - demote
+  - promote
+  - "permissionsex:"
+  - pex
+  - pl
+  - "?"
+  - bungee
+  - me
+  - "bukkit:plugins"
+  - "bukkit:pl"
+  - "bukkit:?"
+  - "bukkit:help"
+  - "bukkit:me"
+  - version
+  - tell
+  - "minecraft:me"
+
+# /strafe catalogue. duration: <n>s|m|h|d|w|mon|y or permanent.
+punishments:
+  1: {type: BAN, reason: "Hacking Anti-Knockback", duration: 16d}
+  2: {type: BAN, reason: "Hacking KillAura", duration: 20d}
+  3: {type: BAN, reason: "Hacking Fly", duration: 14d}
+  4: {type: BAN, reason: "Hacking Autoclicker", duration: 14d}
+  5: {type: BAN, reason: "Hacking Speed", duration: 12d}
+  6: {type: BAN, reason: "Hacking Sonstiges", duration: 21d}
+  7: {type: MUTE, reason: "Beleidigungen Team", duration: 3d}
+  8: {type: MUTE, reason: "Beleidigungen Spieler", duration: 2d}
+  9: {type: MUTE, reason: "Beleidigungen Netzwerk", duration: 1d}
+  10: {type: BAN, reason: "Fehlverhalten Bugusing", duration: 12h}
+  11: {type: BAN, reason: "Fehlverhalten Drohung", duration: permanent}
+  12: {type: BAN, reason: "Fehlverhalten Radikalismus", duration: permanent}
+  13: {type: BAN, reason: "Fehlverhalten Werbung", duration: 20d}
+  14: {type: BAN, reason: "Fehlverhalten Combat-Log", duration: 1h}
+  15: {type: BAN, reason: "Fehlverhalten Teaming", duration: 3601s}
+  16: {type: MUTE, reason: "Oberflächliche Beleidigung", duration: 1801s}
+  17: {type: MUTE, reason: "Respektloses Verhalten", duration: 2701s}
+  18: {type: BAN, reason: "Report-Abuse", duration: 3601s}
+  19: {type: MUTE, reason: "Provokante Ausdrucksweise", duration: 7201s}
+  20: {type: BAN, reason: "Provokation (Allgemein)", duration: 3601s}
+  21: {type: BAN, reason: "Alt-Account", duration: permanent}
+  22: {type: BAN, reason: "Banumgehung", duration: permanent}
+  23: {type: BAN, reason: "Griefing", duration: permanent}
+  24: {type: BAN, reason: "Extrem - Extrem kommt zu stande, indem gegen sehr viele Regeln oft und stark verstoßen wird.", duration: permanent}
