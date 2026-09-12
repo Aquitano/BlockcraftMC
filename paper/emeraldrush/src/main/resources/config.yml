@@ -1,6 +1,5 @@
 MapName: "MapName"
 MinPlayers: 2
-lobby-server: lobby
 emeralds-per-ore: 12
 ore-respawn-seconds: 12
 countdown:

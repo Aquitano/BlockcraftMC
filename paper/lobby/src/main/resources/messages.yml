@@ -1,5 +1,4 @@
 prefix: "<gold>Blockcraft <dark_gray>» <reset>"
-motd: "<red>BlockcraftMC.net Network"
 join:
   title: "<blue>BlockcraftMC.net"
   subtitle: "<gray>Willkommen!"
@@ -26,6 +25,7 @@ premium:
 navigator:
   title: "<dark_gray>» <blue>Navigator"
   lore: "<dark_gray>● <gray>Klicke zum Teleportieren."
+  online: "<dark_gray>● <gray><online> Spieler online"
   qsg: "<dark_gray>» <blue>QSG"
   duell: "<dark_gray>» <blue>Duell"
   shop: "<dark_gray>» <blue>Shop"

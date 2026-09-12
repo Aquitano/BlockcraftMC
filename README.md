@@ -73,6 +73,11 @@ also StatusSigns and ReportsMenu); `docker-compose.yml` is the place that says w
 plugin data live in named volumes: `docker compose down` keeps them, `docker compose down -v` starts over. After a
 code change, `./gradlew stagePlugins` and `docker compose restart <server>` pick up the new jars.
 
+In the lobby, `/createsign quicksg` while looking at a sign makes a status sign for that group, `/setspawn qsg` and
+friends place the navigator warps, and `/play quicksg` joins a game from anywhere. To run several instances of a
+game, remove that service's `hostname:` line (instances then announce themselves under their container id) and
+`docker compose up -d --scale quicksg=3`.
+
 `docker compose logs -f lobby` follows a server and `docker compose exec lobby rcon-cli <command>` runs a command.
 LuckPerms answers only on the real console, so on a fresh database run
 
@@ -99,18 +104,24 @@ behalf and drop `ranks.json.gz` next to LuckPerms; on a fresh database run `lp i
 
 Both flavours share the database and announce a server called `lobby`, so run one of them at a time.
 
-## Server discovery
+## Server discovery and groups
 
-The proxy keeps no server list. Every Paper server writes a heartbeat row (name, host, port) to `bc_servers` through
-BlockcraftAPI, and BlockcraftSystem on the proxy registers each server with a fresh heartbeat and drops those whose
-heartbeat went stale (`discovery` in its `config.yml`). `[servers]` in `velocity.toml` stays empty; players land on
-`lobby-server`. Servers listed in `velocity.toml` anyway keep their static address.
+The proxy keeps no server list. Every Paper server writes a heartbeat row (name, group, address, state, player
+count) to `bc_servers` through BlockcraftAPI, and BlockcraftSystem on the proxy registers each server with a fresh
+heartbeat and drops those whose heartbeat went stale (`discovery` in its `config.yml`). `[servers]` in
+`velocity.toml` stays empty; servers listed there anyway keep their static address.
 
-A server announces itself as `BLOCKCRAFT_SERVER_NAME`, falling back to `HOSTNAME` (the container or pod name), at
-`BLOCKCRAFT_SERVER_HOST`, falling back to the address of the interface that reaches the database, on its
-`server-port`. Set the two variables when several servers share a host or the proxy reaches them through another
-address. The same works unchanged on Kubernetes: one Deployment per game mode, the pod name becomes the server name
-and the pod IP its address.
+Servers of one game form a group, and players join groups, not servers: `/play <group>`, a status sign or a game's
+"back to the lobby" item ask the proxy, which picks the instance. Games fill the fullest open instance, lobbies
+(`lobby-group`) take the emptiest. A server is open while its state is `LOBBY` and it has room; the game plugins
+switch the state to `INGAME` and `RESTART` as rounds run, and the lobby's status signs and navigator show the group's
+state and player count from the same table.
+
+A server announces itself as `BLOCKCRAFT_SERVER_NAME`, falling back to `HOSTNAME` (the container or pod name), in
+group `BLOCKCRAFT_SERVER_GROUP`, falling back to its name, at `BLOCKCRAFT_SERVER_HOST`, falling back to the address
+of the interface that reaches the database, on its `server-port`. Set the variables when several servers share a
+host or the proxy reaches them through another address. The same works unchanged on Kubernetes: one Deployment per
+group, the pod name becomes the server name and the pod IP its address.
 
 ## Deploy
 

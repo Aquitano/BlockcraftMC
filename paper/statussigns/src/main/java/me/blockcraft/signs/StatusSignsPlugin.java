@@ -1,13 +1,13 @@
 package me.blockcraft.signs;
 
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
+import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.common.config.YamlFile;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.signs.command.CreateSignCommand;
 import me.blockcraft.signs.listener.SignClickListener;
 import me.blockcraft.signs.sign.SignRenderer;
 import me.blockcraft.signs.sign.SignStore;
-import me.blockcraft.signs.sign.StatusPinger;
 import me.blockcraft.signs.sign.StatusSigns;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -19,14 +19,15 @@ public final class StatusSignsPlugin extends JavaPlugin {
     public void onEnable() {
         saveDefaultConfig();
         var config = YamlFile.loadWithDefaults(getDataPath().resolve("config.yml"), () -> getResource("config.yml"));
-        var ping = YamlFile.section(config, "ping");
-        long intervalTicks = ((Number) ping.getOrDefault("interval-ticks", 50)).longValue();
-        int timeoutMillis = ((Number) ping.getOrDefault("timeout-millis", 1500)).intValue();
+        var refresh = YamlFile.section(config, "refresh");
+        long intervalTicks = ((Number) refresh.getOrDefault("interval-ticks", 50)).longValue();
+        int staleSeconds = ((Number) refresh.getOrDefault("stale-seconds", 20)).intValue();
         var messages = Messages.load(getDataPath(), () -> getResource("messages.yml"));
 
         signs = new StatusSigns(this,
                 new SignStore(getDataPath().resolve("signs.yml"), getLogger()),
-                new StatusPinger(timeoutMillis),
+                BlockcraftApi.get().servers(),
+                staleSeconds,
                 new SignRenderer(messages));
         getLogger().info(signs.load() + " signs loaded");
         signs.start(intervalTicks);

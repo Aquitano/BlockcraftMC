@@ -25,7 +25,7 @@ public final class SystemConfig {
     public record Network(String ip, String website, String shop, String teamspeak, String discord) {
     }
 
-    public record JoinMe(int dailyLimit, int resetHour, Map<String, String> gamesByServerPrefix) {
+    public record JoinMe(int dailyLimit, int resetHour) {
     }
 
     public record Discovery(int pollSeconds, int staleSeconds) {
@@ -35,7 +35,7 @@ public final class SystemConfig {
     private final Map<String, Object> root;
     private final DatabaseConfig database;
     private final Network network;
-    private final String lobbyServer;
+    private final String lobbyGroup;
     private final Discovery discovery;
     private final int maxWarns;
     private final int maxStrikes;
@@ -55,16 +55,14 @@ public final class SystemConfig {
         var network = YamlFile.section(root, "network");
         this.network = new Network(string(network, "ip"), string(network, "website"), string(network, "shop"),
                 string(network, "teamspeak"), string(network, "discord"));
-        this.lobbyServer = string(root, "lobby-server");
+        this.lobbyGroup = string(root, "lobby-group");
         var discovery = YamlFile.section(root, "discovery");
         this.discovery = new Discovery(number(discovery, "poll-seconds", 5), number(discovery, "stale-seconds", 20));
         this.maxWarns = number(root, "max-warns", 8);
         this.maxStrikes = number(root, "max-strikes", 5);
         this.autoBroadcastMinutes = number(root, "auto-broadcast-minutes", 5);
         var joinMe = YamlFile.section(root, "joinme");
-        this.joinMe = new JoinMe(number(joinMe, "daily-limit", 6), number(joinMe, "reset-hour", 0),
-                YamlFile.section(root, "joinme-games").entrySet().stream()
-                        .collect(Collectors.toUnmodifiableMap(entry -> String.valueOf(entry.getKey()), entry -> String.valueOf(entry.getValue()))));
+        this.joinMe = new JoinMe(number(joinMe, "daily-limit", 6), number(joinMe, "reset-hour", 0));
         this.unbannable = strings(root, "unbannable").stream().map(String::toLowerCase).collect(Collectors.toUnmodifiableSet());
         this.blockedCommands = strings(root, "blocked-commands").stream().map(String::toLowerCase).collect(Collectors.toUnmodifiableSet());
         this.punishments = presets(YamlFile.section(root, "punishments"));
@@ -86,8 +84,8 @@ public final class SystemConfig {
         return network;
     }
 
-    public String lobbyServer() {
-        return lobbyServer;
+    public String lobbyGroup() {
+        return lobbyGroup;
     }
 
     public Discovery discovery() {

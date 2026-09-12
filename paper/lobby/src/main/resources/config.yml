@@ -24,3 +24,10 @@ jump-pad:
   max-length: 6.0
 player-hider:
   cooldown-millis: 3000
+# Navigator entry -> server group whose player count it shows; stale-seconds matches the proxy's discovery setting.
+navigator:
+  groups:
+    qsg: quicksg
+    rush: emeraldrush
+    duell: duell
+  stale-seconds: 20

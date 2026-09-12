@@ -1,7 +1,4 @@
 prefix: "<blue>EmeraldRush <dark_gray>» <reset>"
-motd:
-  lobby: "<green>-------------"
-  ingame: "<gold>-------------"
 lobby:
   cancelled: "<prefix><red>Zu wenige Spieler, der Countdown wurde abgebrochen."
   welcome:

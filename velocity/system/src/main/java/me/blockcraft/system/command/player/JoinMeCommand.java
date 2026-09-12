@@ -7,6 +7,7 @@ import me.blockcraft.common.message.Messages;
 import me.blockcraft.system.SystemConfig;
 import me.blockcraft.system.SystemPermissions;
 import me.blockcraft.system.command.CommandSupport;
+import me.blockcraft.system.network.ServerDirectory;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
@@ -23,13 +24,15 @@ public final class JoinMeCommand {
     private final CommandSupport support;
     private final ProxyServer proxy;
     private final SystemConfig config;
+    private final ServerDirectory directory;
     private final Messages messages;
     private final Map<UUID, Integer> usesToday = new ConcurrentHashMap<>();
 
-    public JoinMeCommand(CommandSupport support, ProxyServer proxy, SystemConfig config, Messages messages) {
+    public JoinMeCommand(CommandSupport support, ProxyServer proxy, SystemConfig config, ServerDirectory directory, Messages messages) {
         this.support = support;
         this.proxy = proxy;
         this.config = config;
+        this.directory = directory;
         this.messages = messages;
     }
 
@@ -75,11 +78,8 @@ public final class JoinMeCommand {
         }
     }
 
+    /** messages.yml names games by their group: {@code joinme.game.<group>}. */
     private String gameKey(String server) {
-        return config.joinMe().gamesByServerPrefix().entrySet().stream()
-                .filter(entry -> server.startsWith(entry.getKey()))
-                .map(Map.Entry::getValue)
-                .findFirst()
-                .orElse("default");
+        return directory.groupOf(server).filter(group -> messages.has("joinme.game." + group)).orElse("default");
     }
 }

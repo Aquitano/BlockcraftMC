@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 
 public record DuellConfig(
-        String hubServer,
         String globalStatsHead,
         Countdowns countdowns,
         int winCoins,
@@ -46,7 +45,6 @@ public record DuellConfig(
                         entry.get("weight") instanceof Number weight ? weight.intValue() : 1))
                 .toList();
         return new DuellConfig(
-                config.getString("hub-server", "lobby"),
                 config.getString("global-stats-head", "Kevos"),
                 new Countdowns(
                         countdown.getInt("lobby", 30),

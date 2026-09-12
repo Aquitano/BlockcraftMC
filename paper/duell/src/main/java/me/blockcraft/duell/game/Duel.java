@@ -1,10 +1,12 @@
 package me.blockcraft.duell.game;
 
 import me.blockcraft.api.coins.CoinsRepository;
+import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.api.task.Countdown;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.common.network.ServerState;
 import me.blockcraft.duell.config.DuellConfig;
 import me.blockcraft.duell.config.Spawns;
 import me.blockcraft.duell.storage.StatColumn;
@@ -34,7 +36,7 @@ import java.util.stream.Stream;
 
 public final class Duel {
 
-    private static final int MAX_PARTICIPANTS = 2;
+    public static final int MAX_PARTICIPANTS = 2;
     private static final Set<Integer> LOBBY_ANNOUNCEMENTS = Set.of(15, 10, 5, 4, 3, 2, 1);
     private static final Set<Integer> ROUND_ANNOUNCEMENTS = Set.of(60, 30, 10);
     private static final Set<Integer> RESTART_ANNOUNCEMENTS = Set.of(5, 4, 3, 2);
@@ -283,7 +285,7 @@ public final class Duel {
 
     private void startRound() {
         lobbyCountdown = null;
-        phase = GamePhase.INGAME;
+        setPhase(GamePhase.INGAME);
         pvp = mode != DuelMode.SUPERJUMP;
         Bukkit.broadcast(messages.get("lobby.started"));
         var maps = config.maps(mode);
@@ -320,6 +322,15 @@ public final class Duel {
         return playable.length == 0 ? 1 : playable[random.nextInt(playable.length)];
     }
 
+    private void setPhase(GamePhase phase) {
+        this.phase = phase;
+        BlockcraftApi.get().presence().state(switch (phase) {
+            case LOBBY -> ServerState.LOBBY;
+            case INGAME -> ServerState.INGAME;
+            case ENDING -> ServerState.RESTART;
+        });
+    }
+
     private void teleportToMapSpawn(Player player, int slot) {
         mapSpawn(slot).ifPresentOrElse(player::teleport,
                 () -> plugin.getLogger().warning("No spawn set for " + mode.setupKey() + " map " + mapNumber + " player " + slot));
@@ -353,7 +364,7 @@ public final class Duel {
         if (phase == GamePhase.ENDING) {
             return;
         }
-        phase = GamePhase.ENDING;
+        setPhase(GamePhase.ENDING);
         cancel(roundTimer);
         cancel(freezeCountdown);
         frozen = false;
@@ -365,7 +376,7 @@ public final class Duel {
                 Bukkit.broadcast(restartMessage(remaining));
             }
             if (remaining == 1) {
-                Bukkit.getOnlinePlayers().forEach(online -> ProxyMessaging.connect(plugin, online, config.hubServer()));
+                Bukkit.getOnlinePlayers().forEach(online -> ProxyMessaging.hub(plugin, online));
             }
         }, Bukkit::shutdown);
     }

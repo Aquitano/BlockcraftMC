@@ -1,8 +1,5 @@
 prefix: "<blue>QuickSG <dark_gray>» <reset>"
 
-motd:
-  lobby: "<green><strikethrough>-------------"
-
 actionbar: "<dark_red>Teams Verboten"
 
 join:

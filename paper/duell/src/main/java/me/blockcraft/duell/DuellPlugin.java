@@ -13,7 +13,6 @@ import me.blockcraft.duell.game.LootChests;
 import me.blockcraft.duell.game.TopList;
 import me.blockcraft.duell.listener.ConnectionListener;
 import me.blockcraft.duell.listener.LobbyItemListener;
-import me.blockcraft.duell.listener.MotdListener;
 import me.blockcraft.duell.listener.ProtectionListener;
 import me.blockcraft.duell.listener.SgListener;
 import me.blockcraft.duell.listener.SuperJumpListener;
@@ -46,15 +45,15 @@ public final class DuellPlugin extends JavaPlugin {
 
         var items = new GameItems(messages);
         duel = new Duel(this, config, messages, spawns, stats, api.coins(), new GameScoreboard(messages), items);
+        api.presence().maxPlayers(Duel.MAX_PARTICIPANTS);
         var topList = new TopList(this, stats, messages);
         var statsMenus = new StatsMenus(this, messages, duel, stats, items, topList, config.globalStatsHead());
         var lootChests = new LootChests(config.loot());
 
         List.of(
                 new ConnectionListener(duel),
-                new LobbyItemListener(this, duel, messages, config.hubServer(), statsMenus),
+                new LobbyItemListener(this, duel, messages, statsMenus),
                 new ProtectionListener(duel),
-                new MotdListener(duel, messages),
                 new VsListener(this, duel, messages, items),
                 new SgListener(duel, lootChests),
                 new SuperJumpListener(duel)

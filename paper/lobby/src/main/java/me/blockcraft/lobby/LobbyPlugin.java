@@ -20,7 +20,6 @@ import me.blockcraft.lobby.listener.DoubleJumpListener;
 import me.blockcraft.lobby.listener.InventoryLockListener;
 import me.blockcraft.lobby.listener.JoinQuitListener;
 import me.blockcraft.lobby.listener.LobbyItemListener;
-import me.blockcraft.lobby.listener.MotdListener;
 import me.blockcraft.lobby.listener.MoveListener;
 import me.blockcraft.lobby.listener.PetListener;
 import me.blockcraft.lobby.listener.ProtectionListener;
@@ -28,6 +27,7 @@ import me.blockcraft.lobby.listener.SecretsListener;
 import me.blockcraft.lobby.listener.ShopNpcListener;
 import me.blockcraft.lobby.listener.WorldDownloaderListener;
 import me.blockcraft.lobby.menu.Menus;
+import me.blockcraft.lobby.network.GroupCounts;
 import me.blockcraft.lobby.npc.ShopNpc;
 import me.blockcraft.lobby.rank.PremiumRank;
 import me.blockcraft.lobby.rank.TabTeams;
@@ -38,7 +38,10 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public final class LobbyPlugin extends JavaPlugin {
 
+    private static final long GROUP_COUNTS_INTERVAL_TICKS = 100L;
+
     private ShopNpc shopNpc;
+    private GroupCounts groupCounts;
 
     @Override
     public void onEnable() {
@@ -46,7 +49,8 @@ public final class LobbyPlugin extends JavaPlugin {
         var config = LobbyConfig.fromYaml(YamlFile.loadWithDefaults(getDataPath().resolve("config.yml"), () -> getResource("config.yml")));
         var messages = Messages.load(getDataPath(), () -> getResource("messages.yml"));
         var locations = Locations.load(getDataPath().resolve("locations.yml"), LobbyLocation::key);
-        var coins = BlockcraftApi.get().coins();
+        var api = BlockcraftApi.get();
+        var coins = api.coins();
         var luckPerms = LuckPermsProvider.get();
 
         var trails = new Trails();
@@ -55,12 +59,14 @@ public final class LobbyPlugin extends JavaPlugin {
         var items = new LobbyItems(messages);
         var tabTeams = new TabTeams(luckPerms, messages);
         var secrets = new UnlockStore(getDataPath().resolve("secrets.yml"));
+        groupCounts = new GroupCounts(this, api.servers(), config.serverListStaleSeconds());
+        groupCounts.start(GROUP_COUNTS_INTERVAL_TICKS);
         var menus = new Menus(this, messages, config, locations, coins,
                 new UnlockStore(getDataPath().resolve("heads.yml")),
                 new UnlockStore(getDataPath().resolve("shirts.yml")),
                 secrets,
                 new UnlockStore(getDataPath().resolve("premium-purchases.yml")),
-                new PremiumRank(luckPerms), pets, trails);
+                new PremiumRank(luckPerms), pets, trails, groupCounts);
         shopNpc = new ShopNpc(this, locations, messages);
         shopNpc.start(config.shopNpcRespawnSeconds());
 
@@ -77,8 +83,8 @@ public final class LobbyPlugin extends JavaPlugin {
                 new MoveListener(messages, config, locations, trails),
                 new DoubleJumpListener(config),
                 new InventoryLockListener(),
-                new DeathListener(locations, items),
-                new MotdListener(messages, config.maxPlayers()));
+                new DeathListener(locations, items));
+        api.presence().maxPlayers(config.maxPlayers());
 
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             var registrar = event.registrar();
@@ -92,6 +98,9 @@ public final class LobbyPlugin extends JavaPlugin {
     public void onDisable() {
         if (shopNpc != null) {
             shopNpc.stop();
+        }
+        if (groupCounts != null) {
+            groupCounts.stop();
         }
     }
 

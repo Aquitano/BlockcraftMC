@@ -1,5 +1,8 @@
 package me.blockcraft.lobby.config;
 
+import java.util.Arrays;
+import java.util.Optional;
+
 public enum LobbyLocation {
     SPAWN("spawn"),
     DUELL("duell"),
@@ -18,5 +21,9 @@ public enum LobbyLocation {
 
     public String key() {
         return key;
+    }
+
+    public static Optional<LobbyLocation> byKey(String key) {
+        return Arrays.stream(values()).filter(location -> location.key.equals(key)).findFirst();
     }
 }

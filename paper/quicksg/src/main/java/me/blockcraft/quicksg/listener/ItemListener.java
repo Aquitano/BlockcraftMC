@@ -32,17 +32,15 @@ public final class ItemListener implements Listener {
     private final Game game;
     private final Messages messages;
     private final LootChests lootChests;
-    private final String hubServer;
     private final KitMenus kitMenus;
     private final StatsMenus statsMenus;
 
-    public ItemListener(Plugin plugin, Game game, Messages messages, LootChests lootChests, String hubServer,
+    public ItemListener(Plugin plugin, Game game, Messages messages, LootChests lootChests,
                         KitMenus kitMenus, StatsMenus statsMenus) {
         this.plugin = plugin;
         this.game = game;
         this.messages = messages;
         this.lootChests = lootChests;
-        this.hubServer = hubServer;
         this.kitMenus = kitMenus;
         this.statsMenus = statsMenus;
     }
@@ -68,7 +66,7 @@ public final class ItemListener implements Listener {
         switch (item.getType()) {
             case SLIME_BALL -> {
                 event.setCancelled(true);
-                ProxyMessaging.connect(plugin, player, hubServer);
+                ProxyMessaging.hub(plugin, player);
             }
             case DIAMOND -> {
                 if (player.hasPermission("blockcraft.quicksg.start")) {

@@ -27,8 +27,12 @@ README.md; this file only holds what the code does not say by itself.
   `luckperms/ranks.json`.
 - Moderation state (bans, mutes, strikes, warns, maintenance, global mute) is in MySQL `bc_*` tables written by the
   proxy; Paper `core` enforces chat-side consequences because Velocity cannot cancel chat for 1.19.1+ clients.
-- Backends announce themselves in `bc_servers` (BlockcraftAPI heartbeat) and the proxy registers them at runtime;
-  `velocity.toml` lists no servers. Server identity and database settings can come from `BLOCKCRAFT_*` environment
-  variables (README, "Server discovery").
+- Backends announce themselves in `bc_servers` (BlockcraftAPI heartbeat with group, state and player count) and the
+  proxy registers them at runtime; `velocity.toml` lists no servers. Players join groups, never server names: Paper
+  code uses `ProxyMessaging.play`/`hub`, the proxy's `ServerDirectory` picks the instance. Game plugins report their
+  phase through `BlockcraftApi.presence()`. Server identity and database settings can come from `BLOCKCRAFT_*`
+  environment variables (README, "Server discovery and groups").
+- Anything that concerns the whole network (private messages, staff notices, parties, moderation) lives on the
+  proxy; Paper plugins only do what needs the world.
 - No NMS, no legacy `§` codes in code. Legacy `&` is only parsed for text humans typed (MOTD, chat, LuckPerms prefixes, report statuses).
 - Names and structure should carry the meaning; comments only for a non-obvious why.

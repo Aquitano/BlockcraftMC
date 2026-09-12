@@ -22,7 +22,9 @@ public record LobbyConfig(
         double jumpPadY,
         double jumpPadMultiply,
         double jumpPadMaxLength,
-        long hiderCooldownMillis
+        long hiderCooldownMillis,
+        Map<LobbyLocation, String> navigatorGroups,
+        int serverListStaleSeconds
 ) {
 
     public static LobbyConfig fromYaml(Map<String, Object> root) {
@@ -32,6 +34,11 @@ public record LobbyConfig(
         var doubleJump = YamlFile.section(root, "double-jump");
         var jumpPad = YamlFile.section(root, "jump-pad");
         var hider = YamlFile.section(root, "player-hider");
+        var navigator = YamlFile.section(root, "navigator");
+        Map<LobbyLocation, String> navigatorGroups = YamlFile.section(navigator, "groups").entrySet().stream()
+                .flatMap(entry -> LobbyLocation.byKey(String.valueOf(entry.getKey())).stream()
+                        .map(location -> Map.entry(location, String.valueOf(entry.getValue()))))
+                .collect(Collectors.toUnmodifiableMap(Map.Entry::getKey, Map.Entry::getValue));
         Set<String> allowedCommands = root.get("allowed-commands") instanceof List<?> commands
                 ? commands.stream().map(String::valueOf).map(String::toLowerCase).collect(Collectors.toUnmodifiableSet())
                 : Set.of();
@@ -55,7 +62,9 @@ public record LobbyConfig(
                 number(jumpPad, "y", 0.18),
                 number(jumpPad, "multiply", 5.0),
                 number(jumpPad, "max-length", 6.0),
-                (long) number(hider, "cooldown-millis", 3000)
+                (long) number(hider, "cooldown-millis", 3000),
+                navigatorGroups,
+                (int) number(navigator, "stale-seconds", 20)
         );
     }
 

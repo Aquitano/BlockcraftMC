@@ -1,10 +1,12 @@
 package me.blockcraft.quicksg.game;
 
+import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.coins.CoinsRepository;
 import me.blockcraft.api.config.Locations;
 import me.blockcraft.api.task.Countdown;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.common.network.ServerState;
 import me.blockcraft.quicksg.config.LocationKey;
 import me.blockcraft.quicksg.config.QuickSGConfig;
 import me.blockcraft.quicksg.kit.Kit;
@@ -265,7 +267,7 @@ public final class Game {
 
     private void start() {
         lobbyCountdown = null;
-        phase = GamePhase.INGAME;
+        setPhase(GamePhase.INGAME);
         protection = true;
         Bukkit.broadcast(messages.get("lobby.started"));
         var spawns = spawns();
@@ -343,7 +345,7 @@ public final class Game {
         if (phase != GamePhase.INGAME || alive.size() > 1) {
             return;
         }
-        phase = GamePhase.ENDING;
+        setPhase(GamePhase.ENDING);
         cancel(protectionCountdown);
         cancel(gameTimer);
         cancel(freezeCountdown);
@@ -462,5 +464,14 @@ public final class Game {
 
     public void shutdown() {
         Stream.of(lobbyCountdown, freezeCountdown, protectionCountdown, gameTimer, restartCountdown).forEach(Game::cancel);
+    }
+
+    private void setPhase(GamePhase phase) {
+        this.phase = phase;
+        BlockcraftApi.get().presence().state(switch (phase) {
+            case LOBBY -> ServerState.LOBBY;
+            case INGAME -> ServerState.INGAME;
+            case ENDING -> ServerState.RESTART;
+        });
     }
 }

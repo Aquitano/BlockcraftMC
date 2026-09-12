@@ -1,7 +1,6 @@
 package me.blockcraft.signs.command;
 
 import com.mojang.brigadier.Command;
-import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
@@ -27,25 +26,23 @@ public final class CreateSignCommand {
                     context.getSource().getSender().sendMessage(messages.get("createsign.usage"));
                     return Command.SINGLE_SUCCESS;
                 })
-                .then(Commands.argument("ip", StringArgumentType.word())
-                        .then(Commands.argument("port", IntegerArgumentType.integer(1, 65535))
-                                .then(Commands.argument("name", StringArgumentType.word())
-                                        .executes(context -> {
-                                            var player = context.getSource().getPlayerOrThrow();
-                                            var target = player.getTargetBlockExact(TARGET_RANGE);
-                                            if (target == null || !Tag.ALL_SIGNS.isTagged(target.getType())) {
-                                                player.sendMessage(messages.get("createsign.not-a-sign"));
-                                                return Command.SINGLE_SUCCESS;
-                                            }
-                                            String name = StringArgumentType.getString(context, "name");
-                                            signs.add(new StatusSign(
-                                                    target.getLocation(),
-                                                    name,
-                                                    StringArgumentType.getString(context, "ip"),
-                                                    IntegerArgumentType.getInteger(context, "port")));
-                                            player.sendMessage(messages.get("createsign.created", Placeholder.unparsed("name", name)));
-                                            return Command.SINGLE_SUCCESS;
-                                        }))))
+                .then(Commands.argument("group", StringArgumentType.word())
+                        .suggests((context, builder) -> {
+                            signs.knownGroups().stream().filter(group -> group.startsWith(builder.getRemaining())).forEach(builder::suggest);
+                            return builder.buildFuture();
+                        })
+                        .executes(context -> {
+                            var player = context.getSource().getPlayerOrThrow();
+                            var target = player.getTargetBlockExact(TARGET_RANGE);
+                            if (target == null || !Tag.ALL_SIGNS.isTagged(target.getType())) {
+                                player.sendMessage(messages.get("createsign.not-a-sign"));
+                                return Command.SINGLE_SUCCESS;
+                            }
+                            String group = StringArgumentType.getString(context, "group");
+                            signs.add(new StatusSign(target.getLocation(), group));
+                            player.sendMessage(messages.get("createsign.created", Placeholder.unparsed("name", group)));
+                            return Command.SINGLE_SUCCESS;
+                        }))
                 .build();
     }
 }

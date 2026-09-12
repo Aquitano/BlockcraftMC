@@ -20,7 +20,6 @@ import me.blockcraft.quicksg.game.TopList;
 import me.blockcraft.quicksg.listener.ConnectionListener;
 import me.blockcraft.quicksg.listener.DeathListener;
 import me.blockcraft.quicksg.listener.ItemListener;
-import me.blockcraft.quicksg.listener.MotdListener;
 import me.blockcraft.quicksg.listener.ProtectionListener;
 import me.blockcraft.quicksg.menu.KitMenus;
 import me.blockcraft.quicksg.menu.StatsMenus;
@@ -54,6 +53,7 @@ public final class QuickSGPlugin extends JavaPlugin {
 
         var items = new GameItems(messages);
         game = new Game(this, config, messages, locations, stats, api.coins(), new GameScoreboard(messages, config), items);
+        api.presence().maxPlayers(config.maxPlayers());
         game.applyLobbyWorldBorder();
 
         var lootChests = new LootChests(config.loot(), items);
@@ -65,8 +65,7 @@ public final class QuickSGPlugin extends JavaPlugin {
                 new ConnectionListener(game, messages),
                 new DeathListener(game),
                 new ProtectionListener(game),
-                new MotdListener(game, messages),
-                new ItemListener(this, game, messages, lootChests, config.hubServer(), kitMenus, statsMenus)
+                new ItemListener(this, game, messages, lootChests, kitMenus, statsMenus)
         ).forEach(this::register);
 
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {

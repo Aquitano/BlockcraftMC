@@ -1,11 +1,13 @@
 package me.blockcraft.rush.game;
 
+import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.coins.CoinsRepository;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.task.Countdown;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.api.world.Worlds;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.common.network.ServerState;
 import me.blockcraft.rush.Permissions;
 import me.blockcraft.rush.config.RushConfig;
 import me.blockcraft.rush.config.SpawnPoint;
@@ -258,7 +260,7 @@ public final class Game {
             Bukkit.getOnlinePlayers().forEach(online -> online.setLevel(config.lobbyCountdown()));
             return;
         }
-        phase = GamePhase.SEARCH;
+        setPhase(GamePhase.SEARCH);
         messages.getLines("search.started", Formatter.number("minutes", config.searchSeconds() / 60)).forEach(Bukkit::broadcast);
         var pickaxe = Items.of(Material.IRON_PICKAXE).name(messages.get("item.pickaxe")).edit(meta -> {
             meta.addEnchant(Enchantment.UNBREAKING, 10, true);
@@ -298,7 +300,7 @@ public final class Game {
     }
 
     private void beginShopping() {
-        phase = GamePhase.SHOPPING;
+        setPhase(GamePhase.SHOPPING);
         var shop = Items.of(Material.CHEST).name(messages.get("item.shop")).build();
         var titleTimes = Title.Times.times(Duration.ofMillis(1250), Duration.ofMillis(1250), Duration.ofMillis(1250));
         for (var player : alivePlayers()) {
@@ -332,7 +334,7 @@ public final class Game {
     }
 
     private void beginDeathmatch() {
-        phase = GamePhase.DEATHMATCH;
+        setPhase(GamePhase.DEATHMATCH);
         broadcast("deathmatch.started");
         int spawnIndex = 0;
         for (var player : alivePlayers()) {
@@ -436,7 +438,7 @@ public final class Game {
         if (phase == GamePhase.LOBBY || phase == GamePhase.ENDING || alive.size() > 1) {
             return;
         }
-        phase = GamePhase.ENDING;
+        setPhase(GamePhase.ENDING);
         for (var winner : alivePlayers()) {
             broadcast("ending.winner", Placeholder.unparsed("player", winner.getName()));
             Tasks.async(plugin, () -> {
@@ -524,5 +526,14 @@ public final class Game {
         for (var player : Bukkit.getOnlinePlayers()) {
             player.playSound(player.getLocation(), sound, SOUND_VOLUME, SOUND_PITCH);
         }
+    }
+
+    private void setPhase(GamePhase phase) {
+        this.phase = phase;
+        BlockcraftApi.get().presence().state(switch (phase) {
+            case LOBBY -> ServerState.LOBBY;
+            case SEARCH, SHOPPING, DEATHMATCH -> ServerState.INGAME;
+            case ENDING -> ServerState.RESTART;
+        });
     }
 }

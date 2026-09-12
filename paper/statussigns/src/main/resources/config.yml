@@ -1,3 +1,4 @@
-ping:
+# Signs re-read bc_servers this often; a server whose heartbeat is older than stale-seconds counts as offline.
+refresh:
   interval-ticks: 50
-  timeout-millis: 1500
+  stale-seconds: 20

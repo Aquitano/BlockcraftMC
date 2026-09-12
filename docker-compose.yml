@@ -82,6 +82,7 @@ services:
     hostname: lobby
     environment:
       <<: *paper-env
+      BLOCKCRAFT_SERVER_GROUP: lobby
       PLUGINS: |
         /blockcraft/api.jar
         /blockcraft/core.jar
@@ -100,6 +101,7 @@ services:
     hostname: duell
     environment:
       <<: *paper-env
+      BLOCKCRAFT_SERVER_GROUP: duell
       PLUGINS: |
         /blockcraft/api.jar
         /blockcraft/core.jar
@@ -116,6 +118,7 @@ services:
     hostname: emeraldrush
     environment:
       <<: *paper-env
+      BLOCKCRAFT_SERVER_GROUP: emeraldrush
       PLUGINS: |
         /blockcraft/api.jar
         /blockcraft/core.jar
@@ -132,6 +135,7 @@ services:
     hostname: quicksg
     environment:
       <<: *paper-env
+      BLOCKCRAFT_SERVER_GROUP: quicksg
       PLUGINS: |
         /blockcraft/api.jar
         /blockcraft/core.jar

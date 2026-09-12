@@ -2,5 +2,6 @@ package me.blockcraft.signs.sign;
 
 import org.bukkit.Location;
 
-public record StatusSign(Location location, String name, String host, int port) {
+/** A sign that shows one server group and sends clicking players to it. */
+public record StatusSign(Location location, String group) {
 }

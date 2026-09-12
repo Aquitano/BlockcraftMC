@@ -1,9 +1,5 @@
 prefix: "<blue>Duell <dark_gray>» <reset>"
 
-motd:
-  lobby: "<green>-------------"
-  ingame: "<gold>-------------"
-
 mode:
   vs: "1vs1"
   sg: "SurvivalGames"

@@ -53,6 +53,10 @@ public final class Messages {
         return Arrays.stream(raw(key).split("\n", -1)).map(line -> MINI.deserialize(line, all)).toList();
     }
 
+    public boolean has(String key) {
+        return messages.containsKey(key);
+    }
+
     public String raw(String key) {
         return messages.getOrDefault(key, "<red><missing: " + key + ">");
     }

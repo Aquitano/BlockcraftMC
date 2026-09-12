@@ -16,14 +16,12 @@ public final class LobbyItemListener implements Listener {
     private final Plugin plugin;
     private final Duel duel;
     private final Messages messages;
-    private final String hubServer;
     private final StatsMenus statsMenus;
 
-    public LobbyItemListener(Plugin plugin, Duel duel, Messages messages, String hubServer, StatsMenus statsMenus) {
+    public LobbyItemListener(Plugin plugin, Duel duel, Messages messages, StatsMenus statsMenus) {
         this.plugin = plugin;
         this.duel = duel;
         this.messages = messages;
-        this.hubServer = hubServer;
         this.statsMenus = statsMenus;
     }
 
@@ -41,7 +39,7 @@ public final class LobbyItemListener implements Listener {
             case SLIME_BALL -> {
                 if (!duel.isIngame()) {
                     event.setCancelled(true);
-                    ProxyMessaging.connect(plugin, player, hubServer);
+                    ProxyMessaging.hub(plugin, player);
                 }
             }
             case PLAYER_HEAD -> {

@@ -40,6 +40,7 @@ import me.blockcraft.system.command.player.OnlineCommand;
 import me.blockcraft.system.command.player.PartyChatCommand;
 import me.blockcraft.system.command.player.PartyCommand;
 import me.blockcraft.system.command.player.PingCommand;
+import me.blockcraft.system.command.player.PlayCommand;
 import me.blockcraft.system.command.player.PremiumCommand;
 import me.blockcraft.system.command.player.SupportCommand;
 import me.blockcraft.system.command.player.YouTuberCommand;
@@ -60,11 +61,12 @@ import me.blockcraft.system.listener.CommandListener;
 import me.blockcraft.system.listener.InitialServerListener;
 import me.blockcraft.system.listener.KickListener;
 import me.blockcraft.system.listener.LoginListener;
-import me.blockcraft.system.listener.StaffNoticeListener;
+import me.blockcraft.system.listener.ProxyMessageListener;
 import me.blockcraft.system.listener.TabCompleteListener;
 import me.blockcraft.system.listener.TabHeaderListener;
 import me.blockcraft.system.moderation.PunishmentService;
 import me.blockcraft.system.motd.MotdListener;
+import me.blockcraft.system.network.ServerDirectory;
 import me.blockcraft.system.network.ServerDiscovery;
 import me.blockcraft.system.party.PartyListener;
 import me.blockcraft.system.party.PartyManager;
@@ -114,7 +116,8 @@ public final class SystemPlugin {
 
         var settings = new ProxySettings(repositories.settings());
         var lookup = new PlayerLookup(proxy, repositories.players());
-        var lobby = new LobbyConnector(proxy, config, messages);
+        var directory = new ServerDirectory(proxy);
+        var lobby = new LobbyConnector(directory, config, messages);
         var punishments = new PunishmentService(proxy, repositories.punishments(), messages, config.network());
         var parties = new PartyManager(proxy, messages);
         var supportSessions = new SupportSessions();
@@ -127,7 +130,7 @@ public final class SystemPlugin {
         events.register(this, new CommandListener(config, messages));
         events.register(this, new KickListener(lobby, messages));
         events.register(this, new InitialServerListener(lobby));
-        events.register(this, new StaffNoticeListener(proxy));
+        events.register(this, new ProxyMessageListener(proxy, lobby, logger));
         events.register(this, new TabCompleteListener());
         events.register(this, new MotdListener(proxy, config, settings, messages));
         events.register(this, new PartyListener(parties));
@@ -167,9 +170,10 @@ public final class SystemPlugin {
         register(new ListCommand(support, proxy, config, messages).create());
 
         register(new HubCommand(support, lobby).create(), "h", "lobby", "l");
+        register(new PlayCommand(support, lobby, directory).create());
         register(new PartyCommand(support, proxy, parties, messages).create());
         register(new PartyChatCommand(support, parties, messages).create());
-        var joinMe = new JoinMeCommand(support, proxy, config, messages);
+        var joinMe = new JoinMeCommand(support, proxy, config, directory, messages);
         register(joinMe.create());
         register(new SupportCommand(support, proxy, supportSessions, messages).create());
         register(new YouTuberCommand(support, config, messages).create(), "youtube", "yt");
@@ -178,7 +182,7 @@ public final class SystemPlugin {
         register(new ModCommand(support, proxy, messages).create());
         register(new OnlineCommand(support, proxy, messages).create());
 
-        proxy.getScheduler().buildTask(this, new ServerDiscovery(proxy, servers, config.discovery().staleSeconds(), logger))
+        proxy.getScheduler().buildTask(this, new ServerDiscovery(proxy, servers, directory, config.discovery().staleSeconds(), logger))
                 .repeat(config.discovery().pollSeconds(), TimeUnit.SECONDS)
                 .schedule();
         proxy.getScheduler().buildTask(this, new AutoBroadcast(proxy, config, messages))

@@ -12,7 +12,8 @@ network:
   teamspeak: ts.BlockcraftMC.net
   discord: https://discord.gg/kh3xaQ3
 
-lobby-server: lobby
+# Server group players land in; game groups are joined with /play <group>.
+lobby-group: lobby
 
 # Backends announce themselves in bc_servers; the proxy registers them and drops any whose heartbeat is stale.
 discovery:
@@ -32,17 +33,6 @@ auto-broadcast-minutes: 5
 joinme:
   daily-limit: 6
   reset-hour: 0
-
-# Server name prefix -> messages.yml key joinme.game.<value>
-joinme-games:
-  KFFA: knockbackffa
-  1vs1: pvp
-  NoHitDelay: pvp
-  SoupPvP: pvp
-  BW: bedwars
-  SW: skywars
-  EM: tradewars
-  BauServer: bauserver
 
 unbannable:
   - Aquitano

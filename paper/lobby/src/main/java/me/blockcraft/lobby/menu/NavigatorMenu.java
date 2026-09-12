@@ -3,11 +3,14 @@ package me.blockcraft.lobby.menu;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.menu.Menu;
 import me.blockcraft.lobby.config.LobbyLocation;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.List;
 import java.util.Map;
 
 final class NavigatorMenu extends Menu {
@@ -27,13 +30,22 @@ final class NavigatorMenu extends Menu {
         this.menus = menus;
         var messages = menus.messages();
         var lore = messages.get("navigator.lore");
-        set(2, Items.of(Material.IRON_SWORD).name(messages.get("navigator.qsg")).lore(lore).build());
-        set(6, Items.of(Material.EMERALD).name(messages.get("navigator.rush")).lore(lore).build());
-        set(10, Items.of(Material.CHAINMAIL_CHESTPLATE).name(messages.get("navigator.duell")).lore(lore).build());
+        set(2, Items.of(Material.IRON_SWORD).name(messages.get("navigator.qsg")).lore(gameLore(LobbyLocation.QSG)).build());
+        set(6, Items.of(Material.EMERALD).name(messages.get("navigator.rush")).lore(gameLore(LobbyLocation.RUSH)).build());
+        set(10, Items.of(Material.CHAINMAIL_CHESTPLATE).name(messages.get("navigator.duell")).lore(gameLore(LobbyLocation.DUELL)).build());
         set(13, Items.of(Material.ENDER_EYE).name(messages.get("navigator.spawn")).lore(lore).build());
         set(16, Items.of(Material.GOLD_INGOT).name(messages.get("navigator.shop")).lore(lore).build());
         set(20, Items.of(Material.IRON_BARS).name(messages.get("navigator.filler")).build());
         set(24, Items.of(Material.DIAMOND_BOOTS).name(messages.get("navigator.jump")).lore(lore).build());
+    }
+
+    private List<Component> gameLore(LobbyLocation target) {
+        var messages = menus.messages();
+        String group = menus.config().navigatorGroups().get(target);
+        return group == null
+                ? List.of(messages.get("navigator.lore"))
+                : List.of(messages.get("navigator.lore"),
+                        messages.get("navigator.online", Formatter.number("online", menus.groupCounts().online(group))));
     }
 
     @Override

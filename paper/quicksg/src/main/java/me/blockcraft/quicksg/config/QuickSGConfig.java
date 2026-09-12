@@ -10,7 +10,6 @@ public record QuickSGConfig(
         String mapName,
         int minPlayers,
         int maxPlayers,
-        String hubServer,
         String globalStatsHead,
         Countdowns countdowns,
         WorldBorderSettings worldBorder,
@@ -50,7 +49,6 @@ public record QuickSGConfig(
                 config.getString("map-name", "MapName"),
                 config.getInt("min-players", 2),
                 config.getInt("max-players", 8),
-                config.getString("hub-server", "lobby"),
                 config.getString("global-stats-head", "Kevos"),
                 new Countdowns(
                         countdown.getInt("lobby", 30),

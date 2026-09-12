@@ -8,6 +8,7 @@ import me.blockcraft.lobby.config.LobbyConfig;
 import me.blockcraft.lobby.config.LobbyLocation;
 import me.blockcraft.lobby.cosmetic.Pets;
 import me.blockcraft.lobby.cosmetic.Trails;
+import me.blockcraft.lobby.network.GroupCounts;
 import me.blockcraft.lobby.rank.PremiumRank;
 import me.blockcraft.lobby.storage.UnlockStore;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
@@ -29,7 +30,8 @@ public record Menus(
         UnlockStore premiumPurchases,
         PremiumRank premiumRank,
         Pets pets,
-        Trails trails
+        Trails trails,
+        GroupCounts groupCounts
 ) {
 
     private static final float TELEPORT_VOLUME = 4.0f;

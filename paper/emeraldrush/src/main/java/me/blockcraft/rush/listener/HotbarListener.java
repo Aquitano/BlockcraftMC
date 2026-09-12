@@ -43,7 +43,7 @@ public final class HotbarListener implements Listener {
         switch (item.getType()) {
             case SLIME_BALL -> {
                 event.setCancelled(true);
-                ProxyMessaging.connect(plugin, player, config.lobbyServer());
+                ProxyMessaging.hub(plugin, player);
             }
             case DIAMOND -> {
                 if (player.hasPermission(Permissions.START) && game.phase() == GamePhase.LOBBY) {

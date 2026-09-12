@@ -20,26 +20,38 @@ public final class ServerRepository {
         db.execute("""
                 CREATE TABLE IF NOT EXISTS bc_servers (
                     name VARCHAR(64) NOT NULL PRIMARY KEY,
+                    group_name VARCHAR(64) NOT NULL,
                     host VARCHAR(255) NOT NULL,
                     port INT NOT NULL,
+                    state VARCHAR(16) NOT NULL,
+                    online INT NOT NULL,
+                    max_players INT NOT NULL,
                     heartbeat TIMESTAMP NOT NULL
                 )""");
     }
 
-    public void heartbeat(ServerAddress server) {
+    public void heartbeat(ServerIdentity server, ServerStatus status) {
         db.update("""
-                INSERT INTO bc_servers (name, host, port, heartbeat) VALUES (?, ?, ?, CURRENT_TIMESTAMP)
-                ON DUPLICATE KEY UPDATE host = VALUES(host), port = VALUES(port), heartbeat = CURRENT_TIMESTAMP""",
-                server.name(), server.host(), server.port());
+                INSERT INTO bc_servers (name, group_name, host, port, state, online, max_players, heartbeat)
+                VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                ON DUPLICATE KEY UPDATE group_name = VALUES(group_name), host = VALUES(host), port = VALUES(port),
+                    state = VALUES(state), online = VALUES(online), max_players = VALUES(max_players),
+                    heartbeat = CURRENT_TIMESTAMP""",
+                server.name(), server.group(), server.host(), server.port(),
+                status.state().name(), status.online(), status.maxPlayers());
     }
 
     public void delete(String name) {
         db.update("DELETE FROM bc_servers WHERE name = ?", name);
     }
 
-    public List<ServerAddress> alive(int staleAfterSeconds) {
-        return db.queryList("SELECT name, host, port FROM bc_servers WHERE heartbeat > CURRENT_TIMESTAMP - INTERVAL ? SECOND",
-                row -> new ServerAddress(row.getString("name"), row.getString("host"), row.getInt("port")),
+    public List<ServerRecord> alive(int staleAfterSeconds) {
+        return db.queryList("""
+                SELECT name, group_name, host, port, state, online, max_players FROM bc_servers
+                WHERE heartbeat > CURRENT_TIMESTAMP - INTERVAL ? SECOND""",
+                row -> new ServerRecord(
+                        new ServerIdentity(row.getString("name"), row.getString("group_name"), row.getString("host"), row.getInt("port")),
+                        new ServerStatus(ServerState.valueOf(row.getString("state")), row.getInt("online"), row.getInt("max_players"))),
                 staleAfterSeconds);
     }
 }

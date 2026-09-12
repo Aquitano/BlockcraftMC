@@ -1,8 +1,10 @@
 package me.blockcraft.api;
 
 import me.blockcraft.api.coins.CoinsRepository;
+import me.blockcraft.api.network.ServerPresence;
 import me.blockcraft.common.db.Database;
-import me.blockcraft.common.network.ServerAddress;
+import me.blockcraft.common.network.ServerIdentity;
+import me.blockcraft.common.network.ServerRepository;
 
 /** Entry point for other plugins; populated while BlockcraftAPI is enabled. */
 public final class BlockcraftApi {
@@ -11,12 +13,16 @@ public final class BlockcraftApi {
 
     private final Database database;
     private final CoinsRepository coins;
-    private final ServerAddress server;
+    private final ServerRepository servers;
+    private final ServerIdentity server;
+    private final ServerPresence presence;
 
-    BlockcraftApi(Database database, ServerAddress server) {
+    BlockcraftApi(Database database, ServerRepository servers, ServerIdentity server, ServerPresence presence) {
         this.database = database;
         this.coins = new CoinsRepository(database);
+        this.servers = servers;
         this.server = server;
+        this.presence = presence;
     }
 
     public static BlockcraftApi get() {
@@ -42,8 +48,18 @@ public final class BlockcraftApi {
         return coins;
     }
 
+    /** The live server list of the whole network. */
+    public ServerRepository servers() {
+        return servers;
+    }
+
     /** This server as the proxy knows it. */
-    public ServerAddress server() {
+    public ServerIdentity server() {
         return server;
+    }
+
+    /** What this server tells the proxy about itself. */
+    public ServerPresence presence() {
+        return presence;
     }
 }

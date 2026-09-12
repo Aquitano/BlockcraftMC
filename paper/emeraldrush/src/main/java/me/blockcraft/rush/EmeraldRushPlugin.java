@@ -19,7 +19,6 @@ import me.blockcraft.rush.listener.BlockListener;
 import me.blockcraft.rush.listener.ConnectionListener;
 import me.blockcraft.rush.listener.DeathListener;
 import me.blockcraft.rush.listener.HotbarListener;
-import me.blockcraft.rush.listener.MotdListener;
 import me.blockcraft.rush.listener.ProtectionListener;
 import me.blockcraft.rush.menu.RushMenus;
 import me.blockcraft.rush.storage.KitRepository;
@@ -56,7 +55,6 @@ public final class EmeraldRushPlugin extends JavaPlugin {
         register(new ProtectionListener(game));
         register(new BlockListener(this, game, config));
         register(new HotbarListener(this, game, menus, config, messages));
-        register(new MotdListener(game, messages));
 
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             var registrar = event.registrar();

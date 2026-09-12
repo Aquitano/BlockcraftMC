@@ -30,11 +30,14 @@ public final class SignClickListener implements Listener {
         signs.find(event.getClickedBlock().getLocation()).ifPresent(sign -> {
             event.setCancelled(true);
             var player = event.getPlayer();
-            if (!signs.isOnline(sign)) {
+            var status = signs.status(sign);
+            if (status.state().isEmpty()) {
                 player.sendMessage(messages.get("click.offline"));
-                return;
+            } else if (!status.joinable()) {
+                player.sendMessage(messages.get("click.full"));
+            } else {
+                ProxyMessaging.play(plugin, player, sign.group());
             }
-            ProxyMessaging.connect(plugin, player, sign.name());
         });
     }
 }

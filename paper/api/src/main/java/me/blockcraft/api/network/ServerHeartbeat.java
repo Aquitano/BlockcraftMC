@@ -2,7 +2,7 @@ package me.blockcraft.api.network;
 
 import me.blockcraft.common.db.DatabaseConfig;
 import me.blockcraft.common.db.DatabaseException;
-import me.blockcraft.common.network.ServerAddress;
+import me.blockcraft.common.network.ServerIdentity;
 import me.blockcraft.common.network.ServerRepository;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
@@ -17,29 +17,32 @@ public final class ServerHeartbeat {
 
     private final Plugin plugin;
     private final ServerRepository servers;
-    private final ServerAddress self;
+    private final ServerIdentity self;
+    private final ServerPresence presence;
     private BukkitTask task;
 
-    public ServerHeartbeat(Plugin plugin, ServerRepository servers, ServerAddress self) {
+    public ServerHeartbeat(Plugin plugin, ServerRepository servers, ServerIdentity self, ServerPresence presence) {
         this.plugin = plugin;
         this.servers = servers;
         this.self = self;
+        this.presence = presence;
+        presence.onChange(() -> Bukkit.getScheduler().runTaskAsynchronously(plugin, this::beat));
     }
 
     /**
      * Name: {@code BLOCKCRAFT_SERVER_NAME}, else the hostname (the container or pod name in Docker and Kubernetes).
-     * Host: {@code BLOCKCRAFT_SERVER_HOST}, else the address of the interface that reaches the database, which is
-     * the one the proxy on the same network reaches too.
+     * Group: {@code BLOCKCRAFT_SERVER_GROUP}, else the name. Host: {@code BLOCKCRAFT_SERVER_HOST}, else the address
+     * of the interface that reaches the database, which is the one the proxy on the same network reaches too.
      */
-    public static ServerAddress local(DatabaseConfig database, int port) {
+    public static ServerIdentity local(DatabaseConfig database, int port) {
         String name = env("BLOCKCRAFT_SERVER_NAME", env("HOSTNAME", ""));
         if (name.isEmpty()) {
             throw new IllegalStateException("Neither BLOCKCRAFT_SERVER_NAME nor HOSTNAME is set");
         }
-        return new ServerAddress(name, env("BLOCKCRAFT_SERVER_HOST", routeSource(database)), port);
+        return new ServerIdentity(name, env("BLOCKCRAFT_SERVER_GROUP", name), env("BLOCKCRAFT_SERVER_HOST", routeSource(database)), port);
     }
 
-    public ServerAddress self() {
+    public ServerIdentity self() {
         return self;
     }
 
@@ -60,7 +63,7 @@ public final class ServerHeartbeat {
 
     private void beat() {
         try {
-            servers.heartbeat(self);
+            servers.heartbeat(self, presence.status());
         } catch (DatabaseException e) {
             plugin.getLogger().warning("Heartbeat failed: " + e.getCause().getMessage());
         }

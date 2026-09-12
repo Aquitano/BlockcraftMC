@@ -3,14 +3,15 @@ package me.blockcraft.system.network;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import me.blockcraft.common.db.DatabaseException;
-import me.blockcraft.common.network.ServerAddress;
+import me.blockcraft.common.network.ServerIdentity;
+import me.blockcraft.common.network.ServerRecord;
 import me.blockcraft.common.network.ServerRepository;
 import org.slf4j.Logger;
 
 import java.net.InetSocketAddress;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * Mirrors {@code bc_servers} into the proxy's server list: backends appear when their heartbeat does and vanish
@@ -20,50 +21,54 @@ public final class ServerDiscovery implements Runnable {
 
     private final ProxyServer proxy;
     private final ServerRepository servers;
+    private final ServerDirectory directory;
     private final int staleSeconds;
     private final Logger logger;
     private final Map<String, ServerInfo> registered = new HashMap<>();
 
-    public ServerDiscovery(ProxyServer proxy, ServerRepository servers, int staleSeconds, Logger logger) {
+    public ServerDiscovery(ProxyServer proxy, ServerRepository servers, ServerDirectory directory, int staleSeconds, Logger logger) {
         this.proxy = proxy;
         this.servers = servers;
+        this.directory = directory;
         this.staleSeconds = staleSeconds;
         this.logger = logger;
     }
 
     @Override
     public synchronized void run() {
-        Map<String, ServerAddress> alive;
+        List<ServerRecord> alive;
         try {
-            alive = servers.alive(staleSeconds).stream().collect(Collectors.toMap(ServerAddress::name, address -> address));
+            alive = servers.alive(staleSeconds);
         } catch (DatabaseException e) {
             logger.warn("Could not read bc_servers, keeping the current server list", e);
             return;
         }
+        var aliveNames = alive.stream().map(ServerRecord::name).toList();
         registered.keySet().removeIf(name -> {
-            if (alive.containsKey(name)) {
+            if (aliveNames.contains(name)) {
                 return false;
             }
             proxy.unregisterServer(registered.get(name));
             logger.info("Unregistered {}", name);
             return true;
         });
-        alive.values().forEach(this::register);
+        alive.forEach(server -> register(server.identity()));
+        directory.update(alive);
     }
 
-    private void register(ServerAddress address) {
-        var info = new ServerInfo(address.name(), InetSocketAddress.createUnresolved(address.host(), address.port()));
-        var current = registered.get(address.name());
+    private void register(ServerIdentity server) {
+        var info = new ServerInfo(server.name(), InetSocketAddress.createUnresolved(server.host(), server.port()));
+        var current = registered.get(server.name());
         if (info.equals(current)) {
             return;
         }
         if (current != null) {
             proxy.unregisterServer(current);
-        } else if (proxy.getServer(address.name()).isPresent()) {
+        } else if (proxy.getServer(server.name()).isPresent()) {
             return;
         }
         proxy.registerServer(info);
-        registered.put(address.name(), info);
-        logger.info("Registered {} at {}:{}", address.name(), address.host(), address.port());
+        registered.put(server.name(), info);
+        logger.info("Registered {} ({}) at {}:{}", server.name(), server.group(), server.host(), server.port());
     }
 }

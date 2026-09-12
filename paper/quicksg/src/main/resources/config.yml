@@ -1,7 +1,6 @@
 map-name: "MapName"
 min-players: 2
 max-players: 8
-hub-server: lobby
 global-stats-head: Kevos
 countdown:
   lobby: 30

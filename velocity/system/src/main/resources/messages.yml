@@ -7,6 +7,7 @@ help:
   - "<dark_gray>● <blue>INFORMATIONEN ZUM SERVER <dark_gray>●"
   - ""
   - "  <blue>/lobby <gray>- <white>Kehre in die Lobby zurück!"
+  - "  <blue>/play <gray>- <white>Tritt einem Spiel bei!"
   - "  <blue>/report <gray>- <white>Reporte einen verdächtigen Spieler!"
   - "  <blue>/msg <gray>- <white>Sende einem Spieler eine private Nachricht!"
   - "  <blue>/party <gray>- <white>Erstelle eine Party!"
@@ -419,6 +420,11 @@ hub:
   unavailable: "<prefix><red>Derzeit sind keine Lobby-Server verfügbar."
   already: "<prefix><red>Du bist bereits auf der Lobby."
   connecting: "<prefix><green>Du wirst zur <aqua>Lobby <green>verbunden."
+play:
+  usage: "<prefix><red>Benutze /play \\<Spiel>"
+  unavailable: "<prefix><red>Derzeit ist kein Server frei, versuche es gleich noch einmal!"
+  already: "<prefix><red>Du bist bereits auf diesem Server."
+  connecting: "<prefix><green>Du wirst verbunden..."
 ping: "<prefix><gray>Dein Ping beträgt: <green><ping><gray>ms."
 online: "<prefix><gray>Es sind momentan <yellow><count> <gray>Spieler online."
 mod: "<prefix><gray>Es sind <yellow><count> <gray>Teammitglieder online."
@@ -457,14 +463,12 @@ joinme:
   frame: "<gold><obfuscated>|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||"
   click: "<dark_gray>» <gray>KLICKE HIER, um den <yellow>Server <gray>zu <yellow>betreten<gray>!"
   click-hover: "<red>Verbinden"
+  # One line per server group, default for everything else.
   game:
     default: "<dark_gray>» <gold><player><gray> spielt jetzt!"
-    knockbackffa: "<dark_gray>» <gold><player><gray> spielt <yellow>KnockbackFFA<gray>!"
-    pvp: "<dark_gray>» <gold><player><gray> spielt <yellow>PVP<gray>!"
-    bedwars: "<dark_gray>» <gold><player><gray> spielt <yellow>Bedwars<gray>!"
-    skywars: "<dark_gray>» <gold><player><gray> spielt <yellow>Skywars<gray>!"
-    tradewars: "<dark_gray>» <gold><player><gray> spielt <yellow>Tradewars<gray>!"
-    bauserver: "<dark_gray>» <gold><player><gray> spielt auf dem <yellow>Bauserver<gray>!"
+    quicksg: "<dark_gray>» <gold><player><gray> spielt <yellow>QuickSG<gray>!"
+    duell: "<dark_gray>» <gold><player><gray> spielt <yellow>Duell<gray>!"
+    emeraldrush: "<dark_gray>» <gold><player><gray> spielt <yellow>EmeraldRush<gray>!"
 
 support:
   already-open: "<gold>Support <dark_gray>» <reset><red>Du hast bereits einen offenen Supportantrag. Bitte warte, bis ein Supporter diesen bearbeitet."

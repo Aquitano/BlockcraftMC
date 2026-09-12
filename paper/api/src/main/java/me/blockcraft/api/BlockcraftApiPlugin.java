@@ -5,6 +5,7 @@ import me.blockcraft.api.coins.CoinsJoinListener;
 import me.blockcraft.api.command.CoinsCommand;
 import me.blockcraft.api.menu.MenuListener;
 import me.blockcraft.api.network.ServerHeartbeat;
+import me.blockcraft.api.network.ServerPresence;
 import me.blockcraft.common.config.YamlFile;
 import me.blockcraft.common.db.Database;
 import me.blockcraft.common.db.DatabaseConfig;
@@ -30,10 +31,12 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
 
         var servers = new ServerRepository(database);
         servers.createTable();
-        heartbeat = new ServerHeartbeat(this, servers, ServerHeartbeat.local(databaseConfig, getServer().getPort()));
-        getLogger().info("Announcing as " + heartbeat.self().name() + " at " + heartbeat.self().host() + ":" + heartbeat.self().port());
+        var presence = new ServerPresence();
+        heartbeat = new ServerHeartbeat(this, servers, ServerHeartbeat.local(databaseConfig, getServer().getPort()), presence);
+        var self = heartbeat.self();
+        getLogger().info("Announcing as " + self.name() + " (group " + self.group() + ") at " + self.host() + ":" + self.port());
 
-        var api = new BlockcraftApi(database, heartbeat.self());
+        var api = new BlockcraftApi(database, servers, self, presence);
         api.coins().createTable();
         BlockcraftApi.install(api);
         int startingCoins = ((Number) config.getOrDefault("starting-coins", 10)).intValue();
