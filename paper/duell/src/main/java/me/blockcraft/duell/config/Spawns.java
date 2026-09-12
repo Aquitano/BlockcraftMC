@@ -10,6 +10,7 @@ import java.util.LinkedHashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /** The lobby spawn and one spawn per map and participant slot, persisted in {@code locations.yml}. */
 public final class Spawns {
@@ -32,6 +33,10 @@ public final class Spawns {
 
     public Optional<Location> mapSpawn(DuelMode mode, int map, int player) {
         return locations.get(mapKey(mode, map, player));
+    }
+
+    public boolean hasMapSpawns(DuelMode mode, int map, int players) {
+        return IntStream.rangeClosed(1, players).allMatch(player -> mapSpawn(mode, map, player).isPresent());
     }
 
     public void setSpawn(Location location) {

@@ -29,6 +29,7 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public final class Duel {
@@ -286,7 +287,7 @@ public final class Duel {
         pvp = mode != DuelMode.SUPERJUMP;
         Bukkit.broadcast(messages.get("lobby.started"));
         var maps = config.maps(mode);
-        mapNumber = maps.isEmpty() ? 1 : random.nextInt(maps.size()) + 1;
+        mapNumber = pickMap(maps.size());
         mapName = maps.isEmpty() ? messages.raw("scoreboard.map-random") : maps.get(mapNumber - 1);
         int slot = 1;
         for (var player : participants().toList()) {
@@ -311,6 +312,12 @@ public final class Duel {
         refreshScoreboards();
         startRoundTimer();
         freeze();
+    }
+
+    /** Only maps with a spawn for every slot are drawn; without any, the first map is used and the warning below tells why. */
+    private int pickMap(int configured) {
+        var playable = IntStream.rangeClosed(1, configured).filter(map -> spawns.hasMapSpawns(mode, map, MAX_PARTICIPANTS)).toArray();
+        return playable.length == 0 ? 1 : playable[random.nextInt(playable.length)];
     }
 
     private void teleportToMapSpawn(Player player, int slot) {
