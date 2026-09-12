@@ -53,14 +53,15 @@ public final class BlockcraftCorePlugin extends JavaPlugin {
                 : Set.of();
         var messages = Messages.load(getDataPath(), () -> getResource("messages.yml"));
 
-        var moderation = ModerationRepositories.create(BlockcraftApi.get().database());
+        var api = BlockcraftApi.get();
+        var moderation = ModerationRepositories.create(api.database());
         moderation.createTables();
         var chatFilter = ChatFilterConfig.fromYaml(config);
         var pluginManager = getServer().getPluginManager();
         pluginManager.registerEvents(new MuteListener(moderation.punishments(), messages), this);
         pluginManager.registerEvents(new GlobalMuteListener(moderation.settings(), messages), this);
         pluginManager.registerEvents(new ChatCooldownListener(chatFilter.cooldown(), messages), this);
-        pluginManager.registerEvents(new ChatFilterListener(chatFilter, moderation.adLog(), messages), this);
+        pluginManager.registerEvents(new ChatFilterListener(chatFilter, api.server().name(), moderation.adLog(), messages), this);
         pluginManager.registerEvents(new ChatFormatListener(messages), this);
         var vanish = new VanishListener(this);
         pluginManager.registerEvents(vanish, this);

@@ -2,9 +2,6 @@ sudo:
   protected-players:
     - Aquitano
 
-# Shown to staff in chat filter notices; use the proxy's name for this server.
-server-name: lobby
-
 chat:
   cooldown-seconds: 3
   allowed-domain: blockcraftmc.net

@@ -62,8 +62,8 @@ Versions live in `gradle/libs.versions.toml` (`paper-api`, `velocity-api`, `mine
 
 ```
 docker compose up -d            # MariaDB on localhost:3306, database/user/password "blockcraft"
-./gradlew :paper:runServer      # Paper 26.2 on 25566 with all Paper plugins + LuckPerms
-./gradlew :velocity:runVelocity # Velocity on 25565 with all Velocity plugins + LuckPerms, forwarding to 25566
+./gradlew :paper:runServer      # Paper 26.2 on 25566 with all Paper plugins + LuckPerms, announced as "lobby"
+./gradlew :velocity:runVelocity # Velocity on 25565 with all Velocity plugins + LuckPerms
 ```
 
 `-Pplugins=core,lobby` limits either run task to a subset (`BlockcraftAPI` is always included). The run directories
@@ -72,9 +72,23 @@ and backend share one permission database) and are git-ignored. The dev run task
 behalf and drop `ranks.json.gz` next to LuckPerms; on a fresh database run `lp import ranks` and
 `lp user <name> parent set owner` in either console once.
 
+## Server discovery
+
+The proxy keeps no server list. Every Paper server writes a heartbeat row (name, host, port) to `bc_servers` through
+BlockcraftAPI, and BlockcraftSystem on the proxy registers each server with a fresh heartbeat and drops those whose
+heartbeat went stale (`discovery` in its `config.yml`). `[servers]` in `velocity.toml` stays empty; players land on
+`lobby-server`. Servers listed in `velocity.toml` anyway keep their static address.
+
+A server announces itself as `BLOCKCRAFT_SERVER_NAME`, falling back to `HOSTNAME` (the container or pod name), at
+`BLOCKCRAFT_SERVER_HOST`, falling back to the address of the interface that reaches the database, on its
+`server-port`. Set the two variables when several servers share a host or the proxy reaches them through another
+address. The same works unchanged on Kubernetes: one Deployment per game mode, the pod name becomes the server name
+and the pod IP its address.
+
 ## Deploy
 
 Copy the jars from `build/libs` plus `LuckPerms` into `plugins/` of the respective server, configure the `database`
 section of `plugins/BlockcraftAPI/config.yml` (Paper) and of each Velocity plugin's `config.yml`, point LuckPerms on
 every server at the same database (`storage-method` and `data` in its `config.yml`), import the ranks (see above),
-and point the Paper servers at the proxy with modern forwarding.
+and point the Paper servers at the proxy with modern forwarding. The servers register themselves with the proxy (see
+above).

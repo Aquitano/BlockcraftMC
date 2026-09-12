@@ -4,3 +4,6 @@ database:
   database: blockcraft
   username: blockcraft
   password: blockcraft
+
+# How often this server announces itself to the proxy (bc_servers).
+heartbeat-seconds: 5

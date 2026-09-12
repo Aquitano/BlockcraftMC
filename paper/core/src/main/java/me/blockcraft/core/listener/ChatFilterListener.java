@@ -26,11 +26,13 @@ public final class ChatFilterListener implements Listener {
             "(?<![0-9])((25[0-5]|2[0-4]\\d|[0-1]?\\d{1,2})[.,_ ]){3}(25[0-5]|2[0-4]\\d|[0-1]?\\d{1,2})(?![0-9])");
 
     private final ChatFilterConfig config;
+    private final String serverName;
     private final AdLogRepository adLog;
     private final Messages messages;
 
-    public ChatFilterListener(ChatFilterConfig config, AdLogRepository adLog, Messages messages) {
+    public ChatFilterListener(ChatFilterConfig config, String serverName, AdLogRepository adLog, Messages messages) {
         this.config = config;
+        this.serverName = serverName;
         this.adLog = adLog;
         this.messages = messages;
     }
@@ -49,7 +51,7 @@ public final class ChatFilterListener implements Listener {
         if (!player.hasPermission(ChatPermissions.ADS_BYPASS) && isAdvertisement(withoutAllowedDomain(lowercase))) {
             event.setCancelled(true);
             notifyStaff(player, text);
-            adLog.add(player.getUniqueId(), config.serverName(), text);
+            adLog.add(player.getUniqueId(), serverName, text);
             messages.getLines("chat.ad-filtered").forEach(player::sendMessage);
         }
     }
@@ -67,7 +69,7 @@ public final class ChatFilterListener implements Listener {
         var notice = messages.get("chat.filtered-notify",
                 Placeholder.unparsed("player", player.getName()),
                 Placeholder.unparsed("message", text),
-                Placeholder.unparsed("server", config.serverName()));
+                Placeholder.unparsed("server", serverName));
         for (Player staff : Bukkit.getOnlinePlayers()) {
             if (staff.hasPermission(ChatPermissions.FILTER_NOTIFY)) {
                 staff.sendMessage(notice);

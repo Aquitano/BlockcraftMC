@@ -28,11 +28,15 @@ public final class SystemConfig {
     public record JoinMe(int dailyLimit, int resetHour, Map<String, String> gamesByServerPrefix) {
     }
 
+    public record Discovery(int pollSeconds, int staleSeconds) {
+    }
+
     private final Path file;
     private final Map<String, Object> root;
     private final DatabaseConfig database;
     private final Network network;
     private final String lobbyServer;
+    private final Discovery discovery;
     private final int maxWarns;
     private final int maxStrikes;
     private final int autoBroadcastMinutes;
@@ -52,6 +56,8 @@ public final class SystemConfig {
         this.network = new Network(string(network, "ip"), string(network, "website"), string(network, "shop"),
                 string(network, "teamspeak"), string(network, "discord"));
         this.lobbyServer = string(root, "lobby-server");
+        var discovery = YamlFile.section(root, "discovery");
+        this.discovery = new Discovery(number(discovery, "poll-seconds", 5), number(discovery, "stale-seconds", 20));
         this.maxWarns = number(root, "max-warns", 8);
         this.maxStrikes = number(root, "max-strikes", 5);
         this.autoBroadcastMinutes = number(root, "auto-broadcast-minutes", 5);
@@ -82,6 +88,10 @@ public final class SystemConfig {
 
     public String lobbyServer() {
         return lobbyServer;
+    }
+
+    public Discovery discovery() {
+        return discovery;
     }
 
     public int maxWarns() {

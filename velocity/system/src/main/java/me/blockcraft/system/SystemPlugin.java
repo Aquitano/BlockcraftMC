@@ -13,6 +13,7 @@ import me.blockcraft.build.BuildConstants;
 import me.blockcraft.common.db.Database;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.moderation.ModerationRepositories;
+import me.blockcraft.common.network.ServerRepository;
 import me.blockcraft.system.command.CommandSupport;
 import me.blockcraft.system.command.moderation.BanCommand;
 import me.blockcraft.system.command.moderation.BanListCommand;
@@ -56,12 +57,14 @@ import me.blockcraft.system.command.staff.SetMaxCommand;
 import me.blockcraft.system.command.staff.TeamChatCommand;
 import me.blockcraft.system.command.staff.WartungenCommand;
 import me.blockcraft.system.listener.CommandListener;
+import me.blockcraft.system.listener.InitialServerListener;
 import me.blockcraft.system.listener.KickListener;
 import me.blockcraft.system.listener.LoginListener;
 import me.blockcraft.system.listener.TabCompleteListener;
 import me.blockcraft.system.listener.TabHeaderListener;
 import me.blockcraft.system.moderation.PunishmentService;
 import me.blockcraft.system.motd.MotdListener;
+import me.blockcraft.system.network.ServerDiscovery;
 import me.blockcraft.system.party.PartyListener;
 import me.blockcraft.system.party.PartyManager;
 import me.blockcraft.system.support.SupportListener;
@@ -105,6 +108,8 @@ public final class SystemPlugin {
         database = Database.connect(config.database(), "BlockcraftSystem");
         var repositories = ModerationRepositories.create(database);
         repositories.createTables();
+        var servers = new ServerRepository(database);
+        servers.createTable();
 
         var settings = new ProxySettings(repositories.settings());
         var lookup = new PlayerLookup(proxy, repositories.players());
@@ -120,6 +125,7 @@ public final class SystemPlugin {
         events.register(this, new TabHeaderListener(proxy, config, messages));
         events.register(this, new CommandListener(config, messages));
         events.register(this, new KickListener(lobby, messages));
+        events.register(this, new InitialServerListener(lobby));
         events.register(this, new TabCompleteListener());
         events.register(this, new MotdListener(proxy, config, settings, messages));
         events.register(this, new PartyListener(parties));
@@ -170,6 +176,9 @@ public final class SystemPlugin {
         register(new ModCommand(support, proxy, messages).create());
         register(new OnlineCommand(support, proxy, messages).create());
 
+        proxy.getScheduler().buildTask(this, new ServerDiscovery(proxy, servers, config.discovery().staleSeconds(), logger))
+                .repeat(config.discovery().pollSeconds(), TimeUnit.SECONDS)
+                .schedule();
         proxy.getScheduler().buildTask(this, new AutoBroadcast(proxy, config, messages))
                 .repeat(config.autoBroadcastMinutes(), TimeUnit.MINUTES)
                 .schedule();

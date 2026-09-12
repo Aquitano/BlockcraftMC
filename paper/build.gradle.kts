@@ -4,14 +4,16 @@ plugins {
 
 val libs = the<VersionCatalogsExtension>().named("libs")
 
-// Runs one Paper server (port 25566, behind the dev Velocity) with every plugin in this directory plus LuckPerms.
-// Needs the MariaDB from docker-compose.yml. `-Pplugins=core,lobby` limits the set (BlockcraftAPI is always included).
+// Runs one Paper server (port 25566, announced to the dev Velocity as "lobby") with every plugin in this directory
+// plus LuckPerms. Needs the MariaDB from docker-compose.yml. `-Pplugins=core,lobby` limits the set (BlockcraftAPI is
+// always included).
 val selectedPlugins = providers.gradleProperty("plugins").map { it.split(",").map(String::trim).toSet() }
 
 tasks.runServer {
     minecraftVersion(libs.findVersion("minecraft").get().requiredVersion)
     runDirectory = rootProject.layout.projectDirectory.dir("run/paper")
     systemProperty("com.mojang.eula.agree", "true")
+    environment("BLOCKCRAFT_SERVER_NAME", "lobby")
     dependsOn(":packRanks")
     doFirst {
         copy {

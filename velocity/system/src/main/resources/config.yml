@@ -14,6 +14,11 @@ network:
 
 lobby-server: lobby
 
+# Backends announce themselves in bc_servers; the proxy registers them and drops any whose heartbeat is stale.
+discovery:
+  poll-seconds: 5
+  stale-seconds: 20
+
 # Edited in-game by /setmax and /motd; MOTD lines use legacy & colour codes.
 max-players: 100
 motd:
