@@ -1,0 +1,15 @@
+services:
+  mariadb:
+    image: mariadb:11
+    environment:
+      MARIADB_DATABASE: blockcraft
+      MARIADB_USER: blockcraft
+      MARIADB_PASSWORD: blockcraft
+      MARIADB_ROOT_PASSWORD: root
+    ports:
+      - "3306:3306"
+    volumes:
+      - mariadb:/var/lib/mysql
+
+volumes:
+  mariadb:

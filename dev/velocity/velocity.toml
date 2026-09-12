@@ -1,0 +1,12 @@
+config-version = "2.7"
+bind = "0.0.0.0:25565"
+motd = "<gold>Blockcraft dev proxy"
+online-mode = true
+player-info-forwarding-mode = "modern"
+forwarding-secret-file = "forwarding.secret"
+
+[servers]
+lobby = "127.0.0.1:25566"
+try = ["lobby"]
+
+[forced-hosts]
