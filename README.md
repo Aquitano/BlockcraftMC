@@ -1,167 +1,59 @@
 # BlockcraftMC Plugins
 
-Welcome to the **BlockcraftMC Plugins** repository! This collection comprises a variety of BungeeCord and Spigot plugins developed and/or updated by Fabian and me in 2018-2019 for the BlockcraftMC minigame server. Each plugin is designed to enhance the gameplay experience, streamline server management, and provide unique functionalities tailored to our community's needs.
+Paper and Velocity plugins for the BlockcraftMC minigame network, originally written for Spigot 1.8.8 / BungeeCord in
+2018-2019 and ported to Paper 26.2 / Velocity 4 in 2026.
 
-- [BungeeCord Plugins](#bungeecord-plugins)
-  - [BungeeRanks (BungeeCord)](#bungeeranks-bungeecord)
-  - [BungeeSystem (BungeeCord)](#bungeesystem-bungeecord)
-  - [BungeeReport (BungeeCord)](#bungeereport-bungeecord)
-- [Spigot Plugins](#spigot-plugins)
-  - [BlockcraftAPI (Spigot)](#blockcraftapi-spigot)
-  - [BlockcraftCore (Spigot)](#blockcraftcore-spigot)
-  - [BlockcraftPerms (Spigot)](#blockcraftperms-spigot)
-  - [Duell (Spigot)](#duell-spigot)
-  - [EmeraldRush (Spigot)](#emeraldrush-spigot)
-  - [Lobby (Spigot)](#lobby-spigot)
-  - [QuickSg (Spigot)](#quicksg-spigot)
-  - [Reports (Spigot)](#reports-spigot)
-  - [StatusSigns (Spigot)](#statussigns-spigot)
+## Layout
 
+```
+common/                  DB access (HikariCP), YAML config, MiniMessage messages; shared by Paper and Velocity plugins
+paper/api                BlockcraftAPI: library plugin owning the database pool, coins, menus, items, shared helpers
+paper/core               BlockcraftCore: staff/utility commands, chat moderation enforcement
+paper/lobby              Lobby: join items, server compass, cosmetics, premium shop, secrets
+paper/duell              Duell: 1v1 duels (vs, sg, superjump)
+paper/emeraldrush        EmeraldRush minigame
+paper/quicksg            QuickSG survival games
+paper/reports            ReportsMenu: staff GUI over the reports table
+paper/statussigns        StatusSigns: clickable server-status signs
+velocity/system          BlockcraftSystem: bans, mutes, strikes, warns, party, hub, MOTD, staff tools
+velocity/report          BlockcraftReport: /report on the proxy
+dev/                     Config templates for the local dev network (see below)
+```
 
-## Plugins Overview
+Ranks and permissions are handled by [LuckPerms](https://luckperms.net) on both platforms; the plugins check
+`group.<rank>` permissions and assign groups through the LuckPerms API.
 
-### BungeeCord Plugins
+Every plugin ships a `messages.yml` (MiniMessage, German by default) and a `config.yml`; both are copied to the plugin's
+data folder on first start and can be edited there.
 
-#### BungeeRanks (BungeeCord)
+## Build
 
-**Description:**
-Manage player ranks across multiple servers seamlessly with BungeeRanks. Assign, modify, and track ranks with ease to ensure a consistent experience for players regardless of the server they are on.
+Requires JDK 25 (`mise install` picks it up from `mise.toml`; the Gradle toolchain downloads one otherwise).
 
-**Features:**
-- Rank assignment and removal
-- Rank hierarchy management
-- Integration with other BlockcraftMC plugins and LuckyPerms
+```
+./gradlew build
+```
 
----
+Deployable jars land in `<module>/build/libs/<module>-<version>.jar` (the `-slim` jar is a build artefact).
+Paper plugins declare HikariCP and the MariaDB driver in `plugin.yml` `libraries`, so only `BlockcraftAPI` needs them
+and they are downloaded by the server. Velocity plugins shade them.
 
-#### BungeeSystem (BungeeCord)
+Versions live in `gradle/libs.versions.toml` (`paper-api`, `velocity-api`, `minecraft`).
 
-**Description:**
-A comprehensive system plugin that integrates various functionalities like commands, listeners, party management, and more to streamline server operations.
+## Run locally
 
-**Features:**
-- Command handling
-- Event listeners
-- Party management system
-- Utility tools
+```
+docker compose up -d            # MariaDB on localhost:3306, database/user/password "blockcraft"
+./gradlew :paper:runServer      # Paper 26.2 on 25566 with all Paper plugins + LuckPerms
+./gradlew :velocity:runVelocity # Velocity on 25565 with all Velocity plugins + LuckPerms, forwarding to 25566
+```
 
----
+`-Pplugins=core,lobby` limits either run task to a subset (`BlockcraftAPI` is always included). The run directories
+under `run/` are seeded from `dev/` (proxy forwarding, ports, dev secret) and are git-ignored. The dev run tasks accept
+the Minecraft EULA on your behalf.
 
-#### BungeeReport (BungeeCord)
+## Deploy
 
-**Description:**
-Facilitates player reporting by providing a platform for players to submit report, ensuring a safe and fair gaming environment.
-
-**Features:**
-- Player report submission
-- Staff report management interface
-- Automated report notifications
-
----
-
-### Spigot Plugins
-
-#### BlockcraftAPI (Spigot)
-
-**Description:**
-Provides a robust API for other plugins to interact with core BlockcraftMC features, facilitating easier development and integration. Especially for the coins that are used in the server.
-
-**Features:**
-- API for coins management
-- Integration hooks for other plugins
-
----
-
-#### BlockcraftCore (Spigot)
-
-**Description:**
-The core plugin that handles essential server functionalities, ensuring smooth and efficient operations for the BlockcraftMC server.
-
-**Features:**
-- Core command handling
-- Server utilities
-- Integration with other core plugins
-
----
-
-#### BlockcraftPerms (Spigot)
-
-**Description:**
-Advanced permissions management system, allowing for fine-grained control over player permissions and roles.
-
-**Features:**
-- Permission groups management
-- Dynamic permission assignments
-- Integration with BungeeRanks
-
----
-
-#### Duell (Spigot)
-
-**Description:**
-Manages duels between players, including matchmaking, scoring, and duel-related events.
-
-**Features:**
-- Duel initiation and management
-- Matchmaking system
-- Scoring and leaderboard integration
-
----
-
-#### EmeraldRush (Spigot)
-
-**Description:**
-A minigame plugin that introduces the Emerald Rush game mode, complete with custom commands, listeners, and scoring systems.
-
-**Features:**
-- Custom game mechanics
-- Player perks and abilities
-- Scoreboard integration
-
----
-
-#### Lobby (Spigot)
-
-**Description:**
-Enhances the lobby experience with APIs, custom commands, listeners, and utilities to engage players as they wait.
-
-**Features:**
-- Custom lobby commands
-- Interactive lobby features
-- Integration with StatusSigns
-
----
-
-#### QuickSg (Spigot)
-
-**Description:**
-Streamlines the SkyGates (QuickSG) minigame with efficient commands, kit management, and scoreboards.
-
-**Features:**
-- QuickSG game management
-- Kit customization
-- Real-time scoreboards
-
----
-
-#### Reports (Spigot)
-
-**Description:**
-An advanced user interface for team members to manage player reports, ensuring timely and effective resolution of issues.
-
-**Features:**
-- Report management interface
-- Automated report notifications
-- Integration with BungeeReport
-
----
-
-#### StatusSigns (Spigot)
-
-**Description:**
-Manages interactive status signs within the server, displaying real-time information and providing clickable actions for players.
-
-**Features:**
-- Real-time server status displays
-- Clickable sign actions
-- Integration with other plugins for dynamic content
+Copy the jars from `build/libs` plus `LuckPerms` into `plugins/` of the respective server, configure the `database`
+section of `plugins/BlockcraftAPI/config.yml` (Paper) and of each Velocity plugin's `config.yml`, and point the
+Paper servers at the proxy with modern forwarding.
