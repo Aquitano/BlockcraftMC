@@ -1,0 +1,13 @@
+package me.blockcraft.core.listener;
+
+final class ChatPermissions {
+
+    static final String GLOBAL_MUTE_BYPASS = "blockcraft.globalmute.bypass";
+    static final String SPAM_BYPASS = "blockcraft.core.chat.spam.bypass";
+    static final String WORDS_BYPASS = "blockcraft.core.chatfilter.bypass.words";
+    static final String ADS_BYPASS = "blockcraft.core.chatfilter.bypass.ads";
+    static final String FILTER_NOTIFY = "blockcraft.core.chatfilter.notify";
+
+    private ChatPermissions() {
+    }
+}

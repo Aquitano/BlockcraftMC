@@ -1,0 +1,139 @@
+prefix: "<gold>Blockcraft <dark_gray>» <reset>"
+fly:
+  enabled: "<prefix><gray>Du kannst nun fliegen!"
+  disabled: "<prefix><gray>Du kannst nun <white>nicht <gray>mehr fliegen!"
+flyspeed:
+  enabled: "<prefix><gray>Dein Flyspeed wurde <white>aktiviert<gray>!"
+  disabled: "<prefix><gray>Dein Flyspeed wurde <white>deaktiviert<gray>!"
+food:
+  done: "<prefix><gray>Du hast nun keinen Hunger mehr!"
+gm:
+  usage: "<prefix><red>Benutze /gm [1,2,3]"
+  changed: "<prefix><gray>Dein Gamemode wurde auf <white><mode> <gray>gesetz!"
+heal:
+  done: "<prefix><gray>Du wurdest geheilt!"
+invsee:
+  usage: "<prefix><red>BeNutze /invsee [Spieler]"
+  opened: "<prefix>Du siehst nun das Inventar von <white><player>"
+serverinfo:
+  lines:
+    - ""
+    - "<prefix><gray>Maximaler Ram: <white><max><gray> MB"
+    - "<prefix><gray>Benutzter Ram: <white><used><gray> MB"
+    - " "
+sethealth:
+  usage: "<prefix><red>benutze /sethealth [Name] [Herzen]"
+  done: "<prefix><white><player><gray> hat nun <white><health><gray> Herzen!"
+skull:
+  usage: "<prefix><gray>Benutze <white>/skull [name]"
+  received: "<prefix><gray>Du hast den Kopf von <white><player><gray> erhalten!"
+speed:
+  enabled: "<prefix><gray>Speed wurde <white>aktivert<gray>!"
+  disabled: "<prefix><gray>Speed wurde <white>deaktiviert<gray>!"
+sudo:
+  usage: "<prefix><red>Benutze /sudo \\<name> \\<nachricht>"
+  done: "<prefix><gray>Der Spieler <white><player> <gray>gibt automatisch <white><message> <gray>ein!"
+  protected: "<prefix><red>Der Sudo Command ist für diesen Spieler nicht erlabt!"
+kill:
+  usage: "<prefix><red>Benutze /kill [Name]"
+  done: "<prefix><gray>Du hast den Spieler <white><player><gray> getötet!"
+rain:
+  done: "<prefix><gray>Du hast den Regen <white>aktiviert<gray>!"
+sun:
+  done: "<prefix><gray>Du hast den Regen <white>deaktiviert<gray>!"
+time:
+  usage: "<prefix><red>Benutze /time [tag,nacht,10...]"
+  day: "<prefix><gray>Du hast die Zeit zu <white>Tag<gray> geändert!"
+  night: "<prefix><gray>Du hast die Zeit zu <white>Nacht<gray> geändert!"
+  set: "<prefix><gray>Du hast die Zeit auf <white><time><gray> gesetzt!"
+  invalid: "<prefix><red>Nutze für die Zeit <white>day<red>, <white>night<red> oder einen <white>Zahlenwert<red>!"
+tp:
+  usage: "<prefix><red>Benutze /tp [Name] [Name]"
+  self: "<prefix><gray>Du hast dich zu <white><player><gray> teleportiert!"
+  other: "<prefix><gray>Du hast <white><from><gray> zu <white><to><gray> teleportiert!"
+xp:
+  usage: "<prefix><red>Benutze /xp [Name] [Level]"
+  done: "<prefix><gray>Du hast den Spieler <white><player> <level><gray> Level gegeben!"
+msg:
+  usage: "<prefix><red>Benutze /msg \\<name> \\<nachricht>"
+  self: "<prefix><red>Du kannst dir nicht selber schreiben!"
+  to-target: "<white><sender> <green>» <target><gray>: <aqua><message>"
+  to-sender: "<white><sender> <red>« <target><gray>: <aqua><message>"
+vanish:
+  enabled: "<prefix><gray>Du bist nun unsichtbar!"
+  disabled: "<prefix><gray>Du bist nun wieder sichtbar!"
+clear:
+  usage: "<prefix><red>Benutze /clear [Name]"
+  done: "<prefix><gray>Du hast das Inventar von <white><player><gray> geleert!"
+connect:
+  usage: "<prefix><red>Benutze /connect [ServerName]"
+  done: "<prefix><gray>Du betrittst den Server <white><server>"
+reflash:
+  done: "<prefix><gray>Alle Spieler müssten nun sichtbar sein!"
+team:
+  help:
+    - ""
+    - "<dark_gray>● <blue>INFORMATIONEN <gold>TEAM<blue> COMMANDS <dark_gray>●"
+    - "  <aqua>/cc <dark_gray>- <gray>Leert den Chat"
+    - "  <aqua>/reports <dark_gray>- <gray>Öffnet das ReportMenu"
+    - "  <aqua>/food <dark_gray>- <gray>Füllt deine Hungerbalken"
+    - "  <aqua>/fly, /flyspeed, /speed"
+    - "  <aqua>/heal"
+    - "  <aqua>/invsee ,/sudo"
+    - "  <aqua>/sethealth"
+    - "  <aqua>/kill, /tp, /xp , /time"
+    - "  <aqua>/rain, /sun"
+    - "  <aqua>/msg <dark_gray>[Name] [MSG]"
+  admin-hint:
+    - ""
+    - "   <blue>mit /team help admin siehst du deine anderen Rechte!"
+  admin:
+    - "<dark_gray>● <blue>INFORMATIONEN <white>TEAM<blue> COMMANDS <dark_gray>●"
+    - "  <aqua>/gm <gray>[0-3]"
+    - "  <aqua>/serverinfo"
+    - "  <aqua>/connect <gray>[ServerName] "
+    - "  <aqua>/skull <gray>[name]"
+    - "  <aqua>/reflash"
+    - "  <aqua>/enchant"
+    - "<blue>EmeraldRush:"
+    - "  <aqua>/rush endsuch"
+    - "  <aqua>/rush endshop"
+    - "  <aqua>/rush shop"
+    - "  <aqua>/rushcoins set <gray>[Name] [Emeralds]"
+duration:
+  second: Sekunde
+  seconds: Sekunden
+  minute: Minute
+  minutes: Minuten
+  hour: Stunde
+  hours: Stunden
+  day: Tag
+  days: Tage
+  week: Woche
+  weeks: Wochen
+  month: Monat
+  months: Monate
+  year: Jahr
+  years: Jahre
+  remaining: "<time>"
+  permanent: "<dark_red>Permanent"
+mute:
+  blocked:
+    - "<prefix><gray>Derzeit ist der Chat für dich deaktiviert!"
+    - "<prefix><gray>Grund: <red><reason>"
+    - "<prefix><gray>Verbleibende Zeit: <red><remaining>"
+globalmute:
+  blocked: "<dark_aqua>Dir wird es derzeit verweigert, im <yellow>Chat <dark_aqua>zu schreiben. <yellow>GlobalMute <dark_aqua>ist aktiv."
+chat:
+  spam: "<prefix><red>Bitte warte einen Moment... Verdacht auf Spam!"
+  word-filtered: "<prefix><gray>Diese Chatnachricht wurde vom System gefiltert. <red>Grund: Anzügige Sprache"
+  filtered-notify: "<prefix><gray>Der Spieler <red><player><gray> hat geschrieben: <red><message> <gray>auf <red><server>"
+  ad-filtered:
+    - "<prefix><gray>Deine ChatNachricht wurde gefiltert. <red>Grund: Mögliche Werbung."
+    - "<prefix><red>Die Teammitglieder werden diesen Sachverhalt nun prüfen."
+  ad-warned: "<prefix><gold>Du hast <red><count><gold>/<gold><max><red> Warns."
+  ad-warn-reason: "Werbung"
+  ad-ban-reason: "Werbung - Zu viele Warns"
+  ad-ban-issuer: "ChatFilter"
+  ad-ban-screen:
+    - "<red>Du wurdest wegen <gold><count><red>/<red><max><gold> Warns vom Server gebannt."

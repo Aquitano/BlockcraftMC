@@ -1,0 +1,73 @@
+sudo:
+  protected-players:
+    - Aquitano
+
+# Shown to staff in chat filter notices; use the proxy's name for this server.
+server-name: lobby
+
+chat:
+  cooldown-seconds: 3
+  # Advertising warns land in bc_warns; reaching this count bans the player.
+  max-warns: 8
+  allowed-domain: blockcraftmc.net
+  blocked-words:
+    - noob
+    - l2p
+    - ficken
+    - hurensohn
+    - missgeburt
+    - bastard
+    - basti
+    - spast
+    - spasti
+    - huren
+    - huso
+  advertisement-terms:
+    - ".arpa"
+    - ":2"
+    - ".to"
+    - ".tk"
+    - ".eu"
+    - ".me"
+    - ".biz"
+    - ".com"
+    - ".info"
+    - ".name"
+    - ".net"
+    - ".org"
+    - ".pro"
+    - ".aero"
+    - ".asia"
+    - ".cat"
+    - ".coop"
+    - ".edu"
+    - ".gov"
+    - ".int"
+    - ".jobs"
+    - ".mil"
+    - ".mobi"
+    - ".museum"
+    - ".post"
+    - ".tel"
+    - ".de"
+    - ".travel"
+    - ".xxx"
+    - joint
+    - ".gs"
+    - kommt alle auf
+    - "(.)"
+    - "(Punkt)"
+    - gommehd
+    - revayd
+    - sevenpvp
+    - lightningpvp
+    - cytooxien
+    - rewinside
+    - ".n e t"
+    - n e t
+    - d e
+    - ",net"
+    - ",de"
+    - ",com"
+    - ",tk"
+    - ", n e t"
