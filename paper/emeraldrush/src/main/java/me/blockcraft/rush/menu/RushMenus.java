@@ -99,6 +99,14 @@ public final class RushMenus {
     }
 
     void buy(Player player, ShopEntry entry) {
+        if (game.phase() != GamePhase.SHOPPING) {
+            Menu.close(player);
+            return;
+        }
+        if (player.getInventory().firstEmpty() == -1) {
+            player.sendMessage(messages.get("shop.inventory-full"));
+            return;
+        }
         if (!game.withdrawEmeralds(player, entry.price())) {
             player.sendMessage(messages.get("shop.not-enough"));
             return;

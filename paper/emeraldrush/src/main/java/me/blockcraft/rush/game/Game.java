@@ -174,7 +174,7 @@ public final class Game {
         scoreboard.refreshAll();
         if (Bukkit.getOnlinePlayers().size() >= config.minPlayers()) {
             startLobbyCountdown();
-        } else {
+        } else if (!forcedStart) {
             countdown.cancel();
             Bukkit.getOnlinePlayers().forEach(online -> online.setLevel(config.lobbyCountdown()));
         }
@@ -189,7 +189,7 @@ public final class Game {
         emeralds.remove(id);
         lives.remove(id);
         loadouts.remove(id);
-        if (wasAlive && phase != GamePhase.LOBBY) {
+        if (wasAlive && phase != GamePhase.LOBBY && phase != GamePhase.ENDING) {
             Tasks.async(plugin, () -> stats.increment(id, player.getName(), StatCategory.LOSES, 1));
             checkWinner();
         }
@@ -252,6 +252,12 @@ public final class Game {
     }
 
     private void beginSearch() {
+        if (alive.size() < 2) {
+            forcedStart = false;
+            broadcast("lobby.cancelled");
+            Bukkit.getOnlinePlayers().forEach(online -> online.setLevel(config.lobbyCountdown()));
+            return;
+        }
         phase = GamePhase.SEARCH;
         messages.getLines("search.started", Formatter.number("minutes", config.searchSeconds() / 60)).forEach(Bukkit::broadcast);
         var pickaxe = Items.of(Material.IRON_PICKAXE).name(messages.get("item.pickaxe")).edit(meta -> {
@@ -368,7 +374,7 @@ public final class Game {
             return;
         }
         var victimName = Placeholder.component("victim", victim.playerListName());
-        killer.ifPresentOrElse(slayer -> {
+        killer.filter(slayer -> !slayer.equals(victim)).ifPresentOrElse(slayer -> {
             broadcast("deathmatch.killed", victimName, Placeholder.component("killer", slayer.playerListName()));
             Tasks.async(plugin, () -> {
                 coins.add(slayer.getUniqueId(), slayer.getName(), KILL_COINS);

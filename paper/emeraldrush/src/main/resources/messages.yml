@@ -3,6 +3,7 @@ motd:
   lobby: "<green>-------------"
   ingame: "<gold>-------------"
 lobby:
+  cancelled: "<prefix><red>Zu wenige Spieler, der Countdown wurde abgebrochen."
   welcome:
     - " "
     - "<gray>Sammle bei <aqua>EmeraldRush <gray>möglichst viele Emeralds!"
@@ -129,6 +130,7 @@ perk:
 shop:
   title: "<dark_aqua>Shop <gray>» <dark_gray><category>"
   not-enough: "<prefix><red>Du hast zu wenig Emeralds!"
+  inventory-full: "<prefix><red>Dein Inventar ist voll!"
   price: "<dark_gray>» <gray><price> Emeralds"
   filler: " "
   category:
