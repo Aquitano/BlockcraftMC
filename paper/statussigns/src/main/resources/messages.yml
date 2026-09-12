@@ -1,0 +1,19 @@
+prefix: "<gold>Blockcraft <dark_gray>» <reset>"
+sign:
+  name: "- <name> -"
+  status:
+    lobby: "<green><motd>"
+    ingame: "<red><motd>"
+    restart: "<aqua><motd>"
+    other: "<gray>[<green>Join<gray>]"
+  players: "<online>/<max>"
+  click: "<dark_gray>*Klick*"
+  offline:
+    border: "<red>█ █ █<bold>✖</bold> █ █ █"
+    status: "<gray>Offline"
+    players: " "
+createsign:
+  usage: "<prefix><yellow>/createsign <green>\\<IP> <gold>\\<Port> <dark_purple>\\<ServerName>"
+  not-a-sign: "<prefix><red>Du schaust nicht auf ein gültiges Schild!"
+click:
+  offline: "<prefix><red>Server ist derzeit offline!"
