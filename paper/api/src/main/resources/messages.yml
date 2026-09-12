@@ -1,0 +1,4 @@
+prefix: "<gold>Blockcraft <dark_gray>» <reset>"
+coins:
+  self: "<prefix><gray>Du hast <yellow><coins> <gray>Coins!"
+  other: "<prefix><yellow><player> <gray>hat <yellow><coins> <gray>Coins."
