@@ -25,6 +25,7 @@ import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Firework;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
+import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.plugin.Plugin;
 
 import java.util.HashMap;
@@ -43,6 +44,7 @@ public final class Game {
     private static final Set<Integer> GAME_END_ANNOUNCEMENTS = Set.of(600, 300, 180);
     private static final double INGAME_MAX_HEALTH = 14.0;
     private static final double DEFAULT_MAX_HEALTH = 20.0;
+    private static final long RESPAWN_DELAY_TICKS = 1L;
 
     private final Plugin plugin;
     private final QuickSGConfig config;
@@ -179,9 +181,24 @@ public final class Game {
         }
         record(victim, StatColumn.DEATHS, 1);
         record(victim, StatColumn.LOSSES, 1);
-        makeSpectator(victim);
+        alive.remove(victim.getUniqueId());
+        spectators.add(victim.getUniqueId());
+        Tasks.later(plugin, RESPAWN_DELAY_TICKS, () -> {
+            if (victim.isOnline() && victim.isDead()) {
+                victim.spigot().respawn();
+            }
+        });
         refreshScoreboards();
         checkWinner();
+    }
+
+    /** The spectator state is applied after the respawn; touching health or game mode on a dead player breaks the respawn. */
+    public void respawn(PlayerRespawnEvent event) {
+        var player = event.getPlayer();
+        locations.get(LocationKey.SPECTATOR).ifPresent(event::setRespawnLocation);
+        if (spectators.contains(player.getUniqueId())) {
+            Tasks.sync(plugin, () -> makeSpectator(player));
+        }
     }
 
     /** Skips a running lobby countdown to its last five seconds; returns false if that is not possible any more. */

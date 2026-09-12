@@ -53,7 +53,7 @@ final class KitDetailMenu extends Menu {
     protected void onClick(Player player, int slot, ItemStack clicked, InventoryClickEvent event) {
         switch (slot) {
             case SLOT_SELECT -> menus.select(player, kit, owned);
-            case SLOT_BUY -> menus.buy(player, kit, owned);
+            case SLOT_BUY -> menus.buy(player, kit);
             case 7, 8 -> menus.openSelector(player);
             default -> {
             }

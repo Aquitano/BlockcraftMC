@@ -144,6 +144,7 @@ public final class ItemListener implements Listener {
     }
 
     private static void consumeHeldItem(Player player) {
-        player.getInventory().setItem(player.getInventory().getHeldItemSlot(), null);
+        var inventory = player.getInventory();
+        inventory.setItemInMainHand(inventory.getItemInMainHand().subtract());
     }
 }
