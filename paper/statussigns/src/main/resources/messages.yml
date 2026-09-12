@@ -15,5 +15,6 @@ sign:
 createsign:
   usage: "<prefix><yellow>/createsign <green>\\<IP> <gold>\\<Port> <dark_purple>\\<ServerName>"
   not-a-sign: "<prefix><red>Du schaust nicht auf ein gültiges Schild!"
+  created: "<prefix><gray>Status-Schild für <gold><name><gray> erstellt."
 click:
   offline: "<prefix><red>Server ist derzeit offline!"

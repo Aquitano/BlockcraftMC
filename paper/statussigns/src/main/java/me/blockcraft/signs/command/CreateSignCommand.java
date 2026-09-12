@@ -9,6 +9,7 @@ import io.papermc.paper.command.brigadier.Commands;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.signs.sign.StatusSign;
 import me.blockcraft.signs.sign.StatusSigns;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Tag;
 import org.bukkit.entity.Player;
 
@@ -36,11 +37,13 @@ public final class CreateSignCommand {
                                                 player.sendMessage(messages.get("createsign.not-a-sign"));
                                                 return Command.SINGLE_SUCCESS;
                                             }
+                                            String name = StringArgumentType.getString(context, "name");
                                             signs.add(new StatusSign(
                                                     target.getLocation(),
-                                                    StringArgumentType.getString(context, "name"),
+                                                    name,
                                                     StringArgumentType.getString(context, "ip"),
                                                     IntegerArgumentType.getInteger(context, "port")));
+                                            player.sendMessage(messages.get("createsign.created", Placeholder.unparsed("name", name)));
                                             return Command.SINGLE_SUCCESS;
                                         }))))
                 .build();
