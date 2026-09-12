@@ -18,6 +18,7 @@ paper/statussigns        StatusSigns: clickable server-status signs
 velocity/system          BlockcraftSystem: bans, mutes, strikes, warns, party, hub, MOTD, staff tools
 velocity/report          BlockcraftReport: /report on the proxy
 dev/                     Config templates for the local dev network (see below)
+docker-compose.yml       The local dev network: MariaDB, Velocity and one Paper server per game mode
 ```
 
 Ranks and permissions are handled by [LuckPerms](https://luckperms.net) on both platforms; the plugins check
@@ -60,8 +61,32 @@ Versions live in `gradle/libs.versions.toml` (`paper-api`, `velocity-api`, `mine
 
 ## Run locally
 
+### The whole network in Docker
+
 ```
-docker compose up -d            # MariaDB on localhost:3306, database/user/password "blockcraft"
+./gradlew stagePlugins   # plugin jars into build/docker/
+docker compose up -d     # MariaDB, Velocity on 25565, Paper servers lobby, duell, emeraldrush and quicksg
+```
+
+Connect to `localhost:25565`. Every Paper server runs BlockcraftAPI, BlockcraftCore and its game plugin (the lobby
+also StatusSigns and ReportsMenu); `docker-compose.yml` is the place that says which server runs what. Worlds and
+plugin data live in named volumes: `docker compose down` keeps them, `docker compose down -v` starts over. After a
+code change, `./gradlew stagePlugins` and `docker compose restart <server>` pick up the new jars.
+
+`docker compose logs -f lobby` follows a server and `docker compose exec lobby rcon-cli <command>` runs a command.
+LuckPerms answers only on the real console, so on a fresh database run
+
+```
+docker compose exec -u 1000 lobby mc-send-to-console lp import ranks
+docker compose exec -u 1000 lobby mc-send-to-console lp user <name> parent set owner
+```
+
+and read the replies in the log.
+
+### One server on the host
+
+```
+docker compose up -d mariadb    # MariaDB on localhost:3306, database/user/password "blockcraft"
 ./gradlew :paper:runServer      # Paper 26.2 on 25566 with all Paper plugins + LuckPerms, announced as "lobby"
 ./gradlew :velocity:runVelocity # Velocity on 25565 with all Velocity plugins + LuckPerms
 ```
@@ -71,6 +96,8 @@ under `run/` are seeded from `dev/` (proxy forwarding, ports, dev secret, LuckPe
 and backend share one permission database) and are git-ignored. The dev run tasks accept the Minecraft EULA on your
 behalf and drop `ranks.json.gz` next to LuckPerms; on a fresh database run `lp import ranks` and
 `lp user <name> parent set owner` in either console once.
+
+Both flavours share the database and announce a server called `lobby`, so run one of them at a time.
 
 ## Server discovery
 
@@ -92,3 +119,8 @@ section of `plugins/BlockcraftAPI/config.yml` (Paper) and of each Velocity plugi
 every server at the same database (`storage-method` and `data` in its `config.yml`), import the ranks (see above),
 and point the Paper servers at the proxy with modern forwarding. The servers register themselves with the proxy (see
 above).
+
+In containers, environment variables replace the config edits: `BLOCKCRAFT_DB_HOST`, `BLOCKCRAFT_DB_PORT`,
+`BLOCKCRAFT_DB_NAME`, `BLOCKCRAFT_DB_USER` and `BLOCKCRAFT_DB_PASSWORD` override the `database` section of every
+Blockcraft plugin, and LuckPerms reads `LUCKPERMS_STORAGE_METHOD`, `LUCKPERMS_DATA_ADDRESS` and friends itself;
+`docker-compose.yml` shows the full set.

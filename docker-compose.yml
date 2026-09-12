@@ -1,3 +1,35 @@
+# The whole dev network: MariaDB, the Velocity proxy and one Paper server per game mode. Plugin jars come from
+# `./gradlew stagePlugins`; the servers find each other through the database (README, "Run locally").
+
+x-luckperms: &luckperms
+  LUCKPERMS_STORAGE_METHOD: mariadb
+  LUCKPERMS_DATA_ADDRESS: mariadb:3306
+  LUCKPERMS_DATA_DATABASE: blockcraft
+  LUCKPERMS_DATA_USERNAME: blockcraft
+  LUCKPERMS_DATA_PASSWORD: blockcraft
+  LUCKPERMS_MESSAGING_SERVICE: sql
+
+x-paper: &paper
+  image: itzg/minecraft-server:java25
+  stop_grace_period: 1m
+  depends_on:
+    mariadb:
+      condition: service_healthy
+
+x-paper-env: &paper-env
+  <<: *luckperms
+  EULA: "TRUE"
+  TYPE: PAPER
+  VERSION: "26.2"
+  ONLINE_MODE: "FALSE"
+  ALLOW_FLIGHT: "TRUE"
+  LEVEL_TYPE: minecraft:flat
+  GENERATOR_SETTINGS: '{"layers":[{"block":"minecraft:bedrock","height":1},{"block":"minecraft:dirt","height":2},{"block":"minecraft:grass_block","height":1}],"biome":"minecraft:plains"}'
+  MEMORY: 1G
+  SYNC_SKIP_NEWER_IN_DESTINATION: "false"
+  CREATE_CONSOLE_IN_PIPE: "true"
+  BLOCKCRAFT_DB_HOST: mariadb
+
 services:
   mariadb:
     image: mariadb:11
@@ -10,6 +42,108 @@ services:
       - "3306:3306"
     volumes:
       - mariadb:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  velocity:
+    image: itzg/mc-proxy:java25
+    stop_grace_period: 1m
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    ports:
+      - "25565:25565"
+    environment:
+      <<: *luckperms
+      TYPE: VELOCITY
+      VELOCITY_VERSION: "4.1.1"
+      MEMORY: 512m
+      SYNC_SKIP_NEWER_IN_DESTINATION: "false"
+      BLOCKCRAFT_DB_HOST: mariadb
+      PLUGINS: |
+        /blockcraft/system.jar
+        /blockcraft/report.jar
+        https://download.luckperms.net/1669/velocity/LuckPerms-Velocity-5.5.82.jar
+    volumes:
+      - ./build/docker/velocity:/blockcraft:ro
+      - ./build/luckperms:/plugins/luckperms:ro
+      - ./dev/velocity/velocity.toml:/config/velocity.toml:ro
+      - ./dev/velocity/forwarding.secret:/config/forwarding.secret:ro
+      - velocity:/server
+
+  lobby:
+    <<: *paper
+    hostname: lobby
+    environment:
+      <<: *paper-env
+      PLUGINS: |
+        /blockcraft/api.jar
+        /blockcraft/core.jar
+        /blockcraft/lobby.jar
+        /blockcraft/statussigns.jar
+        /blockcraft/reports.jar
+        https://download.luckperms.net/1669/bukkit/loader/LuckPerms-Bukkit-5.5.82.jar
+    volumes:
+      - ./build/docker/paper:/blockcraft:ro
+      - ./build/luckperms:/plugins/LuckPerms:ro
+      - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
+      - lobby:/data
+
+  duell:
+    <<: *paper
+    hostname: duell
+    environment:
+      <<: *paper-env
+      PLUGINS: |
+        /blockcraft/api.jar
+        /blockcraft/core.jar
+        /blockcraft/duell.jar
+        https://download.luckperms.net/1669/bukkit/loader/LuckPerms-Bukkit-5.5.82.jar
+    volumes:
+      - ./build/docker/paper:/blockcraft:ro
+      - ./build/luckperms:/plugins/LuckPerms:ro
+      - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
+      - duell:/data
+
+  emeraldrush:
+    <<: *paper
+    hostname: emeraldrush
+    environment:
+      <<: *paper-env
+      PLUGINS: |
+        /blockcraft/api.jar
+        /blockcraft/core.jar
+        /blockcraft/emeraldrush.jar
+        https://download.luckperms.net/1669/bukkit/loader/LuckPerms-Bukkit-5.5.82.jar
+    volumes:
+      - ./build/docker/paper:/blockcraft:ro
+      - ./build/luckperms:/plugins/LuckPerms:ro
+      - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
+      - emeraldrush:/data
+
+  quicksg:
+    <<: *paper
+    hostname: quicksg
+    environment:
+      <<: *paper-env
+      PLUGINS: |
+        /blockcraft/api.jar
+        /blockcraft/core.jar
+        /blockcraft/quicksg.jar
+        https://download.luckperms.net/1669/bukkit/loader/LuckPerms-Bukkit-5.5.82.jar
+    volumes:
+      - ./build/docker/paper:/blockcraft:ro
+      - ./build/luckperms:/plugins/LuckPerms:ro
+      - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
+      - quicksg:/data
 
 volumes:
   mariadb:
+  velocity:
+  lobby:
+  duell:
+  emeraldrush:
+  quicksg:

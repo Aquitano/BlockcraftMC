@@ -6,9 +6,10 @@ README.md; this file only holds what the code does not say by itself.
 ## Commands
 
 - `./gradlew build` compiles everything with `-Xlint:deprecation`; keep it warning-free.
-- `docker compose up -d`, then `./gradlew :paper:runServer` / `./gradlew :velocity:runVelocity` boot the dev network.
-  `-Pplugins=core,lobby` limits the plugin set. There are no unit tests; a change is verified by building and, where it
-  touches gameplay, by clicking through it on the dev network.
+- `./gradlew stagePlugins && docker compose up -d` boots the whole dev network (proxy plus one Paper server per game
+  mode). `docker compose up -d mariadb`, then `./gradlew :paper:runServer` / `./gradlew :velocity:runVelocity` run one
+  server on the host instead; `-Pplugins=core,lobby` limits the plugin set. There are no unit tests; a change is
+  verified by building and, where it touches gameplay, by clicking through it on the dev network.
 
 ## Conventions
 
