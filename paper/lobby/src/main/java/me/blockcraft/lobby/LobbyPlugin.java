@@ -5,9 +5,7 @@ import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.config.Locations;
 import me.blockcraft.common.config.YamlFile;
 import me.blockcraft.common.message.Messages;
-import me.blockcraft.lobby.chat.ChatMute;
 import me.blockcraft.lobby.command.ClearChatCommand;
-import me.blockcraft.lobby.command.GlobalMuteCommand;
 import me.blockcraft.lobby.command.SetHoloCommand;
 import me.blockcraft.lobby.command.SetSpawnCommand;
 import me.blockcraft.lobby.config.LobbyConfig;
@@ -16,7 +14,6 @@ import me.blockcraft.lobby.cosmetic.Pets;
 import me.blockcraft.lobby.cosmetic.Trails;
 import me.blockcraft.lobby.hider.PlayerHider;
 import me.blockcraft.lobby.item.LobbyItems;
-import me.blockcraft.lobby.listener.ChatMuteListener;
 import me.blockcraft.lobby.listener.CommandBlockListener;
 import me.blockcraft.lobby.listener.DeathListener;
 import me.blockcraft.lobby.listener.DoubleJumpListener;
@@ -52,7 +49,6 @@ public final class LobbyPlugin extends JavaPlugin {
         var coins = BlockcraftApi.get().coins();
         var luckPerms = LuckPermsProvider.get();
 
-        var chatMute = new ChatMute();
         var trails = new Trails();
         var pets = new Pets(messages);
         var hider = new PlayerHider(this, config.hiderCooldownMillis());
@@ -75,7 +71,6 @@ public final class LobbyPlugin extends JavaPlugin {
                 new LobbyItemListener(messages, menus, items, hider),
                 new ProtectionListener(),
                 new CommandBlockListener(config.allowedCommands()),
-                new ChatMuteListener(chatMute, messages),
                 new SecretsListener(messages, secrets, coins, config.secretReward()),
                 new ShopNpcListener(menus),
                 new PetListener(pets, messages),
@@ -89,7 +84,6 @@ public final class LobbyPlugin extends JavaPlugin {
             var registrar = event.registrar();
             registrar.register(SetSpawnCommand.create(locations, messages), "Setzt die Lobby-Teleportpunkte");
             registrar.register(SetHoloCommand.create(messages, locations, shopNpc), "Erstellt Hologramme");
-            registrar.register(GlobalMuteCommand.create(chatMute, messages), "Schaltet den Chat stumm");
             registrar.register(ClearChatCommand.create(messages), "Leert den Chat");
         });
     }

@@ -165,9 +165,6 @@ trails:
     flame: "<prefix><gray>Du hast den <white>Feuer <gray>Effekt ausgewählt."
     firework: "<prefix><gray>Du hast den <white>Feuerwerk <gray>Effekt ausgewählt."
 chat:
-  muted: "<dark_gray>» <red>Der Chat ist derzeit deaktiviert."
-  mute-on: "<prefix><gray>Der Chat wurde gestummt."
-  mute-off: "<prefix><gray>Der Chat wurde entstummt."
   cleared: "<prefix><gray>Der Chat wurde von <red><player><gray> geleert."
 setspawn:
   set: "<red>Server <dark_gray>» <gray>gesetzt."
