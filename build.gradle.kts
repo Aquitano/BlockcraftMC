@@ -14,16 +14,27 @@ val packRanks = tasks.register("packRanks") {
     }
 }
 
-// Lays out build/docker/{paper,velocity}/<module>.jar for docker-compose.yml, which mounts them into the containers.
+// Lays out build/docker for docker-compose.yml: build/docker/paper/<module>/<module>.jar (one directory per plugin,
+// so a compose service lists the ones it runs), build/docker/velocity/<module>.jar, and ranks.json.gz next to
+// LuckPerms on both sides.
 tasks.register<Sync>("stagePlugins") {
-    dependsOn(packRanks)
-    listOf(project(":paper"), project(":velocity")).forEach { platform ->
-        platform.subprojects.forEach { plugin ->
-            from(plugin.tasks.named("shadowJar")) {
-                into(platform.name)
-                rename { "${plugin.name}.jar" }
-            }
+    project(":paper").subprojects.forEach { plugin ->
+        from(plugin.tasks.named("shadowJar")) {
+            into("paper/${plugin.name}")
+            rename { "${plugin.name}.jar" }
         }
+    }
+    project(":velocity").subprojects.forEach { plugin ->
+        from(plugin.tasks.named("shadowJar")) {
+            into("velocity")
+            rename { "${plugin.name}.jar" }
+        }
+    }
+    from(packRanks) {
+        into("paper/luckperms/LuckPerms")
+    }
+    from(packRanks) {
+        into("velocity/luckperms")
     }
     into(layout.buildDirectory.dir("docker"))
 }
