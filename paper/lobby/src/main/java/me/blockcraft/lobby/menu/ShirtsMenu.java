@@ -27,7 +27,6 @@ final class ShirtsMenu extends Menu {
     @Override
     protected void onClick(Player player, int slot, ItemStack clicked, InventoryClickEvent event) {
         if (slot == BACK_SLOT) {
-            player.closeInventory();
             menus.openShop(player);
             return;
         }
@@ -37,7 +36,7 @@ final class ShirtsMenu extends Menu {
         Shirt shirt = Shirt.values()[slot];
         var messages = menus.messages();
         int price = menus.config().shirtPrice();
-        player.closeInventory();
+        close(player);
         if (menus.shirts().has(player.getUniqueId(), shirt.key())) {
             player.getInventory().setChestplate(item(shirt, true));
             player.sendMessage(messages.get("shirts.equipped"));

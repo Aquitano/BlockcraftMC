@@ -31,6 +31,6 @@ final class SecretsMenu extends Menu {
 
     @Override
     protected void onClick(Player player, int slot, ItemStack clicked, InventoryClickEvent event) {
-        player.closeInventory();
+        close(player);
     }
 }

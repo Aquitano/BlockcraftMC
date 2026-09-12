@@ -43,7 +43,7 @@ public final class ModeMenu extends Menu {
 
     @Override
     protected void onClick(Player player, int slot, ItemStack clicked, InventoryClickEvent event) {
-        player.closeInventory();
+        close(player);
         var mode = SLOTS.get(slot);
         if (mode != null && !duel.vote(mode)) {
             player.sendMessage(messages.get("vote.already-ended"));

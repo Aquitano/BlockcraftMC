@@ -1,6 +1,7 @@
 package me.blockcraft.rush.menu;
 
 import me.blockcraft.api.coins.CoinsRepository;
+import me.blockcraft.api.menu.Menu;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.rush.config.SpawnPoint;
@@ -62,7 +63,7 @@ public final class RushMenus {
     }
 
     void buyPerk(Player player, Perk perk) {
-        player.closeInventory();
+        Menu.close(player);
         Tasks.async(plugin, () -> {
             if (kits.owns(player.getUniqueId(), perk)) {
                 return PerkPurchase.ALREADY_OWNED;
@@ -107,7 +108,7 @@ public final class RushMenus {
     }
 
     void teleportToEnchant(Player player) {
-        player.closeInventory();
+        Menu.close(player);
         spawns.teleport(player, SpawnPoint.ENCHANT);
     }
 

@@ -33,19 +33,13 @@ final class PremiumMenu extends Menu {
     @Override
     protected void onClick(Player player, int slot, ItemStack clicked, InventoryClickEvent event) {
         switch (slot) {
-            case TRAILS_SLOT -> {
-                player.closeInventory();
-                menus.openTrails(player);
-            }
+            case TRAILS_SLOT -> menus.openTrails(player);
             case AREA_SLOT -> menus.locations().get(LobbyLocation.PREMIUM).ifPresent(location -> {
                 player.teleport(location);
                 player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 4.0f, 4.0f);
             });
-            case PETS_SLOT -> {
-                player.closeInventory();
-                menus.openPets(player);
-            }
-            default -> player.closeInventory();
+            case PETS_SLOT -> menus.openPets(player);
+            default -> close(player);
         }
     }
 }

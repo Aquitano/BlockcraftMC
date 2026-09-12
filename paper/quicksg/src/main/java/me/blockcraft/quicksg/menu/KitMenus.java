@@ -1,6 +1,7 @@
 package me.blockcraft.quicksg.menu;
 
 import me.blockcraft.api.coins.CoinsRepository;
+import me.blockcraft.api.menu.Menu;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.quicksg.game.Game;
 import me.blockcraft.quicksg.kit.Kit;
@@ -47,7 +48,7 @@ public final class KitMenus {
     }
 
     void select(Player player, Kit kit, boolean owned) {
-        player.closeInventory();
+        Menu.close(player);
         if (!owned) {
             player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 4.0f, 4.0f);
             player.sendMessage(messages.get("kit.not-owned"));
@@ -58,7 +59,7 @@ public final class KitMenus {
     }
 
     void buy(Player player, Kit kit, boolean owned) {
-        player.closeInventory();
+        Menu.close(player);
         if (owned) {
             player.sendMessage(messages.get("kit.already-owned"));
             return;

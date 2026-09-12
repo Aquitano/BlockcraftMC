@@ -1,5 +1,6 @@
 package me.blockcraft.reports.menu;
 
+import me.blockcraft.api.menu.Menu;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.report.Report;
@@ -51,7 +52,7 @@ public final class ReportMenus {
     }
 
     public void delete(Player player, Report report, Optional<String> reported) {
-        player.closeInventory();
+        Menu.close(player);
         Tasks.async(plugin, () -> {
             reports.delete(report.id());
             return report;
@@ -59,13 +60,13 @@ public final class ReportMenus {
     }
 
     public void sendFindLink(Player player, String target) {
-        player.closeInventory();
+        Menu.close(player);
         player.sendMessage(messages.get("find", Placeholder.unparsed("player", target))
                 .clickEvent(ClickEvent.runCommand("/find " + target)));
     }
 
     public void promptStatus(Player player, Report report, Optional<String> reported) {
-        player.closeInventory();
+        Menu.close(player);
         statusPrompts.put(player.getUniqueId(), new StatusPrompt(report, reported));
         player.sendMessage(messages.get("status.prompt"));
     }

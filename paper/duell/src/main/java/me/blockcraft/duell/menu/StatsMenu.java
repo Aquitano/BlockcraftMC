@@ -48,7 +48,7 @@ public final class StatsMenu extends Menu {
 
     @Override
     protected void onClick(Player player, int slot, ItemStack clicked, InventoryClickEvent event) {
-        player.closeInventory();
+        close(player);
         if (slot == globalSlot) {
             topList.sendWins(player);
         }

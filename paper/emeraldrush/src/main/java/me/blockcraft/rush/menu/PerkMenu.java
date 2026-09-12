@@ -36,7 +36,7 @@ final class PerkMenu extends Menu {
         if (slot < PERKS.length) {
             menus.openPerk(player, PERKS[slot]);
         } else {
-            player.closeInventory();
+            close(player);
         }
     }
 }

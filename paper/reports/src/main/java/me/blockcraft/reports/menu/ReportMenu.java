@@ -60,7 +60,7 @@ final class ReportMenu extends Menu {
             case SET_STATUS -> menus.promptStatus(player, report, reported);
             case BACK -> menus.openList(player, reported, 1);
             case DELETE -> menus.delete(player, report, reported);
-            case CLOSE -> player.closeInventory();
+            case CLOSE -> close(player);
             default -> {
             }
         }

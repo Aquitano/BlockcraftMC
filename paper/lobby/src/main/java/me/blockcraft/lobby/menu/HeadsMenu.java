@@ -28,7 +28,7 @@ final class HeadsMenu extends Menu {
         Head head = Head.values()[slot];
         var messages = menus.messages();
         int price = menus.config().headPrice();
-        player.closeInventory();
+        close(player);
         if (menus.heads().has(player.getUniqueId(), head.key())) {
             player.getInventory().setHelmet(item(head, true));
             player.sendMessage(messages.get("heads.equipped"));

@@ -27,6 +27,6 @@ final class KitSelectorMenu extends Menu {
 
     @Override
     protected void onClick(Player player, int slot, ItemStack clicked, InventoryClickEvent event) {
-        Kit.bySlot(slot).ifPresentOrElse(kit -> menus.openDetail(player, kit), player::closeInventory);
+        Kit.bySlot(slot).ifPresentOrElse(kit -> menus.openDetail(player, kit), () -> close(player));
     }
 }

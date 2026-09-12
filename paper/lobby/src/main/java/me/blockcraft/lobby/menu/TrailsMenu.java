@@ -29,7 +29,7 @@ final class TrailsMenu extends Menu {
 
     @Override
     protected void onClick(Player player, int slot, ItemStack clicked, InventoryClickEvent event) {
-        player.closeInventory();
+        close(player);
         var messages = menus.messages();
         if (slot == REMOVE_SLOT) {
             menus.trails().clear(player);

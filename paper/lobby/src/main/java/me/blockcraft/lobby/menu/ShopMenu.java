@@ -35,19 +35,16 @@ final class ShopMenu extends Menu {
     protected void onClick(Player player, int slot, ItemStack clicked, InventoryClickEvent event) {
         switch (slot) {
             case HEADS_SLOT -> menus.openHeads(player);
-            case SHIRTS_SLOT -> {
-                player.closeInventory();
-                menus.openShirts(player);
-            }
+            case SHIRTS_SLOT -> menus.openShirts(player);
             case PREMIUM_SLOT -> buyPremium(player);
-            default -> player.closeInventory();
+            default -> close(player);
         }
     }
 
     private void buyPremium(Player player) {
         var messages = menus.messages();
         int price = menus.config().premiumPrice();
-        player.closeInventory();
+        close(player);
         if (!menus.coins().withdraw(player.getUniqueId(), player.getName(), price)) {
             player.sendMessage(messages.get("shop.too-expensive", Formatter.number("coins", price)));
             return;

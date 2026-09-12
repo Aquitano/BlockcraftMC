@@ -73,7 +73,7 @@ final class ReportListMenu extends Menu {
         } else if (slot == NEXT && page < pages) {
             new ReportListMenu(menus, messages, all, reported, page + 1).open(player);
         } else if (slot == CLOSE) {
-            player.closeInventory();
+            close(player);
         }
     }
 }

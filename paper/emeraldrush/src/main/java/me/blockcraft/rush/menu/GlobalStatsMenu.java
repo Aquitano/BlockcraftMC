@@ -31,7 +31,7 @@ final class GlobalStatsMenu extends Menu {
 
     @Override
     protected void onClick(Player player, int slot, ItemStack clicked, InventoryClickEvent event) {
-        player.closeInventory();
+        close(player);
         var category = SLOTS.get(slot);
         if (category != null) {
             menus.showTop(player, category);

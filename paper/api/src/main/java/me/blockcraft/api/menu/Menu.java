@@ -8,12 +8,20 @@ import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.java.JavaPlugin;
 
 /**
  * A chest GUI identified by its holder instead of its title. Clicks inside it are cancelled and routed
  * to {@link #onClick} by {@link MenuListener}; clicks in the player's own inventory are cancelled too.
+ * <p>
+ * {@link #open} and {@link #close} run on the next tick because Bukkit forbids opening or closing an
+ * inventory from inside {@link InventoryClickEvent}; the client would otherwise receive the cancel resync
+ * for the old window after the new one opened and show ghost items.
  */
 public abstract class Menu implements InventoryHolder {
+
+    private static final Plugin API = JavaPlugin.getProvidingPlugin(Menu.class);
 
     private final Inventory inventory;
 
@@ -39,7 +47,15 @@ public abstract class Menu implements InventoryHolder {
     }
 
     public void open(Player player) {
-        player.openInventory(inventory);
+        Bukkit.getScheduler().runTask(API, () -> {
+            if (player.isOnline()) {
+                player.openInventory(inventory);
+            }
+        });
+    }
+
+    public static void close(Player player) {
+        Bukkit.getScheduler().runTask(API, () -> player.closeInventory());
     }
 
     @Override

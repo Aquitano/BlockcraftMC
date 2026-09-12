@@ -38,7 +38,7 @@ final class NavigatorMenu extends Menu {
 
     @Override
     protected void onClick(Player player, int slot, ItemStack clicked, InventoryClickEvent event) {
-        player.closeInventory();
+        close(player);
         LobbyLocation target = TARGETS.get(slot);
         if (target != null) {
             menus.warp(player, target);
