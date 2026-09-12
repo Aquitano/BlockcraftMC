@@ -5,5 +5,8 @@ database:
   username: blockcraft
   password: blockcraft
 
+# Balance a player starts with on their first join anywhere on the network.
+starting-coins: 10
+
 # How often this server announces itself to the proxy (bc_servers).
 heartbeat-seconds: 5

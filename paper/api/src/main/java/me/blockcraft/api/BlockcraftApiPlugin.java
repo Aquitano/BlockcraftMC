@@ -1,6 +1,7 @@
 package me.blockcraft.api;
 
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
+import me.blockcraft.api.coins.CoinsJoinListener;
 import me.blockcraft.api.command.CoinsCommand;
 import me.blockcraft.api.menu.MenuListener;
 import me.blockcraft.api.network.ServerHeartbeat;
@@ -35,6 +36,8 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         var api = new BlockcraftApi(database, heartbeat.self());
         api.coins().createTable();
         BlockcraftApi.install(api);
+        int startingCoins = ((Number) config.getOrDefault("starting-coins", 10)).intValue();
+        getServer().getPluginManager().registerEvents(new CoinsJoinListener(this, api.coins(), startingCoins), this);
         getServer().getPluginManager().registerEvents(new MenuListener(), this);
 
         var messages = Messages.load(getDataPath(), () -> getResource("messages.yml"));

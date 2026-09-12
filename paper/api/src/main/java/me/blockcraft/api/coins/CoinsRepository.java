@@ -20,6 +20,12 @@ public final class CoinsRepository {
         return db.queryOne("SELECT COINS FROM VCOINS WHERE UUID = ?", row -> row.getInt("COINS"), player.toString()).orElse(0);
     }
 
+    /** Opens the account with the starting balance on first sight; afterwards only the name is refreshed. */
+    public void register(UUID player, String name, int startingCoins) {
+        db.update("INSERT INTO VCOINS (UUID, NAME, COINS) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE NAME = VALUES(NAME)",
+                player.toString(), name, startingCoins);
+    }
+
     public boolean has(UUID player, int amount) {
         return get(player) >= amount;
     }
