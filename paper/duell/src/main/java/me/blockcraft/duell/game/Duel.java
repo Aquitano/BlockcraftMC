@@ -150,7 +150,10 @@ public final class Duel {
         switch (phase) {
             case INGAME -> {
                 if (participants.size() <= 1) {
-                    participants().forEach(this::broadcastWinner);
+                    participants().forEach(winner -> {
+                        broadcastWinner(winner);
+                        rewardWinner(winner);
+                    });
                     Bukkit.broadcast(messages.get("round.ended"));
                     startRestart();
                 }
