@@ -60,6 +60,7 @@ import me.blockcraft.system.listener.CommandListener;
 import me.blockcraft.system.listener.InitialServerListener;
 import me.blockcraft.system.listener.KickListener;
 import me.blockcraft.system.listener.LoginListener;
+import me.blockcraft.system.listener.StaffNoticeListener;
 import me.blockcraft.system.listener.TabCompleteListener;
 import me.blockcraft.system.listener.TabHeaderListener;
 import me.blockcraft.system.moderation.PunishmentService;
@@ -126,6 +127,7 @@ public final class SystemPlugin {
         events.register(this, new CommandListener(config, messages));
         events.register(this, new KickListener(lobby, messages));
         events.register(this, new InitialServerListener(lobby));
+        events.register(this, new StaffNoticeListener(proxy));
         events.register(this, new TabCompleteListener());
         events.register(this, new MotdListener(proxy, config, settings, messages));
         events.register(this, new PartyListener(parties));

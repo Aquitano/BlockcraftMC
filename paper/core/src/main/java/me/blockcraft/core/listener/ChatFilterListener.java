@@ -1,21 +1,22 @@
 package me.blockcraft.core.listener;
 
 import io.papermc.paper.event.player.AsyncChatEvent;
+import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.moderation.AdLogRepository;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.plugin.Plugin;
 
 import java.util.regex.Pattern;
 
 /**
- * Word and advertisement filter. Both drop the message and tell the staff; advertisements are also logged for
- * /werbung. The term list is loose on purpose (it catches obfuscated addresses), so nothing is punished
- * automatically; staff decide with /warn and /strafe.
+ * Word and advertisement filter. Both drop the message and tell the staff on the whole network through the proxy;
+ * advertisements are also logged for /werbung. The term list is loose on purpose (it catches obfuscated addresses),
+ * so nothing is punished automatically; staff decide with /warn and /strafe.
  */
 public final class ChatFilterListener implements Listener {
 
@@ -25,12 +26,14 @@ public final class ChatFilterListener implements Listener {
     private static final Pattern IP = Pattern.compile(
             "(?<![0-9])((25[0-5]|2[0-4]\\d|[0-1]?\\d{1,2})[.,_ ]){3}(25[0-5]|2[0-4]\\d|[0-1]?\\d{1,2})(?![0-9])");
 
+    private final Plugin plugin;
     private final ChatFilterConfig config;
     private final String serverName;
     private final AdLogRepository adLog;
     private final Messages messages;
 
-    public ChatFilterListener(ChatFilterConfig config, String serverName, AdLogRepository adLog, Messages messages) {
+    public ChatFilterListener(Plugin plugin, ChatFilterConfig config, String serverName, AdLogRepository adLog, Messages messages) {
+        this.plugin = plugin;
         this.config = config;
         this.serverName = serverName;
         this.adLog = adLog;
@@ -70,10 +73,6 @@ public final class ChatFilterListener implements Listener {
                 Placeholder.unparsed("player", player.getName()),
                 Placeholder.unparsed("message", text),
                 Placeholder.unparsed("server", serverName));
-        for (Player staff : Bukkit.getOnlinePlayers()) {
-            if (staff.hasPermission(ChatPermissions.FILTER_NOTIFY)) {
-                staff.sendMessage(notice);
-            }
-        }
+        ProxyMessaging.notifyStaff(plugin, player, ChatPermissions.FILTER_NOTIFY, notice);
     }
 }
