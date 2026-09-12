@@ -91,6 +91,15 @@ public final class SystemPlugin {
 
     @Subscribe
     public void onInit(ProxyInitializeEvent event) {
+        try {
+            enable();
+        } catch (RuntimeException e) {
+            logger.error("BlockcraftSystem failed to start; stopping the proxy so nobody joins without bans and mutes", e);
+            proxy.shutdown();
+        }
+    }
+
+    private void enable() {
         var config = SystemConfig.load(dataDirectory.resolve("config.yml"), () -> getClass().getResourceAsStream("/config.yml"));
         var messages = Messages.load(dataDirectory, () -> getClass().getResourceAsStream("/messages.yml"));
         database = Database.connect(config.database(), "BlockcraftSystem");
