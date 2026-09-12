@@ -32,7 +32,7 @@ the group's prefix in front of the name; the prefix carries the name colour, so 
 
 | Group      | Prefix                | Grants                                                                     |
 |------------|-----------------------|----------------------------------------------------------------------------|
-| `default`  | `&7SPIELER &8● &7`    | party invite and kick, `/msg`, `/server`, `/glist`                         |
+| `default`  | `&7SPIELER &8● &7`    | party invite and kick, `/msg` and `/r`, `/server`, `/glist`                |
 | `premium`  | `&6PREMIUM &8● &6`    | premium lobby area, double jump, join when full, `/joinme`                 |
 | `youtuber` | `&5YT &8● &5`         | premium plus `/joinme` without delay, `/bc`, `/send`                       |
 | `dev`      | `&bDEV &8● &b`        | premium plus every `blockcraft.*` and `velocity.command.*` permission      |

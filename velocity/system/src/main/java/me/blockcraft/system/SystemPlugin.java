@@ -34,6 +34,7 @@ import me.blockcraft.system.command.moderation.WarnCommand;
 import me.blockcraft.system.command.moderation.WarnsCommand;
 import me.blockcraft.system.command.moderation.WerbungCommand;
 import me.blockcraft.system.command.player.HubCommand;
+import me.blockcraft.system.command.player.MessageCommand;
 import me.blockcraft.system.command.player.JoinMeCommand;
 import me.blockcraft.system.command.player.ModCommand;
 import me.blockcraft.system.command.player.OnlineCommand;
@@ -171,6 +172,10 @@ public final class SystemPlugin {
 
         register(new HubCommand(support, lobby).create(), "h", "lobby", "l");
         register(new PlayCommand(support, lobby, directory).create());
+        var privateMessages = new MessageCommand(support, proxy, messages);
+        events.register(this, privateMessages);
+        register(privateMessages.msg(), "tell", "w");
+        register(privateMessages.reply(), "reply");
         register(new PartyCommand(support, proxy, parties, messages).create());
         register(new PartyChatCommand(support, parties, messages).create());
         var joinMe = new JoinMeCommand(support, proxy, config, directory, messages);

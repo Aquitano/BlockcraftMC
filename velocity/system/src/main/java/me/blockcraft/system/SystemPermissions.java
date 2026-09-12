@@ -29,6 +29,7 @@ public final class SystemPermissions {
     public static final String SET_MAX = ROOT + "setmax";
     public static final String MOTD = ROOT + "motd";
     public static final String JOIN_ME = ROOT + "joinme";
+    public static final String MSG = ROOT + "msg";
     public static final String JOIN_ME_NO_DELAY = ROOT + "joinme.nodelay";
     public static final String JOIN_ME_CLEAR = ROOT + "joinme.clear";
     public static final String SUPPORT_STAFF = ROOT + "support.staff";

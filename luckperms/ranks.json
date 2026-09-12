@@ -6,7 +6,7 @@
         {"type": "prefix", "key": "prefix.10.&7SPIELER &8● &7", "value": true},
         {"type": "permission", "key": "blockcraft.system.party.invite", "value": true},
         {"type": "permission", "key": "blockcraft.system.party.kick", "value": true},
-        {"type": "permission", "key": "blockcraft.core.msg", "value": true},
+        {"type": "permission", "key": "blockcraft.system.msg", "value": true},
         {"type": "permission", "key": "velocity.command.server", "value": true},
         {"type": "permission", "key": "velocity.command.glist", "value": true}
       ]

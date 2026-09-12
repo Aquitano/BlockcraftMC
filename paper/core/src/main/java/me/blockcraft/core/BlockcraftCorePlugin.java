@@ -15,7 +15,6 @@ import me.blockcraft.core.command.GamemodeCommand;
 import me.blockcraft.core.command.HealCommand;
 import me.blockcraft.core.command.InvseeCommand;
 import me.blockcraft.core.command.KillCommand;
-import me.blockcraft.core.command.MsgCommand;
 import me.blockcraft.core.command.RainCommand;
 import me.blockcraft.core.command.ReflashCommand;
 import me.blockcraft.core.command.ServerInfoCommand;
@@ -87,7 +86,6 @@ public final class BlockcraftCorePlugin extends JavaPlugin {
             registrar.register(TimeCommand.create(messages), "Ändert die Zeit");
             registrar.register(TpCommand.create(messages), "Teleportiert Spieler");
             registrar.register(XpCommand.create(messages), "Setzt das Level eines Spielers");
-            registrar.register(MsgCommand.create(messages), "Private Nachricht");
             registrar.register(VanishCommand.create(vanish, messages), "Unsichtbarkeit", List.of("vanish"));
             registrar.register(ClearCommand.create(messages), "Leert das Inventar eines Spielers");
             registrar.register(ConnectCommand.create(this, messages), "Wechselt den Server");

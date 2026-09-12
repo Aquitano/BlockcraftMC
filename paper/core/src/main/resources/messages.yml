@@ -54,11 +54,6 @@ tp:
 xp:
   usage: "<prefix><red>Benutze /xp [Name] [Level]"
   done: "<prefix><gray>Du hast den Spieler <white><player> <level><gray> Level gegeben!"
-msg:
-  usage: "<prefix><red>Benutze /msg \\<name> \\<nachricht>"
-  self: "<prefix><red>Du kannst dir nicht selber schreiben!"
-  to-target: "<white><sender> <green>» <target><gray>: <aqua><message>"
-  to-sender: "<white><sender> <red>« <target><gray>: <aqua><message>"
 vanish:
   enabled: "<prefix><gray>Du bist nun unsichtbar!"
   disabled: "<prefix><gray>Du bist nun wieder sichtbar!"
