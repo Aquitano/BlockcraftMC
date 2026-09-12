@@ -10,10 +10,12 @@ import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 
-import java.util.Optional;
-import java.util.OptionalInt;
+import java.util.Comparator;
 
-/** Sorts the tab list by LuckPerms group weight and shows the group's prefix in front of each name. */
+/**
+ * Sorts the tab list by LuckPerms group weight and shows the group's prefix in front of each name. The heaviest
+ * inherited group counts, not the primary one: /addpremium and the shop only add an inheritance node.
+ */
 public final class TabTeams {
 
     private static final int MAX_WEIGHT = 9999;
@@ -30,16 +32,18 @@ public final class TabTeams {
 
     public void update(Player player) {
         var user = luckPerms.getPlayerAdapter(Player.class).getUser(player);
-        String group = user.getPrimaryGroup();
-        int weight = Optional.ofNullable(luckPerms.getGroupManager().getGroup(group))
-                .map(Group::getWeight).filter(OptionalInt::isPresent).map(OptionalInt::getAsInt).orElse(0);
+        Group group = user.getInheritedGroups(user.getQueryOptions()).stream()
+                .max(Comparator.comparingInt(inherited -> inherited.getWeight().orElse(0)))
+                .orElseGet(() -> luckPerms.getGroupManager().getGroup(user.getPrimaryGroup()));
+        int weight = group == null ? 0 : group.getWeight().orElse(0);
+        String groupName = group == null ? user.getPrimaryGroup() : group.getName();
         Component prefix = Ranks.prefix(player).orElseGet(() -> messages.get("tab.default-prefix"));
 
         Team current = scoreboard.getEntryTeam(player.getName());
         if (current != null) {
             current.removeEntry(player.getName());
         }
-        team(teamName(weight, group), prefix).addEntry(player.getName());
+        team(teamName(weight, groupName), prefix).addEntry(player.getName());
         player.setScoreboard(scoreboard);
     }
 

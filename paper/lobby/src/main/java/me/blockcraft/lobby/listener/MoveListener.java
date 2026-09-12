@@ -16,6 +16,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.util.HashSet;
 import java.util.List;
@@ -56,6 +57,11 @@ public final class MoveListener implements Listener {
         } else if (standingOn == Material.STONE_PRESSURE_PLATE && fireworksShown.add(player.getUniqueId())) {
             config.fireworkSpots().forEach(spot -> launchFirework(spot.toLocation(player.getWorld())));
         }
+    }
+
+    @EventHandler
+    public void onQuit(PlayerQuitEvent event) {
+        fireworksShown.remove(event.getPlayer().getUniqueId());
     }
 
     private void enterPremiumArea(Player player) {
