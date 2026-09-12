@@ -5,6 +5,7 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import me.blockcraft.common.message.Messages;
+import org.bukkit.attribute.Attribute;
 
 public final class HealCommand {
 
@@ -17,7 +18,7 @@ public final class HealCommand {
                 .executes(context -> {
                     var player = context.getSource().getPlayerOrThrow();
                     player.setFoodLevel(20);
-                    player.setHealth(20.0);
+                    player.setHealth(player.getAttribute(Attribute.MAX_HEALTH).getValue());
                     player.sendMessage(messages.get("heal.done"));
                     return Command.SINGLE_SUCCESS;
                 })

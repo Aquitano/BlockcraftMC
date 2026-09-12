@@ -3,26 +3,19 @@ package me.blockcraft.core.listener;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.moderation.AdLogRepository;
-import me.blockcraft.common.moderation.PunishmentRepository;
-import me.blockcraft.common.moderation.WarnRepository;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.JoinConfiguration;
-import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.plugin.Plugin;
 
-import java.util.Optional;
 import java.util.regex.Pattern;
 
 /**
- * Word and advertisement filter. Blocked words only drop the message; advertisements also warn the player,
- * log the message for /werbung and ban at the warn limit.
+ * Word and advertisement filter. Both drop the message and tell the staff; advertisements are also logged for
+ * /werbung. The term list is loose on purpose (it catches obfuscated addresses), so nothing is punished
+ * automatically; staff decide with /warn and /strafe.
  */
 public final class ChatFilterListener implements Listener {
 
@@ -32,19 +25,12 @@ public final class ChatFilterListener implements Listener {
     private static final Pattern IP = Pattern.compile(
             "(?<![0-9])((25[0-5]|2[0-4]\\d|[0-1]?\\d{1,2})[.,_ ]){3}(25[0-5]|2[0-4]\\d|[0-1]?\\d{1,2})(?![0-9])");
 
-    private final Plugin plugin;
     private final ChatFilterConfig config;
-    private final WarnRepository warns;
-    private final PunishmentRepository punishments;
     private final AdLogRepository adLog;
     private final Messages messages;
 
-    public ChatFilterListener(Plugin plugin, ChatFilterConfig config, WarnRepository warns, PunishmentRepository punishments,
-                              AdLogRepository adLog, Messages messages) {
-        this.plugin = plugin;
+    public ChatFilterListener(ChatFilterConfig config, AdLogRepository adLog, Messages messages) {
         this.config = config;
-        this.warns = warns;
-        this.punishments = punishments;
         this.adLog = adLog;
         this.messages = messages;
     }
@@ -65,7 +51,6 @@ public final class ChatFilterListener implements Listener {
             notifyStaff(player, text);
             adLog.add(player.getUniqueId(), config.serverName(), text);
             messages.getLines("chat.ad-filtered").forEach(player::sendMessage);
-            warn(player);
         }
     }
 
@@ -76,18 +61,6 @@ public final class ChatFilterListener implements Listener {
     private boolean isAdvertisement(String lowercase) {
         return URL.matcher(lowercase).find() || IP.matcher(lowercase).find()
                 || config.advertisementTerms().stream().anyMatch(lowercase::contains);
-    }
-
-    private void warn(Player player) {
-        int count = warns.add(player.getUniqueId(), Optional.of(messages.raw("chat.ad-warn-reason")));
-        var placeholders = TagResolver.resolver(Formatter.number("count", count), Formatter.number("max", config.maxWarns()));
-        player.sendMessage(messages.get("chat.ad-warned", placeholders));
-        if (count < config.maxWarns()) {
-            return;
-        }
-        punishments.ban(player.getUniqueId(), messages.raw("chat.ad-ban-reason"), messages.raw("chat.ad-ban-issuer"), Optional.empty());
-        var screen = Component.join(JoinConfiguration.newlines(), messages.getLines("chat.ad-ban-screen", placeholders));
-        Bukkit.getScheduler().runTask(plugin, () -> player.kick(screen));
     }
 
     private void notifyStaff(Player player, String text) {

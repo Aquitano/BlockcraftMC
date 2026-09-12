@@ -59,8 +59,7 @@ public final class BlockcraftCorePlugin extends JavaPlugin {
         pluginManager.registerEvents(new MuteListener(moderation.punishments(), messages), this);
         pluginManager.registerEvents(new GlobalMuteListener(moderation.settings(), messages), this);
         pluginManager.registerEvents(new ChatCooldownListener(chatFilter.cooldown(), messages), this);
-        pluginManager.registerEvents(new ChatFilterListener(this, chatFilter, moderation.warns(), moderation.punishments(),
-                moderation.adLog(), messages), this);
+        pluginManager.registerEvents(new ChatFilterListener(chatFilter, moderation.adLog(), messages), this);
         var vanish = new VanishListener(this);
         pluginManager.registerEvents(vanish, this);
 

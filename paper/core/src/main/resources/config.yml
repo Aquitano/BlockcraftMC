@@ -7,8 +7,6 @@ server-name: lobby
 
 chat:
   cooldown-seconds: 3
-  # Advertising warns land in bc_warns; reaching this count bans the player.
-  max-warns: 8
   allowed-domain: blockcraftmc.net
   blocked-words:
     - noob

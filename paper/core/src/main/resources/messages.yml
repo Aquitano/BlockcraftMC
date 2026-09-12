@@ -131,9 +131,3 @@ chat:
   ad-filtered:
     - "<prefix><gray>Deine ChatNachricht wurde gefiltert. <red>Grund: Mögliche Werbung."
     - "<prefix><red>Die Teammitglieder werden diesen Sachverhalt nun prüfen."
-  ad-warned: "<prefix><gold>Du hast <red><count><gold>/<gold><max><red> Warns."
-  ad-warn-reason: "Werbung"
-  ad-ban-reason: "Werbung - Zu viele Warns"
-  ad-ban-issuer: "ChatFilter"
-  ad-ban-screen:
-    - "<red>Du wurdest wegen <gold><count><red>/<red><max><gold> Warns vom Server gebannt."
