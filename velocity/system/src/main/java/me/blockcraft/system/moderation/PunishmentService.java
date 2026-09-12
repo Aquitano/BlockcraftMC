@@ -61,7 +61,7 @@ public final class PunishmentService {
     public void mute(Target target, String reason, String issuer, Optional<Duration> duration) {
         punishments.mute(target.uuid(), reason, issuer, duration);
         punishments.activeMute(target.uuid()).ifPresent(mute -> {
-            target.online().ifPresent(player -> player.disconnect(muteScreen(mute)));
+            target.online().ifPresent(player -> player.sendMessage(muteScreen(mute)));
             notify(SystemPermissions.TEAM, "mute.notify", placeholders(target.name(), mute));
         });
     }
