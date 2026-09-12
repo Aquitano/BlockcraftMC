@@ -1,6 +1,7 @@
 package me.blockcraft.lobby.listener;
 
 import me.blockcraft.api.coins.CoinsRepository;
+import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.lobby.LobbyPermissions;
 import me.blockcraft.lobby.cosmetic.Secret;
@@ -20,6 +21,7 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.plugin.Plugin;
 
 import java.time.Duration;
 import java.util.Arrays;
@@ -32,12 +34,14 @@ public final class SecretsListener implements Listener {
     private static final Title.Times TITLE_TIMES = Title.Times.times(Duration.ofMillis(500), Duration.ofSeconds(1), Duration.ofMillis(500));
     private static final PlainTextComponentSerializer PLAIN = PlainTextComponentSerializer.plainText();
 
+    private final Plugin plugin;
     private final Messages messages;
     private final UnlockStore found;
     private final CoinsRepository coins;
     private final int reward;
 
-    public SecretsListener(Messages messages, UnlockStore found, CoinsRepository coins, int reward) {
+    public SecretsListener(Plugin plugin, Messages messages, UnlockStore found, CoinsRepository coins, int reward) {
+        this.plugin = plugin;
         this.messages = messages;
         this.found = found;
         this.coins = coins;
@@ -83,8 +87,14 @@ public final class SecretsListener implements Listener {
         player.showTitle(Title.title(messages.get("secrets.found-title"), messages.get("secrets.found-subtitle", rewardResolver), TITLE_TIMES));
         messages.getLines("secrets.found", rewardResolver, Placeholder.unparsed("secret", secret.key())).forEach(player::sendMessage);
         player.playSound(player.getLocation(), Sound.ENTITY_ENDER_DRAGON_GROWL, 1.0f, 1.0f);
-        coins.add(player.getUniqueId(), player.getName(), reward);
-        player.setLevel(coins.get(player.getUniqueId()));
+        Tasks.async(plugin, () -> {
+            coins.add(player.getUniqueId(), player.getName(), reward);
+            return coins.get(player.getUniqueId());
+        }, balance -> {
+            if (player.isOnline()) {
+                player.setLevel(balance);
+            }
+        });
     }
 
     private Component signName(Secret secret) {

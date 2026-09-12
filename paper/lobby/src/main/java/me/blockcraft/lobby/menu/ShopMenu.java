@@ -3,7 +3,6 @@ package me.blockcraft.lobby.menu;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.menu.Menu;
 import me.blockcraft.lobby.LobbyPermissions;
-import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -43,20 +42,15 @@ final class ShopMenu extends Menu {
     }
 
     private void buyPremium(Player player) {
-        var messages = menus.messages();
-        int price = menus.config().premiumPrice();
         close(player);
         if (player.hasPermission(LobbyPermissions.PREMIUM)) {
-            player.sendMessage(messages.get("shop.already-premium"));
+            player.sendMessage(menus.messages().get("shop.already-premium"));
             return;
         }
-        if (!menus.coins().withdraw(player.getUniqueId(), player.getName(), price)) {
-            player.sendMessage(messages.get("shop.too-expensive", Formatter.number("coins", price)));
-            return;
-        }
-        menus.premiumRank().grant(player.getUniqueId());
-        menus.premiumPurchases().record(player.getUniqueId(), "name", player.getName());
-        menus.premiumPurchases().record(player.getUniqueId(), "date", LocalDate.now().toString());
-        player.sendMessage(messages.get("shop.bought"));
+        menus.purchase(player, menus.config().premiumPrice(), () -> {
+            menus.premiumRank().grant(player.getUniqueId());
+            menus.premiumPurchases().record(player.getUniqueId(), "name", player.getName());
+            menus.premiumPurchases().record(player.getUniqueId(), "date", LocalDate.now().toString());
+        });
     }
 }

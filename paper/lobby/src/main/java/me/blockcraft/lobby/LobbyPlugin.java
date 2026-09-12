@@ -55,7 +55,7 @@ public final class LobbyPlugin extends JavaPlugin {
         var items = new LobbyItems(messages);
         var tabTeams = new TabTeams(luckPerms, messages);
         var secrets = new UnlockStore(getDataPath().resolve("secrets.yml"));
-        var menus = new Menus(messages, config, locations, coins,
+        var menus = new Menus(this, messages, config, locations, coins,
                 new UnlockStore(getDataPath().resolve("heads.yml")),
                 new UnlockStore(getDataPath().resolve("shirts.yml")),
                 secrets,
@@ -71,7 +71,7 @@ public final class LobbyPlugin extends JavaPlugin {
                 new LobbyItemListener(messages, menus, items, hider),
                 new ProtectionListener(),
                 new CommandBlockListener(config.allowedCommands()),
-                new SecretsListener(messages, secrets, coins, config.secretReward()),
+                new SecretsListener(this, messages, secrets, coins, config.secretReward()),
                 new ShopNpcListener(menus),
                 new PetListener(pets, messages),
                 new MoveListener(messages, config, locations, trails),

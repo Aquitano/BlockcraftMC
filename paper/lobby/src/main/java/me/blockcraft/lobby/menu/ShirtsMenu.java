@@ -34,18 +34,12 @@ final class ShirtsMenu extends Menu {
             return;
         }
         Shirt shirt = Shirt.values()[slot];
-        var messages = menus.messages();
-        int price = menus.config().shirtPrice();
         close(player);
         if (menus.shirts().has(player.getUniqueId(), shirt.key())) {
             player.getInventory().setChestplate(item(shirt, true));
-            player.sendMessage(messages.get("shirts.equipped"));
-        } else if (menus.coins().withdraw(player.getUniqueId(), player.getName(), price)) {
-            menus.shirts().unlock(player.getUniqueId(), shirt.key());
-            player.sendMessage(messages.get("shop.bought"));
-            player.setLevel(menus.coins().get(player.getUniqueId()));
+            player.sendMessage(menus.messages().get("shirts.equipped"));
         } else {
-            player.sendMessage(messages.get("shop.too-expensive", Formatter.number("coins", price)));
+            menus.purchase(player, menus.config().shirtPrice(), () -> menus.shirts().unlock(player.getUniqueId(), shirt.key()));
         }
     }
 

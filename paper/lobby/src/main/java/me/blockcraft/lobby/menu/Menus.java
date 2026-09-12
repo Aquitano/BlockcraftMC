@@ -2,6 +2,7 @@ package me.blockcraft.lobby.menu;
 
 import me.blockcraft.api.coins.CoinsRepository;
 import me.blockcraft.api.config.Locations;
+import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.lobby.config.LobbyConfig;
 import me.blockcraft.lobby.config.LobbyLocation;
@@ -9,12 +10,15 @@ import me.blockcraft.lobby.cosmetic.Pets;
 import me.blockcraft.lobby.cosmetic.Trails;
 import me.blockcraft.lobby.rank.PremiumRank;
 import me.blockcraft.lobby.storage.UnlockStore;
+import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
 
 /** Everything the chest GUIs need, so they can open one another without re-wiring. */
 public record Menus(
+        Plugin plugin,
         Messages messages,
         LobbyConfig config,
         Locations<LobbyLocation> locations,
@@ -31,6 +35,26 @@ public record Menus(
     private static final float TELEPORT_VOLUME = 4.0f;
     private static final float TELEPORT_PITCH = 4.0f;
     private static final int TELEPORT_PARTICLES = 20;
+
+    /**
+     * Charges the price off the main thread; {@code onBought} runs on it afterwards and the level shows the new
+     * balance. Tells the player if they cannot afford it.
+     */
+    public void purchase(Player player, int price, Runnable onBought) {
+        Tasks.async(plugin, () -> coins.withdraw(player.getUniqueId(), player.getName(), price) ? coins.get(player.getUniqueId()) : -1,
+                balance -> {
+                    if (!player.isOnline()) {
+                        return;
+                    }
+                    if (balance < 0) {
+                        player.sendMessage(messages.get("shop.too-expensive", Formatter.number("coins", price)));
+                        return;
+                    }
+                    onBought.run();
+                    player.sendMessage(messages.get("shop.bought"));
+                    player.setLevel(balance);
+                });
+    }
 
     public void warp(Player player, LobbyLocation target) {
         locations.get(target).ifPresent(location -> {

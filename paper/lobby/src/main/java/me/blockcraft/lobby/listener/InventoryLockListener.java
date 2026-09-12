@@ -6,6 +6,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
+import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 
 /** Players cannot rearrange their own inventory (operators can), and the lobby hotbar items never move or drop. */
 public final class InventoryLockListener implements Listener {
@@ -17,6 +18,13 @@ public final class InventoryLockListener implements Listener {
         }
         boolean ownInventory = event.getClickedInventory() == player.getInventory();
         if ((ownInventory && !player.isOp()) || LobbyItem.of(event.getCurrentItem()).isPresent()) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onSwapHands(PlayerSwapHandItemsEvent event) {
+        if (LobbyItem.of(event.getOffHandItem()).isPresent() || LobbyItem.of(event.getMainHandItem()).isPresent()) {
             event.setCancelled(true);
         }
     }

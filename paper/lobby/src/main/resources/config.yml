@@ -1,6 +1,9 @@
 max-players: 100
 allowed-commands:
   - coins
+  - cc
+  - setspawn
+  - setholo
 prices:
   premium: 15000
   head: 300

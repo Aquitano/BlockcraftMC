@@ -26,18 +26,12 @@ final class HeadsMenu extends Menu {
             return;
         }
         Head head = Head.values()[slot];
-        var messages = menus.messages();
-        int price = menus.config().headPrice();
         close(player);
         if (menus.heads().has(player.getUniqueId(), head.key())) {
             player.getInventory().setHelmet(item(head, true));
-            player.sendMessage(messages.get("heads.equipped"));
-        } else if (menus.coins().withdraw(player.getUniqueId(), player.getName(), price)) {
-            menus.heads().unlock(player.getUniqueId(), head.key());
-            player.sendMessage(messages.get("shop.bought"));
-            player.setLevel(menus.coins().get(player.getUniqueId()));
+            player.sendMessage(menus.messages().get("heads.equipped"));
         } else {
-            player.sendMessage(messages.get("shop.too-expensive", Formatter.number("coins", price)));
+            menus.purchase(player, menus.config().headPrice(), () -> menus.heads().unlock(player.getUniqueId(), head.key()));
         }
     }
 
