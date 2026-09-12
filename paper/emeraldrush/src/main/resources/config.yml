@@ -1,0 +1,13 @@
+MapName: "MapName"
+MinPlayers: 2
+lobby-server: lobby
+emeralds-per-ore: 12
+ore-respawn-seconds: 12
+countdown:
+  lobby: 30
+  search: 300
+  shopping: 90
+  deathmatch: 1200
+  deathmatch-tracker-after: 300
+  restart: 10
+idle-restart-minutes: 50
