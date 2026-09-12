@@ -5,7 +5,10 @@
         {"type": "weight", "key": "weight.10", "value": true},
         {"type": "prefix", "key": "prefix.10.&7SPIELER &8● &7", "value": true},
         {"type": "permission", "key": "blockcraft.system.party.invite", "value": true},
-        {"type": "permission", "key": "blockcraft.system.party.kick", "value": true}
+        {"type": "permission", "key": "blockcraft.system.party.kick", "value": true},
+        {"type": "permission", "key": "blockcraft.core.msg", "value": true},
+        {"type": "permission", "key": "velocity.command.server", "value": true},
+        {"type": "permission", "key": "velocity.command.glist", "value": true}
       ]
     },
     "premium": {
@@ -23,7 +26,9 @@
         {"type": "inheritance", "key": "group.premium", "value": true},
         {"type": "weight", "key": "weight.30", "value": true},
         {"type": "prefix", "key": "prefix.30.&5YT &8● &5", "value": true},
-        {"type": "permission", "key": "blockcraft.system.joinme.nodelay", "value": true}
+        {"type": "permission", "key": "blockcraft.system.joinme.nodelay", "value": true},
+        {"type": "permission", "key": "blockcraft.system.bc", "value": true},
+        {"type": "permission", "key": "velocity.command.send", "value": true}
       ]
     },
     "dev": {
@@ -31,7 +36,8 @@
         {"type": "inheritance", "key": "group.premium", "value": true},
         {"type": "weight", "key": "weight.40", "value": true},
         {"type": "prefix", "key": "prefix.40.&bDEV &8● &b", "value": true},
-        {"type": "permission", "key": "blockcraft.*", "value": true}
+        {"type": "permission", "key": "blockcraft.*", "value": true},
+        {"type": "permission", "key": "velocity.command.*", "value": true}
       ]
     },
     "admin": {
