@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /** Owns the registered signs, their last known status and the async refresh loop. */
 public final class StatusSigns {
@@ -20,6 +21,7 @@ public final class StatusSigns {
     private final SignRenderer renderer;
     private final Map<Location, StatusSign> signs = new ConcurrentHashMap<>();
     private final Map<Location, ServerStatus> statuses = new ConcurrentHashMap<>();
+    private final AtomicBoolean refreshing = new AtomicBoolean();
     private BukkitTask refreshTask;
 
     public StatusSigns(Plugin plugin, SignStore store, StatusPinger pinger, SignRenderer renderer) {
@@ -57,15 +59,25 @@ public final class StatusSigns {
         }
     }
 
+    /** Pings run one after another with a timeout each, so a slow run must not overlap the next tick of the timer. */
     private void refresh() {
-        List<StatusSign> snapshot = List.copyOf(signs.values());
-        var results = new LinkedHashMap<StatusSign, ServerStatus>();
-        for (StatusSign sign : snapshot) {
-            results.put(sign, pinger.ping(sign.host(), sign.port()));
+        if (!refreshing.compareAndSet(false, true)) {
+            return;
         }
-        Bukkit.getScheduler().runTask(plugin, () -> results.forEach((sign, status) -> {
-            statuses.put(sign.location(), status);
-            renderer.render(sign, status);
-        }));
+        try {
+            List<StatusSign> snapshot = List.copyOf(signs.values());
+            var results = new LinkedHashMap<StatusSign, ServerStatus>();
+            for (StatusSign sign : snapshot) {
+                results.put(sign, pinger.ping(sign.host(), sign.port()));
+            }
+            if (plugin.isEnabled()) {
+                Bukkit.getScheduler().runTask(plugin, () -> results.forEach((sign, status) -> {
+                    statuses.put(sign.location(), status);
+                    renderer.render(sign, status);
+                }));
+            }
+        } finally {
+            refreshing.set(false);
+        }
     }
 }

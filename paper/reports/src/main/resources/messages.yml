@@ -4,7 +4,7 @@ no-permission-hint: "<prefix>Wolltest du einen Spieler reporten? <red>/report [S
 none: "<prefix>Es gibt aktuell keine Reports!"
 none-for-player: "<prefix>Der Spieler <red><bold><player><reset><gray> wurde nicht Reportet!"
 join-count: "<prefix>Es gibt aktuell <red><count> <gray>Reports!"
-find: "<prefix>Klicke hier, um zu <yellow><player> <gray>zu wechseln: <red><click:run_command:'/find <player>'>/find <player></click>"
+find: "<prefix>Klicke hier, um zu <yellow><player> <gray>zu wechseln: <red>/find <player>"
 status:
   prompt: "<prefix>Schreibe den neuen Status in den Chat. <gray>(<red>abbrechen<gray> zum Abbrechen)"
   updated: "<prefix>Status von Report <yellow><id> <gray>gesetzt: <yellow><status>"

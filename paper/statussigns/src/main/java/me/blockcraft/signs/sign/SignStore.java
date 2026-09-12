@@ -36,16 +36,20 @@ public final class SignStore {
         }
         for (String key : root.getKeys(false)) {
             ConfigurationSection entry = root.getConfigurationSection(key);
-            Optional<StatusSign> sign = entry == null ? Optional.empty() : read(entry);
-            if (sign.isPresent()) {
-                signs.add(sign.get());
-            } else {
+            if (entry == null || !isComplete(entry)) {
                 logger.warning("Dropping invalid status sign entry " + key);
                 root.set(key, null);
+                continue;
             }
+            read(entry).ifPresentOrElse(signs::add,
+                    () -> logger.warning("Skipping status sign " + key + ": world " + entry.getString("loc.world") + " is not loaded"));
         }
         save();
         return signs;
+    }
+
+    private static boolean isComplete(ConfigurationSection entry) {
+        return entry.isConfigurationSection("loc") && entry.isString("name") && entry.isString("ip");
     }
 
     public void add(StatusSign sign) {
@@ -66,19 +70,15 @@ public final class SignStore {
         save();
     }
 
+    /** Empty while the sign's world is not loaded. */
     private static Optional<StatusSign> read(ConfigurationSection entry) {
         ConfigurationSection loc = entry.getConfigurationSection("loc");
-        String name = entry.getString("name");
-        String host = entry.getString("ip");
-        if (loc == null || name == null || host == null) {
-            return Optional.empty();
-        }
         var world = Bukkit.getWorld(String.valueOf(loc.getString("world")));
         if (world == null) {
             return Optional.empty();
         }
         var location = new Location(world, loc.getInt("x"), loc.getInt("y"), loc.getInt("z"));
-        return Optional.of(new StatusSign(location, name, host, entry.getInt("port")));
+        return Optional.of(new StatusSign(location, entry.getString("name"), entry.getString("ip"), entry.getInt("port")));
     }
 
     private static int parseId(String key) {
