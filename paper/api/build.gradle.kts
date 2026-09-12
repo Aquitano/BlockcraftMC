@@ -5,4 +5,5 @@ plugins {
 
 dependencies {
     api(project(":common"))
+    compileOnly(libs.luckperms.api)
 }

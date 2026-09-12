@@ -1,0 +1,54 @@
+{
+  "groups": {
+    "default": {
+      "nodes": [
+        {"type": "weight", "key": "weight.10", "value": true},
+        {"type": "prefix", "key": "prefix.10.&7SPIELER &8● &7", "value": true},
+        {"type": "permission", "key": "blockcraft.system.party.invite", "value": true},
+        {"type": "permission", "key": "blockcraft.system.party.kick", "value": true}
+      ]
+    },
+    "premium": {
+      "nodes": [
+        {"type": "weight", "key": "weight.20", "value": true},
+        {"type": "prefix", "key": "prefix.20.&6PREMIUM &8● &6", "value": true},
+        {"type": "permission", "key": "blockcraft.lobby.premium", "value": true},
+        {"type": "permission", "key": "blockcraft.lobby.doublejump", "value": true},
+        {"type": "permission", "key": "blockcraft.system.fulljoin", "value": true},
+        {"type": "permission", "key": "blockcraft.system.joinme", "value": true}
+      ]
+    },
+    "youtuber": {
+      "nodes": [
+        {"type": "inheritance", "key": "group.premium", "value": true},
+        {"type": "weight", "key": "weight.30", "value": true},
+        {"type": "prefix", "key": "prefix.30.&5YT &8● &5", "value": true},
+        {"type": "permission", "key": "blockcraft.system.joinme.nodelay", "value": true}
+      ]
+    },
+    "dev": {
+      "nodes": [
+        {"type": "inheritance", "key": "group.premium", "value": true},
+        {"type": "weight", "key": "weight.40", "value": true},
+        {"type": "prefix", "key": "prefix.40.&bDEV &8● &b", "value": true},
+        {"type": "permission", "key": "blockcraft.*", "value": true}
+      ]
+    },
+    "admin": {
+      "nodes": [
+        {"type": "inheritance", "key": "group.dev", "value": true},
+        {"type": "weight", "key": "weight.50", "value": true},
+        {"type": "prefix", "key": "prefix.50.&4ADMIN &8● &4", "value": true},
+        {"type": "permission", "key": "luckperms.*", "value": true}
+      ]
+    },
+    "owner": {
+      "nodes": [
+        {"type": "inheritance", "key": "group.admin", "value": true},
+        {"type": "weight", "key": "weight.60", "value": true},
+        {"type": "prefix", "key": "prefix.60.&bOWNER &8● &b", "value": true},
+        {"type": "permission", "key": "*", "value": true}
+      ]
+    }
+  }
+}

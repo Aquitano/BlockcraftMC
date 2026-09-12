@@ -1,8 +1,8 @@
 package me.blockcraft.lobby.rank;
 
+import me.blockcraft.api.rank.Ranks;
 import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.model.group.Group;
 import org.bukkit.Bukkit;
@@ -33,9 +33,7 @@ public final class TabTeams {
         String group = user.getPrimaryGroup();
         int weight = Optional.ofNullable(luckPerms.getGroupManager().getGroup(group))
                 .map(Group::getWeight).filter(OptionalInt::isPresent).map(OptionalInt::getAsInt).orElse(0);
-        Component prefix = Optional.ofNullable(user.getCachedData().getMetaData().getPrefix())
-                .<Component>map(LegacyComponentSerializer.legacyAmpersand()::deserialize)
-                .orElseGet(() -> messages.get("tab.default-prefix"));
+        Component prefix = Ranks.prefix(player).orElseGet(() -> messages.get("tab.default-prefix"));
 
         Team current = scoreboard.getEntryTeam(player.getName());
         if (current != null) {

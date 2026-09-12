@@ -4,6 +4,7 @@ main: me.blockcraft.api.BlockcraftApiPlugin
 api-version: '26.2'
 author: Aquitano
 description: Shared database connection and coins for the Blockcraft plugins
+depend: [LuckPerms]
 libraries:
   - com.zaxxer:HikariCP:${hikariVersion}
   - org.mariadb.jdbc:mariadb-java-client:${mariadbVersion}

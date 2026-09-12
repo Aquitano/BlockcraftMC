@@ -32,6 +32,7 @@ import me.blockcraft.core.command.XpCommand;
 import me.blockcraft.core.listener.ChatCooldownListener;
 import me.blockcraft.core.listener.ChatFilterConfig;
 import me.blockcraft.core.listener.ChatFilterListener;
+import me.blockcraft.core.listener.ChatFormatListener;
 import me.blockcraft.core.listener.GlobalMuteListener;
 import me.blockcraft.core.listener.MuteListener;
 import me.blockcraft.core.listener.VanishListener;
@@ -60,6 +61,7 @@ public final class BlockcraftCorePlugin extends JavaPlugin {
         pluginManager.registerEvents(new GlobalMuteListener(moderation.settings(), messages), this);
         pluginManager.registerEvents(new ChatCooldownListener(chatFilter.cooldown(), messages), this);
         pluginManager.registerEvents(new ChatFilterListener(chatFilter, moderation.adLog(), messages), this);
+        pluginManager.registerEvents(new ChatFormatListener(messages), this);
         var vanish = new VanishListener(this);
         pluginManager.registerEvents(vanish, this);
 

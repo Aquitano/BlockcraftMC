@@ -21,7 +21,9 @@ README.md; this file only holds what the code does not say by itself.
   work (DB, pings) on hot paths runs through `Tasks.async`, chat listeners use `AsyncChatEvent` and may block.
 - GUIs extend `Menu` (holder-based, never title matching). Open and close other inventories only via `Menu.open` /
   `Menu.close`; both defer a tick because Bukkit forbids doing it inside `InventoryClickEvent`.
-- Ranks come from LuckPerms (`group.<rank>` permissions, `LuckPermsProvider` API). No rank tables, no prefix handling.
+- Ranks come from LuckPerms (`group.<rank>` permissions, `LuckPermsProvider` API). No rank tables, no rank names in
+  code; chat and tab show the group prefix via `Ranks.prefix`, and the groups themselves are seeded from
+  `luckperms/ranks.json`.
 - Moderation state (bans, mutes, strikes, warns, maintenance, global mute) is in MySQL `bc_*` tables written by the
   proxy; Paper `core` enforces chat-side consequences because Velocity cannot cancel chat for 1.19.1+ clients.
 - No NMS, no legacy `§` codes in code. Legacy `&` is only parsed for text humans typed (MOTD, chat, LuckPerms prefixes, report statuses).

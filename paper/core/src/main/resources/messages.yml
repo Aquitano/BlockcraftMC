@@ -125,6 +125,7 @@ mute:
 globalmute:
   blocked: "<dark_aqua>Dir wird es derzeit verweigert, im <yellow>Chat <dark_aqua>zu schreiben. <yellow>GlobalMute <dark_aqua>ist aktiv."
 chat:
+  format: "<rank><name> <dark_gray>» <white><message>"
   spam: "<prefix><red>Bitte warte einen Moment... Verdacht auf Spam!"
   word-filtered: "<prefix><gray>Diese Chatnachricht wurde vom System gefiltert. <red>Grund: Anzügige Sprache"
   filtered-notify: "<prefix><gray>Der Spieler <red><player><gray> hat geschrieben: <red><message> <gray>auf <red><server>"

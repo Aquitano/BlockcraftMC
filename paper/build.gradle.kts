@@ -12,10 +12,15 @@ tasks.runServer {
     minecraftVersion(libs.findVersion("minecraft").get().requiredVersion)
     runDirectory = rootProject.layout.projectDirectory.dir("run/paper")
     systemProperty("com.mojang.eula.agree", "true")
+    dependsOn(":packRanks")
     doFirst {
         copy {
             from(rootProject.file("dev/paper"))
             into(runDirectory)
+        }
+        copy {
+            from(rootProject.layout.buildDirectory.file("luckperms/ranks.json.gz"))
+            into(runDirectory.dir("plugins/LuckPerms"))
         }
     }
     pluginJars.from(provider {

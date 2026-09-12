@@ -11,10 +11,15 @@ val selectedPlugins = providers.gradleProperty("plugins").map { it.split(",").ma
 tasks.runVelocity {
     velocityVersion(libs.findVersion("velocity-api").get().requiredVersion)
     runDirectory = rootProject.layout.projectDirectory.dir("run/velocity")
+    dependsOn(":packRanks")
     doFirst {
         copy {
             from(rootProject.file("dev/velocity"))
             into(runDirectory)
+        }
+        copy {
+            from(rootProject.layout.buildDirectory.file("luckperms/ranks.json.gz"))
+            into(runDirectory.dir("plugins/luckperms"))
         }
     }
     pluginJars.from(provider {
