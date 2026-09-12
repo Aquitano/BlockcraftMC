@@ -23,7 +23,16 @@ public final class Pets {
     }
 
     public boolean hasPet(Player owner) {
-        return petByOwner.containsKey(owner.getUniqueId());
+        UUID petId = petByOwner.get(owner.getUniqueId());
+        if (petId == null) {
+            return false;
+        }
+        Entity pet = Bukkit.getEntity(petId);
+        if (pet == null || !pet.isValid()) {
+            petByOwner.remove(owner.getUniqueId());
+            return false;
+        }
+        return true;
     }
 
     public void spawn(Player owner, PetType type) {

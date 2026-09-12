@@ -44,6 +44,16 @@ public final class PlayerHider {
         Bukkit.getOnlinePlayers().forEach(other -> player.showPlayer(plugin, other));
     }
 
+    /** Keeps a freshly joined player invisible to everyone who has the hider on. */
+    public void onJoin(Player joined) {
+        for (UUID id : hiding) {
+            Player hider = Bukkit.getPlayer(id);
+            if (hider != null && !hider.equals(joined)) {
+                hider.hidePlayer(plugin, joined);
+            }
+        }
+    }
+
     public void forget(Player player) {
         hiding.remove(player.getUniqueId());
         lastToggle.remove(player.getUniqueId());

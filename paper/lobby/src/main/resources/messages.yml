@@ -69,6 +69,7 @@ shop:
   shirts-lore: "<dark_gray>● <gray>Kaufe dir Hemden!"
   premium: "<blue>Premium"
   premium-lore: "<dark_gray>● <gray>Kaufe dir Premium!"
+  already-premium: "<prefix><gray>Du hast bereits <blue>Premium<gray>."
   back: "<dark_gray>» <red>zurück"
   bought: "<prefix><gray>Dein Kauf war erfolgreich!"
   too-expensive: "<prefix><gray>Du benötigst <white><coins> Coins <gray>um dir das zu kaufen."

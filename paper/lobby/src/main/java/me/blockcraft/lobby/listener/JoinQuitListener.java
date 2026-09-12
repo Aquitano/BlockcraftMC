@@ -67,6 +67,7 @@ public final class JoinQuitListener implements Listener {
         player.setCollidable(false);
         player.showBossBar(BossBar.bossBar(messages.get("join.bossbar"), 1.0f, BossBar.Color.BLUE, BossBar.Overlay.NOTCHED_10));
         Bukkit.getOnlinePlayers().forEach(tabTeams::update);
+        hider.onJoin(player);
         showCoinsAsLevel(player);
     }
 

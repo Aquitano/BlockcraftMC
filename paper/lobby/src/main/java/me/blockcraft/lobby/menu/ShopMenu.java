@@ -2,6 +2,7 @@ package me.blockcraft.lobby.menu;
 
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.menu.Menu;
+import me.blockcraft.lobby.LobbyPermissions;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import org.bukkit.Color;
 import org.bukkit.Material;
@@ -45,6 +46,10 @@ final class ShopMenu extends Menu {
         var messages = menus.messages();
         int price = menus.config().premiumPrice();
         close(player);
+        if (player.hasPermission(LobbyPermissions.PREMIUM)) {
+            player.sendMessage(messages.get("shop.already-premium"));
+            return;
+        }
         if (!menus.coins().withdraw(player.getUniqueId(), player.getName(), price)) {
             player.sendMessage(messages.get("shop.too-expensive", Formatter.number("coins", price)));
             return;
