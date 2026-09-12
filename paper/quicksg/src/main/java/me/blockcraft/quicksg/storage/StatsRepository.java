@@ -14,7 +14,9 @@ public final class StatsRepository {
     }
 
     public void createTable() {
-        db.execute("CREATE TABLE IF NOT EXISTS qsg_stats (UUID VARCHAR(100), NAME VARCHAR(16), KILLS int, DEATHS int, WIN int, LOSE int, COINS int)");
+        db.execute("CREATE TABLE IF NOT EXISTS qsg_stats (UUID VARCHAR(36) NOT NULL PRIMARY KEY, NAME VARCHAR(16), "
+                + "KILLS INT NOT NULL DEFAULT 0, DEATHS INT NOT NULL DEFAULT 0, WIN INT NOT NULL DEFAULT 0, LOSE INT NOT NULL DEFAULT 0, "
+                + "COINS INT NOT NULL DEFAULT 0)");
     }
 
     public Stats get(UUID player) {
@@ -24,17 +26,10 @@ public final class StatsRepository {
     }
 
     public void add(UUID player, String name, StatColumn column, int delta) {
-        int updated = db.update("UPDATE qsg_stats SET " + column.sql() + " = " + column.sql() + " + ?, NAME = ? WHERE UUID = ?",
-                delta, name, player.toString());
-        if (updated == 0) {
-            db.update("INSERT INTO qsg_stats (UUID, NAME, KILLS, DEATHS, WIN, LOSE, COINS) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                    player.toString(), name,
-                    column == StatColumn.KILLS ? delta : 0,
-                    column == StatColumn.DEATHS ? delta : 0,
-                    column == StatColumn.WINS ? delta : 0,
-                    column == StatColumn.LOSSES ? delta : 0,
-                    column == StatColumn.POINTS ? delta : 0);
-        }
+        String col = column.sql();
+        db.update("INSERT INTO qsg_stats (UUID, NAME, " + col + ") VALUES (?, ?, ?) "
+                + "ON DUPLICATE KEY UPDATE NAME = VALUES(NAME), " + col + " = " + col + " + ?",
+                player.toString(), name, delta, delta);
     }
 
     public List<TopEntry> top(StatColumn column, int limit) {

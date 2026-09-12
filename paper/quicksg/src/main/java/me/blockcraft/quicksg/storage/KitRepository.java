@@ -16,7 +16,9 @@ public final class KitRepository {
     }
 
     public void createTable() {
-        db.execute("CREATE TABLE IF NOT EXISTS qsg_kits (UUID VARCHAR(100), NAME VARCHAR(16), KIT1 int, KIT2 int, KIT3 int, KIT4 int, KIT5 int, KIT6 int, KIT7 int, KIT8 int)");
+        db.execute("CREATE TABLE IF NOT EXISTS qsg_kits (UUID VARCHAR(36) NOT NULL PRIMARY KEY, NAME VARCHAR(16), "
+                + "KIT1 INT NOT NULL DEFAULT 0, KIT2 INT NOT NULL DEFAULT 0, KIT3 INT NOT NULL DEFAULT 0, KIT4 INT NOT NULL DEFAULT 0, "
+                + "KIT5 INT NOT NULL DEFAULT 0)");
     }
 
     public Set<Kit> owned(UUID player) {
@@ -36,15 +38,7 @@ public final class KitRepository {
     }
 
     public void unlock(UUID player, String name, Kit kit) {
-        int updated = db.update("UPDATE qsg_kits SET " + kit.column() + " = 1, NAME = ? WHERE UUID = ?", name, player.toString());
-        if (updated == 0) {
-            db.update("INSERT INTO qsg_kits (UUID, NAME, KIT1, KIT2, KIT3, KIT4, KIT5, KIT6, KIT7, KIT8) VALUES (?, ?, ?, ?, ?, ?, ?, 0, 0, 0)",
-                    player.toString(), name,
-                    kit == Kit.STARTER ? 1 : 0,
-                    kit == Kit.BOW ? 1 : 0,
-                    kit == Kit.HEARTS ? 1 : 0,
-                    kit == Kit.CHAIN ? 1 : 0,
-                    kit == Kit.DIAMOND ? 1 : 0);
-        }
+        db.update("INSERT INTO qsg_kits (UUID, NAME, " + kit.column() + ") VALUES (?, ?, 1) "
+                + "ON DUPLICATE KEY UPDATE NAME = VALUES(NAME), " + kit.column() + " = 1", player.toString(), name);
     }
 }

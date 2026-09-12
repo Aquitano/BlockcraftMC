@@ -13,7 +13,7 @@ public final class CoinsRepository {
     }
 
     public void createTable() {
-        db.execute("CREATE TABLE IF NOT EXISTS VCOINS (UUID VARCHAR(36) NOT NULL, NAME VARCHAR(16), COINS INT NOT NULL DEFAULT 0)");
+        db.execute("CREATE TABLE IF NOT EXISTS VCOINS (UUID VARCHAR(36) NOT NULL PRIMARY KEY, NAME VARCHAR(16), COINS INT NOT NULL DEFAULT 0)");
     }
 
     public int get(UUID player) {
@@ -25,23 +25,18 @@ public final class CoinsRepository {
     }
 
     public void set(UUID player, String name, int coins) {
-        int updated = db.update("UPDATE VCOINS SET COINS = ?, NAME = ? WHERE UUID = ?", coins, name, player.toString());
-        if (updated == 0) {
-            db.update("INSERT INTO VCOINS (UUID, NAME, COINS) VALUES (?, ?, ?)", player.toString(), name, coins);
-        }
+        db.update("INSERT INTO VCOINS (UUID, NAME, COINS) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE NAME = VALUES(NAME), COINS = VALUES(COINS)",
+                player.toString(), name, coins);
     }
 
     public void add(UUID player, String name, int delta) {
-        set(player, name, get(player) + delta);
+        db.update("INSERT INTO VCOINS (UUID, NAME, COINS) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE NAME = VALUES(NAME), COINS = COINS + ?",
+                player.toString(), name, delta, delta);
     }
 
     /** Returns false and leaves the balance untouched if the player cannot afford it. */
     public boolean withdraw(UUID player, String name, int amount) {
-        int balance = get(player);
-        if (balance < amount) {
-            return false;
-        }
-        set(player, name, balance - amount);
-        return true;
+        return db.update("UPDATE VCOINS SET COINS = COINS - ?, NAME = ? WHERE UUID = ? AND COINS >= ?",
+                amount, name, player.toString(), amount) > 0;
     }
 }

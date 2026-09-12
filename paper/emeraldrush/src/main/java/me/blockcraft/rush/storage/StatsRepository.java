@@ -14,7 +14,9 @@ public final class StatsRepository {
     }
 
     public void createTable() {
-        db.execute("CREATE TABLE IF NOT EXISTS em_stats (UUID VARCHAR(100), NAME VARCHAR(16), KILLS int, DEATHS int, WIN int, LOSE int, COINS int)");
+        db.execute("CREATE TABLE IF NOT EXISTS em_stats (UUID VARCHAR(36) NOT NULL PRIMARY KEY, NAME VARCHAR(16), "
+                + "KILLS INT NOT NULL DEFAULT 0, DEATHS INT NOT NULL DEFAULT 0, WIN INT NOT NULL DEFAULT 0, LOSE INT NOT NULL DEFAULT 0, "
+                + "COINS INT NOT NULL DEFAULT 0)");
     }
 
     public PlayerStats get(UUID player) {
@@ -25,13 +27,9 @@ public final class StatsRepository {
 
     public void increment(UUID player, String name, StatCategory category, int delta) {
         String column = category.column();
-        int updated = db.update("UPDATE em_stats SET " + column + " = " + column + " + ?, NAME = ? WHERE UUID = ?",
-                delta, name, player.toString());
-        if (updated == 0) {
-            db.update("INSERT INTO em_stats (UUID, NAME, KILLS, DEATHS, WIN, LOSE, COINS) VALUES (?, ?, 0, 0, 0, 0, 0)",
-                    player.toString(), name);
-            db.update("UPDATE em_stats SET " + column + " = " + column + " + ? WHERE UUID = ?", delta, player.toString());
-        }
+        db.update("INSERT INTO em_stats (UUID, NAME, " + column + ") VALUES (?, ?, ?) "
+                + "ON DUPLICATE KEY UPDATE NAME = VALUES(NAME), " + column + " = " + column + " + ?",
+                player.toString(), name, delta, delta);
     }
 
     public List<TopEntry> top(StatCategory category, int limit) {
