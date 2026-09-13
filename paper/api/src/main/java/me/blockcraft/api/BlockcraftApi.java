@@ -12,6 +12,7 @@ import me.blockcraft.common.db.Database;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.network.ServerIdentity;
 import me.blockcraft.common.network.ServerRepository;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.entity.Player;
 
 /** Entry point for other plugins; populated while BlockcraftAPI is enabled. */
@@ -31,9 +32,10 @@ public final class BlockcraftApi {
     private final ServerPresence presence;
     private final RealNames realNames;
     private final Xp xp;
+    private final TagResolver tags;
 
     BlockcraftApi(Database database, PlayerSettings settings, Messages messages, ServerRepository servers, ServerIdentity server,
-                  ServerPresence presence, RealNames realNames, Xp xp) {
+                  ServerPresence presence, RealNames realNames, Xp xp, TagResolver tags) {
         this.database = database;
         this.coins = new CoinsRepository(database);
         this.unlocks = new Unlocks(database);
@@ -46,6 +48,7 @@ public final class BlockcraftApi {
         this.presence = presence;
         this.realNames = realNames;
         this.xp = xp;
+        this.tags = tags;
     }
 
     public static BlockcraftApi get() {
@@ -109,6 +112,11 @@ public final class BlockcraftApi {
     /** What this server tells the proxy about itself. */
     public ServerPresence presence() {
         return presence;
+    }
+
+    /** The network addresses and the colour palette, resolved in every message of every Paper plugin. */
+    public TagResolver tags() {
+        return tags;
     }
 
     /** Network XP and levels; games award {@link me.blockcraft.api.xp.XpReward}s. */

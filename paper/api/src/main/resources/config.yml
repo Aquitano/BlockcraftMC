@@ -5,6 +5,15 @@ database:
   username: blockcraft
   password: blockcraft
 
+# Network addresses; every message of every Paper plugin can use them as <ip>, <website>, <shop>, <teamspeak>
+# and <discord>. Keep them in step with the proxy's network section.
+network:
+  ip: BlockcraftMC.net
+  website: https://BlockcraftMC.net
+  shop: https://shop.BlockcraftMC.net
+  teamspeak: ts.BlockcraftMC.net
+  discord: https://discord.gg/kh3xaQ3
+
 # Balance a player starts with on their first join anywhere on the network.
 starting-coins: 10
 

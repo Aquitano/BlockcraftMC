@@ -1,19 +1,50 @@
 prefix: "<gold>Blockcraft <dark_gray>» <reset>"
+
+# The network's colours. Every Paper plugin's messages.yml may use these as tags, so a redesign happens here
+# and nowhere else. The values are spliced in before parsing, so a colour tag colours what follows it.
+palette:
+  primary: "<blue>"
+  accent: "<yellow>"
+  muted: "<gray>"
+  dark: "<dark_gray>"
+  success: "<green>"
+  error: "<red>"
+  bullet: "<dark_gray>● "
+  arrow: "<dark_gray>» "
+
+commands:
+  coins:
+    description: "Zeigt deine Coins"
+  level:
+    description: "Zeigt dein Level"
+
+tab:
+  default-prefix: "<muted>"
+
+menu:
+  filler: " "
+  back: "<arrow><error>Zurück"
+  close: "<arrow><error>Schließen"
+  confirm:
+    title: "<arrow><primary>Bestätigen"
+    accept: "<success>Kaufen"
+    cancel: "<error>Abbrechen"
+
 coins:
-  self: "<prefix><gray>Du hast <yellow><coins> <gray>Coins!"
-  other: "<prefix><yellow><player> <gray>hat <yellow><coins> <gray>Coins."
+  self: "<prefix><muted>Du hast <accent><coins> <muted>Coins!"
+  other: "<prefix><accent><player> <muted>hat <accent><coins> <muted>Coins."
 xp:
-  gained: "<green>+<amount> XP"
-  level-up: "<prefix><gray>Du bist jetzt <yellow>Level <level><gray>!"
+  gained: "<success>+<amount> XP"
+  level-up: "<prefix><muted>Du bist jetzt <accent>Level <level><muted>!"
 level:
-  self: "<prefix><gray>Du bist <yellow>Level <level> <gray>und hast <yellow><xp><gray>/<yellow><next> <gray>XP bis zum nächsten Level."
-  other: "<prefix><yellow><player> <gray>ist <yellow>Level <level> <gray>mit <yellow><xp> <gray>XP."
+  self: "<prefix><muted>Du bist <accent>Level <level> <muted>und hast <accent><xp><muted>/<accent><next> <muted>XP bis zum nächsten Level."
+  other: "<prefix><accent><player> <muted>ist <accent>Level <level> <muted>mit <accent><xp> <muted>XP."
 tags:
-  pro: "<dark_gray>[<gold>PRO<dark_gray>]"
-  legend: "<dark_gray>[<light_purple>LEGENDE<dark_gray>]"
-  gg: "<dark_gray>[<green>GG<dark_gray>]"
-  og: "<dark_gray>[<yellow>OG<dark_gray>]"
-  king: "<dark_gray>[<gold>KÖNIG<dark_gray>]"
-  noob: "<dark_gray>[<gray>NOOB<dark_gray>]"
-  sweat: "<dark_gray>[<aqua>SWEAT<dark_gray>]"
-  chill: "<dark_gray>[<blue>CHILL<dark_gray>]"
+  pro: "<dark>[<gold>PRO<dark>]"
+  legend: "<dark>[<light_purple>LEGENDE<dark>]"
+  gg: "<dark>[<success>GG<dark>]"
+  og: "<dark>[<accent>OG<dark>]"
+  king: "<dark>[<gold>KÖNIG<dark>]"
+  noob: "<dark>[<muted>NOOB<dark>]"
+  sweat: "<dark>[<aqua>SWEAT<dark>]"
+  chill: "<dark>[<primary>CHILL<dark>]"
