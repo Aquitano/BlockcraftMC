@@ -1,12 +1,14 @@
 package me.blockcraft.rush.game;
 
+import me.blockcraft.api.game.LobbyCountdown;
 import me.blockcraft.api.game.Stat;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.game.ServerRestart;
 import me.blockcraft.api.game.PlayerReset;
 import me.blockcraft.api.BlockcraftApi;
-import me.blockcraft.api.coins.CoinsRepository;
+import me.blockcraft.api.coins.Coins;
 import me.blockcraft.api.item.Items;
+import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Countdown;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.api.xp.XpReward;
@@ -25,7 +27,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.Particle;
-import org.bukkit.Sound;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
@@ -51,24 +52,17 @@ import java.util.function.IntConsumer;
 
 public final class Game {
 
-    private static final int LIVES = 3;
-    private static final int KILL_COINS = 5;
-    private static final int WIN_COINS = 15;
-    private static final float SOUND_VOLUME = 4.0f;
-    private static final float SOUND_PITCH = 4.0f;
-
     private final Plugin plugin;
     private final RushConfig config;
     private final Spawns spawns;
     private final Messages messages;
     private final StatsRepository stats;
-    private final CoinsRepository coins;
     private final Countdown countdown;
+    private final LobbyCountdown lobbyCountdown;
     private final GameScoreboard scoreboard;
     private Countdown restart;
 
     private GamePhase phase = GamePhase.LOBBY;
-    private boolean forcedStart;
     private final Set<UUID> alive = new LinkedHashSet<>();
     private final Set<UUID> spectators = new HashSet<>();
     private final Set<UUID> builders = new HashSet<>();
@@ -79,15 +73,15 @@ public final class Game {
     private record Loadout(ItemStack[] contents, ItemStack[] armor) {
     }
 
-    public Game(Plugin plugin, RushConfig config, Spawns spawns, Messages messages, StatsRepository stats,
-                CoinsRepository coins) {
+    public Game(Plugin plugin, RushConfig config, Spawns spawns, Messages messages, StatsRepository stats) {
         this.plugin = plugin;
         this.config = config;
         this.spawns = spawns;
         this.messages = messages;
         this.stats = stats;
-        this.coins = coins;
         this.countdown = new Countdown(plugin);
+        this.lobbyCountdown = new LobbyCountdown(plugin, config.lobbyCountdown(), config.minPlayers(), alive::size,
+                seconds -> broadcast("lobby.countdown", Formatter.number("seconds", seconds)), this::beginSearch);
         this.scoreboard = new GameScoreboard(this, messages, config);
     }
 
@@ -173,12 +167,7 @@ public final class Game {
         giveLobbyItems(player);
         broadcast("lobby.joined", Placeholder.unparsed("player", player.getName()));
         scoreboard.refreshAll();
-        if (Bukkit.getOnlinePlayers().size() >= config.minPlayers()) {
-            startLobbyCountdown();
-        } else if (!forcedStart) {
-            countdown.cancel();
-            Bukkit.getOnlinePlayers().forEach(online -> online.setLevel(config.lobbyCountdown()));
-        }
+        lobbyCountdown.start();
     }
 
     /** Returns whether the player left as a spectator, whose departure is not announced. */
@@ -207,13 +196,9 @@ public final class Game {
             requester.sendMessage(messages.get("command.start-not-lobby"));
             return;
         }
-        if (countdown.isRunning() && countdown.remaining() <= 5) {
+        if (!lobbyCountdown.shorten(5)) {
             requester.sendMessage(messages.get("command.start-already-started"));
-            return;
         }
-        startLobbyCountdown();
-        forcedStart = true;
-        countdown.remaining(6);
     }
 
     public void skipSearch() {
@@ -229,39 +214,14 @@ public final class Game {
     }
 
     public void stop() {
+        lobbyCountdown.cancel();
         countdown.cancel();
         if (restart != null) {
             restart.cancel();
         }
     }
 
-    private void startLobbyCountdown() {
-        if (countdown.isRunning()) {
-            return;
-        }
-        forcedStart = false;
-        startPhase(config.lobbyCountdown(), remaining -> {
-            if (!forcedStart && Bukkit.getOnlinePlayers().size() < config.minPlayers()) {
-                countdown.remaining(config.lobbyCountdown());
-            }
-            int seconds = countdown.remaining();
-            Bukkit.getOnlinePlayers().forEach(online -> online.setLevel(seconds));
-            if (seconds == 15 || seconds == 10 || seconds <= 5) {
-                broadcast("lobby.countdown", Formatter.number("seconds", seconds));
-            }
-            if (seconds <= 5) {
-                playSoundToAll(Sound.UI_BUTTON_CLICK);
-            }
-        }, this::beginSearch);
-    }
-
     private void beginSearch() {
-        if (alive.size() < 2) {
-            forcedStart = false;
-            broadcast("lobby.cancelled");
-            Bukkit.getOnlinePlayers().forEach(online -> online.setLevel(config.lobbyCountdown()));
-            return;
-        }
         setPhase(GamePhase.SEARCH);
         messages.getLines("search.started", Formatter.number("minutes", config.searchSeconds() / 60)).forEach(Bukkit::broadcast);
         var pickaxe = Items.of(Material.IRON_PICKAXE).name(messages.get("item.pickaxe")).edit(meta -> {
@@ -273,7 +233,6 @@ public final class Game {
             player.setLevel(0);
             player.setExp(0.0f);
             player.setGameMode(GameMode.SURVIVAL);
-            player.playSound(player.getLocation(), Sound.ENTITY_IRON_GOLEM_DEATH, SOUND_VOLUME, SOUND_PITCH);
             player.getWorld().spawnParticle(Particle.LARGE_SMOKE, player.getLocation(), 2);
             player.getInventory().addItem(pickaxe.clone());
             spawns.teleport(player, SpawnPoint.SEARCH);
@@ -287,14 +246,14 @@ public final class Game {
             scoreboard.refreshAll();
             switch (remaining) {
                 case 120, 60 -> {
-                    playSoundToAll(Sound.UI_BUTTON_CLICK);
+                    Sounds.NOTIFY.playToAll();
                     broadcast("search.ends-minutes", Formatter.number("minutes", remaining / 60));
                 }
                 case 15, 5 -> {
-                    playSoundToAll(Sound.UI_BUTTON_CLICK);
+                    Sounds.NOTIFY.playToAll();
                     broadcast("search.ends-seconds", Formatter.number("seconds", remaining));
                 }
-                case 4, 3, 2, 1 -> playSoundToAll(Sound.ENTITY_PLAYER_LEVELUP);
+                case 4, 3, 2, 1 -> Sounds.COUNTDOWN_TICK.playToAll();
                 default -> {
                 }
             }
@@ -306,7 +265,7 @@ public final class Game {
         var shop = Items.of(Material.CHEST).name(messages.get("item.shop")).build();
         var titleTimes = Title.Times.times(Duration.ofMillis(1250), Duration.ofMillis(1250), Duration.ofMillis(1250));
         for (var player : alivePlayers()) {
-            player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, SOUND_VOLUME, SOUND_PITCH);
+            Sounds.COUNTDOWN_GO.play(player);
             player.showTitle(Title.title(
                     messages.get("shopping.title", Formatter.number("emeralds", emeralds(player))),
                     messages.get("shopping.subtitle"), titleTimes));
@@ -315,7 +274,7 @@ public final class Game {
             player.getInventory().clear();
             player.getInventory().setItem(4, shop.clone());
             spawns.teleport(player, SpawnPoint.SHOPPING);
-            lives.put(player.getUniqueId(), LIVES);
+            lives.put(player.getUniqueId(), config.lives());
         }
         spectatorPlayers().forEach(spectator -> spawns.teleport(spectator, SpawnPoint.SHOPPING));
         scoreboard.refreshAll();
@@ -325,10 +284,10 @@ public final class Game {
             }
             switch (remaining) {
                 case 15, 5 -> {
-                    playSoundToAll(Sound.UI_BUTTON_CLICK);
+                    Sounds.NOTIFY.playToAll();
                     broadcast("shopping.ends", Formatter.number("seconds", remaining));
                 }
-                case 4, 3, 1 -> playSoundToAll(Sound.UI_BUTTON_CLICK);
+                case 4, 3, 2, 1 -> Sounds.COUNTDOWN_TICK.playToAll();
                 default -> {
                 }
             }
@@ -340,7 +299,7 @@ public final class Game {
         broadcast("deathmatch.started");
         int spawnIndex = 0;
         for (var player : alivePlayers()) {
-            player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, SOUND_VOLUME, SOUND_PITCH);
+            Sounds.COUNTDOWN_GO.play(player);
             player.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 80, 10));
             player.setGameMode(GameMode.SURVIVAL);
             player.getInventory().remove(Material.CHEST);
@@ -369,7 +328,7 @@ public final class Game {
         var compass = Items.of(Material.COMPASS).name(messages.get("item.compass")).lore(messages.get("item.compass-lore")).build();
         for (var player : Bukkit.getOnlinePlayers()) {
             player.getInventory().addItem(compass.clone());
-            player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, SOUND_VOLUME, SOUND_PITCH);
+            Sounds.NOTIFY.play(player);
         }
     }
 
@@ -380,10 +339,10 @@ public final class Game {
         var victimName = Placeholder.component("victim", victim.playerListName());
         killer.filter(slayer -> !slayer.equals(victim)).ifPresentOrElse(slayer -> {
             broadcast("deathmatch.killed", victimName, Placeholder.component("killer", slayer.playerListName()));
+            Coins.award(plugin, slayer, config.killCoins());
             Tasks.async(plugin, () -> {
-                coins.add(slayer.getUniqueId(), BlockcraftApi.get().realName(slayer), KILL_COINS);
                 stats.add(slayer.getUniqueId(), BlockcraftApi.get().realName(slayer), Stat.KILLS, 1);
-                stats.add(slayer.getUniqueId(), BlockcraftApi.get().realName(slayer), Stat.POINTS, KILL_COINS);
+                stats.add(slayer.getUniqueId(), BlockcraftApi.get().realName(slayer), Stat.POINTS, config.killCoins());
             });
             slayer.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 160, 1));
             BlockcraftApi.get().effects().onKill(slayer, victim);
@@ -444,10 +403,10 @@ public final class Game {
         }
         for (var winner : alivePlayers()) {
             broadcast("ending.winner", Placeholder.unparsed("player", winner.getName()));
+            Coins.award(plugin, winner, config.winCoins());
             Tasks.async(plugin, () -> {
                 stats.add(winner.getUniqueId(), BlockcraftApi.get().realName(winner), Stat.WINS, 1);
-                coins.add(winner.getUniqueId(), BlockcraftApi.get().realName(winner), WIN_COINS);
-                stats.add(winner.getUniqueId(), BlockcraftApi.get().realName(winner), Stat.POINTS, WIN_COINS);
+                stats.add(winner.getUniqueId(), BlockcraftApi.get().realName(winner), Stat.POINTS, config.winCoins());
             });
             BlockcraftApi.get().effects().onWin(winner);
             BlockcraftApi.get().xp().award(winner, XpReward.WIN);
@@ -484,12 +443,7 @@ public final class Game {
     private void makeSpectator(Player player) {
         alive.remove(player.getUniqueId());
         spectators.add(player.getUniqueId());
-        player.setExp(0.0f);
-        player.setLevel(0);
-        PlayerReset.resetHealth(player);
-        player.setFoodLevel(20);
-        player.getInventory().setArmorContents(null);
-        player.setGameMode(GameMode.SPECTATOR);
+        PlayerReset.spectate(player);
     }
 
 
@@ -511,12 +465,6 @@ public final class Game {
 
     private void broadcast(String key, TagResolver... resolvers) {
         Bukkit.broadcast(messages.get(key, resolvers));
-    }
-
-    private static void playSoundToAll(Sound sound) {
-        for (var player : Bukkit.getOnlinePlayers()) {
-            player.playSound(player.getLocation(), sound, SOUND_VOLUME, SOUND_PITCH);
-        }
     }
 
     private void setPhase(GamePhase phase) {

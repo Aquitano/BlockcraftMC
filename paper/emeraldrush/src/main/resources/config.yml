@@ -10,3 +10,9 @@ countdown:
   deathmatch-tracker-after: 300
   restart: 10
 idle-restart-minutes: 50
+
+# Deathmatch lives per player and the coins a kill and a win are worth.
+lives: 3
+rewards:
+  kill: 5
+  win: 15

@@ -1,11 +1,11 @@
 package me.blockcraft.rush.listener;
 
+import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.rush.config.RushConfig;
 import me.blockcraft.rush.game.Game;
 import me.blockcraft.rush.game.GamePhase;
 import org.bukkit.Material;
-import org.bukkit.Sound;
 import org.bukkit.entity.TNTPrimed;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -37,7 +37,7 @@ public final class BlockListener implements Listener {
         var player = event.getPlayer();
         if (game.phase() == GamePhase.SEARCH && block.getType() == Material.EMERALD_ORE) {
             game.addEmeralds(player, config.emeraldsPerOre());
-            player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 4.0f, 4.0f);
+            Sounds.COINS.play(player);
             Tasks.later(plugin, config.oreRespawnSeconds() * 20L, () -> block.setType(Material.EMERALD_ORE));
             return;
         }

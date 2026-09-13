@@ -13,7 +13,10 @@ public record RushConfig(
         int deathmatchSeconds,
         int trackerAfterSeconds,
         int restartSeconds,
-        int idleRestartMinutes
+        int idleRestartMinutes,
+        int lives,
+        int killCoins,
+        int winCoins
 ) {
 
     public static RushConfig from(FileConfiguration config) {
@@ -28,6 +31,9 @@ public record RushConfig(
                 config.getInt("countdown.deathmatch", 1200),
                 config.getInt("countdown.deathmatch-tracker-after", 300),
                 config.getInt("countdown.restart", 10),
-                config.getInt("idle-restart-minutes", 50));
+                config.getInt("idle-restart-minutes", 50),
+                config.getInt("lives", 3),
+                config.getInt("rewards.kill", 5),
+                config.getInt("rewards.win", 15));
     }
 }

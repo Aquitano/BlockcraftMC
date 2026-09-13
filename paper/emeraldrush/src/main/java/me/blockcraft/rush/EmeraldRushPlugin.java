@@ -1,7 +1,9 @@
 package me.blockcraft.rush;
 
+import me.blockcraft.api.command.CommandRegistry;
 import me.blockcraft.api.game.ArenaProtection;
 import me.blockcraft.api.game.ServerRestart;
+import me.blockcraft.api.game.StatsCommand;
 import me.blockcraft.api.game.StatsRepository;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import me.blockcraft.api.BlockcraftApi;
@@ -12,7 +14,6 @@ import me.blockcraft.rush.command.RushCoinsCommand;
 import me.blockcraft.rush.command.RushCommand;
 import me.blockcraft.rush.command.RushSetCommand;
 import me.blockcraft.rush.command.StartCommand;
-import me.blockcraft.rush.command.StatsCommand;
 import me.blockcraft.rush.command.TopCommand;
 import me.blockcraft.rush.config.RushConfig;
 import me.blockcraft.rush.config.Spawns;
@@ -29,7 +30,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.List;
 
 public final class EmeraldRushPlugin extends JavaPlugin {
 
@@ -40,14 +40,14 @@ public final class EmeraldRushPlugin extends JavaPlugin {
         saveDefaultConfig();
         var config = RushConfig.from(getConfig());
         var spawns = new Spawns(this);
-        var messages = Messages.load(getDataPath(), () -> getResource("messages.yml"));
-
         var api = BlockcraftApi.get();
+        var messages = Messages.load(getDataPath(), () -> getResource("messages.yml"), api.tags());
+
         var stats = new StatsRepository(api.database(), "em_stats");
         stats.createTable();
         api.unlocks().importLegacyTable("em_kits", Perk.LEGACY_COLUMNS);
 
-        game = new Game(this, config, spawns, messages, stats, api.coins());
+        game = new Game(this, config, spawns, messages, stats);
         var menus = new RushMenus(this, game, messages, spawns, api.unlocks(), api.shop(), stats);
 
         register(new ConnectionListener(game, messages));
@@ -58,15 +58,15 @@ public final class EmeraldRushPlugin extends JavaPlugin {
         register(new HotbarListener(this, game, menus, config, messages));
 
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
-            var registrar = event.registrar();
-            registrar.register(StartCommand.create(this, game, api.coins(), messages), "Startet die Runde", List.of());
-            registrar.register(StatsCommand.create(this, stats, messages), "Zeigt die Stats eines Spielers", List.of());
-            registrar.register(BuildCommand.create(game, messages), "Schaltet den Build-Modus um", List.of());
-            registrar.register(RushSetCommand.create(spawns, messages), "Setzt eine Spawn-Location", List.of());
-            registrar.register(TopCommand.create(menus), "Zeigt die Top 10 einer Kategorie", List.of());
-            registrar.register(ChestCommand.create(game, menus, messages), "Öffnet den Shop", List.of());
-            registrar.register(RushCommand.create(this, game, menus, api.coins(), messages), "Admin-Befehle", List.of());
-            registrar.register(RushCoinsCommand.create(game, messages), "Setzt die Emeralds eines Spielers", List.of());
+            var commands = new CommandRegistry(event.registrar(), messages);
+            commands.register(StartCommand.create(this, game, api.coins(), messages));
+            commands.register(StatsCommand.create(this, stats, messages));
+            commands.register(BuildCommand.create(game, messages));
+            commands.register(RushSetCommand.create(spawns, messages));
+            commands.register(TopCommand.create(menus));
+            commands.register(ChestCommand.create(game, menus, messages));
+            commands.register(RushCommand.create(this, game, menus, api.coins(), messages));
+            commands.register(RushCoinsCommand.create(game, messages));
         });
 
         int idleSeconds = config.idleRestartMinutes() * 60;

@@ -23,10 +23,6 @@ final class ShopMenu extends Menu {
     ShopMenu(RushMenus menus, Messages messages, ShopCategory category, List<ShopEntry> stock) {
         super(2, messages.get("shop.title", Placeholder.parsed("category", messages.raw("shop.category." + category.key()))));
         this.menus = menus;
-        var filler = Items.of(Material.WHITE_STAINED_GLASS_PANE).name(messages.get("shop.filler")).build();
-        for (int slot = 0; slot < 9; slot++) {
-            set(slot, filler);
-        }
         for (var tab : ShopCategory.values()) {
             var icon = Items.of(tab.icon()).name(messages.get("shop.nav." + tab.key()));
             if (tab == category) {

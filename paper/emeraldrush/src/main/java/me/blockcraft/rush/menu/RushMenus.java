@@ -2,12 +2,14 @@ package me.blockcraft.rush.menu;
 
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.game.Stat;
-import me.blockcraft.api.game.Stats;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.game.TopList;
+import me.blockcraft.api.item.Items;
+import me.blockcraft.api.menu.ConfirmMenu;
 import me.blockcraft.api.menu.Menu;
 import me.blockcraft.api.shop.Shop;
 import me.blockcraft.api.shop.Unlocks;
+import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.rush.config.SpawnPoint;
@@ -19,8 +21,8 @@ import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
-import org.bukkit.Sound;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 
 import java.util.List;
@@ -64,17 +66,28 @@ public final class RushMenus {
     }
 
     void buyPerk(Player player, Perk perk) {
+        new ConfirmMenu(perkIcon(perk), buyer -> purchasePerk(buyer, perk), buyer -> openPerk(buyer, perk)).open(player);
+    }
+
+    ItemStack perkIcon(Perk perk) {
+        return Items.of(perk.icon())
+                .name(messages.get("perk.item", perkName(messages, perk)))
+                .lore(messages.get("perk.price-lore", Formatter.number("price", perk.price())))
+                .build();
+    }
+
+    private void purchasePerk(Player player, Perk perk) {
         Menu.close(player);
         Tasks.async(plugin, () -> shop.buy(player.getUniqueId(), BlockcraftApi.get().realName(player), perk.item(), perk.price()), purchase -> {
             switch (purchase.outcome()) {
                 case BOUGHT -> {
+                    Sounds.PURCHASE.play(player);
                     player.sendMessage(messages.get("perk.bought", perkName(messages, perk)));
                     player.sendMessage(messages.get("perk.bought-price", Formatter.number("price", perk.price())));
-                    player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 4.0f, 4.0f);
                 }
                 case ALREADY_OWNED -> player.sendMessage(messages.get("perk.already-owned"));
                 case NOT_ENOUGH_COINS -> {
-                    player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 4.0f, 4.0f);
+                    Sounds.MENU_DENY.play(player);
                     player.sendMessage(messages.get("perk.not-enough-coins"));
                 }
             }
@@ -96,10 +109,12 @@ public final class RushMenus {
             return;
         }
         if (player.getInventory().firstEmpty() == -1) {
+            Sounds.MENU_DENY.play(player);
             player.sendMessage(messages.get("shop.inventory-full"));
             return;
         }
         if (!game.withdrawEmeralds(player, entry.price())) {
+            Sounds.MENU_DENY.play(player);
             player.sendMessage(messages.get("shop.not-enough"));
             return;
         }
@@ -108,6 +123,7 @@ public final class RushMenus {
     }
 
     void teleportToEnchant(Player player) {
+        Sounds.TELEPORT.play(player);
         Menu.close(player);
         spawns.teleport(player, SpawnPoint.ENCHANT);
     }
@@ -134,12 +150,4 @@ public final class RushMenus {
         return Placeholder.parsed("perk", messages.raw("perk." + perk.key()));
     }
 
-    public static TagResolver statsPlaceholders(Stats stats) {
-        return TagResolver.resolver(
-                Formatter.number("wins", stats.wins()),
-                Formatter.number("loses", stats.losses()),
-                Formatter.number("deaths", stats.deaths()),
-                Formatter.number("kills", stats.kills()),
-                Formatter.number("points", stats.points()));
-    }
 }

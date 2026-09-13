@@ -13,6 +13,7 @@ import org.bukkit.inventory.ItemStack;
 final class PerkBuyMenu extends Menu {
 
     private static final int BUY = 6;
+    private static final int BACK = 8;
 
     private final RushMenus menus;
     private final Perk perk;
@@ -27,16 +28,13 @@ final class PerkBuyMenu extends Menu {
         set(BUY, owned
                 ? Items.of(Material.ORANGE_STAINED_GLASS_PANE).name(messages.get("perk.owned")).build()
                 : Items.of(Material.GREEN_STAINED_GLASS_PANE).name(messages.get("perk.buy")).build());
-        var back = Items.of(Material.RED_STAINED_GLASS_PANE).name(messages.get("perk.back")).build();
-        set(7, back);
-        set(8, back);
+        backButton(BACK, menus::openPerks);
     }
 
     @Override
     protected void onClick(Player player, int slot, ItemStack clicked, InventoryClickEvent event) {
         switch (slot) {
             case BUY -> menus.buyPerk(player, perk);
-            case 7, 8 -> menus.openPerks(player);
             default -> {
             }
         }

@@ -34,7 +34,7 @@ final class StatsMenu extends Menu {
                 break;
             }
             var placeholders = TagResolver.resolver(Placeholder.unparsed("player", entry.player().getName()),
-                    RushMenus.statsPlaceholders(entry.stats()));
+                    entry.stats().placeholders());
             set(slot++, Items.head(entry.player().getUniqueId(), entry.player().getName())
                     .name(messages.get("stats-menu.entry", placeholders))
                     .lore(messages.getLines("stats-menu.entry-lore", placeholders))

@@ -1,11 +1,11 @@
 package me.blockcraft.rush.menu;
 
 import me.blockcraft.api.item.Items;
+import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.rush.kit.Perk;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import org.bukkit.Material;
-import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -65,7 +65,7 @@ final class ShopCatalog {
         entries.add(item(10, "golden-apple", ItemStack.of(Material.GOLDEN_APPLE), 35));
         entries.add(entry(11, "level", ItemStack.of(Material.ENCHANTED_BOOK), 30, player -> {
             player.setLevel(player.getLevel() + 1);
-            player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 4.0f, 4.0f);
+            Sounds.LEVEL_UP.play(player);
         }));
         entries.add(item(12, "lapis", ItemStack.of(Material.LAPIS_LAZULI), 20));
         if (ownedPerks.contains(Perk.ANGEL)) {
