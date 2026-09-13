@@ -42,7 +42,6 @@ shopping:
   subtitle: "<success><bold>Emeralds"
   info: "<prefix><muted>Du hast nun <accent><seconds> <muted>Sekunden Zeit, um dich auszurüsten!"
   hint: "<prefix><error>Solltest du kein Shop-Item bekommen, öffnest du den Shop mit /chest!"
-  actionbar: "<gold>Shopping <arrow><white><seconds>"
   ends: "<prefix><muted>Die <white>Shopping-Phase <muted>endet in <accent><seconds><muted> Sekunden!"
 deathmatch:
   started: "<prefix><muted>Das Deathmatch hat begonnen!"
@@ -56,9 +55,14 @@ deathmatch:
   killed: "<prefix><white><victim><muted> wurde von <white><killer><muted> getötet."
   died: "<prefix><white><victim> <muted>ist gestorben."
 ending:
-  winner: "<prefix><muted>Der Spieler <white><player><muted> hat die Runde gewonnen!"
   restart: "<prefix><muted>Der Server startet in <error><seconds> <muted>Sekunden neu!"
   restart-now: "<prefix><error>Der Server startet jetzt neu!"
+summary:
+  name: "EmeraldRush"
+timer:
+  search: "<primary>Suchzeit <dark>● <white><time>"
+  shopping: "<primary>Shopping <dark>● <white><seconds>s"
+  deathmatch: "<primary>Deathmatch <dark>● <white><time>"
 tracker:
   found: "<prefix><white><player> <arrow><white><distance><muted> Blöcke"
 item:

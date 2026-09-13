@@ -1,17 +1,17 @@
 package me.blockcraft.rush.game;
 
 import me.blockcraft.api.game.LobbyCountdown;
+import me.blockcraft.api.game.RoundSummary;
 import me.blockcraft.api.game.Stat;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.game.ServerRestart;
 import me.blockcraft.api.game.PlayerReset;
+import me.blockcraft.api.game.TimerBar;
 import me.blockcraft.api.BlockcraftApi;
-import me.blockcraft.api.coins.Coins;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Countdown;
 import me.blockcraft.api.task.Tasks;
-import me.blockcraft.api.xp.XpReward;
 import me.blockcraft.api.world.Worlds;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.rush.Permissions;
@@ -59,8 +59,10 @@ public final class Game {
     private final StatsRepository stats;
     private final Countdown countdown;
     private final LobbyCountdown lobbyCountdown;
+    private final RoundSummary summary;
     private final GameScoreboard scoreboard;
     private Countdown restart;
+    private TimerBar timer;
 
     private GamePhase phase = GamePhase.LOBBY;
     private final Set<UUID> alive = new LinkedHashSet<>();
@@ -82,6 +84,8 @@ public final class Game {
         this.countdown = new Countdown(plugin);
         this.lobbyCountdown = new LobbyCountdown(plugin, config.lobbyCountdown(), config.minPlayers(), alive::size,
                 seconds -> broadcast("lobby.countdown", Formatter.number("seconds", seconds)), this::beginSearch);
+        this.summary = new RoundSummary(plugin, messages.get("summary.name"),
+                new RoundSummary.Rewards(config.killCoins(), config.winCoins()));
         this.scoreboard = new GameScoreboard(this, messages, config);
     }
 
@@ -161,6 +165,7 @@ public final class Game {
             return;
         }
         alive.add(player.getUniqueId());
+        summary.join(player);
         spawns.teleport(player, SpawnPoint.LOBBY);
         PlayerReset.reset(player, GameMode.ADVENTURE);
         messages.getLines("lobby.welcome", Formatter.number("emeralds", config.emeraldsPerOre())).forEach(player::sendMessage);
@@ -183,6 +188,7 @@ public final class Game {
             Tasks.async(plugin, () -> stats.add(id, BlockcraftApi.get().realName(player), Stat.LOSSES, 1));
             checkWinner();
         }
+        hideTimer(player);
         scoreboard.refreshAll();
         return wasSpectator;
     }
@@ -216,6 +222,7 @@ public final class Game {
     public void stop() {
         lobbyCountdown.cancel();
         countdown.cancel();
+        hideTimer();
         if (restart != null) {
             restart.cancel();
         }
@@ -239,7 +246,7 @@ public final class Game {
             player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 120, 1));
         }
         scoreboard.refreshAll();
-        startPhase(config.searchSeconds(), remaining -> {
+        startPhase("timer.search", config.searchSeconds(), remaining -> {
             for (var player : Bukkit.getOnlinePlayers()) {
                 player.sendActionBar(messages.get("search.actionbar", Formatter.number("emeralds", emeralds(player))));
             }
@@ -253,7 +260,7 @@ public final class Game {
                     Sounds.NOTIFY.playToAll();
                     broadcast("search.ends-seconds", Formatter.number("seconds", remaining));
                 }
-                case 4, 3, 2, 1 -> Sounds.COUNTDOWN_TICK.playToAll();
+                case 4, 3, 2, 1 -> Sounds.countdownTick(remaining);
                 default -> {
                 }
             }
@@ -278,16 +285,13 @@ public final class Game {
         }
         spectatorPlayers().forEach(spectator -> spawns.teleport(spectator, SpawnPoint.SHOPPING));
         scoreboard.refreshAll();
-        startPhase(config.shoppingSeconds(), remaining -> {
-            for (var player : Bukkit.getOnlinePlayers()) {
-                player.sendActionBar(messages.get("shopping.actionbar", Formatter.number("seconds", remaining)));
-            }
+        startPhase("timer.shopping", config.shoppingSeconds(), remaining -> {
             switch (remaining) {
                 case 15, 5 -> {
                     Sounds.NOTIFY.playToAll();
                     broadcast("shopping.ends", Formatter.number("seconds", remaining));
                 }
-                case 4, 3, 2, 1 -> Sounds.COUNTDOWN_TICK.playToAll();
+                case 4, 3, 2, 1 -> Sounds.countdownTick(remaining);
                 default -> {
                 }
             }
@@ -309,7 +313,7 @@ public final class Game {
         spectatorPlayers().forEach(spectator -> spawns.teleport(spectator, SpawnPoint.DEATHMATCH_1));
         scoreboard.refreshAll();
         int trackerAt = config.deathmatchSeconds() - config.trackerAfterSeconds();
-        startPhase(config.deathmatchSeconds(), remaining -> {
+        startPhase("timer.deathmatch", config.deathmatchSeconds(), remaining -> {
             if (remaining == trackerAt) {
                 giveTrackers();
             } else if (remaining == 600 || remaining == 300 || remaining == 180) {
@@ -339,15 +343,14 @@ public final class Game {
         var victimName = Placeholder.component("victim", victim.playerListName());
         killer.filter(slayer -> !slayer.equals(victim)).ifPresentOrElse(slayer -> {
             broadcast("deathmatch.killed", victimName, Placeholder.component("killer", slayer.playerListName()));
-            Coins.award(plugin, slayer, config.killCoins());
+            int coins = summary.awardKill(slayer, victim);
             Tasks.async(plugin, () -> {
                 stats.add(slayer.getUniqueId(), BlockcraftApi.get().realName(slayer), Stat.KILLS, 1);
-                stats.add(slayer.getUniqueId(), BlockcraftApi.get().realName(slayer), Stat.POINTS, config.killCoins());
+                stats.add(slayer.getUniqueId(), BlockcraftApi.get().realName(slayer), Stat.POINTS, coins);
             });
             slayer.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 160, 1));
-            BlockcraftApi.get().effects().onKill(slayer, victim);
-            BlockcraftApi.get().xp().award(slayer, XpReward.KILL);
         }, () -> broadcast("deathmatch.died", victimName));
+        summary.death(victim);
         Tasks.async(plugin, () -> stats.add(victim.getUniqueId(), BlockcraftApi.get().realName(victim), Stat.DEATHS, 1));
         int remaining = Math.max(0, lives(victim) - 1);
         lives.put(victim.getUniqueId(), remaining);
@@ -402,14 +405,11 @@ public final class Game {
             return;
         }
         for (var winner : alivePlayers()) {
-            broadcast("ending.winner", Placeholder.unparsed("player", winner.getName()));
-            Coins.award(plugin, winner, config.winCoins());
+            int coins = summary.awardWin(winner);
             Tasks.async(plugin, () -> {
                 stats.add(winner.getUniqueId(), BlockcraftApi.get().realName(winner), Stat.WINS, 1);
-                stats.add(winner.getUniqueId(), BlockcraftApi.get().realName(winner), Stat.POINTS, config.winCoins());
+                stats.add(winner.getUniqueId(), BlockcraftApi.get().realName(winner), Stat.POINTS, coins);
             });
-            BlockcraftApi.get().effects().onWin(winner);
-            BlockcraftApi.get().xp().award(winner, XpReward.WIN);
         }
         endRound();
     }
@@ -418,6 +418,8 @@ public final class Game {
         setPhase(GamePhase.ENDING);
         scoreboard.refreshAll();
         countdown.cancel();
+        hideTimer();
+        summary.show();
         restart = ServerRestart.start(plugin, config.restartSeconds() + 1, remaining -> {
             if (remaining == 10 || (remaining >= 1 && remaining <= 5)) {
                 broadcast("ending.restart", Formatter.number("seconds", remaining));
@@ -432,12 +434,30 @@ public final class Game {
     }
 
     /** Phases announce {@code seconds .. 1} and end one second after the last announcement. */
-    private void startPhase(int seconds, IntConsumer onSecond, Runnable onFinish) {
+    private void startPhase(String barKey, int seconds, IntConsumer onSecond, Runnable onFinish) {
+        var bar = new TimerBar(messages, barKey, seconds);
+        timer = bar;
         countdown.start(seconds + 1, remaining -> {
             if (remaining > 0) {
+                bar.update(remaining);
                 onSecond.accept(remaining);
             }
-        }, onFinish);
+        }, () -> {
+            bar.hide();
+            onFinish.run();
+        });
+    }
+
+    private void hideTimer() {
+        if (timer != null) {
+            timer.hide();
+        }
+    }
+
+    private void hideTimer(Player player) {
+        if (timer != null) {
+            timer.hide(player);
+        }
     }
 
     private void makeSpectator(Player player) {
