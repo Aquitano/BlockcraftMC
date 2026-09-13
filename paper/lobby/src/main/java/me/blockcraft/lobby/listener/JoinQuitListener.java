@@ -2,6 +2,7 @@ package me.blockcraft.lobby.listener;
 
 import me.blockcraft.api.coins.CoinsRepository;
 import me.blockcraft.api.config.Locations;
+import me.blockcraft.api.nick.NickChangeEvent;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.lobby.config.LobbyLocation;
@@ -13,7 +14,6 @@ import me.blockcraft.lobby.rank.TabTeams;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
-import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -66,15 +66,21 @@ public final class JoinQuitListener implements Listener {
         locations.get(LobbyLocation.SPAWN).ifPresent(player::teleport);
         player.setCollidable(false);
         player.showBossBar(BossBar.bossBar(messages.get("join.bossbar"), 1.0f, BossBar.Color.BLUE, BossBar.Overlay.NOTCHED_10));
-        Bukkit.getOnlinePlayers().forEach(tabTeams::update);
+        tabTeams.update(player);
         hider.onJoin(player);
         showCoinsAsLevel(player);
+    }
+
+    @EventHandler
+    public void onNickChange(NickChangeEvent event) {
+        tabTeams.update(event.getPlayer());
     }
 
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
         event.quitMessage(null);
+        tabTeams.remove(player);
         trails.clear(player);
         hider.forget(player);
         pets.release(player.getUniqueId());

@@ -11,10 +11,15 @@ import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * Sorts the tab list by LuckPerms group weight and shows the group's prefix in front of each name. The heaviest
- * inherited group counts, not the primary one: /addpremium and the shop only add an inheritance node.
+ * inherited group counts, not the primary one: /addpremium and the shop only add an inheritance node. Every
+ * player shares one scoreboard, so a joining player receives all teams at once and only their own entry is new.
+ * Entries are remembered per UUID because a nick changes the name the tab list is keyed by.
  */
 public final class TabTeams {
 
@@ -24,6 +29,7 @@ public final class TabTeams {
     private final LuckPerms luckPerms;
     private final Messages messages;
     private final Scoreboard scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
+    private final Map<UUID, String> entries = new HashMap<>();
 
     public TabTeams(LuckPerms luckPerms, Messages messages) {
         this.luckPerms = luckPerms;
@@ -39,12 +45,20 @@ public final class TabTeams {
         String groupName = group == null ? user.getPrimaryGroup() : group.getName();
         Component prefix = Ranks.prefix(player).orElseGet(() -> messages.get("tab.default-prefix"));
 
-        Team current = scoreboard.getEntryTeam(player.getName());
-        if (current != null) {
-            current.removeEntry(player.getName());
-        }
+        remove(player);
         team(teamName(weight, groupName), prefix).addEntry(player.getName());
+        entries.put(player.getUniqueId(), player.getName());
         player.setScoreboard(scoreboard);
+    }
+
+    public void remove(Player player) {
+        var entry = entries.remove(player.getUniqueId());
+        if (entry != null) {
+            Team current = scoreboard.getEntryTeam(entry);
+            if (current != null) {
+                current.removeEntry(entry);
+            }
+        }
     }
 
     private Team team(String name, Component prefix) {

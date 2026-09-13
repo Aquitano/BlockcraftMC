@@ -7,6 +7,8 @@ final class ChatPermissions {
     static final String WORDS_BYPASS = "blockcraft.core.chatfilter.bypass.words";
     static final String ADS_BYPASS = "blockcraft.core.chatfilter.bypass.ads";
     static final String FILTER_NOTIFY = "blockcraft.core.chatfilter.notify";
+    static final String CHAT_COLOR = "blockcraft.chat.color";
+    static final String NICK_SEE = "blockcraft.nick.see";
 
     private ChatPermissions() {
     }
