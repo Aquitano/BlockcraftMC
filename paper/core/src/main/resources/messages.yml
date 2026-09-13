@@ -117,6 +117,7 @@ mute:
     - "<prefix><gray>Derzeit ist der Chat für dich deaktiviert!"
     - "<prefix><gray>Grund: <red><reason>"
     - "<prefix><gray>Verbleibende Zeit: <red><remaining>"
+  check-failed: "<prefix><red>Deine Nachricht konnte gerade nicht geprüft werden. Versuche es gleich noch einmal."
 globalmute:
   blocked: "<dark_aqua>Dir wird es derzeit verweigert, im <yellow>Chat <dark_aqua>zu schreiben. <yellow>GlobalMute <dark_aqua>ist aktiv."
 chat:

@@ -57,7 +57,7 @@ public final class BlockcraftCorePlugin extends JavaPlugin {
         moderation.createTables();
         var chatFilter = ChatFilterConfig.fromYaml(config);
         var pluginManager = getServer().getPluginManager();
-        pluginManager.registerEvents(new MuteListener(moderation.punishments(), messages), this);
+        pluginManager.registerEvents(new MuteListener(this, moderation.punishments(), messages), this);
         pluginManager.registerEvents(new GlobalMuteListener(moderation.settings(), messages), this);
         pluginManager.registerEvents(new ChatCooldownListener(chatFilter.cooldown(), messages), this);
         pluginManager.registerEvents(new ChatFilterListener(this, chatFilter, api.server().name(), moderation.adLog(), messages), this);
