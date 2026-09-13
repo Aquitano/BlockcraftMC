@@ -9,8 +9,11 @@ import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import me.blockcraft.common.network.ProxyChannel;
 import me.blockcraft.system.LobbyConnector;
+import me.blockcraft.system.PlayerVisibility;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import org.slf4j.Logger;
+
+import java.util.Optional;
 
 /** Answers the backends' requests on the Blockcraft channel; the player the message travelled with is the subject. */
 public final class ProxyMessageListener {
@@ -19,11 +22,16 @@ public final class ProxyMessageListener {
 
     private final ProxyServer proxy;
     private final LobbyConnector lobby;
+    private final PlayerVisibility visibility;
+    private final TabHeaderListener tabHeader;
     private final Logger logger;
 
-    public ProxyMessageListener(ProxyServer proxy, LobbyConnector lobby, Logger logger) {
+    public ProxyMessageListener(ProxyServer proxy, LobbyConnector lobby, PlayerVisibility visibility, TabHeaderListener tabHeader,
+                                Logger logger) {
         this.proxy = proxy;
         this.lobby = lobby;
+        this.visibility = visibility;
+        this.tabHeader = tabHeader;
         this.logger = logger;
         proxy.getChannelRegistrar().register(CHANNEL);
     }
@@ -37,17 +45,24 @@ public final class ProxyMessageListener {
         if (!(event.getSource() instanceof ServerConnection connection)) {
             return;
         }
+        var player = connection.getPlayer();
         var in = event.dataAsDataStream();
         String subchannel = in.readUTF();
         switch (subchannel) {
-            case ProxyChannel.PLAY -> lobby.play(connection.getPlayer(), in.readUTF());
-            case ProxyChannel.HUB -> lobby.send(connection.getPlayer());
+            case ProxyChannel.PLAY -> lobby.play(player, in.readUTF());
+            case ProxyChannel.HUB -> lobby.send(player);
+            case ProxyChannel.COMMAND -> proxy.getCommandManager().executeAsync(player, in.readUTF());
+            case ProxyChannel.NICK -> visibility.setNick(player, Optional.of(in.readUTF()).filter(nick -> !nick.isEmpty()));
+            case ProxyChannel.VANISH -> {
+                visibility.setVanished(player, in.readBoolean());
+                tabHeader.refreshAll();
+            }
             case ProxyChannel.STAFF_NOTICE -> {
                 String permission = in.readUTF();
                 var notice = GsonComponentSerializer.gson().deserialize(in.readUTF());
-                for (Player player : proxy.getAllPlayers()) {
-                    if (player.hasPermission(permission)) {
-                        player.sendMessage(notice);
+                for (Player online : proxy.getAllPlayers()) {
+                    if (online.hasPermission(permission)) {
+                        online.sendMessage(notice);
                     }
                 }
             }

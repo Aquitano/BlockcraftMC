@@ -32,7 +32,7 @@ the group's prefix in front of the name; the prefix carries the name colour, so 
 
 | Group      | Prefix             | Grants                                                                            |
 |------------|--------------------|-----------------------------------------------------------------------------------|
-| `default`  | `&7SPIELER &8● &7` | party invite and kick, `/msg` and `/r`, `/seen`, `/playtime`, `/discord`, `/server`, `/glist` |
+| `default`  | `&7SPIELER &8● &7` | party invite and kick, `/msg` and `/r`, `/seen`, `/playtime`, `/discord`, `/server`   |
 | `premium`  | `&6PREMIUM &8● &6` | premium lobby area, double jump, join when full, `/joinme`, chat colours          |
 | `youtuber` | `&5YT &8● &5`      | premium plus `/joinme` without delay, `/bc`, `/send`, `/nick`                     |
 | `dev`      | `&bDEV &8● &b`     | premium plus every `blockcraft.*` and `velocity.command.*` permission             |
@@ -126,6 +126,21 @@ group, the pod name becomes the server name and the pod IP its address.
 When a discovery poll finds no joinable server left in the lobby group, BlockcraftSystem posts the `alerts.no-lobby`
 text to the Discord webhook in `alerts.webhook-url`, and `alerts.lobby-back` once a lobby is joinable again. Each
 change is announced once and at most one alert goes out per `alerts.min-interval-seconds`; an empty URL disables it.
+
+## Nick and vanish across the network
+
+Both states are set on a Paper server (`/nick`, `/v`, `/staff`) and stored in `bc_nicks` and `bc_vanished` so every
+server re-applies them on join. The proxy keeps its own view: it reads both tables when a player logs in and the
+Paper servers report every change over the `blockcraft:main` plugin channel. Player counts (`/online`, `/list`, the
+tab header, the server list ping), `/find`, `/goto`, `/msg`, `/seen` and party invites leave vanished players out and
+address nicked players by their nick; `blockcraft.core.vanish.see` and `blockcraft.nick.see` look through either on
+both sides, and the moderation commands resolve a nick to the account behind it. `velocity.command.glist` is not
+granted to players because Velocity's own list would show real names and vanished staff.
+
+The same channel lets a Paper plugin run a proxy command as the player, with the player's permissions: the report
+menu's "go to" buttons run `/goto`, its punish menu runs `/strafe`. The `/strafe` catalogue itself stays in the
+proxy's `config.yml`; BlockcraftSystem mirrors it into `bc_punishment_catalog` at every start so the menu can list
+the numbered punishments without a copy of the file.
 
 ## Discord linking
 

@@ -10,8 +10,7 @@
         {"type": "permission", "key": "blockcraft.system.discord", "value": true},
         {"type": "permission", "key": "blockcraft.system.seen", "value": true},
         {"type": "permission", "key": "blockcraft.system.playtime", "value": true},
-        {"type": "permission", "key": "velocity.command.server", "value": true},
-        {"type": "permission", "key": "velocity.command.glist", "value": true}
+        {"type": "permission", "key": "velocity.command.server", "value": true}
       ]
     },
     "premium": {

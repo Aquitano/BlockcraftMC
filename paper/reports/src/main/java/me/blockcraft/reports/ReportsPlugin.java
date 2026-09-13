@@ -3,6 +3,7 @@ package me.blockcraft.reports;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.common.moderation.PunishmentCatalogRepository;
 import me.blockcraft.common.report.ReportRepository;
 import me.blockcraft.reports.command.ReportsCommand;
 import me.blockcraft.reports.listener.ChatPromptListener;
@@ -21,8 +22,10 @@ public final class ReportsPlugin extends JavaPlugin {
         var messages = Messages.load(getDataPath(), () -> getResource("messages.yml"));
         var reports = new ReportRepository(BlockcraftApi.get().database());
         reports.createTable();
+        var catalog = new PunishmentCatalogRepository(BlockcraftApi.get().database());
+        catalog.createTable();
 
-        var menus = new ReportMenus(this, reports, messages);
+        var menus = new ReportMenus(this, reports, catalog, messages);
         getServer().getPluginManager().registerEvents(new JoinListener(this, reports, messages), this);
         getServer().getPluginManager().registerEvents(new ChatPromptListener(menus), this);
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event ->

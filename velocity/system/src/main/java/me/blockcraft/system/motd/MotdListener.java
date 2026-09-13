@@ -2,9 +2,9 @@ package me.blockcraft.system.motd;
 
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyPingEvent;
-import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.server.ServerPing;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.system.PlayerVisibility;
 import me.blockcraft.system.ProxySettings;
 import me.blockcraft.system.SystemConfig;
 import net.kyori.adventure.text.Component;
@@ -19,14 +19,14 @@ public final class MotdListener {
 
     private static final int MAINTENANCE_PROTOCOL = 0;
 
-    private final ProxyServer proxy;
+    private final PlayerVisibility visibility;
     private final SystemConfig config;
     private final ProxySettings settings;
     private final Messages messages;
     private final Random random = new Random();
 
-    public MotdListener(ProxyServer proxy, SystemConfig config, ProxySettings settings, Messages messages) {
-        this.proxy = proxy;
+    public MotdListener(PlayerVisibility visibility, SystemConfig config, ProxySettings settings, Messages messages) {
+        this.visibility = visibility;
         this.config = config;
         this.settings = settings;
         this.messages = messages;
@@ -34,7 +34,7 @@ public final class MotdListener {
 
     @Subscribe
     public void onPing(ProxyPingEvent event) {
-        int online = proxy.getPlayerCount();
+        int online = visibility.publicCount();
         int max = config.maxPlayers();
         var ping = event.getPing().asBuilder().onlinePlayers(online).maximumPlayers(max);
         var firstLine = LegacyComponentSerializer.legacyAmpersand().deserialize(config.defaultMotd());

@@ -1,12 +1,13 @@
 package me.blockcraft.reports.menu;
 
 import me.blockcraft.api.menu.Menu;
+import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.common.moderation.PunishmentCatalogRepository;
 import me.blockcraft.common.report.Report;
 import me.blockcraft.common.report.ReportRepository;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
@@ -19,20 +20,25 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-/** Opens the report menus and routes their actions; {@code reported} filters a list to one accused player. */
+/**
+ * Opens the report menus and routes their actions; {@code reported} filters a list to one accused player. Moving
+ * to a player and punishing one are proxy commands run through the plugin channel, so the proxy answers.
+ */
 public final class ReportMenus {
 
     private final Plugin plugin;
     private final ReportRepository reports;
+    private final PunishmentCatalogRepository catalog;
     private final Messages messages;
     private final Map<UUID, StatusPrompt> statusPrompts = new ConcurrentHashMap<>();
 
     private record StatusPrompt(Report report, Optional<String> reported) {
     }
 
-    public ReportMenus(Plugin plugin, ReportRepository reports, Messages messages) {
+    public ReportMenus(Plugin plugin, ReportRepository reports, PunishmentCatalogRepository catalog, Messages messages) {
         this.plugin = plugin;
         this.reports = reports;
+        this.catalog = catalog;
         this.messages = messages;
     }
 
@@ -59,10 +65,24 @@ public final class ReportMenus {
         }, deleted -> openList(player, reported, 1));
     }
 
-    public void sendFindLink(Player player, String target) {
+    public void goTo(Player player, String target) {
         Menu.close(player);
-        player.sendMessage(messages.get("find", Placeholder.unparsed("player", target))
-                .clickEvent(ClickEvent.runCommand("/find " + target)));
+        ProxyMessaging.runOnProxy(plugin, player, "goto " + target);
+    }
+
+    public void openPunish(Player player, Report report, Optional<String> reported) {
+        Tasks.async(plugin, catalog::all, entries -> {
+            if (entries.isEmpty()) {
+                player.sendMessage(messages.get("punish.empty"));
+                return;
+            }
+            new PunishMenu(this, messages, report, reported, entries).open(player);
+        });
+    }
+
+    public void punish(Player player, Report report, PunishmentCatalogRepository.Entry entry) {
+        Menu.close(player);
+        ProxyMessaging.runOnProxy(plugin, player, "strafe " + report.reported() + " " + entry.number());
     }
 
     public void promptStatus(Player player, Report report, Optional<String> reported) {

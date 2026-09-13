@@ -42,6 +42,10 @@ public final class SystemPermissions {
     public static final String BYPASS_RANK = ROOT + "bypass-rank";
     public static final String PREMIUM_GROUP = "group.premium";
 
+    /** The Paper side's nodes for looking through vanish and nicks; one node covers both sides. */
+    public static final String SEE_VANISHED = "blockcraft.core.vanish.see";
+    public static final String SEE_NICKS = "blockcraft.nick.see";
+
     public static final String SEEN = ROOT + "seen";
     public static final String PLAYTIME = ROOT + "playtime";
     public static final String PLAYTIME_OTHERS = PLAYTIME + ".others";

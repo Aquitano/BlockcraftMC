@@ -3,8 +3,8 @@ package me.blockcraft.system.command.player;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.proxy.Player;
-import com.velocitypowered.api.proxy.ProxyServer;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.system.PlayerVisibility;
 import me.blockcraft.system.SystemPermissions;
 import me.blockcraft.system.command.CommandSupport;
 import me.blockcraft.system.party.PartyManager;
@@ -12,13 +12,13 @@ import me.blockcraft.system.party.PartyManager;
 public final class PartyCommand {
 
     private final CommandSupport support;
-    private final ProxyServer proxy;
+    private final PlayerVisibility visibility;
     private final PartyManager parties;
     private final Messages messages;
 
-    public PartyCommand(CommandSupport support, ProxyServer proxy, PartyManager parties, Messages messages) {
+    public PartyCommand(CommandSupport support, PlayerVisibility visibility, PartyManager parties, Messages messages) {
         this.support = support;
-        this.proxy = proxy;
+        this.visibility = visibility;
         this.parties = parties;
         this.messages = messages;
     }
@@ -62,7 +62,7 @@ public final class PartyCommand {
     }
 
     private void join(Player player, String leaderName) {
-        var leader = proxy.getPlayer(leaderName);
+        var leader = visibility.find(player, leaderName);
         if (leader.isEmpty()) {
             player.sendMessage(messages.get("party.target-offline"));
             return;
@@ -83,7 +83,7 @@ public final class PartyCommand {
             inviter.sendMessage(messages.get("party.invite-no-permission"));
             return;
         }
-        var invitee = proxy.getPlayer(inviteeName);
+        var invitee = visibility.find(inviter, inviteeName);
         if (invitee.isEmpty()) {
             inviter.sendMessage(messages.get("party.target-offline"));
             return;
@@ -104,7 +104,7 @@ public final class PartyCommand {
             leader.sendMessage(messages.get("party.kick-no-permission"));
             return;
         }
-        var member = proxy.getPlayer(memberName);
+        var member = visibility.find(leader, memberName);
         if (member.isEmpty()) {
             leader.sendMessage(messages.get("party.target-offline"));
             return;

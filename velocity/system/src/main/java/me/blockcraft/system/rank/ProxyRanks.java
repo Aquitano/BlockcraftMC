@@ -14,9 +14,9 @@ public final class ProxyRanks {
     private ProxyRanks() {
     }
 
-    /** Prefix plus name as chat shows it, or just the name without LuckPerms. */
-    public static Component displayName(Player player) {
-        var name = Component.text(player.getUsername());
+    /** Prefix plus the given name as chat shows it, or just the name without LuckPerms. */
+    public static Component displayName(Player player, String shownName) {
+        var name = Component.text(shownName);
         try {
             String prefix = LuckPermsProvider.get().getPlayerAdapter(Player.class).getMetaData(player).getPrefix();
             return prefix == null ? name : LegacyComponentSerializer.legacyAmpersand().deserialize(prefix).append(name);

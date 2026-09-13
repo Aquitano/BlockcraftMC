@@ -6,6 +6,7 @@ import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.system.PlayerVisibility;
 import me.blockcraft.system.SystemConfig;
 import me.blockcraft.system.SystemPermissions;
 import me.blockcraft.system.command.CommandSupport;
@@ -18,12 +19,14 @@ public final class KickCommand {
 
     private final CommandSupport support;
     private final ProxyServer proxy;
+    private final PlayerVisibility visibility;
     private final SystemConfig config;
     private final Messages messages;
 
-    public KickCommand(CommandSupport support, ProxyServer proxy, SystemConfig config, Messages messages) {
+    public KickCommand(CommandSupport support, ProxyServer proxy, PlayerVisibility visibility, SystemConfig config, Messages messages) {
         this.support = support;
         this.proxy = proxy;
+        this.visibility = visibility;
         this.config = config;
         this.messages = messages;
     }
@@ -41,7 +44,7 @@ public final class KickCommand {
     }
 
     private void kick(CommandSource source, String name, String reason) {
-        var target = proxy.getPlayer(name);
+        var target = visibility.find(source, name);
         if (target.isEmpty()) {
             source.sendMessage(messages.get("kick.offline"));
             return;

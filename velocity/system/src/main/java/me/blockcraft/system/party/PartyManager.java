@@ -4,6 +4,7 @@ import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.system.PlayerVisibility;
 import me.blockcraft.system.command.CommandSupport;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
@@ -30,14 +31,16 @@ public final class PartyManager {
     }
 
     private final ProxyServer proxy;
+    private final PlayerVisibility visibility;
     private final Messages messages;
     private final Map<UUID, Party> byLeader = new ConcurrentHashMap<>();
     private final Map<UUID, UUID> leaderByMember = new ConcurrentHashMap<>();
     private final Map<UUID, Invite> invites = new ConcurrentHashMap<>();
     private final Map<UUID, Instant> joinRequests = new ConcurrentHashMap<>();
 
-    public PartyManager(ProxyServer proxy, Messages messages) {
+    public PartyManager(ProxyServer proxy, PlayerVisibility visibility, Messages messages) {
         this.proxy = proxy;
+        this.visibility = visibility;
         this.messages = messages;
     }
 
@@ -149,7 +152,7 @@ public final class PartyManager {
         player.sendMessage(messages.get("party.join-requested", name(leader)));
         leader.sendMessage(messages.get("party.join-request", name(player)));
         leader.sendMessage(messages.get("party.join-request-click", name(player))
-                .clickEvent(ClickEvent.runCommand("/party invite " + player.getUsername()))
+                .clickEvent(ClickEvent.runCommand("/party invite " + visibility.shownName(player)))
                 .hoverEvent(HoverEvent.showText(messages.get("party.join-request-hover", name(player)))));
     }
 
@@ -262,8 +265,8 @@ public final class PartyManager {
         }
     }
 
-    private static TagResolver name(Player player) {
-        return Placeholder.unparsed("player", player.getUsername());
+    private TagResolver name(Player player) {
+        return Placeholder.unparsed("player", visibility.shownName(player));
     }
 
     private static TagResolver server(Player player) {

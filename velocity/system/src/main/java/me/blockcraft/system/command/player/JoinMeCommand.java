@@ -4,6 +4,7 @@ import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.system.PlayerVisibility;
 import me.blockcraft.system.SystemConfig;
 import me.blockcraft.system.SystemPermissions;
 import me.blockcraft.system.command.CommandSupport;
@@ -23,14 +24,17 @@ public final class JoinMeCommand {
 
     private final CommandSupport support;
     private final ProxyServer proxy;
+    private final PlayerVisibility visibility;
     private final SystemConfig config;
     private final ServerDirectory directory;
     private final Messages messages;
     private final Map<UUID, Integer> usesToday = new ConcurrentHashMap<>();
 
-    public JoinMeCommand(CommandSupport support, ProxyServer proxy, SystemConfig config, ServerDirectory directory, Messages messages) {
+    public JoinMeCommand(CommandSupport support, ProxyServer proxy, PlayerVisibility visibility, SystemConfig config,
+                         ServerDirectory directory, Messages messages) {
         this.support = support;
         this.proxy = proxy;
+        this.visibility = visibility;
         this.config = config;
         this.directory = directory;
         this.messages = messages;
@@ -66,7 +70,7 @@ public final class JoinMeCommand {
         var lines = List.of(
                 frame,
                 blank,
-                messages.get("joinme.game." + gameKey(server), Placeholder.unparsed("player", player.getUsername())),
+                messages.get("joinme.game." + gameKey(server), Placeholder.unparsed("player", visibility.shownName(player))),
                 blank,
                 messages.get("joinme.click")
                         .clickEvent(ClickEvent.runCommand("/serverjoin " + server))

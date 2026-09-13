@@ -3,7 +3,6 @@ package me.blockcraft.system.command.moderation;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
-import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.moderation.WarnRepository;
@@ -53,16 +52,9 @@ public final class WarnCommand {
                 .requires(CommandSupport.permission(SystemPermissions.WARN))
                 .executes(support.usage("warn.usage"))
                 .then(BrigadierCommand.requiredArgumentBuilder("args", StringArgumentType.greedyString())
-                        .suggests((context, builder) -> {
-                            String typed = builder.getRemaining().toLowerCase();
-                            if (!typed.contains(" ")) {
-                                proxy.getAllPlayers().stream()
-                                        .map(Player::getUsername)
-                                        .filter(username -> username.toLowerCase().startsWith(typed))
-                                        .forEach(builder::suggest);
-                            }
-                            return builder.buildFuture();
-                        })
+                        .suggests((context, builder) -> builder.getRemaining().contains(" ")
+                                ? builder.buildFuture()
+                                : support.suggestPlayers(context.getSource(), builder))
                         .executes(support.run((source, context) -> {
                             String[] parts = StringArgumentType.getString(context, "args").trim().split("\\s+", 2);
                             warn(source, parts[0], parts.length > 1 ? Optional.of(parts[1]) : Optional.empty());

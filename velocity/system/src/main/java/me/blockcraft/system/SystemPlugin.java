@@ -14,6 +14,8 @@ import me.blockcraft.common.db.Database;
 import me.blockcraft.common.discord.DiscordLinkRepository;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.moderation.ModerationRepositories;
+import me.blockcraft.common.moderation.PunishmentCatalogRepository;
+import me.blockcraft.common.nick.NickRepository;
 import me.blockcraft.common.network.ServerRepository;
 import me.blockcraft.system.command.CommandSupport;
 import me.blockcraft.system.command.moderation.BanCommand;
@@ -124,28 +126,38 @@ public final class SystemPlugin {
         servers.createTable();
         var discordLinks = new DiscordLinkRepository(database);
         discordLinks.createTable();
+        var nicks = new NickRepository(database);
+        nicks.createTable();
+        var catalog = new PunishmentCatalogRepository(database);
+        catalog.createTable();
+        catalog.replace(config.punishments().entrySet().stream()
+                .map(preset -> new PunishmentCatalogRepository.Entry(preset.getKey(), preset.getValue().type(), preset.getValue().reason()))
+                .toList());
 
         var settings = new ProxySettings(repositories.settings());
-        var lookup = new PlayerLookup(proxy, repositories.players());
+        var visibility = new PlayerVisibility(proxy, repositories.vanish(), nicks, logger);
+        var lookup = new PlayerLookup(proxy, visibility, repositories.players());
         var directory = new ServerDirectory(proxy);
         var lobby = new LobbyConnector(directory, config, messages);
         var punishments = new PunishmentService(proxy, repositories.punishments(), messages, config.network());
         var muteGate = new MuteGate(repositories.punishments(), punishments, messages, logger);
-        var parties = new PartyManager(proxy, messages);
+        var parties = new PartyManager(proxy, visibility, messages);
         var supportSessions = new SupportSessions();
         var playtime = new Playtime(repositories.players(), logger);
-        var support = new CommandSupport(proxy, messages);
+        var support = new CommandSupport(visibility, messages);
+        var tabHeader = new TabHeaderListener(proxy, visibility, config, messages);
 
         var events = proxy.getEventManager();
         events.register(this, new LoginListener(this, proxy, config, settings, repositories.players(), repositories.punishments(),
                 punishments, lobby, messages, logger));
-        events.register(this, new TabHeaderListener(proxy, config, messages));
+        events.register(this, visibility);
+        events.register(this, tabHeader);
         events.register(this, new CommandListener(config, messages));
         events.register(this, new KickListener(lobby, messages));
         events.register(this, new InitialServerListener(lobby));
-        events.register(this, new ProxyMessageListener(proxy, lobby, logger));
+        events.register(this, new ProxyMessageListener(proxy, lobby, visibility, tabHeader, logger));
         events.register(this, new TabCompleteListener());
-        events.register(this, new MotdListener(proxy, config, settings, messages));
+        events.register(this, new MotdListener(visibility, config, settings, messages));
         events.register(this, new PartyListener(parties));
         events.register(this, new SupportListener(supportSessions));
         events.register(this, playtime);
@@ -158,10 +170,10 @@ public final class SystemPlugin {
         register(new TempMuteCommand(support, lookup, punishments, messages).create());
         register(new UnmuteCommand(support, lookup, punishments, messages).create());
         register(new MuteListCommand(support, lookup, repositories.punishments(), messages).create());
-        register(new KickCommand(support, proxy, config, messages).create());
+        register(new KickCommand(support, proxy, visibility, config, messages).create());
         register(new CheckCommand(support, lookup, punishments, messages).create());
         register(new StrafeCommand(support, lookup, punishments, config, messages).create());
-        register(new StrikeCommand(support, proxy, repositories.strikes(), punishments, config, messages).create());
+        register(new StrikeCommand(support, visibility, repositories.strikes(), punishments, config, messages).create());
         register(new StrikesCommand(support, repositories.strikes(), messages).create());
         register(new DelStrikeCommand(support, lookup, repositories.strikes(), messages).create());
         register(new ShowStrikesCommand(support, lookup, repositories.strikes(), messages).create());
@@ -170,8 +182,8 @@ public final class SystemPlugin {
         register(new WerbungCommand(support, lookup, repositories.adLog(), messages).create());
 
         register(new TeamChatCommand(support, proxy, messages).create());
-        register(new FindCommand(support, proxy, messages).create());
-        register(new GotoCommand(support, proxy, messages).create());
+        register(new FindCommand(support, visibility, messages).create());
+        register(new GotoCommand(support, visibility, messages).create());
         register(new ClearChatCommand(support, messages).create(), "clearchat");
         register(new GlobalMuteCommand(support, proxy, settings, messages).create());
         register(new BroadcastCommand(support, proxy, messages).create());
@@ -182,19 +194,19 @@ public final class SystemPlugin {
         register(new MotdCommand(support, config, messages).create());
         register(new ServerJoinCommand(support, proxy, messages).create());
         register(new ServersCommand(support, servers, config, messages).create());
-        register(new ListCommand(support, proxy, config, messages).create());
+        register(new ListCommand(support, visibility, config, messages).create());
         register(new WhoisCommand(support, lookup, repositories.players(), repositories.strikes(), repositories.warns(),
                 punishments, playtime, messages).create());
 
         register(new HubCommand(support, lobby).create(), "h", "lobby", "l");
         register(new PlayCommand(support, lobby, directory).create());
-        var privateMessages = new MessageCommand(support, proxy, muteGate, messages);
+        var privateMessages = new MessageCommand(support, proxy, visibility, muteGate, messages);
         events.register(this, privateMessages);
         register(privateMessages.msg(), "tell", "w");
         register(privateMessages.reply(), "reply");
-        register(new PartyCommand(support, proxy, parties, messages).create());
+        register(new PartyCommand(support, visibility, parties, messages).create());
         register(new PartyChatCommand(support, parties, muteGate, messages).create());
-        var joinMe = new JoinMeCommand(support, proxy, config, directory, messages);
+        var joinMe = new JoinMeCommand(support, proxy, visibility, config, directory, messages);
         register(joinMe.create());
         register(new SupportCommand(support, proxy, supportSessions, muteGate, messages).create());
         register(new YouTuberCommand(support, config, messages).create(), "youtube", "yt");
@@ -202,8 +214,8 @@ public final class SystemPlugin {
         register(new DiscordCommand(support, discordLinks, config, messages).create());
         register(new PingCommand(support, messages).create());
         register(new ModCommand(support, proxy, messages).create());
-        register(new OnlineCommand(support, proxy, messages).create());
-        register(new SeenCommand(support, lookup, repositories.players(), messages).create());
+        register(new OnlineCommand(support, visibility, messages).create());
+        register(new SeenCommand(support, visibility, repositories.players(), messages).create());
         register(new PlaytimeCommand(support, lookup, repositories.players(), playtime, messages).create());
 
         var lobbyAlert = new LobbyAlert(proxy, directory, config, messages, logger);

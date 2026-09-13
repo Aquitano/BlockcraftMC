@@ -7,6 +7,7 @@ import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.system.PlayerVisibility;
 import me.blockcraft.system.SystemPermissions;
 import me.blockcraft.system.command.CommandSupport;
 import me.blockcraft.system.moderation.MuteGate;
@@ -29,13 +30,15 @@ public final class MessageCommand {
 
     private final CommandSupport support;
     private final ProxyServer proxy;
+    private final PlayerVisibility visibility;
     private final MuteGate muteGate;
     private final Messages messages;
     private final Map<UUID, UUID> lastPartner = new ConcurrentHashMap<>();
 
-    public MessageCommand(CommandSupport support, ProxyServer proxy, MuteGate muteGate, Messages messages) {
+    public MessageCommand(CommandSupport support, ProxyServer proxy, PlayerVisibility visibility, MuteGate muteGate, Messages messages) {
         this.support = support;
         this.proxy = proxy;
+        this.visibility = visibility;
         this.muteGate = muteGate;
         this.messages = messages;
     }
@@ -48,7 +51,7 @@ public final class MessageCommand {
                         .executes(support.usage("msg.usage"))
                         .then(BrigadierCommand.requiredArgumentBuilder("message", StringArgumentType.greedyString())
                                 .executes(support.asPlayer((sender, context) ->
-                                        proxy.getPlayer(StringArgumentType.getString(context, "player")).ifPresentOrElse(
+                                        visibility.find(sender, StringArgumentType.getString(context, "player")).ifPresentOrElse(
                                                 target -> deliver(sender, target, StringArgumentType.getString(context, "message")),
                                                 () -> sender.sendMessage(messages.get("msg.offline"))))))));
     }
@@ -79,8 +82,8 @@ public final class MessageCommand {
             return;
         }
         var resolvers = TagResolver.resolver(
-                Placeholder.component("sender", ProxyRanks.displayName(sender)),
-                Placeholder.component("target", ProxyRanks.displayName(target)),
+                Placeholder.component("sender", ProxyRanks.displayName(sender, visibility.shownName(sender))),
+                Placeholder.component("target", ProxyRanks.displayName(target, visibility.shownName(target))),
                 Placeholder.component("message", LegacyComponentSerializer.legacyAmpersand().deserialize(text)));
         target.sendMessage(messages.get("msg.to-target", resolvers));
         target.playSound(NOTIFY);

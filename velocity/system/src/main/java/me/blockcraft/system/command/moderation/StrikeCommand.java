@@ -3,10 +3,10 @@ package me.blockcraft.system.command.moderation;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
-import com.velocitypowered.api.proxy.ProxyServer;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.moderation.StrikeRepository;
 import me.blockcraft.system.PlayerLookup.Target;
+import me.blockcraft.system.PlayerVisibility;
 import me.blockcraft.system.SystemConfig;
 import me.blockcraft.system.SystemPermissions;
 import me.blockcraft.system.command.CommandSupport;
@@ -20,16 +20,16 @@ import java.util.Optional;
 public final class StrikeCommand {
 
     private final CommandSupport support;
-    private final ProxyServer proxy;
+    private final PlayerVisibility visibility;
     private final StrikeRepository strikes;
     private final PunishmentService punishments;
     private final SystemConfig config;
     private final Messages messages;
 
-    public StrikeCommand(CommandSupport support, ProxyServer proxy, StrikeRepository strikes, PunishmentService punishments,
+    public StrikeCommand(CommandSupport support, PlayerVisibility visibility, StrikeRepository strikes, PunishmentService punishments,
                          SystemConfig config, Messages messages) {
         this.support = support;
-        this.proxy = proxy;
+        this.visibility = visibility;
         this.strikes = strikes;
         this.punishments = punishments;
         this.config = config;
@@ -49,7 +49,7 @@ public final class StrikeCommand {
     }
 
     private void strike(CommandSource source, String name, String reason) {
-        var target = proxy.getPlayer(name);
+        var target = visibility.find(source, name);
         if (target.isEmpty()) {
             source.sendMessage(messages.get("strike.offline"));
             return;

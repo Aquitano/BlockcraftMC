@@ -6,7 +6,7 @@ import com.velocitypowered.api.command.CommandSource;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.moderation.DurationText;
 import me.blockcraft.common.moderation.PlayerRepository;
-import me.blockcraft.system.PlayerLookup;
+import me.blockcraft.system.PlayerVisibility;
 import me.blockcraft.system.SystemPermissions;
 import me.blockcraft.system.command.CommandSupport;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -14,17 +14,18 @@ import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import java.time.Duration;
 import java.time.Instant;
 
+/** Online players are shown as the viewer would see them; anyone else is looked up by account name only. */
 public final class SeenCommand {
 
     private final CommandSupport support;
-    private final PlayerLookup lookup;
+    private final PlayerVisibility visibility;
     private final PlayerRepository players;
     private final Messages messages;
     private final DurationText durations;
 
-    public SeenCommand(CommandSupport support, PlayerLookup lookup, PlayerRepository players, Messages messages) {
+    public SeenCommand(CommandSupport support, PlayerVisibility visibility, PlayerRepository players, Messages messages) {
         this.support = support;
-        this.lookup = lookup;
+        this.visibility = visibility;
         this.players = players;
         this.messages = messages;
         this.durations = new DurationText(messages);
@@ -39,19 +40,14 @@ public final class SeenCommand {
     }
 
     private void seen(CommandSource source, String name) {
-        var target = lookup.find(name);
-        if (target.isEmpty()) {
-            source.sendMessage(messages.get("player-unknown", Placeholder.unparsed("player", name)));
-            return;
-        }
-        var found = target.get();
-        if (found.online().isPresent()) {
+        var online = visibility.find(source, name);
+        if (online.isPresent()) {
             source.sendMessage(messages.get("seen.online",
-                    Placeholder.unparsed("player", found.name()),
-                    Placeholder.unparsed("server", CommandSupport.currentServer(found.online().get()))));
+                    Placeholder.unparsed("player", visibility.shownName(online.get())),
+                    Placeholder.unparsed("server", CommandSupport.currentServer(online.get()))));
             return;
         }
-        players.byUuid(found.uuid()).ifPresentOrElse(
+        players.byName(name).ifPresentOrElse(
                 known -> source.sendMessage(messages.get("seen.offline",
                         Placeholder.unparsed("player", known.name()),
                         Placeholder.unparsed("time", durations.format(Duration.between(known.lastSeen(), Instant.now()))))),

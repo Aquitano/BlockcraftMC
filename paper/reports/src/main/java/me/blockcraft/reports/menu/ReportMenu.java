@@ -17,6 +17,7 @@ final class ReportMenu extends Menu {
     private static final int GOTO_REPORTER = 1;
     private static final int GOTO_REPORTED = 7;
     private static final int SET_STATUS = 31;
+    private static final int PUNISH = 40;
     private static final int BACK = 45;
     private static final int DELETE = 49;
     private static final int CLOSE = 53;
@@ -43,6 +44,7 @@ final class ReportMenu extends Menu {
         set(22, item(Material.CLOCK, "menu.status", messages, placeholders));
         set(24, item(Material.BOOK, "menu.reason", messages, placeholders));
         set(SET_STATUS, item(Material.NAME_TAG, "menu.set-status", messages, placeholders));
+        set(PUNISH, item(Material.IRON_AXE, "menu.punish", messages, placeholders));
         set(BACK, item(Material.ARROW, "menu.back", messages, placeholders));
         set(DELETE, item(Material.REDSTONE_BLOCK, "menu.delete", messages, placeholders));
         set(CLOSE, Items.of(Material.BARRIER).name(messages.get("menu.close")).build());
@@ -55,9 +57,10 @@ final class ReportMenu extends Menu {
     @Override
     protected void onClick(Player player, int slot, ItemStack clicked, InventoryClickEvent event) {
         switch (slot) {
-            case GOTO_REPORTER -> menus.sendFindLink(player, report.reporter());
-            case GOTO_REPORTED -> menus.sendFindLink(player, report.reported());
+            case GOTO_REPORTER -> menus.goTo(player, report.reporter());
+            case GOTO_REPORTED -> menus.goTo(player, report.reported());
             case SET_STATUS -> menus.promptStatus(player, report, reported);
+            case PUNISH -> menus.openPunish(player, report, reported);
             case BACK -> menus.openList(player, reported, 1);
             case DELETE -> menus.delete(player, report, reported);
             case CLOSE -> close(player);

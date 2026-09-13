@@ -4,15 +4,18 @@ import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.suggestion.Suggestions;
+import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
-import com.velocitypowered.api.proxy.ProxyServer;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.system.PlayerVisibility;
 import me.blockcraft.system.SystemPermissions;
 import me.blockcraft.system.rank.ProxyRanks;
 
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Predicate;
 
 /** Shared Brigadier glue: permission predicates, player-only executors, online-name suggestions. */
@@ -28,11 +31,11 @@ public final class CommandSupport {
         void run(CommandSource source, CommandContext<CommandSource> context);
     }
 
-    private final ProxyServer proxy;
+    private final PlayerVisibility visibility;
     private final Messages messages;
 
-    public CommandSupport(ProxyServer proxy, Messages messages) {
-        this.proxy = proxy;
+    public CommandSupport(PlayerVisibility visibility, Messages messages) {
+        this.visibility = visibility;
         this.messages = messages;
     }
 
@@ -83,14 +86,14 @@ public final class CommandSupport {
 
     public RequiredArgumentBuilder<CommandSource, String> playerArgument(String name) {
         return BrigadierCommand.requiredArgumentBuilder(name, StringArgumentType.word())
-                .suggests((context, builder) -> {
-                    String typed = builder.getRemaining().toLowerCase();
-                    proxy.getAllPlayers().stream()
-                            .map(Player::getUsername)
-                            .filter(username -> username.toLowerCase().startsWith(typed))
-                            .forEach(builder::suggest);
-                    return builder.buildFuture();
-                });
+                .suggests((context, builder) -> suggestPlayers(context.getSource(), builder));
+    }
+
+    /** Completes the names the source would see in the tab list. */
+    public CompletableFuture<Suggestions> suggestPlayers(CommandSource source, SuggestionsBuilder builder) {
+        String typed = builder.getRemaining().toLowerCase();
+        visibility.namesFor(source).filter(shown -> shown.toLowerCase().startsWith(typed)).forEach(builder::suggest);
+        return builder.buildFuture();
     }
 
     public static String senderName(CommandSource source) {
