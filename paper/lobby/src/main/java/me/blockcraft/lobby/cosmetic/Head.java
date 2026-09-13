@@ -1,5 +1,8 @@
 package me.blockcraft.lobby.cosmetic;
 
+import java.util.Arrays;
+import java.util.Optional;
+
 public enum Head {
     CAPTAIN_AMERICA("capam", "MURICA"),
     GRUMPY_CAT("crump", "GrumpyCat"),
@@ -20,6 +23,8 @@ public enum Head {
     MASTER_CHIEF("chief", "jscherry"),
     IRON_MAN("iron", "iron_man");
 
+    public static final String ITEM_PREFIX = "lobby.head.";
+
     private final String key;
     private final String owner;
 
@@ -28,8 +33,16 @@ public enum Head {
         this.owner = owner;
     }
 
+    public static Optional<Head> byKey(String key) {
+        return Arrays.stream(values()).filter(head -> head.key.equals(key)).findFirst();
+    }
+
     public String key() {
         return key;
+    }
+
+    public String item() {
+        return ITEM_PREFIX + key;
     }
 
     public String owner() {

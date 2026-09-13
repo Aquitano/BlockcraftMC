@@ -8,15 +8,19 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.Set;
+
 final class HeadsMenu extends Menu {
 
     private final Menus menus;
+    private final Set<String> owned;
 
-    HeadsMenu(Menus menus, Player viewer) {
+    HeadsMenu(Menus menus, Set<String> owned) {
         super(3, menus.messages().get("heads.title"));
         this.menus = menus;
+        this.owned = owned;
         for (Head head : Head.values()) {
-            set(head.ordinal(), item(head, menus.heads().has(viewer.getUniqueId(), head.key())));
+            set(head.ordinal(), item(head, owned.contains(head.item())));
         }
     }
 
@@ -27,12 +31,16 @@ final class HeadsMenu extends Menu {
         }
         Head head = Head.values()[slot];
         close(player);
-        if (menus.heads().has(player.getUniqueId(), head.key())) {
-            player.getInventory().setHelmet(item(head, true));
-            player.sendMessage(menus.messages().get("heads.equipped"));
+        if (owned.contains(head.item())) {
+            equip(player, head);
         } else {
-            menus.purchase(player, menus.config().headPrice(), () -> menus.heads().unlock(player.getUniqueId(), head.key()));
+            menus.purchase(player, head.item(), menus.config().headPrice(), () -> equip(player, head));
         }
+    }
+
+    private void equip(Player player, Head head) {
+        player.getInventory().setHelmet(item(head, true));
+        player.sendMessage(menus.messages().get("heads.equipped"));
     }
 
     private ItemStack item(Head head, boolean owned) {

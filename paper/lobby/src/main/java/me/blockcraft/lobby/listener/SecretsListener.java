@@ -1,11 +1,11 @@
 package me.blockcraft.lobby.listener;
 
 import me.blockcraft.api.coins.CoinsRepository;
+import me.blockcraft.api.shop.Unlocks;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.lobby.LobbyPermissions;
 import me.blockcraft.lobby.cosmetic.Secret;
-import me.blockcraft.lobby.storage.UnlockStore;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -26,6 +26,7 @@ import org.bukkit.plugin.Plugin;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.OptionalInt;
 
 public final class SecretsListener implements Listener {
 
@@ -36,14 +37,14 @@ public final class SecretsListener implements Listener {
 
     private final Plugin plugin;
     private final Messages messages;
-    private final UnlockStore found;
+    private final Unlocks unlocks;
     private final CoinsRepository coins;
     private final int reward;
 
-    public SecretsListener(Plugin plugin, Messages messages, UnlockStore found, CoinsRepository coins, int reward) {
+    public SecretsListener(Plugin plugin, Messages messages, Unlocks unlocks, CoinsRepository coins, int reward) {
         this.plugin = plugin;
         this.messages = messages;
-        this.found = found;
+        this.unlocks = unlocks;
         this.coins = coins;
         this.reward = reward;
     }
@@ -78,22 +79,27 @@ public final class SecretsListener implements Listener {
     }
 
     private void reveal(Player player, Secret secret) {
-        if (found.has(player.getUniqueId(), secret.key())) {
-            player.sendMessage(messages.get("secrets.already-found"));
-            return;
-        }
-        found.unlock(player.getUniqueId(), secret.key());
-        var rewardResolver = Formatter.number("coins", reward);
-        player.showTitle(Title.title(messages.get("secrets.found-title"), messages.get("secrets.found-subtitle", rewardResolver), TITLE_TIMES));
-        messages.getLines("secrets.found", rewardResolver, Placeholder.unparsed("secret", secret.key())).forEach(player::sendMessage);
-        player.playSound(player.getLocation(), Sound.ENTITY_ENDER_DRAGON_GROWL, 1.0f, 1.0f);
+        var uuid = player.getUniqueId();
+        var name = player.getName();
         Tasks.async(plugin, () -> {
-            coins.add(player.getUniqueId(), player.getName(), reward);
-            return coins.get(player.getUniqueId());
-        }, balance -> {
-            if (player.isOnline()) {
-                player.setLevel(balance);
+            if (!unlocks.unlock(uuid, secret.item())) {
+                return OptionalInt.empty();
             }
+            coins.add(uuid, name, reward);
+            return OptionalInt.of(coins.get(uuid));
+        }, balance -> {
+            if (!player.isOnline()) {
+                return;
+            }
+            if (balance.isEmpty()) {
+                player.sendMessage(messages.get("secrets.already-found"));
+                return;
+            }
+            var rewardResolver = Formatter.number("coins", reward);
+            player.showTitle(Title.title(messages.get("secrets.found-title"), messages.get("secrets.found-subtitle", rewardResolver), TITLE_TIMES));
+            messages.getLines("secrets.found", rewardResolver, Placeholder.unparsed("secret", secret.key())).forEach(player::sendMessage);
+            player.playSound(player.getLocation(), Sound.ENTITY_ENDER_DRAGON_GROWL, 1.0f, 1.0f);
+            player.setLevel(balance.getAsInt());
         });
     }
 

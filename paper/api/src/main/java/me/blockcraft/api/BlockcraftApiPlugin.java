@@ -38,6 +38,7 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
 
         var api = new BlockcraftApi(database, servers, self, presence);
         api.coins().createTable();
+        api.unlocks().createTable();
         BlockcraftApi.install(api);
         int startingCoins = ((Number) config.getOrDefault("starting-coins", 10)).intValue();
         getServer().getPluginManager().registerEvents(new CoinsJoinListener(this, api.coins(), startingCoins), this);

@@ -10,7 +10,10 @@ import me.blockcraft.lobby.command.SetHoloCommand;
 import me.blockcraft.lobby.command.SetSpawnCommand;
 import me.blockcraft.lobby.config.LobbyConfig;
 import me.blockcraft.lobby.config.LobbyLocation;
+import me.blockcraft.lobby.cosmetic.Head;
 import me.blockcraft.lobby.cosmetic.Pets;
+import me.blockcraft.lobby.cosmetic.Secret;
+import me.blockcraft.lobby.cosmetic.Shirt;
 import me.blockcraft.lobby.cosmetic.Trails;
 import me.blockcraft.lobby.hider.PlayerHider;
 import me.blockcraft.lobby.item.LobbyItems;
@@ -27,14 +30,17 @@ import me.blockcraft.lobby.listener.SecretsListener;
 import me.blockcraft.lobby.listener.ShopNpcListener;
 import me.blockcraft.lobby.listener.WorldDownloaderListener;
 import me.blockcraft.lobby.menu.Menus;
+import me.blockcraft.lobby.menu.ShopMenu;
 import me.blockcraft.lobby.network.GroupCounts;
 import me.blockcraft.lobby.npc.ShopNpc;
 import me.blockcraft.lobby.rank.PremiumRank;
 import me.blockcraft.lobby.rank.TabTeams;
-import me.blockcraft.lobby.storage.UnlockStore;
+import me.blockcraft.lobby.storage.LegacyUnlocks;
 import net.luckperms.api.LuckPermsProvider;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.util.Optional;
 
 public final class LobbyPlugin extends JavaPlugin {
 
@@ -58,15 +64,11 @@ public final class LobbyPlugin extends JavaPlugin {
         var hider = new PlayerHider(this, config.hiderCooldownMillis());
         var items = new LobbyItems(messages);
         var tabTeams = new TabTeams(luckPerms, messages);
-        var secrets = new UnlockStore(getDataPath().resolve("secrets.yml"));
+        importLegacyUnlocks(new LegacyUnlocks(api.unlocks(), getLogger()));
         groupCounts = new GroupCounts(this, api.servers(), config.serverListStaleSeconds());
         groupCounts.start(GROUP_COUNTS_INTERVAL_TICKS);
-        var menus = new Menus(this, messages, config, locations, coins,
-                new UnlockStore(getDataPath().resolve("heads.yml")),
-                new UnlockStore(getDataPath().resolve("shirts.yml")),
-                secrets,
-                new UnlockStore(getDataPath().resolve("premium-purchases.yml")),
-                new PremiumRank(luckPerms), pets, trails, groupCounts);
+        var menus = new Menus(this, messages, config, locations, api.unlocks(), api.shop(),
+                new PremiumRank(this, luckPerms), pets, trails, groupCounts);
         shopNpc = new ShopNpc(this, locations, messages);
         shopNpc.start(config.shopNpcRespawnSeconds());
 
@@ -77,7 +79,7 @@ public final class LobbyPlugin extends JavaPlugin {
                 new LobbyItemListener(messages, menus, items, hider),
                 new ProtectionListener(),
                 new CommandBlockListener(config.allowedCommands()),
-                new SecretsListener(this, messages, secrets, coins, config.secretReward()),
+                new SecretsListener(this, messages, api.unlocks(), coins, config.secretReward()),
                 new ShopNpcListener(menus),
                 new PetListener(pets, messages),
                 new MoveListener(messages, config, locations, trails),
@@ -102,6 +104,14 @@ public final class LobbyPlugin extends JavaPlugin {
         if (groupCounts != null) {
             groupCounts.stop();
         }
+    }
+
+    private void importLegacyUnlocks(LegacyUnlocks legacy) {
+        legacy.importYaml(getDataPath().resolve("heads.yml"), key -> Head.byKey(key).map(Head::item));
+        legacy.importYaml(getDataPath().resolve("shirts.yml"), key -> Shirt.byKey(key).map(Shirt::item));
+        legacy.importYaml(getDataPath().resolve("secrets.yml"), key -> Secret.byKey(key).map(Secret::item));
+        legacy.importYaml(getDataPath().resolve("premium-purchases.yml"),
+                key -> key.equals("name") ? Optional.of(ShopMenu.PREMIUM_ITEM) : Optional.empty());
     }
 
     private void register(Listener... listeners) {

@@ -20,8 +20,8 @@ import me.blockcraft.rush.listener.ConnectionListener;
 import me.blockcraft.rush.listener.DeathListener;
 import me.blockcraft.rush.listener.HotbarListener;
 import me.blockcraft.rush.listener.ProtectionListener;
+import me.blockcraft.rush.kit.Perk;
 import me.blockcraft.rush.menu.RushMenus;
-import me.blockcraft.rush.storage.KitRepository;
 import me.blockcraft.rush.storage.StatsRepository;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
@@ -43,12 +43,11 @@ public final class EmeraldRushPlugin extends JavaPlugin {
 
         var api = BlockcraftApi.get();
         var stats = new StatsRepository(api.database());
-        var kits = new KitRepository(api.database());
         stats.createTable();
-        kits.createTable();
+        api.unlocks().importLegacyTable("em_kits", Perk.LEGACY_COLUMNS);
 
         game = new Game(this, config, spawns, messages, stats, api.coins());
-        var menus = new RushMenus(this, game, messages, spawns, kits, stats, api.coins());
+        var menus = new RushMenus(this, game, messages, spawns, api.unlocks(), api.shop(), stats);
 
         register(new ConnectionListener(game, messages));
         register(new DeathListener(game));

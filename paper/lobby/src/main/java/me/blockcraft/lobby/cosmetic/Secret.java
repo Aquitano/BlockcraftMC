@@ -15,6 +15,8 @@ public enum Secret {
     RUHE("Ruhe"),
     ABGELEGEN("Abgelegen");
 
+    public static final String ITEM_PREFIX = "lobby.secret.";
+
     private final String key;
 
     Secret(String key) {
@@ -27,6 +29,10 @@ public enum Secret {
 
     public String key() {
         return key;
+    }
+
+    public String item() {
+        return ITEM_PREFIX + key.toLowerCase();
     }
 
     public String messageKey() {

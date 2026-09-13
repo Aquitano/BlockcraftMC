@@ -9,13 +9,12 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
-import java.time.LocalDate;
-
-final class ShopMenu extends Menu {
+public final class ShopMenu extends Menu {
 
     private static final int HEADS_SLOT = 1;
     private static final int SHIRTS_SLOT = 4;
     private static final int PREMIUM_SLOT = 7;
+    public static final String PREMIUM_ITEM = "lobby.premium";
     private static final Color SHIRT_ICON_COLOR = Color.fromRGB(0, 102, 204);
 
     private final Menus menus;
@@ -47,10 +46,7 @@ final class ShopMenu extends Menu {
             player.sendMessage(menus.messages().get("shop.already-premium"));
             return;
         }
-        menus.purchase(player, menus.config().premiumPrice(), () -> {
-            menus.premiumRank().grant(player.getUniqueId());
-            menus.premiumPurchases().record(player.getUniqueId(), "name", player.getName());
-            menus.premiumPurchases().record(player.getUniqueId(), "date", LocalDate.now().toString());
-        });
+        menus.purchase(player, PREMIUM_ITEM, menus.config().premiumPrice(),
+                () -> menus.premiumRank().grant(player.getUniqueId()));
     }
 }

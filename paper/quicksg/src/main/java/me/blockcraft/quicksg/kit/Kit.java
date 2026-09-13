@@ -6,7 +6,12 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.Arrays;
+import java.util.EnumSet;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public enum Kit {
     STARTER("KIT1", Material.WOODEN_SWORD, true) {
@@ -46,20 +51,31 @@ public enum Kit {
         }
     };
 
-    private final String column;
+    public static final String ITEM_PREFIX = "qsg.kit.";
+    /** The flag columns of the legacy qsg_kits table, for the one-time import into bc_unlocks. */
+    public static final Map<String, String> LEGACY_COLUMNS = Arrays.stream(values())
+            .filter(kit -> !kit.free)
+            .collect(Collectors.toUnmodifiableMap(kit -> kit.legacyColumn, Kit::item));
+
+    private final String legacyColumn;
     private final Material icon;
     private final boolean free;
 
-    Kit(String column, Material icon, boolean free) {
-        this.column = column;
+    Kit(String legacyColumn, Material icon, boolean free) {
+        this.legacyColumn = legacyColumn;
         this.icon = icon;
         this.free = free;
     }
 
     public abstract void apply(Player player);
 
-    public String column() {
-        return column;
+    public String item() {
+        return ITEM_PREFIX + name().toLowerCase();
+    }
+
+    public static Set<Kit> ownedAmong(Set<String> items) {
+        return Arrays.stream(values()).filter(kit -> kit.free || items.contains(kit.item()))
+                .collect(Collectors.toCollection(() -> EnumSet.noneOf(Kit.class)));
     }
 
     public Material icon() {

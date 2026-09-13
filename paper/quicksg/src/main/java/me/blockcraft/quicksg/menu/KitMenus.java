@@ -1,12 +1,12 @@
 package me.blockcraft.quicksg.menu;
 
-import me.blockcraft.api.coins.CoinsRepository;
 import me.blockcraft.api.menu.Menu;
+import me.blockcraft.api.shop.Shop;
+import me.blockcraft.api.shop.Unlocks;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.quicksg.game.Game;
 import me.blockcraft.quicksg.kit.Kit;
-import me.blockcraft.quicksg.storage.KitRepository;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
@@ -20,18 +20,16 @@ public final class KitMenus {
     private final Plugin plugin;
     private final Messages messages;
     private final Game game;
-    private final KitRepository kits;
-    private final CoinsRepository coins;
+    private final Unlocks unlocks;
+    private final Shop shop;
     private final int price;
 
-    private enum Purchase { BOUGHT, ALREADY_OWNED, NOT_ENOUGH_COINS }
-
-    public KitMenus(Plugin plugin, Messages messages, Game game, KitRepository kits, CoinsRepository coins, int price) {
+    public KitMenus(Plugin plugin, Messages messages, Game game, Unlocks unlocks, Shop shop, int price) {
         this.plugin = plugin;
         this.messages = messages;
         this.game = game;
-        this.kits = kits;
-        this.coins = coins;
+        this.unlocks = unlocks;
+        this.shop = shop;
         this.price = price;
     }
 
@@ -47,11 +45,13 @@ public final class KitMenus {
         if (!game.isLobby()) {
             return;
         }
-        Tasks.async(plugin, () -> kits.owned(player.getUniqueId()), owned -> new KitSelectorMenu(this, owned).open(player));
+        Tasks.async(plugin, () -> Kit.ownedAmong(unlocks.owned(player.getUniqueId(), Kit.ITEM_PREFIX)),
+                owned -> new KitSelectorMenu(this, owned).open(player));
     }
 
     void openDetail(Player player, Kit kit) {
-        Tasks.async(plugin, () -> kits.owns(player.getUniqueId(), kit), owned -> new KitDetailMenu(this, kit, owned).open(player));
+        Tasks.async(plugin, () -> kit.free() || unlocks.owns(player.getUniqueId(), kit.item()),
+                owned -> new KitDetailMenu(this, kit, owned).open(player));
     }
 
     void select(Player player, Kit kit, boolean owned) {
@@ -67,17 +67,8 @@ public final class KitMenus {
 
     void buy(Player player, Kit kit) {
         Menu.close(player);
-        Tasks.async(plugin, () -> {
-            if (kits.owns(player.getUniqueId(), kit)) {
-                return Purchase.ALREADY_OWNED;
-            }
-            if (!coins.withdraw(player.getUniqueId(), player.getName(), price)) {
-                return Purchase.NOT_ENOUGH_COINS;
-            }
-            kits.unlock(player.getUniqueId(), player.getName(), kit);
-            return Purchase.BOUGHT;
-        }, result -> {
-            switch (result) {
+        Tasks.async(plugin, () -> shop.buy(player.getUniqueId(), player.getName(), kit.item(), price), purchase -> {
+            switch (purchase.outcome()) {
                 case BOUGHT -> {
                     player.sendMessage(messages.get("kit.bought", kitName(kit)));
                     player.sendMessage(messages.get("kit.bought-cost", Formatter.number("price", price)));

@@ -1,7 +1,8 @@
 package me.blockcraft.rush.menu;
 
-import me.blockcraft.api.coins.CoinsRepository;
 import me.blockcraft.api.menu.Menu;
+import me.blockcraft.api.shop.Shop;
+import me.blockcraft.api.shop.Unlocks;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.rush.config.SpawnPoint;
@@ -9,7 +10,6 @@ import me.blockcraft.rush.config.Spawns;
 import me.blockcraft.rush.game.Game;
 import me.blockcraft.rush.game.GamePhase;
 import me.blockcraft.rush.kit.Perk;
-import me.blockcraft.rush.storage.KitRepository;
 import me.blockcraft.rush.storage.PlayerStats;
 import me.blockcraft.rush.storage.StatCategory;
 import me.blockcraft.rush.storage.StatsRepository;
@@ -22,6 +22,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
 import java.util.List;
+import java.util.Set;
 
 /** Opens every EmeraldRush GUI and performs the purchases they trigger. */
 public final class RushMenus {
@@ -32,22 +33,19 @@ public final class RushMenus {
     private final Game game;
     private final Messages messages;
     private final Spawns spawns;
-    private final KitRepository kits;
+    private final Unlocks unlocks;
+    private final Shop shop;
     private final StatsRepository stats;
-    private final CoinsRepository coins;
     private final ShopCatalog catalog;
 
-    private enum PerkPurchase { BOUGHT, ALREADY_OWNED, NOT_ENOUGH_COINS }
-
-    public RushMenus(Plugin plugin, Game game, Messages messages, Spawns spawns, KitRepository kits, StatsRepository stats,
-                     CoinsRepository coins) {
+    public RushMenus(Plugin plugin, Game game, Messages messages, Spawns spawns, Unlocks unlocks, Shop shop, StatsRepository stats) {
         this.plugin = plugin;
         this.game = game;
         this.messages = messages;
         this.spawns = spawns;
-        this.kits = kits;
+        this.unlocks = unlocks;
+        this.shop = shop;
         this.stats = stats;
-        this.coins = coins;
         this.catalog = new ShopCatalog(messages);
     }
 
@@ -55,26 +53,18 @@ public final class RushMenus {
         if (game.phase() != GamePhase.LOBBY) {
             return;
         }
-        Tasks.async(plugin, () -> kits.owned(player.getUniqueId()), owned -> new PerkMenu(this, messages, owned).open(player));
+        Tasks.async(plugin, () -> ownedPerks(player), owned -> new PerkMenu(this, messages, owned).open(player));
     }
 
     void openPerk(Player player, Perk perk) {
-        Tasks.async(plugin, () -> kits.owns(player.getUniqueId(), perk), owned -> new PerkBuyMenu(this, messages, perk, owned).open(player));
+        Tasks.async(plugin, () -> unlocks.owns(player.getUniqueId(), perk.item()),
+                owned -> new PerkBuyMenu(this, messages, perk, owned).open(player));
     }
 
     void buyPerk(Player player, Perk perk) {
         Menu.close(player);
-        Tasks.async(plugin, () -> {
-            if (kits.owns(player.getUniqueId(), perk)) {
-                return PerkPurchase.ALREADY_OWNED;
-            }
-            if (!coins.withdraw(player.getUniqueId(), player.getName(), perk.price())) {
-                return PerkPurchase.NOT_ENOUGH_COINS;
-            }
-            kits.grant(player.getUniqueId(), player.getName(), perk);
-            return PerkPurchase.BOUGHT;
-        }, result -> {
-            switch (result) {
+        Tasks.async(plugin, () -> shop.buy(player.getUniqueId(), player.getName(), perk.item(), perk.price()), purchase -> {
+            switch (purchase.outcome()) {
                 case BOUGHT -> {
                     player.sendMessage(messages.get("perk.bought", perkName(messages, perk)));
                     player.sendMessage(messages.get("perk.bought-price", Formatter.number("price", perk.price())));
@@ -94,7 +84,7 @@ public final class RushMenus {
     }
 
     void openShop(Player player, ShopCategory category) {
-        Tasks.async(plugin, () -> kits.owned(player.getUniqueId()),
+        Tasks.async(plugin, () -> ownedPerks(player),
                 owned -> new ShopMenu(this, messages, category, catalog.entries(category, owned)).open(player));
     }
 
@@ -142,6 +132,10 @@ public final class RushMenus {
             }
             player.sendMessage(messages.get("top.separator"));
         });
+    }
+
+    private Set<Perk> ownedPerks(Player player) {
+        return Perk.ownedAmong(unlocks.owned(player.getUniqueId(), Perk.ITEM_PREFIX));
     }
 
     static TagResolver perkName(Messages messages, Perk perk) {

@@ -21,9 +21,9 @@ import me.blockcraft.quicksg.listener.ConnectionListener;
 import me.blockcraft.quicksg.listener.DeathListener;
 import me.blockcraft.quicksg.listener.ItemListener;
 import me.blockcraft.quicksg.listener.ProtectionListener;
+import me.blockcraft.quicksg.kit.Kit;
 import me.blockcraft.quicksg.menu.KitMenus;
 import me.blockcraft.quicksg.menu.StatsMenus;
-import me.blockcraft.quicksg.storage.KitRepository;
 import me.blockcraft.quicksg.storage.StatsRepository;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -47,9 +47,8 @@ public final class QuickSGPlugin extends JavaPlugin {
 
         var api = BlockcraftApi.get();
         var stats = new StatsRepository(api.database());
-        var kits = new KitRepository(api.database());
         stats.createTable();
-        kits.createTable();
+        api.unlocks().importLegacyTable("qsg_kits", Kit.LEGACY_COLUMNS);
 
         var items = new GameItems(messages);
         game = new Game(this, config, messages, locations, stats, api.coins(), new GameScoreboard(messages, config), items);
@@ -58,7 +57,7 @@ public final class QuickSGPlugin extends JavaPlugin {
 
         var lootChests = new LootChests(config.loot(), items);
         var topList = new TopList(this, stats, messages);
-        var kitMenus = new KitMenus(this, messages, game, kits, api.coins(), config.kitPrice());
+        var kitMenus = new KitMenus(this, messages, game, api.unlocks(), api.shop(), config.kitPrice());
         var statsMenus = new StatsMenus(this, messages, stats, items, topList, config.globalStatsHead());
 
         List.of(

@@ -1,16 +1,19 @@
 package me.blockcraft.lobby.menu;
 
-import me.blockcraft.api.coins.CoinsRepository;
 import me.blockcraft.api.config.Locations;
+import me.blockcraft.api.shop.Shop;
+import me.blockcraft.api.shop.Unlocks;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.lobby.config.LobbyConfig;
 import me.blockcraft.lobby.config.LobbyLocation;
+import me.blockcraft.lobby.cosmetic.Head;
 import me.blockcraft.lobby.cosmetic.Pets;
+import me.blockcraft.lobby.cosmetic.Secret;
+import me.blockcraft.lobby.cosmetic.Shirt;
 import me.blockcraft.lobby.cosmetic.Trails;
 import me.blockcraft.lobby.network.GroupCounts;
 import me.blockcraft.lobby.rank.PremiumRank;
-import me.blockcraft.lobby.storage.UnlockStore;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
@@ -23,11 +26,8 @@ public record Menus(
         Messages messages,
         LobbyConfig config,
         Locations<LobbyLocation> locations,
-        CoinsRepository coins,
-        UnlockStore heads,
-        UnlockStore shirts,
-        UnlockStore secrets,
-        UnlockStore premiumPurchases,
+        Unlocks unlocks,
+        Shop shop,
         PremiumRank premiumRank,
         Pets pets,
         Trails trails,
@@ -39,23 +39,24 @@ public record Menus(
     private static final int TELEPORT_PARTICLES = 20;
 
     /**
-     * Charges the price off the main thread; {@code onBought} runs on it afterwards and the level shows the new
-     * balance. Tells the player if they cannot afford it.
+     * Buys the item off the main thread; {@code onOwned} runs on it once the player owns the item, whether this
+     * click bought it or an earlier one did. The level shows the new balance.
      */
-    public void purchase(Player player, int price, Runnable onBought) {
-        Tasks.async(plugin, () -> coins.withdraw(player.getUniqueId(), player.getName(), price) ? coins.get(player.getUniqueId()) : -1,
-                balance -> {
-                    if (!player.isOnline()) {
-                        return;
-                    }
-                    if (balance < 0) {
-                        player.sendMessage(messages.get("shop.too-expensive", Formatter.number("coins", price)));
-                        return;
-                    }
-                    onBought.run();
+    public void purchase(Player player, String item, int price, Runnable onOwned) {
+        Tasks.async(plugin, () -> shop.buy(player.getUniqueId(), player.getName(), item, price), purchase -> {
+            if (!player.isOnline()) {
+                return;
+            }
+            switch (purchase.outcome()) {
+                case BOUGHT -> {
                     player.sendMessage(messages.get("shop.bought"));
-                    player.setLevel(balance);
-                });
+                    onOwned.run();
+                }
+                case ALREADY_OWNED -> onOwned.run();
+                case NOT_ENOUGH_COINS -> player.sendMessage(messages.get("shop.too-expensive", Formatter.number("coins", price)));
+            }
+            player.setLevel(purchase.balance());
+        });
     }
 
     public void warp(Player player, LobbyLocation target) {
@@ -71,7 +72,8 @@ public record Menus(
     }
 
     public void openSecrets(Player player) {
-        new SecretsMenu(this, player).open(player);
+        Tasks.async(plugin, () -> unlocks.owned(player.getUniqueId(), Secret.ITEM_PREFIX),
+                found -> new SecretsMenu(this, found).open(player));
     }
 
     public void openShop(Player player) {
@@ -79,11 +81,13 @@ public record Menus(
     }
 
     public void openHeads(Player player) {
-        new HeadsMenu(this, player).open(player);
+        Tasks.async(plugin, () -> unlocks.owned(player.getUniqueId(), Head.ITEM_PREFIX),
+                owned -> new HeadsMenu(this, owned).open(player));
     }
 
     public void openShirts(Player player) {
-        new ShirtsMenu(this, player).open(player);
+        Tasks.async(plugin, () -> unlocks.owned(player.getUniqueId(), Shirt.ITEM_PREFIX),
+                owned -> new ShirtsMenu(this, owned).open(player));
     }
 
     public void openPremium(Player player) {

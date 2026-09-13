@@ -9,17 +9,21 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.Set;
+
 final class ShirtsMenu extends Menu {
 
     private static final int BACK_SLOT = 8;
 
     private final Menus menus;
+    private final Set<String> owned;
 
-    ShirtsMenu(Menus menus, Player viewer) {
+    ShirtsMenu(Menus menus, Set<String> owned) {
         super(1, menus.messages().get("shirts.title"));
         this.menus = menus;
+        this.owned = owned;
         for (Shirt shirt : Shirt.values()) {
-            set(shirt.ordinal(), item(shirt, menus.shirts().has(viewer.getUniqueId(), shirt.key())));
+            set(shirt.ordinal(), item(shirt, owned.contains(shirt.item())));
         }
         set(BACK_SLOT, Items.of(Material.BARRIER).name(menus.messages().get("shop.back")).build());
     }
@@ -35,12 +39,16 @@ final class ShirtsMenu extends Menu {
         }
         Shirt shirt = Shirt.values()[slot];
         close(player);
-        if (menus.shirts().has(player.getUniqueId(), shirt.key())) {
-            player.getInventory().setChestplate(item(shirt, true));
-            player.sendMessage(menus.messages().get("shirts.equipped"));
+        if (owned.contains(shirt.item())) {
+            equip(player, shirt);
         } else {
-            menus.purchase(player, menus.config().shirtPrice(), () -> menus.shirts().unlock(player.getUniqueId(), shirt.key()));
+            menus.purchase(player, shirt.item(), menus.config().shirtPrice(), () -> equip(player, shirt));
         }
+    }
+
+    private void equip(Player player, Shirt shirt) {
+        player.getInventory().setChestplate(item(shirt, true));
+        player.sendMessage(menus.messages().get("shirts.equipped"));
     }
 
     private ItemStack item(Shirt shirt, boolean owned) {

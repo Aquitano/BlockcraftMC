@@ -9,9 +9,11 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.Set;
+
 final class SecretsMenu extends Menu {
 
-    SecretsMenu(Menus menus, Player viewer) {
+    SecretsMenu(Menus menus, Set<String> found) {
         super(1, menus.messages().get("secrets.title"));
         var messages = menus.messages();
         var unknown = Items.of(Material.GRAY_DYE)
@@ -19,8 +21,7 @@ final class SecretsMenu extends Menu {
                 .lore(messages.get("secrets.unknown-lore"))
                 .build();
         for (Secret secret : Secret.values()) {
-            boolean found = menus.secrets().has(viewer.getUniqueId(), secret.key());
-            set(secret.ordinal(), found
+            set(secret.ordinal(), found.contains(secret.item())
                     ? Items.of(Material.LIME_DYE)
                             .name(messages.get("secrets.found-item", Placeholder.component("name", messages.get(secret.messageKey()))))
                             .lore(messages.get("secrets.found-lore"))
