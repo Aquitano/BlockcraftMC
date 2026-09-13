@@ -6,6 +6,7 @@ import me.blockcraft.api.command.CoinsCommand;
 import me.blockcraft.api.menu.MenuListener;
 import me.blockcraft.api.network.ServerHeartbeat;
 import me.blockcraft.api.network.ServerPresence;
+import me.blockcraft.api.settings.PlayerSettings;
 import me.blockcraft.common.config.YamlFile;
 import me.blockcraft.common.db.Database;
 import me.blockcraft.common.db.DatabaseConfig;
@@ -36,15 +37,18 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         var self = heartbeat.self();
         getLogger().info("Announcing as " + self.name() + " (group " + self.group() + ") at " + self.host() + ":" + self.port());
 
-        var api = new BlockcraftApi(database, servers, self, presence);
+        var messages = Messages.load(getDataPath(), () -> getResource("messages.yml"));
+        var settings = new PlayerSettings(this, database);
+        var api = new BlockcraftApi(database, settings, messages, servers, self, presence);
         api.coins().createTable();
         api.unlocks().createTable();
+        settings.createTable();
         BlockcraftApi.install(api);
         int startingCoins = ((Number) config.getOrDefault("starting-coins", 10)).intValue();
         getServer().getPluginManager().registerEvents(new CoinsJoinListener(this, api.coins(), startingCoins), this);
+        getServer().getPluginManager().registerEvents(settings, this);
         getServer().getPluginManager().registerEvents(new MenuListener(), this);
 
-        var messages = Messages.load(getDataPath(), () -> getResource("messages.yml"));
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event ->
                 event.registrar().register(CoinsCommand.create(api.coins(), messages), "Zeigt deine Coins", List.of()));
 

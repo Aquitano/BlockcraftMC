@@ -2,3 +2,12 @@ prefix: "<gold>Blockcraft <dark_gray>» <reset>"
 coins:
   self: "<prefix><gray>Du hast <yellow><coins> <gray>Coins!"
   other: "<prefix><yellow><player> <gray>hat <yellow><coins> <gray>Coins."
+tags:
+  pro: "<dark_gray>[<gold>PRO<dark_gray>]"
+  legend: "<dark_gray>[<light_purple>LEGENDE<dark_gray>]"
+  gg: "<dark_gray>[<green>GG<dark_gray>]"
+  og: "<dark_gray>[<yellow>OG<dark_gray>]"
+  king: "<dark_gray>[<gold>KÖNIG<dark_gray>]"
+  noob: "<dark_gray>[<gray>NOOB<dark_gray>]"
+  sweat: "<dark_gray>[<aqua>SWEAT<dark_gray>]"
+  chill: "<dark_gray>[<blue>CHILL<dark_gray>]"
