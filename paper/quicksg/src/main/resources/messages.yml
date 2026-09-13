@@ -35,7 +35,13 @@ game:
   draw: "<prefix><error>Unentschieden, die Runde wird neu gestartet!"
   killed: "<prefix><white><player><muted> wurde von <white><killer><muted> getötet."
   died: "<prefix><white><player> <muted>ist gestorben."
-  winner: "<prefix><muted>Der Spieler <white><player><muted> hat die Runde gewonnen!"
+
+summary:
+  name: "QuickSG"
+
+timer:
+  protection: "<primary>Schutzzeit <dark>● <white><seconds>s"
+  game: "<primary>Spielzeit <dark>● <white><time>"
 
 restart:
   in: "<prefix><muted>Der Server startet in <error><seconds> <muted>Sekunden neu!"

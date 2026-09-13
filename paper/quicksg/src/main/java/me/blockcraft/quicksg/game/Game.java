@@ -1,18 +1,18 @@
 package me.blockcraft.quicksg.game;
 
 import me.blockcraft.api.BlockcraftApi;
-import me.blockcraft.api.coins.Coins;
 import me.blockcraft.api.config.Locations;
 import me.blockcraft.api.game.GamePhase;
 import me.blockcraft.api.game.LobbyCountdown;
 import me.blockcraft.api.game.PlayerReset;
+import me.blockcraft.api.game.RoundSummary;
 import me.blockcraft.api.game.ServerRestart;
 import me.blockcraft.api.game.Stat;
 import me.blockcraft.api.game.StatsRepository;
+import me.blockcraft.api.game.TimerBar;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Countdown;
 import me.blockcraft.api.task.Tasks;
-import me.blockcraft.api.xp.XpReward;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.quicksg.config.LocationKey;
 import me.blockcraft.quicksg.config.QuickSGConfig;
@@ -35,8 +35,10 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 public final class Game {
@@ -62,10 +64,13 @@ public final class Game {
     private final Set<UUID> builders = new HashSet<>();
     private final Map<UUID, Kit> kits = new HashMap<>();
     private final LobbyCountdown lobbyCountdown;
+    private final RoundSummary summary;
     private Countdown freezeCountdown;
     private Countdown protectionCountdown;
     private Countdown gameTimer;
     private Countdown restartCountdown;
+    private TimerBar protectionBar;
+    private TimerBar gameBar;
 
     public Game(Plugin plugin, QuickSGConfig config, Messages messages, Locations<LocationKey> locations,
                 StatsRepository stats, GameScoreboard scoreboard, GameItems items) {
@@ -79,6 +84,8 @@ public final class Game {
         this.lobbyCountdown = new LobbyCountdown(plugin, config.countdowns().lobby(), config.minPlayers(), alive::size,
                 seconds -> Bukkit.broadcast(messages.get("lobby.starting-in", Formatter.number("seconds", seconds))),
                 this::start);
+        this.summary = new RoundSummary(plugin, messages.get("summary.name"),
+                new RoundSummary.Rewards(config.rewards().kill(), config.rewards().win()));
     }
 
     public boolean isLobby() {
@@ -147,6 +154,7 @@ public final class Game {
         PlayerReset.reset(player, GameMode.ADVENTURE);
         locations.get(LocationKey.LOBBY).ifPresent(player::teleport);
         giveLobbyItems(player);
+        summary.join(player);
         Bukkit.broadcast(messages.get("join.broadcast", Placeholder.unparsed("player", player.getName())));
         refreshScoreboards();
         lobbyCountdown.start();
@@ -161,6 +169,7 @@ public final class Game {
             record(player, Stat.LOSSES, 1);
             record(player, Stat.DEATHS, 1);
         }
+        forEachTimer(bar -> bar.hide(player));
         refreshScoreboards();
         checkWinner();
     }
@@ -172,14 +181,13 @@ public final class Game {
         var victimName = Placeholder.unparsed("player", victim.getName());
         if (killer != null) {
             Bukkit.broadcast(messages.get("game.killed", victimName, Placeholder.unparsed("killer", killer.getName())));
-            BlockcraftApi.get().effects().onKill(killer, victim);
-            BlockcraftApi.get().xp().award(killer, XpReward.KILL);
-            reward(killer, config.rewards().kill());
+            record(killer, Stat.POINTS, summary.awardKill(killer, victim));
             record(killer, Stat.KILLS, 1);
         } else {
             Bukkit.broadcast(messages.get("game.died", victimName));
-            reward(victim, config.rewards().death());
+            record(victim, Stat.POINTS, summary.awardCoins(victim, config.rewards().death()));
         }
+        summary.death(victim);
         record(victim, Stat.DEATHS, 1);
         record(victim, Stat.LOSSES, 1);
         alive.remove(victim.getUniqueId());
@@ -263,12 +271,15 @@ public final class Game {
     private void startProtection() {
         int seconds = config.countdowns().protection();
         Bukkit.broadcast(messages.get("protection.ends-in", Formatter.number("seconds", seconds)));
+        protectionBar = new TimerBar(messages, "timer.protection", seconds);
         protectionCountdown = Countdown.start(plugin, seconds, remaining -> {
+            protectionBar.update(remaining);
             if (PROTECTION_ANNOUNCEMENTS.contains(remaining)) {
                 Bukkit.broadcast(messages.get("protection.ends-in", Formatter.number("seconds", remaining)));
             }
         }, () -> {
             protection = false;
+            protectionBar.hide();
             Bukkit.broadcast(messages.get("protection.over"));
         });
     }
@@ -276,7 +287,9 @@ public final class Game {
     private void startGameTimer() {
         int seconds = config.countdowns().game();
         int trackerAt = seconds - config.countdowns().trackerAfter();
+        gameBar = new TimerBar(messages, "timer.game", seconds);
         gameTimer = Countdown.start(plugin, seconds, remaining -> {
+            gameBar.update(remaining);
             if (remaining == trackerAt) {
                 giveTrackers();
             }
@@ -313,17 +326,16 @@ public final class Game {
         cancel(freezeCountdown);
         frozen = false;
         for (var winner : alivePlayers().toList()) {
-            Bukkit.broadcast(messages.get("game.winner", Placeholder.unparsed("player", winner.getName())));
             record(winner, Stat.WINS, 1);
-            reward(winner, config.rewards().win());
-            BlockcraftApi.get().effects().onWin(winner);
-            BlockcraftApi.get().xp().award(winner, XpReward.WIN);
+            record(winner, Stat.POINTS, summary.awardWin(winner));
         }
         refreshScoreboards();
         startRestart();
     }
 
     private void startRestart() {
+        forEachTimer(TimerBar::hide);
+        summary.show();
         int seconds = config.countdowns().restart();
         Bukkit.broadcast(restartMessage(seconds));
         restartCountdown = ServerRestart.start(plugin, seconds, remaining -> {
@@ -376,11 +388,6 @@ public final class Game {
         }
     }
 
-    private void reward(Player player, int amount) {
-        Coins.award(plugin, player, amount);
-        record(player, Stat.POINTS, amount);
-    }
-
     private void record(Player player, Stat column, int delta) {
         var uuid = player.getUniqueId();
         var name = BlockcraftApi.get().realName(player);
@@ -392,6 +399,10 @@ public final class Game {
         if (player.getHealth() > value) {
             player.setHealth(value);
         }
+    }
+
+    private void forEachTimer(Consumer<TimerBar> action) {
+        Stream.of(protectionBar, gameBar).filter(Objects::nonNull).forEach(action);
     }
 
     private static void cancel(Countdown countdown) {
