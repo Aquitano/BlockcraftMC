@@ -47,10 +47,6 @@ final class ReportListMenu extends Menu {
                     .lore(messages.getLines("menu.entry-lore", placeholders))
                     .build());
         }
-        var filler = Items.of(Material.IRON_BARS).name(messages.get("menu.filler")).build();
-        for (int slot = 36; slot <= 44; slot++) {
-            set(slot, filler);
-        }
         reported.ifPresent(name -> set(45, Items.head(name)
                 .name(messages.get("menu.target", Placeholder.unparsed("player", name))).build()));
         set(49, Items.of(Material.BOOK, Math.min(this.page, 64)).name(messages.get("menu.page"))
@@ -61,7 +57,7 @@ final class ReportListMenu extends Menu {
         if (this.page < pages) {
             set(NEXT, Items.of(Material.PAPER).name(messages.get("menu.next")).lore(messages.get("menu.next-lore")).build());
         }
-        set(CLOSE, Items.of(Material.BARRIER).name(messages.get("menu.close")).build());
+        closeButton(CLOSE);
     }
 
     @Override
@@ -72,8 +68,6 @@ final class ReportListMenu extends Menu {
             new ReportListMenu(menus, messages, all, reported, page - 1).open(player);
         } else if (slot == NEXT && page < pages) {
             new ReportListMenu(menus, messages, all, reported, page + 1).open(player);
-        } else if (slot == CLOSE) {
-            close(player);
         }
     }
 }

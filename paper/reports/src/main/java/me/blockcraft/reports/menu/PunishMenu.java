@@ -48,18 +48,14 @@ final class PunishMenu extends Menu {
                     .lore(messages.getLines("menu.punish-entry-lore", placeholders))
                     .build());
         }
-        set(BACK, Items.of(Material.ARROW).name(messages.get("menu.back")).lore(messages.get("menu.back-lore")).build());
-        set(CLOSE, Items.of(Material.BARRIER).name(messages.get("menu.close")).build());
+        backButton(BACK, viewer -> menus.openReport(viewer, report, reported));
+        closeButton(CLOSE);
     }
 
     @Override
     protected void onClick(Player player, int slot, ItemStack clicked, InventoryClickEvent event) {
         if (slot < shown.size()) {
             menus.punish(player, report, shown.get(slot));
-        } else if (slot == BACK) {
-            menus.openReport(player, report, reported);
-        } else if (slot == CLOSE) {
-            close(player);
         }
     }
 }

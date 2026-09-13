@@ -2,6 +2,7 @@ package me.blockcraft.reports;
 
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.command.CommandRegistry;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.moderation.PunishmentCatalogRepository;
 import me.blockcraft.common.report.ReportRepository;
@@ -11,7 +12,6 @@ import me.blockcraft.reports.listener.JoinListener;
 import me.blockcraft.reports.menu.ReportMenus;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.List;
 
 public final class ReportsPlugin extends JavaPlugin {
 
@@ -19,7 +19,7 @@ public final class ReportsPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        var messages = Messages.load(getDataPath(), () -> getResource("messages.yml"));
+        var messages = Messages.load(getDataPath(), () -> getResource("messages.yml"), BlockcraftApi.get().tags());
         var reports = new ReportRepository(BlockcraftApi.get().database());
         reports.createTable();
         var catalog = new PunishmentCatalogRepository(BlockcraftApi.get().database());
@@ -29,6 +29,6 @@ public final class ReportsPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new JoinListener(this, reports, messages), this);
         getServer().getPluginManager().registerEvents(new ChatPromptListener(menus), this);
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event ->
-                event.registrar().register(ReportsCommand.create(menus, messages), "Öffnet das Reports-Menü", List.of()));
+                new CommandRegistry(event.registrar(), messages).register(ReportsCommand.create(menus, messages)));
     }
 }

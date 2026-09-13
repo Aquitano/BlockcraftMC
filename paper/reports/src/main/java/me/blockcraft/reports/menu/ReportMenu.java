@@ -45,9 +45,9 @@ final class ReportMenu extends Menu {
         set(24, item(Material.BOOK, "menu.reason", messages, placeholders));
         set(SET_STATUS, item(Material.NAME_TAG, "menu.set-status", messages, placeholders));
         set(PUNISH, item(Material.IRON_AXE, "menu.punish", messages, placeholders));
-        set(BACK, item(Material.ARROW, "menu.back", messages, placeholders));
         set(DELETE, item(Material.REDSTONE_BLOCK, "menu.delete", messages, placeholders));
-        set(CLOSE, Items.of(Material.BARRIER).name(messages.get("menu.close")).build());
+        backButton(BACK, viewer -> menus.openList(viewer, reported, 1));
+        closeButton(CLOSE);
     }
 
     private static ItemStack item(Material material, String key, Messages messages, TagResolver placeholders) {
@@ -61,9 +61,7 @@ final class ReportMenu extends Menu {
             case GOTO_REPORTED -> menus.goTo(player, report.reported());
             case SET_STATUS -> menus.promptStatus(player, report, reported);
             case PUNISH -> menus.openPunish(player, report, reported);
-            case BACK -> menus.openList(player, reported, 1);
             case DELETE -> menus.delete(player, report, reported);
-            case CLOSE -> close(player);
             default -> {
             }
         }

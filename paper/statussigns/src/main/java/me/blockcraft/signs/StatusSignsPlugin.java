@@ -2,6 +2,7 @@ package me.blockcraft.signs;
 
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.command.CommandRegistry;
 import me.blockcraft.common.config.YamlFile;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.signs.command.CreateSignCommand;
@@ -22,7 +23,7 @@ public final class StatusSignsPlugin extends JavaPlugin {
         var refresh = YamlFile.section(config, "refresh");
         long intervalTicks = ((Number) refresh.getOrDefault("interval-ticks", 50)).longValue();
         int staleSeconds = ((Number) refresh.getOrDefault("stale-seconds", 20)).intValue();
-        var messages = Messages.load(getDataPath(), () -> getResource("messages.yml"));
+        var messages = Messages.load(getDataPath(), () -> getResource("messages.yml"), BlockcraftApi.get().tags());
 
         signs = new StatusSigns(this,
                 new SignStore(getDataPath().resolve("signs.yml"), getLogger()),
@@ -34,7 +35,7 @@ public final class StatusSignsPlugin extends JavaPlugin {
 
         getServer().getPluginManager().registerEvents(new SignClickListener(this, signs, messages), this);
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event ->
-                event.registrar().register(CreateSignCommand.create(signs, messages), "Erstellt ein Status-Schild"));
+                new CommandRegistry(event.registrar(), messages).register(CreateSignCommand.create(signs, messages)));
     }
 
     @Override
