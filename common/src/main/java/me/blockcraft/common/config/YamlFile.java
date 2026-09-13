@@ -44,14 +44,15 @@ public final class YamlFile {
         }
     }
 
+    /** Nested sections may be keyed by numbers (the /strafe catalogue), so keys stay untyped here. */
     @SuppressWarnings("unchecked")
-    private static Map<String, Object> merge(Map<String, Object> defaults, Map<String, Object> overrides) {
-        var merged = new LinkedHashMap<>(defaults);
+    private static Map<String, Object> merge(Map<?, ?> defaults, Map<?, ?> overrides) {
+        var merged = new LinkedHashMap<Object, Object>(defaults);
         overrides.forEach((key, value) -> merged.merge(key, value, (fallback, override) ->
-                fallback instanceof Map<?, ?> && override instanceof Map<?, ?>
-                        ? merge((Map<String, Object>) fallback, (Map<String, Object>) override)
+                fallback instanceof Map<?, ?> nested && override instanceof Map<?, ?> replacement
+                        ? merge(nested, replacement)
                         : override));
-        return merged;
+        return (Map<String, Object>) (Map<?, ?>) merged;
     }
 
     public static Map<String, Object> load(InputStream in) {
