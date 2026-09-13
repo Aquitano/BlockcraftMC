@@ -50,17 +50,17 @@ public final class LobbyCountdown {
     /** Starts once enough players are there; calling it on every join is how a game keeps it going. */
     public void start() {
         if (players.getAsInt() >= minPlayers) {
-            begin(false);
+            begin();
         }
     }
 
     /** Runs the clock down to {@code toSeconds} whatever the player count says; false if it is already there. */
     public boolean shorten(int toSeconds) {
-        begin(true);
-        forced = true;
+        begin();
         if (countdown.remaining() <= toSeconds) {
             return false;
         }
+        forced = true;
         countdown.remaining(toSeconds + 1);
         return true;
     }
@@ -74,6 +74,7 @@ public final class LobbyCountdown {
     }
 
     public void cancel() {
+        forced = false;
         countdown.cancel();
         Bukkit.getOnlinePlayers().forEach(player -> player.setLevel(0));
     }
@@ -84,13 +85,10 @@ public final class LobbyCountdown {
      */
     public static Countdown freeze(Plugin plugin, int seconds, Supplier<List<Player>> audience,
                                    IntFunction<Component> title, Runnable onEnd) {
+        showSecond(audience.get(), title, seconds);
         return Countdown.start(plugin, seconds, remaining -> {
             if (remaining > 0) {
-                var shown = Title.title(title.apply(remaining), Component.empty(), SECOND_TIMES);
-                audience.get().forEach(player -> {
-                    player.showTitle(shown);
-                    Sounds.countdownTick(player, remaining);
-                });
+                showSecond(audience.get(), title, remaining);
             }
         }, () -> {
             var go = goTitle();
@@ -102,15 +100,23 @@ public final class LobbyCountdown {
         });
     }
 
+    private static void showSecond(List<Player> audience, IntFunction<Component> title, int remaining) {
+        var shown = Title.title(title.apply(remaining), Component.empty(), SECOND_TIMES);
+        audience.forEach(player -> {
+            player.showTitle(shown);
+            Sounds.countdownTick(player, remaining);
+        });
+    }
+
     private static Title goTitle() {
         return Title.title(BlockcraftApi.get().messages().get("countdown.go"), Component.empty(), GO_TIMES);
     }
 
-    private void begin(boolean forced) {
+    private void begin() {
         if (countdown.isRunning()) {
             return;
         }
-        this.forced = forced;
+        forced = false;
         announce.accept(seconds);
         countdown.start(seconds, this::tick, this::finish);
     }

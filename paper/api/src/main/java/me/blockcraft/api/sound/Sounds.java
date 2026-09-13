@@ -45,11 +45,11 @@ public enum Sounds {
 
     /** The last seconds before a start: the closer to zero, the higher the tick. */
     public static void countdownTick(int secondsLeft) {
-        Bukkit.getServer().playSound(COUNTDOWN_TICK.at(countdownPitch(secondsLeft)));
+        Bukkit.getOnlinePlayers().forEach(player -> countdownTick(player, secondsLeft));
     }
 
     public static void countdownTick(Player player, int secondsLeft) {
-        player.playSound(COUNTDOWN_TICK.at(countdownPitch(secondsLeft)));
+        playIfEnabled(player, COUNTDOWN_TICK.at(countdownPitch(secondsLeft)));
     }
 
     private static float countdownPitch(int secondsLeft) {
@@ -62,6 +62,10 @@ public enum Sounds {
 
     /** Silent for players who turned the network's feedback sounds off in their settings. */
     public void play(Player player) {
+        playIfEnabled(player, sound);
+    }
+
+    private static void playIfEnabled(Player player, Sound sound) {
         if (BlockcraftApi.get().settings().enabled(player, PlayerSetting.SOUNDS)) {
             player.playSound(sound);
         }

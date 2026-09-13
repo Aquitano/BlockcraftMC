@@ -60,8 +60,8 @@ public final class PlayerSettings implements Listener {
     }
 
     public void clear(Player player, PlayerSetting setting) {
-        cache.getOrDefault(player.getUniqueId(), Map.of()).remove(setting);
         var uuid = player.getUniqueId();
+        cache.computeIfAbsent(uuid, ignored -> new EnumMap<>(PlayerSetting.class)).remove(setting);
         Tasks.async(plugin, () -> repository.clear(uuid, setting));
     }
 
