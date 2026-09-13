@@ -1,5 +1,6 @@
 package me.blockcraft.core.staff;
 
+import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.moderation.VanishRepository;
 import org.bukkit.Bukkit;
@@ -19,7 +20,8 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Network-wide vanish: the flag lives in {@code bc_vanished}, is read during the async pre-login so the join
  * event can already act on it, and is only changed by {@link #set}. Staff with {@link #SEE_PERMISSION} and
- * other vanished players keep seeing vanished players.
+ * other vanished players keep seeing vanished players. The proxy hears about every change so its lists and
+ * counts agree; it reads the table itself for players who log in vanished.
  */
 public final class VanishService implements Listener {
 
@@ -60,6 +62,7 @@ public final class VanishService implements Listener {
             Bukkit.getOnlinePlayers().forEach(viewer -> viewer.showPlayer(plugin, player));
         }
         Tasks.async(plugin, () -> repository.set(uuid, vanish));
+        ProxyMessaging.vanish(plugin, player, vanish);
     }
 
     private boolean canSee(Player viewer, Player hidden) {

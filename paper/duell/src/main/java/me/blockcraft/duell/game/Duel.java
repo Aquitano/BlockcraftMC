@@ -422,7 +422,7 @@ public final class Duel {
         Bukkit.broadcast(messages.get("round.coins", Placeholder.unparsed("player", winner.getName()), Formatter.number("coins", amount)));
         BlockcraftApi.get().effects().onWin(winner);
         var uuid = winner.getUniqueId();
-        var name = winner.getName();
+        var name = BlockcraftApi.get().realName(winner);
         Tasks.async(plugin, () -> {
             coins.add(uuid, name, amount);
             stats.add(uuid, name, Stat.WINS, 1);
@@ -431,7 +431,7 @@ public final class Duel {
 
     private void record(Player player, Stat column) {
         var uuid = player.getUniqueId();
-        var name = player.getName();
+        var name = BlockcraftApi.get().realName(player);
         Tasks.async(plugin, () -> stats.add(uuid, name, column, 1));
     }
 

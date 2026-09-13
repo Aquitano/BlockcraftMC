@@ -1,5 +1,6 @@
 package me.blockcraft.lobby.menu;
 
+import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.config.Locations;
 import me.blockcraft.api.menu.Menu;
 import me.blockcraft.api.settings.PlayerSettings;
@@ -57,7 +58,7 @@ public record Menus(
      * click bought it or an earlier one did. The level shows the new balance.
      */
     public void purchase(Player player, String item, int price, Runnable onOwned) {
-        Tasks.async(plugin, () -> shop.buy(player.getUniqueId(), player.getName(), item, price), purchase -> {
+        Tasks.async(plugin, () -> shop.buy(player.getUniqueId(), BlockcraftApi.get().realName(player), item, price), purchase -> {
             if (!player.isOnline()) {
                 return;
             }

@@ -6,6 +6,7 @@ import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
 import io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSelectorArgumentResolver;
+import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.coins.CoinsRepository;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
@@ -48,7 +49,7 @@ public final class StartCommand {
                                 .executes(context -> {
                                     Player target = context.getArgument("player", PlayerSelectorArgumentResolver.class)
                                             .resolve(context.getSource()).getFirst();
-                                    Tasks.async(plugin, () -> coins.add(target.getUniqueId(), target.getName(), DEBUG_COINS));
+                                    Tasks.async(plugin, () -> coins.add(target.getUniqueId(), BlockcraftApi.get().realName(target), DEBUG_COINS));
                                     context.getSource().getSender().sendMessage(
                                             messages.get("start.coins-added", Formatter.number("coins", DEBUG_COINS)));
                                     return Command.SINGLE_SUCCESS;
@@ -63,7 +64,7 @@ public final class StartCommand {
                         .requires(source -> source.getSender().hasPermission("blockcraft.quicksg.admin"))
                         .executes(context -> {
                             Player player = context.getSource().getPlayerOrThrow();
-                            Tasks.async(plugin, () -> stats.add(player.getUniqueId(), player.getName(), Stat.WINS, 1));
+                            Tasks.async(plugin, () -> stats.add(player.getUniqueId(), BlockcraftApi.get().realName(player), Stat.WINS, 1));
                             return Command.SINGLE_SUCCESS;
                         }))
                 .build();

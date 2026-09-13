@@ -2,6 +2,7 @@ package me.blockcraft.core.nick;
 
 import com.destroystokyo.paper.profile.PlayerProfile;
 import me.blockcraft.api.nick.NickChangeEvent;
+import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.nick.Nick;
 import me.blockcraft.common.nick.NickRepository;
@@ -42,10 +43,6 @@ public final class Nicks {
 
     public Optional<Active> of(Player player) {
         return Optional.ofNullable(active.get(player.getUniqueId()));
-    }
-
-    public String realName(Player player) {
-        return of(player).map(Active::realName).orElseGet(player::getName);
     }
 
     /** Picks and persists a fresh nick; {@code onDone} gets it on the main thread, or empty when the skin could not load. */
@@ -89,6 +86,7 @@ public final class Nicks {
         Tasks.async(plugin, () -> repository.clear(uuid));
         player.setPlayerProfile(current.original());
         Bukkit.getPluginManager().callEvent(new NickChangeEvent(player));
+        ProxyMessaging.nick(plugin, player, Optional.empty());
         return true;
     }
 
@@ -104,6 +102,7 @@ public final class Nicks {
         player.setPlayerProfile(profile);
         active.put(player.getUniqueId(), new Active(original.getName(), nick, original));
         Bukkit.getPluginManager().callEvent(new NickChangeEvent(player));
+        ProxyMessaging.nick(plugin, player, Optional.of(nick));
     }
 
     private static Optional<PlayerProfile> fetchSkin(String owner) {

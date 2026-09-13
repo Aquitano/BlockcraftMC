@@ -190,7 +190,7 @@ public final class Game {
         lives.remove(id);
         loadouts.remove(id);
         if (wasAlive && phase != GamePhase.LOBBY && phase != GamePhase.ENDING) {
-            Tasks.async(plugin, () -> stats.add(id, player.getName(), Stat.LOSSES, 1));
+            Tasks.async(plugin, () -> stats.add(id, BlockcraftApi.get().realName(player), Stat.LOSSES, 1));
             checkWinner();
         }
         scoreboard.refreshAll();
@@ -380,20 +380,20 @@ public final class Game {
         killer.filter(slayer -> !slayer.equals(victim)).ifPresentOrElse(slayer -> {
             broadcast("deathmatch.killed", victimName, Placeholder.component("killer", slayer.playerListName()));
             Tasks.async(plugin, () -> {
-                coins.add(slayer.getUniqueId(), slayer.getName(), KILL_COINS);
-                stats.add(slayer.getUniqueId(), slayer.getName(), Stat.KILLS, 1);
-                stats.add(slayer.getUniqueId(), slayer.getName(), Stat.POINTS, KILL_COINS);
+                coins.add(slayer.getUniqueId(), BlockcraftApi.get().realName(slayer), KILL_COINS);
+                stats.add(slayer.getUniqueId(), BlockcraftApi.get().realName(slayer), Stat.KILLS, 1);
+                stats.add(slayer.getUniqueId(), BlockcraftApi.get().realName(slayer), Stat.POINTS, KILL_COINS);
             });
             slayer.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 160, 1));
             BlockcraftApi.get().effects().onKill(slayer, victim);
         }, () -> broadcast("deathmatch.died", victimName));
-        Tasks.async(plugin, () -> stats.add(victim.getUniqueId(), victim.getName(), Stat.DEATHS, 1));
+        Tasks.async(plugin, () -> stats.add(victim.getUniqueId(), BlockcraftApi.get().realName(victim), Stat.DEATHS, 1));
         int remaining = Math.max(0, lives(victim) - 1);
         lives.put(victim.getUniqueId(), remaining);
         if (remaining == 0) {
             alive.remove(victim.getUniqueId());
             spectators.add(victim.getUniqueId());
-            Tasks.async(plugin, () -> stats.add(victim.getUniqueId(), victim.getName(), Stat.LOSSES, 1));
+            Tasks.async(plugin, () -> stats.add(victim.getUniqueId(), BlockcraftApi.get().realName(victim), Stat.LOSSES, 1));
         }
         scoreboard.refreshAll();
         if (remaining == 0) {
@@ -443,9 +443,9 @@ public final class Game {
         for (var winner : alivePlayers()) {
             broadcast("ending.winner", Placeholder.unparsed("player", winner.getName()));
             Tasks.async(plugin, () -> {
-                stats.add(winner.getUniqueId(), winner.getName(), Stat.WINS, 1);
-                coins.add(winner.getUniqueId(), winner.getName(), WIN_COINS);
-                stats.add(winner.getUniqueId(), winner.getName(), Stat.POINTS, WIN_COINS);
+                stats.add(winner.getUniqueId(), BlockcraftApi.get().realName(winner), Stat.WINS, 1);
+                coins.add(winner.getUniqueId(), BlockcraftApi.get().realName(winner), WIN_COINS);
+                stats.add(winner.getUniqueId(), BlockcraftApi.get().realName(winner), Stat.POINTS, WIN_COINS);
             });
             BlockcraftApi.get().effects().onWin(winner);
         }

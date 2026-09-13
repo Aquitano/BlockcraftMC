@@ -3,6 +3,7 @@ package me.blockcraft.api;
 import me.blockcraft.api.coins.CoinsRepository;
 import me.blockcraft.api.cosmetic.Effects;
 import me.blockcraft.api.network.ServerPresence;
+import me.blockcraft.api.player.RealNames;
 import me.blockcraft.api.settings.PlayerSettings;
 import me.blockcraft.api.shop.Shop;
 import me.blockcraft.api.shop.Unlocks;
@@ -10,6 +11,7 @@ import me.blockcraft.common.db.Database;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.network.ServerIdentity;
 import me.blockcraft.common.network.ServerRepository;
+import org.bukkit.entity.Player;
 
 /** Entry point for other plugins; populated while BlockcraftAPI is enabled. */
 public final class BlockcraftApi {
@@ -26,9 +28,10 @@ public final class BlockcraftApi {
     private final ServerRepository servers;
     private final ServerIdentity server;
     private final ServerPresence presence;
+    private final RealNames realNames;
 
     BlockcraftApi(Database database, PlayerSettings settings, Messages messages, ServerRepository servers, ServerIdentity server,
-                  ServerPresence presence) {
+                  ServerPresence presence, RealNames realNames) {
         this.database = database;
         this.coins = new CoinsRepository(database);
         this.unlocks = new Unlocks(database);
@@ -39,6 +42,7 @@ public final class BlockcraftApi {
         this.servers = servers;
         this.server = server;
         this.presence = presence;
+        this.realNames = realNames;
     }
 
     public static BlockcraftApi get() {
@@ -102,5 +106,10 @@ public final class BlockcraftApi {
     /** What this server tells the proxy about itself. */
     public ServerPresence presence() {
         return presence;
+    }
+
+    /** The name the player logged in with, whatever nick they wear; the one to write into name columns. */
+    public String realName(Player player) {
+        return realNames.of(player);
     }
 }

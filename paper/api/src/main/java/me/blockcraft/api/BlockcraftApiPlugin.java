@@ -6,6 +6,7 @@ import me.blockcraft.api.command.CoinsCommand;
 import me.blockcraft.api.menu.MenuListener;
 import me.blockcraft.api.network.ServerHeartbeat;
 import me.blockcraft.api.network.ServerPresence;
+import me.blockcraft.api.player.RealNames;
 import me.blockcraft.api.settings.PlayerSettings;
 import me.blockcraft.common.config.YamlFile;
 import me.blockcraft.common.db.Database;
@@ -39,12 +40,14 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
 
         var messages = Messages.load(getDataPath(), () -> getResource("messages.yml"));
         var settings = new PlayerSettings(this, database);
-        var api = new BlockcraftApi(database, settings, messages, servers, self, presence);
+        var realNames = new RealNames();
+        var api = new BlockcraftApi(database, settings, messages, servers, self, presence, realNames);
         api.coins().createTable();
         api.unlocks().createTable();
         settings.createTable();
         BlockcraftApi.install(api);
         int startingCoins = ((Number) config.getOrDefault("starting-coins", 10)).intValue();
+        getServer().getPluginManager().registerEvents(realNames, this);
         getServer().getPluginManager().registerEvents(new CoinsJoinListener(this, api.coins(), startingCoins), this);
         getServer().getPluginManager().registerEvents(settings, this);
         getServer().getPluginManager().registerEvents(new MenuListener(), this);

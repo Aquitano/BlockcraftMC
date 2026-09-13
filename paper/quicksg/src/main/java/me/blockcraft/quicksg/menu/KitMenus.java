@@ -1,5 +1,6 @@
 package me.blockcraft.quicksg.menu;
 
+import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.menu.Menu;
 import me.blockcraft.api.shop.Shop;
 import me.blockcraft.api.shop.Unlocks;
@@ -67,7 +68,7 @@ public final class KitMenus {
 
     void buy(Player player, Kit kit) {
         Menu.close(player);
-        Tasks.async(plugin, () -> shop.buy(player.getUniqueId(), player.getName(), kit.item(), price), purchase -> {
+        Tasks.async(plugin, () -> shop.buy(player.getUniqueId(), BlockcraftApi.get().realName(player), kit.item(), price), purchase -> {
             switch (purchase.outcome()) {
                 case BOUGHT -> {
                     player.sendMessage(messages.get("kit.bought", kitName(kit)));

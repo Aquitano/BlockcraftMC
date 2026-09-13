@@ -415,7 +415,7 @@ public final class Game {
 
     private void reward(Player player, int amount) {
         var uuid = player.getUniqueId();
-        var name = player.getName();
+        var name = BlockcraftApi.get().realName(player);
         Tasks.async(plugin, () -> {
             coins.add(uuid, name, amount);
             stats.add(uuid, name, Stat.POINTS, amount);
@@ -424,7 +424,7 @@ public final class Game {
 
     private void record(Player player, Stat column, int delta) {
         var uuid = player.getUniqueId();
-        var name = player.getName();
+        var name = BlockcraftApi.get().realName(player);
         Tasks.async(plugin, () -> stats.add(uuid, name, column, delta));
     }
 

@@ -1,5 +1,6 @@
 package me.blockcraft.api.coins;
 
+import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.task.Tasks;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -21,6 +22,7 @@ public final class CoinsJoinListener implements Listener {
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
         var player = event.getPlayer();
-        Tasks.async(plugin, () -> coins.register(player.getUniqueId(), player.getName(), startingCoins));
+        var name = BlockcraftApi.get().realName(player);
+        Tasks.async(plugin, () -> coins.register(player.getUniqueId(), name, startingCoins));
     }
 }

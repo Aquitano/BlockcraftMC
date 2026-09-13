@@ -7,6 +7,7 @@ import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
 import io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSelectorArgumentResolver;
+import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.coins.CoinsRepository;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
@@ -45,7 +46,7 @@ public final class RushCommand {
                                             var target = context.getArgument("player", PlayerSelectorArgumentResolver.class)
                                                     .resolve(context.getSource()).getFirst();
                                             int amount = IntegerArgumentType.getInteger(context, "amount");
-                                            Tasks.async(plugin, () -> coins.add(target.getUniqueId(), target.getName(), amount));
+                                            Tasks.async(plugin, () -> coins.add(target.getUniqueId(), BlockcraftApi.get().realName(target), amount));
                                             context.getSource().getSender().sendMessage(
                                                     messages.get("command.coins-given", Formatter.number("amount", amount)));
                                             return Command.SINGLE_SUCCESS;

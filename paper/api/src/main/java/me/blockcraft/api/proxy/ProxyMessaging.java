@@ -7,6 +7,8 @@ import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
+import java.util.Optional;
+
 /** Plugin messages to the proxy: the BungeeCord channel Velocity answers itself, plus the Blockcraft channel. */
 public final class ProxyMessaging {
 
@@ -35,6 +37,29 @@ public final class ProxyMessaging {
     public static void hub(Plugin plugin, Player player) {
         var out = ByteStreams.newDataOutput();
         out.writeUTF(ProxyChannel.HUB);
+        send(plugin, player, ProxyChannel.NAME, out.toByteArray());
+    }
+
+    /** Runs a proxy command as the player, permission checks included; {@code command} carries no leading slash. */
+    public static void runOnProxy(Plugin plugin, Player player, String command) {
+        var out = ByteStreams.newDataOutput();
+        out.writeUTF(ProxyChannel.COMMAND);
+        out.writeUTF(command);
+        send(plugin, player, ProxyChannel.NAME, out.toByteArray());
+    }
+
+    /** Tells the proxy the nick the player wears from now on, or that it came off. */
+    public static void nick(Plugin plugin, Player player, Optional<String> nick) {
+        var out = ByteStreams.newDataOutput();
+        out.writeUTF(ProxyChannel.NICK);
+        out.writeUTF(nick.orElse(""));
+        send(plugin, player, ProxyChannel.NAME, out.toByteArray());
+    }
+
+    public static void vanish(Plugin plugin, Player player, boolean vanished) {
+        var out = ByteStreams.newDataOutput();
+        out.writeUTF(ProxyChannel.VANISH);
+        out.writeBoolean(vanished);
         send(plugin, player, ProxyChannel.NAME, out.toByteArray());
     }
 

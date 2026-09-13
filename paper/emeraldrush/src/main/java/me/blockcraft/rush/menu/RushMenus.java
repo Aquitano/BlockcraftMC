@@ -1,5 +1,6 @@
 package me.blockcraft.rush.menu;
 
+import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.game.Stat;
 import me.blockcraft.api.game.Stats;
 import me.blockcraft.api.game.StatsRepository;
@@ -64,7 +65,7 @@ public final class RushMenus {
 
     void buyPerk(Player player, Perk perk) {
         Menu.close(player);
-        Tasks.async(plugin, () -> shop.buy(player.getUniqueId(), player.getName(), perk.item(), perk.price()), purchase -> {
+        Tasks.async(plugin, () -> shop.buy(player.getUniqueId(), BlockcraftApi.get().realName(player), perk.item(), perk.price()), purchase -> {
             switch (purchase.outcome()) {
                 case BOUGHT -> {
                     player.sendMessage(messages.get("perk.bought", perkName(messages, perk)));
