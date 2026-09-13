@@ -50,7 +50,15 @@ public final class PlayerChoices {
     }
 
     public boolean enabled(Player player, PlayerSetting setting) {
-        return PlayerSetting.enabled(Optional.ofNullable(choices.getOrDefault(player.getUniqueId(), Map.of()).get(setting)));
+        return enabled(player.getUniqueId(), setting);
+    }
+
+    /** Reads the table for a player who is not online, so a friend request judges an absent player correctly. */
+    public boolean enabled(UUID player, PlayerSetting setting) {
+        var cached = choices.get(player);
+        return PlayerSetting.enabled(cached == null
+                ? repository.get(player, setting)
+                : Optional.ofNullable(cached.get(setting)));
     }
 
     public void set(Player player, PlayerSetting setting, String value) {

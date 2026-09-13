@@ -1,5 +1,7 @@
 package me.blockcraft.system.listener;
 
+import com.google.common.io.ByteStreams;
+import com.velocitypowered.api.event.EventTask;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.event.connection.PluginMessageEvent.ForwardResult;
@@ -12,6 +14,7 @@ import me.blockcraft.common.settings.PlayerSetting;
 import me.blockcraft.system.LobbyConnector;
 import me.blockcraft.system.PlayerChoices;
 import me.blockcraft.system.PlayerVisibility;
+import me.blockcraft.system.friends.FriendManager;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import org.slf4j.Logger;
 
@@ -26,28 +29,30 @@ public final class ProxyMessageListener {
     private final LobbyConnector lobby;
     private final PlayerVisibility visibility;
     private final PlayerChoices choices;
+    private final FriendManager friends;
     private final TabHeaderListener tabHeader;
     private final Logger logger;
 
     public ProxyMessageListener(ProxyServer proxy, LobbyConnector lobby, PlayerVisibility visibility, PlayerChoices choices,
-                                TabHeaderListener tabHeader, Logger logger) {
+                                FriendManager friends, TabHeaderListener tabHeader, Logger logger) {
         this.proxy = proxy;
         this.lobby = lobby;
         this.visibility = visibility;
         this.choices = choices;
+        this.friends = friends;
         this.tabHeader = tabHeader;
         this.logger = logger;
         proxy.getChannelRegistrar().register(CHANNEL);
     }
 
     @Subscribe
-    public void onPluginMessage(PluginMessageEvent event) {
+    public EventTask onPluginMessage(PluginMessageEvent event) {
         if (!CHANNEL.equals(event.getIdentifier())) {
-            return;
+            return null;
         }
         event.setResult(ForwardResult.handled());
         if (!(event.getSource() instanceof ServerConnection connection)) {
-            return;
+            return null;
         }
         var player = connection.getPlayer();
         var in = event.dataAsDataStream();
@@ -57,6 +62,10 @@ public final class ProxyMessageListener {
             case ProxyChannel.HUB -> lobby.send(player);
             case ProxyChannel.COMMAND -> proxy.getCommandManager().executeAsync(player, in.readUTF());
             case ProxyChannel.NICK -> visibility.setNick(player, Optional.of(in.readUTF()).filter(nick -> !nick.isEmpty()));
+            // The friend list is a database read, so it leaves the network thread.
+            case ProxyChannel.FRIENDS -> {
+                return EventTask.async(() -> sendFriends(connection, player));
+            }
             case ProxyChannel.SETTING -> {
                 String key = in.readUTF();
                 String value = in.readUTF();
@@ -77,5 +86,23 @@ public final class ProxyMessageListener {
             }
             default -> logger.warn("Unknown subchannel {} from {}", subchannel, connection.getServerInfo().getName());
         }
+        return null;
+    }
+
+    /** Only the proxy knows who is online and where, so the lobby's friends menu is drawn from this answer. */
+    private void sendFriends(ServerConnection connection, Player player) {
+        var entries = friends.entriesFor(player);
+        var requests = friends.requestNames(player);
+        var out = ByteStreams.newDataOutput();
+        out.writeUTF(ProxyChannel.FRIENDS);
+        out.writeInt(entries.size());
+        for (var entry : entries) {
+            out.writeUTF(entry.name());
+            out.writeBoolean(entry.online());
+            out.writeUTF(entry.server());
+        }
+        out.writeInt(requests.size());
+        requests.forEach(out::writeUTF);
+        connection.sendPluginMessage(CHANNEL, out.toByteArray());
     }
 }

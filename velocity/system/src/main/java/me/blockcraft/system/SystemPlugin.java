@@ -38,6 +38,7 @@ import me.blockcraft.system.command.moderation.WarnCommand;
 import me.blockcraft.system.command.moderation.WarnsCommand;
 import me.blockcraft.system.command.moderation.WerbungCommand;
 import me.blockcraft.system.command.player.DiscordCommand;
+import me.blockcraft.system.command.player.FriendCommand;
 import me.blockcraft.system.command.player.HubCommand;
 import me.blockcraft.system.command.player.MessageCommand;
 import me.blockcraft.system.command.player.JoinMeCommand;
@@ -67,6 +68,9 @@ import me.blockcraft.system.command.staff.SetMaxCommand;
 import me.blockcraft.system.command.staff.TeamChatCommand;
 import me.blockcraft.system.command.staff.WartungenCommand;
 import me.blockcraft.system.command.staff.WhoisCommand;
+import me.blockcraft.system.friends.FriendListener;
+import me.blockcraft.system.friends.FriendManager;
+import me.blockcraft.system.friends.FriendRepository;
 import me.blockcraft.system.listener.CommandListener;
 import me.blockcraft.system.listener.InitialServerListener;
 import me.blockcraft.system.listener.KickListener;
@@ -132,6 +136,8 @@ public final class SystemPlugin {
         nicks.createTable();
         var playerSettings = new PlayerSettingRepository(database);
         playerSettings.createTable();
+        var friendships = new FriendRepository(database);
+        friendships.createTable();
         var catalog = new PunishmentCatalogRepository(database);
         catalog.createTable();
         catalog.replace(config.punishments().entrySet().stream()
@@ -147,6 +153,7 @@ public final class SystemPlugin {
         var punishments = new PunishmentService(proxy, repositories.punishments(), messages, config.network());
         var muteGate = new MuteGate(repositories.punishments(), punishments, messages, logger);
         var parties = new PartyManager(proxy, visibility, choices, messages);
+        var friends = new FriendManager(proxy, lookup, visibility, choices, friendships, config, messages);
         var supportSessions = new SupportSessions();
         var playtime = new Playtime(repositories.players(), logger);
         var support = new CommandSupport(visibility, messages);
@@ -161,10 +168,11 @@ public final class SystemPlugin {
         events.register(this, new CommandListener(config, messages));
         events.register(this, new KickListener(lobby, messages));
         events.register(this, new InitialServerListener(lobby));
-        events.register(this, new ProxyMessageListener(proxy, lobby, visibility, choices, tabHeader, logger));
+        events.register(this, new ProxyMessageListener(proxy, lobby, visibility, choices, friends, tabHeader, logger));
         events.register(this, new TabCompleteListener());
         events.register(this, new MotdListener(visibility, config, settings, messages, dataDirectory, logger));
         events.register(this, new PartyListener(parties));
+        events.register(this, new FriendListener(friends, visibility, logger));
         events.register(this, new SupportListener(supportSessions));
         events.register(this, playtime);
 
@@ -210,6 +218,9 @@ public final class SystemPlugin {
         events.register(this, privateMessages);
         register(privateMessages.msg(), "tell", "w");
         register(privateMessages.reply(), "reply");
+        var friendCommands = new FriendCommand(support, friends, messages);
+        register(friendCommands.create());
+        register(friendCommands.list());
         register(new PartyCommand(support, visibility, parties, messages).create());
         register(new PartyChatCommand(support, parties, muteGate, messages).create());
         var joinMe = new JoinMeCommand(support, proxy, visibility, config, directory, messages);
@@ -231,6 +242,9 @@ public final class SystemPlugin {
                 .schedule();
         proxy.getScheduler().buildTask(this, tabHeader)
                 .repeat(config.tabRefreshSeconds(), TimeUnit.SECONDS)
+                .schedule();
+        proxy.getScheduler().buildTask(this, friends::purgeExpiredRequests)
+                .repeat(config.friends().requestMinutes(), TimeUnit.MINUTES)
                 .schedule();
         proxy.getScheduler().buildTask(this, new AutoBroadcast(proxy, messages))
                 .repeat(config.autoBroadcastMinutes(), TimeUnit.MINUTES)

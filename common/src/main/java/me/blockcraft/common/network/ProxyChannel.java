@@ -31,6 +31,12 @@ public final class ProxyChannel {
     /** setting key and its new value, so the proxy's own view of the player's choices stays current */
     public static final String SETTING = "Setting";
 
+    /**
+     * The one subchannel the proxy answers on: asked with no payload, it writes back the player's friends
+     * (name, online, server) and the names of the requests waiting for them, which only the proxy knows.
+     */
+    public static final String FRIENDS = "Friends";
+
     private ProxyChannel() {
     }
 }
