@@ -43,7 +43,8 @@ public final class ReportPlugin {
         var reports = new ReportRepository(database);
         reports.createTable();
 
-        var messages = Messages.load(dataDirectory, () -> getClass().getResourceAsStream("/messages.yml"));
+        var loaded = Messages.load(dataDirectory, () -> getClass().getResourceAsStream("/messages.yml"));
+        var messages = loaded.with(loaded.tagsOf("palette"));
         var preferences = new NotifyPreferences(dataDirectory.resolve("ignored-staff.yml"));
         var description = proxy.getPluginManager().fromInstance(this).map(PluginContainer::getDescription).orElseThrow();
         var command = new ReportCommand(this, proxy, logger, description, reports, preferences, messages,

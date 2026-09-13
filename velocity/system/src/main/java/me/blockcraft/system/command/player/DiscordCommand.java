@@ -43,7 +43,7 @@ public final class DiscordCommand {
     }
 
     private void info(Player player) {
-        player.sendMessage(messages.get("discord.invite", Placeholder.unparsed("discord", config.network().discord())));
+        player.sendMessage(messages.get("discord.invite"));
         var link = links.get(player.getUniqueId());
         var discordId = link.flatMap(Link::discordId);
         var pendingCode = link.flatMap(Link::pendingCode);

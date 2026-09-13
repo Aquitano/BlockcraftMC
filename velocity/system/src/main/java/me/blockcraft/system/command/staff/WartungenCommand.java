@@ -6,13 +6,10 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.scheduler.ScheduledTask;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.system.ProxySettings;
-import me.blockcraft.system.SystemConfig;
 import me.blockcraft.system.SystemPermissions;
 import me.blockcraft.system.command.CommandSupport;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,17 +25,14 @@ public final class WartungenCommand {
     private final CommandSupport support;
     private final ProxyServer proxy;
     private final ProxySettings settings;
-    private final SystemConfig config;
     private final Messages messages;
     private final List<ScheduledTask> pending = new ArrayList<>();
 
-    public WartungenCommand(Object plugin, CommandSupport support, ProxyServer proxy, ProxySettings settings, SystemConfig config,
-                            Messages messages) {
+    public WartungenCommand(Object plugin, CommandSupport support, ProxyServer proxy, ProxySettings settings, Messages messages) {
         this.plugin = plugin;
         this.support = support;
         this.proxy = proxy;
         this.settings = settings;
-        this.config = config;
         this.messages = messages;
     }
 
@@ -82,7 +76,7 @@ public final class WartungenCommand {
         cancelPending();
         settings.setMaintenance(true);
         proxy.sendMessage(announcement);
-        var screen = Component.join(JoinConfiguration.newlines(), messages.getLines("wartungen.kick-screen", ip()));
+        var screen = Component.join(JoinConfiguration.newlines(), messages.getLines("wartungen.kick-screen"));
         for (Player player : proxy.getAllPlayers()) {
             if (!player.hasPermission(SystemPermissions.MAINTENANCE_JOIN)) {
                 player.disconnect(screen);
@@ -91,10 +85,6 @@ public final class WartungenCommand {
     }
 
     private Component countdown(String key) {
-        return messages.get(key, ip());
-    }
-
-    private TagResolver ip() {
-        return Placeholder.unparsed("ip", config.network().ip());
+        return messages.get(key);
     }
 }

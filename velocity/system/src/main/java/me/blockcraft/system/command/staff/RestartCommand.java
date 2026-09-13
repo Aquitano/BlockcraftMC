@@ -5,11 +5,9 @@ import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import me.blockcraft.common.message.Messages;
-import me.blockcraft.system.SystemConfig;
 import me.blockcraft.system.SystemPermissions;
 import me.blockcraft.system.command.CommandSupport;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -20,15 +18,13 @@ public final class RestartCommand {
     private final Object plugin;
     private final CommandSupport support;
     private final ProxyServer proxy;
-    private final SystemConfig config;
     private final Messages messages;
     private final AtomicBoolean pending = new AtomicBoolean();
 
-    public RestartCommand(Object plugin, CommandSupport support, ProxyServer proxy, SystemConfig config, Messages messages) {
+    public RestartCommand(Object plugin, CommandSupport support, ProxyServer proxy, Messages messages) {
         this.plugin = plugin;
         this.support = support;
         this.proxy = proxy;
-        this.config = config;
         this.messages = messages;
     }
 
@@ -58,6 +54,6 @@ public final class RestartCommand {
     }
 
     private Component countdown(String key) {
-        return messages.get(key, Placeholder.unparsed("ip", config.network().ip()));
+        return messages.get(key);
     }
 }

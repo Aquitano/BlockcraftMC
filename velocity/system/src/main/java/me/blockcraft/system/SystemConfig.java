@@ -2,7 +2,9 @@ package me.blockcraft.system;
 
 import me.blockcraft.common.config.YamlFile;
 import me.blockcraft.common.db.DatabaseConfig;
+import me.blockcraft.common.message.Messages;
 import me.blockcraft.system.moderation.PunishmentPreset;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
@@ -38,12 +40,14 @@ public final class SystemConfig {
     private final Map<String, Object> root;
     private final DatabaseConfig database;
     private final Network network;
+    private final TagResolver networkTags;
     private final String lobbyGroup;
     private final Discovery discovery;
     private final Alerts alerts;
     private final int maxWarns;
     private final int maxStrikes;
     private final int autoBroadcastMinutes;
+    private final int tabRefreshSeconds;
     private final int discordCodeMinutes;
     private final JoinMe joinMe;
     private final Set<String> unbannable;
@@ -60,6 +64,7 @@ public final class SystemConfig {
         var network = YamlFile.section(root, "network");
         this.network = new Network(string(network, "ip"), string(network, "website"), string(network, "shop"),
                 string(network, "teamspeak"), string(network, "discord"));
+        this.networkTags = Messages.tagsOf(network);
         this.lobbyGroup = string(root, "lobby-group");
         var discovery = YamlFile.section(root, "discovery");
         this.discovery = new Discovery(number(discovery, "poll-seconds", 5), number(discovery, "stale-seconds", 20));
@@ -68,6 +73,7 @@ public final class SystemConfig {
         this.maxWarns = number(root, "max-warns", 8);
         this.maxStrikes = number(root, "max-strikes", 5);
         this.autoBroadcastMinutes = number(root, "auto-broadcast-minutes", 5);
+        this.tabRefreshSeconds = number(YamlFile.section(root, "tab"), "refresh-seconds", 5);
         this.discordCodeMinutes = number(root, "discord-code-minutes", 10);
         var joinMe = YamlFile.section(root, "joinme");
         this.joinMe = new JoinMe(number(joinMe, "daily-limit", 6), number(joinMe, "reset-hour", 0));
@@ -92,6 +98,11 @@ public final class SystemConfig {
         return network;
     }
 
+    /** The network addresses as tags, resolved in every message of this plugin. */
+    public TagResolver networkTags() {
+        return networkTags;
+    }
+
     public String lobbyGroup() {
         return lobbyGroup;
     }
@@ -114,6 +125,10 @@ public final class SystemConfig {
 
     public int autoBroadcastMinutes() {
         return autoBroadcastMinutes;
+    }
+
+    public int tabRefreshSeconds() {
+        return tabRefreshSeconds;
     }
 
     public int discordCodeMinutes() {

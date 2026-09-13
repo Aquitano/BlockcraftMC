@@ -66,11 +66,11 @@ public final class LoginListener {
         return EventTask.async(() -> {
             Player player = event.getPlayer();
             if (settings.maintenance() && !player.hasPermission(SystemPermissions.MAINTENANCE_JOIN)) {
-                event.setResult(ComponentResult.denied(screen("login.maintenance", network())));
+                event.setResult(ComponentResult.denied(screen("login.maintenance")));
                 return;
             }
             if (proxy.getPlayerCount() >= config.maxPlayers() && !player.hasPermission(SystemPermissions.FULL_JOIN)) {
-                event.setResult(ComponentResult.denied(screen("login.full", network(), Formatter.number("max", config.maxPlayers()))));
+                event.setResult(ComponentResult.denied(screen("login.full", Formatter.number("max", config.maxPlayers()))));
                 return;
             }
             try {
@@ -86,7 +86,7 @@ public final class LoginListener {
             } catch (DatabaseException e) {
                 // Velocity would log the exception and let the login through, ban check included.
                 logger.error("Could not check {} against the database, refusing the login", player.getUsername(), e);
-                event.setResult(ComponentResult.denied(screen("login.error", network())));
+                event.setResult(ComponentResult.denied(screen("login.error")));
             }
         });
     }
@@ -100,7 +100,7 @@ public final class LoginListener {
                 return;
             }
             if (firstJoins.remove(player.getUniqueId())) {
-                var welcome = messages.getLines("login.welcome", network(),
+                var welcome = messages.getLines("login.welcome",
                         Placeholder.unparsed("player", player.getUsername()), Formatter.number("number", players.count()));
                 for (Player all : proxy.getAllPlayers()) {
                     welcome.forEach(all::sendMessage);
@@ -114,11 +114,5 @@ public final class LoginListener {
 
     private Component screen(String key, TagResolver... placeholders) {
         return Component.join(JoinConfiguration.newlines(), messages.getLines(key, placeholders));
-    }
-
-    private TagResolver network() {
-        return TagResolver.resolver(
-                Placeholder.unparsed("ip", config.network().ip()),
-                Placeholder.unparsed("discord", config.network().discord()));
     }
 }

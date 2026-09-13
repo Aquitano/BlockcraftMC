@@ -13,10 +13,12 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 
-/** Keeps every player's tab header and footer (player count as they may see it, current server, links) current. */
-public final class TabHeaderListener {
+/**
+ * Keeps every player's tab header and footer (player count as they may see it, current server, links) current.
+ * The ticking refresh is what keeps the count honest: a player hopping servers changes what others may see.
+ */
+public final class TabHeaderListener implements Runnable {
 
     private final ProxyServer proxy;
     private final PlayerVisibility visibility;
@@ -40,16 +42,17 @@ public final class TabHeaderListener {
         refreshAll();
     }
 
+    @Override
+    public void run() {
+        refreshAll();
+    }
+
     public void refreshAll() {
-        var shared = TagResolver.resolver(
-                Placeholder.unparsed("ip", config.network().ip()),
-                Placeholder.unparsed("discord", config.network().discord()),
-                Placeholder.unparsed("website", config.network().website()),
-                Formatter.number("max", config.maxPlayers()));
+        var max = Formatter.number("max", config.maxPlayers());
         for (Player player : proxy.getAllPlayers()) {
             var online = Formatter.number("online", visibility.countFor(player));
-            var header = Component.join(JoinConfiguration.newlines(), messages.getLines("tab.header", shared, online));
-            var footer = Component.join(JoinConfiguration.newlines(), messages.getLines("tab.footer", shared, online,
+            var header = Component.join(JoinConfiguration.newlines(), messages.getLines("tab.header", max, online));
+            var footer = Component.join(JoinConfiguration.newlines(), messages.getLines("tab.footer", max, online,
                     Placeholder.unparsed("server", CommandSupport.currentServer(player))));
             player.sendPlayerListHeaderAndFooter(header, footer);
         }

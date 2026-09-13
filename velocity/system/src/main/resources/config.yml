@@ -28,12 +28,16 @@ alerts:
 # Edited in-game by /setmax and /motd; MOTD lines use legacy & colour codes.
 max-players: 100
 motd:
-  default: "&cBlockcraft.net"
+  default: "&cBlockcraftMC.net"
   random: []
 
 max-warns: 8
 max-strikes: 5
 auto-broadcast-minutes: 5
+
+# How often the tab list header and footer are rewritten, so the player count there does not go stale.
+tab:
+  refresh-seconds: 5
 
 # How long a code from /discord link stays valid; the invite itself is network.discord.
 discord-code-minutes: 10

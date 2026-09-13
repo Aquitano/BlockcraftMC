@@ -118,7 +118,8 @@ public final class SystemPlugin {
 
     private void enable() {
         var config = SystemConfig.load(dataDirectory.resolve("config.yml"), () -> getClass().getResourceAsStream("/config.yml"));
-        var messages = Messages.load(dataDirectory, () -> getClass().getResourceAsStream("/messages.yml"));
+        var loaded = Messages.load(dataDirectory, () -> getClass().getResourceAsStream("/messages.yml"));
+        var messages = loaded.with(config.networkTags(), loaded.tagsOf("palette"));
         database = Database.connect(config.database(), "BlockcraftSystem");
         var repositories = ModerationRepositories.create(database);
         repositories.createTables();
@@ -170,7 +171,7 @@ public final class SystemPlugin {
         register(new TempMuteCommand(support, lookup, punishments, messages).create());
         register(new UnmuteCommand(support, lookup, punishments, messages).create());
         register(new MuteListCommand(support, lookup, repositories.punishments(), messages).create());
-        register(new KickCommand(support, proxy, visibility, config, messages).create());
+        register(new KickCommand(support, proxy, visibility, messages).create());
         register(new CheckCommand(support, lookup, punishments, messages).create());
         register(new StrafeCommand(support, lookup, punishments, config, messages).create());
         register(new StrikeCommand(support, visibility, repositories.strikes(), punishments, config, messages).create());
@@ -187,14 +188,14 @@ public final class SystemPlugin {
         register(new ClearChatCommand(support, messages).create(), "clearchat");
         register(new GlobalMuteCommand(support, proxy, settings, messages).create());
         register(new BroadcastCommand(support, proxy, messages).create());
-        register(new WartungenCommand(this, support, proxy, settings, config, messages).create());
-        register(new RestartCommand(this, support, proxy, config, messages).create());
+        register(new WartungenCommand(this, support, proxy, settings, messages).create());
+        register(new RestartCommand(this, support, proxy, messages).create());
         register(new AddPremiumCommand(support, proxy, lookup, messages).create());
         register(new SetMaxCommand(support, config, messages).create());
         register(new MotdCommand(support, config, messages).create());
         register(new ServerJoinCommand(support, proxy, messages).create());
         register(new ServersCommand(support, servers, config, messages).create());
-        register(new ListCommand(support, visibility, config, messages).create());
+        register(new ListCommand(support, visibility, messages).create());
         register(new WhoisCommand(support, lookup, repositories.players(), repositories.strikes(), repositories.warns(),
                 punishments, playtime, messages).create());
 
@@ -209,8 +210,8 @@ public final class SystemPlugin {
         var joinMe = new JoinMeCommand(support, proxy, visibility, config, directory, messages);
         register(joinMe.create());
         register(new SupportCommand(support, proxy, supportSessions, muteGate, messages).create());
-        register(new YouTuberCommand(support, config, messages).create(), "youtube", "yt");
-        register(new PremiumCommand(support, config, messages).create(), "shop");
+        register(new YouTuberCommand(support, messages).create(), "youtube", "yt");
+        register(new PremiumCommand(support, messages).create(), "shop");
         register(new DiscordCommand(support, discordLinks, config, messages).create());
         register(new PingCommand(support, messages).create());
         register(new ModCommand(support, proxy, messages).create());
@@ -223,7 +224,10 @@ public final class SystemPlugin {
                         config.discovery().staleSeconds(), logger))
                 .repeat(config.discovery().pollSeconds(), TimeUnit.SECONDS)
                 .schedule();
-        proxy.getScheduler().buildTask(this, new AutoBroadcast(proxy, config, messages))
+        proxy.getScheduler().buildTask(this, tabHeader)
+                .repeat(config.tabRefreshSeconds(), TimeUnit.SECONDS)
+                .schedule();
+        proxy.getScheduler().buildTask(this, new AutoBroadcast(proxy, messages))
                 .repeat(config.autoBroadcastMinutes(), TimeUnit.MINUTES)
                 .schedule();
         DailySchedule.at(config.joinMe().resetHour(), proxy.getScheduler(), this, joinMe::resetDailyUses);
