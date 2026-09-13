@@ -15,31 +15,60 @@ import java.util.function.Supplier;
 
 /**
  * MiniMessage strings loaded from a plugin's {@code messages.yml}, bundled defaults underneath;
- * {@code <prefix>} resolves to the {@code prefix} key everywhere.
+ * {@code <prefix>} resolves to the {@code prefix} key everywhere, and the global resolvers a module
+ * is loaded with (the network tags and the colour palette) resolve in every message too.
  */
 public final class Messages {
 
     private static final MiniMessage MINI = MiniMessage.miniMessage();
 
     private final Map<String, String> messages;
-    private final TagResolver prefix;
+    private final TagResolver globals;
 
-    private Messages(Map<String, String> messages) {
+    private Messages(Map<String, String> messages, TagResolver globals) {
         this.messages = messages;
-        this.prefix = Placeholder.parsed("prefix", messages.getOrDefault("prefix", ""));
+        this.globals = TagResolver.resolver(Placeholder.parsed("prefix", messages.getOrDefault("prefix", "")), globals);
     }
 
-    public static Messages load(Path dataDirectory, Supplier<InputStream> bundledDefault) {
-        return new Messages(YamlFile.flatten(YamlFile.loadWithDefaults(dataDirectory.resolve("messages.yml"), bundledDefault)));
+    public static Messages load(Path dataDirectory, Supplier<InputStream> bundledDefault, TagResolver... globals) {
+        return new Messages(YamlFile.flatten(YamlFile.loadWithDefaults(dataDirectory.resolve("messages.yml"), bundledDefault)),
+                TagResolver.resolver(globals));
+    }
+
+    /** The same strings with more global resolvers; used to fold tags built from this very file back into it. */
+    public Messages with(TagResolver... extra) {
+        return new Messages(messages, TagResolver.resolver(globals, TagResolver.resolver(extra)));
+    }
+
+    /**
+     * Every direct child of {@code section} as a tag named after its key, so {@code palette.primary} becomes
+     * {@code <primary>}. The values are spliced into the message before it is parsed, so a colour tag colours
+     * whatever follows it.
+     */
+    public TagResolver tagsOf(String section) {
+        String prefix = section + ".";
+        var tags = messages.entrySet().stream()
+                .filter(entry -> entry.getKey().startsWith(prefix) && entry.getKey().indexOf('.', prefix.length()) < 0)
+                .map(entry -> Placeholder.parsed(entry.getKey().substring(prefix.length()), entry.getValue()))
+                .toList();
+        return TagResolver.resolver(tags);
+    }
+
+    /** Every scalar of a config section as an unparsed tag named after its key; used for the network addresses. */
+    public static TagResolver tagsOf(Map<String, Object> section) {
+        return TagResolver.resolver(section.entrySet().stream()
+                .filter(entry -> !(entry.getValue() instanceof Map<?, ?>) && !(entry.getValue() instanceof List<?>))
+                .map(entry -> Placeholder.unparsed(entry.getKey(), String.valueOf(entry.getValue())))
+                .toList());
     }
 
     public Component get(String key, TagResolver... resolvers) {
-        return MINI.deserialize(raw(key), TagResolver.resolver(prefix, TagResolver.resolver(resolvers)));
+        return MINI.deserialize(raw(key), TagResolver.resolver(globals, TagResolver.resolver(resolvers)));
     }
 
     /** Multi-line messages are written as a YAML list. */
     public List<Component> getLines(String key, TagResolver... resolvers) {
-        TagResolver all = TagResolver.resolver(prefix, TagResolver.resolver(resolvers));
+        TagResolver all = TagResolver.resolver(globals, TagResolver.resolver(resolvers));
         return Arrays.stream(raw(key).split("\n", -1)).map(line -> MINI.deserialize(line, all)).toList();
     }
 
