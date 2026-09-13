@@ -19,7 +19,11 @@ public final class YamlFile {
     private YamlFile() {
     }
 
-    /** Copies the bundled default to {@code target} if it does not exist yet, then loads it. */
+    /**
+     * Copies the bundled default to {@code target} if it does not exist yet, then loads the file with every key it
+     * lacks taken from the bundled default, so a plugin update never runs on missing settings. Sections merge
+     * key by key; lists and scalars in the file win as a whole.
+     */
     public static Map<String, Object> loadWithDefaults(Path target, Supplier<InputStream> bundledDefault) {
         try {
             if (Files.notExists(target)) {
@@ -28,12 +32,26 @@ public final class YamlFile {
                     Files.copy(in, target, StandardCopyOption.REPLACE_EXISTING);
                 }
             }
+            Map<String, Object> defaults;
+            try (InputStream in = bundledDefault.get()) {
+                defaults = load(in);
+            }
             try (InputStream in = Files.newInputStream(target)) {
-                return load(in);
+                return merge(defaults, load(in));
             }
         } catch (IOException e) {
             throw new UncheckedIOException("Could not load " + target, e);
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> merge(Map<String, Object> defaults, Map<String, Object> overrides) {
+        var merged = new LinkedHashMap<>(defaults);
+        overrides.forEach((key, value) -> merged.merge(key, value, (fallback, override) ->
+                fallback instanceof Map<?, ?> && override instanceof Map<?, ?>
+                        ? merge((Map<String, Object>) fallback, (Map<String, Object>) override)
+                        : override));
+        return merged;
     }
 
     public static Map<String, Object> load(InputStream in) {

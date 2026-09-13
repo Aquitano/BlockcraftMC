@@ -6,19 +6,16 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
 /**
- * MiniMessage strings loaded from a plugin's {@code messages.yml}. Keys missing from the user's file
- * fall back to the bundled defaults; {@code <prefix>} resolves to the {@code prefix} key everywhere.
+ * MiniMessage strings loaded from a plugin's {@code messages.yml}, bundled defaults underneath;
+ * {@code <prefix>} resolves to the {@code prefix} key everywhere.
  */
 public final class Messages {
 
@@ -33,14 +30,7 @@ public final class Messages {
     }
 
     public static Messages load(Path dataDirectory, Supplier<InputStream> bundledDefault) {
-        Map<String, String> merged = new HashMap<>();
-        try (InputStream in = bundledDefault.get()) {
-            merged.putAll(YamlFile.flatten(YamlFile.load(in)));
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-        merged.putAll(YamlFile.flatten(YamlFile.loadWithDefaults(dataDirectory.resolve("messages.yml"), bundledDefault)));
-        return new Messages(merged);
+        return new Messages(YamlFile.flatten(YamlFile.loadWithDefaults(dataDirectory.resolve("messages.yml"), bundledDefault)));
     }
 
     public Component get(String key, TagResolver... resolvers) {
