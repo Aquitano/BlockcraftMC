@@ -158,7 +158,7 @@ public final class SystemPlugin {
         events.register(this, new InitialServerListener(lobby));
         events.register(this, new ProxyMessageListener(proxy, lobby, visibility, tabHeader, logger));
         events.register(this, new TabCompleteListener());
-        events.register(this, new MotdListener(visibility, config, settings, messages));
+        events.register(this, new MotdListener(visibility, config, settings, messages, dataDirectory, logger));
         events.register(this, new PartyListener(parties));
         events.register(this, new SupportListener(supportSessions));
         events.register(this, playtime);

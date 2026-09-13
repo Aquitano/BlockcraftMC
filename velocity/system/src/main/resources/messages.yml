@@ -113,6 +113,14 @@ motd:
   maintenance-version: "<error>Wartungsmodus <muted><online><dark>/<muted><max>"
   maintenance-line: "<muted>Der <error>Wartungsmodus<muted> ist derzeit aktiviert!"
   wrong-version: "<dark_red><bold>Falsche Version!"
+  # Shown where the client would list who is online.
+  sample:
+    - "<accent><ip>"
+    - "<muted>Online: <accent><online><dark>/<muted><max>"
+    - ""
+    - "<muted>Discord <dark>● <accent><discord>"
+    - "<muted>Website <dark>● <accent><website>"
+    - "<muted>Shop <dark>● <accent><shop>"
   usage:
     - "<prefix><error>/motd setdefault \\<motd>"
     - "<prefix><error>/motd add \\<motd>"
