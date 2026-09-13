@@ -46,6 +46,9 @@ public final class KickCommand {
             source.sendMessage(messages.get("kick.offline"));
             return;
         }
+        if (!support.mayModerate(source, target.get().getUniqueId())) {
+            return;
+        }
         source.sendMessage(messages.get("kick.done"));
         var placeholders = TagResolver.resolver(
                 Placeholder.unparsed("player", target.get().getUsername()),

@@ -25,8 +25,7 @@ public final class FreezeCommand {
                         .executes(context -> {
                             var staff = context.getSource().getPlayerOrThrow();
                             var target = Players.resolve(context, "player");
-                            if (target.equals(staff)) {
-                                staff.sendMessage(messages.get("freeze.self"));
+                            if (!TargetGuard.notSelf(staff, target, messages) || !TargetGuard.mayTarget(staff, target, messages)) {
                                 return Command.SINGLE_SUCCESS;
                             }
                             staff.sendMessage(messages.get(freeze.toggle(target, staff) ? "freeze.frozen" : "freeze.unfrozen",

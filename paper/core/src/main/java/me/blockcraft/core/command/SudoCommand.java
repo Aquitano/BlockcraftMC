@@ -32,6 +32,9 @@ public final class SudoCommand {
                                 .executes(context -> {
                                     var sender = context.getSource().getSender();
                                     var target = Players.resolve(context, "player");
+                                    if (!TargetGuard.notSelf(sender, target, messages) || !TargetGuard.mayTarget(sender, target, messages)) {
+                                        return Command.SINGLE_SUCCESS;
+                                    }
                                     if (target.isOp() || protectedNames.contains(target.getName().toLowerCase())) {
                                         sender.sendMessage(messages.get("sudo.protected"));
                                         return Command.SINGLE_SUCCESS;

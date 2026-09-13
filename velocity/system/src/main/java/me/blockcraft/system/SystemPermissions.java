@@ -30,6 +30,7 @@ public final class SystemPermissions {
     public static final String MOTD = ROOT + "motd";
     public static final String JOIN_ME = ROOT + "joinme";
     public static final String MSG = ROOT + "msg";
+    public static final String DISCORD = ROOT + "discord";
     public static final String JOIN_ME_NO_DELAY = ROOT + "joinme.nodelay";
     public static final String JOIN_ME_CLEAR = ROOT + "joinme.clear";
     public static final String SUPPORT_STAFF = ROOT + "support.staff";
@@ -38,6 +39,7 @@ public final class SystemPermissions {
     public static final String FULL_JOIN = ROOT + "fulljoin";
     public static final String BLOCKED_COMMANDS_BYPASS = ROOT + "blockedcommands.bypass";
     public static final String TAB_COMPLETE = ROOT + "tab";
+    public static final String BYPASS_RANK = ROOT + "bypass-rank";
     public static final String PREMIUM_GROUP = "group.premium";
 
     public static final String SEEN = "blockcraft.seen";

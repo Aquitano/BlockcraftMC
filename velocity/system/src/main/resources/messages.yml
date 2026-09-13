@@ -123,6 +123,10 @@ setmax:
   current: "<prefix><gray>Es können maximal <aqua><max><gray> Spieler online!"
   done: "<prefix><gray>Die maximale <aqua>Spieleranzahl<gray> wurde zu <aqua><max><gray> gesetzt!"
 
+moderation:
+  self: "<prefix><red>Das kannst du nicht mit dir selbst machen."
+  protected: "<prefix><red>Dieser Spieler steht im Rang über dir oder gleich mit dir."
+
 ban:
   use-strafe: "<prefix><red>Nutze Folgendes: <dark_aqua>/strafe"
   notify:
@@ -325,7 +329,6 @@ delstrike:
 
 warn:
   usage: "<prefix><red>/warn \\<player> [reason]"
-  self: "<prefix><gray>Du kannst dich nicht selbst warnen!"
   protected: "<prefix><gray>Du kannst diesen<red> Spieler<gray> nicht warnen."
   offline: "<prefix><gray>Der <red>Spieler<gray> wurde nicht gefunden oder ist offline! "
   offline-click: "<green>Hier klicken<red>, um \"<gold><player><red>\" trotzdem zu warnen."
@@ -599,3 +602,18 @@ party:
   chat-empty: "<gold>Party <dark_gray>» <reset><yellow>Die Nachricht darf nicht leer sein."
   leader-moved: "<gold>Party <dark_gray>» <reset><green>Die Party hat den Server <aqua><server><green> betreten."
   following: "<gold>Party <dark_gray>» <reset><green>Die Party betritt den Server <aqua><server><green>."
+
+discord:
+  invite: "<prefix><gray>Unser Discord: <aqua><discord>"
+  status-linked: "<prefix><gray>Dein Account ist mit Discord <aqua><id> <gray>verknüpft. Lösen mit <aqua>/discord unlink<gray>."
+  status-pending: "<prefix><gray>Dein Code <aqua><code> <gray>wartet noch auf den Bot. Sende ihm <aqua>/link <code><gray>."
+  status-unlinked: "<prefix><gray>Dein Account ist noch nicht mit Discord verknüpft. Starte mit <aqua>/discord link<gray>."
+  code: "<prefix><green>Sende <aqua>/link <code> <green>innerhalb von <aqua><minutes> Minuten <green>an unseren Discord-Bot."
+  already-linked: "<prefix><red>Dein Account ist bereits mit Discord verknüpft. Nutze zuerst <gold>/discord unlink<red>."
+  unlinked: "<prefix><green>Die Verknüpfung mit Discord wurde gelöst."
+  not-linked: "<prefix><red>Dein Account ist nicht mit Discord verknüpft."
+
+# Text for the Discord webhook in config.yml, plain: it never reaches a Minecraft chat.
+alerts:
+  no-lobby: "Auf <ip> ist keine Lobby mehr erreichbar! Online: <online> Spieler."
+  lobby-back: "Auf <ip> ist wieder eine Lobby erreichbar. Online: <online> Spieler."

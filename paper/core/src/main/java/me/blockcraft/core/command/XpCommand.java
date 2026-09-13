@@ -29,9 +29,13 @@ public final class XpCommand {
                         })
                         .then(Commands.argument("level", IntegerArgumentType.integer(0))
                                 .executes(context -> {
+                                    var sender = context.getSource().getSender();
                                     var target = Players.resolve(context, "player");
+                                    if (!TargetGuard.mayTarget(sender, target, messages)) {
+                                        return Command.SINGLE_SUCCESS;
+                                    }
                                     int level = IntegerArgumentType.getInteger(context, "level");
-                                    context.getSource().getSender().sendMessage(messages.get("xp.done",
+                                    sender.sendMessage(messages.get("xp.done",
                                             Placeholder.unparsed("player", target.getName()),
                                             Formatter.number("level", level)));
                                     target.setLevel(level);

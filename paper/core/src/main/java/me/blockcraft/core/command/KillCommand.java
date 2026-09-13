@@ -22,8 +22,12 @@ public final class KillCommand {
                 })
                 .then(Commands.argument("player", ArgumentTypes.player())
                         .executes(context -> {
+                            var sender = context.getSource().getSender();
                             var target = Players.resolve(context, "player");
-                            context.getSource().getSender().sendMessage(messages.get("kill.done", Placeholder.unparsed("player", target.getName())));
+                            if (!TargetGuard.mayTarget(sender, target, messages)) {
+                                return Command.SINGLE_SUCCESS;
+                            }
+                            sender.sendMessage(messages.get("kill.done", Placeholder.unparsed("player", target.getName())));
                             target.setHealth(0.0);
                             return Command.SINGLE_SUCCESS;
                         }))

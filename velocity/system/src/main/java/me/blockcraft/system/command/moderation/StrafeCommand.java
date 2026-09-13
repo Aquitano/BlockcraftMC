@@ -61,6 +61,9 @@ public final class StrafeCommand {
             source.sendMessage(messages.get("player-unknown", Placeholder.unparsed("player", name)));
             return;
         }
+        if (!support.mayModerate(source, target.get().uuid())) {
+            return;
+        }
         String issuer = CommandSupport.senderName(source);
         var existing = preset.type() == PunishmentType.BAN ? punishments.activeBan(target.get()) : punishments.activeMute(target.get());
         if (existing.isPresent()) {

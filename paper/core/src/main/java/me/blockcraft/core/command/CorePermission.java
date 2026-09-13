@@ -7,6 +7,8 @@ import java.util.function.Predicate;
 
 final class CorePermission {
 
+    static final String BYPASS_RANK = "blockcraft.core.bypass-rank";
+
     private CorePermission() {
     }
 

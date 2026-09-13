@@ -30,9 +30,13 @@ public final class TpCommand {
                         })
                         .then(Commands.argument("to", ArgumentTypes.player())
                                 .executes(context -> {
+                                    var sender = context.getSource().getSender();
                                     var from = Players.resolve(context, "player");
                                     var to = Players.resolve(context, "to");
-                                    context.getSource().getSender().sendMessage(messages.get("tp.other",
+                                    if (!TargetGuard.mayTarget(sender, from, messages)) {
+                                        return Command.SINGLE_SUCCESS;
+                                    }
+                                    sender.sendMessage(messages.get("tp.other",
                                             Placeholder.unparsed("from", from.getName()),
                                             Placeholder.unparsed("to", to.getName())));
                                     from.teleport(to);

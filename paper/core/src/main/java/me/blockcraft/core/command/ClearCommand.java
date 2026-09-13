@@ -22,8 +22,12 @@ public final class ClearCommand {
                 })
                 .then(Commands.argument("player", ArgumentTypes.player())
                         .executes(context -> {
+                            var sender = context.getSource().getSender();
                             var target = Players.resolve(context, "player");
-                            context.getSource().getSender().sendMessage(messages.get("clear.done", Placeholder.unparsed("player", target.getName())));
+                            if (!TargetGuard.mayTarget(sender, target, messages)) {
+                                return Command.SINGLE_SUCCESS;
+                            }
+                            sender.sendMessage(messages.get("clear.done", Placeholder.unparsed("player", target.getName())));
                             target.getInventory().clear();
                             return Command.SINGLE_SUCCESS;
                         }))

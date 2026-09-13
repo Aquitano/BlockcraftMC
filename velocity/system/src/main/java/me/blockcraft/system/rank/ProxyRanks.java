@@ -33,4 +33,21 @@ public final class ProxyRanks {
             return Optional.empty();
         }
     }
+
+    /** The heaviest inherited group decides, like the tab list sorting; equal weight does not outrank. */
+    public static boolean outranks(Player actor, UUID target) {
+        try {
+            return weight(actor.getUniqueId()) > weight(target);
+        } catch (IllegalStateException | NoClassDefFoundError noLuckPerms) {
+            return true;
+        }
+    }
+
+    private static int weight(UUID player) {
+        var user = LuckPermsProvider.get().getUserManager().loadUser(player).join();
+        return user.getInheritedGroups(user.getQueryOptions()).stream()
+                .mapToInt(group -> group.getWeight().orElse(0))
+                .max()
+                .orElse(0);
+    }
 }

@@ -55,6 +55,9 @@ public final class StrikeCommand {
             return;
         }
         var player = target.get();
+        if (!support.mayModerate(source, player.getUniqueId())) {
+            return;
+        }
         if (!player.hasPermission(SystemPermissions.STRIKES)) {
             source.sendMessage(messages.get("strike.target-needs-permission",
                     Placeholder.unparsed("player", player.getUsername()), Placeholder.unparsed("permission", SystemPermissions.STRIKES)));

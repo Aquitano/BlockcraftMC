@@ -59,7 +59,6 @@ vanish:
   disabled: "<prefix><gray>Du bist nun wieder sichtbar!"
 freeze:
   usage: "<prefix><red>Benutze /freeze <Name>"
-  self: "<prefix><red>Du kannst dich nicht selbst einfrieren."
   frozen: "<prefix><gray>Du hast <white><player> <gray>eingefroren."
   unfrozen: "<prefix><gray>Du hast <white><player> <gray>wieder freigegeben."
   released: "<prefix><green>Du wurdest wieder freigegeben."
@@ -122,6 +121,9 @@ team:
     - "  <aqua>/rush endshop"
     - "  <aqua>/rush shop"
     - "  <aqua>/rushcoins set <gray>[Name] [Emeralds]"
+rank:
+  protected: "<prefix><red>Dieser Spieler steht im Rang über dir oder gleich mit dir."
+  self: "<prefix><red>Das kannst du nicht mit dir selbst machen."
 duration:
   second: Sekunde
   seconds: Sekunden

@@ -30,14 +30,18 @@ public final class SetHealthCommand {
                         })
                         .then(Commands.argument("health", IntegerArgumentType.integer(1, 1024))
                                 .executes(context -> {
+                                    var sender = context.getSource().getSender();
                                     var target = Players.resolve(context, "player");
+                                    if (!TargetGuard.mayTarget(sender, target, messages)) {
+                                        return Command.SINGLE_SUCCESS;
+                                    }
                                     int health = IntegerArgumentType.getInteger(context, "health");
                                     var maxHealth = target.getAttribute(Attribute.MAX_HEALTH);
                                     if (maxHealth != null) {
                                         maxHealth.setBaseValue(health);
                                     }
                                     target.setHealth(health);
-                                    context.getSource().getSender().sendMessage(messages.get("sethealth.done",
+                                    sender.sendMessage(messages.get("sethealth.done",
                                             Placeholder.unparsed("player", target.getName()),
                                             Formatter.number("health", health)));
                                     return Command.SINGLE_SUCCESS;

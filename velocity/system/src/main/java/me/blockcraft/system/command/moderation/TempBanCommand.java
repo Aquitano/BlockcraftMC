@@ -58,6 +58,9 @@ public final class TempBanCommand {
             source.sendMessage(messages.get("player-unknown", Placeholder.unparsed("player", name)));
             return;
         }
+        if (!support.mayModerate(source, target.get().uuid())) {
+            return;
+        }
         if (punishments.activeBan(target.get()).isPresent()) {
             source.sendMessage(messages.get("tempban.already-banned"));
             return;

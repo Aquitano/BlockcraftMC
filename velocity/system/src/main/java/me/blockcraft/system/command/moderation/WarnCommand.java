@@ -72,13 +72,12 @@ public final class WarnCommand {
     private void warn(CommandSource source, String argument, Optional<String> reason) {
         boolean forced = argument.endsWith(FORCE_SUFFIX);
         String name = forced ? argument.substring(0, argument.length() - FORCE_SUFFIX.length()) : argument;
-        if (source instanceof Player sender && sender.getUsername().equalsIgnoreCase(name)) {
-            source.sendMessage(messages.get("warn.self"));
-            return;
-        }
         var target = lookup.find(name);
         if (target.isEmpty()) {
             source.sendMessage(messages.get("player-unknown", Placeholder.unparsed("player", name)));
+            return;
+        }
+        if (!support.mayModerate(source, target.get().uuid())) {
             return;
         }
         if (target.get().online().isPresent()) {

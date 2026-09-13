@@ -17,4 +17,17 @@ public final class Ranks {
         var meta = LuckPermsProvider.get().getPlayerAdapter(Player.class).getMetaData(player);
         return Optional.ofNullable(meta.getPrefix()).map(LegacyComponentSerializer.legacyAmpersand()::deserialize);
     }
+
+    /** The heaviest inherited group decides, like the tab list sorting; equal weight does not outrank. */
+    public static boolean outranks(Player actor, Player target) {
+        return weight(actor) > weight(target);
+    }
+
+    private static int weight(Player player) {
+        var user = LuckPermsProvider.get().getPlayerAdapter(Player.class).getUser(player);
+        return user.getInheritedGroups(user.getQueryOptions()).stream()
+                .mapToInt(group -> group.getWeight().orElse(0))
+                .max()
+                .orElse(0);
+    }
 }

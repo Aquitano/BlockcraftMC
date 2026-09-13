@@ -30,6 +30,9 @@ public final class InvseeCommand {
     }
 
     public static void open(Player viewer, Player target, Messages messages) {
+        if (!TargetGuard.notSelf(viewer, target, messages) || !TargetGuard.mayTarget(viewer, target, messages)) {
+            return;
+        }
         viewer.closeInventory();
         viewer.openInventory(target.getInventory());
         viewer.sendMessage(messages.get("invsee.opened", Placeholder.unparsed("player", target.getName())));

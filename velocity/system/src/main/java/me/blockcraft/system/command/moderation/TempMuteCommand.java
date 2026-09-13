@@ -50,6 +50,9 @@ public final class TempMuteCommand {
             source.sendMessage(messages.get("player-unknown", Placeholder.unparsed("player", name)));
             return;
         }
+        if (!support.mayModerate(source, target.get().uuid())) {
+            return;
+        }
         if (punishments.activeMute(target.get()).isPresent()) {
             source.sendMessage(messages.get("tempmute.already-muted"));
             return;

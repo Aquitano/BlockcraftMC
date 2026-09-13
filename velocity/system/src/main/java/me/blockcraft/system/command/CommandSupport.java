@@ -9,7 +9,10 @@ import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.system.SystemPermissions;
+import me.blockcraft.system.rank.ProxyRanks;
 
+import java.util.UUID;
 import java.util.function.Predicate;
 
 /** Shared Brigadier glue: permission predicates, player-only executors, online-name suggestions. */
@@ -60,6 +63,22 @@ public final class CommandSupport {
             }
             return Command.SINGLE_SUCCESS;
         };
+    }
+
+    /** Staff may not punish themselves, nor anyone the rank ladder does not put below them; the console always may. */
+    public boolean mayModerate(CommandSource source, UUID target) {
+        if (!(source instanceof Player actor)) {
+            return true;
+        }
+        if (actor.getUniqueId().equals(target)) {
+            source.sendMessage(messages.get("moderation.self"));
+            return false;
+        }
+        if (actor.hasPermission(SystemPermissions.BYPASS_RANK) || ProxyRanks.outranks(actor, target)) {
+            return true;
+        }
+        source.sendMessage(messages.get("moderation.protected"));
+        return false;
     }
 
     public RequiredArgumentBuilder<CommandSource, String> playerArgument(String name) {
