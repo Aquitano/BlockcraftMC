@@ -15,7 +15,12 @@ README.md; this file only holds what the code does not say by itself.
 
 - Commands are Brigadier (`Commands.literal` on Paper, `BrigadierCommand` on Velocity). No `plugin.yml` command entries.
 - Every player-facing string lives in the module's `messages.yml` (MiniMessage, German). Tunables live in
-  `config.yml`. Never hard-code either; `<prefix>` is available in every message.
+  `config.yml`. Never hard-code either; `<prefix>` is available in every message, and so are the colour palette
+  (`<primary>`, `<accent>`, `<muted>`, `<dark>`, `<success>`, `<error>`, `<bullet>`, `<arrow>`) and the network
+  addresses (`<ip>`, `<website>`, `<shop>`, `<teamspeak>`, `<discord>`). Paper plugins get both from
+  `BlockcraftApi.get().tags()` when they load their messages; the proxy plugins build them from their own config.
+  Write colours as palette tags, never the raw ones, and the brand only as `<ip>`.
+- Command descriptions are messages too: `commands.<name>.description`, registered through `CommandRegistry`.
 - Database access goes through `common`'s `Database` with prepared statements. Table and column names of the legacy
   tables (`VCOINS`, `*_stats`, `*_kits`, `Reports`) stay as they are; new tables are `bc_*`.
 - Anything a player unlocks with coins or by finding it (cosmetics, kits, perks, secrets) is one row in `bc_unlocks`
@@ -24,7 +29,11 @@ README.md; this file only holds what the code does not say by itself.
 - Paper plugins get the one Hikari pool from `BlockcraftApi.get().database()`; they never open their own. Blocking
   work (DB, pings) on hot paths runs through `Tasks.async`, chat listeners use `AsyncChatEvent` and may block.
 - GUIs extend `Menu` (holder-based, never title matching). Open and close other inventories only via `Menu.open` /
-  `Menu.close`; both defer a tick because Bukkit forbids doing it inside `InventoryClickEvent`.
+  `Menu.close`; both defer a tick because Bukkit forbids doing it inside `InventoryClickEvent`. `Menu` fills the
+  empty slots, plays the click sound and owns `backButton`/`closeButton`; a coin purchase goes through
+  `ConfirmMenu` first.
+- Feedback sounds come from `Sounds` in `paper/api` (`Sounds.MENU_CLICK.play(player)`), never from a hand-written
+  volume and pitch; only sounds that belong to a world effect stay at their call site.
 - Ranks come from LuckPerms (`group.<rank>` permissions, `LuckPermsProvider` API). No rank tables, no rank names in
   code; chat and tab show the group prefix via `Ranks.prefix`, and the groups themselves are seeded from
   `luckperms/ranks.json`.

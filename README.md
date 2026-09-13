@@ -27,8 +27,9 @@ one LuckPerms database, otherwise a rank set on one side is unknown on the other
 
 ## Ranks
 
-`luckperms/ranks.json` is a LuckPerms export with the groups the plugins expect. Chat and the lobby tab list render
-the group's prefix in front of the name; the prefix carries the name colour, so it ends in a colour code.
+`luckperms/ranks.json` is a LuckPerms export with the groups the plugins expect. Chat and the tab list of every
+Paper server render the group's prefix in front of the name and sort the tab list by group weight; the prefix
+carries the name colour, so it ends in a colour code.
 
 | Group      | Prefix             | Grants                                                                            |
 |------------|--------------------|-----------------------------------------------------------------------------------|
@@ -45,6 +46,13 @@ Import it once per LuckPerms database (`gzip -k luckperms/ranks.json`, copy the 
 Every plugin ships a `messages.yml` (MiniMessage, German by default) and a `config.yml`; both are copied to the plugin's
 data folder on first start and can be edited there. Keys the edited file lacks come from the bundled default, so a
 plugin update never runs on missing settings.
+
+Two sets of tags resolve in every message. The network addresses (`<ip>`, `<website>`, `<shop>`, `<teamspeak>`,
+`<discord>`) come from `network` in `BlockcraftAPI/config.yml` on the Paper side and from `network` in
+BlockcraftSystem's `config.yml` on the proxy, so the server address is written once. The colour palette
+(`<primary>`, `<accent>`, `<muted>`, `<dark>`, `<success>`, `<error>`, plus `<bullet>` and `<arrow>` for the two
+list shapes) comes from `palette` in `BlockcraftAPI/messages.yml` and from the same section in the proxy plugins'
+`messages.yml`; recolouring the network means editing that one section.
 
 ## Build
 
