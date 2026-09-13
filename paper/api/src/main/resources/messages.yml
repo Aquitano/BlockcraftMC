@@ -30,6 +30,11 @@ menu:
     accept: "<success>Kaufen"
     cancel: "<error>Abbrechen"
 
+# The shared countdown: the last seconds as a title, then the start.
+countdown:
+  seconds: "<primary><seconds>"
+  go: "<success><bold>LOS!"
+
 # The end-of-round recap every game shows; <game> is the game's own name, <winner> the player who won it.
 summary:
   rule: "<dark><strikethrough>                                        "

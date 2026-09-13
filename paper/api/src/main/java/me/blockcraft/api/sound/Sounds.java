@@ -28,10 +28,34 @@ public enum Sounds {
     NOTIFY("block.note_block.pling", 0.8f, 1.8f),
     SECRET("entity.ender_dragon.growl", 0.6f, 1.2f);
 
+    private static final int COUNTDOWN_FROM = 5;
+    private static final float COUNTDOWN_PITCH_STEP = 0.15f;
+
+    private final Key key;
+    private final float volume;
     private final Sound sound;
 
     Sounds(String key, float volume, float pitch) {
-        this.sound = Sound.sound(Key.key(key), Sound.Source.MASTER, volume, pitch);
+        this.key = Key.key(key);
+        this.volume = volume;
+        this.sound = Sound.sound(this.key, Sound.Source.MASTER, volume, pitch);
+    }
+
+    /** The last seconds before a start: the closer to zero, the higher the tick. */
+    public static void countdownTick(int secondsLeft) {
+        Bukkit.getServer().playSound(COUNTDOWN_TICK.at(countdownPitch(secondsLeft)));
+    }
+
+    public static void countdownTick(Player player, int secondsLeft) {
+        player.playSound(COUNTDOWN_TICK.at(countdownPitch(secondsLeft)));
+    }
+
+    private static float countdownPitch(int secondsLeft) {
+        return COUNTDOWN_TICK.sound.pitch() + (COUNTDOWN_FROM - Math.clamp(secondsLeft, 1, COUNTDOWN_FROM)) * COUNTDOWN_PITCH_STEP;
+    }
+
+    private Sound at(float pitch) {
+        return Sound.sound(key, Sound.Source.MASTER, volume, pitch);
     }
 
     public void play(Player player) {

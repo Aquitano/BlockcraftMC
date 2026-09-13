@@ -1,13 +1,16 @@
 package me.blockcraft.api.game;
 
+import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Countdown;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Set;
 import java.util.function.IntConsumer;
@@ -16,14 +19,16 @@ import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
 /**
- * The waiting-lobby countdown every game shares: the remaining seconds are the players' XP level, the last
- * seconds tick audibly, and while fewer than {@code minPlayers} are there the clock stays at its full value
- * instead of running out.
+ * The waiting-lobby countdown every game shares: the remaining seconds are the players' XP level, the last five
+ * count down as a title and tick a note higher each second, and while fewer than {@code minPlayers} are there the
+ * clock stays at its full value instead of running out.
  */
 public final class LobbyCountdown {
 
     private static final Set<Integer> ANNOUNCE_AT = Set.of(60, 30, 15, 10, 5, 4, 3, 2, 1);
     private static final int AUDIBLE_FROM = 5;
+    private static final Title.Times SECOND_TIMES = Title.Times.times(Duration.ZERO, Duration.ofMillis(500), Duration.ofMillis(250));
+    private static final Title.Times GO_TIMES = Title.Times.times(Duration.ZERO, Duration.ofMillis(700), Duration.ofMillis(300));
 
     private final Countdown countdown;
     private final int seconds;
@@ -81,16 +86,24 @@ public final class LobbyCountdown {
                                    IntFunction<Component> title, Runnable onEnd) {
         return Countdown.start(plugin, seconds, remaining -> {
             if (remaining > 0) {
-                var shown = Title.title(title.apply(remaining), Component.empty());
+                var shown = Title.title(title.apply(remaining), Component.empty(), SECOND_TIMES);
                 audience.get().forEach(player -> {
                     player.showTitle(shown);
-                    Sounds.COUNTDOWN_TICK.play(player);
+                    Sounds.countdownTick(player, remaining);
                 });
             }
         }, () -> {
-            audience.get().forEach(Sounds.COUNTDOWN_GO::play);
+            var go = goTitle();
+            audience.get().forEach(player -> {
+                player.showTitle(go);
+                Sounds.COUNTDOWN_GO.play(player);
+            });
             onEnd.run();
         });
+    }
+
+    private static Title goTitle() {
+        return Title.title(BlockcraftApi.get().messages().get("countdown.go"), Component.empty(), GO_TIMES);
     }
 
     private void begin(boolean forced) {
@@ -113,11 +126,16 @@ public final class LobbyCountdown {
             announce.accept(remaining);
         }
         if (remaining > 0 && remaining <= AUDIBLE_FROM) {
-            Sounds.COUNTDOWN_TICK.playToAll();
+            var title = Title.title(BlockcraftApi.get().messages().get("countdown.seconds", Formatter.number("seconds", remaining)),
+                    Component.empty(), SECOND_TIMES);
+            Bukkit.getOnlinePlayers().forEach(player -> player.showTitle(title));
+            Sounds.countdownTick(remaining);
         }
     }
 
     private void finish() {
+        var go = goTitle();
+        Bukkit.getOnlinePlayers().forEach(player -> player.showTitle(go));
         Sounds.COUNTDOWN_GO.playToAll();
         onStart.run();
     }
