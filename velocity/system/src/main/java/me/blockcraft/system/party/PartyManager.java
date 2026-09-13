@@ -24,6 +24,7 @@ public final class PartyManager {
 
     private static final int MAX_MEMBERS = 6;
     private static final Duration INVITE_TTL = Duration.ofSeconds(60);
+    private static final Duration JOIN_REQUEST_COOLDOWN = Duration.ofSeconds(30);
 
     private record Invite(UUID leader, Instant sentAt) {
     }
@@ -33,6 +34,7 @@ public final class PartyManager {
     private final Map<UUID, Party> byLeader = new ConcurrentHashMap<>();
     private final Map<UUID, UUID> leaderByMember = new ConcurrentHashMap<>();
     private final Map<UUID, Invite> invites = new ConcurrentHashMap<>();
+    private final Map<UUID, Instant> joinRequests = new ConcurrentHashMap<>();
 
     public PartyManager(ProxyServer proxy, Messages messages) {
         this.proxy = proxy;
@@ -127,6 +129,30 @@ public final class PartyManager {
                 .hoverEvent(HoverEvent.showText(messages.get("party.invite-accept-hover"))));
     }
 
+    /** Only the leader can let someone in: the request is a clickable /party invite on the leader's screen. */
+    public void requestInvite(Player player, Player leader) {
+        var party = byLeader.get(leader.getUniqueId());
+        if (party == null) {
+            player.sendMessage(messages.get("party.target-not-leader"));
+            return;
+        }
+        if (party.members().size() >= MAX_MEMBERS) {
+            player.sendMessage(messages.get("party.full"));
+            return;
+        }
+        var last = joinRequests.get(player.getUniqueId());
+        if (last != null && Duration.between(last, Instant.now()).compareTo(JOIN_REQUEST_COOLDOWN) < 0) {
+            player.sendMessage(messages.get("party.join-request-cooldown"));
+            return;
+        }
+        joinRequests.put(player.getUniqueId(), Instant.now());
+        player.sendMessage(messages.get("party.join-requested", name(leader)));
+        leader.sendMessage(messages.get("party.join-request", name(player)));
+        leader.sendMessage(messages.get("party.join-request-click", name(player))
+                .clickEvent(ClickEvent.runCommand("/party invite " + player.getUsername()))
+                .hoverEvent(HoverEvent.showText(messages.get("party.join-request-hover", name(player)))));
+    }
+
     public void accept(Player player) {
         if (isInParty(player.getUniqueId())) {
             player.sendMessage(messages.get("party.already-in-party"));
@@ -204,6 +230,8 @@ public final class PartyManager {
     }
 
     public void onDisconnect(Player player) {
+        joinRequests.remove(player.getUniqueId());
+        invites.remove(player.getUniqueId());
         var own = byLeader.get(player.getUniqueId());
         if (own != null) {
             disband(own, messages.get("party.disbanded-by-disconnect"));

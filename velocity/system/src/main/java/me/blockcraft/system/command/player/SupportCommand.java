@@ -7,6 +7,7 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.system.SystemPermissions;
 import me.blockcraft.system.command.CommandSupport;
+import me.blockcraft.system.moderation.MuteGate;
 import me.blockcraft.system.support.SupportSessions;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
@@ -17,12 +18,14 @@ public final class SupportCommand {
     private final CommandSupport support;
     private final ProxyServer proxy;
     private final SupportSessions sessions;
+    private final MuteGate muteGate;
     private final Messages messages;
 
-    public SupportCommand(CommandSupport support, ProxyServer proxy, SupportSessions sessions, Messages messages) {
+    public SupportCommand(CommandSupport support, ProxyServer proxy, SupportSessions sessions, MuteGate muteGate, Messages messages) {
         this.support = support;
         this.proxy = proxy;
         this.sessions = sessions;
+        this.muteGate = muteGate;
         this.messages = messages;
     }
 
@@ -116,6 +119,9 @@ public final class SupportCommand {
                 }
                 if (message.isBlank()) {
                     player.sendMessage(messages.get("support.empty-message"));
+                    return;
+                }
+                if (!muteGate.allows(player)) {
                     return;
                 }
                 var line = messages.get("support.chat",

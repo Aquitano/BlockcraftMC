@@ -9,6 +9,7 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.system.SystemPermissions;
 import me.blockcraft.system.command.CommandSupport;
+import me.blockcraft.system.moderation.MuteGate;
 import me.blockcraft.system.rank.ProxyRanks;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
@@ -28,12 +29,14 @@ public final class MessageCommand {
 
     private final CommandSupport support;
     private final ProxyServer proxy;
+    private final MuteGate muteGate;
     private final Messages messages;
     private final Map<UUID, UUID> lastPartner = new ConcurrentHashMap<>();
 
-    public MessageCommand(CommandSupport support, ProxyServer proxy, Messages messages) {
+    public MessageCommand(CommandSupport support, ProxyServer proxy, MuteGate muteGate, Messages messages) {
         this.support = support;
         this.proxy = proxy;
+        this.muteGate = muteGate;
         this.messages = messages;
     }
 
@@ -70,6 +73,9 @@ public final class MessageCommand {
     private void deliver(Player sender, Player target, String text) {
         if (target.equals(sender)) {
             sender.sendMessage(messages.get("msg.self"));
+            return;
+        }
+        if (!muteGate.allows(sender)) {
             return;
         }
         var resolvers = TagResolver.resolver(

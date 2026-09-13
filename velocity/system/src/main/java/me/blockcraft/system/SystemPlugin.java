@@ -65,6 +65,7 @@ import me.blockcraft.system.listener.LoginListener;
 import me.blockcraft.system.listener.ProxyMessageListener;
 import me.blockcraft.system.listener.TabCompleteListener;
 import me.blockcraft.system.listener.TabHeaderListener;
+import me.blockcraft.system.moderation.MuteGate;
 import me.blockcraft.system.moderation.PunishmentService;
 import me.blockcraft.system.motd.MotdListener;
 import me.blockcraft.system.network.ServerDirectory;
@@ -120,6 +121,7 @@ public final class SystemPlugin {
         var directory = new ServerDirectory(proxy);
         var lobby = new LobbyConnector(directory, config, messages);
         var punishments = new PunishmentService(proxy, repositories.punishments(), messages, config.network());
+        var muteGate = new MuteGate(repositories.punishments(), punishments, messages, logger);
         var parties = new PartyManager(proxy, messages);
         var supportSessions = new SupportSessions();
         var support = new CommandSupport(proxy, messages);
@@ -172,15 +174,15 @@ public final class SystemPlugin {
 
         register(new HubCommand(support, lobby).create(), "h", "lobby", "l");
         register(new PlayCommand(support, lobby, directory).create());
-        var privateMessages = new MessageCommand(support, proxy, messages);
+        var privateMessages = new MessageCommand(support, proxy, muteGate, messages);
         events.register(this, privateMessages);
         register(privateMessages.msg(), "tell", "w");
         register(privateMessages.reply(), "reply");
         register(new PartyCommand(support, proxy, parties, messages).create());
-        register(new PartyChatCommand(support, parties, messages).create());
+        register(new PartyChatCommand(support, parties, muteGate, messages).create());
         var joinMe = new JoinMeCommand(support, proxy, config, directory, messages);
         register(joinMe.create());
-        register(new SupportCommand(support, proxy, supportSessions, messages).create());
+        register(new SupportCommand(support, proxy, supportSessions, muteGate, messages).create());
         register(new YouTuberCommand(support, config, messages).create(), "youtube", "yt");
         register(new PremiumCommand(support, config, messages).create(), "shop");
         register(new PingCommand(support, messages).create());

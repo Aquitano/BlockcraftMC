@@ -61,7 +61,6 @@ public final class PartyCommand {
         messages.getLines("party.help").forEach(player::sendMessage);
     }
 
-    /** Asks a party leader for an invitation into their party. */
     private void join(Player player, String leaderName) {
         var leader = proxy.getPlayer(leaderName);
         if (leader.isEmpty()) {
@@ -76,7 +75,7 @@ public final class PartyCommand {
             player.sendMessage(messages.get("party.already-in-party"));
             return;
         }
-        parties.invite(leader.get(), player);
+        parties.requestInvite(player, leader.get());
     }
 
     private void invite(Player inviter, String inviteeName) {
