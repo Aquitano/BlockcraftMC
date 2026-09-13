@@ -10,6 +10,9 @@ import me.blockcraft.common.message.Messages;
 import me.blockcraft.core.nick.Nicks;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.JoinConfiguration;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
@@ -37,12 +40,21 @@ public final class ChatFormatListener implements Listener {
                 .map(chosen -> api.messages().get(chosen.messageKey()).append(Component.space()))
                 .orElse(Component.empty());
         var rank = Ranks.prefix(source).orElse(Component.empty());
-        var level = messages.get("chat.level", Formatter.number("level", api.xp().level(source)));
-        event.renderer((ChatRenderer) (player, displayName, message, viewer) -> messages.get("chat.format",
-                Placeholder.component("level", level),
-                Placeholder.component("tag", tag),
+        int level = api.xp().level(source);
+        var levelBadge = messages.get("chat.level", Formatter.number("level", level));
+        // The proxy resolves the nick, so the hover and the /msg it suggests both go by the name others see.
+        String shown = nicks.of(source).map(Nicks.Active::nick).orElseGet(source::getName);
+        var hover = HoverEvent.showText(Component.join(JoinConfiguration.newlines(), messages.getLines("chat.hover",
                 Placeholder.component("rank", rank),
-                Placeholder.component("name", name(player, displayName, viewer)),
+                Placeholder.unparsed("name", shown),
+                Formatter.number("level", level))));
+        var click = ClickEvent.suggestCommand(PlainTextComponentSerializer.plainText()
+                .serialize(messages.get("chat.msg-command", Placeholder.unparsed("name", shown))));
+        event.renderer((ChatRenderer) (player, displayName, message, viewer) -> messages.get("chat.format",
+                Placeholder.component("level", levelBadge),
+                Placeholder.component("tag", tag),
+                Placeholder.component("rank", rank.hoverEvent(hover).clickEvent(click)),
+                Placeholder.component("name", name(player, displayName, viewer).hoverEvent(hover).clickEvent(click)),
                 Placeholder.component("message", colour(player, message))));
     }
 
