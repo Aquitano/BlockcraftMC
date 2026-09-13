@@ -29,6 +29,7 @@ lobby:
   joined: "<prefix><white><player> <muted>hat das Spiel betreten!"
   left: "<prefix><white><player><muted> hat das Spiel verlassen!"
   countdown: "<prefix><muted>Die Runde startet in <accent><seconds> <muted>Sekunden."
+  cancelled: "<prefix><error>Zu wenige Spieler, der Countdown wurde abgebrochen."
 search:
   started:
     - "<prefix><muted>Die Runde wurde gestartet."

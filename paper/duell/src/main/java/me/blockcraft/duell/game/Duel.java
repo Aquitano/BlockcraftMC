@@ -424,6 +424,7 @@ public final class Duel {
 
     public void shutdown() {
         lobbyCountdown.cancel();
+        hideRoundBar();
         Stream.of(freezeCountdown, roundTimer, restartCountdown).forEach(Duel::cancel);
     }
 }

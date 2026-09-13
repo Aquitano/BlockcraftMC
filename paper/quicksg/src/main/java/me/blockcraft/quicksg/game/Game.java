@@ -166,6 +166,7 @@ public final class Game {
         builders.remove(player.getUniqueId());
         kits.remove(player.getUniqueId());
         if (phase == GamePhase.INGAME && wasAlive) {
+            summary.death(player);
             record(player, Stat.LOSSES, 1);
             record(player, Stat.DEATHS, 1);
         }

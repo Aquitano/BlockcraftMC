@@ -52,6 +52,8 @@ import java.util.function.IntConsumer;
 
 public final class Game {
 
+    private static final int MIN_TO_START = 2;
+
     private final Plugin plugin;
     private final RushConfig config;
     private final Spawns spawns;
@@ -185,7 +187,8 @@ public final class Game {
         lives.remove(id);
         loadouts.remove(id);
         if (wasAlive && phase != GamePhase.LOBBY && phase != GamePhase.ENDING) {
-            Tasks.async(plugin, () -> stats.add(id, BlockcraftApi.get().realName(player), Stat.LOSSES, 1));
+            var name = BlockcraftApi.get().realName(player);
+            Tasks.async(plugin, () -> stats.add(id, name, Stat.LOSSES, 1));
             checkWinner();
         }
         hideTimer(player);
@@ -194,7 +197,7 @@ public final class Game {
     }
 
     public void forceStart(Player requester) {
-        if (alive.size() < 2) {
+        if (alive.size() < MIN_TO_START) {
             requester.sendMessage(messages.get("command.start-not-enough-players"));
             return;
         }
@@ -229,6 +232,12 @@ public final class Game {
     }
 
     private void beginSearch() {
+        if (alive.size() < MIN_TO_START) {
+            broadcast("lobby.cancelled");
+            Bukkit.getOnlinePlayers().forEach(player -> player.setLevel(config.lobbyCountdown()));
+            lobbyCountdown.start();
+            return;
+        }
         setPhase(GamePhase.SEARCH);
         messages.getLines("search.started", Formatter.number("minutes", config.searchSeconds() / 60)).forEach(Bukkit::broadcast);
         var pickaxe = Items.of(Material.IRON_PICKAXE).name(messages.get("item.pickaxe")).edit(meta -> {
