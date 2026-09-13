@@ -1,17 +1,24 @@
 package me.blockcraft.lobby.menu;
 
 import me.blockcraft.api.config.Locations;
+import me.blockcraft.api.menu.Menu;
+import me.blockcraft.api.settings.PlayerSettings;
 import me.blockcraft.api.shop.Shop;
 import me.blockcraft.api.shop.Unlocks;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.common.network.ServerIdentity;
+import me.blockcraft.common.network.ServerRecord;
+import me.blockcraft.common.network.ServerRepository;
 import me.blockcraft.lobby.config.LobbyConfig;
+import me.blockcraft.lobby.LobbyPermissions;
 import me.blockcraft.lobby.config.LobbyLocation;
 import me.blockcraft.lobby.cosmetic.Head;
 import me.blockcraft.lobby.cosmetic.Pets;
 import me.blockcraft.lobby.cosmetic.Secret;
 import me.blockcraft.lobby.cosmetic.Shirt;
 import me.blockcraft.lobby.cosmetic.Trails;
+import me.blockcraft.lobby.gadget.Gadgets;
 import me.blockcraft.lobby.network.GroupCounts;
 import me.blockcraft.lobby.rank.PremiumRank;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
@@ -19,6 +26,8 @@ import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
+
+import java.util.Comparator;
 
 /** Everything the chest GUIs need, so they can open one another without re-wiring. */
 public record Menus(
@@ -28,9 +37,14 @@ public record Menus(
         Locations<LobbyLocation> locations,
         Unlocks unlocks,
         Shop shop,
+        PlayerSettings settings,
+        Messages apiMessages,
+        ServerRepository servers,
+        ServerIdentity self,
         PremiumRank premiumRank,
         Pets pets,
         Trails trails,
+        Gadgets gadgets,
         GroupCounts groupCounts
 ) {
 
@@ -100,5 +114,43 @@ public record Menus(
 
     public void openTrails(Player player) {
         new TrailsMenu(this).open(player);
+    }
+
+    public void openExtras(Player player) {
+        new ExtrasMenu(this).open(player);
+    }
+
+    public void openGadgets(Player player) {
+        new GadgetsMenu(this, player).open(player);
+    }
+
+    public void openKillEffects(Player player) {
+        openEffects(player, EffectKind.KILL, config.killEffectPrice());
+    }
+
+    public void openWinEffects(Player player) {
+        openEffects(player, EffectKind.WIN, config.winEffectPrice());
+    }
+
+    private <E extends Enum<E>> void openEffects(Player player, EffectKind<E> kind, int price) {
+        Tasks.async(plugin, () -> unlocks.owned(player.getUniqueId(), kind.itemPrefix()),
+                owned -> new EffectsMenu<>(this, kind, price, player, owned).open(player));
+    }
+
+    public void openChatTags(Player player) {
+        if (!player.hasPermission(LobbyPermissions.PREMIUM)) {
+            Menu.close(player);
+            messages.getLines("premium.required").forEach(player::sendMessage);
+            return;
+        }
+        new ChatTagsMenu(this, player).open(player);
+    }
+
+    public void openLobbies(Player player) {
+        Tasks.async(plugin, () -> servers.alive(config.serverListStaleSeconds()).stream()
+                        .filter(server -> server.group().equals(self.group()))
+                        .sorted(Comparator.comparing(ServerRecord::name))
+                        .toList(),
+                lobbies -> new LobbySelectorMenu(this, lobbies).open(player));
     }
 }

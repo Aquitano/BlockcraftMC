@@ -24,7 +24,10 @@ public record LobbyConfig(
         double jumpPadMaxLength,
         long hiderCooldownMillis,
         Map<LobbyLocation, String> navigatorGroups,
-        int serverListStaleSeconds
+        int serverListStaleSeconds,
+        int killEffectPrice,
+        int winEffectPrice,
+        int gadgetCooldownSeconds
 ) {
 
     public static LobbyConfig fromYaml(Map<String, Object> root) {
@@ -35,6 +38,8 @@ public record LobbyConfig(
         var jumpPad = YamlFile.section(root, "jump-pad");
         var hider = YamlFile.section(root, "player-hider");
         var navigator = YamlFile.section(root, "navigator");
+        var effects = YamlFile.section(root, "effects");
+        var gadgets = YamlFile.section(root, "gadgets");
         Map<LobbyLocation, String> navigatorGroups = YamlFile.section(navigator, "groups").entrySet().stream()
                 .flatMap(entry -> LobbyLocation.byKey(String.valueOf(entry.getKey())).stream()
                         .map(location -> Map.entry(location, String.valueOf(entry.getValue()))))
@@ -64,7 +69,10 @@ public record LobbyConfig(
                 number(jumpPad, "max-length", 6.0),
                 (long) number(hider, "cooldown-millis", 3000),
                 navigatorGroups,
-                (int) number(navigator, "stale-seconds", 20)
+                (int) number(navigator, "stale-seconds", 20),
+                (int) number(effects, "kill-price", 500),
+                (int) number(effects, "win-price", 500),
+                (int) number(gadgets, "cooldown-seconds", 5)
         );
     }
 

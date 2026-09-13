@@ -29,6 +29,6 @@ public final class Trails {
 
     public void show(Player player) {
         of(player).ifPresent(trail ->
-                player.spawnParticle(trail.particle(), player.getLocation(), COUNT, OFFSET, OFFSET, OFFSET, SPEED));
+                player.getWorld().spawnParticle(trail.particle(), player.getLocation(), COUNT, OFFSET, OFFSET, OFFSET, SPEED));
     }
 }

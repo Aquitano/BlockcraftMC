@@ -12,6 +12,7 @@ public enum LobbyItem {
     NAVIGATOR(0),
     PLAYER_HIDER(1),
     EXTRAS(4),
+    GADGET(5),
     FRIENDS(7),
     SECRETS(8);
 

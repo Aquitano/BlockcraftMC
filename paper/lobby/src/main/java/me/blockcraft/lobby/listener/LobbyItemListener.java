@@ -1,7 +1,6 @@
 package me.blockcraft.lobby.listener;
 
 import me.blockcraft.common.message.Messages;
-import me.blockcraft.lobby.LobbyPermissions;
 import me.blockcraft.lobby.hider.PlayerHider;
 import me.blockcraft.lobby.item.LobbyItem;
 import me.blockcraft.lobby.item.LobbyItems;
@@ -36,20 +35,12 @@ public final class LobbyItemListener implements Listener {
             switch (item) {
                 case NAVIGATOR -> menus.openNavigator(player);
                 case SECRETS -> menus.openSecrets(player);
-                case EXTRAS -> openExtras(player);
+                case EXTRAS -> menus.openExtras(player);
                 case PLAYER_HIDER -> toggleHider(player);
-                case FRIENDS -> {
+                case FRIENDS, GADGET -> {
                 }
             }
         });
-    }
-
-    private void openExtras(Player player) {
-        if (player.hasPermission(LobbyPermissions.PREMIUM)) {
-            menus.openPremium(player);
-        } else {
-            messages.getLines("premium.required").forEach(player::sendMessage);
-        }
     }
 
     private void toggleHider(Player player) {

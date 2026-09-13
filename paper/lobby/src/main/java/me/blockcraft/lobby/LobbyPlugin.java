@@ -15,11 +15,13 @@ import me.blockcraft.lobby.cosmetic.Pets;
 import me.blockcraft.lobby.cosmetic.Secret;
 import me.blockcraft.lobby.cosmetic.Shirt;
 import me.blockcraft.lobby.cosmetic.Trails;
+import me.blockcraft.lobby.gadget.Gadgets;
 import me.blockcraft.lobby.hider.PlayerHider;
 import me.blockcraft.lobby.item.LobbyItems;
 import me.blockcraft.lobby.listener.CommandBlockListener;
 import me.blockcraft.lobby.listener.DeathListener;
 import me.blockcraft.lobby.listener.DoubleJumpListener;
+import me.blockcraft.lobby.listener.GadgetListener;
 import me.blockcraft.lobby.listener.InventoryLockListener;
 import me.blockcraft.lobby.listener.JoinQuitListener;
 import me.blockcraft.lobby.listener.LobbyItemListener;
@@ -40,6 +42,7 @@ import net.luckperms.api.LuckPermsProvider;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.time.Duration;
 import java.util.Optional;
 
 public final class LobbyPlugin extends JavaPlugin {
@@ -48,6 +51,7 @@ public final class LobbyPlugin extends JavaPlugin {
 
     private ShopNpc shopNpc;
     private GroupCounts groupCounts;
+    private Gadgets gadgets;
 
     @Override
     public void onEnable() {
@@ -67,8 +71,9 @@ public final class LobbyPlugin extends JavaPlugin {
         importLegacyUnlocks(new LegacyUnlocks(api.unlocks(), getLogger()));
         groupCounts = new GroupCounts(this, api.servers(), config.serverListStaleSeconds());
         groupCounts.start(GROUP_COUNTS_INTERVAL_TICKS);
-        var menus = new Menus(this, messages, config, locations, api.unlocks(), api.shop(),
-                new PremiumRank(this, luckPerms), pets, trails, groupCounts);
+        gadgets = new Gadgets(this, messages, Duration.ofSeconds(config.gadgetCooldownSeconds()));
+        var menus = new Menus(this, messages, config, locations, api.unlocks(), api.shop(), api.settings(), api.messages(),
+                api.servers(), api.server(), new PremiumRank(this, luckPerms), pets, trails, gadgets, groupCounts);
         shopNpc = new ShopNpc(this, locations, messages);
         shopNpc.start(config.shopNpcRespawnSeconds());
 
@@ -84,6 +89,7 @@ public final class LobbyPlugin extends JavaPlugin {
                 new PetListener(pets, messages),
                 new MoveListener(messages, config, locations, trails),
                 new DoubleJumpListener(config),
+                new GadgetListener(gadgets),
                 new InventoryLockListener(),
                 new DeathListener(locations, items));
         api.presence().maxPlayers(config.maxPlayers());
@@ -103,6 +109,9 @@ public final class LobbyPlugin extends JavaPlugin {
         }
         if (groupCounts != null) {
             groupCounts.stop();
+        }
+        if (gadgets != null) {
+            gadgets.restorePaint();
         }
     }
 
