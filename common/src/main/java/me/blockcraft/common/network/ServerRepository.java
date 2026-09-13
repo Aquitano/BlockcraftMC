@@ -2,6 +2,9 @@ package me.blockcraft.common.network;
 
 import me.blockcraft.common.db.Database;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.time.Duration;
 import java.util.List;
 
 /**
@@ -9,6 +12,13 @@ import java.util.List;
  * maintained by hand. Timestamps come from the database clock so the servers' clocks need not agree.
  */
 public final class ServerRepository {
+
+    /** One row of {@code bc_servers} with the age of its heartbeat, stale or not. */
+    public record Entry(ServerRecord server, Duration heartbeatAge) {
+    }
+
+    private static final String COLUMNS = "name, group_name, host, port, state, online, max_players, "
+            + "TIMESTAMPDIFF(SECOND, heartbeat, CURRENT_TIMESTAMP) AS heartbeat_age";
 
     private final Database db;
 
@@ -46,12 +56,19 @@ public final class ServerRepository {
     }
 
     public List<ServerRecord> alive(int staleAfterSeconds) {
-        return db.queryList("""
-                SELECT name, group_name, host, port, state, online, max_players FROM bc_servers
-                WHERE heartbeat > CURRENT_TIMESTAMP - INTERVAL ? SECOND""",
-                row -> new ServerRecord(
-                        new ServerIdentity(row.getString("name"), row.getString("group_name"), row.getString("host"), row.getInt("port")),
-                        new ServerStatus(ServerState.valueOf(row.getString("state")), row.getInt("online"), row.getInt("max_players"))),
-                staleAfterSeconds);
+        return db.queryList("SELECT " + COLUMNS + " FROM bc_servers WHERE heartbeat > CURRENT_TIMESTAMP - INTERVAL ? SECOND",
+                row -> record(row), staleAfterSeconds);
+    }
+
+    /** Every announced server, stale ones included, for the staff overview. */
+    public List<Entry> all() {
+        return db.queryList("SELECT " + COLUMNS + " FROM bc_servers ORDER BY group_name, name",
+                row -> new Entry(record(row), Duration.ofSeconds(row.getLong("heartbeat_age"))));
+    }
+
+    private static ServerRecord record(ResultSet row) throws SQLException {
+        return new ServerRecord(
+                new ServerIdentity(row.getString("name"), row.getString("group_name"), row.getString("host"), row.getInt("port")),
+                new ServerStatus(ServerState.valueOf(row.getString("state")), row.getInt("online"), row.getInt("max_players")));
     }
 }

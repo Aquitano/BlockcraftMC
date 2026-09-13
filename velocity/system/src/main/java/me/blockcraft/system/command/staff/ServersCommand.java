@@ -7,19 +7,19 @@ import me.blockcraft.common.moderation.DurationText;
 import me.blockcraft.system.SystemConfig;
 import me.blockcraft.system.SystemPermissions;
 import me.blockcraft.system.command.CommandSupport;
-import me.blockcraft.system.network.ServerList;
+import me.blockcraft.common.network.ServerRepository;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 
 public final class ServersCommand {
 
     private final CommandSupport support;
-    private final ServerList servers;
+    private final ServerRepository servers;
     private final SystemConfig config;
     private final Messages messages;
     private final DurationText durations;
 
-    public ServersCommand(CommandSupport support, ServerList servers, SystemConfig config, Messages messages) {
+    public ServersCommand(CommandSupport support, ServerRepository servers, SystemConfig config, Messages messages) {
         this.support = support;
         this.servers = servers;
         this.config = config;

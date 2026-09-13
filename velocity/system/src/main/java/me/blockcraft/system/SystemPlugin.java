@@ -77,7 +77,6 @@ import me.blockcraft.system.motd.MotdListener;
 import me.blockcraft.system.network.LobbyAlert;
 import me.blockcraft.system.network.ServerDirectory;
 import me.blockcraft.system.network.ServerDiscovery;
-import me.blockcraft.system.network.ServerList;
 import me.blockcraft.system.party.PartyListener;
 import me.blockcraft.system.party.PartyManager;
 import me.blockcraft.system.support.SupportListener;
@@ -123,7 +122,6 @@ public final class SystemPlugin {
         repositories.createTables();
         var servers = new ServerRepository(database);
         servers.createTable();
-        var serverList = new ServerList(database);
         var discordLinks = new DiscordLinkRepository(database);
         discordLinks.createTable();
 
@@ -183,7 +181,7 @@ public final class SystemPlugin {
         register(new SetMaxCommand(support, config, messages).create());
         register(new MotdCommand(support, config, messages).create());
         register(new ServerJoinCommand(support, proxy, messages).create());
-        register(new ServersCommand(support, serverList, config, messages).create());
+        register(new ServersCommand(support, servers, config, messages).create());
         register(new ListCommand(support, proxy, config, messages).create());
         register(new WhoisCommand(support, lookup, repositories.players(), repositories.strikes(), repositories.warns(),
                 punishments, playtime, messages).create());
