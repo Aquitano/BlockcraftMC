@@ -7,6 +7,7 @@ import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
 import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import org.bukkit.entity.Player;
 
 public final class InvseeCommand {
 
@@ -22,13 +23,15 @@ public final class InvseeCommand {
                 })
                 .then(Commands.argument("player", ArgumentTypes.player())
                         .executes(context -> {
-                            var player = context.getSource().getPlayerOrThrow();
-                            var target = Players.resolve(context, "player");
-                            player.closeInventory();
-                            player.openInventory(target.getInventory());
-                            player.sendMessage(messages.get("invsee.opened", Placeholder.unparsed("player", target.getName())));
+                            open(context.getSource().getPlayerOrThrow(), Players.resolve(context, "player"), messages);
                             return Command.SINGLE_SUCCESS;
                         }))
                 .build();
+    }
+
+    public static void open(Player viewer, Player target, Messages messages) {
+        viewer.closeInventory();
+        viewer.openInventory(target.getInventory());
+        viewer.sendMessage(messages.get("invsee.opened", Placeholder.unparsed("player", target.getName())));
     }
 }

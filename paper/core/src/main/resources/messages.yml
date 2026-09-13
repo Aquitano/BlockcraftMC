@@ -57,6 +57,33 @@ xp:
 vanish:
   enabled: "<prefix><gray>Du bist nun unsichtbar!"
   disabled: "<prefix><gray>Du bist nun wieder sichtbar!"
+freeze:
+  usage: "<prefix><red>Benutze /freeze <Name>"
+  self: "<prefix><red>Du kannst dich nicht selbst einfrieren."
+  frozen: "<prefix><gray>Du hast <white><player> <gray>eingefroren."
+  unfrozen: "<prefix><gray>Du hast <white><player> <gray>wieder freigegeben."
+  released: "<prefix><green>Du wurdest wieder freigegeben."
+  title: "<red><bold>EINGEFROREN"
+  subtitle: "<gray>Bleib stehen und komm auf den TeamSpeak!"
+  reminder:
+    - "<prefix><red>Du wurdest von einem Teammitglied eingefroren!"
+    - "<prefix><gray>Komm jetzt auf den TeamSpeak: <aqua><teamspeak>"
+    - "<prefix><gray>Wer die Verbindung trennt, wird gebannt."
+  no-commands: "<prefix><red>Eingefroren: nur /msg und /r sind erlaubt."
+  left-while-frozen: "<prefix><red><player> <gray>hat den Server eingefroren verlassen!"
+staff:
+  entered: "<prefix><green>Staff-Modus aktiviert. <gray>Du bist unsichtbar und fliegst."
+  left: "<prefix><gray>Staff-Modus beendet. Dein Inventar ist wieder da."
+  inventory-restored: "<prefix><gray>Dein Inventar aus dem Staff-Modus wurde wiederhergestellt."
+  nobody-online: "<prefix><red>Kein Spieler online, zu dem du dich teleportieren könntest."
+  teleported: "<prefix><gray>Du bist jetzt bei <white><player><gray>."
+  no-reports: "<prefix><red>Die Report-Übersicht gibt es nur in der Lobby."
+  item:
+    random: "<aqua>Zufälliger Spieler"
+    freeze: "<blue>Freeze <gray>(Rechtsklick auf Spieler)"
+    invsee: "<gold>Invsee <gray>(Rechtsklick auf Spieler)"
+    reports: "<yellow>Reports"
+    leave: "<red>Staff-Modus verlassen"
 clear:
   usage: "<prefix><red>Benutze /clear [Name]"
   done: "<prefix><gray>Du hast das Inventar von <white><player><gray> geleert!"
@@ -121,10 +148,18 @@ mute:
 globalmute:
   blocked: "<dark_aqua>Dir wird es derzeit verweigert, im <yellow>Chat <dark_aqua>zu schreiben. <yellow>GlobalMute <dark_aqua>ist aktiv."
 chat:
-  format: "<rank><name> <dark_gray>» <white><message>"
+  format: "<tag><rank><name> <dark_gray>» <white><message>"
+  nick-real: " <dark_gray>(<gray><real><dark_gray>)"
   spam: "<prefix><red>Bitte warte einen Moment... Verdacht auf Spam!"
   word-filtered: "<prefix><gray>Diese Chatnachricht wurde vom System gefiltert. <red>Grund: Anzügige Sprache"
   filtered-notify: "<prefix><gray>Der Spieler <red><player><gray> hat geschrieben: <red><message> <gray>auf <red><server>"
   ad-filtered:
     - "<prefix><gray>Deine ChatNachricht wurde gefiltert. <red>Grund: Mögliche Werbung."
     - "<prefix><red>Die Teammitglieder werden diesen Sachverhalt nun prüfen."
+nick:
+  loading: "<prefix><gray>Dein neuer Nick wird geladen..."
+  assigned: "<prefix><gray>Du bist jetzt als <yellow><nick> <gray>unterwegs. Teammitglieder sehen weiterhin deinen echten Namen. <aqua>/nick off <gray>entfernt den Nick."
+  still-active: "<prefix><gray>Du bist weiterhin als <yellow><nick> <gray>unterwegs. <aqua>/nick off <gray>entfernt den Nick."
+  removed: "<prefix><gray>Dein Nick wurde entfernt."
+  none: "<prefix><gray>Du trägst gerade keinen Nick."
+  failed: "<prefix><red>Der Skin konnte gerade nicht geladen werden. Versuche es gleich noch einmal."

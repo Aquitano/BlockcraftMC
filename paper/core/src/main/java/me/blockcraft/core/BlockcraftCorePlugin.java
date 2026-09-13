@@ -8,6 +8,7 @@ import me.blockcraft.common.moderation.ModerationRepositories;
 import me.blockcraft.core.command.ClearCommand;
 import me.blockcraft.core.command.ConnectCommand;
 import me.blockcraft.core.command.EnchantCommand;
+import me.blockcraft.core.command.FreezeCommand;
 import me.blockcraft.core.command.FlyCommand;
 import me.blockcraft.core.command.FlySpeedCommand;
 import me.blockcraft.core.command.FoodCommand;
@@ -15,12 +16,14 @@ import me.blockcraft.core.command.GamemodeCommand;
 import me.blockcraft.core.command.HealCommand;
 import me.blockcraft.core.command.InvseeCommand;
 import me.blockcraft.core.command.KillCommand;
+import me.blockcraft.core.command.NickCommand;
 import me.blockcraft.core.command.RainCommand;
 import me.blockcraft.core.command.ReflashCommand;
 import me.blockcraft.core.command.ServerInfoCommand;
 import me.blockcraft.core.command.SetHealthCommand;
 import me.blockcraft.core.command.SkullCommand;
 import me.blockcraft.core.command.SpeedCommand;
+import me.blockcraft.core.command.StaffCommand;
 import me.blockcraft.core.command.SudoCommand;
 import me.blockcraft.core.command.SunCommand;
 import me.blockcraft.core.command.TeamCommand;
@@ -34,10 +37,17 @@ import me.blockcraft.core.listener.ChatFilterListener;
 import me.blockcraft.core.listener.ChatFormatListener;
 import me.blockcraft.core.listener.GlobalMuteListener;
 import me.blockcraft.core.listener.MuteListener;
-import me.blockcraft.core.listener.VanishListener;
+import me.blockcraft.core.staff.FreezeService;
+import me.blockcraft.core.staff.StaffInventoryRepository;
+import me.blockcraft.core.staff.StaffMode;
+import me.blockcraft.core.staff.VanishService;
+import me.blockcraft.core.nick.NickListener;
+import me.blockcraft.core.nick.Nicks;
+import me.blockcraft.common.nick.NickRepository;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -61,9 +71,22 @@ public final class BlockcraftCorePlugin extends JavaPlugin {
         pluginManager.registerEvents(new GlobalMuteListener(moderation.settings(), messages), this);
         pluginManager.registerEvents(new ChatCooldownListener(chatFilter.cooldown(), messages), this);
         pluginManager.registerEvents(new ChatFilterListener(this, chatFilter, api.server().name(), moderation.adLog(), messages), this);
-        pluginManager.registerEvents(new ChatFormatListener(messages), this);
-        var vanish = new VanishListener(this);
+        var nickRepository = new NickRepository(api.database());
+        nickRepository.createTable();
+        var nickSection = YamlFile.section(config, "nick");
+        var nicks = new Nicks(this, nickRepository, stringList(nickSection, "names"), stringList(nickSection, "skins"));
+        pluginManager.registerEvents(new NickListener(nicks, messages), this);
+        pluginManager.registerEvents(new ChatFormatListener(messages, nicks), this);
+        var vanish = new VanishService(this, moderation.vanish());
         pluginManager.registerEvents(vanish, this);
+        var freeze = new FreezeService(this, moderation.frozen(), messages,
+                String.valueOf(YamlFile.section(config, "freeze").getOrDefault("teamspeak", "")));
+        pluginManager.registerEvents(freeze, this);
+        freeze.start();
+        var staffInventories = new StaffInventoryRepository(api.database());
+        staffInventories.createTable();
+        var staffMode = new StaffMode(this, messages, vanish, freeze, staffInventories);
+        pluginManager.registerEvents(staffMode, this);
 
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             var registrar = event.registrar();
@@ -87,9 +110,16 @@ public final class BlockcraftCorePlugin extends JavaPlugin {
             registrar.register(TpCommand.create(messages), "Teleportiert Spieler");
             registrar.register(XpCommand.create(messages), "Setzt das Level eines Spielers");
             registrar.register(VanishCommand.create(vanish, messages), "Unsichtbarkeit", List.of("vanish"));
+            registrar.register(FreezeCommand.create(freeze, messages), "Friert einen Spieler ein");
+            registrar.register(StaffCommand.create(staffMode), "Staff-Modus");
             registrar.register(ClearCommand.create(messages), "Leert das Inventar eines Spielers");
             registrar.register(ConnectCommand.create(this, messages), "Wechselt den Server");
             registrar.register(ReflashCommand.create(this, messages), "Aktualisiert die Spielerliste");
+            registrar.register(NickCommand.create(nicks, messages), "Zufälliger Name und Skin");
         });
+    }
+
+    private static List<String> stringList(Map<String, Object> section, String key) {
+        return section.get(key) instanceof List<?> values ? values.stream().map(String::valueOf).toList() : List.of();
     }
 }
