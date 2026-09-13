@@ -11,6 +11,7 @@ import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
 import me.blockcraft.build.BuildConstants;
 import me.blockcraft.common.db.Database;
+import me.blockcraft.common.discord.DiscordLinkRepository;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.moderation.ModerationRepositories;
 import me.blockcraft.common.network.ServerRepository;
@@ -33,6 +34,7 @@ import me.blockcraft.system.command.moderation.UnmuteCommand;
 import me.blockcraft.system.command.moderation.WarnCommand;
 import me.blockcraft.system.command.moderation.WarnsCommand;
 import me.blockcraft.system.command.moderation.WerbungCommand;
+import me.blockcraft.system.command.player.DiscordCommand;
 import me.blockcraft.system.command.player.HubCommand;
 import me.blockcraft.system.command.player.MessageCommand;
 import me.blockcraft.system.command.player.JoinMeCommand;
@@ -72,6 +74,7 @@ import me.blockcraft.system.listener.TabHeaderListener;
 import me.blockcraft.system.moderation.MuteGate;
 import me.blockcraft.system.moderation.PunishmentService;
 import me.blockcraft.system.motd.MotdListener;
+import me.blockcraft.system.network.LobbyAlert;
 import me.blockcraft.system.network.ServerDirectory;
 import me.blockcraft.system.network.ServerDiscovery;
 import me.blockcraft.system.network.ServerList;
@@ -121,6 +124,8 @@ public final class SystemPlugin {
         var servers = new ServerRepository(database);
         servers.createTable();
         var serverList = new ServerList(database);
+        var discordLinks = new DiscordLinkRepository(database);
+        discordLinks.createTable();
 
         var settings = new ProxySettings(repositories.settings());
         var lookup = new PlayerLookup(proxy, repositories.players());
@@ -196,13 +201,16 @@ public final class SystemPlugin {
         register(new SupportCommand(support, proxy, supportSessions, muteGate, messages).create());
         register(new YouTuberCommand(support, config, messages).create(), "youtube", "yt");
         register(new PremiumCommand(support, config, messages).create(), "shop");
+        register(new DiscordCommand(support, discordLinks, config, messages).create());
         register(new PingCommand(support, messages).create());
         register(new ModCommand(support, proxy, messages).create());
         register(new OnlineCommand(support, proxy, messages).create());
         register(new SeenCommand(support, lookup, repositories.players(), messages).create());
         register(new PlaytimeCommand(support, lookup, repositories.players(), playtime, messages).create());
 
-        proxy.getScheduler().buildTask(this, new ServerDiscovery(proxy, servers, directory, config.discovery().staleSeconds(), logger))
+        var lobbyAlert = new LobbyAlert(proxy, directory, config, messages, logger);
+        proxy.getScheduler().buildTask(this, new ServerDiscovery(proxy, servers, directory, lobbyAlert,
+                        config.discovery().staleSeconds(), logger))
                 .repeat(config.discovery().pollSeconds(), TimeUnit.SECONDS)
                 .schedule();
         proxy.getScheduler().buildTask(this, new AutoBroadcast(proxy, config, messages))

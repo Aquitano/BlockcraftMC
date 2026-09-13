@@ -20,6 +20,11 @@ discovery:
   poll-seconds: 5
   stale-seconds: 20
 
+# Discord webhook that is told when no lobby is joinable any more and when one is back; empty disables it.
+alerts:
+  webhook-url: ""
+  min-interval-seconds: 300
+
 # Edited in-game by /setmax and /motd; MOTD lines use legacy & colour codes.
 max-players: 100
 motd:
@@ -29,6 +34,9 @@ motd:
 max-warns: 8
 max-strikes: 5
 auto-broadcast-minutes: 5
+
+# How long a code from /discord link stays valid; the invite itself is network.discord.
+discord-code-minutes: 10
 
 joinme:
   daily-limit: 6

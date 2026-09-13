@@ -32,7 +32,7 @@ the group's prefix in front of the name; the prefix carries the name colour, so 
 
 | Group      | Prefix             | Grants                                                                            |
 |------------|--------------------|-----------------------------------------------------------------------------------|
-| `default`  | `&7SPIELER &8● &7` | party invite and kick, `/msg` and `/r`, `/seen`, `/playtime`, `/server`, `/glist` |
+| `default`  | `&7SPIELER &8● &7` | party invite and kick, `/msg` and `/r`, `/seen`, `/playtime`, `/discord`, `/server`, `/glist` |
 | `premium`  | `&6PREMIUM &8● &6` | premium lobby area, double jump, join when full, `/joinme`, chat colours          |
 | `youtuber` | `&5YT &8● &5`      | premium plus `/joinme` without delay, `/bc`, `/send`, `/nick`                     |
 | `dev`      | `&bDEV &8● &b`     | premium plus every `blockcraft.*` and `velocity.command.*` permission             |
@@ -122,6 +122,20 @@ group `BLOCKCRAFT_SERVER_GROUP`, falling back to its name, at `BLOCKCRAFT_SERVER
 of the interface that reaches the database, on its `server-port`. Set the variables when several servers share a
 host or the proxy reaches them through another address. The same works unchanged on Kubernetes: one Deployment per
 group, the pod name becomes the server name and the pod IP its address.
+
+When a discovery poll finds no joinable server left in the lobby group, BlockcraftSystem posts the `alerts.no-lobby`
+text to the Discord webhook in `alerts.webhook-url`, and `alerts.lobby-back` once a lobby is joinable again. Each
+change is announced once and at most one alert goes out per `alerts.min-interval-seconds`; an empty URL disables it.
+
+## Discord linking
+
+BlockcraftSystem owns the table `bc_discord_links` (`player_uuid`, `code`, `code_expires_at`, `discord_id`,
+`linked_at`), the Discord bot lives outside this repository and shares the table with it. `/discord link` writes a
+fresh six-character `code` with a `code_expires_at` ten minutes out (`discord-code-minutes`) and replaces whatever
+code the row held. The bot looks the code up (`code = ? AND code_expires_at > NOW()`), and on a match sets
+`discord_id` and `linked_at` and clears `code` and `code_expires_at`; `discord_id` is unique, so one Discord account
+links to one player. `/discord unlink` clears `discord_id` and `linked_at` again. Nothing else writes the table, and
+`/discord` reads it to tell a player where they stand.
 
 ## Deploy
 

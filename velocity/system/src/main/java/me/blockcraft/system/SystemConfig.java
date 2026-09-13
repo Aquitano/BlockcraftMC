@@ -31,15 +31,20 @@ public final class SystemConfig {
     public record Discovery(int pollSeconds, int staleSeconds) {
     }
 
+    public record Alerts(String webhookUrl, int minIntervalSeconds) {
+    }
+
     private final Path file;
     private final Map<String, Object> root;
     private final DatabaseConfig database;
     private final Network network;
     private final String lobbyGroup;
     private final Discovery discovery;
+    private final Alerts alerts;
     private final int maxWarns;
     private final int maxStrikes;
     private final int autoBroadcastMinutes;
+    private final int discordCodeMinutes;
     private final JoinMe joinMe;
     private final Set<String> unbannable;
     private final Set<String> blockedCommands;
@@ -58,9 +63,12 @@ public final class SystemConfig {
         this.lobbyGroup = string(root, "lobby-group");
         var discovery = YamlFile.section(root, "discovery");
         this.discovery = new Discovery(number(discovery, "poll-seconds", 5), number(discovery, "stale-seconds", 20));
+        var alerts = YamlFile.section(root, "alerts");
+        this.alerts = new Alerts(string(alerts, "webhook-url"), number(alerts, "min-interval-seconds", 300));
         this.maxWarns = number(root, "max-warns", 8);
         this.maxStrikes = number(root, "max-strikes", 5);
         this.autoBroadcastMinutes = number(root, "auto-broadcast-minutes", 5);
+        this.discordCodeMinutes = number(root, "discord-code-minutes", 10);
         var joinMe = YamlFile.section(root, "joinme");
         this.joinMe = new JoinMe(number(joinMe, "daily-limit", 6), number(joinMe, "reset-hour", 0));
         this.unbannable = strings(root, "unbannable").stream().map(String::toLowerCase).collect(Collectors.toUnmodifiableSet());
@@ -92,6 +100,10 @@ public final class SystemConfig {
         return discovery;
     }
 
+    public Alerts alerts() {
+        return alerts;
+    }
+
     public int maxWarns() {
         return maxWarns;
     }
@@ -102,6 +114,10 @@ public final class SystemConfig {
 
     public int autoBroadcastMinutes() {
         return autoBroadcastMinutes;
+    }
+
+    public int discordCodeMinutes() {
+        return discordCodeMinutes;
     }
 
     public JoinMe joinMe() {
