@@ -5,7 +5,6 @@ import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.moderation.FreezeRepository;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -40,16 +39,14 @@ public final class FreezeService implements Listener {
     private final Plugin plugin;
     private final FreezeRepository repository;
     private final Messages messages;
-    private final String teamspeak;
     private final Set<UUID> frozen = ConcurrentHashMap.newKeySet();
     private final Set<UUID> pending = ConcurrentHashMap.newKeySet();
     private BukkitTask reminder;
 
-    public FreezeService(Plugin plugin, FreezeRepository repository, Messages messages, String teamspeak) {
+    public FreezeService(Plugin plugin, FreezeRepository repository, Messages messages) {
         this.plugin = plugin;
         this.repository = repository;
         this.messages = messages;
-        this.teamspeak = teamspeak;
     }
 
     public void start() {
@@ -92,11 +89,11 @@ public final class FreezeService implements Listener {
 
     private void announce(Player target) {
         target.showTitle(Title.title(messages.get("freeze.title"), messages.get("freeze.subtitle")));
-        messages.getLines("freeze.reminder", teamspeakPlaceholder()).forEach(target::sendMessage);
+        messages.getLines("freeze.reminder").forEach(target::sendMessage);
     }
 
     private void remind() {
-        var lines = messages.getLines("freeze.reminder", teamspeakPlaceholder());
+        var lines = messages.getLines("freeze.reminder");
         for (UUID id : frozen) {
             Player player = Bukkit.getPlayer(id);
             if (player != null) {
@@ -105,9 +102,6 @@ public final class FreezeService implements Listener {
         }
     }
 
-    private TagResolver teamspeakPlaceholder() {
-        return Placeholder.unparsed("teamspeak", teamspeak);
-    }
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onPreLogin(AsyncPlayerPreLoginEvent event) {

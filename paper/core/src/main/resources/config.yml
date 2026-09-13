@@ -1,6 +1,3 @@
-freeze:
-  teamspeak: ts.blockcraftmc.net
-
 sudo:
   protected-players:
     - Aquitano

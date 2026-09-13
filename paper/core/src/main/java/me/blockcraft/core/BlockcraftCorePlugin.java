@@ -2,6 +2,7 @@ package me.blockcraft.core;
 
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.command.CommandRegistry;
 import me.blockcraft.common.config.YamlFile;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.moderation.ModerationRepositories;
@@ -60,9 +61,8 @@ public final class BlockcraftCorePlugin extends JavaPlugin {
         Set<String> sudoProtected = YamlFile.section(config, "sudo").get("protected-players") instanceof List<?> names
                 ? names.stream().map(String::valueOf).map(String::toLowerCase).collect(Collectors.toUnmodifiableSet())
                 : Set.of();
-        var messages = Messages.load(getDataPath(), () -> getResource("messages.yml"));
-
         var api = BlockcraftApi.get();
+        var messages = Messages.load(getDataPath(), () -> getResource("messages.yml"), api.tags());
         var moderation = ModerationRepositories.create(api.database());
         moderation.createTables();
         var chatFilter = ChatFilterConfig.fromYaml(config);
@@ -79,8 +79,7 @@ public final class BlockcraftCorePlugin extends JavaPlugin {
         pluginManager.registerEvents(new ChatFormatListener(messages, nicks), this);
         var vanish = new VanishService(this, moderation.vanish());
         pluginManager.registerEvents(vanish, this);
-        var freeze = new FreezeService(this, moderation.frozen(), messages,
-                String.valueOf(YamlFile.section(config, "freeze").getOrDefault("teamspeak", "")));
+        var freeze = new FreezeService(this, moderation.frozen(), messages);
         pluginManager.registerEvents(freeze, this);
         freeze.start();
         var staffInventories = new StaffInventoryRepository(api.database());
@@ -89,33 +88,33 @@ public final class BlockcraftCorePlugin extends JavaPlugin {
         pluginManager.registerEvents(staffMode, this);
 
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
-            var registrar = event.registrar();
-            registrar.register(TeamCommand.create(messages), "Team-Hilfe");
-            registrar.register(EnchantCommand.create(), "Öffnet einen Zaubertisch");
-            registrar.register(FlyCommand.create(messages), "Flugmodus");
-            registrar.register(FlySpeedCommand.create(messages), "Fluggeschwindigkeit");
-            registrar.register(FoodCommand.create(messages), "Füllt den Hunger");
-            registrar.register(GamemodeCommand.create(messages), "Ändert den Gamemode");
-            registrar.register(HealCommand.create(messages), "Heilt dich");
-            registrar.register(InvseeCommand.create(messages), "Öffnet das Inventar eines Spielers");
-            registrar.register(ServerInfoCommand.create(messages), "Zeigt Serverinformationen");
-            registrar.register(SetHealthCommand.create(messages), "Setzt die Herzen eines Spielers");
-            registrar.register(SkullCommand.create(messages), "Gibt dir einen Spielerkopf");
-            registrar.register(SpeedCommand.create(messages), "Speed-Effekt");
-            registrar.register(SudoCommand.create(messages, sudoProtected), "Lässt einen Spieler etwas schreiben");
-            registrar.register(KillCommand.create(messages), "Tötet einen Spieler");
-            registrar.register(RainCommand.create(messages), "Aktiviert Regen");
-            registrar.register(SunCommand.create(messages), "Deaktiviert Regen");
-            registrar.register(TimeCommand.create(messages), "Ändert die Zeit");
-            registrar.register(TpCommand.create(messages), "Teleportiert Spieler");
-            registrar.register(XpCommand.create(messages), "Setzt das Level eines Spielers");
-            registrar.register(VanishCommand.create(vanish, messages), "Unsichtbarkeit", List.of("vanish"));
-            registrar.register(FreezeCommand.create(freeze, messages), "Friert einen Spieler ein");
-            registrar.register(StaffCommand.create(staffMode), "Staff-Modus");
-            registrar.register(ClearCommand.create(messages), "Leert das Inventar eines Spielers");
-            registrar.register(ConnectCommand.create(this, messages), "Wechselt den Server");
-            registrar.register(ReflashCommand.create(this, messages), "Aktualisiert die Spielerliste");
-            registrar.register(NickCommand.create(nicks, messages), "Zufälliger Name und Skin");
+            var commands = new CommandRegistry(event.registrar(), messages);
+            commands.register(TeamCommand.create(messages));
+            commands.register(EnchantCommand.create());
+            commands.register(FlyCommand.create(messages));
+            commands.register(FlySpeedCommand.create(messages));
+            commands.register(FoodCommand.create(messages));
+            commands.register(GamemodeCommand.create(messages));
+            commands.register(HealCommand.create(messages));
+            commands.register(InvseeCommand.create(messages));
+            commands.register(ServerInfoCommand.create(messages));
+            commands.register(SetHealthCommand.create(messages));
+            commands.register(SkullCommand.create(messages));
+            commands.register(SpeedCommand.create(messages));
+            commands.register(SudoCommand.create(messages, sudoProtected));
+            commands.register(KillCommand.create(messages));
+            commands.register(RainCommand.create(messages));
+            commands.register(SunCommand.create(messages));
+            commands.register(TimeCommand.create(messages));
+            commands.register(TpCommand.create(messages));
+            commands.register(XpCommand.create(messages));
+            commands.register(VanishCommand.create(vanish, messages), "vanish");
+            commands.register(FreezeCommand.create(freeze, messages));
+            commands.register(StaffCommand.create(staffMode));
+            commands.register(ClearCommand.create(messages));
+            commands.register(ConnectCommand.create(this, messages));
+            commands.register(ReflashCommand.create(this, messages));
+            commands.register(NickCommand.create(nicks, messages));
         });
     }
 
