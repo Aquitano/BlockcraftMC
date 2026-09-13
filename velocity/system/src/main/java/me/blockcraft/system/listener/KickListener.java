@@ -8,7 +8,10 @@ import me.blockcraft.system.LobbyConnector;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 
-/** A player kicked from a game server lands in the lobby with the reason instead of losing the connection. */
+/**
+ * A player kicked from a server lands in a lobby with the reason instead of losing the connection; a lobby that
+ * dies hands its players to another lobby of the group, and only a network without a second lobby disconnects them.
+ */
 public final class KickListener {
 
     private final LobbyConnector lobby;
@@ -21,11 +24,13 @@ public final class KickListener {
 
     @Subscribe
     public void onKicked(KickedFromServerEvent event) {
-        if (event.kickedDuringServerConnect() || lobby.isLobby(event.getServer())) {
+        if (event.kickedDuringServerConnect()) {
             return;
         }
-        lobby.lobby().ifPresent(target -> event.setResult(RedirectPlayer.create(target, messages.get("kicked-to-lobby",
-                Placeholder.unparsed("server", event.getServer().getServerInfo().getName()),
+        var from = event.getServer();
+        var target = lobby.isLobby(from) ? lobby.lobbyExcept(from) : lobby.lobby();
+        target.ifPresent(server -> event.setResult(RedirectPlayer.create(server, messages.get("kicked-to-lobby",
+                Placeholder.unparsed("server", from.getServerInfo().getName()),
                 Placeholder.component("reason", event.getServerKickReason().orElse(Component.empty()))))));
     }
 }

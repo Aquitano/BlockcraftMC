@@ -49,7 +49,11 @@ public final class ServerDirectory {
 
     /** Lobbies spread the load: the joinable server with the fewest players. */
     public Optional<RegisteredServer> balance(String group) {
-        return joinable(group).min(BY_ONLINE).flatMap(this::registered);
+        return balance(group, Set.of());
+    }
+
+    public Optional<RegisteredServer> balance(String group, Set<String> excludedServers) {
+        return joinable(group).filter(server -> !excludedServers.contains(server.name())).min(BY_ONLINE).flatMap(this::registered);
     }
 
     private Stream<ServerRecord> joinable(String group) {

@@ -6,6 +6,7 @@ import me.blockcraft.common.message.Messages;
 import me.blockcraft.system.network.ServerDirectory;
 
 import java.util.Optional;
+import java.util.Set;
 
 /** Sends players to the emptiest lobby of the configured lobby group. */
 public final class LobbyConnector {
@@ -22,6 +23,11 @@ public final class LobbyConnector {
 
     public Optional<RegisteredServer> lobby() {
         return directory.balance(config.lobbyGroup());
+    }
+
+    /** The crashed lobby can still be in the directory until its heartbeat goes stale, so it is excluded by name. */
+    public Optional<RegisteredServer> lobbyExcept(RegisteredServer server) {
+        return directory.balance(config.lobbyGroup(), Set.of(server.getServerInfo().getName()));
     }
 
     public boolean isLobby(RegisteredServer server) {
