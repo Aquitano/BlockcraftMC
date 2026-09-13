@@ -1,14 +1,13 @@
-package me.blockcraft.quicksg.game;
+package me.blockcraft.api.game;
 
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
-import me.blockcraft.quicksg.storage.StatColumn;
-import me.blockcraft.quicksg.storage.StatsRepository;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
+/** Prints the top ten of a stat with the module's {@code top.separator}, {@code top.first} and {@code top.entry} lines. */
 public final class TopList {
 
     private static final int SIZE = 10;
@@ -23,8 +22,8 @@ public final class TopList {
         this.messages = messages;
     }
 
-    public void send(Player player, StatColumn column) {
-        Tasks.async(plugin, () -> stats.top(column, SIZE), entries -> {
+    public void send(Player player, Stat stat) {
+        Tasks.async(plugin, () -> stats.top(stat, SIZE), entries -> {
             player.sendMessage(messages.get("top.separator"));
             int rank = 0;
             for (var entry : entries) {

@@ -2,7 +2,7 @@ package me.blockcraft.quicksg.menu;
 
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.menu.Menu;
-import me.blockcraft.quicksg.storage.Stats;
+import me.blockcraft.api.game.Stats;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;

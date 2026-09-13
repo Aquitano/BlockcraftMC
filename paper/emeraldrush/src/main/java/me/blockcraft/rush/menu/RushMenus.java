@@ -1,5 +1,9 @@
 package me.blockcraft.rush.menu;
 
+import me.blockcraft.api.game.Stat;
+import me.blockcraft.api.game.Stats;
+import me.blockcraft.api.game.StatsRepository;
+import me.blockcraft.api.game.TopList;
 import me.blockcraft.api.menu.Menu;
 import me.blockcraft.api.shop.Shop;
 import me.blockcraft.api.shop.Unlocks;
@@ -10,9 +14,6 @@ import me.blockcraft.rush.config.Spawns;
 import me.blockcraft.rush.game.Game;
 import me.blockcraft.rush.game.GamePhase;
 import me.blockcraft.rush.kit.Perk;
-import me.blockcraft.rush.storage.PlayerStats;
-import me.blockcraft.rush.storage.StatCategory;
-import me.blockcraft.rush.storage.StatsRepository;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
@@ -27,8 +28,6 @@ import java.util.Set;
 /** Opens every EmeraldRush GUI and performs the purchases they trigger. */
 public final class RushMenus {
 
-    private static final int TOP_SIZE = 10;
-
     private final Plugin plugin;
     private final Game game;
     private final Messages messages;
@@ -36,6 +35,7 @@ public final class RushMenus {
     private final Unlocks unlocks;
     private final Shop shop;
     private final StatsRepository stats;
+    private final TopList topList;
     private final ShopCatalog catalog;
 
     public RushMenus(Plugin plugin, Game game, Messages messages, Spawns spawns, Unlocks unlocks, Shop shop, StatsRepository stats) {
@@ -46,6 +46,7 @@ public final class RushMenus {
         this.unlocks = unlocks;
         this.shop = shop;
         this.stats = stats;
+        this.topList = new TopList(plugin, stats, messages);
         this.catalog = new ShopCatalog(messages);
     }
 
@@ -120,18 +121,8 @@ public final class RushMenus {
         new GlobalStatsMenu(this, messages).open(player);
     }
 
-    public void showTop(Player player, StatCategory category) {
-        Tasks.async(plugin, () -> stats.top(category, TOP_SIZE), top -> {
-            player.sendMessage(messages.get("top.separator"));
-            int rank = 1;
-            for (var entry : top) {
-                player.sendMessage(messages.get(rank == 1 ? "top.first" : "top.entry",
-                        Formatter.number("rank", rank++),
-                        Placeholder.unparsed("player", String.valueOf(entry.name())),
-                        Formatter.number("value", entry.value())));
-            }
-            player.sendMessage(messages.get("top.separator"));
-        });
+    public void showTop(Player player, Stat category) {
+        topList.send(player, category);
     }
 
     private Set<Perk> ownedPerks(Player player) {
@@ -142,10 +133,10 @@ public final class RushMenus {
         return Placeholder.parsed("perk", messages.raw("perk." + perk.key()));
     }
 
-    public static TagResolver statsPlaceholders(PlayerStats stats) {
+    public static TagResolver statsPlaceholders(Stats stats) {
         return TagResolver.resolver(
                 Formatter.number("wins", stats.wins()),
-                Formatter.number("loses", stats.loses()),
+                Formatter.number("loses", stats.losses()),
                 Formatter.number("deaths", stats.deaths()),
                 Formatter.number("kills", stats.kills()),
                 Formatter.number("points", stats.points()));

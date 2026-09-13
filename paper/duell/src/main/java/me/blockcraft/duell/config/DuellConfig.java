@@ -1,7 +1,7 @@
 package me.blockcraft.duell.config;
 
 import me.blockcraft.duell.game.DuelMode;
-import org.bukkit.Material;
+import me.blockcraft.api.game.LootTable;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 
@@ -15,16 +15,10 @@ public record DuellConfig(
         int winCoins,
         int vsKillsToEnd,
         Map<DuelMode, List<String>> maps,
-        Loot loot
+        LootTable loot
 ) {
 
     public record Countdowns(int lobby, int freeze, int round, int restart) {
-    }
-
-    public record Loot(int minItems, int maxItems, List<LootEntry> entries) {
-    }
-
-    public record LootEntry(Material material, int amount, int weight) {
     }
 
     public List<String> maps(DuelMode mode) {
@@ -38,12 +32,6 @@ public record DuellConfig(
         for (var mode : DuelMode.values()) {
             maps.put(mode, List.copyOf(config.getStringList("maps." + mode.configKey())));
         }
-        var entries = chest.getMapList("loot").stream()
-                .map(entry -> new LootEntry(
-                        Material.valueOf(String.valueOf(entry.get("item"))),
-                        entry.get("amount") instanceof Number amount ? amount.intValue() : 1,
-                        entry.get("weight") instanceof Number weight ? weight.intValue() : 1))
-                .toList();
         return new DuellConfig(
                 config.getString("global-stats-head", "Kevos"),
                 new Countdowns(
@@ -54,7 +42,7 @@ public record DuellConfig(
                 config.getInt("rewards.win", 10),
                 config.getInt("vs.kills-to-end", 3),
                 maps,
-                new Loot(chest.getInt("min-items", 1), chest.getInt("max-items", 6), entries));
+                LootTable.fromYaml(chest, 1, 6));
     }
 
     private static ConfigurationSection section(FileConfiguration config, String key) {

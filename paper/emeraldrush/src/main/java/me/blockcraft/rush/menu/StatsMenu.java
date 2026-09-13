@@ -1,9 +1,9 @@
 package me.blockcraft.rush.menu;
 
+import me.blockcraft.api.game.Stats;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.menu.Menu;
 import me.blockcraft.common.message.Messages;
-import me.blockcraft.rush.storage.PlayerStats;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.entity.Player;
@@ -17,7 +17,7 @@ final class StatsMenu extends Menu {
     private static final int GLOBAL = 13;
     private static final int SIZE = 18;
 
-    record Entry(Player player, PlayerStats stats) {
+    record Entry(Player player, Stats stats) {
     }
 
     private final RushMenus menus;

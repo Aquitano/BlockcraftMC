@@ -1,5 +1,6 @@
 package me.blockcraft.rush.command;
 
+import me.blockcraft.api.game.StatsRepository;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
@@ -9,7 +10,6 @@ import io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSele
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.rush.menu.RushMenus;
-import me.blockcraft.rush.storage.StatsRepository;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.entity.Player;

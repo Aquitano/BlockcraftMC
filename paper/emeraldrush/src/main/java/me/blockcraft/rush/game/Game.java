@@ -1,5 +1,9 @@
 package me.blockcraft.rush.game;
 
+import me.blockcraft.api.game.Stat;
+import me.blockcraft.api.game.StatsRepository;
+import me.blockcraft.api.game.ServerRestart;
+import me.blockcraft.api.game.PlayerReset;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.coins.CoinsRepository;
 import me.blockcraft.api.item.Items;
@@ -7,29 +11,22 @@ import me.blockcraft.api.task.Countdown;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.api.world.Worlds;
 import me.blockcraft.common.message.Messages;
-import me.blockcraft.common.network.ServerState;
 import me.blockcraft.rush.Permissions;
 import me.blockcraft.rush.config.RushConfig;
 import me.blockcraft.rush.config.SpawnPoint;
 import me.blockcraft.rush.config.Spawns;
 import me.blockcraft.rush.scoreboard.GameScoreboard;
-import me.blockcraft.rush.storage.StatCategory;
-import me.blockcraft.rush.storage.StatsRepository;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
-import org.bukkit.Color;
-import org.bukkit.FireworkEffect;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
-import org.bukkit.attribute.Attribute;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.Firework;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerRespawnEvent;
@@ -67,6 +64,7 @@ public final class Game {
     private final CoinsRepository coins;
     private final Countdown countdown;
     private final GameScoreboard scoreboard;
+    private Countdown restart;
 
     private GamePhase phase = GamePhase.LOBBY;
     private boolean forcedStart;
@@ -169,7 +167,7 @@ public final class Game {
         }
         alive.add(player.getUniqueId());
         spawns.teleport(player, SpawnPoint.LOBBY);
-        resetPlayer(player, GameMode.ADVENTURE);
+        PlayerReset.reset(player, GameMode.ADVENTURE);
         messages.getLines("lobby.welcome", Formatter.number("emeralds", config.emeraldsPerOre())).forEach(player::sendMessage);
         giveLobbyItems(player);
         broadcast("lobby.joined", Placeholder.unparsed("player", player.getName()));
@@ -192,7 +190,7 @@ public final class Game {
         lives.remove(id);
         loadouts.remove(id);
         if (wasAlive && phase != GamePhase.LOBBY && phase != GamePhase.ENDING) {
-            Tasks.async(plugin, () -> stats.increment(id, player.getName(), StatCategory.LOSES, 1));
+            Tasks.async(plugin, () -> stats.add(id, player.getName(), Stat.LOSSES, 1));
             checkWinner();
         }
         scoreboard.refreshAll();
@@ -231,6 +229,9 @@ public final class Game {
 
     public void stop() {
         countdown.cancel();
+        if (restart != null) {
+            restart.cancel();
+        }
     }
 
     private void startLobbyCountdown() {
@@ -358,7 +359,7 @@ public final class Game {
             }
         }, () -> {
             broadcast("deathmatch.draw");
-            Bukkit.shutdown();
+            endRound();
         });
     }
 
@@ -380,18 +381,19 @@ public final class Game {
             broadcast("deathmatch.killed", victimName, Placeholder.component("killer", slayer.playerListName()));
             Tasks.async(plugin, () -> {
                 coins.add(slayer.getUniqueId(), slayer.getName(), KILL_COINS);
-                stats.increment(slayer.getUniqueId(), slayer.getName(), StatCategory.KILLS, 1);
-                stats.increment(slayer.getUniqueId(), slayer.getName(), StatCategory.POINTS, KILL_COINS);
+                stats.add(slayer.getUniqueId(), slayer.getName(), Stat.KILLS, 1);
+                stats.add(slayer.getUniqueId(), slayer.getName(), Stat.POINTS, KILL_COINS);
             });
             slayer.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 160, 1));
+            BlockcraftApi.get().effects().onKill(slayer, victim);
         }, () -> broadcast("deathmatch.died", victimName));
-        Tasks.async(plugin, () -> stats.increment(victim.getUniqueId(), victim.getName(), StatCategory.DEATHS, 1));
+        Tasks.async(plugin, () -> stats.add(victim.getUniqueId(), victim.getName(), Stat.DEATHS, 1));
         int remaining = Math.max(0, lives(victim) - 1);
         lives.put(victim.getUniqueId(), remaining);
         if (remaining == 0) {
             alive.remove(victim.getUniqueId());
             spectators.add(victim.getUniqueId());
-            Tasks.async(plugin, () -> stats.increment(victim.getUniqueId(), victim.getName(), StatCategory.LOSES, 1));
+            Tasks.async(plugin, () -> stats.add(victim.getUniqueId(), victim.getName(), Stat.LOSSES, 1));
         }
         scoreboard.refreshAll();
         if (remaining == 0) {
@@ -438,31 +440,32 @@ public final class Game {
         if (phase == GamePhase.LOBBY || phase == GamePhase.ENDING || alive.size() > 1) {
             return;
         }
-        setPhase(GamePhase.ENDING);
         for (var winner : alivePlayers()) {
             broadcast("ending.winner", Placeholder.unparsed("player", winner.getName()));
             Tasks.async(plugin, () -> {
-                stats.increment(winner.getUniqueId(), winner.getName(), StatCategory.WINS, 1);
+                stats.add(winner.getUniqueId(), winner.getName(), Stat.WINS, 1);
                 coins.add(winner.getUniqueId(), winner.getName(), WIN_COINS);
-                stats.increment(winner.getUniqueId(), winner.getName(), StatCategory.POINTS, WIN_COINS);
+                stats.add(winner.getUniqueId(), winner.getName(), Stat.POINTS, WIN_COINS);
             });
-            var firework = winner.getWorld().spawn(winner.getLocation(), Firework.class);
-            var meta = firework.getFireworkMeta();
-            meta.addEffect(FireworkEffect.builder().withColor(Color.RED).withFade(Color.BLUE).with(FireworkEffect.Type.BALL_LARGE).build());
-            meta.setPower(1);
-            firework.setFireworkMeta(meta);
+            BlockcraftApi.get().effects().onWin(winner);
         }
+        endRound();
+    }
+
+    private void endRound() {
+        setPhase(GamePhase.ENDING);
         scoreboard.refreshAll();
-        startPhase(config.restartSeconds(), remaining -> {
-            if (remaining == 10 || remaining <= 5) {
+        countdown.cancel();
+        restart = ServerRestart.start(plugin, config.restartSeconds() + 1, remaining -> {
+            if (remaining == 10 || (remaining >= 1 && remaining <= 5)) {
                 broadcast("ending.restart", Formatter.number("seconds", remaining));
             }
             if (remaining == 5) {
                 clearDroppedItems();
             }
-        }, () -> {
-            broadcast("ending.restart-now");
-            Bukkit.shutdown();
+            if (remaining == 0) {
+                broadcast("ending.restart-now");
+            }
         });
     }
 
@@ -480,27 +483,12 @@ public final class Game {
         spectators.add(player.getUniqueId());
         player.setExp(0.0f);
         player.setLevel(0);
-        resetHealth(player);
+        PlayerReset.resetHealth(player);
         player.setFoodLevel(20);
         player.getInventory().setArmorContents(null);
         player.setGameMode(GameMode.SPECTATOR);
     }
 
-    private void resetPlayer(Player player, GameMode mode) {
-        player.getActivePotionEffects().forEach(effect -> player.removePotionEffect(effect.getType()));
-        player.setExp(0.0f);
-        player.setLevel(0);
-        resetHealth(player);
-        player.setGameMode(mode);
-        player.setFoodLevel(20);
-        player.getInventory().clear();
-    }
-
-    private static void resetHealth(Player player) {
-        var maxHealth = Objects.requireNonNull(player.getAttribute(Attribute.MAX_HEALTH));
-        maxHealth.setBaseValue(20.0);
-        player.setHealth(20.0);
-    }
 
     private void giveLobbyItems(Player player) {
         var inventory = player.getInventory();
@@ -530,10 +518,6 @@ public final class Game {
 
     private void setPhase(GamePhase phase) {
         this.phase = phase;
-        BlockcraftApi.get().presence().state(switch (phase) {
-            case LOBBY -> ServerState.LOBBY;
-            case SEARCH, SHOPPING, DEATHMATCH -> ServerState.INGAME;
-            case ENDING -> ServerState.RESTART;
-        });
+        BlockcraftApi.get().presence().state(phase.serverState());
     }
 }

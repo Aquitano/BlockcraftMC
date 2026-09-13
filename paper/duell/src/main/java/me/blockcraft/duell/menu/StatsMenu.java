@@ -1,11 +1,12 @@
 package me.blockcraft.duell.menu;
 
+import me.blockcraft.api.game.Stat;
+import me.blockcraft.api.game.Stats;
+import me.blockcraft.api.game.TopList;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.menu.Menu;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.duell.game.GameItems;
-import me.blockcraft.duell.game.TopList;
-import me.blockcraft.duell.storage.Stats;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.entity.Player;
@@ -35,14 +36,13 @@ public final class StatsMenu extends Menu {
     }
 
     private static ItemStack head(Messages messages, Player player, Stats stats) {
-        double kdr = Math.round((double) stats.kills() / stats.deaths() * 100.0) / 100.0;
         return Items.head(player.getUniqueId(), player.getName())
                 .name(messages.get("menu.stats.player", Placeholder.unparsed("player", player.getName())))
                 .lore(messages.getLines("menu.stats.player-lore",
                         Formatter.number("kills", stats.kills()),
                         Formatter.number("wins", stats.wins()),
                         Formatter.number("deaths", stats.deaths()),
-                        Placeholder.unparsed("kdr", stats.deaths() > 0 ? String.valueOf(kdr) : "-")))
+                        Placeholder.unparsed("kdr", stats.kdr())))
                 .build();
     }
 
@@ -50,7 +50,7 @@ public final class StatsMenu extends Menu {
     protected void onClick(Player player, int slot, ItemStack clicked, InventoryClickEvent event) {
         close(player);
         if (slot == globalSlot) {
-            topList.sendWins(player);
+            topList.send(player, Stat.WINS);
         }
     }
 }

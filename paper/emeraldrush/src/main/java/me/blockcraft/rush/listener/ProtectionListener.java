@@ -6,16 +6,12 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.Action;
-import org.bukkit.event.block.LeavesDecayEvent;
-import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -39,11 +35,6 @@ public final class ProtectionListener implements Listener {
         if (event.getEntity() instanceof Player player && player.getHealth() >= LOADOUT_SNAPSHOT_MIN_HEALTH) {
             game.saveLoadout(player);
         }
-    }
-
-    @EventHandler
-    public void onCreatureSpawn(CreatureSpawnEvent event) {
-        event.setCancelled(true);
     }
 
     @EventHandler
@@ -85,18 +76,5 @@ public final class ProtectionListener implements Listener {
                 && event.getPlayer().getLocation().getBlock().getType() == Material.WATER) {
             event.getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.JUMP_BOOST, 60, 5));
         }
-    }
-
-    @EventHandler
-    public void onTrample(PlayerInteractEvent event) {
-        var block = event.getClickedBlock();
-        if (event.getAction() == Action.PHYSICAL && block != null && block.getType() == Material.FARMLAND) {
-            event.setCancelled(true);
-        }
-    }
-
-    @EventHandler
-    public void onLeavesDecay(LeavesDecayEvent event) {
-        event.setCancelled(true);
     }
 }

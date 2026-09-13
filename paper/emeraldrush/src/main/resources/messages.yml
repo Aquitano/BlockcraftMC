@@ -76,8 +76,8 @@ stats:
     - "<dark_gray>» <blue>TW Points: <gray><points>"
 top:
   separator: "<gray><strikethrough>---------------------------------"
-  first: "<yellow><bold>#1 <reset><blue><player><gray> ( <white><value><gray> ) "
-  entry: "<reset>#<rank> <blue><player> <gray>( <white><value><gray> ) "
+  first: "<yellow><bold>#1 <reset><blue><name><gray> ( <white><value><gray> ) "
+  entry: "<reset>#<rank> <blue><name> <gray>( <white><value><gray> ) "
 scoreboard:
   title: "<dark_gray>» <blue>BlockcraftMC.net <dark_gray>«"
   lobby:

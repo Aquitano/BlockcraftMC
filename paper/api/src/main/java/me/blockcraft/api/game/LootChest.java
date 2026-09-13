@@ -1,11 +1,12 @@
-package me.blockcraft.duell.game;
+package me.blockcraft.api.game;
 
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 
-final class LootChest implements InventoryHolder {
+/** Marker holder so listeners can tell generated loot chests from other inventories. */
+public final class LootChest implements InventoryHolder {
 
     private final Inventory inventory;
 

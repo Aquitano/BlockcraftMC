@@ -1,8 +1,8 @@
 package me.blockcraft.duell.listener;
 
+import me.blockcraft.api.game.LootChests;
 import me.blockcraft.duell.game.Duel;
 import me.blockcraft.duell.game.DuelMode;
-import me.blockcraft.duell.game.LootChests;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.event.EventHandler;

@@ -2,7 +2,7 @@ package me.blockcraft.quicksg.menu;
 
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.menu.Menu;
-import me.blockcraft.quicksg.storage.StatColumn;
+import me.blockcraft.api.game.Stat;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -12,12 +12,12 @@ import java.util.Map;
 
 final class GlobalStatsMenu extends Menu {
 
-    private static final Map<Integer, StatColumn> SLOTS = Map.of(
-            0, StatColumn.WINS,
-            2, StatColumn.DEATHS,
-            4, StatColumn.KILLS,
-            6, StatColumn.LOSSES,
-            8, StatColumn.POINTS);
+    private static final Map<Integer, Stat> SLOTS = Map.of(
+            0, Stat.WINS,
+            2, Stat.DEATHS,
+            4, Stat.KILLS,
+            6, Stat.LOSSES,
+            8, Stat.POINTS);
 
     private final StatsMenus menus;
 

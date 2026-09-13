@@ -1,10 +1,10 @@
 package me.blockcraft.quicksg.listener;
 
+import me.blockcraft.api.game.LootChest;
+import me.blockcraft.api.game.LootChests;
 import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.quicksg.game.Game;
-import me.blockcraft.quicksg.game.LootChest;
-import me.blockcraft.quicksg.game.LootChests;
 import me.blockcraft.quicksg.menu.KitMenus;
 import me.blockcraft.quicksg.menu.StatsMenus;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;

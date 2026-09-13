@@ -10,8 +10,8 @@ import me.blockcraft.api.coins.CoinsRepository;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.quicksg.game.Game;
-import me.blockcraft.quicksg.storage.StatColumn;
-import me.blockcraft.quicksg.storage.StatsRepository;
+import me.blockcraft.api.game.Stat;
+import me.blockcraft.api.game.StatsRepository;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -63,7 +63,7 @@ public final class StartCommand {
                         .requires(source -> source.getSender().hasPermission("blockcraft.quicksg.admin"))
                         .executes(context -> {
                             Player player = context.getSource().getPlayerOrThrow();
-                            Tasks.async(plugin, () -> stats.add(player.getUniqueId(), player.getName(), StatColumn.WINS, 1));
+                            Tasks.async(plugin, () -> stats.add(player.getUniqueId(), player.getName(), Stat.WINS, 1));
                             return Command.SINGLE_SUCCESS;
                         }))
                 .build();

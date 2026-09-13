@@ -3,28 +3,27 @@ package me.blockcraft.quicksg.game;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.coins.CoinsRepository;
 import me.blockcraft.api.config.Locations;
+import me.blockcraft.api.game.GamePhase;
+import me.blockcraft.api.game.PlayerReset;
+import me.blockcraft.api.game.ServerRestart;
+import me.blockcraft.api.game.Stat;
+import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.task.Countdown;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
-import me.blockcraft.common.network.ServerState;
 import me.blockcraft.quicksg.config.LocationKey;
 import me.blockcraft.quicksg.config.QuickSGConfig;
 import me.blockcraft.quicksg.kit.Kit;
-import me.blockcraft.quicksg.storage.StatColumn;
-import me.blockcraft.quicksg.storage.StatsRepository;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
-import org.bukkit.Color;
-import org.bukkit.FireworkEffect;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
-import org.bukkit.entity.Firework;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerRespawnEvent;
@@ -45,7 +44,6 @@ public final class Game {
     private static final Set<Integer> PROTECTION_ANNOUNCEMENTS = Set.of(15, 10, 5, 4, 3, 2, 1);
     private static final Set<Integer> GAME_END_ANNOUNCEMENTS = Set.of(600, 300, 180);
     private static final double INGAME_MAX_HEALTH = 14.0;
-    private static final double DEFAULT_MAX_HEALTH = 20.0;
     private static final long RESPAWN_DELAY_TICKS = 1L;
 
     private final Plugin plugin;
@@ -145,7 +143,7 @@ public final class Game {
         }
         alive.add(player.getUniqueId());
         kits.put(player.getUniqueId(), Kit.STARTER);
-        resetPlayer(player, GameMode.ADVENTURE);
+        PlayerReset.reset(player, GameMode.ADVENTURE);
         locations.get(LocationKey.LOBBY).ifPresent(player::teleport);
         giveLobbyItems(player);
         Bukkit.broadcast(messages.get("join.broadcast", Placeholder.unparsed("player", player.getName())));
@@ -161,8 +159,8 @@ public final class Game {
         builders.remove(player.getUniqueId());
         kits.remove(player.getUniqueId());
         if (phase == GamePhase.INGAME && wasAlive) {
-            record(player, StatColumn.LOSSES, 1);
-            record(player, StatColumn.DEATHS, 1);
+            record(player, Stat.LOSSES, 1);
+            record(player, Stat.DEATHS, 1);
         }
         refreshScoreboards();
         checkWinner();
@@ -175,14 +173,15 @@ public final class Game {
         var victimName = Placeholder.unparsed("player", victim.getName());
         if (killer != null) {
             Bukkit.broadcast(messages.get("game.killed", victimName, Placeholder.unparsed("killer", killer.getName())));
+            BlockcraftApi.get().effects().onKill(killer, victim);
             reward(killer, config.rewards().kill());
-            record(killer, StatColumn.KILLS, 1);
+            record(killer, Stat.KILLS, 1);
         } else {
             Bukkit.broadcast(messages.get("game.died", victimName));
             reward(victim, config.rewards().death());
         }
-        record(victim, StatColumn.DEATHS, 1);
-        record(victim, StatColumn.LOSSES, 1);
+        record(victim, Stat.DEATHS, 1);
+        record(victim, Stat.LOSSES, 1);
         alive.remove(victim.getUniqueId());
         spectators.add(victim.getUniqueId());
         Tasks.later(plugin, RESPAWN_DELAY_TICKS, () -> {
@@ -226,8 +225,7 @@ public final class Game {
         spectators.add(player.getUniqueId());
         player.setExp(0.0f);
         player.setLevel(0);
-        maxHealth(player, DEFAULT_MAX_HEALTH);
-        player.setHealth(DEFAULT_MAX_HEALTH);
+        PlayerReset.resetHealth(player);
         player.setFoodLevel(20);
         player.getInventory().setArmorContents(null);
         player.setGameMode(GameMode.SPECTATOR);
@@ -327,7 +325,9 @@ public final class Game {
             }
         }, () -> {
             Bukkit.broadcast(messages.get("game.draw"));
-            Bukkit.shutdown();
+            setPhase(GamePhase.ENDING);
+            refreshScoreboards();
+            startRestart();
         });
     }
 
@@ -352,9 +352,9 @@ public final class Game {
         frozen = false;
         for (var winner : alivePlayers().toList()) {
             Bukkit.broadcast(messages.get("game.winner", Placeholder.unparsed("player", winner.getName())));
-            record(winner, StatColumn.WINS, 1);
+            record(winner, Stat.WINS, 1);
             reward(winner, config.rewards().win());
-            spawnFirework(winner);
+            BlockcraftApi.get().effects().onWin(winner);
         }
         refreshScoreboards();
         startRestart();
@@ -363,16 +363,16 @@ public final class Game {
     private void startRestart() {
         int seconds = config.countdowns().restart();
         Bukkit.broadcast(restartMessage(seconds));
-        restartCountdown = Countdown.start(plugin, seconds, remaining -> {
+        restartCountdown = ServerRestart.start(plugin, seconds, remaining -> {
             if (remaining == 5) {
                 clearDroppedItems();
             }
             if (remaining >= 1 && remaining <= 5) {
                 Bukkit.broadcast(restartMessage(remaining));
             }
-        }, () -> {
-            Bukkit.broadcast(messages.get("restart.now"));
-            Bukkit.shutdown();
+            if (remaining == 0) {
+                Bukkit.broadcast(messages.get("restart.now"));
+            }
         });
     }
 
@@ -392,18 +392,6 @@ public final class Game {
         }
     }
 
-    private void resetPlayer(Player player, GameMode gameMode) {
-        player.clearActivePotionEffects();
-        player.setExp(0.0f);
-        player.setLevel(0);
-        maxHealth(player, DEFAULT_MAX_HEALTH);
-        player.setHealth(DEFAULT_MAX_HEALTH);
-        player.setGameMode(gameMode);
-        player.setFoodLevel(20);
-        player.getInventory().clear();
-        player.getInventory().setArmorContents(null);
-    }
-
     private List<Location> spawns() {
         return LocationKey.spawns().stream().flatMap(key -> locations.get(key).stream()).toList();
     }
@@ -419,15 +407,6 @@ public final class Game {
         });
     }
 
-    private void spawnFirework(Player winner) {
-        winner.getWorld().spawn(winner.getLocation(), Firework.class, firework -> {
-            var meta = firework.getFireworkMeta();
-            meta.addEffect(FireworkEffect.builder().withColor(Color.RED).withFade(Color.BLUE).with(FireworkEffect.Type.BALL_LARGE).build());
-            meta.setPower(1);
-            firework.setFireworkMeta(meta);
-        });
-    }
-
     private void clearDroppedItems() {
         for (var world : Bukkit.getWorlds()) {
             world.getEntitiesByClass(Item.class).forEach(Item::remove);
@@ -439,11 +418,11 @@ public final class Game {
         var name = player.getName();
         Tasks.async(plugin, () -> {
             coins.add(uuid, name, amount);
-            stats.add(uuid, name, StatColumn.POINTS, amount);
+            stats.add(uuid, name, Stat.POINTS, amount);
         });
     }
 
-    private void record(Player player, StatColumn column, int delta) {
+    private void record(Player player, Stat column, int delta) {
         var uuid = player.getUniqueId();
         var name = player.getName();
         Tasks.async(plugin, () -> stats.add(uuid, name, column, delta));
@@ -468,10 +447,6 @@ public final class Game {
 
     private void setPhase(GamePhase phase) {
         this.phase = phase;
-        BlockcraftApi.get().presence().state(switch (phase) {
-            case LOBBY -> ServerState.LOBBY;
-            case INGAME -> ServerState.INGAME;
-            case ENDING -> ServerState.RESTART;
-        });
+        BlockcraftApi.get().presence().state(phase.serverState());
     }
 }

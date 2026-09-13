@@ -1,10 +1,10 @@
 package me.blockcraft.quicksg.config;
 
-import org.bukkit.Material;
+import me.blockcraft.api.game.LootTable;
+
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 
-import java.util.List;
 
 public record QuickSGConfig(
         String mapName,
@@ -15,7 +15,7 @@ public record QuickSGConfig(
         WorldBorderSettings worldBorder,
         Rewards rewards,
         int kitPrice,
-        Loot loot
+        LootTable loot
 ) {
 
     public record Countdowns(int lobby, int freeze, int protection, int game, int trackerAfter, int restart,
@@ -28,23 +28,11 @@ public record QuickSGConfig(
     public record Rewards(int kill, int death, int win) {
     }
 
-    public record Loot(int minItems, int maxItems, List<LootEntry> entries) {
-    }
-
-    public record LootEntry(Material material, int amount, int weight) {
-    }
-
     public static QuickSGConfig from(FileConfiguration config) {
         var countdown = section(config, "countdown");
         var border = section(config, "world-border");
         var rewards = section(config, "rewards");
         var chest = section(config, "chest");
-        var entries = chest.getMapList("loot").stream()
-                .map(entry -> new LootEntry(
-                        Material.valueOf(String.valueOf(entry.get("item"))),
-                        entry.get("amount") instanceof Number amount ? amount.intValue() : 1,
-                        entry.get("weight") instanceof Number weight ? weight.intValue() : 1))
-                .toList();
         return new QuickSGConfig(
                 config.getString("map-name", "MapName"),
                 config.getInt("min-players", 2),
@@ -65,7 +53,7 @@ public record QuickSGConfig(
                         border.getDouble("ingame-radius", 60)),
                 new Rewards(rewards.getInt("kill", 5), rewards.getInt("death", 2), rewards.getInt("win", 15)),
                 config.getInt("kit-price", 200),
-                new Loot(chest.getInt("min-items", 1), chest.getInt("max-items", 7), entries));
+                LootTable.fromYaml(chest, 1, 7));
     }
 
     private static ConfigurationSection section(FileConfiguration config, String key) {

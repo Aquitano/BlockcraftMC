@@ -25,6 +25,7 @@ round:
   coins: "<prefix><reset><player> <gray>erhält <green><coins> Coins<white>."
   died: "<prefix><reset><player> <gray>ist gestorben."
   ended: "<prefix><gray>Die Runde wurde beendet."
+  draw: "<prefix><gray>Die Zeit ist um, das Duell endet <yellow>unentschieden<gray>."
   restart-in: "<prefix><gray>Der Server startet in <red><seconds> <gray>Sekunden neu."
 
 superjump:

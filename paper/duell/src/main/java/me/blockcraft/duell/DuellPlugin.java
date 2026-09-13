@@ -2,6 +2,10 @@ package me.blockcraft.duell;
 
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.game.ArenaProtection;
+import me.blockcraft.api.game.LootChests;
+import me.blockcraft.api.game.StatsRepository;
+import me.blockcraft.api.game.TopList;
 import me.blockcraft.api.world.Worlds;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.duell.command.SetSpawnCommand;
@@ -10,8 +14,6 @@ import me.blockcraft.duell.config.Spawns;
 import me.blockcraft.duell.game.Duel;
 import me.blockcraft.duell.game.GameItems;
 import me.blockcraft.duell.game.GameScoreboard;
-import me.blockcraft.duell.game.LootChests;
-import me.blockcraft.duell.game.TopList;
 import me.blockcraft.duell.listener.ConnectionListener;
 import me.blockcraft.duell.listener.LobbyItemListener;
 import me.blockcraft.duell.listener.ProtectionListener;
@@ -19,7 +21,6 @@ import me.blockcraft.duell.listener.SgListener;
 import me.blockcraft.duell.listener.SuperJumpListener;
 import me.blockcraft.duell.listener.VsListener;
 import me.blockcraft.duell.menu.StatsMenus;
-import me.blockcraft.duell.storage.StatsRepository;
 import org.bukkit.Bukkit;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -38,7 +39,7 @@ public final class DuellPlugin extends JavaPlugin {
         var spawns = Spawns.load(getDataPath());
 
         var api = BlockcraftApi.get();
-        var stats = new StatsRepository(api.database());
+        var stats = new StatsRepository(api.database(), "duell_stats");
         stats.createTable();
 
         var items = new GameItems(messages);
@@ -52,6 +53,7 @@ public final class DuellPlugin extends JavaPlugin {
                 new ConnectionListener(duel),
                 new LobbyItemListener(this, duel, messages, statsMenus),
                 new ProtectionListener(duel),
+                new ArenaProtection(duel::frozen),
                 new VsListener(this, duel, messages, items),
                 new SgListener(duel, lootChests),
                 new SuperJumpListener(duel)

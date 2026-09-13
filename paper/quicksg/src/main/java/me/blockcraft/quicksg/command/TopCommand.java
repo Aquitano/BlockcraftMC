@@ -6,8 +6,8 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import me.blockcraft.common.message.Messages;
-import me.blockcraft.quicksg.game.TopList;
-import me.blockcraft.quicksg.storage.StatColumn;
+import me.blockcraft.api.game.Stat;
+import me.blockcraft.api.game.TopList;
 import org.bukkit.entity.Player;
 
 import java.util.Arrays;
@@ -22,12 +22,12 @@ public final class TopCommand {
                 .requires(source -> source.getSender() instanceof Player)
                 .then(Commands.argument("category", StringArgumentType.word())
                         .suggests((context, builder) -> {
-                            Arrays.stream(StatColumn.values()).map(StatColumn::category).forEach(builder::suggest);
+                            Arrays.stream(Stat.values()).map(Stat::key).forEach(builder::suggest);
                             return builder.buildFuture();
                         })
                         .executes(context -> {
                             Player player = context.getSource().getPlayerOrThrow();
-                            StatColumn.parse(StringArgumentType.getString(context, "category")).ifPresentOrElse(
+                            Stat.parse(StringArgumentType.getString(context, "category")).ifPresentOrElse(
                                     column -> topList.send(player, column),
                                     () -> player.sendMessage(messages.get("top.unknown-category")));
                             return Command.SINGLE_SUCCESS;

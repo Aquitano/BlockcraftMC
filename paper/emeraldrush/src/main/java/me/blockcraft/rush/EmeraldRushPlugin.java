@@ -1,8 +1,10 @@
 package me.blockcraft.rush;
 
+import me.blockcraft.api.game.ArenaProtection;
+import me.blockcraft.api.game.ServerRestart;
+import me.blockcraft.api.game.StatsRepository;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import me.blockcraft.api.BlockcraftApi;
-import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.rush.command.BuildCommand;
 import me.blockcraft.rush.command.ChestCommand;
@@ -22,7 +24,6 @@ import me.blockcraft.rush.listener.HotbarListener;
 import me.blockcraft.rush.listener.ProtectionListener;
 import me.blockcraft.rush.kit.Perk;
 import me.blockcraft.rush.menu.RushMenus;
-import me.blockcraft.rush.storage.StatsRepository;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.event.Listener;
@@ -42,7 +43,7 @@ public final class EmeraldRushPlugin extends JavaPlugin {
         var messages = Messages.load(getDataPath(), () -> getResource("messages.yml"));
 
         var api = BlockcraftApi.get();
-        var stats = new StatsRepository(api.database());
+        var stats = new StatsRepository(api.database(), "em_stats");
         stats.createTable();
         api.unlocks().importLegacyTable("em_kits", Perk.LEGACY_COLUMNS);
 
@@ -52,6 +53,7 @@ public final class EmeraldRushPlugin extends JavaPlugin {
         register(new ConnectionListener(game, messages));
         register(new DeathListener(game));
         register(new ProtectionListener(game));
+        register(new ArenaProtection(() -> false));
         register(new BlockListener(this, game, config));
         register(new HotbarListener(this, game, menus, config, messages));
 
@@ -67,12 +69,8 @@ public final class EmeraldRushPlugin extends JavaPlugin {
             registrar.register(RushCoinsCommand.create(game, messages), "Setzt die Emeralds eines Spielers", List.of());
         });
 
-        long idleRestartTicks = config.idleRestartMinutes() * 60L * 20L;
-        Tasks.later(this, idleRestartTicks, () -> {
-            if (Bukkit.getOnlinePlayers().isEmpty()) {
-                Bukkit.shutdown();
-            }
-        });
+        int idleSeconds = config.idleRestartMinutes() * 60;
+        ServerRestart.whenIdle(this, idleSeconds, idleSeconds);
     }
 
     @Override

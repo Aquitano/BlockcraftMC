@@ -1,12 +1,12 @@
 package me.blockcraft.duell.menu;
 
+import me.blockcraft.api.game.Stats;
+import me.blockcraft.api.game.StatsRepository;
+import me.blockcraft.api.game.TopList;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.duell.game.Duel;
 import me.blockcraft.duell.game.GameItems;
-import me.blockcraft.duell.game.TopList;
-import me.blockcraft.duell.storage.Stats;
-import me.blockcraft.duell.storage.StatsRepository;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 

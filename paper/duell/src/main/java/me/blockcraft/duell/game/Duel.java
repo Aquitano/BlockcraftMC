@@ -1,16 +1,16 @@
 package me.blockcraft.duell.game;
 
-import me.blockcraft.api.coins.CoinsRepository;
 import me.blockcraft.api.BlockcraftApi;
-import me.blockcraft.api.proxy.ProxyMessaging;
+import me.blockcraft.api.coins.CoinsRepository;
+import me.blockcraft.api.game.GamePhase;
+import me.blockcraft.api.game.ServerRestart;
+import me.blockcraft.api.game.Stat;
+import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.task.Countdown;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
-import me.blockcraft.common.network.ServerState;
 import me.blockcraft.duell.config.DuellConfig;
 import me.blockcraft.duell.config.Spawns;
-import me.blockcraft.duell.storage.StatColumn;
-import me.blockcraft.duell.storage.StatsRepository;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -31,6 +31,7 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.ToIntFunction;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -192,8 +193,9 @@ public final class Duel {
 
     public void handleVsKill(Player victim, Player killer) {
         round++;
-        record(killer, StatColumn.KILLS);
-        record(victim, StatColumn.DEATHS);
+        BlockcraftApi.get().effects().onKill(killer, victim);
+        record(killer, Stat.KILLS);
+        record(victim, Stat.DEATHS);
         killer.setLevel(killer.getLevel() + 1);
         respawnLater(victim);
         if (round > config.vsKillsToEnd()) {
@@ -212,11 +214,12 @@ public final class Duel {
         var victimName = Placeholder.unparsed("player", victim.getName());
         if (killer != null) {
             Bukkit.broadcast(messages.get("round.died", victimName));
+            BlockcraftApi.get().effects().onKill(killer, victim);
             broadcastWinner(killer);
             rewardWinner(killer);
-            record(killer, StatColumn.KILLS);
-            record(victim, StatColumn.DEATHS);
-            record(victim, StatColumn.LOSSES);
+            record(killer, Stat.KILLS);
+            record(victim, Stat.DEATHS);
+            record(victim, Stat.LOSSES);
         } else {
             opponentsOf(victim).forEach(winner -> {
                 broadcastWinner(winner);
@@ -323,11 +326,7 @@ public final class Duel {
 
     private void setPhase(GamePhase phase) {
         this.phase = phase;
-        BlockcraftApi.get().presence().state(switch (phase) {
-            case LOBBY -> ServerState.LOBBY;
-            case INGAME -> ServerState.INGAME;
-            case ENDING -> ServerState.RESTART;
-        });
+        BlockcraftApi.get().presence().state(phase.serverState());
     }
 
     private void teleportToMapSpawn(Player player, int slot) {
@@ -353,7 +352,32 @@ public final class Duel {
             if (ROUND_ANNOUNCEMENTS.contains(remaining)) {
                 Bukkit.broadcast(restartMessage(remaining));
             }
-        }, Bukkit::shutdown);
+        }, this::endByTimeout);
+    }
+
+    /** The clock decides: VS by kills, SuperJump by the furthest checkpoint, SG is a draw. */
+    private void endByTimeout() {
+        var winner = switch (mode) {
+            case VS -> leaderBy(Player::getLevel);
+            case SUPERJUMP -> leaderBy(player -> checkpoints.getOrDefault(player.getUniqueId(), 0));
+            case SG -> Optional.<Player>empty();
+        };
+        winner.ifPresentOrElse(leader -> {
+            broadcastWinner(leader);
+            showWinTitle(leader);
+            rewardWinner(leader);
+        }, () -> Bukkit.broadcast(messages.get("round.draw")));
+        endRound();
+    }
+
+    private Optional<Player> leaderBy(ToIntFunction<Player> score) {
+        var players = participants().toList();
+        if (players.size() < 2) {
+            return players.stream().findFirst();
+        }
+        int first = score.applyAsInt(players.get(0));
+        int second = score.applyAsInt(players.get(1));
+        return first == second ? Optional.empty() : Optional.of(first > second ? players.get(0) : players.get(1));
     }
 
     private void endRound() {
@@ -372,15 +396,12 @@ public final class Duel {
         frozen = false;
         int seconds = config.countdowns().restart();
         Bukkit.broadcast(restartMessage(seconds));
-        restartCountdown = Countdown.start(plugin, seconds, remaining -> {
+        restartCountdown = ServerRestart.start(plugin, seconds, remaining -> {
             participants().forEach(participant -> participant.setLevel(remaining));
             if (RESTART_ANNOUNCEMENTS.contains(remaining)) {
                 Bukkit.broadcast(restartMessage(remaining));
             }
-            if (remaining == 1) {
-                Bukkit.getOnlinePlayers().forEach(online -> ProxyMessaging.hub(plugin, online));
-            }
-        }, Bukkit::shutdown);
+        });
     }
 
     private Component restartMessage(int seconds) {
@@ -399,15 +420,16 @@ public final class Duel {
     private void rewardWinner(Player winner) {
         int amount = config.winCoins();
         Bukkit.broadcast(messages.get("round.coins", Placeholder.unparsed("player", winner.getName()), Formatter.number("coins", amount)));
+        BlockcraftApi.get().effects().onWin(winner);
         var uuid = winner.getUniqueId();
         var name = winner.getName();
         Tasks.async(plugin, () -> {
             coins.add(uuid, name, amount);
-            stats.add(uuid, name, StatColumn.WINS, 1);
+            stats.add(uuid, name, Stat.WINS, 1);
         });
     }
 
-    private void record(Player player, StatColumn column) {
+    private void record(Player player, Stat column) {
         var uuid = player.getUniqueId();
         var name = player.getName();
         Tasks.async(plugin, () -> stats.add(uuid, name, column, 1));

@@ -1,11 +1,11 @@
 package me.blockcraft.quicksg.menu;
 
+import me.blockcraft.api.game.Stats;
+import me.blockcraft.api.game.StatsRepository;
+import me.blockcraft.api.game.TopList;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.quicksg.game.GameItems;
-import me.blockcraft.quicksg.game.TopList;
-import me.blockcraft.quicksg.storage.Stats;
-import me.blockcraft.quicksg.storage.StatsRepository;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;

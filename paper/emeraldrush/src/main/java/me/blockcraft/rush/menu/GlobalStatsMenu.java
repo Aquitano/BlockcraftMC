@@ -1,9 +1,9 @@
 package me.blockcraft.rush.menu;
 
+import me.blockcraft.api.game.Stat;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.menu.Menu;
 import me.blockcraft.common.message.Messages;
-import me.blockcraft.rush.storage.StatCategory;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -13,12 +13,12 @@ import java.util.Map;
 
 final class GlobalStatsMenu extends Menu {
 
-    private static final Map<Integer, StatCategory> SLOTS = Map.of(
-            0, StatCategory.WINS,
-            2, StatCategory.DEATHS,
-            4, StatCategory.KILLS,
-            6, StatCategory.LOSES,
-            8, StatCategory.POINTS);
+    private static final Map<Integer, Stat> SLOTS = Map.of(
+            0, Stat.WINS,
+            2, Stat.DEATHS,
+            4, Stat.KILLS,
+            6, Stat.LOSSES,
+            8, Stat.POINTS);
 
     private final RushMenus menus;
 
