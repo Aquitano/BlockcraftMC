@@ -1,10 +1,9 @@
 package me.blockcraft.api.xp;
 
+import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.xp.XpRepository;
-import net.kyori.adventure.key.Key;
-import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -23,8 +22,6 @@ import java.util.concurrent.ConcurrentHashMap;
  * query; awards go to the database first and the cache follows, so a level-up is judged on the stored total.
  */
 public final class Xp implements Listener {
-
-    private static final Sound LEVEL_UP = Sound.sound(Key.key("entity.player.levelup"), Sound.Source.MASTER, 1.0f, 1.0f);
 
     private final Plugin plugin;
     private final XpRepository repository;
@@ -73,7 +70,7 @@ public final class Xp implements Listener {
             int after = levels.levelFor(total);
             if (after > before) {
                 player.sendMessage(messages.get("xp.level-up", Formatter.number("level", after)));
-                player.playSound(LEVEL_UP);
+                Sounds.LEVEL_UP.play(player);
             }
         });
     }
