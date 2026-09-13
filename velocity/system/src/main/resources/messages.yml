@@ -604,6 +604,7 @@ friends:
   list-request-hover: "<accent>Klicke, um <player> anzunehmen."
   offline: "<accent>Freunde <arrow><reset><muted><player> <muted>ist gerade nicht online."
   already-there: "<accent>Freunde <arrow><reset><muted>Du bist bereits auf dem Server von <accent><player><muted>."
+  unavailable: "<accent>Freunde <arrow><reset><error>Der Server von <accent><player> <error>nimmt gerade keine Spieler auf."
   jumping: "<accent>Freunde <arrow><reset><success>Du springst zu <accent><player> <success>auf <accent><server><success>."
   joined: "<accent>Freunde <arrow><reset><success><player> <success>ist jetzt online."
   left: "<accent>Freunde <arrow><reset><muted><player> <muted>ist jetzt offline."

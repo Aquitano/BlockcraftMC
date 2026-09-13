@@ -153,7 +153,7 @@ public final class SystemPlugin {
         var punishments = new PunishmentService(proxy, repositories.punishments(), messages, config.network());
         var muteGate = new MuteGate(repositories.punishments(), punishments, messages, logger);
         var parties = new PartyManager(proxy, visibility, choices, messages);
-        var friends = new FriendManager(proxy, lookup, visibility, choices, friendships, config, messages);
+        var friends = new FriendManager(proxy, lookup, visibility, choices, directory, friendships, config, messages);
         var supportSessions = new SupportSessions();
         var playtime = new Playtime(repositories.players(), logger);
         var support = new CommandSupport(visibility, messages);

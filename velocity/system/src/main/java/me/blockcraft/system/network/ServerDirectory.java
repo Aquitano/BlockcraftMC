@@ -38,6 +38,11 @@ public final class ServerDirectory {
         return get(server).map(ServerRecord::group);
     }
 
+    /** Whether a named server still takes players, which is what every join path asks before it connects one. */
+    public boolean isJoinable(String server) {
+        return get(server).map(record -> record.status().joinable()).orElse(false);
+    }
+
     public Set<String> groups() {
         return servers.values().stream().map(ServerRecord::group).collect(Collectors.toCollection(TreeSet::new));
     }

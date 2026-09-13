@@ -9,6 +9,7 @@ import me.blockcraft.system.PlayerLookup;
 import me.blockcraft.system.PlayerVisibility;
 import me.blockcraft.system.SystemConfig;
 import me.blockcraft.system.command.CommandSupport;
+import me.blockcraft.system.network.ServerDirectory;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
@@ -33,16 +34,18 @@ public final class FriendManager {
     private final PlayerLookup lookup;
     private final PlayerVisibility visibility;
     private final PlayerChoices choices;
+    private final ServerDirectory directory;
     private final FriendRepository repository;
     private final SystemConfig config;
     private final Messages messages;
 
     public FriendManager(ProxyServer proxy, PlayerLookup lookup, PlayerVisibility visibility, PlayerChoices choices,
-                         FriendRepository repository, SystemConfig config, Messages messages) {
+                         ServerDirectory directory, FriendRepository repository, SystemConfig config, Messages messages) {
         this.proxy = proxy;
         this.lookup = lookup;
         this.visibility = visibility;
         this.choices = choices;
+        this.directory = directory;
         this.repository = repository;
         this.config = config;
         this.messages = messages;
@@ -87,6 +90,10 @@ public final class FriendManager {
             int max = config.friends().max();
             if (repository.countFriends(player.getUniqueId()) >= max) {
                 player.sendMessage(messages.get("friends.full", Formatter.number("max", max)));
+                return;
+            }
+            if (repository.countFriends(requester.uuid()) >= max) {
+                player.sendMessage(messages.get("friends.target-full", named(requester)));
                 return;
             }
             if (!repository.accept(requester.uuid(), player.getUniqueId(), config.friends().requestMinutes())) {
@@ -153,6 +160,10 @@ public final class FriendManager {
             }
             if (player.getCurrentServer().map(current -> current.getServer().equals(server.get())).orElse(false)) {
                 player.sendMessage(messages.get("friends.already-there", named(friend)));
+                return;
+            }
+            if (!directory.isJoinable(server.get().getServerInfo().getName())) {
+                player.sendMessage(messages.get("friends.unavailable", named(friend)));
                 return;
             }
             player.sendMessage(messages.get("friends.jumping", named(friend),
