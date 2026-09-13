@@ -11,6 +11,8 @@ import java.util.Set;
 
 final class KitSelectorMenu extends Menu {
 
+    private static final int CLOSE = 8;
+
     private final KitMenus menus;
 
     KitSelectorMenu(KitMenus menus, Set<Kit> owned) {
@@ -23,6 +25,7 @@ final class KitSelectorMenu extends Menu {
             }
             set(kit.ordinal(), icon.build());
         }
+        closeButton(CLOSE);
     }
 
     @Override

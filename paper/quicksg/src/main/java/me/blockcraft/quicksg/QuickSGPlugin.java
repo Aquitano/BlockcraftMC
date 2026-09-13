@@ -2,17 +2,18 @@ package me.blockcraft.quicksg;
 
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.command.CommandRegistry;
 import me.blockcraft.api.config.Locations;
 import me.blockcraft.api.game.ArenaProtection;
 import me.blockcraft.api.game.LootChests;
 import me.blockcraft.api.game.ServerRestart;
+import me.blockcraft.api.game.StatsCommand;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.game.TopList;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.quicksg.command.BuildCommand;
 import me.blockcraft.quicksg.command.SetupCommand;
 import me.blockcraft.quicksg.command.StartCommand;
-import me.blockcraft.quicksg.command.StatsCommand;
 import me.blockcraft.quicksg.command.TopCommand;
 import me.blockcraft.quicksg.config.LocationKey;
 import me.blockcraft.quicksg.config.QuickSGConfig;
@@ -43,16 +44,16 @@ public final class QuickSGPlugin extends JavaPlugin {
     public void onEnable() {
         saveDefaultConfig();
         var config = QuickSGConfig.from(getConfig());
-        var messages = Messages.load(getDataPath(), () -> getResource("messages.yml"));
+        var api = BlockcraftApi.get();
+        var messages = Messages.load(getDataPath(), () -> getResource("messages.yml"), api.tags());
         var locations = Locations.load(getDataPath().resolve("locations.yml"), LocationKey::key);
 
-        var api = BlockcraftApi.get();
         var stats = new StatsRepository(api.database(), "qsg_stats");
         stats.createTable();
         api.unlocks().importLegacyTable("qsg_kits", Kit.LEGACY_COLUMNS);
 
         var items = new GameItems(messages);
-        game = new Game(this, config, messages, locations, stats, api.coins(), new GameScoreboard(messages, config), items);
+        game = new Game(this, config, messages, locations, stats, new GameScoreboard(messages, config), items);
         api.presence().maxPlayers(config.maxPlayers());
         game.applyLobbyWorldBorder();
 
@@ -70,12 +71,12 @@ public final class QuickSGPlugin extends JavaPlugin {
         ).forEach(this::register);
 
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
-            var registrar = event.registrar();
-            registrar.register(StartCommand.create(this, game, messages, api.coins(), stats), "Startet die Runde", List.of());
-            registrar.register(StatsCommand.create(this, stats, messages), "Zeigt die Stats eines Spielers", List.of());
-            registrar.register(BuildCommand.create(game, messages), "Schaltet den Build Modus um", List.of());
-            registrar.register(SetupCommand.create(locations, messages), "Setzt die QuickSG Locations", List.of());
-            registrar.register(TopCommand.create(topList, messages), "Zeigt die Top 10 einer Kategorie", List.of());
+            var commands = new CommandRegistry(event.registrar(), messages);
+            commands.register(StartCommand.create(this, game, messages, api.coins(), stats));
+            commands.register(StatsCommand.create(this, stats, messages));
+            commands.register(BuildCommand.create(game, messages));
+            commands.register(SetupCommand.create(locations, messages));
+            commands.register(TopCommand.create(topList, messages));
         });
 
         Bukkit.getScheduler().runTaskTimer(this, () -> {

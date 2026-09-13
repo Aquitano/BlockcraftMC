@@ -3,7 +3,6 @@ package me.blockcraft.quicksg.menu;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.menu.Menu;
 import me.blockcraft.api.game.Stats;
-import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -43,11 +42,7 @@ final class StatsMenu extends Menu {
     private ItemStack head(Player player, Stats stats) {
         return Items.head(player.getUniqueId(), player.getName())
                 .name(menus.messages().get("menu.stats.player", Placeholder.unparsed("player", player.getName())))
-                .lore(menus.messages().getLines("menu.stats.player-lore",
-                        Formatter.number("wins", stats.wins()),
-                        Formatter.number("losses", stats.losses()),
-                        Formatter.number("deaths", stats.deaths()),
-                        Formatter.number("kills", stats.kills())))
+                .lore(menus.messages().getLines("menu.stats.player-lore", stats.placeholders()))
                 .build();
     }
 

@@ -18,15 +18,17 @@ final class GlobalStatsMenu extends Menu {
             4, Stat.KILLS,
             6, Stat.LOSSES,
             8, Stat.POINTS);
+    private static final int BACK = 13;
 
     private final StatsMenus menus;
 
     GlobalStatsMenu(StatsMenus menus) {
-        super(1, menus.messages().get("menu.global-stats.title"));
+        super(2, menus.messages().get("menu.global-stats.title"));
         this.menus = menus;
         SLOTS.forEach((slot, column) -> set(slot, Items.of(Material.PAPER)
                 .name(menus.messages().get("menu.global-stats." + column.name().toLowerCase()))
                 .build()));
+        backButton(BACK, menus::openPlayers);
     }
 
     @Override

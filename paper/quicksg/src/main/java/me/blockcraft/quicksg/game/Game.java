@@ -1,13 +1,15 @@
 package me.blockcraft.quicksg.game;
 
 import me.blockcraft.api.BlockcraftApi;
-import me.blockcraft.api.coins.CoinsRepository;
+import me.blockcraft.api.coins.Coins;
 import me.blockcraft.api.config.Locations;
 import me.blockcraft.api.game.GamePhase;
+import me.blockcraft.api.game.LobbyCountdown;
 import me.blockcraft.api.game.PlayerReset;
 import me.blockcraft.api.game.ServerRestart;
 import me.blockcraft.api.game.Stat;
 import me.blockcraft.api.game.StatsRepository;
+import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Countdown;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.api.xp.XpReward;
@@ -18,12 +20,10 @@ import me.blockcraft.quicksg.kit.Kit;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Particle;
-import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
@@ -41,7 +41,6 @@ import java.util.stream.Stream;
 
 public final class Game {
 
-    private static final Set<Integer> LOBBY_ANNOUNCEMENTS = Set.of(15, 10, 5, 4, 3, 2, 1);
     private static final Set<Integer> PROTECTION_ANNOUNCEMENTS = Set.of(15, 10, 5, 4, 3, 2, 1);
     private static final Set<Integer> GAME_END_ANNOUNCEMENTS = Set.of(600, 300, 180);
     private static final double INGAME_MAX_HEALTH = 14.0;
@@ -52,7 +51,6 @@ public final class Game {
     private final Messages messages;
     private final Locations<LocationKey> locations;
     private final StatsRepository stats;
-    private final CoinsRepository coins;
     private final GameScoreboard scoreboard;
     private final GameItems items;
 
@@ -63,22 +61,24 @@ public final class Game {
     private final Set<UUID> spectators = new HashSet<>();
     private final Set<UUID> builders = new HashSet<>();
     private final Map<UUID, Kit> kits = new HashMap<>();
-    private Countdown lobbyCountdown;
+    private final LobbyCountdown lobbyCountdown;
     private Countdown freezeCountdown;
     private Countdown protectionCountdown;
     private Countdown gameTimer;
     private Countdown restartCountdown;
 
     public Game(Plugin plugin, QuickSGConfig config, Messages messages, Locations<LocationKey> locations,
-                StatsRepository stats, CoinsRepository coins, GameScoreboard scoreboard, GameItems items) {
+                StatsRepository stats, GameScoreboard scoreboard, GameItems items) {
         this.plugin = plugin;
         this.config = config;
         this.messages = messages;
         this.locations = locations;
         this.stats = stats;
-        this.coins = coins;
         this.scoreboard = scoreboard;
         this.items = items;
+        this.lobbyCountdown = new LobbyCountdown(plugin, config.countdowns().lobby(), config.minPlayers(), alive::size,
+                seconds -> Bukkit.broadcast(messages.get("lobby.starting-in", Formatter.number("seconds", seconds))),
+                this::start);
     }
 
     public boolean isLobby() {
@@ -149,9 +149,7 @@ public final class Game {
         giveLobbyItems(player);
         Bukkit.broadcast(messages.get("join.broadcast", Placeholder.unparsed("player", player.getName())));
         refreshScoreboards();
-        if (Bukkit.getOnlinePlayers().size() >= config.minPlayers()) {
-            startLobbyCountdown();
-        }
+        lobbyCountdown.start();
     }
 
     public void quit(Player player) {
@@ -206,14 +204,7 @@ public final class Game {
 
     /** Skips a running lobby countdown to its last five seconds; returns false if that is not possible any more. */
     public boolean shortenLobbyCountdown() {
-        if (lobbyCountdown == null) {
-            startLobbyCountdown();
-        }
-        if (lobbyCountdown.remaining() <= 5) {
-            return false;
-        }
-        lobbyCountdown.remaining(6);
-        return true;
+        return lobbyCountdown.shorten(5);
     }
 
     public void skipGameTimer(int remainingSeconds) {
@@ -225,14 +216,7 @@ public final class Game {
     public void makeSpectator(Player player) {
         alive.remove(player.getUniqueId());
         spectators.add(player.getUniqueId());
-        player.setExp(0.0f);
-        player.setLevel(0);
-        PlayerReset.resetHealth(player);
-        player.setFoodLevel(20);
-        player.getInventory().setArmorContents(null);
-        player.setGameMode(GameMode.SPECTATOR);
-        player.setAllowFlight(true);
-        player.setFlying(true);
+        PlayerReset.spectate(player);
     }
 
     public void refreshScoreboards() {
@@ -247,26 +231,7 @@ public final class Game {
         }
     }
 
-    private void startLobbyCountdown() {
-        if (lobbyCountdown != null) {
-            return;
-        }
-        int seconds = config.countdowns().lobby();
-        lobbyCountdown = Countdown.start(plugin, seconds, remaining -> {
-            if (Bukkit.getOnlinePlayers().size() < config.minPlayers()) {
-                Bukkit.getOnlinePlayers().forEach(player -> player.setLevel(0));
-                lobbyCountdown.remaining(seconds);
-                return;
-            }
-            alivePlayers().forEach(player -> player.setLevel(remaining));
-            if (LOBBY_ANNOUNCEMENTS.contains(remaining)) {
-                Bukkit.broadcast(messages.get("lobby.starting-in", Formatter.number("seconds", remaining)));
-            }
-        }, this::start);
-    }
-
     private void start() {
-        lobbyCountdown = null;
         setPhase(GamePhase.INGAME);
         protection = true;
         Bukkit.broadcast(messages.get("lobby.started"));
@@ -280,7 +245,6 @@ public final class Game {
             player.setLevel(0);
             player.setExp(0.0f);
             player.setGameMode(GameMode.SURVIVAL);
-            player.playSound(player.getLocation(), Sound.ENTITY_IRON_GOLEM_DEATH, 4.0f, 4.0f);
             player.getWorld().spawnParticle(Particle.LARGE_SMOKE, player.getLocation(), 5);
             maxHealth(player, INGAME_MAX_HEALTH);
             kit(player).apply(player);
@@ -288,16 +252,12 @@ public final class Game {
         refreshScoreboards();
         applyWorldBorder(LocationKey.GAME_CENTER, config.worldBorder().ingameRadius());
         frozen = true;
-        freezeCountdown = Countdown.start(plugin, config.countdowns().freeze(), remaining -> {
-            if (remaining > 0) {
-                var title = Title.title(messages.get("lobby.freeze-title", Formatter.number("seconds", remaining)), Component.empty());
-                alivePlayers().forEach(player -> player.showTitle(title));
-            }
-        }, () -> {
-            frozen = false;
-            startProtection();
-            startGameTimer();
-        });
+        freezeCountdown = LobbyCountdown.freeze(plugin, config.countdowns().freeze(), () -> alivePlayers().toList(),
+                seconds -> messages.get("lobby.freeze-title", Formatter.number("seconds", seconds)), () -> {
+                    frozen = false;
+                    startProtection();
+                    startGameTimer();
+                });
     }
 
     private void startProtection() {
@@ -339,7 +299,7 @@ public final class Game {
         Bukkit.broadcast(Component.empty());
         for (var player : Bukkit.getOnlinePlayers()) {
             player.getInventory().addItem(items.tracker());
-            player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 4.0f, 4.0f);
+            Sounds.NOTIFY.play(player);
         }
     }
 
@@ -417,12 +377,8 @@ public final class Game {
     }
 
     private void reward(Player player, int amount) {
-        var uuid = player.getUniqueId();
-        var name = BlockcraftApi.get().realName(player);
-        Tasks.async(plugin, () -> {
-            coins.add(uuid, name, amount);
-            stats.add(uuid, name, Stat.POINTS, amount);
-        });
+        Coins.award(plugin, player, amount);
+        record(player, Stat.POINTS, amount);
     }
 
     private void record(Player player, Stat column, int delta) {
@@ -445,7 +401,8 @@ public final class Game {
     }
 
     public void shutdown() {
-        Stream.of(lobbyCountdown, freezeCountdown, protectionCountdown, gameTimer, restartCountdown).forEach(Game::cancel);
+        lobbyCountdown.cancel();
+        Stream.of(freezeCountdown, protectionCountdown, gameTimer, restartCountdown).forEach(Game::cancel);
     }
 
     private void setPhase(GamePhase phase) {

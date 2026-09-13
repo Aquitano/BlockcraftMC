@@ -1,159 +1,170 @@
 prefix: "<blue>QuickSG <dark_gray>» <reset>"
 
-actionbar: "<dark_red>Teams Verboten"
+commands:
+  start:
+    description: "Startet die Runde"
+  stats:
+    description: "Zeigt die Stats eines Spielers"
+  build:
+    description: "Schaltet den Build-Modus um"
+  qsgset:
+    description: "Setzt die QuickSG-Locations"
+  top:
+    description: "Zeigt die Top 10 einer Kategorie"
+
+actionbar: "<dark_red>Teams verboten"
 
 join:
-  broadcast: "<prefix><white><player> <gray>hat das Spiel betreten!"
+  broadcast: "<prefix><white><player> <muted>hat das Spiel betreten!"
 quit:
-  broadcast: "<prefix><white><player> <gray>hat die Runde verlassen!"
+  broadcast: "<prefix><white><player> <muted>hat die Runde verlassen!"
 
 lobby:
-  starting-in: "<prefix><gray>Die Runde startet in <reset><seconds> <gray>Sekunden."
-  started: "<prefix><gray>Die Runde wurde gestartet."
-  freeze-title: "<blue><seconds>"
+  starting-in: "<prefix><muted>Die Runde startet in <accent><seconds> <muted>Sekunden."
+  started: "<prefix><muted>Die Runde wurde gestartet."
+  freeze-title: "<primary><seconds>"
 
 protection:
-  ends-in: "<prefix><gray>Die Schutzzeit endet in<white> <seconds><gray> Sekunden!"
-  over: "<prefix><red>Die Schutzzeit ist vorbei!"
+  ends-in: "<prefix><muted>Die Schutzzeit endet in <accent><seconds><muted> Sekunden!"
+  over: "<prefix><error>Die Schutzzeit ist vorbei!"
 
 game:
-  tracker: "<prefix><gray><minutes> Minuten sind vorbei, alle Spieler bekommen einen Tracker!"
-  ends-in-minutes: "<prefix><red>Das Spiel endet in <minutes> Minuten!"
-  ends-in-one-minute: "<prefix><red>Das Spiel endet in 1 Minute!"
-  draw: "<prefix><red>Unentschieden, die Runde wird Restartet!"
-  killed: "<prefix><white><player><gray> wurde von <white><killer><gray> getötet."
-  died: "<prefix><white><player> <gray>ist gestorben"
-  winner: "<prefix><gray>Der Spieler <white><player><gray> hat die Runde gewonnen!"
+  tracker: "<prefix><muted><minutes> Minuten sind vorbei, alle Spieler bekommen einen Tracker!"
+  ends-in-minutes: "<prefix><error>Das Spiel endet in <minutes> Minuten!"
+  ends-in-one-minute: "<prefix><error>Das Spiel endet in 1 Minute!"
+  draw: "<prefix><error>Unentschieden, die Runde wird neu gestartet!"
+  killed: "<prefix><white><player><muted> wurde von <white><killer><muted> getötet."
+  died: "<prefix><white><player> <muted>ist gestorben."
+  winner: "<prefix><muted>Der Spieler <white><player><muted> hat die Runde gewonnen!"
 
 restart:
-  in: "<prefix><gray>Der Server startet in <red><seconds> <gray>Sekunden neu!"
-  now: "<prefix><red>Der Server Restartet Jetzt!"
+  in: "<prefix><muted>Der Server startet in <error><seconds> <muted>Sekunden neu!"
+  now: "<prefix><error>Der Server startet jetzt neu!"
 
 tracker:
-  found: "<prefix><white><player> <gray>» <white><distance><gray> Blöcke"
+  found: "<prefix><white><player> <arrow><white><distance><muted> Blöcke"
 
 start:
-  not-enough-players: "<prefix><red>Es müssen mindesten 2 Spieler Online sein!"
-  only-in-lobby: "<prefix><red>Du kannst die Runde nur im Lobby Modus starten!"
-  already-started: "<prefix><red>Die Runde wurde bereits gestartet!"
-  coins-added: "<prefix>Du hast diesem Spieler <coins> Coins hinzugefügt!"
+  not-enough-players: "<prefix><error>Es müssen mindestens 2 Spieler online sein!"
+  only-in-lobby: "<prefix><error>Du kannst die Runde nur im Lobby-Modus starten!"
+  already-started: "<prefix><error>Die Runde wurde bereits gestartet!"
+  coins-added: "<prefix><muted>Du hast diesem Spieler <accent><coins> <muted>Coins hinzugefügt!"
 
 build:
-  enabled: "<prefix><gray>Build Modus <white>aktivert!"
-  disabled: "<prefix><gray>Build Modus <white>deaktiviert!"
+  enabled: "<prefix><muted>Build-Modus <white>aktiviert!"
+  disabled: "<prefix><muted>Build-Modus <white>deaktiviert!"
 
 setup:
   help:
     - ""
-    - "<gray>/qsgset lobby, Spectator, Pos1(-8), DM1(-4), Lobbymitte, InGamemitte"
+    - "<muted>/qsgset lobby, Spectator, Pos1(-8), DM1(-4), Lobbymitte, InGamemitte"
     - ""
-  set: "<prefix><gray>Du hast die Location<white> <location> <gray>gesetzt!"
-  unknown: "<prefix><red>Unbekannte Location. Siehe /qsgset help"
+  set: "<prefix><muted>Du hast die Location <white><location> <muted>gesetzt!"
+  unknown: "<prefix><error>Unbekannte Location. Siehe /qsgset help"
 
 stats:
-  header: "<gray><player>`s Stats"
+  header: "<muted>Stats von <accent><player>"
   lines:
-    - "<white>» <blue>Wins: <gray><wins>"
-    - "<white>» <blue>Loses: <gray><losses>"
-    - "<white>» <blue>Deaths: <gray><deaths>"
-    - "<white>» <blue>Kills: <gray><kills>"
-    - "<white>» <blue>QSG Points: <gray><points>"
+    - "<arrow><primary>Siege<dark>: <muted><wins>"
+    - "<arrow><primary>Niederlagen<dark>: <muted><losses>"
+    - "<arrow><primary>Tode<dark>: <muted><deaths>"
+    - "<arrow><primary>Kills<dark>: <muted><kills>"
+    - "<arrow><primary>Punkte<dark>: <muted><points>"
 
 top:
-  separator: "<gray><strikethrough>---------------------------------"
-  first: "<yellow><bold>#1 <reset><blue><name><gray> ( <white><value><gray> ) "
-  entry: "<reset>#<rank> <blue><name> <gray>( <white><value><gray> ) "
-  unknown-category: "<prefix><red>/top <wins|deaths|kills|loses|points>"
+  separator: "<muted><strikethrough>---------------------------------"
+  first: "<accent><bold>#1 <reset><primary><name><muted> ( <white><value><muted> )"
+  entry: "<reset>#<rank> <primary><name> <muted>( <white><value><muted> )"
+  unknown-category: "<prefix><error>/top <wins|deaths|kills|loses|points>"
 
 kit:
-  selected: "<prefix><gray>Du hast das <white><kit><gray> ausgewählt!"
-  not-owned: "<prefix><red>Du hast dieses Kit noch nicht gekauft!"
-  bought: "<prefix><gray>Du hast das <white><kit> <white>gekauft!"
-  bought-cost: " <white>» <gray>- <price> Coins!"
-  already-owned: "<prefix><red>Du hast dieses Kit bereits gekauft!"
-  not-enough-coins: "<prefix><red>Du hast nicht genug Coins!"
+  selected: "<prefix><muted>Du hast das <white><kit><muted> ausgewählt!"
+  not-owned: "<prefix><error>Du hast dieses Kit noch nicht gekauft!"
+  bought: "<prefix><muted>Du hast das <white><kit> <muted>gekauft!"
+  bought-cost: "<arrow><muted>- <accent><price> <muted>Coins"
+  already-owned: "<prefix><error>Du hast dieses Kit bereits gekauft!"
+  not-enough-coins: "<prefix><error>Du hast nicht genug Coins!"
   starter:
     name: "Starter Kit"
     contents:
-      - " <white>» <gray>1 Holz Schwert"
+      - "<arrow><muted>1 Holz Schwert"
   bow:
     name: "Bogen Kit"
     contents:
-      - " <white>» <gray>1 Bogen"
-      - " <white>» <gray>12 Pfeile"
+      - "<arrow><muted>1 Bogen"
+      - "<arrow><muted>12 Pfeile"
   hearts:
     name: "Herzen Kit"
     contents:
-      - " <white>» <gray>3 Herzen mehr"
+      - "<arrow><muted>3 Herzen mehr"
   chain:
     name: "Chain Kit"
     contents:
-      - " <white>» <gray>1 Chain Helm"
-      - " <white>» <gray>1 Chain Leggings"
-      - " <white>» <gray>1 Chain Boots"
+      - "<arrow><muted>1 Chain Helm"
+      - "<arrow><muted>1 Chain Hose"
+      - "<arrow><muted>1 Chain Schuhe"
   diamond:
     name: "Diamant Kit"
     contents:
-      - " <white>» <gray>1 Diamanten Chestplate"
-      - " <white>» <gray>1 Holz Schwert"
+      - "<arrow><muted>1 Diamanten Brustpanzer"
+      - "<arrow><muted>1 Holz Schwert"
 
 menu:
   kits:
-    title: "<dark_gray>Kits"
-    entry: "<white>» <aqua><kit>"
+    title: "<arrow><primary>Kits"
+    entry: "<arrow><aqua><kit>"
   kit-detail:
-    title: "<dark_gray>Kits » <kit>"
-    price: "<gray>Preis"
-    price-free: "<green>kostenlos"
-    price-coins: "<white><price> Coins"
-    select: "<gray>Auswählen?"
-    buy: "<green>Kaufen?"
-    bought: "<green>bereits gekauft!"
-    back: "<red>Abrechen? / Zurück?"
+    title: "<arrow><primary>Kit <dark>● <accent><kit>"
+    price: "<muted>Preis"
+    price-free: "<success>kostenlos"
+    price-coins: "<arrow><accent><price> Coins"
+    select: "<muted>Auswählen"
+    buy: "<success>Kaufen"
+    bought: "<success>bereits gekauft!"
   stats:
-    title: "<dark_gray>Stats"
-    player: "<yellow><player>"
+    title: "<arrow><primary>Stats"
+    player: "<accent><player>"
     player-lore:
-      - "<white>» <blue><bold>Wins: <reset><gray><wins>"
-      - "<white>» <blue><bold>Loses: <reset><gray><losses>"
-      - "<white>» <blue><bold>Deaths: <reset><gray><deaths>"
-      - "<white>» <blue><bold>Kills: <reset><gray><kills>"
-    global: "<white>» <aqua>Global Stats"
+      - "<arrow><primary>Siege<dark>: <muted><wins>"
+      - "<arrow><primary>Niederlagen<dark>: <muted><losses>"
+      - "<arrow><primary>Tode<dark>: <muted><deaths>"
+      - "<arrow><primary>Kills<dark>: <muted><kills>"
+    global: "<arrow><aqua>Globale Stats"
   global-stats:
-    title: "<dark_gray>Stats » Global"
-    wins: "<white>» <aqua>Wins"
-    deaths: "<white>» <aqua>Deaths"
-    kills: "<white>» <aqua>Kills"
-    losses: "<white>» <aqua>Verlorene Spiele"
-    points: "<white>» <aqua>QuickSG Points"
+    title: "<arrow><primary>Globale Stats"
+    wins: "<arrow><aqua>Siege"
+    deaths: "<arrow><aqua>Tode"
+    kills: "<arrow><aqua>Kills"
+    losses: "<arrow><aqua>Niederlagen"
+    points: "<arrow><aqua>Punkte"
 
 item:
-  kits: "<white>» <blue>Kits"
-  hub: "<white>» <blue>Hub"
-  stats: "<white>» <blue>Stats"
-  start: "<white>» <blue>Spiel Starten"
+  kits: "<arrow><primary>Kits"
+  hub: "<arrow><primary>Hub"
+  stats: "<arrow><primary>Stats"
+  start: "<arrow><primary>Spiel starten"
   level-up:
-    name: "<yellow>+1 Level"
-    lore: "<gray>Rechtsklick"
+    name: "<accent>+1 Level"
+    lore: "<bullet><muted>Rechtsklick"
   heart:
-    name: "<yellow>+1 Herz"
-    lore: "<gray>Rechtsklick"
+    name: "<accent>+1 Herz"
+    lore: "<bullet><muted>Rechtsklick"
   full-food:
-    name: "<yellow>Full Food"
-    lore: "<gray>Dein Hunger wird sofort gefüllt!"
+    name: "<accent>Voller Hunger"
+    lore: "<bullet><muted>Dein Hunger wird sofort gefüllt!"
   tracker:
-    name: "<blue>Kompass"
-    lore: "<gray>Tracke Spieler in deiner Nähe"
+    name: "<primary>Kompass"
+    lore: "<bullet><muted>Tracke Spieler in deiner Nähe"
 
 scoreboard:
-  title: "<white>» <blue>BlockcraftMC.net <white>«"
-  online: "<gray>ONLINE:"
-  online-value: "<dark_gray>» <white><online> <dark_gray>/<white> <max>"
-  map: "<gray>MAP:"
-  map-value: "<dark_gray>» <white><map>"
-  kit: "<gray>KIT:"
-  kit-value: "<dark_gray>» <white><kit>"
-  spectator: "<gray>SPECTATOR:"
-  spectator-value: "<dark_gray>» <white><spectators>"
-  winner: "<dark_gray>»<gray>WINNER:"
-  winner-value: "<dark_gray>» <white><player>"
+  title: "<arrow><primary><ip> <dark>«"
+  online: "<muted>SPIELER"
+  online-value: "<arrow><white><online> <dark>/<white> <max>"
+  map: "<muted>MAP"
+  map-value: "<arrow><white><map>"
+  kit: "<muted>KIT"
+  kit-value: "<arrow><white><kit>"
+  spectator: "<muted>ZUSCHAUER"
+  spectator-value: "<arrow><white><spectators>"
+  winner: "<muted>GEWINNER"
+  winner-value: "<arrow><white><player>"

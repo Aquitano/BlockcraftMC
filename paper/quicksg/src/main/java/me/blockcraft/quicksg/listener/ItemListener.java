@@ -3,6 +3,7 @@ package me.blockcraft.quicksg.listener;
 import me.blockcraft.api.game.LootChest;
 import me.blockcraft.api.game.LootChests;
 import me.blockcraft.api.proxy.ProxyMessaging;
+import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.quicksg.game.Game;
 import me.blockcraft.quicksg.menu.KitMenus;
@@ -10,7 +11,6 @@ import me.blockcraft.quicksg.menu.StatsMenus;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Material;
-import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -55,7 +55,7 @@ public final class ItemListener implements Listener {
         if (event.getAction() == Action.RIGHT_CLICK_BLOCK && block != null && block.getType() == Material.CHEST
                 && !game.isLobby() && !game.isSpectator(player)) {
             event.setCancelled(true);
-            player.playSound(player.getLocation(), Sound.BLOCK_CHEST_OPEN, 10.0f, 1.0f);
+            Sounds.MENU_OPEN.play(player);
             player.openInventory(lootChests.open(block.getLocation()));
             return;
         }
@@ -126,7 +126,7 @@ public final class ItemListener implements Listener {
     @EventHandler
     public void onClose(InventoryCloseEvent event) {
         if (event.getInventory().getHolder(false) instanceof LootChest && event.getPlayer() instanceof Player player) {
-            player.playSound(player.getLocation(), Sound.BLOCK_CHEST_CLOSE, 10.0f, 1.0f);
+            Sounds.MENU_CLICK.play(player);
         }
     }
 

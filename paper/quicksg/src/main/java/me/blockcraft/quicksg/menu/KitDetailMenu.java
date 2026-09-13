@@ -14,6 +14,7 @@ final class KitDetailMenu extends Menu {
 
     private static final int SLOT_SELECT = 3;
     private static final int SLOT_BUY = 6;
+    private static final int BACK = 8;
 
     private final KitMenus menus;
     private final Kit kit;
@@ -44,9 +45,7 @@ final class KitDetailMenu extends Menu {
                     ? Items.of(Material.ORANGE_STAINED_GLASS_PANE).name(messages.get("menu.kit-detail.bought")).build()
                     : Items.of(Material.LIME_STAINED_GLASS_PANE).name(messages.get("menu.kit-detail.buy")).build());
         }
-        var back = Items.of(Material.RED_STAINED_GLASS_PANE).name(messages.get("menu.kit-detail.back")).build();
-        set(7, back);
-        set(8, back);
+        backButton(BACK, menus::openSelector);
     }
 
     @Override
@@ -54,7 +53,6 @@ final class KitDetailMenu extends Menu {
         switch (slot) {
             case SLOT_SELECT -> menus.select(player, kit, owned);
             case SLOT_BUY -> menus.buy(player, kit);
-            case 7, 8 -> menus.openSelector(player);
             default -> {
             }
         }

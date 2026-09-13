@@ -1,9 +1,12 @@
 package me.blockcraft.quicksg.menu;
 
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.item.Items;
+import me.blockcraft.api.menu.ConfirmMenu;
 import me.blockcraft.api.menu.Menu;
 import me.blockcraft.api.shop.Shop;
 import me.blockcraft.api.shop.Unlocks;
+import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.quicksg.game.Game;
@@ -11,8 +14,8 @@ import me.blockcraft.quicksg.kit.Kit;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
-import org.bukkit.Sound;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 
 /** Opens the kit GUIs and performs the purchases they trigger; the database work runs off the main thread. */
@@ -58,7 +61,7 @@ public final class KitMenus {
     void select(Player player, Kit kit, boolean owned) {
         Menu.close(player);
         if (!owned) {
-            player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 4.0f, 4.0f);
+            Sounds.MENU_DENY.play(player);
             player.sendMessage(messages.get("kit.not-owned"));
             return;
         }
@@ -67,21 +70,32 @@ public final class KitMenus {
     }
 
     void buy(Player player, Kit kit) {
+        new ConfirmMenu(icon(kit), buyer -> purchase(buyer, kit), buyer -> openDetail(buyer, kit)).open(player);
+    }
+
+    private void purchase(Player player, Kit kit) {
         Menu.close(player);
         Tasks.async(plugin, () -> shop.buy(player.getUniqueId(), BlockcraftApi.get().realName(player), kit.item(), price), purchase -> {
             switch (purchase.outcome()) {
                 case BOUGHT -> {
+                    Sounds.PURCHASE.play(player);
                     player.sendMessage(messages.get("kit.bought", kitName(kit)));
                     player.sendMessage(messages.get("kit.bought-cost", Formatter.number("price", price)));
-                    player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 4.0f, 4.0f);
                 }
                 case ALREADY_OWNED -> player.sendMessage(messages.get("kit.already-owned"));
                 case NOT_ENOUGH_COINS -> {
-                    player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 4.0f, 4.0f);
+                    Sounds.MENU_DENY.play(player);
                     player.sendMessage(messages.get("kit.not-enough-coins"));
                 }
             }
         });
+    }
+
+    ItemStack icon(Kit kit) {
+        return Items.of(kit.icon())
+                .name(messages.get("menu.kits.entry", kitName(kit)))
+                .lore(messages.get("menu.kit-detail.price-coins", Formatter.number("price", price)))
+                .build();
     }
 
     TagResolver kitName(Kit kit) {
