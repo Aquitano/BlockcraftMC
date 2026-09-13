@@ -2,6 +2,12 @@ prefix: "<gold>Blockcraft <dark_gray>» <reset>"
 coins:
   self: "<prefix><gray>Du hast <yellow><coins> <gray>Coins!"
   other: "<prefix><yellow><player> <gray>hat <yellow><coins> <gray>Coins."
+xp:
+  gained: "<green>+<amount> XP"
+  level-up: "<prefix><gray>Du bist jetzt <yellow>Level <level><gray>!"
+level:
+  self: "<prefix><gray>Du bist <yellow>Level <level> <gray>und hast <yellow><xp><gray>/<yellow><next> <gray>XP bis zum nächsten Level."
+  other: "<prefix><yellow><player> <gray>ist <yellow>Level <level> <gray>mit <yellow><xp> <gray>XP."
 tags:
   pro: "<dark_gray>[<gold>PRO<dark_gray>]"
   legend: "<dark_gray>[<light_purple>LEGENDE<dark_gray>]"

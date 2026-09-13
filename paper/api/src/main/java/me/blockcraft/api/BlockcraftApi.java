@@ -7,6 +7,7 @@ import me.blockcraft.api.player.RealNames;
 import me.blockcraft.api.settings.PlayerSettings;
 import me.blockcraft.api.shop.Shop;
 import me.blockcraft.api.shop.Unlocks;
+import me.blockcraft.api.xp.Xp;
 import me.blockcraft.common.db.Database;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.network.ServerIdentity;
@@ -29,9 +30,10 @@ public final class BlockcraftApi {
     private final ServerIdentity server;
     private final ServerPresence presence;
     private final RealNames realNames;
+    private final Xp xp;
 
     BlockcraftApi(Database database, PlayerSettings settings, Messages messages, ServerRepository servers, ServerIdentity server,
-                  ServerPresence presence, RealNames realNames) {
+                  ServerPresence presence, RealNames realNames, Xp xp) {
         this.database = database;
         this.coins = new CoinsRepository(database);
         this.unlocks = new Unlocks(database);
@@ -43,6 +45,7 @@ public final class BlockcraftApi {
         this.server = server;
         this.presence = presence;
         this.realNames = realNames;
+        this.xp = xp;
     }
 
     public static BlockcraftApi get() {
@@ -106,6 +109,11 @@ public final class BlockcraftApi {
     /** What this server tells the proxy about itself. */
     public ServerPresence presence() {
         return presence;
+    }
+
+    /** Network XP and levels; games award {@link me.blockcraft.api.xp.XpReward}s. */
+    public Xp xp() {
+        return xp;
     }
 
     /** The name the player logged in with, whatever nick they wear; the one to write into name columns. */

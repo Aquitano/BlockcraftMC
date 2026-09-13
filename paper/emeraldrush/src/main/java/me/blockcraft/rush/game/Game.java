@@ -9,6 +9,7 @@ import me.blockcraft.api.coins.CoinsRepository;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.task.Countdown;
 import me.blockcraft.api.task.Tasks;
+import me.blockcraft.api.xp.XpReward;
 import me.blockcraft.api.world.Worlds;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.rush.Permissions;
@@ -386,6 +387,7 @@ public final class Game {
             });
             slayer.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 160, 1));
             BlockcraftApi.get().effects().onKill(slayer, victim);
+            BlockcraftApi.get().xp().award(slayer, XpReward.KILL);
         }, () -> broadcast("deathmatch.died", victimName));
         Tasks.async(plugin, () -> stats.add(victim.getUniqueId(), BlockcraftApi.get().realName(victim), Stat.DEATHS, 1));
         int remaining = Math.max(0, lives(victim) - 1);
@@ -448,6 +450,7 @@ public final class Game {
                 stats.add(winner.getUniqueId(), BlockcraftApi.get().realName(winner), Stat.POINTS, WIN_COINS);
             });
             BlockcraftApi.get().effects().onWin(winner);
+            BlockcraftApi.get().xp().award(winner, XpReward.WIN);
         }
         endRound();
     }

@@ -127,6 +127,14 @@ When a discovery poll finds no joinable server left in the lobby group, Blockcra
 text to the Discord webhook in `alerts.webhook-url`, and `alerts.lobby-back` once a lobby is joinable again. Each
 change is announced once and at most one alert goes out per `alerts.min-interval-seconds`; an empty URL disables it.
 
+## Network XP and levels
+
+Every kill and win in a game awards XP through BlockcraftAPI (`xp.rewards` in its `config.yml`), stored in `bc_xp`
+as one total per player. The level follows a fixed curve: each level costs `xp.level-step` more than the one before,
+so with the default of 100 level 2 is 100 XP, level 3 is 300 and level 10 is 4500. Awards show in the action bar,
+a level-up in chat with the level-up sound; `/level` shows the own progress, `/level <player>` needs
+`blockcraft.level.others`, and chat prefixes every message with the level (`chat.level` in core's `messages.yml`).
+
 ## Nick and vanish across the network
 
 Both states are set on a Paper server (`/nick`, `/v`, `/staff`) and stored in `bc_nicks` and `bc_vanished` so every

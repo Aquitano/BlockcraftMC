@@ -10,6 +10,7 @@ import me.blockcraft.api.game.Stat;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.task.Countdown;
 import me.blockcraft.api.task.Tasks;
+import me.blockcraft.api.xp.XpReward;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.quicksg.config.LocationKey;
 import me.blockcraft.quicksg.config.QuickSGConfig;
@@ -174,6 +175,7 @@ public final class Game {
         if (killer != null) {
             Bukkit.broadcast(messages.get("game.killed", victimName, Placeholder.unparsed("killer", killer.getName())));
             BlockcraftApi.get().effects().onKill(killer, victim);
+            BlockcraftApi.get().xp().award(killer, XpReward.KILL);
             reward(killer, config.rewards().kill());
             record(killer, Stat.KILLS, 1);
         } else {
@@ -355,6 +357,7 @@ public final class Game {
             record(winner, Stat.WINS, 1);
             reward(winner, config.rewards().win());
             BlockcraftApi.get().effects().onWin(winner);
+            BlockcraftApi.get().xp().award(winner, XpReward.WIN);
         }
         refreshScoreboards();
         startRestart();

@@ -10,3 +10,11 @@ starting-coins: 10
 
 # How often this server announces itself to the proxy (bc_servers).
 heartbeat-seconds: 5
+
+# Network XP (bc_xp). Each level costs level-step more XP than the one before: level 2 at 100, level 3 at 300,
+# level 10 at 4500. rewards are what every game hands out per kill and per win.
+xp:
+  level-step: 100
+  rewards:
+    kill: 10
+    win: 50

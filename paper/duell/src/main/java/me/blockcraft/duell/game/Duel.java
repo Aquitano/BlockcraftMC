@@ -8,6 +8,7 @@ import me.blockcraft.api.game.Stat;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.task.Countdown;
 import me.blockcraft.api.task.Tasks;
+import me.blockcraft.api.xp.XpReward;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.duell.config.DuellConfig;
 import me.blockcraft.duell.config.Spawns;
@@ -194,6 +195,7 @@ public final class Duel {
     public void handleVsKill(Player victim, Player killer) {
         round++;
         BlockcraftApi.get().effects().onKill(killer, victim);
+        BlockcraftApi.get().xp().award(killer, XpReward.KILL);
         record(killer, Stat.KILLS);
         record(victim, Stat.DEATHS);
         killer.setLevel(killer.getLevel() + 1);
@@ -215,6 +217,7 @@ public final class Duel {
         if (killer != null) {
             Bukkit.broadcast(messages.get("round.died", victimName));
             BlockcraftApi.get().effects().onKill(killer, victim);
+            BlockcraftApi.get().xp().award(killer, XpReward.KILL);
             broadcastWinner(killer);
             rewardWinner(killer);
             record(killer, Stat.KILLS);
@@ -421,6 +424,7 @@ public final class Duel {
         int amount = config.winCoins();
         Bukkit.broadcast(messages.get("round.coins", Placeholder.unparsed("player", winner.getName()), Formatter.number("coins", amount)));
         BlockcraftApi.get().effects().onWin(winner);
+        BlockcraftApi.get().xp().award(winner, XpReward.WIN);
         var uuid = winner.getUniqueId();
         var name = BlockcraftApi.get().realName(winner);
         Tasks.async(plugin, () -> {
