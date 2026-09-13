@@ -22,6 +22,7 @@ import me.blockcraft.lobby.cosmetic.Pets;
 import me.blockcraft.lobby.cosmetic.Secret;
 import me.blockcraft.lobby.cosmetic.Shirt;
 import me.blockcraft.lobby.cosmetic.Trails;
+import me.blockcraft.lobby.friends.FriendEntry;
 import me.blockcraft.lobby.gadget.Gadgets;
 import me.blockcraft.lobby.network.GroupCounts;
 import me.blockcraft.lobby.rank.PremiumRank;
@@ -32,6 +33,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 
 import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -127,6 +129,11 @@ public record Menus(
 
     public void openTrails(Player player) {
         new TrailsMenu(this).open(player);
+    }
+
+    /** Drawn from the proxy's answer, not from the database: only it knows who is online and where. */
+    public void openFriends(Player player, List<FriendEntry> friends, List<String> requests) {
+        new FriendsMenu(this, friends, requests).open(player);
     }
 
     public void openProfile(Player player) {

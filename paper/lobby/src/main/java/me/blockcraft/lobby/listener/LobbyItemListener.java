@@ -1,5 +1,6 @@
 package me.blockcraft.lobby.listener;
 
+import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.lobby.hider.PlayerHider;
 import me.blockcraft.lobby.item.LobbyItem;
@@ -10,15 +11,18 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.plugin.Plugin;
 
 public final class LobbyItemListener implements Listener {
 
+    private final Plugin plugin;
     private final Messages messages;
     private final Menus menus;
     private final LobbyItems items;
     private final PlayerHider hider;
 
-    public LobbyItemListener(Messages messages, Menus menus, LobbyItems items, PlayerHider hider) {
+    public LobbyItemListener(Plugin plugin, Messages messages, Menus menus, LobbyItems items, PlayerHider hider) {
+        this.plugin = plugin;
         this.messages = messages;
         this.menus = menus;
         this.items = items;
@@ -39,7 +43,8 @@ public final class LobbyItemListener implements Listener {
                 case PLAYER_HIDER -> toggleHider(player);
                 case PROFILE -> menus.openProfile(player);
                 case SETTINGS -> menus.openSettings(player);
-                case FRIENDS, GADGET -> {
+                case FRIENDS -> ProxyMessaging.friends(plugin, player);
+                case GADGET -> {
                 }
             }
         });

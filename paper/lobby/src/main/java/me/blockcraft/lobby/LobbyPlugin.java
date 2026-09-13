@@ -6,6 +6,7 @@ import me.blockcraft.api.command.CommandRegistry;
 import me.blockcraft.api.config.Locations;
 import me.blockcraft.common.config.YamlFile;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.common.network.ProxyChannel;
 import me.blockcraft.lobby.command.ClearChatCommand;
 import me.blockcraft.lobby.command.SetHoloCommand;
 import me.blockcraft.lobby.command.SetSpawnCommand;
@@ -16,6 +17,7 @@ import me.blockcraft.lobby.cosmetic.Pets;
 import me.blockcraft.lobby.cosmetic.Secret;
 import me.blockcraft.lobby.cosmetic.Shirt;
 import me.blockcraft.lobby.cosmetic.Trails;
+import me.blockcraft.lobby.friends.FriendsChannel;
 import me.blockcraft.lobby.gadget.Gadgets;
 import me.blockcraft.lobby.hider.PlayerHider;
 import me.blockcraft.lobby.item.LobbyItems;
@@ -78,9 +80,10 @@ public final class LobbyPlugin extends JavaPlugin {
 
         var messenger = getServer().getMessenger();
         messenger.registerIncomingPluginChannel(this, WorldDownloaderListener.INIT_CHANNEL, new WorldDownloaderListener(messages));
+        messenger.registerIncomingPluginChannel(this, ProxyChannel.NAME, new FriendsChannel(menus));
 
         register(new JoinQuitListener(this, messages, coins, locations, items, trails, pets, hider),
-                new LobbyItemListener(messages, menus, items, hider),
+                new LobbyItemListener(this, messages, menus, items, hider),
                 new ProtectionListener(),
                 new CommandBlockListener(config.allowedCommands()),
                 new SecretsListener(this, messages, api.unlocks(), coins, config.secretReward()),

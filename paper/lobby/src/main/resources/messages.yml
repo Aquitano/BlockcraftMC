@@ -22,10 +22,31 @@ item:
   profile: "<arrow><primary>Profil <dark>● <muted>Rechtsklick"
   extras: "<arrow><primary>Extras <dark>● <muted>Rechtsklick"
   settings: "<arrow><primary>Einstellungen <dark>● <muted>Rechtsklick"
-  friends: "<arrow><primary>Freunde <dark>● <error>Bald verfügbar!"
+  friends: "<arrow><primary>Freunde <dark>● <muted>Rechtsklick"
   secrets: "<arrow><primary>Secrets <dark>● <muted>Rechtsklick"
 hider:
   wait: "<prefix><error>Warte kurz!"
+friends:
+  title: "<arrow><primary>Freunde"
+  online: "<arrow><success><player>"
+  online-lore:
+    - "<bullet><muted>Auf <accent><server>"
+    - "<bullet><muted>Klicke, um zu ihm zu springen."
+  offline: "<arrow><muted><player>"
+  offline-lore:
+    - "<bullet><muted>Gerade offline"
+  request: "<arrow><accent><player>"
+  request-lore:
+    - "<bullet><muted>Möchte dein Freund werden."
+    - "<bullet><success>Linksklick <dark>● <muted>Annehmen"
+    - "<bullet><error>Rechtsklick <dark>● <muted>Ablehnen"
+  empty: "<arrow><muted>Noch keine Freunde"
+  empty-lore: "<bullet><muted>Schicke die erste Anfrage!"
+  note: "<arrow><primary>Freunde hinzufügen"
+  note-lore:
+    - "<bullet><muted>Mit <accent>/friend add \\<Spieler><muted> schickst du"
+    - "<bullet><muted>jemandem eine Freundschaftsanfrage."
+    - "<bullet><muted>Alle Befehle zeigt <accent>/friend help<muted>."
 premium:
   required:
     - "<prefix><muted>Dafür benötigst du <gold>Premium<muted>!"
