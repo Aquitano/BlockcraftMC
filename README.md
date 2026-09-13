@@ -43,7 +43,8 @@ Import it once per LuckPerms database (`gzip -k luckperms/ranks.json`, copy the 
 `/lp import ranks`), then assign players with `/lp user <name> parent set <group>`.
 
 Every plugin ships a `messages.yml` (MiniMessage, German by default) and a `config.yml`; both are copied to the plugin's
-data folder on first start and can be edited there.
+data folder on first start and can be edited there. Keys the edited file lacks come from the bundled default, so a
+plugin update never runs on missing settings.
 
 ## Build
 
