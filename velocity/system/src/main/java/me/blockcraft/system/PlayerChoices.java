@@ -10,7 +10,6 @@ import me.blockcraft.common.settings.PlayerSetting;
 import me.blockcraft.common.settings.PlayerSettingRepository;
 import org.slf4j.Logger;
 
-import java.util.EnumMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -37,7 +36,10 @@ public final class PlayerChoices {
         UUID player = event.getPlayer().getUniqueId();
         return EventTask.async(() -> {
             try {
-                choices.put(player, repository.all(player));
+                choices.merge(player, new ConcurrentHashMap<>(repository.all(player)), (live, stored) -> {
+                    stored.putAll(live);
+                    return stored;
+                });
             } catch (DatabaseException e) {
                 logger.warn("Could not read the settings of {}", player, e);
             }
@@ -62,6 +64,6 @@ public final class PlayerChoices {
     }
 
     public void set(Player player, PlayerSetting setting, String value) {
-        choices.computeIfAbsent(player.getUniqueId(), ignored -> new EnumMap<>(PlayerSetting.class)).put(setting, value);
+        choices.computeIfAbsent(player.getUniqueId(), ignored -> new ConcurrentHashMap<>()).put(setting, value);
     }
 }
