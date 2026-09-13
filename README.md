@@ -33,7 +33,7 @@ carries the name colour, so it ends in a colour code.
 
 | Group      | Prefix             | Grants                                                                            |
 |------------|--------------------|-----------------------------------------------------------------------------------|
-| `default`  | `&7SPIELER &8● &7` | party invite and kick, `/msg` and `/r`, `/seen`, `/playtime`, `/discord`, `/server`   |
+| `default`  | `&7SPIELER &8● &7` | party invite and kick, `/msg` and `/r`, `/friend`, `/seen`, `/playtime`, `/discord`, `/server` |
 | `premium`  | `&6PREMIUM &8● &6` | premium lobby area, double jump, join when full, `/joinme`, chat colours          |
 | `youtuber` | `&5YT &8● &5`      | premium plus `/joinme` without delay, `/bc`, `/send`, `/nick`                     |
 | `dev`      | `&bDEV &8● &b`     | premium plus every `blockcraft.*` and `velocity.command.*` permission             |
@@ -158,6 +158,43 @@ The same channel lets a Paper plugin run a proxy command as the player, with the
 menu's "go to" buttons run `/goto`, its punish menu runs `/strafe`. The `/strafe` catalogue itself stays in the
 proxy's `config.yml`; BlockcraftSystem mirrors it into `bc_punishment_catalog` at every start so the menu can list
 the numbered punishments without a copy of the file.
+
+## Server list
+
+The ping answer carries the MOTD edited by `/motd`, the cap set by `/setmax`, the icon from `server-icon.png` in
+BlockcraftSystem's data folder (a default is copied there on first start; replace it with any 64x64 PNG) and, where
+the client would list who is online, the `motd.sample` lines from its `messages.yml`.
+
+## Player settings
+
+Every remembered choice a player makes is one row in `bc_player_settings`, read by both platforms through
+`common`'s `PlayerSettingRepository`. The cosmetic ones store the chosen key (chat tag, kill and win effect); the
+five toggles (`private-messages`, `party-invites`, `friend-requests`, `player-visibility`, `sounds`) store `on` or
+`off` and count as on while no row exists, so nothing has to be seeded.
+
+Paper caches a player's settings for as long as they are online (`BlockcraftApi.get().settings()`) and fires
+`PlayerSettingsLoadedEvent` once the cache is filled; the lobby waits for it before re-applying a stored "players
+hidden". The settings menu is `SettingsMenu` in BlockcraftAPI, opened from the lobby's hotbar or from the profile
+card (`ProfileMenu`, rank, level, coins and the per-game stats listed in `profile.games` of BlockcraftAPI's
+`config.yml`). `Sounds.play` stays silent for a player who turned the sounds off.
+
+The proxy keeps its own view: it reads the table at login and every change reaches it over the `Setting`
+subchannel of `blockcraft:main`, the same way nick and vanish do. `/msg` to a player with private messages off is
+refused unless the sender holds `blockcraft.system.msg.bypass`, and a party invite to a player with invites off
+never arrives.
+
+## Friends
+
+`bc_friends` holds one row per pair, the player who asked first in `requester` and a `status` of `PENDING` or
+`ACCEPTED`; the names come from `bc_players`, so a rename follows by itself. An unanswered request expires after
+`friends.request-minutes` and a player may have `friends.max` friends (both in BlockcraftSystem's `config.yml`).
+`/friend add|accept|deny|remove|list|jump <name>` and `/friends` need `blockcraft.system.friends`; `add` respects
+the target's `friend-requests` setting, and a friend who is vanished counts as offline everywhere.
+
+The lobby's friends item opens `FriendsMenu`, which is drawn from the proxy's answer rather than from the
+database: only the proxy knows who is online and on which server, so the Paper side asks over the `Friends`
+subchannel and the proxy writes the list back. Clicking a friend, or accepting and denying a request, runs the
+matching `/friend` command through the `Command` subchannel.
 
 ## Discord linking
 
