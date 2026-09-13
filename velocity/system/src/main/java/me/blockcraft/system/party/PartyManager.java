@@ -4,6 +4,8 @@ import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.common.settings.PlayerSetting;
+import me.blockcraft.system.PlayerChoices;
 import me.blockcraft.system.PlayerVisibility;
 import me.blockcraft.system.command.CommandSupport;
 import net.kyori.adventure.text.Component;
@@ -32,15 +34,17 @@ public final class PartyManager {
 
     private final ProxyServer proxy;
     private final PlayerVisibility visibility;
+    private final PlayerChoices choices;
     private final Messages messages;
     private final Map<UUID, Party> byLeader = new ConcurrentHashMap<>();
     private final Map<UUID, UUID> leaderByMember = new ConcurrentHashMap<>();
     private final Map<UUID, Invite> invites = new ConcurrentHashMap<>();
     private final Map<UUID, Instant> joinRequests = new ConcurrentHashMap<>();
 
-    public PartyManager(ProxyServer proxy, PlayerVisibility visibility, Messages messages) {
+    public PartyManager(ProxyServer proxy, PlayerVisibility visibility, PlayerChoices choices, Messages messages) {
         this.proxy = proxy;
         this.visibility = visibility;
+        this.choices = choices;
         this.messages = messages;
     }
 
@@ -122,6 +126,10 @@ public final class PartyManager {
         }
         if (isInParty(invitee.getUniqueId())) {
             inviter.sendMessage(messages.get("party.target-in-party"));
+            return;
+        }
+        if (!choices.enabled(invitee, PlayerSetting.PARTY_INVITES)) {
+            inviter.sendMessage(messages.get("party.invites-disabled", name(invitee)));
             return;
         }
         invites.put(invitee.getUniqueId(), new Invite(inviter.getUniqueId(), Instant.now()));

@@ -65,7 +65,7 @@ public final class LobbyPlugin extends JavaPlugin {
 
         var trails = new Trails();
         var pets = new Pets(messages);
-        var hider = new PlayerHider(this, config.hiderCooldownMillis());
+        var hider = new PlayerHider(this, api.settings(), config.hiderCooldownMillis());
         var items = new LobbyItems(messages);
         importLegacyUnlocks(new LegacyUnlocks(api.unlocks(), getLogger()));
         groupCounts = new GroupCounts(this, api.servers(), config.serverListStaleSeconds());
@@ -90,7 +90,7 @@ public final class LobbyPlugin extends JavaPlugin {
                 new DoubleJumpListener(config),
                 new GadgetListener(gadgets),
                 new InventoryLockListener(),
-                new DeathListener(locations, items));
+                new DeathListener(locations, items, hider));
         api.presence().maxPlayers(config.maxPlayers());
 
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {

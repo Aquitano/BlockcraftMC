@@ -2,6 +2,7 @@ package me.blockcraft.api.proxy;
 
 import com.google.common.io.ByteStreams;
 import me.blockcraft.common.network.ProxyChannel;
+import me.blockcraft.common.settings.PlayerSetting;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import org.bukkit.entity.Player;
@@ -53,6 +54,15 @@ public final class ProxyMessaging {
         var out = ByteStreams.newDataOutput();
         out.writeUTF(ProxyChannel.NICK);
         out.writeUTF(nick.orElse(""));
+        send(plugin, player, ProxyChannel.NAME, out.toByteArray());
+    }
+
+    /** Tells the proxy what the player just chose, so private messages and invites follow the same setting. */
+    public static void setting(Plugin plugin, Player player, PlayerSetting setting, String value) {
+        var out = ByteStreams.newDataOutput();
+        out.writeUTF(ProxyChannel.SETTING);
+        out.writeUTF(setting.key());
+        out.writeUTF(value);
         send(plugin, player, ProxyChannel.NAME, out.toByteArray());
     }
 

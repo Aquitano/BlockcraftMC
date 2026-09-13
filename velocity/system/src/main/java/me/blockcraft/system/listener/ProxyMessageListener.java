@@ -8,7 +8,9 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import me.blockcraft.common.network.ProxyChannel;
+import me.blockcraft.common.settings.PlayerSetting;
 import me.blockcraft.system.LobbyConnector;
+import me.blockcraft.system.PlayerChoices;
 import me.blockcraft.system.PlayerVisibility;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import org.slf4j.Logger;
@@ -23,14 +25,16 @@ public final class ProxyMessageListener {
     private final ProxyServer proxy;
     private final LobbyConnector lobby;
     private final PlayerVisibility visibility;
+    private final PlayerChoices choices;
     private final TabHeaderListener tabHeader;
     private final Logger logger;
 
-    public ProxyMessageListener(ProxyServer proxy, LobbyConnector lobby, PlayerVisibility visibility, TabHeaderListener tabHeader,
-                                Logger logger) {
+    public ProxyMessageListener(ProxyServer proxy, LobbyConnector lobby, PlayerVisibility visibility, PlayerChoices choices,
+                                TabHeaderListener tabHeader, Logger logger) {
         this.proxy = proxy;
         this.lobby = lobby;
         this.visibility = visibility;
+        this.choices = choices;
         this.tabHeader = tabHeader;
         this.logger = logger;
         proxy.getChannelRegistrar().register(CHANNEL);
@@ -53,6 +57,11 @@ public final class ProxyMessageListener {
             case ProxyChannel.HUB -> lobby.send(player);
             case ProxyChannel.COMMAND -> proxy.getCommandManager().executeAsync(player, in.readUTF());
             case ProxyChannel.NICK -> visibility.setNick(player, Optional.of(in.readUTF()).filter(nick -> !nick.isEmpty()));
+            case ProxyChannel.SETTING -> {
+                String key = in.readUTF();
+                String value = in.readUTF();
+                PlayerSetting.byKey(key).ifPresent(setting -> choices.set(player, setting, value));
+            }
             case ProxyChannel.VANISH -> {
                 visibility.setVanished(player, in.readBoolean());
                 tabHeader.refreshAll();

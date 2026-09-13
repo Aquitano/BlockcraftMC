@@ -37,6 +37,8 @@ public final class LobbyItemListener implements Listener {
                 case SECRETS -> menus.openSecrets(player);
                 case EXTRAS -> menus.openExtras(player);
                 case PLAYER_HIDER -> toggleHider(player);
+                case PROFILE -> menus.openProfile(player);
+                case SETTINGS -> menus.openSettings(player);
                 case FRIENDS, GADGET -> {
                 }
             }

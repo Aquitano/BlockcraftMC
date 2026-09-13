@@ -2,6 +2,8 @@ package me.blockcraft.api;
 
 import me.blockcraft.api.coins.CoinsRepository;
 import me.blockcraft.api.cosmetic.Effects;
+import me.blockcraft.api.game.StatsRepository;
+import me.blockcraft.api.menu.Profiles;
 import me.blockcraft.api.network.ServerPresence;
 import me.blockcraft.api.player.RealNames;
 import me.blockcraft.api.settings.PlayerSettings;
@@ -14,6 +16,9 @@ import me.blockcraft.common.network.ServerIdentity;
 import me.blockcraft.common.network.ServerRepository;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
+
+import java.util.Map;
 
 /** Entry point for other plugins; populated while BlockcraftAPI is enabled. */
 public final class BlockcraftApi {
@@ -26,6 +31,7 @@ public final class BlockcraftApi {
     private final Shop shop;
     private final PlayerSettings settings;
     private final Effects effects;
+    private final Profiles profiles;
     private final Messages messages;
     private final ServerRepository servers;
     private final ServerIdentity server;
@@ -34,14 +40,16 @@ public final class BlockcraftApi {
     private final Xp xp;
     private final TagResolver tags;
 
-    BlockcraftApi(Database database, PlayerSettings settings, Messages messages, ServerRepository servers, ServerIdentity server,
-                  ServerPresence presence, RealNames realNames, Xp xp, TagResolver tags) {
+    BlockcraftApi(Plugin plugin, Database database, PlayerSettings settings, Map<String, StatsRepository> profileGames,
+                  Messages messages, ServerRepository servers, ServerIdentity server, ServerPresence presence,
+                  RealNames realNames, Xp xp, TagResolver tags) {
         this.database = database;
         this.coins = new CoinsRepository(database);
         this.unlocks = new Unlocks(database);
         this.shop = new Shop(coins, unlocks);
         this.settings = settings;
         this.effects = new Effects(settings);
+        this.profiles = new Profiles(plugin, coins, profileGames);
         this.messages = messages;
         this.servers = servers;
         this.server = server;
@@ -87,6 +95,11 @@ public final class BlockcraftApi {
     /** Remembered per-player choices such as the chat tag or kill effect. */
     public PlayerSettings settings() {
         return settings;
+    }
+
+    /** The player's own profile card: rank, level, coins and per-game stats. */
+    public Profiles profiles() {
+        return profiles;
     }
 
     /** Kill and win effects to play from a game's death and win handling. */

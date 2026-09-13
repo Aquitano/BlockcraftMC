@@ -7,6 +7,8 @@ import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.common.settings.PlayerSetting;
+import me.blockcraft.system.PlayerChoices;
 import me.blockcraft.system.PlayerVisibility;
 import me.blockcraft.system.SystemPermissions;
 import me.blockcraft.system.command.CommandSupport;
@@ -31,14 +33,17 @@ public final class MessageCommand {
     private final CommandSupport support;
     private final ProxyServer proxy;
     private final PlayerVisibility visibility;
+    private final PlayerChoices choices;
     private final MuteGate muteGate;
     private final Messages messages;
     private final Map<UUID, UUID> lastPartner = new ConcurrentHashMap<>();
 
-    public MessageCommand(CommandSupport support, ProxyServer proxy, PlayerVisibility visibility, MuteGate muteGate, Messages messages) {
+    public MessageCommand(CommandSupport support, ProxyServer proxy, PlayerVisibility visibility, PlayerChoices choices,
+                          MuteGate muteGate, Messages messages) {
         this.support = support;
         this.proxy = proxy;
         this.visibility = visibility;
+        this.choices = choices;
         this.muteGate = muteGate;
         this.messages = messages;
     }
@@ -76,6 +81,10 @@ public final class MessageCommand {
     private void deliver(Player sender, Player target, String text) {
         if (target.equals(sender)) {
             sender.sendMessage(messages.get("msg.self"));
+            return;
+        }
+        if (!choices.enabled(target, PlayerSetting.PRIVATE_MESSAGES) && !sender.hasPermission(SystemPermissions.MSG_BYPASS)) {
+            sender.sendMessage(messages.get("msg.disabled", Placeholder.unparsed("player", visibility.shownName(target))));
             return;
         }
         if (!muteGate.allows(sender)) {

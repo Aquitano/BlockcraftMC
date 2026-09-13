@@ -20,6 +20,14 @@ starting-coins: 10
 # How often this server announces itself to the proxy (bc_servers).
 heartbeat-seconds: 5
 
+# The games the profile card lists: the menu key (its name is profile.games.<key> in messages.yml) and the
+# stats table it reads. A game the network does not run yet simply shows zeroes.
+profile:
+  games:
+    quicksg: qsg_stats
+    emeraldrush: em_stats
+    duell: duell_stats
+
 # Network XP (bc_xp). Each level costs level-step more XP than the one before: level 2 at 100, level 3 at 300,
 # level 10 at 4500. rewards are what every game hands out per kill and per win.
 xp:

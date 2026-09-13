@@ -5,6 +5,7 @@ import me.blockcraft.api.coins.CoinsJoinListener;
 import me.blockcraft.api.command.CoinsCommand;
 import me.blockcraft.api.command.CommandRegistry;
 import me.blockcraft.api.command.LevelCommand;
+import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.menu.MenuListener;
 import me.blockcraft.api.network.ServerHeartbeat;
 import me.blockcraft.api.network.ServerPresence;
@@ -19,12 +20,14 @@ import me.blockcraft.common.db.Database;
 import me.blockcraft.common.db.DatabaseConfig;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.network.ServerRepository;
+import me.blockcraft.common.settings.PlayerSettingRepository;
 import me.blockcraft.common.xp.XpRepository;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.luckperms.api.LuckPermsProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.EnumMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public final class BlockcraftApiPlugin extends JavaPlugin {
@@ -51,16 +54,18 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         var loaded = Messages.load(getDataPath(), () -> getResource("messages.yml"));
         var tags = TagResolver.resolver(Messages.tagsOf(YamlFile.section(config, "network")), loaded.tagsOf("palette"));
         var messages = loaded.with(tags);
-        var settings = new PlayerSettings(this, database);
+        var settingRepository = new PlayerSettingRepository(database);
+        settingRepository.createTable();
+        var settings = new PlayerSettings(this, settingRepository);
         var realNames = new RealNames();
         var xpRepository = new XpRepository(database);
         xpRepository.createTable();
         var xp = new Xp(this, xpRepository, new Levels(number(YamlFile.section(config, "xp"), "level-step", 100)),
                 xpRewards(YamlFile.section(YamlFile.section(config, "xp"), "rewards")), messages);
-        var api = new BlockcraftApi(database, settings, messages, servers, self, presence, realNames, xp, tags);
+        var api = new BlockcraftApi(this, database, settings, profileGames(YamlFile.section(YamlFile.section(config, "profile"), "games")),
+                messages, servers, self, presence, realNames, xp, tags);
         api.coins().createTable();
         api.unlocks().createTable();
-        settings.createTable();
         BlockcraftApi.install(api);
         int startingCoins = number(config, "starting-coins", 10);
         getServer().getPluginManager().registerEvents(realNames, this);
@@ -78,6 +83,13 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
 
         int heartbeatSeconds = number(config, "heartbeat-seconds", 5);
         heartbeat.start(heartbeatSeconds * TICKS_PER_SECOND);
+    }
+
+    /** The profile card's games: menu key to legacy stats table, as configured. */
+    private Map<String, StatsRepository> profileGames(Map<String, Object> section) {
+        var games = new LinkedHashMap<String, StatsRepository>();
+        section.forEach((key, table) -> games.put(key, new StatsRepository(database, String.valueOf(table))));
+        return games;
     }
 
     private static Map<XpReward, Integer> xpRewards(Map<String, Object> section) {
