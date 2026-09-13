@@ -4,16 +4,20 @@ import me.blockcraft.common.db.Database;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Every timestamp is written and compared on the database clock and read back as epoch seconds, so the
+ * proxy's and the game servers' time zones never shift an expiry.
+ */
 public final class PunishmentRepository {
 
-    private static final String COLUMNS = "id, player_uuid, type, reason, issuer, created_at, expires_at, revoked_at, revoked_by";
+    private static final String COLUMNS = "id, player_uuid, type, reason, issuer, UNIX_TIMESTAMP(created_at) AS created_at, "
+            + "UNIX_TIMESTAMP(expires_at) AS expires_at, UNIX_TIMESTAMP(revoked_at) AS revoked_at, revoked_by";
     private static final String ACTIVE = "revoked_at IS NULL AND (expires_at IS NULL OR expires_at > NOW())";
 
     private final Database db;
@@ -58,16 +62,15 @@ public final class PunishmentRepository {
     }
 
     public void create(UUID player, PunishmentType type, String reason, String issuer, Optional<Duration> duration) {
-        var now = Instant.now();
-        db.update("INSERT INTO bc_punishments (player_uuid, type, reason, issuer, created_at, expires_at) VALUES (?, ?, ?, ?, ?, ?)",
-                player.toString(), type.name(), reason, issuer, Timestamp.from(now),
-                duration.map(now::plus).map(Timestamp::from).orElse(null));
+        db.update("INSERT INTO bc_punishments (player_uuid, type, reason, issuer, expires_at) "
+                        + "VALUES (?, ?, ?, ?, NOW() + INTERVAL ? SECOND)",
+                player.toString(), type.name(), reason, issuer, duration.map(Duration::toSeconds).orElse(null));
     }
 
     /** Ends every active punishment of that type; returns false if there was none. */
     public boolean revoke(UUID player, PunishmentType type, String revokedBy) {
-        return db.update("UPDATE bc_punishments SET revoked_at = ?, revoked_by = ? WHERE player_uuid = ? AND type = ? AND " + ACTIVE,
-                Timestamp.from(Instant.now()), revokedBy, player.toString(), type.name()) > 0;
+        return db.update("UPDATE bc_punishments SET revoked_at = NOW(), revoked_by = ? WHERE player_uuid = ? AND type = ? AND " + ACTIVE,
+                revokedBy, player.toString(), type.name()) > 0;
     }
 
     public List<Punishment> history(UUID player, PunishmentType type) {
@@ -87,9 +90,14 @@ public final class PunishmentRepository {
                 PunishmentType.valueOf(row.getString("type")),
                 row.getString("reason"),
                 row.getString("issuer"),
-                row.getTimestamp("created_at").toInstant(),
-                Optional.ofNullable(row.getTimestamp("expires_at")).map(Timestamp::toInstant),
-                Optional.ofNullable(row.getTimestamp("revoked_at")).map(Timestamp::toInstant),
+                Instant.ofEpochSecond(row.getLong("created_at")),
+                epochSeconds(row, "expires_at"),
+                epochSeconds(row, "revoked_at"),
                 Optional.ofNullable(row.getString("revoked_by")));
+    }
+
+    private static Optional<Instant> epochSeconds(ResultSet row, String column) throws SQLException {
+        long seconds = row.getLong(column);
+        return row.wasNull() ? Optional.empty() : Optional.of(Instant.ofEpochSecond(seconds));
     }
 }

@@ -2,7 +2,6 @@ package me.blockcraft.common.moderation;
 
 import me.blockcraft.common.db.Database;
 
-import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -26,8 +25,8 @@ public final class AdLogRepository {
     }
 
     public void add(UUID player, String server, String message) {
-        db.update("INSERT INTO bc_ad_log (player_uuid, server, message, created_at) VALUES (?, ?, ?, ?)",
-                player.toString(), server, message, Timestamp.from(Instant.now()));
+        db.update("INSERT INTO bc_ad_log (player_uuid, server, message, created_at) VALUES (?, ?, ?, NOW())",
+                player.toString(), server, message);
     }
 
     public List<AdLog> list() {

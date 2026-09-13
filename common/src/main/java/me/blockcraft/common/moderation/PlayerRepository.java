@@ -4,7 +4,6 @@ import me.blockcraft.common.db.Database;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
@@ -30,9 +29,9 @@ public final class PlayerRepository {
     }
 
     public void upsert(UUID player, String name) {
-        db.update("INSERT INTO bc_players (uuid, name, last_seen) VALUES (?, ?, ?) "
-                + "ON DUPLICATE KEY UPDATE name = VALUES(name), last_seen = VALUES(last_seen)",
-                player.toString(), name, Timestamp.from(Instant.now()));
+        db.update("INSERT INTO bc_players (uuid, name, last_seen) VALUES (?, ?, NOW()) "
+                + "ON DUPLICATE KEY UPDATE name = VALUES(name), last_seen = NOW()",
+                player.toString(), name);
     }
 
     public Optional<KnownPlayer> byName(String name) {

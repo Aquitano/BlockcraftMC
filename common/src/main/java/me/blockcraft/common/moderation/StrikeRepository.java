@@ -4,7 +4,6 @@ import me.blockcraft.common.db.Database;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -28,8 +27,8 @@ public final class StrikeRepository {
     }
 
     public void add(UUID player, String reason, String issuer) {
-        db.update("INSERT INTO bc_strikes (player_uuid, reason, issuer, created_at) VALUES (?, ?, ?, ?)",
-                player.toString(), reason, issuer, Timestamp.from(Instant.now()));
+        db.update("INSERT INTO bc_strikes (player_uuid, reason, issuer, created_at) VALUES (?, ?, ?, NOW())",
+                player.toString(), reason, issuer);
     }
 
     public int count(UUID player) {

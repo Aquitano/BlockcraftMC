@@ -2,8 +2,6 @@ package me.blockcraft.common.moderation;
 
 import me.blockcraft.common.db.Database;
 
-import java.sql.Timestamp;
-import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -27,8 +25,8 @@ public final class WarnRepository {
 
     /** Returns the player's warn count after adding. */
     public int add(UUID player, Optional<String> reason) {
-        db.update("INSERT INTO bc_warns (player_uuid, reason, created_at) VALUES (?, ?, ?)",
-                player.toString(), reason.orElse(null), Timestamp.from(Instant.now()));
+        db.update("INSERT INTO bc_warns (player_uuid, reason, created_at) VALUES (?, ?, NOW())",
+                player.toString(), reason.orElse(null));
         return count(player);
     }
 
