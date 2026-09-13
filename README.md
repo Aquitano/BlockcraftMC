@@ -30,14 +30,14 @@ one LuckPerms database, otherwise a rank set on one side is unknown on the other
 `luckperms/ranks.json` is a LuckPerms export with the groups the plugins expect. Chat and the lobby tab list render
 the group's prefix in front of the name; the prefix carries the name colour, so it ends in a colour code.
 
-| Group      | Prefix                | Grants                                                                     |
-|------------|-----------------------|----------------------------------------------------------------------------|
-| `default`  | `&7SPIELER &8● &7`    | party invite and kick, `/msg` and `/r`, `/server`, `/glist`                |
-| `premium`  | `&6PREMIUM &8● &6`    | premium lobby area, double jump, join when full, `/joinme`                 |
-| `youtuber` | `&5YT &8● &5`         | premium plus `/joinme` without delay, `/bc`, `/send`                       |
-| `dev`      | `&bDEV &8● &b`        | premium plus every `blockcraft.*` and `velocity.command.*` permission      |
-| `admin`    | `&4ADMIN &8● &4`      | dev plus `luckperms.*`                                                     |
-| `owner`    | `&bOWNER &8● &b`      | admin plus `*`                                                             |
+| Group      | Prefix             | Grants                                                                            |
+|------------|--------------------|-----------------------------------------------------------------------------------|
+| `default`  | `&7SPIELER &8● &7` | party invite and kick, `/msg` and `/r`, `/seen`, `/playtime`, `/server`, `/glist` |
+| `premium`  | `&6PREMIUM &8● &6` | premium lobby area, double jump, join when full, `/joinme`, chat colours          |
+| `youtuber` | `&5YT &8● &5`      | premium plus `/joinme` without delay, `/bc`, `/send`, `/nick`                     |
+| `dev`      | `&bDEV &8● &b`     | premium plus every `blockcraft.*` and `velocity.command.*` permission             |
+| `admin`    | `&4ADMIN &8● &4`   | dev plus `luckperms.*`                                                            |
+| `owner`    | `&bOWNER &8● &b`   | admin plus `*`                                                                    |
 
 Import it once per LuckPerms database (`gzip -k luckperms/ranks.json`, copy the `.gz` into LuckPerms' data folder,
 `/lp import ranks`), then assign players with `/lp user <name> parent set <group>`.

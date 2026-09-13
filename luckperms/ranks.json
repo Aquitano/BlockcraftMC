@@ -7,6 +7,8 @@
         {"type": "permission", "key": "blockcraft.system.party.invite", "value": true},
         {"type": "permission", "key": "blockcraft.system.party.kick", "value": true},
         {"type": "permission", "key": "blockcraft.system.msg", "value": true},
+        {"type": "permission", "key": "blockcraft.seen", "value": true},
+        {"type": "permission", "key": "blockcraft.playtime", "value": true},
         {"type": "permission", "key": "velocity.command.server", "value": true},
         {"type": "permission", "key": "velocity.command.glist", "value": true}
       ]
@@ -18,7 +20,8 @@
         {"type": "permission", "key": "blockcraft.lobby.premium", "value": true},
         {"type": "permission", "key": "blockcraft.lobby.doublejump", "value": true},
         {"type": "permission", "key": "blockcraft.system.fulljoin", "value": true},
-        {"type": "permission", "key": "blockcraft.system.joinme", "value": true}
+        {"type": "permission", "key": "blockcraft.system.joinme", "value": true},
+        {"type": "permission", "key": "blockcraft.chat.color", "value": true}
       ]
     },
     "youtuber": {
@@ -27,6 +30,7 @@
         {"type": "weight", "key": "weight.30", "value": true},
         {"type": "prefix", "key": "prefix.30.&5YT &8● &5", "value": true},
         {"type": "permission", "key": "blockcraft.system.joinme.nodelay", "value": true},
+        {"type": "permission", "key": "blockcraft.nick", "value": true},
         {"type": "permission", "key": "blockcraft.system.bc", "value": true},
         {"type": "permission", "key": "velocity.command.send", "value": true}
       ]
