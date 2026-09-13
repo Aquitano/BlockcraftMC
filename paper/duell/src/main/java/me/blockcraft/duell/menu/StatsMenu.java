@@ -7,7 +7,6 @@ import me.blockcraft.api.item.Items;
 import me.blockcraft.api.menu.Menu;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.duell.game.GameItems;
-import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -38,11 +37,7 @@ public final class StatsMenu extends Menu {
     private static ItemStack head(Messages messages, Player player, Stats stats) {
         return Items.head(player.getUniqueId(), player.getName())
                 .name(messages.get("menu.stats.player", Placeholder.unparsed("player", player.getName())))
-                .lore(messages.getLines("menu.stats.player-lore",
-                        Formatter.number("kills", stats.kills()),
-                        Formatter.number("wins", stats.wins()),
-                        Formatter.number("deaths", stats.deaths()),
-                        Placeholder.unparsed("kdr", stats.kdr())))
+                .lore(messages.getLines("menu.stats.player-lore", stats.placeholders()))
                 .build();
     }
 

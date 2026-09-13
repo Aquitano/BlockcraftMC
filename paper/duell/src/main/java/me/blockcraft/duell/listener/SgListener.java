@@ -1,10 +1,10 @@
 package me.blockcraft.duell.listener;
 
 import me.blockcraft.api.game.LootChests;
+import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.duell.game.Duel;
 import me.blockcraft.duell.game.DuelMode;
 import org.bukkit.Material;
-import org.bukkit.Sound;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
@@ -34,7 +34,7 @@ public final class SgListener implements Listener {
         event.setCancelled(true);
         var player = event.getPlayer();
         if (lootChests.isFresh(block.getLocation())) {
-            player.playSound(player.getLocation(), Sound.BLOCK_CHEST_OPEN, 10.0f, 1.0f);
+            Sounds.MENU_OPEN.play(player);
         }
         player.openInventory(lootChests.open(block.getLocation()));
     }

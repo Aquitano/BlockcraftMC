@@ -1,11 +1,13 @@
 package me.blockcraft.duell.game;
 
 import me.blockcraft.api.BlockcraftApi;
-import me.blockcraft.api.coins.CoinsRepository;
+import me.blockcraft.api.coins.Coins;
 import me.blockcraft.api.game.GamePhase;
+import me.blockcraft.api.game.LobbyCountdown;
 import me.blockcraft.api.game.ServerRestart;
 import me.blockcraft.api.game.Stat;
 import me.blockcraft.api.game.StatsRepository;
+import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Countdown;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.api.xp.XpReward;
@@ -20,7 +22,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Particle;
-import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
@@ -39,7 +40,6 @@ import java.util.stream.Stream;
 public final class Duel {
 
     public static final int MAX_PARTICIPANTS = 2;
-    private static final Set<Integer> LOBBY_ANNOUNCEMENTS = Set.of(15, 10, 5, 4, 3, 2, 1);
     private static final Set<Integer> ROUND_ANNOUNCEMENTS = Set.of(60, 30, 10);
     private static final Set<Integer> RESTART_ANNOUNCEMENTS = Set.of(5, 4, 3, 2);
     private static final long RESPAWN_DELAY_TICKS = 5L;
@@ -49,7 +49,6 @@ public final class Duel {
     private final Messages messages;
     private final Spawns spawns;
     private final StatsRepository stats;
-    private final CoinsRepository coins;
     private final GameScoreboard scoreboard;
     private final GameItems items;
     private final Random random = new Random();
@@ -64,21 +63,23 @@ public final class Duel {
     private int round = 1;
     private boolean superJumpFinished;
     private final Map<UUID, Integer> checkpoints = new HashMap<>();
-    private Countdown lobbyCountdown;
+    private final LobbyCountdown lobbyCountdown;
     private Countdown freezeCountdown;
     private Countdown roundTimer;
     private Countdown restartCountdown;
 
     public Duel(Plugin plugin, DuellConfig config, Messages messages, Spawns spawns, StatsRepository stats,
-                CoinsRepository coins, GameScoreboard scoreboard, GameItems items) {
+                GameScoreboard scoreboard, GameItems items) {
         this.plugin = plugin;
         this.config = config;
         this.messages = messages;
         this.spawns = spawns;
         this.stats = stats;
-        this.coins = coins;
         this.scoreboard = scoreboard;
         this.items = items;
+        this.lobbyCountdown = new LobbyCountdown(plugin, config.countdowns().lobby(), MAX_PARTICIPANTS, participants::size,
+                seconds -> Bukkit.broadcast(messages.get("lobby.starting-in", Formatter.number("seconds", seconds))),
+                this::startRound);
     }
 
     public boolean isLobby() {
@@ -167,11 +168,9 @@ public final class Duel {
                 if (participants.isEmpty()) {
                     mode = null;
                 }
-                if (lobbyCountdown != null && participants.size() < MAX_PARTICIPANTS) {
+                if (lobbyCountdown.isRunning() && participants.size() < MAX_PARTICIPANTS) {
                     lobbyCountdown.cancel();
-                    lobbyCountdown = null;
                     Bukkit.broadcast(messages.get("lobby.not-enough-players"));
-                    Bukkit.getOnlinePlayers().forEach(online -> online.setLevel(0));
                 }
                 refreshScoreboards();
             }
@@ -194,6 +193,7 @@ public final class Duel {
 
     public void handleVsKill(Player victim, Player killer) {
         round++;
+        Sounds.KILL.play(killer);
         BlockcraftApi.get().effects().onKill(killer, victim);
         BlockcraftApi.get().xp().award(killer, XpReward.KILL);
         record(killer, Stat.KILLS);
@@ -244,7 +244,7 @@ public final class Duel {
         Bukkit.broadcast(messages.get("superjump.checkpoint", Placeholder.unparsed("player", player.getName()),
                 Formatter.number("checkpoint", checkpoint)));
         player.setRespawnLocation(player.getLocation(), true);
-        player.playSound(player.getLocation(), Sound.ENTITY_ARROW_HIT_PLAYER, 5.0f, 10.0f);
+        Sounds.NOTIFY.play(player);
         player.getWorld().spawnParticle(Particle.FLAME, player.getLocation(), 5);
         return true;
     }
@@ -259,8 +259,8 @@ public final class Duel {
         showWinTitle(winner);
         rewardWinner(winner);
         Bukkit.broadcast(Component.empty());
-        opponentsOf(winner).forEach(other -> other.playSound(other.getLocation(), Sound.ENTITY_BLAZE_DEATH, 5.0f, 10.0f));
-        winner.playSound(winner.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 5.0f, 10.0f);
+        opponentsOf(winner).forEach(Sounds.LOSE::play);
+        Sounds.WIN.play(winner);
         winner.getWorld().spawnParticle(Particle.EXPLOSION, winner.getLocation(), 5);
         winner.setRespawnLocation(winner.getLocation(), true);
         startRestart();
@@ -276,21 +276,12 @@ public final class Duel {
     }
 
     private void startLobbyCountdownIfReady() {
-        if (phase != GamePhase.LOBBY || mode == null || lobbyCountdown != null || participants.size() < MAX_PARTICIPANTS) {
-            return;
+        if (phase == GamePhase.LOBBY && mode != null && participants.size() >= MAX_PARTICIPANTS) {
+            lobbyCountdown.start();
         }
-        int seconds = config.countdowns().lobby();
-        Bukkit.broadcast(messages.get("lobby.starting-in", Formatter.number("seconds", seconds)));
-        lobbyCountdown = Countdown.start(plugin, seconds, remaining -> {
-            Bukkit.getOnlinePlayers().forEach(player -> player.setLevel(remaining));
-            if (LOBBY_ANNOUNCEMENTS.contains(remaining)) {
-                Bukkit.broadcast(messages.get("lobby.starting-in", Formatter.number("seconds", remaining)));
-            }
-        }, this::startRound);
     }
 
     private void startRound() {
-        lobbyCountdown = null;
         setPhase(GamePhase.INGAME);
         Bukkit.broadcast(messages.get("lobby.started"));
         var maps = config.maps(mode);
@@ -339,15 +330,11 @@ public final class Duel {
 
     private void freeze() {
         frozen = true;
-        freezeCountdown = Countdown.start(plugin, config.countdowns().freeze(), remaining -> {
-            if (remaining > 0) {
-                var title = Title.title(messages.get("title.freeze", Formatter.number("seconds", remaining)), Component.empty());
-                participants().forEach(participant -> participant.showTitle(title));
-            }
-        }, () -> {
-            frozen = false;
-            pvp = mode != DuelMode.SUPERJUMP;
-        });
+        freezeCountdown = LobbyCountdown.freeze(plugin, config.countdowns().freeze(), () -> participants().toList(),
+                seconds -> messages.get("title.freeze", Formatter.number("seconds", seconds)), () -> {
+                    frozen = false;
+                    pvp = mode != DuelMode.SUPERJUMP;
+                });
     }
 
     private void startRoundTimer() {
@@ -425,12 +412,8 @@ public final class Duel {
         Bukkit.broadcast(messages.get("round.coins", Placeholder.unparsed("player", winner.getName()), Formatter.number("coins", amount)));
         BlockcraftApi.get().effects().onWin(winner);
         BlockcraftApi.get().xp().award(winner, XpReward.WIN);
-        var uuid = winner.getUniqueId();
-        var name = BlockcraftApi.get().realName(winner);
-        Tasks.async(plugin, () -> {
-            coins.add(uuid, name, amount);
-            stats.add(uuid, name, Stat.WINS, 1);
-        });
+        Coins.award(plugin, winner, amount);
+        record(winner, Stat.WINS);
     }
 
     private void record(Player player, Stat column) {
@@ -454,6 +437,7 @@ public final class Duel {
     }
 
     public void shutdown() {
-        Stream.of(lobbyCountdown, freezeCountdown, roundTimer, restartCountdown).forEach(Duel::cancel);
+        lobbyCountdown.cancel();
+        Stream.of(freezeCountdown, roundTimer, restartCountdown).forEach(Duel::cancel);
     }
 }

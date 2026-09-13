@@ -2,6 +2,7 @@ package me.blockcraft.duell;
 
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.command.CommandRegistry;
 import me.blockcraft.api.game.ArenaProtection;
 import me.blockcraft.api.game.LootChests;
 import me.blockcraft.api.game.StatsRepository;
@@ -35,15 +36,15 @@ public final class DuellPlugin extends JavaPlugin {
     public void onEnable() {
         saveDefaultConfig();
         var config = DuellConfig.from(getConfig());
-        var messages = Messages.load(getDataPath(), () -> getResource("messages.yml"));
         var spawns = Spawns.load(getDataPath());
 
         var api = BlockcraftApi.get();
+        var messages = Messages.load(getDataPath(), () -> getResource("messages.yml"), api.tags());
         var stats = new StatsRepository(api.database(), "duell_stats");
         stats.createTable();
 
         var items = new GameItems(messages);
-        duel = new Duel(this, config, messages, spawns, stats, api.coins(), new GameScoreboard(messages), items);
+        duel = new Duel(this, config, messages, spawns, stats, new GameScoreboard(messages), items);
         api.presence().maxPlayers(Duel.MAX_PARTICIPANTS);
         var topList = new TopList(this, stats, messages);
         var statsMenus = new StatsMenus(this, messages, duel, stats, items, topList, config.globalStatsHead());
@@ -60,7 +61,7 @@ public final class DuellPlugin extends JavaPlugin {
         ).forEach(this::register);
 
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event ->
-                event.registrar().register(SetSpawnCommand.create(spawns, config, messages), "Setzt die Duell Spawns", List.of()));
+                new CommandRegistry(event.registrar(), messages).register(SetSpawnCommand.create(spawns, config, messages)));
 
         clearArenaEntities(spawns);
     }
