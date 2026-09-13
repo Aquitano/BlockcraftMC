@@ -28,6 +28,16 @@ public final class PlayerReset {
         player.getInventory().setArmorContents(null);
     }
 
+    /** The state a player watching the rest of the round is in; the game keeps the bookkeeping. */
+    public static void spectate(Player player) {
+        player.setExp(0.0f);
+        player.setLevel(0);
+        resetHealth(player);
+        player.setFoodLevel(20);
+        player.getInventory().setArmorContents(null);
+        player.setGameMode(GameMode.SPECTATOR);
+    }
+
     public static void resetHealth(Player player) {
         Objects.requireNonNull(player.getAttribute(Attribute.MAX_HEALTH)).setBaseValue(DEFAULT_MAX_HEALTH);
         player.setHealth(DEFAULT_MAX_HEALTH);
