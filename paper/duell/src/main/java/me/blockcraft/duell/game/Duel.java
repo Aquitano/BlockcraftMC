@@ -286,7 +286,6 @@ public final class Duel {
     private void startRound() {
         lobbyCountdown = null;
         setPhase(GamePhase.INGAME);
-        pvp = mode != DuelMode.SUPERJUMP;
         Bukkit.broadcast(messages.get("lobby.started"));
         var maps = config.maps(mode);
         mapNumber = pickMap(maps.size());
@@ -343,7 +342,10 @@ public final class Duel {
                 var title = Title.title(messages.get("title.freeze", Formatter.number("seconds", remaining)), Component.empty());
                 participants().forEach(participant -> participant.showTitle(title));
             }
-        }, () -> frozen = false);
+        }, () -> {
+            frozen = false;
+            pvp = mode != DuelMode.SUPERJUMP;
+        });
     }
 
     private void startRoundTimer() {

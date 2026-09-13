@@ -2,6 +2,7 @@ package me.blockcraft.duell;
 
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.world.Worlds;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.duell.command.SetSpawnCommand;
 import me.blockcraft.duell.config.DuellConfig;
@@ -20,9 +21,6 @@ import me.blockcraft.duell.listener.VsListener;
 import me.blockcraft.duell.menu.StatsMenus;
 import me.blockcraft.duell.storage.StatsRepository;
 import org.bukkit.Bukkit;
-import org.bukkit.entity.ItemFrame;
-import org.bukkit.entity.Minecart;
-import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -77,14 +75,7 @@ public final class DuellPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(listener, this);
     }
 
-    /** Leftovers from the previous round: everything but players, item frames and minecarts. */
     private void clearArenaEntities(Spawns spawns) {
-        for (var world : spawns.worlds()) {
-            for (var entity : world.getEntities()) {
-                if (!(entity instanceof Player || entity instanceof ItemFrame || entity instanceof Minecart)) {
-                    entity.remove();
-                }
-            }
-        }
+        spawns.worlds().forEach(world -> Worlds.removeLeftovers(world, entity -> false));
     }
 }
