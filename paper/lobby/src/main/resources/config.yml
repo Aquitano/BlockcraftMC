@@ -12,6 +12,11 @@ secrets:
   reward: 50
 shop-npc:
   respawn-seconds: 500
+# /setholo accepts these names; every one needs a holo.<name> block in messages.yml.
+holograms:
+  - quicksg
+  - emeraldrush
+  - duell
 fireworks:
   - { x: -65, y: 22.5, z: 56 }
   - { x: -69, y: 22.5, z: 56 }

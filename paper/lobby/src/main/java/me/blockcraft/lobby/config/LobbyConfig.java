@@ -24,6 +24,7 @@ public record LobbyConfig(
         double jumpPadMaxLength,
         long hiderCooldownMillis,
         Map<LobbyLocation, String> navigatorGroups,
+        List<String> holograms,
         int serverListStaleSeconds,
         int killEffectPrice,
         int winEffectPrice,
@@ -69,6 +70,7 @@ public record LobbyConfig(
                 number(jumpPad, "max-length", 6.0),
                 (long) number(hider, "cooldown-millis", 3000),
                 navigatorGroups,
+                strings(root, "holograms"),
                 (int) number(navigator, "stale-seconds", 20),
                 (int) number(effects, "kill-price", 500),
                 (int) number(effects, "win-price", 500),
@@ -78,5 +80,9 @@ public record LobbyConfig(
 
     private static double number(Map<?, ?> section, String key, double fallback) {
         return section.get(key) instanceof Number value ? value.doubleValue() : fallback;
+    }
+
+    private static List<String> strings(Map<String, Object> root, String key) {
+        return root.get(key) instanceof List<?> values ? values.stream().map(String::valueOf).toList() : List.of();
     }
 }

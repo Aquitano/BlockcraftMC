@@ -10,6 +10,7 @@ import org.bukkit.inventory.ItemStack;
 
 final class TrailsMenu extends Menu {
 
+    private static final int BACK_SLOT = 7;
     private static final int REMOVE_SLOT = 8;
 
     private final Menus menus;
@@ -25,6 +26,7 @@ final class TrailsMenu extends Menu {
                     .build());
         }
         set(REMOVE_SLOT, Items.of(Material.BARRIER).name(messages.get("trails.remove")).lore(messages.get("trails.remove-lore")).build());
+        backButton(BACK_SLOT, menus::openPremium);
     }
 
     @Override

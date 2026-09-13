@@ -14,6 +14,7 @@ import java.util.Set;
 
 final class EffectsMenu<E extends Enum<E>> extends Menu {
 
+    private static final int BACK_SLOT = 7;
     private static final int RESET_SLOT = 8;
 
     private final Menus menus;
@@ -43,6 +44,7 @@ final class EffectsMenu<E extends Enum<E>> extends Menu {
             set(effect.ordinal(), icon.build());
         }
         set(RESET_SLOT, Items.of(Material.BARRIER).name(messages.get("effects.reset")).lore(messages.get("effects.reset-lore")).build());
+        backButton(BACK_SLOT, menus::openExtras);
     }
 
     @Override
@@ -61,7 +63,7 @@ final class EffectsMenu<E extends Enum<E>> extends Menu {
         if (owned.contains(item)) {
             select(player, effect);
         } else {
-            menus.purchase(player, item, price, () -> select(player, effect));
+            menus.purchase(player, clicked, item, price, buyer -> select(buyer, effect));
         }
     }
 

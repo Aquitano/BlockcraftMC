@@ -11,6 +11,7 @@ import org.bukkit.inventory.ItemStack;
 
 final class GadgetsMenu extends Menu {
 
+    private static final int BACK_SLOT = 7;
     private static final int REMOVE_SLOT = 8;
 
     private final Menus menus;
@@ -30,6 +31,7 @@ final class GadgetsMenu extends Menu {
             set(gadget.ordinal(), icon.build());
         }
         set(REMOVE_SLOT, Items.of(Material.BARRIER).name(messages.get("gadgets.remove")).build());
+        backButton(BACK_SLOT, menus::openExtras);
     }
 
     @Override

@@ -12,6 +12,8 @@ import java.util.Set;
 
 final class HeadsMenu extends Menu {
 
+    private static final int BACK_SLOT = 26;
+
     private final Menus menus;
     private final Set<String> owned;
 
@@ -22,6 +24,7 @@ final class HeadsMenu extends Menu {
         for (Head head : Head.values()) {
             set(head.ordinal(), item(head, owned.contains(head.item())));
         }
+        backButton(BACK_SLOT, menus::openShop);
     }
 
     @Override
@@ -30,11 +33,11 @@ final class HeadsMenu extends Menu {
             return;
         }
         Head head = Head.values()[slot];
-        close(player);
         if (owned.contains(head.item())) {
+            close(player);
             equip(player, head);
         } else {
-            menus.purchase(player, head.item(), menus.config().headPrice(), () -> equip(player, head));
+            menus.purchase(player, item(head, false), head.item(), menus.config().headPrice(), buyer -> equip(buyer, head));
         }
     }
 
@@ -49,7 +52,7 @@ final class HeadsMenu extends Menu {
                 .name(messages.get("heads.name." + head.key()))
                 .lore(owned
                         ? messages.get("shop.owned-lore")
-                        : messages.get("heads.price-lore", Formatter.number("coins", menus.config().headPrice())))
+                        : messages.get("shop.price-lore", Formatter.number("coins", menus.config().headPrice())))
                 .build();
     }
 }

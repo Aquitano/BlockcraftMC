@@ -12,12 +12,13 @@ import org.bukkit.inventory.ItemStack;
 
 final class ChatTagsMenu extends Menu {
 
-    private static final int REMOVE_SLOT = 8;
+    private static final int BACK_SLOT = 9;
+    private static final int REMOVE_SLOT = 17;
 
     private final Menus menus;
 
     ChatTagsMenu(Menus menus, Player viewer) {
-        super(1, menus.messages().get("tags.title"));
+        super(2, menus.messages().get("tags.title"));
         this.menus = menus;
         var selected = menus.settings().get(viewer, PlayerSetting.CHAT_TAG);
         for (ChatTag tag : ChatTag.values()) {
@@ -30,6 +31,7 @@ final class ChatTagsMenu extends Menu {
             set(tag.ordinal(), icon.build());
         }
         set(REMOVE_SLOT, Items.of(Material.BARRIER).name(menus.messages().get("tags.remove")).build());
+        backButton(BACK_SLOT, menus::openExtras);
     }
 
     @Override

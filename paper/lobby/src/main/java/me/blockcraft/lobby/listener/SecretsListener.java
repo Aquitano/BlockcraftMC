@@ -2,6 +2,7 @@ package me.blockcraft.lobby.listener;
 
 import me.blockcraft.api.coins.CoinsRepository;
 import me.blockcraft.api.shop.Unlocks;
+import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.lobby.LobbyPermissions;
@@ -11,7 +12,6 @@ import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.kyori.adventure.title.Title;
-import org.bukkit.Sound;
 import org.bukkit.block.Sign;
 import org.bukkit.block.sign.Side;
 import org.bukkit.entity.Player;
@@ -98,7 +98,7 @@ public final class SecretsListener implements Listener {
             var rewardResolver = Formatter.number("coins", reward);
             player.showTitle(Title.title(messages.get("secrets.found-title"), messages.get("secrets.found-subtitle", rewardResolver), TITLE_TIMES));
             messages.getLines("secrets.found", rewardResolver, Placeholder.unparsed("secret", secret.key())).forEach(player::sendMessage);
-            player.playSound(player.getLocation(), Sound.ENTITY_ENDER_DRAGON_GROWL, 1.0f, 1.0f);
+            Sounds.SECRET.play(player);
             player.setLevel(balance.getAsInt());
         });
     }

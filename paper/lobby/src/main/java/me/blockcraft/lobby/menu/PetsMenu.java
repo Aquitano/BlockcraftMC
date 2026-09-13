@@ -3,14 +3,13 @@ package me.blockcraft.lobby.menu;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.menu.Menu;
 import me.blockcraft.lobby.cosmetic.PetType;
-import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
 final class PetsMenu extends Menu {
 
-    private static final int CLOSE_SLOT = 8;
+    private static final int BACK_SLOT = 8;
 
     private final Menus menus;
 
@@ -24,7 +23,7 @@ final class PetsMenu extends Menu {
                     .lore(messages.get("pets.lore." + type.key()))
                     .build());
         }
-        set(CLOSE_SLOT, Items.of(Material.BARRIER).name(messages.get("pets.close")).build());
+        backButton(BACK_SLOT, menus::openPremium);
     }
 
     @Override

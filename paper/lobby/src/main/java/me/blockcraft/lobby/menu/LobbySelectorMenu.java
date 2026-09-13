@@ -21,7 +21,7 @@ final class LobbySelectorMenu extends Menu {
     private final List<ServerRecord> lobbies;
 
     LobbySelectorMenu(Menus menus, List<ServerRecord> lobbies) {
-        super(Math.max(1, (lobbies.size() + SLOTS_PER_ROW - 1) / SLOTS_PER_ROW), menus.messages().get("lobbies.title"));
+        super(rows(lobbies.size()), menus.messages().get("lobbies.title"));
         this.menus = menus;
         this.lobbies = lobbies;
         var messages = menus.messages();
@@ -38,6 +38,11 @@ final class LobbySelectorMenu extends Menu {
             }
             set(slot, icon.build());
         }
+        backButton((rows(lobbies.size()) - 1) * SLOTS_PER_ROW, menus::openExtras);
+    }
+
+    private static int rows(int lobbies) {
+        return Math.min(6, (lobbies + SLOTS_PER_ROW - 1) / SLOTS_PER_ROW + 1);
     }
 
     @Override

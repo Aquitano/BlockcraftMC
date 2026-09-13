@@ -17,19 +17,18 @@ import java.util.List;
 
 public final class SetHoloCommand {
 
-    private static final List<String> HOLOGRAMS = List.of("syndicate", "skypvp", "farm");
-
     private SetHoloCommand() {
     }
 
-    public static LiteralCommandNode<CommandSourceStack> create(Messages messages, Locations<LobbyLocation> locations, ShopNpc shopNpc) {
+    public static LiteralCommandNode<CommandSourceStack> create(Messages messages, List<String> holograms,
+                                                                Locations<LobbyLocation> locations, ShopNpc shopNpc) {
         var root = Commands.literal("setholo")
                 .requires(source -> source.getSender() instanceof Player player && player.hasPermission(LobbyPermissions.SET_HOLO))
                 .executes(context -> {
                     context.getSource().getSender().sendMessage(messages.get("setholo.usage"));
                     return Command.SINGLE_SUCCESS;
                 });
-        HOLOGRAMS.forEach(name -> root.then(hologram(name, messages)));
+        holograms.forEach(name -> root.then(hologram(name, messages)));
         root.then(Commands.literal("shop").executes(context -> {
             var player = context.getSource().getPlayerOrThrow();
             locations.set(LobbyLocation.SHOP_NPC, player.getLocation());

@@ -35,7 +35,6 @@ final class NavigatorMenu extends Menu {
         set(10, Items.of(Material.CHAINMAIL_CHESTPLATE).name(messages.get("navigator.duell")).lore(gameLore(LobbyLocation.DUELL)).build());
         set(13, Items.of(Material.ENDER_EYE).name(messages.get("navigator.spawn")).lore(lore).build());
         set(16, Items.of(Material.GOLD_INGOT).name(messages.get("navigator.shop")).lore(lore).build());
-        set(20, Items.of(Material.IRON_BARS).name(messages.get("navigator.filler")).build());
         set(24, Items.of(Material.DIAMOND_BOOTS).name(messages.get("navigator.jump")).lore(lore).build());
     }
 

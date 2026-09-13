@@ -2,6 +2,7 @@ package me.blockcraft.lobby;
 
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.command.CommandRegistry;
 import me.blockcraft.api.config.Locations;
 import me.blockcraft.common.config.YamlFile;
 import me.blockcraft.common.message.Messages;
@@ -36,7 +37,6 @@ import me.blockcraft.lobby.menu.ShopMenu;
 import me.blockcraft.lobby.network.GroupCounts;
 import me.blockcraft.lobby.npc.ShopNpc;
 import me.blockcraft.lobby.rank.PremiumRank;
-import me.blockcraft.lobby.rank.TabTeams;
 import me.blockcraft.lobby.storage.LegacyUnlocks;
 import net.luckperms.api.LuckPermsProvider;
 import org.bukkit.event.Listener;
@@ -57,9 +57,9 @@ public final class LobbyPlugin extends JavaPlugin {
     public void onEnable() {
         saveDefaultConfig();
         var config = LobbyConfig.fromYaml(YamlFile.loadWithDefaults(getDataPath().resolve("config.yml"), () -> getResource("config.yml")));
-        var messages = Messages.load(getDataPath(), () -> getResource("messages.yml"));
-        var locations = Locations.load(getDataPath().resolve("locations.yml"), LobbyLocation::key);
         var api = BlockcraftApi.get();
+        var messages = Messages.load(getDataPath(), () -> getResource("messages.yml"), api.tags());
+        var locations = Locations.load(getDataPath().resolve("locations.yml"), LobbyLocation::key);
         var coins = api.coins();
         var luckPerms = LuckPermsProvider.get();
 
@@ -67,7 +67,6 @@ public final class LobbyPlugin extends JavaPlugin {
         var pets = new Pets(messages);
         var hider = new PlayerHider(this, config.hiderCooldownMillis());
         var items = new LobbyItems(messages);
-        var tabTeams = new TabTeams(luckPerms, messages);
         importLegacyUnlocks(new LegacyUnlocks(api.unlocks(), getLogger()));
         groupCounts = new GroupCounts(this, api.servers(), config.serverListStaleSeconds());
         groupCounts.start(GROUP_COUNTS_INTERVAL_TICKS);
@@ -80,7 +79,7 @@ public final class LobbyPlugin extends JavaPlugin {
         var messenger = getServer().getMessenger();
         messenger.registerIncomingPluginChannel(this, WorldDownloaderListener.INIT_CHANNEL, new WorldDownloaderListener(messages));
 
-        register(new JoinQuitListener(this, messages, coins, locations, items, tabTeams, trails, pets, hider),
+        register(new JoinQuitListener(this, messages, coins, locations, items, trails, pets, hider),
                 new LobbyItemListener(messages, menus, items, hider),
                 new ProtectionListener(),
                 new CommandBlockListener(config.allowedCommands()),
@@ -95,10 +94,10 @@ public final class LobbyPlugin extends JavaPlugin {
         api.presence().maxPlayers(config.maxPlayers());
 
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
-            var registrar = event.registrar();
-            registrar.register(SetSpawnCommand.create(locations, messages), "Setzt die Lobby-Teleportpunkte");
-            registrar.register(SetHoloCommand.create(messages, locations, shopNpc), "Erstellt Hologramme");
-            registrar.register(ClearChatCommand.create(messages), "Leert den Chat");
+            var commands = new CommandRegistry(event.registrar(), messages);
+            commands.register(SetSpawnCommand.create(locations, messages));
+            commands.register(SetHoloCommand.create(messages, config.holograms(), locations, shopNpc));
+            commands.register(ClearChatCommand.create(messages));
         });
     }
 

@@ -25,24 +25,20 @@ final class ShirtsMenu extends Menu {
         for (Shirt shirt : Shirt.values()) {
             set(shirt.ordinal(), item(shirt, owned.contains(shirt.item())));
         }
-        set(BACK_SLOT, Items.of(Material.BARRIER).name(menus.messages().get("shop.back")).build());
+        backButton(BACK_SLOT, menus::openShop);
     }
 
     @Override
     protected void onClick(Player player, int slot, ItemStack clicked, InventoryClickEvent event) {
-        if (slot == BACK_SLOT) {
-            menus.openShop(player);
-            return;
-        }
         if (slot >= Shirt.values().length) {
             return;
         }
         Shirt shirt = Shirt.values()[slot];
-        close(player);
         if (owned.contains(shirt.item())) {
+            close(player);
             equip(player, shirt);
         } else {
-            menus.purchase(player, shirt.item(), menus.config().shirtPrice(), () -> equip(player, shirt));
+            menus.purchase(player, item(shirt, false), shirt.item(), menus.config().shirtPrice(), buyer -> equip(buyer, shirt));
         }
     }
 
@@ -57,7 +53,7 @@ final class ShirtsMenu extends Menu {
                 .name(messages.get("shirts.name." + shirt.key()))
                 .lore(owned
                         ? messages.get("shop.owned-lore")
-                        : messages.get("shirts.price-lore", Formatter.number("coins", menus.config().shirtPrice())))
+                        : messages.get("shop.price-lore", Formatter.number("coins", menus.config().shirtPrice())))
                 .build();
     }
 }

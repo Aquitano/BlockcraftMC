@@ -2,10 +2,12 @@ package me.blockcraft.lobby.menu;
 
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.config.Locations;
+import me.blockcraft.api.menu.ConfirmMenu;
 import me.blockcraft.api.menu.Menu;
 import me.blockcraft.api.settings.PlayerSettings;
 import me.blockcraft.api.shop.Shop;
 import me.blockcraft.api.shop.Unlocks;
+import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.network.ServerIdentity;
@@ -24,11 +26,12 @@ import me.blockcraft.lobby.network.GroupCounts;
 import me.blockcraft.lobby.rank.PremiumRank;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import org.bukkit.Particle;
-import org.bukkit.Sound;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 
 import java.util.Comparator;
+import java.util.function.Consumer;
 
 /** Everything the chest GUIs need, so they can open one another without re-wiring. */
 public record Menus(
@@ -49,26 +52,33 @@ public record Menus(
         GroupCounts groupCounts
 ) {
 
-    private static final float TELEPORT_VOLUME = 4.0f;
-    private static final float TELEPORT_PITCH = 4.0f;
     private static final int TELEPORT_PARTICLES = 20;
+
+    /** Shows what the click is about to cost before anything is bought. */
+    public void purchase(Player player, ItemStack subject, String item, int price, Consumer<Player> onOwned) {
+        new ConfirmMenu(subject, buyer -> buy(buyer, item, price, onOwned), Menu::close).open(player);
+    }
 
     /**
      * Buys the item off the main thread; {@code onOwned} runs on it once the player owns the item, whether this
      * click bought it or an earlier one did. The level shows the new balance.
      */
-    public void purchase(Player player, String item, int price, Runnable onOwned) {
+    private void buy(Player player, String item, int price, Consumer<Player> onOwned) {
         Tasks.async(plugin, () -> shop.buy(player.getUniqueId(), BlockcraftApi.get().realName(player), item, price), purchase -> {
             if (!player.isOnline()) {
                 return;
             }
             switch (purchase.outcome()) {
                 case BOUGHT -> {
+                    Sounds.PURCHASE.play(player);
                     player.sendMessage(messages.get("shop.bought"));
-                    onOwned.run();
+                    onOwned.accept(player);
                 }
-                case ALREADY_OWNED -> onOwned.run();
-                case NOT_ENOUGH_COINS -> player.sendMessage(messages.get("shop.too-expensive", Formatter.number("coins", price)));
+                case ALREADY_OWNED -> onOwned.accept(player);
+                case NOT_ENOUGH_COINS -> {
+                    Sounds.MENU_DENY.play(player);
+                    player.sendMessage(messages.get("shop.too-expensive", Formatter.number("coins", price)));
+                }
             }
             player.setLevel(purchase.balance());
         });
@@ -77,7 +87,7 @@ public record Menus(
     public void warp(Player player, LobbyLocation target) {
         locations.get(target).ifPresent(location -> {
             player.teleport(location);
-            player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, TELEPORT_VOLUME, TELEPORT_PITCH);
+            Sounds.TELEPORT.play(player);
             player.getWorld().spawnParticle(Particle.FLAME, player.getLocation(), TELEPORT_PARTICLES, 0.5, 0.5, 0.5, 0.01);
         });
     }

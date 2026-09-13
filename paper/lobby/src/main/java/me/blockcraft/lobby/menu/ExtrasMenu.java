@@ -29,7 +29,6 @@ final class ExtrasMenu extends Menu {
         set(PREMIUM_SLOT, Items.of(Material.GLISTERING_MELON_SLICE).name(messages.get("extras.premium")).lore(messages.get("extras.premium-lore")).build());
         set(TAGS_SLOT, Items.of(Material.NAME_TAG).name(messages.get("extras.tags")).lore(messages.get("extras.tags-lore")).build());
         set(LOBBIES_SLOT, Items.of(Material.NETHER_STAR).name(messages.get("extras.lobbies")).lore(messages.get("extras.lobbies-lore")).build());
-        fill(Items.of(Material.BLACK_STAINED_GLASS_PANE).name(messages.get("extras.filler")).build());
     }
 
     @Override

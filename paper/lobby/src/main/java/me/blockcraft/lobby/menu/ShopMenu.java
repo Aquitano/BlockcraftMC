@@ -3,6 +3,7 @@ package me.blockcraft.lobby.menu;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.menu.Menu;
 import me.blockcraft.lobby.LobbyPermissions;
+import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -26,8 +27,7 @@ public final class ShopMenu extends Menu {
         set(HEADS_SLOT, Items.of(Material.PLAYER_HEAD).name(messages.get("shop.heads")).lore(messages.get("shop.heads-lore")).build());
         set(SHIRTS_SLOT, Items.of(Material.LEATHER_CHESTPLATE).color(SHIRT_ICON_COLOR)
                 .name(messages.get("shop.shirts")).lore(messages.get("shop.shirts-lore")).build());
-        set(PREMIUM_SLOT, Items.of(Material.GLISTERING_MELON_SLICE).name(messages.get("shop.premium")).lore(messages.get("shop.premium-lore")).build());
-        fill(Items.of(Material.BLACK_STAINED_GLASS_PANE).name(messages.get("shop.filler")).build());
+        set(PREMIUM_SLOT, premiumIcon());
     }
 
     @Override
@@ -41,12 +41,21 @@ public final class ShopMenu extends Menu {
     }
 
     private void buyPremium(Player player) {
-        close(player);
         if (player.hasPermission(LobbyPermissions.PREMIUM)) {
+            close(player);
             player.sendMessage(menus.messages().get("shop.already-premium"));
             return;
         }
-        menus.purchase(player, PREMIUM_ITEM, menus.config().premiumPrice(),
-                () -> menus.premiumRank().grant(player.getUniqueId()));
+        menus.purchase(player, premiumIcon(), PREMIUM_ITEM, menus.config().premiumPrice(),
+                buyer -> menus.premiumRank().grant(buyer.getUniqueId()));
+    }
+
+    private ItemStack premiumIcon() {
+        var messages = menus.messages();
+        return Items.of(Material.GLISTERING_MELON_SLICE)
+                .name(messages.get("shop.premium"))
+                .lore(messages.get("shop.premium-lore"),
+                        messages.get("shop.price-lore", Formatter.number("coins", menus.config().premiumPrice())))
+                .build();
     }
 }
