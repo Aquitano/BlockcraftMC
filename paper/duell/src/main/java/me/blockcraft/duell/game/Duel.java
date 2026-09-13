@@ -1,16 +1,16 @@
 package me.blockcraft.duell.game;
 
 import me.blockcraft.api.BlockcraftApi;
-import me.blockcraft.api.coins.Coins;
 import me.blockcraft.api.game.GamePhase;
 import me.blockcraft.api.game.LobbyCountdown;
+import me.blockcraft.api.game.RoundSummary;
 import me.blockcraft.api.game.ServerRestart;
 import me.blockcraft.api.game.Stat;
 import me.blockcraft.api.game.StatsRepository;
+import me.blockcraft.api.game.TimerBar;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Countdown;
 import me.blockcraft.api.task.Tasks;
-import me.blockcraft.api.xp.XpReward;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.duell.config.DuellConfig;
 import me.blockcraft.duell.config.Spawns;
@@ -40,7 +40,6 @@ import java.util.stream.Stream;
 public final class Duel {
 
     public static final int MAX_PARTICIPANTS = 2;
-    private static final Set<Integer> ROUND_ANNOUNCEMENTS = Set.of(60, 30, 10);
     private static final Set<Integer> RESTART_ANNOUNCEMENTS = Set.of(5, 4, 3, 2);
     private static final long RESPAWN_DELAY_TICKS = 5L;
 
@@ -64,9 +63,11 @@ public final class Duel {
     private boolean superJumpFinished;
     private final Map<UUID, Integer> checkpoints = new HashMap<>();
     private final LobbyCountdown lobbyCountdown;
+    private final RoundSummary summary;
     private Countdown freezeCountdown;
     private Countdown roundTimer;
     private Countdown restartCountdown;
+    private TimerBar roundBar;
 
     public Duel(Plugin plugin, DuellConfig config, Messages messages, Spawns spawns, StatsRepository stats,
                 GameScoreboard scoreboard, GameItems items) {
@@ -80,6 +81,8 @@ public final class Duel {
         this.lobbyCountdown = new LobbyCountdown(plugin, config.countdowns().lobby(), MAX_PARTICIPANTS, participants::size,
                 seconds -> Bukkit.broadcast(messages.get("lobby.starting-in", Formatter.number("seconds", seconds))),
                 this::startRound);
+        this.summary = new RoundSummary(plugin, messages.get("summary.name"),
+                new RoundSummary.Rewards(config.killCoins(), config.winCoins()));
     }
 
     public boolean isLobby() {
@@ -140,6 +143,7 @@ public final class Duel {
         } else {
             player.setGameMode(GameMode.SURVIVAL);
             participants.add(player.getUniqueId());
+            summary.join(player);
             Bukkit.broadcast(messages.get("join.broadcast", Placeholder.unparsed("player", player.getName()),
                     Formatter.number("online", participants.size()), Formatter.number("max", MAX_PARTICIPANTS)));
         }
@@ -153,13 +157,11 @@ public final class Duel {
                     Formatter.number("online", participants.size()), Formatter.number("max", MAX_PARTICIPANTS)));
         }
         checkpoints.remove(player.getUniqueId());
+        hideRoundBar(player);
         switch (phase) {
             case INGAME -> {
                 if (participants.size() <= 1) {
-                    participants().forEach(winner -> {
-                        broadcastWinner(winner);
-                        rewardWinner(winner);
-                    });
+                    participants().forEach(this::rewardWinner);
                     Bukkit.broadcast(messages.get("round.ended"));
                     startRestart();
                 }
@@ -193,17 +195,14 @@ public final class Duel {
 
     public void handleVsKill(Player victim, Player killer) {
         round++;
-        Sounds.KILL.play(killer);
-        BlockcraftApi.get().effects().onKill(killer, victim);
-        BlockcraftApi.get().xp().award(killer, XpReward.KILL);
+        summary.awardKill(killer, victim);
+        summary.death(victim);
         record(killer, Stat.KILLS);
         record(victim, Stat.DEATHS);
         killer.setLevel(killer.getLevel() + 1);
         respawnLater(victim);
         if (round > config.vsKillsToEnd()) {
             var winner = victim.getLevel() > killer.getLevel() ? victim : killer;
-            broadcastWinner(winner);
-            showWinTitle(winner);
             rewardWinner(winner);
             endRound();
             return;
@@ -214,21 +213,16 @@ public final class Duel {
 
     public void handleSgDeath(Player victim, Player killer) {
         var victimName = Placeholder.unparsed("player", victim.getName());
+        summary.death(victim);
         if (killer != null) {
             Bukkit.broadcast(messages.get("round.died", victimName));
-            BlockcraftApi.get().effects().onKill(killer, victim);
-            BlockcraftApi.get().xp().award(killer, XpReward.KILL);
-            broadcastWinner(killer);
+            summary.awardKill(killer, victim);
             rewardWinner(killer);
             record(killer, Stat.KILLS);
             record(victim, Stat.DEATHS);
             record(victim, Stat.LOSSES);
         } else {
-            opponentsOf(victim).forEach(winner -> {
-                broadcastWinner(winner);
-                rewardWinner(winner);
-            });
-            victim.showTitle(Title.title(messages.get("title.game-over"), Component.empty()));
+            opponentsOf(victim).forEach(this::rewardWinner);
             Bukkit.broadcast(messages.get("round.died", victimName));
         }
         endRound();
@@ -256,11 +250,8 @@ public final class Duel {
         superJumpFinished = true;
         Bukkit.broadcast(Component.empty());
         Bukkit.broadcast(messages.get("superjump.goal", Placeholder.unparsed("player", winner.getName())));
-        showWinTitle(winner);
         rewardWinner(winner);
         Bukkit.broadcast(Component.empty());
-        opponentsOf(winner).forEach(Sounds.LOSE::play);
-        Sounds.WIN.play(winner);
         winner.getWorld().spawnParticle(Particle.EXPLOSION, winner.getLocation(), 5);
         winner.setRespawnLocation(winner.getLocation(), true);
         startRestart();
@@ -338,11 +329,9 @@ public final class Duel {
     }
 
     private void startRoundTimer() {
-        roundTimer = Countdown.start(plugin, config.countdowns().round(), remaining -> {
-            if (ROUND_ANNOUNCEMENTS.contains(remaining)) {
-                Bukkit.broadcast(restartMessage(remaining));
-            }
-        }, this::endByTimeout);
+        int seconds = config.countdowns().round();
+        roundBar = new TimerBar(messages, "timer.round", seconds);
+        roundTimer = Countdown.start(plugin, seconds, remaining -> roundBar.update(remaining), this::endByTimeout);
     }
 
     /** The clock decides: VS by kills, SuperJump by the furthest checkpoint, SG is a draw. */
@@ -352,11 +341,7 @@ public final class Duel {
             case SUPERJUMP -> leaderBy(player -> checkpoints.getOrDefault(player.getUniqueId(), 0));
             case SG -> Optional.<Player>empty();
         };
-        winner.ifPresentOrElse(leader -> {
-            broadcastWinner(leader);
-            showWinTitle(leader);
-            rewardWinner(leader);
-        }, () -> Bukkit.broadcast(messages.get("round.draw")));
+        winner.ifPresentOrElse(this::rewardWinner, () -> Bukkit.broadcast(messages.get("round.draw")));
         endRound();
     }
 
@@ -384,6 +369,8 @@ public final class Duel {
         cancel(roundTimer);
         cancel(freezeCountdown);
         frozen = false;
+        hideRoundBar();
+        summary.show();
         int seconds = config.countdowns().restart();
         Bukkit.broadcast(restartMessage(seconds));
         restartCountdown = ServerRestart.start(plugin, seconds, remaining -> {
@@ -398,22 +385,21 @@ public final class Duel {
         return messages.get("round.restart-in", Formatter.number("seconds", seconds));
     }
 
-    private void broadcastWinner(Player winner) {
-        Bukkit.broadcast(messages.get("round.won", Placeholder.unparsed("player", winner.getName())));
-    }
-
-    private void showWinTitle(Player winner) {
-        winner.showTitle(Title.title(messages.get("title.won"),
-                messages.get("title.won-subtitle", Placeholder.unparsed("player", winner.getName()))));
-    }
-
     private void rewardWinner(Player winner) {
-        int amount = config.winCoins();
-        Bukkit.broadcast(messages.get("round.coins", Placeholder.unparsed("player", winner.getName()), Formatter.number("coins", amount)));
-        BlockcraftApi.get().effects().onWin(winner);
-        BlockcraftApi.get().xp().award(winner, XpReward.WIN);
-        Coins.award(plugin, winner, amount);
+        summary.awardWin(winner);
         record(winner, Stat.WINS);
+    }
+
+    private void hideRoundBar() {
+        if (roundBar != null) {
+            roundBar.hide();
+        }
+    }
+
+    private void hideRoundBar(Player player) {
+        if (roundBar != null) {
+            roundBar.hide(player);
+        }
     }
 
     private void record(Player player, Stat column) {

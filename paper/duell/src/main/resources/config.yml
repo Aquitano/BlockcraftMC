@@ -5,6 +5,7 @@ countdown:
   round: 600
   restart: 10
 rewards:
+  kill: 0
   win: 10
 vs:
   kills-to-end: 3

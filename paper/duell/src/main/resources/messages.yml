@@ -25,12 +25,16 @@ lobby:
   not-enough-players: "<prefix><error>Es sind nicht genügend Spieler online."
 
 round:
-  won: "<prefix><white><player> <muted>hat das Duell gewonnen."
-  coins: "<prefix><white><player> <muted>erhält <success><coins> Coins<muted>."
   died: "<prefix><white><player> <muted>ist gestorben."
   ended: "<prefix><muted>Die Runde wurde beendet."
   draw: "<prefix><muted>Die Zeit ist um, das Duell endet <accent>unentschieden<muted>."
   restart-in: "<prefix><muted>Der Server startet in <error><seconds> <muted>Sekunden neu."
+
+summary:
+  name: "Duell"
+
+timer:
+  round: "<primary>Rundenzeit <dark>● <white><time>"
 
 superjump:
   checkpoint: "<prefix><white><player><muted> hat Checkpoint <accent><checkpoint> <muted>erreicht!"
@@ -43,9 +47,6 @@ title:
   sg: "<primary>SurvivalGames"
   superjump: "<primary>SuperJump"
   map: "<muted><map>"
-  won: "<success>Gewonnen!"
-  won-subtitle: "<white><player> <muted>hat das Duell gewonnen."
-  game-over: "<success>Spiel vorbei!"
 
 setspawn:
   spawn: "<prefix><muted>Spawn gesetzt."

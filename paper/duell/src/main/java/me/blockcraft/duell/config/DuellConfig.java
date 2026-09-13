@@ -12,6 +12,7 @@ import java.util.Map;
 public record DuellConfig(
         String globalStatsHead,
         Countdowns countdowns,
+        int killCoins,
         int winCoins,
         int vsKillsToEnd,
         Map<DuelMode, List<String>> maps,
@@ -39,6 +40,7 @@ public record DuellConfig(
                         countdown.getInt("freeze", 5),
                         countdown.getInt("round", 600),
                         countdown.getInt("restart", 10)),
+                config.getInt("rewards.kill", 0),
                 config.getInt("rewards.win", 10),
                 config.getInt("vs.kills-to-end", 3),
                 maps,
