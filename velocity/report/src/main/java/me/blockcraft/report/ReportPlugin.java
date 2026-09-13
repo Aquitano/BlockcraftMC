@@ -46,7 +46,7 @@ public final class ReportPlugin {
         var messages = Messages.load(dataDirectory, () -> getClass().getResourceAsStream("/messages.yml"));
         var preferences = new NotifyPreferences(dataDirectory.resolve("ignored-staff.yml"));
         var description = proxy.getPluginManager().fromInstance(this).map(PluginContainer::getDescription).orElseThrow();
-        var command = new ReportCommand(this, proxy, description, reports, preferences, messages,
+        var command = new ReportCommand(this, proxy, logger, description, reports, preferences, messages,
                 String.valueOf(config.getOrDefault("staff-permission", "blockcraft.report.notify")),
                 Duration.ofSeconds(((Number) config.getOrDefault("report-cooldown-seconds", 10)).longValue()));
 

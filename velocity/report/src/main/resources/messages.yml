@@ -20,6 +20,9 @@ notify:
 report:
   self: "<prefix>Du kannst dich nicht selber Reporten!"
   exists: "<prefix>Du hast diesen Spieler bereits Reported!"
+  invalid-player: "<prefix>Das ist kein gültiger Spielername!"
+  reason-too-long: "<prefix>Dein Grund darf höchstens <red><bold><max> <reset><gray>Zeichen lang sein!"
+  error: "<prefix>Dein Report konnte nicht gespeichert werden, bitte versuche es später erneut!"
   cooldown: "<prefix>Du kannst diesen Befehl erst wieder in <red><bold><seconds> <reset><gray>Sekunden nutzen!"
   success: "<prefix><gray>Du hast den Spieler <red><bold><player><reset><gray> erfolgreich gemeldet!"
   offline-server: "Offline"

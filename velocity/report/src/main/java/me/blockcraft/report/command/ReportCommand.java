@@ -10,23 +10,30 @@ import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.server.ServerInfo;
+import me.blockcraft.common.db.DatabaseException;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.report.storage.NotifyPreferences;
 import me.blockcraft.common.report.ReportRepository;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
+import org.slf4j.Logger;
 
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Pattern;
 
 public final class ReportCommand {
 
+    private static final Pattern PLAYER_NAME = Pattern.compile("[A-Za-z0-9_]{1,16}");
+    private static final int MAX_REASON_LENGTH = 200;
+
     private final Object plugin;
     private final ProxyServer proxy;
+    private final Logger logger;
     private final PluginDescription description;
     private final ReportRepository reports;
     private final NotifyPreferences preferences;
@@ -35,10 +42,11 @@ public final class ReportCommand {
     private final Duration cooldown;
     private final Map<UUID, Instant> lastReport = new ConcurrentHashMap<>();
 
-    public ReportCommand(Object plugin, ProxyServer proxy, PluginDescription description, ReportRepository reports,
+    public ReportCommand(Object plugin, ProxyServer proxy, Logger logger, PluginDescription description, ReportRepository reports,
                          NotifyPreferences preferences, Messages messages, String staffPermission, Duration cooldown) {
         this.plugin = plugin;
         this.proxy = proxy;
+        this.logger = logger;
         this.description = description;
         this.reports = reports;
         this.preferences = preferences;
@@ -88,14 +96,18 @@ public final class ReportCommand {
     }
 
     private void report(Player reporter, String targetName, String reason) {
+        if (!PLAYER_NAME.matcher(targetName).matches()) {
+            reporter.sendMessage(messages.get("report.invalid-player"));
+            return;
+        }
+        if (reason.length() > MAX_REASON_LENGTH) {
+            reporter.sendMessage(messages.get("report.reason-too-long", Formatter.number("max", MAX_REASON_LENGTH)));
+            return;
+        }
         var target = proxy.getPlayer(targetName);
         String reported = target.map(Player::getUsername).orElse(targetName);
         if (reported.equalsIgnoreCase(reporter.getUsername())) {
             reporter.sendMessage(messages.get("report.self"));
-            return;
-        }
-        if (reports.exists(reporter.getUsername(), reported)) {
-            reporter.sendMessage(messages.get("report.exists"));
             return;
         }
         var last = lastReport.get(reporter.getUniqueId());
@@ -106,12 +118,23 @@ public final class ReportCommand {
                 return;
             }
         }
+        lastReport.put(reporter.getUniqueId(), Instant.now());
         String server = target.flatMap(Player::getCurrentServer).map(ServerConnection::getServerInfo).map(ServerInfo::getName)
                 .orElseGet(() -> messages.raw("report.offline-server"));
-        int previous = reports.countByReported(reported);
-        notifyStaff(reporter, reported, reason, server, previous + 1);
-        reports.insert(reporter.getUsername(), reported, reason, server);
-        lastReport.put(reporter.getUniqueId(), Instant.now());
+        int count;
+        try {
+            if (reports.exists(reporter.getUsername(), reported)) {
+                reporter.sendMessage(messages.get("report.exists"));
+                return;
+            }
+            count = reports.countByReported(reported) + 1;
+            reports.insert(reporter.getUsername(), reported, reason, server);
+        } catch (DatabaseException exception) {
+            logger.error("Report of {} by {} failed", reported, reporter.getUsername(), exception);
+            reporter.sendMessage(messages.get("report.error"));
+            return;
+        }
+        notifyStaff(reporter, reported, reason, server, count);
         reporter.sendMessage(messages.get("report.success", Placeholder.unparsed("player", reported)));
     }
 
