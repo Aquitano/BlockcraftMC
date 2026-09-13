@@ -408,6 +408,11 @@ addpremium:
   failed: "<prefix><red>Die Rechte für <yellow><player> <red>konnten nicht gesetzt werden. Siehe Konsole."
 serverjoin:
   unknown: "<prefix><red>Der Server ist nicht verfügbar."
+servers:
+  empty: "<prefix><red>Es ist kein Server eingetragen."
+  header: "<prefix><gold>Es sind <count> Server eingetragen."
+  entry: "<prefix><dark_aqua><server> <dark_gray>| <gray><group> <dark_gray>| <yellow><state> <dark_gray>| <green><online><dark_gray>/<green><max> <dark_gray>| <gray>Heartbeat vor <age>"
+  entry-stale: "<prefix><red><server> <dark_gray>| <red><group> <dark_gray>| <red><state> <dark_gray>| <red><online><dark_gray>/<red><max> <dark_gray>| <red>Heartbeat vor <age>"
 list:
   lines:
     - "<gray><bold><strikethrough>------------  <yellow><bold><ip> Netzwerk <dark_gray><bold>- <gray><bold>List <gray><bold><strikethrough>------------"
@@ -416,6 +421,27 @@ list:
     - "<gray>Spieler auf <red><server><gray>:<green> <count>"
     - " "
     - "<gray><bold><strikethrough>------------  <yellow><bold><ip> Netzwerk <dark_gray><bold>- <gray><bold>List <gray><bold><strikethrough>------------"
+whois:
+  usage: "<prefix><gray>Ausführung: <red>/whois \\<Spieler>"
+  lines:
+    - "<prefix><dark_aqua><strikethrough>---------------------------------"
+    - "<prefix><yellow>Spieler: <green><player>"
+    - "<prefix><yellow>UUID: <dark_aqua><uuid>"
+    - "<prefix><yellow>Rang: <dark_aqua><rank>"
+    - "<prefix><yellow>Erster Login: <dark_aqua><first>"
+    - "<prefix><yellow>Zuletzt gesehen: <dark_aqua><last>"
+    - "<prefix><yellow>Spielzeit: <dark_aqua><playtime>"
+    - "<prefix><yellow>Server: <dark_aqua><server>"
+    - "<prefix><yellow>Bann: <ban>"
+    - "<prefix><yellow>Mute: <mute>"
+    - "<prefix><yellow>Strikes: <dark_aqua><strikes> <dark_gray>| <yellow>Verwarnungen: <dark_aqua><warns>"
+    - "<prefix><dark_aqua><strikethrough>---------------------------------"
+  ago: "vor <time>"
+  now: "<green>jetzt online"
+  offline: "<red>Offline"
+  none: "<gray>Keiner"
+  punishment: "<red><reason> <dark_gray>(<remaining><dark_gray>)"
+  unknown-rank: "unbekannt"
 
 hub:
   unavailable: "<prefix><red>Derzeit sind keine Lobby-Server verfügbar."
@@ -437,6 +463,12 @@ msg:
 ping: "<prefix><gray>Dein Ping beträgt: <green><ping><gray>ms."
 online: "<prefix><gray>Es sind momentan <yellow><count> <gray>Spieler online."
 mod: "<prefix><gray>Es sind <yellow><count> <gray>Teammitglieder online."
+seen:
+  usage: "<prefix><gray>Ausführung: <red>/seen \\<Spieler>"
+  online: "<prefix><gold><player> <gray>ist gerade auf dem Server <yellow><server><gray> online."
+  offline: "<prefix><gold><player> <gray>war zuletzt vor <yellow><time> <gray>online."
+playtime:
+  total: "<prefix><gold><player> <gray>war bereits <yellow><time> <gray>online."
 premium:
   - "<dark_gray>● <blue>INFORMATIONEN ZUM <gold>PREMIUM<dark_gray>-<blue>RANG <dark_gray>●"
   - "  <gray>Du möchtest den <gold>Premium<dark_gray>-<gray>Rang kaufen und uns so unterstützen?"

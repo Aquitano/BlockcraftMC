@@ -42,7 +42,9 @@ import me.blockcraft.system.command.player.PartyChatCommand;
 import me.blockcraft.system.command.player.PartyCommand;
 import me.blockcraft.system.command.player.PingCommand;
 import me.blockcraft.system.command.player.PlayCommand;
+import me.blockcraft.system.command.player.PlaytimeCommand;
 import me.blockcraft.system.command.player.PremiumCommand;
+import me.blockcraft.system.command.player.SeenCommand;
 import me.blockcraft.system.command.player.SupportCommand;
 import me.blockcraft.system.command.player.YouTuberCommand;
 import me.blockcraft.system.command.staff.AddPremiumCommand;
@@ -55,9 +57,11 @@ import me.blockcraft.system.command.staff.ListCommand;
 import me.blockcraft.system.command.staff.MotdCommand;
 import me.blockcraft.system.command.staff.RestartCommand;
 import me.blockcraft.system.command.staff.ServerJoinCommand;
+import me.blockcraft.system.command.staff.ServersCommand;
 import me.blockcraft.system.command.staff.SetMaxCommand;
 import me.blockcraft.system.command.staff.TeamChatCommand;
 import me.blockcraft.system.command.staff.WartungenCommand;
+import me.blockcraft.system.command.staff.WhoisCommand;
 import me.blockcraft.system.listener.CommandListener;
 import me.blockcraft.system.listener.InitialServerListener;
 import me.blockcraft.system.listener.KickListener;
@@ -70,6 +74,7 @@ import me.blockcraft.system.moderation.PunishmentService;
 import me.blockcraft.system.motd.MotdListener;
 import me.blockcraft.system.network.ServerDirectory;
 import me.blockcraft.system.network.ServerDiscovery;
+import me.blockcraft.system.network.ServerList;
 import me.blockcraft.system.party.PartyListener;
 import me.blockcraft.system.party.PartyManager;
 import me.blockcraft.system.support.SupportListener;
@@ -115,6 +120,7 @@ public final class SystemPlugin {
         repositories.createTables();
         var servers = new ServerRepository(database);
         servers.createTable();
+        var serverList = new ServerList(database);
 
         var settings = new ProxySettings(repositories.settings());
         var lookup = new PlayerLookup(proxy, repositories.players());
@@ -124,6 +130,7 @@ public final class SystemPlugin {
         var muteGate = new MuteGate(repositories.punishments(), punishments, messages, logger);
         var parties = new PartyManager(proxy, messages);
         var supportSessions = new SupportSessions();
+        var playtime = new Playtime(repositories.players(), logger);
         var support = new CommandSupport(proxy, messages);
 
         var events = proxy.getEventManager();
@@ -138,6 +145,7 @@ public final class SystemPlugin {
         events.register(this, new MotdListener(proxy, config, settings, messages));
         events.register(this, new PartyListener(parties));
         events.register(this, new SupportListener(supportSessions));
+        events.register(this, playtime);
 
         register(new BanCommand(support).create());
         register(new TempBanCommand(support, lookup, punishments, config, messages).create());
@@ -170,7 +178,10 @@ public final class SystemPlugin {
         register(new SetMaxCommand(support, config, messages).create());
         register(new MotdCommand(support, config, messages).create());
         register(new ServerJoinCommand(support, proxy, messages).create());
+        register(new ServersCommand(support, serverList, config, messages).create());
         register(new ListCommand(support, proxy, config, messages).create());
+        register(new WhoisCommand(support, lookup, repositories.players(), repositories.strikes(), repositories.warns(),
+                punishments, playtime, messages).create());
 
         register(new HubCommand(support, lobby).create(), "h", "lobby", "l");
         register(new PlayCommand(support, lobby, directory).create());
@@ -188,6 +199,8 @@ public final class SystemPlugin {
         register(new PingCommand(support, messages).create());
         register(new ModCommand(support, proxy, messages).create());
         register(new OnlineCommand(support, proxy, messages).create());
+        register(new SeenCommand(support, lookup, repositories.players(), messages).create());
+        register(new PlaytimeCommand(support, lookup, repositories.players(), playtime, messages).create());
 
         proxy.getScheduler().buildTask(this, new ServerDiscovery(proxy, servers, directory, config.discovery().staleSeconds(), logger))
                 .repeat(config.discovery().pollSeconds(), TimeUnit.SECONDS)

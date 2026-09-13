@@ -40,6 +40,10 @@ public final class SystemPermissions {
     public static final String TAB_COMPLETE = ROOT + "tab";
     public static final String PREMIUM_GROUP = "group.premium";
 
+    public static final String SEEN = "blockcraft.seen";
+    public static final String PLAYTIME = "blockcraft.playtime";
+    public static final String PLAYTIME_OTHERS = PLAYTIME + ".others";
+
     private SystemPermissions() {
     }
 }
