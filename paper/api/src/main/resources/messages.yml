@@ -30,6 +30,23 @@ menu:
     accept: "<success>Kaufen"
     cancel: "<error>Abbrechen"
 
+# The end-of-round recap every game shows; <game> is the game's own name, <winner> the player who won it.
+summary:
+  rule: "<dark><strikethrough>                                        "
+  game: "<arrow><primary><game>"
+  winner: "<arrow><muted>Gewinner<dark>: <white><winner>"
+  draw: "<arrow><muted>Unentschieden"
+  kills: "<arrow><muted>Kills<dark>: <white><kills>"
+  deaths: "<arrow><muted>Tode<dark>: <white><deaths>"
+  coins: "<arrow><muted>Coins<dark>: <accent>+<coins>"
+  xp: "<arrow><muted>XP<dark>: <success>+<xp>"
+  title:
+    win: "<success>Sieg"
+    lose: "<error>Niederlage"
+    draw: "<accent>Unentschieden"
+    subtitle: "<white><winner> <muted>hat gewonnen."
+    subtitle-draw: "<muted>Niemand hat gewonnen."
+
 coins:
   self: "<prefix><muted>Du hast <accent><coins> <muted>Coins!"
   other: "<prefix><accent><player> <muted>hat <accent><coins> <muted>Coins."

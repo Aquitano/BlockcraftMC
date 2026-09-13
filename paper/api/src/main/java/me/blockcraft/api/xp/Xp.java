@@ -51,8 +51,11 @@ public final class Xp implements Listener {
         return levels.levelFor(total(player));
     }
 
-    public void award(Player player, XpReward reward) {
-        award(player, rewards.getOrDefault(reward, 0));
+    /** Returns what the reward is worth, so a round summary can name the XP it handed out. */
+    public int award(Player player, XpReward reward) {
+        int amount = rewards.getOrDefault(reward, 0);
+        award(player, amount);
+        return amount;
     }
 
     public void award(Player player, int amount) {
