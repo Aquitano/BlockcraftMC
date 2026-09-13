@@ -3,7 +3,7 @@ package me.blockcraft.lobby.menu;
 import me.blockcraft.api.cosmetic.ChatTag;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.menu.Menu;
-import me.blockcraft.api.settings.PlayerSetting;
+import me.blockcraft.common.settings.PlayerSetting;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;

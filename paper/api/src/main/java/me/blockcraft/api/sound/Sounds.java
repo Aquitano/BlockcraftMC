@@ -1,5 +1,7 @@
 package me.blockcraft.api.sound;
 
+import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.common.settings.PlayerSetting;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
 import org.bukkit.Bukkit;
@@ -58,12 +60,15 @@ public enum Sounds {
         return Sound.sound(key, Sound.Source.MASTER, volume, pitch);
     }
 
+    /** Silent for players who turned the network's feedback sounds off in their settings. */
     public void play(Player player) {
-        player.playSound(sound);
+        if (BlockcraftApi.get().settings().enabled(player, PlayerSetting.SOUNDS)) {
+            player.playSound(sound);
+        }
     }
 
     public void playToAll() {
-        Bukkit.getServer().playSound(sound);
+        Bukkit.getOnlinePlayers().forEach(this::play);
     }
 
     public Sound sound() {

@@ -4,6 +4,7 @@ import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.config.Locations;
 import me.blockcraft.api.menu.ConfirmMenu;
 import me.blockcraft.api.menu.Menu;
+import me.blockcraft.api.menu.SettingsMenu;
 import me.blockcraft.api.settings.PlayerSettings;
 import me.blockcraft.api.shop.Shop;
 import me.blockcraft.api.shop.Unlocks;
@@ -21,6 +22,7 @@ import me.blockcraft.lobby.cosmetic.Pets;
 import me.blockcraft.lobby.cosmetic.Secret;
 import me.blockcraft.lobby.cosmetic.Shirt;
 import me.blockcraft.lobby.cosmetic.Trails;
+import me.blockcraft.lobby.friends.FriendEntry;
 import me.blockcraft.lobby.gadget.Gadgets;
 import me.blockcraft.lobby.network.GroupCounts;
 import me.blockcraft.lobby.rank.PremiumRank;
@@ -31,6 +33,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 
 import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 /** Everything the chest GUIs need, so they can open one another without re-wiring. */
@@ -125,6 +129,19 @@ public record Menus(
 
     public void openTrails(Player player) {
         new TrailsMenu(this).open(player);
+    }
+
+    /** Drawn from the proxy's answer, not from the database: only it knows who is online and where. */
+    public void openFriends(Player player, List<FriendEntry> friends, List<String> requests) {
+        new FriendsMenu(this, friends, requests).open(player);
+    }
+
+    public void openProfile(Player player) {
+        BlockcraftApi.get().profiles().open(player, Optional.of(this::openExtras));
+    }
+
+    public void openSettings(Player player) {
+        new SettingsMenu(player, Optional.empty()).open(player);
     }
 
     public void openExtras(Player player) {

@@ -11,8 +11,10 @@ import java.util.Optional;
 public enum LobbyItem {
     NAVIGATOR(0),
     PLAYER_HIDER(1),
+    PROFILE(2),
     EXTRAS(4),
     GADGET(5),
+    SETTINGS(6),
     FRIENDS(7),
     SECRETS(8);
 

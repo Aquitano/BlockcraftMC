@@ -2,6 +2,7 @@ package me.blockcraft.lobby.listener;
 
 import me.blockcraft.api.coins.CoinsRepository;
 import me.blockcraft.api.config.Locations;
+import me.blockcraft.api.settings.PlayerSettingsLoadedEvent;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
@@ -9,6 +10,7 @@ import me.blockcraft.lobby.config.LobbyLocation;
 import me.blockcraft.lobby.cosmetic.Pets;
 import me.blockcraft.lobby.cosmetic.Trails;
 import me.blockcraft.lobby.hider.PlayerHider;
+import me.blockcraft.lobby.item.LobbyItem;
 import me.blockcraft.lobby.item.LobbyItems;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.title.Title;
@@ -54,13 +56,22 @@ public final class JoinQuitListener implements Listener {
         player.setGameMode(GameMode.ADVENTURE);
         player.showTitle(Title.title(messages.get("join.title"), messages.get("join.subtitle"), TITLE_TIMES));
         player.getInventory().setArmorContents(null);
-        items.give(player);
+        items.give(player, true);
         locations.get(LobbyLocation.SPAWN).ifPresent(player::teleport);
         player.setCollidable(false);
         player.showBossBar(BossBar.bossBar(messages.get("join.bossbar"), 1.0f, BossBar.Color.BLUE, BossBar.Overlay.NOTCHED_10));
         Sounds.JOIN.play(player);
         hider.onJoin(player);
         showCoinsAsLevel(player);
+    }
+
+    /** The hider choice is stored, so it is applied once the settings arrived rather than on join. */
+    @EventHandler
+    public void onSettingsLoaded(PlayerSettingsLoadedEvent event) {
+        Player player = event.getPlayer();
+        if (hider.applyStored(player)) {
+            player.getInventory().setItem(LobbyItem.PLAYER_HIDER.slot(), items.hiderItem(false));
+        }
     }
 
     @EventHandler

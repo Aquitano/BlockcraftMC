@@ -46,6 +46,11 @@ joinme:
   daily-limit: 6
   reset-hour: 0
 
+# Friends (bc_friends): how many a player may have and how long an unanswered request stays valid.
+friends:
+  max: 50
+  request-minutes: 10
+
 unbannable:
   - Aquitano
 

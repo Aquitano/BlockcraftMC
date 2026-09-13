@@ -52,6 +52,38 @@ summary:
     subtitle: "<white><winner> <muted>hat gewonnen."
     subtitle-draw: "<muted>Niemand hat gewonnen."
 
+settings:
+  title: "<arrow><primary>Einstellungen"
+  enabled: "<bullet><success>AN <dark>● <muted>Klicke zum Ausschalten"
+  disabled: "<bullet><error>AUS <dark>● <muted>Klicke zum Einschalten"
+  private-messages: "<arrow><primary>Private Nachrichten"
+  party-invites: "<arrow><primary>Party-Einladungen"
+  friend-requests: "<arrow><primary>Freundschaftsanfragen"
+  player-visibility: "<arrow><primary>Spieler sichtbar"
+  sounds: "<arrow><primary>Sounds"
+
+profile:
+  title: "<arrow><primary>Profil"
+  head: "<arrow><primary><player>"
+  head-lore:
+    - "<bullet><muted>Rang <dark>● <rank>"
+    - "<bullet><muted>Level <dark>● <accent><level>"
+    - "<bullet><muted>Noch <accent><missing> <muted>XP bis Level <accent><next>"
+    - "<bullet><muted>Coins <dark>● <accent><coins>"
+  stats-lore:
+    - "<bullet><muted>Kills <dark>● <accent><kills>"
+    - "<bullet><muted>Tode <dark>● <accent><deaths>"
+    - "<bullet><muted>K/D <dark>● <accent><kdr>"
+    - "<bullet><muted>Siege <dark>● <accent><wins>"
+  settings: "<arrow><primary>Einstellungen"
+  settings-lore: "<bullet><muted>Nachrichten, Sounds und mehr"
+  cosmetics: "<arrow><primary>Kosmetik"
+  cosmetics-lore: "<bullet><muted>Effekte, Gadgets und Tags"
+  games:
+    quicksg: "<arrow><primary>QuickSG"
+    emeraldrush: "<arrow><primary>EmeraldRush"
+    duell: "<arrow><primary>Duell"
+
 coins:
   self: "<prefix><muted>Du hast <accent><coins> <muted>Coins!"
   other: "<prefix><accent><player> <muted>hat <accent><coins> <muted>Coins."

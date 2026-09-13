@@ -26,6 +26,9 @@ README.md; this file only holds what the code does not say by itself.
 - Anything a player unlocks with coins or by finding it (cosmetics, kits, perks, secrets) is one row in `bc_unlocks`
   through `BlockcraftApi.unlocks()`, bought via `BlockcraftApi.shop()`; the legacy `*_kits` tables are only read once for
   the import. No per-plugin unlock tables or YAML stores.
+- Anything the network remembers about a player's own choices (cosmetics, on/off toggles) is one row in
+  `bc_player_settings` through `common`'s `PlayerSetting`; Paper reads it from `BlockcraftApi.get().settings()` and
+  reports every change to the proxy over the `Setting` subchannel. No per-plugin settings store.
 - Paper plugins get the one Hikari pool from `BlockcraftApi.get().database()`; they never open their own. Blocking
   work (DB, pings) on hot paths runs through `Tasks.async`, chat listeners use `AsyncChatEvent` and may block.
 - GUIs extend `Menu` (holder-based, never title matching). Open and close other inventories only via `Menu.open` /

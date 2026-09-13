@@ -2,7 +2,7 @@ package me.blockcraft.lobby.menu;
 
 import me.blockcraft.api.cosmetic.KillEffect;
 import me.blockcraft.api.cosmetic.WinEffect;
-import me.blockcraft.api.settings.PlayerSetting;
+import me.blockcraft.common.settings.PlayerSetting;
 import org.bukkit.Material;
 
 import java.util.Arrays;

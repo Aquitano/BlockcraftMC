@@ -1,7 +1,7 @@
 package me.blockcraft.api.cosmetic;
 
-import me.blockcraft.api.settings.PlayerSetting;
 import me.blockcraft.api.settings.PlayerSettings;
+import me.blockcraft.common.settings.PlayerSetting;
 import org.bukkit.entity.Player;
 
 /** The hooks games call; they play whatever the player chose in the lobby and nothing otherwise. */

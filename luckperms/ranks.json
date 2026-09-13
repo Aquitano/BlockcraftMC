@@ -7,6 +7,7 @@
         {"type": "permission", "key": "blockcraft.system.party.invite", "value": true},
         {"type": "permission", "key": "blockcraft.system.party.kick", "value": true},
         {"type": "permission", "key": "blockcraft.system.msg", "value": true},
+        {"type": "permission", "key": "blockcraft.system.friends", "value": true},
         {"type": "permission", "key": "blockcraft.system.discord", "value": true},
         {"type": "permission", "key": "blockcraft.system.seen", "value": true},
         {"type": "permission", "key": "blockcraft.system.playtime", "value": true},
