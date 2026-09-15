@@ -42,7 +42,7 @@ public final class Messages {
 
     /** The same strings under {@code other}'s {@code <prefix>}: shared texts said in the voice of the module that says them. */
     public Messages prefixedLike(Messages other) {
-        return new Messages(messages, TagResolver.resolver(prefixOf(other.messages), globals));
+        return new Messages(messages, TagResolver.resolver(globals, prefixOf(other.messages)));
     }
 
     private static TagResolver prefixOf(Map<String, String> messages) {
