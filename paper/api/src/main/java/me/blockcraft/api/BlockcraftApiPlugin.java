@@ -13,6 +13,7 @@ import me.blockcraft.api.menu.MenuListener;
 import me.blockcraft.api.network.ServerHeartbeat;
 import me.blockcraft.api.network.ServerPresence;
 import me.blockcraft.api.player.RealNames;
+import me.blockcraft.api.player.VanillaProgress;
 import me.blockcraft.api.rank.TabTeams;
 import me.blockcraft.api.settings.PlayerSettings;
 import me.blockcraft.api.world.BuildMode;
@@ -77,6 +78,7 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new ServerMenu(this), this);
         getServer().getPluginManager().registerEvents(new TabTeams(LuckPermsProvider.get(), messages), this);
         getServer().getPluginManager().registerEvents(buildMode, this);
+        getServer().getPluginManager().registerEvents(new VanillaProgress(), this);
 
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             var commands = new CommandRegistry(event.registrar(), messages);
