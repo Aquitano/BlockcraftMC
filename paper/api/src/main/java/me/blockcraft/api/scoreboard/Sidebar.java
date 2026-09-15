@@ -1,5 +1,6 @@
 package me.blockcraft.api.scoreboard;
 
+import io.papermc.paper.scoreboard.numbers.NumberFormat;
 import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.Criteria;
@@ -13,7 +14,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
 
-/** One sidebar objective on the player's {@link Boards} scoreboard, updated in place so refreshes do not flicker. */
+/**
+ * One sidebar objective on the player's {@link Boards} scoreboard, updated in place so refreshes do not flicker.
+ * Scores only order the rows; the client never shows them.
+ */
 public final class Sidebar {
 
     private static final String OBJECTIVE = "blockcraft";
@@ -65,6 +69,7 @@ public final class Sidebar {
             return existing;
         }
         var objective = board.registerNewObjective(OBJECTIVE, Criteria.DUMMY, title);
+        objective.numberFormat(NumberFormat.blank());
         objective.setDisplaySlot(DisplaySlot.SIDEBAR);
         return objective;
     }
