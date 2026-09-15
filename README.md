@@ -215,7 +215,8 @@ shows another player's inventory read-only unless the viewer holds `blockcraft.c
 
 Every game says the shared moments the same way, from `arena` in BlockcraftAPI's `messages.yml`: the arrival card
 with game and map, who joined and left the round with the player count, the lobby countdown and the restart
-countdown. A game's own `messages.yml` only holds what is specific to that game.
+countdown. A game's own `messages.yml` only holds what is specific to that game. `MessageKeysTest` in `common`
+checks that every key a plugin asks its messages for exists in its `messages.yml` or BlockcraftAPI's.
 
 `/history <player>` shows bans and mutes, including revoked entries, with the display length set by
 `history.limit`. It requires `blockcraft.system.history`; `/whois` also shows the totals.

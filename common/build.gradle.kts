@@ -14,3 +14,8 @@ dependencies {
     compileOnly(libs.findLibrary("snakeyaml").get())
     compileOnly(libs.findLibrary("slf4j-api").get())
 }
+
+// MessageKeysTest reads every module's sources and bundled messages, so they are inputs of this module's tests.
+tasks.test {
+    inputs.files(rootProject.fileTree("paper") { include("*/src/main/**") }, rootProject.fileTree("velocity") { include("*/src/main/**") })
+}
