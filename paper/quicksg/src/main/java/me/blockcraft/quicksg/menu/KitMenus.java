@@ -49,16 +49,27 @@ public final class KitMenus {
             return;
         }
         BlockcraftApi.get().playerTasks().latest(player, () -> Kit.ownedAmong(unlocks.owned(player.getUniqueId(), Kit.ITEM_PREFIX)),
-                owned -> new KitSelectorMenu(this, owned).open(player));
+                owned -> {
+                    if (game.isLobby()) {
+                        new KitSelectorMenu(this, owned, game.kit(player)).open(player);
+                    }
+                });
     }
 
     void openDetail(Player player, Kit kit) {
         BlockcraftApi.get().playerTasks().latest(player, () -> kit.free() || unlocks.owns(player.getUniqueId(), kit.item()),
-                owned -> new KitDetailMenu(this, kit, owned).open(player));
+                owned -> {
+                    if (game.isLobby()) {
+                        new KitDetailMenu(this, kit, owned).open(player);
+                    }
+                });
     }
 
     void select(Player player, Kit kit, boolean owned) {
         Menu.close(player);
+        if (!game.isLobby()) {
+            return;
+        }
         if (!owned) {
             Sounds.MENU_DENY.play(player);
             player.sendMessage(messages.get("kit.not-owned"));
@@ -73,6 +84,7 @@ public final class KitMenus {
     }
 
     private void purchase(Player player, Kit kit) {
+        var view = player.getOpenInventory();
         BlockcraftApi.get().playerTasks().write(player, () -> shop.buy(player.getUniqueId(), BlockcraftApi.get().realName(player), kit.item(), price), purchase -> {
             switch (purchase.outcome()) {
                 case BOUGHT -> {
@@ -85,6 +97,9 @@ public final class KitMenus {
                     Sounds.MENU_DENY.play(player);
                     player.sendMessage(messages.get("kit.not-enough-coins"));
                 }
+            }
+            if (game.isLobby() && player.getOpenInventory() == view) {
+                openDetail(player, kit);
             }
         });
     }

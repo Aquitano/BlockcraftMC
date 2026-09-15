@@ -17,11 +17,13 @@ final class PerkBuyMenu extends Menu {
 
     private final RushMenus menus;
     private final Perk perk;
+    private final boolean owned;
 
     PerkBuyMenu(RushMenus menus, Messages messages, Perk perk, boolean owned) {
         super(1, messages.get("perk.buy-title", RushMenus.perkName(messages, perk)));
         this.menus = menus;
         this.perk = perk;
+        this.owned = owned;
         set(0, Items.of(perk.icon()).name(messages.get("perk.item", RushMenus.perkName(messages, perk))).build());
         set(1, Items.of(Material.NAME_TAG).name(messages.get("perk.price"))
                 .lore(messages.get("perk.price-lore", Formatter.number("price", perk.price()))).build());
@@ -34,7 +36,11 @@ final class PerkBuyMenu extends Menu {
     @Override
     protected void onClick(Player player, int slot, ItemStack clicked, InventoryClickEvent event) {
         switch (slot) {
-            case BUY -> menus.buyPerk(player, perk);
+            case BUY -> {
+                if (!owned) {
+                    menus.buyPerk(player, perk);
+                }
+            }
             default -> {
             }
         }

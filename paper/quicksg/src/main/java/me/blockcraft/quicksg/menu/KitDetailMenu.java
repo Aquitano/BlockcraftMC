@@ -39,7 +39,9 @@ final class KitDetailMenu extends Menu {
                         ? messages.get("menu.kit-detail.price-free")
                         : messages.get("menu.kit-detail.price-coins", Formatter.number("price", menus.price())))
                 .build());
-        set(SLOT_SELECT, Items.of(Material.LEAD).name(messages.get("menu.kit-detail.select")).build());
+        if (owned) {
+            set(SLOT_SELECT, Items.of(Material.LIME_DYE).name(messages.get("menu.kit-detail.select")).build());
+        }
         if (!kit.free()) {
             set(SLOT_BUY, owned
                     ? Items.of(Material.ORANGE_STAINED_GLASS_PANE).name(messages.get("menu.kit-detail.bought")).build()
@@ -52,7 +54,11 @@ final class KitDetailMenu extends Menu {
     protected void onClick(Player player, int slot, ItemStack clicked, InventoryClickEvent event) {
         switch (slot) {
             case SLOT_SELECT -> menus.select(player, kit, owned);
-            case SLOT_BUY -> menus.buy(player, kit);
+            case SLOT_BUY -> {
+                if (!owned && !kit.free()) {
+                    menus.buy(player, kit);
+                }
+            }
             default -> {
             }
         }

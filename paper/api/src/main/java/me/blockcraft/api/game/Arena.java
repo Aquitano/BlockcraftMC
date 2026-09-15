@@ -2,6 +2,7 @@ package me.blockcraft.api.game;
 
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.player.Arrival;
+import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
@@ -18,19 +19,24 @@ public final class Arena {
 
     private final Component game;
     private final Messages messages;
+    private final Sounds arrivalSound;
+    private final Component introduction;
 
     /** {@code gameMessages} is the game's own file; it names the game as {@code game-name}. */
-    public Arena(Messages gameMessages) {
+    public Arena(Messages gameMessages, Sounds arrivalSound) {
+        this.arrivalSound = arrivalSound;
+        this.introduction = gameMessages.get("join.introduction");
         this.game = gameMessages.get("game-name");
         this.messages = BlockcraftApi.get().messages().prefixedLike(gameMessages);
     }
 
     public void arrive(Player player) {
-        Arrival.show(player, game);
+        Arrival.show(player, game, arrivalSound);
     }
 
     public void welcome(Player player, int online, int max) {
         arrive(player);
+        player.sendMessage(introduction);
         broadcast("arena.joined", player, online, max);
     }
 

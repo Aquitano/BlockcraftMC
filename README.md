@@ -188,6 +188,8 @@ a level-up in chat with the level-up sound; `/level` shows the own progress, `/l
 `blockcraft.level.others`, and chat prefixes every message with the level (`chat.level` in core's `messages.yml`).
 The lobby experience bar shows this network level and progress. Its boss bar labels coins separately and refreshes
 from the database every `hud.refresh-seconds`. Purchases and secret rewards report the new balance in chat.
+Game countdowns use boss bars, and Duell displays its kill tally in the sidebar. Levels bought or collected inside
+a game are labelled as enchantment levels and do not change network XP.
 
 ## Nick and vanish across the network
 
@@ -223,7 +225,10 @@ shows another player's inventory read-only unless the viewer holds `blockcraft.c
 
 Every game says the shared moments the same way, from `arena` in BlockcraftAPI's `messages.yml`: the arrival card
 with game and map, who joined and left the round with the player count, the lobby countdown and the restart
-countdown. A game's own `messages.yml` only holds what is specific to that game. `MessageKeysTest` in `common`
+countdown. The `quicksg`, `emeraldrush`, and `duell` palette tags give the games distinct colours across menus,
+signs and sidebars. Their arrival sounds respect the player's sound setting. Kit and perk menus distinguish
+selected, unlocked and purchasable items; coins buy permanent unlocks, while EmeraldRush emeralds buy round items.
+A game's own `messages.yml` holds its introduction and game-specific wording. `MessageKeysTest` in `common`
 checks that every key a plugin asks its messages for exists in its `messages.yml` or BlockcraftAPI's.
 
 `/history <player>` shows bans and mutes, including revoked entries, with the display length set by

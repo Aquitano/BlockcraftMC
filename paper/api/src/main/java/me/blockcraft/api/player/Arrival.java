@@ -18,6 +18,10 @@ public final class Arrival {
     }
 
     public static void show(Player player, Component where) {
+        show(player, where, Sounds.JOIN);
+    }
+
+    public static void show(Player player, Component where, Sounds sound) {
         var api = BlockcraftApi.get();
         var map = api.map();
         var messages = api.messages();
@@ -26,6 +30,6 @@ public final class Arrival {
                 ? messages.get("arrival.subtitle", name)
                 : messages.get("arrival.subtitle-credits", name, Placeholder.unparsed("builders", String.join(", ", map.builders())));
         player.showTitle(Title.title(messages.get("arrival.title", Placeholder.component("where", where)), subtitle, TIMES));
-        Sounds.JOIN.play(player);
+        sound.play(player);
     }
 }

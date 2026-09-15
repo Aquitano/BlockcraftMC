@@ -1,5 +1,5 @@
-prefix: "<blue>QuickSG <dark_gray>» <reset>"
-game-name: "QuickSG"
+prefix: "<quicksg>QuickSG <dark>» <reset>"
+game-name: "<quicksg>QuickSG"
 
 commands:
   start:
@@ -11,7 +11,10 @@ commands:
   top:
     description: "Zeigt die Top 10 einer Kategorie"
 
-actionbar: "<dark_red>Teams verboten"
+actionbar: "<muted>Jeder gegen jeden <dark>● <quicksg>Keine Teams"
+
+join:
+  introduction: "<prefix><muted>Wähle dein Kit. Sammle Beute und überlebe. <quicksg>Keine Teams."
 
 lobby:
   started: "<prefix><muted>Die Runde wurde gestartet."
@@ -31,8 +34,8 @@ game:
 
 
 timer:
-  protection: "<primary>Schutzzeit <dark>● <white><seconds>s"
-  game: "<primary>Spielzeit <dark>● <white><time>"
+  protection: "<quicksg>Schutzzeit <dark>● <white><seconds>s"
+  game: "<quicksg>Verbleibende Zeit <dark>● <white><time>"
 
 tracker:
   found: "<prefix><white><player> <arrow><white><distance><muted> Blöcke"
@@ -74,41 +77,45 @@ kit:
   already-owned: "<prefix><error>Du hast dieses Kit bereits gekauft!"
   not-enough-coins: "<prefix><error>Du hast nicht genug Coins!"
   starter:
-    name: "Starter Kit"
+    name: "Starter-Kit"
     contents:
-      - "<arrow><muted>1 Holz Schwert"
+      - "<arrow><muted>1 Holzschwert"
   bow:
-    name: "Bogen Kit"
+    name: "Bogen-Kit"
     contents:
       - "<arrow><muted>1 Bogen"
       - "<arrow><muted>12 Pfeile"
   hearts:
-    name: "Herzen Kit"
+    name: "Herzen-Kit"
     contents:
       - "<arrow><muted>3 Herzen mehr"
   chain:
-    name: "Chain Kit"
+    name: "Ketten-Kit"
     contents:
-      - "<arrow><muted>1 Chain Helm"
-      - "<arrow><muted>1 Chain Hose"
-      - "<arrow><muted>1 Chain Schuhe"
+      - "<arrow><muted>1 Kettenhelm"
+      - "<arrow><muted>1 Kettenhose"
+      - "<arrow><muted>1 Kettenschuhe"
   diamond:
-    name: "Diamant Kit"
+    name: "Diamant-Kit"
     contents:
-      - "<arrow><muted>1 Diamanten Brustpanzer"
-      - "<arrow><muted>1 Holz Schwert"
+      - "<arrow><muted>1 Diamantbrustpanzer"
+      - "<arrow><muted>1 Holzschwert"
 
 menu:
   kits:
-    title: "<arrow><primary>Kits"
-    entry: "<arrow><aqua><kit>"
+    title: "<quicksg>QuickSG <dark>· <muted>Dein Start-Kit"
+    selected: "<success>Für diese Runde ausgewählt"
+    owned: "<success>Freigeschaltet"
+    locked: "<accent><price> Coins <dark>· <muted>Dauerhaft freischalten"
+    inspect: "<muted>Klicken <dark>· <quicksg>Kit ansehen"
+    entry: "<quicksg><kit>"
   kit-detail:
-    title: "<arrow><primary>Kit <dark>● <accent><kit>"
-    price: "<muted>Preis"
+    title: "<quicksg><kit> <dark>· <muted>QuickSG"
+    price: "<muted>Dauerhaft freischalten"
     price-free: "<success>kostenlos"
     price-coins: "<arrow><accent><price> Coins"
-    select: "<muted>Auswählen"
-    buy: "<success>Kaufen"
+    select: "<success>Für diese Runde auswählen"
+    buy: "<success>Mit Coins freischalten"
     bought: "<success>bereits gekauft!"
   stats:
     title: "<arrow><primary>Stats"
@@ -129,11 +136,11 @@ menu:
 
 item:
   kits: "<arrow><primary>Kits"
-  hub: "<arrow><primary>Hub"
+  hub: "<arrow><primary>Zur Lobby"
   stats: "<arrow><primary>Stats"
   start: "<arrow><primary>Spiel starten"
   level-up:
-    name: "<accent>+1 Level"
+    name: "<accent>+1 Verzauberungslevel"
     lore: "<bullet><muted>Rechtsklick"
   heart:
     name: "<accent>+1 Herz"
@@ -146,7 +153,7 @@ item:
     lore: "<bullet><muted>Tracke Spieler in deiner Nähe"
 
 scoreboard:
-  title: "<arrow><primary><ip> <dark>«"
+  title: "<quicksg><bold>QuickSG"
   online: "<muted>SPIELER"
   online-value: "<arrow><white><online> <dark>/<white> <max>"
   map: "<muted>MAP"

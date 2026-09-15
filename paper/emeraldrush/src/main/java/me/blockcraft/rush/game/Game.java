@@ -82,7 +82,7 @@ public final class Game {
         this.messages = messages;
         this.stats = stats;
         this.countdown = new Countdown(plugin);
-        this.arena = new Arena(messages);
+        this.arena = new Arena(messages, Sounds.RUSH_JOIN);
         this.lobbyCountdown = new LobbyCountdown(plugin, arena, config.lobbyCountdown(), config.minPlayers(), alive::size, this::beginSearch);
         this.summary = new RoundSummary(plugin, messages.get("game-name"),
                 new RoundSummary.Rewards(config.killCoins(), config.winCoins()));
@@ -153,7 +153,6 @@ public final class Game {
         summary.join(player);
         spawns.teleport(player, SpawnPoint.LOBBY);
         PlayerReset.reset(player, GameMode.ADVENTURE);
-        messages.getLines("lobby.welcome", Formatter.number("emeralds", config.emeraldsPerOre())).forEach(player::sendMessage);
         giveLobbyItems(player);
         arena.welcome(player, alive.size(), Bukkit.getMaxPlayers());
         scoreboard.refreshAll();
@@ -217,11 +216,11 @@ public final class Game {
     private void beginSearch() {
         if (alive.size() < MIN_TO_START) {
             broadcast("lobby.cancelled");
-            Bukkit.getOnlinePlayers().forEach(player -> player.setLevel(config.lobbyCountdown()));
             lobbyCountdown.start();
             return;
         }
         setPhase(GamePhase.SEARCH);
+        Sounds.COUNTDOWN_GO.playToAll();
         messages.getLines("search.started", Formatter.number("minutes", config.searchSeconds() / 60)).forEach(Bukkit::broadcast);
         var pickaxe = Items.of(Material.IRON_PICKAXE).name(messages.get("item.pickaxe")).edit(meta -> {
             meta.addEnchant(Enchantment.UNBREAKING, 10, true);

@@ -14,20 +14,21 @@ import java.util.Map;
 
 public final class ModeMenu extends Menu {
 
-    private static final Map<Integer, DuelMode> SLOTS = Map.of(0, DuelMode.VS, 1, DuelMode.SG, 2, DuelMode.SUPERJUMP);
+    private static final Map<Integer, DuelMode> SLOTS = Map.of(11, DuelMode.VS, 13, DuelMode.SG, 15, DuelMode.SUPERJUMP);
     private static final Map<DuelMode, Material> ICONS = Map.of(
             DuelMode.VS, Material.IRON_SWORD,
             DuelMode.SG, Material.CHAINMAIL_CHESTPLATE,
             DuelMode.SUPERJUMP, Material.GOLDEN_BOOTS);
-    private static final int SLOT_VOTED = 4;
+    private static final int SLOT_VOTED = 13;
 
     private final Duel duel;
     private final Messages messages;
 
     public ModeMenu(Duel duel, Messages messages) {
-        super(1, messages.get("menu.modes.title"));
+        super(3, messages.get("menu.modes.title"));
         this.duel = duel;
         this.messages = messages;
+        closeButton(26);
         if (duel.voted()) {
             set(SLOT_VOTED, Items.of(Material.BARRIER)
                     .name(messages.get("menu.modes.voted"))
@@ -37,8 +38,14 @@ public final class ModeMenu extends Menu {
         }
         SLOTS.forEach((slot, mode) -> set(slot, Items.of(ICONS.get(mode))
                 .name(messages.get("menu.modes." + mode.configKey()))
-                .lore(messages.get("menu.modes." + mode.configKey() + "-lore"))
+                .lore(messages.get("menu.modes." + mode.configKey() + "-lore"), messages.get("menu.modes.choose"))
+                .hideAttributes()
                 .build()));
+    }
+
+    @Override
+    protected boolean fillEmptySlots() {
+        return false;
     }
 
     @Override

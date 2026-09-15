@@ -1,5 +1,5 @@
-prefix: "<blue>Duell <dark_gray>» <reset>"
-game-name: "Duell"
+prefix: "<duell>Duell <dark>» <reset>"
+game-name: "<duell>Duell"
 
 commands:
   setspawn:
@@ -11,6 +11,7 @@ mode:
   superjump: "SuperJump"
 
 join:
+  introduction: "<prefix><muted>Wähle euren Modus über die Truhe. <duell>Ein Gegner, ein Duell."
   spectator: "<prefix><muted>Du bist als Zuschauer beigetreten."
 
 vote:
@@ -28,7 +29,7 @@ round:
 
 
 timer:
-  round: "<primary>Rundenzeit <dark>● <white><time>"
+  round: "<duell>Rundenzeit <dark>● <white><time>"
 
 superjump:
   checkpoint: "<prefix><white><player><muted> hat Checkpoint <accent><checkpoint> <muted>erreicht!"
@@ -53,8 +54,8 @@ top:
   entry: "<reset>#<rank> <primary><name> <muted>( <white><value><muted> )"
 
 item:
-  style: "<arrow><primary>Stil"
-  hub: "<arrow><primary>Hub"
+  style: "<arrow><duell>Modus wählen"
+  hub: "<arrow><primary>Zur Lobby"
   stats: "<arrow><primary>Stats"
   vs-kit:
     helmet: "<primary>Helm"
@@ -68,13 +69,14 @@ item:
 
 menu:
   modes:
-    title: "<arrow><primary>Spielmodi"
-    vs: "<arrow><primary>1vs1"
-    vs-lore: "<bullet><muted>Normales 1vs1"
-    sg: "<arrow><primary>SurvivalGames"
-    sg-lore: "<bullet><muted>Syndicate Stil"
-    superjump: "<arrow><primary>SuperJump"
-    superjump-lore: "<bullet><muted>Jump 1vs1"
+    title: "<duell>Duell <dark>· <muted>Euer Modus"
+    choose: "<muted>Klicken <dark>· <duell>Modus wählen"
+    vs: "<duell>1vs1"
+    vs-lore: "<bullet><muted>Schwert, Bogen und Angel. Besiege deinen Gegner."
+    sg: "<duell>SurvivalGames"
+    sg-lore: "<bullet><muted>Sammle Beute und gewinne den letzten Kampf."
+    superjump: "<duell>SuperJump"
+    superjump-lore: "<bullet><muted>Erreiche die Checkpoints und das Ziel zuerst."
     voted: "<arrow><error>Voting beendet"
     voted-lore: "<bullet><muted>Das Voting wurde bereits beendet"
   stats:
@@ -89,13 +91,15 @@ menu:
     global-lore: "<bullet><muted>Klicke zum Anzeigen"
 
 scoreboard:
-  title: "<arrow><primary><ip> <dark>«"
+  kills: "<muted>DEINE KILLS"
+  kills-value: "<arrow><duell><kills>"
+  title: "<duell><bold>Duell"
   mode: "<muted>MODUS"
   mode-value: "<arrow><white><mode>"
-  mode-none: "-/-"
+  mode-none: "Noch offen"
   map: "<muted>MAP"
   map-value: "<arrow><white><map>"
-  map-random: "Random"
+  map-random: "Wird ausgewählt"
   opponent: "<muted>GEGNER"
   opponent-value: "<arrow><white><player>"
-  opponent-none: "-/-"
+  opponent-none: "Warte auf einen Gegner"

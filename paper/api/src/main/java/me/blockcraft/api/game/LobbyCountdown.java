@@ -3,6 +3,7 @@ package me.blockcraft.api.game;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Countdown;
+import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.title.Title;
@@ -19,7 +20,7 @@ import java.util.function.Supplier;
 
 /**
  * The waiting-lobby countdown every game shares: the {@link Arena} announces it in chat, the remaining seconds are
- * the players' XP level, the last five count down as a title and tick a note higher each second, and while fewer
+ * shown in a boss bar, the last five count down as a title and tick a note higher each second, and while fewer
  * than {@code minPlayers} are there the clock stays at its full value instead of running out.
  */
 public final class LobbyCountdown {
@@ -36,6 +37,7 @@ public final class LobbyCountdown {
     private final IntSupplier players;
     private final Runnable onStart;
     private boolean forced;
+    private BossBar bar;
 
     public LobbyCountdown(Plugin plugin, Arena arena, int seconds, int minPlayers, IntSupplier players, Runnable onStart) {
         this.countdown = new Countdown(plugin);
@@ -48,6 +50,7 @@ public final class LobbyCountdown {
 
     /** Starts once enough players are there; calling it on every join is how a game keeps it going. */
     public void start() {
+        updateBar(countdown.isRunning() ? countdown.remaining() : seconds);
         if (players.getAsInt() >= minPlayers) {
             begin();
         }
@@ -75,7 +78,7 @@ public final class LobbyCountdown {
     public void cancel() {
         forced = false;
         countdown.cancel();
-        Bukkit.getOnlinePlayers().forEach(player -> player.setLevel(0));
+        hideBar();
     }
 
     /**
@@ -116,6 +119,7 @@ public final class LobbyCountdown {
             return;
         }
         forced = false;
+        updateBar(seconds);
         arena.announceStart(seconds);
         countdown.start(seconds, this::tick, this::finish);
     }
@@ -123,10 +127,10 @@ public final class LobbyCountdown {
     private void tick(int remaining) {
         if (!forced && players.getAsInt() < minPlayers) {
             countdown.remaining(seconds);
-            Bukkit.getOnlinePlayers().forEach(player -> player.setLevel(seconds));
+            updateBar(seconds);
             return;
         }
-        Bukkit.getOnlinePlayers().forEach(player -> player.setLevel(remaining));
+        updateBar(remaining);
         if (ANNOUNCE_AT.contains(remaining)) {
             arena.announceStart(remaining);
         }
@@ -138,10 +142,29 @@ public final class LobbyCountdown {
         }
     }
 
+    private void updateBar(int remaining) {
+        var messages = BlockcraftApi.get().messages();
+        int missing = Math.max(0, minPlayers - players.getAsInt());
+        boolean waiting = !forced && missing > 0;
+        var label = waiting
+                ? messages.get("countdown.waiting", Formatter.number("players", missing))
+                : messages.get("countdown.starting", Formatter.number("seconds", remaining));
+        if (bar == null) {
+            bar = BossBar.bossBar(label, 1.0f, BossBar.Color.YELLOW, BossBar.Overlay.PROGRESS);
+        }
+        bar.name(label).progress(waiting ? 1.0f : Math.clamp(remaining / (float) Math.max(seconds, 1), 0.0f, 1.0f));
+        Bukkit.getServer().showBossBar(bar);
+    }
+
+    private void hideBar() {
+        if (bar != null) {
+            Bukkit.getServer().hideBossBar(bar);
+            bar = null;
+        }
+    }
+
     private void finish() {
-        var go = goTitle();
-        Bukkit.getOnlinePlayers().forEach(player -> player.showTitle(go));
-        Sounds.COUNTDOWN_GO.playToAll();
+        hideBar();
         onStart.run();
     }
 }

@@ -1,5 +1,5 @@
-prefix: "<blue>EmeraldRush <dark_gray>» <reset>"
-game-name: "EmeraldRush"
+prefix: "<emeraldrush>EmeraldRush <dark>» <reset>"
+game-name: "<emeraldrush>EmeraldRush"
 
 commands:
   start:
@@ -16,6 +16,9 @@ commands:
     description: "Admin-Befehle"
   rushcoins:
     description: "Setzt die Emeralds eines Spielers"
+
+join:
+  introduction: "<prefix><muted>Baue Erze ab, handle mit Emeralds und rüste dich fürs Deathmatch aus."
 
 lobby:
   welcome:
@@ -52,16 +55,16 @@ deathmatch:
   killed: "<prefix><white><victim><muted> wurde von <white><killer><muted> getötet."
   died: "<prefix><white><victim> <muted>ist gestorben."
 timer:
-  search: "<primary>Suchzeit <dark>● <white><time>"
-  shopping: "<primary>Shopping <dark>● <white><seconds>s"
-  deathmatch: "<primary>Deathmatch <dark>● <white><time>"
+  search: "<emeraldrush>Erze sammeln <dark>● <white><time>"
+  shopping: "<emeraldrush>Ausrüsten <dark>● <white><seconds>s"
+  deathmatch: "<emeraldrush>Deathmatch <dark>● <white><time>"
 tracker:
   found: "<prefix><white><player> <arrow><white><distance><muted> Blöcke"
 item:
   perks: "<arrow><primary>Perks"
   start: "<arrow><primary>Spiel starten"
   stats: "<arrow><primary>Stats"
-  hub: "<arrow><primary>Hub"
+  hub: "<arrow><primary>Zur Lobby"
   pickaxe: "<muted>Spitzhacke"
   shop: "<arrow><primary>Shop"
   compass: "<primary>Kompass"
@@ -91,7 +94,7 @@ top:
   first: "<accent><bold>#1 <reset><primary><name><muted> ( <white><value><muted> )"
   entry: "<reset>#<rank> <primary><name> <muted>( <white><value><muted> )"
 scoreboard:
-  title: "<arrow><primary><ip> <dark>«"
+  title: "<emeraldrush><bold>EmeraldRush"
   lobby:
     - "<muted>SPIELER"
     - "<arrow><white><online> <dark>/<white> <max>"
@@ -116,27 +119,33 @@ scoreboard:
   winner-header: "<muted>GEWINNER"
   winner: "<arrow><white><player>"
 perk:
-  title: "<arrow><primary>Perks"
-  buy-title: "<arrow><primary>Perk <dark>● <accent><perk>"
-  item: "<arrow><aqua><perk> Perk"
+  title: "<emeraldrush>EmeraldRush <dark>· <muted>Perks"
+  unlocked: "<success>Im Rundenshop freigeschaltet"
+  inspect: "<muted>Klicken <dark>· <emeraldrush>Freischaltung ansehen"
+  description:
+    angel: "<muted>Halte Gegner mit einer Angel auf Abstand."
+    lucky-potion: "<muted>Ein Unsichtbarkeitstrank für überraschende Angriffe."
+    strength: "<muted>Ein Stärketrank für den nächsten Kampf."
+  buy-title: "<emeraldrush><perk> <dark>· <muted>Freischalten"
+  item: "<emeraldrush><perk>"
   angel: "Angel"
   lucky-potion: "LuckyPotion"
   strength: "Stärke"
-  explain: "<arrow><gold>Erklärung"
+  explain: "<emeraldrush>Coins und Emeralds"
   explain-lore:
-    - "<bullet><muted>Mit dem Kauf eines Perks"
-    - "<bullet><muted>schaltest du frei, es im"
-    - "<bullet><muted>Shop kaufen zu können."
-  price: "<muted>Preis"
+    - "<muted>Coins schalten einen Perk dauerhaft frei."
+    - "<muted>Im Rundenshop kaufst du ihn mit Emeralds."
+    - "<muted>Emeralds gelten nur für die aktuelle Runde."
+  price: "<muted>Dauerhafte Freischaltung"
   price-lore: "<arrow><accent><price> Coins"
-  buy: "<success>Kaufen"
+  buy: "<success>Mit Coins freischalten"
   owned: "<success>bereits gekauft!"
   bought: "<prefix><muted>Du hast das <white><perk> Perk <muted>gekauft!"
   bought-price: "<arrow><muted>- <accent><price> <muted>Coins"
   not-enough-coins: "<prefix><error>Du hast nicht genug Coins!"
   already-owned: "<prefix><error>Du hast dieses Perk bereits gekauft!"
 shop:
-  title: "<arrow><primary>Shop <dark>● <accent><category>"
+  title: "<emeraldrush><category> <dark>· <muted>Emeralds"
   not-enough: "<prefix><error>Du hast zu wenig Emeralds!"
   inventory-full: "<prefix><error>Dein Inventar ist voll!"
   price: "<arrow><muted><price> Emeralds"
@@ -174,7 +183,7 @@ shop:
     speed: "<arrow><primary>Schnelligkeit"
     extra-heart: "<arrow><dark_red>Extra Herz"
     golden-apple: "<arrow><accent>Goldapfel"
-    level: "<arrow><white>1 Level"
+    level: "<arrow><accent>1 Verzauberungslevel"
     lapis: "<arrow><primary>Lapis"
     angel: "<arrow><aqua>Angel"
     lucky-potion: "<arrow><aqua>LuckyPotion"

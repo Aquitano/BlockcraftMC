@@ -31,6 +31,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.Random;
 import java.util.UUID;
 import java.util.function.ToIntFunction;
@@ -78,7 +79,7 @@ public final class Duel {
         this.stats = stats;
         this.scoreboard = scoreboard;
         this.items = items;
-        this.arena = new Arena(messages);
+        this.arena = new Arena(messages, Sounds.DUELL_JOIN);
         this.lobbyCountdown = new LobbyCountdown(plugin, arena, config.countdowns().lobby(), MAX_PARTICIPANTS, participants::size, this::startRound);
         this.summary = new RoundSummary(plugin, messages.get("game-name"),
                 new RoundSummary.Rewards(config.killCoins(), config.winCoins()));
@@ -197,10 +198,10 @@ public final class Duel {
         summary.death(victim);
         record(killer, Stat.KILLS);
         record(victim, Stat.DEATHS);
-        killer.setLevel(killer.getLevel() + 1);
+        refreshScoreboards();
         respawnLater(victim);
         if (round > config.vsKillsToEnd()) {
-            var winner = victim.getLevel() > killer.getLevel() ? victim : killer;
+            var winner = summary.kills(victim) > summary.kills(killer) ? victim : killer;
             rewardWinner(winner);
             endRound();
             return;
@@ -261,7 +262,8 @@ public final class Duel {
                 ? messages.get("scoreboard.map-random")
                 : Component.text(mapName);
         participants().forEach(participant ->
-                scoreboard.show(participant, modeLine, mapLine, opponentsOf(participant).map(Player::getName).toList()));
+                scoreboard.show(participant, modeLine, mapLine, opponentsOf(participant).map(Player::getName).toList(),
+                        mode == DuelMode.VS && phase != GamePhase.LOBBY ? OptionalInt.of(summary.kills(participant)) : OptionalInt.empty()));
     }
 
     private void startLobbyCountdownIfReady() {
@@ -335,7 +337,7 @@ public final class Duel {
     /** The clock decides: VS by kills, SuperJump by the furthest checkpoint, SG is a draw. */
     private void endByTimeout() {
         var winner = switch (mode) {
-            case VS -> leaderBy(Player::getLevel);
+            case VS -> leaderBy(summary::kills);
             case SUPERJUMP -> leaderBy(player -> checkpoints.getOrDefault(player.getUniqueId(), 0));
             case SG -> Optional.<Player>empty();
         };
@@ -369,8 +371,7 @@ public final class Duel {
         frozen = false;
         hideRoundBar();
         summary.show();
-        restartCountdown = ServerRestart.start(plugin, arena, config.countdowns().restart(),
-                remaining -> participants().forEach(participant -> participant.setLevel(remaining)));
+        restartCountdown = ServerRestart.start(plugin, arena, config.countdowns().restart());
     }
 
     private void rewardWinner(Player winner) {

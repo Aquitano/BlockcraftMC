@@ -24,9 +24,12 @@ public enum Sounds {
     PURCHASE("entity.player.levelup", 0.8f, 1.4f),
     KILL("entity.player.attack_crit", 1.0f, 1.0f),
     WIN("ui.toast.challenge_complete", 1.0f, 1.0f),
-    LOSE("entity.blaze.death", 0.8f, 1.0f),
+    LOSE("block.note_block.bass", 0.5f, 0.8f),
     LEVEL_UP("entity.player.levelup", 1.0f, 1.0f),
     JOIN("block.note_block.bell", 0.6f, 1.6f),
+    QUICKSG_JOIN("item.crossbow.loading_end", 0.5f, 1.1f),
+    RUSH_JOIN("block.amethyst_block.chime", 0.5f, 1.2f),
+    DUELL_JOIN("block.anvil.place", 0.25f, 1.5f),
     NOTIFY("block.note_block.pling", 0.8f, 1.8f),
     SECRET("entity.ender_dragon.growl", 0.6f, 1.2f);
 

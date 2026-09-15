@@ -68,6 +68,8 @@ arena:
 
 # The shared countdown: the last seconds as a title, then the start.
 countdown:
+  waiting: "<muted>Warten auf Spieler <dark>● <accent>Noch <players> benötigt"
+  starting: "<muted>Rundenstart in <accent><seconds>s"
   seconds: "<primary><seconds>"
   go: "<success><bold>LOS!"
 

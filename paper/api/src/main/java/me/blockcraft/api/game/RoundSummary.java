@@ -69,6 +69,11 @@ public final class RoundSummary {
         return pay(killer, rewards.kill());
     }
 
+    public int kills(Player player) {
+        var score = scores.get(player.getUniqueId());
+        return score == null ? 0 : score.kills;
+    }
+
     public void death(Player victim) {
         score(victim).deaths++;
     }
@@ -121,9 +126,6 @@ public final class RoundSummary {
             boolean won = winners.containsKey(player.getUniqueId());
             player.showTitle(Title.title(messages.get(titleKey(won)), subtitle, TIMES));
             (won ? Sounds.WIN : Sounds.LOSE).play(player);
-            if (score.coins > 0) {
-                Sounds.COINS.play(player);
-            }
         }
     }
 
