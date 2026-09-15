@@ -108,6 +108,12 @@ final class SharedSchema {
             "ALTER TABLE Reports ADD COLUMN IF NOT EXISTS reported_uuid CHAR(36) NULL",
             "ALTER TABLE Reports ADD COLUMN IF NOT EXISTS claimed_uuid CHAR(36) NULL",
             "CREATE UNIQUE INDEX IF NOT EXISTS uq_reports_accounts ON Reports (reporter_uuid, reported_uuid)"
+        )),
+        new Migration(4, List.of(
+            "ALTER TABLE bc_punishments ADD COLUMN IF NOT EXISTS issuer_uuid CHAR(36) NULL",
+            "ALTER TABLE bc_punishments ADD COLUMN IF NOT EXISTS revoked_by_uuid CHAR(36) NULL",
+            "ALTER TABLE bc_strikes ADD COLUMN IF NOT EXISTS issuer_uuid CHAR(36) NULL",
+            "ALTER TABLE bc_frozen ADD COLUMN IF NOT EXISTS issuer_uuid CHAR(36) NULL"
         ))
     );
 

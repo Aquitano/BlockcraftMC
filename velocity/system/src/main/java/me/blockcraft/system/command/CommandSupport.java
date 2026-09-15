@@ -10,6 +10,7 @@ import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.common.player.PlayerReference;
 import me.blockcraft.system.PlayerVisibility;
 import me.blockcraft.system.SystemPermissions;
 import me.blockcraft.system.rank.ProxyRanks;
@@ -96,8 +97,9 @@ public final class CommandSupport {
         return builder.buildFuture();
     }
 
-    public static String senderName(CommandSource source) {
-        return source instanceof Player player ? player.getUsername() : "Console";
+    /** Who acts: the player's account, or the console by name alone. */
+    public static PlayerReference sender(CommandSource source) {
+        return source instanceof Player player ? PlayerReference.known(player.getUniqueId(), player.getUsername()) : PlayerReference.named("Console");
     }
 
     public static String currentServer(Player player) {

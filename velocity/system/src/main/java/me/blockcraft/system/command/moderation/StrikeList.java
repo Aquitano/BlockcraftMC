@@ -27,7 +27,7 @@ final class StrikeList {
             viewer.sendMessage(messages.get("strikes.entry",
                     Formatter.number("number", i + 1),
                     Placeholder.unparsed("reason", list.get(i).reason()),
-                    Placeholder.unparsed("issuer", list.get(i).issuer())));
+                    Placeholder.unparsed("issuer", list.get(i).issuer().name())));
         }
         viewer.sendMessage(messages.get("strikes.footer"));
     }

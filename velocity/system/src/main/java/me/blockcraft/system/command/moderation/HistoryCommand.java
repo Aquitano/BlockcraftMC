@@ -77,7 +77,7 @@ public final class HistoryCommand {
         return TagResolver.resolver(
                 Placeholder.component("type", type(punishment.type())),
                 Placeholder.unparsed("date", dates.format(punishment.createdAt())),
-                Placeholder.unparsed("issuer", punishment.issuer()),
+                Placeholder.unparsed("issuer", punishment.issuer().name()),
                 Placeholder.unparsed("reason", punishment.reason()),
                 Placeholder.component("duration", duration(punishment)),
                 Placeholder.component("revoked", revoked(punishment)));
@@ -98,7 +98,7 @@ public final class HistoryCommand {
 
     private Component revoked(Punishment punishment) {
         return punishment.revokedBy()
-                .map(revoker -> messages.get("history.revoked", Placeholder.unparsed("revoker", revoker)))
+                .map(revoker -> messages.get("history.revoked", Placeholder.unparsed("revoker", revoker.name())))
                 .orElseGet(Component::empty);
     }
 }

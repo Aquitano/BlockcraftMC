@@ -43,6 +43,6 @@ public final class UnmuteCommand {
             return;
         }
         source.sendMessage(messages.get("unmute.done"));
-        punishments.unmute(target.get(), CommandSupport.senderName(source));
+        punishments.unmute(target.get(), CommandSupport.sender(source));
     }
 }

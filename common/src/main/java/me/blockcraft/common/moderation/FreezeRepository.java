@@ -1,6 +1,7 @@
 package me.blockcraft.common.moderation;
 
 import me.blockcraft.common.db.Database;
+import me.blockcraft.common.player.PlayerReference;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -14,13 +15,15 @@ public final class FreezeRepository {
         this.db = db;
     }
 
-    public Optional<String> issuer(UUID player) {
-        return db.queryOne("SELECT issuer FROM bc_frozen WHERE player_uuid = ?", row -> row.getString("issuer"), player.toString());
+    public Optional<PlayerReference> issuer(UUID player) {
+        return db.queryOne("SELECT issuer, issuer_uuid FROM bc_frozen WHERE player_uuid = ?",
+                row -> PunishmentRepository.reference(row, "issuer", "issuer_uuid"), player.toString());
     }
 
-    public void freeze(UUID player, String issuer) {
-        db.update("INSERT INTO bc_frozen (player_uuid, issuer) VALUES (?, ?) ON DUPLICATE KEY UPDATE issuer = VALUES(issuer), since = NOW()",
-                player.toString(), issuer);
+    public void freeze(UUID player, PlayerReference issuer) {
+        db.update("INSERT INTO bc_frozen (player_uuid, issuer, issuer_uuid) VALUES (?, ?, ?) "
+                        + "ON DUPLICATE KEY UPDATE issuer = VALUES(issuer), issuer_uuid = VALUES(issuer_uuid), since = NOW()",
+                player.toString(), issuer.name(), PunishmentRepository.uuidOf(issuer));
     }
 
     public void unfreeze(UUID player) {

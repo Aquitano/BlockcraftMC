@@ -52,7 +52,7 @@ public final class KickCommand {
         source.sendMessage(messages.get("kick.done"));
         var placeholders = TagResolver.resolver(
                 Placeholder.unparsed("player", target.get().getUsername()),
-                Placeholder.unparsed("issuer", CommandSupport.senderName(source)),
+                Placeholder.unparsed("issuer", CommandSupport.sender(source).name()),
                 Placeholder.unparsed("reason", reason));
         var notification = messages.getLines("kick.notify", placeholders);
         for (Player staff : proxy.getAllPlayers()) {

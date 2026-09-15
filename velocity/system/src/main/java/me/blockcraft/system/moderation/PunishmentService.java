@@ -7,6 +7,7 @@ import me.blockcraft.common.moderation.DurationText;
 import me.blockcraft.common.moderation.Punishment;
 import me.blockcraft.common.moderation.PunishmentRepository;
 import me.blockcraft.common.moderation.PunishmentType;
+import me.blockcraft.common.player.PlayerReference;
 import me.blockcraft.system.PlayerLookup.Target;
 import me.blockcraft.system.SystemConfig;
 import me.blockcraft.system.SystemPermissions;
@@ -60,7 +61,7 @@ public final class PunishmentService {
                 bans.size(), mutes.size());
     }
 
-    public void ban(Target target, String reason, String issuer, Optional<Duration> duration) {
+    public void ban(Target target, String reason, PlayerReference issuer, Optional<Duration> duration) {
         punishments.ban(target.uuid(), reason, issuer, duration);
         punishments.activeBan(target.uuid()).ifPresent(ban -> {
             target.online().ifPresent(player -> player.disconnect(banScreen(ban)));
@@ -69,13 +70,13 @@ public final class PunishmentService {
         });
     }
 
-    public void unban(Target target, String issuer) {
+    public void unban(Target target, PlayerReference issuer) {
         punishments.revoke(target.uuid(), PunishmentType.BAN, issuer);
         notify(SystemPermissions.KICK, "unban.notify",
-                Placeholder.unparsed("player", target.name()), Placeholder.unparsed("issuer", issuer));
+                Placeholder.unparsed("player", target.name()), Placeholder.unparsed("issuer", issuer.name()));
     }
 
-    public void mute(Target target, String reason, String issuer, Optional<Duration> duration) {
+    public void mute(Target target, String reason, PlayerReference issuer, Optional<Duration> duration) {
         punishments.mute(target.uuid(), reason, issuer, duration);
         punishments.activeMute(target.uuid()).ifPresent(mute -> {
             target.online().ifPresent(player -> player.sendMessage(muteScreen(mute)));
@@ -83,14 +84,14 @@ public final class PunishmentService {
         });
     }
 
-    public void unmute(Target target, String issuer) {
+    public void unmute(Target target, PlayerReference issuer) {
         punishments.revoke(target.uuid(), PunishmentType.MUTE, issuer);
         notify(SystemPermissions.TEAM, "unmute.notify",
-                Placeholder.unparsed("player", target.name()), Placeholder.unparsed("issuer", issuer));
+                Placeholder.unparsed("player", target.name()), Placeholder.unparsed("issuer", issuer.name()));
     }
 
     /** Ends the active punishment without telling the staff, for a /strafe that replaces it right away. */
-    public void revokeQuietly(Target target, PunishmentType type, String issuer) {
+    public void revokeQuietly(Target target, PunishmentType type, PlayerReference issuer) {
         punishments.revoke(target.uuid(), type, issuer);
     }
 
@@ -112,7 +113,7 @@ public final class PunishmentService {
         return TagResolver.resolver(
                 Placeholder.unparsed("player", name),
                 Placeholder.unparsed("reason", punishment.reason()),
-                Placeholder.unparsed("issuer", punishment.issuer()),
+                Placeholder.unparsed("issuer", punishment.issuer().name()),
                 Placeholder.component("remaining", remaining(punishment)),
                 Placeholder.unparsed("ip", network.ip()),
                 Placeholder.unparsed("website", network.website()),

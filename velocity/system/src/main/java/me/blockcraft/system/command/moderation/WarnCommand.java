@@ -89,7 +89,7 @@ public final class WarnCommand {
                     .hoverEvent(HoverEvent.showText(messages.get("warn.offline-hover", placeholders))));
             return;
         }
-        String key = CommandSupport.senderName(source) + " " + argument.toLowerCase();
+        String key = CommandSupport.sender(source).name() + " " + argument.toLowerCase();
         if (key.equals(lastForcedWarn)) {
             return;
         }

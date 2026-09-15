@@ -4,6 +4,7 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.common.player.PlayerReference;
 import me.blockcraft.common.moderation.StrikeRepository;
 import me.blockcraft.system.PlayerLookup.Target;
 import me.blockcraft.system.PlayerVisibility;
@@ -63,14 +64,14 @@ public final class StrikeCommand {
                     Placeholder.unparsed("player", player.getUsername()), Placeholder.unparsed("permission", SystemPermissions.STRIKES)));
             return;
         }
-        strikes.add(player.getUniqueId(), reason, CommandSupport.senderName(source));
+        strikes.add(player.getUniqueId(), reason, CommandSupport.sender(source));
         int count = strikes.count(player.getUniqueId());
         var placeholders = TagResolver.resolver(Placeholder.unparsed("player", player.getUsername()), Formatter.number("count", count));
         player.sendMessage(messages.get("strike.received", placeholders));
         source.sendMessage(messages.get("strike.done", placeholders));
         if (count >= config.maxStrikes()) {
             punishments.ban(new Target(player.getUniqueId(), player.getUsername(), Optional.of(player)),
-                    messages.raw("strike.ban-reason"), messages.raw("strike.ban-issuer"), Optional.empty());
+                    messages.raw("strike.ban-reason"), PlayerReference.named(messages.raw("strike.ban-issuer")), Optional.empty());
             source.sendMessage(messages.get("strike.max-reached", placeholders));
         }
     }

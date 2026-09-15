@@ -73,9 +73,9 @@ public final class ModerationActions {
         }
         return store(source, () -> {
             if (ban) {
-                punishments.ban(target.get(), reason, CommandSupport.senderName(source), duration);
+                punishments.ban(target.get(), reason, CommandSupport.sender(source), duration);
             } else {
-                punishments.mute(target.get(), reason, CommandSupport.senderName(source), duration);
+                punishments.mute(target.get(), reason, CommandSupport.sender(source), duration);
             }
             source.sendMessage(messages.get(key + ".done", Placeholder.unparsed("player", target.get().name())));
         });
@@ -102,7 +102,7 @@ public final class ModerationActions {
         if (!support.mayModerate(source, target.get().uuid())) {
             return OperationResult.REJECTED;
         }
-        String issuer = CommandSupport.senderName(source);
+        var issuer = CommandSupport.sender(source);
         String reason = preset.reason() + " #" + banId();
         return store(source, () -> {
             var existing = preset.type() == PunishmentType.BAN ? punishments.activeBan(target.get()) : punishments.activeMute(target.get());

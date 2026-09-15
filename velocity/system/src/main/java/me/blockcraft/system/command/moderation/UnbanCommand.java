@@ -43,6 +43,6 @@ public final class UnbanCommand {
             return;
         }
         source.sendMessage(messages.get("unban.done"));
-        punishments.unban(target.get(), CommandSupport.senderName(source));
+        punishments.unban(target.get(), CommandSupport.sender(source));
     }
 }

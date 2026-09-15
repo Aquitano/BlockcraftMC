@@ -1,9 +1,11 @@
 package me.blockcraft.core.staff;
 
+import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.moderation.FreezeRepository;
+import me.blockcraft.common.player.PlayerReference;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
@@ -69,11 +71,11 @@ public final class FreezeService implements Listener {
             unfreeze(target);
             return false;
         }
-        freeze(target, issuer.getName());
+        freeze(target, PlayerReference.known(issuer.getUniqueId(), BlockcraftApi.get().realName(issuer)));
         return true;
     }
 
-    private void freeze(Player target, String issuer) {
+    private void freeze(Player target, PlayerReference issuer) {
         var uuid = target.getUniqueId();
         frozen.add(uuid);
         Tasks.async(plugin, () -> repository.freeze(uuid, issuer));

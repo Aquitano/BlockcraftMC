@@ -1,10 +1,10 @@
 package me.blockcraft.common.moderation;
 
 import me.blockcraft.common.db.Database;
+import me.blockcraft.common.player.PlayerReference;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -16,9 +16,9 @@ public final class StrikeRepository {
         this.db = db;
     }
 
-    public void add(UUID player, String reason, String issuer) {
-        db.update("INSERT INTO bc_strikes (player_uuid, reason, issuer, created_at) VALUES (?, ?, ?, NOW())",
-                player.toString(), reason, issuer);
+    public void add(UUID player, String reason, PlayerReference issuer) {
+        db.update("INSERT INTO bc_strikes (player_uuid, reason, issuer, issuer_uuid, created_at) VALUES (?, ?, ?, ?, NOW())",
+                player.toString(), reason, issuer.name(), PunishmentRepository.uuidOf(issuer));
     }
 
     public int count(UUID player) {
@@ -27,7 +27,7 @@ public final class StrikeRepository {
 
     /** Oldest first, so index + 1 is the strike number shown to players. */
     public List<Strike> list(UUID player) {
-        return db.queryList("SELECT id, player_uuid, reason, issuer, created_at FROM bc_strikes WHERE player_uuid = ? ORDER BY id ASC",
+        return db.queryList("SELECT id, player_uuid, reason, issuer, issuer_uuid, created_at FROM bc_strikes WHERE player_uuid = ? ORDER BY id ASC",
                 StrikeRepository::map, player.toString());
     }
 
@@ -37,6 +37,6 @@ public final class StrikeRepository {
 
     private static Strike map(ResultSet row) throws SQLException {
         return new Strike(row.getLong("id"), UUID.fromString(row.getString("player_uuid")), row.getString("reason"),
-                row.getString("issuer"), row.getTimestamp("created_at").toInstant());
+                PunishmentRepository.reference(row, "issuer", "issuer_uuid"), row.getTimestamp("created_at").toInstant());
     }
 }

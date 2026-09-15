@@ -60,7 +60,7 @@ README.md; this file only holds what the code does not say by itself.
 - Names and structure should carry the meaning; comments only for a non-obvious why.
 - Reports live in `velocity/system/report`, using the system pool and visibility-aware player lookup. The retired
   `velocity/report` jar must not run.
-- Whoever a row is about or by (reporter, reported, claimer) is a `PlayerReference`: the account UUID next to
+- Whoever a row is about or by (reporter, reported, claimer, issuer) is a `PlayerReference`: the account UUID next to
   the name it had at the time; the console has only a name. Names stay for legacy rows and display.
 - Reports and punishments from Paper use `BlockcraftApi.operations()` and the common versioned operation codec.
   Commands and plugin messages call the same proxy implementations, which also tell the player the outcome; Paper only
