@@ -89,6 +89,7 @@ import me.blockcraft.system.motd.MotdListener;
 import me.blockcraft.system.network.LobbyAlert;
 import me.blockcraft.system.network.ServerDirectory;
 import me.blockcraft.system.network.ServerDiscovery;
+import me.blockcraft.system.pack.NetworkPack;
 import me.blockcraft.system.party.PartyListener;
 import me.blockcraft.system.party.PartyManager;
 import me.blockcraft.system.support.SupportListener;
@@ -110,6 +111,7 @@ public final class SystemPlugin {
     private final Logger logger;
     private final Path dataDirectory;
     private Database database;
+    private Optional<NetworkPack> pack = Optional.empty();
 
     @Inject
     public SystemPlugin(ProxyServer proxy, Logger logger, @DataDirectory Path dataDirectory) {
@@ -191,6 +193,8 @@ public final class SystemPlugin {
         events.register(this, new SupportListener(supportSessions, messages));
         events.register(this, new WatchListener(proxy, repositories.watches(), config.watchRecent(), messages, logger));
         events.register(this, playtime);
+        pack = NetworkPack.start(proxy, config.resourcePack(), dataDirectory, messages.get("resource-pack.prompt"), logger);
+        pack.ifPresent(networkPack -> events.register(this, networkPack));
 
         register(new BanCommand(support).create());
         register(new TempBanCommand(support, moderationActions, messages).create());
@@ -272,6 +276,7 @@ public final class SystemPlugin {
 
     @Subscribe
     public void onShutdown(ProxyShutdownEvent event) {
+        pack.ifPresent(NetworkPack::stop);
         if (database != null) {
             database.close();
         }

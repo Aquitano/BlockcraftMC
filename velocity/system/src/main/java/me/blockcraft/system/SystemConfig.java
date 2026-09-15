@@ -40,6 +40,10 @@ public final class SystemConfig {
     public record Alerts(String webhookUrl, int minIntervalSeconds) {
     }
 
+    /** {@code file} is relative to the plugin directory and empty disables the pack; {@code port} 0 serves nothing. */
+    public record ResourcePack(String file, String url, int port, boolean required) {
+    }
+
     private final Path file;
     private final Map<String, Object> root;
     private final DatabaseConfig database;
@@ -48,6 +52,7 @@ public final class SystemConfig {
     private final String lobbyGroup;
     private final Discovery discovery;
     private final Alerts alerts;
+    private final ResourcePack resourcePack;
     private final int maxWarns;
     private final int maxStrikes;
     private final int autoBroadcastMinutes;
@@ -77,6 +82,9 @@ public final class SystemConfig {
         this.discovery = new Discovery(number(discovery, "poll-seconds", 5), number(discovery, "stale-seconds", 20));
         var alerts = YamlFile.section(root, "alerts");
         this.alerts = new Alerts(string(alerts, "webhook-url"), number(alerts, "min-interval-seconds", 300));
+        var resourcePack = YamlFile.section(root, "resource-pack");
+        this.resourcePack = new ResourcePack(string(resourcePack, "file"), string(resourcePack, "url"),
+                number(resourcePack, "port", 0), Boolean.TRUE.equals(resourcePack.get("required")));
         this.maxWarns = number(root, "max-warns", 8);
         this.maxStrikes = number(root, "max-strikes", 5);
         this.autoBroadcastMinutes = number(root, "auto-broadcast-minutes", 5);
@@ -124,6 +132,10 @@ public final class SystemConfig {
 
     public Alerts alerts() {
         return alerts;
+    }
+
+    public ResourcePack resourcePack() {
+        return resourcePack;
     }
 
     public int maxWarns() {

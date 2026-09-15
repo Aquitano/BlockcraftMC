@@ -5,6 +5,8 @@ package me.blockcraft.common.network;
  * concerns the player the message travelled with: the proxy moves them ({@link #PLAY}, {@link #HUB}), runs a
  * command as them ({@link #COMMAND}), learns what they look like to others ({@link #NICK}, {@link #VANISH}) or
  * what they let others do to them ({@link #SETTING}), or delivers a notice on their behalf ({@link #STAFF_NOTICE}).
+ * The proxy speaks first only to answer ({@link #FRIENDS}) and to say whether the client wears the network's
+ * resource pack ({@link #PACK}).
  */
 public final class ProxyChannel {
 
@@ -36,6 +38,9 @@ public final class ProxyChannel {
      * (name, online, server) and the names of the requests waiting for them, which only the proxy knows.
      */
     public static final String FRIENDS = "Friends";
+
+    /** boolean, sent by the proxy when the player arrives on a backend and whenever the client's answer changes */
+    public static final String PACK = "Pack";
 
     private ProxyChannel() {
     }

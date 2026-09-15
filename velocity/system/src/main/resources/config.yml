@@ -25,6 +25,16 @@ alerts:
   webhook-url: ""
   min-interval-seconds: 300
 
+# The network resource pack (menu panels, HUD icons; README "Resource pack"). file lives in this plugin's directory,
+# is hashed at startup and served at http://<this proxy>:<port>/<file>; url is that address as clients reach it, or
+# wherever else the same file is hosted, then port 0 serves nothing. required kicks whoever declines. An empty file
+# offers no pack, and every screen still works without one.
+resource-pack:
+  file: blockcraft.zip
+  url: http://localhost:8080/blockcraft.zip
+  port: 8080
+  required: false
+
 # Edited in-game by /setmax and /motd; MOTD lines use legacy & colour codes.
 max-players: 100
 motd:

@@ -19,6 +19,8 @@ no-permission: "<prefix><error>Dazu hast du keine Berechtigung."
 request-failed: "<prefix><error>Die Anfrage konnte nicht ausgeführt werden. Bitte melde das dem Team."
 command-blocked: "<prefix><error>Nicht verfügbar!"
 kicked-to-lobby: "<prefix><muted>Deine <error>Verbindung <muted>zum Server <error><server><muted> wurde getrennt. Grund: <error><reason>"
+resource-pack:
+  prompt: "<primary><ip> <muted>sieht mit unserem Texturenpaket am besten aus: <white>eigene Menüs und Symbole<muted>. Ohne geht es auch."
 help:
   - "<bullet><primary>INFORMATIONEN ZUM SERVER <dark>●"
   - ""
