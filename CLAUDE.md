@@ -56,3 +56,4 @@ README.md; this file only holds what the code does not say by itself.
   proxy; Paper plugins only do what needs the world.
 - No NMS, no legacy `§` codes in code. Legacy `&` is only parsed for text humans typed (MOTD, chat, LuckPerms prefixes, report statuses).
 - Names and structure should carry the meaning; comments only for a non-obvious why.
+- Purchases use `common`'s `Shop`: the unlock and coin payment commit in one transaction.

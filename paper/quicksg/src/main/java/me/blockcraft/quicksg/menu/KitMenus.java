@@ -4,7 +4,7 @@ import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.dialog.ConfirmDialog;
 import me.blockcraft.api.menu.Menu;
-import me.blockcraft.api.shop.Shop;
+import me.blockcraft.common.shop.Shop;
 import me.blockcraft.api.shop.Unlocks;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Tasks;

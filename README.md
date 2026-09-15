@@ -191,11 +191,13 @@ applying what is pending, so servers starting together take turns; a checksum re
 statement is safe to run again because MariaDB commits DDL on its own. Existing report rows and name columns stay as
 they are. The games' stats tables keep their own setup.
 
+A purchase commits the unlock and the payment together, so a database failure rolls back both.
+
 ## Tests
 
 `./gradlew build` runs the tests; with `BLOCKCRAFT_TEST_DB_PORT` set that includes the MariaDB integration tests:
-legacy upgrade, concurrent migration startup and checksum enforcement. CI sets it; locally, point it at a disposable
-MariaDB:
+legacy upgrade, concurrent migration startup, checksum enforcement and transactional purchases. CI sets it; locally,
+point it at a disposable MariaDB:
 
 ```sh
 BLOCKCRAFT_TEST_DB_PORT=3307 BLOCKCRAFT_TEST_DB_PASSWORD=blockcraft-test ./gradlew build

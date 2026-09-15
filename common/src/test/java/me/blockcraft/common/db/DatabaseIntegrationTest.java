@@ -1,6 +1,7 @@
 package me.blockcraft.common.db;
 
 import me.blockcraft.common.report.ReportRepository;
+import me.blockcraft.common.shop.Shop;
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
@@ -110,5 +111,40 @@ public class DatabaseIntegrationTest {
             Migrations.apply(connection, List.of(new Migration(NEXT, List.of(probe))));
             assertThrows(SQLException.class, () -> Migrations.apply(connection, List.of(new Migration(NEXT, List.of("SELECT 1")))));
         }
+    }
+
+    @Test
+    public void concurrentPurchasesChargeOnceAndCannotOverspend() throws Exception {
+        db.migrate();
+        var player = UUID.randomUUID();
+        db.update("INSERT INTO VCOINS (UUID, NAME, COINS) VALUES (?, 'Buyer', 100)", player.toString());
+        var shop = new Shop(db);
+        int bought = 0;
+        try (var pool = Executors.newVirtualThreadPerTaskExecutor()) {
+            var clicks = new ArrayList<Callable<Shop.Purchase>>();
+            for (int i = 0; i < 16; i++) {
+                clicks.add(() -> shop.buy(player, "Buyer", "test.item", 60));
+            }
+            for (var click : pool.invokeAll(clicks)) {
+                if (click.get().bought()) {
+                    bought++;
+                }
+            }
+        }
+        assertEquals(1, bought);
+        assertEquals(Shop.Outcome.NOT_ENOUGH_COINS, shop.buy(player, "Buyer", "test.other", 60).outcome());
+        assertEquals(40, count("SELECT COINS FROM VCOINS WHERE UUID = ?", player.toString()));
+        assertEquals(1, count("SELECT COUNT(*) FROM bc_unlocks"));
+    }
+
+    @Test
+    public void paymentFailureRollsBackUnlock() {
+        db.migrate();
+        var player = UUID.randomUUID();
+        db.update("INSERT INTO VCOINS (UUID, NAME, COINS) VALUES (?, 'Buyer', 100)", player.toString());
+        db.execute("CREATE TRIGGER fail_payment BEFORE UPDATE ON VCOINS FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'injected failure'");
+        assertThrows(DatabaseException.class, () -> new Shop(db).buy(player, "Buyer", "test.item", 60));
+        assertEquals(0, count("SELECT COUNT(*) FROM bc_unlocks"));
+        assertEquals(100, count("SELECT COINS FROM VCOINS"));
     }
 }
