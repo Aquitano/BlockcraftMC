@@ -79,7 +79,6 @@ import me.blockcraft.system.listener.KickListener;
 import me.blockcraft.system.listener.LoginListener;
 import me.blockcraft.system.listener.OperationListener;
 import me.blockcraft.system.listener.ProxyMessageListener;
-import me.blockcraft.system.listener.TabCompleteListener;
 import me.blockcraft.system.listener.TabHeaderListener;
 import me.blockcraft.system.listener.WatchListener;
 import me.blockcraft.system.moderation.ModerationActions;
@@ -186,7 +185,6 @@ public final class SystemPlugin {
         events.register(this, new KickListener(lobby, messages));
         events.register(this, new InitialServerListener(lobby));
         events.register(this, new ProxyMessageListener(proxy, lobby, visibility, choices, friends, tabHeader, logger));
-        events.register(this, new TabCompleteListener());
         events.register(this, new MotdListener(visibility, config, settings, messages, dataDirectory, logger));
         events.register(this, new PartyListener(parties));
         events.register(this, new FriendListener(friends, visibility, logger));

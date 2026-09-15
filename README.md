@@ -93,10 +93,13 @@ LuckPerms answers only on the real console, so on a fresh database run
 
 ```
 docker compose exec -u 1000 lobby mc-send-to-console lp import ranks
+docker compose exec -u 1000 lobby mc-send-to-console lp networksync
 docker compose exec -u 1000 lobby mc-send-to-console lp user <name> parent set owner
 ```
 
-and read the replies in the log.
+and read the replies in the log. The import does not notify the other servers, so without the `networksync` the proxy
+keeps the empty groups it loaded at startup and every permission check there fails, which also hides all tab
+completion. A player who is online while their rank changes has to rejoin before the client shows completions again.
 
 ### One server on the host
 

@@ -3,12 +3,16 @@ package me.blockcraft.system.listener;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import com.velocitypowered.api.event.command.CommandExecuteEvent.CommandResult;
+import com.velocitypowered.api.event.command.PlayerAvailableCommandsEvent;
 import com.velocitypowered.api.proxy.Player;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.system.SystemConfig;
 import me.blockcraft.system.SystemPermissions;
 
-/** Answers /help with the network help and blocks the configured commands for players without the bypass. */
+/**
+ * Answers /help with the network help and keeps the configured commands from players without the bypass: they are
+ * denied when run and left out of the command tree the client completes from.
+ */
 public final class CommandListener {
 
     private static final String HELP = "help";
@@ -32,9 +36,20 @@ public final class CommandListener {
             messages.getLines("help").forEach(player::sendMessage);
             return;
         }
-        if (config.isBlockedCommand(command) && !player.hasPermission(SystemPermissions.BLOCKED_COMMANDS_BYPASS)) {
+        if (config.isBlockedCommand(command) && !canBypass(player)) {
             event.setResult(CommandResult.denied());
             player.sendMessage(messages.get("command-blocked"));
         }
+    }
+
+    @Subscribe
+    public void onAvailableCommands(PlayerAvailableCommandsEvent event) {
+        if (!canBypass(event.getPlayer())) {
+            event.getRootNode().getChildren().removeIf(node -> config.isBlockedCommand(node.getName()));
+        }
+    }
+
+    private static boolean canBypass(Player player) {
+        return player.hasPermission(SystemPermissions.BLOCKED_COMMANDS_BYPASS);
     }
 }

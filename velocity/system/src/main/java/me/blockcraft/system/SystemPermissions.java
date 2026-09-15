@@ -41,7 +41,6 @@ public final class SystemPermissions {
     public static final String PARTY_KICK = ROOT + "party.kick";
     public static final String FULL_JOIN = ROOT + "fulljoin";
     public static final String BLOCKED_COMMANDS_BYPASS = ROOT + "blockedcommands.bypass";
-    public static final String TAB_COMPLETE = ROOT + "tab";
     public static final String BYPASS_RANK = ROOT + "bypass-rank";
     public static final String PREMIUM_GROUP = "group.premium";
 
