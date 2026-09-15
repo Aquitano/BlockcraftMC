@@ -13,6 +13,7 @@ import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -50,6 +51,8 @@ public final class SystemConfig {
     private final int maxWarns;
     private final int maxStrikes;
     private final int autoBroadcastMinutes;
+    private final int historyLimit;
+    private final Duration watchRecent;
     private final int tabRefreshSeconds;
     private final int discordCodeMinutes;
     private final JoinMe joinMe;
@@ -77,6 +80,8 @@ public final class SystemConfig {
         this.maxWarns = number(root, "max-warns", 8);
         this.maxStrikes = number(root, "max-strikes", 5);
         this.autoBroadcastMinutes = number(root, "auto-broadcast-minutes", 5);
+        this.historyLimit = Math.max(1, number(YamlFile.section(root, "history"), "limit", 10));
+        this.watchRecent = Duration.ofDays(Math.max(1, number(YamlFile.section(root, "watch"), "recent-days", 30)));
         this.tabRefreshSeconds = number(YamlFile.section(root, "tab"), "refresh-seconds", 5);
         this.discordCodeMinutes = number(root, "discord-code-minutes", 10);
         var joinMe = YamlFile.section(root, "joinme");
@@ -131,6 +136,15 @@ public final class SystemConfig {
 
     public int autoBroadcastMinutes() {
         return autoBroadcastMinutes;
+    }
+
+    public int historyLimit() {
+        return historyLimit;
+    }
+
+    /** How far back a punishment still flags a login for the team. */
+    public Duration watchRecent() {
+        return watchRecent;
     }
 
     public int tabRefreshSeconds() {

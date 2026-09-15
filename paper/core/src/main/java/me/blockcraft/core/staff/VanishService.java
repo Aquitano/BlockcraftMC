@@ -2,6 +2,7 @@ package me.blockcraft.core.staff;
 
 import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.api.task.Tasks;
+import me.blockcraft.api.vanish.VanishChangeEvent;
 import me.blockcraft.common.moderation.VanishRepository;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -63,6 +64,7 @@ public final class VanishService implements Listener {
         }
         Tasks.async(plugin, () -> repository.set(uuid, vanish));
         ProxyMessaging.vanish(plugin, player, vanish);
+        Bukkit.getPluginManager().callEvent(new VanishChangeEvent(player, vanish));
     }
 
     private boolean canSee(Player viewer, Player hidden) {
@@ -87,6 +89,7 @@ public final class VanishService implements Listener {
                     viewer.hidePlayer(plugin, joiner);
                 }
             });
+            Bukkit.getPluginManager().callEvent(new VanishChangeEvent(joiner, true));
         }
         for (UUID id : vanished) {
             Player hidden = Bukkit.getPlayer(id);

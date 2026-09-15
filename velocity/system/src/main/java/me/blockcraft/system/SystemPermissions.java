@@ -9,6 +9,7 @@ public final class SystemPermissions {
     public static final String BAN_LIST = ROOT + "banlist";
     public static final String MUTE_LIST = ROOT + "mutelist";
     public static final String CHECK = ROOT + "check";
+    public static final String HISTORY = ROOT + "history";
     public static final String KICK = ROOT + "kick";
     public static final String STRIKE = ROOT + "strike";
     public static final String STRIKES = ROOT + "strikes";

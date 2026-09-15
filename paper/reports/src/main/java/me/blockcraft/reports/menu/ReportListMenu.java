@@ -41,7 +41,7 @@ final class ReportListMenu extends Menu {
 
         for (int slot = 0; slot < shown.size(); slot++) {
             var report = shown.get(slot);
-            var placeholders = ReportMenus.placeholders(report);
+            var placeholders = ReportMenus.placeholders(messages, report);
             set(slot, Items.head(report.reported())
                     .name(messages.get("menu.entry", placeholders))
                     .lore(messages.getLines("menu.entry-lore", placeholders))

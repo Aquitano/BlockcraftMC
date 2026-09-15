@@ -2,9 +2,9 @@ package me.blockcraft.lobby.menu;
 
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.config.Locations;
-import me.blockcraft.api.menu.ConfirmMenu;
+import me.blockcraft.api.dialog.ConfirmDialog;
 import me.blockcraft.api.menu.Menu;
-import me.blockcraft.api.menu.SettingsMenu;
+import me.blockcraft.api.dialog.SettingsDialog;
 import me.blockcraft.api.settings.PlayerSettings;
 import me.blockcraft.api.shop.Shop;
 import me.blockcraft.api.shop.Unlocks;
@@ -60,7 +60,7 @@ public record Menus(
 
     /** Shows what the click is about to cost before anything is bought. */
     public void purchase(Player player, ItemStack subject, String item, int price, Consumer<Player> onOwned) {
-        new ConfirmMenu(subject, buyer -> buy(buyer, item, price, onOwned), Menu::close).open(player);
+        new ConfirmDialog(subject, buyer -> buy(buyer, item, price, onOwned), Menu::close).open(player);
     }
 
     /**
@@ -141,7 +141,7 @@ public record Menus(
     }
 
     public void openSettings(Player player) {
-        new SettingsMenu(player, Optional.empty()).open(player);
+        new SettingsDialog(player, Optional.empty()).open(player);
     }
 
     public void openExtras(Player player) {

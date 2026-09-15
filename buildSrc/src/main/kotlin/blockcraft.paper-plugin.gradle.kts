@@ -11,13 +11,9 @@ dependencies {
 }
 
 tasks.processResources {
-    val props = mapOf(
-        "version" to project.version,
-        "hikariVersion" to libs.findVersion("hikaricp").get().requiredVersion,
-        "mariadbVersion" to libs.findVersion("mariadb-client").get().requiredVersion,
-    )
+    val props = mapOf("version" to project.version)
     inputs.properties(props)
-    filesMatching("plugin.yml") {
+    filesMatching(listOf("plugin.yml", "paper-plugin.yml")) {
         expand(props)
     }
 }

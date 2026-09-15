@@ -6,6 +6,7 @@ import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.core.staff.InvseeGuard;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.entity.Player;
 
@@ -34,7 +35,10 @@ public final class InvseeCommand {
             return;
         }
         viewer.closeInventory();
-        viewer.openInventory(target.getInventory());
+        var view = viewer.openInventory(target.getInventory());
         viewer.sendMessage(messages.get("invsee.opened", Placeholder.unparsed("player", target.getName())));
+        if (view != null && InvseeGuard.isReadOnly(viewer, view)) {
+            viewer.sendMessage(messages.get("invsee.read-only"));
+        }
     }
 }

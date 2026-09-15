@@ -14,13 +14,19 @@ import me.blockcraft.common.db.DatabaseException;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.report.storage.NotifyPreferences;
 import me.blockcraft.common.report.ReportRepository;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.JoinConfiguration;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.slf4j.Logger;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -74,7 +80,9 @@ public final class ReportCommand {
                             proxy.getAllPlayers().forEach(online -> builder.suggest(online.getUsername()));
                             return builder.buildFuture();
                         })
-                        .executes(asPlayer((player, context) -> player.sendMessage(messages.get("usage"))))
+                        // Without a reason the backend opens its report dialog, which comes back here with one.
+                        .executes(context -> context.getSource() instanceof Player ? BrigadierCommand.FORWARD
+                                : asPlayer((player, ctx) -> player.sendMessage(messages.get("usage"))).run(context))
                         .then(BrigadierCommand.requiredArgumentBuilder("reason", StringArgumentType.greedyString())
                                 .executes(asPlayer((player, context) -> proxy.getScheduler().buildTask(plugin, () -> report(player,
                                         StringArgumentType.getString(context, "player"),
@@ -138,26 +146,29 @@ public final class ReportCommand {
         reporter.sendMessage(messages.get("report.success", Placeholder.unparsed("player", reported)));
     }
 
+    /** The reported name is the whole notice: it jumps to the player on click and carries the details on hover. */
     private void notifyStaff(Player reporter, String reported, String reason, String server, int count) {
-        var placeholders = new TagResolver[]{
+        var details = TagResolver.resolver(
                 Placeholder.unparsed("reporter", reporter.getUsername()),
                 Placeholder.unparsed("reported", reported),
                 Placeholder.unparsed("reason", reason),
                 Placeholder.unparsed("server", server),
-                Formatter.number("count", count)
-        };
+                Formatter.number("count", count));
+        var target = messages.get("staff.target", details)
+                .hoverEvent(HoverEvent.showText(Component.join(JoinConfiguration.newlines(), messages.getLines("staff.hover", details))))
+                .clickEvent(ClickEvent.runCommand(PlainTextComponentSerializer.plainText()
+                        .serialize(messages.get("staff.goto-command", details))));
+        var lines = new ArrayList<Component>();
+        lines.add(messages.get("staff.notice", TagResolver.resolver(Placeholder.component("target", target), details)));
+        lines.add(messages.get("staff.reason", details));
+        if (count > 1) {
+            lines.add(messages.get("staff.count", details));
+        }
         for (Player staff : proxy.getAllPlayers()) {
             if (!staff.hasPermission(staffPermission) || preferences.isMuted(staff.getUniqueId())) {
                 continue;
             }
-            staff.sendMessage(messages.get("staff.header"));
-            staff.sendMessage(messages.get("staff.reported", placeholders));
-            staff.sendMessage(messages.get("staff.reason", placeholders));
-            staff.sendMessage(messages.get("staff.server", placeholders));
-            if (count > 1) {
-                staff.sendMessage(messages.get("staff.count", placeholders));
-            }
-            staff.sendMessage(messages.get("staff.footer"));
+            lines.forEach(staff::sendMessage);
         }
     }
 

@@ -31,6 +31,14 @@ motd:
   default: "&cBlockcraftMC.net"
   random: []
 
+# How many /history entries one player's list shows; everything older stays in bc_punishments.
+history:
+  limit: 10
+
+# The team is told when a player with open reports or a punishment from the last N days logs in.
+watch:
+  recent-days: 30
+
 max-warns: 8
 max-strikes: 5
 auto-broadcast-minutes: 5

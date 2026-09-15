@@ -5,12 +5,12 @@ import me.blockcraft.common.db.Database;
 /** Every moderation table in one place; both the proxy and the Paper servers create them at startup. */
 public record ModerationRepositories(PlayerRepository players, PunishmentRepository punishments, StrikeRepository strikes,
                                      WarnRepository warns, SettingsRepository settings, AdLogRepository adLog,
-                                     VanishRepository vanish, FreezeRepository frozen) {
+                                     VanishRepository vanish, FreezeRepository frozen, WatchRepository watches) {
 
     public static ModerationRepositories create(Database db) {
         return new ModerationRepositories(new PlayerRepository(db), new PunishmentRepository(db), new StrikeRepository(db),
                 new WarnRepository(db), new SettingsRepository(db), new AdLogRepository(db), new VanishRepository(db),
-                new FreezeRepository(db));
+                new FreezeRepository(db), new WatchRepository(db));
     }
 
     public void createTables() {

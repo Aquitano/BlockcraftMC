@@ -2,7 +2,7 @@ package me.blockcraft.quicksg.menu;
 
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.item.Items;
-import me.blockcraft.api.menu.ConfirmMenu;
+import me.blockcraft.api.dialog.ConfirmDialog;
 import me.blockcraft.api.menu.Menu;
 import me.blockcraft.api.shop.Shop;
 import me.blockcraft.api.shop.Unlocks;
@@ -70,7 +70,7 @@ public final class KitMenus {
     }
 
     void buy(Player player, Kit kit) {
-        new ConfirmMenu(icon(kit), buyer -> purchase(buyer, kit), buyer -> openDetail(buyer, kit)).open(player);
+        new ConfirmDialog(icon(kit), buyer -> purchase(buyer, kit), buyer -> openDetail(buyer, kit)).open(player);
     }
 
     private void purchase(Player player, Kit kit) {

@@ -182,12 +182,12 @@ unban:
   notify:
     - "<dark_red><bold>Strafe <arrow><reset><muted>Der Spieler <aqua><player> <muted>wurde von <error><issuer> <muted>entbannt."
 tempban:
-  usage: "<prefix><muted>Ausführung:<error> /tempban \\<Spieler> \\<Zeit> \\<Zeitform> \\<Grund>"
+  usage: "<prefix><muted>Ausführung:<error> /tempban \\<Spieler> \\<Dauer> \\<Grund>"
   unbannable: "<prefix><dark_red>Du kannst diesen Spieler nicht bannen!"
   already-banned: "<prefix><muted>Dieser <error>Spieler <muted>ist bereits gebannt."
   units:
-    - "<prefix><muted>Verwende folgende Zeitformen"
-    - "<prefix><error>\\<s | m | h | d | w | mon | y>"
+    - "<prefix><muted>Die Dauer ist ein Wort aus Zahl und Einheit, zum Beispiel <error>30m<muted>, <error>12h <muted>oder <error>16d<muted>."
+    - "<prefix><muted>Einheiten: <error>s <muted>| <error>m <muted>| <error>h <muted>| <error>d <muted>| <error>w <muted>| <error>mon <muted>| <error>y"
   done: "<prefix><muted>Der Spieler <error><player><muted> wurde erfolgreich gebannt."
 
 mute:
@@ -227,11 +227,11 @@ unmute:
   notify:
     - "<prefix>Der Spieler <error><player> <muted>wurde von <error><issuer> <muted>entmuted."
 tempmute:
-  usage: "<prefix><error>Ausführung: /tempmute \\<Spieler> \\<Zeit> \\<Zeitform> \\<Grund>"
+  usage: "<prefix><error>Ausführung: /tempmute \\<Spieler> \\<Dauer> \\<Grund>"
   already-muted: "<prefix><error>Dieser Spieler ist bereits gemuted."
   units:
-    - "<prefix><error>Verwende folgende Zeitformen"
-    - "<prefix><error>\\< s | m | h | d | w >"
+    - "<prefix><muted>Die Dauer ist ein Wort aus Zahl und Einheit, zum Beispiel <error>30m<muted>, <error>12h <muted>oder <error>16d<muted>."
+    - "<prefix><muted>Einheiten: <error>s <muted>| <error>m <muted>| <error>h <muted>| <error>d <muted>| <error>w <muted>| <error>mon <muted>| <error>y"
   done: "<prefix><muted>Du hast den Spieler <error><player><muted> erfolgreich gemuted."
 
 banlist:
@@ -286,6 +286,18 @@ check:
     - ""
     - "<prefix><dark_green><strikethrough>---------------------------------"
     - ""
+
+history:
+  usage: "<prefix><muted>Ausführung: <error>/history \\<Spieler>"
+  header: "<prefix><gold>Strafen von <accent><player><muted>: <accent><bans> <muted>Bans <dark>| <accent><mutes> <muted>Mutes"
+  empty: "<prefix><muted>Für <accent><player> <muted>ist keine Strafe gespeichert."
+  entry: "<prefix><type> <dark>| <muted><date> <dark>| <accent><issuer> <dark>| <muted><reason> <dark>| <muted><duration><revoked>"
+  revoked: " <dark>| <success>aufgehoben von <accent><revoker>"
+  count: "<prefix><muted>Angezeigt: <accent><shown> <muted>von <accent><total><muted>."
+  type-ban: "<error>Bann"
+  type-mute: "<accent>Mute"
+  # Java date pattern for the entries above; the German order belongs to the text, not to the code.
+  date-format: "dd.MM.yyyy HH:mm"
 
 strafe:
   unknown-number: "<dark_red><bold>Strafe <arrow><reset><error>Diese Nummer ist unbekannt."
@@ -385,6 +397,9 @@ tc:
   online-entry: "<muted>   - <error><player><muted> -<error> <server>"
   usage: "<error>TeamChat <arrow><reset><muted>Verwende bitte <aqua>/tc \\<message> <muted>um eine Nachricht an alle Team-Mitglieder zu senden."
   format: "<error>TeamChat <arrow><reset><aqua><player><reset> (<server>): <primary><message>"
+watch:
+  joined: "<prefix><error><player> <muted>ist online: <accent><reports> <muted>offene Reports, <accent><punishments> <muted>Strafen in den letzten <accent><days> <muted>Tagen."
+  hover: "<muted>Klicke für <aqua>/whois <player>"
 find:
   usage: "<prefix>Syntax: /find \\<Spieler>"
   found: "<prefix><success>Der Spieler befindet sich auf dem Server <dark_aqua><server><success>."
@@ -457,6 +472,7 @@ whois:
     - "<prefix><accent>Bann: <ban>"
     - "<prefix><accent>Mute: <mute>"
     - "<prefix><accent>Strikes: <dark_aqua><strikes> <dark>| <accent>Verwarnungen: <dark_aqua><warns>"
+    - "<prefix><accent>Historie: <dark_aqua><bans> <muted>Bans <dark>| <dark_aqua><mutes> <muted>Mutes <dark>| <muted>/history <player>"
     - "<prefix><dark_aqua><strikethrough>---------------------------------"
   ago: "vor <time>"
   now: "<success>jetzt online"
@@ -561,6 +577,11 @@ support:
   supporter-offline: "<gold>Support <arrow><reset><error>Der Supporter, der deinen Antrag angenommen hat, ist nicht mehr online."
   empty-message: "<gold>Support <arrow><reset><error>Bitte gib eine gültige Nachricht ein."
   chat: "<error><player> : <muted><message>"
+  waiting-on-join: "<gold>Support <arrow><reset><accent><count> <muted>Supportanfragen warten noch. <aqua>Klicke <muted>für die Liste."
+  list-empty: "<gold>Support <arrow><reset><muted>Es gibt gerade keine offenen Supportanfragen."
+  list-header: "<gold>Support <arrow><reset><muted>Offene Supportanfragen: <accent><count>"
+  list-waiting: "<gold>Support <arrow><reset><error>Wartet <muted>seit <accent><waited><muted>: <gold><player> <dark>(<aqua>Klicken zum Übernehmen<dark>)"
+  list-assigned: "<gold>Support <arrow><reset><success>Bei <staff> <muted>seit <accent><waited><muted>: <gold><player>"
 
 friends:
   help:
@@ -619,6 +640,7 @@ party:
     - "<gold>Party <arrow><reset><accent>Verlasse die Party: <aqua>/party leave"
     - "<gold>Party <arrow><reset><accent>Nehme Einladungen an: <aqua>/party accept"
     - "<gold>Party <arrow><reset><accent>Kicke einen Spieler: <aqua>/party kick \\<Player>"
+    - "<gold>Party <arrow><reset><accent>Übergib die Leitung: <aqua>/party promote \\<Player>"
     - "<gold>Party <arrow><reset><accent>Bitte um eine Einladung: <aqua>/party join \\<Leader>"
     - "<gold>Party <arrow><reset><accent>Party-Chat: <aqua>/pc \\<Message>"
   join-usage: "<gold>Party <arrow><reset><accent>Verwende: <aqua>/party join \\<Leader>"
@@ -626,6 +648,7 @@ party:
   invite-no-permission: "<gold>Party <arrow><reset><error>Du hast keine Berechtigung, Spieler einzuladen."
   kick-usage: "<gold>Party <arrow><reset><accent>Verwende: <aqua>/party kick \\<Player>"
   kick-no-permission: "<gold>Party <arrow><reset><error>Du hast keine Berechtigung, Spieler zu kicken."
+  promote-usage: "<gold>Party <arrow><reset><accent>Verwende: <aqua>/party promote \\<Player>"
   target-offline: "<gold>Party <arrow><reset><error>Dieser Spieler ist nicht online."
   target-not-leader: "<gold>Party <arrow><reset><error>Dieser Spieler ist kein Party-Leader."
   target-in-party: "<gold>Party <arrow><reset><error>Dieser Spieler ist bereits in einer Party."
@@ -635,6 +658,10 @@ party:
   not-in-party: "<gold>Party <arrow><reset><accent>Du bist in keiner Party."
   only-leader-invites: "<gold>Party <arrow><reset><error>Nur Party-Leader können Spieler einladen."
   only-leader-kicks: "<gold>Party <arrow><reset><error>Nur Party-Leader können Spieler kicken."
+  only-leader-promotes: "<gold>Party <arrow><reset><error>Nur Party-Leader können die Leitung übergeben."
+  promote-self: "<gold>Party <arrow><reset><accent>Du bist bereits Party-Leader."
+  promoted: "<gold>Party <arrow><reset><gold><player><success> leitet die Party jetzt."
+  leader-handed-over: "<gold>Party <arrow><reset><muted>Der Party-Leader hat die Verbindung getrennt. <gold><player><muted> leitet die Party jetzt."
   not-leader: "<gold>Party <arrow><reset><accent>Du bist kein Party-Leader."
   not-your-member: "<gold>Party <arrow><reset><accent>Dieser Spieler ist nicht in deiner Party."
   created: "<gold>Party <arrow><reset><success>Du hast eine neue Party erstellt."

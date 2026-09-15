@@ -20,7 +20,8 @@ README.md; this file only holds what the code does not say by itself.
   addresses (`<ip>`, `<website>`, `<shop>`, `<teamspeak>`, `<discord>`). Paper plugins get both from
   `BlockcraftApi.get().tags()` when they load their messages; the proxy plugins build them from their own config.
   Write colours as palette tags, never the raw ones, and the brand only as `<ip>`.
-- Command descriptions are messages too: `commands.<name>.description`, registered through `CommandRegistry`.
+- Command descriptions are messages too: `commands.<name>.description`, registered through `CommandRegistry`; core's
+  `/team help` is generated from that registry, so never write a command list by hand.
 - Database access goes through `common`'s `Database` with prepared statements. Table and column names of the legacy
   tables (`VCOINS`, `*_stats`, `*_kits`, `Reports`) stay as they are; new tables are `bc_*`.
 - Anything a player unlocks with coins or by finding it (cosmetics, kits, perks, secrets) is one row in `bc_unlocks`
@@ -34,7 +35,7 @@ README.md; this file only holds what the code does not say by itself.
 - GUIs extend `Menu` (holder-based, never title matching). Open and close other inventories only via `Menu.open` /
   `Menu.close`; both defer a tick because Bukkit forbids doing it inside `InventoryClickEvent`. `Menu` fills the
   empty slots, plays the click sound and owns `backButton`/`closeButton`; a coin purchase goes through
-  `ConfirmMenu` first.
+  `ConfirmDialog` first.
 - Feedback sounds come from `Sounds` in `paper/api` (`Sounds.MENU_CLICK.play(player)`), never from a hand-written
   volume and pitch; only sounds that belong to a world effect stay at their call site.
 - Ranks come from LuckPerms (`group.<rank>` permissions, `LuckPermsProvider` API). No rank tables, no rank names in

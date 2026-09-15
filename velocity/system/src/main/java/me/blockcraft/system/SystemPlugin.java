@@ -16,6 +16,7 @@ import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.moderation.ModerationRepositories;
 import me.blockcraft.common.moderation.PunishmentCatalogRepository;
 import me.blockcraft.common.nick.NickRepository;
+import me.blockcraft.common.report.ReportRepository;
 import me.blockcraft.common.network.ServerRepository;
 import me.blockcraft.common.settings.PlayerSettingRepository;
 import me.blockcraft.system.command.CommandSupport;
@@ -23,6 +24,7 @@ import me.blockcraft.system.command.moderation.BanCommand;
 import me.blockcraft.system.command.moderation.BanListCommand;
 import me.blockcraft.system.command.moderation.CheckCommand;
 import me.blockcraft.system.command.moderation.DelStrikeCommand;
+import me.blockcraft.system.command.moderation.HistoryCommand;
 import me.blockcraft.system.command.moderation.KickCommand;
 import me.blockcraft.system.command.moderation.MuteCommand;
 import me.blockcraft.system.command.moderation.MuteListCommand;
@@ -78,6 +80,7 @@ import me.blockcraft.system.listener.LoginListener;
 import me.blockcraft.system.listener.ProxyMessageListener;
 import me.blockcraft.system.listener.TabCompleteListener;
 import me.blockcraft.system.listener.TabHeaderListener;
+import me.blockcraft.system.listener.WatchListener;
 import me.blockcraft.system.moderation.MuteGate;
 import me.blockcraft.system.moderation.PunishmentService;
 import me.blockcraft.system.motd.MotdListener;
@@ -138,6 +141,7 @@ public final class SystemPlugin {
         playerSettings.createTable();
         var friendships = new FriendRepository(database);
         friendships.createTable();
+        new ReportRepository(database).createTable();
         var catalog = new PunishmentCatalogRepository(database);
         catalog.createTable();
         catalog.replace(config.punishments().entrySet().stream()
@@ -173,7 +177,8 @@ public final class SystemPlugin {
         events.register(this, new MotdListener(visibility, config, settings, messages, dataDirectory, logger));
         events.register(this, new PartyListener(parties));
         events.register(this, new FriendListener(friends, visibility, logger));
-        events.register(this, new SupportListener(supportSessions));
+        events.register(this, new SupportListener(supportSessions, messages));
+        events.register(this, new WatchListener(proxy, repositories.watches(), config.watchRecent(), messages, logger));
         events.register(this, playtime);
 
         register(new BanCommand(support).create());
@@ -186,6 +191,7 @@ public final class SystemPlugin {
         register(new MuteListCommand(support, lookup, repositories.punishments(), messages).create());
         register(new KickCommand(support, proxy, visibility, messages).create());
         register(new CheckCommand(support, lookup, punishments, messages).create());
+        register(new HistoryCommand(support, lookup, punishments, config, messages).create());
         register(new StrafeCommand(support, lookup, punishments, config, messages).create());
         register(new StrikeCommand(support, visibility, repositories.strikes(), punishments, config, messages).create());
         register(new StrikesCommand(support, repositories.strikes(), messages).create());

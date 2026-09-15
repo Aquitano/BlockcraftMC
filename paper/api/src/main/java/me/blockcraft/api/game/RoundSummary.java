@@ -2,9 +2,14 @@ package me.blockcraft.api.game;
 
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.coins.Coins;
+import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.xp.XpReward;
+import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickCallback;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.title.Title;
@@ -16,11 +21,12 @@ import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 /**
  * What a round paid and who won it. A game feeds it while the round runs and calls {@link #show()} once at the
  * end; because every coin and every XP point of a round is handed out here, the recap names exactly what was
- * paid.
+ * paid, and closes with the two ways on: another round of the same game, or the lobby.
  */
 public final class RoundSummary {
 
@@ -29,6 +35,12 @@ public final class RoundSummary {
     }
 
     private static final Title.Times TIMES = Title.Times.times(Duration.ofMillis(300), Duration.ofSeconds(3), Duration.ofMillis(700));
+
+    /** The buttons stay clickable past the restart countdown, which every game's config.yml sets for itself. */
+    private static final ClickCallback.Options BUTTON = ClickCallback.Options.builder()
+            .uses(ClickCallback.UNLIMITED_USES)
+            .lifetime(Duration.ofMinutes(1))
+            .build();
 
     private final Plugin plugin;
     private final Component game;
@@ -86,20 +98,26 @@ public final class RoundSummary {
         var subtitle = winners.isEmpty()
                 ? messages.get("summary.title.subtitle-draw")
                 : messages.get("summary.title.subtitle", Placeholder.unparsed("winner", names));
+        var group = BlockcraftApi.get().server().group();
+        var again = button(messages, "summary.again", player -> ProxyMessaging.play(plugin, player, group));
+        var lobby = button(messages, "summary.lobby", player -> ProxyMessaging.hub(plugin, player));
         for (var player : Bukkit.getOnlinePlayers()) {
             player.sendMessage(rule);
             player.sendMessage(headline);
             player.sendMessage(winnerLine);
             var score = scores.get(player.getUniqueId());
+            if (score != null) {
+                player.sendMessage(messages.get("summary.kills", Formatter.number("kills", score.kills)));
+                player.sendMessage(messages.get("summary.deaths", Formatter.number("deaths", score.deaths)));
+                player.sendMessage(messages.get("summary.coins", Formatter.number("coins", score.coins)));
+                player.sendMessage(messages.get("summary.xp", Formatter.number("xp", score.xp)));
+            }
+            player.sendMessage(again);
+            player.sendMessage(lobby);
+            player.sendMessage(rule);
             if (score == null) {
-                player.sendMessage(rule);
                 continue;
             }
-            player.sendMessage(messages.get("summary.kills", Formatter.number("kills", score.kills)));
-            player.sendMessage(messages.get("summary.deaths", Formatter.number("deaths", score.deaths)));
-            player.sendMessage(messages.get("summary.coins", Formatter.number("coins", score.coins)));
-            player.sendMessage(messages.get("summary.xp", Formatter.number("xp", score.xp)));
-            player.sendMessage(rule);
             boolean won = winners.containsKey(player.getUniqueId());
             player.showTitle(Title.title(messages.get(titleKey(won)), subtitle, TIMES));
             (won ? Sounds.WIN : Sounds.LOSE).play(player);
@@ -107,6 +125,17 @@ public final class RoundSummary {
                 Sounds.COINS.play(player);
             }
         }
+    }
+
+    private Component button(Messages messages, String key, Consumer<Player> action) {
+        return messages.get(key)
+                .hoverEvent(HoverEvent.showText(messages.get(key + "-hover")))
+                .clickEvent(ClickEvent.callback(audience -> {
+                    if (audience instanceof Player player) {
+                        Sounds.MENU_CLICK.play(player);
+                        action.accept(player);
+                    }
+                }, BUTTON));
     }
 
     private String titleKey(boolean won) {

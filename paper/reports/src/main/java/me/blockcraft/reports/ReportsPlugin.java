@@ -7,7 +7,6 @@ import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.moderation.PunishmentCatalogRepository;
 import me.blockcraft.common.report.ReportRepository;
 import me.blockcraft.reports.command.ReportsCommand;
-import me.blockcraft.reports.listener.ChatPromptListener;
 import me.blockcraft.reports.listener.JoinListener;
 import me.blockcraft.reports.menu.ReportMenus;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -27,7 +26,6 @@ public final class ReportsPlugin extends JavaPlugin {
 
         var menus = new ReportMenus(this, reports, catalog, messages);
         getServer().getPluginManager().registerEvents(new JoinListener(this, reports, messages), this);
-        getServer().getPluginManager().registerEvents(new ChatPromptListener(menus), this);
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event ->
                 new CommandRegistry(event.registrar(), messages).register(ReportsCommand.create(menus, messages)));
     }

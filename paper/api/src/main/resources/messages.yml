@@ -20,6 +20,7 @@ commands:
 
 tab:
   default-prefix: "<muted>"
+  vanished-suffix: " <dark>[<muted>V<dark>]"
 
 menu:
   filler: " "
@@ -45,6 +46,10 @@ summary:
   deaths: "<arrow><muted>Tode<dark>: <white><deaths>"
   coins: "<arrow><muted>Coins<dark>: <accent>+<coins>"
   xp: "<arrow><muted>XP<dark>: <success>+<xp>"
+  again: "<arrow><success>Nochmal spielen"
+  again-hover: "<muted>Klicke, um in die nächste Runde zu kommen."
+  lobby: "<arrow><accent>Zur Lobby"
+  lobby-hover: "<muted>Klicke, um in die Lobby zurückzukehren."
   title:
     win: "<success>Sieg"
     lose: "<error>Niederlage"
@@ -54,13 +59,20 @@ summary:
 
 settings:
   title: "<arrow><primary>Einstellungen"
-  enabled: "<bullet><success>AN <dark>● <muted>Klicke zum Ausschalten"
-  disabled: "<bullet><error>AUS <dark>● <muted>Klicke zum Einschalten"
+  save: "<success>Speichern"
+  saved: "<prefix><muted>Einstellungen gespeichert."
   private-messages: "<arrow><primary>Private Nachrichten"
   party-invites: "<arrow><primary>Party-Einladungen"
   friend-requests: "<arrow><primary>Freundschaftsanfragen"
   player-visibility: "<arrow><primary>Spieler sichtbar"
   sounds: "<arrow><primary>Sounds"
+
+# The dialog behind the pause menu's button and the quick-actions key (G).
+server-menu:
+  title: "<arrow><primary>Blockcraft"
+  settings: "<primary>Einstellungen"
+  profile: "<primary>Profil"
+  hub: "<accent>Zur Lobby"
 
 profile:
   title: "<arrow><primary>Profil"

@@ -67,6 +67,16 @@ chat:
     - ",tk"
     - ", n e t"
 
+# What a player can pick in the /report dialog; the choice is stored as the report's reason, free text appended.
+report:
+  reasons:
+    - Hacking
+    - Beleidigung
+    - Teaming
+    - Bugusing
+    - Werbung
+    - Sonstiges
+
 nick:
   names:
     - Felix_HD

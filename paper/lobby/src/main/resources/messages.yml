@@ -31,7 +31,8 @@ friends:
   online: "<arrow><success><player>"
   online-lore:
     - "<bullet><muted>Auf <accent><server>"
-    - "<bullet><muted>Klicke, um zu ihm zu springen."
+    - "<bullet><success>Linksklick <dark>● <muted>Zu ihm springen"
+    - "<bullet><accent>Rechtsklick <dark>● <muted>In die Party einladen"
   offline: "<arrow><muted><player>"
   offline-lore:
     - "<bullet><muted>Gerade offline"

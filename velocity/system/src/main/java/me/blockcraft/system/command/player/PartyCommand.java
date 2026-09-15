@@ -1,7 +1,9 @@
 package me.blockcraft.system.command.player;
 
 import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.velocitypowered.api.command.BrigadierCommand;
+import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.system.PlayerVisibility;
@@ -54,7 +56,25 @@ public final class PartyCommand {
                             }
                         }))
                         .then(support.playerArgument("player")
-                                .executes(support.asPlayer((player, context) -> kick(player, StringArgumentType.getString(context, "player")))))));
+                                .executes(support.asPlayer((player, context) -> kick(player, StringArgumentType.getString(context, "player"))))))
+                .then(BrigadierCommand.literalArgumentBuilder("promote")
+                        .executes(support.usage("party.promote-usage"))
+                        .then(memberArgument()
+                                .executes(support.asPlayer((player, context) -> promote(player, StringArgumentType.getString(context, "player")))))));
+    }
+
+    /** Only party members can be promoted, so the suggestions come from the party instead of the tab list. */
+    private RequiredArgumentBuilder<CommandSource, String> memberArgument() {
+        return BrigadierCommand.requiredArgumentBuilder("player", StringArgumentType.word())
+                .suggests((context, builder) -> {
+                    if (context.getSource() instanceof Player player) {
+                        String typed = builder.getRemaining().toLowerCase();
+                        parties.memberNames(player.getUniqueId())
+                                .filter(shown -> shown.toLowerCase().startsWith(typed))
+                                .forEach(builder::suggest);
+                    }
+                    return builder.buildFuture();
+                });
     }
 
     private void help(Player player) {
@@ -97,6 +117,19 @@ public final class PartyCommand {
             return;
         }
         parties.invite(inviter, invitee.get());
+    }
+
+    private void promote(Player leader, String memberName) {
+        if (!parties.isLeader(leader.getUniqueId())) {
+            leader.sendMessage(messages.get("party.only-leader-promotes"));
+            return;
+        }
+        var member = visibility.find(leader, memberName);
+        if (member.isEmpty()) {
+            leader.sendMessage(messages.get("party.target-offline"));
+            return;
+        }
+        parties.promote(leader, member.get());
     }
 
     private void kick(Player leader, String memberName) {

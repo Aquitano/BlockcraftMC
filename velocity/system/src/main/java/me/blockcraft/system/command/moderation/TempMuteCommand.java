@@ -1,6 +1,5 @@
 package me.blockcraft.system.command.moderation;
 
-import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
@@ -32,19 +31,16 @@ public final class TempMuteCommand {
                 .executes(support.usage("tempmute.usage"))
                 .then(support.playerArgument("player")
                         .executes(support.usage("tempmute.usage"))
-                        .then(BrigadierCommand.requiredArgumentBuilder("time", IntegerArgumentType.integer(1))
+                        .then(BrigadierCommand.requiredArgumentBuilder("duration", StringArgumentType.word())
                                 .executes(support.usage("tempmute.usage"))
-                                .then(BrigadierCommand.requiredArgumentBuilder("unit", StringArgumentType.word())
-                                        .executes(support.usage("tempmute.usage"))
-                                        .then(BrigadierCommand.requiredArgumentBuilder("reason", StringArgumentType.greedyString())
-                                                .executes(support.run((source, context) -> mute(source,
-                                                        StringArgumentType.getString(context, "player"),
-                                                        IntegerArgumentType.getInteger(context, "time"),
-                                                        StringArgumentType.getString(context, "unit"),
-                                                        StringArgumentType.getString(context, "reason")))))))));
+                                .then(BrigadierCommand.requiredArgumentBuilder("reason", StringArgumentType.greedyString())
+                                        .executes(support.run((source, context) -> mute(source,
+                                                StringArgumentType.getString(context, "player"),
+                                                StringArgumentType.getString(context, "duration"),
+                                                StringArgumentType.getString(context, "reason"))))))));
     }
 
-    private void mute(CommandSource source, String name, int time, String unit, String reason) {
+    private void mute(CommandSource source, String name, String spec, String reason) {
         var target = lookup.find(name);
         if (target.isEmpty()) {
             source.sendMessage(messages.get("player-unknown", Placeholder.unparsed("player", name)));
@@ -57,7 +53,7 @@ public final class TempMuteCommand {
             source.sendMessage(messages.get("tempmute.already-muted"));
             return;
         }
-        var duration = Durations.of(time, unit);
+        var duration = Durations.timed(spec);
         if (duration.isEmpty()) {
             messages.getLines("tempmute.units").forEach(source::sendMessage);
             return;

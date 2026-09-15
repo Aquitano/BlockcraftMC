@@ -20,6 +20,7 @@ import me.blockcraft.core.command.KillCommand;
 import me.blockcraft.core.command.NickCommand;
 import me.blockcraft.core.command.RainCommand;
 import me.blockcraft.core.command.ReflashCommand;
+import me.blockcraft.core.command.ReportCommand;
 import me.blockcraft.core.command.ServerInfoCommand;
 import me.blockcraft.core.command.SetHealthCommand;
 import me.blockcraft.core.command.SkullCommand;
@@ -39,6 +40,7 @@ import me.blockcraft.core.listener.ChatFormatListener;
 import me.blockcraft.core.listener.GlobalMuteListener;
 import me.blockcraft.core.listener.MuteListener;
 import me.blockcraft.core.staff.FreezeService;
+import me.blockcraft.core.staff.InvseeGuard;
 import me.blockcraft.core.staff.StaffInventoryRepository;
 import me.blockcraft.core.staff.StaffMode;
 import me.blockcraft.core.staff.VanishService;
@@ -79,6 +81,7 @@ public final class BlockcraftCorePlugin extends JavaPlugin {
         pluginManager.registerEvents(new ChatFormatListener(messages, nicks), this);
         var vanish = new VanishService(this, moderation.vanish());
         pluginManager.registerEvents(vanish, this);
+        pluginManager.registerEvents(new InvseeGuard(), this);
         var freeze = new FreezeService(this, moderation.frozen(), messages);
         pluginManager.registerEvents(freeze, this);
         freeze.start();
@@ -115,6 +118,7 @@ public final class BlockcraftCorePlugin extends JavaPlugin {
             commands.register(ConnectCommand.create(this, messages));
             commands.register(ReflashCommand.create(this, messages));
             commands.register(NickCommand.create(nicks, messages));
+            commands.register(ReportCommand.create(this, stringList(YamlFile.section(config, "report"), "reasons"), messages));
         });
     }
 

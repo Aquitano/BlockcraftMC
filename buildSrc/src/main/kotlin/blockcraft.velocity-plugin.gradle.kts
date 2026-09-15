@@ -28,7 +28,7 @@ tasks.runVelocity {
 }
 
 // @Plugin(version = ...) needs a compile-time constant, so the Gradle version is generated into a class.
-val generateBuildConstants by tasks.registering {
+val generateBuildConstants = tasks.register("generateBuildConstants") {
     val outputDir = layout.buildDirectory.dir("generated/sources/buildConstants/java/main")
     val version = project.version.toString()
     inputs.property("version", version)

@@ -5,7 +5,7 @@ import me.blockcraft.api.game.Stat;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.game.TopList;
 import me.blockcraft.api.item.Items;
-import me.blockcraft.api.menu.ConfirmMenu;
+import me.blockcraft.api.dialog.ConfirmDialog;
 import me.blockcraft.api.menu.Menu;
 import me.blockcraft.api.shop.Shop;
 import me.blockcraft.api.shop.Unlocks;
@@ -66,7 +66,7 @@ public final class RushMenus {
     }
 
     void buyPerk(Player player, Perk perk) {
-        new ConfirmMenu(perkIcon(perk), buyer -> purchasePerk(buyer, perk), buyer -> openPerk(buyer, perk)).open(player);
+        new ConfirmDialog(perkIcon(perk), buyer -> purchasePerk(buyer, perk), buyer -> openPerk(buyer, perk)).open(player);
     }
 
     ItemStack perkIcon(Perk perk) {

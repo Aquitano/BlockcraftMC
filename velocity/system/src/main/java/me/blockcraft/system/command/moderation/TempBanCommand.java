@@ -1,6 +1,5 @@
 package me.blockcraft.system.command.moderation;
 
-import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
@@ -36,19 +35,16 @@ public final class TempBanCommand {
                 .executes(support.usage("tempban.usage"))
                 .then(support.playerArgument("player")
                         .executes(support.usage("tempban.usage"))
-                        .then(BrigadierCommand.requiredArgumentBuilder("time", IntegerArgumentType.integer(1))
+                        .then(BrigadierCommand.requiredArgumentBuilder("duration", StringArgumentType.word())
                                 .executes(support.usage("tempban.usage"))
-                                .then(BrigadierCommand.requiredArgumentBuilder("unit", StringArgumentType.word())
-                                        .executes(support.usage("tempban.usage"))
-                                        .then(BrigadierCommand.requiredArgumentBuilder("reason", StringArgumentType.greedyString())
-                                                .executes(support.run((source, context) -> ban(source,
-                                                        StringArgumentType.getString(context, "player"),
-                                                        IntegerArgumentType.getInteger(context, "time"),
-                                                        StringArgumentType.getString(context, "unit"),
-                                                        StringArgumentType.getString(context, "reason")))))))));
+                                .then(BrigadierCommand.requiredArgumentBuilder("reason", StringArgumentType.greedyString())
+                                        .executes(support.run((source, context) -> ban(source,
+                                                StringArgumentType.getString(context, "player"),
+                                                StringArgumentType.getString(context, "duration"),
+                                                StringArgumentType.getString(context, "reason"))))))));
     }
 
-    private void ban(CommandSource source, String name, int time, String unit, String reason) {
+    private void ban(CommandSource source, String name, String spec, String reason) {
         if (config.isUnbannable(name)) {
             source.sendMessage(messages.get("tempban.unbannable"));
             return;
@@ -65,7 +61,7 @@ public final class TempBanCommand {
             source.sendMessage(messages.get("tempban.already-banned"));
             return;
         }
-        var duration = Durations.of(time, unit);
+        var duration = Durations.timed(spec);
         if (duration.isEmpty()) {
             messages.getLines("tempban.units").forEach(source::sendMessage);
             return;

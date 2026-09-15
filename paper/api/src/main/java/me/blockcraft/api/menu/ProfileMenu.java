@@ -1,6 +1,7 @@
 package me.blockcraft.api.menu;
 
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.dialog.SettingsDialog;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.rank.Ranks;
 import net.kyori.adventure.text.Component;
@@ -61,7 +62,7 @@ final class ProfileMenu extends Menu {
     @Override
     protected void onClick(Player player, int slot, ItemStack clicked, InventoryClickEvent event) {
         if (slot == SETTINGS_SLOT) {
-            new SettingsMenu(player, Optional.of(back -> profiles.open(back, cosmetics))).open(player);
+            new SettingsDialog(player, Optional.of(back -> profiles.open(back, cosmetics))).open(player);
         } else if (slot == COSMETICS_SLOT) {
             cosmetics.ifPresent(open -> open.accept(player));
         }

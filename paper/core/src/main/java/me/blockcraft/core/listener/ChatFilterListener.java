@@ -4,7 +4,11 @@ import io.papermc.paper.event.player.AsyncChatEvent;
 import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.moderation.AdLogRepository;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -68,11 +72,21 @@ public final class ChatFilterListener implements Listener {
                 || config.advertisementTerms().stream().anyMatch(lowercase::contains);
     }
 
+    /** The notice carries its follow-ups: the three are proxy commands, so the staff's click runs them anywhere. */
     private void notifyStaff(Player player, String text) {
-        var notice = messages.get("chat.filtered-notify",
-                Placeholder.unparsed("player", player.getName()),
-                Placeholder.unparsed("message", text),
-                Placeholder.unparsed("server", serverName));
+        var name = Placeholder.unparsed("player", player.getName());
+        var notice = messages.get("chat.filtered-notify", name,
+                        Placeholder.unparsed("message", text),
+                        Placeholder.unparsed("server", serverName))
+                .append(action("goto", name, ClickEvent.runCommand("/goto " + player.getName())))
+                .append(action("tempmute", name, ClickEvent.suggestCommand("/tempmute " + player.getName() + " ")))
+                .append(action("strafe", name, ClickEvent.suggestCommand("/strafe " + player.getName() + " ")));
         ProxyMessaging.notifyStaff(plugin, player, ChatPermissions.FILTER_NOTIFY, notice);
+    }
+
+    private Component action(String key, TagResolver name, ClickEvent click) {
+        return Component.space().append(messages.get("chat.actions." + key)
+                .clickEvent(click)
+                .hoverEvent(HoverEvent.showText(messages.get("chat.actions." + key + "-hover", name))));
     }
 }

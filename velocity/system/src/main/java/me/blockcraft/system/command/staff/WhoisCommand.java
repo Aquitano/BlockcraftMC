@@ -70,6 +70,7 @@ public final class WhoisCommand {
     }
 
     private TagResolver placeholders(Target target, KnownPlayer known) {
+        var history = punishments.history(target);
         return TagResolver.resolver(
                 Placeholder.unparsed("player", known.name()),
                 Placeholder.unparsed("uuid", known.uuid().toString()),
@@ -82,6 +83,8 @@ public final class WhoisCommand {
                         .orElseGet(() -> messages.get("whois.offline"))),
                 Placeholder.component("ban", punishment(known.name(), punishments.activeBan(target))),
                 Placeholder.component("mute", punishment(known.name(), punishments.activeMute(target))),
+                Formatter.number("bans", history.bans()),
+                Formatter.number("mutes", history.mutes()),
                 Formatter.number("strikes", strikes.count(known.uuid())),
                 Formatter.number("warns", warns.count(known.uuid())));
     }

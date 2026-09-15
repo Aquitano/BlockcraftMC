@@ -1,10 +1,13 @@
 name: BlockcraftAPI
 version: '${version}'
 main: me.blockcraft.api.BlockcraftApiPlugin
+bootstrapper: me.blockcraft.api.BlockcraftApiBootstrap
 api-version: '26.2'
 author: Aquitano
 description: Shared database connection and coins for the Blockcraft plugins
-depend: [LuckPerms]
-libraries:
-  - com.zaxxer:HikariCP:${hikariVersion}
-  - org.mariadb.jdbc:mariadb-java-client:${mariadbVersion}
+dependencies:
+  server:
+    LuckPerms:
+      load: BEFORE
+      required: true
+      join-classpath: true

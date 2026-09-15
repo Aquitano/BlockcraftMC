@@ -21,8 +21,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
 
-/** In-memory parties keyed by UUID; a party follows its leader between servers and dissolves when the leader leaves. */
+/**
+ * In-memory parties keyed by UUID; a party follows its leader between servers and passes to the member who joined
+ * first once the leader is gone.
+ */
 public final class PartyManager {
 
     private static final int MAX_MEMBERS = 6;
@@ -48,15 +52,15 @@ public final class PartyManager {
         this.messages = messages;
     }
 
-    public boolean isInParty(UUID player) {
+    public synchronized boolean isInParty(UUID player) {
         return byLeader.containsKey(player) || leaderByMember.containsKey(player);
     }
 
-    public boolean isLeader(UUID player) {
+    public synchronized boolean isLeader(UUID player) {
         return byLeader.containsKey(player);
     }
 
-    public Optional<Party> partyOf(UUID player) {
+    public synchronized Optional<Party> partyOf(UUID player) {
         var own = byLeader.get(player);
         if (own != null) {
             return Optional.of(own);
@@ -65,7 +69,15 @@ public final class PartyManager {
         return leader == null ? Optional.empty() : Optional.ofNullable(byLeader.get(leader));
     }
 
-    public void create(Player player) {
+    /** The names the members of that player's party are shown under, for tab completion. */
+    public synchronized Stream<String> memberNames(UUID player) {
+        return partyOf(player).stream()
+                .flatMap(party -> party.members().stream())
+                .flatMap(memberId -> proxy.getPlayer(memberId).stream())
+                .map(visibility::shownName).toList().stream();
+    }
+
+    public synchronized void create(Player player) {
         if (isInParty(player.getUniqueId())) {
             player.sendMessage(messages.get("party.already-in-party"));
             return;
@@ -74,7 +86,7 @@ public final class PartyManager {
         player.sendMessage(messages.get("party.created"));
     }
 
-    public void list(Player player) {
+    public synchronized void list(Player player) {
         var party = partyOf(player.getUniqueId());
         if (party.isEmpty()) {
             player.sendMessage(messages.get("party.not-in-party"));
@@ -90,7 +102,7 @@ public final class PartyManager {
         }
     }
 
-    public void leave(Player player) {
+    public synchronized void leave(Player player) {
         var party = partyOf(player.getUniqueId());
         if (party.isEmpty()) {
             player.sendMessage(messages.get("party.not-in-party"));
@@ -107,7 +119,7 @@ public final class PartyManager {
         player.sendMessage(messages.get("party.left"));
     }
 
-    public void invite(Player inviter, Player invitee) {
+    public synchronized void invite(Player inviter, Player invitee) {
         if (inviter.getUniqueId().equals(invitee.getUniqueId())) {
             inviter.sendMessage(messages.get("party.invite-self"));
             return;
@@ -141,7 +153,7 @@ public final class PartyManager {
     }
 
     /** Only the leader can let someone in: the request is a clickable /party invite on the leader's screen. */
-    public void requestInvite(Player player, Player leader) {
+    public synchronized void requestInvite(Player player, Player leader) {
         var party = byLeader.get(leader.getUniqueId());
         if (party == null) {
             player.sendMessage(messages.get("party.target-not-leader"));
@@ -164,7 +176,7 @@ public final class PartyManager {
                 .hoverEvent(HoverEvent.showText(messages.get("party.join-request-hover", name(player)))));
     }
 
-    public void accept(Player player) {
+    public synchronized void accept(Player player) {
         if (isInParty(player.getUniqueId())) {
             player.sendMessage(messages.get("party.already-in-party"));
             return;
@@ -195,7 +207,7 @@ public final class PartyManager {
         broadcastToMembers(party, messages.get("party.member-joined", name(player)));
     }
 
-    public void kick(Player leader, Player member) {
+    public synchronized void kick(Player leader, Player member) {
         var party = byLeader.get(leader.getUniqueId());
         if (party == null) {
             leader.sendMessage(messages.get("party.not-leader"));
@@ -211,7 +223,27 @@ public final class PartyManager {
         broadcastToMembers(party, messages.get("party.kicked-members", name(member)));
     }
 
-    public void chat(Player player, String message) {
+    public synchronized void promote(Player leader, Player member) {
+        var party = byLeader.get(leader.getUniqueId());
+        if (party == null) {
+            leader.sendMessage(messages.get("party.not-leader"));
+            return;
+        }
+        if (member.getUniqueId().equals(leader.getUniqueId())) {
+            leader.sendMessage(messages.get("party.promote-self"));
+            return;
+        }
+        if (!party.members().contains(member.getUniqueId())) {
+            leader.sendMessage(messages.get("party.not-your-member"));
+            return;
+        }
+        var former = party.promote(member.getUniqueId());
+        party.members().add(former);
+        reindex(party, former);
+        broadcast(party, messages.get("party.promoted", name(member)));
+    }
+
+    public synchronized void chat(Player player, String message) {
         var party = partyOf(player.getUniqueId());
         if (party.isEmpty()) {
             player.sendMessage(messages.get("party.not-in-party"));
@@ -223,7 +255,7 @@ public final class PartyManager {
         broadcastToMembers(party.get(), line);
     }
 
-    public void followLeader(Player leader, RegisteredServer server) {
+    public synchronized void followLeader(Player leader, RegisteredServer server) {
         var party = byLeader.get(leader.getUniqueId());
         if (party == null) {
             return;
@@ -240,12 +272,16 @@ public final class PartyManager {
         }
     }
 
-    public void onDisconnect(Player player) {
+    public synchronized void onDisconnect(Player player) {
         joinRequests.remove(player.getUniqueId());
         invites.remove(player.getUniqueId());
         var own = byLeader.get(player.getUniqueId());
         if (own != null) {
-            disband(own, messages.get("party.disbanded-by-disconnect"));
+            own.members().stream()
+                    .flatMap(memberId -> proxy.getPlayer(memberId).stream())
+                    .findFirst()
+                    .ifPresentOrElse(next -> handOver(own, next),
+                            () -> disband(own, messages.get("party.disbanded-by-disconnect")));
             return;
         }
         var leaderId = leaderByMember.remove(player.getUniqueId());
@@ -259,12 +295,35 @@ public final class PartyManager {
         proxy.getPlayer(leaderId).ifPresent(leader -> leader.sendMessage(messages.get("party.member-left", name(player))));
     }
 
+    private void handOver(Party party, Player next) {
+        reindex(party, party.promote(next.getUniqueId()));
+        broadcast(party, messages.get("party.leader-handed-over", name(next)));
+    }
+
+    /** Both maps are keyed by the leader, so a hand-over has to write the new one into every entry. */
+    private void reindex(Party party, UUID formerLeader) {
+        byLeader.remove(formerLeader);
+        invites.replaceAll((invitee, invite) -> invite.leader().equals(formerLeader)
+                ? new Invite(party.leader(), invite.sentAt()) : invite);
+        byLeader.put(party.leader(), party);
+        leaderByMember.remove(party.leader());
+        for (UUID memberId : party.members()) {
+            leaderByMember.put(memberId, party.leader());
+        }
+    }
+
     private void disband(Party party, Component notice) {
         byLeader.remove(party.leader());
+        invites.values().removeIf(invite -> invite.leader().equals(party.leader()));
         for (UUID memberId : party.members()) {
             leaderByMember.remove(memberId);
             proxy.getPlayer(memberId).ifPresent(member -> member.sendMessage(notice));
         }
+    }
+
+    private void broadcast(Party party, Component line) {
+        proxy.getPlayer(party.leader()).ifPresent(leader -> leader.sendMessage(line));
+        broadcastToMembers(party, line);
     }
 
     private void broadcastToMembers(Party party, Component line) {

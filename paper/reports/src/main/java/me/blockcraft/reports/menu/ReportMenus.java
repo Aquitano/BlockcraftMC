@@ -1,10 +1,13 @@
 package me.blockcraft.reports.menu;
 
+import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.menu.Menu;
+import me.blockcraft.reports.ReportsPlugin;
 import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.moderation.PunishmentCatalogRepository;
+import me.blockcraft.common.moderation.PunishmentType;
 import me.blockcraft.common.report.Report;
 import me.blockcraft.common.report.ReportRepository;
 import net.kyori.adventure.text.Component;
@@ -15,10 +18,7 @@ import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
-import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Opens the report menus and routes their actions; {@code reported} filters a list to one accused player. Moving
@@ -30,10 +30,6 @@ public final class ReportMenus {
     private final ReportRepository reports;
     private final PunishmentCatalogRepository catalog;
     private final Messages messages;
-    private final Map<UUID, StatusPrompt> statusPrompts = new ConcurrentHashMap<>();
-
-    private record StatusPrompt(Report report, Optional<String> reported) {
-    }
 
     public ReportMenus(Plugin plugin, ReportRepository reports, PunishmentCatalogRepository catalog, Messages messages) {
         this.plugin = plugin;
@@ -43,7 +39,13 @@ public final class ReportMenus {
     }
 
     public void openList(Player player, Optional<String> reported, int page) {
+        if (!allowed(player)) {
+            return;
+        }
         Tasks.async(plugin, () -> reported.map(reports::byReported).orElseGet(reports::all), list -> {
+            if (!allowed(player)) {
+                return;
+            }
             if (list.isEmpty()) {
                 player.sendMessage(reported.map(name -> messages.get("none-for-player", Placeholder.unparsed("player", name)))
                         .orElseGet(() -> messages.get("none")));
@@ -54,10 +56,54 @@ public final class ReportMenus {
     }
 
     public void openReport(Player player, Report report, Optional<String> reported) {
-        new ReportMenu(this, messages, report, reported).open(player);
+        if (!allowed(player)) {
+            return;
+        }
+        Tasks.async(plugin, () -> reports.byId(report.id()), current -> {
+            if (!allowed(player)) {
+                return;
+            }
+            current.ifPresentOrElse(updated ->
+                            new ReportMenu(this, messages, updated, reported, BlockcraftApi.get().realName(player)).open(player),
+                    () -> openList(player, reported, 1));
+        });
+    }
+
+    /** The claim is guarded in SQL, so a lost race simply reopens the report with whoever actually holds it. */
+    public void toggleClaim(Player player, Report report, Optional<String> reported) {
+        if (!allowed(player)) {
+            return;
+        }
+        String staff = BlockcraftApi.get().realName(player);
+        Tasks.async(plugin, () -> {
+            if (report.isClaimedBy(staff)) {
+                reports.release(report.id(), staff);
+            } else {
+                reports.claim(report.id(), staff);
+            }
+            return reports.byId(report.id());
+        }, current -> {
+            if (!allowed(player)) {
+                return;
+            }
+            current.ifPresentOrElse(updated -> {
+                player.sendMessage(messages.get(claimResult(updated, staff), placeholders(messages, updated)));
+                openReport(player, updated, reported);
+            }, () -> openList(player, reported, 1));
+        });
+    }
+
+    private static String claimResult(Report report, String staff) {
+        if (report.isClaimedBy(staff)) {
+            return "claim.taken";
+        }
+        return report.claimedBy().isPresent() ? "claim.held" : "claim.released";
     }
 
     public void delete(Player player, Report report, Optional<String> reported) {
+        if (!allowed(player)) {
+            return;
+        }
         Menu.close(player);
         Tasks.async(plugin, () -> {
             reports.delete(report.id());
@@ -66,56 +112,87 @@ public final class ReportMenus {
     }
 
     public void goTo(Player player, String target) {
+        if (!allowed(player)) {
+            return;
+        }
         Menu.close(player);
         ProxyMessaging.runOnProxy(plugin, player, "goto " + target);
     }
 
     public void openPunish(Player player, Report report, Optional<String> reported) {
+        if (!allowed(player)) {
+            return;
+        }
         Tasks.async(plugin, catalog::all, entries -> {
-            if (entries.isEmpty()) {
-                player.sendMessage(messages.get("punish.empty"));
+            if (!allowed(player)) {
                 return;
             }
-            new PunishMenu(this, messages, report, reported, entries).open(player);
+            new PunishDialog(this, messages, report, reported, entries).open(player);
         });
     }
 
     public void punish(Player player, Report report, PunishmentCatalogRepository.Entry entry) {
-        Menu.close(player);
+        if (!allowed(player)) {
+            return;
+        }
         ProxyMessaging.runOnProxy(plugin, player, "strafe " + report.reported() + " " + entry.number());
     }
 
-    public void promptStatus(Player player, Report report, Optional<String> reported) {
-        Menu.close(player);
-        statusPrompts.put(player.getUniqueId(), new StatusPrompt(report, reported));
-        player.sendMessage(messages.get("status.prompt"));
+    /** A punishment outside the catalogue; the proxy's /tempban and /tempmute answer, so only the form is checked here. */
+    void punish(Player player, Report report, Optional<String> reported, PunishDialog.Custom custom) {
+        if (!allowed(player)) {
+            return;
+        }
+        if (custom == null) {
+            player.sendMessage(messages.get("punish.invalid"));
+            openPunish(player, report, reported);
+            return;
+        }
+        if (custom.reason().isEmpty() || custom.totalHours() <= 0) {
+            player.sendMessage(messages.get(custom.reason().isEmpty() ? "punish.reason-missing" : "punish.duration-missing"));
+            openPunish(player, report, reported);
+            return;
+        }
+        String duration = custom.hours() == 0 ? custom.days() + "d" : custom.totalHours() + "h";
+        String command = custom.type() == PunishmentType.BAN ? "tempban" : "tempmute";
+        ProxyMessaging.runOnProxy(plugin, player, command + " " + report.reported() + " " + duration + " " + custom.reason());
     }
 
-    /** Runs on the chat thread; returns whether the message was consumed as a status answer. */
-    public boolean answerStatusPrompt(Player player, String text) {
-        var prompt = statusPrompts.remove(player.getUniqueId());
-        if (prompt == null) {
-            return false;
+    public void promptStatus(Player player, Report report, Optional<String> reported) {
+        if (!allowed(player)) {
+            return;
         }
-        if (text.equalsIgnoreCase("abbrechen")) {
-            Tasks.sync(plugin, () -> {
-                player.sendMessage(messages.get("status.cancelled"));
-                openReport(player, prompt.report(), prompt.reported());
-            });
-            return true;
+        new StatusDialog(this, messages, report, reported).open(player);
+    }
+
+    public void setStatus(Player player, Report report, Optional<String> reported, String status) {
+        if (!allowed(player)) {
+            return;
         }
-        reports.updateStatus(prompt.report().id(), text);
-        var updated = prompt.report().withStatus(text);
-        Tasks.sync(plugin, () -> {
+        if (status == null || status.isBlank() || status.length() > 100 || status.chars().anyMatch(Character::isISOControl)) {
+            player.sendMessage(messages.get("status.cancelled"));
+            openReport(player, report, reported);
+            return;
+        }
+        Tasks.async(plugin, () -> {
+            reports.updateStatus(report.id(), status);
+            return report.withStatus(status);
+        }, updated -> {
             player.sendMessage(messages.get("status.updated", Formatter.number("id", updated.id()),
                     Placeholder.component("status", status(updated))));
-            openReport(player, updated, prompt.reported());
+            openReport(player, updated, reported);
         });
-        return true;
     }
 
-    public void forgetStatusPrompt(Player player) {
-        statusPrompts.remove(player.getUniqueId());
+    private boolean allowed(Player player) {
+        if (!player.isOnline()) {
+            return false;
+        }
+        if (player.hasPermission(ReportsPlugin.MENU_PERMISSION)) {
+            return true;
+        }
+        player.sendMessage(messages.get("no-permission"));
+        return false;
     }
 
     /** Statuses were historically typed with {@code &} colour codes, so stored values keep rendering that way. */
@@ -123,14 +200,18 @@ public final class ReportMenus {
         return LegacyComponentSerializer.legacyAmpersand().deserialize(report.status());
     }
 
-    static TagResolver placeholders(Report report) {
+    static TagResolver placeholders(Messages messages, Report report) {
         return TagResolver.resolver(
                 Formatter.number("id", report.id()),
                 Placeholder.unparsed("player", report.reported()),
                 Placeholder.unparsed("reporter", report.reporter()),
                 Placeholder.unparsed("reason", report.reason()),
                 Placeholder.unparsed("server", report.server()),
-                Placeholder.component("status", status(report)));
+                Placeholder.component("status", status(report)),
+                Placeholder.component("age", Age.since(messages, report.createdAt())),
+                Placeholder.component("claimer", report.claimedBy()
+                        .map(holder -> messages.get("menu.claimed-by", Placeholder.unparsed("staff", holder)))
+                        .orElseGet(() -> messages.get("menu.unclaimed"))));
     }
 
 }

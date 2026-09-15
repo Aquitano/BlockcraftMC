@@ -63,8 +63,8 @@ Requires JDK 25 (`mise install` picks it up from `mise.toml`; the Gradle toolcha
 ```
 
 Deployable jars land in `<module>/build/libs/<module>-<version>.jar` (the `-slim` jar is a build artefact).
-Paper plugins declare HikariCP and the MariaDB driver in `plugin.yml` `libraries`, so only `BlockcraftAPI` needs them
-and they are downloaded by the server. Velocity plugins shade them.
+`BlockcraftAPI` shades HikariCP and the MariaDB driver; the other Paper plugins reach the pool through it. Velocity
+plugins shade them too.
 
 Versions live in `gradle/libs.versions.toml` (`paper-api`, `velocity-api`, `minecraft`).
 
@@ -159,6 +159,31 @@ menu's "go to" buttons run `/goto`, its punish menu runs `/strafe`. The `/strafe
 proxy's `config.yml`; BlockcraftSystem mirrors it into `bc_punishment_catalog` at every start so the menu can list
 the numbered punishments without a copy of the file.
 
+Staff who see through vanish get a `[V]` marker behind vanished names in the tab list (`tab.vanished-suffix` in
+BlockcraftAPI's `messages.yml`); nobody else lists them at all.
+
+## Moderation on the proxy
+
+`/tempban` and `/tempmute` take the duration as one word, the same shape the `/strafe` catalogue uses: `16d`, `12h`,
+`30m`. `/support list` shows the open support requests, waiting ones first and clickable to accept, and staff who
+log in while requests are waiting are told so. When a player with open reports or a punishment from the last
+`watch.recent-days` logs in, everyone with `blockcraft.system.team` gets a line that opens `/whois` on click, from
+one query per login. A message the chat filter dropped reaches the staff with `[Goto]`, `[Mute]` and `[Strafe]`
+behind it, which run `/goto` or pre-fill `/tempmute` and `/strafe` for that player.
+
+On the Paper side `/team help` lists every command registered on that server through `CommandRegistry` that the
+player may run, with its `commands.<name>.description`, so there is no hand-written list to go stale. `/invsee`
+shows another player's inventory read-only unless the viewer holds `blockcraft.core.invsee.edit`.
+
+`/history <player>` shows bans and mutes, including revoked entries, with the display length set by
+`history.limit`. It requires `blockcraft.system.history`; `/whois` also shows the totals.
+
+`/report <player>` opens a reason dialog on the backend. Staff can claim reports, edit their status and choose
+catalogue or custom timed punishments. Claims identify the staff account even while it is nicked.
+
+`/party promote <player>` transfers leadership to a member. On disconnect, leadership passes to the first remaining
+member in join order. Pending invitations follow the new leader and expire when the party disbands.
+
 ## Server list
 
 The ping answer carries the MOTD edited by `/motd`, the cap set by `/setmax`, the icon from `server-icon.png` in
@@ -174,8 +199,8 @@ five toggles (`private-messages`, `party-invites`, `friend-requests`, `player-vi
 
 Paper caches a player's settings for as long as they are online (`BlockcraftApi.get().settings()`) and fires
 `PlayerSettingsLoadedEvent` once the cache is filled; the lobby waits for it before re-applying a stored "players
-hidden". The settings menu is `SettingsMenu` in BlockcraftAPI, opened from the lobby's hotbar or from the profile
-card (`ProfileMenu`, rank, level, coins and the per-game stats listed in `profile.games` of BlockcraftAPI's
+hidden". The settings screen is `SettingsDialog` in BlockcraftAPI, opened from the lobby's hotbar, the pause menu or
+the profile card (`ProfileMenu`, rank, level, coins and the per-game stats listed in `profile.games` of BlockcraftAPI's
 `config.yml`). `Sounds.play` stays silent for a player who turned the sounds off.
 
 The proxy keeps its own view: it reads the table at login and every change reaches it over the `Setting`

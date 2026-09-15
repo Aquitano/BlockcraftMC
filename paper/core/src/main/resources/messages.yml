@@ -53,6 +53,8 @@ commands:
     description: "Aktualisiert die Spielerliste"
   nick:
     description: "Zufälliger Name und Skin"
+  report:
+    description: "Meldet einen Spieler"
 fly:
   enabled: "<prefix><muted>Du kannst nun fliegen!"
   disabled: "<prefix><muted>Du kannst nun <white>nicht <muted>mehr fliegen!"
@@ -67,8 +69,9 @@ gm:
 heal:
   done: "<prefix><muted>Du wurdest geheilt!"
 invsee:
-  usage: "<prefix><error>BeNutze /invsee [Spieler]"
+  usage: "<prefix><error>Benutze /invsee [Spieler]"
   opened: "<prefix>Du siehst nun das Inventar von <white><player>"
+  read-only: "<prefix><muted>Nur ansehen: zum Verändern fehlt dir die Berechtigung."
 serverinfo:
   lines:
     - ""
@@ -146,35 +149,12 @@ connect:
 reflash:
   done: "<prefix><muted>Alle Spieler müssten nun sichtbar sein!"
 team:
-  help:
+  help-header:
     - ""
-    - "<bullet><primary>INFORMATIONEN <gold>TEAM<primary> COMMANDS <dark>●"
-    - "  <aqua>/cc <dark>- <muted>Leert den Chat"
-    - "  <aqua>/reports <dark>- <muted>Öffnet das ReportMenu"
-    - "  <aqua>/food <dark>- <muted>Füllt deine Hungerbalken"
-    - "  <aqua>/fly, /flyspeed, /speed"
-    - "  <aqua>/heal"
-    - "  <aqua>/invsee ,/sudo"
-    - "  <aqua>/sethealth"
-    - "  <aqua>/kill, /tp, /xp , /time"
-    - "  <aqua>/rain, /sun"
-    - "  <aqua>/msg <dark>[Name] [MSG]"
-  admin-hint:
+    - "<bullet><primary>DEINE BEFEHLE AUF DIESEM SERVER <dark>●"
+  help-entry: "  <aqua>/<command> <dark>- <muted><description>"
+  help-footer:
     - ""
-    - "   <primary>mit /team help admin siehst du deine anderen Rechte!"
-  admin:
-    - "<bullet><primary>INFORMATIONEN <white>TEAM<primary> COMMANDS <dark>●"
-    - "  <aqua>/gm <muted>[0-3]"
-    - "  <aqua>/serverinfo"
-    - "  <aqua>/connect <muted>[ServerName] "
-    - "  <aqua>/skull <muted>[name]"
-    - "  <aqua>/reflash"
-    - "  <aqua>/enchant"
-    - "<primary>EmeraldRush:"
-    - "  <aqua>/rush endsuch"
-    - "  <aqua>/rush endshop"
-    - "  <aqua>/rush shop"
-    - "  <aqua>/rushcoins set <muted>[Name] [Emeralds]"
 rank:
   protected: "<prefix><error>Dieser Spieler steht im Rang über dir oder gleich mit dir."
   self: "<prefix><error>Das kannst du nicht mit dir selbst machen."
@@ -217,6 +197,13 @@ chat:
   spam: "<prefix><error>Bitte warte einen Moment... Verdacht auf Spam!"
   word-filtered: "<prefix><muted>Diese Chatnachricht wurde vom System gefiltert. <error>Grund: Anzügige Sprache"
   filtered-notify: "<prefix><muted>Der Spieler <error><player><muted> hat geschrieben: <error><message> <muted>auf <error><server>"
+  actions:
+    goto: "<dark>[<aqua>Goto<dark>]"
+    goto-hover: "<muted>Bringt dich auf den Server von <accent><player>"
+    tempmute: "<dark>[<gold>Mute<dark>]"
+    tempmute-hover: "<muted>Schlägt <aqua>/tempmute <player> <muted>vor; Dauer und Grund ergänzt du"
+    strafe: "<dark>[<error>Strafe<dark>]"
+    strafe-hover: "<muted>Schlägt <aqua>/strafe <player> <muted>vor; die Nummer ergänzt du"
   ad-filtered:
     - "<prefix><muted>Deine ChatNachricht wurde gefiltert. <error>Grund: Mögliche Werbung."
     - "<prefix><error>Die Teammitglieder werden diesen Sachverhalt nun prüfen."
@@ -227,3 +214,13 @@ nick:
   removed: "<prefix><muted>Dein Nick wurde entfernt."
   none: "<prefix><muted>Du trägst gerade keinen Nick."
   failed: "<prefix><error>Der Skin konnte gerade nicht geladen werden. Versuche es gleich noch einmal."
+report:
+  reason-missing: "<prefix><error>Wähle einen gültigen Grund oder gib Details an."
+  usage: "<prefix><error>Benutze /report [Spieler]"
+  self: "<prefix><error>Du kannst dich nicht selbst reporten!"
+  title: "<arrow><error>Report <dark>● <accent><player>"
+  body: "<muted>Du meldest <error><player><muted>. Das Team schaut sich die Meldung an."
+  reason: "<primary>Grund"
+  details: "<primary>Details (optional)"
+  send: "<success>Melden"
+  cancel: "<error>Abbrechen"

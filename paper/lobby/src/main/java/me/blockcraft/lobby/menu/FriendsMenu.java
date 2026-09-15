@@ -13,8 +13,8 @@ import org.bukkit.inventory.ItemStack;
 import java.util.List;
 
 /**
- * The open requests on the top row, the friends below them. Every click runs a {@code /friend} command on the
- * proxy, which owns the friendships and knows where everybody is.
+ * The open requests on the top row, the friends below them. Every click runs a {@code /friend} or {@code /party}
+ * command on the proxy, which owns the friendships and the parties and knows where everybody is.
  */
 final class FriendsMenu extends Menu {
 
@@ -69,7 +69,7 @@ final class FriendsMenu extends Menu {
         int friend = slot - FIRST_FRIEND_SLOT;
         if (friend >= 0 && friend < friends.size()) {
             close(player);
-            run(player, "friend jump ", friends.get(friend).name());
+            run(player, event.isRightClick() ? "party invite " : "friend jump ", friends.get(friend).name());
         }
     }
 

@@ -16,10 +16,16 @@ import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 
 import java.time.Duration;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 /** Applies punishments the way the old proxy did: store, kick the target if online, tell the staff. */
 public final class PunishmentService {
+
+    public record History(List<Punishment> entries, int bans, int mutes) {
+    }
 
     private final ProxyServer proxy;
     private final PunishmentRepository punishments;
@@ -41,6 +47,17 @@ public final class PunishmentService {
 
     public Optional<Punishment> activeMute(Target target) {
         return punishments.activeMute(target.uuid());
+    }
+
+    /** Every ban and mute of one player in one list, newest first, next to the per-type counts. */
+    public History history(Target target) {
+        var bans = punishments.history(target.uuid(), PunishmentType.BAN);
+        var mutes = punishments.history(target.uuid(), PunishmentType.MUTE);
+        return new History(
+                Stream.concat(bans.stream(), mutes.stream())
+                        .sorted(Comparator.comparing(Punishment::createdAt).reversed())
+                        .toList(),
+                bans.size(), mutes.size());
     }
 
     public void ban(Target target, String reason, String issuer, Optional<Duration> duration) {
