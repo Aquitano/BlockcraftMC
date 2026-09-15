@@ -26,20 +26,6 @@ public final class ServerRepository {
         this.db = db;
     }
 
-    public void createTable() {
-        db.execute("""
-                CREATE TABLE IF NOT EXISTS bc_servers (
-                    name VARCHAR(64) NOT NULL PRIMARY KEY,
-                    group_name VARCHAR(64) NOT NULL,
-                    host VARCHAR(255) NOT NULL,
-                    port INT NOT NULL,
-                    state VARCHAR(16) NOT NULL,
-                    online INT NOT NULL,
-                    max_players INT NOT NULL,
-                    heartbeat TIMESTAMP NOT NULL
-                )""");
-    }
-
     public void heartbeat(ServerIdentity server, ServerStatus status) {
         db.update("""
                 INSERT INTO bc_servers (name, group_name, host, port, state, online, max_players, heartbeat)

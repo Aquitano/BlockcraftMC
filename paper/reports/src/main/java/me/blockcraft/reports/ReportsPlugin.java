@@ -20,9 +20,7 @@ public final class ReportsPlugin extends JavaPlugin {
     public void onEnable() {
         var messages = Messages.load(getDataPath(), () -> getResource("messages.yml"), BlockcraftApi.get().tags());
         var reports = new ReportRepository(BlockcraftApi.get().database());
-        reports.createTable();
         var catalog = new PunishmentCatalogRepository(BlockcraftApi.get().database());
-        catalog.createTable();
 
         var menus = new ReportMenus(this, reports, catalog, messages);
         getServer().getPluginManager().registerEvents(new JoinListener(this, reports, messages), this);

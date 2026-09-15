@@ -16,14 +16,6 @@ public final class PlayerSettingRepository {
         this.db = db;
     }
 
-    public void createTable() {
-        db.execute("CREATE TABLE IF NOT EXISTS bc_player_settings ("
-                + "player_uuid CHAR(36) NOT NULL, "
-                + "setting VARCHAR(32) NOT NULL, "
-                + "value VARCHAR(64) NOT NULL, "
-                + "PRIMARY KEY (player_uuid, setting))");
-    }
-
     public Map<PlayerSetting, String> all(UUID player) {
         var stored = new EnumMap<PlayerSetting, String>(PlayerSetting.class);
         db.queryList("SELECT setting, value FROM bc_player_settings WHERE player_uuid = ?",

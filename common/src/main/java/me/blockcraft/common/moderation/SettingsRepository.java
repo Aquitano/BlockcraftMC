@@ -12,10 +12,6 @@ public final class SettingsRepository {
         this.db = db;
     }
 
-    public void createTable() {
-        db.execute("CREATE TABLE IF NOT EXISTS bc_settings (`key` VARCHAR(64) NOT NULL PRIMARY KEY, `value` TEXT NOT NULL)");
-    }
-
     public Optional<String> get(Setting setting) {
         return db.queryOne("SELECT `value` FROM bc_settings WHERE `key` = ?", row -> row.getString("value"), setting.key());
     }

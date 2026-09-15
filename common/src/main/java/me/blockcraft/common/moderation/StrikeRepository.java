@@ -16,16 +16,6 @@ public final class StrikeRepository {
         this.db = db;
     }
 
-    public void createTable() {
-        db.execute("CREATE TABLE IF NOT EXISTS bc_strikes ("
-                + "id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, "
-                + "player_uuid CHAR(36) NOT NULL, "
-                + "reason TEXT NOT NULL, "
-                + "issuer VARCHAR(16) NOT NULL, "
-                + "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, "
-                + "INDEX idx_bc_strikes_player (player_uuid))");
-    }
-
     public void add(UUID player, String reason, String issuer) {
         db.update("INSERT INTO bc_strikes (player_uuid, reason, issuer, created_at) VALUES (?, ?, ?, NOW())",
                 player.toString(), reason, issuer);

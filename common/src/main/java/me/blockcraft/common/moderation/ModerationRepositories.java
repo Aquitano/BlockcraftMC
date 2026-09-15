@@ -2,7 +2,7 @@ package me.blockcraft.common.moderation;
 
 import me.blockcraft.common.db.Database;
 
-/** Every moderation table in one place; both the proxy and the Paper servers create them at startup. */
+/** Moderation repositories sharing the database initialized by the runtime plugin. */
 public record ModerationRepositories(PlayerRepository players, PunishmentRepository punishments, StrikeRepository strikes,
                                      WarnRepository warns, SettingsRepository settings, AdLogRepository adLog,
                                      VanishRepository vanish, FreezeRepository frozen, WatchRepository watches) {
@@ -13,14 +13,4 @@ public record ModerationRepositories(PlayerRepository players, PunishmentReposit
                 new FreezeRepository(db), new WatchRepository(db));
     }
 
-    public void createTables() {
-        players.createTable();
-        punishments.createTable();
-        strikes.createTable();
-        warns.createTable();
-        settings.createTable();
-        adLog.createTable();
-        vanish.createTable();
-        frozen.createTable();
-    }
 }

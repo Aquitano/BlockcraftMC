@@ -27,16 +27,6 @@ public final class DiscordLinkRepository {
         this.db = db;
     }
 
-    public void createTable() {
-        db.execute("CREATE TABLE IF NOT EXISTS bc_discord_links ("
-                + "player_uuid CHAR(36) NOT NULL PRIMARY KEY, "
-                + "code CHAR(6) NULL, "
-                + "code_expires_at TIMESTAMP NULL, "
-                + "discord_id VARCHAR(32) NULL, "
-                + "linked_at TIMESTAMP NULL, "
-                + "UNIQUE KEY uq_bc_discord_links_discord (discord_id))");
-    }
-
     /** The code expires on the database clock, so an expired one never reaches the caller. */
     public Optional<Link> get(UUID player) {
         return db.queryOne("SELECT discord_id, IF(code_expires_at > NOW(), code, NULL) AS code "

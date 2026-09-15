@@ -12,10 +12,6 @@ public final class CoinsRepository {
         this.db = db;
     }
 
-    public void createTable() {
-        db.execute("CREATE TABLE IF NOT EXISTS VCOINS (UUID VARCHAR(36) NOT NULL PRIMARY KEY, NAME VARCHAR(16), COINS INT NOT NULL DEFAULT 0)");
-    }
-
     public int get(UUID player) {
         return db.queryOne("SELECT COINS FROM VCOINS WHERE UUID = ?", row -> row.getInt("COINS"), player.toString()).orElse(0);
     }

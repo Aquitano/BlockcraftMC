@@ -42,9 +42,9 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         var config = resources.config();
         var databaseConfig = DatabaseConfig.fromYaml(YamlFile.section(config, "database"));
         database = Database.connect(databaseConfig, getName());
+        database.migrate();
 
         var servers = new ServerRepository(database);
-        servers.createTable();
         var presence = new ServerPresence();
         heartbeat = new ServerHeartbeat(this, servers, ServerHeartbeat.local(databaseConfig, getServer().getPort()), presence);
         var self = heartbeat.self();
@@ -52,17 +52,13 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
 
         var messages = resources.messages();
         var settingRepository = new PlayerSettingRepository(database);
-        settingRepository.createTable();
         var settings = new PlayerSettings(this, settingRepository);
         var realNames = new RealNames();
         var xpRepository = new XpRepository(database);
-        xpRepository.createTable();
         var xp = new Xp(this, xpRepository, new Levels(number(YamlFile.section(config, "xp"), "level-step", 100)),
                 xpRewards(YamlFile.section(YamlFile.section(config, "xp"), "rewards")), messages);
         var api = new BlockcraftApi(this, database, settings, profileGames(YamlFile.section(YamlFile.section(config, "profile"), "games")),
                 messages, servers, self, presence, realNames, xp, resources.tags());
-        api.coins().createTable();
-        api.unlocks().createTable();
         BlockcraftApi.install(api);
         int startingCoins = number(config, "starting-coins", 10);
         getServer().getPluginManager().registerEvents(realNames, this);

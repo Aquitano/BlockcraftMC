@@ -25,9 +25,9 @@ public final class WatchRepository {
 
     /** One round trip per login; reports are keyed by name, punishments by UUID. */
     public Watch of(UUID player, String name, Duration recent) {
-        return db.queryOne("SELECT (SELECT COUNT(*) FROM Reports WHERE Reportedname = ?) AS reports, "
+        return db.queryOne("SELECT (SELECT COUNT(*) FROM Reports WHERE reported_uuid = ? OR (reported_uuid IS NULL AND Reportedname = ?)) AS reports, "
                         + "(SELECT COUNT(*) FROM bc_punishments WHERE player_uuid = ? AND created_at > NOW() - INTERVAL ? SECOND) AS punishments",
                 row -> new Watch(row.getInt("reports"), row.getInt("punishments")),
-                name, player.toString(), recent.toSeconds()).orElse(NOTHING);
+                player.toString(), name, player.toString(), recent.toSeconds()).orElse(NOTHING);
     }
 }

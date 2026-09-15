@@ -19,14 +19,6 @@ public final class Unlocks {
         this.db = db;
     }
 
-    public void createTable() {
-        db.execute("CREATE TABLE IF NOT EXISTS bc_unlocks ("
-                + "player_uuid CHAR(36) NOT NULL, "
-                + "item VARCHAR(64) NOT NULL, "
-                + "unlocked_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, "
-                + "PRIMARY KEY (player_uuid, item))");
-    }
-
     public boolean owns(UUID player, String item) {
         return db.queryOne("SELECT 1 FROM bc_unlocks WHERE player_uuid = ? AND item = ?", row -> true, player.toString(), item).isPresent();
     }

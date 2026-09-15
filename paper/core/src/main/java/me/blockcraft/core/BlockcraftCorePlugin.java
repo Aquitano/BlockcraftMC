@@ -66,7 +66,6 @@ public final class BlockcraftCorePlugin extends JavaPlugin {
         var api = BlockcraftApi.get();
         var messages = Messages.load(getDataPath(), () -> getResource("messages.yml"), api.tags());
         var moderation = ModerationRepositories.create(api.database());
-        moderation.createTables();
         var chatFilter = ChatFilterConfig.fromYaml(config);
         var pluginManager = getServer().getPluginManager();
         pluginManager.registerEvents(new MuteListener(this, moderation.punishments(), messages), this);
@@ -74,7 +73,6 @@ public final class BlockcraftCorePlugin extends JavaPlugin {
         pluginManager.registerEvents(new ChatCooldownListener(chatFilter.cooldown(), messages), this);
         pluginManager.registerEvents(new ChatFilterListener(this, chatFilter, api.server().name(), moderation.adLog(), messages), this);
         var nickRepository = new NickRepository(api.database());
-        nickRepository.createTable();
         var nickSection = YamlFile.section(config, "nick");
         var nicks = new Nicks(this, nickRepository, stringList(nickSection, "names"), stringList(nickSection, "skins"));
         pluginManager.registerEvents(new NickListener(nicks, messages), this);

@@ -19,13 +19,6 @@ public final class PunishmentCatalogRepository {
         this.db = db;
     }
 
-    public void createTable() {
-        db.execute("CREATE TABLE IF NOT EXISTS bc_punishment_catalog ("
-                + "number INT NOT NULL PRIMARY KEY, "
-                + "type VARCHAR(8) NOT NULL, "
-                + "reason VARCHAR(255) NOT NULL)");
-    }
-
     public void replace(List<Entry> entries) {
         db.update("DELETE FROM bc_punishment_catalog");
         for (var entry : entries) {

@@ -184,6 +184,26 @@ catalogue or custom timed punishments. Claims identify the staff account even wh
 `/party promote <player>` transfers leadership to a member. On disconnect, leadership passes to the first remaining
 member in join order. Pending invitations follow the new leader and expire when the party disbands.
 
+## Shared modules and upgrades
+
+Shared tables come from ordered migrations recorded in `bc_schema_migrations`. A start takes a MariaDB lock before
+applying what is pending, so servers starting together take turns; a checksum rejects an edited migration. Every
+statement is safe to run again because MariaDB commits DDL on its own. Existing report rows and name columns stay as
+they are. The games' stats tables keep their own setup.
+
+## Tests
+
+`./gradlew build` runs the tests; with `BLOCKCRAFT_TEST_DB_PORT` set that includes the MariaDB integration tests:
+legacy upgrade, concurrent migration startup and checksum enforcement. CI sets it; locally, point it at a disposable
+MariaDB:
+
+```sh
+BLOCKCRAFT_TEST_DB_PORT=3307 BLOCKCRAFT_TEST_DB_PASSWORD=blockcraft-test ./gradlew build
+```
+
+The tests connect as root, create a fresh `bc_test_*` schema per test and drop only those. Dialogs and inventories
+still need an in-game smoke test.
+
 ## Server list
 
 The ping answer carries the MOTD edited by `/motd`, the cap set by `/setmax`, the icon from `server-icon.png` in

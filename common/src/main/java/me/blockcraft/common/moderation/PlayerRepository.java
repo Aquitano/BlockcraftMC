@@ -21,18 +21,6 @@ public final class PlayerRepository {
         this.db = db;
     }
 
-    public void createTable() {
-        db.execute("CREATE TABLE IF NOT EXISTS bc_players ("
-                + "uuid CHAR(36) NOT NULL PRIMARY KEY, "
-                + "name VARCHAR(16) NOT NULL, "
-                + "first_seen TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, "
-                + "last_seen TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, "
-                + "playtime_seconds BIGINT NOT NULL DEFAULT 0, "
-                + "INDEX idx_bc_players_name (name))");
-        db.execute("ALTER TABLE bc_players ADD COLUMN IF NOT EXISTS first_seen TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP");
-        db.execute("ALTER TABLE bc_players ADD COLUMN IF NOT EXISTS playtime_seconds BIGINT NOT NULL DEFAULT 0");
-    }
-
     public boolean exists(UUID player) {
         return db.queryOne("SELECT 1 FROM bc_players WHERE uuid = ?", row -> true, player.toString()).isPresent();
     }

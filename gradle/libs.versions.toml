@@ -13,6 +13,7 @@ slf4j = "2.0.18"
 luckperms = "5.5"
 
 [libraries]
+junit = { module = "junit:junit", version = "4.13.2" }
 paper-api = { module = "io.papermc.paper:paper-api", version.ref = "paper-api" }
 velocity-api = { module = "com.velocitypowered:velocity-api", version.ref = "velocity-api" }
 hikaricp = { module = "com.zaxxer:HikariCP", version.ref = "hikaricp" }

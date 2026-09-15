@@ -2,7 +2,6 @@ package me.blockcraft.common.moderation;
 
 import me.blockcraft.common.db.Database;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -13,15 +12,6 @@ public final class AdLogRepository {
 
     public AdLogRepository(Database db) {
         this.db = db;
-    }
-
-    public void createTable() {
-        db.execute("CREATE TABLE IF NOT EXISTS bc_ad_log ("
-                + "id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, "
-                + "player_uuid CHAR(36) NOT NULL, "
-                + "server VARCHAR(64) NOT NULL, "
-                + "message TEXT NOT NULL, "
-                + "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)");
     }
 
     public void add(UUID player, String server, String message) {

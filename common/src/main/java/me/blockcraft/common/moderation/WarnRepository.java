@@ -14,15 +14,6 @@ public final class WarnRepository {
         this.db = db;
     }
 
-    public void createTable() {
-        db.execute("CREATE TABLE IF NOT EXISTS bc_warns ("
-                + "id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, "
-                + "player_uuid CHAR(36) NOT NULL, "
-                + "reason TEXT NULL, "
-                + "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, "
-                + "INDEX idx_bc_warns_player (player_uuid))");
-    }
-
     /** Returns the player's warn count after adding. */
     public int add(UUID player, Optional<String> reason) {
         db.update("INSERT INTO bc_warns (player_uuid, reason, created_at) VALUES (?, ?, NOW())",

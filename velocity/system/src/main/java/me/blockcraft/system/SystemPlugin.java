@@ -16,7 +16,6 @@ import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.moderation.ModerationRepositories;
 import me.blockcraft.common.moderation.PunishmentCatalogRepository;
 import me.blockcraft.common.nick.NickRepository;
-import me.blockcraft.common.report.ReportRepository;
 import me.blockcraft.common.network.ServerRepository;
 import me.blockcraft.common.settings.PlayerSettingRepository;
 import me.blockcraft.system.command.CommandSupport;
@@ -129,21 +128,15 @@ public final class SystemPlugin {
         var loaded = Messages.load(dataDirectory, () -> getClass().getResourceAsStream("/messages.yml"));
         var messages = loaded.with(config.networkTags(), loaded.tagsOf("palette"));
         database = Database.connect(config.database(), "BlockcraftSystem");
+        database.migrate();
         var repositories = ModerationRepositories.create(database);
-        repositories.createTables();
         var servers = new ServerRepository(database);
-        servers.createTable();
         var discordLinks = new DiscordLinkRepository(database);
-        discordLinks.createTable();
         var nicks = new NickRepository(database);
-        nicks.createTable();
         var playerSettings = new PlayerSettingRepository(database);
-        playerSettings.createTable();
         var friendships = new FriendRepository(database);
         friendships.createTable();
-        new ReportRepository(database).createTable();
         var catalog = new PunishmentCatalogRepository(database);
-        catalog.createTable();
         catalog.replace(config.punishments().entrySet().stream()
                 .map(preset -> new PunishmentCatalogRepository.Entry(preset.getKey(), preset.getValue().type(), preset.getValue().reason()))
                 .toList());

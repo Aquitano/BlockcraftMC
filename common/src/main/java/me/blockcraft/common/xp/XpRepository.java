@@ -13,12 +13,6 @@ public final class XpRepository {
         this.db = db;
     }
 
-    public void createTable() {
-        db.execute("CREATE TABLE IF NOT EXISTS bc_xp ("
-                + "player_uuid CHAR(36) NOT NULL PRIMARY KEY, "
-                + "xp BIGINT NOT NULL DEFAULT 0)");
-    }
-
     public long get(UUID player) {
         return db.queryOne("SELECT xp FROM bc_xp WHERE player_uuid = ?", row -> row.getLong("xp"), player.toString()).orElse(0L);
     }

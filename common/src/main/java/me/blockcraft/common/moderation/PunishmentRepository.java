@@ -26,20 +26,6 @@ public final class PunishmentRepository {
         this.db = db;
     }
 
-    public void createTable() {
-        db.execute("CREATE TABLE IF NOT EXISTS bc_punishments ("
-                + "id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, "
-                + "player_uuid CHAR(36) NOT NULL, "
-                + "type ENUM('BAN','MUTE') NOT NULL, "
-                + "reason TEXT NOT NULL, "
-                + "issuer VARCHAR(16) NOT NULL, "
-                + "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, "
-                + "expires_at TIMESTAMP NULL, "
-                + "revoked_at TIMESTAMP NULL, "
-                + "revoked_by VARCHAR(16) NULL, "
-                + "INDEX idx_bc_punishments_player (player_uuid, type))");
-    }
-
     public Optional<Punishment> active(UUID player, PunishmentType type) {
         return db.queryOne("SELECT " + COLUMNS + " FROM bc_punishments WHERE player_uuid = ? AND type = ? AND " + ACTIVE
                 + " ORDER BY id DESC LIMIT 1", PunishmentRepository::map, player.toString(), type.name());

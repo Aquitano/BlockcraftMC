@@ -8,8 +8,9 @@ README.md; this file only holds what the code does not say by itself.
 - `./gradlew build` compiles everything with `-Xlint:deprecation`; keep it warning-free.
 - `./gradlew stagePlugins && docker compose up -d` boots the whole dev network (proxy plus one Paper server per game
   mode). `docker compose up -d mariadb`, then `./gradlew :paper:runServer` / `./gradlew :velocity:runVelocity` run one
-  server on the host instead; `-Pplugins=core,lobby` limits the plugin set. There are no unit tests; a change is
-  verified by building and, where it touches gameplay, by clicking through it on the dev network.
+  server on the host instead; `-Pplugins=core,lobby` limits the plugin set. The build runs the unit tests; with
+  `BLOCKCRAFT_TEST_DB_PORT` set it also runs the MariaDB integration tests, as CI does. Gameplay changes still need a
+  client smoke test on the dev network.
 
 ## Conventions
 
@@ -22,6 +23,9 @@ README.md; this file only holds what the code does not say by itself.
   Write colours as palette tags, never the raw ones, and the brand only as `<ip>`.
 - Command descriptions are messages too: `commands.<name>.description`, registered through `CommandRegistry`; core's
   `/team help` is generated from that registry, so never write a command list by hand.
+- Shared database tables are initialized once per runtime by `Database.migrate()`. Append to `SharedSchema`; never
+  edit a deployed migration. Tables one plugin owns alone (game stats, staff inventories, friends) keep their own
+  `createTable`.
 - Database access goes through `common`'s `Database` with prepared statements. Table and column names of the legacy
   tables (`VCOINS`, `*_stats`, `*_kits`, `Reports`) stay as they are; new tables are `bc_*`.
 - Anything a player unlocks with coins or by finding it (cosmetics, kits, perks, secrets) is one row in `bc_unlocks`

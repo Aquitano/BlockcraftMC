@@ -15,12 +15,6 @@ public final class VanishRepository {
         this.db = db;
     }
 
-    public void createTable() {
-        db.execute("CREATE TABLE IF NOT EXISTS bc_vanished ("
-                + "player_uuid CHAR(36) NOT NULL PRIMARY KEY, "
-                + "since TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)");
-    }
-
     public boolean isVanished(UUID player) {
         return db.queryOne("SELECT 1 FROM bc_vanished WHERE player_uuid = ?", row -> true, player.toString()).isPresent();
     }

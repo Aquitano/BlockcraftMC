@@ -6,7 +6,8 @@ plugins {
 val libs = the<VersionCatalogsExtension>().named("libs")
 
 dependencies {
-    // Provided at runtime by Paper (plugin.yml libraries) and shaded into Velocity plugins.
+    testRuntimeOnly(libs.findLibrary("mariadb-client").get())
+    // Shaded by the Paper and Velocity runtime plugins.
     compileOnly(libs.findLibrary("hikaricp").get())
     // Both Paper and Velocity ship these on the plugin classpath.
     compileOnly(libs.findLibrary("adventure-minimessage").get())

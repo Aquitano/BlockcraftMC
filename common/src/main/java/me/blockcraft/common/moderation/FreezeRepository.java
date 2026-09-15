@@ -14,13 +14,6 @@ public final class FreezeRepository {
         this.db = db;
     }
 
-    public void createTable() {
-        db.execute("CREATE TABLE IF NOT EXISTS bc_frozen ("
-                + "player_uuid CHAR(36) NOT NULL PRIMARY KEY, "
-                + "issuer VARCHAR(16) NOT NULL, "
-                + "since TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)");
-    }
-
     public Optional<String> issuer(UUID player) {
         return db.queryOne("SELECT issuer FROM bc_frozen WHERE player_uuid = ?", row -> row.getString("issuer"), player.toString());
     }

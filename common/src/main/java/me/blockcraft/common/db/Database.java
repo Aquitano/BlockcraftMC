@@ -14,6 +14,7 @@ import java.util.Optional;
 public final class Database implements AutoCloseable {
 
     private final HikariDataSource dataSource;
+    private boolean migrated;
 
     private Database(HikariDataSource dataSource) {
         this.dataSource = dataSource;
@@ -34,6 +35,45 @@ public final class Database implements AutoCloseable {
 
     public void execute(String ddl) {
         update(ddl);
+    }
+
+    /** Brings the shared {@code bc_*} tables up to date; the runtime plugin calls it once before any repository runs. */
+    public synchronized void migrate() {
+        if (migrated) {
+            return;
+        }
+        try (var connection = dataSource.getConnection()) {
+            Migrations.apply(connection, SharedSchema.MIGRATIONS);
+            migrated = true;
+        } catch (SQLException e) {
+            throw new DatabaseException("shared schema migration", e);
+        }
+    }
+
+    @FunctionalInterface
+    public interface Transaction<T> {
+        T run(Connection connection) throws SQLException;
+    }
+
+    /** Commits when {@code work} returns and rolls back when it throws, whatever it throws. */
+    public <T> T transaction(Transaction<T> work) {
+        try (var connection = dataSource.getConnection()) {
+            connection.setAutoCommit(false);
+            try {
+                T result = work.run(connection);
+                connection.commit();
+                return result;
+            } catch (SQLException | RuntimeException | Error e) {
+                try {
+                    connection.rollback();
+                } catch (SQLException rollback) {
+                    e.addSuppressed(rollback);
+                }
+                throw e;
+            }
+        } catch (SQLException e) {
+            throw new DatabaseException("transaction", e);
+        }
     }
 
     public int update(String sql, Object... params) {

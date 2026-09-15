@@ -8,6 +8,21 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    services:
+      mariadb:
+        image: mariadb:11
+        env:
+          MARIADB_ROOT_PASSWORD: blockcraft-test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+    env:
+      BLOCKCRAFT_TEST_DB_PORT: 3306
+      BLOCKCRAFT_TEST_DB_PASSWORD: blockcraft-test
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
