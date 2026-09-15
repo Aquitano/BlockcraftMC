@@ -1,6 +1,8 @@
 package me.blockcraft.api.item;
 
 import com.destroystokyo.paper.profile.PlayerProfile;
+import io.papermc.paper.datacomponent.DataComponentTypes;
+import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
@@ -84,6 +86,12 @@ public final class Items {
 
         public Builder color(Color color) {
             stack.editMeta(LeatherArmorMeta.class, meta -> meta.setColor(color));
+            return this;
+        }
+
+        /** Draws the item with a model from the resource pack, whatever the material; only for clients wearing it. */
+        public Builder model(Key model) {
+            stack.setData(DataComponentTypes.ITEM_MODEL, model);
             return this;
         }
 

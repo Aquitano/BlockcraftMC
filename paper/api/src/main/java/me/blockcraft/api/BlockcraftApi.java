@@ -5,6 +5,7 @@ import me.blockcraft.api.cosmetic.Effects;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.menu.Profiles;
 import me.blockcraft.api.network.ServerPresence;
+import me.blockcraft.api.pack.ResourcePacks;
 import me.blockcraft.api.player.RealNames;
 import me.blockcraft.api.proxy.NetworkOperations;
 import me.blockcraft.api.settings.PlayerSettings;
@@ -37,6 +38,7 @@ public final class BlockcraftApi {
     private final Unlocks unlocks;
     private final Shop shop;
     private final PlayerSettings settings;
+    private final ResourcePacks resourcePack;
     private final Effects effects;
     private final Profiles profiles;
     private final Messages messages;
@@ -49,9 +51,10 @@ public final class BlockcraftApi {
     private final BuildMode buildMode;
     private final TagResolver tags;
 
-    BlockcraftApi(Plugin plugin, Database database, PlayerSettings settings, Map<String, StatsRepository> profileGames,
-                  Messages messages, ServerRepository servers, ServerIdentity server, ServerPresence presence,
-                  RealNames realNames, Xp xp, MapBundle map, BuildMode buildMode, TagResolver tags) {
+    BlockcraftApi(Plugin plugin, Database database, PlayerSettings settings, ResourcePacks resourcePack,
+                  Map<String, StatsRepository> profileGames, Messages messages, ServerRepository servers,
+                  ServerIdentity server, ServerPresence presence, RealNames realNames, Xp xp, MapBundle map,
+                  BuildMode buildMode, TagResolver tags) {
         this.operations = new NetworkOperations(plugin, messages);
         this.playerTasks = new PlayerTasks(plugin, messages);
         this.database = database;
@@ -59,6 +62,7 @@ public final class BlockcraftApi {
         this.unlocks = new Unlocks(database);
         this.shop = new Shop(database);
         this.settings = settings;
+        this.resourcePack = resourcePack;
         this.effects = new Effects(settings);
         this.profiles = new Profiles(plugin, coins, profileGames);
         this.messages = messages;
@@ -118,6 +122,11 @@ public final class BlockcraftApi {
     /** Remembered per-player choices such as the chat tag or kill effect. */
     public PlayerSettings settings() {
         return settings;
+    }
+
+    /** Which clients wear the network's resource pack, and the icons each one can draw. */
+    public ResourcePacks resourcePack() {
+        return resourcePack;
     }
 
     /** The player's own profile card: rank, level, coins and per-game stats. */

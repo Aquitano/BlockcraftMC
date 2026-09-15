@@ -12,6 +12,7 @@ import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.menu.MenuListener;
 import me.blockcraft.api.network.ServerHeartbeat;
 import me.blockcraft.api.network.ServerPresence;
+import me.blockcraft.api.pack.ResourcePacks;
 import me.blockcraft.api.player.RealNames;
 import me.blockcraft.api.player.VanillaProgress;
 import me.blockcraft.api.rank.TabTeams;
@@ -25,6 +26,7 @@ import me.blockcraft.api.xp.XpReward;
 import me.blockcraft.common.config.YamlFile;
 import me.blockcraft.common.db.Database;
 import me.blockcraft.common.db.DatabaseConfig;
+import me.blockcraft.common.network.ProxyChannel;
 import me.blockcraft.common.network.ServerRepository;
 import me.blockcraft.common.settings.PlayerSettingRepository;
 import me.blockcraft.common.xp.XpRepository;
@@ -65,7 +67,9 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
                 xpRewards(YamlFile.section(YamlFile.section(config, "xp"), "rewards")), messages);
         var map = MapBundle.load(getServer().getWorlds().getFirst(), WorldTemplate.configured(config));
         var buildMode = new BuildMode();
-        var api = new BlockcraftApi(this, database, settings, profileGames(YamlFile.section(YamlFile.section(config, "profile"), "games")),
+        var resourcePack = new ResourcePacks(messages);
+        var api = new BlockcraftApi(this, database, settings, resourcePack,
+                profileGames(YamlFile.section(YamlFile.section(config, "profile"), "games")),
                 messages, servers, self, presence, realNames, xp, map, buildMode, resources.tags());
         BlockcraftApi.install(api);
         getLogger().info("Running map " + map.name() + map.template().map(template -> " from " + template.directory()).orElse(""));
@@ -74,6 +78,8 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(xp, this);
         getServer().getPluginManager().registerEvents(new CoinsJoinListener(this, api.coins(), startingCoins), this);
         getServer().getPluginManager().registerEvents(settings, this);
+        getServer().getPluginManager().registerEvents(resourcePack, this);
+        getServer().getMessenger().registerIncomingPluginChannel(this, ProxyChannel.NAME, resourcePack);
         getServer().getPluginManager().registerEvents(new MenuListener(), this);
         getServer().getPluginManager().registerEvents(new ServerMenu(this), this);
         getServer().getPluginManager().registerEvents(new TabTeams(LuckPermsProvider.get(), messages), this);

@@ -39,6 +39,14 @@ commands:
   map:
     description: "Zeigt die Map oder speichert sie mit /map save"
 
+# What <icon:name> draws for a client without the network resource pack; with it, the pack's own glyph.
+icons:
+  profile: "☻"
+  coins: "◎"
+  level: "★"
+  chat: "✉"
+  server: "▤"
+
 tab:
   default-prefix: "<muted>"
   vanished-suffix: " <dark>[<muted>V<dark>]"

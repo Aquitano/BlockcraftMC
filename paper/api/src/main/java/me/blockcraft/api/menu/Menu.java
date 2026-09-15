@@ -2,7 +2,9 @@ package me.blockcraft.api.menu;
 
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.item.Items;
+import me.blockcraft.api.pack.UiFont;
 import me.blockcraft.api.sound.Sounds;
+import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -16,14 +18,20 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.BitSet;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Consumer;
 
 /**
  * A chest GUI identified by its holder instead of its title. Clicks inside it are cancelled and routed
  * to {@link #onClick} by {@link MenuListener}; clicks in the player's own inventory are cancelled too.
  * <p>
- * Empty slots are filled with a pane when the menu opens and clicks on those are swallowed;
- * {@link #backButton} and {@link #closeButton} place the two buttons every menu shares.
+ * The inventory itself is created when the menu opens, because its look depends on the viewer: a client wearing
+ * the network's resource pack sees the pack's panel behind the slots, the pack's icons on items placed with an
+ * icon name and on the two buttons every menu shares ({@link #backButton} and {@link #closeButton}), and a
+ * {@link #toolbar} of three wide buttons across the first row; everyone else sees vanilla items and empty slots
+ * filled with panes, whose clicks are swallowed.
  * <p>
  * {@link #open} and {@link #close} run on the next tick because Bukkit forbids opening or closing an
  * inventory from inside {@link InventoryClickEvent}; the client would otherwise receive the cancel resync
@@ -32,16 +40,45 @@ import java.util.function.Consumer;
 public abstract class Menu implements InventoryHolder {
 
     private static final Plugin API = JavaPlugin.getProvidingPlugin(Menu.class);
+    private static final int COLUMNS = 9;
 
-    private final Inventory inventory;
+    /** One of the three wide buttons of the toolbar row; each spans three slots. */
+    public enum ToolbarButton {
+        LEFT(0), MIDDLE(3), RIGHT(6);
+
+        private final int firstSlot;
+
+        ToolbarButton(int firstSlot) {
+            this.firstSlot = firstSlot;
+        }
+
+        int iconSlot() {
+            return firstSlot + 1;
+        }
+
+        boolean covers(int slot) {
+            return slot >= firstSlot && slot < firstSlot + 3;
+        }
+    }
+
+    private record ToolbarEntry(ItemStack icon, String packIcon, Consumer<Player> action) {
+    }
+
+    private final int rows;
+    private final Component title;
+    private final ItemStack[] items;
+    private final Map<Integer, String> packIcons = new HashMap<>();
+    private final Map<ToolbarButton, ToolbarEntry> toolbar = new EnumMap<>(ToolbarButton.class);
     private final BitSet fillerSlots = new BitSet();
-    private boolean filled;
+    private Inventory inventory;
     private int backSlot = -1;
     private int closeSlot = -1;
     private Consumer<Player> backAction;
 
     protected Menu(int rows, Component title) {
-        this.inventory = Bukkit.createInventory(this, rows * 9, title);
+        this.rows = rows;
+        this.title = title;
+        this.items = new ItemStack[rows * COLUMNS];
     }
 
     protected abstract void onClick(Player player, int slot, ItemStack clicked, InventoryClickEvent event);
@@ -55,13 +92,30 @@ public abstract class Menu implements InventoryHolder {
     }
 
     protected void set(int slot, ItemStack item) {
-        inventory.setItem(slot, item);
+        items[slot] = item;
+        if (inventory != null) {
+            inventory.setItem(slot, item);
+        }
+    }
+
+    /** {@code item} for everyone; a client wearing the pack sees it drawn as the pack's {@code packIcon} item model. */
+    protected void set(int slot, ItemStack item, String packIcon) {
+        packIcons.put(slot, packIcon);
+        set(slot, item);
+    }
+
+    /**
+     * A wide button in the first row: {@code icon} sits in its middle slot and the whole button answers the click.
+     * The pack draws the row as three coloured bars; without it, the icon is an ordinary item between panes.
+     */
+    protected void toolbar(ToolbarButton button, ItemStack icon, String packIcon, Consumer<Player> action) {
+        toolbar.put(button, new ToolbarEntry(icon, packIcon, action));
     }
 
     protected void fill(ItemStack item) {
-        for (int slot = 0; slot < inventory.getSize(); slot++) {
-            if (inventory.getItem(slot) == null) {
-                inventory.setItem(slot, item);
+        for (int slot = 0; slot < items.length; slot++) {
+            if (items[slot] == null) {
+                set(slot, item);
             }
         }
     }
@@ -70,12 +124,10 @@ public abstract class Menu implements InventoryHolder {
     protected void backButton(int slot, Consumer<Player> previous) {
         backSlot = slot;
         backAction = previous;
-        set(slot, button(Material.ARROW, "menu.back"));
     }
 
     protected void closeButton(int slot) {
         closeSlot = slot;
-        set(slot, button(Material.BARRIER, "menu.close"));
     }
 
     public void open(Player player) {
@@ -84,9 +136,8 @@ public abstract class Menu implements InventoryHolder {
             if (!player.isOnline()) {
                 return;
             }
-            if (fillEmptySlots() && !filled) {
-                fillEmpty();
-                filled = true;
+            if (inventory == null) {
+                build(BlockcraftApi.get().resourcePack().applied(player));
             }
             player.openInventory(inventory);
         });
@@ -99,6 +150,9 @@ public abstract class Menu implements InventoryHolder {
 
     @Override
     public final Inventory getInventory() {
+        if (inventory == null) {
+            build(false);
+        }
         return inventory;
     }
 
@@ -107,6 +161,12 @@ public abstract class Menu implements InventoryHolder {
             return;
         }
         Sounds.MENU_CLICK.play(player);
+        for (var button : toolbar.entrySet()) {
+            if (button.getKey().covers(slot)) {
+                button.getValue().action().accept(player);
+                return;
+            }
+        }
         if (slot == backSlot) {
             backAction.accept(player);
         } else if (slot == closeSlot) {
@@ -120,17 +180,56 @@ public abstract class Menu implements InventoryHolder {
         onClose(player, event);
     }
 
-    private void fillEmpty() {
-        var pane = button(Material.GRAY_STAINED_GLASS_PANE, "menu.filler");
-        for (int slot = 0; slot < inventory.getSize(); slot++) {
-            if (inventory.getItem(slot) == null) {
-                inventory.setItem(slot, pane);
-                fillerSlots.set(slot);
+    private void build(boolean packApplied) {
+        boolean withToolbar = !toolbar.isEmpty();
+        inventory = Bukkit.createInventory(this, items.length, packApplied ? UiFont.menuTitle(rows, withToolbar, title) : title);
+        if (backSlot >= 0) {
+            items[backSlot] = button(Material.ARROW, "back", packApplied);
+        }
+        if (closeSlot >= 0) {
+            items[closeSlot] = button(Material.BARRIER, "close", packApplied);
+        }
+        toolbar.forEach((button, entry) -> {
+            var icon = entry.icon().clone();
+            if (packApplied) {
+                Items.of(icon).model(packIcon(entry.packIcon()));
+                var rest = icon.clone();
+                Items.of(rest).model(packIcon("empty"));
+                for (int slot = button.firstSlot; slot < button.firstSlot + 3; slot++) {
+                    items[slot] = slot == button.iconSlot() ? icon : rest;
+                }
+            } else {
+                items[button.iconSlot()] = icon;
+            }
+        });
+        if (packApplied) {
+            packIcons.forEach((slot, packIcon) -> {
+                if (items[slot] != null) {
+                    items[slot] = Items.of(items[slot].clone()).model(packIcon(packIcon)).build();
+                }
+            });
+        }
+        if (fillEmptySlots() && !packApplied) {
+            var pane = Items.of(Material.GRAY_STAINED_GLASS_PANE).name(BlockcraftApi.get().messages().get("menu.filler")).build();
+            for (int slot = 0; slot < items.length; slot++) {
+                if (items[slot] == null) {
+                    items[slot] = pane;
+                    fillerSlots.set(slot);
+                }
             }
         }
+        inventory.setContents(items);
     }
 
-    private static ItemStack button(Material material, String messageKey) {
-        return Items.of(material).name(BlockcraftApi.get().messages().get(messageKey)).build();
+    private static ItemStack button(Material vanilla, String name, boolean packApplied) {
+        var button = Items.of(vanilla).name(BlockcraftApi.get().messages().get("menu." + name));
+        if (packApplied) {
+            button.model(packIcon(name));
+        }
+        return button.build();
+    }
+
+    private static Key packIcon(String name) {
+        return Key.key("blockcraft", name);
     }
 }
