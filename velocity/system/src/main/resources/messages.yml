@@ -10,6 +10,9 @@ palette:
   error: "<red>"
   bullet: "<dark_gray>● "
   arrow: "<dark_gray>» "
+  quicksg: "<gold>"
+  emeraldrush: "<green>"
+  duell: "<aqua>"
 player-only: "<error>Nur ein Spieler kann diesen Befehl verwenden!"
 player-unknown: "<prefix><error>Der Spieler <gold><player> <error>ist unbekannt."
 no-permission: "<prefix><error>Dazu hast du keine Berechtigung."
@@ -490,9 +493,13 @@ hub:
   connecting: "<prefix><success>Du wirst zur <aqua>Lobby <success>verbunden."
 play:
   usage: "<prefix><error>Benutze /play \\<Spiel>"
-  unavailable: "<prefix><error>Derzeit ist kein Server frei, versuche es gleich noch einmal!"
+  unavailable: "<prefix><muted>Für <game> <muted>ist gerade keine Runde frei. Versuch es gleich noch einmal."
   already: "<prefix><error>Du bist bereits auf diesem Server."
-  connecting: "<prefix><success>Du wirst verbunden..."
+  connecting: "<prefix><muted>Eine Runde <game> <muted>wird für dich geöffnet…"
+  games:
+    quicksg: "<quicksg>QuickSG"
+    emeraldrush: "<emeraldrush>EmeraldRush"
+    duell: "<duell>Duell"
 msg:
   usage: "<prefix><error>Benutze /msg \\<Name> \\<Nachricht>"
   reply-usage: "<prefix><error>Benutze /r \\<Nachricht>"

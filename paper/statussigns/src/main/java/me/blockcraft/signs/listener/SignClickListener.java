@@ -1,7 +1,6 @@
 package me.blockcraft.signs.listener;
 
 import me.blockcraft.api.proxy.ProxyMessaging;
-import me.blockcraft.common.message.Messages;
 import me.blockcraft.signs.sign.StatusSigns;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -14,12 +13,10 @@ public final class SignClickListener implements Listener {
 
     private final Plugin plugin;
     private final StatusSigns signs;
-    private final Messages messages;
 
-    public SignClickListener(Plugin plugin, StatusSigns signs, Messages messages) {
+    public SignClickListener(Plugin plugin, StatusSigns signs) {
         this.plugin = plugin;
         this.signs = signs;
-        this.messages = messages;
     }
 
     @EventHandler
@@ -29,15 +26,7 @@ public final class SignClickListener implements Listener {
         }
         signs.find(event.getClickedBlock().getLocation()).ifPresent(sign -> {
             event.setCancelled(true);
-            var player = event.getPlayer();
-            var status = signs.status(sign);
-            if (status.state().isEmpty()) {
-                player.sendMessage(messages.get("click.offline"));
-            } else if (!status.joinable()) {
-                player.sendMessage(messages.get("click.full"));
-            } else {
-                ProxyMessaging.play(plugin, player, sign.group());
-            }
+            ProxyMessaging.play(plugin, event.getPlayer(), sign.group());
         });
     }
 }

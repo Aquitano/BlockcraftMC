@@ -4,6 +4,8 @@ import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.system.network.ServerDirectory;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 
 import java.util.Optional;
 import java.util.Set;
@@ -54,16 +56,18 @@ public final class LobbyConnector {
 
     /** Joins the fullest open server of a game group, which is what signs, /play and the navigator do. */
     public void play(Player player, String group) {
+        String key = "play.games." + group;
+        var game = Placeholder.component("game", messages.has(key) ? messages.get(key) : Component.text(group));
         var target = directory.fill(group);
         if (target.isEmpty()) {
-            player.sendMessage(messages.get("play.unavailable"));
+            player.sendMessage(messages.get("play.unavailable", game));
             return;
         }
         if (player.getCurrentServer().map(connection -> connection.getServer().equals(target.get())).orElse(false)) {
-            player.sendMessage(messages.get("play.already"));
+            player.sendMessage(messages.get("play.already", game));
             return;
         }
-        player.sendMessage(messages.get("play.connecting"));
+        player.sendMessage(messages.get("play.connecting", game));
         player.createConnectionRequest(target.get()).fireAndForget();
     }
 }

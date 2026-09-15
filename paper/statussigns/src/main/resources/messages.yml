@@ -1,24 +1,14 @@
-prefix: "<gold>Blockcraft <dark_gray>» <reset>"
+prefix: "<primary>Blockcraft <dark>» <reset>"
 
 commands:
   createsign:
     description: "Erstellt ein Status-Schild"
 sign:
-  name: "- <name> -"
-  state:
-    lobby: "<success>Lobby"
-    ingame: "<error>Ingame"
-    restart: "<aqua>Neustart"
-  players: "<online>/<max>"
-  click: "<dark>*Klick*"
-  offline:
-    border: "<error>█ █ █<bold>✖</bold> █ █ █"
-    status: "<muted>Offline"
-    players: " "
+  name: "<name>"
+  players: "<muted><online> online"
+  click: "<success>Jetzt spielen"
+  retry: "<muted>Erneut prüfen"
 createsign:
   usage: "<prefix><accent>/createsign <success>\\<Gruppe>"
   not-a-sign: "<prefix><error>Du schaust nicht auf ein gültiges Schild!"
-  created: "<prefix><muted>Status-Schild für <gold><name><muted> erstellt."
-click:
-  offline: "<prefix><error>Server ist derzeit offline!"
-  full: "<prefix><error>Derzeit ist kein Server frei, versuche es gleich noch einmal!"
+  created: "<prefix><muted>Status-Schild für <accent><name><muted> erstellt."

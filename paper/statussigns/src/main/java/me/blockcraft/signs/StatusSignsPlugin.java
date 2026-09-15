@@ -33,7 +33,7 @@ public final class StatusSignsPlugin extends JavaPlugin {
         getLogger().info(signs.load() + " signs loaded");
         signs.start(intervalTicks);
 
-        getServer().getPluginManager().registerEvents(new SignClickListener(this, signs, messages), this);
+        getServer().getPluginManager().registerEvents(new SignClickListener(this, signs), this);
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event ->
                 new CommandRegistry(event.registrar(), messages).register(CreateSignCommand.create(signs, messages)));
     }

@@ -1,6 +1,7 @@
 package me.blockcraft.signs.sign;
 
 import me.blockcraft.common.db.DatabaseException;
+import me.blockcraft.common.network.GroupStatus;
 import me.blockcraft.common.network.ServerRecord;
 import me.blockcraft.common.network.ServerRepository;
 import org.bukkit.Bukkit;

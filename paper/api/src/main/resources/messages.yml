@@ -11,6 +11,23 @@ palette:
   error: "<red>"
   bullet: "<dark_gray>● "
   arrow: "<dark_gray>» "
+  quicksg: "<gold>"
+  emeraldrush: "<green>"
+  duell: "<aqua>"
+
+games:
+  quicksg:
+    name: "<quicksg>QuickSG"
+  emeraldrush:
+    name: "<emeraldrush>EmeraldRush"
+  duell:
+    name: "<duell>Duell"
+game-status:
+  available: "<success>Jetzt spielen"
+  full: "<muted>Alle Plätze belegt"
+  ingame: "<muted>Runde läuft"
+  restart: "<accent>Startet neu"
+  offline: "<muted>Gerade offline"
 
 commands:
   coins:

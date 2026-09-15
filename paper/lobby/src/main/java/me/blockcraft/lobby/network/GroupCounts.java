@@ -1,6 +1,7 @@
 package me.blockcraft.lobby.network;
 
 import me.blockcraft.common.db.DatabaseException;
+import me.blockcraft.common.network.GroupStatus;
 import me.blockcraft.common.network.ServerRecord;
 import me.blockcraft.common.network.ServerRepository;
 import org.bukkit.Bukkit;
@@ -10,13 +11,13 @@ import org.bukkit.scheduler.BukkitTask;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-/** Players online per server group, refreshed from {@code bc_servers} for the navigator. */
+/** Availability and population per server group, refreshed from {@code bc_servers} for the navigator. */
 public final class GroupCounts {
 
     private final Plugin plugin;
     private final ServerRepository servers;
     private final int staleSeconds;
-    private volatile Map<String, Integer> online = Map.of();
+    private volatile Map<String, GroupStatus> groups = Map.of();
     private BukkitTask task;
 
     public GroupCounts(Plugin plugin, ServerRepository servers, int staleSeconds) {
@@ -25,8 +26,8 @@ public final class GroupCounts {
         this.staleSeconds = staleSeconds;
     }
 
-    public int online(String group) {
-        return online.getOrDefault(group, 0);
+    public GroupStatus status(String group) {
+        return groups.getOrDefault(group, GroupStatus.OFFLINE);
     }
 
     public void start(long intervalTicks) {
@@ -41,8 +42,8 @@ public final class GroupCounts {
 
     private void refresh() {
         try {
-            online = servers.alive(staleSeconds).stream()
-                    .collect(Collectors.groupingBy(ServerRecord::group, Collectors.summingInt(server -> server.status().online())));
+            groups = servers.alive(staleSeconds).stream()
+                    .collect(Collectors.groupingBy(ServerRecord::group, Collectors.collectingAndThen(Collectors.toList(), GroupStatus::of)));
         } catch (DatabaseException e) {
             plugin.getLogger().warning("Could not read bc_servers: " + e.getCause().getMessage());
         }

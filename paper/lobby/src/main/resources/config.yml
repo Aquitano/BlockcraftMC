@@ -34,7 +34,7 @@ effects:
   win-price: 500
 gadgets:
   cooldown-seconds: 5
-# Navigator entry -> server group whose player count it shows; stale-seconds matches the proxy's discovery setting.
+# Navigator entry -> server group to join; stale-seconds matches the proxy's discovery setting.
 navigator:
   groups:
     qsg: quicksg

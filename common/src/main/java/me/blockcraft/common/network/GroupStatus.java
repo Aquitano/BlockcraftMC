@@ -1,14 +1,26 @@
-package me.blockcraft.signs.sign;
-
-import me.blockcraft.common.network.ServerRecord;
-import me.blockcraft.common.network.ServerState;
+package me.blockcraft.common.network;
 
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
-/** All live servers of a group folded into what one sign can show. */
+/** Availability and total population shared by game cards and status signs. */
 public record GroupStatus(Optional<ServerState> state, int online, int maxPlayers, boolean joinable) {
+
+    public enum Availability {
+        AVAILABLE, FULL, INGAME, RESTART, OFFLINE
+    }
+
+    public Availability availability() {
+        if (joinable) {
+            return Availability.AVAILABLE;
+        }
+        return state.map(value -> switch (value) {
+            case LOBBY -> Availability.FULL;
+            case INGAME -> Availability.INGAME;
+            case RESTART -> Availability.RESTART;
+        }).orElse(Availability.OFFLINE);
+    }
 
     public static final GroupStatus OFFLINE = new GroupStatus(Optional.empty(), 0, 0, false);
 

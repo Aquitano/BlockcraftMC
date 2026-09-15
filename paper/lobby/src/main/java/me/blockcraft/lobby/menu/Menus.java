@@ -85,11 +85,17 @@ public record Menus(
     }
 
     public void warp(Player player, LobbyLocation target) {
-        locations.get(target).ifPresent(location -> {
-            player.teleport(location);
+        var destination = locations.get(target);
+        if (destination.isEmpty()) {
+            Sounds.MENU_DENY.play(player);
+            player.sendMessage(messages.get("navigator.place-unavailable"));
+            return;
+        }
+        Menu.close(player);
+        if (player.teleport(destination.get())) {
             Sounds.TELEPORT.play(player);
             player.getWorld().spawnParticle(Particle.FLAME, player.getLocation(), TELEPORT_PARTICLES, 0.5, 0.5, 0.5, 0.01);
-        });
+        }
     }
 
     public void openNavigator(Player player) {

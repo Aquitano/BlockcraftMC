@@ -53,15 +53,30 @@ premium:
     - "<prefix><muted>Mehr erfahren <accent>/Premium"
   entered: "<prefix><muted>Du betrittst den <gold>Premium <muted>Bereich."
 navigator:
-  title: "<arrow><primary>Navigator"
-  lore: "<bullet><muted>Klicke zum Teleportieren."
-  online: "<bullet><muted><online> Spieler online"
-  qsg: "<arrow><primary>QSG"
-  duell: "<arrow><primary>Duell"
-  shop: "<arrow><primary>Shop"
-  rush: "<arrow><primary>EmeraldRush"
-  spawn: "<arrow><aqua>Spawn"
-  jump: "<arrow><primary>JumpAndRun"
+  title: "<primary>Spielen <dark>● <muted>Lobby entdecken"
+  lore: "<muted>Klicken <dark>· <primary>Besuchen"
+  online: "<muted><online> Spieler im Spielmodus"
+  play: "<success>Linksklick <dark>· <muted>Jetzt spielen"
+  retry: "<accent>Linksklick <dark>· <muted>Verfügbarkeit prüfen"
+  visit: "<primary>Rechtsklick <dark>· <muted>Lobby-Bereich besuchen"
+  unavailable: "<prefix><muted>Dieses Spiel ist gerade nicht verfügbar."
+  place-unavailable: "<prefix><muted>Dieser Lobby-Bereich ist noch nicht eingerichtet."
+  qsg: "<quicksg><bold>QuickSG"
+  rush: "<emeraldrush><bold>EmeraldRush"
+  duell: "<duell><bold>Duell"
+  shop: "<accent>Lobby-Shop"
+  spawn: "<primary>Zurück zum Spawn"
+  jump: "<primary>JumpAndRun"
+  description:
+    qsg:
+      - "<muted>Kit wählen, Beute sammeln, überleben."
+      - "<muted>Jeder gegen jeden. Keine Teams."
+    rush:
+      - "<muted>Erze abbauen, Ausrüstung erhandeln."
+      - "<muted>Dein Vorrat entscheidet im Deathmatch."
+    duell:
+      - "<muted>Ein Gegner. Ihr bestimmt den Modus."
+      - "<muted>1vs1, SurvivalGames oder SuperJump."
 secrets:
   title: "<arrow><primary>Secrets"
   unknown: "<error>???"
@@ -267,14 +282,14 @@ setholo:
 # One block per entry of holograms in config.yml.
 holo:
   quicksg:
-    - "<dark>● <gold><bold>QUICKSG</bold> <dark>●"
-    - "<dark>- <muted>Schnelle Survivalgames <dark>-"
-    - "<accent>Jetzt spielen: <success>/play quicksg"
+    - "<dark>● <quicksg><bold>QUICKSG</bold> <dark>●"
+    - "<dark>- <muted>Kit wählen, Beute sammeln, überleben. <dark>-"
+    - "<success>Jetzt spielen <dark>· <primary>/play quicksg"
   emeraldrush:
-    - "<dark>● <gold><bold>EMERALDRUSH</bold> <dark>●"
-    - "<dark>- <muted>Sammeln, handeln, Deathmatch <dark>-"
-    - "<accent>Jetzt spielen: <success>/play emeraldrush"
+    - "<dark>● <emeraldrush><bold>EMERALDRUSH</bold> <dark>●"
+    - "<dark>- <muted>Erze abbauen, handeln, Deathmatch. <dark>-"
+    - "<success>Jetzt spielen <dark>· <primary>/play emeraldrush"
   duell:
-    - "<dark>● <gold><bold>DUELL</bold> <dark>●"
-    - "<dark>- <muted>1vs1, SurvivalGames, SuperJump <dark>-"
-    - "<accent>Jetzt spielen: <success>/play duell"
+    - "<dark>● <duell><bold>DUELL</bold> <dark>●"
+    - "<dark>- <muted>1vs1, SurvivalGames oder SuperJump. <dark>-"
+    - "<success>Jetzt spielen <dark>· <primary>/play duell"

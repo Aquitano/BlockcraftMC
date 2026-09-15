@@ -1,7 +1,10 @@
 package me.blockcraft.signs.sign;
 
+import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.common.network.GroupStatus;
 import me.blockcraft.common.network.ServerState;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Material;
@@ -10,6 +13,8 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.block.Sign;
 import org.bukkit.block.data.type.WallSign;
 import org.bukkit.block.sign.Side;
+
+import java.util.Locale;
 
 public final class SignRenderer {
 
@@ -24,20 +29,14 @@ public final class SignRenderer {
             return;
         }
         var front = sign.getSide(Side.FRONT);
-        status.state().ifPresentOrElse(state -> {
-            front.line(0, messages.get("sign.name", Placeholder.unparsed("name", statusSign.group())));
-            front.line(1, messages.get("sign.state." + state.name().toLowerCase()));
-            front.line(2, messages.get("sign.players",
-                    Formatter.number("online", status.online()), Formatter.number("max", status.maxPlayers())));
-            front.line(3, messages.get("sign.click"));
-            attachedBlock(sign).setType(indicator(state, status.joinable()));
-        }, () -> {
-            front.line(0, messages.get("sign.offline.border"));
-            front.line(1, messages.get("sign.offline.status"));
-            front.line(2, messages.get("sign.offline.players"));
-            front.line(3, messages.get("sign.offline.border"));
-            attachedBlock(sign).setType(Material.RED_TERRACOTTA);
-        });
+        var shared = BlockcraftApi.get().messages();
+        String nameKey = "games." + statusSign.group() + ".name";
+        var name = shared.has(nameKey) ? shared.get(nameKey) : Component.text(statusSign.group());
+        front.line(0, messages.get("sign.name", Placeholder.component("name", name)));
+        front.line(1, shared.get("game-status." + status.availability().name().toLowerCase(Locale.ROOT)));
+        front.line(2, messages.get("sign.players", Formatter.number("online", status.online()), Formatter.number("max", status.maxPlayers())));
+        front.line(3, messages.get(status.joinable() ? "sign.click" : "sign.retry"));
+        attachedBlock(sign).setType(status.state().map(state -> indicator(state, status.joinable())).orElse(Material.RED_TERRACOTTA));
         sign.update();
     }
 
