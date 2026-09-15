@@ -15,8 +15,8 @@ val packRanks = tasks.register("packRanks") {
 }
 
 // Lays out build/docker for docker-compose.yml: build/docker/paper/<module>/<module>.jar (one directory per plugin,
-// so a compose service lists the ones it runs), build/docker/velocity/<module>.jar, and ranks.json.gz next to
-// LuckPerms on both sides.
+// so a compose service lists the ones it runs), build/docker/velocity/<module>.jar, ranks.json.gz next to
+// LuckPerms on both sides, and the resource pack in the proxy plugin's data directory.
 tasks.register<Sync>("stagePlugins") {
     project(":paper").subprojects.forEach { plugin ->
         from(plugin.tasks.named("shadowJar")) {
@@ -35,6 +35,9 @@ tasks.register<Sync>("stagePlugins") {
     }
     from(packRanks) {
         into("velocity/luckperms")
+    }
+    from(project(":resourcepack").tasks.named("pack")) {
+        into("velocity/blockcraft-system")
     }
     into(layout.buildDirectory.dir("docker"))
 }

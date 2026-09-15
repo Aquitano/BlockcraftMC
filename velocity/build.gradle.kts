@@ -11,7 +11,7 @@ val selectedPlugins = providers.gradleProperty("plugins").map { it.split(",").ma
 tasks.runVelocity {
     velocityVersion(libs.findVersion("velocity-api").get().requiredVersion)
     runDirectory = rootProject.layout.projectDirectory.dir("run/velocity")
-    dependsOn(":packRanks")
+    dependsOn(":packRanks", ":resourcepack:pack")
     doFirst {
         copy {
             from(rootProject.file("dev/velocity"))
@@ -20,6 +20,10 @@ tasks.runVelocity {
         copy {
             from(rootProject.layout.buildDirectory.file("luckperms/ranks.json.gz"))
             into(runDirectory.dir("plugins/luckperms"))
+        }
+        copy {
+            from(project(":resourcepack").layout.buildDirectory.file("blockcraft.zip"))
+            into(runDirectory.dir("plugins/blockcraft-system"))
         }
     }
     pluginJars.from(provider {

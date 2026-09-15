@@ -42,6 +42,9 @@ README.md; this file only holds what the code does not say by itself.
   `Menu.close`; both defer a tick because Bukkit forbids doing it inside `InventoryClickEvent`. `Menu` fills the
   empty slots, plays the click sound and owns `backButton`/`closeButton`; a coin purchase goes through
   `ConfirmDialog` first.
+- The client-side look lives in `resourcepack/` (README, "Resource pack"): menu panels and HUD icons are glyphs of
+  the `blockcraft:ui` font, addressed only through `UiFont` and `<icon:name>`, and never assumed: whatever the pack
+  draws must also read without it, because `BlockcraftApi.get().resourcePack().applied(player)` may be false.
 - Feedback sounds come from `Sounds` in `paper/api` (`Sounds.MENU_CLICK.play(player)`), never from a hand-written
   volume and pitch; only sounds that belong to a world effect stay at their call site.
 - Ranks come from LuckPerms (`group.<rank>` permissions, `LuckPermsProvider` API). No rank tables, no rank names in

@@ -16,6 +16,7 @@ paper/quicksg            QuickSG survival games
 paper/reports            ReportsMenu: staff GUI over the reports table
 paper/statussigns        StatusSigns: clickable server-status signs
 velocity/system          BlockcraftSystem: reports, moderation, parties, friends, routing and staff tools
+resourcepack/            The client-side look: menu panels, HUD icons and button textures (see "Resource pack")
 dev/                     Config templates for the local dev network (see below)
 worlds/                  One map template per server group, restored at every start (see "Maps")
 docker-compose.yml       The local dev network: MariaDB, Velocity and one Paper server per game mode
@@ -332,10 +333,34 @@ code the row held. The bot looks the code up (`code = ? AND code_expires_at > NO
 links to one player. `/discord unlink` clears `discord_id` and `linked_at` again. Nothing else writes the table, and
 `/discord` reads it to tell a player where they stand.
 
+## Resource pack
+
+`resourcepack/src` is the pack the proxy offers at login, zipped by `./gradlew :resourcepack:pack` and staged next to
+the proxy plugin by `stagePlugins`. The proxy hashes `plugins/blockcraft-system/blockcraft.zip` at startup, serves it
+on `resource-pack.port` (8080 in the compose network) and offers `resource-pack.url` to every client while it is being
+configured; `required: true` kicks whoever declines. Only the proxy hears the client's answer, so it tells each
+backend on arrival (the `Pack` subchannel), and BlockcraftAPI keeps that in `resourcePack()`.
+
+Everything the pack changes has a plain fallback, so a player without it sees vanilla menus and text symbols:
+
+- Menu panels are glyphs of the `blockcraft:ui` font, drawn from the inventory title and moved back into the corner
+  with negative-width spaces (`UiFont`); `Menu` picks the panel by viewer, skips the pane filler and draws the back
+  and close buttons with the pack's item models. A menu with a `toolbar` gets the variant whose first row is three
+  wide coloured buttons; the icon item sits in the middle slot and the outer slots hold invisible items, so the
+  whole bar answers the click. Items placed with `set(slot, item, icon)` are drawn as the pack's `items/<icon>.json`.
+- HUD icons are `<icon:name>` in a message (`Icon`): a font glyph with the pack, the symbol under `icons.<name>` in
+  BlockcraftAPI's `messages.yml` without.
+- The `Inventar` label under a menu is blanked through the pack's language files.
+
+The textures are drawn by `java resourcepack/PackArt.java resourcepack/src` (panel colours, slots and the pixel
+icons live in that file); a redrawn pack needs `stagePlugins` and a proxy restart, and the client re-downloads it
+because the hash changed. `UiFontTest` keeps the code's glyph table in step with `ui.json`.
+
 ## Deploy
 
 Copy the jars from `build/libs` plus `LuckPerms` into `plugins/` of the respective server, configure the `database`
-section of `plugins/BlockcraftAPI/config.yml` (Paper) and of each Velocity plugin's `config.yml`, point LuckPerms on
+section of `plugins/BlockcraftAPI/config.yml` (Paper) and of each Velocity plugin's `config.yml`, put
+`blockcraft.zip` next to the proxy plugin's config with `resource-pack.url` reachable from the internet, point LuckPerms on
 every server at the same database (`storage-method` and `data` in its `config.yml`), import the ranks (see above),
 and point the Paper servers at the proxy with modern forwarding. The servers register themselves with the proxy (see
 above).

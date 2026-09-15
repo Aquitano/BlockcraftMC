@@ -1,0 +1,133 @@
+{
+  "providers": [
+    {
+      "type": "space",
+      "advances": {
+        "\ue800": -1,
+        "\ue801": -2,
+        "\ue802": -4,
+        "\ue803": -8,
+        "\ue804": -16,
+        "\ue805": -32,
+        "\ue806": -64,
+        "\ue807": -128,
+        "\ue810": 1,
+        "\ue811": 2,
+        "\ue812": 4,
+        "\ue813": 8,
+        "\ue814": 16,
+        "\ue815": 32,
+        "\ue816": 64,
+        "\ue817": 128
+      }
+    },
+    {
+      "type": "bitmap",
+      "file": "blockcraft:font/menu_1.png",
+      "ascent": 13,
+      "height": 132,
+      "chars": [
+        "\ue101"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "blockcraft:font/menu_2.png",
+      "ascent": 13,
+      "height": 150,
+      "chars": [
+        "\ue102"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "blockcraft:font/menu_3.png",
+      "ascent": 13,
+      "height": 168,
+      "chars": [
+        "\ue103"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "blockcraft:font/menu_4.png",
+      "ascent": 13,
+      "height": 186,
+      "chars": [
+        "\ue104"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "blockcraft:font/menu_5.png",
+      "ascent": 13,
+      "height": 204,
+      "chars": [
+        "\ue105"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "blockcraft:font/menu_6.png",
+      "ascent": 13,
+      "height": 222,
+      "chars": [
+        "\ue106"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "blockcraft:font/toolbar_2.png",
+      "ascent": 13,
+      "height": 150,
+      "chars": [
+        "\ue112"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "blockcraft:font/toolbar_3.png",
+      "ascent": 13,
+      "height": 168,
+      "chars": [
+        "\ue113"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "blockcraft:font/toolbar_4.png",
+      "ascent": 13,
+      "height": 186,
+      "chars": [
+        "\ue114"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "blockcraft:font/toolbar_5.png",
+      "ascent": 13,
+      "height": 204,
+      "chars": [
+        "\ue115"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "blockcraft:font/toolbar_6.png",
+      "ascent": 13,
+      "height": 222,
+      "chars": [
+        "\ue116"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "blockcraft:font/icons.png",
+      "ascent": 7,
+      "height": 8,
+      "chars": [
+        "\ue200\ue201\ue202\ue203\ue204"
+      ]
+    }
+  ]
+}
