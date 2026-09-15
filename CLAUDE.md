@@ -35,7 +35,9 @@ README.md; this file only holds what the code does not say by itself.
   `bc_player_settings` through `common`'s `PlayerSetting`; Paper reads it from `BlockcraftApi.get().settings()` and
   reports every change to the proxy over the `Setting` subchannel. No per-plugin settings store.
 - Paper plugins get the one Hikari pool from `BlockcraftApi.get().database()`; they never open their own. Blocking
-  work (DB, pings) on hot paths runs through `Tasks.async`, chat listeners use `AsyncChatEvent` and may block.
+  work (DB, pings) on hot paths runs through `Tasks.async`; database work behind a menu goes through
+  `BlockcraftApi.get().playerTasks()`: `latest` for reads that build a screen, `write` for changes the player must
+  hear about. Chat listeners use `AsyncChatEvent` and may block.
 - GUIs extend `Menu` (holder-based, never title matching). Open and close other inventories only via `Menu.open` /
   `Menu.close`; both defer a tick because Bukkit forbids doing it inside `InventoryClickEvent`. `Menu` fills the
   empty slots, plays the click sound and owns `backButton`/`closeButton`; a coin purchase goes through

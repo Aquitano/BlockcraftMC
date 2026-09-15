@@ -4,7 +4,6 @@ import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.menu.Menu;
 import me.blockcraft.reports.ReportsPlugin;
 import me.blockcraft.api.proxy.ProxyMessaging;
-import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.moderation.PunishmentCatalogRepository;
 import me.blockcraft.common.network.operation.NetworkRequest.PresetPunishment;
@@ -45,7 +44,7 @@ public final class ReportMenus {
         if (!allowed(player)) {
             return;
         }
-        Tasks.async(plugin, () -> reported.map(reports::byReported).orElseGet(reports::all), list -> {
+        BlockcraftApi.get().playerTasks().latest(player, () -> reported.map(reports::byReported).orElseGet(reports::all), list -> {
             if (!allowed(player)) {
                 return;
             }
@@ -62,7 +61,7 @@ public final class ReportMenus {
         if (!allowed(player)) {
             return;
         }
-        Tasks.async(plugin, () -> reports.byId(report.id()), current -> {
+        BlockcraftApi.get().playerTasks().latest(player, () -> reports.byId(report.id()), current -> {
             if (!allowed(player)) {
                 return;
             }
@@ -78,7 +77,7 @@ public final class ReportMenus {
             return;
         }
         String staff = BlockcraftApi.get().realName(player);
-        Tasks.async(plugin, () -> {
+        BlockcraftApi.get().playerTasks().write(player, () -> {
             if (report.isClaimedBy(player.getUniqueId(), staff)) {
                 reports.release(report.id(), player.getUniqueId(), staff);
             } else {
@@ -107,8 +106,7 @@ public final class ReportMenus {
         if (!allowed(player)) {
             return;
         }
-        Menu.close(player);
-        Tasks.async(plugin, () -> {
+        BlockcraftApi.get().playerTasks().write(player, () -> {
             reports.delete(report.id());
             return report;
         }, deleted -> openList(player, reported, 1));
@@ -126,7 +124,7 @@ public final class ReportMenus {
         if (!allowed(player)) {
             return;
         }
-        Tasks.async(plugin, catalog::all, entries -> {
+        BlockcraftApi.get().playerTasks().latest(player, catalog::all, entries -> {
             if (!allowed(player)) {
                 return;
             }
@@ -176,7 +174,7 @@ public final class ReportMenus {
             openReport(player, report, reported);
             return;
         }
-        Tasks.async(plugin, () -> {
+        BlockcraftApi.get().playerTasks().write(player, () -> {
             reports.updateStatus(report.id(), status);
             return report.withStatus(status);
         }, updated -> {

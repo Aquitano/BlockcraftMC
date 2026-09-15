@@ -10,7 +10,6 @@ import me.blockcraft.api.menu.Menu;
 import me.blockcraft.common.shop.Shop;
 import me.blockcraft.api.shop.Unlocks;
 import me.blockcraft.api.sound.Sounds;
-import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.rush.config.SpawnPoint;
 import me.blockcraft.rush.config.Spawns;
@@ -57,11 +56,11 @@ public final class RushMenus {
         if (game.phase() != GamePhase.LOBBY) {
             return;
         }
-        Tasks.async(plugin, () -> ownedPerks(player), owned -> new PerkMenu(this, messages, owned).open(player));
+        BlockcraftApi.get().playerTasks().latest(player, () -> ownedPerks(player), owned -> new PerkMenu(this, messages, owned).open(player));
     }
 
     void openPerk(Player player, Perk perk) {
-        Tasks.async(plugin, () -> unlocks.owns(player.getUniqueId(), perk.item()),
+        BlockcraftApi.get().playerTasks().latest(player, () -> unlocks.owns(player.getUniqueId(), perk.item()),
                 owned -> new PerkBuyMenu(this, messages, perk, owned).open(player));
     }
 
@@ -77,8 +76,7 @@ public final class RushMenus {
     }
 
     private void purchasePerk(Player player, Perk perk) {
-        Menu.close(player);
-        Tasks.async(plugin, () -> shop.buy(player.getUniqueId(), BlockcraftApi.get().realName(player), perk.item(), perk.price()), purchase -> {
+        BlockcraftApi.get().playerTasks().write(player, () -> shop.buy(player.getUniqueId(), BlockcraftApi.get().realName(player), perk.item(), perk.price()), purchase -> {
             switch (purchase.outcome()) {
                 case BOUGHT -> {
                     Sounds.PURCHASE.play(player);
@@ -99,7 +97,7 @@ public final class RushMenus {
     }
 
     void openShop(Player player, ShopCategory category) {
-        Tasks.async(plugin, () -> ownedPerks(player),
+        BlockcraftApi.get().playerTasks().latest(player, () -> ownedPerks(player),
                 owned -> new ShopMenu(this, messages, category, catalog.entries(category, owned)).open(player));
     }
 
@@ -130,7 +128,7 @@ public final class RushMenus {
 
     public void openStats(Player player) {
         List<Player> online = List.copyOf(Bukkit.getOnlinePlayers());
-        Tasks.async(plugin, () -> online.stream().map(other -> new StatsMenu.Entry(other, stats.get(other.getUniqueId()))).toList(),
+        BlockcraftApi.get().playerTasks().latest(player, () -> online.stream().map(other -> new StatsMenu.Entry(other, stats.get(other.getUniqueId()))).toList(),
                 entries -> new StatsMenu(this, messages, entries).open(player));
     }
 

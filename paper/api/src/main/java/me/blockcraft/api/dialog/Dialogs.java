@@ -1,5 +1,6 @@
 package me.blockcraft.api.dialog;
 
+import me.blockcraft.api.BlockcraftApi;
 import io.papermc.paper.dialog.Dialog;
 import io.papermc.paper.dialog.DialogResponseView;
 import io.papermc.paper.registry.data.dialog.ActionButton;
@@ -54,6 +55,7 @@ public final class Dialogs {
 
     /** Closes a chest menu the player has open, since the dialog takes its screen without telling the server. */
     public static void show(Player player, Dialog dialog) {
+        BlockcraftApi.get().playerTasks().invalidate(player);
         Plugin api = JavaPlugin.getProvidingPlugin(Dialogs.class);
         Bukkit.getScheduler().runTask(api, () -> {
             if (!player.isOnline()) {

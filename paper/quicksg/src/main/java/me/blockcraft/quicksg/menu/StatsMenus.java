@@ -1,9 +1,9 @@
 package me.blockcraft.quicksg.menu;
 
+import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.game.Stats;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.game.TopList;
-import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.quicksg.game.GameItems;
 import org.bukkit.Bukkit;
@@ -50,7 +50,7 @@ public final class StatsMenus {
 
     public void openPlayers(Player viewer) {
         var online = Bukkit.getOnlinePlayers().stream().map(Player::getUniqueId).toList();
-        Tasks.async(plugin, () -> {
+        BlockcraftApi.get().playerTasks().latest(viewer, () -> {
             Map<UUID, Stats> loaded = new LinkedHashMap<>();
             online.forEach(uuid -> loaded.put(uuid, stats.get(uuid)));
             return loaded;

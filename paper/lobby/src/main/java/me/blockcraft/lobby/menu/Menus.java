@@ -9,7 +9,6 @@ import me.blockcraft.api.settings.PlayerSettings;
 import me.blockcraft.common.shop.Shop;
 import me.blockcraft.api.shop.Unlocks;
 import me.blockcraft.api.sound.Sounds;
-import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.network.ServerIdentity;
 import me.blockcraft.common.network.ServerRecord;
@@ -68,10 +67,7 @@ public record Menus(
      * click bought it or an earlier one did. The level shows the new balance.
      */
     private void buy(Player player, String item, int price, Consumer<Player> onOwned) {
-        Tasks.async(plugin, () -> shop.buy(player.getUniqueId(), BlockcraftApi.get().realName(player), item, price), purchase -> {
-            if (!player.isOnline()) {
-                return;
-            }
+        BlockcraftApi.get().playerTasks().write(player, () -> shop.buy(player.getUniqueId(), BlockcraftApi.get().realName(player), item, price), purchase -> {
             switch (purchase.outcome()) {
                 case BOUGHT -> {
                     Sounds.PURCHASE.play(player);
@@ -101,7 +97,7 @@ public record Menus(
     }
 
     public void openSecrets(Player player) {
-        Tasks.async(plugin, () -> unlocks.owned(player.getUniqueId(), Secret.ITEM_PREFIX),
+        BlockcraftApi.get().playerTasks().latest(player, () -> unlocks.owned(player.getUniqueId(), Secret.ITEM_PREFIX),
                 found -> new SecretsMenu(this, found).open(player));
     }
 
@@ -110,12 +106,12 @@ public record Menus(
     }
 
     public void openHeads(Player player) {
-        Tasks.async(plugin, () -> unlocks.owned(player.getUniqueId(), Head.ITEM_PREFIX),
+        BlockcraftApi.get().playerTasks().latest(player, () -> unlocks.owned(player.getUniqueId(), Head.ITEM_PREFIX),
                 owned -> new HeadsMenu(this, owned).open(player));
     }
 
     public void openShirts(Player player) {
-        Tasks.async(plugin, () -> unlocks.owned(player.getUniqueId(), Shirt.ITEM_PREFIX),
+        BlockcraftApi.get().playerTasks().latest(player, () -> unlocks.owned(player.getUniqueId(), Shirt.ITEM_PREFIX),
                 owned -> new ShirtsMenu(this, owned).open(player));
     }
 
@@ -161,7 +157,7 @@ public record Menus(
     }
 
     private <E extends Enum<E>> void openEffects(Player player, EffectKind<E> kind, int price) {
-        Tasks.async(plugin, () -> unlocks.owned(player.getUniqueId(), kind.itemPrefix()),
+        BlockcraftApi.get().playerTasks().latest(player, () -> unlocks.owned(player.getUniqueId(), kind.itemPrefix()),
                 owned -> new EffectsMenu<>(this, kind, price, player, owned).open(player));
     }
 
@@ -175,7 +171,7 @@ public record Menus(
     }
 
     public void openLobbies(Player player) {
-        Tasks.async(plugin, () -> servers.alive(config.serverListStaleSeconds()).stream()
+        BlockcraftApi.get().playerTasks().latest(player, () -> servers.alive(config.serverListStaleSeconds()).stream()
                         .filter(server -> server.group().equals(self.group()))
                         .sorted(Comparator.comparing(ServerRecord::name))
                         .toList(),

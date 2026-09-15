@@ -9,6 +9,7 @@ import me.blockcraft.api.player.RealNames;
 import me.blockcraft.api.proxy.NetworkOperations;
 import me.blockcraft.api.settings.PlayerSettings;
 import me.blockcraft.api.shop.Unlocks;
+import me.blockcraft.api.task.PlayerTasks;
 import me.blockcraft.api.xp.Xp;
 import me.blockcraft.api.xp.XpReward;
 import me.blockcraft.common.db.Database;
@@ -28,6 +29,7 @@ public final class BlockcraftApi {
     private static BlockcraftApi instance;
 
     private final NetworkOperations operations;
+    private final PlayerTasks playerTasks;
     private final Database database;
     private final CoinsRepository coins;
     private final Unlocks unlocks;
@@ -47,6 +49,7 @@ public final class BlockcraftApi {
                   Messages messages, ServerRepository servers, ServerIdentity server, ServerPresence presence,
                   RealNames realNames, Xp xp, TagResolver tags) {
         this.operations = new NetworkOperations(plugin, messages);
+        this.playerTasks = new PlayerTasks(plugin, messages);
         this.database = database;
         this.coins = new CoinsRepository(database);
         this.unlocks = new Unlocks(database);
@@ -81,6 +84,11 @@ public final class BlockcraftApi {
     /** Typed requests to the proxy: reports and punishments, answered with a result. */
     public NetworkOperations operations() {
         return operations;
+    }
+
+    /** Database work behind menus, delivered only to a player who is still there for it. */
+    public PlayerTasks playerTasks() {
+        return playerTasks;
     }
 
     public Database database() {

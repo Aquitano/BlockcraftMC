@@ -186,6 +186,11 @@ member in join order. Pending invitations follow the new leader and expire when 
 
 ## Shared modules and upgrades
 
+`common` holds what both platforms use: storage and migrations, purchases, player references and the operation
+payloads. `paper/api` holds what every backend shares: menus, dialogs, player tasks and requests to the proxy.
+`paper/core` is the backend's commands and enforcement; the games keep their own match rules on top of the shared
+countdowns, rewards and menus.
+
 Reports run inside BlockcraftSystem on its database pool and player identity rules. Remove the old BlockcraftReport
 jar when deploying this version; the proxy refuses to start while it is loaded. On first start the old plugin's
 `config.yml`, `messages.yml` and `ignored-staff.yml` are copied from `plugins/blockcraft-report` into
@@ -204,14 +209,17 @@ statement is safe to run again because MariaDB commits DDL on its own. Existing 
 they are. New reports and claims also record the account UUID of everyone involved, so a renamed account
 still resolves to who did what. The games' stats tables keep their own setup.
 
-A purchase commits the unlock and the payment together, so a database failure rolls back both.
+Database work behind a menu goes through `PlayerTasks`: a read that builds a screen is dropped when the player moved
+on, opened another screen or disconnected before it finished; a write such as a purchase or a claim always reports
+its outcome. A failed query is logged and answered with one message. A purchase commits the unlock and the payment
+together, so a database failure rolls back both.
 
 ## Tests
 
 `./gradlew build` runs the unit tests: player visibility, the operation protocol, the proxy's handling of backend
-requests and the report configuration import. With `BLOCKCRAFT_TEST_DB_PORT` set it also runs the MariaDB integration
-tests: legacy upgrade, concurrent migration startup, checksum enforcement, report identity and transactional
-purchases. CI sets it; locally, point it at a disposable MariaDB:
+requests, stale requests and the report configuration import. With `BLOCKCRAFT_TEST_DB_PORT` set it also runs the
+MariaDB integration tests: legacy upgrade, concurrent migration startup, checksum enforcement, report identity and
+transactional purchases. CI sets it; locally, point it at a disposable MariaDB:
 
 ```sh
 BLOCKCRAFT_TEST_DB_PORT=3307 BLOCKCRAFT_TEST_DB_PASSWORD=blockcraft-test ./gradlew build

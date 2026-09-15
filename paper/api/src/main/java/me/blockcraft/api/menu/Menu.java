@@ -79,6 +79,7 @@ public abstract class Menu implements InventoryHolder {
     }
 
     public void open(Player player) {
+        BlockcraftApi.get().playerTasks().invalidate(player);
         Bukkit.getScheduler().runTask(API, () -> {
             if (!player.isOnline()) {
                 return;
@@ -92,6 +93,7 @@ public abstract class Menu implements InventoryHolder {
     }
 
     public static void close(Player player) {
+        BlockcraftApi.get().playerTasks().invalidate(player);
         Bukkit.getScheduler().runTask(API, () -> player.closeInventory());
     }
 

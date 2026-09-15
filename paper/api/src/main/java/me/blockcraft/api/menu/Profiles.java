@@ -1,9 +1,9 @@
 package me.blockcraft.api.menu;
 
+import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.coins.CoinsRepository;
 import me.blockcraft.api.game.Stats;
 import me.blockcraft.api.game.StatsRepository;
-import me.blockcraft.api.task.Tasks;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
@@ -39,7 +39,7 @@ public final class Profiles {
     /** {@code cosmetics} is the cosmetics menu of whatever server the player is on, where there is one. */
     public void open(Player player, Optional<Consumer<Player>> cosmetics) {
         var uuid = player.getUniqueId();
-        Tasks.async(plugin, () -> new Snapshot(coins.get(uuid), statsOf(uuid)),
+        BlockcraftApi.get().playerTasks().latest(player, () -> new Snapshot(coins.get(uuid), statsOf(uuid)),
                 snapshot -> new ProfileMenu(this, player, snapshot, cosmetics).open(player));
     }
 

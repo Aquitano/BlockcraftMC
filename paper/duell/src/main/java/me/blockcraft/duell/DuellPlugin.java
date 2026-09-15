@@ -47,7 +47,7 @@ public final class DuellPlugin extends JavaPlugin {
         duel = new Duel(this, config, messages, spawns, stats, new GameScoreboard(messages), items);
         api.presence().maxPlayers(Duel.MAX_PARTICIPANTS);
         var topList = new TopList(this, stats, messages);
-        var statsMenus = new StatsMenus(this, messages, duel, stats, items, topList, config.globalStatsHead());
+        var statsMenus = new StatsMenus(messages, duel, stats, items, topList, config.globalStatsHead());
         var lootChests = new LootChests(config.loot());
 
         List.of(

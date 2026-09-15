@@ -118,3 +118,4 @@ tags:
 operation:
   pending: "<prefix><muted>Deine letzte Anfrage wird noch bearbeitet."
   unconfirmed: "<prefix><error>Die Anfrage konnte nicht bestätigt werden. Prüfe das Ergebnis, bevor du es erneut versuchst."
+  failed: "<prefix><error>Die Daten konnten nicht geladen oder gespeichert werden. Bitte versuche es später erneut."

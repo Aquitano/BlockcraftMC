@@ -7,7 +7,6 @@ import me.blockcraft.api.menu.Menu;
 import me.blockcraft.common.shop.Shop;
 import me.blockcraft.api.shop.Unlocks;
 import me.blockcraft.api.sound.Sounds;
-import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.quicksg.game.Game;
 import me.blockcraft.quicksg.kit.Kit;
@@ -49,12 +48,12 @@ public final class KitMenus {
         if (!game.isLobby()) {
             return;
         }
-        Tasks.async(plugin, () -> Kit.ownedAmong(unlocks.owned(player.getUniqueId(), Kit.ITEM_PREFIX)),
+        BlockcraftApi.get().playerTasks().latest(player, () -> Kit.ownedAmong(unlocks.owned(player.getUniqueId(), Kit.ITEM_PREFIX)),
                 owned -> new KitSelectorMenu(this, owned).open(player));
     }
 
     void openDetail(Player player, Kit kit) {
-        Tasks.async(plugin, () -> kit.free() || unlocks.owns(player.getUniqueId(), kit.item()),
+        BlockcraftApi.get().playerTasks().latest(player, () -> kit.free() || unlocks.owns(player.getUniqueId(), kit.item()),
                 owned -> new KitDetailMenu(this, kit, owned).open(player));
     }
 
@@ -74,8 +73,7 @@ public final class KitMenus {
     }
 
     private void purchase(Player player, Kit kit) {
-        Menu.close(player);
-        Tasks.async(plugin, () -> shop.buy(player.getUniqueId(), BlockcraftApi.get().realName(player), kit.item(), price), purchase -> {
+        BlockcraftApi.get().playerTasks().write(player, () -> shop.buy(player.getUniqueId(), BlockcraftApi.get().realName(player), kit.item(), price), purchase -> {
             switch (purchase.outcome()) {
                 case BOUGHT -> {
                     Sounds.PURCHASE.play(player);
