@@ -64,7 +64,7 @@ public record Menus(
 
     /**
      * Buys the item off the main thread; {@code onOwned} runs on it once the player owns the item, whether this
-     * click bought it or an earlier one did. The level shows the new balance.
+     * click bought it or an earlier one did. The balance is labelled separately from network levels.
      */
     private void buy(Player player, String item, int price, Consumer<Player> onOwned) {
         BlockcraftApi.get().playerTasks().write(player, () -> shop.buy(player.getUniqueId(), BlockcraftApi.get().realName(player), item, price), purchase -> {
@@ -80,7 +80,7 @@ public record Menus(
                     player.sendMessage(messages.get("shop.too-expensive", Formatter.number("coins", price)));
                 }
             }
-            player.setLevel(purchase.balance());
+            player.sendMessage(messages.get("shop.balance", Formatter.number("coins", purchase.balance())));
         });
     }
 

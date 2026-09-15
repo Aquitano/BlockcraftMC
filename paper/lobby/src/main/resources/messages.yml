@@ -10,7 +10,9 @@ commands:
 
 join:
   title: "<ip>"
-  bossbar: "<bullet><muted>Du spielst auf <primary><ip><muted>! <dark>●"
+hud:
+  loading: "<primary><ip> <dark>● <muted>Dein Profil wird geladen…"
+  balance: "<accent><coins> Coins <dark>● <primary>Netzwerk-Level <level> <dark>● <muted><xp>/<needed> XP"
 wdl:
   kick: "<error>World Downloader ist nicht erlaubt."
 item:
@@ -113,7 +115,8 @@ shop:
   premium: "<arrow><gold>Premium"
   premium-lore: "<bullet><muted>Kaufe dir Premium!"
   already-premium: "<prefix><muted>Du hast bereits <gold>Premium<muted>."
-  bought: "<prefix><muted>Dein Kauf war erfolgreich!"
+  bought: "<prefix><success>Freigeschaltet. Viel Spaß damit!"
+  balance: "<prefix><muted>Kontostand <dark>· <accent><coins> Coins"
   too-expensive: "<prefix><error>Du benötigst <accent><coins> Coins <error>um dir das zu kaufen."
   owned-lore: "<arrow><success>Gekauft!"
   price-lore: "<arrow><accent><coins> Coins"

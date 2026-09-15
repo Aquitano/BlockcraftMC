@@ -186,6 +186,8 @@ as one total per player. The level follows a fixed curve: each level costs `xp.l
 so with the default of 100 level 2 is 100 XP, level 3 is 300 and level 10 is 4500. Awards show in the action bar,
 a level-up in chat with the level-up sound; `/level` shows the own progress, `/level <player>` needs
 `blockcraft.level.others`, and chat prefixes every message with the level (`chat.level` in core's `messages.yml`).
+The lobby experience bar shows this network level and progress. Its boss bar labels coins separately and refreshes
+from the database every `hud.refresh-seconds`. Purchases and secret rewards report the new balance in chat.
 
 ## Nick and vanish across the network
 

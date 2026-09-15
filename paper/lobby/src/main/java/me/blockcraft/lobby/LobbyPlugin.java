@@ -28,6 +28,7 @@ import me.blockcraft.lobby.listener.GadgetListener;
 import me.blockcraft.lobby.listener.InventoryLockListener;
 import me.blockcraft.lobby.listener.JoinQuitListener;
 import me.blockcraft.lobby.listener.LobbyItemListener;
+import me.blockcraft.lobby.listener.LobbyHud;
 import me.blockcraft.lobby.listener.MoveListener;
 import me.blockcraft.lobby.listener.PetListener;
 import me.blockcraft.lobby.listener.ProtectionListener;
@@ -54,6 +55,7 @@ public final class LobbyPlugin extends JavaPlugin {
     private ShopNpc shopNpc;
     private GroupCounts groupCounts;
     private Gadgets gadgets;
+    private LobbyHud hud;
 
     @Override
     public void onEnable() {
@@ -82,7 +84,9 @@ public final class LobbyPlugin extends JavaPlugin {
         messenger.registerIncomingPluginChannel(this, WorldDownloaderListener.INIT_CHANNEL, new WorldDownloaderListener(messages));
         messenger.registerIncomingPluginChannel(this, ProxyChannel.NAME, new FriendsChannel(menus));
 
-        register(new JoinQuitListener(this, messages, coins, locations, items, trails, pets, hider),
+        hud = new LobbyHud(this, messages);
+        hud.start(config.hudRefreshSeconds() * 20L);
+        register(hud, new JoinQuitListener(messages, locations, items, trails, pets, hider),
                 new LobbyItemListener(this, messages, menus, items, hider),
                 new ProtectionListener(api.buildMode()),
                 new CommandBlockListener(config.allowedCommands()),
@@ -106,6 +110,9 @@ public final class LobbyPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (hud != null) {
+            hud.stop();
+        }
         if (shopNpc != null) {
             shopNpc.stop();
         }

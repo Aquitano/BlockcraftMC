@@ -1,10 +1,8 @@
 package me.blockcraft.lobby.listener;
 
-import me.blockcraft.api.coins.CoinsRepository;
 import me.blockcraft.api.config.Locations;
 import me.blockcraft.api.player.Arrival;
 import me.blockcraft.api.settings.PlayerSettingsLoadedEvent;
-import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.lobby.config.LobbyLocation;
 import me.blockcraft.lobby.cosmetic.Pets;
@@ -12,31 +10,25 @@ import me.blockcraft.lobby.cosmetic.Trails;
 import me.blockcraft.lobby.hider.PlayerHider;
 import me.blockcraft.lobby.item.LobbyItem;
 import me.blockcraft.lobby.item.LobbyItems;
-import net.kyori.adventure.bossbar.BossBar;
 import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.plugin.Plugin;
 
 public final class JoinQuitListener implements Listener {
 
-    private final Plugin plugin;
     private final Messages messages;
-    private final CoinsRepository coins;
     private final Locations<LobbyLocation> locations;
     private final LobbyItems items;
     private final Trails trails;
     private final Pets pets;
     private final PlayerHider hider;
 
-    public JoinQuitListener(Plugin plugin, Messages messages, CoinsRepository coins, Locations<LobbyLocation> locations,
+    public JoinQuitListener(Messages messages, Locations<LobbyLocation> locations,
                             LobbyItems items, Trails trails, Pets pets, PlayerHider hider) {
-        this.plugin = plugin;
         this.messages = messages;
-        this.coins = coins;
         this.locations = locations;
         this.items = items;
         this.trails = trails;
@@ -54,9 +46,7 @@ public final class JoinQuitListener implements Listener {
         items.give(player, true);
         locations.get(LobbyLocation.SPAWN).ifPresent(player::teleport);
         player.setCollidable(false);
-        player.showBossBar(BossBar.bossBar(messages.get("join.bossbar"), 1.0f, BossBar.Color.BLUE, BossBar.Overlay.NOTCHED_10));
         hider.onJoin(player);
-        showCoinsAsLevel(player);
     }
 
     /** The hider choice is stored, so it is applied once the settings arrived rather than on join. */
@@ -77,11 +67,4 @@ public final class JoinQuitListener implements Listener {
         pets.release(player.getUniqueId());
     }
 
-    private void showCoinsAsLevel(Player player) {
-        Tasks.async(plugin, () -> coins.get(player.getUniqueId()), balance -> {
-            if (player.isOnline()) {
-                player.setLevel(balance);
-            }
-        });
-    }
 }

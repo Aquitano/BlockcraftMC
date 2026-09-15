@@ -34,6 +34,8 @@ effects:
   win-price: 500
 gadgets:
   cooldown-seconds: 5
+hud:
+  refresh-seconds: 5
 # Navigator entry -> server group to join; stale-seconds matches the proxy's discovery setting.
 navigator:
   groups:

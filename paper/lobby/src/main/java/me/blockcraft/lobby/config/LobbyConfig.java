@@ -28,7 +28,8 @@ public record LobbyConfig(
         int serverListStaleSeconds,
         int killEffectPrice,
         int winEffectPrice,
-        int gadgetCooldownSeconds
+        int gadgetCooldownSeconds,
+        int hudRefreshSeconds
 ) {
 
     public static LobbyConfig fromYaml(Map<String, Object> root) {
@@ -74,7 +75,8 @@ public record LobbyConfig(
                 (int) number(navigator, "stale-seconds", 20),
                 (int) number(effects, "kill-price", 500),
                 (int) number(effects, "win-price", 500),
-                (int) number(gadgets, "cooldown-seconds", 5)
+                (int) number(gadgets, "cooldown-seconds", 5),
+                Math.max(1, (int) number(YamlFile.section(root, "hud"), "refresh-seconds", 5))
         );
     }
 

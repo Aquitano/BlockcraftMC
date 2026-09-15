@@ -26,6 +26,7 @@ public final class DeathListener implements Listener {
         event.deathMessage(null);
         event.setDroppedExp(0);
         event.setKeepInventory(true);
+        event.setKeepLevel(true);
     }
 
     @EventHandler

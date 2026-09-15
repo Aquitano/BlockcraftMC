@@ -99,7 +99,7 @@ public final class SecretsListener implements Listener {
             player.showTitle(Title.title(messages.get("secrets.found-title"), messages.get("secrets.found-subtitle", rewardResolver), TITLE_TIMES));
             messages.getLines("secrets.found", rewardResolver, Placeholder.unparsed("secret", secret.key())).forEach(player::sendMessage);
             Sounds.SECRET.play(player);
-            player.setLevel(balance.getAsInt());
+            player.sendMessage(messages.get("shop.balance", Formatter.number("coins", balance.getAsInt())));
         });
     }
 
