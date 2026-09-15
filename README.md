@@ -347,7 +347,8 @@ Everything the pack changes has a plain fallback, so a player without it sees va
   with negative-width spaces (`UiFont`); `Menu` picks the panel by viewer, skips the pane filler and draws the back
   and close buttons with the pack's item models. A menu with a `toolbar` gets the variant whose first row is three
   wide coloured buttons; the icon item sits in the middle slot and the outer slots hold invisible items, so the
-  whole bar answers the click. Items placed with `set(slot, item, icon)` are drawn as the pack's `items/<icon>.json`.
+  whole bar answers the click. An item built from a `MenuIcon` carries its icon, so every menu draws it with the
+  pack's `items/<icon>.json` for pack wearers and as the vanilla item for everyone else.
 - HUD icons are `<icon:name>` in a message (`Icon`): a font glyph with the pack, the symbol under `icons.<name>` in
   BlockcraftAPI's `messages.yml` without.
 - The `Inventar` label under a menu is blanked through the pack's language files.

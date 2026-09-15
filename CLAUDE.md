@@ -45,6 +45,10 @@ README.md; this file only holds what the code does not say by itself.
 - The client-side look lives in `resourcepack/` (README, "Resource pack"): menu panels and HUD icons are glyphs of
   the `blockcraft:ui` font, addressed only through `UiFont` and `<icon:name>`, and never assumed: whatever the pack
   draws must also read without it, because `BlockcraftApi.get().resourcePack().applied(player)` may be false.
+- A picture on a menu item is a `MenuIcon`: the pack model and the vanilla fallback are decided there, never at the
+  call site, and `MenuIconTest` fails when the pack lacks one. Top-level menus (navigator, profile, extras, shop)
+  put close on the left of the `toolbar` and their two main destinations next to it; list menus keep the corner
+  `closeButton`, because the toolbar takes their first row.
 - Feedback sounds come from `Sounds` in `paper/api` (`Sounds.MENU_CLICK.play(player)`), never from a hand-written
   volume and pitch; only sounds that belong to a world effect stay at their call site.
 - Ranks come from LuckPerms (`group.<rank>` permissions, `LuckPermsProvider` API). No rank tables, no rank names in

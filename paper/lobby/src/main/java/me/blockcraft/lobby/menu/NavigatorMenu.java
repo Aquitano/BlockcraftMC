@@ -1,13 +1,12 @@
 package me.blockcraft.lobby.menu;
 
-import me.blockcraft.api.item.Items;
 import me.blockcraft.api.menu.Menu;
+import me.blockcraft.api.pack.MenuIcon;
 import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.common.network.GroupStatus;
 import me.blockcraft.lobby.config.LobbyLocation;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
-import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
@@ -28,14 +27,12 @@ final class NavigatorMenu extends Menu {
     NavigatorMenu(Menus menus) {
         super(6, menus.messages().get("navigator.title"));
         this.menus = menus;
-        var messages = menus.messages();
-        var apiMessages = menus.apiMessages();
-        toolbar(ToolbarButton.LEFT, Items.of(Material.BARRIER).name(apiMessages.get("menu.close")).build(), "tool_close", Menu::close);
-        toolbar(ToolbarButton.MIDDLE, place(Material.GOLD_INGOT, "shop", "navigator.shop-lore"), "tool_shop", menus::openShop);
-        toolbar(ToolbarButton.RIGHT, place(Material.ENDER_EYE, "spawn", "navigator.spawn-lore"), "tool_home",
+        toolbar(ToolbarButton.LEFT, MenuIcon.TOOL_CLOSE.item().name(menus.apiMessages().get("menu.close")).build(), Menu::close);
+        toolbar(ToolbarButton.MIDDLE, place(MenuIcon.TOOL_SHOP, "shop", "navigator.shop-lore"), menus::openShop);
+        toolbar(ToolbarButton.RIGHT, place(MenuIcon.TOOL_HOME, "spawn", "navigator.spawn-lore"),
                 player -> menus.warp(player, LobbyLocation.SPAWN));
-        GAMES.forEach((slot, target) -> set(slot, game(target), look(target).icon()));
-        set(JUMP_SLOT, place(Material.DIAMOND_BOOTS, "jump", "navigator.lore"), "jump");
+        GAMES.forEach((slot, target) -> set(slot, game(target)));
+        set(JUMP_SLOT, place(MenuIcon.JUMP, "jump", "navigator.lore"));
     }
 
     @Override
@@ -43,14 +40,11 @@ final class NavigatorMenu extends Menu {
         return false;
     }
 
-    private record Look(Material material, String icon) {
-    }
-
-    private static Look look(LobbyLocation game) {
+    private static MenuIcon icon(LobbyLocation game) {
         return switch (game) {
-            case QSG -> new Look(Material.IRON_SWORD, "quicksg");
-            case RUSH -> new Look(Material.EMERALD, "emeraldrush");
-            default -> new Look(Material.SHIELD, "duell");
+            case QSG -> MenuIcon.QUICKSG;
+            case RUSH -> MenuIcon.EMERALDRUSH;
+            default -> MenuIcon.DUELL;
         };
     }
 
@@ -67,12 +61,11 @@ final class NavigatorMenu extends Menu {
         if (menus.locations().get(target).isPresent()) {
             lore.add(messages.get("navigator.visit"));
         }
-        return Items.of(look(target).material()).name(messages.get("navigator." + target.key())).lore(lore).hideAttributes().build();
+        return icon(target).item().name(messages.get("navigator." + target.key())).lore(lore).build();
     }
 
-    private ItemStack place(Material material, String key, String loreKey) {
-        return Items.of(material).name(menus.messages().get("navigator." + key))
-                .lore(menus.messages().get(loreKey)).hideAttributes().build();
+    private ItemStack place(MenuIcon icon, String key, String loreKey) {
+        return icon.item().name(menus.messages().get("navigator." + key)).lore(menus.messages().get(loreKey)).build();
     }
 
     @Override
