@@ -1,5 +1,6 @@
 package me.blockcraft.common.db;
 
+import me.blockcraft.common.player.PlayerReference;
 import me.blockcraft.common.report.ReportRepository;
 import me.blockcraft.common.shop.Shop;
 import org.junit.After;
@@ -16,6 +17,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
@@ -79,6 +81,7 @@ public class DatabaseIntegrationTest {
         db.migrate();
         var report = new ReportRepository(db).all().getFirst();
         assertEquals("Reason", report.reason());
+        assertTrue(report.reportedId().isEmpty());
         assertEquals(APPLIED, count("SELECT COUNT(*) FROM bc_schema_migrations"));
     }
 
@@ -146,5 +149,25 @@ public class DatabaseIntegrationTest {
         assertThrows(DatabaseException.class, () -> new Shop(db).buy(player, "Buyer", "test.item", 60));
         assertEquals(0, count("SELECT COUNT(*) FROM bc_unlocks"));
         assertEquals(100, count("SELECT COINS FROM VCOINS"));
+    }
+
+    @Test
+    public void reportsKeepIdentityAndClaimsAcrossNameChanges() {
+        db.migrate();
+        var reports = new ReportRepository(db);
+        var reporter = PlayerReference.known(UUID.randomUUID(), "Reporter");
+        var target = PlayerReference.known(UUID.randomUUID(), "Target");
+        assertTrue(reports.insert(reporter, target, "Reason", "lobby"));
+        assertFalse(reports.insert(reporter, PlayerReference.known(target.uuid().orElseThrow(), "Renamed"), "Other", "lobby"));
+
+        var report = reports.all().getFirst();
+        assertEquals(target.uuid(), report.target().uuid());
+
+        var staff = UUID.randomUUID();
+        assertTrue(reports.claim(report.id(), staff, "Staff"));
+        assertFalse(reports.claim(report.id(), UUID.randomUUID(), "Other"));
+        assertTrue(reports.byId(report.id()).orElseThrow().isClaimedBy(staff, "NewStaffName"));
+        reports.release(report.id(), staff, "NewStaffName");
+        assertTrue(reports.byId(report.id()).orElseThrow().claimedBy().isEmpty());
     }
 }

@@ -15,5 +15,4 @@ include(
     "paper:reports",
     "paper:statussigns",
     "velocity:system",
-    "velocity:report",
 )

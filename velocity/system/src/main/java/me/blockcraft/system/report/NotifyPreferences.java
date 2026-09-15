@@ -1,4 +1,4 @@
-package me.blockcraft.report.storage;
+package me.blockcraft.system.report;
 
 import me.blockcraft.common.config.YamlFile;
 import org.yaml.snakeyaml.Yaml;

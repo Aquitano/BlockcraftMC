@@ -15,8 +15,7 @@ paper/emeraldrush        EmeraldRush minigame
 paper/quicksg            QuickSG survival games
 paper/reports            ReportsMenu: staff GUI over the reports table
 paper/statussigns        StatusSigns: clickable server-status signs
-velocity/system          BlockcraftSystem: bans, mutes, strikes, warns, party, hub, MOTD, staff tools
-velocity/report          BlockcraftReport: /report on the proxy
+velocity/system          BlockcraftSystem: reports, moderation, parties, friends, routing and staff tools
 dev/                     Config templates for the local dev network (see below)
 docker-compose.yml       The local dev network: MariaDB, Velocity and one Paper server per game mode
 ```
@@ -186,18 +185,26 @@ member in join order. Pending invitations follow the new leader and expire when 
 
 ## Shared modules and upgrades
 
+Reports run inside BlockcraftSystem on its database pool and player identity rules. Remove the old BlockcraftReport
+jar when deploying this version; the proxy refuses to start while it is loaded. On first start the old plugin's
+`config.yml`, `messages.yml` and `ignored-staff.yml` are copied from `plugins/blockcraft-report` into
+`plugins/blockcraft-system/reports` where no file exists yet, so messages, cooldown and muted staff survive. The old
+plugin's own database section is gone; if it pointed at a different database, move its `Reports` table first.
+
 Shared tables come from ordered migrations recorded in `bc_schema_migrations`. A start takes a MariaDB lock before
 applying what is pending, so servers starting together take turns; a checksum rejects an edited migration. Every
 statement is safe to run again because MariaDB commits DDL on its own. Existing report rows and name columns stay as
-they are. The games' stats tables keep their own setup.
+they are. New reports and claims also record the account UUID of everyone involved, so a renamed account
+still resolves to who did what. The games' stats tables keep their own setup.
 
 A purchase commits the unlock and the payment together, so a database failure rolls back both.
 
 ## Tests
 
-`./gradlew build` runs the tests; with `BLOCKCRAFT_TEST_DB_PORT` set that includes the MariaDB integration tests:
-legacy upgrade, concurrent migration startup, checksum enforcement and transactional purchases. CI sets it; locally,
-point it at a disposable MariaDB:
+`./gradlew build` runs the unit tests: player visibility and the report configuration import. With
+`BLOCKCRAFT_TEST_DB_PORT` set it also runs the MariaDB integration tests: legacy upgrade, concurrent migration
+startup, checksum enforcement, report identity and transactional purchases. CI sets it; locally, point it at a
+disposable MariaDB:
 
 ```sh
 BLOCKCRAFT_TEST_DB_PORT=3307 BLOCKCRAFT_TEST_DB_PASSWORD=blockcraft-test ./gradlew build

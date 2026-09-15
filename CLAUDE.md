@@ -56,4 +56,8 @@ README.md; this file only holds what the code does not say by itself.
   proxy; Paper plugins only do what needs the world.
 - No NMS, no legacy `§` codes in code. Legacy `&` is only parsed for text humans typed (MOTD, chat, LuckPerms prefixes, report statuses).
 - Names and structure should carry the meaning; comments only for a non-obvious why.
+- Reports live in `velocity/system/report`, using the system pool and visibility-aware player lookup. The retired
+  `velocity/report` jar must not run.
+- Whoever a row is about or by (reporter, reported, claimer) is a `PlayerReference`: the account UUID next to
+  the name it had at the time; the console has only a name. Names stay for legacy rows and display.
 - Purchases use `common`'s `Shop`: the unlock and coin payment commit in one transaction.

@@ -19,6 +19,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Opens the report menus and routes their actions; {@code reported} filters a list to one accused player. Moving
@@ -64,7 +65,7 @@ public final class ReportMenus {
                 return;
             }
             current.ifPresentOrElse(updated ->
-                            new ReportMenu(this, messages, updated, reported, BlockcraftApi.get().realName(player)).open(player),
+                            new ReportMenu(this, messages, updated, reported, player.getUniqueId(), BlockcraftApi.get().realName(player)).open(player),
                     () -> openList(player, reported, 1));
         });
     }
@@ -76,10 +77,10 @@ public final class ReportMenus {
         }
         String staff = BlockcraftApi.get().realName(player);
         Tasks.async(plugin, () -> {
-            if (report.isClaimedBy(staff)) {
-                reports.release(report.id(), staff);
+            if (report.isClaimedBy(player.getUniqueId(), staff)) {
+                reports.release(report.id(), player.getUniqueId(), staff);
             } else {
-                reports.claim(report.id(), staff);
+                reports.claim(report.id(), player.getUniqueId(), staff);
             }
             return reports.byId(report.id());
         }, current -> {
@@ -87,14 +88,14 @@ public final class ReportMenus {
                 return;
             }
             current.ifPresentOrElse(updated -> {
-                player.sendMessage(messages.get(claimResult(updated, staff), placeholders(messages, updated)));
+                player.sendMessage(messages.get(claimResult(updated, player.getUniqueId(), staff), placeholders(messages, updated)));
                 openReport(player, updated, reported);
             }, () -> openList(player, reported, 1));
         });
     }
 
-    private static String claimResult(Report report, String staff) {
-        if (report.isClaimedBy(staff)) {
+    private static String claimResult(Report report, UUID staffId, String staff) {
+        if (report.isClaimedBy(staffId, staff)) {
             return "claim.taken";
         }
         return report.claimedBy().isPresent() ? "claim.held" : "claim.released";

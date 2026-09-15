@@ -111,7 +111,11 @@ public final class PlayerVisibility {
 
     /** Names worth suggesting to the viewer: what they would see in the tab list. */
     public Stream<String> namesFor(CommandSource viewer) {
-        return visibleTo(viewer).map(player -> seesRealNames(viewer) ? player.getUsername() : shownName(player));
+        return visibleTo(viewer).map(player -> nameFor(viewer, player));
+    }
+
+    public String nameFor(CommandSource viewer, Player target) {
+        return seesRealNames(viewer) ? target.getUsername() : shownName(target);
     }
 
     /**

@@ -1,17 +1,20 @@
 package me.blockcraft.common.report;
 
 import me.blockcraft.common.db.Database;
+import me.blockcraft.common.db.DatabaseException;
 import me.blockcraft.common.db.RowMapper;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
+import me.blockcraft.common.player.PlayerReference;
 
 /** The {@code Reports} table, written by the proxy and reviewed on the Paper servers. */
 public final class ReportRepository {
 
     /** The age is measured on the database clock, so the reading server's time zone cannot shift it. */
-    private static final String COLUMNS = "ID, Reportername, Reportedname, Grund, Server, Status, claimed_by, "
+    private static final String COLUMNS = "ID, Reportername, Reportedname, Grund, Server, Status, claimed_by, reporter_uuid, reported_uuid, claimed_uuid, "
             + "TIMESTAMPDIFF(SECOND, created_at, CURRENT_TIMESTAMP) AS age_seconds";
 
     /** Whoever still has to look at a report is shown it first, newest one on top. */
@@ -19,20 +22,15 @@ public final class ReportRepository {
 
     private static final RowMapper<Report> REPORT = row -> new Report(row.getInt("ID"), row.getString("Reportername"),
             row.getString("Reportedname"), row.getString("Grund"), row.getString("Server"), row.getString("Status"),
-            Instant.now().minusSeconds(row.getLong("age_seconds")), Optional.ofNullable(row.getString("claimed_by")));
+            Instant.now().minusSeconds(row.getLong("age_seconds")), Optional.ofNullable(row.getString("claimed_by")),
+            Optional.ofNullable(row.getString("reporter_uuid")).map(UUID::fromString),
+            Optional.ofNullable(row.getString("reported_uuid")).map(UUID::fromString),
+            Optional.ofNullable(row.getString("claimed_uuid")).map(UUID::fromString));
 
     private final Database db;
 
     public ReportRepository(Database db) {
         this.db = db;
-    }
-
-    public void createTable() {
-        db.execute("CREATE TABLE IF NOT EXISTS Reports (ID INT NOT NULL AUTO_INCREMENT PRIMARY KEY, "
-                + "Reportername VARCHAR(100), Reportedname VARCHAR(100), Grund VARCHAR(1000), Server VARCHAR(100), Status VARCHAR(100), "
-                + "created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, claimed_by VARCHAR(100))");
-        db.execute("ALTER TABLE Reports ADD COLUMN IF NOT EXISTS created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP");
-        db.execute("ALTER TABLE Reports ADD COLUMN IF NOT EXISTS claimed_by VARCHAR(100)");
     }
 
     public List<Report> all() {
@@ -55,14 +53,18 @@ public final class ReportRepository {
         return db.queryOne("SELECT COUNT(*) FROM Reports WHERE Reportedname = ?", row -> row.getInt(1), reported).orElse(0);
     }
 
-    public boolean exists(String reporter, String reported) {
-        return db.queryOne("SELECT ID FROM Reports WHERE Reportername = ? AND Reportedname = ?", row -> row.getInt("ID"), reporter, reported)
-                .isPresent();
-    }
-
-    public void insert(String reporter, String reported, String reason, String server) {
-        db.update("INSERT INTO Reports (Reportername, Reportedname, Grund, Server, Status, created_at) "
-                + "VALUES (?, ?, ?, ?, 'Offen', CURRENT_TIMESTAMP)", reporter, reported, reason, server);
+    /** UUID uniqueness prevents concurrent submissions; names also match reports written before UUID storage. */
+    public boolean insert(PlayerReference reporter, PlayerReference reported, String reason, String server) {
+        try {
+            return db.update("INSERT INTO Reports (Reportername, Reportedname, reporter_uuid, reported_uuid, Grund, Server, Status) "
+                        + "SELECT ?, ?, ?, ?, ?, ?, 'Offen' WHERE NOT EXISTS (SELECT 1 FROM Reports "
+                        + "WHERE Reportername = ? AND Reportedname = ? AND (reporter_uuid IS NULL OR reported_uuid IS NULL))",
+                reporter.name(), reported.name(), reporter.uuid().orElseThrow().toString(), reported.uuid().orElseThrow().toString(),
+                reason, server, reporter.name(), reported.name()) > 0;
+        } catch (DatabaseException e) {
+            if (e.getCause() instanceof java.sql.SQLException sql && sql.getErrorCode() == 1062) return false;
+            throw e;
+        }
     }
 
     public void updateStatus(int id, String status) {
@@ -70,12 +72,13 @@ public final class ReportRepository {
     }
 
     /** Only a free report can be taken, so two moderators clicking at the same moment cannot both hold it. */
-    public boolean claim(int id, String staff) {
-        return db.update("UPDATE Reports SET claimed_by = ? WHERE ID = ? AND claimed_by IS NULL", staff, id) > 0;
+    public boolean claim(int id, UUID staffId, String staff) {
+        return db.update("UPDATE Reports SET claimed_by = ?, claimed_uuid = ? WHERE ID = ? AND claimed_by IS NULL", staff, staffId.toString(), id) > 0;
     }
 
-    public void release(int id, String staff) {
-        db.update("UPDATE Reports SET claimed_by = NULL WHERE ID = ? AND claimed_by = ?", id, staff);
+    public void release(int id, UUID staffId, String staff) {
+        db.update("UPDATE Reports SET claimed_by = NULL, claimed_uuid = NULL WHERE ID = ? AND "
+                + "(claimed_uuid = ? OR (claimed_uuid IS NULL AND claimed_by = ?))", id, staffId.toString(), staff);
     }
 
     public void delete(int id) {

@@ -102,6 +102,12 @@ final class SharedSchema {
             "CREATE TABLE IF NOT EXISTS VCOINS (UUID VARCHAR(36) NOT NULL PRIMARY KEY, NAME VARCHAR(16), COINS INT NOT NULL DEFAULT 0)",
             "CREATE TABLE IF NOT EXISTS bc_unlocks (player_uuid CHAR(36) NOT NULL, item VARCHAR(64) NOT NULL, "
                 + "unlocked_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (player_uuid, item))"
+        )),
+        new Migration(3, List.of(
+            "ALTER TABLE Reports ADD COLUMN IF NOT EXISTS reporter_uuid CHAR(36) NULL",
+            "ALTER TABLE Reports ADD COLUMN IF NOT EXISTS reported_uuid CHAR(36) NULL",
+            "ALTER TABLE Reports ADD COLUMN IF NOT EXISTS claimed_uuid CHAR(36) NULL",
+            "CREATE UNIQUE INDEX IF NOT EXISTS uq_reports_accounts ON Reports (reporter_uuid, reported_uuid)"
         ))
     );
 

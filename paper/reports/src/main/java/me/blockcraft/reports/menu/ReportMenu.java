@@ -11,6 +11,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.Optional;
+import java.util.UUID;
 
 final class ReportMenu extends Menu {
 
@@ -27,7 +28,7 @@ final class ReportMenu extends Menu {
     private final Report report;
     private final Optional<String> reported;
 
-    ReportMenu(ReportMenus menus, Messages messages, Report report, Optional<String> reported, String staff) {
+    ReportMenu(ReportMenus menus, Messages messages, Report report, Optional<String> reported, UUID staffId, String staff) {
         super(6, messages.get("menu.title-report", ReportMenus.placeholders(messages, report)));
         this.menus = menus;
         this.report = report;
@@ -45,7 +46,7 @@ final class ReportMenu extends Menu {
         set(20, item(Material.COMMAND_BLOCK, "menu.server", messages, placeholders));
         set(22, item(Material.CLOCK, "menu.status", messages, placeholders));
         set(24, item(Material.BOOK, "menu.reason", messages, placeholders));
-        set(CLAIM, claim(messages, report, staff, placeholders));
+        set(CLAIM, claim(messages, report, staffId, staff, placeholders));
         set(SET_STATUS, item(Material.NAME_TAG, "menu.set-status", messages, placeholders));
         set(PUNISH, item(Material.IRON_AXE, "menu.punish", messages, placeholders));
         set(DELETE, item(Material.REDSTONE_BLOCK, "menu.delete", messages, placeholders));
@@ -58,8 +59,8 @@ final class ReportMenu extends Menu {
     }
 
     /** A report somebody else holds wears their head, so a second moderator sees it before clicking anything. */
-    private static ItemStack claim(Messages messages, Report report, String staff, TagResolver placeholders) {
-        if (report.isClaimedBy(staff)) {
+    private static ItemStack claim(Messages messages, Report report, UUID staffId, String staff, TagResolver placeholders) {
+        if (report.isClaimedBy(staffId, staff)) {
             return item(Material.ORANGE_DYE, "menu.release", messages, placeholders);
         }
         return report.claimedBy()

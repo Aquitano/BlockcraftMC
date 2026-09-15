@@ -82,6 +82,7 @@ import me.blockcraft.system.listener.TabHeaderListener;
 import me.blockcraft.system.listener.WatchListener;
 import me.blockcraft.system.moderation.MuteGate;
 import me.blockcraft.system.moderation.PunishmentService;
+import me.blockcraft.system.report.Reports;
 import me.blockcraft.system.motd.MotdListener;
 import me.blockcraft.system.network.LobbyAlert;
 import me.blockcraft.system.network.ServerDirectory;
@@ -124,6 +125,9 @@ public final class SystemPlugin {
     }
 
     private void enable() {
+        if (proxy.getPluginManager().getPlugin("blockcraft-report").isPresent()) {
+            throw new IllegalStateException("Remove the old BlockcraftReport jar; reports are now part of BlockcraftSystem");
+        }
         var config = SystemConfig.load(dataDirectory.resolve("config.yml"), () -> getClass().getResourceAsStream("/config.yml"));
         var loaded = Messages.load(dataDirectory, () -> getClass().getResourceAsStream("/messages.yml"));
         var messages = loaded.with(config.networkTags(), loaded.tagsOf("palette"));
@@ -154,6 +158,10 @@ public final class SystemPlugin {
         var supportSessions = new SupportSessions();
         var playtime = new Playtime(repositories.players(), logger);
         var support = new CommandSupport(visibility, messages);
+        var reports = Reports.load(this, proxy, logger, dataDirectory, database, lookup, visibility,
+                proxy.getPluginManager().fromInstance(this).orElseThrow().getDescription());
+        register(reports.command().create());
+
         var tabHeader = new TabHeaderListener(proxy, visibility, config, messages);
 
         var events = proxy.getEventManager();

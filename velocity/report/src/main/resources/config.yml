@@ -1,8 +1,0 @@
-database:
-  host: localhost
-  port: 3306
-  database: blockcraft
-  username: blockcraft
-  password: blockcraft
-report-cooldown-seconds: 10
-staff-permission: blockcraft.report.notify

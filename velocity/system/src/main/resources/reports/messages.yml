@@ -29,6 +29,7 @@ notify:
   already-enabled: "<prefix>Du erhälst bereits Report Notifies! (Notifies: <success>ON<reset>)"
   usage: "<prefix>Um die Notifies an oder aus zu schalten <error>/report notify [on|off]"
 report:
+  unknown-player: "<prefix><error>Dieser Spieler ist nicht bekannt oder nicht sichtbar."
   self: "<prefix>Du kannst dich nicht selber Reporten!"
   exists: "<prefix>Du hast diesen Spieler bereits Reported!"
   invalid-player: "<prefix>Das ist kein gültiger Spielername!"
