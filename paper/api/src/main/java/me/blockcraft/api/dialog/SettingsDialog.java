@@ -26,7 +26,7 @@ public final class SettingsDialog {
         var api = BlockcraftApi.get();
         var messages = api.messages();
         var inputs = TOGGLES.stream()
-                .map(setting -> DialogInput.bool(setting.key(), messages.get("settings." + setting.key()))
+                .map(setting -> DialogInput.bool(inputKey(setting), messages.get("settings." + setting.key()))
                         .initial(api.settings().enabled(viewer, setting))
                         .build())
                 .toList();
@@ -45,10 +45,15 @@ public final class SettingsDialog {
         Dialogs.show(player, dialog);
     }
 
+    /** Dialog inputs are named like command macro variables, which allow no hyphen. */
+    private static String inputKey(PlayerSetting setting) {
+        return setting.key().replace('-', '_');
+    }
+
     private static void save(Player player, DialogResponseView view) {
         var api = BlockcraftApi.get();
         for (var setting : TOGGLES) {
-            Boolean chosen = view.getBoolean(setting.key());
+            Boolean chosen = view.getBoolean(inputKey(setting));
             if (chosen == null) {
                 continue;
             }
