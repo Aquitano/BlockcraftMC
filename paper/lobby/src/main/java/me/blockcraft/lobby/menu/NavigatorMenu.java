@@ -16,25 +16,26 @@ import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Map;
 
+/** The toolbar closes, opens the shop or warps to spawn; the games sit in the middle row, JumpAndRun below them. */
 final class NavigatorMenu extends Menu {
 
     private static final Map<Integer, LobbyLocation> GAMES = Map.of(
-            11, LobbyLocation.QSG, 13, LobbyLocation.RUSH, 15, LobbyLocation.DUELL);
-    private static final Map<Integer, LobbyLocation> PLACES = Map.of(
-            29, LobbyLocation.SPAWN, 31, LobbyLocation.SHOP, 33, LobbyLocation.JUMP);
+            20, LobbyLocation.QSG, 22, LobbyLocation.RUSH, 24, LobbyLocation.DUELL);
+    private static final int JUMP_SLOT = 40;
 
     private final Menus menus;
 
     NavigatorMenu(Menus menus) {
-        super(5, menus.messages().get("navigator.title"));
+        super(6, menus.messages().get("navigator.title"));
         this.menus = menus;
-        game(11, LobbyLocation.QSG, Material.IRON_SWORD);
-        game(13, LobbyLocation.RUSH, Material.EMERALD);
-        game(15, LobbyLocation.DUELL, Material.SHIELD);
-        place(29, "spawn", Material.ENDER_EYE);
-        place(31, "shop", Material.GOLD_INGOT);
-        place(33, "jump", Material.DIAMOND_BOOTS);
-        closeButton(44);
+        var messages = menus.messages();
+        var apiMessages = menus.apiMessages();
+        toolbar(ToolbarButton.LEFT, Items.of(Material.BARRIER).name(apiMessages.get("menu.close")).build(), "tool_close", Menu::close);
+        toolbar(ToolbarButton.MIDDLE, place(Material.GOLD_INGOT, "shop", "navigator.shop-lore"), "tool_shop", menus::openShop);
+        toolbar(ToolbarButton.RIGHT, place(Material.ENDER_EYE, "spawn", "navigator.spawn-lore"), "tool_home",
+                player -> menus.warp(player, LobbyLocation.SPAWN));
+        GAMES.forEach((slot, target) -> set(slot, game(target), look(target).icon()));
+        set(JUMP_SLOT, place(Material.DIAMOND_BOOTS, "jump", "navigator.lore"), "jump");
     }
 
     @Override
@@ -42,7 +43,18 @@ final class NavigatorMenu extends Menu {
         return false;
     }
 
-    private void game(int slot, LobbyLocation target, Material material) {
+    private record Look(Material material, String icon) {
+    }
+
+    private static Look look(LobbyLocation game) {
+        return switch (game) {
+            case QSG -> new Look(Material.IRON_SWORD, "quicksg");
+            case RUSH -> new Look(Material.EMERALD, "emeraldrush");
+            default -> new Look(Material.SHIELD, "duell");
+        };
+    }
+
+    private ItemStack game(LobbyLocation target) {
         var messages = menus.messages();
         String group = menus.config().navigatorGroups().get(target);
         var status = group == null ? GroupStatus.OFFLINE : menus.groupCounts().status(group);
@@ -55,12 +67,12 @@ final class NavigatorMenu extends Menu {
         if (menus.locations().get(target).isPresent()) {
             lore.add(messages.get("navigator.visit"));
         }
-        set(slot, Items.of(material).name(messages.get("navigator." + target.key())).lore(lore).hideAttributes().build());
+        return Items.of(look(target).material()).name(messages.get("navigator." + target.key())).lore(lore).hideAttributes().build();
     }
 
-    private void place(int slot, String key, Material material) {
-        set(slot, Items.of(material).name(menus.messages().get("navigator." + key))
-                .lore(menus.messages().get("navigator.lore")).hideAttributes().build());
+    private ItemStack place(Material material, String key, String loreKey) {
+        return Items.of(material).name(menus.messages().get("navigator." + key))
+                .lore(menus.messages().get(loreKey)).hideAttributes().build();
     }
 
     @Override
@@ -84,9 +96,8 @@ final class NavigatorMenu extends Menu {
             }
             return;
         }
-        var place = PLACES.get(slot);
-        if (place != null) {
-            menus.warp(player, place);
+        if (slot == JUMP_SLOT) {
+            menus.warp(player, LobbyLocation.JUMP);
         }
     }
 }
