@@ -217,9 +217,10 @@ together, so a database failure rolls back both.
 ## Tests
 
 `./gradlew build` runs the unit tests: player visibility, the operation protocol, the proxy's handling of backend
-requests, stale requests and the report configuration import. With `BLOCKCRAFT_TEST_DB_PORT` set it also runs the
-MariaDB integration tests: legacy upgrade, concurrent migration startup, checksum enforcement, report identity and
-transactional purchases. CI sets it; locally, point it at a disposable MariaDB:
+requests, stale requests, support assignment, party handover and the report configuration import. With
+`BLOCKCRAFT_TEST_DB_PORT` set it also runs the MariaDB integration tests: legacy upgrade, concurrent migration
+startup, checksum enforcement, report identity and transactional purchases. CI sets it; locally, point it at a
+disposable MariaDB:
 
 ```sh
 BLOCKCRAFT_TEST_DB_PORT=3307 BLOCKCRAFT_TEST_DB_PASSWORD=blockcraft-test ./gradlew build
