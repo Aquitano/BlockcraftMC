@@ -27,17 +27,26 @@ public final class Messages {
 
     private Messages(Map<String, String> messages, TagResolver globals) {
         this.messages = messages;
-        this.globals = TagResolver.resolver(Placeholder.parsed("prefix", messages.getOrDefault("prefix", "")), globals);
+        this.globals = globals;
     }
 
     public static Messages load(Path dataDirectory, Supplier<InputStream> bundledDefault, TagResolver... globals) {
-        return new Messages(YamlFile.flatten(YamlFile.loadWithDefaults(dataDirectory.resolve("messages.yml"), bundledDefault)),
-                TagResolver.resolver(globals));
+        var messages = YamlFile.flatten(YamlFile.loadWithDefaults(dataDirectory.resolve("messages.yml"), bundledDefault));
+        return new Messages(messages, TagResolver.resolver(prefixOf(messages), TagResolver.resolver(globals)));
     }
 
     /** The same strings with more global resolvers; used to fold tags built from this very file back into it. */
     public Messages with(TagResolver... extra) {
         return new Messages(messages, TagResolver.resolver(globals, TagResolver.resolver(extra)));
+    }
+
+    /** The same strings under {@code other}'s {@code <prefix>}: shared texts said in the voice of the module that says them. */
+    public Messages prefixedLike(Messages other) {
+        return new Messages(messages, TagResolver.resolver(prefixOf(other.messages), globals));
+    }
+
+    private static TagResolver prefixOf(Map<String, String> messages) {
+        return Placeholder.parsed("prefix", messages.getOrDefault("prefix", ""));
     }
 
     /**

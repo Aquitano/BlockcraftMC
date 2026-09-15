@@ -9,8 +9,7 @@ commands:
     description: "Leert den Chat"
 
 join:
-  title: "<primary><ip>"
-  subtitle: "<muted>Willkommen!"
+  title: "<ip>"
   bossbar: "<bullet><muted>Du spielst auf <primary><ip><muted>! <dark>●"
 wdl:
   kick: "<error>World Downloader ist nicht erlaubt."

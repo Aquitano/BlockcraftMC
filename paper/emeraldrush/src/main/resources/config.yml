@@ -1,5 +1,4 @@
-MapName: "MapName"
-MinPlayers: 2
+min-players: 2
 emeralds-per-ore: 12
 ore-respawn-seconds: 12
 countdown:

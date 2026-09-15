@@ -3,18 +3,17 @@ package me.blockcraft.rush.config;
 import java.util.List;
 import java.util.Optional;
 
-/** Keys match the sections older config files already contain. */
 public enum SpawnPoint {
-    LOBBY("Lobby"),
-    SPECTATOR("Spectator"),
-    SEARCH("Such"),
-    DEATHMATCH_1("DM1"),
-    DEATHMATCH_2("DM2"),
-    DEATHMATCH_3("DM3"),
-    DEATHMATCH_4("DM4"),
-    DEATHMATCH_5("DM5"),
-    DEATHMATCH_6("DM6"),
-    ENCHANT("Enchant"),
+    LOBBY("lobby"),
+    SPECTATOR("spectator"),
+    SEARCH("search"),
+    DEATHMATCH_1("dm1"),
+    DEATHMATCH_2("dm2"),
+    DEATHMATCH_3("dm3"),
+    DEATHMATCH_4("dm4"),
+    DEATHMATCH_5("dm5"),
+    DEATHMATCH_6("dm6"),
+    ENCHANT("enchant"),
     SHOPPING("shopping");
 
     public static final List<SpawnPoint> DEATHMATCH =

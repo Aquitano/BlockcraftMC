@@ -17,6 +17,7 @@ paper/reports            ReportsMenu: staff GUI over the reports table
 paper/statussigns        StatusSigns: clickable server-status signs
 velocity/system          BlockcraftSystem: reports, moderation, parties, friends, routing and staff tools
 dev/                     Config templates for the local dev network (see below)
+worlds/                  One map template per server group, restored at every start (see "Maps")
 docker-compose.yml       The local dev network: MariaDB, Velocity and one Paper server per game mode
 ```
 
@@ -77,14 +78,15 @@ docker compose up -d     # MariaDB, Velocity on 25565, Paper servers lobby, duel
 ```
 
 Connect to `localhost:25565`. Every Paper server runs BlockcraftAPI, BlockcraftCore and its game plugin (the lobby
-also StatusSigns and ReportsMenu); `docker-compose.yml` is the place that says which server runs what. Worlds and
-plugin data live in named volumes: `docker compose down` keeps them, `docker compose down -v` starts over. After a
-code change, `./gradlew stagePlugins` and `docker compose restart <server>` pick up the new jars.
+also StatusSigns and ReportsMenu); `docker-compose.yml` is the place that says which server runs what. Plugin data
+lives in named volumes: `docker compose down` keeps it, `docker compose down -v` starts over. The worlds come from
+`worlds/<group>` (see "Maps") and are thrown away at every start. After a code change, `./gradlew stagePlugins` and
+`docker compose restart <server>` pick up the new jars.
 
 In the lobby, `/createsign quicksg` while looking at a sign makes a status sign for that group, `/setspawn qsg` and
-friends place the navigator warps, and `/play quicksg` joins a game from anywhere. To run several instances of a
-game, remove that service's `hostname:` line (instances then announce themselves under their container id) and
-`docker compose up -d --scale quicksg=3`.
+friends place the navigator warps, `/map save` keeps all of that, and `/play quicksg` joins a game from anywhere.
+To run several instances of a game, remove that service's `hostname:` line (instances then announce themselves
+under their container id) and `docker compose up -d --scale quicksg=3`.
 
 `docker compose logs -f lobby` follows a server and `docker compose exec lobby rcon-cli <command>` runs a command.
 LuckPerms answers only on the real console, so on a fresh database run
@@ -110,7 +112,43 @@ and backend share one permission database) and are git-ignored. The dev run task
 behalf and drop `ranks.json.gz` next to LuckPerms; on a fresh database run `lp import ranks` and
 `lp user <name> parent set owner` in either console once.
 
-Both flavours share the database and announce a server called `lobby`, so run one of them at a time.
+Both flavours share the database, announce a server called `lobby` and run the map in `worlds/lobby`, so run one of
+them at a time.
+
+## Maps
+
+A map is one folder: the world plus a `blockcraft/` directory inside it, where every plugin keeps what belongs to
+the map (`blockcraft/<Plugin>/locations.yml` for spawns and warps, `blockcraft/StatusSigns/signs.yml`) and
+`blockcraft/map.yml` names it:
+
+```yaml
+name: Mondbasis
+builders: [Kevos, Aquitano]
+```
+
+Name and builders show in the title every server greets a player with (`arrival` in BlockcraftAPI's
+`messages.yml`) and in the games' sidebars. Without a `map.yml` the map is called after its template directory.
+
+Every server group has a template directory, `worlds/<group>` in this repository, mounted into the container and
+named by `BLOCKCRAFT_WORLD_TEMPLATE` (or `world.template` in `plugins/BlockcraftAPI/config.yml`). BlockcraftAPI
+replaces the world folder with a copy of the template before Paper loads it, so a restart, which every game round
+ends in anyway, also resets the map: nothing a round, a gadget or a builder left behind survives. A template
+without a `level.dat` is left alone and the server keeps whatever world it has, which is how a map is made in the
+first place; no template at all means a plain persistent world.
+
+Changing a map: join the server, `/build` (`blockcraft.build`) lifts the block protection and the inventory lock
+for you until you leave, edit, place spawns with the plugin's setup command, then `/map save` (`blockcraft.map`).
+That flushes the world and copies it into the template without player data, and every start from then on boots
+with the new state; `/map` shows what the server is running. Commit the template like any other change and revert
+it like one. Region files go through git-lfs (`.gitattributes`), so `git lfs install` once before committing a map.
+A map edited without `/map save` is gone at the next restart, and so is a `/setspawn` on such a server, which is the
+point. The running server publishes its own copy of `map.yml` too, so edit that file in the template and restart
+rather than while the server runs.
+
+Templates from a server that predates this layout: copy its world folder into `worlds/<group>`, start the server
+and set the spawns again, since the plugin files used to live in `plugins/<Plugin>` and pointed at the old world
+name. On a server that already runs this layout without a template, those files move into the world's
+`blockcraft/` directory on the first start by themselves.
 
 ## Server discovery and groups
 
@@ -174,6 +212,10 @@ behind it, which run `/goto` or pre-fill `/tempmute` and `/strafe` for that play
 On the Paper side `/team help` lists every command registered on that server through `CommandRegistry` that the
 player may run, with its `commands.<name>.description`, so there is no hand-written list to go stale. `/invsee`
 shows another player's inventory read-only unless the viewer holds `blockcraft.core.invsee.edit`.
+
+Every game says the shared moments the same way, from `arena` in BlockcraftAPI's `messages.yml`: the arrival card
+with game and map, who joined and left the round with the player count, the lobby countdown and the restart
+countdown. A game's own `messages.yml` only holds what is specific to that game.
 
 `/history <player>` shows bans and mutes, including revoked entries, with the display length set by
 `history.limit`. It requires `blockcraft.system.history`; `/whois` also shows the totals.
@@ -286,5 +328,5 @@ above).
 
 In containers, environment variables replace the config edits: `BLOCKCRAFT_DB_HOST`, `BLOCKCRAFT_DB_PORT`,
 `BLOCKCRAFT_DB_NAME`, `BLOCKCRAFT_DB_USER` and `BLOCKCRAFT_DB_PASSWORD` override the `database` section of every
-Blockcraft plugin, and LuckPerms reads `LUCKPERMS_STORAGE_METHOD`, `LUCKPERMS_DATA_ADDRESS` and friends itself;
-`docker-compose.yml` shows the full set.
+Blockcraft plugin, `BLOCKCRAFT_WORLD_TEMPLATE` the map template (see "Maps"), and LuckPerms reads
+`LUCKPERMS_STORAGE_METHOD`, `LUCKPERMS_DATA_ADDRESS` and friends itself; `docker-compose.yml` shows the full set.

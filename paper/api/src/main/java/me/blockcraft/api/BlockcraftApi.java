@@ -10,6 +10,8 @@ import me.blockcraft.api.proxy.NetworkOperations;
 import me.blockcraft.api.settings.PlayerSettings;
 import me.blockcraft.api.shop.Unlocks;
 import me.blockcraft.api.task.PlayerTasks;
+import me.blockcraft.api.world.BuildMode;
+import me.blockcraft.api.world.MapBundle;
 import me.blockcraft.api.xp.Xp;
 import me.blockcraft.api.xp.XpReward;
 import me.blockcraft.common.db.Database;
@@ -43,11 +45,13 @@ public final class BlockcraftApi {
     private final ServerPresence presence;
     private final RealNames realNames;
     private final Xp xp;
+    private final MapBundle map;
+    private final BuildMode buildMode;
     private final TagResolver tags;
 
     BlockcraftApi(Plugin plugin, Database database, PlayerSettings settings, Map<String, StatsRepository> profileGames,
                   Messages messages, ServerRepository servers, ServerIdentity server, ServerPresence presence,
-                  RealNames realNames, Xp xp, TagResolver tags) {
+                  RealNames realNames, Xp xp, MapBundle map, BuildMode buildMode, TagResolver tags) {
         this.operations = new NetworkOperations(plugin, messages);
         this.playerTasks = new PlayerTasks(plugin, messages);
         this.database = database;
@@ -63,6 +67,8 @@ public final class BlockcraftApi {
         this.presence = presence;
         this.realNames = realNames;
         this.xp = xp;
+        this.map = map;
+        this.buildMode = buildMode;
         this.tags = tags;
     }
 
@@ -152,6 +158,16 @@ public final class BlockcraftApi {
     /** Network XP and levels; games award {@link XpReward}s. */
     public Xp xp() {
         return xp;
+    }
+
+    /** The map this server runs, with the files each plugin keeps inside it. */
+    public MapBundle map() {
+        return map;
+    }
+
+    /** Who is allowed to change the map right now. */
+    public BuildMode buildMode() {
+        return buildMode;
     }
 
     /** The name the player logged in with, whatever nick they wear; the one to write into name columns. */

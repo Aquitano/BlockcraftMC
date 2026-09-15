@@ -1,6 +1,7 @@
 # The whole dev network: MariaDB, the Velocity proxy and one Paper server per game mode. Plugin jars come from
 # `./gradlew stagePlugins`; each Paper service lists the plugin directories it runs in COPY_PLUGINS_SRC. The servers
-# find each other through the database (README, "Run locally").
+# find each other through the database (README, "Run locally"). Each server's map comes from worlds/<group>
+# (README, "Maps"): the world is copied fresh from there at every start and /map save writes it back.
 
 x-luckperms: &luckperms
   LUCKPERMS_STORAGE_METHOD: mariadb
@@ -81,10 +82,12 @@ services:
     environment:
       <<: *paper-env
       BLOCKCRAFT_SERVER_GROUP: lobby
+      BLOCKCRAFT_WORLD_TEMPLATE: /worlds/lobby
       COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/lobby,/blockcraft/statussigns,/blockcraft/reports
     volumes:
       - ./build/docker/paper:/blockcraft:ro
       - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
+      - ./worlds/lobby:/worlds/lobby
       - lobby:/data
 
   duell:
@@ -93,10 +96,12 @@ services:
     environment:
       <<: *paper-env
       BLOCKCRAFT_SERVER_GROUP: duell
+      BLOCKCRAFT_WORLD_TEMPLATE: /worlds/duell
       COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/duell
     volumes:
       - ./build/docker/paper:/blockcraft:ro
       - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
+      - ./worlds/duell:/worlds/duell
       - duell:/data
 
   emeraldrush:
@@ -105,10 +110,12 @@ services:
     environment:
       <<: *paper-env
       BLOCKCRAFT_SERVER_GROUP: emeraldrush
+      BLOCKCRAFT_WORLD_TEMPLATE: /worlds/emeraldrush
       COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/emeraldrush
     volumes:
       - ./build/docker/paper:/blockcraft:ro
       - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
+      - ./worlds/emeraldrush:/worlds/emeraldrush
       - emeraldrush:/data
 
   quicksg:
@@ -117,10 +124,12 @@ services:
     environment:
       <<: *paper-env
       BLOCKCRAFT_SERVER_GROUP: quicksg
+      BLOCKCRAFT_WORLD_TEMPLATE: /worlds/quicksg
       COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/quicksg
     volumes:
       - ./build/docker/paper:/blockcraft:ro
       - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
+      - ./worlds/quicksg:/worlds/quicksg
       - quicksg:/data
 
 volumes:

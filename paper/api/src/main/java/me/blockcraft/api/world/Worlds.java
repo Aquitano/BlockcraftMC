@@ -27,11 +27,6 @@ public final class Worlds {
         }
     }
 
-    public static void clearWeather(World world) {
-        world.setThundering(false);
-        world.setStorm(false);
-    }
-
     /**
      * Removes what a round leaves behind - dropped items, projectiles, orbs, primed TNT, falling blocks, effect
      * clouds and mobs that vanilla would despawn anyway. Map decoration (paintings, displays, boats, end crystals,

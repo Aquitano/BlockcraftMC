@@ -6,7 +6,6 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -43,13 +42,5 @@ public final class Locations<K> {
         } catch (IOException e) {
             throw new UncheckedIOException("Could not save " + file, e);
         }
-    }
-
-    /** Every stored location whose world is loaded. */
-    public List<Location> all() {
-        return yaml.getKeys(true).stream()
-                .map(yaml::getLocation)
-                .filter(location -> location != null && location.isWorldLoaded())
-                .toList();
     }
 }

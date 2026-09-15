@@ -12,8 +12,6 @@ import me.blockcraft.rush.config.Spawns;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.entity.Player;
 
-import java.util.Locale;
-
 public final class RushSetCommand {
 
     private RushSetCommand() {
@@ -26,7 +24,7 @@ public final class RushSetCommand {
                 .then(Commands.argument("location", StringArgumentType.word())
                         .suggests((context, builder) -> {
                             for (var point : SpawnPoint.values()) {
-                                builder.suggest(point.key().toLowerCase(Locale.ROOT));
+                                builder.suggest(point.key());
                             }
                             return builder.buildFuture();
                         })

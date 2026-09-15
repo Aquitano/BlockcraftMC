@@ -8,7 +8,6 @@ import me.blockcraft.api.game.StatsRepository;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.common.message.Messages;
-import me.blockcraft.rush.command.BuildCommand;
 import me.blockcraft.rush.command.ChestCommand;
 import me.blockcraft.rush.command.RushCoinsCommand;
 import me.blockcraft.rush.command.RushCommand;
@@ -39,29 +38,28 @@ public final class EmeraldRushPlugin extends JavaPlugin {
     public void onEnable() {
         saveDefaultConfig();
         var config = RushConfig.from(getConfig());
-        var spawns = new Spawns(this);
         var api = BlockcraftApi.get();
+        var spawns = Spawns.load(api.map().file(this, "locations.yml"));
         var messages = Messages.load(getDataPath(), () -> getResource("messages.yml"), api.tags());
 
         var stats = new StatsRepository(api.database(), "em_stats");
         stats.createTable();
         api.unlocks().importLegacyTable("em_kits", Perk.LEGACY_COLUMNS);
 
-        game = new Game(this, config, spawns, messages, stats);
+        game = new Game(this, config, spawns, messages, stats, api.map());
         var menus = new RushMenus(this, game, messages, spawns, api.unlocks(), api.shop(), stats);
 
-        register(new ConnectionListener(game, messages));
+        register(new ConnectionListener(game));
         register(new DeathListener(game));
-        register(new ProtectionListener(game));
+        register(new ProtectionListener(game, api.buildMode()));
         register(new ArenaProtection(() -> false));
-        register(new BlockListener(this, game, config));
+        register(new BlockListener(this, game, config, api.buildMode()));
         register(new HotbarListener(this, game, menus, config, messages));
 
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             var commands = new CommandRegistry(event.registrar(), messages);
             commands.register(StartCommand.create(this, game, api.coins(), messages));
             commands.register(StatsCommand.create(this, stats, messages));
-            commands.register(BuildCommand.create(game, messages));
             commands.register(RushSetCommand.create(spawns, messages));
             commands.register(TopCommand.create(menus));
             commands.register(ChestCommand.create(game, menus, messages));

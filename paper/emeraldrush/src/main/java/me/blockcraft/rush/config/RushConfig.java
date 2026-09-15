@@ -3,7 +3,6 @@ package me.blockcraft.rush.config;
 import org.bukkit.configuration.file.FileConfiguration;
 
 public record RushConfig(
-        String mapName,
         int minPlayers,
         int emeraldsPerOre,
         int oreRespawnSeconds,
@@ -21,8 +20,7 @@ public record RushConfig(
 
     public static RushConfig from(FileConfiguration config) {
         return new RushConfig(
-                config.getString("MapName", "MapName"),
-                config.getInt("MinPlayers", 2),
+                config.getInt("min-players", 2),
                 config.getInt("emeralds-per-ore", 12),
                 config.getInt("ore-respawn-seconds", 12),
                 config.getInt("countdown.lobby", 30),

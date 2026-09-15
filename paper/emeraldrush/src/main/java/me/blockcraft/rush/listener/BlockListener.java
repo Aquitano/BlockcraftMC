@@ -2,6 +2,7 @@ package me.blockcraft.rush.listener;
 
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Tasks;
+import me.blockcraft.api.world.BuildMode;
 import me.blockcraft.rush.config.RushConfig;
 import me.blockcraft.rush.game.Game;
 import me.blockcraft.rush.game.GamePhase;
@@ -22,11 +23,13 @@ public final class BlockListener implements Listener {
     private final Plugin plugin;
     private final Game game;
     private final RushConfig config;
+    private final BuildMode buildMode;
 
-    public BlockListener(Plugin plugin, Game game, RushConfig config) {
+    public BlockListener(Plugin plugin, Game game, RushConfig config, BuildMode buildMode) {
         this.plugin = plugin;
         this.game = game;
         this.config = config;
+        this.buildMode = buildMode;
     }
 
     @EventHandler
@@ -41,12 +44,12 @@ public final class BlockListener implements Listener {
             Tasks.later(plugin, config.oreRespawnSeconds() * 20L, () -> block.setType(Material.EMERALD_ORE));
             return;
         }
-        event.setCancelled(!game.isBuilder(player));
+        event.setCancelled(!buildMode.isEnabled(player));
     }
 
     @EventHandler
     public void onPlace(BlockPlaceEvent event) {
-        event.setCancelled(!game.isBuilder(event.getPlayer()));
+        event.setCancelled(!buildMode.isEnabled(event.getPlayer()));
     }
 
     @EventHandler(ignoreCancelled = true)

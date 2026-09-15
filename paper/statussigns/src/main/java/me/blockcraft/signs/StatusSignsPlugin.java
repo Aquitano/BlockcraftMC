@@ -26,7 +26,7 @@ public final class StatusSignsPlugin extends JavaPlugin {
         var messages = Messages.load(getDataPath(), () -> getResource("messages.yml"), BlockcraftApi.get().tags());
 
         signs = new StatusSigns(this,
-                new SignStore(getDataPath().resolve("signs.yml"), getLogger()),
+                new SignStore(BlockcraftApi.get().map().file(this, "signs.yml"), getLogger()),
                 BlockcraftApi.get().servers(),
                 staleSeconds,
                 new SignRenderer(messages));

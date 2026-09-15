@@ -1,6 +1,7 @@
 package me.blockcraft.quicksg.game;
 
 import me.blockcraft.api.scoreboard.Sidebar;
+import me.blockcraft.api.world.MapBundle;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.quicksg.config.QuickSGConfig;
 import me.blockcraft.quicksg.kit.Kit;
@@ -16,11 +17,13 @@ public final class GameScoreboard {
 
     private final Messages messages;
     private final QuickSGConfig config;
+    private final MapBundle map;
     private final Sidebar sidebar;
 
-    public GameScoreboard(Messages messages, QuickSGConfig config) {
+    public GameScoreboard(Messages messages, QuickSGConfig config, MapBundle map) {
         this.messages = messages;
         this.config = config;
+        this.map = map;
         this.sidebar = new Sidebar(messages.get("scoreboard.title"));
     }
 
@@ -30,7 +33,7 @@ public final class GameScoreboard {
                 onlineLine(online),
                 Component.empty(),
                 messages.get("scoreboard.map"),
-                messages.get("scoreboard.map-value", Placeholder.unparsed("map", config.mapName())),
+                messages.get("scoreboard.map-value", Placeholder.unparsed("map", map.name())),
                 Component.empty(),
                 messages.get("scoreboard.kit"),
                 messages.get("scoreboard.kit-value", Placeholder.component("kit", messages.get(kit.messageKey() + ".name"))),
@@ -46,7 +49,7 @@ public final class GameScoreboard {
                 messages.get("scoreboard.spectator-value", Formatter.number("spectators", spectators)),
                 Component.empty(),
                 messages.get("scoreboard.map"),
-                messages.get("scoreboard.map-value", Placeholder.unparsed("map", config.mapName())),
+                messages.get("scoreboard.map-value", Placeholder.unparsed("map", map.name())),
                 Component.empty()));
     }
 

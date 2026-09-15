@@ -1,12 +1,11 @@
 prefix: "<blue>QuickSG <dark_gray>» <reset>"
+game-name: "QuickSG"
 
 commands:
   start:
     description: "Startet die Runde"
   stats:
     description: "Zeigt die Stats eines Spielers"
-  build:
-    description: "Schaltet den Build-Modus um"
   qsgset:
     description: "Setzt die QuickSG-Locations"
   top:
@@ -14,13 +13,7 @@ commands:
 
 actionbar: "<dark_red>Teams verboten"
 
-join:
-  broadcast: "<prefix><white><player> <muted>hat das Spiel betreten!"
-quit:
-  broadcast: "<prefix><white><player> <muted>hat die Runde verlassen!"
-
 lobby:
-  starting-in: "<prefix><muted>Die Runde startet in <accent><seconds> <muted>Sekunden."
   started: "<prefix><muted>Die Runde wurde gestartet."
   freeze-title: "<primary><seconds>"
 
@@ -36,16 +29,10 @@ game:
   killed: "<prefix><white><player><muted> wurde von <white><killer><muted> getötet."
   died: "<prefix><white><player> <muted>ist gestorben."
 
-summary:
-  name: "QuickSG"
 
 timer:
   protection: "<primary>Schutzzeit <dark>● <white><seconds>s"
   game: "<primary>Spielzeit <dark>● <white><time>"
-
-restart:
-  in: "<prefix><muted>Der Server startet in <error><seconds> <muted>Sekunden neu!"
-  now: "<prefix><error>Der Server startet jetzt neu!"
 
 tracker:
   found: "<prefix><white><player> <arrow><white><distance><muted> Blöcke"
@@ -55,10 +42,6 @@ start:
   only-in-lobby: "<prefix><error>Du kannst die Runde nur im Lobby-Modus starten!"
   already-started: "<prefix><error>Die Runde wurde bereits gestartet!"
   coins-added: "<prefix><muted>Du hast diesem Spieler <accent><coins> <muted>Coins hinzugefügt!"
-
-build:
-  enabled: "<prefix><muted>Build-Modus <white>aktiviert!"
-  disabled: "<prefix><muted>Build-Modus <white>deaktiviert!"
 
 setup:
   help:

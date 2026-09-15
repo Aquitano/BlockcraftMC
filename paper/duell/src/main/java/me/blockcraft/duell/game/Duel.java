@@ -1,6 +1,7 @@
 package me.blockcraft.duell.game;
 
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.game.Arena;
 import me.blockcraft.api.game.GamePhase;
 import me.blockcraft.api.game.LobbyCountdown;
 import me.blockcraft.api.game.RoundSummary;
@@ -31,7 +32,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
-import java.util.Set;
 import java.util.UUID;
 import java.util.function.ToIntFunction;
 import java.util.stream.IntStream;
@@ -40,7 +40,6 @@ import java.util.stream.Stream;
 public final class Duel {
 
     public static final int MAX_PARTICIPANTS = 2;
-    private static final Set<Integer> RESTART_ANNOUNCEMENTS = Set.of(5, 4, 3, 2);
     private static final long RESPAWN_DELAY_TICKS = 5L;
 
     private final Plugin plugin;
@@ -64,6 +63,7 @@ public final class Duel {
     private final Map<UUID, Integer> checkpoints = new HashMap<>();
     private final LobbyCountdown lobbyCountdown;
     private final RoundSummary summary;
+    private final Arena arena;
     private Countdown freezeCountdown;
     private Countdown roundTimer;
     private Countdown restartCountdown;
@@ -78,10 +78,9 @@ public final class Duel {
         this.stats = stats;
         this.scoreboard = scoreboard;
         this.items = items;
-        this.lobbyCountdown = new LobbyCountdown(plugin, config.countdowns().lobby(), MAX_PARTICIPANTS, participants::size,
-                seconds -> Bukkit.broadcast(messages.get("lobby.starting-in", Formatter.number("seconds", seconds))),
-                this::startRound);
-        this.summary = new RoundSummary(plugin, messages.get("summary.name"),
+        this.arena = new Arena(messages);
+        this.lobbyCountdown = new LobbyCountdown(plugin, arena, config.countdowns().lobby(), MAX_PARTICIPANTS, participants::size, this::startRound);
+        this.summary = new RoundSummary(plugin, messages.get("game-name"),
                 new RoundSummary.Rewards(config.killCoins(), config.winCoins()));
     }
 
@@ -139,13 +138,13 @@ public final class Duel {
         spawns.spawn().ifPresent(player::teleport);
         if (participants.size() >= MAX_PARTICIPANTS || phase != GamePhase.LOBBY) {
             player.setGameMode(GameMode.SPECTATOR);
+            arena.arrive(player);
             player.sendMessage(messages.get("join.spectator"));
         } else {
             player.setGameMode(GameMode.SURVIVAL);
             participants.add(player.getUniqueId());
             summary.join(player);
-            Bukkit.broadcast(messages.get("join.broadcast", Placeholder.unparsed("player", player.getName()),
-                    Formatter.number("online", participants.size()), Formatter.number("max", MAX_PARTICIPANTS)));
+            arena.welcome(player, participants.size(), MAX_PARTICIPANTS);
         }
         refreshScoreboards();
         startLobbyCountdownIfReady();
@@ -153,8 +152,7 @@ public final class Duel {
 
     public void quit(Player player) {
         if (participants.remove(player.getUniqueId())) {
-            Bukkit.broadcast(messages.get("quit.broadcast", Placeholder.unparsed("player", player.getName()),
-                    Formatter.number("online", participants.size()), Formatter.number("max", MAX_PARTICIPANTS)));
+            arena.farewell(player, participants.size(), MAX_PARTICIPANTS);
         }
         checkpoints.remove(player.getUniqueId());
         hideRoundBar(player);
@@ -371,18 +369,8 @@ public final class Duel {
         frozen = false;
         hideRoundBar();
         summary.show();
-        int seconds = config.countdowns().restart();
-        Bukkit.broadcast(restartMessage(seconds));
-        restartCountdown = ServerRestart.start(plugin, seconds, remaining -> {
-            participants().forEach(participant -> participant.setLevel(remaining));
-            if (RESTART_ANNOUNCEMENTS.contains(remaining)) {
-                Bukkit.broadcast(restartMessage(remaining));
-            }
-        });
-    }
-
-    private Component restartMessage(int seconds) {
-        return messages.get("round.restart-in", Formatter.number("seconds", seconds));
+        restartCountdown = ServerRestart.start(plugin, arena, config.countdowns().restart(),
+                remaining -> participants().forEach(participant -> participant.setLevel(remaining)));
     }
 
     private void rewardWinner(Player winner) {

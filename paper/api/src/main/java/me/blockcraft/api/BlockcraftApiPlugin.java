@@ -2,9 +2,11 @@ package me.blockcraft.api;
 
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import me.blockcraft.api.coins.CoinsJoinListener;
+import me.blockcraft.api.command.BuildCommand;
 import me.blockcraft.api.command.CoinsCommand;
 import me.blockcraft.api.command.CommandRegistry;
 import me.blockcraft.api.command.LevelCommand;
+import me.blockcraft.api.command.MapCommand;
 import me.blockcraft.api.dialog.ServerMenu;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.menu.MenuListener;
@@ -13,6 +15,9 @@ import me.blockcraft.api.network.ServerPresence;
 import me.blockcraft.api.player.RealNames;
 import me.blockcraft.api.rank.TabTeams;
 import me.blockcraft.api.settings.PlayerSettings;
+import me.blockcraft.api.world.BuildMode;
+import me.blockcraft.api.world.MapBundle;
+import me.blockcraft.api.world.WorldTemplate;
 import me.blockcraft.api.xp.Levels;
 import me.blockcraft.api.xp.Xp;
 import me.blockcraft.api.xp.XpReward;
@@ -57,9 +62,12 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         var xpRepository = new XpRepository(database);
         var xp = new Xp(this, xpRepository, new Levels(number(YamlFile.section(config, "xp"), "level-step", 100)),
                 xpRewards(YamlFile.section(YamlFile.section(config, "xp"), "rewards")), messages);
+        var map = MapBundle.load(getServer().getWorlds().getFirst(), WorldTemplate.configured(config));
+        var buildMode = new BuildMode();
         var api = new BlockcraftApi(this, database, settings, profileGames(YamlFile.section(YamlFile.section(config, "profile"), "games")),
-                messages, servers, self, presence, realNames, xp, resources.tags());
+                messages, servers, self, presence, realNames, xp, map, buildMode, resources.tags());
         BlockcraftApi.install(api);
+        getLogger().info("Running map " + map.name() + map.template().map(template -> " from " + template.directory()).orElse(""));
         int startingCoins = number(config, "starting-coins", 10);
         getServer().getPluginManager().registerEvents(realNames, this);
         getServer().getPluginManager().registerEvents(xp, this);
@@ -68,11 +76,14 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new MenuListener(), this);
         getServer().getPluginManager().registerEvents(new ServerMenu(this), this);
         getServer().getPluginManager().registerEvents(new TabTeams(LuckPermsProvider.get(), messages), this);
+        getServer().getPluginManager().registerEvents(buildMode, this);
 
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             var commands = new CommandRegistry(event.registrar(), messages);
             commands.register(CoinsCommand.create(api.coins(), messages));
             commands.register(LevelCommand.create(xp, messages));
+            commands.register(BuildCommand.create(buildMode, messages));
+            commands.register(MapCommand.create(this, map, messages));
         });
 
         int heartbeatSeconds = number(config, "heartbeat-seconds", 5);

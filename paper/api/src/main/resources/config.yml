@@ -14,6 +14,12 @@ network:
   teamspeak: ts.BlockcraftMC.net
   discord: https://discord.gg/kh3xaQ3
 
+# The map this server runs, as a directory outside the server (README, "Maps"). When set, the world folder is
+# replaced by a copy of it at every start and /map save publishes the running world back into it. Empty keeps the
+# world as it is. BLOCKCRAFT_WORLD_TEMPLATE overrides it.
+world:
+  template: ""
+
 # Balance a player starts with on their first join anywhere on the network.
 starting-coins: 10
 

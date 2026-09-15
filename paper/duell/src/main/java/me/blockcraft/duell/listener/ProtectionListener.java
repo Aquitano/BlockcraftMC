@@ -1,5 +1,6 @@
 package me.blockcraft.duell.listener;
 
+import me.blockcraft.api.world.BuildMode;
 import me.blockcraft.duell.game.Duel;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -25,9 +26,11 @@ public final class ProtectionListener implements Listener {
             EntityDamageEvent.DamageCause.DROWNING);
 
     private final Duel duel;
+    private final BuildMode buildMode;
 
-    public ProtectionListener(Duel duel) {
+    public ProtectionListener(Duel duel, BuildMode buildMode) {
         this.duel = duel;
+        this.buildMode = buildMode;
     }
 
     @EventHandler
@@ -37,12 +40,12 @@ public final class ProtectionListener implements Listener {
 
     @EventHandler
     public void onBreak(BlockBreakEvent event) {
-        event.setCancelled(!event.getPlayer().hasPermission("blockcraft.duell.build"));
+        event.setCancelled(!buildMode.isEnabled(event.getPlayer()));
     }
 
     @EventHandler
     public void onPlace(BlockPlaceEvent event) {
-        event.setCancelled(!event.getPlayer().hasPermission("blockcraft.duell.build"));
+        event.setCancelled(!buildMode.isEnabled(event.getPlayer()));
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)

@@ -13,15 +13,14 @@ import org.bukkit.plugin.Plugin;
 import java.time.Duration;
 import java.util.List;
 import java.util.Set;
-import java.util.function.IntConsumer;
 import java.util.function.IntFunction;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
 /**
- * The waiting-lobby countdown every game shares: the remaining seconds are the players' XP level, the last five
- * count down as a title and tick a note higher each second, and while fewer than {@code minPlayers} are there the
- * clock stays at its full value instead of running out.
+ * The waiting-lobby countdown every game shares: the {@link Arena} announces it in chat, the remaining seconds are
+ * the players' XP level, the last five count down as a title and tick a note higher each second, and while fewer
+ * than {@code minPlayers} are there the clock stays at its full value instead of running out.
  */
 public final class LobbyCountdown {
 
@@ -31,19 +30,19 @@ public final class LobbyCountdown {
     private static final Title.Times GO_TIMES = Title.Times.times(Duration.ZERO, Duration.ofMillis(700), Duration.ofMillis(300));
 
     private final Countdown countdown;
+    private final Arena arena;
     private final int seconds;
     private final int minPlayers;
     private final IntSupplier players;
-    private final IntConsumer announce;
     private final Runnable onStart;
     private boolean forced;
 
-    public LobbyCountdown(Plugin plugin, int seconds, int minPlayers, IntSupplier players, IntConsumer announce, Runnable onStart) {
+    public LobbyCountdown(Plugin plugin, Arena arena, int seconds, int minPlayers, IntSupplier players, Runnable onStart) {
         this.countdown = new Countdown(plugin);
+        this.arena = arena;
         this.seconds = seconds;
         this.minPlayers = minPlayers;
         this.players = players;
-        this.announce = announce;
         this.onStart = onStart;
     }
 
@@ -117,7 +116,7 @@ public final class LobbyCountdown {
             return;
         }
         forced = false;
-        announce.accept(seconds);
+        arena.announceStart(seconds);
         countdown.start(seconds, this::tick, this::finish);
     }
 
@@ -129,7 +128,7 @@ public final class LobbyCountdown {
         }
         Bukkit.getOnlinePlayers().forEach(player -> player.setLevel(remaining));
         if (ANNOUNCE_AT.contains(remaining)) {
-            announce.accept(remaining);
+            arena.announceStart(remaining);
         }
         if (remaining > 0 && remaining <= AUDIBLE_FROM) {
             var title = Title.title(BlockcraftApi.get().messages().get("countdown.seconds", Formatter.number("seconds", remaining)),

@@ -1,8 +1,8 @@
 package me.blockcraft.rush.scoreboard;
 
 import me.blockcraft.api.scoreboard.Sidebar;
+import me.blockcraft.api.world.MapBundle;
 import me.blockcraft.common.message.Messages;
-import me.blockcraft.rush.config.RushConfig;
 import me.blockcraft.rush.game.Game;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
@@ -17,13 +17,13 @@ public final class GameScoreboard {
 
     private final Game game;
     private final Messages messages;
-    private final RushConfig config;
+    private final MapBundle map;
     private final Sidebar sidebar;
 
-    public GameScoreboard(Game game, Messages messages, RushConfig config) {
+    public GameScoreboard(Game game, Messages messages, MapBundle map) {
         this.game = game;
         this.messages = messages;
-        this.config = config;
+        this.map = map;
         this.sidebar = new Sidebar(messages.get("scoreboard.title"));
     }
 
@@ -36,7 +36,7 @@ public final class GameScoreboard {
                 Formatter.number("online", game.alivePlayers().size()),
                 Formatter.number("max", Bukkit.getMaxPlayers()));
         switch (game.phase()) {
-            case LOBBY -> sidebar.show(player, messages.getLines("scoreboard.lobby", online, Placeholder.unparsed("map", config.mapName())));
+            case LOBBY -> sidebar.show(player, messages.getLines("scoreboard.lobby", online, Placeholder.unparsed("map", map.name())));
             case SEARCH -> sidebar.show(player, messages.getLines("scoreboard.search", online, Formatter.number("time", game.secondsLeft())));
             case SHOPPING -> sidebar.show(player, messages.getLines("scoreboard.shopping", online, Formatter.number("emeralds", game.emeralds(player))));
             case DEATHMATCH -> sidebar.showRows(player, game.alivePlayers().stream()

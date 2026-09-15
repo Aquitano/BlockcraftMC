@@ -1,4 +1,5 @@
 prefix: "<blue>Duell <dark_gray>» <reset>"
+game-name: "Duell"
 
 commands:
   setspawn:
@@ -11,16 +12,12 @@ mode:
 
 join:
   spectator: "<prefix><muted>Du bist als Zuschauer beigetreten."
-  broadcast: "<prefix><white><player> <muted>hat den Server betreten. <accent><online>/<max>"
-quit:
-  broadcast: "<prefix><white><player> <muted>hat den Server verlassen. <accent><online>/<max>"
 
 vote:
   ended: "<prefix><muted>Das Voting wurde beendet."
   already-ended: "<prefix><error>Das Voting wurde bereits beendet."
 
 lobby:
-  starting-in: "<prefix><muted>Die Runde startet in <accent><seconds> <muted>Sekunden."
   started: "<prefix><muted>Die Runde wurde gestartet."
   not-enough-players: "<prefix><error>Es sind nicht genügend Spieler online."
 
@@ -28,10 +25,7 @@ round:
   died: "<prefix><white><player> <muted>ist gestorben."
   ended: "<prefix><muted>Die Runde wurde beendet."
   draw: "<prefix><muted>Die Zeit ist um, das Duell endet <accent>unentschieden<muted>."
-  restart-in: "<prefix><muted>Der Server startet in <error><seconds> <muted>Sekunden neu."
 
-summary:
-  name: "Duell"
 
 timer:
   round: "<primary>Rundenzeit <dark>● <white><time>"

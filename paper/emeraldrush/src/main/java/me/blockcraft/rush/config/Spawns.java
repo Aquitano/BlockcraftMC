@@ -1,44 +1,32 @@
 package me.blockcraft.rush.config;
 
-import org.bukkit.Bukkit;
+import me.blockcraft.api.config.Locations;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.java.JavaPlugin;
 
+import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 
-/** Spawn points persisted in the plugin's config.yml under their {@link SpawnPoint#key()}. */
+/** The map's spawn points, one per {@link SpawnPoint}, persisted in the map's {@code locations.yml}. */
 public final class Spawns {
 
-    private final JavaPlugin plugin;
+    private final Locations<SpawnPoint> locations;
 
-    public Spawns(JavaPlugin plugin) {
-        this.plugin = plugin;
+    private Spawns(Locations<SpawnPoint> locations) {
+        this.locations = locations;
+    }
+
+    public static Spawns load(Path file) {
+        return new Spawns(Locations.load(file, SpawnPoint::key));
     }
 
     public Optional<Location> get(SpawnPoint point) {
-        var section = plugin.getConfig().getConfigurationSection(point.key());
-        if (section == null) {
-            return Optional.empty();
-        }
-        var world = Bukkit.getWorld(section.getString("World", ""));
-        if (world == null) {
-            return Optional.empty();
-        }
-        return Optional.of(new Location(world, section.getDouble("X"), section.getDouble("Y"), section.getDouble("Z"),
-                (float) section.getDouble("Yaw"), (float) section.getDouble("Pitch")));
+        return locations.get(point);
     }
 
     public void set(SpawnPoint point, Location location) {
-        var config = plugin.getConfig();
-        config.set(point.key() + ".X", location.getX());
-        config.set(point.key() + ".Y", location.getY());
-        config.set(point.key() + ".Z", location.getZ());
-        config.set(point.key() + ".Yaw", location.getYaw());
-        config.set(point.key() + ".Pitch", location.getPitch());
-        config.set(point.key() + ".World", location.getWorld().getName());
-        plugin.saveConfig();
+        locations.set(point, location);
     }
 
     public void teleport(Player player, SpawnPoint point) {

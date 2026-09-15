@@ -1,5 +1,6 @@
 package me.blockcraft.rush.listener;
 
+import me.blockcraft.api.world.BuildMode;
 import me.blockcraft.rush.game.Game;
 import me.blockcraft.rush.game.GamePhase;
 import org.bukkit.Material;
@@ -21,9 +22,11 @@ public final class ProtectionListener implements Listener {
     private static final double LOADOUT_SNAPSHOT_MIN_HEALTH = 5.0;
 
     private final Game game;
+    private final BuildMode buildMode;
 
-    public ProtectionListener(Game game) {
+    public ProtectionListener(Game game, BuildMode buildMode) {
         this.game = game;
+        this.buildMode = buildMode;
     }
 
     @EventHandler
@@ -39,7 +42,7 @@ public final class ProtectionListener implements Listener {
 
     @EventHandler
     public void onDrop(PlayerDropItemEvent event) {
-        if (!game.phase().allowsDamage() && !game.isBuilder(event.getPlayer())) {
+        if (!game.phase().allowsDamage() && !buildMode.isEnabled(event.getPlayer())) {
             event.setCancelled(true);
         }
     }
@@ -60,7 +63,7 @@ public final class ProtectionListener implements Listener {
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
-        if (game.phase().locksInventory() && event.getWhoClicked() instanceof Player player && !game.isBuilder(player)) {
+        if (game.phase().locksInventory() && event.getWhoClicked() instanceof Player player && !buildMode.isEnabled(player)) {
             event.setCancelled(true);
         }
     }

@@ -17,6 +17,10 @@ commands:
     description: "Zeigt deine Coins"
   level:
     description: "Zeigt dein Level"
+  build:
+    description: "Schaltet den Baumodus um"
+  map:
+    description: "Zeigt die Map oder speichert sie mit /map save"
 
 tab:
   default-prefix: "<muted>"
@@ -31,10 +35,37 @@ menu:
     accept: "<success>Kaufen"
     cancel: "<error>Abbrechen"
 
+# The card every server shows on arrival; <where> is the lobby or the game, <map> and <builders> come from the
+# map's map.yml.
+arrival:
+  title: "<primary><where>"
+  subtitle: "<muted>Map <accent><map>"
+  subtitle-credits: "<muted>Map <accent><map> <muted>von <accent><builders>"
+
+# The moments every game shares, said the same way everywhere.
+arena:
+  joined: "<prefix><white><player> <muted>hat das Spiel betreten! <dark>[<accent><online><dark>/<accent><max><dark>]"
+  left: "<prefix><white><player> <muted>hat das Spiel verlassen! <dark>[<accent><online><dark>/<accent><max><dark>]"
+  starting-in: "<prefix><muted>Die Runde startet in <accent><seconds> <muted>Sekunden."
+  restart-in: "<prefix><muted>Der Server startet in <error><seconds> <muted>Sekunden neu!"
+
 # The shared countdown: the last seconds as a title, then the start.
 countdown:
   seconds: "<primary><seconds>"
   go: "<success><bold>LOS!"
+
+build:
+  enabled: "<prefix><success>Baumodus aktiviert. <muted>Speichere die Map mit <accent>/map save<muted>, sonst ist sie beim Neustart wieder wie vorher."
+  disabled: "<prefix><error>Baumodus deaktiviert."
+
+map:
+  info:
+    - "<arrow><primary>Map <dark>● <accent><map>"
+    - "<arrow><primary>Gebaut von <dark>● <accent><builders>"
+    - "<arrow><primary>Vorlage <dark>● <muted><template>"
+  saved: "<prefix><success>Map <accent><map> <success>gespeichert. <muted>Jeder Neustart startet jetzt mit diesem Stand."
+  no-template: "<prefix><error>Für diesen Server ist keine Map-Vorlage eingerichtet."
+  failed: "<prefix><error>Die Map konnte nicht gespeichert werden, sieh in die Konsole."
 
 # The end-of-round recap every game shows; <game> is the game's own name, <winner> the player who won it.
 summary:

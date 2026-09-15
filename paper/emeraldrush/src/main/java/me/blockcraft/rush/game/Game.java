@@ -1,5 +1,6 @@
 package me.blockcraft.rush.game;
 
+import me.blockcraft.api.game.Arena;
 import me.blockcraft.api.game.LobbyCountdown;
 import me.blockcraft.api.game.RoundSummary;
 import me.blockcraft.api.game.Stat;
@@ -12,7 +13,7 @@ import me.blockcraft.api.item.Items;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Countdown;
 import me.blockcraft.api.task.Tasks;
-import me.blockcraft.api.world.Worlds;
+import me.blockcraft.api.world.MapBundle;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.rush.Permissions;
 import me.blockcraft.rush.config.RushConfig;
@@ -28,8 +29,6 @@ import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.ItemStack;
@@ -40,7 +39,6 @@ import org.bukkit.potion.PotionEffectType;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -63,13 +61,13 @@ public final class Game {
     private final LobbyCountdown lobbyCountdown;
     private final RoundSummary summary;
     private final GameScoreboard scoreboard;
+    private final Arena arena;
     private Countdown restart;
     private TimerBar timer;
 
     private GamePhase phase = GamePhase.LOBBY;
     private final Set<UUID> alive = new LinkedHashSet<>();
-    private final Set<UUID> spectators = new HashSet<>();
-    private final Set<UUID> builders = new HashSet<>();
+    private final Set<UUID> spectators = new LinkedHashSet<>();
     private final Map<UUID, Integer> emeralds = new HashMap<>();
     private final Map<UUID, Integer> lives = new HashMap<>();
     private final Map<UUID, Loadout> loadouts = new HashMap<>();
@@ -77,18 +75,18 @@ public final class Game {
     private record Loadout(ItemStack[] contents, ItemStack[] armor) {
     }
 
-    public Game(Plugin plugin, RushConfig config, Spawns spawns, Messages messages, StatsRepository stats) {
+    public Game(Plugin plugin, RushConfig config, Spawns spawns, Messages messages, StatsRepository stats, MapBundle map) {
         this.plugin = plugin;
         this.config = config;
         this.spawns = spawns;
         this.messages = messages;
         this.stats = stats;
         this.countdown = new Countdown(plugin);
-        this.lobbyCountdown = new LobbyCountdown(plugin, config.lobbyCountdown(), config.minPlayers(), alive::size,
-                seconds -> broadcast("lobby.countdown", Formatter.number("seconds", seconds)), this::beginSearch);
-        this.summary = new RoundSummary(plugin, messages.get("summary.name"),
+        this.arena = new Arena(messages);
+        this.lobbyCountdown = new LobbyCountdown(plugin, arena, config.lobbyCountdown(), config.minPlayers(), alive::size, this::beginSearch);
+        this.summary = new RoundSummary(plugin, messages.get("game-name"),
                 new RoundSummary.Rewards(config.killCoins(), config.winCoins()));
-        this.scoreboard = new GameScoreboard(this, messages, config);
+        this.scoreboard = new GameScoreboard(this, messages, map);
     }
 
     public GamePhase phase() {
@@ -109,18 +107,6 @@ public final class Game {
 
     public boolean isSpectator(Player player) {
         return spectators.contains(player.getUniqueId());
-    }
-
-    public boolean isBuilder(Player player) {
-        return builders.contains(player.getUniqueId());
-    }
-
-    public boolean toggleBuilder(Player player) {
-        if (builders.remove(player.getUniqueId())) {
-            return false;
-        }
-        builders.add(player.getUniqueId());
-        return true;
     }
 
     public List<Player> alivePlayers() {
@@ -156,13 +142,10 @@ public final class Game {
     }
 
     public void join(Player player) {
-        for (var world : Bukkit.getWorlds()) {
-            Worlds.clearWeather(world);
-            Worlds.setTime(world, 1000L);
-        }
         if (phase != GamePhase.LOBBY) {
             makeSpectator(player);
             spawns.teleport(player, SpawnPoint.SPECTATOR);
+            arena.arrive(player);
             scoreboard.refreshAll();
             return;
         }
@@ -172,17 +155,15 @@ public final class Game {
         PlayerReset.reset(player, GameMode.ADVENTURE);
         messages.getLines("lobby.welcome", Formatter.number("emeralds", config.emeraldsPerOre())).forEach(player::sendMessage);
         giveLobbyItems(player);
-        broadcast("lobby.joined", Placeholder.unparsed("player", player.getName()));
+        arena.welcome(player, alive.size(), Bukkit.getMaxPlayers());
         scoreboard.refreshAll();
         lobbyCountdown.start();
     }
 
-    /** Returns whether the player left as a spectator, whose departure is not announced. */
-    public boolean quit(Player player) {
+    public void quit(Player player) {
         var id = player.getUniqueId();
         boolean wasSpectator = spectators.remove(id);
         boolean wasAlive = alive.remove(id);
-        builders.remove(id);
         emeralds.remove(id);
         lives.remove(id);
         loadouts.remove(id);
@@ -191,9 +172,11 @@ public final class Game {
             Tasks.async(plugin, () -> stats.add(id, name, Stat.LOSSES, 1));
             checkWinner();
         }
+        if (!wasSpectator) {
+            arena.farewell(player, alive.size(), Bukkit.getMaxPlayers());
+        }
         hideTimer(player);
         scoreboard.refreshAll();
-        return wasSpectator;
     }
 
     public void forceStart(Player requester) {
@@ -429,17 +412,7 @@ public final class Game {
         countdown.cancel();
         hideTimer();
         summary.show();
-        restart = ServerRestart.start(plugin, config.restartSeconds() + 1, remaining -> {
-            if (remaining == 10 || (remaining >= 1 && remaining <= 5)) {
-                broadcast("ending.restart", Formatter.number("seconds", remaining));
-            }
-            if (remaining == 5) {
-                clearDroppedItems();
-            }
-            if (remaining == 0) {
-                broadcast("ending.restart-now");
-            }
-        });
+        restart = ServerRestart.start(plugin, arena, config.restartSeconds());
     }
 
     /** Phases announce {@code seconds .. 1} and end one second after the last announcement. */
@@ -484,12 +457,6 @@ public final class Game {
         }
         inventory.setItem(4, Items.of(Material.PLAYER_HEAD).name(messages.get("item.stats")).build());
         inventory.setItem(8, Items.of(Material.SLIME_BALL).name(messages.get("item.hub")).build());
-    }
-
-    private static void clearDroppedItems() {
-        for (var world : Bukkit.getWorlds()) {
-            world.getEntitiesByClass(Item.class).forEach(Entity::remove);
-        }
     }
 
     private void broadcast(String key, TagResolver... resolvers) {

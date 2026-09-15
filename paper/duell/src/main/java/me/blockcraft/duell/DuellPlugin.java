@@ -7,7 +7,6 @@ import me.blockcraft.api.game.ArenaProtection;
 import me.blockcraft.api.game.LootChests;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.game.TopList;
-import me.blockcraft.api.world.Worlds;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.duell.command.SetSpawnCommand;
 import me.blockcraft.duell.config.DuellConfig;
@@ -36,9 +35,8 @@ public final class DuellPlugin extends JavaPlugin {
     public void onEnable() {
         saveDefaultConfig();
         var config = DuellConfig.from(getConfig());
-        var spawns = Spawns.load(getDataPath());
-
         var api = BlockcraftApi.get();
+        var spawns = Spawns.load(api.map().file(this, "locations.yml"));
         var messages = Messages.load(getDataPath(), () -> getResource("messages.yml"), api.tags());
         var stats = new StatsRepository(api.database(), "duell_stats");
         stats.createTable();
@@ -53,7 +51,7 @@ public final class DuellPlugin extends JavaPlugin {
         List.of(
                 new ConnectionListener(duel),
                 new LobbyItemListener(this, duel, messages, statsMenus),
-                new ProtectionListener(duel),
+                new ProtectionListener(duel, api.buildMode()),
                 new ArenaProtection(duel::frozen),
                 new VsListener(this, duel, messages, items),
                 new SgListener(duel, lootChests),
@@ -62,8 +60,6 @@ public final class DuellPlugin extends JavaPlugin {
 
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event ->
                 new CommandRegistry(event.registrar(), messages).register(SetSpawnCommand.create(spawns, config, messages)));
-
-        clearArenaEntities(spawns);
     }
 
     @Override
@@ -76,9 +72,5 @@ public final class DuellPlugin extends JavaPlugin {
 
     private void register(Listener listener) {
         getServer().getPluginManager().registerEvents(listener, this);
-    }
-
-    private void clearArenaEntities(Spawns spawns) {
-        spawns.worlds().forEach(world -> Worlds.removeLeftovers(world, entity -> false));
     }
 }

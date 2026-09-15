@@ -2,8 +2,8 @@ package me.blockcraft.lobby.listener;
 
 import me.blockcraft.api.coins.CoinsRepository;
 import me.blockcraft.api.config.Locations;
+import me.blockcraft.api.player.Arrival;
 import me.blockcraft.api.settings.PlayerSettingsLoadedEvent;
-import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.lobby.config.LobbyLocation;
@@ -13,7 +13,6 @@ import me.blockcraft.lobby.hider.PlayerHider;
 import me.blockcraft.lobby.item.LobbyItem;
 import me.blockcraft.lobby.item.LobbyItems;
 import net.kyori.adventure.bossbar.BossBar;
-import net.kyori.adventure.title.Title;
 import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -22,11 +21,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.Plugin;
 
-import java.time.Duration;
-
 public final class JoinQuitListener implements Listener {
-
-    private static final Title.Times TITLE_TIMES = Title.Times.times(Duration.ofMillis(500), Duration.ofSeconds(1), Duration.ofMillis(500));
 
     private final Plugin plugin;
     private final Messages messages;
@@ -54,13 +49,12 @@ public final class JoinQuitListener implements Listener {
         Player player = event.getPlayer();
         event.joinMessage(null);
         player.setGameMode(GameMode.ADVENTURE);
-        player.showTitle(Title.title(messages.get("join.title"), messages.get("join.subtitle"), TITLE_TIMES));
+        Arrival.show(player, messages.get("join.title"));
         player.getInventory().setArmorContents(null);
         items.give(player, true);
         locations.get(LobbyLocation.SPAWN).ifPresent(player::teleport);
         player.setCollidable(false);
         player.showBossBar(BossBar.bossBar(messages.get("join.bossbar"), 1.0f, BossBar.Color.BLUE, BossBar.Overlay.NOTCHED_10));
-        Sounds.JOIN.play(player);
         hider.onJoin(player);
         showCoinsAsLevel(player);
     }

@@ -1,12 +1,11 @@
 prefix: "<blue>EmeraldRush <dark_gray>» <reset>"
+game-name: "EmeraldRush"
 
 commands:
   start:
     description: "Startet die Runde"
   stats:
     description: "Zeigt die Stats eines Spielers"
-  build:
-    description: "Schaltet den Build-Modus um"
   rushset:
     description: "Setzt eine Spawn-Location"
   top:
@@ -26,9 +25,6 @@ lobby:
     - "<muted>Nutze sie, um mit dem Villager zu handeln und rüste"
     - "<muted>dich für das große Deathmatch gut aus!"
     - " "
-  joined: "<prefix><white><player> <muted>hat das Spiel betreten!"
-  left: "<prefix><white><player><muted> hat das Spiel verlassen!"
-  countdown: "<prefix><muted>Die Runde startet in <accent><seconds> <muted>Sekunden."
   cancelled: "<prefix><error>Zu wenige Spieler, der Countdown wurde abgebrochen."
 search:
   started:
@@ -55,11 +51,6 @@ deathmatch:
   draw: "<prefix><error>Unentschieden, die Runde wird neu gestartet!"
   killed: "<prefix><white><victim><muted> wurde von <white><killer><muted> getötet."
   died: "<prefix><white><victim> <muted>ist gestorben."
-ending:
-  restart: "<prefix><muted>Der Server startet in <error><seconds> <muted>Sekunden neu!"
-  restart-now: "<prefix><error>Der Server startet jetzt neu!"
-summary:
-  name: "EmeraldRush"
 timer:
   search: "<primary>Suchzeit <dark>● <white><time>"
   shopping: "<primary>Shopping <dark>● <white><seconds>s"
@@ -76,8 +67,6 @@ item:
   compass: "<primary>Kompass"
   compass-lore: "<bullet><muted>Tracke Spieler in deiner Nähe"
 command:
-  build-enabled: "<prefix><muted>Build-Modus <white>aktiviert!"
-  build-disabled: "<prefix><muted>Build-Modus <white>deaktiviert!"
   chest-wrong-phase: "<prefix><error>Du kannst diesen Command nur in der Shopping-Phase benutzen!"
   emeralds-set: "<prefix><muted>Du hast diesem Spieler <accent><amount> <muted>Emeralds gegeben!"
   coins-given: "<prefix><muted>Du hast diesem Spieler <accent><amount> <muted>Coins gegeben!"

@@ -1,6 +1,6 @@
 package me.blockcraft.lobby.listener;
 
-import me.blockcraft.lobby.LobbyPermissions;
+import me.blockcraft.api.world.BuildMode;
 import org.bukkit.Material;
 import org.bukkit.Tag;
 import org.bukkit.entity.Blaze;
@@ -42,24 +42,30 @@ public final class ProtectionListener implements Listener {
             Material.ANVIL, Material.CHIPPED_ANVIL, Material.DAMAGED_ANVIL,
             Material.CRAFTING_TABLE, Material.FURNACE, Material.LEVER, Material.CHEST);
 
+    private final BuildMode buildMode;
+
+    public ProtectionListener(BuildMode buildMode) {
+        this.buildMode = buildMode;
+    }
+
     @EventHandler
     public void onPlace(BlockPlaceEvent event) {
-        event.setCancelled(!event.getPlayer().hasPermission(LobbyPermissions.BUILD));
+        event.setCancelled(!buildMode.isEnabled(event.getPlayer()));
     }
 
     @EventHandler
     public void onBreak(BlockBreakEvent event) {
-        event.setCancelled(!event.getPlayer().hasPermission(LobbyPermissions.BUILD));
+        event.setCancelled(!buildMode.isEnabled(event.getPlayer()));
     }
 
     @EventHandler
     public void onBucketEmpty(PlayerBucketEmptyEvent event) {
-        event.setCancelled(!event.getPlayer().hasPermission(LobbyPermissions.BUILD));
+        event.setCancelled(!buildMode.isEnabled(event.getPlayer()));
     }
 
     @EventHandler
     public void onDrop(PlayerDropItemEvent event) {
-        event.setCancelled(!event.getPlayer().hasPermission(LobbyPermissions.BUILD));
+        event.setCancelled(!buildMode.isEnabled(event.getPlayer()));
     }
 
     @EventHandler
@@ -115,7 +121,7 @@ public final class ProtectionListener implements Listener {
 
     @EventHandler
     public void onBlockInteract(PlayerInteractEvent event) {
-        if (event.getAction() != Action.RIGHT_CLICK_BLOCK || event.getClickedBlock() == null) {
+        if (event.getAction() != Action.RIGHT_CLICK_BLOCK || event.getClickedBlock() == null || buildMode.isEnabled(event.getPlayer())) {
             return;
         }
         Material type = event.getClickedBlock().getType();

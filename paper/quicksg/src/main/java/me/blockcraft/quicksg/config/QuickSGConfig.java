@@ -7,7 +7,6 @@ import org.bukkit.configuration.file.FileConfiguration;
 
 
 public record QuickSGConfig(
-        String mapName,
         int minPlayers,
         int maxPlayers,
         String globalStatsHead,
@@ -34,7 +33,6 @@ public record QuickSGConfig(
         var rewards = section(config, "rewards");
         var chest = section(config, "chest");
         return new QuickSGConfig(
-                config.getString("map-name", "MapName"),
                 config.getInt("min-players", 2),
                 config.getInt("max-players", 8),
                 config.getString("global-stats-head", "Kevos"),

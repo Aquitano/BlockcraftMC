@@ -11,7 +11,6 @@ import me.blockcraft.api.game.StatsCommand;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.game.TopList;
 import me.blockcraft.common.message.Messages;
-import me.blockcraft.quicksg.command.BuildCommand;
 import me.blockcraft.quicksg.command.SetupCommand;
 import me.blockcraft.quicksg.command.StartCommand;
 import me.blockcraft.quicksg.command.TopCommand;
@@ -46,14 +45,14 @@ public final class QuickSGPlugin extends JavaPlugin {
         var config = QuickSGConfig.from(getConfig());
         var api = BlockcraftApi.get();
         var messages = Messages.load(getDataPath(), () -> getResource("messages.yml"), api.tags());
-        var locations = Locations.load(getDataPath().resolve("locations.yml"), LocationKey::key);
+        var locations = Locations.load(api.map().file(this, "locations.yml"), LocationKey::key);
 
         var stats = new StatsRepository(api.database(), "qsg_stats");
         stats.createTable();
         api.unlocks().importLegacyTable("qsg_kits", Kit.LEGACY_COLUMNS);
 
         var items = new GameItems(messages);
-        game = new Game(this, config, messages, locations, stats, new GameScoreboard(messages, config), items);
+        game = new Game(this, config, messages, locations, stats, new GameScoreboard(messages, config, api.map()), items);
         api.presence().maxPlayers(config.maxPlayers());
         game.applyLobbyWorldBorder();
 
@@ -63,9 +62,9 @@ public final class QuickSGPlugin extends JavaPlugin {
         var statsMenus = new StatsMenus(this, messages, stats, items, topList, config.globalStatsHead());
 
         List.of(
-                new ConnectionListener(game, messages),
+                new ConnectionListener(game),
                 new DeathListener(game),
-                new ProtectionListener(game),
+                new ProtectionListener(game, api.buildMode()),
                 new ArenaProtection(game::frozen),
                 new ItemListener(this, game, messages, lootChests, kitMenus, statsMenus)
         ).forEach(this::register);
@@ -74,7 +73,6 @@ public final class QuickSGPlugin extends JavaPlugin {
             var commands = new CommandRegistry(event.registrar(), messages);
             commands.register(StartCommand.create(this, game, messages, api.coins(), stats));
             commands.register(StatsCommand.create(this, stats, messages));
-            commands.register(BuildCommand.create(game, messages));
             commands.register(SetupCommand.create(locations, messages));
             commands.register(TopCommand.create(topList, messages));
         });

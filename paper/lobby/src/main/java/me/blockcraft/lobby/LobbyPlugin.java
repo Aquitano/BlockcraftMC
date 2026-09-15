@@ -61,7 +61,7 @@ public final class LobbyPlugin extends JavaPlugin {
         var config = LobbyConfig.fromYaml(YamlFile.loadWithDefaults(getDataPath().resolve("config.yml"), () -> getResource("config.yml")));
         var api = BlockcraftApi.get();
         var messages = Messages.load(getDataPath(), () -> getResource("messages.yml"), api.tags());
-        var locations = Locations.load(getDataPath().resolve("locations.yml"), LobbyLocation::key);
+        var locations = Locations.load(api.map().file(this, "locations.yml"), LobbyLocation::key);
         var coins = api.coins();
         var luckPerms = LuckPermsProvider.get();
 
@@ -84,7 +84,7 @@ public final class LobbyPlugin extends JavaPlugin {
 
         register(new JoinQuitListener(this, messages, coins, locations, items, trails, pets, hider),
                 new LobbyItemListener(this, messages, menus, items, hider),
-                new ProtectionListener(),
+                new ProtectionListener(api.buildMode()),
                 new CommandBlockListener(config.allowedCommands()),
                 new SecretsListener(this, messages, api.unlocks(), coins, config.secretReward()),
                 new ShopNpcListener(menus),
@@ -92,7 +92,7 @@ public final class LobbyPlugin extends JavaPlugin {
                 new MoveListener(messages, config, locations, trails),
                 new DoubleJumpListener(config),
                 new GadgetListener(gadgets),
-                new InventoryLockListener(),
+                new InventoryLockListener(api.buildMode()),
                 new DeathListener(locations, items, hider));
         api.presence().maxPlayers(config.maxPlayers());
 

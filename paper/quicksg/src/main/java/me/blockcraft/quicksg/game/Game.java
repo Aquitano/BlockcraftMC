@@ -2,6 +2,7 @@ package me.blockcraft.quicksg.game;
 
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.config.Locations;
+import me.blockcraft.api.game.Arena;
 import me.blockcraft.api.game.GamePhase;
 import me.blockcraft.api.game.LobbyCountdown;
 import me.blockcraft.api.game.PlayerReset;
@@ -25,13 +26,11 @@ import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.attribute.Attribute;
-import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.plugin.Plugin;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -60,11 +59,11 @@ public final class Game {
     private boolean protection;
     private boolean frozen;
     private final Set<UUID> alive = new LinkedHashSet<>();
-    private final Set<UUID> spectators = new HashSet<>();
-    private final Set<UUID> builders = new HashSet<>();
+    private final Set<UUID> spectators = new LinkedHashSet<>();
     private final Map<UUID, Kit> kits = new HashMap<>();
     private final LobbyCountdown lobbyCountdown;
     private final RoundSummary summary;
+    private final Arena arena;
     private Countdown freezeCountdown;
     private Countdown protectionCountdown;
     private Countdown gameTimer;
@@ -81,10 +80,9 @@ public final class Game {
         this.stats = stats;
         this.scoreboard = scoreboard;
         this.items = items;
-        this.lobbyCountdown = new LobbyCountdown(plugin, config.countdowns().lobby(), config.minPlayers(), alive::size,
-                seconds -> Bukkit.broadcast(messages.get("lobby.starting-in", Formatter.number("seconds", seconds))),
-                this::start);
-        this.summary = new RoundSummary(plugin, messages.get("summary.name"),
+        this.arena = new Arena(messages);
+        this.lobbyCountdown = new LobbyCountdown(plugin, arena, config.countdowns().lobby(), config.minPlayers(), alive::size, this::start);
+        this.summary = new RoundSummary(plugin, messages.get("game-name"),
                 new RoundSummary.Rewards(config.rewards().kill(), config.rewards().win()));
     }
 
@@ -112,19 +110,6 @@ public final class Game {
         return spectators.contains(player.getUniqueId());
     }
 
-    public boolean isBuilder(Player player) {
-        return builders.contains(player.getUniqueId());
-    }
-
-    /** Returns whether build mode is enabled after the toggle. */
-    public boolean toggleBuilder(Player player) {
-        if (builders.remove(player.getUniqueId())) {
-            return false;
-        }
-        builders.add(player.getUniqueId());
-        return true;
-    }
-
     public Kit kit(Player player) {
         return kits.getOrDefault(player.getUniqueId(), Kit.STARTER);
     }
@@ -146,6 +131,7 @@ public final class Game {
         if (phase != GamePhase.LOBBY) {
             makeSpectator(player);
             locations.get(LocationKey.SPECTATOR).ifPresent(player::teleport);
+            arena.arrive(player);
             refreshScoreboards();
             return;
         }
@@ -155,20 +141,22 @@ public final class Game {
         locations.get(LocationKey.LOBBY).ifPresent(player::teleport);
         giveLobbyItems(player);
         summary.join(player);
-        Bukkit.broadcast(messages.get("join.broadcast", Placeholder.unparsed("player", player.getName())));
+        arena.welcome(player, alive.size(), config.maxPlayers());
         refreshScoreboards();
         lobbyCountdown.start();
     }
 
     public void quit(Player player) {
         boolean wasAlive = alive.remove(player.getUniqueId());
-        spectators.remove(player.getUniqueId());
-        builders.remove(player.getUniqueId());
+        boolean wasSpectator = spectators.remove(player.getUniqueId());
         kits.remove(player.getUniqueId());
         if (phase == GamePhase.INGAME && wasAlive) {
             summary.death(player);
             record(player, Stat.LOSSES, 1);
             record(player, Stat.DEATHS, 1);
+        }
+        if (!wasSpectator) {
+            arena.farewell(player, alive.size(), config.maxPlayers());
         }
         forEachTimer(bar -> bar.hide(player));
         refreshScoreboards();
@@ -337,23 +325,7 @@ public final class Game {
     private void startRestart() {
         forEachTimer(TimerBar::hide);
         summary.show();
-        int seconds = config.countdowns().restart();
-        Bukkit.broadcast(restartMessage(seconds));
-        restartCountdown = ServerRestart.start(plugin, seconds, remaining -> {
-            if (remaining == 5) {
-                clearDroppedItems();
-            }
-            if (remaining >= 1 && remaining <= 5) {
-                Bukkit.broadcast(restartMessage(remaining));
-            }
-            if (remaining == 0) {
-                Bukkit.broadcast(messages.get("restart.now"));
-            }
-        });
-    }
-
-    private Component restartMessage(int seconds) {
-        return messages.get("restart.in", Formatter.number("seconds", seconds));
+        restartCountdown = ServerRestart.start(plugin, arena, config.countdowns().restart());
     }
 
     private void giveLobbyItems(Player player) {
@@ -381,12 +353,6 @@ public final class Game {
             border.setCenter(location);
             border.setSize(radius * 2);
         });
-    }
-
-    private void clearDroppedItems() {
-        for (var world : Bukkit.getWorlds()) {
-            world.getEntitiesByClass(Item.class).forEach(Item::remove);
-        }
     }
 
     private void record(Player player, Stat column, int delta) {

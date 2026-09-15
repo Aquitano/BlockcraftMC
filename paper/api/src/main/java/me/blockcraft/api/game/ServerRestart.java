@@ -9,17 +9,29 @@ import org.bukkit.plugin.Plugin;
 import java.util.function.IntConsumer;
 
 /**
- * The end of a round: counts down, sends everyone back to a lobby a second before the end so nobody is kicked,
- * then stops the server for the orchestrator to bring it back fresh.
+ * The end of a round: announces the countdown, sends everyone back to a lobby a second before the end so nobody
+ * is kicked, then stops the server for the orchestrator to bring it back fresh.
  */
 public final class ServerRestart {
+
+    private static final int ANNOUNCE_FROM = 5;
 
     private ServerRestart() {
     }
 
-    public static Countdown start(Plugin plugin, int seconds, IntConsumer onTick) {
+    public static Countdown start(Plugin plugin, Arena arena, int seconds) {
+        return start(plugin, arena, seconds, remaining -> {
+        });
+    }
+
+    /** {@code onTick} gets every remaining second for what the game itself shows alongside the announcements. */
+    public static Countdown start(Plugin plugin, Arena arena, int seconds, IntConsumer onTick) {
+        arena.announceRestart(seconds);
         return Countdown.start(plugin, seconds, remaining -> {
             onTick.accept(remaining);
+            if (remaining >= 1 && remaining <= ANNOUNCE_FROM) {
+                arena.announceRestart(remaining);
+            }
             if (remaining == 1) {
                 Bukkit.getOnlinePlayers().forEach(player -> ProxyMessaging.hub(plugin, player));
             }
