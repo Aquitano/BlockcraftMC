@@ -7,7 +7,8 @@ import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.moderation.PunishmentCatalogRepository;
-import me.blockcraft.common.moderation.PunishmentType;
+import me.blockcraft.common.network.operation.NetworkRequest.PresetPunishment;
+import me.blockcraft.common.network.operation.NetworkRequest.TimedPunishment;
 import me.blockcraft.common.report.Report;
 import me.blockcraft.common.report.ReportRepository;
 import net.kyori.adventure.text.Component;
@@ -18,12 +19,13 @@ import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
+import java.time.Duration;
 import java.util.Optional;
 import java.util.UUID;
 
 /**
  * Opens the report menus and routes their actions; {@code reported} filters a list to one accused player. Moving
- * to a player and punishing one are proxy commands run through the plugin channel, so the proxy answers.
+ * to a player runs {@code /goto} on the proxy, punishing one is a typed request to it, so the proxy answers both.
  */
 public final class ReportMenus {
 
@@ -136,10 +138,10 @@ public final class ReportMenus {
         if (!allowed(player)) {
             return;
         }
-        ProxyMessaging.runOnProxy(plugin, player, "strafe " + report.reported() + " " + entry.number());
+        BlockcraftApi.get().operations().submit(player, new PresetPunishment(report.target(), entry.number()));
     }
 
-    /** A punishment outside the catalogue; the proxy's /tempban and /tempmute answer, so only the form is checked here. */
+    /** A punishment outside the catalogue; the proxy checks rank and permission and answers, so only the form is checked here. */
     void punish(Player player, Report report, Optional<String> reported, PunishDialog.Custom custom) {
         if (!allowed(player)) {
             return;
@@ -154,9 +156,8 @@ public final class ReportMenus {
             openPunish(player, report, reported);
             return;
         }
-        String duration = custom.hours() == 0 ? custom.days() + "d" : custom.totalHours() + "h";
-        String command = custom.type() == PunishmentType.BAN ? "tempban" : "tempmute";
-        ProxyMessaging.runOnProxy(plugin, player, command + " " + report.reported() + " " + duration + " " + custom.reason());
+        BlockcraftApi.get().operations().submit(player, new TimedPunishment(report.target(), custom.type(),
+                Duration.ofHours(custom.totalHours()).toSeconds(), custom.reason()));
     }
 
     public void promptStatus(Player player, Report report, Optional<String> reported) {

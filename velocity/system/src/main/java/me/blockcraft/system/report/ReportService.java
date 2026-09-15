@@ -6,6 +6,8 @@ import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import me.blockcraft.common.db.DatabaseException;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.common.network.operation.NetworkRequest;
+import me.blockcraft.common.network.operation.OperationResult;
 import me.blockcraft.common.player.PlayerReference;
 import me.blockcraft.common.report.ReportRepository;
 import me.blockcraft.system.PlayerLookup;
@@ -33,8 +35,6 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class ReportService {
 
-    private static final int MAX_REASON_LENGTH = 200;
-
     private final ProxyServer proxy;
     private final Logger logger;
     private final ReportRepository reports;
@@ -61,19 +61,19 @@ public final class ReportService {
         this.visibility = visibility;
     }
 
-    public synchronized void submit(Player reporter, String targetName, String reason) {
+    public synchronized OperationResult submit(Player reporter, String targetName, String reason) {
         if (!PlayerReference.isName(targetName)) {
             reporter.sendMessage(messages.get("report.invalid-player"));
-            return;
+            return OperationResult.REJECTED;
         }
-        if (reason.isBlank() || reason.length() > MAX_REASON_LENGTH || reason.chars().anyMatch(Character::isISOControl)) {
-            reporter.sendMessage(messages.get("report.reason-too-long", Formatter.number("max", MAX_REASON_LENGTH)));
-            return;
+        if (!NetworkRequest.isText(reason)) {
+            reporter.sendMessage(messages.get("report.reason-too-long", Formatter.number("max", NetworkRequest.MAX_TEXT_LENGTH)));
+            return OperationResult.REJECTED;
         }
         var found = lookup.findVisible(reporter, targetName);
         if (found.isEmpty()) {
             reporter.sendMessage(messages.get("report.unknown-player"));
-            return;
+            return OperationResult.REJECTED;
         }
         var account = found.get();
         var target = account.online();
@@ -81,7 +81,7 @@ public final class ReportService {
         String shown = target.map(player -> visibility.nameFor(reporter, player)).orElse(reported);
         if (reported.equalsIgnoreCase(reporter.getUsername())) {
             reporter.sendMessage(messages.get("report.self"));
-            return;
+            return OperationResult.REJECTED;
         }
         lastReport.entrySet().removeIf(entry -> !entry.getValue().plus(cooldown).isAfter(Instant.now()));
         var last = lastReport.get(reporter.getUniqueId());
@@ -89,7 +89,7 @@ public final class ReportService {
             long secondsLeft = Duration.between(Instant.now(), last.plus(cooldown)).toSeconds();
             if (secondsLeft > 0) {
                 reporter.sendMessage(messages.get("report.cooldown", Formatter.number("seconds", secondsLeft)));
-                return;
+                return OperationResult.REJECTED;
             }
         }
         String server = target.flatMap(Player::getCurrentServer).map(ServerConnection::getServerInfo).map(ServerInfo::getName)
@@ -99,17 +99,18 @@ public final class ReportService {
             if (!reports.insert(PlayerReference.known(reporter.getUniqueId(), reporter.getUsername()),
                     PlayerReference.known(account.uuid(), account.name()), reason, server)) {
                 reporter.sendMessage(messages.get("report.exists"));
-                return;
+                return OperationResult.REJECTED;
             }
             count = reports.countByReported(reported);
             lastReport.put(reporter.getUniqueId(), Instant.now());
         } catch (DatabaseException exception) {
             logger.error("Report of {} by {} failed", reported, reporter.getUsername(), exception);
             reporter.sendMessage(messages.get("report.error"));
-            return;
+            return OperationResult.FAILED;
         }
         notifyStaff(reporter, reported, reason, server, count);
         reporter.sendMessage(messages.get("report.success", Placeholder.unparsed("player", shown)));
+        return OperationResult.APPLIED;
     }
 
     /** The reported name is the whole notice: it jumps to the player on click and carries the details on hover. */

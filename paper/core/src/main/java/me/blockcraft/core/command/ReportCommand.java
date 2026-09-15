@@ -14,8 +14,9 @@ import io.papermc.paper.registry.data.dialog.input.SingleOptionDialogInput.Optio
 import io.papermc.paper.registry.data.dialog.type.DialogType;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.dialog.Dialogs;
-import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.common.network.operation.NetworkRequest.SubmitReport;
+import me.blockcraft.common.player.PlayerReference;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.entity.Player;
@@ -26,8 +27,8 @@ import java.util.List;
 
 /**
  * The player's side of /report: the proxy forwards {@code /report <player>} here, the dialog collects a reason from
- * the configured list plus free text, and the finished report goes back to the proxy's command, which stores it,
- * applies the cooldown and tells the staff.
+ * the configured list plus free text, and the finished report goes back to the proxy as a {@link SubmitReport},
+ * which resolves the name the player sees, stores the report, applies the cooldown and tells the staff.
  */
 public final class ReportCommand {
 
@@ -49,6 +50,10 @@ public final class ReportCommand {
                         .executes(context -> {
                             var player = context.getSource().getPlayerOrThrow();
                             String target = StringArgumentType.getString(context, "player");
+                            if (!PlayerReference.isName(target)) {
+                                player.sendMessage(messages.get("report.invalid-player"));
+                                return Command.SINGLE_SUCCESS;
+                            }
                             if (target.equalsIgnoreCase(BlockcraftApi.get().realName(player))) {
                                 player.sendMessage(messages.get("report.self"));
                                 return Command.SINGLE_SUCCESS;
@@ -83,7 +88,7 @@ public final class ReportCommand {
                                 Dialogs.show(player, dialog(plugin, target, reasons, messages));
                                 return;
                             }
-                            ProxyMessaging.runOnProxy(plugin, player, "report " + target + " " + reason);
+                            BlockcraftApi.get().operations().submit(player, new SubmitReport(target, reason));
                         }),
                         Dialogs.button(messages.get("report.cancel")))));
     }

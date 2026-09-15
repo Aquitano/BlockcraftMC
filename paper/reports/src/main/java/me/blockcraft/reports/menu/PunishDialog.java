@@ -26,8 +26,8 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * The /strafe catalogue as buttons, each running the numbered punishment on the proxy, plus a form for a punishment
- * the catalogue lacks: type, duration and reason go out as /tempban or /tempmute.
+ * The /strafe catalogue as buttons, each requesting the numbered punishment from the proxy, plus a form for a
+ * punishment the catalogue lacks: type, duration and reason go out as a timed punishment request.
  */
 final class PunishDialog {
 

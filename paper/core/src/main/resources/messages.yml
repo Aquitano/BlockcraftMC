@@ -217,6 +217,7 @@ nick:
 report:
   reason-missing: "<prefix><error>Wähle einen gültigen Grund oder gib Details an."
   usage: "<prefix><error>Benutze /report [Spieler]"
+  invalid-player: "<prefix><error>Das ist kein gültiger Spielername."
   self: "<prefix><error>Du kannst dich nicht selbst reporten!"
   title: "<arrow><error>Report <dark>● <accent><player>"
   body: "<muted>Du meldest <error><player><muted>. Das Team schaut sich die Meldung an."

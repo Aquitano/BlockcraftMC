@@ -17,6 +17,7 @@ import me.blockcraft.common.moderation.ModerationRepositories;
 import me.blockcraft.common.moderation.PunishmentCatalogRepository;
 import me.blockcraft.common.nick.NickRepository;
 import me.blockcraft.common.network.ServerRepository;
+import me.blockcraft.common.network.operation.NetworkRequest;
 import me.blockcraft.common.settings.PlayerSettingRepository;
 import me.blockcraft.system.command.CommandSupport;
 import me.blockcraft.system.command.moderation.BanCommand;
@@ -76,10 +77,12 @@ import me.blockcraft.system.listener.CommandListener;
 import me.blockcraft.system.listener.InitialServerListener;
 import me.blockcraft.system.listener.KickListener;
 import me.blockcraft.system.listener.LoginListener;
+import me.blockcraft.system.listener.OperationListener;
 import me.blockcraft.system.listener.ProxyMessageListener;
 import me.blockcraft.system.listener.TabCompleteListener;
 import me.blockcraft.system.listener.TabHeaderListener;
 import me.blockcraft.system.listener.WatchListener;
+import me.blockcraft.system.moderation.ModerationActions;
 import me.blockcraft.system.moderation.MuteGate;
 import me.blockcraft.system.moderation.PunishmentService;
 import me.blockcraft.system.report.Reports;
@@ -96,6 +99,8 @@ import me.blockcraft.system.task.DailySchedule;
 import org.slf4j.Logger;
 
 import java.nio.file.Path;
+import java.time.Duration;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @Plugin(id = "blockcraft-system", name = "BlockcraftSystem", version = BuildConstants.VERSION, authors = {"Aquitano"},
@@ -158,9 +163,16 @@ public final class SystemPlugin {
         var supportSessions = new SupportSessions();
         var playtime = new Playtime(repositories.players(), logger);
         var support = new CommandSupport(visibility, messages);
+        var moderationActions = new ModerationActions(support, lookup, punishments, config, messages);
         var reports = Reports.load(this, proxy, logger, dataDirectory, database, lookup, visibility,
                 proxy.getPluginManager().fromInstance(this).orElseThrow().getDescription());
         register(reports.command().create());
+        proxy.getEventManager().register(this, new OperationListener(proxy, (player, request) -> switch (request) {
+            case NetworkRequest.SubmitReport report -> reports.service().submit(player, report.target(), report.reason());
+            case NetworkRequest.TimedPunishment punishment -> moderationActions.timed(player, punishment.target(),
+                    punishment.type(), Optional.of(Duration.ofSeconds(punishment.seconds())), punishment.reason());
+            case NetworkRequest.PresetPunishment punishment -> moderationActions.preset(player, punishment.target(), punishment.number());
+        }, messages, logger));
 
         var tabHeader = new TabHeaderListener(proxy, visibility, config, messages);
 
@@ -183,17 +195,17 @@ public final class SystemPlugin {
         events.register(this, playtime);
 
         register(new BanCommand(support).create());
-        register(new TempBanCommand(support, lookup, punishments, config, messages).create());
+        register(new TempBanCommand(support, moderationActions, messages).create());
         register(new UnbanCommand(support, lookup, punishments, messages).create());
         register(new BanListCommand(support, lookup, repositories.punishments(), messages).create());
         register(new MuteCommand(support).create());
-        register(new TempMuteCommand(support, lookup, punishments, messages).create());
+        register(new TempMuteCommand(support, moderationActions, messages).create());
         register(new UnmuteCommand(support, lookup, punishments, messages).create());
         register(new MuteListCommand(support, lookup, repositories.punishments(), messages).create());
         register(new KickCommand(support, proxy, visibility, messages).create());
         register(new CheckCommand(support, lookup, punishments, messages).create());
         register(new HistoryCommand(support, lookup, punishments, config, messages).create());
-        register(new StrafeCommand(support, lookup, punishments, config, messages).create());
+        register(new StrafeCommand(support, moderationActions, messages).create());
         register(new StrikeCommand(support, visibility, repositories.strikes(), punishments, config, messages).create());
         register(new StrikesCommand(support, repositories.strikes(), messages).create());
         register(new DelStrikeCommand(support, lookup, repositories.strikes(), messages).create());

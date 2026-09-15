@@ -60,4 +60,7 @@ README.md; this file only holds what the code does not say by itself.
   `velocity/report` jar must not run.
 - Whoever a row is about or by (reporter, reported, claimer) is a `PlayerReference`: the account UUID next to
   the name it had at the time; the console has only a name. Names stay for legacy rows and display.
+- Reports and punishments from Paper use `BlockcraftApi.operations()` and the common versioned operation codec.
+  Commands and plugin messages call the same proxy implementations, which also tell the player the outcome; Paper only
+  speaks when no answer arrived. Generic command forwarding remains for other commands.
 - Purchases use `common`'s `Shop`: the unlock and coin payment commit in one transaction.

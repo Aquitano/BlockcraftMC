@@ -12,6 +12,8 @@ palette:
   arrow: "<dark_gray>» "
 player-only: "<error>Nur ein Spieler kann diesen Befehl verwenden!"
 player-unknown: "<prefix><error>Der Spieler <gold><player> <error>ist unbekannt."
+no-permission: "<prefix><error>Dazu hast du keine Berechtigung."
+request-failed: "<prefix><error>Die Anfrage konnte nicht ausgeführt werden. Bitte melde das dem Team."
 command-blocked: "<prefix><error>Nicht verfügbar!"
 kicked-to-lobby: "<prefix><muted>Deine <error>Verbindung <muted>zum Server <error><server><muted> wurde getrennt. Grund: <error><reason>"
 help:
@@ -145,6 +147,7 @@ setmax:
 moderation:
   self: "<prefix><error>Das kannst du nicht mit dir selbst machen."
   protected: "<prefix><error>Dieser Spieler steht im Rang über dir oder gleich mit dir."
+  error: "<prefix><error>Die Strafe konnte nicht gespeichert werden. Bitte versuche es erneut."
 
 ban:
   use-strafe: "<prefix><error>Nutze Folgendes: <dark_aqua>/strafe"

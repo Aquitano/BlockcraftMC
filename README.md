@@ -154,9 +154,10 @@ both sides, and the moderation commands resolve a nick to the account behind it.
 granted to players because Velocity's own list would show real names and vanished staff.
 
 The same channel lets a Paper plugin run a proxy command as the player, with the player's permissions: the report
-menu's "go to" buttons run `/goto`, its punish menu runs `/strafe`. The `/strafe` catalogue itself stays in the
-proxy's `config.yml`; BlockcraftSystem mirrors it into `bc_punishment_catalog` at every start so the menu can list
-the numbered punishments without a copy of the file.
+menu's "go to" buttons run `/goto`. Reports and punishments do not travel as commands but as typed requests on
+`blockcraft:operations` (see "Shared modules and upgrades"). The `/strafe` catalogue itself stays in the proxy's
+`config.yml`; BlockcraftSystem mirrors it into `bc_punishment_catalog` at every start so the menu can list the
+numbered punishments without a copy of the file.
 
 Staff who see through vanish get a `[V]` marker behind vanished names in the tab list (`tab.vanished-suffix` in
 BlockcraftAPI's `messages.yml`); nobody else lists them at all.
@@ -191,6 +192,12 @@ jar when deploying this version; the proxy refuses to start while it is loaded. 
 `plugins/blockcraft-system/reports` where no file exists yet, so messages, cooldown and muted staff survive. The old
 plugin's own database section is gone; if it pointed at a different database, move its `Reports` table first.
 
+Deploy the Paper and Velocity jars together: reports and punishments from a backend travel on `blockcraft:operations`
+as versioned payloads with a request id, and the proxy answers with a result. The proxy accepts a request only from
+the server the player is on, checks permission and rank itself, and tells the player what happened, a failed database
+write included; only an unanswered request times out with an unconfirmed-result message on the backend. Nothing is
+retried automatically, because the original request may already have reached storage.
+
 Shared tables come from ordered migrations recorded in `bc_schema_migrations`. A start takes a MariaDB lock before
 applying what is pending, so servers starting together take turns; a checksum rejects an edited migration. Every
 statement is safe to run again because MariaDB commits DDL on its own. Existing report rows and name columns stay as
@@ -201,10 +208,10 @@ A purchase commits the unlock and the payment together, so a database failure ro
 
 ## Tests
 
-`./gradlew build` runs the unit tests: player visibility and the report configuration import. With
-`BLOCKCRAFT_TEST_DB_PORT` set it also runs the MariaDB integration tests: legacy upgrade, concurrent migration
-startup, checksum enforcement, report identity and transactional purchases. CI sets it; locally, point it at a
-disposable MariaDB:
+`./gradlew build` runs the unit tests: player visibility, the operation protocol, the proxy's handling of backend
+requests and the report configuration import. With `BLOCKCRAFT_TEST_DB_PORT` set it also runs the MariaDB integration
+tests: legacy upgrade, concurrent migration startup, checksum enforcement, report identity and transactional
+purchases. CI sets it; locally, point it at a disposable MariaDB:
 
 ```sh
 BLOCKCRAFT_TEST_DB_PORT=3307 BLOCKCRAFT_TEST_DB_PASSWORD=blockcraft-test ./gradlew build

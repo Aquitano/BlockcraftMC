@@ -6,9 +6,11 @@ import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.menu.Profiles;
 import me.blockcraft.api.network.ServerPresence;
 import me.blockcraft.api.player.RealNames;
+import me.blockcraft.api.proxy.NetworkOperations;
 import me.blockcraft.api.settings.PlayerSettings;
 import me.blockcraft.api.shop.Unlocks;
 import me.blockcraft.api.xp.Xp;
+import me.blockcraft.api.xp.XpReward;
 import me.blockcraft.common.db.Database;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.network.ServerIdentity;
@@ -25,6 +27,7 @@ public final class BlockcraftApi {
 
     private static BlockcraftApi instance;
 
+    private final NetworkOperations operations;
     private final Database database;
     private final CoinsRepository coins;
     private final Unlocks unlocks;
@@ -43,6 +46,7 @@ public final class BlockcraftApi {
     BlockcraftApi(Plugin plugin, Database database, PlayerSettings settings, Map<String, StatsRepository> profileGames,
                   Messages messages, ServerRepository servers, ServerIdentity server, ServerPresence presence,
                   RealNames realNames, Xp xp, TagResolver tags) {
+        this.operations = new NetworkOperations(plugin, messages);
         this.database = database;
         this.coins = new CoinsRepository(database);
         this.unlocks = new Unlocks(database);
@@ -72,6 +76,11 @@ public final class BlockcraftApi {
 
     static void uninstall() {
         instance = null;
+    }
+
+    /** Typed requests to the proxy: reports and punishments, answered with a result. */
+    public NetworkOperations operations() {
+        return operations;
     }
 
     public Database database() {
@@ -132,7 +141,7 @@ public final class BlockcraftApi {
         return tags;
     }
 
-    /** Network XP and levels; games award {@link me.blockcraft.api.xp.XpReward}s. */
+    /** Network XP and levels; games award {@link XpReward}s. */
     public Xp xp() {
         return xp;
     }
