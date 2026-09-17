@@ -8,8 +8,8 @@ import java.util.Map;
 
 /**
  * Draws the resource pack's textures 1:1 in GUI pixels: menu panels per chest row count (plain and with a toolbar
- * row of three buttons), 8x8 HUD glyphs and 16x16 item icons. Icons are text grids: '.' is transparent, 'o' the
- * outline, every other letter a colour of the icon's palette.
+ * row of three buttons), the tooltip behind a menu item's name, 8x8 HUD glyphs and 16x16 item icons. Icons are
+ * text grids: '.' is transparent, 'o' the outline, every other letter a colour of the icon's palette.
  */
 public final class PackArt {
 
@@ -26,6 +26,9 @@ public final class PackArt {
     static final int DIVIDER = 0xFF2C303B;
     static final int WHITE = 0xFFFFFFFF;
     static final int OUTLINE = 0xFF111318;
+    static final int TOOLTIP_SIZE = 100;
+    static final int TOOLTIP_MARGIN = 8;
+    static final int TOOLTIP_BODY = 0xF2141720;
 
     static final int[][] BUTTONS = {
             {0xFFE04E4E, 0xFF9E2B2B, 0xFFF08A8A},
@@ -37,15 +40,20 @@ public final class PackArt {
         Path root = Path.of(args[0]);
         Path font = root.resolve("assets/blockcraft/textures/font");
         Path item = root.resolve("assets/blockcraft/textures/item");
+        Path tooltip = root.resolve("assets/blockcraft/textures/gui/sprites/tooltip");
         Files.createDirectories(font);
         Files.createDirectories(item);
+        Files.createDirectories(tooltip);
         for (int rows = 1; rows <= 6; rows++) {
             write(panel(rows, false), font.resolve("menu_" + rows + ".png"));
         }
         for (int rows = 2; rows <= 6; rows++) {
             write(panel(rows, true), font.resolve("toolbar_" + rows + ".png"));
         }
-        write(glyphSheet(ICON_PROFILE, ICON_COINS, ICON_LEVEL, ICON_CHAT, ICON_SERVER), font.resolve("icons.png"));
+        write(tooltipBackground(), tooltip.resolve("menu_background.png"));
+        write(tooltipFrame(), tooltip.resolve("menu_frame.png"));
+        write(glyphSheet(ICON_PROFILE, ICON_COINS, ICON_LEVEL, ICON_CHAT, ICON_SERVER, ICON_PLAYERS, ICON_MAP, ICON_KIT,
+                ICON_SPECTATOR, ICON_TIME, ICON_EMERALD, ICON_WINNER, ICON_MODE, ICON_OPPONENT, ICON_KILLS), font.resolve("icons.png"));
         for (var icon : ICONS.entrySet()) {
             write(pixels(icon.getValue().rows(), icon.getValue().palette()), item.resolve(icon.getKey() + ".png"));
         }
@@ -81,6 +89,39 @@ public final class PackArt {
         }
         outline(image, PANEL_WIDTH, height);
         return image;
+    }
+
+    /**
+     * The tooltip sprites keep vanilla's shape: a 100x100 nine-slice whose outer {@link #TOOLTIP_MARGIN} pixels are
+     * empty, because the client draws them that far outside the text, and whose corners are cut by one pixel.
+     */
+    static BufferedImage tooltipBackground() {
+        var image = new BufferedImage(TOOLTIP_SIZE, TOOLTIP_SIZE, BufferedImage.TYPE_INT_ARGB);
+        int inner = TOOLTIP_SIZE - 2 * TOOLTIP_MARGIN;
+        fill(image, TOOLTIP_MARGIN, TOOLTIP_MARGIN, inner, inner, TOOLTIP_BODY);
+        for (int[] corner : tooltipCorners(TOOLTIP_MARGIN)) {
+            image.setRGB(corner[0], corner[1], 0);
+        }
+        return image;
+    }
+
+    static BufferedImage tooltipFrame() {
+        var image = new BufferedImage(TOOLTIP_SIZE, TOOLTIP_SIZE, BufferedImage.TYPE_INT_ARGB);
+        int edge = TOOLTIP_MARGIN + 1;
+        int inner = TOOLTIP_SIZE - 2 * edge;
+        fill(image, edge, edge, inner, 1, ACCENT);
+        fill(image, edge, TOOLTIP_SIZE - edge - 1, inner, 1, EDGE);
+        fill(image, edge, edge, 1, inner, EDGE);
+        fill(image, TOOLTIP_SIZE - edge - 1, edge, 1, inner, EDGE);
+        for (int[] corner : tooltipCorners(edge)) {
+            image.setRGB(corner[0], corner[1], 0);
+        }
+        return image;
+    }
+
+    static int[][] tooltipCorners(int inset) {
+        int far = TOOLTIP_SIZE - inset - 1;
+        return new int[][] {{inset, inset}, {far, inset}, {inset, far}, {far, far}};
     }
 
     static void slot(BufferedImage image, int x, int y) {
@@ -174,6 +215,16 @@ public final class PackArt {
     static final Map<Character, Integer> GREEN = Map.of('G', 0xFF2ECC71, 'g', 0xFF8EF0B3, 'd', 0xFF1B8A4B);
     static final Map<Character, Integer> AQUA = Map.of('A', 0xFF5EEAD4, 'a', 0xFF14B8A6, 'B', 0xFF7A4B1F, 'W', 0xFFF4F5F7);
     static final Map<Character, Integer> CYAN = Map.of('C', 0xFF67E8F9, 'c', 0xFF0891B2);
+    static final Map<Character, Integer> GEAR = Map.of('L', 0xFFE2E5EA, 'M', 0xFFA7AEBB, 'D', 0xFF6F7887);
+    static final Map<Character, Integer> STAR = Map.of('L', 0xFFFBCFE8, 'M', 0xFFEC4899, 'D', 0xFFBE185D);
+    static final Map<Character, Integer> HOUSE = Map.of('R', 0xFFE04E4E, 'r', 0xFF9E2B2B, 'W', 0xFFF4F5F7, 'w', 0xFFC9CDD6,
+            'e', 0xFF4C6EF5, 'B', 0xFF9A6B3F, 'b', 0xFF7A4B1F);
+    static final Map<Character, Integer> CHEST = Map.of('B', 0xFF9A6B3F, 'b', 0xFF7A4B1F, 'd', 0xFF55321A, 'G', 0xFFF5C542, 'g', 0xFFB98A16);
+    static final Map<Character, Integer> PERSON = Map.of('H', 0xFF5A3A1E, 'S', 0xFFF0C8A0, 's', 0xFFC89A6C, 'E', 0xFFF4F5F7,
+            'e', 0xFF4C6EF5, 'T', 0xFF22B5B5, 't', 0xFF178383);
+    static final Map<Character, Integer> HEAD = Map.of('H', 0xFF5A3A1E, 'h', 0xFF3D2612, 'S', 0xFFF0C8A0, 's', 0xFFC89A6C,
+            'E', 0xFFF4F5F7, 'e', 0xFF4C6EF5);
+    static final Map<Character, Integer> SHIRT = Map.of('W', 0xFFF4F5F7, 'w', 0xFFC9CDD6, 'R', 0xFFE04E4E);
 
     static final Map<String, Icon> ICONS = Map.ofEntries(
             Map.entry("back", new Icon(new String[] {
@@ -214,58 +265,148 @@ public final class PackArt {
             }, RED)),
             Map.entry("tool_close", new Icon(new String[] {
                     "................",
-                    "................",
-                    "................",
-                    "...oo......oo...",
-                    "..oWWo....oWWo..",
-                    "...oWWo..oWWo...",
-                    "....oWWooWWo....",
-                    ".....oWWWWo.....",
-                    ".....oWWWWo.....",
-                    "....oWWooWWo....",
-                    "...oWWo..oWWo...",
-                    "..oWWo....oWWo..",
-                    "...oo......oo...",
-                    "................",
-                    "................",
+                    ".oo..........oo.",
+                    "oWWo........oWWo",
+                    "oWWWo......oWWWo",
+                    ".oWWWo....oWWWo.",
+                    "..oWWWo..oWWWo..",
+                    "...oWWWooWWWo...",
+                    "....oWWWWWWo....",
+                    "....oWWWWWWo....",
+                    "...oWWWooWWWo...",
+                    "..oWWWo..oWWWo..",
+                    ".oWWWo....oWWWo.",
+                    "oWWWo......oWWWo",
+                    "oWWo........oWWo",
+                    ".oo..........oo.",
                     "................",
             }, LIGHT)),
             Map.entry("tool_shop", new Icon(new String[] {
                     "................",
-                    "......oooo......",
-                    ".....oWWWWo.....",
-                    ".....oW..Wo.....",
-                    "...ooooWWoooo...",
-                    "..oWWWWWWWWWWo..",
-                    "..oWWWWWWWWWWo..",
-                    "..oWWwWWWWwWWo..",
-                    "..oWWWWWWWWWWo..",
-                    "..oWWWWWWWWWWo..",
-                    "..oWWWWWWWWWWo..",
-                    "..oWWWWWWWWWWo..",
-                    "..oWWWWWWWWWWo..",
-                    "...oooooooooo...",
+                    "..oooooooooooo..",
+                    ".oBBBBBBBBBBBBo.",
+                    ".oBBBBBBBBBBBBo.",
+                    ".oBBBBBBBBBBBBo.",
+                    ".obbbbbbbbbbbbo.",
+                    ".oGGGGGggGGGGGo.",
+                    ".obbbbbggbbbbbo.",
+                    ".obbbbbbbbbbbbo.",
+                    ".obbbbbbbbbbbbo.",
+                    ".obbbbbbbbbbbbo.",
+                    ".obbbbbbbbbbbbo.",
+                    ".oddddddddddddo.",
+                    ".oooooooooooooo.",
                     "................",
                     "................",
-            }, LIGHT)),
+            }, CHEST)),
             Map.entry("tool_home", new Icon(new String[] {
                     "................",
                     ".......oo.......",
-                    "......oWWo......",
-                    ".....oWWWWo.....",
-                    "....oWWWWWWo....",
-                    "...oWWWWWWWWo...",
+                    "......oRRo......",
+                    ".....oRRRRo.....",
+                    "....oRRRRRRo....",
+                    "...oRRRRRRRRo...",
+                    "..oRRRRRRRRRRo..",
+                    ".orrrrrrrrrrrro.",
                     "..oWWWWWWWWWWo..",
-                    ".oooWWWWWWWWooo.",
-                    "...oWWWWWWWWo...",
-                    "...oWWWooWWWo...",
-                    "...oWWWowWWWo...",
-                    "...oWWWowWWWo...",
-                    "...oWWWooWWWo...",
-                    "...oooooooooo...",
+                    "..oWWeeWWWBBWo..",
+                    "..oWWeeWWWBbWo..",
+                    "..oWWWWWWWBBWo..",
+                    "..oWWWWWWWBbWo..",
+                    "..owwwwwwwbbwo..",
+                    "..oooooooooooo..",
                     "................",
+            }, HOUSE)),
+            Map.entry("tool_settings", new Icon(new String[] {
+                    "......oooo......",
+                    "..oo.oLLLLo.oo..",
+                    ".oLLooMMMMooLLo.",
+                    ".oDMLLMMMMLLMDo.",
+                    "..oMMMDDDDMMMo..",
+                    ".oLMMDooooDMMLo.",
+                    "oLMMMo....oMMMLo",
+                    "oMMMMo....oMMMMo",
+                    "oMMMMo....oMMMMo",
+                    "oDMMMo....oMMMDo",
+                    ".oDMMLooooLMMDo.",
+                    "..oMMMLLLLMMMo..",
+                    ".oLMDDMMMMDDMLo.",
+                    ".oDDooMMMMooDDo.",
+                    "..oo.oDDDDo.oo..",
+                    "......oooo......",
+            }, GEAR)),
+            Map.entry("tool_cosmetics", new Icon(new String[] {
+                    "......ooo.......",
+                    "......oLo.......",
+                    ".....ooMoo......",
+                    ".....oLMLo......",
+                    ".....oMMMo......",
+                    "ooooooMMMoooooo.",
+                    "oLLLLLMMMLLLLLo.",
+                    "ooDMMMMMMMMMDoo.",
+                    ".ooDMMMMMMMDoo..",
+                    "..ooMMMMMMMoo...",
+                    "...oMMMMMMMo....",
+                    "...oMMDDDMMo....",
+                    "..ooMDoooDMoo...",
+                    "..oLDoo.ooDLo...",
+                    "..oooo...oooo...",
                     "................",
-            }, LIGHT)),
+            }, STAR)),
+            Map.entry("tool_profile", new Icon(new String[] {
+                    "................",
+                    "....oooooooo....",
+                    "...oHHHHHHHHo...",
+                    "...oHHHHHHHHo...",
+                    "...oHSSSSSSHo...",
+                    "...oSEeSSeESo...",
+                    "...oSSSSSSSSo...",
+                    "...oSSSssSSSo...",
+                    "....oSSSSSSo....",
+                    ".oooooSSSSooooo.",
+                    "oTTTTtSSSStTTTTo",
+                    "oTTTTTtSStTTTTTo",
+                    "oTTTTTTttTTTTTTo",
+                    "oTTTTTTTTTTTTTTo",
+                    "oooooooooooooooo",
+                    "................",
+            }, PERSON)),
+            Map.entry("tool_heads", new Icon(new String[] {
+                    ".oooooooooooooo.",
+                    "oHHHHHHHHHHHHHHo",
+                    "oHHHHHHHHHHHHHHo",
+                    "oHHHHHHHHHHHHHHo",
+                    "oHhSSSSSSSSSShHo",
+                    "oSSSSSSSSSSSSSSo",
+                    "oSSEEeSSSSeEESSo",
+                    "oSSEEeSSSSeEESSo",
+                    "oSSSSSSssSSSSSSo",
+                    "oSSSSSSssSSSSSSo",
+                    "oSSSSHHHHHHSSSSo",
+                    "oSSSSHhhhhHSSSSo",
+                    "oSSSSSSSSSSSSSSo",
+                    "oSSSSSSSSSSSSSSo",
+                    "oSSSSSSSSSSSSSSo",
+                    ".oooooooooooooo.",
+            }, HEAD)),
+            Map.entry("tool_shirts", new Icon(new String[] {
+                    "................",
+                    "..ooo......ooo..",
+                    ".oWWWooooooWWWo.",
+                    "oWWWWWWRRWWWWWWo",
+                    "oWWWWWWWWWWWWWWo",
+                    "oWWWWWWWWWWWWWWo",
+                    "oWWooWWWWWWooWWo",
+                    ".ooooWWWWWWoooo.",
+                    "....oWWWWWwo....",
+                    "....oWWWWWwo....",
+                    "....oWWWWWwo....",
+                    "....oWWWWWwo....",
+                    "....oWWWWWwo....",
+                    "....owwwwwwo....",
+                    "....oooooooo....",
+                    "................",
+            }, SHIRT)),
             Map.entry("quicksg", new Icon(new String[] {
                     ".............oo.",
                     "............oGGo",
@@ -337,7 +478,25 @@ public final class PackArt {
                     "................",
                     "................",
                     "................",
-            }, CYAN))
+            }, CYAN)),
+            Map.entry("premium", new Icon(new String[] {
+                    "................",
+                    "................",
+                    ".oo....oo....oo.",
+                    "oGGo..oGGo..oGGo",
+                    "oGGGo.oGGo.oGGGo",
+                    "oGGGGooGGooGGGGo",
+                    "oGGGGGGGGGGGGGGo",
+                    "oGGGGGGGGGGGGGGo",
+                    "oGGGWGGGWGGGWGGo",
+                    "oGGGGGGGGGGGGGGo",
+                    "oggggggggggggggo",
+                    "oGGGGGGGGGGGGGGo",
+                    "oggggggggggggggo",
+                    ".oooooooooooooo.",
+                    "................",
+                    "................",
+            }, GOLD))
     );
 
     static final String[] ICON_PROFILE = {
@@ -393,5 +552,115 @@ public final class PackArt {
             "#.....##",
             "########",
             "........",
+    };
+
+    static final String[] ICON_PLAYERS = {
+            ".##...##",
+            ".##...##",
+            "........",
+            "###..###",
+            "###..###",
+            "###..###",
+            "###..###",
+            "###..###",
+    };
+
+    static final String[] ICON_MAP = {
+            "..####..",
+            ".######.",
+            ".##..##.",
+            ".##..##.",
+            ".######.",
+            "..####..",
+            "...##...",
+            "....#...",
+    };
+
+    static final String[] ICON_KIT = {
+            "...##...",
+            "..####..",
+            "..####..",
+            "..####..",
+            "..####..",
+            "########",
+            "...##...",
+            "..####..",
+    };
+
+    static final String[] ICON_SPECTATOR = {
+            "........",
+            "..####..",
+            ".##..##.",
+            "##.##.##",
+            "##.##.##",
+            ".##..##.",
+            "..####..",
+            "........",
+    };
+
+    static final String[] ICON_TIME = {
+            "..####..",
+            ".#....#.",
+            "#..#...#",
+            "#..#...#",
+            "#..###.#",
+            "#......#",
+            ".#....#.",
+            "..####..",
+    };
+
+    static final String[] ICON_EMERALD = {
+            "..####..",
+            ".#.####.",
+            "#..#####",
+            "#..#####",
+            "########",
+            "########",
+            ".######.",
+            "..####..",
+    };
+
+    static final String[] ICON_WINNER = {
+            "########",
+            "#.####.#",
+            "#.####.#",
+            "##.##.##",
+            "..####..",
+            "...##...",
+            "..####..",
+            ".######.",
+    };
+
+    static final String[] ICON_MODE = {
+            "#.......",
+            "#######.",
+            "########",
+            "########",
+            "#######.",
+            "#.......",
+            "#.......",
+            "#.......",
+    };
+
+    static final String[] ICON_OPPONENT = {
+            "#......#",
+            "##....##",
+            ".##..##.",
+            "..####..",
+            "..####..",
+            ".##..##.",
+            "##....##",
+            "#......#",
+    };
+
+    static final String[] ICON_KILLS = {
+            ".######.",
+            "########",
+            "#..##..#",
+            "#..##..#",
+            "########",
+            ".##..##.",
+            "..####..",
+            "..#..#..",
     };
 }
