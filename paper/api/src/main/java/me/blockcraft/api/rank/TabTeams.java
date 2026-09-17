@@ -1,5 +1,6 @@
 package me.blockcraft.api.rank;
 
+import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.nick.NickChangeEvent;
 import me.blockcraft.api.scoreboard.Boards;
 import me.blockcraft.api.vanish.VanishChangeEvent;
@@ -26,9 +27,10 @@ import java.util.UUID;
 /**
  * Sorts the tab list by LuckPerms group weight and shows the group's prefix in front of each name, on every
  * Paper server. The heaviest inherited group counts, not the primary one: /addpremium and the shop only add an
- * inheritance node. Every player has their own scoreboard for the sidebar, so the teams are written to all of
- * them; entries are remembered per UUID because a nick changes the name the tab list is keyed by. Vanished players
- * get their own team per group, suffixed with a marker: only staff who see through vanish still list them.
+ * inheritance node; a nicked player sorts and reads as the group their nick wears. Every player has their own
+ * scoreboard for the sidebar, so the teams are written to all of them; entries are remembered per UUID because a
+ * nick changes the name the tab list is keyed by. Vanished players get their own team per group, suffixed with a
+ * marker: only staff who see through vanish still list them.
  */
 public final class TabTeams implements Listener {
 
@@ -100,9 +102,11 @@ public final class TabTeams implements Listener {
 
     private Entry entryOf(Player player) {
         var user = luckPerms.getPlayerAdapter(Player.class).getUser(player);
-        Group group = user.getInheritedGroups(user.getQueryOptions()).stream()
-                .max(Comparator.comparingInt(inherited -> inherited.getWeight().orElse(0)))
-                .orElseGet(() -> luckPerms.getGroupManager().getGroup(user.getPrimaryGroup()));
+        Group group = BlockcraftApi.get().nickRank(player)
+                .map(luckPerms.getGroupManager()::getGroup)
+                .orElseGet(() -> user.getInheritedGroups(user.getQueryOptions()).stream()
+                        .max(Comparator.comparingInt(inherited -> inherited.getWeight().orElse(0)))
+                        .orElseGet(() -> luckPerms.getGroupManager().getGroup(user.getPrimaryGroup())));
         int weight = group == null ? 0 : group.getWeight().orElse(0);
         String groupName = group == null ? user.getPrimaryGroup() : group.getName();
         Component prefix = Ranks.prefix(player).orElseGet(() -> messages.get("tab.default-prefix"));

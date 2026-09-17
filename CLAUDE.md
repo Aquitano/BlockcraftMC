@@ -56,7 +56,8 @@ README.md; this file only holds what the code does not say by itself.
   volume and pitch; only sounds that belong to a world effect stay at their call site.
 - Ranks come from LuckPerms (`group.<rank>` permissions, `LuckPermsProvider` API). No rank tables, no rank names in
   code; chat and tab show the group prefix via `Ranks.prefix`, and the groups themselves are seeded from
-  `luckperms/ranks.json`.
+  `luckperms/ranks.json`. A nick hides the rank too: `Ranks.prefix` and `TabTeams` show the group the nick wears
+  (`BlockcraftApi.nickRank`, one of core's `nick.ranks`), permissions stay the player's own.
 - Moderation state (bans, mutes, strikes, warns, maintenance, global mute) is in MySQL `bc_*` tables written by the
   proxy; Paper `core` enforces chat-side consequences because Velocity cannot cancel chat for 1.19.1+ clients.
 - Backends announce themselves in `bc_servers` (BlockcraftAPI heartbeat with group, state and player count) and the

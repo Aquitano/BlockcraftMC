@@ -77,7 +77,12 @@ report:
     - Werbung
     - Sonstiges
 
+# A nick hides the name, the skin and the rank: it shows one of the ranks listed here (LuckPerms group names),
+# picked at random unless /nick <rank> names one.
 nick:
+  ranks:
+    - default
+    - premium
   names:
     - Felix_HD
     - LukasGamer

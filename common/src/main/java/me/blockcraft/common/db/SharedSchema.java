@@ -114,6 +114,9 @@ final class SharedSchema {
             "ALTER TABLE bc_punishments ADD COLUMN IF NOT EXISTS revoked_by_uuid CHAR(36) NULL",
             "ALTER TABLE bc_strikes ADD COLUMN IF NOT EXISTS issuer_uuid CHAR(36) NULL",
             "ALTER TABLE bc_frozen ADD COLUMN IF NOT EXISTS issuer_uuid CHAR(36) NULL"
+        )),
+        new Migration(5, List.of(
+            "ALTER TABLE bc_nicks ADD COLUMN IF NOT EXISTS rank_group VARCHAR(36) NOT NULL DEFAULT 'default'"
         ))
     );
 

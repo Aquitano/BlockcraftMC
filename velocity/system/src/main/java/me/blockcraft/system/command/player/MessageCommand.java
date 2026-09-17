@@ -91,8 +91,8 @@ public final class MessageCommand {
             return;
         }
         var resolvers = TagResolver.resolver(
-                Placeholder.component("sender", ProxyRanks.displayName(sender, visibility.shownName(sender))),
-                Placeholder.component("target", ProxyRanks.displayName(target, visibility.shownName(target))),
+                Placeholder.component("sender", ProxyRanks.displayName(sender, visibility.nick(sender))),
+                Placeholder.component("target", ProxyRanks.displayName(target, visibility.nick(target))),
                 Placeholder.component("message", LegacyComponentSerializer.legacyAmpersand().deserialize(text)));
         target.sendMessage(messages.get("msg.to-target", resolvers));
         target.playSound(NOTIFY);

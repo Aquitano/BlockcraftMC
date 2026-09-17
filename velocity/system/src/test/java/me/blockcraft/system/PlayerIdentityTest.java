@@ -1,5 +1,6 @@
 package me.blockcraft.system;
 
+import me.blockcraft.common.nick.Nick;
 import me.blockcraft.system.report.Reports;
 import org.junit.Test;
 
@@ -21,7 +22,7 @@ public class PlayerIdentityTest {
         var visibility = new PlayerVisibility(proxy.server, null, null, null);
         var lookup = new PlayerLookup(proxy.server, visibility, null);
 
-        visibility.setNick(target, Optional.of("Nickname"));
+        visibility.setNick(target, Optional.of(new Nick("Nickname", "Notch", "default")));
         assertEquals(List.of("Viewer", "Nickname"), visibility.namesFor(viewer).toList());
         assertEquals(target.getUniqueId(), lookup.findVisible(viewer, "Nickname").orElseThrow().uuid());
         assertTrue(lookup.findVisible(viewer, "Account").isEmpty());

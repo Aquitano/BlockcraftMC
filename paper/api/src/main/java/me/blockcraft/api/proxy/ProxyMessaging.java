@@ -2,6 +2,7 @@ package me.blockcraft.api.proxy;
 
 import com.google.common.io.ByteStreams;
 import me.blockcraft.common.network.ProxyChannel;
+import me.blockcraft.common.nick.Nick;
 import me.blockcraft.common.settings.PlayerSetting;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
@@ -49,11 +50,13 @@ public final class ProxyMessaging {
         send(plugin, player, ProxyChannel.NAME, out.toByteArray());
     }
 
-    /** Tells the proxy the nick the player wears from now on, or that it came off. */
-    public static void nick(Plugin plugin, Player player, Optional<String> nick) {
+    /** Tells the proxy the nick the player wears from now on, or that it came off (an empty name). */
+    public static void nick(Plugin plugin, Player player, Optional<Nick> nick) {
         var out = ByteStreams.newDataOutput();
         out.writeUTF(ProxyChannel.NICK);
-        out.writeUTF(nick.orElse(""));
+        out.writeUTF(nick.map(Nick::name).orElse(""));
+        out.writeUTF(nick.map(Nick::skinOwner).orElse(""));
+        out.writeUTF(nick.map(Nick::rankGroup).orElse(""));
         send(plugin, player, ProxyChannel.NAME, out.toByteArray());
     }
 

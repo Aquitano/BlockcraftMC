@@ -1,6 +1,7 @@
 package me.blockcraft.system.rank;
 
 import com.velocitypowered.api.proxy.Player;
+import me.blockcraft.common.nick.Nick;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.luckperms.api.LuckPermsProvider;
@@ -14,11 +15,16 @@ public final class ProxyRanks {
     private ProxyRanks() {
     }
 
-    /** Prefix plus the given name as chat shows it, or just the name without LuckPerms. */
-    public static Component displayName(Player player, String shownName) {
-        var name = Component.text(shownName);
+    /** Prefix plus name as chat shows them, both of the nick while one is worn, or just the name without LuckPerms. */
+    public static Component displayName(Player player, Optional<Nick> nick) {
+        var name = Component.text(nick.map(Nick::name).orElseGet(player::getUsername));
         try {
-            String prefix = LuckPermsProvider.get().getPlayerAdapter(Player.class).getMetaData(player).getPrefix();
+            var luckPerms = LuckPermsProvider.get();
+            String prefix = nick.map(Nick::rankGroup)
+                    .map(luckPerms.getGroupManager()::getGroup)
+                    .map(group -> group.getCachedData().getMetaData())
+                    .orElseGet(() -> luckPerms.getPlayerAdapter(Player.class).getMetaData(player))
+                    .getPrefix();
             return prefix == null ? name : LegacyComponentSerializer.legacyAmpersand().deserialize(prefix).append(name);
         } catch (IllegalStateException | NoClassDefFoundError noLuckPerms) {
             return name;

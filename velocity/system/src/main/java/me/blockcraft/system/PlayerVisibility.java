@@ -33,7 +33,7 @@ public final class PlayerVisibility {
     private final NickRepository nicks;
     private final Logger logger;
     private final Set<UUID> vanished = ConcurrentHashMap.newKeySet();
-    private final Map<UUID, String> worn = new ConcurrentHashMap<>();
+    private final Map<UUID, Nick> worn = new ConcurrentHashMap<>();
 
     public PlayerVisibility(ProxyServer proxy, VanishRepository vanish, NickRepository nicks, Logger logger) {
         this.proxy = proxy;
@@ -50,7 +50,7 @@ public final class PlayerVisibility {
                 if (vanish.isVanished(player)) {
                     vanished.add(player);
                 }
-                nicks.get(player).map(Nick::name).ifPresent(nick -> worn.put(player, nick));
+                nicks.get(player).ifPresent(nick -> worn.put(player, nick));
             } catch (DatabaseException e) {
                 logger.warn("Could not read the vanish and nick state of {}", player, e);
             }
@@ -71,21 +71,21 @@ public final class PlayerVisibility {
         }
     }
 
-    public void setNick(Player player, Optional<String> nick) {
-        nick.ifPresentOrElse(name -> worn.put(player.getUniqueId(), name), () -> worn.remove(player.getUniqueId()));
+    public void setNick(Player player, Optional<Nick> nick) {
+        nick.ifPresentOrElse(value -> worn.put(player.getUniqueId(), value), () -> worn.remove(player.getUniqueId()));
     }
 
     public boolean isVanished(Player player) {
         return vanished.contains(player.getUniqueId());
     }
 
-    public Optional<String> nick(Player player) {
+    public Optional<Nick> nick(Player player) {
         return Optional.ofNullable(worn.get(player.getUniqueId()));
     }
 
     /** The name other players see: the nick while one is worn. */
     public String shownName(Player player) {
-        return nick(player).orElseGet(player::getUsername);
+        return nick(player).map(Nick::name).orElseGet(player::getUsername);
     }
 
     public boolean canSee(CommandSource viewer, Player target) {
@@ -130,6 +130,8 @@ public final class PlayerVisibility {
     }
 
     public Optional<Player> byNick(String nick) {
-        return proxy.getAllPlayers().stream().filter(player -> nick.equalsIgnoreCase(worn.get(player.getUniqueId()))).findFirst();
+        return proxy.getAllPlayers().stream()
+                .filter(player -> nick(player).map(Nick::name).filter(nick::equalsIgnoreCase).isPresent())
+                .findFirst();
     }
 }

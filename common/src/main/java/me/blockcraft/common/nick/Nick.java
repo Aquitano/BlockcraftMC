@@ -1,4 +1,5 @@
 package me.blockcraft.common.nick;
 
-public record Nick(String name, String skinOwner) {
+/** A worn nick: the name and skin others see, and the LuckPerms group whose rank is shown instead of the real one. */
+public record Nick(String name, String skinOwner, String rankGroup) {
 }

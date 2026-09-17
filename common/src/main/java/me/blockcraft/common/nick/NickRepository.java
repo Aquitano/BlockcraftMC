@@ -15,14 +15,14 @@ public final class NickRepository {
     }
 
     public Optional<Nick> get(UUID player) {
-        return db.queryOne("SELECT nick, skin_owner FROM bc_nicks WHERE player_uuid = ?",
-                row -> new Nick(row.getString("nick"), row.getString("skin_owner")), player.toString());
+        return db.queryOne("SELECT nick, skin_owner, rank_group FROM bc_nicks WHERE player_uuid = ?",
+                row -> new Nick(row.getString("nick"), row.getString("skin_owner"), row.getString("rank_group")), player.toString());
     }
 
     public void set(UUID player, Nick nick) {
-        db.update("INSERT INTO bc_nicks (player_uuid, nick, skin_owner) VALUES (?, ?, ?) "
-                + "ON DUPLICATE KEY UPDATE nick = VALUES(nick), skin_owner = VALUES(skin_owner), set_at = NOW()",
-                player.toString(), nick.name(), nick.skinOwner());
+        db.update("INSERT INTO bc_nicks (player_uuid, nick, skin_owner, rank_group) VALUES (?, ?, ?, ?) "
+                + "ON DUPLICATE KEY UPDATE nick = VALUES(nick), skin_owner = VALUES(skin_owner), rank_group = VALUES(rank_group), set_at = NOW()",
+                player.toString(), nick.name(), nick.skinOwner(), nick.rankGroup());
     }
 
     public void clear(UUID player) {

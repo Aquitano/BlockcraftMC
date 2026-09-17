@@ -14,6 +14,7 @@ import me.blockcraft.api.network.ServerHeartbeat;
 import me.blockcraft.api.network.ServerPresence;
 import me.blockcraft.api.pack.ResourcePacks;
 import me.blockcraft.api.player.RealNames;
+import me.blockcraft.api.rank.NickRanks;
 import me.blockcraft.api.player.VanillaProgress;
 import me.blockcraft.api.rank.TabTeams;
 import me.blockcraft.api.settings.PlayerSettings;
@@ -62,6 +63,7 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         var settingRepository = new PlayerSettingRepository(database);
         var settings = new PlayerSettings(this, settingRepository);
         var realNames = new RealNames();
+        var nickRanks = new NickRanks();
         var xpRepository = new XpRepository(database);
         var xp = new Xp(this, xpRepository, new Levels(number(YamlFile.section(config, "xp"), "level-step", 100)),
                 xpRewards(YamlFile.section(YamlFile.section(config, "xp"), "rewards")), messages);
@@ -70,11 +72,12 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         var resourcePack = new ResourcePacks(messages);
         var api = new BlockcraftApi(this, database, settings, resourcePack,
                 profileGames(YamlFile.section(YamlFile.section(config, "profile"), "games")),
-                messages, servers, self, presence, realNames, xp, map, buildMode, resources.tags());
+                messages, servers, self, presence, realNames, nickRanks, xp, map, buildMode, resources.tags());
         BlockcraftApi.install(api);
         getLogger().info("Running map " + map.name() + map.template().map(template -> " from " + template.directory()).orElse(""));
         int startingCoins = number(config, "starting-coins", 10);
         getServer().getPluginManager().registerEvents(realNames, this);
+        getServer().getPluginManager().registerEvents(nickRanks, this);
         getServer().getPluginManager().registerEvents(xp, this);
         getServer().getPluginManager().registerEvents(new CoinsJoinListener(this, api.coins(), startingCoins), this);
         getServer().getPluginManager().registerEvents(settings, this);

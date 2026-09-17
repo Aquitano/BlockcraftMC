@@ -20,7 +20,8 @@ public final class NickListener implements Listener {
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
         var player = event.getPlayer();
-        nicks.applyStored(player, nick -> player.sendMessage(messages.get("nick.still-active", Placeholder.unparsed("nick", nick))));
+        nicks.applyStored(player, nick -> player.sendMessage(messages.get("nick.still-active",
+                Placeholder.unparsed("nick", nick.name()), Placeholder.unparsed("rank", nick.rankGroup()))));
     }
 
     @EventHandler

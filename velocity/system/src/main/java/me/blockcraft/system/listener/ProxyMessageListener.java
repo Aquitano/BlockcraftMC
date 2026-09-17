@@ -11,6 +11,7 @@ import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import me.blockcraft.common.db.DatabaseException;
 import me.blockcraft.common.network.ProxyChannel;
+import me.blockcraft.common.nick.Nick;
 import me.blockcraft.common.settings.PlayerSetting;
 import me.blockcraft.system.LobbyConnector;
 import me.blockcraft.system.PlayerChoices;
@@ -63,7 +64,10 @@ public final class ProxyMessageListener {
             case ProxyChannel.PLAY -> lobby.play(player, in.readUTF());
             case ProxyChannel.HUB -> lobby.send(player);
             case ProxyChannel.COMMAND -> proxy.getCommandManager().executeAsync(player, in.readUTF());
-            case ProxyChannel.NICK -> visibility.setNick(player, Optional.of(in.readUTF()).filter(nick -> !nick.isEmpty()));
+            case ProxyChannel.NICK -> {
+                var nick = new Nick(in.readUTF(), in.readUTF(), in.readUTF());
+                visibility.setNick(player, Optional.of(nick).filter(worn -> !worn.name().isEmpty()));
+            }
             // The friend list is a database read, so it leaves the network thread.
             case ProxyChannel.FRIENDS -> {
                 return EventTask.async(() -> sendFriends(connection, player));

@@ -7,6 +7,7 @@ import me.blockcraft.api.menu.Profiles;
 import me.blockcraft.api.network.ServerPresence;
 import me.blockcraft.api.pack.ResourcePacks;
 import me.blockcraft.api.player.RealNames;
+import me.blockcraft.api.rank.NickRanks;
 import me.blockcraft.api.proxy.NetworkOperations;
 import me.blockcraft.api.settings.PlayerSettings;
 import me.blockcraft.api.shop.Unlocks;
@@ -25,6 +26,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
 import java.util.Map;
+import java.util.Optional;
 
 /** Entry point for other plugins; populated while BlockcraftAPI is enabled. */
 public final class BlockcraftApi {
@@ -46,6 +48,7 @@ public final class BlockcraftApi {
     private final ServerIdentity server;
     private final ServerPresence presence;
     private final RealNames realNames;
+    private final NickRanks nickRanks;
     private final Xp xp;
     private final MapBundle map;
     private final BuildMode buildMode;
@@ -53,8 +56,8 @@ public final class BlockcraftApi {
 
     BlockcraftApi(Plugin plugin, Database database, PlayerSettings settings, ResourcePacks resourcePack,
                   Map<String, StatsRepository> profileGames, Messages messages, ServerRepository servers,
-                  ServerIdentity server, ServerPresence presence, RealNames realNames, Xp xp, MapBundle map,
-                  BuildMode buildMode, TagResolver tags) {
+                  ServerIdentity server, ServerPresence presence, RealNames realNames, NickRanks nickRanks, Xp xp,
+                  MapBundle map, BuildMode buildMode, TagResolver tags) {
         this.operations = new NetworkOperations(plugin, messages);
         this.playerTasks = new PlayerTasks(plugin, messages);
         this.database = database;
@@ -70,6 +73,7 @@ public final class BlockcraftApi {
         this.server = server;
         this.presence = presence;
         this.realNames = realNames;
+        this.nickRanks = nickRanks;
         this.xp = xp;
         this.map = map;
         this.buildMode = buildMode;
@@ -182,5 +186,10 @@ public final class BlockcraftApi {
     /** The name the player logged in with, whatever nick they wear; the one to write into name columns. */
     public String realName(Player player) {
         return realNames.of(player);
+    }
+
+    /** The LuckPerms group whose rank the player's nick shows, empty while they wear none. */
+    public Optional<String> nickRank(Player player) {
+        return nickRanks.of(player);
     }
 }
