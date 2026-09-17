@@ -112,6 +112,7 @@ summary:
   draw: "<arrow><muted>Unentschieden"
   kills: "<arrow><muted>Kills<dark>: <white><kills>"
   deaths: "<arrow><muted>Tode<dark>: <white><deaths>"
+  streak-best: "<arrow><muted>Beste Serie<dark>: <white><streak> Kills"
   coins: "<arrow><muted>Coins<dark>: <accent>+<coins>"
   xp: "<arrow><muted>XP<dark>: <success>+<xp>"
   again: "<arrow><success>Nochmal spielen"
@@ -124,6 +125,7 @@ summary:
     draw: "<accent>Unentschieden"
     subtitle: "<white><winner> <muted>hat gewonnen."
     subtitle-draw: "<muted>Niemand hat gewonnen."
+  streak: "<prefix><accent><player> <muted>hat eine Serie von <accent><streak> Kills<muted>!"
 
 settings:
   title: "<arrow><primary>Einstellungen"

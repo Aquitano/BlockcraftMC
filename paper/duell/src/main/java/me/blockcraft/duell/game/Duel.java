@@ -81,7 +81,7 @@ public final class Duel {
         this.items = items;
         this.arena = new Arena(messages, Sounds.DUELL_JOIN);
         this.lobbyCountdown = new LobbyCountdown(plugin, arena, config.countdowns().lobby(), MAX_PARTICIPANTS, participants::size, this::startRound);
-        this.summary = new RoundSummary(plugin, messages.get("game-name"),
+        this.summary = new RoundSummary(plugin, messages,
                 new RoundSummary.Rewards(config.killCoins(), config.winCoins()));
     }
 

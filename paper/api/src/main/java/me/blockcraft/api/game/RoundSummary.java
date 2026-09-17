@@ -26,7 +26,8 @@ import java.util.function.Consumer;
 /**
  * What a round paid and who won it. A game feeds it while the round runs and calls {@link #show()} once at the
  * end; because every coin and every XP point of a round is handed out here, the recap names exactly what was
- * paid, and closes with the two ways on: another round of the same game, or the lobby.
+ * paid, and closes with the two ways on: another round of the same game, or the lobby. Kill streaks are counted
+ * here too and announced at the lengths {@link Streaks} names.
  */
 public final class RoundSummary {
 
@@ -44,13 +45,16 @@ public final class RoundSummary {
 
     private final Plugin plugin;
     private final Component game;
+    private final Messages messages;
     private final Rewards rewards;
     private final Map<UUID, Score> scores = new LinkedHashMap<>();
     private final Map<UUID, String> winners = new LinkedHashMap<>();
 
-    public RoundSummary(Plugin plugin, Component game, Rewards rewards) {
+    /** {@code gameMessages} is the game's own file; it names the game as {@code game-name} and lends its prefix. */
+    public RoundSummary(Plugin plugin, Messages gameMessages, Rewards rewards) {
         this.plugin = plugin;
-        this.game = game;
+        this.game = gameMessages.get("game-name");
+        this.messages = BlockcraftApi.get().messages().prefixedLike(gameMessages);
         this.rewards = rewards;
     }
 
@@ -65,6 +69,13 @@ public final class RoundSummary {
         Sounds.KILL.play(killer);
         var score = score(killer);
         score.kills++;
+        score.streak++;
+        score.bestStreak = Math.max(score.bestStreak, score.streak);
+        if (BlockcraftApi.get().streaks().announces(score.streak)) {
+            Bukkit.broadcast(messages.get("summary.streak",
+                    Placeholder.unparsed("player", killer.getName()), Formatter.number("streak", score.streak)));
+            Sounds.STREAK.play(killer);
+        }
         score.xp += BlockcraftApi.get().xp().award(killer, XpReward.KILL);
         return pay(killer, rewards.kill());
     }
@@ -75,7 +86,9 @@ public final class RoundSummary {
     }
 
     public void death(Player victim) {
-        score(victim).deaths++;
+        var score = score(victim);
+        score.deaths++;
+        score.streak = 0;
     }
 
     /** Pays the winner, plays their win effect and returns the coins, for the game to book as points. */
@@ -93,7 +106,6 @@ public final class RoundSummary {
     }
 
     public void show() {
-        var messages = BlockcraftApi.get().messages();
         var names = String.join(", ", winners.values());
         var rule = messages.get("summary.rule");
         var headline = messages.get("summary.game", Placeholder.component("game", game));
@@ -104,8 +116,8 @@ public final class RoundSummary {
                 ? messages.get("summary.title.subtitle-draw")
                 : messages.get("summary.title.subtitle", Placeholder.unparsed("winner", names));
         var group = BlockcraftApi.get().server().group();
-        var again = button(messages, "summary.again", player -> ProxyMessaging.play(plugin, player, group));
-        var lobby = button(messages, "summary.lobby", player -> ProxyMessaging.hub(plugin, player));
+        var again = button("summary.again", player -> ProxyMessaging.play(plugin, player, group));
+        var lobby = button("summary.lobby", player -> ProxyMessaging.hub(plugin, player));
         for (var player : Bukkit.getOnlinePlayers()) {
             player.sendMessage(rule);
             player.sendMessage(headline);
@@ -114,6 +126,9 @@ public final class RoundSummary {
             if (score != null) {
                 player.sendMessage(messages.get("summary.kills", Formatter.number("kills", score.kills)));
                 player.sendMessage(messages.get("summary.deaths", Formatter.number("deaths", score.deaths)));
+                if (score.bestStreak > 1) {
+                    player.sendMessage(messages.get("summary.streak-best", Formatter.number("streak", score.bestStreak)));
+                }
                 player.sendMessage(messages.get("summary.coins", Formatter.number("coins", score.coins)));
                 player.sendMessage(messages.get("summary.xp", Formatter.number("xp", score.xp)));
             }
@@ -129,7 +144,7 @@ public final class RoundSummary {
         }
     }
 
-    private Component button(Messages messages, String key, Consumer<Player> action) {
+    private Component button(String key, Consumer<Player> action) {
         return messages.get(key)
                 .hoverEvent(HoverEvent.showText(messages.get(key + "-hover")))
                 .clickEvent(ClickEvent.callback(audience -> {
@@ -162,6 +177,8 @@ public final class RoundSummary {
     private static final class Score {
         private int kills;
         private int deaths;
+        private int streak;
+        private int bestStreak;
         private int coins;
         private int xp;
     }

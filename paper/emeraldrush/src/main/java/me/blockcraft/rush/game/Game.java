@@ -84,7 +84,7 @@ public final class Game {
         this.countdown = new Countdown(plugin);
         this.arena = new Arena(messages, Sounds.RUSH_JOIN);
         this.lobbyCountdown = new LobbyCountdown(plugin, arena, config.lobbyCountdown(), config.minPlayers(), alive::size, this::beginSearch);
-        this.summary = new RoundSummary(plugin, messages.get("game-name"),
+        this.summary = new RoundSummary(plugin, messages,
                 new RoundSummary.Rewards(config.killCoins(), config.winCoins()));
         this.scoreboard = new GameScoreboard(this, messages, map);
     }

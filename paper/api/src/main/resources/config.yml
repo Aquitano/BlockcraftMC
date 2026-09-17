@@ -41,3 +41,7 @@ xp:
   rewards:
     kill: 10
     win: 50
+
+# A kill streak is announced to the round when it reaches one of these lengths.
+streaks:
+  announce: [3, 5, 10]

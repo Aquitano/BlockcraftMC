@@ -23,6 +23,7 @@ public enum Sounds {
     COINS("entity.experience_orb.pickup", 0.7f, 1.4f),
     PURCHASE("entity.player.levelup", 0.8f, 1.4f),
     KILL("entity.player.attack_crit", 1.0f, 1.0f),
+    STREAK("item.trident.thunder", 0.6f, 1.3f),
     WIN("ui.toast.challenge_complete", 1.0f, 1.0f),
     LOSE("block.note_block.bass", 0.5f, 0.8f),
     LEVEL_UP("entity.player.levelup", 1.0f, 1.0f),

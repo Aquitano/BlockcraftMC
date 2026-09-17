@@ -2,6 +2,7 @@ package me.blockcraft.api;
 
 import me.blockcraft.api.coins.CoinsRepository;
 import me.blockcraft.api.cosmetic.Effects;
+import me.blockcraft.api.game.Streaks;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.menu.Profiles;
 import me.blockcraft.api.network.ServerPresence;
@@ -38,6 +39,7 @@ public final class BlockcraftApi {
     private final Database database;
     private final CoinsRepository coins;
     private final Unlocks unlocks;
+    private final Streaks streaks;
     private final Shop shop;
     private final PlayerSettings settings;
     private final ResourcePacks resourcePack;
@@ -57,12 +59,13 @@ public final class BlockcraftApi {
     BlockcraftApi(Plugin plugin, Database database, PlayerSettings settings, ResourcePacks resourcePack,
                   Map<String, StatsRepository> profileGames, Messages messages, ServerRepository servers,
                   ServerIdentity server, ServerPresence presence, RealNames realNames, NickRanks nickRanks, Xp xp,
-                  MapBundle map, BuildMode buildMode, TagResolver tags) {
+                  Streaks streaks, MapBundle map, BuildMode buildMode, TagResolver tags) {
         this.operations = new NetworkOperations(plugin, messages);
         this.playerTasks = new PlayerTasks(plugin, messages);
         this.database = database;
         this.coins = new CoinsRepository(database);
         this.unlocks = new Unlocks(database);
+        this.streaks = streaks;
         this.shop = new Shop(database);
         this.settings = settings;
         this.resourcePack = resourcePack;
@@ -121,6 +124,10 @@ public final class BlockcraftApi {
     /** Buys an unlock with coins, once, however many lobbies the player hops between. */
     public Shop shop() {
         return shop;
+    }
+
+    public Streaks streaks() {
+        return streaks;
     }
 
     /** Remembered per-player choices such as the chat tag or kill effect. */

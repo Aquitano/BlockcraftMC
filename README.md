@@ -226,7 +226,10 @@ shows another player's inventory read-only unless the viewer holds `blockcraft.c
 
 Every game says the shared moments the same way, from `arena` in BlockcraftAPI's `messages.yml`: the arrival card
 with game and map, who joined and left the round with the player count, the lobby countdown and the restart
-countdown. The `quicksg`, `emeraldrush`, and `duell` palette tags give the games distinct colours across menus,
+countdown. A round's kills, deaths, coins and XP are counted in one place (`RoundSummary`), which announces kill
+streaks at the lengths `streaks.announce` in BlockcraftAPI's `config.yml` names and prints the recap in chat when
+the round ends. The `quicksg`,
+`emeraldrush`, and `duell` palette tags give the games distinct colours across menus,
 signs and sidebars. Their arrival sounds respect the player's sound setting. Kit and perk menus distinguish
 selected, unlocked and purchasable items; coins buy permanent unlocks, while EmeraldRush emeralds buy round items.
 A game's own `messages.yml` holds its introduction and game-specific wording. `MessageKeysTest` in `common`

@@ -9,6 +9,7 @@ import me.blockcraft.api.command.LevelCommand;
 import me.blockcraft.api.command.MapCommand;
 import me.blockcraft.api.dialog.ServerMenu;
 import me.blockcraft.api.game.StatsRepository;
+import me.blockcraft.api.game.Streaks;
 import me.blockcraft.api.menu.MenuListener;
 import me.blockcraft.api.network.ServerHeartbeat;
 import me.blockcraft.api.network.ServerPresence;
@@ -37,6 +38,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.EnumMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 public final class BlockcraftApiPlugin extends JavaPlugin {
@@ -75,7 +77,8 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         var resourcePack = new ResourcePacks(messages);
         var api = new BlockcraftApi(this, database, settings, resourcePack,
                 profileGames(YamlFile.section(YamlFile.section(config, "profile"), "games")),
-                messages, servers, self, presence, realNames, nickRanks, xp, map, buildMode, resources.tags());
+                messages, servers, self, presence, realNames, nickRanks, xp, streaks(YamlFile.section(config, "streaks")), map,
+                buildMode, resources.tags());
         BlockcraftApi.install(api);
         getLogger().info("Running map " + map.name() + map.template().map(template -> " from " + template.directory()).orElse(""));
         int startingCoins = number(config, "starting-coins", 10);
@@ -117,6 +120,12 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
             rewards.put(reward, number(section, reward.key(), 0));
         }
         return rewards;
+    }
+
+    private static Streaks streaks(Map<String, Object> section) {
+        return new Streaks(section.get("announce") instanceof List<?> values
+                ? values.stream().filter(Number.class::isInstance).map(value -> ((Number) value).intValue()).toList()
+                : List.of());
     }
 
     private static int number(Map<String, Object> section, String key, int fallback) {
