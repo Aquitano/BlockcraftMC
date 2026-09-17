@@ -27,10 +27,10 @@ import java.util.function.Consumer;
  * to {@link #onClick} by {@link MenuListener}; clicks in the player's own inventory are cancelled too.
  * <p>
  * The inventory itself is created when the menu opens, because its look depends on the viewer: a client wearing
- * the network's resource pack sees the pack's panel behind the slots, the pack's model on every item built from a
- * {@link MenuIcon} (the two buttons every menu shares, {@link #backButton} and {@link #closeButton}, among them),
- * and a {@link #toolbar} of three wide buttons across the first row; everyone else sees vanilla items and empty
- * slots filled with panes, whose clicks are swallowed.
+ * the network's resource pack sees the pack's panel behind the slots, the pack's tooltip and model on every item
+ * built from a {@link MenuIcon} (the two buttons every menu shares, {@link #backButton} and {@link #closeButton},
+ * among them), and a {@link #toolbar} of three wide buttons across the first row; everyone else sees vanilla items
+ * and empty slots filled with panes, whose clicks are swallowed.
  * <p>
  * {@link #open} and {@link #close} run on the next tick because Bukkit forbids opening or closing an
  * inventory from inside {@link InventoryClickEvent}; the client would otherwise receive the cancel resync
@@ -123,6 +123,11 @@ public abstract class Menu implements InventoryHolder {
         closeSlot = slot;
     }
 
+    /** Close as one of the wide buttons; top-level menus put it on the left. */
+    protected void closeButton(ToolbarButton button) {
+        toolbar(button, button(MenuIcon.TOOL_CLOSE, "menu.close"), Menu::close);
+    }
+
     public void open(Player player) {
         BlockcraftApi.get().playerTasks().invalidate(player);
         Bukkit.getScheduler().runTask(API, () -> {
@@ -182,24 +187,22 @@ public abstract class Menu implements InventoryHolder {
         if (closeSlot >= 0) {
             items[closeSlot] = button(MenuIcon.CLOSE, "menu.close");
         }
-        toolbar.forEach((button, entry) -> {
-            items[button.iconSlot()] = entry.icon();
-            if (packApplied) {
+        toolbar.forEach((button, entry) -> items[button.iconSlot()] = entry.icon());
+        if (packApplied) {
+            for (var item : items) {
+                if (item != null) {
+                    MenuIcon.style(item, true);
+                    Items.of(item).tooltipStyle(MenuIcon.TOOLTIP_STYLE);
+                }
+            }
+            toolbar.forEach((button, entry) -> {
                 var rest = Items.of(entry.icon().clone()).model(MenuIcon.EMPTY_MODEL).build();
                 for (int slot = button.firstSlot; slot < button.firstSlot + 3; slot++) {
                     if (slot != button.iconSlot()) {
                         items[slot] = rest;
                     }
                 }
-            }
-        });
-        if (packApplied) {
-            for (int slot = 0; slot < items.length; slot++) {
-                var item = items[slot];
-                if (item != null) {
-                    MenuIcon.modelOf(item).ifPresent(model -> Items.of(item).model(model));
-                }
-            }
+            });
         }
         if (fillEmptySlots() && !packApplied) {
             var pane = Items.of(Material.GRAY_STAINED_GLASS_PANE).name(BlockcraftApi.get().messages().get("menu.filler")).build();

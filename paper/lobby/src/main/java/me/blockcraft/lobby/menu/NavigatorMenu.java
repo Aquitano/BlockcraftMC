@@ -27,7 +27,7 @@ final class NavigatorMenu extends Menu {
     NavigatorMenu(Menus menus) {
         super(6, menus.messages().get("navigator.title"));
         this.menus = menus;
-        toolbar(ToolbarButton.LEFT, MenuIcon.TOOL_CLOSE.item().name(menus.apiMessages().get("menu.close")).build(), Menu::close);
+        closeButton(ToolbarButton.LEFT);
         toolbar(ToolbarButton.MIDDLE, place(MenuIcon.TOOL_SHOP, "shop", "navigator.shop-lore"), menus::openShop);
         toolbar(ToolbarButton.RIGHT, place(MenuIcon.TOOL_HOME, "spawn", "navigator.spawn-lore"),
                 player -> menus.warp(player, LobbyLocation.SPAWN));

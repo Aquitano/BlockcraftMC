@@ -7,13 +7,14 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 
+import java.util.Arrays;
 import java.util.Locale;
 import java.util.Optional;
 
 /**
- * The pictures a menu can show on an item: the pack's {@code items/<key>.json} model for clients wearing it, the
- * vanilla item everyone else sees, decided in one place. An item built here carries its icon, so any {@code Menu}
- * that places it draws it right for its viewer.
+ * The pictures a menu or a hotbar can show on an item: the pack's {@code items/<key>.json} model for clients
+ * wearing it, the vanilla item everyone else sees, decided in one place. An item built here carries its icon, so
+ * {@link #style} can draw it right for its viewer wherever it ends up.
  */
 public enum MenuIcon {
 
@@ -22,6 +23,12 @@ public enum MenuIcon {
     TOOL_CLOSE(Material.BARRIER),
     TOOL_SHOP(Material.GOLD_INGOT),
     TOOL_HOME(Material.ENDER_EYE),
+    TOOL_SETTINGS(Material.COMPARATOR),
+    TOOL_COSMETICS(Material.ENDER_CHEST),
+    TOOL_PROFILE(Material.PLAYER_HEAD),
+    TOOL_HEADS(Material.PLAYER_HEAD),
+    TOOL_SHIRTS(Material.LEATHER_CHESTPLATE),
+    PREMIUM(Material.GLISTERING_MELON_SLICE),
     QUICKSG(Material.IRON_SWORD),
     EMERALDRUSH(Material.EMERALD),
     DUELL(Material.SHIELD),
@@ -29,6 +36,9 @@ public enum MenuIcon {
 
     /** Draws nothing at all; the outer slots of a toolbar button wear it so the whole bar answers hover and click. */
     public static final Key EMPTY_MODEL = Key.key("blockcraft", "empty");
+
+    /** The dark tooltip behind every menu item's name, {@code gui/sprites/tooltip/menu_*} in the pack. */
+    public static final Key TOOLTIP_STYLE = Key.key("blockcraft", "menu");
 
     private static final NamespacedKey MARKER = NamespacedKey.fromString("blockcraft:menu_icon");
 
@@ -46,8 +56,17 @@ public enum MenuIcon {
         return Key.key("blockcraft", key());
     }
 
+    public static Optional<MenuIcon> byKey(String key) {
+        return Arrays.stream(values()).filter(icon -> icon.key().equals(key)).findFirst();
+    }
+
     public Items.Builder item() {
-        return Items.of(fallback).hideAttributes()
+        return mark(Items.of(fallback));
+    }
+
+    /** Marks an item built elsewhere, such as a player's own head, so the pack draws this icon over it. */
+    public Items.Builder mark(Items.Builder item) {
+        return item.hideAttributes()
                 .edit(meta -> meta.getPersistentDataContainer().set(MARKER, PersistentDataType.STRING, key()));
     }
 
@@ -57,5 +76,22 @@ public enum MenuIcon {
         }
         return Optional.ofNullable(item.getItemMeta().getPersistentDataContainer().get(MARKER, PersistentDataType.STRING))
                 .map(key -> Key.key("blockcraft", key));
+    }
+
+    /**
+     * Puts the pack's model on an item that carries an icon, or takes it off again, as the viewer's client needs;
+     * false when the item carries none.
+     */
+    public static boolean style(ItemStack item, boolean packApplied) {
+        var model = modelOf(item);
+        if (model.isEmpty()) {
+            return false;
+        }
+        if (packApplied) {
+            Items.of(item).model(model.get());
+        } else {
+            Items.of(item).noModel();
+        }
+        return true;
     }
 }

@@ -18,8 +18,9 @@ import java.util.UUID;
 
 /**
  * Which clients wear the network's resource pack. The proxy offers it and is the only one to hear the client's
- * answer, so it tells every backend the player arrives on; each answer is re-announced here as a
- * {@link PlayerResourcePackStatusEvent}, so a screen drawn before it came can redraw itself.
+ * answer, so it tells every backend the player arrives on; each answer restyles the {@link MenuIcon} items the
+ * player already holds and is re-announced as a {@link PlayerResourcePackStatusEvent}, so a screen drawn before
+ * it came can redraw itself.
  */
 public final class ResourcePacks implements PluginMessageListener, Listener {
 
@@ -52,6 +53,13 @@ public final class ResourcePacks implements PluginMessageListener, Listener {
             applied.add(player.getUniqueId());
         } else {
             applied.remove(player.getUniqueId());
+        }
+        var inventory = player.getInventory();
+        for (int slot = 0; slot < inventory.getSize(); slot++) {
+            var item = inventory.getItem(slot);
+            if (item != null && MenuIcon.style(item, wearing)) {
+                inventory.setItem(slot, item);
+            }
         }
         new PlayerResourcePackStatusEvent(player, ID, wearing
                 ? PlayerResourcePackStatusEvent.Status.SUCCESSFULLY_LOADED

@@ -95,6 +95,18 @@ public final class Items {
             return this;
         }
 
+        /** Draws the item as its material again. */
+        public Builder noModel() {
+            stack.unsetData(DataComponentTypes.ITEM_MODEL);
+            return this;
+        }
+
+        /** The sprites behind the item's tooltip, {@code tooltip/<style>_background} and {@code _frame} of the pack. */
+        public Builder tooltipStyle(Key style) {
+            stack.setData(DataComponentTypes.TOOLTIP_STYLE, style);
+            return this;
+        }
+
         public Builder hideAttributes() {
             stack.editMeta(meta -> meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ENCHANTS));
             return this;

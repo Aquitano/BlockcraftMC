@@ -5,6 +5,7 @@ import me.blockcraft.api.config.Locations;
 import me.blockcraft.api.dialog.ConfirmDialog;
 import me.blockcraft.api.menu.Menu;
 import me.blockcraft.api.dialog.SettingsDialog;
+import me.blockcraft.api.pack.MenuIcon;
 import me.blockcraft.api.settings.PlayerSettings;
 import me.blockcraft.common.shop.Shop;
 import me.blockcraft.api.shop.Unlocks;
@@ -57,8 +58,9 @@ public record Menus(
 
     private static final int TELEPORT_PARTICLES = 20;
 
-    /** Shows what the click is about to cost before anything is bought. */
+    /** Shows what the click is about to cost before anything is bought, drawn as the player's client draws it. */
     public void purchase(Player player, ItemStack subject, String item, int price, Consumer<Player> onOwned) {
+        MenuIcon.style(subject, BlockcraftApi.get().resourcePack().applied(player));
         new ConfirmDialog(subject, buyer -> buy(buyer, item, price, onOwned), Menu::close).open(player);
     }
 
