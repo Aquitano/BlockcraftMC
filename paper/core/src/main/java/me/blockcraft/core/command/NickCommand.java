@@ -54,7 +54,7 @@ public final class NickCommand {
         var player = context.getSource().getPlayerOrThrow();
         player.sendMessage(messages.get("nick.loading"));
         nicks.assign(player, rank, nick -> player.sendMessage(nick
-                .map(worn -> messages.get("nick.assigned", Placeholder.unparsed("nick", worn.name()), Placeholder.unparsed("rank", worn.rankGroup())))
+                .map(worn -> messages.get("nick.assigned", Nicks.shown(player, worn)))
                 .orElseGet(() -> messages.get("nick.failed"))));
         return Command.SINGLE_SUCCESS;
     }

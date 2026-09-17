@@ -3,9 +3,13 @@ package me.blockcraft.core.nick;
 import com.destroystokyo.paper.profile.PlayerProfile;
 import me.blockcraft.api.nick.NickChangeEvent;
 import me.blockcraft.api.proxy.ProxyMessaging;
+import me.blockcraft.api.rank.Ranks;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.nick.Nick;
 import me.blockcraft.common.nick.NickRepository;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
@@ -46,6 +50,13 @@ public final class Nicks {
 
     public Optional<Active> of(Player player) {
         return Optional.ofNullable(active.get(player.getUniqueId()));
+    }
+
+    /** {@code <rank><nick>}: the worn nick as others read it, with the prefix of the group it wears. */
+    public static TagResolver shown(Player player, Nick nick) {
+        return TagResolver.resolver(
+                Placeholder.component("rank", Ranks.prefix(player).orElse(Component.empty())),
+                Placeholder.unparsed("nick", nick.name()));
     }
 
     /** The LuckPerms groups a nick may show, as config.yml lists them. */

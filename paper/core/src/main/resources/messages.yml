@@ -209,8 +209,8 @@ chat:
     - "<prefix><error>Die Teammitglieder werden diesen Sachverhalt nun prüfen."
 nick:
   loading: "<prefix><muted>Dein neuer Nick wird geladen..."
-  assigned: "<prefix><muted>Du bist jetzt als <accent><nick> <muted>mit dem Rang <accent><rank> <muted>unterwegs. Teammitglieder sehen weiterhin deinen echten Namen. <aqua>/nick off <muted>entfernt den Nick."
-  still-active: "<prefix><muted>Du bist weiterhin als <accent><nick> <muted>mit dem Rang <accent><rank> <muted>unterwegs. <aqua>/nick off <muted>entfernt den Nick."
+  assigned: "<prefix><muted>Du bist jetzt als <rank><nick> <muted>unterwegs. Teammitglieder sehen weiterhin deinen echten Namen. <aqua>/nick off <muted>entfernt den Nick."
+  still-active: "<prefix><muted>Du bist weiterhin als <rank><nick> <muted>unterwegs. <aqua>/nick off <muted>entfernt den Nick."
   unknown-rank: "<prefix><error>Diesen Rang kann ein Nick nicht tragen. <muted>Zur Wahl stehen: <accent><ranks>"
   removed: "<prefix><muted>Dein Nick wurde entfernt."
   none: "<prefix><muted>Du trägst gerade keinen Nick."

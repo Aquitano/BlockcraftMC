@@ -1,7 +1,6 @@
 package me.blockcraft.core.nick;
 
 import me.blockcraft.common.message.Messages;
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -20,8 +19,7 @@ public final class NickListener implements Listener {
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
         var player = event.getPlayer();
-        nicks.applyStored(player, nick -> player.sendMessage(messages.get("nick.still-active",
-                Placeholder.unparsed("nick", nick.name()), Placeholder.unparsed("rank", nick.rankGroup()))));
+        nicks.applyStored(player, nick -> player.sendMessage(messages.get("nick.still-active", Nicks.shown(player, nick))));
     }
 
     @EventHandler
