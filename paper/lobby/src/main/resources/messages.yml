@@ -199,6 +199,21 @@ pets:
     chicken: "<prefix><muted>Dein <white>Huhn<muted> Haustier wurde entfernt."
     pig: "<prefix><muted>Dein <white>Schwein<muted> Haustier wurde entfernt."
     rabbit: "<prefix><muted>Dein <white>Hasen<muted> Haustier wurde entfernt."
+recap:
+  title: "<arrow><primary>Runde vorbei <dark>· <game>"
+  result:
+    win: "<success><bold>Sieg"
+    lose: "<error><bold>Niederlage"
+    draw: "<accent><bold>Unentschieden"
+  winner: "<muted>Gewinner<dark>: <white><winner>"
+  winner-none: "<muted>Niemand hat gewonnen."
+  kills: "<muted>Kills<dark>: <white><kills>"
+  deaths: "<muted>Tode<dark>: <white><deaths>"
+  streak: "<muted>Beste Serie<dark>: <white><streak> Kills"
+  coins: "<muted>Coins<dark>: <accent>+<coins>"
+  xp: "<muted>XP<dark>: <success>+<xp>"
+  again: "<success>Nochmal spielen"
+  close: "<muted>Schließen"
 extras:
   title: "<arrow><primary>Extras"
   profile: "<arrow><primary>Profil"

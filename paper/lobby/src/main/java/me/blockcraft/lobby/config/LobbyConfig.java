@@ -3,6 +3,7 @@ package me.blockcraft.lobby.config;
 import me.blockcraft.common.config.YamlFile;
 import org.bukkit.util.Vector;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -29,7 +30,8 @@ public record LobbyConfig(
         int killEffectPrice,
         int winEffectPrice,
         int gadgetCooldownSeconds,
-        int hudRefreshSeconds
+        int hudRefreshSeconds,
+        Duration recapMaxAge
 ) {
 
     public static LobbyConfig fromYaml(Map<String, Object> root) {
@@ -76,7 +78,8 @@ public record LobbyConfig(
                 (int) number(effects, "kill-price", 500),
                 (int) number(effects, "win-price", 500),
                 (int) number(gadgets, "cooldown-seconds", 5),
-                Math.max(1, (int) number(YamlFile.section(root, "hud"), "refresh-seconds", 5))
+                Math.max(1, (int) number(YamlFile.section(root, "hud"), "refresh-seconds", 5)),
+                Duration.ofMinutes((long) number(YamlFile.section(root, "recap"), "max-age-minutes", 10))
         );
     }
 

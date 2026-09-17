@@ -4,8 +4,10 @@ import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.coins.Coins;
 import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.api.sound.Sounds;
+import me.blockcraft.api.task.Tasks;
 import me.blockcraft.api.xp.XpReward;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.common.round.RoundRecap;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickCallback;
 import net.kyori.adventure.text.event.ClickEvent;
@@ -27,7 +29,8 @@ import java.util.function.Consumer;
  * What a round paid and who won it. A game feeds it while the round runs and calls {@link #show()} once at the
  * end; because every coin and every XP point of a round is handed out here, the recap names exactly what was
  * paid, and closes with the two ways on: another round of the same game, or the lobby. Kill streaks are counted
- * here too and announced at the lengths {@link Streaks} names.
+ * here too and announced at the lengths {@link Streaks} names. The recap is also stored for every participant,
+ * so the lobby can show it once more when they arrive there.
  */
 public final class RoundSummary {
 
@@ -107,6 +110,7 @@ public final class RoundSummary {
 
     public void show() {
         var names = String.join(", ", winners.values());
+        store(names);
         var rule = messages.get("summary.rule");
         var headline = messages.get("summary.game", Placeholder.component("game", game));
         var winnerLine = winners.isEmpty()
@@ -142,6 +146,15 @@ public final class RoundSummary {
             player.showTitle(Title.title(messages.get(titleKey(won)), subtitle, TIMES));
             (won ? Sounds.WIN : Sounds.LOSE).play(player);
         }
+    }
+
+    /** Every participant's recap, the lobby shows it once they arrive; those who left early get theirs too. */
+    private void store(String names) {
+        var api = BlockcraftApi.get();
+        var recaps = new LinkedHashMap<UUID, RoundRecap>();
+        scores.forEach((id, score) -> recaps.put(id, new RoundRecap(api.server().group(), winners.containsKey(id), names,
+                score.kills, score.deaths, score.bestStreak, score.coins, score.xp)));
+        Tasks.async(plugin, () -> api.recaps().save(recaps));
     }
 
     private Component button(String key, Consumer<Player> action) {

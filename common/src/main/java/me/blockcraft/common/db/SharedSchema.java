@@ -117,6 +117,19 @@ final class SharedSchema {
         )),
         new Migration(5, List.of(
             "ALTER TABLE bc_nicks ADD COLUMN IF NOT EXISTS rank_group VARCHAR(36) NOT NULL DEFAULT 'default'"
+        )),
+        new Migration(6, List.of(
+            "CREATE TABLE IF NOT EXISTS bc_round_recaps ("
+                + "player_uuid CHAR(36) NOT NULL PRIMARY KEY, "
+                + "game VARCHAR(32) NOT NULL, "
+                + "won TINYINT(1) NOT NULL, "
+                + "winners VARCHAR(255) NOT NULL, "
+                + "kills INT NOT NULL, "
+                + "deaths INT NOT NULL, "
+                + "best_streak INT NOT NULL, "
+                + "coins INT NOT NULL, "
+                + "xp INT NOT NULL, "
+                + "ended_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)"
         ))
     );
 

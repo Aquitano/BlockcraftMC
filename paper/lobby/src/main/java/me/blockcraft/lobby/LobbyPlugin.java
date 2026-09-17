@@ -40,6 +40,7 @@ import me.blockcraft.lobby.menu.ShopMenu;
 import me.blockcraft.lobby.network.GroupCounts;
 import me.blockcraft.lobby.npc.Holograms;
 import me.blockcraft.lobby.npc.ShopNpc;
+import me.blockcraft.lobby.recap.RoundRecapListener;
 import me.blockcraft.lobby.rank.PremiumRank;
 import me.blockcraft.lobby.storage.LegacyUnlocks;
 import net.luckperms.api.LuckPermsProvider;
@@ -90,6 +91,7 @@ public final class LobbyPlugin extends JavaPlugin {
         hud = new LobbyHud(this, messages);
         hud.start(config.hudRefreshSeconds() * 20L);
         register(hud, new JoinQuitListener(messages, locations, items, trails, pets, hider),
+                new RoundRecapListener(this, messages, config),
                 new LobbyItemListener(this, messages, menus, items, hider),
                 new ProtectionListener(api.buildMode()),
                 new CommandBlockListener(config.allowedCommands()),

@@ -21,6 +21,7 @@ import me.blockcraft.common.db.Database;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.network.ServerIdentity;
 import me.blockcraft.common.network.ServerRepository;
+import me.blockcraft.common.round.RoundRecapRepository;
 import me.blockcraft.common.shop.Shop;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.entity.Player;
@@ -39,6 +40,7 @@ public final class BlockcraftApi {
     private final Database database;
     private final CoinsRepository coins;
     private final Unlocks unlocks;
+    private final RoundRecapRepository recaps;
     private final Streaks streaks;
     private final Shop shop;
     private final PlayerSettings settings;
@@ -65,6 +67,7 @@ public final class BlockcraftApi {
         this.database = database;
         this.coins = new CoinsRepository(database);
         this.unlocks = new Unlocks(database);
+        this.recaps = new RoundRecapRepository(database);
         this.streaks = streaks;
         this.shop = new Shop(database);
         this.settings = settings;
@@ -124,6 +127,11 @@ public final class BlockcraftApi {
     /** Buys an unlock with coins, once, however many lobbies the player hops between. */
     public Shop shop() {
         return shop;
+    }
+
+    /** The recap of a player's last round, written by the game and taken by the lobby. */
+    public RoundRecapRepository recaps() {
+        return recaps;
     }
 
     public Streaks streaks() {

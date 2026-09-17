@@ -2,6 +2,8 @@ package me.blockcraft.common.db;
 
 import me.blockcraft.common.player.PlayerReference;
 import me.blockcraft.common.report.ReportRepository;
+import me.blockcraft.common.round.RoundRecap;
+import me.blockcraft.common.round.RoundRecapRepository;
 import me.blockcraft.common.shop.Shop;
 import org.junit.After;
 import org.junit.Assume;
@@ -10,8 +12,10 @@ import org.junit.Test;
 
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
@@ -169,5 +173,21 @@ public class DatabaseIntegrationTest {
         assertTrue(reports.byId(report.id()).orElseThrow().isClaimedBy(staff, "NewStaffName"));
         reports.release(report.id(), staff, "NewStaffName");
         assertTrue(reports.byId(report.id()).orElseThrow().claimedBy().isEmpty());
+    }
+
+    @Test
+    public void recapIsTakenOnceAndOnlyWhileFresh() {
+        db.migrate();
+        var recaps = new RoundRecapRepository(db);
+        var player = UUID.randomUUID();
+        var recap = new RoundRecap("quicksg", true, "Winner", 3, 1, 2, 40, 80);
+        recaps.save(Map.of(player, recap));
+        assertEquals(recap, recaps.take(player, Duration.ofMinutes(10)).orElseThrow());
+        assertTrue(recaps.take(player, Duration.ofMinutes(10)).isEmpty());
+
+        recaps.save(Map.of(player, recap));
+        db.update("UPDATE bc_round_recaps SET ended_at = NOW() - INTERVAL 11 MINUTE WHERE player_uuid = ?", player.toString());
+        assertTrue(recaps.take(player, Duration.ofMinutes(10)).isEmpty());
+        assertEquals(0, count("SELECT COUNT(*) FROM bc_round_recaps"));
     }
 }
