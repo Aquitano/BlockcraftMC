@@ -353,7 +353,7 @@ Everything the pack changes has a plain fallback, so a player without it sees va
   pack's tooltip (`tooltip_style`, the `gui/sprites/tooltip/menu_*` nine-slices), so the item names read on the same
   dark card as the panel.
 - HUD icons are `<icon:name>` in a message (`Icon`): a font glyph with the pack, the symbol under `icons.<name>` in
-  BlockcraftAPI's `messages.yml` without.
+  BlockcraftAPI's `messages.yml` without. The lobby's and every game's sidebar headings carry them.
 - The `Inventar` label under a menu is blanked through the pack's language files.
 
 The textures are drawn by `java resourcepack/PackArt.java resourcepack/src` (panel colours, slots and the pixel

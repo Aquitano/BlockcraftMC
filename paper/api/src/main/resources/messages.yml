@@ -46,6 +46,16 @@ icons:
   level: "★"
   chat: "✉"
   server: "▤"
+  players: "☻"
+  map: "◈"
+  kit: "⚒"
+  spectator: "◉"
+  time: "⌛"
+  emerald: "◆"
+  winner: "♛"
+  mode: "⚑"
+  opponent: "⚔"
+  kills: "☠"
 
 tab:
   default-prefix: "<muted>"

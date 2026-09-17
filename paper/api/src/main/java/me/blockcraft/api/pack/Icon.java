@@ -18,7 +18,17 @@ public enum Icon {
     COINS('\uE201'),
     LEVEL('\uE202'),
     CHAT('\uE203'),
-    SERVER('\uE204');
+    SERVER('\uE204'),
+    PLAYERS('\uE205'),
+    MAP('\uE206'),
+    KIT('\uE207'),
+    SPECTATOR('\uE208'),
+    TIME('\uE209'),
+    EMERALD('\uE20A'),
+    WINNER('\uE20B'),
+    MODE('\uE20C'),
+    OPPONENT('\uE20D'),
+    KILLS('\uE20E');
 
     private final char glyph;
 

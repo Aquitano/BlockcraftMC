@@ -154,13 +154,13 @@ item:
 
 scoreboard:
   title: "<quicksg><bold>QuickSG"
-  online: "<muted>SPIELER"
+  online: "<muted><icon:players> SPIELER"
   online-value: "<arrow><white><online> <dark>/<white> <max>"
-  map: "<muted>MAP"
+  map: "<muted><icon:map> MAP"
   map-value: "<arrow><white><map>"
-  kit: "<muted>KIT"
+  kit: "<muted><icon:kit> KIT"
   kit-value: "<arrow><white><kit>"
-  spectator: "<muted>ZUSCHAUER"
+  spectator: "<muted><icon:spectator> ZUSCHAUER"
   spectator-value: "<arrow><white><spectators>"
-  winner: "<muted>GEWINNER"
+  winner: "<muted><icon:winner> GEWINNER"
   winner-value: "<arrow><white><player>"

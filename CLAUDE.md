@@ -50,7 +50,8 @@ README.md; this file only holds what the code does not say by itself.
   an item handed out elsewhere goes through `MenuIcon.style` with the viewer's pack status. Top-level menus
   (navigator, profile, extras, shop) put close on the left of the `toolbar` (`closeButton(ToolbarButton.LEFT)`) and
   their two main destinations next to it; list menus keep the corner `closeButton`, because the toolbar takes their
-  first row.
+  first row. Sidebar headings carry an `<icon:...>`, resolved with `resourcePack().icons(player)`, and redraw on
+  `PlayerResourcePackStatusEvent`.
 - Feedback sounds come from `Sounds` in `paper/api` (`Sounds.MENU_CLICK.play(player)`), never from a hand-written
   volume and pitch; only sounds that belong to a world effect stay at their call site.
 - Ranks come from LuckPerms (`group.<rank>` permissions, `LuckPermsProvider` API). No rank tables, no rank names in

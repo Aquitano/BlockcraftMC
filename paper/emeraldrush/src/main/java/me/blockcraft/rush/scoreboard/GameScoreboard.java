@@ -1,5 +1,6 @@
 package me.blockcraft.rush.scoreboard;
 
+import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.scoreboard.Sidebar;
 import me.blockcraft.api.world.MapBundle;
 import me.blockcraft.common.message.Messages;
@@ -31,8 +32,10 @@ public final class GameScoreboard {
         Bukkit.getOnlinePlayers().forEach(this::show);
     }
 
+    /** The headings carry icons, which only the viewer's client knows how to draw. */
     public void show(Player player) {
         var online = TagResolver.resolver(
+                BlockcraftApi.get().resourcePack().icons(player),
                 Formatter.number("online", game.alivePlayers().size()),
                 Formatter.number("max", Bukkit.getMaxPlayers()));
         switch (game.phase()) {
@@ -44,7 +47,7 @@ public final class GameScoreboard {
                     .toList());
             case ENDING -> {
                 var winners = new ArrayList<Component>();
-                winners.add(messages.get("scoreboard.winner-header"));
+                winners.add(messages.get("scoreboard.winner-header", online));
                 game.alivePlayers().forEach(winner ->
                         winners.add(messages.get("scoreboard.winner", Placeholder.component("player", winner.playerListName()))));
                 sidebar.show(player, winners);
