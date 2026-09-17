@@ -149,6 +149,8 @@ profile:
   settings-lore: "<bullet><muted>Nachrichten, Sounds und mehr"
   cosmetics: "<arrow><primary>Kosmetik"
   cosmetics-lore: "<bullet><muted>Effekte, Gadgets und Tags"
+  hub: "<arrow><accent>Zur Lobby"
+  hub-lore: "<bullet><muted>Zurück in die Lobby"
   games:
     quicksg: "<arrow><primary>QuickSG"
     emeraldrush: "<arrow><primary>EmeraldRush"

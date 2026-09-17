@@ -149,7 +149,7 @@ public record Menus(
     }
 
     public void openExtras(Player player) {
-        new ExtrasMenu(this).open(player);
+        new ExtrasMenu(this, player).open(player);
     }
 
     public void openGadgets(Player player) {

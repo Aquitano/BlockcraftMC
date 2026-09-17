@@ -3,7 +3,10 @@ package me.blockcraft.api.menu;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.dialog.SettingsDialog;
 import me.blockcraft.api.item.Items;
+import me.blockcraft.api.pack.MenuIcon;
+import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.api.rank.Ranks;
+import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -15,24 +18,26 @@ import org.bukkit.inventory.ItemStack;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-/** The player's own card: rank, level, coins and what every game remembers about them. */
+/**
+ * The player's own card: rank, level, coins and what every game remembers about them. The toolbar closes, opens
+ * the settings and, where the server has one, the cosmetics; elsewhere its third button leads to the lobby.
+ */
 final class ProfileMenu extends Menu {
 
-    private static final int HEAD_SLOT = 4;
-    private static final int GAMES_ROW = 9;
-    private static final int SETTINGS_SLOT = 21;
-    private static final int COSMETICS_SLOT = 23;
-    private static final int CLOSE_SLOT = 26;
-
-    private final Profiles profiles;
-    private final Optional<Consumer<Player>> cosmetics;
+    private static final int HEAD_SLOT = 13;
+    private static final int GAMES_ROW = 18;
 
     ProfileMenu(Profiles profiles, Player viewer, Profiles.Snapshot snapshot, Optional<Consumer<Player>> cosmetics) {
         super(3, BlockcraftApi.get().messages().get("profile.title"));
-        this.profiles = profiles;
-        this.cosmetics = cosmetics;
         var api = BlockcraftApi.get();
         var messages = api.messages();
+        closeButton(ToolbarButton.LEFT);
+        toolbar(ToolbarButton.MIDDLE, button(messages, MenuIcon.TOOL_SETTINGS, "profile.settings"),
+                player -> new SettingsDialog(player, Optional.of(back -> profiles.open(back, cosmetics))).open(player));
+        cosmetics.ifPresentOrElse(
+                open -> toolbar(ToolbarButton.RIGHT, button(messages, MenuIcon.TOOL_COSMETICS, "profile.cosmetics"), open),
+                () -> toolbar(ToolbarButton.RIGHT, button(messages, MenuIcon.TOOL_HOME, "profile.hub"),
+                        player -> ProxyMessaging.hub(profiles.plugin(), player)));
         var progress = api.xp().levels().progress(api.xp().total(viewer));
         set(HEAD_SLOT, Items.head(viewer.getUniqueId(), api.realName(viewer))
                 .name(messages.get("profile.head", Placeholder.unparsed("player", viewer.getName())))
@@ -46,26 +51,24 @@ final class ProfileMenu extends Menu {
         var games = snapshot.games();
         for (int index = 0; index < games.size(); index++) {
             var game = games.get(index);
-            set(gameSlot(index, games.size()), Items.of(Material.IRON_SWORD)
+            set(gameSlot(index, games.size()), gameIcon(game.key())
                     .name(messages.get("profile.games." + game.key()))
                     .lore(messages.getLines("profile.stats-lore", game.stats().placeholders()))
-                    .hideAttributes()
                     .build());
         }
-        set(SETTINGS_SLOT, Items.of(Material.COMPARATOR).name(messages.get("profile.settings"))
-                .lore(messages.get("profile.settings-lore")).build());
-        cosmetics.ifPresent(ignored -> set(COSMETICS_SLOT, Items.of(Material.ENDER_CHEST)
-                .name(messages.get("profile.cosmetics")).lore(messages.get("profile.cosmetics-lore")).build()));
-        closeButton(CLOSE_SLOT);
     }
 
     @Override
     protected void onClick(Player player, int slot, ItemStack clicked, InventoryClickEvent event) {
-        if (slot == SETTINGS_SLOT) {
-            new SettingsDialog(player, Optional.of(back -> profiles.open(back, cosmetics))).open(player);
-        } else if (slot == COSMETICS_SLOT) {
-            cosmetics.ifPresent(open -> open.accept(player));
-        }
+    }
+
+    private static ItemStack button(Messages messages, MenuIcon icon, String key) {
+        return icon.item().name(messages.get(key)).lore(messages.get(key + "-lore")).build();
+    }
+
+    /** A game the pack has no icon for, such as one added in config.yml alone, shows as a sword. */
+    private static Items.Builder gameIcon(String key) {
+        return MenuIcon.byKey(key).map(MenuIcon::item).orElseGet(() -> Items.of(Material.IRON_SWORD).hideAttributes());
     }
 
     private static int gameSlot(int index, int games) {

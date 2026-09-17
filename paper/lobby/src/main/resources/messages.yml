@@ -201,6 +201,10 @@ pets:
     rabbit: "<prefix><muted>Dein <white>Hasen<muted> Haustier wurde entfernt."
 extras:
   title: "<arrow><primary>Extras"
+  profile: "<arrow><primary>Profil"
+  profile-lore: "<bullet><muted>Rang, Level und Statistiken"
+  shop: "<arrow><accent>Lobby-Shop"
+  shop-lore: "<bullet><muted>Köpfe, Hemden und Premium"
   gadgets: "<arrow><primary>Gadgets"
   gadgets-lore: "<bullet><muted>Enterhaken, TNT-Sprung und mehr!"
   kill-effects: "<arrow><primary>Kill-Effekte"

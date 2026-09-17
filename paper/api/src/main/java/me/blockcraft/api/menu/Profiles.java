@@ -36,6 +36,10 @@ public final class Profiles {
         this.games = games;
     }
 
+    Plugin plugin() {
+        return plugin;
+    }
+
     /** {@code cosmetics} is the cosmetics menu of whatever server the player is on, where there is one. */
     public void open(Player player, Optional<Consumer<Player>> cosmetics) {
         var uuid = player.getUniqueId();
