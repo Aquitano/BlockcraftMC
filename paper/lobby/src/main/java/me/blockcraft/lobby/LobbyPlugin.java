@@ -38,6 +38,7 @@ import me.blockcraft.lobby.listener.WorldDownloaderListener;
 import me.blockcraft.lobby.menu.Menus;
 import me.blockcraft.lobby.menu.ShopMenu;
 import me.blockcraft.lobby.network.GroupCounts;
+import me.blockcraft.lobby.npc.Holograms;
 import me.blockcraft.lobby.npc.ShopNpc;
 import me.blockcraft.lobby.rank.PremiumRank;
 import me.blockcraft.lobby.storage.LegacyUnlocks;
@@ -79,6 +80,8 @@ public final class LobbyPlugin extends JavaPlugin {
                 api.servers(), api.server(), new PremiumRank(this, luckPerms), pets, trails, gadgets, groupCounts);
         shopNpc = new ShopNpc(this, locations, messages);
         shopNpc.start(config.shopNpcRespawnSeconds());
+        var holograms = new Holograms(messages);
+        getServer().getWorlds().forEach(holograms::refresh);
 
         var messenger = getServer().getMessenger();
         messenger.registerIncomingPluginChannel(this, WorldDownloaderListener.INIT_CHANNEL, new WorldDownloaderListener(messages));
@@ -103,7 +106,7 @@ public final class LobbyPlugin extends JavaPlugin {
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             var commands = new CommandRegistry(event.registrar(), messages);
             commands.register(SetSpawnCommand.create(locations, messages));
-            commands.register(SetHoloCommand.create(messages, config.holograms(), locations, shopNpc));
+            commands.register(SetHoloCommand.create(messages, config.holograms(), holograms, locations, shopNpc));
             commands.register(ClearChatCommand.create(messages));
         });
     }

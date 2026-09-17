@@ -12,7 +12,8 @@ secrets:
   reward: 50
 shop-npc:
   respawn-seconds: 500
-# /setholo accepts these names; every one needs a holo.<name> block in messages.yml.
+# /setholo accepts these names; every one needs a holo.<name> block in messages.yml. Placing a name again replaces
+# its hologram, and the lines are re-read from messages.yml on every start.
 holograms:
   - quicksg
   - emeraldrush

@@ -20,7 +20,7 @@ public final class SetHoloCommand {
     private SetHoloCommand() {
     }
 
-    public static LiteralCommandNode<CommandSourceStack> create(Messages messages, List<String> holograms,
+    public static LiteralCommandNode<CommandSourceStack> create(Messages messages, List<String> names, Holograms holograms,
                                                                 Locations<LobbyLocation> locations, ShopNpc shopNpc) {
         var root = Commands.literal("setholo")
                 .requires(source -> source.getSender() instanceof Player player && player.hasPermission(LobbyPermissions.SET_HOLO))
@@ -28,7 +28,7 @@ public final class SetHoloCommand {
                     context.getSource().getSender().sendMessage(messages.get("setholo.usage"));
                     return Command.SINGLE_SUCCESS;
                 });
-        holograms.forEach(name -> root.then(hologram(name, messages)));
+        names.forEach(name -> root.then(hologram(name, holograms, messages)));
         root.then(Commands.literal("shop").executes(context -> {
             var player = context.getSource().getPlayerOrThrow();
             locations.set(LobbyLocation.SHOP_NPC, player.getLocation());
@@ -39,10 +39,10 @@ public final class SetHoloCommand {
         return root.build();
     }
 
-    private static LiteralArgumentBuilder<CommandSourceStack> hologram(String name, Messages messages) {
+    private static LiteralArgumentBuilder<CommandSourceStack> hologram(String name, Holograms holograms, Messages messages) {
         return Commands.literal(name).executes(context -> {
             var player = context.getSource().getPlayerOrThrow();
-            Holograms.spawn(player.getLocation(), messages.getLines("holo." + name));
+            holograms.place(name, player.getLocation());
             player.sendMessage(messages.get("setholo.set"));
             return Command.SINGLE_SUCCESS;
         });

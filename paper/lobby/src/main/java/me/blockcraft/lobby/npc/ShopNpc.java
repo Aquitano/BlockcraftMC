@@ -6,10 +6,11 @@ import me.blockcraft.common.message.Messages;
 import me.blockcraft.lobby.config.LobbyLocation;
 import me.blockcraft.lobby.cosmetic.PetType;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.JoinConfiguration;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.TextDisplay;
 import org.bukkit.entity.Villager;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
@@ -18,14 +19,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * The shop villager with its two floating name lines, respawned periodically after clearing round leftovers from
+ * The shop villager with its floating name card, respawned periodically after clearing round leftovers from
  * the spawn world; pets survive the purge. The NPC's own entities are not persisted, so a restart cannot leave
  * duplicates behind.
  */
 public final class ShopNpc {
 
-    private static final double TITLE_OFFSET = 1.3;
-    private static final double SUBTITLE_OFFSET = 1.0;
+    private static final double NAME_OFFSET = 2.1;
 
     private final Plugin plugin;
     private final Locations<LobbyLocation> locations;
@@ -61,13 +61,13 @@ public final class ShopNpc {
                 villager.setSilent(true);
                 villager.setPersistent(false);
             }));
-            spawned.add(ownLine(location.clone().add(0, TITLE_OFFSET, 0), messages.get("npc.title")));
-            spawned.add(ownLine(location.clone().add(0, SUBTITLE_OFFSET, 0), messages.get("npc.subtitle")));
+            spawned.add(ownLine(location.clone().add(0, NAME_OFFSET, 0),
+                    Component.join(JoinConfiguration.newlines(), messages.get("npc.title"), messages.get("npc.subtitle"))));
         });
     }
 
-    private static ArmorStand ownLine(Location location, Component text) {
-        ArmorStand line = hologramLine(location, text);
+    private static TextDisplay ownLine(Location location, Component text) {
+        var line = Holograms.line(location, text);
         line.setPersistent(false);
         return line;
     }
@@ -77,15 +77,5 @@ public final class ShopNpc {
         spawned.clear();
         locations.get(LobbyLocation.SPAWN).ifPresent(spawn ->
                 Worlds.removeLeftovers(spawn.getWorld(), entity -> PetType.of(entity).isPresent()));
-    }
-
-    public static ArmorStand hologramLine(Location location, Component text) {
-        return location.getWorld().spawn(location, ArmorStand.class, stand -> {
-            stand.setVisible(false);
-            stand.setSmall(true);
-            stand.setGravity(false);
-            stand.customName(text);
-            stand.setCustomNameVisible(true);
-        });
     }
 }
