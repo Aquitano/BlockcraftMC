@@ -32,6 +32,7 @@ import me.blockcraft.common.network.ServerRepository;
 import me.blockcraft.common.settings.PlayerSettingRepository;
 import me.blockcraft.common.xp.XpRepository;
 import net.luckperms.api.LuckPermsProvider;
+import org.bukkit.GameRules;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.EnumMap;
@@ -68,6 +69,8 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         var xp = new Xp(this, xpRepository, new Levels(number(YamlFile.section(config, "xp"), "level-step", 100)),
                 xpRewards(YamlFile.section(YamlFile.section(config, "xp"), "rewards")), messages);
         var map = MapBundle.load(getServer().getWorlds().getFirst(), WorldTemplate.configured(config));
+        // The locator bar would take the level bar's place and point at hidden or hunted players.
+        getServer().getWorlds().forEach(world -> world.setGameRule(GameRules.LOCATOR_BAR, false));
         var buildMode = new BuildMode();
         var resourcePack = new ResourcePacks(messages);
         var api = new BlockcraftApi(this, database, settings, resourcePack,
