@@ -23,7 +23,7 @@ public class WorldTemplateTest {
         write(world, "level.dat", "level");
         write(world, "region/r.0.0.mca", "chunks");
         write(world, "blockcraft/Lobby/locations.yml", "spawn");
-        write(world, "playerdata/uuid.dat", "player");
+        write(world, "players/data/uuid.dat", "player");
         write(world, "session.lock", "lock");
         Path directory = folder.newFolder("template").toPath();
         write(directory, ".gitkeep", "");
@@ -35,7 +35,7 @@ public class WorldTemplateTest {
         assertTrue(template.exists());
         assertEquals("chunks", Files.readString(directory.resolve("region/r.0.0.mca")));
         assertEquals("spawn", Files.readString(directory.resolve("blockcraft/Lobby/locations.yml")));
-        assertFalse(Files.exists(directory.resolve("playerdata")));
+        assertFalse(Files.exists(directory.resolve("players")));
         assertFalse(Files.exists(directory.resolve("session.lock")));
         assertFalse(Files.exists(directory.resolve(".gitkeep")));
     }

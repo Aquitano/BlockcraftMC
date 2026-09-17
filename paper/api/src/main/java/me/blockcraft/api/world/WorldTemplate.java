@@ -23,7 +23,7 @@ import java.util.stream.Stream;
 public final class WorldTemplate {
 
     private static final String ENV = "BLOCKCRAFT_WORLD_TEMPLATE";
-    private static final Set<String> TRANSIENT = Set.of("session.lock", "playerdata", "stats", "advancements", "level.dat_old");
+    private static final Set<String> TRANSIENT = Set.of("session.lock", "players", "playerdata", "stats", "advancements", "level.dat_old");
 
     private final Path directory;
 
