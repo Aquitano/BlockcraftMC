@@ -605,7 +605,7 @@ friends:
     - "<accent>Freunde <arrow><reset><muted>Anfrage ablehnen: <aqua>/friend deny \\<Spieler>"
     - "<accent>Freunde <arrow><reset><muted>Freund entfernen: <aqua>/friend remove \\<Spieler>"
     - "<accent>Freunde <arrow><reset><muted>Zeige deine Freunde: <aqua>/friends"
-    - "<accent>Freunde <arrow><reset><muted>Springe zu einem Freund: <aqua>/friend jump \\<Spieler>"
+    - "<accent>Freunde <arrow><reset><muted>Springe zu einem Freund oder schau zu: <aqua>/friend jump \\<Spieler>"
   usage-add: "<accent>Freunde <arrow><reset><muted>Verwende: <aqua>/friend add \\<Spieler>"
   usage-accept: "<accent>Freunde <arrow><reset><muted>Verwende: <aqua>/friend accept \\<Spieler>"
   usage-deny: "<accent>Freunde <arrow><reset><muted>Verwende: <aqua>/friend deny \\<Spieler>"
@@ -639,6 +639,7 @@ friends:
   already-there: "<accent>Freunde <arrow><reset><muted>Du bist bereits auf dem Server von <accent><player><muted>."
   unavailable: "<accent>Freunde <arrow><reset><error>Der Server von <accent><player> <error>nimmt gerade keine Spieler auf."
   jumping: "<accent>Freunde <arrow><reset><success>Du springst zu <accent><player> <success>auf <accent><server><success>."
+  watching: "<accent>Freunde <arrow><reset><success>Die Runde von <accent><player> <success>läuft schon <dark>● <success>du schaust auf <accent><server> <success>zu."
   joined: "<accent>Freunde <arrow><reset><success><player> <success>ist jetzt online."
   left: "<accent>Freunde <arrow><reset><muted><player> <muted>ist jetzt offline."
 

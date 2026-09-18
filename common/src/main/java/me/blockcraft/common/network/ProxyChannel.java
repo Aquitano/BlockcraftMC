@@ -5,8 +5,8 @@ package me.blockcraft.common.network;
  * concerns the player the message travelled with: the proxy moves them ({@link #PLAY}, {@link #HUB}), runs a
  * command as them ({@link #COMMAND}), learns what they look like to others ({@link #NICK}, {@link #VANISH}) or
  * what they let others do to them ({@link #SETTING}), or delivers a notice on their behalf ({@link #STAFF_NOTICE}).
- * The proxy speaks first only to answer ({@link #FRIENDS}) and to say whether the client wears the network's
- * resource pack ({@link #PACK}).
+ * The proxy speaks first only to answer ({@link #FRIENDS}), to say whether the client wears the network's
+ * resource pack ({@link #PACK}) and to name the friend the player came to watch ({@link #SPECTATE}).
  */
 public final class ProxyChannel {
 
@@ -41,6 +41,12 @@ public final class ProxyChannel {
 
     /** boolean, sent by the proxy when the player arrives on a backend and whenever the client's answer changes */
     public static final String PACK = "Pack";
+
+    /**
+     * The UUID of the friend the player came to watch, as a string. Sent by the proxy when a player arrives on a
+     * server whose round is already running, because only the proxy knows that the jump was meant as a watch.
+     */
+    public static final String SPECTATE = "Spectate";
 
     private ProxyChannel() {
     }

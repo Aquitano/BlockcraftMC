@@ -114,6 +114,7 @@ public final class ProxyMessageListener {
             out.writeUTF(entry.name());
             out.writeBoolean(entry.online());
             out.writeUTF(entry.server());
+            out.writeBoolean(entry.watching());
         }
         out.writeInt(requests.size());
         requests.forEach(out::writeUTF);

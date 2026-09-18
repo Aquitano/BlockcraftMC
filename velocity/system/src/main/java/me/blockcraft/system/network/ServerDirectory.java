@@ -3,6 +3,7 @@ package me.blockcraft.system.network;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import me.blockcraft.common.network.ServerRecord;
+import me.blockcraft.common.network.ServerState;
 
 import java.util.Comparator;
 import java.util.List;
@@ -20,10 +21,12 @@ public final class ServerDirectory {
     private static final Comparator<ServerRecord> BY_ONLINE = Comparator.comparingInt(server -> server.status().online());
 
     private final ProxyServer proxy;
+    private final String lobbyGroup;
     private volatile Map<String, ServerRecord> servers = Map.of();
 
-    public ServerDirectory(ProxyServer proxy) {
+    public ServerDirectory(ProxyServer proxy, String lobbyGroup) {
         this.proxy = proxy;
+        this.lobbyGroup = lobbyGroup;
     }
 
     void update(List<ServerRecord> alive) {
@@ -41,6 +44,13 @@ public final class ServerDirectory {
     /** Whether a named server still takes players, which is what every join path asks before it connects one. */
     public boolean isJoinable(String server) {
         return get(server).map(record -> record.status().joinable()).orElse(false);
+    }
+
+    /** Whether a round is running there, which nobody joins but a friend may watch; a lobby is never watched. */
+    public boolean isWatchable(String server) {
+        return get(server)
+                .map(record -> record.status().state() == ServerState.INGAME && !record.group().equals(lobbyGroup))
+                .orElse(false);
     }
 
     public Set<String> groups() {

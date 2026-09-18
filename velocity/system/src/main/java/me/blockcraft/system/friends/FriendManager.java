@@ -27,7 +27,7 @@ import java.util.UUID;
 public final class FriendManager {
 
     /** One line of the friend list, as both {@code /friend list} and the lobby's menu show it. */
-    public record Entry(String name, boolean online, String server) {
+    public record Entry(String name, boolean online, String server, boolean watching) {
     }
 
     private final ProxyServer proxy;
@@ -35,17 +35,20 @@ public final class FriendManager {
     private final PlayerVisibility visibility;
     private final PlayerChoices choices;
     private final ServerDirectory directory;
+    private final SpectateRequests spectating;
     private final FriendRepository repository;
     private final SystemConfig config;
     private final Messages messages;
 
     public FriendManager(ProxyServer proxy, PlayerLookup lookup, PlayerVisibility visibility, PlayerChoices choices,
-                         ServerDirectory directory, FriendRepository repository, SystemConfig config, Messages messages) {
+                         ServerDirectory directory, SpectateRequests spectating, FriendRepository repository,
+                         SystemConfig config, Messages messages) {
         this.proxy = proxy;
         this.lookup = lookup;
         this.visibility = visibility;
         this.choices = choices;
         this.directory = directory;
+        this.spectating = spectating;
         this.repository = repository;
         this.config = config;
         this.messages = messages;
@@ -162,12 +165,17 @@ public final class FriendManager {
                 player.sendMessage(messages.get("friends.already-there", named(friend)));
                 return;
             }
-            if (!directory.isJoinable(server.get().getServerInfo().getName())) {
+            String target = server.get().getServerInfo().getName();
+            var where = Placeholder.unparsed("server", target);
+            if (directory.isJoinable(target)) {
+                player.sendMessage(messages.get("friends.jumping", named(friend), where));
+            } else if (directory.isWatchable(target)) {
+                spectating.watch(player, friend.uuid(), target);
+                player.sendMessage(messages.get("friends.watching", named(friend), where));
+            } else {
                 player.sendMessage(messages.get("friends.unavailable", named(friend)));
                 return;
             }
-            player.sendMessage(messages.get("friends.jumping", named(friend),
-                    Placeholder.unparsed("server", server.get().getServerInfo().getName())));
             player.createConnectionRequest(server.get()).fireAndForget();
         });
     }
@@ -176,8 +184,9 @@ public final class FriendManager {
     public List<Entry> entriesFor(Player player) {
         return repository.friendsOf(player.getUniqueId()).stream().map(friend -> {
             var online = proxy.getPlayer(friend.uuid()).filter(other -> visibility.canSee(player, other));
-            return new Entry(online.map(visibility::shownName).orElse(friend.name()), online.isPresent(),
-                    online.map(CommandSupport::currentServer).orElse(""));
+            String server = online.map(CommandSupport::currentServer).orElse("");
+            return new Entry(online.map(visibility::shownName).orElse(friend.name()), online.isPresent(), server,
+                    directory.isWatchable(server));
         }).toList();
     }
 
