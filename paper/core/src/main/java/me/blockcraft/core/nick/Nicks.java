@@ -86,16 +86,34 @@ public final class Nicks {
         });
     }
 
-    /** Re-applies the stored nick when a nicked player arrives on this server. */
-    public void applyStored(Player player, Consumer<Nick> onApplied) {
+    /** Re-applies the stored nick when a nicked player arrives on this server; {@code onDone} hears which one, if any. */
+    public void applyStored(Player player, Consumer<Optional<Nick>> onDone) {
         var uuid = player.getUniqueId();
         Tasks.async(plugin, () -> repository.get(uuid).flatMap(nick -> fetchSkin(nick.skinOwner()).map(skin -> Map.entry(nick, skin))),
-                stored -> stored.ifPresent(entry -> {
-                    if (player.isOnline()) {
-                        apply(player, entry.getKey(), entry.getValue());
-                        onApplied.accept(entry.getKey());
+                stored -> {
+                    if (!player.isOnline()) {
+                        return;
                     }
-                }));
+                    stored.ifPresent(entry -> apply(player, entry.getKey(), entry.getValue()));
+                    onDone.accept(stored.map(Map.Entry::getKey));
+                });
+    }
+
+    /**
+     * Throws a stored nick away before it is ever applied, so a player who arrives with one simply appears as
+     * themselves; {@code onDropped} runs when there was a nick to drop. The proxy read the nick at login, so it is
+     * told even though this server never wore it.
+     */
+    public void dropStored(Player player, Runnable onDropped) {
+        var uuid = player.getUniqueId();
+        Tasks.async(plugin, () -> repository.clear(uuid), dropped -> {
+            if (!dropped || !player.isOnline()) {
+                return;
+            }
+            Bukkit.getPluginManager().callEvent(new NickChangeEvent(player, Optional.empty()));
+            ProxyMessaging.nick(plugin, player, Optional.empty());
+            onDropped.run();
+        });
     }
 
     /** Returns false when the player wore no nick. */

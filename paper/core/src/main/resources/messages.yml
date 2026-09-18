@@ -217,6 +217,8 @@ nick:
   removed: "<prefix><muted>Dein Nick wurde entfernt."
   none: "<prefix><muted>Du trägst gerade keinen Nick."
   failed: "<prefix><error>Der Skin konnte gerade nicht geladen werden. Versuche es gleich noch einmal."
+  auto: "<prefix><muted>Du startest die Runde als <rank><nick><muted>. <accent>/nick off <muted>entfernt den Nick."
+  auto-off: "<prefix><muted>In der Lobby trägst du wieder deinen echten Namen."
 report:
   reason-missing: "<prefix><error>Wähle einen gültigen Grund oder gib Details an."
   usage: "<prefix><error>Benutze /report [Spieler]"

@@ -195,8 +195,11 @@ a game are labelled as enchantment levels and do not change network XP.
 ## Nick and vanish across the network
 
 Both states are set on a Paper server (`/nick`, `/v`, `/staff`) and stored in `bc_nicks` and `bc_vanished` so every
-server re-applies them on join. The proxy keeps its own view: it reads both tables when a player logs in and the
-Paper servers report every change over the `blockcraft:main` plugin channel. Player counts (`/online`, `/list`, the
+server re-applies them on join. A player with `blockcraft.nick` who turns `auto-nick` on is nicked by the server
+itself when they arrive for a round, and arrives in the lobby under their own name again unless they also turned
+`keep-nick` on; which servers count as a lobby is `lobby-group` in BlockcraftAPI's `config.yml`. The proxy keeps its
+own view: it reads both tables when a player logs in and the Paper servers report every change over the
+`blockcraft:main` plugin channel. Player counts (`/online`, `/list`, the
 tab header, the server list ping), `/find`, `/goto`, `/msg`, `/seen` and party invites leave vanished players out and
 address nicked players by their nick; `blockcraft.core.vanish.see` and `blockcraft.nick.see` look through either on
 both sides, and the moderation commands resolve a nick to the account behind it. `velocity.command.glist` is not

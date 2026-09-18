@@ -25,7 +25,8 @@ public final class NickRepository {
                 player.toString(), nick.name(), nick.skinOwner(), nick.rankGroup());
     }
 
-    public void clear(UUID player) {
-        db.update("DELETE FROM bc_nicks WHERE player_uuid = ?", player.toString());
+    /** Answers whether the player was wearing a nick at all. */
+    public boolean clear(UUID player) {
+        return db.update("DELETE FROM bc_nicks WHERE player_uuid = ?", player.toString()) > 0;
     }
 }
