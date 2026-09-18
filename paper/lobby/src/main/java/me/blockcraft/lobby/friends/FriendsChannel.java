@@ -29,7 +29,7 @@ public final class FriendsChannel implements PluginMessageListener {
         }
         var friends = new ArrayList<FriendEntry>();
         for (int count = in.readInt(); count > 0; count--) {
-            friends.add(new FriendEntry(in.readUTF(), in.readBoolean(), in.readUTF()));
+            friends.add(new FriendEntry(in.readUTF(), in.readBoolean(), in.readUTF(), in.readBoolean()));
         }
         var requests = new ArrayList<String>();
         for (int count = in.readInt(); count > 0; count--) {

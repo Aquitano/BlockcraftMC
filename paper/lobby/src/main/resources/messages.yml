@@ -44,6 +44,10 @@ friends:
     - "<bullet><muted>Auf <accent><server>"
     - "<bullet><success>Linksklick <dark>● <muted>Zu ihm springen"
     - "<bullet><accent>Rechtsklick <dark>● <muted>In die Party einladen"
+  watching-lore:
+    - "<bullet><muted>Spielt gerade auf <accent><server>"
+    - "<bullet><success>Linksklick <dark>● <muted>Zuschauen"
+    - "<bullet><accent>Rechtsklick <dark>● <muted>In die Party einladen"
   offline: "<arrow><muted><player>"
   offline-lore:
     - "<bullet><muted>Gerade offline"

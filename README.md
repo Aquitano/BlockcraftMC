@@ -322,10 +322,16 @@ never arrives.
 `/friend add|accept|deny|remove|list|jump <name>` and `/friends` need `blockcraft.system.friends`; `add` respects
 the target's `friend-requests` setting, and a friend who is vanished counts as offline everywhere.
 
+`/friend jump` also works while the friend's round is running: a game server takes no new players then, so the
+proxy sends the player over as a spectator, names the friend on the `Spectate` subchannel once they arrive and the
+game puts them next to them. Only a game server is watched this way; a lobby and a server that is restarting stay
+unavailable.
+
 The lobby's friends item opens `FriendsMenu`, which is drawn from the proxy's answer rather than from the
 database: only the proxy knows who is online and on which server, so the Paper side asks over the `Friends`
-subchannel and the proxy writes the list back. Clicking a friend, or accepting and denying a request, runs the
-matching `/friend` command through the `Command` subchannel.
+subchannel and the proxy writes the list back, including whether the friend's round is running, which the lore of
+their head says. Clicking a friend, or accepting and denying a request, runs the matching `/friend` command through
+the `Command` subchannel.
 
 ## Discord linking
 

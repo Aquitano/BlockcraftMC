@@ -43,11 +43,13 @@ final class FriendsMenu extends Menu {
         }
         for (int index = 0; index < this.friends.size(); index++) {
             var friend = this.friends.get(index);
+            var server = Placeholder.unparsed("server", friend.server());
             set(FIRST_FRIEND_SLOT + index, Items.head(friend.name())
                     .name(messages.get(friend.online() ? "friends.online" : "friends.offline",
                             Placeholder.unparsed("player", friend.name())))
-                    .lore(messages.getLines(friend.online() ? "friends.online-lore" : "friends.offline-lore",
-                            Placeholder.unparsed("server", friend.server())))
+                    .lore(friend.online()
+                            ? messages.getLines(friend.watching() ? "friends.watching-lore" : "friends.online-lore", server)
+                            : messages.getLines("friends.offline-lore", server))
                     .build());
         }
         if (this.friends.isEmpty()) {
