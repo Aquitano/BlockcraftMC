@@ -6,29 +6,43 @@ import java.util.Optional;
 
 /**
  * The per-player choices the network remembers, read on both platforms. A cosmetic setting stores the
- * {@code key()} of the chosen enum constant; a toggle stores {@link #ON} or {@link #OFF} and counts as on until
- * a row says otherwise, so a player who never opened the settings menu is reachable, hears sounds and sees others.
+ * {@code key()} of the chosen enum constant; a toggle stores {@link #ON} or {@link #OFF} and counts as the value
+ * it names here until a row says otherwise, so a player who never opened the settings menu is reachable, hears
+ * sounds and sees others, while the nick toggles stay off until they are asked for. A toggle with a permission
+ * belongs to the players holding it and is off for everyone else.
  */
 public enum PlayerSetting {
 
-    CHAT_TAG("chat-tag", false),
-    KILL_EFFECT("kill-effect", false),
-    WIN_EFFECT("win-effect", false),
-    PRIVATE_MESSAGES("private-messages", true),
-    PARTY_INVITES("party-invites", true),
-    FRIEND_REQUESTS("friend-requests", true),
-    PLAYER_VISIBILITY("player-visibility", true),
-    SOUNDS("sounds", true);
+    CHAT_TAG("chat-tag"),
+    KILL_EFFECT("kill-effect"),
+    WIN_EFFECT("win-effect"),
+    PRIVATE_MESSAGES("private-messages", PlayerSetting.ON),
+    PARTY_INVITES("party-invites", PlayerSetting.ON),
+    FRIEND_REQUESTS("friend-requests", PlayerSetting.ON),
+    PLAYER_VISIBILITY("player-visibility", PlayerSetting.ON),
+    SOUNDS("sounds", PlayerSetting.ON),
+    AUTO_NICK("auto-nick", PlayerSetting.OFF, "blockcraft.nick"),
+    KEEP_NICK("keep-nick", PlayerSetting.OFF, "blockcraft.nick");
 
     public static final String ON = "on";
     public static final String OFF = "off";
 
     private final String key;
-    private final boolean toggle;
+    private final String fallback;
+    private final String permission;
 
-    PlayerSetting(String key, boolean toggle) {
+    PlayerSetting(String key) {
+        this(key, null, null);
+    }
+
+    PlayerSetting(String key, String fallback) {
+        this(key, fallback, null);
+    }
+
+    PlayerSetting(String key, String fallback, String permission) {
         this.key = key;
-        this.toggle = toggle;
+        this.fallback = fallback;
+        this.permission = permission;
     }
 
     /** The on/off settings, in the order the settings menu lays them out. */
@@ -40,12 +54,13 @@ public enum PlayerSetting {
         return Arrays.stream(values()).filter(setting -> setting.key.equals(key)).findFirst();
     }
 
-    public static boolean enabled(Optional<String> stored) {
-        return stored.filter(OFF::equals).isEmpty();
-    }
-
     public static String value(boolean enabled) {
         return enabled ? ON : OFF;
+    }
+
+    /** Whether the toggle is on for a player whose row holds {@code stored}, or has none. */
+    public boolean enabled(Optional<String> stored) {
+        return !OFF.equals(stored.orElse(fallback));
     }
 
     public String key() {
@@ -53,6 +68,11 @@ public enum PlayerSetting {
     }
 
     public boolean isToggle() {
-        return toggle;
+        return fallback != null;
+    }
+
+    /** The permission a player needs before this setting is theirs to choose. */
+    public Optional<String> permission() {
+        return Optional.ofNullable(permission);
     }
 }

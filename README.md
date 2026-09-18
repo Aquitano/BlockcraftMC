@@ -300,8 +300,10 @@ the client would list who is online, the `motd.sample` lines from its `messages.
 
 Every remembered choice a player makes is one row in `bc_player_settings`, read by both platforms through
 `common`'s `PlayerSettingRepository`. The cosmetic ones store the chosen key (chat tag, kill and win effect); the
-five toggles (`private-messages`, `party-invites`, `friend-requests`, `player-visibility`, `sounds`) store `on` or
-`off` and count as on while no row exists, so nothing has to be seeded.
+toggles store `on` or `off` and count as their own default while no row exists, so nothing has to be seeded:
+`private-messages`, `party-invites`, `friend-requests`, `player-visibility` and `sounds` default to on, the two nick
+toggles (`auto-nick`, `keep-nick`) to off. A toggle may name a permission, and then it is only shown to, and only
+read for, the players who hold it.
 
 Paper caches a player's settings for as long as they are online (`BlockcraftApi.get().settings()`) and fires
 `PlayerSettingsLoadedEvent` once the cache is filled; the lobby waits for it before re-applying a stored "players

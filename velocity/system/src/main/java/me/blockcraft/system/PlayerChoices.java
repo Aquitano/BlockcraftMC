@@ -18,7 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * What a player lets the network do to them. The Paper servers own {@code bc_player_settings} and report every
  * change over the plugin channel; the table is read once at login so a player who never opens a menu is still
- * judged on their stored choices. An unread setting counts as on, like everywhere else.
+ * judged on their stored choices. An unread setting counts as its default, like everywhere else.
  */
 public final class PlayerChoices {
 
@@ -58,7 +58,7 @@ public final class PlayerChoices {
     /** Reads the table for a player who is not online, so a friend request judges an absent player correctly. */
     public boolean enabled(UUID player, PlayerSetting setting) {
         var cached = choices.get(player);
-        return PlayerSetting.enabled(cached == null
+        return setting.enabled(cached == null
                 ? repository.get(player, setting)
                 : Optional.ofNullable(cached.get(setting)));
     }

@@ -6,6 +6,7 @@ import io.papermc.paper.registry.data.dialog.DialogBase;
 import io.papermc.paper.registry.data.dialog.input.DialogInput;
 import io.papermc.paper.registry.data.dialog.type.DialogType;
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.settings.PlayerSettings;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.common.settings.PlayerSetting;
 import org.bukkit.entity.Player;
@@ -14,10 +15,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-/** One checkbox per on/off setting; saving applies what changed and goes back to where the dialog was opened from. */
+/**
+ * One checkbox per on/off setting the viewer may choose; saving applies what changed and goes back to where the
+ * dialog was opened from.
+ */
 public final class SettingsDialog {
-
-    private static final List<PlayerSetting> TOGGLES = PlayerSetting.toggles();
 
     private final Dialog dialog;
 
@@ -25,7 +27,10 @@ public final class SettingsDialog {
     public SettingsDialog(Player viewer, Optional<Consumer<Player>> back) {
         var api = BlockcraftApi.get();
         var messages = api.messages();
-        var inputs = TOGGLES.stream()
+        var toggles = PlayerSetting.toggles().stream()
+                .filter(setting -> PlayerSettings.allowed(viewer, setting))
+                .toList();
+        var inputs = toggles.stream()
                 .map(setting -> DialogInput.bool(inputKey(setting), messages.get("settings." + setting.key()))
                         .initial(api.settings().enabled(viewer, setting))
                         .build())
@@ -33,7 +38,7 @@ public final class SettingsDialog {
         dialog = Dialog.create(factory -> factory.empty()
                 .base(DialogBase.builder(messages.get("settings.title")).inputs(inputs).build())
                 .type(DialogType.multiAction(List.of(Dialogs.button(messages.get("settings.save"), (player, view) -> {
-                            save(player, view);
+                            save(player, view, toggles);
                             back.ifPresent(previous -> previous.accept(player));
                         })))
                         .exitAction(back.map(previous -> Dialogs.button(messages.get("menu.back"), previous))
@@ -50,9 +55,9 @@ public final class SettingsDialog {
         return setting.key().replace('-', '_');
     }
 
-    private static void save(Player player, DialogResponseView view) {
+    private static void save(Player player, DialogResponseView view, List<PlayerSetting> toggles) {
         var api = BlockcraftApi.get();
-        for (var setting : TOGGLES) {
+        for (var setting : toggles) {
             Boolean chosen = view.getBoolean(inputKey(setting));
             if (chosen == null) {
                 continue;

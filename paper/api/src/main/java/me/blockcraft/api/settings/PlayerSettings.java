@@ -40,9 +40,14 @@ public final class PlayerSettings implements Listener {
         return Optional.ofNullable(cache.getOrDefault(player.getUniqueId(), Map.of()).get(setting));
     }
 
-    /** Whether an on/off setting is on; a player without a stored row is. */
+    /** Whether an on/off setting is on; a player without a stored row has the setting's default. */
     public boolean enabled(Player player, PlayerSetting setting) {
-        return PlayerSetting.enabled(get(player, setting));
+        return allowed(player, setting) && setting.enabled(get(player, setting));
+    }
+
+    /** A toggle guarded by a permission is only the player's to choose, and to be judged on, while they hold it. */
+    public static boolean allowed(Player player, PlayerSetting setting) {
+        return setting.permission().map(player::hasPermission).orElse(true);
     }
 
     public void set(Player player, PlayerSetting setting, String value) {

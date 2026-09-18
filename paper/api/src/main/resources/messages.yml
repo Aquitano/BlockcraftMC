@@ -137,6 +137,8 @@ settings:
   friend-requests: "<arrow><primary>Freundschaftsanfragen"
   player-visibility: "<arrow><primary>Spieler sichtbar"
   sounds: "<arrow><primary>Sounds"
+  auto-nick: "<arrow><primary>Automatisch nicken"
+  keep-nick: "<arrow><primary>Nick in der Lobby behalten"
 
 # The dialog behind the pause menu's button and the quick-actions key (G).
 server-menu:
