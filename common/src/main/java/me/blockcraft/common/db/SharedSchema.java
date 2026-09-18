@@ -130,6 +130,17 @@ final class SharedSchema {
                 + "coins INT NOT NULL, "
                 + "xp INT NOT NULL, "
                 + "ended_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)"
+        )),
+        new Migration(7, List.of(
+            "CREATE TABLE IF NOT EXISTS bc_elo ("
+                + "player_uuid CHAR(36) NOT NULL, "
+                + "season VARCHAR(16) NOT NULL, "
+                + "rating INT NOT NULL, "
+                + "wins INT NOT NULL DEFAULT 0, "
+                + "losses INT NOT NULL DEFAULT 0, "
+                + "name VARCHAR(16) NOT NULL, "
+                + "updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, "
+                + "PRIMARY KEY (player_uuid, season))"
         ))
     );
 

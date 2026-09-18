@@ -1,5 +1,8 @@
 package me.blockcraft.common.db;
 
+import me.blockcraft.common.elo.EloFormula;
+import me.blockcraft.common.elo.EloRepository;
+import me.blockcraft.common.elo.Season;
 import me.blockcraft.common.player.PlayerReference;
 import me.blockcraft.common.report.ReportRepository;
 import me.blockcraft.common.round.RoundRecap;
@@ -13,6 +16,7 @@ import org.junit.Test;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -189,5 +193,21 @@ public class DatabaseIntegrationTest {
         db.update("UPDATE bc_round_recaps SET ended_at = NOW() - INTERVAL 11 MINUTE WHERE player_uuid = ?", player.toString());
         assertTrue(recaps.take(player, Duration.ofMinutes(10)).isEmpty());
         assertEquals(0, count("SELECT COUNT(*) FROM bc_round_recaps"));
+    }
+
+    @Test
+    public void aSettledRoundMovesBothRatingsWithinTheSeasonOnly() {
+        db.migrate();
+        var elo = new EloRepository(db, new EloFormula(1000, 32));
+        var season = Season.of(LocalDate.of(2026, 9, 18));
+        var winner = UUID.randomUUID();
+        var loser = UUID.randomUUID();
+        var match = elo.settle(winner, "Winner", loser, "Loser", season);
+        assertEquals(16, match.delta());
+        assertEquals(1016, elo.get(winner, season).rating());
+        assertEquals(984, elo.byName("Loser", season).orElseThrow().rating());
+        assertEquals(1, elo.get(loser, season).losses());
+        assertEquals("Winner", elo.top(season, 10).getFirst().name());
+        assertEquals(1000, elo.get(winner, Season.of(LocalDate.of(2026, 10, 1))).rating());
     }
 }
