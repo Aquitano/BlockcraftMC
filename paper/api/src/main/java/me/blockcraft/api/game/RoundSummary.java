@@ -114,6 +114,7 @@ public final class RoundSummary {
         participants.forEach(player -> score(player).xp += api.xp().award(player, XpReward.PARTICIPATION));
         var names = String.join(", ", winners.values());
         store(names);
+        api.achievements().afterRound(api.server().group(), participants);
         var rule = messages.get("summary.rule");
         var headline = messages.get("summary.game", Placeholder.component("game", game));
         var winnerLine = winners.isEmpty()

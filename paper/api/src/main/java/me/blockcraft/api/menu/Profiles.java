@@ -1,6 +1,7 @@
 package me.blockcraft.api.menu;
 
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.achievement.Achievement;
 import me.blockcraft.api.coins.CoinsRepository;
 import me.blockcraft.api.game.Stats;
 import me.blockcraft.api.game.StatsRepository;
@@ -23,7 +24,7 @@ public final class Profiles {
     record GameStats(String key, Stats stats) {
     }
 
-    record Snapshot(int coins, List<GameStats> games) {
+    record Snapshot(int coins, List<GameStats> games, int achievements) {
     }
 
     private final Plugin plugin;
@@ -43,7 +44,9 @@ public final class Profiles {
     /** {@code cosmetics} is the cosmetics menu of whatever server the player is on, where there is one. */
     public void open(Player player, Optional<Consumer<Player>> cosmetics) {
         var uuid = player.getUniqueId();
-        BlockcraftApi.get().playerTasks().latest(player, () -> new Snapshot(coins.get(uuid), statsOf(uuid)),
+        var api = BlockcraftApi.get();
+        api.playerTasks().latest(player,
+                () -> new Snapshot(coins.get(uuid), statsOf(uuid), api.unlocks().owned(uuid, Achievement.ITEM_PREFIX).size()),
                 snapshot -> new ProfileMenu(this, player, snapshot, cosmetics).open(player));
     }
 

@@ -27,6 +27,7 @@ public enum Sounds {
     WIN("ui.toast.challenge_complete", 1.0f, 1.0f),
     LOSE("block.note_block.bass", 0.5f, 0.8f),
     LEVEL_UP("entity.player.levelup", 1.0f, 1.0f),
+    ACHIEVEMENT("ui.toast.challenge_complete", 0.8f, 1.3f),
     JOIN("block.note_block.bell", 0.6f, 1.6f),
     QUICKSG_JOIN("item.crossbow.loading_end", 0.5f, 1.1f),
     RUSH_JOIN("block.amethyst_block.chime", 0.5f, 1.2f),

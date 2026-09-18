@@ -1,5 +1,7 @@
 package me.blockcraft.api;
 
+import me.blockcraft.api.achievement.Achievement;
+import me.blockcraft.api.achievement.Achievements;
 import me.blockcraft.api.coins.CoinsRepository;
 import me.blockcraft.api.cosmetic.Effects;
 import me.blockcraft.api.game.Streaks;
@@ -27,6 +29,7 @@ import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -57,11 +60,12 @@ public final class BlockcraftApi {
     private final MapBundle map;
     private final BuildMode buildMode;
     private final TagResolver tags;
+    private final Achievements achievements;
 
     BlockcraftApi(Plugin plugin, Database database, PlayerSettings settings, ResourcePacks resourcePack,
                   Map<String, StatsRepository> profileGames, Messages messages, ServerRepository servers,
                   ServerIdentity server, ServerPresence presence, RealNames realNames, NickRanks nickRanks, Xp xp,
-                  Streaks streaks, MapBundle map, BuildMode buildMode, TagResolver tags) {
+                  Streaks streaks, MapBundle map, BuildMode buildMode, TagResolver tags, List<Achievement> achievements) {
         this.operations = new NetworkOperations(plugin, messages);
         this.playerTasks = new PlayerTasks(plugin, messages);
         this.database = database;
@@ -84,6 +88,7 @@ public final class BlockcraftApi {
         this.map = map;
         this.buildMode = buildMode;
         this.tags = tags;
+        this.achievements = new Achievements(plugin, achievements, profileGames, unlocks, xp, messages);
     }
 
     public static BlockcraftApi get() {
@@ -206,5 +211,10 @@ public final class BlockcraftApi {
     /** The LuckPerms group whose rank the player's nick shows, empty while they wear none. */
     public Optional<String> nickRank(Player player) {
         return nickRanks.of(player);
+    }
+
+    /** The achievement catalog; games hand it their round, level-ups reach it by event. */
+    public Achievements achievements() {
+        return achievements;
     }
 }

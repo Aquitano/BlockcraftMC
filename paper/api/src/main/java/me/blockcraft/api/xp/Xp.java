@@ -74,6 +74,7 @@ public final class Xp implements Listener {
             if (after > before) {
                 player.sendMessage(messages.get("xp.level-up", Formatter.number("level", after)));
                 Sounds.LEVEL_UP.play(player);
+                plugin.getServer().getPluginManager().callEvent(new LevelUpEvent(player, after));
             }
         });
     }

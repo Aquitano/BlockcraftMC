@@ -164,6 +164,8 @@ profile:
   cosmetics-lore: "<bullet><muted>Effekte, Gadgets und Tags"
   hub: "<arrow><accent>Zur Lobby"
   hub-lore: "<bullet><muted>Zurück in die Lobby"
+  achievements: "<arrow><primary>Erfolge"
+  achievements-lore: "<bullet><muted><unlocked><dark>/<muted><total> freigeschaltet"
   games:
     quicksg: "<arrow><primary>QuickSG"
     emeraldrush: "<arrow><primary>EmeraldRush"
@@ -192,3 +194,92 @@ operation:
   pending: "<prefix><muted>Deine letzte Anfrage wird noch bearbeitet."
   unconfirmed: "<prefix><error>Die Anfrage konnte nicht bestätigt werden. Prüfe das Ergebnis, bevor du es erneut versuchst."
   failed: "<prefix><error>Die Daten konnten nicht geladen oder gespeichert werden. Bitte versuche es später erneut."
+
+# Achievements: the moment one is earned, the menu, and every catalog entry of config.yml by its game and name.
+achievements:
+  unlocked: "<prefix><muted>Erfolg freigeschaltet<dark>: <accent><name> <dark>(<success>+<xp> XP<dark>)"
+  title: "<accent>Erfolg freigeschaltet"
+  subtitle: "<white><name>"
+  menu-title: "<arrow><primary>Erfolge"
+  groups:
+    quicksg: "<arrow><primary>QuickSG"
+    emeraldrush: "<arrow><primary>EmeraldRush"
+    duell: "<arrow><primary>Duell"
+    network: "<arrow><primary>Netzwerk"
+  group-lore: "<bullet><muted><unlocked><dark>/<muted><total> freigeschaltet"
+  unlocked-name: "<arrow><success><name>"
+  unlocked-lore:
+    - "<bullet><muted><description>"
+    - "<bullet><success>Freigeschaltet"
+  locked-name: "<arrow><muted><name>"
+  locked-lore:
+    - "<bullet><muted><description>"
+    - "<bullet><muted>Fortschritt <dark>● <accent><current><dark>/<accent><threshold>"
+    - "<bullet><muted>Belohnung <dark>● <success>+<xp> XP"
+  quicksg:
+    first-win:
+      name: "Erster Sieg"
+      description: "Gewinne deine erste Runde QuickSG."
+    kills-10:
+      name: "Kämpfer"
+      description: "Erziele 10 Kills in QuickSG."
+    kills-100:
+      name: "Krieger"
+      description: "Erziele 100 Kills in QuickSG."
+    kills-1000:
+      name: "Legende"
+      description: "Erziele 1.000 Kills in QuickSG."
+    wins-10:
+      name: "Champion"
+      description: "Gewinne 10 Runden QuickSG."
+    wins-100:
+      name: "Meister"
+      description: "Gewinne 100 Runden QuickSG."
+  emeraldrush:
+    first-win:
+      name: "Erster Sieg"
+      description: "Gewinne deine erste Runde EmeraldRush."
+    kills-10:
+      name: "Kämpfer"
+      description: "Erziele 10 Kills in EmeraldRush."
+    kills-100:
+      name: "Krieger"
+      description: "Erziele 100 Kills in EmeraldRush."
+    kills-1000:
+      name: "Legende"
+      description: "Erziele 1.000 Kills in EmeraldRush."
+    wins-10:
+      name: "Champion"
+      description: "Gewinne 10 Runden EmeraldRush."
+    wins-100:
+      name: "Meister"
+      description: "Gewinne 100 Runden EmeraldRush."
+  duell:
+    first-win:
+      name: "Erster Sieg"
+      description: "Gewinne dein erstes Duell."
+    kills-10:
+      name: "Kämpfer"
+      description: "Erziele 10 Kills im Duell."
+    kills-100:
+      name: "Krieger"
+      description: "Erziele 100 Kills im Duell."
+    kills-1000:
+      name: "Legende"
+      description: "Erziele 1.000 Kills im Duell."
+    wins-10:
+      name: "Champion"
+      description: "Gewinne 10 Duelle."
+    wins-100:
+      name: "Meister"
+      description: "Gewinne 100 Duelle."
+  network:
+    level-5:
+      name: "Aufsteiger"
+      description: "Erreiche Netzwerk-Level 5."
+    level-10:
+      name: "Veteran"
+      description: "Erreiche Netzwerk-Level 10."
+    level-25:
+      name: "Elite"
+      description: "Erreiche Netzwerk-Level 25."

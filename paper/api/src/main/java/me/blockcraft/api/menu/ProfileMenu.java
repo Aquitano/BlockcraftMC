@@ -25,12 +25,16 @@ import java.util.function.Consumer;
 final class ProfileMenu extends Menu {
 
     private static final int HEAD_SLOT = 13;
+    private static final int ACHIEVEMENTS_SLOT = 15;
     private static final int GAMES_ROW = 18;
+
+    private final Consumer<Player> achievements;
 
     ProfileMenu(Profiles profiles, Player viewer, Profiles.Snapshot snapshot, Optional<Consumer<Player>> cosmetics) {
         super(3, BlockcraftApi.get().messages().get("profile.title"));
         var api = BlockcraftApi.get();
         var messages = api.messages();
+        achievements = player -> api.achievements().open(player, Optional.of(back -> profiles.open(back, cosmetics)));
         closeButton(ToolbarButton.LEFT);
         toolbar(ToolbarButton.MIDDLE, button(messages, MenuIcon.TOOL_SETTINGS, "profile.settings"),
                 player -> new SettingsDialog(player, Optional.of(back -> profiles.open(back, cosmetics))).open(player));
@@ -48,6 +52,12 @@ final class ProfileMenu extends Menu {
                         Formatter.number("missing", progress.needed() - progress.into()),
                         Formatter.number("coins", snapshot.coins())))
                 .build());
+        set(ACHIEVEMENTS_SLOT, Items.of(Material.NETHER_STAR).hideAttributes()
+                .name(messages.get("profile.achievements"))
+                .lore(messages.get("profile.achievements-lore",
+                        Formatter.number("unlocked", snapshot.achievements()),
+                        Formatter.number("total", api.achievements().catalog().size())))
+                .build());
         var games = snapshot.games();
         for (int index = 0; index < games.size(); index++) {
             var game = games.get(index);
@@ -60,6 +70,9 @@ final class ProfileMenu extends Menu {
 
     @Override
     protected void onClick(Player player, int slot, ItemStack clicked, InventoryClickEvent event) {
+        if (slot == ACHIEVEMENTS_SLOT) {
+            achievements.accept(player);
+        }
     }
 
     private static ItemStack button(Messages messages, MenuIcon icon, String key) {

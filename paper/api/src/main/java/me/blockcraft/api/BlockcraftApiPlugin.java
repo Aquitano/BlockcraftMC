@@ -1,6 +1,7 @@
 package me.blockcraft.api;
 
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
+import me.blockcraft.api.achievement.Achievements;
 import me.blockcraft.api.coins.CoinsJoinListener;
 import me.blockcraft.api.command.BuildCommand;
 import me.blockcraft.api.command.CoinsCommand;
@@ -79,13 +80,14 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         var api = new BlockcraftApi(this, database, settings, resourcePack,
                 profileGames(YamlFile.section(YamlFile.section(config, "profile"), "games")),
                 messages, servers, self, presence, realNames, nickRanks, xp, streaks(YamlFile.section(config, "streaks")), map,
-                buildMode, resources.tags());
+                buildMode, resources.tags(), Achievements.parse(YamlFile.section(config, "achievements")));
         BlockcraftApi.install(api);
         getLogger().info("Running map " + map.name() + map.template().map(template -> " from " + template.directory()).orElse(""));
         int startingCoins = number(config, "starting-coins", 10);
         getServer().getPluginManager().registerEvents(realNames, this);
         getServer().getPluginManager().registerEvents(nickRanks, this);
         getServer().getPluginManager().registerEvents(xp, this);
+        getServer().getPluginManager().registerEvents(api.achievements(), this);
         getServer().getPluginManager().registerEvents(new CoinsJoinListener(this, api.coins(), startingCoins), this);
         getServer().getPluginManager().registerEvents(settings, this);
         getServer().getPluginManager().registerEvents(resourcePack, this);

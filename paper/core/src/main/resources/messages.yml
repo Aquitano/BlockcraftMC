@@ -55,6 +55,8 @@ commands:
     description: "Zufälliger Name, Skin und Rang; /nick <rang> wählt den Rang"
   report:
     description: "Meldet einen Spieler"
+  erfolge:
+    description: "Zeigt deine Erfolge"
 fly:
   enabled: "<prefix><muted>Du kannst nun fliegen!"
   disabled: "<prefix><muted>Du kannst nun <white>nicht <muted>mehr fliegen!"

@@ -47,3 +47,34 @@ xp:
 # A kill streak is announced to the round when it reaches one of these lengths.
 streaks:
   announce: [3, 5, 10]
+
+# Achievements (Erfolge), grouped by the profile game they belong to or by network. Each one is earned once what
+# it counts reaches the threshold and pays its xp; counts is a column of the game's stats table (kills, deaths,
+# wins, losses, points) or level for the network level. Earned ones are bc_unlocks rows achievement.<game>.<name>,
+# and every entry is named under achievements.<game>.<name> in messages.yml.
+achievements:
+  quicksg:
+    first-win: {counts: wins, threshold: 1, xp: 25}
+    kills-10: {counts: kills, threshold: 10, xp: 25}
+    kills-100: {counts: kills, threshold: 100, xp: 100}
+    kills-1000: {counts: kills, threshold: 1000, xp: 500}
+    wins-10: {counts: wins, threshold: 10, xp: 100}
+    wins-100: {counts: wins, threshold: 100, xp: 500}
+  emeraldrush:
+    first-win: {counts: wins, threshold: 1, xp: 25}
+    kills-10: {counts: kills, threshold: 10, xp: 25}
+    kills-100: {counts: kills, threshold: 100, xp: 100}
+    kills-1000: {counts: kills, threshold: 1000, xp: 500}
+    wins-10: {counts: wins, threshold: 10, xp: 100}
+    wins-100: {counts: wins, threshold: 100, xp: 500}
+  duell:
+    first-win: {counts: wins, threshold: 1, xp: 25}
+    kills-10: {counts: kills, threshold: 10, xp: 25}
+    kills-100: {counts: kills, threshold: 100, xp: 100}
+    kills-1000: {counts: kills, threshold: 1000, xp: 500}
+    wins-10: {counts: wins, threshold: 10, xp: 100}
+    wins-100: {counts: wins, threshold: 100, xp: 500}
+  network:
+    level-5: {counts: level, threshold: 5, xp: 50}
+    level-10: {counts: level, threshold: 10, xp: 100}
+    level-25: {counts: level, threshold: 25, xp: 250}
