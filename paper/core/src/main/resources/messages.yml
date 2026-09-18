@@ -57,6 +57,8 @@ commands:
     description: "Meldet einen Spieler"
   erfolge:
     description: "Zeigt deine Erfolge"
+  elo:
+    description: "Zeigt dein Elo-Rating der Saison; /elo top die Top 10"
 fly:
   enabled: "<prefix><muted>Du kannst nun fliegen!"
   disabled: "<prefix><muted>Du kannst nun <white>nicht <muted>mehr fliegen!"
@@ -230,3 +232,15 @@ report:
   details: "<primary>Details (optional)"
   send: "<success>Melden"
   cancel: "<error>Abbrechen"
+
+# Ranked 1vs1; <group> is the skill group's name from BlockcraftAPI's elo.groups, <season> the key like 2026-3.
+elo:
+  self: "<prefix><muted>Saison <accent><season><dark>: <muted>Du bist <group> <muted>mit <accent><rating> <muted>Elo <dark>(<success><wins> <muted>Siege, <error><losses> <muted>Niederlagen<dark>)"
+  other: "<prefix><muted>Saison <accent><season><dark>: <accent><player> <muted>ist <group> <muted>mit <accent><rating> <muted>Elo <dark>(<success><wins> <muted>Siege, <error><losses> <muted>Niederlagen<dark>)"
+  unknown: "<prefix><error><player> <muted>hat in dieser Saison noch kein Duell gespielt."
+  top:
+    separator: "<muted><strikethrough>---------------------------------"
+    title: "<arrow><primary>Top 10 <muted>der Saison <accent><season>"
+    empty: "<muted>Noch niemand hat in dieser Saison ein Duell gespielt."
+    first: "<accent><bold>#1 <reset><primary><name><muted> ( <white><rating><muted> ) <group>"
+    entry: "<reset>#<rank> <primary><name> <muted>( <white><rating><muted> ) <group>"

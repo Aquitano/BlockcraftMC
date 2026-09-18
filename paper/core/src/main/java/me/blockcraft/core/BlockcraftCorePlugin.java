@@ -9,6 +9,7 @@ import me.blockcraft.common.moderation.ModerationRepositories;
 import me.blockcraft.core.command.AchievementsCommand;
 import me.blockcraft.core.command.ClearCommand;
 import me.blockcraft.core.command.ConnectCommand;
+import me.blockcraft.core.command.EloCommand;
 import me.blockcraft.core.command.EnchantCommand;
 import me.blockcraft.core.command.FreezeCommand;
 import me.blockcraft.core.command.FlyCommand;
@@ -120,6 +121,7 @@ public final class BlockcraftCorePlugin extends JavaPlugin {
             commands.register(NickCommand.create(nicks, messages));
             commands.register(ReportCommand.create(this, stringList(YamlFile.section(config, "report"), "reasons"), messages));
             commands.register(AchievementsCommand.create());
+            commands.register(EloCommand.create(this, api.elo(), messages));
         });
     }
 
