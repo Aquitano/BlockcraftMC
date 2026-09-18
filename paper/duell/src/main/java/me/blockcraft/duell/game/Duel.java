@@ -50,6 +50,7 @@ public final class Duel {
     private final StatsRepository stats;
     private final GameScoreboard scoreboard;
     private final GameItems items;
+    private final DuelRatings ratings;
     private final Random random = new Random();
 
     private GamePhase phase = GamePhase.LOBBY;
@@ -71,7 +72,7 @@ public final class Duel {
     private TimerBar roundBar;
 
     public Duel(Plugin plugin, DuellConfig config, Messages messages, Spawns spawns, StatsRepository stats,
-                GameScoreboard scoreboard, GameItems items) {
+                GameScoreboard scoreboard, GameItems items, DuelRatings ratings) {
         this.plugin = plugin;
         this.config = config;
         this.messages = messages;
@@ -79,6 +80,7 @@ public final class Duel {
         this.stats = stats;
         this.scoreboard = scoreboard;
         this.items = items;
+        this.ratings = ratings;
         this.arena = new Arena(messages, Sounds.DUELL_JOIN);
         this.lobbyCountdown = new LobbyCountdown(plugin, arena, config.countdowns().lobby(), MAX_PARTICIPANTS, participants::size, this::startRound);
         this.summary = new RoundSummary(plugin, messages,
@@ -147,6 +149,7 @@ public final class Duel {
             summary.join(player);
             arena.welcome(player, participants.size(), MAX_PARTICIPANTS);
         }
+        ratings.load(player, this::refreshScoreboards);
         refreshScoreboards();
         startLobbyCountdownIfReady();
     }
@@ -163,15 +166,16 @@ public final class Duel {
     }
 
     public void quit(Player player) {
-        if (participants.remove(player.getUniqueId())) {
+        boolean left = participants.remove(player.getUniqueId());
+        if (left) {
             arena.farewell(player, participants.size(), MAX_PARTICIPANTS);
         }
         checkpoints.remove(player.getUniqueId());
         hideRoundBar(player);
         switch (phase) {
             case INGAME -> {
-                if (participants.size() <= 1) {
-                    participants().forEach(this::rewardWinner);
+                if (left && participants.size() <= 1) {
+                    participants().forEach(winner -> rewardWinner(winner, player));
                     Bukkit.broadcast(messages.get("round.ended"));
                     startRestart();
                 }
@@ -189,6 +193,7 @@ public final class Duel {
             case ENDING -> {
             }
         }
+        ratings.forget(player);
     }
 
     /** Returns false if a mode was already voted. */
@@ -273,7 +278,8 @@ public final class Duel {
                 ? messages.get("scoreboard.map-random")
                 : Component.text(mapName);
         participants().forEach(participant ->
-                scoreboard.show(participant, modeLine, mapLine, opponentsOf(participant).map(Player::getName).toList(),
+                scoreboard.show(participant, modeLine, ratings.placeholders(participant), mapLine,
+                        opponentsOf(participant).map(Player::getName).toList(),
                         mode == DuelMode.VS && phase != GamePhase.LOBBY ? OptionalInt.of(summary.kills(participant)) : OptionalInt.empty()));
     }
 
@@ -390,6 +396,14 @@ public final class Duel {
     private void rewardWinner(Player winner) {
         summary.awardWin(winner);
         record(winner, Stat.WINS);
+        opponentsOf(winner).findFirst().ifPresent(loser -> ratings.settle(winner, loser, this::refreshScoreboards));
+    }
+
+    /** A quitter has already left the participants, so the round names them as the loser itself. */
+    private void rewardWinner(Player winner, Player quitter) {
+        summary.awardWin(winner);
+        record(winner, Stat.WINS);
+        ratings.settle(winner, quitter, this::refreshScoreboards);
     }
 
     private void hideRoundBar() {

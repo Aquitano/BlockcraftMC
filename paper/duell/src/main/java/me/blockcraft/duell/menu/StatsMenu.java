@@ -1,13 +1,13 @@
 package me.blockcraft.duell.menu;
 
 import me.blockcraft.api.game.Stat;
-import me.blockcraft.api.game.Stats;
 import me.blockcraft.api.game.TopList;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.menu.Menu;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.duell.game.GameItems;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
@@ -25,7 +25,7 @@ public final class StatsMenu extends Menu {
     private final int globalSlot;
 
     public StatsMenu(Messages messages, GameItems items, TopList topList, String globalHead,
-                     Player viewer, Stats viewerStats, Optional<Player> opponent, Stats opponentStats) {
+                     Player viewer, TagResolver viewerStats, Optional<Player> opponent, TagResolver opponentStats) {
         super(1, messages.get("menu.stats.title"));
         this.topList = topList;
         set(SLOT_SELF, head(messages, viewer, viewerStats));
@@ -34,10 +34,11 @@ public final class StatsMenu extends Menu {
         set(globalSlot, items.head(globalHead, "menu.stats.global", "menu.stats.global-lore"));
     }
 
-    private static ItemStack head(Messages messages, Player player, Stats stats) {
+    /** {@code stats} carries the game stats and the rating of the season, as the lore names them. */
+    private static ItemStack head(Messages messages, Player player, TagResolver stats) {
         return Items.head(player.getUniqueId(), player.getName())
                 .name(messages.get("menu.stats.player", Placeholder.unparsed("player", player.getName())))
-                .lore(messages.getLines("menu.stats.player-lore", stats.placeholders()))
+                .lore(messages.getLines("menu.stats.player-lore", stats))
                 .build();
     }
 

@@ -12,6 +12,7 @@ import me.blockcraft.duell.command.SetSpawnCommand;
 import me.blockcraft.duell.config.DuellConfig;
 import me.blockcraft.duell.config.Spawns;
 import me.blockcraft.duell.game.Duel;
+import me.blockcraft.duell.game.DuelRatings;
 import me.blockcraft.duell.game.GameItems;
 import me.blockcraft.duell.game.GameScoreboard;
 import me.blockcraft.duell.listener.ConnectionListener;
@@ -42,10 +43,11 @@ public final class DuellPlugin extends JavaPlugin {
         stats.createTable();
 
         var items = new GameItems(messages);
-        duel = new Duel(this, config, messages, spawns, stats, new GameScoreboard(messages), items);
+        duel = new Duel(this, config, messages, spawns, stats, new GameScoreboard(messages), items,
+                new DuelRatings(this, messages, api.elo()));
         api.presence().maxPlayers(Duel.MAX_PARTICIPANTS);
         var topList = new TopList(this, stats, messages);
-        var statsMenus = new StatsMenus(messages, duel, stats, items, topList, config.globalStatsHead());
+        var statsMenus = new StatsMenus(messages, duel, stats, api.elo(), items, topList, config.globalStatsHead());
         var lootChests = new LootChests(config.loot());
 
         List.of(

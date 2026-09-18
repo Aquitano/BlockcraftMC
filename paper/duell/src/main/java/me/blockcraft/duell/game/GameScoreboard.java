@@ -6,6 +6,7 @@ import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
@@ -23,12 +24,13 @@ public final class GameScoreboard {
     }
 
     /** The headings carry icons, which only the viewer's client knows how to draw. */
-    public void show(Player player, Component mode, Component map, List<String> opponents, OptionalInt kills) {
+    public void show(Player player, Component mode, TagResolver rating, Component map, List<String> opponents, OptionalInt kills) {
         var icons = BlockcraftApi.get().resourcePack().icons(player);
         var lines = new ArrayList<Component>();
         lines.add(Component.empty());
         lines.add(messages.get("scoreboard.mode", icons));
         lines.add(messages.get("scoreboard.mode-value", Placeholder.component("mode", mode)));
+        lines.add(messages.get("scoreboard.group-value", rating));
         lines.add(Component.empty());
         lines.add(messages.get("scoreboard.map", icons));
         lines.add(messages.get("scoreboard.map-value", Placeholder.component("map", map)));

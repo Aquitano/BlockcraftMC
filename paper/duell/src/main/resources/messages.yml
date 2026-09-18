@@ -27,6 +27,15 @@ round:
   ended: "<prefix><muted>Die Runde wurde beendet."
   draw: "<prefix><muted>Die Zeit ist um, das Duell endet <accent>unentschieden<muted>."
 
+# The ranked result of a round; <group> is the skill group's name from BlockcraftAPI's elo.groups.
+elo:
+  changed: "<prefix><muted>Elo <accent><delta> <dark>● <muted>Du stehst jetzt bei <accent><rating> <dark>(<group><dark>)<muted>."
+  promoted: "<prefix><success>Aufstieg! <muted>Du spielst ab jetzt in <group><muted>."
+  demoted: "<prefix><error>Abstieg. <muted>Du spielst ab jetzt in <group><muted>."
+
+tab:
+  name: "<dark>[<group><dark>] <name>"
+
 
 timer:
   round: "<duell>Rundenzeit <dark>● <white><time>"
@@ -87,6 +96,8 @@ menu:
       - "<arrow><primary>Siege<dark>: <muted><wins>"
       - "<arrow><primary>Tode<dark>: <muted><deaths>"
       - "<arrow><primary>K/D<dark>: <muted><kdr>"
+      - "<arrow><primary>Liga<dark>: <group>"
+      - "<arrow><primary>Elo<dark>: <muted><rating>"
     global: "<arrow><aqua>Globale Siege"
     global-lore: "<bullet><muted>Klicke zum Anzeigen"
 
@@ -97,6 +108,7 @@ scoreboard:
   mode: "<muted><icon:mode> MODUS"
   mode-value: "<arrow><white><mode>"
   mode-none: "Noch offen"
+  group-value: "<arrow><group> <dark>(<white><rating><dark>)"
   map: "<muted><icon:map> MAP"
   map-value: "<arrow><white><map>"
   map-random: "Wird ausgewählt"
