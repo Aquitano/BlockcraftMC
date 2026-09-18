@@ -95,3 +95,12 @@ elo:
     gold: 1250
     diamant: 1450
     meister: 1700
+
+# What others see of a nicked player: /stats, the stats menus, the Duell ladder and the chat level show numbers
+# drawn from these ranges instead of the account's own, the same ones for as long as the nick is worn.
+nick-stats:
+  rounds: {min: 20, max: 200}
+  win-rate: {min: 0.05, max: 0.3}
+  kdr: {min: 0.6, max: 1.6}
+  rating: {min: 900, max: 1250}
+  level: {min: 3, max: 12}

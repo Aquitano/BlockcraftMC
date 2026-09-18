@@ -24,6 +24,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -128,8 +129,16 @@ public final class RushMenus {
 
     public void openStats(Player player) {
         List<Player> online = List.copyOf(Bukkit.getOnlinePlayers());
-        BlockcraftApi.get().playerTasks().latest(player, () -> online.stream().map(other -> new StatsMenu.Entry(other, stats.get(other.getUniqueId()))).toList(),
-                entries -> new StatsMenu(this, messages, entries).open(player));
+        var api = BlockcraftApi.get();
+        api.playerTasks().latest(player, () -> online.stream().map(other -> stats.get(other.getUniqueId())).toList(), loaded -> {
+            var entries = new ArrayList<StatsMenu.Entry>();
+            for (int index = 0; index < online.size(); index++) {
+                var other = online.get(index);
+                var real = loaded.get(index);
+                entries.add(new StatsMenu.Entry(other, other.equals(player) ? real : api.nickStats().stats(other, real)));
+            }
+            new StatsMenu(this, messages, entries).open(player);
+        });
     }
 
     void openGlobalStats(Player player) {

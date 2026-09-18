@@ -165,6 +165,11 @@ public final class Duel {
         }
     }
 
+    public void nickChanged(Player player) {
+        ratings.refreshTab(player);
+        refreshScoreboards();
+    }
+
     public void quit(Player player) {
         boolean left = participants.remove(player.getUniqueId());
         if (left) {

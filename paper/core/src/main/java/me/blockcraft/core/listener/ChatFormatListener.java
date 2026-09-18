@@ -40,7 +40,7 @@ public final class ChatFormatListener implements Listener {
                 .map(chosen -> api.messages().get(chosen.messageKey()).append(Component.space()))
                 .orElse(Component.empty());
         var rank = Ranks.prefix(source).orElse(Component.empty());
-        int level = api.xp().level(source);
+        int level = api.nickStats().level(source, api.xp().level(source));
         var levelBadge = messages.get("chat.level", Formatter.number("level", level));
         // The proxy resolves the nick, so the hover and the /msg it suggests both go by the name others see.
         String shown = nicks.of(source).map(Nicks.Active::nick).orElseGet(source::getName);

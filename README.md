@@ -195,7 +195,9 @@ a game are labelled as enchantment levels and do not change network XP.
 ## Nick and vanish across the network
 
 Both states are set on a Paper server (`/nick`, `/v`, `/staff`) and stored in `bc_nicks` and `bc_vanished` so every
-server re-applies them on join. A player with `blockcraft.nick` who turns `auto-nick` on is nicked by the server
+server re-applies them on join. Others see a nicked player with made-up stats, rating and level drawn from the nick's name
+(`nick-stats` in BlockcraftAPI's `config.yml`): `/stats`, the stats menus, the Duell ladder and the chat level all show
+those, while the account's own rows keep counting underneath. A player with `blockcraft.nick` who turns `auto-nick` on is nicked by the server
 itself when they arrive for a round, and arrives in the lobby under their own name again unless they also turned
 `keep-nick` on; which servers count as a lobby is `lobby-group` in BlockcraftAPI's `config.yml`. The proxy keeps its
 own view: it reads both tables when a player logs in and the Paper servers report every change over the

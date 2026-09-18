@@ -6,6 +6,7 @@ import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
 import io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSelectorArgumentResolver;
+import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.text.Component;
@@ -38,7 +39,8 @@ public final class StatsCommand {
     }
 
     private static void send(Plugin plugin, StatsRepository stats, Messages messages, Player viewer, Player target) {
-        Tasks.async(plugin, () -> stats.get(target.getUniqueId()), result -> {
+        Tasks.async(plugin, () -> stats.get(target.getUniqueId()), loaded -> {
+            var result = viewer.equals(target) ? loaded : BlockcraftApi.get().nickStats().stats(target, loaded);
             viewer.sendMessage(Component.empty());
             if (!viewer.equals(target)) {
                 viewer.sendMessage(messages.get("stats.header", Placeholder.unparsed("player", target.getName())));

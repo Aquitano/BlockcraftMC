@@ -1,6 +1,7 @@
 package me.blockcraft.duell.listener;
 
 import io.papermc.paper.event.player.AsyncChatEvent;
+import me.blockcraft.api.nick.NickChangeEvent;
 import me.blockcraft.api.spectate.SpectateRequestEvent;
 import me.blockcraft.duell.game.Duel;
 import org.bukkit.event.EventHandler;
@@ -33,6 +34,12 @@ public final class ConnectionListener implements Listener {
     @EventHandler
     public void onSpectateRequest(SpectateRequestEvent event) {
         duel.follow(event.getPlayer(), event.target());
+    }
+
+    /** The tab list and the sidebar show the group a nick wears, not the account's. */
+    @EventHandler
+    public void onNickChange(NickChangeEvent event) {
+        duel.nickChanged(event.getPlayer());
     }
 
     /** The proxy's word on the pack arrives after the join, and the sidebar's icons depend on it. */

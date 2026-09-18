@@ -46,8 +46,14 @@ public final class StatsMenus {
                         opponentId.map(stats::get).orElse(Stats.EMPTY), opponentId.map(elo::rating).orElse(elo.fresh())),
                 loaded -> new StatsMenu(messages, items, topList, globalHead,
                         viewer, placeholders(loaded.viewer(), loaded.viewerRating()),
-                        opponent, placeholders(loaded.opponent(), loaded.opponentRating()))
+                        opponent, opponent.map(other -> shown(other, loaded)).orElseGet(TagResolver::empty))
                         .open(viewer));
+    }
+
+    /** The opponent's numbers as everyone sees them, which for a nicked opponent are the nick's. */
+    private TagResolver shown(Player opponent, Loaded loaded) {
+        var nickStats = BlockcraftApi.get().nickStats();
+        return placeholders(nickStats.stats(opponent, loaded.opponent()), nickStats.rating(opponent, loaded.opponentRating()));
     }
 
     private TagResolver placeholders(Stats stats, EloRating rating) {

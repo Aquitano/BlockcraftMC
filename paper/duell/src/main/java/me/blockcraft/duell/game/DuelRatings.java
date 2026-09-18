@@ -47,9 +47,16 @@ public final class DuelRatings {
         ratings.remove(player.getUniqueId());
     }
 
-    /** {@code <rating>} and {@code <group>} of the player; the start rating until the join-time load finished. */
+    /** {@code <rating>} and {@code <group>} as the sidebar shows them: a nick wears its own, the start rating until the load finished. */
     public TagResolver placeholders(Player player) {
-        return elo.placeholders(ratings.getOrDefault(player.getUniqueId(), elo.fresh()));
+        return elo.placeholders(shown(player));
+    }
+
+    /** A nick change swaps the numbers the tab list shows, and the name they hang on. */
+    public void refreshTab(Player player) {
+        if (ratings.containsKey(player.getUniqueId())) {
+            showInTab(player);
+        }
     }
 
     public void settle(Player winner, Player loser, Runnable then) {
@@ -82,9 +89,18 @@ public final class DuelRatings {
         (promoted ? Sounds.LEVEL_UP : Sounds.LOSE).play(player);
     }
 
-    /** The tab list team carries the rank; the group goes into the name the team wraps. */
     private void remember(Player player, EloRating rating) {
         ratings.put(player.getUniqueId(), rating);
-        player.playerListName(messages.get("tab.name", elo.placeholders(rating), Placeholder.unparsed("name", player.getName())));
+        showInTab(player);
+    }
+
+    /** The tab list team carries the rank; the group goes into the name the team wraps. */
+    private void showInTab(Player player) {
+        player.playerListName(messages.get("tab.name", elo.placeholders(shown(player)), Placeholder.unparsed("name", player.getName())));
+    }
+
+    private EloRating shown(Player player) {
+        var real = ratings.getOrDefault(player.getUniqueId(), elo.fresh());
+        return BlockcraftApi.get().nickStats().rating(player, real);
     }
 }

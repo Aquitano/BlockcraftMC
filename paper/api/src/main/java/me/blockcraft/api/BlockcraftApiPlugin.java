@@ -16,6 +16,7 @@ import me.blockcraft.api.game.Streaks;
 import me.blockcraft.api.menu.MenuListener;
 import me.blockcraft.api.network.ServerHeartbeat;
 import me.blockcraft.api.network.ServerPresence;
+import me.blockcraft.api.nick.NickStats;
 import me.blockcraft.api.pack.ResourcePacks;
 import me.blockcraft.api.player.RealNames;
 import me.blockcraft.api.rank.NickRanks;
@@ -89,7 +90,8 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
                 profileGames(YamlFile.section(YamlFile.section(config, "profile"), "games")),
                 messages, servers, self, text(config, "lobby-group", "lobby"), presence, realNames, nickRanks, xp,
                 streaks(YamlFile.section(config, "streaks")), map, buildMode, resources.tags(),
-                Achievements.parse(YamlFile.section(config, "achievements")), elo);
+                Achievements.parse(YamlFile.section(config, "achievements")), elo,
+                new NickStats(nickRanks, NickStats.Ranges.from(YamlFile.section(config, "nick-stats"))));
         BlockcraftApi.install(api);
         getLogger().info("Running map " + map.name() + map.template().map(template -> " from " + template.directory()).orElse(""));
         int startingCoins = number(config, "starting-coins", 10);

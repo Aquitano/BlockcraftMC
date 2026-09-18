@@ -55,9 +55,15 @@ public final class StatsMenus {
             online.forEach(uuid -> loaded.put(uuid, stats.get(uuid)));
             return loaded;
         }, loaded -> {
-            if (viewer.isOnline()) {
-                new StatsMenu(this, loaded).open(viewer);
+            if (!viewer.isOnline()) {
+                return;
             }
+            var nickStats = BlockcraftApi.get().nickStats();
+            loaded.replaceAll((uuid, real) -> {
+                var other = Bukkit.getPlayer(uuid);
+                return other == null || other.equals(viewer) ? real : nickStats.stats(other, real);
+            });
+            new StatsMenu(this, loaded).open(viewer);
         });
     }
 
