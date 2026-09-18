@@ -146,6 +146,17 @@ public final class Game {
         lobbyCountdown.start();
     }
 
+    /** The player came to watch a friend, and the round has already put them among the spectators. */
+    public void follow(Player spectator, UUID friend) {
+        if (!isSpectator(spectator)) {
+            return;
+        }
+        var target = Bukkit.getPlayer(friend);
+        if (target != null) {
+            arena.follow(spectator, target);
+        }
+    }
+
     public void quit(Player player) {
         boolean wasAlive = alive.remove(player.getUniqueId());
         boolean wasSpectator = spectators.remove(player.getUniqueId());

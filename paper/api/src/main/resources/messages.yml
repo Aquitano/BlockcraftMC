@@ -83,6 +83,7 @@ arena:
   left: "<prefix><white><player> <muted>hat das Spiel verlassen! <dark>[<accent><online><dark>/<accent><max><dark>]"
   starting-in: "<prefix><muted>Die Runde startet in <accent><seconds> <muted>Sekunden."
   restart-in: "<prefix><muted>Der Server startet in <error><seconds> <muted>Sekunden neu!"
+  spectating: "<prefix><muted>Du schaust <accent><player> <muted>beim Spielen zu."
 
 # The shared countdown: the last seconds as a title, then the start.
 countdown:

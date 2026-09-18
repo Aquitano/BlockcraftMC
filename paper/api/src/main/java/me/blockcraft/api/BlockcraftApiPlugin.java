@@ -19,6 +19,7 @@ import me.blockcraft.api.rank.NickRanks;
 import me.blockcraft.api.player.VanillaProgress;
 import me.blockcraft.api.rank.TabTeams;
 import me.blockcraft.api.settings.PlayerSettings;
+import me.blockcraft.api.spectate.SpectateRequests;
 import me.blockcraft.api.world.BuildMode;
 import me.blockcraft.api.world.MapBundle;
 import me.blockcraft.api.world.WorldTemplate;
@@ -89,6 +90,7 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(settings, this);
         getServer().getPluginManager().registerEvents(resourcePack, this);
         getServer().getMessenger().registerIncomingPluginChannel(this, ProxyChannel.NAME, resourcePack);
+        getServer().getMessenger().registerIncomingPluginChannel(this, ProxyChannel.NAME, new SpectateRequests());
         getServer().getPluginManager().registerEvents(new MenuListener(), this);
         getServer().getPluginManager().registerEvents(new ServerMenu(this), this);
         getServer().getPluginManager().registerEvents(new TabTeams(LuckPermsProvider.get(), messages), this);

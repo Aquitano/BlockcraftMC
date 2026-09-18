@@ -151,6 +151,17 @@ public final class Duel {
         startLobbyCountdownIfReady();
     }
 
+    /** The player came to watch a friend, and only participants are playing, so everyone else is a spectator. */
+    public void follow(Player spectator, UUID friend) {
+        if (isParticipant(spectator)) {
+            return;
+        }
+        var target = Bukkit.getPlayer(friend);
+        if (target != null) {
+            arena.follow(spectator, target);
+        }
+    }
+
     public void quit(Player player) {
         if (participants.remove(player.getUniqueId())) {
             arena.farewell(player, participants.size(), MAX_PARTICIPANTS);

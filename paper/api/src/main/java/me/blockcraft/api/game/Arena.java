@@ -12,8 +12,8 @@ import org.bukkit.entity.Player;
 
 /**
  * What every game says at the moments they share, from BlockcraftAPI's {@code arena} texts but under the game's
- * own prefix: the arrival card, who joined and left the round, and the countdowns that
- * {@link LobbyCountdown} and {@link ServerRestart} run.
+ * own prefix: the arrival card, who joined and left the round, who a spectator came to watch, and the countdowns
+ * that {@link LobbyCountdown} and {@link ServerRestart} run.
  */
 public final class Arena {
 
@@ -38,6 +38,12 @@ public final class Arena {
         arrive(player);
         player.sendMessage(introduction);
         broadcast("arena.joined", player, online, max);
+    }
+
+    /** A spectator who came for a friend: put next to them and told whose round they are watching. */
+    public void follow(Player spectator, Player friend) {
+        spectator.teleport(friend);
+        spectator.sendMessage(messages.get("arena.spectating", Placeholder.unparsed("player", friend.getName())));
     }
 
     public void farewell(Player player, int online, int max) {
