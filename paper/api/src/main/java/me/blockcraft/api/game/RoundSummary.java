@@ -109,6 +109,9 @@ public final class RoundSummary {
     }
 
     public void show() {
+        var api = BlockcraftApi.get();
+        var participants = Bukkit.getOnlinePlayers().stream().filter(player -> scores.containsKey(player.getUniqueId())).toList();
+        participants.forEach(player -> score(player).xp += api.xp().award(player, XpReward.PARTICIPATION));
         var names = String.join(", ", winners.values());
         store(names);
         var rule = messages.get("summary.rule");
