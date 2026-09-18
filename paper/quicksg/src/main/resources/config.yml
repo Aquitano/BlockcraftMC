@@ -53,3 +53,7 @@ chest:
     - {item: MUSHROOM_STEW, weight: 5}
     - {item: CAKE, weight: 2}
     - {item: COMPASS, weight: 1}
+
+# 1.8 PvP: no attack cooldown, everything else stays vanilla.
+pvp:
+  legacy-combat: true

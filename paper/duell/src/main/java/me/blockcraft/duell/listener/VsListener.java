@@ -1,6 +1,7 @@
 package me.blockcraft.duell.listener;
 
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.duell.config.DuellConfig;
 import me.blockcraft.duell.game.Duel;
 import me.blockcraft.duell.game.DuelMode;
 import me.blockcraft.duell.game.GameItems;
@@ -18,12 +19,14 @@ public final class VsListener implements Listener {
 
     private final Plugin plugin;
     private final Duel duel;
+    private final DuellConfig config;
     private final Messages messages;
     private final GameItems items;
 
-    public VsListener(Plugin plugin, Duel duel, Messages messages, GameItems items) {
+    public VsListener(Plugin plugin, Duel duel, DuellConfig config, Messages messages, GameItems items) {
         this.plugin = plugin;
         this.duel = duel;
+        this.config = config;
         this.messages = messages;
         this.items = items;
     }
@@ -49,10 +52,12 @@ public final class VsListener implements Listener {
         duel.mapSpawn(2).ifPresent(spawn -> duel.opponentsOf(player).forEach(other -> {
             other.teleport(spawn);
             items.giveVsKit(other);
+            config.combat().apply(other);
         }));
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             if (player.isOnline()) {
                 items.giveVsKit(player);
+                config.combat().apply(player);
             }
         }, KIT_DELAY_TICKS);
     }

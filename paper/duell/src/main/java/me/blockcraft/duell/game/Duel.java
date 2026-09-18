@@ -285,10 +285,12 @@ public final class Duel {
                 case VS -> {
                     player.showTitle(Title.title(messages.get("title.vs-round", Formatter.number("round", round)), messages.get("title.start")));
                     items.giveVsKit(player);
+                    config.combat().apply(player);
                 }
                 case SG -> {
                     player.showTitle(Title.title(messages.get("title.sg"), messages.get("title.start")));
                     player.getInventory().clear();
+                    config.combat().apply(player);
                 }
                 case SUPERJUMP -> {
                     player.showTitle(Title.title(messages.get("title.superjump"), messages.get("title.map", Placeholder.unparsed("map", mapName))));

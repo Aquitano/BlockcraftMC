@@ -245,6 +245,7 @@ public final class Game {
             player.getWorld().spawnParticle(Particle.LARGE_SMOKE, player.getLocation(), 5);
             maxHealth(player, INGAME_MAX_HEALTH);
             kit(player).apply(player);
+            config.combat().apply(player);
         }
         refreshScoreboards();
         applyWorldBorder(LocationKey.GAME_CENTER, config.worldBorder().ingameRadius());

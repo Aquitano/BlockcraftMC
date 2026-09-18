@@ -235,6 +235,7 @@ public final class Game {
             player.getInventory().addItem(pickaxe.clone());
             spawns.teleport(player, SpawnPoint.SEARCH);
             player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 120, 1));
+            config.combat().apply(player);
         }
         scoreboard.refreshAll();
         startPhase("timer.search", config.searchSeconds(), remaining -> {
@@ -371,6 +372,7 @@ public final class Game {
         }
         spawns.get(spawns.randomDeathmatch()).ifPresent(event::setRespawnLocation);
         Tasks.sync(plugin, () -> {
+            config.combat().apply(player);
             player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 120, 1));
             player.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 120, 5));
             player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 120, 5));

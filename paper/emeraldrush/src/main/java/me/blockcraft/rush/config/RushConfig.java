@@ -1,5 +1,6 @@
 package me.blockcraft.rush.config;
 
+import me.blockcraft.api.game.CombatStyle;
 import org.bukkit.configuration.file.FileConfiguration;
 
 public record RushConfig(
@@ -15,7 +16,8 @@ public record RushConfig(
         int idleRestartMinutes,
         int lives,
         int killCoins,
-        int winCoins
+        int winCoins,
+        CombatStyle combat
 ) {
 
     public static RushConfig from(FileConfiguration config) {
@@ -32,6 +34,7 @@ public record RushConfig(
                 config.getInt("idle-restart-minutes", 50),
                 config.getInt("lives", 3),
                 config.getInt("rewards.kill", 5),
-                config.getInt("rewards.win", 15));
+                config.getInt("rewards.win", 15),
+                CombatStyle.from(config));
     }
 }

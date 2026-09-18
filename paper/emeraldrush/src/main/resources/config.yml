@@ -15,3 +15,7 @@ lives: 3
 rewards:
   kill: 5
   win: 15
+
+# 1.8 PvP: no attack cooldown, everything else stays vanilla.
+pvp:
+  legacy-combat: true

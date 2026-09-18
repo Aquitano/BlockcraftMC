@@ -21,6 +21,7 @@ public final class PlayerReset {
         player.setFireTicks(0);
         player.setFallDistance(0.0f);
         resetHealth(player);
+        CombatStyle.MODERN.apply(player);
         player.setFoodLevel(20);
         player.setSaturation(5.0f);
         player.setGameMode(gameMode);
@@ -33,6 +34,7 @@ public final class PlayerReset {
         player.setExp(0.0f);
         player.setLevel(0);
         resetHealth(player);
+        CombatStyle.MODERN.apply(player);
         player.setFoodLevel(20);
         player.getInventory().setArmorContents(null);
         player.setGameMode(GameMode.SPECTATOR);

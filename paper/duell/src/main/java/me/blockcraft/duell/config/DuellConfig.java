@@ -1,6 +1,7 @@
 package me.blockcraft.duell.config;
 
 import me.blockcraft.duell.game.DuelMode;
+import me.blockcraft.api.game.CombatStyle;
 import me.blockcraft.api.game.LootTable;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -16,7 +17,8 @@ public record DuellConfig(
         int winCoins,
         int vsKillsToEnd,
         Map<DuelMode, List<String>> maps,
-        LootTable loot
+        LootTable loot,
+        CombatStyle combat
 ) {
 
     public record Countdowns(int lobby, int freeze, int round, int restart) {
@@ -44,7 +46,8 @@ public record DuellConfig(
                 config.getInt("rewards.win", 10),
                 config.getInt("vs.kills-to-end", 3),
                 maps,
-                LootTable.fromYaml(chest, 1, 6));
+                LootTable.fromYaml(chest, 1, 6),
+                CombatStyle.from(config));
     }
 
     private static ConfigurationSection section(FileConfiguration config, String key) {

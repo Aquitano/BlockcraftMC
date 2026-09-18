@@ -1,5 +1,6 @@
 package me.blockcraft.quicksg.config;
 
+import me.blockcraft.api.game.CombatStyle;
 import me.blockcraft.api.game.LootTable;
 
 import org.bukkit.configuration.ConfigurationSection;
@@ -14,7 +15,8 @@ public record QuickSGConfig(
         WorldBorderSettings worldBorder,
         Rewards rewards,
         int kitPrice,
-        LootTable loot
+        LootTable loot,
+        CombatStyle combat
 ) {
 
     public record Countdowns(int lobby, int freeze, int protection, int game, int trackerAfter, int restart,
@@ -51,7 +53,8 @@ public record QuickSGConfig(
                         border.getDouble("ingame-radius", 60)),
                 new Rewards(rewards.getInt("kill", 5), rewards.getInt("death", 2), rewards.getInt("win", 15)),
                 config.getInt("kit-price", 200),
-                LootTable.fromYaml(chest, 1, 7));
+                LootTable.fromYaml(chest, 1, 7),
+                CombatStyle.from(config));
     }
 
     private static ConfigurationSection section(FileConfiguration config, String key) {
