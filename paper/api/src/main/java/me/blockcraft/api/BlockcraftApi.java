@@ -53,6 +53,7 @@ public final class BlockcraftApi {
     private final Messages messages;
     private final ServerRepository servers;
     private final ServerIdentity server;
+    private final String lobbyGroup;
     private final ServerPresence presence;
     private final RealNames realNames;
     private final NickRanks nickRanks;
@@ -64,8 +65,9 @@ public final class BlockcraftApi {
 
     BlockcraftApi(Plugin plugin, Database database, PlayerSettings settings, ResourcePacks resourcePack,
                   Map<String, StatsRepository> profileGames, Messages messages, ServerRepository servers,
-                  ServerIdentity server, ServerPresence presence, RealNames realNames, NickRanks nickRanks, Xp xp,
-                  Streaks streaks, MapBundle map, BuildMode buildMode, TagResolver tags, List<Achievement> achievements) {
+                  ServerIdentity server, String lobbyGroup, ServerPresence presence, RealNames realNames,
+                  NickRanks nickRanks, Xp xp, Streaks streaks, MapBundle map, BuildMode buildMode, TagResolver tags,
+                  List<Achievement> achievements) {
         this.operations = new NetworkOperations(plugin, messages);
         this.playerTasks = new PlayerTasks(plugin, messages);
         this.database = database;
@@ -81,6 +83,7 @@ public final class BlockcraftApi {
         this.messages = messages;
         this.servers = servers;
         this.server = server;
+        this.lobbyGroup = lobbyGroup;
         this.presence = presence;
         this.realNames = realNames;
         this.nickRanks = nickRanks;
@@ -176,6 +179,11 @@ public final class BlockcraftApi {
     /** This server as the proxy knows it. */
     public ServerIdentity server() {
         return server;
+    }
+
+    /** Whether this server is one of the lobbies players fall back to, rather than a game. */
+    public boolean isLobby() {
+        return server.group().equals(lobbyGroup);
     }
 
     /** What this server tells the proxy about itself. */

@@ -48,6 +48,10 @@ xp:
 streaks:
   announce: [3, 5, 10]
 
+# The group of the lobbies players fall back to between rounds; every other group counts as a game. Mirrors
+# lobby-group in BlockcraftSystem's config.yml on the proxy.
+lobby-group: lobby
+
 # Achievements (Erfolge), grouped by the profile game they belong to or by network. Each one is earned once what
 # it counts reaches the threshold and pays its xp; counts is a column of the game's stats table (kills, deaths,
 # wins, losses, points) or level for the network level. Earned ones are bc_unlocks rows achievement.<game>.<name>,

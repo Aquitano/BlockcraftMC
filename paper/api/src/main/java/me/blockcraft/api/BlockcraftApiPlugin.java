@@ -79,8 +79,9 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         var resourcePack = new ResourcePacks(messages);
         var api = new BlockcraftApi(this, database, settings, resourcePack,
                 profileGames(YamlFile.section(YamlFile.section(config, "profile"), "games")),
-                messages, servers, self, presence, realNames, nickRanks, xp, streaks(YamlFile.section(config, "streaks")), map,
-                buildMode, resources.tags(), Achievements.parse(YamlFile.section(config, "achievements")));
+                messages, servers, self, text(config, "lobby-group", "lobby"), presence, realNames, nickRanks, xp,
+                streaks(YamlFile.section(config, "streaks")), map, buildMode, resources.tags(),
+                Achievements.parse(YamlFile.section(config, "achievements")));
         BlockcraftApi.install(api);
         getLogger().info("Running map " + map.name() + map.template().map(template -> " from " + template.directory()).orElse(""));
         int startingCoins = number(config, "starting-coins", 10);
@@ -134,6 +135,10 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
 
     private static int number(Map<String, Object> section, String key, int fallback) {
         return section.get(key) instanceof Number value ? value.intValue() : fallback;
+    }
+
+    private static String text(Map<String, Object> section, String key, String fallback) {
+        return section.get(key) instanceof String value ? value : fallback;
     }
 
     @Override
