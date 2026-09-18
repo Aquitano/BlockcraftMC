@@ -82,3 +82,16 @@ achievements:
     level-5: {counts: level, threshold: 5, xp: 50}
     level-10: {counts: level, threshold: 10, xp: 100}
     level-25: {counts: level, threshold: 25, xp: 250}
+
+# Ranked 1vs1 (bc_elo). A season is three months from January, April, July or October and starts everyone at
+# start-rating; a win moves k-factor points times how unexpected it was. groups is the skill ladder, each with the
+# rating it begins at; their names and colours are elo.groups.<key> in messages.yml.
+elo:
+  start-rating: 1000
+  k-factor: 32
+  groups:
+    bronze: 0
+    silber: 1100
+    gold: 1250
+    diamant: 1450
+    meister: 1700

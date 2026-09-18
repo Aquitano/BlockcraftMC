@@ -285,3 +285,12 @@ achievements:
     level-25:
       name: "Elite"
       description: "Erreiche Netzwerk-Level 25."
+
+# The ranked ladder's skill groups, keyed like elo.groups in config.yml; like the chat tags, each wears its own colour.
+elo:
+  groups:
+    bronze: "<red>Bronze"
+    silber: "<white>Silber"
+    gold: "<gold>Gold"
+    diamant: "<aqua>Diamant"
+    meister: "<light_purple>Meister"

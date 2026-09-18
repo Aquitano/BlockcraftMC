@@ -4,6 +4,7 @@ import me.blockcraft.api.achievement.Achievement;
 import me.blockcraft.api.achievement.Achievements;
 import me.blockcraft.api.coins.CoinsRepository;
 import me.blockcraft.api.cosmetic.Effects;
+import me.blockcraft.api.elo.Elo;
 import me.blockcraft.api.game.Streaks;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.menu.Profiles;
@@ -62,12 +63,13 @@ public final class BlockcraftApi {
     private final BuildMode buildMode;
     private final TagResolver tags;
     private final Achievements achievements;
+    private final Elo elo;
 
     BlockcraftApi(Plugin plugin, Database database, PlayerSettings settings, ResourcePacks resourcePack,
                   Map<String, StatsRepository> profileGames, Messages messages, ServerRepository servers,
                   ServerIdentity server, String lobbyGroup, ServerPresence presence, RealNames realNames,
                   NickRanks nickRanks, Xp xp, Streaks streaks, MapBundle map, BuildMode buildMode, TagResolver tags,
-                  List<Achievement> achievements) {
+                  List<Achievement> achievements, Elo elo) {
         this.operations = new NetworkOperations(plugin, messages);
         this.playerTasks = new PlayerTasks(plugin, messages);
         this.database = database;
@@ -92,6 +94,7 @@ public final class BlockcraftApi {
         this.buildMode = buildMode;
         this.tags = tags;
         this.achievements = new Achievements(plugin, achievements, profileGames, unlocks, xp, messages);
+        this.elo = elo;
     }
 
     public static BlockcraftApi get() {
@@ -224,5 +227,10 @@ public final class BlockcraftApi {
     /** The achievement catalog; games hand it their round, level-ups reach it by event. */
     public Achievements achievements() {
         return achievements;
+    }
+
+    /** Ranked 1vs1 ratings of the running season and the skill groups they fall into. */
+    public Elo elo() {
+        return elo;
     }
 }

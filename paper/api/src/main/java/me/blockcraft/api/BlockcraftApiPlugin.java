@@ -9,6 +9,8 @@ import me.blockcraft.api.command.CommandRegistry;
 import me.blockcraft.api.command.LevelCommand;
 import me.blockcraft.api.command.MapCommand;
 import me.blockcraft.api.dialog.ServerMenu;
+import me.blockcraft.api.elo.Elo;
+import me.blockcraft.api.elo.SkillGroup;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.game.Streaks;
 import me.blockcraft.api.menu.MenuListener;
@@ -30,6 +32,8 @@ import me.blockcraft.api.xp.XpReward;
 import me.blockcraft.common.config.YamlFile;
 import me.blockcraft.common.db.Database;
 import me.blockcraft.common.db.DatabaseConfig;
+import me.blockcraft.common.elo.EloFormula;
+import me.blockcraft.common.elo.EloRepository;
 import me.blockcraft.common.network.ProxyChannel;
 import me.blockcraft.common.network.ServerRepository;
 import me.blockcraft.common.settings.PlayerSettingRepository;
@@ -77,11 +81,15 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         getServer().getWorlds().forEach(world -> world.setGameRule(GameRules.LOCATOR_BAR, false));
         var buildMode = new BuildMode();
         var resourcePack = new ResourcePacks(messages);
+        var eloSection = YamlFile.section(config, "elo");
+        var elo = new Elo(new EloRepository(database,
+                new EloFormula(number(eloSection, "start-rating", 1000), number(eloSection, "k-factor", 32))),
+                SkillGroup.ladder(YamlFile.section(eloSection, "groups")), messages);
         var api = new BlockcraftApi(this, database, settings, resourcePack,
                 profileGames(YamlFile.section(YamlFile.section(config, "profile"), "games")),
                 messages, servers, self, text(config, "lobby-group", "lobby"), presence, realNames, nickRanks, xp,
                 streaks(YamlFile.section(config, "streaks")), map, buildMode, resources.tags(),
-                Achievements.parse(YamlFile.section(config, "achievements")));
+                Achievements.parse(YamlFile.section(config, "achievements")), elo);
         BlockcraftApi.install(api);
         getLogger().info("Running map " + map.name() + map.template().map(template -> " from " + template.directory()).orElse(""));
         int startingCoins = number(config, "starting-coins", 10);
