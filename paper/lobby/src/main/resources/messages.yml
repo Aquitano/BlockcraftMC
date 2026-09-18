@@ -313,8 +313,19 @@ setholo:
   usage: "<prefix><error>Korrekte Verwendung <accent>/setholo \\<Typ>"
   set: "<prefix><muted>Hologramm gesetzt."
   shop-set: "<prefix><muted>Shop-NPC gesetzt."
-# One block per entry of holograms in config.yml.
+# One block per entry of holograms in config.yml; every leaderboard hologram draws its lines from leaderboard.
 holo:
+  leaderboard:
+    title: "<dark>● <accent><bold>TOP 10</bold> <dark>● <game> <dark>· <muted><stat> <dark>●"
+    first: "<accent><bold>#1 <reset><primary><name> <muted>( <white><value><muted> )"
+    entry: "<muted>#<rank> <primary><name> <muted>( <white><value><muted> )"
+    empty: "<muted>Noch keine Einträge"
+    stat:
+      kills: "Kills"
+      deaths: "Tode"
+      wins: "Siege"
+      loses: "Niederlagen"
+      points: "Punkte"
   quicksg:
     - "<dark>● <quicksg><bold>QUICKSG</bold> <dark>●"
     - "<dark>- <muted>Kit wählen, Beute sammeln, überleben. <dark>-"

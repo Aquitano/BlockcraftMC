@@ -39,6 +39,7 @@ import me.blockcraft.lobby.menu.Menus;
 import me.blockcraft.lobby.menu.ShopMenu;
 import me.blockcraft.lobby.network.GroupCounts;
 import me.blockcraft.lobby.npc.Holograms;
+import me.blockcraft.lobby.npc.Leaderboards;
 import me.blockcraft.lobby.npc.ShopNpc;
 import me.blockcraft.lobby.recap.RoundRecapListener;
 import me.blockcraft.lobby.rank.PremiumRank;
@@ -49,6 +50,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.time.Duration;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 public final class LobbyPlugin extends JavaPlugin {
 
@@ -58,6 +60,7 @@ public final class LobbyPlugin extends JavaPlugin {
     private GroupCounts groupCounts;
     private Gadgets gadgets;
     private LobbyHud hud;
+    private Holograms holograms;
 
     @Override
     public void onEnable() {
@@ -81,8 +84,9 @@ public final class LobbyPlugin extends JavaPlugin {
                 api.servers(), api.server(), new PremiumRank(this, luckPerms), pets, trails, gadgets, groupCounts);
         shopNpc = new ShopNpc(this, locations, messages);
         shopNpc.start(config.shopNpcRespawnSeconds());
-        var holograms = new Holograms(messages);
-        getServer().getWorlds().forEach(holograms::refresh);
+        var leaderboards = new Leaderboards(this, api.database(), messages, api.messages(), config.leaderboards());
+        holograms = new Holograms(this, messages, leaderboards);
+        holograms.start(config.leaderboardRefreshSeconds() * 20L);
 
         var messenger = getServer().getMessenger();
         messenger.registerIncomingPluginChannel(this, WorldDownloaderListener.INIT_CHANNEL, new WorldDownloaderListener(messages));
@@ -108,7 +112,9 @@ public final class LobbyPlugin extends JavaPlugin {
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             var commands = new CommandRegistry(event.registrar(), messages);
             commands.register(SetSpawnCommand.create(locations, messages));
-            commands.register(SetHoloCommand.create(messages, config.holograms(), holograms, locations, shopNpc));
+            commands.register(SetHoloCommand.create(messages,
+                    Stream.concat(config.holograms().stream(), leaderboards.names().stream()).toList(),
+                    holograms, locations, shopNpc));
             commands.register(ClearChatCommand.create(messages));
         });
     }
@@ -117,6 +123,9 @@ public final class LobbyPlugin extends JavaPlugin {
     public void onDisable() {
         if (hud != null) {
             hud.stop();
+        }
+        if (holograms != null) {
+            holograms.stop();
         }
         if (shopNpc != null) {
             shopNpc.stop();

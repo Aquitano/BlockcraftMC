@@ -18,6 +18,35 @@ holograms:
   - quicksg
   - emeraldrush
   - duell
+# /setholo accepts these names too. Each one is a hologram that shows the top ten of stat (kills, deaths, wins,
+# loses, points) in a game's stats table, under the game's name and icon, redrawn every refresh-seconds.
+leaderboards:
+  refresh-seconds: 300
+  holograms:
+    quicksg-kills:
+      game: quicksg
+      table: qsg_stats
+      stat: kills
+    quicksg-wins:
+      game: quicksg
+      table: qsg_stats
+      stat: wins
+    emeraldrush-kills:
+      game: emeraldrush
+      table: em_stats
+      stat: kills
+    emeraldrush-wins:
+      game: emeraldrush
+      table: em_stats
+      stat: wins
+    duell-kills:
+      game: duell
+      table: duell_stats
+      stat: kills
+    duell-wins:
+      game: duell
+      table: duell_stats
+      stat: wins
 fireworks:
   - { x: -65, y: 22.5, z: 56 }
   - { x: -69, y: 22.5, z: 56 }

@@ -1,11 +1,13 @@
 package me.blockcraft.lobby.config;
 
+import me.blockcraft.api.game.Stat;
 import me.blockcraft.common.config.YamlFile;
 import org.bukkit.util.Vector;
 
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -26,6 +28,8 @@ public record LobbyConfig(
         long hiderCooldownMillis,
         Map<LobbyLocation, String> navigatorGroups,
         List<String> holograms,
+        Map<String, Leaderboard> leaderboards,
+        int leaderboardRefreshSeconds,
         int serverListStaleSeconds,
         int killEffectPrice,
         int winEffectPrice,
@@ -44,6 +48,11 @@ public record LobbyConfig(
         var navigator = YamlFile.section(root, "navigator");
         var effects = YamlFile.section(root, "effects");
         var gadgets = YamlFile.section(root, "gadgets");
+        var leaderboards = YamlFile.section(root, "leaderboards");
+        Map<String, Leaderboard> boards = YamlFile.section(leaderboards, "holograms").entrySet().stream()
+                .flatMap(entry -> leaderboard(entry.getValue())
+                        .map(board -> Map.entry(String.valueOf(entry.getKey()), board)).stream())
+                .collect(Collectors.toUnmodifiableMap(Map.Entry::getKey, Map.Entry::getValue));
         Map<LobbyLocation, String> navigatorGroups = YamlFile.section(navigator, "groups").entrySet().stream()
                 .flatMap(entry -> LobbyLocation.byKey(String.valueOf(entry.getKey())).stream()
                         .map(location -> Map.entry(location, String.valueOf(entry.getValue()))))
@@ -74,6 +83,8 @@ public record LobbyConfig(
                 (long) number(hider, "cooldown-millis", 3000),
                 navigatorGroups,
                 strings(root, "holograms"),
+                boards,
+                Math.max(1, (int) number(leaderboards, "refresh-seconds", 300)),
                 (int) number(navigator, "stale-seconds", 20),
                 (int) number(effects, "kill-price", 500),
                 (int) number(effects, "win-price", 500),
@@ -81,6 +92,15 @@ public record LobbyConfig(
                 Math.max(1, (int) number(YamlFile.section(root, "hud"), "refresh-seconds", 5)),
                 Duration.ofMinutes((long) number(YamlFile.section(root, "recap"), "max-age-minutes", 10))
         );
+    }
+
+    private static Optional<Leaderboard> leaderboard(Object value) {
+        if (!(value instanceof Map<?, ?> board)
+                || !(board.get("game") instanceof String game)
+                || !(board.get("table") instanceof String table)) {
+            return Optional.empty();
+        }
+        return Stat.parse(String.valueOf(board.get("stat"))).map(stat -> new Leaderboard(game, table, stat));
     }
 
     private static double number(Map<?, ?> section, String key, double fallback) {
