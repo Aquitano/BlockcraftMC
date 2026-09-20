@@ -27,6 +27,7 @@ public final class Profiles {
     record Snapshot(int coins, List<GameStats> games, int achievements) {
     }
 
+    private Optional<Consumer<Player>> recentRound = Optional.empty();
     private final Plugin plugin;
     private final CoinsRepository coins;
     private final Map<String, StatsRepository> games;
@@ -35,6 +36,18 @@ public final class Profiles {
         this.plugin = plugin;
         this.coins = coins;
         this.games = games;
+    }
+
+    public void recentRound(Consumer<Player> open) {
+        recentRound = Optional.of(open);
+    }
+
+    public void clearRecentRound() {
+        recentRound = Optional.empty();
+    }
+
+    Optional<Consumer<Player>> recentRound() {
+        return recentRound;
     }
 
     Plugin plugin() {

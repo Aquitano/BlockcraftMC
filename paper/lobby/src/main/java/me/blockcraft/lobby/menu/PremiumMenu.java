@@ -2,7 +2,6 @@ package me.blockcraft.lobby.menu;
 
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.menu.Menu;
-import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.lobby.config.LobbyLocation;
 import org.bukkit.Color;
 import org.bukkit.Material;
@@ -35,10 +34,7 @@ final class PremiumMenu extends Menu {
     protected void onClick(Player player, int slot, ItemStack clicked, InventoryClickEvent event) {
         switch (slot) {
             case TRAILS_SLOT -> menus.openTrails(player);
-            case AREA_SLOT -> menus.locations().get(LobbyLocation.PREMIUM).ifPresent(location -> {
-                player.teleport(location);
-                Sounds.TELEPORT.play(player);
-            });
+            case AREA_SLOT -> menus.warp(player, LobbyLocation.PREMIUM);
             case PETS_SLOT -> menus.openPets(player);
             default -> close(player);
         }

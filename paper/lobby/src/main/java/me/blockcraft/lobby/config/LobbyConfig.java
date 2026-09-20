@@ -34,8 +34,12 @@ public record LobbyConfig(
         int killEffectPrice,
         int winEffectPrice,
         int gadgetCooldownSeconds,
+        int trailIntervalTicks,
+        int trailViewDistance,
+        int cosmeticPreviewTicks,
         int hudRefreshSeconds,
-        Duration recapMaxAge
+        Duration recapMaxAge,
+        long friendsTimeoutTicks
 ) {
 
     public static LobbyConfig fromYaml(Map<String, Object> root) {
@@ -80,7 +84,7 @@ public record LobbyConfig(
                 number(jumpPad, "y", 0.18),
                 number(jumpPad, "multiply", 5.0),
                 number(jumpPad, "max-length", 6.0),
-                (long) number(hider, "cooldown-millis", 3000),
+                Math.clamp((long) number(hider, "cooldown-millis", 3000), 0L, Integer.MAX_VALUE * 50L),
                 navigatorGroups,
                 strings(root, "holograms"),
                 boards,
@@ -88,9 +92,13 @@ public record LobbyConfig(
                 (int) number(navigator, "stale-seconds", 20),
                 (int) number(effects, "kill-price", 500),
                 (int) number(effects, "win-price", 500),
-                (int) number(gadgets, "cooldown-seconds", 5),
+                Math.clamp((int) number(gadgets, "cooldown-seconds", 5), 0, Integer.MAX_VALUE / 20),
+                Math.max(1, (int) number(effects, "trail-interval-ticks", 2)),
+                Math.clamp((int) number(effects, "trail-view-distance", 32), 1, 128),
+                Math.clamp((int) number(effects, "preview-ticks", 60), 20, 200),
                 Math.max(1, (int) number(YamlFile.section(root, "hud"), "refresh-seconds", 5)),
-                Duration.ofMinutes((long) number(YamlFile.section(root, "recap"), "max-age-minutes", 10))
+                Duration.ofMinutes((long) number(YamlFile.section(root, "recap"), "max-age-minutes", 10)),
+                Math.max(20L, (long) number(YamlFile.section(root, "friends"), "timeout-ticks", 200))
         );
     }
 

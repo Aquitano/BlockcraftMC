@@ -2,7 +2,9 @@ package me.blockcraft.api.dialog;
 
 import io.papermc.paper.dialog.Dialog;
 import io.papermc.paper.dialog.DialogResponseView;
+import io.papermc.paper.registry.data.dialog.ActionButton;
 import io.papermc.paper.registry.data.dialog.DialogBase;
+import io.papermc.paper.registry.data.dialog.body.DialogBody;
 import io.papermc.paper.registry.data.dialog.input.DialogInput;
 import io.papermc.paper.registry.data.dialog.type.DialogType;
 import me.blockcraft.api.BlockcraftApi;
@@ -11,8 +13,10 @@ import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.common.settings.PlayerSetting;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 /**
@@ -35,18 +39,44 @@ public final class SettingsDialog {
                         .initial(api.settings().enabled(viewer, setting))
                         .build())
                 .toList();
+        var buttons = new ArrayList<ActionButton>();
+        buttons.add(Dialogs.button(messages.get("settings.save"), (player, view) -> {
+            save(player, view, toggles);
+            back.ifPresent(previous -> previous.accept(player));
+        }));
+        buttons.add(Dialogs.button(messages.get("settings.pack-details"), player -> showPack(player, back)));
         dialog = Dialog.create(factory -> factory.empty()
                 .base(DialogBase.builder(messages.get("settings.title")).inputs(inputs).build())
-                .type(DialogType.multiAction(List.of(Dialogs.button(messages.get("settings.save"), (player, view) -> {
-                            save(player, view, toggles);
-                            back.ifPresent(previous -> previous.accept(player));
-                        })))
+                .type(DialogType.multiAction(buttons)
                         .exitAction(back.map(previous -> Dialogs.button(messages.get("menu.back"), previous))
                                 .orElseGet(() -> Dialogs.button(messages.get("menu.close"))))
                         .build()));
     }
 
     public void open(Player player) {
+        Dialogs.show(player, dialog);
+    }
+
+    private static void showPack(Player player, Optional<Consumer<Player>> back) {
+        var api = BlockcraftApi.get();
+        var messages = api.messages();
+        var status = api.resourcePack().status(player);
+        var actions = new ArrayList<ActionButton>();
+        switch (status) {
+            case FAILED, DECLINED, UNAVAILABLE -> actions.add(Dialogs.button(messages.get("settings.pack-retry"), retry -> {
+                api.resourcePack().retry(retry);
+                retry.sendMessage(messages.get("settings.pack-requested"));
+            }));
+            default -> { }
+        }
+        actions.add(Dialogs.button(messages.get("settings.pack-refresh"), refresh -> showPack(refresh, back)));
+        var dialog = Dialog.create(factory -> factory.empty()
+                .base(DialogBase.builder(messages.get("settings.pack-details"))
+                        .body(List.of(DialogBody.plainMessage(messages.get("settings.pack-status." + status.name().toLowerCase(java.util.Locale.ROOT)))))
+                        .build())
+                .type(DialogType.multiAction(actions)
+                        .exitAction(Dialogs.button(messages.get("menu.back"), previous -> new SettingsDialog(previous, back).open(previous)))
+                        .build()));
         Dialogs.show(player, dialog);
     }
 
@@ -57,16 +87,21 @@ public final class SettingsDialog {
 
     private static void save(Player player, DialogResponseView view, List<PlayerSetting> toggles) {
         var api = BlockcraftApi.get();
+        var saves = new ArrayList<CompletableFuture<Boolean>>();
         for (var setting : toggles) {
             Boolean chosen = view.getBoolean(inputKey(setting));
             if (chosen == null) {
                 continue;
             }
             if (chosen != api.settings().enabled(player, setting)) {
-                api.settings().set(player, setting, PlayerSetting.value(chosen));
+                saves.add(api.settings().set(player, setting, PlayerSetting.value(chosen)));
             }
         }
         Sounds.MENU_CLICK.play(player);
-        player.sendMessage(api.messages().get("settings.saved"));
+        CompletableFuture.allOf(saves.toArray(CompletableFuture[]::new)).thenRun(() -> {
+            if (player.isOnline() && saves.stream().allMatch(save -> save.getNow(false))) {
+                player.sendMessage(api.messages().get("settings.saved"));
+            }
+        });
     }
 }

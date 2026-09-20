@@ -5,6 +5,8 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.settings.PlayerSetting;
+import me.blockcraft.common.sound.FeedbackSound;
+import me.blockcraft.system.pack.NetworkPack;
 import me.blockcraft.system.PlayerChoices;
 import me.blockcraft.system.PlayerVisibility;
 import me.blockcraft.system.command.CommandSupport;
@@ -147,6 +149,9 @@ public final class PartyManager {
         invites.put(invitee.getUniqueId(), new Invite(inviter.getUniqueId(), Instant.now()));
         inviter.sendMessage(messages.get("party.invited", name(invitee)));
         invitee.sendMessage(messages.get("party.invite-received", name(inviter)));
+        if (choices.enabled(invitee, PlayerSetting.SOUNDS)) {
+            invitee.playSound(FeedbackSound.NOTIFY.sound(NetworkPack.applied(invitee)));
+        }
         invitee.sendMessage(messages.get("party.invite-accept", name(inviter))
                 .clickEvent(ClickEvent.runCommand("/party accept"))
                 .hoverEvent(HoverEvent.showText(messages.get("party.invite-accept-hover"))));

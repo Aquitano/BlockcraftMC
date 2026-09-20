@@ -86,7 +86,7 @@ public final class DuelRatings {
         }
         boolean promoted = to.minRating() > from.minRating();
         player.sendMessage(messages.get(promoted ? "elo.promoted" : "elo.demoted", placeholders));
-        (promoted ? Sounds.LEVEL_UP : Sounds.LOSE).play(player);
+        BlockcraftApi.get().notifications().rewardSound(player, promoted ? Sounds.LEVEL_UP : Sounds.LOSE);
     }
 
     private void remember(Player player, EloRating rating) {

@@ -13,7 +13,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerFishEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.persistence.PersistentDataType;
 
@@ -64,11 +63,9 @@ public final class GadgetListener implements Listener {
         switch (event.getState()) {
             case IN_GROUND, REEL_IN, CAUGHT_ENTITY -> {
                 event.setCancelled(true);
-                if (!gadgets.tryUse(player)) {
-                    return;
-                }
                 var pull = event.getHook().getLocation().toVector().subtract(player.getLocation().toVector());
-                if (pull.lengthSquared() < 1.0) {
+                event.getHook().remove();
+                if (pull.lengthSquared() < 1.0 || !gadgets.tryUse(player)) {
                     return;
                 }
                 player.setVelocity(pull.normalize().multiply(HOOK_PULL).setY(Math.max(pull.getY() / 4.0, HOOK_LIFT)));
@@ -93,11 +90,6 @@ public final class GadgetListener implements Listener {
             gadgets.paint(block);
             block.getWorld().playSound(block.getLocation(), Sound.ENTITY_SLIME_SQUISH, 1.0f, 1.2f);
         }
-    }
-
-    @EventHandler
-    public void onQuit(PlayerQuitEvent event) {
-        gadgets.forget(event.getPlayer());
     }
 
     private void tntJump(Player player) {

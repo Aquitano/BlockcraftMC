@@ -1,6 +1,7 @@
 package me.blockcraft.signs.listener;
 
 import me.blockcraft.api.proxy.ProxyMessaging;
+import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.signs.sign.StatusSigns;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -26,6 +27,7 @@ public final class SignClickListener implements Listener {
         }
         signs.find(event.getClickedBlock().getLocation()).ifPresent(sign -> {
             event.setCancelled(true);
+            (signs.status(sign).joinable() ? Sounds.MENU_CLICK : Sounds.MENU_DENY).play(event.getPlayer());
             ProxyMessaging.play(plugin, event.getPlayer(), sign.group());
         });
     }

@@ -1,6 +1,7 @@
 package me.blockcraft.quicksg.game;
 
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.menu.Menu;
 import me.blockcraft.api.config.Locations;
 import me.blockcraft.api.game.Arena;
 import me.blockcraft.api.game.GamePhase;
@@ -152,7 +153,7 @@ public final class Game {
             return;
         }
         var target = Bukkit.getPlayer(friend);
-        if (target != null) {
+        if (target != null && spectator.canSee(target)) {
             arena.follow(spectator, target);
         }
     }
@@ -235,7 +236,7 @@ public final class Game {
         switch (phase) {
             case LOBBY -> scoreboard.showLobby(player, alive.size(), kit(player));
             case INGAME -> scoreboard.showIngame(player, alive.size(), spectators.size());
-            case ENDING -> scoreboard.showEnding(player, alivePlayers().map(Player::getName).toList());
+            case ENDING -> scoreboard.showEnding(player, summary.winnerNames());
         }
     }
 
@@ -282,6 +283,10 @@ public final class Game {
             protection = false;
             protectionBar.hide();
             Bukkit.broadcast(messages.get("protection.over"));
+            alivePlayers().forEach(player -> {
+                Sounds.PVP_ENABLED.play(player);
+                BlockcraftApi.get().notifications().important(player, messages.get("protection.fight"));
+            });
         });
     }
 
@@ -311,7 +316,7 @@ public final class Game {
         Bukkit.broadcast(Component.empty());
         Bukkit.broadcast(messages.get("game.tracker", Formatter.number("minutes", config.countdowns().trackerAfter() / 60)));
         Bukkit.broadcast(Component.empty());
-        for (var player : Bukkit.getOnlinePlayers()) {
+        for (var player : alivePlayers().toList()) {
             player.getInventory().addItem(items.tracker());
             Sounds.NOTIFY.play(player);
         }
@@ -397,6 +402,10 @@ public final class Game {
 
     private void setPhase(GamePhase phase) {
         this.phase = phase;
+        Bukkit.getOnlinePlayers().forEach(player -> {
+            Menu.close(player);
+            player.closeDialog();
+        });
         BlockcraftApi.get().presence().state(phase.serverState());
     }
 }

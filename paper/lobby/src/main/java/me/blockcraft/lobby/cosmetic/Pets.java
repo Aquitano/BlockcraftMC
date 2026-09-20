@@ -22,17 +22,11 @@ public final class Pets {
         this.messages = messages;
     }
 
-    public boolean hasPet(Player owner) {
-        UUID petId = petByOwner.get(owner.getUniqueId());
-        if (petId == null) {
-            return false;
-        }
-        Entity pet = Bukkit.getEntity(petId);
-        if (pet == null || !pet.isValid()) {
-            petByOwner.remove(owner.getUniqueId());
-            return false;
-        }
-        return true;
+    public Optional<PetType> of(Player owner) {
+        return Optional.ofNullable(petByOwner.get(owner.getUniqueId()))
+                .map(Bukkit::getEntity)
+                .filter(Entity::isValid)
+                .flatMap(PetType::of);
     }
 
     public void spawn(Player owner, PetType type) {

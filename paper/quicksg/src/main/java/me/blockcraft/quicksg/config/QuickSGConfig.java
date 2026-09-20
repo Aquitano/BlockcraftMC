@@ -13,6 +13,7 @@ public record QuickSGConfig(
         String globalStatsHead,
         Countdowns countdowns,
         WorldBorderSettings worldBorder,
+        Tracker tracker,
         Rewards rewards,
         int kitPrice,
         LootTable loot,
@@ -24,6 +25,9 @@ public record QuickSGConfig(
     }
 
     public record WorldBorderSettings(boolean enabled, double lobbyRadius, double ingameRadius) {
+    }
+
+    public record Tracker(double rangeHorizontal, double rangeVertical, int cooldownTicks) {
     }
 
     public record Rewards(int kill, int death, int win) {
@@ -51,6 +55,8 @@ public record QuickSGConfig(
                         border.getBoolean("enabled", false),
                         border.getDouble("lobby-radius", 30),
                         border.getDouble("ingame-radius", 60)),
+                new Tracker(config.getDouble("tracker.range-horizontal", 100.0), config.getDouble("tracker.range-vertical", 25.0),
+                        Math.max(0, config.getInt("tracker.cooldown-ticks", 20))),
                 new Rewards(rewards.getInt("kill", 5), rewards.getInt("death", 2), rewards.getInt("win", 15)),
                 config.getInt("kit-price", 200),
                 LootTable.fromYaml(chest, 1, 7),

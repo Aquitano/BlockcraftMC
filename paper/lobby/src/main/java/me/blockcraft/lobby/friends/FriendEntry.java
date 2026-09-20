@@ -1,8 +1,0 @@
-package me.blockcraft.lobby.friends;
-
-/**
- * A friend as the proxy last described them; {@code server} is empty while they are offline and {@code watching}
- * says that a round is running there, so joining them means watching.
- */
-public record FriendEntry(String name, boolean online, String server, boolean watching) {
-}

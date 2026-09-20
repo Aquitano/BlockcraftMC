@@ -1,6 +1,8 @@
 package me.blockcraft.lobby.listener;
 
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.common.settings.PlayerSetting;
 import me.blockcraft.lobby.cosmetic.PetType;
 import me.blockcraft.lobby.cosmetic.Pets;
 import org.bukkit.Material;
@@ -28,7 +30,6 @@ public final class PetListener implements Listener {
     @EventHandler
     public void onUnleash(EntityUnleashEvent event) {
         Entity entity = event.getEntity();
-        entity.remove();
         pets.ownerOf(entity).ifPresent(pets::release);
     }
 
@@ -54,10 +55,9 @@ public final class PetListener implements Listener {
         }
         PetType.of(animal).ifPresent(type -> {
             Player player = event.getPlayer();
-            if (!animal.isLeashed()) {
-                animal.remove();
-            } else if (pets.isOwner(player, animal)) {
-                pets.release(player.getUniqueId());
+            if (pets.isOwner(player, animal)) {
+                event.setCancelled(true);
+                BlockcraftApi.get().settings().clear(player, PlayerSetting.PET);
                 player.sendMessage(messages.get("pets.removed." + type.key()));
             }
         });

@@ -1,12 +1,17 @@
 package me.blockcraft.api.menu;
 
+import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.settings.PlayerSettingChangedEvent;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
+import org.bukkit.event.player.PlayerResourcePackStatusEvent;
 import org.bukkit.inventory.ItemStack;
+
 
 public final class MenuListener implements Listener {
 
@@ -16,6 +21,9 @@ public final class MenuListener implements Listener {
             return;
         }
         event.setCancelled(true);
+        if (event.getClick() != ClickType.LEFT && event.getClick() != ClickType.RIGHT) {
+            return;
+        }
         ItemStack clicked = event.getCurrentItem();
         if (event.getClickedInventory() == menu.getInventory() && clicked != null && !clicked.isEmpty()) {
             menu.handleClick(player, event.getSlot(), clicked, event);
@@ -30,8 +38,27 @@ public final class MenuListener implements Listener {
     }
 
     @EventHandler
+    public void onSettingChanged(PlayerSettingChangedEvent event) {
+        var player = event.getPlayer();
+        if (player.getOpenInventory().getTopInventory().getHolder(false) instanceof Menu menu) {
+            menu.onSettingChanged(player, event.setting());
+        }
+    }
+
+    @EventHandler
+    public void onPack(PlayerResourcePackStatusEvent event) {
+        var player = event.getPlayer();
+        if (player.getOpenInventory().getTopInventory().getHolder(false) instanceof Menu menu) {
+            menu.restyle(player);
+        }
+    }
+
+    @EventHandler
     public void onClose(InventoryCloseEvent event) {
         if (event.getInventory().getHolder(false) instanceof Menu menu && event.getPlayer() instanceof Player player) {
+            if (event.getReason() == InventoryCloseEvent.Reason.PLAYER) {
+                BlockcraftApi.get().playerTasks().invalidate(player);
+            }
             menu.handleClose(player, event);
         }
     }

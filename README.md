@@ -184,13 +184,18 @@ change is announced once and at most one alert goes out per `alerts.min-interval
 
 Every kill and win in a game awards XP through BlockcraftAPI (`xp.rewards` in its `config.yml`), stored in `bc_xp`
 as one total per player. The level follows a fixed curve: each level costs `xp.level-step` more than the one before,
-so with the default of 100 level 2 is 100 XP, level 3 is 300 and level 10 is 4500. Awards show in the action bar,
-a level-up in chat with the level-up sound; `/level` shows the own progress, `/level <player>` needs
+so with the default of 100 level 2 is 100 XP, level 3 is 300 and level 10 is 4500. Awards arriving together show as
+one XP total in the action bar; level-ups report the highest reached level in chat. `/level` shows the own progress, `/level <player>` needs
 `blockcraft.level.others`, and chat prefixes every message with the level (`chat.level` in core's `messages.yml`).
 The lobby experience bar shows this network level and progress. Its boss bar labels coins separately and refreshes
 from the database every `hud.refresh-seconds`. Purchases and secret rewards report the new balance in chat.
 Game countdowns use boss bars, and Duell displays its kill tally in the sidebar. Levels bought or collected inside
 a game are labelled as enchantment levels and do not change network XP.
+
+`BlockcraftApi.notifications()` coordinates action bars, titles, and reward sounds. Direct feedback takes priority
+over routine status updates and XP notices. Round titles take priority over achievement titles; interrupted titles
+do not replay. The `notifications` section in BlockcraftAPI's config controls display times, XP batching, and sound
+spacing. Queued notices expire, and the shared scheduler stops when no notifications remain.
 
 ## Nick and vanish across the network
 
@@ -233,8 +238,9 @@ Every game says the shared moments the same way, from `arena` in BlockcraftAPI's
 with game and map, who joined and left the round with the player count, the lobby countdown and the restart
 countdown. A round's kills, deaths, coins and XP are counted in one place (`RoundSummary`), which announces kill
 streaks at the lengths `streaks.announce` in BlockcraftAPI's `config.yml` names, prints the recap in chat when the
-round ends and stores it in `bc_round_recaps`; the lobby opens that recap as a dialog once the player arrives,
-with a button back into the same game, and drops one older than `recap.max-age-minutes`. The `quicksg`,
+round ends and stores it in `bc_round_recaps`; the lobby opens that recap as a dialog after arrival if the player has not opened another screen. The profile
+keeps the recap accessible during that lobby session, with a button back into the same game. Recaps older than
+`recap.max-age-minutes` are discarded. The `quicksg`,
 `emeraldrush`, and `duell` palette tags give the games distinct colours across menus,
 signs and sidebars. Their arrival sounds respect the player's sound setting. Kit and perk menus distinguish
 selected, unlocked and purchasable items; coins buy permanent unlocks, while EmeraldRush emeralds buy round items.
@@ -277,7 +283,8 @@ a renamed account or a nicked staff member still resolves to who did what. The g
 
 Database work behind a menu goes through `PlayerTasks`: a read that builds a screen is dropped when the player moved
 on, opened another screen or disconnected before it finished; a write such as a purchase or a claim always reports
-its outcome. A failed query is logged and answered with one message. A purchase commits the unlock and the payment
+its outcome. Reads that take longer than a few ticks show a loading screen. A failed read keeps Back and Retry actions
+available. Failed writes report their outcome. A purchase commits the unlock and the payment
 together, so a database failure rolls back both.
 
 ## Tests
@@ -304,9 +311,9 @@ the client would list who is online, the `motd.sample` lines from its `messages.
 ## Player settings
 
 Every remembered choice a player makes is one row in `bc_player_settings`, read by both platforms through
-`common`'s `PlayerSettingRepository`. The cosmetic ones store the chosen key (chat tag, kill and win effect); the
-toggles store `on` or `off` and count as their own default while no row exists, so nothing has to be seeded:
-`private-messages`, `party-invites`, `friend-requests`, `player-visibility` and `sounds` default to on, the two nick
+`common`'s `PlayerSettingRepository`. Cosmetic settings store the chosen key for tags, effects, trails, gadgets,
+pets, heads, and shirts. The toggles store `on` or `off` and count as their own default while no row exists, so nothing has to be seeded:
+`private-messages`, `party-invites`, `friend-requests`, `player-visibility`, `sounds`, and `effects` default to on, the two nick
 toggles (`auto-nick`, `keep-nick`) to off. A toggle may name a permission, and then it is only shown to, and only
 read for, the players who hold it.
 
@@ -314,7 +321,14 @@ Paper caches a player's settings for as long as they are online (`BlockcraftApi.
 `PlayerSettingsLoadedEvent` once the cache is filled; the lobby waits for it before re-applying a stored "players
 hidden". The settings screen is `SettingsDialog` in BlockcraftAPI, opened from the lobby's hotbar, the pause menu or
 the profile card (`ProfileMenu`, rank, level, coins and the per-game stats listed in `profile.games` of BlockcraftAPI's
-`config.yml`). `Sounds.play` stays silent for a player who turned the sounds off.
+`config.yml`). `Sounds.play` and proxy notifications stay silent for players who turned sounds off. Settings apply immediately,
+and saving reports success after the database write completes. Failed writes restore the stored choice when it
+can be read. The `effects` toggle controls lobby particles and cosmetic previews.
+
+Right-click a head, shirt, pet, trail, or effect to preview it. Head and shirt previews use a mannequin; preview
+entities and particles are visible only to the viewer. Previews leave saved equipment and unlocks unchanged and
+end on navigation, teleport, disconnect, or after the lobby's `effects.preview-ticks` duration. Already-equipped
+controls and empty remove actions are inactive. Cosmetic selections update the open inventory in place.
 
 The proxy keeps its own view: it reads the table at login and every change reaches it over the `Setting`
 subchannel of `blockcraft:main`, the same way nick and vanish do. `/msg` to a player with private messages off is
@@ -336,9 +350,11 @@ unavailable.
 
 The lobby's friends item opens `FriendsMenu`, which is drawn from the proxy's answer rather than from the
 database: only the proxy knows who is online and on which server, so the Paper side asks over the `Friends`
-subchannel and the proxy writes the list back, including whether the friend's round is running, which the lore of
-their head says. Clicking a friend, or accepting and denying a request, runs the matching `/friend` command through
-the `Command` subchannel.
+subchannel and the proxy writes the list back, including whether the friend's round is running. The menu paginates friends
+and requests, accepts names through a dialog, and refreshes after accepting or denying a request. Pages and refreshes
+update the open inventory in place. Typed requests
+carry a request ID. Late replies cannot replace newer screens, and failures show a retry action.
+`friends.timeout-ticks` in the lobby config controls how long the menu waits.
 
 ## Discord linking
 
@@ -371,11 +387,16 @@ Everything the pack changes has a plain fallback, so a player without it sees va
   dark card as the panel.
 - HUD icons are `<icon:name>` in a message (`Icon`): a font glyph with the pack, the symbol under `icons.<name>` in
   BlockcraftAPI's `messages.yml` without. The lobby's and every game's sidebar headings carry them.
-- The `Inventar` label under a menu is blanked through the pack's language files.
+- Vanilla inventory labels remain intact. The pack does not override container translations.
+- Short UI sounds live in `assets/blockcraft/sounds/ui`. `FeedbackSound` selects custom sounds when the pack is
+  active and vanilla sounds otherwise. `python3 resourcepack/SoundArt.py` regenerates the Ogg Vorbis files with
+  Python and FFmpeg. `FeedbackSoundTest` checks that every custom sound has a definition and an audio asset.
 
 The textures are drawn by `java resourcepack/PackArt.java resourcepack/src` (panel colours, slots and the pixel
 icons live in that file); a redrawn pack needs `stagePlugins` and a proxy restart, and the client re-downloads it
-because the hash changed. `UiFontTest` keeps the code's glyph table in step with `ui.json`.
+because the hash changed. `UiFontTest` keeps the code's glyph table in step with `ui.json`. Open menus restyle when the pack becomes active
+without losing their page or selection. Settings show the pack status and offer retry after a failed download
+or a declined offer.
 
 ## Deploy
 

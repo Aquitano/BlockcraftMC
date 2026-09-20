@@ -1,11 +1,13 @@
 package me.blockcraft.quicksg.listener;
 
+import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.game.LootChest;
 import me.blockcraft.api.game.LootChests;
 import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.quicksg.game.Game;
+import me.blockcraft.quicksg.config.QuickSGConfig;
 import me.blockcraft.quicksg.menu.KitMenus;
 import me.blockcraft.quicksg.menu.StatsMenus;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
@@ -22,10 +24,10 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.MenuType;
 import org.bukkit.plugin.Plugin;
 
+import java.util.Comparator;
+
 public final class ItemListener implements Listener {
 
-    private static final double TRACKER_RANGE_XZ = 100.0;
-    private static final double TRACKER_RANGE_Y = 25.0;
     private static final double HEART = 2.0;
 
     private final Plugin plugin;
@@ -34,15 +36,17 @@ public final class ItemListener implements Listener {
     private final LootChests lootChests;
     private final KitMenus kitMenus;
     private final StatsMenus statsMenus;
+    private final QuickSGConfig.Tracker tracker;
 
     public ItemListener(Plugin plugin, Game game, Messages messages, LootChests lootChests,
-                        KitMenus kitMenus, StatsMenus statsMenus) {
+                        KitMenus kitMenus, StatsMenus statsMenus, QuickSGConfig.Tracker tracker) {
         this.plugin = plugin;
         this.game = game;
         this.messages = messages;
         this.lootChests = lootChests;
         this.kitMenus = kitMenus;
         this.statsMenus = statsMenus;
+        this.tracker = tracker;
     }
 
     @EventHandler
@@ -99,6 +103,8 @@ public final class ItemListener implements Listener {
                     event.setCancelled(true);
                     consumeHeldItem(player);
                     player.setFoodLevel(20);
+                    Sounds.HEAL.play(player);
+                    BlockcraftApi.get().notifications().feedback(player, messages.get("consume.food"));
                 }
             }
             case MUSHROOM_STEW -> {
@@ -108,6 +114,8 @@ public final class ItemListener implements Listener {
                     var maxHealth = player.getAttribute(Attribute.MAX_HEALTH);
                     maxHealth.setBaseValue(maxHealth.getBaseValue() + HEART);
                     player.setHealth(player.getHealth() + HEART);
+                    Sounds.HEAL.play(player);
+                    BlockcraftApi.get().notifications().feedback(player, messages.get("consume.heart"));
                 }
             }
             case ENCHANTED_BOOK -> {
@@ -115,9 +123,14 @@ public final class ItemListener implements Listener {
                     event.setCancelled(true);
                     consumeHeldItem(player);
                     player.setLevel(player.getLevel() + 1);
+                    BlockcraftApi.get().notifications().rewardSound(player, Sounds.LEVEL_UP);
+                    BlockcraftApi.get().notifications().feedback(player, messages.get("consume.level"));
                 }
             }
-            case COMPASS -> track(player);
+            case COMPASS -> {
+                event.setCancelled(true);
+                track(player);
+            }
             default -> {
             }
         }
@@ -131,14 +144,36 @@ public final class ItemListener implements Listener {
     }
 
     private void track(Player player) {
-        for (var entity : player.getNearbyEntities(TRACKER_RANGE_XZ, TRACKER_RANGE_Y, TRACKER_RANGE_XZ)) {
-            if (entity instanceof Player near && !game.isSpectator(near)) {
-                player.setCompassTarget(near.getLocation());
-                player.sendMessage(messages.get("tracker.found",
-                        Placeholder.unparsed("player", near.getName()),
-                        Formatter.number("distance", (int) player.getLocation().distance(near.getLocation()))));
-            }
+        if (!game.isIngame() || !game.isAlive(player)) {
+            return;
         }
+        var compass = player.getInventory().getItemInMainHand();
+        if (player.hasCooldown(compass)) {
+            return;
+        }
+        player.setCooldown(compass, tracker.cooldownTicks());
+        var origin = player.getLocation();
+        var target = game.alivePlayers()
+                .filter(other -> !other.equals(player) && !other.isDead() && player.canSee(other))
+                .filter(other -> other.getWorld().equals(origin.getWorld()))
+                .filter(other -> {
+                    var location = other.getLocation();
+                    return Math.abs(location.getX() - origin.getX()) <= tracker.rangeHorizontal()
+                            && Math.abs(location.getZ() - origin.getZ()) <= tracker.rangeHorizontal()
+                            && Math.abs(location.getY() - origin.getY()) <= tracker.rangeVertical();
+                })
+                .min(Comparator.comparingDouble(other -> origin.distanceSquared(other.getLocation())));
+        target.ifPresentOrElse(near -> {
+            player.setCompassTarget(near.getLocation());
+            BlockcraftApi.get().notifications().feedback(player, messages.get("tracker.found",
+                    Placeholder.unparsed("player", near.getName()),
+                    Formatter.number("distance", (int) origin.distance(near.getLocation()))));
+            Sounds.NOTIFY.play(player);
+        }, () -> {
+            player.setCompassTarget(origin);
+            BlockcraftApi.get().notifications().feedback(player, messages.get("tracker.empty"));
+            Sounds.MENU_DENY.play(player);
+        });
     }
 
     private static void consumeHeldItem(Player player) {

@@ -4,6 +4,8 @@ import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.settings.PlayerSetting;
+import me.blockcraft.common.sound.FeedbackSound;
+import me.blockcraft.system.pack.NetworkPack;
 import me.blockcraft.system.PlayerChoices;
 import me.blockcraft.system.PlayerLookup;
 import me.blockcraft.system.PlayerVisibility;
@@ -219,6 +221,9 @@ public final class FriendManager {
     private void invite(Player invitee, Player requester) {
         var name = Placeholder.unparsed("player", shownName(requester));
         invitee.sendMessage(messages.get("friends.request-received", name));
+        if (choices.enabled(invitee, PlayerSetting.SOUNDS)) {
+            invitee.playSound(FeedbackSound.NOTIFY.sound(NetworkPack.applied(invitee)));
+        }
         invitee.sendMessage(messages.get("friends.request-accept", name)
                 .clickEvent(ClickEvent.runCommand("/friend accept " + shownName(requester)))
                 .hoverEvent(HoverEvent.showText(messages.get("friends.request-accept-hover", name))));

@@ -3,7 +3,6 @@ package me.blockcraft.quicksg.menu;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.dialog.ConfirmDialog;
-import me.blockcraft.api.menu.Menu;
 import me.blockcraft.common.shop.Shop;
 import me.blockcraft.api.shop.Unlocks;
 import me.blockcraft.api.sound.Sounds;
@@ -57,16 +56,18 @@ public final class KitMenus {
     }
 
     void openDetail(Player player, Kit kit) {
+        if (!game.isLobby()) {
+            return;
+        }
         BlockcraftApi.get().playerTasks().latest(player, () -> kit.free() || unlocks.owns(player.getUniqueId(), kit.item()),
                 owned -> {
                     if (game.isLobby()) {
-                        new KitDetailMenu(this, kit, owned).open(player);
+                        new KitDetailMenu(this, kit, owned, player).open(player);
                     }
                 });
     }
 
     void select(Player player, Kit kit, boolean owned) {
-        Menu.close(player);
         if (!game.isLobby()) {
             return;
         }
@@ -76,19 +77,30 @@ public final class KitMenus {
             return;
         }
         game.selectKit(player, kit);
-        player.sendMessage(messages.get("kit.selected", kitName(kit)));
+        BlockcraftApi.get().notifications().feedback(player, messages.get("kit.selected", kitName(kit)));
+    }
+
+    boolean selected(Player player, Kit kit) {
+        return game.kit(player) == kit;
     }
 
     void buy(Player player, Kit kit) {
+        if (!game.isLobby()) {
+            return;
+        }
         new ConfirmDialog(icon(kit), buyer -> purchase(buyer, kit), buyer -> openDetail(buyer, kit)).open(player);
     }
 
     private void purchase(Player player, Kit kit) {
-        var view = player.getOpenInventory();
+        if (!game.isLobby()) {
+            player.sendMessage(messages.get("kit.round-started"));
+            return;
+        }
+        var currentScreen = BlockcraftApi.get().playerTasks().currentScreen(player);
         BlockcraftApi.get().playerTasks().write(player, () -> shop.buy(player.getUniqueId(), BlockcraftApi.get().realName(player), kit.item(), price), purchase -> {
             switch (purchase.outcome()) {
                 case BOUGHT -> {
-                    Sounds.PURCHASE.play(player);
+                    BlockcraftApi.get().notifications().rewardSound(player, Sounds.PURCHASE);
                     player.sendMessage(messages.get("kit.bought", kitName(kit)));
                     player.sendMessage(messages.get("kit.bought-cost", Formatter.number("price", price)));
                 }
@@ -98,7 +110,7 @@ public final class KitMenus {
                     player.sendMessage(messages.get("kit.not-enough-coins"));
                 }
             }
-            if (game.isLobby() && player.getOpenInventory() == view) {
+            if (game.isLobby() && currentScreen.getAsBoolean()) {
                 openDetail(player, kit);
             }
         });

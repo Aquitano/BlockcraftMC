@@ -59,7 +59,7 @@ public final class GameScoreboard {
 
     public void showEnding(Player player, List<String> winners) {
         var lines = new ArrayList<Component>();
-        lines.add(messages.get("scoreboard.winner", icons(player)));
+        lines.add(messages.get(winners.isEmpty() ? "scoreboard.draw" : "scoreboard.winner", icons(player)));
         for (var winner : winners) {
             lines.add(messages.get("scoreboard.winner-value", Placeholder.unparsed("player", winner)));
         }

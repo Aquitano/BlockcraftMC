@@ -57,3 +57,8 @@ chest:
 # 1.8 PvP: no attack cooldown, everything else stays vanilla.
 pvp:
   legacy-combat: true
+
+tracker:
+  range-horizontal: 100.0
+  range-vertical: 25.0
+  cooldown-ticks: 20

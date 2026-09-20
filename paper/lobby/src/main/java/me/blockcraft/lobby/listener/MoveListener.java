@@ -46,12 +46,18 @@ public final class MoveListener implements Listener {
         this.trails = trails;
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onMove(PlayerMoveEvent event) {
+        if (!event.hasChangedPosition()) {
+            return;
+        }
         Player player = event.getPlayer();
-        player.setFallDistance(-100.0f);
+        player.setFallDistance(0.0f);
         trails.show(player);
-        Material standingOn = player.getLocation().getBlock().getType();
+        if (!event.hasChangedBlock()) {
+            return;
+        }
+        Material standingOn = event.getTo().getBlock().getType();
         if (standingOn == Material.HEAVY_WEIGHTED_PRESSURE_PLATE) {
             enterPremiumArea(player);
         } else if (standingOn == Material.STONE_PRESSURE_PLATE && fireworksShown.add(player.getUniqueId())) {

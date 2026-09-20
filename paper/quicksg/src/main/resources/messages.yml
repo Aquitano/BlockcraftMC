@@ -11,8 +11,6 @@ commands:
   top:
     description: "Zeigt die Top 10 einer Kategorie"
 
-actionbar: "<muted>Jeder gegen jeden <dark>● <quicksg>Keine Teams"
-
 join:
   introduction: "<prefix><muted>Wähle dein Kit. Sammle Beute und überlebe. <quicksg>Keine Teams."
 
@@ -23,6 +21,7 @@ lobby:
 protection:
   ends-in: "<prefix><muted>Die Schutzzeit endet in <accent><seconds><muted> Sekunden!"
   over: "<prefix><error>Die Schutzzeit ist vorbei!"
+  fight: "<error>Schutzzeit vorbei <dark>● <primary>Kampf frei"
 
 game:
   tracker: "<prefix><muted><minutes> Minuten sind vorbei, alle Spieler bekommen einen Tracker!"
@@ -38,7 +37,13 @@ timer:
   game: "<quicksg>Verbleibende Zeit <dark>● <white><time>"
 
 tracker:
-  found: "<prefix><white><player> <arrow><white><distance><muted> Blöcke"
+  found: "<primary><player> <arrow><primary><distance><muted> Blöcke"
+  empty: "<muted>Kein Gegner in Reichweite"
+
+consume:
+  food: "<success>Hunger aufgefüllt"
+  heart: "<success>+1 Herz für diese Runde"
+  level: "<success>+1 Verzauberungslevel"
 
 start:
   not-enough-players: "<prefix><error>Es müssen mindestens 2 Spieler online sein!"
@@ -70,6 +75,7 @@ top:
   unknown-category: "<prefix><error>/top <wins|deaths|kills|loses|points>"
 
 kit:
+  round-started: "<prefix><muted>Die Runde läuft bereits. Kits kannst du in der nächsten Lobby kaufen."
   selected: "<prefix><muted>Du hast das <white><kit><muted> ausgewählt!"
   not-owned: "<prefix><error>Du hast dieses Kit noch nicht gekauft!"
   bought: "<prefix><muted>Du hast das <white><kit> <muted>gekauft!"
@@ -114,6 +120,7 @@ menu:
     price: "<muted>Dauerhaft freischalten"
     price-free: "<success>kostenlos"
     price-coins: "<arrow><accent><price> Coins"
+    selected: "<success>Ausgewählt"
     select: "<success>Für diese Runde auswählen"
     buy: "<success>Mit Coins freischalten"
     bought: "<success>bereits gekauft!"
@@ -153,6 +160,7 @@ item:
     lore: "<bullet><muted>Tracke Spieler in deiner Nähe"
 
 scoreboard:
+  draw: "<muted>Unentschieden"
   title: "<quicksg><bold>QuickSG"
   online: "<muted><icon:players> SPIELER"
   online-value: "<arrow><white><online> <dark>/<white> <max>"

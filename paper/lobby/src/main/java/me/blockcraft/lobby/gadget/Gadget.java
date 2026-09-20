@@ -27,6 +27,10 @@ public enum Gadget {
         return Arrays.stream(values()).filter(gadget -> gadget.material == stack.getType()).findFirst();
     }
 
+    public static Optional<Gadget> byKey(String key) {
+        return Arrays.stream(values()).filter(value -> value.key.equals(key)).findFirst();
+    }
+
     public String key() {
         return key;
     }

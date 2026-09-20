@@ -62,10 +62,16 @@ tab:
   vanished-suffix: " <dark>[<muted>V<dark>]"
 
 menu:
+  load:
+    title: "<primary>Wird geladen"
+    pending: "<muted>Einen Moment …"
+    failed: "<error>Laden fehlgeschlagen"
+    retry: "<accent>Erneut versuchen"
   filler: " "
   back: "<arrow><error>Zurück"
   close: "<arrow><error>Schließen"
   confirm:
+    unavailable: "<error>Kauf nicht möglich"
     title: "<arrow><primary>Bestätigen"
     accept: "<success>Kaufen"
     cancel: "<error>Abbrechen"
@@ -129,6 +135,19 @@ summary:
   streak: "<prefix><accent><player> <muted>hat eine Serie von <accent><streak> Kills<muted>!"
 
 settings:
+  pack-details: "Ressourcenpaket"
+  pack-retry: "Erneut laden"
+  pack-refresh: "Status aktualisieren"
+  pack-requested: "<prefix><muted>Das Ressourcenpaket wurde erneut angefordert."
+  pack-status:
+    unavailable: "<muted>Das Ressourcenpaket ist derzeit nicht verfügbar."
+    offered: "<muted>Das Ressourcenpaket wartet auf deine Bestätigung."
+    downloading: "<muted>Das Ressourcenpaket wird geladen."
+    applied: "<success>Das Ressourcenpaket ist aktiv."
+    declined: "<muted>Du hast das Ressourcenpaket abgelehnt."
+    failed: "<error>Das Ressourcenpaket konnte nicht geladen werden."
+  failed: "<prefix><error>Deine Einstellung konnte nicht gespeichert werden. Bitte versuche es erneut."
+  effects: "Lobby-Partikel und Vorschauen"
   title: "<arrow><primary>Einstellungen"
   save: "<success>Speichern"
   saved: "<prefix><muted>Einstellungen gespeichert."
@@ -148,6 +167,8 @@ server-menu:
   hub: "<accent>Zur Lobby"
 
 profile:
+  recap: "<accent>Letzte Runde"
+  recap-lore: "<muted>Ergebnis und Belohnungen ansehen"
   title: "<arrow><primary>Profil"
   head: "<arrow><primary><player>"
   head-lore:

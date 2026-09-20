@@ -56,9 +56,10 @@ public final class Dialogs {
     /** Closes a chest menu the player has open, since the dialog takes its screen without telling the server. */
     public static void show(Player player, Dialog dialog) {
         BlockcraftApi.get().playerTasks().invalidate(player);
+        var current = BlockcraftApi.get().playerTasks().currentScreen(player);
         Plugin api = JavaPlugin.getProvidingPlugin(Dialogs.class);
         Bukkit.getScheduler().runTask(api, () -> {
-            if (!player.isOnline()) {
+            if (!current.getAsBoolean()) {
                 return;
             }
             if (player.getOpenInventory().getTopInventory().getHolder(false) instanceof Menu) {

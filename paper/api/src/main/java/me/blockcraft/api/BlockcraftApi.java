@@ -9,6 +9,7 @@ import me.blockcraft.api.game.Streaks;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.menu.Profiles;
 import me.blockcraft.api.network.ServerPresence;
+import me.blockcraft.api.notification.Notifications;
 import me.blockcraft.api.nick.NickStats;
 import me.blockcraft.api.pack.ResourcePacks;
 import me.blockcraft.api.player.RealNames;
@@ -40,6 +41,7 @@ public final class BlockcraftApi {
 
     private static BlockcraftApi instance;
 
+    private final Notifications notifications;
     private final NetworkOperations operations;
     private final PlayerTasks playerTasks;
     private final Database database;
@@ -71,7 +73,8 @@ public final class BlockcraftApi {
                   Map<String, StatsRepository> profileGames, Messages messages, ServerRepository servers,
                   ServerIdentity server, String lobbyGroup, ServerPresence presence, RealNames realNames,
                   NickRanks nickRanks, Xp xp, Streaks streaks, MapBundle map, BuildMode buildMode, TagResolver tags,
-                  List<Achievement> achievements, Elo elo, NickStats nickStats) {
+                  List<Achievement> achievements, Elo elo, NickStats nickStats, Notifications notifications) {
+        this.notifications = notifications;
         this.operations = new NetworkOperations(plugin, messages);
         this.playerTasks = new PlayerTasks(plugin, messages);
         this.database = database;
@@ -113,6 +116,10 @@ public final class BlockcraftApi {
 
     static void uninstall() {
         instance = null;
+    }
+
+    public Notifications notifications() {
+        return notifications;
     }
 
     /** Typed requests to the proxy: reports and punishments, answered with a result. */

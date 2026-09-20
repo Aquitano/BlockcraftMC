@@ -188,7 +188,7 @@ public final class SystemPlugin {
         events.register(this, new CommandListener(config, messages));
         events.register(this, new KickListener(lobby, messages));
         events.register(this, new InitialServerListener(lobby));
-        events.register(this, new ProxyMessageListener(proxy, lobby, visibility, choices, friends, tabHeader, logger));
+        events.register(this, new ProxyMessageListener(proxy, lobby, visibility, choices, friends, tabHeader, logger, () -> pack));
         events.register(this, new MotdListener(visibility, config, settings, messages, dataDirectory, logger));
         events.register(this, new PartyListener(parties));
         events.register(this, new FriendListener(friends, visibility, logger));

@@ -32,7 +32,7 @@ final class PerkMenu extends Menu {
             }
             set(slot, icon.hideAttributes().build());
         });
-        set(22, Items.of(Material.EMERALD).name(messages.get("perk.explain")).lore(messages.getLines("perk.explain-lore")).build());
+        info(22, Items.of(Material.EMERALD).name(messages.get("perk.explain")).lore(messages.getLines("perk.explain-lore")).build());
         closeButton(26);
     }
 

@@ -1,27 +1,32 @@
 package me.blockcraft.system.listener;
 
-import com.google.common.io.ByteStreams;
 import com.velocitypowered.api.event.EventTask;
 import com.velocitypowered.api.event.Subscribe;
-import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.event.connection.PluginMessageEvent.ForwardResult;
+import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import me.blockcraft.common.db.DatabaseException;
+import me.blockcraft.common.network.FriendsMessage;
+import me.blockcraft.common.network.PackStatus;
 import me.blockcraft.common.network.ProxyChannel;
 import me.blockcraft.common.nick.Nick;
 import me.blockcraft.common.settings.PlayerSetting;
 import me.blockcraft.system.LobbyConnector;
 import me.blockcraft.system.PlayerChoices;
 import me.blockcraft.system.PlayerVisibility;
+import me.blockcraft.system.SystemPermissions;
 import me.blockcraft.system.friends.FriendManager;
+import me.blockcraft.system.pack.NetworkPack;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import org.slf4j.Logger;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 /** Answers the backends' requests on the Blockcraft channel; the player the message travelled with is the subject. */
 public final class ProxyMessageListener {
@@ -35,9 +40,10 @@ public final class ProxyMessageListener {
     private final FriendManager friends;
     private final TabHeaderListener tabHeader;
     private final Logger logger;
+    private final Supplier<Optional<NetworkPack>> pack;
 
     public ProxyMessageListener(ProxyServer proxy, LobbyConnector lobby, PlayerVisibility visibility, PlayerChoices choices,
-                                FriendManager friends, TabHeaderListener tabHeader, Logger logger) {
+                                FriendManager friends, TabHeaderListener tabHeader, Logger logger, Supplier<Optional<NetworkPack>> pack) {
         this.proxy = proxy;
         this.lobby = lobby;
         this.visibility = visibility;
@@ -45,6 +51,7 @@ public final class ProxyMessageListener {
         this.friends = friends;
         this.tabHeader = tabHeader;
         this.logger = logger;
+        this.pack = pack;
         proxy.getChannelRegistrar().register(CHANNEL);
     }
 
@@ -61,6 +68,8 @@ public final class ProxyMessageListener {
         var in = event.dataAsDataStream();
         String subchannel = in.readUTF();
         switch (subchannel) {
+            case ProxyChannel.PACK_REQUEST -> pack.get().ifPresentOrElse(networkPack -> networkPack.retry(player),
+                    () -> NetworkPack.tell(player, PackStatus.UNAVAILABLE));
             case ProxyChannel.PLAY -> lobby.play(player, in.readUTF());
             case ProxyChannel.HUB -> lobby.send(player);
             case ProxyChannel.COMMAND -> proxy.getCommandManager().executeAsync(player, in.readUTF());
@@ -70,7 +79,7 @@ public final class ProxyMessageListener {
             }
             // The friend list is a database read, so it leaves the network thread.
             case ProxyChannel.FRIENDS -> {
-                return EventTask.async(() -> sendFriends(connection, player));
+                return EventTask.async(() -> sendFriends(connection, player, event.getData()));
             }
             case ProxyChannel.SETTING -> {
                 String key = in.readUTF();
@@ -95,29 +104,35 @@ public final class ProxyMessageListener {
         return null;
     }
 
-    /** Only the proxy knows who is online and where, so the lobby's friends menu is drawn from this answer. */
-    private void sendFriends(ServerConnection connection, Player player) {
+    private void sendFriends(ServerConnection connection, Player player, byte[] payload) {
+        FriendsMessage.Request request;
         try {
-            sendFriends(connection, friends.entriesFor(player), friends.requestNames(player));
-        } catch (DatabaseException e) {
-            logger.warn("Could not read the friends of {}", player.getUsername(), e);
-            sendFriends(connection, List.of(), List.of());
+            request = FriendsMessage.request(payload);
+        } catch (IOException | IllegalArgumentException e) {
+            logger.warn("Invalid friends request from {}", connection.getServerInfo().getName());
+            return;
+        }
+        if (!player.hasPermission(SystemPermissions.FRIENDS)) {
+            reply(connection, new FriendsMessage.Reply(request.id(), FriendsMessage.Status.FORBIDDEN, List.of(), List.of()));
+            return;
+        }
+        try {
+            switch (request.action()) {
+                case LIST -> { }
+                case ADD -> friends.add(player, request.name());
+                case ACCEPT -> friends.accept(player, request.name());
+                case DENY -> friends.deny(player, request.name());
+            }
+            var entries = friends.entriesFor(player).stream()
+                    .map(entry -> new FriendsMessage.Entry(entry.name(), entry.online(), entry.server(), entry.watching())).toList();
+            reply(connection, new FriendsMessage.Reply(request.id(), FriendsMessage.Status.OK, entries, friends.requestNames(player)));
+        } catch (DatabaseException | IllegalArgumentException e) {
+            logger.warn("Could not load friends for {}", player.getUsername(), e);
+            reply(connection, new FriendsMessage.Reply(request.id(), FriendsMessage.Status.FAILED, List.of(), List.of()));
         }
     }
 
-    /** An empty answer is what the menu draws when the database did not answer; a missing one would hang it. */
-    private void sendFriends(ServerConnection connection, List<FriendManager.Entry> entries, List<String> requests) {
-        var out = ByteStreams.newDataOutput();
-        out.writeUTF(ProxyChannel.FRIENDS);
-        out.writeInt(entries.size());
-        for (var entry : entries) {
-            out.writeUTF(entry.name());
-            out.writeBoolean(entry.online());
-            out.writeUTF(entry.server());
-            out.writeBoolean(entry.watching());
-        }
-        out.writeInt(requests.size());
-        requests.forEach(out::writeUTF);
-        connection.sendPluginMessage(CHANNEL, out.toByteArray());
+    private void reply(ServerConnection connection, FriendsMessage.Reply reply) {
+        connection.sendPluginMessage(CHANNEL, FriendsMessage.encode(reply));
     }
 }

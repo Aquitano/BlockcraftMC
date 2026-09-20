@@ -14,8 +14,8 @@ import me.blockcraft.system.SystemPermissions;
 import me.blockcraft.system.command.CommandSupport;
 import me.blockcraft.system.moderation.MuteGate;
 import me.blockcraft.system.rank.ProxyRanks;
-import net.kyori.adventure.key.Key;
-import net.kyori.adventure.sound.Sound;
+import me.blockcraft.common.sound.FeedbackSound;
+import me.blockcraft.system.pack.NetworkPack;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
@@ -27,8 +27,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /** Private messages across the network: /msg starts a conversation, /r answers whoever wrote last. */
 public final class MessageCommand {
-
-    private static final Sound NOTIFY = Sound.sound(Key.key("ui.button.click"), Sound.Source.MASTER, 4.0f, 4.0f);
 
     private final CommandSupport support;
     private final ProxyServer proxy;
@@ -95,7 +93,9 @@ public final class MessageCommand {
                 Placeholder.component("target", ProxyRanks.displayName(target, visibility.nick(target))),
                 Placeholder.component("message", LegacyComponentSerializer.legacyAmpersand().deserialize(text)));
         target.sendMessage(messages.get("msg.to-target", resolvers));
-        target.playSound(NOTIFY);
+        if (choices.enabled(target, PlayerSetting.SOUNDS)) {
+            target.playSound(FeedbackSound.NOTIFY.sound(NetworkPack.applied(target)));
+        }
         sender.sendMessage(messages.get("msg.to-sender", resolvers));
         lastPartner.put(sender.getUniqueId(), target.getUniqueId());
         lastPartner.put(target.getUniqueId(), sender.getUniqueId());

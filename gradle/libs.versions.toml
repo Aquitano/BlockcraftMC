@@ -1,7 +1,7 @@
 [versions]
 java = "25"
 minecraft = "26.2"
-paper-api = "26.2.build.123-stable"
+paper-api = "26.2.build.126-stable"
 velocity-api = "4.1.1"
 hikaricp = "7.1.0"
 mariadb-client = "3.5.10"

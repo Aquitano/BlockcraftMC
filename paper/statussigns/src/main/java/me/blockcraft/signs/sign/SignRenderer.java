@@ -25,6 +25,7 @@ public final class SignRenderer {
     }
 
     public void render(StatusSign statusSign, GroupStatus status) {
+        if (!statusSign.location().isChunkLoaded()) return;
         if (!(statusSign.location().getBlock().getState() instanceof Sign sign)) {
             return;
         }
@@ -32,12 +33,24 @@ public final class SignRenderer {
         var shared = BlockcraftApi.get().messages();
         String nameKey = "games." + statusSign.group() + ".name";
         var name = shared.has(nameKey) ? shared.get(nameKey) : Component.text(statusSign.group());
-        front.line(0, messages.get("sign.name", Placeholder.component("name", name)));
-        front.line(1, shared.get("game-status." + status.availability().name().toLowerCase(Locale.ROOT)));
-        front.line(2, messages.get("sign.players", Formatter.number("online", status.online()), Formatter.number("max", status.maxPlayers())));
-        front.line(3, messages.get(status.joinable() ? "sign.click" : "sign.retry"));
-        attachedBlock(sign).setType(status.state().map(state -> indicator(state, status.joinable())).orElse(Material.RED_TERRACOTTA));
-        sign.update();
+        var lines = java.util.List.of(
+                messages.get("sign.name", Placeholder.component("name", name)),
+                shared.get("game-status." + status.availability().name().toLowerCase(Locale.ROOT)),
+                messages.get("sign.players", Formatter.number("online", status.online()), Formatter.number("max", status.maxPlayers())),
+                messages.get(status.joinable() ? "sign.click" : "sign.retry"));
+        boolean changed = false;
+        for (int index = 0; index < lines.size(); index++) {
+            if (!front.line(index).equals(lines.get(index))) {
+                front.line(index, lines.get(index));
+                changed = true;
+            }
+        }
+        var block = attachedBlock(sign);
+        var material = status.state().map(state -> indicator(state, status.joinable())).orElse(Material.RED_TERRACOTTA);
+        if (block.getLocation().isChunkLoaded() && block.getType() != material) {
+            block.setType(material);
+        }
+        if (changed) sign.update();
     }
 
     private static Material indicator(ServerState state, boolean joinable) {

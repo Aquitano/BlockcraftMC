@@ -60,13 +60,6 @@ public final class ProxyMessaging {
         send(plugin, player, ProxyChannel.NAME, out.toByteArray());
     }
 
-    /** Asks the proxy for the player's friends; the answer arrives on the same channel. */
-    public static void friends(Plugin plugin, Player player) {
-        var out = ByteStreams.newDataOutput();
-        out.writeUTF(ProxyChannel.FRIENDS);
-        send(plugin, player, ProxyChannel.NAME, out.toByteArray());
-    }
-
     /** Tells the proxy what the player just chose, so private messages and invites follow the same setting. */
     public static void setting(Plugin plugin, Player player, PlayerSetting setting, String value) {
         var out = ByteStreams.newDataOutput();
@@ -80,6 +73,12 @@ public final class ProxyMessaging {
         var out = ByteStreams.newDataOutput();
         out.writeUTF(ProxyChannel.VANISH);
         out.writeBoolean(vanished);
+        send(plugin, player, ProxyChannel.NAME, out.toByteArray());
+    }
+
+    public static void requestPack(Plugin plugin, Player player) {
+        var out = ByteStreams.newDataOutput();
+        out.writeUTF(ProxyChannel.PACK_REQUEST);
         send(plugin, player, ProxyChannel.NAME, out.toByteArray());
     }
 

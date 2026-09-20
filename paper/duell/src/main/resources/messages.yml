@@ -48,9 +48,7 @@ title:
   freeze: "<primary><seconds>"
   start: "<muted>Start!"
   vs-round: "<primary>Runde <round>"
-  sg: "<primary>SurvivalGames"
-  superjump: "<primary>SuperJump"
-  map: "<muted><map>"
+  introduction: "<duell><mode> <dark>· <muted><map>"
 
 setspawn:
   spawn: "<prefix><muted>Spawn gesetzt."
@@ -102,6 +100,14 @@ menu:
     global-lore: "<bullet><muted>Klicke zum Anzeigen"
 
 scoreboard:
+  spectator: "<muted><icon:spectator> ZUSCHAUER"
+  spectator-player: "<primary><player>"
+  spectator-kills: "<primary><player> <dark>· <duell><kills> Kills"
+  spectator-checkpoint: "<primary><player> <dark>· <duell>Checkpoint <checkpoint>"
+  phase:
+    lobby: "<muted>Warten auf den Start"
+    ingame: "<success>Duell läuft"
+    ending: "<muted>Duell beendet"
   kills: "<muted><icon:kills> DEINE KILLS"
   kills-value: "<arrow><duell><kills>"
   title: "<duell><bold>Duell"

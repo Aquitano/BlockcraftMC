@@ -9,6 +9,7 @@ import me.blockcraft.api.game.ServerRestart;
 import me.blockcraft.api.game.PlayerReset;
 import me.blockcraft.api.game.TimerBar;
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.menu.Menu;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Countdown;
@@ -137,6 +138,10 @@ public final class Game {
         return true;
     }
 
+    public List<String> winnerNames() {
+        return summary.winnerNames();
+    }
+
     public int lives(Player player) {
         return lives.getOrDefault(player.getUniqueId(), 0);
     }
@@ -165,7 +170,7 @@ public final class Game {
             return;
         }
         var target = Bukkit.getPlayer(friend);
-        if (target != null) {
+        if (target != null && spectator.canSee(target)) {
             arena.follow(spectator, target);
         }
     }
@@ -251,7 +256,7 @@ public final class Game {
         scoreboard.refreshAll();
         startPhase("timer.search", config.searchSeconds(), remaining -> {
             for (var player : Bukkit.getOnlinePlayers()) {
-                player.sendActionBar(messages.get("search.actionbar", Formatter.number("emeralds", emeralds(player))));
+                BlockcraftApi.get().notifications().status(player, messages.get("search.actionbar", Formatter.number("emeralds", emeralds(player))));
             }
             scoreboard.refreshAll();
             switch (remaining) {
@@ -275,10 +280,9 @@ public final class Game {
         var shop = Items.of(Material.CHEST).name(messages.get("item.shop")).build();
         var titleTimes = Title.Times.times(Duration.ofMillis(1250), Duration.ofMillis(1250), Duration.ofMillis(1250));
         for (var player : alivePlayers()) {
-            Sounds.COUNTDOWN_GO.play(player);
-            player.showTitle(Title.title(
+            BlockcraftApi.get().notifications().important(player, Title.title(
                     messages.get("shopping.title", Formatter.number("emeralds", emeralds(player))),
-                    messages.get("shopping.subtitle"), titleTimes));
+                    messages.get("shopping.subtitle"), titleTimes), Sounds.COUNTDOWN_GO);
             player.sendMessage(messages.get("shopping.info", Formatter.number("seconds", config.shoppingSeconds())));
             player.sendMessage(messages.get("shopping.hint"));
             player.getInventory().clear();
@@ -333,7 +337,7 @@ public final class Game {
     private void giveTrackers() {
         messages.getLines("deathmatch.tracker", Formatter.number("minutes", config.trackerAfterSeconds() / 60)).forEach(Bukkit::broadcast);
         var compass = Items.of(Material.COMPASS).name(messages.get("item.compass")).lore(messages.get("item.compass-lore")).build();
-        for (var player : Bukkit.getOnlinePlayers()) {
+        for (var player : alivePlayers()) {
             player.getInventory().addItem(compass.clone());
             Sounds.NOTIFY.play(player);
         }
@@ -477,6 +481,10 @@ public final class Game {
 
     private void setPhase(GamePhase phase) {
         this.phase = phase;
+        Bukkit.getOnlinePlayers().forEach(player -> {
+            Menu.close(player);
+            player.closeDialog();
+        });
         BlockcraftApi.get().presence().state(phase.serverState());
     }
 }

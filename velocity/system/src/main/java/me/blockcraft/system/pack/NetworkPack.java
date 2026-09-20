@@ -11,6 +11,7 @@ import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import com.velocitypowered.api.proxy.player.ResourcePackInfo;
+import me.blockcraft.common.network.PackStatus;
 import me.blockcraft.common.network.ProxyChannel;
 import me.blockcraft.system.SystemConfig;
 import net.kyori.adventure.text.Component;
@@ -24,10 +25,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.HashSet;
+import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 
 /**
@@ -42,8 +43,7 @@ public final class NetworkPack {
 
     private final ResourcePackInfo info;
     private final Optional<HttpServer> server;
-    /** Whoever declined once is not asked again on every server switch. */
-    private final Set<UUID> declined = new HashSet<>();
+    private final Map<UUID, PackStatus> statuses = new ConcurrentHashMap<>();
 
     private NetworkPack(ResourcePackInfo info, Optional<HttpServer> server) {
         this.info = info;
@@ -82,42 +82,60 @@ public final class NetworkPack {
     @Subscribe
     public void onConfiguration(PlayerConfigurationEvent event) {
         var player = event.player();
-        if (!applied(player) && !declined.contains(player.getUniqueId())) {
-            player.sendResourcePackOffer(info);
+        if (!applied(player) && statuses.get(player.getUniqueId()) != PackStatus.DECLINED) {
+            retry(player);
         }
+    }
+
+    public synchronized void retry(Player player) {
+        var status = statuses.get(player.getUniqueId());
+        if (status == PackStatus.OFFERED || status == PackStatus.DOWNLOADING || applied(player)) {
+            tell(player, applied(player) ? PackStatus.APPLIED : status);
+            return;
+        }
+        statuses.put(player.getUniqueId(), PackStatus.OFFERED);
+        player.sendResourcePackOffer(info);
+        tell(player, PackStatus.OFFERED);
     }
 
     @Subscribe
     public void onStatus(PlayerResourcePackStatusEvent event) {
-        if (!ID.equals(event.getPackId()) || event.getStatus().isIntermediate()) {
-            return;
+        if (!ID.equals(event.getPackId())) return;
+        PackStatus status;
+        if (event.getStatus().isIntermediate()) {
+            status = PackStatus.DOWNLOADING;
+        } else if (event.getStatus() == PlayerResourcePackStatusEvent.Status.SUCCESSFUL) {
+            status = PackStatus.APPLIED;
+        } else if (event.getStatus() == PlayerResourcePackStatusEvent.Status.DECLINED) {
+            status = PackStatus.DECLINED;
+        } else {
+            status = PackStatus.FAILED;
         }
-        boolean applied = event.getStatus() == PlayerResourcePackStatusEvent.Status.SUCCESSFUL;
-        if (!applied) {
-            declined.add(event.getPlayer().getUniqueId());
-        }
-        tell(event.getPlayer(), applied);
+        statuses.put(event.getPlayer().getUniqueId(), status);
+        tell(event.getPlayer(), status);
     }
 
     @Subscribe
     public void onServerPostConnect(ServerPostConnectEvent event) {
-        tell(event.getPlayer(), applied(event.getPlayer()));
+        var player = event.getPlayer();
+        tell(player, applied(player) ? PackStatus.APPLIED : statuses.getOrDefault(player.getUniqueId(), PackStatus.UNAVAILABLE));
     }
 
     @Subscribe
     public void onDisconnect(DisconnectEvent event) {
-        declined.remove(event.getPlayer().getUniqueId());
+        statuses.remove(event.getPlayer().getUniqueId());
     }
 
-    private static boolean applied(Player player) {
+    public static boolean applied(Player player) {
         return player.getAppliedResourcePacks().stream().anyMatch(pack -> ID.equals(pack.getId()));
     }
 
-    private static void tell(Player player, boolean applied) {
+    public static void tell(Player player, PackStatus status) {
         player.getCurrentServer().ifPresent(connection -> {
             var out = ByteStreams.newDataOutput();
             out.writeUTF(ProxyChannel.PACK);
-            out.writeBoolean(applied);
+            out.writeBoolean(status == PackStatus.APPLIED);
+            out.writeUTF(status.name());
             connection.sendPluginMessage(CHANNEL, out.toByteArray());
         });
     }

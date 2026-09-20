@@ -29,6 +29,7 @@ import me.blockcraft.api.world.MapBundle;
 import me.blockcraft.api.world.WorldTemplate;
 import me.blockcraft.api.xp.Levels;
 import me.blockcraft.api.xp.Xp;
+import me.blockcraft.api.notification.Notifications;
 import me.blockcraft.api.xp.XpReward;
 import me.blockcraft.common.config.YamlFile;
 import me.blockcraft.common.db.Database;
@@ -52,6 +53,7 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
 
     private static final long TICKS_PER_SECOND = 20L;
 
+    private Notifications notifications;
     private Database database;
     private ServerHeartbeat heartbeat;
 
@@ -70,13 +72,14 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         getLogger().info("Announcing as " + self.name() + " (group " + self.group() + ") at " + self.host() + ":" + self.port());
 
         var messages = resources.messages();
+        notifications = new Notifications(this, messages, Notifications.Timing.from(YamlFile.section(config, "notifications")));
         var settingRepository = new PlayerSettingRepository(database);
         var settings = new PlayerSettings(this, settingRepository);
         var realNames = new RealNames();
         var nickRanks = new NickRanks();
         var xpRepository = new XpRepository(database);
         var xp = new Xp(this, xpRepository, new Levels(number(YamlFile.section(config, "xp"), "level-step", 100)),
-                xpRewards(YamlFile.section(YamlFile.section(config, "xp"), "rewards")), messages);
+                xpRewards(YamlFile.section(YamlFile.section(config, "xp"), "rewards")));
         var map = MapBundle.load(getServer().getWorlds().getFirst(), WorldTemplate.configured(config));
         // The locator bar would take the level bar's place and point at hidden or hunted players.
         getServer().getWorlds().forEach(world -> world.setGameRule(GameRules.LOCATOR_BAR, false));
@@ -91,7 +94,7 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
                 messages, servers, self, text(config, "lobby-group", "lobby"), presence, realNames, nickRanks, xp,
                 streaks(YamlFile.section(config, "streaks")), map, buildMode, resources.tags(),
                 Achievements.parse(YamlFile.section(config, "achievements")), elo,
-                new NickStats(nickRanks, NickStats.Ranges.from(YamlFile.section(config, "nick-stats"))));
+                new NickStats(nickRanks, NickStats.Ranges.from(YamlFile.section(config, "nick-stats"))), notifications);
         BlockcraftApi.install(api);
         getLogger().info("Running map " + map.name() + map.template().map(template -> " from " + template.directory()).orElse(""));
         int startingCoins = number(config, "starting-coins", 10);
@@ -153,6 +156,9 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (notifications != null) {
+            notifications.close();
+        }
         BlockcraftApi.uninstall();
         if (heartbeat != null) {
             heartbeat.stop();

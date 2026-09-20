@@ -43,14 +43,16 @@ public final class GameScoreboard {
             case SEARCH -> sidebar.show(player, messages.getLines("scoreboard.search", online, Formatter.number("time", game.secondsLeft())));
             case SHOPPING -> sidebar.show(player, messages.getLines("scoreboard.shopping", online, Formatter.number("emeralds", game.emeralds(player))));
             case DEATHMATCH -> sidebar.showRows(player, game.alivePlayers().stream()
-                    .map(alive -> new Sidebar.Row(alive.getName(), alive.playerListName(), game.lives(alive)))
+                    .map(alive -> new Sidebar.Row(alive.getName(), messages.get("scoreboard.lives",
+                            Placeholder.component("player", alive.playerListName()),
+                            Formatter.number("lives", game.lives(alive))), game.lives(alive)))
                     .toList());
             case ENDING -> {
-                var winners = new ArrayList<Component>();
-                winners.add(messages.get("scoreboard.winner-header", online));
-                game.alivePlayers().forEach(winner ->
-                        winners.add(messages.get("scoreboard.winner", Placeholder.component("player", winner.playerListName()))));
-                sidebar.show(player, winners);
+                var names = game.winnerNames();
+                var lines = new ArrayList<Component>();
+                lines.add(messages.get(names.isEmpty() ? "scoreboard.draw" : "scoreboard.winner-header", online));
+                names.forEach(winner -> lines.add(messages.get("scoreboard.winner", Placeholder.unparsed("player", winner))));
+                sidebar.show(player, lines);
             }
         }
     }

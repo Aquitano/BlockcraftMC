@@ -29,7 +29,6 @@ public final class Arrival {
         var subtitle = map.builders().isEmpty()
                 ? messages.get("arrival.subtitle", name)
                 : messages.get("arrival.subtitle-credits", name, Placeholder.unparsed("builders", String.join(", ", map.builders())));
-        player.showTitle(Title.title(messages.get("arrival.title", Placeholder.component("where", where)), subtitle, TIMES));
-        sound.play(player);
+        api.notifications().reward(player, Title.title(messages.get("arrival.title", Placeholder.component("where", where)), subtitle, TIMES), sound);
     }
 }

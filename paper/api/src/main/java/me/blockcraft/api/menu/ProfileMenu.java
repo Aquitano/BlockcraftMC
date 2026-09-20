@@ -24,14 +24,17 @@ import java.util.function.Consumer;
  */
 final class ProfileMenu extends Menu {
 
+    private static final int RECAP_SLOT = 11;
     private static final int HEAD_SLOT = 13;
     private static final int ACHIEVEMENTS_SLOT = 15;
     private static final int GAMES_ROW = 18;
 
     private final Consumer<Player> achievements;
+    private final Optional<Consumer<Player>> recentRound;
 
     ProfileMenu(Profiles profiles, Player viewer, Profiles.Snapshot snapshot, Optional<Consumer<Player>> cosmetics) {
         super(3, BlockcraftApi.get().messages().get("profile.title"));
+        recentRound = profiles.recentRound();
         var api = BlockcraftApi.get();
         var messages = api.messages();
         achievements = player -> api.achievements().open(player, Optional.of(back -> profiles.open(back, cosmetics)));
@@ -43,7 +46,9 @@ final class ProfileMenu extends Menu {
                 () -> toolbar(ToolbarButton.RIGHT, button(messages, MenuIcon.TOOL_HOME, "profile.hub"),
                         player -> ProxyMessaging.hub(profiles.plugin(), player)));
         var progress = api.xp().levels().progress(api.xp().total(viewer));
-        set(HEAD_SLOT, Items.head(viewer.getUniqueId(), api.realName(viewer))
+        recentRound.ifPresent(open -> set(RECAP_SLOT, Items.of(Material.WRITABLE_BOOK)
+                .name(messages.get("profile.recap")).lore(messages.get("profile.recap-lore")).build()));
+        info(HEAD_SLOT, Items.head(viewer.getUniqueId(), api.realName(viewer))
                 .name(messages.get("profile.head", Placeholder.unparsed("player", viewer.getName())))
                 .lore(messages.getLines("profile.head-lore",
                         Placeholder.component("rank", Ranks.prefix(viewer).orElse(Component.empty())),
@@ -61,7 +66,7 @@ final class ProfileMenu extends Menu {
         var games = snapshot.games();
         for (int index = 0; index < games.size(); index++) {
             var game = games.get(index);
-            set(gameSlot(index, games.size()), gameIcon(game.key())
+            info(gameSlot(index, games.size()), gameIcon(game.key())
                     .name(messages.get("profile.games." + game.key()))
                     .lore(messages.getLines("profile.stats-lore", game.stats().placeholders()))
                     .build());
@@ -70,7 +75,9 @@ final class ProfileMenu extends Menu {
 
     @Override
     protected void onClick(Player player, int slot, ItemStack clicked, InventoryClickEvent event) {
-        if (slot == ACHIEVEMENTS_SLOT) {
+        if (slot == RECAP_SLOT) {
+            recentRound.ifPresent(open -> open.accept(player));
+        } else if (slot == ACHIEVEMENTS_SLOT) {
             achievements.accept(player);
         }
     }

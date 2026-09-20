@@ -168,9 +168,9 @@ public final class Achievements implements Listener {
             return;
         }
         var last = unlocked.getLast();
-        player.showTitle(Title.title(messages.get("achievements.title"),
-                messages.get("achievements.subtitle", Placeholder.component("name", name(last))), TIMES));
-        Sounds.ACHIEVEMENT.play(player);
+        BlockcraftApi.get().notifications().reward(player,
+                Title.title(messages.get("achievements.title"),
+                        messages.get("achievements.subtitle", Placeholder.component("name", name(last))), TIMES), Sounds.ACHIEVEMENT);
     }
 
     public Component name(Achievement achievement) {

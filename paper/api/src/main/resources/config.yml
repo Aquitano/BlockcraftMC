@@ -104,3 +104,14 @@ nick-stats:
   kdr: {min: 0.6, max: 1.6}
   rating: {min: 900, max: 1250}
   level: {min: 3, max: 12}
+
+notifications:
+  status-ticks: 25
+  feedback-ticks: 40
+  reward-ticks: 40
+  important-ticks: 60
+  max-wait-ticks: 200
+  xp-window-ticks: 10
+  sound-window-ticks: 4
+  sound-gap-ticks: 30
+  sound-lifetime-ticks: 40

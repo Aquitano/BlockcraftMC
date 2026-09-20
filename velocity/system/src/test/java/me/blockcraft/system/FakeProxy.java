@@ -50,6 +50,9 @@ final class FakeProxy {
                     case "hasPermission" -> granted.contains(args[0]);
                     case "isActive" -> online.containsKey(id);
                     case "getCurrentServer" -> Optional.ofNullable(connections.get(id));
+                    case "getAppliedResourcePacks" -> List.of();
+                    case "playSound" -> null;
+                    case "sendPlayerListHeaderAndFooter" -> received.computeIfAbsent(id, key -> new ArrayList<>()).add(args[0]);
                     case "sendMessage" -> received.computeIfAbsent(id, key -> new ArrayList<>()).add(args[0]);
                     case "hashCode" -> id.hashCode();
                     case "equals" -> proxy == args[0];

@@ -62,6 +62,9 @@ player-hider:
 effects:
   kill-price: 500
   win-price: 500
+  trail-interval-ticks: 2
+  trail-view-distance: 32
+  preview-ticks: 60
 gadgets:
   cooldown-seconds: 5
 hud:
@@ -77,3 +80,6 @@ navigator:
     rush: emeraldrush
     duell: duell
   stale-seconds: 20
+
+friends:
+  timeout-ticks: 200

@@ -87,25 +87,29 @@ public final class LobbyCountdown {
      */
     public static Countdown freeze(Plugin plugin, int seconds, Supplier<List<Player>> audience,
                                    IntFunction<Component> title, Runnable onEnd) {
-        showSecond(audience.get(), title, seconds);
+        return freeze(plugin, seconds, audience, title, Component.empty(), onEnd);
+    }
+
+    public static Countdown freeze(Plugin plugin, int seconds, Supplier<List<Player>> audience,
+                                   IntFunction<Component> title, Component subtitle, Runnable onEnd) {
+        showSecond(audience.get(), title, subtitle, seconds);
         return Countdown.start(plugin, seconds, remaining -> {
             if (remaining > 0) {
-                showSecond(audience.get(), title, remaining);
+                showSecond(audience.get(), title, subtitle, remaining);
             }
         }, () -> {
             var go = goTitle();
             audience.get().forEach(player -> {
-                player.showTitle(go);
-                Sounds.COUNTDOWN_GO.play(player);
+                BlockcraftApi.get().notifications().important(player, go, Sounds.COUNTDOWN_GO);
             });
             onEnd.run();
         });
     }
 
-    private static void showSecond(List<Player> audience, IntFunction<Component> title, int remaining) {
-        var shown = Title.title(title.apply(remaining), Component.empty(), SECOND_TIMES);
+    private static void showSecond(List<Player> audience, IntFunction<Component> title, Component subtitle, int remaining) {
+        var shown = Title.title(title.apply(remaining), subtitle, SECOND_TIMES);
         audience.forEach(player -> {
-            player.showTitle(shown);
+            BlockcraftApi.get().notifications().important(player, shown);
             Sounds.countdownTick(player, remaining);
         });
     }
@@ -137,7 +141,7 @@ public final class LobbyCountdown {
         if (remaining > 0 && remaining <= AUDIBLE_FROM) {
             var title = Title.title(BlockcraftApi.get().messages().get("countdown.seconds", Formatter.number("seconds", remaining)),
                     Component.empty(), SECOND_TIMES);
-            Bukkit.getOnlinePlayers().forEach(player -> player.showTitle(title));
+            Bukkit.getOnlinePlayers().forEach(player -> BlockcraftApi.get().notifications().important(player, title));
             Sounds.countdownTick(remaining);
         }
     }

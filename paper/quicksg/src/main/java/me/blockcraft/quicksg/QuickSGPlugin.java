@@ -35,8 +35,6 @@ import java.util.List;
 
 public final class QuickSGPlugin extends JavaPlugin {
 
-    private static final long ACTIONBAR_INTERVAL_TICKS = 40L;
-
     private Game game;
 
     @Override
@@ -66,7 +64,7 @@ public final class QuickSGPlugin extends JavaPlugin {
                 new DeathListener(game),
                 new ProtectionListener(game, api.buildMode()),
                 new ArenaProtection(game::frozen),
-                new ItemListener(this, game, messages, lootChests, kitMenus, statsMenus)
+                new ItemListener(this, game, messages, lootChests, kitMenus, statsMenus, config.tracker())
         ).forEach(this::register);
 
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
@@ -77,10 +75,6 @@ public final class QuickSGPlugin extends JavaPlugin {
             commands.register(TopCommand.create(topList, messages));
         });
 
-        Bukkit.getScheduler().runTaskTimer(this, () -> {
-            var actionbar = messages.get("actionbar");
-            Bukkit.getOnlinePlayers().forEach(player -> player.sendActionBar(actionbar));
-        }, ACTIONBAR_INTERVAL_TICKS, ACTIONBAR_INTERVAL_TICKS);
         ServerRestart.whenIdle(this, config.countdowns().idleRestart(), config.countdowns().idleRestartRetry());
     }
 

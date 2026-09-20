@@ -14,6 +14,14 @@ public final class LatestRequests<K> {
         return token;
     }
 
+    public synchronized Object snapshot(K key) {
+        return current.computeIfAbsent(key, ignored -> new Object());
+    }
+
+    public synchronized boolean isCurrent(K key, Object token) {
+        return current.get(key) == token;
+    }
+
     public synchronized boolean finish(K key, Object token) {
         return current.remove(key, token);
     }

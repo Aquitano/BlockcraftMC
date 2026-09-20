@@ -3,6 +3,8 @@ package me.blockcraft.lobby.listener;
 import me.blockcraft.api.config.Locations;
 import me.blockcraft.api.player.Arrival;
 import me.blockcraft.api.settings.PlayerSettingsLoadedEvent;
+import me.blockcraft.api.settings.PlayerSettingChangedEvent;
+import me.blockcraft.common.settings.PlayerSetting;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.lobby.config.LobbyLocation;
 import me.blockcraft.lobby.cosmetic.Pets;
@@ -53,9 +55,19 @@ public final class JoinQuitListener implements Listener {
     @EventHandler
     public void onSettingsLoaded(PlayerSettingsLoadedEvent event) {
         Player player = event.getPlayer();
-        if (hider.applyStored(player)) {
-            player.getInventory().setItem(LobbyItem.PLAYER_HIDER.slot(), items.hiderItem(false));
+        refreshHider(player);
+    }
+
+    @EventHandler
+    public void onSettingChanged(PlayerSettingChangedEvent event) {
+        if (event.setting() == PlayerSetting.PLAYER_VISIBILITY) {
+            refreshHider(event.getPlayer());
         }
+    }
+
+    private void refreshHider(Player player) {
+        hider.applyStored(player);
+        player.getInventory().setItem(LobbyItem.PLAYER_HIDER.slot(), items.hiderItem(!hider.isHiding(player)));
     }
 
     @EventHandler

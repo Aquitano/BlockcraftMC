@@ -33,14 +33,13 @@ public final class ProxyChannel {
     /** setting key and its new value, so the proxy's own view of the player's choices stays current */
     public static final String SETTING = "Setting";
 
-    /**
-     * The one subchannel the proxy answers on: asked with no payload, it writes back the player's friends
-     * (name, online, server) and the names of the requests waiting for them, which only the proxy knows.
-     */
+    /** Correlated friends request or reply, encoded by FriendsMessage. */
     public static final String FRIENDS = "Friends";
 
-    /** boolean, sent by the proxy when the player arrives on a backend and whenever the client's answer changes */
+    /** Applied boolean followed by PackStatus.name(). */
     public static final String PACK = "Pack";
+
+    public static final String PACK_REQUEST = "PackRequest";
 
     /**
      * The UUID of the friend the player came to watch, as a string. Sent by the proxy when a player arrives on a

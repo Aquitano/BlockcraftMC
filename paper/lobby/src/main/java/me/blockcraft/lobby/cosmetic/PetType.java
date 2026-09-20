@@ -33,6 +33,10 @@ public enum PetType {
         return Arrays.stream(values()).filter(type -> type.entityClass.isInstance(entity)).findFirst();
     }
 
+    public static Optional<PetType> byKey(String key) {
+        return Arrays.stream(values()).filter(value -> value.key.equals(key)).findFirst();
+    }
+
     public String key() {
         return key;
     }

@@ -48,4 +48,19 @@ public final class GameScoreboard {
         }
         sidebar.show(player, lines);
     }
+
+    public void showSpectator(Player player, Component mode, Component map, Component phase, List<Component> contestants) {
+        var icons = BlockcraftApi.get().resourcePack().icons(player);
+        var lines = new ArrayList<Component>();
+        lines.add(messages.get("scoreboard.spectator", icons));
+        lines.add(phase);
+        lines.add(Component.empty());
+        lines.add(messages.get("scoreboard.mode", icons));
+        lines.add(messages.get("scoreboard.mode-value", Placeholder.component("mode", mode)));
+        lines.add(messages.get("scoreboard.map", icons));
+        lines.add(messages.get("scoreboard.map-value", Placeholder.component("map", map)));
+        lines.add(Component.empty());
+        lines.addAll(contestants);
+        sidebar.show(player, lines);
+    }
 }

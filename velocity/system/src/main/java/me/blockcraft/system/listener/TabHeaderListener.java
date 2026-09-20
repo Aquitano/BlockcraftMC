@@ -8,11 +8,18 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.system.PlayerVisibility;
 import me.blockcraft.system.SystemConfig;
+import me.blockcraft.system.SystemPermissions;
 import me.blockcraft.system.command.CommandSupport;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * Keeps every player's tab header and footer (player count as they may see it, current server, links) current.
@@ -20,6 +27,8 @@ import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
  */
 public final class TabHeaderListener implements Runnable {
 
+    private record Rendered(Component header, Component footer) {}
+    private final Map<UUID, Rendered> rendered = new HashMap<>();
     private final ProxyServer proxy;
     private final PlayerVisibility visibility;
     private final SystemConfig config;
@@ -33,13 +42,14 @@ public final class TabHeaderListener implements Runnable {
     }
 
     @Subscribe
-    public void onServerPostConnect(ServerPostConnectEvent event) {
+    public synchronized void onServerPostConnect(ServerPostConnectEvent event) {
+        rendered.remove(event.getPlayer().getUniqueId());
         refreshAll();
     }
 
     @Subscribe
-    public void onDisconnect(DisconnectEvent event) {
-        refreshAll();
+    public synchronized void onDisconnect(DisconnectEvent event) {
+        refreshExcept(Set.of(event.getPlayer().getUniqueId()));
     }
 
     @Override
@@ -47,14 +57,26 @@ public final class TabHeaderListener implements Runnable {
         refreshAll();
     }
 
-    public void refreshAll() {
+    public synchronized void refreshAll() {
+        refreshExcept(Set.of());
+    }
+
+    private void refreshExcept(Set<UUID> excluded) {
         var max = Formatter.number("max", config.maxPlayers());
-        for (Player player : proxy.getAllPlayers()) {
-            var online = Formatter.number("online", visibility.countFor(player));
+        var players = proxy.getAllPlayers().stream().filter(player -> player.isActive() && !excluded.contains(player.getUniqueId())).toList();
+        rendered.keySet().retainAll(players.stream().map(Player::getUniqueId).collect(Collectors.toSet()));
+        int publicCount = (int) players.stream().filter(player -> !visibility.isVanished(player)).count();
+        for (Player player : players) {
+            int visible = player.hasPermission(SystemPermissions.SEE_VANISHED) ? players.size()
+                    : publicCount + (visibility.isVanished(player) ? 1 : 0);
+            var online = Formatter.number("online", visible);
             var header = Component.join(JoinConfiguration.newlines(), messages.getLines("tab.header", max, online));
             var footer = Component.join(JoinConfiguration.newlines(), messages.getLines("tab.footer", max, online,
                     Placeholder.unparsed("server", CommandSupport.currentServer(player))));
-            player.sendPlayerListHeaderAndFooter(header, footer);
+            var next = new Rendered(header, footer);
+            if (!next.equals(rendered.put(player.getUniqueId(), next))) {
+                player.sendPlayerListHeaderAndFooter(header, footer);
+            }
         }
     }
 }

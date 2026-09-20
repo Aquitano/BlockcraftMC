@@ -1,9 +1,11 @@
 package me.blockcraft.lobby.menu;
 
+import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.menu.Menu;
+import me.blockcraft.api.sound.Sounds;
+import me.blockcraft.common.settings.PlayerSetting;
 import me.blockcraft.lobby.gadget.Gadget;
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -19,35 +21,62 @@ final class GadgetsMenu extends Menu {
     GadgetsMenu(Menus menus, Player viewer) {
         super(1, menus.messages().get("gadgets.title"));
         this.menus = menus;
-        var messages = menus.messages();
-        var held = menus.gadgets().of(viewer);
-        for (Gadget gadget : Gadget.values()) {
-            var icon = Items.of(gadget.material())
-                    .name(messages.get("gadgets.name." + gadget.key()))
-                    .lore(messages.get("gadgets.lore." + gadget.key()));
-            if (held.filter(gadget::equals).isPresent()) {
+        refresh(viewer);
+        backButton(BACK_SLOT, menus::openExtras);
+    }
+
+    private void refresh(Player player) {
+        var selected = menus.settings().get(player, PlayerSetting.GADGET);
+        for (var choice : Gadget.values()) {
+            boolean equipped = selected.filter(choice.key()::equals).isPresent();
+            var icon = Items.of(choice.material())
+                    .name(menus.messages().get("gadgets.name." + choice.key()))
+                    .lore(menus.messages().get("gadgets.lore." + choice.key()),
+                            menus.messages().get(equipped ? "cosmetics.equipped" : "cosmetics.owned"));
+            if (equipped) {
                 icon.glow();
             }
-            set(gadget.ordinal(), icon.build());
+            set(choice.ordinal(), icon.build());
         }
-        set(REMOVE_SLOT, Items.of(Material.BARRIER).name(messages.get("gadgets.remove")).build());
-        backButton(BACK_SLOT, menus::openExtras);
+        set(REMOVE_SLOT, Items.of(Material.BARRIER).name(menus.messages().get("cosmetics.remove"))
+                .lore(menus.messages().get(selected.isPresent() ? "cosmetics.remove-lore" : "cosmetics.empty-remove")).build());
+    }
+
+    @Override
+    protected void onSettingChanged(Player player, PlayerSetting setting) {
+        if (setting == PlayerSetting.GADGET) {
+            refresh(player);
+        }
+    }
+
+    @Override
+    protected boolean isEnabled(Player player, int slot, InventoryClickEvent event) {
+        if (slot == REMOVE_SLOT) {
+            return menus.settings().get(player, PlayerSetting.GADGET).isPresent();
+        }
+        if (slot >= 0 && slot < Gadget.values().length) {
+            return menus.settings().get(player, PlayerSetting.GADGET).filter(Gadget.values()[slot].key()::equals).isEmpty();
+        }
+        return true;
+    }
+
+    @Override
+    protected Sounds clickSound(int slot, InventoryClickEvent event) {
+        return Sounds.EQUIP;
     }
 
     @Override
     protected void onClick(Player player, int slot, ItemStack clicked, InventoryClickEvent event) {
-        close(player);
         if (slot == REMOVE_SLOT) {
-            menus.gadgets().clear(player);
-            player.sendMessage(menus.messages().get("gadgets.removed"));
+            menus.settings().clear(player, PlayerSetting.GADGET);
+            BlockcraftApi.get().notifications().feedback(player, menus.messages().get("cosmetics.removed"));
             return;
         }
         if (slot >= Gadget.values().length) {
             return;
         }
-        Gadget gadget = Gadget.values()[slot];
-        menus.gadgets().select(player, gadget);
-        player.sendMessage(menus.messages().get("gadgets.chosen",
-                Placeholder.component("gadget", menus.messages().get("gadgets.name." + gadget.key()))));
+        var choice = Gadget.values()[slot];
+        menus.settings().set(player, PlayerSetting.GADGET, choice.key());
+        BlockcraftApi.get().notifications().feedback(player, menus.messages().get("cosmetics.selected"));
     }
 }

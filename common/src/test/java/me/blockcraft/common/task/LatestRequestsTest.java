@@ -8,6 +8,19 @@ import static org.junit.Assert.assertTrue;
 public class LatestRequestsTest {
 
     @Test
+    public void observingAScreenPreservesItsRequestUntilNavigationChanges() {
+        var requests = new LatestRequests<String>();
+        var screen = requests.snapshot("player");
+        assertTrue(requests.isCurrent("player", requests.snapshot("player")));
+        assertTrue(requests.isCurrent("player", screen));
+        requests.begin("player");
+        assertFalse(requests.isCurrent("player", screen));
+        var next = requests.snapshot("player");
+        requests.invalidate("player");
+        assertFalse(requests.isCurrent("player", next));
+    }
+
+    @Test
     public void staleCompletionCannotConsumeNewRequest() {
         var requests = new LatestRequests<String>();
         var first = requests.begin("player");

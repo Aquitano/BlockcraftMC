@@ -1,6 +1,8 @@
 package me.blockcraft.rush.listener;
 
+import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.proxy.ProxyMessaging;
+import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.rush.Permissions;
 import me.blockcraft.rush.config.RushConfig;
@@ -15,6 +17,8 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.plugin.Plugin;
+
+import java.util.Comparator;
 
 /** Right-clicks on the hotbar items handed out by the game. */
 public final class HotbarListener implements Listener {
@@ -66,20 +70,45 @@ public final class HotbarListener implements Listener {
                     }
                 }
             }
-            case COMPASS -> track(player);
+            case COMPASS -> {
+                event.setCancelled(true);
+                track(player);
+            }
             default -> {
             }
         }
     }
 
     private void track(Player player) {
-        for (var entity : player.getNearbyEntities(100.0, 25.0, 100.0)) {
-            if (entity instanceof Player near && !game.isSpectator(near)) {
-                player.setCompassTarget(near.getLocation());
-                player.sendMessage(messages.get("tracker.found",
-                        Placeholder.unparsed("player", near.getName()),
-                        Formatter.number("distance", (int) player.getLocation().distance(near.getLocation()))));
-            }
+        if (game.phase() != GamePhase.DEATHMATCH || !game.isAlive(player)) {
+            return;
         }
+        var compass = player.getInventory().getItemInMainHand();
+        if (player.hasCooldown(compass)) {
+            return;
+        }
+        player.setCooldown(compass, config.trackerCooldownTicks());
+        var origin = player.getLocation();
+        var target = game.alivePlayers().stream()
+                .filter(other -> !other.equals(player) && !other.isDead() && player.canSee(other))
+                .filter(other -> other.getWorld().equals(origin.getWorld()))
+                .filter(other -> {
+                    var location = other.getLocation();
+                    return Math.abs(location.getX() - origin.getX()) <= config.trackerRangeHorizontal()
+                            && Math.abs(location.getZ() - origin.getZ()) <= config.trackerRangeHorizontal()
+                            && Math.abs(location.getY() - origin.getY()) <= config.trackerRangeVertical();
+                })
+                .min(Comparator.comparingDouble(other -> origin.distanceSquared(other.getLocation())));
+        target.ifPresentOrElse(near -> {
+            player.setCompassTarget(near.getLocation());
+            BlockcraftApi.get().notifications().feedback(player, messages.get("tracker.found",
+                    Placeholder.unparsed("player", near.getName()),
+                    Formatter.number("distance", (int) origin.distance(near.getLocation()))));
+            Sounds.NOTIFY.play(player);
+        }, () -> {
+            player.setCompassTarget(origin);
+            BlockcraftApi.get().notifications().feedback(player, messages.get("tracker.empty"));
+            Sounds.MENU_DENY.play(player);
+        });
     }
 }

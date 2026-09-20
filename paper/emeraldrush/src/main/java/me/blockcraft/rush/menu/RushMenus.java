@@ -57,15 +57,29 @@ public final class RushMenus {
         if (game.phase() != GamePhase.LOBBY) {
             return;
         }
-        BlockcraftApi.get().playerTasks().latest(player, () -> ownedPerks(player), owned -> new PerkMenu(this, messages, owned).open(player));
+        BlockcraftApi.get().playerTasks().latest(player, () -> ownedPerks(player), owned -> {
+            if (game.phase() == GamePhase.LOBBY) {
+                new PerkMenu(this, messages, owned).open(player);
+            }
+        });
     }
 
     void openPerk(Player player, Perk perk) {
+        if (game.phase() != GamePhase.LOBBY) {
+            return;
+        }
         BlockcraftApi.get().playerTasks().latest(player, () -> unlocks.owns(player.getUniqueId(), perk.item()),
-                owned -> new PerkBuyMenu(this, messages, perk, owned).open(player));
+                owned -> {
+                    if (game.phase() == GamePhase.LOBBY) {
+                        new PerkBuyMenu(this, messages, perk, owned).open(player);
+                    }
+                });
     }
 
     void buyPerk(Player player, Perk perk) {
+        if (game.phase() != GamePhase.LOBBY) {
+            return;
+        }
         new ConfirmDialog(perkIcon(perk), buyer -> purchasePerk(buyer, perk), buyer -> openPerk(buyer, perk)).open(player);
     }
 
@@ -77,10 +91,14 @@ public final class RushMenus {
     }
 
     private void purchasePerk(Player player, Perk perk) {
+        if (game.phase() != GamePhase.LOBBY) {
+            player.sendMessage(messages.get("perk.round-started"));
+            return;
+        }
         BlockcraftApi.get().playerTasks().write(player, () -> shop.buy(player.getUniqueId(), BlockcraftApi.get().realName(player), perk.item(), perk.price()), purchase -> {
             switch (purchase.outcome()) {
                 case BOUGHT -> {
-                    Sounds.PURCHASE.play(player);
+                    BlockcraftApi.get().notifications().rewardSound(player, Sounds.PURCHASE);
                     player.sendMessage(messages.get("perk.bought", perkName(messages, perk)));
                     player.sendMessage(messages.get("perk.bought-price", Formatter.number("price", perk.price())));
                 }
@@ -94,20 +112,37 @@ public final class RushMenus {
     }
 
     public void openShop(Player player) {
-        openShop(player, ShopCategory.CHAIN);
+        if (!canShop(player)) {
+            return;
+        }
+        BlockcraftApi.get().playerTasks().latest(player, () -> ownedPerks(player),
+                owned -> openShop(player, ShopCategory.CHAIN, owned));
     }
 
-    void openShop(Player player, ShopCategory category) {
-        BlockcraftApi.get().playerTasks().latest(player, () -> ownedPerks(player),
-                owned -> new ShopMenu(this, messages, category, catalog.entries(category, owned)).open(player));
+    void openShop(Player player, ShopCategory category, Set<Perk> owned) {
+        if (canShop(player)) {
+            new ShopMenu(this, messages, category, stock(category, owned), owned, player).open(player);
+        }
+    }
+
+    List<ShopEntry> stock(ShopCategory category, Set<Perk> owned) {
+        return catalog.entries(category, owned);
+    }
+
+    int balance(Player player) {
+        return game.emeralds(player);
+    }
+
+    private boolean canShop(Player player) {
+        return game.phase() == GamePhase.SHOPPING && game.isAlive(player);
     }
 
     void buy(Player player, ShopEntry entry) {
-        if (game.phase() != GamePhase.SHOPPING) {
+        if (!canShop(player)) {
             Menu.close(player);
             return;
         }
-        if (player.getInventory().firstEmpty() == -1) {
+        if (!entry.hasCapacity().test(player)) {
             Sounds.MENU_DENY.play(player);
             player.sendMessage(messages.get("shop.inventory-full"));
             return;
@@ -118,10 +153,17 @@ public final class RushMenus {
             return;
         }
         entry.reward().accept(player);
+        BlockcraftApi.get().notifications().rewardSound(player, Sounds.PURCHASE);
+        BlockcraftApi.get().notifications().feedback(player, messages.get("shop.bought", Formatter.number("price", entry.price()),
+                Formatter.number("emeralds", game.emeralds(player))));
         game.scoreboard().show(player);
     }
 
     void teleportToEnchant(Player player) {
+        if (!canShop(player)) {
+            Menu.close(player);
+            return;
+        }
         Sounds.TELEPORT.play(player);
         Menu.close(player);
         spawns.teleport(player, SpawnPoint.ENCHANT);

@@ -1,40 +1,92 @@
 package me.blockcraft.lobby.friends;
 
-import com.google.common.io.ByteStreams;
+import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.common.network.FriendsMessage;
 import me.blockcraft.common.network.ProxyChannel;
-import me.blockcraft.lobby.menu.Menus;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.messaging.PluginMessageListener;
+import org.bukkit.scheduler.BukkitTask;
 
-import java.util.ArrayList;
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
 
-/**
- * The proxy's answer to a friends request. Only the proxy knows who is online and on which server, so the menu
- * is drawn from what comes back rather than from the database.
- */
-public final class FriendsChannel implements PluginMessageListener {
+public final class FriendsChannel implements PluginMessageListener, Listener {
+    private record Pending(UUID id, BooleanSupplier current, Consumer<FriendsMessage.Reply> complete, BukkitTask timeout) {}
 
-    private final Menus menus;
+    private final Map<UUID, Pending> pending = new HashMap<>();
+    private final Plugin plugin;
+    private final long timeoutTicks;
 
-    public FriendsChannel(Menus menus) {
-        this.menus = menus;
+    public FriendsChannel(Plugin plugin, long timeoutTicks) {
+        this.plugin = plugin;
+        this.timeoutTicks = timeoutTicks;
+        plugin.getServer().getMessenger().registerOutgoingPluginChannel(plugin, ProxyChannel.NAME);
+        plugin.getServer().getMessenger().registerIncomingPluginChannel(plugin, ProxyChannel.NAME, this);
+        plugin.getServer().getPluginManager().registerEvents(this, plugin);
+    }
+
+    public void request(Player player, FriendsMessage.Action action, String name, Consumer<FriendsMessage.Reply> complete) {
+        cancel(player.getUniqueId());
+        var id = UUID.randomUUID();
+        var current = BlockcraftApi.get().playerTasks().currentScreen(player);
+        var timeout = plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+            var request = pending.remove(player.getUniqueId());
+            if (request != null && request.current().getAsBoolean()) {
+                complete.accept(new FriendsMessage.Reply(id, FriendsMessage.Status.FAILED, List.of(), List.of()));
+            }
+        }, timeoutTicks);
+        pending.put(player.getUniqueId(), new Pending(id, current, complete, timeout));
+        player.sendPluginMessage(plugin, ProxyChannel.NAME, FriendsMessage.encode(new FriendsMessage.Request(id, action, name)));
     }
 
     @Override
     public void onPluginMessageReceived(String channel, Player player, byte[] message) {
-        var in = ByteStreams.newDataInput(message);
-        if (!channel.equals(ProxyChannel.NAME) || !in.readUTF().equals(ProxyChannel.FRIENDS)) {
+        if (!channel.equals(ProxyChannel.NAME)) {
             return;
         }
-        var friends = new ArrayList<FriendEntry>();
-        for (int count = in.readInt(); count > 0; count--) {
-            friends.add(new FriendEntry(in.readUTF(), in.readBoolean(), in.readUTF(), in.readBoolean()));
+        try (var in = new DataInputStream(new ByteArrayInputStream(message))) {
+            if (!in.readUTF().equals(ProxyChannel.FRIENDS)) {
+                return;
+            }
+            var reply = FriendsMessage.reply(message);
+            var request = pending.get(player.getUniqueId());
+            if (request == null || !request.id().equals(reply.id())) {
+                return;
+            }
+            cancel(player.getUniqueId());
+            if (request.current().getAsBoolean()) {
+                request.complete().accept(reply);
+            }
+        } catch (IOException | IllegalArgumentException e) {
+            plugin.getLogger().warning("Invalid friends response: " + e.getMessage());
         }
-        var requests = new ArrayList<String>();
-        for (int count = in.readInt(); count > 0; count--) {
-            requests.add(in.readUTF());
+    }
+
+    @EventHandler
+    public void onQuit(PlayerQuitEvent event) {
+        cancel(event.getPlayer().getUniqueId());
+    }
+
+    public void close() {
+        pending.values().forEach(request -> request.timeout().cancel());
+        pending.clear();
+    }
+
+    private void cancel(UUID player) {
+        var request = pending.remove(player);
+        if (request != null) {
+            request.timeout().cancel();
         }
-        menus.openFriends(player, List.copyOf(friends), List.copyOf(requests));
     }
 }

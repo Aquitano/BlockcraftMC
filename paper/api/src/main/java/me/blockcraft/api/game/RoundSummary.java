@@ -21,6 +21,7 @@ import org.bukkit.plugin.Plugin;
 
 import java.time.Duration;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -88,6 +89,10 @@ public final class RoundSummary {
         return score == null ? 0 : score.kills;
     }
 
+    public List<String> winnerNames() {
+        return List.copyOf(winners.values());
+    }
+
     public void death(Player victim) {
         var score = score(victim);
         score.deaths++;
@@ -147,8 +152,8 @@ public final class RoundSummary {
                 continue;
             }
             boolean won = winners.containsKey(player.getUniqueId());
-            player.showTitle(Title.title(messages.get(titleKey(won)), subtitle, TIMES));
-            (won ? Sounds.WIN : Sounds.LOSE).play(player);
+            BlockcraftApi.get().notifications().important(player, Title.title(messages.get(titleKey(won)), subtitle, TIMES),
+                    won ? Sounds.WIN : Sounds.LOSE);
         }
     }
 

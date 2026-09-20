@@ -90,7 +90,7 @@ public final class FreezeService implements Listener {
     }
 
     private void announce(Player target) {
-        target.showTitle(Title.title(messages.get("freeze.title"), messages.get("freeze.subtitle")));
+        BlockcraftApi.get().notifications().important(target, Title.title(messages.get("freeze.title"), messages.get("freeze.subtitle")));
         messages.getLines("freeze.reminder").forEach(target::sendMessage);
     }
 

@@ -1,10 +1,8 @@
 package me.blockcraft.api.xp;
 
-import me.blockcraft.api.sound.Sounds;
+import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.task.Tasks;
-import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.xp.XpRepository;
-import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -27,15 +25,14 @@ public final class Xp implements Listener {
     private final XpRepository repository;
     private final Levels levels;
     private final Map<XpReward, Integer> rewards;
-    private final Messages messages;
+    private final Map<UUID, Object> sessions = new java.util.HashMap<>();
     private final Map<UUID, Long> totals = new ConcurrentHashMap<>();
 
-    public Xp(Plugin plugin, XpRepository repository, Levels levels, Map<XpReward, Integer> rewards, Messages messages) {
+    public Xp(Plugin plugin, XpRepository repository, Levels levels, Map<XpReward, Integer> rewards) {
         this.plugin = plugin;
         this.repository = repository;
         this.levels = levels;
         this.rewards = rewards;
-        this.messages = messages;
     }
 
     public Levels levels() {
@@ -63,17 +60,16 @@ public final class Xp implements Listener {
             return;
         }
         var uuid = player.getUniqueId();
+        var session = sessions.get(uuid);
         Tasks.async(plugin, () -> repository.add(uuid, amount), total -> {
-            totals.put(uuid, total);
-            if (!player.isOnline()) {
+            if (!player.isOnline() || sessions.get(uuid) != session) {
                 return;
             }
-            player.sendActionBar(messages.get("xp.gained", Formatter.number("amount", amount)));
+            long cached = totals.merge(uuid, total, Math::max);
             int before = levels.levelFor(total - amount);
             int after = levels.levelFor(total);
+            BlockcraftApi.get().notifications().xp(player, amount, after > before ? levels.levelFor(cached) : 0);
             if (after > before) {
-                player.sendMessage(messages.get("xp.level-up", Formatter.number("level", after)));
-                Sounds.LEVEL_UP.play(player);
                 plugin.getServer().getPluginManager().callEvent(new LevelUpEvent(player, after));
             }
         });
@@ -82,11 +78,18 @@ public final class Xp implements Listener {
     @EventHandler(priority = EventPriority.LOWEST)
     public void onJoin(PlayerJoinEvent event) {
         var uuid = event.getPlayer().getUniqueId();
-        Tasks.async(plugin, () -> repository.get(uuid), total -> totals.merge(uuid, total, Math::max));
+        var session = new Object();
+        sessions.put(uuid, session);
+        Tasks.async(plugin, () -> repository.get(uuid), total -> {
+            if (sessions.get(uuid) == session) {
+                totals.merge(uuid, total, Math::max);
+            }
+        });
     }
 
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
+        sessions.remove(event.getPlayer().getUniqueId());
         totals.remove(event.getPlayer().getUniqueId());
     }
 }

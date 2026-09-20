@@ -13,6 +13,11 @@ import java.util.Optional;
  */
 public enum PlayerSetting {
 
+    TRAIL("trail"),
+    GADGET("gadget"),
+    PET("pet"),
+    HEAD("head"),
+    SHIRT("shirt"),
     CHAT_TAG("chat-tag"),
     KILL_EFFECT("kill-effect"),
     WIN_EFFECT("win-effect"),
@@ -21,6 +26,7 @@ public enum PlayerSetting {
     FRIEND_REQUESTS("friend-requests", PlayerSetting.ON),
     PLAYER_VISIBILITY("player-visibility", PlayerSetting.ON),
     SOUNDS("sounds", PlayerSetting.ON),
+    EFFECTS("effects", PlayerSetting.ON),
     AUTO_NICK("auto-nick", PlayerSetting.OFF, "blockcraft.nick"),
     KEEP_NICK("keep-nick", PlayerSetting.OFF, "blockcraft.nick");
 

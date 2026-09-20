@@ -1,5 +1,6 @@
 package me.blockcraft.lobby.listener;
 
+import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.coins.CoinsRepository;
 import me.blockcraft.api.shop.Unlocks;
 import me.blockcraft.api.sound.Sounds;
@@ -96,9 +97,8 @@ public final class SecretsListener implements Listener {
                 return;
             }
             var rewardResolver = Formatter.number("coins", reward);
-            player.showTitle(Title.title(messages.get("secrets.found-title"), messages.get("secrets.found-subtitle", rewardResolver), TITLE_TIMES));
+            BlockcraftApi.get().notifications().reward(player, Title.title(messages.get("secrets.found-title"), messages.get("secrets.found-subtitle", rewardResolver), TITLE_TIMES), Sounds.SECRET);
             messages.getLines("secrets.found", rewardResolver, Placeholder.unparsed("secret", secret.key())).forEach(player::sendMessage);
-            Sounds.SECRET.play(player);
             player.sendMessage(messages.get("shop.balance", Formatter.number("coins", balance.getAsInt())));
         });
     }

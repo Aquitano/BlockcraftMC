@@ -3,6 +3,9 @@ package me.blockcraft.lobby.cosmetic;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 
+import java.util.Arrays;
+import java.util.Optional;
+
 public enum Trail {
     WITCH("witch", Material.BOOK, Particle.WITCH),
     NOTE("note", Material.NOTE_BLOCK, Particle.NOTE),
@@ -17,6 +20,10 @@ public enum Trail {
         this.key = key;
         this.icon = icon;
         this.particle = particle;
+    }
+
+    public static Optional<Trail> byKey(String key) {
+        return Arrays.stream(values()).filter(value -> value.key.equals(key)).findFirst();
     }
 
     public String key() {

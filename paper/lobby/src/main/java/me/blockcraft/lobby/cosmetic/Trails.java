@@ -1,5 +1,7 @@
 package me.blockcraft.lobby.cosmetic;
 
+import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.common.settings.PlayerSetting;
 import org.bukkit.entity.Player;
 
 import java.util.HashMap;
@@ -14,6 +16,14 @@ public final class Trails {
     private static final double SPEED = 0.05;
 
     private final Map<UUID, Trail> selected = new HashMap<>();
+    private final Map<UUID, Integer> lastEmission = new HashMap<>();
+    private final int intervalTicks;
+    private final int viewDistance;
+
+    public Trails(int intervalTicks, int viewDistance) {
+        this.intervalTicks = intervalTicks;
+        this.viewDistance = viewDistance;
+    }
 
     public void select(Player player, Trail trail) {
         selected.put(player.getUniqueId(), trail);
@@ -21,6 +31,7 @@ public final class Trails {
 
     public void clear(Player player) {
         selected.remove(player.getUniqueId());
+        lastEmission.remove(player.getUniqueId());
     }
 
     public Optional<Trail> of(Player player) {
@@ -28,7 +39,20 @@ public final class Trails {
     }
 
     public void show(Player player) {
-        of(player).ifPresent(trail ->
-                player.getWorld().spawnParticle(trail.particle(), player.getLocation(), COUNT, OFFSET, OFFSET, OFFSET, SPEED));
+        of(player).ifPresent(trail -> {
+            int now = player.getTicksLived();
+            var last = lastEmission.get(player.getUniqueId());
+            if (last != null && now - last < intervalTicks) {
+                return;
+            }
+            lastEmission.put(player.getUniqueId(), now);
+            var location = player.getLocation();
+            for (var viewer : player.getWorld().getNearbyPlayers(location, viewDistance)) {
+                if (viewer.canSee(player)
+                        && BlockcraftApi.get().settings().enabled(viewer, PlayerSetting.EFFECTS)) {
+                    viewer.spawnParticle(trail.particle(), location, COUNT, OFFSET, OFFSET, OFFSET, SPEED);
+                }
+            }
+        });
     }
 }

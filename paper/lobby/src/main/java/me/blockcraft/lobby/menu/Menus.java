@@ -10,6 +10,8 @@ import me.blockcraft.api.settings.PlayerSettings;
 import me.blockcraft.common.shop.Shop;
 import me.blockcraft.api.shop.Unlocks;
 import me.blockcraft.api.sound.Sounds;
+import me.blockcraft.api.task.Tasks;
+import me.blockcraft.common.settings.PlayerSetting;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.network.ServerIdentity;
 import me.blockcraft.common.network.ServerRecord;
@@ -18,12 +20,11 @@ import me.blockcraft.lobby.config.LobbyConfig;
 import me.blockcraft.lobby.LobbyPermissions;
 import me.blockcraft.lobby.config.LobbyLocation;
 import me.blockcraft.lobby.cosmetic.Head;
+import me.blockcraft.lobby.cosmetic.CosmeticPreviews;
 import me.blockcraft.lobby.cosmetic.Pets;
 import me.blockcraft.lobby.cosmetic.Secret;
 import me.blockcraft.lobby.cosmetic.Shirt;
-import me.blockcraft.lobby.cosmetic.Trails;
-import me.blockcraft.lobby.friends.FriendEntry;
-import me.blockcraft.lobby.gadget.Gadgets;
+import me.blockcraft.lobby.friends.FriendsChannel;
 import me.blockcraft.lobby.network.GroupCounts;
 import me.blockcraft.lobby.rank.PremiumRank;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
@@ -51,38 +52,79 @@ public record Menus(
         ServerIdentity self,
         PremiumRank premiumRank,
         Pets pets,
-        Trails trails,
-        Gadgets gadgets,
-        GroupCounts groupCounts
+        GroupCounts groupCounts,
+        FriendsChannel friends,
+        CosmeticPreviews previews
 ) {
 
     private static final int TELEPORT_PARTICLES = 20;
 
+    private record PurchaseState(int balance, boolean owned) { }
+
     /** Shows what the click is about to cost before anything is bought, drawn as the player's client draws it. */
-    public void purchase(Player player, ItemStack subject, String item, int price, Consumer<Player> onOwned) {
-        MenuIcon.style(subject, BlockcraftApi.get().resourcePack().applied(player));
-        new ConfirmDialog(subject, buyer -> buy(buyer, item, price, onOwned), Menu::close).open(player);
+    public void purchase(Player player, ItemStack subject, String item, int price,
+                         Consumer<Player> onOwned, Consumer<Player> returnTo) {
+        var api = BlockcraftApi.get();
+        MenuIcon.style(subject, api.resourcePack().applied(player));
+        var id = player.getUniqueId();
+        api.playerTasks().latest(player,
+                () -> new PurchaseState(api.coins().get(id), unlocks.owns(id, item)), state -> {
+            if (state.owned()) {
+                onOwned.accept(player);
+                returnTo.accept(player);
+                return;
+            }
+            int balance = state.balance();
+            var details = List.of(
+                    messages.get("shop.confirm-price", Formatter.number("coins", price)),
+                    messages.get("shop.confirm-balance", Formatter.number("coins", balance)),
+                    messages.get(balance >= price ? "shop.confirm-remaining" : "shop.confirm-missing",
+                            Formatter.number("coins", Math.abs(balance - price))));
+            Optional<Consumer<Player>> accept = balance >= price
+                    ? Optional.of(buyer -> buy(buyer, item, price, onOwned, returnTo)) : Optional.empty();
+            new ConfirmDialog(subject, details, accept, returnTo).open(player);
+        });
     }
 
     /**
      * Buys the item off the main thread; {@code onOwned} runs on it once the player owns the item, whether this
      * click bought it or an earlier one did. The balance is labelled separately from network levels.
      */
-    private void buy(Player player, String item, int price, Consumer<Player> onOwned) {
-        BlockcraftApi.get().playerTasks().write(player, () -> shop.buy(player.getUniqueId(), BlockcraftApi.get().realName(player), item, price), purchase -> {
+    private void buy(Player player, String item, int price, Consumer<Player> onOwned, Consumer<Player> returnTo) {
+        var api = BlockcraftApi.get();
+        api.notifications().feedback(player, messages.get("shop.pending"));
+        var current = api.playerTasks().currentScreen(player);
+        var id = player.getUniqueId();
+        var name = api.realName(player);
+        Consumer<Player> returnIfCurrent = buyer -> {
+            if (current.getAsBoolean()) {
+                returnTo.accept(buyer);
+            }
+        };
+        api.playerTasks().write(player, () -> shop.buy(id, name, item, price), purchase -> {
             switch (purchase.outcome()) {
                 case BOUGHT -> {
-                    Sounds.PURCHASE.play(player);
+                    api.notifications().rewardSound(player, Sounds.PURCHASE);
+                    api.notifications().feedback(player, messages.get("shop.completed"));
                     player.sendMessage(messages.get("shop.bought"));
                     onOwned.accept(player);
                 }
-                case ALREADY_OWNED -> onOwned.accept(player);
+                case ALREADY_OWNED -> {
+                    api.notifications().feedback(player, messages.get("shop.completed"));
+                    onOwned.accept(player);
+                }
                 case NOT_ENOUGH_COINS -> {
                     Sounds.MENU_DENY.play(player);
+                    api.notifications().feedback(player, messages.get("shop.confirm-missing",
+                            Formatter.number("coins", price - purchase.balance())));
                     player.sendMessage(messages.get("shop.too-expensive", Formatter.number("coins", price)));
                 }
             }
             player.sendMessage(messages.get("shop.balance", Formatter.number("coins", purchase.balance())));
+            returnIfCurrent.accept(player);
+        }, failed -> {
+            api.notifications().feedback(failed, apiMessages.get("operation.failed"));
+            returnIfCurrent.accept(failed);
         });
     }
 
@@ -94,10 +136,25 @@ public record Menus(
             return;
         }
         Menu.close(player);
-        if (player.teleport(destination.get())) {
-            Sounds.TELEPORT.play(player);
-            player.getWorld().spawnParticle(Particle.FLAME, player.getLocation(), TELEPORT_PARTICLES, 0.5, 0.5, 0.5, 0.01);
-        }
+        player.teleportAsync(destination.get()).whenComplete((teleported, failure) -> {
+            if (!plugin.isEnabled()) {
+                return;
+            }
+            Tasks.sync(plugin, () -> {
+                if (!plugin.isEnabled() || !player.isOnline()) {
+                    return;
+                }
+                if (failure != null || !Boolean.TRUE.equals(teleported)) {
+                    Sounds.MENU_DENY.play(player);
+                    player.sendMessage(messages.get("navigator.teleport-failed"));
+                    return;
+                }
+                Sounds.TELEPORT.play(player);
+                if (settings.enabled(player, PlayerSetting.EFFECTS)) {
+                    player.spawnParticle(Particle.FLAME, player.getLocation(), TELEPORT_PARTICLES, 0.5, 0.5, 0.5, 0.01);
+                }
+            });
+        });
     }
 
     public void openNavigator(Player player) {
@@ -110,17 +167,17 @@ public record Menus(
     }
 
     public void openShop(Player player) {
-        new ShopMenu(this).open(player);
+        new ShopMenu(this, player).open(player);
     }
 
     public void openHeads(Player player) {
         BlockcraftApi.get().playerTasks().latest(player, () -> unlocks.owned(player.getUniqueId(), Head.ITEM_PREFIX),
-                owned -> new HeadsMenu(this, owned).open(player));
+                owned -> new HeadsMenu(this, player, owned).open(player));
     }
 
     public void openShirts(Player player) {
         BlockcraftApi.get().playerTasks().latest(player, () -> unlocks.owned(player.getUniqueId(), Shirt.ITEM_PREFIX),
-                owned -> new ShirtsMenu(this, owned).open(player));
+                owned -> new ShirtsMenu(this, player, owned).open(player));
     }
 
     public void openPremium(Player player) {
@@ -128,16 +185,15 @@ public record Menus(
     }
 
     public void openPets(Player player) {
-        new PetsMenu(this).open(player);
+        new PetsMenu(this, player).open(player);
     }
 
     public void openTrails(Player player) {
-        new TrailsMenu(this).open(player);
+        new TrailsMenu(this, player).open(player);
     }
 
-    /** Drawn from the proxy's answer, not from the database: only it knows who is online and where. */
-    public void openFriends(Player player, List<FriendEntry> friends, List<String> requests) {
-        new FriendsMenu(this, friends, requests).open(player);
+    public void openFriends(Player player) {
+        new FriendsMenu(this).open(player);
     }
 
     public void openProfile(Player player) {

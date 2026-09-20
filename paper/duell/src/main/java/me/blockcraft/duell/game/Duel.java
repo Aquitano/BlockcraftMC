@@ -1,6 +1,7 @@
 package me.blockcraft.duell.game;
 
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.menu.Menu;
 import me.blockcraft.api.game.Arena;
 import me.blockcraft.api.game.GamePhase;
 import me.blockcraft.api.game.LobbyCountdown;
@@ -150,7 +151,7 @@ public final class Duel {
             arena.welcome(player, participants.size(), MAX_PARTICIPANTS);
         }
         ratings.load(player, this::refreshScoreboards);
-        refreshScoreboards();
+        Tasks.sync(plugin, this::refreshScoreboards);
         startLobbyCountdownIfReady();
     }
 
@@ -160,7 +161,7 @@ public final class Duel {
             return;
         }
         var target = Bukkit.getPlayer(friend);
-        if (target != null) {
+        if (target != null && spectator.canSee(target)) {
             arena.follow(spectator, target);
         }
     }
@@ -228,7 +229,7 @@ public final class Duel {
             return;
         }
         var title = Title.title(messages.get("title.vs-round", Formatter.number("round", round)), messages.get("title.start"));
-        participants().forEach(participant -> participant.showTitle(title));
+        participants().forEach(participant -> BlockcraftApi.get().notifications().important(participant, title));
     }
 
     public void handleSgDeath(Player victim, Player killer) {
@@ -255,6 +256,7 @@ public final class Duel {
             return false;
         }
         checkpoints.put(player.getUniqueId(), checkpoint);
+        refreshScoreboards();
         Bukkit.broadcast(messages.get("superjump.checkpoint", Placeholder.unparsed("player", player.getName()),
                 Formatter.number("checkpoint", checkpoint)));
         player.setRespawnLocation(player.getLocation(), true);
@@ -284,8 +286,27 @@ public final class Duel {
                 : Component.text(mapName);
         participants().forEach(participant ->
                 scoreboard.show(participant, modeLine, ratings.placeholders(participant), mapLine,
-                        opponentsOf(participant).map(Player::getName).toList(),
+                        opponentsOf(participant).filter(participant::canSee).map(Player::getName).toList(),
                         mode == DuelMode.VS && phase != GamePhase.LOBBY ? OptionalInt.of(summary.kills(participant)) : OptionalInt.empty()));
+        var phaseLine = messages.get(switch (phase) {
+            case LOBBY -> "scoreboard.phase.lobby";
+            case INGAME -> "scoreboard.phase.ingame";
+            case ENDING -> "scoreboard.phase.ending";
+        });
+        Bukkit.getOnlinePlayers().stream().filter(player -> !isParticipant(player)).forEach(viewer -> {
+            var contestants = participants().filter(viewer::canSee).map(player -> {
+                var name = Placeholder.unparsed("player", player.getName());
+                if (mode == DuelMode.VS && phase != GamePhase.LOBBY) {
+                    return messages.get("scoreboard.spectator-kills", name, Formatter.number("kills", summary.kills(player)));
+                }
+                if (mode == DuelMode.SUPERJUMP && phase != GamePhase.LOBBY) {
+                    return messages.get("scoreboard.spectator-checkpoint", name,
+                            Formatter.number("checkpoint", checkpoints.getOrDefault(player.getUniqueId(), 0)));
+                }
+                return messages.get("scoreboard.spectator-player", name);
+            }).toList();
+            scoreboard.showSpectator(viewer, modeLine, mapLine, phaseLine, contestants);
+        });
     }
 
     private void startLobbyCountdownIfReady() {
@@ -299,23 +320,20 @@ public final class Duel {
         Bukkit.broadcast(messages.get("lobby.started"));
         var maps = config.maps(mode);
         mapNumber = pickMap(maps.size());
-        mapName = maps.isEmpty() ? messages.raw("scoreboard.map-random") : maps.get(mapNumber - 1);
+        mapName = maps.isEmpty() ? null : maps.get(mapNumber - 1);
         int slot = 1;
         for (var player : participants().toList()) {
             teleportToMapSpawn(player, slot++);
             switch (mode) {
                 case VS -> {
-                    player.showTitle(Title.title(messages.get("title.vs-round", Formatter.number("round", round)), messages.get("title.start")));
                     items.giveVsKit(player);
                     config.combat().apply(player);
                 }
                 case SG -> {
-                    player.showTitle(Title.title(messages.get("title.sg"), messages.get("title.start")));
                     player.getInventory().clear();
                     config.combat().apply(player);
                 }
                 case SUPERJUMP -> {
-                    player.showTitle(Title.title(messages.get("title.superjump"), messages.get("title.map", Placeholder.unparsed("map", mapName))));
                     items.giveSuperJumpKit(player);
                     player.setRespawnLocation(player.getLocation(), true);
                 }
@@ -335,6 +353,10 @@ public final class Duel {
 
     private void setPhase(GamePhase phase) {
         this.phase = phase;
+        Bukkit.getOnlinePlayers().forEach(player -> {
+            Menu.close(player);
+            player.closeDialog();
+        });
         BlockcraftApi.get().presence().state(phase.serverState());
     }
 
@@ -346,7 +368,9 @@ public final class Duel {
     private void freeze() {
         frozen = true;
         freezeCountdown = LobbyCountdown.freeze(plugin, config.countdowns().freeze(), () -> participants().toList(),
-                seconds -> messages.get("title.freeze", Formatter.number("seconds", seconds)), () -> {
+                seconds -> messages.get("title.freeze", Formatter.number("seconds", seconds)),
+                messages.get("title.introduction", Placeholder.component("mode", messages.get("mode." + mode.configKey())),
+                        Placeholder.component("map", mapName == null ? messages.get("scoreboard.map-random") : Component.text(mapName))), () -> {
                     frozen = false;
                     pvp = mode != DuelMode.SUPERJUMP;
                 });
@@ -390,6 +414,7 @@ public final class Duel {
             return;
         }
         setPhase(GamePhase.ENDING);
+        refreshScoreboards();
         cancel(roundTimer);
         cancel(freezeCountdown);
         frozen = false;
