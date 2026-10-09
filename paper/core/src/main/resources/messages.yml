@@ -201,6 +201,7 @@ chat:
     - "<muted>Klicke, um <accent><name><muted> zu schreiben."
   msg-command: "/msg <name> "
   spam: "<prefix><error>Bitte warte einen Moment... Verdacht auf Spam!"
+  slow: "<prefix><error>Der Chat ist verlangsamt. <muted>Du kannst alle <accent><seconds> Sekunden <muted>eine Nachricht schreiben."
   word-filtered: "<prefix><muted>Diese Chatnachricht wurde vom System gefiltert. <error>Grund: Anzügige Sprache"
   filtered-notify: "<prefix><muted>Der Spieler <error><player><muted> hat geschrieben: <error><message> <muted>auf <error><server>"
   actions:

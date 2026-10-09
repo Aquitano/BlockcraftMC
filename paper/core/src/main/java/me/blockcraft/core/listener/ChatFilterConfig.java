@@ -8,13 +8,14 @@ import java.util.Locale;
 import java.util.Map;
 
 /** The {@code chat} section of config.yml. */
-public record ChatFilterConfig(Duration cooldown, String allowedDomain, List<String> blockedWords,
+public record ChatFilterConfig(Duration cooldown, Duration networkRefresh, String allowedDomain, List<String> blockedWords,
                                List<String> advertisementTerms) {
 
     public static ChatFilterConfig fromYaml(Map<String, Object> root) {
         var chat = YamlFile.section(root, "chat");
         return new ChatFilterConfig(
                 Duration.ofSeconds(chat.get("cooldown-seconds") instanceof Number seconds ? seconds.longValue() : 3),
+                Duration.ofSeconds(chat.get("network-refresh-seconds") instanceof Number seconds ? seconds.longValue() : 3),
                 String.valueOf(chat.getOrDefault("allowed-domain", "")).toLowerCase(Locale.ROOT),
                 lowercased(chat, "blocked-words"),
                 lowercased(chat, "advertisement-terms"));

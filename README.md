@@ -247,6 +247,11 @@ selected, unlocked and purchasable items; coins buy permanent unlocks, while Eme
 A game's own `messages.yml` holds its introduction and game-specific wording. `MessageKeysTest` in `common`
 checks that every key a plugin asks its messages for exists in its `messages.yml` or BlockcraftAPI's.
 
+`/globalmute` and `/chatslow <seconds>|off` (`blockcraft.system.chatslow`) are stored in `bc_settings`. Every Paper
+server re-reads both every `chat.network-refresh-seconds` of core's `config.yml` and keeps the last known values while
+the database cannot answer. A chat slow longer than core's `chat.cooldown-seconds` replaces that cooldown, and
+`blockcraft.core.chat.spam.bypass` skips both.
+
 `/history <player>` shows bans and mutes, including revoked entries, with the display length set by
 `history.limit`. It requires `blockcraft.system.history`; `/whois` also shows the totals.
 

@@ -420,6 +420,10 @@ cc:
 globalmute:
   enabled: "<prefix><muted>Der <accent>GlobalMute <muted>wurde <success>aktiviert<muted>."
   disabled: "<prefix><muted>Der <accent>GlobalMute <muted>wurde <error>deaktiviert<muted>."
+chatslow:
+  usage: "<prefix><muted>Verwende <error>/chatslow \\<Sekunden> <muted>oder <error>/chatslow off"
+  enabled: "<prefix><muted>Der Chat ist <accent>verlangsamt<muted>: eine Nachricht alle <accent><seconds> Sekunden<muted>."
+  disabled: "<prefix><muted>Der Chat ist nicht mehr <accent>verlangsamt<muted>."
 bc:
   usage: "<prefix><muted>Verwende <error>/bc \\<Nachricht>"
   format:
