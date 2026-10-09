@@ -7,6 +7,7 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
+import me.blockcraft.api.audit.StaffAudit;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.nick.Nick;
 import me.blockcraft.core.nick.Nicks;
@@ -23,13 +24,17 @@ public final class NickCommand {
     private NickCommand() {
     }
 
-    public static LiteralCommandNode<CommandSourceStack> create(Nicks nicks, Messages messages) {
+    public static LiteralCommandNode<CommandSourceStack> create(Nicks nicks, StaffAudit audit, Messages messages) {
         return Commands.literal("nick")
                 .requires(source -> source.getSender() instanceof Player player && player.hasPermission(PERMISSION))
-                .executes(context -> assign(context, nicks, messages, Optional.empty()))
+                .executes(context -> assign(context, nicks, audit, messages, Optional.empty()))
                 .then(Commands.literal("off").executes(context -> {
                     var player = context.getSource().getPlayerOrThrow();
-                    player.sendMessage(messages.get(nicks.restore(player) ? "nick.removed" : "nick.none"));
+                    boolean removed = nicks.restore(player);
+                    if (removed) {
+                        audit.record(player, "nick.off");
+                    }
+                    player.sendMessage(messages.get(removed ? "nick.removed" : "nick.none"));
                     return Command.SINGLE_SUCCESS;
                 }))
                 .then(Commands.argument("rank", StringArgumentType.word())
@@ -44,18 +49,21 @@ public final class NickCommand {
                                         Placeholder.unparsed("ranks", String.join(", ", nicks.ranks()))));
                                 return Command.SINGLE_SUCCESS;
                             }
-                            return assign(context, nicks, messages, Optional.of(rank));
+                            return assign(context, nicks, audit, messages, Optional.of(rank));
                         }))
                 .build();
     }
 
-    private static int assign(CommandContext<CommandSourceStack> context, Nicks nicks, Messages messages, Optional<String> rank)
-            throws CommandSyntaxException {
+    private static int assign(CommandContext<CommandSourceStack> context, Nicks nicks, StaffAudit audit, Messages messages,
+                              Optional<String> rank) throws CommandSyntaxException {
         var player = context.getSource().getPlayerOrThrow();
         player.sendMessage(messages.get("nick.loading"));
-        nicks.assign(player, rank, nick -> player.sendMessage(nick
-                .map(worn -> messages.get("nick.assigned", Nicks.shown(player, worn)))
-                .orElseGet(() -> messages.get("nick.failed"))));
+        nicks.assign(player, rank, nick -> {
+            nick.ifPresent(worn -> audit.record(player, "nick.on", worn.name()));
+            player.sendMessage(nick
+                    .map(worn -> messages.get("nick.assigned", Nicks.shown(player, worn)))
+                    .orElseGet(() -> messages.get("nick.failed")));
+        });
         return Command.SINGLE_SUCCESS;
     }
 }

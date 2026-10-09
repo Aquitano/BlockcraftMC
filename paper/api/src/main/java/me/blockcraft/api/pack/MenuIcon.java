@@ -33,7 +33,13 @@ public enum MenuIcon {
     EMERALDRUSH(Material.EMERALD),
     DUELL(Material.SHIELD),
     JUMP(Material.DIAMOND_BOOTS),
-    START(Material.DIAMOND);
+    START(Material.DIAMOND),
+    STAFF_RANDOM(Material.COMPASS),
+    STAFF_FREEZE(Material.PACKED_ICE),
+    STAFF_INVSEE(Material.CHEST),
+    STAFF_REPORTS(Material.BOOK),
+    STAFF_INFO(Material.SPYGLASS),
+    STAFF_SPECTATE(Material.ENDER_EYE);
 
     /** Draws nothing at all; the outer slots of a toolbar button wear it so the whole bar answers hover and click. */
     public static final Key EMPTY_MODEL = Key.key("blockcraft", "empty");

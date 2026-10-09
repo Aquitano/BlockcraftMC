@@ -73,6 +73,7 @@ public final class SystemConfig {
     private final int maxStrikes;
     private final int autoBroadcastMinutes;
     private final int historyLimit;
+    private final int staffLogPageSize;
     private final Duration watchRecent;
     private final Alts alts;
     private final Freeze freeze;
@@ -113,6 +114,7 @@ public final class SystemConfig {
         this.maxStrikes = number(root, "max-strikes", 5);
         this.autoBroadcastMinutes = number(root, "auto-broadcast-minutes", 5);
         this.historyLimit = Math.max(1, number(YamlFile.section(root, "history"), "limit", 10));
+        this.staffLogPageSize = Math.max(1, number(YamlFile.section(root, "stafflog"), "page-size", 10));
         this.watchRecent = Duration.ofDays(Math.max(1, number(YamlFile.section(root, "watch"), "recent-days", 30)));
         var alts = YamlFile.section(root, "alts");
         this.alts = new Alts(Duration.ofDays(Math.max(1, number(alts, "retention-days", 90))),
@@ -187,6 +189,10 @@ public final class SystemConfig {
 
     public int historyLimit() {
         return historyLimit;
+    }
+
+    public int staffLogPageSize() {
+        return staffLogPageSize;
     }
 
     /** How far back a punishment still flags a login for the team. */

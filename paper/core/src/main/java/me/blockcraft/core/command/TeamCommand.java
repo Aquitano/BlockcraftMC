@@ -16,7 +16,7 @@ public final class TeamCommand {
 
     public static LiteralCommandNode<CommandSourceStack> create(Messages messages) {
         return Commands.literal("team")
-                .requires(CorePermission.player("team"))
+                .requires(CorePermission.of("team"))
                 .executes(context -> help(context.getSource(), messages))
                 .then(Commands.literal("help").executes(context -> help(context.getSource(), messages)))
                 .build();

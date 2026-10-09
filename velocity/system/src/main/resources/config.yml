@@ -60,6 +60,10 @@ motd:
 history:
   limit: 10
 
+# How many staff actions one /stafflog page lists.
+stafflog:
+  page-size: 10
+
 # The team is told when a player with open reports or a punishment from the last N days logs in.
 watch:
   recent-days: 30

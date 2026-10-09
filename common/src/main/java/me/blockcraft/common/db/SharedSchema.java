@@ -146,6 +146,21 @@ final class SharedSchema {
             "ALTER TABLE bc_warns ADD COLUMN IF NOT EXISTS issuer VARCHAR(16) NULL",
             "ALTER TABLE bc_warns ADD COLUMN IF NOT EXISTS issuer_uuid CHAR(36) NULL"
         )),
+        new Migration(9, List.of(
+            "CREATE TABLE IF NOT EXISTS bc_staff_actions ("
+                + "id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, "
+                + "issuer_uuid CHAR(36) NULL, "
+                + "issuer_name VARCHAR(16) NOT NULL, "
+                + "action VARCHAR(32) NOT NULL, "
+                + "target_uuid CHAR(36) NULL, "
+                + "target_name VARCHAR(16) NULL, "
+                + "detail TEXT NULL, "
+                + "server VARCHAR(64) NOT NULL, "
+                + "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, "
+                + "INDEX idx_bc_staff_actions_issuer (issuer_uuid, created_at), "
+                + "INDEX idx_bc_staff_actions_target (target_uuid, created_at), "
+                + "INDEX idx_bc_staff_actions_created (created_at))"
+        )),
         new Migration(10, List.of(
             "CREATE TABLE IF NOT EXISTS bc_player_addresses ("
                 + "player_uuid CHAR(36) NOT NULL, "

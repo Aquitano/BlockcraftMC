@@ -6,6 +6,7 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
+import me.blockcraft.api.audit.StaffAudit;
 import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 
@@ -16,9 +17,9 @@ public final class SudoCommand {
     private SudoCommand() {
     }
 
-    public static LiteralCommandNode<CommandSourceStack> create(Messages messages, Set<String> protectedNames) {
+    public static LiteralCommandNode<CommandSourceStack> create(StaffAudit audit, Messages messages, Set<String> protectedNames) {
         return Commands.literal("sudo")
-                .requires(CorePermission.player("sudo"))
+                .requires(CorePermission.of("sudo"))
                 .executes(context -> {
                     context.getSource().getSender().sendMessage(messages.get("sudo.usage"));
                     return Command.SINGLE_SUCCESS;
@@ -43,6 +44,7 @@ public final class SudoCommand {
                                     sender.sendMessage(messages.get("sudo.done",
                                             Placeholder.unparsed("player", target.getName()),
                                             Placeholder.unparsed("message", message)));
+                                    audit.record(sender, "sudo", target, message);
                                     target.chat(message);
                                     return Command.SINGLE_SUCCESS;
                                 })))

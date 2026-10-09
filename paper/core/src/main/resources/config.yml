@@ -2,6 +2,11 @@ sudo:
   protected-players:
     - Aquitano
 
+# /near without a radius looks this far, in blocks; a typed radius may not exceed max-radius.
+near:
+  default-radius: 100
+  max-radius: 500
+
 chat:
   cooldown-seconds: 3
   # How often global mute and /chatslow, both switched on the proxy, are re-read from the database.
