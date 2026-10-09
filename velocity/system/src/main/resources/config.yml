@@ -92,7 +92,6 @@ blocked-commands:
   - "bukkit:help"
   - "bukkit:me"
   - version
-  - tell
   - "minecraft:me"
 
 # /strafe catalogue. duration: <n>s|m|h|d|w|mon|y or permanent.
