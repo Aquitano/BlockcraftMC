@@ -14,6 +14,7 @@ palette:
   quicksg: "<gold>"
   emeraldrush: "<green>"
   duell: "<aqua>"
+  premium: "<gold>"
 
 games:
   quicksg:

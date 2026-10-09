@@ -1,4 +1,4 @@
-prefix: "<gold>Blockcraft <dark_gray>» <reset>"
+prefix: "<accent><ip> <dark>» <reset>"
 
 commands:
   setspawn:
@@ -79,9 +79,9 @@ friends:
 
 premium:
   required:
-    - "<prefix><muted>Dafür benötigst du <gold>Premium<muted>!"
+    - "<prefix><muted>Dafür benötigst du <premium>Premium<muted>!"
     - "<prefix><muted>Mehr erfahren <accent>/Premium"
-  entered: "<prefix><muted>Du betrittst den <gold>Premium <muted>Bereich."
+  entered: "<prefix><muted>Du betrittst den <premium>Premium <muted>Bereich."
 navigator:
   title: "<primary>Spielen <dark>● <muted>Lobby entdecken"
   lore: "<muted>Klicken <dark>· <primary>Besuchen"
@@ -132,11 +132,11 @@ secrets:
     name: "<primary><name>"
   already-found: "<prefix><error>Dieses Secret hast du bereits gefunden!"
   found-title: "<muted>Secret gefunden!"
-  found-subtitle: "<aqua>+<coins> Coins"
+  found-subtitle: "<accent>+<coins> Coins"
   found:
     - "<primary>Secrets <dark>● <muted>Du hast folgendes <white>Secret <muted>gefunden<dark>: <white><secret><dark>!"
     - "<primary>Secrets <dark>● <muted>Herzlichen Glückwunsch!"
-    - "<aqua>+<coins> Coins"
+    - "<accent>+<coins> Coins"
 cosmetics:
   fitting-lore: "<muted>Rechtsklick <dark>· <primary>An einer Figur ansehen"
   preview-lore: "<muted>Rechtsklick <dark>· <primary>Vorschau"
@@ -165,12 +165,12 @@ shop:
   heads-lore: "<bullet><muted>Kaufe dir Köpfe!"
   shirts: "<arrow><primary>Hemden"
   shirts-lore: "<bullet><muted>Kaufe dir Hemden!"
-  premium: "<arrow><gold>Premium"
+  premium: "<arrow><premium>Premium"
   premium-lore: "<bullet><muted>Kaufe dir Premium!"
   premium-grant-failed: "<prefix><error>Premium konnte noch nicht aktiviert werden. Dein Kauf bleibt gespeichert. Klicke erneut auf Premium, um die Aktivierung kostenlos zu wiederholen."
   premium-retry: "<accent>Klicken zum erneuten Aktivieren. Kein weiterer Kauf."
   premium-owned: "<success>Premium ist freigeschaltet."
-  already-premium: "<prefix><muted>Du hast bereits <gold>Premium<muted>."
+  already-premium: "<prefix><muted>Du hast bereits <premium>Premium<muted>."
   bought: "<prefix><success>Freigeschaltet. Viel Spaß damit!"
   balance: "<prefix><muted>Kontostand <dark>· <accent><coins> Coins"
   too-expensive: "<prefix><error>Du benötigst <accent><coins> Coins <error>um dir das zu kaufen."
@@ -212,12 +212,12 @@ npc:
   title: "<arrow><primary>Lobby-Shop"
   subtitle: "<muted>Kaufe dir coole Items!"
 premium-menu:
-  title: "<arrow><gold>Premium"
-  trails: "<arrow><aqua>Spuren"
+  title: "<arrow><premium>Premium"
+  trails: "<arrow><primary>Spuren"
   trails-lore: "<bullet><muted>Hinterlasse Laufspuren!"
-  area: "<arrow><gold>Zum Premiumbereich"
+  area: "<arrow><premium>Zum Premiumbereich"
   area-lore: "<bullet><muted>Teleportiere dich zum Premiumbereich!"
-  pets: "<arrow><aqua>Haustiere"
+  pets: "<arrow><primary>Haustiere"
   pets-lore: "<bullet><muted>Spawne dein eigenes Pet!"
 pets:
   title: "<arrow><primary>Haustiere"
@@ -271,7 +271,7 @@ extras:
   kill-effects-lore: "<bullet><muted>Effekte für deine Kills!"
   win-effects: "<arrow><primary>Win-Effekte"
   win-effects-lore: "<bullet><muted>Effekte für deine Siege!"
-  premium: "<arrow><gold>Premium"
+  premium: "<arrow><premium>Premium"
   premium-lore: "<bullet><muted>Spuren, Haustiere und der Premiumbereich"
   tags: "<arrow><primary>Chat-Tags"
   tags-lore: "<bullet><muted>Ein Tag vor deinem Namen (Premium)"
@@ -283,7 +283,7 @@ effects:
   preview-disabled: "<muted>Aktiviere kosmetische Effekte in den Einstellungen für die Vorschau."
   price-lore: "<arrow><accent><coins> Coins"
   owned-lore: "<arrow><success>Gekauft! <muted>Klicke zum Auswählen."
-  selected-lore: "<arrow><aqua>Ausgewählt"
+  selected-lore: "<arrow><success>Ausgewählt"
   reset: "<arrow><error>Effekt entfernen"
   reset-lore: "<bullet><muted>Klicke um keinen Effekt zu nutzen."
   reset-done: "<prefix><muted>Dein Effekt wurde entfernt."
