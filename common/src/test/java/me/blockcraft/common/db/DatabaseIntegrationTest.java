@@ -73,7 +73,7 @@ public class DatabaseIntegrationTest {
     }
 
     private Database connect(String poolName) {
-        return Database.connect(new DatabaseConfig(HOST, port, schema, USER, password), poolName);
+        return Database.connect(new DatabaseConfig(HOST, port, schema, USER, password, 4, Duration.ofSeconds(30)), poolName);
     }
 
     private int count(String sql, Object... params) {
