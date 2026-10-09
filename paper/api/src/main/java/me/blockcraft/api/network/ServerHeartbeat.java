@@ -11,6 +11,7 @@ import org.bukkit.scheduler.BukkitTask;
 import java.io.IOException;
 import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /** Announces this server in {@code bc_servers} while it runs so the proxy can register it without configuration. */
 public final class ServerHeartbeat {
@@ -19,6 +20,7 @@ public final class ServerHeartbeat {
     private final ServerRepository servers;
     private final ServerIdentity self;
     private final ServerPresence presence;
+    private final AtomicBoolean failing = new AtomicBoolean();
     private BukkitTask task;
 
     public ServerHeartbeat(Plugin plugin, ServerRepository servers, ServerIdentity self, ServerPresence presence) {
@@ -64,8 +66,13 @@ public final class ServerHeartbeat {
     private void beat() {
         try {
             servers.heartbeat(self, presence.status());
+            if (failing.getAndSet(false)) {
+                plugin.getLogger().info("Heartbeat recovered");
+            }
         } catch (DatabaseException e) {
-            plugin.getLogger().warning("Heartbeat failed: " + e.getCause().getMessage());
+            if (!failing.getAndSet(true)) {
+                plugin.getLogger().warning("Heartbeat failed, retrying quietly until it recovers: " + e.getCause().getMessage());
+            }
         }
     }
 
