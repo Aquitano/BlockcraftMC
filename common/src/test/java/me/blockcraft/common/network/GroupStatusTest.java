@@ -40,6 +40,6 @@ public class GroupStatusTest {
     }
 
     private static ServerRecord server(String name, ServerState state, int online, int max) {
-        return new ServerRecord(new ServerIdentity(name, "quicksg", "localhost", 25565), new ServerStatus(state, online, max));
+        return new ServerRecord(new ServerIdentity(name, "quicksg", "localhost", 25565), new ServerStatus(state, online, max, 20, 5));
     }
 }

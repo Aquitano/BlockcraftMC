@@ -87,6 +87,7 @@ import me.blockcraft.system.moderation.MuteGate;
 import me.blockcraft.system.moderation.PunishmentService;
 import me.blockcraft.system.report.Reports;
 import me.blockcraft.system.motd.MotdListener;
+import me.blockcraft.system.network.LagAlert;
 import me.blockcraft.system.network.LobbyAlert;
 import me.blockcraft.system.network.ServerDirectory;
 import me.blockcraft.system.network.ServerDiscovery;
@@ -260,7 +261,8 @@ public final class SystemPlugin {
         register(new PlaytimeCommand(support, lookup, repositories.players(), playtime, messages).create());
 
         var lobbyAlert = new LobbyAlert(proxy, directory, config, messages, logger);
-        proxy.getScheduler().buildTask(this, new ServerDiscovery(proxy, servers, directory, lobbyAlert,
+        var lagAlert = new LagAlert(config, messages, logger);
+        proxy.getScheduler().buildTask(this, new ServerDiscovery(proxy, servers, directory, lobbyAlert, lagAlert,
                         config.discovery().staleSeconds(), logger))
                 .repeat(config.discovery().pollSeconds(), TimeUnit.SECONDS)
                 .schedule();

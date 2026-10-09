@@ -179,6 +179,9 @@ group, the pod name becomes the server name and the pod IP its address.
 When a discovery poll finds no joinable server left in the lobby group, BlockcraftSystem posts the `alerts.no-lobby`
 text to the Discord webhook in `alerts.webhook-url`, and `alerts.lobby-back` once a lobby is joinable again. Each
 change is announced once and at most one alert goes out per `alerts.min-interval-seconds`; an empty URL disables it.
+Every heartbeat also carries the server's one-minute TPS and its average milliseconds per tick; a server above
+`alerts.lag-mspt` for `alerts.lag-polls` polls in a row is posted as `alerts.lag`, and `alerts.lag-over` follows once
+it drops back, under the same once-per-interval limit kept apart from the lobby alert's.
 
 ## Network XP and levels
 

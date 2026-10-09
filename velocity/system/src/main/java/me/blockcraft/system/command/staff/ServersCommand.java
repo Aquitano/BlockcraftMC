@@ -8,8 +8,11 @@ import me.blockcraft.system.SystemConfig;
 import me.blockcraft.system.SystemPermissions;
 import me.blockcraft.system.command.CommandSupport;
 import me.blockcraft.common.network.ServerRepository;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+
+import java.util.Locale;
 
 public final class ServersCommand {
 
@@ -48,7 +51,23 @@ public final class ServersCommand {
                     Placeholder.unparsed("state", entry.server().status().state().name()),
                     Formatter.number("online", entry.server().status().online()),
                     Formatter.number("max", entry.server().status().maxPlayers()),
+                    Placeholder.component("tps", tps(entry.server().status().tps())),
+                    Placeholder.component("mspt", mspt(entry.server().status().mspt())),
                     Placeholder.unparsed("age", durations.format(entry.heartbeatAge()))));
         }
+    }
+
+    private Component tps(double tps) {
+        var health = config.serverHealth();
+        return health(tps < health.tpsCritical() ? "critical" : tps < health.tpsWarn() ? "warn" : "good", tps);
+    }
+
+    private Component mspt(double mspt) {
+        var health = config.serverHealth();
+        return health(mspt >= health.msptCritical() ? "critical" : mspt >= health.msptWarn() ? "warn" : "good", mspt);
+    }
+
+    private Component health(String level, double value) {
+        return messages.get("servers.health." + level, Placeholder.unparsed("value", String.format(Locale.GERMANY, "%.1f", value)));
     }
 }

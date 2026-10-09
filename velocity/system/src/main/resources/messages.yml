@@ -456,8 +456,12 @@ serverjoin:
 servers:
   empty: "<prefix><error>Es ist kein Server eingetragen."
   header: "<prefix><gold>Es sind <count> Server eingetragen."
-  entry: "<prefix><dark_aqua><server> <dark>| <muted><group> <dark>| <accent><state> <dark>| <success><online><dark>/<success><max> <dark>| <muted>Heartbeat vor <age>"
+  entry: "<prefix><dark_aqua><server> <dark>| <muted><group> <dark>| <accent><state> <dark>| <success><online><dark>/<success><max> <dark>| <tps> <muted>TPS <dark>| <mspt> <muted>ms <dark>| <muted>Heartbeat vor <age>"
   entry-stale: "<prefix><error><server> <dark>| <error><group> <dark>| <error><state> <dark>| <error><online><dark>/<error><max> <dark>| <error>Heartbeat vor <age>"
+  health:
+    good: "<success><value>"
+    warn: "<accent><value>"
+    critical: "<error><value>"
 list:
   lines:
     - "<muted><bold><strikethrough>------------  <accent><bold><ip> Netzwerk <dark><bold>- <muted><bold>List <muted><bold><strikethrough>------------"
@@ -725,3 +729,5 @@ discord:
 alerts:
   no-lobby: "Auf <ip> ist keine Lobby mehr erreichbar! Online: <online> Spieler."
   lobby-back: "Auf <ip> ist wieder eine Lobby erreichbar. Online: <online> Spieler."
+  lag: "<server> auf <ip> laggt: <mspt> ms pro Tick, <tps> TPS."
+  lag-over: "<server> auf <ip> läuft wieder flüssig: <mspt> ms pro Tick, <tps> TPS."

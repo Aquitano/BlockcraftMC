@@ -30,7 +30,8 @@ public final class ServerPresence {
     }
 
     public ServerStatus status() {
-        return new ServerStatus(state, Bukkit.getOnlinePlayers().size(), maxPlayers.orElseGet(Bukkit::getMaxPlayers));
+        return new ServerStatus(state, Bukkit.getOnlinePlayers().size(), maxPlayers.orElseGet(Bukkit::getMaxPlayers),
+                Math.min(20, Bukkit.getTPS()[0]), Bukkit.getAverageTickTime());
     }
 
     void onChange(Runnable onChange) {

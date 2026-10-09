@@ -20,10 +20,22 @@ discovery:
   poll-seconds: 5
   stale-seconds: 20
 
-# Discord webhook that is told when no lobby is joinable any more and when one is back; empty disables it.
+# /servers colours a server's TPS below tps-warn and its milliseconds per tick at or above mspt-warn, stronger past
+# the critical values.
+server-health:
+  tps-warn: 19
+  tps-critical: 15
+  mspt-warn: 40
+  mspt-critical: 50
+
+# Discord webhook that is told when no lobby is joinable any more and when one is back; empty disables it. It also
+# hears when a server's milliseconds per tick stay above lag-mspt for lag-polls discovery polls in a row, and when
+# they drop back. Each kind of alert waits min-interval-seconds after its last one.
 alerts:
   webhook-url: ""
   min-interval-seconds: 300
+  lag-mspt: 50
+  lag-polls: 6
 
 # The network resource pack (menu panels, HUD icons; README "Resource pack"). file lives in this plugin's directory,
 # is hashed at startup and served at http://<this proxy>:<port>/<file>; url is that address as clients reach it, or

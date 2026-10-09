@@ -43,6 +43,6 @@ public class ServerDirectoryTest {
     }
 
     private static ServerRecord server(String name, String group, ServerState state) {
-        return new ServerRecord(new ServerIdentity(name, group, "127.0.0.1", 25566), new ServerStatus(state, 4, 8));
+        return new ServerRecord(new ServerIdentity(name, group, "127.0.0.1", 25566), new ServerStatus(state, 4, 8, 20, 5));
     }
 }

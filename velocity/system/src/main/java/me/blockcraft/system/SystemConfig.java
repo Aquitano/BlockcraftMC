@@ -37,7 +37,10 @@ public final class SystemConfig {
     public record Friends(int max, int requestMinutes) {
     }
 
-    public record Alerts(String webhookUrl, int minIntervalSeconds) {
+    public record Alerts(String webhookUrl, int minIntervalSeconds, int lagMspt, int lagPolls) {
+    }
+
+    public record ServerHealth(int tpsWarn, int tpsCritical, int msptWarn, int msptCritical) {
     }
 
     /** {@code file} is relative to the plugin directory and empty disables the pack; {@code port} 0 serves nothing. */
@@ -52,6 +55,7 @@ public final class SystemConfig {
     private final String lobbyGroup;
     private final Discovery discovery;
     private final Alerts alerts;
+    private final ServerHealth serverHealth;
     private final ResourcePack resourcePack;
     private final int maxWarns;
     private final int maxStrikes;
@@ -81,7 +85,11 @@ public final class SystemConfig {
         var discovery = YamlFile.section(root, "discovery");
         this.discovery = new Discovery(number(discovery, "poll-seconds", 5), number(discovery, "stale-seconds", 20));
         var alerts = YamlFile.section(root, "alerts");
-        this.alerts = new Alerts(string(alerts, "webhook-url"), number(alerts, "min-interval-seconds", 300));
+        this.alerts = new Alerts(string(alerts, "webhook-url"), number(alerts, "min-interval-seconds", 300),
+                number(alerts, "lag-mspt", 50), number(alerts, "lag-polls", 6));
+        var serverHealth = YamlFile.section(root, "server-health");
+        this.serverHealth = new ServerHealth(number(serverHealth, "tps-warn", 19), number(serverHealth, "tps-critical", 15),
+                number(serverHealth, "mspt-warn", 40), number(serverHealth, "mspt-critical", 50));
         var resourcePack = YamlFile.section(root, "resource-pack");
         this.resourcePack = new ResourcePack(string(resourcePack, "file"), string(resourcePack, "url"),
                 number(resourcePack, "port", 0), Boolean.TRUE.equals(resourcePack.get("required")));
@@ -132,6 +140,10 @@ public final class SystemConfig {
 
     public Alerts alerts() {
         return alerts;
+    }
+
+    public ServerHealth serverHealth() {
+        return serverHealth;
     }
 
     public ResourcePack resourcePack() {

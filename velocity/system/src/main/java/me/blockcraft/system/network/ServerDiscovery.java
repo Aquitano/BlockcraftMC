@@ -23,16 +23,18 @@ public final class ServerDiscovery implements Runnable {
     private final ServerRepository servers;
     private final ServerDirectory directory;
     private final LobbyAlert lobbyAlert;
+    private final LagAlert lagAlert;
     private final int staleSeconds;
     private final Logger logger;
     private final Map<String, ServerInfo> registered = new HashMap<>();
 
     public ServerDiscovery(ProxyServer proxy, ServerRepository servers, ServerDirectory directory, LobbyAlert lobbyAlert,
-                           int staleSeconds, Logger logger) {
+                           LagAlert lagAlert, int staleSeconds, Logger logger) {
         this.proxy = proxy;
         this.servers = servers;
         this.directory = directory;
         this.lobbyAlert = lobbyAlert;
+        this.lagAlert = lagAlert;
         this.staleSeconds = staleSeconds;
         this.logger = logger;
     }
@@ -58,6 +60,7 @@ public final class ServerDiscovery implements Runnable {
         alive.forEach(server -> register(server.identity()));
         directory.update(alive);
         lobbyAlert.check();
+        lagAlert.check(alive);
     }
 
     private void register(ServerIdentity server) {
