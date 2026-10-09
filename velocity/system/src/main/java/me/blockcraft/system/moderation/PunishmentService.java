@@ -70,12 +70,6 @@ public final class PunishmentService {
         });
     }
 
-    public void unban(Target target, PlayerReference issuer) {
-        punishments.revoke(target.uuid(), PunishmentType.BAN, issuer);
-        notify(SystemPermissions.KICK, "unban.notify",
-                Placeholder.unparsed("player", target.name()), Placeholder.unparsed("issuer", issuer.name()));
-    }
-
     public void mute(Target target, String reason, PlayerReference issuer, Optional<Duration> duration) {
         punishments.mute(target.uuid(), reason, issuer, duration);
         punishments.activeMute(target.uuid()).ifPresent(mute -> {
@@ -84,10 +78,13 @@ public final class PunishmentService {
         });
     }
 
-    public void unmute(Target target, PlayerReference issuer) {
-        punishments.revoke(target.uuid(), PunishmentType.MUTE, issuer);
-        notify(SystemPermissions.TEAM, "unmute.notify",
-                Placeholder.unparsed("player", target.name()), Placeholder.unparsed("issuer", issuer.name()));
+    public void revoke(Target target, PunishmentType type, PlayerReference issuer) {
+        punishments.revoke(target.uuid(), type, issuer);
+        var placeholders = TagResolver.resolver(Placeholder.unparsed("player", target.name()), Placeholder.unparsed("issuer", issuer.name()));
+        switch (type) {
+            case BAN -> notify(SystemPermissions.KICK, "unban.notify", placeholders);
+            case MUTE -> notify(SystemPermissions.TEAM, "unmute.notify", placeholders);
+        }
     }
 
     /** Ends the active punishment without telling the staff, for a /strafe that replaces it right away. */

@@ -118,6 +118,28 @@ public final class ModerationActions {
         });
     }
 
+    public OperationResult revoke(CommandSource source, PlayerReference reference, PunishmentType type) {
+        boolean ban = type == PunishmentType.BAN;
+        String key = ban ? "unban" : "unmute";
+        if (!permitted(source, ban ? SystemPermissions.BAN : SystemPermissions.MUTE)) {
+            return OperationResult.REJECTED;
+        }
+        var target = lookup.find(reference);
+        if (target.isEmpty()) {
+            source.sendMessage(messages.get("player-unknown", Placeholder.unparsed("player", reference.name())));
+            return OperationResult.REJECTED;
+        }
+        var active = ban ? punishments.activeBan(target.get()) : punishments.activeMute(target.get());
+        if (active.isEmpty()) {
+            source.sendMessage(messages.get(key + (ban ? ".not-banned" : ".not-muted")));
+            return OperationResult.REJECTED;
+        }
+        return store(source, () -> {
+            punishments.revoke(target.get(), type, CommandSupport.sender(source));
+            source.sendMessage(messages.get(key + ".done"));
+        });
+    }
+
     /** The database is the only thing that can still fail here; the source hears about it once, whichever way it asked. */
     private OperationResult store(CommandSource source, Runnable write) {
         try {

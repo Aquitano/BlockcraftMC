@@ -251,6 +251,7 @@ mutelist:
   empty: "<prefix><muted>Es sind derzeit keine <error>Spieler <muted>gemuted."
   header: "<prefix><muted>Diese <error>Spieler <muted>sind derzeit Gemuted:"
   entry: "<prefix><error><player> <dark>| <muted>/check <player>"
+  count: "<prefix><muted>Gemutete Spieler: <accent><count>"
 
 kick:
   usage: "<prefix><muted>Verwende <error>/kick \\<Spieler> \\<Grund>"

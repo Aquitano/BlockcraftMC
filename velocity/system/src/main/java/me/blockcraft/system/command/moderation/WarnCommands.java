@@ -1,6 +1,7 @@
 package me.blockcraft.system.command.moderation;
 
 import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.ProxyServer;
@@ -19,14 +20,17 @@ import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
- * Warns an online player, or an offline one after confirming with the trailing "*" the click action appends.
+ * {@code /warn} warns an online player, or an offline one after confirming with the trailing "*" the click action
+ * appends; {@code /warns} counts, lists and clears them.
  */
-public final class WarnCommand {
+public final class WarnCommands {
 
     private static final String FORCE_SUFFIX = "*";
+    private static final int MAX_LISTED = 18;
 
     private final CommandSupport support;
     private final ProxyServer proxy;
@@ -36,8 +40,8 @@ public final class WarnCommand {
     private final Messages messages;
     private volatile String lastForcedWarn = "";
 
-    public WarnCommand(CommandSupport support, ProxyServer proxy, PlayerLookup lookup, WarnRepository warns, SystemConfig config,
-                       Messages messages) {
+    public WarnCommands(CommandSupport support, ProxyServer proxy, PlayerLookup lookup, WarnRepository warns, SystemConfig config,
+                        Messages messages) {
         this.support = support;
         this.proxy = proxy;
         this.lookup = lookup;
@@ -46,8 +50,12 @@ public final class WarnCommand {
         this.messages = messages;
     }
 
+    public List<BrigadierCommand> create() {
+        return List.of(warn(), warns());
+    }
+
     /** "{@code <player>[*] [reason]}" is one greedy argument because Brigadier words cannot carry the "*". */
-    public BrigadierCommand create() {
+    private BrigadierCommand warn() {
         return new BrigadierCommand(BrigadierCommand.literalArgumentBuilder("warn")
                 .requires(CommandSupport.permission(SystemPermissions.WARN))
                 .executes(support.usage("warn.usage"))
@@ -59,6 +67,24 @@ public final class WarnCommand {
                             String[] parts = StringArgumentType.getString(context, "args").trim().split("\\s+", 2);
                             warn(source, parts[0], parts.length > 1 ? Optional.of(parts[1]) : Optional.empty());
                         }))));
+    }
+
+    private BrigadierCommand warns() {
+        return new BrigadierCommand(BrigadierCommand.literalArgumentBuilder("warns")
+                .requires(CommandSupport.permission(SystemPermissions.WARNS))
+                .executes(support.usage("warns.usage"))
+                .then(confirmClear("clear"))
+                .then(confirmClear("reset"))
+                .then(BrigadierCommand.literalArgumentBuilder("clear*")
+                        .executes(support.run((source, context) -> clearAll(source)))
+                        .then(support.playerArgument("player")
+                                .executes(support.run((source, context) -> clear(source, StringArgumentType.getString(context, "player"))))))
+                .then(BrigadierCommand.literalArgumentBuilder("get")
+                        .executes(support.usage("warns.usage"))
+                        .then(support.playerArgument("player")
+                                .executes(support.run((source, context) -> get(source, StringArgumentType.getString(context, "player"))))))
+                .then(BrigadierCommand.literalArgumentBuilder("list")
+                        .executes(support.run((source, context) -> list(source)))));
     }
 
     private void warn(CommandSource source, String argument, Optional<String> reason) {
@@ -117,6 +143,52 @@ public final class WarnCommand {
             source.sendMessage(messages.get("warn.ban-click", placeholders)
                     .clickEvent(ClickEvent.runCommand("/strafe " + target.name()))
                     .hoverEvent(HoverEvent.showText(messages.get("warn.ban-hover", placeholders))));
+        }
+    }
+
+    private LiteralArgumentBuilder<CommandSource> confirmClear(String literal) {
+        return BrigadierCommand.literalArgumentBuilder(literal)
+                .executes(support.run((source, context) -> source.sendMessage(messages.get("warns.clear-all-confirm")
+                        .clickEvent(ClickEvent.runCommand("/warns clear*"))
+                        .hoverEvent(HoverEvent.showText(messages.get("warns.clear-hover"))))))
+                .then(support.playerArgument("player")
+                        .executes(support.run((source, context) -> {
+                            String player = StringArgumentType.getString(context, "player");
+                            source.sendMessage(messages.get("warns.clear-confirm", Placeholder.unparsed("player", player))
+                                    .clickEvent(ClickEvent.runCommand("/warns clear* " + player))
+                                    .hoverEvent(HoverEvent.showText(messages.get("warns.clear-hover"))));
+                        })));
+    }
+
+    private void clearAll(CommandSource source) {
+        warns.clearAll();
+        source.sendMessage(messages.get("warns.cleared-all"));
+    }
+
+    private void clear(CommandSource source, String name) {
+        lookup.find(name).ifPresentOrElse(target -> {
+            int removed = warns.clear(target.uuid());
+            source.sendMessage(messages.get("warns.cleared", Placeholder.unparsed("player", target.name()), Formatter.number("count", removed)));
+        }, () -> source.sendMessage(messages.get("player-unknown", Placeholder.unparsed("player", name))));
+    }
+
+    private void get(CommandSource source, String name) {
+        lookup.find(name).ifPresentOrElse(
+                target -> source.sendMessage(messages.get("warns.get",
+                        Placeholder.unparsed("player", target.name()), Formatter.number("count", warns.count(target.uuid())))),
+                () -> source.sendMessage(messages.get("player-unknown", Placeholder.unparsed("player", name))));
+    }
+
+    private void list(CommandSource source) {
+        var counts = warns.counts();
+        if (counts.size() > MAX_LISTED) {
+            source.sendMessage(messages.get("warns.too-many"));
+            return;
+        }
+        source.sendMessage(messages.get("warns.list-header", Formatter.number("count", counts.size())));
+        for (var entry : counts) {
+            source.sendMessage(messages.get("warns.list-entry",
+                    Placeholder.unparsed("player", entry.name()), Formatter.number("count", entry.count())));
         }
     }
 }
