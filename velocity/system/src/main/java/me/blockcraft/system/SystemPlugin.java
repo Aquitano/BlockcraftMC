@@ -10,15 +10,19 @@ import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
 import me.blockcraft.build.BuildConstants;
+import me.blockcraft.common.coins.CoinBalanceRepository;
 import me.blockcraft.common.db.Database;
 import me.blockcraft.common.discord.DiscordLinkRepository;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.moderation.ModerationRepositories;
+import me.blockcraft.common.moderation.PlayerAddressRepository;
 import me.blockcraft.common.moderation.PunishmentCatalogRepository;
 import me.blockcraft.common.nick.NickRepository;
 import me.blockcraft.common.network.ServerRepository;
 import me.blockcraft.common.network.operation.NetworkRequest;
 import me.blockcraft.common.settings.PlayerSettingRepository;
+import me.blockcraft.system.alt.AddressHasher;
+import me.blockcraft.system.alt.AltListener;
 import me.blockcraft.system.command.CommandSupport;
 import me.blockcraft.system.command.moderation.BanCommand;
 import me.blockcraft.system.command.moderation.BanListCommand;
@@ -56,6 +60,7 @@ import me.blockcraft.system.command.player.SeenCommand;
 import me.blockcraft.system.command.player.SupportCommand;
 import me.blockcraft.system.command.player.YouTuberCommand;
 import me.blockcraft.system.command.staff.AddPremiumCommand;
+import me.blockcraft.system.command.staff.AltsCommand;
 import me.blockcraft.system.command.staff.BroadcastCommand;
 import me.blockcraft.system.command.staff.ClearChatCommand;
 import me.blockcraft.system.command.staff.FindCommand;
@@ -75,6 +80,7 @@ import me.blockcraft.system.friends.FriendManager;
 import me.blockcraft.system.friends.FriendRepository;
 import me.blockcraft.system.friends.SpectateRequests;
 import me.blockcraft.system.listener.CommandListener;
+import me.blockcraft.system.listener.FreezeQuitListener;
 import me.blockcraft.system.listener.InitialServerListener;
 import me.blockcraft.system.listener.KickListener;
 import me.blockcraft.system.listener.LoginListener;
@@ -147,6 +153,7 @@ public final class SystemPlugin {
         var nicks = new NickRepository(database);
         var playerSettings = new PlayerSettingRepository(database);
         var friendships = new FriendRepository(database);
+        var addresses = new PlayerAddressRepository(database);
         friendships.createTable();
         var catalog = new PunishmentCatalogRepository(database);
         catalog.replace(config.punishments().entrySet().stream()
@@ -195,7 +202,12 @@ public final class SystemPlugin {
         events.register(this, new FriendListener(friends, visibility, logger));
         events.register(this, spectating);
         events.register(this, new SupportListener(supportSessions, messages));
-        events.register(this, new WatchListener(proxy, repositories.watches(), config.watchRecent(), messages, logger));
+        events.register(this, new WatchListener(proxy, repositories.watches(), config.watchRecent(), config.alts().retention(),
+                messages, logger));
+        var alts = new AltListener(addresses, AddressHasher.load(dataDirectory), config.alts(), messages, logger);
+        events.register(this, alts);
+        events.register(this, new FreezeQuitListener(this, proxy, repositories.frozen(), punishments, moderationActions,
+                config.freeze(), messages, logger));
         events.register(this, playtime);
         pack = NetworkPack.start(proxy, config.resourcePack(), dataDirectory, messages.get("resource-pack.prompt"), logger);
         pack.ifPresent(networkPack -> events.register(this, networkPack));
@@ -235,7 +247,8 @@ public final class SystemPlugin {
         register(new ServersCommand(support, servers, config, messages).create());
         register(new ListCommand(support, visibility, messages).create());
         register(new WhoisCommand(support, lookup, repositories.players(), repositories.strikes(), repositories.warns(),
-                punishments, playtime, messages).create());
+                punishments, playtime, new CoinBalanceRepository(database), addresses, config.alts().retention(), messages).create());
+        register(new AltsCommand(support, lookup, addresses, config.alts().retention(), messages).create());
 
         register(new HubCommand(support, lobby).create(), "h", "lobby", "l");
         register(new PlayCommand(support, lobby, directory).create());
@@ -276,6 +289,7 @@ public final class SystemPlugin {
                 .repeat(config.autoBroadcastMinutes(), TimeUnit.MINUTES)
                 .schedule();
         DailySchedule.at(config.joinMe().resetHour(), proxy.getScheduler(), this, joinMe::resetDailyUses);
+        DailySchedule.at(config.alts().purgeHour(), proxy.getScheduler(), this, alts::purgeExpired);
         logger.info("BlockcraftSystem enabled");
     }
 

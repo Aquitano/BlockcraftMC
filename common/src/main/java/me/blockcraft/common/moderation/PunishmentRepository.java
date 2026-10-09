@@ -20,7 +20,7 @@ public final class PunishmentRepository {
 
     private static final String COLUMNS = "id, player_uuid, type, reason, issuer, issuer_uuid, UNIX_TIMESTAMP(created_at) AS created_at, "
             + "UNIX_TIMESTAMP(expires_at) AS expires_at, UNIX_TIMESTAMP(revoked_at) AS revoked_at, revoked_by, revoked_by_uuid";
-    private static final String ACTIVE = "revoked_at IS NULL AND (expires_at IS NULL OR expires_at > NOW())";
+    static final String ACTIVE = "revoked_at IS NULL AND (expires_at IS NULL OR expires_at > NOW())";
 
     private final Database db;
 

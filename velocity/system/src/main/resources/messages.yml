@@ -408,6 +408,23 @@ tc:
 watch:
   joined: "<prefix><error><player> <muted>ist online: <accent><reports> <muted>offene Reports, <accent><punishments> <muted>Strafen in den letzten <accent><days> <muted>Tagen."
   hover: "<muted>Klicke für <aqua>/whois <player>"
+  banned-alts: "<prefix><error><player> <muted>nutzt eine Verbindung, über die <accent><count> <muted>gebannte Accounts gespielt haben."
+  alts-hover: "<muted>Klicke für <primary>/alts <player>"
+freeze:
+  quit-punished: "<prefix><error><player> <muted>hat das Netzwerk eingefroren verlassen und wurde automatisch bestraft."
+alts:
+  usage: "<prefix><muted>Ausführung: <error>/alts \\<Spieler>"
+  none: "<prefix><muted>Über die Verbindungen von <accent><player> <muted>hat in den letzten <accent><days> <muted>Tagen kein anderer Account gespielt."
+  header: "<prefix><accent><count> <muted>Accounts teilen in den letzten <accent><days> <muted>Tagen eine Verbindung mit <accent><player><muted>:"
+  entry: "<prefix><bullet><accent><player> <dark>| <muted>zuletzt vor <time><ban-flag><mute-flag>"
+  banned: " <dark>| <error>gebannt"
+  muted: " <dark>| <accent>gemutet"
+  hover: "<muted>Klicke für <primary>/whois <player>"
+  blocked:
+    - "<prefix><muted>Über deine Verbindung hat ein <error>gesperrter Account <muted>auf <error><ip> <muted>gespielt."
+    - " "
+    - " <muted>Ist das ein Irrtum? Melde dich im Forum:"
+    - " <primary><website>/Forum"
 find:
   usage: "<prefix>Syntax: /find \\<Spieler>"
   found: "<prefix><success>Der Spieler befindet sich auf dem Server <dark_aqua><server><success>."
@@ -480,7 +497,10 @@ whois:
     - "<prefix><accent>Erster Login: <dark_aqua><first>"
     - "<prefix><accent>Zuletzt gesehen: <dark_aqua><last>"
     - "<prefix><accent>Spielzeit: <dark_aqua><playtime>"
-    - "<prefix><accent>Server: <dark_aqua><server>"
+    - "<prefix><accent>Server: <dark_aqua><server> <dark>| <accent>Ping: <ping>"
+    - "<prefix><accent>Version: <client>"
+    - "<prefix><accent>Coins: <dark_aqua><coins>"
+    - "<prefix><accent>Geteilte Verbindungen: <alts>"
     - "<prefix><accent>Bann: <ban>"
     - "<prefix><accent>Mute: <mute>"
     - "<prefix><accent>Strikes: <dark_aqua><strikes> <dark>| <accent>Verwarnungen: <dark_aqua><warns>"
@@ -492,6 +512,11 @@ whois:
   none: "<muted>Keiner"
   punishment: "<error><reason> <dark>(<remaining><dark>)"
   unknown-rank: "unbekannt"
+  ping: "<primary><ping>ms"
+  client: "<primary><version> <dark>(<muted>Protokoll <protocol><dark>)"
+  client-range: "<first> - <last>"
+  alts: "<primary><count> Accounts <muted>(<primary>/alts<muted>)"
+  alts-hover: "<muted>Klicke für <primary>/alts <player>"
 
 hub:
   unavailable: "<prefix><error>Derzeit sind keine Lobby-Server verfügbar."

@@ -43,6 +43,14 @@ public final class SystemConfig {
     public record ServerHealth(int tpsWarn, int tpsCritical, int msptWarn, int msptCritical) {
     }
 
+    /** {@code retention} bounds both what {@code /alts} reports and how long an address hash is kept. */
+    public record Alts(Duration retention, boolean blockBannedAlts, int purgeHour) {
+    }
+
+    /** {@code quitPunishment} is a {@code /strafe} catalogue number, 0 for none. */
+    public record Freeze(int quitPunishment, Duration quitGrace) {
+    }
+
     /** {@code file} is relative to the plugin directory and empty disables the pack; {@code port} 0 serves nothing. */
     public record ResourcePack(String file, String url, int port, boolean required) {
     }
@@ -62,6 +70,8 @@ public final class SystemConfig {
     private final int autoBroadcastMinutes;
     private final int historyLimit;
     private final Duration watchRecent;
+    private final Alts alts;
+    private final Freeze freeze;
     private final int tabRefreshSeconds;
     private final int discordCodeMinutes;
     private final JoinMe joinMe;
@@ -98,6 +108,11 @@ public final class SystemConfig {
         this.autoBroadcastMinutes = number(root, "auto-broadcast-minutes", 5);
         this.historyLimit = Math.max(1, number(YamlFile.section(root, "history"), "limit", 10));
         this.watchRecent = Duration.ofDays(Math.max(1, number(YamlFile.section(root, "watch"), "recent-days", 30)));
+        var alts = YamlFile.section(root, "alts");
+        this.alts = new Alts(Duration.ofDays(Math.max(1, number(alts, "retention-days", 90))),
+                Boolean.TRUE.equals(alts.get("block-banned-alts")), number(alts, "purge-hour", 4));
+        var freeze = YamlFile.section(root, "freeze");
+        this.freeze = new Freeze(number(freeze, "quit-punishment", 0), Duration.ofSeconds(number(freeze, "quit-grace-seconds", 10)));
         this.tabRefreshSeconds = number(YamlFile.section(root, "tab"), "refresh-seconds", 5);
         this.discordCodeMinutes = number(root, "discord-code-minutes", 10);
         var joinMe = YamlFile.section(root, "joinme");
@@ -169,6 +184,14 @@ public final class SystemConfig {
     /** How far back a punishment still flags a login for the team. */
     public Duration watchRecent() {
         return watchRecent;
+    }
+
+    public Alts alts() {
+        return alts;
+    }
+
+    public Freeze freeze() {
+        return freeze;
     }
 
     public int tabRefreshSeconds() {

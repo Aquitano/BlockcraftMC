@@ -251,7 +251,17 @@ A game's own `messages.yml` holds its introduction and game-specific wording. `M
 checks that every key a plugin asks its messages for exists in its `messages.yml` or BlockcraftAPI's.
 
 `/history <player>` shows bans and mutes, including revoked entries, with the display length set by
-`history.limit`. It requires `blockcraft.system.history`; `/whois` also shows the totals.
+`history.limit`. It requires `blockcraft.system.history`; `/whois` also shows the totals, along with ping, client
+version, coins and how many accounts share an address with the player.
+
+Every login records a keyed hash of its address in `bc_player_addresses` (never the address itself; IPv6 by its /64
+prefix), kept for `alts.retention-days` and purged daily. `/alts <player>` (`blockcraft.system.alts`) lists the
+accounts that shared one of those addresses, with last login and whether they are banned or muted now. When a
+joining account shares an address with a banned one, holders of that permission are told from the same per-login
+query; `alts.block-banned-alts` refuses such a login instead.
+
+A player who leaves while frozen and is not back within `freeze.quit-grace-seconds` gets the `/strafe` number
+`freeze.quit-punishment` in the name of whoever froze them; 0, the default, only tells the team.
 
 `/report <player>` opens a reason dialog on the backend. Staff can claim reports, edit their status and choose
 catalogue or custom timed punishments. Claims identify the staff account even while it is nicked.
@@ -414,3 +424,7 @@ In containers, environment variables replace the config edits: `BLOCKCRAFT_DB_HO
 `BLOCKCRAFT_DB_NAME`, `BLOCKCRAFT_DB_USER` and `BLOCKCRAFT_DB_PASSWORD` override the `database` section of every
 Blockcraft plugin, `BLOCKCRAFT_WORLD_TEMPLATE` the map template (see "Maps"), and LuckPerms reads
 `LUCKPERMS_STORAGE_METHOD`, `LUCKPERMS_DATA_ADDRESS` and friends itself; `docker-compose.yml` shows the full set.
+
+Alt detection stores login addresses only as an HMAC-SHA256 under a secret the proxy generates once into
+`plugins/blockcraft-system/address-secret`. Several proxies sharing one database must hash alike, so give them all the
+same `BLOCKCRAFT_ADDRESS_SECRET`, which then replaces the file. Changing the secret unlinks every stored hash.

@@ -17,19 +17,25 @@ import org.slf4j.Logger;
 
 import java.time.Duration;
 
-/** Tells the team when a player with open reports or a punishment from the last {@code watch.recent-days} logs in. */
+/**
+ * Tells the team when a player with open reports or a punishment from the last {@code watch.recent-days} logs in, and
+ * whoever may run {@code /alts} when the player shares an address with a banned account.
+ */
 public final class WatchListener {
 
     private final ProxyServer proxy;
     private final WatchRepository watches;
     private final Duration recent;
+    private final Duration addressRetention;
     private final Messages messages;
     private final Logger logger;
 
-    public WatchListener(ProxyServer proxy, WatchRepository watches, Duration recent, Messages messages, Logger logger) {
+    public WatchListener(ProxyServer proxy, WatchRepository watches, Duration recent, Duration addressRetention, Messages messages,
+                         Logger logger) {
         this.proxy = proxy;
         this.watches = watches;
         this.recent = recent;
+        this.addressRetention = addressRetention;
         this.messages = messages;
         this.logger = logger;
     }
@@ -39,9 +45,12 @@ public final class WatchListener {
         Player player = event.getPlayer();
         return EventTask.async(() -> {
             try {
-                var watch = watches.of(player.getUniqueId(), player.getUsername(), recent);
-                if (!watch.isEmpty()) {
+                var watch = watches.of(player.getUniqueId(), player.getUsername(), recent, addressRetention);
+                if (watch.hasRecord()) {
                     alert(player, watch);
+                }
+                if (watch.bannedAlts() > 0) {
+                    alertBannedAlts(player, watch.bannedAlts());
                 }
             } catch (DatabaseException e) {
                 logger.warn("Could not look up reports and punishments of {}", player.getUsername(), e);
@@ -59,6 +68,18 @@ public final class WatchListener {
                 .hoverEvent(HoverEvent.showText(messages.get("watch.hover", name)));
         for (Player staff : proxy.getAllPlayers()) {
             if (staff.hasPermission(SystemPermissions.TEAM)) {
+                staff.sendMessage(notice);
+            }
+        }
+    }
+
+    private void alertBannedAlts(Player player, int bannedAlts) {
+        var name = Placeholder.unparsed("player", player.getUsername());
+        var notice = messages.get("watch.banned-alts", name, Formatter.number("count", bannedAlts))
+                .clickEvent(ClickEvent.runCommand("/alts " + player.getUsername()))
+                .hoverEvent(HoverEvent.showText(messages.get("watch.alts-hover", name)));
+        for (Player staff : proxy.getAllPlayers()) {
+            if (staff.hasPermission(SystemPermissions.ALTS)) {
                 staff.sendMessage(notice);
             }
         }

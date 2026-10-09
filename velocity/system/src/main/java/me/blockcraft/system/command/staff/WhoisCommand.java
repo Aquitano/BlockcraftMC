@@ -3,9 +3,13 @@ package me.blockcraft.system.command.staff;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.api.network.ProtocolVersion;
+import com.velocitypowered.api.proxy.Player;
+import me.blockcraft.common.coins.CoinBalanceRepository;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.moderation.DurationText;
 import me.blockcraft.common.moderation.KnownPlayer;
+import me.blockcraft.common.moderation.PlayerAddressRepository;
 import me.blockcraft.common.moderation.PlayerRepository;
 import me.blockcraft.common.moderation.Punishment;
 import me.blockcraft.common.moderation.StrikeRepository;
@@ -18,6 +22,8 @@ import me.blockcraft.system.command.CommandSupport;
 import me.blockcraft.system.moderation.PunishmentService;
 import me.blockcraft.system.rank.ProxyRanks;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
@@ -35,11 +41,15 @@ public final class WhoisCommand {
     private final WarnRepository warns;
     private final PunishmentService punishments;
     private final Playtime playtime;
+    private final CoinBalanceRepository coins;
+    private final PlayerAddressRepository addresses;
+    private final Duration addressRetention;
     private final Messages messages;
     private final DurationText durations;
 
     public WhoisCommand(CommandSupport support, PlayerLookup lookup, PlayerRepository players, StrikeRepository strikes,
-                        WarnRepository warns, PunishmentService punishments, Playtime playtime, Messages messages) {
+                        WarnRepository warns, PunishmentService punishments, Playtime playtime, CoinBalanceRepository coins,
+                        PlayerAddressRepository addresses, Duration addressRetention, Messages messages) {
         this.support = support;
         this.lookup = lookup;
         this.players = players;
@@ -47,6 +57,9 @@ public final class WhoisCommand {
         this.warns = warns;
         this.punishments = punishments;
         this.playtime = playtime;
+        this.coins = coins;
+        this.addresses = addresses;
+        this.addressRetention = addressRetention;
         this.messages = messages;
         this.durations = new DurationText(messages);
     }
@@ -86,7 +99,31 @@ public final class WhoisCommand {
                 Formatter.number("bans", history.bans()),
                 Formatter.number("mutes", history.mutes()),
                 Formatter.number("strikes", strikes.count(known.uuid())),
-                Formatter.number("warns", warns.count(known.uuid())));
+                Formatter.number("warns", warns.count(known.uuid())),
+                Placeholder.component("ping", target.online()
+                        .map(player -> messages.get("whois.ping", Formatter.number("ping", player.getPing())))
+                        .orElseGet(() -> messages.get("whois.offline"))),
+                Placeholder.component("client", target.online()
+                        .map(Player::getProtocolVersion)
+                        .map(this::client)
+                        .orElseGet(() -> messages.get("whois.offline"))),
+                Formatter.number("coins", coins.balance(known.uuid())),
+                Placeholder.component("alts", alts(known)));
+    }
+
+    private Component client(ProtocolVersion version) {
+        String first = version.getVersionIntroducedIn();
+        String last = version.getMostRecentSupportedVersion();
+        var name = first.equals(last) ? Component.text(first)
+                : messages.get("whois.client-range", Placeholder.unparsed("first", first), Placeholder.unparsed("last", last));
+        return messages.get("whois.client", Placeholder.component("version", name), Formatter.number("protocol", version.getProtocol()));
+    }
+
+    private Component alts(KnownPlayer known) {
+        var count = Formatter.number("count", addresses.alts(known.uuid(), addressRetention).size());
+        return messages.get("whois.alts", count)
+                .clickEvent(ClickEvent.runCommand("/alts " + known.name()))
+                .hoverEvent(HoverEvent.showText(messages.get("whois.alts-hover", Placeholder.unparsed("player", known.name()))));
     }
 
     private Component punishment(String name, Optional<Punishment> active) {

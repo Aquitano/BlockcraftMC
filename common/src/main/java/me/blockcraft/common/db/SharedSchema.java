@@ -142,6 +142,15 @@ final class SharedSchema {
                 + "updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, "
                 + "PRIMARY KEY (player_uuid, season))"
         )),
+        new Migration(10, List.of(
+            "CREATE TABLE IF NOT EXISTS bc_player_addresses ("
+                + "player_uuid CHAR(36) NOT NULL, "
+                + "address_hash BINARY(32) NOT NULL, "
+                + "first_seen TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, "
+                + "last_seen TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, "
+                + "PRIMARY KEY (player_uuid, address_hash), "
+                + "INDEX idx_bc_player_addresses_hash (address_hash))"
+        )),
         new Migration(11, List.of(
             "ALTER TABLE bc_servers ADD COLUMN IF NOT EXISTS tps DECIMAL(4,2) NOT NULL DEFAULT 20",
             "ALTER TABLE bc_servers ADD COLUMN IF NOT EXISTS mspt DECIMAL(8,2) NOT NULL DEFAULT 0"
