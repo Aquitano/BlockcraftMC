@@ -1,7 +1,10 @@
 package me.blockcraft.system.report;
 
+import com.velocitypowered.api.proxy.Player;
 import me.blockcraft.common.config.YamlFile;
-import org.yaml.snakeyaml.Yaml;
+import me.blockcraft.common.settings.PlayerSetting;
+import me.blockcraft.common.settings.PlayerSettingRepository;
+import me.blockcraft.system.PlayerChoices;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -9,55 +12,49 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
-/** Staff members who switched report notifications off, persisted as {@code ignored-staff.yml}. */
+/**
+ * Whether a staff member hears about new reports: the {@link PlayerSetting#REPORT_NOTIFICATIONS} toggle. The old
+ * plugin kept the opt-outs in {@code ignored-staff.yml}; that file is imported once and then renamed.
+ */
 public final class NotifyPreferences {
 
-    private final Path file;
-    private final Set<UUID> muted = ConcurrentHashMap.newKeySet();
+    static final String LEGACY_FILE = "ignored-staff.yml";
+    static final String IMPORTED_SUFFIX = ".imported";
 
-    public NotifyPreferences(Path file) {
-        this.file = file;
-        load();
+    private final PlayerChoices choices;
+    private final PlayerSettingRepository settings;
+
+    public NotifyPreferences(PlayerChoices choices, PlayerSettingRepository settings) {
+        this.choices = choices;
+        this.settings = settings;
     }
 
-    public boolean isMuted(UUID player) {
-        return muted.contains(player);
+    public boolean enabled(Player player) {
+        return choices.enabled(player, PlayerSetting.REPORT_NOTIFICATIONS);
     }
 
-    public void mute(UUID player) {
-        muted.add(player);
-        save();
+    public void set(Player player, boolean enabled) {
+        String value = PlayerSetting.value(enabled);
+        settings.set(player.getUniqueId(), PlayerSetting.REPORT_NOTIFICATIONS, value);
+        choices.set(player, PlayerSetting.REPORT_NOTIFICATIONS, value);
     }
 
-    public void unmute(UUID player) {
-        muted.remove(player);
-        save();
-    }
-
-    private void load() {
+    public static void importLegacy(Path directory, PlayerSettingRepository settings) {
+        Path file = directory.resolve(LEGACY_FILE);
         if (Files.notExists(file)) {
             return;
         }
-        try (InputStream in = Files.newInputStream(file)) {
-            if (YamlFile.load(in).get("muted") instanceof List<?> ids) {
-                ids.forEach(id -> muted.add(UUID.fromString(String.valueOf(id))));
-            }
-        } catch (IOException e) {
-            throw new UncheckedIOException("Could not load " + file, e);
-        }
-    }
-
-    private synchronized void save() {
         try {
-            Files.createDirectories(file.getParent());
-            Files.writeString(file, new Yaml().dump(Map.of("muted", muted.stream().map(UUID::toString).sorted().toList())));
+            List<?> muted;
+            try (InputStream in = Files.newInputStream(file)) {
+                muted = YamlFile.load(in).get("muted") instanceof List<?> ids ? ids : List.of();
+            }
+            muted.forEach(id -> settings.set(UUID.fromString(String.valueOf(id)), PlayerSetting.REPORT_NOTIFICATIONS, PlayerSetting.OFF));
+            Files.move(file, directory.resolve(LEGACY_FILE + IMPORTED_SUFFIX));
         } catch (IOException e) {
-            throw new UncheckedIOException("Could not save " + file, e);
+            throw new UncheckedIOException("Could not import " + file, e);
         }
     }
 }

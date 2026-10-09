@@ -132,7 +132,7 @@ public final class ReportService {
             lines.add(messages.get("staff.count", details));
         }
         for (Player staff : proxy.getAllPlayers()) {
-            if (!staff.hasPermission(staffPermission) || preferences.isMuted(staff.getUniqueId())) {
+            if (!staff.hasPermission(staffPermission) || !preferences.enabled(staff)) {
                 continue;
             }
             lines.forEach(staff::sendMessage);

@@ -157,7 +157,7 @@ public final class SystemPlugin {
         var playtime = new Playtime(repositories.players(), logger);
         var support = new CommandSupport(visibility, messages);
         var moderationActions = new ModerationActions(support, lookup, punishments, config, messages);
-        var reports = Reports.load(this, proxy, logger, dataDirectory, database, lookup, visibility,
+        var reports = Reports.load(this, proxy, logger, dataDirectory, database, lookup, visibility, choices, playerSettings,
                 proxy.getPluginManager().fromInstance(this).orElseThrow().getDescription());
         register(reports.command().create());
         proxy.getEventManager().register(this, new OperationListener(proxy, (player, request) -> switch (request) {

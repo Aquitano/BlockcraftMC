@@ -28,7 +28,8 @@ public enum PlayerSetting {
     SOUNDS("sounds", PlayerSetting.ON),
     EFFECTS("effects", PlayerSetting.ON),
     AUTO_NICK("auto-nick", PlayerSetting.OFF, "blockcraft.nick"),
-    KEEP_NICK("keep-nick", PlayerSetting.OFF, "blockcraft.nick");
+    KEEP_NICK("keep-nick", PlayerSetting.OFF, "blockcraft.nick"),
+    REPORT_NOTIFICATIONS("report-notifications", PlayerSetting.ON, "blockcraft.report.notify");
 
     public static final String ON = "on";
     public static final String OFF = "off";

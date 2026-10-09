@@ -268,6 +268,8 @@ jar when deploying this version; the proxy refuses to start while it is loaded. 
 `config.yml`, `messages.yml` and `ignored-staff.yml` are copied from `plugins/blockcraft-report` into
 `plugins/blockcraft-system/reports` where no file exists yet, so messages, cooldown and muted staff survive. The old
 plugin's own database section is gone; if it pointed at a different database, move its `Reports` table first.
+The staff listed in `ignored-staff.yml` get the `report-notifications` setting turned off on that start, and the
+file is renamed to `ignored-staff.yml.imported`; from then on `/report notify` and the settings dialog change it.
 
 Deploy the Paper and Velocity jars together: reports and punishments from a backend travel on `blockcraft:operations`
 as versioned payloads with a request id, and the proxy answers with a result. The proxy accepts a request only from
@@ -314,7 +316,7 @@ Every remembered choice a player makes is one row in `bc_player_settings`, read 
 `common`'s `PlayerSettingRepository`. Cosmetic settings store the chosen key for tags, effects, trails, gadgets,
 pets, heads, and shirts. The toggles store `on` or `off` and count as their own default while no row exists, so nothing has to be seeded:
 `private-messages`, `party-invites`, `friend-requests`, `player-visibility`, `sounds`, and `effects` default to on, the two nick
-toggles (`auto-nick`, `keep-nick`) to off. A toggle may name a permission, and then it is only shown to, and only
+toggles (`auto-nick`, `keep-nick`) to off, and `report-notifications` (staff with `blockcraft.report.notify`) to on. A toggle may name a permission, and then it is only shown to, and only
 read for, the players who hold it.
 
 Paper caches a player's settings for as long as they are online (`BlockcraftApi.get().settings()`) and fires

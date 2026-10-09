@@ -158,6 +158,7 @@ settings:
   sounds: "<arrow><primary>Sounds"
   auto-nick: "<arrow><primary>Automatisch nicken"
   keep-nick: "<arrow><primary>Nick in der Lobby behalten"
+  report-notifications: "<arrow><primary>Report-Benachrichtigungen"
 
 # The dialog behind the pause menu's button and the quick-actions key (G).
 server-menu:

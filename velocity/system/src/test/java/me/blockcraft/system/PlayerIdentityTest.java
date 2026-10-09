@@ -52,6 +52,10 @@ public class PlayerIdentityTest {
             Reports.importLegacy(source, destination);
             assertEquals("report-cooldown-seconds: 30", Files.readString(destination.resolve("config.yml")));
             assertTrue(Files.exists(source.resolve("ignored-staff.yml")));
+
+            Files.move(destination.resolve("ignored-staff.yml"), destination.resolve("ignored-staff.yml.imported"));
+            Reports.importLegacy(source, destination);
+            assertTrue(Files.notExists(destination.resolve("ignored-staff.yml")));
         } finally {
             try (var paths = Files.walk(root)) {
                 for (var path : paths.sorted(Comparator.reverseOrder()).toList()) {
