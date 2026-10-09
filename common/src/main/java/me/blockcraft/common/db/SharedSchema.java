@@ -141,6 +141,21 @@ final class SharedSchema {
                 + "name VARCHAR(16) NOT NULL, "
                 + "updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, "
                 + "PRIMARY KEY (player_uuid, season))"
+        )),
+        new Migration(9, List.of(
+            "CREATE TABLE IF NOT EXISTS bc_staff_actions ("
+                + "id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, "
+                + "issuer_uuid CHAR(36) NULL, "
+                + "issuer_name VARCHAR(16) NOT NULL, "
+                + "action VARCHAR(32) NOT NULL, "
+                + "target_uuid CHAR(36) NULL, "
+                + "target_name VARCHAR(16) NULL, "
+                + "detail TEXT NULL, "
+                + "server VARCHAR(64) NOT NULL, "
+                + "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, "
+                + "INDEX idx_bc_staff_actions_issuer (issuer_uuid, created_at), "
+                + "INDEX idx_bc_staff_actions_target (target_uuid, created_at), "
+                + "INDEX idx_bc_staff_actions_created (created_at))"
         ))
     );
 

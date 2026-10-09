@@ -38,7 +38,7 @@ public class DatabaseIntegrationTest {
     private static final String HOST = "127.0.0.1";
     private static final String USER = "root";
     private static final int APPLIED = SharedSchema.MIGRATIONS.size();
-    private static final int NEXT = APPLIED + 1;
+    private static final int NEXT = SharedSchema.MIGRATIONS.getLast().version() + 1;
 
     private int port;
     private String password;
