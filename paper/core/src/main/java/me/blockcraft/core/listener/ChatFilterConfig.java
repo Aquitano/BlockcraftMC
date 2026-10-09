@@ -4,6 +4,7 @@ import me.blockcraft.common.config.YamlFile;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /** The {@code chat} section of config.yml. */
@@ -14,14 +15,14 @@ public record ChatFilterConfig(Duration cooldown, String allowedDomain, List<Str
         var chat = YamlFile.section(root, "chat");
         return new ChatFilterConfig(
                 Duration.ofSeconds(chat.get("cooldown-seconds") instanceof Number seconds ? seconds.longValue() : 3),
-                String.valueOf(chat.getOrDefault("allowed-domain", "")).toLowerCase(),
+                String.valueOf(chat.getOrDefault("allowed-domain", "")).toLowerCase(Locale.ROOT),
                 lowercased(chat, "blocked-words"),
                 lowercased(chat, "advertisement-terms"));
     }
 
     private static List<String> lowercased(Map<String, Object> section, String key) {
         return section.get(key) instanceof List<?> values
-                ? values.stream().map(String::valueOf).map(String::toLowerCase).toList()
+                ? values.stream().map(String::valueOf).map(value -> value.toLowerCase(Locale.ROOT)).toList()
                 : List.of();
     }
 }
