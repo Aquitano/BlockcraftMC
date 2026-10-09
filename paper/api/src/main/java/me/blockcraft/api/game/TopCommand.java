@@ -1,23 +1,22 @@
-package me.blockcraft.rush.command;
+package me.blockcraft.api.game;
 
-import me.blockcraft.api.game.Stat;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
-import me.blockcraft.rush.menu.RushMenus;
 import org.bukkit.entity.Player;
 
+/** {@code /top <stat>}, the top ten of the game's {@link TopList}. */
 public final class TopCommand {
 
     private TopCommand() {
     }
 
-    public static LiteralCommandNode<CommandSourceStack> create(RushMenus menus) {
+    public static LiteralCommandNode<CommandSourceStack> create(TopList topList) {
         var top = Commands.literal("top").requires(source -> source.getSender() instanceof Player);
-        for (var category : Stat.values()) {
-            top.then(Commands.literal(category.key()).executes(context -> {
-                menus.showTop(context.getSource().getPlayerOrThrow(), category);
+        for (var stat : Stat.values()) {
+            top.then(Commands.literal(stat.key()).executes(context -> {
+                topList.send(context.getSource().getPlayerOrThrow(), stat);
                 return Command.SINGLE_SUCCESS;
             }));
         }

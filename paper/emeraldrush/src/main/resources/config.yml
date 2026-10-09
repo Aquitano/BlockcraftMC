@@ -1,4 +1,5 @@
 min-players: 2
+global-stats-head: Kevos
 emeralds-per-ore: 12
 ore-respawn-seconds: 12
 countdown:

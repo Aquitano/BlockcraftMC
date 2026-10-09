@@ -45,12 +45,6 @@ shopping:
   ends: "<prefix><muted>Die <white>Shopping-Phase <muted>endet in <accent><seconds><muted> Sekunden!"
 deathmatch:
   started: "<prefix><muted>Das Deathmatch hat begonnen!"
-  tracker:
-    - " "
-    - "<prefix><muted><minutes> Minuten sind vorbei, alle Spieler bekommen einen Tracker!"
-    - " "
-  ends-minutes: "<prefix><error>Das Spiel endet in <minutes> Minuten!"
-  ends-minute: "<prefix><error>Das Spiel endet in 1 Minute!"
   draw: "<prefix><error>Unentschieden, die Runde wird neu gestartet!"
   killed: "<prefix><white><victim><muted> wurde von <white><killer><muted> getötet."
   died: "<prefix><white><victim> <muted>ist gestorben."
@@ -197,19 +191,21 @@ shop:
     angel: "<arrow><aqua>Angel"
     lucky-potion: "<arrow><aqua>LuckyPotion"
     strength: "<arrow><aqua>Stärke-Trank"
-stats-menu:
-  title: "<arrow><primary>Stats"
-  entry: "<accent><player>"
-  entry-lore:
-    - "<arrow><primary>Siege<dark>: <muted><wins>"
-    - "<arrow><primary>Niederlagen<dark>: <muted><losses>"
-    - "<arrow><primary>Tode<dark>: <muted><deaths>"
-    - "<arrow><primary>Kills<dark>: <muted><kills>"
-    - "<arrow><primary>Punkte<dark>: <muted><points>"
-  global: "<arrow><aqua>Globale Stats"
-  global-title: "<arrow><primary>Globale Stats"
-  wins: "<arrow><aqua>Siege"
-  deaths: "<arrow><aqua>Tode"
-  kills: "<arrow><aqua>Kills"
-  loses: "<arrow><aqua>Niederlagen"
-  points: "<arrow><aqua>Punkte"
+menu:
+  stats:
+    title: "<arrow><primary>Stats"
+    player: "<accent><player>"
+    player-lore:
+      - "<arrow><primary>Siege<dark>: <muted><wins>"
+      - "<arrow><primary>Niederlagen<dark>: <muted><losses>"
+      - "<arrow><primary>Tode<dark>: <muted><deaths>"
+      - "<arrow><primary>Kills<dark>: <muted><kills>"
+      - "<arrow><primary>Punkte<dark>: <muted><points>"
+    global: "<arrow><aqua>Globale Stats"
+  global-stats:
+    title: "<arrow><primary>Globale Stats"
+    wins: "<arrow><aqua>Siege"
+    deaths: "<arrow><aqua>Tode"
+    kills: "<arrow><aqua>Kills"
+    losses: "<arrow><aqua>Niederlagen"
+    points: "<arrow><aqua>Punkte"

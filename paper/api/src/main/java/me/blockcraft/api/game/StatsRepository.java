@@ -35,6 +35,14 @@ public final class StatsRepository {
                 player.toString(), name, delta, delta);
     }
 
+    /** Adds a whole round's numbers to the player's row in one statement. */
+    public void add(UUID player, String name, Stats delta) {
+        db.update("INSERT INTO " + table + " (UUID, NAME, KILLS, DEATHS, WIN, LOSE, COINS) VALUES (?, ?, ?, ?, ?, ?, ?) "
+                + "ON DUPLICATE KEY UPDATE NAME = VALUES(NAME), KILLS = KILLS + VALUES(KILLS), DEATHS = DEATHS + VALUES(DEATHS), "
+                + "WIN = WIN + VALUES(WIN), LOSE = LOSE + VALUES(LOSE), COINS = COINS + VALUES(COINS)",
+                player.toString(), name, delta.kills(), delta.deaths(), delta.wins(), delta.losses(), delta.points());
+    }
+
     public List<TopEntry> top(Stat stat, int limit) {
         String column = stat.column();
         return db.queryList("SELECT NAME, " + column + " FROM " + table + " ORDER BY " + column + " DESC LIMIT ?",

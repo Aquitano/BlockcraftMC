@@ -2,7 +2,7 @@ package me.blockcraft.api.game;
 
 import me.blockcraft.common.network.ServerState;
 
-/** The three-step round of Duell and QuickSG and what the proxy is told about it. */
+/** The three steps of every {@link Round} and what the proxy is told about them; a game may split INGAME further. */
 public enum GamePhase {
     LOBBY(ServerState.LOBBY),
     INGAME(ServerState.INGAME),

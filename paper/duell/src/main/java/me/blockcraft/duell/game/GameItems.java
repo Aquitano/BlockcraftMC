@@ -1,6 +1,8 @@
 package me.blockcraft.duell.game;
 
+import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.item.Items;
+import me.blockcraft.api.pack.MenuIcon;
 import me.blockcraft.common.message.Messages;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -22,9 +24,11 @@ public final class GameItems {
         var inventory = player.getInventory();
         inventory.clear();
         inventory.setArmorContents(null);
-        inventory.setItem(0, Items.of(Material.PLAYER_HEAD).name(messages.get("item.stats")).build());
-        inventory.setItem(4, Items.of(Material.CHEST).name(messages.get("item.style")).build());
-        inventory.setItem(8, Items.of(Material.SLIME_BALL).name(messages.get("item.hub")).build());
+        inventory.setItem(0, GameItem.STATS.build(player,
+                MenuIcon.TOOL_PROFILE.mark(Items.head(player.getUniqueId(), BlockcraftApi.get().realName(player)))
+                        .name(messages.get("item.stats"))));
+        inventory.setItem(4, GameItem.MODE.build(player, MenuIcon.DUELL.item().name(messages.get("item.style"))));
+        inventory.setItem(8, GameItem.HUB.build(player, MenuIcon.TOOL_HOME.item().name(messages.get("item.hub"))));
         player.setHealth(FULL_HEALTH);
         player.setFoodLevel(FULL_FOOD);
         player.setLevel(0);
@@ -52,10 +56,6 @@ public final class GameItems {
         player.setLevel(0);
         player.setHealth(FULL_HEALTH);
         player.setFoodLevel(FULL_FOOD);
-    }
-
-    public ItemStack head(String owner, String nameKey, String loreKey) {
-        return Items.head(owner).name(messages.get(nameKey)).lore(messages.get(loreKey)).build();
     }
 
     private ItemStack named(Material material, String key) {

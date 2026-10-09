@@ -5,6 +5,7 @@ import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.command.CommandRegistry;
 import me.blockcraft.api.game.ArenaProtection;
 import me.blockcraft.api.game.LootChests;
+import me.blockcraft.api.game.StatsMenus;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.game.TopList;
 import me.blockcraft.common.message.Messages;
@@ -21,7 +22,6 @@ import me.blockcraft.duell.listener.ProtectionListener;
 import me.blockcraft.duell.listener.SgListener;
 import me.blockcraft.duell.listener.SuperJumpListener;
 import me.blockcraft.duell.listener.VsListener;
-import me.blockcraft.duell.menu.StatsMenus;
 import org.bukkit.Bukkit;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -47,7 +47,7 @@ public final class DuellPlugin extends JavaPlugin {
                 new DuelRatings(this, messages, api.elo()));
         api.presence().maxPlayers(Duel.MAX_PARTICIPANTS);
         var topList = new TopList(this, stats, messages);
-        var statsMenus = new StatsMenus(messages, duel, stats, api.elo(), items, topList, config.globalStatsHead());
+        var statsMenus = StatsMenus.ranked(messages, stats, topList, config.globalStatsHead());
         var lootChests = new LootChests(config.loot());
 
         List.of(

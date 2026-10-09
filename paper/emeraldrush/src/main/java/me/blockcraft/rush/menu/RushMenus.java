@@ -1,9 +1,6 @@
 package me.blockcraft.rush.menu;
 
 import me.blockcraft.api.BlockcraftApi;
-import me.blockcraft.api.game.Stat;
-import me.blockcraft.api.game.StatsRepository;
-import me.blockcraft.api.game.TopList;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.dialog.ConfirmDialog;
 import me.blockcraft.api.menu.Menu;
@@ -19,37 +16,28 @@ import me.blockcraft.rush.kit.Perk;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.plugin.Plugin;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
 /** Opens every EmeraldRush GUI and performs the purchases they trigger. */
 public final class RushMenus {
 
-    private final Plugin plugin;
     private final Game game;
     private final Messages messages;
     private final Spawns spawns;
     private final Unlocks unlocks;
     private final Shop shop;
-    private final StatsRepository stats;
-    private final TopList topList;
     private final ShopCatalog catalog;
 
-    public RushMenus(Plugin plugin, Game game, Messages messages, Spawns spawns, Unlocks unlocks, Shop shop, StatsRepository stats) {
-        this.plugin = plugin;
+    public RushMenus(Game game, Messages messages, Spawns spawns, Unlocks unlocks, Shop shop) {
         this.game = game;
         this.messages = messages;
         this.spawns = spawns;
         this.unlocks = unlocks;
         this.shop = shop;
-        this.stats = stats;
-        this.topList = new TopList(plugin, stats, messages);
         this.catalog = new ShopCatalog(messages);
     }
 
@@ -167,28 +155,6 @@ public final class RushMenus {
         Sounds.TELEPORT.play(player);
         Menu.close(player);
         spawns.teleport(player, SpawnPoint.ENCHANT);
-    }
-
-    public void openStats(Player player) {
-        List<Player> online = List.copyOf(Bukkit.getOnlinePlayers());
-        var api = BlockcraftApi.get();
-        api.playerTasks().latest(player, () -> online.stream().map(other -> stats.get(other.getUniqueId())).toList(), loaded -> {
-            var entries = new ArrayList<StatsMenu.Entry>();
-            for (int index = 0; index < online.size(); index++) {
-                var other = online.get(index);
-                var real = loaded.get(index);
-                entries.add(new StatsMenu.Entry(other, other.equals(player) ? real : api.nickStats().stats(other, real)));
-            }
-            new StatsMenu(this, messages, entries).open(player);
-        });
-    }
-
-    void openGlobalStats(Player player) {
-        new GlobalStatsMenu(this, messages).open(player);
-    }
-
-    public void showTop(Player player, Stat category) {
-        topList.send(player, category);
     }
 
     private Set<Perk> ownedPerks(Player player) {

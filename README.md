@@ -235,16 +235,21 @@ player may run, with its `commands.<name>.description`, so there is no hand-writ
 shows another player's inventory read-only unless the viewer holds `blockcraft.core.invsee.edit`.
 
 Every game says the shared moments the same way, from `arena` in BlockcraftAPI's `messages.yml`: the arrival card
-with game and map, who joined and left the round with the player count, the lobby countdown and the restart
-countdown. A round's kills, deaths, coins and XP are counted in one place (`RoundSummary`), which announces kill
-streaks at the lengths `streaks.announce` in BlockcraftAPI's `config.yml` names, prints the recap in chat when the
-round ends and stores it in `bc_round_recaps`; the lobby opens that recap as a dialog after arrival if the player has not opened another screen. The profile
+with game and map, who joined and left the round with the player count, the lobby countdown, the trackers, the last
+minutes and the restart countdown. Each game holds a `Round` for what they share: it seats joiners while the lobby
+has room and makes everyone else a spectator, vanished staff included, who are neither announced nor counted; it
+reports the phase to the proxy and counts leaving a running round as a death and a loss. A round's kills, deaths,
+coins and XP are counted in one place (`RoundSummary`), which announces kill
+streaks at the lengths `streaks.announce` in BlockcraftAPI's `config.yml` names, writes every participant's stats
+once when the round ends (a loss for everyone knocked out or beaten by a winner), prints the recap in chat and
+stores it in `bc_round_recaps`; the lobby opens that recap as a dialog after arrival if the player has not opened another screen. The profile
 keeps the recap accessible during that lobby session, with a button back into the same game. Recaps older than
 `recap.max-age-minutes` are discarded. The `quicksg`,
 `emeraldrush`, and `duell` palette tags give the games distinct colours across menus,
 signs and sidebars. Their arrival sounds respect the player's sound setting. Kit and perk menus distinguish
 selected, unlocked and purchasable items; coins buy permanent unlocks, while EmeraldRush emeralds buy round items.
-A game's own `messages.yml` holds its introduction and game-specific wording. `MessageKeysTest` in `common`
+A game's own `messages.yml` holds its introduction and game-specific wording, including the `menu.stats` and
+`menu.global-stats` texts of the shared `StatsMenus` and `/top`. `MessageKeysTest` in `common`
 checks that every key a plugin asks its messages for exists in its `messages.yml` or BlockcraftAPI's.
 
 `/history <player>` shows bans and mutes, including revoked entries, with the display length set by
@@ -381,8 +386,9 @@ Everything the pack changes has a plain fallback, so a player without it sees va
   and close buttons with the pack's item models. A menu with a `toolbar` gets the variant whose first row is three
   wide coloured buttons; the icon item sits in the middle slot and the outer slots hold invisible items, so the
   whole bar answers the click. An item built from a `MenuIcon` carries its icon, so every menu draws it with the
-  pack's `items/<icon>.json` for pack wearers and as the vanilla item for everyone else; the lobby hotbar carries
-  the same icons, restyled the moment the proxy's answer about the pack arrives. Every item in a menu gets the
+  pack's `items/<icon>.json` for pack wearers and as the vanilla item for everyone else; the lobby's and the games'
+  hotbars carry the same icons, restyled the moment the proxy's answer about the pack arrives. A hotbar item is a
+  `HotbarItem`, recognised by a tag in its data rather than its material. Every item in a menu gets the
   pack's tooltip (`tooltip_style`, the `gui/sprites/tooltip/menu_*` nine-slices), so the item names read on the same
   dark card as the panel.
 - HUD icons are `<icon:name>` in a message (`Icon`): a font glyph with the pack, the symbol under `icons.<name>` in

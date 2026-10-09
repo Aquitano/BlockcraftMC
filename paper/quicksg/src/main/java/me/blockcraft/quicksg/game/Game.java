@@ -1,15 +1,13 @@
 package me.blockcraft.quicksg.game;
 
 import me.blockcraft.api.BlockcraftApi;
-import me.blockcraft.api.menu.Menu;
 import me.blockcraft.api.config.Locations;
 import me.blockcraft.api.game.Arena;
 import me.blockcraft.api.game.GamePhase;
 import me.blockcraft.api.game.LobbyCountdown;
 import me.blockcraft.api.game.PlayerReset;
+import me.blockcraft.api.game.Round;
 import me.blockcraft.api.game.RoundSummary;
-import me.blockcraft.api.game.ServerRestart;
-import me.blockcraft.api.game.Stat;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.game.TimerBar;
 import me.blockcraft.api.sound.Sounds;
@@ -19,7 +17,6 @@ import me.blockcraft.common.message.Messages;
 import me.blockcraft.quicksg.config.LocationKey;
 import me.blockcraft.quicksg.config.QuickSGConfig;
 import me.blockcraft.quicksg.kit.Kit;
-import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
@@ -32,45 +29,32 @@ import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.plugin.Plugin;
 
 import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.Consumer;
-import java.util.stream.Stream;
 
 public final class Game {
 
     private static final Set<Integer> PROTECTION_ANNOUNCEMENTS = Set.of(15, 10, 5, 4, 3, 2, 1);
-    private static final Set<Integer> GAME_END_ANNOUNCEMENTS = Set.of(600, 300, 180);
     private static final double INGAME_MAX_HEALTH = 14.0;
     private static final long RESPAWN_DELAY_TICKS = 1L;
+    private static final int SECONDS_PER_MINUTE = 60;
 
     private final Plugin plugin;
     private final QuickSGConfig config;
     private final Messages messages;
     private final Locations<LocationKey> locations;
-    private final StatsRepository stats;
     private final GameScoreboard scoreboard;
     private final GameItems items;
+    private final RoundSummary summary;
+    private final Round round;
+    private final LobbyCountdown lobbyCountdown;
 
-    private GamePhase phase = GamePhase.LOBBY;
     private boolean protection;
     private boolean frozen;
-    private final Set<UUID> alive = new LinkedHashSet<>();
-    private final Set<UUID> spectators = new LinkedHashSet<>();
     private final Map<UUID, Kit> kits = new HashMap<>();
-    private final LobbyCountdown lobbyCountdown;
-    private final RoundSummary summary;
-    private final Arena arena;
-    private Countdown freezeCountdown;
-    private Countdown protectionCountdown;
     private Countdown gameTimer;
-    private Countdown restartCountdown;
-    private TimerBar protectionBar;
-    private TimerBar gameBar;
 
     public Game(Plugin plugin, QuickSGConfig config, Messages messages, Locations<LocationKey> locations,
                 StatsRepository stats, GameScoreboard scoreboard, GameItems items) {
@@ -78,21 +62,21 @@ public final class Game {
         this.config = config;
         this.messages = messages;
         this.locations = locations;
-        this.stats = stats;
         this.scoreboard = scoreboard;
         this.items = items;
-        this.arena = new Arena(messages, Sounds.QUICKSG_JOIN);
-        this.lobbyCountdown = new LobbyCountdown(plugin, arena, config.countdowns().lobby(), config.minPlayers(), alive::size, this::start);
         this.summary = new RoundSummary(plugin, messages,
-                new RoundSummary.Rewards(config.rewards().kill(), config.rewards().win()));
+                new RoundSummary.Rewards(config.rewards().kill(), config.rewards().win()), stats);
+        this.round = new Round(plugin, new Arena(messages, Sounds.QUICKSG_JOIN), summary, config.maxPlayers());
+        this.lobbyCountdown = new LobbyCountdown(plugin, round.arena(), config.countdowns().lobby(), config.minPlayers(),
+                round::playerCount, this::start);
     }
 
     public boolean isLobby() {
-        return phase == GamePhase.LOBBY;
+        return round.phase() == GamePhase.LOBBY;
     }
 
     public boolean isIngame() {
-        return phase == GamePhase.INGAME;
+        return round.phase() == GamePhase.INGAME;
     }
 
     public boolean protection() {
@@ -104,11 +88,11 @@ public final class Game {
     }
 
     public boolean isAlive(Player player) {
-        return alive.contains(player.getUniqueId());
+        return round.isPlaying(player);
     }
 
     public boolean isSpectator(Player player) {
-        return spectators.contains(player.getUniqueId());
+        return round.isSpectator(player);
     }
 
     public Kit kit(Player player) {
@@ -120,8 +104,8 @@ public final class Game {
         refreshScoreboard(player);
     }
 
-    public Stream<Player> alivePlayers() {
-        return alive.stream().map(Bukkit::getPlayer).filter(player -> player != null);
+    public List<Player> alivePlayers() {
+        return round.players();
     }
 
     public void applyLobbyWorldBorder() {
@@ -129,75 +113,45 @@ public final class Game {
     }
 
     public void join(Player player) {
-        if (phase != GamePhase.LOBBY) {
-            makeSpectator(player);
+        if (!round.join(player)) {
             locations.get(LocationKey.SPECTATOR).ifPresent(player::teleport);
-            arena.arrive(player);
             refreshScoreboards();
             return;
         }
-        alive.add(player.getUniqueId());
         kits.put(player.getUniqueId(), Kit.STARTER);
         PlayerReset.reset(player, GameMode.ADVENTURE);
         locations.get(LocationKey.LOBBY).ifPresent(player::teleport);
         giveLobbyItems(player);
-        summary.join(player);
-        arena.welcome(player, alive.size(), config.maxPlayers());
         refreshScoreboards();
         lobbyCountdown.start();
     }
 
-    /** The player came to watch a friend, and the round has already put them among the spectators. */
     public void follow(Player spectator, UUID friend) {
-        if (!isSpectator(spectator)) {
-            return;
-        }
-        var target = Bukkit.getPlayer(friend);
-        if (target != null && spectator.canSee(target)) {
-            arena.follow(spectator, target);
-        }
+        round.follow(spectator, friend);
     }
 
     public void quit(Player player) {
-        boolean wasAlive = alive.remove(player.getUniqueId());
-        boolean wasSpectator = spectators.remove(player.getUniqueId());
+        round.leave(player);
         kits.remove(player.getUniqueId());
-        if (phase == GamePhase.INGAME && wasAlive) {
-            summary.death(player);
-            record(player, Stat.LOSSES, 1);
-            record(player, Stat.DEATHS, 1);
-        }
-        if (!wasSpectator) {
-            arena.farewell(player, alive.size(), config.maxPlayers());
-        }
-        forEachTimer(bar -> bar.hide(player));
         refreshScoreboards();
         checkWinner();
     }
 
     public void handleDeath(Player victim, Player killer) {
-        if (phase != GamePhase.INGAME) {
+        if (!isIngame() || !isAlive(victim)) {
             return;
         }
         var victimName = Placeholder.unparsed("player", victim.getName());
         if (killer != null) {
             Bukkit.broadcast(messages.get("game.killed", victimName, Placeholder.unparsed("killer", killer.getName())));
-            record(killer, Stat.POINTS, summary.awardKill(killer, victim));
-            record(killer, Stat.KILLS, 1);
+            summary.awardKill(killer, victim);
         } else {
             Bukkit.broadcast(messages.get("game.died", victimName));
-            record(victim, Stat.POINTS, summary.awardCoins(victim, config.rewards().death()));
+            summary.awardCoins(victim, config.rewards().death());
         }
         summary.death(victim);
-        record(victim, Stat.DEATHS, 1);
-        record(victim, Stat.LOSSES, 1);
-        alive.remove(victim.getUniqueId());
-        spectators.add(victim.getUniqueId());
-        Tasks.later(plugin, RESPAWN_DELAY_TICKS, () -> {
-            if (victim.isOnline() && victim.isDead()) {
-                victim.spigot().respawn();
-            }
-        });
+        round.eliminate(victim);
+        round.respawn(victim, RESPAWN_DELAY_TICKS);
         refreshScoreboards();
         checkWinner();
     }
@@ -206,8 +160,8 @@ public final class Game {
     public void respawn(PlayerRespawnEvent event) {
         var player = event.getPlayer();
         locations.get(LocationKey.SPECTATOR).ifPresent(event::setRespawnLocation);
-        if (spectators.contains(player.getUniqueId())) {
-            Tasks.sync(plugin, () -> makeSpectator(player));
+        if (isSpectator(player)) {
+            Tasks.sync(plugin, () -> PlayerReset.spectate(player));
         }
     }
 
@@ -222,31 +176,25 @@ public final class Game {
         }
     }
 
-    public void makeSpectator(Player player) {
-        alive.remove(player.getUniqueId());
-        spectators.add(player.getUniqueId());
-        PlayerReset.spectate(player);
-    }
-
     public void refreshScoreboards() {
         Bukkit.getOnlinePlayers().forEach(this::refreshScoreboard);
     }
 
     private void refreshScoreboard(Player player) {
-        switch (phase) {
-            case LOBBY -> scoreboard.showLobby(player, alive.size(), kit(player));
-            case INGAME -> scoreboard.showIngame(player, alive.size(), spectators.size());
+        switch (round.phase()) {
+            case LOBBY -> scoreboard.showLobby(player, round.playerCount(), kit(player));
+            case INGAME -> scoreboard.showIngame(player, round.playerCount(), round.spectatorCount());
             case ENDING -> scoreboard.showEnding(player, summary.winnerNames());
         }
     }
 
     private void start() {
-        setPhase(GamePhase.INGAME);
+        round.enter(GamePhase.INGAME);
         protection = true;
         Bukkit.broadcast(messages.get("lobby.started"));
         var spawns = spawns();
         int index = 0;
-        for (var player : alivePlayers().toList()) {
+        for (var player : alivePlayers()) {
             player.getInventory().clear();
             if (!spawns.isEmpty()) {
                 player.teleport(spawns.get(index++ % spawns.size()));
@@ -262,19 +210,19 @@ public final class Game {
         refreshScoreboards();
         applyWorldBorder(LocationKey.GAME_CENTER, config.worldBorder().ingameRadius());
         frozen = true;
-        freezeCountdown = LobbyCountdown.freeze(plugin, config.countdowns().freeze(), () -> alivePlayers().toList(),
+        round.timer(LobbyCountdown.freeze(plugin, config.countdowns().freeze(), round::players,
                 seconds -> messages.get("lobby.freeze-title", Formatter.number("seconds", seconds)), () -> {
                     frozen = false;
                     startProtection();
                     startGameTimer();
-                });
+                }));
     }
 
     private void startProtection() {
         int seconds = config.countdowns().protection();
         Bukkit.broadcast(messages.get("protection.ends-in", Formatter.number("seconds", seconds)));
-        protectionBar = new TimerBar(messages, "timer.protection", seconds);
-        protectionCountdown = Countdown.start(plugin, seconds, remaining -> {
+        var protectionBar = round.bar(new TimerBar(messages, "timer.protection", seconds));
+        round.timer(Countdown.start(plugin, seconds, remaining -> {
             protectionBar.update(remaining);
             if (PROTECTION_ANNOUNCEMENTS.contains(remaining)) {
                 Bukkit.broadcast(messages.get("protection.ends-in", Formatter.number("seconds", remaining)));
@@ -287,73 +235,48 @@ public final class Game {
                 Sounds.PVP_ENABLED.play(player);
                 BlockcraftApi.get().notifications().important(player, messages.get("protection.fight"));
             });
-        });
+        }));
     }
 
     private void startGameTimer() {
         int seconds = config.countdowns().game();
-        int trackerAt = seconds - config.countdowns().trackerAfter();
-        gameBar = new TimerBar(messages, "timer.game", seconds);
-        gameTimer = Countdown.start(plugin, seconds, remaining -> {
+        int trackerAfter = config.countdowns().trackerAfter();
+        var gameBar = round.bar(new TimerBar(messages, "timer.game", seconds));
+        gameTimer = round.timer(Countdown.start(plugin, seconds, remaining -> {
             gameBar.update(remaining);
-            if (remaining == trackerAt) {
-                giveTrackers();
+            if (remaining == seconds - trackerAfter) {
+                round.handOutTrackers(trackerAfter / SECONDS_PER_MINUTE, items.tracker());
             }
-            if (GAME_END_ANNOUNCEMENTS.contains(remaining)) {
-                Bukkit.broadcast(messages.get("game.ends-in-minutes", Formatter.number("minutes", remaining / 60)));
-            } else if (remaining == 60) {
-                Bukkit.broadcast(messages.get("game.ends-in-one-minute"));
-            }
+            round.announceEnd(remaining);
         }, () -> {
             Bukkit.broadcast(messages.get("game.draw"));
-            setPhase(GamePhase.ENDING);
-            refreshScoreboards();
-            startRestart();
-        });
-    }
-
-    private void giveTrackers() {
-        Bukkit.broadcast(Component.empty());
-        Bukkit.broadcast(messages.get("game.tracker", Formatter.number("minutes", config.countdowns().trackerAfter() / 60)));
-        Bukkit.broadcast(Component.empty());
-        for (var player : alivePlayers().toList()) {
-            player.getInventory().addItem(items.tracker());
-            Sounds.NOTIFY.play(player);
-        }
+            endRound();
+        }));
     }
 
     private void checkWinner() {
-        if (phase != GamePhase.INGAME || alive.size() > 1) {
+        if (!isIngame() || round.playerCount() > 1) {
             return;
         }
-        setPhase(GamePhase.ENDING);
-        cancel(protectionCountdown);
-        cancel(gameTimer);
-        cancel(freezeCountdown);
-        frozen = false;
-        for (var winner : alivePlayers().toList()) {
-            record(winner, Stat.WINS, 1);
-            record(winner, Stat.POINTS, summary.awardWin(winner));
-        }
-        refreshScoreboards();
-        startRestart();
+        alivePlayers().forEach(summary::awardWin);
+        endRound();
     }
 
-    private void startRestart() {
-        forEachTimer(TimerBar::hide);
-        summary.show();
-        restartCountdown = ServerRestart.start(plugin, arena, config.countdowns().restart());
+    private void endRound() {
+        frozen = false;
+        round.end(config.countdowns().restart());
+        refreshScoreboards();
     }
 
     private void giveLobbyItems(Player player) {
         var inventory = player.getInventory();
-        inventory.setItem(0, items.stats());
-        inventory.setItem(8, items.hub());
+        inventory.setItem(0, items.hotbar(player, GameItem.STATS));
+        inventory.setItem(8, items.hotbar(player, GameItem.HUB));
         if (player.hasPermission("blockcraft.quicksg.start")) {
-            inventory.setItem(3, items.start());
-            inventory.setItem(5, items.kits());
+            inventory.setItem(3, items.hotbar(player, GameItem.START));
+            inventory.setItem(5, items.hotbar(player, GameItem.KITS));
         } else {
-            inventory.setItem(4, items.kits());
+            inventory.setItem(4, items.hotbar(player, GameItem.KITS));
         }
     }
 
@@ -372,12 +295,6 @@ public final class Game {
         });
     }
 
-    private void record(Player player, Stat column, int delta) {
-        var uuid = player.getUniqueId();
-        var name = BlockcraftApi.get().realName(player);
-        Tasks.async(plugin, () -> stats.add(uuid, name, column, delta));
-    }
-
     private static void maxHealth(Player player, double value) {
         player.getAttribute(Attribute.MAX_HEALTH).setBaseValue(value);
         if (player.getHealth() > value) {
@@ -385,27 +302,8 @@ public final class Game {
         }
     }
 
-    private void forEachTimer(Consumer<TimerBar> action) {
-        Stream.of(protectionBar, gameBar).filter(Objects::nonNull).forEach(action);
-    }
-
-    private static void cancel(Countdown countdown) {
-        if (countdown != null) {
-            countdown.cancel();
-        }
-    }
-
     public void shutdown() {
         lobbyCountdown.cancel();
-        Stream.of(freezeCountdown, protectionCountdown, gameTimer, restartCountdown).forEach(Game::cancel);
-    }
-
-    private void setPhase(GamePhase phase) {
-        this.phase = phase;
-        Bukkit.getOnlinePlayers().forEach(player -> {
-            Menu.close(player);
-            player.closeDialog();
-        });
-        BlockcraftApi.get().presence().state(phase.serverState());
+        round.stop();
     }
 }

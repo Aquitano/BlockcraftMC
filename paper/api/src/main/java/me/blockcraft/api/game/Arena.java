@@ -12,8 +12,8 @@ import org.bukkit.entity.Player;
 
 /**
  * What every game says at the moments they share, from BlockcraftAPI's {@code arena} texts but under the game's
- * own prefix: the arrival card, who joined and left the round, who a spectator came to watch, and the countdowns
- * that {@link LobbyCountdown} and {@link ServerRestart} run.
+ * own prefix: the arrival card, who joined and left the round, who a spectator came to watch, the countdowns
+ * that {@link LobbyCountdown} and {@link ServerRestart} run, and the trackers and last minutes of a {@link Round}.
  */
 public final class Arena {
 
@@ -56,6 +56,15 @@ public final class Arena {
 
     void announceRestart(int seconds) {
         Bukkit.broadcast(messages.get("arena.restart-in", Formatter.number("seconds", seconds)));
+    }
+
+    void announceTrackers(int minutes) {
+        messages.getLines("arena.tracker", Formatter.number("minutes", minutes)).forEach(Bukkit::broadcast);
+    }
+
+    void announceEnd(int minutes) {
+        Bukkit.broadcast(messages.get(minutes == 1 ? "arena.ends-in-minute" : "arena.ends-in-minutes",
+                Formatter.number("minutes", minutes)));
     }
 
     private void broadcast(String key, Player player, int online, int max) {
