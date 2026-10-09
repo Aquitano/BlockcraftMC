@@ -31,7 +31,7 @@ game-status:
 
 commands:
   coins:
-    description: "Zeigt deine Coins"
+    description: "Zeigt deine Coins, mit /coins top die zehn reichsten Spieler"
   level:
     description: "Zeigt dein Level"
   build:
@@ -197,6 +197,18 @@ profile:
 coins:
   self: "<prefix><muted>Du hast <accent><coins> <muted>Coins!"
   other: "<prefix><accent><player> <muted>hat <accent><coins> <muted>Coins."
+  usage: "<prefix><muted>Verwende <error>/coins give|take|set \\<Spieler> \\<Anzahl> <muted>oder <error>/coins top"
+  unknown: "<prefix><error><player> <muted>war noch nie auf dem Netzwerk."
+  given: "<prefix><muted>Du hast <accent><player> <accent><amount> <muted>Coins gegeben. Neuer Stand: <accent><coins> <muted>Coins."
+  taken: "<prefix><muted>Du hast <accent><player> <accent><amount> <muted>Coins abgezogen. Neuer Stand: <accent><coins> <muted>Coins."
+  not-enough: "<prefix><error><player> <muted>hat nur <accent><coins> <muted>Coins, es wurde nichts abgezogen."
+  set: "<prefix><accent><player> <muted>hat jetzt <accent><coins> <muted>Coins."
+  top:
+    separator: "<muted><strikethrough>---------------------------------"
+    title: "<arrow><primary>Top 10 <muted>nach Coins"
+    empty: "<muted>Noch niemand hat Coins gesammelt."
+    first: "<accent><bold>#1 <reset><primary><name><muted> ( <white><coins><muted> Coins )"
+    entry: "<reset>#<rank> <primary><name> <muted>( <white><coins><muted> Coins )"
 xp:
   gained: "<success>+<amount> XP"
   level-up: "<prefix><muted>Du bist jetzt <accent>Level <level><muted>!"
