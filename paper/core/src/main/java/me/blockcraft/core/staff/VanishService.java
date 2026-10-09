@@ -1,16 +1,15 @@
 package me.blockcraft.core.staff;
 
+import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.api.task.SerialTasks;
 import me.blockcraft.api.vanish.VanishChangeEvent;
-import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.moderation.VanishRepository;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.Plugin;
@@ -20,8 +19,8 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Network-wide vanish: the flag lives in {@code bc_vanished}, is read during the async pre-login so the join
- * event can already act on it, and is only changed by {@link #set}. Staff with {@link #SEE_PERMISSION} and
+ * Network-wide vanish: the flag lives in {@code bc_vanished}, BlockcraftAPI reads it during the async pre-login so
+ * the join event can already act on it, and it is only changed by {@link #set}. Staff with {@link #SEE_PERMISSION} and
  * other vanished players keep seeing vanished players. The proxy hears about every change so its lists and
  * counts agree; it reads the table itself for players who log in vanished.
  */
@@ -31,15 +30,12 @@ public final class VanishService implements Listener {
 
     private final Plugin plugin;
     private final VanishRepository repository;
-    private final Messages messages;
     private final SerialTasks<UUID> writes;
     private final Set<UUID> vanished = ConcurrentHashMap.newKeySet();
-    private final Set<UUID> pending = ConcurrentHashMap.newKeySet();
 
-    public VanishService(Plugin plugin, VanishRepository repository, Messages messages) {
+    public VanishService(Plugin plugin, VanishRepository repository) {
         this.plugin = plugin;
         this.repository = repository;
-        this.messages = messages;
         this.writes = new SerialTasks<>(plugin);
     }
 
@@ -76,19 +72,10 @@ public final class VanishService implements Listener {
         return viewer.equals(hidden) || viewer.hasPermission(SEE_PERMISSION) || vanished.contains(viewer.getUniqueId());
     }
 
-    @EventHandler(priority = EventPriority.LOWEST)
-    public void onPreLogin(AsyncPlayerPreLoginEvent event) {
-        LoginLookup.run(plugin, messages, event, "vanish state", () -> {
-            if (repository.isVanished(event.getUniqueId())) {
-                pending.add(event.getUniqueId());
-            }
-        });
-    }
-
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onJoin(PlayerJoinEvent event) {
         var joiner = event.getPlayer();
-        if (pending.remove(joiner.getUniqueId())) {
+        if (BlockcraftApi.get().isVanished(joiner)) {
             vanished.add(joiner.getUniqueId());
             event.joinMessage(null);
             Bukkit.getOnlinePlayers().forEach(viewer -> {

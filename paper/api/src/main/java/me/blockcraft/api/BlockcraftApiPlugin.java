@@ -103,7 +103,7 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         var afk = new Afk(this, notifications, messages,
                 Duration.ofMinutes(Math.max(1, number(YamlFile.section(config, "afk"), "idle-minutes", 5))));
         var ignores = new Ignores(this, new IgnoreRepository(database));
-        var vanished = new VanishedPlayers(new VanishRepository(database));
+        var vanished = new VanishedPlayers(this, new VanishRepository(database), messages);
         var api = new BlockcraftApi(this, database, settings, resourcePack,
                 profileGames(YamlFile.section(YamlFile.section(config, "profile"), "games")),
                 messages, servers, self, text(config, "lobby-group", "lobby"), presence, realNames, nickRanks, xp,

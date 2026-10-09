@@ -84,6 +84,9 @@ menu:
     accept: "<success>Kaufen"
     cancel: "<error>Abbrechen"
 
+login:
+  retry: "<error>Deine Daten konnten gerade nicht geladen werden. <muted>Bitte versuche es gleich noch einmal."
+
 # The card every server shows on arrival; <where> is the lobby or the game, <map> and <builders> come from the
 # map's map.yml.
 arrival:
