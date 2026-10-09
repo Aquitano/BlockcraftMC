@@ -1,10 +1,12 @@
 package me.blockcraft.duell.listener;
 
+import me.blockcraft.api.game.StatsMenus;
+import me.blockcraft.api.item.HotbarItem;
 import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.duell.game.Duel;
+import me.blockcraft.duell.game.GameItem;
 import me.blockcraft.duell.menu.ModeMenu;
-import me.blockcraft.duell.menu.StatsMenus;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -27,27 +29,17 @@ public final class LobbyItemListener implements Listener {
 
     @EventHandler
     public void onInteract(PlayerInteractEvent event) {
-        if (event.getHand() != EquipmentSlot.HAND || !event.getAction().isRightClick() || event.getItem() == null) {
+        if (event.getHand() != EquipmentSlot.HAND || !event.getAction().isRightClick()) {
             return;
         }
         var player = event.getPlayer();
-        switch (event.getItem().getType()) {
-            case CHEST -> {
-                event.setCancelled(true);
-                new ModeMenu(duel, messages).open(player);
+        HotbarItem.of(event.getItem(), GameItem.class).ifPresent(item -> {
+            event.setCancelled(true);
+            switch (item) {
+                case MODE -> new ModeMenu(duel, messages).open(player);
+                case HUB -> ProxyMessaging.hub(plugin, player);
+                case STATS -> statsMenus.open(player);
             }
-            case SLIME_BALL -> {
-                if (!duel.isIngame()) {
-                    event.setCancelled(true);
-                    ProxyMessaging.hub(plugin, player);
-                }
-            }
-            case PLAYER_HEAD -> {
-                event.setCancelled(true);
-                statsMenus.open(player);
-            }
-            default -> {
-            }
-        }
+        });
     }
 }

@@ -21,6 +21,7 @@ import me.blockcraft.api.proxy.NetworkOperations;
 import me.blockcraft.api.settings.PlayerSettings;
 import me.blockcraft.api.shop.Unlocks;
 import me.blockcraft.api.task.PlayerTasks;
+import me.blockcraft.api.vanish.VanishedPlayers;
 import me.blockcraft.api.world.BuildMode;
 import me.blockcraft.api.world.MapBundle;
 import me.blockcraft.api.xp.Xp;
@@ -74,13 +75,14 @@ public final class BlockcraftApi {
     private final Elo elo;
     private final Afk afk;
     private final Ignores ignores;
+    private final VanishedPlayers vanished;
 
     BlockcraftApi(Plugin plugin, Database database, PlayerSettings settings, ResourcePacks resourcePack,
                   Map<String, StatsRepository> profileGames, Messages messages, ServerRepository servers,
                   ServerIdentity server, String lobbyGroup, ServerPresence presence, RealNames realNames,
                   NickRanks nickRanks, Xp xp, Streaks streaks, MapBundle map, BuildMode buildMode, TagResolver tags,
                   List<Achievement> achievements, Elo elo, NickStats nickStats, Notifications notifications,
-                  ServerGroups groups, Afk afk, Ignores ignores) {
+                  ServerGroups groups, Afk afk, Ignores ignores, VanishedPlayers vanished) {
         this.notifications = notifications;
         this.operations = new NetworkOperations(plugin, messages);
         this.playerTasks = new PlayerTasks(plugin, messages);
@@ -111,6 +113,7 @@ public final class BlockcraftApi {
         this.elo = elo;
         this.afk = afk;
         this.ignores = ignores;
+        this.vanished = vanished;
     }
 
     public static BlockcraftApi get() {
@@ -272,5 +275,10 @@ public final class BlockcraftApi {
     /** Whom each online player ignores; chat from those players does not reach them. */
     public Ignores ignores() {
         return ignores;
+    }
+
+    /** Whether the player is vanished, already true while the join of a vanished player is handled. */
+    public boolean isVanished(Player player) {
+        return vanished.isVanished(player);
     }
 }

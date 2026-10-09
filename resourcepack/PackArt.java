@@ -496,7 +496,25 @@ public final class PackArt {
                     ".oooooooooooooo.",
                     "................",
                     "................",
-            }, GOLD))
+            }, GOLD)),
+            Map.entry("start", new Icon(new String[] {
+                    "................",
+                    "................",
+                    "...oo...........",
+                    "...ogoo.........",
+                    "...ogGGoo.......",
+                    "...ogGGGGoo.....",
+                    "...ogGGGGGGoo...",
+                    "...ogGGGGGGGGo..",
+                    "...oGGGGGGGGdo..",
+                    "...oGGGGGGdoo...",
+                    "...oGGGGdoo.....",
+                    "...oGGdoo.......",
+                    "...odoo.........",
+                    "...oo...........",
+                    "................",
+                    "................",
+            }, GREEN))
     );
 
     static final String[] ICON_PROFILE = {

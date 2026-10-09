@@ -1,8 +1,11 @@
 package me.blockcraft.quicksg.game;
 
+import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.item.Items;
+import me.blockcraft.api.pack.MenuIcon;
 import me.blockcraft.common.message.Messages;
 import org.bukkit.Material;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 public final class GameItems {
@@ -13,28 +16,18 @@ public final class GameItems {
         this.messages = messages;
     }
 
-    public ItemStack kits() {
-        return Items.of(Material.CHEST).name(messages.get("item.kits")).build();
-    }
-
-    public ItemStack hub() {
-        return Items.of(Material.SLIME_BALL).name(messages.get("item.hub")).build();
-    }
-
-    public ItemStack stats() {
-        return Items.of(Material.PLAYER_HEAD).name(messages.get("item.stats")).build();
-    }
-
-    public ItemStack start() {
-        return Items.of(Material.DIAMOND).name(messages.get("item.start")).build();
+    public ItemStack hotbar(Player viewer, GameItem item) {
+        return item.build(viewer, switch (item) {
+            case STATS -> MenuIcon.TOOL_PROFILE.mark(Items.head(viewer.getUniqueId(), BlockcraftApi.get().realName(viewer)))
+                    .name(messages.get("item.stats"));
+            case KITS -> MenuIcon.QUICKSG.item().name(messages.get("item.kits"));
+            case START -> MenuIcon.START.item().name(messages.get("item.start"));
+            case HUB -> MenuIcon.TOOL_HOME.item().name(messages.get("item.hub"));
+        });
     }
 
     public ItemStack tracker() {
         return named(Material.COMPASS, 1, "item.tracker");
-    }
-
-    public ItemStack head(String owner, String nameKey) {
-        return Items.head(owner).name(messages.get(nameKey)).build();
     }
 
     /** Chest loot: the consumable items carry a name and a hint, everything else is a plain stack. */

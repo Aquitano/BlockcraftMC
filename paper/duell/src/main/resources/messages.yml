@@ -96,8 +96,14 @@ menu:
       - "<arrow><primary>K/D<dark>: <muted><kdr>"
       - "<arrow><primary>Liga<dark>: <group>"
       - "<arrow><primary>Elo<dark>: <muted><rating>"
-    global: "<arrow><aqua>Globale Siege"
-    global-lore: "<bullet><muted>Klicke zum Anzeigen"
+    global: "<arrow><aqua>Globale Stats"
+  global-stats:
+    title: "<arrow><primary>Globale Stats"
+    wins: "<arrow><aqua>Siege"
+    deaths: "<arrow><aqua>Tode"
+    kills: "<arrow><aqua>Kills"
+    losses: "<arrow><aqua>Niederlagen"
+    points: "<arrow><aqua>Punkte"
 
 scoreboard:
   spectator: "<muted><icon:spectator> ZUSCHAUER"

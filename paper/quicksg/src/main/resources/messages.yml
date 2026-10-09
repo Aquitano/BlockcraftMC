@@ -24,9 +24,6 @@ protection:
   fight: "<error>Schutzzeit vorbei <dark>● <primary>Kampf frei"
 
 game:
-  tracker: "<prefix><muted><minutes> Minuten sind vorbei, alle Spieler bekommen einen Tracker!"
-  ends-in-minutes: "<prefix><error>Das Spiel endet in <minutes> Minuten!"
-  ends-in-one-minute: "<prefix><error>Das Spiel endet in 1 Minute!"
   draw: "<prefix><error>Unentschieden, die Runde wird neu gestartet!"
   killed: "<prefix><white><player><muted> wurde von <white><killer><muted> getötet."
   died: "<prefix><white><player> <muted>ist gestorben."
@@ -72,7 +69,6 @@ top:
   separator: "<muted><strikethrough>---------------------------------"
   first: "<accent><bold>#1 <reset><primary><name><muted> ( <white><value><muted> )"
   entry: "<reset>#<rank> <primary><name> <muted>( <white><value><muted> )"
-  unknown-category: "<prefix><error>/top <wins|deaths|kills|loses|points>"
 
 kit:
   round-started: "<prefix><muted>Die Runde läuft bereits. Kits kannst du in der nächsten Lobby kaufen."

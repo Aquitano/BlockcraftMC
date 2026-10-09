@@ -98,6 +98,12 @@ arena:
   starting-in: "<prefix><muted>Die Runde startet in <accent><seconds> <muted>Sekunden."
   restart-in: "<prefix><muted>Der Server startet in <error><seconds> <muted>Sekunden neu!"
   spectating: "<prefix><muted>Du schaust <accent><player> <muted>beim Spielen zu."
+  tracker:
+    - " "
+    - "<prefix><muted><minutes> Minuten sind vorbei, alle Spieler bekommen einen Tracker!"
+    - " "
+  ends-in-minutes: "<prefix><error>Das Spiel endet in <minutes> Minuten!"
+  ends-in-minute: "<prefix><error>Das Spiel endet in 1 Minute!"
 
 # The shared countdown: the last seconds as a title, then the start.
 countdown:

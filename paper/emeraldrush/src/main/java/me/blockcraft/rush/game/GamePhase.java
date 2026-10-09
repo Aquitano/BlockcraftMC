@@ -1,7 +1,5 @@
 package me.blockcraft.rush.game;
 
-import me.blockcraft.common.network.ServerState;
-
 public enum GamePhase {
     LOBBY,
     SEARCH,
@@ -17,11 +15,12 @@ public enum GamePhase {
         return this == LOBBY || this == SEARCH;
     }
 
-    public ServerState serverState() {
+    /** The shared round's step this phase belongs to; the three phases of play are all one running round. */
+    public me.blockcraft.api.game.GamePhase roundPhase() {
         return switch (this) {
-            case LOBBY -> ServerState.LOBBY;
-            case SEARCH, SHOPPING, DEATHMATCH -> ServerState.INGAME;
-            case ENDING -> ServerState.RESTART;
+            case LOBBY -> me.blockcraft.api.game.GamePhase.LOBBY;
+            case SEARCH, SHOPPING, DEATHMATCH -> me.blockcraft.api.game.GamePhase.INGAME;
+            case ENDING -> me.blockcraft.api.game.GamePhase.ENDING;
         };
     }
 }

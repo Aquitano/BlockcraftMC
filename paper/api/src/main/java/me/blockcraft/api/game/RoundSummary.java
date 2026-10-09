@@ -20,6 +20,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,7 +32,8 @@ import java.util.function.Consumer;
  * end; because every coin and every XP point of a round is handed out here, the recap names exactly what was
  * paid, and closes with the two ways on: another round of the same game, or the lobby. Kill streaks are counted
  * here too and announced at the lengths {@link Streaks} names. The recap is also stored for every participant,
- * so the lobby can show it once more when they arrive there.
+ * so the lobby can show it once more when they arrive there, and their numbers go into the game's stats table in
+ * one write: the coins as points, and a loss for everyone knocked out or beaten by a winner.
  */
 public final class RoundSummary {
 
@@ -51,15 +53,20 @@ public final class RoundSummary {
     private final Component game;
     private final Messages messages;
     private final Rewards rewards;
+    private final StatsRepository stats;
     private final Map<UUID, Score> scores = new LinkedHashMap<>();
     private final Map<UUID, String> winners = new LinkedHashMap<>();
 
+    private record Row(UUID player, String name, Stats delta) {
+    }
+
     /** {@code gameMessages} is the game's own file; it names the game as {@code game-name} and lends its prefix. */
-    public RoundSummary(Plugin plugin, Messages gameMessages, Rewards rewards) {
+    public RoundSummary(Plugin plugin, Messages gameMessages, Rewards rewards, StatsRepository stats) {
         this.plugin = plugin;
         this.game = gameMessages.get("game-name");
         this.messages = BlockcraftApi.get().messages().prefixedLike(gameMessages);
         this.rewards = rewards;
+        this.stats = stats;
     }
 
     /** Whoever joins the round as a player; everyone else is a spectator and only sees who won. */
@@ -67,8 +74,18 @@ public final class RoundSummary {
         score(player);
     }
 
-    /** Pays the killer, plays their kill effect and returns the coins, for the game to book as points. */
-    public int awardKill(Player killer, Player victim) {
+    /** A player who left before the round started takes no part in it. */
+    public void forget(Player player) {
+        scores.remove(player.getUniqueId());
+    }
+
+    /** Out of the round for good, which books a loss whoever wins. */
+    public void eliminate(Player player) {
+        score(player).eliminated = true;
+    }
+
+    /** Pays the killer and plays their kill effect. */
+    public void awardKill(Player killer, Player victim) {
         BlockcraftApi.get().effects().onKill(killer, victim);
         Sounds.KILL.play(killer);
         var score = score(killer);
@@ -81,7 +98,7 @@ public final class RoundSummary {
             Sounds.STREAK.play(killer);
         }
         score.xp += BlockcraftApi.get().xp().award(killer, XpReward.KILL);
-        return pay(killer, rewards.kill());
+        pay(killer, rewards.kill());
     }
 
     public int kills(Player player) {
@@ -99,18 +116,18 @@ public final class RoundSummary {
         score.streak = 0;
     }
 
-    /** Pays the winner, plays their win effect and returns the coins, for the game to book as points. */
-    public int awardWin(Player winner) {
+    /** Pays the winner and plays their win effect. */
+    public void awardWin(Player winner) {
         BlockcraftApi.get().effects().onWin(winner);
         winners.put(winner.getUniqueId(), winner.getName());
         var score = score(winner);
         score.xp += BlockcraftApi.get().xp().award(winner, XpReward.WIN);
-        return pay(winner, rewards.win());
+        pay(winner, rewards.win());
     }
 
     /** Coins outside a kill or a win, such as a consolation for dying; they show up in the recap all the same. */
-    public int awardCoins(Player player, int coins) {
-        return pay(player, coins);
+    public void awardCoins(Player player, int coins) {
+        pay(player, coins);
     }
 
     public void show() {
@@ -119,6 +136,7 @@ public final class RoundSummary {
         participants.forEach(player -> score(player).xp += api.xp().award(player, XpReward.PARTICIPATION));
         var names = String.join(", ", winners.values());
         store(names);
+        book();
         api.achievements().afterRound(api.server().group(), participants);
         var rule = messages.get("summary.rule");
         var headline = messages.get("summary.game", Placeholder.component("game", game));
@@ -166,6 +184,17 @@ public final class RoundSummary {
         Tasks.async(plugin, () -> api.recaps().save(recaps));
     }
 
+    private void book() {
+        var rows = new ArrayList<Row>();
+        scores.forEach((id, score) -> {
+            var delta = score.stats(winners.containsKey(id), !winners.isEmpty());
+            if (!delta.equals(Stats.EMPTY)) {
+                rows.add(new Row(id, score.name, delta));
+            }
+        });
+        Tasks.async(plugin, () -> rows.forEach(row -> stats.add(row.player(), row.name(), row.delta())));
+    }
+
     private Component button(String key, Consumer<Player> action) {
         return messages.get(key)
                 .hoverEvent(HoverEvent.showText(messages.get(key + "-hover")))
@@ -184,24 +213,35 @@ public final class RoundSummary {
         return winners.isEmpty() ? "summary.title.draw" : "summary.title.lose";
     }
 
-    private int pay(Player player, int coins) {
+    private void pay(Player player, int coins) {
         if (coins > 0) {
             Coins.award(plugin, player, coins);
             score(player).coins += coins;
         }
-        return coins;
     }
 
     private Score score(Player player) {
-        return scores.computeIfAbsent(player.getUniqueId(), id -> new Score());
+        return scores.computeIfAbsent(player.getUniqueId(), id -> new Score(BlockcraftApi.get().realName(player)));
     }
 
-    private static final class Score {
-        private int kills;
-        private int deaths;
-        private int streak;
-        private int bestStreak;
-        private int coins;
-        private int xp;
+    static final class Score {
+        final String name;
+        int kills;
+        int deaths;
+        int streak;
+        int bestStreak;
+        int coins;
+        int xp;
+        boolean eliminated;
+
+        Score(String name) {
+            this.name = name;
+        }
+
+        /** A draw costs nobody still standing a loss; a won round costs everyone else one, once. */
+        Stats stats(boolean won, boolean decided) {
+            boolean lost = eliminated || (decided && !won);
+            return new Stats(kills, deaths, won ? 1 : 0, lost ? 1 : 0, coins);
+        }
     }
 }

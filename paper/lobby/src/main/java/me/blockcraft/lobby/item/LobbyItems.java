@@ -47,8 +47,6 @@ public final class LobbyItems {
     }
 
     private ItemStack item(Player player, LobbyItem item, Items.Builder icon, String nameKey) {
-        var stack = item.tag(icon.name(messages.get(nameKey)).lore(messages.get("item.lore")).build());
-        MenuIcon.style(stack, BlockcraftApi.get().resourcePack().applied(player));
-        return stack;
+        return item.build(player, icon.name(messages.get(nameKey)).lore(messages.get("item.lore")));
     }
 }

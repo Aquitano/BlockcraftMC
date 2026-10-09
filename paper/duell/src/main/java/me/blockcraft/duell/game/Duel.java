@@ -1,13 +1,11 @@
 package me.blockcraft.duell.game;
 
 import me.blockcraft.api.BlockcraftApi;
-import me.blockcraft.api.menu.Menu;
 import me.blockcraft.api.game.Arena;
 import me.blockcraft.api.game.GamePhase;
 import me.blockcraft.api.game.LobbyCountdown;
+import me.blockcraft.api.game.Round;
 import me.blockcraft.api.game.RoundSummary;
-import me.blockcraft.api.game.ServerRestart;
-import me.blockcraft.api.game.Stat;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.game.TimerBar;
 import me.blockcraft.api.sound.Sounds;
@@ -27,9 +25,7 @@ import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -48,29 +44,22 @@ public final class Duel {
     private final DuellConfig config;
     private final Messages messages;
     private final Spawns spawns;
-    private final StatsRepository stats;
     private final GameScoreboard scoreboard;
     private final GameItems items;
     private final DuelRatings ratings;
     private final Random random = new Random();
+    private final RoundSummary summary;
+    private final Round round;
+    private final LobbyCountdown lobbyCountdown;
 
-    private GamePhase phase = GamePhase.LOBBY;
     private DuelMode mode;
     private boolean pvp;
     private boolean frozen;
-    private final List<UUID> participants = new ArrayList<>();
     private int mapNumber;
     private String mapName;
-    private int round = 1;
+    private int vsRound = 1;
     private boolean superJumpFinished;
     private final Map<UUID, Integer> checkpoints = new HashMap<>();
-    private final LobbyCountdown lobbyCountdown;
-    private final RoundSummary summary;
-    private final Arena arena;
-    private Countdown freezeCountdown;
-    private Countdown roundTimer;
-    private Countdown restartCountdown;
-    private TimerBar roundBar;
 
     public Duel(Plugin plugin, DuellConfig config, Messages messages, Spawns spawns, StatsRepository stats,
                 GameScoreboard scoreboard, GameItems items, DuelRatings ratings) {
@@ -78,26 +67,26 @@ public final class Duel {
         this.config = config;
         this.messages = messages;
         this.spawns = spawns;
-        this.stats = stats;
         this.scoreboard = scoreboard;
         this.items = items;
         this.ratings = ratings;
-        this.arena = new Arena(messages, Sounds.DUELL_JOIN);
-        this.lobbyCountdown = new LobbyCountdown(plugin, arena, config.countdowns().lobby(), MAX_PARTICIPANTS, participants::size, this::startRound);
         this.summary = new RoundSummary(plugin, messages,
-                new RoundSummary.Rewards(config.killCoins(), config.winCoins()));
+                new RoundSummary.Rewards(config.killCoins(), config.winCoins()), stats);
+        this.round = new Round(plugin, new Arena(messages, Sounds.DUELL_JOIN), summary, MAX_PARTICIPANTS);
+        this.lobbyCountdown = new LobbyCountdown(plugin, round.arena(), config.countdowns().lobby(), MAX_PARTICIPANTS,
+                round::playerCount, this::startRound);
     }
 
     public boolean isLobby() {
-        return phase == GamePhase.LOBBY;
+        return round.phase() == GamePhase.LOBBY;
     }
 
     public boolean isIngame() {
-        return phase == GamePhase.INGAME;
+        return round.phase() == GamePhase.INGAME;
     }
 
     public boolean isPlaying(DuelMode mode) {
-        return phase == GamePhase.INGAME && this.mode == mode;
+        return isIngame() && this.mode == mode;
     }
 
     public boolean isMode(DuelMode mode) {
@@ -117,11 +106,7 @@ public final class Duel {
     }
 
     public boolean isParticipant(Player player) {
-        return participants.contains(player.getUniqueId());
-    }
-
-    public Stream<Player> participants() {
-        return participants.stream().map(Bukkit::getPlayer).filter(player -> player != null);
+        return round.isPlaying(player);
     }
 
     public Stream<Player> opponentsOf(Player player) {
@@ -140,30 +125,18 @@ public final class Duel {
     public void join(Player player) {
         items.giveLobbyItems(player);
         spawns.spawn().ifPresent(player::teleport);
-        if (participants.size() >= MAX_PARTICIPANTS || phase != GamePhase.LOBBY) {
-            player.setGameMode(GameMode.SPECTATOR);
-            arena.arrive(player);
-            player.sendMessage(messages.get("join.spectator"));
-        } else {
+        if (round.join(player)) {
             player.setGameMode(GameMode.SURVIVAL);
-            participants.add(player.getUniqueId());
-            summary.join(player);
-            arena.welcome(player, participants.size(), MAX_PARTICIPANTS);
+        } else {
+            player.sendMessage(messages.get("join.spectator"));
         }
         ratings.load(player, this::refreshScoreboards);
         Tasks.sync(plugin, this::refreshScoreboards);
         startLobbyCountdownIfReady();
     }
 
-    /** The player came to watch a friend, and only participants are playing, so everyone else is a spectator. */
     public void follow(Player spectator, UUID friend) {
-        if (isParticipant(spectator)) {
-            return;
-        }
-        var target = Bukkit.getPlayer(friend);
-        if (target != null && spectator.canSee(target)) {
-            arena.follow(spectator, target);
-        }
+        round.follow(spectator, friend);
     }
 
     public void nickChanged(Player player) {
@@ -172,25 +145,20 @@ public final class Duel {
     }
 
     public void quit(Player player) {
-        boolean left = participants.remove(player.getUniqueId());
-        if (left) {
-            arena.farewell(player, participants.size(), MAX_PARTICIPANTS);
-        }
+        boolean left = round.leave(player);
         checkpoints.remove(player.getUniqueId());
-        hideRoundBar(player);
-        switch (phase) {
+        switch (round.phase()) {
             case INGAME -> {
-                if (left && participants.size() <= 1) {
+                if (left && round.playerCount() <= 1) {
                     participants().forEach(winner -> rewardWinner(winner, player));
-                    Bukkit.broadcast(messages.get("round.ended"));
-                    startRestart();
+                    endRound();
                 }
             }
             case LOBBY -> {
-                if (participants.isEmpty()) {
+                if (round.playerCount() == 0) {
                     mode = null;
                 }
-                if (lobbyCountdown.isRunning() && participants.size() < MAX_PARTICIPANTS) {
+                if (lobbyCountdown.isRunning() && round.playerCount() < MAX_PARTICIPANTS) {
                     lobbyCountdown.cancel();
                     Bukkit.broadcast(messages.get("lobby.not-enough-players"));
                 }
@@ -215,39 +183,31 @@ public final class Duel {
     }
 
     public void handleVsKill(Player victim, Player killer) {
-        round++;
+        vsRound++;
         summary.awardKill(killer, victim);
         summary.death(victim);
-        record(killer, Stat.KILLS);
-        record(victim, Stat.DEATHS);
         refreshScoreboards();
-        respawnLater(victim);
-        if (round > config.vsKillsToEnd()) {
+        round.respawn(victim, RESPAWN_DELAY_TICKS);
+        if (vsRound > config.vsKillsToEnd()) {
             var winner = summary.kills(victim) > summary.kills(killer) ? victim : killer;
             rewardWinner(winner);
             endRound();
             return;
         }
-        var title = Title.title(messages.get("title.vs-round", Formatter.number("round", round)), messages.get("title.start"));
+        var title = Title.title(messages.get("title.vs-round", Formatter.number("round", vsRound)), messages.get("title.start"));
         participants().forEach(participant -> BlockcraftApi.get().notifications().important(participant, title));
     }
 
+    /** Whoever dies loses the duel, whether the opponent or the map killed them. */
     public void handleSgDeath(Player victim, Player killer) {
-        var victimName = Placeholder.unparsed("player", victim.getName());
+        Bukkit.broadcast(messages.get("round.died", Placeholder.unparsed("player", victim.getName())));
         summary.death(victim);
-        if (killer != null) {
-            Bukkit.broadcast(messages.get("round.died", victimName));
+        if (killer != null && !killer.equals(victim)) {
             summary.awardKill(killer, victim);
-            rewardWinner(killer);
-            record(killer, Stat.KILLS);
-            record(victim, Stat.DEATHS);
-            record(victim, Stat.LOSSES);
-        } else {
-            opponentsOf(victim).forEach(this::rewardWinner);
-            Bukkit.broadcast(messages.get("round.died", victimName));
         }
+        opponentsOf(victim).forEach(this::rewardWinner);
         endRound();
-        respawnLater(victim);
+        round.respawn(victim, RESPAWN_DELAY_TICKS);
     }
 
     /** Returns true if this checkpoint is new for the player. */
@@ -280,6 +240,7 @@ public final class Duel {
     }
 
     public void refreshScoreboards() {
+        var phase = round.phase();
         var modeLine = mode == null ? messages.get("scoreboard.mode-none") : messages.get("mode." + mode.configKey());
         var mapLine = phase == GamePhase.LOBBY || mapName == null
                 ? messages.get("scoreboard.map-random")
@@ -309,20 +270,24 @@ public final class Duel {
         });
     }
 
+    private Stream<Player> participants() {
+        return round.players().stream();
+    }
+
     private void startLobbyCountdownIfReady() {
-        if (phase == GamePhase.LOBBY && mode != null && participants.size() >= MAX_PARTICIPANTS) {
+        if (isLobby() && mode != null && round.playerCount() >= MAX_PARTICIPANTS) {
             lobbyCountdown.start();
         }
     }
 
     private void startRound() {
-        setPhase(GamePhase.INGAME);
+        round.enter(GamePhase.INGAME);
         Bukkit.broadcast(messages.get("lobby.started"));
         var maps = config.maps(mode);
         mapNumber = pickMap(maps.size());
         mapName = maps.isEmpty() ? null : maps.get(mapNumber - 1);
         int slot = 1;
-        for (var player : participants().toList()) {
+        for (var player : round.players()) {
             teleportToMapSpawn(player, slot++);
             switch (mode) {
                 case VS -> {
@@ -351,15 +316,6 @@ public final class Duel {
         return playable.length == 0 ? 1 : playable[random.nextInt(playable.length)];
     }
 
-    private void setPhase(GamePhase phase) {
-        this.phase = phase;
-        Bukkit.getOnlinePlayers().forEach(player -> {
-            Menu.close(player);
-            player.closeDialog();
-        });
-        BlockcraftApi.get().presence().state(phase.serverState());
-    }
-
     private void teleportToMapSpawn(Player player, int slot) {
         mapSpawn(slot).ifPresentOrElse(player::teleport,
                 () -> plugin.getLogger().warning("No spawn set for " + mode.setupKey() + " map " + mapNumber + " player " + slot));
@@ -367,19 +323,19 @@ public final class Duel {
 
     private void freeze() {
         frozen = true;
-        freezeCountdown = LobbyCountdown.freeze(plugin, config.countdowns().freeze(), () -> participants().toList(),
+        round.timer(LobbyCountdown.freeze(plugin, config.countdowns().freeze(), round::players,
                 seconds -> messages.get("title.freeze", Formatter.number("seconds", seconds)),
                 messages.get("title.introduction", Placeholder.component("mode", messages.get("mode." + mode.configKey())),
                         Placeholder.component("map", mapName == null ? messages.get("scoreboard.map-random") : Component.text(mapName))), () -> {
                     frozen = false;
                     pvp = mode != DuelMode.SUPERJUMP;
-                });
+                }));
     }
 
     private void startRoundTimer() {
         int seconds = config.countdowns().round();
-        roundBar = new TimerBar(messages, "timer.round", seconds);
-        roundTimer = Countdown.start(plugin, seconds, remaining -> roundBar.update(remaining), this::endByTimeout);
+        var roundBar = round.bar(new TimerBar(messages, "timer.round", seconds));
+        round.timer(Countdown.start(plugin, seconds, roundBar::update, this::endByTimeout));
     }
 
     /** The clock decides: VS by kills, SuperJump by the furthest checkpoint, SG is a draw. */
@@ -394,7 +350,7 @@ public final class Duel {
     }
 
     private Optional<Player> leaderBy(ToIntFunction<Player> score) {
-        var players = participants().toList();
+        var players = round.players();
         if (players.size() < 2) {
             return players.stream().findFirst();
         }
@@ -410,67 +366,26 @@ public final class Duel {
     }
 
     private void startRestart() {
-        if (phase == GamePhase.ENDING) {
-            return;
-        }
-        setPhase(GamePhase.ENDING);
-        refreshScoreboards();
-        cancel(roundTimer);
-        cancel(freezeCountdown);
         frozen = false;
-        hideRoundBar();
-        summary.show();
-        restartCountdown = ServerRestart.start(plugin, arena, config.countdowns().restart());
+        if (round.end(config.countdowns().restart())) {
+            refreshScoreboards();
+        }
     }
 
+    /** The round books the loss of everyone the winner beat; the rating moves here. */
     private void rewardWinner(Player winner) {
         summary.awardWin(winner);
-        record(winner, Stat.WINS);
         opponentsOf(winner).findFirst().ifPresent(loser -> ratings.settle(winner, loser, this::refreshScoreboards));
     }
 
     /** A quitter has already left the participants, so the round names them as the loser itself. */
     private void rewardWinner(Player winner, Player quitter) {
         summary.awardWin(winner);
-        record(winner, Stat.WINS);
         ratings.settle(winner, quitter, this::refreshScoreboards);
-    }
-
-    private void hideRoundBar() {
-        if (roundBar != null) {
-            roundBar.hide();
-        }
-    }
-
-    private void hideRoundBar(Player player) {
-        if (roundBar != null) {
-            roundBar.hide(player);
-        }
-    }
-
-    private void record(Player player, Stat column) {
-        var uuid = player.getUniqueId();
-        var name = BlockcraftApi.get().realName(player);
-        Tasks.async(plugin, () -> stats.add(uuid, name, column, 1));
-    }
-
-    private void respawnLater(Player player) {
-        Tasks.later(plugin, RESPAWN_DELAY_TICKS, () -> {
-            if (player.isOnline() && player.isDead()) {
-                player.spigot().respawn();
-            }
-        });
-    }
-
-    private static void cancel(Countdown countdown) {
-        if (countdown != null) {
-            countdown.cancel();
-        }
     }
 
     public void shutdown() {
         lobbyCountdown.cancel();
-        hideRoundBar();
-        Stream.of(freezeCountdown, roundTimer, restartCountdown).forEach(Duel::cancel);
+        round.stop();
     }
 }

@@ -3,13 +3,15 @@ package me.blockcraft.quicksg.listener;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.game.LootChest;
 import me.blockcraft.api.game.LootChests;
+import me.blockcraft.api.game.StatsMenus;
+import me.blockcraft.api.item.HotbarItem;
 import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.quicksg.game.Game;
+import me.blockcraft.quicksg.game.GameItem;
 import me.blockcraft.quicksg.config.QuickSGConfig;
 import me.blockcraft.quicksg.menu.KitMenus;
-import me.blockcraft.quicksg.menu.StatsMenus;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Material;
@@ -67,27 +69,18 @@ public final class ItemListener implements Listener {
         if (item == null) {
             return;
         }
+        var hotbar = HotbarItem.of(item, GameItem.class);
+        if (hotbar.isPresent()) {
+            event.setCancelled(true);
+            switch (hotbar.get()) {
+                case HUB -> ProxyMessaging.hub(plugin, player);
+                case START -> player.performCommand("start");
+                case STATS -> statsMenus.open(player);
+                case KITS -> kitMenus.openSelector(player);
+            }
+            return;
+        }
         switch (item.getType()) {
-            case SLIME_BALL -> {
-                event.setCancelled(true);
-                ProxyMessaging.hub(plugin, player);
-            }
-            case DIAMOND -> {
-                if (player.hasPermission("blockcraft.quicksg.start")) {
-                    event.setCancelled(true);
-                    player.performCommand("start");
-                }
-            }
-            case PLAYER_HEAD -> {
-                event.setCancelled(true);
-                statsMenus.openPlayers(player);
-            }
-            case CHEST -> {
-                if (game.isLobby()) {
-                    event.setCancelled(true);
-                    kitMenus.openSelector(player);
-                }
-            }
             case ENCHANTING_TABLE -> {
                 if (game.isIngame() && game.isAlive(player)) {
                     player.openInventory(MenuType.ENCHANTMENT.builder().location(player.getLocation()).checkReachable(false).build(player));
@@ -153,7 +146,7 @@ public final class ItemListener implements Listener {
         }
         player.setCooldown(compass, tracker.cooldownTicks());
         var origin = player.getLocation();
-        var target = game.alivePlayers()
+        var target = game.alivePlayers().stream()
                 .filter(other -> !other.equals(player) && !other.isDead() && player.canSee(other))
                 .filter(other -> other.getWorld().equals(origin.getWorld()))
                 .filter(other -> {

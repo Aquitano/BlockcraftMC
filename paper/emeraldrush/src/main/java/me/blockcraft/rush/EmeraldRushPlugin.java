@@ -4,7 +4,10 @@ import me.blockcraft.api.command.CommandRegistry;
 import me.blockcraft.api.game.ArenaProtection;
 import me.blockcraft.api.game.ServerRestart;
 import me.blockcraft.api.game.StatsCommand;
+import me.blockcraft.api.game.StatsMenus;
 import me.blockcraft.api.game.StatsRepository;
+import me.blockcraft.api.game.TopCommand;
+import me.blockcraft.api.game.TopList;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.common.message.Messages;
@@ -13,7 +16,6 @@ import me.blockcraft.rush.command.RushCoinsCommand;
 import me.blockcraft.rush.command.RushCommand;
 import me.blockcraft.rush.command.RushSetCommand;
 import me.blockcraft.rush.command.StartCommand;
-import me.blockcraft.rush.command.TopCommand;
 import me.blockcraft.rush.config.RushConfig;
 import me.blockcraft.rush.config.Spawns;
 import me.blockcraft.rush.game.Game;
@@ -47,21 +49,23 @@ public final class EmeraldRushPlugin extends JavaPlugin {
         api.unlocks().importLegacyTable("em_kits", Perk.LEGACY_COLUMNS);
 
         game = new Game(this, config, spawns, messages, stats, api.map());
-        var menus = new RushMenus(this, game, messages, spawns, api.unlocks(), api.shop(), stats);
+        var menus = new RushMenus(game, messages, spawns, api.unlocks(), api.shop());
+        var topList = new TopList(this, stats, messages);
+        var statsMenus = StatsMenus.of(messages, stats, topList, config.globalStatsHead());
 
         register(new ConnectionListener(game));
         register(new DeathListener(game));
         register(new ProtectionListener(game, api.buildMode()));
         register(new ArenaProtection(() -> false));
         register(new BlockListener(this, game, config, api.buildMode()));
-        register(new HotbarListener(this, game, menus, config, messages));
+        register(new HotbarListener(this, game, menus, statsMenus, config, messages));
 
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             var commands = new CommandRegistry(event.registrar(), messages);
             commands.register(StartCommand.create(this, game, api.coins(), messages));
             commands.register(StatsCommand.create(this, stats, messages));
             commands.register(RushSetCommand.create(spawns, messages));
-            commands.register(TopCommand.create(menus));
+            commands.register(TopCommand.create(topList));
             commands.register(ChestCommand.create(game, menus, messages));
             commands.register(RushCommand.create(this, game, menus, api.coins(), messages));
             commands.register(RushCoinsCommand.create(game, messages));

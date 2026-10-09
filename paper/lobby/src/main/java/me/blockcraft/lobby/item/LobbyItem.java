@@ -1,14 +1,12 @@
 package me.blockcraft.lobby.item;
 
-import org.bukkit.NamespacedKey;
+import me.blockcraft.api.item.HotbarItem;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.persistence.PersistentDataType;
 
-import java.util.Arrays;
 import java.util.Optional;
 
-/** Hotbar items every player gets on join, identified by a persistent tag instead of their name. */
-public enum LobbyItem {
+/** Hotbar items every player gets on join. */
+public enum LobbyItem implements HotbarItem {
     NAVIGATOR(0),
     PLAYER_HIDER(1),
     PROFILE(2),
@@ -18,8 +16,6 @@ public enum LobbyItem {
     FRIENDS(7),
     SECRETS(8);
 
-    public static final NamespacedKey KEY = new NamespacedKey("lobby", "item");
-
     private final int slot;
 
     LobbyItem(int slot) {
@@ -27,19 +23,10 @@ public enum LobbyItem {
     }
 
     public static Optional<LobbyItem> of(ItemStack stack) {
-        if (stack == null || stack.isEmpty()) {
-            return Optional.empty();
-        }
-        String id = stack.getPersistentDataContainer().get(KEY, PersistentDataType.STRING);
-        return Arrays.stream(values()).filter(item -> item.name().equals(id)).findFirst();
+        return HotbarItem.of(stack, LobbyItem.class);
     }
 
     public int slot() {
         return slot;
-    }
-
-    public ItemStack tag(ItemStack stack) {
-        stack.editMeta(meta -> meta.getPersistentDataContainer().set(KEY, PersistentDataType.STRING, name()));
-        return stack;
     }
 }

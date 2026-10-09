@@ -32,7 +32,8 @@ public enum MenuIcon {
     QUICKSG(Material.IRON_SWORD),
     EMERALDRUSH(Material.EMERALD),
     DUELL(Material.SHIELD),
-    JUMP(Material.DIAMOND_BOOTS);
+    JUMP(Material.DIAMOND_BOOTS),
+    START(Material.DIAMOND);
 
     /** Draws nothing at all; the outer slots of a toolbar button wear it so the whole bar answers hover and click. */
     public static final Key EMPTY_MODEL = Key.key("blockcraft", "empty");
