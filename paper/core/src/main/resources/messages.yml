@@ -17,8 +17,8 @@ commands:
     description: "Heilt dich"
   invsee:
     description: "Öffnet das Inventar eines Spielers"
-  serverinfo:
-    description: "Zeigt Serverinformationen"
+  lag:
+    description: "Zeigt TPS, MSPT, Speicher und Welten dieses Servers"
   sethealth:
     description: "Setzt die Herzen eines Spielers"
   skull:
@@ -76,12 +76,16 @@ invsee:
   usage: "<prefix><error>Benutze /invsee [Spieler]"
   opened: "<prefix>Du siehst nun das Inventar von <white><player>"
   read-only: "<prefix><muted>Nur ansehen: zum Verändern fehlt dir die Berechtigung."
-serverinfo:
+lag:
   lines:
     - ""
-    - "<prefix><muted>Maximaler Ram: <white><max><muted> MB"
-    - "<prefix><muted>Benutzter Ram: <white><used><muted> MB"
-    - " "
+    - "<prefix><muted>Server: <white><server> <dark>(<muted><group><dark>) <dark>| <accent><state>"
+    - "<prefix><muted>TPS (1, 5, 15 Min.): <white><tps1><dark>, <white><tps5><dark>, <white><tps15>"
+    - "<prefix><muted>MSPT: <white><mspt><muted> ms"
+    - "<prefix><muted>Uptime: <white><uptime>"
+    - "<prefix><muted>Ram: <white><used><muted>/<white><max><muted> MB"
+    - "<prefix><muted>Spieler: <white><online><muted>/<white><slots>"
+  world: "<prefix><bullet><white><world><dark>: <white><chunks> <muted>Chunks, <white><entities> <muted>Entities"
 sethealth:
   usage: "<prefix><error>benutze /sethealth [Name] [Herzen]"
   done: "<prefix><white><player><muted> hat nun <white><health><muted> Herzen!"
