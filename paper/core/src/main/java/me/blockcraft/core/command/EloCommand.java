@@ -5,6 +5,7 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
+import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.elo.Elo;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.elo.EloEntry;
@@ -33,13 +34,13 @@ public final class EloCommand {
                     var player = context.getSource().getPlayerOrThrow();
                     var uuid = player.getUniqueId();
                     Tasks.async(plugin, () -> elo.rating(uuid),
-                            rating -> player.sendMessage(messages.get("elo.self", describe(elo, rating))));
+                            rating -> player.sendMessage(messages.get("elo.self", describe(elo, rating))), () -> failed(player));
                     return Command.SINGLE_SUCCESS;
                 })
                 .then(Commands.literal("top")
                         .executes(context -> {
                             var player = context.getSource().getPlayerOrThrow();
-                            Tasks.async(plugin, () -> elo.top(TOP_SIZE), entries -> sendTop(player, elo, messages, entries));
+                            Tasks.async(plugin, () -> elo.top(TOP_SIZE), entries -> sendTop(player, elo, messages, entries), () -> failed(player));
                             return Command.SINGLE_SUCCESS;
                         }))
                 .then(Commands.argument("player", StringArgumentType.word())
@@ -56,10 +57,14 @@ public final class EloCommand {
                             var target = Placeholder.unparsed("player", name);
                             Tasks.async(plugin, () -> elo.ratingByName(name), rating -> player.sendMessage(rating
                                     .map(found -> messages.get("elo.other", describe(elo, found), target))
-                                    .orElseGet(() -> messages.get("elo.unknown", target))));
+                                    .orElseGet(() -> messages.get("elo.unknown", target))), () -> failed(player));
                             return Command.SINGLE_SUCCESS;
                         }))
                 .build();
+    }
+
+    private static void failed(Player player) {
+        player.sendMessage(BlockcraftApi.get().messages().get("operation.failed"));
     }
 
     private static TagResolver describe(Elo elo, EloRating rating) {

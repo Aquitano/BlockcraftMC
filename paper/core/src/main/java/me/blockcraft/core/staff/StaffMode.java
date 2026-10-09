@@ -1,7 +1,7 @@
 package me.blockcraft.core.staff;
 
 import me.blockcraft.api.item.Items;
-import me.blockcraft.api.task.Tasks;
+import me.blockcraft.api.task.SerialTasks;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.core.command.InvseeCommand;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -52,6 +52,7 @@ public final class StaffMode implements Listener {
     private final VanishService vanish;
     private final FreezeService freeze;
     private final StaffInventoryRepository inventories;
+    private final SerialTasks<UUID> writes;
     private final Map<UUID, Session> sessions = new ConcurrentHashMap<>();
     private final Map<UUID, byte[]> pendingRestore = new ConcurrentHashMap<>();
     private final Random random = new Random();
@@ -62,6 +63,7 @@ public final class StaffMode implements Listener {
         this.vanish = vanish;
         this.freeze = freeze;
         this.inventories = inventories;
+        this.writes = new SerialTasks<>(plugin);
     }
 
     public boolean isActive(Player player) {
@@ -83,7 +85,7 @@ public final class StaffMode implements Listener {
         var contents = player.getInventory().getContents();
         sessions.put(uuid, new Session(contents, vanish.isVanished(player), player.getAllowFlight()));
         byte[] serialized = ItemStack.serializeItemsAsBytes(contents);
-        Tasks.async(plugin, () -> inventories.save(uuid, serialized));
+        writes.run(uuid, () -> inventories.save(uuid, serialized));
         player.getInventory().clear();
         var inventory = player.getInventory();
         inventory.setItem(SLOT_RANDOM, Items.of(Material.COMPASS).name(messages.get("staff.item.random")).build());
@@ -111,7 +113,7 @@ public final class StaffMode implements Listener {
     private void restore(Player player, Session session) {
         var uuid = player.getUniqueId();
         player.getInventory().setContents(session.contents());
-        Tasks.async(plugin, () -> inventories.delete(uuid));
+        writes.run(uuid, () -> inventories.delete(uuid));
         if (!session.vanishedBefore()) {
             vanish.set(player, false);
         }
@@ -121,7 +123,8 @@ public final class StaffMode implements Listener {
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onPreLogin(AsyncPlayerPreLoginEvent event) {
-        inventories.find(event.getUniqueId()).ifPresent(contents -> pendingRestore.put(event.getUniqueId(), contents));
+        LoginLookup.run(plugin, messages, event, "staff-mode inventory", () ->
+                inventories.find(event.getUniqueId()).ifPresent(contents -> pendingRestore.put(event.getUniqueId(), contents)));
     }
 
     @EventHandler
@@ -133,7 +136,7 @@ public final class StaffMode implements Listener {
         }
         player.getInventory().setContents(ItemStack.deserializeItemsFromBytes(saved));
         var uuid = player.getUniqueId();
-        Tasks.async(plugin, () -> inventories.delete(uuid));
+        writes.run(uuid, () -> inventories.delete(uuid));
         player.sendMessage(messages.get("staff.inventory-restored"));
     }
 

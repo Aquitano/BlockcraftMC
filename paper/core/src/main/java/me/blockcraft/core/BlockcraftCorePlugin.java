@@ -80,7 +80,7 @@ public final class BlockcraftCorePlugin extends JavaPlugin {
                 stringList(nickSection, "ranks"));
         pluginManager.registerEvents(new NickListener(nicks, messages), this);
         pluginManager.registerEvents(new ChatFormatListener(messages, nicks), this);
-        var vanish = new VanishService(this, moderation.vanish());
+        var vanish = new VanishService(this, moderation.vanish(), messages);
         pluginManager.registerEvents(vanish, this);
         pluginManager.registerEvents(new InvseeGuard(), this);
         var freeze = new FreezeService(this, moderation.frozen(), messages);

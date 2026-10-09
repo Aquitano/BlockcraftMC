@@ -1,8 +1,9 @@
 package me.blockcraft.core.staff;
 
 import me.blockcraft.api.proxy.ProxyMessaging;
-import me.blockcraft.api.task.Tasks;
+import me.blockcraft.api.task.SerialTasks;
 import me.blockcraft.api.vanish.VanishChangeEvent;
+import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.moderation.VanishRepository;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -30,12 +31,16 @@ public final class VanishService implements Listener {
 
     private final Plugin plugin;
     private final VanishRepository repository;
+    private final Messages messages;
+    private final SerialTasks<UUID> writes;
     private final Set<UUID> vanished = ConcurrentHashMap.newKeySet();
     private final Set<UUID> pending = ConcurrentHashMap.newKeySet();
 
-    public VanishService(Plugin plugin, VanishRepository repository) {
+    public VanishService(Plugin plugin, VanishRepository repository, Messages messages) {
         this.plugin = plugin;
         this.repository = repository;
+        this.messages = messages;
+        this.writes = new SerialTasks<>(plugin);
     }
 
     public boolean isVanished(Player player) {
@@ -62,7 +67,7 @@ public final class VanishService implements Listener {
             vanished.remove(uuid);
             Bukkit.getOnlinePlayers().forEach(viewer -> viewer.showPlayer(plugin, player));
         }
-        Tasks.async(plugin, () -> repository.set(uuid, vanish));
+        writes.run(uuid, () -> repository.set(uuid, vanish));
         ProxyMessaging.vanish(plugin, player, vanish);
         Bukkit.getPluginManager().callEvent(new VanishChangeEvent(player, vanish));
     }
@@ -73,9 +78,11 @@ public final class VanishService implements Listener {
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onPreLogin(AsyncPlayerPreLoginEvent event) {
-        if (repository.isVanished(event.getUniqueId())) {
-            pending.add(event.getUniqueId());
-        }
+        LoginLookup.run(plugin, messages, event, "vanish state", () -> {
+            if (repository.isVanished(event.getUniqueId())) {
+                pending.add(event.getUniqueId());
+            }
+        });
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
