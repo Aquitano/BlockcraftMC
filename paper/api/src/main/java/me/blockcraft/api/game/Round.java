@@ -29,6 +29,7 @@ public final class Round {
     private static final int SECONDS_PER_MINUTE = 60;
 
     private final Plugin plugin;
+    private final BlockcraftApi api;
     private final Arena arena;
     private final RoundSummary summary;
     private final int capacity;
@@ -40,6 +41,7 @@ public final class Round {
 
     public Round(Plugin plugin, Arena arena, RoundSummary summary, int capacity) {
         this.plugin = plugin;
+        this.api = BlockcraftApi.get();
         this.arena = arena;
         this.summary = summary;
         this.capacity = capacity;
@@ -64,12 +66,12 @@ public final class Round {
             Menu.close(player);
             player.closeDialog();
         });
-        BlockcraftApi.get().presence().state(phase.serverState());
+        api.presence().state(phase.serverState());
     }
 
     /** Seats a joiner and returns whether they play; a spectator is in spectator mode already. */
     public boolean join(Player player) {
-        if (phase != GamePhase.LOBBY || players.size() >= capacity || BlockcraftApi.get().isVanished(player)) {
+        if (phase != GamePhase.LOBBY || players.size() >= capacity || api.isVanished(player)) {
             spectators.add(player.getUniqueId());
             PlayerReset.spectate(player);
             arena.arrive(player);
@@ -142,7 +144,7 @@ public final class Round {
 
     /** Vanished staff watch uncounted. */
     public int spectatorCount() {
-        return (int) spectators().stream().filter(player -> !BlockcraftApi.get().isVanished(player)).count();
+        return (int) spectators().stream().filter(player -> !api.isVanished(player)).count();
     }
 
     /** Registers a countdown that the end of the round stops. */

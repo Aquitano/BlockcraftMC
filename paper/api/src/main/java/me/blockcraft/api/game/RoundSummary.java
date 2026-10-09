@@ -50,6 +50,7 @@ public final class RoundSummary {
             .build();
 
     private final Plugin plugin;
+    private final BlockcraftApi api;
     private final Component game;
     private final Messages messages;
     private final Rewards rewards;
@@ -63,8 +64,9 @@ public final class RoundSummary {
     /** {@code gameMessages} is the game's own file; it names the game as {@code game-name} and lends its prefix. */
     public RoundSummary(Plugin plugin, Messages gameMessages, Rewards rewards, StatsRepository stats) {
         this.plugin = plugin;
+        this.api = BlockcraftApi.get();
         this.game = gameMessages.get("game-name");
-        this.messages = BlockcraftApi.get().messages().prefixedLike(gameMessages);
+        this.messages = api.messages().prefixedLike(gameMessages);
         this.rewards = rewards;
         this.stats = stats;
     }
@@ -86,18 +88,18 @@ public final class RoundSummary {
 
     /** Pays the killer and plays their kill effect. */
     public void awardKill(Player killer, Player victim) {
-        BlockcraftApi.get().effects().onKill(killer, victim);
+        api.effects().onKill(killer, victim);
         Sounds.KILL.play(killer);
         var score = score(killer);
         score.kills++;
         score.streak++;
         score.bestStreak = Math.max(score.bestStreak, score.streak);
-        if (BlockcraftApi.get().streaks().announces(score.streak)) {
+        if (api.streaks().announces(score.streak)) {
             Bukkit.broadcast(messages.get("summary.streak",
                     Placeholder.unparsed("player", killer.getName()), Formatter.number("streak", score.streak)));
             Sounds.STREAK.play(killer);
         }
-        score.xp += BlockcraftApi.get().xp().award(killer, XpReward.KILL);
+        score.xp += api.xp().award(killer, XpReward.KILL);
         pay(killer, rewards.kill());
     }
 
@@ -118,10 +120,10 @@ public final class RoundSummary {
 
     /** Pays the winner and plays their win effect. */
     public void awardWin(Player winner) {
-        BlockcraftApi.get().effects().onWin(winner);
+        api.effects().onWin(winner);
         winners.put(winner.getUniqueId(), winner.getName());
         var score = score(winner);
-        score.xp += BlockcraftApi.get().xp().award(winner, XpReward.WIN);
+        score.xp += api.xp().award(winner, XpReward.WIN);
         pay(winner, rewards.win());
     }
 
@@ -131,7 +133,6 @@ public final class RoundSummary {
     }
 
     public void show() {
-        var api = BlockcraftApi.get();
         var participants = Bukkit.getOnlinePlayers().stream().filter(player -> scores.containsKey(player.getUniqueId())).toList();
         participants.forEach(player -> score(player).xp += api.xp().award(player, XpReward.PARTICIPATION));
         var names = String.join(", ", winners.values());
@@ -146,7 +147,7 @@ public final class RoundSummary {
         var subtitle = winners.isEmpty()
                 ? messages.get("summary.title.subtitle-draw")
                 : messages.get("summary.title.subtitle", Placeholder.unparsed("winner", names));
-        var group = BlockcraftApi.get().server().group();
+        var group = api.server().group();
         var again = button("summary.again", player -> ProxyMessaging.play(plugin, player, group));
         var lobby = button("summary.lobby", player -> ProxyMessaging.hub(plugin, player));
         for (var player : Bukkit.getOnlinePlayers()) {
@@ -170,14 +171,13 @@ public final class RoundSummary {
                 continue;
             }
             boolean won = winners.containsKey(player.getUniqueId());
-            BlockcraftApi.get().notifications().important(player, Title.title(messages.get(titleKey(won)), subtitle, TIMES),
+            api.notifications().important(player, Title.title(messages.get(titleKey(won)), subtitle, TIMES),
                     won ? Sounds.WIN : Sounds.LOSE);
         }
     }
 
     /** Every participant's recap, the lobby shows it once they arrive; those who left early get theirs too. */
     private void store(String names) {
-        var api = BlockcraftApi.get();
         var recaps = new LinkedHashMap<UUID, RoundRecap>();
         scores.forEach((id, score) -> recaps.put(id, new RoundRecap(api.server().group(), winners.containsKey(id), names,
                 score.kills, score.deaths, score.bestStreak, score.coins, score.xp)));
@@ -221,7 +221,7 @@ public final class RoundSummary {
     }
 
     private Score score(Player player) {
-        return scores.computeIfAbsent(player.getUniqueId(), id -> new Score(BlockcraftApi.get().realName(player)));
+        return scores.computeIfAbsent(player.getUniqueId(), id -> new Score(api.realName(player)));
     }
 
     static final class Score {
