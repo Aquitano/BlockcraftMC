@@ -6,6 +6,7 @@ import me.blockcraft.common.elo.Season;
 import me.blockcraft.common.moderation.PlayerAddressRepository;
 import me.blockcraft.common.moderation.PlayerRepository;
 import me.blockcraft.common.moderation.PunishmentRepository;
+import me.blockcraft.common.moderation.WarnRepository;
 import me.blockcraft.common.moderation.WatchRepository;
 import me.blockcraft.common.player.PlayerReference;
 import me.blockcraft.common.report.ReportRepository;
@@ -43,7 +44,7 @@ public class DatabaseIntegrationTest {
     private static final String HOST = "127.0.0.1";
     private static final String USER = "root";
     private static final int APPLIED = SharedSchema.MIGRATIONS.size();
-    private static final int NEXT = APPLIED + 1;
+    private static final int NEXT = SharedSchema.MIGRATIONS.getLast().version() + 1;
 
     private int port;
     private String password;
@@ -248,5 +249,18 @@ public class DatabaseIntegrationTest {
         db.update("UPDATE bc_player_addresses SET last_seen = NOW() - INTERVAL 91 DAY WHERE player_uuid = ?", banned.toString());
         assertTrue(addresses.alts(alt, retention).isEmpty());
         assertEquals(1, addresses.purge(retention));
+    }
+
+    @Test
+    public void warnsKeepTheirIssuerAndLegacyWarnsHaveNone() {
+        db.migrate();
+        var warns = new WarnRepository(db);
+        var player = UUID.randomUUID();
+        db.update("INSERT INTO bc_warns (player_uuid, reason) VALUES (?, NULL)", player.toString());
+        var staff = PlayerReference.known(UUID.randomUUID(), "Staff");
+        assertEquals(2, warns.add(player, Optional.of("Spam"), staff));
+        var listed = warns.list(player);
+        assertTrue(listed.getFirst().issuer().isEmpty());
+        assertEquals(Optional.of(staff), listed.getLast().issuer());
     }
 }

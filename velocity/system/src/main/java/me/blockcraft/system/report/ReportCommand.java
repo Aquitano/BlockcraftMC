@@ -8,6 +8,7 @@ import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.plugin.PluginDescription;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
+import me.blockcraft.common.db.DatabaseException;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.system.PlayerVisibility;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -47,7 +48,7 @@ public final class ReportCommand {
                                 Placeholder.unparsed("version", description.getVersion().orElse("?"))).forEach(player::sendMessage))))
                 .then(BrigadierCommand.literalArgumentBuilder("notify")
                         .executes(asStaff((player, context) -> player.sendMessage(
-                                messages.get(preferences.isMuted(player.getUniqueId()) ? "notify.status-off" : "notify.status-on"))))
+                                messages.get(preferences.enabled(player) ? "notify.status-on" : "notify.status-off"))))
                         .then(BrigadierCommand.literalArgumentBuilder("on").executes(asStaff((player, context) -> toggle(player, true))))
                         .then(BrigadierCommand.literalArgumentBuilder("off").executes(asStaff((player, context) -> toggle(player, false))))
                         .then(BrigadierCommand.requiredArgumentBuilder("state", StringArgumentType.word())
@@ -70,15 +71,15 @@ public final class ReportCommand {
     }
 
     private void toggle(Player player, boolean enabled) {
-        boolean muted = preferences.isMuted(player.getUniqueId());
-        if (enabled == !muted) {
+        if (enabled == preferences.enabled(player)) {
             player.sendMessage(messages.get(enabled ? "notify.already-enabled" : "notify.already-disabled"));
             return;
         }
-        if (enabled) {
-            preferences.unmute(player.getUniqueId());
-        } else {
-            preferences.mute(player.getUniqueId());
+        try {
+            preferences.set(player, enabled);
+        } catch (DatabaseException e) {
+            player.sendMessage(messages.get("notify.failed"));
+            return;
         }
         player.sendMessage(messages.get(enabled ? "notify.enabled" : "notify.disabled"));
     }

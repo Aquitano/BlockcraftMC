@@ -6,6 +6,8 @@ import me.blockcraft.common.config.YamlFile;
 import me.blockcraft.common.db.Database;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.report.ReportRepository;
+import me.blockcraft.common.settings.PlayerSettingRepository;
+import me.blockcraft.system.PlayerChoices;
 import me.blockcraft.system.PlayerLookup;
 import me.blockcraft.system.PlayerVisibility;
 import org.slf4j.Logger;
@@ -23,16 +25,18 @@ import java.util.List;
  */
 public record Reports(ReportCommand command, ReportService service) {
 
-    private static final List<String> LEGACY_FILES = List.of("config.yml", "messages.yml", "ignored-staff.yml");
+    private static final List<String> LEGACY_FILES = List.of("config.yml", "messages.yml", NotifyPreferences.LEGACY_FILE);
 
     public static Reports load(Object plugin, ProxyServer proxy, Logger logger, Path systemDirectory,
-                               Database database, PlayerLookup lookup, PlayerVisibility visibility, PluginDescription description) {
+                               Database database, PlayerLookup lookup, PlayerVisibility visibility, PlayerChoices choices,
+                               PlayerSettingRepository settings, PluginDescription description) {
         Path directory = systemDirectory.resolve("reports");
         importLegacy(systemDirectory.resolveSibling("blockcraft-report"), directory);
         var config = YamlFile.loadWithDefaults(directory.resolve("config.yml"), () -> Reports.class.getResourceAsStream("/reports/config.yml"));
         var loaded = Messages.load(directory, () -> Reports.class.getResourceAsStream("/reports/messages.yml"));
         var messages = loaded.with(loaded.tagsOf("palette"));
-        var preferences = new NotifyPreferences(directory.resolve("ignored-staff.yml"));
+        NotifyPreferences.importLegacy(directory, settings);
+        var preferences = new NotifyPreferences(choices, settings);
         var repository = new ReportRepository(database);
         String permission = String.valueOf(config.getOrDefault("staff-permission", "blockcraft.report.notify"));
         var cooldown = Duration.ofSeconds(Math.max(0, ((Number) config.getOrDefault("report-cooldown-seconds", 10)).longValue()));
@@ -45,7 +49,8 @@ public record Reports(ReportCommand command, ReportService service) {
         try {
             Files.createDirectories(destination);
             for (String name : LEGACY_FILES) {
-                if (Files.exists(source.resolve(name)) && Files.notExists(destination.resolve(name))) {
+                if (Files.exists(source.resolve(name)) && Files.notExists(destination.resolve(name))
+                        && Files.notExists(destination.resolve(name + NotifyPreferences.IMPORTED_SUFFIX))) {
                     Files.copy(source.resolve(name), destination.resolve(name));
                 }
             }

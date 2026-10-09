@@ -296,6 +296,8 @@ jar when deploying this version; the proxy refuses to start while it is loaded. 
 `config.yml`, `messages.yml` and `ignored-staff.yml` are copied from `plugins/blockcraft-report` into
 `plugins/blockcraft-system/reports` where no file exists yet, so messages, cooldown and muted staff survive. The old
 plugin's own database section is gone; if it pointed at a different database, move its `Reports` table first.
+The staff listed in `ignored-staff.yml` get the `report-notifications` setting turned off on that start, and the
+file is renamed to `ignored-staff.yml.imported`; from then on `/report notify` and the settings dialog change it.
 
 Deploy the Paper and Velocity jars together: reports and punishments from a backend travel on `blockcraft:operations`
 as versioned payloads with a request id, and the proxy answers with a result. The proxy accepts a request only from
@@ -306,7 +308,7 @@ retried automatically, because the original request may already have reached sto
 Shared tables come from ordered migrations recorded in `bc_schema_migrations`. A start takes a MariaDB lock before
 applying what is pending, so servers starting together take turns; a checksum rejects an edited migration. Every
 statement is safe to run again because MariaDB commits DDL on its own. Existing report rows and name columns stay as
-they are. New reports, claims, punishments, strikes and freezes also record the account UUID of everyone involved, so
+they are. New reports, claims, punishments, strikes, warns and freezes also record the account UUID of everyone involved, so
 a renamed account or a nicked staff member still resolves to who did what. The games' stats tables keep their own setup.
 
 Database work behind a menu goes through `PlayerTasks`: a read that builds a screen is dropped when the player moved
@@ -342,7 +344,7 @@ Every remembered choice a player makes is one row in `bc_player_settings`, read 
 `common`'s `PlayerSettingRepository`. Cosmetic settings store the chosen key for tags, effects, trails, gadgets,
 pets, heads, and shirts. The toggles store `on` or `off` and count as their own default while no row exists, so nothing has to be seeded:
 `private-messages`, `party-invites`, `friend-requests`, `player-visibility`, `sounds`, and `effects` default to on, the two nick
-toggles (`auto-nick`, `keep-nick`) to off. A toggle may name a permission, and then it is only shown to, and only
+toggles (`auto-nick`, `keep-nick`) to off, and `report-notifications` (staff with `blockcraft.report.notify`) to on. A toggle may name a permission, and then it is only shown to, and only
 read for, the players who hold it.
 
 Paper caches a player's settings for as long as they are online (`BlockcraftApi.get().settings()`) and fires

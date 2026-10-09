@@ -18,6 +18,7 @@ import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.moderation.ModerationRepositories;
 import me.blockcraft.common.moderation.PlayerAddressRepository;
 import me.blockcraft.common.moderation.PunishmentCatalogRepository;
+import me.blockcraft.common.moderation.PunishmentType;
 import me.blockcraft.common.nick.NickRepository;
 import me.blockcraft.common.network.ServerRepository;
 import me.blockcraft.common.network.operation.NetworkRequest;
@@ -25,24 +26,13 @@ import me.blockcraft.common.settings.PlayerSettingRepository;
 import me.blockcraft.system.alt.AddressHasher;
 import me.blockcraft.system.alt.AltListener;
 import me.blockcraft.system.command.CommandSupport;
-import me.blockcraft.system.command.moderation.BanCommand;
-import me.blockcraft.system.command.moderation.BanListCommand;
 import me.blockcraft.system.command.moderation.CheckCommand;
-import me.blockcraft.system.command.moderation.DelStrikeCommand;
 import me.blockcraft.system.command.moderation.HistoryCommand;
 import me.blockcraft.system.command.moderation.KickCommand;
-import me.blockcraft.system.command.moderation.MuteCommand;
-import me.blockcraft.system.command.moderation.MuteListCommand;
-import me.blockcraft.system.command.moderation.ShowStrikesCommand;
+import me.blockcraft.system.command.moderation.PunishmentCommands;
 import me.blockcraft.system.command.moderation.StrafeCommand;
-import me.blockcraft.system.command.moderation.StrikeCommand;
-import me.blockcraft.system.command.moderation.StrikesCommand;
-import me.blockcraft.system.command.moderation.TempBanCommand;
-import me.blockcraft.system.command.moderation.TempMuteCommand;
-import me.blockcraft.system.command.moderation.UnbanCommand;
-import me.blockcraft.system.command.moderation.UnmuteCommand;
-import me.blockcraft.system.command.moderation.WarnCommand;
-import me.blockcraft.system.command.moderation.WarnsCommand;
+import me.blockcraft.system.command.moderation.StrikeCommands;
+import me.blockcraft.system.command.moderation.WarnCommands;
 import me.blockcraft.system.command.moderation.WerbungCommand;
 import me.blockcraft.system.command.player.DiscordCommand;
 import me.blockcraft.system.command.player.FriendCommand;
@@ -173,7 +163,7 @@ public final class SystemPlugin {
         var lookup = new PlayerLookup(proxy, visibility, repositories.players());
         var directory = new ServerDirectory(proxy, config.lobbyGroup());
         var lobby = new LobbyConnector(directory, config, messages);
-        var punishments = new PunishmentService(proxy, repositories.punishments(), messages, config.network());
+        var punishments = new PunishmentService(proxy, repositories.punishments(), messages);
         var muteGate = new MuteGate(repositories.punishments(), punishments, messages, logger);
         var parties = new PartyManager(proxy, visibility, choices, ignores, messages);
         var spectating = new SpectateRequests();
@@ -182,7 +172,7 @@ public final class SystemPlugin {
         var playtime = new Playtime(repositories.players(), logger);
         var support = new CommandSupport(visibility, messages);
         var moderationActions = new ModerationActions(support, lookup, punishments, config, messages);
-        var reports = Reports.load(this, proxy, logger, dataDirectory, database, lookup, visibility,
+        var reports = Reports.load(this, proxy, logger, dataDirectory, database, lookup, visibility, choices, playerSettings,
                 proxy.getPluginManager().fromInstance(this).orElseThrow().getDescription());
         register(reports.command().create());
         proxy.getEventManager().register(this, new OperationListener(proxy, (player, request) -> switch (request) {
@@ -221,24 +211,16 @@ public final class SystemPlugin {
         pack = NetworkPack.start(proxy, config.resourcePack(), dataDirectory, messages.get("resource-pack.prompt"), logger);
         pack.ifPresent(networkPack -> events.register(this, networkPack));
 
-        register(new BanCommand(support).create());
-        register(new TempBanCommand(support, moderationActions, messages).create());
-        register(new UnbanCommand(support, lookup, punishments, messages).create());
-        register(new BanListCommand(support, lookup, repositories.punishments(), messages).create());
-        register(new MuteCommand(support).create());
-        register(new TempMuteCommand(support, moderationActions, messages).create());
-        register(new UnmuteCommand(support, lookup, punishments, messages).create());
-        register(new MuteListCommand(support, lookup, repositories.punishments(), messages).create());
+        var punishmentCommands = new PunishmentCommands(support, lookup, moderationActions, repositories.punishments(), messages);
+        for (var type : PunishmentType.values()) {
+            punishmentCommands.create(type).forEach(this::register);
+        }
         register(new KickCommand(support, proxy, visibility, messages).create());
         register(new CheckCommand(support, lookup, punishments, messages).create());
         register(new HistoryCommand(support, lookup, punishments, config, messages).create());
         register(new StrafeCommand(support, moderationActions, messages).create());
-        register(new StrikeCommand(support, visibility, repositories.strikes(), punishments, config, messages).create());
-        register(new StrikesCommand(support, repositories.strikes(), messages).create());
-        register(new DelStrikeCommand(support, lookup, repositories.strikes(), messages).create());
-        register(new ShowStrikesCommand(support, lookup, repositories.strikes(), messages).create());
-        register(new WarnCommand(support, proxy, lookup, repositories.warns(), config, messages).create());
-        register(new WarnsCommand(support, lookup, repositories.warns(), messages).create());
+        new StrikeCommands(support, visibility, lookup, repositories.strikes(), punishments, config, messages).create().forEach(this::register);
+        new WarnCommands(support, proxy, lookup, repositories.warns(), config, messages).create().forEach(this::register);
         register(new WerbungCommand(support, lookup, repositories.adLog(), messages).create());
 
         register(new TeamChatCommand(support, proxy, messages).create());
