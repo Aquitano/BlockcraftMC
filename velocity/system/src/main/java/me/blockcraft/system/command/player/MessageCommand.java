@@ -12,6 +12,7 @@ import me.blockcraft.system.PlayerChoices;
 import me.blockcraft.system.PlayerVisibility;
 import me.blockcraft.system.SystemPermissions;
 import me.blockcraft.system.command.CommandSupport;
+import me.blockcraft.system.ignore.IgnoreList;
 import me.blockcraft.system.moderation.MuteGate;
 import me.blockcraft.system.rank.ProxyRanks;
 import me.blockcraft.common.sound.FeedbackSound;
@@ -32,16 +33,18 @@ public final class MessageCommand {
     private final ProxyServer proxy;
     private final PlayerVisibility visibility;
     private final PlayerChoices choices;
+    private final IgnoreList ignores;
     private final MuteGate muteGate;
     private final Messages messages;
     private final Map<UUID, UUID> lastPartner = new ConcurrentHashMap<>();
 
     public MessageCommand(CommandSupport support, ProxyServer proxy, PlayerVisibility visibility, PlayerChoices choices,
-                          MuteGate muteGate, Messages messages) {
+                          IgnoreList ignores, MuteGate muteGate, Messages messages) {
         this.support = support;
         this.proxy = proxy;
         this.visibility = visibility;
         this.choices = choices;
+        this.ignores = ignores;
         this.muteGate = muteGate;
         this.messages = messages;
     }
@@ -81,7 +84,8 @@ public final class MessageCommand {
             sender.sendMessage(messages.get("msg.self"));
             return;
         }
-        if (!choices.enabled(target, PlayerSetting.PRIVATE_MESSAGES) && !sender.hasPermission(SystemPermissions.MSG_BYPASS)) {
+        boolean refused = !choices.enabled(target, PlayerSetting.PRIVATE_MESSAGES) || ignores.ignores(target, sender);
+        if (refused && !sender.hasPermission(SystemPermissions.MSG_BYPASS)) {
             sender.sendMessage(messages.get("msg.disabled", Placeholder.unparsed("player", visibility.shownName(target))));
             return;
         }

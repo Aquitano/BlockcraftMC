@@ -21,7 +21,10 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 
-/** Level, rank prefix, optional chat tag, nick-aware name (staff see the real one too) and premium colour codes. */
+/**
+ * Level, rank prefix, optional chat tag, nick-aware name (staff see the real one too) and premium colour codes; a
+ * player who ignores the sender does not get the line at all.
+ */
 public final class ChatFormatListener implements Listener {
 
     private final Messages messages;
@@ -36,6 +39,7 @@ public final class ChatFormatListener implements Listener {
     public void onChat(AsyncChatEvent event) {
         var source = event.getPlayer();
         var api = BlockcraftApi.get();
+        event.viewers().removeIf(viewer -> viewer instanceof Player watcher && api.ignores().ignores(watcher, source));
         var tag = api.settings().get(source, PlayerSetting.CHAT_TAG).flatMap(ChatTag::byKey)
                 .map(chosen -> api.messages().get(chosen.messageKey()).append(Component.space()))
                 .orElse(Component.empty());

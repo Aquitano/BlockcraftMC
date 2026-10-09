@@ -6,7 +6,8 @@ package me.blockcraft.common.network;
  * command as them ({@link #COMMAND}), learns what they look like to others ({@link #NICK}, {@link #VANISH}) or
  * what they let others do to them ({@link #SETTING}), or delivers a notice on their behalf ({@link #STAFF_NOTICE}).
  * The proxy speaks first only to answer ({@link #FRIENDS}), to say whether the client wears the network's
- * resource pack ({@link #PACK}) and to name the friend the player came to watch ({@link #SPECTATE}).
+ * resource pack ({@link #PACK}), to name the friend the player came to watch ({@link #SPECTATE}) and to say whom
+ * the player just ignored ({@link #IGNORE}).
  */
 public final class ProxyChannel {
 
@@ -46,6 +47,9 @@ public final class ProxyChannel {
      * server whose round is already running, because only the proxy knows that the jump was meant as a watch.
      */
     public static final String SPECTATE = "Spectate";
+
+    /** The ignored account's UUID as a string, then whether it is ignored from now on. */
+    public static final String IGNORE = "Ignore";
 
     private ProxyChannel() {
     }

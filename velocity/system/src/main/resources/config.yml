@@ -69,6 +69,10 @@ friends:
   max: 50
   request-minutes: 10
 
+# How many accounts one player may /ignore (bc_ignores).
+ignore:
+  max: 50
+
 unbannable:
   - Aquitano
 

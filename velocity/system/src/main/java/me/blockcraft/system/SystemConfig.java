@@ -62,6 +62,7 @@ public final class SystemConfig {
     private final int discordCodeMinutes;
     private final JoinMe joinMe;
     private final Friends friends;
+    private final int maxIgnored;
     private final Set<String> unbannable;
     private final Set<String> blockedCommands;
     private final Map<Integer, PunishmentPreset> punishments;
@@ -96,6 +97,7 @@ public final class SystemConfig {
         this.joinMe = new JoinMe(number(joinMe, "daily-limit", 6), number(joinMe, "reset-hour", 0));
         var friends = YamlFile.section(root, "friends");
         this.friends = new Friends(number(friends, "max", 50), number(friends, "request-minutes", 10));
+        this.maxIgnored = number(YamlFile.section(root, "ignore"), "max", 50);
         this.unbannable = strings(root, "unbannable").stream().map(String::toLowerCase).collect(Collectors.toUnmodifiableSet());
         this.blockedCommands = strings(root, "blocked-commands").stream().map(String::toLowerCase).collect(Collectors.toUnmodifiableSet());
         this.punishments = presets(YamlFile.section(root, "punishments"));
@@ -173,6 +175,10 @@ public final class SystemConfig {
 
     public Friends friends() {
         return friends;
+    }
+
+    public int maxIgnored() {
+        return maxIgnored;
     }
 
     public boolean isUnbannable(String name) {

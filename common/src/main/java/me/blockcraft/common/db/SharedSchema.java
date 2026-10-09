@@ -141,6 +141,14 @@ final class SharedSchema {
                 + "name VARCHAR(16) NOT NULL, "
                 + "updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, "
                 + "PRIMARY KEY (player_uuid, season))"
+        )),
+        new Migration(12, List.of(
+            "CREATE TABLE IF NOT EXISTS bc_ignores ("
+                + "player_uuid CHAR(36) NOT NULL, "
+                + "ignored_uuid CHAR(36) NOT NULL, "
+                + "ignored_name VARCHAR(16) NOT NULL, "
+                + "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, "
+                + "PRIMARY KEY (player_uuid, ignored_uuid))"
         ))
     );
 

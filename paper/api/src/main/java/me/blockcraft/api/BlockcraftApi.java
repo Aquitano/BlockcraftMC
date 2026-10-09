@@ -7,6 +7,7 @@ import me.blockcraft.api.cosmetic.Effects;
 import me.blockcraft.api.elo.Elo;
 import me.blockcraft.api.game.Streaks;
 import me.blockcraft.api.game.StatsRepository;
+import me.blockcraft.api.ignore.Ignores;
 import me.blockcraft.api.menu.Profiles;
 import me.blockcraft.api.network.ServerPresence;
 import me.blockcraft.api.notification.Notifications;
@@ -68,12 +69,14 @@ public final class BlockcraftApi {
     private final TagResolver tags;
     private final Achievements achievements;
     private final Elo elo;
+    private final Ignores ignores;
 
     BlockcraftApi(Plugin plugin, Database database, PlayerSettings settings, ResourcePacks resourcePack,
                   Map<String, StatsRepository> profileGames, Messages messages, ServerRepository servers,
                   ServerIdentity server, String lobbyGroup, ServerPresence presence, RealNames realNames,
                   NickRanks nickRanks, Xp xp, Streaks streaks, MapBundle map, BuildMode buildMode, TagResolver tags,
-                  List<Achievement> achievements, Elo elo, NickStats nickStats, Notifications notifications) {
+                  List<Achievement> achievements, Elo elo, NickStats nickStats, Notifications notifications,
+                  Ignores ignores) {
         this.notifications = notifications;
         this.operations = new NetworkOperations(plugin, messages);
         this.playerTasks = new PlayerTasks(plugin, messages);
@@ -101,6 +104,7 @@ public final class BlockcraftApi {
         this.tags = tags;
         this.achievements = new Achievements(plugin, achievements, profileGames, unlocks, xp, messages);
         this.elo = elo;
+        this.ignores = ignores;
     }
 
     public static BlockcraftApi get() {
@@ -247,5 +251,10 @@ public final class BlockcraftApi {
     /** Ranked 1vs1 ratings of the running season and the skill groups they fall into. */
     public Elo elo() {
         return elo;
+    }
+
+    /** Whom each online player ignores; chat from those players does not reach them. */
+    public Ignores ignores() {
+        return ignores;
     }
 }

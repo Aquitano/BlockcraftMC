@@ -31,6 +31,7 @@ public final class SystemPermissions {
     public static final String MOTD = ROOT + "motd";
     public static final String JOIN_ME = ROOT + "joinme";
     public static final String MSG = ROOT + "msg";
+    public static final String IGNORE = ROOT + "ignore";
     public static final String MSG_BYPASS = ROOT + "msg.bypass";
     public static final String FRIENDS = ROOT + "friends";
     public static final String DISCORD = ROOT + "discord";

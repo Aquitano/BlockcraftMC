@@ -11,6 +11,7 @@ import me.blockcraft.system.PlayerLookup;
 import me.blockcraft.system.PlayerVisibility;
 import me.blockcraft.system.SystemConfig;
 import me.blockcraft.system.command.CommandSupport;
+import me.blockcraft.system.ignore.IgnoreList;
 import me.blockcraft.system.network.ServerDirectory;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
@@ -36,6 +37,7 @@ public final class FriendManager {
     private final PlayerLookup lookup;
     private final PlayerVisibility visibility;
     private final PlayerChoices choices;
+    private final IgnoreList ignores;
     private final ServerDirectory directory;
     private final SpectateRequests spectating;
     private final FriendRepository repository;
@@ -43,12 +45,13 @@ public final class FriendManager {
     private final Messages messages;
 
     public FriendManager(ProxyServer proxy, PlayerLookup lookup, PlayerVisibility visibility, PlayerChoices choices,
-                         ServerDirectory directory, SpectateRequests spectating, FriendRepository repository,
+                         IgnoreList ignores, ServerDirectory directory, SpectateRequests spectating, FriendRepository repository,
                          SystemConfig config, Messages messages) {
         this.proxy = proxy;
         this.lookup = lookup;
         this.visibility = visibility;
         this.choices = choices;
+        this.ignores = ignores;
         this.directory = directory;
         this.spectating = spectating;
         this.repository = repository;
@@ -75,7 +78,8 @@ public final class FriendManager {
                 sender.sendMessage(messages.get("friends.target-full", named(target)));
                 return;
             }
-            if (!choices.enabled(target.uuid(), PlayerSetting.FRIEND_REQUESTS)) {
+            if (!choices.enabled(target.uuid(), PlayerSetting.FRIEND_REQUESTS)
+                    || ignores.ignores(target.uuid(), sender.getUniqueId())) {
                 sender.sendMessage(messages.get("friends.requests-disabled", named(target)));
                 return;
             }

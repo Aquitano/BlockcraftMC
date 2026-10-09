@@ -2,6 +2,7 @@ package me.blockcraft.system;
 
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.settings.PlayerSetting;
+import me.blockcraft.system.ignore.IgnoreList;
 import me.blockcraft.system.party.PartyManager;
 import org.junit.Test;
 
@@ -19,7 +20,8 @@ public class PartyManagerTest {
         var proxy = new FakeProxy();
         var choices = new PlayerChoices(null, null);
         var messages = Messages.load(Files.createTempDirectory("party-messages"), () -> PartyManagerTest.class.getResourceAsStream("/messages.yml"));
-        var parties = new PartyManager(proxy.server, new PlayerVisibility(proxy.server, null, null, null), choices, messages);
+        var parties = new PartyManager(proxy.server, new PlayerVisibility(proxy.server, null, null, null), choices,
+                new IgnoreList(null, null), messages);
         var leader = proxy.join("Leader");
         var member = proxy.join("Member");
         var invited = proxy.join("Invited");
@@ -45,7 +47,8 @@ public class PartyManagerTest {
         var proxy = new FakeProxy();
         var choices = new PlayerChoices(null, null);
         var messages = Messages.load(Files.createTempDirectory("party-messages"), () -> PartyManagerTest.class.getResourceAsStream("/messages.yml"));
-        var parties = new PartyManager(proxy.server, new PlayerVisibility(proxy.server, null, null, null), choices, messages);
+        var parties = new PartyManager(proxy.server, new PlayerVisibility(proxy.server, null, null, null), choices,
+                new IgnoreList(null, null), messages);
         var leader = proxy.join("Leader");
         var stale = proxy.join("Stale");
         choices.set(stale, PlayerSetting.PARTY_INVITES, PlayerSetting.value(true));

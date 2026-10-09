@@ -13,6 +13,7 @@ import me.blockcraft.api.elo.Elo;
 import me.blockcraft.api.elo.SkillGroup;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.game.Streaks;
+import me.blockcraft.api.ignore.Ignores;
 import me.blockcraft.api.menu.MenuListener;
 import me.blockcraft.api.network.ServerHeartbeat;
 import me.blockcraft.api.network.ServerPresence;
@@ -36,6 +37,7 @@ import me.blockcraft.common.db.Database;
 import me.blockcraft.common.db.DatabaseConfig;
 import me.blockcraft.common.elo.EloFormula;
 import me.blockcraft.common.elo.EloRepository;
+import me.blockcraft.common.ignore.IgnoreRepository;
 import me.blockcraft.common.network.ProxyChannel;
 import me.blockcraft.common.network.ServerRepository;
 import me.blockcraft.common.settings.PlayerSettingRepository;
@@ -89,12 +91,14 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         var elo = new Elo(new EloRepository(database,
                 new EloFormula(number(eloSection, "start-rating", 1000), number(eloSection, "k-factor", 32))),
                 SkillGroup.ladder(YamlFile.section(eloSection, "groups")), messages);
+        var ignores = new Ignores(this, new IgnoreRepository(database));
         var api = new BlockcraftApi(this, database, settings, resourcePack,
                 profileGames(YamlFile.section(YamlFile.section(config, "profile"), "games")),
                 messages, servers, self, text(config, "lobby-group", "lobby"), presence, realNames, nickRanks, xp,
                 streaks(YamlFile.section(config, "streaks")), map, buildMode, resources.tags(),
                 Achievements.parse(YamlFile.section(config, "achievements")), elo,
-                new NickStats(nickRanks, NickStats.Ranges.from(YamlFile.section(config, "nick-stats"))), notifications);
+                new NickStats(nickRanks, NickStats.Ranges.from(YamlFile.section(config, "nick-stats"))), notifications,
+                ignores);
         BlockcraftApi.install(api);
         getLogger().info("Running map " + map.name() + map.template().map(template -> " from " + template.directory()).orElse(""));
         int startingCoins = number(config, "starting-coins", 10);
@@ -107,6 +111,8 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(resourcePack, this);
         getServer().getMessenger().registerIncomingPluginChannel(this, ProxyChannel.NAME, resourcePack);
         getServer().getMessenger().registerIncomingPluginChannel(this, ProxyChannel.NAME, new SpectateRequests());
+        getServer().getPluginManager().registerEvents(ignores, this);
+        getServer().getMessenger().registerIncomingPluginChannel(this, ProxyChannel.NAME, ignores);
         getServer().getPluginManager().registerEvents(new MenuListener(), this);
         getServer().getPluginManager().registerEvents(new ServerMenu(this), this);
         getServer().getPluginManager().registerEvents(new TabTeams(LuckPermsProvider.get(), messages), this);
