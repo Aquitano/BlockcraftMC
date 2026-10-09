@@ -1,5 +1,6 @@
 package me.blockcraft.lobby.listener;
 
+import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.lobby.gadget.Gadget;
 import me.blockcraft.lobby.gadget.Gadgets;
 import me.blockcraft.lobby.item.LobbyItem;
@@ -69,7 +70,7 @@ public final class GadgetListener implements Listener {
                     return;
                 }
                 player.setVelocity(pull.normalize().multiply(HOOK_PULL).setY(Math.max(pull.getY() / 4.0, HOOK_LIFT)));
-                player.playSound(player.getLocation(), Sound.ENTITY_FISHING_BOBBER_RETRIEVE, 1.0f, 0.8f);
+                Sounds.GRAPPLE.play(player);
             }
             case FISHING, BITE, FAILED_ATTEMPT, CAUGHT_FISH, LURED -> {
             }
@@ -107,6 +108,6 @@ public final class GadgetListener implements Listener {
         }
         var snowball = player.launchProjectile(Snowball.class, player.getLocation().getDirection().multiply(SNOWBALL_SPEED));
         snowball.getPersistentDataContainer().set(PAINT_KEY, PersistentDataType.BYTE, (byte) 1);
-        player.playSound(player.getLocation(), Sound.ENTITY_SNOWBALL_THROW, 1.0f, 1.0f);
+        Sounds.PAINT_THROW.play(player);
     }
 }

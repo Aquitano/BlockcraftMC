@@ -40,7 +40,6 @@ import me.blockcraft.lobby.listener.ShopNpcListener;
 import me.blockcraft.lobby.listener.WorldDownloaderListener;
 import me.blockcraft.lobby.menu.Menus;
 import me.blockcraft.lobby.menu.ShopMenu;
-import me.blockcraft.lobby.network.GroupCounts;
 import me.blockcraft.lobby.npc.Holograms;
 import me.blockcraft.lobby.npc.Leaderboards;
 import me.blockcraft.lobby.npc.ShopNpc;
@@ -57,12 +56,9 @@ import java.util.stream.Stream;
 
 public final class LobbyPlugin extends JavaPlugin {
 
-    private static final long GROUP_COUNTS_INTERVAL_TICKS = 100L;
-
     private Profiles profiles;
     private CosmeticPreviews previews;
     private ShopNpc shopNpc;
-    private GroupCounts groupCounts;
     private FriendsChannel friends;
     private Gadgets gadgets;
     private LobbyHud hud;
@@ -84,13 +80,11 @@ public final class LobbyPlugin extends JavaPlugin {
         var hider = new PlayerHider(this, api.settings(), config.hiderCooldownMillis());
         var items = new LobbyItems(messages);
         importLegacyUnlocks(new LegacyUnlocks(api.unlocks(), getLogger()));
-        groupCounts = new GroupCounts(this, api.servers(), config.serverListStaleSeconds());
-        groupCounts.start(GROUP_COUNTS_INTERVAL_TICKS);
         gadgets = new Gadgets(this, messages, Duration.ofSeconds(config.gadgetCooldownSeconds()));
         friends = new FriendsChannel(this, config.friendsTimeoutTicks());
         previews = new CosmeticPreviews(this, messages, config.cosmeticPreviewTicks());
         var menus = new Menus(this, messages, config, locations, api.unlocks(), api.shop(), api.settings(), api.messages(),
-                api.servers(), api.server(), new PremiumRank(this, luckPerms), pets, groupCounts, friends, previews);
+                api.servers(), api.server(), new PremiumRank(this, luckPerms), pets, api.groups(), friends, previews);
         shopNpc = new ShopNpc(this, locations, messages);
         shopNpc.start(config.shopNpcRespawnSeconds());
         var leaderboards = new Leaderboards(this, api.database(), messages, api.messages(), config.leaderboards());
@@ -147,9 +141,6 @@ public final class LobbyPlugin extends JavaPlugin {
         }
         if (shopNpc != null) {
             shopNpc.stop();
-        }
-        if (groupCounts != null) {
-            groupCounts.stop();
         }
         if (gadgets != null) {
             gadgets.restorePaint();

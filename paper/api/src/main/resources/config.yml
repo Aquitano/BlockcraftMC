@@ -26,6 +26,12 @@ starting-coins: 10
 # How often this server announces itself to the proxy (bc_servers).
 heartbeat-seconds: 5
 
+# How often this server re-reads every group's status (navigator, status signs) from bc_servers; a server whose
+# heartbeat is older than stale-seconds counts as offline, as on the proxy.
+group-status:
+  refresh-ticks: 50
+  stale-seconds: 20
+
 # The games the profile card lists: the menu key (its name is profile.games.<key> in messages.yml) and the
 # stats table it reads. A game the network does not run yet simply shows zeroes.
 profile:

@@ -1,11 +1,11 @@
 package me.blockcraft.lobby.listener;
 
+import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.lobby.LobbyPermissions;
 import me.blockcraft.lobby.config.LobbyConfig;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.Particle;
-import org.bukkit.Sound;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -44,11 +44,11 @@ public final class DoubleJumpListener implements Listener {
         player.setFlying(false);
         player.setVelocity(player.getLocation().getDirection().multiply(config.doubleJumpMultiply()).setY(config.doubleJumpHeight()));
         player.setFallDistance(0.0f);
-        player.playSound(player.getLocation(), Sound.ENTITY_ENDER_DRAGON_FLAP, 4.0f, 4.0f);
+        Sounds.DOUBLE_JUMP.play(player);
     }
 
     private void launch(Player player) {
-        player.playSound(player.getLocation(), Sound.ENTITY_ARROW_HIT, 1.0f, 0.0f);
+        Sounds.JUMP_PAD.play(player);
         player.getWorld().spawnParticle(Particle.CRIT, player.getLocation(), 10, 0.3, 0.3, 0.3, 0.1);
         Vector velocity = player.getLocation().getDirection().setY(config.jumpPadY()).multiply(config.jumpPadMultiply());
         if (velocity.length() <= config.jumpPadMaxLength()) {

@@ -1,4 +1,4 @@
-prefix: "<primary>Blockcraft <dark>» <reset>"
+prefix: "<primary><ip> <dark>» <reset>"
 
 commands:
   createsign:

@@ -27,6 +27,10 @@ public enum FeedbackSound {
     DUELL_JOIN("block.anvil.place", 0.25f, 1.5f),
     NOTIFY("block.note_block.pling", 0.8f, 1.8f, "notify"),
     SECRET("entity.ender_dragon.growl", 0.6f, 1.2f),
+    DOUBLE_JUMP("entity.ender_dragon.flap", 1.0f, 2.0f),
+    JUMP_PAD("entity.arrow.hit", 1.0f, 0.5f),
+    GRAPPLE("entity.fishing_bobber.retrieve", 1.0f, 0.8f),
+    PAINT_THROW("entity.snowball.throw", 1.0f, 1.0f),
     EQUIP("item.armor.equip_leather", 0.5f, 1.2f, "equip"),
     HEAL("entity.experience_orb.pickup", 0.5f, 1.0f),
     PVP_ENABLED("block.note_block.bell", 0.7f, 0.8f);

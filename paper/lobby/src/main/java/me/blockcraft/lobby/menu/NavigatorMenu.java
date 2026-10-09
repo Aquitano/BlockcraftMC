@@ -51,7 +51,7 @@ final class NavigatorMenu extends Menu {
     private ItemStack game(LobbyLocation target) {
         var messages = menus.messages();
         String group = menus.config().navigatorGroups().get(target);
-        var status = group == null ? GroupStatus.OFFLINE : menus.groupCounts().status(group);
+        var status = group == null ? GroupStatus.OFFLINE : menus.groups().status(group);
         var lore = new ArrayList<>(messages.getLines("navigator.description." + target.key()));
         lore.add(Component.empty());
         lore.add(menus.apiMessages().get("game-status." + status.availability().name().toLowerCase(Locale.ROOT)));
