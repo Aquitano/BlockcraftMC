@@ -96,6 +96,18 @@ elo:
     diamant: 1450
     meister: 1700
 
+# Every staff action lands in bc_staff_actions (/stafflog on the proxy); the actions listed under notify are also
+# told to every online player with notify-permission, wherever on the network they are.
+audit:
+  notify-permission: blockcraft.audit.notify
+  notify:
+    - gamemode.creative
+    - gamemode.spectator
+    - sudo
+    - clear
+    - kill
+    - invsee.edit
+
 # What others see of a nicked player: /stats, the stats menus, the Duell ladder and the chat level show numbers
 # drawn from these ranges instead of the account's own, the same ones for as long as the nick is worn.
 nick-stats:

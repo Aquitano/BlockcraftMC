@@ -2,6 +2,7 @@ package me.blockcraft.api;
 
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import me.blockcraft.api.achievement.Achievements;
+import me.blockcraft.api.audit.StaffAudit;
 import me.blockcraft.api.coins.CoinsJoinListener;
 import me.blockcraft.api.command.BuildCommand;
 import me.blockcraft.api.command.CoinsCommand;
@@ -36,6 +37,7 @@ import me.blockcraft.common.db.Database;
 import me.blockcraft.common.db.DatabaseConfig;
 import me.blockcraft.common.elo.EloFormula;
 import me.blockcraft.common.elo.EloRepository;
+import me.blockcraft.common.moderation.StaffActionRepository;
 import me.blockcraft.common.network.ProxyChannel;
 import me.blockcraft.common.network.ServerRepository;
 import me.blockcraft.common.settings.PlayerSettingRepository;
@@ -94,7 +96,9 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
                 messages, servers, self, text(config, "lobby-group", "lobby"), presence, realNames, nickRanks, xp,
                 streaks(YamlFile.section(config, "streaks")), map, buildMode, resources.tags(),
                 Achievements.parse(YamlFile.section(config, "achievements")), elo,
-                new NickStats(nickRanks, NickStats.Ranges.from(YamlFile.section(config, "nick-stats"))), notifications);
+                new NickStats(nickRanks, NickStats.Ranges.from(YamlFile.section(config, "nick-stats"))), notifications,
+                new StaffAudit(this, new StaffActionRepository(database), realNames, self.name(),
+                        StaffAudit.Notices.from(YamlFile.section(config, "audit")), messages));
         BlockcraftApi.install(api);
         getLogger().info("Running map " + map.name() + map.template().map(template -> " from " + template.directory()).orElse(""));
         int startingCoins = number(config, "starting-coins", 10);
@@ -117,7 +121,7 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
             var commands = new CommandRegistry(event.registrar(), messages);
             commands.register(CoinsCommand.create(api.coins(), messages));
             commands.register(LevelCommand.create(xp, messages));
-            commands.register(BuildCommand.create(buildMode, messages));
+            commands.register(BuildCommand.create(buildMode, api.audit(), messages));
             commands.register(MapCommand.create(this, map, messages));
         });
 

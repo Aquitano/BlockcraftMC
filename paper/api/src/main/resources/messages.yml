@@ -102,6 +102,12 @@ build:
   enabled: "<prefix><success>Baumodus aktiviert. <muted>Speichere die Map mit <accent>/map save<muted>, sonst ist sie beim Neustart wieder wie vorher."
   disabled: "<prefix><error>Baumodus deaktiviert."
 
+# The staff notice for the actions in config.yml's audit.notify; <action> is the logged key such as gamemode.creative.
+audit:
+  notice: "<prefix><accent><issuer> <dark>» <primary><action><target><detail> <dark>[<muted><server><dark>]"
+  notice-target: " <muted>an <accent><target>"
+  notice-detail: " <dark>(<muted><detail><dark>)"
+
 map:
   info:
     - "<arrow><primary>Map <dark>● <accent><map>"
