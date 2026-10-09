@@ -312,7 +312,9 @@ Deploy the Paper and Velocity jars together: reports and punishments from a back
 as versioned payloads with a request id, and the proxy answers with a result. The proxy accepts a request only from
 the server the player is on, checks permission and rank itself, and tells the player what happened, a failed database
 write included; only an unanswered request times out with an unconfirmed-result message on the backend. Nothing is
-retried automatically, because the original request may already have reached storage.
+retried automatically, because the original request may already have reached storage. Every `blockcraft:main`
+message (`ProxyMessage`) starts with a protocol version byte, and a side drops and logs a message whose version
+differs from its own, so a Paper jar and a proxy jar from different builds ignore each other on that channel.
 
 Shared tables come from ordered migrations recorded in `bc_schema_migrations`. A start takes a MariaDB lock before
 applying what is pending, so servers starting together take turns; a checksum rejects an edited migration. Every

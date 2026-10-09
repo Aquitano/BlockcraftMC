@@ -1,13 +1,13 @@
 package me.blockcraft.system.friends;
 
-import com.google.common.io.ByteStreams;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.player.ServerPostConnectEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
-import me.blockcraft.common.network.ProxyChannel;
+import me.blockcraft.common.network.ProxyMessage;
+import me.blockcraft.common.network.ProxyMessageCodec;
 
 import java.util.Map;
 import java.util.UUID;
@@ -20,7 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class SpectateRequests {
 
-    private static final MinecraftChannelIdentifier CHANNEL = MinecraftChannelIdentifier.from(ProxyChannel.NAME);
+    private static final MinecraftChannelIdentifier CHANNEL = MinecraftChannelIdentifier.from(ProxyMessageCodec.CHANNEL);
 
     private record Intent(UUID friend, String server) {
     }
@@ -49,9 +49,6 @@ public final class SpectateRequests {
     }
 
     private static void tell(ServerConnection connection, UUID friend) {
-        var out = ByteStreams.newDataOutput();
-        out.writeUTF(ProxyChannel.SPECTATE);
-        out.writeUTF(friend.toString());
-        connection.sendPluginMessage(CHANNEL, out.toByteArray());
+        connection.sendPluginMessage(CHANNEL, ProxyMessageCodec.encode(new ProxyMessage.Spectate(friend)));
     }
 }

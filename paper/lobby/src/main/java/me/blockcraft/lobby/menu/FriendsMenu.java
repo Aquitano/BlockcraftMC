@@ -9,7 +9,8 @@ import me.blockcraft.api.item.Items;
 import me.blockcraft.api.menu.Menu;
 import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.api.sound.Sounds;
-import me.blockcraft.common.network.FriendsMessage;
+import me.blockcraft.common.network.ProxyMessage.FriendsReply;
+import me.blockcraft.common.network.ProxyMessage.FriendsRequest;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Material;
@@ -23,12 +24,12 @@ import java.util.List;
 final class FriendsMenu extends Menu {
     private static final int PAGE_SIZE = 36;
     private final Menus menus;
-    private List<FriendsMessage.Entry> friends = List.of();
+    private List<FriendsReply.Entry> friends = List.of();
     private List<String> requests = List.of();
     private int page;
     private boolean showRequests;
     private boolean loading = true;
-    private FriendsMessage.Status status = FriendsMessage.Status.OK;
+    private FriendsReply.Status status = FriendsReply.Status.OK;
 
     FriendsMenu(Menus menus) {
         super(6, menus.messages().get("friends.title"));
@@ -39,7 +40,7 @@ final class FriendsMenu extends Menu {
 
     @Override
     public void open(Player player) {
-        super.open(player, opened -> load(opened, FriendsMessage.Action.LIST, ""));
+        super.open(player, opened -> load(opened, FriendsRequest.Action.LIST, ""));
     }
 
     private int size() {
@@ -59,7 +60,7 @@ final class FriendsMenu extends Menu {
         }
         set(4, Items.of(Material.WRITABLE_BOOK).name(messages.get("friends.note")).lore(messages.getLines("friends.note-lore")).build());
         set(7, Items.of(Material.SUNFLOWER).name(messages.get("friends.refresh")).build());
-        boolean ready = !loading && status == FriendsMessage.Status.OK;
+        boolean ready = !loading && status == FriendsReply.Status.OK;
         int pages = Math.max(1, (size() + PAGE_SIZE - 1) / PAGE_SIZE);
         page = Math.min(page, pages - 1);
         info(49, ready ? Items.of(Material.MAP).name(messages.get("friends.page", Formatter.number("page", page + 1),
@@ -76,7 +77,7 @@ final class FriendsMenu extends Menu {
                 };
                 var state = Items.of(loading ? Material.CLOCK : ready ? Material.PAPER : Material.BARRIER)
                         .name(messages.get(key)).build();
-                if (!loading && status == FriendsMessage.Status.FAILED) {
+                if (!loading && status == FriendsReply.Status.FAILED) {
                     set(slot, state);
                 } else {
                     info(slot, state);
@@ -106,25 +107,25 @@ final class FriendsMenu extends Menu {
         if (slot == 53) {
             return true;
         }
-        if (loading || status == FriendsMessage.Status.FORBIDDEN) {
+        if (loading || status == FriendsReply.Status.FORBIDDEN) {
             return false;
         }
-        if (status == FriendsMessage.Status.FAILED) {
+        if (status == FriendsReply.Status.FAILED) {
             return slot == 7 || slot == 22;
         }
         return true;
     }
 
-    private void load(Player player, FriendsMessage.Action action, String name) {
+    private void load(Player player, FriendsRequest.Action action, String name) {
         loading = true;
-        status = FriendsMessage.Status.OK;
+        status = FriendsReply.Status.OK;
         render();
         menus.friends().request(player, action, name, reply -> {
             loading = false;
             status = reply.status();
-            if (status == FriendsMessage.Status.OK) {
-                friends = reply.friends().stream().sorted(Comparator.comparing(FriendsMessage.Entry::online).reversed()
-                        .thenComparing(FriendsMessage.Entry::name, String.CASE_INSENSITIVE_ORDER)).toList();
+            if (status == FriendsReply.Status.OK) {
+                friends = reply.friends().stream().sorted(Comparator.comparing(FriendsReply.Entry::online).reversed()
+                        .thenComparing(FriendsReply.Entry::name, String.CASE_INSENSITIVE_ORDER)).toList();
                 requests = reply.requests();
             } else Sounds.MENU_DENY.play(player);
             render();
@@ -133,14 +134,14 @@ final class FriendsMenu extends Menu {
 
     @Override
     protected void onClick(Player player, int slot, ItemStack clicked, InventoryClickEvent event) {
-        if (loading || status == FriendsMessage.Status.FORBIDDEN) {
+        if (loading || status == FriendsReply.Status.FORBIDDEN) {
             return;
         }
-        if (slot == 7 || status == FriendsMessage.Status.FAILED && slot == 22) {
-            load(player, FriendsMessage.Action.LIST, "");
+        if (slot == 7 || status == FriendsReply.Status.FAILED && slot == 22) {
+            load(player, FriendsRequest.Action.LIST, "");
             return;
         }
-        if (status != FriendsMessage.Status.OK) {
+        if (status != FriendsReply.Status.OK) {
             return;
         }
         if (slot == 4) {
@@ -168,7 +169,7 @@ final class FriendsMenu extends Menu {
             return;
         }
         if (showRequests) {
-            load(player, event.isRightClick() ? FriendsMessage.Action.DENY : FriendsMessage.Action.ACCEPT, requests.get(index));
+            load(player, event.isRightClick() ? FriendsRequest.Action.DENY : FriendsRequest.Action.ACCEPT, requests.get(index));
         } else if (friends.get(index).online()) {
             if (!event.isRightClick()) close(player);
             ProxyMessaging.runOnProxy(menus.plugin(), player, (event.isRightClick() ? "party invite " : "friend jump ") + friends.get(index).name());
@@ -187,7 +188,7 @@ final class FriendsMenu extends Menu {
                         add(viewer);
                         return;
                     }
-                    super.open(viewer, opened -> load(opened, FriendsMessage.Action.ADD, name));
+                    super.open(viewer, opened -> load(opened, FriendsRequest.Action.ADD, name));
                 }))).exitAction(Dialogs.button(menus.apiMessages().get("menu.back"), previous -> open(previous))).build()));
         Dialogs.show(player, dialog);
     }
