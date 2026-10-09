@@ -1,10 +1,11 @@
 package me.blockcraft.core.nick;
 
 import com.destroystokyo.paper.profile.PlayerProfile;
+import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.nick.NickChangeEvent;
 import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.api.rank.Ranks;
-import me.blockcraft.api.task.Tasks;
+import me.blockcraft.api.task.SerialTasks;
 import me.blockcraft.common.nick.Nick;
 import me.blockcraft.common.nick.NickRepository;
 import net.kyori.adventure.text.Component;
@@ -39,6 +40,7 @@ public final class Nicks {
     private final List<String> ranks;
     private final Random random = new Random();
     private final Map<UUID, Active> active = new ConcurrentHashMap<>();
+    private final SerialTasks<UUID> writes;
 
     public Nicks(Plugin plugin, NickRepository repository, List<String> names, List<String> skins, List<String> ranks) {
         this.plugin = plugin;
@@ -46,6 +48,7 @@ public final class Nicks {
         this.names = names;
         this.skins = skins;
         this.ranks = ranks;
+        this.writes = new SerialTasks<>(plugin);
     }
 
     public Optional<Active> of(Player player) {
@@ -66,12 +69,12 @@ public final class Nicks {
 
     /**
      * Picks and persists a fresh nick showing {@code rank}, or one of the {@link #ranks()} at random; {@code onDone}
-     * gets the nick on the main thread, or empty when the skin could not load.
+     * gets the nick on the main thread, or empty when the skin could not load or the nick could not be stored.
      */
     public void assign(Player player, Optional<String> rank, Consumer<Optional<Nick>> onDone) {
         var nick = new Nick(pickName(), skins.get(random.nextInt(skins.size())), rank.orElseGet(() -> ranks.get(random.nextInt(ranks.size()))));
         var uuid = player.getUniqueId();
-        Tasks.async(plugin, () -> {
+        writes.submit(uuid, () -> {
             var skin = fetchSkin(nick.skinOwner());
             if (skin.isPresent()) {
                 repository.set(uuid, nick);
@@ -83,19 +86,27 @@ public final class Nicks {
             }
             skin.ifPresent(textures -> apply(player, nick, textures));
             onDone.accept(skin.map(ignored -> nick));
+        }, () -> {
+            if (player.isOnline()) {
+                onDone.accept(Optional.empty());
+            }
         });
     }
 
     /** Re-applies the stored nick when a nicked player arrives on this server; {@code onDone} hears which one, if any. */
     public void applyStored(Player player, Consumer<Optional<Nick>> onDone) {
         var uuid = player.getUniqueId();
-        Tasks.async(plugin, () -> repository.get(uuid).flatMap(nick -> fetchSkin(nick.skinOwner()).map(skin -> Map.entry(nick, skin))),
+        writes.submit(uuid, () -> repository.get(uuid).flatMap(nick -> fetchSkin(nick.skinOwner()).map(skin -> Map.entry(nick, skin))),
                 stored -> {
                     if (!player.isOnline()) {
                         return;
                     }
                     stored.ifPresent(entry -> apply(player, entry.getKey(), entry.getValue()));
                     onDone.accept(stored.map(Map.Entry::getKey));
+                }, () -> {
+                    if (player.isOnline()) {
+                        player.sendMessage(BlockcraftApi.get().messages().get("operation.failed"));
+                    }
                 });
     }
 
@@ -106,14 +117,14 @@ public final class Nicks {
      */
     public void dropStored(Player player, Runnable onDropped) {
         var uuid = player.getUniqueId();
-        Tasks.async(plugin, () -> repository.clear(uuid), dropped -> {
+        writes.submit(uuid, () -> repository.clear(uuid), dropped -> {
             if (!dropped || !player.isOnline()) {
                 return;
             }
             Bukkit.getPluginManager().callEvent(new NickChangeEvent(player, Optional.empty()));
             ProxyMessaging.nick(plugin, player, Optional.empty());
             onDropped.run();
-        });
+        }, () -> { });
     }
 
     /** Returns false when the player wore no nick. */
@@ -123,7 +134,7 @@ public final class Nicks {
             return false;
         }
         var uuid = player.getUniqueId();
-        Tasks.async(plugin, () -> repository.clear(uuid));
+        writes.run(uuid, () -> repository.clear(uuid));
         player.setPlayerProfile(current.original());
         Bukkit.getPluginManager().callEvent(new NickChangeEvent(player, Optional.empty()));
         ProxyMessaging.nick(plugin, player, Optional.empty());

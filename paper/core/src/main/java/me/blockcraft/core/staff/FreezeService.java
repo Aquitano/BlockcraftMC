@@ -2,7 +2,7 @@ package me.blockcraft.core.staff;
 
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.proxy.ProxyMessaging;
-import me.blockcraft.api.task.Tasks;
+import me.blockcraft.api.task.SerialTasks;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.moderation.FreezeRepository;
 import me.blockcraft.common.player.PlayerReference;
@@ -41,6 +41,7 @@ public final class FreezeService implements Listener {
     private final Plugin plugin;
     private final FreezeRepository repository;
     private final Messages messages;
+    private final SerialTasks<UUID> writes;
     private final Set<UUID> frozen = ConcurrentHashMap.newKeySet();
     private final Set<UUID> pending = ConcurrentHashMap.newKeySet();
     private BukkitTask reminder;
@@ -49,6 +50,7 @@ public final class FreezeService implements Listener {
         this.plugin = plugin;
         this.repository = repository;
         this.messages = messages;
+        this.writes = new SerialTasks<>(plugin);
     }
 
     public void start() {
@@ -78,14 +80,14 @@ public final class FreezeService implements Listener {
     private void freeze(Player target, PlayerReference issuer) {
         var uuid = target.getUniqueId();
         frozen.add(uuid);
-        Tasks.async(plugin, () -> repository.freeze(uuid, issuer));
+        writes.run(uuid, () -> repository.freeze(uuid, issuer));
         announce(target);
     }
 
     private void unfreeze(Player target) {
         var uuid = target.getUniqueId();
         frozen.remove(uuid);
-        Tasks.async(plugin, () -> repository.unfreeze(uuid));
+        writes.run(uuid, () -> repository.unfreeze(uuid));
         target.sendMessage(messages.get("freeze.released"));
     }
 
@@ -107,9 +109,11 @@ public final class FreezeService implements Listener {
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onPreLogin(AsyncPlayerPreLoginEvent event) {
-        if (repository.issuer(event.getUniqueId()).isPresent()) {
-            pending.add(event.getUniqueId());
-        }
+        LoginLookup.run(plugin, messages, event, "freeze state", () -> {
+            if (repository.issuer(event.getUniqueId()).isPresent()) {
+                pending.add(event.getUniqueId());
+            }
+        });
     }
 
     @EventHandler

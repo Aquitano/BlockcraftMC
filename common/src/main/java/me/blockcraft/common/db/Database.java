@@ -28,7 +28,8 @@ public final class Database implements AutoCloseable {
         hikari.setDriverClassName("org.mariadb.jdbc.Driver");
         hikari.setUsername(config.username());
         hikari.setPassword(config.password());
-        hikari.setMaximumPoolSize(4);
+        hikari.setMaximumPoolSize(config.poolSize());
+        hikari.setConnectionTimeout(config.connectionTimeout().toMillis());
         hikari.addDataSourceProperty("cachePrepStmts", "true");
         return new Database(new HikariDataSource(hikari));
     }

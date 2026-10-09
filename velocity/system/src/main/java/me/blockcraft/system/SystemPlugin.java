@@ -65,6 +65,7 @@ import me.blockcraft.system.command.player.YouTuberCommand;
 import me.blockcraft.system.command.staff.AddPremiumCommand;
 import me.blockcraft.system.command.staff.AltsCommand;
 import me.blockcraft.system.command.staff.BroadcastCommand;
+import me.blockcraft.system.command.staff.ChatSlowCommand;
 import me.blockcraft.system.command.staff.ClearChatCommand;
 import me.blockcraft.system.command.staff.FindCommand;
 import me.blockcraft.system.command.staff.GlobalMuteCommand;
@@ -245,6 +246,7 @@ public final class SystemPlugin {
         register(new GotoCommand(support, visibility, messages).create());
         register(new ClearChatCommand(support, messages).create(), "clearchat");
         register(new GlobalMuteCommand(support, proxy, settings, messages).create());
+        register(new ChatSlowCommand(support, proxy, settings, messages).create());
         register(new BroadcastCommand(support, proxy, messages).create());
         register(new WartungenCommand(this, support, proxy, settings, messages).create());
         register(new RestartCommand(this, support, proxy, messages).create());

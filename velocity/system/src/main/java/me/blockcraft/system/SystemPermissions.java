@@ -23,6 +23,7 @@ public final class SystemPermissions {
     public static final String GOTO = ROOT + "goto";
     public static final String CLEAR_CHAT = ROOT + "cc";
     public static final String GLOBAL_MUTE = ROOT + "globalmute";
+    public static final String CHAT_SLOW = ROOT + "chatslow";
     public static final String BROADCAST = ROOT + "bc";
     public static final String MAINTENANCE = ROOT + "wartungen";
     public static final String MAINTENANCE_JOIN = ROOT + "wartungen.join";

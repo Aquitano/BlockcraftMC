@@ -12,7 +12,10 @@
         {"type": "permission", "key": "blockcraft.system.discord", "value": true},
         {"type": "permission", "key": "blockcraft.system.seen", "value": true},
         {"type": "permission", "key": "blockcraft.system.playtime", "value": true},
-        {"type": "permission", "key": "velocity.command.server", "value": true}
+        {"type": "permission", "key": "velocity.command.server", "value": true},
+        {"type": "permission", "key": "minecraft.command.msg", "value": false},
+        {"type": "permission", "key": "minecraft.command.teammsg", "value": false},
+        {"type": "permission", "key": "minecraft.command.me", "value": false}
       ]
     },
     "premium": {
@@ -23,7 +26,10 @@
         {"type": "permission", "key": "blockcraft.lobby.doublejump", "value": true},
         {"type": "permission", "key": "blockcraft.system.fulljoin", "value": true},
         {"type": "permission", "key": "blockcraft.system.joinme", "value": true},
-        {"type": "permission", "key": "blockcraft.chat.color", "value": true}
+        {"type": "permission", "key": "blockcraft.chat.color", "value": true},
+        {"type": "permission", "key": "minecraft.command.msg", "value": false},
+        {"type": "permission", "key": "minecraft.command.teammsg", "value": false},
+        {"type": "permission", "key": "minecraft.command.me", "value": false}
       ]
     },
     "youtuber": {

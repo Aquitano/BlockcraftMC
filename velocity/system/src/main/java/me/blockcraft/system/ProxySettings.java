@@ -4,7 +4,7 @@ import me.blockcraft.common.moderation.Setting;
 import me.blockcraft.common.moderation.SettingsRepository;
 
 /**
- * Maintenance and global mute are only switched from the proxy, so the proxy keeps them in memory
+ * Maintenance, global mute and chat slow are only switched from the proxy, so the proxy keeps them in memory
  * and mirrors every change to bc_settings for the Paper servers.
  */
 public final class ProxySettings {
@@ -35,5 +35,10 @@ public final class ProxySettings {
     public void setGlobalMute(boolean enabled) {
         globalMute = enabled;
         settings.setEnabled(Setting.GLOBAL_MUTE, enabled);
+    }
+
+    /** Seconds a player must wait between two chat messages network-wide; 0 is off. */
+    public void setChatSlowSeconds(int seconds) {
+        settings.set(Setting.CHAT_SLOW, Integer.toString(seconds));
     }
 }

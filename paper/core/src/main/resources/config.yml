@@ -4,6 +4,8 @@ sudo:
 
 chat:
   cooldown-seconds: 3
+  # How often global mute and /chatslow, both switched on the proxy, are re-read from the database.
+  network-refresh-seconds: 3
   allowed-domain: blockcraftmc.net
   blocked-words:
     - noob

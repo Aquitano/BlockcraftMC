@@ -5,6 +5,7 @@ import org.bukkit.plugin.Plugin;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.logging.Level;
 
 public final class Tasks {
 
@@ -15,11 +16,25 @@ public final class Tasks {
         Bukkit.getScheduler().runTaskAsynchronously(plugin, work);
     }
 
-    /** Runs blocking work off the main thread and hands its result back on it. */
+    /** Runs blocking work off the main thread and hands its result back on it; a failure is only logged. */
     public static <T> void async(Plugin plugin, Supplier<T> work, Consumer<T> onMainThread) {
+        async(plugin, work, onMainThread, () -> { });
+    }
+
+    /** As {@link #async(Plugin, Supplier, Consumer)}, but a failed {@code work} runs {@code onFailure} on the main thread. */
+    public static <T> void async(Plugin plugin, Supplier<T> work, Consumer<T> onMainThread, Runnable onFailure) {
         async(plugin, () -> {
-            T result = work.get();
-            sync(plugin, () -> onMainThread.accept(result));
+            Runnable completion;
+            try {
+                T result = work.get();
+                completion = () -> onMainThread.accept(result);
+            } catch (RuntimeException e) {
+                plugin.getLogger().log(Level.WARNING, "Background task failed", e);
+                completion = onFailure;
+            }
+            if (plugin.isEnabled()) {
+                sync(plugin, completion);
+            }
         });
     }
 

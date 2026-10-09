@@ -4,6 +4,9 @@ database:
   database: blockcraft
   username: blockcraft
   password: blockcraft
+  # Connections this server keeps open, and how long a query waits for a free one before it fails.
+  pool-size: 4
+  connection-timeout-seconds: 30
 
 network:
   ip: BlockcraftMC.net
@@ -126,7 +129,6 @@ blocked-commands:
   - "bukkit:help"
   - "bukkit:me"
   - version
-  - tell
   - "minecraft:me"
 
 # /strafe catalogue. duration: <n>s|m|h|d|w|mon|y or permanent.

@@ -189,6 +189,8 @@ mute:
     - "<prefix><muted>Grund: <error><reason>"
     - "<prefix><muted>Verbleibende Zeit: <error><remaining>"
   check-failed: "<prefix><error>Deine Nachricht konnte gerade nicht geprüft werden. Versuche es gleich noch einmal."
+login:
+  retry: "<error>Deine Daten konnten gerade nicht geladen werden. <muted>Bitte versuche es gleich noch einmal."
 globalmute:
   blocked: "<dark_aqua>Dir wird es derzeit verweigert, im <accent>Chat <dark_aqua>zu schreiben. <accent>GlobalMute <dark_aqua>ist aktiv."
 chat:
@@ -203,6 +205,7 @@ chat:
     - "<muted>Klicke, um <accent><name><muted> zu schreiben."
   msg-command: "/msg <name> "
   spam: "<prefix><error>Bitte warte einen Moment... Verdacht auf Spam!"
+  slow: "<prefix><error>Der Chat ist verlangsamt. <muted>Du kannst alle <accent><seconds> Sekunden <muted>eine Nachricht schreiben."
   word-filtered: "<prefix><muted>Diese Chatnachricht wurde vom System gefiltert. <error>Grund: Anzügige Sprache"
   filtered-notify: "<prefix><muted>Der Spieler <error><player><muted> hat geschrieben: <error><message> <muted>auf <error><server>"
   actions:
@@ -222,7 +225,7 @@ nick:
   unknown-rank: "<prefix><error>Diesen Rang kann ein Nick nicht tragen. <muted>Zur Wahl stehen: <accent><ranks>"
   removed: "<prefix><muted>Dein Nick wurde entfernt."
   none: "<prefix><muted>Du trägst gerade keinen Nick."
-  failed: "<prefix><error>Der Skin konnte gerade nicht geladen werden. Versuche es gleich noch einmal."
+  failed: "<prefix><error>Der Nick konnte gerade nicht gesetzt werden. Versuche es gleich noch einmal."
   auto: "<prefix><muted>Du startest die Runde als <rank><nick><muted>. <accent>/nick off <muted>entfernt den Nick."
   auto-off: "<prefix><muted>In der Lobby trägst du wieder deinen echten Namen."
 report:
