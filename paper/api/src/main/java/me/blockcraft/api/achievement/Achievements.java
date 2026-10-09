@@ -1,11 +1,12 @@
 package me.blockcraft.api.achievement;
 
-import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.game.Stats;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.menu.AchievementsMenu;
+import me.blockcraft.api.notification.Notifications;
 import me.blockcraft.api.shop.Unlocks;
 import me.blockcraft.api.sound.Sounds;
+import me.blockcraft.api.task.PlayerTasks;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.api.xp.LevelUpEvent;
 import me.blockcraft.api.xp.Xp;
@@ -65,15 +66,19 @@ public final class Achievements implements Listener {
     private final Unlocks unlocks;
     private final Xp xp;
     private final Messages messages;
+    private final PlayerTasks playerTasks;
+    private final Notifications notifications;
 
     public Achievements(Plugin plugin, List<Achievement> catalog, Map<String, StatsRepository> games, Unlocks unlocks,
-                        Xp xp, Messages messages) {
+                        Xp xp, Messages messages, PlayerTasks playerTasks, Notifications notifications) {
         this.plugin = plugin;
         this.catalog = List.copyOf(catalog);
         this.games = games;
         this.unlocks = unlocks;
         this.xp = xp;
         this.messages = messages;
+        this.playerTasks = playerTasks;
+        this.notifications = notifications;
     }
 
     /** {@code achievements.<game>.<name>: {counts, threshold, xp}} of config.yml, in file order. */
@@ -126,7 +131,7 @@ public final class Achievements implements Listener {
     public void open(Player player, Optional<Consumer<Player>> back) {
         var uuid = player.getUniqueId();
         int level = xp.level(player);
-        BlockcraftApi.get().playerTasks().latest(player, () -> {
+        playerTasks.latest(player, () -> {
             var stats = new LinkedHashMap<String, Stats>();
             games().forEach(game -> Optional.ofNullable(games.get(game)).ifPresent(repository -> stats.put(game, repository.get(uuid))));
             return new Snapshot(stats, level, unlocks.owned(uuid, Achievement.ITEM_PREFIX));
@@ -168,7 +173,7 @@ public final class Achievements implements Listener {
             return;
         }
         var last = unlocked.getLast();
-        BlockcraftApi.get().notifications().reward(player,
+        notifications.reward(player,
                 Title.title(messages.get("achievements.title"),
                         messages.get("achievements.subtitle", Placeholder.component("name", name(last))), TIMES), Sounds.ACHIEVEMENT);
     }

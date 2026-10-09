@@ -1,7 +1,7 @@
 package me.blockcraft.api.menu;
 
-import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.settings.PlayerSettingChangedEvent;
+import me.blockcraft.api.task.PlayerTasks;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -14,6 +14,12 @@ import org.bukkit.inventory.ItemStack;
 
 
 public final class MenuListener implements Listener {
+
+    private final PlayerTasks playerTasks;
+
+    public MenuListener(PlayerTasks playerTasks) {
+        this.playerTasks = playerTasks;
+    }
 
     @EventHandler
     public void onClick(InventoryClickEvent event) {
@@ -57,7 +63,7 @@ public final class MenuListener implements Listener {
     public void onClose(InventoryCloseEvent event) {
         if (event.getInventory().getHolder(false) instanceof Menu menu && event.getPlayer() instanceof Player player) {
             if (event.getReason() == InventoryCloseEvent.Reason.PLAYER) {
-                BlockcraftApi.get().playerTasks().invalidate(player);
+                playerTasks.invalidate(player);
             }
             menu.handleClose(player, event);
         }

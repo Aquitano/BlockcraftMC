@@ -1,6 +1,6 @@
 package me.blockcraft.api.xp;
 
-import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.notification.Notifications;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.xp.XpRepository;
 import org.bukkit.entity.Player;
@@ -25,14 +25,17 @@ public final class Xp implements Listener {
     private final XpRepository repository;
     private final Levels levels;
     private final Map<XpReward, Integer> rewards;
+    private final Notifications notifications;
     private final Map<UUID, Object> sessions = new java.util.HashMap<>();
     private final Map<UUID, Long> totals = new ConcurrentHashMap<>();
 
-    public Xp(Plugin plugin, XpRepository repository, Levels levels, Map<XpReward, Integer> rewards) {
+    public Xp(Plugin plugin, XpRepository repository, Levels levels, Map<XpReward, Integer> rewards,
+              Notifications notifications) {
         this.plugin = plugin;
         this.repository = repository;
         this.levels = levels;
         this.rewards = rewards;
+        this.notifications = notifications;
     }
 
     public Levels levels() {
@@ -68,7 +71,7 @@ public final class Xp implements Listener {
             long cached = totals.merge(uuid, total, Math::max);
             int before = levels.levelFor(total - amount);
             int after = levels.levelFor(total);
-            BlockcraftApi.get().notifications().xp(player, amount, after > before ? levels.levelFor(cached) : 0);
+            notifications.xp(player, amount, after > before ? levels.levelFor(cached) : 0);
             if (after > before) {
                 plugin.getServer().getPluginManager().callEvent(new LevelUpEvent(player, after));
             }

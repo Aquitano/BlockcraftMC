@@ -95,12 +95,12 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         var messages = resources.messages();
         notifications = new Notifications(this, messages, Notifications.Timing.from(YamlFile.section(config, "notifications")));
         var settingRepository = new PlayerSettingRepository(database);
-        var settings = new PlayerSettings(this, settingRepository);
+        var settings = new PlayerSettings(this, settingRepository, messages);
         var realNames = new RealNames();
         var nickRanks = new NickRanks();
         var xpRepository = new XpRepository(database);
         var xp = new Xp(this, xpRepository, new Levels(number(YamlFile.section(config, "xp"), "level-step", 100)),
-                xpRewards(YamlFile.section(YamlFile.section(config, "xp"), "rewards")));
+                xpRewards(YamlFile.section(YamlFile.section(config, "xp"), "rewards")), notifications);
         var map = MapBundle.load(getServer().getWorlds().getFirst(), WorldTemplate.configured(config));
         // The locator bar would take the level bar's place and point at hidden or hunted players.
         getServer().getWorlds().forEach(world -> world.setGameRule(GameRules.LOCATOR_BAR, false));
@@ -119,13 +119,14 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         var unlocks = new Unlocks(database);
         var profileGames = profileGames(YamlFile.section(YamlFile.section(config, "profile"), "games"));
         var achievements = new Achievements(this, Achievements.parse(YamlFile.section(config, "achievements")),
-                profileGames, unlocks, xp, messages);
+                profileGames, unlocks, xp, messages, playerTasks, notifications);
+        var profiles = new Profiles(this, coins, profileGames, playerTasks, unlocks, achievements, xp, messages, realNames);
         var nickStats = new NickStats(nickRanks, NickStats.Ranges.from(YamlFile.section(config, "nick-stats")));
         var audit = new StaffAudit(this, new StaffActionRepository(database), realNames, self.name(),
                 StaffAudit.Notices.from(YamlFile.section(config, "audit")), messages);
         var api = new BlockcraftApi(notifications, new NetworkOperations(this, messages), playerTasks, database, coins,
                 unlocks, new Shop(database), new RoundRecapRepository(database), streaks(YamlFile.section(config, "streaks")),
-                settings, resourcePack, new Profiles(this, coins, profileGames), new Effects(settings), messages,
+                settings, resourcePack, profiles, new Effects(settings), messages,
                 servers, self, groups, text(config, "lobby-group", "lobby"), presence, resources.tags(), xp, map,
                 buildMode, realNames, nickRanks, nickStats, achievements, elo, afk, ignores, vanished, audit);
         BlockcraftApi.install(api);
@@ -136,7 +137,7 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(vanished, this);
         getServer().getPluginManager().registerEvents(xp, this);
         getServer().getPluginManager().registerEvents(achievements, this);
-        getServer().getPluginManager().registerEvents(new CoinsJoinListener(this, coins, startingCoins), this);
+        getServer().getPluginManager().registerEvents(new CoinsJoinListener(this, coins, realNames, startingCoins), this);
         getServer().getPluginManager().registerEvents(settings, this);
         getServer().getPluginManager().registerEvents(resourcePack, this);
         getServer().getMessenger().registerIncomingPluginChannel(this, ProxyChannel.NAME, resourcePack);
@@ -145,9 +146,9 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         getServer().getMessenger().registerIncomingPluginChannel(this, ProxyChannel.NAME, ignores);
         getServer().getPluginManager().registerEvents(afk, this);
         afk.start();
-        getServer().getPluginManager().registerEvents(new MenuListener(), this);
-        getServer().getPluginManager().registerEvents(new ServerMenu(this), this);
-        getServer().getPluginManager().registerEvents(new TabTeams(LuckPermsProvider.get(), messages), this);
+        getServer().getPluginManager().registerEvents(new MenuListener(playerTasks), this);
+        getServer().getPluginManager().registerEvents(new ServerMenu(this, profiles), this);
+        getServer().getPluginManager().registerEvents(new TabTeams(LuckPermsProvider.get(), messages, nickRanks, afk), this);
         getServer().getPluginManager().registerEvents(buildMode, this);
         getServer().getPluginManager().registerEvents(new VanillaProgress(), this);
 

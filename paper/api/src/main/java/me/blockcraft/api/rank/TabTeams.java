@@ -1,6 +1,6 @@
 package me.blockcraft.api.rank;
 
-import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.afk.Afk;
 import me.blockcraft.api.afk.AfkChangeEvent;
 import me.blockcraft.api.nick.NickChangeEvent;
 import me.blockcraft.api.scoreboard.Boards;
@@ -44,15 +44,19 @@ public final class TabTeams implements Listener {
 
     private final LuckPerms luckPerms;
     private final Messages messages;
+    private final NickRanks nickRanks;
+    private final Afk afk;
     private final Map<UUID, Entry> entries = new LinkedHashMap<>();
     private final Set<UUID> vanished = new HashSet<>();
 
     private record Entry(String team, Component prefix, Component suffix, String name) {
     }
 
-    public TabTeams(LuckPerms luckPerms, Messages messages) {
+    public TabTeams(LuckPerms luckPerms, Messages messages, NickRanks nickRanks, Afk afk) {
         this.luckPerms = luckPerms;
         this.messages = messages;
+        this.nickRanks = nickRanks;
+        this.afk = afk;
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -110,7 +114,7 @@ public final class TabTeams implements Listener {
 
     private Entry entryOf(Player player) {
         var user = luckPerms.getPlayerAdapter(Player.class).getUser(player);
-        Group group = BlockcraftApi.get().nickRank(player)
+        Group group = nickRanks.of(player)
                 .map(luckPerms.getGroupManager()::getGroup)
                 .orElseGet(() -> user.getInheritedGroups(user.getQueryOptions()).stream()
                         .max(Comparator.comparingInt(inherited -> inherited.getWeight().orElse(0)))
@@ -119,7 +123,7 @@ public final class TabTeams implements Listener {
         String groupName = group == null ? user.getPrimaryGroup() : group.getName();
         Component prefix = Ranks.prefix(player).orElseGet(() -> messages.get("tab.default-prefix"));
         boolean isVanished = vanished.contains(player.getUniqueId());
-        boolean isAfk = !isVanished && BlockcraftApi.get().isAfk(player);
+        boolean isAfk = !isVanished && afk.isAfk(player);
         Component suffix = isVanished ? messages.get("tab.vanished-suffix")
                 : isAfk ? messages.get("tab.afk-suffix") : Component.empty();
         return new Entry(teamName(weight, groupName, isVanished ? VANISHED : isAfk ? AFK : VISIBLE), prefix, suffix,

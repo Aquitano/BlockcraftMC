@@ -11,7 +11,7 @@ import io.papermc.paper.registry.data.dialog.action.DialogAction;
 import io.papermc.paper.registry.data.dialog.type.DialogType;
 import io.papermc.paper.registry.event.WritableRegistry;
 import io.papermc.paper.registry.keys.DialogKeys;
-import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.menu.Profiles;
 import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.key.Key;
@@ -38,9 +38,11 @@ public final class ServerMenu implements Listener {
     private static final int COLUMNS = 1;
 
     private final Plugin plugin;
+    private final Profiles profiles;
 
-    public ServerMenu(Plugin plugin) {
+    public ServerMenu(Plugin plugin, Profiles profiles) {
         this.plugin = plugin;
+        this.profiles = profiles;
     }
 
     public static void register(WritableRegistry<Dialog, DialogRegistryEntry.Builder> registry, Messages messages) {
@@ -69,7 +71,7 @@ public final class ServerMenu implements Listener {
         if (clicked.equals(SETTINGS)) {
             new SettingsDialog(player, Optional.empty()).open(player);
         } else if (clicked.equals(PROFILE)) {
-            BlockcraftApi.get().profiles().open(player, Optional.empty());
+            profiles.open(player, Optional.empty());
         } else if (clicked.equals(HUB)) {
             ProxyMessaging.hub(plugin, player);
         }
