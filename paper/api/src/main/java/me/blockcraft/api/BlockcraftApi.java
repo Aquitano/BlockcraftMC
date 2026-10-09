@@ -2,6 +2,7 @@ package me.blockcraft.api;
 
 import me.blockcraft.api.achievement.Achievement;
 import me.blockcraft.api.achievement.Achievements;
+import me.blockcraft.api.afk.Afk;
 import me.blockcraft.api.coins.CoinsRepository;
 import me.blockcraft.api.cosmetic.Effects;
 import me.blockcraft.api.elo.Elo;
@@ -69,13 +70,14 @@ public final class BlockcraftApi {
     private final TagResolver tags;
     private final Achievements achievements;
     private final Elo elo;
+    private final Afk afk;
     private final Ignores ignores;
 
     BlockcraftApi(Plugin plugin, Database database, PlayerSettings settings, ResourcePacks resourcePack,
                   Map<String, StatsRepository> profileGames, Messages messages, ServerRepository servers,
                   ServerIdentity server, String lobbyGroup, ServerPresence presence, RealNames realNames,
                   NickRanks nickRanks, Xp xp, Streaks streaks, MapBundle map, BuildMode buildMode, TagResolver tags,
-                  List<Achievement> achievements, Elo elo, NickStats nickStats, Notifications notifications,
+                  List<Achievement> achievements, Elo elo, NickStats nickStats, Notifications notifications, Afk afk,
                   Ignores ignores) {
         this.notifications = notifications;
         this.operations = new NetworkOperations(plugin, messages);
@@ -104,6 +106,7 @@ public final class BlockcraftApi {
         this.tags = tags;
         this.achievements = new Achievements(plugin, achievements, profileGames, unlocks, xp, messages);
         this.elo = elo;
+        this.afk = afk;
         this.ignores = ignores;
     }
 
@@ -251,6 +254,11 @@ public final class BlockcraftApi {
     /** Ranked 1vs1 ratings of the running season and the skill groups they fall into. */
     public Elo elo() {
         return elo;
+    }
+
+    /** Whether the player is away from the keyboard; the tab list and the proxy never show it while they are vanished. */
+    public boolean isAfk(Player player) {
+        return afk.isAfk(player);
     }
 
     /** Whom each online player ignores; chat from those players does not reach them. */

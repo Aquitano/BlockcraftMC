@@ -105,6 +105,11 @@ nick-stats:
   rating: {min: 900, max: 1250}
   level: {min: 3, max: 12}
 
+# A player counts as AFK after this long without moving, looking around, chatting, running a command or
+# interacting; /afk sets it at once.
+afk:
+  idle-minutes: 5
+
 notifications:
   status-ticks: 25
   feedback-ticks: 40

@@ -1,6 +1,7 @@
 package me.blockcraft.api.rank;
 
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.afk.AfkChangeEvent;
 import me.blockcraft.api.nick.NickChangeEvent;
 import me.blockcraft.api.scoreboard.Boards;
 import me.blockcraft.api.vanish.VanishChangeEvent;
@@ -30,7 +31,8 @@ import java.util.UUID;
  * inheritance node; a nicked player sorts and reads as the group their nick wears. Every player has their own
  * scoreboard for the sidebar, so the teams are written to all of them; entries are remembered per UUID because a
  * nick changes the name the tab list is keyed by. Vanished players get their own team per group, suffixed with a
- * marker: only staff who see through vanish still list them.
+ * marker: only staff who see through vanish still list them. Players away from the keyboard get a team of their own
+ * with an AFK marker, unless they are vanished.
  */
 public final class TabTeams implements Listener {
 
@@ -38,6 +40,7 @@ public final class TabTeams implements Listener {
     private static final int MAX_TEAM_NAME = 16;
     private static final char VISIBLE = '-';
     private static final char VANISHED = 'v';
+    private static final char AFK = 'a';
 
     private final LuckPerms luckPerms;
     private final Messages messages;
@@ -69,6 +72,11 @@ public final class TabTeams implements Listener {
         } else {
             vanished.remove(event.getPlayer().getUniqueId());
         }
+        update(event.getPlayer());
+    }
+
+    @EventHandler
+    public void onAfkChange(AfkChangeEvent event) {
         update(event.getPlayer());
     }
 
@@ -111,8 +119,11 @@ public final class TabTeams implements Listener {
         String groupName = group == null ? user.getPrimaryGroup() : group.getName();
         Component prefix = Ranks.prefix(player).orElseGet(() -> messages.get("tab.default-prefix"));
         boolean isVanished = vanished.contains(player.getUniqueId());
-        Component suffix = isVanished ? messages.get("tab.vanished-suffix") : Component.empty();
-        return new Entry(teamName(weight, groupName, isVanished), prefix, suffix, player.getName());
+        boolean isAfk = !isVanished && BlockcraftApi.get().isAfk(player);
+        Component suffix = isVanished ? messages.get("tab.vanished-suffix")
+                : isAfk ? messages.get("tab.afk-suffix") : Component.empty();
+        return new Entry(teamName(weight, groupName, isVanished ? VANISHED : isAfk ? AFK : VISIBLE), prefix, suffix,
+                player.getName());
     }
 
     private static void apply(Scoreboard board, Entry entry) {
@@ -127,10 +138,10 @@ public final class TabTeams implements Listener {
         team.addEntry(entry.name());
     }
 
-    /** Weight, group, then the vanish flag, so vanished players sort right after their visible rank mates. */
-    private static String teamName(int weight, String group, boolean isVanished) {
+    /** Weight, group, then the marker, so AFK and vanished players sort right after their visible rank mates. */
+    private static String teamName(int weight, String group, char marker) {
         String name = String.format("%04d%s", MAX_WEIGHT - Math.clamp(weight, 0, MAX_WEIGHT), group);
         int room = MAX_TEAM_NAME - 1;
-        return (name.length() > room ? name.substring(0, room) : name) + (isVanished ? VANISHED : VISIBLE);
+        return (name.length() > room ? name.substring(0, room) : name) + marker;
     }
 }

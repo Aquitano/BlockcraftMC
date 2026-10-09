@@ -76,6 +76,14 @@ public final class ProxyMessaging {
         send(plugin, player, ProxyChannel.NAME, out.toByteArray());
     }
 
+    /** Tells the proxy the player went away from the keyboard or came back, so a private message can say so. */
+    public static void afk(Plugin plugin, Player player, boolean afk) {
+        var out = ByteStreams.newDataOutput();
+        out.writeUTF(ProxyChannel.AFK);
+        out.writeBoolean(afk);
+        send(plugin, player, ProxyChannel.NAME, out.toByteArray());
+    }
+
     public static void requestPack(Plugin plugin, Player player) {
         var out = ByteStreams.newDataOutput();
         out.writeUTF(ProxyChannel.PACK_REQUEST);

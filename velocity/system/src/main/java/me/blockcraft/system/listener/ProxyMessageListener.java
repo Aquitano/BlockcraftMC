@@ -14,6 +14,7 @@ import me.blockcraft.common.network.PackStatus;
 import me.blockcraft.common.network.ProxyChannel;
 import me.blockcraft.common.nick.Nick;
 import me.blockcraft.common.settings.PlayerSetting;
+import me.blockcraft.system.AfkPlayers;
 import me.blockcraft.system.LobbyConnector;
 import me.blockcraft.system.PlayerChoices;
 import me.blockcraft.system.PlayerVisibility;
@@ -37,17 +38,19 @@ public final class ProxyMessageListener {
     private final LobbyConnector lobby;
     private final PlayerVisibility visibility;
     private final PlayerChoices choices;
+    private final AfkPlayers afk;
     private final FriendManager friends;
     private final TabHeaderListener tabHeader;
     private final Logger logger;
     private final Supplier<Optional<NetworkPack>> pack;
 
     public ProxyMessageListener(ProxyServer proxy, LobbyConnector lobby, PlayerVisibility visibility, PlayerChoices choices,
-                                FriendManager friends, TabHeaderListener tabHeader, Logger logger, Supplier<Optional<NetworkPack>> pack) {
+                                AfkPlayers afk, FriendManager friends, TabHeaderListener tabHeader, Logger logger, Supplier<Optional<NetworkPack>> pack) {
         this.proxy = proxy;
         this.lobby = lobby;
         this.visibility = visibility;
         this.choices = choices;
+        this.afk = afk;
         this.friends = friends;
         this.tabHeader = tabHeader;
         this.logger = logger;
@@ -86,6 +89,7 @@ public final class ProxyMessageListener {
                 String value = in.readUTF();
                 PlayerSetting.byKey(key).ifPresent(setting -> choices.set(player, setting, value));
             }
+            case ProxyChannel.AFK -> afk.set(player, in.readBoolean());
             case ProxyChannel.VANISH -> {
                 visibility.setVanished(player, in.readBoolean());
                 tabHeader.refreshAll();

@@ -8,6 +8,7 @@ import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.settings.PlayerSetting;
+import me.blockcraft.system.AfkPlayers;
 import me.blockcraft.system.PlayerChoices;
 import me.blockcraft.system.PlayerVisibility;
 import me.blockcraft.system.SystemPermissions;
@@ -34,17 +35,19 @@ public final class MessageCommand {
     private final PlayerVisibility visibility;
     private final PlayerChoices choices;
     private final IgnoreList ignores;
+    private final AfkPlayers afk;
     private final MuteGate muteGate;
     private final Messages messages;
     private final Map<UUID, UUID> lastPartner = new ConcurrentHashMap<>();
 
     public MessageCommand(CommandSupport support, ProxyServer proxy, PlayerVisibility visibility, PlayerChoices choices,
-                          IgnoreList ignores, MuteGate muteGate, Messages messages) {
+                          IgnoreList ignores, AfkPlayers afk, MuteGate muteGate, Messages messages) {
         this.support = support;
         this.proxy = proxy;
         this.visibility = visibility;
         this.choices = choices;
         this.ignores = ignores;
+        this.afk = afk;
         this.muteGate = muteGate;
         this.messages = messages;
     }
@@ -101,6 +104,9 @@ public final class MessageCommand {
             target.playSound(FeedbackSound.NOTIFY.sound(NetworkPack.applied(target)));
         }
         sender.sendMessage(messages.get("msg.to-sender", resolvers));
+        if (afk.isAfk(target) && !visibility.isVanished(target)) {
+            sender.sendMessage(messages.get("msg.afk", Placeholder.unparsed("player", visibility.shownName(target))));
+        }
         lastPartner.put(sender.getUniqueId(), target.getUniqueId());
         lastPartner.put(target.getUniqueId(), sender.getUniqueId());
     }

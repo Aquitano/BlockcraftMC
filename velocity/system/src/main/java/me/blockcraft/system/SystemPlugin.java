@@ -160,6 +160,7 @@ public final class SystemPlugin {
         var visibility = new PlayerVisibility(proxy, repositories.vanish(), nicks, logger);
         var choices = new PlayerChoices(playerSettings, logger);
         var ignores = new IgnoreList(new IgnoreRepository(database), logger);
+        var afk = new AfkPlayers();
         var lookup = new PlayerLookup(proxy, visibility, repositories.players());
         var directory = new ServerDirectory(proxy, config.lobbyGroup());
         var lobby = new LobbyConnector(directory, config, messages);
@@ -190,11 +191,12 @@ public final class SystemPlugin {
         events.register(this, visibility);
         events.register(this, choices);
         events.register(this, ignores);
+        events.register(this, afk);
         events.register(this, tabHeader);
         events.register(this, new CommandListener(config, messages));
         events.register(this, new KickListener(lobby, messages));
         events.register(this, new InitialServerListener(lobby));
-        events.register(this, new ProxyMessageListener(proxy, lobby, visibility, choices, friends, tabHeader, logger, () -> pack));
+        events.register(this, new ProxyMessageListener(proxy, lobby, visibility, choices, afk, friends, tabHeader, logger, () -> pack));
         events.register(this, new MotdListener(visibility, config, settings, messages, dataDirectory, logger));
         events.register(this, new PartyListener(parties));
         events.register(this, new FriendListener(friends, visibility, logger));
@@ -244,7 +246,7 @@ public final class SystemPlugin {
 
         register(new HubCommand(support, lobby).create(), "h", "lobby", "l");
         register(new PlayCommand(support, lobby, directory).create());
-        var privateMessages = new MessageCommand(support, proxy, visibility, choices, ignores, muteGate, messages);
+        var privateMessages = new MessageCommand(support, proxy, visibility, choices, ignores, afk, muteGate, messages);
         events.register(this, privateMessages);
         register(privateMessages.msg(), "tell", "w");
         register(privateMessages.reply(), "reply");

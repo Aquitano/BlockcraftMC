@@ -511,6 +511,7 @@ msg:
   nobody-to-answer: "<prefix><error>Du hast noch niemandem geschrieben."
   to-target: "<white><sender> <success>» <target><muted>: <aqua><message>"
   to-sender: "<white><sender> <error>« <target><muted>: <aqua><message>"
+  afk: "<prefix><accent><player> <muted>ist gerade AFK und liest deine Nachricht später."
 ignore:
   usage:
     - "<prefix><muted>Ignorieren: <aqua>/ignore \\<Spieler>"
