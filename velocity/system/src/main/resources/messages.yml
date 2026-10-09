@@ -493,7 +493,10 @@ whois:
     - "<prefix><accent>Erster Login: <dark_aqua><first>"
     - "<prefix><accent>Zuletzt gesehen: <dark_aqua><last>"
     - "<prefix><accent>Spielzeit: <dark_aqua><playtime>"
-    - "<prefix><accent>Server: <dark_aqua><server>"
+    - "<prefix><accent>Server: <dark_aqua><server> <dark>| <accent>Ping: <ping>"
+    - "<prefix><accent>Version: <client>"
+    - "<prefix><accent>Coins: <dark_aqua><coins>"
+    - "<prefix><accent>Geteilte Verbindungen: <alts>"
     - "<prefix><accent>Bann: <ban>"
     - "<prefix><accent>Mute: <mute>"
     - "<prefix><accent>Strikes: <dark_aqua><strikes> <dark>| <accent>Verwarnungen: <dark_aqua><warns>"
@@ -505,6 +508,11 @@ whois:
   none: "<muted>Keiner"
   punishment: "<error><reason> <dark>(<remaining><dark>)"
   unknown-rank: "unbekannt"
+  ping: "<primary><ping>ms"
+  client: "<primary><version> <dark>(<muted>Protokoll <protocol><dark>)"
+  client-range: "<first> - <last>"
+  alts: "<primary><count> Accounts <muted>(<primary>/alts<muted>)"
+  alts-hover: "<muted>Klicke für <primary>/alts <player>"
 
 hub:
   unavailable: "<prefix><error>Derzeit sind keine Lobby-Server verfügbar."

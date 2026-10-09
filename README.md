@@ -248,7 +248,8 @@ A game's own `messages.yml` holds its introduction and game-specific wording. `M
 checks that every key a plugin asks its messages for exists in its `messages.yml` or BlockcraftAPI's.
 
 `/history <player>` shows bans and mutes, including revoked entries, with the display length set by
-`history.limit`. It requires `blockcraft.system.history`; `/whois` also shows the totals.
+`history.limit`. It requires `blockcraft.system.history`; `/whois` also shows the totals, along with ping, client
+version, coins and how many accounts share an address with the player.
 
 Every login records a keyed hash of its address in `bc_player_addresses` (never the address itself; IPv6 by its /64
 prefix), kept for `alts.retention-days` and purged daily. `/alts <player>` (`blockcraft.system.alts`) lists the
