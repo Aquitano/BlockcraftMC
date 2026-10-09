@@ -245,7 +245,8 @@ shows another player's inventory read-only unless the viewer holds `blockcraft.c
 Core's `/tp`, `/kill`, `/clear`, `/xp` and `/enchant` take the vanilla argument forms (coordinates, selectors,
 item filters, enchantments) and add the rank guard; `/time` is vanilla's, with `/day` and `/night` as shortcuts. The
 console and `rcon-cli` run every core command that names a target. Every staff action on a player (gamemode,
-teleports, invsee, sudo, clear, kill, heal, fly, speed, vanish, freeze, staff mode, nick, `/build`) is one row in
+teleports, invsee, sudo, clear, kill, heal, fly, speed, vanish, freeze, staff mode, nick, `/build`, `/coins give|take|set`)
+is one row in
 `bc_staff_actions`, written through `BlockcraftApi.get().audit()`; the actions under `audit.notify` in
 BlockcraftAPI's `config.yml` also reach everyone with `blockcraft.audit.notify`. `/stafflog <player> [page]`
 (`blockcraft.system.stafflog`) lists what was done by or to a player, newest first.

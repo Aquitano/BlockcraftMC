@@ -116,6 +116,8 @@ audit:
     - clear
     - kill
     - invsee.edit
+    - coins.give
+    - coins.set
 
 # What others see of a nicked player: /stats, the stats menus, the Duell ladder and the chat level show numbers
 # drawn from these ranges instead of the account's own, the same ones for as long as the nick is worn.

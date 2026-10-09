@@ -72,9 +72,18 @@ public final class StaffAudit {
         record(issuer, action, Optional.of(target), Optional.of(detail));
     }
 
+    /** For a target who may be offline, such as an account whose coins were changed by name. */
+    public void record(CommandSender issuer, String action, PlayerReference target, String detail) {
+        record(issuer, action, Optional.of(target), Optional.empty(), Optional.of(detail));
+    }
+
     private void record(CommandSender issuer, String action, Optional<Player> target, Optional<String> detail) {
+        record(issuer, action, target.map(this::reference), target, detail);
+    }
+
+    private void record(CommandSender issuer, String action, Optional<PlayerReference> targetReference,
+                        Optional<Player> target, Optional<String> detail) {
         var issuerReference = reference(issuer);
-        var targetReference = target.map(this::reference);
         Tasks.async(plugin, () -> repository.record(issuerReference, action, targetReference, detail, server));
         if (notices.actions().contains(action)) {
             notifyStaff(issuer, target, messages.get("audit.notice",

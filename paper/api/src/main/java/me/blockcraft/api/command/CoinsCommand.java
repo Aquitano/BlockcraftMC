@@ -9,9 +9,11 @@ import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
 import io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSelectorArgumentResolver;
+import me.blockcraft.api.audit.StaffAudit;
 import me.blockcraft.api.coins.CoinsRepository;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.common.player.PlayerReference;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -38,7 +40,8 @@ public final class CoinsCommand {
     private CoinsCommand() {
     }
 
-    public static LiteralCommandNode<CommandSourceStack> create(Plugin plugin, CoinsRepository coins, Messages messages) {
+    public static LiteralCommandNode<CommandSourceStack> create(Plugin plugin, CoinsRepository coins, StaffAudit audit,
+                                                                Messages messages) {
         return Commands.literal("coins")
                 .requires(source -> source.getSender() instanceof Player || source.getSender().hasPermission(ADMIN_PERMISSION))
                 .executes(context -> {
@@ -60,9 +63,9 @@ public final class CoinsCommand {
                                     () -> failed(sender, messages));
                             return Command.SINGLE_SUCCESS;
                         }))
-                .then(change(plugin, coins, messages, "give", Change.GIVE, 1))
-                .then(change(plugin, coins, messages, "take", Change.TAKE, 1))
-                .then(change(plugin, coins, messages, "set", Change.SET, 0))
+                .then(change(plugin, coins, audit, messages, "give", Change.GIVE, 1))
+                .then(change(plugin, coins, audit, messages, "take", Change.TAKE, 1))
+                .then(change(plugin, coins, audit, messages, "set", Change.SET, 0))
                 .then(Commands.argument("player", ArgumentTypes.player())
                         .requires(source -> source.getSender().hasPermission(OTHERS_PERMISSION))
                         .executes(context -> {
@@ -80,8 +83,9 @@ public final class CoinsCommand {
     }
 
     /** Works on offline accounts too, so the target is a name looked up in the database rather than an online player. */
-    private static LiteralArgumentBuilder<CommandSourceStack> change(Plugin plugin, CoinsRepository coins, Messages messages,
-                                                                    String literal, Change change, int minimum) {
+    private static LiteralArgumentBuilder<CommandSourceStack> change(Plugin plugin, CoinsRepository coins, StaffAudit audit,
+                                                                    Messages messages, String literal, Change change,
+                                                                    int minimum) {
         return Commands.literal(literal)
                 .requires(source -> source.getSender().hasPermission(ADMIN_PERMISSION))
                 .then(Commands.argument("player", StringArgumentType.word())
@@ -98,9 +102,15 @@ public final class CoinsCommand {
                                     String name = StringArgumentType.getString(context, "player");
                                     int amount = IntegerArgumentType.getInteger(context, "amount");
                                     Tasks.async(plugin, () -> apply(coins, change, name, amount),
-                                            outcome -> sender.sendMessage(outcome
-                                                    .map(done -> describe(messages, change, done, amount))
-                                                    .orElseGet(() -> messages.get("coins.unknown", Placeholder.unparsed("player", name)))),
+                                            outcome -> {
+                                                outcome.filter(Outcome::applied).ifPresent(done -> audit.record(sender,
+                                                        "coins." + change.name().toLowerCase(Locale.ROOT),
+                                                        PlayerReference.known(done.account().uuid(), done.account().name()),
+                                                        String.valueOf(amount)));
+                                                sender.sendMessage(outcome
+                                                        .map(done -> describe(messages, change, done, amount))
+                                                        .orElseGet(() -> messages.get("coins.unknown", Placeholder.unparsed("player", name))));
+                                            },
                                             () -> failed(sender, messages));
                                     return Command.SINGLE_SUCCESS;
                                 })));
