@@ -1,8 +1,8 @@
 package me.blockcraft.api.settings;
 
-import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.api.task.SerialTasks;
+import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.settings.PlayerSetting;
 import me.blockcraft.common.settings.PlayerSettingRepository;
 import org.bukkit.Bukkit;
@@ -32,14 +32,16 @@ public final class PlayerSettings implements Listener {
 
     private final Plugin plugin;
     private final PlayerSettingRepository repository;
+    private final Messages messages;
     private final SettingsCache cache = new SettingsCache();
 
     private final SerialTasks<UUID> writes;
     private final Map<UUID, Map<PlayerSetting, Object>> revisions = new HashMap<>();
 
-    public PlayerSettings(Plugin plugin, PlayerSettingRepository repository) {
+    public PlayerSettings(Plugin plugin, PlayerSettingRepository repository, Messages messages) {
         this.plugin = plugin;
         this.repository = repository;
+        this.messages = messages;
         this.writes = new SerialTasks<>(plugin);
     }
 
@@ -74,7 +76,7 @@ public final class PlayerSettings implements Listener {
         writes.submit(uuid, () -> save(uuid, setting, value, previousValue), saved -> {
             if (player.isOnline() && revisions.getOrDefault(uuid, Map.of()).get(setting) == revision && !saved.success()) {
                 apply(player, setting, saved.stored());
-                player.sendMessage(BlockcraftApi.get().messages().get("settings.failed"));
+                player.sendMessage(messages.get("settings.failed"));
             }
             completion.complete(saved.success());
         }, () -> completion.complete(false));
@@ -135,7 +137,7 @@ public final class PlayerSettings implements Listener {
             Bukkit.getPluginManager().callEvent(new PlayerSettingsLoadedEvent(player));
         }, () -> {
             if (player.isOnline()) {
-                player.sendMessage(BlockcraftApi.get().messages().get("operation.failed"));
+                player.sendMessage(messages.get("operation.failed"));
             }
         });
     }

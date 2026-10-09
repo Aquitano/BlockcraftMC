@@ -1,10 +1,10 @@
 package me.blockcraft.lobby.listener;
 
 import me.blockcraft.api.BlockcraftApi;
-import me.blockcraft.api.coins.CoinsRepository;
 import me.blockcraft.api.shop.Unlocks;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Tasks;
+import me.blockcraft.common.coins.CoinsRepository;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.lobby.LobbyPermissions;
 import me.blockcraft.lobby.cosmetic.Secret;

@@ -1,4 +1,4 @@
-package me.blockcraft.api.coins;
+package me.blockcraft.common.coins;
 
 import me.blockcraft.common.db.Database;
 import me.blockcraft.common.moderation.PlayerRepository;

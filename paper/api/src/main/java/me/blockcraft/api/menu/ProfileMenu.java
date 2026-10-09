@@ -1,6 +1,5 @@
 package me.blockcraft.api.menu;
 
-import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.dialog.SettingsDialog;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.pack.MenuIcon;
@@ -33,11 +32,10 @@ final class ProfileMenu extends Menu {
     private final Optional<Consumer<Player>> recentRound;
 
     ProfileMenu(Profiles profiles, Player viewer, Profiles.Snapshot snapshot, Optional<Consumer<Player>> cosmetics) {
-        super(3, BlockcraftApi.get().messages().get("profile.title"));
+        super(3, profiles.messages().get("profile.title"));
         recentRound = profiles.recentRound();
-        var api = BlockcraftApi.get();
-        var messages = api.messages();
-        achievements = player -> api.achievements().open(player, Optional.of(back -> profiles.open(back, cosmetics)));
+        var messages = profiles.messages();
+        achievements = player -> profiles.achievements().open(player, Optional.of(back -> profiles.open(back, cosmetics)));
         closeButton(ToolbarButton.LEFT);
         toolbar(ToolbarButton.MIDDLE, button(messages, MenuIcon.TOOL_SETTINGS, "profile.settings"),
                 player -> new SettingsDialog(player, Optional.of(back -> profiles.open(back, cosmetics))).open(player));
@@ -45,10 +43,11 @@ final class ProfileMenu extends Menu {
                 open -> toolbar(ToolbarButton.RIGHT, button(messages, MenuIcon.TOOL_COSMETICS, "profile.cosmetics"), open),
                 () -> toolbar(ToolbarButton.RIGHT, button(messages, MenuIcon.TOOL_HOME, "profile.hub"),
                         player -> ProxyMessaging.hub(profiles.plugin(), player)));
-        var progress = api.xp().levels().progress(api.xp().total(viewer));
+        var xp = profiles.xp();
+        var progress = xp.levels().progress(xp.total(viewer));
         recentRound.ifPresent(open -> set(RECAP_SLOT, Items.of(Material.WRITABLE_BOOK)
                 .name(messages.get("profile.recap")).lore(messages.get("profile.recap-lore")).build()));
-        info(HEAD_SLOT, Items.head(viewer.getUniqueId(), api.realName(viewer))
+        info(HEAD_SLOT, Items.head(viewer.getUniqueId(), profiles.realNames().of(viewer))
                 .name(messages.get("profile.head", Placeholder.unparsed("player", viewer.getName())))
                 .lore(messages.getLines("profile.head-lore",
                         Placeholder.component("rank", Ranks.prefix(viewer).orElse(Component.empty())),
@@ -61,7 +60,7 @@ final class ProfileMenu extends Menu {
                 .name(messages.get("profile.achievements"))
                 .lore(messages.get("profile.achievements-lore",
                         Formatter.number("unlocked", snapshot.achievements()),
-                        Formatter.number("total", api.achievements().catalog().size())))
+                        Formatter.number("total", profiles.achievements().catalog().size())))
                 .build());
         var games = snapshot.games();
         for (int index = 0; index < games.size(); index++) {

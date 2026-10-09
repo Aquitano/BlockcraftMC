@@ -11,6 +11,7 @@ import me.blockcraft.api.command.CoinsCommand;
 import me.blockcraft.api.command.CommandRegistry;
 import me.blockcraft.api.command.LevelCommand;
 import me.blockcraft.api.command.MapCommand;
+import me.blockcraft.api.cosmetic.Effects;
 import me.blockcraft.api.dialog.ServerMenu;
 import me.blockcraft.api.elo.Elo;
 import me.blockcraft.api.elo.SkillGroup;
@@ -18,6 +19,7 @@ import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.game.Streaks;
 import me.blockcraft.api.ignore.Ignores;
 import me.blockcraft.api.menu.MenuListener;
+import me.blockcraft.api.menu.Profiles;
 import me.blockcraft.api.network.ServerGroups;
 import me.blockcraft.api.network.ServerHeartbeat;
 import me.blockcraft.api.network.ServerPresence;
@@ -27,8 +29,11 @@ import me.blockcraft.api.player.RealNames;
 import me.blockcraft.api.proxy.ProxyMessageListener;
 import me.blockcraft.api.rank.NickRanks;
 import me.blockcraft.api.player.VanillaProgress;
+import me.blockcraft.api.proxy.NetworkOperations;
 import me.blockcraft.api.rank.TabTeams;
 import me.blockcraft.api.settings.PlayerSettings;
+import me.blockcraft.api.shop.Unlocks;
+import me.blockcraft.api.task.PlayerTasks;
 import me.blockcraft.api.vanish.VanishedPlayers;
 import me.blockcraft.api.world.BuildMode;
 import me.blockcraft.api.world.MapBundle;
@@ -37,6 +42,7 @@ import me.blockcraft.api.xp.Levels;
 import me.blockcraft.api.xp.Xp;
 import me.blockcraft.api.notification.Notifications;
 import me.blockcraft.api.xp.XpReward;
+import me.blockcraft.common.coins.CoinsRepository;
 import me.blockcraft.common.config.YamlFile;
 import me.blockcraft.common.db.Database;
 import me.blockcraft.common.db.DatabaseConfig;
@@ -47,7 +53,9 @@ import me.blockcraft.common.moderation.VanishRepository;
 import me.blockcraft.common.moderation.StaffActionRepository;
 import me.blockcraft.common.network.ProxyMessageCodec;
 import me.blockcraft.common.network.ServerRepository;
+import me.blockcraft.common.round.RoundRecapRepository;
 import me.blockcraft.common.settings.PlayerSettingRepository;
+import me.blockcraft.common.shop.Shop;
 import me.blockcraft.common.xp.XpRepository;
 import net.luckperms.api.LuckPermsProvider;
 import org.bukkit.GameRules;
@@ -87,12 +95,12 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         var messages = resources.messages();
         notifications = new Notifications(this, messages, Notifications.Timing.from(YamlFile.section(config, "notifications")));
         var settingRepository = new PlayerSettingRepository(database);
-        var settings = new PlayerSettings(this, settingRepository);
+        var settings = new PlayerSettings(this, settingRepository, messages);
         var realNames = new RealNames();
         var nickRanks = new NickRanks();
         var xpRepository = new XpRepository(database);
         var xp = new Xp(this, xpRepository, new Levels(number(YamlFile.section(config, "xp"), "level-step", 100)),
-                xpRewards(YamlFile.section(YamlFile.section(config, "xp"), "rewards")));
+                xpRewards(YamlFile.section(YamlFile.section(config, "xp"), "rewards")), notifications);
         var map = MapBundle.load(getServer().getWorlds().getFirst(), WorldTemplate.configured(config));
         // The locator bar would take the level bar's place and point at hidden or hunted players.
         getServer().getWorlds().forEach(world -> world.setGameRule(GameRules.LOCATOR_BAR, false));
@@ -106,15 +114,21 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
                 Duration.ofMinutes(Math.max(1, number(YamlFile.section(config, "afk"), "idle-minutes", 5))));
         var ignores = new Ignores(this, new IgnoreRepository(database));
         var vanished = new VanishedPlayers(this, new VanishRepository(database), messages);
-        var api = new BlockcraftApi(this, database, settings, resourcePack,
-                profileGames(YamlFile.section(YamlFile.section(config, "profile"), "games")),
-                messages, servers, self, text(config, "lobby-group", "lobby"), presence, realNames, nickRanks, xp,
-                streaks(YamlFile.section(config, "streaks")), map, buildMode, resources.tags(),
-                Achievements.parse(YamlFile.section(config, "achievements")), elo,
-                new NickStats(nickRanks, NickStats.Ranges.from(YamlFile.section(config, "nick-stats"))), notifications,
-                groups, afk, ignores, vanished,
-                new StaffAudit(this, new StaffActionRepository(database), realNames, self.name(),
-                        StaffAudit.Notices.from(YamlFile.section(config, "audit")), messages));
+        var playerTasks = new PlayerTasks(this, messages);
+        var coins = new CoinsRepository(database);
+        var unlocks = new Unlocks(database);
+        var profileGames = profileGames(YamlFile.section(YamlFile.section(config, "profile"), "games"));
+        var achievements = new Achievements(this, Achievements.parse(YamlFile.section(config, "achievements")),
+                profileGames, unlocks, xp, messages, playerTasks, notifications);
+        var profiles = new Profiles(this, coins, profileGames, playerTasks, unlocks, achievements, xp, messages, realNames);
+        var nickStats = new NickStats(nickRanks, NickStats.Ranges.from(YamlFile.section(config, "nick-stats")));
+        var audit = new StaffAudit(this, new StaffActionRepository(database), realNames, self.name(),
+                StaffAudit.Notices.from(YamlFile.section(config, "audit")), messages);
+        var api = new BlockcraftApi(notifications, new NetworkOperations(this, messages), playerTasks, database, coins,
+                unlocks, new Shop(database), new RoundRecapRepository(database), streaks(YamlFile.section(config, "streaks")),
+                settings, resourcePack, profiles, new Effects(settings), messages,
+                servers, self, groups, text(config, "lobby-group", "lobby"), presence, resources.tags(), xp, map,
+                buildMode, realNames, nickRanks, nickStats, achievements, elo, afk, ignores, vanished, audit);
         BlockcraftApi.install(api);
         getLogger().info("Running map " + map.name() + map.template().map(template -> " from " + template.directory()).orElse(""));
         int startingCoins = number(config, "starting-coins", 10);
@@ -122,8 +136,8 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(nickRanks, this);
         getServer().getPluginManager().registerEvents(vanished, this);
         getServer().getPluginManager().registerEvents(xp, this);
-        getServer().getPluginManager().registerEvents(api.achievements(), this);
-        getServer().getPluginManager().registerEvents(new CoinsJoinListener(this, api.coins(), startingCoins), this);
+        getServer().getPluginManager().registerEvents(achievements, this);
+        getServer().getPluginManager().registerEvents(new CoinsJoinListener(this, coins, realNames, startingCoins), this);
         getServer().getPluginManager().registerEvents(settings, this);
         getServer().getPluginManager().registerEvents(resourcePack, this);
         getServer().getPluginManager().registerEvents(ignores, this);
@@ -131,17 +145,17 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
                 new ProxyMessageListener(getLogger(), resourcePack, ignores));
         getServer().getPluginManager().registerEvents(afk, this);
         afk.start();
-        getServer().getPluginManager().registerEvents(new MenuListener(), this);
-        getServer().getPluginManager().registerEvents(new ServerMenu(this), this);
-        getServer().getPluginManager().registerEvents(new TabTeams(LuckPermsProvider.get(), messages), this);
+        getServer().getPluginManager().registerEvents(new MenuListener(playerTasks), this);
+        getServer().getPluginManager().registerEvents(new ServerMenu(this, profiles), this);
+        getServer().getPluginManager().registerEvents(new TabTeams(LuckPermsProvider.get(), messages, nickRanks, afk), this);
         getServer().getPluginManager().registerEvents(buildMode, this);
         getServer().getPluginManager().registerEvents(new VanillaProgress(), this);
 
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             var commands = new CommandRegistry(event.registrar(), messages);
-            commands.register(CoinsCommand.create(this, api.coins(), api.audit(), messages));
+            commands.register(CoinsCommand.create(this, coins, audit, messages));
             commands.register(LevelCommand.create(xp, messages));
-            commands.register(BuildCommand.create(buildMode, api.audit(), messages));
+            commands.register(BuildCommand.create(buildMode, audit, messages));
             commands.register(MapCommand.create(this, map, messages));
             commands.register(AfkCommand.create(afk));
         });

@@ -1,6 +1,5 @@
 package me.blockcraft.api.task;
 
-import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.menu.Menu;
 import me.blockcraft.common.message.Messages;
@@ -45,8 +44,8 @@ public final class PlayerTasks implements Listener {
 
     private <T> void latest(Player player, Supplier<T> work, Consumer<T> complete, InventoryView parent) {
         latest(player, work, complete,
-                waiting -> new TaskMenu(false, ignored -> latest(player, work, complete, parent), parent).showNow(waiting),
-                failed -> new TaskMenu(true, ignored -> latest(player, work, complete, parent), parent).open(failed));
+                waiting -> new TaskMenu(messages, false, ignored -> latest(player, work, complete, parent), parent).showNow(waiting),
+                failed -> new TaskMenu(messages, true, ignored -> latest(player, work, complete, parent), parent).open(failed));
     }
 
     public <T> void latest(Player player, Supplier<T> work, Consumer<T> complete,
@@ -149,11 +148,10 @@ public final class PlayerTasks implements Listener {
         private final Consumer<Player> retry;
         private final boolean failed;
 
-        private TaskMenu(boolean failed, Consumer<Player> retry, InventoryView previous) {
-            super(1, BlockcraftApi.get().messages().get(failed ? "menu.load.failed" : "menu.load.title"));
+        private TaskMenu(Messages messages, boolean failed, Consumer<Player> retry, InventoryView previous) {
+            super(1, messages.get(failed ? "menu.load.failed" : "menu.load.title"));
             this.retry = retry;
             this.failed = failed;
-            var messages = BlockcraftApi.get().messages();
             var status = Items.of(failed ? Material.REDSTONE : Material.CLOCK)
                     .name(messages.get(failed ? "menu.load.retry" : "menu.load.pending")).build();
             if (failed) {
