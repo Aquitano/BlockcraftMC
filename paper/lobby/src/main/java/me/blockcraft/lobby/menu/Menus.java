@@ -19,11 +19,9 @@ import me.blockcraft.common.network.ServerRepository;
 import me.blockcraft.lobby.config.LobbyConfig;
 import me.blockcraft.lobby.LobbyPermissions;
 import me.blockcraft.lobby.config.LobbyLocation;
-import me.blockcraft.lobby.cosmetic.Head;
 import me.blockcraft.lobby.cosmetic.CosmeticPreviews;
 import me.blockcraft.lobby.cosmetic.Pets;
 import me.blockcraft.lobby.cosmetic.Secret;
-import me.blockcraft.lobby.cosmetic.Shirt;
 import me.blockcraft.lobby.friends.FriendsChannel;
 import me.blockcraft.lobby.network.GroupCounts;
 import me.blockcraft.lobby.rank.PremiumRank;
@@ -36,6 +34,7 @@ import org.bukkit.plugin.Plugin;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
 
 /** Everything the chest GUIs need, so they can open one another without re-wiring. */
@@ -171,13 +170,11 @@ public record Menus(
     }
 
     public void openHeads(Player player) {
-        BlockcraftApi.get().playerTasks().latest(player, () -> unlocks.owned(player.getUniqueId(), Head.ITEM_PREFIX),
-                owned -> new HeadsMenu(this, player, owned).open(player));
+        openCosmetics(player, CosmeticKinds.heads(this));
     }
 
     public void openShirts(Player player) {
-        BlockcraftApi.get().playerTasks().latest(player, () -> unlocks.owned(player.getUniqueId(), Shirt.ITEM_PREFIX),
-                owned -> new ShirtsMenu(this, player, owned).open(player));
+        openCosmetics(player, CosmeticKinds.shirts(this));
     }
 
     public void openPremium(Player player) {
@@ -185,11 +182,11 @@ public record Menus(
     }
 
     public void openPets(Player player) {
-        new PetsMenu(this, player).open(player);
+        openCosmetics(player, CosmeticKinds.pets(this));
     }
 
     public void openTrails(Player player) {
-        new TrailsMenu(this, player).open(player);
+        openCosmetics(player, CosmeticKinds.trails(this));
     }
 
     public void openFriends(Player player) {
@@ -209,20 +206,23 @@ public record Menus(
     }
 
     public void openGadgets(Player player) {
-        new GadgetsMenu(this, player).open(player);
+        openCosmetics(player, CosmeticKinds.gadgets(this));
     }
 
     public void openKillEffects(Player player) {
-        openEffects(player, EffectKind.KILL, config.killEffectPrice());
+        openCosmetics(player, CosmeticKinds.killEffects(this));
     }
 
     public void openWinEffects(Player player) {
-        openEffects(player, EffectKind.WIN, config.winEffectPrice());
+        openCosmetics(player, CosmeticKinds.winEffects(this));
     }
 
-    private <E extends Enum<E>> void openEffects(Player player, EffectKind<E> kind, int price) {
-        BlockcraftApi.get().playerTasks().latest(player, () -> unlocks.owned(player.getUniqueId(), kind.itemPrefix()),
-                owned -> new EffectsMenu<>(this, kind, price, player, owned).open(player));
+    private <C> void openCosmetics(Player player, CosmeticKind<C> kind) {
+        kind.price().ifPresentOrElse(
+                price -> BlockcraftApi.get().playerTasks().latest(player,
+                        () -> unlocks.owned(player.getUniqueId(), price.itemPrefix()),
+                        owned -> new CosmeticMenu<>(this, kind, player, owned).open(player)),
+                () -> new CosmeticMenu<>(this, kind, player, Set.of()).open(player));
     }
 
     public void openChatTags(Player player) {
@@ -231,7 +231,7 @@ public record Menus(
             messages.getLines("premium.required").forEach(player::sendMessage);
             return;
         }
-        new ChatTagsMenu(this, player).open(player);
+        openCosmetics(player, CosmeticKinds.chatTags(this));
     }
 
     public void openLobbies(Player player) {
