@@ -148,7 +148,7 @@ public final class SystemPlugin {
         var lookup = new PlayerLookup(proxy, visibility, repositories.players());
         var directory = new ServerDirectory(proxy, config.lobbyGroup());
         var lobby = new LobbyConnector(directory, config, messages);
-        var punishments = new PunishmentService(proxy, repositories.punishments(), messages, config.network());
+        var punishments = new PunishmentService(proxy, repositories.punishments(), messages);
         var muteGate = new MuteGate(repositories.punishments(), punishments, messages, logger);
         var parties = new PartyManager(proxy, visibility, choices, messages);
         var spectating = new SpectateRequests();

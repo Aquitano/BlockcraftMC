@@ -9,7 +9,6 @@ import me.blockcraft.common.moderation.PunishmentRepository;
 import me.blockcraft.common.moderation.PunishmentType;
 import me.blockcraft.common.player.PlayerReference;
 import me.blockcraft.system.PlayerLookup.Target;
-import me.blockcraft.system.SystemConfig;
 import me.blockcraft.system.SystemPermissions;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
@@ -32,14 +31,12 @@ public final class PunishmentService {
     private final PunishmentRepository punishments;
     private final Messages messages;
     private final DurationText durations;
-    private final SystemConfig.Network network;
 
-    public PunishmentService(ProxyServer proxy, PunishmentRepository punishments, Messages messages, SystemConfig.Network network) {
+    public PunishmentService(ProxyServer proxy, PunishmentRepository punishments, Messages messages) {
         this.proxy = proxy;
         this.punishments = punishments;
         this.messages = messages;
         this.durations = new DurationText(messages);
-        this.network = network;
     }
 
     public Optional<Punishment> activeBan(Target target) {
@@ -111,10 +108,7 @@ public final class PunishmentService {
                 Placeholder.unparsed("player", name),
                 Placeholder.unparsed("reason", punishment.reason()),
                 Placeholder.unparsed("issuer", punishment.issuer().name()),
-                Placeholder.component("remaining", remaining(punishment)),
-                Placeholder.unparsed("ip", network.ip()),
-                Placeholder.unparsed("website", network.website()),
-                Placeholder.unparsed("teamspeak", network.teamspeak()));
+                Placeholder.component("remaining", remaining(punishment)));
     }
 
     private Component screen(String key, Punishment punishment) {
