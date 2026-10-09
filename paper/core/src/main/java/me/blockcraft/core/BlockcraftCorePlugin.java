@@ -7,19 +7,24 @@ import me.blockcraft.common.config.YamlFile;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.moderation.ModerationRepositories;
 import me.blockcraft.core.command.AchievementsCommand;
+import me.blockcraft.core.command.BackCommand;
+import me.blockcraft.core.command.BackLocations;
 import me.blockcraft.core.command.ClearCommand;
 import me.blockcraft.core.command.ConnectCommand;
+import me.blockcraft.core.command.DayTimeCommand;
 import me.blockcraft.core.command.EloCommand;
 import me.blockcraft.core.command.EnchantCommand;
 import me.blockcraft.core.command.FreezeCommand;
 import me.blockcraft.core.command.FlyCommand;
-import me.blockcraft.core.command.FlySpeedCommand;
 import me.blockcraft.core.command.FoodCommand;
 import me.blockcraft.core.command.GamemodeCommand;
 import me.blockcraft.core.command.HealCommand;
 import me.blockcraft.core.command.InvseeCommand;
 import me.blockcraft.core.command.KillCommand;
+import me.blockcraft.core.command.NearCommand;
 import me.blockcraft.core.command.NickCommand;
+import me.blockcraft.core.command.PTimeCommand;
+import me.blockcraft.core.command.PWeatherCommand;
 import me.blockcraft.core.command.RainCommand;
 import me.blockcraft.core.command.ReflashCommand;
 import me.blockcraft.core.command.ReportCommand;
@@ -31,7 +36,8 @@ import me.blockcraft.core.command.StaffCommand;
 import me.blockcraft.core.command.SudoCommand;
 import me.blockcraft.core.command.SunCommand;
 import me.blockcraft.core.command.TeamCommand;
-import me.blockcraft.core.command.TimeCommand;
+import me.blockcraft.core.command.TpAllCommand;
+import me.blockcraft.core.command.TpHereCommand;
 import me.blockcraft.core.command.TpCommand;
 import me.blockcraft.core.command.VanishCommand;
 import me.blockcraft.core.command.XpCommand;
@@ -49,6 +55,8 @@ import me.blockcraft.core.staff.VanishService;
 import me.blockcraft.core.nick.NickListener;
 import me.blockcraft.core.nick.Nicks;
 import me.blockcraft.common.nick.NickRepository;
+import me.blockcraft.common.report.ReportRepository;
+import org.bukkit.GameMode;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.List;
@@ -88,37 +96,53 @@ public final class BlockcraftCorePlugin extends JavaPlugin {
         freeze.start();
         var staffInventories = new StaffInventoryRepository(api.database());
         staffInventories.createTable();
-        var staffMode = new StaffMode(this, messages, vanish, freeze, staffInventories);
+        var audit = api.audit();
+        var staffMode = new StaffMode(this, messages, vanish, freeze, staffInventories, audit, new ReportRepository(api.database()),
+                moderation.punishments());
         pluginManager.registerEvents(staffMode, this);
+        var back = new BackLocations();
+        pluginManager.registerEvents(back, this);
+        var nearSection = YamlFile.section(config, "near");
+        var nearRadius = new NearCommand.Radius(number(nearSection, "default-radius", 100), number(nearSection, "max-radius", 500));
 
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             var commands = new CommandRegistry(event.registrar(), messages);
             commands.register(TeamCommand.create(messages));
-            commands.register(EnchantCommand.create());
-            commands.register(FlyCommand.create(messages));
-            commands.register(FlySpeedCommand.create(messages));
-            commands.register(FoodCommand.create(messages));
-            commands.register(GamemodeCommand.create(messages));
-            commands.register(HealCommand.create(messages));
-            commands.register(InvseeCommand.create(messages));
+            commands.register(EnchantCommand.create(messages));
+            commands.register(FlyCommand.create(audit, messages));
+            commands.register(FoodCommand.create(audit, messages), "feed");
+            commands.register(GamemodeCommand.create(audit, messages));
+            commands.register(GamemodeCommand.shortcut("gms", GameMode.SURVIVAL, audit, messages));
+            commands.register(GamemodeCommand.shortcut("gmc", GameMode.CREATIVE, audit, messages));
+            commands.register(GamemodeCommand.shortcut("gma", GameMode.ADVENTURE, audit, messages));
+            commands.register(GamemodeCommand.shortcut("gmsp", GameMode.SPECTATOR, audit, messages));
+            commands.register(HealCommand.create(audit, messages));
+            commands.register(InvseeCommand.create(audit, messages));
             commands.register(ServerInfoCommand.create(messages));
             commands.register(SetHealthCommand.create(messages));
             commands.register(SkullCommand.create(messages));
-            commands.register(SpeedCommand.create(messages));
-            commands.register(SudoCommand.create(messages, sudoProtected));
-            commands.register(KillCommand.create(messages));
+            commands.register(SpeedCommand.create(audit, messages));
+            commands.register(SudoCommand.create(audit, messages, sudoProtected));
+            commands.register(KillCommand.create(audit, messages));
             commands.register(RainCommand.create(messages));
             commands.register(SunCommand.create(messages));
-            commands.register(TimeCommand.create(messages));
-            commands.register(TpCommand.create(messages));
+            commands.register(DayTimeCommand.day(messages));
+            commands.register(DayTimeCommand.night(messages));
+            commands.register(TpCommand.create(back, audit, messages));
+            commands.register(TpHereCommand.create(back, audit, messages));
+            commands.register(TpAllCommand.create(back, audit, messages));
+            commands.register(BackCommand.create(back, audit, messages));
+            commands.register(NearCommand.create(nearRadius, messages));
+            commands.register(PTimeCommand.create(messages));
+            commands.register(PWeatherCommand.create(messages));
             commands.register(XpCommand.create(messages));
-            commands.register(VanishCommand.create(vanish, messages), "vanish");
-            commands.register(FreezeCommand.create(freeze, messages));
+            commands.register(VanishCommand.create(vanish, audit, messages), "vanish");
+            commands.register(FreezeCommand.create(freeze, audit, messages));
             commands.register(StaffCommand.create(staffMode));
-            commands.register(ClearCommand.create(messages));
+            commands.register(ClearCommand.create(audit, messages));
             commands.register(ConnectCommand.create(this, messages));
             commands.register(ReflashCommand.create(this, messages));
-            commands.register(NickCommand.create(nicks, messages));
+            commands.register(NickCommand.create(nicks, audit, messages));
             commands.register(ReportCommand.create(this, stringList(YamlFile.section(config, "report"), "reasons"), messages));
             commands.register(AchievementsCommand.create());
             commands.register(EloCommand.create(this, api.elo(), messages));
@@ -127,5 +151,9 @@ public final class BlockcraftCorePlugin extends JavaPlugin {
 
     private static List<String> stringList(Map<String, Object> section, String key) {
         return section.get(key) instanceof List<?> values ? values.stream().map(String::valueOf).toList() : List.of();
+    }
+
+    private static int number(Map<String, Object> section, String key, int fallback) {
+        return section.get(key) instanceof Number value ? value.intValue() : fallback;
     }
 }

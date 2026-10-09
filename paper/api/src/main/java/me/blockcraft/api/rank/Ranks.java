@@ -27,6 +27,11 @@ public final class Ranks {
         return Optional.ofNullable(meta.getPrefix()).map(LegacyComponentSerializer.legacyAmpersand()::deserialize);
     }
 
+    /** The account's own primary group, whatever rank a nick shows; for staff eyes. */
+    public static String group(Player player) {
+        return LuckPermsProvider.get().getPlayerAdapter(Player.class).getUser(player).getPrimaryGroup();
+    }
+
     /** The heaviest inherited group decides, like the tab list sorting; equal weight does not outrank. */
     public static boolean outranks(Player actor, Player target) {
         return weight(actor) > weight(target);

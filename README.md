@@ -234,6 +234,14 @@ On the Paper side `/team help` lists every command registered on that server thr
 player may run, with its `commands.<name>.description`, so there is no hand-written list to go stale. `/invsee`
 shows another player's inventory read-only unless the viewer holds `blockcraft.core.invsee.edit`.
 
+Core's `/tp`, `/kill`, `/clear`, `/xp` and `/enchant` take the vanilla argument forms (coordinates, selectors,
+item filters, enchantments) and add the rank guard; `/time` is vanilla's, with `/day` and `/night` as shortcuts. The
+console and `rcon-cli` run every core command that names a target. Every staff action on a player (gamemode,
+teleports, invsee, sudo, clear, kill, heal, fly, speed, vanish, freeze, staff mode, nick, `/build`) is one row in
+`bc_staff_actions`, written through `BlockcraftApi.get().audit()`; the actions under `audit.notify` in
+BlockcraftAPI's `config.yml` also reach everyone with `blockcraft.audit.notify`. `/stafflog <player> [page]`
+(`blockcraft.system.stafflog`) lists what was done by or to a player, newest first.
+
 Every game says the shared moments the same way, from `arena` in BlockcraftAPI's `messages.yml`: the arrival card
 with game and map, who joined and left the round with the player count, the lobby countdown and the restart
 countdown. A round's kills, deaths, coins and XP are counted in one place (`RoundSummary`), which announces kill

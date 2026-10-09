@@ -12,6 +12,11 @@ final class CorePermission {
     private CorePermission() {
     }
 
+    /** Any sender holding {@code blockcraft.core.<node>}: players, the console and rcon alike. */
+    static Predicate<CommandSourceStack> of(String node) {
+        return source -> source.getSender().hasPermission("blockcraft.core." + node);
+    }
+
     static Predicate<CommandSourceStack> player(String command) {
         return source -> source.getSender() instanceof Player player && player.hasPermission("blockcraft.core." + command);
     }

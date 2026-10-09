@@ -18,7 +18,7 @@ public final class SetHealthCommand {
 
     public static LiteralCommandNode<CommandSourceStack> create(Messages messages) {
         return Commands.literal("sethealth")
-                .requires(CorePermission.player("sethealth"))
+                .requires(CorePermission.of("sethealth"))
                 .executes(context -> {
                     context.getSource().getSender().sendMessage(messages.get("sethealth.usage"));
                     return Command.SINGLE_SUCCESS;

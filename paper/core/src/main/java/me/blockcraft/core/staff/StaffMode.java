@@ -1,12 +1,15 @@
 package me.blockcraft.core.staff;
 
-import me.blockcraft.api.item.Items;
+import com.destroystokyo.paper.event.player.PlayerStopSpectatingEntityEvent;
+import me.blockcraft.api.audit.StaffAudit;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.common.moderation.PunishmentRepository;
+import me.blockcraft.common.report.ReportRepository;
 import me.blockcraft.core.command.InvseeCommand;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
-import org.bukkit.Material;
+import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -24,6 +27,7 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -37,11 +41,6 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class StaffMode implements Listener {
 
-    private static final int SLOT_RANDOM = 0;
-    private static final int SLOT_FREEZE = 1;
-    private static final int SLOT_INVSEE = 2;
-    private static final int SLOT_REPORTS = 3;
-    private static final int SLOT_LEAVE = 8;
     private static final String REPORTS_COMMAND = "reports";
 
     private record Session(ItemStack[] contents, boolean vanishedBefore, boolean flightBefore) {
@@ -55,13 +54,19 @@ public final class StaffMode implements Listener {
     private final Map<UUID, Session> sessions = new ConcurrentHashMap<>();
     private final Map<UUID, byte[]> pendingRestore = new ConcurrentHashMap<>();
     private final Random random = new Random();
+    private final StaffAudit audit;
+    private final PlayerInfo info;
+    private final Map<UUID, GameMode> spectating = new HashMap<>();
 
-    public StaffMode(Plugin plugin, Messages messages, VanishService vanish, FreezeService freeze, StaffInventoryRepository inventories) {
+    public StaffMode(Plugin plugin, Messages messages, VanishService vanish, FreezeService freeze, StaffInventoryRepository inventories,
+                     StaffAudit audit, ReportRepository reports, PunishmentRepository punishments) {
         this.plugin = plugin;
         this.messages = messages;
         this.vanish = vanish;
         this.freeze = freeze;
         this.inventories = inventories;
+        this.audit = audit;
+        this.info = new PlayerInfo(plugin, reports, punishments, messages);
     }
 
     public boolean isActive(Player player) {
@@ -72,9 +77,11 @@ public final class StaffMode implements Listener {
     public boolean toggle(Player player) {
         if (isActive(player)) {
             leave(player);
+            audit.record(player, "staff.off");
             return false;
         }
         enter(player);
+        audit.record(player, "staff.on");
         return true;
     }
 
@@ -85,12 +92,7 @@ public final class StaffMode implements Listener {
         byte[] serialized = ItemStack.serializeItemsAsBytes(contents);
         Tasks.async(plugin, () -> inventories.save(uuid, serialized));
         player.getInventory().clear();
-        var inventory = player.getInventory();
-        inventory.setItem(SLOT_RANDOM, Items.of(Material.COMPASS).name(messages.get("staff.item.random")).build());
-        inventory.setItem(SLOT_FREEZE, Items.of(Material.PACKED_ICE).name(messages.get("staff.item.freeze")).build());
-        inventory.setItem(SLOT_INVSEE, Items.of(Material.CHEST).name(messages.get("staff.item.invsee")).build());
-        inventory.setItem(SLOT_REPORTS, Items.of(Material.BOOK).name(messages.get("staff.item.reports")).build());
-        inventory.setItem(SLOT_LEAVE, Items.of(Material.BARRIER).name(messages.get("staff.item.leave")).build());
+        StaffTool.giveAll(player, messages);
         if (!vanish.isVanished(player)) {
             vanish.set(player, true);
         }
@@ -109,6 +111,7 @@ public final class StaffMode implements Listener {
     }
 
     private void restore(Player player, Session session) {
+        endSpectating(player);
         var uuid = player.getUniqueId();
         player.getInventory().setContents(session.contents());
         Tasks.async(plugin, () -> inventories.delete(uuid));
@@ -153,13 +156,15 @@ public final class StaffMode implements Listener {
             return;
         }
         event.setCancelled(true);
-        switch (player.getInventory().getHeldItemSlot()) {
-            case SLOT_RANDOM -> teleportToRandomPlayer(player);
-            case SLOT_REPORTS -> openReports(player);
-            case SLOT_LEAVE -> leave(player);
-            default -> {
+        StaffTool.of(event.getItem()).ifPresent(tool -> {
+            switch (tool) {
+                case RANDOM -> teleportToRandomPlayer(player);
+                case REPORTS -> openReports(player);
+                case LEAVE -> toggle(player);
+                default -> {
+                }
             }
-        }
+        });
     }
 
     @EventHandler
@@ -169,12 +174,48 @@ public final class StaffMode implements Listener {
             return;
         }
         event.setCancelled(true);
-        switch (staff.getInventory().getHeldItemSlot()) {
-            case SLOT_FREEZE -> staff.sendMessage(messages.get(freeze.toggle(target, staff) ? "freeze.frozen" : "freeze.unfrozen",
-                    Placeholder.unparsed("player", target.getName())));
-            case SLOT_INVSEE -> InvseeCommand.open(staff, target, messages);
-            default -> {
+        StaffTool.of(staff.getInventory().getItemInMainHand()).ifPresent(tool -> {
+            switch (tool) {
+                case FREEZE -> {
+                    boolean frozen = freeze.toggle(target, staff);
+                    audit.record(staff, frozen ? "freeze.on" : "freeze.off", target);
+                    staff.sendMessage(messages.get(frozen ? "freeze.frozen" : "freeze.unfrozen",
+                            Placeholder.unparsed("player", target.getName())));
+                }
+                case INVSEE -> InvseeCommand.open(staff, target, audit, messages);
+                case INFO -> info.show(staff, target);
+                case SPECTATE -> spectate(staff, target);
+                default -> {
+                }
             }
+        });
+    }
+
+    /** The camera follows the target until the staff member sneaks out of it or leaves staff mode. */
+    private void spectate(Player staff, Player target) {
+        spectating.putIfAbsent(staff.getUniqueId(), staff.getGameMode());
+        staff.setGameMode(GameMode.SPECTATOR);
+        staff.setSpectatorTarget(target);
+        staff.sendMessage(messages.get("staff.spectating", Placeholder.unparsed("player", target.getName())));
+    }
+
+    @EventHandler
+    public void onStopSpectating(PlayerStopSpectatingEntityEvent event) {
+        var staff = event.getPlayer();
+        if (spectating.containsKey(staff.getUniqueId())) {
+            Tasks.sync(plugin, () -> endSpectating(staff));
+        }
+    }
+
+    private void endSpectating(Player staff) {
+        var previous = spectating.remove(staff.getUniqueId());
+        if (previous == null) {
+            return;
+        }
+        staff.setGameMode(previous);
+        if (isActive(staff)) {
+            staff.setAllowFlight(true);
+            staff.setFlying(true);
         }
     }
 
@@ -208,7 +249,9 @@ public final class StaffMode implements Listener {
             staff.sendMessage(messages.get("staff.nobody-online"));
             return;
         }
-        var target = candidates.get(random.nextInt(candidates.size()));
+        var playing = candidates.stream().filter(other -> other.getGameMode() != GameMode.SPECTATOR).toList();
+        var pool = playing.isEmpty() ? candidates : playing;
+        var target = pool.get(random.nextInt(pool.size()));
         staff.teleport(target);
         staff.sendMessage(messages.get("staff.teleported", Placeholder.unparsed("player", target.getName())));
     }
