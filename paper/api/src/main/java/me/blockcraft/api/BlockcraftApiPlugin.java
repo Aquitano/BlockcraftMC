@@ -24,6 +24,7 @@ import me.blockcraft.api.player.VanillaProgress;
 import me.blockcraft.api.rank.TabTeams;
 import me.blockcraft.api.settings.PlayerSettings;
 import me.blockcraft.api.spectate.SpectateRequests;
+import me.blockcraft.api.vanish.VanishedPlayers;
 import me.blockcraft.api.world.BuildMode;
 import me.blockcraft.api.world.MapBundle;
 import me.blockcraft.api.world.WorldTemplate;
@@ -36,6 +37,7 @@ import me.blockcraft.common.db.Database;
 import me.blockcraft.common.db.DatabaseConfig;
 import me.blockcraft.common.elo.EloFormula;
 import me.blockcraft.common.elo.EloRepository;
+import me.blockcraft.common.moderation.VanishRepository;
 import me.blockcraft.common.network.ProxyChannel;
 import me.blockcraft.common.network.ServerRepository;
 import me.blockcraft.common.settings.PlayerSettingRepository;
@@ -89,17 +91,20 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         var elo = new Elo(new EloRepository(database,
                 new EloFormula(number(eloSection, "start-rating", 1000), number(eloSection, "k-factor", 32))),
                 SkillGroup.ladder(YamlFile.section(eloSection, "groups")), messages);
+        var vanished = new VanishedPlayers(new VanishRepository(database));
         var api = new BlockcraftApi(this, database, settings, resourcePack,
                 profileGames(YamlFile.section(YamlFile.section(config, "profile"), "games")),
                 messages, servers, self, text(config, "lobby-group", "lobby"), presence, realNames, nickRanks, xp,
                 streaks(YamlFile.section(config, "streaks")), map, buildMode, resources.tags(),
                 Achievements.parse(YamlFile.section(config, "achievements")), elo,
-                new NickStats(nickRanks, NickStats.Ranges.from(YamlFile.section(config, "nick-stats"))), notifications);
+                new NickStats(nickRanks, NickStats.Ranges.from(YamlFile.section(config, "nick-stats"))), notifications,
+                vanished);
         BlockcraftApi.install(api);
         getLogger().info("Running map " + map.name() + map.template().map(template -> " from " + template.directory()).orElse(""));
         int startingCoins = number(config, "starting-coins", 10);
         getServer().getPluginManager().registerEvents(realNames, this);
         getServer().getPluginManager().registerEvents(nickRanks, this);
+        getServer().getPluginManager().registerEvents(vanished, this);
         getServer().getPluginManager().registerEvents(xp, this);
         getServer().getPluginManager().registerEvents(api.achievements(), this);
         getServer().getPluginManager().registerEvents(new CoinsJoinListener(this, api.coins(), startingCoins), this);
