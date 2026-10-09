@@ -256,6 +256,9 @@ accounts that shared one of those addresses, with last login and whether they ar
 joining account shares an address with a banned one, holders of that permission are told from the same per-login
 query; `alts.block-banned-alts` refuses such a login instead.
 
+A player who leaves while frozen and is not back within `freeze.quit-grace-seconds` gets the `/strafe` number
+`freeze.quit-punishment` in the name of whoever froze them; 0, the default, only tells the team.
+
 `/report <player>` opens a reason dialog on the backend. Staff can claim reports, edit their status and choose
 catalogue or custom timed punishments. Claims identify the staff account even while it is nicked.
 

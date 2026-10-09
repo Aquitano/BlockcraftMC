@@ -79,6 +79,7 @@ import me.blockcraft.system.friends.FriendManager;
 import me.blockcraft.system.friends.FriendRepository;
 import me.blockcraft.system.friends.SpectateRequests;
 import me.blockcraft.system.listener.CommandListener;
+import me.blockcraft.system.listener.FreezeQuitListener;
 import me.blockcraft.system.listener.InitialServerListener;
 import me.blockcraft.system.listener.KickListener;
 import me.blockcraft.system.listener.LoginListener;
@@ -203,6 +204,8 @@ public final class SystemPlugin {
                 messages, logger));
         var alts = new AltListener(addresses, AddressHasher.load(dataDirectory), config.alts(), messages, logger);
         events.register(this, alts);
+        events.register(this, new FreezeQuitListener(this, proxy, repositories.frozen(), punishments, moderationActions,
+                config.freeze(), messages, logger));
         events.register(this, playtime);
         pack = NetworkPack.start(proxy, config.resourcePack(), dataDirectory, messages.get("resource-pack.prompt"), logger);
         pack.ifPresent(networkPack -> events.register(this, networkPack));

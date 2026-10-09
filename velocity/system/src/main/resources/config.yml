@@ -57,6 +57,12 @@ alts:
   purge-hour: 4
   block-banned-alts: false
 
+# A player who leaves while frozen and is not back within quit-grace-seconds gets this /strafe number; 0 only tells
+# the team.
+freeze:
+  quit-punishment: 0
+  quit-grace-seconds: 10
+
 max-warns: 8
 max-strikes: 5
 auto-broadcast-minutes: 5

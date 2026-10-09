@@ -410,6 +410,8 @@ watch:
   hover: "<muted>Klicke für <aqua>/whois <player>"
   banned-alts: "<prefix><error><player> <muted>nutzt eine Verbindung, über die <accent><count> <muted>gebannte Accounts gespielt haben."
   alts-hover: "<muted>Klicke für <primary>/alts <player>"
+freeze:
+  quit-punished: "<prefix><error><player> <muted>hat das Netzwerk eingefroren verlassen und wurde automatisch bestraft."
 alts:
   usage: "<prefix><muted>Ausführung: <error>/alts \\<Spieler>"
   none: "<prefix><muted>Über die Verbindungen von <accent><player> <muted>hat in den letzten <accent><days> <muted>Tagen kein anderer Account gespielt."

@@ -8,6 +8,7 @@ import me.blockcraft.common.network.operation.NetworkRequest;
 import me.blockcraft.common.network.operation.OperationResult;
 import me.blockcraft.common.player.PlayerReference;
 import me.blockcraft.system.PlayerLookup;
+import me.blockcraft.system.PlayerLookup.Target;
 import me.blockcraft.system.SystemConfig;
 import me.blockcraft.system.SystemPermissions;
 import me.blockcraft.system.command.CommandSupport;
@@ -116,6 +117,27 @@ public final class ModerationActions {
             }
             source.sendMessage(messages.get("strafe.done"));
         });
+    }
+
+    /**
+     * A catalogue punishment the network applies on its own in the name of {@code issuer}, with no source to answer.
+     * Unlike {@code /strafe} it leaves an active punishment of the same type standing; returns whether it applied one.
+     */
+    public boolean automatic(Target target, int number, PlayerReference issuer) {
+        PunishmentPreset preset = config.punishments().get(number);
+        if (preset == null || config.isUnbannable(target.name())) {
+            return false;
+        }
+        var existing = preset.type() == PunishmentType.BAN ? punishments.activeBan(target) : punishments.activeMute(target);
+        if (existing.isPresent()) {
+            return false;
+        }
+        String reason = preset.reason() + " #" + banId();
+        switch (preset.type()) {
+            case BAN -> punishments.ban(target, reason, issuer, preset.duration());
+            case MUTE -> punishments.mute(target, reason, issuer, preset.duration());
+        }
+        return true;
     }
 
     /** The database is the only thing that can still fail here; the source hears about it once, whichever way it asked. */
