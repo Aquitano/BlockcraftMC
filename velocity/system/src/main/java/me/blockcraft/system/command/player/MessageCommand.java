@@ -8,10 +8,12 @@ import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.settings.PlayerSetting;
+import me.blockcraft.system.AfkPlayers;
 import me.blockcraft.system.PlayerChoices;
 import me.blockcraft.system.PlayerVisibility;
 import me.blockcraft.system.SystemPermissions;
 import me.blockcraft.system.command.CommandSupport;
+import me.blockcraft.system.ignore.IgnoreList;
 import me.blockcraft.system.moderation.MuteGate;
 import me.blockcraft.system.rank.ProxyRanks;
 import me.blockcraft.common.sound.FeedbackSound;
@@ -32,16 +34,20 @@ public final class MessageCommand {
     private final ProxyServer proxy;
     private final PlayerVisibility visibility;
     private final PlayerChoices choices;
+    private final IgnoreList ignores;
+    private final AfkPlayers afk;
     private final MuteGate muteGate;
     private final Messages messages;
     private final Map<UUID, UUID> lastPartner = new ConcurrentHashMap<>();
 
     public MessageCommand(CommandSupport support, ProxyServer proxy, PlayerVisibility visibility, PlayerChoices choices,
-                          MuteGate muteGate, Messages messages) {
+                          IgnoreList ignores, AfkPlayers afk, MuteGate muteGate, Messages messages) {
         this.support = support;
         this.proxy = proxy;
         this.visibility = visibility;
         this.choices = choices;
+        this.ignores = ignores;
+        this.afk = afk;
         this.muteGate = muteGate;
         this.messages = messages;
     }
@@ -81,7 +87,8 @@ public final class MessageCommand {
             sender.sendMessage(messages.get("msg.self"));
             return;
         }
-        if (!choices.enabled(target, PlayerSetting.PRIVATE_MESSAGES) && !sender.hasPermission(SystemPermissions.MSG_BYPASS)) {
+        boolean refused = !choices.enabled(target, PlayerSetting.PRIVATE_MESSAGES) || ignores.ignores(target, sender);
+        if (refused && !sender.hasPermission(SystemPermissions.MSG_BYPASS)) {
             sender.sendMessage(messages.get("msg.disabled", Placeholder.unparsed("player", visibility.shownName(target))));
             return;
         }
@@ -97,6 +104,9 @@ public final class MessageCommand {
             target.playSound(FeedbackSound.NOTIFY.sound(NetworkPack.applied(target)));
         }
         sender.sendMessage(messages.get("msg.to-sender", resolvers));
+        if (afk.isAfk(target) && !visibility.isVanished(target)) {
+            sender.sendMessage(messages.get("msg.afk", Placeholder.unparsed("player", visibility.shownName(target))));
+        }
         lastPartner.put(sender.getUniqueId(), target.getUniqueId());
         lastPartner.put(target.getUniqueId(), sender.getUniqueId());
     }

@@ -39,6 +39,8 @@ commands:
     description: "Schaltet den Baumodus um"
   map:
     description: "Zeigt die Map oder speichert sie mit /map save"
+  afk:
+    description: "Meldet dich als abwesend oder zurück"
 
 # What <icon:name> draws for a client without the network resource pack; with it, the pack's own glyph.
 icons:
@@ -61,6 +63,11 @@ icons:
 tab:
   default-prefix: "<muted>"
   vanished-suffix: " <dark>[<muted>V<dark>]"
+  afk-suffix: " <dark>[<muted>AFK<dark>]"
+
+afk:
+  status: "<muted>Du bist <accent>AFK<muted>. Beweg dich, um zurückzukommen."
+  back: "<success>Willkommen zurück!"
 
 menu:
   load:

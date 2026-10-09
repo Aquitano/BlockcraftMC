@@ -51,6 +51,10 @@ public final class SystemConfig {
     public record Freeze(int quitPunishment, Duration quitGrace) {
     }
 
+    /** A command that prints the {@code info.<name>} lines of messages.yml. */
+    public record InfoCommand(String name, List<String> aliases) {
+    }
+
     /** {@code file} is relative to the plugin directory and empty disables the pack; {@code port} 0 serves nothing. */
     public record ResourcePack(String file, String url, int port, boolean required) {
     }
@@ -76,6 +80,8 @@ public final class SystemConfig {
     private final int discordCodeMinutes;
     private final JoinMe joinMe;
     private final Friends friends;
+    private final int maxIgnored;
+    private final List<InfoCommand> infoCommands;
     private final Set<String> unbannable;
     private final Set<String> blockedCommands;
     private final Map<Integer, PunishmentPreset> punishments;
@@ -119,6 +125,8 @@ public final class SystemConfig {
         this.joinMe = new JoinMe(number(joinMe, "daily-limit", 6), number(joinMe, "reset-hour", 0));
         var friends = YamlFile.section(root, "friends");
         this.friends = new Friends(number(friends, "max", 50), number(friends, "request-minutes", 10));
+        this.maxIgnored = number(YamlFile.section(root, "ignore"), "max", 50);
+        this.infoCommands = infoCommands(root);
         this.unbannable = strings(root, "unbannable").stream().map(String::toLowerCase).collect(Collectors.toUnmodifiableSet());
         this.blockedCommands = strings(root, "blocked-commands").stream().map(String::toLowerCase).collect(Collectors.toUnmodifiableSet());
         this.punishments = presets(YamlFile.section(root, "punishments"));
@@ -210,6 +218,14 @@ public final class SystemConfig {
         return friends;
     }
 
+    public int maxIgnored() {
+        return maxIgnored;
+    }
+
+    public List<InfoCommand> infoCommands() {
+        return infoCommands;
+    }
+
     public boolean isUnbannable(String name) {
         return unbannable.contains(name.toLowerCase());
     }
@@ -287,6 +303,18 @@ public final class SystemConfig {
             }
         });
         return Map.copyOf(presets);
+    }
+
+    private static List<InfoCommand> infoCommands(Map<String, Object> root) {
+        if (!(root.get("info-commands") instanceof List<?> entries)) {
+            return List.of();
+        }
+        return entries.stream()
+                .filter(Map.class::isInstance)
+                .map(entry -> (Map<?, ?>) entry)
+                .map(entry -> new InfoCommand(String.valueOf(entry.get("name")), entry.get("aliases") instanceof List<?> aliases
+                        ? aliases.stream().map(String::valueOf).toList() : List.of()))
+                .toList();
     }
 
     private static String string(Map<String, Object> section, String key) {

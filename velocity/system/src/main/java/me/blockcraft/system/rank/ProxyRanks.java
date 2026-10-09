@@ -40,6 +40,16 @@ public final class ProxyRanks {
         }
     }
 
+    /** Whether the account holds the node, for players who are offline too; false without LuckPerms. */
+    public static boolean hasPermission(UUID player, String node) {
+        try {
+            return LuckPermsProvider.get().getUserManager().loadUser(player).join()
+                    .getCachedData().getPermissionData().checkPermission(node).asBoolean();
+        } catch (IllegalStateException | NoClassDefFoundError noLuckPerms) {
+            return false;
+        }
+    }
+
     /** The heaviest inherited group decides, like the tab list sorting; equal weight does not outrank. */
     public static boolean outranks(Player actor, UUID target) {
         try {

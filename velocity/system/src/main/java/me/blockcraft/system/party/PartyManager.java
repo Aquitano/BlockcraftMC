@@ -10,6 +10,7 @@ import me.blockcraft.system.pack.NetworkPack;
 import me.blockcraft.system.PlayerChoices;
 import me.blockcraft.system.PlayerVisibility;
 import me.blockcraft.system.command.CommandSupport;
+import me.blockcraft.system.ignore.IgnoreList;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
@@ -41,16 +42,19 @@ public final class PartyManager {
     private final ProxyServer proxy;
     private final PlayerVisibility visibility;
     private final PlayerChoices choices;
+    private final IgnoreList ignores;
     private final Messages messages;
     private final Map<UUID, Party> byLeader = new ConcurrentHashMap<>();
     private final Map<UUID, UUID> leaderByMember = new ConcurrentHashMap<>();
     private final Map<UUID, Invite> invites = new ConcurrentHashMap<>();
     private final Map<UUID, Instant> joinRequests = new ConcurrentHashMap<>();
 
-    public PartyManager(ProxyServer proxy, PlayerVisibility visibility, PlayerChoices choices, Messages messages) {
+    public PartyManager(ProxyServer proxy, PlayerVisibility visibility, PlayerChoices choices, IgnoreList ignores,
+                        Messages messages) {
         this.proxy = proxy;
         this.visibility = visibility;
         this.choices = choices;
+        this.ignores = ignores;
         this.messages = messages;
     }
 
@@ -142,7 +146,7 @@ public final class PartyManager {
             inviter.sendMessage(messages.get("party.target-in-party"));
             return;
         }
-        if (!choices.enabled(invitee, PlayerSetting.PARTY_INVITES)) {
+        if (!choices.enabled(invitee, PlayerSetting.PARTY_INVITES) || ignores.ignores(invitee, inviter)) {
             inviter.sendMessage(messages.get("party.invites-disabled", name(invitee)));
             return;
         }

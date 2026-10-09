@@ -154,6 +154,14 @@ final class SharedSchema {
         new Migration(11, List.of(
             "ALTER TABLE bc_servers ADD COLUMN IF NOT EXISTS tps DECIMAL(4,2) NOT NULL DEFAULT 20",
             "ALTER TABLE bc_servers ADD COLUMN IF NOT EXISTS mspt DECIMAL(8,2) NOT NULL DEFAULT 0"
+        )),
+        new Migration(12, List.of(
+            "CREATE TABLE IF NOT EXISTS bc_ignores ("
+                + "player_uuid CHAR(36) NOT NULL, "
+                + "ignored_uuid CHAR(36) NOT NULL, "
+                + "ignored_name VARCHAR(16) NOT NULL, "
+                + "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, "
+                + "PRIMARY KEY (player_uuid, ignored_uuid))"
         ))
     );
 

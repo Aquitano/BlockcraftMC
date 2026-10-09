@@ -13,6 +13,7 @@ import me.blockcraft.build.BuildConstants;
 import me.blockcraft.common.coins.CoinBalanceRepository;
 import me.blockcraft.common.db.Database;
 import me.blockcraft.common.discord.DiscordLinkRepository;
+import me.blockcraft.common.ignore.IgnoreRepository;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.moderation.ModerationRepositories;
 import me.blockcraft.common.moderation.PlayerAddressRepository;
@@ -46,6 +47,8 @@ import me.blockcraft.system.command.moderation.WerbungCommand;
 import me.blockcraft.system.command.player.DiscordCommand;
 import me.blockcraft.system.command.player.FriendCommand;
 import me.blockcraft.system.command.player.HubCommand;
+import me.blockcraft.system.command.player.IgnoreCommand;
+import me.blockcraft.system.command.player.InfoCommand;
 import me.blockcraft.system.command.player.MessageCommand;
 import me.blockcraft.system.command.player.JoinMeCommand;
 import me.blockcraft.system.command.player.ModCommand;
@@ -79,6 +82,7 @@ import me.blockcraft.system.friends.FriendListener;
 import me.blockcraft.system.friends.FriendManager;
 import me.blockcraft.system.friends.FriendRepository;
 import me.blockcraft.system.friends.SpectateRequests;
+import me.blockcraft.system.ignore.IgnoreList;
 import me.blockcraft.system.listener.CommandListener;
 import me.blockcraft.system.listener.FreezeQuitListener;
 import me.blockcraft.system.listener.InitialServerListener;
@@ -163,14 +167,16 @@ public final class SystemPlugin {
         var settings = new ProxySettings(repositories.settings());
         var visibility = new PlayerVisibility(proxy, repositories.vanish(), nicks, logger);
         var choices = new PlayerChoices(playerSettings, logger);
+        var ignores = new IgnoreList(new IgnoreRepository(database), logger);
+        var afk = new AfkPlayers();
         var lookup = new PlayerLookup(proxy, visibility, repositories.players());
         var directory = new ServerDirectory(proxy, config.lobbyGroup());
         var lobby = new LobbyConnector(directory, config, messages);
         var punishments = new PunishmentService(proxy, repositories.punishments(), messages, config.network());
         var muteGate = new MuteGate(repositories.punishments(), punishments, messages, logger);
-        var parties = new PartyManager(proxy, visibility, choices, messages);
+        var parties = new PartyManager(proxy, visibility, choices, ignores, messages);
         var spectating = new SpectateRequests();
-        var friends = new FriendManager(proxy, lookup, visibility, choices, directory, spectating, friendships, config, messages);
+        var friends = new FriendManager(proxy, lookup, visibility, choices, ignores, directory, spectating, friendships, config, messages);
         var supportSessions = new SupportSessions();
         var playtime = new Playtime(repositories.players(), logger);
         var support = new CommandSupport(visibility, messages);
@@ -192,11 +198,13 @@ public final class SystemPlugin {
                 punishments, lobby, messages, logger));
         events.register(this, visibility);
         events.register(this, choices);
+        events.register(this, ignores);
+        events.register(this, afk);
         events.register(this, tabHeader);
         events.register(this, new CommandListener(config, messages));
         events.register(this, new KickListener(lobby, messages));
         events.register(this, new InitialServerListener(lobby));
-        events.register(this, new ProxyMessageListener(proxy, lobby, visibility, choices, friends, tabHeader, logger, () -> pack));
+        events.register(this, new ProxyMessageListener(proxy, lobby, visibility, choices, afk, friends, tabHeader, logger, () -> pack));
         events.register(this, new MotdListener(visibility, config, settings, messages, dataDirectory, logger));
         events.register(this, new PartyListener(parties));
         events.register(this, new FriendListener(friends, visibility, logger));
@@ -252,10 +260,13 @@ public final class SystemPlugin {
 
         register(new HubCommand(support, lobby).create(), "h", "lobby", "l");
         register(new PlayCommand(support, lobby, directory).create());
-        var privateMessages = new MessageCommand(support, proxy, visibility, choices, muteGate, messages);
+        var privateMessages = new MessageCommand(support, proxy, visibility, choices, ignores, afk, muteGate, messages);
         events.register(this, privateMessages);
         register(privateMessages.msg(), "tell", "w");
         register(privateMessages.reply(), "reply");
+        var ignoreCommands = new IgnoreCommand(support, lookup, visibility, ignores, config, messages);
+        register(ignoreCommands.ignore());
+        register(ignoreCommands.unignore());
         var friendCommands = new FriendCommand(support, friends, messages);
         register(friendCommands.create());
         register(friendCommands.list());
@@ -272,6 +283,14 @@ public final class SystemPlugin {
         register(new OnlineCommand(support, visibility, messages).create());
         register(new SeenCommand(support, visibility, repositories.players(), messages).create());
         register(new PlaytimeCommand(support, lookup, repositories.players(), playtime, messages).create());
+        for (var info : config.infoCommands()) {
+            if (!messages.has(InfoCommand.messageKey(info.name())) || proxy.getCommandManager().hasCommand(info.name())) {
+                logger.warn("Skipping info command /{}: it has no {} lines or the name is taken", info.name(),
+                        InfoCommand.messageKey(info.name()));
+                continue;
+            }
+            register(InfoCommand.create(support, info.name(), messages), info.aliases().toArray(String[]::new));
+        }
 
         var lobbyAlert = new LobbyAlert(proxy, directory, config, messages, logger);
         var lagAlert = new LagAlert(config, messages, logger);
