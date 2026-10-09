@@ -2,9 +2,9 @@ package me.blockcraft.api.menu;
 
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.achievement.Achievement;
-import me.blockcraft.api.coins.CoinsRepository;
 import me.blockcraft.api.game.Stats;
 import me.blockcraft.api.game.StatsRepository;
+import me.blockcraft.common.coins.CoinsRepository;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 

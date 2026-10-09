@@ -2,6 +2,7 @@ package me.blockcraft.api.coins;
 
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.task.Tasks;
+import me.blockcraft.common.coins.CoinsRepository;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;

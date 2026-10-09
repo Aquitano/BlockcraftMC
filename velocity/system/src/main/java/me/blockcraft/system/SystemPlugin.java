@@ -10,7 +10,7 @@ import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
 import me.blockcraft.build.BuildConstants;
-import me.blockcraft.common.coins.CoinBalanceRepository;
+import me.blockcraft.common.coins.CoinsRepository;
 import me.blockcraft.common.db.Database;
 import me.blockcraft.common.discord.DiscordLinkRepository;
 import me.blockcraft.common.ignore.IgnoreRepository;
@@ -242,7 +242,7 @@ public final class SystemPlugin {
         register(new ServersCommand(support, servers, config, messages).create());
         register(new ListCommand(support, visibility, messages).create());
         register(new WhoisCommand(support, lookup, repositories.players(), repositories.strikes(), repositories.warns(),
-                punishments, playtime, new CoinBalanceRepository(database), addresses, config.alts().retention(), messages).create());
+                punishments, playtime, new CoinsRepository(database), addresses, config.alts().retention(), messages).create());
         register(new AltsCommand(support, lookup, addresses, config.alts().retention(), messages).create());
 
         register(new HubCommand(support, lobby).create(), "h", "lobby", "l");

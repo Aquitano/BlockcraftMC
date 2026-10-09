@@ -5,7 +5,7 @@ import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.Player;
-import me.blockcraft.common.coins.CoinBalanceRepository;
+import me.blockcraft.common.coins.CoinsRepository;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.moderation.DurationText;
 import me.blockcraft.common.moderation.KnownPlayer;
@@ -41,14 +41,14 @@ public final class WhoisCommand {
     private final WarnRepository warns;
     private final PunishmentService punishments;
     private final Playtime playtime;
-    private final CoinBalanceRepository coins;
+    private final CoinsRepository coins;
     private final PlayerAddressRepository addresses;
     private final Duration addressRetention;
     private final Messages messages;
     private final DurationText durations;
 
     public WhoisCommand(CommandSupport support, PlayerLookup lookup, PlayerRepository players, StrikeRepository strikes,
-                        WarnRepository warns, PunishmentService punishments, Playtime playtime, CoinBalanceRepository coins,
+                        WarnRepository warns, PunishmentService punishments, Playtime playtime, CoinsRepository coins,
                         PlayerAddressRepository addresses, Duration addressRetention, Messages messages) {
         this.support = support;
         this.lookup = lookup;
@@ -107,7 +107,7 @@ public final class WhoisCommand {
                         .map(Player::getProtocolVersion)
                         .map(this::client)
                         .orElseGet(() -> messages.get("whois.offline"))),
-                Formatter.number("coins", coins.balance(known.uuid())),
+                Formatter.number("coins", coins.get(known.uuid())),
                 Placeholder.component("alts", alts(known)));
     }
 
