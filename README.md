@@ -278,7 +278,7 @@ retried automatically, because the original request may already have reached sto
 Shared tables come from ordered migrations recorded in `bc_schema_migrations`. A start takes a MariaDB lock before
 applying what is pending, so servers starting together take turns; a checksum rejects an edited migration. Every
 statement is safe to run again because MariaDB commits DDL on its own. Existing report rows and name columns stay as
-they are. New reports, claims, punishments, strikes and freezes also record the account UUID of everyone involved, so
+they are. New reports, claims, punishments, strikes, warns and freezes also record the account UUID of everyone involved, so
 a renamed account or a nicked staff member still resolves to who did what. The games' stats tables keep their own setup.
 
 Database work behind a menu goes through `PlayerTasks`: a read that builds a screen is dropped when the player moved

@@ -6,7 +6,9 @@ import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.ProxyServer;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.common.moderation.Warn;
 import me.blockcraft.common.moderation.WarnRepository;
+import me.blockcraft.common.player.PlayerReference;
 import me.blockcraft.system.PlayerLookup;
 import me.blockcraft.system.PlayerLookup.Target;
 import me.blockcraft.system.SystemConfig;
@@ -21,7 +23,9 @@ import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * {@code /warn} warns an online player, or an offline one after confirming with the trailing "*" the click action
@@ -38,7 +42,7 @@ public final class WarnCommands {
     private final WarnRepository warns;
     private final SystemConfig config;
     private final Messages messages;
-    private volatile String lastForcedWarn = "";
+    private final Map<PlayerReference, String> lastForcedWarn = new ConcurrentHashMap<>();
 
     public WarnCommands(CommandSupport support, ProxyServer proxy, PlayerLookup lookup, WarnRepository warns, SystemConfig config,
                         Messages messages) {
@@ -106,8 +110,9 @@ public final class WarnCommands {
             apply(source, target.get(), reason);
             return;
         }
+        var issuer = CommandSupport.sender(source);
         if (!forced) {
-            lastForcedWarn = "";
+            lastForcedWarn.remove(issuer);
             source.sendMessage(messages.get("warn.offline"));
             var placeholders = Placeholder.unparsed("player", target.get().name());
             source.sendMessage(messages.get("warn.offline-click", placeholders)
@@ -115,16 +120,15 @@ public final class WarnCommands {
                     .hoverEvent(HoverEvent.showText(messages.get("warn.offline-hover", placeholders))));
             return;
         }
-        String key = CommandSupport.sender(source).name() + " " + argument.toLowerCase();
-        if (key.equals(lastForcedWarn)) {
+        String forcedWarn = argument.toLowerCase();
+        if (forcedWarn.equals(lastForcedWarn.put(issuer, forcedWarn))) {
             return;
         }
-        lastForcedWarn = key;
         apply(source, target.get(), reason);
     }
 
     private void apply(CommandSource source, Target target, Optional<String> reason) {
-        int count = warns.add(target.uuid(), reason);
+        int count = warns.add(target.uuid(), reason, CommandSupport.sender(source));
         var placeholders = TagResolver.resolver(
                 Placeholder.unparsed("player", target.name()),
                 Formatter.number("count", count),
@@ -173,10 +177,21 @@ public final class WarnCommands {
     }
 
     private void get(CommandSource source, String name) {
-        lookup.find(name).ifPresentOrElse(
-                target -> source.sendMessage(messages.get("warns.get",
-                        Placeholder.unparsed("player", target.name()), Formatter.number("count", warns.count(target.uuid())))),
-                () -> source.sendMessage(messages.get("player-unknown", Placeholder.unparsed("player", name))));
+        lookup.find(name).ifPresentOrElse(target -> {
+            var list = warns.list(target.uuid());
+            source.sendMessage(messages.get("warns.get", Placeholder.unparsed("player", target.name()), Formatter.number("count", list.size())));
+            for (int i = 0; i < list.size(); i++) {
+                source.sendMessage(entry(i + 1, list.get(i)));
+            }
+        }, () -> source.sendMessage(messages.get("player-unknown", Placeholder.unparsed("player", name))));
+    }
+
+    private Component entry(int number, Warn warn) {
+        return messages.get("warns.entry",
+                Formatter.number("number", number),
+                Placeholder.component("reason", warn.reason().<Component>map(Component::text).orElseGet(() -> messages.get("warns.no-reason"))),
+                Placeholder.component("issuer", warn.issuer().<Component>map(issuer -> Component.text(issuer.name()))
+                        .orElseGet(() -> messages.get("warns.unknown-issuer"))));
     }
 
     private void list(CommandSource source) {

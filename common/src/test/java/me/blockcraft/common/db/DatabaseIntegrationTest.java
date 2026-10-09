@@ -3,6 +3,7 @@ package me.blockcraft.common.db;
 import me.blockcraft.common.elo.EloFormula;
 import me.blockcraft.common.elo.EloRepository;
 import me.blockcraft.common.elo.Season;
+import me.blockcraft.common.moderation.WarnRepository;
 import me.blockcraft.common.player.PlayerReference;
 import me.blockcraft.common.report.ReportRepository;
 import me.blockcraft.common.round.RoundRecap;
@@ -20,6 +21,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
@@ -209,5 +211,18 @@ public class DatabaseIntegrationTest {
         assertEquals(1, elo.get(loser, season).losses());
         assertEquals("Winner", elo.top(season, 10).getFirst().name());
         assertEquals(1000, elo.get(winner, Season.of(LocalDate.of(2026, 10, 1))).rating());
+    }
+
+    @Test
+    public void warnsKeepTheirIssuerAndLegacyWarnsHaveNone() {
+        db.migrate();
+        var warns = new WarnRepository(db);
+        var player = UUID.randomUUID();
+        db.update("INSERT INTO bc_warns (player_uuid, reason) VALUES (?, NULL)", player.toString());
+        var staff = PlayerReference.known(UUID.randomUUID(), "Staff");
+        assertEquals(2, warns.add(player, Optional.of("Spam"), staff));
+        var listed = warns.list(player);
+        assertTrue(listed.getFirst().issuer().isEmpty());
+        assertEquals(Optional.of(staff), listed.getLast().issuer());
     }
 }

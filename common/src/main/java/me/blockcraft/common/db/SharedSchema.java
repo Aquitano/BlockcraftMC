@@ -141,6 +141,10 @@ final class SharedSchema {
                 + "name VARCHAR(16) NOT NULL, "
                 + "updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, "
                 + "PRIMARY KEY (player_uuid, season))"
+        )),
+        new Migration(8, List.of(
+            "ALTER TABLE bc_warns ADD COLUMN IF NOT EXISTS issuer VARCHAR(16) NULL",
+            "ALTER TABLE bc_warns ADD COLUMN IF NOT EXISTS issuer_uuid CHAR(36) NULL"
         ))
     );
 
