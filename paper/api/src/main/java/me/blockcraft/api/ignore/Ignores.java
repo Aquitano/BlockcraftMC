@@ -3,7 +3,6 @@ package me.blockcraft.api.ignore;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.db.DatabaseException;
 import me.blockcraft.common.ignore.IgnoreRepository;
-import me.blockcraft.common.network.ProxyChannel;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -11,11 +10,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.plugin.messaging.PluginMessageListener;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
-import java.io.IOException;
 import java.util.UUID;
 import java.util.logging.Level;
 
@@ -24,7 +19,7 @@ import java.util.logging.Level;
  * list is read when the player joins this server, and the proxy reports every later /ignore over the plugin channel.
  * Chat reads it off the main thread.
  */
-public final class Ignores implements Listener, PluginMessageListener {
+public final class Ignores implements Listener {
 
     private final Plugin plugin;
     private final IgnoreRepository repository;
@@ -62,17 +57,7 @@ public final class Ignores implements Listener, PluginMessageListener {
         cache.forget(event.getPlayer().getUniqueId());
     }
 
-    @Override
-    public void onPluginMessageReceived(String channel, Player player, byte[] message) {
-        if (!channel.equals(ProxyChannel.NAME)) {
-            return;
-        }
-        try (var in = new DataInputStream(new ByteArrayInputStream(message))) {
-            if (in.readUTF().equals(ProxyChannel.IGNORE)) {
-                cache.set(player.getUniqueId(), UUID.fromString(in.readUTF()), in.readBoolean());
-            }
-        } catch (IOException | IllegalArgumentException malformed) {
-            plugin.getLogger().warning("Dropped a malformed plugin message for " + player.getName());
-        }
+    public void update(Player player, UUID other, boolean ignoring) {
+        cache.set(player.getUniqueId(), other, ignoring);
     }
 }

@@ -1,6 +1,5 @@
 package me.blockcraft.system.pack;
 
-import com.google.common.io.ByteStreams;
 import com.sun.net.httpserver.HttpServer;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
@@ -12,7 +11,8 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import com.velocitypowered.api.proxy.player.ResourcePackInfo;
 import me.blockcraft.common.network.PackStatus;
-import me.blockcraft.common.network.ProxyChannel;
+import me.blockcraft.common.network.ProxyMessage;
+import me.blockcraft.common.network.ProxyMessageCodec;
 import me.blockcraft.system.SystemConfig;
 import net.kyori.adventure.text.Component;
 import org.slf4j.Logger;
@@ -39,7 +39,7 @@ import java.util.concurrent.Executors;
 public final class NetworkPack {
 
     private static final UUID ID = UUID.nameUUIDFromBytes("blockcraft:pack".getBytes(StandardCharsets.UTF_8));
-    private static final MinecraftChannelIdentifier CHANNEL = MinecraftChannelIdentifier.from(ProxyChannel.NAME);
+    private static final MinecraftChannelIdentifier CHANNEL = MinecraftChannelIdentifier.from(ProxyMessageCodec.CHANNEL);
 
     private final ResourcePackInfo info;
     private final Optional<HttpServer> server;
@@ -131,13 +131,8 @@ public final class NetworkPack {
     }
 
     public static void tell(Player player, PackStatus status) {
-        player.getCurrentServer().ifPresent(connection -> {
-            var out = ByteStreams.newDataOutput();
-            out.writeUTF(ProxyChannel.PACK);
-            out.writeBoolean(status == PackStatus.APPLIED);
-            out.writeUTF(status.name());
-            connection.sendPluginMessage(CHANNEL, out.toByteArray());
-        });
+        player.getCurrentServer().ifPresent(connection ->
+                connection.sendPluginMessage(CHANNEL, ProxyMessageCodec.encode(new ProxyMessage.Pack(status))));
     }
 
     private static HttpServer serve(int port, String fileName, byte[] bytes) {

@@ -3,7 +3,6 @@ package me.blockcraft.api.pack;
 import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.network.PackStatus;
-import me.blockcraft.common.network.ProxyChannel;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -11,11 +10,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerResourcePackStatusEvent;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.plugin.messaging.PluginMessageListener;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
@@ -27,7 +22,7 @@ import java.util.UUID;
  * player already holds and is re-announced as a {@link PlayerResourcePackStatusEvent}, so a screen drawn before
  * it came can redraw itself.
  */
-public final class ResourcePacks implements PluginMessageListener, Listener {
+public final class ResourcePacks implements Listener {
 
     private static final UUID ID = UUID.nameUUIDFromBytes("blockcraft:pack".getBytes(StandardCharsets.UTF_8));
 
@@ -55,24 +50,7 @@ public final class ResourcePacks implements PluginMessageListener, Listener {
         return Icon.resolver(applied(player), messages);
     }
 
-    @Override
-    public void onPluginMessageReceived(String channel, Player player, byte[] message) {
-        if (!channel.equals(ProxyChannel.NAME)) {
-            return;
-        }
-        PackStatus state;
-        try (var in = new DataInputStream(new ByteArrayInputStream(message))) {
-            if (!in.readUTF().equals(ProxyChannel.PACK)) {
-                return;
-            }
-            boolean wearing = in.readBoolean();
-            state = PackStatus.valueOf(in.readUTF());
-            if (wearing != (state == PackStatus.APPLIED) || in.available() != 0) {
-                return;
-            }
-        } catch (IOException | IllegalArgumentException malformed) {
-            return;
-        }
+    public void update(Player player, PackStatus state) {
         boolean previouslyApplied = applied(player);
         statuses.put(player.getUniqueId(), state);
         boolean wearing = state == PackStatus.APPLIED;

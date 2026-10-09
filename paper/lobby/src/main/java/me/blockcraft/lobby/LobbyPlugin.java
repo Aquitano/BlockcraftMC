@@ -7,7 +7,6 @@ import me.blockcraft.api.command.CommandRegistry;
 import me.blockcraft.api.config.Locations;
 import me.blockcraft.common.config.YamlFile;
 import me.blockcraft.common.message.Messages;
-import me.blockcraft.common.network.ProxyChannel;
 import me.blockcraft.lobby.command.ClearChatCommand;
 import me.blockcraft.lobby.command.SetHoloCommand;
 import me.blockcraft.lobby.command.SetSpawnCommand;

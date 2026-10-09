@@ -1,7 +1,8 @@
 package me.blockcraft.api.proxy;
 
 import com.google.common.io.ByteStreams;
-import me.blockcraft.common.network.ProxyChannel;
+import me.blockcraft.common.network.ProxyMessage;
+import me.blockcraft.common.network.ProxyMessageCodec;
 import me.blockcraft.common.nick.Nick;
 import me.blockcraft.common.settings.PlayerSetting;
 import net.kyori.adventure.text.Component;
@@ -29,74 +30,49 @@ public final class ProxyMessaging {
 
     /** Moves the player to whichever server of the group the proxy picks. */
     public static void play(Plugin plugin, Player player, String group) {
-        var out = ByteStreams.newDataOutput();
-        out.writeUTF(ProxyChannel.PLAY);
-        out.writeUTF(group);
-        send(plugin, player, ProxyChannel.NAME, out.toByteArray());
+        send(plugin, player, new ProxyMessage.Play(group));
     }
 
     /** Moves the player to a lobby. */
     public static void hub(Plugin plugin, Player player) {
-        var out = ByteStreams.newDataOutput();
-        out.writeUTF(ProxyChannel.HUB);
-        send(plugin, player, ProxyChannel.NAME, out.toByteArray());
+        send(plugin, player, new ProxyMessage.Hub());
     }
 
     /** Runs a proxy command as the player, permission checks included; {@code command} carries no leading slash. */
     public static void runOnProxy(Plugin plugin, Player player, String command) {
-        var out = ByteStreams.newDataOutput();
-        out.writeUTF(ProxyChannel.COMMAND);
-        out.writeUTF(command);
-        send(plugin, player, ProxyChannel.NAME, out.toByteArray());
+        send(plugin, player, new ProxyMessage.Command(command));
     }
 
-    /** Tells the proxy the nick the player wears from now on, or that it came off (an empty name). */
+    /** Tells the proxy the nick the player wears from now on, or that it came off. */
     public static void nick(Plugin plugin, Player player, Optional<Nick> nick) {
-        var out = ByteStreams.newDataOutput();
-        out.writeUTF(ProxyChannel.NICK);
-        out.writeUTF(nick.map(Nick::name).orElse(""));
-        out.writeUTF(nick.map(Nick::skinOwner).orElse(""));
-        out.writeUTF(nick.map(Nick::rankGroup).orElse(""));
-        send(plugin, player, ProxyChannel.NAME, out.toByteArray());
+        send(plugin, player, new ProxyMessage.NickChange(nick));
     }
 
     /** Tells the proxy what the player just chose, so private messages and invites follow the same setting. */
     public static void setting(Plugin plugin, Player player, PlayerSetting setting, String value) {
-        var out = ByteStreams.newDataOutput();
-        out.writeUTF(ProxyChannel.SETTING);
-        out.writeUTF(setting.key());
-        out.writeUTF(value);
-        send(plugin, player, ProxyChannel.NAME, out.toByteArray());
+        send(plugin, player, new ProxyMessage.Setting(setting, value));
     }
 
     public static void vanish(Plugin plugin, Player player, boolean vanished) {
-        var out = ByteStreams.newDataOutput();
-        out.writeUTF(ProxyChannel.VANISH);
-        out.writeBoolean(vanished);
-        send(plugin, player, ProxyChannel.NAME, out.toByteArray());
+        send(plugin, player, new ProxyMessage.Vanish(vanished));
     }
 
     /** Tells the proxy the player went away from the keyboard or came back, so a private message can say so. */
     public static void afk(Plugin plugin, Player player, boolean afk) {
-        var out = ByteStreams.newDataOutput();
-        out.writeUTF(ProxyChannel.AFK);
-        out.writeBoolean(afk);
-        send(plugin, player, ProxyChannel.NAME, out.toByteArray());
+        send(plugin, player, new ProxyMessage.Afk(afk));
     }
 
     public static void requestPack(Plugin plugin, Player player) {
-        var out = ByteStreams.newDataOutput();
-        out.writeUTF(ProxyChannel.PACK_REQUEST);
-        send(plugin, player, ProxyChannel.NAME, out.toByteArray());
+        send(plugin, player, new ProxyMessage.PackRequest());
     }
 
     /** Delivers the notice to every player on the network with the permission; {@code via} only carries the message. */
     public static void notifyStaff(Plugin plugin, Player via, String permission, Component notice) {
-        var out = ByteStreams.newDataOutput();
-        out.writeUTF(ProxyChannel.STAFF_NOTICE);
-        out.writeUTF(permission);
-        out.writeUTF(GsonComponentSerializer.gson().serialize(notice));
-        send(plugin, via, ProxyChannel.NAME, out.toByteArray());
+        send(plugin, via, new ProxyMessage.StaffNotice(permission, GsonComponentSerializer.gson().serialize(notice)));
+    }
+
+    public static void send(Plugin plugin, Player player, ProxyMessage.ToProxy message) {
+        send(plugin, player, ProxyMessageCodec.CHANNEL, ProxyMessageCodec.encode(message));
     }
 
     private static void send(Plugin plugin, Player player, String channel, byte[] payload) {
