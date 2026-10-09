@@ -1,4 +1,0 @@
-# Signs re-read bc_servers this often; a server whose heartbeat is older than stale-seconds counts as offline.
-refresh:
-  interval-ticks: 50
-  stale-seconds: 20

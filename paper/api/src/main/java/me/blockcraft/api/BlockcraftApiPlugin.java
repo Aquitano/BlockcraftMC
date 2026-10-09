@@ -14,6 +14,7 @@ import me.blockcraft.api.elo.SkillGroup;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.game.Streaks;
 import me.blockcraft.api.menu.MenuListener;
+import me.blockcraft.api.network.ServerGroups;
 import me.blockcraft.api.network.ServerHeartbeat;
 import me.blockcraft.api.network.ServerPresence;
 import me.blockcraft.api.nick.NickStats;
@@ -56,6 +57,7 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
     private Notifications notifications;
     private Database database;
     private ServerHeartbeat heartbeat;
+    private ServerGroups groups;
 
     @Override
     public void onEnable() {
@@ -70,6 +72,8 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         heartbeat = new ServerHeartbeat(this, servers, ServerHeartbeat.local(databaseConfig, getServer().getPort()), presence);
         var self = heartbeat.self();
         getLogger().info("Announcing as " + self.name() + " (group " + self.group() + ") at " + self.host() + ":" + self.port());
+        var groupStatus = YamlFile.section(config, "group-status");
+        groups = new ServerGroups(this, servers, number(groupStatus, "stale-seconds", 20));
 
         var messages = resources.messages();
         notifications = new Notifications(this, messages, Notifications.Timing.from(YamlFile.section(config, "notifications")));
@@ -94,7 +98,8 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
                 messages, servers, self, text(config, "lobby-group", "lobby"), presence, realNames, nickRanks, xp,
                 streaks(YamlFile.section(config, "streaks")), map, buildMode, resources.tags(),
                 Achievements.parse(YamlFile.section(config, "achievements")), elo,
-                new NickStats(nickRanks, NickStats.Ranges.from(YamlFile.section(config, "nick-stats"))), notifications);
+                new NickStats(nickRanks, NickStats.Ranges.from(YamlFile.section(config, "nick-stats"))), notifications,
+                groups);
         BlockcraftApi.install(api);
         getLogger().info("Running map " + map.name() + map.template().map(template -> " from " + template.directory()).orElse(""));
         int startingCoins = number(config, "starting-coins", 10);
@@ -123,6 +128,7 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
 
         int heartbeatSeconds = number(config, "heartbeat-seconds", 5);
         heartbeat.start(heartbeatSeconds * TICKS_PER_SECOND);
+        groups.start(number(groupStatus, "refresh-ticks", 50));
     }
 
     /** The profile card's games: menu key to legacy stats table, as configured. */
@@ -160,6 +166,9 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
             notifications.close();
         }
         BlockcraftApi.uninstall();
+        if (groups != null) {
+            groups.stop();
+        }
         if (heartbeat != null) {
             heartbeat.stop();
         }

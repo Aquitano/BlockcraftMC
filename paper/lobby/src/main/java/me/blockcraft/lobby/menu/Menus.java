@@ -23,7 +23,7 @@ import me.blockcraft.lobby.cosmetic.CosmeticPreviews;
 import me.blockcraft.lobby.cosmetic.Pets;
 import me.blockcraft.lobby.cosmetic.Secret;
 import me.blockcraft.lobby.friends.FriendsChannel;
-import me.blockcraft.lobby.network.GroupCounts;
+import me.blockcraft.api.network.ServerGroups;
 import me.blockcraft.lobby.rank.PremiumRank;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import org.bukkit.Particle;
@@ -51,7 +51,7 @@ public record Menus(
         ServerIdentity self,
         PremiumRank premiumRank,
         Pets pets,
-        GroupCounts groupCounts,
+        ServerGroups groups,
         FriendsChannel friends,
         CosmeticPreviews previews
 ) {

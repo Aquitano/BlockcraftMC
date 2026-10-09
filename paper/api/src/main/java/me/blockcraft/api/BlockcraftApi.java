@@ -8,6 +8,7 @@ import me.blockcraft.api.elo.Elo;
 import me.blockcraft.api.game.Streaks;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.menu.Profiles;
+import me.blockcraft.api.network.ServerGroups;
 import me.blockcraft.api.network.ServerPresence;
 import me.blockcraft.api.notification.Notifications;
 import me.blockcraft.api.nick.NickStats;
@@ -57,6 +58,7 @@ public final class BlockcraftApi {
     private final Messages messages;
     private final ServerRepository servers;
     private final ServerIdentity server;
+    private final ServerGroups groups;
     private final String lobbyGroup;
     private final ServerPresence presence;
     private final RealNames realNames;
@@ -73,7 +75,8 @@ public final class BlockcraftApi {
                   Map<String, StatsRepository> profileGames, Messages messages, ServerRepository servers,
                   ServerIdentity server, String lobbyGroup, ServerPresence presence, RealNames realNames,
                   NickRanks nickRanks, Xp xp, Streaks streaks, MapBundle map, BuildMode buildMode, TagResolver tags,
-                  List<Achievement> achievements, Elo elo, NickStats nickStats, Notifications notifications) {
+                  List<Achievement> achievements, Elo elo, NickStats nickStats, Notifications notifications,
+                  ServerGroups groups) {
         this.notifications = notifications;
         this.operations = new NetworkOperations(plugin, messages);
         this.playerTasks = new PlayerTasks(plugin, messages);
@@ -90,6 +93,7 @@ public final class BlockcraftApi {
         this.messages = messages;
         this.servers = servers;
         this.server = server;
+        this.groups = groups;
         this.lobbyGroup = lobbyGroup;
         this.presence = presence;
         this.realNames = realNames;
@@ -192,6 +196,11 @@ public final class BlockcraftApi {
     /** This server as the proxy knows it. */
     public ServerIdentity server() {
         return server;
+    }
+
+    /** Availability and population of every server group, for game cards and status signs. */
+    public ServerGroups groups() {
+        return groups;
     }
 
     /** Whether this server is one of the lobbies players fall back to, rather than a game. */
