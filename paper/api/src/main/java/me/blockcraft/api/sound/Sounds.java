@@ -29,6 +29,10 @@ public enum Sounds {
     DUELL_JOIN(FeedbackSound.DUELL_JOIN),
     NOTIFY(FeedbackSound.NOTIFY),
     SECRET(FeedbackSound.SECRET),
+    DOUBLE_JUMP(FeedbackSound.DOUBLE_JUMP),
+    JUMP_PAD(FeedbackSound.JUMP_PAD),
+    GRAPPLE(FeedbackSound.GRAPPLE),
+    PAINT_THROW(FeedbackSound.PAINT_THROW),
     EQUIP(FeedbackSound.EQUIP),
     HEAL(FeedbackSound.HEAL),
     PVP_ENABLED(FeedbackSound.PVP_ENABLED);
