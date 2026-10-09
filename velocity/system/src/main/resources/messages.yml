@@ -307,6 +307,18 @@ history:
   # Java date pattern for the entries above; the German order belongs to the text, not to the code.
   date-format: "dd.MM.yyyy HH:mm"
 
+# The staff audit log; <action> is the logged key such as gamemode.creative or invsee.edit.
+stafflog:
+  usage: "<prefix><muted>Ausführung: <error>/stafflog \\<Spieler> [Seite]"
+  empty: "<prefix><muted>Von oder an <accent><player> <muted>ist keine Team-Aktion gespeichert."
+  no-page: "<prefix><error>Diese Seite gibt es nicht. <muted>Seiten: <accent><pages>"
+  header: "<prefix><primary>Team-Aktionen von und an <accent><player> <dark>| <muted>Seite <accent><page><muted>/<accent><pages> <dark>| <accent><total> <muted>Einträge"
+  entry: "<prefix><muted><date> <dark>| <accent><issuer> <primary><action><target><detail> <dark>[<muted><server><dark>]"
+  target: " <muted>an <accent><target>"
+  detail: " <dark>(<muted><detail><dark>)"
+  next: "<prefix><muted>Weiter mit <accent>/stafflog <player> <next>"
+  date-format: "dd.MM.yyyy HH:mm"
+
 strafe:
   unknown-number: "<dark_red><bold>Strafe <arrow><reset><error>Diese Nummer ist unbekannt."
   unbannable: "<dark_red><bold>Strafe <arrow><reset><error>Du kannst diesen Spieler nicht bannen!"
