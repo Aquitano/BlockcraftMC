@@ -408,6 +408,21 @@ tc:
 watch:
   joined: "<prefix><error><player> <muted>ist online: <accent><reports> <muted>offene Reports, <accent><punishments> <muted>Strafen in den letzten <accent><days> <muted>Tagen."
   hover: "<muted>Klicke für <aqua>/whois <player>"
+  banned-alts: "<prefix><error><player> <muted>nutzt eine Verbindung, über die <accent><count> <muted>gebannte Accounts gespielt haben."
+  alts-hover: "<muted>Klicke für <primary>/alts <player>"
+alts:
+  usage: "<prefix><muted>Ausführung: <error>/alts \\<Spieler>"
+  none: "<prefix><muted>Über die Verbindungen von <accent><player> <muted>hat in den letzten <accent><days> <muted>Tagen kein anderer Account gespielt."
+  header: "<prefix><accent><count> <muted>Accounts teilen in den letzten <accent><days> <muted>Tagen eine Verbindung mit <accent><player><muted>:"
+  entry: "<prefix><bullet><accent><player> <dark>| <muted>zuletzt vor <time><ban-flag><mute-flag>"
+  banned: " <dark>| <error>gebannt"
+  muted: " <dark>| <accent>gemutet"
+  hover: "<muted>Klicke für <primary>/whois <player>"
+  blocked:
+    - "<prefix><muted>Über deine Verbindung hat ein <error>gesperrter Account <muted>auf <error><ip> <muted>gespielt."
+    - " "
+    - " <muted>Ist das ein Irrtum? Melde dich im Forum:"
+    - " <primary><website>/Forum"
 find:
   usage: "<prefix>Syntax: /find \\<Spieler>"
   found: "<prefix><success>Der Spieler befindet sich auf dem Server <dark_aqua><server><success>."

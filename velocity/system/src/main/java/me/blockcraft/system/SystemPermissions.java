@@ -18,6 +18,7 @@ public final class SystemPermissions {
     public static final String WERBUNG = ROOT + "werbung";
     public static final String TEAM_CHAT = ROOT + "tc";
     public static final String TEAM = ROOT + "team";
+    public static final String ALTS = ROOT + "alts";
     public static final String FIND = ROOT + "find";
     public static final String GOTO = ROOT + "goto";
     public static final String CLEAR_CHAT = ROOT + "cc";

@@ -3,6 +3,10 @@ package me.blockcraft.common.db;
 import me.blockcraft.common.elo.EloFormula;
 import me.blockcraft.common.elo.EloRepository;
 import me.blockcraft.common.elo.Season;
+import me.blockcraft.common.moderation.PlayerAddressRepository;
+import me.blockcraft.common.moderation.PlayerRepository;
+import me.blockcraft.common.moderation.PunishmentRepository;
+import me.blockcraft.common.moderation.WatchRepository;
 import me.blockcraft.common.player.PlayerReference;
 import me.blockcraft.common.report.ReportRepository;
 import me.blockcraft.common.round.RoundRecap;
@@ -20,6 +24,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
@@ -209,5 +214,39 @@ public class DatabaseIntegrationTest {
         assertEquals(1, elo.get(loser, season).losses());
         assertEquals("Winner", elo.top(season, 10).getFirst().name());
         assertEquals(1000, elo.get(winner, Season.of(LocalDate.of(2026, 10, 1))).rating());
+    }
+
+    @Test
+    public void accountsSharingAnAddressAreLinkedWithinRetentionOnly() {
+        db.migrate();
+        var players = new PlayerRepository(db);
+        var addresses = new PlayerAddressRepository(db);
+        var banned = UUID.randomUUID();
+        var alt = UUID.randomUUID();
+        var stranger = UUID.randomUUID();
+        players.upsert(banned, "Banned");
+        players.upsert(alt, "Alt");
+        players.upsert(stranger, "Stranger");
+        byte[] home = new byte[32];
+        byte[] elsewhere = new byte[32];
+        elsewhere[0] = 1;
+        addresses.record(banned, home);
+        addresses.record(alt, home);
+        addresses.record(alt, home);
+        addresses.record(stranger, elsewhere);
+        new PunishmentRepository(db).ban(banned, "Hacking", PlayerReference.named("Console"), Optional.empty());
+        var retention = Duration.ofDays(90);
+
+        var alts = addresses.alts(alt, retention);
+        assertEquals(List.of(banned), alts.stream().map(PlayerAddressRepository.Alt::uuid).toList());
+        assertTrue(alts.getFirst().banned());
+        assertFalse(alts.getFirst().muted());
+        assertTrue(addresses.sharedWithBannedAccount(alt, home, retention));
+        assertFalse(addresses.sharedWithBannedAccount(stranger, elsewhere, retention));
+        assertEquals(1, new WatchRepository(db).of(alt, "Alt", Duration.ofDays(30), retention).bannedAlts());
+
+        db.update("UPDATE bc_player_addresses SET last_seen = NOW() - INTERVAL 91 DAY WHERE player_uuid = ?", banned.toString());
+        assertTrue(addresses.alts(alt, retention).isEmpty());
+        assertEquals(1, addresses.purge(retention));
     }
 }

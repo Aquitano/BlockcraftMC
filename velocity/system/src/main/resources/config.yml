@@ -49,6 +49,14 @@ history:
 watch:
   recent-days: 30
 
+# Alt detection keeps a keyed hash of each login address (never the address) for retention-days, purged daily at
+# purge-hour. The team is told when a joining account shares an address with a banned one; block-banned-alts refuses
+# that login instead. Proxies sharing the database need the same BLOCKCRAFT_ADDRESS_SECRET (README, "Deploy").
+alts:
+  retention-days: 90
+  purge-hour: 4
+  block-banned-alts: false
+
 max-warns: 8
 max-strikes: 5
 auto-broadcast-minutes: 5
