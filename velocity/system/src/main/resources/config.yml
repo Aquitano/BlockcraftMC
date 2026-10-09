@@ -73,6 +73,13 @@ friends:
 ignore:
   max: 50
 
+# Commands that only print their info.<name> lines from messages.yml. The list replaces the default as a whole.
+info-commands:
+  - {name: regeln}
+  - {name: teamspeak, aliases: [ts]}
+  - {name: website}
+  - {name: bewerben}
+
 unbannable:
   - Aquitano
 

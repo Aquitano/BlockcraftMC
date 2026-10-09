@@ -44,6 +44,7 @@ import me.blockcraft.system.command.player.DiscordCommand;
 import me.blockcraft.system.command.player.FriendCommand;
 import me.blockcraft.system.command.player.HubCommand;
 import me.blockcraft.system.command.player.IgnoreCommand;
+import me.blockcraft.system.command.player.InfoCommand;
 import me.blockcraft.system.command.player.MessageCommand;
 import me.blockcraft.system.command.player.JoinMeCommand;
 import me.blockcraft.system.command.player.ModCommand;
@@ -266,6 +267,14 @@ public final class SystemPlugin {
         register(new OnlineCommand(support, visibility, messages).create());
         register(new SeenCommand(support, visibility, repositories.players(), messages).create());
         register(new PlaytimeCommand(support, lookup, repositories.players(), playtime, messages).create());
+        for (var info : config.infoCommands()) {
+            if (!messages.has(InfoCommand.messageKey(info.name())) || proxy.getCommandManager().hasCommand(info.name())) {
+                logger.warn("Skipping info command /{}: it has no {} lines or the name is taken", info.name(),
+                        InfoCommand.messageKey(info.name()));
+                continue;
+            }
+            register(InfoCommand.create(support, info.name(), messages), info.aliases().toArray(String[]::new));
+        }
 
         var lobbyAlert = new LobbyAlert(proxy, directory, config, messages, logger);
         proxy.getScheduler().buildTask(this, new ServerDiscovery(proxy, servers, directory, lobbyAlert,

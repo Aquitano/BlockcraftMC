@@ -565,6 +565,25 @@ youtuber:
     - "<arrow><muted>Ebenfalls musst du mindestens <error>1 Video <muted>aufnehmen."
     - "<arrow><muted>Dieses <error>Video <muted>muss in angemessener <error>Qualität <muted>und <error>Länge <muted>sein."
     - "<muted>Alles erfüllt? Beantrage den <error>Premium+ <muted>Rang im Forum <error><website>"
+# The commands listed under info-commands in config.yml print these lines.
+info:
+  regeln:
+    - "<bullet><primary>REGELN <dark>●"
+    - ""
+    - "<arrow><muted>Sei respektvoll: <error>keine Beleidigungen<muted>, Drohungen oder Provokationen."
+    - "<arrow><muted>Keine <error>Hacks<muted>, Mods mit Spielvorteil oder Bugusing."
+    - "<arrow><muted>Kein <error>Teaming <muted>in Spielen ohne Teams."
+    - "<arrow><muted>Keine <error>Werbung <muted>für andere Server oder Angebote."
+    - "<arrow><muted>Ein Regelverstoß gesehen? Melde ihn mit <aqua>/report<muted>."
+  teamspeak:
+    - "<prefix><muted>Unser TeamSpeak: <aqua><teamspeak>"
+  website:
+    - "<prefix><muted>Unsere Website: <aqua><website>"
+  bewerben:
+    - "<bullet><primary>BEWERBUNG IM TEAM <dark>●"
+    - ""
+    - "<arrow><muted>Du möchtest <ip> als Teammitglied unterstützen?"
+    - "<arrow><muted>Bewirb dich auf unserer Website: <aqua><website>"
 joinme:
   limit: "<prefix><error>Du hast diesen Befehl schon zu oft benutzt."
   cleared: "<prefix><error>Du hast alle JoinMe Einträge geleert!"
