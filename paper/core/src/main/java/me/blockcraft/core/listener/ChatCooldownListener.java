@@ -5,6 +5,7 @@ import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -47,5 +48,10 @@ public final class ChatCooldownListener implements Listener {
                     ? messages.get("chat.slow", Formatter.number("seconds", slowMode.toSeconds()))
                     : messages.get("chat.spam"));
         }
+    }
+
+    @EventHandler
+    public void onQuit(PlayerQuitEvent event) {
+        lastMessage.remove(event.getPlayer().getUniqueId());
     }
 }
