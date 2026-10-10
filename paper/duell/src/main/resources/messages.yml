@@ -11,12 +11,15 @@ mode:
   superjump: "SuperJump"
 
 join:
-  introduction: "<prefix><muted>Wähle euren Modus über die Truhe. <duell>Ein Gegner, ein Duell."
+  introduction: "<prefix><muted>Stimme über die Truhe für Modus und Map ab. <duell>Ein Gegner, ein Duell."
   spectator: "<prefix><muted>Du bist als Zuschauer beigetreten."
 
+# <map> is the map's name or vote.random-map.
 vote:
-  ended: "<prefix><muted>Das Voting wurde beendet."
-  already-ended: "<prefix><error>Das Voting wurde bereits beendet."
+  cast: "<prefix><white><player> <muted>stimmt für <accent><mode> <dark>· <accent><map><muted>."
+  random-map: "Zufällige Map"
+  result: "<prefix><muted>Gespielt wird <accent><mode> <muted>auf <accent><map><muted>."
+  closed: "<prefix><error>Die Abstimmung ist bereits vorbei."
 
 lobby:
   started: "<prefix><muted>Die Runde wurde gestartet."
@@ -61,7 +64,7 @@ top:
   entry: "<reset>#<rank> <primary><name> <muted>( <white><value><muted> )"
 
 item:
-  style: "<arrow><duell>Modus wählen"
+  style: "<arrow><duell>Abstimmung"
   hub: "<arrow><primary>Zur Lobby"
   stats: "<arrow><primary>Stats"
   vs-kit:
@@ -77,15 +80,22 @@ item:
 menu:
   modes:
     title: "<duell>Duell <dark>· <muted>Euer Modus"
-    choose: "<muted>Klicken <dark>· <duell>Modus wählen"
+    choose: "<muted>Klicken <dark>· <duell>Map wählen"
     vs: "<duell>1vs1"
     vs-lore: "<bullet><muted>Schwert, Bogen und Angel. Besiege deinen Gegner."
     sg: "<duell>SurvivalGames"
     sg-lore: "<bullet><muted>Sammle Beute und gewinne den letzten Kampf."
     superjump: "<duell>SuperJump"
     superjump-lore: "<bullet><muted>Erreiche die Checkpoints und das Ziel zuerst."
-    voted: "<arrow><error>Voting beendet"
-    voted-lore: "<bullet><muted>Das Voting wurde bereits beendet"
+  maps:
+    title: "<duell><mode> <dark>· <muted>Eure Map"
+    map: "<duell><map>"
+    random: "<duell>Zufällige Map"
+    random-lore: "<bullet><muted>Die Map wird beim Start ausgelost."
+    choose: "<muted>Klicken <dark>· <duell>Abstimmen"
+  vote:
+    votes: "<bullet><muted>Stimmen<dark>: <accent><votes>"
+    own: "<success>Deine Stimme"
   stats:
     title: "<arrow><primary>Stats"
     player: "<accent><player>"
@@ -119,7 +129,8 @@ scoreboard:
   title: "<duell><bold>Duell"
   mode: "<muted><icon:mode> MODUS"
   mode-value: "<arrow><white><mode>"
-  mode-none: "Noch offen"
+  mode-voting: "Abstimmung läuft"
+  mode-leading: "<mode> <muted>führt"
   group-value: "<arrow><group> <dark>(<white><rating><dark>)"
   map: "<muted><icon:map> MAP"
   map-value: "<arrow><white><map>"

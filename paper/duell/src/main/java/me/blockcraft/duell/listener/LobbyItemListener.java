@@ -36,7 +36,11 @@ public final class LobbyItemListener implements Listener {
         HotbarItem.of(event.getItem(), GameItem.class).ifPresent(item -> {
             event.setCancelled(true);
             switch (item) {
-                case MODE -> new ModeMenu(duel, messages).open(player);
+                case MODE -> {
+                    if (duel.isLobby() && duel.isParticipant(player)) {
+                        new ModeMenu(duel, messages, player).open(player);
+                    }
+                }
                 case HUB -> ProxyMessaging.hub(plugin, player);
                 case STATS -> statsMenus.open(player);
             }

@@ -25,7 +25,9 @@ import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
+import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -51,6 +53,7 @@ public final class Duel {
     private final RoundSummary summary;
     private final Round round;
     private final LobbyCountdown lobbyCountdown;
+    private final DuelVote votes = new DuelVote();
 
     private DuelMode mode;
     private boolean pvp;
@@ -101,8 +104,8 @@ public final class Duel {
         return frozen;
     }
 
-    public boolean voted() {
-        return mode != null;
+    public DuelVote votes() {
+        return votes;
     }
 
     public boolean isParticipant(Player player) {
@@ -123,9 +126,10 @@ public final class Duel {
     }
 
     public void join(Player player) {
-        items.giveLobbyItems(player);
         spawns.spawn().ifPresent(player::teleport);
-        if (round.join(player)) {
+        boolean playing = round.join(player);
+        items.giveLobbyItems(player, playing);
+        if (playing) {
             player.setGameMode(GameMode.SURVIVAL);
         } else {
             player.sendMessage(messages.get("join.spectator"));
@@ -137,6 +141,15 @@ public final class Duel {
 
     public void follow(Player spectator, UUID friend) {
         round.follow(spectator, friend);
+    }
+
+    /** A player who vanishes in the lobby watches instead; the round, which hears it first, has unseated them already. */
+    public void vanishChanged(Player player) {
+        if (isLobby() && !isParticipant(player)) {
+            votes.withdraw(player.getUniqueId());
+            items.giveLobbyItems(player, false);
+        }
+        refreshScoreboards();
     }
 
     public void nickChanged(Player player) {
@@ -155,9 +168,7 @@ public final class Duel {
                 }
             }
             case LOBBY -> {
-                if (round.playerCount() == 0) {
-                    mode = null;
-                }
+                votes.withdraw(player.getUniqueId());
                 if (lobbyCountdown.isRunning() && round.playerCount() < MAX_PARTICIPANTS) {
                     lobbyCountdown.cancel();
                     Bukkit.broadcast(messages.get("lobby.not-enough-players"));
@@ -170,16 +181,33 @@ public final class Duel {
         ratings.forget(player);
     }
 
-    /** Returns false if a mode was already voted. */
-    public boolean vote(DuelMode mode) {
-        if (this.mode != null) {
+    /** A participant's vote, which replaces the one they cast before; false for a spectator or once the round has started. */
+    public boolean vote(Player voter, DuelVote.Choice choice) {
+        if (!isLobby() || !isParticipant(voter)) {
             return false;
         }
-        this.mode = mode;
-        Bukkit.broadcast(messages.get("vote.ended"));
+        if (!votes.cast(voter.getUniqueId(), choice)) {
+            return true;
+        }
+        var map = choice.map().isPresent()
+                ? Component.text(mapName(choice.mode(), choice.map().getAsInt()))
+                : messages.get("vote.random-map");
+        Bukkit.broadcast(messages.get("vote.cast", Placeholder.unparsed("player", voter.getName()),
+                Placeholder.component("mode", modeName(choice.mode())), Placeholder.component("map", map)));
         refreshScoreboards();
-        startLobbyCountdownIfReady();
         return true;
+    }
+
+    /** The maps of {@code mode} with a spawn for every slot, by number. */
+    public List<Integer> playableMaps(DuelMode mode) {
+        return IntStream.rangeClosed(1, config.maps(mode).size())
+                .filter(map -> spawns.hasMapSpawns(mode, map, MAX_PARTICIPANTS))
+                .boxed()
+                .toList();
+    }
+
+    public String mapName(DuelMode mode, int map) {
+        return config.maps(mode).get(map - 1);
     }
 
     public void handleVsKill(Player victim, Player killer) {
@@ -241,7 +269,9 @@ public final class Duel {
 
     public void refreshScoreboards() {
         var phase = round.phase();
-        var modeLine = mode == null ? messages.get("scoreboard.mode-none") : messages.get("mode." + mode.configKey());
+        var modeLine = mode != null ? modeName(mode) : votes.leader()
+                .map(leader -> messages.get("scoreboard.mode-leading", Placeholder.component("mode", modeName(leader))))
+                .orElseGet(() -> messages.get("scoreboard.mode-voting"));
         var mapLine = phase == GamePhase.LOBBY || mapName == null
                 ? messages.get("scoreboard.map-random")
                 : Component.text(mapName);
@@ -270,12 +300,16 @@ public final class Duel {
         });
     }
 
+    private Component modeName(DuelMode mode) {
+        return messages.get("mode." + mode.configKey());
+    }
+
     private Stream<Player> participants() {
         return round.players().stream();
     }
 
     private void startLobbyCountdownIfReady() {
-        if (isLobby() && mode != null && round.playerCount() >= MAX_PARTICIPANTS) {
+        if (isLobby() && round.playerCount() >= MAX_PARTICIPANTS) {
             lobbyCountdown.start();
         }
     }
@@ -283,9 +317,16 @@ public final class Duel {
     private void startRound() {
         round.enter(GamePhase.INGAME);
         Bukkit.broadcast(messages.get("lobby.started"));
-        var maps = config.maps(mode);
-        mapNumber = pickMap(maps.size());
-        mapName = maps.isEmpty() ? null : maps.get(mapNumber - 1);
+        var playable = new EnumMap<DuelMode, List<Integer>>(DuelMode.class);
+        for (var candidate : DuelMode.values()) {
+            playable.put(candidate, playableMaps(candidate));
+        }
+        var outcome = votes.tally(playable, random);
+        mode = outcome.mode();
+        mapNumber = outcome.map();
+        mapName = config.maps(mode).isEmpty() ? null : mapName(mode, mapNumber);
+        Bukkit.broadcast(messages.get("vote.result", Placeholder.component("mode", modeName(mode)),
+                Placeholder.component("map", mapName == null ? messages.get("vote.random-map") : Component.text(mapName))));
         int slot = 1;
         for (var player : round.players()) {
             teleportToMapSpawn(player, slot++);
@@ -310,12 +351,6 @@ public final class Duel {
         freeze();
     }
 
-    /** Only maps with a spawn for every slot are drawn; without any, the first map is used and the warning below tells why. */
-    private int pickMap(int configured) {
-        var playable = IntStream.rangeClosed(1, configured).filter(map -> spawns.hasMapSpawns(mode, map, MAX_PARTICIPANTS)).toArray();
-        return playable.length == 0 ? 1 : playable[random.nextInt(playable.length)];
-    }
-
     private void teleportToMapSpawn(Player player, int slot) {
         mapSpawn(slot).ifPresentOrElse(player::teleport,
                 () -> plugin.getLogger().warning("No spawn set for " + mode.setupKey() + " map " + mapNumber + " player " + slot));
@@ -325,7 +360,7 @@ public final class Duel {
         frozen = true;
         round.timer(LobbyCountdown.freeze(plugin, config.countdowns().freeze(), round::players,
                 seconds -> messages.get("title.freeze", Formatter.number("seconds", seconds)),
-                messages.get("title.introduction", Placeholder.component("mode", messages.get("mode." + mode.configKey())),
+                messages.get("title.introduction", Placeholder.component("mode", modeName(mode)),
                         Placeholder.component("map", mapName == null ? messages.get("scoreboard.map-random") : Component.text(mapName))), () -> {
                     frozen = false;
                     pvp = mode != DuelMode.SUPERJUMP;

@@ -5,12 +5,17 @@ import me.blockcraft.api.menu.Menu;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.duell.game.Duel;
 import me.blockcraft.duell.game.DuelMode;
+import me.blockcraft.duell.game.DuelVote;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.ArrayList;
 import java.util.Map;
+import java.util.Optional;
 
 public final class ModeMenu extends Menu {
 
@@ -19,28 +24,34 @@ public final class ModeMenu extends Menu {
             DuelMode.VS, Material.IRON_SWORD,
             DuelMode.SG, Material.CHAINMAIL_CHESTPLATE,
             DuelMode.SUPERJUMP, Material.GOLDEN_BOOTS);
-    private static final int SLOT_VOTED = 13;
 
     private final Duel duel;
     private final Messages messages;
 
-    public ModeMenu(Duel duel, Messages messages) {
+    public ModeMenu(Duel duel, Messages messages, Player viewer) {
         super(3, messages.get("menu.modes.title"));
         this.duel = duel;
         this.messages = messages;
         closeButton(26);
-        if (duel.voted()) {
-            set(SLOT_VOTED, Items.of(Material.BARRIER)
-                    .name(messages.get("menu.modes.voted"))
-                    .lore(messages.get("menu.modes.voted-lore"))
-                    .build());
-            return;
-        }
-        SLOTS.forEach((slot, mode) -> set(slot, Items.of(ICONS.get(mode))
-                .name(messages.get("menu.modes." + mode.configKey()))
-                .lore(messages.get("menu.modes." + mode.configKey() + "-lore"), messages.get("menu.modes.choose"))
-                .hideAttributes()
-                .build()));
+        var own = duel.votes().choiceOf(viewer.getUniqueId()).map(DuelVote.Choice::mode);
+        SLOTS.forEach((slot, mode) -> {
+            boolean chosen = own.equals(Optional.of(mode));
+            var lore = new ArrayList<Component>();
+            lore.add(messages.get("menu.modes." + mode.configKey() + "-lore"));
+            lore.add(messages.get("menu.vote.votes", Formatter.number("votes", duel.votes().votes(mode))));
+            if (chosen) {
+                lore.add(messages.get("menu.vote.own"));
+            }
+            lore.add(messages.get("menu.modes.choose"));
+            var icon = Items.of(ICONS.get(mode))
+                    .name(messages.get("menu.modes." + mode.configKey()))
+                    .lore(lore)
+                    .hideAttributes();
+            if (chosen) {
+                icon.glow();
+            }
+            set(slot, icon.build());
+        });
     }
 
     @Override
@@ -50,10 +61,9 @@ public final class ModeMenu extends Menu {
 
     @Override
     protected void onClick(Player player, int slot, ItemStack clicked, InventoryClickEvent event) {
-        close(player);
         var mode = SLOTS.get(slot);
-        if (mode != null && !duel.vote(mode)) {
-            player.sendMessage(messages.get("vote.already-ended"));
+        if (mode != null) {
+            new MapMenu(duel, messages, mode, player).open(player);
         }
     }
 }

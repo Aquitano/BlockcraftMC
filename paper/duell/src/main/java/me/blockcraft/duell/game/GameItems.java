@@ -20,14 +20,17 @@ public final class GameItems {
         this.messages = messages;
     }
 
-    public void giveLobbyItems(Player player) {
+    /** Only the two participants vote, so only they get the vote chest. */
+    public void giveLobbyItems(Player player, boolean voter) {
         var inventory = player.getInventory();
         inventory.clear();
         inventory.setArmorContents(null);
         inventory.setItem(0, GameItem.STATS.build(player,
                 MenuIcon.TOOL_PROFILE.mark(Items.head(player.getUniqueId(), BlockcraftApi.get().realName(player)))
                         .name(messages.get("item.stats"))));
-        inventory.setItem(4, GameItem.MODE.build(player, MenuIcon.DUELL.item().name(messages.get("item.style"))));
+        if (voter) {
+            inventory.setItem(4, GameItem.MODE.build(player, MenuIcon.DUELL.item().name(messages.get("item.style"))));
+        }
         inventory.setItem(8, GameItem.HUB.build(player, MenuIcon.TOOL_HOME.item().name(messages.get("item.hub"))));
         player.setHealth(FULL_HEALTH);
         player.setFoodLevel(FULL_FOOD);
