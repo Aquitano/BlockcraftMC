@@ -51,7 +51,7 @@ public final class WerbungCommand {
     }
 
     private void clear(CommandSource source) {
-        source.sendMessage(messages.get("werbung.cleared", Formatter.number("count", adLog.count())));
-        adLog.clear();
+        int cleared = adLog.clear();
+        source.sendMessage(messages.get("werbung.cleared", Formatter.number("count", cleared)));
     }
 }

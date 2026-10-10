@@ -25,11 +25,8 @@ public final class AdLogRepository {
                         row.getString("message"), row.getTimestamp("created_at").toInstant()));
     }
 
-    public int count() {
-        return db.queryOne("SELECT COUNT(*) FROM bc_ad_log", row -> row.getInt(1)).orElse(0);
-    }
-
-    public void clear() {
-        db.update("DELETE FROM bc_ad_log");
+    /** Returns how many entries were removed. */
+    public int clear() {
+        return db.update("DELETE FROM bc_ad_log");
     }
 }
