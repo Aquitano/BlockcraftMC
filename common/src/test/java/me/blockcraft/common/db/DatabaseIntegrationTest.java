@@ -173,6 +173,7 @@ public class DatabaseIntegrationTest {
         var target = PlayerReference.known(UUID.randomUUID(), "Target");
         assertTrue(reports.insert(reporter, target, "Reason", "lobby"));
         assertFalse(reports.insert(reporter, PlayerReference.known(target.uuid().orElseThrow(), "Renamed"), "Other", "lobby"));
+        assertEquals(1, reports.countByReported(target.uuid().orElseThrow(), "Renamed"));
 
         var report = reports.all().getFirst();
         assertEquals(target.uuid(), report.target().uuid());

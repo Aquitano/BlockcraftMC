@@ -44,7 +44,7 @@ final class PlayerInfo {
                 Placeholder.unparsed("rank", Ranks.group(target)),
                 Formatter.number("ping", target.getPing()),
                 Placeholder.unparsed("client", Optional.ofNullable(target.getClientBrandName()).orElse("?")));
-        Tasks.async(plugin, () -> new Standing(reports.countByReported(name), punishments.activeBan(uuid), punishments.activeMute(uuid)),
+        Tasks.async(plugin, () -> new Standing(reports.countByReported(uuid, name), punishments.activeBan(uuid), punishments.activeMute(uuid)),
                 standing -> {
                     if (!staff.isOnline()) {
                         return;

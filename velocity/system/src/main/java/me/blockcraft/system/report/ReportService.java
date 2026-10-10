@@ -101,7 +101,7 @@ public final class ReportService {
                 reporter.sendMessage(messages.get("report.exists"));
                 return OperationResult.REJECTED;
             }
-            count = reports.countByReported(reported);
+            count = reports.countByReported(account.uuid(), account.name());
             lastReport.put(reporter.getUniqueId(), Instant.now());
         } catch (DatabaseException exception) {
             logger.error("Report of {} by {} failed", reported, reporter.getUsername(), exception);

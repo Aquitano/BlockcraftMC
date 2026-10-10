@@ -49,8 +49,10 @@ public final class ReportRepository {
         return db.queryOne("SELECT COUNT(*) FROM Reports", row -> row.getInt(1)).orElse(0);
     }
 
-    public int countByReported(String reported) {
-        return db.queryOne("SELECT COUNT(*) FROM Reports WHERE Reportedname = ?", row -> row.getInt(1), reported).orElse(0);
+    /** Rows written before UUID storage still count when they carry the player's current name. */
+    public int countByReported(UUID reported, String name) {
+        return db.queryOne("SELECT COUNT(*) FROM Reports WHERE reported_uuid = ? OR (reported_uuid IS NULL AND Reportedname = ?)",
+                row -> row.getInt(1), reported.toString(), name).orElse(0);
     }
 
     /** UUID uniqueness prevents concurrent submissions; names also match reports written before UUID storage. */
