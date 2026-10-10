@@ -5,8 +5,11 @@ import me.blockcraft.api.menu.Menu;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Countdown;
 import me.blockcraft.api.task.Tasks;
+import me.blockcraft.api.vanish.VanishChangeEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 
@@ -20,10 +23,11 @@ import java.util.UUID;
 /**
  * The bookkeeping every game's round shares, held by the game next to its own rules. It seats every joiner: while
  * the lobby is open and has room, they play, unless they are vanished; everyone else watches, and a vanished
- * spectator is neither announced nor counted. It tells the proxy the phase, owns the countdowns and boss bars that
+ * spectator is neither announced nor counted. A player who vanishes while the lobby waits moves to the spectators
+ * the same way. It tells the proxy the phase, owns the countdowns and boss bars that
  * end with the round, counts a mid-round quit as a death and a loss, and ends the round once.
  */
-public final class Round {
+public final class Round implements Listener {
 
     private static final Set<Integer> END_ANNOUNCEMENTS = Set.of(600, 300, 180, 60);
     private static final int SECONDS_PER_MINUTE = 60;
@@ -45,6 +49,7 @@ public final class Round {
         this.arena = arena;
         this.summary = summary;
         this.capacity = capacity;
+        Bukkit.getPluginManager().registerEvents(this, plugin);
     }
 
     public Arena arena() {
@@ -102,6 +107,18 @@ public final class Round {
         }
         arena.farewell(player, players.size(), capacity);
         return true;
+    }
+
+    @EventHandler
+    public void onVanish(VanishChangeEvent event) {
+        var player = event.getPlayer();
+        if (!event.isVanished() || phase != GamePhase.LOBBY || !players.remove(player.getUniqueId())) {
+            return;
+        }
+        summary.forget(player);
+        spectators.add(player.getUniqueId());
+        PlayerReset.spectate(player);
+        arena.farewell(player, players.size(), capacity);
     }
 
     /** Out for good: the player watches the rest, which the game shows once they have respawned. */
