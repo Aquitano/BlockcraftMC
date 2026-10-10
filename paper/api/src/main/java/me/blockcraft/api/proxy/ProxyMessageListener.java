@@ -2,6 +2,7 @@ package me.blockcraft.api.proxy;
 
 import me.blockcraft.api.ignore.Ignores;
 import me.blockcraft.api.pack.ResourcePacks;
+import me.blockcraft.api.settings.PlayerSettings;
 import me.blockcraft.api.spectate.SpectateRequestEvent;
 import me.blockcraft.common.network.ProxyMessage;
 import me.blockcraft.common.network.ProxyMessageCodec;
@@ -16,11 +17,13 @@ public final class ProxyMessageListener implements PluginMessageListener {
     private final Logger logger;
     private final ResourcePacks resourcePacks;
     private final Ignores ignores;
+    private final PlayerSettings settings;
 
-    public ProxyMessageListener(Logger logger, ResourcePacks resourcePacks, Ignores ignores) {
+    public ProxyMessageListener(Logger logger, ResourcePacks resourcePacks, Ignores ignores, PlayerSettings settings) {
         this.logger = logger;
         this.resourcePacks = resourcePacks;
         this.ignores = ignores;
+        this.settings = settings;
     }
 
     @Override
@@ -33,6 +36,7 @@ public final class ProxyMessageListener implements PluginMessageListener {
                 case ProxyMessage.Pack pack -> resourcePacks.update(player, pack.status());
                 case ProxyMessage.Spectate spectate -> new SpectateRequestEvent(player, spectate.friend()).callEvent();
                 case ProxyMessage.Ignore ignore -> ignores.update(player, ignore.other(), ignore.ignoring());
+                case ProxyMessage.Setting setting -> settings.changedOnProxy(player, setting.setting(), setting.value());
                 // The lobby's FriendsChannel waits for these.
                 case ProxyMessage.FriendsReply _ -> {
                 }

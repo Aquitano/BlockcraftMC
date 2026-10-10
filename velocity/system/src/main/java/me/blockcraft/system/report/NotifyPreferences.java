@@ -1,7 +1,10 @@
 package me.blockcraft.system.report;
 
 import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import me.blockcraft.common.config.YamlFile;
+import me.blockcraft.common.network.ProxyMessage;
+import me.blockcraft.common.network.ProxyMessageCodec;
 import me.blockcraft.common.settings.PlayerSetting;
 import me.blockcraft.common.settings.PlayerSettingRepository;
 import me.blockcraft.system.PlayerChoices;
@@ -22,6 +25,7 @@ public final class NotifyPreferences {
 
     static final String LEGACY_FILE = "ignored-staff.yml";
     static final String IMPORTED_SUFFIX = ".imported";
+    private static final MinecraftChannelIdentifier CHANNEL = MinecraftChannelIdentifier.from(ProxyMessageCodec.CHANNEL);
 
     private final PlayerChoices choices;
     private final PlayerSettingRepository settings;
@@ -39,6 +43,8 @@ public final class NotifyPreferences {
         String value = PlayerSetting.value(enabled);
         settings.set(player.getUniqueId(), PlayerSetting.REPORT_NOTIFICATIONS, value);
         choices.set(player, PlayerSetting.REPORT_NOTIFICATIONS, value);
+        var payload = ProxyMessageCodec.encode(new ProxyMessage.Setting(PlayerSetting.REPORT_NOTIFICATIONS, value));
+        player.getCurrentServer().ifPresent(connection -> connection.sendPluginMessage(CHANNEL, payload));
     }
 
     public static void importLegacy(Path directory, PlayerSettingRepository settings) {

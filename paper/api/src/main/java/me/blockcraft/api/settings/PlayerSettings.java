@@ -123,6 +123,12 @@ public final class PlayerSettings implements Listener {
         return change(player, setting, Optional.empty());
     }
 
+    /** A change the proxy already stored, so it only refreshes the cache. */
+    public void changedOnProxy(Player player, PlayerSetting setting, String value) {
+        cache.set(player.getUniqueId(), setting, Optional.of(value).filter(text -> !text.isEmpty()));
+        new PlayerSettingChangedEvent(player, setting).callEvent();
+    }
+
     @EventHandler(priority = EventPriority.LOWEST)
     public void onJoin(PlayerJoinEvent event) {
         var player = event.getPlayer();

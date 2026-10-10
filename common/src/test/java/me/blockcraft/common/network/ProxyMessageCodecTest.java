@@ -50,4 +50,12 @@ public class ProxyMessageCodecTest {
         }
         assertEquals(Optional.empty(), ProxyMessageCodec.decode(bytes, ProxyMessage.ToBackend.class));
     }
+
+    @Test
+    public void aSettingTravelsBothWays() {
+        var setting = new ProxyMessage.Setting(PlayerSetting.REPORT_NOTIFICATIONS, PlayerSetting.OFF);
+        var bytes = ProxyMessageCodec.encode(setting);
+        assertEquals(Optional.of(setting), ProxyMessageCodec.decode(bytes, ProxyMessage.ToProxy.class));
+        assertEquals(Optional.of(setting), ProxyMessageCodec.decode(bytes, ProxyMessage.ToBackend.class));
+    }
 }

@@ -11,7 +11,8 @@ import java.util.UUID;
  * What travels on {@link ProxyMessageCodec#CHANNEL}. Every message concerns the player it travelled with: a backend
  * asks the proxy to move them, run a command as them, learn what they look like to others or what they chose, or
  * deliver a notice on their behalf. The proxy speaks first only to answer, to say whether the client wears the
- * network's resource pack, to name the friend the player came to watch and to say whom the player just ignored.
+ * network's resource pack, to name the friend the player came to watch, to say whom the player just ignored and to
+ * pass on a setting the player changed through a proxy command.
  */
 public sealed interface ProxyMessage {
 
@@ -45,7 +46,7 @@ public sealed interface ProxyMessage {
     record StaffNotice(String permission, String noticeJson) implements ToProxy {
     }
 
-    record Setting(PlayerSetting setting, String value) implements ToProxy {
+    record Setting(PlayerSetting setting, String value) implements ToProxy, ToBackend {
     }
 
     record PackRequest() implements ToProxy {
