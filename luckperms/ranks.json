@@ -27,7 +27,8 @@
         {"type": "permission", "key": "blockcraft.lobby.doublejump", "value": true},
         {"type": "permission", "key": "blockcraft.system.fulljoin", "value": true},
         {"type": "permission", "key": "blockcraft.system.joinme", "value": true},
-        {"type": "permission", "key": "blockcraft.chat.color", "value": true}
+        {"type": "permission", "key": "blockcraft.chat.color", "value": true},
+        {"type": "permission", "key": "blockcraft.core.ptime", "value": true}
       ]
     },
     "youtuber": {

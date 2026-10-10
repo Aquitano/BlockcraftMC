@@ -21,6 +21,8 @@ public enum PlayerSetting {
     CHAT_TAG("chat-tag"),
     KILL_EFFECT("kill-effect"),
     WIN_EFFECT("win-effect"),
+    /** The {@code /ptime} clock in ticks, kept across servers for the players who may set their own. */
+    PLAYER_TIME("player-time", null, "blockcraft.core.ptime"),
     PRIVATE_MESSAGES("private-messages", PlayerSetting.ON),
     PARTY_INVITES("party-invites", PlayerSetting.ON),
     FRIEND_REQUESTS("friend-requests", PlayerSetting.ON),

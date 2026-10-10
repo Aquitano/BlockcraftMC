@@ -25,6 +25,7 @@ import me.blockcraft.core.command.LagCommand;
 import me.blockcraft.core.command.NearCommand;
 import me.blockcraft.core.command.NickCommand;
 import me.blockcraft.core.command.PTimeCommand;
+import me.blockcraft.core.command.PlayerTimeListener;
 import me.blockcraft.core.command.PWeatherCommand;
 import me.blockcraft.core.command.RainCommand;
 import me.blockcraft.core.command.ReflashCommand;
@@ -91,6 +92,7 @@ public final class BlockcraftCorePlugin extends JavaPlugin {
                 stringList(nickSection, "ranks"));
         pluginManager.registerEvents(new NickListener(nicks, messages), this);
         pluginManager.registerEvents(new ChatFormatListener(this, messages, nicks), this);
+        pluginManager.registerEvents(new PlayerTimeListener(), this);
         var vanish = new VanishService(this, moderation.vanish());
         pluginManager.registerEvents(vanish, this);
         pluginManager.registerEvents(new InvseeGuard(), this);

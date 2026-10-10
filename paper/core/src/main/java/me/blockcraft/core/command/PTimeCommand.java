@@ -8,7 +8,10 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
+import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.settings.PlayerSettings;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.common.settings.PlayerSetting;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.command.CommandSender;
@@ -17,7 +20,10 @@ import org.bukkit.entity.Player;
 import java.util.Optional;
 import java.util.function.Function;
 
-/** A clock of the player's own until reset or rejoin; the world and everyone else keep theirs. */
+/**
+ * A clock of the player's own until reset or rejoin; the world and everyone else keep theirs. A player who may keep
+ * it has their own choice stored, so {@link PlayerTimeListener} brings it back on every server.
+ */
 public final class PTimeCommand {
 
     private PTimeCommand() {
@@ -63,9 +69,15 @@ public final class PTimeCommand {
 
     private static void apply(CommandSender sender, Player target, Optional<Long> ticks, Component label, Messages messages) {
         ticks.ifPresentOrElse(time -> target.setPlayerTime(time, false), target::resetPlayerTime);
+        boolean kept = target.equals(sender) && PlayerSettings.allowed(target, PlayerSetting.PLAYER_TIME);
+        if (kept) {
+            var settings = BlockcraftApi.get().settings();
+            ticks.ifPresentOrElse(time -> settings.set(target, PlayerSetting.PLAYER_TIME, Long.toString(time)),
+                    () -> settings.clear(target, PlayerSetting.PLAYER_TIME));
+        }
         var time = Placeholder.component("time", label);
         var player = Placeholder.unparsed("player", target.getName());
-        target.sendMessage(messages.get(ticks.isPresent() ? "ptime.set" : "ptime.reset", time));
+        target.sendMessage(messages.get(ticks.isEmpty() ? "ptime.reset" : kept ? "ptime.set-kept" : "ptime.set", time));
         if (!target.equals(sender)) {
             sender.sendMessage(messages.get(ticks.isPresent() ? "ptime.set-other" : "ptime.reset-other", time, player));
         }

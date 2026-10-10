@@ -175,6 +175,7 @@ ptime:
   night: "Nacht"
   midnight: "Mitternacht"
   set: "<prefix><muted>Deine eigene Zeit steht nun auf <accent><time><muted>."
+  set-kept: "<prefix><muted>Deine eigene Zeit steht nun auf <accent><time><muted> und bleibt dir auf allen Servern erhalten."
   set-other: "<prefix><muted>Die eigene Zeit von <accent><player> <muted>steht nun auf <accent><time><muted>."
   reset: "<prefix><muted>Du siehst wieder die Zeit der Welt."
   reset-other: "<prefix><accent><player> <muted>sieht wieder die Zeit der Welt."
