@@ -11,8 +11,8 @@ import java.util.UUID;
  * What travels on {@link ProxyMessageCodec#CHANNEL}. Every message concerns the player it travelled with: a backend
  * asks the proxy to move them, run a command as them, learn what they look like to others or what they chose, or
  * deliver a notice on their behalf. The proxy speaks first only to answer, to say whether the client wears the
- * network's resource pack, to name the friend the player came to watch, to say whom the player just ignored and to
- * pass on a setting the player changed through a proxy command.
+ * network's resource pack, to name the friend the player came to watch, to say whom the player just ignored, to pass
+ * on a setting the player changed through a proxy command and to welcome a player who is new to the network.
  */
 public sealed interface ProxyMessage {
 
@@ -74,5 +74,12 @@ public sealed interface ProxyMessage {
     }
 
     record Ignore(UUID other, boolean ignoring) implements ToBackend {
+    }
+
+    /**
+     * Sent once, when a player's first join of the network reaches a lobby, because the backends' worlds forget
+     * every player on restart. The proxy keeps the rules, so they travel along as a JSON component.
+     */
+    record Welcome(String rulesJson) implements ToBackend {
     }
 }

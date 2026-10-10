@@ -225,6 +225,15 @@ settings:
   keep-nick: "<arrow><primary>Nick in der Lobby behalten"
   report-notifications: "<arrow><primary>Report-Benachrichtigungen"
 
+# Shown once, on the lobby a player reaches on their first join of the network; the rules come from the proxy.
+welcome:
+  title: "<arrow><primary>Willkommen auf <ip>"
+  intro: "<muted>Schön, dass du da bist! Lies dir kurz unsere Regeln durch, dann kann es losgehen."
+  pack: "<muted>Unser <accent>Ressourcenpaket <muted>gibt Menüs und Symbolen ein eigenes Aussehen und bringt eigene Sounds mit. Alles funktioniert auch ohne."
+  settings: "<primary>Einstellungen"
+  pack-details: "<primary>Ressourcenpaket"
+  start: "<success>Los geht's"
+
 # The dialog behind the pause menu's button and the quick-actions key (G).
 server-menu:
   title: "<arrow><primary>Blockcraft"

@@ -37,6 +37,7 @@ public final class ProxyMessageCodec {
     private static final int PACK = 12;
     private static final int SPECTATE = 13;
     private static final int IGNORE = 14;
+    private static final int WELCOME = 15;
 
     private ProxyMessageCodec() {
     }
@@ -119,6 +120,10 @@ public final class ProxyMessageCodec {
                     uuid(out, ignore.other());
                     out.writeBoolean(ignore.ignoring());
                 }
+                case ProxyMessage.Welcome welcome -> {
+                    out.writeByte(WELCOME);
+                    out.writeUTF(welcome.rulesJson());
+                }
             }
         });
         if (bytes.length > MAX_BYTES) {
@@ -168,6 +173,7 @@ public final class ProxyMessageCodec {
             case PACK -> new ProxyMessage.Pack(PackStatus.valueOf(in.readUTF()));
             case SPECTATE -> new ProxyMessage.Spectate(uuid(in));
             case IGNORE -> new ProxyMessage.Ignore(uuid(in), in.readBoolean());
+            case WELCOME -> new ProxyMessage.Welcome(in.readUTF());
             default -> throw new IOException("Unknown message type");
         };
     }

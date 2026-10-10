@@ -3,14 +3,19 @@ package me.blockcraft.system.listener;
 import com.velocitypowered.api.event.EventTask;
 import com.velocitypowered.api.event.ResultedEvent.ComponentResult;
 import com.velocitypowered.api.event.Subscribe;
+import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.connection.LoginEvent;
 import com.velocitypowered.api.event.connection.PostLoginEvent;
+import com.velocitypowered.api.event.player.ServerPostConnectEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
+import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import me.blockcraft.common.db.DatabaseException;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.moderation.PlayerRepository;
 import me.blockcraft.common.moderation.PunishmentRepository;
+import me.blockcraft.common.network.ProxyMessage;
+import me.blockcraft.common.network.ProxyMessageCodec;
 import me.blockcraft.system.LobbyConnector;
 import me.blockcraft.system.ProxySettings;
 import me.blockcraft.system.SystemConfig;
@@ -21,6 +26,7 @@ import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
+import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import org.slf4j.Logger;
 
 import java.util.Set;
@@ -30,9 +36,12 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Gate at login (maintenance, player cap, active ban), remember the player, then welcome first-timers
- * and pull everyone to the lobby two seconds after they joined, as the old proxy did.
+ * and pull everyone to the lobby two seconds after they joined, as the old proxy did. A first-timer's first lobby
+ * is also told to greet them with the rules.
  */
 public final class LoginListener {
+
+    private static final MinecraftChannelIdentifier CHANNEL = MinecraftChannelIdentifier.from(ProxyMessageCodec.CHANNEL);
 
     private final Object plugin;
     private final ProxyServer proxy;
@@ -45,6 +54,7 @@ public final class LoginListener {
     private final Messages messages;
     private final Logger logger;
     private final Set<UUID> firstJoins = ConcurrentHashMap.newKeySet();
+    private final Set<UUID> awaitingWelcome = ConcurrentHashMap.newKeySet();
 
     public LoginListener(Object plugin, ProxyServer proxy, SystemConfig config, ProxySettings settings, PlayerRepository players,
                          PunishmentRepository punishments, PunishmentService punishmentService, LobbyConnector lobby, Messages messages,
@@ -81,6 +91,7 @@ public final class LoginListener {
                 }
                 if (!players.exists(player.getUniqueId())) {
                     firstJoins.add(player.getUniqueId());
+                    awaitingWelcome.add(player.getUniqueId());
                 }
                 players.upsert(player.getUniqueId(), player.getUsername());
             } catch (DatabaseException e) {
@@ -110,6 +121,22 @@ public final class LoginListener {
                 lobby.send(player);
             }
         }).delay(2, TimeUnit.SECONDS).schedule();
+    }
+
+    @Subscribe
+    public void onServerPostConnect(ServerPostConnectEvent event) {
+        Player player = event.getPlayer();
+        if (!lobby.isOnLobby(player) || !awaitingWelcome.remove(player.getUniqueId())) {
+            return;
+        }
+        var rules = GsonComponentSerializer.gson().serialize(screen("info.regeln"));
+        player.getCurrentServer().ifPresent(connection ->
+                connection.sendPluginMessage(CHANNEL, ProxyMessageCodec.encode(new ProxyMessage.Welcome(rules))));
+    }
+
+    @Subscribe
+    public void onDisconnect(DisconnectEvent event) {
+        awaitingWelcome.remove(event.getPlayer().getUniqueId());
     }
 
     private Component screen(String key, TagResolver... placeholders) {

@@ -142,7 +142,7 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(resourcePack, this);
         getServer().getPluginManager().registerEvents(ignores, this);
         getServer().getMessenger().registerIncomingPluginChannel(this, ProxyMessageCodec.CHANNEL,
-                new ProxyMessageListener(getLogger(), resourcePack, ignores, settings));
+                new ProxyMessageListener(this, resourcePack, ignores, settings));
         getServer().getPluginManager().registerEvents(afk, this);
         afk.start();
         getServer().getPluginManager().registerEvents(new MenuListener(playerTasks), this);

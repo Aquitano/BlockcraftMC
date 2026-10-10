@@ -31,7 +31,8 @@ public class ProxyMessageCodecTest {
                         List.of(new ProxyMessage.FriendsReply.Entry("Friend", true, "lobby-1", false)), List.of("Thomas")),
                 new ProxyMessage.Pack(PackStatus.APPLIED),
                 new ProxyMessage.Spectate(UUID.randomUUID()),
-                new ProxyMessage.Ignore(UUID.randomUUID(), true));
+                new ProxyMessage.Ignore(UUID.randomUUID(), true),
+                new ProxyMessage.Welcome("{\"text\":\"Regeln\"}"));
         for (var message : messages) {
             assertEquals(Optional.of(message), ProxyMessageCodec.decode(ProxyMessageCodec.encode(message), ProxyMessage.class));
         }

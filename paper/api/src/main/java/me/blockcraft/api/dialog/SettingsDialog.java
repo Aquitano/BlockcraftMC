@@ -4,7 +4,6 @@ import io.papermc.paper.dialog.Dialog;
 import io.papermc.paper.dialog.DialogResponseView;
 import io.papermc.paper.registry.data.dialog.ActionButton;
 import io.papermc.paper.registry.data.dialog.DialogBase;
-import io.papermc.paper.registry.data.dialog.body.DialogBody;
 import io.papermc.paper.registry.data.dialog.input.DialogInput;
 import io.papermc.paper.registry.data.dialog.type.DialogType;
 import me.blockcraft.api.BlockcraftApi;
@@ -44,7 +43,8 @@ public final class SettingsDialog {
             save(player, view, toggles);
             back.ifPresent(previous -> previous.accept(player));
         }));
-        buttons.add(Dialogs.button(messages.get("settings.pack-details"), player -> showPack(player, back)));
+        buttons.add(Dialogs.button(messages.get("settings.pack-details"), player -> PackDialog.open(player,
+                previous -> new SettingsDialog(previous, back).open(previous))));
         dialog = Dialog.create(factory -> factory.empty()
                 .base(DialogBase.builder(messages.get("settings.title")).inputs(inputs).build())
                 .type(DialogType.multiAction(buttons)
@@ -54,29 +54,6 @@ public final class SettingsDialog {
     }
 
     public void open(Player player) {
-        Dialogs.show(player, dialog);
-    }
-
-    private static void showPack(Player player, Optional<Consumer<Player>> back) {
-        var api = BlockcraftApi.get();
-        var messages = api.messages();
-        var status = api.resourcePack().status(player);
-        var actions = new ArrayList<ActionButton>();
-        switch (status) {
-            case FAILED, DECLINED, UNAVAILABLE -> actions.add(Dialogs.button(messages.get("settings.pack-retry"), retry -> {
-                api.resourcePack().retry(retry);
-                retry.sendMessage(messages.get("settings.pack-requested"));
-            }));
-            default -> { }
-        }
-        actions.add(Dialogs.button(messages.get("settings.pack-refresh"), refresh -> showPack(refresh, back)));
-        var dialog = Dialog.create(factory -> factory.empty()
-                .base(DialogBase.builder(messages.get("settings.pack-details"))
-                        .body(List.of(DialogBody.plainMessage(messages.get("settings.pack-status." + status.name().toLowerCase(java.util.Locale.ROOT)))))
-                        .build())
-                .type(DialogType.multiAction(actions)
-                        .exitAction(Dialogs.button(messages.get("menu.back"), previous -> new SettingsDialog(previous, back).open(previous)))
-                        .build()));
         Dialogs.show(player, dialog);
     }
 
