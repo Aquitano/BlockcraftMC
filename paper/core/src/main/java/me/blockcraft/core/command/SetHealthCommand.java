@@ -6,11 +6,14 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
+import me.blockcraft.api.game.PlayerReset;
 import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeModifier;
 
+/** Health above the maximum comes from a transient modifier, so it ends with the session instead of lasting in player data. */
 public final class SetHealthCommand {
 
     private SetHealthCommand() {
@@ -38,7 +41,12 @@ public final class SetHealthCommand {
                                     int health = IntegerArgumentType.getInteger(context, "health");
                                     var maxHealth = target.getAttribute(Attribute.MAX_HEALTH);
                                     if (maxHealth != null) {
-                                        maxHealth.setBaseValue(health);
+                                        maxHealth.removeModifier(PlayerReset.EXTRA_HEALTH);
+                                        double extra = health - maxHealth.getValue();
+                                        if (extra > 0) {
+                                            maxHealth.addTransientModifier(
+                                                    new AttributeModifier(PlayerReset.EXTRA_HEALTH, extra, AttributeModifier.Operation.ADD_NUMBER));
+                                        }
                                     }
                                     target.setHealth(health);
                                     sender.sendMessage(messages.get("sethealth.done",

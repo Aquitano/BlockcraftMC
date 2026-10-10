@@ -1,6 +1,7 @@
 package me.blockcraft.api.game;
 
 import org.bukkit.GameMode;
+import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
 
@@ -10,6 +11,9 @@ import java.util.Objects;
 public final class PlayerReset {
 
     private static final double DEFAULT_MAX_HEALTH = 20.0;
+
+    /** The transient bonus /sethealth grants above the maximum; a reset takes it away with the rest. */
+    public static final NamespacedKey EXTRA_HEALTH = new NamespacedKey("blockcraft", "extra_health");
 
     private PlayerReset() {
     }
@@ -41,7 +45,9 @@ public final class PlayerReset {
     }
 
     public static void resetHealth(Player player) {
-        Objects.requireNonNull(player.getAttribute(Attribute.MAX_HEALTH)).setBaseValue(DEFAULT_MAX_HEALTH);
+        var maxHealth = Objects.requireNonNull(player.getAttribute(Attribute.MAX_HEALTH));
+        maxHealth.removeModifier(EXTRA_HEALTH);
+        maxHealth.setBaseValue(DEFAULT_MAX_HEALTH);
         player.setHealth(DEFAULT_MAX_HEALTH);
     }
 }
