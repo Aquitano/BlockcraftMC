@@ -22,6 +22,12 @@ public class ChatFilterTest {
         assertFalse(FILTER.isAdvertisement("hmm...toll"));
         assertFalse(FILTER.isAdvertisement("und eine runde noch"));
         assertFalse(FILTER.isAdvertisement("kommt auf play.BlockcraftMC.net"));
+        assertFalse(FILTER.isAdvertisement("wir starten um 12:20"));
+    }
+
+    @Test
+    public void namesAreNoInsults() {
+        assertFalse(FILTER.hasBlockedWord("Sebastian kommt gleich"));
     }
 
     @Test
@@ -29,6 +35,7 @@ public class ChatFilterTest {
         assertTrue(FILTER.isAdvertisement("kommt auf play.gommehd.net"));
         assertTrue(FILTER.isAdvertisement("blockcraft.de ist besser"));
         assertTrue(FILTER.isAdvertisement("connect 85,214,3,9"));
+        assertTrue(FILTER.isAdvertisement("join myserver:25565"));
     }
 
     private static Map<String, Object> bundledConfig() {
