@@ -101,6 +101,7 @@ arena:
   starting-in: "<prefix><muted>Die Runde startet in <accent><seconds> <muted>Sekunden."
   restart-in: "<prefix><muted>Der Server startet in <error><seconds> <muted>Sekunden neu!"
   spectating: "<prefix><muted>Du schaust <accent><player> <muted>beim Spielen zu."
+  spectator-chat: "<dark>[<muted>Zuschauer<dark>]"
   tracker:
     - " "
     - "<prefix><muted><minutes> Minuten sind vorbei, alle Spieler bekommen einen Tracker!"

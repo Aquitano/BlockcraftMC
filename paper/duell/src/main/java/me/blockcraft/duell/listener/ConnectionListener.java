@@ -1,6 +1,5 @@
 package me.blockcraft.duell.listener;
 
-import io.papermc.paper.event.player.AsyncChatEvent;
 import me.blockcraft.api.nick.NickChangeEvent;
 import me.blockcraft.api.spectate.SpectateRequestEvent;
 import me.blockcraft.api.vanish.VanishChangeEvent;
@@ -52,12 +51,5 @@ public final class ConnectionListener implements Listener {
     @EventHandler
     public void onVanishChange(VanishChangeEvent event) {
         duel.refreshScoreboards();
-    }
-
-    @EventHandler
-    public void onChat(AsyncChatEvent event) {
-        if (!duel.isParticipant(event.getPlayer())) {
-            event.setCancelled(true);
-        }
     }
 }

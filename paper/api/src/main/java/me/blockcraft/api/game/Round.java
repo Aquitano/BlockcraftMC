@@ -1,31 +1,36 @@
 package me.blockcraft.api.game;
 
+import io.papermc.paper.chat.ChatRenderer;
+import io.papermc.paper.event.player.AsyncChatEvent;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.menu.Menu;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Countdown;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.api.vanish.VanishChangeEvent;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
  * The bookkeeping every game's round shares, held by the game next to its own rules. It seats every joiner: while
  * the lobby is open and has room, they play, unless they are vanished; everyone else watches, and a vanished
  * spectator is neither announced nor counted. A player who vanishes while the lobby waits moves to the spectators
  * the same way. It tells the proxy the phase, owns the countdowns and boss bars that
- * end with the round, counts a mid-round quit as a death and a loss, and ends the round once.
+ * end with the round, counts a mid-round quit as a death and a loss, and ends the round once. While the round runs,
+ * what a spectator writes reaches only the other spectators, so nobody can tell the players where their enemies are.
  */
 public final class Round implements Listener {
 
@@ -37,11 +42,12 @@ public final class Round implements Listener {
     private final Arena arena;
     private final RoundSummary summary;
     private final int capacity;
-    private final Set<UUID> players = new LinkedHashSet<>();
-    private final Set<UUID> spectators = new LinkedHashSet<>();
+    // Chat reads these off the main thread; copy-on-write keeps the join order players() hands out.
+    private final Set<UUID> players = new CopyOnWriteArraySet<>();
+    private final Set<UUID> spectators = new CopyOnWriteArraySet<>();
     private final List<Countdown> timers = new ArrayList<>();
     private final List<TimerBar> bars = new ArrayList<>();
-    private GamePhase phase = GamePhase.LOBBY;
+    private volatile GamePhase phase = GamePhase.LOBBY;
 
     public Round(Plugin plugin, Arena arena, RoundSummary summary, int capacity) {
         this.plugin = plugin;
@@ -119,6 +125,19 @@ public final class Round implements Listener {
         spectators.add(player.getUniqueId());
         PlayerReset.spectate(player);
         arena.farewell(player, players.size(), capacity);
+    }
+
+    /** Runs after core's chat format, whose line it marks rather than replaces. */
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onChat(AsyncChatEvent event) {
+        if (phase != GamePhase.INGAME || !isSpectator(event.getPlayer())) {
+            return;
+        }
+        event.viewers().removeIf(viewer -> viewer instanceof Player reader && !isSpectator(reader));
+        var tag = arena.spectatorChatTag().append(Component.space());
+        var line = event.renderer();
+        event.renderer((ChatRenderer) (source, displayName, message, viewer) ->
+                tag.append(line.render(source, displayName, message, viewer)));
     }
 
     /** Out for good: the player watches the rest, which the game shows once they have respawned. */
