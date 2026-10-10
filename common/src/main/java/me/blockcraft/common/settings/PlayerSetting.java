@@ -26,6 +26,7 @@ public enum PlayerSetting {
     FRIEND_REQUESTS("friend-requests", PlayerSetting.ON),
     PLAYER_VISIBILITY("player-visibility", PlayerSetting.ON),
     SOUNDS("sounds", PlayerSetting.ON),
+    MENTIONS("mentions", PlayerSetting.ON),
     EFFECTS("effects", PlayerSetting.ON),
     AUTO_NICK("auto-nick", PlayerSetting.OFF, "blockcraft.nick"),
     KEEP_NICK("keep-nick", PlayerSetting.OFF, "blockcraft.nick"),

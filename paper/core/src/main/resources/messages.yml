@@ -292,6 +292,7 @@ chat:
   format: "<level><tag><rank><name> <arrow><white><message>"
   level: "<dark>[<aqua><level><dark>] "
   nick-real: " <dark>(<muted><real><dark>)"
+  mention: "<accent><mention>"
   hover:
     - "<rank><name>"
     - "<muted>Level <accent><level>"

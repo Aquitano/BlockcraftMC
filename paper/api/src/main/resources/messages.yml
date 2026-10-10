@@ -220,6 +220,7 @@ settings:
   friend-requests: "<arrow><primary>Freundschaftsanfragen"
   player-visibility: "<arrow><primary>Spieler sichtbar"
   sounds: "<arrow><primary>Sounds"
+  mentions: "<arrow><primary>Erwähnungen im Chat"
   auto-nick: "<arrow><primary>Automatisch nicken"
   keep-nick: "<arrow><primary>Nick in der Lobby behalten"
   report-notifications: "<arrow><primary>Report-Benachrichtigungen"

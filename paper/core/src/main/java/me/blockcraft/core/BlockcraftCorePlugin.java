@@ -90,7 +90,7 @@ public final class BlockcraftCorePlugin extends JavaPlugin {
         var nicks = new Nicks(this, nickRepository, stringList(nickSection, "names"), stringList(nickSection, "skins"),
                 stringList(nickSection, "ranks"));
         pluginManager.registerEvents(new NickListener(nicks, messages), this);
-        pluginManager.registerEvents(new ChatFormatListener(messages, nicks), this);
+        pluginManager.registerEvents(new ChatFormatListener(this, messages, nicks), this);
         var vanish = new VanishService(this, moderation.vanish());
         pluginManager.registerEvents(vanish, this);
         pluginManager.registerEvents(new InvseeGuard(), this);
