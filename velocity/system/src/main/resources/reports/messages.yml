@@ -1,4 +1,4 @@
-prefix: "<red>Reports <dark_gray>» <reset>"
+prefix: "<error>Reports <dark>» <reset>"
 
 # The network's colours, the same tags the Paper plugins use (BlockcraftAPI messages.yml).
 palette:

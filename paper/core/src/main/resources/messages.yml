@@ -1,4 +1,4 @@
-prefix: "<gold>Blockcraft <dark_gray>» <reset>"
+prefix: "<primary><ip> <dark>» <reset>"
 
 commands:
   team:

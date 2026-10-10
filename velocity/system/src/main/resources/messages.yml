@@ -1,4 +1,4 @@
-prefix: "<primary>Blockcraft <dark>» <reset>"
+prefix: "<primary><ip> <dark>» <reset>"
 
 # The network's colours, the same tags the Paper plugins use (BlockcraftAPI messages.yml).
 palette:

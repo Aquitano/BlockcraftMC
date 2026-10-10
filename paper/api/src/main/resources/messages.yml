@@ -1,4 +1,4 @@
-prefix: "<gold>Blockcraft <dark_gray>» <reset>"
+prefix: "<primary><ip> <dark>» <reset>"
 
 # The network's colours. Every Paper plugin's messages.yml may use these as tags, so a redesign happens here
 # and nowhere else. The values are spliced in before parsing, so a colour tag colours what follows it.

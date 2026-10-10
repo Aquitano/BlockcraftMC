@@ -1,4 +1,4 @@
-prefix: "<accent><ip> <dark>» <reset>"
+prefix: "<primary><ip> <dark>» <reset>"
 
 commands:
   setspawn:
