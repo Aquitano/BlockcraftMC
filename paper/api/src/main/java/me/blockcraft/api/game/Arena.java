@@ -12,9 +12,9 @@ import org.bukkit.entity.Player;
 
 /**
  * What every game says at the moments they share, from BlockcraftAPI's {@code arena} texts but under the game's
- * own prefix: the arrival card, who joined and left the round, who a spectator came to watch, the tag on spectator
- * chat, the countdowns that {@link LobbyCountdown} and {@link ServerRestart} run, and the trackers and last minutes
- * of a {@link Round}.
+ * own prefix: the arrival card, who joined and left the round, whom a spectator came for or picked to watch, the tag
+ * on spectator chat, the countdowns that {@link LobbyCountdown} and {@link ServerRestart} run, and the trackers and
+ * last minutes of a {@link Round}.
  */
 public final class Arena {
 
@@ -45,6 +45,13 @@ public final class Arena {
     public void follow(Player spectator, Player friend) {
         spectator.teleport(friend);
         spectator.sendMessage(messages.get("arena.spectating", Placeholder.unparsed("player", friend.getName())));
+    }
+
+    /** A spectator's own pick, told in the action bar, so that stepping through the players does not fill the chat. */
+    void jump(Player spectator, Player target) {
+        spectator.teleport(target);
+        BlockcraftApi.get().notifications().feedback(spectator,
+                messages.get("arena.watching", Placeholder.unparsed("player", target.getName())));
     }
 
     Component spectatorChatTag() {

@@ -161,7 +161,7 @@ public final class Game {
         var player = event.getPlayer();
         locations.get(LocationKey.SPECTATOR).ifPresent(event::setRespawnLocation);
         if (isSpectator(player)) {
-            Tasks.sync(plugin, () -> PlayerReset.spectate(player));
+            Tasks.sync(plugin, () -> round.watch(player));
         }
     }
 

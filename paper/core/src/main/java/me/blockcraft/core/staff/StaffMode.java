@@ -2,6 +2,7 @@ package me.blockcraft.core.staff;
 
 import com.destroystokyo.paper.event.player.PlayerStopSpectatingEntityEvent;
 import me.blockcraft.api.audit.StaffAudit;
+import me.blockcraft.api.game.Round;
 import me.blockcraft.api.task.SerialTasks;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
@@ -253,7 +254,8 @@ public final class StaffMode implements Listener {
             staff.sendMessage(messages.get("staff.nobody-online"));
             return;
         }
-        var playing = candidates.stream().filter(other -> other.getGameMode() != GameMode.SPECTATOR).toList();
+        var playing = candidates.stream()
+                .filter(other -> other.getGameMode() != GameMode.SPECTATOR && !Round.isWatching(other)).toList();
         var pool = playing.isEmpty() ? candidates : playing;
         var target = pool.get(random.nextInt(pool.size()));
         staff.teleport(target);

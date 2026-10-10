@@ -39,7 +39,10 @@ public enum MenuIcon {
     STAFF_INVSEE(Material.CHEST),
     STAFF_REPORTS(Material.BOOK),
     STAFF_INFO(Material.SPYGLASS),
-    STAFF_SPECTATE(Material.ENDER_EYE);
+    STAFF_SPECTATE(Material.ENDER_EYE),
+    SPECTATE_PLAYERS(Material.COMPASS),
+    SPECTATE_PREVIOUS(Material.ARROW),
+    SPECTATE_NEXT(Material.SPECTRAL_ARROW);
 
     /** Draws nothing at all; the outer slots of a toolbar button wear it so the whole bar answers hover and click. */
     public static final Key EMPTY_MODEL = Key.key("blockcraft", "empty");

@@ -262,7 +262,9 @@ Every game says the shared moments the same way, from `arena` in BlockcraftAPI's
 with game and map, who joined and left the round with the player count, the lobby countdown, the trackers, the last
 minutes and the restart countdown. Each game holds a `Round` for what they share: it seats joiners while the lobby
 has room and makes everyone else a spectator, vanished staff included, who are neither announced nor counted; it
-reports the phase to the proxy and counts leaving a running round as a death and a loss. A round's kills, deaths,
+reports the phase to the proxy and counts leaving a running round as a death and a loss. Spectators fly unseen in
+adventure mode with a hotbar to pick a player, step to the previous or next one and leave; the round keeps them from
+touching, taking or opening anything, and while it runs their chat reaches only the other spectators. A round's kills, deaths,
 coins and XP are counted in one place (`RoundSummary`), which announces kill
 streaks at the lengths `streaks.announce` in BlockcraftAPI's `config.yml` names, writes every participant's stats
 once when the round ends (a loss for everyone knocked out or beaten by a winner), prints the recap in chat and

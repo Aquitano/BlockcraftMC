@@ -127,9 +127,8 @@ public final class Duel {
 
     public void join(Player player) {
         spawns.spawn().ifPresent(player::teleport);
-        boolean playing = round.join(player);
-        items.giveLobbyItems(player, playing);
-        if (playing) {
+        if (round.join(player)) {
+            items.giveLobbyItems(player);
             player.setGameMode(GameMode.SURVIVAL);
         } else {
             player.sendMessage(messages.get("join.spectator"));
@@ -147,7 +146,6 @@ public final class Duel {
     public void vanishChanged(Player player) {
         if (isLobby() && !isParticipant(player)) {
             votes.withdraw(player.getUniqueId());
-            items.giveLobbyItems(player, false);
         }
         refreshScoreboards();
     }

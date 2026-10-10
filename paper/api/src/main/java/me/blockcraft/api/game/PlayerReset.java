@@ -29,19 +29,21 @@ public final class PlayerReset {
         player.setFoodLevel(20);
         player.setSaturation(5.0f);
         player.setGameMode(gameMode);
+        player.setAllowFlight(false);
+        player.setCollidable(true);
         player.getInventory().clear();
         player.getInventory().setArmorContents(null);
     }
 
-    /** The state a player watching the rest of the round is in; the game keeps the bookkeeping. */
-    public static void spectate(Player player) {
-        player.setExp(0.0f);
-        player.setLevel(0);
-        resetHealth(player);
-        CombatStyle.MODERN.apply(player);
-        player.setFoodLevel(20);
-        player.getInventory().setArmorContents(null);
-        player.setGameMode(GameMode.SPECTATOR);
+    /**
+     * The state a player watching the rest of the round is in: flying in adventure mode, so that the spectator hotbar
+     * works, and out of everyone's way. {@link Round} hides them, hands out the hotbar and keeps them off the round.
+     */
+    static void spectate(Player player) {
+        reset(player, GameMode.ADVENTURE);
+        player.setAllowFlight(true);
+        player.setFlying(true);
+        player.setCollidable(false);
     }
 
     public static void resetHealth(Player player) {

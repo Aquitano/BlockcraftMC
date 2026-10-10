@@ -26,7 +26,7 @@ public final class SgListener implements Listener {
     @EventHandler
     public void onChestOpen(PlayerInteractEvent event) {
         var block = event.getClickedBlock();
-        if (!duel.isPlaying(DuelMode.SG) || event.getHand() != EquipmentSlot.HAND
+        if (!duel.isPlaying(DuelMode.SG) || !duel.isParticipant(event.getPlayer()) || event.getHand() != EquipmentSlot.HAND
                 || event.getAction() != Action.RIGHT_CLICK_BLOCK || block == null
                 || (block.getType() != Material.CHEST && block.getType() != Material.TRAPPED_CHEST)) {
             return;

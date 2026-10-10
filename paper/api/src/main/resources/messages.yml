@@ -102,12 +102,25 @@ arena:
   restart-in: "<prefix><muted>Der Server startet in <error><seconds> <muted>Sekunden neu!"
   spectating: "<prefix><muted>Du schaust <accent><player> <muted>beim Spielen zu."
   spectator-chat: "<dark>[<muted>Zuschauer<dark>]"
+  watching: "<muted>Du schaust <accent><player> <muted>zu."
   tracker:
     - " "
     - "<prefix><muted><minutes> Minuten sind vorbei, alle Spieler bekommen einen Tracker!"
     - " "
   ends-in-minutes: "<prefix><error>Das Spiel endet in <minutes> Minuten!"
   ends-in-minute: "<prefix><error>Das Spiel endet in 1 Minute!"
+
+# The hotbar and player picker of a spectator, who watches flying and unseen.
+spectator:
+  pick: "<arrow><primary>Spieler wählen"
+  previous: "<arrow><primary>Vorheriger Spieler"
+  next: "<arrow><primary>Nächster Spieler"
+  leave: "<arrow><primary>Zur Lobby"
+  nobody: "<muted>Gerade spielt niemand, dem du zuschauen kannst."
+  menu:
+    title: "<arrow><primary>Zuschauen"
+    player: "<accent><player>"
+    player-lore: "<bullet><muted>Klicken <dark>· <primary>Zu <player> fliegen"
 
 # The shared countdown: the last seconds as a title, then the start.
 countdown:
