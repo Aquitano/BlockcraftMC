@@ -105,6 +105,7 @@ heal:
 invsee:
   usage: "<prefix><error>Benutze /invsee [Spieler]"
   opened: "<prefix>Du siehst nun das Inventar von <white><player>"
+  failed: "<prefix><error>Das Inventar von <white><player> <error>konnte nicht geöffnet werden."
   read-only: "<prefix><muted>Nur ansehen: zum Verändern fehlt dir die Berechtigung."
 lag:
   lines:

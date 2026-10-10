@@ -36,14 +36,17 @@ public final class InvseeCommand {
             return;
         }
         viewer.closeInventory();
+        var name = Placeholder.unparsed("player", target.getName());
         var view = viewer.openInventory(target.getInventory());
-        viewer.sendMessage(messages.get("invsee.opened", Placeholder.unparsed("player", target.getName())));
-        boolean readOnly = view != null && InvseeGuard.isReadOnly(viewer, view);
+        if (view == null) {
+            viewer.sendMessage(messages.get("invsee.failed", name));
+            return;
+        }
+        viewer.sendMessage(messages.get("invsee.opened", name));
+        boolean readOnly = InvseeGuard.isReadOnly(viewer, view);
         if (readOnly) {
             viewer.sendMessage(messages.get("invsee.read-only"));
         }
-        if (view != null) {
-            audit.record(viewer, readOnly ? "invsee.read" : "invsee.edit", target);
-        }
+        audit.record(viewer, readOnly ? "invsee.read" : "invsee.edit", target);
     }
 }
