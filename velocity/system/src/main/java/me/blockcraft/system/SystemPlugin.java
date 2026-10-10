@@ -173,6 +173,7 @@ public final class SystemPlugin {
         var supportSessions = new SupportSessions();
         var playtime = new Playtime(repositories.players(), logger);
         var support = new CommandSupport(visibility, messages);
+        var staffButtons = new StaffButtons(messages);
         var moderationActions = new ModerationActions(support, lookup, punishments, config, messages);
         var reports = Reports.load(this, proxy, logger, dataDirectory, database, lookup, visibility, choices, playerSettings,
                 proxy.getPluginManager().fromInstance(this).orElseThrow().getDescription());
@@ -205,11 +206,11 @@ public final class SystemPlugin {
         events.register(this, spectating);
         events.register(this, new SupportListener(supportSessions, messages));
         events.register(this, new WatchListener(proxy, repositories.watches(), config.watchRecent(), config.alts().retention(),
-                messages, logger));
+                messages, staffButtons, logger));
         var alts = new AltListener(addresses, AddressHasher.load(dataDirectory), config.alts(), messages, logger);
         events.register(this, alts);
         events.register(this, new FreezeQuitListener(this, proxy, repositories.frozen(), punishments, moderationActions,
-                config.freeze(), messages, logger));
+                config.freeze(), messages, staffButtons, logger));
         events.register(this, playtime);
         pack = NetworkPack.start(proxy, config.resourcePack(), dataDirectory, messages.get("resource-pack.prompt"), logger);
         pack.ifPresent(networkPack -> events.register(this, networkPack));
@@ -221,7 +222,7 @@ public final class SystemPlugin {
         register(new KickCommand(support, proxy, visibility, messages).create());
         register(new CheckCommand(support, lookup, punishments, messages).create());
         register(new HistoryCommand(support, lookup, punishments, config, messages).create());
-        register(new StaffLogCommand(support, lookup, new StaffActionRepository(database), config, messages).create());
+        register(new StaffLogCommand(support, lookup, new StaffActionRepository(database), config, messages, staffButtons).create());
         register(new StrafeCommand(support, moderationActions, messages).create());
         new StrikeCommands(support, visibility, lookup, repositories.strikes(), punishments, config, messages).create().forEach(this::register);
         new WarnCommands(support, proxy, lookup, repositories.warns(), config, messages).create().forEach(this::register);

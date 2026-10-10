@@ -120,11 +120,51 @@ build:
   enabled: "<prefix><success>Baumodus aktiviert. <muted>Speichere die Map mit <accent>/map save<muted>, sonst ist sie beim Neustart wieder wie vorher."
   disabled: "<prefix><error>Baumodus deaktiviert."
 
-# The staff notice for the actions in config.yml's audit.notify; <action> is the logged key such as gamemode.creative.
+# The staff notice for the actions in config.yml's audit.notify; <action> is the action's label below.
 audit:
   notice: "<prefix><accent><issuer> <dark>» <primary><action><target><detail> <dark>[<muted><server><dark>]"
   notice-target: " <muted>an <accent><target>"
   notice-detail: " <dark>(<muted><detail><dark>)"
+  buttons:
+    goto: "<dark>[<primary>Goto<dark>]"
+    goto-hover: "<muted>Bringt dich auf den Server von <accent><player>"
+    whois: "<dark>[<accent>Whois<dark>]"
+    whois-hover: "<muted>Zeigt <primary>/whois <player>"
+  # One label per action key; a key without one shows as it is.
+  labels:
+    "back": "Zurückteleportiert"
+    "build.on": "Baumodus an"
+    "build.off": "Baumodus aus"
+    "clear": "Inventar geleert"
+    "coins.give": "Coins gegeben"
+    "coins.take": "Coins abgezogen"
+    "coins.set": "Coins gesetzt"
+    "fly.on": "Flugmodus an"
+    "fly.off": "Flugmodus aus"
+    "food": "Hunger gestillt"
+    "freeze.on": "Eingefroren"
+    "freeze.off": "Aufgetaut"
+    "gamemode.survival": "Spielmodus Überleben"
+    "gamemode.creative": "Spielmodus Kreativ"
+    "gamemode.adventure": "Spielmodus Abenteuer"
+    "gamemode.spectator": "Spielmodus Zuschauer"
+    "heal": "Geheilt"
+    "invsee.read": "Inventar angesehen"
+    "invsee.edit": "Inventar bearbeitet"
+    "kill": "Getötet"
+    "kill.entities": "Entities entfernt"
+    "nick.on": "Nick an"
+    "nick.off": "Nick aus"
+    "speed": "Geschwindigkeit gesetzt"
+    "staff.on": "Staff-Modus an"
+    "staff.off": "Staff-Modus aus"
+    "sudo": "Als Spieler ausgeführt"
+    "tp": "Spieler teleportiert"
+    "tp.to": "Selbst teleportiert"
+    "tpall": "Alle hergeholt"
+    "tphere": "Hergeholt"
+    "vanish.on": "Vanish an"
+    "vanish.off": "Vanish aus"
 
 map:
   info:

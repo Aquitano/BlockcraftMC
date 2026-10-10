@@ -7,6 +7,8 @@ import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.moderation.StaffActionRepository;
 import me.blockcraft.common.player.PlayerReference;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -86,17 +88,37 @@ public final class StaffAudit {
         var issuerReference = reference(issuer);
         Tasks.async(plugin, () -> repository.record(issuerReference, action, targetReference, detail, server));
         if (notices.actions().contains(action)) {
+            var about = targetReference.or(() -> Optional.of(issuerReference).filter(reference -> reference.uuid().isPresent()));
             notifyStaff(issuer, target, messages.get("audit.notice",
                     Placeholder.unparsed("issuer", issuerReference.name()),
-                    Placeholder.unparsed("action", action),
+                    Placeholder.component("action", label(action)),
                     Placeholder.component("target", targetReference
                             .map(reference -> messages.get("audit.notice-target", Placeholder.unparsed("target", reference.name())))
                             .orElseGet(Component::empty)),
                     Placeholder.component("detail", detail
                             .map(text -> messages.get("audit.notice-detail", Placeholder.unparsed("detail", text)))
                             .orElseGet(Component::empty)),
-                    Placeholder.unparsed("server", server)));
+                    Placeholder.unparsed("server", server))
+                    .append(about.map(reference -> buttons(reference.name())).orElseGet(Component::empty)));
         }
+    }
+
+    /** A key without a label, such as one a newer plugin records, shows as it is. */
+    private Component label(String action) {
+        String key = "audit.labels." + action;
+        return messages.has(key) ? messages.get(key) : Component.text(action);
+    }
+
+    /** {@code /goto} and {@code /whois} are proxy commands, so the click works on whichever server the notice reaches. */
+    private Component buttons(String player) {
+        return button("goto", player).append(button("whois", player));
+    }
+
+    private Component button(String command, String player) {
+        return Component.space().append(messages.get("audit.buttons." + command)
+                .clickEvent(ClickEvent.runCommand("/" + command + " " + player))
+                .hoverEvent(HoverEvent.showText(
+                        messages.get("audit.buttons." + command + "-hover", Placeholder.unparsed("player", player)))));
     }
 
     private PlayerReference reference(CommandSender sender) {

@@ -9,6 +9,7 @@ import me.blockcraft.common.db.DatabaseException;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.moderation.FreezeRepository;
 import me.blockcraft.system.PlayerLookup.Target;
+import me.blockcraft.system.StaffButtons;
 import me.blockcraft.system.SystemConfig;
 import me.blockcraft.system.SystemPermissions;
 import me.blockcraft.system.moderation.ModerationActions;
@@ -32,11 +33,13 @@ public final class FreezeQuitListener {
     private final ModerationActions moderation;
     private final SystemConfig.Freeze config;
     private final Messages messages;
+    private final StaffButtons buttons;
     private final Logger logger;
     private volatile boolean shuttingDown;
 
     public FreezeQuitListener(Object plugin, ProxyServer proxy, FreezeRepository frozen, PunishmentService punishments,
-                              ModerationActions moderation, SystemConfig.Freeze config, Messages messages, Logger logger) {
+                              ModerationActions moderation, SystemConfig.Freeze config, Messages messages, StaffButtons buttons,
+                              Logger logger) {
         this.plugin = plugin;
         this.proxy = proxy;
         this.frozen = frozen;
@@ -44,6 +47,7 @@ public final class FreezeQuitListener {
         this.moderation = moderation;
         this.config = config;
         this.messages = messages;
+        this.buttons = buttons;
         this.logger = logger;
     }
 
@@ -78,7 +82,8 @@ public final class FreezeQuitListener {
                         name, config.quitPunishment());
                 return;
             }
-            var notice = messages.get("freeze.quit-punished", Placeholder.unparsed("player", name));
+            var notice = messages.get("freeze.quit-punished", Placeholder.unparsed("player", name))
+                    .append(buttons.of(name, StaffButtons.Button.WHOIS));
             for (Player staff : proxy.getAllPlayers()) {
                 if (staff.hasPermission(SystemPermissions.TEAM)) {
                     staff.sendMessage(notice);

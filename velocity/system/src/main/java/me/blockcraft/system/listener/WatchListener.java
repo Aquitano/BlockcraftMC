@@ -8,9 +8,9 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import me.blockcraft.common.db.DatabaseException;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.moderation.WatchRepository;
+import me.blockcraft.system.StaffButtons;
+import me.blockcraft.system.StaffButtons.Button;
 import me.blockcraft.system.SystemPermissions;
-import net.kyori.adventure.text.event.ClickEvent;
-import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.slf4j.Logger;
@@ -28,15 +28,17 @@ public final class WatchListener {
     private final Duration recent;
     private final Duration addressRetention;
     private final Messages messages;
+    private final StaffButtons buttons;
     private final Logger logger;
 
     public WatchListener(ProxyServer proxy, WatchRepository watches, Duration recent, Duration addressRetention, Messages messages,
-                         Logger logger) {
+                         StaffButtons buttons, Logger logger) {
         this.proxy = proxy;
         this.watches = watches;
         this.recent = recent;
         this.addressRetention = addressRetention;
         this.messages = messages;
+        this.buttons = buttons;
         this.logger = logger;
     }
 
@@ -59,13 +61,11 @@ public final class WatchListener {
     }
 
     private void alert(Player player, WatchRepository.Watch watch) {
-        var name = Placeholder.unparsed("player", player.getUsername());
-        var notice = messages.get("watch.joined", name,
+        var notice = messages.get("watch.joined", Placeholder.unparsed("player", player.getUsername()),
                         Formatter.number("reports", watch.openReports()),
                         Formatter.number("punishments", watch.recentPunishments()),
                         Formatter.number("days", recent.toDays()))
-                .clickEvent(ClickEvent.runCommand("/whois " + player.getUsername()))
-                .hoverEvent(HoverEvent.showText(messages.get("watch.hover", name)));
+                .append(buttons.of(player.getUsername(), Button.GOTO, Button.WHOIS));
         for (Player staff : proxy.getAllPlayers()) {
             if (staff.hasPermission(SystemPermissions.TEAM)) {
                 staff.sendMessage(notice);
@@ -74,10 +74,9 @@ public final class WatchListener {
     }
 
     private void alertBannedAlts(Player player, int bannedAlts) {
-        var name = Placeholder.unparsed("player", player.getUsername());
-        var notice = messages.get("watch.banned-alts", name, Formatter.number("count", bannedAlts))
-                .clickEvent(ClickEvent.runCommand("/alts " + player.getUsername()))
-                .hoverEvent(HoverEvent.showText(messages.get("watch.alts-hover", name)));
+        var notice = messages.get("watch.banned-alts", Placeholder.unparsed("player", player.getUsername()),
+                        Formatter.number("count", bannedAlts))
+                .append(buttons.of(player.getUsername(), Button.GOTO, Button.WHOIS, Button.ALTS));
         for (Player staff : proxy.getAllPlayers()) {
             if (staff.hasPermission(SystemPermissions.ALTS)) {
                 staff.sendMessage(notice);

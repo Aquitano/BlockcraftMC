@@ -9,6 +9,7 @@ import me.blockcraft.common.moderation.StaffAction;
 import me.blockcraft.common.moderation.StaffActionRepository;
 import me.blockcraft.common.player.PlayerReference;
 import me.blockcraft.system.PlayerLookup;
+import me.blockcraft.system.StaffButtons;
 import me.blockcraft.system.SystemConfig;
 import me.blockcraft.system.SystemPermissions;
 import me.blockcraft.system.command.CommandSupport;
@@ -27,15 +28,17 @@ public final class StaffLogCommand {
     private final StaffActionRepository actions;
     private final SystemConfig config;
     private final Messages messages;
+    private final StaffButtons buttons;
     private final DateTimeFormatter dates;
 
     public StaffLogCommand(CommandSupport support, PlayerLookup lookup, StaffActionRepository actions, SystemConfig config,
-                           Messages messages) {
+                           Messages messages, StaffButtons buttons) {
         this.support = support;
         this.lookup = lookup;
         this.actions = actions;
         this.config = config;
         this.messages = messages;
+        this.buttons = buttons;
         this.dates = DateTimeFormatter.ofPattern(messages.raw("stafflog.date-format")).withZone(ZoneId.systemDefault());
     }
 
@@ -79,14 +82,25 @@ public final class StaffLogCommand {
     private Component entry(StaffAction action) {
         return messages.get("stafflog.entry",
                 Placeholder.unparsed("date", dates.format(action.createdAt())),
-                Placeholder.unparsed("issuer", action.issuer().name()),
-                Placeholder.unparsed("action", action.action()),
-                Placeholder.component("target", action.target().map(PlayerReference::name)
-                        .map(target -> messages.get("stafflog.target", Placeholder.unparsed("target", target)))
+                Placeholder.component("issuer", name(action.issuer())),
+                Placeholder.component("action", label(action.action())),
+                Placeholder.component("target", action.target()
+                        .map(target -> messages.get("stafflog.target", Placeholder.component("target", name(target))))
                         .orElseGet(Component::empty)),
                 Placeholder.component("detail", action.detail()
                         .map(detail -> messages.get("stafflog.detail", Placeholder.unparsed("detail", detail)))
                         .orElseGet(Component::empty)),
                 Placeholder.unparsed("server", action.server()));
+    }
+
+    /** The console has no account to look up. */
+    private Component name(PlayerReference player) {
+        return player.uuid().isPresent() ? buttons.name(player.name()) : Component.text(player.name());
+    }
+
+    /** A key without a label, from an old row or a newer server, shows as it is. */
+    private Component label(String action) {
+        String key = "stafflog.labels." + action;
+        return messages.has(key) ? messages.get(key) : Component.text(action);
     }
 }
