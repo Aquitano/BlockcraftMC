@@ -545,6 +545,7 @@ hub:
 play:
   usage: "<prefix><error>Benutze /play \\<Spiel>"
   unavailable: "<prefix><muted>Für <game> <muted>ist gerade keine Runde frei. Versuch es gleich noch einmal."
+  no-room-for-party: "<prefix><muted>Keine Runde <game> <muted>hat gerade Platz für deine ganze Party (<accent><count> Spieler<muted>)."
   already: "<prefix><error>Du bist bereits auf diesem Server."
   connecting: "<prefix><muted>Eine Runde <game> <muted>wird für dich geöffnet…"
   games:
@@ -795,6 +796,7 @@ party:
   chat-empty: "<primary>Party <arrow><reset><muted>Die Nachricht darf nicht leer sein."
   leader-moved: "<primary>Party <arrow><reset><success>Die Party hat den Server <accent><server><success> betreten."
   following: "<primary>Party <arrow><reset><success>Die Party betritt den Server <accent><server><success>."
+  no-room: "<primary>Party <arrow><reset><error>Auf <accent><server> <error>ist kein Platz mehr für dich, du bleibst hier."
 
 discord:
   invite: "<prefix><muted>Unser Discord: <accent><discord>"

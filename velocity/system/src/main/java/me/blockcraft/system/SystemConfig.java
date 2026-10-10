@@ -31,7 +31,7 @@ public final class SystemConfig {
     public record JoinMe(int dailyLimit, int resetHour) {
     }
 
-    public record Discovery(int pollSeconds, int staleSeconds) {
+    public record Discovery(int pollSeconds, int staleSeconds, int seatSeconds) {
     }
 
     public record Friends(int max, int requestMinutes) {
@@ -100,7 +100,8 @@ public final class SystemConfig {
         this.networkTags = Messages.tagsOf(network);
         this.lobbyGroup = string(root, "lobby-group");
         var discovery = YamlFile.section(root, "discovery");
-        this.discovery = new Discovery(number(discovery, "poll-seconds", 5), number(discovery, "stale-seconds", 20));
+        this.discovery = new Discovery(number(discovery, "poll-seconds", 5), number(discovery, "stale-seconds", 20),
+                number(discovery, "seat-seconds", 15));
         var alerts = YamlFile.section(root, "alerts");
         this.alerts = new Alerts(string(alerts, "webhook-url"), number(alerts, "min-interval-seconds", 300),
                 number(alerts, "lag-mspt", 50), number(alerts, "lag-polls", 6));

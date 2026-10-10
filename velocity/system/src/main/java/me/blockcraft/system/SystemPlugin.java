@@ -163,11 +163,11 @@ public final class SystemPlugin {
         var ignores = new IgnoreList(new IgnoreRepository(database), logger);
         var afk = new AfkPlayers();
         var lookup = new PlayerLookup(proxy, visibility, repositories.players());
-        var directory = new ServerDirectory(proxy, config.lobbyGroup());
-        var lobby = new LobbyConnector(directory, config, messages);
+        var directory = new ServerDirectory(proxy, config.lobbyGroup(), Duration.ofSeconds(config.discovery().seatSeconds()));
+        var parties = new PartyManager(proxy, visibility, choices, ignores, directory, messages);
+        var lobby = new LobbyConnector(directory, parties, config, messages);
         var punishments = new PunishmentService(proxy, repositories.punishments(), messages);
         var muteGate = new MuteGate(repositories.punishments(), punishments, messages, logger);
-        var parties = new PartyManager(proxy, visibility, choices, ignores, messages);
         var spectating = new SpectateRequests();
         var friends = new FriendManager(proxy, lookup, visibility, choices, ignores, directory, spectating, friendships, config, messages);
         var supportSessions = new SupportSessions();
@@ -199,6 +199,7 @@ public final class SystemPlugin {
         events.register(this, new InitialServerListener(lobby));
         events.register(this, new ProxyMessageListener(proxy, lobby, visibility, choices, afk, friends, tabHeader, logger, () -> pack));
         events.register(this, new MotdListener(visibility, config, settings, messages, dataDirectory, logger));
+        events.register(this, directory);
         events.register(this, new PartyListener(parties));
         events.register(this, new FriendListener(friends, visibility, logger));
         events.register(this, spectating);

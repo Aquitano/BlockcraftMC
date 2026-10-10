@@ -11,6 +11,7 @@ import me.blockcraft.system.PlayerChoices;
 import me.blockcraft.system.PlayerVisibility;
 import me.blockcraft.system.command.CommandSupport;
 import me.blockcraft.system.ignore.IgnoreList;
+import me.blockcraft.system.network.ServerDirectory;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
@@ -20,6 +21,7 @@ import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -43,6 +45,7 @@ public final class PartyManager {
     private final PlayerVisibility visibility;
     private final PlayerChoices choices;
     private final IgnoreList ignores;
+    private final ServerDirectory directory;
     private final Messages messages;
     private final Map<UUID, Party> byLeader = new ConcurrentHashMap<>();
     private final Map<UUID, UUID> leaderByMember = new ConcurrentHashMap<>();
@@ -50,11 +53,12 @@ public final class PartyManager {
     private final Map<UUID, Instant> joinRequests = new ConcurrentHashMap<>();
 
     public PartyManager(ProxyServer proxy, PlayerVisibility visibility, PlayerChoices choices, IgnoreList ignores,
-                        Messages messages) {
+                        ServerDirectory directory, Messages messages) {
         this.proxy = proxy;
         this.visibility = visibility;
         this.choices = choices;
         this.ignores = ignores;
+        this.directory = directory;
         this.messages = messages;
     }
 
@@ -73,6 +77,13 @@ public final class PartyManager {
         }
         var leader = leaderByMember.get(player);
         return leader == null ? Optional.empty() : Optional.ofNullable(byLeader.get(leader));
+    }
+
+    /** The online members who follow this player between servers; nobody unless they lead a party. */
+    public synchronized List<UUID> followersOf(UUID leader) {
+        var party = byLeader.get(leader);
+        return party == null ? List.of()
+                : party.members().stream().filter(member -> proxy.getPlayer(member).isPresent()).toList();
     }
 
     /** The names the members of that player's party are shown under, for tab completion. */
@@ -269,14 +280,19 @@ public final class PartyManager {
         if (party == null) {
             return;
         }
-        var serverName = Placeholder.unparsed("server", server.getServerInfo().getName());
+        String name = server.getServerInfo().getName();
+        var serverName = Placeholder.unparsed("server", name);
         leader.sendMessage(messages.get("party.leader-moved", serverName));
         for (UUID memberId : party.members()) {
             proxy.getPlayer(memberId)
                     .filter(member -> !member.getCurrentServer().map(current -> current.getServer().equals(server)).orElse(false))
                     .ifPresent(member -> {
+                        if (!directory.admit(memberId, name)) {
+                            member.sendMessage(messages.get("party.no-room", serverName));
+                            return;
+                        }
                         member.sendMessage(messages.get("party.following", serverName));
-                        member.createConnectionRequest(server).fireAndForget();
+                        directory.send(member, server);
                     });
         }
     }

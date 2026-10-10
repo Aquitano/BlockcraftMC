@@ -18,10 +18,12 @@ network:
 # Server group players land in; game groups are joined with /play <group>.
 lobby-group: lobby
 
-# Backends announce themselves in bc_servers; the proxy registers them and drops any whose heartbeat is stale.
+# Backends announce themselves in bc_servers; the proxy registers them and drops any whose heartbeat is stale. A
+# player sent to a game holds a seat there for at most seat-seconds, until the server counts them itself.
 discovery:
   poll-seconds: 5
   stale-seconds: 20
+  seat-seconds: 15
 
 # /servers colours a server's TPS below tps-warn and its milliseconds per tick at or above mspt-warn, stronger past
 # the critical values.

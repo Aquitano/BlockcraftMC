@@ -175,6 +175,13 @@ Servers of one game form a group, and players join groups, not servers: `/play <
 switch the state to `INGAME` and `RESTART` as rounds run, and the lobby's status signs and navigator show the group's
 state and player count from the same table.
 
+The heartbeat lags a few seconds behind, so the proxy counts a server's players as the larger of the heartbeat and
+the players it has connected there itself, plus a seat for everyone it is still sending there. A seat ends when its
+player arrives, when the connection fails, or after `discovery.seat-seconds`. A party leader who joins a game takes
+seats for every online member at once, and is told when no instance has room for the whole party. A member who
+follows a leader onto a game instance any other way needs a free seat there, or stays where they are; lobbies and
+running rounds, which members only watch, take them as before.
+
 A server announces itself as `BLOCKCRAFT_SERVER_NAME`, falling back to `HOSTNAME` (the container or pod name), in
 group `BLOCKCRAFT_SERVER_GROUP`, falling back to its name, at `BLOCKCRAFT_SERVER_HOST`, falling back to the address
 of the interface that reaches the database, on its `server-port`. Set the variables when several servers share a
