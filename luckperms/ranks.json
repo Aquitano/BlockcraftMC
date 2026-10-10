@@ -20,16 +20,14 @@
     },
     "premium": {
       "nodes": [
+        {"type": "inheritance", "key": "group.default", "value": true},
         {"type": "weight", "key": "weight.20", "value": true},
         {"type": "prefix", "key": "prefix.20.&6PREMIUM &8● &6", "value": true},
         {"type": "permission", "key": "blockcraft.lobby.premium", "value": true},
         {"type": "permission", "key": "blockcraft.lobby.doublejump", "value": true},
         {"type": "permission", "key": "blockcraft.system.fulljoin", "value": true},
         {"type": "permission", "key": "blockcraft.system.joinme", "value": true},
-        {"type": "permission", "key": "blockcraft.chat.color", "value": true},
-        {"type": "permission", "key": "minecraft.command.msg", "value": false},
-        {"type": "permission", "key": "minecraft.command.teammsg", "value": false},
-        {"type": "permission", "key": "minecraft.command.me", "value": false}
+        {"type": "permission", "key": "blockcraft.chat.color", "value": true}
       ]
     },
     "youtuber": {

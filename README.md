@@ -35,15 +35,15 @@ carries the name colour, so it ends in a colour code.
 | Group      | Prefix             | Grants                                                                            |
 |------------|--------------------|-----------------------------------------------------------------------------------|
 | `default`  | `&7SPIELER &8● &7` | party invite and kick, `/msg` and `/r`, `/friend`, `/seen`, `/playtime`, `/discord`, `/server` |
-| `premium`  | `&6PREMIUM &8● &6` | premium lobby area, double jump, join when full, `/joinme`, chat colours          |
+| `premium`  | `&6PREMIUM &8● &6` | default plus premium lobby area, double jump, join when full, `/joinme`, chat colours |
 | `youtuber` | `&5YT &8● &5`      | premium plus `/joinme` without delay, `/bc`, `/send`, `/nick`                     |
 | `dev`      | `&bDEV &8● &b`     | premium plus every `blockcraft.*` and `velocity.command.*` permission             |
 | `admin`    | `&4ADMIN &8● &4`   | dev plus `luckperms.*`                                                            |
 | `owner`    | `&bOWNER &8● &b`   | admin plus `*`                                                                    |
 
-`default` and `premium` negate `minecraft.command.msg`, `minecraft.command.teammsg` and `minecraft.command.me`. Paper
+`default` negates `minecraft.command.msg`, `minecraft.command.teammsg` and `minecraft.command.me`. Paper
 grants these vanilla chat commands, with their `tell`, `w` and `tm` aliases, to every player, and they reach the
-chat without passing the mute check or the chat filter. The groups that inherit `premium` lose them as well; the
+chat without passing the mute check or the chat filter. Every other group inherits `default` and loses them as well; the
 proxy's `/msg`, `/tell` and `/w` remain.
 
 Import it once per LuckPerms database (`gzip -k luckperms/ranks.json`, copy the `.gz` into LuckPerms' data folder,
