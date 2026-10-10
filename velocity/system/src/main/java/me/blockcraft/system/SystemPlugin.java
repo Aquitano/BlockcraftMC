@@ -12,6 +12,7 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import me.blockcraft.build.BuildConstants;
 import me.blockcraft.common.coins.CoinsRepository;
 import me.blockcraft.common.db.Database;
+import me.blockcraft.common.db.DatabaseException;
 import me.blockcraft.common.discord.DiscordLinkRepository;
 import me.blockcraft.common.ignore.IgnoreRepository;
 import me.blockcraft.common.message.Messages;
@@ -105,6 +106,7 @@ import org.slf4j.Logger;
 
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -163,7 +165,8 @@ public final class SystemPlugin {
         var ignores = new IgnoreList(new IgnoreRepository(database), logger);
         var afk = new AfkPlayers();
         var lookup = new PlayerLookup(proxy, visibility, repositories.players());
-        var directory = new ServerDirectory(proxy, config.lobbyGroup(), Duration.ofSeconds(config.discovery().seatSeconds()));
+        var directory = new ServerDirectory(proxy, config.lobbyGroup(), Duration.ofSeconds(config.discovery().seatSeconds()),
+                counts -> proxy.getScheduler().buildTask(this, () -> storeOccupancy(servers, counts)).schedule());
         var parties = new PartyManager(proxy, visibility, choices, ignores, directory, messages);
         var lobby = new LobbyConnector(directory, parties, config, messages);
         var punishments = new PunishmentService(proxy, repositories.punishments(), messages);
@@ -230,7 +233,7 @@ public final class SystemPlugin {
 
         register(new TeamChatCommand(support, proxy, messages).create());
         register(new FindCommand(support, visibility, messages).create());
-        register(new GotoCommand(support, visibility, messages).create());
+        register(new GotoCommand(support, visibility, directory, messages).create());
         register(new ClearChatCommand(support, messages).create(), "clearchat");
         register(new GlobalMuteCommand(support, proxy, settings, messages).create());
         register(new ChatSlowCommand(support, proxy, settings, messages).create());
@@ -240,7 +243,7 @@ public final class SystemPlugin {
         register(new AddPremiumCommand(support, proxy, lookup, messages).create());
         register(new SetMaxCommand(support, config, messages).create());
         register(new MotdCommand(support, config, messages).create());
-        register(new ServerJoinCommand(support, proxy, messages).create());
+        register(new ServerJoinCommand(support, proxy, directory, messages).create());
         register(new ServersCommand(support, servers, config, messages).create());
         register(new ListCommand(support, visibility, messages).create());
         register(new WhoisCommand(support, lookup, repositories.players(), repositories.strikes(), repositories.warns(),
@@ -306,6 +309,14 @@ public final class SystemPlugin {
         pack.ifPresent(NetworkPack::stop);
         if (database != null) {
             database.close();
+        }
+    }
+
+    private void storeOccupancy(ServerRepository servers, Map<String, Integer> counts) {
+        try {
+            servers.occupancy(counts);
+        } catch (DatabaseException e) {
+            logger.warn("Could not store how many players the proxy counts on {}", counts.keySet(), e);
         }
     }
 

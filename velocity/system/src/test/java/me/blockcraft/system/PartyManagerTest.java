@@ -23,7 +23,7 @@ public class PartyManagerTest {
         var choices = new PlayerChoices(null, null);
         var messages = Messages.load(Files.createTempDirectory("party-messages"), () -> PartyManagerTest.class.getResourceAsStream("/messages.yml"));
         var parties = new PartyManager(proxy.server, new PlayerVisibility(proxy.server, null, null, null), choices,
-                new IgnoreList(null, null), new ServerDirectory(proxy.server, "lobby", Duration.ofSeconds(15)), messages);
+                new IgnoreList(null, null), new ServerDirectory(proxy.server, "lobby", Duration.ofSeconds(15), counts -> { }), messages);
         var leader = proxy.join("Leader");
         var member = proxy.join("Member");
         var invited = proxy.join("Invited");
@@ -50,7 +50,7 @@ public class PartyManagerTest {
         var choices = new PlayerChoices(null, null);
         var messages = Messages.load(Files.createTempDirectory("party-messages"), () -> PartyManagerTest.class.getResourceAsStream("/messages.yml"));
         var parties = new PartyManager(proxy.server, new PlayerVisibility(proxy.server, null, null, null), choices,
-                new IgnoreList(null, null), new ServerDirectory(proxy.server, "lobby", Duration.ofSeconds(15)), messages);
+                new IgnoreList(null, null), new ServerDirectory(proxy.server, "lobby", Duration.ofSeconds(15), counts -> { }), messages);
         var leader = proxy.join("Leader");
         var stale = proxy.join("Stale");
         choices.set(stale, PlayerSetting.PARTY_INVITES, PlayerSetting.value(true));

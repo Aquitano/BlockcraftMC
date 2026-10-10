@@ -31,6 +31,15 @@ public class GroupStatusTest {
     }
 
     @Test
+    public void theProxysCountFillsAnInstanceTheHeartbeatStillShowsOpen() {
+        var status = GroupStatus.of(List.of(server("one", ServerState.LOBBY, 6, 8, 8)));
+
+        assertFalse(status.joinable());
+        assertEquals(GroupStatus.Availability.FULL, status.availability());
+        assertEquals(8, status.online());
+    }
+
+    @Test
     public void reportsWhyNoRoundIsAvailable() {
         assertEquals(GroupStatus.Availability.OFFLINE, GroupStatus.of(List.of()).availability());
         assertEquals(GroupStatus.Availability.INGAME,
@@ -40,6 +49,11 @@ public class GroupStatusTest {
     }
 
     private static ServerRecord server(String name, ServerState state, int online, int max) {
-        return new ServerRecord(new ServerIdentity(name, "quicksg", "localhost", 25565), new ServerStatus(state, online, max, 20, 5));
+        return server(name, state, online, max, 0);
+    }
+
+    private static ServerRecord server(String name, ServerState state, int online, int max, int occupancy) {
+        return new ServerRecord(new ServerIdentity(name, "quicksg", "localhost", 25565), new ServerStatus(state, online, max, 20, 5),
+                occupancy);
     }
 }

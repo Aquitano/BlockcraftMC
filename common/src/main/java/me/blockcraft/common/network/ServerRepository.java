@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Backend servers announce themselves here and the proxy registers whatever is alive, so no server list is
@@ -17,7 +18,7 @@ public final class ServerRepository {
     public record Entry(ServerRecord server, Duration heartbeatAge) {
     }
 
-    private static final String COLUMNS = "name, group_name, host, port, state, online, max_players, tps, mspt, "
+    private static final String COLUMNS = "name, group_name, host, port, state, online, max_players, tps, mspt, occupancy, "
             + "TIMESTAMPDIFF(SECOND, heartbeat, CURRENT_TIMESTAMP) AS heartbeat_age";
 
     private final Database db;
@@ -35,6 +36,11 @@ public final class ServerRepository {
                     tps = VALUES(tps), mspt = VALUES(mspt), heartbeat = CURRENT_TIMESTAMP""",
                 server.name(), server.group(), server.host(), server.port(),
                 status.state().name(), status.online(), status.maxPlayers(), status.tps(), status.mspt());
+    }
+
+    /** The proxy's own counts, which the heartbeat leaves alone. */
+    public void occupancy(Map<String, Integer> counts) {
+        counts.forEach((name, count) -> db.update("UPDATE bc_servers SET occupancy = ? WHERE name = ?", count, name));
     }
 
     public void delete(String name) {
@@ -56,6 +62,7 @@ public final class ServerRepository {
         return new ServerRecord(
                 new ServerIdentity(row.getString("name"), row.getString("group_name"), row.getString("host"), row.getInt("port")),
                 new ServerStatus(ServerState.valueOf(row.getString("state")), row.getInt("online"), row.getInt("max_players"),
-                        row.getDouble("tps"), row.getDouble("mspt")));
+                        row.getDouble("tps"), row.getDouble("mspt")),
+                row.getInt("occupancy"));
     }
 }

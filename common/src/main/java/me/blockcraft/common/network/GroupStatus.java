@@ -29,12 +29,12 @@ public record GroupStatus(Optional<ServerState> state, int online, int maxPlayer
         if (servers.isEmpty()) {
             return OFFLINE;
         }
-        boolean joinable = servers.stream().anyMatch(server -> server.status().joinable());
+        boolean joinable = servers.stream().anyMatch(ServerRecord::joinable);
         var state = joinable
                 ? ServerState.LOBBY
                 : servers.stream().map(server -> server.status().state()).min(Comparator.naturalOrder()).orElseThrow();
         return new GroupStatus(Optional.of(state),
-                servers.stream().mapToInt(server -> server.status().online()).sum(),
+                servers.stream().mapToInt(ServerRecord::online).sum(),
                 servers.stream().mapToInt(server -> server.status().maxPlayers()).sum(),
                 joinable);
     }

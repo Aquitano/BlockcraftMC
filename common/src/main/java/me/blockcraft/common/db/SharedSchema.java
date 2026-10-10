@@ -181,6 +181,9 @@ final class SharedSchema {
                 + "ignored_name VARCHAR(16) NOT NULL, "
                 + "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, "
                 + "PRIMARY KEY (player_uuid, ignored_uuid))"
+        )),
+        new Migration(13, List.of(
+            "ALTER TABLE bc_servers ADD COLUMN IF NOT EXISTS occupancy INT NOT NULL DEFAULT 0"
         ))
     );
 

@@ -17,11 +17,13 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import java.util.stream.Collectors;
@@ -29,9 +31,13 @@ import java.util.stream.Collectors;
 /**
  * The live view of {@code bc_servers} as last read by {@link ServerDiscovery}, and how a group is joined. Players the
  * proxy sends to a game hold a seat there until they arrive, their connection fails or the seat times out, so a burst
- * of joins does not overfill an instance whose heartbeat has not caught up yet.
+ * of joins does not overfill an instance whose heartbeat has not caught up yet. Every change in what it counts goes
+ * back to {@code bc_servers}, so status signs and the navigator see the seats as well.
  */
 public final class ServerDirectory {
+
+    /** How a player may go to one particular server: into a seat, as a spectator of its running round, or not at all. */
+    public enum Entry { SEATED, WATCHING, CLOSED }
 
     private record Seat(String server, Instant expires) {
     }
@@ -40,22 +46,31 @@ public final class ServerDirectory {
     private final String lobbyGroup;
     private final Duration seatTimeout;
     private final InstantSource clock;
+    private final Consumer<Map<String, Integer>> publish;
     private final Map<UUID, Seat> seats = new HashMap<>();
+    private final Map<String, Integer> published = new HashMap<>();
     private volatile Map<String, ServerRecord> servers = Map.of();
 
-    public ServerDirectory(ProxyServer proxy, String lobbyGroup, Duration seatTimeout) {
-        this(proxy, lobbyGroup, seatTimeout, InstantSource.system());
+    /** {@code publish} receives the counts that changed and must not block, since it is called while seats change. */
+    public ServerDirectory(ProxyServer proxy, String lobbyGroup, Duration seatTimeout, Consumer<Map<String, Integer>> publish) {
+        this(proxy, lobbyGroup, seatTimeout, InstantSource.system(), publish);
     }
 
-    ServerDirectory(ProxyServer proxy, String lobbyGroup, Duration seatTimeout, InstantSource clock) {
+    ServerDirectory(ProxyServer proxy, String lobbyGroup, Duration seatTimeout, InstantSource clock,
+                    Consumer<Map<String, Integer>> publish) {
         this.proxy = proxy;
         this.lobbyGroup = lobbyGroup;
         this.seatTimeout = seatTimeout;
         this.clock = clock;
+        this.publish = publish;
     }
 
-    void update(List<ServerRecord> alive) {
+    synchronized void update(List<ServerRecord> alive) {
         servers = alive.stream().collect(Collectors.toUnmodifiableMap(ServerRecord::name, Function.identity()));
+        // Every poll writes all counts again, which also mends a write that arrived out of order.
+        published.clear();
+        expireSeats();
+        publishChanges();
     }
 
     public Optional<ServerRecord> get(String server) {
@@ -64,12 +79,6 @@ public final class ServerDirectory {
 
     public Optional<String> groupOf(String server) {
         return get(server).map(ServerRecord::group);
-    }
-
-    /** Whether a named server still has a free seat, which is what every join path asks before it connects one. */
-    public synchronized boolean isJoinable(String server) {
-        expireSeats();
-        return get(server).map(record -> hasRoom(record, 1)).orElse(false);
     }
 
     /** Whether a round is running there, which nobody joins but a friend may watch; a lobby is never watched. */
@@ -87,34 +96,57 @@ public final class ServerDirectory {
     public synchronized Optional<RegisteredServer> fill(String group, Collection<UUID> players) {
         expireSeats();
         var target = joinable(group, players.size()).max(Comparator.comparingInt(this::occupancy)).flatMap(this::registered);
-        target.ifPresent(server -> players.forEach(player -> seat(player, server.getServerInfo().getName())));
+        target.ifPresent(server -> {
+            players.forEach(player -> seat(player, server.getServerInfo().getName()));
+            publishChanges();
+        });
         return target;
     }
 
     /**
-     * Whether the player may follow someone onto that server: into the seat held for them, into a free one, or as a
-     * spectator of a running round. Lobbies and servers outside {@code bc_servers} take everyone, as they always did.
+     * Seats the player on a server they chose by name, such as a friend's or one a JoinMe named, keeping the seat
+     * they already hold there; a running round they may only watch, and a full or restarting server stays closed.
      */
-    public synchronized boolean admit(UUID player, String server) {
+    public synchronized Entry enter(UUID player, String server) {
         var record = get(server);
-        if (record.isEmpty() || record.get().group().equals(lobbyGroup) || isWatchable(server)) {
-            return true;
+        if (record.isEmpty()) {
+            return Entry.CLOSED;
+        }
+        if (isWatchable(server)) {
+            return Entry.WATCHING;
         }
         expireSeats();
         var held = seats.get(player);
         if (held != null && held.server().equals(server)) {
-            return true;
+            return Entry.SEATED;
         }
         if (!hasRoom(record.get(), 1)) {
-            return false;
+            return Entry.CLOSED;
         }
         seat(player, server);
-        return true;
+        publishChanges();
+        return Entry.SEATED;
+    }
+
+    /**
+     * Whether the player may follow someone onto that server, as {@link #enter} decides. Lobbies and servers outside
+     * {@code bc_servers} take everyone, as they always did.
+     */
+    public synchronized boolean admit(UUID player, String server) {
+        var record = get(server);
+        return record.isEmpty() || record.get().group().equals(lobbyGroup) || enter(player, server) != Entry.CLOSED;
     }
 
     /** Gives up the seat the player holds on that server, if any; a seat elsewhere belongs to a newer attempt. */
     public synchronized void release(UUID player, String server) {
-        seats.computeIfPresent(player, (id, seat) -> seat.server().equals(server) ? null : seat);
+        if (unseat(player, server)) {
+            publishChanges();
+        }
+    }
+
+    private boolean unseat(UUID player, String server) {
+        var held = seats.get(player);
+        return held != null && held.server().equals(server) && seats.remove(player, held);
     }
 
     /** Connects the player with Velocity's own error messages and releases their seat there unless they arrive. */
@@ -128,14 +160,17 @@ public final class ServerDirectory {
         });
     }
 
+    /** An arrival turns a seat into a connected player and changes no count, so nothing is published. */
     @Subscribe
-    public void onServerConnected(ServerConnectedEvent event) {
-        release(event.getPlayer().getUniqueId(), event.getServer().getServerInfo().getName());
+    public synchronized void onServerConnected(ServerConnectedEvent event) {
+        unseat(event.getPlayer().getUniqueId(), event.getServer().getServerInfo().getName());
     }
 
     @Subscribe
     public synchronized void onDisconnect(DisconnectEvent event) {
-        seats.remove(event.getPlayer().getUniqueId());
+        if (seats.remove(event.getPlayer().getUniqueId()) != null) {
+            publishChanges();
+        }
     }
 
     /** Lobbies spread the load: the joinable server with the fewest players. */
@@ -159,7 +194,7 @@ public final class ServerDirectory {
 
     /**
      * The heartbeat can be seconds old, while the proxy knows exactly whom it connected there; a seat counts until its
-     * player shows up among those.
+     * player shows up among those. The row's occupancy column is left out, since it is this count as published before.
      */
     private int occupancy(ServerRecord server) {
         var arrived = registered(server).map(RegisteredServer::getPlayersConnected).orElse(List.of()).stream()
@@ -176,7 +211,23 @@ public final class ServerDirectory {
 
     private void expireSeats() {
         var now = clock.instant();
-        seats.values().removeIf(seat -> !seat.expires().isAfter(now));
+        if (seats.values().removeIf(seat -> !seat.expires().isAfter(now))) {
+            publishChanges();
+        }
+    }
+
+    private void publishChanges() {
+        var changed = new HashMap<String, Integer>();
+        for (var server : servers.values()) {
+            int count = occupancy(server);
+            if (!Objects.equals(published.put(server.name(), count), count)) {
+                changed.put(server.name(), count);
+            }
+        }
+        published.keySet().retainAll(servers.keySet());
+        if (!changed.isEmpty()) {
+            publish.accept(Map.copyOf(changed));
+        }
     }
 
     private Optional<RegisteredServer> registered(ServerRecord server) {

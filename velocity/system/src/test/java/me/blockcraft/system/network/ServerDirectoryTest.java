@@ -34,6 +34,7 @@ public class ServerDirectoryTest {
                 case "getServer" -> Optional.of(registered.computeIfAbsent((String) args[0], ServerDirectoryTest::nobodyOn));
                 default -> throw new AssertionError(method.getName());
             });
+    private final Map<String, Integer> published = new HashMap<>();
     private Instant now = Instant.parse("2026-01-01T00:00:00Z");
 
     @Test
@@ -52,10 +53,10 @@ public class ServerDirectoryTest {
     }
 
     @Test
-    public void aRunningRoundStaysClosedToJoins() {
+    public void aRunningRoundIsWatchedRatherThanJoined() {
         var directory = directoryOf(server("quicksg-1", "quicksg", ServerState.INGAME));
 
-        assertFalse(directory.isJoinable("quicksg-1"));
+        assertEquals(ServerDirectory.Entry.WATCHING, directory.enter(UUID.randomUUID(), "quicksg-1"));
     }
 
     @Test
@@ -81,9 +82,9 @@ public class ServerDirectoryTest {
         var player = UUID.randomUUID();
 
         fill(directory, player);
-        assertFalse(directory.isJoinable("quicksg-1"));
+        assertEquals(ServerDirectory.Entry.CLOSED, directory.enter(UUID.randomUUID(), "quicksg-1"));
         directory.release(player, "quicksg-1");
-        assertTrue(directory.isJoinable("quicksg-1"));
+        assertEquals(ServerDirectory.Entry.SEATED, directory.enter(UUID.randomUUID(), "quicksg-1"));
     }
 
     @Test
@@ -91,14 +92,25 @@ public class ServerDirectoryTest {
         var directory = directoryOf(game("quicksg-1", 1, 2));
 
         fill(directory, UUID.randomUUID());
-        assertFalse(directory.isJoinable("quicksg-1"));
+        assertEquals(ServerDirectory.Entry.CLOSED, directory.enter(UUID.randomUUID(), "quicksg-1"));
         now = now.plus(SEAT_TIMEOUT);
-        assertTrue(directory.isJoinable("quicksg-1"));
+        assertEquals(ServerDirectory.Entry.SEATED, directory.enter(UUID.randomUUID(), "quicksg-1"));
+    }
+
+    @Test
+    public void signsHearOfASeatBeforeTheHeartbeatDoes() {
+        var directory = directoryOf(game("quicksg-1", 1, 8));
+        var player = UUID.randomUUID();
+
+        fill(directory, player);
+        assertEquals(Integer.valueOf(2), published.get("quicksg-1"));
+        directory.release(player, "quicksg-1");
+        assertEquals(Integer.valueOf(1), published.get("quicksg-1"));
     }
 
     /** Nobody is connected through the fake proxy, so the mirrored rows and the seats are all that count. */
     private ServerDirectory directoryOf(ServerRecord... servers) {
-        var directory = new ServerDirectory(proxy, "lobby", SEAT_TIMEOUT, () -> now);
+        var directory = new ServerDirectory(proxy, "lobby", SEAT_TIMEOUT, () -> now, published::putAll);
         directory.update(List.of(servers));
         return directory;
     }
@@ -108,12 +120,12 @@ public class ServerDirectoryTest {
     }
 
     private static ServerRecord server(String name, String group, ServerState state) {
-        return new ServerRecord(new ServerIdentity(name, group, "127.0.0.1", 25566), new ServerStatus(state, 4, 8, 20, 5));
+        return new ServerRecord(new ServerIdentity(name, group, "127.0.0.1", 25566), new ServerStatus(state, 4, 8, 20, 5), 0);
     }
 
     private static ServerRecord game(String name, int online, int maxPlayers) {
         return new ServerRecord(new ServerIdentity(name, "quicksg", "127.0.0.1", 25566),
-                new ServerStatus(ServerState.LOBBY, online, maxPlayers, 20, 5));
+                new ServerStatus(ServerState.LOBBY, online, maxPlayers, 20, 5), 0);
     }
 
     private static RegisteredServer nobodyOn(String name) {

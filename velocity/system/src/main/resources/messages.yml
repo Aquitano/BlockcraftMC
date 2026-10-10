@@ -531,6 +531,7 @@ addpremium:
   failed: "<prefix><error>Die Rechte für <accent><player> <error>konnten nicht gesetzt werden. Siehe Konsole."
 serverjoin:
   unknown: "<prefix><error>Der Server ist nicht verfügbar."
+  closed: "<prefix><error>Auf diesem Server ist gerade kein Platz frei."
 servers:
   empty: "<prefix><error>Es ist kein Server eingetragen."
   header: "<prefix><muted>Es sind <accent><count> <muted>Server eingetragen."

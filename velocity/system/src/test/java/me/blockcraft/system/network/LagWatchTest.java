@@ -40,6 +40,6 @@ public class LagWatchTest {
 
     private static ServerRecord server(double mspt) {
         return new ServerRecord(new ServerIdentity("quicksg-1", "quicksg", "127.0.0.1", 25566),
-                new ServerStatus(ServerState.LOBBY, 4, 8, 20, mspt));
+                new ServerStatus(ServerState.LOBBY, 4, 8, 20, mspt), 0);
     }
 }

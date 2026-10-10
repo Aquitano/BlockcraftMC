@@ -55,7 +55,7 @@ final class LobbySelectorMenu extends Menu {
                 var icon = Items.of(current ? Material.EMERALD_BLOCK : Material.EMERALD)
                         .name(messages.get("lobbies.entry", Placeholder.unparsed("server", lobby.name())))
                         .lore(messages.get(current ? "lobbies.current-lore" : "lobbies.join-lore",
-                                Formatter.number("online", lobby.status().online()),
+                                Formatter.number("online", lobby.online()),
                                 Formatter.number("max", lobby.status().maxPlayers())));
                 if (current) {
                     info(slot, icon.glow().build());

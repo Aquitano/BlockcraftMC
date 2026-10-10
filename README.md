@@ -180,7 +180,11 @@ the players it has connected there itself, plus a seat for everyone it is still 
 player arrives, when the connection fails, or after `discovery.seat-seconds`. A party leader who joins a game takes
 seats for every online member at once, and is told when no instance has room for the whole party. A member who
 follows a leader onto a game instance any other way needs a free seat there, or stays where they are; lobbies and
-running rounds, which members only watch, take them as before.
+running rounds, which members only watch, take them as before. A friend jump and a JoinMe click take a seat on that
+one server too, or let the player watch its running round, and are turned away when it has neither; `/goto` takes a
+seat when there is one and goes anyway. The proxy writes its count back into the row's `occupancy` column whenever a
+seat comes or goes and on every poll, and status signs, the navigator and the lobby list count the higher of that and
+the heartbeat, so they stop inviting players the moment the last seat is taken.
 
 A server announces itself as `BLOCKCRAFT_SERVER_NAME`, falling back to `HOSTNAME` (the container or pod name), in
 group `BLOCKCRAFT_SERVER_GROUP`, falling back to its name, at `BLOCKCRAFT_SERVER_HOST`, falling back to the address

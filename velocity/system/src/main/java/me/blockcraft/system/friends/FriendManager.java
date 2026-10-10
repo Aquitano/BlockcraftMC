@@ -173,16 +173,18 @@ public final class FriendManager {
             }
             String target = server.get().getServerInfo().getName();
             var where = Placeholder.unparsed("server", target);
-            if (directory.isJoinable(target)) {
-                player.sendMessage(messages.get("friends.jumping", named(friend), where));
-            } else if (directory.isWatchable(target)) {
-                spectating.watch(player, friend.uuid(), target);
-                player.sendMessage(messages.get("friends.watching", named(friend), where));
-            } else {
-                player.sendMessage(messages.get("friends.unavailable", named(friend)));
-                return;
+            switch (directory.enter(player.getUniqueId(), target)) {
+                case SEATED -> player.sendMessage(messages.get("friends.jumping", named(friend), where));
+                case WATCHING -> {
+                    spectating.watch(player, friend.uuid(), target);
+                    player.sendMessage(messages.get("friends.watching", named(friend), where));
+                }
+                case CLOSED -> {
+                    player.sendMessage(messages.get("friends.unavailable", named(friend)));
+                    return;
+                }
             }
-            player.createConnectionRequest(server.get()).fireAndForget();
+            directory.send(player, server.get());
         });
     }
 
