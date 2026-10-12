@@ -65,6 +65,10 @@ after a 30-second per-player cooldown and explain when they are still waiting.
 5. Run `/map save` when the server uses a world template. Otherwise, the next restart restores the old map and
    discards these positions. See the [map workflow](README.md#maps).
 
+Run `/lobbyset check` before the final save. The command also works from the console and reports missing locations,
+invalid or duplicate pressure plates, stations in another world, a missing jump warp, and insufficient or duplicate
+Easter hiding places. It checks the setup, not whether the jumps are reachable or the pond is fishable.
+
 The course requires all configured checkpoints in order. Falling more than four blocks below the last checkpoint
 returns the player there while the timer continues. Times and falls persist in `bc_parkour`. One hundred falls
 unlock `Ausdauer`. Flying, gliding, riding, or teleporting cancels a run. Double jumps and gadgets are disabled
@@ -104,3 +108,4 @@ Before deploying, verify these interactions with Minecraft clients on a local te
 - Leave a menu while its database request is pending. Rewards should arrive without reopening the old menu.
 
 The build does not validate client rendering, map geometry, or a live proxy-to-backend connection.
+Use the [performance capture workflow](dev/performance/README.md) to compare server tick time, CPU, GC pauses, and client frame times.

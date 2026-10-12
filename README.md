@@ -78,6 +78,8 @@ Versions live in `gradle/libs.versions.toml` (`paper-api`, `velocity-api`, `mine
 
 ## Run locally
 
+For repeatable server and client measurements, see [Measure Minecraft performance](dev/performance/README.md).
+
 ### The whole network in Docker
 
 ```

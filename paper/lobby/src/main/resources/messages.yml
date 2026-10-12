@@ -451,6 +451,15 @@ npc:
 activities:
   firework-wait: "<muted>Das nächste Feuerwerk wird gerade vorbereitet."
   location-set: "<prefix><success><location> <muted>gespeichert."
+  setup-missing: "<prefix><error><location> fehlt oder die Welt ist nicht geladen."
+  setup-plate: "<prefix><error>Bei <location> liegt keine Druckplatte."
+  setup-duplicate: "<prefix><error><location> teilt sich einen Block mit einer anderen Parcours-Station."
+  setup-world: "<prefix><error><location> liegt nicht in der Welt der Startplatte."
+  setup-jump: "<prefix><error>Der Navigator-Zielpunkt fehlt. Setze ihn mit /setspawn jump."
+  setup-eggs: "<prefix><error>Nur <found> verschiedene Osterei-Verstecke gesetzt. Benötigt werden <required>."
+  setup-egg-duplicate: "<prefix><error><location> teilt sich einen Block mit einem anderen Osterei-Versteck."
+  setup-ready: "<prefix><success>Die Aktivitätspositionen sind eingerichtet. Teste den Teich und den Parcours im Spiel und sichere die Karte mit /map save."
+  setup-problems: "<prefix><error>Die Prüfung meldet <count> Einrichtungsfehler."
 fishing:
   rod: "<primary>Teichangel"
   rod-lore: "<muted>Für Fische, Fundsachen und unwahrscheinliche Geschichten."

@@ -142,7 +142,7 @@ public final class LobbyPlugin extends JavaPlugin {
                     Stream.concat(config.holograms().stream(), leaderboards.names().stream()).toList(),
                     holograms, locations, shopNpc));
             commands.register(ClearChatCommand.create(messages));
-            commands.register(LobbySetCommand.create(activityLocations, messages, activities,
+            commands.register(LobbySetCommand.create(activityLocations, messages, activities, locations,
                     () -> {
                         parkour.refresh();
                         seasons.refresh();
