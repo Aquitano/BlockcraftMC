@@ -1,6 +1,6 @@
 package me.blockcraft.lobby.menu;
 
-import me.blockcraft.api.cosmetic.ChatTag;
+import me.blockcraft.api.cosmetic.ChatTagChoice;
 import me.blockcraft.api.cosmetic.KillEffect;
 import me.blockcraft.api.cosmetic.WinEffect;
 import me.blockcraft.api.item.Items;
@@ -41,28 +41,29 @@ final class CosmeticKinds {
                 Optional.of(new Price<>(menus.config().shirtPrice(), Shirt.ITEM_PREFIX, Shirt::item)),
                 Optional.of(new Preview<>(FITTING_LORE, (player, shirt, back) ->
                         menus.previews().equipment(player, shirt(shirt), EquipmentSlot.CHEST, back))),
-                Optional.empty(), shirt -> messages.get("shirts.equipped"), messages.get("cosmetics.removed"));
+                Optional.empty(), shirt -> messages.get("shirts.equipped"), messages.get("cosmetics.removed"), Optional.empty());
     }
 
     static CosmeticKind<Head> heads(Menus menus) {
         var messages = menus.messages();
         return new CosmeticKind<>(PlayerSetting.HEAD, messages.get("heads.title"), new Layout(3, 26, 25), menus::openShop,
-                List.of(Head.values()), Head::key, head -> Items.head(head.owner()).build(),
+                List.of(Head.values()), Head::storageKey, head -> Items.head(head.owner()).build(),
                 head -> messages.get("heads.name." + head.key()), head -> List.of(), false,
                 Optional.of(new Price<>(menus.config().headPrice(), Head.ITEM_PREFIX, Head::item)),
                 Optional.of(new Preview<>(FITTING_LORE, (player, head, back) ->
                         menus.previews().equipment(player, Items.head(head.owner()).build(), EquipmentSlot.HEAD, back))),
-                Optional.empty(), head -> messages.get("heads.equipped"), messages.get("cosmetics.removed"));
+                Optional.empty(), head -> messages.get("heads.equipped"), messages.get("cosmetics.removed"), Optional.empty());
     }
 
     static CosmeticKind<Trail> trails(Menus menus) {
         var messages = menus.messages();
-        return new CosmeticKind<>(PlayerSetting.TRAIL, messages.get("trails.title"), Layout.ROW, menus::openPremium,
+        return new CosmeticKind<>(PlayerSetting.TRAIL, messages.get("trails.title"), Layout.ROW, menus::openExtras,
                 List.of(Trail.values()), Trail::key, trail -> ItemStack.of(trail.icon()),
                 trail -> messages.get("trails.name." + trail.key()),
                 trail -> List.of(messages.get("trails.lore." + trail.key())), true, Optional.empty(),
                 Optional.of(new Preview<>(PREVIEW_LORE, menus.previews()::trail)),
-                Optional.empty(), trail -> messages.get("trails.selected." + trail.key()), messages.get("cosmetics.removed"));
+                Optional.empty(), trail -> messages.get("trails.selected." + trail.key()), messages.get("cosmetics.removed"),
+                Optional.of(new CosmeticKind.Unlock<>(Trail.ITEM_PREFIX, trail -> trail.premium() ? Optional.empty() : Optional.of(trail.item()))));
     }
 
     static CosmeticKind<PetType> pets(Menus menus) {
@@ -77,7 +78,7 @@ final class CosmeticKinds {
                     pets.release(player.getUniqueId());
                     pets.spawn(player, pet);
                 })),
-                pet -> messages.get("pets.chosen." + pet.key()), messages.get("cosmetics.removed"));
+                pet -> messages.get("pets.chosen." + pet.key()), messages.get("cosmetics.removed"), Optional.empty());
     }
 
     static CosmeticKind<Gadget> gadgets(Menus menus) {
@@ -86,18 +87,22 @@ final class CosmeticKinds {
                 List.of(Gadget.values()), Gadget::key, gadget -> ItemStack.of(gadget.material()),
                 gadget -> messages.get("gadgets.name." + gadget.key()),
                 gadget -> List.of(messages.get("gadgets.lore." + gadget.key())), false, Optional.empty(),
-                Optional.empty(), Optional.empty(), gadget -> messages.get("cosmetics.selected"), messages.get("cosmetics.removed"));
+                Optional.empty(), Optional.empty(), gadget -> messages.get("cosmetics.selected"), messages.get("cosmetics.removed"),
+                Optional.of(new CosmeticKind.Unlock<>("gadget.", gadget -> gadget == Gadget.BIRTHDAY_CAKE ? Optional.of("gadget.birthday-cake") : Optional.empty())));
     }
 
-    static CosmeticKind<ChatTag> chatTags(Menus menus) {
+    /** {@code choices} are the tags the viewer may wear, which their rank and their earned unlocks decide. */
+    static CosmeticKind<ChatTagChoice> chatTags(Menus menus, List<ChatTagChoice> choices) {
         var messages = menus.messages();
         var tags = menus.apiMessages();
-        return new CosmeticKind<>(PlayerSetting.CHAT_TAG, messages.get("tags.title"), new Layout(2, 9, 17), menus::openExtras,
-                List.of(ChatTag.values()), ChatTag::key, tag -> ItemStack.of(Material.NAME_TAG),
-                tag -> tags.get(tag.messageKey()), tag -> List.of(), false, Optional.empty(),
+        return new CosmeticKind<>(PlayerSetting.CHAT_TAG, messages.get("tags.title"), new Layout(3, 18, 26), menus::openExtras,
+                choices, ChatTagChoice::value,
+                choice -> ItemStack.of(choice.tag().earned() ? Material.GOLDEN_HELMET : Material.NAME_TAG),
+                choice -> choice.text(tags),
+                choice -> choice.tag().earned() ? List.of(messages.get("tags.earned-lore")) : List.of(), false, Optional.empty(),
                 Optional.empty(), Optional.empty(),
-                tag -> messages.get("tags.chosen", Placeholder.component("tag", tags.get(tag.messageKey()))),
-                messages.get("tags.removed"));
+                choice -> messages.get("tags.chosen", Placeholder.component("tag", choice.text(tags))),
+                messages.get("tags.removed"), Optional.empty());
     }
 
     static CosmeticKind<KillEffect> killEffects(Menus menus) {
@@ -125,7 +130,7 @@ final class CosmeticKinds {
                         menus.previews().effect(player, viewer -> preview.accept(viewer, effect), back))),
                 Optional.empty(),
                 effect -> messages.get("effects.chosen", Placeholder.component("effect", messages.get(prefix + ".name." + key.apply(effect)))),
-                messages.get("effects.reset-done"));
+                messages.get("effects.reset-done"), Optional.empty());
     }
 
     private static ItemStack shirt(Shirt shirt) {

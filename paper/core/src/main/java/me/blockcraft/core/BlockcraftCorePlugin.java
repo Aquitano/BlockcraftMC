@@ -56,8 +56,11 @@ import me.blockcraft.core.staff.StaffMode;
 import me.blockcraft.core.staff.VanishService;
 import me.blockcraft.core.nick.NickListener;
 import me.blockcraft.core.nick.Nicks;
+import me.blockcraft.core.welcome.WelcomeCommittee;
+import me.blockcraft.core.welcome.WelcomeConfig;
 import me.blockcraft.common.nick.NickRepository;
 import me.blockcraft.common.report.ReportRepository;
+import me.blockcraft.common.welcome.GreetingRepository;
 import org.bukkit.GameMode;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -83,8 +86,8 @@ public final class BlockcraftCorePlugin extends JavaPlugin {
         pluginManager.registerEvents(new MuteListener(this, moderation.punishments(), messages), this);
         var networkChat = new NetworkChat(moderation.settings(), getLogger());
         networkChat.start(this, chatFilter.networkRefresh());
-        pluginManager.registerEvents(new GlobalMuteListener(networkChat, messages), this);
-        pluginManager.registerEvents(new ChatCooldownListener(chatFilter.cooldown(), networkChat, messages), this);
+        pluginManager.registerEvents(new GlobalMuteListener(this, networkChat, messages), this);
+        pluginManager.registerEvents(new ChatCooldownListener(this, chatFilter.cooldown(), networkChat, messages), this);
         pluginManager.registerEvents(new ChatFilterListener(this, chatFilter, api.server().name(), moderation.adLog(), messages), this);
         var nickRepository = new NickRepository(api.database());
         var nickSection = YamlFile.section(config, "nick");
@@ -92,6 +95,8 @@ public final class BlockcraftCorePlugin extends JavaPlugin {
                 stringList(nickSection, "ranks"));
         pluginManager.registerEvents(new NickListener(nicks, messages), this);
         pluginManager.registerEvents(new ChatFormatListener(this, messages, nicks), this);
+        pluginManager.registerEvents(new WelcomeCommittee(this, WelcomeConfig.fromYaml(config), new GreetingRepository(api.database()),
+                messages), this);
         pluginManager.registerEvents(new PlayerTimeListener(), this);
         var vanish = new VanishService(this, moderation.vanish());
         pluginManager.registerEvents(vanish, this);

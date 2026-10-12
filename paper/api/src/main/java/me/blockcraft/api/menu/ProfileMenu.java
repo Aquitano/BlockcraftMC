@@ -30,11 +30,14 @@ final class ProfileMenu extends Menu {
 
     private final Consumer<Player> achievements;
     private final Optional<Consumer<Player>> recentRound;
+    private final Optional<Consumer<Player>> advent;
 
     ProfileMenu(Profiles profiles, Player viewer, Profiles.Snapshot snapshot, Optional<Consumer<Player>> cosmetics) {
         super(3, profiles.messages().get("profile.title"));
         recentRound = profiles.recentRound();
+        advent = profiles.advent();
         var messages = profiles.messages();
+        advent.ifPresent(open -> set(17, Items.of(Material.CHEST).name(messages.get("profile.advent")).build()));
         achievements = player -> profiles.achievements().open(player, Optional.of(back -> profiles.open(back, cosmetics)));
         closeButton(ToolbarButton.LEFT);
         toolbar(ToolbarButton.MIDDLE, button(messages, MenuIcon.TOOL_SETTINGS, "profile.settings"),
@@ -74,7 +77,9 @@ final class ProfileMenu extends Menu {
 
     @Override
     protected void onClick(Player player, int slot, ItemStack clicked, InventoryClickEvent event) {
-        if (slot == RECAP_SLOT) {
+        if (slot == 17) {
+            advent.ifPresent(open -> open.accept(player));
+        } else if (slot == RECAP_SLOT) {
             recentRound.ifPresent(open -> open.accept(player));
         } else if (slot == ACHIEVEMENTS_SLOT) {
             achievements.accept(player);

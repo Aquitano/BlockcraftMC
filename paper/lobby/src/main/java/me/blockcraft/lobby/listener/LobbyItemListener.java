@@ -40,7 +40,7 @@ public final class LobbyItemListener implements Listener {
                 case PROFILE -> menus.openProfile(player);
                 case SETTINGS -> menus.openSettings(player);
                 case FRIENDS -> menus.openFriends(player);
-                case GADGET -> {
+                case GADGET, POND_ROD -> {
                 }
             }
         });

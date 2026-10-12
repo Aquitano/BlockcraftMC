@@ -5,8 +5,8 @@ commands:
     description: "Erstellt ein Status-Schild"
 sign:
   name: "<name>"
-  players: "<muted><online> online"
-  click: "<success>Jetzt spielen"
+  players: "<muted><online><dark>/<muted><max> online"
+  click: "<muted>Klick: <success>Beitreten"
   retry: "<muted>Erneut prüfen"
 createsign:
   usage: "<prefix><accent>/createsign <success>\\<Gruppe>"

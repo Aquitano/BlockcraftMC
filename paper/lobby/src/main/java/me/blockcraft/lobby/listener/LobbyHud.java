@@ -13,12 +13,15 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerResourcePackStatusEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.OptionalInt;
 import java.util.UUID;
 
 /**
@@ -30,6 +33,7 @@ public final class LobbyHud implements Listener {
     private final Plugin plugin;
     private final Messages messages;
     private final Sidebar sidebar;
+    private final Map<UUID, Integer> shownCoins = new HashMap<>();
     private BukkitTask task;
     private boolean refreshing;
 
@@ -53,6 +57,17 @@ public final class LobbyHud implements Listener {
     public void onJoin(PlayerJoinEvent event) {
         // The API loads XP and creates a first-time coin account independently of the join event.
         Tasks.later(plugin, 20L, () -> refresh(List.of(event.getPlayer()), () -> { }));
+    }
+
+    @EventHandler
+    public void onQuit(PlayerQuitEvent event) {
+        shownCoins.remove(event.getPlayer().getUniqueId());
+    }
+
+    /** The balance the sidebar shows, at most one refresh old; empty until the first refresh after the join. */
+    public OptionalInt coins(Player player) {
+        var coins = shownCoins.get(player.getUniqueId());
+        return coins == null ? OptionalInt.empty() : OptionalInt.of(coins);
     }
 
     /** The proxy's word on the pack arrives after the join, and the icons depend on it. */
@@ -95,6 +110,7 @@ public final class LobbyHud implements Listener {
     }
 
     private void show(Player player, int coins) {
+        shownCoins.put(player.getUniqueId(), coins);
         var api = BlockcraftApi.get();
         var progress = api.xp().levels().progress(api.xp().total(player));
         player.setLevel(progress.level());

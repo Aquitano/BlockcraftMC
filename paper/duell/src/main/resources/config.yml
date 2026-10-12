@@ -48,3 +48,8 @@ sg-chest:
 # 1.8 PvP: no attack cooldown, everything else stays vanilla.
 pvp:
   legacy-combat: true
+
+# A duel that ends with both duellists still here offers both a rematch; it is on once both asked within this long
+# of each other, and the restart countdown above is the last chance to ask.
+rematch:
+  window-seconds: 15

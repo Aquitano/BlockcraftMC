@@ -33,7 +33,15 @@ public enum FeedbackSound {
     PAINT_THROW("entity.snowball.throw", 1.0f, 1.0f),
     EQUIP("item.armor.equip_leather", 0.5f, 1.2f, "equip"),
     HEAL("entity.experience_orb.pickup", 0.5f, 1.0f),
-    PVP_ENABLED("block.note_block.bell", 0.7f, 0.8f);
+    PVP_ENABLED("block.note_block.bell", 0.7f, 0.8f),
+    NOTE_BIT("block.note_block.bit", 0.8f, 1.0f),
+    NOTE_PLING("block.note_block.pling", 0.7f, 1.0f),
+    NOTE_BASS("block.note_block.bass", 0.8f, 1.0f),
+    SHOP_TALK("entity.villager.ambient", 0.8f, 1.0f),
+    SHOP_HURT("entity.villager.hurt", 0.8f, 1.0f),
+    EASTER_EGG("entity.chicken.egg", 1.0f, 1.3f),
+    ADVENT_DOOR("block.note_block.chime", 0.9f, 1.2f),
+    TRICK("entity.witch.celebrate", 0.8f, 1.0f);
 
     private final Sound fallback;
     private final Optional<Sound> custom;

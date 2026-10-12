@@ -6,8 +6,6 @@ import me.blockcraft.api.task.Tasks;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
 
-import java.util.function.IntConsumer;
-
 /**
  * The end of a round: announces the countdown, sends everyone back to a lobby a second before the end so nobody
  * is kicked, then stops the server for the orchestrator to bring it back fresh.
@@ -19,20 +17,15 @@ public final class ServerRestart {
     private ServerRestart() {
     }
 
-    public static Countdown start(Plugin plugin, Arena arena, int seconds) {
-        return start(plugin, arena, seconds, remaining -> {
-        });
-    }
-
-    /** {@code onTick} gets every remaining second for what the game itself shows alongside the announcements. */
-    public static Countdown start(Plugin plugin, Arena arena, int seconds, IntConsumer onTick) {
+    /** {@code beforeLeaving} runs right before everyone is sent away, for what the round still has to say. */
+    public static Countdown start(Plugin plugin, Arena arena, int seconds, Runnable beforeLeaving) {
         arena.announceRestart(seconds);
         return Countdown.start(plugin, seconds, remaining -> {
-            onTick.accept(remaining);
             if (remaining >= 1 && remaining <= ANNOUNCE_FROM) {
                 arena.announceRestart(remaining);
             }
             if (remaining == 1) {
+                beforeLeaving.run();
                 Bukkit.getOnlinePlayers().forEach(player -> ProxyMessaging.hub(plugin, player));
             }
         }, Bukkit::shutdown);

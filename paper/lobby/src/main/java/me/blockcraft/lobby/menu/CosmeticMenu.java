@@ -41,7 +41,8 @@ final class CosmeticMenu<C> extends Menu {
             var lore = new ArrayList<>(kind.description().apply(choice));
             lore.add(owns(choice)
                     ? messages.get(equipped ? "cosmetics.equipped" : "cosmetics.owned")
-                    : messages.get("cosmetics.locked", Formatter.number("coins", kind.price().orElseThrow().coins())));
+                    : kind.price().map(price -> messages.get("cosmetics.locked", Formatter.number("coins", price.coins())))
+                            .orElseGet(() -> messages.get("cosmetics.earned-locked")));
             kind.preview().ifPresent(preview -> lore.add(messages.get(menus.settings().enabled(player, PlayerSetting.EFFECTS)
                     ? preview.loreKey() : "cosmetics.preview-disabled")));
             var icon = Items.of(kind.picture().apply(choice)).name(kind.name().apply(choice)).lore(lore);
@@ -64,7 +65,8 @@ final class CosmeticMenu<C> extends Menu {
     }
 
     private boolean owns(C choice) {
-        return kind.price().map(price -> owned.contains(price.item().apply(choice))).orElse(true);
+        return kind.unlock().flatMap(unlock -> unlock.item().apply(choice)).map(owned::contains)
+                .orElseGet(() -> kind.price().map(price -> owned.contains(price.item().apply(choice))).orElse(true));
     }
 
     private Optional<C> choiceAt(int slot) {
@@ -88,7 +90,8 @@ final class CosmeticMenu<C> extends Menu {
             return selected(player).isPresent();
         }
         return choiceAt(slot).map(choice -> {
-            if (kind.premium() && !player.hasPermission(LobbyPermissions.PREMIUM)) {
+            boolean earned = kind.unlock().flatMap(unlock -> unlock.item().apply(choice)).isPresent();
+            if (earned && !owns(choice) || !earned && kind.premium() && !player.hasPermission(LobbyPermissions.PREMIUM)) {
                 return false;
             }
             return previews(event) ? menus.settings().enabled(player, PlayerSetting.EFFECTS) : !equipped(player, choice);

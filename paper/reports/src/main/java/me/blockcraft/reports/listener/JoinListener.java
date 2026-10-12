@@ -31,7 +31,7 @@ public final class JoinListener implements Listener {
         Tasks.async(plugin, () -> {
             int count = reports.count();
             if (count > 0) {
-                player.sendMessage(messages.get("join-count", Formatter.number("count", count)));
+                player.sendMessage(messages.get(count == 1 ? "join-one" : "join-many", Formatter.number("count", count)));
             }
         });
     }

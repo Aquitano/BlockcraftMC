@@ -2,6 +2,7 @@ package me.blockcraft.duell.game;
 
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.game.Arena;
+import me.blockcraft.api.game.Defeat;
 import me.blockcraft.api.game.GamePhase;
 import me.blockcraft.api.game.LobbyCountdown;
 import me.blockcraft.api.game.Round;
@@ -54,6 +55,7 @@ public final class Duel {
     private final Round round;
     private final LobbyCountdown lobbyCountdown;
     private final DuelVote votes = new DuelVote();
+    private final Rematch rematch;
 
     private DuelMode mode;
     private boolean pvp;
@@ -78,6 +80,7 @@ public final class Duel {
         this.round = new Round(plugin, new Arena(messages, Sounds.DUELL_JOIN), summary, MAX_PARTICIPANTS);
         this.lobbyCountdown = new LobbyCountdown(plugin, round.arena(), config.countdowns().lobby(), MAX_PARTICIPANTS,
                 round::playerCount, this::startRound);
+        this.rematch = new Rematch(plugin, messages, config.rematchWindow());
     }
 
     public boolean isLobby() {
@@ -208,9 +211,10 @@ public final class Duel {
         return config.maps(mode).get(map - 1);
     }
 
+    /** The next round's title goes to the killer alone; the victim reads who beat them instead. */
     public void handleVsKill(Player victim, Player killer) {
         vsRound++;
-        summary.awardKill(killer, victim);
+        summary.awardKill(killer, victim, Defeat.POINT);
         summary.death(victim);
         refreshScoreboards();
         round.respawn(victim, RESPAWN_DELAY_TICKS);
@@ -221,7 +225,7 @@ public final class Duel {
             return;
         }
         var title = Title.title(messages.get("title.vs-round", Formatter.number("round", vsRound)), messages.get("title.start"));
-        participants().forEach(participant -> BlockcraftApi.get().notifications().important(participant, title));
+        BlockcraftApi.get().notifications().important(killer, title);
     }
 
     /** Whoever dies loses the duel, whether the opponent or the map killed them. */
@@ -229,7 +233,7 @@ public final class Duel {
         Bukkit.broadcast(messages.get("round.died", Placeholder.unparsed("player", victim.getName())));
         summary.death(victim);
         if (killer != null && !killer.equals(victim)) {
-            summary.awardKill(killer, victim);
+            summary.awardKill(killer, victim, Defeat.OUT);
         }
         opponentsOf(victim).forEach(this::rewardWinner);
         endRound();
@@ -398,10 +402,16 @@ public final class Duel {
         startRestart();
     }
 
+    /** Duellists who are both still here are offered a rematch. */
     private void startRestart() {
         frozen = false;
-        if (round.end(config.countdowns().restart())) {
+        if (round.end(Math.max(config.countdowns().restart(), Math.toIntExact(config.rematchWindow().toSeconds()) + 2))) {
             refreshScoreboards();
+            var duellists = round.players();
+            if (duellists.size() == MAX_PARTICIPANTS) {
+                rematch.offer(duellists.get(0), duellists.get(1));
+                rematch.offer(duellists.get(1), duellists.get(0));
+            }
         }
     }
 

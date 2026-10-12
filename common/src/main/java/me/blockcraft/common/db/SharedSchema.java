@@ -184,9 +184,50 @@ final class SharedSchema {
         )),
         new Migration(13, List.of(
             "ALTER TABLE bc_servers ADD COLUMN IF NOT EXISTS occupancy INT NOT NULL DEFAULT 0"
+        )),
+        new Migration(14, List.of(
+            "ALTER TABLE bc_players ADD COLUMN IF NOT EXISTS join_number INT NULL",
+            "UPDATE bc_players p JOIN (SELECT uuid, ROW_NUMBER() OVER (ORDER BY first_seen, uuid) AS n FROM bc_players) ranked "
+                + "ON p.uuid = ranked.uuid SET p.join_number = ranked.n WHERE p.join_number IS NULL",
+            "CREATE UNIQUE INDEX IF NOT EXISTS uq_bc_players_join_number ON bc_players (join_number)",
+            "CREATE TABLE IF NOT EXISTS bc_greetings ("
+                + "greeter_uuid CHAR(36) NOT NULL, "
+                + "newcomer_uuid CHAR(36) NOT NULL, "
+                + "greeter_name VARCHAR(16) NOT NULL, "
+                + "greeted_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, "
+                + "PRIMARY KEY (greeter_uuid, newcomer_uuid), "
+                + "INDEX idx_bc_greetings_newcomer (newcomer_uuid, greeted_at))",
+            "CREATE TABLE IF NOT EXISTS bc_rivalries ("
+                + "killer_uuid CHAR(36) NOT NULL, "
+                + "victim_uuid CHAR(36) NOT NULL, "
+                + "kills INT NOT NULL DEFAULT 0, "
+                + "PRIMARY KEY (killer_uuid, victim_uuid), "
+                + "INDEX idx_bc_rivalries_victim (victim_uuid))"
+        )),
+        new Migration(15, List.of(
+            "CREATE TABLE IF NOT EXISTS bc_join_counter (id INT NOT NULL PRIMARY KEY, next_number INT NOT NULL)",
+            "INSERT IGNORE INTO bc_join_counter (id, next_number) SELECT 1, COALESCE(MAX(join_number), 0) + 1 FROM bc_players",
+            "CREATE TABLE IF NOT EXISTS bc_secret_firsts (item VARCHAR(64) NOT NULL PRIMARY KEY, player_uuid CHAR(36) NOT NULL)",
+            "INSERT IGNORE INTO bc_secret_firsts (item, player_uuid) SELECT item, player_uuid FROM "
+                + "(SELECT item, player_uuid, ROW_NUMBER() OVER (PARTITION BY item ORDER BY unlocked_at, player_uuid) AS n "
+                + "FROM bc_unlocks WHERE item LIKE 'lobby.secret.%') firsts WHERE n = 1",
+            "ALTER TABLE bc_players ADD COLUMN IF NOT EXISTS first_seen_verified BOOLEAN NOT NULL DEFAULT FALSE",
+            "INSERT IGNORE INTO bc_unlocks (player_uuid, item) SELECT UUID, 'tag.og' FROM VCOINS",
+            legacyTags("qsg_stats"), "PREPARE bc_legacy FROM @bc_legacy_sql", "EXECUTE bc_legacy", "DEALLOCATE PREPARE bc_legacy",
+            legacyTags("em_stats"), "PREPARE bc_legacy FROM @bc_legacy_sql", "EXECUTE bc_legacy", "DEALLOCATE PREPARE bc_legacy",
+            legacyTags("duell_stats"), "PREPARE bc_legacy FROM @bc_legacy_sql", "EXECUTE bc_legacy", "DEALLOCATE PREPARE bc_legacy"
+        )),
+        new Migration(16, List.of(
+            "CREATE INDEX IF NOT EXISTS idx_bc_greetings_daily ON bc_greetings (greeter_uuid, greeted_at)"
         ))
     );
 
     private SharedSchema() {
+    }
+
+    private static String legacyTags(String table) {
+        return "SET @bc_legacy_sql = IF(EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = DATABASE() "
+                + "AND table_name = '" + table + "'), 'INSERT IGNORE INTO bc_unlocks (player_uuid, item) "
+                + "SELECT UUID, ''tag.og'' FROM " + table + "', 'DO 0')";
     }
 }

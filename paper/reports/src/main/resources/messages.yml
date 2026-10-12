@@ -3,11 +3,12 @@ prefix: "<error>Reports <dark>» <reset>"
 commands:
   reports:
     description: "Öffnet das Reports-Menü"
-no-permission: "<prefix>Dazu hast du keine Rechte!"
+no-permission: "<prefix><error>Dazu hast du keine Berechtigung."
 no-permission-hint: "<prefix>Wolltest du einen Spieler reporten? <error>/report [Spieler]"
 none: "<prefix>Es gibt aktuell keine Reports!"
-none-for-player: "<prefix>Der Spieler <error><bold><player><reset><muted> wurde nicht Reportet!"
-join-count: "<prefix>Es gibt aktuell <error><count> <muted>Reports!"
+none-for-player: "<prefix>Der Spieler <error><bold><player><reset><muted> wurde nicht reportet!"
+join-one: "<prefix><muted>Es liegt gerade <error>ein <muted>Report vor."
+join-many: "<prefix><muted>Es liegen gerade <error><count> <muted>Reports vor."
 age:
   now: "gerade eben"
   minutes: "vor <amount> min"

@@ -67,7 +67,7 @@ tab:
 
 afk:
   status: "<muted>Du bist <accent>AFK<muted>. Beweg dich, um zurückzukommen."
-  back: "<success>Willkommen zurück!"
+  back: "<success>Willkommen zurück! <muted>Du warst <accent><minutes> Minuten <muted>weg."
 
 menu:
   load:
@@ -234,6 +234,7 @@ settings:
   player-visibility: "<arrow><primary>Spieler sichtbar"
   sounds: "<arrow><primary>Sounds"
   mentions: "<arrow><primary>Erwähnungen im Chat"
+  server-list-greeting: "<arrow><primary>Serverliste: Name für alle an deiner IP sichtbar"
   auto-nick: "<arrow><primary>Automatisch nicken"
   keep-nick: "<arrow><primary>Nick in der Lobby behalten"
   report-notifications: "<arrow><primary>Report-Benachrichtigungen"
@@ -255,6 +256,7 @@ server-menu:
   hub: "<accent>Zur Lobby"
 
 profile:
+  advent: "<accent>Dein Adventskalender"
   recap: "<accent>Letzte Runde"
   recap-lore: "<muted>Ergebnis und Belohnungen ansehen"
   title: "<arrow><primary>Profil"
@@ -312,6 +314,10 @@ tags:
   noob: "<dark>[<muted>NOOB<dark>]"
   sweat: "<dark>[<aqua>SWEAT<dark>]"
   chill: "<dark>[<primary>CHILL<dark>]"
+  1up: "<dark>[<success>1UP<dark>]"
+  entdecker: "<dark>[<dark_aqua>ENTDECKER<dark>]"
+  osterhase: "<dark>[<light_purple>OSTERHASE<dark>]"
+  neujahr: "<dark>[<accent><year><dark>]"
 
 operation:
   pending: "<prefix><muted>Deine letzte Anfrage wird noch bearbeitet."
@@ -339,6 +345,9 @@ achievements:
     - "<bullet><muted><description>"
     - "<bullet><muted>Fortschritt <dark>● <accent><current><dark>/<accent><threshold>"
     - "<bullet><muted>Belohnung <dark>● <success>+<xp> XP"
+  moment-lore:
+    - "<bullet><muted><description>"
+    - "<bullet><muted>Belohnung <dark>● <success>+<xp> XP"
   quicksg:
     first-win:
       name: "Erster Sieg"
@@ -358,6 +367,12 @@ achievements:
     wins-100:
       name: "Meister"
       description: "Gewinne 100 Runden QuickSG."
+    nackt:
+      name: "Nackt"
+      description: "Gewinne eine Runde QuickSG ohne Rüstung."
+    david-gegen-goliath:
+      name: "David gegen Goliath"
+      description: "Besiege mit dem Starter-Kit einen Spieler mit dem Diamant-Kit."
   emeraldrush:
     first-win:
       name: "Erster Sieg"
@@ -406,6 +421,18 @@ achievements:
     level-25:
       name: "Elite"
       description: "Erreiche Netzwerk-Level 25."
+    willkommenskomitee:
+      name: "Willkommenskomitee"
+      description: "Begrüße zehn Spieler bei ihrem ersten Besuch."
+    rache:
+      name: "Rache ist süß"
+      description: "Besiege deinen Erzfeind."
+    haarscharf:
+      name: "Haarscharf"
+      description: "Gewinne eine Runde mit einem halben Herzen."
+    ausdauer:
+      name: "Ausdauer"
+      description: "Falle im JumpAndRun 100-mal herunter und mach weiter."
 
 # The ranked ladder's skill groups, keyed like elo.groups in config.yml; like the chat tags, each wears its own colour.
 elo:
@@ -415,3 +442,31 @@ elo:
     gold: "<gold>Gold"
     diamant: "<aqua>Diamant"
     meister: "<light_purple>Meister"
+
+# The title a killed player sees: what the kill cost them, then who beat them and the health that one had left.
+defeat:
+  out: "<error>Ausgeschieden"
+  life: "<accent>Ein Leben weniger"
+  point: "<accent>Punkt verloren"
+  subtitle: "<white><killer> <muted>hatte noch <error><hearts> ❤"
+
+# A player's nemesis (Erzfeind); <won>:<lost> is the score between them from the player's side.
+nemesis:
+  present: "<prefix><muted>Dein Erzfeind <error><nemesis> <muted>ist in dieser Runde. Stand <accent><won>:<lost><muted>."
+  revenge-title: "<success>Rache!"
+  revenge-subtitle: "<white><nemesis> <muted>besiegt <dark>· <muted>Stand <accent><won>:<lost>"
+  revenge-note: "<arrow><success>Rache <dark>· <muted>Erzfeind <white><nemesis> <muted>besiegt, Stand <accent><won>:<lost>"
+
+# The recap line of a win on half a heart or less.
+close-call:
+  note: "<arrow><success>Haarscharf <dark>· <muted>Gewonnen mit einem halben Herzen"
+
+# The round's answer to the F written after a death; <deceased> is the player who died.
+respect:
+  one: "<prefix><white><player> <muted>zollt <white><deceased> <muted>Respekt."
+  many: "<prefix><accent><count> Spieler <muted>zollen <white><deceased> <muted>Respekt."
+
+# The button a killed player gets when they call their killer a cheater.
+hacker:
+  report: "<prefix><error>[<killer> melden]"
+  report-hover: "<muted>Klicke, um <white><killer> <muted>dem Team zu melden."

@@ -30,6 +30,11 @@ public final class Unlocks {
                 .collect(Collectors.toUnmodifiableSet());
     }
 
+    /** How many players own the item; 1 right after the first one unlocked it. */
+    public int holders(String item) {
+        return db.queryOne("SELECT COUNT(*) FROM bc_unlocks WHERE item = ?", row -> row.getInt(1), item).orElse(0);
+    }
+
     /** Returns false if the player already owned the item. */
     public boolean unlock(UUID player, String item) {
         return db.update("INSERT IGNORE INTO bc_unlocks (player_uuid, item) VALUES (?, ?)", player.toString(), item) > 0;

@@ -1,5 +1,6 @@
 package me.blockcraft.system;
 
+import me.blockcraft.common.calendar.NetworkCalendar;
 import me.blockcraft.common.config.YamlFile;
 import me.blockcraft.common.db.DatabaseConfig;
 import me.blockcraft.common.message.Messages;
@@ -59,6 +60,10 @@ public final class SystemConfig {
     public record ResourcePack(String file, String url, int port, boolean required) {
     }
 
+    /** {@code groups} are the server groups that see a first join announced and count greetings for it. */
+    public record Welcome(boolean enabled, Set<String> groups, int greetingSeconds, int listedGreeters) {
+    }
+
     private final Path file;
     private final Map<String, Object> root;
     private final DatabaseConfig database;
@@ -89,6 +94,10 @@ public final class SystemConfig {
     private volatile int maxPlayers;
     private volatile String defaultMotd;
     private final List<String> randomMotds;
+    private final Welcome welcome;
+    private final boolean serverListFriends;
+    private final Duration serverListCache;
+    private final NetworkCalendar calendar;
 
     private SystemConfig(Path file, Map<String, Object> root) {
         this.file = file;
@@ -137,6 +146,12 @@ public final class SystemConfig {
         var motd = YamlFile.section(root, "motd");
         this.defaultMotd = string(motd, "default");
         this.randomMotds = new ArrayList<>(strings(motd, "random"));
+        var welcome = YamlFile.section(root, "welcome");
+        this.welcome = new Welcome(Boolean.TRUE.equals(welcome.get("enabled")), Set.copyOf(strings(welcome, "groups")),
+                Math.max(1, number(welcome, "greeting-seconds", 60)), Math.max(1, number(welcome, "listed-greeters", 2)));
+        this.serverListFriends = Boolean.TRUE.equals(YamlFile.section(root, "server-list").get("show-friends"));
+        this.serverListCache = Duration.ofSeconds(Math.max(1, number(YamlFile.section(root, "server-list"), "cache-seconds", 30)));
+        this.calendar = NetworkCalendar.fromYaml(YamlFile.section(root, "calendar"));
     }
 
     public static SystemConfig load(Path file, Supplier<InputStream> bundledDefault) {
@@ -255,6 +270,23 @@ public final class SystemConfig {
 
     public synchronized List<String> randomMotds() {
         return List.copyOf(randomMotds);
+    }
+
+    public Welcome welcome() {
+        return welcome;
+    }
+
+    public boolean serverListFriends() {
+        return serverListFriends;
+    }
+
+    /** How long the server list remembers who pinged from an address. */
+    public Duration serverListCache() {
+        return serverListCache;
+    }
+
+    public NetworkCalendar calendar() {
+        return calendar;
     }
 
     public synchronized void setMaxPlayers(int maxPlayers) {

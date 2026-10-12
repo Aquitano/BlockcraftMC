@@ -88,6 +88,12 @@ public final class ProxyMessageListener {
                 visibility.setVanished(player, vanish.vanished());
                 tabHeader.refreshAll();
             }
+            case ProxyMessage.Announcement announcement -> {
+                var line = GsonComponentSerializer.gson().deserialize(announcement.noticeJson());
+                proxy.getAllPlayers().forEach(online -> online.sendMessage(line));
+            }
+            case ProxyMessage.Rematch rematch -> proxy.getPlayer(rematch.opponent())
+                    .ifPresent(opponent -> lobby.rematch(player, opponent));
             case ProxyMessage.StaffNotice staffNotice -> {
                 var notice = GsonComponentSerializer.gson().deserialize(staffNotice.noticeJson());
                 for (Player online : proxy.getAllPlayers()) {

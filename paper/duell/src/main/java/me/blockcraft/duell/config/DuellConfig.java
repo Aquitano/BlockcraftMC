@@ -6,6 +6,7 @@ import me.blockcraft.api.game.LootTable;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 
+import java.time.Duration;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -18,7 +19,8 @@ public record DuellConfig(
         int vsKillsToEnd,
         Map<DuelMode, List<String>> maps,
         LootTable loot,
-        CombatStyle combat
+        CombatStyle combat,
+        Duration rematchWindow
 ) {
 
     public record Countdowns(int lobby, int freeze, int round, int restart) {
@@ -47,7 +49,8 @@ public record DuellConfig(
                 config.getInt("vs.kills-to-end", 3),
                 maps,
                 LootTable.fromYaml(chest, 1, 6),
-                CombatStyle.from(config));
+                CombatStyle.from(config),
+                Duration.ofSeconds(config.getInt("rematch.window-seconds", 15)));
     }
 
     private static ConfigurationSection section(FileConfiguration config, String key) {

@@ -1,11 +1,14 @@
 package me.blockcraft.core.listener;
 
 import io.papermc.paper.event.player.AsyncChatEvent;
+import me.blockcraft.api.sound.Sounds;
+import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.plugin.Plugin;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -19,12 +22,14 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class ChatCooldownListener implements Listener {
 
+    private final Plugin plugin;
     private final Duration cooldown;
     private final NetworkChat network;
     private final Messages messages;
     private final Map<UUID, Instant> lastMessage = new ConcurrentHashMap<>();
 
-    public ChatCooldownListener(Duration cooldown, NetworkChat network, Messages messages) {
+    public ChatCooldownListener(Plugin plugin, Duration cooldown, NetworkChat network, Messages messages) {
+        this.plugin = plugin;
         this.cooldown = cooldown;
         this.network = network;
         this.messages = messages;
@@ -47,6 +52,7 @@ public final class ChatCooldownListener implements Listener {
             player.sendMessage(slowed
                     ? messages.get("chat.slow", Formatter.number("seconds", slowMode.toSeconds()))
                     : messages.get("chat.spam"));
+            Tasks.sync(plugin, () -> Sounds.MENU_DENY.play(player));
         }
     }
 

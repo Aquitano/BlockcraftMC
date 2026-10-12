@@ -131,3 +131,34 @@ nick:
     - xilefian
     - Hypixel
     - Bebopvox
+
+# The Willkommenskomitee: while the proxy keeps a newcomer's welcome window open, a chat line holding one of these
+# words greets them. A word counts only on its own, in any case; umlauts may be spelled out and letters stretched,
+# so "GRUSS", "grüß" and "Hallooo" count too. Each newcomer counts once per greeter.
+welcome:
+  words:
+    - hallo
+    - hallöchen
+    - hallihallo
+    - hello
+    - hi
+    - hey
+    - huhu
+    - moin
+    - moinsen
+    - servus
+    - tach
+    - grüß
+    - grüße
+    - grüezi
+    - willkommen
+    - welcome
+    - wb
+    - guten tag
+    - guten morgen
+    - guten abend
+  reward-coins: 10
+  # Greetings past this many a day still count for the achievement, but pay nothing.
+  daily-cap: 5
+  # Newcomers to greet for the Willkommenskomitee achievement.
+  committee-threshold: 10

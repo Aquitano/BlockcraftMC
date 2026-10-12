@@ -30,6 +30,7 @@ public enum PlayerSetting {
     SOUNDS("sounds", PlayerSetting.ON),
     MENTIONS("mentions", PlayerSetting.ON),
     EFFECTS("effects", PlayerSetting.ON),
+    SERVER_LIST_GREETING("server-list-greeting", PlayerSetting.OFF),
     AUTO_NICK("auto-nick", PlayerSetting.OFF, "blockcraft.nick"),
     KEEP_NICK("keep-nick", PlayerSetting.OFF, "blockcraft.nick"),
     REPORT_NOTIFICATIONS("report-notifications", PlayerSetting.ON, "blockcraft.report.notify");

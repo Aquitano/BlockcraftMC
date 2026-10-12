@@ -10,7 +10,8 @@ import java.util.Optional;
 public enum Gadget {
     GRAPPLING_HOOK("grappling-hook", Material.FISHING_ROD),
     TNT_JUMP("tnt-jump", Material.TNT),
-    PAINT_GUN("paint-gun", Material.SNOWBALL);
+    PAINT_GUN("paint-gun", Material.SNOWBALL),
+    BIRTHDAY_CAKE("birthday-cake", Material.CAKE);
 
     private final String key;
     private final Material material;

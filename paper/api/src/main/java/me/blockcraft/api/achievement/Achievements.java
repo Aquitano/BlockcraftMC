@@ -35,9 +35,9 @@ import java.util.function.Consumer;
 
 /**
  * The achievement catalog and what earns an entry of it. A game's entries are judged on its stats table after
- * every round, the network's on the level after every level-up; whatever is reached and not yet owned becomes one
- * {@code achievement.<game>.<name>} unlock, pays its XP and is announced to the player. Every read of the totals
- * runs off the main thread.
+ * every round, the network's on the level after every level-up, and a moment whenever the code that saw it calls
+ * {@link #grant}; whatever is reached and not yet owned becomes one {@code achievement.<game>.<name>} unlock, pays
+ * its XP and is announced to the player. Every read of the totals runs off the main thread.
  */
 public final class Achievements implements Listener {
 
@@ -116,6 +116,27 @@ public final class Achievements implements Listener {
 
     public List<Achievement> of(String game) {
         return catalog.stream().filter(achievement -> achievement.game().equals(game)).toList();
+    }
+
+    /**
+     * Earns the moment {@code achievements.<game>.<name>} for the player, once; a name the catalog lacks, or one that
+     * counts something other than moments, earns nothing.
+     */
+    public void grant(Player player, String game, String name) {
+        var entry = catalog.stream()
+                .filter(achievement -> achievement.isMoment() && achievement.game().equals(game) && achievement.name().equals(name))
+                .findFirst();
+        if (entry.isEmpty()) {
+            plugin.getLogger().warning("No moment achievement " + game + "." + name + " in the catalog");
+            return;
+        }
+        var achievement = entry.get();
+        UUID uuid = player.getUniqueId();
+        Tasks.async(plugin, () -> unlocks.unlock(uuid, achievement.item()), fresh -> {
+            if (fresh) {
+                celebrate(player, List.of(achievement));
+            }
+        });
     }
 
     public void afterRound(String game, Collection<? extends Player> participants) {

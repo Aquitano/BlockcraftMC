@@ -16,6 +16,7 @@ final class ExtrasMenu extends Menu {
     private static final int GADGETS_SLOT = 9;
     private static final int KILL_EFFECTS_SLOT = 10;
     private static final int WIN_EFFECTS_SLOT = 11;
+    private static final int TRAILS_SLOT = 12;
     private static final int PREMIUM_SLOT = 13;
     private static final int TAGS_SLOT = 15;
     private static final int LOBBIES_SLOT = 16;
@@ -34,6 +35,7 @@ final class ExtrasMenu extends Menu {
         set(GADGETS_SLOT, Items.of(Material.FISHING_ROD).name(messages.get("extras.gadgets")).lore(messages.get("extras.gadgets-lore")).hideAttributes().build());
         set(KILL_EFFECTS_SLOT, Items.of(Material.IRON_SWORD).name(messages.get("extras.kill-effects")).lore(messages.get("extras.kill-effects-lore")).hideAttributes().build());
         set(WIN_EFFECTS_SLOT, Items.of(Material.FIREWORK_ROCKET).name(messages.get("extras.win-effects")).lore(messages.get("extras.win-effects-lore")).build());
+        set(TRAILS_SLOT, Items.of(Material.SNOWBALL).name(messages.get("premium-menu.trails")).lore(messages.get("premium-menu.trails-lore")).build());
         set(PREMIUM_SLOT, MenuIcon.PREMIUM.item().name(messages.get("extras.premium")).lore(messages.get("extras.premium-lore")).build());
         set(TAGS_SLOT, Items.of(Material.NAME_TAG).name(messages.get("extras.tags")).lore(messages.get("extras.tags-lore")).build());
         set(LOBBIES_SLOT, Items.of(Material.NETHER_STAR).name(messages.get("extras.lobbies")).lore(messages.get("extras.lobbies-lore")).build());
@@ -45,6 +47,7 @@ final class ExtrasMenu extends Menu {
             case GADGETS_SLOT -> menus.openGadgets(player);
             case KILL_EFFECTS_SLOT -> menus.openKillEffects(player);
             case WIN_EFFECTS_SLOT -> menus.openWinEffects(player);
+            case TRAILS_SLOT -> menus.openTrails(player);
             case PREMIUM_SLOT -> {
                 if (player.hasPermission(LobbyPermissions.PREMIUM)) {
                     menus.openPremium(player);

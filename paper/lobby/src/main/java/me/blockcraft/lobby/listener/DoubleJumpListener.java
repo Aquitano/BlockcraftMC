@@ -2,6 +2,7 @@ package me.blockcraft.lobby.listener;
 
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.lobby.LobbyPermissions;
+import me.blockcraft.lobby.activity.Parkour;
 import me.blockcraft.lobby.config.LobbyConfig;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
@@ -14,17 +15,23 @@ import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerToggleFlightEvent;
 import org.bukkit.util.Vector;
 
+
 public final class DoubleJumpListener implements Listener {
 
     private final LobbyConfig config;
+    private final Parkour parkour;
 
-    public DoubleJumpListener(LobbyConfig config) {
+    public DoubleJumpListener(LobbyConfig config, Parkour parkour) {
         this.config = config;
+        this.parkour = parkour;
     }
 
     @EventHandler
     public void onMove(PlayerMoveEvent event) {
         Player player = event.getPlayer();
+        if (parkour.running(player) || parkour.startsAt(event.getTo())) {
+            return;
+        }
         if (canDoubleJump(player) && player.getLocation().getBlock().getRelative(BlockFace.DOWN).getType() != Material.AIR) {
             player.setAllowFlight(true);
         }
@@ -36,6 +43,10 @@ public final class DoubleJumpListener implements Listener {
     @EventHandler
     public void onToggleFlight(PlayerToggleFlightEvent event) {
         Player player = event.getPlayer();
+        if (parkour.running(player)) {
+            event.setCancelled(true);
+            return;
+        }
         if (!canDoubleJump(player)) {
             return;
         }
@@ -48,12 +59,13 @@ public final class DoubleJumpListener implements Listener {
     }
 
     private void launch(Player player) {
+        Vector velocity = player.getLocation().getDirection().setY(config.jumpPadY()).multiply(config.jumpPadMultiply());
+        if (velocity.length() > config.jumpPadMaxLength()) {
+            return;
+        }
         Sounds.JUMP_PAD.play(player);
         player.getWorld().spawnParticle(Particle.CRIT, player.getLocation(), 10, 0.3, 0.3, 0.3, 0.1);
-        Vector velocity = player.getLocation().getDirection().setY(config.jumpPadY()).multiply(config.jumpPadMultiply());
-        if (velocity.length() <= config.jumpPadMaxLength()) {
-            player.setVelocity(velocity);
-        }
+        player.setVelocity(velocity);
     }
 
     private static boolean canDoubleJump(Player player) {

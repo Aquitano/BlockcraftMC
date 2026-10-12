@@ -62,14 +62,6 @@ login:
   error:
     - "<prefix><muted>Die Datenbank von <error><ip> <muted>ist derzeit nicht erreichbar."
     - " <muted>Bitte versuche es in ein paar Minuten erneut."
-  welcome:
-    - "<dark><strikethrough>-------------------------------------------"
-    - ""
-    - ""
-    - "<prefix><muted>Willkommen <accent><player><muted>, Spieler <primary>#<number><muted>!"
-    - ""
-    - ""
-    - "<dark><strikethrough>-------------------------------------------"
 
 tab:
   header:
@@ -138,12 +130,19 @@ motd:
   del-range: "<prefix><error>/motd del \\<zahl 1-<max>>"
   list-header: "<prefix><dark>----------<primary>Motds<dark>----------"
   list-default: "<prefix><primary>Default-Motd: <muted><motd>"
-  list-empty: "<prefix>-"
+  list-empty: "<prefix><muted>Es sind keine Random-Motds eingetragen. Füge eine mit <accent>/motd add \\<motd> <muted>hinzu."
   list-entry: "<prefix><number>: <muted><motd>"
   cleared: "<prefix><count> Random-Motds wurden erfolgreich gelöscht!"
   default-set: "<prefix><muted>Die Default-Motd wurde erfolgreich zu \"<white><motd><muted>\" geändert!"
   added: "<prefix><muted>Die Motd \"<white><motd><muted>\" wurde erfolgreich hinzugefügt!"
   removed: "<prefix><muted>Die Motd \"<white><motd><muted>\" wurde erfolgreich gelöscht!"
+  # The second line, in this order: the network's birthday (calendar.founded in config.yml), then the returning
+  # player last seen at the pinging address if they opted in, then one of motd.random in config.yml.
+  birthday: "<accent><ip> <muted>wird heute <accent><years> Jahre <muted>alt!"
+  birthday-one: "<accent><ip> <muted>wird heute <accent>ein Jahr <muted>alt!"
+  welcome-back: "<muted>Willkommen zurück, <accent><player><muted>."
+  welcome-back-friend: "<muted>Willkommen zurück, <accent><player><muted>! <success>1 <muted>Freund online."
+  welcome-back-friends: "<muted>Willkommen zurück, <accent><player><muted>! <success><count> <muted>Freunde online."
 
 setmax:
   current: "<prefix><muted>Es können maximal <accent><max><muted> Spieler online!"
@@ -176,11 +175,11 @@ ban:
     - "<muted>Du wurdest vom <primary><ip> Netzwerk <muted>gebannt."
     - " <muted>Grund: <success><reason> "
     - " "
-    - " <muted>Verbleibende Zeit: <success>"
-    - "<success><remaining>"
+    - " <muted>Dieser Bann ist <error>permanent<muted>: Er läuft nicht ab"
+    - " <muted>und endet nur, wenn das Team ihn aufhebt."
     - " "
     - " <muted>Unrechter Ban? Stelle einen <accent>Entbannungsantrag<muted> im Forum:"
-    - " <accent><website> "
+    - " <accent><website>/Forum "
     - " <muted>oder auf dem TeamSpeak:"
     - " <accent><teamspeak>"
 unban:
@@ -220,11 +219,11 @@ mute:
     - "<muted>Du wurdest vom <primary><ip> Netzwerk <muted>gemuted."
     - " <muted>Grund: <success><reason> "
     - " "
-    - " <muted>Verbleibende Zeit: <success>"
-    - "<success><remaining>"
+    - " <muted>Dieser Mute ist <error>permanent<muted>: Er läuft nicht ab"
+    - " <muted>und endet nur, wenn das Team ihn aufhebt."
     - " "
     - " <muted>Unrechter Mute? Stelle einen <accent>Entmutungsantrag<muted> im Forum:"
-    - " <accent><website> "
+    - " <accent><website>/Forum "
     - " <muted>oder auf dem TeamSpeak:"
     - " <accent><teamspeak>"
   check-failed: "<prefix><error>Deine Nachricht konnte gerade nicht geprüft werden. Versuche es gleich noch einmal."
@@ -590,6 +589,8 @@ play:
   no-room-for-party: "<prefix><muted>Keine Runde <game> <muted>hat gerade Platz für deine ganze Party (<accent><count> Spieler<muted>)."
   already: "<prefix><error>Du bist bereits auf diesem Server."
   connecting: "<prefix><muted>Eine Runde <game> <muted>wird für dich geöffnet…"
+  rematch: "<prefix><muted>Revanche! Eine neue Runde <game> <muted>wird für euch beide geöffnet…"
+  rematch-unavailable: "<prefix><muted>Gerade hat keine Runde <game> <muted>Platz für euch beide. Versucht es gleich noch einmal."
   games:
     quicksg: "<quicksg>QuickSG"
     emeraldrush: "<emeraldrush>EmeraldRush"
@@ -643,7 +644,7 @@ youtuber:
     - "<muted>Verwende <error>/youtuber 250 <muted>um die <error>Anforderungen <muted>für <error>Premium+ <muted>zu sehen."
     - "<muted>Verwende <error>/youtuber 500 <muted>um die <error>Anforderungen <muted>für <error>YouTuber <muted>zu sehen."
   requirements-500:
-    - "<bullet><primary>Vorraussetzungen für <error>YOUTUBER<dark>-<primary>RANG <dark>●"
+    - "<bullet><primary>Voraussetzungen für <error>YOUTUBER<dark>-<primary>RANG <dark>●"
     - ""
     - "<arrow><muted>Dein <error>Kanal <muted>muss mindestens <error>500 Abonnenten<muted> besitzen."
     - "<arrow><muted>Du benötigst eine angemessene <error>Klickzahl<muted>."
@@ -651,7 +652,7 @@ youtuber:
     - "<arrow><muted>Dieses <error>Video <muted>muss in angemessener <error>Qualität <muted>und <error>Länge <muted>sein."
     - "<muted>Alles erfüllt? Beantrage den <error>YouTuber <muted>Rang im Forum <error><website>"
   requirements-250:
-    - "<bullet><primary>Vorraussetzungen für <error>PREMIUM+<dark>-<primary>RANG <dark>●"
+    - "<bullet><primary>Voraussetzungen für <error>PREMIUM+<dark>-<primary>RANG <dark>●"
     - ""
     - "<arrow><muted>Dein <error>Kanal <muted>muss mindestens <error>250 Abonnenten<muted> besitzen."
     - "<arrow><muted>Du benötigst eine angemessene <error>Klickzahl<muted>."
@@ -716,7 +717,7 @@ support:
   wait: "<primary>Support <arrow><reset><error>Bitte warte, bis ein Supporter deinen Antrag angenommen hat."
   supporter-offline: "<primary>Support <arrow><reset><error>Der Supporter, der deinen Antrag angenommen hat, ist nicht mehr online."
   empty-message: "<primary>Support <arrow><reset><error>Bitte gib eine gültige Nachricht ein."
-  chat: "<error><player> : <muted><message>"
+  chat: "<error><player>: <muted><message>"
   waiting-on-join: "<primary>Support <arrow><reset><accent><count> <muted>Supportanfragen warten noch. <accent>Klicke <muted>für die Liste."
   list-empty: "<primary>Support <arrow><reset><muted>Es gibt gerade keine offenen Supportanfragen."
   list-header: "<primary>Support <arrow><reset><muted>Offene Supportanfragen: <accent><count>"
@@ -769,6 +770,8 @@ friends:
   jumping: "<primary>Freunde <arrow><reset><success>Du springst zu <accent><player> <success>auf <accent><server><success>."
   watching: "<primary>Freunde <arrow><reset><success>Die Runde von <accent><player> <success>läuft schon <dark>● <success>du schaust auf <accent><server> <success>zu."
   joined: "<primary>Freunde <arrow><reset><success><player> <success>ist jetzt online."
+  joined-anniversary: "<primary>Freunde <arrow><reset><success><player> <success>ist jetzt online und feiert heute <accent><years> Jahre <ip><success>."
+  joined-anniversary-one: "<primary>Freunde <arrow><reset><success><player> <success>ist jetzt online und feiert heute <accent>ein Jahr <ip><success>."
   left: "<primary>Freunde <arrow><reset><muted><player> <muted>ist jetzt offline."
 
 party:
@@ -776,20 +779,20 @@ party:
     - "<bullet><primary>INFORMATIONEN ZUR PARTY <dark>●"
     - ""
     - "<primary>Party <arrow><reset><muted>Zeige diese Liste: <accent>/party help"
-    - "<primary>Party <arrow><reset><muted>Lade Spieler ein: <accent>/party invite \\<Player>"
-    - "<primary>Party <arrow><reset><muted>Zeige alle Member: <accent>/party list"
+    - "<primary>Party <arrow><reset><muted>Lade Spieler ein: <accent>/party invite \\<Spieler>"
+    - "<primary>Party <arrow><reset><muted>Zeige alle Mitglieder: <accent>/party list"
     - "<primary>Party <arrow><reset><muted>Verlasse die Party: <accent>/party leave"
-    - "<primary>Party <arrow><reset><muted>Nehme Einladungen an: <accent>/party accept"
-    - "<primary>Party <arrow><reset><muted>Kicke einen Spieler: <accent>/party kick \\<Player>"
-    - "<primary>Party <arrow><reset><muted>Übergib die Leitung: <accent>/party promote \\<Player>"
+    - "<primary>Party <arrow><reset><muted>Nimm Einladungen an: <accent>/party accept"
+    - "<primary>Party <arrow><reset><muted>Kicke einen Spieler: <accent>/party kick \\<Spieler>"
+    - "<primary>Party <arrow><reset><muted>Übergib die Leitung: <accent>/party promote \\<Spieler>"
     - "<primary>Party <arrow><reset><muted>Bitte um eine Einladung: <accent>/party join \\<Leader>"
-    - "<primary>Party <arrow><reset><muted>Party-Chat: <accent>/pc \\<Message>"
+    - "<primary>Party <arrow><reset><muted>Party-Chat: <accent>/pc \\<Nachricht>"
   join-usage: "<primary>Party <arrow><reset><muted>Verwende: <accent>/party join \\<Leader>"
-  invite-usage: "<primary>Party <arrow><reset><muted>Verwende: <accent>/party invite \\<Player>"
+  invite-usage: "<primary>Party <arrow><reset><muted>Verwende: <accent>/party invite \\<Spieler>"
   invite-no-permission: "<primary>Party <arrow><reset><error>Du hast keine Berechtigung, Spieler einzuladen."
-  kick-usage: "<primary>Party <arrow><reset><muted>Verwende: <accent>/party kick \\<Player>"
+  kick-usage: "<primary>Party <arrow><reset><muted>Verwende: <accent>/party kick \\<Spieler>"
   kick-no-permission: "<primary>Party <arrow><reset><error>Du hast keine Berechtigung, Spieler zu kicken."
-  promote-usage: "<primary>Party <arrow><reset><muted>Verwende: <accent>/party promote \\<Player>"
+  promote-usage: "<primary>Party <arrow><reset><muted>Verwende: <accent>/party promote \\<Spieler>"
   target-offline: "<primary>Party <arrow><reset><error>Dieser Spieler ist nicht online."
   target-not-leader: "<primary>Party <arrow><reset><error>Dieser Spieler ist kein Party-Leader."
   target-in-party: "<primary>Party <arrow><reset><error>Dieser Spieler ist bereits in einer Party."
@@ -833,7 +836,7 @@ party:
   kicked: "<primary>Party <arrow><reset><error>Du wurdest aus der Party von <accent><player><error> entfernt."
   kicked-leader: "<primary>Party <arrow><reset><success>Du hast <accent><player><success> aus der Party entfernt."
   kicked-members: "<primary>Party <arrow><reset><accent><player><error> wurde aus der Party entfernt."
-  chat: "<primary>Party <arrow><reset><error><player> <white>: <muted><accent><message>"
+  chat: "<primary>Party <arrow><reset><error><player><white>: <accent><message>"
   chat-usage: "<primary>Party <arrow><reset><muted>Bitte gib eine Nachricht ein, um sie an deine Party zu senden."
   chat-empty: "<primary>Party <arrow><reset><muted>Die Nachricht darf nicht leer sein."
   leader-moved: "<primary>Party <arrow><reset><success>Die Party hat den Server <accent><server><success> betreten."
@@ -856,3 +859,25 @@ alerts:
   lobby-back: "Auf <ip> ist wieder eine Lobby erreichbar. Online: <online> Spieler."
   lag: "<server> auf <ip> laggt: <mspt> ms pro Tick, <tps> TPS."
   lag-over: "<server> auf <ip> läuft wieder flüssig: <mspt> ms pro Tick, <tps> TPS."
+
+# A first join (welcome in config.yml): everyone else on a server of welcome.groups sees announcement, the newcomer
+# sees newcomer, and once the greeting window closes the newcomer hears who said hello, joined with the separators.
+# og goes to an account the old network knew, the anniversary lines to a player on the day they first joined.
+welcome:
+  announcement:
+    - "<prefix><accent><player> <muted>ist zum ersten Mal hier, als Spieler <primary>#<number><muted>!"
+    - "<prefix><muted>Heiß <accent><player> <muted>in den nächsten <accent><seconds> Sekunden <muted>im Chat willkommen."
+  newcomer:
+    - "<prefix><muted>Hallo <accent><player><muted>, schön, dass du da bist! Du bist Spieler <primary>#<number><muted>."
+    - "<prefix><muted>Die Lobby weiß schon Bescheid. Mal sehen, wer zuerst Hallo sagt."
+  greeted: "<prefix><accent><greeters> <muted>heißen dich willkommen. Viel Spaß auf <ip>!"
+  greeted-one: "<prefix><accent><greeters> <muted>heißt dich willkommen. Viel Spaß auf <ip>!"
+  greeters:
+    separator: "<muted>, "
+    last-separator: "<muted> und "
+    others: "<count> weitere"
+  og:
+    - "<prefix><muted>Du warst schon auf dem alten <ip> dabei. Dein Tag <dark>[<accent>OG<dark>] <muted>wartet in der Lobby in den Extras unter Chat-Tags."
+    - "<prefix><muted>Danke, dass du zurück bist."
+  anniversary: "<prefix><muted>Heute vor <accent><years> Jahren <muted>warst du zum ersten Mal auf <ip>. Danke, dass du dabei bist! Dein Kuchen-Gadget wartet in den Lobby-Extras."
+  anniversary-one: "<prefix><muted>Heute vor <accent>einem Jahr <muted>warst du zum ersten Mal auf <ip>. Danke, dass du dabei bist! Dein Kuchen-Gadget wartet in den Lobby-Extras."

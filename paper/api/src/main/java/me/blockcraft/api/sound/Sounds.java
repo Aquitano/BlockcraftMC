@@ -35,10 +35,19 @@ public enum Sounds {
     PAINT_THROW(FeedbackSound.PAINT_THROW),
     EQUIP(FeedbackSound.EQUIP),
     HEAL(FeedbackSound.HEAL),
-    PVP_ENABLED(FeedbackSound.PVP_ENABLED);
+    PVP_ENABLED(FeedbackSound.PVP_ENABLED),
+    NOTE_BIT(FeedbackSound.NOTE_BIT),
+    NOTE_PLING(FeedbackSound.NOTE_PLING),
+    NOTE_BASS(FeedbackSound.NOTE_BASS),
+    SHOP_TALK(FeedbackSound.SHOP_TALK),
+    SHOP_HURT(FeedbackSound.SHOP_HURT),
+    EASTER_EGG(FeedbackSound.EASTER_EGG),
+    ADVENT_DOOR(FeedbackSound.ADVENT_DOOR),
+    TRICK(FeedbackSound.TRICK);
 
     private static final int COUNTDOWN_FROM = 5;
     private static final float COUNTDOWN_PITCH_STEP = 0.15f;
+    private static final int NOTE_BLOCK_SEMITONES = 24;
     private final FeedbackSound feedback;
 
     Sounds(FeedbackSound feedback) {
@@ -52,6 +61,13 @@ public enum Sounds {
     public static void countdownTick(Player player, int secondsLeft) {
         var base = COUNTDOWN_TICK.sound();
         float pitch = base.pitch() + (COUNTDOWN_FROM - Math.clamp(secondsLeft, 1, COUNTDOWN_FROM)) * COUNTDOWN_PITCH_STEP;
+        playIfEnabled(player, Sound.sound(base.name(), base.source(), base.volume(), pitch));
+    }
+
+    /** A note on the note block's own scale, {@code semitone} 0 (F#3) to 24 (F#5); this sound's pitch is ignored. */
+    public void note(Player player, int semitone) {
+        var base = sound();
+        float pitch = (float) Math.pow(2, (Math.clamp(semitone, 0, NOTE_BLOCK_SEMITONES) - 12) / 12.0);
         playIfEnabled(player, Sound.sound(base.name(), base.source(), base.volume(), pitch));
     }
 

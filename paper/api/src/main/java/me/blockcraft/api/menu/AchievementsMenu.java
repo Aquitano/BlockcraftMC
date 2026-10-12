@@ -62,6 +62,12 @@ public final class AchievementsMenu extends Menu {
                     .lore(messages.getLines("achievements.unlocked-lore", description))
                     .build();
         }
+        if (achievement.isMoment()) {
+            return Items.of(Material.GRAY_DYE)
+                    .name(messages.get("achievements.locked-name", name))
+                    .lore(messages.getLines("achievements.moment-lore", description, Formatter.number("xp", achievement.xp())))
+                    .build();
+        }
         return Items.of(Material.GRAY_DYE)
                 .name(messages.get("achievements.locked-name", name))
                 .lore(messages.getLines("achievements.locked-lore", description,

@@ -69,7 +69,7 @@ public final class CosmeticSettingsListener implements Listener {
                             .name(messages.get("shirts.name." + shirt.key())).build())
                     .orElse(null));
             case TRAIL -> {
-                var selected = value.flatMap(Trail::byKey).filter(ignored -> player.hasPermission(LobbyPermissions.PREMIUM));
+                var selected = value.flatMap(Trail::byKey).filter(trail -> !trail.premium() || player.hasPermission(LobbyPermissions.PREMIUM));
                 if (!selected.equals(trails.of(player))) {
                     selected.ifPresentOrElse(trail -> trails.select(player, trail), () -> trails.clear(player));
                 }

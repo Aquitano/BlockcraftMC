@@ -6,9 +6,12 @@ import java.util.Arrays;
 import java.util.Locale;
 import java.util.Optional;
 
-/** What an achievement counts: a column of the game's stats table, or the network level. */
+/**
+ * What an achievement counts: a column of the game's stats table, the network level, or nothing at all for a
+ * {@link #MOMENT}, which the code that sees the moment grants itself.
+ */
 public enum Metric {
-    KILLS, DEATHS, WINS, LOSSES, POINTS, LEVEL;
+    KILLS, DEATHS, WINS, LOSSES, POINTS, LEVEL, MOMENT;
 
     public long of(Stats stats, int level) {
         return switch (this) {
@@ -18,6 +21,7 @@ public enum Metric {
             case LOSSES -> stats.losses();
             case POINTS -> stats.points();
             case LEVEL -> level;
+            case MOMENT -> 0;
         };
     }
 

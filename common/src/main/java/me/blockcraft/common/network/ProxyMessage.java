@@ -12,7 +12,8 @@ import java.util.UUID;
  * asks the proxy to move them, run a command as them, learn what they look like to others or what they chose, or
  * deliver a notice on their behalf. The proxy speaks first only to answer, to say whether the client wears the
  * network's resource pack, to name the friend the player came to watch, to say whom the player just ignored, to pass
- * on a setting the player changed through a proxy command and to welcome a player who is new to the network.
+ * on a setting the player changed through a proxy command, to welcome a player who is new to the network and to tell
+ * a server that greetings for such a newcomer count, which travels with whichever player is on that server.
  */
 public sealed interface ProxyMessage {
 
@@ -44,6 +45,14 @@ public sealed interface ProxyMessage {
 
     /** The notice is a JSON component, because {@code common} carries no component serializer. */
     record StaffNotice(String permission, String noticeJson) implements ToProxy {
+    }
+
+    /** A line for every player of the network, such as the first find of a secret; JSON like a staff notice. */
+    record Announcement(String noticeJson) implements ToProxy {
+    }
+
+    /** The player and the opponent beside them both asked for another round; the proxy seats the two together. */
+    record Rematch(UUID opponent) implements ToProxy {
     }
 
     record Setting(PlayerSetting setting, String value) implements ToProxy, ToBackend {
@@ -81,5 +90,9 @@ public sealed interface ProxyMessage {
      * every player on restart. The proxy keeps the rules, so they travel along as a JSON component.
      */
     record Welcome(String rulesJson) implements ToBackend {
+    }
+
+    /** Someone joined the network for the first time; greetings written on this server count for them for {@code seconds}. */
+    record Newcomer(UUID player, String name, int seconds) implements ToBackend {
     }
 }

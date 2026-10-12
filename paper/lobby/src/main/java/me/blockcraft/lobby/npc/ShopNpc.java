@@ -17,6 +17,7 @@ import org.bukkit.scheduler.BukkitTask;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 
 /**
  * The shop villager with its floating name card, respawned periodically after clearing round leftovers from
@@ -30,13 +31,15 @@ public final class ShopNpc {
     private final Plugin plugin;
     private final Locations<LobbyLocation> locations;
     private final Messages messages;
+    private final Predicate<Entity> keep;
     private final List<Entity> spawned = new ArrayList<>();
     private BukkitTask respawnTask;
 
-    public ShopNpc(Plugin plugin, Locations<LobbyLocation> locations, Messages messages) {
+    public ShopNpc(Plugin plugin, Locations<LobbyLocation> locations, Messages messages, Predicate<Entity> keep) {
         this.plugin = plugin;
         this.locations = locations;
         this.messages = messages;
+        this.keep = keep;
     }
 
     public void start(long respawnSeconds) {
@@ -76,6 +79,6 @@ public final class ShopNpc {
         spawned.forEach(Entity::remove);
         spawned.clear();
         locations.get(LobbyLocation.SPAWN).ifPresent(spawn ->
-                Worlds.removeLeftovers(spawn.getWorld(), entity -> PetType.of(entity).isPresent()));
+                Worlds.removeLeftovers(spawn.getWorld(), entity -> PetType.of(entity).isPresent() || keep.test(entity)));
     }
 }

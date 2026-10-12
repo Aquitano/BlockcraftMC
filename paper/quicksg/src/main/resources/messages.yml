@@ -168,3 +168,8 @@ scoreboard:
   spectator-value: "<arrow><white><spectators>"
   winner: "<muted><icon:winner> GEWINNER"
   winner-value: "<arrow><white><player>"
+
+# Lines in a player's own recap for what they pulled off this round.
+note:
+  nackt: "<arrow><success>Nackt <dark>· <muted>Gewonnen ganz ohne Rüstung"
+  david-gegen-goliath: "<arrow><success>David gegen Goliath <dark>· <muted>Mit dem Starter-Kit <white><player> <muted>im Diamant-Kit besiegt"

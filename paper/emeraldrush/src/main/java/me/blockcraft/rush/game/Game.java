@@ -1,6 +1,7 @@
 package me.blockcraft.rush.game;
 
 import me.blockcraft.api.game.Arena;
+import me.blockcraft.api.game.Defeat;
 import me.blockcraft.api.game.LobbyCountdown;
 import me.blockcraft.api.game.PlayerReset;
 import me.blockcraft.api.game.Round;
@@ -297,13 +298,13 @@ public final class Game {
             return;
         }
         var victimName = Placeholder.component("victim", victim.playerListName());
+        int remaining = Math.max(0, lives(victim) - 1);
         killer.filter(slayer -> !slayer.equals(victim)).ifPresentOrElse(slayer -> {
             broadcast("deathmatch.killed", victimName, Placeholder.component("killer", slayer.playerListName()));
-            summary.awardKill(slayer, victim);
+            summary.awardKill(slayer, victim, remaining == 0 ? Defeat.OUT : Defeat.LIFE);
             slayer.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 160, 1));
         }, () -> broadcast("deathmatch.died", victimName));
         summary.death(victim);
-        int remaining = Math.max(0, lives(victim) - 1);
         lives.put(victim.getUniqueId(), remaining);
         if (remaining == 0) {
             round.eliminate(victim);

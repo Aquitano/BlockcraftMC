@@ -15,6 +15,7 @@ import me.blockcraft.api.cosmetic.Effects;
 import me.blockcraft.api.dialog.ServerMenu;
 import me.blockcraft.api.elo.Elo;
 import me.blockcraft.api.elo.SkillGroup;
+import me.blockcraft.api.game.RoundConfig;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.game.Streaks;
 import me.blockcraft.api.ignore.Ignores;
@@ -43,6 +44,7 @@ import me.blockcraft.api.xp.Xp;
 import me.blockcraft.api.notification.Notifications;
 import me.blockcraft.api.xp.XpReward;
 import me.blockcraft.common.coins.CoinsRepository;
+import me.blockcraft.common.calendar.NetworkCalendar;
 import me.blockcraft.common.config.YamlFile;
 import me.blockcraft.common.db.Database;
 import me.blockcraft.common.db.DatabaseConfig;
@@ -128,7 +130,8 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
                 unlocks, new Shop(database), new RoundRecapRepository(database), streaks(YamlFile.section(config, "streaks")),
                 settings, resourcePack, profiles, new Effects(settings), messages,
                 servers, self, groups, text(config, "lobby-group", "lobby"), presence, resources.tags(), xp, map,
-                buildMode, realNames, nickRanks, nickStats, achievements, elo, afk, ignores, vanished, audit);
+                buildMode, realNames, nickRanks, nickStats, achievements, elo, afk, ignores, vanished, audit,
+                NetworkCalendar.fromYaml(YamlFile.section(config, "calendar")), RoundConfig.from(config));
         BlockcraftApi.install(api);
         getLogger().info("Running map " + map.name() + map.template().map(template -> " from " + template.directory()).orElse(""));
         int startingCoins = number(config, "starting-coins", 10);

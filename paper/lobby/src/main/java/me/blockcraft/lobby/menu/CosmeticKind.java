@@ -28,7 +28,8 @@ record CosmeticKind<C>(
         Optional<Preview<C>> preview,
         Optional<Live<C>> live,
         Function<C, Component> selected,
-        Component removed
+        Component removed,
+        Optional<Unlock<C>> unlock
 ) {
 
     record Layout(int rows, int backSlot, int removeSlot) {
@@ -48,5 +49,14 @@ record CosmeticKind<C>(
 
     /** A choice that exists in the world besides the setting; it only counts as worn while it is there. */
     record Live<C>(BiPredicate<Player, C> present, BiConsumer<Player, C> restore) {
+    }
+
+    /** A choice with an unlock item belongs to whoever unlocked it, premium or not, and cannot be bought. */
+    record Unlock<C>(String itemPrefix, Function<C, Optional<String>> item) {
+    }
+
+    /** The namespace of the unlocks the menu must know the viewer owns. */
+    Optional<String> ownedPrefix() {
+        return price.map(Price::itemPrefix).or(() -> unlock.map(Unlock::itemPrefix));
     }
 }

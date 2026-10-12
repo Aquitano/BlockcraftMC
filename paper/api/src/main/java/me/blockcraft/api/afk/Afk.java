@@ -5,6 +5,7 @@ import me.blockcraft.api.notification.Notifications;
 import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
+import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -38,6 +39,7 @@ public final class Afk implements Listener {
     private final Duration idle;
     private final Map<UUID, Long> lastActive = new ConcurrentHashMap<>();
     private final Set<UUID> away = ConcurrentHashMap.newKeySet();
+    private final Map<UUID, Long> awaySince = new ConcurrentHashMap<>();
 
     public Afk(Plugin plugin, Notifications notifications, Messages messages, Duration idle) {
         this.plugin = plugin;
@@ -52,6 +54,11 @@ public final class Afk implements Listener {
 
     public boolean isAfk(Player player) {
         return away.contains(player.getUniqueId());
+    }
+
+    public Duration awayFor(Player player) {
+        long now = System.nanoTime();
+        return Duration.ofNanos(Math.max(0, now - awaySince.getOrDefault(player.getUniqueId(), now)));
     }
 
     public void toggle(Player player) {
@@ -74,13 +81,19 @@ public final class Afk implements Listener {
         if (!(afk ? away.add(uuid) : away.remove(uuid))) {
             return;
         }
+        var duration = awayFor(player);
+        if (afk) {
+            awaySince.put(uuid, System.nanoTime());
+        } else {
+            awaySince.remove(uuid);
+        }
         lastActive.put(uuid, System.nanoTime());
         ProxyMessaging.afk(plugin, player, afk);
         new AfkChangeEvent(player, afk).callEvent();
         if (afk) {
             notifications.status(player, messages.get("afk.status"));
         } else {
-            notifications.feedback(player, messages.get("afk.back"));
+            notifications.feedback(player, messages.get("afk.back", Formatter.number("minutes", duration.toMinutes())));
         }
     }
 
@@ -135,5 +148,6 @@ public final class Afk implements Listener {
     public void onQuit(PlayerQuitEvent event) {
         lastActive.remove(event.getPlayer().getUniqueId());
         away.remove(event.getPlayer().getUniqueId());
+        awaySince.remove(event.getPlayer().getUniqueId());
     }
 }

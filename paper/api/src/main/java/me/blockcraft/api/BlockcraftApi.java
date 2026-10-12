@@ -5,6 +5,7 @@ import me.blockcraft.api.afk.Afk;
 import me.blockcraft.api.audit.StaffAudit;
 import me.blockcraft.api.cosmetic.Effects;
 import me.blockcraft.api.elo.Elo;
+import me.blockcraft.api.game.RoundConfig;
 import me.blockcraft.api.game.Streaks;
 import me.blockcraft.api.ignore.Ignores;
 import me.blockcraft.api.menu.Profiles;
@@ -24,6 +25,7 @@ import me.blockcraft.api.world.BuildMode;
 import me.blockcraft.api.world.MapBundle;
 import me.blockcraft.api.xp.Xp;
 import me.blockcraft.api.xp.XpReward;
+import me.blockcraft.common.calendar.NetworkCalendar;
 import me.blockcraft.common.coins.CoinsRepository;
 import me.blockcraft.common.db.Database;
 import me.blockcraft.common.message.Messages;
@@ -63,6 +65,8 @@ import java.util.Optional;
  * @param elo          ranked 1vs1 ratings of the running season and the skill groups they fall into
  * @param ignores      whom each online player ignores; chat from those players does not reach them
  * @param audit        the staff audit log; whatever staff do to players or to the server is recorded here
+ * @param calendar     the days the network celebrates, in its own time zone
+ * @param roundConfig  what every game's round makes of a kill: nemesis lead, respect window, hacker words
  */
 public record BlockcraftApi(
         Notifications notifications,
@@ -96,7 +100,9 @@ public record BlockcraftApi(
         Afk afk,
         Ignores ignores,
         VanishedPlayers vanished,
-        StaffAudit audit) {
+        StaffAudit audit,
+        NetworkCalendar calendar,
+        RoundConfig roundConfig) {
 
     private static BlockcraftApi instance;
 

@@ -1,6 +1,9 @@
 package me.blockcraft.lobby.listener;
 
+import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.sound.Sounds;
+import me.blockcraft.common.settings.PlayerSetting;
+import me.blockcraft.lobby.activity.Parkour;
 import me.blockcraft.lobby.gadget.Gadget;
 import me.blockcraft.lobby.gadget.Gadgets;
 import me.blockcraft.lobby.item.LobbyItem;
@@ -17,6 +20,8 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.persistence.PersistentDataType;
 
+
+
 public final class GadgetListener implements Listener {
 
     private static final NamespacedKey PAINT_KEY = new NamespacedKey("lobby", "paint");
@@ -26,9 +31,11 @@ public final class GadgetListener implements Listener {
     private static final double SNOWBALL_SPEED = 2.0;
 
     private final Gadgets gadgets;
+    private final Parkour parkour;
 
-    public GadgetListener(Gadgets gadgets) {
+    public GadgetListener(Gadgets gadgets, Parkour parkour) {
         this.gadgets = gadgets;
+        this.parkour = parkour;
     }
 
     @EventHandler
@@ -38,6 +45,10 @@ public final class GadgetListener implements Listener {
             return;
         }
         var player = event.getPlayer();
+        if (parkour.running(player)) {
+            event.setCancelled(true);
+            return;
+        }
         Gadget.of(event.getItem()).ifPresent(gadget -> {
             switch (gadget) {
                 case TNT_JUMP -> {
@@ -50,6 +61,18 @@ public final class GadgetListener implements Listener {
                 }
                 case GRAPPLING_HOOK -> {
                 }
+                case BIRTHDAY_CAKE -> {
+                    event.setCancelled(true);
+                    if (gadgets.tryUse(player)) {
+                        Sounds.ACHIEVEMENT.play(player);
+                        for (var viewer : player.getWorld().getNearbyPlayers(player.getLocation(), 24)) {
+                            if (viewer.canSee(player) && BlockcraftApi.get().settings()
+                                    .enabled(viewer, PlayerSetting.EFFECTS)) {
+                                viewer.spawnParticle(Particle.HAPPY_VILLAGER, player.getLocation().add(0, 1, 0), 20, 0.6, 0.6, 0.6, 0);
+                            }
+                        }
+                    }
+                }
             }
         });
     }
@@ -57,6 +80,11 @@ public final class GadgetListener implements Listener {
     @EventHandler
     public void onFish(PlayerFishEvent event) {
         var player = event.getPlayer();
+        if (parkour.running(player)) {
+            event.setCancelled(true);
+            event.getHook().remove();
+            return;
+        }
         if (Gadget.of(player.getInventory().getItemInMainHand()).filter(Gadget.GRAPPLING_HOOK::equals).isEmpty()
                 || LobbyItem.of(player.getInventory().getItemInMainHand()).filter(LobbyItem.GADGET::equals).isEmpty()) {
             return;

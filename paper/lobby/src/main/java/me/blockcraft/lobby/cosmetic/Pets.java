@@ -3,6 +3,7 @@ package me.blockcraft.lobby.cosmetic;
 import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.entity.Animals;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -27,6 +28,11 @@ public final class Pets {
                 .map(Bukkit::getEntity)
                 .filter(Entity::isValid)
                 .flatMap(PetType::of);
+    }
+
+    public Optional<Location> location(Player owner) {
+        return Optional.ofNullable(petByOwner.get(owner.getUniqueId()))
+                .map(Bukkit::getEntity).filter(Entity::isValid).map(Entity::getLocation);
     }
 
     public void spawn(Player owner, PetType type) {

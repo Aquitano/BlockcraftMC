@@ -21,23 +21,25 @@ import me.blockcraft.system.ProxySettings;
 import me.blockcraft.system.SystemConfig;
 import me.blockcraft.system.SystemPermissions;
 import me.blockcraft.system.moderation.PunishmentService;
+import me.blockcraft.system.welcome.Anniversaries;
+import me.blockcraft.system.welcome.Newcomers;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import org.slf4j.Logger;
 
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Gate at login (maintenance, player cap, active ban), remember the player, then welcome first-timers
- * and pull everyone to the lobby two seconds after they joined, as the old proxy did. A first-timer's first lobby
- * is also told to greet them with the rules.
+ * Gate at login (maintenance, player cap, active ban), remember the player, then welcome first-timers, congratulate
+ * a player on the anniversary of their first join and pull everyone to the lobby two seconds after they joined, as
+ * the old proxy did. A first-timer's first lobby is also told to greet them with the rules.
  */
 public final class LoginListener {
 
@@ -51,14 +53,16 @@ public final class LoginListener {
     private final PunishmentRepository punishments;
     private final PunishmentService punishmentService;
     private final LobbyConnector lobby;
+    private final Newcomers newcomers;
+    private final Anniversaries anniversaries;
     private final Messages messages;
     private final Logger logger;
-    private final Set<UUID> firstJoins = ConcurrentHashMap.newKeySet();
+    private final Map<UUID, Newcomers.Arrival> firstJoins = new ConcurrentHashMap<>();
     private final Set<UUID> awaitingWelcome = ConcurrentHashMap.newKeySet();
 
     public LoginListener(Object plugin, ProxyServer proxy, SystemConfig config, ProxySettings settings, PlayerRepository players,
-                         PunishmentRepository punishments, PunishmentService punishmentService, LobbyConnector lobby, Messages messages,
-                         Logger logger) {
+                         PunishmentRepository punishments, PunishmentService punishmentService, LobbyConnector lobby,
+                         Newcomers newcomers, Anniversaries anniversaries, Messages messages, Logger logger) {
         this.plugin = plugin;
         this.proxy = proxy;
         this.config = config;
@@ -67,6 +71,8 @@ public final class LoginListener {
         this.punishments = punishments;
         this.punishmentService = punishmentService;
         this.lobby = lobby;
+        this.newcomers = newcomers;
+        this.anniversaries = anniversaries;
         this.messages = messages;
         this.logger = logger;
     }
@@ -89,11 +95,17 @@ public final class LoginListener {
                     event.setResult(ComponentResult.denied(punishmentService.banScreen(ban.get())));
                     return;
                 }
-                if (!players.exists(player.getUniqueId())) {
-                    firstJoins.add(player.getUniqueId());
-                    awaitingWelcome.add(player.getUniqueId());
-                }
+                var known = players.byUuid(player.getUniqueId());
                 players.upsert(player.getUniqueId(), player.getUsername());
+                known.ifPresentOrElse(returning -> {
+                    firstJoins.put(player.getUniqueId(), newcomers.returning(player));
+                    if (players.verifiedFirstSeen(player.getUniqueId())) {
+                        anniversaries.arrive(player.getUniqueId(), returning.firstSeen());
+                    }
+                }, () -> {
+                    firstJoins.put(player.getUniqueId(), newcomers.arrive(player));
+                    awaitingWelcome.add(player.getUniqueId());
+                });
             } catch (DatabaseException e) {
                 // Velocity would log the exception and let the login through, ban check included.
                 logger.error("Could not check {} against the database, refusing the login", player.getUsername(), e);
@@ -106,17 +118,16 @@ public final class LoginListener {
     public void onPostLogin(PostLoginEvent event) {
         Player player = event.getPlayer();
         proxy.getScheduler().buildTask(plugin, () -> {
+            var arrival = firstJoins.remove(player.getUniqueId());
             if (!player.isActive()) {
-                firstJoins.remove(player.getUniqueId());
                 return;
             }
-            if (firstJoins.remove(player.getUniqueId())) {
-                var welcome = messages.getLines("login.welcome",
-                        Placeholder.unparsed("player", player.getUsername()), Formatter.number("number", players.count()));
-                for (Player all : proxy.getAllPlayers()) {
-                    welcome.forEach(all::sendMessage);
-                }
+            if (arrival != null) {
+                newcomers.welcome(player, arrival);
             }
+            anniversaries.years(player.getUniqueId()).ifPresent(years -> player.sendMessage(years == 1
+                    ? messages.get("welcome.anniversary-one")
+                    : messages.get("welcome.anniversary", Formatter.number("years", years))));
             if (!lobby.isOnLobby(player)) {
                 lobby.send(player);
             }
@@ -136,6 +147,7 @@ public final class LoginListener {
 
     @Subscribe
     public void onDisconnect(DisconnectEvent event) {
+        firstJoins.remove(event.getPlayer().getUniqueId());
         awaitingWelcome.remove(event.getPlayer().getUniqueId());
     }
 

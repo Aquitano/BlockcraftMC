@@ -33,6 +33,7 @@ public final class Profiles {
     }
 
     private Optional<Consumer<Player>> recentRound = Optional.empty();
+    private Optional<Consumer<Player>> advent = Optional.empty();
     private final Plugin plugin;
     private final CoinsRepository coins;
     private final Map<String, StatsRepository> games;
@@ -58,6 +59,19 @@ public final class Profiles {
 
     public void recentRound(Consumer<Player> open) {
         recentRound = Optional.of(open);
+    }
+
+    public void advent(Consumer<Player> open) {
+        advent = Optional.of(open);
+    }
+
+    public void clearAdvent() {
+        advent = Optional.empty();
+    }
+
+    Optional<Consumer<Player>> advent() {
+        return me.blockcraft.api.BlockcraftApi.get().calendar().is(me.blockcraft.common.calendar.NetworkCalendar.Occasion.ADVENT)
+                ? advent : Optional.empty();
     }
 
     public void clearRecentRound() {

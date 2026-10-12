@@ -138,3 +138,14 @@ scoreboard:
   opponent: "<muted><icon:opponent> GEGNER"
   opponent-value: "<arrow><white><player>"
   opponent-none: "Warte auf einen Gegner"
+
+# The rematch offered when a duel ends; <opponent> is the other duellist.
+rematch:
+  offer: "<arrow><duell>[Revanche]"
+  offer-hover: "<muted>Klicke, um gleich noch einmal gegen <white><opponent> <muted>anzutreten."
+  asked: "<prefix><muted>Deine Revanche-Anfrage ist bei <white><opponent> <muted>angekommen."
+  request: "<prefix><white><player> <muted>will eine Revanche. "
+  accept: "<success>[Annehmen]"
+  accept-hover: "<muted>Klicke, um die Revanche gegen <white><opponent> <muted>anzunehmen."
+  waiting: "<prefix><muted>Deine Anfrage steht, jetzt ist <white><opponent> <muted>am Zug."
+  gone: "<prefix><muted>Dein Gegner ist schon weg, die Revanche muss warten."

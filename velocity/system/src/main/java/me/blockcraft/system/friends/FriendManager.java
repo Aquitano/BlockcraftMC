@@ -13,6 +13,7 @@ import me.blockcraft.system.SystemConfig;
 import me.blockcraft.system.command.CommandSupport;
 import me.blockcraft.system.ignore.IgnoreList;
 import me.blockcraft.system.network.ServerDirectory;
+import me.blockcraft.system.welcome.Anniversaries;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
@@ -41,12 +42,13 @@ public final class FriendManager {
     private final ServerDirectory directory;
     private final SpectateRequests spectating;
     private final FriendRepository repository;
+    private final Anniversaries anniversaries;
     private final SystemConfig config;
     private final Messages messages;
 
     public FriendManager(ProxyServer proxy, PlayerLookup lookup, PlayerVisibility visibility, PlayerChoices choices,
                          IgnoreList ignores, ServerDirectory directory, SpectateRequests spectating, FriendRepository repository,
-                         SystemConfig config, Messages messages) {
+                         Anniversaries anniversaries, SystemConfig config, Messages messages) {
         this.proxy = proxy;
         this.lookup = lookup;
         this.visibility = visibility;
@@ -55,6 +57,7 @@ public final class FriendManager {
         this.directory = directory;
         this.spectating = spectating;
         this.repository = repository;
+        this.anniversaries = anniversaries;
         this.config = config;
         this.messages = messages;
     }
@@ -204,19 +207,34 @@ public final class FriendManager {
     }
 
     public void announceJoin(Player player) {
-        announce(player, "friends.joined");
+        var years = anniversaries.years(player.getUniqueId());
+        if (years.isEmpty()) {
+            announce(player, "friends.joined");
+        } else if (years.getAsInt() == 1) {
+            announce(player, "friends.joined-anniversary-one");
+        } else {
+            announce(player, "friends.joined-anniversary", Formatter.number("years", years.getAsInt()));
+        }
     }
 
     public void announceQuit(Player player) {
         announce(player, "friends.left");
     }
 
+    /** How many of the player's friends are online and not vanished; the player need not be online themselves. */
+    public int onlineCount(UUID player) {
+        return (int) repository.friendUuidsOf(player).stream()
+                .flatMap(friend -> proxy.getPlayer(friend).stream())
+                .filter(friend -> !visibility.isVanished(friend))
+                .count();
+    }
+
     public void purgeExpiredRequests() {
         repository.deleteExpiredRequests(config.friends().requestMinutes());
     }
 
-    private void announce(Player player, String key) {
-        var line = Placeholder.unparsed("player", shownName(player));
+    private void announce(Player player, String key, TagResolver... details) {
+        var line = TagResolver.resolver(Placeholder.unparsed("player", shownName(player)), TagResolver.resolver(details));
         for (UUID friendId : repository.friendUuidsOf(player.getUniqueId())) {
             proxy.getPlayer(friendId)
                     .filter(friend -> visibility.canSee(friend, player))

@@ -3,6 +3,8 @@
 Paper and Velocity plugins for the BlockcraftMC minigame network, originally written for Spigot 1.8.8 / BungeeCord in
 2018-2019 and ported to Paper 26.2 / Velocity 4 in 2026.
 
+See [Easter eggs and lobby activities](EASTER_EGGS.md) for rewards, calendar events, map setup, and gameplay checks.
+
 ## Layout
 
 ```
@@ -360,15 +362,20 @@ still need an in-game smoke test.
 
 The ping answer carries the MOTD edited by `/motd`, the cap set by `/setmax`, the icon from `server-icon.png` in
 BlockcraftSystem's data folder (a default is copied there on first start; replace it with any 64x64 PNG) and, where
-the client would list who is online, the `motd.sample` lines from its `messages.yml`.
+the client would list who is online, the `motd.sample` lines from its `messages.yml`. The second line of the MOTD
+names the network's birthday (`calendar.founded`), else greets the account last seen logging in from the pinging
+address (the alt detection's address hash) if that player enabled `server-list-greeting`, else is a random
+`motd.random` line. Personal greetings default to off because everyone sharing an address can see them.
+Friend counts additionally require `server-list.show-friends`, which also defaults to false.
 
 ## Player settings
 
 Every remembered choice a player makes is one row in `bc_player_settings`, read by both platforms through
 `common`'s `PlayerSettingRepository`. Cosmetic settings store the chosen key for tags, effects, trails, gadgets,
 pets, heads, and shirts. The toggles store `on` or `off` and count as their own default while no row exists, so nothing has to be seeded:
-`private-messages`, `party-invites`, `friend-requests`, `player-visibility`, `sounds`, and `effects` default to on, the two nick
-toggles (`auto-nick`, `keep-nick`) to off, and `report-notifications` (staff with `blockcraft.report.notify`) to on. A toggle may name a permission, and then it is only shown to, and only
+`private-messages`, `party-invites`, `friend-requests`, `player-visibility`, `sounds`, `mentions`, and `effects` default to on.
+The nick toggles (`auto-nick`, `keep-nick`) and `server-list-greeting` default to off.
+`report-notifications` defaults to on for staff with `blockcraft.report.notify`. A toggle may name a permission, and then it is only shown to, and only
 read for, the players who hold it.
 
 Paper caches a player's settings for as long as they are online (`BlockcraftApi.get().settings()`) and fires

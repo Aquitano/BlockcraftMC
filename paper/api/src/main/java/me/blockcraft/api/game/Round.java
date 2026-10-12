@@ -87,14 +87,21 @@ public final class Round implements Listener {
         return phase;
     }
 
-    /** Open menus and dialogs close, because what they offered may be gone, and the proxy hears the new state. */
+    /**
+     * Open menus and dialogs close, because what they offered may be gone, and the proxy hears the new state. When
+     * the lobby gives way to play, the summary learns who plays.
+     */
     public void enter(GamePhase phase) {
+        boolean starts = this.phase == GamePhase.LOBBY && phase == GamePhase.INGAME;
         this.phase = phase;
         Bukkit.getOnlinePlayers().forEach(player -> {
             Menu.close(player);
             player.closeDialog();
         });
         api.presence().state(phase.serverState());
+        if (starts) {
+            summary.begin(players());
+        }
     }
 
     /** Seats a joiner and returns whether they play; a spectator watches already. */
@@ -335,7 +342,7 @@ public final class Round implements Listener {
         enter(GamePhase.ENDING);
         stop();
         summary.show();
-        timer(ServerRestart.start(plugin, arena, restartSeconds));
+        timer(ServerRestart.start(plugin, arena, restartSeconds, summary::closeRespects));
         return true;
     }
 

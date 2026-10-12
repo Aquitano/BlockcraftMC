@@ -78,7 +78,7 @@ public final class CosmeticPreviews implements Listener {
     }
 
     public void trail(Player player, Trail trail, Consumer<Player> back) {
-        start(player, true, preview -> preview.animate = ticks -> {
+        start(player, trail.premium(), preview -> preview.animate = ticks -> {
             double progress = ticks / (double) durationTicks;
             var point = preview.location.clone().add(Math.sin(progress * Math.PI * 2) * 0.8, 0.2, 0);
             player.spawnParticle(trail.particle(), point, 3, 0.12, 0.12, 0.12, 0.02);

@@ -3,7 +3,7 @@ package me.blockcraft.core.listener;
 import io.papermc.paper.chat.ChatRenderer;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import me.blockcraft.api.BlockcraftApi;
-import me.blockcraft.api.cosmetic.ChatTag;
+import me.blockcraft.api.cosmetic.ChatTagChoice;
 import me.blockcraft.api.rank.Ranks;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Tasks;
@@ -48,8 +48,8 @@ public final class ChatFormatListener implements Listener {
         var source = event.getPlayer();
         var api = BlockcraftApi.get();
         event.viewers().removeIf(viewer -> viewer instanceof Player watcher && api.ignores().ignores(watcher, source));
-        var tag = api.settings().get(source, PlayerSetting.CHAT_TAG).flatMap(ChatTag::byKey)
-                .map(chosen -> api.messages().get(chosen.messageKey()).append(Component.space()))
+        var tag = api.settings().get(source, PlayerSetting.CHAT_TAG).flatMap(ChatTagChoice::parse)
+                .map(chosen -> chosen.text(api.messages()).append(Component.space()))
                 .orElse(Component.empty());
         var rank = Ranks.prefix(source).orElse(Component.empty());
         int level = api.nickStats().level(source, api.xp().level(source));

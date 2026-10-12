@@ -3,6 +3,7 @@ package me.blockcraft.api.proxy;
 import me.blockcraft.api.dialog.WelcomeDialog;
 import me.blockcraft.api.ignore.Ignores;
 import me.blockcraft.api.pack.ResourcePacks;
+import me.blockcraft.api.player.NewcomerEvent;
 import me.blockcraft.api.settings.PlayerSettings;
 import me.blockcraft.api.spectate.SpectateRequestEvent;
 import me.blockcraft.api.task.Tasks;
@@ -12,6 +13,8 @@ import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.messaging.PluginMessageListener;
+
+import java.time.Duration;
 
 /** Hands what the proxy says about a player to the part of BlockcraftAPI that keeps it. */
 public final class ProxyMessageListener implements PluginMessageListener {
@@ -49,6 +52,8 @@ public final class ProxyMessageListener implements PluginMessageListener {
                         }
                     });
                 }
+                case ProxyMessage.Newcomer newcomer ->
+                        new NewcomerEvent(newcomer.player(), newcomer.name(), Duration.ofSeconds(newcomer.seconds())).callEvent();
                 // The lobby's FriendsChannel waits for these.
                 case ProxyMessage.FriendsReply _ -> {
                 }

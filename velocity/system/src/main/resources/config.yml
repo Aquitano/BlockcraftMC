@@ -56,7 +56,13 @@ resource-pack:
 max-players: 100
 motd:
   default: "&cBlockcraftMC.net"
-  random: []
+  random:
+    - "&7Heute schon &6QuickSG &7gewonnen?"
+    - "&7Die Smaragde warten. &aEmeraldRush"
+    - "&7Wer zuerst blinzelt, verliert. &bDuell"
+    - "&7Die Lobby hat dich vermisst. Ein bisschen."
+    - "&7Kein Lag, nur Skill. Meistens."
+    - "&7Komm rein, die Kekse sind fast fertig."
 
 # How many /history entries one player's list shows; everything older stays in bc_punishments.
 history:
@@ -163,3 +169,31 @@ punishments:
   22: {type: BAN, reason: "Banumgehung", duration: permanent}
   23: {type: BAN, reason: "Griefing", duration: permanent}
   24: {type: BAN, reason: "Extrem - Extrem kommt zu stande, indem gegen sehr viele Regeln oft und stark verstoßen wird.", duration: permanent}
+
+# A first join is announced to everyone on a server of groups, with the number the player joined the network under,
+# and those servers count a greeting in chat for greeting-seconds. Once that window closes, the newcomer hears who
+# said hello: listed-greeters of them by name, the rest as a count. enabled: false keeps first joins quiet.
+welcome:
+  enabled: true
+  groups: [lobby]
+  greeting-seconds: 60
+  listed-greeters: 2
+
+# The server list greets the account last seen logging in from the pinging address (the alt detection's address
+# hash) by name after that player opts in. Everyone sharing the address can see the greeting.
+# Friend counts require show-friends as well as the player's opt-in.
+server-list:
+  cache-seconds: 30
+  show-friends: false
+
+# The days the network celebrates, counted in zone; founded is the yyyy-MM-dd the network opened, and empty means it
+# has no birthday to celebrate. Mirrors calendar in BlockcraftAPI's config.yml, so keep the two the same.
+calendar:
+  zone: Europe/Berlin
+  easter:
+    days-before: 2
+    days-after: 7
+  halloween:
+    from: "10-25"
+    to: "10-31"
+  founded: ""

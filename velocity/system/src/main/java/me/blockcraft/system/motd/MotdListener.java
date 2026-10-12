@@ -1,5 +1,6 @@
 package me.blockcraft.system.motd;
 
+import com.velocitypowered.api.event.EventTask;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyPingEvent;
 import com.velocitypowered.api.proxy.server.ServerPing;
@@ -10,12 +11,14 @@ import me.blockcraft.system.ProxySettings;
 import me.blockcraft.system.SystemConfig;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.net.InetAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -26,8 +29,9 @@ import java.util.Random;
 import java.util.UUID;
 
 /**
- * Server list entry: default MOTD plus a random second line, the configured player cap, the maintenance banner,
- * the icon from {@code server-icon.png} and the network's addresses where the client would list player names.
+ * Server list entry: default MOTD plus a second line, the configured player cap, the maintenance banner, the icon
+ * from {@code server-icon.png} and the network's addresses where the client would list player names. The second line
+ * celebrates the network's birthday, else greets the returning player behind the address, else is a random one.
  */
 public final class MotdListener {
 
@@ -37,24 +41,31 @@ public final class MotdListener {
     private final PlayerVisibility visibility;
     private final SystemConfig config;
     private final ProxySettings settings;
+    private final ReturningPlayers returning;
     private final Messages messages;
     private final Optional<Favicon> favicon;
     private final Random random = new Random();
 
-    public MotdListener(PlayerVisibility visibility, SystemConfig config, ProxySettings settings, Messages messages,
-                        Path dataDirectory, Logger logger) {
+    public MotdListener(PlayerVisibility visibility, SystemConfig config, ProxySettings settings, ReturningPlayers returning,
+                        Messages messages, Path dataDirectory, Logger logger) {
         this.visibility = visibility;
         this.config = config;
         this.settings = settings;
+        this.returning = returning;
         this.messages = messages;
         this.favicon = loadFavicon(dataDirectory, logger);
     }
 
     @Subscribe
-    public void onPing(ProxyPingEvent event) {
+    public EventTask onPing(ProxyPingEvent event) {
+        var address = event.getConnection().getRemoteAddress().getAddress();
+        return EventTask.async(() -> event.setPing(answer(event.getPing(), address)));
+    }
+
+    private ServerPing answer(ServerPing original, InetAddress address) {
         int online = visibility.publicCount();
         int max = config.maxPlayers();
-        var ping = event.getPing().asBuilder().onlinePlayers(online).maximumPlayers(max);
+        var ping = original.asBuilder().onlinePlayers(online).maximumPlayers(max);
         favicon.ifPresent(ping::favicon);
         ping.clearSamplePlayers().samplePlayers(sample(online, max));
         var firstLine = LegacyComponentSerializer.legacyAmpersand().deserialize(config.defaultMotd());
@@ -63,10 +74,30 @@ public final class MotdListener {
                     Formatter.number("online", online), Formatter.number("max", max)))));
             ping.description(firstLine.append(Component.newline()).append(messages.get("motd.maintenance-line")));
         } else {
-            ping.version(new ServerPing.Version(event.getPing().getVersion().getProtocol(), legacy(messages.get("motd.wrong-version"))));
-            ping.description(firstLine.append(Component.newline()).append(randomLine()));
+            ping.version(new ServerPing.Version(original.getVersion().getProtocol(), legacy(messages.get("motd.wrong-version"))));
+            ping.description(firstLine.append(Component.newline()).append(secondLine(address)));
         }
-        event.setPing(ping.build());
+        return ping.build();
+    }
+
+    private Component secondLine(InetAddress address) {
+        var calendar = config.calendar();
+        var age = calendar.age(calendar.today());
+        if (age.isPresent()) {
+            return age.getAsInt() == 1
+                    ? messages.get("motd.birthday-one")
+                    : messages.get("motd.birthday", Formatter.number("years", age.getAsInt()));
+        }
+        return returning.at(address).map(this::greeting).orElseGet(this::randomLine);
+    }
+
+    private Component greeting(ReturningPlayers.Returning player) {
+        var name = Placeholder.unparsed("player", player.name());
+        return switch (player.friendsOnline()) {
+            case 0 -> messages.get("motd.welcome-back", name);
+            case 1 -> messages.get("motd.welcome-back-friend", name);
+            default -> messages.get("motd.welcome-back-friends", name, Formatter.number("count", player.friendsOnline()));
+        };
     }
 
     /** The hover over the player count carries the network's addresses instead of who happens to be online. */

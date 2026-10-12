@@ -3,6 +3,7 @@ package me.blockcraft.quicksg.game;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.config.Locations;
 import me.blockcraft.api.game.Arena;
+import me.blockcraft.api.game.Defeat;
 import me.blockcraft.api.game.GamePhase;
 import me.blockcraft.api.game.LobbyCountdown;
 import me.blockcraft.api.game.PlayerReset;
@@ -28,6 +29,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.plugin.Plugin;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +42,8 @@ public final class Game {
     private static final double INGAME_MAX_HEALTH = 14.0;
     private static final long RESPAWN_DELAY_TICKS = 1L;
     private static final int SECONDS_PER_MINUTE = 60;
+    /** QuickSG's group in the achievement catalog, {@code achievements.quicksg} in BlockcraftAPI's config.yml. */
+    private static final String ACHIEVEMENTS = "quicksg";
 
     private final Plugin plugin;
     private final QuickSGConfig config;
@@ -144,7 +148,11 @@ public final class Game {
         var victimName = Placeholder.unparsed("player", victim.getName());
         if (killer != null) {
             Bukkit.broadcast(messages.get("game.killed", victimName, Placeholder.unparsed("killer", killer.getName())));
-            summary.awardKill(killer, victim);
+            summary.awardKill(killer, victim, Defeat.OUT);
+            if (kit(killer) == Kit.STARTER && kit(victim) == Kit.DIAMOND) {
+                summary.note(killer, messages.get("note.david-gegen-goliath", victimName));
+                BlockcraftApi.get().achievements().grant(killer, ACHIEVEMENTS, "david-gegen-goliath");
+            }
         } else {
             Bukkit.broadcast(messages.get("game.died", victimName));
             summary.awardCoins(victim, config.rewards().death());
@@ -258,7 +266,13 @@ public final class Game {
         if (!isIngame() || round.playerCount() > 1) {
             return;
         }
-        alivePlayers().forEach(summary::awardWin);
+        for (var winner : alivePlayers()) {
+            summary.awardWin(winner);
+            if (Arrays.stream(winner.getInventory().getArmorContents()).allMatch(piece -> piece == null || piece.isEmpty())) {
+                summary.note(winner, messages.get("note.nackt"));
+                BlockcraftApi.get().achievements().grant(winner, ACHIEVEMENTS, "nackt");
+            }
+        }
         endRound();
     }
 

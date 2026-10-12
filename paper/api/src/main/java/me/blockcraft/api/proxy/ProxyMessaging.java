@@ -71,6 +71,16 @@ public final class ProxyMessaging {
         send(plugin, via, new ProxyMessage.StaffNotice(permission, GsonComponentSerializer.gson().serialize(notice)));
     }
 
+    /** Delivers the line to every player on the network; {@code via} only carries the message. */
+    public static void announce(Plugin plugin, Player via, Component line) {
+        send(plugin, via, new ProxyMessage.Announcement(GsonComponentSerializer.gson().serialize(line)));
+    }
+
+    /** Asks the proxy to seat the player and the opponent beside them together in a fresh round of this game. */
+    public static void rematch(Plugin plugin, Player player, Player opponent) {
+        send(plugin, player, new ProxyMessage.Rematch(opponent.getUniqueId()));
+    }
+
     public static void send(Plugin plugin, Player player, ProxyMessage.ToProxy message) {
         send(plugin, player, ProxyMessageCodec.CHANNEL, ProxyMessageCodec.encode(message));
     }

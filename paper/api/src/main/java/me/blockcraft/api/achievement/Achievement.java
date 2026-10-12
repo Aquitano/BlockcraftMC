@@ -2,8 +2,9 @@ package me.blockcraft.api.achievement;
 
 /**
  * One entry of the catalog in {@code achievements} of BlockcraftAPI's config.yml: earned once {@code metric} of
- * {@code game} reaches {@code threshold}, kept as the unlock {@link #item()} and paid with {@code xp}. The name and
- * description are {@code achievements.<game>.<name>.name} and {@code .description} in messages.yml.
+ * {@code game} reaches {@code threshold}, or for a moment once {@link Achievements#grant} names it, kept as the
+ * unlock {@link #item()} and paid with {@code xp}. The name and description are
+ * {@code achievements.<game>.<name>.name} and {@code .description} in messages.yml.
  */
 public record Achievement(String game, String name, Metric metric, int threshold, int xp) {
 
@@ -21,6 +22,10 @@ public record Achievement(String game, String name, Metric metric, int threshold
     }
 
     public boolean reached(long current) {
-        return current >= threshold;
+        return !isMoment() && current >= threshold;
+    }
+
+    public boolean isMoment() {
+        return metric == Metric.MOMENT;
     }
 }

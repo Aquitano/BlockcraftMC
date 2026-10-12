@@ -9,6 +9,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -86,5 +87,35 @@ public final class LobbyConnector {
                 seated.forEach(id -> directory.release(id, server));
             }
         });
+    }
+
+    /**
+     * Seats two players who just played each other on the same server together in a fresh round of that server's
+     * group; a server elsewhere, or none with two free seats, leaves both where they are.
+     */
+    public void rematch(Player player, Player opponent) {
+        var here = player.getCurrentServer().map(connection -> connection.getServer().getServerInfo().getName());
+        var there = opponent.getCurrentServer().map(connection -> connection.getServer().getServerInfo().getName());
+        var group = here.filter(there.orElse("")::equals).flatMap(directory::groupOf);
+        if (group.isEmpty()) {
+            return;
+        }
+        String key = "play.games." + group.get();
+        var game = Placeholder.component("game", messages.has(key) ? messages.get(key) : Component.text(group.get()));
+        var pair = List.of(player, opponent);
+        var target = directory.fill(group.get(), pair.stream().map(Player::getUniqueId).toList());
+        if (target.isEmpty()) {
+            pair.forEach(each -> each.sendMessage(messages.get("play.rematch-unavailable", game)));
+            return;
+        }
+        String server = target.get().getServerInfo().getName();
+        for (var each : pair) {
+            each.sendMessage(messages.get("play.rematch", game));
+            directory.send(each, target.get()).thenAccept(connected -> {
+                if (!connected) {
+                    directory.release(each.getUniqueId(), server);
+                }
+            });
+        }
     }
 }

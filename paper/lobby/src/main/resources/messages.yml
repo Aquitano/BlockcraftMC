@@ -1,6 +1,8 @@
 prefix: "<primary><ip> <dark>» <reset>"
 
 commands:
+  lobbyset:
+    description: "Setzt Teich, Parcours und saisonale Fundorte"
   setspawn:
     description: "Setzt die Lobby-Teleportpunkte"
   setholo:
@@ -111,9 +113,10 @@ navigator:
       - "<muted>Ein Gegner. Ihr bestimmt den Modus."
       - "<muted>1vs1, SurvivalGames oder SuperJump."
 secrets:
-  title: "<arrow><primary>Secrets"
+  title: "<arrow><primary>Secrets <dark>· <muted><found>/<total>"
   unknown: "<error>???"
   unknown-lore: "<bullet><muted>Noch nicht gefunden!"
+  riddle-lore: "<bullet><muted><italic><riddle>"
   found-item: "<success><name>"
   found-lore: "<bullet><muted>Gefunden!"
   name:
@@ -126,6 +129,23 @@ secrets:
     statue: "Statue"
     ruhe: "Ruh dich aus!"
     abgelegen: "Abgelegen"
+    retro: "Retro"
+    karpfen: "Goldener Karpfen"
+    goldenesei: "Goldenes Ei"
+  # Shown on every secret still missing, once a player found secrets.riddles-after of them (config.yml).
+  riddle:
+    zimmer: "Jedes Haus hat ein Zimmer, das niemand betritt."
+    wagen: "Wer mitfahren will, muss erst aufsteigen."
+    nacht: "Dort, wo man sich hinlegt, wenn es dunkel wird."
+    abwasser: "Wo das Wasser hinfließt, wenn keiner hinsieht."
+    abfall: "Was andere wegwerfen, ist für dich ein Fund."
+    hinrichtung: "Ein Ort, an dem früher Urteile vollstreckt wurden."
+    statue: "Sie steht still, seit es die Lobby gibt."
+    ruhe: "Wer lange läuft, braucht irgendwann eine Bank."
+    abgelegen: "Am Rand der Lobby, wo kaum jemand hinläuft."
+    retro: "Oben, oben, unten, unten … den Rest kennst du."
+    karpfen: "Wer am Wasser Geduld hat, zieht manchmal Gold heraus."
+    goldenesei: "Manche Hühner legen mehr als nur Frühstück."
   sign:
     border: "<dark><strikethrough>-----------"
     tag: "<muted>[SECRET]"
@@ -135,9 +155,14 @@ secrets:
   found-subtitle: "<accent>+<coins> Coins"
   found:
     - "<primary>Secrets <dark>● <muted>Du hast folgendes <white>Secret <muted>gefunden<dark>: <white><secret><dark>!"
-    - "<primary>Secrets <dark>● <muted>Herzlichen Glückwunsch!"
+    - "<primary>Secrets <dark>● <muted>Das war dein <accent><found>. <muted>von <accent><total> <muted>Secrets."
     - "<accent>+<coins> Coins"
+  first-finder: "<primary>Secrets <dark>● <accent><player> <muted>hat das Secret <white><secret> <muted>gefunden. <accent>Niemand war schneller!"
+  explorer:
+    - "<primary>Secrets <dark>● <success>Alle Secrets gefunden!"
+    - "<primary>Secrets <dark>● <muted>Dein Tag <tag> <muted>wartet in den Extras unter Chat-Tags."
 cosmetics:
+  earned-locked: "<muted>Wird bei einem besonderen Anlass freigeschaltet."
   fitting-lore: "<muted>Rechtsklick <dark>· <primary>An einer Figur ansehen"
   preview-lore: "<muted>Rechtsklick <dark>· <primary>Vorschau"
   preview-disabled: "<muted>Vorschau aus. Aktiviere kosmetische Effekte in den Einstellungen."
@@ -182,13 +207,13 @@ heads:
   name:
     capam: "<primary>Captain America's Kopf"
     crump: "<primary>Crumpy Cat's Kopf"
-    a: "<primary>Hamburger Kopf"
-    ab: "<primary>Kisten Kopf"
-    abs: "<primary>Piston Kopf"
-    abss: "<primary>Command Kopf"
-    dis: "<primary>Dispenser Kopf"
-    diss: "<primary>Gummi Kopf"
-    disss: "<primary>TNT Kopf"
+    hamburger: "<primary>Hamburger Kopf"
+    chest: "<primary>Kisten Kopf"
+    piston: "<primary>Piston Kopf"
+    command-block: "<primary>Command Kopf"
+    dispenser: "<primary>Dispenser Kopf"
+    rubber: "<primary>Gummi Kopf"
+    tnt: "<primary>TNT Kopf"
     foot: "<primary>Football Kopf"
     foots: "<primary>Ender Kopf"
     marios: "<primary>SuperMario Kopf"
@@ -208,9 +233,6 @@ shirts:
     purple: "<primary>Lila Hemd"
     orange: "<primary>Oranges Hemd"
     turquoise: "<primary>Türkises Hemd"
-npc:
-  title: "<arrow><primary>Lobby-Shop"
-  subtitle: "<muted>Kaufe dir coole Items!"
 premium-menu:
   title: "<arrow><premium>Premium"
   trails: "<arrow><primary>Spuren"
@@ -274,7 +296,7 @@ extras:
   premium: "<arrow><premium>Premium"
   premium-lore: "<bullet><muted>Spuren, Haustiere und der Premiumbereich"
   tags: "<arrow><primary>Chat-Tags"
-  tags-lore: "<bullet><muted>Ein Tag vor deinem Namen (Premium)"
+  tags-lore: "<bullet><muted>Ein Tag vor deinem Namen, gekauft oder verdient"
   lobbies: "<arrow><primary>Lobby-Wechsel"
   lobbies-lore: "<bullet><muted>Wechsle auf eine andere Lobby!"
 effects:
@@ -308,6 +330,7 @@ effects:
 tags:
   title: "<arrow><primary>Chat-Tags"
   select-lore: "<bullet><muted>Klicke zum Auswählen."
+  earned-lore: "<bullet><accent>Verdient, nicht gekauft"
   remove: "<arrow><error>Tag entfernen"
   removed: "<prefix><muted>Dein Chat-Tag wurde entfernt."
   chosen: "<prefix><muted>Dein Chat-Tag ist jetzt <tag><muted>."
@@ -321,8 +344,10 @@ gadgets:
   name:
     grappling-hook: "<arrow><primary>Enterhaken"
     tnt-jump: "<arrow><primary>TNT-Sprung"
+    birthday-cake: "<accent>Geburtstagskuchen"
     paint-gun: "<arrow><primary>Farbpistole"
   lore:
+    birthday-cake: "<muted>Ein Geschenk zu deinem ersten Jahrestag. Rechtsklick zum Feiern."
     grappling-hook: "<bullet><muted>Wirf den Haken und zieh dich hin!"
     tnt-jump: "<bullet><muted>Rechtsklick für einen Sprung in die Luft!"
     paint-gun: "<bullet><muted>Färbe die Lobby kurzzeitig bunt!"
@@ -344,16 +369,19 @@ trails:
   remove-lore: "<bullet><muted>Klicke um Effekte zu entfernen."
   removed: "<prefix><muted>Deine Effekte wurden entfernt."
   name:
+    snow: "<primary>Schneespur"
     witch: "<arrow><primary>Zauber"
     note: "<arrow><primary>Musik"
     flame: "<arrow><primary>Feuer"
     firework: "<arrow><primary>Feuerwerk"
   lore:
+    snow: "<muted>Das Geschenk hinter Türchen 24."
     witch: "<bullet><muted>Zauber Spuren!"
     note: "<bullet><muted>Hinterlasse Musik!"
     flame: "<bullet><muted>Laufe auf Feuer!"
     firework: "<bullet><muted>Party!"
   selected:
+    snow: "<muted>Du hinterlässt jetzt Schneeflocken."
     witch: "<prefix><muted>Du hast den <white>Zauber <muted>Effekt ausgewählt."
     note: "<prefix><muted>Du hast den <white>Musik <muted>Effekt ausgewählt."
     flame: "<prefix><muted>Du hast den <white>Feuer <muted>Effekt ausgewählt."
@@ -391,3 +419,75 @@ holo:
     - "<dark>● <duell><bold>DUELL</bold> <dark>●"
     - "<dark>- <muted>1vs1, SurvivalGames oder SuperJump. <dark>-"
     - "<success>Jetzt spielen <dark>· <primary>/play duell"
+
+konami:
+  key:
+    up: "↑"
+    down: "↓"
+    left: "←"
+    right: "→"
+    b: "B"
+    hamburger: "A"
+  bar: "<keys>"
+  lit: "<success><key>"
+  missed: "<error><key>"
+  complete: "<accent><bold><key>"
+  todo: "<dark><key>"
+  title: "<success><bold>1UP"
+  subtitle: "<muted>Zehn Tasten. Ein altes Geheimnis."
+  tag: "<prefix><muted>Dein Tag <tag> <muted>wartet in den Extras."
+  known: "<prefix><muted>Muskelgedächtnis aus einer anderen Ära."
+npc:
+  title: "<arrow><primary>Lobby-Shop"
+  subtitle: "<muted>Köpfe, Farben und andere gute Ideen."
+  talk:
+    - "<muted>Frisch sortiert. Die Preise stehen noch dran."
+    - "<muted>Ein Kopf mehr im Sortiment schadet nie."
+    - "<muted>Alles hier passt ins Inventar. Fast alles."
+  window-shopping:
+    - "<muted>Schaufensterbummel? Auch schön."
+    - "<muted>Die Secrets zahlen Coins. Ich warte hier."
+  hurt: "<error>Aua. <muted>Das kostet extra."
+activities:
+  firework-wait: "<muted>Das nächste Feuerwerk wird gerade vorbereitet."
+  location-set: "<prefix><success><location> <muted>gespeichert."
+fishing:
+  rod: "<primary>Teichangel"
+  rod-lore: "<muted>Für Fische, Fundsachen und unwahrscheinliche Geschichten."
+  arrived: "<prefix><muted>Eine Angel wartet auf Platz 4. Der Teich behält keine Geheimnisse für immer."
+  caught: "<prefix><muted>Gefangen: <accent><catch>"
+  catches:
+    - "Kevos' verlorene Schaufel. Noch voller Sand."
+    - "Ein 1.8-Schwert. Die Klinge hat Feierabend."
+    - "Ein Brief an Notch. Ungeöffnet."
+    - "Ein nasser Stiefel. Der zweite fehlt seit 2018."
+    - "Eine Karte des Teichs. Du bist hier."
+
+parkour:
+  unavailable: "<prefix><muted>Dieser Parcours ist noch nicht fertig eingerichtet."
+  start: "<prefix><accent>Die Zeit läuft. <muted>Jeder Checkpoint zählt."
+  status: "<accent>Checkpoint <checkpoint>/<total> <dark>· <primary><time>"
+  finish: "<prefix><success>Geschafft: <accent><time><muted>. Deine Bestzeit: <accent><best><muted>."
+  cancelled: "<prefix><muted>Parcours beendet. Die Startplatte wartet auf deinen nächsten Versuch."
+  top: "<primary><bold>JumpAndRun <dark>· <accent>Top 10"
+  entry: "<accent>#<rank> <primary><player> <dark>· <muted><time>"
+quirks:
+  sleep: "<muted>z <primary>Z <muted>z"
+  egg: "<muted>Frisch gelegt"
+  golden-egg: "<accent>Goldenes Ei"
+  golden-laid: "<prefix><accent>Dein Huhn hat ein goldenes Ei gelegt. <muted>Schnapp es dir!"
+seasonal:
+  new-year: "<prefix><success>Willkommen im Jahr <year>! <muted>Auf neue Runden und alte Freunde."
+  countdown: "<accent>Noch <seconds> Sekunden bis <year>"
+  tag: "<prefix><muted>Verdient: <tag><muted>. Dein Tag wartet in den Extras."
+  egg: "<prefix><muted>Osterei <accent><found>/<total> <muted>gefunden. Der Hase war hier."
+  already: "<prefix><muted>Für heute hast du dein Geschenk schon abgeholt."
+  sweet: "<prefix><success>Süßes! <accent>+<coins> Coins<muted>. Keine Krümel in der Tastatur."
+  trick: "<prefix><accent>Saures! <muted>Der Kürbis steht dir. In <seconds> Sekunden ist er wieder weg."
+  advent-title: "<primary>Adventskalender"
+  advent-open: "<success>Heute öffnen"
+  advent-closed: "<muted>Jedes Türchen öffnet nur an seinem Dezembertag."
+  advent-claimed: "<muted>Schon ausgepackt"
+  advent-reward: "<prefix><success>Türchen geöffnet: <accent>+<coins> Coins<muted>."
+  door: "<accent>Türchen <day>"
+  snow: "<prefix><muted>Die <primary>Schneespur <muted>wartet bei deinen Spuren. Frohe Weihnachten!"

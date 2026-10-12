@@ -14,7 +14,9 @@ import org.bukkit.block.Sign;
 import org.bukkit.block.data.type.WallSign;
 import org.bukkit.block.sign.Side;
 
+import java.util.Arrays;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 public final class SignRenderer {
 
@@ -32,7 +34,7 @@ public final class SignRenderer {
         var front = sign.getSide(Side.FRONT);
         var shared = BlockcraftApi.get().messages();
         String nameKey = "games." + statusSign.group() + ".name";
-        var name = shared.has(nameKey) ? shared.get(nameKey) : Component.text(statusSign.group());
+        var name = shared.has(nameKey) ? shared.get(nameKey) : readable(statusSign.group());
         var lines = java.util.List.of(
                 messages.get("sign.name", Placeholder.component("name", name)),
                 shared.get("game-status." + status.availability().name().toLowerCase(Locale.ROOT)),
@@ -51,6 +53,14 @@ public final class SignRenderer {
             block.setType(material);
         }
         if (changed) sign.update();
+    }
+
+    /** The name of a group the shared messages lack, from its id: {@code build-battle} becomes "Build Battle". */
+    private static Component readable(String group) {
+        return Component.text(Arrays.stream(group.split("[-_]+"))
+                .filter(word -> !word.isEmpty())
+                .map(word -> word.substring(0, 1).toUpperCase(Locale.ROOT) + word.substring(1))
+                .collect(Collectors.joining(" ")));
     }
 
     private static Material indicator(ServerState state, boolean joinable) {

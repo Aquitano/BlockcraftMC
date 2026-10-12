@@ -19,4 +19,12 @@ public class RoundSummaryTest {
         assertEquals(new Stats(0, 0, 1, 0, 0), standing.stats(true, true));
         assertEquals(Stats.EMPTY, standing.stats(false, false));
     }
+
+    @Test
+    public void heartsReadLikeTheHealthBarWithADecimalComma() {
+        assertEquals("2,5", RoundSummary.hearts(5.0));
+        assertEquals("3", RoundSummary.hearts(6.0));
+        assertEquals("2,5", RoundSummary.hearts(4.2));
+        assertEquals("0,5", RoundSummary.hearts(0.3));
+    }
 }

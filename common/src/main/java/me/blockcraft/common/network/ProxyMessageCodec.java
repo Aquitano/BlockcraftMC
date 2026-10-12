@@ -38,6 +38,9 @@ public final class ProxyMessageCodec {
     private static final int SPECTATE = 13;
     private static final int IGNORE = 14;
     private static final int WELCOME = 15;
+    private static final int ANNOUNCEMENT = 16;
+    private static final int REMATCH = 17;
+    private static final int NEWCOMER = 18;
 
     private ProxyMessageCodec() {
     }
@@ -124,6 +127,20 @@ public final class ProxyMessageCodec {
                     out.writeByte(WELCOME);
                     out.writeUTF(welcome.rulesJson());
                 }
+                case ProxyMessage.Announcement announcement -> {
+                    out.writeByte(ANNOUNCEMENT);
+                    out.writeUTF(announcement.noticeJson());
+                }
+                case ProxyMessage.Rematch rematch -> {
+                    out.writeByte(REMATCH);
+                    uuid(out, rematch.opponent());
+                }
+                case ProxyMessage.Newcomer newcomer -> {
+                    out.writeByte(NEWCOMER);
+                    uuid(out, newcomer.player());
+                    out.writeUTF(newcomer.name());
+                    out.writeInt(newcomer.seconds());
+                }
             }
         });
         if (bytes.length > MAX_BYTES) {
@@ -174,6 +191,9 @@ public final class ProxyMessageCodec {
             case SPECTATE -> new ProxyMessage.Spectate(uuid(in));
             case IGNORE -> new ProxyMessage.Ignore(uuid(in), in.readBoolean());
             case WELCOME -> new ProxyMessage.Welcome(in.readUTF());
+            case ANNOUNCEMENT -> new ProxyMessage.Announcement(in.readUTF());
+            case REMATCH -> new ProxyMessage.Rematch(uuid(in));
+            case NEWCOMER -> new ProxyMessage.Newcomer(uuid(in), in.readUTF(), in.readInt());
             default -> throw new IOException("Unknown message type");
         };
     }

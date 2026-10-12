@@ -32,7 +32,10 @@ public class ProxyMessageCodecTest {
                 new ProxyMessage.Pack(PackStatus.APPLIED),
                 new ProxyMessage.Spectate(UUID.randomUUID()),
                 new ProxyMessage.Ignore(UUID.randomUUID(), true),
-                new ProxyMessage.Welcome("{\"text\":\"Regeln\"}"));
+                new ProxyMessage.Welcome("{\"text\":\"Regeln\"}"),
+                new ProxyMessage.Announcement("{\"text\":\"Gefunden\"}"),
+                new ProxyMessage.Rematch(UUID.randomUUID()),
+                new ProxyMessage.Newcomer(UUID.randomUUID(), "Mia", 60));
         for (var message : messages) {
             assertEquals(Optional.of(message), ProxyMessageCodec.decode(ProxyMessageCodec.encode(message), ProxyMessage.class));
         }

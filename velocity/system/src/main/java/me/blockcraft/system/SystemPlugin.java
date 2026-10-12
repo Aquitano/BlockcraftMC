@@ -25,6 +25,7 @@ import me.blockcraft.common.nick.NickRepository;
 import me.blockcraft.common.network.ServerRepository;
 import me.blockcraft.common.network.operation.NetworkRequest;
 import me.blockcraft.common.settings.PlayerSettingRepository;
+import me.blockcraft.common.welcome.GreetingRepository;
 import me.blockcraft.system.alt.AddressHasher;
 import me.blockcraft.system.alt.AltListener;
 import me.blockcraft.system.command.CommandSupport;
@@ -91,6 +92,7 @@ import me.blockcraft.system.moderation.MuteGate;
 import me.blockcraft.system.moderation.PunishmentService;
 import me.blockcraft.system.report.Reports;
 import me.blockcraft.system.motd.MotdListener;
+import me.blockcraft.system.motd.ReturningPlayers;
 import me.blockcraft.system.network.LagAlert;
 import me.blockcraft.system.network.LobbyAlert;
 import me.blockcraft.system.network.ServerDirectory;
@@ -102,6 +104,9 @@ import me.blockcraft.system.support.SupportListener;
 import me.blockcraft.system.support.SupportSessions;
 import me.blockcraft.system.task.AutoBroadcast;
 import me.blockcraft.system.task.DailySchedule;
+import me.blockcraft.system.welcome.Anniversaries;
+import me.blockcraft.system.welcome.Newcomers;
+import me.blockcraft.system.welcome.OgTag;
 import org.slf4j.Logger;
 
 import java.nio.file.Path;
@@ -172,7 +177,9 @@ public final class SystemPlugin {
         var punishments = new PunishmentService(proxy, repositories.punishments(), messages);
         var muteGate = new MuteGate(repositories.punishments(), punishments, messages, logger);
         var spectating = new SpectateRequests();
-        var friends = new FriendManager(proxy, lookup, visibility, choices, ignores, directory, spectating, friendships, config, messages);
+        var anniversaries = new Anniversaries(config.calendar(), database);
+        var friends = new FriendManager(proxy, lookup, visibility, choices, ignores, directory, spectating, friendships, anniversaries,
+                config, messages);
         var supportSessions = new SupportSessions();
         var playtime = new Playtime(repositories.players(), logger);
         var support = new CommandSupport(visibility, messages);
@@ -191,8 +198,11 @@ public final class SystemPlugin {
         var tabHeader = new TabHeaderListener(proxy, visibility, config, messages);
 
         var events = proxy.getEventManager();
+        var newcomers = new Newcomers(this, proxy, directory, repositories.players(), new GreetingRepository(database),
+                new OgTag(database), config.welcome(), messages, logger);
         events.register(this, new LoginListener(this, proxy, config, settings, repositories.players(), repositories.punishments(),
-                punishments, lobby, messages, logger));
+                punishments, lobby, newcomers, anniversaries, messages, logger));
+        events.register(this, anniversaries);
         events.register(this, visibility);
         events.register(this, choices);
         events.register(this, ignores);
@@ -202,7 +212,9 @@ public final class SystemPlugin {
         events.register(this, new KickListener(lobby, messages));
         events.register(this, new InitialServerListener(lobby));
         events.register(this, new ProxyMessageListener(proxy, lobby, visibility, choices, afk, friends, tabHeader, logger, () -> pack));
-        events.register(this, new MotdListener(visibility, config, settings, messages, dataDirectory, logger));
+        var addressHasher = AddressHasher.load(dataDirectory);
+        var returning = new ReturningPlayers(addressHasher, repositories.players(), choices, friends, config.serverListCache(), config.serverListFriends(), logger);
+        events.register(this, new MotdListener(visibility, config, settings, returning, messages, dataDirectory, logger));
         events.register(this, directory);
         events.register(this, new PartyListener(parties));
         events.register(this, new FriendListener(friends, visibility, logger));
@@ -210,7 +222,7 @@ public final class SystemPlugin {
         events.register(this, new SupportListener(supportSessions, messages));
         events.register(this, new WatchListener(proxy, repositories.watches(), config.watchRecent(), config.alts().retention(),
                 messages, staffButtons, logger));
-        var alts = new AltListener(addresses, AddressHasher.load(dataDirectory), config.alts(), messages, logger);
+        var alts = new AltListener(addresses, addressHasher, config.alts(), messages, logger);
         events.register(this, alts);
         events.register(this, new FreezeQuitListener(this, proxy, repositories.frozen(), punishments, moderationActions,
                 config.freeze(), messages, staffButtons, logger));

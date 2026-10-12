@@ -14,7 +14,8 @@ public enum LobbyItem implements HotbarItem {
     GADGET(5),
     SETTINGS(6),
     FRIENDS(7),
-    SECRETS(8);
+    SECRETS(8),
+    POND_ROD(3);
 
     private final int slot;
 

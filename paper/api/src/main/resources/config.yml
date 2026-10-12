@@ -53,6 +53,19 @@ xp:
     win: 50
     participation: 15
 
+# The days the network celebrates, counted in zone. Easter runs from days-before Easter Sunday to days-after it,
+# Halloween from one month-day to the other; founded is the yyyy-MM-dd the network opened, and empty means it has
+# no birthday to celebrate. Mirrors calendar in BlockcraftSystem's config.yml on the proxy.
+calendar:
+  zone: Europe/Berlin
+  easter:
+    days-before: 2
+    days-after: 7
+  halloween:
+    from: "10-25"
+    to: "10-31"
+  founded: ""
+
 # A kill streak is announced to the round when it reaches one of these lengths.
 streaks:
   announce: [3, 5, 10]
@@ -63,8 +76,9 @@ lobby-group: lobby
 
 # Achievements (Erfolge), grouped by the profile game they belong to or by network. Each one is earned once what
 # it counts reaches the threshold and pays its xp; counts is a column of the game's stats table (kills, deaths,
-# wins, losses, points) or level for the network level. Earned ones are bc_unlocks rows achievement.<game>.<name>,
-# and every entry is named under achievements.<game>.<name> in messages.yml.
+# wins, losses, points), level for the network level, or moment for one that the code seeing the moment grants and
+# that needs no threshold. Earned ones are bc_unlocks rows achievement.<game>.<name>, and every entry is named under
+# achievements.<game>.<name> in messages.yml.
 achievements:
   quicksg:
     first-win: {counts: wins, threshold: 1, xp: 25}
@@ -73,6 +87,8 @@ achievements:
     kills-1000: {counts: kills, threshold: 1000, xp: 500}
     wins-10: {counts: wins, threshold: 10, xp: 100}
     wins-100: {counts: wins, threshold: 100, xp: 500}
+    nackt: {counts: moment, xp: 100}
+    david-gegen-goliath: {counts: moment, xp: 50}
   emeraldrush:
     first-win: {counts: wins, threshold: 1, xp: 25}
     kills-10: {counts: kills, threshold: 10, xp: 25}
@@ -91,6 +107,10 @@ achievements:
     level-5: {counts: level, threshold: 5, xp: 50}
     level-10: {counts: level, threshold: 10, xp: 100}
     level-25: {counts: level, threshold: 25, xp: 250}
+    willkommenskomitee: {counts: moment, xp: 100}
+    rache: {counts: moment, xp: 50}
+    haarscharf: {counts: moment, xp: 50}
+    ausdauer: {counts: moment, xp: 100}
 
 # Ranked 1vs1 (bc_elo). A season is three months from January, April, July or October and starts everyone at
 # start-rating; a win moves k-factor points times how unexpected it was. groups is the skill ladder, each with the
@@ -143,3 +163,20 @@ notifications:
   sound-window-ticks: 4
   sound-gap-ticks: 30
   sound-lifetime-ticks: 40
+
+# A player's nemesis (Erzfeind) is the opponent who has beaten them at least lead times more often than they beat
+# that opponent, in any game (bc_rivalries); of several, the one furthest ahead. A round tells each player whose
+# nemesis plays too, and the first kill of that nemesis is their revenge.
+nemesis:
+  lead: 3
+
+# For this long after a death in a round, a chat message that is only "F" is held back and counted once per player;
+# then the round hears who paid their respects.
+respect:
+  seconds: 10
+
+# A player killed in a round who writes one of these words (whole words, any case) within window-seconds of the
+# kill gets a button to report the killer.
+hacker:
+  window-seconds: 60
+  words: [hacker, hacks, hax, hackt, hackst, hacken, cheater, cheats, cheatet, cheatest, cheatst, killaura, aimbot]

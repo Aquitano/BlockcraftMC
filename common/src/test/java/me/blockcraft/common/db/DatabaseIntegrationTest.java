@@ -87,6 +87,80 @@ public class DatabaseIntegrationTest {
     }
 
     @Test
+    public void simultaneousNewcomersKeepDistinctJoinNumbers() throws Exception {
+        db.migrate();
+        var players = new PlayerRepository(db);
+        var ids = java.util.stream.IntStream.range(0, 16).mapToObj(index -> UUID.randomUUID()).toList();
+        ids.forEach(id -> players.upsert(id, "Newcomer"));
+        var numbers = new java.util.HashSet<Integer>();
+        try (var pool = Executors.newVirtualThreadPerTaskExecutor()) {
+            var joins = ids.stream().<Callable<Integer>>map(id -> () -> players.assignJoinNumber(id).orElseThrow()).toList();
+            for (var join : pool.invokeAll(joins)) {
+                numbers.add(join.get());
+            }
+        }
+        assertEquals(ids.size(), numbers.size());
+        for (var id : ids) {
+            assertEquals(players.assignJoinNumber(id), players.assignJoinNumber(id));
+            assertTrue(players.verifiedFirstSeen(id));
+        }
+    }
+
+    @Test
+    public void concurrentGreetingsPayAtMostTheDailyCapAndNeverPayTwice() throws Exception {
+        db.migrate();
+        var greeter = UUID.randomUUID();
+        new PlayerRepository(db).upsert(greeter, "Greeter");
+        var greetings = new me.blockcraft.common.welcome.GreetingRepository(db);
+        var newcomers = java.util.stream.IntStream.range(0, 8).mapToObj(index -> UUID.randomUUID()).toList();
+        try (var pool = Executors.newVirtualThreadPerTaskExecutor()) {
+            var requests = newcomers.stream().<Callable<Void>>map(newcomer -> () -> {
+                greetings.reward(greeter, "Shown", "Greeter", newcomer, 10, 2);
+                greetings.reward(greeter, "Shown", "Greeter", newcomer, 10, 2);
+                return null;
+            }).toList();
+            for (var request : pool.invokeAll(requests)) { request.get(); }
+        }
+        assertEquals(8, greetings.greetedBy(greeter));
+        assertEquals(20, count("SELECT COINS FROM VCOINS WHERE UUID = ?", greeter.toString()));
+        assertEquals(List.of("Shown"), greetings.greeters(newcomers.getFirst()));
+    }
+
+    @Test
+    public void unlockRewardsPayOnceAndRollbackIfCreditFails() throws Exception {
+        db.migrate();
+        var rewards = new me.blockcraft.common.shop.UnlockRewards(db);
+        var player = UUID.randomUUID();
+        try (var pool = Executors.newVirtualThreadPerTaskExecutor()) {
+            var claims = java.util.stream.IntStream.range(0, 8).<Callable<Boolean>>mapToObj(index ->
+                    () -> rewards.grant(player, "Player", "calendar.advent.2026.1", 25)).toList();
+            int paid = 0;
+            for (var claim : pool.invokeAll(claims)) { if (claim.get()) { paid++; } }
+            assertEquals(1, paid);
+        }
+        assertEquals(25, count("SELECT COINS FROM VCOINS WHERE UUID = ?", player.toString()));
+        db.execute("CREATE TRIGGER reject_reward BEFORE UPDATE ON VCOINS FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'test credit failure'");
+        assertThrows(DatabaseException.class, () -> rewards.grant(player, "Player", "calendar.advent.2026.2", 25));
+        assertEquals(0, count("SELECT COUNT(*) FROM bc_unlocks WHERE item = 'calendar.advent.2026.2'"));
+        assertEquals(25, count("SELECT COINS FROM VCOINS WHERE UUID = ?", player.toString()));
+    }
+
+    @Test
+    public void ogEligibilityIsCapturedOnceFromLegacyCoinsAndStats() throws Exception {
+        var coinsPlayer = UUID.randomUUID();
+        var statsPlayer = UUID.randomUUID();
+        db.execute("CREATE TABLE VCOINS (UUID VARCHAR(36) PRIMARY KEY, NAME VARCHAR(16), COINS INT NOT NULL DEFAULT 0)");
+        db.update("INSERT INTO VCOINS (UUID, NAME) VALUES (?, 'OldCoins')", coinsPlayer.toString());
+        db.execute("CREATE TABLE qsg_stats (UUID VARCHAR(36) PRIMARY KEY)");
+        db.update("INSERT INTO qsg_stats (UUID) VALUES (?)", statsPlayer.toString());
+        db.migrate();
+        assertEquals(2, count("SELECT COUNT(*) FROM bc_unlocks WHERE item = 'tag.og'"));
+        db.update("INSERT INTO VCOINS (UUID, NAME) VALUES (?, 'NewPlayer')", UUID.randomUUID().toString());
+        try (var restarted = connect("restarted")) { restarted.migrate(); }
+        assertEquals(2, count("SELECT COUNT(*) FROM bc_unlocks WHERE item = 'tag.og'"));
+    }
+
+    @Test
     public void upgradesLegacyReportsWithoutLosingRowsAndRunsOnce() {
         db.execute("CREATE TABLE Reports (ID INT AUTO_INCREMENT PRIMARY KEY, Reportername VARCHAR(100), Reportedname VARCHAR(100), "
                 + "Grund VARCHAR(1000), Server VARCHAR(100), Status VARCHAR(100))");

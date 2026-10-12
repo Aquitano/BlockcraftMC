@@ -2,6 +2,7 @@ package me.blockcraft.lobby.menu;
 
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.config.Locations;
+import me.blockcraft.api.cosmetic.ChatTagChoice;
 import me.blockcraft.api.dialog.ConfirmDialog;
 import me.blockcraft.api.menu.Menu;
 import me.blockcraft.api.dialog.SettingsDialog;
@@ -218,20 +219,25 @@ public record Menus(
     }
 
     private <C> void openCosmetics(Player player, CosmeticKind<C> kind) {
-        kind.price().ifPresentOrElse(
-                price -> BlockcraftApi.get().playerTasks().latest(player,
-                        () -> unlocks.owned(player.getUniqueId(), price.itemPrefix()),
+        kind.ownedPrefix().ifPresentOrElse(
+                prefix -> BlockcraftApi.get().playerTasks().latest(player,
+                        () -> unlocks.owned(player.getUniqueId(), prefix),
                         owned -> new CosmeticMenu<>(this, kind, player, owned).open(player)),
                 () -> new CosmeticMenu<>(this, kind, player, Set.of()).open(player));
     }
 
+    /** Premium players choose among the premium tags; anyone wears the tags they earned. */
     public void openChatTags(Player player) {
-        if (!player.hasPermission(LobbyPermissions.PREMIUM)) {
-            Menu.close(player);
-            messages.getLines("premium.required").forEach(player::sendMessage);
-            return;
-        }
-        openCosmetics(player, CosmeticKinds.chatTags(this));
+        boolean premium = player.hasPermission(LobbyPermissions.PREMIUM);
+        BlockcraftApi.get().playerTasks().latest(player, () -> unlocks.owned(player.getUniqueId(), ChatTagChoice.ITEM_PREFIX), owned -> {
+            var choices = ChatTagChoice.available(premium, owned);
+            if (choices.isEmpty()) {
+                Menu.close(player);
+                messages.getLines("premium.required").forEach(player::sendMessage);
+                return;
+            }
+            openCosmetics(player, CosmeticKinds.chatTags(this, choices));
+        });
     }
 
     public void openLobbies(Player player) {
