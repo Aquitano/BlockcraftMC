@@ -91,11 +91,11 @@ first-seen timestamps and UUIDs.
 
 ## Shooting stars
 
-Between 22:00 inclusive and 02:00 exclusive in `Europe/Berlin`, a rare particle trail crosses the lobby sky.
+Between 22:00 inclusive and 02:00 exclusive in the network calendar zone, a rare particle trail crosses the lobby sky.
 A wish during the next 15 seconds finds `Sternschnuppe`. It is a bonus secret and does not gate `[ENTDECKER]`.
 The event needs at least one active, non-vanished player. Cosmetic-effect settings control the particles.
 
-Lobby's `shooting-stars` section controls the zone, hours, check interval, odds, cooldown, animation, and wish
+Lobby's `shooting-stars` section controls the hours, check interval, odds, cooldown, animation, and wish
 window. Defaults check once per minute with a one-in-30 chance and a 30-minute cooldown after an event.
 Setting `enabled` to false stops the sky events.
 
@@ -219,9 +219,10 @@ Before deploying, verify these interactions with Minecraft clients on a local te
 - Check seasonal hats, per-player egg visibility, calendar doors, and midnight behavior using a suitable test date.
 - Shorten sleep thresholds in local config, poke a sleeping account, and wake it. Check the growing label,
   absence of damage and knockback, and the private count using the poker’s current nick.
-- Set shooting-star odds to one in local config and choose a window containing the current Berlin hour. Test a
-  wish within 15 seconds, a repeat, and a late wish. The wish must never appear on another client, in console
-  chat, or in the moderation advertisement log. Restore the normal odds after checking the sky trail.
+- Set shooting-star odds to one in local config and choose a window containing the current hour in the network
+  calendar zone. Test a wish within 15 seconds and a repeat. Neither may appear on another client, in console chat,
+  or in the moderation advertisement log. A wish after the window must reach chat normally. Restore the normal odds
+  after checking the sky trail.
 - Use local friendship fixtures to check the yearly notice, elapsed days, reconnect deduplication, both
   recipients, nicknames, vanished friends, and midnight.
 - Leave a menu while its database request is pending. Rewards should arrive without reopening the old menu.

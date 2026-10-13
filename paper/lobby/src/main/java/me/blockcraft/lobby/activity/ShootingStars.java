@@ -16,8 +16,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.util.Vector;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -53,7 +53,7 @@ public final class ShootingStars implements AutoCloseable {
         var api = BlockcraftApi.get();
         var viewers = Bukkit.getOnlinePlayers().stream().filter(player -> !api.isVanished(player)).toList();
         var observer = viewers.stream().filter(player -> !api.isAfk(player)).findFirst();
-        if (now < next || !config.nightAt(Instant.now()) || observer.isEmpty()
+        if (now < next || !config.night().includes(api.calendar().now().getHour()) || observer.isEmpty()
                 || ThreadLocalRandom.current().nextInt(config.odds()) != 0) {
             return;
         }
@@ -72,7 +72,7 @@ public final class ShootingStars implements AutoCloseable {
         double dx = Math.cos(angle) * config.length();
         double dz = Math.sin(angle) * config.length();
         var start = center.clone().add(-dx / 2, config.height(), -dz / 2);
-        var delta = new org.bukkit.util.Vector(dx, -config.height() / 2.0, dz);
+        var delta = new Vector(dx, -config.height() / 2.0, dz);
         animation = new BukkitRunnable() {
             private int frame;
 
