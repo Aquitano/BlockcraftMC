@@ -20,6 +20,7 @@ import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -31,7 +32,7 @@ import java.util.UUID;
 public final class FriendManager {
 
     /** One line of the friend list, as both {@code /friend list} and the lobby's menu show it. */
-    public record Entry(String name, boolean online, String server, boolean watching) {
+    public record Entry(String name, boolean online, String server, boolean watching, long days) {
     }
 
     private final ProxyServer proxy;
@@ -45,6 +46,7 @@ public final class FriendManager {
     private final Anniversaries anniversaries;
     private final SystemConfig config;
     private final Messages messages;
+    private LocalDate lastAnniversaryDay;
 
     public FriendManager(ProxyServer proxy, PlayerLookup lookup, PlayerVisibility visibility, PlayerChoices choices,
                          IgnoreList ignores, ServerDirectory directory, SpectateRequests spectating, FriendRepository repository,
@@ -197,7 +199,7 @@ public final class FriendManager {
             var online = proxy.getPlayer(friend.uuid()).filter(other -> visibility.canSee(player, other));
             String server = online.map(CommandSupport::currentServer).orElse("");
             return new Entry(online.map(visibility::shownName).orElse(friend.name()), online.isPresent(), server,
-                    directory.isWatchable(server));
+                    directory.isWatchable(server), friend.days(config.calendar().today(), config.calendar().zone()));
         }).toList();
     }
 
@@ -207,6 +209,12 @@ public final class FriendManager {
     }
 
     public void announceJoin(Player player) {
+        var today = config.calendar().today();
+        for (var friend : repository.friendsOf(player.getUniqueId())) {
+            announceFriendshipDay(player, friend, today);
+            proxy.getPlayer(friend.uuid()).ifPresent(other -> announceFriendshipDay(other,
+                    new Friend(player.getUniqueId(), player.getUsername(), friend.createdAt()), today));
+        }
         var years = anniversaries.years(player.getUniqueId());
         if (years.isEmpty()) {
             announce(player, "friends.joined");
@@ -214,6 +222,40 @@ public final class FriendManager {
             announce(player, "friends.joined-anniversary-one");
         } else {
             announce(player, "friends.joined-anniversary", Formatter.number("years", years.getAsInt()));
+        }
+    }
+
+    public synchronized void announceAnniversaries() {
+        var today = config.calendar().today();
+        if (today.equals(lastAnniversaryDay)) {
+            return;
+        }
+        for (var player : proxy.getAllPlayers()) {
+            if (player.getCurrentServer().isPresent()) {
+                announceFriendshipDay(player);
+            }
+        }
+        lastAnniversaryDay = today;
+    }
+
+    private void announceFriendshipDay(Player player) {
+        var today = config.calendar().today();
+        for (var friend : repository.friendsOf(player.getUniqueId())) {
+            announceFriendshipDay(player, friend, today);
+        }
+    }
+
+    private void announceFriendshipDay(Player player, Friend friend, LocalDate today) {
+        var years = friend.anniversary(today, config.calendar().zone());
+        var online = proxy.getPlayer(friend.uuid());
+        if (years.isEmpty() || ignores.ignores(player.getUniqueId(), friend.uuid())
+                || online.filter(other -> !visibility.canSee(player, other)).isPresent()) {
+            return;
+        }
+        if (repository.claimAnniversary(player.getUniqueId(), friend.uuid(), today)) {
+            player.sendMessage(messages.get(years.getAsInt() == 1 ? "friends.anniversary-one" : "friends.anniversary",
+                    Placeholder.unparsed("player", online.map(visibility::shownName).orElse(friend.name())),
+                    Formatter.number("years", years.getAsInt())));
         }
     }
 

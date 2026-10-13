@@ -164,6 +164,17 @@ returns the player there while the timer continues. Times and falls persist in `
 unlock `Ausdauer`. Flying, gliding, riding, or teleporting cancels a run. Double jumps and gadgets are disabled
 during it. An incomplete course reports that it is not ready.
 
+## Friendship anniversaries
+
+Accepted friendships retain their existing `bc_friends.created_at` timestamp. New acceptances already reset it
+to the acceptance time. The lobby menu shows elapsed calendar days for online and offline friends.
+
+Each recipient gets one private notice on the yearly date, using the network calendar zone and the current nick
+when the friend is visible online. February 29 falls on February 28 in non-leap years. Join checks and a
+once-per-minute calendar check cover both reconnects and friends who stay online through midnight. Daily claims
+in `bc_unlocks` prevent repeated notices across proxy restarts. Ignored and invisible online friends produce no
+notice. Older friend-menu protocol messages still work and omit the age line.
+
 ## Calendar
 
 Keep the `calendar` sections in BlockcraftAPI and BlockcraftSystem identical. The default zone is `Europe/Berlin`.

@@ -68,7 +68,10 @@ public sealed interface ProxyMessage {
     record FriendsReply(UUID id, Status status, List<Entry> friends, List<String> requests) implements ToBackend {
         public enum Status { OK, FAILED, FORBIDDEN }
 
-        public record Entry(String name, boolean online, String server, boolean watching) {
+        public record Entry(String name, boolean online, String server, boolean watching, long days) {
+            public Entry(String name, boolean online, String server, boolean watching) {
+                this(name, online, server, watching, -1);
+            }
         }
     }
 

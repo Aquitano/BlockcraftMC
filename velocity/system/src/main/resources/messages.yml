@@ -716,6 +716,8 @@ support:
   list-assigned: "<primary>Support <arrow><reset><success>Bei <staff> <muted>seit <accent><waited><muted>: <accent><player>"
 
 friends:
+  anniversary-one: "<primary>Freunde <arrow><reset><muted>Du und <accent><player> <muted>seid heute seit einem Jahr befreundet. Zeit für ein Duell?"
+  anniversary: "<primary>Freunde <arrow><reset><muted>Du und <accent><player> <muted>seid heute seit <accent><years> <muted>Jahren befreundet. Zeit für ein Duell?"
   help:
     - "<bullet><primary>INFORMATIONEN ZU FREUNDEN <dark>●"
     - ""

@@ -4,6 +4,7 @@ import me.blockcraft.common.db.Database;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -35,7 +36,7 @@ public final class FriendRepository {
     }
 
     public List<Friend> friendsOf(UUID player) {
-        return db.queryList("SELECT p.uuid, p.name FROM bc_friends f "
+        return db.queryList("SELECT p.uuid, p.name, f.created_at FROM bc_friends f "
                         + "JOIN bc_players p ON p.uuid = IF(f.first_player = ?, f.second_player, f.first_player) "
                         + "WHERE f.status = '" + ACCEPTED + "' AND (f.first_player = ? OR f.second_player = ?) ORDER BY p.name",
                 FriendRepository::map, player.toString(), player.toString(), player.toString());
@@ -49,7 +50,7 @@ public final class FriendRepository {
 
     /** The open requests waiting for {@code player} to answer, expired ones left out. */
     public List<Friend> requestsTo(UUID player, int validMinutes) {
-        return db.queryList("SELECT p.uuid, p.name FROM bc_friends f JOIN bc_players p ON p.uuid = f.requester "
+        return db.queryList("SELECT p.uuid, p.name, f.created_at FROM bc_friends f JOIN bc_players p ON p.uuid = f.requester "
                         + "WHERE f.status = '" + PENDING + "' AND f.requester <> ? "
                         + "AND (f.first_player = ? OR f.second_player = ?) "
                         + "AND TIMESTAMPDIFF(MINUTE, f.created_at, NOW()) < ? ORDER BY f.created_at",
@@ -114,8 +115,13 @@ public final class FriendRepository {
                 validMinutes);
     }
 
+    public boolean claimAnniversary(UUID player, UUID friend, LocalDate day) {
+        return db.update("INSERT IGNORE INTO bc_unlocks (player_uuid, item) VALUES (?, ?)",
+                player.toString(), "friend.day." + friend + "." + day) > 0;
+    }
+
     private static Friend map(ResultSet row) throws SQLException {
-        return new Friend(UUID.fromString(row.getString("uuid")), row.getString("name"));
+        return new Friend(UUID.fromString(row.getString("uuid")), row.getString("name"), row.getTimestamp("created_at").toInstant());
     }
 
     /** The two sides of a friendship in the order the primary key stores them, so a pair has one row whoever asked. */

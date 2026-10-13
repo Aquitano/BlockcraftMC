@@ -308,6 +308,15 @@ public final class SystemPlugin {
         proxy.getScheduler().buildTask(this, friends::purgeExpiredRequests)
                 .repeat(config.friends().requestMinutes(), TimeUnit.MINUTES)
                 .schedule();
+        proxy.getScheduler().buildTask(this, () -> {
+                    try {
+                        friends.announceAnniversaries();
+                    } catch (DatabaseException e) {
+                        logger.warn("Could not announce friendship anniversaries", e);
+                    }
+                })
+                .repeat(1, TimeUnit.MINUTES)
+                .schedule();
         proxy.getScheduler().buildTask(this, new AutoBroadcast(proxy, messages))
                 .repeat(config.autoBroadcastMinutes(), TimeUnit.MINUTES)
                 .schedule();

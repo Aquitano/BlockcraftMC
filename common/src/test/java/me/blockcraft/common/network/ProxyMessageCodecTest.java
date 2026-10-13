@@ -56,6 +56,23 @@ public class ProxyMessageCodecTest {
     }
 
     @Test
+    public void friendshipAgesExtendRepliesWithoutChangingLegacyRequestsAndLists() {
+        var id = UUID.randomUUID();
+        var request = new ProxyMessage.FriendsRequest(id, ProxyMessage.FriendsRequest.Action.LIST, "");
+        var reply = new ProxyMessage.FriendsReply(id, ProxyMessage.FriendsReply.Status.OK,
+                List.of(new ProxyMessage.FriendsReply.Entry("Mia", true, "Lobby-1", false, 412)), List.of());
+        var legacyReply = new ProxyMessage.FriendsReply(id, ProxyMessage.FriendsReply.Status.OK,
+                List.of(new ProxyMessage.FriendsReply.Entry("Mia", true, "Lobby-1", false)), List.of());
+
+        for (var message : List.of(request, reply, legacyReply)) {
+            assertEquals(Optional.of(message), ProxyMessageCodec.decode(ProxyMessageCodec.encode(message), ProxyMessage.class));
+        }
+        assertEquals(1, ProxyMessageCodec.encode(request)[0]);
+        assertEquals(2, ProxyMessageCodec.encode(reply)[0]);
+        assertEquals(1, ProxyMessageCodec.encode(legacyReply)[0]);
+    }
+
+    @Test
     public void aSettingTravelsBothWays() {
         var setting = new ProxyMessage.Setting(PlayerSetting.REPORT_NOTIFICATIONS, PlayerSetting.OFF);
         var bytes = ProxyMessageCodec.encode(setting);

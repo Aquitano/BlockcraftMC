@@ -119,7 +119,7 @@ public final class ProxyMessageListener {
                 case DENY -> friends.deny(player, request.name());
             }
             var entries = friends.entriesFor(player).stream()
-                    .map(entry -> new FriendsReply.Entry(entry.name(), entry.online(), entry.server(), entry.watching())).toList();
+                    .map(entry -> new FriendsReply.Entry(entry.name(), entry.online(), entry.server(), entry.watching(), entry.days())).toList();
             reply(connection, new FriendsReply(request.id(), FriendsReply.Status.OK, entries, friends.requestNames(player)));
         } catch (DatabaseException | IllegalArgumentException e) {
             logger.warn("Could not load friends for {}", player.getUsername(), e);
@@ -129,5 +129,12 @@ public final class ProxyMessageListener {
 
     private void reply(ServerConnection connection, FriendsReply reply) {
         connection.sendPluginMessage(CHANNEL, ProxyMessageCodec.encode(reply));
+        if (reply.friends().stream().anyMatch(friend -> friend.days() >= 0)) {
+            // Older backends reject version 2 and still need a version-1 answer to the same request.
+            var legacy = reply.friends().stream().map(friend -> new FriendsReply.Entry(
+                    friend.name(), friend.online(), friend.server(), friend.watching())).toList();
+            connection.sendPluginMessage(CHANNEL, ProxyMessageCodec.encode(
+                    new FriendsReply(reply.id(), reply.status(), legacy, reply.requests())));
+        }
     }
 }

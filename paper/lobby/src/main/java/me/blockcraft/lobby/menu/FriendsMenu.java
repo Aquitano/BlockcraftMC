@@ -18,6 +18,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
@@ -89,10 +90,16 @@ final class FriendsMenu extends Menu {
                         .lore(messages.getLines("friends.request-lore")).build());
             } else {
                 var friend = friends.get(index);
+                var lore = new ArrayList<>(messages.getLines(friend.online()
+                                ? friend.watching() ? "friends.watching-lore" : "friends.online-lore" : "friends.offline-lore",
+                        Placeholder.unparsed("server", friend.server()), Placeholder.unparsed("player", friend.name())));
+                if (friend.days() >= 0) {
+                    lore.add(messages.get(friend.days() == 1 ? "friends.since-one" : "friends.since",
+                            Formatter.number("days", friend.days())));
+                }
                 var icon = Items.head(friend.name()).name(messages.get(friend.online() ? "friends.online" : "friends.offline",
                                 Placeholder.unparsed("player", friend.name())))
-                        .lore(messages.getLines(friend.online() ? friend.watching() ? "friends.watching-lore" : "friends.online-lore" : "friends.offline-lore",
-                                Placeholder.unparsed("server", friend.server()))).build();
+                        .lore(lore).build();
                 if (friend.online()) {
                     set(slot, icon);
                 } else {

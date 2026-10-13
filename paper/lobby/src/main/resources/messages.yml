@@ -42,6 +42,8 @@ hider:
   hidden: "<muted>Andere Spieler sind ausgeblendet."
   visible: "<success>Andere Spieler sind sichtbar."
 friends:
+  since: "<bullet><muted>Befreundet seit <accent><days> <muted>Tagen"
+  since-one: "<bullet><muted>Befreundet seit <accent>einem Tag"
   title: "<arrow><primary>Freunde"
   online: "<arrow><success><player>"
   online-lore:
