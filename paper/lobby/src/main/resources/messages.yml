@@ -505,6 +505,9 @@ parkour:
   entry: "<accent>#<rank> <primary><player> <dark>· <muted><time>"
 quirks:
   sleep: "<muted>z <primary>Z <muted>z"
+  sleep-warning: "<muted>Bitte nicht wecken"
+  sleep-hours: "<dark>Schläft seit <amount> Std."
+  sleep-minutes: "<dark>Schläft seit <amount> Min."
   egg: "<muted>Frisch gelegt"
   egg-collected:
     - "<muted>Ei eingesammelt. Das Huhn hat einen Liefernachweis."

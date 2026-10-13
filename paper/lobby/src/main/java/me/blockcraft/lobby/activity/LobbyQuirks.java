@@ -1,6 +1,8 @@
 package me.blockcraft.lobby.activity;
 
+import io.papermc.paper.event.player.PrePlayerAttackEntityEvent;
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.afk.AfkChangeEvent;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.settings.PlayerSetting;
@@ -10,6 +12,9 @@ import me.blockcraft.lobby.cosmetic.Pets;
 import me.blockcraft.lobby.cosmetic.Secret;
 import me.blockcraft.lobby.cosmetic.Secrets;
 import me.blockcraft.lobby.npc.Holograms;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.JoinConfiguration;
+import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Entity;
@@ -25,6 +30,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 
 import java.util.HashMap;
+import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
@@ -71,6 +78,7 @@ public final class LobbyQuirks implements Listener, AutoCloseable {
                     text.setViewRange(0.5f);
                     return text;
                 });
+                display.text(sleepLabel(api.afk().awayFor(player)));
                 display.teleport(player.getLocation().add(0, 2.5 + Math.sin(now / 1_000_000_000.0) * 0.15, 0));
                 for (var viewer : Bukkit.getOnlinePlayers()) {
                     if (viewer.canSee(player) && viewer.getWorld().equals(player.getWorld())
@@ -94,6 +102,44 @@ public final class LobbyQuirks implements Listener, AutoCloseable {
             if (now >= next) {
                 nextEgg.put(id, now + config.chickenInterval().toNanos());
                 lay(player, now);
+            }
+        }
+    }
+
+    private Component sleepLabel(Duration away) {
+        var lines = new ArrayList<Component>();
+        lines.add(messages.get("quirks.sleep"));
+        if (away.compareTo(config.sleepWarningAfter()) >= 0) {
+            lines.add(messages.get("quirks.sleep-warning"));
+        }
+        if (away.compareTo(config.sleepDurationAfter()) >= 0) {
+            boolean hours = away.toHours() > 0;
+            lines.add(messages.get(hours ? "quirks.sleep-hours" : "quirks.sleep-minutes",
+                    Formatter.number("amount", hours ? away.toHours() : away.toMinutes())));
+        }
+        return Component.join(JoinConfiguration.newlines(), lines);
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onPoke(PrePlayerAttackEntityEvent event) {
+        if (!(event.getAttacked() instanceof Player sleeper)) {
+            return;
+        }
+        var poker = event.getPlayer();
+        var api = BlockcraftApi.get();
+        if (poker.canSee(sleeper) && sleeper.canSee(poker) && api.isAfk(sleeper)
+                && api.afk().awayFor(sleeper).compareTo(config.sleepAfter()) >= 0) {
+            event.setCancelled(true);
+            api.afk().pokedBy(sleeper, poker);
+        }
+    }
+
+    @EventHandler
+    public void onAfkChange(AfkChangeEvent event) {
+        if (!event.isAfk()) {
+            var display = sleeping.remove(event.getPlayer().getUniqueId());
+            if (display != null) {
+                display.remove();
             }
         }
     }

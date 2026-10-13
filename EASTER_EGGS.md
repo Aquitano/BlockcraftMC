@@ -89,6 +89,17 @@ Existing imported `bc_players.first_seen` values are not treated as verified his
 record a verified date. Join numbers remain stable, but the ordering of imported accounts follows their stored
 first-seen timestamps and UUIDs.
 
+## Sleeping players
+
+After ten AFK minutes, the floating label appears. It adds `Bitte nicht wecken` after 20 minutes and a duration
+line after one hour. Lobby's `activities.sleep-after-seconds`, `sleep-warning-seconds`, and
+`sleep-duration-seconds` control those stages. Cosmetic-effect and player-visibility settings still apply.
+
+Attacking a visible sleeping player records a poke without damage or knockback. Returning from AFK shows one
+private chat line naming the most persistent poker and the number of attempts. The name follows the current nick
+when that player is online, or the displayed name of their last poke otherwise. Poke counts are cleared on wake-up
+and disconnect. They are not stored in the database.
+
 ## Lobby discoveries
 
 The secrets menu shows progress and unlocks riddles after the configured number of discoveries. Each secret pays

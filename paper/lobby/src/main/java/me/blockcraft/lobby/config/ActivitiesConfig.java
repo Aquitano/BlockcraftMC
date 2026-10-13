@@ -9,7 +9,8 @@ public record ActivitiesConfig(Duration konamiGap, Duration fireworkCooldown, Du
                                Duration chickenInterval, int goldenEggOdds, Duration eggLifetime,
                                double pondRadius, int goldenCarpOdds, int checkpoints, double fallBelow,
                                int perseveranceFalls, int easterSpots, int easterEggs, int adventCoins,
-                               int halloweenCoins, String halloweenPhrase, Duration pumpkinDuration) {
+                               int halloweenCoins, String halloweenPhrase, Duration pumpkinDuration,
+                               Duration sleepWarningAfter, Duration sleepDurationAfter) {
 
     public static ActivitiesConfig fromYaml(Map<String, Object> root) {
         var activities = YamlFile.section(root, "activities");
@@ -22,7 +23,8 @@ public record ActivitiesConfig(Duration konamiGap, Duration fireworkCooldown, Du
                 Math.min(100, number(activities, "easter-spots", 20)), Math.min(Math.min(100, number(activities, "easter-spots", 20)), number(activities, "easter-eggs", 10)),
                 nonnegative(activities, "advent-coins", 25), nonnegative(activities, "halloween-coins", 5),
                 String.valueOf(activities.getOrDefault("halloween-phrase", "Süßes oder Saures")),
-                seconds(activities, "pumpkin-seconds", 300));
+                seconds(activities, "pumpkin-seconds", 300), seconds(activities, "sleep-warning-seconds", 1200),
+                seconds(activities, "sleep-duration-seconds", 3600));
     }
 
     private static int number(Map<String, Object> values, String key, int fallback) {

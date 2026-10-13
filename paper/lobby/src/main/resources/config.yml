@@ -91,6 +91,8 @@ activities:
   konami-gap-seconds: 3
   firework-cooldown-seconds: 30
   sleep-after-seconds: 600
+  sleep-warning-seconds: 1200
+  sleep-duration-seconds: 3600
   chicken-interval-seconds: 180
   golden-egg-odds: 200
   egg-lifetime-seconds: 20

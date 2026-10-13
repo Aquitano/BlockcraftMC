@@ -6,6 +6,7 @@ import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -40,6 +41,7 @@ public final class Afk implements Listener {
     private final Map<UUID, Long> lastActive = new ConcurrentHashMap<>();
     private final Set<UUID> away = ConcurrentHashMap.newKeySet();
     private final Map<UUID, Long> awaySince = new ConcurrentHashMap<>();
+    private final WakeAttempts wakeAttempts = new WakeAttempts();
 
     public Afk(Plugin plugin, Notifications notifications, Messages messages, Duration idle) {
         this.plugin = plugin;
@@ -65,6 +67,12 @@ public final class Afk implements Listener {
         set(player, !isAfk(player));
     }
 
+    public void pokedBy(Player sleeper, Player poker) {
+        if (isAfk(sleeper) && !sleeper.equals(poker)) {
+            wakeAttempts.poke(sleeper.getUniqueId(), poker.getUniqueId(), poker.getName());
+        }
+    }
+
     private void check() {
         long now = System.nanoTime();
         for (Player player : Bukkit.getOnlinePlayers()) {
@@ -84,6 +92,7 @@ public final class Afk implements Listener {
         var duration = awayFor(player);
         if (afk) {
             awaySince.put(uuid, System.nanoTime());
+            wakeAttempts.clear(uuid);
         } else {
             awaySince.remove(uuid);
         }
@@ -94,6 +103,14 @@ public final class Afk implements Listener {
             notifications.status(player, messages.get("afk.status"));
         } else {
             notifications.feedback(player, messages.pick("afk.back", Formatter.number("minutes", duration.toMinutes())));
+            wakeAttempts.take(uuid).ifPresent(poker -> {
+                var current = Bukkit.getPlayer(poker.player());
+                String countKey = "afk.poke-count." + poker.count();
+                var count = messages.get(messages.has(countKey) ? countKey : "afk.poke-count.many",
+                        Formatter.number("amount", poker.count()));
+                player.sendMessage(messages.get("afk.poked", Placeholder.unparsed("player", current == null ? poker.name() : current.getName()),
+                        Placeholder.component("count", count)));
+            });
         }
     }
 
@@ -149,5 +166,6 @@ public final class Afk implements Listener {
         lastActive.remove(event.getPlayer().getUniqueId());
         away.remove(event.getPlayer().getUniqueId());
         awaySince.remove(event.getPlayer().getUniqueId());
+        wakeAttempts.clear(event.getPlayer().getUniqueId());
     }
 }

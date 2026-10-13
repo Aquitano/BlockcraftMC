@@ -72,6 +72,13 @@ afk:
     - "<success>Wieder da! <accent><minutes> Minuten <muted>Pause. Dein Platz ist noch warm."
     - "<success>Willkommen zurück! <accent><minutes> Minuten <muted>weg. Die Blöcke stehen noch."
 
+  poked: "<prefix><primary><player> <muted>hat <count> versucht, dich zu wecken."
+  poke-count:
+    1: "einmal"
+    2: "zweimal"
+    3: "dreimal"
+    many: "<amount>-mal"
+
 menu:
   load:
     title: "<primary>Wird geladen"
