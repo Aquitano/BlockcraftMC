@@ -26,7 +26,6 @@ lobby:
   not-enough-players: "<prefix><error>Es sind nicht genügend Spieler online."
 
 round:
-  died: "<prefix><white><player> <muted>ist gestorben."
   ended: "<prefix><muted>Die Runde wurde beendet."
   draw:
     - "<prefix><muted>Die Zeit ist um. Das Duell endet <accent>unentschieden<muted>."

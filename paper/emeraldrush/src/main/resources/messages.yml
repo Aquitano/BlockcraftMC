@@ -46,8 +46,6 @@ shopping:
 deathmatch:
   started: "<prefix><muted>Das Deathmatch hat begonnen!"
   draw: "<prefix><error>Unentschieden, die Runde wird neu gestartet!"
-  killed: "<prefix><white><victim><muted> wurde von <white><killer><muted> getötet."
-  died: "<prefix><white><victim> <muted>ist gestorben."
 timer:
   search: "<emeraldrush>Erze sammeln <dark>● <white><time>"
   shopping: "<emeraldrush>Ausrüsten <dark>● <white><seconds>s"
