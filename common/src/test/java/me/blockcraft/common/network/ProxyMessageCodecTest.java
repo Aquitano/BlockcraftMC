@@ -28,7 +28,7 @@ public class ProxyMessageCodecTest {
                 new ProxyMessage.PackRequest(),
                 new ProxyMessage.FriendsRequest(UUID.randomUUID(), ProxyMessage.FriendsRequest.Action.ADD, "Thomas"),
                 new ProxyMessage.FriendsReply(UUID.randomUUID(), ProxyMessage.FriendsReply.Status.OK,
-                        List.of(new ProxyMessage.FriendsReply.Entry("Friend", true, "lobby-1", false)), List.of("Thomas")),
+                        List.of(new ProxyMessage.FriendsReply.Entry("Friend", true, "lobby-1", false, 412)), List.of("Thomas")),
                 new ProxyMessage.Pack(PackStatus.APPLIED),
                 new ProxyMessage.Spectate(UUID.randomUUID()),
                 new ProxyMessage.Ignore(UUID.randomUUID(), true),
@@ -53,23 +53,6 @@ public class ProxyMessageCodecTest {
             assertEquals(Optional.empty(), ProxyMessageCodec.decode(payload, ProxyMessage.class));
         }
         assertEquals(Optional.empty(), ProxyMessageCodec.decode(bytes, ProxyMessage.ToBackend.class));
-    }
-
-    @Test
-    public void friendshipAgesExtendRepliesWithoutChangingLegacyRequestsAndLists() {
-        var id = UUID.randomUUID();
-        var request = new ProxyMessage.FriendsRequest(id, ProxyMessage.FriendsRequest.Action.LIST, "");
-        var reply = new ProxyMessage.FriendsReply(id, ProxyMessage.FriendsReply.Status.OK,
-                List.of(new ProxyMessage.FriendsReply.Entry("Mia", true, "Lobby-1", false, 412)), List.of());
-        var legacyReply = new ProxyMessage.FriendsReply(id, ProxyMessage.FriendsReply.Status.OK,
-                List.of(new ProxyMessage.FriendsReply.Entry("Mia", true, "Lobby-1", false)), List.of());
-
-        for (var message : List.of(request, reply, legacyReply)) {
-            assertEquals(Optional.of(message), ProxyMessageCodec.decode(ProxyMessageCodec.encode(message), ProxyMessage.class));
-        }
-        assertEquals(1, ProxyMessageCodec.encode(request)[0]);
-        assertEquals(2, ProxyMessageCodec.encode(reply)[0]);
-        assertEquals(1, ProxyMessageCodec.encode(legacyReply)[0]);
     }
 
     @Test

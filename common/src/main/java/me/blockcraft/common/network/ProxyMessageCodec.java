@@ -20,7 +20,6 @@ public final class ProxyMessageCodec {
     public static final String CHANNEL = "blockcraft:main";
 
     private static final int VERSION = 1;
-    private static final int FRIEND_AGES_VERSION = 2;
     private static final int MAX_BYTES = 32_766;
     private static final int MAX_COUNT = 4096;
 
@@ -48,12 +47,8 @@ public final class ProxyMessageCodec {
 
     /** Throws {@link IllegalArgumentException} when the message does not fit into one plugin message. */
     public static byte[] encode(ProxyMessage message) {
-        int version = switch (message) {
-            case ProxyMessage.FriendsReply reply when reply.friends().stream().anyMatch(friend -> friend.days() >= 0) -> FRIEND_AGES_VERSION;
-            default -> VERSION;
-        };
         var bytes = write(out -> {
-            out.writeByte(version);
+            out.writeByte(VERSION);
             switch (message) {
                 case ProxyMessage.Play play -> {
                     out.writeByte(PLAY);
@@ -109,9 +104,7 @@ public final class ProxyMessageCodec {
                         out.writeBoolean(friend.online());
                         out.writeUTF(friend.server());
                         out.writeBoolean(friend.watching());
-                        if (version == FRIEND_AGES_VERSION) {
-                            out.writeLong(friend.days());
-                        }
+                        out.writeLong(friend.days());
                     }
                     out.writeInt(reply.requests().size());
                     for (var name : reply.requests()) {
@@ -166,14 +159,10 @@ public final class ProxyMessageCodec {
             return Optional.empty();
         }
         try (var in = new DataInputStream(new ByteArrayInputStream(bytes))) {
-            int version = in.readUnsignedByte();
-            if (version != VERSION && version != FRIEND_AGES_VERSION) {
+            if (in.readUnsignedByte() != VERSION) {
                 return Optional.empty();
             }
-            var message = read(in, version);
-            if (version == FRIEND_AGES_VERSION && !(message instanceof ProxyMessage.FriendsReply)) {
-                return Optional.empty();
-            }
+            var message = read(in);
             if (in.available() != 0) {
                 return Optional.empty();
             }
@@ -183,7 +172,7 @@ public final class ProxyMessageCodec {
         }
     }
 
-    private static ProxyMessage read(DataInputStream in, int version) throws IOException {
+    private static ProxyMessage read(DataInputStream in) throws IOException {
         return switch (in.readUnsignedByte()) {
             case PLAY -> new ProxyMessage.Play(in.readUTF());
             case HUB -> new ProxyMessage.Hub();
@@ -198,7 +187,7 @@ public final class ProxyMessageCodec {
                     PlayerSetting.byKey(in.readUTF()).orElseThrow(() -> new IOException("Unknown setting")), in.readUTF());
             case PACK_REQUEST -> new ProxyMessage.PackRequest();
             case FRIENDS_REQUEST -> friendsRequest(in);
-            case FRIENDS_REPLY -> friendsReply(in, version);
+            case FRIENDS_REPLY -> friendsReply(in);
             case PACK -> new ProxyMessage.Pack(PackStatus.valueOf(in.readUTF()));
             case SPECTATE -> new ProxyMessage.Spectate(uuid(in));
             case IGNORE -> new ProxyMessage.Ignore(uuid(in), in.readBoolean());
@@ -221,13 +210,13 @@ public final class ProxyMessageCodec {
         return request;
     }
 
-    private static ProxyMessage.FriendsReply friendsReply(DataInputStream in, int version) throws IOException {
+    private static ProxyMessage.FriendsReply friendsReply(DataInputStream in) throws IOException {
         var id = uuid(in);
         var status = ProxyMessage.FriendsReply.Status.valueOf(in.readUTF());
         var friends = new ArrayList<ProxyMessage.FriendsReply.Entry>();
         for (int count = count(in); count > 0; count--) {
             friends.add(new ProxyMessage.FriendsReply.Entry(in.readUTF(), in.readBoolean(), in.readUTF(), in.readBoolean(),
-                    version == FRIEND_AGES_VERSION ? in.readLong() : -1));
+                    in.readLong()));
         }
         var requests = new ArrayList<String>();
         for (int count = count(in); count > 0; count--) {

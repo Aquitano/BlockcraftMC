@@ -171,9 +171,9 @@ to the acceptance time. The lobby menu shows elapsed calendar days for online an
 
 Each recipient gets one private notice on the yearly date, using the network calendar zone and the current nick
 when the friend is visible online. February 29 falls on February 28 in non-leap years. Join checks and a
-once-per-minute calendar check cover both reconnects and friends who stay online through midnight. Daily claims
-in `bc_unlocks` prevent repeated notices across proxy restarts. Ignored and invisible online friends produce no
-notice. Older friend-menu protocol messages still work and omit the age line.
+once-per-minute calendar check cover both reconnects and friends who stay online through midnight. The proxy
+remembers the day's notices in memory only, so a proxy restart on the day can repeat a notice once. Ignored and
+invisible online friends produce no notice.
 
 ## Calendar
 
@@ -223,7 +223,7 @@ Before deploying, verify these interactions with Minecraft clients on a local te
   wish within 15 seconds, a repeat, and a late wish. The wish must never appear on another client, in console
   chat, or in the moderation advertisement log. Restore the normal odds after checking the sky trail.
 - Use local friendship fixtures to check the yearly notice, elapsed days, reconnect deduplication, both
-  recipients, nicknames, vanished friends, and midnight. Check friend lists with an older lobby or proxy build.
+  recipients, nicknames, vanished friends, and midnight.
 - Leave a menu while its database request is pending. Rewards should arrive without reopening the old menu.
 
 The build does not validate client rendering, map geometry, or a live proxy-to-backend connection.

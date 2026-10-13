@@ -4,7 +4,6 @@ import me.blockcraft.common.db.Database;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -113,11 +112,6 @@ public final class FriendRepository {
     public void deleteExpiredRequests(int validMinutes) {
         db.update("DELETE FROM bc_friends WHERE status = '" + PENDING + "' AND TIMESTAMPDIFF(MINUTE, created_at, NOW()) >= ?",
                 validMinutes);
-    }
-
-    public boolean claimAnniversary(UUID player, UUID friend, LocalDate day) {
-        return db.update("INSERT IGNORE INTO bc_unlocks (player_uuid, item) VALUES (?, ?)",
-                player.toString(), "friend.day." + friend + "." + day) > 0;
     }
 
     private static Friend map(ResultSet row) throws SQLException {

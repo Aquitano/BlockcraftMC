@@ -3,6 +3,7 @@ package me.blockcraft.system.friends;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.common.network.ProxyMessage.FriendsReply;
 import me.blockcraft.common.settings.PlayerSetting;
 import me.blockcraft.common.sound.FeedbackSound;
 import me.blockcraft.system.pack.NetworkPack;
@@ -23,7 +24,9 @@ import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Friendships across the network. A friend is an account, not a session, so the list works for players who are
@@ -31,8 +34,7 @@ import java.util.UUID;
  */
 public final class FriendManager {
 
-    /** One line of the friend list, as both {@code /friend list} and the lobby's menu show it. */
-    public record Entry(String name, boolean online, String server, boolean watching, long days) {
+    private record Notice(UUID player, UUID friend, LocalDate day) {
     }
 
     private final ProxyServer proxy;
@@ -46,6 +48,8 @@ public final class FriendManager {
     private final Anniversaries anniversaries;
     private final SystemConfig config;
     private final Messages messages;
+    /** Kept in memory only: a proxy restart on the day repeats a notice at most once. */
+    private final Set<Notice> noticed = ConcurrentHashMap.newKeySet();
     private LocalDate lastAnniversaryDay;
 
     public FriendManager(ProxyServer proxy, PlayerLookup lookup, PlayerVisibility visibility, PlayerChoices choices,
@@ -154,7 +158,7 @@ public final class FriendManager {
         }
         player.sendMessage(messages.get("friends.list-header", Formatter.number("count", friends.size()),
                 Formatter.number("max", config.friends().max())));
-        for (Entry friend : friends) {
+        for (var friend : friends) {
             player.sendMessage(messages.get(friend.online() ? "friends.list-online" : "friends.list-offline",
                     Placeholder.unparsed("player", friend.name()), Placeholder.unparsed("server", friend.server())));
         }
@@ -194,11 +198,11 @@ public final class FriendManager {
     }
 
     /** What the lobby's friends menu draws: every friend once, with where they are right now. */
-    public List<Entry> entriesFor(Player player) {
+    public List<FriendsReply.Entry> entriesFor(Player player) {
         return repository.friendsOf(player.getUniqueId()).stream().map(friend -> {
             var online = proxy.getPlayer(friend.uuid()).filter(other -> visibility.canSee(player, other));
             String server = online.map(CommandSupport::currentServer).orElse("");
-            return new Entry(online.map(visibility::shownName).orElse(friend.name()), online.isPresent(), server,
+            return new FriendsReply.Entry(online.map(visibility::shownName).orElse(friend.name()), online.isPresent(), server,
                     directory.isWatchable(server), friend.days(config.calendar().today(), config.calendar().zone()));
         }).toList();
     }
@@ -230,6 +234,7 @@ public final class FriendManager {
         if (today.equals(lastAnniversaryDay)) {
             return;
         }
+        noticed.removeIf(notice -> !notice.day().equals(today));
         for (var player : proxy.getAllPlayers()) {
             if (player.getCurrentServer().isPresent()) {
                 announceFriendshipDay(player);
@@ -252,7 +257,7 @@ public final class FriendManager {
                 || online.filter(other -> !visibility.canSee(player, other)).isPresent()) {
             return;
         }
-        if (repository.claimAnniversary(player.getUniqueId(), friend.uuid(), today)) {
+        if (noticed.add(new Notice(player.getUniqueId(), friend.uuid(), today))) {
             player.sendMessage(messages.get(years.getAsInt() == 1 ? "friends.anniversary-one" : "friends.anniversary",
                     Placeholder.unparsed("player", online.map(visibility::shownName).orElse(friend.name())),
                     Formatter.number("years", years.getAsInt())));
