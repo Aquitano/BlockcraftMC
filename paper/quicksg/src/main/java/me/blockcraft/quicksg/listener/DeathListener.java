@@ -17,8 +17,7 @@ public final class DeathListener implements Listener {
     @EventHandler
     public void onDeath(PlayerDeathEvent event) {
         event.deathMessage(null);
-        var victim = event.getPlayer();
-        game.handleDeath(victim, victim.getKiller());
+        game.handleDeath(event);
     }
 
     @EventHandler

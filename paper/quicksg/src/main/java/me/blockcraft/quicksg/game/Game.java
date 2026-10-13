@@ -26,6 +26,7 @@ import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.plugin.Plugin;
 
@@ -141,20 +142,22 @@ public final class Game {
         checkWinner();
     }
 
-    public void handleDeath(Player victim, Player killer) {
+    public void handleDeath(PlayerDeathEvent event) {
+        var victim = event.getPlayer();
         if (!isIngame() || !isAlive(victim)) {
             return;
         }
+        var death = summary.deathLines().resolve(event);
+        var killer = death.killer();
+        Bukkit.broadcast(death.line());
         var victimName = Placeholder.unparsed("player", victim.getName());
         if (killer != null) {
-            Bukkit.broadcast(messages.get("game.killed", victimName, Placeholder.unparsed("killer", killer.getName())));
             summary.awardKill(killer, victim, Defeat.OUT);
             if (kit(killer) == Kit.STARTER && kit(victim) == Kit.DIAMOND) {
                 summary.note(killer, messages.get("note.david-gegen-goliath", victimName));
                 BlockcraftApi.get().achievements().grant(killer, ACHIEVEMENTS, "david-gegen-goliath");
             }
         } else {
-            Bukkit.broadcast(messages.get("game.died", victimName));
             summary.awardCoins(victim, config.rewards().death());
         }
         summary.death(victim);

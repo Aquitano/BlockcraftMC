@@ -73,6 +73,7 @@ public final class RoundSummary {
     private final Rivalries rivalries;
     private final Respects respects;
     private final Accusations accusations;
+    private final DeathLines deathLines;
 
     private record Row(UUID player, String name, Stats delta) {
     }
@@ -89,13 +90,20 @@ public final class RoundSummary {
         this.rivalries = new Rivalries(plugin, api, messages, new RivalryRepository(api.database()), config.nemesisLead());
         this.respects = new Respects(plugin, messages, config.respectWindow());
         this.accusations = new Accusations(plugin, messages, config.accusationWindow(), config.accusations());
+        this.deathLines = new DeathLines(messages, config.creditWindow());
+        Bukkit.getPluginManager().registerEvents(deathLines, plugin);
         Bukkit.getPluginManager().registerEvents(respects, plugin);
         Bukkit.getPluginManager().registerEvents(accusations, plugin);
     }
 
     /** The round has started with these players; their rivalries load, and each hears of a nemesis among them. */
     void begin(List<Player> players) {
+        deathLines.begin(players);
         rivalries.load(players);
+    }
+
+    public DeathLines deathLines() {
+        return deathLines;
     }
 
     /** Whoever joins the round as a player; everyone else is a spectator and only sees who won. */
@@ -106,6 +114,7 @@ public final class RoundSummary {
     /** A player who left before the round started takes no part in it. */
     public void forget(Player player) {
         scores.remove(player.getUniqueId());
+        deathLines.forget(player);
     }
 
     /** Out of the round for good, which books a loss whoever wins. */
@@ -181,6 +190,7 @@ public final class RoundSummary {
     }
 
     public void show() {
+        deathLines.stop();
         var participants = Bukkit.getOnlinePlayers().stream().filter(player -> scores.containsKey(player.getUniqueId())).toList();
         participants.forEach(player -> score(player).xp += api.xp().award(player, XpReward.PARTICIPATION));
         var names = String.join(", ", winners.values());

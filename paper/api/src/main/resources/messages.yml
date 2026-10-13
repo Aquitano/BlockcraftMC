@@ -479,3 +479,39 @@ respect:
 hacker:
   report: "<prefix><error>[<killer> melden]"
   report-hover: "<muted>Klicke, um <white><killer> <muted>dem Team zu melden."
+
+death-lines:
+  generic:
+    - "<prefix><white><player> <muted>ist gestorben."
+    - "<prefix><white><player> <muted>braucht einen neuen Versuch."
+  fall:
+    - "<prefix><white><player> <muted>hat die Schwerkraft unterschätzt."
+    - "<prefix><white><player> <muted>hat den Boden zu früh gefunden."
+  void:
+    - "<prefix><white><player> <muted>fiel ins Leere."
+    - "<prefix><white><player> <muted>suchte eine Abkürzung unter der Map."
+  lava:
+    - "<prefix><white><player> <muted>wollte schwimmen. In Lava."
+    - "<prefix><white><player> <muted>hat die heiße Quelle falsch verstanden."
+  fire:
+    - "<prefix><white><player> <muted>hat sich zu warm angezogen."
+    - "<prefix><white><player> <muted>stand leider selbst auf dem Grill."
+  drowning:
+    - "<prefix><white><player> <muted>hat die Luft angehalten. Zu lange."
+    - "<prefix><white><player> <muted>hat vergessen, dass hier keine Kiemen wachsen."
+  explosion:
+    - "<prefix><white><player> <muted>stand im Kleingedruckten der Explosion."
+    - "<prefix><white><player> <muted>war der Sprengung einen Schritt zu nah."
+  bow:
+    - "<prefix><white><player> <muted>wurde von <white><killer> <muted>aus <accent><distance> Blöcken <muted>getroffen."
+    - "<prefix><white><killer> <muted>hat <white><player> <muted>aus <accent><distance> Blöcken <muted>einen Pfeil zugestellt."
+  melee:
+    - "<prefix><white><player> <muted>wurde von <white><killer> <muted>besiegt."
+    - "<prefix><white><killer> <muted>hat das letzte Wort gegen <white><player><muted>."
+  assisted: " <white><killer> <muted>hat nachgeholfen."
+  weapon: " <muted>Mit <weapon><muted>."
+  weapons:
+    wooden_sword: "einem Holzschwert"
+    wooden_axe: "einer Holzaxt"
+    fishing_rod: "einer Angel"
+    stick: "einem Stock"

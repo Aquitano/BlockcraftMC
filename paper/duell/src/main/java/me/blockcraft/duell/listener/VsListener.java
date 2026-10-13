@@ -1,11 +1,9 @@
 package me.blockcraft.duell.listener;
 
-import me.blockcraft.common.message.Messages;
 import me.blockcraft.duell.config.DuellConfig;
 import me.blockcraft.duell.game.Duel;
 import me.blockcraft.duell.game.DuelMode;
 import me.blockcraft.duell.game.GameItems;
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -20,26 +18,20 @@ public final class VsListener implements Listener {
     private final Plugin plugin;
     private final Duel duel;
     private final DuellConfig config;
-    private final Messages messages;
     private final GameItems items;
 
-    public VsListener(Plugin plugin, Duel duel, DuellConfig config, Messages messages, GameItems items) {
+    public VsListener(Plugin plugin, Duel duel, DuellConfig config, GameItems items) {
         this.plugin = plugin;
         this.duel = duel;
         this.config = config;
-        this.messages = messages;
         this.items = items;
     }
 
     @EventHandler
     public void onDeath(PlayerDeathEvent event) {
-        var victim = event.getPlayer();
-        var killer = victim.getKiller();
-        if (!duel.isPlaying(DuelMode.VS) || killer == null) {
-            return;
+        if (duel.isPlaying(DuelMode.VS)) {
+            duel.handleDeath(event);
         }
-        event.deathMessage(messages.get("round.died", Placeholder.unparsed("player", victim.getName())));
-        duel.handleVsKill(victim, killer);
     }
 
     @EventHandler

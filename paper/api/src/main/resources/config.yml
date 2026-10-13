@@ -180,3 +180,6 @@ respect:
 hacker:
   window-seconds: 60
   words: [hacker, hacks, hax, hackt, hackst, hacken, cheater, cheats, cheatet, cheatest, cheatst, killaura, aimbot]
+
+death-lines:
+  credit-seconds: 10

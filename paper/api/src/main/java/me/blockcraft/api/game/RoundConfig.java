@@ -11,7 +11,8 @@ import java.util.Map;
  * ({@code nemesis}), how long a death collects respect ({@code respect}), and the words that call a killer a
  * cheater within how long of the kill ({@code hacker}).
  */
-public record RoundConfig(int nemesisLead, Duration respectWindow, Duration accusationWindow, List<String> accusations) {
+public record RoundConfig(int nemesisLead, Duration respectWindow, Duration accusationWindow, List<String> accusations,
+                          Duration creditWindow) {
 
     public static RoundConfig from(Map<String, Object> config) {
         var hacker = YamlFile.section(config, "hacker");
@@ -19,7 +20,8 @@ public record RoundConfig(int nemesisLead, Duration respectWindow, Duration accu
                 number(YamlFile.section(config, "nemesis"), "lead", 3),
                 Duration.ofSeconds(number(YamlFile.section(config, "respect"), "seconds", 10)),
                 Duration.ofSeconds(number(hacker, "window-seconds", 60)),
-                hacker.get("words") instanceof List<?> words ? words.stream().map(String::valueOf).toList() : List.of());
+                hacker.get("words") instanceof List<?> words ? words.stream().map(String::valueOf).toList() : List.of(),
+                Duration.ofSeconds(Math.max(0, number(YamlFile.section(config, "death-lines"), "credit-seconds", 10))));
     }
 
     private static int number(Map<String, Object> section, String key, int fallback) {

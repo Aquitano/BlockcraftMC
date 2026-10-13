@@ -27,6 +27,14 @@ The numbered keys under `coins.asides` and `chat.level-asides` determine which b
 an extra line. Set an entry to an empty string to hide it. `sign.first` controls the empty-group prompt.
 These details do not grant coins, XP, unlocks, or gameplay advantages.
 
+## Death messages and kill credit
+
+QuickSG, EmeraldRush, and combat duels use the shared `death-lines` message pools. The lines distinguish falls,
+void, lava, fire, drowning, explosions, arrow distance, and melee kills with selected weapons. Environmental
+deaths name the recent attacker when one exists. `death-lines.credit-seconds` in BlockcraftAPI defaults to ten.
+A newer hit replaces the earlier attacker, and a death consumes that credit. Reeling a player in with a fishing
+rod records an attack even when the hook deals no damage. Cancelled hits do not count.
+
 ## Network and games
 
 | Feature | Behavior and default settings |

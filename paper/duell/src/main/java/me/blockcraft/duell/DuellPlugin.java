@@ -55,7 +55,7 @@ public final class DuellPlugin extends JavaPlugin {
                 new LobbyItemListener(this, duel, messages, statsMenus),
                 new ProtectionListener(duel, api.buildMode()),
                 new ArenaProtection(duel::frozen),
-                new VsListener(this, duel, config, messages, items),
+                new VsListener(this, duel, config, items),
                 new SgListener(duel, lootChests),
                 new SuperJumpListener(duel)
         ).forEach(this::register);

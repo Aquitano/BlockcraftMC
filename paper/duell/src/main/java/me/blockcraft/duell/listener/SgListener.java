@@ -44,9 +44,7 @@ public final class SgListener implements Listener {
         if (!duel.isPlaying(DuelMode.SG)) {
             return;
         }
-        event.deathMessage(null);
-        var victim = event.getPlayer();
-        duel.handleSgDeath(victim, victim.getKiller());
+        duel.handleDeath(event);
     }
 
     @EventHandler

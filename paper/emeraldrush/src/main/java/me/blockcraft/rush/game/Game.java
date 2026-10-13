@@ -32,6 +32,7 @@ import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
@@ -293,17 +294,18 @@ public final class Game {
         });
     }
 
-    public void handleDeath(Player victim, Optional<Player> killer) {
+    public void handleDeath(PlayerDeathEvent event) {
+        var victim = event.getPlayer();
         if (phase != GamePhase.DEATHMATCH || !isAlive(victim)) {
             return;
         }
-        var victimName = Placeholder.component("victim", victim.playerListName());
+        var death = summary.deathLines().resolve(event);
+        Bukkit.broadcast(death.line());
         int remaining = Math.max(0, lives(victim) - 1);
-        killer.filter(slayer -> !slayer.equals(victim)).ifPresentOrElse(slayer -> {
-            broadcast("deathmatch.killed", victimName, Placeholder.component("killer", slayer.playerListName()));
+        Optional.ofNullable(death.killer()).ifPresent(slayer -> {
             summary.awardKill(slayer, victim, remaining == 0 ? Defeat.OUT : Defeat.LIFE);
             slayer.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 160, 1));
-        }, () -> broadcast("deathmatch.died", victimName));
+        });
         summary.death(victim);
         lives.put(victim.getUniqueId(), remaining);
         if (remaining == 0) {

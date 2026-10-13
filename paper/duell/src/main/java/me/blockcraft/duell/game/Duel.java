@@ -24,6 +24,7 @@ import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.entity.Player;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.plugin.Plugin;
 
 import java.util.EnumMap;
@@ -212,7 +213,25 @@ public final class Duel {
     }
 
     /** The next round's title goes to the killer alone; the victim reads who beat them instead. */
-    public void handleVsKill(Player victim, Player killer) {
+    public void handleDeath(PlayerDeathEvent event) {
+        var victim = event.getPlayer();
+        if (!isIngame() || !isParticipant(victim) || mode == DuelMode.SUPERJUMP) {
+            return;
+        }
+        event.deathMessage(null);
+        var death = summary.deathLines().resolve(event);
+        Bukkit.broadcast(death.line());
+        if (mode == DuelMode.SG) {
+            handleSgDeath(victim, death.killer());
+        } else if (death.killer() != null) {
+            handleVsKill(victim, death.killer());
+        } else {
+            summary.death(victim);
+            round.respawn(victim, RESPAWN_DELAY_TICKS);
+        }
+    }
+
+    private void handleVsKill(Player victim, Player killer) {
         vsRound++;
         summary.awardKill(killer, victim, Defeat.POINT);
         summary.death(victim);
@@ -229,8 +248,7 @@ public final class Duel {
     }
 
     /** Whoever dies loses the duel, whether the opponent or the map killed them. */
-    public void handleSgDeath(Player victim, Player killer) {
-        Bukkit.broadcast(messages.get("round.died", Placeholder.unparsed("player", victim.getName())));
+    private void handleSgDeath(Player victim, Player killer) {
         summary.death(victim);
         if (killer != null && !killer.equals(victim)) {
             summary.awardKill(killer, victim, Defeat.OUT);
