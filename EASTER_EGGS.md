@@ -196,16 +196,34 @@ through Extras without Premium. Existing purchased heads keep their original sto
 ## Gameplay verification
 
 The automated build checks message keys and covers calendar dates, Konami input, parkour progression, rematch
-requests, and head-key compatibility. Database integration tests cover concurrent join numbering, greeting caps,
-duplicate reward claims, rollback on failed credit, and the one-time OG snapshot.
+requests, hidden-command replies and bypasses, attacker-credit expiry, consecutive draws, curiosity selection,
+wake-up counts, friendship age, legacy friend-menu messages, and shooting-star wish cancellation. Database
+integration tests cover concurrent join numbering, greeting caps, duplicate reward claims, rollback on failed
+credit, the one-time OG snapshot, and persistent mirror-duel rewards. They need a disposable test database;
+a build without one skips those tests.
 
 Before deploying, verify these interactions with Minecraft clients on a local test network:
 
 - Use two accounts for the welcome window, spectator `F` messages, defeat titles, report suggestions, and rematches.
+- Draw twice against the same opponent, choose `[SPIEGEL]` without Premium, and rematch with a nick. Check that
+  private greetings show the current nick. An intervening opponent or decisive result must break the draw sequence.
+- Try environmental deaths, a long arrow hit, a wooden-sword kill, and a rod pull into the void. Credit must expire
+  after ten seconds and be consumed by the first death. Check one shared curiosity line at the end.
+- Exercise all six moment conditions. A failed shop purchase must preserve Minimalist; a completed free purchase
+  must disqualify it. Water and lava resets must disqualify Trittsicher. Cancelled damage must preserve Makellos.
+- Run `/pl` three times and `/version` as a regular player, then check the real responses with the staff bypass.
+  The blocked commands must remain absent from regular-player tab completion.
 - Enter the Konami code and select its earned tag with a non-Premium account.
 - Complete the configured course, fall at a checkpoint, and retry to confirm the best time and leaderboard.
 - Fish with the pond rod and collect a chicken egg. Lower the odds in local test config to exercise rare rewards.
 - Check seasonal hats, per-player egg visibility, calendar doors, and midnight behavior using a suitable test date.
+- Shorten sleep thresholds in local config, poke a sleeping account, and wake it. Check the growing label,
+  absence of damage and knockback, and the private count using the poker’s current nick.
+- Set shooting-star odds to one in local config and choose a window containing the current Berlin hour. Test a
+  wish within 15 seconds, a repeat, and a late wish. The wish must never appear on another client, in console
+  chat, or in the moderation advertisement log. Restore the normal odds after checking the sky trail.
+- Use local friendship fixtures to check the yearly notice, elapsed days, reconnect deduplication, both
+  recipients, nicknames, vanished friends, and midnight. Check friend lists with an older lobby or proxy build.
 - Leave a menu while its database request is pending. Rewards should arrive without reopening the old menu.
 
 The build does not validate client rendering, map geometry, or a live proxy-to-backend connection.
