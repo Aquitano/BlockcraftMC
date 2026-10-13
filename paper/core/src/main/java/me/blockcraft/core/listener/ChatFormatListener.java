@@ -61,7 +61,7 @@ public final class ChatFormatListener implements Listener {
                 Placeholder.unparsed("name", shown),
                 Formatter.number("level", level)));
         String aside = "chat.level-asides." + level;
-        if (messages.has(aside)) {
+        if (messages.has(aside) && !messages.raw(aside).isEmpty()) {
             hoverText = hoverText.append(Component.newline()).append(messages.get(aside));
         }
         var hover = HoverEvent.showText(hoverText);
