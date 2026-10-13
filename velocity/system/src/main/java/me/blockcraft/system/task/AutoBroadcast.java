@@ -6,10 +6,11 @@ import me.blockcraft.common.message.Messages;
 
 import java.util.List;
 
-/** Rotates through the network's useful tips and secret hints. */
+/** Rotates through the network's tips, its ranks and channels, and secret hints. */
 public final class AutoBroadcast implements Runnable {
 
-    private static final List<String> KEYS = List.of("friends", "report", "discord", "pond", "retro", "secrets");
+    private static final List<String> KEYS = List.of("friends", "premium", "pond", "report", "teamspeak", "retro",
+            "support", "youtuber", "secrets", "discord");
 
     private final ProxyServer proxy;
     private final Messages messages;

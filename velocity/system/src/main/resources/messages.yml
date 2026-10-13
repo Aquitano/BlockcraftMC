@@ -88,7 +88,11 @@ tab:
 
 broadcast:
   friends: "<primary>Wusstest du? <bullet><muted>Mit /friend jump schaust du der Runde eines Freundes zu."
+  premium: "<primary>Wusstest du? <bullet><muted>Ränge wie Premium unterstützen <ip>. Du findest sie auf <shop>."
   report: "<primary>Wusstest du? <bullet><muted>Mit /report meldest du verdächtiges Verhalten direkt dem Team."
+  teamspeak: "<primary>Wusstest du? <bullet><muted>Unser TeamSpeak erreichst du unter <teamspeak>."
+  support: "<primary>Wusstest du? <bullet><muted>Bei Fragen oder Problemen hilft dir /support weiter."
+  youtuber: "<primary>Wusstest du? <bullet><muted>Du machst Videos über <ip>? Mit /youtuber erfährst du alles zum YouTuber-Rang."
   discord: "<primary>Wusstest du? <bullet><muted>Über /discord findest du Hilfe und Neuigkeiten."
   pond: "<primary>Wusstest du? <bullet><muted>Im Teich soll ein goldener Karpfen leben. Geduld hilft."
   retro: "<primary>Wusstest du? <bullet><muted>Manche Tastenfolgen sind älter als Minecraft."
