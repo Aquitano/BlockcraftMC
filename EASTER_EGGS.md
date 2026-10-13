@@ -3,6 +3,30 @@
 The plugins add persistent discoveries, seasonal rewards, and chat responses. Player-facing text lives in each
 plugin's `messages.yml`. Existing configuration files inherit missing keys from the bundled defaults.
 
+## Small surprises in everyday actions
+
+| Plugin | Where to find the detail |
+|---|---|
+| BlockcraftAPI | `/coins` adds a reference at balances of 42, 64, 404, 1337, and 9001. Returning from AFK rotates the greeting and keeps the minutes away. |
+| BlockcraftCore | Hover over a chat name at displayed level 42, 64, or 100. The extra line uses the displayed level even for a nick. `/food` rotates its confirmation. |
+| Lobby | The villager has more browsing lines and replies to being hit. Fishing can retrieve a 42-coin receipt, an expired coupon, patch notes, and other junk. Collecting a normal chicken egg gives private feedback. These finds do not add inventory items. |
+| Duell | Draw announcements and sent rematch requests rotate their lines. Every rematch confirmation still names the opponent. |
+| EmeraldRush | Purchases rotate the receipt. Spending the last Emerald gets an exact-change reply. Every receipt keeps the price and remaining balance. |
+| QuickSG | Consuming the full-food item rotates the hunger confirmation. |
+| ReportsMenu | An empty report list rotates its staff-only confirmation. Messages about individual reports and punishments keep their existing wording. |
+| StatusSigns | A joinable group with zero players shows `Klick: Erster!`. Clicking still joins that group. |
+| BlockcraftSystem | `/ping` rotates its reply and always shows the measured ping. Sending a message or party invitation to yourself gets a different refusal. |
+
+`Messages.pick` selects one line from a YAML list when an action occurs. Existing server-edited scalar messages
+remain valid. The new rotating keys are `afk.back`, `food.done`, `npc.hurt`, `quirks.egg-collected`, `round.draw`,
+`rematch.asked`, `shop.bought`, `shop.exact-change`, `consume.food`, `none`, `msg.self`, `ping`, and `party.invite-self`.
+`npc.talk`, `npc.window-shopping`, and `fishing.catches` also use this helper. A single line fixes the response to
+that wording. An empty list renders empty text.
+
+The numbered keys under `coins.asides` and `chat.level-asides` determine which balances and displayed levels get
+an extra line. Set an entry to an empty string to hide it. `sign.first` controls the empty-group prompt.
+These details do not grant coins, XP, unlocks, or gameplay advantages.
+
 ## Network and games
 
 | Feature | Behavior and default settings |

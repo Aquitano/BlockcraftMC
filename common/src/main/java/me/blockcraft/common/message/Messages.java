@@ -11,6 +11,7 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Supplier;
 
 /**
@@ -73,6 +74,12 @@ public final class Messages {
 
     public Component get(String key, TagResolver... resolvers) {
         return MINI.deserialize(raw(key), TagResolver.resolver(globals, TagResolver.resolver(resolvers)));
+    }
+
+    public Component pick(String key, TagResolver... resolvers) {
+        String[] choices = raw(key).split("\n", -1);
+        return MINI.deserialize(choices[ThreadLocalRandom.current().nextInt(choices.length)],
+                TagResolver.resolver(globals, TagResolver.resolver(resolvers)));
     }
 
     /** Multi-line messages are written as a YAML list. */

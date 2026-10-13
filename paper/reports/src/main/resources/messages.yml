@@ -5,7 +5,11 @@ commands:
     description: "Öffnet das Reports-Menü"
 no-permission: "<prefix><error>Dazu hast du keine Berechtigung."
 no-permission-hint: "<prefix>Wolltest du einen Spieler reporten? <error>/report [Spieler]"
-none: "<prefix>Es gibt aktuell keine Reports!"
+none:
+  - "<prefix><success>Es gibt aktuell keine Reports."
+  - "<prefix><success>Keine Reports offen. <muted>Die Aktenklammer hat heute frei."
+  - "<prefix><success>Keine Reports offen. <muted>Auch auf Seite 404 nicht."
+  - "<prefix><success>Keine Reports offen. <muted>Der Papierkorb meldet sich freiwillig ab."
 none-for-player: "<prefix>Der Spieler <error><bold><player><reset><muted> wurde nicht reportet!"
 join-one: "<prefix><muted>Es liegt gerade <error>ein <muted>Report vor."
 join-many: "<prefix><muted>Es liegen gerade <error><count> <muted>Reports vor."

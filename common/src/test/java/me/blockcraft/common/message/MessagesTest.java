@@ -9,8 +9,11 @@ import org.junit.rules.TemporaryFolder;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class MessagesTest {
 
@@ -31,6 +34,38 @@ public class MessagesTest {
                 themed.prefixedLike(game).get("joined", player));
         assertEquals(MiniMessage.miniMessage().deserialize("<blue>Blockcraft <gray>» <white>Builder joined"),
                 themed.get("joined", player));
+    }
+
+    @Test
+    public void picksOneLocalizedLineWithTheSamePrefixAndPlaceholders() throws Exception {
+        var messages = load("choices", """
+                prefix: '<blue>Blockcraft <gray>» '
+                choices:
+                  - '<prefix><white>Hello <player>'
+                  - '<prefix><white>Welcome <player>'
+                """);
+        var player = Placeholder.unparsed("player", "<Builder>");
+        var mini = MiniMessage.miniMessage();
+        var expected = List.of(
+                mini.deserialize("<blue>Blockcraft <gray>» <white>Hello <player>", player),
+                mini.deserialize("<blue>Blockcraft <gray>» <white>Welcome <player>", player));
+
+        assertTrue(expected.contains(messages.pick("choices", player)));
+        assertEquals(2, messages.getLines("choices", player).size());
+    }
+
+    @Test
+    public void aServerEditedScalarOverridesTheBundledChoiceList() throws Exception {
+        var directory = folder.newFolder("override").toPath();
+        Files.writeString(directory.resolve("messages.yml"), "greeting: '<green>My own <player>'");
+        var messages = Messages.load(directory, () -> new ByteArrayInputStream("""
+                greeting:
+                  - '<blue>Hello <player>'
+                  - '<blue>Welcome <player>'
+                """.getBytes(StandardCharsets.UTF_8)));
+        var player = Placeholder.unparsed("player", "Builder");
+
+        assertEquals(messages.get("greeting", player), messages.pick("greeting", player));
     }
 
     private Messages load(String directory, String yaml) throws Exception {

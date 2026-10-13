@@ -382,7 +382,7 @@ public final class Duel {
             case SUPERJUMP -> leaderBy(player -> checkpoints.getOrDefault(player.getUniqueId(), 0));
             case SG -> Optional.<Player>empty();
         };
-        winner.ifPresentOrElse(this::rewardWinner, () -> Bukkit.broadcast(messages.get("round.draw")));
+        winner.ifPresentOrElse(this::rewardWinner, () -> Bukkit.broadcast(messages.pick("round.draw")));
         endRound();
     }
 

@@ -11,7 +11,7 @@ mode:
   superjump: "SuperJump"
 
 join:
-  introduction: "<prefix><muted>Stimme über die Truhe für Modus und Map ab. <duell>Ein Gegner, ein Duell."
+  introduction: "<prefix><muted>Wähle Modus und Map über die Truhe. <duell>Ein Gegner. <muted>Keine Zeugen nötig."
   spectator: "<prefix><muted>Du bist als Zuschauer beigetreten."
 
 # <map> is the map's name or vote.random-map.
@@ -28,7 +28,10 @@ lobby:
 round:
   died: "<prefix><white><player> <muted>ist gestorben."
   ended: "<prefix><muted>Die Runde wurde beendet."
-  draw: "<prefix><muted>Die Zeit ist um, das Duell endet <accent>unentschieden<muted>."
+  draw:
+    - "<prefix><muted>Die Zeit ist um. Das Duell endet <accent>unentschieden<muted>."
+    - "<prefix><accent>Unentschieden. <muted>Selbst das Schwert will eine zweite Meinung."
+    - "<prefix><accent>Unentschieden. <muted>Ihr habt beide den Endgegner gespielt."
 
 # The ranked result of a round; <group> is the skill group's name from BlockcraftAPI's elo.groups.
 elo:
@@ -143,7 +146,10 @@ scoreboard:
 rematch:
   offer: "<arrow><duell>[Revanche]"
   offer-hover: "<muted>Klicke, um gleich noch einmal gegen <white><opponent> <muted>anzutreten."
-  asked: "<prefix><muted>Deine Revanche-Anfrage ist bei <white><opponent> <muted>angekommen."
+  asked:
+    - "<prefix><muted>Deine Revanche-Anfrage ist bei <white><opponent> <muted>angekommen."
+    - "<prefix><muted>Revanche bei <white><opponent> <muted>angefragt. Diesmal kennst du den Endgegner."
+    - "<prefix><muted>Revanche bei <white><opponent> <muted>angefragt. Das war nur die Generalprobe."
   request: "<prefix><white><player> <muted>will eine Revanche. "
   accept: "<success>[Annehmen]"
   accept-hover: "<muted>Klicke, um die Revanche gegen <white><opponent> <muted>anzunehmen."

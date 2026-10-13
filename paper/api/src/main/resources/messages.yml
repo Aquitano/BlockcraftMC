@@ -67,7 +67,10 @@ tab:
 
 afk:
   status: "<muted>Du bist <accent>AFK<muted>. Beweg dich, um zurückzukommen."
-  back: "<success>Willkommen zurück! <muted>Du warst <accent><minutes> Minuten <muted>weg."
+  back:
+    - "<success>Willkommen zurück! <muted>Du warst <accent><minutes> Minuten <muted>weg."
+    - "<success>Wieder da! <accent><minutes> Minuten <muted>Pause. Dein Platz ist noch warm."
+    - "<success>Willkommen zurück! <accent><minutes> Minuten <muted>weg. Die Blöcke stehen noch."
 
 menu:
   load:
@@ -286,6 +289,12 @@ profile:
 
 coins:
   self: "<prefix><muted>Du hast <accent><coins> <muted>Coins!"
+  asides:
+    42: " <dark>Die Antwort auf alles. Die Frage liegt wohl im Teich."
+    64: " <dark>Ein Stack Coins. Leider nicht stapelbar."
+    404: " <dark>Coins gefunden. Sparschwein nicht gefunden."
+    1337: " <dark>Dein Sparschwein spricht jetzt leetspeak."
+    9001: " <dark>Der Kontostand passt nicht mehr auf den Scouter."
   other: "<prefix><accent><player> <muted>hat <accent><coins> <muted>Coins."
   usage: "<prefix><muted>Verwende <error>/coins give|take|set \\<Spieler> \\<Anzahl> <muted>oder <error>/coins top"
   unknown: "<prefix><error><player> <muted>war noch nie auf dem Netzwerk."

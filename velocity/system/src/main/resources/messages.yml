@@ -598,7 +598,10 @@ play:
 msg:
   usage: "<prefix><error>Benutze /msg \\<Name> \\<Nachricht>"
   reply-usage: "<prefix><error>Benutze /r \\<Nachricht>"
-  self: "<prefix><error>Du kannst dir nicht selber schreiben!"
+  self:
+    - "<prefix><error>Du kannst dir nicht selbst schreiben. <muted>Dein Echo hat gerade frei."
+    - "<prefix><error>Du kannst dir nicht selbst schreiben. <muted>Enderman-Mail stellt keine Gedanken zu."
+    - "<prefix><error>Du kannst dir nicht selbst schreiben. <muted>Die Flaschenpost gehört in den Teich."
   offline: "<prefix><error>Dieser Spieler ist nicht online."
   disabled: "<prefix><error><player> <muted>empfängt gerade keine privaten Nachrichten."
   nobody-to-answer: "<prefix><error>Du hast noch niemandem geschrieben."
@@ -621,7 +624,11 @@ ignore:
   list-empty: "<prefix><muted>Du ignorierst niemanden."
   list-header: "<prefix><muted>Ignorierte Spieler <dark>(<accent><count><dark>/<muted><max><dark>)"
   list-entry: "<bullet><muted><player>"
-ping: "<prefix><muted>Dein Ping beträgt: <success><ping><muted>ms."
+ping:
+  - "<prefix><muted>Dein Ping beträgt <success><ping> ms<muted>."
+  - "<prefix><muted>Dein Ping beträgt <success><ping> ms<muted>. Die Enderperle kam mit der Post."
+  - "<prefix><muted>Dein Ping beträgt <success><ping> ms<muted>. Gemessen ohne Redstone-Verstärker."
+  - "<prefix><muted>Dein Ping beträgt <success><ping> ms<muted>. Der Villager nennt das Lieferzeit."
 online: "<prefix><muted>Es sind momentan <accent><count> <muted>Spieler online."
 mod: "<prefix><muted>Es sind <accent><count> <muted>Teammitglieder online."
 seen:
@@ -797,7 +804,9 @@ party:
   target-not-leader: "<primary>Party <arrow><reset><error>Dieser Spieler ist kein Party-Leader."
   target-in-party: "<primary>Party <arrow><reset><error>Dieser Spieler ist bereits in einer Party."
   invites-disabled: "<primary>Party <arrow><reset><error><player> <muted>empfängt gerade keine Party-Einladungen."
-  invite-self: "<primary>Party <arrow><reset><error>Du kannst dich nicht selbst einladen."
+  invite-self:
+    - "<primary>Party <arrow><reset><error>Du kannst dich nicht selbst einladen. <muted>Du stehst schon auf deiner Gästeliste."
+    - "<primary>Party <arrow><reset><error>Du kannst dich nicht selbst einladen. <muted>Dein Schatten zählt nicht als zweiter Spieler."
   already-in-party: "<primary>Party <arrow><reset><muted>Du bist bereits in einer Party."
   not-in-party: "<primary>Party <arrow><reset><muted>Du bist in keiner Party."
   only-leader-invites: "<primary>Party <arrow><reset><error>Nur Party-Leader können Spieler einladen."

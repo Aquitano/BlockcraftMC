@@ -87,7 +87,10 @@ fly:
   other-disabled: "<prefix><accent><player> <muted>kann nun <accent>nicht <muted>mehr fliegen."
 food:
   usage: "<prefix><error>Benutze /food [Spieler]"
-  done: "<prefix><muted>Du hast nun keinen Hunger mehr!"
+  done:
+    - "<prefix><success>Hunger aufgefüllt. <muted>Guten Appetit!"
+    - "<prefix><success>Hunger aufgefüllt. <muted>Einmal Sättigung, ohne Abwasch."
+    - "<prefix><success>Hunger aufgefüllt. <muted>Der Kuchen war tatsächlich echt."
   other: "<prefix><accent><player> <muted>hat nun keinen Hunger mehr."
 gm:
   usage: "<prefix><error>Benutze /gm \\<0-3, s, c, a, sp> [Spieler]"
@@ -301,6 +304,10 @@ chat:
     - ""
     - "<muted>Klicke, um <accent><name><muted> zu schreiben."
   msg-command: "/msg <name> "
+  level-asides:
+    42: "<dark>Die Antwort steht hier. Die Frage ist im Teich versunken."
+    64: "<dark>Ein ganzer Stack Erfahrung. Bitte nicht mit Rechtsklick teilen."
+    100: "<dark>Dreistellig. Der Villager hätte jetzt gern ein Autogramm."
   spam: "<prefix><error>Bitte warte einen Moment... Verdacht auf Spam!"
   slow: "<prefix><error>Der Chat ist verlangsamt. <muted>Du kannst alle <accent><seconds> Sekunden <muted>eine Nachricht schreiben."
   word-filtered: "<prefix><muted>Deine Chatnachricht wurde gefiltert. <error>Grund: Gesperrtes Wort."

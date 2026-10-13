@@ -91,7 +91,7 @@ final class Rematch {
         var opponentName = Placeholder.unparsed("opponent", opponent.getName());
         switch (requests.ask(player.getUniqueId(), opponentId, Instant.now())) {
             case ASKED -> {
-                player.sendMessage(messages.get("rematch.asked", opponentName));
+                player.sendMessage(messages.pick("rematch.asked", opponentName));
                 var playerId = player.getUniqueId();
                 opponent.sendMessage(messages.get("rematch.request", Placeholder.unparsed("player", player.getName()))
                         .append(button("rematch.accept", opponentId, player.getName(), clicker -> ask(clicker, playerId))));

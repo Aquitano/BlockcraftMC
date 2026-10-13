@@ -79,11 +79,7 @@ public final class PondFishing implements Listener {
         if (ThreadLocalRandom.current().nextInt(config.goldenCarpOdds()) == 0) {
             secrets.find(player, Secret.GOLDEN_CARP);
         } else {
-            var catches = messages.getLines("fishing.catches");
-            if (!catches.isEmpty()) {
-                player.sendMessage(messages.get("fishing.caught", Placeholder.component("catch",
-                        catches.get(ThreadLocalRandom.current().nextInt(catches.size())))));
-            }
+            player.sendMessage(messages.get("fishing.caught", Placeholder.component("catch", messages.pick("fishing.catches"))));
         }
     }
 

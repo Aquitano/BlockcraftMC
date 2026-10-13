@@ -18,7 +18,7 @@ commands:
     description: "Setzt die Emeralds eines Spielers"
 
 join:
-  introduction: "<prefix><muted>Baue Erze ab, handle mit Emeralds und rüste dich fürs Deathmatch aus."
+  introduction: "<prefix><muted>Baue Erze ab, kaufe Ausrüstung und gewinne das Deathmatch. <emeraldrush>Hrrm. Nur Barzahlung."
 
 lobby:
   welcome:
@@ -151,7 +151,13 @@ shop:
   available: "<success>Klicken zum Kaufen"
   missing: "<error>Dir fehlen <emeralds> Emeralds"
   no-space: "<error>Nicht genug Platz im Inventar"
-  bought: "<success>Gekauft <dark>· <muted>-<price> Emeralds <dark>· <success><emeralds> übrig"
+  bought:
+    - "<success>Gekauft <dark>· <muted>-<price> Emeralds <dark>· <success><emeralds> übrig"
+    - "<success>Gekauft <dark>· <muted>-<price> Emeralds <dark>· <success><emeralds> übrig <dark>· <muted>Hrrm."
+    - "<success>Gekauft <dark>· <muted>-<price> Emeralds <dark>· <success><emeralds> übrig <dark>· <muted>Keine Rücknahme."
+  exact-change:
+    - "<success>Gekauft <dark>· <muted>-<price> Emeralds <dark>· <success><emeralds> übrig <dark>· <muted>Hrrm. Passend."
+    - "<success>Gekauft <dark>· <muted>-<price> Emeralds <dark>· <success><emeralds> übrig <dark>· <muted>Kein Wechselgeld nötig."
   category:
     chain: "Chain Rüstung"
     iron: "Eisen Rüstung"

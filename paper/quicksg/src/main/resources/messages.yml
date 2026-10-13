@@ -12,7 +12,7 @@ commands:
     description: "Zeigt die Top 10 einer Kategorie"
 
 join:
-  introduction: "<prefix><muted>Wähle dein Kit. Sammle Beute und überlebe. <quicksg>Keine Teams."
+  introduction: "<prefix><muted>Wähle dein Kit, sammle Beute und überlebe. <quicksg>Keine Teams. <muted>Auch keine Handschlagpause."
 
 lobby:
   started: "<prefix><muted>Die Runde wurde gestartet."
@@ -38,7 +38,11 @@ tracker:
   empty: "<muted>Kein Gegner in Reichweite"
 
 consume:
-  food: "<success>Hunger aufgefüllt"
+  food:
+    - "<success>Hunger aufgefüllt"
+    - "<success>Hunger aufgefüllt <dark>· <muted>Letzte Mahlzeit? Lieber nicht."
+    - "<success>Hunger aufgefüllt <dark>· <muted>Kein Trinkgeld für den Kompass."
+    - "<success>Hunger aufgefüllt <dark>· <muted>Der Kuchen ist kein Teamkollege."
   heart: "<success>+1 Herz für diese Runde"
   level: "<success>+1 Verzauberungslevel"
 

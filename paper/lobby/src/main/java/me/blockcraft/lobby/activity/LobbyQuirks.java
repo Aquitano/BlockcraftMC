@@ -132,6 +132,8 @@ public final class LobbyQuirks implements Listener, AutoCloseable {
             egg.item().remove();
             if (egg.golden()) {
                 secrets.find(player, Secret.GOLDEN_EGG);
+            } else {
+                BlockcraftApi.get().notifications().feedback(player, messages.pick("quirks.egg-collected"));
             }
         }
     }

@@ -138,7 +138,7 @@ public final class PartyManager {
 
     public synchronized void invite(Player inviter, Player invitee) {
         if (inviter.getUniqueId().equals(invitee.getUniqueId())) {
-            inviter.sendMessage(messages.get("party.invite-self"));
+            inviter.sendMessage(messages.pick("party.invite-self"));
             return;
         }
         if (!isInParty(inviter.getUniqueId())) {

@@ -27,7 +27,7 @@ public class MessageKeysTest {
 
     private static final Path ROOT = Path.of("..").toAbsolutePath().normalize();
     private static final Path API = ROOT.resolve("paper/api");
-    private static final Pattern LOOKUP = Pattern.compile("(?i)messages(?:\\(\\))?\\.(?:get|getLines|raw|has)\\(\\s*\"([^\"]+)\"\\s*[,)]");
+    private static final Pattern LOOKUP = Pattern.compile("(?i)messages(?:\\(\\))?\\.(?:get|getLines|pick|raw|has)\\(\\s*\"([^\"]+)\"\\s*[,)]");
     private static final Pattern PACKAGE = Pattern.compile("^package\\s+([\\w.]+);", Pattern.MULTILINE);
 
     @Test

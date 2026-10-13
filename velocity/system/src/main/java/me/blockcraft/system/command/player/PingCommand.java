@@ -18,6 +18,6 @@ public final class PingCommand {
     public BrigadierCommand create() {
         return new BrigadierCommand(BrigadierCommand.literalArgumentBuilder("ping")
                 .executes(support.asPlayer((player, context) ->
-                        player.sendMessage(messages.get("ping", Formatter.number("ping", player.getPing()))))));
+                        player.sendMessage(messages.pick("ping", Formatter.number("ping", player.getPing()))))));
     }
 }

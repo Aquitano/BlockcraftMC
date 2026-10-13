@@ -97,7 +97,7 @@ public final class ItemListener implements Listener {
                     consumeHeldItem(player);
                     player.setFoodLevel(20);
                     Sounds.HEAL.play(player);
-                    BlockcraftApi.get().notifications().feedback(player, messages.get("consume.food"));
+                    BlockcraftApi.get().notifications().feedback(player, messages.pick("consume.food"));
                 }
             }
             case MUSHROOM_STEW -> {

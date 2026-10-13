@@ -36,7 +36,7 @@ public final class FoodCommand {
 
     private static void feed(CommandSender sender, Player target, StaffAudit audit, Messages messages) {
         target.setFoodLevel(20);
-        target.sendMessage(messages.get("food.done"));
+        target.sendMessage(messages.pick("food.done"));
         if (!target.equals(sender)) {
             sender.sendMessage(messages.get("food.other", Placeholder.unparsed("player", target.getName())));
             audit.record(sender, "food", target);

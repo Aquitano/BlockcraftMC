@@ -52,7 +52,14 @@ public final class CoinsCommand {
                     }
                     var uuid = player.getUniqueId();
                     Tasks.async(plugin, () -> coins.get(uuid),
-                            balance -> player.sendMessage(messages.get("coins.self", Formatter.number("coins", balance))),
+                            balance -> {
+                                var line = messages.get("coins.self", Formatter.number("coins", balance));
+                                String aside = "coins.asides." + balance;
+                                if (messages.has(aside)) {
+                                    line = line.append(messages.get(aside));
+                                }
+                                player.sendMessage(line);
+                            },
                             () -> failed(player, messages));
                     return Command.SINGLE_SUCCESS;
                 })

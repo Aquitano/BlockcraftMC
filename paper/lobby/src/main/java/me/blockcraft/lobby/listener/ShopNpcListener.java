@@ -6,7 +6,6 @@ import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.lobby.config.LobbyConfig;
 import me.blockcraft.lobby.menu.Menus;
-import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Villager;
 import org.bukkit.event.EventHandler;
@@ -14,7 +13,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.inventory.EquipmentSlot;
 
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.IntStream;
 
 /** The shop villager has a word for whoever opens the shop, and for whoever hits it. */
@@ -39,7 +37,7 @@ public final class ShopNpcListener implements Listener {
             if (event.getHand() == EquipmentSlot.HAND) {
                 Player player = event.getPlayer();
                 Sounds.SHOP_TALK.play(player);
-                BlockcraftApi.get().notifications().feedback(player, randomLine(windowShopping(player) ? "npc.window-shopping" : "npc.talk"));
+                BlockcraftApi.get().notifications().feedback(player, messages.pick(windowShopping(player) ? "npc.window-shopping" : "npc.talk"));
                 menus.openShop(player);
             }
         }
@@ -51,17 +49,12 @@ public final class ShopNpcListener implements Listener {
             event.setCancelled(true);
             villager.playHurtAnimation(0);
             Sounds.SHOP_HURT.play(event.getPlayer());
-            BlockcraftApi.get().notifications().feedback(event.getPlayer(), messages.get("npc.hurt"));
+            BlockcraftApi.get().notifications().feedback(event.getPlayer(), messages.pick("npc.hurt"));
         }
     }
 
     /** Judged by the balance the sidebar shows, so a click never waits for the database. */
     private boolean windowShopping(Player player) {
         return hud.coins(player).stream().anyMatch(coins -> coins < cheapestPrice);
-    }
-
-    private Component randomLine(String key) {
-        var lines = messages.getLines(key);
-        return lines.get(ThreadLocalRandom.current().nextInt(lines.size()));
     }
 }

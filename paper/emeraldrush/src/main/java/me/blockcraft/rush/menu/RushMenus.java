@@ -142,8 +142,9 @@ public final class RushMenus {
         }
         entry.reward().accept(player);
         BlockcraftApi.get().notifications().rewardSound(player, Sounds.PURCHASE);
-        BlockcraftApi.get().notifications().feedback(player, messages.get("shop.bought", Formatter.number("price", entry.price()),
-                Formatter.number("emeralds", game.emeralds(player))));
+        int remaining = game.emeralds(player);
+        BlockcraftApi.get().notifications().feedback(player, messages.pick(remaining == 0 ? "shop.exact-change" : "shop.bought",
+                Formatter.number("price", entry.price()), Formatter.number("emeralds", remaining)));
         game.scoreboard().show(player);
     }
 

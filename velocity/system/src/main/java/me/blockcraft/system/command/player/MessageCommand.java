@@ -84,7 +84,7 @@ public final class MessageCommand {
 
     private void deliver(Player sender, Player target, String text) {
         if (target.equals(sender)) {
-            sender.sendMessage(messages.get("msg.self"));
+            sender.sendMessage(messages.pick("msg.self"));
             return;
         }
         boolean refused = !choices.enabled(target, PlayerSetting.PRIVATE_MESSAGES) || ignores.ignores(target, sender);

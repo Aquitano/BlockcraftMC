@@ -93,7 +93,7 @@ public final class Afk implements Listener {
         if (afk) {
             notifications.status(player, messages.get("afk.status"));
         } else {
-            notifications.feedback(player, messages.get("afk.back", Formatter.number("minutes", duration.toMinutes())));
+            notifications.feedback(player, messages.pick("afk.back", Formatter.number("minutes", duration.toMinutes())));
         }
     }
 

@@ -50,7 +50,7 @@ public final class ReportMenus {
             }
             if (list.isEmpty()) {
                 player.sendMessage(reported.map(name -> messages.get("none-for-player", Placeholder.unparsed("player", name)))
-                        .orElseGet(() -> messages.get("none")));
+                        .orElseGet(() -> messages.pick("none")));
                 return;
             }
             new ReportListMenu(this, messages, list, reported, page).open(player);

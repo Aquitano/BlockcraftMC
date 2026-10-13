@@ -35,11 +35,12 @@ public final class SignRenderer {
         var shared = BlockcraftApi.get().messages();
         String nameKey = "games." + statusSign.group() + ".name";
         var name = shared.has(nameKey) ? shared.get(nameKey) : readable(statusSign.group());
+        String joinKey = status.online() == 0 ? "sign.first" : "sign.click";
         var lines = java.util.List.of(
                 messages.get("sign.name", Placeholder.component("name", name)),
                 shared.get("game-status." + status.availability().name().toLowerCase(Locale.ROOT)),
                 messages.get("sign.players", Formatter.number("online", status.online()), Formatter.number("max", status.maxPlayers())),
-                messages.get(status.joinable() ? "sign.click" : "sign.retry"));
+                messages.get(status.joinable() ? joinKey : "sign.retry"));
         boolean changed = false;
         for (int index = 0; index < lines.size(); index++) {
             if (!front.line(index).equals(lines.get(index))) {

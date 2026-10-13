@@ -56,10 +56,15 @@ public final class ChatFormatListener implements Listener {
         var levelBadge = messages.get("chat.level", Formatter.number("level", level));
         // The proxy resolves the nick, so the hover and the /msg it suggests both go by the name others see.
         String shown = shownName(source);
-        var hover = HoverEvent.showText(Component.join(JoinConfiguration.newlines(), messages.getLines("chat.hover",
+        var hoverText = Component.join(JoinConfiguration.newlines(), messages.getLines("chat.hover",
                 Placeholder.component("rank", rank),
                 Placeholder.unparsed("name", shown),
-                Formatter.number("level", level))));
+                Formatter.number("level", level)));
+        String aside = "chat.level-asides." + level;
+        if (messages.has(aside)) {
+            hoverText = hoverText.append(Component.newline()).append(messages.get(aside));
+        }
+        var hover = HoverEvent.showText(hoverText);
         var click = ClickEvent.suggestCommand(PlainTextComponentSerializer.plainText()
                 .serialize(messages.get("chat.msg-command", Placeholder.unparsed("name", shown))));
         event.renderer((ChatRenderer) (player, displayName, message, viewer) -> messages.get("chat.format",
