@@ -27,6 +27,14 @@ The numbered keys under `coins.asides` and `chat.level-asides` determine which b
 an extra line. Set an entry to an empty string to hide it. `sign.first` controls the empty-group prompt.
 These details do not grant coins, XP, unlocks, or gameplay advantages.
 
+## Mirror duels
+
+Two consecutive draws against the same opponent unlock `[SPIEGEL]` for both players. An intervening duel with a
+different opponent or a decisive result breaks the sequence. The latest result for each account persists in
+`bc_duel_history`, while the tag and remembered opponents use `bc_unlocks`. The history update and both tag
+unlocks commit together. Later encounters give each duellist a private greeting using the other player's current
+displayed name. The tag is available in Extras without Premium.
+
 ## Death messages and kill credit
 
 QuickSG, EmeraldRush, and combat duels use the shared `death-lines` message pools. The lines distinguish falls,

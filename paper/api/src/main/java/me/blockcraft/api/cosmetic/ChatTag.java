@@ -19,6 +19,7 @@ public enum ChatTag {
     OG("og", true, false),
     RETRO("1up", true, false),
     EXPLORER("entdecker", true, false),
+    MIRROR("spiegel", true, false),
     EASTER_BUNNY("osterhase", true, false),
     NEW_YEAR("neujahr", true, true);
 

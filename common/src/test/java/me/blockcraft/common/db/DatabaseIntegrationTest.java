@@ -1,6 +1,7 @@
 package me.blockcraft.common.db;
 
 import me.blockcraft.common.elo.EloFormula;
+import me.blockcraft.common.duel.DuelHistoryRepository;
 import me.blockcraft.common.elo.EloRepository;
 import me.blockcraft.common.elo.Season;
 import me.blockcraft.common.moderation.PlayerAddressRepository;
@@ -84,6 +85,26 @@ public class DatabaseIntegrationTest {
 
     private int count(String sql, Object... params) {
         return db.queryOne(sql, row -> row.getInt(1), params).orElseThrow();
+    }
+
+    @Test
+    public void mirrorDuelsRequireBothPlayersConsecutiveDrawsAndUnlockBothTagsOnce() {
+        db.migrate();
+        var history = new DuelHistoryRepository(db);
+        var one = UUID.randomUUID();
+        var two = UUID.randomUUID();
+        var other = UUID.randomUUID();
+        assertFalse(history.familiar(one, two));
+        assertFalse(history.finish(UUID.randomUUID(), one, two, true));
+        assertTrue(history.familiar(two, one));
+        assertFalse(history.finish(UUID.randomUUID(), one, other, true));
+        assertFalse(history.finish(UUID.randomUUID(), two, one, true));
+        var round = UUID.randomUUID();
+        assertTrue(history.finish(round, one, two, true));
+        assertFalse(history.finish(round, two, one, true));
+        assertFalse(history.finish(UUID.randomUUID(), one, two, true));
+        assertEquals(2, count("SELECT COUNT(*) FROM bc_unlocks WHERE item = 'tag.spiegel'"));
+        assertFalse(history.finish(UUID.randomUUID(), one, two, false));
     }
 
     @Test

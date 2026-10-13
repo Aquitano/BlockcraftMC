@@ -13,6 +13,7 @@ import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Countdown;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.common.duel.DuelHistoryRepository;
 import me.blockcraft.duell.config.DuellConfig;
 import me.blockcraft.duell.config.Spawns;
 import net.kyori.adventure.text.Component;
@@ -57,6 +58,9 @@ public final class Duel {
     private final LobbyCountdown lobbyCountdown;
     private final DuelVote votes = new DuelVote();
     private final Rematch rematch;
+    private final DuelHistoryRepository history;
+    private final UUID roundId = UUID.randomUUID();
+    private List<UUID> duellists = List.of();
 
     private DuelMode mode;
     private boolean pvp;
@@ -82,6 +86,7 @@ public final class Duel {
         this.lobbyCountdown = new LobbyCountdown(plugin, round.arena(), config.countdowns().lobby(), MAX_PARTICIPANTS,
                 round::playerCount, this::startRound);
         this.rematch = new Rematch(plugin, messages, config.rematchWindow());
+        this.history = new DuelHistoryRepository(BlockcraftApi.get().database());
     }
 
     public boolean isLobby() {
@@ -212,7 +217,6 @@ public final class Duel {
         return config.maps(mode).get(map - 1);
     }
 
-    /** The next round's title goes to the killer alone; the victim reads who beat them instead. */
     public void handleDeath(PlayerDeathEvent event) {
         var victim = event.getPlayer();
         if (!isIngame() || !isParticipant(victim) || mode == DuelMode.SUPERJUMP) {
@@ -231,6 +235,7 @@ public final class Duel {
         }
     }
 
+    /** The next round's title goes to the killer alone; the victim reads who beat them instead. */
     private void handleVsKill(Player victim, Player killer) {
         vsRound++;
         summary.awardKill(killer, victim, Defeat.POINT);
@@ -335,7 +340,9 @@ public final class Duel {
     }
 
     private void startRound() {
+        duellists = round.players().stream().map(Player::getUniqueId).toList();
         round.enter(GamePhase.INGAME);
+        recognizeOpponents();
         Bukkit.broadcast(messages.get("lobby.started"));
         var playable = new EnumMap<DuelMode, List<Integer>>(DuelMode.class);
         for (var candidate : DuelMode.values()) {
@@ -424,6 +431,7 @@ public final class Duel {
     private void startRestart() {
         frozen = false;
         if (round.end(Math.max(config.countdowns().restart(), Math.toIntExact(config.rematchWindow().toSeconds()) + 2))) {
+            rememberResult();
             refreshScoreboards();
             var duellists = round.players();
             if (duellists.size() == MAX_PARTICIPANTS) {
@@ -431,6 +439,36 @@ public final class Duel {
                 rematch.offer(duellists.get(1), duellists.get(0));
             }
         }
+    }
+
+    private void recognizeOpponents() {
+        if (duellists.size() != MAX_PARTICIPANTS) {
+            return;
+        }
+        var first = duellists.getFirst();
+        var second = duellists.getLast();
+        Tasks.async(plugin, () -> history.familiar(first, second), familiar -> {
+            var one = Bukkit.getPlayer(first);
+            var two = Bukkit.getPlayer(second);
+            if (familiar && isIngame() && one != null && two != null && isParticipant(one) && isParticipant(two)
+                    && one.canSee(two) && two.canSee(one)) {
+                one.sendMessage(messages.get("mirror.familiar", Placeholder.unparsed("opponent", two.getName())));
+                two.sendMessage(messages.get("mirror.familiar", Placeholder.unparsed("opponent", one.getName())));
+            }
+        });
+    }
+
+    private void rememberResult() {
+        if (duellists.size() != MAX_PARTICIPANTS) {
+            return;
+        }
+        boolean draw = summary.winnerNames().isEmpty();
+        Tasks.async(plugin, () -> history.finish(roundId, duellists.getFirst(), duellists.getLast(), draw), mirror -> {
+            if (mirror) {
+                duellists.stream().map(Bukkit::getPlayer).filter(java.util.Objects::nonNull).forEach(player ->
+                        player.sendMessage(messages.get("mirror.inspection")));
+            }
+        });
     }
 
     /** The round books the loss of everyone the winner beat; the rating moves here. */

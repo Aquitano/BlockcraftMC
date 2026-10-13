@@ -155,3 +155,7 @@ rematch:
   accept-hover: "<muted>Klicke, um die Revanche gegen <white><opponent> <muted>anzunehmen."
   waiting: "<prefix><muted>Deine Anfrage steht, jetzt ist <white><opponent> <muted>am Zug."
   gone: "<prefix><muted>Dein Gegner ist schon weg, die Revanche muss warten."
+
+mirror:
+  familiar: "<prefix><muted>Den Kampfstil von <accent><opponent> <muted>kennst du schon. Willkommen zur nächsten Begegnung."
+  inspection: "<prefix><muted>Zweimal unentschieden? Der Schiedsrichter verlangt eine Spiegelkontrolle. Euer Tag <dark>[<primary>SPIEGEL<dark>] <muted>wartet in den Lobby-Extras."
