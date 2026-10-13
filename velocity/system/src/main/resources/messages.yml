@@ -18,11 +18,13 @@ player-unknown: "<prefix><error>Der Spieler <accent><player> <error>ist unbekann
 no-permission: "<prefix><error>Dazu hast du keine Berechtigung."
 request-failed: "<prefix><error>Die Anfrage konnte nicht ausgeführt werden. Bitte melde das dem Team."
 command-blocked: "<prefix><error>Nicht verfügbar!"
-command-blocked.pl: "<muted>Plugins (6): <success>Kaffee, Geduld, Redstone, Kevos, Spaghetti, Tagebuch"
-command-blocked.pl-again: "<muted>Immer noch Kaffee."
-command-blocked.version:
-  - "<muted>Dieser Server läuft auf <primary>Blockcraft 1.8.9-nostalgie <muted>(MC: 26.2)"
-  - "<muted>Neueste Version? Für uns schon."
+# Blocked commands that answer with a line of their own instead of command-blocked, picked anew on every try.
+blocked-replies:
+  pl: &plugins
+    - "<muted>Plugins (6): <success>Kaffee, Geduld, Redstone, Kevos, Spaghetti, Tagebuch"
+    - "<muted>Plugins (6): <success>Kaffee, Kaffee, Kaffee, Kaffee, Kaffee, Kaffee"
+  plugins: *plugins
+  version: "<muted>Dieser Server läuft auf <primary>Blockcraft 1.8.9-nostalgie <muted>(MC: 26.2). Neueste Version? Für uns schon."
 kicked-to-lobby: "<prefix><muted>Deine <error>Verbindung <muted>zum Server <error><server><muted> wurde getrennt. Grund: <error><reason>"
 resource-pack:
   prompt: "<primary><ip> <muted>sieht mit unserem Texturenpaket am besten aus: <white>eigene Menüs und Symbole<muted>. Ohne geht es auch."

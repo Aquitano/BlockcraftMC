@@ -15,7 +15,7 @@ plugin's `messages.yml`. Existing configuration files inherit missing keys from 
 | QuickSG | Consuming the full-food item rotates the hunger confirmation. |
 | ReportsMenu | An empty report list rotates its staff-only confirmation. Messages about individual reports and punishments keep their existing wording. |
 | StatusSigns | A joinable group with zero players shows `Klick: Erster!`. Clicking still joins that group. |
-| BlockcraftSystem | `/ping` rotates its reply and always shows the measured ping. Sending a message or party invitation to yourself gets a different refusal. |
+| BlockcraftSystem | `/ping` rotates its reply and always shows the measured ping. Sending a message or party invitation to yourself gets a different refusal. A blocked command with lines under `blocked-replies`, such as `/pl` or `/version`, answers with one of them instead of the plain refusal. |
 
 `Messages.pick` selects one line from a YAML list when an action occurs. Existing server-edited scalar messages
 remain valid. The new rotating keys are `afk.back`, `food.done`, `npc.hurt`, `quirks.egg-collected`, `round.draw`,
@@ -211,7 +211,7 @@ Before deploying, verify these interactions with Minecraft clients on a local te
   after ten seconds and be consumed by the first death. Check one shared curiosity line at the end.
 - Exercise all six moment conditions. A failed shop purchase must preserve Minimalist; a completed free purchase
   must disqualify it. Water and lava resets must disqualify Trittsicher. Cancelled damage must preserve Makellos.
-- Run `/pl` three times and `/version` as a regular player, then check the real responses with the staff bypass.
+- Run `/pl` a few times and `/version` as a regular player, then check the real responses with the staff bypass.
   The blocked commands must remain absent from regular-player tab completion.
 - Enter the Konami code and select its earned tag with a non-Premium account.
 - Complete the configured course, fall at a checkpoint, and retry to confirm the best time and leaderboard.
