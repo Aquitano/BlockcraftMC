@@ -6,10 +6,10 @@ import me.blockcraft.common.message.Messages;
 
 import java.util.List;
 
-/** Rotates through the network hints (TeamSpeak, YouTuber, Discord, shop, report, support) on every tick. */
+/** Rotates through the network's useful tips and secret hints. */
 public final class AutoBroadcast implements Runnable {
 
-    private static final List<String> KEYS = List.of("teamspeak", "youtuber", "discord", "premium", "report", "support");
+    private static final List<String> KEYS = List.of("friends", "report", "discord", "pond", "retro", "secrets");
 
     private final ProxyServer proxy;
     private final Messages messages;

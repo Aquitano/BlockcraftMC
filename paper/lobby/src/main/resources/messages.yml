@@ -46,7 +46,7 @@ friends:
   online: "<arrow><success><player>"
   online-lore:
     - "<bullet><muted>Auf <accent><server>"
-    - "<bullet><success>Linksklick <dark>● <muted>Zu ihm springen"
+    - "<bullet><success>Linksklick <dark>● <muted>Zu <accent><player> <muted>springen"
     - "<bullet><accent>Rechtsklick <dark>● <muted>In die Party einladen"
   watching-lore:
     - "<bullet><muted>Spielt gerade auf <accent><server>"
@@ -182,8 +182,8 @@ cosmetics:
   selected: "<success>Kosmetik ausgerüstet."
 shop:
   completed: "<success>Kauf abgeschlossen."
-  premium-activating: "<muted>Premium wird aktiviert..."
-  pending: "<muted>Kauf wird verarbeitet..."
+  premium-activating: "<muted>Premium wird aktiviert…"
+  pending: "<muted>Kauf wird verarbeitet…"
   confirm-price: "<muted>Preis <dark>· <accent><coins> Coins"
   confirm-balance: "<muted>Dein Guthaben <dark>· <accent><coins> Coins"
   confirm-remaining: "<muted>Nach dem Kauf <dark>· <success><coins> Coins"
@@ -365,7 +365,7 @@ lobbies:
   join-lore: "<bullet><muted><online>/<max> Spieler <dark>● <muted>Klicke zum Wechseln"
   current-lore: "<bullet><muted><online>/<max> Spieler <dark>● <success>Du bist hier"
   already: "<prefix><muted>Du bist bereits auf dieser Lobby."
-  connecting: "<prefix><muted>Du wirst auf <primary><server> <muted>verbunden..."
+  connecting: "<prefix><muted>Du wirst auf <primary><server> <muted>verbunden…"
 trails:
   title: "<arrow><primary>Spuren"
   remove: "<arrow><error>Effekt entfernen"

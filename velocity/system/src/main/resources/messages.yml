@@ -18,6 +18,11 @@ player-unknown: "<prefix><error>Der Spieler <accent><player> <error>ist unbekann
 no-permission: "<prefix><error>Dazu hast du keine Berechtigung."
 request-failed: "<prefix><error>Die Anfrage konnte nicht ausgeführt werden. Bitte melde das dem Team."
 command-blocked: "<prefix><error>Nicht verfügbar!"
+command-blocked.pl: "<muted>Plugins (6): <success>Kaffee, Geduld, Redstone, Kevos, Spaghetti, Tagebuch"
+command-blocked.pl-again: "<muted>Immer noch Kaffee."
+command-blocked.version:
+  - "<muted>Dieser Server läuft auf <primary>Blockcraft 1.8.9-nostalgie <muted>(MC: 26.2)"
+  - "<muted>Neueste Version? Für uns schon."
 kicked-to-lobby: "<prefix><muted>Deine <error>Verbindung <muted>zum Server <error><server><muted> wurde getrennt. Grund: <error><reason>"
 resource-pack:
   prompt: "<primary><ip> <muted>sieht mit unserem Texturenpaket am besten aus: <white>eigene Menüs und Symbole<muted>. Ohne geht es auch."
@@ -29,6 +34,9 @@ help:
   - "  <primary>/report <muted>- <white>Reporte einen verdächtigen Spieler!"
   - "  <primary>/msg <muted>- <white>Sende einem Spieler eine private Nachricht!"
   - "  <primary>/party <muted>- <white>Erstelle eine Party!"
+  - "  <primary>/friend <muted>- <white>Verwalte Freunde oder schau ihrer Runde zu."
+  - "  <primary>/ignore <muted>- <white>Verwalte deine ignorierten Spieler."
+  - "  <primary>/discord <muted>- <white>Öffne den Discord-Link oder verknüpfe deinen Account."
   - "  <primary>/premium /yt <muted>- <white>Erhalte Infos zu den Rängen!"
   - ""
 
@@ -57,7 +65,7 @@ login:
   full:
     - "<prefix><muted>Das maximale <error>Spielerlimit <muted>von <error><max> <muted>ist erreicht."
     - "<error>"
-    - "<muted>Nur noch <error>Spieler <muted>mit dem <error>PremiumRang <muted>können noch <error>Joinen!"
+    - "<muted>Nur noch <error>Spieler <muted>mit dem <error>Premium-Rang <muted>können noch <error>beitreten."
     - "<muted>Discord: <error><discord>"
   error:
     - "<prefix><muted>Die Datenbank von <error><ip> <muted>ist derzeit nicht erreichbar."
@@ -77,36 +85,12 @@ tab:
     - "<muted>"
 
 broadcast:
-  teamspeak:
-    - " "
-    - "          <muted>Unsere <success>TeamSpeak<muted> IP:"
-    - "               <success><teamspeak>"
-    - " "
-  youtuber:
-    - " "
-    - "          <muted>Interesse am <dark_purple>YouTuber <muted>Rang?"
-    - "                  <success>/youtuber"
-    - " "
-  discord:
-    - " "
-    - "           <muted>Unser <success>Discord<muted>:"
-    - "                  <success><discord>"
-    - " "
-  premium:
-    - " "
-    - "           <muted>Interesse an einem Rang (<gold>Premium<muted>)?"
-    - "                   <muted>Besuche <success><shop>"
-    - " "
-  report:
-    - " "
-    - "           <muted>Du hast einen <error>Hacker <muted>gesehen?"
-    - "                   <muted>Reporte ihn mit <accent>/report \\<Spieler> \\<Grund>"
-    - " "
-  support:
-    - " "
-    - "          <muted>Du hast <error>Fragen <muted>oder <error>Probleme?"
-    - "               <muted> Nutze <success>/support"
-    - " "
+  friends: "<primary>Wusstest du? <bullet><muted>Mit /friend jump schaust du der Runde eines Freundes zu."
+  report: "<primary>Wusstest du? <bullet><muted>Mit /report meldest du verdächtiges Verhalten direkt dem Team."
+  discord: "<primary>Wusstest du? <bullet><muted>Über /discord findest du Hilfe und Neuigkeiten."
+  pond: "<primary>Wusstest du? <bullet><muted>Im Teich soll ein goldener Karpfen leben. Geduld hilft."
+  retro: "<primary>Wusstest du? <bullet><muted>Manche Tastenfolgen sind älter als Minecraft."
+  secrets: "<primary>Wusstest du? <bullet><muted>Der Villager hat Quittungen verloren. Frag den Teich."
 
 motd:
   maintenance-version: "<error>Wartungsmodus <muted><online><dark>/<muted><max>"
@@ -132,7 +116,7 @@ motd:
   list-default: "<prefix><primary>Default-Motd: <muted><motd>"
   list-empty: "<prefix><muted>Es sind keine Random-Motds eingetragen. Füge eine mit <accent>/motd add \\<motd> <muted>hinzu."
   list-entry: "<prefix><number>: <muted><motd>"
-  cleared: "<prefix><count> Random-Motds wurden erfolgreich gelöscht!"
+  cleared: "<prefix><muted><count> Random-Motds wurden erfolgreich gelöscht!"
   default-set: "<prefix><muted>Die Default-Motd wurde erfolgreich zu \"<white><motd><muted>\" geändert!"
   added: "<prefix><muted>Die Motd \"<white><motd><muted>\" wurde erfolgreich hinzugefügt!"
   removed: "<prefix><muted>Die Motd \"<white><motd><muted>\" wurde erfolgreich gelöscht!"
@@ -200,12 +184,12 @@ tempban:
 mute:
   use-strafe: "<prefix><muted>Nutze <error>/strafe \\<Name> \\<Grund>"
   notify:
-    - "<prefix><muted>Der Spieler <error><player> <muted>wurde <muted>gemuted."
+    - "<prefix><muted>Der Spieler <error><player> <muted>wurde <muted>gemutet."
     - "<prefix><muted>Grund: <error><reason>"
     - "<prefix><muted>Von: <error><issuer>"
     - "<prefix><muted>Verbleibende Zeit: <error><remaining>"
   screen-temporary:
-    - "<muted>Du wurdest vom <primary><ip> Netzwerk <muted>gemuted."
+    - "<muted>Du wurdest vom <primary><ip> Netzwerk <muted>gemutet."
     - " <muted>Grund: <success><reason> "
     - " "
     - " <muted>Verbleibende Zeit: <success>"
@@ -216,7 +200,7 @@ mute:
     - " <muted>oder auf dem TeamSpeak:"
     - " <accent><teamspeak>"
   screen-permanent:
-    - "<muted>Du wurdest vom <primary><ip> Netzwerk <muted>gemuted."
+    - "<muted>Du wurdest vom <primary><ip> Netzwerk <muted>gemutet."
     - " <muted>Grund: <success><reason> "
     - " "
     - " <muted>Dieser Mute ist <error>permanent<muted>: Er läuft nicht ab"
@@ -229,17 +213,17 @@ mute:
   check-failed: "<prefix><error>Deine Nachricht konnte gerade nicht geprüft werden. Versuche es gleich noch einmal."
 unmute:
   usage: "<prefix><muted>Ausführung:<error> /unmute \\<Spieler>"
-  not-muted: "<prefix><muted>Dieser <error>Spieler<muted> ist nicht gemuted."
-  done: "<prefix><muted>Dieser <error>Spieler <muted>wurde erfolgreich entmuted."
+  not-muted: "<prefix><muted>Dieser <error>Spieler<muted> ist nicht gemutet."
+  done: "<prefix><muted>Dieser <error>Spieler <muted>wurde erfolgreich entmutet."
   notify:
-    - "<prefix>Der Spieler <error><player> <muted>wurde von <error><issuer> <muted>entmuted."
+    - "<prefix><muted>Der Spieler <error><player> <muted>wurde von <error><issuer> <muted>entmutet."
 tempmute:
   usage: "<prefix><error>Ausführung: /tempmute \\<Spieler> \\<Dauer> \\<Grund>"
-  already-muted: "<prefix><error>Dieser Spieler ist bereits gemuted."
+  already-muted: "<prefix><error>Dieser Spieler ist bereits gemutet."
   units:
     - "<prefix><muted>Die Dauer ist ein Wort aus Zahl und Einheit, zum Beispiel <error>30m<muted>, <error>12h <muted>oder <error>16d<muted>."
     - "<prefix><muted>Einheiten: <error>s <muted>| <error>m <muted>| <error>h <muted>| <error>d <muted>| <error>w <muted>| <error>mon <muted>| <error>y"
-  done: "<prefix><muted>Du hast den Spieler <error><player><muted> erfolgreich gemuted."
+  done: "<prefix><muted>Du hast den Spieler <error><player><muted> erfolgreich gemutet."
 
 banlist:
   empty: "<prefix><accent>Derzeit sind keine Spieler gebannt."
@@ -247,8 +231,8 @@ banlist:
   entry: "<prefix><error><player> <dark>| <muted>/check<error> <player>"
   count: "<prefix><muted>Gebannte Spieler: <accent><count>"
 mutelist:
-  empty: "<prefix><muted>Es sind derzeit keine <error>Spieler <muted>gemuted."
-  header: "<prefix><muted>Diese <error>Spieler <muted>sind derzeit Gemuted:"
+  empty: "<prefix><muted>Es sind derzeit keine <error>Spieler <muted>gemutet."
+  header: "<prefix><muted>Diese <error>Spieler <muted>sind derzeit gemutet:"
   entry: "<prefix><error><player> <dark>| <muted>/check <player>"
   count: "<prefix><muted>Gemutete Spieler: <accent><count>"
 
@@ -290,7 +274,7 @@ check:
   not-muted:
     - "<prefix><dark><strikethrough>---------------------------------"
     - ""
-    - "<prefix><muted>Der Spieler ist nicht gemuted."
+    - "<prefix><muted>Der Spieler ist nicht gemutet."
     - ""
     - "<prefix><dark><strikethrough>---------------------------------"
     - ""
@@ -357,7 +341,7 @@ stafflog:
 strafe:
   unknown-number: "<error><bold>Strafe <arrow><reset><error>Diese Nummer ist unbekannt."
   unbannable: "<error><bold>Strafe <arrow><reset><error>Du kannst diesen Spieler nicht bannen!"
-  overwrite: "<error><bold>Strafe <arrow><reset><error>Dieser Spieler wurde bereits bestraft. Seine Strafe wird nun überschrieben..."
+  overwrite: "<error><bold>Strafe <arrow><reset><error>Dieser Spieler wurde bereits bestraft. Seine Strafe wird nun überschrieben…"
   done: "<error><bold>Strafe <arrow><reset><success>Du hast den Spieler erfolgreich bestraft."
   list:
     - "<error><bold>Hack Strafen"
@@ -399,7 +383,7 @@ strike:
   ban-reason: "Strike-Überschreitung"
   ban-issuer: "StrikeSystem"
 strikes:
-  not-collected: "<prefix><error>Es werden keine Informationen über dich gesammelt..."
+  not-collected: "<prefix><error>Es werden keine Informationen über dich gesammelt…"
   header: "<prefix><muted>Die Strikes von <accent><player>"
   count: "<prefix><muted>Strikes: <error><count>"
   entry: "<prefix><muted>Grund<number>: <white><reason> <dark>(<muted><issuer><dark>)"
@@ -418,7 +402,7 @@ warn:
   protected: "<prefix><muted>Du kannst diesen<error> Spieler<muted> nicht warnen."
   offline: "<prefix><muted>Der <error>Spieler<muted> wurde nicht gefunden oder ist offline! "
   offline-click: "<success>Hier klicken<error>, um \"<accent><player><error>\" trotzdem zu warnen."
-  offline-hover: "<success><player> trotzdem warnen..."
+  offline-hover: "<success><player> trotzdem warnen…"
   broadcast: "<muted>Der Spieler <error><bold>\"<player>\"<reset><muted> bekam einen <accent>Warn <dark>(<accent><count><dark>/<accent><max><dark>)<muted>."
   broadcast-reason: "<muted>Der Spieler <error><bold>\"<player>\"<reset><muted> bekam einen <accent>Warn <dark>(<accent><count><dark>/<accent><max><dark>)<muted>. Grund: <accent><reason>"
   you-have: "<prefix><muted>Du hast <error><count><dark>/<accent><max> <muted>Warns."
@@ -429,14 +413,14 @@ warn:
     - "<prefix><error>Der Spieler <accent><player><error> sollte jetzt, wegen"
     - "<prefix><error>zuvielen <accent>Warns<error> gebannt <error>werden."
   ban-click: "<success>Hier klicken<error>, um eine Strafe für \"<accent><player><error>\" zu wählen."
-  ban-hover: "<success>/strafe <player> öffnen..."
+  ban-hover: "<success>/strafe <player> öffnen…"
 warns:
   usage: "<prefix><error>/warns \\<clear|get|list> [player]"
   clear-all-confirm: "<success>Hier klicken<error>, um das Zurücksetzen aller Warns zu bestätigen."
   clear-confirm: "<success>Hier klicken<error>, um das Zurücksetzen der Warns von \"<accent><player><error>\" zu bestätigen."
-  clear-hover: "<success>Alle Warns zurücksetzen..."
-  cleared-all: "<prefix><success>Alle Warns wurden erfolgreich resetet."
-  cleared: "<prefix><success>Die <accent>Warns (<count> Warns) <success>von \"<accent><player><success>\", wurden erfolgreich resetet."
+  clear-hover: "<success>Alle Warns zurücksetzen…"
+  cleared-all: "<prefix><success>Alle Warns wurden erfolgreich zurückgesetzt."
+  cleared: "<prefix><success>Die <accent>Warns (<count> Warns) <success>von \"<accent><player><success>\", wurden erfolgreich zurückgesetzt."
   get: "<prefix><success>Verwarnungen von <accent><player><success>: <accent><count><success>."
   entry: "<prefix><muted>#<number> <dark>| <white><reason> <dark>| <muted>von <accent><issuer>"
   no-reason: "<muted>ohne Grund"
@@ -448,7 +432,7 @@ werbung:
   too-many: "<prefix><error>Die Server können nicht angezeigt werden. Grund:<accent> Zu viele Server."
   header: "<prefix><dark>---------<primary>Es sind <count> Server gefunden.<dark>----------"
   entry: "<prefix><error><player> <muted>(<server>): <error><message>"
-  cleared: "<prefix><count> Server wurden gefunden."
+  cleared: "<prefix><muted><count> Server wurden gefunden."
 
 tc:
   online-header: "<error>TeamChat <arrow><reset><muted>Im TeamChat sind gerade diese Spieler:"
@@ -482,11 +466,11 @@ alts:
     - " <muted>Ist das ein Irrtum? Melde dich im Forum:"
     - " <primary><website>/Forum"
 find:
-  usage: "<prefix>Syntax: /find \\<Spieler>"
+  usage: "<prefix><muted>Syntax: /find \\<Spieler>"
   found: "<prefix><success>Der Spieler befindet sich auf dem Server <accent><server><success>."
   offline: "<prefix><accent>Der Spieler ist nicht online."
 goto:
-  usage: "<prefix>Syntax: /goto \\<Spieler>"
+  usage: "<prefix><muted>Syntax: /goto \\<Spieler>"
   offline: "<prefix><accent>Der Spieler ist nicht online."
 cc:
   cleared: "<prefix><muted>Der <success>Chat <muted>wurde geleert!"
@@ -614,11 +598,11 @@ ignore:
     - "<prefix><muted>Nicht mehr ignorieren: <accent>/unignore \\<Spieler>"
     - "<prefix><muted>Deine Liste: <accent>/ignore list"
   unknown: "<prefix><error>Den Spieler <accent><player> <error>kennt das Netzwerk nicht."
-  self: "<prefix><error>Du kannst dich nicht selbst ignorieren."
+  self: "<prefix><muted>Manchmal wäre das schön. Geht aber nicht."
   staff: "<prefix><error>Teammitglieder kannst du nicht ignorieren."
   already: "<prefix><muted>Du ignorierst <accent><player> <muted>bereits."
   full: "<prefix><error>Du ignorierst schon <accent><max> <error>Spieler."
-  added: "<prefix><success>Du ignorierst jetzt <accent><player><success> und bekommst keine Nachrichten, Einladungen oder Anfragen mehr von ihm."
+  added: "<prefix><success>Du ignorierst jetzt <accent><player><success> und bekommst keine Nachrichten, Einladungen oder Anfragen mehr von <accent><player><success>."
   not-ignored: "<prefix><error>Du ignorierst <accent><player> <error>nicht."
   removed: "<prefix><success>Du ignorierst <accent><player> <success>nicht mehr."
   list-empty: "<prefix><muted>Du ignorierst niemanden."
@@ -748,7 +732,7 @@ friends:
   usage-remove: "<primary>Freunde <arrow><reset><muted>Verwende: <accent>/friend remove \\<Spieler>"
   usage-jump: "<primary>Freunde <arrow><reset><muted>Verwende: <accent>/friend jump \\<Spieler>"
   unknown: "<primary>Freunde <arrow><reset><error>Den Spieler <accent><player> <error>kennt das Netzwerk nicht."
-  self: "<primary>Freunde <arrow><reset><error>Du kannst dich nicht selbst hinzufügen."
+  self: "<primary>Freunde <arrow><reset><muted>Du bist schon dein bester Freund."
   already: "<primary>Freunde <arrow><reset><muted><player> <muted>ist bereits dein Freund."
   full: "<primary>Freunde <arrow><reset><error>Du hast schon <accent><max> <error>Freunde."
   target-full: "<primary>Freunde <arrow><reset><error><player> <error>hat die Freundesliste voll."

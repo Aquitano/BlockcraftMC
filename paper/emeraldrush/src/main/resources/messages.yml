@@ -23,7 +23,7 @@ join:
 lobby:
   welcome:
     - " "
-    - "<muted>Sammle bei <aqua>EmeraldRush <muted>möglichst viele Emeralds!"
+    - "<muted>Sammle bei <emeraldrush>EmeraldRush <muted>möglichst viele Emeralds!"
     - "<muted>Pro Emerald, den du sammelst, erhältst du <emeralds> Punkte."
     - "<muted>Nutze sie, um mit dem Villager zu handeln und rüste"
     - "<muted>dich für das große Deathmatch gut aus!"
@@ -165,12 +165,12 @@ shop:
     potions: "Tränke"
     special: "Spezial"
   nav:
-    weapons: "<arrow><aqua>Waffen"
-    chain: "<arrow><aqua>Chain"
-    iron: "<arrow><aqua>Eisen"
-    potions: "<arrow><aqua>Tränke"
-    special: "<arrow><aqua>Spezial"
-    enchant: "<arrow><aqua>Verzaubern"
+    weapons: "<arrow><primary>Waffen"
+    chain: "<arrow><primary>Chain"
+    iron: "<arrow><primary>Eisen"
+    potions: "<arrow><primary>Tränke"
+    special: "<arrow><primary>Spezial"
+    enchant: "<arrow><primary>Verzaubern"
   item:
     chain-helmet: "<arrow><primary>Chain Helm"
     chain-chestplate: "<arrow><primary>Chain Brustpanzer"
@@ -194,9 +194,9 @@ shop:
     golden-apple: "<arrow><accent>Goldapfel"
     level: "<arrow><accent>1 Verzauberungslevel"
     lapis: "<arrow><primary>Lapis"
-    angel: "<arrow><aqua>Angel"
-    lucky-potion: "<arrow><aqua>LuckyPotion"
-    strength: "<arrow><aqua>Stärke-Trank"
+    angel: "<arrow><primary>Angel"
+    lucky-potion: "<arrow><primary>LuckyPotion"
+    strength: "<arrow><primary>Stärke-Trank"
 menu:
   stats:
     title: "<arrow><primary>Stats"
@@ -207,11 +207,11 @@ menu:
       - "<arrow><primary>Tode<dark>: <muted><deaths>"
       - "<arrow><primary>Kills<dark>: <muted><kills>"
       - "<arrow><primary>Punkte<dark>: <muted><points>"
-    global: "<arrow><aqua>Globale Stats"
+    global: "<arrow><primary>Globale Stats"
   global-stats:
     title: "<arrow><primary>Globale Stats"
-    wins: "<arrow><aqua>Siege"
-    deaths: "<arrow><aqua>Tode"
-    kills: "<arrow><aqua>Kills"
-    losses: "<arrow><aqua>Niederlagen"
-    points: "<arrow><aqua>Punkte"
+    wins: "<arrow><primary>Siege"
+    deaths: "<arrow><primary>Tode"
+    kills: "<arrow><primary>Kills"
+    losses: "<arrow><primary>Niederlagen"
+    points: "<arrow><primary>Punkte"

@@ -48,7 +48,7 @@ timer:
 
 superjump:
   checkpoint: "<prefix><white><player><muted> hat Checkpoint <accent><checkpoint> <muted>erreicht!"
-  goal: "<prefix><white><player><muted> hat das <aqua>Ziel <muted>erreicht!"
+  goal: "<prefix><white><player><muted> hat das <primary>Ziel <muted>erreicht!"
 
 title:
   freeze: "<primary><seconds>"
@@ -58,7 +58,7 @@ title:
 
 setspawn:
   spawn: "<prefix><muted>Spawn gesetzt."
-  map: "<prefix><muted><mode> Spawn, Map <gold><map><muted> Spieler <gold><player> <muted>gesetzt."
+  map: "<prefix><muted><mode> Spawn, Map <accent><map><muted> Spieler <accent><player> <muted>gesetzt."
   usage: "<prefix><error>/setspawn <spawn|1vs1<map>p<1-2>|SG<map>p<1-2>|SJ<map>p<1-2>>"
 
 top:
@@ -109,14 +109,14 @@ menu:
       - "<arrow><primary>K/D<dark>: <muted><kdr>"
       - "<arrow><primary>Liga<dark>: <group>"
       - "<arrow><primary>Elo<dark>: <muted><rating>"
-    global: "<arrow><aqua>Globale Stats"
+    global: "<arrow><primary>Globale Stats"
   global-stats:
     title: "<arrow><primary>Globale Stats"
-    wins: "<arrow><aqua>Siege"
-    deaths: "<arrow><aqua>Tode"
-    kills: "<arrow><aqua>Kills"
-    losses: "<arrow><aqua>Niederlagen"
-    points: "<arrow><aqua>Punkte"
+    wins: "<arrow><primary>Siege"
+    deaths: "<arrow><primary>Tode"
+    kills: "<arrow><primary>Kills"
+    losses: "<arrow><primary>Niederlagen"
+    points: "<arrow><primary>Punkte"
 
 scoreboard:
   spectator: "<muted><icon:spectator> ZUSCHAUER"

@@ -107,7 +107,7 @@ heal:
   other: "<prefix><accent><player> <muted>wurde geheilt."
 invsee:
   usage: "<prefix><error>Benutze /invsee [Spieler]"
-  opened: "<prefix>Du siehst nun das Inventar von <white><player>"
+  opened: "<prefix><muted>Du siehst nun das Inventar von <white><player>"
   failed: "<prefix><error>Das Inventar von <white><player> <error>konnte nicht geöffnet werden."
   read-only: "<prefix><muted>Nur ansehen: zum Verändern fehlt dir die Berechtigung."
 lag:
@@ -166,7 +166,7 @@ back:
   none: "<prefix><error>Du wurdest noch von keinem Teleport-Befehl bewegt."
   none-other: "<prefix><error><player> <muted>wurde noch von keinem Teleport-Befehl bewegt."
   done: "<prefix><muted>Du bist zurück an deinem vorherigen Ort."
-  other: "<prefix><accent><player> <muted>ist zurück an seinem vorherigen Ort."
+  other: "<prefix><accent><player> <muted>ist wieder am vorherigen Ort."
 near:
   header: "<prefix><muted>Spieler im Umkreis von <accent><radius> <muted>Blöcken: <accent><count>"
   entry: "<bullet><accent><player> <dark>(<muted><distance> Blöcke<dark>)"
@@ -218,7 +218,7 @@ freeze:
   subtitle: "<muted>Bleib stehen und komm auf den TeamSpeak!"
   reminder:
     - "<prefix><error>Du wurdest von einem Teammitglied eingefroren!"
-    - "<prefix><muted>Komm jetzt auf den TeamSpeak: <aqua><teamspeak>"
+    - "<prefix><muted>Komm jetzt auf den TeamSpeak: <primary><teamspeak>"
     - "<prefix><muted>Wer die Verbindung trennt, wird gebannt."
   no-commands: "<prefix><error>Eingefroren: nur /msg und /r sind erlaubt."
   left-while-frozen: "<prefix><error><player> <muted>hat den Server eingefroren verlassen!"
@@ -231,9 +231,9 @@ staff:
   no-reports: "<prefix><error>Die Report-Übersicht gibt es nur in der Lobby."
   spectating: "<prefix><muted>Du schaust <accent><player> <muted>zu. Schleichen beendet das Zuschauen."
   item:
-    random: "<aqua>Zufälliger Spieler"
+    random: "<primary>Zufälliger Spieler"
     freeze: "<primary>Freeze <muted>(Rechtsklick auf Spieler)"
-    invsee: "<gold>Invsee <muted>(Rechtsklick auf Spieler)"
+    invsee: "<accent>Invsee <muted>(Rechtsklick auf Spieler)"
     info: "<primary>Spielerinfo <muted>(Rechtsklick auf Spieler)"
     spectate: "<primary>Zuschauen <muted>(Rechtsklick auf Spieler)"
     reports: "<accent>Reports"
@@ -258,7 +258,7 @@ team:
   help-header:
     - ""
     - "<bullet><primary>DEINE BEFEHLE AUF DIESEM SERVER <dark>●"
-  help-entry: "  <aqua>/<command> <dark>- <muted><description>"
+  help-entry: "  <primary>/<command> <dark>- <muted><description>"
   help-footer:
     - ""
 rank:
@@ -291,10 +291,10 @@ mute:
 login:
   retry: "<error>Deine Daten konnten gerade nicht geladen werden. <muted>Bitte versuche es gleich noch einmal."
 globalmute:
-  blocked: "<dark_aqua>Dir wird es derzeit verweigert, im <accent>Chat <dark_aqua>zu schreiben. <accent>GlobalMute <dark_aqua>ist aktiv."
+  blocked: "<prefix><muted>Der Chat ist gerade für alle deaktiviert. <accent>GlobalMute <muted>ist aktiv."
 chat:
   format: "<level><tag><rank><name> <arrow><white><message>"
-  level: "<dark>[<aqua><level><dark>] "
+  level: "<dark>[<primary><level><dark>] "
   nick-real: " <dark>(<muted><real><dark>)"
   mention: "<accent><mention>"
   hover:
@@ -308,24 +308,24 @@ chat:
     42: "<dark>Die Antwort steht hier. Die Frage ist im Teich versunken."
     64: "<dark>Ein ganzer Stack Erfahrung. Bitte nicht mit Rechtsklick teilen."
     100: "<dark>Dreistellig. Der Villager hätte jetzt gern ein Autogramm."
-  spam: "<prefix><error>Bitte warte einen Moment... Verdacht auf Spam!"
+  spam: "<prefix><error>Bitte warte einen Moment… Verdacht auf Spam!"
   slow: "<prefix><error>Der Chat ist verlangsamt. <muted>Du kannst alle <accent><seconds> Sekunden <muted>eine Nachricht schreiben."
   word-filtered: "<prefix><muted>Deine Chatnachricht wurde gefiltert. <error>Grund: Gesperrtes Wort."
   filtered-notify: "<prefix><muted>Der Spieler <error><player><muted> hat geschrieben: <error><message> <muted>auf <error><server>"
   actions:
-    goto: "<dark>[<aqua>Goto<dark>]"
+    goto: "<dark>[<primary>Goto<dark>]"
     goto-hover: "<muted>Bringt dich auf den Server von <accent><player>"
-    tempmute: "<dark>[<gold>Mute<dark>]"
-    tempmute-hover: "<muted>Schlägt <aqua>/tempmute <player> <muted>vor; Dauer und Grund ergänzt du"
+    tempmute: "<dark>[<accent>Mute<dark>]"
+    tempmute-hover: "<muted>Schlägt <primary>/tempmute <player> <muted>vor; Dauer und Grund ergänzt du"
     strafe: "<dark>[<error>Strafe<dark>]"
-    strafe-hover: "<muted>Schlägt <aqua>/strafe <player> <muted>vor; die Nummer ergänzt du"
+    strafe-hover: "<muted>Schlägt <primary>/strafe <player> <muted>vor; die Nummer ergänzt du"
   ad-filtered:
     - "<prefix><muted>Deine Chatnachricht wurde gefiltert. <error>Grund: Mögliche Werbung."
     - "<prefix><error>Die Teammitglieder werden diesen Sachverhalt nun prüfen."
 nick:
-  loading: "<prefix><muted>Dein neuer Nick wird geladen..."
-  assigned: "<prefix><muted>Du bist jetzt als <rank><nick> <muted>unterwegs. Teammitglieder sehen weiterhin deinen echten Namen. <aqua>/nick off <muted>entfernt den Nick."
-  still-active: "<prefix><muted>Du bist weiterhin als <rank><nick> <muted>unterwegs. <aqua>/nick off <muted>entfernt den Nick."
+  loading: "<prefix><muted>Dein neuer Nick wird geladen…"
+  assigned: "<prefix><muted>Du bist jetzt als <rank><nick> <muted>unterwegs. Teammitglieder sehen weiterhin deinen echten Namen. <primary>/nick off <muted>entfernt den Nick."
+  still-active: "<prefix><muted>Du bist weiterhin als <rank><nick> <muted>unterwegs. <primary>/nick off <muted>entfernt den Nick."
   unknown-rank: "<prefix><error>Diesen Rang kann ein Nick nicht tragen. <muted>Zur Wahl stehen: <accent><ranks>"
   removed: "<prefix><muted>Dein Nick wurde entfernt."
   none: "<prefix><muted>Du trägst gerade keinen Nick."
@@ -336,7 +336,7 @@ report:
   reason-missing: "<prefix><error>Wähle einen gültigen Grund oder gib Details an."
   usage: "<prefix><error>Benutze /report [Spieler]"
   invalid-player: "<prefix><error>Das ist kein gültiger Spielername."
-  self: "<prefix><error>Du kannst dich nicht selbst reporten!"
+  self: "<prefix><muted>Ehrlich von dir. Melden kannst du dich trotzdem nicht."
   title: "<arrow><error>Report <dark>● <accent><player>"
   body: "<muted>Du meldest <error><player><muted>. Das Team schaut sich die Meldung an."
   reason: "<primary>Grund"
