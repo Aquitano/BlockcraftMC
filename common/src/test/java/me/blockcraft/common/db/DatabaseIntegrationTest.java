@@ -1,7 +1,7 @@
 package me.blockcraft.common.db;
 
 import me.blockcraft.common.elo.EloFormula;
-import me.blockcraft.common.duel.DuelHistoryRepository;
+import me.blockcraft.common.duel.DuelPairRepository;
 import me.blockcraft.common.elo.EloRepository;
 import me.blockcraft.common.elo.Season;
 import me.blockcraft.common.moderation.PlayerAddressRepository;
@@ -88,23 +88,22 @@ public class DatabaseIntegrationTest {
     }
 
     @Test
-    public void mirrorDuelsRequireBothPlayersConsecutiveDrawsAndUnlockBothTagsOnce() {
+    public void aDuelPairRewardsBothPlayersOnceWhenItsDrawsInARowReachTheCount() {
         db.migrate();
-        var history = new DuelHistoryRepository(db);
+        var pairs = new DuelPairRepository(db);
+        pairs.createTable();
         var one = UUID.randomUUID();
         var two = UUID.randomUUID();
-        var other = UUID.randomUUID();
-        assertFalse(history.familiar(one, two));
-        assertFalse(history.finish(UUID.randomUUID(), one, two, true));
-        assertTrue(history.familiar(two, one));
-        assertFalse(history.finish(UUID.randomUUID(), one, other, true));
-        assertFalse(history.finish(UUID.randomUUID(), two, one, true));
-        var round = UUID.randomUUID();
-        assertTrue(history.finish(round, one, two, true));
-        assertFalse(history.finish(round, two, one, true));
-        assertFalse(history.finish(UUID.randomUUID(), one, two, true));
+
+        assertFalse(pairs.met(one, two));
+        assertFalse(pairs.finish(one, two, true, 2, "tag.spiegel"));
+        assertTrue(pairs.met(two, one));
+        assertTrue(pairs.finish(two, one, true, 2, "tag.spiegel"));
+        assertFalse(pairs.finish(one, two, true, 2, "tag.spiegel"));
         assertEquals(2, count("SELECT COUNT(*) FROM bc_unlocks WHERE item = 'tag.spiegel'"));
-        assertFalse(history.finish(UUID.randomUUID(), one, two, false));
+        assertFalse(pairs.finish(one, two, false, 2, "tag.other"));
+        assertFalse(pairs.finish(one, two, true, 2, "tag.other"));
+        assertEquals(0, count("SELECT COUNT(*) FROM bc_unlocks WHERE item = 'tag.other'"));
     }
 
     @Test

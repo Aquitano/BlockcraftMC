@@ -219,13 +219,6 @@ final class SharedSchema {
         )),
         new Migration(16, List.of(
             "CREATE INDEX IF NOT EXISTS idx_bc_greetings_daily ON bc_greetings (greeter_uuid, greeted_at)"
-        )),
-        new Migration(17, List.of(
-            "CREATE TABLE IF NOT EXISTS bc_duel_history ("
-                + "player_uuid CHAR(36) NOT NULL PRIMARY KEY, "
-                + "opponent_uuid CHAR(36) NULL, "
-                + "last_draw BOOLEAN NOT NULL DEFAULT FALSE, "
-                + "round_uuid CHAR(36) NULL)"
         ))
     );
 

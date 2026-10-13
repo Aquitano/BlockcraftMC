@@ -1,6 +1,8 @@
 package me.blockcraft.duell.game;
 
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.cosmetic.ChatTag;
+import me.blockcraft.api.cosmetic.ChatTagChoice;
 import me.blockcraft.api.game.Arena;
 import me.blockcraft.api.game.Defeat;
 import me.blockcraft.api.game.GamePhase;
@@ -12,8 +14,8 @@ import me.blockcraft.api.game.TimerBar;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Countdown;
 import me.blockcraft.api.task.Tasks;
+import me.blockcraft.common.duel.DuelPairRepository;
 import me.blockcraft.common.message.Messages;
-import me.blockcraft.common.duel.DuelHistoryRepository;
 import me.blockcraft.duell.config.DuellConfig;
 import me.blockcraft.duell.config.Spawns;
 import net.kyori.adventure.text.Component;
@@ -33,6 +35,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Random;
@@ -46,6 +49,7 @@ public final class Duel {
 
     public static final int MAX_PARTICIPANTS = 2;
     private static final long RESPAWN_DELAY_TICKS = 5L;
+    private static final int MIRROR_DRAWS = 2;
 
     private final Plugin plugin;
     private final DuellConfig config;
@@ -60,8 +64,7 @@ public final class Duel {
     private final LobbyCountdown lobbyCountdown;
     private final DuelVote votes = new DuelVote();
     private final Rematch rematch;
-    private final DuelHistoryRepository history;
-    private final UUID roundId = UUID.randomUUID();
+    private final DuelPairRepository pairs;
     private List<UUID> duellists = List.of();
 
     private DuelMode mode;
@@ -75,7 +78,7 @@ public final class Duel {
     private final Set<UUID> fallen = new HashSet<>();
 
     public Duel(Plugin plugin, DuellConfig config, Messages messages, Spawns spawns, StatsRepository stats,
-                GameScoreboard scoreboard, GameItems items, DuelRatings ratings) {
+                GameScoreboard scoreboard, GameItems items, DuelRatings ratings, DuelPairRepository pairs) {
         this.plugin = plugin;
         this.config = config;
         this.messages = messages;
@@ -89,7 +92,7 @@ public final class Duel {
         this.lobbyCountdown = new LobbyCountdown(plugin, round.arena(), config.countdowns().lobby(), MAX_PARTICIPANTS,
                 round::playerCount, this::startRound);
         this.rematch = new Rematch(plugin, messages, config.rematchWindow());
-        this.history = new DuelHistoryRepository(BlockcraftApi.get().database());
+        this.pairs = pairs;
     }
 
     public boolean isLobby() {
@@ -457,7 +460,7 @@ public final class Duel {
         }
         var first = duellists.getFirst();
         var second = duellists.getLast();
-        Tasks.async(plugin, () -> history.familiar(first, second), familiar -> {
+        Tasks.async(plugin, () -> pairs.met(first, second), familiar -> {
             var one = Bukkit.getPlayer(first);
             var two = Bukkit.getPlayer(second);
             if (familiar && isIngame() && one != null && two != null && isParticipant(one) && isParticipant(two)
@@ -473,9 +476,12 @@ public final class Duel {
             return;
         }
         boolean draw = summary.winnerNames().isEmpty();
-        Tasks.async(plugin, () -> history.finish(roundId, duellists.getFirst(), duellists.getLast(), draw), mirror -> {
-            if (mirror) {
-                duellists.stream().map(Bukkit::getPlayer).filter(java.util.Objects::nonNull).forEach(player ->
+        var first = duellists.getFirst();
+        var second = duellists.getLast();
+        String tag = ChatTagChoice.of(ChatTag.MIRROR).item();
+        Tasks.async(plugin, () -> pairs.finish(first, second, draw, MIRROR_DRAWS, tag), unlocked -> {
+            if (unlocked) {
+                duellists.stream().map(Bukkit::getPlayer).filter(Objects::nonNull).forEach(player ->
                         player.sendMessage(messages.get("mirror.inspection")));
             }
         });

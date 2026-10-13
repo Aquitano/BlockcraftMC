@@ -52,10 +52,10 @@ Each completed moment adds a personal recap note and grants its achievement once
 
 ## Mirror duels
 
-Two consecutive draws against the same opponent unlock `[SPIEGEL]` for both players. An intervening duel with a
-different opponent or a decisive result breaks the sequence. The latest result for each account persists in
-`bc_duel_history`, while the tag and remembered opponents use `bc_unlocks`. The history update and both tag
-unlocks commit together. Later encounters give each duellist a private greeting using the other player's current
+Two draws in a row between the same two players unlock `[SPIEGEL]` for both. A decisive result between them
+starts the count again; duels against other players in between do not. Duell keeps every pair that ever met and
+its current run of draws in its own `bc_duel_pairs` table; the draw that completes the run unlocks the tag for both
+in the same transaction. Later encounters give each duellist a private greeting using the other player's current
 displayed name. The tag is available in Extras without Premium.
 
 ## Death messages and kill credit
@@ -199,14 +199,14 @@ The automated build checks message keys and covers calendar dates, Konami input,
 requests, hidden-command replies and bypasses, attacker-credit expiry, consecutive draws, curiosity selection,
 wake-up counts, friendship age, legacy friend-menu messages, and shooting-star wish cancellation. Database
 integration tests cover concurrent join numbering, greeting caps, duplicate reward claims, rollback on failed
-credit, the one-time OG snapshot, and persistent mirror-duel rewards. They need a disposable test database;
+credit, the one-time OG snapshot, and duel pairs counting their draws. They need a disposable test database;
 a build without one skips those tests.
 
 Before deploying, verify these interactions with Minecraft clients on a local test network:
 
 - Use two accounts for the welcome window, spectator `F` messages, defeat titles, report suggestions, and rematches.
 - Draw twice against the same opponent, choose `[SPIEGEL]` without Premium, and rematch with a nick. Check that
-  private greetings show the current nick. An intervening opponent or decisive result must break the draw sequence.
+  private greetings show the current nick. A decisive result between the two must restart the draw count.
 - Try environmental deaths, a long arrow hit, a wooden-sword kill, and a rod pull into the void. Credit must expire
   after ten seconds and be consumed by the first death. Check one shared curiosity line at the end.
 - Exercise all six moment conditions. A failed shop purchase must preserve Minimalist; a completed free purchase

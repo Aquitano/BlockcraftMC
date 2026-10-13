@@ -8,6 +8,7 @@ import me.blockcraft.api.game.LootChests;
 import me.blockcraft.api.game.StatsMenus;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.game.TopList;
+import me.blockcraft.common.duel.DuelPairRepository;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.duell.command.SetSpawnCommand;
 import me.blockcraft.duell.config.DuellConfig;
@@ -41,10 +42,12 @@ public final class DuellPlugin extends JavaPlugin {
         var messages = Messages.load(getDataPath(), () -> getResource("messages.yml"), api.tags());
         var stats = new StatsRepository(api.database(), "duell_stats");
         stats.createTable();
+        var pairs = new DuelPairRepository(api.database());
+        pairs.createTable();
 
         var items = new GameItems(messages);
         duel = new Duel(this, config, messages, spawns, stats, new GameScoreboard(messages), items,
-                new DuelRatings(this, messages, api.elo()));
+                new DuelRatings(this, messages, api.elo()), pairs);
         api.presence().maxPlayers(Duel.MAX_PARTICIPANTS);
         var topList = new TopList(this, stats, messages);
         var statsMenus = StatsMenus.ranked(messages, stats, topList, config.globalStatsHead());
