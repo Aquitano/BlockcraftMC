@@ -99,11 +99,11 @@ Lobby's `shooting-stars` section controls the zone, hours, check interval, odds,
 window. Defaults check once per minute with a one-in-30 chance and a 30-minute cooldown after an event.
 Setting `enabled` to false stops the sky events.
 
-Messages beginning with a configured `wish-prefixes` phrase and a nonempty wish are always intercepted in lobby
-chat before Blockcraft's word and advertisement filters. They are cancelled and removed from every audience,
-including the console. Late wishes receive a private reply. Only the first wish per account and event triggers
-the discovery. The event stores a deadline and account UUIDs, while the secret uses the existing unlock system.
-The wish text is never stored or forwarded by the Blockcraft plugins.
+While a star is up, messages beginning with a configured `wish-prefixes` phrase and a nonempty wish are
+intercepted in lobby chat before Blockcraft's word and advertisement filters. They are cancelled and removed from
+every audience, including the console. Only the first wish per account and event triggers the discovery. At any
+other time such a message is ordinary chat. The event stores a deadline and account UUIDs, while the secret uses
+the existing unlock system. The wish text is never stored or forwarded by the Blockcraft plugins.
 
 ## Sleeping players
 

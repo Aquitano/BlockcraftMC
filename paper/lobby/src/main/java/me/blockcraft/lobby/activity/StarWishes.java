@@ -44,18 +44,18 @@ public final class StarWishes implements Listener {
         window = null;
     }
 
+    /** Only while a star is up: outside that window a message starting with "i wish" is ordinary chat. */
     @EventHandler(priority = EventPriority.LOWEST)
     public void onChat(AsyncChatEvent event) {
-        if (!prefixes.matcher(PlainTextComponentSerializer.plainText().serialize(event.message())).find()) {
+        var current = window;
+        if (current == null || clock.getAsLong() >= current.until()
+                || !prefixes.matcher(PlainTextComponentSerializer.plainText().serialize(event.message())).find()) {
             return;
         }
         event.setCancelled(true);
         event.viewers().clear();
-        var current = window;
         var player = event.getPlayer();
-        if (current == null || clock.getAsLong() >= current.until()) {
-            player.sendMessage(messages.get("shooting-star.wish-late"));
-        } else if (current.claimed().add(player.getUniqueId())) {
+        if (current.claimed().add(player.getUniqueId())) {
             player.sendMessage(messages.get("shooting-star.wish"));
             discovery.accept(player);
         }

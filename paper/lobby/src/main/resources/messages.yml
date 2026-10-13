@@ -538,4 +538,3 @@ seasonal:
 shooting-star:
   announce: "<prefix><accent>Eine Sternschnuppe! <muted>Schreib in <seconds> Sekunden '<phrase> …'. Dein Wunsch bleibt privat."
   wish: "<prefix><muted>Wunsch notiert. Wir verraten ihn niemandem."
-  wish-late: "<prefix><muted>Gerade ist keine Sternschnuppe zu sehen. Dein Wunsch bleibt trotzdem privat."

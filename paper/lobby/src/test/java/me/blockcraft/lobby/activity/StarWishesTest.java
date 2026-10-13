@@ -31,44 +31,43 @@ public class StarWishesTest {
     public TemporaryFolder folder = new TemporaryFolder();
 
     @Test
-    public void validWishesArePrivateAndClaimOneDiscoveryPerWindow() throws Exception {
-        var clock = new AtomicLong();
-        var discoveries = new ArrayList<UUID>();
-        var wishes = new StarWishes(messages(), List.of("ich wünsche mir"),
-                player -> discoveries.add(player.getUniqueId()), clock::get);
-        var player = player();
-        wishes.open(Duration.ofSeconds(15));
-        for (int attempt = 0; attempt < 2; attempt++) {
-            var event = chat(player, "ich wünsche mir einen goldenen Karpfen");
-            wishes.onChat(event);
-            assertTrue(event.isCancelled());
-            assertTrue(event.viewers().isEmpty());
-        }
-        assertEquals(List.of(player.getUniqueId()), discoveries);
-
-        clock.set(Duration.ofSeconds(15).toNanos());
-        var late = chat(player, "ich wünsche mir etwas anderes");
-        wishes.onChat(late);
-        assertTrue(late.isCancelled());
-        assertTrue(late.viewers().isEmpty());
-        assertEquals(1, discoveries.size());
-    }
-
-    @Test
-    public void lateWishesStayPrivateWhileNormalChatKeepsItsAudience() throws Exception {
+    public void wishesWhileTheStarIsUpArePrivateAndClaimOneDiscovery() throws Exception {
         var discoveries = new ArrayList<UUID>();
         var wishes = new StarWishes(messages(), List.of("ich wünsche mir"),
                 player -> discoveries.add(player.getUniqueId()), () -> 0);
         var player = player();
+        wishes.open(Duration.ofSeconds(15));
+        for (String text : List.of("ich wünsche mir einen goldenen Karpfen", "ICH WÜNSCHE MIR einen geheimen Ort")) {
+            var event = chat(player, text);
+            wishes.onChat(event);
+            assertTrue(event.isCancelled());
+            assertTrue(event.viewers().isEmpty());
+        }
         var normal = chat(player, "Hallo zusammen");
         wishes.onChat(normal);
-        assertFalse(normal.isCancelled());
-        assertEquals(2, normal.viewers().size());
 
-        var late = chat(player, "ICH WÜNSCHE MIR einen geheimen Ort");
-        wishes.onChat(late);
-        assertTrue(late.isCancelled());
-        assertTrue(late.viewers().isEmpty());
+        assertFalse(normal.isCancelled());
+        assertEquals(List.of(player.getUniqueId()), discoveries);
+    }
+
+    @Test
+    public void wishesWithoutAStarAreOrdinaryChat() throws Exception {
+        var clock = new AtomicLong();
+        var discoveries = new ArrayList<UUID>();
+        var wishes = new StarWishes(messages(), List.of("i wish"),
+                player -> discoveries.add(player.getUniqueId()), clock::get);
+        var player = player();
+        var beforeAnyStar = chat(player, "i wish I had won that round");
+        wishes.onChat(beforeAnyStar);
+        wishes.open(Duration.ofSeconds(15));
+        clock.set(Duration.ofSeconds(15).toNanos());
+        var afterTheStar = chat(player, "i wish it came back");
+        wishes.onChat(afterTheStar);
+
+        for (var event : List.of(beforeAnyStar, afterTheStar)) {
+            assertFalse(event.isCancelled());
+            assertEquals(2, event.viewers().size());
+        }
         assertTrue(discoveries.isEmpty());
     }
 
@@ -76,7 +75,6 @@ public class StarWishesTest {
         return Messages.load(folder.newFolder().toPath(), () -> new ByteArrayInputStream("""
                 shooting-star:
                   wish: 'Privat'
-                  wish-late: 'Vorbei, aber privat'
                 """.getBytes(StandardCharsets.UTF_8)));
     }
 
