@@ -27,6 +27,16 @@ The numbered keys under `coins.asides` and `chat.level-asides` determine which b
 an extra line. Set an entry to an empty string to hide it. `sign.first` controls the empty-group prompt.
 These details do not grant coins, XP, unlocks, or gameplay advantages.
 
+## Round curiosity
+
+Each round tracks the longest arrow hit, jumps, time at half a heart, rod hits, and Emeralds earned from mining.
+The summary shows at most one fact to everyone, selected by the largest ratio to its configured threshold.
+Only players still online and not vanished at the end can be named. Spectator jumps and half-heart time do not count.
+
+BlockcraftAPI's `curiosities` thresholds default to 40 blocks, 100 jumps, ten seconds, ten rod hits, and 100 mined
+Emeralds. A threshold of zero or less disables that category. Half-heart time uses a tick-level health check and
+stops on death, leaving the round, or the end of the round. The counters stay in memory for that round only.
+
 ## Moment achievements
 
 Each completed moment adds a personal recap note and grants its achievement once through `bc_unlocks`.

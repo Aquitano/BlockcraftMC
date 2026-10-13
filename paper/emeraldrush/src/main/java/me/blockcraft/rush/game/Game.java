@@ -119,6 +119,7 @@ public final class Game {
 
     public void addEmeralds(Player player, int amount) {
         emeralds.merge(player.getUniqueId(), amount, Integer::sum);
+        summary.minedEmeralds(player, amount);
     }
 
     public boolean withdrawEmeralds(Player player, int amount) {

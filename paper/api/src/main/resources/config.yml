@@ -194,3 +194,10 @@ moments:
   night-owl:
     from-hour: 3
     until-hour: 4
+
+curiosities:
+  bow-blocks: 40
+  jumps: 100
+  half-heart-seconds: 10
+  rod-hits: 10
+  emeralds-mined: 100

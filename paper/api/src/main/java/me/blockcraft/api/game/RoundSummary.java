@@ -18,12 +18,15 @@ import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.scheduler.BukkitTask;
+import com.destroystokyo.paper.event.player.PlayerJumpEvent;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -79,6 +82,8 @@ public final class RoundSummary implements Listener {
     private final Accusations accusations;
     private final DeathLines deathLines;
     private boolean running;
+    private final Curiosities curiosities;
+    private BukkitTask curiosityTick;
 
     private record Row(UUID player, String name, Stats delta) {
     }
@@ -95,7 +100,13 @@ public final class RoundSummary implements Listener {
         this.rivalries = new Rivalries(plugin, api, messages, new RivalryRepository(api.database()), config.nemesisLead());
         this.respects = new Respects(plugin, messages, config.respectWindow());
         this.accusations = new Accusations(plugin, messages, config.accusationWindow(), config.accusations());
-        this.deathLines = new DeathLines(messages, config.creditWindow());
+        this.curiosities = new Curiosities(config.curiosityMinimums());
+        this.deathLines = new DeathLines(messages, config.creditWindow(), hit -> {
+            curiosities.record(hit.attacker(), Curiosities.Kind.BOW, hit.distance());
+            if (hit.weapon() == Material.FISHING_ROD) {
+                curiosities.record(hit.attacker(), Curiosities.Kind.ROD, 1);
+            }
+        });
         Bukkit.getPluginManager().registerEvents(this, plugin);
         Bukkit.getPluginManager().registerEvents(deathLines, plugin);
         Bukkit.getPluginManager().registerEvents(respects, plugin);
@@ -105,6 +116,15 @@ public final class RoundSummary implements Listener {
     /** The round has started with these players; their rivalries load, and each hears of a nemesis among them. */
     void begin(List<Player> players) {
         running = true;
+        curiosityTick = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+            long now = System.nanoTime();
+            for (var player : Bukkit.getOnlinePlayers()) {
+                if (scores.containsKey(player.getUniqueId())) {
+                    curiosities.health(player.getUniqueId(), !Round.isWatching(player) && !player.isDead()
+                            && player.getHealth() > 0 && player.getHealth() <= HALF_A_HEART, now);
+                }
+            }
+        }, 1L, 1L);
         deathLines.begin(players);
         rivalries.load(players);
     }
@@ -187,11 +207,26 @@ public final class RoundSummary implements Listener {
         api.achievements().grant(player, game, name);
     }
 
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onJump(PlayerJumpEvent event) {
+        var player = event.getPlayer();
+        if (running && scores.containsKey(player.getUniqueId()) && !Round.isWatching(player)) {
+            curiosities.record(player.getUniqueId(), Curiosities.Kind.JUMPS, 1);
+        }
+    }
+
+    public void minedEmeralds(Player player, int amount) {
+        if (running && scores.containsKey(player.getUniqueId()) && !Round.isWatching(player)) {
+            curiosities.record(player.getUniqueId(), Curiosities.Kind.EMERALDS, amount);
+        }
+    }
+
     public List<String> winnerNames() {
         return List.copyOf(winners.values());
     }
 
     public void death(Player victim) {
+        curiosities.health(victim.getUniqueId(), false, System.nanoTime());
         var score = score(victim);
         score.deaths++;
         score.streak = 0;
@@ -217,8 +252,12 @@ public final class RoundSummary implements Listener {
     }
 
     public void show() {
-        running = false;
-        deathLines.stop();
+        stopTracking();
+        var curiosity = curiosities.select(id -> {
+            var player = Bukkit.getPlayer(id);
+            return player != null && !api.isVanished(player);
+        }).map(fact -> messages.get("curiosity." + fact.kind().key(),
+                Placeholder.unparsed("player", Bukkit.getPlayer(fact.player()).getName()), Formatter.number("value", fact.value())));
         var participants = Bukkit.getOnlinePlayers().stream().filter(player -> scores.containsKey(player.getUniqueId())).toList();
         if (api.roundConfig().nightOwl().includes(api.calendar().now().getHour())) {
             participants.forEach(player -> moment(player, Achievement.NETWORK, "nachteule"));
@@ -254,6 +293,7 @@ public final class RoundSummary implements Listener {
                 player.sendMessage(messages.get("summary.xp", Formatter.number("xp", score.xp)));
                 score.notes.forEach(player::sendMessage);
             }
+            curiosity.ifPresent(player::sendMessage);
             player.sendMessage(again);
             player.sendMessage(lobby);
             player.sendMessage(rule);
@@ -269,6 +309,16 @@ public final class RoundSummary implements Listener {
     /** The respects still being paid are said now, before the restart sends everyone away. */
     void closeRespects() {
         respects.closeAll();
+        stopTracking();
+    }
+
+    private void stopTracking() {
+        running = false;
+        if (curiosityTick != null) {
+            curiosityTick.cancel();
+        }
+        curiosities.finish(System.nanoTime());
+        deathLines.stop();
     }
 
     /** The round's last kill ends it in the same tick, and the title that kill showed is read to the end first. */

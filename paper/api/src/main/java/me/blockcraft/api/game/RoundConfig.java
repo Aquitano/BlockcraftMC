@@ -12,7 +12,7 @@ import java.util.Map;
  * cheater within how long of the kill ({@code hacker}).
  */
 public record RoundConfig(int nemesisLead, Duration respectWindow, Duration accusationWindow, List<String> accusations,
-                          Duration creditWindow, NightOwl nightOwl) {
+                          Duration creditWindow, NightOwl nightOwl, Map<Curiosities.Kind, Integer> curiosityMinimums) {
 
     public record NightOwl(int fromHour, int untilHour) {
         public boolean includes(int hour) {
@@ -29,7 +29,8 @@ public record RoundConfig(int nemesisLead, Duration respectWindow, Duration accu
                 Duration.ofSeconds(number(hacker, "window-seconds", 60)),
                 hacker.get("words") instanceof List<?> words ? words.stream().map(String::valueOf).toList() : List.of(),
                 Duration.ofSeconds(Math.max(0, number(YamlFile.section(config, "death-lines"), "credit-seconds", 10))),
-                new NightOwl(Math.clamp(number(night, "from-hour", 3), 0, 23), Math.clamp(number(night, "until-hour", 4), 0, 24)));
+                new NightOwl(Math.clamp(number(night, "from-hour", 3), 0, 23), Math.clamp(number(night, "until-hour", 4), 0, 24)),
+                Curiosities.minimums(YamlFile.section(config, "curiosities")));
     }
 
     private static int number(Map<String, Object> section, String key, int fallback) {

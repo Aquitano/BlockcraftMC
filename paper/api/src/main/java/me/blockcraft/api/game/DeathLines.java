@@ -25,12 +25,13 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 public final class DeathLines implements Listener {
 
     public record Death(Player killer, Component line) { }
 
-    record Hit(UUID attacker, Material weapon, int distance, long at) { }
+    public record Hit(UUID attacker, Material weapon, int distance, long at) { }
 
     static final class Attacks {
         private final long window;
@@ -62,10 +63,12 @@ public final class DeathLines implements Listener {
     private final Messages messages;
     private final Attacks attacks;
     private final Set<UUID> active = new HashSet<>();
+    private final Consumer<Hit> observer;
 
-    public DeathLines(Messages messages, Duration creditWindow) {
+    public DeathLines(Messages messages, Duration creditWindow, Consumer<Hit> observer) {
         this.messages = messages;
         this.attacks = new Attacks(creditWindow);
+        this.observer = observer;
     }
 
     public void begin(List<Player> players) {
@@ -103,7 +106,7 @@ public final class DeathLines implements Listener {
             }
         }
         Material weapon = event.getDamager() instanceof Player ? attacker.getInventory().getItemInMainHand().getType() : Material.AIR;
-        attacks.record(victim.getUniqueId(), new Hit(attacker.getUniqueId(), weapon,
+        record(victim.getUniqueId(), new Hit(attacker.getUniqueId(), weapon,
                 distance, System.nanoTime()));
     }
 
@@ -112,8 +115,13 @@ public final class DeathLines implements Listener {
         var attacker = event.getPlayer();
         if (event.getState() == PlayerFishEvent.State.CAUGHT_ENTITY && event.getCaught() instanceof Player victim
                 && !attacker.equals(victim) && active.contains(attacker.getUniqueId()) && active.contains(victim.getUniqueId())) {
-            attacks.record(victim.getUniqueId(), new Hit(attacker.getUniqueId(), Material.FISHING_ROD, 0, System.nanoTime()));
+            record(victim.getUniqueId(), new Hit(attacker.getUniqueId(), Material.FISHING_ROD, 0, System.nanoTime()));
         }
+    }
+
+    private void record(UUID victim, Hit hit) {
+        attacks.record(victim, hit);
+        observer.accept(hit);
     }
 
     public Death resolve(PlayerDeathEvent event) {

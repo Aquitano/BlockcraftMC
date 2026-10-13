@@ -543,3 +543,10 @@ moments:
   makellos: "<arrow><success>Makellos <dark>· <muted>Gewonnen ohne Schaden zu nehmen"
   trittsicher: "<arrow><success>Trittsicher <dark>· <muted>Das SuperJump-Ziel ohne Rückfall erreicht"
   nachteule: "<arrow><success>Nachteule <dark>· <muted>Eine Runde zwischen drei und vier Uhr beendet"
+
+curiosity:
+  bow-blocks: "<arrow><accent>Kurios <dark>· <white><player> <muted>hat aus <accent><value> Blöcken <muted>getroffen. Fernzustellung bestätigt."
+  jumps: "<arrow><accent>Kurios <dark>· <white><player> <muted>sprang <accent><value>-mal<muted>. Niemand weiß, warum."
+  half-heart-seconds: "<arrow><accent>Kurios <dark>· <white><player> <muted>hielt <accent><value> Sekunden <muted>mit einem halben Herzen durch."
+  rod-hits: "<arrow><accent>Kurios <dark>· <white><player> <muted>hat <accent><value>-mal <muted>mit der Angel nachgeholfen. Der Teich hat sich beschwert."
+  emeralds-mined: "<arrow><accent>Kurios <dark>· <white><player> <muted>schürfte <accent><value> Emeralds<muted>. Der Villager bestellt einen Tresor."
