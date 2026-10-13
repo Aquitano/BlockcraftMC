@@ -27,6 +27,19 @@ The numbered keys under `coins.asides` and `chat.level-asides` determine which b
 an extra line. Set an entry to an empty string to hide it. `sign.first` controls the empty-group prompt.
 These details do not grant coins, XP, unlocks, or gameplay advantages.
 
+## Moment achievements
+
+Each completed moment adds a personal recap note and grants its achievement once through `bc_unlocks`.
+
+| Moment | Condition | Default XP |
+|---|---|---|
+| Dagobert | Win EmeraldRush with at least 100 Emeralds and no Emeralds spent. The threshold is `achievements.emeraldrush.dagobert.threshold`. | 100 |
+| Minimalist | Win EmeraldRush without completing a purchase in the round shop, including a free purchase. | 100 |
+| Pazifist | Win QuickSG with zero kills in the round. | 100 |
+| Makellos | Win a combat duel without taking any non-cancelled damage during the match. | 100 |
+| Trittsicher | Reach the SuperJump goal without a water or lava reset. Winning by timeout does not count. | 100 |
+| Nachteule | Finish a round between 03:00 inclusive and 04:00 exclusive in the network calendar zone. `moments.night-owl` controls the hours. | 50 |
+
 ## Mirror duels
 
 Two consecutive draws against the same opponent unlock `[SPIEGEL]` for both players. An intervening duel with a

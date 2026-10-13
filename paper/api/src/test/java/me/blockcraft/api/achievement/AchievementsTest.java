@@ -1,6 +1,7 @@
 package me.blockcraft.api.achievement;
 
 import me.blockcraft.api.game.Stats;
+import me.blockcraft.common.config.YamlFile;
 import org.junit.Test;
 
 import java.util.List;
@@ -8,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class AchievementsTest {
 
@@ -33,5 +35,22 @@ public class AchievementsTest {
         assertEquals(List.of(), Achievements.reached(CATALOG, Achievement.NETWORK, Stats.EMPTY, 4, Set.of()));
         assertEquals(List.of("network.level-5"),
                 Achievements.reached(CATALOG, Achievement.NETWORK, Stats.EMPTY, 5, Set.of()).stream().map(Achievement::key).toList());
+    }
+
+    @Test
+    public void newMomentsHaveCatalogEntriesAndLocalizedRecapNotes() throws Exception {
+        try (var config = getClass().getResourceAsStream("/config.yml");
+             var messages = getClass().getResourceAsStream("/messages.yml")) {
+            var catalog = Achievements.parse(YamlFile.section(YamlFile.load(config), "achievements"));
+            var texts = YamlFile.flatten(YamlFile.load(messages));
+            for (String key : List.of("emeraldrush.dagobert", "emeraldrush.minimalist", "quicksg.pazifist",
+                    "duell.makellos", "duell.trittsicher", "network.nachteule")) {
+                var entry = catalog.stream().filter(achievement -> achievement.key().equals(key)).findFirst().orElseThrow();
+                assertTrue(entry.isMoment());
+                assertTrue(texts.containsKey("achievements." + key + ".name"));
+                assertTrue(texts.containsKey("achievements." + key + ".description"));
+                assertTrue(texts.containsKey("moments." + entry.name()));
+            }
+        }
     }
 }

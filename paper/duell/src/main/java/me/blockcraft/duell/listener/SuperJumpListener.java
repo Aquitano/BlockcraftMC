@@ -31,7 +31,10 @@ public final class SuperJumpListener implements Listener {
         switch (block.getType()) {
             case HEAVY_WEIGHTED_PRESSURE_PLATE -> duel.reachCheckpoint(player, CHECKPOINT_ONE);
             case LIGHT_WEIGHTED_PRESSURE_PLATE -> duel.reachCheckpoint(player, CHECKPOINT_TWO);
-            case WATER, LAVA -> Optional.ofNullable(player.getRespawnLocation()).ifPresent(player::teleport);
+            case WATER, LAVA -> {
+                duel.fell(player);
+                Optional.ofNullable(player.getRespawnLocation()).ifPresent(player::teleport);
+            }
             default -> {
                 if (block.getRelative(BlockFace.DOWN).getType() == Material.DIAMOND_BLOCK) {
                     duel.finishSuperJump(player);

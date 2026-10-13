@@ -89,6 +89,7 @@ achievements:
     wins-100: {counts: wins, threshold: 100, xp: 500}
     nackt: {counts: moment, xp: 100}
     david-gegen-goliath: {counts: moment, xp: 50}
+    pazifist: {counts: moment, xp: 100}
   emeraldrush:
     first-win: {counts: wins, threshold: 1, xp: 25}
     kills-10: {counts: kills, threshold: 10, xp: 25}
@@ -96,6 +97,8 @@ achievements:
     kills-1000: {counts: kills, threshold: 1000, xp: 500}
     wins-10: {counts: wins, threshold: 10, xp: 100}
     wins-100: {counts: wins, threshold: 100, xp: 500}
+    dagobert: {counts: moment, threshold: 100, xp: 100}
+    minimalist: {counts: moment, xp: 100}
   duell:
     first-win: {counts: wins, threshold: 1, xp: 25}
     kills-10: {counts: kills, threshold: 10, xp: 25}
@@ -103,6 +106,8 @@ achievements:
     kills-1000: {counts: kills, threshold: 1000, xp: 500}
     wins-10: {counts: wins, threshold: 10, xp: 100}
     wins-100: {counts: wins, threshold: 100, xp: 500}
+    makellos: {counts: moment, xp: 100}
+    trittsicher: {counts: moment, xp: 100}
   network:
     level-5: {counts: level, threshold: 5, xp: 50}
     level-10: {counts: level, threshold: 10, xp: 100}
@@ -111,6 +116,7 @@ achievements:
     rache: {counts: moment, xp: 50}
     haarscharf: {counts: moment, xp: 50}
     ausdauer: {counts: moment, xp: 100}
+    nachteule: {counts: moment, xp: 50}
 
 # Ranked 1vs1 (bc_elo). A season is three months from January, April, July or October and starts everyone at
 # start-rating; a win moves k-factor points times how unexpected it was. groups is the skill ladder, each with the
@@ -183,3 +189,8 @@ hacker:
 
 death-lines:
   credit-seconds: 10
+
+moments:
+  night-owl:
+    from-hour: 3
+    until-hour: 4

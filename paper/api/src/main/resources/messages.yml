@@ -383,6 +383,9 @@ achievements:
     david-gegen-goliath:
       name: "David gegen Goliath"
       description: "Besiege mit dem Starter-Kit einen Spieler mit dem Diamant-Kit."
+    pazifist:
+      name: "Pazifist"
+      description: "Gewinne eine Runde QuickSG ohne einen einzigen Kill."
   emeraldrush:
     first-win:
       name: "Erster Sieg"
@@ -402,6 +405,12 @@ achievements:
     wins-100:
       name: "Meister"
       description: "Gewinne 100 Runden EmeraldRush."
+    dagobert:
+      name: "Dagobert"
+      description: "Gewinne EmeraldRush mit mindestens 100 Emeralds, ohne welche auszugeben."
+    minimalist:
+      name: "Minimalist"
+      description: "Gewinne EmeraldRush, ohne im Rundenshop etwas zu kaufen."
   duell:
     first-win:
       name: "Erster Sieg"
@@ -421,6 +430,12 @@ achievements:
     wins-100:
       name: "Meister"
       description: "Gewinne 100 Duelle."
+    makellos:
+      name: "Makellos"
+      description: "Gewinne ein Kampfduell, ohne Schaden zu nehmen."
+    trittsicher:
+      name: "Trittsicher"
+      description: "Erreiche das SuperJump-Ziel ohne einen Rückfall ins Wasser oder in die Lava."
   network:
     level-5:
       name: "Aufsteiger"
@@ -443,6 +458,10 @@ achievements:
     ausdauer:
       name: "Ausdauer"
       description: "Falle im JumpAndRun 100-mal herunter und mach weiter."
+
+    nachteule:
+      name: "Nachteule"
+      description: "Beende eine Runde zwischen drei und vier Uhr morgens."
 
 # The ranked ladder's skill groups, keyed like elo.groups in config.yml; like the chat tags, each wears its own colour.
 elo:
@@ -516,3 +535,11 @@ death-lines:
     wooden_axe: "einer Holzaxt"
     fishing_rod: "einer Angel"
     stick: "einem Stock"
+
+moments:
+  dagobert: "<arrow><success>Dagobert <dark>· <muted><emeralds> Emeralds, nie ausgegeben"
+  minimalist: "<arrow><success>Minimalist <dark>· <muted>Ohne einen Kauf im Rundenshop gewonnen"
+  pazifist: "<arrow><success>Pazifist <dark>· <muted>Gewonnen ohne einen einzigen Kill"
+  makellos: "<arrow><success>Makellos <dark>· <muted>Gewonnen ohne Schaden zu nehmen"
+  trittsicher: "<arrow><success>Trittsicher <dark>· <muted>Das SuperJump-Ziel ohne Rückfall erreicht"
+  nachteule: "<arrow><success>Nachteule <dark>· <muted>Eine Runde zwischen drei und vier Uhr beendet"

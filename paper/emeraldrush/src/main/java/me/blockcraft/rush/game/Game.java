@@ -42,9 +42,11 @@ import org.bukkit.potion.PotionEffectType;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.IntConsumer;
 
@@ -67,6 +69,8 @@ public final class Game {
     private final Map<UUID, Integer> emeralds = new HashMap<>();
     private final Map<UUID, Integer> lives = new HashMap<>();
     private final Map<UUID, Loadout> loadouts = new HashMap<>();
+    private final Set<UUID> spentEmeralds = new HashSet<>();
+    private final Set<UUID> purchased = new HashSet<>();
 
     private record Loadout(ItemStack[] contents, ItemStack[] armor) {
     }
@@ -122,7 +126,14 @@ public final class Game {
             return false;
         }
         emeralds.put(player.getUniqueId(), emeralds(player) - amount);
+        if (amount > 0) {
+            spentEmeralds.add(player.getUniqueId());
+        }
         return true;
+    }
+
+    public void bought(Player player) {
+        purchased.add(player.getUniqueId());
     }
 
     public List<String> winnerNames() {
@@ -357,7 +368,16 @@ public final class Game {
         if (phase == GamePhase.LOBBY || phase == GamePhase.ENDING || round.playerCount() > 1) {
             return;
         }
-        alivePlayers().forEach(summary::awardWin);
+        alivePlayers().forEach(winner -> {
+            summary.awardWin(winner);
+            if (!purchased.contains(winner.getUniqueId())) {
+                summary.moment(winner, "emeraldrush", "minimalist");
+            }
+            if (!spentEmeralds.contains(winner.getUniqueId())
+                    && emeralds(winner) >= BlockcraftApi.get().achievements().threshold("emeraldrush", "dagobert")) {
+                summary.moment(winner, "emeraldrush", "dagobert", Formatter.number("emeralds", emeralds(winner)));
+            }
+        });
         endRound();
     }
 

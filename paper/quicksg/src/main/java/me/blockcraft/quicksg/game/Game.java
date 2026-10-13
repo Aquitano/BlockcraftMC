@@ -271,6 +271,9 @@ public final class Game {
         }
         for (var winner : alivePlayers()) {
             summary.awardWin(winner);
+            if (summary.kills(winner) == 0) {
+                summary.moment(winner, ACHIEVEMENTS, "pazifist");
+            }
             if (Arrays.stream(winner.getInventory().getArmorContents()).allMatch(piece -> piece == null || piece.isEmpty())) {
                 summary.note(winner, messages.get("note.nackt"));
                 BlockcraftApi.get().achievements().grant(winner, ACHIEVEMENTS, "nackt");

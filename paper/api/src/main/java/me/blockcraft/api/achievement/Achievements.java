@@ -107,6 +107,11 @@ public final class Achievements implements Listener {
         return catalog;
     }
 
+    public int threshold(String game, String name) {
+        return catalog.stream().filter(entry -> entry.game().equals(game) && entry.name().equals(name))
+                .mapToInt(Achievement::threshold).findFirst().orElse(Integer.MAX_VALUE);
+    }
+
     /** The games with entries, in catalog order; {@link Achievement#NETWORK} among them. */
     public Set<String> games() {
         var games = new LinkedHashSet<String>();

@@ -19,6 +19,10 @@ import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.plugin.Plugin;
 
 import java.time.Duration;
@@ -43,7 +47,7 @@ import java.util.function.Consumer;
  * victim's title, the {@link Rivalries} of the players, the respects paid with an F in chat and the report button
  * for a cry of hacker.
  */
-public final class RoundSummary {
+public final class RoundSummary implements Listener {
 
     /** What a kill and a win pay; the amounts are the game's own {@code rewards} keys in its config.yml. */
     public record Rewards(int kill, int win) {
@@ -74,6 +78,7 @@ public final class RoundSummary {
     private final Respects respects;
     private final Accusations accusations;
     private final DeathLines deathLines;
+    private boolean running;
 
     private record Row(UUID player, String name, Stats delta) {
     }
@@ -91,6 +96,7 @@ public final class RoundSummary {
         this.respects = new Respects(plugin, messages, config.respectWindow());
         this.accusations = new Accusations(plugin, messages, config.accusationWindow(), config.accusations());
         this.deathLines = new DeathLines(messages, config.creditWindow());
+        Bukkit.getPluginManager().registerEvents(this, plugin);
         Bukkit.getPluginManager().registerEvents(deathLines, plugin);
         Bukkit.getPluginManager().registerEvents(respects, plugin);
         Bukkit.getPluginManager().registerEvents(accusations, plugin);
@@ -98,6 +104,7 @@ public final class RoundSummary {
 
     /** The round has started with these players; their rivalries load, and each hears of a nemesis among them. */
     void begin(List<Player> players) {
+        running = true;
         deathLines.begin(players);
         rivalries.load(players);
     }
@@ -160,6 +167,26 @@ public final class RoundSummary {
         return score == null ? 0 : score.kills;
     }
 
+    public boolean undamaged(Player player) {
+        var score = scores.get(player.getUniqueId());
+        return score != null && !score.damaged;
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onDamage(EntityDamageEvent event) {
+        if (running && event.getEntity() instanceof Player player && event.getFinalDamage() > 0) {
+            var score = scores.get(player.getUniqueId());
+            if (score != null) {
+                score.damaged = true;
+            }
+        }
+    }
+
+    public void moment(Player player, String game, String name, TagResolver... resolvers) {
+        note(player, messages.get("moments." + name, resolvers));
+        api.achievements().grant(player, game, name);
+    }
+
     public List<String> winnerNames() {
         return List.copyOf(winners.values());
     }
@@ -190,8 +217,12 @@ public final class RoundSummary {
     }
 
     public void show() {
+        running = false;
         deathLines.stop();
         var participants = Bukkit.getOnlinePlayers().stream().filter(player -> scores.containsKey(player.getUniqueId())).toList();
+        if (api.roundConfig().nightOwl().includes(api.calendar().now().getHour())) {
+            participants.forEach(player -> moment(player, Achievement.NETWORK, "nachteule"));
+        }
         participants.forEach(player -> score(player).xp += api.xp().award(player, XpReward.PARTICIPATION));
         var names = String.join(", ", winners.values());
         store(names);
@@ -331,6 +362,7 @@ public final class RoundSummary {
         int coins;
         int xp;
         boolean eliminated;
+        boolean damaged;
         final List<Component> notes = new ArrayList<>();
 
         Score(String name) {

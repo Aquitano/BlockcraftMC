@@ -30,11 +30,13 @@ import org.bukkit.plugin.Plugin;
 
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Random;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.ToIntFunction;
 import java.util.stream.IntStream;
@@ -70,6 +72,7 @@ public final class Duel {
     private int vsRound = 1;
     private boolean superJumpFinished;
     private final Map<UUID, Integer> checkpoints = new HashMap<>();
+    private final Set<UUID> fallen = new HashSet<>();
 
     public Duel(Plugin plugin, DuellConfig config, Messages messages, Spawns spawns, StatsRepository stats,
                 GameScoreboard scoreboard, GameItems items, DuelRatings ratings) {
@@ -283,6 +286,9 @@ public final class Duel {
             return;
         }
         superJumpFinished = true;
+        if (!fallen.contains(winner.getUniqueId())) {
+            summary.moment(winner, "duell", "trittsicher");
+        }
         Bukkit.broadcast(Component.empty());
         Bukkit.broadcast(messages.get("superjump.goal", Placeholder.unparsed("player", winner.getName())));
         rewardWinner(winner);
@@ -290,6 +296,10 @@ public final class Duel {
         winner.getWorld().spawnParticle(Particle.EXPLOSION, winner.getLocation(), 5);
         winner.setRespawnLocation(winner.getLocation(), true);
         startRestart();
+    }
+
+    public void fell(Player player) {
+        fallen.add(player.getUniqueId());
     }
 
     public void refreshScoreboards() {
@@ -473,14 +483,21 @@ public final class Duel {
 
     /** The round books the loss of everyone the winner beat; the rating moves here. */
     private void rewardWinner(Player winner) {
-        summary.awardWin(winner);
+        awardWin(winner);
         opponentsOf(winner).findFirst().ifPresent(loser -> ratings.settle(winner, loser, this::refreshScoreboards));
     }
 
     /** A quitter has already left the participants, so the round names them as the loser itself. */
     private void rewardWinner(Player winner, Player quitter) {
-        summary.awardWin(winner);
+        awardWin(winner);
         ratings.settle(winner, quitter, this::refreshScoreboards);
+    }
+
+    private void awardWin(Player winner) {
+        summary.awardWin(winner);
+        if (mode != DuelMode.SUPERJUMP && summary.undamaged(winner)) {
+            summary.moment(winner, "duell", "makellos");
+        }
     }
 
     public void shutdown() {
