@@ -113,9 +113,7 @@ public final class LobbyQuirks implements Listener, AutoCloseable {
             lines.add(messages.get("quirks.sleep-warning"));
         }
         if (away.compareTo(config.sleepDurationAfter()) >= 0) {
-            boolean hours = away.toHours() > 0;
-            lines.add(messages.get(hours ? "quirks.sleep-hours" : "quirks.sleep-minutes",
-                    Formatter.number("amount", hours ? away.toHours() : away.toMinutes())));
+            lines.add(messages.get("quirks.sleep-hours", Formatter.number("amount", away.toHours())));
         }
         return Component.join(JoinConfiguration.newlines(), lines);
     }

@@ -108,8 +108,8 @@ the existing unlock system. The wish text is never stored or forwarded by the Bl
 ## Sleeping players
 
 After ten AFK minutes, the floating label appears. It adds `Bitte nicht wecken` after 20 minutes and a duration
-line after one hour. Lobby's `activities.sleep-after-seconds`, `sleep-warning-seconds`, and
-`sleep-duration-seconds` control those stages. Cosmetic-effect and player-visibility settings still apply.
+line in whole hours after one hour. Lobby's `activities.sleep-after-seconds`, `sleep-warning-seconds`, and
+`sleep-duration-hours` control those stages. Cosmetic-effect and player-visibility settings still apply.
 
 Attacking a visible sleeping player records a poke without damage or knockback. Returning from AFK shows one
 private chat line naming the most persistent poker and the number of attempts. The name follows the current nick

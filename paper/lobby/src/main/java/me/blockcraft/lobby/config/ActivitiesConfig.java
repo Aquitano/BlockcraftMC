@@ -24,7 +24,7 @@ public record ActivitiesConfig(Duration konamiGap, Duration fireworkCooldown, Du
                 nonnegative(activities, "advent-coins", 25), nonnegative(activities, "halloween-coins", 5),
                 String.valueOf(activities.getOrDefault("halloween-phrase", "Süßes oder Saures")),
                 seconds(activities, "pumpkin-seconds", 300), seconds(activities, "sleep-warning-seconds", 1200),
-                seconds(activities, "sleep-duration-seconds", 3600));
+                Duration.ofHours(number(activities, "sleep-duration-hours", 1)));
     }
 
     private static int number(Map<String, Object> values, String key, int fallback) {
