@@ -147,19 +147,16 @@ public final class Game {
         if (!isIngame() || !isAlive(victim)) {
             return;
         }
-        var death = summary.deathLines().resolve(event);
-        var killer = death.killer();
+        var death = summary.resolveDeath(event);
         Bukkit.broadcast(death.line());
         var victimName = Placeholder.unparsed("player", victim.getName());
-        if (killer != null) {
+        death.killer().ifPresentOrElse(killer -> {
             summary.awardKill(killer, victim, Defeat.OUT);
             if (kit(killer) == Kit.STARTER && kit(victim) == Kit.DIAMOND) {
                 summary.note(killer, messages.get("note.david-gegen-goliath", victimName));
                 BlockcraftApi.get().achievements().grant(killer, ACHIEVEMENTS, "david-gegen-goliath");
             }
-        } else {
-            summary.awardCoins(victim, config.rewards().death());
-        }
+        }, () -> summary.awardCoins(victim, config.rewards().death()));
         summary.death(victim);
         round.eliminate(victim);
         round.respawn(victim, RESPAWN_DELAY_TICKS);

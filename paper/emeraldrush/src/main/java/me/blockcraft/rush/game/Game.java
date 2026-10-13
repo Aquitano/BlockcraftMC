@@ -45,7 +45,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.IntConsumer;
@@ -311,10 +310,10 @@ public final class Game {
         if (phase != GamePhase.DEATHMATCH || !isAlive(victim)) {
             return;
         }
-        var death = summary.deathLines().resolve(event);
+        var death = summary.resolveDeath(event);
         Bukkit.broadcast(death.line());
         int remaining = Math.max(0, lives(victim) - 1);
-        Optional.ofNullable(death.killer()).ifPresent(slayer -> {
+        death.killer().ifPresent(slayer -> {
             summary.awardKill(slayer, victim, remaining == 0 ? Defeat.OUT : Defeat.LIFE);
             slayer.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 160, 1));
         });

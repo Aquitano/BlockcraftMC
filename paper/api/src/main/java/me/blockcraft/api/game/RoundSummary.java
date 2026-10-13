@@ -18,15 +18,9 @@ import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
-import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
-import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.scheduler.BukkitTask;
-import com.destroystokyo.paper.event.player.PlayerJumpEvent;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -50,7 +44,7 @@ import java.util.function.Consumer;
  * victim's title, the {@link Rivalries} of the players, the respects paid with an F in chat and the report button
  * for a cry of hacker.
  */
-public final class RoundSummary implements Listener {
+public final class RoundSummary {
 
     /** What a kill and a win pay; the amounts are the game's own {@code rewards} keys in its config.yml. */
     public record Rewards(int kill, int win) {
@@ -59,7 +53,7 @@ public final class RoundSummary implements Listener {
     private static final Title.Times TIMES = Title.Times.times(Duration.ofMillis(300), Duration.ofSeconds(3), Duration.ofMillis(700));
     private static final Title.Times MOMENT = Title.Times.times(Duration.ofMillis(250), Duration.ofMillis(2500), Duration.ofMillis(500));
     private static final long MOMENT_TICKS = MOMENT.fadeIn().plus(MOMENT.stay()).plus(MOMENT.fadeOut()).toMillis() / 50;
-    private static final double HALF_A_HEART = 1.0;
+    static final double HALF_A_HEART = 1.0;
 
     /** The buttons stay clickable past the restart countdown, which every game's config.yml sets for itself. */
     private static final ClickCallback.Options BUTTON = ClickCallback.Options.builder()
@@ -81,9 +75,7 @@ public final class RoundSummary implements Listener {
     private final Respects respects;
     private final Accusations accusations;
     private final DeathLines deathLines;
-    private boolean running;
-    private final Curiosities curiosities;
-    private BukkitTask curiosityTick;
+    private final RoundTracking tracking;
 
     private record Row(UUID player, String name, Stats delta) {
     }
@@ -100,37 +92,22 @@ public final class RoundSummary implements Listener {
         this.rivalries = new Rivalries(plugin, api, messages, new RivalryRepository(api.database()), config.nemesisLead());
         this.respects = new Respects(plugin, messages, config.respectWindow());
         this.accusations = new Accusations(plugin, messages, config.accusationWindow(), config.accusations());
-        this.curiosities = new Curiosities(config.curiosityMinimums());
-        this.deathLines = new DeathLines(messages, config.creditWindow(), hit -> {
-            curiosities.record(hit.attacker(), Curiosities.Kind.BOW, hit.distance());
-            if (hit.weapon() == Material.FISHING_ROD) {
-                curiosities.record(hit.attacker(), Curiosities.Kind.ROD, 1);
-            }
-        });
-        Bukkit.getPluginManager().registerEvents(this, plugin);
-        Bukkit.getPluginManager().registerEvents(deathLines, plugin);
+        this.deathLines = new DeathLines(messages);
+        this.tracking = new RoundTracking(plugin, config.creditWindow(), config.curiosityMinimums());
+        Bukkit.getPluginManager().registerEvents(tracking, plugin);
         Bukkit.getPluginManager().registerEvents(respects, plugin);
         Bukkit.getPluginManager().registerEvents(accusations, plugin);
     }
 
     /** The round has started with these players; their rivalries load, and each hears of a nemesis among them. */
     void begin(List<Player> players) {
-        running = true;
-        curiosityTick = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
-            long now = System.nanoTime();
-            for (var player : Bukkit.getOnlinePlayers()) {
-                if (scores.containsKey(player.getUniqueId())) {
-                    curiosities.health(player.getUniqueId(), !Round.isWatching(player) && !player.isDead()
-                            && player.getHealth() > 0 && player.getHealth() <= HALF_A_HEART, now);
-                }
-            }
-        }, 1L, 1L);
-        deathLines.begin(players);
+        tracking.begin(players);
         rivalries.load(players);
     }
 
-    public DeathLines deathLines() {
-        return deathLines;
+    /** The death's line, and the killer a recent hit credits; asking uses that credit up. */
+    public DeathLines.Death resolveDeath(PlayerDeathEvent event) {
+        return deathLines.resolve(event, tracking.takeHit(event.getPlayer()));
     }
 
     /** Whoever joins the round as a player; everyone else is a spectator and only sees who won. */
@@ -141,7 +118,7 @@ public final class RoundSummary implements Listener {
     /** A player who left before the round started takes no part in it. */
     public void forget(Player player) {
         scores.remove(player.getUniqueId());
-        deathLines.forget(player);
+        tracking.forget(player);
     }
 
     /** Out of the round for good, which books a loss whoever wins. */
@@ -188,37 +165,17 @@ public final class RoundSummary implements Listener {
     }
 
     public boolean undamaged(Player player) {
-        var score = scores.get(player.getUniqueId());
-        return score != null && !score.damaged;
+        return tracking.undamaged(player);
     }
 
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onDamage(EntityDamageEvent event) {
-        if (running && event.getEntity() instanceof Player player && event.getFinalDamage() > 0) {
-            var score = scores.get(player.getUniqueId());
-            if (score != null) {
-                score.damaged = true;
-            }
-        }
-    }
-
+    /** Grants the moment achievement {@code game.name} and adds its {@code moments.<name>} line to the player's recap. */
     public void moment(Player player, String game, String name, TagResolver... resolvers) {
         note(player, messages.get("moments." + name, resolvers));
         api.achievements().grant(player, game, name);
     }
 
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onJump(PlayerJumpEvent event) {
-        var player = event.getPlayer();
-        if (running && scores.containsKey(player.getUniqueId()) && !Round.isWatching(player)) {
-            curiosities.record(player.getUniqueId(), Curiosities.Kind.JUMPS, 1);
-        }
-    }
-
     public void minedEmeralds(Player player, int amount) {
-        if (running && scores.containsKey(player.getUniqueId()) && !Round.isWatching(player)) {
-            curiosities.record(player.getUniqueId(), Curiosities.Kind.EMERALDS, amount);
-        }
+        tracking.minedEmeralds(player, amount);
     }
 
     public List<String> winnerNames() {
@@ -226,7 +183,7 @@ public final class RoundSummary implements Listener {
     }
 
     public void death(Player victim) {
-        curiosities.health(victim.getUniqueId(), false, System.nanoTime());
+        tracking.died(victim);
         var score = score(victim);
         score.deaths++;
         score.streak = 0;
@@ -252,8 +209,8 @@ public final class RoundSummary implements Listener {
     }
 
     public void show() {
-        stopTracking();
-        var curiosity = curiosities.select(id -> {
+        tracking.stop();
+        var curiosity = tracking.curiosity(id -> {
             var player = Bukkit.getPlayer(id);
             return player != null && !api.isVanished(player);
         }).map(fact -> messages.get("curiosity." + fact.kind().key(),
@@ -309,16 +266,7 @@ public final class RoundSummary implements Listener {
     /** The respects still being paid are said now, before the restart sends everyone away. */
     void closeRespects() {
         respects.closeAll();
-        stopTracking();
-    }
-
-    private void stopTracking() {
-        running = false;
-        if (curiosityTick != null) {
-            curiosityTick.cancel();
-        }
-        curiosities.finish(System.nanoTime());
-        deathLines.stop();
+        tracking.stop();
     }
 
     /** The round's last kill ends it in the same tick, and the title that kill showed is read to the end first. */
@@ -412,7 +360,6 @@ public final class RoundSummary implements Listener {
         int coins;
         int xp;
         boolean eliminated;
-        boolean damaged;
         final List<Component> notes = new ArrayList<>();
 
         Score(String name) {

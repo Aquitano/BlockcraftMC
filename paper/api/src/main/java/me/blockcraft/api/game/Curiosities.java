@@ -3,6 +3,7 @@ package me.blockcraft.api.game;
 import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -72,7 +73,7 @@ public final class Curiosities {
     }
 
     public void finish(long now) {
-        for (var player : java.util.List.copyOf(woundedSince.keySet())) {
+        for (var player : List.copyOf(woundedSince.keySet())) {
             health(player, false, now);
         }
     }

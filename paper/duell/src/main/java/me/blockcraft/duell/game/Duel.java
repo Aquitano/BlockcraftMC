@@ -229,16 +229,16 @@ public final class Duel {
             return;
         }
         event.deathMessage(null);
-        var death = summary.deathLines().resolve(event);
+        var death = summary.resolveDeath(event);
         Bukkit.broadcast(death.line());
         if (mode == DuelMode.SG) {
             handleSgDeath(victim, death.killer());
-        } else if (death.killer() != null) {
-            handleVsKill(victim, death.killer());
-        } else {
+            return;
+        }
+        death.killer().ifPresentOrElse(killer -> handleVsKill(victim, killer), () -> {
             summary.death(victim);
             round.respawn(victim, RESPAWN_DELAY_TICKS);
-        }
+        });
     }
 
     /** The next round's title goes to the killer alone; the victim reads who beat them instead. */
@@ -259,11 +259,9 @@ public final class Duel {
     }
 
     /** Whoever dies loses the duel, whether the opponent or the map killed them. */
-    private void handleSgDeath(Player victim, Player killer) {
+    private void handleSgDeath(Player victim, Optional<Player> killer) {
         summary.death(victim);
-        if (killer != null && !killer.equals(victim)) {
-            summary.awardKill(killer, victim, Defeat.OUT);
-        }
+        killer.ifPresent(slayer -> summary.awardKill(slayer, victim, Defeat.OUT));
         opponentsOf(victim).forEach(this::rewardWinner);
         endRound();
         round.respawn(victim, RESPAWN_DELAY_TICKS);

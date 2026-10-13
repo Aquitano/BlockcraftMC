@@ -34,8 +34,8 @@ The summary shows at most one fact to everyone, selected by the largest ratio to
 Only players still online and not vanished at the end can be named. Spectator jumps and half-heart time do not count.
 
 BlockcraftAPI's `curiosities` thresholds default to 40 blocks, 100 jumps, ten seconds, ten rod hits, and 100 mined
-Emeralds. A threshold of zero or less disables that category. Half-heart time uses a tick-level health check and
-stops on death, leaving the round, or the end of the round. The counters stay in memory for that round only.
+Emeralds. A threshold of zero or less disables that category. Half-heart time uses a once-per-second health check
+and stops on death, leaving the round, or the end of the round. The counters stay in memory for that round only.
 
 ## Moment achievements
 
