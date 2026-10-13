@@ -21,6 +21,7 @@ public record RushConfig(
         int lives,
         int killCoins,
         int winCoins,
+        int dagobertEmeralds,
         CombatStyle combat
 ) {
 
@@ -43,6 +44,7 @@ public record RushConfig(
                 config.getInt("lives", 3),
                 config.getInt("rewards.kill", 5),
                 config.getInt("rewards.win", 15),
+                config.getInt("moments.dagobert-emeralds", 100),
                 CombatStyle.from(config));
     }
 }

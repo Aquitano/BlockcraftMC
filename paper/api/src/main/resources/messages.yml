@@ -71,7 +71,6 @@ afk:
     - "<success>Willkommen zurück! <muted>Du warst <accent><minutes> Minuten <muted>weg."
     - "<success>Wieder da! <accent><minutes> Minuten <muted>Pause. Dein Platz ist noch warm."
     - "<success>Willkommen zurück! <accent><minutes> Minuten <muted>weg. Die Blöcke stehen noch."
-
   poked: "<prefix><primary><player> <muted>hat <count> versucht, dich zu wecken."
   poke-count:
     1: "einmal"
@@ -465,7 +464,6 @@ achievements:
     ausdauer:
       name: "Ausdauer"
       description: "Falle im JumpAndRun 100-mal herunter und mach weiter."
-
     nachteule:
       name: "Nachteule"
       description: "Beende eine Runde zwischen drei und vier Uhr morgens."
@@ -491,11 +489,6 @@ nemesis:
   present: "<prefix><muted>Dein Erzfeind <error><nemesis> <muted>ist in dieser Runde. Stand <accent><won>:<lost><muted>."
   revenge-title: "<success>Rache!"
   revenge-subtitle: "<white><nemesis> <muted>besiegt <dark>· <muted>Stand <accent><won>:<lost>"
-  revenge-note: "<arrow><success>Rache <dark>· <muted>Erzfeind <white><nemesis> <muted>besiegt, Stand <accent><won>:<lost>"
-
-# The recap line of a win on half a heart or less.
-close-call:
-  note: "<arrow><success>Haarscharf <dark>· <muted>Gewonnen mit einem halben Herzen"
 
 # The round's answer to the F written after a death; <deceased> is the player who died.
 respect:
@@ -543,7 +536,12 @@ death-lines:
     fishing_rod: "einer Angel"
     stick: "einem Stock"
 
+# The recap line of each moment a round grants, named like its achievement.
 moments:
+  rache: "<arrow><success>Rache <dark>· <muted>Erzfeind <white><nemesis> <muted>besiegt, Stand <accent><won>:<lost>"
+  haarscharf: "<arrow><success>Haarscharf <dark>· <muted>Gewonnen mit einem halben Herzen"
+  nackt: "<arrow><success>Nackt <dark>· <muted>Gewonnen ganz ohne Rüstung"
+  david-gegen-goliath: "<arrow><success>David gegen Goliath <dark>· <muted>Mit dem Starter-Kit <white><player> <muted>im Diamant-Kit besiegt"
   dagobert: "<arrow><success>Dagobert <dark>· <muted><emeralds> Emeralds, nie ausgegeben"
   minimalist: "<arrow><success>Minimalist <dark>· <muted>Ohne einen Kauf im Rundenshop gewonnen"
   pazifist: "<arrow><success>Pazifist <dark>· <muted>Gewonnen ohne einen einzigen Kill"

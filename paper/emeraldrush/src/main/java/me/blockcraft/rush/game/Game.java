@@ -373,8 +373,7 @@ public final class Game {
             if (!purchased.contains(winner.getUniqueId())) {
                 summary.moment(winner, "emeraldrush", "minimalist");
             }
-            if (!spentEmeralds.contains(winner.getUniqueId())
-                    && emeralds(winner) >= BlockcraftApi.get().achievements().threshold("emeraldrush", "dagobert")) {
+            if (!spentEmeralds.contains(winner.getUniqueId()) && emeralds(winner) >= config.dagobertEmeralds()) {
                 summary.moment(winner, "emeraldrush", "dagobert", Formatter.number("emeralds", emeralds(winner)));
             }
         });

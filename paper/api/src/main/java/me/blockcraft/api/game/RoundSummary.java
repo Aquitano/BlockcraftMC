@@ -198,8 +198,7 @@ public final class RoundSummary {
         score.xp += api.xp().award(winner, XpReward.WIN);
         pay(winner, rewards.win());
         if (!winner.isDead() && winner.getHealth() <= HALF_A_HEART) {
-            note(winner, messages.get("close-call.note"));
-            api.achievements().grant(winner, Achievement.NETWORK, "haarscharf");
+            moment(winner, Achievement.NETWORK, "haarscharf");
         }
     }
 
@@ -288,8 +287,7 @@ public final class RoundSummary {
         var resolvers = TagResolver.resolver(Placeholder.unparsed("nemesis", nemesis.getName()),
                 Formatter.number("won", standing.won()), Formatter.number("lost", standing.lost()));
         moment(killer, messages.get("nemesis.revenge-title"), messages.get("nemesis.revenge-subtitle", resolvers));
-        note(killer, messages.get("nemesis.revenge-note", resolvers));
-        api.achievements().grant(killer, Achievement.NETWORK, "rache");
+        moment(killer, Achievement.NETWORK, "rache", resolvers);
     }
 
     private void moment(Player player, Component title, Component subtitle) {

@@ -39,11 +39,13 @@ and stops on death, leaving the round, or the end of the round. The counters sta
 
 ## Moment achievements
 
-Each completed moment adds a personal recap note and grants its achievement once through `bc_unlocks`.
+Each completed moment adds a personal recap note and grants its achievement once through `bc_unlocks`. Every
+moment a round grants, including Rache, Haarscharf, Nackt, and David gegen Goliath, takes its recap line from
+BlockcraftAPI's `moments.<name>`.
 
 | Moment | Condition | Default XP |
 |---|---|---|
-| Dagobert | Win EmeraldRush with at least 100 Emeralds and no Emeralds spent. The threshold is `achievements.emeraldrush.dagobert.threshold`. | 100 |
+| Dagobert | Win EmeraldRush with at least 100 Emeralds and no Emeralds spent. EmeraldRush's `moments.dagobert-emeralds` sets the minimum. | 100 |
 | Minimalist | Win EmeraldRush without completing a purchase in the round shop, including a free purchase. | 100 |
 | Pazifist | Win QuickSG with zero kills in the round. | 100 |
 | Makellos | Win a combat duel without taking any non-cancelled damage during the match. | 100 |
@@ -196,8 +198,8 @@ through Extras without Premium. Existing purchased heads keep their original sto
 ## Gameplay verification
 
 The automated build checks message keys and covers calendar dates, Konami input, parkour progression, rematch
-requests, hidden-command replies and bypasses, attacker-credit expiry, consecutive draws, curiosity selection,
-wake-up counts, friendship age, legacy friend-menu messages, and shooting-star wish cancellation. Database
+requests, hidden-command replies and bypasses, attacker-credit expiry, hour windows, curiosity selection,
+wake-up counts, friendship age, every achievement's texts, and shooting-star wish cancellation. Database
 integration tests cover concurrent join numbering, greeting caps, duplicate reward claims, rollback on failed
 credit, the one-time OG snapshot, and duel pairs counting their draws. They need a disposable test database;
 a build without one skips those tests.

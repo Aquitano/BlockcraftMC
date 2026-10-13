@@ -4,14 +4,17 @@ import me.blockcraft.api.game.Stats;
 import me.blockcraft.common.config.YamlFile;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 public class AchievementsTest {
+
+    /** Granted outside any round, by the lobby parkour and by greeting newcomers, so no recap shows them. */
+    private static final Set<String> OUTSIDE_ROUNDS = Set.of("network.ausdauer", "network.willkommenskomitee");
 
     private static final List<Achievement> CATALOG = Achievements.parse(Map.of(
             "quicksg", Map.of(
@@ -38,19 +41,21 @@ public class AchievementsTest {
     }
 
     @Test
-    public void newMomentsHaveCatalogEntriesAndLocalizedRecapNotes() throws Exception {
+    public void everyAchievementIsNamedAndEveryRoundMomentHasARecapLine() throws Exception {
         try (var config = getClass().getResourceAsStream("/config.yml");
              var messages = getClass().getResourceAsStream("/messages.yml")) {
             var catalog = Achievements.parse(YamlFile.section(YamlFile.load(config), "achievements"));
             var texts = YamlFile.flatten(YamlFile.load(messages));
-            for (String key : List.of("emeraldrush.dagobert", "emeraldrush.minimalist", "quicksg.pazifist",
-                    "duell.makellos", "duell.trittsicher", "network.nachteule")) {
-                var entry = catalog.stream().filter(achievement -> achievement.key().equals(key)).findFirst().orElseThrow();
-                assertTrue(entry.isMoment());
-                assertTrue(texts.containsKey("achievements." + key + ".name"));
-                assertTrue(texts.containsKey("achievements." + key + ".description"));
-                assertTrue(texts.containsKey("moments." + entry.name()));
+            var missing = new ArrayList<String>();
+            for (var achievement : catalog) {
+                var required = new ArrayList<>(List.of("achievements." + achievement.key() + ".name",
+                        "achievements." + achievement.key() + ".description"));
+                if (achievement.isMoment() && !OUTSIDE_ROUNDS.contains(achievement.key())) {
+                    required.add("moments." + achievement.name());
+                }
+                required.stream().filter(key -> !texts.containsKey(key)).forEach(missing::add);
             }
+            assertEquals(List.of(), missing);
         }
     }
 }

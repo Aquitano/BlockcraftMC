@@ -97,7 +97,7 @@ achievements:
     kills-1000: {counts: kills, threshold: 1000, xp: 500}
     wins-10: {counts: wins, threshold: 10, xp: 100}
     wins-100: {counts: wins, threshold: 100, xp: 500}
-    dagobert: {counts: moment, threshold: 100, xp: 100}
+    dagobert: {counts: moment, xp: 100}
     minimalist: {counts: moment, xp: 100}
   duell:
     first-win: {counts: wins, threshold: 1, xp: 25}

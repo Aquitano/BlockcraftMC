@@ -149,12 +149,10 @@ public final class Game {
         }
         var death = summary.resolveDeath(event);
         Bukkit.broadcast(death.line());
-        var victimName = Placeholder.unparsed("player", victim.getName());
         death.killer().ifPresentOrElse(killer -> {
             summary.awardKill(killer, victim, Defeat.OUT);
             if (kit(killer) == Kit.STARTER && kit(victim) == Kit.DIAMOND) {
-                summary.note(killer, messages.get("note.david-gegen-goliath", victimName));
-                BlockcraftApi.get().achievements().grant(killer, ACHIEVEMENTS, "david-gegen-goliath");
+                summary.moment(killer, ACHIEVEMENTS, "david-gegen-goliath", Placeholder.unparsed("player", victim.getName()));
             }
         }, () -> summary.awardCoins(victim, config.rewards().death()));
         summary.death(victim);
@@ -272,8 +270,7 @@ public final class Game {
                 summary.moment(winner, ACHIEVEMENTS, "pazifist");
             }
             if (Arrays.stream(winner.getInventory().getArmorContents()).allMatch(piece -> piece == null || piece.isEmpty())) {
-                summary.note(winner, messages.get("note.nackt"));
-                BlockcraftApi.get().achievements().grant(winner, ACHIEVEMENTS, "nackt");
+                summary.moment(winner, ACHIEVEMENTS, "nackt");
             }
         }
         endRound();
