@@ -107,3 +107,17 @@ activities:
   halloween-coins: 5
   halloween-phrase: "Süßes oder Saures"
   pumpkin-seconds: 300
+
+shooting-stars:
+  enabled: true
+  zone: Europe/Berlin
+  from-hour: 22
+  until-hour: 2
+  check-seconds: 60
+  odds: 30
+  cooldown-seconds: 1800
+  wish-seconds: 15
+  animation-ticks: 40
+  height: 24
+  length: 60
+  wish-prefixes: ["ich wünsche mir", "ich wuensche mir", "i wish"]

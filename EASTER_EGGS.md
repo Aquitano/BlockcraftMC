@@ -89,6 +89,22 @@ Existing imported `bc_players.first_seen` values are not treated as verified his
 record a verified date. Join numbers remain stable, but the ordering of imported accounts follows their stored
 first-seen timestamps and UUIDs.
 
+## Shooting stars
+
+Between 22:00 inclusive and 02:00 exclusive in `Europe/Berlin`, a rare particle trail crosses the lobby sky.
+A wish during the next 15 seconds finds `Sternschnuppe`. It is a bonus secret and does not gate `[ENTDECKER]`.
+The event needs at least one active, non-vanished player. Cosmetic-effect settings control the particles.
+
+Lobby's `shooting-stars` section controls the zone, hours, check interval, odds, cooldown, animation, and wish
+window. Defaults check once per minute with a one-in-30 chance and a 30-minute cooldown after an event.
+Setting `enabled` to false stops the sky events.
+
+Messages beginning with a configured `wish-prefixes` phrase and a nonempty wish are always intercepted in lobby
+chat before Blockcraft's word and advertisement filters. They are cancelled and removed from every audience,
+including the console. Late wishes receive a private reply. Only the first wish per account and event triggers
+the discovery. The event stores a deadline and account UUIDs, while the secret uses the existing unlock system.
+The wish text is never stored or forwarded by the Blockcraft plugins.
+
 ## Sleeping players
 
 After ten AFK minutes, the floating label appears. It adds `Bitte nicht wecken` after 20 minutes and a duration
@@ -103,8 +119,8 @@ and disconnect. They are not stored in the database.
 ## Lobby discoveries
 
 The secrets menu shows progress and unlocks riddles after the configured number of discoveries. Each secret pays
-once. The first recorded finder gets a network announcement. Finding every secret available without Premium
-unlocks `[ENTDECKER]`; the chicken's golden egg is an additional Premium discovery.
+once. The first recorded finder gets a network announcement. Finding all sign, Konami-code, and pond discoveries
+unlocks `[ENTDECKER]`; the chicken's golden egg and the shooting star are bonus discoveries.
 
 Press forward twice, backward twice, left, right, left, right, sneak, then jump to enter the Konami code. Release
 each key between presses. The default bindings are `W W S S A D A D Shift Space`. A three-second gap resets the

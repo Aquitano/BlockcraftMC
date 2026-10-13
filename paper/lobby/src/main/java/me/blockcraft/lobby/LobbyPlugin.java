@@ -11,6 +11,7 @@ import me.blockcraft.lobby.activity.LobbyQuirks;
 import me.blockcraft.lobby.activity.Parkour;
 import me.blockcraft.lobby.activity.PondFishing;
 import me.blockcraft.lobby.activity.SeasonalEvents;
+import me.blockcraft.lobby.activity.ShootingStars;
 import me.blockcraft.lobby.command.ClearChatCommand;
 import me.blockcraft.lobby.command.LobbySetCommand;
 import me.blockcraft.lobby.command.SetHoloCommand;
@@ -18,6 +19,7 @@ import me.blockcraft.lobby.command.SetSpawnCommand;
 import me.blockcraft.lobby.config.ActivitiesConfig;
 import me.blockcraft.lobby.config.LobbyConfig;
 import me.blockcraft.lobby.config.LobbyLocation;
+import me.blockcraft.lobby.config.ShootingStarConfig;
 import me.blockcraft.lobby.cosmetic.CosmeticPreviews;
 import me.blockcraft.lobby.cosmetic.Head;
 import me.blockcraft.lobby.cosmetic.Pets;
@@ -73,6 +75,7 @@ public final class LobbyPlugin extends JavaPlugin {
     private Parkour parkour;
     private LobbyQuirks quirks;
     private SeasonalEvents seasons;
+    private ShootingStars stars;
 
     @Override
     public void onEnable() {
@@ -95,6 +98,7 @@ public final class LobbyPlugin extends JavaPlugin {
         var activityLocations = Locations.load(api.map().file(this, "activities.yml"));
         parkour = new Parkour(this, activityLocations, activities, messages);
         quirks = new LobbyQuirks(this, activities, messages, pets, secrets);
+        stars = new ShootingStars(this, ShootingStarConfig.fromYaml(YamlFile.section(yaml, "shooting-stars")), messages, secrets);
         seasons = new SeasonalEvents(this, activityLocations, activities, messages,
                 () -> locations.get(LobbyLocation.SPAWN).ifPresent(spawn -> config.fireworkSpots()
                         .forEach(spot -> MoveListener.launchFirework(spot.toLocation(spawn.getWorld())))));
@@ -116,7 +120,7 @@ public final class LobbyPlugin extends JavaPlugin {
 
         hud = new LobbyHud(this, messages);
         hud.start(config.hudRefreshSeconds() * 20L);
-        register(previews, hud, parkour, quirks, seasons,
+        register(previews, hud, parkour, quirks, seasons, stars.wishes(),
                 new PondFishing(activityLocations, activities, messages, secrets),
                 new JoinQuitListener(messages, locations, items, trails, pets, hider),
                 new CosmeticSettingsListener(messages, trails, pets, gadgets),
@@ -152,6 +156,9 @@ public final class LobbyPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (stars != null) {
+            stars.close();
+        }
         if (parkour != null) {
             parkour.close();
         }

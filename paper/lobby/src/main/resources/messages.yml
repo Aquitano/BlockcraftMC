@@ -135,6 +135,7 @@ secrets:
     retro: "Retro"
     karpfen: "Goldener Karpfen"
     goldenesei: "Goldenes Ei"
+    sternschnuppe: "Sternschnuppe"
   # Shown on every secret still missing, once a player found secrets.riddles-after of them (config.yml).
   riddle:
     zimmer: "Jedes Haus hat ein Zimmer, das niemand betritt."
@@ -149,6 +150,7 @@ secrets:
     retro: "Oben, oben, unten, unten … den Rest kennst du."
     karpfen: "Wer am Wasser Geduld hat, zieht manchmal Gold heraus."
     goldenesei: "Manche Hühner legen mehr als nur Frühstück."
+    sternschnuppe: "Zwischen zehn am Abend und zwei in der Nacht hat der Himmel manchmal einen Wunsch frei."
   sign:
     border: "<dark><strikethrough>-----------"
     tag: "<muted>[SECRET]"
@@ -162,7 +164,7 @@ secrets:
     - "<accent>+<coins> Coins"
   first-finder: "<primary>Secrets <dark>● <accent><player> <muted>hat das Secret <white><secret> <muted>gefunden. <accent>Niemand war schneller!"
   explorer:
-    - "<primary>Secrets <dark>● <success>Alle Secrets gefunden!"
+    - "<primary>Secrets <dark>● <success>Alle regulären Secrets gefunden!"
     - "<primary>Secrets <dark>● <muted>Dein Tag <tag> <muted>wartet in den Extras unter Chat-Tags."
 cosmetics:
   earned-locked: "<muted>Wird bei einem besonderen Anlass freigeschaltet."
@@ -530,3 +532,8 @@ seasonal:
   advent-reward: "<prefix><success>Türchen geöffnet: <accent>+<coins> Coins<muted>."
   door: "<accent>Türchen <day>"
   snow: "<prefix><muted>Die <primary>Schneespur <muted>wartet bei deinen Spuren. Frohe Weihnachten!"
+
+shooting-star:
+  announce: "<prefix><accent>Eine Sternschnuppe! <muted>Schreib in <seconds> Sekunden '<phrase> …'. Dein Wunsch bleibt privat."
+  wish: "<prefix><muted>Wunsch notiert. Wir verraten ihn niemandem."
+  wish-late: "<prefix><muted>Gerade ist keine Sternschnuppe zu sehen. Dein Wunsch bleibt trotzdem privat."

@@ -17,10 +17,11 @@ public enum Secret {
     ABGELEGEN("Abgelegen", Trigger.SIGN),
     RETRO("Retro", Trigger.KONAMI_CODE),
     GOLDEN_CARP("Karpfen", Trigger.FISHING),
-    GOLDEN_EGG("GoldenesEi", Trigger.CHICKEN);
+    GOLDEN_EGG("GoldenesEi", Trigger.CHICKEN),
+    SHOOTING_STAR("Sternschnuppe", Trigger.SHOOTING_STAR);
 
     /** A sign is placed in the map; the others need no map at all. The chicken is a premium pet. */
-    public enum Trigger { SIGN, KONAMI_CODE, FISHING, CHICKEN }
+    public enum Trigger { SIGN, KONAMI_CODE, FISHING, CHICKEN, SHOOTING_STAR }
 
     public static final String ITEM_PREFIX = "lobby.secret.";
 
@@ -36,9 +37,9 @@ public enum Secret {
         return Arrays.stream(values()).filter(secret -> secret.key.equalsIgnoreCase(key)).findFirst();
     }
 
-    /** What the explorer tag asks for: every secret a player can find without premium. */
+    /** Premium and time-limited bonus discoveries do not gate the explorer tag. */
     public static Stream<Secret> forExplorer() {
-        return Arrays.stream(values()).filter(secret -> secret.trigger != Trigger.CHICKEN);
+        return Arrays.stream(values()).filter(secret -> secret.trigger != Trigger.CHICKEN && secret.trigger != Trigger.SHOOTING_STAR);
     }
 
     public String key() {
