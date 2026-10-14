@@ -9,6 +9,7 @@ public enum LobbyLocation {
     QSG("qsg"),
     JUMP("jump"),
     RUSH("rush"),
+    BEDWARS("bedwars"),
     SHOP("shop"),
     PREMIUM("premium"),
     SHOP_NPC("shop-npc");

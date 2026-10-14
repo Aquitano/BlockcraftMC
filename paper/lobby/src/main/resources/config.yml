@@ -82,6 +82,7 @@ navigator:
     qsg: quicksg
     rush: emeraldrush
     duell: duell
+    bedwars: bedwars
   stale-seconds: 20
 
 friends:
