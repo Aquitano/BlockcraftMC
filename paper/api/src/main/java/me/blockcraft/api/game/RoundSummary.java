@@ -148,6 +148,7 @@ public final class RoundSummary {
             case OUT -> "defeat.out";
             case LIFE -> "defeat.life";
             case POINT -> "defeat.point";
+            case RESPAWN -> "defeat.respawn";
         }), messages.get("defeat.subtitle", Placeholder.unparsed("killer", killer.getName()),
                 Placeholder.unparsed("hearts", hearts(killer.getHealth()))));
         rivalries.kill(killer, victim, standing -> avenge(killer, victim, standing));

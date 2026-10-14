@@ -14,6 +14,7 @@ import org.bukkit.plugin.Plugin;
 import java.time.Duration;
 import java.util.List;
 import java.util.Set;
+import java.util.function.IntConsumer;
 import java.util.function.IntFunction;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
@@ -35,16 +36,24 @@ public final class LobbyCountdown {
     private final int seconds;
     private final int minPlayers;
     private final IntSupplier players;
+    private final IntConsumer onSecond;
     private final Runnable onStart;
     private boolean forced;
     private BossBar bar;
 
     public LobbyCountdown(Plugin plugin, Arena arena, int seconds, int minPlayers, IntSupplier players, Runnable onStart) {
+        this(plugin, arena, seconds, minPlayers, players, remaining -> { }, onStart);
+    }
+
+    /** {@code onSecond} hears every second the clock actually runs down, not the ones it waits at full. */
+    public LobbyCountdown(Plugin plugin, Arena arena, int seconds, int minPlayers, IntSupplier players,
+                          IntConsumer onSecond, Runnable onStart) {
         this.countdown = new Countdown(plugin);
         this.arena = arena;
         this.seconds = seconds;
         this.minPlayers = minPlayers;
         this.players = players;
+        this.onSecond = onSecond;
         this.onStart = onStart;
     }
 
@@ -135,6 +144,7 @@ public final class LobbyCountdown {
             return;
         }
         updateBar(remaining);
+        onSecond.accept(remaining);
         if (ANNOUNCE_AT.contains(remaining)) {
             arena.announceStart(remaining);
         }

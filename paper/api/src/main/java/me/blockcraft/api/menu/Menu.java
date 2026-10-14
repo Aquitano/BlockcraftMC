@@ -10,6 +10,7 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
@@ -87,6 +88,11 @@ public abstract class Menu implements InventoryHolder {
 
     protected Sounds clickSound(int slot, InventoryClickEvent event) {
         return Sounds.MENU_CLICK;
+    }
+
+    /** The clicks that reach {@link #onClick}; a menu that does more on a shift-click or a number key takes those too. */
+    protected boolean accepts(ClickType click) {
+        return click == ClickType.LEFT || click == ClickType.RIGHT;
     }
 
     protected boolean isEnabled(Player player, int slot, InventoryClickEvent event) {

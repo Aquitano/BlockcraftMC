@@ -482,6 +482,7 @@ defeat:
   out: "<error>Ausgeschieden"
   life: "<accent>Ein Leben weniger"
   point: "<accent>Punkt verloren"
+  respawn: "<accent>Getötet"
   subtitle: "<white><killer> <muted>hatte noch <error><hearts> ❤"
 
 # A player's nemesis (Erzfeind); <won>:<lost> is the score between them from the player's side.

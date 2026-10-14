@@ -7,6 +7,7 @@ import me.blockcraft.api.scoreboard.Boards;
 import me.blockcraft.api.vanish.VanishChangeEvent;
 import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.model.group.Group;
 import org.bukkit.Bukkit;
@@ -19,9 +20,12 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.scoreboard.Scoreboard;
 
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -32,7 +36,8 @@ import java.util.UUID;
  * scoreboard for the sidebar, so the teams are written to all of them; entries are remembered per UUID because a
  * nick changes the name the tab list is keyed by. Vanished players get their own team per group, suffixed with a
  * marker: only staff who see through vanish still list them. Players away from the keyboard get a team of their own
- * with an AFK marker, unless they are vanished.
+ * with an AFK marker, unless they are vanished. A game that plays in teams colours its players' names, in the tab
+ * list and above their heads, without taking the rank prefix away.
  */
 public final class TabTeams implements Listener {
 
@@ -41,6 +46,9 @@ public final class TabTeams implements Listener {
     private static final char VISIBLE = '-';
     private static final char VANISHED = 'v';
     private static final char AFK = 'a';
+    private static final char UNCOLORED = '-';
+    private static final List<NamedTextColor> COLORS = NamedTextColor.NAMES.values().stream()
+            .sorted(Comparator.comparingInt(NamedTextColor::value)).toList();
 
     private final LuckPerms luckPerms;
     private final Messages messages;
@@ -48,8 +56,9 @@ public final class TabTeams implements Listener {
     private final Afk afk;
     private final Map<UUID, Entry> entries = new LinkedHashMap<>();
     private final Set<UUID> vanished = new HashSet<>();
+    private final Map<UUID, NamedTextColor> colors = new HashMap<>();
 
-    private record Entry(String team, Component prefix, Component suffix, String name) {
+    private record Entry(String team, Component prefix, Component suffix, Optional<NamedTextColor> color, String name) {
     }
 
     public TabTeams(LuckPerms luckPerms, Messages messages, NickRanks nickRanks, Afk afk) {
@@ -87,7 +96,20 @@ public final class TabTeams implements Listener {
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
         vanished.remove(event.getPlayer().getUniqueId());
+        colors.remove(event.getPlayer().getUniqueId());
         remove(event.getPlayer());
+    }
+
+    /** The colour of the player's game team on their name, until {@link #clearColor} or they leave. */
+    public void color(Player player, NamedTextColor color) {
+        colors.put(player.getUniqueId(), color);
+        update(player);
+    }
+
+    public void clearColor(Player player) {
+        if (colors.remove(player.getUniqueId()) != null) {
+            update(player);
+        }
     }
 
     public void update(Player player) {
@@ -126,8 +148,9 @@ public final class TabTeams implements Listener {
         boolean isAfk = !isVanished && afk.isAfk(player);
         Component suffix = isVanished ? messages.get("tab.vanished-suffix")
                 : isAfk ? messages.get("tab.afk-suffix") : Component.empty();
-        return new Entry(teamName(weight, groupName, isVanished ? VANISHED : isAfk ? AFK : VISIBLE), prefix, suffix,
-                player.getName());
+        var color = Optional.ofNullable(colors.get(player.getUniqueId()));
+        return new Entry(teamName(weight, groupName, color, isVanished ? VANISHED : isAfk ? AFK : VISIBLE), prefix, suffix,
+                color, player.getName());
     }
 
     private static void apply(Scoreboard board, Entry entry) {
@@ -139,13 +162,18 @@ public final class TabTeams implements Listener {
         }
         team.prefix(entry.prefix());
         team.suffix(entry.suffix());
+        entry.color().ifPresent(team::color);
         team.addEntry(entry.name());
     }
 
-    /** Weight, group, then the marker, so AFK and vanished players sort right after their visible rank mates. */
-    private static String teamName(int weight, String group, char marker) {
+    /**
+     * Weight, group, the game team's colour, then the marker, so a game's teams sort together within a rank and AFK
+     * and vanished players right after their visible mates.
+     */
+    private static String teamName(int weight, String group, Optional<NamedTextColor> color, char marker) {
         String name = String.format("%04d%s", MAX_WEIGHT - Math.clamp(weight, 0, MAX_WEIGHT), group);
-        int room = MAX_TEAM_NAME - 1;
-        return (name.length() > room ? name.substring(0, room) : name) + marker;
+        int room = MAX_TEAM_NAME - 2;
+        char colorMark = color.map(named -> Character.forDigit(COLORS.indexOf(named), Character.MAX_RADIX)).orElse(UNCOLORED);
+        return (name.length() > room ? name.substring(0, room) : name) + colorMark + marker;
     }
 }

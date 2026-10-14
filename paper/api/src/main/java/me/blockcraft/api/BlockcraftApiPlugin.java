@@ -126,11 +126,12 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         var nickStats = new NickStats(nickRanks, NickStats.Ranges.from(YamlFile.section(config, "nick-stats")));
         var audit = new StaffAudit(this, new StaffActionRepository(database), realNames, self.name(),
                 StaffAudit.Notices.from(YamlFile.section(config, "audit")), messages);
+        var tabTeams = new TabTeams(LuckPermsProvider.get(), messages, nickRanks, afk);
         var api = new BlockcraftApi(notifications, new NetworkOperations(this, messages), playerTasks, database, coins,
                 unlocks, new Shop(database), new RoundRecapRepository(database), streaks(YamlFile.section(config, "streaks")),
                 settings, resourcePack, profiles, new Effects(settings), messages,
                 servers, self, groups, text(config, "lobby-group", "lobby"), presence, resources.tags(), xp, map,
-                buildMode, realNames, nickRanks, nickStats, achievements, elo, afk, ignores, vanished, audit,
+                buildMode, realNames, nickRanks, nickStats, achievements, elo, afk, ignores, vanished, audit, tabTeams,
                 NetworkCalendar.fromYaml(YamlFile.section(config, "calendar")), RoundConfig.from(config));
         BlockcraftApi.install(api);
         getLogger().info("Running map " + map.name() + map.template().map(template -> " from " + template.directory()).orElse(""));
@@ -150,7 +151,7 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         afk.start();
         getServer().getPluginManager().registerEvents(new MenuListener(playerTasks), this);
         getServer().getPluginManager().registerEvents(new ServerMenu(this, profiles), this);
-        getServer().getPluginManager().registerEvents(new TabTeams(LuckPermsProvider.get(), messages, nickRanks, afk), this);
+        getServer().getPluginManager().registerEvents(tabTeams, this);
         getServer().getPluginManager().registerEvents(buildMode, this);
         getServer().getPluginManager().registerEvents(new VanillaProgress(), this);
 

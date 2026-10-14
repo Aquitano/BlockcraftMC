@@ -16,6 +16,7 @@ import me.blockcraft.api.nick.NickStats;
 import me.blockcraft.api.pack.ResourcePacks;
 import me.blockcraft.api.player.RealNames;
 import me.blockcraft.api.rank.NickRanks;
+import me.blockcraft.api.rank.TabTeams;
 import me.blockcraft.api.proxy.NetworkOperations;
 import me.blockcraft.api.settings.PlayerSettings;
 import me.blockcraft.api.shop.Unlocks;
@@ -65,6 +66,7 @@ import java.util.Optional;
  * @param elo          ranked 1vs1 ratings of the running season and the skill groups they fall into
  * @param ignores      whom each online player ignores; chat from those players does not reach them
  * @param audit        the staff audit log; whatever staff do to players or to the server is recorded here
+ * @param tabTeams     the tab list and name tag teams; a team game colours its players' names through it
  * @param calendar     the days the network celebrates, in its own time zone
  * @param roundConfig  what every game's round makes of a kill: nemesis lead, respect window, hacker words
  */
@@ -101,6 +103,7 @@ public record BlockcraftApi(
         Ignores ignores,
         VanishedPlayers vanished,
         StaffAudit audit,
+        TabTeams tabTeams,
         NetworkCalendar calendar,
         RoundConfig roundConfig) {
 
