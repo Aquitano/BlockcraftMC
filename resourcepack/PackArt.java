@@ -232,6 +232,7 @@ public final class PackArt {
     static final Map<Character, Integer> BOOK = Map.of('R', 0xFFE04E4E, 'r', 0xFF9E2B2B, 'W', 0xFFF4F5F7);
     static final Map<Character, Integer> LENS = Map.of('G', 0xFFA7AEBB, 'C', 0xFF67E8F9, 'W', 0xFFF4F5F7, 'B', 0xFF7A4B1F);
     static final Map<Character, Integer> EYE = Map.of('W', 0xFFF4F5F7, 'e', 0xFF4C6EF5, 'E', 0xFF1B1E26);
+    static final Map<Character, Integer> BALLOT = Map.of('W', 0xFFF4F5F7, 'w', 0xFFC9CDD6, 'G', 0xFF2ECC71);
 
     static final Map<String, Icon> ICONS = Map.ofEntries(
             Map.entry("back", new Icon(new String[] {
@@ -468,6 +469,42 @@ public final class PackArt {
                     ".oo..........oo.",
                     "................",
             }, AQUA)),
+            Map.entry("bedwars", new Icon(new String[] {
+                    "................",
+                    "................",
+                    "................",
+                    "oo..............",
+                    "oBo.............",
+                    "oBo.............",
+                    "oBoooooooooooooo",
+                    "oBWWWWwRRRRRRRRo",
+                    "oBWWWWwRRRRRRRRo",
+                    "oBwwwwwrrrrrrrro",
+                    "oBBBBBBBBBBBBBBo",
+                    "obbbbbbbbbbbbbbo",
+                    "obboooooooooobbo",
+                    "obbo........obbo",
+                    "oooo........oooo",
+                    "................",
+            }, HOUSE)),
+            Map.entry("vote", new Icon(new String[] {
+                    "................",
+                    "...oooooooo.....",
+                    "...oWWWWWWwo....",
+                    "...oWWWWWWWwo...",
+                    "...oWwwwwWWWo...",
+                    "...oWWWWWWWWo...",
+                    "...oWwwwwwWWo...",
+                    "...oWWWWWWWWo...",
+                    "...oWWWWWWGWo...",
+                    "...oWGWWWGWWo...",
+                    "...oWWGWGWWWo...",
+                    "...oWWWGWWWWo...",
+                    "...oWWWWWWWWo...",
+                    "...oooooooooo...",
+                    "................",
+                    "................",
+            }, BALLOT)),
             Map.entry("jump", new Icon(new String[] {
                     "................",
                     "....oooo........",

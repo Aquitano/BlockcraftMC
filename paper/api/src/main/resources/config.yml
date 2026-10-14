@@ -42,6 +42,7 @@ profile:
     quicksg: qsg_stats
     emeraldrush: em_stats
     duell: duell_stats
+    bedwars: bw_stats
 
 # Network XP (bc_xp). Each level costs level-step more XP than the one before: level 2 at 100, level 3 at 300,
 # level 10 at 4500. rewards are what every game hands out per kill, per win and to every player who is still
@@ -108,6 +109,13 @@ achievements:
     wins-100: {counts: wins, threshold: 100, xp: 500}
     makellos: {counts: moment, xp: 100}
     trittsicher: {counts: moment, xp: 100}
+  bedwars:
+    first-win: {counts: wins, threshold: 1, xp: 25}
+    kills-10: {counts: kills, threshold: 10, xp: 25}
+    kills-100: {counts: kills, threshold: 100, xp: 100}
+    kills-1000: {counts: kills, threshold: 1000, xp: 500}
+    wins-10: {counts: wins, threshold: 10, xp: 100}
+    wins-100: {counts: wins, threshold: 100, xp: 500}
   network:
     level-5: {counts: level, threshold: 5, xp: 50}
     level-10: {counts: level, threshold: 10, xp: 100}

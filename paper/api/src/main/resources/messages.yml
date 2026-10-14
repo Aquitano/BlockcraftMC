@@ -14,6 +14,7 @@ palette:
   quicksg: "<gold>"
   emeraldrush: "<green>"
   duell: "<aqua>"
+  bedwars: "<dark_aqua>"
   premium: "<gold>"
 
 games:
@@ -23,6 +24,8 @@ games:
     name: "<emeraldrush>EmeraldRush"
   duell:
     name: "<duell>Duell"
+  bedwars:
+    name: "<bedwars>BedWars"
 game-status:
   available: "<success>Jetzt spielen"
   full: "<muted>Alle Plätze belegt"
@@ -292,6 +295,7 @@ profile:
     quicksg: "<arrow><primary>QuickSG"
     emeraldrush: "<arrow><primary>EmeraldRush"
     duell: "<arrow><primary>Duell"
+    bedwars: "<arrow><primary>BedWars"
 
 coins:
   self: "<prefix><muted>Du hast <accent><coins> <muted>Coins!"
@@ -350,6 +354,7 @@ achievements:
     quicksg: "<arrow><primary>QuickSG"
     emeraldrush: "<arrow><primary>EmeraldRush"
     duell: "<arrow><primary>Duell"
+    bedwars: "<arrow><primary>BedWars"
     network: "<arrow><primary>Netzwerk"
   group-lore: "<bullet><muted><unlocked><dark>/<muted><total> freigeschaltet"
   unlocked-name: "<arrow><success><name>"
@@ -442,6 +447,25 @@ achievements:
     trittsicher:
       name: "Trittsicher"
       description: "Erreiche das SuperJump-Ziel ohne einen Rückfall ins Wasser oder in die Lava."
+  bedwars:
+    first-win:
+      name: "Erster Sieg"
+      description: "Gewinne deine erste Runde BedWars."
+    kills-10:
+      name: "Kämpfer"
+      description: "Erziele 10 Kills in BedWars."
+    kills-100:
+      name: "Krieger"
+      description: "Erziele 100 Kills in BedWars."
+    kills-1000:
+      name: "Legende"
+      description: "Erziele 1.000 Kills in BedWars."
+    wins-10:
+      name: "Champion"
+      description: "Gewinne 10 Runden BedWars."
+    wins-100:
+      name: "Meister"
+      description: "Gewinne 100 Runden BedWars."
   network:
     level-5:
       name: "Aufsteiger"

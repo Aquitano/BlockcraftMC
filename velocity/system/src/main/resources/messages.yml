@@ -13,6 +13,7 @@ palette:
   quicksg: "<gold>"
   emeraldrush: "<green>"
   duell: "<aqua>"
+  bedwars: "<dark_aqua>"
 player-only: "<error>Nur ein Spieler kann diesen Befehl verwenden!"
 player-unknown: "<prefix><error>Der Spieler <accent><player> <error>ist unbekannt."
 no-permission: "<prefix><error>Dazu hast du keine Berechtigung."
@@ -585,6 +586,7 @@ play:
     quicksg: "<quicksg>QuickSG"
     emeraldrush: "<emeraldrush>EmeraldRush"
     duell: "<duell>Duell"
+    bedwars: "<bedwars>BedWars"
 msg:
   usage: "<prefix><error>Benutze /msg \\<Name> \\<Nachricht>"
   reply-usage: "<prefix><error>Benutze /r \\<Nachricht>"
@@ -687,6 +689,7 @@ joinme:
     quicksg: "<arrow><accent><player><muted> spielt <quicksg>QuickSG<muted>!"
     duell: "<arrow><accent><player><muted> spielt <duell>Duell<muted>!"
     emeraldrush: "<arrow><accent><player><muted> spielt <emeraldrush>EmeraldRush<muted>!"
+    bedwars: "<arrow><accent><player><muted> spielt <bedwars>BedWars<muted>!"
 
 support:
   already-open: "<primary>Support <arrow><reset><error>Du hast bereits einen offenen Supportantrag. Bitte warte, bis ein Supporter diesen bearbeitet."

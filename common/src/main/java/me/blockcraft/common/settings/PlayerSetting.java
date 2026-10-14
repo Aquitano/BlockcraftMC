@@ -21,6 +21,11 @@ public enum PlayerSetting {
     CHAT_TAG("chat-tag"),
     KILL_EFFECT("kill-effect"),
     WIN_EFFECT("win-effect"),
+    /** The BedWars perks: what the knockback stick looks like, the sounds of a broken bed and a kill, the arrow trail. */
+    BEDWARS_STICK("bedwars-stick"),
+    BEDWARS_BED_SOUND("bedwars-bed-sound"),
+    BEDWARS_KILL_SOUND("bedwars-kill-sound"),
+    BEDWARS_ARROW_TRAIL("bedwars-arrow-trail"),
     /** The {@code /ptime} clock in ticks, kept across servers for the players who may set their own. */
     PLAYER_TIME("player-time", null, "blockcraft.core.ptime"),
     PRIVATE_MESSAGES("private-messages", PlayerSetting.ON),

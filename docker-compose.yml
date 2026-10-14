@@ -119,6 +119,20 @@ services:
       - ./worlds/emeraldrush:/worlds/emeraldrush
       - emeraldrush:/data
 
+  bedwars:
+    <<: *paper
+    hostname: bedwars
+    environment:
+      <<: *paper-env
+      BLOCKCRAFT_SERVER_GROUP: bedwars
+      BLOCKCRAFT_WORLD_TEMPLATE: /worlds/bedwars
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/bedwars
+    volumes:
+      - ./build/docker/paper:/blockcraft:ro
+      - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
+      - ./worlds/bedwars:/worlds/bedwars
+      - bedwars:/data
+
   quicksg:
     <<: *paper
     hostname: quicksg
@@ -140,3 +154,4 @@ volumes:
   duell:
   emeraldrush:
   quicksg:
+  bedwars:

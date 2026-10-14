@@ -10,6 +10,7 @@ See [Easter eggs and lobby activities](EASTER_EGGS.md) for rewards, calendar eve
 ```
 common/                  DB access (HikariCP), YAML config, MiniMessage messages; shared by Paper and Velocity plugins
 paper/api                BlockcraftAPI: library plugin owning the database pool, coins, menus, items, shared helpers
+paper/bedwars            BedWars, a port of rewi-bw (see "BedWars")
 paper/core               BlockcraftCore: staff/utility commands, chat moderation enforcement
 paper/lobby              Lobby: join items, server compass, cosmetics, premium shop, secrets
 paper/duell              Duell: 1v1 duels (vs, sg, superjump)
@@ -84,7 +85,7 @@ For repeatable server and client measurements, see [Measure Minecraft performanc
 
 ```
 ./gradlew stagePlugins   # plugin jars into build/docker/
-docker compose up -d     # MariaDB, Velocity on 25565, Paper servers lobby, duell, emeraldrush and quicksg
+docker compose up -d     # MariaDB, Velocity on 25565, Paper servers lobby, duell, emeraldrush, quicksg and bedwars
 ```
 
 Connect to `localhost:25565`. Every Paper server runs BlockcraftAPI, BlockcraftCore and its game plugin (the lobby
@@ -165,6 +166,26 @@ Templates from a server that predates this layout: copy its world folder into `w
 and set the spawns again, since the plugin files used to live in `plugins/<Plugin>` and pointed at the old world
 name. On a server that already runs this layout without a template, those files move into the world's
 `blockcraft/` directory on the first start by themselves.
+
+## BedWars
+
+`paper/bedwars` is a port of [rewi-bw](https://github.com/Marfien/rewi-bw), the Rewinside BedWars clone, under its
+Apache 2.0 licence (`paper/bedwars/NOTICE`). It plays like the original: four teams of two, bronze, iron and gold
+from the map's spawners, the original shop and prices (the `shop` list of its `config.yml`), team chests, rescue
+platforms, parachutes, teleporters and mobile shops, and a lobby with team stands, a map vote, a CPS tester, a jump
+and run and a game of catch. Stats, coins, XP, achievements and spectating are the network's own, as in every game.
+
+The lobby is the `worlds/bedwars` template like any other map. The maps a round is played on travel inside it, one
+directory per map under `blockcraft/BedWars/maps/<key>/`: `map.yml` with its name, border, spectator spot, shops,
+spawners, team spawns and beds, and `world/`, the map's dimension folder. A round copies the voted map to
+`dimensions/bedwars/<key>` of the running level and loads it as the world `bedwars:<key>`; the restart after the round
+throws it away again.
+
+`/bwsetup lobby ...` places the lobby's spots, kept with `/map save` like every plugin's. `/bwsetup map <key> edit`
+loads a map of the pool, or an empty one for a new key, and takes the builder there; standing in it, `spawn`, `bed`,
+`shop`, `spawner`, `spectator`, `border`, `name` and `icon` change its `map.yml` at once, `info` names what is still
+missing, and `save` copies the world back into the pool. `/map save` then publishes the lobby with its pool. A map is
+in the vote once nothing is missing for the teams `config.yml` plays with.
 
 ## Server discovery and groups
 

@@ -32,6 +32,8 @@ public enum MenuIcon {
     QUICKSG(Material.IRON_SWORD),
     EMERALDRUSH(Material.EMERALD),
     DUELL(Material.SHIELD),
+    BEDWARS(Material.RED_BED),
+    VOTE(Material.PAPER),
     JUMP(Material.DIAMOND_BOOTS),
     START(Material.DIAMOND),
     STAFF_RANDOM(Material.COMPASS),
