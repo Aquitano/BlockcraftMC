@@ -1,0 +1,597 @@
+prefix: "<primary><ip> <dark>» <reset>"
+
+# The network's colours. Every Paper plugin's messages.yml may use these as tags, so a redesign happens here
+# and nowhere else. The values are spliced in before parsing, so a colour tag colours what follows it.
+palette:
+  primary: "<blue>"
+  accent: "<yellow>"
+  muted: "<gray>"
+  dark: "<dark_gray>"
+  success: "<green>"
+  error: "<red>"
+  bullet: "<dark_gray>● "
+  arrow: "<dark_gray>» "
+  quicksg: "<gold>"
+  emeraldrush: "<green>"
+  duell: "<aqua>"
+  bedwars: "<dark_aqua>"
+  premium: "<gold>"
+
+games:
+  quicksg:
+    name: "<quicksg>QuickSG"
+  emeraldrush:
+    name: "<emeraldrush>EmeraldRush"
+  duell:
+    name: "<duell>Duell"
+  bedwars:
+    name: "<bedwars>BedWars"
+game-status:
+  available: "<success>Jetzt spielen"
+  full: "<muted>Alle Plätze belegt"
+  ingame: "<muted>Runde läuft"
+  restart: "<accent>Startet neu"
+  offline: "<muted>Gerade offline"
+
+commands:
+  coins:
+    description: "Zeigt deine Coins, mit /coins top die zehn reichsten Spieler"
+  level:
+    description: "Zeigt dein Level"
+  build:
+    description: "Schaltet den Baumodus um"
+  map:
+    description: "Zeigt die Map oder speichert sie mit /map save"
+  afk:
+    description: "Meldet dich als abwesend oder zurück"
+
+# What <icon:name> draws for a client without the network resource pack; with it, the pack's own glyph.
+icons:
+  profile: "☻"
+  coins: "◎"
+  level: "★"
+  chat: "✉"
+  server: "▤"
+  players: "☻"
+  map: "◈"
+  kit: "⚒"
+  spectator: "◉"
+  time: "⌛"
+  emerald: "◆"
+  winner: "♛"
+  mode: "⚑"
+  opponent: "⚔"
+  kills: "☠"
+
+tab:
+  default-prefix: "<muted>"
+  vanished-suffix: " <dark>[<muted>V<dark>]"
+  afk-suffix: " <dark>[<muted>AFK<dark>]"
+
+afk:
+  status: "<muted>Du bist <accent>AFK<muted>. Beweg dich, um zurückzukommen."
+  back:
+    - "<success>Willkommen zurück! <muted>Du warst <accent><minutes> Minuten <muted>weg."
+    - "<success>Wieder da! <accent><minutes> Minuten <muted>Pause. Dein Platz ist noch warm."
+    - "<success>Willkommen zurück! <accent><minutes> Minuten <muted>weg. Die Blöcke stehen noch."
+  poked: "<prefix><primary><player> <muted>hat <count> versucht, dich zu wecken."
+  poke-count:
+    1: "einmal"
+    2: "zweimal"
+    3: "dreimal"
+    many: "<amount>-mal"
+
+menu:
+  load:
+    title: "<primary>Wird geladen"
+    pending: "<muted>Einen Moment …"
+    failed: "<error>Laden fehlgeschlagen"
+    retry: "<accent>Erneut versuchen"
+  filler: " "
+  back: "<arrow><error>Zurück"
+  close: "<arrow><error>Schließen"
+  previous: "<primary>Vorherige Seite"
+  next: "<primary>Nächste Seite"
+  page: "<muted>Seite <page> von <pages>"
+  confirm:
+    unavailable: "<error>Kauf nicht möglich"
+    title: "<arrow><primary>Bestätigen"
+    accept: "<success>Kaufen"
+    cancel: "<error>Abbrechen"
+
+purchase:
+  completed: "<success>Kauf abgeschlossen."
+  pending: "<muted>Kauf wird verarbeitet…"
+  confirm-price: "<muted>Preis <dark>· <accent><coins> Coins"
+  confirm-balance: "<muted>Dein Guthaben <dark>· <accent><coins> Coins"
+  confirm-remaining: "<muted>Nach dem Kauf <dark>· <success><coins> Coins"
+  confirm-missing: "<error>Dir fehlen <coins> Coins."
+  bought: "<prefix><item> <success>für <accent><coins> Coins <success>freigeschaltet."
+  balance: "<prefix><muted>Kontostand <dark>· <accent><coins> Coins"
+  too-expensive: "<prefix><error>Du benötigst <accent><coins> Coins <error>um dir das zu kaufen."
+  unavailable: "<error>Du kannst hier gerade nichts kaufen."
+
+login:
+  retry: "<error>Deine Daten konnten gerade nicht geladen werden. <muted>Bitte versuche es gleich noch einmal."
+
+# The card every server shows on arrival; <where> is the lobby or the game, <map> and <builders> come from the
+# map's map.yml.
+arrival:
+  title: "<primary><where>"
+  subtitle: "<muted>Map <accent><map>"
+  subtitle-credits: "<muted>Map <accent><map> <muted>von <accent><builders>"
+
+# The moments every game shares, said the same way everywhere.
+arena:
+  joined: "<prefix><white><player> <muted>hat das Spiel betreten! <dark>[<accent><online><dark>/<accent><max><dark>]"
+  left: "<prefix><white><player> <muted>hat das Spiel verlassen! <dark>[<accent><online><dark>/<accent><max><dark>]"
+  starting-in: "<prefix><muted>Die Runde startet in <accent><seconds> <muted>Sekunden."
+  restart-in: "<prefix><muted>Der Server startet in <error><seconds> <muted>Sekunden neu!"
+  spectating: "<prefix><muted>Du schaust <accent><player> <muted>beim Spielen zu."
+  spectator-chat: "<dark>[<muted>Zuschauer<dark>]"
+  watching: "<muted>Du schaust <accent><player> <muted>zu."
+  tracker:
+    - " "
+    - "<prefix><muted><minutes> Minuten sind vorbei, alle Spieler bekommen einen Tracker!"
+    - " "
+  ends-in-minutes: "<prefix><error>Das Spiel endet in <minutes> Minuten!"
+  ends-in-minute: "<prefix><error>Das Spiel endet in 1 Minute!"
+
+# The hotbar and player picker of a spectator, who watches flying and unseen.
+spectator:
+  pick: "<arrow><primary>Spieler wählen"
+  previous: "<arrow><primary>Vorheriger Spieler"
+  next: "<arrow><primary>Nächster Spieler"
+  leave: "<arrow><primary>Zur Lobby"
+  nobody: "<muted>Gerade spielt niemand, dem du zuschauen kannst."
+  menu:
+    title: "<arrow><primary>Zuschauen"
+    player: "<accent><player>"
+    player-lore: "<bullet><muted>Klicken <dark>· <primary>Zu <player> fliegen"
+
+# The shared countdown: the last seconds as a title, then the start.
+countdown:
+  waiting: "<muted>Warten auf Spieler <dark>● <accent>Noch <players> benötigt"
+  starting: "<muted>Rundenstart in <accent><seconds>s"
+  seconds: "<primary><seconds>"
+  go: "<success><bold>LOS!"
+
+build:
+  enabled: "<prefix><success>Baumodus aktiviert. <muted>Speichere die Map mit <accent>/map save<muted>, sonst ist sie beim Neustart wieder wie vorher."
+  disabled: "<prefix><error>Baumodus deaktiviert."
+
+# The staff notice for the actions in config.yml's audit.notify; <action> is the action's label below.
+audit:
+  notice: "<prefix><accent><issuer> <dark>» <primary><action><target><detail> <dark>[<muted><server><dark>]"
+  notice-target: " <muted>an <accent><target>"
+  notice-detail: " <dark>(<muted><detail><dark>)"
+  buttons:
+    goto: "<dark>[<primary>Goto<dark>]"
+    goto-hover: "<muted>Bringt dich auf den Server von <accent><player>"
+    whois: "<dark>[<accent>Whois<dark>]"
+    whois-hover: "<muted>Zeigt <primary>/whois <player>"
+  # One label per action key; a key without one shows as it is.
+  labels:
+    "back": "Zurückteleportiert"
+    "build.on": "Baumodus an"
+    "build.off": "Baumodus aus"
+    "clear": "Inventar geleert"
+    "coins.give": "Coins gegeben"
+    "coins.take": "Coins abgezogen"
+    "coins.set": "Coins gesetzt"
+    "fly.on": "Flugmodus an"
+    "fly.off": "Flugmodus aus"
+    "food": "Hunger gestillt"
+    "freeze.on": "Eingefroren"
+    "freeze.off": "Aufgetaut"
+    "gamemode.survival": "Spielmodus Überleben"
+    "gamemode.creative": "Spielmodus Kreativ"
+    "gamemode.adventure": "Spielmodus Abenteuer"
+    "gamemode.spectator": "Spielmodus Zuschauer"
+    "heal": "Geheilt"
+    "invsee.read": "Inventar angesehen"
+    "invsee.edit": "Inventar bearbeitet"
+    "kill": "Getötet"
+    "kill.entities": "Entities entfernt"
+    "nick.on": "Nick an"
+    "nick.off": "Nick aus"
+    "speed": "Geschwindigkeit gesetzt"
+    "staff.on": "Staff-Modus an"
+    "staff.off": "Staff-Modus aus"
+    "sudo": "Als Spieler ausgeführt"
+    "tp": "Spieler teleportiert"
+    "tp.to": "Selbst teleportiert"
+    "tpall": "Alle hergeholt"
+    "tphere": "Hergeholt"
+    "vanish.on": "Vanish an"
+    "vanish.off": "Vanish aus"
+
+map:
+  info:
+    - "<arrow><primary>Map <dark>● <accent><map>"
+    - "<arrow><primary>Gebaut von <dark>● <accent><builders>"
+    - "<arrow><primary>Vorlage <dark>● <muted><template>"
+  saved: "<prefix><success>Map <accent><map> <success>gespeichert. <muted>Jeder Neustart startet jetzt mit diesem Stand."
+  no-template: "<prefix><error>Für diesen Server ist keine Map-Vorlage eingerichtet."
+  failed: "<prefix><error>Die Map konnte nicht gespeichert werden, sieh in die Konsole."
+
+# The end-of-round recap every game shows; <game> is the game's own name, <winner> the player who won it.
+summary:
+  rule: "<dark><strikethrough>                                        "
+  game: "<arrow><primary><game>"
+  winner: "<arrow><muted>Gewinner<dark>: <white><winner>"
+  draw: "<arrow><muted>Unentschieden"
+  kills: "<arrow><muted>Kills<dark>: <white><kills>"
+  deaths: "<arrow><muted>Tode<dark>: <white><deaths>"
+  streak-best: "<arrow><muted>Beste Serie<dark>: <white><streak> Kills"
+  coins: "<arrow><muted>Coins<dark>: <accent>+<coins>"
+  xp: "<arrow><muted>XP<dark>: <success>+<xp>"
+  again: "<arrow><success>Nochmal spielen"
+  again-hover: "<muted>Klicke, um in die nächste Runde zu kommen."
+  lobby: "<arrow><accent>Zur Lobby"
+  lobby-hover: "<muted>Klicke, um in die Lobby zurückzukehren."
+  title:
+    win: "<success>Sieg"
+    lose: "<error>Niederlage"
+    draw: "<accent>Unentschieden"
+    subtitle: "<white><winner> <muted>hat gewonnen."
+    subtitle-draw: "<muted>Niemand hat gewonnen."
+  streak: "<prefix><accent><player> <muted>hat eine Serie von <accent><streak> Kills<muted>!"
+
+settings:
+  pack-details: "Ressourcenpaket"
+  pack-retry: "Erneut laden"
+  pack-refresh: "Status aktualisieren"
+  pack-requested: "<prefix><muted>Das Ressourcenpaket wurde erneut angefordert."
+  pack-status:
+    unavailable: "<muted>Das Ressourcenpaket ist derzeit nicht verfügbar."
+    offered: "<muted>Das Ressourcenpaket wartet auf deine Bestätigung."
+    downloading: "<muted>Das Ressourcenpaket wird geladen."
+    applied: "<success>Das Ressourcenpaket ist aktiv."
+    declined: "<muted>Du hast das Ressourcenpaket abgelehnt."
+    failed: "<error>Das Ressourcenpaket konnte nicht geladen werden."
+  failed: "<prefix><error>Deine Einstellung konnte nicht gespeichert werden. Bitte versuche es erneut."
+  effects: "Lobby-Partikel und Vorschauen"
+  title: "<arrow><primary>Einstellungen"
+  save: "<success>Speichern"
+  saved: "<prefix><muted>Einstellungen gespeichert."
+  private-messages: "<arrow><primary>Private Nachrichten"
+  party-invites: "<arrow><primary>Party-Einladungen"
+  friend-requests: "<arrow><primary>Freundschaftsanfragen"
+  player-visibility: "<arrow><primary>Spieler sichtbar"
+  sounds: "<arrow><primary>Sounds"
+  mentions: "<arrow><primary>Erwähnungen im Chat"
+  server-list-greeting: "<arrow><primary>Serverliste: Name für alle an deiner IP sichtbar"
+  auto-nick: "<arrow><primary>Automatisch nicken"
+  keep-nick: "<arrow><primary>Nick in der Lobby behalten"
+  report-notifications: "<arrow><primary>Report-Benachrichtigungen"
+
+# Shown once, on the lobby a player reaches on their first join of the network; the rules come from the proxy.
+welcome:
+  title: "<arrow><primary>Willkommen auf <ip>"
+  intro: "<muted>Schön, dass du da bist! Lies dir kurz unsere Regeln durch, dann kann es losgehen."
+  pack: "<muted>Unser <accent>Ressourcenpaket <muted>gibt Menüs und Symbolen ein eigenes Aussehen und bringt eigene Sounds mit. Alles funktioniert auch ohne."
+  settings: "<primary>Einstellungen"
+  pack-details: "<primary>Ressourcenpaket"
+  start: "<success>Los geht's"
+
+# The dialog behind the pause menu's button and the quick-actions key (G).
+server-menu:
+  title: "<arrow><primary>Blockcraft"
+  settings: "<primary>Einstellungen"
+  profile: "<primary>Profil"
+  hub: "<accent>Zur Lobby"
+
+profile:
+  advent: "<accent>Dein Adventskalender"
+  recap: "<accent>Letzte Runde"
+  recap-lore: "<muted>Ergebnis und Belohnungen ansehen"
+  title: "<arrow><primary>Profil"
+  head: "<arrow><primary><player>"
+  head-lore:
+    - "<bullet><muted>Rang <dark>● <rank>"
+    - "<bullet><muted>Level <dark>● <accent><level>"
+    - "<bullet><muted>Noch <accent><missing> <muted>XP bis Level <accent><next>"
+    - "<bullet><muted>Coins <dark>● <accent><coins>"
+  stats-lore:
+    - "<bullet><muted>Kills <dark>● <accent><kills>"
+    - "<bullet><muted>Tode <dark>● <accent><deaths>"
+    - "<bullet><muted>K/D <dark>● <accent><kdr>"
+    - "<bullet><muted>Siege <dark>● <accent><wins>"
+  settings: "<arrow><primary>Einstellungen"
+  settings-lore: "<bullet><muted>Nachrichten, Sounds und mehr"
+  cosmetics: "<arrow><primary>Kosmetik"
+  cosmetics-lore: "<bullet><muted>Effekte, Gadgets und Tags"
+  hub: "<arrow><accent>Zur Lobby"
+  hub-lore: "<bullet><muted>Zurück in die Lobby"
+  achievements: "<arrow><primary>Erfolge"
+  achievements-lore: "<bullet><muted><unlocked><dark>/<muted><total> freigeschaltet"
+  games:
+    quicksg: "<arrow><primary>QuickSG"
+    emeraldrush: "<arrow><primary>EmeraldRush"
+    duell: "<arrow><primary>Duell"
+    bedwars: "<arrow><primary>BedWars"
+
+coins:
+  self: "<prefix><muted>Du hast <accent><coins> <muted>Coins!"
+  asides:
+    42: " <dark>Die Antwort auf alles. Die Frage liegt wohl im Teich."
+    64: " <dark>Ein Stack Coins. Leider nicht stapelbar."
+    404: " <dark>Coins gefunden. Sparschwein nicht gefunden."
+    1337: " <dark>Dein Sparschwein spricht jetzt leetspeak."
+    9001: " <dark>Der Kontostand passt nicht mehr auf den Scouter."
+  other: "<prefix><accent><player> <muted>hat <accent><coins> <muted>Coins."
+  usage: "<prefix><muted>Verwende <error>/coins give|take|set \\<Spieler> \\<Anzahl> <muted>oder <error>/coins top"
+  unknown: "<prefix><error><player> <muted>war noch nie auf dem Netzwerk."
+  given: "<prefix><muted>Du hast <accent><player> <accent><amount> <muted>Coins gegeben. Neuer Stand: <accent><coins> <muted>Coins."
+  taken: "<prefix><muted>Du hast <accent><player> <accent><amount> <muted>Coins abgezogen. Neuer Stand: <accent><coins> <muted>Coins."
+  not-enough: "<prefix><error><player> <muted>hat nur <accent><coins> <muted>Coins, es wurde nichts abgezogen."
+  set: "<prefix><accent><player> <muted>hat jetzt <accent><coins> <muted>Coins."
+  top:
+    separator: "<muted><strikethrough>---------------------------------"
+    title: "<arrow><primary>Top 10 <muted>nach Coins"
+    empty: "<muted>Noch niemand hat Coins gesammelt."
+    first: "<accent><bold>#1 <reset><primary><name><muted> ( <white><coins><muted> Coins )"
+    entry: "<reset>#<rank> <primary><name> <muted>( <white><coins><muted> Coins )"
+xp:
+  gained: "<success>+<amount> XP"
+  level-up: "<prefix><muted>Du bist jetzt <accent>Level <level><muted>!"
+level:
+  self: "<prefix><muted>Du bist <accent>Level <level> <muted>und hast <accent><xp><muted>/<accent><next> <muted>XP bis zum nächsten Level."
+  other: "<prefix><accent><player> <muted>ist <accent>Level <level> <muted>mit <accent><xp> <muted>XP."
+tags:
+  pro: "<dark>[<gold>PRO<dark>]"
+  legend: "<dark>[<light_purple>LEGENDE<dark>]"
+  gg: "<dark>[<success>GG<dark>]"
+  og: "<dark>[<accent>OG<dark>]"
+  king: "<dark>[<gold>KÖNIG<dark>]"
+  noob: "<dark>[<muted>NOOB<dark>]"
+  sweat: "<dark>[<aqua>SWEAT<dark>]"
+  chill: "<dark>[<primary>CHILL<dark>]"
+  1up: "<dark>[<success>1UP<dark>]"
+  entdecker: "<dark>[<dark_aqua>ENTDECKER<dark>]"
+  spiegel: "<dark>[<primary>SPIEGEL<dark>]"
+  osterhase: "<dark>[<light_purple>OSTERHASE<dark>]"
+  neujahr: "<dark>[<accent><year><dark>]"
+
+operation:
+  pending: "<prefix><muted>Deine letzte Anfrage wird noch bearbeitet."
+  unconfirmed: "<prefix><error>Die Anfrage konnte nicht bestätigt werden. Prüfe das Ergebnis, bevor du es erneut versuchst."
+  failed: "<prefix><error>Die Daten konnten nicht geladen oder gespeichert werden. Bitte versuche es später erneut."
+
+# Achievements: the moment one is earned, the menu, and every catalog entry of config.yml by its game and name.
+achievements:
+  unlocked: "<prefix><muted>Erfolg freigeschaltet<dark>: <accent><name> <dark>(<success>+<xp> XP<dark>)"
+  title: "<accent>Erfolg freigeschaltet"
+  subtitle: "<white><name>"
+  menu-title: "<arrow><primary>Erfolge"
+  groups:
+    quicksg: "<arrow><primary>QuickSG"
+    emeraldrush: "<arrow><primary>EmeraldRush"
+    duell: "<arrow><primary>Duell"
+    bedwars: "<arrow><primary>BedWars"
+    network: "<arrow><primary>Netzwerk"
+  group-lore: "<bullet><muted><unlocked><dark>/<muted><total> freigeschaltet"
+  unlocked-name: "<arrow><success><name>"
+  unlocked-lore:
+    - "<bullet><muted><description>"
+    - "<bullet><success>Freigeschaltet"
+  locked-name: "<arrow><muted><name>"
+  locked-lore:
+    - "<bullet><muted><description>"
+    - "<bullet><muted>Fortschritt <dark>● <accent><current><dark>/<accent><threshold>"
+    - "<bullet><muted>Belohnung <dark>● <success>+<xp> XP"
+  moment-lore:
+    - "<bullet><muted><description>"
+    - "<bullet><muted>Belohnung <dark>● <success>+<xp> XP"
+  quicksg:
+    first-win:
+      name: "Erster Sieg"
+      description: "Gewinne deine erste Runde QuickSG."
+    kills-10:
+      name: "Kämpfer"
+      description: "Erziele 10 Kills in QuickSG."
+    kills-100:
+      name: "Krieger"
+      description: "Erziele 100 Kills in QuickSG."
+    kills-1000:
+      name: "Legende"
+      description: "Erziele 1.000 Kills in QuickSG."
+    wins-10:
+      name: "Champion"
+      description: "Gewinne 10 Runden QuickSG."
+    wins-100:
+      name: "Meister"
+      description: "Gewinne 100 Runden QuickSG."
+    nackt:
+      name: "Nackt"
+      description: "Gewinne eine Runde QuickSG ohne Rüstung."
+    david-gegen-goliath:
+      name: "David gegen Goliath"
+      description: "Besiege mit dem Starter-Kit einen Spieler mit dem Diamant-Kit."
+    pazifist:
+      name: "Pazifist"
+      description: "Gewinne eine Runde QuickSG ohne einen einzigen Kill."
+  emeraldrush:
+    first-win:
+      name: "Erster Sieg"
+      description: "Gewinne deine erste Runde EmeraldRush."
+    kills-10:
+      name: "Kämpfer"
+      description: "Erziele 10 Kills in EmeraldRush."
+    kills-100:
+      name: "Krieger"
+      description: "Erziele 100 Kills in EmeraldRush."
+    kills-1000:
+      name: "Legende"
+      description: "Erziele 1.000 Kills in EmeraldRush."
+    wins-10:
+      name: "Champion"
+      description: "Gewinne 10 Runden EmeraldRush."
+    wins-100:
+      name: "Meister"
+      description: "Gewinne 100 Runden EmeraldRush."
+    dagobert:
+      name: "Dagobert"
+      description: "Gewinne EmeraldRush mit mindestens 100 Emeralds, ohne welche auszugeben."
+    minimalist:
+      name: "Minimalist"
+      description: "Gewinne EmeraldRush, ohne im Rundenshop etwas zu kaufen."
+  duell:
+    first-win:
+      name: "Erster Sieg"
+      description: "Gewinne dein erstes Duell."
+    kills-10:
+      name: "Kämpfer"
+      description: "Erziele 10 Kills im Duell."
+    kills-100:
+      name: "Krieger"
+      description: "Erziele 100 Kills im Duell."
+    kills-1000:
+      name: "Legende"
+      description: "Erziele 1.000 Kills im Duell."
+    wins-10:
+      name: "Champion"
+      description: "Gewinne 10 Duelle."
+    wins-100:
+      name: "Meister"
+      description: "Gewinne 100 Duelle."
+    makellos:
+      name: "Makellos"
+      description: "Gewinne ein Kampfduell, ohne Schaden zu nehmen."
+    trittsicher:
+      name: "Trittsicher"
+      description: "Erreiche das SuperJump-Ziel ohne einen Rückfall ins Wasser oder in die Lava."
+  bedwars:
+    first-win:
+      name: "Erster Sieg"
+      description: "Gewinne deine erste Runde BedWars."
+    kills-10:
+      name: "Kämpfer"
+      description: "Erziele 10 Kills in BedWars."
+    kills-100:
+      name: "Krieger"
+      description: "Erziele 100 Kills in BedWars."
+    kills-1000:
+      name: "Legende"
+      description: "Erziele 1.000 Kills in BedWars."
+    wins-10:
+      name: "Champion"
+      description: "Gewinne 10 Runden BedWars."
+    wins-100:
+      name: "Meister"
+      description: "Gewinne 100 Runden BedWars."
+  network:
+    level-5:
+      name: "Aufsteiger"
+      description: "Erreiche Netzwerk-Level 5."
+    level-10:
+      name: "Veteran"
+      description: "Erreiche Netzwerk-Level 10."
+    level-25:
+      name: "Elite"
+      description: "Erreiche Netzwerk-Level 25."
+    willkommenskomitee:
+      name: "Willkommenskomitee"
+      description: "Begrüße zehn Spieler bei ihrem ersten Besuch."
+    rache:
+      name: "Rache ist süß"
+      description: "Besiege deinen Erzfeind."
+    haarscharf:
+      name: "Haarscharf"
+      description: "Gewinne eine Runde mit einem halben Herzen."
+    ausdauer:
+      name: "Ausdauer"
+      description: "Falle im JumpAndRun 100-mal herunter und mach weiter."
+    nachteule:
+      name: "Nachteule"
+      description: "Beende eine Runde zwischen drei und vier Uhr morgens."
+
+# The ranked ladder's skill groups, keyed like elo.groups in config.yml; like the chat tags, each wears its own colour.
+elo:
+  groups:
+    bronze: "<red>Bronze"
+    silber: "<white>Silber"
+    gold: "<gold>Gold"
+    diamant: "<aqua>Diamant"
+    meister: "<light_purple>Meister"
+
+# The title a killed player sees: what the kill cost them, then who beat them and the health that one had left.
+defeat:
+  out: "<error>Ausgeschieden"
+  life: "<accent>Ein Leben weniger"
+  point: "<accent>Punkt verloren"
+  respawn: "<accent>Getötet"
+  subtitle: "<white><killer> <muted>hatte noch <error><hearts> ❤"
+
+# A player's nemesis (Erzfeind); <won>:<lost> is the score between them from the player's side.
+nemesis:
+  present: "<prefix><muted>Dein Erzfeind <error><nemesis> <muted>ist in dieser Runde. Stand <accent><won>:<lost><muted>."
+  revenge-title: "<success>Rache!"
+  revenge-subtitle: "<white><nemesis> <muted>besiegt <dark>· <muted>Stand <accent><won>:<lost>"
+
+# The round's answer to the F written after a death; <deceased> is the player who died.
+respect:
+  one: "<prefix><white><player> <muted>zollt <white><deceased> <muted>Respekt."
+  many: "<prefix><accent><count> Spieler <muted>zollen <white><deceased> <muted>Respekt."
+
+# The button a killed player gets when they call their killer a cheater.
+hacker:
+  report: "<prefix><error>[<killer> melden]"
+  report-hover: "<muted>Klicke, um <white><killer> <muted>dem Team zu melden."
+
+death-lines:
+  generic:
+    - "<prefix><white><player> <muted>ist gestorben."
+    - "<prefix><white><player> <muted>braucht einen neuen Versuch."
+  fall:
+    - "<prefix><white><player> <muted>hat die Schwerkraft unterschätzt."
+    - "<prefix><white><player> <muted>hat den Boden zu früh gefunden."
+  void:
+    - "<prefix><white><player> <muted>fiel ins Leere."
+    - "<prefix><white><player> <muted>suchte eine Abkürzung unter der Map."
+  lava:
+    - "<prefix><white><player> <muted>wollte schwimmen. In Lava."
+    - "<prefix><white><player> <muted>hat die heiße Quelle falsch verstanden."
+  fire:
+    - "<prefix><white><player> <muted>hat sich zu warm angezogen."
+    - "<prefix><white><player> <muted>stand leider selbst auf dem Grill."
+  drowning:
+    - "<prefix><white><player> <muted>hat die Luft angehalten. Zu lange."
+    - "<prefix><white><player> <muted>hat vergessen, dass hier keine Kiemen wachsen."
+  explosion:
+    - "<prefix><white><player> <muted>stand im Kleingedruckten der Explosion."
+    - "<prefix><white><player> <muted>war der Sprengung einen Schritt zu nah."
+  bow:
+    - "<prefix><white><player> <muted>wurde von <white><killer> <muted>aus <accent><distance> Blöcken <muted>getroffen."
+    - "<prefix><white><killer> <muted>hat <white><player> <muted>aus <accent><distance> Blöcken <muted>einen Pfeil zugestellt."
+  melee:
+    - "<prefix><white><player> <muted>wurde von <white><killer> <muted>besiegt."
+    - "<prefix><white><killer> <muted>hat das letzte Wort gegen <white><player><muted>."
+  assisted: " <white><killer> <muted>hat nachgeholfen."
+  weapon: " <muted>Mit <weapon><muted>."
+  weapons:
+    wooden_sword: "einem Holzschwert"
+    wooden_axe: "einer Holzaxt"
+    fishing_rod: "einer Angel"
+    stick: "einem Stock"
+
+# The recap line of each moment a round grants, named like its achievement.
+moments:
+  rache: "<arrow><success>Rache <dark>· <muted>Erzfeind <white><nemesis> <muted>besiegt, Stand <accent><won>:<lost>"
+  haarscharf: "<arrow><success>Haarscharf <dark>· <muted>Gewonnen mit einem halben Herzen"
+  nackt: "<arrow><success>Nackt <dark>· <muted>Gewonnen ganz ohne Rüstung"
+  david-gegen-goliath: "<arrow><success>David gegen Goliath <dark>· <muted>Mit dem Starter-Kit <white><player> <muted>im Diamant-Kit besiegt"
+  dagobert: "<arrow><success>Dagobert <dark>· <muted><emeralds> Emeralds, nie ausgegeben"
+  minimalist: "<arrow><success>Minimalist <dark>· <muted>Ohne einen Kauf im Rundenshop gewonnen"
+  pazifist: "<arrow><success>Pazifist <dark>· <muted>Gewonnen ohne einen einzigen Kill"
+  makellos: "<arrow><success>Makellos <dark>· <muted>Gewonnen ohne Schaden zu nehmen"
+  trittsicher: "<arrow><success>Trittsicher <dark>· <muted>Das SuperJump-Ziel ohne Rückfall erreicht"
+  nachteule: "<arrow><success>Nachteule <dark>· <muted>Eine Runde zwischen drei und vier Uhr beendet"
+
+curiosity:
+  bow-blocks: "<arrow><accent>Kurios <dark>· <white><player> <muted>hat aus <accent><value> Blöcken <muted>getroffen. Fernzustellung bestätigt."
+  jumps: "<arrow><accent>Kurios <dark>· <white><player> <muted>sprang <accent><value>-mal<muted>. Niemand weiß, warum."
+  half-heart-seconds: "<arrow><accent>Kurios <dark>· <white><player> <muted>hielt <accent><value> Sekunden <muted>mit einem halben Herzen durch."
+  rod-hits: "<arrow><accent>Kurios <dark>· <white><player> <muted>hat <accent><value>-mal <muted>mit der Angel nachgeholfen. Der Teich hat sich beschwert."
+  emeralds-mined: "<arrow><accent>Kurios <dark>· <white><player> <muted>schürfte <accent><value> Emeralds<muted>. Der Villager bestellt einen Tresor."

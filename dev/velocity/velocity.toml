@@ -1,0 +1,12 @@
+config-version = "2.7"
+bind = "0.0.0.0:25565"
+motd = "<gold>Blockcraft dev proxy"
+online-mode = true
+player-info-forwarding-mode = "modern"
+forwarding-secret-file = "forwarding.secret"
+
+# Backends register themselves through the database (see README); nothing is listed here.
+[servers]
+try = []
+
+[forced-hosts]

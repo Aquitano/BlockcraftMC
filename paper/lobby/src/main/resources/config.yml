@@ -1,0 +1,123 @@
+max-players: 100
+allowed-commands:
+  - coins
+  - cc
+  - setspawn
+  - setholo
+  - lobbyset
+prices:
+  premium: 15000
+  head: 300
+  shirt: 500
+secrets:
+  reward: 50
+  # Once a player found this many secrets, the menu shows a riddle on each one still missing.
+  riddles-after: 3
+shop-npc:
+  respawn-seconds: 500
+# /setholo accepts these names; every one needs a holo.<name> block in messages.yml. Placing a name again replaces
+# its hologram, and the lines are re-read from messages.yml on every start.
+holograms:
+  - quicksg
+  - emeraldrush
+  - duell
+# /setholo accepts these names too. Each one is a hologram that shows the top ten of stat (kills, deaths, wins,
+# loses, points) in a game's stats table, under the game's name and icon, redrawn every refresh-seconds.
+leaderboards:
+  refresh-seconds: 300
+  holograms:
+    quicksg-kills:
+      game: quicksg
+      table: qsg_stats
+      stat: kills
+    quicksg-wins:
+      game: quicksg
+      table: qsg_stats
+      stat: wins
+    emeraldrush-kills:
+      game: emeraldrush
+      table: em_stats
+      stat: kills
+    emeraldrush-wins:
+      game: emeraldrush
+      table: em_stats
+      stat: wins
+    duell-kills:
+      game: duell
+      table: duell_stats
+      stat: kills
+    duell-wins:
+      game: duell
+      table: duell_stats
+      stat: wins
+fireworks:
+  - { x: -65, y: 22.5, z: 56 }
+  - { x: -69, y: 22.5, z: 56 }
+double-jump:
+  height: 0.6
+  multiply: 1.0
+jump-pad:
+  y: 0.18
+  multiply: 5.0
+  max-length: 6.0
+player-hider:
+  cooldown-millis: 3000
+effects:
+  kill-price: 500
+  win-price: 500
+  trail-interval-ticks: 2
+  trail-view-distance: 32
+  preview-ticks: 60
+gadgets:
+  cooldown-seconds: 5
+hud:
+  refresh-seconds: 5
+# The recap of a player's last round waits in bc_round_recaps and opens as a dialog when they arrive; one older
+# than this is dropped instead.
+recap:
+  max-age-minutes: 10
+# Navigator entry -> server group to join; stale-seconds matches the proxy's discovery setting.
+navigator:
+  groups:
+    qsg: quicksg
+    rush: emeraldrush
+    duell: duell
+    bedwars: bedwars
+  stale-seconds: 20
+
+friends:
+  timeout-ticks: 200
+
+activities:
+  konami-gap-seconds: 3
+  firework-cooldown-seconds: 30
+  sleep-after-seconds: 600
+  sleep-warning-seconds: 1200
+  sleep-duration-hours: 1
+  chicken-interval-seconds: 180
+  golden-egg-odds: 200
+  egg-lifetime-seconds: 20
+  pond-radius: 20
+  golden-carp-odds: 500
+  parkour-checkpoints: 7
+  parkour-fall-below: 4
+  perseverance-falls: 100
+  easter-spots: 20
+  easter-eggs: 10
+  advent-coins: 25
+  halloween-coins: 5
+  halloween-phrase: "Süßes oder Saures"
+  pumpkin-seconds: 300
+
+shooting-stars:
+  enabled: true
+  from-hour: 22
+  until-hour: 2
+  check-seconds: 60
+  odds: 30
+  cooldown-seconds: 1800
+  wish-seconds: 15
+  animation-ticks: 40
+  height: 24
+  length: 60
+  wish-prefixes: ["ich wünsche mir", "ich wuensche mir", "i wish"]

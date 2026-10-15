@@ -1,0 +1,162 @@
+prefix: "<duell>Duell <dark>» <reset>"
+game-name: "<duell>Duell"
+
+commands:
+  setspawn:
+    description: "Setzt die Duell-Spawns"
+
+mode:
+  vs: "1vs1"
+  sg: "SurvivalGames"
+  superjump: "SuperJump"
+
+join:
+  introduction: "<prefix><muted>Wähle Modus und Map über die Truhe. <duell>Ein Gegner. <muted>Keine Zeugen nötig."
+  spectator: "<prefix><muted>Du bist als Zuschauer beigetreten."
+
+# <map> is the map's name or vote.random-map.
+vote:
+  cast: "<prefix><white><player> <muted>stimmt für <accent><mode> <dark>· <accent><map><muted>."
+  random-map: "Zufällige Map"
+  result: "<prefix><muted>Gespielt wird <accent><mode> <muted>auf <accent><map><muted>."
+  closed: "<prefix><error>Die Abstimmung ist bereits vorbei."
+
+lobby:
+  started: "<prefix><muted>Die Runde wurde gestartet."
+  not-enough-players: "<prefix><error>Es sind nicht genügend Spieler online."
+
+round:
+  ended: "<prefix><muted>Die Runde wurde beendet."
+  draw:
+    - "<prefix><muted>Die Zeit ist um. Das Duell endet <accent>unentschieden<muted>."
+    - "<prefix><accent>Unentschieden. <muted>Selbst das Schwert will eine zweite Meinung."
+    - "<prefix><accent>Unentschieden. <muted>Ihr habt beide den Endgegner gespielt."
+
+# The ranked result of a round; <group> is the skill group's name from BlockcraftAPI's elo.groups.
+elo:
+  changed: "<prefix><muted>Elo <accent><delta> <dark>● <muted>Du stehst jetzt bei <accent><rating> <dark>(<group><dark>)<muted>."
+  promoted: "<prefix><success>Aufstieg! <muted>Du spielst ab jetzt in <group><muted>."
+  demoted: "<prefix><error>Abstieg. <muted>Du spielst ab jetzt in <group><muted>."
+
+tab:
+  name: "<dark>[<group><dark>] <name>"
+
+
+timer:
+  round: "<duell>Rundenzeit <dark>● <white><time>"
+
+superjump:
+  checkpoint: "<prefix><white><player><muted> hat Checkpoint <accent><checkpoint> <muted>erreicht!"
+  goal: "<prefix><white><player><muted> hat das <primary>Ziel <muted>erreicht!"
+
+title:
+  freeze: "<primary><seconds>"
+  start: "<muted>Start!"
+  vs-round: "<primary>Runde <round>"
+  introduction: "<duell><mode> <dark>· <muted><map>"
+
+setspawn:
+  spawn: "<prefix><muted>Spawn gesetzt."
+  map: "<prefix><muted><mode> Spawn, Map <accent><map><muted> Spieler <accent><player> <muted>gesetzt."
+  usage: "<prefix><error>/setspawn <spawn|1vs1<map>p<1-2>|SG<map>p<1-2>|SJ<map>p<1-2>>"
+
+top:
+  separator: "<muted><strikethrough>---------------------------------"
+  first: "<accent><bold>#1 <reset><primary><name><muted> ( <white><value><muted> )"
+  entry: "<reset>#<rank> <primary><name> <muted>( <white><value><muted> )"
+
+item:
+  style: "<arrow><duell>Abstimmung"
+  hub: "<arrow><primary>Zur Lobby"
+  stats: "<arrow><primary>Stats"
+  vs-kit:
+    helmet: "<primary>Helm"
+    chestplate: "<primary>Harnisch"
+    leggings: "<primary>Hose"
+    boots: "<primary>Schuhe"
+    sword: "<primary>Schwert"
+    rod: "<primary>Angel"
+    bow: "<primary>Bogen"
+    arrows: "<primary>Pfeile"
+
+menu:
+  modes:
+    title: "<duell>Duell <dark>· <muted>Euer Modus"
+    choose: "<muted>Klicken <dark>· <duell>Map wählen"
+    vs: "<duell>1vs1"
+    vs-lore: "<bullet><muted>Schwert, Bogen und Angel. Besiege deinen Gegner."
+    sg: "<duell>SurvivalGames"
+    sg-lore: "<bullet><muted>Sammle Beute und gewinne den letzten Kampf."
+    superjump: "<duell>SuperJump"
+    superjump-lore: "<bullet><muted>Erreiche die Checkpoints und das Ziel zuerst."
+  maps:
+    title: "<duell><mode> <dark>· <muted>Eure Map"
+    map: "<duell><map>"
+    random: "<duell>Zufällige Map"
+    random-lore: "<bullet><muted>Die Map wird beim Start ausgelost."
+    unavailable: "<error>Keine spielbare Map verfügbar"
+    unavailable-lore: "<muted>Gehe zurück und wähle einen anderen Modus."
+    choose: "<muted>Klicken <dark>· <duell>Abstimmen"
+  vote:
+    votes: "<bullet><muted>Stimmen<dark>: <accent><votes>"
+    own: "<success>Deine Stimme"
+  stats:
+    title: "<arrow><primary>Stats"
+    player: "<accent><player>"
+    player-lore:
+      - "<arrow><primary>Kills<dark>: <muted><kills>"
+      - "<arrow><primary>Siege<dark>: <muted><wins>"
+      - "<arrow><primary>Tode<dark>: <muted><deaths>"
+      - "<arrow><primary>K/D<dark>: <muted><kdr>"
+      - "<arrow><primary>Liga<dark>: <group>"
+      - "<arrow><primary>Elo<dark>: <muted><rating>"
+    global: "<arrow><primary>Globale Stats"
+  global-stats:
+    title: "<arrow><primary>Globale Stats"
+    wins: "<arrow><primary>Siege"
+    deaths: "<arrow><primary>Tode"
+    kills: "<arrow><primary>Kills"
+    losses: "<arrow><primary>Niederlagen"
+    points: "<arrow><primary>Punkte"
+
+scoreboard:
+  spectator: "<muted><icon:spectator> ZUSCHAUER"
+  spectator-player: "<primary><player>"
+  spectator-kills: "<primary><player> <dark>· <duell><kills> Kills"
+  spectator-checkpoint: "<primary><player> <dark>· <duell>Checkpoint <checkpoint>"
+  phase:
+    lobby: "<muted>Warten auf den Start"
+    ingame: "<success>Duell läuft"
+    ending: "<muted>Duell beendet"
+  kills: "<muted><icon:kills> DEINE KILLS"
+  kills-value: "<arrow><duell><kills>"
+  title: "<duell><bold>Duell"
+  mode: "<muted><icon:mode> MODUS"
+  mode-value: "<arrow><white><mode>"
+  mode-voting: "Abstimmung läuft"
+  mode-leading: "<mode> <muted>führt"
+  group-value: "<arrow><group> <dark>(<white><rating><dark>)"
+  map: "<muted><icon:map> MAP"
+  map-value: "<arrow><white><map>"
+  map-random: "Wird ausgewählt"
+  opponent: "<muted><icon:opponent> GEGNER"
+  opponent-value: "<arrow><white><player>"
+  opponent-none: "Warte auf einen Gegner"
+
+# The rematch offered when a duel ends; <opponent> is the other duellist.
+rematch:
+  offer: "<arrow><duell>[Revanche]"
+  offer-hover: "<muted>Klicke, um gleich noch einmal gegen <white><opponent> <muted>anzutreten."
+  asked:
+    - "<prefix><muted>Deine Revanche-Anfrage ist bei <white><opponent> <muted>angekommen."
+    - "<prefix><muted>Revanche bei <white><opponent> <muted>angefragt. Diesmal kennst du den Endgegner."
+    - "<prefix><muted>Revanche bei <white><opponent> <muted>angefragt. Das war nur die Generalprobe."
+  request: "<prefix><white><player> <muted>will eine Revanche. "
+  accept: "<success>[Annehmen]"
+  accept-hover: "<muted>Klicke, um die Revanche gegen <white><opponent> <muted>anzunehmen."
+  waiting: "<prefix><muted>Deine Anfrage steht, jetzt ist <white><opponent> <muted>am Zug."
+  gone: "<prefix><muted>Dein Gegner ist schon weg, die Revanche muss warten."
+
+mirror:
+  familiar: "<prefix><muted>Den Kampfstil von <accent><opponent> <muted>kennst du schon. Willkommen zur nächsten Begegnung."
+  inspection: "<prefix><muted>Zweimal unentschieden? Der Schiedsrichter verlangt eine Spiegelkontrolle. Euer Tag <dark>[<primary>SPIEGEL<dark>] <muted>wartet in den Lobby-Extras."

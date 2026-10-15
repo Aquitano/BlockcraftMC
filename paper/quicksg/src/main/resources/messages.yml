@@ -1,0 +1,167 @@
+prefix: "<quicksg>QuickSG <dark>» <reset>"
+game-name: "<quicksg>QuickSG"
+
+commands:
+  start:
+    description: "Startet die Runde"
+  stats:
+    description: "Zeigt die Stats eines Spielers"
+  qsgset:
+    description: "Setzt die QuickSG-Locations"
+  top:
+    description: "Zeigt die Top 10 einer Kategorie"
+
+join:
+  introduction: "<prefix><muted>Wähle dein Kit, sammle Beute und überlebe. <quicksg>Keine Teams. <muted>Auch keine Handschlagpause."
+
+lobby:
+  started: "<prefix><muted>Die Runde wurde gestartet."
+  freeze-title: "<primary><seconds>"
+
+protection:
+  ends-in: "<prefix><muted>Die Schutzzeit endet in <accent><seconds><muted> Sekunden!"
+  over: "<prefix><error>Die Schutzzeit ist vorbei!"
+  fight: "<error>Schutzzeit vorbei <dark>● <primary>Kampf frei"
+
+game:
+  draw: "<prefix><error>Unentschieden, die Runde wird neu gestartet!"
+
+
+timer:
+  protection: "<quicksg>Schutzzeit <dark>● <white><seconds>s"
+  game: "<quicksg>Verbleibende Zeit <dark>● <white><time>"
+
+tracker:
+  found: "<primary><player> <arrow><primary><distance><muted> Blöcke"
+  empty: "<muted>Kein Gegner in Reichweite"
+
+consume:
+  food:
+    - "<success>Hunger aufgefüllt"
+    - "<success>Hunger aufgefüllt <dark>· <muted>Letzte Mahlzeit? Lieber nicht."
+    - "<success>Hunger aufgefüllt <dark>· <muted>Kein Trinkgeld für den Kompass."
+    - "<success>Hunger aufgefüllt <dark>· <muted>Der Kuchen ist kein Teamkollege."
+  heart: "<success>+1 Herz für diese Runde"
+  level: "<success>+1 Verzauberungslevel"
+
+start:
+  not-enough-players: "<prefix><error>Es müssen mindestens 2 Spieler online sein!"
+  only-in-lobby: "<prefix><error>Du kannst die Runde nur im Lobby-Modus starten!"
+  already-started: "<prefix><error>Die Runde wurde bereits gestartet!"
+  coins-added: "<prefix><muted>Du hast diesem Spieler <accent><coins> <muted>Coins hinzugefügt!"
+
+setup:
+  help:
+    - ""
+    - "<muted>/qsgset lobby, Spectator, Pos1(-8), DM1(-4), Lobbymitte, InGamemitte"
+    - ""
+  set: "<prefix><muted>Du hast die Location <white><location> <muted>gesetzt!"
+  unknown: "<prefix><error>Unbekannte Location. Siehe /qsgset help"
+
+stats:
+  header: "<muted>Stats von <accent><player>"
+  lines:
+    - "<arrow><primary>Siege<dark>: <muted><wins>"
+    - "<arrow><primary>Niederlagen<dark>: <muted><losses>"
+    - "<arrow><primary>Tode<dark>: <muted><deaths>"
+    - "<arrow><primary>Kills<dark>: <muted><kills>"
+    - "<arrow><primary>Punkte<dark>: <muted><points>"
+
+top:
+  separator: "<muted><strikethrough>---------------------------------"
+  first: "<accent><bold>#1 <reset><primary><name><muted> ( <white><value><muted> )"
+  entry: "<reset>#<rank> <primary><name> <muted>( <white><value><muted> )"
+
+kit:
+  selected: "<prefix><muted>Du hast das <white><kit><muted> ausgewählt!"
+  not-owned: "<prefix><error>Du hast dieses Kit noch nicht gekauft!"
+  starter:
+    name: "Starter-Kit"
+    contents:
+      - "<arrow><muted>1 Holzschwert"
+  bow:
+    name: "Bogen-Kit"
+    contents:
+      - "<arrow><muted>1 Bogen"
+      - "<arrow><muted>12 Pfeile"
+  hearts:
+    name: "Herzen-Kit"
+    contents:
+      - "<arrow><muted>3 Herzen mehr"
+  chain:
+    name: "Ketten-Kit"
+    contents:
+      - "<arrow><muted>1 Kettenhelm"
+      - "<arrow><muted>1 Kettenhose"
+      - "<arrow><muted>1 Kettenschuhe"
+  diamond:
+    name: "Diamant-Kit"
+    contents:
+      - "<arrow><muted>1 Diamantbrustpanzer"
+      - "<arrow><muted>1 Holzschwert"
+
+menu:
+  kits:
+    title: "<quicksg>QuickSG <dark>· <muted>Dein Start-Kit"
+    selected: "<success>Für diese Runde ausgewählt"
+    owned: "<success>Freigeschaltet"
+    locked: "<accent><price> Coins <dark>· <muted>Dauerhaft freischalten"
+    inspect: "<muted>Klicken <dark>· <quicksg>Kit ansehen"
+    entry: "<quicksg><kit>"
+  kit-detail:
+    title: "<quicksg><kit> <dark>· <muted>QuickSG"
+    price: "<muted>Dauerhaft freischalten"
+    price-free: "<success>kostenlos"
+    price-coins: "<arrow><accent><price> Coins"
+    selected: "<success>Ausgewählt"
+    select: "<success>Für diese Runde auswählen"
+    buy: "<success>Mit Coins freischalten"
+    bought: "<success>bereits gekauft!"
+  stats:
+    title: "<arrow><primary>Stats"
+    player: "<accent><player>"
+    player-lore:
+      - "<arrow><primary>Siege<dark>: <muted><wins>"
+      - "<arrow><primary>Niederlagen<dark>: <muted><losses>"
+      - "<arrow><primary>Tode<dark>: <muted><deaths>"
+      - "<arrow><primary>Kills<dark>: <muted><kills>"
+    global: "<arrow><aqua>Globale Stats"
+  global-stats:
+    title: "<arrow><primary>Globale Stats"
+    wins: "<arrow><aqua>Siege"
+    deaths: "<arrow><aqua>Tode"
+    kills: "<arrow><aqua>Kills"
+    losses: "<arrow><aqua>Niederlagen"
+    points: "<arrow><aqua>Punkte"
+
+item:
+  kits: "<arrow><primary>Kits"
+  hub: "<arrow><primary>Zur Lobby"
+  stats: "<arrow><primary>Stats"
+  start: "<arrow><primary>Spiel starten"
+  level-up:
+    name: "<accent>+1 Verzauberungslevel"
+    lore: "<bullet><muted>Rechtsklick"
+  heart:
+    name: "<accent>+1 Herz"
+    lore: "<bullet><muted>Rechtsklick"
+  full-food:
+    name: "<accent>Voller Hunger"
+    lore: "<bullet><muted>Dein Hunger wird sofort gefüllt!"
+  tracker:
+    name: "<primary>Kompass"
+    lore: "<bullet><muted>Tracke Spieler in deiner Nähe"
+
+scoreboard:
+  draw: "<muted>Unentschieden"
+  title: "<quicksg><bold>QuickSG"
+  online: "<muted><icon:players> SPIELER"
+  online-value: "<arrow><white><online> <dark>/<white> <max>"
+  map: "<muted><icon:map> MAP"
+  map-value: "<arrow><white><map>"
+  kit: "<muted><icon:kit> KIT"
+  kit-value: "<arrow><white><kit>"
+  spectator: "<muted><icon:spectator> ZUSCHAUER"
+  spectator-value: "<arrow><white><spectators>"
+  winner: "<muted><icon:winner> GEWINNER"
+  winner-value: "<arrow><white><player>"

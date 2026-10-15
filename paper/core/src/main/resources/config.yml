@@ -1,0 +1,164 @@
+sudo:
+  protected-players:
+    - Aquitano
+
+# /near without a radius looks this far, in blocks; a typed radius may not exceed max-radius.
+near:
+  default-radius: 100
+  max-radius: 500
+
+chat:
+  cooldown-seconds: 3
+  # How often global mute and /chatslow, both switched on the proxy, are re-read from the database.
+  network-refresh-seconds: 3
+  allowed-domain: blockcraftmc.net
+  blocked-words:
+    - noob
+    - l2p
+    - ficken
+    - hurensohn
+    - missgeburt
+    - bastard
+    - spast
+    - spasti
+    - huren
+    - huso
+  advertisement-terms:
+    - ".arpa"
+    - ":25565"
+    - ".to"
+    - ".tk"
+    - ".eu"
+    - ".me"
+    - ".biz"
+    - ".com"
+    - ".info"
+    - ".name"
+    - ".net"
+    - ".org"
+    - ".pro"
+    - ".aero"
+    - ".asia"
+    - ".cat"
+    - ".coop"
+    - ".edu"
+    - ".gov"
+    - ".int"
+    - ".jobs"
+    - ".mil"
+    - ".mobi"
+    - ".museum"
+    - ".post"
+    - ".tel"
+    - ".de"
+    - ".travel"
+    - ".xxx"
+    - joint
+    - ".gs"
+    - kommt alle auf
+    - "(.)"
+    - "(Punkt)"
+    - gommehd
+    - revayd
+    - sevenpvp
+    - lightningpvp
+    - cytooxien
+    - rewinside
+    - ".n e t"
+    - n e t
+    - d e
+    - ",net"
+    - ",de"
+    - ",com"
+    - ",tk"
+    - ", n e t"
+
+# What a player can pick in the /report dialog; the choice is stored as the report's reason, free text appended.
+report:
+  reasons:
+    - Hacking
+    - Beleidigung
+    - Teaming
+    - Bugusing
+    - Werbung
+    - Sonstiges
+
+# A nick hides the name, the skin and the rank: it shows one of the ranks listed here (LuckPerms group names),
+# picked at random unless /nick <rank> names one.
+nick:
+  ranks:
+    - default
+    - premium
+  names:
+    - Felix_HD
+    - LukasGamer
+    - Timo_YT
+    - Jonas2006
+    - MaxPlays
+    - BenniLP
+    - LeonCraft
+    - PaulMC
+    - FinnPvP
+    - NoahBuilds
+    - EliasHD
+    - JannikLP
+    - MoritzMC
+    - TomCraft
+    - NiklasPlays
+    - Luis_MC
+    - Julian_LP
+    - DavidGames
+    - SimonPvP
+    - LucaHD
+    - Mia_Plays
+    - LenaMC
+    - EmmaCraft
+    - HannahLP
+    - SophieHD
+    - LauraPvP
+    - AnnaBuilds
+    - LeaGames
+    - MarieMC
+    - SarahLP
+  skins:
+    - Notch
+    - jeb_
+    - Dinnerbone
+    - Grumm
+    - Searge
+    - Marc
+    - Kappe
+    - xilefian
+    - Hypixel
+    - Bebopvox
+
+# The Willkommenskomitee: while the proxy keeps a newcomer's welcome window open, a chat line holding one of these
+# words greets them. A word counts only on its own, in any case; umlauts may be spelled out and letters stretched,
+# so "GRUSS", "grüß" and "Hallooo" count too. Each newcomer counts once per greeter.
+welcome:
+  words:
+    - hallo
+    - hallöchen
+    - hallihallo
+    - hello
+    - hi
+    - hey
+    - huhu
+    - moin
+    - moinsen
+    - servus
+    - tach
+    - grüß
+    - grüße
+    - grüezi
+    - willkommen
+    - welcome
+    - wb
+    - guten tag
+    - guten morgen
+    - guten abend
+  reward-coins: 10
+  # Greetings past this many a day still count for the achievement, but pay nothing.
+  daily-cap: 5
+  # Newcomers to greet for the Willkommenskomitee achievement.
+  committee-threshold: 10

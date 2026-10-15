@@ -1,0 +1,211 @@
+database:
+  host: localhost
+  port: 3306
+  database: blockcraft
+  username: blockcraft
+  password: blockcraft
+  # Connections this server keeps open, and how long a query waits for a free one before it fails.
+  pool-size: 4
+  connection-timeout-seconds: 30
+
+# Network addresses; every message of every Paper plugin can use them as <ip>, <website>, <shop>, <teamspeak>
+# and <discord>. Keep them in step with the proxy's network section.
+network:
+  ip: BlockcraftMC.net
+  website: https://BlockcraftMC.net
+  shop: https://shop.BlockcraftMC.net
+  teamspeak: ts.BlockcraftMC.net
+  discord: https://discord.gg/kh3xaQ3
+
+# The map this server runs, as a directory outside the server (README, "Maps"). When set, the world folder is
+# replaced by a copy of it at every start and /map save publishes the running world back into it. Empty keeps the
+# world as it is. BLOCKCRAFT_WORLD_TEMPLATE overrides it.
+world:
+  template: ""
+
+# Balance a player starts with on their first join anywhere on the network.
+starting-coins: 10
+
+# How often this server announces itself to the proxy (bc_servers).
+heartbeat-seconds: 5
+
+# How often this server re-reads every group's status (navigator, status signs) from bc_servers; a server whose
+# heartbeat is older than stale-seconds counts as offline, as on the proxy.
+group-status:
+  refresh-ticks: 50
+  stale-seconds: 20
+
+# The games the profile card lists: the menu key (its name is profile.games.<key> in messages.yml) and the
+# stats table it reads. A game the network does not run yet simply shows zeroes.
+profile:
+  games:
+    quicksg: qsg_stats
+    emeraldrush: em_stats
+    duell: duell_stats
+    bedwars: bw_stats
+
+# Network XP (bc_xp). Each level costs level-step more XP than the one before: level 2 at 100, level 3 at 300,
+# level 10 at 4500. rewards are what every game hands out per kill, per win and to every player who is still
+# there when the round ends.
+xp:
+  level-step: 100
+  rewards:
+    kill: 10
+    win: 50
+    participation: 15
+
+# The days the network celebrates, counted in zone. Easter runs from days-before Easter Sunday to days-after it,
+# Halloween from one month-day to the other; founded is the yyyy-MM-dd the network opened, and empty means it has
+# no birthday to celebrate. Mirrors calendar in BlockcraftSystem's config.yml on the proxy.
+calendar:
+  zone: Europe/Berlin
+  easter:
+    days-before: 2
+    days-after: 7
+  halloween:
+    from: "10-25"
+    to: "10-31"
+  founded: ""
+
+# A kill streak is announced to the round when it reaches one of these lengths.
+streaks:
+  announce: [3, 5, 10]
+
+# The group of the lobbies players fall back to between rounds; every other group counts as a game. Mirrors
+# lobby-group in BlockcraftSystem's config.yml on the proxy.
+lobby-group: lobby
+
+# Achievements (Erfolge), grouped by the profile game they belong to or by network. Each one is earned once what
+# it counts reaches the threshold and pays its xp; counts is a column of the game's stats table (kills, deaths,
+# wins, losses, points), level for the network level, or moment for one that the code seeing the moment grants and
+# that needs no threshold. Earned ones are bc_unlocks rows achievement.<game>.<name>, and every entry is named under
+# achievements.<game>.<name> in messages.yml.
+achievements:
+  quicksg:
+    first-win: {counts: wins, threshold: 1, xp: 25}
+    kills-10: {counts: kills, threshold: 10, xp: 25}
+    kills-100: {counts: kills, threshold: 100, xp: 100}
+    kills-1000: {counts: kills, threshold: 1000, xp: 500}
+    wins-10: {counts: wins, threshold: 10, xp: 100}
+    wins-100: {counts: wins, threshold: 100, xp: 500}
+    nackt: {counts: moment, xp: 100}
+    david-gegen-goliath: {counts: moment, xp: 50}
+    pazifist: {counts: moment, xp: 100}
+  emeraldrush:
+    first-win: {counts: wins, threshold: 1, xp: 25}
+    kills-10: {counts: kills, threshold: 10, xp: 25}
+    kills-100: {counts: kills, threshold: 100, xp: 100}
+    kills-1000: {counts: kills, threshold: 1000, xp: 500}
+    wins-10: {counts: wins, threshold: 10, xp: 100}
+    wins-100: {counts: wins, threshold: 100, xp: 500}
+    dagobert: {counts: moment, xp: 100}
+    minimalist: {counts: moment, xp: 100}
+  duell:
+    first-win: {counts: wins, threshold: 1, xp: 25}
+    kills-10: {counts: kills, threshold: 10, xp: 25}
+    kills-100: {counts: kills, threshold: 100, xp: 100}
+    kills-1000: {counts: kills, threshold: 1000, xp: 500}
+    wins-10: {counts: wins, threshold: 10, xp: 100}
+    wins-100: {counts: wins, threshold: 100, xp: 500}
+    makellos: {counts: moment, xp: 100}
+    trittsicher: {counts: moment, xp: 100}
+  bedwars:
+    first-win: {counts: wins, threshold: 1, xp: 25}
+    kills-10: {counts: kills, threshold: 10, xp: 25}
+    kills-100: {counts: kills, threshold: 100, xp: 100}
+    kills-1000: {counts: kills, threshold: 1000, xp: 500}
+    wins-10: {counts: wins, threshold: 10, xp: 100}
+    wins-100: {counts: wins, threshold: 100, xp: 500}
+  network:
+    level-5: {counts: level, threshold: 5, xp: 50}
+    level-10: {counts: level, threshold: 10, xp: 100}
+    level-25: {counts: level, threshold: 25, xp: 250}
+    willkommenskomitee: {counts: moment, xp: 100}
+    rache: {counts: moment, xp: 50}
+    haarscharf: {counts: moment, xp: 50}
+    ausdauer: {counts: moment, xp: 100}
+    nachteule: {counts: moment, xp: 50}
+
+# Ranked 1vs1 (bc_elo). A season is three months from January, April, July or October and starts everyone at
+# start-rating; a win moves k-factor points times how unexpected it was. groups is the skill ladder, each with the
+# rating it begins at; their names and colours are elo.groups.<key> in messages.yml.
+elo:
+  start-rating: 1000
+  k-factor: 32
+  groups:
+    bronze: 0
+    silber: 1100
+    gold: 1250
+    diamant: 1450
+    meister: 1700
+
+# Every staff action lands in bc_staff_actions (/stafflog on the proxy); the actions listed under notify are also
+# told to every online player with notify-permission, wherever on the network they are.
+audit:
+  notify-permission: blockcraft.audit.notify
+  notify:
+    - gamemode.creative
+    - gamemode.spectator
+    - sudo
+    - clear
+    - kill
+    - invsee.edit
+    - coins.give
+    - coins.set
+
+# What others see of a nicked player: /stats, the stats menus, the Duell ladder and the chat level show numbers
+# drawn from these ranges instead of the account's own, the same ones for as long as the nick is worn.
+nick-stats:
+  rounds: {min: 20, max: 200}
+  win-rate: {min: 0.05, max: 0.3}
+  kdr: {min: 0.6, max: 1.6}
+  rating: {min: 900, max: 1250}
+  level: {min: 3, max: 12}
+
+# A player counts as AFK after this long without moving, looking around, chatting, running a command or
+# interacting; /afk sets it at once.
+afk:
+  idle-minutes: 5
+
+notifications:
+  status-ticks: 25
+  feedback-ticks: 40
+  reward-ticks: 40
+  important-ticks: 60
+  max-wait-ticks: 200
+  xp-window-ticks: 10
+  sound-window-ticks: 4
+  sound-gap-ticks: 30
+  sound-lifetime-ticks: 40
+
+# A player's nemesis (Erzfeind) is the opponent who has beaten them at least lead times more often than they beat
+# that opponent, in any game (bc_rivalries); of several, the one furthest ahead. A round tells each player whose
+# nemesis plays too, and the first kill of that nemesis is their revenge.
+nemesis:
+  lead: 3
+
+# For this long after a death in a round, a chat message that is only "F" is held back and counted once per player;
+# then the round hears who paid their respects.
+respect:
+  seconds: 10
+
+# A player killed in a round who writes one of these words (whole words, any case) within window-seconds of the
+# kill gets a button to report the killer.
+hacker:
+  window-seconds: 60
+  words: [hacker, hacks, hax, hackt, hackst, hacken, cheater, cheats, cheatet, cheatest, cheatst, killaura, aimbot]
+
+death-lines:
+  credit-seconds: 10
+
+moments:
+  night-owl:
+    from-hour: 3
+    until-hour: 4
+
+curiosities:
+  bow-blocks: 40
+  jumps: 100
+  half-heart-seconds: 10
+  rod-hits: 10
+  emeralds-mined: 100

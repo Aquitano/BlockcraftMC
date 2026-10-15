@@ -1,0 +1,6 @@
+name: ReportsMenu
+version: '${version}'
+main: me.blockcraft.reports.ReportsPlugin
+api-version: '26.2'
+author: Aquitano
+depend: [BlockcraftAPI]

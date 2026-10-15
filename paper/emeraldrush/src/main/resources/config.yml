@@ -1,0 +1,31 @@
+min-players: 2
+global-stats-head: Kevos
+emeralds-per-ore: 12
+ore-respawn-seconds: 12
+countdown:
+  lobby: 30
+  search: 300
+  shopping: 90
+  deathmatch: 1200
+  deathmatch-tracker-after: 300
+  restart: 10
+idle-restart-minutes: 50
+
+# Deathmatch lives per player and the coins a kill and a win are worth.
+lives: 3
+rewards:
+  kill: 5
+  win: 15
+
+# A winner who never spent an Emerald earns Dagobert with at least this many.
+moments:
+  dagobert-emeralds: 100
+
+# 1.8 PvP: no attack cooldown, everything else stays vanilla.
+pvp:
+  legacy-combat: true
+
+tracker:
+  range-horizontal: 100.0
+  range-vertical: 25.0
+  cooldown-ticks: 20

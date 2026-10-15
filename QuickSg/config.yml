@@ -1,7 +1,0 @@
-MapName: "MapName"
-MinPlayers: 2
-Actionbar: "&4&Teams Verboten"
-WorldBoarder:
-  enable: false
-  Lobbyradius: 30
-  InGameradius: 60

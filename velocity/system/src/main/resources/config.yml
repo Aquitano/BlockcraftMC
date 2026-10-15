@@ -1,0 +1,199 @@
+database:
+  host: localhost
+  port: 3306
+  database: blockcraft
+  username: blockcraft
+  password: blockcraft
+  # Connections this server keeps open, and how long a query waits for a free one before it fails.
+  pool-size: 4
+  connection-timeout-seconds: 30
+
+network:
+  ip: BlockcraftMC.net
+  website: https://BlockcraftMC.net
+  shop: https://shop.BlockcraftMC.net
+  teamspeak: ts.BlockcraftMC.net
+  discord: https://discord.gg/kh3xaQ3
+
+# Server group players land in; game groups are joined with /play <group>.
+lobby-group: lobby
+
+# Backends announce themselves in bc_servers; the proxy registers them and drops any whose heartbeat is stale. A
+# player sent to a game holds a seat there for at most seat-seconds, until the server counts them itself.
+discovery:
+  poll-seconds: 5
+  stale-seconds: 20
+  seat-seconds: 15
+
+# /servers colours a server's TPS below tps-warn and its milliseconds per tick at or above mspt-warn, stronger past
+# the critical values.
+server-health:
+  tps-warn: 19
+  tps-critical: 15
+  mspt-warn: 40
+  mspt-critical: 50
+
+# Discord webhook that is told when no lobby is joinable any more and when one is back; empty disables it. It also
+# hears when a server's milliseconds per tick stay above lag-mspt for lag-polls discovery polls in a row, and when
+# they drop back. Each kind of alert waits min-interval-seconds after its last one.
+alerts:
+  webhook-url: ""
+  min-interval-seconds: 300
+  lag-mspt: 50
+  lag-polls: 6
+
+# The network resource pack (menu panels, HUD icons; README "Resource pack"). file lives in this plugin's directory,
+# is hashed at startup and served at http://<this proxy>:<port>/<file>; url is that address as clients reach it, or
+# wherever else the same file is hosted, then port 0 serves nothing. required kicks whoever declines. An empty file
+# offers no pack, and every screen still works without one.
+resource-pack:
+  file: blockcraft.zip
+  url: http://localhost:8080/blockcraft.zip
+  port: 8080
+  required: false
+
+# Edited in-game by /setmax and /motd; MOTD lines use legacy & colour codes.
+max-players: 100
+motd:
+  default: "&cBlockcraftMC.net"
+  random:
+    - "&7Heute schon &6QuickSG &7gewonnen?"
+    - "&7Die Smaragde warten. &aEmeraldRush"
+    - "&7Wer zuerst blinzelt, verliert. &bDuell"
+    - "&7Die Lobby hat dich vermisst. Ein bisschen."
+    - "&7Kein Lag, nur Skill. Meistens."
+    - "&7Komm rein, die Kekse sind fast fertig."
+
+# How many /history entries one player's list shows; everything older stays in bc_punishments.
+history:
+  limit: 10
+
+# How many staff actions one /stafflog page lists.
+stafflog:
+  page-size: 10
+
+# The team is told when a player with open reports or a punishment from the last N days logs in.
+watch:
+  recent-days: 30
+
+# Alt detection keeps a keyed hash of each login address (never the address) for retention-days, purged daily at
+# purge-hour. The team is told when a joining account shares an address with a banned one; block-banned-alts refuses
+# that login instead. Proxies sharing the database need the same BLOCKCRAFT_ADDRESS_SECRET (README, "Deploy").
+alts:
+  retention-days: 90
+  purge-hour: 4
+  block-banned-alts: false
+
+# A player who leaves while frozen and is not back within quit-grace-seconds gets this /strafe number; 0 only tells
+# the team.
+freeze:
+  quit-punishment: 0
+  quit-grace-seconds: 10
+
+max-warns: 8
+max-strikes: 5
+auto-broadcast-minutes: 5
+
+# How often the tab list header and footer are rewritten, so the player count there does not go stale.
+tab:
+  refresh-seconds: 5
+
+# How long a code from /discord link stays valid; the invite itself is network.discord.
+discord-code-minutes: 10
+
+joinme:
+  daily-limit: 6
+  reset-hour: 0
+
+# Friends (bc_friends): how many a player may have and how long an unanswered request stays valid.
+friends:
+  max: 50
+  request-minutes: 10
+
+# How many accounts one player may /ignore (bc_ignores).
+ignore:
+  max: 50
+
+# Commands that only print their info.<name> lines from messages.yml. The list replaces the default as a whole.
+info-commands:
+  - {name: regeln}
+  - {name: teamspeak, aliases: [ts]}
+  - {name: website}
+  - {name: bewerben}
+
+unbannable:
+  - Aquitano
+
+# Command names (without the slash) players need blockcraft.system.blockedcommands.bypass to run.
+blocked-commands:
+  - plugins
+  - demote
+  - promote
+  - "permissionsex:"
+  - pex
+  - pl
+  - "?"
+  - bungee
+  - me
+  - "bukkit:plugins"
+  - "bukkit:pl"
+  - "bukkit:?"
+  - "bukkit:help"
+  - "bukkit:me"
+  - version
+  - "minecraft:me"
+
+# /strafe catalogue. duration: <n>s|m|h|d|w|mon|y or permanent.
+punishments:
+  1: {type: BAN, reason: "Hacking Anti-Knockback", duration: 16d}
+  2: {type: BAN, reason: "Hacking KillAura", duration: 20d}
+  3: {type: BAN, reason: "Hacking Fly", duration: 14d}
+  4: {type: BAN, reason: "Hacking Autoclicker", duration: 14d}
+  5: {type: BAN, reason: "Hacking Speed", duration: 12d}
+  6: {type: BAN, reason: "Hacking Sonstiges", duration: 21d}
+  7: {type: MUTE, reason: "Beleidigungen Team", duration: 3d}
+  8: {type: MUTE, reason: "Beleidigungen Spieler", duration: 2d}
+  9: {type: MUTE, reason: "Beleidigungen Netzwerk", duration: 1d}
+  10: {type: BAN, reason: "Fehlverhalten Bugusing", duration: 12h}
+  11: {type: BAN, reason: "Fehlverhalten Drohung", duration: permanent}
+  12: {type: BAN, reason: "Fehlverhalten Radikalismus", duration: permanent}
+  13: {type: BAN, reason: "Fehlverhalten Werbung", duration: 20d}
+  14: {type: BAN, reason: "Fehlverhalten Combat-Log", duration: 1h}
+  15: {type: BAN, reason: "Fehlverhalten Teaming", duration: 3601s}
+  16: {type: MUTE, reason: "Oberflächliche Beleidigung", duration: 1801s}
+  17: {type: MUTE, reason: "Respektloses Verhalten", duration: 2701s}
+  18: {type: BAN, reason: "Report-Abuse", duration: 3601s}
+  19: {type: MUTE, reason: "Provokante Ausdrucksweise", duration: 7201s}
+  20: {type: BAN, reason: "Provokation (Allgemein)", duration: 3601s}
+  21: {type: BAN, reason: "Alt-Account", duration: permanent}
+  22: {type: BAN, reason: "Banumgehung", duration: permanent}
+  23: {type: BAN, reason: "Griefing", duration: permanent}
+  24: {type: BAN, reason: "Extrem - Extrem kommt zu stande, indem gegen sehr viele Regeln oft und stark verstoßen wird.", duration: permanent}
+
+# A first join is announced to everyone on a server of groups, with the number the player joined the network under,
+# and those servers count a greeting in chat for greeting-seconds. Once that window closes, the newcomer hears who
+# said hello: listed-greeters of them by name, the rest as a count. enabled: false keeps first joins quiet.
+welcome:
+  enabled: true
+  groups: [lobby]
+  greeting-seconds: 60
+  listed-greeters: 2
+
+# The server list greets the account last seen logging in from the pinging address (the alt detection's address
+# hash) by name after that player opts in. Everyone sharing the address can see the greeting.
+# Friend counts require show-friends as well as the player's opt-in.
+server-list:
+  cache-seconds: 30
+  show-friends: false
+
+# The days the network celebrates, counted in zone; founded is the yyyy-MM-dd the network opened, and empty means it
+# has no birthday to celebrate. Mirrors calendar in BlockcraftAPI's config.yml, so keep the two the same.
+calendar:
+  zone: Europe/Berlin
+  easter:
+    days-before: 2
+    days-after: 7
+  halloween:
+    from: "10-25"
+    to: "10-31"
+  founded: ""

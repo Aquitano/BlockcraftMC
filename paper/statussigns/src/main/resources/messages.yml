@@ -1,0 +1,15 @@
+prefix: "<primary><ip> <dark>» <reset>"
+
+commands:
+  createsign:
+    description: "Erstellt ein Status-Schild"
+sign:
+  name: "<name>"
+  players: "<muted><online><dark>/<muted><max> online"
+  click: "<muted>Klick: <success>Beitreten"
+  first: "<muted>Klick: <accent>Erster!"
+  retry: "<muted>Erneut prüfen"
+createsign:
+  usage: "<prefix><accent>/createsign <success>\\<Gruppe>"
+  not-a-sign: "<prefix><error>Du schaust nicht auf ein gültiges Schild!"
+  created: "<prefix><muted>Status-Schild für <accent><name><muted> erstellt."

@@ -1,0 +1,6 @@
+name: EmeraldRush
+version: '${version}'
+main: me.blockcraft.rush.EmeraldRushPlugin
+api-version: '26.2'
+author: Aquitano
+depend: [BlockcraftAPI]
