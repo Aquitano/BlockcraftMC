@@ -6,6 +6,8 @@ import me.blockcraft.system.LobbyConnector;
 import me.blockcraft.system.command.CommandSupport;
 import me.blockcraft.system.network.ServerDirectory;
 
+import java.util.Locale;
+
 /** Joins a game by group name; the proxy picks the instance. */
 public final class PlayCommand {
 
@@ -24,7 +26,8 @@ public final class PlayCommand {
                 .executes(support.usage("play.usage"))
                 .then(BrigadierCommand.requiredArgumentBuilder("game", StringArgumentType.word())
                         .suggests((context, builder) -> {
-                            directory.groups().stream().filter(group -> group.startsWith(builder.getRemaining())).forEach(builder::suggest);
+                            String typed = builder.getRemainingLowerCase();
+                            directory.groups().stream().filter(group -> group.toLowerCase(Locale.ROOT).startsWith(typed)).forEach(builder::suggest);
                             return builder.buildFuture();
                         })
                         .executes(support.asPlayer((player, context) -> lobby.play(player, StringArgumentType.getString(context, "game"))))));

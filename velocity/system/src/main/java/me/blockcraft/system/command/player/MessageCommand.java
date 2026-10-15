@@ -83,6 +83,10 @@ public final class MessageCommand {
     }
 
     private void deliver(Player sender, Player target, String text) {
+        if (!visibility.canSee(sender, target)) {
+            sender.sendMessage(messages.get("msg.offline"));
+            return;
+        }
         if (target.equals(sender)) {
             sender.sendMessage(messages.pick("msg.self"));
             return;

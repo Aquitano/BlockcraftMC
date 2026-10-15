@@ -10,6 +10,7 @@ import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -47,17 +48,17 @@ public final class LobbyConnector {
     }
 
     public void send(Player player) {
+        if (isOnLobby(player)) {
+            player.sendMessage(messages.get("hub.already"));
+            return;
+        }
         var lobby = lobby();
         if (lobby.isEmpty()) {
             player.sendMessage(messages.get("hub.unavailable"));
             return;
         }
-        if (isOnLobby(player)) {
-            player.sendMessage(messages.get("hub.already"));
-            return;
-        }
         player.sendMessage(messages.get("hub.connecting"));
-        player.createConnectionRequest(lobby.get()).fireAndForget();
+        directory.send(player, lobby.get());
     }
 
     /**
@@ -65,6 +66,7 @@ public final class LobbyConnector {
      * takes the whole party along, so the server needs a seat for every member who will follow.
      */
     public void play(Player player, String group) {
+        group = group.toLowerCase(Locale.ROOT);
         String key = "play.games." + group;
         var game = Placeholder.component("game", messages.has(key) ? messages.get(key) : Component.text(group));
         var seated = Stream.concat(Stream.of(player.getUniqueId()), parties.followersOf(player.getUniqueId()).stream()).toList();

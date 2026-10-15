@@ -69,7 +69,7 @@ public final class FriendManager {
     }
 
     public void add(Player sender, String name) {
-        find(sender, name).ifPresent(target -> {
+        findVisible(sender, name).ifPresent(target -> {
             if (target.uuid().equals(sender.getUniqueId())) {
                 sender.sendMessage(messages.get("friends.self"));
                 return;
@@ -104,7 +104,8 @@ public final class FriendManager {
     }
 
     public void accept(Player player, String name) {
-        find(player, name).ifPresent(requester -> {
+        var requests = repository.requestsTo(player.getUniqueId(), config.friends().requestMinutes());
+        findRelated(player, name, requests, "friends.no-request").ifPresent(requester -> {
             int max = config.friends().max();
             if (repository.countFriends(player.getUniqueId()) >= max) {
                 player.sendMessage(messages.get("friends.full", Formatter.number("max", max)));
@@ -125,7 +126,8 @@ public final class FriendManager {
     }
 
     public void deny(Player player, String name) {
-        find(player, name).ifPresent(requester -> {
+        var requests = repository.requestsTo(player.getUniqueId(), config.friends().requestMinutes());
+        findRelated(player, name, requests, "friends.no-request").ifPresent(requester -> {
             if (!repository.deleteRequest(requester.uuid(), player.getUniqueId())) {
                 player.sendMessage(messages.get("friends.no-request", named(requester)));
                 return;
@@ -135,7 +137,7 @@ public final class FriendManager {
     }
 
     public void remove(Player player, String name) {
-        find(player, name).ifPresent(friend -> {
+        findRelated(player, name, repository.friendsOf(player.getUniqueId()), "friends.not-a-friend").ifPresent(friend -> {
             if (!repository.remove(player.getUniqueId(), friend.uuid())) {
                 player.sendMessage(messages.get("friends.not-a-friend", named(friend)));
                 return;
@@ -165,13 +167,8 @@ public final class FriendManager {
     }
 
     public void jump(Player player, String name) {
-        find(player, name).ifPresent(friend -> {
-            if (!repository.areFriends(player.getUniqueId(), friend.uuid())) {
-                player.sendMessage(messages.get("friends.not-a-friend", named(friend)));
-                return;
-            }
-            var online = friend.online().filter(other -> visibility.canSee(player, other));
-            var server = online.flatMap(Player::getCurrentServer).map(connection -> connection.getServer());
+        findRelated(player, name, repository.friendsOf(player.getUniqueId()), "friends.not-a-friend").ifPresent(friend -> {
+            var server = friend.online().flatMap(Player::getCurrentServer).map(connection -> connection.getServer());
             if (server.isEmpty()) {
                 player.sendMessage(messages.get("friends.offline", named(friend)));
                 return;
@@ -200,16 +197,26 @@ public final class FriendManager {
     /** What the lobby's friends menu draws: every friend once, with where they are right now. */
     public List<FriendsReply.Entry> entriesFor(Player player) {
         return repository.friendsOf(player.getUniqueId()).stream().map(friend -> {
-            var online = proxy.getPlayer(friend.uuid()).filter(other -> visibility.canSee(player, other));
+            var online = visibleOnline(player, friend.uuid());
             String server = online.map(CommandSupport::currentServer).orElse("");
-            return new FriendsReply.Entry(online.map(visibility::shownName).orElse(friend.name()), online.isPresent(), server,
+            return new FriendsReply.Entry(online.map(other -> visibility.nameFor(player, other)).orElse(friend.name()), online.isPresent(), server,
                     directory.isWatchable(server), friend.days(config.calendar().today(), config.calendar().zone()));
         }).toList();
     }
 
     public List<String> requestNames(Player player) {
         return repository.requestsTo(player.getUniqueId(), config.friends().requestMinutes()).stream()
-                .map(Friend::name).toList();
+                .map(friend -> nameFor(player, friend)).toList();
+    }
+
+    public List<String> friendNames(Player player) {
+        return repository.friendsOf(player.getUniqueId()).stream().map(friend -> nameFor(player, friend)).toList();
+    }
+
+    public List<String> onlineFriendNames(Player player) {
+        return repository.friendsOf(player.getUniqueId()).stream()
+                .flatMap(friend -> visibleOnline(player, friend.uuid()).stream())
+                .map(friend -> visibility.nameFor(player, friend)).toList();
     }
 
     public void announceJoin(Player player) {
@@ -301,16 +308,39 @@ public final class FriendManager {
     }
 
     /** Tells the sender when nobody goes by that name, so every caller can act on a hit alone. */
-    private Optional<PlayerLookup.Target> find(Player sender, String name) {
-        var target = lookup.find(name);
+    private Optional<PlayerLookup.Target> findVisible(Player sender, String name) {
+        var target = lookup.findVisible(sender, name).map(found -> new PlayerLookup.Target(found.uuid(),
+                found.online().map(online -> visibility.nameFor(sender, online)).orElse(found.name()), found.online()));
         if (target.isEmpty()) {
             sender.sendMessage(messages.get("friends.unknown", Placeholder.unparsed("player", name)));
         }
         return target;
     }
 
+    private Optional<PlayerLookup.Target> findRelated(Player player, String name, List<Friend> related, String missing) {
+        // An account name already on the list stays usable without revealing the nick or presence behind it.
+        var account = related.stream().filter(friend -> friend.name().equalsIgnoreCase(name)).findFirst()
+                .map(friend -> new PlayerLookup.Target(friend.uuid(), friend.name(), visibleOnline(player, friend.uuid())
+                        .filter(online -> visibility.nick(online).isEmpty() || visibility.seesRealNames(player))));
+        var target = account.or(() -> visibility.find(player, name)
+                .filter(online -> related.stream().anyMatch(friend -> friend.uuid().equals(online.getUniqueId())))
+                .map(online -> new PlayerLookup.Target(online.getUniqueId(), visibility.nameFor(player, online), Optional.of(online))));
+        if (target.isEmpty()) {
+            player.sendMessage(messages.get(missing, Placeholder.unparsed("player", name)));
+        }
+        return target;
+    }
+
+    private Optional<Player> visibleOnline(Player viewer, UUID friend) {
+        return proxy.getPlayer(friend).filter(online -> visibility.canSee(viewer, online));
+    }
+
+    private String nameFor(Player viewer, Friend friend) {
+        return visibleOnline(viewer, friend.uuid()).map(online -> visibility.nameFor(viewer, online)).orElse(friend.name());
+    }
+
     private TagResolver named(PlayerLookup.Target target) {
-        return Placeholder.unparsed("player", target.online().map(visibility::shownName).orElse(target.name()));
+        return Placeholder.unparsed("player", target.name());
     }
 
     private String shownName(Player player) {

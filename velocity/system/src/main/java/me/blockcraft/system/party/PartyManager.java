@@ -141,25 +141,25 @@ public final class PartyManager {
             inviter.sendMessage(messages.pick("party.invite-self"));
             return;
         }
-        if (!isInParty(inviter.getUniqueId())) {
-            create(inviter);
+        if (isInParty(invitee.getUniqueId())) {
+            inviter.sendMessage(messages.get("party.target-in-party"));
+            return;
         }
         var party = byLeader.get(inviter.getUniqueId());
-        if (party == null) {
+        if (party == null && isInParty(inviter.getUniqueId())) {
             inviter.sendMessage(messages.get("party.only-leader-invites"));
             return;
         }
-        if (party.members().size() >= MAX_MEMBERS) {
+        if (party != null && party.members().size() >= MAX_MEMBERS) {
             inviter.sendMessage(messages.get("party.full"));
-            return;
-        }
-        if (isInParty(invitee.getUniqueId())) {
-            inviter.sendMessage(messages.get("party.target-in-party"));
             return;
         }
         if (!choices.enabled(invitee, PlayerSetting.PARTY_INVITES) || ignores.ignores(invitee, inviter)) {
             inviter.sendMessage(messages.get("party.invites-disabled", name(invitee)));
             return;
+        }
+        if (party == null) {
+            create(inviter);
         }
         invites.put(invitee.getUniqueId(), new Invite(inviter.getUniqueId(), Instant.now()));
         inviter.sendMessage(messages.get("party.invited", name(invitee)));
@@ -177,6 +177,10 @@ public final class PartyManager {
         var party = byLeader.get(leader.getUniqueId());
         if (party == null) {
             player.sendMessage(messages.get("party.target-not-leader"));
+            return;
+        }
+        if (isInParty(player.getUniqueId())) {
+            player.sendMessage(messages.get("party.already-in-party"));
             return;
         }
         if (party.members().size() >= MAX_MEMBERS) {
@@ -230,7 +234,7 @@ public final class PartyManager {
     public synchronized void kick(Player leader, Player member) {
         var party = byLeader.get(leader.getUniqueId());
         if (party == null) {
-            leader.sendMessage(messages.get("party.not-leader"));
+            leader.sendMessage(messages.get("party.only-leader-kicks"));
             return;
         }
         if (!party.members().remove(member.getUniqueId())) {
@@ -246,7 +250,7 @@ public final class PartyManager {
     public synchronized void promote(Player leader, Player member) {
         var party = byLeader.get(leader.getUniqueId());
         if (party == null) {
-            leader.sendMessage(messages.get("party.not-leader"));
+            leader.sendMessage(messages.get("party.only-leader-promotes"));
             return;
         }
         if (member.getUniqueId().equals(leader.getUniqueId())) {

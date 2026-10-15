@@ -87,14 +87,6 @@ public final class PartyCommand {
             player.sendMessage(messages.get("party.target-offline"));
             return;
         }
-        if (!parties.isLeader(leader.get().getUniqueId())) {
-            player.sendMessage(messages.get("party.target-not-leader"));
-            return;
-        }
-        if (parties.isInParty(player.getUniqueId())) {
-            player.sendMessage(messages.get("party.already-in-party"));
-            return;
-        }
         parties.requestInvite(player, leader.get());
     }
 
@@ -108,22 +100,10 @@ public final class PartyCommand {
             inviter.sendMessage(messages.get("party.target-offline"));
             return;
         }
-        if (parties.isInParty(invitee.get().getUniqueId())) {
-            inviter.sendMessage(messages.get("party.target-in-party"));
-            return;
-        }
-        if (parties.isInParty(inviter.getUniqueId()) && !parties.isLeader(inviter.getUniqueId())) {
-            inviter.sendMessage(messages.get("party.only-leader-invites"));
-            return;
-        }
         parties.invite(inviter, invitee.get());
     }
 
     private void promote(Player leader, String memberName) {
-        if (!parties.isLeader(leader.getUniqueId())) {
-            leader.sendMessage(messages.get("party.only-leader-promotes"));
-            return;
-        }
         var member = visibility.find(leader, memberName);
         if (member.isEmpty()) {
             leader.sendMessage(messages.get("party.target-offline"));
@@ -140,10 +120,6 @@ public final class PartyCommand {
         var member = visibility.find(leader, memberName);
         if (member.isEmpty()) {
             leader.sendMessage(messages.get("party.target-offline"));
-            return;
-        }
-        if (!parties.isLeader(leader.getUniqueId())) {
-            leader.sendMessage(messages.get("party.only-leader-kicks"));
             return;
         }
         parties.kick(leader, member.get());
