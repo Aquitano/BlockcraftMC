@@ -58,4 +58,35 @@ public class DuelVoteTest {
     public void withoutVotesOnlyModesWithAPlayableMapComeUp() {
         assertEquals(new DuelVote.Outcome(DuelMode.SG, 3), new DuelVote().tally(PLAYABLE, LAST));
     }
+
+    @Test
+    public void votesForUnavailableModesCannotOverrideVotesForPlayableModes() {
+        var vote = new DuelVote();
+        vote.cast(UUID.randomUUID(), new DuelVote.Choice(DuelMode.SUPERJUMP, OptionalInt.empty()));
+        vote.cast(UUID.randomUUID(), new DuelVote.Choice(DuelMode.SUPERJUMP, OptionalInt.empty()));
+        vote.cast(UUID.randomUUID(), new DuelVote.Choice(DuelMode.VS, OptionalInt.of(2)));
+
+        assertEquals(new DuelVote.Outcome(DuelMode.VS, 2), vote.tally(PLAYABLE, LAST));
+    }
+
+    @Test
+    public void votesOnlyForUnavailableModesFallBackToPlayableModes() {
+        var vote = new DuelVote();
+        vote.cast(UUID.randomUUID(), new DuelVote.Choice(DuelMode.SUPERJUMP, OptionalInt.empty()));
+
+        assertEquals(new DuelVote.Outcome(DuelMode.SG, 3), vote.tally(PLAYABLE, LAST));
+    }
+
+    @Test
+    public void withoutAnyPlayableMapsTheVotedModeKeepsItsFallbackMap() {
+        var vote = new DuelVote();
+        vote.cast(UUID.randomUUID(), new DuelVote.Choice(DuelMode.VS, OptionalInt.of(2)));
+
+        assertEquals(new DuelVote.Outcome(DuelMode.VS, 1), vote.tally(Map.of(), LAST));
+    }
+
+    @Test
+    public void withoutAnyPlayableMapsOrVotesAnyModeKeepsItsFallbackMap() {
+        assertEquals(new DuelVote.Outcome(DuelMode.SUPERJUMP, 1), new DuelVote().tally(Map.of(), LAST));
+    }
 }

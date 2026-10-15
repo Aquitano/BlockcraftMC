@@ -2,6 +2,7 @@ package me.blockcraft.lobby.menu;
 
 import me.blockcraft.api.menu.Menu;
 import me.blockcraft.api.pack.MenuIcon;
+import me.blockcraft.api.shop.Purchases;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.lobby.LobbyPermissions;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
@@ -75,7 +76,7 @@ public final class ShopMenu extends Menu {
             activate(player);
             return;
         }
-        menus.purchase(player, premiumIcon(), PREMIUM_ITEM, menus.config().premiumPrice(), this::activate, this::open);
+        Purchases.confirm(player, premiumIcon(), PREMIUM_ITEM, menus.config().premiumPrice(), this::activate, this::open);
     }
 
     private void activate(Player buyer) {

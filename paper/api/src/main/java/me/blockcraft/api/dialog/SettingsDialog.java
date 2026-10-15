@@ -13,7 +13,9 @@ import me.blockcraft.common.settings.PlayerSetting;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
@@ -28,6 +30,10 @@ public final class SettingsDialog {
 
     /** {@code back} is the menu this was opened from, or empty when the hotbar item or the pause menu opened it. */
     public SettingsDialog(Player viewer, Optional<Consumer<Player>> back) {
+        this(viewer, back, Map.of());
+    }
+
+    private SettingsDialog(Player viewer, Optional<Consumer<Player>> back, Map<PlayerSetting, Boolean> draft) {
         var api = BlockcraftApi.get();
         var messages = api.messages();
         var toggles = PlayerSetting.toggles().stream()
@@ -35,7 +41,7 @@ public final class SettingsDialog {
                 .toList();
         var inputs = toggles.stream()
                 .map(setting -> DialogInput.bool(inputKey(setting), messages.get("settings." + setting.key()))
-                        .initial(api.settings().enabled(viewer, setting))
+                        .initial(draft.getOrDefault(setting, api.settings().enabled(viewer, setting)))
                         .build())
                 .toList();
         var buttons = new ArrayList<ActionButton>();
@@ -43,8 +49,16 @@ public final class SettingsDialog {
             save(player, view, toggles);
             back.ifPresent(previous -> previous.accept(player));
         }));
-        buttons.add(Dialogs.button(messages.get("settings.pack-details"), player -> PackDialog.open(player,
-                previous -> new SettingsDialog(previous, back).open(previous))));
+        buttons.add(Dialogs.button(messages.get("settings.pack-details"), (player, view) -> {
+            var choices = new EnumMap<PlayerSetting, Boolean>(PlayerSetting.class);
+            for (var setting : toggles) {
+                Boolean chosen = view.getBoolean(inputKey(setting));
+                if (chosen != null) {
+                    choices.put(setting, chosen);
+                }
+            }
+            PackDialog.open(player, previous -> new SettingsDialog(previous, back, choices).open(previous));
+        }));
         dialog = Dialog.create(factory -> factory.empty()
                 .base(DialogBase.builder(messages.get("settings.title")).inputs(inputs).build())
                 .type(DialogType.multiAction(buttons)

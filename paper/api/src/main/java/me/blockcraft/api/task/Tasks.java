@@ -23,23 +23,31 @@ public final class Tasks {
 
     /** As {@link #async(Plugin, Supplier, Consumer)}, but a failed {@code work} runs {@code onFailure} on the main thread. */
     public static <T> void async(Plugin plugin, Supplier<T> work, Consumer<T> onMainThread, Runnable onFailure) {
+        async(plugin, "Background task failed", work, onMainThread, onFailure);
+    }
+
+    static <T> void async(Plugin plugin, String failureContext, Supplier<T> work, Consumer<T> onMainThread, Runnable onFailure) {
         async(plugin, () -> {
             Runnable completion;
             try {
                 T result = work.get();
                 completion = () -> onMainThread.accept(result);
             } catch (RuntimeException e) {
-                plugin.getLogger().log(Level.WARNING, "Background task failed", e);
+                plugin.getLogger().log(Level.WARNING, failureContext, e);
                 completion = onFailure;
             }
-            if (plugin.isEnabled()) {
-                sync(plugin, completion);
-            }
+            sync(plugin, completion);
         });
     }
 
     public static void sync(Plugin plugin, Runnable task) {
-        Bukkit.getScheduler().runTask(plugin, task);
+        if (plugin.isEnabled()) {
+            Bukkit.getScheduler().runTask(plugin, () -> {
+                if (plugin.isEnabled()) {
+                    task.run();
+                }
+            });
+        }
     }
 
     public static void later(Plugin plugin, long ticks, Runnable task) {

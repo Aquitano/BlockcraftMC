@@ -12,6 +12,7 @@ import org.bukkit.inventory.ItemStack;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 
 public final class ConfirmDialog {
@@ -43,5 +44,9 @@ public final class ConfirmDialog {
 
     public void open(Player player) {
         Dialogs.show(player, dialog);
+    }
+
+    public void open(Player player, BooleanSupplier eligible) {
+        Dialogs.show(player, dialog, eligible);
     }
 }

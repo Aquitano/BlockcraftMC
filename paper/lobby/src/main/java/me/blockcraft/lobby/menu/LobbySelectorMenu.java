@@ -5,6 +5,7 @@ import me.blockcraft.api.item.Items;
 import me.blockcraft.api.menu.Menu;
 import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.api.sound.Sounds;
+import me.blockcraft.common.network.GroupStatus;
 import me.blockcraft.common.network.ServerRecord;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -13,8 +14,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 
 final class LobbySelectorMenu extends Menu {
 
@@ -52,13 +53,20 @@ final class LobbySelectorMenu extends Menu {
             } else {
                 var lobby = lobbies.get(index);
                 boolean current = lobby.name().equals(menus.self().name());
-                var icon = Items.of(current ? Material.EMERALD_BLOCK : Material.EMERALD)
+                boolean joinable = lobby.joinable();
+                var status = GroupStatus.of(List.of(lobby)).availability();
+                String lore = current ? "lobbies.current-lore" : joinable ? "lobbies.join-lore" : "lobbies.unavailable-lore";
+                var icon = Items.of(current ? Material.EMERALD_BLOCK : joinable ? Material.EMERALD : Material.REDSTONE)
                         .name(messages.get("lobbies.entry", Placeholder.unparsed("server", lobby.name())))
-                        .lore(messages.get(current ? "lobbies.current-lore" : "lobbies.join-lore",
+                        .lore(messages.getLines(lore,
                                 Formatter.number("online", lobby.online()),
-                                Formatter.number("max", lobby.status().maxPlayers())));
+                                Formatter.number("max", lobby.status().maxPlayers()),
+                                Placeholder.component("status", menus.apiMessages().get("game-status."
+                                        + status.name().toLowerCase(Locale.ROOT)))));
                 if (current) {
                     info(slot, icon.glow().build());
+                } else if (!joinable) {
+                    info(slot, icon.build());
                 } else {
                     set(slot, icon.build());
                 }
@@ -81,9 +89,7 @@ final class LobbySelectorMenu extends Menu {
         failed = false;
         render();
         BlockcraftApi.get().playerTasks().latest(player,
-                () -> menus.servers().alive(menus.config().serverListStaleSeconds()).stream()
-                        .filter(server -> server.group().equals(menus.self().group()))
-                        .sorted(Comparator.comparing(ServerRecord::name)).toList(),
+                menus::lobbies,
                 updated -> {
                     lobbies = List.copyOf(updated);
                     loading = false;

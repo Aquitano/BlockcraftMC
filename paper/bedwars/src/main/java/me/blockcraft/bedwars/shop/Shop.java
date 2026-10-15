@@ -1,5 +1,6 @@
 package me.blockcraft.bedwars.shop;
 
+import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.bedwars.perk.Perks;
 import me.blockcraft.bedwars.resource.Resource;
 import me.blockcraft.bedwars.team.TeamColor;
@@ -72,13 +73,22 @@ public final class Shop {
         return fits ? new Purchase.Done(contents) : new Purchase.NoRoom();
     }
 
-    void buy(Player player, Offer offer, boolean shift, int hotbar) {
-        switch (plan(player, offer, shift, hotbar)) {
-            case Purchase.Done done -> player.getInventory().setStorageContents(done.contents());
-            case Purchase.Short shortOf -> player.sendMessage(messages.get("shop.not-enough",
-                    Placeholder.component("resource", shortOf.currency().displayName(messages))));
-            case Purchase.NoRoom ignored -> player.sendMessage(messages.get("shop.no-room"));
-        }
+    Sounds buy(Player player, Offer offer, boolean shift, int hotbar) {
+        return switch (plan(player, offer, shift, hotbar)) {
+            case Purchase.Done done -> {
+                player.getInventory().setStorageContents(done.contents());
+                yield Sounds.MENU_CLICK;
+            }
+            case Purchase.Short shortOf -> {
+                player.sendMessage(messages.get("shop.not-enough",
+                        Placeholder.component("resource", shortOf.currency().displayName(messages))));
+                yield Sounds.MENU_DENY;
+            }
+            case Purchase.NoRoom ignored -> {
+                player.sendMessage(messages.get("shop.no-room"));
+                yield Sounds.MENU_DENY;
+            }
+        };
     }
 
     public ItemStack item(Player buyer, Offer offer) {

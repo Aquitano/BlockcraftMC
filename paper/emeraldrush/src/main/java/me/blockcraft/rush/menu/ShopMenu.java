@@ -69,13 +69,8 @@ final class ShopMenu extends Menu {
     }
 
     @Override
-    protected boolean isEnabled(Player player, int slot, InventoryClickEvent event) {
-        var entry = entries.get(slot);
-        if (entry != null && (menus.balance(player) < entry.price() || !entry.hasCapacity().test(player))) {
-            refresh(player);
-            return false;
-        }
-        return true;
+    protected boolean automaticClickSound(int slot, InventoryClickEvent event) {
+        return !entries.containsKey(slot);
     }
 
     @Override

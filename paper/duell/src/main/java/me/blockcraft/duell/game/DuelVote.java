@@ -59,15 +59,18 @@ public final class DuelVote {
     /**
      * The most-voted mode and, among the votes for it, the most-voted of its {@code playable} maps; ties fall to
      * {@code random}. Without votes any mode with a playable map can come up, and without map votes any playable map.
+     * Votes for unavailable modes are ignored while another mode has a playable map.
      */
     public Outcome tally(Map<DuelMode, List<Integer>> playable, Random random) {
-        var modes = mostVoted(choices.values().stream().map(Choice::mode));
+        var available = playable.entrySet().stream()
+                .filter(entry -> !entry.getValue().isEmpty())
+                .map(Map.Entry::getKey)
+                .sorted()
+                .toList();
+        var modes = mostVoted(choices.values().stream().map(Choice::mode)
+                .filter(mode -> available.isEmpty() || available.contains(mode)));
         if (modes.isEmpty()) {
-            modes = playable.entrySet().stream()
-                    .filter(entry -> !entry.getValue().isEmpty())
-                    .map(Map.Entry::getKey)
-                    .sorted()
-                    .toList();
+            modes = available;
         }
         var mode = pick(modes.isEmpty() ? List.of(DuelMode.values()) : modes, random);
         var maps = playable.getOrDefault(mode, List.of());

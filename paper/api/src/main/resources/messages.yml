@@ -90,11 +90,26 @@ menu:
   filler: " "
   back: "<arrow><error>Zurück"
   close: "<arrow><error>Schließen"
+  previous: "<primary>Vorherige Seite"
+  next: "<primary>Nächste Seite"
+  page: "<muted>Seite <page> von <pages>"
   confirm:
     unavailable: "<error>Kauf nicht möglich"
     title: "<arrow><primary>Bestätigen"
     accept: "<success>Kaufen"
     cancel: "<error>Abbrechen"
+
+purchase:
+  completed: "<success>Kauf abgeschlossen."
+  pending: "<muted>Kauf wird verarbeitet…"
+  confirm-price: "<muted>Preis <dark>· <accent><coins> Coins"
+  confirm-balance: "<muted>Dein Guthaben <dark>· <accent><coins> Coins"
+  confirm-remaining: "<muted>Nach dem Kauf <dark>· <success><coins> Coins"
+  confirm-missing: "<error>Dir fehlen <coins> Coins."
+  bought: "<prefix><item> <success>für <accent><coins> Coins <success>freigeschaltet."
+  balance: "<prefix><muted>Kontostand <dark>· <accent><coins> Coins"
+  too-expensive: "<prefix><error>Du benötigst <accent><coins> Coins <error>um dir das zu kaufen."
+  unavailable: "<error>Du kannst hier gerade nichts kaufen."
 
 login:
   retry: "<error>Deine Daten konnten gerade nicht geladen werden. <muted>Bitte versuche es gleich noch einmal."

@@ -34,8 +34,7 @@ final class MapMenu extends Menu {
     private final Map<Integer, OptionalInt> slots = new HashMap<>();
 
     MapMenu(Duel duel, Messages messages, DuelMode mode, Player viewer) {
-        this(duel, messages, mode, viewer, Stream.concat(Stream.of(OptionalInt.empty()),
-                duel.playableMaps(mode).stream().map(OptionalInt::of)).toList());
+        this(duel, messages, mode, viewer, options(duel.playableMaps(mode)));
     }
 
     private MapMenu(Duel duel, Messages messages, DuelMode mode, Player viewer, List<OptionalInt> options) {
@@ -46,6 +45,10 @@ final class MapMenu extends Menu {
         this.mode = mode;
         int rows = rows(options.size());
         backButton(rows * COLUMNS - 1, player -> new ModeMenu(duel, messages, player).open(player));
+        if (options.isEmpty()) {
+            info(COLUMNS + 4, Items.of(Material.BARRIER).name(messages.get("menu.maps.unavailable"))
+                    .lore(messages.get("menu.maps.unavailable-lore")).build());
+        }
         var own = duel.votes().choiceOf(viewer.getUniqueId());
         for (int index = 0; index < options.size(); index++) {
             var map = options.get(index);
@@ -53,6 +56,11 @@ final class MapMenu extends Menu {
             slots.put(slot, map);
             set(slot, icon(map, own.equals(Optional.of(new DuelVote.Choice(mode, map)))));
         }
+    }
+
+    private static List<OptionalInt> options(List<Integer> playable) {
+        return playable.isEmpty() ? List.of() : Stream.concat(Stream.of(OptionalInt.empty()),
+                playable.stream().map(OptionalInt::of)).toList();
     }
 
     private static int rows(int options) {
@@ -76,6 +84,11 @@ final class MapMenu extends Menu {
         }
         lore.add(messages.get("menu.maps.choose"));
         return icon.lore(lore).hideAttributes().build();
+    }
+
+    @Override
+    public void open(Player player) {
+        super.open(player, () -> duel.isLobby() && duel.isParticipant(player));
     }
 
     @Override

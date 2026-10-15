@@ -3,12 +3,9 @@ package me.blockcraft.lobby.menu;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.config.Locations;
 import me.blockcraft.api.cosmetic.ChatTagChoice;
-import me.blockcraft.api.dialog.ConfirmDialog;
 import me.blockcraft.api.menu.Menu;
 import me.blockcraft.api.dialog.SettingsDialog;
-import me.blockcraft.api.pack.MenuIcon;
 import me.blockcraft.api.settings.PlayerSettings;
-import me.blockcraft.common.shop.Shop;
 import me.blockcraft.api.shop.Unlocks;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Tasks;
@@ -26,17 +23,14 @@ import me.blockcraft.lobby.cosmetic.Secret;
 import me.blockcraft.lobby.friends.FriendsChannel;
 import me.blockcraft.api.network.ServerGroups;
 import me.blockcraft.lobby.rank.PremiumRank;
-import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import org.bukkit.Particle;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Consumer;
 
 /** Everything the chest GUIs need, so they can open one another without re-wiring. */
 public record Menus(
@@ -45,7 +39,6 @@ public record Menus(
         LobbyConfig config,
         Locations<LobbyLocation> locations,
         Unlocks unlocks,
-        Shop shop,
         PlayerSettings settings,
         Messages apiMessages,
         ServerRepository servers,
@@ -58,75 +51,6 @@ public record Menus(
 ) {
 
     private static final int TELEPORT_PARTICLES = 20;
-
-    private record PurchaseState(int balance, boolean owned) { }
-
-    /** Shows what the click is about to cost before anything is bought, drawn as the player's client draws it. */
-    public void purchase(Player player, ItemStack subject, String item, int price,
-                         Consumer<Player> onOwned, Consumer<Player> returnTo) {
-        var api = BlockcraftApi.get();
-        MenuIcon.style(subject, api.resourcePack().applied(player));
-        var id = player.getUniqueId();
-        api.playerTasks().latest(player,
-                () -> new PurchaseState(api.coins().get(id), unlocks.owns(id, item)), state -> {
-            if (state.owned()) {
-                onOwned.accept(player);
-                returnTo.accept(player);
-                return;
-            }
-            int balance = state.balance();
-            var details = List.of(
-                    messages.get("shop.confirm-price", Formatter.number("coins", price)),
-                    messages.get("shop.confirm-balance", Formatter.number("coins", balance)),
-                    messages.get(balance >= price ? "shop.confirm-remaining" : "shop.confirm-missing",
-                            Formatter.number("coins", Math.abs(balance - price))));
-            Optional<Consumer<Player>> accept = balance >= price
-                    ? Optional.of(buyer -> buy(buyer, item, price, onOwned, returnTo)) : Optional.empty();
-            new ConfirmDialog(subject, details, accept, returnTo).open(player);
-        });
-    }
-
-    /**
-     * Buys the item off the main thread; {@code onOwned} runs on it once the player owns the item, whether this
-     * click bought it or an earlier one did. The balance is labelled separately from network levels.
-     */
-    private void buy(Player player, String item, int price, Consumer<Player> onOwned, Consumer<Player> returnTo) {
-        var api = BlockcraftApi.get();
-        api.notifications().feedback(player, messages.get("shop.pending"));
-        var current = api.playerTasks().currentScreen(player);
-        var id = player.getUniqueId();
-        var name = api.realName(player);
-        Consumer<Player> returnIfCurrent = buyer -> {
-            if (current.getAsBoolean()) {
-                returnTo.accept(buyer);
-            }
-        };
-        api.playerTasks().write(player, () -> shop.buy(id, name, item, price), purchase -> {
-            switch (purchase.outcome()) {
-                case BOUGHT -> {
-                    api.notifications().rewardSound(player, Sounds.PURCHASE);
-                    api.notifications().feedback(player, messages.get("shop.completed"));
-                    player.sendMessage(messages.get("shop.bought"));
-                    onOwned.accept(player);
-                }
-                case ALREADY_OWNED -> {
-                    api.notifications().feedback(player, messages.get("shop.completed"));
-                    onOwned.accept(player);
-                }
-                case NOT_ENOUGH_COINS -> {
-                    Sounds.MENU_DENY.play(player);
-                    api.notifications().feedback(player, messages.get("shop.confirm-missing",
-                            Formatter.number("coins", price - purchase.balance())));
-                    player.sendMessage(messages.get("shop.too-expensive", Formatter.number("coins", price)));
-                }
-            }
-            player.sendMessage(messages.get("shop.balance", Formatter.number("coins", purchase.balance())));
-            returnIfCurrent.accept(player);
-        }, failed -> {
-            api.notifications().feedback(failed, apiMessages.get("operation.failed"));
-            returnIfCurrent.accept(failed);
-        });
-    }
 
     public void warp(Player player, LobbyLocation target) {
         var destination = locations.get(target);
@@ -241,10 +165,16 @@ public record Menus(
     }
 
     public void openLobbies(Player player) {
-        BlockcraftApi.get().playerTasks().latest(player, () -> servers.alive(config.serverListStaleSeconds()).stream()
-                        .filter(server -> server.group().equals(self.group()))
-                        .sorted(Comparator.comparing(ServerRecord::name))
-                        .toList(),
+        BlockcraftApi.get().playerTasks().latest(player, this::lobbies,
                 lobbies -> new LobbySelectorMenu(this, lobbies).open(player));
+    }
+
+    List<ServerRecord> lobbies() {
+        return servers.alive(config.serverListStaleSeconds()).stream()
+                .filter(server -> server.group().equals(self.group()))
+                .sorted(Comparator.comparing((ServerRecord server) -> !server.name().equals(self.name()))
+                        .thenComparing(server -> !server.joinable())
+                        .thenComparing(ServerRecord::name))
+                .toList();
     }
 }

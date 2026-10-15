@@ -28,6 +28,7 @@ public final class PackDialog {
             case FAILED, DECLINED, UNAVAILABLE -> actions.add(Dialogs.button(messages.get("settings.pack-retry"), retry -> {
                 api.resourcePack().retry(retry);
                 retry.sendMessage(messages.get("settings.pack-requested"));
+                open(retry, back);
             }));
             default -> { }
         }

@@ -190,13 +190,7 @@ cosmetics:
   removed: "<muted>Kosmetik abgelegt."
   selected: "<success>Kosmetik ausgerüstet."
 shop:
-  completed: "<success>Kauf abgeschlossen."
   premium-activating: "<muted>Premium wird aktiviert…"
-  pending: "<muted>Kauf wird verarbeitet…"
-  confirm-price: "<muted>Preis <dark>· <accent><coins> Coins"
-  confirm-balance: "<muted>Dein Guthaben <dark>· <accent><coins> Coins"
-  confirm-remaining: "<muted>Nach dem Kauf <dark>· <success><coins> Coins"
-  confirm-missing: "<error>Dir fehlen <coins> Coins."
   title: "<arrow><primary>Lobby-Shop"
   heads: "<arrow><primary>Köpfe"
   heads-lore: "<bullet><muted>Kaufe dir Köpfe!"
@@ -208,9 +202,7 @@ shop:
   premium-retry: "<accent>Klicken zum erneuten Aktivieren. Kein weiterer Kauf."
   premium-owned: "<success>Premium ist freigeschaltet."
   already-premium: "<prefix><muted>Du hast bereits <premium>Premium<muted>."
-  bought: "<prefix><success>Freigeschaltet. Viel Spaß damit!"
   balance: "<prefix><muted>Kontostand <dark>· <accent><coins> Coins"
-  too-expensive: "<prefix><error>Du benötigst <accent><coins> Coins <error>um dir das zu kaufen."
   owned-lore: "<arrow><success>Gekauft!"
   price-lore: "<arrow><accent><coins> Coins"
 heads:
@@ -372,6 +364,9 @@ lobbies:
   title: "<arrow><primary>Lobby-Wechsel"
   entry: "<arrow><primary><server>"
   join-lore: "<bullet><muted><online>/<max> Spieler <dark>● <muted>Klicke zum Wechseln"
+  unavailable-lore:
+    - "<bullet><muted><online>/<max> Spieler <dark>● <status>"
+    - "<muted>Mit Aktualisieren erneut prüfen."
   current-lore: "<bullet><muted><online>/<max> Spieler <dark>● <success>Du bist hier"
   already: "<prefix><muted>Du bist bereits auf dieser Lobby."
   connecting: "<prefix><muted>Du wirst auf <primary><server> <muted>verbunden…"

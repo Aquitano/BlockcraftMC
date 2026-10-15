@@ -73,13 +73,8 @@ top:
   entry: "<reset>#<rank> <primary><name> <muted>( <white><value><muted> )"
 
 kit:
-  round-started: "<prefix><muted>Die Runde läuft bereits. Kits kannst du in der nächsten Lobby kaufen."
   selected: "<prefix><muted>Du hast das <white><kit><muted> ausgewählt!"
   not-owned: "<prefix><error>Du hast dieses Kit noch nicht gekauft!"
-  bought: "<prefix><muted>Du hast das <white><kit> <muted>gekauft!"
-  bought-cost: "<arrow><muted>- <accent><price> <muted>Coins"
-  already-owned: "<prefix><error>Du hast dieses Kit bereits gekauft!"
-  not-enough-coins: "<prefix><error>Du hast nicht genug Coins!"
   starter:
     name: "Starter-Kit"
     contents:

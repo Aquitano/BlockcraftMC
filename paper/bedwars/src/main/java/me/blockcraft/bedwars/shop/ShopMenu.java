@@ -2,7 +2,6 @@ package me.blockcraft.bedwars.shop;
 
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.menu.Menu;
-import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.common.message.Messages;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
@@ -20,6 +19,7 @@ import java.util.Optional;
 final class ShopMenu extends Menu {
 
     private static final int COLUMNS = 9;
+    private static final int MAX_ROWS = 6;
 
     private final Shop shop;
     private final Messages messages;
@@ -27,14 +27,19 @@ final class ShopMenu extends Menu {
     private final int categoryRows;
     private final Map<Integer, ShopCatalog.Category> categories = new HashMap<>();
     private final Map<Integer, Offer> offers = new HashMap<>();
-    private Optional<ShopCatalog.Category> selected = Optional.empty();
+    private Optional<ShopCatalog.Category> selected;
 
     ShopMenu(Shop shop, Messages messages, ShopCatalog catalog, Player buyer) {
-        super(rows(catalog), messages.get("shop.title"));
+        super(Math.min(MAX_ROWS, rows(catalog)), messages.get("shop.title"));
         this.shop = shop;
         this.messages = messages;
         this.buyer = buyer;
         this.categoryRows = Slots.rows(catalog.categories().size());
+        this.selected = catalog.categories().stream().findFirst();
+        // A catalog already filling a chest keeps all its offers; Escape still closes it.
+        if (rows(catalog) <= MAX_ROWS) {
+            closeButton(rows(catalog) * COLUMNS - 1);
+        }
         var slots = Slots.centered(catalog.categories().size());
         for (int index = 0; index < slots.length; index++) {
             categories.put(slots[index], catalog.categories().get(index));
@@ -44,7 +49,7 @@ final class ShopMenu extends Menu {
 
     private static int rows(ShopCatalog catalog) {
         int offerRows = catalog.categories().stream().mapToInt(category -> Slots.rows(category.offers().size())).max().orElse(1);
-        return Slots.rows(catalog.categories().size()) + offerRows;
+        return Slots.rows(catalog.categories().size()) + offerRows + 1;
     }
 
     private void draw() {
@@ -75,14 +80,8 @@ final class ShopMenu extends Menu {
     }
 
     @Override
-    protected Sounds clickSound(int slot, InventoryClickEvent event) {
-        var offer = offers.get(slot);
-        if (offer == null) {
-            return Sounds.MENU_CLICK;
-        }
-        return shop.plan(buyer, offer, event.isShiftClick(), event.getHotbarButton()) instanceof Shop.Purchase.Done
-                ? Sounds.MENU_CLICK
-                : Sounds.MENU_DENY;
+    protected boolean automaticClickSound(int slot, InventoryClickEvent event) {
+        return !offers.containsKey(slot);
     }
 
     @Override
@@ -95,7 +94,7 @@ final class ShopMenu extends Menu {
         }
         var offer = offers.get(slot);
         if (offer != null) {
-            shop.buy(player, offer, event.isShiftClick(), event.getHotbarButton());
+            shop.buy(player, offer, event.isShiftClick(), event.getHotbarButton()).play(player);
         }
     }
 }

@@ -56,7 +56,7 @@ public final class QuickSGPlugin extends JavaPlugin {
 
         var lootChests = new LootChests(config.loot(), entry -> items.loot(entry.material(), entry.amount()));
         var topList = new TopList(this, stats, messages);
-        var kitMenus = new KitMenus(this, messages, game, api.unlocks(), api.shop(), config.kitPrice());
+        var kitMenus = new KitMenus(messages, game, api.unlocks(), config.kitPrice());
         var statsMenus = StatsMenus.of(messages, stats, topList, config.globalStatsHead());
 
         List.of(

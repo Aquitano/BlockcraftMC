@@ -12,45 +12,72 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 
 /**
- * The catalog, one row per game with the game's icon in front: earned entries lit, the rest grey with how far
- * the player has come. The corner leads back to wherever it was opened from, or closes.
+ * The catalog, a game's icon before each row of entries: earned entries lit, the rest grey with how far the
+ * player has come. A footer turns pages and leads back to wherever it was opened from, or closes.
  */
 public final class AchievementsMenu extends Menu {
 
-    private static final int COLUMNS = 9;
-    private static final int MAX_ROWS = 6;
+    private final Achievements achievements;
+    private final Messages messages;
+    private final Achievements.Snapshot snapshot;
+    private final AchievementPages pages;
+    private final int footer;
+    private int page;
 
     public AchievementsMenu(Achievements achievements, Messages messages, Achievements.Snapshot snapshot, Optional<Consumer<Player>> back) {
-        super(rows(achievements), messages.get("achievements.menu-title"));
-        var games = List.copyOf(achievements.games());
-        for (int row = 0; row < games.size() && row < MAX_ROWS - 1; row++) {
-            var game = games.get(row);
-            var entries = achievements.of(game);
+        this(achievements, messages, snapshot, back, new AchievementPages(achievements.catalog()));
+    }
+
+    private AchievementsMenu(Achievements achievements, Messages messages, Achievements.Snapshot snapshot,
+                             Optional<Consumer<Player>> back, AchievementPages pages) {
+        super(pages.inventoryRows(), messages.get("achievements.menu-title"));
+        this.achievements = achievements;
+        this.messages = messages;
+        this.snapshot = snapshot;
+        this.pages = pages;
+        footer = (pages.inventoryRows() - 1) * AchievementPages.COLUMNS;
+        back.ifPresentOrElse(previous -> backButton(footer + 8, previous), () -> closeButton(footer + 8));
+        render();
+    }
+
+    private void render() {
+        for (int slot = 0; slot < footer; slot++) {
+            set(slot, null);
+        }
+        var rows = pages.page(page);
+        for (int row = 0; row < rows.size(); row++) {
+            var group = rows.get(row);
+            var entries = achievements.of(group.game());
             long unlocked = entries.stream().filter(snapshot::owns).count();
-            set(row * COLUMNS, gameIcon(game)
-                    .name(messages.get("achievements.groups." + game))
+            int start = row * AchievementPages.COLUMNS;
+            info(start, gameIcon(group.game())
+                    .name(messages.get("achievements.groups." + group.game()))
                     .lore(messages.get("achievements.group-lore",
                             Formatter.number("unlocked", unlocked), Formatter.number("total", entries.size())))
                     .build());
-            for (int column = 1; column <= entries.size() && column < COLUMNS; column++) {
-                set(row * COLUMNS + column, item(achievements, messages, entries.get(column - 1), snapshot));
+            for (int index = 0; index < group.entries().size(); index++) {
+                info(start + index + 1, item(achievements, messages, group.entries().get(index), snapshot));
             }
         }
-        int corner = rows(achievements) * COLUMNS - 1;
-        back.ifPresentOrElse(previous -> backButton(corner, previous), () -> closeButton(corner));
+        set(footer + 3, page > 0 ? Items.of(Material.ARROW).name(messages.get("menu.previous")).build() : null);
+        info(footer + 4, pages.count() > 1 ? Items.of(Material.PAPER).name(messages.get("menu.page",
+                Formatter.number("page", page + 1), Formatter.number("pages", pages.count()))).build() : null);
+        set(footer + 5, page + 1 < pages.count() ? Items.of(Material.ARROW).name(messages.get("menu.next")).build() : null);
     }
 
     @Override
     protected void onClick(Player player, int slot, ItemStack clicked, InventoryClickEvent event) {
-    }
-
-    private static int rows(Achievements achievements) {
-        return Math.min(MAX_ROWS, achievements.games().size() + 1);
+        if (slot == footer + 3 && page > 0) {
+            page--;
+            render();
+        } else if (slot == footer + 5 && page + 1 < pages.count()) {
+            page++;
+            render();
+        }
     }
 
     private static ItemStack item(Achievements achievements, Messages messages, Achievement achievement, Achievements.Snapshot snapshot) {

@@ -114,7 +114,6 @@ scoreboard:
   winner-header: "<muted><icon:winner> GEWINNER"
   winner: "<arrow><white><player>"
 perk:
-  round-started: "<prefix><muted>Die Runde läuft bereits. Perks kannst du in der nächsten Lobby kaufen."
   title: "<emeraldrush>EmeraldRush <dark>· <muted>Perks"
   unlocked: "<success>Im Rundenshop freigeschaltet"
   inspect: "<muted>Klicken <dark>· <emeraldrush>Freischaltung ansehen"
@@ -136,10 +135,6 @@ perk:
   price-lore: "<arrow><accent><price> Coins"
   buy: "<success>Mit Coins freischalten"
   owned: "<success>bereits gekauft!"
-  bought: "<prefix><muted>Du hast das <white><perk> Perk <muted>gekauft!"
-  bought-price: "<arrow><muted>- <accent><price> <muted>Coins"
-  not-enough-coins: "<prefix><error>Du hast nicht genug Coins!"
-  already-owned: "<prefix><error>Du hast dieses Perk bereits gekauft!"
 shop:
   browse-title: "<emeraldrush>Ausrüstung <dark>· <muted>Emeralds"
   not-enough: "<prefix><error>Du hast zu wenig Emeralds!"

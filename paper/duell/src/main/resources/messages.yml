@@ -94,6 +94,8 @@ menu:
     map: "<duell><map>"
     random: "<duell>Zufällige Map"
     random-lore: "<bullet><muted>Die Map wird beim Start ausgelost."
+    unavailable: "<error>Keine spielbare Map verfügbar"
+    unavailable-lore: "<muted>Gehe zurück und wähle einen anderen Modus."
     choose: "<muted>Klicken <dark>· <duell>Abstimmen"
   vote:
     votes: "<bullet><muted>Stimmen<dark>: <accent><votes>"

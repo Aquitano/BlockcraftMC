@@ -18,7 +18,6 @@ import java.util.UUID;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import java.util.logging.Level;
 
 /**
  * Database work behind a menu: {@code work} runs off the main thread, {@code complete} runs on it and only while the
@@ -65,6 +64,31 @@ public final class PlayerTasks implements Listener {
         var token = requests.snapshot(id);
         var view = player.getOpenInventory();
         return () -> player.isOnline() && requests.isCurrent(id, token) && sameScreen(player.getOpenInventory(), view);
+    }
+
+    /** Replaces the screen next tick, invalidating pending reads and earlier navigation. */
+    public void navigate(Player player, Consumer<Player> screen) {
+        navigate(player, () -> true, screen);
+    }
+
+    /** Checks eligibility when the screen actually opens, since a game may start before the next tick. */
+    public void navigate(Player player, BooleanSupplier eligible, Consumer<Player> screen) {
+        invalidate(player);
+        defer(player, eligible, screen);
+    }
+
+    /** Restyles the current screen next tick without invalidating its pending read. */
+    public void update(Player player, Consumer<Player> screen) {
+        defer(player, () -> true, screen);
+    }
+
+    private void defer(Player player, BooleanSupplier eligible, Consumer<Player> screen) {
+        var current = currentScreen(player);
+        Tasks.sync(plugin, () -> {
+            if (current.getAsBoolean() && eligible.getAsBoolean()) {
+                screen.accept(player);
+            }
+        });
     }
 
     private final class Read implements BooleanSupplier {
@@ -117,31 +141,18 @@ public final class PlayerTasks implements Listener {
     }
 
     private <T> void run(Player player, Supplier<T> work, Consumer<T> complete, BooleanSupplier stillWanted, Consumer<Player> onFailure) {
-        Tasks.async(plugin, () -> {
-            T value;
-            try {
-                value = work.get();
-            } catch (RuntimeException e) {
-                plugin.getLogger().log(Level.WARNING, "Player operation failed for " + player.getUniqueId(), e);
-                deliver(player, stillWanted, () -> {
+        Tasks.async(plugin, "Player operation failed for " + player.getUniqueId(), work,
+                value -> deliver(player, stillWanted, () -> complete.accept(value)),
+                () -> deliver(player, stillWanted, () -> {
                     player.sendMessage(messages.get("operation.failed"));
                     onFailure.accept(player);
-                });
-                return;
-            }
-            deliver(player, stillWanted, () -> complete.accept(value));
-        });
+                }));
     }
 
     private void deliver(Player player, BooleanSupplier stillWanted, Runnable completion) {
-        if (!plugin.isEnabled()) {
-            return;
+        if (player.isOnline() && stillWanted.getAsBoolean()) {
+            completion.run();
         }
-        Tasks.sync(plugin, () -> {
-            if (player.isOnline() && stillWanted.getAsBoolean()) {
-                completion.run();
-            }
-        });
     }
 
     private static final class TaskMenu extends Menu {

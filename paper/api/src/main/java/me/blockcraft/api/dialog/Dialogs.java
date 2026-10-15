@@ -8,12 +8,10 @@ import io.papermc.paper.registry.data.dialog.action.DialogAction;
 import me.blockcraft.api.menu.Menu;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickCallback;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.Plugin;
-import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.function.BiConsumer;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 
 /**
@@ -55,17 +53,15 @@ public final class Dialogs {
 
     /** Closes a chest menu the player has open, since the dialog takes its screen without telling the server. */
     public static void show(Player player, Dialog dialog) {
-        BlockcraftApi.get().playerTasks().invalidate(player);
-        var current = BlockcraftApi.get().playerTasks().currentScreen(player);
-        Plugin api = JavaPlugin.getProvidingPlugin(Dialogs.class);
-        Bukkit.getScheduler().runTask(api, () -> {
-            if (!current.getAsBoolean()) {
-                return;
+        show(player, dialog, () -> true);
+    }
+
+    public static void show(Player player, Dialog dialog, BooleanSupplier eligible) {
+        BlockcraftApi.get().playerTasks().navigate(player, eligible, opened -> {
+            if (opened.getOpenInventory().getTopInventory().getHolder(false) instanceof Menu) {
+                opened.closeInventory();
             }
-            if (player.getOpenInventory().getTopInventory().getHolder(false) instanceof Menu) {
-                player.closeInventory();
-            }
-            player.showDialog(dialog);
+            opened.showDialog(dialog);
         });
     }
 }

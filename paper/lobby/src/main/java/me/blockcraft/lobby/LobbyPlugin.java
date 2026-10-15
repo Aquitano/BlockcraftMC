@@ -107,7 +107,7 @@ public final class LobbyPlugin extends JavaPlugin {
         gadgets = new Gadgets(this, messages, Duration.ofSeconds(config.gadgetCooldownSeconds()));
         friends = new FriendsChannel(this, config.friendsTimeoutTicks());
         previews = new CosmeticPreviews(this, messages, config.cosmeticPreviewTicks());
-        var menus = new Menus(this, messages, config, locations, api.unlocks(), api.shop(), api.settings(), api.messages(),
+        var menus = new Menus(this, messages, config, locations, api.unlocks(), api.settings(), api.messages(),
                 api.servers(), api.server(), new PremiumRank(this, luckPerms), pets, api.groups(), friends, previews);
         shopNpc = new ShopNpc(this, locations, messages, quirks::owns);
         shopNpc.start(config.shopNpcRespawnSeconds());

@@ -16,13 +16,12 @@ import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.plugin.Plugin;
-import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.BitSet;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 
 /**
@@ -41,7 +40,6 @@ import java.util.function.Consumer;
  */
 public abstract class Menu implements InventoryHolder {
 
-    private static final Plugin API = JavaPlugin.getProvidingPlugin(Menu.class);
     private static final int COLUMNS = 9;
 
     /** One of the three wide buttons of the toolbar row; each spans three slots. */
@@ -88,6 +86,11 @@ public abstract class Menu implements InventoryHolder {
 
     protected Sounds clickSound(int slot, InventoryClickEvent event) {
         return Sounds.MENU_CLICK;
+    }
+
+    /** Purchase actions choose their feedback after the attempt instead of playing a click beforehand. */
+    protected boolean automaticClickSound(int slot, InventoryClickEvent event) {
+        return true;
     }
 
     /** The clicks that reach {@link #onClick}; a menu that does more on a shift-click or a number key takes those too. */
@@ -165,23 +168,25 @@ public abstract class Menu implements InventoryHolder {
         open(player, ignored -> { });
     }
 
+    public void open(Player player, BooleanSupplier eligible) {
+        open(player, eligible, ignored -> { });
+    }
+
     protected final void open(Player player, Consumer<Player> afterOpen) {
-        var tasks = BlockcraftApi.get().playerTasks();
-        tasks.invalidate(player);
-        var current = tasks.currentScreen(player);
-        Bukkit.getScheduler().runTask(API, () -> {
-            if (!current.getAsBoolean()) {
-                return;
-            }
-            boolean opening = !(player.getOpenInventory().getTopInventory().getHolder(false) instanceof Menu);
-            show(player);
-            if (player.getOpenInventory().getTopInventory() != inventory) {
+        open(player, () -> true, afterOpen);
+    }
+
+    private void open(Player player, BooleanSupplier eligible, Consumer<Player> afterOpen) {
+        BlockcraftApi.get().playerTasks().navigate(player, eligible, opened -> {
+            boolean opening = !(opened.getOpenInventory().getTopInventory().getHolder(false) instanceof Menu);
+            show(opened);
+            if (opened.getOpenInventory().getTopInventory() != inventory) {
                 return;
             }
             if (opening) {
-                Sounds.MENU_OPEN.play(player);
+                Sounds.MENU_OPEN.play(opened);
             }
-            afterOpen.accept(player);
+            afterOpen.accept(opened);
         });
     }
 
@@ -203,12 +208,7 @@ public abstract class Menu implements InventoryHolder {
         if (packApplied == BlockcraftApi.get().resourcePack().applied(player)) {
             return;
         }
-        var current = BlockcraftApi.get().playerTasks().currentScreen(player);
-        Bukkit.getScheduler().runTask(API, () -> {
-            if (current.getAsBoolean()) {
-                show(player);
-            }
-        });
+        BlockcraftApi.get().playerTasks().update(player, this::show);
     }
 
     public static void close(Player player) {
@@ -216,14 +216,9 @@ public abstract class Menu implements InventoryHolder {
     }
 
     public static void close(Player player, Consumer<Player> afterClose) {
-        var tasks = BlockcraftApi.get().playerTasks();
-        tasks.invalidate(player);
-        var current = tasks.currentScreen(player);
-        Bukkit.getScheduler().runTask(API, () -> {
-            if (current.getAsBoolean()) {
-                player.closeInventory();
-                afterClose.accept(player);
-            }
+        BlockcraftApi.get().playerTasks().navigate(player, closed -> {
+            closed.closeInventory();
+            afterClose.accept(closed);
         });
     }
 
@@ -253,7 +248,9 @@ public abstract class Menu implements InventoryHolder {
             Sounds.MENU_CLICK.play(player);
             close(player);
         } else {
-            clickSound(slot, event).play(player);
+            if (automaticClickSound(slot, event)) {
+                clickSound(slot, event).play(player);
+            }
             onClick(player, slot, clicked, event);
         }
     }

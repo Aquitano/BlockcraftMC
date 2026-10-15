@@ -3,6 +3,7 @@ package me.blockcraft.lobby.menu;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.menu.Menu;
+import me.blockcraft.api.shop.Purchases;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.common.settings.PlayerSetting;
 import me.blockcraft.lobby.LobbyPermissions;
@@ -126,7 +127,7 @@ final class CosmeticMenu<C> extends Menu {
         }
         var price = kind.price().orElseThrow();
         String item = price.item().apply(choice);
-        menus.purchase(player, clicked, item, price.coins(), buyer -> owned.add(item), buyer -> {
+        Purchases.confirm(player, clicked, item, price.coins(), buyer -> owned.add(item), buyer -> {
             if (owned.contains(item)) {
                 select(buyer, choice);
             }

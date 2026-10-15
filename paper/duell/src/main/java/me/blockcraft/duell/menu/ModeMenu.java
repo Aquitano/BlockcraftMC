@@ -55,6 +55,11 @@ public final class ModeMenu extends Menu {
     }
 
     @Override
+    public void open(Player player) {
+        super.open(player, () -> duel.isLobby() && duel.isParticipant(player));
+    }
+
+    @Override
     protected boolean fillEmptySlots() {
         return false;
     }
