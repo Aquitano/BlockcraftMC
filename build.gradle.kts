@@ -1,5 +1,5 @@
 group = "me.blockcraft"
-version = "2.0.0-SNAPSHOT"
+version = "2.0.0-SNAPSHOT" + providers.environmentVariable("BLOCKCRAFT_BUILD").map { "+$it" }.getOrElse("")
 
 // LuckPerms only imports gzipped exports; the dev run tasks place this next to LuckPerms for `/lp import ranks`.
 val packRanks = tasks.register("packRanks") {

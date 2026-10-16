@@ -30,11 +30,8 @@ jobs:
           distribution: temurin
           java-version: 25
       - uses: gradle/actions/setup-gradle@v4
-      - run: ./gradlew build --no-daemon
+      - run: BLOCKCRAFT_BUILD="${GITHUB_SHA::7}" ./gradlew build stagePlugins --no-daemon
       - uses: actions/upload-artifact@v4
         with:
-          name: plugins
-          path: |
-            paper/*/build/libs/*.jar
-            velocity/*/build/libs/*.jar
-            !**/*-slim.jar
+          name: network
+          path: build/docker
