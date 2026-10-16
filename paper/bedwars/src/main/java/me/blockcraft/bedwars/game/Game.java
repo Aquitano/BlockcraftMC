@@ -67,8 +67,11 @@ import org.bukkit.plugin.Plugin;
 
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -124,6 +127,8 @@ public final class Game {
     private final CatchGame catchGame;
     private final MapChoice maps;
     private final Set<Block> placed = new HashSet<>();
+    /** Who started the round for which team; a win counts for all of them, also those out before the end. */
+    private final Map<UUID, Team> roster = new HashMap<>();
     private Match match;
     private Optional<Team> winner = Optional.empty();
     private int secondsLeft;
@@ -291,6 +296,7 @@ public final class Game {
         if (phase() == GamePhase.LOBBY) {
             team.ifPresent(selector::show);
         } else if (phase() == GamePhase.INGAME && wasPlaying) {
+            roster.remove(player.getUniqueId());
             emptied.ifPresent(this::announceOut);
             if (!checkWinner()) {
                 announceRemaining();
@@ -433,13 +439,15 @@ public final class Game {
         catchGame.close();
         round.enter(GamePhase.INGAME);
         for (var player : round.players()) {
-            var spawn = teams.of(player).flatMap(Team::spawn);
+            var team = teams.of(player);
+            var spawn = team.flatMap(Team::spawn);
             if (spawn.isEmpty()) {
                 round.eliminate(player);
                 round.watch(player);
                 player.teleport(match.spectatorSpawn());
                 continue;
             }
+            roster.put(player.getUniqueId(), team.get());
             PlayerReset.reset(player, GameMode.SURVIVAL);
             config.combat().apply(player);
             player.teleport(spawn.get());
@@ -588,7 +596,8 @@ public final class Game {
             return;
         }
         winner = won;
-        won.ifPresent(team -> team.members().forEach(summary::awardWin));
+        won.ifPresent(team -> roster.entrySet().stream().filter(entry -> entry.getValue() == team)
+                .map(entry -> Bukkit.getPlayer(entry.getKey())).filter(Objects::nonNull).forEach(summary::awardWin));
         match.stop();
         specials.clear();
         chests.clear();
