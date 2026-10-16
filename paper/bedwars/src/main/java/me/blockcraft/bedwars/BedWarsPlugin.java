@@ -49,6 +49,7 @@ public final class BedWarsPlugin extends JavaPlugin {
         var layout = LobbyLayout.load(api.map().file(this, "lobby.yml"));
         var pool = new MapPool(api.map().file(this, "maps"), getLogger());
         game = new Game(this, config, messages, pool, layout, catalog, stats);
+        api.presence().maxPlayers(config.capacity());
         var topList = new TopList(this, stats, messages);
         var statsMenus = StatsMenus.of(messages, stats, topList, config.globalStatsHead());
 
