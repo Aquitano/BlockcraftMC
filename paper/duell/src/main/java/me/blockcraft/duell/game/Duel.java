@@ -141,7 +141,7 @@ public final class Duel {
     }
 
     public void join(Player player) {
-        spawns.spawn().ifPresent(player::teleport);
+        (isLobby() ? lobbySpawn() : mapSpawn(1).or(this::lobbySpawn)).ifPresent(player::teleport);
         if (round.join(player)) {
             items.giveLobbyItems(player);
             player.setGameMode(GameMode.SURVIVAL);
