@@ -143,6 +143,7 @@ setmax:
 moderation:
   self: "<prefix><error>Das kannst du nicht mit dir selbst machen."
   protected: "<prefix><error>Dieser Spieler steht im Rang über dir oder gleich mit dir."
+  issuer-outranks: "<prefix><error>Das hat jemand mit höherem Rang als du verhängt."
   error: "<prefix><error>Die Strafe konnte nicht gespeichert werden. Bitte versuche es erneut."
 
 ban:

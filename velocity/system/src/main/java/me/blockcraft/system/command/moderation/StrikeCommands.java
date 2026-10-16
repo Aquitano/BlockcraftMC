@@ -114,11 +114,18 @@ public final class StrikeCommands {
     }
 
     private void remove(CommandSource source, Target target) {
-        int before = strikes.count(target.uuid());
-        if (before == 0) {
+        if (!support.mayModerate(source, target.uuid())) {
+            return;
+        }
+        var list = strikes.list(target.uuid());
+        if (list.isEmpty()) {
             source.sendMessage(messages.get("delstrike.none"));
             return;
         }
+        if (!support.mayOverrule(source, list.getLast().issuer())) {
+            return;
+        }
+        int before = list.size();
         strikes.removeLatest(target.uuid());
         var placeholders = TagResolver.resolver(
                 Placeholder.unparsed("player", target.name()),

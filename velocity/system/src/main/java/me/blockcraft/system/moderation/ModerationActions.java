@@ -101,10 +101,13 @@ public final class ModerationActions {
         if (!support.mayModerate(source, target.get().uuid())) {
             return OperationResult.REJECTED;
         }
+        var existing = preset.type() == PunishmentType.BAN ? punishments.activeBan(target.get()) : punishments.activeMute(target.get());
+        if (existing.isPresent() && !support.mayOverrule(source, existing.get().issuer())) {
+            return OperationResult.REJECTED;
+        }
         var issuer = CommandSupport.sender(source);
         String reason = preset.reason() + " #" + banId();
         return store(source, () -> {
-            var existing = preset.type() == PunishmentType.BAN ? punishments.activeBan(target.get()) : punishments.activeMute(target.get());
             if (existing.isPresent()) {
                 source.sendMessage(messages.get("strafe.overwrite"));
                 punishments.revokeQuietly(target.get(), preset.type(), issuer);
@@ -145,12 +148,15 @@ public final class ModerationActions {
             return OperationResult.REJECTED;
         }
         var target = lookup.find(source, reference, messages.get("player-unknown", Placeholder.unparsed("player", reference.name())));
-        if (target.isEmpty()) {
+        if (target.isEmpty() || !support.mayModerate(source, target.get().uuid())) {
             return OperationResult.REJECTED;
         }
         var active = ban ? punishments.activeBan(target.get()) : punishments.activeMute(target.get());
         if (active.isEmpty()) {
             source.sendMessage(messages.get(key + (ban ? ".not-banned" : ".not-muted")));
+            return OperationResult.REJECTED;
+        }
+        if (!support.mayOverrule(source, active.get().issuer())) {
             return OperationResult.REJECTED;
         }
         return store(source, () -> {

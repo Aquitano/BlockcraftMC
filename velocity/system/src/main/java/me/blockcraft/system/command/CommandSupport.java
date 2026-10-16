@@ -85,6 +85,16 @@ public final class CommandSupport {
         return false;
     }
 
+    /** Lifting or replacing what someone handed out also needs them not to outrank the source; the console always may. */
+    public boolean mayOverrule(CommandSource source, PlayerReference issuer) {
+        if (!(source instanceof Player actor) || actor.hasPermission(SystemPermissions.BYPASS_RANK)
+                || issuer.uuid().filter(id -> ProxyRanks.ranksAbove(id, actor)).isEmpty()) {
+            return true;
+        }
+        source.sendMessage(messages.get("moderation.issuer-outranks"));
+        return false;
+    }
+
     public RequiredArgumentBuilder<CommandSource, String> playerArgument(String name) {
         return BrigadierCommand.requiredArgumentBuilder(name, StringArgumentType.word())
                 .suggests((context, builder) -> suggestPlayers(context.getSource(), builder));

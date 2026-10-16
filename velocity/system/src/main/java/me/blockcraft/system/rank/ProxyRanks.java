@@ -59,6 +59,15 @@ public final class ProxyRanks {
         }
     }
 
+    /** Whether the account stands above the actor on the ladder; without LuckPerms nobody does. */
+    public static boolean ranksAbove(UUID player, Player actor) {
+        try {
+            return weight(player) > weight(actor.getUniqueId());
+        } catch (IllegalStateException | NoClassDefFoundError noLuckPerms) {
+            return false;
+        }
+    }
+
     private static int weight(UUID player) {
         var user = LuckPermsProvider.get().getUserManager().loadUser(player).join();
         return user.getInheritedGroups(user.getQueryOptions()).stream()
