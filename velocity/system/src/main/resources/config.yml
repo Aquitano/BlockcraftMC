@@ -5,8 +5,8 @@ database:
   username: blockcraft
   password: blockcraft
   # Connections this server keeps open, and how long a query waits for a free one before it fails.
-  pool-size: 4
-  connection-timeout-seconds: 30
+  pool-size: 10
+  connection-timeout-seconds: 5
 
 # The addresses messages name as <ip>, <website>, <shop>, <teamspeak> and <discord>; keep them in step with
 # BlockcraftAPI's network section. BLOCKCRAFT_NETWORK_<KEY> overrides an entry.
