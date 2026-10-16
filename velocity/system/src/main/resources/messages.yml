@@ -185,6 +185,7 @@ tempban:
   usage: "<prefix><muted>Ausführung:<error> /tempban \\<Spieler> \\<Dauer> \\<Grund>"
   unbannable: "<prefix><error>Du kannst diesen Spieler nicht bannen!"
   already-banned: "<prefix><muted>Dieser <error>Spieler <muted>ist bereits gebannt."
+  too-long: "<prefix><error>Ein Bann dauert höchstens <accent><years> Jahre<error>. Für einen dauerhaften nutze <accent>/strafe<error>."
   units:
     - "<prefix><muted>Die Dauer ist ein Wort aus Zahl und Einheit, zum Beispiel <error>30m<muted>, <error>12h <muted>oder <error>16d<muted>."
     - "<prefix><muted>Einheiten: <error>s <muted>| <error>m <muted>| <error>h <muted>| <error>d <muted>| <error>w <muted>| <error>mon <muted>| <error>y"
@@ -229,6 +230,7 @@ unmute:
 tempmute:
   usage: "<prefix><error>Ausführung: /tempmute \\<Spieler> \\<Dauer> \\<Grund>"
   already-muted: "<prefix><error>Dieser Spieler ist bereits gemutet."
+  too-long: "<prefix><error>Ein Mute dauert höchstens <accent><years> Jahre<error>. Für einen dauerhaften nutze <accent>/strafe<error>."
   units:
     - "<prefix><muted>Die Dauer ist ein Wort aus Zahl und Einheit, zum Beispiel <error>30m<muted>, <error>12h <muted>oder <error>16d<muted>."
     - "<prefix><muted>Einheiten: <error>s <muted>| <error>m <muted>| <error>h <muted>| <error>d <muted>| <error>w <muted>| <error>mon <muted>| <error>y"

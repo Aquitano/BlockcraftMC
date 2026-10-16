@@ -12,6 +12,7 @@ import me.blockcraft.system.PlayerLookup.Target;
 import me.blockcraft.system.SystemConfig;
 import me.blockcraft.system.SystemPermissions;
 import me.blockcraft.system.command.CommandSupport;
+import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 
 import java.time.Duration;
@@ -49,6 +50,10 @@ public final class ModerationActions {
         }
         if (duration.filter(value -> !value.isNegative() && !value.isZero()).isEmpty()) {
             messages.getLines(key + ".units").forEach(source::sendMessage);
+            return OperationResult.REJECTED;
+        }
+        if (!Durations.fits(duration.get())) {
+            source.sendMessage(messages.get(key + ".too-long", Formatter.number("years", Durations.LONGEST.toDays() / 365)));
             return OperationResult.REJECTED;
         }
         if (!NetworkRequest.isText(reason)) {

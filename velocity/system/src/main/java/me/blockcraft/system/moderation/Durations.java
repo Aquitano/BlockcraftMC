@@ -7,17 +7,24 @@ import java.util.regex.Pattern;
 /** One-token durations, "16d", "12h" or "3601s", as the /strafe catalogue, /tempban and /tempmute write them. */
 public final class Durations {
 
+    /** The end is stored as a TIMESTAMP, which stops in 2038; MariaDB turns anything past it into permanent or expired. */
+    public static final Duration LONGEST = Duration.ofDays(5 * 365);
+
     private static final Pattern SPEC = Pattern.compile("(\\d{1,9})\\s*([a-zA-Z]+)");
 
     private Durations() {
     }
 
-    /** A catalogue entry: a timed spec or "permanent" (empty). Throws on anything else. */
+    /** A catalogue entry: a timed spec up to {@link #LONGEST} or "permanent" (empty). Throws on anything else. */
     public static Optional<Duration> parse(String spec) {
         if (spec.equalsIgnoreCase("permanent")) {
             return Optional.empty();
         }
-        return Optional.of(timed(spec).orElseThrow(() -> new IllegalArgumentException("Invalid duration: " + spec)));
+        return Optional.of(timed(spec).filter(Durations::fits).orElseThrow(() -> new IllegalArgumentException("Invalid duration: " + spec)));
+    }
+
+    public static boolean fits(Duration duration) {
+        return duration.compareTo(LONGEST) <= 0;
     }
 
     /** A timed spec as typed by staff; empty when the token is not one, or would end at once. */
