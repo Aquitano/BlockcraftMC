@@ -81,11 +81,11 @@ public final class Game {
         this.messages = messages;
         this.summary = new RoundSummary(plugin, messages,
                 new RoundSummary.Rewards(config.killCoins(), config.winCoins()), stats);
-        this.round = new Round(plugin, new Arena(messages, Sounds.RUSH_JOIN), summary, Bukkit.getMaxPlayers());
+        this.round = new Round(plugin, new Arena(messages, Sounds.RUSH_JOIN), summary, config.maxPlayers());
         this.countdown = round.timer(new Countdown(plugin));
         this.lobbyCountdown = new LobbyCountdown(plugin, round.arena(), config.lobbyCountdown(), config.minPlayers(),
                 round::playerCount, this::beginSearch);
-        this.scoreboard = new GameScoreboard(this, messages, map);
+        this.scoreboard = new GameScoreboard(this, messages, map, config.maxPlayers());
     }
 
     public GamePhase phase() {

@@ -5,6 +5,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 
 public record RushConfig(
         int minPlayers,
+        int maxPlayers,
         String globalStatsHead,
         int emeraldsPerOre,
         int oreRespawnSeconds,
@@ -28,6 +29,7 @@ public record RushConfig(
     public static RushConfig from(FileConfiguration config) {
         return new RushConfig(
                 config.getInt("min-players", 2),
+                config.getInt("max-players", 6),
                 config.getString("global-stats-head", "Kevos"),
                 config.getInt("emeralds-per-ore", 12),
                 config.getInt("ore-respawn-seconds", 12),

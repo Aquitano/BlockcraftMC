@@ -49,6 +49,7 @@ public final class EmeraldRushPlugin extends JavaPlugin {
         api.unlocks().importLegacyTable("em_kits", Perk.LEGACY_COLUMNS);
 
         game = new Game(this, config, spawns, messages, stats, api.map());
+        api.presence().maxPlayers(config.maxPlayers());
         var menus = new RushMenus(game, messages, spawns, api.unlocks());
         var topList = new TopList(this, stats, messages);
         var statsMenus = StatsMenus.of(messages, stats, topList, config.globalStatsHead());

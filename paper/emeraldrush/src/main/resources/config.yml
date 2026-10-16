@@ -1,4 +1,6 @@
 min-players: 2
+# The map has six deathmatch spawns; more players would share them.
+max-players: 6
 global-stats-head: Kevos
 emeralds-per-ore: 12
 ore-respawn-seconds: 12

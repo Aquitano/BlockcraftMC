@@ -19,12 +19,14 @@ public final class GameScoreboard {
     private final Game game;
     private final Messages messages;
     private final MapBundle map;
+    private final int maxPlayers;
     private final Sidebar sidebar;
 
-    public GameScoreboard(Game game, Messages messages, MapBundle map) {
+    public GameScoreboard(Game game, Messages messages, MapBundle map, int maxPlayers) {
         this.game = game;
         this.messages = messages;
         this.map = map;
+        this.maxPlayers = maxPlayers;
         this.sidebar = new Sidebar(messages.get("scoreboard.title"));
     }
 
@@ -37,7 +39,7 @@ public final class GameScoreboard {
         var online = TagResolver.resolver(
                 BlockcraftApi.get().resourcePack().icons(player),
                 Formatter.number("online", game.alivePlayers().size()),
-                Formatter.number("max", Bukkit.getMaxPlayers()));
+                Formatter.number("max", maxPlayers));
         switch (game.phase()) {
             case LOBBY -> sidebar.show(player, messages.getLines("scoreboard.lobby", online, Placeholder.unparsed("map", map.name())));
             case SEARCH -> sidebar.show(player, messages.getLines("scoreboard.search", online, Formatter.number("time", game.secondsLeft())));
