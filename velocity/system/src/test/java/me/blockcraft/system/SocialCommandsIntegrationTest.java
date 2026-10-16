@@ -80,13 +80,13 @@ public class SocialCommandsIntegrationTest {
         var data = folder.newFolder().toPath();
         var config = SystemConfig.load(data.resolve("config.yml"), () -> getClass().getResourceAsStream("/config.yml"));
         messages = Messages.load(data, () -> getClass().getResourceAsStream("/messages.yml"));
-        var lookup = new PlayerLookup(proxy.server, visibility, players);
+        var lookup = new PlayerLookup(proxy.server, visibility, players, messages);
         var ignores = new IgnoreList(new IgnoreRepository(db), null);
         var directory = new ServerDirectory(proxy.server, "lobby", Duration.ofSeconds(15), counts -> { });
         friends = new FriendManager(proxy.server, lookup, visibility, choices, ignores, directory, null, repository, null, config, messages);
         var support = new CommandSupport(visibility, messages);
         var muteGate = new MuteGate(new PunishmentRepository(db), null, messages, null);
-        var messaging = new MessageCommand(support, proxy.server, visibility, choices, ignores, new AfkPlayers(), muteGate, messages);
+        var messaging = new MessageCommand(support, proxy.server, visibility, lookup, choices, ignores, new AfkPlayers(), muteGate, messages);
         commands = new CommandDispatcher<>();
         commands.getRoot().addChild(messaging.msg().getNode());
         commands.getRoot().addChild(messaging.reply().getNode());

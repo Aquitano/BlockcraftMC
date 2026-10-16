@@ -16,6 +16,7 @@ palette:
   bedwars: "<dark_aqua>"
 player-only: "<error>Nur ein Spieler kann diesen Befehl verwenden!"
 player-unknown: "<prefix><error>Der Spieler <accent><player> <error>ist unbekannt."
+player-ambiguous: "<prefix><error>Der Name <accent><player> <error>passt gerade auf mehrere Spieler, darum passiert nichts."
 no-permission: "<prefix><error>Dazu hast du keine Berechtigung."
 request-failed: "<prefix><error>Die Anfrage konnte nicht ausgeführt werden. Bitte melde das dem Team."
 command-blocked: "<prefix><error>Nicht verfügbar!"

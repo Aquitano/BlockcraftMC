@@ -44,9 +44,7 @@ public final class AddPremiumCommand {
             source.sendMessage(messages.get("addpremium.unavailable"));
             return;
         }
-        lookup.find(name).ifPresentOrElse(
-                target -> grant(source, target),
-                () -> source.sendMessage(messages.get("player-unknown", Placeholder.unparsed("player", name))));
+        lookup.find(source, name, messages.get("player-unknown", Placeholder.unparsed("player", name))).ifPresent(target -> grant(source, target));
     }
 
     /** Touches LuckPerms classes only here, so the command still loads without the plugin. */

@@ -54,9 +54,8 @@ public final class StaffLogCommand {
     }
 
     private void show(CommandSource source, String name, int page) {
-        var target = lookup.find(name);
+        var target = lookup.find(source, name, messages.get("player-unknown", Placeholder.unparsed("player", name)));
         if (target.isEmpty()) {
-            source.sendMessage(messages.get("player-unknown", Placeholder.unparsed("player", name)));
             return;
         }
         var player = Placeholder.unparsed("player", target.get().name());

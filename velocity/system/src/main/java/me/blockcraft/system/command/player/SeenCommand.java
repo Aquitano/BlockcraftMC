@@ -40,11 +40,15 @@ public final class SeenCommand {
     }
 
     private void seen(CommandSource source, String name) {
-        var online = visibility.find(source, name);
-        if (online.isPresent()) {
+        var online = visibility.matches(source, name);
+        if (online.size() > 1) {
+            source.sendMessage(messages.get("player-ambiguous", Placeholder.unparsed("player", name)));
+            return;
+        }
+        if (online.size() == 1) {
             source.sendMessage(messages.get("seen.online",
-                    Placeholder.unparsed("player", visibility.shownName(online.get())),
-                    Placeholder.unparsed("server", CommandSupport.currentServer(online.get()))));
+                    Placeholder.unparsed("player", visibility.shownName(online.getFirst())),
+                    Placeholder.unparsed("server", CommandSupport.currentServer(online.getFirst()))));
             return;
         }
         players.byName(name).ifPresentOrElse(

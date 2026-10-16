@@ -156,7 +156,7 @@ public class PartyManagerTest {
     @Test
     public void commandsKeepPermissionAndVisibilityChecksBeforePartyChanges() throws Exception {
         var commands = new CommandDispatcher<CommandSource>();
-        commands.getRoot().addChild(new PartyCommand(new CommandSupport(visibility, messages), visibility, parties, messages).create().getNode());
+        commands.getRoot().addChild(new PartyCommand(new CommandSupport(visibility, messages), new PlayerLookup(proxy.server, visibility, null, messages), parties, messages).create().getNode());
         var ordinary = proxy.join("Ordinary");
         var inviter = proxy.join("Inviter", SystemPermissions.PARTY_INVITE);
         var target = proxy.join("Target");

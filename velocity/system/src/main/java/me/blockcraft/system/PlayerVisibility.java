@@ -13,6 +13,7 @@ import me.blockcraft.common.nick.Nick;
 import me.blockcraft.common.nick.NickRepository;
 import org.slf4j.Logger;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -119,19 +120,19 @@ public final class PlayerVisibility {
     }
 
     /**
-     * The player the viewer means by a name: a nick always resolves, the account name behind a nick only for
-     * viewers who see real names, and a vanished player only for viewers who see vanished players.
+     * Every online player the viewer may mean by a name: a nick always answers, the account name behind a nick only
+     * for viewers who see real names, and a vanished player only for viewers who see vanished players.
      */
-    public Optional<Player> find(CommandSource viewer, String name) {
-        return proxy.getPlayer(name)
-                .filter(player -> nick(player).isEmpty() || seesRealNames(viewer))
-                .or(() -> byNick(name))
-                .filter(player -> canSee(viewer, player));
+    public List<Player> matches(CommandSource viewer, String name) {
+        return named(name)
+                .filter(player -> canSee(viewer, player)
+                        && (seesRealNames(viewer) || nick(player).map(Nick::name).map(name::equalsIgnoreCase).orElse(true)))
+                .toList();
     }
 
-    public Optional<Player> byNick(String nick) {
-        return proxy.getAllPlayers().stream()
-                .filter(player -> nick(player).map(Nick::name).filter(nick::equalsIgnoreCase).isPresent())
-                .findFirst();
+    /** Every online player who goes by that name, as account or as nick, whoever asks. */
+    public Stream<Player> named(String name) {
+        return proxy.getAllPlayers().stream().filter(player -> player.getUsername().equalsIgnoreCase(name)
+                || nick(player).map(Nick::name).filter(name::equalsIgnoreCase).isPresent());
     }
 }

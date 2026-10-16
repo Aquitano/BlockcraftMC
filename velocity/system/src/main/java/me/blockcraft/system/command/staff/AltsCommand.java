@@ -47,9 +47,8 @@ public final class AltsCommand {
     }
 
     private void alts(CommandSource source, String name) {
-        var target = lookup.findVisible(source, name);
+        var target = lookup.findVisible(source, name, messages.get("player-unknown", Placeholder.unparsed("player", name)));
         if (target.isEmpty()) {
-            source.sendMessage(messages.get("player-unknown", Placeholder.unparsed("player", name)));
             return;
         }
         var player = Placeholder.unparsed("player", target.get().name());

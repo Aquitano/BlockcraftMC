@@ -70,9 +70,8 @@ public final class ReportService {
             reporter.sendMessage(messages.get("report.reason-too-long", Formatter.number("max", NetworkRequest.MAX_TEXT_LENGTH)));
             return OperationResult.REJECTED;
         }
-        var found = lookup.findVisible(reporter, targetName);
+        var found = lookup.findVisible(reporter, targetName, messages.get("report.unknown-player"));
         if (found.isEmpty()) {
-            reporter.sendMessage(messages.get("report.unknown-player"));
             return OperationResult.REJECTED;
         }
         var account = found.get();

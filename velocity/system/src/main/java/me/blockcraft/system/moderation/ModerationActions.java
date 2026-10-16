@@ -55,9 +55,8 @@ public final class ModerationActions {
             source.sendMessage(messages.get(key + ".usage"));
             return OperationResult.REJECTED;
         }
-        var target = lookup.find(reference);
+        var target = lookup.find(source, reference, messages.get("player-unknown", Placeholder.unparsed("player", reference.name())));
         if (target.isEmpty()) {
-            source.sendMessage(messages.get("player-unknown", Placeholder.unparsed("player", reference.name())));
             return OperationResult.REJECTED;
         }
         if (ban && config.isUnbannable(target.get().name())) {
@@ -91,9 +90,8 @@ public final class ModerationActions {
             source.sendMessage(messages.get("strafe.unknown-number"));
             return OperationResult.REJECTED;
         }
-        var target = lookup.find(reference);
+        var target = lookup.find(source, reference, messages.get("player-unknown", Placeholder.unparsed("player", reference.name())));
         if (target.isEmpty()) {
-            source.sendMessage(messages.get("player-unknown", Placeholder.unparsed("player", reference.name())));
             return OperationResult.REJECTED;
         }
         if (config.isUnbannable(reference.name()) || config.isUnbannable(target.get().name())) {
@@ -146,9 +144,8 @@ public final class ModerationActions {
         if (!permitted(source, ban ? SystemPermissions.BAN : SystemPermissions.MUTE)) {
             return OperationResult.REJECTED;
         }
-        var target = lookup.find(reference);
+        var target = lookup.find(source, reference, messages.get("player-unknown", Placeholder.unparsed("player", reference.name())));
         if (target.isEmpty()) {
-            source.sendMessage(messages.get("player-unknown", Placeholder.unparsed("player", reference.name())));
             return OperationResult.REJECTED;
         }
         var active = ban ? punishments.activeBan(target.get()) : punishments.activeMute(target.get());

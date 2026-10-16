@@ -8,7 +8,6 @@ import me.blockcraft.common.moderation.StrikeRepository;
 import me.blockcraft.common.player.PlayerReference;
 import me.blockcraft.system.PlayerLookup;
 import me.blockcraft.system.PlayerLookup.Target;
-import me.blockcraft.system.PlayerVisibility;
 import me.blockcraft.system.SystemConfig;
 import me.blockcraft.system.SystemPermissions;
 import me.blockcraft.system.command.CommandSupport;
@@ -29,17 +28,15 @@ import java.util.function.BiConsumer;
 public final class StrikeCommands {
 
     private final CommandSupport support;
-    private final PlayerVisibility visibility;
     private final PlayerLookup lookup;
     private final StrikeRepository strikes;
     private final PunishmentService punishments;
     private final SystemConfig config;
     private final Messages messages;
 
-    public StrikeCommands(CommandSupport support, PlayerVisibility visibility, PlayerLookup lookup, StrikeRepository strikes,
+    public StrikeCommands(CommandSupport support, PlayerLookup lookup, StrikeRepository strikes,
                           PunishmentService punishments, SystemConfig config, Messages messages) {
         this.support = support;
-        this.visibility = visibility;
         this.lookup = lookup;
         this.strikes = strikes;
         this.punishments = punishments;
@@ -81,15 +78,14 @@ public final class StrikeCommands {
                 .then(support.playerArgument("player")
                         .executes(support.run((source, context) -> {
                             String player = StringArgumentType.getString(context, "player");
-                            lookup.find(player).ifPresentOrElse(target -> action.accept(source, target),
-                                    () -> source.sendMessage(messages.get("player-unknown", Placeholder.unparsed("player", player))));
+                            lookup.find(source, player, messages.get("player-unknown", Placeholder.unparsed("player", player)))
+                                    .ifPresent(target -> action.accept(source, target));
                         }))));
     }
 
     private void strike(CommandSource source, String name, String reason) {
-        var target = visibility.find(source, name);
+        var target = lookup.online(source, name, messages.get("strike.offline"));
         if (target.isEmpty()) {
-            source.sendMessage(messages.get("strike.offline"));
             return;
         }
         var player = target.get();

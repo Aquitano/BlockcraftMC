@@ -73,10 +73,14 @@ public final class WhoisCommand {
     }
 
     private void whois(CommandSource source, String name) {
-        var target = lookup.find(name);
-        var known = target.flatMap(found -> players.byUuid(found.uuid()));
-        if (target.isEmpty() || known.isEmpty()) {
-            source.sendMessage(messages.get("player-unknown", Placeholder.unparsed("player", name)));
+        var unknown = messages.get("player-unknown", Placeholder.unparsed("player", name));
+        var target = lookup.find(source, name, unknown);
+        if (target.isEmpty()) {
+            return;
+        }
+        var known = players.byUuid(target.get().uuid());
+        if (known.isEmpty()) {
+            source.sendMessage(unknown);
             return;
         }
         messages.getLines("whois.lines", placeholders(target.get(), known.get())).forEach(source::sendMessage);

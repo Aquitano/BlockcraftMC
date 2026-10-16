@@ -33,9 +33,8 @@ public final class CheckCommand {
     }
 
     private void check(CommandSource source, String name) {
-        var target = lookup.find(name);
+        var target = lookup.find(source, name, messages.get("player-unknown", Placeholder.unparsed("player", name)));
         if (target.isEmpty()) {
-            source.sendMessage(messages.get("player-unknown", Placeholder.unparsed("player", name)));
             return;
         }
         punishments.activeBan(target.get()).ifPresentOrElse(

@@ -94,9 +94,8 @@ public final class WarnCommands {
     private void warn(CommandSource source, String argument, Optional<String> reason) {
         boolean forced = argument.endsWith(FORCE_SUFFIX);
         String name = forced ? argument.substring(0, argument.length() - FORCE_SUFFIX.length()) : argument;
-        var target = lookup.find(name);
+        var target = lookup.find(source, name, messages.get("player-unknown", Placeholder.unparsed("player", name)));
         if (target.isEmpty()) {
-            source.sendMessage(messages.get("player-unknown", Placeholder.unparsed("player", name)));
             return;
         }
         if (!support.mayModerate(source, target.get().uuid())) {
@@ -170,20 +169,20 @@ public final class WarnCommands {
     }
 
     private void clear(CommandSource source, String name) {
-        lookup.find(name).ifPresentOrElse(target -> {
+        lookup.find(source, name, messages.get("player-unknown", Placeholder.unparsed("player", name))).ifPresent(target -> {
             int removed = warns.clear(target.uuid());
             source.sendMessage(messages.get("warns.cleared", Placeholder.unparsed("player", target.name()), Formatter.number("count", removed)));
-        }, () -> source.sendMessage(messages.get("player-unknown", Placeholder.unparsed("player", name))));
+        });
     }
 
     private void get(CommandSource source, String name) {
-        lookup.find(name).ifPresentOrElse(target -> {
+        lookup.find(source, name, messages.get("player-unknown", Placeholder.unparsed("player", name))).ifPresent(target -> {
             var list = warns.list(target.uuid());
             source.sendMessage(messages.get("warns.get", Placeholder.unparsed("player", target.name()), Formatter.number("count", list.size())));
             for (int i = 0; i < list.size(); i++) {
                 source.sendMessage(entry(i + 1, list.get(i)));
             }
-        }, () -> source.sendMessage(messages.get("player-unknown", Placeholder.unparsed("player", name))));
+        });
     }
 
     private Component entry(int number, Warn warn) {

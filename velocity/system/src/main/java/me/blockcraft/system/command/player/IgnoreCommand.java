@@ -58,9 +58,8 @@ public final class IgnoreCommand {
     }
 
     private void add(Player player, String name) {
-        var found = lookup.findVisible(player, name);
+        var found = lookup.findVisible(player, name, messages.get("ignore.unknown", named(name)));
         if (found.isEmpty()) {
-            player.sendMessage(messages.get("ignore.unknown", named(name)));
             return;
         }
         var target = found.get();
@@ -92,8 +91,11 @@ public final class IgnoreCommand {
                 .filter(entry -> entry.name().equalsIgnoreCase(name))
                 .map(Ignored::uuid)
                 .findFirst()
-                .or(() -> lookup.findVisible(player, name).map(PlayerLookup.Target::uuid));
-        if (account.isEmpty() || !ignores.remove(player, account.get())) {
+                .or(() -> lookup.findVisible(player, name, messages.get("ignore.not-ignored", named(name))).map(PlayerLookup.Target::uuid));
+        if (account.isEmpty()) {
+            return;
+        }
+        if (!ignores.remove(player, account.get())) {
             player.sendMessage(messages.get("ignore.not-ignored", named(name)));
             return;
         }

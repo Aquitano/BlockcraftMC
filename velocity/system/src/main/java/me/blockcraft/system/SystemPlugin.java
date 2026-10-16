@@ -169,7 +169,7 @@ public final class SystemPlugin {
         var choices = new PlayerChoices(playerSettings, logger);
         var ignores = new IgnoreList(new IgnoreRepository(database), logger);
         var afk = new AfkPlayers();
-        var lookup = new PlayerLookup(proxy, visibility, repositories.players());
+        var lookup = new PlayerLookup(proxy, visibility, repositories.players(), messages);
         var directory = new ServerDirectory(proxy, config.lobbyGroup(), Duration.ofSeconds(config.discovery().seatSeconds()),
                 counts -> proxy.getScheduler().buildTask(this, () -> storeOccupancy(servers, counts)).schedule());
         var parties = new PartyManager(proxy, visibility, choices, ignores, directory, messages);
@@ -234,18 +234,18 @@ public final class SystemPlugin {
         for (var type : PunishmentType.values()) {
             punishmentCommands.create(type).forEach(this::register);
         }
-        register(new KickCommand(support, proxy, visibility, messages).create());
+        register(new KickCommand(support, proxy, lookup, messages).create());
         register(new CheckCommand(support, lookup, punishments, messages).create());
         register(new HistoryCommand(support, lookup, punishments, config, messages).create());
         register(new StaffLogCommand(support, lookup, new StaffActionRepository(database), config, messages, staffButtons).create());
         register(new StrafeCommand(support, moderationActions, messages).create());
-        new StrikeCommands(support, visibility, lookup, repositories.strikes(), punishments, config, messages).create().forEach(this::register);
+        new StrikeCommands(support, lookup, repositories.strikes(), punishments, config, messages).create().forEach(this::register);
         new WarnCommands(support, proxy, lookup, repositories.warns(), config, messages).create().forEach(this::register);
         register(new WerbungCommand(support, lookup, repositories.adLog(), messages).create());
 
         register(new TeamChatCommand(support, proxy, messages).create());
-        register(new FindCommand(support, visibility, messages).create());
-        register(new GotoCommand(support, visibility, directory, messages).create());
+        register(new FindCommand(support, lookup, messages).create());
+        register(new GotoCommand(support, lookup, directory, messages).create());
         register(new ClearChatCommand(support, messages).create(), "clearchat");
         register(new GlobalMuteCommand(support, proxy, settings, messages).create());
         register(new ChatSlowCommand(support, proxy, settings, messages).create());
@@ -264,7 +264,7 @@ public final class SystemPlugin {
 
         register(new HubCommand(support, lobby).create(), "h", "lobby", "l");
         register(new PlayCommand(support, lobby, directory).create());
-        var privateMessages = new MessageCommand(support, proxy, visibility, choices, ignores, afk, muteGate, messages);
+        var privateMessages = new MessageCommand(support, proxy, visibility, lookup, choices, ignores, afk, muteGate, messages);
         events.register(this, privateMessages);
         register(privateMessages.msg(), "tell", "w");
         register(privateMessages.reply(), "reply");
@@ -274,7 +274,7 @@ public final class SystemPlugin {
         var friendCommands = new FriendCommand(support, friends, messages);
         register(friendCommands.create());
         register(friendCommands.list());
-        register(new PartyCommand(support, visibility, parties, messages).create());
+        register(new PartyCommand(support, lookup, parties, messages).create());
         register(new PartyChatCommand(support, parties, muteGate, messages).create());
         var joinMe = new JoinMeCommand(support, proxy, visibility, config, directory, messages);
         register(joinMe.create());

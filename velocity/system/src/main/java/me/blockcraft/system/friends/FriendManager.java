@@ -309,12 +309,9 @@ public final class FriendManager {
 
     /** Tells the sender when nobody goes by that name, so every caller can act on a hit alone. */
     private Optional<PlayerLookup.Target> findVisible(Player sender, String name) {
-        var target = lookup.findVisible(sender, name).map(found -> new PlayerLookup.Target(found.uuid(),
-                found.online().map(online -> visibility.nameFor(sender, online)).orElse(found.name()), found.online()));
-        if (target.isEmpty()) {
-            sender.sendMessage(messages.get("friends.unknown", Placeholder.unparsed("player", name)));
-        }
-        return target;
+        return lookup.findVisible(sender, name, messages.get("friends.unknown", Placeholder.unparsed("player", name)))
+                .map(found -> new PlayerLookup.Target(found.uuid(),
+                        found.online().map(online -> visibility.nameFor(sender, online)).orElse(found.name()), found.online()));
     }
 
     private Optional<PlayerLookup.Target> findRelated(Player player, String name, List<Friend> related, String missing) {
@@ -322,8 +319,9 @@ public final class FriendManager {
         var account = related.stream().filter(friend -> friend.name().equalsIgnoreCase(name)).findFirst()
                 .map(friend -> new PlayerLookup.Target(friend.uuid(), friend.name(), visibleOnline(player, friend.uuid())
                         .filter(online -> visibility.nick(online).isEmpty() || visibility.seesRealNames(player))));
-        var target = account.or(() -> visibility.find(player, name)
+        var target = account.or(() -> visibility.matches(player, name).stream()
                 .filter(online -> related.stream().anyMatch(friend -> friend.uuid().equals(online.getUniqueId())))
+                .findFirst()
                 .map(online -> new PlayerLookup.Target(online.getUniqueId(), visibility.nameFor(player, online), Optional.of(online))));
         if (target.isEmpty()) {
             player.sendMessage(messages.get(missing, Placeholder.unparsed("player", name)));

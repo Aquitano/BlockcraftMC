@@ -6,7 +6,7 @@ import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
 import me.blockcraft.common.message.Messages;
-import me.blockcraft.system.PlayerVisibility;
+import me.blockcraft.system.PlayerLookup;
 import me.blockcraft.system.SystemPermissions;
 import me.blockcraft.system.command.CommandSupport;
 import me.blockcraft.system.party.PartyManager;
@@ -14,13 +14,13 @@ import me.blockcraft.system.party.PartyManager;
 public final class PartyCommand {
 
     private final CommandSupport support;
-    private final PlayerVisibility visibility;
+    private final PlayerLookup lookup;
     private final PartyManager parties;
     private final Messages messages;
 
-    public PartyCommand(CommandSupport support, PlayerVisibility visibility, PartyManager parties, Messages messages) {
+    public PartyCommand(CommandSupport support, PlayerLookup lookup, PartyManager parties, Messages messages) {
         this.support = support;
-        this.visibility = visibility;
+        this.lookup = lookup;
         this.parties = parties;
         this.messages = messages;
     }
@@ -82,9 +82,8 @@ public final class PartyCommand {
     }
 
     private void join(Player player, String leaderName) {
-        var leader = visibility.find(player, leaderName);
+        var leader = lookup.online(player, leaderName, messages.get("party.target-offline"));
         if (leader.isEmpty()) {
-            player.sendMessage(messages.get("party.target-offline"));
             return;
         }
         parties.requestInvite(player, leader.get());
@@ -95,18 +94,16 @@ public final class PartyCommand {
             inviter.sendMessage(messages.get("party.invite-no-permission"));
             return;
         }
-        var invitee = visibility.find(inviter, inviteeName);
+        var invitee = lookup.online(inviter, inviteeName, messages.get("party.target-offline"));
         if (invitee.isEmpty()) {
-            inviter.sendMessage(messages.get("party.target-offline"));
             return;
         }
         parties.invite(inviter, invitee.get());
     }
 
     private void promote(Player leader, String memberName) {
-        var member = visibility.find(leader, memberName);
+        var member = lookup.online(leader, memberName, messages.get("party.target-offline"));
         if (member.isEmpty()) {
-            leader.sendMessage(messages.get("party.target-offline"));
             return;
         }
         parties.promote(leader, member.get());
@@ -117,9 +114,8 @@ public final class PartyCommand {
             leader.sendMessage(messages.get("party.kick-no-permission"));
             return;
         }
-        var member = visibility.find(leader, memberName);
+        var member = lookup.online(leader, memberName, messages.get("party.target-offline"));
         if (member.isEmpty()) {
-            leader.sendMessage(messages.get("party.target-offline"));
             return;
         }
         parties.kick(leader, member.get());

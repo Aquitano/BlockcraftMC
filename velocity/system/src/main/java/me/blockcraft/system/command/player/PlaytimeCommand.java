@@ -40,11 +40,11 @@ public final class PlaytimeCommand {
     }
 
     private void show(CommandSource source, String name) {
-        var known = lookup.find(name).flatMap(target -> players.byUuid(target.uuid()));
-        known.ifPresentOrElse(
+        var unknown = messages.get("player-unknown", Placeholder.unparsed("player", name));
+        lookup.find(source, name, unknown).ifPresent(target -> players.byUuid(target.uuid()).ifPresentOrElse(
                 player -> source.sendMessage(messages.get("playtime.total",
                         Placeholder.unparsed("player", player.name()),
                         Placeholder.unparsed("time", durations.format(playtime.total(player))))),
-                () -> source.sendMessage(messages.get("player-unknown", Placeholder.unparsed("player", name))));
+                () -> source.sendMessage(unknown)));
     }
 }

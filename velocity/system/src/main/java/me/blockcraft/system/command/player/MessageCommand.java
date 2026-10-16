@@ -10,6 +10,7 @@ import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.settings.PlayerSetting;
 import me.blockcraft.system.AfkPlayers;
 import me.blockcraft.system.PlayerChoices;
+import me.blockcraft.system.PlayerLookup;
 import me.blockcraft.system.PlayerVisibility;
 import me.blockcraft.system.SystemPermissions;
 import me.blockcraft.system.command.CommandSupport;
@@ -33,6 +34,7 @@ public final class MessageCommand {
     private final CommandSupport support;
     private final ProxyServer proxy;
     private final PlayerVisibility visibility;
+    private final PlayerLookup lookup;
     private final PlayerChoices choices;
     private final IgnoreList ignores;
     private final AfkPlayers afk;
@@ -40,11 +42,12 @@ public final class MessageCommand {
     private final Messages messages;
     private final Map<UUID, UUID> lastPartner = new ConcurrentHashMap<>();
 
-    public MessageCommand(CommandSupport support, ProxyServer proxy, PlayerVisibility visibility, PlayerChoices choices,
-                          IgnoreList ignores, AfkPlayers afk, MuteGate muteGate, Messages messages) {
+    public MessageCommand(CommandSupport support, ProxyServer proxy, PlayerVisibility visibility, PlayerLookup lookup,
+                          PlayerChoices choices, IgnoreList ignores, AfkPlayers afk, MuteGate muteGate, Messages messages) {
         this.support = support;
         this.proxy = proxy;
         this.visibility = visibility;
+        this.lookup = lookup;
         this.choices = choices;
         this.ignores = ignores;
         this.afk = afk;
@@ -60,9 +63,8 @@ public final class MessageCommand {
                         .executes(support.usage("msg.usage"))
                         .then(BrigadierCommand.requiredArgumentBuilder("message", StringArgumentType.greedyString())
                                 .executes(support.asPlayer((sender, context) ->
-                                        visibility.find(sender, StringArgumentType.getString(context, "player")).ifPresentOrElse(
-                                                target -> deliver(sender, target, StringArgumentType.getString(context, "message")),
-                                                () -> sender.sendMessage(messages.get("msg.offline"))))))));
+                                        lookup.online(sender, StringArgumentType.getString(context, "player"), messages.get("msg.offline"))
+                                                .ifPresent(target -> deliver(sender, target, StringArgumentType.getString(context, "message"))))))));
     }
 
     public BrigadierCommand reply() {
