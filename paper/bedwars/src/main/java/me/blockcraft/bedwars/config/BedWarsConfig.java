@@ -41,6 +41,9 @@ public record BedWarsConfig(
                 .map(key -> TeamColor.byKey(key).orElseThrow(() -> new IllegalArgumentException("Unknown team colour " + key)))
                 .distinct()
                 .toList();
+        if (teams.size() == 1) {
+            throw new IllegalArgumentException("A round needs at least two teams, teams.colors names only " + teams);
+        }
         var spawnTicks = new EnumMap<Resource, Integer>(Resource.class);
         for (var resource : Resource.values()) {
             spawnTicks.put(resource, Math.max(1, config.getInt("resources." + resource.key() + "-ticks", 20)));

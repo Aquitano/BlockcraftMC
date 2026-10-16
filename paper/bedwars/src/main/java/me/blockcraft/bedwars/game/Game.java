@@ -402,6 +402,7 @@ public final class Game {
         }
         var world = match.world();
         teams.assignRest(round.players()).forEach((player, team) -> player.sendMessage(messages.get("team.assigned", teamName(team))));
+        teams.splitLoneTeam().forEach((player, team) -> player.sendMessage(messages.get("team.moved", teamName(team))));
         for (var team : teams.all()) {
             var color = team.color();
             team.settle(map.spawns().get(color).in(world), TeamBed.place(world, map.beds().get(color), color));

@@ -5,6 +5,7 @@ import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -26,11 +27,15 @@ public final class Teams {
         FULL
     }
 
+    private static final int RIVALS = 2;
+
     private final Map<TeamColor, Team> teams = new LinkedHashMap<>();
     private final Map<UUID, Team> byPlayer = new ConcurrentHashMap<>();
+    private final int capacity;
     private final TabTeams tabTeams;
 
     public Teams(List<TeamColor> colors, int capacity, Messages messages, TabTeams tabTeams) {
+        this.capacity = capacity;
         this.tabTeams = tabTeams;
         colors.forEach(color -> teams.put(color, new Team(color, capacity, messages.get("team-chest.title"))));
     }
@@ -84,27 +89,44 @@ public final class Teams {
     }
 
     /**
-     * Seats everyone who chose no team, as the original did: the teams are ordered by size once, and each one is
-     * filled before the next, so that the players who did not choose still play with teammates.
+     * Seats everyone who chose no team. They fill as few teams as the player count needs, but at least two, so that
+     * they still get teammates and the round has rivals; teams that already have members come first, and each player
+     * joins the smallest team that has room.
      */
     public Map<Player, Team> assignRest(List<Player> players) {
-        var order = teams.values().stream().sorted(Comparator.comparingInt(Team::size)).toList();
+        int wanted = Math.max(RIVALS, Math.ceilDiv(players.size(), capacity));
+        var playing = new ArrayList<>(standing());
+        teams.values().stream().filter(team -> team.size() == 0).limit(Math.max(0, wanted - playing.size()))
+                .forEach(playing::add);
         var assigned = new LinkedHashMap<Player, Team>();
-        int index = 0;
         for (var player : players) {
             if (of(player).isPresent()) {
                 continue;
             }
-            while (index < order.size() && order.get(index).isFull()) {
-                index++;
-            }
-            if (index == order.size()) {
+            var team = playing.stream().filter(candidate -> !candidate.isFull()).min(Comparator.comparingInt(Team::size));
+            if (team.isEmpty()) {
                 break;
             }
-            join(player, order.get(index));
-            assigned.put(player, order.get(index));
+            join(player, team.get());
+            assigned.put(player, team.get());
         }
         return assigned;
+    }
+
+    /** If everyone chose the same team, its latest choosers move to an empty one, so that the round has rivals. */
+    public Map<Player, Team> splitLoneTeam() {
+        var moved = new LinkedHashMap<Player, Team>();
+        var standing = standing();
+        if (standing.size() != 1) {
+            return moved;
+        }
+        var members = standing.getFirst().members();
+        teams.values().stream().filter(team -> team.size() == 0).findFirst().ifPresent(rival ->
+                members.subList(members.size() - members.size() / 2, members.size()).forEach(player -> {
+                    join(player, rival);
+                    moved.put(player, rival);
+                }));
+        return moved;
     }
 
     /** The teams someone still plays for. */
