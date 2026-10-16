@@ -63,10 +63,15 @@ public final class LobbyConnector {
 
     /**
      * Joins the fullest open server of a game group, which is what signs, /play and the navigator do. A party leader
-     * takes the whole party along, so the server needs a seat for every member who will follow.
+     * takes the whole party along, so the server needs a seat for every member who will follow. The lobby group is
+     * spread like logins instead.
      */
     public void play(Player player, String group) {
         group = group.toLowerCase(Locale.ROOT);
+        if (group.equals(config.lobbyGroup())) {
+            send(player);
+            return;
+        }
         String key = "play.games." + group;
         var game = Placeholder.component("game", messages.has(key) ? messages.get(key) : Component.text(group));
         var seated = Stream.concat(Stream.of(player.getUniqueId()), parties.followersOf(player.getUniqueId()).stream()).toList();
