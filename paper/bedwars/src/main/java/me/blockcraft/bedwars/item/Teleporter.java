@@ -102,6 +102,13 @@ final class Teleporter {
         }
     }
 
+    void clear() {
+        charging.values().forEach(BukkitTask::cancel);
+        charging.clear();
+        flying.values().forEach(flight -> flight.task().cancel());
+        flying.clear();
+    }
+
     private void launch(Player player) {
         int launchHeight = player.getLocation().getBlockY();
         long[] ticks = {0};

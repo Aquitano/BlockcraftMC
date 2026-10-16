@@ -45,9 +45,11 @@ public final class SpecialItems implements Listener {
         this.mobileShop = new MobileShop(plugin, messages, dealers, config.mobileShopSeconds());
     }
 
-    /** The round is over: the mobile dealers go. */
+    /** The round is over: the mobile dealers go, and no teleporter or parachute carries anyone on. */
     public void clear() {
         mobileShop.clear();
+        teleporter.clear();
+        parachute.clear();
     }
 
     @EventHandler(priority = EventPriority.HIGH)

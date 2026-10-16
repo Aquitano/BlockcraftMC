@@ -92,12 +92,19 @@ final class Parachute {
     }
 
     void close(Player player) {
-        Optional.ofNullable(open.remove(player.getUniqueId())).ifPresent(canopy -> {
-            canopy.expiry().cancel();
-            var chicken = canopy.chicken();
-            chicken.getWorld().spawnParticle(Particle.LARGE_SMOKE, chicken.getLocation(), 1, 0, 0, 0, 0);
-            chicken.remove();
-        });
+        Optional.ofNullable(open.remove(player.getUniqueId())).ifPresent(Parachute::fold);
+    }
+
+    void clear() {
+        open.values().forEach(Parachute::fold);
+        open.clear();
+    }
+
+    private static void fold(Canopy canopy) {
+        canopy.expiry().cancel();
+        var chicken = canopy.chicken();
+        chicken.getWorld().spawnParticle(Particle.LARGE_SMOKE, chicken.getLocation(), 1, 0, 0, 0, 0);
+        chicken.remove();
     }
 
     /** Standing on something; the client's own on-ground flag is not to be trusted. */
