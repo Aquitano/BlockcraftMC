@@ -71,8 +71,6 @@ import java.util.Map;
 
 public final class BlockcraftApiPlugin extends JavaPlugin {
 
-    private static final long TICKS_PER_SECOND = 20L;
-
     private Notifications notifications;
     private Database database;
     private ServerHeartbeat heartbeat;
@@ -178,7 +176,7 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         });
 
         int heartbeatSeconds = number(config, "heartbeat-seconds", 5);
-        heartbeat.start(heartbeatSeconds * TICKS_PER_SECOND);
+        heartbeat.start(Duration.ofSeconds(heartbeatSeconds));
         groups.start(number(groupStatus, "refresh-ticks", 50));
     }
 
