@@ -282,7 +282,7 @@ BlockcraftAPI's `messages.yml`); nobody else lists them at all.
 ## Moderation on the proxy
 
 `/tempban` and `/tempmute` take the duration as one word, the same shape the `/strafe` catalogue uses: `16d`, `12h`,
-`30m`. `/support list` shows the open support requests, waiting ones first and clickable to accept, and staff who
+`30m`, at most five years; anything longer is a permanent punishment. `/support list` shows the open support requests, waiting ones first and clickable to accept, and staff who
 log in while requests are waiting are told so. When a player with open reports or a punishment from the last
 `watch.recent-days` logs in, everyone with `blockcraft.system.team` gets a line that opens `/whois` on click, from
 one query per login. A message the chat filter dropped reaches the staff with `[Goto]`, `[Mute]` and `[Strafe]`
