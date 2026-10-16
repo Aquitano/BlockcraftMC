@@ -60,6 +60,29 @@ public class WorldTemplateTest {
         assertEquals("pristine", Files.readString(directory.resolve("region/r.0.0.mca")));
     }
 
+    @Test
+    public void anInterruptedPublishIsNeverRestoredAndClearedByTheNext() throws IOException {
+        Path directory = folder.newFolder("template").toPath();
+        write(directory, "level.dat", "template");
+        write(directory, ".staging/level.dat", "half");
+        write(directory, ".replaced/region/r.0.0.mca", "old");
+        Path world = folder.newFolder("world").toPath();
+        var template = WorldTemplate.at(directory);
+
+        template.restore(world);
+
+        assertEquals("template", Files.readString(world.resolve("level.dat")));
+        assertFalse(Files.exists(world.resolve(".staging")));
+        assertFalse(Files.exists(world.resolve(".replaced")));
+
+        write(world, "level.dat", "saved");
+        template.publish(world);
+
+        assertEquals("saved", Files.readString(directory.resolve("level.dat")));
+        assertFalse(Files.exists(directory.resolve(".staging")));
+        assertFalse(Files.exists(directory.resolve(".replaced")));
+    }
+
     private static void write(Path root, String file, String content) throws IOException {
         Path path = root.resolve(file);
         Files.createDirectories(path.getParent());

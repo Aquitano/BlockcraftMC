@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -24,6 +25,9 @@ public final class WorldTemplate {
 
     private static final String ENV = "BLOCKCRAFT_WORLD_TEMPLATE";
     private static final Set<String> TRANSIENT = Set.of("session.lock", "players", "playerdata", "stats", "advancements", "level.dat_old");
+    private static final String STAGING = ".staging";
+    private static final String REPLACED = ".replaced";
+    private static final Set<String> PUBLISHING = Set.of(STAGING, REPLACED);
 
     private final Path directory;
 
@@ -52,28 +56,58 @@ public final class WorldTemplate {
     }
 
     public void restore(Path world) {
-        replaceContents(directory, world, name -> true);
-    }
-
-    public void publish(Path world) {
-        replaceContents(world, directory, name -> !TRANSIENT.contains(name));
-    }
-
-    private static void replaceContents(Path source, Path target, Predicate<String> include) {
         try {
-            Files.createDirectories(target);
-            try (Stream<Path> children = Files.list(target)) {
-                for (Path child : children.toList()) {
-                    deleteRecursively(child);
-                }
-            }
-            try (Stream<Path> children = Files.list(source)) {
-                for (Path child : children.filter(child -> include.test(child.getFileName().toString())).toList()) {
-                    copyRecursively(child, target.resolve(child.getFileName()));
-                }
-            }
+            Files.createDirectories(world);
+            clear(world, name -> true);
+            copyContents(directory, world, name -> !PUBLISHING.contains(name));
         } catch (IOException e) {
-            throw new UncheckedIOException("Could not copy " + source + " to " + target, e);
+            throw new UncheckedIOException("Could not copy " + directory + " to " + world, e);
+        }
+    }
+
+    /**
+     * Copies the world into a staging directory inside the template and only then swaps the contents with renames,
+     * which stay on the template's file system, so a copy that fails or is cut short leaves the old map in place.
+     * The leftovers of such a copy are cleared by the next publish and never restored.
+     */
+    public void publish(Path world) {
+        Path staging = directory.resolve(STAGING);
+        Path replaced = directory.resolve(REPLACED);
+        try {
+            Files.createDirectories(directory);
+            clear(directory, PUBLISHING::contains);
+            Files.createDirectories(staging);
+            copyContents(world, staging, name -> !TRANSIENT.contains(name));
+            Files.createDirectories(replaced);
+            moveContents(directory, replaced, name -> !PUBLISHING.contains(name));
+            moveContents(staging, directory, name -> true);
+            clear(directory, PUBLISHING::contains);
+        } catch (IOException e) {
+            throw new UncheckedIOException("Could not copy " + world + " to " + directory, e);
+        }
+    }
+
+    private static void clear(Path directory, Predicate<String> include) throws IOException {
+        for (Path child : children(directory, include)) {
+            deleteRecursively(child);
+        }
+    }
+
+    private static void copyContents(Path source, Path target, Predicate<String> include) throws IOException {
+        for (Path child : children(source, include)) {
+            copyRecursively(child, target.resolve(child.getFileName()));
+        }
+    }
+
+    private static void moveContents(Path source, Path target, Predicate<String> include) throws IOException {
+        for (Path child : children(source, include)) {
+            Files.move(child, target.resolve(child.getFileName()), StandardCopyOption.ATOMIC_MOVE);
+        }
+    }
+
+    private static List<Path> children(Path directory, Predicate<String> include) throws IOException {
+        try (Stream<Path> children = Files.list(directory)) {
+            return children.filter(child -> include.test(child.getFileName().toString())).toList();
         }
     }
 
