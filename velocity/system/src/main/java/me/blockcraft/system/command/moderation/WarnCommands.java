@@ -35,6 +35,7 @@ public final class WarnCommands {
 
     private static final String FORCE_SUFFIX = "*";
     private static final int MAX_LISTED = 18;
+    private static final String EVERY_PLAYER = "";
 
     private final CommandSupport support;
     private final ProxyServer proxy;
@@ -43,6 +44,7 @@ public final class WarnCommands {
     private final SystemConfig config;
     private final Messages messages;
     private final Map<PlayerReference, String> lastForcedWarn = new ConcurrentHashMap<>();
+    private final Map<PlayerReference, String> pendingClears = new ConcurrentHashMap<>();
 
     public WarnCommands(CommandSupport support, ProxyServer proxy, PlayerLookup lookup, WarnRepository warns, SystemConfig config,
                         Messages messages) {
@@ -151,24 +153,44 @@ public final class WarnCommands {
 
     private LiteralArgumentBuilder<CommandSource> confirmClear(String literal) {
         return BrigadierCommand.literalArgumentBuilder(literal)
-                .executes(support.run((source, context) -> source.sendMessage(messages.get("warns.clear-all-confirm")
-                        .clickEvent(ClickEvent.runCommand("/warns clear*"))
-                        .hoverEvent(HoverEvent.showText(messages.get("warns.clear-hover"))))))
+                .executes(support.run((source, context) -> askClearAll(source)))
                 .then(support.playerArgument("player")
-                        .executes(support.run((source, context) -> {
-                            String player = StringArgumentType.getString(context, "player");
-                            source.sendMessage(messages.get("warns.clear-confirm", Placeholder.unparsed("player", player))
-                                    .clickEvent(ClickEvent.runCommand("/warns clear* " + player))
-                                    .hoverEvent(HoverEvent.showText(messages.get("warns.clear-hover"))));
-                        })));
+                        .executes(support.run((source, context) -> askClear(source, StringArgumentType.getString(context, "player")))));
+    }
+
+    private void askClearAll(CommandSource source) {
+        pendingClears.put(CommandSupport.sender(source), EVERY_PLAYER);
+        source.sendMessage(messages.get("warns.clear-all-confirm")
+                .clickEvent(ClickEvent.runCommand("/warns clear*"))
+                .hoverEvent(HoverEvent.showText(messages.get("warns.clear-hover"))));
+    }
+
+    private void askClear(CommandSource source, String player) {
+        pendingClears.put(CommandSupport.sender(source), player.toLowerCase());
+        source.sendMessage(messages.get("warns.clear-confirm", Placeholder.unparsed("player", player))
+                .clickEvent(ClickEvent.runCommand("/warns clear* " + player))
+                .hoverEvent(HoverEvent.showText(messages.get("warns.clear-hover"))));
+    }
+
+    /** {@code clear*} only follows a {@code clear} of the same players, so typing it straight away asks first. */
+    private boolean confirmed(CommandSource source, String cleared) {
+        return pendingClears.remove(CommandSupport.sender(source), cleared);
     }
 
     private void clearAll(CommandSource source) {
+        if (!confirmed(source, EVERY_PLAYER)) {
+            askClearAll(source);
+            return;
+        }
         warns.clearAll();
         source.sendMessage(messages.get("warns.cleared-all"));
     }
 
     private void clear(CommandSource source, String name) {
+        if (!confirmed(source, name.toLowerCase())) {
+            askClear(source, name);
+            return;
+        }
         lookup.find(source, name, messages.get("player-unknown", Placeholder.unparsed("player", name))).ifPresent(target -> {
             int removed = warns.clear(target.uuid());
             source.sendMessage(messages.get("warns.cleared", Placeholder.unparsed("player", target.name()), Formatter.number("count", removed)));
