@@ -33,6 +33,9 @@ public final class ProtectionListener implements Listener {
     public void onDamage(EntityDamageEvent event) {
         if (!game.phase().allowsDamage()) {
             event.setCancelled(true);
+            if (event.getCause() == EntityDamageEvent.DamageCause.VOID && event.getEntity() instanceof Player player) {
+                game.returnToPhaseSpawn(player);
+            }
             return;
         }
         if (event.getEntity() instanceof Player player && player.getHealth() >= LOADOUT_SNAPSHOT_MIN_HEALTH) {

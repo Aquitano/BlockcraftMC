@@ -158,6 +158,15 @@ public final class Game {
         lobbyCountdown.start();
     }
 
+    public void returnToPhaseSpawn(Player player) {
+        spawns.teleport(player, switch (phase) {
+            case LOBBY -> SpawnPoint.LOBBY;
+            case SEARCH -> SpawnPoint.SEARCH;
+            case SHOPPING -> SpawnPoint.SHOPPING;
+            case DEATHMATCH, ENDING -> SpawnPoint.DEATHMATCH_1;
+        });
+    }
+
     public void follow(Player spectator, UUID friend) {
         round.follow(spectator, friend);
     }
