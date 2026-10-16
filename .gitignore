@@ -74,3 +74,5 @@ run/
 
 .env
 .cloudflare/
+worlds/*/.staging/
+worlds/*/.replaced/

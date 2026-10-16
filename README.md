@@ -165,7 +165,9 @@ first place; no template at all means a plain persistent world.
 Changing a map: join the server, `/build` (`blockcraft.build`) lifts the block protection and the inventory lock
 for you until you leave, edit, place spawns with the plugin's setup command, then `/map save` (`blockcraft.map`).
 That flushes the world and copies it into the template without player data, and every start from then on boots
-with the new state; `/map` shows what the server is running. Commit the template like any other change and revert
+with the new state; `/map` shows what the server is running. The copy runs in the background and goes to
+`.staging` inside the template first; only a finished copy replaces the old contents, so a save that fails halfway
+leaves the template as it was. Leftover `.staging` and `.replaced` directories are ignored at boot and by git. Commit the template like any other change and revert
 it like one. Region files go through git-lfs (`.gitattributes`), so `git lfs install` once before committing a map.
 A map edited without `/map save` is gone at the next restart, and so is a `/setspawn` on such a server, which is the
 point. The running server publishes its own copy of `map.yml` too, so edit that file in the template and restart
@@ -225,6 +227,9 @@ group `BLOCKCRAFT_SERVER_GROUP`, falling back to its name, at `BLOCKCRAFT_SERVER
 of the interface that reaches the database, on its `server-port`. Set the variables when several servers share a
 host or the proxy reaches them through another address. The same works unchanged on Kubernetes: one Deployment per
 group, the pod name becomes the server name and the pod IP its address.
+
+A Paper server that cannot reach the database at startup shuts itself down instead of running without its plugins,
+so the container's restart policy tries again; the proxy does the same.
 
 When a discovery poll finds no joinable server left in the lobby group, BlockcraftSystem posts the `alerts.no-lobby`
 text to the Discord webhook in `alerts.webhook-url`, and `alerts.lobby-back` once a lobby is joinable again. Each
