@@ -6,6 +6,7 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
+import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.audit.StaffAudit;
 import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -36,7 +37,7 @@ public final class SudoCommand {
                                     if (!TargetGuard.notSelf(sender, target, messages) || !TargetGuard.mayTarget(sender, target, messages)) {
                                         return Command.SINGLE_SUCCESS;
                                     }
-                                    if (target.isOp() || protectedNames.contains(target.getName().toLowerCase())) {
+                                    if (target.isOp() || protectedNames.contains(BlockcraftApi.get().realName(target).toLowerCase())) {
                                         sender.sendMessage(messages.get("sudo.protected"));
                                         return Command.SINGLE_SUCCESS;
                                     }
