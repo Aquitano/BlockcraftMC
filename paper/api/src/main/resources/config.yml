@@ -6,7 +6,7 @@ database:
   password: blockcraft
   # Connections this server keeps open, and how long a query waits for a free one before it fails.
   pool-size: 4
-  connection-timeout-seconds: 30
+  connection-timeout-seconds: 5
 
 # Network addresses; every message of every Paper plugin can use them as <ip>, <website>, <shop>, <teamspeak>
 # and <discord>. Keep them in step with the proxy's network section. BLOCKCRAFT_NETWORK_<KEY> overrides an entry.
