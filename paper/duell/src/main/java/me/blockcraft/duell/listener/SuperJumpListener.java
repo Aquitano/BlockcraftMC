@@ -6,6 +6,7 @@ import org.bukkit.Material;
 import org.bukkit.block.BlockFace;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 
 import java.util.Optional;
@@ -19,6 +20,14 @@ public final class SuperJumpListener implements Listener {
 
     public SuperJumpListener(Duel duel) {
         this.duel = duel;
+    }
+
+    /** The respawn point is the start or the last checkpoint, which the duel sets as the player's respawn location. */
+    @EventHandler
+    public void onDeath(PlayerDeathEvent event) {
+        if (duel.isPlaying(DuelMode.SUPERJUMP)) {
+            duel.handleDeath(event);
+        }
     }
 
     @EventHandler

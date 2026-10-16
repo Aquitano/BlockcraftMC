@@ -225,10 +225,15 @@ public final class Duel {
 
     public void handleDeath(PlayerDeathEvent event) {
         var victim = event.getPlayer();
-        if (!isIngame() || !isParticipant(victim) || mode == DuelMode.SUPERJUMP) {
+        if (!isIngame() || !isParticipant(victim)) {
             return;
         }
         event.deathMessage(null);
+        if (mode == DuelMode.SUPERJUMP) {
+            fell(victim);
+            round.respawn(victim, RESPAWN_DELAY_TICKS);
+            return;
+        }
         var death = summary.resolveDeath(event);
         Bukkit.broadcast(death.line());
         if (mode == DuelMode.SG) {
