@@ -21,6 +21,14 @@ public class RoundSummaryTest {
     }
 
     @Test
+    public void aWinnerOutBeforeTheEndBooksNoLoss() {
+        var teammate = new RoundSummary.Score("Steve");
+        teammate.eliminated = true;
+
+        assertEquals(new Stats(0, 0, 1, 0, 0), teammate.stats(true, true));
+    }
+
+    @Test
     public void heartsReadLikeTheHealthBarWithADecimalComma() {
         assertEquals("2,5", RoundSummary.hearts(5.0));
         assertEquals("3", RoundSummary.hearts(6.0));

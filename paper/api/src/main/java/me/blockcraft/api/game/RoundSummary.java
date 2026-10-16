@@ -365,9 +365,12 @@ public final class RoundSummary {
             this.name = name;
         }
 
-        /** A draw costs nobody still standing a loss; a won round costs everyone else one, once. */
+        /**
+         * A draw costs nobody still standing a loss; a won round costs everyone else one, once. A winner who was out
+         * before the end, as a team game's can be, books the win alone.
+         */
         Stats stats(boolean won, boolean decided) {
-            boolean lost = eliminated || (decided && !won);
+            boolean lost = !won && (eliminated || decided);
             return new Stats(kills, deaths, won ? 1 : 0, lost ? 1 : 0, coins);
         }
     }
