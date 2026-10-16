@@ -1,5 +1,6 @@
 package me.blockcraft.bedwars.game;
 
+import me.blockcraft.api.menu.Menu;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.bedwars.config.BedWarsConfig;
@@ -102,8 +103,11 @@ final class MapChoice {
         return chosen.orElseThrow();
     }
 
-    /** A fresh draw of maps for a new vote. */
+    /** A fresh draw of maps for a new vote; a menu still showing the old draw closes. */
     void redraw() {
+        Bukkit.getOnlinePlayers().stream()
+                .filter(player -> player.getOpenInventory().getTopInventory().getHolder(false) instanceof VoteMenu)
+                .forEach(Menu::close);
         chosen = Optional.empty();
         forced = false;
         var playable = pool.playable(config.teams());
