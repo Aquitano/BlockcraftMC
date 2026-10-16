@@ -26,6 +26,7 @@ import me.blockcraft.api.network.ServerHeartbeat;
 import me.blockcraft.api.network.ServerPresence;
 import me.blockcraft.api.nick.NickStats;
 import me.blockcraft.api.pack.ResourcePacks;
+import me.blockcraft.api.player.FlightGrants;
 import me.blockcraft.api.player.RealNames;
 import me.blockcraft.api.proxy.ProxyMessageListener;
 import me.blockcraft.api.rank.NickRanks;
@@ -118,6 +119,7 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
             world.setGameRule(GameRules.SPAWN_MOBS, false);
         });
         var buildMode = new BuildMode();
+        var flight = new FlightGrants();
         var resourcePack = new ResourcePacks(messages);
         var eloSection = YamlFile.section(config, "elo");
         var elo = new Elo(new EloRepository(database,
@@ -142,7 +144,7 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
                 unlocks, new Shop(database), new RoundRecapRepository(database), streaks(YamlFile.section(config, "streaks")),
                 settings, resourcePack, profiles, new Effects(settings), messages,
                 servers, self, groups, text(config, "lobby-group", "lobby"), presence, resources.tags(), xp, map,
-                buildMode, realNames, nickRanks, nickStats, achievements, elo, afk, ignores, vanished, audit, tabTeams,
+                buildMode, flight, realNames, nickRanks, nickStats, achievements, elo, afk, ignores, vanished, audit, tabTeams,
                 NetworkCalendar.fromYaml(YamlFile.section(config, "calendar")), RoundConfig.from(config));
         BlockcraftApi.install(api);
         getLogger().info("Running map " + map.name() + map.template().map(template -> " from " + template.directory()).orElse(""));
@@ -164,6 +166,7 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new ServerMenu(this, profiles), this);
         getServer().getPluginManager().registerEvents(tabTeams, this);
         getServer().getPluginManager().registerEvents(buildMode, this);
+        getServer().getPluginManager().registerEvents(flight, this);
         getServer().getPluginManager().registerEvents(new VanillaProgress(), this);
 
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {

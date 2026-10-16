@@ -1,5 +1,6 @@
 package me.blockcraft.lobby.listener;
 
+import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.lobby.LobbyPermissions;
 import me.blockcraft.lobby.activity.Parkour;
@@ -69,6 +70,7 @@ public final class DoubleJumpListener implements Listener {
     }
 
     private static boolean canDoubleJump(Player player) {
-        return player.hasPermission(LobbyPermissions.DOUBLE_JUMP) && player.getGameMode() != GameMode.CREATIVE;
+        return player.hasPermission(LobbyPermissions.DOUBLE_JUMP) && player.getGameMode() != GameMode.CREATIVE
+                && !BlockcraftApi.get().flight().granted(player);
     }
 }

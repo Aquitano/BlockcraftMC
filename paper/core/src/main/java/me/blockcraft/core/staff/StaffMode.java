@@ -1,6 +1,7 @@
 package me.blockcraft.core.staff;
 
 import com.destroystokyo.paper.event.player.PlayerStopSpectatingEntityEvent;
+import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.audit.StaffAudit;
 import me.blockcraft.api.game.Round;
 import me.blockcraft.api.task.SerialTasks;
@@ -45,7 +46,7 @@ public final class StaffMode implements Listener {
 
     private static final String REPORTS_COMMAND = "reports";
 
-    private record Session(ItemStack[] contents, boolean vanishedBefore, boolean flightBefore) {
+    private record Session(ItemStack[] contents, boolean vanishedBefore, boolean flightBefore, boolean flightGrantedBefore) {
     }
 
     private final Plugin plugin;
@@ -92,7 +93,8 @@ public final class StaffMode implements Listener {
     private void enter(Player player) {
         var uuid = player.getUniqueId();
         var contents = player.getInventory().getContents();
-        sessions.put(uuid, new Session(contents, vanish.isVanished(player), player.getAllowFlight()));
+        var flight = BlockcraftApi.get().flight();
+        sessions.put(uuid, new Session(contents, vanish.isVanished(player), player.getAllowFlight(), flight.granted(player)));
         byte[] serialized = ItemStack.serializeItemsAsBytes(contents);
         writes.run(uuid, () -> inventories.save(uuid, serialized));
         player.getInventory().clear();
@@ -100,6 +102,7 @@ public final class StaffMode implements Listener {
         if (!vanish.isVanished(player)) {
             vanish.set(player, true);
         }
+        flight.set(player, true);
         player.setAllowFlight(true);
         player.setFlying(true);
         player.sendMessage(messages.get("staff.entered"));
@@ -122,6 +125,7 @@ public final class StaffMode implements Listener {
         if (!session.vanishedBefore()) {
             vanish.set(player, false);
         }
+        BlockcraftApi.get().flight().set(player, session.flightGrantedBefore());
         player.setAllowFlight(session.flightBefore());
         player.setFlying(false);
     }

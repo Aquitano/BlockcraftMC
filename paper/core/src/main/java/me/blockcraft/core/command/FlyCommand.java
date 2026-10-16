@@ -7,6 +7,7 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
+import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.audit.StaffAudit;
 import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -18,7 +19,7 @@ import java.util.function.Predicate;
 /** {@code /fly [players] [on|off]}: without on or off every target's flight flips. */
 public final class FlyCommand {
 
-    private static final Predicate<Player> TOGGLE = player -> !player.getAllowFlight();
+    private static final Predicate<Player> TOGGLE = player -> !BlockcraftApi.get().flight().granted(player);
     private static final Predicate<Player> ON = player -> true;
     private static final Predicate<Player> OFF = player -> false;
 
@@ -54,6 +55,7 @@ public final class FlyCommand {
 
     private static void apply(CommandSender sender, Player target, Predicate<Player> flight, StaffAudit audit, Messages messages) {
         boolean flying = flight.test(target);
+        BlockcraftApi.get().flight().set(target, flying);
         target.setAllowFlight(flying);
         target.setFlying(flying);
         target.sendMessage(messages.get(flying ? "fly.enabled" : "fly.disabled"));

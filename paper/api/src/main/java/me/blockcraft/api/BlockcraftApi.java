@@ -14,6 +14,7 @@ import me.blockcraft.api.network.ServerPresence;
 import me.blockcraft.api.notification.Notifications;
 import me.blockcraft.api.nick.NickStats;
 import me.blockcraft.api.pack.ResourcePacks;
+import me.blockcraft.api.player.FlightGrants;
 import me.blockcraft.api.player.RealNames;
 import me.blockcraft.api.rank.NickRanks;
 import me.blockcraft.api.rank.TabTeams;
@@ -61,6 +62,7 @@ import java.util.Optional;
  * @param xp           network XP and levels; games award {@link XpReward}s
  * @param map          the map this server runs, with the files each plugin keeps inside it
  * @param buildMode    who is allowed to change the map right now
+ * @param flight       who was given flight on purpose, which the lobby's double jump leaves alone
  * @param nickStats    the stats, rating and level others see for a nicked player instead of the account's own
  * @param achievements the achievement catalog; games hand it their round, level-ups reach it by event
  * @param elo          ranked 1vs1 ratings of the running season and the skill groups they fall into
@@ -94,6 +96,7 @@ public record BlockcraftApi(
         Xp xp,
         MapBundle map,
         BuildMode buildMode,
+        FlightGrants flight,
         RealNames realNames,
         NickRanks nickRanks,
         NickStats nickStats,
