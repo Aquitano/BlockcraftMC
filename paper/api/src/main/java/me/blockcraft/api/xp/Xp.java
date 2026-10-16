@@ -1,6 +1,7 @@
 package me.blockcraft.api.xp;
 
 import me.blockcraft.api.notification.Notifications;
+import me.blockcraft.api.task.JoinRetry;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.xp.XpRepository;
 import org.bukkit.entity.Player;
@@ -80,12 +81,20 @@ public final class Xp implements Listener {
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onJoin(PlayerJoinEvent event) {
-        var uuid = event.getPlayer().getUniqueId();
         var session = new Object();
-        sessions.put(uuid, session);
+        sessions.put(event.getPlayer().getUniqueId(), session);
+        load(event.getPlayer(), session, 0);
+    }
+
+    private void load(Player player, Object session, int failures) {
+        var uuid = player.getUniqueId();
         Tasks.async(plugin, () -> repository.get(uuid), total -> {
             if (sessions.get(uuid) == session) {
                 totals.merge(uuid, total, Math::max);
+            }
+        }, () -> {
+            if (sessions.get(uuid) == session) {
+                JoinRetry.after(plugin, player, failures, () -> load(player, session, failures + 1));
             }
         });
     }

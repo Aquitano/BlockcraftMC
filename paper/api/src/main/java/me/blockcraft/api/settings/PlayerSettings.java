@@ -1,6 +1,7 @@
 package me.blockcraft.api.settings;
 
 import me.blockcraft.api.proxy.ProxyMessaging;
+import me.blockcraft.api.task.JoinRetry;
 import me.blockcraft.api.task.SerialTasks;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.settings.PlayerSetting;
@@ -135,6 +136,11 @@ public final class PlayerSettings implements Listener {
         var uuid = player.getUniqueId();
         var session = new EnumMap<PlayerSetting, Object>(PlayerSetting.class);
         revisions.put(uuid, session);
+        load(player, session, 0);
+    }
+
+    private void load(Player player, Map<PlayerSetting, Object> session, int failures) {
+        var uuid = player.getUniqueId();
         writes.submit(uuid, () -> repository.all(uuid), loaded -> {
             if (!player.isOnline() || revisions.get(uuid) != session) {
                 return;
@@ -142,7 +148,8 @@ public final class PlayerSettings implements Listener {
             cache.load(uuid, loaded);
             Bukkit.getPluginManager().callEvent(new PlayerSettingsLoadedEvent(player));
         }, () -> {
-            if (player.isOnline()) {
+            if (player.isOnline() && revisions.get(uuid) == session
+                    && !JoinRetry.after(plugin, player, failures, () -> load(player, session, failures + 1))) {
                 player.sendMessage(messages.get("operation.failed"));
             }
         });
