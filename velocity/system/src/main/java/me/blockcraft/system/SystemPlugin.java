@@ -320,8 +320,8 @@ public final class SystemPlugin {
         proxy.getScheduler().buildTask(this, new AutoBroadcast(proxy, messages))
                 .repeat(config.autoBroadcastMinutes(), TimeUnit.MINUTES)
                 .schedule();
-        DailySchedule.at(config.joinMe().resetHour(), proxy.getScheduler(), this, joinMe::resetDailyUses);
-        DailySchedule.at(config.alts().purgeHour(), proxy.getScheduler(), this, alts::purgeExpired);
+        DailySchedule.at(config.joinMe().resetHour(), config.calendar().zone(), proxy.getScheduler(), this, joinMe::resetDailyUses);
+        DailySchedule.at(config.alts().purgeHour(), config.calendar().zone(), proxy.getScheduler(), this, alts::purgeExpired);
         logger.info("BlockcraftSystem enabled");
     }
 
