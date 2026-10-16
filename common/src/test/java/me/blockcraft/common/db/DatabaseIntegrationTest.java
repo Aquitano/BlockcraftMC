@@ -11,6 +11,11 @@ import me.blockcraft.common.moderation.WarnRepository;
 import me.blockcraft.common.moderation.WatchRepository;
 import me.blockcraft.common.nick.Nick;
 import me.blockcraft.common.nick.NickRepository;
+import me.blockcraft.common.network.ServerIdentity;
+import me.blockcraft.common.network.ServerRecord;
+import me.blockcraft.common.network.ServerRepository;
+import me.blockcraft.common.network.ServerState;
+import me.blockcraft.common.network.ServerStatus;
 import me.blockcraft.common.player.PlayerReference;
 import me.blockcraft.common.report.ReportRepository;
 import me.blockcraft.common.round.RoundRecap;
@@ -280,6 +285,20 @@ public class DatabaseIntegrationTest {
         assertTrue(reports.byId(report.id()).orElseThrow().isClaimedBy(staff, "NewStaffName"));
         reports.release(report.id(), staff, "NewStaffName");
         assertTrue(reports.byId(report.id()).orElseThrow().claimedBy().isEmpty());
+    }
+
+    @Test
+    public void aServerRowWithAnUnknownStateIsSkippedAndNamed() {
+        db.migrate();
+        var servers = new ServerRepository(db);
+        var status = new ServerStatus(ServerState.LOBBY, 0, 20, 20, 0);
+        servers.heartbeat(new ServerIdentity("lobby-1", "lobby", "lobby-1", 25565), status);
+        servers.heartbeat(new ServerIdentity("lobby-2", "lobby", "lobby-2", 25565), status);
+        db.update("UPDATE bc_servers SET state = 'PAUSED' WHERE name = 'lobby-2'");
+
+        var unreadable = new ArrayList<String>();
+        assertEquals(List.of("lobby-1"), servers.alive(60, unreadable::add).stream().map(ServerRecord::name).toList());
+        assertEquals(List.of("lobby-2"), unreadable);
     }
 
     @Test

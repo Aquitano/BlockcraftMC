@@ -5,8 +5,11 @@ import me.blockcraft.common.db.Database;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.function.Consumer;
 
 /**
  * Backend servers announce themselves here and the proxy registers whatever is alive, so no server list is
@@ -48,14 +51,35 @@ public final class ServerRepository {
     }
 
     public List<ServerRecord> alive(int staleAfterSeconds) {
-        return db.queryList("SELECT " + COLUMNS + " FROM bc_servers WHERE heartbeat > CURRENT_TIMESTAMP - INTERVAL ? SECOND",
-                row -> record(row), staleAfterSeconds);
+        return alive(staleAfterSeconds, name -> {
+        });
+    }
+
+    /** A row this build cannot read, such as a state it does not know, is left out and its name handed to {@code unreadable}. */
+    public List<ServerRecord> alive(int staleAfterSeconds, Consumer<String> unreadable) {
+        var alive = new ArrayList<ServerRecord>();
+        for (var row : db.queryList("SELECT " + COLUMNS + " FROM bc_servers WHERE heartbeat > CURRENT_TIMESTAMP - INTERVAL ? SECOND",
+                result -> Map.entry(result.getString("name"), readable(result)), staleAfterSeconds)) {
+            row.getValue().ifPresentOrElse(alive::add, () -> unreadable.accept(row.getKey()));
+        }
+        return alive;
     }
 
     /** Every announced server, stale ones included, for the staff overview. */
     public List<Entry> all() {
         return db.queryList("SELECT " + COLUMNS + " FROM bc_servers ORDER BY group_name, name",
-                row -> new Entry(record(row), Duration.ofSeconds(row.getLong("heartbeat_age"))));
+                row -> {
+                    var age = Duration.ofSeconds(row.getLong("heartbeat_age"));
+                    return readable(row).map(server -> new Entry(server, age));
+                }).stream().flatMap(Optional::stream).toList();
+    }
+
+    private static Optional<ServerRecord> readable(ResultSet row) throws SQLException {
+        try {
+            return Optional.of(record(row));
+        } catch (IllegalArgumentException invalid) {
+            return Optional.empty();
+        }
     }
 
     private static ServerRecord record(ResultSet row) throws SQLException {

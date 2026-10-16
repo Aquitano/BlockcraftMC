@@ -10,8 +10,10 @@ import org.slf4j.Logger;
 
 import java.net.InetSocketAddress;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Mirrors {@code bc_servers} into the proxy's server list: backends appear when their heartbeat does and vanish
@@ -27,6 +29,7 @@ public final class ServerDiscovery implements Runnable {
     private final int staleSeconds;
     private final Logger logger;
     private final Map<String, ServerInfo> registered = new HashMap<>();
+    private final Set<String> warnedUnreadable = new HashSet<>();
 
     public ServerDiscovery(ProxyServer proxy, ServerRepository servers, ServerDirectory directory, LobbyAlert lobbyAlert,
                            LagAlert lagAlert, int staleSeconds, Logger logger) {
@@ -43,7 +46,9 @@ public final class ServerDiscovery implements Runnable {
     public synchronized void run() {
         List<ServerRecord> alive;
         try {
-            alive = servers.alive(staleSeconds);
+            var unreadable = new HashSet<String>();
+            alive = servers.alive(staleSeconds, unreadable::add);
+            warnUnreadable(unreadable);
         } catch (DatabaseException e) {
             logger.warn("Could not read bc_servers, keeping the current server list", e);
             return;
@@ -61,6 +66,14 @@ public final class ServerDiscovery implements Runnable {
         directory.update(alive);
         lobbyAlert.check();
         lagAlert.check(alive);
+    }
+
+    /** Once per broken row, not on every poll; a row that gets fixed and breaks again is reported again. */
+    private void warnUnreadable(Set<String> unreadable) {
+        unreadable.stream().filter(name -> !warnedUnreadable.contains(name))
+                .forEach(name -> logger.warn("Skipping {} in bc_servers: its row cannot be read, check its state", name));
+        warnedUnreadable.clear();
+        warnedUnreadable.addAll(unreadable);
     }
 
     private void register(ServerIdentity server) {
