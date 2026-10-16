@@ -53,6 +53,7 @@ public final class Game {
 
     private static final int MIN_TO_START = 2;
     private static final int SECONDS_PER_MINUTE = 60;
+    private static final long RESPAWN_DELAY_TICKS = 1L;
 
     private final Plugin plugin;
     private final RushConfig config;
@@ -322,6 +323,7 @@ public final class Game {
         if (remaining == 0) {
             round.eliminate(victim);
         }
+        round.respawn(victim, RESPAWN_DELAY_TICKS);
         scoreboard.refreshAll();
         if (remaining == 0) {
             checkWinner();
