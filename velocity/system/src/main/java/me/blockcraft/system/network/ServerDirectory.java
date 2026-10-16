@@ -2,7 +2,7 @@ package me.blockcraft.system.network;
 
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
-import com.velocitypowered.api.event.player.ServerConnectedEvent;
+import com.velocitypowered.api.event.player.ServerPostConnectEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
@@ -160,10 +160,14 @@ public final class ServerDirectory {
         });
     }
 
-    /** An arrival turns a seat into a connected player and changes no count, so nothing is published. */
+    /**
+     * An arrival turns a seat into a connected player and changes no count, so nothing is published. Only after the
+     * switch does the server list the player among its connected ones, so the seat holds until then.
+     */
     @Subscribe
-    public synchronized void onServerConnected(ServerConnectedEvent event) {
-        unseat(event.getPlayer().getUniqueId(), event.getServer().getServerInfo().getName());
+    public synchronized void onServerPostConnect(ServerPostConnectEvent event) {
+        var player = event.getPlayer();
+        player.getCurrentServer().ifPresent(connection -> unseat(player.getUniqueId(), connection.getServerInfo().getName()));
     }
 
     @Subscribe
