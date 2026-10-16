@@ -177,7 +177,7 @@ public final class Game {
         emeralds.remove(id);
         lives.remove(id);
         loadouts.remove(id);
-        checkWinner();
+        checkWinner(true);
         scoreboard.refreshAll();
     }
 
@@ -335,7 +335,7 @@ public final class Game {
         round.respawn(victim, RESPAWN_DELAY_TICKS);
         scoreboard.refreshAll();
         if (remaining == 0) {
-            checkWinner();
+            checkWinner(false);
         }
     }
 
@@ -375,12 +375,16 @@ public final class Game {
         return Arrays.stream(stacks).map(stack -> stack == null ? null : stack.clone()).toArray(ItemStack[]::new);
     }
 
-    private void checkWinner() {
+    /** A win handed over by a leaving opponent earns no moments, so two accounts cannot farm them. */
+    private void checkWinner(boolean opponentLeft) {
         if (phase == GamePhase.LOBBY || phase == GamePhase.ENDING || round.playerCount() > 1) {
             return;
         }
         alivePlayers().forEach(winner -> {
             summary.awardWin(winner);
+            if (opponentLeft) {
+                return;
+            }
             if (!purchased.contains(winner.getUniqueId())) {
                 summary.moment(winner, "emeraldrush", "minimalist");
             }
