@@ -13,7 +13,7 @@ x-luckperms: &luckperms
 
 # Game servers restart themselves after a round (Bukkit.shutdown), so the container has to come back on its own.
 x-paper: &paper
-  image: itzg/minecraft-server:java25
+  image: itzg/minecraft-server:2026.10.0-java25
   restart: unless-stopped
   stop_grace_period: 1m
   depends_on:
@@ -25,7 +25,12 @@ x-paper-env: &paper-env
   EULA: "TRUE"
   TYPE: PAPER
   VERSION: "26.2"
+  PAPER_BUILD: "134"
+  TZ: Europe/Berlin
   ONLINE_MODE: "FALSE"
+  NETWORK_COMPRESSION_THRESHOLD: "-1"
+  MAX_PLAYERS: "200"
+  SPAWN_PROTECTION: "0"
   ALLOW_FLIGHT: "TRUE"
   LEVEL_TYPE: minecraft:flat
   GENERATOR_SETTINGS: '{"layers":[{"block":"minecraft:bedrock","height":1},{"block":"minecraft:dirt","height":2},{"block":"minecraft:grass_block","height":1}],"biome":"minecraft:plains"}'
@@ -40,14 +45,15 @@ x-paper-env: &paper-env
 
 services:
   mariadb:
-    image: mariadb:11
+    image: mariadb:11.8
     environment:
+      TZ: Europe/Berlin
       MARIADB_DATABASE: blockcraft
       MARIADB_USER: blockcraft
       MARIADB_PASSWORD: blockcraft
       MARIADB_ROOT_PASSWORD: root
     ports:
-      - "3306:3306"
+      - "127.0.0.1:3306:3306"
     volumes:
       - mariadb:/var/lib/mysql
     healthcheck:
@@ -57,7 +63,7 @@ services:
       retries: 12
 
   velocity:
-    image: itzg/mc-proxy:java25
+    image: itzg/mc-proxy:2026.10.1-java25
     restart: unless-stopped
     stop_grace_period: 1m
     depends_on:
@@ -70,6 +76,8 @@ services:
       <<: *luckperms
       TYPE: VELOCITY
       VELOCITY_VERSION: "4.2.0"
+      VELOCITY_BUILD_ID: "30"
+      TZ: Europe/Berlin
       MEMORY: 512m
       SYNC_SKIP_NEWER_IN_DESTINATION: "false"
       BLOCKCRAFT_DB_HOST: mariadb

@@ -108,8 +108,8 @@ friends place the navigator warps, `/map save` keeps all of that, and `/play qui
 In the compass, left-click a game to play or right-click to visit its lobby area. Cards and status signs share
 availability labels and group player counts; the proxy checks availability again when clicked. Unconfigured
 lobby areas explain that they are not ready.
-To run several instances of a game, remove that service's `hostname:` line (instances then announce themselves
-under their container id) and `docker compose up -d --scale quicksg=3`.
+To run a second instance of a game, copy its service under a new name with its own `/data` volume. Avoid
+`--scale`: the copies would share one volume, and with it one world folder that every start overwrites.
 
 `docker compose logs -f lobby` follows a server and `docker compose exec lobby rcon-cli <command>` runs a command.
 LuckPerms answers only on the real console, so on a fresh database run
