@@ -178,6 +178,7 @@ public final class LobbyCountdown {
     }
 
     private void finish() {
+        forced = false;
         hideBar();
         onStart.run();
     }
