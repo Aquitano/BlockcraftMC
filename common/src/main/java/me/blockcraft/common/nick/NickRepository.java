@@ -19,10 +19,39 @@ public final class NickRepository {
                 row -> new Nick(row.getString("nick"), row.getString("skin_owner"), row.getString("rank_group")), player.toString());
     }
 
-    public void set(UUID player, Nick nick) {
-        db.update("INSERT INTO bc_nicks (player_uuid, nick, skin_owner, rank_group) VALUES (?, ?, ?, ?) "
-                + "ON DUPLICATE KEY UPDATE nick = VALUES(nick), skin_owner = VALUES(skin_owner), rank_group = VALUES(rank_group), set_at = NOW()",
-                player.toString(), nick.name(), nick.skinOwner(), nick.rankGroup());
+    /**
+     * Stores {@code nick} as the one the player wears, unless another account wears it already or a known account is
+     * called that, so a name typed into a command never means two players. A refused nick leaves the player's
+     * previous one in place; answers whether it was stored.
+     */
+    public boolean claim(UUID player, Nick nick) {
+        return db.transaction(connection -> {
+            try (var known = connection.prepareStatement("SELECT 1 FROM bc_players WHERE name = ? AND uuid <> ?")) {
+                known.setString(1, nick.name());
+                known.setString(2, player.toString());
+                try (var row = known.executeQuery()) {
+                    if (row.next()) {
+                        return false;
+                    }
+                }
+            }
+            try (var previous = connection.prepareStatement("DELETE FROM bc_nicks WHERE player_uuid = ?")) {
+                previous.setString(1, player.toString());
+                previous.executeUpdate();
+            }
+            try (var insert = connection.prepareStatement(
+                    "INSERT IGNORE INTO bc_nicks (player_uuid, nick, skin_owner, rank_group) VALUES (?, ?, ?, ?)")) {
+                insert.setString(1, player.toString());
+                insert.setString(2, nick.name());
+                insert.setString(3, nick.skinOwner());
+                insert.setString(4, nick.rankGroup());
+                if (insert.executeUpdate() == 0) {
+                    connection.rollback();
+                    return false;
+                }
+            }
+            return true;
+        });
     }
 
     /** Answers whether the player was wearing a nick at all. */

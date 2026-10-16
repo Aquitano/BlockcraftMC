@@ -9,6 +9,8 @@ import me.blockcraft.common.moderation.PlayerRepository;
 import me.blockcraft.common.moderation.PunishmentRepository;
 import me.blockcraft.common.moderation.WarnRepository;
 import me.blockcraft.common.moderation.WatchRepository;
+import me.blockcraft.common.nick.Nick;
+import me.blockcraft.common.nick.NickRepository;
 import me.blockcraft.common.player.PlayerReference;
 import me.blockcraft.common.report.ReportRepository;
 import me.blockcraft.common.round.RoundRecap;
@@ -344,6 +346,23 @@ public class DatabaseIntegrationTest {
         db.update("UPDATE bc_player_addresses SET last_seen = NOW() - INTERVAL 91 DAY WHERE player_uuid = ?", banned.toString());
         assertTrue(addresses.alts(alt, retention).isEmpty());
         assertEquals(1, addresses.purge(retention));
+    }
+
+    @Test
+    public void aNickIsWornByOneAccountAndIsNeverAKnownPlayersName() {
+        db.migrate();
+        var nicks = new NickRepository(db);
+        new PlayerRepository(db).upsert(UUID.randomUUID(), "RealPlayer");
+        var one = UUID.randomUUID();
+        var two = UUID.randomUUID();
+
+        assertTrue(nicks.claim(one, new Nick("Felix_HD", "Notch", "vip")));
+        assertFalse(nicks.claim(two, new Nick("felix_hd", "jeb_", "vip")));
+        assertFalse(nicks.claim(two, new Nick("RealPlayer", "jeb_", "vip")));
+        assertTrue(nicks.claim(one, new Nick("Timo_YT", "Notch", "vip")));
+        assertFalse(nicks.claim(one, new Nick("RealPlayer", "Notch", "vip")));
+        assertEquals(Optional.of("Timo_YT"), nicks.get(one).map(Nick::name));
+        assertTrue(nicks.claim(two, new Nick("Felix_HD", "jeb_", "vip")));
     }
 
     @Test

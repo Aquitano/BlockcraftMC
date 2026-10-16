@@ -219,6 +219,11 @@ final class SharedSchema {
         )),
         new Migration(16, List.of(
             "CREATE INDEX IF NOT EXISTS idx_bc_greetings_daily ON bc_greetings (greeter_uuid, greeted_at)"
+        )),
+        new Migration(17, List.of(
+            "DELETE later FROM bc_nicks later JOIN bc_nicks earlier ON earlier.nick = later.nick "
+                + "AND (earlier.set_at, earlier.player_uuid) < (later.set_at, later.player_uuid)",
+            "CREATE UNIQUE INDEX IF NOT EXISTS uq_bc_nicks_nick ON bc_nicks (nick)"
         ))
     );
 
