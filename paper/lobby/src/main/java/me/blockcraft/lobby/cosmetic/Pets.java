@@ -40,6 +40,7 @@ public final class Pets {
             animal.customName(messages.get("pets.entity-name", Placeholder.unparsed("player", owner.getName())));
             animal.setCustomNameVisible(true);
             animal.setRemoveWhenFarAway(true);
+            animal.setPersistent(false);
             if (type.baby()) {
                 animal.setBaby();
             }

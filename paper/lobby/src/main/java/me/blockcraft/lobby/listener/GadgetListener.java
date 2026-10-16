@@ -2,6 +2,7 @@ package me.blockcraft.lobby.listener;
 
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.sound.Sounds;
+import me.blockcraft.api.world.MapSaveEvent;
 import me.blockcraft.common.settings.PlayerSetting;
 import me.blockcraft.lobby.activity.Parkour;
 import me.blockcraft.lobby.gadget.Gadget;
@@ -119,6 +120,11 @@ public final class GadgetListener implements Listener {
             gadgets.paint(block);
             block.getWorld().playSound(block.getLocation(), Sound.ENTITY_SLIME_SQUISH, 1.0f, 1.2f);
         }
+    }
+
+    @EventHandler
+    public void onMapSave(MapSaveEvent event) {
+        gadgets.restorePaint();
     }
 
     private void tntJump(Player player) {
