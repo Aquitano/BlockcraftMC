@@ -299,6 +299,18 @@ public final class Game {
         scoreboard.refreshAll();
     }
 
+    /** Staff who vanish in the lobby watch instead of playing, so they give up their team and their vote. */
+    public void vanished(Player player) {
+        if (phase() != GamePhase.LOBBY) {
+            return;
+        }
+        maps.withdraw(player);
+        var team = teams.of(player);
+        teams.leave(player);
+        team.ifPresent(selector::show);
+        scoreboard.refreshAll();
+    }
+
     private void chooseTeam(Player player, TeamColor color) {
         if (phase() != GamePhase.LOBBY || !round.isPlaying(player)) {
             return;

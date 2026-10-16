@@ -1,6 +1,7 @@
 package me.blockcraft.bedwars.listener;
 
 import me.blockcraft.api.spectate.SpectateRequestEvent;
+import me.blockcraft.api.vanish.VanishChangeEvent;
 import me.blockcraft.bedwars.game.Game;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -38,5 +39,12 @@ public final class ConnectionListener implements Listener {
     @EventHandler
     public void onResourcePack(PlayerResourcePackStatusEvent event) {
         game.scoreboard().refreshAll();
+    }
+
+    @EventHandler
+    public void onVanish(VanishChangeEvent event) {
+        if (event.isVanished()) {
+            game.vanished(event.getPlayer());
+        }
     }
 }
