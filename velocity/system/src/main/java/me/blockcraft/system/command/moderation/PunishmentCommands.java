@@ -2,11 +2,9 @@ package me.blockcraft.system.command.moderation;
 
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.velocitypowered.api.command.BrigadierCommand;
-import com.velocitypowered.api.command.CommandSource;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.moderation.PunishmentRepository;
 import me.blockcraft.common.moderation.PunishmentType;
-import me.blockcraft.common.player.PlayerReference;
 import me.blockcraft.system.PlayerLookup;
 import me.blockcraft.system.SystemPermissions;
 import me.blockcraft.system.command.CommandSupport;
@@ -17,7 +15,6 @@ import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 
 import java.util.List;
 import java.util.Locale;
-import java.util.function.Consumer;
 
 /**
  * The four commands each punishment type has, named after it: {@code /ban} only points to {@code /strafe},
@@ -72,7 +69,7 @@ public final class PunishmentCommands {
                         .then(BrigadierCommand.requiredArgumentBuilder("duration", StringArgumentType.word())
                                 .executes(support.usage(usage))
                                 .then(BrigadierCommand.requiredArgumentBuilder("reason", StringArgumentType.greedyString())
-                                        .executes(support.run((source, context) -> withReference(source,
+                                        .executes(support.run((source, context) -> support.withReference(source,
                                                 StringArgumentType.getString(context, "player"),
                                                 target -> actions.timed(source, target, type,
                                                         Durations.timed(StringArgumentType.getString(context, "duration")),
@@ -84,7 +81,7 @@ public final class PunishmentCommands {
                 .requires(CommandSupport.permission(permission))
                 .executes(support.usage(name + ".usage"))
                 .then(support.playerArgument("player")
-                        .executes(support.run((source, context) -> withReference(source, StringArgumentType.getString(context, "player"),
+                        .executes(support.run((source, context) -> support.withReference(source, StringArgumentType.getString(context, "player"),
                                 target -> actions.revoke(source, target, type))))));
     }
 
@@ -104,14 +101,5 @@ public final class PunishmentCommands {
                     }
                     source.sendMessage(messages.get(name + ".count", Formatter.number("count", active.size())));
                 })));
-    }
-
-    /** Brigadier words also allow characters no Minecraft name has. */
-    private void withReference(CommandSource source, String name, Consumer<PlayerReference> action) {
-        if (PlayerReference.isName(name)) {
-            action.accept(PlayerReference.named(name));
-        } else {
-            source.sendMessage(messages.get("player-unknown", Placeholder.unparsed("player", name)));
-        }
     }
 }

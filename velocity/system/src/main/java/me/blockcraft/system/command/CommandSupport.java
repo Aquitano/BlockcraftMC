@@ -14,9 +14,11 @@ import me.blockcraft.common.player.PlayerReference;
 import me.blockcraft.system.PlayerVisibility;
 import me.blockcraft.system.SystemPermissions;
 import me.blockcraft.system.rank.ProxyRanks;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 /** Shared Brigadier glue: permission predicates, player-only executors, online-name suggestions. */
@@ -105,6 +107,15 @@ public final class CommandSupport {
         String typed = builder.getRemaining().toLowerCase();
         visibility.namesFor(source).filter(shown -> shown.toLowerCase().startsWith(typed)).forEach(builder::suggest);
         return builder.buildFuture();
+    }
+
+    /** Brigadier words also allow characters no Minecraft name has. */
+    public void withReference(CommandSource source, String name, Consumer<PlayerReference> action) {
+        if (PlayerReference.isName(name)) {
+            action.accept(PlayerReference.named(name));
+        } else {
+            source.sendMessage(messages.get("player-unknown", Placeholder.unparsed("player", name)));
+        }
     }
 
     /** Who acts: the player's account, or the console by name alone. */

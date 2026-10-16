@@ -1,6 +1,5 @@
 package me.blockcraft.system.command.moderation;
 
-import me.blockcraft.common.player.PlayerReference;
 import me.blockcraft.system.moderation.ModerationActions;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
@@ -36,6 +35,6 @@ public final class StrafeCommand {
     }
 
     private void punish(CommandSource source, String name, int number) {
-        actions.preset(source, PlayerReference.named(name), number);
+        support.withReference(source, name, target -> actions.preset(source, target, number));
     }
 }
