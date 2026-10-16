@@ -19,6 +19,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.plugin.Plugin;
 
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 /** Right-clicks with the shop's special items, for players in the round; everyone else's click does nothing. */
@@ -33,14 +34,14 @@ public final class SpecialItems implements Listener {
     private final MobileShop mobileShop;
 
     public SpecialItems(Plugin plugin, Messages messages, BedWarsConfig config, Dealers dealers, Teams teams,
-                        Predicate<Player> playing, Predicate<Block> replaceable) {
+                        Predicate<Player> playing, Predicate<Block> replaceable, Consumer<Block> placed) {
         this.messages = messages;
         this.teams = teams;
         this.playing = playing;
         this.teleporter = new Teleporter(plugin, messages, config.teleporterSeconds(), config.teleporterHeight(),
                 player -> teams.of(player).flatMap(Team::spawn));
         this.parachute = new Parachute(plugin, messages, config.parachuteSeconds());
-        this.platform = new RescuePlatform(config.rescuePlatformRadius(), replaceable);
+        this.platform = new RescuePlatform(config.rescuePlatformRadius(), replaceable, placed);
         this.mobileShop = new MobileShop(plugin, messages, dealers, config.mobileShopSeconds());
     }
 

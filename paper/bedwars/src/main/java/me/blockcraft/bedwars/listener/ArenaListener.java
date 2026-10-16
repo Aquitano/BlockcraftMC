@@ -28,7 +28,6 @@ import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -49,7 +48,7 @@ public final class ArenaListener implements Listener {
     private final Game game;
     private final Messages messages;
     private final BedWarsConfig config;
-    private final Set<Block> placed = new HashSet<>();
+    private final Set<Block> placed;
     private final Map<UUID, Long> lastWeb = new HashMap<>();
     private final Map<Block, BukkitTask> melting = new HashMap<>();
 
@@ -58,6 +57,7 @@ public final class ArenaListener implements Listener {
         this.game = game;
         this.messages = messages;
         this.config = config;
+        this.placed = game.placedBlocks();
     }
 
     @EventHandler(priority = EventPriority.LOWEST)

@@ -67,6 +67,7 @@ import org.bukkit.plugin.Plugin;
 
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -122,6 +123,7 @@ public final class Game {
     private final Optional<JumpAndRun> jumpAndRun;
     private final CatchGame catchGame;
     private final MapChoice maps;
+    private final Set<Block> placed = new HashSet<>();
     private Match match;
     private Optional<Team> winner = Optional.empty();
     private int secondsLeft;
@@ -140,7 +142,8 @@ public final class Game {
         this.shop = new Shop(catalog, messages, perks, teams::colorOf);
         this.dealers = new Dealers(messages, shop, round::isPlaying);
         this.chests = new TeamChests(plugin, messages, teams);
-        this.specials = new SpecialItems(plugin, messages, config, dealers, teams, round::isPlaying, Game::isDecoration);
+        this.specials = new SpecialItems(plugin, messages, config, dealers, teams, round::isPlaying, Game::isDecoration,
+                placed::add);
         this.clock = round.timer(new Countdown(plugin));
         this.lobbyCountdown = new LobbyCountdown(plugin, round.arena(), config.lobbySeconds(), config.minPlayers(),
                 round::playerCount, this::lobbySecond, this::start);
@@ -235,6 +238,11 @@ public final class Game {
 
     public Optional<Team> winner() {
         return winner;
+    }
+
+    /** The blocks players put on the map, the only ones besides beds and decoration that break. */
+    public Set<Block> placedBlocks() {
+        return placed;
     }
 
     public Optional<Border> border() {
