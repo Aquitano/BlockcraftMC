@@ -15,6 +15,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -31,6 +33,9 @@ import java.util.function.Consumer;
 public final class Nicks {
 
     public record Active(String realName, String nick, PlayerProfile original) {
+    }
+
+    private record Worn(Nick nick, Optional<PlayerProfile> skin) {
     }
 
     private final Plugin plugin;
@@ -68,24 +73,25 @@ public final class Nicks {
     }
 
     /**
-     * Picks and persists a fresh nick showing {@code rank}, or one of the {@link #ranks()} at random; {@code onDone}
-     * gets the nick on the main thread, or empty when the skin could not load or the nick could not be stored.
+     * Picks and persists a fresh nick showing {@code rank}, or one of the {@link #ranks()} at random, skipping every
+     * name someone on the network already goes by; {@code onDone} gets the nick on the main thread, or empty when
+     * the skin could not load, no name was free or the nick could not be stored.
      */
     public void assign(Player player, Optional<String> rank, Consumer<Optional<Nick>> onDone) {
-        var nick = new Nick(pickName(), skins.get(random.nextInt(skins.size())), rank.orElseGet(() -> ranks.get(random.nextInt(ranks.size()))));
+        String skinOwner = skins.get(random.nextInt(skins.size()));
+        String rankGroup = rank.orElseGet(() -> ranks.get(random.nextInt(ranks.size())));
+        var candidates = freeNames();
         var uuid = player.getUniqueId();
-        writes.submit(uuid, () -> {
-            var skin = fetchSkin(nick.skinOwner());
-            if (skin.isPresent()) {
-                repository.set(uuid, nick);
-            }
-            return skin;
-        }, skin -> {
+        writes.submit(uuid, () -> fetchSkin(skinOwner).flatMap(skin -> candidates.stream()
+                .map(name -> new Nick(name, skinOwner, rankGroup))
+                .filter(nick -> repository.claim(uuid, nick))
+                .findFirst()
+                .map(nick -> new Worn(nick, Optional.of(skin)))), worn -> {
             if (!player.isOnline()) {
                 return;
             }
-            skin.ifPresent(textures -> apply(player, nick, textures));
-            onDone.accept(skin.map(ignored -> nick));
+            worn.ifPresent(chosen -> apply(player, chosen));
+            onDone.accept(worn.map(Worn::nick));
         }, () -> {
             if (player.isOnline()) {
                 onDone.accept(Optional.empty());
@@ -93,16 +99,19 @@ public final class Nicks {
         });
     }
 
-    /** Re-applies the stored nick when a nicked player arrives on this server; {@code onDone} hears which one, if any. */
+    /**
+     * Re-applies the stored nick when a nicked player arrives on this server; {@code onDone} hears which one, if any.
+     * A skin that cannot load leaves the default one rather than unmasking the player.
+     */
     public void applyStored(Player player, Consumer<Optional<Nick>> onDone) {
         var uuid = player.getUniqueId();
-        writes.submit(uuid, () -> repository.get(uuid).flatMap(nick -> fetchSkin(nick.skinOwner()).map(skin -> Map.entry(nick, skin))),
+        writes.submit(uuid, () -> repository.get(uuid).map(nick -> new Worn(nick, fetchSkin(nick.skinOwner()))),
                 stored -> {
                     if (!player.isOnline()) {
                         return;
                     }
-                    stored.ifPresent(entry -> apply(player, entry.getKey(), entry.getValue()));
-                    onDone.accept(stored.map(Map.Entry::getKey));
+                    stored.ifPresent(worn -> apply(player, worn));
+                    onDone.accept(stored.map(Worn::nick));
                 }, () -> {
                     if (player.isOnline()) {
                         player.sendMessage(BlockcraftApi.get().messages().get("operation.failed"));
@@ -145,11 +154,12 @@ public final class Nicks {
         active.remove(player.getUniqueId());
     }
 
-    private void apply(Player player, Nick nick, PlayerProfile skin) {
+    private void apply(Player player, Worn worn) {
+        var nick = worn.nick();
         var current = active.get(player.getUniqueId());
         var original = current == null ? player.getPlayerProfile() : current.original();
         var profile = Bukkit.createProfileExact(player.getUniqueId(), nick.name());
-        profile.setTextures(skin.getTextures());
+        worn.skin().ifPresent(skin -> profile.setTextures(skin.getTextures()));
         player.setPlayerProfile(profile);
         active.put(player.getUniqueId(), new Active(original.getName(), nick.name(), original));
         Bukkit.getPluginManager().callEvent(new NickChangeEvent(player, Optional.of(nick.rankGroup())));
@@ -161,14 +171,10 @@ public final class Nicks {
         return profile.complete(true) && profile.hasTextures() ? Optional.of(profile) : Optional.empty();
     }
 
-    private String pickName() {
-        var taken = active.values().stream().map(Active::nick).toList();
-        for (int attempt = 0; attempt < names.size(); attempt++) {
-            var candidate = names.get(random.nextInt(names.size()));
-            if (!taken.contains(candidate) && Bukkit.getPlayerExact(candidate) == null) {
-                return candidate;
-            }
-        }
-        return names.get(random.nextInt(names.size()));
+    /** The configured names in random order, without those of players on this server; the database checks the rest. */
+    private List<String> freeNames() {
+        var free = new ArrayList<>(names.stream().filter(name -> Bukkit.getPlayerExact(name) == null).toList());
+        Collections.shuffle(free, random);
+        return free;
     }
 }
