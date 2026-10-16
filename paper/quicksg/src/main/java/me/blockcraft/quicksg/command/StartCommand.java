@@ -14,13 +14,11 @@ import me.blockcraft.quicksg.game.Game;
 import me.blockcraft.api.game.Stat;
 import me.blockcraft.api.game.StatsRepository;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
 public final class StartCommand {
 
-    private static final int MIN_PLAYERS_TO_FORCE = 2;
     private static final int DEBUG_COINS = 200;
     private static final int DEBUG_TIMER_SECONDS = 950;
 
@@ -34,7 +32,7 @@ public final class StartCommand {
                         && source.getSender().hasPermission("blockcraft.quicksg.start"))
                 .executes(context -> {
                     Player player = context.getSource().getPlayerOrThrow();
-                    if (Bukkit.getOnlinePlayers().size() < MIN_PLAYERS_TO_FORCE) {
+                    if (game.alivePlayers().size() < Game.MIN_TO_START) {
                         player.sendMessage(messages.get("start.not-enough-players"));
                     } else if (!game.isLobby()) {
                         player.sendMessage(messages.get("start.only-in-lobby"));

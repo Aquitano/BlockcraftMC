@@ -16,6 +16,7 @@ join:
 
 lobby:
   started: "<prefix><muted>Die Runde wurde gestartet."
+  cancelled: "<prefix><error>Zu wenige Spieler, der Countdown wurde abgebrochen."
   freeze-title: "<primary><seconds>"
 
 protection:

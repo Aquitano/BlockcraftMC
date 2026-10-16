@@ -39,6 +39,7 @@ import java.util.UUID;
 
 public final class Game {
 
+    public static final int MIN_TO_START = 2;
     private static final Set<Integer> PROTECTION_ANNOUNCEMENTS = Set.of(15, 10, 5, 4, 3, 2, 1);
     private static final double INGAME_MAX_HEALTH = 14.0;
     private static final long RESPAWN_DELAY_TICKS = 1L;
@@ -195,6 +196,11 @@ public final class Game {
     }
 
     private void start() {
+        if (round.playerCount() < MIN_TO_START) {
+            Bukkit.broadcast(messages.get("lobby.cancelled"));
+            lobbyCountdown.start();
+            return;
+        }
         round.enter(GamePhase.INGAME);
         protection = true;
         Bukkit.broadcast(messages.get("lobby.started"));
