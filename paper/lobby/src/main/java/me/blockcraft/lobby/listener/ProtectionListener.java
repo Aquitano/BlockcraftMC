@@ -41,7 +41,8 @@ public final class ProtectionListener implements Listener {
             EntityDamageEvent.DamageCause.DROWNING);
     private static final Set<Material> LOCKED_BLOCKS = Set.of(
             Material.ANVIL, Material.CHIPPED_ANVIL, Material.DAMAGED_ANVIL,
-            Material.CRAFTING_TABLE, Material.FURNACE, Material.LEVER, Material.CHEST);
+            Material.CRAFTING_TABLE, Material.FURNACE, Material.LEVER, Material.CHEST,
+            Material.CHISELED_BOOKSHELF, Material.DECORATED_POT, Material.JUKEBOX);
     private static final Set<CreatureSpawnEvent.SpawnReason> MANUAL_SPAWNS = Set.of(
             CreatureSpawnEvent.SpawnReason.CUSTOM, CreatureSpawnEvent.SpawnReason.COMMAND,
             CreatureSpawnEvent.SpawnReason.SPAWNER_EGG);
