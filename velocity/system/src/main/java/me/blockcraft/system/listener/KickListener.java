@@ -11,6 +11,7 @@ import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 /**
  * A player kicked from a server lands in a lobby with the reason instead of losing the connection; a lobby that
  * dies hands its players to another lobby of the group, and only a network without a second lobby disconnects them.
+ * A failed switch leaves the player where they are, but a login has nowhere to stay, so it tries the next lobby.
  */
 public final class KickListener {
 
@@ -24,7 +25,7 @@ public final class KickListener {
 
     @Subscribe
     public void onKicked(KickedFromServerEvent event) {
-        if (event.kickedDuringServerConnect()) {
+        if (event.kickedDuringServerConnect() && event.getPlayer().getCurrentServer().isPresent()) {
             return;
         }
         var from = event.getServer();
