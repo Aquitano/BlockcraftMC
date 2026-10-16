@@ -37,7 +37,7 @@ import java.util.UUID;
  * The round's rules for the map: players build inside its border and break only what players placed, grass,
  * flowers and the beds of other teams; TNT goes off when placed and takes only placed blocks with it; a cobweb
  * melts after a while unless it guards a bed. Falling below the void line kills, and teammates do not hurt each
- * other, with arrows neither.
+ * other, with arrows and TNT neither.
  */
 public final class ArenaListener implements Listener {
 
@@ -175,9 +175,11 @@ public final class ArenaListener implements Listener {
             return;
         }
         var damager = event.getDamager();
-        var attacker = damager instanceof Projectile projectile && projectile.getShooter() instanceof Player shooter
-                ? shooter
-                : damager instanceof Player player ? player : null;
+        var attacker = switch (damager) {
+            case Player player -> player;
+            case Projectile projectile when projectile.getShooter() instanceof Player shooter -> shooter;
+            default -> event.getDamageSource().getCausingEntity() instanceof Player causing ? causing : null;
+        };
         if (attacker != null && !attacker.equals(victim) && game.sameTeam(attacker, victim)) {
             event.setCancelled(true);
             if (damager instanceof Projectile) {
