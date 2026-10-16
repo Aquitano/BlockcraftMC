@@ -13,22 +13,31 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityMountEvent;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.util.EnumSet;
 import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Freezes a player in place until staff lift it: no movement, no damage dealt, no commands but private messages.
+ * Freezes a player in place until staff lift it: no movement, no teleport or ride of their own, no damage dealt, no
+ * blocks placed or broken, nothing used, no commands but private messages.
  * The flag is in {@code bc_frozen} and read at pre-login, so switching servers does not shake it off, and a
  * frozen player who disconnects is reported to the staff.
  */
@@ -37,6 +46,8 @@ public final class FreezeService implements Listener {
     public static final String NOTIFY_PERMISSION = "blockcraft.core.freeze.notify";
     private static final long REMINDER_TICKS = 200L;
     private static final Set<String> ALLOWED_COMMANDS = Set.of("msg", "tell", "w", "r", "reply");
+    private static final Set<TeleportCause> OWN_TELEPORTS = EnumSet.of(TeleportCause.ENDER_PEARL, TeleportCause.CONSUMABLE_EFFECT,
+            TeleportCause.NETHER_PORTAL, TeleportCause.END_PORTAL, TeleportCause.END_GATEWAY, TeleportCause.SPECTATE);
 
     private final Plugin plugin;
     private final FreezeRepository repository;
@@ -80,6 +91,7 @@ public final class FreezeService implements Listener {
     private void freeze(Player target, PlayerReference issuer) {
         var uuid = target.getUniqueId();
         frozen.add(uuid);
+        target.leaveVehicle();
         writes.run(uuid, () -> repository.freeze(uuid, issuer));
         announce(target);
     }
@@ -121,6 +133,7 @@ public final class FreezeService implements Listener {
         var player = event.getPlayer();
         if (pending.remove(player.getUniqueId())) {
             frozen.add(player.getUniqueId());
+            player.leaveVehicle();
             announce(player);
         }
     }
@@ -160,8 +173,50 @@ public final class FreezeService implements Listener {
     }
 
     @EventHandler
-    public void onDamage(EntityDamageByEntityEvent event) {
-        if (event.getDamager() instanceof Player damager && isFrozen(damager)) {
+    public void onTeleport(PlayerTeleportEvent event) {
+        if (isFrozen(event.getPlayer()) && OWN_TELEPORTS.contains(event.getCause())) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onMount(EntityMountEvent event) {
+        if (event.getEntity() instanceof Player player && isFrozen(player)) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onDamage(EntityDamageEvent event) {
+        if (event.getDamageSource().getCausingEntity() instanceof Player damager && isFrozen(damager)) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onPlace(BlockPlaceEvent event) {
+        if (isFrozen(event.getPlayer())) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onBreak(BlockBreakEvent event) {
+        if (isFrozen(event.getPlayer())) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onInteract(PlayerInteractEvent event) {
+        if (isFrozen(event.getPlayer())) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onInteractEntity(PlayerInteractEntityEvent event) {
+        if (isFrozen(event.getPlayer())) {
             event.setCancelled(true);
         }
     }
