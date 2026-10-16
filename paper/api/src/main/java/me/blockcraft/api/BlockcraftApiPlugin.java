@@ -80,6 +80,15 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        try {
+            enable();
+        } catch (RuntimeException e) {
+            getSLF4JLogger().error("BlockcraftAPI failed to start; stopping the server so it restarts instead of running without plugins", e);
+            getServer().shutdown();
+        }
+    }
+
+    private void enable() {
         var resources = ApiResources.load(getDataPath(), this::getResource);
         var config = resources.config();
         var databaseConfig = DatabaseConfig.fromYaml(YamlFile.section(config, "database"));
