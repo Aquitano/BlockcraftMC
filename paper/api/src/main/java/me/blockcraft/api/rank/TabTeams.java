@@ -4,11 +4,13 @@ import me.blockcraft.api.afk.Afk;
 import me.blockcraft.api.afk.AfkChangeEvent;
 import me.blockcraft.api.nick.NickChangeEvent;
 import me.blockcraft.api.scoreboard.Boards;
+import me.blockcraft.api.task.Tasks;
 import me.blockcraft.api.vanish.VanishChangeEvent;
 import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.luckperms.api.LuckPerms;
+import net.luckperms.api.event.user.UserDataRecalculateEvent;
 import net.luckperms.api.model.group.Group;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -17,6 +19,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.scoreboard.Scoreboard;
 
 import java.util.Comparator;
@@ -37,7 +40,8 @@ import java.util.UUID;
  * nick changes the name the tab list is keyed by. Vanished players get their own team per group, suffixed with a
  * marker: only staff who see through vanish still list them. Players away from the keyboard get a team of their own
  * with an AFK marker, unless they are vanished. A game that plays in teams colours its players' names, in the tab
- * list and above their heads, without taking the rank prefix away.
+ * list and above their heads, without taking the rank prefix away. A rank change shows as soon as LuckPerms
+ * recalculates the player.
  */
 public final class TabTeams implements Listener {
 
@@ -61,11 +65,16 @@ public final class TabTeams implements Listener {
     private record Entry(String team, Component prefix, Component suffix, Optional<NamedTextColor> color, String name) {
     }
 
-    public TabTeams(LuckPerms luckPerms, Messages messages, NickRanks nickRanks, Afk afk) {
+    public TabTeams(Plugin plugin, LuckPerms luckPerms, Messages messages, NickRanks nickRanks, Afk afk) {
         this.luckPerms = luckPerms;
         this.messages = messages;
         this.nickRanks = nickRanks;
         this.afk = afk;
+        luckPerms.getEventBus().subscribe(plugin, UserDataRecalculateEvent.class, event -> {
+            if (plugin.isEnabled()) {
+                Tasks.sync(plugin, () -> refresh(event.getUser().getUniqueId()));
+            }
+        });
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -108,6 +117,14 @@ public final class TabTeams implements Listener {
 
     public void clearColor(Player player) {
         if (colors.remove(player.getUniqueId()) != null) {
+            update(player);
+        }
+    }
+
+    /** A rank change reaches a player who is already listed; one still logging in is placed by the join. */
+    private void refresh(UUID uuid) {
+        var player = Bukkit.getPlayer(uuid);
+        if (player != null && entries.containsKey(uuid)) {
             update(player);
         }
     }
