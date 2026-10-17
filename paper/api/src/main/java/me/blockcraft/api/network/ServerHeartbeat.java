@@ -31,6 +31,7 @@ public final class ServerHeartbeat {
     private final ServerIdentity self;
     private final ServerPresence presence;
     private final AtomicBoolean failing = new AtomicBoolean();
+    private volatile boolean stopped;
     private final ScheduledExecutorService beats = Executors.newSingleThreadScheduledExecutor(
             Thread.ofPlatform().name("BlockcraftAPI heartbeat").daemon().factory());
 
@@ -66,13 +67,17 @@ public final class ServerHeartbeat {
         beats.scheduleWithFixedDelay(this::beat, 0L, interval.toMillis(), TimeUnit.MILLISECONDS);
     }
 
+    /** Queued beats are dropped and a stuck one is interrupted, so nothing announces the server after its row is gone. */
     public void stop() {
+        stopped = true;
         beats.shutdown();
         try {
             if (!beats.awaitTermination(DRAIN_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS)) {
+                beats.shutdownNow();
                 plugin.getLogger().warning("A heartbeat was still running after " + DRAIN_TIMEOUT.toSeconds() + "s");
             }
         } catch (InterruptedException e) {
+            beats.shutdownNow();
             Thread.currentThread().interrupt();
         }
         try {
@@ -83,6 +88,9 @@ public final class ServerHeartbeat {
     }
 
     private void beat() {
+        if (stopped) {
+            return;
+        }
         try {
             servers.heartbeat(self, presence.status());
             if (failing.getAndSet(false)) {

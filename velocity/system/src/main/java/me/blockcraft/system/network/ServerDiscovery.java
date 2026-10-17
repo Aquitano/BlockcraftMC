@@ -45,8 +45,8 @@ public final class ServerDiscovery implements Runnable {
     @Override
     public synchronized void run() {
         List<ServerRecord> alive;
+        var unreadable = new HashSet<String>();
         try {
-            var unreadable = new HashSet<String>();
             alive = servers.alive(staleSeconds, unreadable::add);
             warnUnreadable(unreadable);
         } catch (DatabaseException e) {
@@ -55,7 +55,7 @@ public final class ServerDiscovery implements Runnable {
         }
         var aliveNames = alive.stream().map(ServerRecord::name).toList();
         registered.keySet().removeIf(name -> {
-            if (aliveNames.contains(name)) {
+            if (aliveNames.contains(name) || unreadable.contains(name)) {
                 return false;
             }
             proxy.unregisterServer(registered.get(name));
@@ -68,7 +68,10 @@ public final class ServerDiscovery implements Runnable {
         lagAlert.check(alive);
     }
 
-    /** Once per broken row, not on every poll; a row that gets fixed and breaks again is reported again. */
+    /**
+     * Once per broken row, not on every poll; a row that gets fixed and breaks again is reported again. The server
+     * behind it stays registered while its heartbeat is fresh, but no group sends anyone there.
+     */
     private void warnUnreadable(Set<String> unreadable) {
         unreadable.stream().filter(name -> !warnedUnreadable.contains(name))
                 .forEach(name -> logger.warn("Skipping {} in bc_servers: its row cannot be read, check its state", name));
