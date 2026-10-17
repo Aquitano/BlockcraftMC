@@ -5,6 +5,7 @@ import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.Plugin;
 
@@ -21,7 +22,7 @@ public final class GlobalMuteListener implements Listener {
         this.messages = messages;
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
     public void onChat(AsyncChatEvent event) {
         if (event.getPlayer().hasPermission(ChatPermissions.GLOBAL_MUTE_BYPASS)) {
             return;
