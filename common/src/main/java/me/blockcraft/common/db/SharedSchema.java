@@ -224,6 +224,10 @@ final class SharedSchema {
             "DELETE later FROM bc_nicks later JOIN bc_nicks earlier ON earlier.nick = later.nick "
                 + "AND (earlier.set_at, earlier.player_uuid) < (later.set_at, later.player_uuid)",
             "CREATE UNIQUE INDEX IF NOT EXISTS uq_bc_nicks_nick ON bc_nicks (nick)"
+        )),
+        new Migration(18, List.of(
+            "DELETE nicked FROM bc_nicks nicked JOIN bc_players owner ON owner.name = nicked.nick "
+                + "AND owner.uuid <> nicked.player_uuid"
         ))
     );
 
