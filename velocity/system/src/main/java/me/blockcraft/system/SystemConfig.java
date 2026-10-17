@@ -4,6 +4,7 @@ import me.blockcraft.common.calendar.NetworkCalendar;
 import me.blockcraft.common.config.YamlFile;
 import me.blockcraft.common.db.DatabaseConfig;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.common.network.NetworkAddresses;
 import me.blockcraft.system.moderation.PunishmentPreset;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.yaml.snakeyaml.DumperOptions;
@@ -103,7 +104,7 @@ public final class SystemConfig {
         this.file = file;
         this.root = root;
         this.database = DatabaseConfig.fromYaml(YamlFile.section(root, "database"));
-        var network = YamlFile.section(root, "network");
+        var network = NetworkAddresses.fromYaml(root);
         this.network = new Network(string(network, "ip"), string(network, "website"), string(network, "shop"),
                 string(network, "teamspeak"), string(network, "discord"));
         this.networkTags = Messages.tagsOf(network);
@@ -118,7 +119,9 @@ public final class SystemConfig {
         this.serverHealth = new ServerHealth(number(serverHealth, "tps-warn", 19), number(serverHealth, "tps-critical", 15),
                 number(serverHealth, "mspt-warn", 40), number(serverHealth, "mspt-critical", 50));
         var resourcePack = YamlFile.section(root, "resource-pack");
-        this.resourcePack = new ResourcePack(string(resourcePack, "file"), string(resourcePack, "url"),
+        var packUrl = System.getenv("BLOCKCRAFT_RESOURCE_PACK_URL");
+        this.resourcePack = new ResourcePack(string(resourcePack, "file"),
+                packUrl == null || packUrl.isBlank() ? string(resourcePack, "url") : packUrl,
                 number(resourcePack, "port", 0), Boolean.TRUE.equals(resourcePack.get("required")));
         this.maxWarns = number(root, "max-warns", 8);
         this.maxStrikes = number(root, "max-strikes", 5);

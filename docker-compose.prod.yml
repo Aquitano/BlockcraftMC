@@ -1,0 +1,54 @@
+# The network on a public host, layered over docker-compose.yml (README, "Deploy"). .env names both files in
+# COMPOSE_FILE and holds the secrets, so every plain `docker compose` command on the host uses them.
+
+x-db-password: &db-password
+  LUCKPERMS_DATA_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env}
+  BLOCKCRAFT_DB_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env}
+
+x-network: &network
+  BLOCKCRAFT_NETWORK_IP: ${NETWORK_IP:?set NETWORK_IP in .env}
+  BLOCKCRAFT_NETWORK_WEBSITE: ${NETWORK_WEBSITE:-}
+  BLOCKCRAFT_NETWORK_SHOP: ${NETWORK_SHOP:-}
+  BLOCKCRAFT_NETWORK_TEAMSPEAK: ${NETWORK_TEAMSPEAK:-}
+  BLOCKCRAFT_NETWORK_DISCORD: ${NETWORK_DISCORD:-}
+
+# The image fills ${CFG_FORWARDING_SECRET} into prod/paper-global.yml while it copies it into the server.
+x-paper: &paper
+  environment:
+    <<: [*db-password, *network]
+    REPLACE_ENV_DURING_SYNC: "TRUE"
+    CFG_FORWARDING_SECRET: ${FORWARDING_SECRET:?set FORWARDING_SECRET in .env}
+  volumes:
+    - ./prod/paper-global.yml:/config/paper-global.yml:ro
+
+services:
+  mariadb:
+    ports: !reset []
+    environment:
+      MARIADB_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env}
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?set DB_ROOT_PASSWORD in .env}
+
+  # Minecraft is not HTTP, so the proxy takes players itself; the resource pack stays on loopback for the web server
+  # that publishes it at RESOURCE_PACK_URL.
+  velocity:
+    ports: !override
+      - "25565:25565"
+      - "127.0.0.1:${RESOURCE_PACK_PORT:?set RESOURCE_PACK_PORT in .env}:8080"
+    environment:
+      <<: [*db-password, *network]
+      VELOCITY_FORWARDING_SECRET: ${FORWARDING_SECRET:?set FORWARDING_SECRET in .env}
+      BLOCKCRAFT_RESOURCE_PACK_URL: ${RESOURCE_PACK_URL:?set RESOURCE_PACK_URL in .env}
+
+  lobby: *paper
+  bedwars: *paper
+
+  # Not released yet: `docker compose --profile unreleased up -d duell` starts one anyway.
+  duell:
+    <<: *paper
+    profiles: [unreleased]
+  emeraldrush:
+    <<: *paper
+    profiles: [unreleased]
+  quicksg:
+    <<: *paper
+    profiles: [unreleased]

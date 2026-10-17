@@ -23,6 +23,7 @@ resourcepack/            The client-side look: menu panels, HUD icons and button
 dev/                     Config templates for the local dev network (see below)
 worlds/                  One map template per server group, restored at every start (see "Maps")
 docker-compose.yml       The local dev network: MariaDB, Velocity and one Paper server per game mode
+docker-compose.prod.yml  The same network on a public host, with prod/ and .env (see "Deploy")
 ```
 
 Ranks and permissions are handled by [LuckPerms](https://luckperms.net) on both platforms; the plugins check
@@ -494,8 +495,40 @@ above).
 
 In containers, environment variables replace the config edits: `BLOCKCRAFT_DB_HOST`, `BLOCKCRAFT_DB_PORT`,
 `BLOCKCRAFT_DB_NAME`, `BLOCKCRAFT_DB_USER` and `BLOCKCRAFT_DB_PASSWORD` override the `database` section of every
-Blockcraft plugin, `BLOCKCRAFT_WORLD_TEMPLATE` the map template (see "Maps"), and LuckPerms reads
-`LUCKPERMS_STORAGE_METHOD`, `LUCKPERMS_DATA_ADDRESS` and friends itself; `docker-compose.yml` shows the full set.
+Blockcraft plugin, `BLOCKCRAFT_NETWORK_<KEY>` an entry of every `network` section (`BLOCKCRAFT_NETWORK_IP` for
+`<ip>`), `BLOCKCRAFT_WORLD_TEMPLATE` the map template (see "Maps"), `BLOCKCRAFT_RESOURCE_PACK_URL` the proxy's
+`resource-pack.url`, and LuckPerms reads `LUCKPERMS_STORAGE_METHOD`, `LUCKPERMS_DATA_ADDRESS` and friends
+itself; `docker-compose.yml` shows the full set.
+
+### One host with Docker
+
+`docker-compose.prod.yml` turns the dev network into the public one: MariaDB publishes no port, the resource pack
+is served on loopback for a web server in front of it, the passwords, the forwarding secret, the pack address and the
+network addresses come from `.env`, and the games under `profiles: [unreleased]` stay off. Players still connect to
+the proxy's port 25565 directly: Minecraft is not HTTP, so neither a web server nor Cloudflare's proxy can carry it,
+and the DNS record players use has to point at the host itself. On the host, with Docker, git-lfs (otherwise the maps arrive as pointer files) and JDK 25 (`mise install`):
+
+```sh
+git lfs install
+git clone https://github.com/Aquitano/BlockcraftMC && cd BlockcraftMC
+cp .env.example .env     # fill in the secrets
+./gradlew stagePlugins
+docker compose up -d
+```
+
+With Caddy in front, the pack needs one site block (`RESOURCE_PACK_PORT` 8081, `RESOURCE_PACK_URL`
+`https://mc.example.net/blockcraft.zip`):
+
+```
+mc.example.net {
+	reverse_proxy 127.0.0.1:8081
+}
+```
+
+`.env` sets `COMPOSE_FILE`, so every `docker compose` command in that directory, the rank import from "Run locally"
+included, works on the production setup. An update is `git pull`, `./gradlew stagePlugins`, `docker compose up -d`
+and `docker compose restart`. Releasing a game means removing its `profiles` line. `/map save` writes into the
+checkout's `worlds/`, so a map edited on the host is committed from there.
 
 Alt detection stores login addresses only as an HMAC-SHA256 under a secret the proxy generates once into
 `plugins/blockcraft-system/address-secret`. Several proxies sharing one database must hash alike, so give them all the

@@ -9,7 +9,7 @@ database:
   connection-timeout-seconds: 30
 
 # Network addresses; every message of every Paper plugin can use them as <ip>, <website>, <shop>, <teamspeak>
-# and <discord>. Keep them in step with the proxy's network section.
+# and <discord>. Keep them in step with the proxy's network section. BLOCKCRAFT_NETWORK_<KEY> overrides an entry.
 network:
   ip: BlockcraftMC.net
   website: https://BlockcraftMC.net

@@ -2,6 +2,7 @@ package me.blockcraft.api;
 
 import me.blockcraft.common.config.YamlFile;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.common.network.NetworkAddresses;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 
 import java.io.InputStream;
@@ -18,7 +19,7 @@ record ApiResources(Map<String, Object> config, Messages messages, TagResolver t
     static ApiResources load(Path dataPath, Function<String, InputStream> bundled) {
         var config = YamlFile.loadWithDefaults(dataPath.resolve("config.yml"), () -> bundled.apply("config.yml"));
         var loaded = Messages.load(dataPath, () -> bundled.apply("messages.yml"));
-        var tags = TagResolver.resolver(Messages.tagsOf(YamlFile.section(config, "network")), loaded.tagsOf("palette"));
+        var tags = TagResolver.resolver(Messages.tagsOf(NetworkAddresses.fromYaml(config)), loaded.tagsOf("palette"));
         return new ApiResources(config, loaded.with(tags), tags);
     }
 }

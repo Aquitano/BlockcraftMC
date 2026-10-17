@@ -8,6 +8,8 @@ database:
   pool-size: 4
   connection-timeout-seconds: 30
 
+# The addresses messages name as <ip>, <website>, <shop>, <teamspeak> and <discord>; keep them in step with
+# BlockcraftAPI's network section. BLOCKCRAFT_NETWORK_<KEY> overrides an entry.
 network:
   ip: BlockcraftMC.net
   website: https://BlockcraftMC.net
@@ -45,7 +47,7 @@ alerts:
 # The network resource pack (menu panels, HUD icons; README "Resource pack"). file lives in this plugin's directory,
 # is hashed at startup and served at http://<this proxy>:<port>/<file>; url is that address as clients reach it, or
 # wherever else the same file is hosted, then port 0 serves nothing. required kicks whoever declines. An empty file
-# offers no pack, and every screen still works without one.
+# offers no pack, and every screen still works without one. BLOCKCRAFT_RESOURCE_PACK_URL overrides url.
 resource-pack:
   file: blockcraft.zip
   url: http://localhost:8080/blockcraft.zip
