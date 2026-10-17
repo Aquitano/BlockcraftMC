@@ -32,7 +32,10 @@ x-paper-env: &paper-env
   MEMORY: 1G
   SYNC_SKIP_NEWER_IN_DESTINATION: "false"
   CREATE_CONSOLE_IN_PIPE: "true"
-  PLUGINS: https://download.luckperms.net/1669/bukkit/loader/LuckPerms-Bukkit-5.5.82.jar
+  # ViaVersion lets clients newer than the server join (README, "Client versions").
+  PLUGINS: |
+    https://download.luckperms.net/1669/bukkit/loader/LuckPerms-Bukkit-5.5.82.jar
+    https://github.com/ViaVersion/ViaVersion/releases/download/5.12.1/ViaVersion-5.12.1.jar
   BLOCKCRAFT_DB_HOST: mariadb
 
 services:
@@ -66,7 +69,7 @@ services:
     environment:
       <<: *luckperms
       TYPE: VELOCITY
-      VELOCITY_VERSION: "4.1.1"
+      VELOCITY_VERSION: "4.2.0"
       MEMORY: 512m
       SYNC_SKIP_NEWER_IN_DESTINATION: "false"
       BLOCKCRAFT_DB_HOST: mariadb

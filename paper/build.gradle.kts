@@ -5,7 +5,7 @@ plugins {
 val libs = the<VersionCatalogsExtension>().named("libs")
 
 // Runs one Paper server (port 25566, announced to the dev Velocity as "lobby") with every plugin in this directory
-// plus LuckPerms, on the same lobby map as the compose network. Needs the MariaDB from docker-compose.yml.
+// plus LuckPerms and ViaVersion, on the same lobby map as the compose network. Needs the MariaDB from docker-compose.yml.
 // `-Pplugins=core,lobby` limits the set (BlockcraftAPI is always included).
 val selectedPlugins = providers.gradleProperty("plugins").map { it.split(",").map(String::trim).toSet() }
 
@@ -33,5 +33,6 @@ tasks.runServer {
     })
     downloadPlugins {
         url("https://download.luckperms.net/1669/bukkit/loader/LuckPerms-Bukkit-5.5.82.jar")
+        url("https://github.com/ViaVersion/ViaVersion/releases/download/5.12.1/ViaVersion-5.12.1.jar")
     }
 }

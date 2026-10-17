@@ -78,6 +78,14 @@ plugins shade them too.
 
 Versions live in `gradle/libs.versions.toml` (`paper-api`, `velocity-api`, `minecraft`).
 
+### Client versions
+
+The servers speak `minecraft`; every Paper server also runs [ViaVersion](https://github.com/ViaVersion/ViaVersion),
+so clients newer than that join as well, as far as the proxy knows their protocol (Velocity 4.2.0 knows 26.3).
+Older clients would need ViaBackwards on top. A new client version therefore needs a ViaVersion release that
+supports it, the jar URL bumped in `docker-compose.yml` and `paper/build.gradle.kts`, and, when the proxy does not
+know it yet, a newer `VELOCITY_VERSION` and `velocity-api`.
+
 ## Run locally
 
 For repeatable server and client measurements, see [Measure Minecraft performance](dev/performance/README.md).
