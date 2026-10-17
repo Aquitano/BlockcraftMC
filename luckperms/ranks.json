@@ -12,7 +12,8 @@
         {"type": "permission", "key": "blockcraft.system.discord", "value": true},
         {"type": "permission", "key": "blockcraft.system.seen", "value": true},
         {"type": "permission", "key": "blockcraft.system.playtime", "value": true},
-        {"type": "permission", "key": "velocity.command.server", "value": true},
+        {"type": "permission", "key": "velocity.command.server", "value": false},
+        {"type": "permission", "key": "minecraft.command.random", "value": false},
         {"type": "permission", "key": "minecraft.command.msg", "value": false},
         {"type": "permission", "key": "minecraft.command.teammsg", "value": false},
         {"type": "permission", "key": "minecraft.command.me", "value": false}
@@ -38,8 +39,7 @@
         {"type": "prefix", "key": "prefix.30.&5YT &8● &5", "value": true},
         {"type": "permission", "key": "blockcraft.system.joinme.nodelay", "value": true},
         {"type": "permission", "key": "blockcraft.nick", "value": true},
-        {"type": "permission", "key": "blockcraft.system.bc", "value": true},
-        {"type": "permission", "key": "velocity.command.send", "value": true}
+        {"type": "permission", "key": "blockcraft.system.bc", "value": true}
       ]
     },
     "dev": {
