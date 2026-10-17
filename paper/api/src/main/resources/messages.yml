@@ -211,8 +211,6 @@ map:
     - "<arrow><primary>Map <dark>● <accent><map>"
     - "<arrow><primary>Gebaut von <dark>● <accent><builders>"
     - "<arrow><primary>Vorlage <dark>● <muted><template>"
-  saving: "<prefix><muted>Die Map wird gespeichert, das kann einen Moment dauern."
-  busy: "<prefix><error>Die Map wird gerade schon gespeichert."
   saved: "<prefix><success>Map <accent><map> <success>gespeichert. <muted>Jeder Neustart startet jetzt mit diesem Stand."
   no-template: "<prefix><error>Für diesen Server ist keine Map-Vorlage eingerichtet."
   failed: "<prefix><error>Die Map konnte nicht gespeichert werden, sieh in die Konsole."

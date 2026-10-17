@@ -24,6 +24,7 @@ import java.util.stream.Stream;
 public final class WorldTemplate {
 
     private static final String ENV = "BLOCKCRAFT_WORLD_TEMPLATE";
+    private static final String LEVEL = "level.dat";
     private static final Set<String> TRANSIENT = Set.of("session.lock", "players", "playerdata", "stats", "advancements", "level.dat_old");
     private static final String STAGING = ".staging";
     private static final String REPLACED = ".replaced";
@@ -52,7 +53,7 @@ public final class WorldTemplate {
 
     /** A map is a directory with a level.dat; an empty or missing directory is a template nobody has published to yet. */
     public boolean exists() {
-        return Files.isRegularFile(directory.resolve("level.dat"));
+        return Files.isRegularFile(directory.resolve(LEVEL));
     }
 
     public void restore(Path world) {
@@ -68,14 +69,15 @@ public final class WorldTemplate {
     /**
      * Copies the world into a staging directory inside the template and only then swaps the contents with renames,
      * which stay on the template's file system, so a copy that fails or is cut short leaves the old map in place.
-     * The leftovers of such a copy are cleared by the next publish and never restored.
+     * level.dat goes last in every copy and move, so a directory that holds it is complete; {@link #recover} relies on
+     * that to finish or undo a swap that was cut short.
      */
     public void publish(Path world) {
         Path staging = directory.resolve(STAGING);
         Path replaced = directory.resolve(REPLACED);
         try {
             Files.createDirectories(directory);
-            clear(directory, PUBLISHING::contains);
+            repair();
             Files.createDirectories(staging);
             copyContents(world, staging, name -> !TRANSIENT.contains(name));
             Files.createDirectories(replaced);
@@ -84,6 +86,37 @@ public final class WorldTemplate {
             clear(directory, PUBLISHING::contains);
         } catch (IOException e) {
             throw new UncheckedIOException("Could not copy " + world + " to " + directory, e);
+        }
+    }
+
+    /**
+     * Leaves the template whole after a publish that stopped partway, before anything reads it. Once the old map moved
+     * out completely, the new one is complete in staging and the rest of it moves in; before that, the old contents
+     * that already moved out go back. Leftovers of a copy that never got to the swap are dropped.
+     */
+    public void recover() {
+        try {
+            repair();
+        } catch (IOException e) {
+            throw new UncheckedIOException("Could not repair " + directory, e);
+        }
+    }
+
+    private void repair() throws IOException {
+        Path staging = directory.resolve(STAGING);
+        Path replaced = directory.resolve(REPLACED);
+        if (Files.isDirectory(replaced) && !exists()) {
+            if (Files.isRegularFile(staging.resolve(LEVEL))) {
+                moveContents(staging, directory, name -> true);
+            } else {
+                clear(directory, name -> !PUBLISHING.contains(name));
+                moveContents(replaced, directory, name -> true);
+            }
+        } else if (Files.isDirectory(replaced) && !Files.isRegularFile(replaced.resolve(LEVEL))) {
+            moveContents(replaced, directory, name -> true);
+        }
+        if (Files.isDirectory(directory)) {
+            clear(directory, PUBLISHING::contains);
         }
     }
 
@@ -107,7 +140,9 @@ public final class WorldTemplate {
 
     private static List<Path> children(Path directory, Predicate<String> include) throws IOException {
         try (Stream<Path> children = Files.list(directory)) {
-            return children.filter(child -> include.test(child.getFileName().toString())).toList();
+            return children.filter(child -> include.test(child.getFileName().toString()))
+                    .sorted(Comparator.comparing((Path child) -> child.getFileName().toString().equals(LEVEL)))
+                    .toList();
         }
     }
 

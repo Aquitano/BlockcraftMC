@@ -83,6 +83,23 @@ public class WorldTemplateTest {
         assertFalse(Files.exists(directory.resolve(".replaced")));
     }
 
+    @Test
+    public void aSwapCutShortAfterTheOldMapMovedOutFinishesWithTheNewOne() throws IOException {
+        Path directory = folder.newFolder("template").toPath();
+        write(directory, "region/r.0.0.mca", "new");
+        write(directory, ".staging/level.dat", "new");
+        write(directory, ".replaced/level.dat", "old");
+        write(directory, ".replaced/region/r.0.0.mca", "old");
+        var template = WorldTemplate.at(directory);
+
+        template.recover();
+
+        assertEquals("new", Files.readString(directory.resolve("level.dat")));
+        assertEquals("new", Files.readString(directory.resolve("region/r.0.0.mca")));
+        assertFalse(Files.exists(directory.resolve(".replaced")));
+        assertFalse(Files.exists(directory.resolve(".staging")));
+    }
+
     private static void write(Path root, String file, String content) throws IOException {
         Path path = root.resolve(file);
         Files.createDirectories(path.getParent());

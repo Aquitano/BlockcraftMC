@@ -42,6 +42,7 @@ public final class BlockcraftApiBootstrap implements PluginBootstrap {
 
     private static void restore(WorldTemplate template, ComponentLogger logger) {
         Path world = Path.of(levelName()).toAbsolutePath();
+        template.recover();
         if (!template.exists()) {
             logger.warn("World template {} holds no map yet, keeping {} as it is; build the map and run /map save", template.directory(), world);
             return;

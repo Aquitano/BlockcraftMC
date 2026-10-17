@@ -12,6 +12,8 @@ import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.Plugin;
 
+import java.io.UncheckedIOException;
+
 /** {@code /map} shows the map this server runs; {@code /map save} publishes the running world to its template. */
 public final class MapCommand {
 
@@ -37,10 +39,13 @@ public final class MapCommand {
             sender.sendMessage(messages.get("map.no-template"));
             return;
         }
-        boolean started = map.save(plugin,
-                () -> sender.sendMessage(messages.get("map.saved", tags(map))),
-                () -> sender.sendMessage(messages.get("map.failed")));
-        sender.sendMessage(messages.get(started ? "map.saving" : "map.busy"));
+        try {
+            map.save();
+            sender.sendMessage(messages.get("map.saved", tags(map)));
+        } catch (UncheckedIOException e) {
+            plugin.getSLF4JLogger().error("Could not publish the map", e);
+            sender.sendMessage(messages.get("map.failed"));
+        }
     }
 
     private static TagResolver tags(MapBundle map) {

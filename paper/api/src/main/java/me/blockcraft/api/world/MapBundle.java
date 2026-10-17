@@ -1,6 +1,5 @@
 package me.blockcraft.api.world;
 
-import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.config.YamlFile;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
@@ -30,7 +29,6 @@ public final class MapBundle {
     private final Optional<WorldTemplate> template;
     private final String name;
     private final List<String> builders;
-    private boolean saving;
 
     private MapBundle(World world, Optional<WorldTemplate> template, String name, List<String> builders) {
         this.world = world;
@@ -79,36 +77,15 @@ public final class MapBundle {
     }
 
     /**
-     * Publishes the running world to the template; the caller checks that one is configured. Every world is flushed on
-     * the main thread, because the other dimensions live in the same folder. The copy runs off it, with autosave
-     * paused until the copy is in place. False while a save runs.
+     * Publishes the running world to the template; the caller checks that one is configured. Every world is flushed,
+     * because the other dimensions live in the same folder, and the copy runs on the main thread, so no chunk unload
+     * writes a region file while it is taken. The template only changes once the copy is complete.
      */
-    public boolean save(Plugin plugin, Runnable onSaved, Runnable onFailed) {
-        if (saving) {
-            return false;
-        }
-        saving = true;
+    public void save() {
         var publishing = template.orElseThrow();
         Bukkit.getPluginManager().callEvent(new MapSaveEvent());
-        var autoSaving = Bukkit.getWorlds().stream().filter(World::isAutoSave).toList();
-        autoSaving.forEach(paused -> paused.setAutoSave(false));
         Bukkit.getWorlds().forEach(dimension -> dimension.save(true));
-        Path root = root(world);
-        Runnable resume = () -> {
-            autoSaving.forEach(paused -> paused.setAutoSave(true));
-            saving = false;
-        };
-        Tasks.async(plugin, () -> {
-            publishing.publish(root);
-            return root;
-        }, published -> {
-            resume.run();
-            onSaved.run();
-        }, () -> {
-            resume.run();
-            onFailed.run();
-        });
-        return true;
+        publishing.publish(root(world));
     }
 
     /**

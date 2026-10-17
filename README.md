@@ -165,9 +165,10 @@ first place; no template at all means a plain persistent world.
 Changing a map: join the server, `/build` (`blockcraft.build`) lifts the block protection and the inventory lock
 for you until you leave, edit, place spawns with the plugin's setup command, then `/map save` (`blockcraft.map`).
 That flushes the world and copies it into the template without player data, and every start from then on boots
-with the new state; `/map` shows what the server is running. The copy runs in the background and goes to
-`.staging` inside the template first; only a finished copy replaces the old contents, so a save that fails halfway
-leaves the template as it was. Leftover `.staging` and `.replaced` directories are ignored at boot and by git. Commit the template like any other change and revert
+with the new state; `/map` shows what the server is running. The copy goes to `.staging` inside the template
+first and only a finished copy replaces the old contents, so a save that fails halfway leaves the template as it
+was; the next start or save puts a swap that was cut short back together. `.staging` and `.replaced` are ignored by
+git. Commit the template like any other change and revert
 it like one. Region files go through git-lfs (`.gitattributes`), so `git lfs install` once before committing a map.
 A map edited without `/map save` is gone at the next restart, and so is a `/setspawn` on such a server, which is the
 point. The running server publishes its own copy of `map.yml` too, so edit that file in the template and restart
