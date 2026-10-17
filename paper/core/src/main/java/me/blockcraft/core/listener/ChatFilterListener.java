@@ -4,6 +4,7 @@ import io.papermc.paper.event.player.AsyncChatEvent;
 import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Tasks;
+import me.blockcraft.common.chat.ChatFilter;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.moderation.AdLogRepository;
 import net.kyori.adventure.text.Component;
@@ -30,9 +31,9 @@ public final class ChatFilterListener implements Listener {
     private final AdLogRepository adLog;
     private final Messages messages;
 
-    public ChatFilterListener(Plugin plugin, ChatFilterConfig config, String serverName, AdLogRepository adLog, Messages messages) {
+    public ChatFilterListener(Plugin plugin, ChatFilter filter, String serverName, AdLogRepository adLog, Messages messages) {
         this.plugin = plugin;
-        this.filter = new ChatFilter(config);
+        this.filter = filter;
         this.serverName = serverName;
         this.adLog = adLog;
         this.messages = messages;

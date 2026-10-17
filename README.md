@@ -290,6 +290,9 @@ log in while requests are waiting are told so. When a player with open reports o
 `watch.recent-days` logs in, everyone with `blockcraft.system.team` gets a line that opens `/whois` on click, from
 one query per login. A message the chat filter dropped reaches the staff with `[Goto]`, `[Mute]` and `[Strafe]`
 behind it, which run `/goto` or pre-fill `/tempmute` and `/strafe` for that player.
+`/msg`, `/r` and `/pc` pass the same word and advertisement filter on the proxy, which reads its own copy of
+`chat-filter.yml` (the lists ship in `common`), and allow one line per `private-chat.cooldown-seconds`; a filtered
+private line reaches the staff with `[Goto]` and `[Whois]`, and an advertisement lands in `/werbung` like one in chat.
 
 On the Paper side `/team help` lists every command registered on that server through `CommandRegistry` that the
 player may run, with its `commands.<name>.description`, so there is no hand-written list to go stale. `/invsee`

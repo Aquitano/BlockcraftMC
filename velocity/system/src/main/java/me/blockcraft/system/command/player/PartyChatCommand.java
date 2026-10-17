@@ -4,20 +4,20 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.velocitypowered.api.command.BrigadierCommand;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.system.command.CommandSupport;
-import me.blockcraft.system.moderation.MuteGate;
+import me.blockcraft.system.moderation.PrivateChatGate;
 import me.blockcraft.system.party.PartyManager;
 
 public final class PartyChatCommand {
 
     private final CommandSupport support;
     private final PartyManager parties;
-    private final MuteGate muteGate;
+    private final PrivateChatGate gate;
     private final Messages messages;
 
-    public PartyChatCommand(CommandSupport support, PartyManager parties, MuteGate muteGate, Messages messages) {
+    public PartyChatCommand(CommandSupport support, PartyManager parties, PrivateChatGate gate, Messages messages) {
         this.support = support;
         this.parties = parties;
-        this.muteGate = muteGate;
+        this.gate = gate;
         this.messages = messages;
     }
 
@@ -36,7 +36,7 @@ public final class PartyChatCommand {
                                 player.sendMessage(messages.get("party.not-in-party"));
                                 return;
                             }
-                            if (!muteGate.allows(player)) {
+                            if (!gate.allows(player, message)) {
                                 return;
                             }
                             parties.chat(player, message);

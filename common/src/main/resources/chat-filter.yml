@@ -1,0 +1,63 @@
+# Public chat on every Paper server and private chat on the proxy drop a line that holds a blocked word or looks
+# like an advertisement, and tell the staff. allowed-domain is the network's own address, which never counts.
+allowed-domain: blockcraftmc.net
+blocked-words:
+  - noob
+  - l2p
+  - ficken
+  - hurensohn
+  - missgeburt
+  - bastard
+  - spast
+  - spasti
+  - huren
+  - huso
+advertisement-terms:
+  - ".arpa"
+  - ":25565"
+  - ".to"
+  - ".tk"
+  - ".eu"
+  - ".me"
+  - ".biz"
+  - ".com"
+  - ".info"
+  - ".name"
+  - ".net"
+  - ".org"
+  - ".pro"
+  - ".aero"
+  - ".asia"
+  - ".cat"
+  - ".coop"
+  - ".edu"
+  - ".gov"
+  - ".int"
+  - ".jobs"
+  - ".mil"
+  - ".mobi"
+  - ".museum"
+  - ".post"
+  - ".tel"
+  - ".de"
+  - ".travel"
+  - ".xxx"
+  - joint
+  - ".gs"
+  - kommt alle auf
+  - "(.)"
+  - "(Punkt)"
+  - gommehd
+  - revayd
+  - sevenpvp
+  - lightningpvp
+  - cytooxien
+  - rewinside
+  - ".n e t"
+  - n e t
+  - d e
+  - ",net"
+  - ",de"
+  - ",com"
+  - ",tk"
+  - ", n e t"

@@ -7,71 +7,11 @@ near:
   default-radius: 100
   max-radius: 500
 
+# Blocked words and advertisement terms live in chat-filter.yml, which the proxy's private chat checks too.
 chat:
   cooldown-seconds: 3
   # How often global mute and /chatslow, both switched on the proxy, are re-read from the database.
   network-refresh-seconds: 3
-  allowed-domain: blockcraftmc.net
-  blocked-words:
-    - noob
-    - l2p
-    - ficken
-    - hurensohn
-    - missgeburt
-    - bastard
-    - spast
-    - spasti
-    - huren
-    - huso
-  advertisement-terms:
-    - ".arpa"
-    - ":25565"
-    - ".to"
-    - ".tk"
-    - ".eu"
-    - ".me"
-    - ".biz"
-    - ".com"
-    - ".info"
-    - ".name"
-    - ".net"
-    - ".org"
-    - ".pro"
-    - ".aero"
-    - ".asia"
-    - ".cat"
-    - ".coop"
-    - ".edu"
-    - ".gov"
-    - ".int"
-    - ".jobs"
-    - ".mil"
-    - ".mobi"
-    - ".museum"
-    - ".post"
-    - ".tel"
-    - ".de"
-    - ".travel"
-    - ".xxx"
-    - joint
-    - ".gs"
-    - kommt alle auf
-    - "(.)"
-    - "(Punkt)"
-    - gommehd
-    - revayd
-    - sevenpvp
-    - lightningpvp
-    - cytooxien
-    - rewinside
-    - ".n e t"
-    - n e t
-    - d e
-    - ",net"
-    - ",de"
-    - ",com"
-    - ",tk"
-    - ", n e t"
 
 # What a player can pick in the /report dialog; the choice is stored as the report's reason, free text appended.
 report:

@@ -4,6 +4,7 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
+import me.blockcraft.common.chat.ChatFilter;
 import me.blockcraft.common.db.Database;
 import me.blockcraft.common.db.DatabaseConfig;
 import me.blockcraft.common.ignore.IgnoreRepository;
@@ -19,6 +20,7 @@ import me.blockcraft.system.friends.FriendManager;
 import me.blockcraft.system.friends.FriendRepository;
 import me.blockcraft.system.ignore.IgnoreList;
 import me.blockcraft.system.moderation.MuteGate;
+import me.blockcraft.system.moderation.PrivateChatGate;
 import me.blockcraft.system.network.ServerDirectory;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.junit.After;
@@ -86,7 +88,9 @@ public class SocialCommandsIntegrationTest {
         friends = new FriendManager(proxy.server, lookup, visibility, choices, ignores, directory, null, repository, null, config, messages);
         var support = new CommandSupport(visibility, messages);
         var muteGate = new MuteGate(new PunishmentRepository(db), null, messages, null);
-        var messaging = new MessageCommand(support, proxy.server, visibility, lookup, choices, ignores, new AfkPlayers(), muteGate, messages);
+        var privateChat = new PrivateChatGate(proxy.server, muteGate, new ChatFilter("", List.of(), List.of()), null, null,
+                Duration.ZERO, messages, null);
+        var messaging = new MessageCommand(support, proxy.server, visibility, lookup, choices, ignores, new AfkPlayers(), privateChat, messages);
         commands = new CommandDispatcher<>();
         commands.getRoot().addChild(messaging.msg().getNode());
         commands.getRoot().addChild(messaging.reply().getNode());

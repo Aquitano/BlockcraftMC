@@ -10,6 +10,7 @@ import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
 import me.blockcraft.build.BuildConstants;
+import me.blockcraft.common.chat.ChatFilter;
 import me.blockcraft.common.coins.CoinsRepository;
 import me.blockcraft.common.db.Database;
 import me.blockcraft.common.db.DatabaseException;
@@ -89,6 +90,7 @@ import me.blockcraft.system.listener.TabHeaderListener;
 import me.blockcraft.system.listener.WatchListener;
 import me.blockcraft.system.moderation.ModerationActions;
 import me.blockcraft.system.moderation.MuteGate;
+import me.blockcraft.system.moderation.PrivateChatGate;
 import me.blockcraft.system.moderation.PunishmentService;
 import me.blockcraft.system.report.Reports;
 import me.blockcraft.system.motd.MotdListener;
@@ -264,7 +266,10 @@ public final class SystemPlugin {
 
         register(new HubCommand(support, lobby).create(), "h", "lobby", "l");
         register(new PlayCommand(support, lobby, directory).create());
-        var privateMessages = new MessageCommand(support, proxy, visibility, lookup, choices, ignores, afk, muteGate, messages);
+        var privateChat = new PrivateChatGate(proxy, muteGate, ChatFilter.load(dataDirectory), repositories.adLog(), staffButtons,
+                config.privateChatCooldown(), messages, logger);
+        events.register(this, privateChat);
+        var privateMessages = new MessageCommand(support, proxy, visibility, lookup, choices, ignores, afk, privateChat, messages);
         events.register(this, privateMessages);
         register(privateMessages.msg(), "tell", "w");
         register(privateMessages.reply(), "reply");
@@ -275,7 +280,7 @@ public final class SystemPlugin {
         register(friendCommands.create());
         register(friendCommands.list());
         register(new PartyCommand(support, lookup, parties, messages).create());
-        register(new PartyChatCommand(support, parties, muteGate, messages).create());
+        register(new PartyChatCommand(support, parties, privateChat, messages).create());
         var joinMe = new JoinMeCommand(support, proxy, visibility, config, directory, messages);
         register(joinMe.create());
         register(new SupportCommand(support, proxy, supportSessions, muteGate, messages).create());

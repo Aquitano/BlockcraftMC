@@ -1,4 +1,4 @@
-package me.blockcraft.core.listener;
+package me.blockcraft.common.chat;
 
 import me.blockcraft.common.config.YamlFile;
 import org.junit.Test;
@@ -14,7 +14,7 @@ import static org.junit.Assert.assertTrue;
 
 public class ChatFilterTest {
 
-    private static final ChatFilter FILTER = new ChatFilter(ChatFilterConfig.fromYaml(bundledConfig()));
+    private static final ChatFilter FILTER = ChatFilter.fromYaml(bundledLists());
 
     @Test
     public void everydayChatIsNoAdvertisement() {
@@ -38,8 +38,8 @@ public class ChatFilterTest {
         assertTrue(FILTER.isAdvertisement("join myserver:25565"));
     }
 
-    private static Map<String, Object> bundledConfig() {
-        try (var in = Files.newInputStream(Path.of("src/main/resources/config.yml"))) {
+    private static Map<String, Object> bundledLists() {
+        try (var in = Files.newInputStream(Path.of("src/main/resources/chat-filter.yml"))) {
             return YamlFile.load(in);
         } catch (IOException e) {
             throw new UncheckedIOException(e);

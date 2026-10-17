@@ -117,6 +117,11 @@ friends:
 ignore:
   max: 50
 
+# /msg, /r and party chat: one line per cooldown-seconds, and public chat's word and advertisement filter from
+# chat-filter.yml next to this file.
+private-chat:
+  cooldown-seconds: 2
+
 # Commands that only print their info.<name> lines from messages.yml. The list replaces the default as a whole.
 info-commands:
   - {name: regeln}

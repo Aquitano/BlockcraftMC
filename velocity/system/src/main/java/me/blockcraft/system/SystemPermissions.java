@@ -52,6 +52,12 @@ public final class SystemPermissions {
     public static final String SEE_VANISHED = "blockcraft.core.vanish.see";
     public static final String SEE_NICKS = "blockcraft.nick.see";
 
+    /** Public chat's nodes on the Paper side; private chat on the proxy honours the same ones. */
+    public static final String CHAT_SPAM_BYPASS = "blockcraft.core.chat.spam.bypass";
+    public static final String CHAT_WORDS_BYPASS = "blockcraft.core.chatfilter.bypass.words";
+    public static final String CHAT_ADS_BYPASS = "blockcraft.core.chatfilter.bypass.ads";
+    public static final String CHAT_FILTER_NOTIFY = "blockcraft.core.chatfilter.notify";
+
     public static final String SEEN = ROOT + "seen";
     public static final String PLAYTIME = ROOT + "playtime";
     public static final String PLAYTIME_OTHERS = PLAYTIME + ".others";

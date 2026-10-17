@@ -15,7 +15,7 @@ import me.blockcraft.system.PlayerVisibility;
 import me.blockcraft.system.SystemPermissions;
 import me.blockcraft.system.command.CommandSupport;
 import me.blockcraft.system.ignore.IgnoreList;
-import me.blockcraft.system.moderation.MuteGate;
+import me.blockcraft.system.moderation.PrivateChatGate;
 import me.blockcraft.system.rank.ProxyRanks;
 import me.blockcraft.common.sound.FeedbackSound;
 import me.blockcraft.system.pack.NetworkPack;
@@ -38,12 +38,12 @@ public final class MessageCommand {
     private final PlayerChoices choices;
     private final IgnoreList ignores;
     private final AfkPlayers afk;
-    private final MuteGate muteGate;
+    private final PrivateChatGate gate;
     private final Messages messages;
     private final Map<UUID, UUID> lastPartner = new ConcurrentHashMap<>();
 
     public MessageCommand(CommandSupport support, ProxyServer proxy, PlayerVisibility visibility, PlayerLookup lookup,
-                          PlayerChoices choices, IgnoreList ignores, AfkPlayers afk, MuteGate muteGate, Messages messages) {
+                          PlayerChoices choices, IgnoreList ignores, AfkPlayers afk, PrivateChatGate gate, Messages messages) {
         this.support = support;
         this.proxy = proxy;
         this.visibility = visibility;
@@ -51,7 +51,7 @@ public final class MessageCommand {
         this.choices = choices;
         this.ignores = ignores;
         this.afk = afk;
-        this.muteGate = muteGate;
+        this.gate = gate;
         this.messages = messages;
     }
 
@@ -98,7 +98,7 @@ public final class MessageCommand {
             sender.sendMessage(messages.get("msg.disabled", Placeholder.unparsed("player", visibility.shownName(target))));
             return;
         }
-        if (!muteGate.allows(sender)) {
+        if (!gate.allows(sender, text)) {
             return;
         }
         var resolvers = TagResolver.resolver(
