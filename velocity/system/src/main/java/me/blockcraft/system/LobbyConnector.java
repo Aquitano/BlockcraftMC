@@ -34,9 +34,9 @@ public final class LobbyConnector {
         return directory.balance(config.lobbyGroup());
     }
 
-    /** The crashed lobby can still be in the directory until its heartbeat goes stale, so it is excluded by name. */
-    public Optional<RegisteredServer> lobbyExcept(RegisteredServer server) {
-        return directory.balance(config.lobbyGroup(), Set.of(server.getServerInfo().getName()));
+    /** A lobby that crashed or refused stays in the directory until its heartbeat goes stale, so it is excluded by name. */
+    public Optional<RegisteredServer> lobbyExcept(Set<String> servers) {
+        return directory.balance(config.lobbyGroup(), servers);
     }
 
     public boolean isLobby(RegisteredServer server) {
