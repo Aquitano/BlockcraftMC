@@ -3,9 +3,13 @@ package me.blockcraft.lobby.listener;
 import me.blockcraft.api.world.BuildMode;
 import org.bukkit.Material;
 import org.bukkit.Tag;
+import org.bukkit.damage.DamageSource;
+import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Blaze;
 import org.bukkit.entity.Chicken;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.Hanging;
+import org.bukkit.entity.ItemFrame;
 import org.bukkit.entity.Pig;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Rabbit;
@@ -24,8 +28,12 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
+import org.bukkit.event.hanging.HangingBreakByEntityEvent;
+import org.bukkit.event.hanging.HangingBreakEvent;
+import org.bukkit.event.player.PlayerArmorStandManipulateEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.weather.WeatherChangeEvent;
 
@@ -124,9 +132,30 @@ public final class ProtectionListener implements Listener {
         Entity victim = event.getEntity();
         boolean protectedAnimal = victim instanceof Player || victim instanceof Blaze || victim instanceof Rabbit
                 || victim instanceof Wolf || victim instanceof Chicken || victim instanceof Pig;
-        if (protectedAnimal || (victim instanceof Villager && event.getDamager() instanceof Player)) {
+        boolean decoration = victim instanceof Hanging || victim instanceof ArmorStand;
+        if (protectedAnimal || (victim instanceof Villager && event.getDamager() instanceof Player)
+                || (decoration && !byBuilder(event.getDamageSource()))) {
             event.setCancelled(true);
         }
+    }
+
+    @EventHandler
+    public void onHangingBreak(HangingBreakEvent event) {
+        boolean byBuilder = event instanceof HangingBreakByEntityEvent byEntity
+                && byEntity.getRemover() instanceof Player player && buildMode.isEnabled(player);
+        event.setCancelled(!byBuilder);
+    }
+
+    @EventHandler
+    public void onEntityInteract(PlayerInteractEntityEvent event) {
+        if (event.getRightClicked() instanceof ItemFrame && !buildMode.isEnabled(event.getPlayer())) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onArmorStandManipulate(PlayerArmorStandManipulateEvent event) {
+        event.setCancelled(!buildMode.isEnabled(event.getPlayer()));
     }
 
     @EventHandler
@@ -135,9 +164,13 @@ public final class ProtectionListener implements Listener {
             return;
         }
         Material type = event.getClickedBlock().getType();
-        if (LOCKED_BLOCKS.contains(type) || Tag.WOODEN_TRAPDOORS.isTagged(type)
+        if (LOCKED_BLOCKS.contains(type) || Tag.FLOWER_POTS.isTagged(type) || Tag.WOODEN_TRAPDOORS.isTagged(type)
                 || Tag.WOODEN_BUTTONS.isTagged(type) || Tag.WOODEN_DOORS.isTagged(type)) {
             event.setCancelled(true);
         }
+    }
+
+    private boolean byBuilder(DamageSource source) {
+        return source.getCausingEntity() instanceof Player player && buildMode.isEnabled(player);
     }
 }
