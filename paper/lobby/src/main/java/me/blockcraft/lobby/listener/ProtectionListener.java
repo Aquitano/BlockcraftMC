@@ -50,7 +50,7 @@ public final class ProtectionListener implements Listener {
     private static final Set<Material> LOCKED_BLOCKS = Set.of(
             Material.ANVIL, Material.CHIPPED_ANVIL, Material.DAMAGED_ANVIL,
             Material.CRAFTING_TABLE, Material.FURNACE, Material.LEVER, Material.CHEST,
-            Material.CHISELED_BOOKSHELF, Material.DECORATED_POT, Material.JUKEBOX);
+            Material.CHISELED_BOOKSHELF, Material.DECORATED_POT, Material.JUKEBOX, Material.NOTE_BLOCK);
     private static final Set<CreatureSpawnEvent.SpawnReason> MANUAL_SPAWNS = Set.of(
             CreatureSpawnEvent.SpawnReason.CUSTOM, CreatureSpawnEvent.SpawnReason.COMMAND,
             CreatureSpawnEvent.SpawnReason.SPAWNER_EGG);
@@ -164,8 +164,8 @@ public final class ProtectionListener implements Listener {
             return;
         }
         Material type = event.getClickedBlock().getType();
-        if (LOCKED_BLOCKS.contains(type) || Tag.FLOWER_POTS.isTagged(type) || Tag.WOODEN_TRAPDOORS.isTagged(type)
-                || Tag.WOODEN_BUTTONS.isTagged(type) || Tag.WOODEN_DOORS.isTagged(type)) {
+        if (LOCKED_BLOCKS.contains(type) || Tag.FLOWER_POTS.isTagged(type) || Tag.FENCE_GATES.isTagged(type)
+                || Tag.TRAPDOORS.isTagged(type) || Tag.DOORS.isTagged(type) || Tag.WOODEN_BUTTONS.isTagged(type)) {
             event.setCancelled(true);
         }
     }
