@@ -1,0 +1,57 @@
+signs:
+  '1':
+    group: duell
+    loc:
+      world: world
+      x: -931
+      y: 33
+      z: 1560
+  '2':
+    group: duell
+    loc:
+      world: world
+      x: -931
+      y: 33
+      z: 1559
+  '3':
+    group: duell
+    loc:
+      world: world
+      x: -931
+      y: 33
+      z: 1558
+  '7':
+    group: emeraldrush
+    loc:
+      world: world
+      x: -884
+      y: 31
+      z: 1612
+  '8':
+    group: emeraldrush
+    loc:
+      world: world
+      x: -884
+      y: 31
+      z: 1614
+  '9':
+    group: quicksg
+    loc:
+      world: world
+      x: -946
+      y: 28
+      z: 1687
+  '10':
+    group: quicksg
+    loc:
+      world: world
+      x: -948
+      y: 28
+      z: 1687
+  '11':
+    group: quicksg
+    loc:
+      world: world
+      x: -950
+      y: 28
+      z: 1687

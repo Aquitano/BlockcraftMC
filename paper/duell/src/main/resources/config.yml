@@ -10,9 +10,9 @@ rewards:
 vs:
   kills-to-end: 3
 maps:
-  vs: [Gefängnis, Western, Mondbasis, Mondbasis]
-  sg: [Gefängnis, Hafen, Höhle]
-  superjump: [Bahnhof, FrozenRiver, Hölle, Cave, Bergwerk]
+  vs: [Gefängnis, Hypixel-DM, DustMC-DM, Tippy]
+  sg: [Bucht, Gefängnis, Bergwerk]
+  superjump: [FrozenRiver, Dimensions, FrostValley, Trains, Dungeons]
 sg-chest:
   min-items: 1
   max-items: 6

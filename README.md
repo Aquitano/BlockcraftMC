@@ -181,6 +181,8 @@ and set the spawns again, since the plugin files used to live in `plugins/<Plugi
 name. On a server that already runs this layout without a template, those files move into the world's
 `blockcraft/` directory on the first start by themselves.
 
+The [Vanade map import](worlds/README.md) records the imported worlds, converted configuration, and remaining in-game checks.
+
 ## BedWars
 
 `paper/bedwars` is a port of [rewi-bw](https://github.com/Marfien/rewi-bw), the Rewinside BedWars clone, under its
