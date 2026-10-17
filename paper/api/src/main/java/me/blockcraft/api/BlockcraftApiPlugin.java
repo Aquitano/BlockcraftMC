@@ -169,10 +169,17 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         groups.start(number(groupStatus, "refresh-ticks", 50));
     }
 
-    /** The profile card's games: menu key to legacy stats table, as configured. */
+    /**
+     * The profile card's games: menu key to legacy stats table, as configured. The table of a game the network does
+     * not run yet is created here, so it reads as zeroes instead of failing the whole card.
+     */
     private Map<String, StatsRepository> profileGames(Map<String, Object> section) {
         var games = new LinkedHashMap<String, StatsRepository>();
-        section.forEach((key, table) -> games.put(key, new StatsRepository(database, String.valueOf(table))));
+        section.forEach((key, table) -> {
+            var repository = new StatsRepository(database, String.valueOf(table));
+            repository.createTable();
+            games.put(key, repository);
+        });
         return games;
     }
 

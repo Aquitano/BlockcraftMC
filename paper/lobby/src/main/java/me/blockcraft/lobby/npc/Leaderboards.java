@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 
 /**
  * The top ten of a stats table as the lines of a hologram, read from the database on a timer. A board that cannot
- * be read keeps the places it last showed.
+ * be read keeps the places it last showed; the table of a game that never ran is created empty.
  */
 public final class Leaderboards {
 
@@ -42,6 +42,7 @@ public final class Leaderboards {
         this.boards = boards;
         this.tables = boards.values().stream().map(Leaderboard::table).distinct()
                 .collect(Collectors.toUnmodifiableMap(table -> table, table -> new StatsRepository(database, table)));
+        tables.values().forEach(StatsRepository::createTable);
     }
 
     public Set<String> names() {
