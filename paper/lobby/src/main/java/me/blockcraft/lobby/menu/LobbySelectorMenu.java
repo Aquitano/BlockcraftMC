@@ -122,7 +122,7 @@ final class LobbySelectorMenu extends Menu {
             close(player);
             BlockcraftApi.get().notifications().feedback(player,
                     menus.messages().get("lobbies.connecting", Placeholder.unparsed("server", lobby.name())));
-            ProxyMessaging.connect(menus.plugin(), player, lobby.name());
+            ProxyMessaging.runOnProxy(menus.plugin(), player, "serverjoin " + lobby.name());
         }
     }
 }
