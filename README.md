@@ -346,7 +346,9 @@ A player who leaves while frozen and is not back within `freeze.quit-grace-secon
 `freeze.quit-punishment` in the name of whoever froze them; 0, the default, only tells the team.
 
 `/report <player>` opens a reason dialog on the backend. Staff can claim reports, edit their status and choose
-catalogue or custom timed punishments. Claims identify the staff account even while it is nicked.
+catalogue or custom timed punishments. Claims identify the staff account even while it is nicked. "Erledigt"
+closes a report instead of deleting it: the row keeps who closed it and when, leaves the lists and the open counts,
+and lets the same player report that account again.
 
 `/party promote <player>` transfers leadership to a member. On disconnect, leadership passes to the first remaining
 member in join order. Pending invitations follow the new leader and expire when the party disbands.

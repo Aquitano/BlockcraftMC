@@ -21,7 +21,7 @@ final class ReportMenu extends Menu {
     private static final int SET_STATUS = 31;
     private static final int PUNISH = 40;
     private static final int BACK = 45;
-    private static final int DELETE = 49;
+    private static final int RESOLVE = 49;
     private static final int CLOSE = 53;
 
     private final ReportMenus menus;
@@ -49,7 +49,7 @@ final class ReportMenu extends Menu {
         set(CLAIM, claim(messages, report, staffId, staff, placeholders));
         set(SET_STATUS, item(Material.NAME_TAG, "menu.set-status", messages, placeholders));
         set(PUNISH, item(Material.IRON_AXE, "menu.punish", messages, placeholders));
-        set(DELETE, item(Material.REDSTONE_BLOCK, "menu.delete", messages, placeholders));
+        set(RESOLVE, item(Material.EMERALD_BLOCK, "menu.resolve", messages, placeholders));
         backButton(BACK, viewer -> menus.openList(viewer, reported, 1));
         closeButton(CLOSE);
     }
@@ -77,7 +77,7 @@ final class ReportMenu extends Menu {
             case CLAIM -> menus.toggleClaim(player, report, reported);
             case SET_STATUS -> menus.promptStatus(player, report, reported);
             case PUNISH -> menus.openPunish(player, report, reported);
-            case DELETE -> menus.delete(player, report, reported);
+            case RESOLVE -> menus.resolve(player, report, reported);
             default -> {
             }
         }

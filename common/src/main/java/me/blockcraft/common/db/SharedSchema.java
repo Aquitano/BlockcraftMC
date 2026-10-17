@@ -228,6 +228,15 @@ final class SharedSchema {
         new Migration(18, List.of(
             "DELETE nicked FROM bc_nicks nicked JOIN bc_players owner ON owner.name = nicked.nick "
                 + "AND owner.uuid <> nicked.player_uuid"
+        )),
+        new Migration(19, List.of(
+            "ALTER TABLE Reports ADD COLUMN IF NOT EXISTS closed_at DATETIME NULL",
+            "ALTER TABLE Reports ADD COLUMN IF NOT EXISTS closed_by VARCHAR(100) NULL",
+            "ALTER TABLE Reports ADD COLUMN IF NOT EXISTS closed_uuid CHAR(36) NULL",
+            "ALTER TABLE Reports ADD COLUMN IF NOT EXISTS open_pair TINYINT AS (IF(closed_at IS NULL, 1, NULL)) PERSISTENT",
+            "DROP INDEX IF EXISTS uq_reports_accounts ON Reports",
+            "CREATE UNIQUE INDEX IF NOT EXISTS uq_reports_open ON Reports (reporter_uuid, reported_uuid, open_pair)",
+            "CREATE INDEX IF NOT EXISTS idx_reports_reported ON Reports (reported_uuid)"
         ))
     );
 

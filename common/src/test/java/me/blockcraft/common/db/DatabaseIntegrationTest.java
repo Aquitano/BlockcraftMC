@@ -288,6 +288,23 @@ public class DatabaseIntegrationTest {
     }
 
     @Test
+    public void aClosedReportLeavesTheCountsAndAllowsOneNewReport() {
+        db.migrate();
+        var reports = new ReportRepository(db);
+        var reporter = PlayerReference.known(UUID.randomUUID(), "Reporter");
+        var target = PlayerReference.known(UUID.randomUUID(), "Target");
+        assertTrue(reports.insert(reporter, target, "Reason", "lobby"));
+
+        reports.close(reports.all().getFirst().id(), UUID.randomUUID(), "Staff");
+
+        assertEquals(0, reports.count());
+        assertEquals(0, reports.countByReported(target.uuid().orElseThrow(), "Target"));
+        assertTrue(reports.insert(reporter, target, "Again", "lobby"));
+        assertFalse(reports.insert(reporter, target, "Twice", "lobby"));
+        assertEquals(2, count("SELECT COUNT(*) FROM Reports"));
+    }
+
+    @Test
     public void aServerRowWithAnUnknownStateIsSkippedAndNamed() {
         db.migrate();
         var servers = new ServerRepository(db);

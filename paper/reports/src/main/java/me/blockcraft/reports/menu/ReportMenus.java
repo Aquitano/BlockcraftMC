@@ -102,14 +102,15 @@ public final class ReportMenus {
         return report.claimedBy().isPresent() ? "claim.held" : "claim.released";
     }
 
-    public void delete(Player player, Report report, Optional<String> reported) {
+    public void resolve(Player player, Report report, Optional<String> reported) {
         if (!allowed(player)) {
             return;
         }
+        String staff = BlockcraftApi.get().realName(player);
         BlockcraftApi.get().playerTasks().write(player, () -> {
-            reports.delete(report.id());
+            reports.close(report.id(), player.getUniqueId(), staff);
             return report;
-        }, deleted -> openList(player, reported, 1));
+        }, closed -> openList(player, reported, 1));
     }
 
     public void goTo(Player player, String target) {

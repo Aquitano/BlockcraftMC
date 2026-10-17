@@ -33,12 +33,13 @@ public final class ReportRepository {
         this.db = db;
     }
 
+    /** The open reports; a closed one stays in the table as a record but leaves every list and count. */
     public List<Report> all() {
-        return db.queryList("SELECT " + COLUMNS + " FROM Reports" + ORDER, REPORT);
+        return db.queryList("SELECT " + COLUMNS + " FROM Reports WHERE closed_at IS NULL" + ORDER, REPORT);
     }
 
     public List<Report> byReported(String name) {
-        return db.queryList("SELECT " + COLUMNS + " FROM Reports WHERE Reportedname = ?" + ORDER, REPORT, name);
+        return db.queryList("SELECT " + COLUMNS + " FROM Reports WHERE closed_at IS NULL AND Reportedname = ?" + ORDER, REPORT, name);
     }
 
     public Optional<Report> byId(int id) {
@@ -46,21 +47,25 @@ public final class ReportRepository {
     }
 
     public int count() {
-        return db.queryOne("SELECT COUNT(*) FROM Reports", row -> row.getInt(1)).orElse(0);
+        return db.queryOne("SELECT COUNT(*) FROM Reports WHERE closed_at IS NULL", row -> row.getInt(1)).orElse(0);
     }
 
     /** Rows written before UUID storage still count when they carry the player's current name. */
     public int countByReported(UUID reported, String name) {
-        return db.queryOne("SELECT COUNT(*) FROM Reports WHERE reported_uuid = ? OR (reported_uuid IS NULL AND Reportedname = ?)",
+        return db.queryOne("SELECT COUNT(*) FROM Reports WHERE closed_at IS NULL "
+                        + "AND (reported_uuid = ? OR (reported_uuid IS NULL AND Reportedname = ?))",
                 row -> row.getInt(1), reported.toString(), name).orElse(0);
     }
 
-    /** UUID uniqueness prevents concurrent submissions; names also match reports written before UUID storage. */
+    /**
+     * One open report per reporter and reported player: a unique index over the open ones prevents concurrent
+     * submissions, and names also match reports written before UUID storage. A closed report allows a new one.
+     */
     public boolean insert(PlayerReference reporter, PlayerReference reported, String reason, String server) {
         try {
             return db.update("INSERT INTO Reports (Reportername, Reportedname, reporter_uuid, reported_uuid, Grund, Server, Status) "
                         + "SELECT ?, ?, ?, ?, ?, ?, 'Offen' WHERE NOT EXISTS (SELECT 1 FROM Reports "
-                        + "WHERE Reportername = ? AND Reportedname = ? AND (reporter_uuid IS NULL OR reported_uuid IS NULL))",
+                        + "WHERE closed_at IS NULL AND Reportername = ? AND Reportedname = ? AND (reporter_uuid IS NULL OR reported_uuid IS NULL))",
                 reporter.name(), reported.name(), reporter.uuid().orElseThrow().toString(), reported.uuid().orElseThrow().toString(),
                 reason, server, reporter.name(), reported.name()) > 0;
         } catch (DatabaseException e) {
@@ -83,7 +88,8 @@ public final class ReportRepository {
                 + "(claimed_uuid = ? OR (claimed_uuid IS NULL AND claimed_by = ?))", id, staffId.toString(), staff);
     }
 
-    public void delete(int id) {
-        db.update("DELETE FROM Reports WHERE ID = ?", id);
+    public void close(int id, UUID staffId, String staff) {
+        db.update("UPDATE Reports SET closed_at = CURRENT_TIMESTAMP, closed_by = ?, closed_uuid = ? WHERE ID = ? AND closed_at IS NULL",
+                staff, staffId.toString(), id);
     }
 }
