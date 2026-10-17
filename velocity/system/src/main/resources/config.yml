@@ -144,6 +144,14 @@ blocked-commands:
   - "bukkit:help"
   - "bukkit:me"
   - version
+  - ver
+  - about
+  - icanhasbukkit
+  - "bukkit:version"
+  - "bukkit:ver"
+  - "bukkit:about"
+  - "bukkit:icanhasbukkit"
+  - velocity
   - "minecraft:me"
 
 # /strafe catalogue. duration: <n>s|m|h|d|w|mon|y or permanent.
