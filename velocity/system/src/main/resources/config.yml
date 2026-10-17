@@ -37,7 +37,8 @@ server-health:
 
 # Discord webhook that is told when no lobby is joinable any more and when one is back; empty disables it. It also
 # hears when a server's milliseconds per tick stay above lag-mspt for lag-polls discovery polls in a row, and when
-# they drop back. Each kind of alert waits min-interval-seconds after its last one.
+# they drop back. Each kind of alert waits min-interval-seconds after its last one. BLOCKCRAFT_ALERTS_WEBHOOK_URL
+# overrides webhook-url when set.
 alerts:
   webhook-url: ""
   min-interval-seconds: 300

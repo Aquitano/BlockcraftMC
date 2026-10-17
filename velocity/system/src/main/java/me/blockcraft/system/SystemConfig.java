@@ -113,8 +113,8 @@ public final class SystemConfig {
         this.discovery = new Discovery(number(discovery, "poll-seconds", 5), number(discovery, "stale-seconds", 20),
                 number(discovery, "seat-seconds", 15));
         var alerts = YamlFile.section(root, "alerts");
-        this.alerts = new Alerts(string(alerts, "webhook-url"), number(alerts, "min-interval-seconds", 300),
-                number(alerts, "lag-mspt", 50), number(alerts, "lag-polls", 6));
+        this.alerts = new Alerts(env("BLOCKCRAFT_ALERTS_WEBHOOK_URL", string(alerts, "webhook-url")),
+                number(alerts, "min-interval-seconds", 300), number(alerts, "lag-mspt", 50), number(alerts, "lag-polls", 6));
         var serverHealth = YamlFile.section(root, "server-health");
         this.serverHealth = new ServerHealth(number(serverHealth, "tps-warn", 19), number(serverHealth, "tps-critical", 15),
                 number(serverHealth, "mspt-warn", 40), number(serverHealth, "mspt-critical", 50));
@@ -361,6 +361,12 @@ public final class SystemConfig {
 
     private static String string(Map<String, Object> section, String key) {
         return String.valueOf(section.getOrDefault(key, ""));
+    }
+
+    /** Production sets these instead of editing the copied config.yml; blank counts as unset, as for the database. */
+    private static String env(String variable, String fallback) {
+        String value = System.getenv(variable);
+        return value == null || value.isBlank() ? fallback : value;
     }
 
     private static int number(Map<String, Object> section, String key, int fallback) {
