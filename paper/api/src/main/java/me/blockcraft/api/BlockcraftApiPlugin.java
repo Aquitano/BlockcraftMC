@@ -104,8 +104,12 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         var xp = new Xp(this, xpRepository, new Levels(number(YamlFile.section(config, "xp"), "level-step", 100)),
                 xpRewards(YamlFile.section(YamlFile.section(config, "xp"), "rewards")), notifications);
         var map = MapBundle.load(getServer().getWorlds().getFirst(), WorldTemplate.configured(config));
-        // The locator bar would take the level bar's place and point at hidden or hunted players.
-        getServer().getWorlds().forEach(world -> world.setGameRule(GameRules.LOCATOR_BAR, false));
+        // The locator bar would take the level bar's place and point at hidden or hunted players. No server lets mobs
+        // spawn by themselves (the games' ArenaProtection, the lobby's ProtectionListener), so none spends ticks trying.
+        getServer().getWorlds().forEach(world -> {
+            world.setGameRule(GameRules.LOCATOR_BAR, false);
+            world.setGameRule(GameRules.SPAWN_MOBS, false);
+        });
         var buildMode = new BuildMode();
         var resourcePack = new ResourcePacks(messages);
         var eloSection = YamlFile.section(config, "elo");

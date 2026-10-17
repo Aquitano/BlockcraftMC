@@ -56,6 +56,7 @@ import me.blockcraft.lobby.rank.PremiumRank;
 import me.blockcraft.lobby.recap.RoundRecapListener;
 import me.blockcraft.lobby.storage.LegacyUnlocks;
 import net.luckperms.api.LuckPermsProvider;
+import org.bukkit.GameRules;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -137,6 +138,8 @@ public final class LobbyPlugin extends JavaPlugin {
                 new GadgetListener(gadgets, parkour),
                 new InventoryLockListener(api.buildMode()),
                 new DeathListener(locations, items, hider));
+        // The map is restored at every start, so nothing in it has to grow, spread or melt in between.
+        getServer().getWorlds().forEach(world -> world.setGameRule(GameRules.RANDOM_TICK_SPEED, 0));
         api.presence().maxPlayers(config.maxPlayers());
 
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {

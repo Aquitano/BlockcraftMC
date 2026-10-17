@@ -18,6 +18,7 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.LeavesDecayEvent;
+import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
@@ -41,6 +42,9 @@ public final class ProtectionListener implements Listener {
     private static final Set<Material> LOCKED_BLOCKS = Set.of(
             Material.ANVIL, Material.CHIPPED_ANVIL, Material.DAMAGED_ANVIL,
             Material.CRAFTING_TABLE, Material.FURNACE, Material.LEVER, Material.CHEST);
+    private static final Set<CreatureSpawnEvent.SpawnReason> MANUAL_SPAWNS = Set.of(
+            CreatureSpawnEvent.SpawnReason.CUSTOM, CreatureSpawnEvent.SpawnReason.COMMAND,
+            CreatureSpawnEvent.SpawnReason.SPAWNER_EGG);
 
     private final BuildMode buildMode;
 
@@ -78,6 +82,11 @@ public final class ProtectionListener implements Listener {
         if (event.getEntity() instanceof Player) {
             event.setCancelled(true);
         }
+    }
+
+    @EventHandler
+    public void onCreatureSpawn(CreatureSpawnEvent event) {
+        event.setCancelled(!MANUAL_SPAWNS.contains(event.getSpawnReason()));
     }
 
     @EventHandler
