@@ -59,20 +59,20 @@ signs:
     group: bedwars
     loc:
       world: world
-      x: -900
-      y: 32
-      z: 1581
+      x: -889
+      y: 31
+      z: 1578
   '13':
     group: bedwars
     loc:
       world: world
-      x: -899
-      y: 32
-      z: 1581
+      x: -889
+      y: 31
+      z: 1579
   '14':
     group: bedwars
     loc:
       world: world
-      x: -898
-      y: 32
-      z: 1581
+      x: -889
+      y: 31
+      z: 1580
