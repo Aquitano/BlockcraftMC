@@ -146,19 +146,21 @@ and the conversion of old flower-pot and note-block records. A separate JVM chec
 all 54 locations and eight signs through the current plugin classes with a stub Bukkit world.
 The initial Paper checks loaded no Blockcraft plugins. A subsequent local Docker preview loaded the
 actual plugin stack on pinned Paper build 134, registered all five backend groups, and loaded all eight
-status signs. Client appearance and multiplayer gameplay still need the in-game review below.
+status signs. Multiplayer gameplay still needs the checks below.
 
 Player records, statistics, session locks, legacy `uid.dat` files, old level backups, the Nether,
 and the End are excluded. Newly generated Paper world UUID metadata remains in the templates.
 Plugin jars, logs, permissions, customer records, and database credentials
 from the backup are excluded. The original backup is unchanged.
 
-## In-game review
+## Accepted layout and gameplay checks
 
-The maps still need a Minecraft client review before deployment:
+The imported layouts and the final lobby board placement have been accepted on the local preview.
+The pond and Easter hiding places remain unset. Acceptance of the layout does not replace the multiplayer
+round checks below.
 
-- Check the lobby warps, signs, shop NPC, and the jump landing. The saved jump location has
-  air immediately below it, so its intended landing needs a visual check.
+- Check the lobby warps, signs, shop NPC, and the jump landing. The saved jump point at Y=7.5 stands
+  on bottom stone-brick slabs at Y=7. Its headroom is clear.
 - Confirm that the shop has one villager and one current name card after startup and a
   periodic NPC respawn.
 - Inspect the gold-block BedWars navigator arrival. Configure the pond and Easter hiding places.
