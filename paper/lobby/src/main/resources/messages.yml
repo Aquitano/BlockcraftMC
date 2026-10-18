@@ -1,6 +1,8 @@
 prefix: "<primary><ip> <dark>» <reset>"
 
 commands:
+  teamboard:
+    description: "Prüft und aktualisiert die Teamwand aus der Teamliste der Map"
   lobbyset:
     description: "Setzt Teich, Parcours und saisonale Fundorte"
   setspawn:
@@ -9,6 +11,15 @@ commands:
     description: "Erstellt Hologramme"
   cc:
     description: "Leert den Chat"
+
+teamboard:
+  ready: "<prefix><success>Teamwand geprüft: <members> Mitglieder, <slots> Plätze."
+  applied: "<prefix><success>Teamwand aktualisiert: <members> Mitglieder. Mit /map save übernehmen."
+  invalid: "<prefix><error>Teamwand unverändert. Ungültig oder fehlt: <fields>"
+  sign:
+    title: ["<dark>-*-", "<primary><ip>", "<accent>Team", "<dark>-*-"]
+    member: ["<dark>-*-", "<primary><role>", "<accent><name>", "<dark>-*-"]
+    empty: ["<dark>-*-", "<muted>Freier Platz", "", "<dark>-*-"]
 
 join:
   title: "<ip>"

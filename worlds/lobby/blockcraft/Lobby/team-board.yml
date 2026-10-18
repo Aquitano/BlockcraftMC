@@ -1,0 +1,186 @@
+title:
+  ==: org.bukkit.Location
+  world: world
+  x: -974.0
+  y: 27.0
+  z: 1650.0
+empty-skin: MHF_Question
+slots:
+  slot-1:
+    head:
+      ==: org.bukkit.Location
+      world: world
+      x: -980.0
+      y: 27.0
+      z: 1643.0
+    sign:
+      ==: org.bukkit.Location
+      world: world
+      x: -980.0
+      y: 26.0
+      z: 1644.0
+  slot-2:
+    head:
+      ==: org.bukkit.Location
+      world: world
+      x: -979.0
+      y: 27.0
+      z: 1643.0
+    sign:
+      ==: org.bukkit.Location
+      world: world
+      x: -979.0
+      y: 26.0
+      z: 1644.0
+  slot-3:
+    head:
+      ==: org.bukkit.Location
+      world: world
+      x: -978.0
+      y: 27.0
+      z: 1643.0
+    sign:
+      ==: org.bukkit.Location
+      world: world
+      x: -978.0
+      y: 26.0
+      z: 1644.0
+  slot-4:
+    head:
+      ==: org.bukkit.Location
+      world: world
+      x: -977.0
+      y: 27.0
+      z: 1643.0
+    sign:
+      ==: org.bukkit.Location
+      world: world
+      x: -977.0
+      y: 26.0
+      z: 1644.0
+  slot-5:
+    head:
+      ==: org.bukkit.Location
+      world: world
+      x: -984.0
+      y: 27.0
+      z: 1648.0
+    sign:
+      ==: org.bukkit.Location
+      world: world
+      x: -983.0
+      y: 26.0
+      z: 1648.0
+  slot-6:
+    head:
+      ==: org.bukkit.Location
+      world: world
+      x: -984.0
+      y: 27.0
+      z: 1649.0
+    sign:
+      ==: org.bukkit.Location
+      world: world
+      x: -983.0
+      y: 26.0
+      z: 1649.0
+  slot-7:
+    head:
+      ==: org.bukkit.Location
+      world: world
+      x: -984.0
+      y: 27.0
+      z: 1651.0
+    sign:
+      ==: org.bukkit.Location
+      world: world
+      x: -983.0
+      y: 26.0
+      z: 1651.0
+  slot-8:
+    head:
+      ==: org.bukkit.Location
+      world: world
+      x: -984.0
+      y: 27.0
+      z: 1652.0
+    sign:
+      ==: org.bukkit.Location
+      world: world
+      x: -983.0
+      y: 26.0
+      z: 1652.0
+  slot-9:
+    head:
+      ==: org.bukkit.Location
+      world: world
+      x: -981.0
+      y: 27.0
+      z: 1656.0
+    sign:
+      ==: org.bukkit.Location
+      world: world
+      x: -981.0
+      y: 26.0
+      z: 1655.0
+  slot-10:
+    head:
+      ==: org.bukkit.Location
+      world: world
+      x: -980.0
+      y: 27.0
+      z: 1656.0
+    sign:
+      ==: org.bukkit.Location
+      world: world
+      x: -980.0
+      y: 26.0
+      z: 1655.0
+  slot-11:
+    head:
+      ==: org.bukkit.Location
+      world: world
+      x: -976.0
+      y: 27.0
+      z: 1657.0
+    sign:
+      ==: org.bukkit.Location
+      world: world
+      x: -976.0
+      y: 26.0
+      z: 1656.0
+  slot-12:
+    head:
+      ==: org.bukkit.Location
+      world: world
+      x: -975.0
+      y: 27.0
+      z: 1657.0
+    sign:
+      ==: org.bukkit.Location
+      world: world
+      x: -975.0
+      y: 26.0
+      z: 1656.0
+members:
+  slot-1:
+    name: CuzImVanZ
+    role: ASK
+  slot-2:
+    name: VOKT
+    role: ASK
+  slot-5:
+    name: Muffin2Go
+    role: MOD
+  slot-6:
+    name: Ryloo
+    role: MOD
+  slot-8:
+    name: Thejuse
+    role: DEV
+  slot-10:
+    name: Resax
+    role: BUILDER
+  slot-12:
+    name: CoredTV
+    role: ADMIN

@@ -16,6 +16,7 @@ import me.blockcraft.lobby.command.ClearChatCommand;
 import me.blockcraft.lobby.command.LobbySetCommand;
 import me.blockcraft.lobby.command.SetHoloCommand;
 import me.blockcraft.lobby.command.SetSpawnCommand;
+import me.blockcraft.lobby.command.TeamBoardCommand;
 import me.blockcraft.lobby.config.ActivitiesConfig;
 import me.blockcraft.lobby.config.LobbyConfig;
 import me.blockcraft.lobby.config.LobbyLocation;
@@ -55,6 +56,7 @@ import me.blockcraft.lobby.npc.ShopNpc;
 import me.blockcraft.lobby.rank.PremiumRank;
 import me.blockcraft.lobby.recap.RoundRecapListener;
 import me.blockcraft.lobby.storage.LegacyUnlocks;
+import me.blockcraft.lobby.team.TeamBoard;
 import net.luckperms.api.LuckPermsProvider;
 import org.bukkit.GameRules;
 import org.bukkit.event.Listener;
@@ -149,6 +151,11 @@ public final class LobbyPlugin extends JavaPlugin {
                     Stream.concat(config.holograms().stream(), leaderboards.names().stream()).toList(),
                     holograms, locations, shopNpc));
             commands.register(ClearChatCommand.create(messages));
+            var activeTeamBoard = api.map().file(this, "team-board.yml");
+            var teamBoardSource = api.map().template()
+                    .map(template -> template.directory().resolve("blockcraft").resolve(getName()).resolve("team-board.yml"))
+                    .orElse(activeTeamBoard);
+            commands.register(TeamBoardCommand.create(new TeamBoard(teamBoardSource, activeTeamBoard, messages), messages));
             commands.register(LobbySetCommand.create(activityLocations, messages, activities, locations,
                     () -> {
                         parkour.refresh();

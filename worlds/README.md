@@ -46,6 +46,56 @@ shop entries point to the absent `Lobby3` world. Its premium entry points to Neu
 The current plugin uses entity displays for holograms and has no importer for that database.
 The `legacy` directory is reference data and is not loaded by the plugins.
 
+## Editable team display
+
+The lobby's team room at `(-974, 27, 1650)` has twelve existing head and sign pairs.
+Their positions and roster are in [team-board.yml](lobby/blockcraft/Lobby/team-board.yml).
+The initial roster preserves the seven historical names and roles from the imported map.
+Replace them with the current team before publishing the display.
+
+Edit `members` using the slot keys already listed under `slots`:
+
+```yaml
+members:
+  slot-1:
+    name: Aquitano
+    role: OWNER
+  slot-2:
+    name: AnotherPlayer
+    role: BUILDER
+```
+
+Use Minecraft account names for skins. A slot without a member uses `empty-skin` and a vacant-place sign.
+The `slots` section controls the layout independently of the roster. Additional slots need existing player
+heads and signs at their configured block positions. The title and sign formatting come from Lobby's
+`messages.yml`, using the network address and palette.
+
+Edit the template's `blockcraft/Lobby/team-board.yml`, then run `/teamboard check` and `/teamboard apply`.
+Both require `blockcraft.lobby.setspawn` and work from the console. Check validates every configured position
+and roster entry without changing blocks. Apply stops before editing if validation fails. It updates the
+heads, front sign text, and central title, and copies the input file into the active map.
+Run `/map save` afterward to keep the rendered blocks with the template.
+On an existing server, add `teamboard` to Lobby's `allowed-commands` list if setup staff lack the command bypass.
+
+On the local map preview, edit `run/map-review/preview-worlds/lobby/blockcraft/Lobby/team-board.yml`.
+Its saves remain in that preview directory until copied back to `worlds/lobby` deliberately.
+
+## Lobby activity setup
+
+All nine hidden sign secrets are present in the imported lobby and match the current secret names.
+The Konami code, chicken-pet eggs, sleeping-player effects, and shooting stars do not need map positions.
+Their conditions and settings are described in [Easter eggs and lobby activities](../EASTER_EGGS.md).
+
+The imported map has no pond, parkour, or Easter hiding-place configuration. With the default settings,
+`/lobbyset check` reports twelve problems: the pond, course start and finish, leaderboard, seven checkpoints,
+and insufficient Easter hiding places. Choose a fishable pond, build or select a playable pressure-plate
+course, and register at least ten distinct hiding places using the [setup commands](../EASTER_EGGS.md#configure-the-lobby-map).
+The commands record positions; they do not build the activities.
+
+Stand at the desired BedWars navigator arrival and run `/setspawn bedwars`. The BedWars backend is separate
+from this lobby warp and can be reached with `/play bedwars` while the warp is unset.
+Use `/map save` after recording any of these positions.
+
 ## Storage and validation
 
 All 103 source overworld region files and their 48,070 chunks are retained. The initial
@@ -66,8 +116,9 @@ resolve to retained chunks, and all eight imported sign positions contain sign b
 An independent review decoded all chunks and checked entity positions, container contents,
 and the conversion of old flower-pot and note-block records. A separate JVM check loaded
 all 54 locations and eight signs through the current plugin classes with a stub Bukkit world.
-The Paper startup checks loaded no Blockcraft plugins. Full plugin startup and multiplayer
-gameplay still need the in-game review below.
+The initial Paper checks loaded no Blockcraft plugins. A subsequent local Docker preview loaded the
+actual plugin stack on pinned Paper build 134, registered all five backend groups, and loaded all eight
+status signs. Client appearance and multiplayer gameplay still need the in-game review below.
 
 Player records, statistics, session locks, legacy `uid.dat` files, old level backups, the Nether,
 and the End are excluded. Newly generated Paper world UUID metadata remains in the templates.
@@ -85,8 +136,8 @@ The maps still need a Minecraft client review before deployment:
 - Place the BedWars navigator warp and the new lobby activities with their setup commands.
   The backup predates those activities.
 - Check for old branding and legacy armor stand holograms in the build. Place the current
-  game and leaderboard holograms with `/setholo` where needed. The sign at `(-974, 27, 1650)`
-  still links to `Vanade.EU`.
+  game and leaderboard holograms with `/setholo` where needed. `/teamboard apply` replaces the legacy
+  title and link on the sign at `(-974, 27, 1650)`.
 - Choose new firework-pad positions if that interaction is wanted. The default `fireworks`
   coordinates in the Lobby plugin configuration belong to another lobby.
 - Supply `LobbyMap` to restore Duell's third SG arena, or keep it unavailable.

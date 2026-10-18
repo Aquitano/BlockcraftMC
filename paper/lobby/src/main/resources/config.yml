@@ -5,6 +5,7 @@ allowed-commands:
   - setspawn
   - setholo
   - lobbyset
+  - teamboard
 prices:
   premium: 15000
   head: 300
