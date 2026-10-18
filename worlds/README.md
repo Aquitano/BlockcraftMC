@@ -50,6 +50,9 @@ The `legacy` directory is reference data and is not loaded by the plugins.
 
 All 103 source overworld region files and their 48,070 chunks are retained. The initial
 import occupies about 197 MiB. No area of a build was trimmed.
+The old shop villager and its two title armor stands were removed from the imported lobby.
+The current Lobby plugin creates their replacements at the saved `shop-npc` location.
+Every other source entity is retained.
 The templates use the Paper 26.2 layout under `dimensions/minecraft/overworld`, with world
 data and `level.dat` at the template root. Region, entity, and POI files use the repository's
 existing Git LFS rule.
@@ -60,9 +63,15 @@ that world upgrades are unimplemented in this build. The compose files currently
 Every source chunk coordinate was checked against the imported overworld, and the original
 files were checked against their SHA-256 hashes after conversion. All 54 active locations
 resolve to retained chunks, and all eight imported sign positions contain sign blocks.
+An independent review decoded all chunks and checked entity positions, container contents,
+and the conversion of old flower-pot and note-block records. A separate JVM check loaded
+all 54 locations and eight signs through the current plugin classes with a stub Bukkit world.
+The Paper startup checks loaded no Blockcraft plugins. Full plugin startup and multiplayer
+gameplay still need the in-game review below.
 
-Player records, statistics, session locks, world UUIDs, old level backups, the Nether, and the
-End are excluded. Plugin jars, logs, permissions, customer records, and database credentials
+Player records, statistics, session locks, legacy `uid.dat` files, old level backups, the Nether,
+and the End are excluded. Newly generated Paper world UUID metadata remains in the templates.
+Plugin jars, logs, permissions, customer records, and database credentials
 from the backup are excluded. The original backup is unchanged.
 
 ## In-game review
@@ -71,10 +80,15 @@ The maps still need a Minecraft client review before deployment:
 
 - Check the lobby warps, signs, shop NPC, and the jump landing. The saved jump location has
   air immediately below it, so its intended landing needs a visual check.
+- Confirm that the shop has one villager and one current name card after startup and a
+  periodic NPC respawn.
 - Place the BedWars navigator warp and the new lobby activities with their setup commands.
   The backup predates those activities.
 - Check for old branding and legacy armor stand holograms in the build. Place the current
-  game and leaderboard holograms with `/setholo` where needed.
+  game and leaderboard holograms with `/setholo` where needed. The sign at `(-974, 27, 1650)`
+  still links to `Vanade.EU`.
+- Choose new firework-pad positions if that interaction is wanted. The default `fireworks`
+  coordinates in the Lobby plugin configuration belong to another lobby.
 - Supply `LobbyMap` to restore Duell's third SG arena, or keep it unavailable.
 - Add the builders to each `blockcraft/map.yml` when their identities are known.
 - Use `/map save` after map or setup changes to publish them to the template.
