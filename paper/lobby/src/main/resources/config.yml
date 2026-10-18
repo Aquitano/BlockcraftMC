@@ -6,6 +6,7 @@ allowed-commands:
   - setholo
   - lobbyset
   - teamboard
+  - erfolge
 prices:
   premium: 15000
   head: 300

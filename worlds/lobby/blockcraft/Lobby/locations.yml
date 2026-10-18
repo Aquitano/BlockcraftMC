@@ -62,3 +62,11 @@ rush:
   z: 1612.4453278069464
   pitch: 3.1469066
   yaw: -90.197815
+bedwars:
+  ==: org.bukkit.Location
+  world: world
+  x: -899.5
+  y: 31.0
+  z: 1579.5
+  yaw: 0.0
+  pitch: 0.0

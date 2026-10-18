@@ -164,23 +164,5 @@ slots:
       z: 1656.0
 members:
   slot-1:
-    name: CuzImVanZ
-    role: ASK
-  slot-2:
-    name: VOKT
-    role: ASK
-  slot-5:
-    name: Muffin2Go
-    role: MOD
-  slot-6:
-    name: Ryloo
-    role: MOD
-  slot-8:
-    name: Thejuse
-    role: DEV
-  slot-10:
-    name: Resax
-    role: BUILDER
-  slot-12:
-    name: CoredTV
-    role: ADMIN
+    name: Aquitano
+    role: Owner

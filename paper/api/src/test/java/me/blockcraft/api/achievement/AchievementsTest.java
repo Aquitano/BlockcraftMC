@@ -14,7 +14,7 @@ import static org.junit.Assert.assertEquals;
 public class AchievementsTest {
 
     /** Granted outside any round, by the lobby parkour and by greeting newcomers, so no recap shows them. */
-    private static final Set<String> OUTSIDE_ROUNDS = Set.of("network.ausdauer", "network.willkommenskomitee");
+    private static final Set<String> OUTSIDE_ROUNDS = Set.of("network.ausdauer", "network.parkour-finish", "network.willkommenskomitee");
 
     private static final List<Achievement> CATALOG = Achievements.parse(Map.of(
             "quicksg", Map.of(

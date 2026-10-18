@@ -477,6 +477,7 @@ npc:
     - "<error>Aua. <muted>Reklamationen bitte mit Rechtsklick."
     - "<error>Aua. <muted>Du hast die Verhandlungstaktik des Golems gewählt."
 activities:
+  setup-sign-target: "<prefix><error>Schau auf das Schild am Parcoursziel."
   firework-wait: "<muted>Das nächste Feuerwerk wird gerade vorbereitet."
   location-set: "<prefix><success><location> <muted>gespeichert."
   setup-missing: "<prefix><error><location> fehlt oder die Welt ist nicht geladen."
@@ -515,8 +516,10 @@ parkour:
   start: "<prefix><accent>Die Zeit läuft. <muted>Jeder Checkpoint zählt."
   status: "<accent>Checkpoint <checkpoint>/<total> <dark>· <primary><time>"
   finish: "<prefix><success>Geschafft: <accent><time><muted>. Deine Bestzeit: <accent><best><muted>."
+  finish-sign: ["<primary>JumpAndRun", "<success>ZIEL", "<muted>Zeit & Erfolg", "<accent>/erfolge"]
   cancelled: "<prefix><muted>Parcours beendet. Die Startplatte wartet auf deinen nächsten Versuch."
   top: "<primary><bold>JumpAndRun <dark>· <accent>Top 10"
+  top-empty: "<muted>Noch keine Bestzeit. Deine könnte hier stehen."
   entry: "<accent>#<rank> <primary><player> <dark>· <muted><time>"
 quirks:
   sleep: "<muted>z <primary>Z <muted>z"

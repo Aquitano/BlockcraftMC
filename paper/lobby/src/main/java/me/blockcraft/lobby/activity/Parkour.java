@@ -15,6 +15,8 @@ import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Tag;
+import org.bukkit.block.Sign;
+import org.bukkit.block.sign.Side;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
 import org.bukkit.event.EventHandler;
@@ -127,6 +129,7 @@ public final class Parkour implements Listener, AutoCloseable {
                     id.toString(), name, time);
             return db.queryOne("SELECT best_millis FROM bc_parkour WHERE player_uuid = ?", row -> row.getLong(1), id.toString()).orElse(time);
         }, best -> {
+            BlockcraftApi.get().achievements().grant(player, "network", "parkour-finish");
             if (player.isOnline()) {
                 player.sendMessage(messages.get("parkour.finish", Placeholder.unparsed("time", ParkourRun.time(time)),
                         Placeholder.unparsed("best", ParkourRun.time(best))));
@@ -210,6 +213,17 @@ public final class Parkour implements Listener, AutoCloseable {
     }
 
     public void refresh() {
+        locations.get("parkour-finish-sign").ifPresent(point -> {
+            if (point.getBlock().getState() instanceof Sign sign) {
+                var lines = messages.getLines("parkour.finish-sign");
+                for (var side : Side.values()) {
+                    for (int index = 0; index < 4; index++) {
+                        sign.getSide(side).line(index, index < lines.size() ? lines.get(index) : Component.empty());
+                    }
+                }
+                sign.update(false, false);
+            }
+        });
         var location = locations.get("parkour-top");
         if (reading || location.isEmpty()) {
             return;
@@ -221,6 +235,9 @@ public final class Parkour implements Listener, AutoCloseable {
             reading = false;
             var lines = new ArrayList<Component>();
             lines.add(messages.get("parkour.top"));
+            if (rows.isEmpty()) {
+                lines.add(messages.get("parkour.top-empty"));
+            }
             for (int i = 0; i < rows.size(); i++) {
                 var row = rows.get(i);
                 lines.add(messages.get("parkour.entry", Formatter.number("rank", i + 1),

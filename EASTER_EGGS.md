@@ -144,6 +144,8 @@ after a 30-second per-player cooldown and explain when they are still waiting.
 
 `/lobbyset` requires `blockcraft.lobby.setspawn`. It saves your current position to the active map's
 `blockcraft/Lobby/activities.yml`. It does not place blocks or build a pond or course.
+Map-specific overrides for the plugin's `activities` settings live in `blockcraft/Lobby/activity-settings.yml`.
+The imported lobby sets `parkour-checkpoints: 0` for its existing course.
 
 1. Build a fishable pond and run `/lobbyset pond` at its center. The default radius is 20 blocks.
 2. Build a parkour course with start, checkpoint, and finish pressure plates. Stand on each plate and run
@@ -160,11 +162,16 @@ after a 30-second per-player cooldown and explain when they are still waiting.
 Run `/lobbyset check` before the final save. The command also works from the console and reports missing locations,
 invalid or duplicate pressure plates, stations in another world, a missing jump warp, and insufficient or duplicate
 Easter hiding places. It checks the setup, not whether the jumps are reachable or the pond is fishable.
+Look at the finish sign and run `/lobbyset parkour-finish-sign` to register it. Its text updates on both sides.
+The finish sign is optional. When configured, the check verifies that its block is a sign.
 
 The course requires all configured checkpoints in order. Falling more than four blocks below the last checkpoint
 returns the player there while the timer continues. Times and falls persist in `bc_parkour`. One hundred falls
 unlock `Ausdauer`. Flying, gliding, riding, or teleporting cancels a run. Double jumps and gadgets are disabled
 during it. An incomplete course reports that it is not ready.
+The first successfully saved completion grants "Im Ziel" and 100 XP through the achievement catalog.
+Later completions update best times without paying that achievement again. `/erfolge` opens the achievements menu.
+Signs can only be edited while `/build` is enabled, including for owners and players in creative mode.
 
 ## Friendship anniversaries
 

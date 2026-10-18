@@ -503,6 +503,9 @@ achievements:
     ausdauer:
       name: "Ausdauer"
       description: "Falle im JumpAndRun 100-mal herunter und mach weiter."
+    parkour-finish:
+      name: "Im Ziel"
+      description: "Beende den Lobby-Parcours mit allen Checkpoints."
     nachteule:
       name: "Nachteule"
       description: "Beende eine Runde zwischen drei und vier Uhr morgens."

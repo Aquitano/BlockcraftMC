@@ -59,10 +59,13 @@ import me.blockcraft.lobby.storage.LegacyUnlocks;
 import me.blockcraft.lobby.team.TeamBoard;
 import net.luckperms.api.LuckPermsProvider;
 import org.bukkit.GameRules;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.time.Duration;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -85,8 +88,10 @@ public final class LobbyPlugin extends JavaPlugin {
         saveDefaultConfig();
         var yaml = YamlFile.loadWithDefaults(getDataPath().resolve("config.yml"), () -> getResource("config.yml"));
         var config = LobbyConfig.fromYaml(yaml);
-        var activities = ActivitiesConfig.fromYaml(yaml);
         var api = BlockcraftApi.get();
+        var activitySettings = new LinkedHashMap<>(YamlFile.section(yaml, "activities"));
+        activitySettings.putAll(YamlConfiguration.loadConfiguration(api.map().file(this, "activity-settings.yml").toFile()).getValues(false));
+        var activities = ActivitiesConfig.fromYaml(Map.of("activities", activitySettings));
         profiles = api.profiles();
         var messages = Messages.load(getDataPath(), () -> getResource("messages.yml"), api.tags());
         var locations = Locations.load(api.map().file(this, "locations.yml"), LobbyLocation::key);

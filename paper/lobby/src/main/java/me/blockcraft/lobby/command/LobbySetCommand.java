@@ -15,6 +15,7 @@ import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Location;
 import org.bukkit.Tag;
 import org.bukkit.block.Block;
+import org.bukkit.block.Sign;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
@@ -30,7 +31,7 @@ public final class LobbySetCommand {
                                                                ActivitiesConfig config, Locations<LobbyLocation> warps,
                                                                Runnable refresh) {
         var root = Commands.literal("lobbyset").requires(source -> source.getSender().hasPermission(LobbyPermissions.SET_SPAWN));
-        var keys = new ArrayList<>(List.of("pond", "parkour-start", "parkour-finish", "parkour-top"));
+        var keys = new ArrayList<>(List.of("pond", "parkour-start", "parkour-finish", "parkour-top", "parkour-finish-sign"));
         for (int i = 1; i <= config.checkpoints(); i++) {
             keys.add("checkpoint-" + i);
         }
@@ -40,7 +41,16 @@ public final class LobbySetCommand {
         for (var key : keys) {
             root.then(Commands.literal(key).requires(source -> source.getSender() instanceof Player).executes(context -> {
                 var player = context.getSource().getPlayerOrThrow();
-                locations.set(key, player.getLocation());
+                var point = player.getLocation();
+                if (key.equals("parkour-finish-sign")) {
+                    var target = player.getTargetBlockExact(10);
+                    if (target == null || !(target.getState() instanceof Sign)) {
+                        player.sendMessage(messages.get("activities.setup-sign-target"));
+                        return 0;
+                    }
+                    point = target.getLocation();
+                }
+                locations.set(key, point);
                 player.sendMessage(messages.get("activities.location-set", Placeholder.unparsed("location", key)));
                 refresh.run();
                 return Command.SINGLE_SUCCESS;
@@ -56,6 +66,12 @@ public final class LobbySetCommand {
                 }
                 var point = locations.get(key);
                 var label = Placeholder.unparsed("location", key);
+                if (key.equals("parkour-finish-sign")) {
+                    if (point.isPresent() && !(point.orElseThrow().getBlock().getState() instanceof Sign)) {
+                        problems.add(messages.get("activities.setup-sign-target"));
+                    }
+                    continue;
+                }
                 if (point.isEmpty()) {
                     problems.add(messages.get("activities.setup-missing", label));
                 } else if (key.equals("parkour-start") || key.equals("parkour-finish") || key.startsWith("checkpoint-")) {

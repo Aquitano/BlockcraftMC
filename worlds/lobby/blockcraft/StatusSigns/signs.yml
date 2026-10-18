@@ -55,3 +55,10 @@ signs:
       x: -950
       y: 28
       z: 1687
+  '12':
+    group: bedwars
+    loc:
+      world: world
+      x: -900
+      y: 32
+      z: 1581

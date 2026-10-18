@@ -8,12 +8,15 @@ The `VanadeSicherung` backup supplies four overworld templates:
 - `emeraldrush` contains `TW1/world`, named Mine. The old plugin was called TradeWars.
 
 The backup does not identify the builders. Each `blockcraft/map.yml` leaves `builders` empty.
-The existing BedWars template comes from a separate import.
+BedWars reuses a copy of EmeraldRush's waiting island. Its two arena templates remain in
+`bedwars/blockcraft/BedWars/maps`.
 
 ## Configuration
 
 All active locations use the runtime world name `world` and Bukkit's location serialization.
-The lobby has its spawn, Duell, QuickSG, jump, EmeraldRush, shop, premium, and shop NPC locations.
+The lobby has its spawn, Duell, QuickSG, jump, EmeraldRush, BedWars, shop, premium, and shop NPC locations.
+The BedWars arrival is centered over the gold block at `(-900, 30, 1579)`, with feet at Y=31.
+The north-facing join sign at `(-900, 32, 1581)` adds BedWars to the eight imported status signs.
 The old source at commit `13cc6d0`, in `Lobby/src/me/blockcraft/lobby/Lobby.java` and
 `Lobby/src/me/blockcraft/lobby/commands/CommandSetholo.java`, establishes the key conversions:
 
@@ -50,8 +53,7 @@ The `legacy` directory is reference data and is not loaded by the plugins.
 
 The lobby's team room at `(-974, 27, 1650)` has twelve existing head and sign pairs.
 Their positions and roster are in [team-board.yml](lobby/blockcraft/Lobby/team-board.yml).
-The initial roster preserves the seven historical names and roles from the imported map.
-Replace them with the current team before publishing the display.
+The roster contains Aquitano as Owner. The remaining eleven slots are vacant.
 
 Edit `members` using the slot keys already listed under `slots`:
 
@@ -86,15 +88,27 @@ All nine hidden sign secrets are present in the imported lobby and match the cur
 The Konami code, chicken-pet eggs, sleeping-player effects, and shooting stars do not need map positions.
 Their conditions and settings are described in [Easter eggs and lobby activities](../EASTER_EGGS.md).
 
-The imported map has no pond, parkour, or Easter hiding-place configuration. With the default settings,
-`/lobbyset check` reports twelve problems: the pond, course start and finish, leaderboard, seven checkpoints,
-and insufficient Easter hiding places. Choose a fishable pond, build or select a playable pressure-plate
-course, and register at least ten distinct hiding places using the [setup commands](../EASTER_EGGS.md#configure-the-lobby-map).
-The commands record positions; they do not build the activities.
+The existing course starts on the oak plate at `(-667, 8, 1601)` and finishes on the added oak plate at
+`(-717, 50, 1632)`. The adjacent sign identifies the finish on both faces. A top-ten display stands nearby.
+`activity-settings.yml` overrides the plugin's activity settings for this map. This course uses zero checkpoints
+because no checkpoint markers exist in the imported build. Completing a timed run records its best time and
+grants the permanent "Im Ziel" achievement with 100 XP once. Clicking the sign alone grants nothing.
 
-Stand at the desired BedWars navigator arrival and run `/setspawn bedwars`. The BedWars backend is separate
-from this lobby warp and can be reached with `/play bedwars` while the warp is unset.
-Use `/map save` after recording any of these positions.
+The pond and Easter hiding places still need configuration. Choose a fishable pond and register at least ten
+distinct hiding places using the [setup commands](../EASTER_EGGS.md#configure-the-lobby-map).
+`/lobbyset check` reports the remaining setup gaps. On the running preview, only the pond and missing Easter
+hiding places remain. Use `/map save` after recording positions.
+
+## BedWars waiting island
+
+The waiting-world copy keeps 49 chunks around EmeraldRush's built island, with sections 2 through 7 and
+all 44 block entities. Unrelated ground below the island and its two horses are excluded. New terrain generates
+as void. Both root and Paper dimension spawn metadata point to `(-194, 47, -318)`.
+`bedwars/blockcraft/BedWars/lobby.yml` places the arrival, CPS tester, four team selectors, and two member displays
+per team. The selectors stand along the north rim, facing inward. Their support and clearance were checked.
+The old waiting area's jump locations are removed because this island has no configured BedWars course.
+The nested arena pool is unchanged. Client inspection still needs to check the approach to the selectors,
+joining teams, displayed player skins, CPS interactions, map voting, and round transitions.
 
 ## Storage and validation
 
@@ -133,8 +147,11 @@ The maps still need a Minecraft client review before deployment:
   air immediately below it, so its intended landing needs a visual check.
 - Confirm that the shop has one villager and one current name card after startup and a
   periodic NPC respawn.
-- Place the BedWars navigator warp and the new lobby activities with their setup commands.
-  The backup predates those activities.
+- Inspect the gold-block BedWars navigator arrival. Configure the pond and Easter hiding places.
+- Complete the lobby course from its start plate. Check the finish sign, best time, leaderboard, and
+  first-completion achievement. Repeat it to confirm the achievement pays only once.
+- Outside `/build`, right-click both sides of an ordinary sign. The editor must stay closed in survival and
+  creative mode. Secret signs and status signs must still respond to their normal clicks.
 - Check for old branding and legacy armor stand holograms in the build. Place the current
   game and leaderboard holograms with `/setholo` where needed. `/teamboard apply` replaces the legacy
   title and link on the sign at `(-974, 27, 1650)`.

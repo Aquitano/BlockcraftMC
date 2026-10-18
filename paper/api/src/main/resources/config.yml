@@ -124,6 +124,7 @@ achievements:
     rache: {counts: moment, xp: 50}
     haarscharf: {counts: moment, xp: 50}
     ausdauer: {counts: moment, xp: 100}
+    parkour-finish: {counts: moment, xp: 100}
     nachteule: {counts: moment, xp: 50}
 
 # Ranked 1vs1 (bc_elo). A season is three months from January, April, July or October and starts everyone at
