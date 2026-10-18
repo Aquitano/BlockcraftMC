@@ -9,72 +9,98 @@ spawn:
 cps-tester:
   ==: org.bukkit.Location
   world: world
-  x: -192.5
+  x: -183.5
   y: 47.0
-  z: -316.5
-  yaw: 0.0
+  z: -303.5
+  yaw: 90.0
   pitch: 0.0
 teams:
   red:
     joiner:
       ==: org.bukkit.Location
       world: world
-      x: -207.5
+      x: -191.5
       y: 47.0
-      z: -320.5
-      yaw: 0.0
+      z: -313.5
+      yaw: 270.0
       pitch: 0.0
     displays:
       '0':
         ==: org.bukkit.Location
         world: world
-        x: -208.5
+        x: -191.5
         y: 47.0
-        z: -320.5
-        yaw: 0.0
+        z: -314.5
+        yaw: 270.0
         pitch: 0.0
       '1':
         ==: org.bukkit.Location
         world: world
-        x: -206.5
+        x: -191.5
         y: 47.0
-        z: -320.5
-        yaw: 0.0
+        z: -312.5
+        yaw: 270.0
         pitch: 0.0
   green:
     joiner:
       ==: org.bukkit.Location
       world: world
-      x: -202.5
+      x: -186.5
       y: 47.0
-      z: -320.5
-      yaw: 0.0
+      z: -312.5
+      yaw: 90.0
       pitch: 0.0
     displays:
       '0':
         ==: org.bukkit.Location
         world: world
-        x: -203.5
+        x: -186.5
         y: 47.0
-        z: -320.5
-        yaw: 0.0
+        z: -313.5
+        yaw: 90.0
         pitch: 0.0
       '1':
         ==: org.bukkit.Location
         world: world
-        x: -201.5
+        x: -186.5
         y: 47.0
-        z: -320.5
-        yaw: 0.0
+        z: -311.5
+        yaw: 90.0
         pitch: 0.0
   yellow:
     joiner:
       ==: org.bukkit.Location
       world: world
-      x: -184.5
+      x: -189.5
       y: 47.0
-      z: -320.5
-      yaw: 0.0
+      z: -299.5
+      yaw: 270.0
+      pitch: 0.0
+    displays:
+      '0':
+        ==: org.bukkit.Location
+        world: world
+        x: -189.5
+        y: 47.0
+        z: -300.5
+        yaw: 270.0
+        pitch: 0.0
+      '1':
+        ==: org.bukkit.Location
+        world: world
+        x: -189.5
+        y: 47.0
+        z: -298.5
+        yaw: 270.0
+        pitch: 0.0
+  purple:
+    joiner:
+      ==: org.bukkit.Location
+      world: world
+      x: -185.5
+      y: 47.0
+      z: -300.5
+      yaw: 90.0
       pitch: 0.0
     displays:
       '0':
@@ -82,40 +108,14 @@ teams:
         world: world
         x: -185.5
         y: 47.0
-        z: -320.5
-        yaw: 0.0
+        z: -301.5
+        yaw: 90.0
         pitch: 0.0
       '1':
         ==: org.bukkit.Location
         world: world
-        x: -183.5
+        x: -185.5
         y: 47.0
-        z: -320.5
-        yaw: 0.0
-        pitch: 0.0
-  purple:
-    joiner:
-      ==: org.bukkit.Location
-      world: world
-      x: -179.5
-      y: 47.0
-      z: -320.5
-      yaw: 0.0
-      pitch: 0.0
-    displays:
-      '0':
-        ==: org.bukkit.Location
-        world: world
-        x: -180.5
-        y: 47.0
-        z: -320.5
-        yaw: 0.0
-        pitch: 0.0
-      '1':
-        ==: org.bukkit.Location
-        world: world
-        x: -178.5
-        y: 47.0
-        z: -320.5
-        yaw: 0.0
+        z: -299.5
+        yaw: 90.0
         pitch: 0.0

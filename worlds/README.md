@@ -16,7 +16,9 @@ BedWars reuses a copy of EmeraldRush's waiting island. Its two arena templates r
 All active locations use the runtime world name `world` and Bukkit's location serialization.
 The lobby has its spawn, Duell, QuickSG, jump, EmeraldRush, BedWars, shop, premium, and shop NPC locations.
 The BedWars arrival is centered over the gold block at `(-900, 30, 1579)`, with feet at Y=31.
-The north-facing join sign at `(-900, 32, 1581)` adds BedWars to the eight imported status signs.
+The arrival faces west toward a copy of Duell's stone sign facade. Three east-facing join signs at
+`(-901, 32, 1578..1580)` add BedWars to the eight imported status signs. A title and information sign complete
+the entrance. The four old TradeWars labels elsewhere in the lobby now read EmeraldRush.
 The old source at commit `13cc6d0`, in `Lobby/src/me/blockcraft/lobby/Lobby.java` and
 `Lobby/src/me/blockcraft/lobby/commands/CommandSetholo.java`, establishes the key conversions:
 
@@ -105,10 +107,19 @@ The waiting-world copy keeps 49 chunks around EmeraldRush's built island, with s
 all 44 block entities. Unrelated ground below the island and its two horses are excluded. New terrain generates
 as void. Both root and Paper dimension spawn metadata point to `(-194, 47, -318)`.
 `bedwars/blockcraft/BedWars/lobby.yml` places the arrival, CPS tester, four team selectors, and two member displays
-per team. The selectors stand along the north rim, facing inward. Their support and clearance were checked.
+per team. The selectors occupy four existing alcoves beside the interior path, facing that path.
+All thirteen NPC positions have natural support and four blocks of clearance. Walking routes from spawn
+reach every selector's front at Y=47. The CPS tester stands at `(-183.5, 47, -303.5)`, off the arrival path.
 The old waiting area's jump locations are removed because this island has no configured BedWars course.
 The nested arena pool is unchanged. Client inspection still needs to check the approach to the selectors,
 joining teams, displayed player skins, CPS interactions, map voting, and round transitions.
+
+## Inspect the maps in 3D
+
+Run `uv run dev/map-inspector/inspect.py` from the repository root, with Java 25 available through
+`JAVA_HOME` or `PATH`. Open <http://localhost:8100> to inspect saved terrain and configured-location markers.
+The viewer reads templates without installing a Minecraft plugin or restarting a server. See
+[local map inspection](../dev/map-inspector/README.md) for rendering the preview copies and other worlds.
 
 ## Storage and validation
 
