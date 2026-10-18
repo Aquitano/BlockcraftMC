@@ -1,8 +1,11 @@
 package me.blockcraft.api.world;
 
+import io.papermc.paper.event.player.PlayerOpenSignEvent;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.util.HashSet;
@@ -25,6 +28,20 @@ public final class BuildMode implements Listener {
         }
         builders.add(player.getUniqueId());
         return true;
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onSignOpen(PlayerOpenSignEvent event) {
+        if (!isEnabled(event.getPlayer())) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onSignChange(SignChangeEvent event) {
+        if (!isEnabled(event.getPlayer())) {
+            event.setCancelled(true);
+        }
     }
 
     @EventHandler
