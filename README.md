@@ -502,7 +502,9 @@ Everything the pack changes has a plain fallback, so a player without it sees va
   Python and FFmpeg. `FeedbackSoundTest` checks that every custom sound has a definition and an audio asset.
 
 The textures are drawn by `java resourcepack/PackArt.java resourcepack/src` (panel colours, slots and the pixel
-icons live in that file); a redrawn pack needs `stagePlugins` and a proxy restart, and the client re-downloads it
+icons live in that file). Item icons use a native 16-pixel grid, transparent margins, and upper-left lighting.
+HUD symbols use seven pixels of ink in each eight-pixel tile to align with the text baseline.
+A redrawn pack needs `stagePlugins` and a proxy restart, and the client re-downloads it
 because the hash changed. `UiFontTest` keeps the code's glyph table in step with `ui.json`. Open menus restyle when the pack becomes active
 without losing their page or selection. Settings show the pack status and offer retry after a failed download
 or a declined offer.
