@@ -16,9 +16,10 @@ BedWars reuses a copy of EmeraldRush's waiting island. Its two arena templates r
 All active locations use the runtime world name `world` and Bukkit's location serialization.
 The lobby has its spawn, Duell, QuickSG, jump, EmeraldRush, BedWars, shop, premium, and shop NPC locations.
 The BedWars arrival is centered over the gold block at `(-900, 30, 1579)`, with feet at Y=31.
-The arrival faces west toward a copy of Duell's stone sign facade. Three east-facing join signs at
-`(-901, 32, 1578..1580)` add BedWars to the eight imported status signs. A title and information sign complete
-the entrance. The four old TradeWars labels elsewhere in the lobby now read EmeraldRush.
+The arrival faces south toward a flat wooden board on the existing rear wall. The board measures five blocks
+wide, three high, and one deep. Three north-facing join signs at `(-900..-898, 32, 1581)` add BedWars to the
+eight imported status signs. Its title sign is at `(-899, 33, 1581)`. The original arch, iron bars, and floor
+remain in place. The four old TradeWars labels elsewhere in the lobby now read EmeraldRush.
 The old source at commit `13cc6d0`, in `Lobby/src/me/blockcraft/lobby/Lobby.java` and
 `Lobby/src/me/blockcraft/lobby/commands/CommandSetholo.java`, establishes the key conversions:
 
