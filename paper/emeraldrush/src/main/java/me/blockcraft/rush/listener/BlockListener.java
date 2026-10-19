@@ -48,19 +48,20 @@ public final class BlockListener implements Listener {
         event.setCancelled(!buildMode.isEnabled(player));
     }
 
-    @EventHandler
-    public void onPlace(BlockPlaceEvent event) {
-        event.setCancelled(!buildMode.isEnabled(event.getPlayer()));
-    }
-
+    /** Outside build mode only TNT, which goes off at once, and cobwebs in the deathmatch, which melt, are placed. */
     @EventHandler(ignoreCancelled = true)
-    public void onPlaceSpecial(BlockPlaceEvent event) {
+    public void onPlace(BlockPlaceEvent event) {
+        if (buildMode.isEnabled(event.getPlayer())) {
+            return;
+        }
         var block = event.getBlock();
         if (block.getType() == Material.TNT) {
             block.setType(Material.AIR);
             block.getWorld().spawn(block.getLocation().toCenterLocation(), TNTPrimed.class, tnt -> tnt.setFuseTicks(TNT_FUSE_TICKS));
         } else if (block.getType() == Material.COBWEB && game.phase() == GamePhase.DEATHMATCH) {
             Tasks.later(plugin, COBWEB_LIFETIME_TICKS, () -> block.setType(Material.AIR));
+        } else {
+            event.setCancelled(true);
         }
     }
 
