@@ -17,6 +17,7 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityMountEvent;
+import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
@@ -210,6 +211,14 @@ public final class FreezeService implements Listener {
     @EventHandler
     public void onInteract(PlayerInteractEvent event) {
         if (isFrozen(event.getPlayer())) {
+            event.setCancelled(true);
+        }
+    }
+
+    /** Hotbar items open their menus whether or not the click was cancelled, and a menu can send the player away. */
+    @EventHandler
+    public void onOpen(InventoryOpenEvent event) {
+        if (event.getPlayer() instanceof Player player && isFrozen(player)) {
             event.setCancelled(true);
         }
     }
