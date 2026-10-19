@@ -68,7 +68,7 @@ command:
   start-not-enough-players: "<prefix><error>Es müssen mindestens 2 Spieler online sein!"
   rushset-help:
     - " "
-    - "<muted>/rushset lobby, spectator, such, dm1(-6), enchant, shopping"
+    - "<muted>/rushset lobby, spectator, search, dm1(-6), enchant, shopping"
     - " "
   rushset-set: "<prefix><muted>Du hast die Location <white><location> <muted>gesetzt!"
 stats:
