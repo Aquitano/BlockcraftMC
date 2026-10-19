@@ -1,10 +1,9 @@
 package me.blockcraft.api.task;
 
-import me.blockcraft.api.item.Items;
 import me.blockcraft.api.menu.Menu;
+import me.blockcraft.api.pack.MenuIcon;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.task.LatestRequests;
-import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -163,7 +162,7 @@ public final class PlayerTasks implements Listener {
             super(1, messages.get(failed ? "menu.load.failed" : "menu.load.title"));
             this.retry = retry;
             this.failed = failed;
-            var status = Items.of(failed ? Material.REDSTONE : Material.CLOCK)
+            var status = (failed ? MenuIcon.REFRESH : MenuIcon.LOADING).item()
                     .name(messages.get(failed ? "menu.load.retry" : "menu.load.pending")).build();
             if (failed) {
                 set(4, status);
@@ -171,9 +170,10 @@ public final class PlayerTasks implements Listener {
                 info(4, status);
             }
             if (previous.getTopInventory().getHolder(false) instanceof Menu menu && !(menu instanceof TaskMenu)) {
-                backButton(0, menu::open);
+                backButton(menu::open);
+            } else {
+                closeButton();
             }
-            closeButton(8);
         }
 
         private void showNow(Player player) {

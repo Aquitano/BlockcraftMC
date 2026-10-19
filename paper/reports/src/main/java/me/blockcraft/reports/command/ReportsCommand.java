@@ -29,7 +29,7 @@ public final class ReportsCommand {
 
     private static int open(Player player, Optional<String> reported, ReportMenus menus, Messages messages) {
         if (player.hasPermission(ReportsPlugin.MENU_PERMISSION)) {
-            menus.openList(player, reported, 1);
+            menus.openList(player, reported);
         } else {
             player.sendMessage(messages.get("no-permission"));
             player.sendMessage(messages.get("no-permission-hint"));

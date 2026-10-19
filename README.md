@@ -347,8 +347,8 @@ query; `alts.block-banned-alts` refuses such a login instead.
 A player who leaves while frozen and is not back within `freeze.quit-grace-seconds` gets the `/strafe` number
 `freeze.quit-punishment` in the name of whoever froze them; 0, the default, only tells the team.
 
-`/report <player>` opens a reason dialog on the backend. Staff can claim reports, edit their status and choose
-catalogue or custom timed punishments. Claims identify the staff account even while it is nicked. "Erledigt"
+`/report <player>` opens a reason dialog on the backend. `/reports` lists the open reports; each opens as a dialog in
+which staff claim it, edit its status and choose catalogue or custom timed punishments. Claims identify the staff account even while it is nicked. "Erledigt"
 closes a report instead of deleting it: the row keeps who closed it and when, leaves the lists and the open counts,
 and lets the same player report that account again.
 
@@ -458,9 +458,9 @@ unavailable.
 
 The lobby's friends item opens `FriendsMenu`, which is drawn from the proxy's answer rather than from the
 database: only the proxy knows who is online and on which server, so the Paper side asks over the `Friends`
-subchannel and the proxy writes the list back, including whether the friend's round is running. The menu paginates friends
-and requests, accepts names through a dialog, and refreshes after accepting or denying a request. Pages and refreshes
-update the open inventory in place. Typed requests
+subchannel and the proxy writes the list back, including whether the friend's round is running. Its toolbar switches
+between friends and requests and opens the dialog that sends a request; the list pages like every `ListMenu` and
+reloads after accepting or denying a request. Pages and refreshes update the open inventory in place. Typed requests
 carry a request ID. Late replies cannot replace newer screens, and failures show a retry action.
 `friends.timeout-ticks` in the lobby config controls how long the menu waits.
 
@@ -485,8 +485,8 @@ backend on arrival (the `Pack` subchannel), and BlockcraftAPI keeps that in `res
 Everything the pack changes has a plain fallback, so a player without it sees vanilla menus and text symbols:
 
 - Menu panels are glyphs of the `blockcraft:ui` font, drawn from the inventory title and moved back into the corner
-  with negative-width spaces (`UiFont`); `Menu` picks the panel by viewer, skips the pane filler and draws the back
-  and close buttons with the pack's item models. A menu with a `toolbar` gets the variant whose first row is three
+  with negative-width spaces (`UiFont`); `Menu` picks the panel by viewer, skips the pane filler and draws the exit
+  and the page buttons with the pack's item models. A menu with a `toolbar` gets the variant whose first row is three
   wide coloured buttons; the icon item sits in the middle slot and the outer slots hold invisible items, so the
   whole bar answers the click. An item built from a `MenuIcon` carries its icon, so every menu draws it with the
   pack's `items/<icon>.json` for pack wearers and as the vanilla item for everyone else; the lobby's and the games'

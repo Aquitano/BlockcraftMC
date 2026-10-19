@@ -7,6 +7,7 @@ import me.blockcraft.api.pack.UiFont;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.common.settings.PlayerSetting;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -30,9 +31,9 @@ import java.util.function.Consumer;
  * <p>
  * The inventory itself is created when the menu opens, because its look depends on the viewer: a client wearing
  * the network's resource pack sees the pack's panel behind the slots, the pack's tooltip and model on every item
- * built from a {@link MenuIcon} (the two buttons every menu shares, {@link #backButton} and {@link #closeButton},
- * among them), and a {@link #toolbar} of three wide buttons across the first row; everyone else sees vanilla items
- * and empty slots filled with panes, whose clicks are swallowed.
+ * built from a {@link MenuIcon} (the exit every menu shares, {@link #backButton} or {@link #closeButton} in the last
+ * slot, among them), and a {@link #toolbar} of three wide buttons across the first row; everyone else sees vanilla
+ * items and empty slots filled with panes, whose clicks are swallowed.
  * <p>
  * {@link #open} and {@link #close} run on the next tick because Bukkit forbids opening or closing an
  * inventory from inside {@link InventoryClickEvent}; the client would otherwise receive the cancel resync
@@ -64,6 +65,9 @@ public abstract class Menu implements InventoryHolder {
     private record ToolbarEntry(ItemStack icon, Consumer<Player> action) {
     }
 
+    private record Exit(MenuIcon icon, String messageKey, Consumer<Player> action) {
+    }
+
     private final int rows;
     private final Component title;
     private final ItemStack[] items;
@@ -72,9 +76,9 @@ public abstract class Menu implements InventoryHolder {
     private Inventory inventory;
     private boolean packApplied;
     private final BitSet informational = new BitSet();
-    private int backSlot = -1;
-    private int closeSlot = -1;
-    private Consumer<Player> backAction;
+    private Exit exit;
+    private int page;
+    private int pages;
 
     protected Menu(int rows, Component title) {
         this.rows = rows;
@@ -135,10 +139,21 @@ public abstract class Menu implements InventoryHolder {
     /**
      * A wide button in the first row: {@code icon}, built from a {@link MenuIcon}, sits in its middle slot and the
      * whole button answers the click. The pack draws the row as three coloured bars; without it, the icon is an
-     * ordinary item between panes.
+     * ordinary item between panes. A button set again once the menu is open changes in place.
      */
     protected void toolbar(ToolbarButton button, ItemStack icon, Consumer<Player> action) {
         toolbar.put(button, new ToolbarEntry(icon, action));
+        if (inventory == null) {
+            return;
+        }
+        items[button.iconSlot()] = icon;
+        for (int slot = button.firstSlot; slot < button.firstSlot + 3; slot++) {
+            inventory.setItem(slot, renderSlot(slot));
+        }
+    }
+
+    boolean hasToolbar() {
+        return !toolbar.isEmpty();
     }
 
     protected void fill(ItemStack item) {
@@ -149,14 +164,17 @@ public abstract class Menu implements InventoryHolder {
         }
     }
 
-    /** The way back to the menu that opened this one; the parent is reopened lazily because it may load first. */
-    protected void backButton(int slot, Consumer<Player> previous) {
-        backSlot = slot;
-        backAction = previous;
+    /**
+     * The way back to the menu that opened this one, in the last slot; the parent is reopened lazily because it may
+     * load first.
+     */
+    protected void backButton(Consumer<Player> previous) {
+        exit = new Exit(MenuIcon.BACK, "menu.back", previous);
     }
 
-    protected void closeButton(int slot) {
-        closeSlot = slot;
+    /** Close in the last slot, for a menu no other menu leads to. */
+    protected void closeButton() {
+        exit = new Exit(MenuIcon.CLOSE, "menu.close", Menu::close);
     }
 
     /** Close as one of the wide buttons; top-level menus put it on the left. */
@@ -204,6 +222,45 @@ public abstract class Menu implements InventoryHolder {
         }
     }
 
+    /**
+     * Shows {@code count} pages, turned from the middle of the last row, and keeps the current page in range; a turn
+     * calls {@link #pageTurned}, which draws the new page.
+     */
+    void paginate(int count) {
+        var messages = BlockcraftApi.get().messages();
+        pages = Math.max(1, count);
+        page = Math.min(page, pages - 1);
+        set(pagerSlot(-1), page > 0 ? button(MenuIcon.PREVIOUS, "menu.previous") : null);
+        info(pagerSlot(0), pages > 1 ? MenuIcon.PAGE.item().name(messages.get("menu.page",
+                Formatter.number("page", page + 1), Formatter.number("pages", pages))).build() : null);
+        set(pagerSlot(1), page + 1 < pages ? button(MenuIcon.NEXT, "menu.next") : null);
+    }
+
+    void hidePager() {
+        set(pagerSlot(-1), null);
+        set(pagerSlot(0), null);
+        set(pagerSlot(1), null);
+    }
+
+    void firstPage() {
+        page = 0;
+    }
+
+    int page() {
+        return page;
+    }
+
+    void pageTurned(Player player) {
+    }
+
+    private int pagerSlot(int offset) {
+        return items.length - COLUMNS + COLUMNS / 2 + offset;
+    }
+
+    private int exitSlot() {
+        return items.length - 1;
+    }
+
     void restyle(Player player) {
         if (packApplied == BlockcraftApi.get().resourcePack().applied(player)) {
             return;
@@ -241,12 +298,13 @@ public abstract class Menu implements InventoryHolder {
                 return;
             }
         }
-        if (slot == backSlot) {
+        if (exit != null && slot == exitSlot()) {
             Sounds.MENU_CLICK.play(player);
-            backAction.accept(player);
-        } else if (slot == closeSlot) {
+            exit.action().accept(player);
+        } else if (pages > 0 && (slot == pagerSlot(-1) || slot == pagerSlot(1))) {
             Sounds.MENU_CLICK.play(player);
-            close(player);
+            page = Math.clamp(page + (slot < pagerSlot(0) ? -1 : 1), 0, pages - 1);
+            pageTurned(player);
         } else {
             if (automaticClickSound(slot, event)) {
                 clickSound(slot, event).play(player);
@@ -262,12 +320,9 @@ public abstract class Menu implements InventoryHolder {
     private void build(boolean packApplied) {
         this.packApplied = packApplied;
         inventory = Bukkit.createInventory(this, items.length,
-                packApplied ? UiFont.menuTitle(rows, !toolbar.isEmpty(), title) : title);
-        if (backSlot >= 0) {
-            items[backSlot] = button(MenuIcon.BACK, "menu.back");
-        }
-        if (closeSlot >= 0) {
-            items[closeSlot] = button(MenuIcon.CLOSE, "menu.close");
+                packApplied ? UiFont.menuTitle(rows, hasToolbar(), title) : title);
+        if (exit != null) {
+            items[exitSlot()] = button(exit.icon(), exit.messageKey());
         }
         toolbar.forEach((button, entry) -> items[button.iconSlot()] = entry.icon());
         for (int slot = 0; slot < items.length; slot++) {

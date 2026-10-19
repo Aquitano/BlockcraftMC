@@ -16,7 +16,7 @@ import java.util.function.Function;
 record CosmeticKind<C>(
         PlayerSetting setting,
         Component title,
-        Layout layout,
+        int rows,
         Consumer<Player> back,
         List<C> choices,
         Function<C, String> key,
@@ -31,10 +31,6 @@ record CosmeticKind<C>(
         Component removed,
         Optional<Unlock<C>> unlock
 ) {
-
-    record Layout(int rows, int backSlot, int removeSlot) {
-        static final Layout ROW = new Layout(1, 7, 8);
-    }
 
     record Price<C>(int coins, String itemPrefix, Function<C, String> item) {
     }

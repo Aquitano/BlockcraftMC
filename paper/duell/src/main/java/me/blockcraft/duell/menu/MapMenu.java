@@ -43,8 +43,7 @@ final class MapMenu extends Menu {
         this.duel = duel;
         this.messages = messages;
         this.mode = mode;
-        int rows = rows(options.size());
-        backButton(rows * COLUMNS - 1, player -> new ModeMenu(duel, messages, player).open(player));
+        backButton(player -> new ModeMenu(duel, messages, player).open(player));
         if (options.isEmpty()) {
             info(COLUMNS + 4, Items.of(Material.BARRIER).name(messages.get("menu.maps.unavailable"))
                     .lore(messages.get("menu.maps.unavailable-lore")).build());

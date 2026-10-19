@@ -17,7 +17,7 @@ import java.util.function.Consumer;
 
 /**
  * The catalog, a game's icon before each row of entries: earned entries lit, the rest grey with how far the
- * player has come. A footer turns pages and leads back to wherever it was opened from, or closes.
+ * player has come. The last row turns pages and leads back to wherever it was opened from, or closes.
  */
 public final class AchievementsMenu extends Menu {
 
@@ -26,7 +26,6 @@ public final class AchievementsMenu extends Menu {
     private final Achievements.Snapshot snapshot;
     private final AchievementPages pages;
     private final int footer;
-    private int page;
 
     public AchievementsMenu(Achievements achievements, Messages messages, Achievements.Snapshot snapshot, Optional<Consumer<Player>> back) {
         this(achievements, messages, snapshot, back, new AchievementPages(achievements.catalog()));
@@ -40,7 +39,7 @@ public final class AchievementsMenu extends Menu {
         this.snapshot = snapshot;
         this.pages = pages;
         footer = (pages.inventoryRows() - 1) * AchievementPages.COLUMNS;
-        back.ifPresentOrElse(previous -> backButton(footer + 8, previous), () -> closeButton(footer + 8));
+        back.ifPresentOrElse(this::backButton, this::closeButton);
         render();
     }
 
@@ -48,7 +47,8 @@ public final class AchievementsMenu extends Menu {
         for (int slot = 0; slot < footer; slot++) {
             set(slot, null);
         }
-        var rows = pages.page(page);
+        paginate(pages.count());
+        var rows = pages.page(page());
         for (int row = 0; row < rows.size(); row++) {
             var group = rows.get(row);
             var entries = achievements.of(group.game());
@@ -63,21 +63,15 @@ public final class AchievementsMenu extends Menu {
                 info(start + index + 1, item(achievements, messages, group.entries().get(index), snapshot));
             }
         }
-        set(footer + 3, page > 0 ? Items.of(Material.ARROW).name(messages.get("menu.previous")).build() : null);
-        info(footer + 4, pages.count() > 1 ? Items.of(Material.PAPER).name(messages.get("menu.page",
-                Formatter.number("page", page + 1), Formatter.number("pages", pages.count()))).build() : null);
-        set(footer + 5, page + 1 < pages.count() ? Items.of(Material.ARROW).name(messages.get("menu.next")).build() : null);
+    }
+
+    @Override
+    void pageTurned(Player player) {
+        render();
     }
 
     @Override
     protected void onClick(Player player, int slot, ItemStack clicked, InventoryClickEvent event) {
-        if (slot == footer + 3 && page > 0) {
-            page--;
-            render();
-        } else if (slot == footer + 5 && page + 1 < pages.count()) {
-            page++;
-            render();
-        }
     }
 
     private static ItemStack item(Achievements achievements, Messages messages, Achievement achievement, Achievements.Snapshot snapshot) {

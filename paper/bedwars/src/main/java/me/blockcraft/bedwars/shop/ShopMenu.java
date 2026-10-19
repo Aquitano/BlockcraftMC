@@ -38,7 +38,7 @@ final class ShopMenu extends Menu {
         this.selected = catalog.categories().stream().findFirst();
         // A catalog already filling a chest keeps all its offers; Escape still closes it.
         if (rows(catalog) <= MAX_ROWS) {
-            closeButton(rows(catalog) * COLUMNS - 1);
+            closeButton();
         }
         var slots = Slots.centered(catalog.categories().size());
         for (int index = 0; index < slots.length; index++) {

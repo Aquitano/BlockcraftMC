@@ -32,7 +32,7 @@ public final class ModeMenu extends Menu {
         super(3, messages.get("menu.modes.title"));
         this.duel = duel;
         this.messages = messages;
-        closeButton(26);
+        closeButton();
         var own = duel.votes().choiceOf(viewer.getUniqueId()).map(DuelVote.Choice::mode);
         SLOTS.forEach((slot, mode) -> {
             boolean chosen = own.equals(Optional.of(mode));

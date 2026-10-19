@@ -40,7 +40,7 @@ public final class ReportMenus {
         this.messages = messages;
     }
 
-    public void openList(Player player, Optional<String> reported, int page) {
+    public void openList(Player player, Optional<String> reported) {
         if (!allowed(player)) {
             return;
         }
@@ -53,7 +53,7 @@ public final class ReportMenus {
                         .orElseGet(() -> messages.pick("none")));
                 return;
             }
-            new ReportListMenu(this, messages, list, reported, page).open(player);
+            new ReportListMenu(this, messages, list, reported).open(player);
         });
     }
 
@@ -65,9 +65,9 @@ public final class ReportMenus {
             if (!allowed(player)) {
                 return;
             }
-            current.ifPresentOrElse(updated ->
-                            new ReportMenu(this, messages, updated, reported, player.getUniqueId(), BlockcraftApi.get().realName(player)).open(player),
-                    () -> openList(player, reported, 1));
+            current.ifPresentOrElse(updated -> new ReportDetailsDialog(this, messages, updated, reported,
+                            player.getUniqueId(), BlockcraftApi.get().realName(player)).open(player),
+                    () -> openList(player, reported));
         });
     }
 
@@ -91,7 +91,7 @@ public final class ReportMenus {
             current.ifPresentOrElse(updated -> {
                 player.sendMessage(messages.get(claimResult(updated, player.getUniqueId(), staff), placeholders(messages, updated)));
                 openReport(player, updated, reported);
-            }, () -> openList(player, reported, 1));
+            }, () -> openList(player, reported));
         });
     }
 
@@ -110,7 +110,7 @@ public final class ReportMenus {
         BlockcraftApi.get().playerTasks().write(player, () -> {
             reports.close(report.id(), player.getUniqueId(), staff);
             return report;
-        }, closed -> openList(player, reported, 1));
+        }, closed -> openList(player, reported));
     }
 
     public void goTo(Player player, String target) {
@@ -122,6 +122,11 @@ public final class ReportMenus {
     }
 
     public void openPunish(Player player, Report report, Optional<String> reported) {
+        openPunish(player, report, reported, Optional.empty());
+    }
+
+    /** {@code draft} is the custom punishment a rejected form carried, so the moderator corrects it instead of retyping it. */
+    private void openPunish(Player player, Report report, Optional<String> reported, Optional<PunishDialog.Custom> draft) {
         if (!allowed(player)) {
             return;
         }
@@ -129,7 +134,7 @@ public final class ReportMenus {
             if (!allowed(player)) {
                 return;
             }
-            new PunishDialog(this, messages, report, reported, entries).open(player);
+            new PunishDialog(this, messages, report, reported, entries, draft).open(player);
         });
     }
 
@@ -141,18 +146,19 @@ public final class ReportMenus {
     }
 
     /** A punishment outside the catalogue; the proxy checks rank and permission and answers, so only the form is checked here. */
-    void punish(Player player, Report report, Optional<String> reported, PunishDialog.Custom custom) {
+    void punish(Player player, Report report, Optional<String> reported, Optional<PunishDialog.Custom> form) {
         if (!allowed(player)) {
             return;
         }
-        if (custom == null) {
+        if (form.isEmpty()) {
             player.sendMessage(messages.get("punish.invalid"));
             openPunish(player, report, reported);
             return;
         }
+        var custom = form.get();
         if (custom.reason().isEmpty() || custom.totalHours() <= 0) {
             player.sendMessage(messages.get(custom.reason().isEmpty() ? "punish.reason-missing" : "punish.duration-missing"));
-            openPunish(player, report, reported);
+            openPunish(player, report, reported, form);
             return;
         }
         BlockcraftApi.get().operations().submit(player, new TimedPunishment(report.target(), custom.type(),

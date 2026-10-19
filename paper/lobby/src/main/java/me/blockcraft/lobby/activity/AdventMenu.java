@@ -37,7 +37,7 @@ final class AdventMenu extends Menu {
                 info(door - 1, item);
             }
         }
-        backButton(31, back);
+        backButton(back);
     }
 
     @Override

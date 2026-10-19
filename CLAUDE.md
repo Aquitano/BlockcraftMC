@@ -38,10 +38,15 @@ README.md; this file only holds what the code does not say by itself.
   work (DB, pings) on hot paths runs through `Tasks.async`; database work behind a menu goes through
   `BlockcraftApi.get().playerTasks()`: `latest` for reads that build a screen, `write` for changes the player must
   hear about. Chat listeners use `AsyncChatEvent` and may block.
+- A chest `Menu` is for picking among things with a picture; reading, forms and confirmations are dialogs, one
+  `*Dialog` class each, shown through `Dialogs.show`, whose back, close and cancel buttons use BlockcraftAPI's `menu.*`
+  messages. A form rejected on submit reopens with what was entered.
 - GUIs extend `Menu` (holder-based, never title matching). Open and close other inventories only via `Menu.open` /
   `Menu.close`; both defer a tick because Bukkit forbids doing it inside `InventoryClickEvent`. `Menu` fills the
-  empty slots, plays the click sound and owns `backButton`/`closeButton`; a coin purchase goes through
-  `ConfirmDialog` first.
+  empty slots, plays the click sound and owns the exit in the last slot: `backButton` when another menu leads there,
+  `closeButton` otherwise; a coin purchase goes through `ConfirmDialog` first. A list of entries is a `ListMenu`,
+  which pages from the middle of the last row and shows loading, failure and an empty list in the middle of the page;
+  no menu draws its own pager or loading state.
 - The client-side look lives in `resourcepack/` (README, "Resource pack"): menu panels and HUD icons are glyphs of
   the `blockcraft:ui` font, addressed only through `UiFont` and `<icon:name>`, and never assumed: whatever the pack
   draws must also read without it, because `BlockcraftApi.get().resourcePack().applied(player)` may be false.

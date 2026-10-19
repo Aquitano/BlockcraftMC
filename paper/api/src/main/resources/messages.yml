@@ -90,14 +90,16 @@ menu:
   filler: " "
   back: "<arrow><error>Zurück"
   close: "<arrow><error>Schließen"
+  cancel: "<error>Abbrechen"
   previous: "<primary>Vorherige Seite"
   next: "<primary>Nächste Seite"
   page: "<muted>Seite <page> von <pages>"
+  refresh: "<primary>Aktualisieren"
+  empty: "<muted>Hier ist noch nichts."
   confirm:
     unavailable: "<error>Kauf nicht möglich"
     title: "<arrow><primary>Bestätigen"
     accept: "<success>Kaufen"
-    cancel: "<error>Abbrechen"
 
 purchase:
   completed: "<success>Kauf abgeschlossen."

@@ -10,7 +10,6 @@ import me.blockcraft.lobby.cosmetic.PetType;
 import me.blockcraft.lobby.cosmetic.Shirt;
 import me.blockcraft.lobby.cosmetic.Trail;
 import me.blockcraft.lobby.gadget.Gadget;
-import me.blockcraft.lobby.menu.CosmeticKind.Layout;
 import me.blockcraft.lobby.menu.CosmeticKind.Live;
 import me.blockcraft.lobby.menu.CosmeticKind.Preview;
 import me.blockcraft.lobby.menu.CosmeticKind.Price;
@@ -35,7 +34,7 @@ final class CosmeticKinds {
 
     static CosmeticKind<Shirt> shirts(Menus menus) {
         var messages = menus.messages();
-        return new CosmeticKind<>(PlayerSetting.SHIRT, messages.get("shirts.title"), new Layout(1, 8, 7), menus::openShop,
+        return new CosmeticKind<>(PlayerSetting.SHIRT, messages.get("shirts.title"), 1, menus::openShop,
                 List.of(Shirt.values()), Shirt::key, CosmeticKinds::shirt,
                 shirt -> messages.get("shirts.name." + shirt.key()), shirt -> List.of(), false,
                 Optional.of(new Price<>(menus.config().shirtPrice(), Shirt.ITEM_PREFIX, Shirt::item)),
@@ -46,7 +45,7 @@ final class CosmeticKinds {
 
     static CosmeticKind<Head> heads(Menus menus) {
         var messages = menus.messages();
-        return new CosmeticKind<>(PlayerSetting.HEAD, messages.get("heads.title"), new Layout(3, 26, 25), menus::openShop,
+        return new CosmeticKind<>(PlayerSetting.HEAD, messages.get("heads.title"), 3, menus::openShop,
                 List.of(Head.values()), Head::storageKey, head -> Items.head(head.owner()).build(),
                 head -> messages.get("heads.name." + head.key()), head -> List.of(), false,
                 Optional.of(new Price<>(menus.config().headPrice(), Head.ITEM_PREFIX, Head::item)),
@@ -57,7 +56,7 @@ final class CosmeticKinds {
 
     static CosmeticKind<Trail> trails(Menus menus) {
         var messages = menus.messages();
-        return new CosmeticKind<>(PlayerSetting.TRAIL, messages.get("trails.title"), Layout.ROW, menus::openExtras,
+        return new CosmeticKind<>(PlayerSetting.TRAIL, messages.get("trails.title"), 1, menus::openExtras,
                 List.of(Trail.values()), Trail::key, trail -> ItemStack.of(trail.icon()),
                 trail -> messages.get("trails.name." + trail.key()),
                 trail -> List.of(messages.get("trails.lore." + trail.key())), true, Optional.empty(),
@@ -69,7 +68,7 @@ final class CosmeticKinds {
     static CosmeticKind<PetType> pets(Menus menus) {
         var messages = menus.messages();
         var pets = menus.pets();
-        return new CosmeticKind<>(PlayerSetting.PET, messages.get("pets.title"), Layout.ROW, menus::openPremium,
+        return new CosmeticKind<>(PlayerSetting.PET, messages.get("pets.title"), 1, menus::openPremium,
                 List.of(PetType.values()), PetType::key, pet -> ItemStack.of(pet.icon()),
                 pet -> messages.get("pets.name." + pet.key()),
                 pet -> List.of(messages.get("pets.lore." + pet.key())), true, Optional.empty(),
@@ -83,7 +82,7 @@ final class CosmeticKinds {
 
     static CosmeticKind<Gadget> gadgets(Menus menus) {
         var messages = menus.messages();
-        return new CosmeticKind<>(PlayerSetting.GADGET, messages.get("gadgets.title"), Layout.ROW, menus::openExtras,
+        return new CosmeticKind<>(PlayerSetting.GADGET, messages.get("gadgets.title"), 1, menus::openExtras,
                 List.of(Gadget.values()), Gadget::key, gadget -> ItemStack.of(gadget.material()),
                 gadget -> messages.get("gadgets.name." + gadget.key()),
                 gadget -> List.of(messages.get("gadgets.lore." + gadget.key())), false, Optional.empty(),
@@ -95,7 +94,7 @@ final class CosmeticKinds {
     static CosmeticKind<ChatTagChoice> chatTags(Menus menus, List<ChatTagChoice> choices) {
         var messages = menus.messages();
         var tags = menus.apiMessages();
-        return new CosmeticKind<>(PlayerSetting.CHAT_TAG, messages.get("tags.title"), new Layout(3, 18, 26), menus::openExtras,
+        return new CosmeticKind<>(PlayerSetting.CHAT_TAG, messages.get("tags.title"), 3, menus::openExtras,
                 choices, ChatTagChoice::value,
                 choice -> ItemStack.of(choice.tag().earned() ? Material.GOLDEN_HELMET : Material.NAME_TAG),
                 choice -> choice.text(tags),
@@ -122,7 +121,7 @@ final class CosmeticKinds {
                                                Function<E, Material> icon, Price<E> price,
                                                BiConsumer<Player, E> preview) {
         var messages = menus.messages();
-        return new CosmeticKind<>(setting, messages.get(prefix + ".title"), Layout.ROW, menus::openExtras,
+        return new CosmeticKind<>(setting, messages.get(prefix + ".title"), 1, menus::openExtras,
                 effects, key, effect -> ItemStack.of(icon.apply(effect)),
                 effect -> messages.get(prefix + ".name." + key.apply(effect)), effect -> List.of(), false,
                 Optional.of(price),

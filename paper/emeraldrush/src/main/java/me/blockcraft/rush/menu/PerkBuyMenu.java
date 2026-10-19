@@ -13,7 +13,6 @@ import org.bukkit.inventory.ItemStack;
 final class PerkBuyMenu extends Menu {
 
     private static final int BUY = 6;
-    private static final int BACK = 8;
 
     private final RushMenus menus;
     private final Perk perk;
@@ -32,7 +31,7 @@ final class PerkBuyMenu extends Menu {
         } else {
             set(BUY, Items.of(Material.GREEN_STAINED_GLASS_PANE).name(messages.get("perk.buy")).build());
         }
-        backButton(BACK, menus::openPerks);
+        backButton(menus::openPerks);
     }
 
     @Override

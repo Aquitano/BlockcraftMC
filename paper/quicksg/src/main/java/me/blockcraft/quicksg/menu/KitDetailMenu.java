@@ -15,7 +15,6 @@ final class KitDetailMenu extends Menu {
 
     private static final int SLOT_SELECT = 3;
     private static final int SLOT_BUY = 6;
-    private static final int BACK = 8;
 
     private final KitMenus menus;
     private final Kit kit;
@@ -48,7 +47,7 @@ final class KitDetailMenu extends Menu {
                 set(SLOT_BUY, Items.of(Material.LIME_STAINED_GLASS_PANE).name(messages.get("menu.kit-detail.buy")).build());
             }
         }
-        backButton(BACK, menus::openSelector);
+        backButton(menus::openSelector);
     }
 
     private void refresh(Player player) {

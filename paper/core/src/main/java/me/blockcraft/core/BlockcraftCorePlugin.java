@@ -154,7 +154,7 @@ public final class BlockcraftCorePlugin extends JavaPlugin {
             commands.register(ConnectCommand.create(this, messages));
             commands.register(ReflashCommand.create(this, messages));
             commands.register(NickCommand.create(nicks, audit, messages));
-            commands.register(ReportCommand.create(this, stringList(YamlFile.section(config, "report"), "reasons"), messages));
+            commands.register(ReportCommand.create(stringList(YamlFile.section(config, "report"), "reasons"), messages));
             commands.register(AchievementsCommand.create());
             commands.register(EloCommand.create(this, api.elo(), messages));
         });

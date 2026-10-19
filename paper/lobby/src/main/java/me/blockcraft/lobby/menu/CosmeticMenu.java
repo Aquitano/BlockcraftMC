@@ -20,17 +20,21 @@ import java.util.Set;
 
 final class CosmeticMenu<C> extends Menu {
 
+    private static final int COLUMNS = 9;
+
     private final Menus menus;
     private final CosmeticKind<C> kind;
     private final Set<String> owned;
+    private final int removeSlot;
 
     CosmeticMenu(Menus menus, CosmeticKind<C> kind, Player viewer, Set<String> owned) {
-        super(kind.layout().rows(), kind.title());
+        super(kind.rows(), kind.title());
         this.menus = menus;
         this.kind = kind;
         this.owned = new HashSet<>(owned);
+        removeSlot = kind.rows() * COLUMNS - 2;
         refresh(viewer);
-        backButton(kind.layout().backSlot(), kind.back());
+        backButton(kind.back());
     }
 
     private void refresh(Player player) {
@@ -52,7 +56,7 @@ final class CosmeticMenu<C> extends Menu {
             }
             set(slot, icon.build());
         }
-        set(kind.layout().removeSlot(), Items.of(Material.BARRIER).name(messages.get("cosmetics.remove"))
+        set(removeSlot, Items.of(Material.BARRIER).name(messages.get("cosmetics.remove"))
                 .lore(messages.get(selected(player).isPresent() ? "cosmetics.remove-lore" : "cosmetics.empty-remove")).build());
     }
 
@@ -87,7 +91,7 @@ final class CosmeticMenu<C> extends Menu {
 
     @Override
     protected boolean isEnabled(Player player, int slot, InventoryClickEvent event) {
-        if (slot == kind.layout().removeSlot()) {
+        if (slot == removeSlot) {
             return selected(player).isPresent();
         }
         return choiceAt(slot).map(choice -> {
@@ -101,13 +105,13 @@ final class CosmeticMenu<C> extends Menu {
 
     @Override
     protected Sounds clickSound(int slot, InventoryClickEvent event) {
-        return slot == kind.layout().removeSlot() || !previews(event) && choiceAt(slot).filter(this::owns).isPresent()
+        return slot == removeSlot || !previews(event) && choiceAt(slot).filter(this::owns).isPresent()
                 ? Sounds.EQUIP : Sounds.MENU_CLICK;
     }
 
     @Override
     protected void onClick(Player player, int slot, ItemStack clicked, InventoryClickEvent event) {
-        if (slot == kind.layout().removeSlot()) {
+        if (slot == removeSlot) {
             menus.settings().clear(player, kind.setting());
             BlockcraftApi.get().notifications().feedback(player, kind.removed());
             return;

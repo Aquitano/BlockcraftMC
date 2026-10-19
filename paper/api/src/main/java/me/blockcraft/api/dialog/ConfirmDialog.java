@@ -38,7 +38,7 @@ public final class ConfirmDialog {
                         .build())
                 .type(onAccept.isPresent() ? DialogType.confirmation(
                         Dialogs.button(messages.get("menu.confirm.accept"), onAccept.get()),
-                        Dialogs.button(messages.get("menu.confirm.cancel"), onCancel))
+                        Dialogs.button(messages.get("menu.cancel"), onCancel))
                         : DialogType.notice(Dialogs.button(messages.get("menu.back"), onCancel))));
     }
 

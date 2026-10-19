@@ -31,7 +31,7 @@ final class ShopMenu extends Menu {
         this.menus = menus;
         this.messages = messages;
         this.owned = Set.copyOf(owned);
-        closeButton(17);
+        closeButton();
         this.category = category;
         set(ENCHANT, Items.of(Material.ENCHANTING_TABLE).name(messages.get("shop.nav.enchant")).build());
         stock.forEach(entry -> entries.put(entry.slot(), entry));

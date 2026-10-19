@@ -29,7 +29,6 @@ public final class StatsMenus {
     private static final int ROWS = 2;
     private static final int SLOTS = ROWS * 9;
     private static final int GLOBAL = 13;
-    private static final int BACK = 13;
     private static final Map<Integer, Stat> CATEGORIES = Map.of(
             0, Stat.WINS,
             2, Stat.DEATHS,
@@ -130,7 +129,7 @@ public final class StatsMenus {
             CATEGORIES.forEach((slot, stat) -> set(slot, Items.of(Material.PAPER)
                     .name(messages.get("menu.global-stats." + stat.name().toLowerCase(Locale.ROOT)))
                     .build()));
-            backButton(BACK, StatsMenus.this::open);
+            backButton(StatsMenus.this::open);
         }
 
         @Override

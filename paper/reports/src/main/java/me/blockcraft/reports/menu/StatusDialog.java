@@ -4,6 +4,7 @@ import io.papermc.paper.dialog.Dialog;
 import io.papermc.paper.registry.data.dialog.DialogBase;
 import io.papermc.paper.registry.data.dialog.input.DialogInput;
 import io.papermc.paper.registry.data.dialog.type.DialogType;
+import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.dialog.Dialogs;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.report.Report;
@@ -31,7 +32,7 @@ final class StatusDialog {
                         .build())
                 .type(DialogType.multiAction(List.of(Dialogs.button(messages.get("status.save"),
                                 (viewer, view) -> menus.setStatus(viewer, report, reported, view.getText(STATUS)))))
-                        .exitAction(Dialogs.button(messages.get("status.back"), viewer -> menus.openReport(viewer, report, reported)))
+                        .exitAction(Dialogs.button(BlockcraftApi.get().messages().get("menu.back"), viewer -> menus.openReport(viewer, report, reported)))
                         .build()));
     }
 

@@ -8,6 +8,7 @@ import io.papermc.paper.registry.data.dialog.body.DialogBody;
 import io.papermc.paper.registry.data.dialog.input.DialogInput;
 import io.papermc.paper.registry.data.dialog.input.SingleOptionDialogInput.OptionEntry;
 import io.papermc.paper.registry.data.dialog.type.DialogType;
+import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.dialog.Dialogs;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.moderation.PunishmentCatalogRepository.Entry;
@@ -49,7 +50,8 @@ final class PunishDialog {
 
     private final Dialog dialog;
 
-    PunishDialog(ReportMenus menus, Messages messages, Report report, Optional<String> reported, List<Entry> catalog) {
+    PunishDialog(ReportMenus menus, Messages messages, Report report, Optional<String> reported, List<Entry> catalog,
+                 Optional<Custom> draft) {
         var placeholders = ReportMenus.placeholders(messages, report);
         var buttons = new ArrayList<ActionButton>();
         for (var entry : catalog) {
@@ -69,14 +71,19 @@ final class PunishDialog {
                 .base(DialogBase.builder(messages.get("menu.title-punish", placeholders))
                         .body(List.of(DialogBody.plainMessage(messages.get("punish.body", placeholders))))
                         .inputs(List.of(
-                                DialogInput.singleOption(TYPE, messages.get("punish.type"), typeOptions(messages)).build(),
-                                DialogInput.numberRange(DAYS, messages.get("punish.days"), 0, MAX_DAYS).step(1f).initial(1f).build(),
-                                DialogInput.numberRange(HOURS, messages.get("punish.hours"), 0, HOURS_PER_DAY - 1).step(1f).initial(0f).build(),
-                                DialogInput.text(REASON, messages.get("punish.reason")).maxLength(MAX_REASON_LENGTH).build()))
+                                DialogInput.singleOption(TYPE, messages.get("punish.type"),
+                                        typeOptions(messages, draft.map(Custom::type).orElse(PunishmentType.BAN))).build(),
+                                DialogInput.numberRange(DAYS, messages.get("punish.days"), 0, MAX_DAYS).step(1f)
+                                        .initial(draft.map(custom -> (float) custom.days()).orElse(1f)).build(),
+                                DialogInput.numberRange(HOURS, messages.get("punish.hours"), 0, HOURS_PER_DAY - 1).step(1f)
+                                        .initial(draft.map(custom -> (float) custom.hours()).orElse(0f)).build(),
+                                DialogInput.text(REASON, messages.get("punish.reason")).maxLength(MAX_REASON_LENGTH)
+                                        .initial(draft.map(Custom::reason).orElse("")).build()))
                         .build())
                 .type(DialogType.multiAction(buttons)
                         .columns(COLUMNS)
-                        .exitAction(Dialogs.button(messages.get("punish.back"), viewer -> menus.openReport(viewer, report, reported)))
+                        .exitAction(Dialogs.button(BlockcraftApi.get().messages().get("menu.back"),
+                                viewer -> menus.openReport(viewer, report, reported)))
                         .build()));
     }
 
@@ -84,14 +91,14 @@ final class PunishDialog {
         Dialogs.show(player, dialog);
     }
 
-    private static List<OptionEntry> typeOptions(Messages messages) {
+    private static List<OptionEntry> typeOptions(Messages messages, PunishmentType selected) {
         return Arrays.stream(PunishmentType.values())
                 .map(type -> OptionEntry.create(type.name(), messages.get("menu.punish-type." + type.name().toLowerCase()),
-                        type == PunishmentType.BAN))
+                        type == selected))
                 .toList();
     }
 
-    private static Custom custom(DialogResponseView view) {
+    private static Optional<Custom> custom(DialogResponseView view) {
         String type = view.getText(TYPE);
         Float days = view.getFloat(DAYS);
         Float hours = view.getFloat(HOURS);
@@ -100,8 +107,8 @@ final class PunishDialog {
                 || days == null || !Float.isFinite(days) || days < 0 || days > MAX_DAYS || days != Math.rint(days)
                 || hours == null || !Float.isFinite(hours) || hours < 0 || hours >= HOURS_PER_DAY || hours != Math.rint(hours)
                 || reason == null || reason.length() > MAX_REASON_LENGTH || reason.chars().anyMatch(Character::isISOControl)) {
-            return null;
+            return Optional.empty();
         }
-        return new Custom(PunishmentType.valueOf(type), Math.round(days), Math.round(hours), reason.strip());
+        return Optional.of(new Custom(PunishmentType.valueOf(type), Math.round(days), Math.round(hours), reason.strip()));
     }
 }

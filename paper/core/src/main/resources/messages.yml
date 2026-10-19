@@ -342,7 +342,6 @@ report:
   reason: "<primary>Grund"
   details: "<primary>Details (optional)"
   send: "<success>Melden"
-  cancel: "<error>Abbrechen"
 
 # Ranked 1vs1; <group> is the skill group's name from BlockcraftAPI's elo.groups, <season> the key like 2026-3.
 elo:

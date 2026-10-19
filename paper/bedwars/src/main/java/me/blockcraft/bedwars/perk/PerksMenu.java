@@ -24,7 +24,6 @@ public final class PerksMenu extends Menu {
     private static final int GRID_COLUMNS = 4;
     private static final int GRID_FIRST_COLUMN = 3;
     private static final int RESET_SLOT = 44;
-    private static final int CLOSE_SLOT = 53;
 
     private final Messages messages;
     private final Perks perks;
@@ -44,7 +43,7 @@ public final class PerksMenu extends Menu {
             tabs.put((index + 1) * COLUMNS, groups[index]);
         }
         set(RESET_SLOT, Items.of(Material.BARRIER).name(messages.get("perks.reset")).build());
-        closeButton(CLOSE_SLOT);
+        closeButton();
         draw();
     }
 
