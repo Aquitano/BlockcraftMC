@@ -22,6 +22,8 @@ import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -36,6 +38,10 @@ public final class WarnCommands {
     private static final String FORCE_SUFFIX = "*";
     private static final int MAX_LISTED = 18;
     private static final String EVERY_PLAYER = "";
+    private static final Duration CONFIRM_TTL = Duration.ofSeconds(30);
+
+    private record PendingClear(String players, Instant askedAt) {
+    }
 
     private final CommandSupport support;
     private final ProxyServer proxy;
@@ -44,7 +50,7 @@ public final class WarnCommands {
     private final SystemConfig config;
     private final Messages messages;
     private final Map<PlayerReference, String> lastForcedWarn = new ConcurrentHashMap<>();
-    private final Map<PlayerReference, String> pendingClears = new ConcurrentHashMap<>();
+    private final Map<PlayerReference, PendingClear> pendingClears = new ConcurrentHashMap<>();
 
     public WarnCommands(CommandSupport support, ProxyServer proxy, PlayerLookup lookup, WarnRepository warns, SystemConfig config,
                         Messages messages) {
@@ -159,22 +165,24 @@ public final class WarnCommands {
     }
 
     private void askClearAll(CommandSource source) {
-        pendingClears.put(CommandSupport.sender(source), EVERY_PLAYER);
+        pendingClears.put(CommandSupport.sender(source), new PendingClear(EVERY_PLAYER, Instant.now()));
         source.sendMessage(messages.get("warns.clear-all-confirm")
                 .clickEvent(ClickEvent.runCommand("/warns clear*"))
                 .hoverEvent(HoverEvent.showText(messages.get("warns.clear-hover"))));
     }
 
     private void askClear(CommandSource source, String player) {
-        pendingClears.put(CommandSupport.sender(source), player.toLowerCase());
+        pendingClears.put(CommandSupport.sender(source), new PendingClear(player.toLowerCase(), Instant.now()));
         source.sendMessage(messages.get("warns.clear-confirm", Placeholder.unparsed("player", player))
                 .clickEvent(ClickEvent.runCommand("/warns clear* " + player))
                 .hoverEvent(HoverEvent.showText(messages.get("warns.clear-hover"))));
     }
 
-    /** {@code clear*} only follows a {@code clear} of the same players, so typing it straight away asks first. */
+    /** {@code clear*} only follows a recent {@code clear} of the same players, so typing it straight away asks first. */
     private boolean confirmed(CommandSource source, String cleared) {
-        return pendingClears.remove(CommandSupport.sender(source), cleared);
+        var pending = pendingClears.remove(CommandSupport.sender(source));
+        return pending != null && pending.players().equals(cleared)
+                && Duration.between(pending.askedAt(), Instant.now()).compareTo(CONFIRM_TTL) <= 0;
     }
 
     private void clearAll(CommandSource source) {
