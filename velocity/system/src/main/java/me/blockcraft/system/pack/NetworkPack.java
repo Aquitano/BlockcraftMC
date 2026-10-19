@@ -43,11 +43,13 @@ public final class NetworkPack {
 
     private final ResourcePackInfo info;
     private final Optional<HttpServer> server;
+    private final Logger logger;
     private final Map<UUID, PackStatus> statuses = new ConcurrentHashMap<>();
 
-    private NetworkPack(ResourcePackInfo info, Optional<HttpServer> server) {
+    private NetworkPack(ResourcePackInfo info, Optional<HttpServer> server, Logger logger) {
         this.info = info;
         this.server = server;
+        this.logger = logger;
     }
 
     /** Empty when the config names no file; nothing is offered then and backends learn nothing. */
@@ -72,7 +74,7 @@ public final class NetworkPack {
                 .build();
         var server = config.port() > 0 ? Optional.of(serve(config.port(), file.getFileName().toString(), bytes)) : Optional.<HttpServer>empty();
         logger.info("Offering resource pack {} ({} KiB) as {}", file.getFileName(), bytes.length / 1024, config.url());
-        return Optional.of(new NetworkPack(info, server));
+        return Optional.of(new NetworkPack(info, server, logger));
     }
 
     public void stop() {
@@ -110,6 +112,9 @@ public final class NetworkPack {
             status = PackStatus.DECLINED;
         } else {
             status = PackStatus.FAILED;
+            // A wrong or unreachable url fails for every client alike, and nothing else would say so.
+            logger.warn("{} could not load the resource pack from {}: {}", event.getPlayer().getUsername(), info.getUrl(),
+                    event.getStatus());
         }
         statuses.put(event.getPlayer().getUniqueId(), status);
         tell(event.getPlayer(), status);
