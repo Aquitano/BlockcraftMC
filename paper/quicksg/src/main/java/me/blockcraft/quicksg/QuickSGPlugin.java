@@ -69,7 +69,7 @@ public final class QuickSGPlugin extends JavaPlugin {
 
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             var commands = new CommandRegistry(event.registrar(), messages);
-            commands.register(StartCommand.create(this, game, messages, api.coins(), stats));
+            commands.register(StartCommand.create(this, game, messages, stats));
             commands.register(StatsCommand.create(this, stats, messages));
             commands.register(SetupCommand.create(locations, messages));
             commands.register(TopCommand.create(topList));

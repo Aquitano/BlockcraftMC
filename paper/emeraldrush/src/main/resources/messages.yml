@@ -14,8 +14,6 @@ commands:
     description: "Öffnet den Shop"
   rush:
     description: "Admin-Befehle"
-  rushcoins:
-    description: "Setzt die Emeralds eines Spielers"
 
 join:
   introduction: "<prefix><muted>Baue Erze ab, kaufe Ausrüstung und gewinne das Deathmatch. <emeraldrush>Hrrm. Nur Barzahlung."
@@ -64,8 +62,7 @@ item:
   compass-lore: "<bullet><muted>Tracke Spieler in deiner Nähe"
 command:
   chest-wrong-phase: "<prefix><error>Du kannst diesen Command nur in der Shopping-Phase benutzen!"
-  emeralds-set: "<prefix><muted>Du hast diesem Spieler <accent><amount> <muted>Emeralds gegeben!"
-  coins-given: "<prefix><muted>Du hast diesem Spieler <accent><amount> <muted>Coins gegeben!"
+  emeralds-set: "<prefix><muted>Der Spieler hat jetzt <accent><amount> <muted>Emeralds."
   start-already-started: "<prefix><error>Die Runde wurde bereits gestartet!"
   start-not-lobby: "<prefix><error>Du kannst die Runde nur im Lobby-Modus starten!"
   start-not-enough-players: "<prefix><error>Es müssen mindestens 2 Spieler online sein!"

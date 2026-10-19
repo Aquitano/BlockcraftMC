@@ -12,7 +12,6 @@ import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.rush.command.ChestCommand;
-import me.blockcraft.rush.command.RushCoinsCommand;
 import me.blockcraft.rush.command.RushCommand;
 import me.blockcraft.rush.command.RushSetCommand;
 import me.blockcraft.rush.command.StartCommand;
@@ -63,13 +62,12 @@ public final class EmeraldRushPlugin extends JavaPlugin {
 
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             var commands = new CommandRegistry(event.registrar(), messages);
-            commands.register(StartCommand.create(this, game, api.coins(), messages));
+            commands.register(StartCommand.create(game));
             commands.register(StatsCommand.create(this, stats, messages));
             commands.register(RushSetCommand.create(spawns, messages));
             commands.register(TopCommand.create(topList));
             commands.register(ChestCommand.create(game, menus, messages));
-            commands.register(RushCommand.create(this, game, menus, api.coins(), messages));
-            commands.register(RushCoinsCommand.create(game, messages));
+            commands.register(RushCommand.create(game, menus, messages));
         });
 
         int idleSeconds = config.idleRestartMinutes() * 60;

@@ -49,7 +49,6 @@ start:
   not-enough-players: "<prefix><error>Es müssen mindestens 2 Spieler online sein!"
   only-in-lobby: "<prefix><error>Du kannst die Runde nur im Lobby-Modus starten!"
   already-started: "<prefix><error>Die Runde wurde bereits gestartet!"
-  coins-added: "<prefix><muted>Du hast diesem Spieler <accent><coins> <muted>Coins hinzugefügt!"
 
 setup:
   help:
