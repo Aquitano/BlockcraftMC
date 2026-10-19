@@ -63,22 +63,30 @@ public final class ProtectionListener implements Listener {
 
     @EventHandler
     public void onPlace(BlockPlaceEvent event) {
-        event.setCancelled(!buildMode.isEnabled(event.getPlayer()));
+        if (!buildMode.isEnabled(event.getPlayer())) {
+            event.setCancelled(true);
+        }
     }
 
     @EventHandler
     public void onBreak(BlockBreakEvent event) {
-        event.setCancelled(!buildMode.isEnabled(event.getPlayer()));
+        if (!buildMode.isEnabled(event.getPlayer())) {
+            event.setCancelled(true);
+        }
     }
 
     @EventHandler
     public void onBucketEmpty(PlayerBucketEmptyEvent event) {
-        event.setCancelled(!buildMode.isEnabled(event.getPlayer()));
+        if (!buildMode.isEnabled(event.getPlayer())) {
+            event.setCancelled(true);
+        }
     }
 
     @EventHandler
     public void onDrop(PlayerDropItemEvent event) {
-        event.setCancelled(!buildMode.isEnabled(event.getPlayer()));
+        if (!buildMode.isEnabled(event.getPlayer())) {
+            event.setCancelled(true);
+        }
     }
 
     @EventHandler
@@ -95,7 +103,9 @@ public final class ProtectionListener implements Listener {
 
     @EventHandler
     public void onCreatureSpawn(CreatureSpawnEvent event) {
-        event.setCancelled(!MANUAL_SPAWNS.contains(event.getSpawnReason()));
+        if (!MANUAL_SPAWNS.contains(event.getSpawnReason())) {
+            event.setCancelled(true);
+        }
     }
 
     @EventHandler
@@ -143,7 +153,9 @@ public final class ProtectionListener implements Listener {
     public void onHangingBreak(HangingBreakEvent event) {
         boolean byBuilder = event instanceof HangingBreakByEntityEvent byEntity
                 && byEntity.getRemover() instanceof Player player && buildMode.isEnabled(player);
-        event.setCancelled(!byBuilder);
+        if (!byBuilder) {
+            event.setCancelled(true);
+        }
     }
 
     @EventHandler
@@ -155,7 +167,9 @@ public final class ProtectionListener implements Listener {
 
     @EventHandler
     public void onArmorStandManipulate(PlayerArmorStandManipulateEvent event) {
-        event.setCancelled(!buildMode.isEnabled(event.getPlayer()));
+        if (!buildMode.isEnabled(event.getPlayer())) {
+            event.setCancelled(true);
+        }
     }
 
     @EventHandler

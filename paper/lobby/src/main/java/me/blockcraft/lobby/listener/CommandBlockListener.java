@@ -22,6 +22,8 @@ public final class CommandBlockListener implements Listener {
             return;
         }
         String label = event.getMessage().substring(1).split(" ", 2)[0].toLowerCase();
-        event.setCancelled(!allowedCommands.contains(label));
+        if (!allowedCommands.contains(label)) {
+            event.setCancelled(true);
+        }
     }
 }

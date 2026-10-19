@@ -45,7 +45,9 @@ public final class BlockListener implements Listener {
             Tasks.later(plugin, config.oreRespawnSeconds() * 20L, () -> block.setType(Material.EMERALD_ORE));
             return;
         }
-        event.setCancelled(!buildMode.isEnabled(player));
+        if (!buildMode.isEnabled(player)) {
+            event.setCancelled(true);
+        }
     }
 
     /** Outside build mode only TNT, which goes off at once, and cobwebs in the deathmatch, which melt, are placed. */

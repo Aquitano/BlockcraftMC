@@ -44,12 +44,16 @@ public final class ProtectionListener implements Listener {
 
     @EventHandler
     public void onBreak(BlockBreakEvent event) {
-        event.setCancelled(!buildMode.isEnabled(event.getPlayer()));
+        if (!buildMode.isEnabled(event.getPlayer())) {
+            event.setCancelled(true);
+        }
     }
 
     @EventHandler
     public void onPlace(BlockPlaceEvent event) {
-        event.setCancelled(!buildMode.isEnabled(event.getPlayer()));
+        if (!buildMode.isEnabled(event.getPlayer())) {
+            event.setCancelled(true);
+        }
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
