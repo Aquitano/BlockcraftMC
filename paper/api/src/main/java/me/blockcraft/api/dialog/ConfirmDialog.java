@@ -1,7 +1,6 @@
 package me.blockcraft.api.dialog;
 
 import io.papermc.paper.dialog.Dialog;
-import io.papermc.paper.registry.data.dialog.DialogBase;
 import io.papermc.paper.registry.data.dialog.body.DialogBody;
 import io.papermc.paper.registry.data.dialog.type.DialogType;
 import me.blockcraft.api.BlockcraftApi;
@@ -32,14 +31,12 @@ public final class ConfirmDialog {
         var body = new ArrayList<DialogBody>();
         body.add(DialogBody.item(subject).build());
         details.forEach(line -> body.add(DialogBody.plainMessage(line)));
-        dialog = Dialog.create(factory -> factory.empty()
-                .base(DialogBase.builder(messages.get(onAccept.isPresent() ? "menu.confirm.title" : "menu.confirm.unavailable"))
-                        .body(body)
-                        .build())
-                .type(onAccept.isPresent() ? DialogType.confirmation(
+        dialog = Dialogs.create(messages.get(onAccept.isPresent() ? "menu.confirm.title" : "menu.confirm.unavailable"),
+                body, List.of(),
+                onAccept.isPresent() ? DialogType.confirmation(
                         Dialogs.button(messages.get("menu.confirm.accept"), onAccept.get()),
                         Dialogs.button(messages.get("menu.cancel"), onCancel))
-                        : DialogType.notice(Dialogs.button(messages.get("menu.back"), onCancel))));
+                        : DialogType.notice(Dialogs.button(messages.get("menu.back"), onCancel)));
     }
 
     public void open(Player player) {

@@ -3,9 +3,7 @@ package me.blockcraft.api.dialog;
 import io.papermc.paper.dialog.Dialog;
 import io.papermc.paper.dialog.DialogResponseView;
 import io.papermc.paper.registry.data.dialog.ActionButton;
-import io.papermc.paper.registry.data.dialog.DialogBase;
 import io.papermc.paper.registry.data.dialog.input.DialogInput;
-import io.papermc.paper.registry.data.dialog.type.DialogType;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.settings.PlayerSettings;
 import me.blockcraft.api.sound.Sounds;
@@ -59,12 +57,9 @@ public final class SettingsDialog {
             }
             PackDialog.open(player, previous -> new SettingsDialog(previous, back, choices).open(previous));
         }));
-        dialog = Dialog.create(factory -> factory.empty()
-                .base(DialogBase.builder(messages.get("settings.title")).inputs(inputs).build())
-                .type(DialogType.multiAction(buttons)
-                        .exitAction(back.map(previous -> Dialogs.button(messages.get("menu.back"), previous))
-                                .orElseGet(() -> Dialogs.button(messages.get("menu.close"))))
-                        .build()));
+        dialog = Dialogs.create(messages.get("settings.title"), List.of(), inputs, Dialogs.actions(buttons,
+                back.map(previous -> Dialogs.button(messages.get("menu.back"), previous))
+                        .orElseGet(() -> Dialogs.button(messages.get("menu.close")))));
     }
 
     public void open(Player player) {

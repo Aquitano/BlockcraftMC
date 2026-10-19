@@ -3,11 +3,9 @@ package me.blockcraft.reports.menu;
 import io.papermc.paper.dialog.Dialog;
 import io.papermc.paper.dialog.DialogResponseView;
 import io.papermc.paper.registry.data.dialog.ActionButton;
-import io.papermc.paper.registry.data.dialog.DialogBase;
 import io.papermc.paper.registry.data.dialog.body.DialogBody;
 import io.papermc.paper.registry.data.dialog.input.DialogInput;
 import io.papermc.paper.registry.data.dialog.input.SingleOptionDialogInput.OptionEntry;
-import io.papermc.paper.registry.data.dialog.type.DialogType;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.dialog.Dialogs;
 import me.blockcraft.common.message.Messages;
@@ -46,7 +44,6 @@ final class PunishDialog {
     private static final int HOURS_PER_DAY = 24;
     private static final int MAX_DAYS = 90;
     private static final int MAX_REASON_LENGTH = 200;
-    private static final int COLUMNS = 2;
 
     private final Dialog dialog;
 
@@ -67,10 +64,9 @@ final class PunishDialog {
         }
         buttons.add(Dialogs.button(messages.get("punish.custom"), (viewer, view) -> menus.punish(viewer, report, reported, custom(view))));
 
-        dialog = Dialog.create(factory -> factory.empty()
-                .base(DialogBase.builder(messages.get("menu.title-punish", placeholders))
-                        .body(List.of(DialogBody.plainMessage(messages.get("punish.body", placeholders))))
-                        .inputs(List.of(
+        dialog = Dialogs.create(messages.get("menu.title-punish", placeholders),
+                List.of(DialogBody.plainMessage(messages.get("punish.body", placeholders))),
+                List.of(
                                 DialogInput.singleOption(TYPE, messages.get("punish.type"),
                                         typeOptions(messages, draft.map(Custom::type).orElse(PunishmentType.BAN))).build(),
                                 DialogInput.numberRange(DAYS, messages.get("punish.days"), 0, MAX_DAYS).step(1f)
@@ -78,13 +74,9 @@ final class PunishDialog {
                                 DialogInput.numberRange(HOURS, messages.get("punish.hours"), 0, HOURS_PER_DAY - 1).step(1f)
                                         .initial(draft.map(custom -> (float) custom.hours()).orElse(0f)).build(),
                                 DialogInput.text(REASON, messages.get("punish.reason")).maxLength(MAX_REASON_LENGTH)
-                                        .initial(draft.map(Custom::reason).orElse("")).build()))
-                        .build())
-                .type(DialogType.multiAction(buttons)
-                        .columns(COLUMNS)
-                        .exitAction(Dialogs.button(BlockcraftApi.get().messages().get("menu.back"),
-                                viewer -> menus.openReport(viewer, report, reported)))
-                        .build()));
+                                        .initial(draft.map(Custom::reason).orElse("")).build()),
+                Dialogs.actions(buttons, Dialogs.button(BlockcraftApi.get().messages().get("menu.back"),
+                        viewer -> menus.openReport(viewer, report, reported))));
     }
 
     void open(Player player) {
@@ -102,13 +94,13 @@ final class PunishDialog {
         String type = view.getText(TYPE);
         Float days = view.getFloat(DAYS);
         Float hours = view.getFloat(HOURS);
-        String reason = view.getText(REASON);
+        var reason = Dialogs.text(view, REASON, MAX_REASON_LENGTH);
         if (type == null || Arrays.stream(PunishmentType.values()).noneMatch(value -> value.name().equals(type))
                 || days == null || !Float.isFinite(days) || days < 0 || days > MAX_DAYS || days != Math.rint(days)
                 || hours == null || !Float.isFinite(hours) || hours < 0 || hours >= HOURS_PER_DAY || hours != Math.rint(hours)
-                || reason == null || reason.length() > MAX_REASON_LENGTH || reason.chars().anyMatch(Character::isISOControl)) {
+                || reason.isEmpty()) {
             return Optional.empty();
         }
-        return Optional.of(new Custom(PunishmentType.valueOf(type), Math.round(days), Math.round(hours), reason.strip()));
+        return Optional.of(new Custom(PunishmentType.valueOf(type), Math.round(days), Math.round(hours), reason.get()));
     }
 }

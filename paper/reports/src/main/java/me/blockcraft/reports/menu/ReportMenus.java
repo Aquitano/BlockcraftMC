@@ -172,15 +172,17 @@ public final class ReportMenus {
         new StatusDialog(this, messages, report, reported).open(player);
     }
 
-    public void setStatus(Player player, Report report, Optional<String> reported, String status) {
+    void setStatus(Player player, Report report, Optional<String> reported, Optional<String> typed) {
         if (!allowed(player)) {
             return;
         }
-        if (status == null || status.isBlank() || status.length() > 100 || status.chars().anyMatch(Character::isISOControl)) {
+        var entered = typed.filter(text -> !text.isEmpty());
+        if (entered.isEmpty()) {
             player.sendMessage(messages.get("status.cancelled"));
             openReport(player, report, reported);
             return;
         }
+        String status = entered.get();
         BlockcraftApi.get().playerTasks().write(player, () -> {
             reports.updateStatus(report.id(), status);
             return report.withStatus(status);

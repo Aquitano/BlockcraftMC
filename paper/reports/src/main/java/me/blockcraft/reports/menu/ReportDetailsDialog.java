@@ -2,9 +2,7 @@ package me.blockcraft.reports.menu;
 
 import io.papermc.paper.dialog.Dialog;
 import io.papermc.paper.registry.data.dialog.ActionButton;
-import io.papermc.paper.registry.data.dialog.DialogBase;
 import io.papermc.paper.registry.data.dialog.body.DialogBody;
-import io.papermc.paper.registry.data.dialog.type.DialogType;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.dialog.Dialogs;
 import me.blockcraft.api.item.Items;
@@ -23,8 +21,6 @@ import java.util.function.Consumer;
 /** One report and what staff can do about it; the exit returns to the list it was opened from. */
 final class ReportDetailsDialog {
 
-    private static final int COLUMNS = 2;
-
     private final Dialog dialog;
 
     ReportDetailsDialog(ReportMenus menus, Messages messages, Report report, Optional<String> reported, UUID staffId, String staff) {
@@ -36,21 +32,17 @@ final class ReportDetailsDialog {
                 button(messages, "menu.set-status", placeholders, viewer -> menus.promptStatus(viewer, report, reported)),
                 button(messages, "menu.punish", placeholders, viewer -> menus.openPunish(viewer, report, reported)),
                 button(messages, "menu.resolve", placeholders, viewer -> menus.resolve(viewer, report, reported)));
-        dialog = Dialog.create(factory -> factory.empty()
-                .base(DialogBase.builder(messages.get("menu.title-report", placeholders))
-                        .body(List.of(
-                                DialogBody.item(Items.head(report.reported()).build())
-                                        .description(DialogBody.plainMessage(messages.get("menu.accused", placeholders)))
-                                        .showTooltip(false)
-                                        .build(),
-                                DialogBody.plainMessage(Component.join(JoinConfiguration.newlines(),
-                                        messages.getLines("menu.entry-lore", placeholders)))))
-                        .build())
-                .type(DialogType.multiAction(buttons)
-                        .columns(COLUMNS)
-                        .exitAction(Dialogs.button(BlockcraftApi.get().messages().get("menu.back"),
-                                viewer -> menus.openList(viewer, reported)))
-                        .build()));
+        dialog = Dialogs.create(messages.get("menu.title-report", placeholders),
+                List.of(
+                        DialogBody.item(Items.head(report.reported()).build())
+                                .description(DialogBody.plainMessage(messages.get("menu.accused", placeholders)))
+                                .showTooltip(false)
+                                .build(),
+                        DialogBody.plainMessage(Component.join(JoinConfiguration.newlines(),
+                                messages.getLines("menu.entry-lore", placeholders)))),
+                List.of(),
+                Dialogs.actions(buttons, Dialogs.button(BlockcraftApi.get().messages().get("menu.back"),
+                        viewer -> menus.openList(viewer, reported))));
     }
 
     void open(Player player) {

@@ -1,8 +1,6 @@
 package me.blockcraft.core.command;
 
 import io.papermc.paper.dialog.Dialog;
-import io.papermc.paper.dialog.DialogResponseView;
-import io.papermc.paper.registry.data.dialog.DialogBase;
 import io.papermc.paper.registry.data.dialog.body.DialogBody;
 import io.papermc.paper.registry.data.dialog.input.DialogInput;
 import io.papermc.paper.registry.data.dialog.input.SingleOptionDialogInput.OptionEntry;
@@ -18,6 +16,7 @@ import org.bukkit.entity.Player;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * A reason from the configured list plus free text, or the text alone when no reasons are configured; a form without
@@ -46,44 +45,37 @@ final class ReportDialog {
         }
         inputs.add(DialogInput.text(DETAILS, messages.get("report.details"))
                 .maxLength(MAX_DETAILS_LENGTH)
-                .initial(details.length() <= MAX_DETAILS_LENGTH ? details : "")
+                .initial(details)
                 .build());
-        dialog = Dialog.create(factory -> factory.empty()
-                .base(DialogBase.builder(messages.get("report.title", placeholders))
-                        .body(List.of(DialogBody.plainMessage(messages.get("report.body", placeholders))))
-                        .inputs(inputs)
-                        .build())
-                .type(DialogType.confirmation(
+        dialog = Dialogs.create(messages.get("report.title", placeholders),
+                List.of(DialogBody.plainMessage(messages.get("report.body", placeholders))),
+                inputs,
+                DialogType.confirmation(
                         Dialogs.button(messages.get("report.send"), (player, view) -> {
-                            String reason = reason(view, choices);
-                            if (reason.isBlank()) {
+                            String picked = Objects.requireNonNullElse(view.getText(REASON), "");
+                            var typed = Dialogs.text(view, DETAILS, MAX_DETAILS_LENGTH);
+                            var reason = typed.flatMap(text -> reason(picked, choices, text));
+                            if (reason.isEmpty()) {
                                 player.sendMessage(messages.get("report.reason-missing"));
-                                new ReportDialog(target, choices, messages, Objects.requireNonNullElse(view.getText(REASON), ""),
-                                        Objects.requireNonNullElse(view.getText(DETAILS), "")).open(player);
+                                new ReportDialog(target, choices, messages, picked, typed.orElse("")).open(player);
                                 return;
                             }
-                            BlockcraftApi.get().operations().submit(player, new SubmitReport(target, reason));
+                            BlockcraftApi.get().operations().submit(player, new SubmitReport(target, reason.get()));
                         }),
-                        Dialogs.button(BlockcraftApi.get().messages().get("menu.cancel")))));
+                        Dialogs.button(BlockcraftApi.get().messages().get("menu.cancel"))));
     }
 
     void open(Player player) {
         Dialogs.show(player, dialog);
     }
 
-    private static String reason(DialogResponseView view, List<String> choices) {
-        String raw = view.getText(DETAILS);
-        String details = raw == null ? "" : raw.strip();
-        if (details.length() > MAX_DETAILS_LENGTH || details.chars().anyMatch(Character::isISOControl)) {
-            return "";
-        }
-        String selected = view.getText(REASON);
+    private static Optional<String> reason(String selected, List<String> choices, String details) {
         if (choices.isEmpty()) {
-            return details;
+            return Optional.of(details).filter(text -> !text.isEmpty());
         }
-        if (selected == null || !choices.contains(selected)) {
-            return "";
+        if (!choices.contains(selected)) {
+            return Optional.empty();
         }
-        return details.isEmpty() ? selected : selected + " - " + details;
+        return Optional.of(details.isEmpty() ? selected : selected + " - " + details);
     }
 }

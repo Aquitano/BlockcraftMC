@@ -42,8 +42,9 @@ README.md; this file only holds what the code does not say by itself.
   `BlockcraftApi.get().playerTasks()`: `latest` for reads that build a screen, `write` for changes the player must
   hear about. Chat listeners use `AsyncChatEvent` and may block.
 - A chest `Menu` is for picking among things with a picture; reading, forms and confirmations are dialogs, one
-  `*Dialog` class each, shown through `Dialogs.show`, whose back, close and cancel buttons use BlockcraftAPI's `menu.*`
-  messages. A form rejected on submit reopens with what was entered.
+  `*Dialog` class each, built with `Dialogs.create` and shown through `Dialogs.show`, whose back, close and cancel
+  buttons use BlockcraftAPI's `menu.*` messages. Typed text is read with `Dialogs.text`; a form rejected on submit
+  reopens with what was entered.
 - GUIs extend `Menu` (holder-based, never title matching). Open and close other inventories only via `Menu.open` /
   `Menu.close`; both defer a tick because Bukkit forbids doing it inside `InventoryClickEvent`. `Menu` fills the
   empty slots, plays the click sound and owns the exit in the last slot: `backButton` when another menu leads there,

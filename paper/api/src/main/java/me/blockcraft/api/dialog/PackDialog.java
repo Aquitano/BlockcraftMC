@@ -1,10 +1,7 @@
 package me.blockcraft.api.dialog;
 
-import io.papermc.paper.dialog.Dialog;
 import io.papermc.paper.registry.data.dialog.ActionButton;
-import io.papermc.paper.registry.data.dialog.DialogBase;
 import io.papermc.paper.registry.data.dialog.body.DialogBody;
-import io.papermc.paper.registry.data.dialog.type.DialogType;
 import me.blockcraft.api.BlockcraftApi;
 import org.bukkit.entity.Player;
 
@@ -33,13 +30,10 @@ public final class PackDialog {
             default -> { }
         }
         actions.add(Dialogs.button(messages.get("settings.pack-refresh"), refresh -> open(refresh, back)));
-        var dialog = Dialog.create(factory -> factory.empty()
-                .base(DialogBase.builder(messages.get("settings.pack-title"))
-                        .body(List.of(DialogBody.plainMessage(messages.get("settings.pack-status." + status.name().toLowerCase(Locale.ROOT)))))
-                        .build())
-                .type(DialogType.multiAction(actions)
-                        .exitAction(Dialogs.button(messages.get("menu.back"), back))
-                        .build()));
+        var dialog = Dialogs.create(messages.get("settings.pack-title"),
+                List.of(DialogBody.plainMessage(messages.get("settings.pack-status." + status.name().toLowerCase(Locale.ROOT)))),
+                List.of(),
+                Dialogs.actions(actions, Dialogs.button(messages.get("menu.back"), back)));
         Dialogs.show(player, dialog);
     }
 }

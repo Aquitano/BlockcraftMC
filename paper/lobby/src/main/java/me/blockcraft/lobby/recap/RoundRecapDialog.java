@@ -1,9 +1,7 @@
 package me.blockcraft.lobby.recap;
 
 import io.papermc.paper.dialog.Dialog;
-import io.papermc.paper.registry.data.dialog.DialogBase;
 import io.papermc.paper.registry.data.dialog.body.DialogBody;
-import io.papermc.paper.registry.data.dialog.type.DialogType;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.dialog.Dialogs;
 import me.blockcraft.api.item.Items;
@@ -45,16 +43,14 @@ final class RoundRecapDialog {
         }
         lines.add(messages.get("recap.coins", Formatter.number("coins", recap.coins())));
         lines.add(messages.get("recap.xp", Formatter.number("xp", recap.xp())));
-        dialog = Dialog.create(factory -> factory.empty()
-                .base(DialogBase.builder(messages.get("recap.title", Placeholder.component("game", game)))
-                        .body(List.of(
-                                DialogBody.item(icon).description(DialogBody.plainMessage(result)).build(),
-                                DialogBody.plainMessage(Component.join(JoinConfiguration.newlines(), lines))))
-                        .build())
-                .type(DialogType.multiAction(List.of(Dialogs.button(messages.get("recap.again"),
-                                player -> ProxyMessaging.play(plugin, player, recap.game()))))
-                        .exitAction(Dialogs.button(messages.get("recap.close")))
-                        .build()));
+        dialog = Dialogs.create(messages.get("recap.title", Placeholder.component("game", game)),
+                List.of(
+                        DialogBody.item(icon).description(DialogBody.plainMessage(result)).build(),
+                        DialogBody.plainMessage(Component.join(JoinConfiguration.newlines(), lines))),
+                List.of(),
+                Dialogs.actions(List.of(Dialogs.button(messages.get("recap.again"),
+                                player -> ProxyMessaging.play(plugin, player, recap.game()))),
+                        Dialogs.button(messages.get("recap.close"))));
     }
 
     void open(Player player) {
