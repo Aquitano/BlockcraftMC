@@ -20,7 +20,10 @@ README.md; this file only holds what the code does not say by itself.
   (`<primary>`, `<accent>`, `<muted>`, `<dark>`, `<success>`, `<error>`, `<bullet>`, `<arrow>`) and the network
   addresses (`<ip>`, `<website>`, `<shop>`, `<teamspeak>`, `<discord>`). Paper plugins get both from
   `BlockcraftApi.get().tags()` when they load their messages; the proxy plugins build them from their own config.
-  Write colours as palette tags, never the raw ones, and the brand only as `<ip>`.
+  Write colours as palette tags, never the raw ones, and the brand only as `<ip>`. A click hint in a menu is
+  `<left>`, `<right>` or `<click>` before the action (`<left>Jetzt spielen`), and a menu or dialog title is
+  `<arrow><colour>Name`, a detail after `<dark>· `, a game's menus in the game's colour (`<arrow><bedwars>BedWars
+  <dark>· <muted>Shop`); `MessageStyleTest` holds both.
 - Command descriptions are messages too: `commands.<name>.description`, registered through `CommandRegistry`; core's
   `/team help` is generated from that registry, so never write a command list by hand.
 - Shared database tables are initialized once per runtime by `Database.migrate()`. Append to `SharedSchema`; never

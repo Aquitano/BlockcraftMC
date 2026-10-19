@@ -337,7 +337,7 @@ report:
   usage: "<prefix><error>Benutze /report [Spieler]"
   invalid-player: "<prefix><error>Das ist kein gültiger Spielername."
   self: "<prefix><muted>Ehrlich von dir. Melden kannst du dich trotzdem nicht."
-  title: "<arrow><error>Report <dark>● <accent><player>"
+  title: "<arrow><error>Report <dark>· <accent><player>"
   body: "<muted>Du meldest <error><player><muted>. Das Team schaut sich die Meldung an."
   reason: "<primary>Grund"
   details: "<primary>Details (optional)"

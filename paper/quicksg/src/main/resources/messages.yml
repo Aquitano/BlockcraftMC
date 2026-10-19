@@ -103,14 +103,14 @@ kit:
 
 menu:
   kits:
-    title: "<quicksg>QuickSG <dark>· <muted>Dein Start-Kit"
+    title: "<arrow><quicksg>QuickSG <dark>· <muted>Dein Start-Kit"
     selected: "<success>Für diese Runde ausgewählt"
     owned: "<success>Freigeschaltet"
     locked: "<accent><price> Coins <dark>· <muted>Dauerhaft freischalten"
-    inspect: "<muted>Klicken <dark>· <quicksg>Kit ansehen"
+    inspect: "<click><quicksg>Kit ansehen"
     entry: "<quicksg><kit>"
   kit-detail:
-    title: "<quicksg><kit> <dark>· <muted>QuickSG"
+    title: "<arrow><quicksg><kit> <dark>· <muted>QuickSG"
     price: "<muted>Dauerhaft freischalten"
     price-free: "<success>kostenlos"
     price-coins: "<arrow><accent><price> Coins"
@@ -119,7 +119,7 @@ menu:
     buy: "<success>Mit Coins freischalten"
     bought: "<success>bereits gekauft!"
   stats:
-    title: "<arrow><primary>Stats"
+    title: "<arrow><quicksg>QuickSG <dark>· <muted>Stats"
     player: "<accent><player>"
     player-lore:
       - "<arrow><primary>Siege<dark>: <muted><wins>"
@@ -128,7 +128,7 @@ menu:
       - "<arrow><primary>Kills<dark>: <muted><kills>"
     global: "<arrow><aqua>Globale Stats"
   global-stats:
-    title: "<arrow><primary>Globale Stats"
+    title: "<arrow><quicksg>QuickSG <dark>· <muted>Globale Stats"
     wins: "<arrow><aqua>Siege"
     deaths: "<arrow><aqua>Tode"
     kills: "<arrow><aqua>Kills"
@@ -142,10 +142,10 @@ item:
   start: "<arrow><primary>Spiel starten"
   level-up:
     name: "<accent>+1 Verzauberungslevel"
-    lore: "<bullet><muted>Rechtsklick"
+    lore: "<bullet><right>Benutzen"
   heart:
     name: "<accent>+1 Herz"
-    lore: "<bullet><muted>Rechtsklick"
+    lore: "<bullet><right>Benutzen"
   full-food:
     name: "<accent>Voller Hunger"
     lore: "<bullet><muted>Dein Hunger wird sofort gefüllt!"

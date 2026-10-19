@@ -11,6 +11,9 @@ palette:
   error: "<red>"
   bullet: "<dark_gray>● "
   arrow: "<dark_gray>» "
+  left: "<green>Linksklick <dark_gray>· <gray>"
+  right: "<yellow>Rechtsklick <dark_gray>· <gray>"
+  click: "<green>Klicken <dark_gray>· <gray>"
   quicksg: "<gold>"
   emeraldrush: "<green>"
   duell: "<aqua>"
@@ -83,9 +86,9 @@ afk:
 
 menu:
   load:
-    title: "<primary>Wird geladen"
+    title: "<arrow><primary>Wird geladen"
     pending: "<muted>Einen Moment …"
-    failed: "<error>Laden fehlgeschlagen"
+    failed: "<arrow><error>Laden fehlgeschlagen"
     retry: "<accent>Erneut versuchen"
   filler: " "
   back: "<arrow><error>Zurück"
@@ -97,7 +100,7 @@ menu:
   refresh: "<primary>Aktualisieren"
   empty: "<muted>Hier ist noch nichts."
   confirm:
-    unavailable: "<error>Kauf nicht möglich"
+    unavailable: "<arrow><error>Kauf nicht möglich"
     title: "<arrow><primary>Bestätigen"
     accept: "<success>Kaufen"
 
@@ -149,7 +152,7 @@ spectator:
   menu:
     title: "<arrow><primary>Zuschauen"
     player: "<accent><player>"
-    player-lore: "<bullet><muted>Klicken <dark>· <primary>Zu <player> fliegen"
+    player-lore: "<bullet><click>Zu <player> fliegen"
 
 # The shared countdown: the last seconds as a title, then the start.
 countdown:
@@ -242,6 +245,7 @@ summary:
 
 settings:
   pack-details: "Ressourcenpaket"
+  pack-title: "<arrow><primary>Ressourcenpaket"
   pack-retry: "Erneut laden"
   pack-refresh: "Status aktualisieren"
   pack-requested: "<prefix><muted>Das Ressourcenpaket wurde erneut angefordert."

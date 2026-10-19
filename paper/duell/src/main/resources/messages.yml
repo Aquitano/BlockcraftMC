@@ -81,8 +81,8 @@ item:
 
 menu:
   modes:
-    title: "<duell>Duell <dark>· <muted>Euer Modus"
-    choose: "<muted>Klicken <dark>· <duell>Map wählen"
+    title: "<arrow><duell>Duell <dark>· <muted>Euer Modus"
+    choose: "<click><duell>Map wählen"
     vs: "<duell>1vs1"
     vs-lore: "<bullet><muted>Schwert, Bogen und Angel. Besiege deinen Gegner."
     sg: "<duell>SurvivalGames"
@@ -90,18 +90,18 @@ menu:
     superjump: "<duell>SuperJump"
     superjump-lore: "<bullet><muted>Erreiche die Checkpoints und das Ziel zuerst."
   maps:
-    title: "<duell><mode> <dark>· <muted>Eure Map"
+    title: "<arrow><duell><mode> <dark>· <muted>Eure Map"
     map: "<duell><map>"
     random: "<duell>Zufällige Map"
     random-lore: "<bullet><muted>Die Map wird beim Start ausgelost."
     unavailable: "<error>Keine spielbare Map verfügbar"
     unavailable-lore: "<muted>Gehe zurück und wähle einen anderen Modus."
-    choose: "<muted>Klicken <dark>· <duell>Abstimmen"
+    choose: "<click><duell>Abstimmen"
   vote:
     votes: "<bullet><muted>Stimmen<dark>: <accent><votes>"
     own: "<success>Deine Stimme"
   stats:
-    title: "<arrow><primary>Stats"
+    title: "<arrow><duell>Duell <dark>· <muted>Stats"
     player: "<accent><player>"
     player-lore:
       - "<arrow><primary>Kills<dark>: <muted><kills>"
@@ -112,7 +112,7 @@ menu:
       - "<arrow><primary>Elo<dark>: <muted><rating>"
     global: "<arrow><primary>Globale Stats"
   global-stats:
-    title: "<arrow><primary>Globale Stats"
+    title: "<arrow><duell>Duell <dark>· <muted>Globale Stats"
     wins: "<arrow><primary>Siege"
     deaths: "<arrow><primary>Tode"
     kills: "<arrow><primary>Kills"

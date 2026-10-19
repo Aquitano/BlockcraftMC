@@ -34,7 +34,7 @@ public final class PackDialog {
         }
         actions.add(Dialogs.button(messages.get("settings.pack-refresh"), refresh -> open(refresh, back)));
         var dialog = Dialog.create(factory -> factory.empty()
-                .base(DialogBase.builder(messages.get("settings.pack-details"))
+                .base(DialogBase.builder(messages.get("settings.pack-title"))
                         .body(List.of(DialogBody.plainMessage(messages.get("settings.pack-status." + status.name().toLowerCase(Locale.ROOT)))))
                         .build())
                 .type(DialogType.multiAction(actions)

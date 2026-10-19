@@ -64,7 +64,9 @@ Two sets of tags resolve in every message. The network addresses (`<ip>`, `<webs
 BlockcraftSystem's `config.yml` on the proxy, so the server address is written once. The colour palette
 (`<primary>`, `<accent>`, `<muted>`, `<dark>`, `<success>`, `<error>`, plus `<bullet>` and `<arrow>` for the two
 list shapes, and `<premium>` for everything Premium) comes from `palette` in `BlockcraftAPI/messages.yml` and from
-the same section in the proxy plugins' `messages.yml`; recolouring the network means editing that one section.
+the same section in the proxy plugins' `messages.yml`; recolouring the network means editing that one section. On
+Paper the palette also holds the click hints of menu lore, `<left>`, `<right>` and `<click>`, which open a line such as
+`<left>Jetzt spielen`.
 
 ## Build
 

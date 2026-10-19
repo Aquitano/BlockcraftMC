@@ -89,7 +89,7 @@ dealer:
   name: "<accent>Dealer"
 
 shop:
-  title: "<bedwars>BedWars Shop"
+  title: "<arrow><bedwars>BedWars <dark>· <muted>Shop"
   not-enough: "<prefix><error>Du hast nicht genug <resource><error>."
   no-room: "<prefix><error>Du hast nicht genug Platz in deinem Inventar."
   categories:
@@ -188,7 +188,7 @@ lobby:
     caught: "<prefix><player> <muted>hat jetzt den Kopf. Schnell!"
 
 vote:
-  title: "<bedwars>Map-Voting"
+  title: "<arrow><bedwars>BedWars <dark>· <muted>Map-Voting"
   map: "<muted><map>"
   builders: "<dark>von <builders>"
   votes: "<white><votes> Votes"
@@ -202,8 +202,8 @@ vote:
     - " "
 
 perks:
-  title: "<bedwars>Perks"
-  choose: "<muted>Klicken zum Auswählen"
+  title: "<arrow><bedwars>BedWars <dark>· <muted>Perks"
+  choose: "<click>Auswählen"
   selected: "<success><bold>Ausgewählt"
   reset: "<error>Zurücksetzen"
   chosen: "<prefix><muted>Du hast das Perk <success><perk> <muted>ausgewählt."
@@ -291,7 +291,7 @@ top:
   entry: "<reset>#<rank> <primary><name> <muted>( <white><value><muted> )"
 menu:
   stats:
-    title: "<arrow><primary>Stats"
+    title: "<arrow><bedwars>BedWars <dark>· <muted>Stats"
     player: "<accent><player>"
     player-lore:
       - "<arrow><primary>Siege<dark>: <muted><wins>"
@@ -301,7 +301,7 @@ menu:
       - "<arrow><primary>Punkte<dark>: <muted><points>"
     global: "<arrow><primary>Globale Stats"
   global-stats:
-    title: "<arrow><primary>Globale Stats"
+    title: "<arrow><bedwars>BedWars <dark>· <muted>Globale Stats"
     wins: "<arrow><primary>Siege"
     deaths: "<arrow><primary>Tode"
     kills: "<arrow><primary>Kills"
