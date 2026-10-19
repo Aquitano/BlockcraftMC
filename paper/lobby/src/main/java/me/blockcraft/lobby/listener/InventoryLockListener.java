@@ -31,7 +31,8 @@ public final class InventoryLockListener implements Listener {
         if (!(event.getWhoClicked() instanceof Player player)) {
             return;
         }
-        boolean ownInventory = event.getClickedInventory() == player.getInventory();
+        boolean ownInventory = event.getClickedInventory() == player.getInventory()
+                || event.getView().getType() == InventoryType.CRAFTING;
         if ((ownInventory && !buildMode.isEnabled(player)) || LobbyItem.of(event.getCurrentItem()).isPresent()) {
             event.setCancelled(true);
         }
