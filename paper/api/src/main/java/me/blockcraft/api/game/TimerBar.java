@@ -50,7 +50,8 @@ public final class TimerBar {
         return messages.get(key, Formatter.number("seconds", remaining), Placeholder.unparsed("time", clock(remaining)));
     }
 
-    private static String clock(int remaining) {
+    /** The time left as {@code m:ss}, the way every round shows it, on the boss bar and the sidebar alike. */
+    public static String clock(int remaining) {
         return "%d:%02d".formatted(remaining / SECONDS_PER_MINUTE, remaining % SECONDS_PER_MINUTE);
     }
 }

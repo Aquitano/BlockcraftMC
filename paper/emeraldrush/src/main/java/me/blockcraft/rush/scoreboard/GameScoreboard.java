@@ -1,6 +1,7 @@
 package me.blockcraft.rush.scoreboard;
 
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.game.TimerBar;
 import me.blockcraft.api.scoreboard.Sidebar;
 import me.blockcraft.api.world.MapBundle;
 import me.blockcraft.common.message.Messages;
@@ -42,7 +43,7 @@ public final class GameScoreboard {
                 Formatter.number("max", maxPlayers));
         switch (game.phase()) {
             case LOBBY -> sidebar.show(player, messages.getLines("scoreboard.lobby", online, Placeholder.unparsed("map", map.name())));
-            case SEARCH -> sidebar.show(player, messages.getLines("scoreboard.search", online, Formatter.number("time", game.secondsLeft())));
+            case SEARCH -> sidebar.show(player, messages.getLines("scoreboard.search", online, Placeholder.unparsed("time", TimerBar.clock(game.secondsLeft()))));
             case SHOPPING -> sidebar.show(player, messages.getLines("scoreboard.shopping", online, Formatter.number("emeralds", game.emeralds(player))));
             case DEATHMATCH -> sidebar.showRows(player, game.alivePlayers().stream()
                     .map(alive -> new Sidebar.Row(alive.getName(), messages.get("scoreboard.lives",

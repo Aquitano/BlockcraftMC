@@ -1,6 +1,7 @@
 package me.blockcraft.bedwars.game;
 
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.game.TimerBar;
 import me.blockcraft.api.scoreboard.Sidebar;
 import me.blockcraft.bedwars.team.Team;
 import me.blockcraft.common.message.Messages;
@@ -19,7 +20,6 @@ import java.util.ArrayList;
  */
 public final class GameScoreboard {
 
-    private static final int SECONDS_PER_MINUTE = 60;
 
     private final Game game;
     private final Messages messages;
@@ -52,7 +52,7 @@ public final class GameScoreboard {
             }
             case INGAME -> {
                 var lines = new ArrayList<>(messages.getLines("scoreboard.round", common,
-                        Placeholder.unparsed("time", clock(game.secondsLeft())),
+                        Placeholder.unparsed("time", TimerBar.clock(game.secondsLeft())),
                         Formatter.number("kills", game.kills(player))));
                 game.teams().all().forEach(team -> lines.add(teamLine(team)));
                 sidebar.show(player, lines);
@@ -69,7 +69,4 @@ public final class GameScoreboard {
                 Formatter.number("players", team.size()));
     }
 
-    private static String clock(int seconds) {
-        return "%02d:%02d".formatted(seconds / SECONDS_PER_MINUTE, seconds % SECONDS_PER_MINUTE);
-    }
 }
