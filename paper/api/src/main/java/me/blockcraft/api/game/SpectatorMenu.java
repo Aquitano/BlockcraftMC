@@ -14,23 +14,15 @@ import java.util.function.BiConsumer;
 /** The players still in the round, one head each; a click takes the spectator to them. */
 final class SpectatorMenu extends ListMenu<Player> {
 
-    private static final int COLUMNS = 9;
-    private static final int MAX_ROWS = 6;
-
     private final Messages messages;
     private final BiConsumer<Player, Player> jump;
 
     SpectatorMenu(Messages messages, List<Player> players, BiConsumer<Player, Player> jump) {
-        super(rows(players.size()), messages.get("spectator.menu.title"));
+        super(rowsFor(players.size()), messages.get("spectator.menu.title"));
         this.messages = messages;
         this.jump = jump;
         closeButton();
         show(players);
-    }
-
-    /** A row of heads per nine players, below them the row with the close button. */
-    private static int rows(int players) {
-        return Math.min(MAX_ROWS, 1 + Math.max(1, (players + COLUMNS - 1) / COLUMNS));
     }
 
     @Override

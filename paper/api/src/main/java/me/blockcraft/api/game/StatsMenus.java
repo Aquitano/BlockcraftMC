@@ -2,7 +2,9 @@ package me.blockcraft.api.game;
 
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.item.Items;
+import me.blockcraft.api.menu.ListMenu;
 import me.blockcraft.api.menu.Menu;
+import me.blockcraft.api.pack.MenuIcon;
 import me.blockcraft.common.elo.EloRating;
 import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -27,8 +29,6 @@ import java.util.Optional;
 public final class StatsMenus {
 
     private static final int ROWS = 2;
-    private static final int SLOTS = ROWS * 9;
-    private static final int GLOBAL = 13;
     private static final Map<Integer, Stat> CATEGORIES = Map.of(
             0, Stat.WINS,
             2, Stat.DEATHS,
@@ -69,7 +69,6 @@ public final class StatsMenus {
     public void open(Player viewer) {
         List<Player> shown = Bukkit.getOnlinePlayers().stream()
                 .filter(viewer::canSee)
-                .limit(SLOTS - 1)
                 .map(Player.class::cast)
                 .toList();
         var elo = BlockcraftApi.get().elo();
@@ -97,26 +96,35 @@ public final class StatsMenus {
         return numbers.build();
     }
 
-    private final class PlayersMenu extends Menu {
+    private final class PlayersMenu extends ListMenu<Entry> {
 
         PlayersMenu(List<Entry> entries) {
-            super(ROWS, messages.get("menu.stats.title"));
-            int slot = 0;
-            for (var entry : entries) {
-                if (slot == GLOBAL) {
-                    slot++;
-                }
-                set(slot++, Items.head(entry.player().getUniqueId(), entry.player().getName())
-                        .name(messages.get("menu.stats.player", entry.numbers()))
-                        .lore(messages.getLines("menu.stats.player-lore", entry.numbers()))
-                        .build());
-            }
-            set(GLOBAL, Items.head(globalHead).name(messages.get("menu.stats.global")).build());
+            super(rowsFor(entries.size()), messages.get("menu.stats.title"));
+            set(lastRowSlot(), MenuIcon.GLOBAL_STATS.mark(Items.head(globalHead)).name(messages.get("menu.stats.global")).build());
+            closeButton();
+            show(entries);
         }
 
         @Override
-        protected void onClick(Player player, int slot, ItemStack clicked, InventoryClickEvent event) {
-            if (slot == GLOBAL) {
+        protected ItemStack icon(Entry entry) {
+            return Items.head(entry.player().getUniqueId(), entry.player().getName())
+                    .name(messages.get("menu.stats.player", entry.numbers()))
+                    .lore(messages.getLines("menu.stats.player-lore", entry.numbers()))
+                    .build();
+        }
+
+        @Override
+        protected boolean selectable(Entry entry) {
+            return false;
+        }
+
+        @Override
+        protected void onSelect(Player player, Entry entry, InventoryClickEvent event) {
+        }
+
+        @Override
+        protected void onButton(Player player, int slot, InventoryClickEvent event) {
+            if (slot == lastRowSlot()) {
                 new GlobalMenu().open(player);
             }
         }

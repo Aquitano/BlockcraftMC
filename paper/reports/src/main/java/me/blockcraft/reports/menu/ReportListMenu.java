@@ -15,7 +15,6 @@ import java.util.Optional;
 final class ReportListMenu extends ListMenu<Report> {
 
     private static final int ROWS = 6;
-    private static final int TARGET_SLOT = (ROWS - 1) * 9;
 
     private final ReportMenus menus;
     private final Messages messages;
@@ -26,7 +25,7 @@ final class ReportListMenu extends ListMenu<Report> {
         this.menus = menus;
         this.messages = messages;
         this.reported = reported;
-        reported.ifPresent(name -> info(TARGET_SLOT, Items.head(name)
+        reported.ifPresent(name -> info(lastRowSlot(), Items.head(name)
                 .name(messages.get("menu.target", Placeholder.unparsed("player", name))).build()));
         closeButton();
         show(reports);

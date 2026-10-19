@@ -18,8 +18,6 @@ import java.util.Optional;
  */
 public abstract class ListMenu<T> extends Menu {
 
-    private static final int COLUMNS = 9;
-
     private record Notice(ItemStack item, boolean retry) {
     }
 
@@ -31,6 +29,16 @@ public abstract class ListMenu<T> extends Menu {
     protected ListMenu(int rows, Component title) {
         super(rows, title);
         this.rows = rows;
+    }
+
+    /** As many rows as {@code entries} need, plus the last row, up to a full chest. */
+    protected static int rowsFor(int entries) {
+        return ListLayout.rowsFor(entries);
+    }
+
+    /** The first slot of the last row, free for one of the menu's own buttons unless the list has a refresh button. */
+    protected final int lastRowSlot() {
+        return layout().lastRow();
     }
 
     protected abstract ItemStack icon(T entry);
@@ -48,6 +56,10 @@ public abstract class ListMenu<T> extends Menu {
 
     /** Loads the entries again, for the refresh button and the failed notice. */
     protected void reload(Player player) {
+    }
+
+    /** A click on one of the menu's own buttons outside the entries, such as one it put in the last row. */
+    protected void onButton(Player player, int slot, InventoryClickEvent event) {
     }
 
     protected final void refreshButton() {
@@ -95,17 +107,18 @@ public abstract class ListMenu<T> extends Menu {
     }
 
     private void render() {
+        var layout = layout();
         if (notice.isPresent()) {
             hidePager();
         } else {
-            paginate((entries.size() + perPage() - 1) / perPage());
+            paginate(layout.pages(entries.size()));
         }
         var centered = notice.or(() -> entries.isEmpty()
                 ? Optional.of(new Notice(MenuIcon.EMPTY_LIST.item().name(empty()).build(), false))
                 : Optional.empty());
-        for (int slot = firstSlot(); slot < footer(); slot++) {
+        for (int slot = layout.firstSlot(); slot < layout.lastRow(); slot++) {
             var entry = entryAt(slot);
-            if (slot == center() && centered.isPresent()) {
+            if (slot == layout.center() && centered.isPresent()) {
                 draw(slot, centered.get().item(), centered.get().retry());
             } else if (entry.isPresent()) {
                 draw(slot, icon(entry.get()), selectable(entry.get()));
@@ -114,7 +127,7 @@ public abstract class ListMenu<T> extends Menu {
             }
         }
         if (refreshable) {
-            draw(footer(), MenuIcon.REFRESH.item().name(BlockcraftApi.get().messages().get("menu.refresh")).build(),
+            draw(layout.lastRow(), MenuIcon.REFRESH.item().name(BlockcraftApi.get().messages().get("menu.refresh")).build(),
                     notice.map(Notice::retry).orElse(true));
         }
     }
@@ -129,33 +142,26 @@ public abstract class ListMenu<T> extends Menu {
 
     @Override
     protected final void onClick(Player player, int slot, ItemStack clicked, InventoryClickEvent event) {
+        var layout = layout();
         var entry = entryAt(slot);
         if (entry.isPresent()) {
             onSelect(player, entry.get(), event);
-        } else if (refreshable && slot == footer() || slot == center() && notice.filter(Notice::retry).isPresent()) {
+        } else if (refreshable && slot == layout.lastRow()
+                || slot == layout.center() && notice.filter(Notice::retry).isPresent()) {
             reload(player);
+        } else {
+            onButton(player, slot, event);
         }
     }
 
     private Optional<T> entryAt(int slot) {
-        int index = page() * perPage() + slot - firstSlot();
-        return notice.isEmpty() && slot >= firstSlot() && slot < footer() && index < entries.size()
-                ? Optional.of(entries.get(index)) : Optional.empty();
+        return notice.isPresent() ? Optional.empty() : layout().index(page(), slot).stream()
+                .filter(index -> index < entries.size())
+                .mapToObj(entries::get)
+                .findFirst();
     }
 
-    private int firstSlot() {
-        return hasToolbar() ? COLUMNS : 0;
-    }
-
-    private int footer() {
-        return (rows - 1) * COLUMNS;
-    }
-
-    private int perPage() {
-        return footer() - firstSlot();
-    }
-
-    private int center() {
-        return firstSlot() + (perPage() / COLUMNS - 1) / 2 * COLUMNS + COLUMNS / 2;
+    private ListLayout layout() {
+        return new ListLayout(rows, hasToolbar());
     }
 }
