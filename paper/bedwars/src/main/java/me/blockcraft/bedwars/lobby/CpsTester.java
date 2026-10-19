@@ -129,6 +129,6 @@ public final class CpsTester implements Listener {
     }
 
     private Component line(int left, int right) {
-        return messages.get("lobby.cps.counter", Formatter.number("left", left), Formatter.number("right", right));
+        return messages.get("lobby.cps.counter", Formatter.number("left-clicks", left), Formatter.number("right-clicks", right));
     }
 }

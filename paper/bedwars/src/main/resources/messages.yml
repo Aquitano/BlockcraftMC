@@ -177,7 +177,7 @@ lobby:
   team-stand: "<team>"
   cps:
     name: "<bedwars>Schlag mich!"
-    counter: "<accent>CPS: <success><left> <muted>& <success><right>"
+    counter: "<accent>CPS: <success><left-clicks> <muted>& <success><right-clicks>"
   jump-and-run:
     clock: "<success><time>s"
     finished: "<prefix><muted>Du hast das Jump'n'Run in <success><time> <muted>Sekunden geschafft!"

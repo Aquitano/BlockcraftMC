@@ -1,5 +1,6 @@
 package me.blockcraft.common.message;
 
+import me.blockcraft.common.config.YamlFile;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -25,6 +26,8 @@ public class MessageKeysTest {
     private static final Path API = MessageFiles.API;
     private static final Pattern LOOKUP = Pattern.compile("(?i)messages(?:\\(\\))?\\.(?:get|getLines|pick|raw|has)\\(\\s*\"([^\"]+)\"\\s*[,)]");
     private static final Pattern PACKAGE = Pattern.compile("^package\\s+([\\w.]+);", Pattern.MULTILINE);
+    private static final Pattern PLACEHOLDER = Pattern.compile(
+            "(?:Placeholder\\.(?:unparsed|parsed|component|styling)|Formatter\\.(?:number|date|choice|booleanChoice|joining))\\(\\s*\"([\\w-]+)\"");
 
     @Test
     public void everyRequestedKeyIsBundled() throws IOException {
@@ -54,6 +57,30 @@ public class MessageKeysTest {
             }
         }
         assertEquals(String.join("\n", missing), List.of(), missing);
+    }
+
+    /** The network's tags resolve before a message's own placeholders, so a placeholder named like one never shows. */
+    @Test
+    public void noPlaceholderIsNamedLikeANetworkTag() throws IOException {
+        var networkTags = new HashSet<String>();
+        for (Path module : MessageFiles.modules()) {
+            MessageFiles.bundled(module).keySet().stream()
+                    .filter(key -> key.startsWith("palette."))
+                    .forEach(key -> networkTags.add(key.substring("palette.".length())));
+        }
+        try (var config = Files.newInputStream(API.resolve("src/main/resources/config.yml"))) {
+            networkTags.addAll(YamlFile.section(YamlFile.load(config), "network").keySet());
+        }
+        var shadowed = new ArrayList<String>();
+        for (Path module : MessageFiles.modules()) {
+            for (Path source : MessageFiles.sources(module)) {
+                PLACEHOLDER.matcher(Files.readString(source)).results()
+                        .map(match -> match.group(1))
+                        .filter(networkTags::contains)
+                        .forEach(name -> shadowed.add(ROOT.relativize(source) + ": <" + name + ">"));
+            }
+        }
+        assertEquals(String.join("\n", shadowed), List.of(), shadowed);
     }
 
     /** The modules whose sources import the class in {@code source}. */
