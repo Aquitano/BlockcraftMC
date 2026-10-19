@@ -7,10 +7,9 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 
 
+/** QuickSG's own keys; the ones every game shares are {@link me.blockcraft.api.game.GameConfig}'s. */
 public record QuickSGConfig(
-        int minPlayers,
         int maxPlayers,
-        String globalStatsHead,
         Countdowns countdowns,
         WorldBorderSettings worldBorder,
         Tracker tracker,
@@ -20,8 +19,7 @@ public record QuickSGConfig(
         CombatStyle combat
 ) {
 
-    public record Countdowns(int lobby, int freeze, int protection, int game, int trackerAfter, int restart,
-                             int idleRestart, int idleRestartRetry) {
+    public record Countdowns(int freeze, int protection, int round, int trackerAfter) {
     }
 
     public record WorldBorderSettings(boolean enabled, double lobbyRadius, double ingameRadius) {
@@ -39,18 +37,12 @@ public record QuickSGConfig(
         var rewards = section(config, "rewards");
         var chest = section(config, "chest");
         return new QuickSGConfig(
-                config.getInt("min-players", 2),
-                config.getInt("max-players", 8),
-                config.getString("global-stats-head", "Kevos"),
+                config.getInt("players.max", 8),
                 new Countdowns(
-                        countdown.getInt("lobby", 30),
                         countdown.getInt("freeze", 5),
                         countdown.getInt("protection", 20),
-                        countdown.getInt("game", 1200),
-                        countdown.getInt("tracker-after", 300),
-                        countdown.getInt("restart", 10),
-                        countdown.getInt("idle-restart", 3000),
-                        countdown.getInt("idle-restart-retry", 2000)),
+                        countdown.getInt("round", 1200),
+                        countdown.getInt("tracker-after", 300)),
                 new WorldBorderSettings(
                         border.getBoolean("enabled", false),
                         border.getDouble("lobby-radius", 30),

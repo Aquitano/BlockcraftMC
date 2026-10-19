@@ -1,8 +1,6 @@
 package me.blockcraft.quicksg.config;
 
-import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
 public enum LocationKey {
     LOBBY("Lobby"),
@@ -36,9 +34,5 @@ public enum LocationKey {
 
     public static List<LocationKey> spawns() {
         return SPAWNS;
-    }
-
-    public static Optional<LocationKey> parse(String input) {
-        return Arrays.stream(values()).filter(value -> value.key.equalsIgnoreCase(input)).findFirst();
     }
 }

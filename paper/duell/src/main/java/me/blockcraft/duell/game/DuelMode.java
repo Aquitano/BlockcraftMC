@@ -16,16 +16,17 @@ public enum DuelMode {
         this.configKey = configKey;
     }
 
-    /** The mode label used by {@code /setspawn} and the location file. */
+    /** The mode's part of a map spawn's name in {@code /setup}. */
     public String setupKey() {
         return setupKey;
     }
 
+    /** The mode in config.yml, the location file, the messages, the vote and {@code /forcemap}. */
     public String configKey() {
         return configKey;
     }
 
-    public static Optional<DuelMode> bySetupKey(String key) {
-        return Arrays.stream(values()).filter(mode -> mode.setupKey.equalsIgnoreCase(key)).findFirst();
+    public static Optional<DuelMode> byConfigKey(String key) {
+        return Arrays.stream(values()).filter(mode -> mode.configKey.equalsIgnoreCase(key)).findFirst();
     }
 }

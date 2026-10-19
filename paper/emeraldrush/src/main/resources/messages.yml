@@ -6,7 +6,7 @@ commands:
     description: "Startet die Runde"
   stats:
     description: "Zeigt die Stats eines Spielers"
-  rushset:
+  setup:
     description: "Setzt eine Spawn-Location"
   top:
     description: "Zeigt die Top 10 einer Kategorie"
@@ -26,10 +26,8 @@ lobby:
     - "<muted>Nutze sie, um mit dem Villager zu handeln und rüste"
     - "<muted>dich für das große Deathmatch gut aus!"
     - " "
-  cancelled: "<prefix><error>Zu wenige Spieler, der Countdown wurde abgebrochen."
 search:
   started:
-    - "<prefix><muted>Die Runde wurde gestartet."
     - "<prefix><muted>Die Suchzeit hat begonnen. Baue so viele Emerald-Erze ab wie du kannst!"
     - "<prefix><muted>Die Suchzeit endet in <accent><minutes><muted> Minuten!"
   ends-minutes: "<prefix><muted>Die <white>Such-Phase <muted>endet in <accent><minutes><muted> Minuten!"
@@ -53,9 +51,6 @@ tracker:
   empty: "<muted>Kein Gegner in Reichweite"
 item:
   perks: "<arrow><primary>Perks"
-  start: "<arrow><primary>Spiel starten"
-  stats: "<arrow><primary>Stats"
-  hub: "<arrow><primary>Zur Lobby"
   pickaxe: "<muted>Spitzhacke"
   shop: "<arrow><primary>Shop"
   compass: "<primary>Kompass"
@@ -63,14 +58,6 @@ item:
 command:
   chest-wrong-phase: "<prefix><error>Du kannst diesen Command nur in der Shopping-Phase benutzen!"
   emeralds-set: "<prefix><muted>Der Spieler hat jetzt <accent><amount> <muted>Emeralds."
-  start-already-started: "<prefix><error>Die Runde wurde bereits gestartet!"
-  start-not-lobby: "<prefix><error>Du kannst die Runde nur im Lobby-Modus starten!"
-  start-not-enough-players: "<prefix><error>Es müssen mindestens 2 Spieler online sein!"
-  rushset-help:
-    - " "
-    - "<muted>/rushset lobby, spectator, search, dm1(-6), enchant, shopping"
-    - " "
-  rushset-set: "<prefix><muted>Du hast die Location <white><location> <muted>gesetzt!"
 stats:
   header: "<muted>Stats von <accent><player>"
   lines:
@@ -84,32 +71,10 @@ top:
   first: "<accent><bold>#1 <reset><primary><name><muted> ( <white><value><muted> )"
   entry: "<reset>#<rank> <primary><name> <muted>( <white><value><muted> )"
 scoreboard:
-  draw: "<muted>Unentschieden"
   title: "<emeraldrush><bold>EmeraldRush"
-  lobby:
-    - "<muted><icon:players> SPIELER"
-    - "<arrow><white><online> <dark>/<white> <max>"
-    - " "
-    - "<muted><icon:map> MAP"
-    - "<arrow><white><map>"
-    - " "
-  search:
-    - "<muted><icon:players> SPIELER"
-    - "<arrow><white><online> <dark>/<white> <max>"
-    - " "
-    - "<muted><icon:time> ZEIT"
-    - "<arrow><white><time>"
-    - " "
-  shopping:
-    - "<muted><icon:players> SPIELER"
-    - "<arrow><white><online> <dark>/<white> <max>"
-    - " "
-    - "<muted><icon:emerald> EMERALDS"
-    - "<arrow><white><emeralds>"
-    - " "
-  lives: "<primary><player> <dark>· <error><lives> Leben"
-  winner-header: "<muted><icon:winner> GEWINNER"
-  winner: "<arrow><white><player>"
+  emeralds: "<muted><icon:emerald> EMERALDS"
+  lives: "<muted><icon:opponent> LEBEN"
+  lives-value: "<player> <dark>· <error><lives>"
 perk:
   title: "<arrow><emeraldrush>EmeraldRush <dark>· <muted>Perks"
   unlocked: "<success>Im Rundenshop freigeschaltet"

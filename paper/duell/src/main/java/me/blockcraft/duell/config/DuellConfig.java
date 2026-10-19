@@ -11,8 +11,8 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
+/** Duell's own keys; the ones every game shares are {@link me.blockcraft.api.game.GameConfig}'s. */
 public record DuellConfig(
-        String globalStatsHead,
         Countdowns countdowns,
         int killCoins,
         int winCoins,
@@ -23,7 +23,7 @@ public record DuellConfig(
         Duration rematchWindow
 ) {
 
-    public record Countdowns(int lobby, int freeze, int round, int restart) {
+    public record Countdowns(int freeze, int round) {
     }
 
     public List<String> maps(DuelMode mode) {
@@ -38,12 +38,9 @@ public record DuellConfig(
             maps.put(mode, List.copyOf(config.getStringList("maps." + mode.configKey())));
         }
         return new DuellConfig(
-                config.getString("global-stats-head", "Kevos"),
                 new Countdowns(
-                        countdown.getInt("lobby", 30),
                         countdown.getInt("freeze", 5),
-                        countdown.getInt("round", 600),
-                        countdown.getInt("restart", 10)),
+                        countdown.getInt("round", 600)),
                 config.getInt("rewards.kill", 0),
                 config.getInt("rewards.win", 10),
                 config.getInt("vs.kills-to-end", 3),

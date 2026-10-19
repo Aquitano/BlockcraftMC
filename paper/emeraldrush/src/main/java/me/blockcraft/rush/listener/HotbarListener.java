@@ -1,12 +1,9 @@
 package me.blockcraft.rush.listener;
 
 import me.blockcraft.api.BlockcraftApi;
-import me.blockcraft.api.game.StatsMenus;
 import me.blockcraft.api.item.HotbarItem;
-import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.common.message.Messages;
-import me.blockcraft.rush.Permissions;
 import me.blockcraft.rush.config.RushConfig;
 import me.blockcraft.rush.game.Game;
 import me.blockcraft.rush.game.GameItem;
@@ -20,25 +17,20 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
-import org.bukkit.plugin.Plugin;
 
 import java.util.Comparator;
 
-/** Right-clicks on the hotbar items handed out by the game. */
+/** Right-clicks on the shop item of the shopping phase and the deathmatch compass. */
 public final class HotbarListener implements Listener {
 
-    private final Plugin plugin;
     private final Game game;
     private final RushMenus menus;
-    private final StatsMenus statsMenus;
     private final RushConfig config;
     private final Messages messages;
 
-    public HotbarListener(Plugin plugin, Game game, RushMenus menus, StatsMenus statsMenus, RushConfig config, Messages messages) {
-        this.plugin = plugin;
+    public HotbarListener(Game game, RushMenus menus, RushConfig config, Messages messages) {
         this.game = game;
         this.menus = menus;
-        this.statsMenus = statsMenus;
         this.config = config;
         this.messages = messages;
     }
@@ -50,20 +42,9 @@ public final class HotbarListener implements Listener {
             return;
         }
         var player = event.getPlayer();
-        var hotbar = HotbarItem.of(item, GameItem.class);
-        if (hotbar.isPresent()) {
+        if (HotbarItem.of(item, GameItem.class).isPresent()) {
             event.setCancelled(true);
-            switch (hotbar.get()) {
-                case HUB -> ProxyMessaging.hub(plugin, player);
-                case START -> {
-                    if (player.hasPermission(Permissions.START)) {
-                        game.forceStart(player);
-                    }
-                }
-                case STATS -> statsMenus.open(player);
-                case PERKS -> menus.openPerks(player);
-                case SHOP -> menus.openShop(player);
-            }
+            menus.openShop(player);
         } else if (item.getType() == Material.COMPASS) {
             event.setCancelled(true);
             track(player);

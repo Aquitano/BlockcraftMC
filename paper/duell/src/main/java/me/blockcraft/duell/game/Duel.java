@@ -5,12 +5,19 @@ import me.blockcraft.api.cosmetic.ChatTag;
 import me.blockcraft.api.cosmetic.ChatTagChoice;
 import me.blockcraft.api.game.Arena;
 import me.blockcraft.api.game.Defeat;
+import me.blockcraft.api.game.GameConfig;
 import me.blockcraft.api.game.GamePhase;
 import me.blockcraft.api.game.LobbyCountdown;
+import me.blockcraft.api.game.LobbyHotbar;
+import me.blockcraft.api.game.PlayerReset;
 import me.blockcraft.api.game.Round;
+import me.blockcraft.api.game.RoundStart;
 import me.blockcraft.api.game.RoundSummary;
+import me.blockcraft.api.game.StatsMenus;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.game.TimerBar;
+import me.blockcraft.api.game.VoteMenu;
+import me.blockcraft.api.pack.MenuIcon;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Countdown;
 import me.blockcraft.api.task.Tasks;
@@ -18,6 +25,7 @@ import me.blockcraft.common.duel.DuelPairRepository;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.duell.config.DuellConfig;
 import me.blockcraft.duell.config.Spawns;
+import me.blockcraft.duell.menu.VoteMenus;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -30,6 +38,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.plugin.Plugin;
 
+import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -52,6 +61,7 @@ public final class Duel {
     private static final int MIRROR_DRAWS = 2;
 
     private final Plugin plugin;
+    private final GameConfig gameConfig;
     private final DuellConfig config;
     private final Messages messages;
     private final Spawns spawns;
@@ -62,6 +72,7 @@ public final class Duel {
     private final RoundSummary summary;
     private final Round round;
     private final LobbyCountdown lobbyCountdown;
+    private final LobbyHotbar lobbyHotbar;
     private final DuelVote votes = new DuelVote();
     private final Rematch rematch;
     private final DuelPairRepository pairs;
@@ -72,27 +83,41 @@ public final class Duel {
     private boolean frozen;
     private int mapNumber;
     private String mapName;
+    private Countdown roundTimer;
     private int vsRound = 1;
     private boolean superJumpFinished;
     private final Map<UUID, Integer> checkpoints = new HashMap<>();
     private final Set<UUID> fallen = new HashSet<>();
 
-    public Duel(Plugin plugin, DuellConfig config, Messages messages, Spawns spawns, StatsRepository stats,
-                GameScoreboard scoreboard, GameItems items, DuelRatings ratings, DuelPairRepository pairs) {
+    public Duel(Plugin plugin, GameConfig gameConfig, DuellConfig config, Messages messages, Spawns spawns,
+                StatsRepository stats, StatsMenus statsMenus, GameItems items, DuelRatings ratings,
+                DuelPairRepository pairs) {
         this.plugin = plugin;
+        this.gameConfig = gameConfig;
         this.config = config;
         this.messages = messages;
         this.spawns = spawns;
-        this.scoreboard = scoreboard;
         this.items = items;
         this.ratings = ratings;
         this.summary = new RoundSummary(plugin, messages,
                 new RoundSummary.Rewards(config.killCoins(), config.winCoins()), stats);
-        this.round = new Round(plugin, new Arena(messages, Sounds.DUELL_JOIN), summary, MAX_PARTICIPANTS);
-        this.lobbyCountdown = new LobbyCountdown(plugin, round.arena(), config.countdowns().lobby(), MAX_PARTICIPANTS,
-                round::playerCount, this::startRound);
+        this.round = new Round(plugin, new Arena(messages, Sounds.DUELL_JOIN), summary, MAX_PARTICIPANTS, gameConfig);
+        this.scoreboard = new GameScoreboard(messages, round);
+        this.lobbyCountdown = new LobbyCountdown(plugin, round, gameConfig, this::startRound);
+        var voteMenus = new VoteMenus(this, messages);
+        this.lobbyHotbar = new LobbyHotbar(plugin,
+                List.of(new LobbyHotbar.Choice(MenuIcon.VOTE, messages.get("item.vote"), voteMenus::openModes)),
+                statsMenus, lobbyCountdown);
         this.rematch = new Rematch(plugin, messages, config.rematchWindow());
         this.pairs = pairs;
+    }
+
+    public LobbyCountdown lobbyCountdown() {
+        return lobbyCountdown;
+    }
+
+    public LobbyHotbar lobbyHotbar() {
+        return lobbyHotbar;
     }
 
     public boolean isLobby() {
@@ -143,14 +168,14 @@ public final class Duel {
     public void join(Player player) {
         (isLobby() ? lobbySpawn() : mapSpawn(1).or(this::lobbySpawn)).ifPresent(player::teleport);
         if (round.join(player)) {
-            items.giveLobbyItems(player);
-            player.setGameMode(GameMode.SURVIVAL);
+            PlayerReset.reset(player, GameMode.ADVENTURE);
+            lobbyHotbar.give(player);
+            lobbyCountdown.start();
         } else {
             player.sendMessage(messages.get("join.spectator"));
         }
         ratings.load(player, this::refreshScoreboards);
         Tasks.sync(plugin, this::refreshScoreboards);
-        startLobbyCountdownIfReady();
     }
 
     public void follow(Player spectator, UUID friend) {
@@ -178,14 +203,12 @@ public final class Duel {
                 if (left && round.playerCount() <= 1) {
                     participants().forEach(winner -> rewardWinner(winner, player));
                     endRound();
+                } else {
+                    refreshScoreboards();
                 }
             }
             case LOBBY -> {
                 votes.withdraw(player.getUniqueId());
-                if (lobbyCountdown.isRunning() && round.playerCount() < MAX_PARTICIPANTS) {
-                    lobbyCountdown.cancel();
-                    Bukkit.broadcast(messages.get("lobby.not-enough-players"));
-                }
                 refreshScoreboards();
             }
             case ENDING -> {
@@ -194,21 +217,38 @@ public final class Duel {
         ratings.forget(player);
     }
 
-    /** A participant's vote, which replaces the one they cast before; false for a spectator or once the round has started. */
-    public boolean vote(Player voter, DuelVote.Choice choice) {
+    /** A participant's vote, which replaces the one they cast before; only the voter hears where it went. */
+    public void vote(Player voter, DuelVote.Choice choice) {
         if (!isLobby() || !isParticipant(voter)) {
-            return false;
+            VoteMenu.closed(voter, messages);
+            return;
         }
-        if (!votes.cast(voter.getUniqueId(), choice)) {
-            return true;
-        }
+        var earlier = votes.cast(voter.getUniqueId(), choice);
         var map = choice.map().isPresent()
                 ? Component.text(mapName(choice.mode(), choice.map().getAsInt()))
                 : messages.get("vote.random-map");
-        Bukkit.broadcast(messages.get("vote.cast", Placeholder.unparsed("player", voter.getName()),
-                Placeholder.component("mode", modeName(choice.mode())), Placeholder.component("map", map)));
+        VoteMenu.confirm(voter, messages, messages.get("vote.option",
+                        Placeholder.component("mode", modeName(choice.mode())), Placeholder.component("map", map)),
+                earlier.filter(previous -> !previous.equals(choice)).isPresent());
         refreshScoreboards();
-        return true;
+    }
+
+    /** What /forcemap offers: the modes with a playable map. */
+    public List<String> forcibleModes() {
+        return forcible().map(DuelMode::configKey).toList();
+    }
+
+    /** /forcemap: the mode is settled, its map still comes from the votes; empty for a mode that cannot be forced. */
+    public Optional<Component> forceMode(String key) {
+        return forcible().filter(mode -> mode.configKey().equalsIgnoreCase(key)).findFirst().map(mode -> {
+            votes.force(mode);
+            refreshScoreboards();
+            return modeName(mode);
+        });
+    }
+
+    private Stream<DuelMode> forcible() {
+        return Arrays.stream(DuelMode.values()).filter(mode -> !playableMaps(mode).isEmpty());
     }
 
     /** The maps of {@code mode} with a spawn for every slot, by number. */
@@ -309,36 +349,49 @@ public final class Duel {
     }
 
     public void refreshScoreboards() {
-        var phase = round.phase();
-        var modeLine = mode != null ? modeName(mode) : votes.leader()
-                .map(leader -> messages.get("scoreboard.mode-leading", Placeholder.component("mode", modeName(leader))))
+        if (round.phase() == GamePhase.ENDING) {
+            var winners = summary.winnerNames();
+            Bukkit.getOnlinePlayers().forEach(viewer -> scoreboard.showEnd(viewer, winners));
+            return;
+        }
+        var board = new GameScoreboard.Board(modeLine(), mapLine(),
+                roundTimer == null ? config.countdowns().round() : roundTimer.remaining());
+        participants().forEach(participant -> scoreboard.showDuellist(participant, board, ratings.placeholders(participant),
+                opponentsOf(participant).filter(participant::canSee).map(Player::getName).toList(),
+                isPlaying(DuelMode.VS) ? OptionalInt.of(summary.kills(participant)) : OptionalInt.empty()));
+        Bukkit.getOnlinePlayers().stream().filter(player -> !isParticipant(player)).forEach(viewer ->
+                scoreboard.showSpectator(viewer, board, participants().filter(viewer::canSee).map(this::duellistLine).toList()));
+    }
+
+    private Component modeLine() {
+        if (mode != null) {
+            return modeName(mode);
+        }
+        if (votes.forced().isPresent()) {
+            return modeName(votes.forced().get());
+        }
+        return votes.leader()
+                .map(leader -> messages.get("scoreboard.mode-leading", Placeholder.component("mode", modeName(leader.mode()))))
                 .orElseGet(() -> messages.get("scoreboard.mode-voting"));
-        var mapLine = phase == GamePhase.LOBBY || mapName == null
-                ? messages.get("scoreboard.map-random")
-                : Component.text(mapName);
-        participants().forEach(participant ->
-                scoreboard.show(participant, modeLine, ratings.placeholders(participant), mapLine,
-                        opponentsOf(participant).filter(participant::canSee).map(Player::getName).toList(),
-                        mode == DuelMode.VS && phase != GamePhase.LOBBY ? OptionalInt.of(summary.kills(participant)) : OptionalInt.empty()));
-        var phaseLine = messages.get(switch (phase) {
-            case LOBBY -> "scoreboard.phase.lobby";
-            case INGAME -> "scoreboard.phase.ingame";
-            case ENDING -> "scoreboard.phase.ending";
-        });
-        Bukkit.getOnlinePlayers().stream().filter(player -> !isParticipant(player)).forEach(viewer -> {
-            var contestants = participants().filter(viewer::canSee).map(player -> {
-                var name = Placeholder.unparsed("player", player.getName());
-                if (mode == DuelMode.VS && phase != GamePhase.LOBBY) {
-                    return messages.get("scoreboard.spectator-kills", name, Formatter.number("kills", summary.kills(player)));
-                }
-                if (mode == DuelMode.SUPERJUMP && phase != GamePhase.LOBBY) {
-                    return messages.get("scoreboard.spectator-checkpoint", name,
-                            Formatter.number("checkpoint", checkpoints.getOrDefault(player.getUniqueId(), 0)));
-                }
-                return messages.get("scoreboard.spectator-player", name);
-            }).toList();
-            scoreboard.showSpectator(viewer, modeLine, mapLine, phaseLine, contestants);
-        });
+    }
+
+    /** Before the start, the map the vote leans to, if it leans to one. */
+    private Component mapLine() {
+        var name = mode != null ? Optional.ofNullable(mapName) : votes.leader().flatMap(leader ->
+                leader.map().stream().mapToObj(map -> mapName(leader.mode(), map)).findFirst());
+        return name.<Component>map(Component::text).orElseGet(() -> messages.get("scoreboard.map-random"));
+    }
+
+    private Component duellistLine(Player duellist) {
+        var name = Placeholder.unparsed("player", duellist.getName());
+        if (isPlaying(DuelMode.VS)) {
+            return messages.get("scoreboard.spectator-kills", name, Formatter.number("kills", summary.kills(duellist)));
+        }
+        if (isPlaying(DuelMode.SUPERJUMP)) {
+            return messages.get("scoreboard.spectator-checkpoint", name,
+                    Formatter.number("checkpoint", checkpoints.getOrDefault(duellist.getUniqueId(), 0)));
+        }
+        return messages.get("scoreboard.spectator-player", name);
     }
 
     private Component modeName(DuelMode mode) {
@@ -349,17 +402,10 @@ public final class Duel {
         return round.players().stream();
     }
 
-    private void startLobbyCountdownIfReady() {
-        if (isLobby() && round.playerCount() >= MAX_PARTICIPANTS) {
-            lobbyCountdown.start();
-        }
-    }
-
     private void startRound() {
         duellists = round.players().stream().map(Player::getUniqueId).toList();
         round.enter(GamePhase.INGAME);
         recognizeOpponents();
-        Bukkit.broadcast(messages.get("lobby.started"));
         var playable = new EnumMap<DuelMode, List<Integer>>(DuelMode.class);
         for (var candidate : DuelMode.values()) {
             playable.put(candidate, playableMaps(candidate));
@@ -372,25 +418,18 @@ public final class Duel {
                 Placeholder.component("map", mapName == null ? messages.get("vote.random-map") : Component.text(mapName))));
         int slot = 1;
         for (var player : round.players()) {
+            PlayerReset.reset(player, GameMode.SURVIVAL);
             teleportToMapSpawn(player, slot++);
             switch (mode) {
                 case VS -> {
                     items.giveVsKit(player);
                     config.combat().apply(player);
                 }
-                case SG -> {
-                    player.getInventory().clear();
-                    config.combat().apply(player);
-                }
-                case SUPERJUMP -> {
-                    items.giveSuperJumpKit(player);
-                    player.setRespawnLocation(player.getLocation(), true);
-                }
+                case SG -> config.combat().apply(player);
+                case SUPERJUMP -> player.setRespawnLocation(player.getLocation(), true);
             }
-            player.setLevel(0);
         }
         refreshScoreboards();
-        startRoundTimer();
         freeze();
     }
 
@@ -401,19 +440,21 @@ public final class Duel {
 
     private void freeze() {
         frozen = true;
-        round.timer(LobbyCountdown.freeze(plugin, config.countdowns().freeze(), round::players,
-                seconds -> messages.get("title.freeze", Formatter.number("seconds", seconds)),
-                messages.get("title.introduction", Placeholder.component("mode", modeName(mode)),
-                        Placeholder.component("map", mapName == null ? messages.get("scoreboard.map-random") : Component.text(mapName))), () -> {
-                    frozen = false;
-                    pvp = mode != DuelMode.SUPERJUMP;
-                }));
+        var introduction = messages.get("title.introduction",
+                Placeholder.component("mode", modeName(mode)), Placeholder.component("map", mapLine()));
+        round.timer(RoundStart.freeze(plugin, config.countdowns().freeze(), round::players, introduction, () -> {
+            frozen = false;
+            pvp = mode != DuelMode.SUPERJUMP;
+            startRoundTimer();
+        }));
     }
 
     private void startRoundTimer() {
-        int seconds = config.countdowns().round();
-        var roundBar = round.bar(new TimerBar(messages, "timer.round", seconds));
-        round.timer(Countdown.start(plugin, seconds, roundBar::update, this::endByTimeout));
+        roundTimer = round.clock(new TimerBar(messages, "timer.round", config.countdowns().round()), remaining -> {
+            if (round.clockOnSidebar()) {
+                refreshScoreboards();
+            }
+        }, this::endByTimeout);
     }
 
     /** The clock decides: VS by kills, SuperJump by the furthest checkpoint, SG is a draw. */
@@ -446,7 +487,7 @@ public final class Duel {
     /** Duellists who are both still here are offered a rematch. */
     private void startRestart() {
         frozen = false;
-        if (round.end(Math.max(config.countdowns().restart(), Math.toIntExact(config.rematchWindow().toSeconds()) + 2))) {
+        if (round.end(Math.max(gameConfig.restartSeconds(), Math.toIntExact(config.rematchWindow().toSeconds()) + 2))) {
             rememberResult();
             refreshScoreboards();
             var duellists = round.players();

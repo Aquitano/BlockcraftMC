@@ -1,9 +1,6 @@
 package me.blockcraft.bedwars.listener;
 
-import me.blockcraft.api.game.StatsMenus;
 import me.blockcraft.api.item.HotbarItem;
-import me.blockcraft.api.proxy.ProxyMessaging;
-import me.blockcraft.bedwars.Permissions;
 import me.blockcraft.bedwars.game.Game;
 import me.blockcraft.bedwars.game.GameItem;
 import me.blockcraft.bedwars.perk.StickSkin;
@@ -22,19 +19,17 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.plugin.Plugin;
 
 /**
- * The lobby's hotbar, and what the perks do to items: the stick wears its holder's skin and the plain stick once it
- * leaves their hands, and an arrow leaves its shooter's trail.
+ * The jump and run's way back to its start, and what the perks do to items: the stick wears its holder's skin and the
+ * plain stick once it leaves their hands, and an arrow leaves its shooter's trail.
  */
 public final class ItemListener implements Listener {
 
     private final Plugin plugin;
     private final Game game;
-    private final StatsMenus statsMenus;
 
-    public ItemListener(Plugin plugin, Game game, StatsMenus statsMenus) {
+    public ItemListener(Plugin plugin, Game game) {
         this.plugin = plugin;
         this.game = game;
-        this.statsMenus = statsMenus;
     }
 
     @EventHandler
@@ -42,20 +37,10 @@ public final class ItemListener implements Listener {
         if (event.getHand() != EquipmentSlot.HAND || !event.getAction().isRightClick()) {
             return;
         }
-        var player = event.getPlayer();
         HotbarItem.of(event.getItem(), GameItem.class).ifPresent(item -> {
             event.setCancelled(true);
             switch (item) {
-                case VOTE -> game.openVote(player);
-                case START -> {
-                    if (player.hasPermission(Permissions.START)) {
-                        game.forceStart(player);
-                    }
-                }
-                case JUMP_RESET -> game.jumpAndRun().ifPresent(run -> run.toStart(player));
-                case PERKS -> game.openPerks(player);
-                case STATS -> statsMenus.open(player);
-                case HUB -> ProxyMessaging.hub(plugin, player);
+                case JUMP_RESET -> game.jumpAndRun().ifPresent(run -> run.toStart(event.getPlayer()));
             }
         });
         if (StickSkin.isStick(event.getItem())) {

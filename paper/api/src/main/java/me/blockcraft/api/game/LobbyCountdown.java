@@ -3,77 +3,109 @@ package me.blockcraft.api.game;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Countdown;
+import me.blockcraft.api.task.Tasks;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.Plugin;
 
 import java.time.Duration;
-import java.util.List;
 import java.util.Set;
 import java.util.function.IntConsumer;
-import java.util.function.IntFunction;
-import java.util.function.IntSupplier;
-import java.util.function.Supplier;
 
 /**
  * The waiting-lobby countdown every game shares: the {@link Arena} announces it in chat, the remaining seconds are
  * shown in a boss bar, the last five count down as a title and tick a note higher each second, and while fewer
- * than {@code minPlayers} are there the clock stays at its full value instead of running out.
+ * than {@code players.min} are there the clock stays at its full value instead of running out. /start runs it down
+ * to {@code countdown.start} seconds regardless, but a round never starts with fewer than {@link #ROUND_MINIMUM}.
  */
-public final class LobbyCountdown {
+public final class LobbyCountdown implements Listener {
+
+    /** Nobody plays a round alone. */
+    public static final int ROUND_MINIMUM = 2;
 
     private static final Set<Integer> ANNOUNCE_AT = Set.of(60, 30, 15, 10, 5, 4, 3, 2, 1);
     private static final int AUDIBLE_FROM = 5;
     private static final Title.Times SECOND_TIMES = Title.Times.times(Duration.ZERO, Duration.ofMillis(500), Duration.ofMillis(250));
-    private static final Title.Times GO_TIMES = Title.Times.times(Duration.ZERO, Duration.ofMillis(700), Duration.ofMillis(300));
 
+    private final Plugin plugin;
     private final Countdown countdown;
-    private final Arena arena;
+    private final Round round;
     private final int seconds;
     private final int minPlayers;
-    private final IntSupplier players;
+    private final int startSeconds;
     private final IntConsumer onSecond;
     private final Runnable onStart;
     private boolean forced;
     private BossBar bar;
 
-    public LobbyCountdown(Plugin plugin, Arena arena, int seconds, int minPlayers, IntSupplier players, Runnable onStart) {
-        this(plugin, arena, seconds, minPlayers, players, remaining -> { }, onStart);
+    public LobbyCountdown(Plugin plugin, Round round, GameConfig config, Runnable onStart) {
+        this(plugin, round, config, remaining -> { }, onStart);
     }
 
     /** {@code onSecond} hears every second the clock actually runs down, not the ones it waits at full. */
-    public LobbyCountdown(Plugin plugin, Arena arena, int seconds, int minPlayers, IntSupplier players,
-                          IntConsumer onSecond, Runnable onStart) {
+    public LobbyCountdown(Plugin plugin, Round round, GameConfig config, IntConsumer onSecond, Runnable onStart) {
         this.countdown = new Countdown(plugin);
-        this.arena = arena;
-        this.seconds = seconds;
-        this.minPlayers = minPlayers;
-        this.players = players;
+        this.round = round;
+        this.seconds = config.lobbySeconds();
+        this.minPlayers = config.minPlayers();
+        this.startSeconds = config.startSeconds();
         this.onSecond = onSecond;
         this.onStart = onStart;
+        this.plugin = plugin;
+        Bukkit.getPluginManager().registerEvents(this, plugin);
     }
 
     /** Starts once enough players are there; calling it on every join is how a game keeps it going. */
     public void start() {
         updateBar(countdown.isRunning() ? countdown.remaining() : seconds);
-        if (players.getAsInt() >= minPlayers) {
+        if (round.playerCount() >= minPlayers) {
             begin();
         }
     }
 
+    /** /start: the clock runs down to {@code countdown.start} seconds, and the requester hears whether it did. */
+    public void forceStart(Player requester) {
+        String outcome;
+        if (round.phase() != GamePhase.LOBBY) {
+            outcome = "start.running";
+        } else if (round.playerCount() < ROUND_MINIMUM) {
+            outcome = "start.too-few";
+        } else if (shorten(startSeconds)) {
+            outcome = "start.shortened";
+        } else {
+            outcome = "start.too-late";
+        }
+        round.arena().tell(requester, outcome);
+    }
+
     /** Runs the clock down to {@code toSeconds} whatever the player count says; false if it is already there. */
     public boolean shorten(int toSeconds) {
-        begin();
-        if (countdown.remaining() <= toSeconds) {
+        if (countdown.isRunning() && countdown.remaining() <= toSeconds) {
             return false;
         }
         forced = true;
-        countdown.remaining(toSeconds + 1);
+        updateBar(toSeconds);
+        if (countdown.isRunning()) {
+            countdown.remaining(toSeconds + 1);
+        } else {
+            countdown.start(toSeconds + 1, this::tick, this::finish);
+        }
         return true;
+    }
+
+    /** The round counts the leaver out during the quit; the waiting bar shows the new count a tick later. */
+    @EventHandler
+    public void onQuit(PlayerQuitEvent event) {
+        if (bar != null && !countdown.isRunning()) {
+            Tasks.sync(plugin, () -> updateBar(seconds));
+        }
     }
 
     public boolean isRunning() {
@@ -90,55 +122,18 @@ public final class LobbyCountdown {
         hideBar();
     }
 
-    /**
-     * The frozen seconds right after a round starts: a title counts them down for the players who are in the
-     * round, then {@code onEnd} lets them move.
-     */
-    public static Countdown freeze(Plugin plugin, int seconds, Supplier<List<Player>> audience,
-                                   IntFunction<Component> title, Runnable onEnd) {
-        return freeze(plugin, seconds, audience, title, Component.empty(), onEnd);
-    }
-
-    public static Countdown freeze(Plugin plugin, int seconds, Supplier<List<Player>> audience,
-                                   IntFunction<Component> title, Component subtitle, Runnable onEnd) {
-        showSecond(audience.get(), title, subtitle, seconds);
-        return Countdown.start(plugin, seconds, remaining -> {
-            if (remaining > 0) {
-                showSecond(audience.get(), title, subtitle, remaining);
-            }
-        }, () -> {
-            var go = goTitle();
-            audience.get().forEach(player -> {
-                BlockcraftApi.get().notifications().important(player, go, Sounds.COUNTDOWN_GO);
-            });
-            onEnd.run();
-        });
-    }
-
-    private static void showSecond(List<Player> audience, IntFunction<Component> title, Component subtitle, int remaining) {
-        var shown = Title.title(title.apply(remaining), subtitle, SECOND_TIMES);
-        audience.forEach(player -> {
-            BlockcraftApi.get().notifications().important(player, shown);
-            Sounds.countdownTick(player, remaining);
-        });
-    }
-
-    private static Title goTitle() {
-        return Title.title(BlockcraftApi.get().messages().get("countdown.go"), Component.empty(), GO_TIMES);
-    }
-
     private void begin() {
         if (countdown.isRunning()) {
             return;
         }
         forced = false;
         updateBar(seconds);
-        arena.announceStart(seconds);
+        round.arena().announceStart(seconds);
         countdown.start(seconds, this::tick, this::finish);
     }
 
     private void tick(int remaining) {
-        if (!forced && players.getAsInt() < minPlayers) {
+        if (!forced && round.playerCount() < minPlayers) {
             countdown.remaining(seconds);
             updateBar(seconds);
             return;
@@ -146,7 +141,7 @@ public final class LobbyCountdown {
         updateBar(remaining);
         onSecond.accept(remaining);
         if (ANNOUNCE_AT.contains(remaining)) {
-            arena.announceStart(remaining);
+            round.arena().announceStart(remaining);
         }
         if (remaining > 0 && remaining <= AUDIBLE_FROM) {
             var title = Title.title(BlockcraftApi.get().messages().get("countdown.seconds", Formatter.number("seconds", remaining)),
@@ -158,7 +153,7 @@ public final class LobbyCountdown {
 
     private void updateBar(int remaining) {
         var messages = BlockcraftApi.get().messages();
-        int missing = Math.max(0, minPlayers - players.getAsInt());
+        int missing = Math.max(0, minPlayers - round.playerCount());
         boolean waiting = !forced && missing > 0;
         var label = waiting
                 ? messages.get("countdown.waiting", Formatter.number("players", missing))
@@ -177,9 +172,15 @@ public final class LobbyCountdown {
         }
     }
 
+    /** A forced countdown may run out after players left; with fewer than two it waits again instead. */
     private void finish() {
         forced = false;
         hideBar();
+        if (round.playerCount() < ROUND_MINIMUM) {
+            round.arena().announceCancelled();
+            start();
+            return;
+        }
         onStart.run();
     }
 }

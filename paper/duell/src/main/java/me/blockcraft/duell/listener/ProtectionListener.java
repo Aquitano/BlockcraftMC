@@ -16,6 +16,10 @@ import org.bukkit.event.player.PlayerDropItemEvent;
 
 import java.util.Set;
 
+/**
+ * Duell's rules beyond the shared lobby's: nobody gets hungry, only build mode builds, falls, fire and water do not
+ * hurt, players hurt each other and drop items only while the duel is fought, and nobody loses their inventory.
+ */
 public final class ProtectionListener implements Listener {
 
     private static final Set<EntityDamageEvent.DamageCause> BLOCKED_CAUSES = Set.of(
@@ -64,7 +68,7 @@ public final class ProtectionListener implements Listener {
 
     @EventHandler
     public void onDrop(PlayerDropItemEvent event) {
-        if (duel.isLobby() || !duel.pvp()) {
+        if (!duel.pvp()) {
             event.setCancelled(true);
         }
     }

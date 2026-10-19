@@ -11,7 +11,7 @@ import org.bukkit.entity.Player;
 /**
  * A boss bar over one timed phase of a round: the label says what is running out, the bar empties while it does.
  * The label is a message key of the game, which gets the remaining seconds as {@code <seconds>} and as
- * {@code <time>} in minutes and seconds.
+ * {@code <time>} in minutes and seconds. {@link Round#clock} shows it, unless the game turned timer bars off.
  */
 public final class TimerBar {
 
@@ -29,7 +29,10 @@ public final class TimerBar {
         this.key = key;
         this.seconds = Math.max(seconds, 1);
         this.bar = BossBar.bossBar(label(seconds), BossBar.MAX_PROGRESS, COLOR, OVERLAY);
-        Bukkit.getServer().showBossBar(bar);
+    }
+
+    public int seconds() {
+        return seconds;
     }
 
     /** Shown to everyone online again on every second, so a spectator who joins mid-phase sees it too. */

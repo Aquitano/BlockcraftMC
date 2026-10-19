@@ -10,7 +10,7 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
-import me.blockcraft.bedwars.Permissions;
+import me.blockcraft.api.game.SetupCommand;
 import me.blockcraft.bedwars.lobby.LobbyLayout;
 import me.blockcraft.bedwars.map.ArenaMap;
 import me.blockcraft.bedwars.map.ArenaWorlds;
@@ -35,12 +35,12 @@ import java.util.function.Function;
 import java.util.function.BiFunction;
 
 /**
- * Places what a BedWars map needs. The lobby's spots are stored in its {@code lobby.yml} and published with
- * {@code /map save}. A pool map is opened with {@code edit}, which loads its world and takes the builder there;
- * every other step is taken standing in that world and lands in its {@code map.yml} at once, and {@code save}
- * copies the world itself back into the pool.
+ * BedWars' /setup: places what a BedWars map needs. The lobby's spots are stored in its {@code lobby.yml} and
+ * published with {@code /map save}. A pool map is opened with {@code edit}, which loads its world and takes the
+ * builder there; every other step is taken standing in that world and lands in its {@code map.yml} at once, and
+ * {@code save} copies the world itself back into the pool.
  */
-public final class SetupCommand {
+public final class BedWarsSetup {
 
     private static final int BED_REACH = 5;
     private static final double REMOVE_REACH_SQUARED = 4.0;
@@ -51,7 +51,7 @@ public final class SetupCommand {
     private final List<TeamColor> teams;
     private final Messages messages;
 
-    private SetupCommand(MapPool pool, LobbyLayout layout, List<TeamColor> teams, Messages messages) {
+    private BedWarsSetup(MapPool pool, LobbyLayout layout, List<TeamColor> teams, Messages messages) {
         this.pool = pool;
         this.layout = layout;
         this.teams = teams;
@@ -60,12 +60,11 @@ public final class SetupCommand {
 
     public static LiteralCommandNode<CommandSourceStack> create(MapPool pool, LobbyLayout layout, List<TeamColor> teams,
                                                                 Messages messages) {
-        return new SetupCommand(pool, layout, teams, messages).tree();
+        return new BedWarsSetup(pool, layout, teams, messages).tree();
     }
 
     private LiteralCommandNode<CommandSourceStack> tree() {
-        return Commands.literal("bwsetup")
-                .requires(source -> source.getSender() instanceof Player && source.getSender().hasPermission(Permissions.SETUP))
+        return SetupCommand.root()
                 .executes(context -> help(player(context)))
                 .then(lobby())
                 .then(Commands.literal("map").then(map()))

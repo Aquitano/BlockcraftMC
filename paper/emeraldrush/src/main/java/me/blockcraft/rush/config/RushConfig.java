@@ -3,13 +3,11 @@ package me.blockcraft.rush.config;
 import me.blockcraft.api.game.CombatStyle;
 import org.bukkit.configuration.file.FileConfiguration;
 
+/** EmeraldRush's own keys; the ones every game shares are {@link me.blockcraft.api.game.GameConfig}'s. */
 public record RushConfig(
-        int minPlayers,
         int maxPlayers,
-        String globalStatsHead,
         int emeraldsPerOre,
         int oreRespawnSeconds,
-        int lobbyCountdown,
         int searchSeconds,
         int shoppingSeconds,
         int deathmatchSeconds,
@@ -17,8 +15,6 @@ public record RushConfig(
         double trackerRangeHorizontal,
         double trackerRangeVertical,
         int trackerCooldownTicks,
-        int restartSeconds,
-        int idleRestartMinutes,
         int lives,
         int killCoins,
         int winCoins,
@@ -28,12 +24,9 @@ public record RushConfig(
 
     public static RushConfig from(FileConfiguration config) {
         return new RushConfig(
-                config.getInt("min-players", 2),
-                config.getInt("max-players", 6),
-                config.getString("global-stats-head", "Kevos"),
+                config.getInt("players.max", 6),
                 config.getInt("emeralds-per-ore", 12),
                 config.getInt("ore-respawn-seconds", 12),
-                config.getInt("countdown.lobby", 30),
                 config.getInt("countdown.search", 300),
                 config.getInt("countdown.shopping", 90),
                 config.getInt("countdown.deathmatch", 1200),
@@ -41,8 +34,6 @@ public record RushConfig(
                 config.getDouble("tracker.range-horizontal", 100.0),
                 config.getDouble("tracker.range-vertical", 25.0),
                 Math.max(0, config.getInt("tracker.cooldown-ticks", 20)),
-                config.getInt("countdown.restart", 10),
-                config.getInt("idle-restart-minutes", 50),
                 config.getInt("lives", 3),
                 config.getInt("rewards.kill", 5),
                 config.getInt("rewards.win", 15),

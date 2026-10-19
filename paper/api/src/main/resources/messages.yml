@@ -128,6 +128,8 @@ arrival:
 
 # The moments every game shares, said the same way everywhere.
 arena:
+  cancelled: "<prefix><muted>Zu wenige Spieler, der Countdown wurde abgebrochen."
+  started: "<prefix><muted>Die Runde wurde gestartet."
   joined: "<prefix><white><player> <muted>hat das Spiel betreten! <dark>[<accent><online><dark>/<accent><max><dark>]"
   left: "<prefix><white><player> <muted>hat das Spiel verlassen! <dark>[<accent><online><dark>/<accent><max><dark>]"
   starting-in: "<prefix><muted>Die Runde startet in <accent><seconds> <muted>Sekunden."
@@ -604,3 +606,40 @@ curiosity:
   half-heart-seconds: "<arrow><accent>Kurios <dark>· <white><player> <muted>hielt <accent><value> Sekunden <muted>mit einem halben Herzen durch."
   rod-hits: "<arrow><accent>Kurios <dark>· <white><player> <muted>hat <accent><value>-mal <muted>mit der Angel nachgeholfen. Der Teich hat sich beschwert."
   emeralds-mined: "<arrow><accent>Kurios <dark>· <white><player> <muted>schürfte <accent><value> Emeralds<muted>. Der Villager bestellt einen Tresor."
+
+# The waiting lobby and the round every game shares: the lobby hotbar, /start, the sidebar's frame, the lobby vote,
+# /forcemap and /setup. Their answers carry the game's prefix.
+hotbar:
+  stats: "<arrow><primary>Stats"
+  start: "<arrow><primary>Spiel starten"
+  hub: "<arrow><primary>Zur Lobby"
+start:
+  running: "<prefix><error>Die Runde läuft bereits."
+  too-few: "<prefix><error>Für eine Runde braucht es mindestens zwei Spieler."
+  shortened: "<prefix><muted>Die Runde startet in wenigen Sekunden."
+  too-late: "<prefix><muted>Die Runde startet sowieso gleich."
+sidebar:
+  players: "<muted><icon:players> SPIELER"
+  players-value: "<arrow><white><players> <dark>/<white> <max>"
+  spectators-value: "<arrow><muted><spectators> schauen zu"
+  time: "<muted><icon:time> ZEIT"
+  map: "<muted><icon:map> MAP"
+  winner: "<muted><icon:winner> GEWINNER"
+  draw: "<arrow><muted>Unentschieden"
+  value: "<arrow><white><value>"
+vote:
+  votes: "<bullet><muted>Stimmen<dark>: <accent><votes>"
+  own: "<bullet><success>Deine Stimme"
+  choose: "<click>Abstimmen"
+  random: "<arrow><primary>Zufällig"
+  random-lore: "<bullet><muted>Der Zufall entscheidet."
+  cast: "<prefix><muted>Deine Stimme geht an <accent><option><muted>."
+  changed: "<prefix><muted>Deine Stimme geht jetzt an <accent><option><muted>."
+  closed: "<prefix><error>Die Abstimmung ist bereits vorbei."
+forcemap:
+  closed: "<prefix><error>Die Abstimmung ist bereits vorbei."
+  done: "<prefix><muted>Gespielt wird <accent><option><muted>."
+  unknown: "<prefix><error><option> <muted>steht nicht zur Wahl: <white><options>"
+setup:
+  help: "<prefix><muted>/setup <white><places>"
+  set: "<prefix><muted>Gesetzt: <white><place><muted>. Dauerhaft wird es mit <white>/map save<muted>."

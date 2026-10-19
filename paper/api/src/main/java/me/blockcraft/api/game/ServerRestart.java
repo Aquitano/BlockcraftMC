@@ -31,8 +31,13 @@ public final class ServerRestart {
         }, Bukkit::shutdown);
     }
 
-    /** Stops an empty server after the idle period; with players online it looks again after the retry period. */
-    public static void whenIdle(Plugin plugin, int idleSeconds, int retrySeconds) {
+    /** Stops an empty server after {@code idle-restart-minutes}; with players online it looks again as long after. */
+    public static void whenIdle(Plugin plugin, GameConfig config) {
+        int seconds = config.idleRestartMinutes() * 60;
+        whenIdle(plugin, seconds, seconds);
+    }
+
+    private static void whenIdle(Plugin plugin, int idleSeconds, int retrySeconds) {
         Tasks.later(plugin, idleSeconds * 20L, () -> {
             if (Bukkit.getOnlinePlayers().isEmpty()) {
                 Bukkit.shutdown();

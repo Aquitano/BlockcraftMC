@@ -10,7 +10,7 @@ commands:
     description: "Zeigt die Stats eines Spielers"
   top:
     description: "Zeigt die Top 10 einer Kategorie"
-  bwsetup:
+  setup:
     description: "Richtet die Lobby und die Maps von BedWars ein"
 
 join:
@@ -72,10 +72,11 @@ bed:
 round:
   team-out: "<prefix><muted>Team <team> <muted>wurde vernichtet."
   remaining: "<prefix><muted>Es verbleiben <accent><teams> <muted>Teams und <accent><players> <muted>Spieler."
-  ends-in-minutes: "<prefix><muted>Das Spiel endet in <accent><minutes> <muted>Minuten."
-  ends-in-seconds: "<prefix><muted>Das Spiel endet in <accent><seconds> <muted>Sekunden."
   winner: "<prefix><primary>Team <team> <primary>hat die Runde gewonnen!"
   draw: "<prefix><muted>Es konnte kein Team die Runde für sich entscheiden."
+
+timer:
+  round: "<bedwars>Verbleibende Zeit <dark>● <white><time>"
 
 build:
   outside: "<prefix><error>Du kannst hier keine Blöcke platzieren!"
@@ -163,15 +164,11 @@ items:
     left: "<bedwars><seconds> Sekunden"
 
 item:
-  vote: "<arrow><primary>Map-Voting"
-  start: "<arrow><primary>Spiel starten"
+  vote: "<arrow><primary>Abstimmung"
   jump-reset: "<arrow><primary>Zurück zum Start"
   perks: "<arrow><primary>Perks"
-  stats: "<arrow><primary>Stats"
-  hub: "<arrow><primary>Zur Lobby"
 
 lobby:
-  cancelled: "<prefix><error>Zu wenige Spieler, der Countdown wurde abgebrochen."
   no-map: "<prefix><error>Es gibt keine spielbare Map, die Runde kann nicht starten."
   map-failed: "<prefix><error>Die Map konnte nicht geladen werden, es wird neu abgestimmt."
   team-stand: "<team>"
@@ -187,19 +184,13 @@ lobby:
     yours: "<prefix><muted>Du hast jetzt den Kopf. Renn weg!"
     caught: "<prefix><player> <muted>hat jetzt den Kopf. Schnell!"
 
+# The map vote; the votes, the chance option and the voter's confirmation are BlockcraftAPI's vote texts.
 vote:
-  title: "<arrow><bedwars>BedWars <dark>· <muted>Map-Voting"
-  map: "<muted><map>"
-  builders: "<dark>von <builders>"
-  votes: "<white><votes> Votes"
-  cast: "<prefix><muted>Du hast für die Karte <success><map> <muted>abgestimmt."
-  changed: "<prefix><muted>Du hast deine Stimme auf <success><map> <muted>geändert."
-  over: "<prefix><error>Die Abstimmung ist bereits beendet."
-  result:
-    - " "
-    - "          <error><italic>Abstimmung beendet!"
-    - "          <accent>Karte: <success><map>"
-    - " "
+  title: "<arrow><bedwars>BedWars <dark>· <muted>Abstimmung"
+  map: "<arrow><primary><map>"
+  builders: "<bullet><muted>Erbaut von <accent><builders>"
+  chance: "den Zufall"
+  result: "<prefix><muted>Gespielt wird <accent><map><muted>."
 
 perks:
   title: "<arrow><bedwars>BedWars <dark>· <muted>Perks"
@@ -244,37 +235,27 @@ perks:
     lava: "<bedwars>Feuer"
     rainbow: "<bedwars>Bunter Staub"
 
-command:
-  start:
-    running: "<prefix><error>Das Spiel läuft bereits."
-    shortened: "<prefix><muted>Der Countdown wurde verkürzt."
-    too-late: "<prefix><error>Der Countdown kann nicht mehr verkürzt werden."
-  forcemap:
-    too-late: "<prefix><error>Du kannst in den letzten <seconds> Sekunden die Map nicht mehr ändern."
-    done: "<prefix><muted>Die Map wurde auf <success><map> <muted>geändert."
-    unknown: "<prefix><error>Die Map <success><map> <error>existiert nicht. <muted>Verfügbar: <success><maps>"
-
 setup:
   help:
     - " "
-    - "<muted>/bwsetup lobby spawn<dark>|<muted>cps-tester<dark>|<muted>jump-start<dark>|<muted>jump-finish"
-    - "<muted>/bwsetup lobby joiner <dark>[<muted>team<dark>]"
-    - "<muted>/bwsetup lobby display <dark>[<muted>team<dark>] [<muted>nummer<dark>]"
-    - "<muted>/bwsetup map <dark>[<muted>map<dark>] <muted>edit<dark>|<muted>save<dark>|<muted>info"
-    - "<muted>/bwsetup map <dark>[<muted>map<dark>] <muted>name<dark>|<muted>icon<dark>|<muted>spectator<dark>|<muted>shop<dark>|<muted>remove"
-    - "<muted>/bwsetup map <dark>[<muted>map<dark>] <muted>spawn<dark>|<muted>bed <dark>[<muted>team<dark>]"
-    - "<muted>/bwsetup map <dark>[<muted>map<dark>] <muted>spawner <dark>[<muted>bronze<dark>|<muted>iron<dark>|<muted>gold<dark>]"
-    - "<muted>/bwsetup map <dark>[<muted>map<dark>] <muted>border <dark>[<muted>x1<dark>] [<muted>z1<dark>] [<muted>x2<dark>] [<muted>z2<dark>]"
+    - "<muted>/setup lobby spawn<dark>|<muted>cps-tester<dark>|<muted>jump-start<dark>|<muted>jump-finish"
+    - "<muted>/setup lobby joiner <dark>[<muted>team<dark>]"
+    - "<muted>/setup lobby display <dark>[<muted>team<dark>] [<muted>nummer<dark>]"
+    - "<muted>/setup map <dark>[<muted>map<dark>] <muted>edit<dark>|<muted>save<dark>|<muted>info"
+    - "<muted>/setup map <dark>[<muted>map<dark>] <muted>name<dark>|<muted>icon<dark>|<muted>spectator<dark>|<muted>shop<dark>|<muted>remove"
+    - "<muted>/setup map <dark>[<muted>map<dark>] <muted>spawn<dark>|<muted>bed <dark>[<muted>team<dark>]"
+    - "<muted>/setup map <dark>[<muted>map<dark>] <muted>spawner <dark>[<muted>bronze<dark>|<muted>iron<dark>|<muted>gold<dark>]"
+    - "<muted>/setup map <dark>[<muted>map<dark>] <muted>border <dark>[<muted>x1<dark>] [<muted>z1<dark>] [<muted>x2<dark>] [<muted>z2<dark>]"
     - " "
   lobby-set: "<prefix><muted>Der Ort <white><spot> <muted>wurde gesetzt. Mit <white>/map save <muted>bleibt er."
   invalid-key: "<prefix><error>Ein Map-Name darf nur aus a-z, 0-9, _, . und - bestehen."
-  editing: "<prefix><muted>Du bearbeitest <white><map><muted>. Mit <white>/bwsetup map <map> save <muted>bleibt die Welt."
+  editing: "<prefix><muted>Du bearbeitest <white><map><muted>. Mit <white>/setup map <map> save <muted>bleibt die Welt."
   not-loaded: "<prefix><error>Diese Map ist gerade nicht geladen."
   saved: "<prefix><muted>Die Welt von <white><map> <muted>wurde gespeichert."
   ready: "<prefix><success><map> ist spielbar."
   missing: "<prefix><muted>Für <white><map> <muted>fehlt noch: <error><missing>"
   no-bed: "<prefix><error>Schau auf ein Bett."
-  not-in-map: "<prefix><error>Dafür musst du in <white><map> <error>stehen: <white>/bwsetup map <map> edit"
+  not-in-map: "<prefix><error>Dafür musst du in <white><map> <error>stehen: <white>/setup map <map> edit"
   changed: "<prefix><muted>Die Map <white><map> <muted>wurde geändert."
 
 stats:
@@ -310,34 +291,11 @@ menu:
 
 scoreboard:
   title: "<bedwars><bold>BedWars"
+  winner-team: "Team <team>"
+  team: "<muted><icon:mode> TEAM"
   no-team: "<muted>Kein Team"
   voting: "<muted>Abstimmung läuft"
-  map: "<white><map>"
-  lobby:
-    - "<muted><icon:players> SPIELER"
-    - "<arrow><white><online> <dark>/<white> <max>"
-    - " "
-    - "<muted><icon:mode> TEAM"
-    - "<arrow><team>"
-    - " "
-    - "<muted><icon:map> MAP"
-    - "<arrow><map-line>"
-    - " "
-  round:
-    - "<muted><icon:map> MAP"
-    - "<arrow><white><map>"
-    - " "
-    - "<muted><icon:time> ZEIT"
-    - "<arrow><white><time>"
-    - " "
-    - "<muted><icon:kills> KILLS"
-    - "<arrow><white><kills>"
-    - " "
+  teams: "<muted><icon:mode> TEAMS"
   team-bed: "<error>❤ <team> <dark>· <white><players>"
   team-no-bed: "<dark>❤ <team> <dark>· <white><players>"
-  winner:
-    - "<muted><icon:winner> GEWINNER"
-    - "<arrow>Team <team>"
-  draw:
-    - "<muted><icon:winner> GEWINNER"
-    - "<arrow><muted>Unentschieden"
+  kills: "<muted><icon:kills> KILLS"

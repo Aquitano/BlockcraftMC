@@ -2,11 +2,7 @@ package me.blockcraft.rush.game;
 
 import me.blockcraft.api.item.HotbarItem;
 
-/** The lobby hotbar, and the shop item of the shopping phase. */
+/** The shop item of the shopping phase; the lobby hotbar is the shared one. */
 public enum GameItem implements HotbarItem {
-    PERKS,
-    START,
-    STATS,
-    HUB,
     SHOP
 }

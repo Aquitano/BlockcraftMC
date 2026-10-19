@@ -1,62 +1,62 @@
 package me.blockcraft.rush.scoreboard;
 
-import me.blockcraft.api.BlockcraftApi;
-import me.blockcraft.api.game.TimerBar;
-import me.blockcraft.api.scoreboard.Sidebar;
+import me.blockcraft.api.game.GameSidebar;
+import me.blockcraft.api.game.Round;
 import me.blockcraft.api.world.MapBundle;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.rush.game.Game;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
-import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 
+/** The shared sidebar, with the viewer's emeralds while shopping and everyone's lives in the deathmatch. */
 public final class GameScoreboard {
 
     private final Game game;
     private final Messages messages;
-    private final MapBundle map;
+    private final GameSidebar sidebar;
+    private final Component map;
     private final int maxPlayers;
-    private final Sidebar sidebar;
 
-    public GameScoreboard(Game game, Messages messages, MapBundle map, int maxPlayers) {
+    public GameScoreboard(Game game, Messages messages, Round round, MapBundle map, int maxPlayers) {
         this.game = game;
         this.messages = messages;
-        this.map = map;
+        this.sidebar = new GameSidebar(messages.get("scoreboard.title"), round);
+        this.map = Component.text(map.name());
         this.maxPlayers = maxPlayers;
-        this.sidebar = new Sidebar(messages.get("scoreboard.title"));
     }
 
     public void refreshAll() {
         Bukkit.getOnlinePlayers().forEach(this::show);
     }
 
-    /** The headings carry icons, which only the viewer's client knows how to draw. */
     public void show(Player player) {
-        var online = TagResolver.resolver(
-                BlockcraftApi.get().resourcePack().icons(player),
-                Formatter.number("online", game.alivePlayers().size()),
-                Formatter.number("max", maxPlayers));
         switch (game.phase()) {
-            case LOBBY -> sidebar.show(player, messages.getLines("scoreboard.lobby", online, Placeholder.unparsed("map", map.name())));
-            case SEARCH -> sidebar.show(player, messages.getLines("scoreboard.search", online, Placeholder.unparsed("time", TimerBar.clock(game.secondsLeft()))));
-            case SHOPPING -> sidebar.show(player, messages.getLines("scoreboard.shopping", online, Formatter.number("emeralds", game.emeralds(player))));
-            case DEATHMATCH -> sidebar.showRows(player, game.alivePlayers().stream()
-                    .map(alive -> new Sidebar.Row(alive.getName(), messages.get("scoreboard.lives",
-                            Placeholder.component("player", alive.playerListName()),
-                            Formatter.number("lives", game.lives(alive))), game.lives(alive)))
-                    .toList());
-            case ENDING -> {
-                var names = game.winnerNames();
-                var lines = new ArrayList<Component>();
-                lines.add(messages.get(names.isEmpty() ? "scoreboard.draw" : "scoreboard.winner-header", online));
-                names.forEach(winner -> lines.add(messages.get("scoreboard.winner", Placeholder.unparsed("player", winner))));
-                sidebar.show(player, lines);
-            }
+            case LOBBY -> sidebar.lobby(player, maxPlayers, map, List.of());
+            case SEARCH -> sidebar.round(player, maxPlayers, game.secondsLeft(), map, List.of());
+            case SHOPPING -> sidebar.round(player, maxPlayers, game.secondsLeft(), map, List.of(emeralds(player)));
+            case DEATHMATCH -> sidebar.round(player, maxPlayers, game.secondsLeft(), map, List.of(lives(player)));
+            case ENDING -> sidebar.end(player, game.winnerNames().stream().<Component>map(Component::text).toList());
         }
+    }
+
+    private GameSidebar.Section emeralds(Player viewer) {
+        return new GameSidebar.Section(messages.get("scoreboard.emeralds", GameSidebar.icons(viewer)),
+                GameSidebar.value(Component.text(game.emeralds(viewer))));
+    }
+
+    private GameSidebar.Section lives(Player viewer) {
+        return new GameSidebar.Section(messages.get("scoreboard.lives", GameSidebar.icons(viewer)),
+                game.alivePlayers().stream()
+                        .sorted(Comparator.comparingInt(game::lives).reversed())
+                        .map(alive -> GameSidebar.value(messages.get("scoreboard.lives-value",
+                                Placeholder.component("player", alive.playerListName()),
+                                Formatter.number("lives", game.lives(alive)))))
+                        .toList());
     }
 }

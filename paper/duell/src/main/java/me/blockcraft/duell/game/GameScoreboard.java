@@ -1,11 +1,10 @@
 package me.blockcraft.duell.game;
 
-import me.blockcraft.api.BlockcraftApi;
-import me.blockcraft.api.scoreboard.Sidebar;
+import me.blockcraft.api.game.GamePhase;
+import me.blockcraft.api.game.GameSidebar;
+import me.blockcraft.api.game.Round;
 import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.entity.Player;
 
@@ -13,54 +12,61 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.OptionalInt;
 
+/**
+ * The shared sidebar with the duel under it: the mode, with the viewer's rating while the lobby waits, the opponent
+ * and, in 1vs1, the viewer's kills; a spectator follows both duellists instead.
+ */
 public final class GameScoreboard {
 
+    /** What every viewer's sidebar shares until the duel ends. */
+    public record Board(Component mode, Component map, int secondsLeft) {
+    }
+
     private final Messages messages;
-    private final Sidebar sidebar;
+    private final Round round;
+    private final GameSidebar sidebar;
 
-    public GameScoreboard(Messages messages) {
+    public GameScoreboard(Messages messages, Round round) {
         this.messages = messages;
-        this.sidebar = new Sidebar(messages.get("scoreboard.title"));
+        this.round = round;
+        this.sidebar = new GameSidebar(messages.get("scoreboard.title"), round);
     }
 
-    /** The headings carry icons, which only the viewer's client knows how to draw. */
-    public void show(Player player, Component mode, TagResolver rating, Component map, List<String> opponents, OptionalInt kills) {
-        var icons = BlockcraftApi.get().resourcePack().icons(player);
-        var lines = new ArrayList<Component>();
-        lines.add(Component.empty());
-        lines.add(messages.get("scoreboard.mode", icons));
-        lines.add(messages.get("scoreboard.mode-value", Placeholder.component("mode", mode)));
-        lines.add(messages.get("scoreboard.group-value", rating));
-        lines.add(Component.empty());
-        lines.add(messages.get("scoreboard.map", icons));
-        lines.add(messages.get("scoreboard.map-value", Placeholder.component("map", map)));
-        lines.add(Component.empty());
-        lines.add(messages.get("scoreboard.opponent", icons));
-        if (opponents.isEmpty()) {
-            lines.add(messages.get("scoreboard.opponent-value", Placeholder.component("player", messages.get("scoreboard.opponent-none"))));
+    public void showDuellist(Player viewer, Board board, TagResolver rating, List<String> opponents, OptionalInt kills) {
+        var icons = GameSidebar.icons(viewer);
+        var sections = new ArrayList<GameSidebar.Section>();
+        var mode = round.phase() == GamePhase.LOBBY
+                ? List.of(GameSidebar.value(board.mode()), messages.get("scoreboard.group-value", rating))
+                : List.of(GameSidebar.value(board.mode()));
+        sections.add(new GameSidebar.Section(messages.get("scoreboard.mode", icons), mode));
+        sections.add(new GameSidebar.Section(messages.get("scoreboard.opponent", icons), opponents.isEmpty()
+                ? List.of(GameSidebar.value(messages.get("scoreboard.opponent-none")))
+                : opponents.stream().map(name -> GameSidebar.value(Component.text(name))).toList()));
+        kills.ifPresent(count -> sections.add(new GameSidebar.Section(messages.get("scoreboard.kills", icons),
+                GameSidebar.value(Component.text(count)))));
+        show(viewer, board, sections);
+    }
+
+    public void showSpectator(Player viewer, Board board, List<Component> duellists) {
+        var icons = GameSidebar.icons(viewer);
+        var sections = new ArrayList<GameSidebar.Section>();
+        sections.add(new GameSidebar.Section(messages.get("scoreboard.mode", icons), GameSidebar.value(board.mode())));
+        if (!duellists.isEmpty()) {
+            sections.add(new GameSidebar.Section(messages.get("scoreboard.duellists", icons),
+                    duellists.stream().map(GameSidebar::value).toList()));
+        }
+        show(viewer, board, sections);
+    }
+
+    public void showEnd(Player viewer, List<String> winners) {
+        sidebar.end(viewer, winners.stream().<Component>map(Component::text).toList());
+    }
+
+    private void show(Player viewer, Board board, List<GameSidebar.Section> sections) {
+        if (round.phase() == GamePhase.LOBBY) {
+            sidebar.lobby(viewer, Duel.MAX_PARTICIPANTS, board.map(), sections);
         } else {
-            opponents.forEach(name -> lines.add(messages.get("scoreboard.opponent-value", Placeholder.unparsed("player", name))));
+            sidebar.round(viewer, Duel.MAX_PARTICIPANTS, board.secondsLeft(), board.map(), sections);
         }
-        lines.add(Component.empty());
-        if (kills.isPresent()) {
-            lines.add(messages.get("scoreboard.kills", icons));
-            lines.add(messages.get("scoreboard.kills-value", Formatter.number("kills", kills.getAsInt())));
-        }
-        sidebar.show(player, lines);
-    }
-
-    public void showSpectator(Player player, Component mode, Component map, Component phase, List<Component> contestants) {
-        var icons = BlockcraftApi.get().resourcePack().icons(player);
-        var lines = new ArrayList<Component>();
-        lines.add(messages.get("scoreboard.spectator", icons));
-        lines.add(phase);
-        lines.add(Component.empty());
-        lines.add(messages.get("scoreboard.mode", icons));
-        lines.add(messages.get("scoreboard.mode-value", Placeholder.component("mode", mode)));
-        lines.add(messages.get("scoreboard.map", icons));
-        lines.add(messages.get("scoreboard.map-value", Placeholder.component("map", map)));
-        lines.add(Component.empty());
-        lines.addAll(contestants);
-        sidebar.show(player, lines);
     }
 }

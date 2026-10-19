@@ -1,10 +1,13 @@
 package me.blockcraft.duell.listener;
 
+import me.blockcraft.api.game.PlayerReset;
 import me.blockcraft.duell.config.DuellConfig;
 import me.blockcraft.duell.game.Duel;
 import me.blockcraft.duell.game.DuelMode;
 import me.blockcraft.duell.game.GameItems;
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
@@ -43,14 +46,19 @@ public final class VsListener implements Listener {
         duel.mapSpawn(1).ifPresent(event::setRespawnLocation);
         duel.mapSpawn(2).ifPresent(spawn -> duel.opponentsOf(player).forEach(other -> {
             other.teleport(spawn);
-            items.giveVsKit(other);
-            config.combat().apply(other);
+            rearm(other);
         }));
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             if (player.isOnline()) {
-                items.giveVsKit(player);
-                config.combat().apply(player);
+                rearm(player);
             }
         }, KIT_DELAY_TICKS);
+    }
+
+    /** Every round of a 1vs1 starts both duellists afresh with the kit. */
+    private void rearm(Player player) {
+        PlayerReset.reset(player, GameMode.SURVIVAL);
+        items.giveVsKit(player);
+        config.combat().apply(player);
     }
 }

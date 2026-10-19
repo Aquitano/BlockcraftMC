@@ -1,11 +1,8 @@
 package me.blockcraft.quicksg.game;
 
-import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.item.Items;
-import me.blockcraft.api.pack.MenuIcon;
 import me.blockcraft.common.message.Messages;
 import org.bukkit.Material;
-import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 public final class GameItems {
@@ -14,16 +11,6 @@ public final class GameItems {
 
     public GameItems(Messages messages) {
         this.messages = messages;
-    }
-
-    public ItemStack hotbar(Player viewer, GameItem item) {
-        return item.build(viewer, switch (item) {
-            case STATS -> MenuIcon.TOOL_PROFILE.mark(Items.head(viewer.getUniqueId(), BlockcraftApi.get().realName(viewer)))
-                    .name(messages.get("item.stats"));
-            case KITS -> MenuIcon.QUICKSG.item().name(messages.get("item.kits"));
-            case START -> MenuIcon.START.item().name(messages.get("item.start"));
-            case HUB -> MenuIcon.TOOL_HOME.item().name(messages.get("item.hub"));
-        });
     }
 
     public ItemStack tracker() {

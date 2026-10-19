@@ -2,28 +2,32 @@ package me.blockcraft.rush.game;
 
 import me.blockcraft.api.game.Arena;
 import me.blockcraft.api.game.Defeat;
+import me.blockcraft.api.game.GameConfig;
 import me.blockcraft.api.game.LobbyCountdown;
+import me.blockcraft.api.game.LobbyHotbar;
 import me.blockcraft.api.game.PlayerReset;
 import me.blockcraft.api.game.Round;
+import me.blockcraft.api.game.RoundStart;
 import me.blockcraft.api.game.RoundSummary;
+import me.blockcraft.api.game.StatsMenus;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.game.TimerBar;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.item.HotbarItem;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.pack.MenuIcon;
+import me.blockcraft.api.shop.Unlocks;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Countdown;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.api.world.MapBundle;
 import me.blockcraft.common.message.Messages;
-import me.blockcraft.rush.Permissions;
 import me.blockcraft.rush.config.RushConfig;
 import me.blockcraft.rush.config.SpawnPoint;
 import me.blockcraft.rush.config.Spawns;
+import me.blockcraft.rush.menu.RushMenus;
 import me.blockcraft.rush.scoreboard.GameScoreboard;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
@@ -51,7 +55,6 @@ import java.util.function.IntConsumer;
 
 public final class Game {
 
-    private static final int MIN_TO_START = 2;
     private static final int SECONDS_PER_MINUTE = 60;
     private static final long RESPAWN_DELAY_TICKS = 1L;
 
@@ -61,11 +64,13 @@ public final class Game {
     private final Messages messages;
     private final RoundSummary summary;
     private final Round round;
-    private final Countdown countdown;
     private final LobbyCountdown lobbyCountdown;
     private final GameScoreboard scoreboard;
+    private final RushMenus menus;
+    private final LobbyHotbar lobbyHotbar;
 
     private GamePhase phase = GamePhase.LOBBY;
+    private Countdown clock;
     private final Map<UUID, Integer> emeralds = new HashMap<>();
     private final Map<UUID, Integer> lives = new HashMap<>();
     private final Map<UUID, Loadout> loadouts = new HashMap<>();
@@ -75,18 +80,21 @@ public final class Game {
     private record Loadout(ItemStack[] contents, ItemStack[] armor) {
     }
 
-    public Game(Plugin plugin, RushConfig config, Spawns spawns, Messages messages, StatsRepository stats, MapBundle map) {
+    public Game(Plugin plugin, GameConfig gameConfig, RushConfig config, Spawns spawns, Messages messages,
+                StatsRepository stats, StatsMenus statsMenus, Unlocks unlocks, MapBundle map) {
         this.plugin = plugin;
         this.config = config;
         this.spawns = spawns;
         this.messages = messages;
         this.summary = new RoundSummary(plugin, messages,
                 new RoundSummary.Rewards(config.killCoins(), config.winCoins()), stats);
-        this.round = new Round(plugin, new Arena(messages, Sounds.RUSH_JOIN), summary, config.maxPlayers());
-        this.countdown = round.timer(new Countdown(plugin));
-        this.lobbyCountdown = new LobbyCountdown(plugin, round.arena(), config.lobbyCountdown(), config.minPlayers(),
-                round::playerCount, this::beginSearch);
-        this.scoreboard = new GameScoreboard(this, messages, map, config.maxPlayers());
+        this.round = new Round(plugin, new Arena(messages, Sounds.RUSH_JOIN), summary, config.maxPlayers(), gameConfig);
+        this.lobbyCountdown = new LobbyCountdown(plugin, round, gameConfig, this::beginSearch);
+        this.scoreboard = new GameScoreboard(this, messages, round, map, config.maxPlayers());
+        this.menus = new RushMenus(this, messages, spawns, unlocks);
+        this.lobbyHotbar = new LobbyHotbar(plugin,
+                List.of(new LobbyHotbar.Choice(MenuIcon.EMERALDRUSH, messages.get("item.perks"), menus::openPerks)),
+                statsMenus, lobbyCountdown);
     }
 
     public GamePhase phase() {
@@ -97,8 +105,20 @@ public final class Game {
         return scoreboard;
     }
 
+    public RushMenus menus() {
+        return menus;
+    }
+
+    public LobbyCountdown lobbyCountdown() {
+        return lobbyCountdown;
+    }
+
+    public LobbyHotbar lobbyHotbar() {
+        return lobbyHotbar;
+    }
+
     public int secondsLeft() {
-        return countdown.remaining();
+        return clock == null ? 0 : clock.remaining();
     }
 
     public boolean isAlive(Player player) {
@@ -153,7 +173,7 @@ public final class Game {
         }
         spawns.teleport(player, SpawnPoint.LOBBY);
         PlayerReset.reset(player, GameMode.ADVENTURE);
-        giveLobbyItems(player);
+        lobbyHotbar.give(player);
         scoreboard.refreshAll();
         lobbyCountdown.start();
     }
@@ -181,29 +201,15 @@ public final class Game {
         scoreboard.refreshAll();
     }
 
-    public void forceStart(Player requester) {
-        if (round.playerCount() < MIN_TO_START) {
-            requester.sendMessage(messages.get("command.start-not-enough-players"));
-            return;
-        }
-        if (phase != GamePhase.LOBBY) {
-            requester.sendMessage(messages.get("command.start-not-lobby"));
-            return;
-        }
-        if (!lobbyCountdown.shorten(5)) {
-            requester.sendMessage(messages.get("command.start-already-started"));
-        }
-    }
-
     public void skipSearch() {
         if (phase == GamePhase.SEARCH) {
-            countdown.remaining(10);
+            clock.remaining(10);
         }
     }
 
     public void skipShopping() {
         if (phase == GamePhase.SHOPPING) {
-            countdown.remaining(10);
+            clock.remaining(10);
         }
     }
 
@@ -213,23 +219,15 @@ public final class Game {
     }
 
     private void beginSearch() {
-        if (round.playerCount() < MIN_TO_START) {
-            broadcast("lobby.cancelled");
-            lobbyCountdown.start();
-            return;
-        }
         setPhase(GamePhase.SEARCH);
-        Sounds.COUNTDOWN_GO.playToAll();
+        RoundStart.go(alivePlayers());
         messages.getLines("search.started", Formatter.number("minutes", config.searchSeconds() / SECONDS_PER_MINUTE)).forEach(Bukkit::broadcast);
         var pickaxe = Items.of(Material.IRON_PICKAXE).name(messages.get("item.pickaxe")).edit(meta -> {
             meta.addEnchant(Enchantment.UNBREAKING, 10, true);
             meta.addEnchant(Enchantment.EFFICIENCY, 5, true);
         }).build();
         for (var player : alivePlayers()) {
-            player.getInventory().clear();
-            player.setLevel(0);
-            player.setExp(0.0f);
-            player.setGameMode(GameMode.SURVIVAL);
+            PlayerReset.reset(player, GameMode.SURVIVAL);
             player.getWorld().spawnParticle(Particle.LARGE_SMOKE, player.getLocation(), 2);
             player.getInventory().addItem(pickaxe.clone());
             spawns.teleport(player, SpawnPoint.SEARCH);
@@ -237,12 +235,10 @@ public final class Game {
             config.combat().apply(player);
         }
         round.spectators().forEach(spectator -> spawns.teleport(spectator, SpawnPoint.SEARCH));
-        scoreboard.refreshAll();
-        startPhase("timer.search", config.searchSeconds(), remaining -> {
+        startClock("timer.search", config.searchSeconds(), remaining -> {
             for (var player : alivePlayers()) {
                 BlockcraftApi.get().notifications().status(player, messages.get("search.actionbar", Formatter.number("emeralds", emeralds(player))));
             }
-            scoreboard.refreshAll();
             switch (remaining) {
                 case 120, 60 -> {
                     Sounds.NOTIFY.playToAll();
@@ -257,6 +253,7 @@ public final class Game {
                 }
             }
         }, this::beginShopping);
+        scoreboard.refreshAll();
     }
 
     private void beginShopping() {
@@ -269,13 +266,12 @@ public final class Game {
             player.sendMessage(messages.get("shopping.info", Formatter.number("seconds", config.shoppingSeconds())));
             player.sendMessage(messages.get("shopping.hint"));
             player.getInventory().clear();
-            player.getInventory().setItem(4, hotbar(player, GameItem.SHOP));
+            player.getInventory().setItem(4, GameItem.SHOP.build(player, MenuIcon.TOOL_SHOP.item().name(messages.get("item.shop"))));
             spawns.teleport(player, SpawnPoint.SHOPPING);
             lives.put(player.getUniqueId(), config.lives());
         }
         round.spectators().forEach(spectator -> spawns.teleport(spectator, SpawnPoint.SHOPPING));
-        scoreboard.refreshAll();
-        startPhase("timer.shopping", config.shoppingSeconds(), remaining -> {
+        startClock("timer.shopping", config.shoppingSeconds(), remaining -> {
             switch (remaining) {
                 case 15, 5 -> {
                     Sounds.NOTIFY.playToAll();
@@ -286,6 +282,7 @@ public final class Game {
                 }
             }
         }, this::beginDeathmatch);
+        scoreboard.refreshAll();
     }
 
     private void beginDeathmatch() {
@@ -301,9 +298,8 @@ public final class Game {
             spawns.teleport(player, spawns.deathmatch(spawnIndex++));
         }
         round.spectators().forEach(spectator -> spawns.teleport(spectator, SpawnPoint.DEATHMATCH_1));
-        scoreboard.refreshAll();
         int trackerAfter = config.trackerAfterSeconds();
-        startPhase("timer.deathmatch", config.deathmatchSeconds(), remaining -> {
+        startClock("timer.deathmatch", config.deathmatchSeconds(), remaining -> {
             if (remaining == config.deathmatchSeconds() - trackerAfter) {
                 round.handOutTrackers(trackerAfter / SECONDS_PER_MINUTE,
                         Items.of(Material.COMPASS).name(messages.get("item.compass")).lore(messages.get("item.compass-lore")).build());
@@ -313,6 +309,7 @@ public final class Game {
             broadcast("deathmatch.draw");
             endRound();
         });
+        scoreboard.refreshAll();
     }
 
     public void handleDeath(PlayerDeathEvent event) {
@@ -397,43 +394,18 @@ public final class Game {
 
     private void endRound() {
         phase = GamePhase.ENDING;
-        round.end(config.restartSeconds());
+        round.end();
         scoreboard.refreshAll();
     }
 
-    /** Phases announce {@code seconds .. 1} and end one second after the last announcement. */
-    private void startPhase(String barKey, int seconds, IntConsumer onSecond, Runnable onFinish) {
-        var bar = round.bar(new TimerBar(messages, barKey, seconds));
-        countdown.start(seconds + 1, remaining -> {
-            if (remaining > 0) {
-                bar.update(remaining);
-                onSecond.accept(remaining);
+    /** Without boss bars the sidebar tells the time, so it follows the clock. */
+    private void startClock(String barKey, int seconds, IntConsumer onSecond, Runnable onEnd) {
+        clock = round.clock(new TimerBar(messages, barKey, seconds), remaining -> {
+            onSecond.accept(remaining);
+            if (round.clockOnSidebar()) {
+                scoreboard.refreshAll();
             }
-        }, () -> {
-            bar.hide();
-            onFinish.run();
-        });
-    }
-
-    private void giveLobbyItems(Player player) {
-        var inventory = player.getInventory();
-        inventory.setItem(0, hotbar(player, GameItem.PERKS));
-        if (player.hasPermission(Permissions.START)) {
-            inventory.setItem(1, hotbar(player, GameItem.START));
-        }
-        inventory.setItem(4, hotbar(player, GameItem.STATS));
-        inventory.setItem(8, hotbar(player, GameItem.HUB));
-    }
-
-    private ItemStack hotbar(Player viewer, GameItem item) {
-        return item.build(viewer, switch (item) {
-            case PERKS -> MenuIcon.EMERALDRUSH.item().name(messages.get("item.perks"));
-            case START -> MenuIcon.START.item().name(messages.get("item.start"));
-            case STATS -> MenuIcon.TOOL_PROFILE.mark(Items.head(viewer.getUniqueId(), BlockcraftApi.get().realName(viewer)))
-                    .name(messages.get("item.stats"));
-            case HUB -> MenuIcon.TOOL_HOME.item().name(messages.get("item.hub"));
-            case SHOP -> MenuIcon.TOOL_SHOP.item().name(messages.get("item.shop"));
-        });
+        }, onEnd);
     }
 
     private static void removeHotbarItems(Player player) {

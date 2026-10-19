@@ -1,9 +1,14 @@
+players:
+  min: 2
 global-stats-head: Kevos
 countdown:
   lobby: 30
+  start: 5
   freeze: 5
   round: 600
   restart: 10
+idle-restart-minutes: 50
+timer-bar: true
 rewards:
   kill: 0
   win: 10

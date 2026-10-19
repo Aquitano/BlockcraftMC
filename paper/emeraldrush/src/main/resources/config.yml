@@ -1,17 +1,20 @@
-min-players: 2
-# The map has six deathmatch spawns; more players would share them.
-max-players: 6
+players:
+  min: 2
+  # The map has six deathmatch spawns; more players would share them.
+  max: 6
 global-stats-head: Kevos
 emeralds-per-ore: 12
 ore-respawn-seconds: 12
 countdown:
   lobby: 30
+  start: 5
   search: 300
   shopping: 90
   deathmatch: 1200
   deathmatch-tracker-after: 300
   restart: 10
 idle-restart-minutes: 50
+timer-bar: true
 
 # Deathmatch lives per player and the coins a kill and a win are worth.
 lives: 3

@@ -1,29 +1,33 @@
 package me.blockcraft.bedwars.game;
 
+import me.blockcraft.api.game.Ballot;
+import me.blockcraft.api.game.VoteMenu;
 import me.blockcraft.api.menu.Menu;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.bedwars.config.BedWarsConfig;
-import me.blockcraft.bedwars.lobby.MapVote;
-import me.blockcraft.bedwars.lobby.VoteMenu;
 import me.blockcraft.bedwars.map.ArenaMap;
 import me.blockcraft.bedwars.map.ArenaWorlds;
 import me.blockcraft.bedwars.map.MapPool;
 import me.blockcraft.common.message.Messages;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * Which map the round is played on. The lobby votes among a few maps of the pool until shortly before the start,
- * when the most voted one wins, unless someone forced one before. The chosen map is copied into place in the
- * background at once, so that the start only has to load it.
+ * Which map the round is played on. The lobby votes among a few maps drawn from the pool, or leaves it to chance,
+ * until shortly before the start, when the vote decides, unless someone forced a map before. The chosen map is copied
+ * into place in the background at once, so that the start only has to load it.
  */
 final class MapChoice {
 
@@ -32,7 +36,7 @@ final class MapChoice {
     private final Messages messages;
     private final MapPool pool;
     private final Random random = new Random();
-    private MapVote vote;
+    private Ballot<String> ballot;
     private List<ArenaMap> choices;
     private Optional<ArenaMap> chosen = Optional.empty();
     private boolean forced;
@@ -64,14 +68,18 @@ final class MapChoice {
 
     void openMenu(Player player) {
         if (chosen.isPresent()) {
-            player.sendMessage(messages.get("vote.over"));
+            VoteMenu.closed(player, messages);
             return;
         }
-        new VoteMenu(messages, vote, choices, config.voteSlots(), this::vote).open(player);
+        var options = choices.stream().map(map -> new VoteMenu.Option(Optional.of(map.key()),
+                messages.get("vote.map", Placeholder.unparsed("map", map.name())), new ItemStack(map.icon()),
+                builders(map), ballot.votes(Optional.of(map.key())))).toList();
+        new VoteMenu(messages.get("vote.title"), options, Optional.of(ballot.votes(Optional.empty())),
+                ballot.choiceOf(player.getUniqueId()), Optional.empty(), this::vote).open(player);
     }
 
     void withdraw(Player player) {
-        vote.withdraw(player.getUniqueId());
+        ballot.withdraw(player.getUniqueId());
     }
 
     /** Closes the vote with its winner; false if the map was chosen already or the pool has none. */
@@ -79,7 +87,7 @@ final class MapChoice {
         if (chosen.isPresent()) {
             return false;
         }
-        var winner = vote.winner(random).flatMap(key -> choices.stream().filter(map -> map.key().equals(key)).findFirst());
+        var winner = ballot.winner(choices.stream().map(ArenaMap::key).toList(), random).flatMap(this::choice);
         winner.ifPresent(map -> choose(map, false));
         return winner.isPresent();
     }
@@ -110,20 +118,33 @@ final class MapChoice {
                 .forEach(Menu::close);
         chosen = Optional.empty();
         forced = false;
-        var playable = pool.playable(config.teams());
-        vote = MapVote.among(playable.stream().map(ArenaMap::key).toList(), config.voteSlots().size(), random);
-        choices = vote.choices().stream()
-                .map(key -> playable.stream().filter(map -> map.key().equals(key)).findFirst().orElseThrow())
-                .toList();
+        var drawn = new ArrayList<>(pool.playable(config.teams()));
+        Collections.shuffle(drawn, random);
+        choices = List.copyOf(drawn.subList(0, Math.min(config.voteMaps(), drawn.size())));
+        ballot = new Ballot<>();
     }
 
-    private void vote(Player player, ArenaMap map) {
+    /** {@code key} empty is a vote to leave the map to chance. */
+    private void vote(Player player, Optional<String> key) {
+        Menu.close(player);
         if (chosen.isPresent()) {
-            player.sendMessage(messages.get("vote.over"));
+            VoteMenu.closed(player, messages);
             return;
         }
-        var previous = vote.cast(player.getUniqueId(), map.key());
-        player.sendMessage(messages.get(previous.isPresent() ? "vote.changed" : "vote.cast", Placeholder.unparsed("map", map.name())));
+        var option = key.flatMap(this::choice).<Component>map(map -> Component.text(map.name()))
+                .orElseGet(() -> messages.get("vote.chance"));
+        boolean changed = ballot.cast(player.getUniqueId(), key).isPresent();
+        VoteMenu.confirm(player, messages, option, changed);
+    }
+
+    private Optional<ArenaMap> choice(String key) {
+        return choices.stream().filter(map -> map.key().equals(key)).findFirst();
+    }
+
+    private List<Component> builders(ArenaMap map) {
+        return map.builders().isEmpty()
+                ? List.of()
+                : List.of(messages.get("vote.builders", Placeholder.unparsed("builders", String.join(", ", map.builders()))));
     }
 
     private void choose(ArenaMap map, boolean forcedChoice) {

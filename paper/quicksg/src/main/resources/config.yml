@@ -1,15 +1,17 @@
-min-players: 2
-max-players: 8
+players:
+  min: 2
+  max: 8
 global-stats-head: Kevos
 countdown:
   lobby: 30
+  start: 5
   freeze: 5
   protection: 20
-  game: 1200
+  round: 1200
   tracker-after: 300
   restart: 10
-  idle-restart: 3000
-  idle-restart-retry: 2000
+idle-restart-minutes: 50
+timer-bar: true
 world-border:
   enabled: false
   lobby-radius: 30

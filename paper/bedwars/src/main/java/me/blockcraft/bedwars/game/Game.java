@@ -3,19 +3,20 @@ package me.blockcraft.bedwars.game;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.game.Arena;
 import me.blockcraft.api.game.Defeat;
+import me.blockcraft.api.game.GameConfig;
 import me.blockcraft.api.game.GamePhase;
 import me.blockcraft.api.game.LobbyCountdown;
+import me.blockcraft.api.game.LobbyHotbar;
 import me.blockcraft.api.game.PlayerReset;
 import me.blockcraft.api.game.Round;
+import me.blockcraft.api.game.RoundStart;
 import me.blockcraft.api.game.RoundSummary;
+import me.blockcraft.api.game.StatsMenus;
 import me.blockcraft.api.game.StatsRepository;
-import me.blockcraft.api.item.HotbarItem;
-import me.blockcraft.api.item.Items;
+import me.blockcraft.api.game.TimerBar;
 import me.blockcraft.api.pack.MenuIcon;
 import me.blockcraft.api.sound.Sounds;
-import me.blockcraft.api.task.Countdown;
 import me.blockcraft.api.task.Tasks;
-import me.blockcraft.bedwars.Permissions;
 import me.blockcraft.bedwars.config.BedWarsConfig;
 import me.blockcraft.bedwars.item.SpecialItems;
 import me.blockcraft.bedwars.lobby.CatchGame;
@@ -53,7 +54,6 @@ import org.bukkit.Particle;
 import org.bukkit.Tag;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.command.CommandSender;
 import org.bukkit.damage.DamageSource;
 import org.bukkit.damage.DamageType;
 import org.bukkit.entity.Firework;
@@ -62,7 +62,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 
 import java.time.Duration;
@@ -91,18 +90,8 @@ public final class Game {
     private static final long WINNER_FIREWORK_TICKS = 70L;
     private static final int WINNER_FIREWORK_POWER = 10;
     private static final int BED_SPIRAL_PER_STRAND = 15;
-    private static final int SECONDS_PER_MINUTE = 60;
-    private static final int LAST_MINUTES = 5;
-    private static final int ANNOUNCED_EVERY_MINUTES = 10;
-    private static final Set<Integer> ANNOUNCED_SECONDS = Set.of(30, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1);
     private static final Title.Times BED_TITLE = Title.Times.times(Duration.ofMillis(250),
             Duration.ofSeconds(2), Duration.ofMillis(500));
-
-    private static final int VOTE_SLOT = 0;
-    private static final int START_SLOT = 1;
-    private static final int PERKS_SLOT = 4;
-    private static final int STATS_SLOT = 7;
-    private static final int HUB_SLOT = 8;
     private static final Set<Material> DECORATION = Set.of(Material.SHORT_GRASS, Material.TALL_GRASS, Material.FERN,
             Material.LARGE_FERN, Material.DEAD_BUSH, Material.SUNFLOWER, Material.LILAC, Material.ROSE_BUSH, Material.PEONY);
 
@@ -119,7 +108,7 @@ public final class Game {
     private final RoundSummary summary;
     private final Round round;
     private final LobbyCountdown lobbyCountdown;
-    private final Countdown clock;
+    private final LobbyHotbar lobbyHotbar;
     private final GameScoreboard scoreboard;
     private final TeamSelector selector;
     private final CpsTester cps;
@@ -133,8 +122,8 @@ public final class Game {
     private Optional<Team> winner = Optional.empty();
     private int secondsLeft;
 
-    public Game(Plugin plugin, BedWarsConfig config, Messages messages, MapPool pool, LobbyLayout layout,
-                ShopCatalog catalog, StatsRepository stats) {
+    public Game(Plugin plugin, GameConfig gameConfig, BedWarsConfig config, Messages messages, MapPool pool,
+                LobbyLayout layout, ShopCatalog catalog, StatsRepository stats, StatsMenus statsMenus) {
         var api = BlockcraftApi.get();
         this.plugin = plugin;
         this.config = config;
@@ -143,28 +132,30 @@ public final class Game {
         this.teams = new Teams(config.teams(), config.playersPerTeam(), messages, api.tabTeams());
         this.perks = new Perks(api.settings());
         this.summary = new RoundSummary(plugin, messages, new RoundSummary.Rewards(config.killCoins(), config.winCoins()), stats);
-        this.round = new Round(plugin, new Arena(messages, Sounds.JOIN), summary, config.capacity());
+        this.round = new Round(plugin, new Arena(messages, Sounds.JOIN), summary, config.capacity(), gameConfig);
         this.shop = new Shop(catalog, messages, perks, teams::colorOf);
         this.dealers = new Dealers(messages, shop, round::isPlaying);
         this.chests = new TeamChests(plugin, messages, teams);
         this.specials = new SpecialItems(plugin, messages, config, dealers, teams, round::isPlaying, Game::isDecoration,
                 placed::add);
-        this.clock = round.timer(new Countdown(plugin));
-        this.lobbyCountdown = new LobbyCountdown(plugin, round.arena(), config.lobbySeconds(), config.minPlayers(),
-                round::playerCount, this::lobbySecond, this::start);
-        this.scoreboard = new GameScoreboard(this, messages);
+        this.maps = new MapChoice(plugin, config, messages, pool);
+        this.lobbyCountdown = new LobbyCountdown(plugin, round, gameConfig, this::lobbySecond, this::start);
+        this.lobbyHotbar = new LobbyHotbar(plugin, List.of(
+                new LobbyHotbar.Choice(MenuIcon.BEDWARS, messages.get("item.perks"), this::openPerks),
+                new LobbyHotbar.Choice(MenuIcon.VOTE, messages.get("item.vote"), () -> maps.chosen().isEmpty(), this::openVote)),
+                statsMenus, lobbyCountdown);
+        this.scoreboard = new GameScoreboard(this, messages, round);
         this.selector = new TeamSelector(plugin, layout, teams, messages, this::chooseTeam);
         this.cps = new CpsTester(plugin, layout.get(LobbyLayout.CPS_TESTER), messages);
         this.jumpAndRun = layout.get(LobbyLayout.JUMP_START).flatMap(start -> layout.get(LobbyLayout.JUMP_FINISH)
-                .map(finish -> new JumpAndRun(plugin, start, finish, messages,
-                        player -> hotbar(player, GameItem.JUMP_RESET))));
+                .map(finish -> new JumpAndRun(plugin, start, finish, messages, player -> GameItem.JUMP_RESET.build(player,
+                        MenuIcon.JUMP.item().name(messages.get("item.jump-reset"))))));
         this.catchGame = new CatchGame(plugin, messages, round::players);
-        this.maps = new MapChoice(plugin, config, messages, pool);
     }
 
     /** Everything that hears the game's events besides the round, which registers itself. */
     public List<Listener> listeners() {
-        var listeners = new ArrayList<Listener>(List.of(dealers, chests, specials, selector, cps, catchGame));
+        var listeners = new ArrayList<Listener>(List.of(lobbyHotbar, dealers, chests, specials, selector, cps, catchGame));
         jumpAndRun.ifPresent(listeners::add);
         return listeners;
     }
@@ -197,6 +188,10 @@ public final class Game {
         return round.phase();
     }
 
+    public LobbyCountdown lobbyCountdown() {
+        return lobbyCountdown;
+    }
+
     public Teams teams() {
         return teams;
     }
@@ -223,10 +218,6 @@ public final class Game {
 
     public int capacity() {
         return config.capacity();
-    }
-
-    public int playerCount() {
-        return round.playerCount();
     }
 
     public int secondsLeft() {
@@ -271,7 +262,7 @@ public final class Game {
         if (round.join(player)) {
             lobbySpawn().ifPresent(player::teleport);
             PlayerReset.reset(player, GameMode.ADVENTURE);
-            giveLobbyItems(player);
+            lobbyHotbar.give(player);
             cps.show(player);
             catchGame.joined();
             lobbyCountdown.start();
@@ -338,76 +329,57 @@ public final class Game {
         });
     }
 
-    public void openVote(Player player) {
+    private void openVote(Player player) {
         if (phase() == GamePhase.LOBBY) {
             maps.openMenu(player);
         }
     }
 
-    public void openPerks(Player player) {
+    private void openPerks(Player player) {
         new PerksMenu(messages, perks, player).open(player);
-    }
-
-    public void forceStart(Player player) {
-        if (phase() != GamePhase.LOBBY) {
-            player.sendMessage(messages.get("command.start.running"));
-        } else if (lobbyCountdown.shorten(config.voteClosesAt())) {
-            player.sendMessage(messages.get("command.start.shortened"));
-        } else {
-            player.sendMessage(messages.get("command.start.too-late"));
-        }
     }
 
     public List<String> playableMaps() {
         return maps.playable();
     }
 
-    public void forceMap(CommandSender sender, String key) {
-        if (phase() != GamePhase.LOBBY) {
-            sender.sendMessage(messages.get("command.start.running"));
-            return;
-        }
-        if (lobbyCountdown.isRunning() && lobbyCountdown.remaining() <= config.voteClosesAt()) {
-            sender.sendMessage(messages.get("command.forcemap.too-late", Formatter.number("seconds", config.voteClosesAt())));
-            return;
-        }
-        maps.playable(key).ifPresentOrElse(map -> {
-            maps.force(map);
-            voteClosed();
-            sender.sendMessage(messages.get("command.forcemap.done", Placeholder.unparsed("map", map.name())));
-        }, () -> sender.sendMessage(messages.get("command.forcemap.unknown", Placeholder.unparsed("map", key),
-                Placeholder.unparsed("maps", String.join(", ", maps.playable())))));
+    /** Whether the lobby still votes, which /forcemap ends early. */
+    /** Staff may force a map, also over a decided or forced one, until the vote's last seconds. */
+    public boolean mapForceable() {
+        return phase() == GamePhase.LOBBY
+                && !(lobbyCountdown.isRunning() && lobbyCountdown.remaining() <= config.voteClosesAt());
+    }
+
+    /** Ends the vote with the playable map {@code key}, and names it; empty for an unknown map. */
+    public Optional<Component> forceMap(String key) {
+        var map = maps.playable(key);
+        map.ifPresent(forced -> {
+            maps.force(forced);
+            voteChanged();
+        });
+        return map.map(forced -> Component.text(forced.name()));
     }
 
     /** The vote closes {@code vote-closes-at} seconds before the start, and opens again if the clock goes back up. */
     private void lobbySecond(int remaining) {
         if (remaining > config.voteClosesAt()) {
             if (maps.reopen()) {
-                voteOpened();
+                voteChanged();
             }
         } else if (maps.decide()) {
-            voteClosed();
+            voteChanged();
         }
     }
 
-    private void voteClosed() {
-        Bukkit.getOnlinePlayers().forEach(player -> removeHotbar(player, GameItem.VOTE));
-        scoreboard.refreshAll();
-    }
-
-    private void voteOpened() {
-        round.players().forEach(player -> player.getInventory().setItem(VOTE_SLOT, hotbar(player, GameItem.VOTE)));
+    /** The vote's item comes and goes with the vote. */
+    private void voteChanged() {
+        round.players().forEach(lobbyHotbar::refreshChoices);
         scoreboard.refreshAll();
     }
 
     private void start() {
-        if (round.playerCount() < config.minToStart()) {
-            broadcast("lobby.cancelled");
-            lobbyCountdown.start();
-            return;
-        }
         if (maps.decide()) {
-            voteClosed();
+            voteChanged();
         }
         if (maps.chosen().isEmpty()) {
             broadcast("lobby.no-map");
@@ -422,7 +394,7 @@ public final class Game {
             plugin.getLogger().log(Level.SEVERE, "Could not load the map " + maps.chosen().map(ArenaMap::key).orElse("?"), e);
             broadcast("lobby.map-failed");
             maps.redraw();
-            voteOpened();
+            voteChanged();
             lobbyCountdown.start();
             return;
         }
@@ -453,16 +425,16 @@ public final class Game {
             player.teleport(spawn.get());
         }
         round.spectators().forEach(spectator -> spectator.teleport(match.spectatorSpawn()));
+        RoundStart.go(round.players());
         announceTeams();
         match.start();
         secondsLeft = config.roundSeconds();
-        announceEnd(secondsLeft);
-        clock.start(config.roundSeconds(), remaining -> {
+        round.clock(new TimerBar(messages, "timer.round", config.roundSeconds()), remaining -> {
             secondsLeft = remaining;
-            if (remaining > 0 && announcesEnd(remaining)) {
-                announceEnd(remaining);
+            round.announceEnd(remaining);
+            if (round.clockOnSidebar()) {
+                scoreboard.refreshAll();
             }
-            scoreboard.refreshAll();
         }, () -> endRound(Optional.empty()));
         scoreboard.refreshAll();
     }
@@ -617,7 +589,7 @@ public final class Game {
                             .withColor(team.color().dye().getColor()).build());
                     firework.setFireworkMeta(meta);
                 }))));
-        round.end(config.restartSeconds());
+        round.end();
         scoreboard.refreshAll();
     }
 
@@ -639,22 +611,6 @@ public final class Game {
         broadcast("round.remaining", Formatter.number("teams", teams.standing().size()), Formatter.number("players", teams.playerCount()));
     }
 
-    /** Every ten minutes, every minute of the last five, then at thirty seconds and the last ten. */
-    private static boolean announcesEnd(int remaining) {
-        int minutes = remaining / SECONDS_PER_MINUTE;
-        boolean fullMinute = remaining % SECONDS_PER_MINUTE == 0;
-        return fullMinute && (minutes % ANNOUNCED_EVERY_MINUTES == 0 || minutes <= LAST_MINUTES)
-                || ANNOUNCED_SECONDS.contains(remaining);
-    }
-
-    private void announceEnd(int remaining) {
-        if (remaining > SECONDS_PER_MINUTE) {
-            broadcast("round.ends-in-minutes", Formatter.number("minutes", remaining / SECONDS_PER_MINUTE));
-        } else {
-            broadcast("round.ends-in-seconds", Formatter.number("seconds", remaining));
-        }
-    }
-
     private void hideBriefly(Player player) {
         Bukkit.getOnlinePlayers().forEach(other -> {
             if (!other.equals(player)) {
@@ -673,7 +629,7 @@ public final class Game {
         Bukkit.getOnlinePlayers().forEach(other -> other.showPlayer(plugin, player));
         PlayerReset.reset(player, GameMode.ADVENTURE);
         lobbySpawn().ifPresent(player::teleport);
-        player.getInventory().setItem(HUB_SLOT, hotbar(player, GameItem.HUB));
+        lobbyHotbar.giveHub(player);
     }
 
     private void dress(Player player, Team team) {
@@ -682,40 +638,6 @@ public final class Game {
         inventory.setBoots(armor[0]);
         inventory.setLeggings(armor[1]);
         inventory.setChestplate(armor[2]);
-    }
-
-    private void giveLobbyItems(Player player) {
-        var inventory = player.getInventory();
-        if (maps.chosen().isEmpty()) {
-            inventory.setItem(VOTE_SLOT, hotbar(player, GameItem.VOTE));
-        }
-        if (player.hasPermission(Permissions.START)) {
-            inventory.setItem(START_SLOT, hotbar(player, GameItem.START));
-        }
-        inventory.setItem(PERKS_SLOT, hotbar(player, GameItem.PERKS));
-        inventory.setItem(STATS_SLOT, hotbar(player, GameItem.STATS));
-        inventory.setItem(HUB_SLOT, hotbar(player, GameItem.HUB));
-    }
-
-    private ItemStack hotbar(Player viewer, GameItem item) {
-        return item.build(viewer, switch (item) {
-            case VOTE -> MenuIcon.VOTE.item().name(messages.get("item.vote"));
-            case START -> MenuIcon.START.item().name(messages.get("item.start"));
-            case JUMP_RESET -> MenuIcon.JUMP.item().name(messages.get("item.jump-reset"));
-            case PERKS -> MenuIcon.BEDWARS.item().name(messages.get("item.perks"));
-            case STATS -> MenuIcon.TOOL_PROFILE.mark(Items.head(viewer.getUniqueId(), BlockcraftApi.get().realName(viewer)))
-                    .name(messages.get("item.stats"));
-            case HUB -> MenuIcon.TOOL_HOME.item().name(messages.get("item.hub"));
-        });
-    }
-
-    private static void removeHotbar(Player player, GameItem item) {
-        var inventory = player.getInventory();
-        for (int slot = 0; slot < inventory.getSize(); slot++) {
-            if (HotbarItem.of(inventory.getItem(slot), GameItem.class).filter(item::equals).isPresent()) {
-                inventory.setItem(slot, null);
-            }
-        }
     }
 
     private TagResolver teamName(Team team) {

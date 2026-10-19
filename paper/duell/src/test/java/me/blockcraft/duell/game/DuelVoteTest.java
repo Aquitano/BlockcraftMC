@@ -78,6 +78,17 @@ public class DuelVoteTest {
     }
 
     @Test
+    public void aForcedModeOutvotesTheOthersWhileItsMapVotesStillCount() {
+        var vote = new DuelVote();
+        vote.cast(UUID.randomUUID(), new DuelVote.Choice(DuelMode.VS, OptionalInt.of(1)));
+        vote.cast(UUID.randomUUID(), new DuelVote.Choice(DuelMode.VS, OptionalInt.of(1)));
+        vote.cast(UUID.randomUUID(), new DuelVote.Choice(DuelMode.SG, OptionalInt.of(1)));
+        vote.force(DuelMode.SG);
+
+        assertEquals(new DuelVote.Outcome(DuelMode.SG, 1), vote.tally(PLAYABLE, LAST));
+    }
+
+    @Test
     public void withoutAnyPlayableMapsTheVotedModeKeepsItsFallbackMap() {
         var vote = new DuelVote();
         vote.cast(UUID.randomUUID(), new DuelVote.Choice(DuelMode.VS, OptionalInt.of(2)));

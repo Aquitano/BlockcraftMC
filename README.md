@@ -174,7 +174,7 @@ first and only a finished copy replaces the old contents, so a save that fails h
 was; the next start or save puts a swap that was cut short back together. `.staging` and `.replaced` are ignored by
 git. Commit the template like any other change and revert
 it like one. Region files go through git-lfs (`.gitattributes`), so `git lfs install` once before committing a map.
-A map edited without `/map save` is gone at the next restart, and so is a `/setspawn` on such a server, which is the
+A map edited without `/map save` is gone at the next restart, and so is a `/setup` on such a server, which is the
 point. The running server publishes its own copy of `map.yml` too, so edit that file in the template and restart
 rather than while the server runs.
 
@@ -199,7 +199,7 @@ spawners, team spawns and beds, and `world/`, the map's dimension folder. A roun
 `dimensions/bedwars/<key>` of the running level and loads it as the world `bedwars:<key>`; the restart after the round
 throws it away again.
 
-`/bwsetup lobby ...` places the lobby's spots, kept with `/map save` like every plugin's. `/bwsetup map <key> edit`
+`/setup lobby ...` places the lobby's spots, kept with `/map save` like every plugin's. `/setup map <key> edit`
 loads a map of the pool, or an empty one for a new key, and takes the builder there; standing in it, `spawn`, `bed`,
 `shop`, `spawner`, `spectator`, `border`, `name` and `icon` change its `map.yml` at once, `info` names what is still
 missing, and `save` copies the world back into the pool. `/map save` then publishes the lobby with its pool. A map is
@@ -254,8 +254,8 @@ one XP total in the action bar; level-ups report the highest reached level in ch
 `blockcraft.level.others`, and chat prefixes every message with the level (`chat.level` in core's `messages.yml`).
 The lobby experience bar shows this network level and progress. Its boss bar labels coins separately and refreshes
 from the database every `hud.refresh-seconds`. Purchases and secret rewards report the new balance in chat.
-Game countdowns use boss bars, and Duell displays its kill tally in the sidebar. Levels bought or collected inside
-a game are labelled as enchantment levels and do not change network XP.
+Every timed phase of a game shows its time on a boss bar; `timer-bar: false` in a game's `config.yml` moves it to the
+sidebar. Levels bought or collected inside a game are labelled as enchantment levels and do not change network XP.
 
 `BlockcraftApi.notifications()` coordinates action bars, titles, and reward sounds. Direct feedback takes priority
 over routine status updates and XP notices. Round titles take priority over achievement titles; interrupted titles
@@ -317,19 +317,32 @@ minutes and the restart countdown. Each game holds a `Round` for what they share
 has room and makes everyone else a spectator, vanished staff included, who are neither announced nor counted; it
 reports the phase to the proxy and counts leaving a running round as a death and a loss. Spectators fly unseen in
 adventure mode with a hotbar to pick a player, step to the previous or next one and leave; the round keeps them from
-touching, taking or opening anything, and while it runs their chat reaches only the other spectators. A round's kills, deaths,
-coins and XP are counted in one place (`RoundSummary`), which announces kill
+touching, taking or opening anything, and while it runs their chat reaches only the other spectators. A round's kills,
+deaths, coins and XP are counted in one place (`RoundSummary`), which announces kill
 streaks at the lengths `streaks.announce` in BlockcraftAPI's `config.yml` names, writes every participant's stats
 once when the round ends (a loss for everyone knocked out or beaten by a winner), prints the recap in chat and
 stores it in `bc_round_recaps`; the lobby opens that recap as a dialog after arrival if the player has not opened another screen. The profile
 keeps the recap accessible during that lobby session, with a button back into the same game. Recaps older than
 `recap.max-age-minutes` are discarded. The `quicksg`,
-`emeraldrush`, and `duell` palette tags give the games distinct colours across menus,
+`emeraldrush`, `duell` and `bedwars` palette tags give the games distinct colours across menus,
 signs and sidebars. Their arrival sounds respect the player's sound setting. Kit and perk menus distinguish
 selected, unlocked and purchasable items; coins buy permanent unlocks, while EmeraldRush emeralds buy round items.
 A game's own `messages.yml` holds its introduction and game-specific wording, including the `menu.stats` and
 `menu.global-stats` texts of the shared `StatsMenus` and `/top`. `MessageKeysTest` in `common`
 checks that every key a plugin asks its messages for exists in its `messages.yml` or BlockcraftAPI's.
+
+The rest of a game's lobby and round comes from the same pieces of BlockcraftAPI's `game` package, so every game reads
+alike. Every game's `config.yml` shares `players.min` (the lobby counts down by itself from there), `countdown.lobby`,
+`countdown.start` (what `/start` shortens the lobby to), `countdown.restart`, `idle-restart-minutes`, `timer-bar` and
+`global-stats-head`. `/start` (`blockcraft.game.start`) never starts a round with fewer than two players, and every
+round announces its start the same way. The lobby hotbar has the game's own choice in its first slot (BedWars has a
+second one, its vote, next to it), stats in the middle, `/start` for staff in slot 7 and the way back to the hub at
+the end; the lobby keeps everyone unhurt and its blocks and items in place. The sidebar shows the players with how
+many watch, the time when no boss bar does and the map, then the game's own lines, and the winners at the end. A
+lobby vote (BedWars' maps, Duell's mode and then its map) marks the voter's choice, offers to leave the map to
+chance, confirms the vote to the voter alone and can be decided with `/forcemap` (`blockcraft.game.forcemap`; in
+Duell it decides the mode). `/setup` (`blockcraft.game.setup`) places a game's spots, its lobby spot always as
+`lobby`.
 
 `/globalmute` and `/chatslow <seconds>|off` (`blockcraft.system.chatslow`) are stored in `bc_settings`. Every Paper
 server re-reads both every `chat.network-refresh-seconds` of core's `config.yml` and keeps the last known values while

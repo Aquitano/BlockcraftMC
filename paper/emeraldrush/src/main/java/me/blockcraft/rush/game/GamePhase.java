@@ -11,10 +11,6 @@ public enum GamePhase {
         return this == DEATHMATCH || this == ENDING;
     }
 
-    public boolean locksInventory() {
-        return this == LOBBY || this == SEARCH;
-    }
-
     /** The shared round's step this phase belongs to; the three phases of play are all one running round. */
     public me.blockcraft.api.game.GamePhase roundPhase() {
         return switch (this) {

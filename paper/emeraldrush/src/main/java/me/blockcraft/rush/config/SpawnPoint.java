@@ -1,7 +1,6 @@
 package me.blockcraft.rush.config;
 
 import java.util.List;
-import java.util.Optional;
 
 public enum SpawnPoint {
     LOBBY("lobby"),
@@ -27,14 +26,5 @@ public enum SpawnPoint {
 
     public String key() {
         return key;
-    }
-
-    public static Optional<SpawnPoint> byKey(String key) {
-        for (var point : values()) {
-            if (point.key.equalsIgnoreCase(key)) {
-                return Optional.of(point);
-            }
-        }
-        return Optional.empty();
     }
 }

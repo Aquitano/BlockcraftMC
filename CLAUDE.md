@@ -51,6 +51,12 @@ README.md; this file only holds what the code does not say by itself.
   `closeButton` otherwise; a coin purchase goes through `ConfirmDialog` first. A list of entries is a `ListMenu`,
   which pages from the middle of the last row and shows loading, failure and an empty list in the middle of the page;
   no menu draws its own pager or loading state.
+- A game plugin builds its lobby and round from `paper/api`'s `game` package: `GameConfig` for the shared
+  config keys, `Round` (with `clock` for every timed phase), `LobbyCountdown`, `RoundStart`, `LobbyHotbar`,
+  `LobbyProtection`, `GameSidebar` sections under the shared frame, `VoteMenu`/`Ballot`/`ForceMapCommand` for a lobby
+  vote, and `StartCommand`, `SetupCommand`, `StatsCommand`, `TopCommand`. No game writes its own lobby hotbar,
+  /start, sidebar frame or lobby rules, and a game with more to set up than named spots hangs it off
+  `SetupCommand.root()`.
 - The client-side look lives in `resourcepack/` (README, "Resource pack"): menu panels and HUD icons are glyphs of
   the `blockcraft:ui` font, addressed only through `UiFont` and `<icon:name>`, and never assumed: whatever the pack
   draws must also read without it, because `BlockcraftApi.get().resourcePack().applied(player)` may be false.

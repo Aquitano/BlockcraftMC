@@ -8,7 +8,6 @@ import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
 import io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSelectorArgumentResolver;
 import me.blockcraft.common.message.Messages;
-import me.blockcraft.rush.Permissions;
 import me.blockcraft.rush.game.Game;
 import me.blockcraft.rush.menu.RushMenus;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
@@ -16,12 +15,14 @@ import org.bukkit.entity.Player;
 
 public final class RushCommand {
 
+    private static final String ADMIN = "blockcraft.rush.admin";
+
     private RushCommand() {
     }
 
     public static LiteralCommandNode<CommandSourceStack> create(Game game, RushMenus menus, Messages messages) {
         return Commands.literal("rush")
-                .requires(source -> source.getSender() instanceof Player && source.getSender().hasPermission(Permissions.ADMIN))
+                .requires(source -> source.getSender() instanceof Player && source.getSender().hasPermission(ADMIN))
                 .then(Commands.literal("endsuch").executes(context -> {
                     game.skipSearch();
                     return Command.SINGLE_SUCCESS;

@@ -1,9 +1,8 @@
-package me.blockcraft.bedwars.listener;
+package me.blockcraft.api.game;
 
-import me.blockcraft.api.game.GamePhase;
 import me.blockcraft.api.world.BuildMode;
-import me.blockcraft.bedwars.game.Game;
 import org.bukkit.Effect;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Tag;
 import org.bukkit.block.Block;
@@ -28,21 +27,27 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 
+import java.util.Optional;
+import java.util.function.BooleanSupplier;
+import java.util.function.Supplier;
+
 /**
- * The waiting lobby, before the round and again after it: nobody is hurt or hungry, nothing is built, dropped or
- * picked up, and of the blocks only doors, trapdoors, buttons and levers answer a click. Whoever falls off is put
- * back on the spawn. A player in build mode is left alone.
+ * The waiting lobby of every game, and whatever else a game counts as lobby ({@code inLobby}): nobody is hurt or
+ * hungry, nothing is built, dropped or picked up, and of the blocks only doors, trapdoors, buttons and levers answer a
+ * click. Whoever falls off is put back on the {@code spawn}. A player in build mode is left alone.
  */
-public final class LobbyListener implements Listener {
+public final class LobbyProtection implements Listener {
 
     private static final double FALL_HEIGHT = 0.0;
 
-    private final Game game;
+    private final BooleanSupplier inLobby;
     private final BuildMode buildMode;
+    private final Supplier<Optional<Location>> spawn;
 
-    public LobbyListener(Game game, BuildMode buildMode) {
-        this.game = game;
+    public LobbyProtection(BooleanSupplier inLobby, BuildMode buildMode, Supplier<Optional<Location>> spawn) {
+        this.inLobby = inLobby;
         this.buildMode = buildMode;
+        this.spawn = spawn;
     }
 
     @EventHandler
@@ -135,9 +140,9 @@ public final class LobbyListener implements Listener {
     @EventHandler
     public void onFall(PlayerMoveEvent event) {
         if (inLobby() && event.getTo().getY() < FALL_HEIGHT) {
-            game.lobbySpawn().ifPresent(spawn -> {
-                event.getPlayer().teleport(spawn);
-                spawn.getWorld().playEffect(spawn, Effect.ENDER_SIGNAL, 0);
+            spawn.get().ifPresent(lobby -> {
+                event.getPlayer().teleport(lobby);
+                lobby.getWorld().playEffect(lobby, Effect.ENDER_SIGNAL, 0);
             });
         }
     }
@@ -149,7 +154,7 @@ public final class LobbyListener implements Listener {
     }
 
     private boolean inLobby() {
-        return game.phase() != GamePhase.INGAME;
+        return inLobby.getAsBoolean();
     }
 
     private boolean building(Player player) {

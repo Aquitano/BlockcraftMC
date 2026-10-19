@@ -2,12 +2,7 @@ package me.blockcraft.bedwars.game;
 
 import me.blockcraft.api.item.HotbarItem;
 
-/** The lobby's hotbar. */
+/** BedWars' own item on the lobby hotbar, next to the shared ones. */
 public enum GameItem implements HotbarItem {
-    VOTE,
-    START,
-    JUMP_RESET,
-    PERKS,
-    STATS,
-    HUB
+    JUMP_RESET
 }

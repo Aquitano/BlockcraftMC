@@ -30,6 +30,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.function.IntConsumer;
 
 /**
  * The bookkeeping every game's round shares, held by the game next to its own rules. It seats every joiner: while
@@ -52,6 +53,7 @@ public final class Round implements Listener {
     private final Arena arena;
     private final RoundSummary summary;
     private final int capacity;
+    private final GameConfig config;
     // Chat reads these off the main thread; copy-on-write keeps the join order players() hands out.
     private final Set<UUID> players = new CopyOnWriteArraySet<>();
     private final Set<UUID> spectators = new CopyOnWriteArraySet<>();
@@ -60,12 +62,13 @@ public final class Round implements Listener {
     private final Map<UUID, UUID> watched = new HashMap<>();
     private volatile GamePhase phase = GamePhase.LOBBY;
 
-    public Round(Plugin plugin, Arena arena, RoundSummary summary, int capacity) {
+    public Round(Plugin plugin, Arena arena, RoundSummary summary, int capacity, GameConfig config) {
         this.plugin = plugin;
         this.api = BlockcraftApi.get();
         this.arena = arena;
         this.summary = summary;
         this.capacity = capacity;
+        this.config = config;
         Bukkit.getPluginManager().registerEvents(this, plugin);
         Bukkit.getPluginManager().registerEvents(new SpectatorGuard(this::isSpectator), plugin);
     }
@@ -89,7 +92,7 @@ public final class Round implements Listener {
 
     /**
      * Open menus and dialogs close, because what they offered may be gone, and the proxy hears the new state. When
-     * the lobby gives way to play, the summary learns who plays.
+     * the lobby gives way to play, the summary learns who plays and everyone hears that the round started.
      */
     public void enter(GamePhase phase) {
         boolean starts = this.phase == GamePhase.LOBBY && phase == GamePhase.INGAME;
@@ -101,6 +104,7 @@ public final class Round implements Listener {
         api.presence().state(phase.serverState());
         if (starts) {
             summary.begin(players());
+            arena.announceStarted();
         }
     }
 
@@ -300,10 +304,30 @@ public final class Round implements Listener {
         return countdown;
     }
 
-    /** Registers a boss bar that the end of the round hides, as leaving hides it from the leaver. */
-    public TimerBar bar(TimerBar bar) {
-        bars.add(bar);
-        return bar;
+    /**
+     * Runs a timed phase of the round on {@code bar}'s seconds: the bar shows them unless the game's config turns
+     * timer bars off, {@code onSecond} hears each remaining second and {@code onEnd} the end. The end of the round
+     * stops it; a phase that ends early stops it through the returned countdown.
+     */
+    public Countdown clock(TimerBar bar, IntConsumer onSecond, Runnable onEnd) {
+        if (config.timerBar()) {
+            bars.add(bar);
+            bar.update(bar.seconds());
+        }
+        return timer(Countdown.start(plugin, bar.seconds(), remaining -> {
+            if (config.timerBar()) {
+                bar.update(remaining);
+            }
+            onSecond.accept(remaining);
+        }, () -> {
+            bar.hide();
+            onEnd.run();
+        }));
+    }
+
+    /** Whether no boss bar tells the time, so that the sidebar has to. */
+    public boolean clockOnSidebar() {
+        return !config.timerBar();
     }
 
     /** Skips the respawn screen {@code delayTicks} after a death. */
@@ -332,9 +356,14 @@ public final class Round implements Listener {
     }
 
     /**
-     * Stops the round's countdowns and bars, shows the summary and restarts the server after {@code restartSeconds};
+     * Stops the round's countdowns and bars, shows the summary and restarts the server after {@code countdown.restart};
      * the winners must be awarded before. False if the round had already ended.
      */
+    public boolean end() {
+        return end(config.restartSeconds());
+    }
+
+    /** As {@link #end()}, with a longer wait before the restart for a game that still has something to offer. */
     public boolean end(int restartSeconds) {
         if (phase == GamePhase.ENDING) {
             return false;

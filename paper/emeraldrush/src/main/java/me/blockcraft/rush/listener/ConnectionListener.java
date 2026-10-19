@@ -1,6 +1,7 @@
 package me.blockcraft.rush.listener;
 
 import me.blockcraft.api.spectate.SpectateRequestEvent;
+import me.blockcraft.api.vanish.VanishChangeEvent;
 import me.blockcraft.rush.game.Game;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -37,6 +38,12 @@ public final class ConnectionListener implements Listener {
     /** The proxy's word on the pack arrives after the join, and the sidebar's icons depend on it. */
     @EventHandler
     public void onResourcePack(PlayerResourcePackStatusEvent event) {
+        game.scoreboard().refreshAll();
+    }
+
+    /** The round seats or unseats a player who vanishes in the lobby before this hears of it. */
+    @EventHandler
+    public void onVanish(VanishChangeEvent event) {
         game.scoreboard().refreshAll();
     }
 }

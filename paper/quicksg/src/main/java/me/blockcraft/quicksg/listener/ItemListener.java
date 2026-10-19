@@ -3,15 +3,10 @@ package me.blockcraft.quicksg.listener;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.game.LootChest;
 import me.blockcraft.api.game.LootChests;
-import me.blockcraft.api.game.StatsMenus;
-import me.blockcraft.api.item.HotbarItem;
-import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.quicksg.game.Game;
-import me.blockcraft.quicksg.game.GameItem;
 import me.blockcraft.quicksg.config.QuickSGConfig;
-import me.blockcraft.quicksg.menu.KitMenus;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Material;
@@ -24,7 +19,6 @@ import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.MenuType;
-import org.bukkit.plugin.Plugin;
 
 import java.util.Comparator;
 
@@ -32,22 +26,15 @@ public final class ItemListener implements Listener {
 
     private static final double HEART = 2.0;
 
-    private final Plugin plugin;
     private final Game game;
     private final Messages messages;
     private final LootChests lootChests;
-    private final KitMenus kitMenus;
-    private final StatsMenus statsMenus;
     private final QuickSGConfig.Tracker tracker;
 
-    public ItemListener(Plugin plugin, Game game, Messages messages, LootChests lootChests,
-                        KitMenus kitMenus, StatsMenus statsMenus, QuickSGConfig.Tracker tracker) {
-        this.plugin = plugin;
+    public ItemListener(Game game, Messages messages, LootChests lootChests, QuickSGConfig.Tracker tracker) {
         this.game = game;
         this.messages = messages;
         this.lootChests = lootChests;
-        this.kitMenus = kitMenus;
-        this.statsMenus = statsMenus;
         this.tracker = tracker;
     }
 
@@ -67,17 +54,6 @@ public final class ItemListener implements Listener {
         }
         var item = event.getItem();
         if (item == null) {
-            return;
-        }
-        var hotbar = HotbarItem.of(item, GameItem.class);
-        if (hotbar.isPresent()) {
-            event.setCancelled(true);
-            switch (hotbar.get()) {
-                case HUB -> ProxyMessaging.hub(plugin, player);
-                case START -> player.performCommand("start");
-                case STATS -> statsMenus.open(player);
-                case KITS -> kitMenus.openSelector(player);
-            }
             return;
         }
         switch (item.getType()) {

@@ -62,6 +62,19 @@ public final class Arena {
         broadcast("arena.left", player, online, max);
     }
 
+    /** One of the round's own answers to {@code player}, such as the outcome of /start. */
+    void tell(Player player, String key) {
+        player.sendMessage(messages.get(key));
+    }
+
+    void announceStarted() {
+        Bukkit.broadcast(messages.get("arena.started"));
+    }
+
+    void announceCancelled() {
+        Bukkit.broadcast(messages.get("arena.cancelled"));
+    }
+
     void announceStart(int seconds) {
         Bukkit.broadcast(messages.get("arena.starting-in", Formatter.number("seconds", seconds)));
     }

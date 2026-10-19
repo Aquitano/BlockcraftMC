@@ -36,6 +36,6 @@ collision, click handling, and gameplay still need a Minecraft client check. The
 vanilla assets and full lighting where saved lighting is absent. Final lighting and the server resource
 pack can look different in the client.
 
-For edits, use `/build` for blocks and `/bwsetup lobby ...` for BedWars positions. Save with `/map save`.
+For edits, use `/build` for blocks and `/setup lobby ...` for BedWars positions. Save with `/map save`.
 Moving existing BedWars selectors and the CPS tester takes a BedWars restart to apply completely.
 The local preview saves into `run/map-review/preview-worlds`, not the tracked `worlds` directory.

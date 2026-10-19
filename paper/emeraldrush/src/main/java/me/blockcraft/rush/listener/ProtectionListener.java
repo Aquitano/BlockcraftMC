@@ -17,6 +17,11 @@ import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
+/**
+ * EmeraldRush's rules beyond the shared lobby's: nobody is hurt or drops anything before the deathmatch, and falling
+ * into the void returns to the phase's spawn; the inventory stays locked while searching; nobody gets hungry; the
+ * deathmatch remembers a healthy player's loadout for the respawn; water in the lobby lets players jump high.
+ */
 public final class ProtectionListener implements Listener {
 
     private static final double LOADOUT_SNAPSHOT_MIN_HEALTH = 5.0;
@@ -52,21 +57,21 @@ public final class ProtectionListener implements Listener {
 
     @EventHandler
     public void onPickup(EntityPickupItemEvent event) {
-        if (event.getEntity() instanceof Player && game.phase().locksInventory()) {
+        if (event.getEntity() instanceof Player && searching()) {
             event.setCancelled(true);
         }
     }
 
     @EventHandler
     public void onInventoryMove(InventoryMoveItemEvent event) {
-        if (game.phase().locksInventory()) {
+        if (searching()) {
             event.setCancelled(true);
         }
     }
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
-        if (game.phase().locksInventory() && event.getWhoClicked() instanceof Player player && !buildMode.isEnabled(player)) {
+        if (searching() && event.getWhoClicked() instanceof Player player && !buildMode.isEnabled(player)) {
             event.setCancelled(true);
         }
     }
@@ -82,5 +87,9 @@ public final class ProtectionListener implements Listener {
                 && event.getPlayer().getLocation().getBlock().getType() == Material.WATER) {
             event.getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.JUMP_BOOST, 60, 5));
         }
+    }
+
+    private boolean searching() {
+        return game.phase() == GamePhase.SEARCH;
     }
 }
