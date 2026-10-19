@@ -29,7 +29,7 @@ blocked-replies:
   version: "<muted>Dieser Server läuft auf <primary>Blockcraft 1.8.9-nostalgie <muted>(MC: 26.2). Neueste Version? Für uns schon."
 kicked-to-lobby: "<prefix><muted>Deine <error>Verbindung <muted>zum Server <error><server><muted> wurde getrennt. Grund: <error><reason>"
 resource-pack:
-  prompt: "<primary><ip> <muted>sieht mit unserem Texturenpaket am besten aus: <white>eigene Menüs und Symbole<muted>. Ohne geht es auch."
+  prompt: "<primary><ip> <muted>braucht unser Texturenpaket für <white>eigene Menüs und Symbole<muted>."
 help:
   - "<bullet><primary>INFORMATIONEN ZUM SERVER <dark>●"
   - ""

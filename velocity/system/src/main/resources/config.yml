@@ -47,13 +47,14 @@ alerts:
 
 # The network resource pack (menu panels, HUD icons; README "Resource pack"). file lives in this plugin's directory,
 # is hashed at startup and served at http://<this proxy>:<port>/<file>; url is that address as clients reach it, or
-# wherever else the same file is hosted, then port 0 serves nothing. required kicks whoever declines. An empty file
-# offers no pack, and every screen still works without one. BLOCKCRAFT_RESOURCE_PACK_URL overrides url.
+# wherever else the same file is hosted, then port 0 serves nothing. required also prompts clients whose server list
+# entry turns packs off, which would otherwise decline silently, and kicks whoever declines. An empty file offers no
+# pack, and every screen still works without one. BLOCKCRAFT_RESOURCE_PACK_URL overrides url.
 resource-pack:
   file: blockcraft.zip
   url: http://localhost:8080/blockcraft.zip
   port: 8080
-  required: false
+  required: true
 
 # Edited in-game by /setmax and /motd; MOTD lines use legacy & colour codes.
 max-players: 100
