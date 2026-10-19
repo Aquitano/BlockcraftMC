@@ -5,7 +5,6 @@ import me.blockcraft.api.item.Items;
 import me.blockcraft.api.menu.Menu;
 import me.blockcraft.api.pack.MenuIcon;
 import me.blockcraft.lobby.LobbyPermissions;
-import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
@@ -32,13 +31,13 @@ final class ExtrasMenu extends Menu {
                 .name(messages.get("extras.profile")).lore(messages.get("extras.profile-lore")).build(), menus::openProfile);
         toolbar(ToolbarButton.RIGHT, MenuIcon.TOOL_SHOP.item()
                 .name(messages.get("extras.shop")).lore(messages.get("extras.shop-lore")).build(), menus::openShop);
-        set(GADGETS_SLOT, Items.of(Material.FISHING_ROD).name(messages.get("extras.gadgets")).lore(messages.get("extras.gadgets-lore")).hideAttributes().build());
-        set(KILL_EFFECTS_SLOT, Items.of(Material.IRON_SWORD).name(messages.get("extras.kill-effects")).lore(messages.get("extras.kill-effects-lore")).hideAttributes().build());
-        set(WIN_EFFECTS_SLOT, Items.of(Material.FIREWORK_ROCKET).name(messages.get("extras.win-effects")).lore(messages.get("extras.win-effects-lore")).build());
-        set(TRAILS_SLOT, Items.of(Material.SNOWBALL).name(messages.get("premium-menu.trails")).lore(messages.get("premium-menu.trails-lore")).build());
+        set(GADGETS_SLOT, MenuIcon.GADGETS.item().name(messages.get("extras.gadgets")).lore(messages.get("extras.gadgets-lore")).build());
+        set(KILL_EFFECTS_SLOT, MenuIcon.KILL_EFFECTS.item().name(messages.get("extras.kill-effects")).lore(messages.get("extras.kill-effects-lore")).build());
+        set(WIN_EFFECTS_SLOT, MenuIcon.WIN_EFFECTS.item().name(messages.get("extras.win-effects")).lore(messages.get("extras.win-effects-lore")).build());
+        set(TRAILS_SLOT, MenuIcon.TRAILS.item().name(messages.get("premium-menu.trails")).lore(messages.get("premium-menu.trails-lore")).build());
         set(PREMIUM_SLOT, MenuIcon.PREMIUM.item().name(messages.get("extras.premium")).lore(messages.get("extras.premium-lore")).build());
-        set(TAGS_SLOT, Items.of(Material.NAME_TAG).name(messages.get("extras.tags")).lore(messages.get("extras.tags-lore")).build());
-        set(LOBBIES_SLOT, Items.of(Material.NETHER_STAR).name(messages.get("extras.lobbies")).lore(messages.get("extras.lobbies-lore")).build());
+        set(TAGS_SLOT, MenuIcon.CHAT_TAGS.item().name(messages.get("extras.tags")).lore(messages.get("extras.tags-lore")).build());
+        set(LOBBIES_SLOT, MenuIcon.LOBBIES.item().name(messages.get("extras.lobbies")).lore(messages.get("extras.lobbies-lore")).build());
     }
 
     @Override

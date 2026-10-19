@@ -26,6 +26,7 @@ final class ProfileMenu extends Menu {
     private static final int RECAP_SLOT = 11;
     private static final int HEAD_SLOT = 13;
     private static final int ACHIEVEMENTS_SLOT = 15;
+    private static final int ADVENT_SLOT = 17;
     private static final int GAMES_ROW = 18;
 
     private final Consumer<Player> achievements;
@@ -37,7 +38,7 @@ final class ProfileMenu extends Menu {
         recentRound = profiles.recentRound();
         advent = profiles.advent();
         var messages = profiles.messages();
-        advent.ifPresent(open -> set(17, Items.of(Material.CHEST).name(messages.get("profile.advent")).build()));
+        advent.ifPresent(open -> set(ADVENT_SLOT, MenuIcon.ADVENT.item().name(messages.get("profile.advent")).build()));
         achievements = player -> profiles.achievements().open(player, Optional.of(back -> profiles.open(back, cosmetics)));
         closeButton(ToolbarButton.LEFT);
         toolbar(ToolbarButton.MIDDLE, button(messages, MenuIcon.TOOL_SETTINGS, "profile.settings"),
@@ -48,7 +49,7 @@ final class ProfileMenu extends Menu {
                         player -> ProxyMessaging.hub(profiles.plugin(), player)));
         var xp = profiles.xp();
         var progress = xp.levels().progress(xp.total(viewer));
-        recentRound.ifPresent(open -> set(RECAP_SLOT, Items.of(Material.WRITABLE_BOOK)
+        recentRound.ifPresent(open -> set(RECAP_SLOT, MenuIcon.RECAP.item()
                 .name(messages.get("profile.recap")).lore(messages.get("profile.recap-lore")).build()));
         info(HEAD_SLOT, Items.head(viewer.getUniqueId(), profiles.realNames().of(viewer))
                 .name(messages.get("profile.head", Placeholder.unparsed("player", viewer.getName())))
@@ -59,7 +60,7 @@ final class ProfileMenu extends Menu {
                         Formatter.number("missing", progress.needed() - progress.into()),
                         Formatter.number("coins", snapshot.coins())))
                 .build());
-        set(ACHIEVEMENTS_SLOT, Items.of(Material.NETHER_STAR).hideAttributes()
+        set(ACHIEVEMENTS_SLOT, MenuIcon.ACHIEVEMENTS.item()
                 .name(messages.get("profile.achievements"))
                 .lore(messages.get("profile.achievements-lore",
                         Formatter.number("unlocked", snapshot.achievements()),
@@ -77,7 +78,7 @@ final class ProfileMenu extends Menu {
 
     @Override
     protected void onClick(Player player, int slot, ItemStack clicked, InventoryClickEvent event) {
-        if (slot == 17) {
+        if (slot == ADVENT_SLOT) {
             advent.ifPresent(open -> open.accept(player));
         } else if (slot == RECAP_SLOT) {
             recentRound.ifPresent(open -> open.accept(player));

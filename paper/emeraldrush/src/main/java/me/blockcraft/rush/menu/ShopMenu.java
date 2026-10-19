@@ -1,6 +1,7 @@
 package me.blockcraft.rush.menu;
 
 import me.blockcraft.api.item.Items;
+import me.blockcraft.api.pack.MenuIcon;
 import me.blockcraft.api.menu.Menu;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.rush.kit.Perk;
@@ -33,7 +34,7 @@ final class ShopMenu extends Menu {
         this.owned = Set.copyOf(owned);
         closeButton();
         this.category = category;
-        set(ENCHANT, Items.of(Material.ENCHANTING_TABLE).name(messages.get("shop.nav.enchant")).build());
+        set(ENCHANT, MenuIcon.ENCHANTING.item().name(messages.get("shop.nav.enchant")).build());
         stock.forEach(entry -> entries.put(entry.slot(), entry));
         refresh(player);
     }

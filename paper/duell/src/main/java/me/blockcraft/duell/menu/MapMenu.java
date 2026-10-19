@@ -1,6 +1,7 @@
 package me.blockcraft.duell.menu;
 
 import me.blockcraft.api.item.Items;
+import me.blockcraft.api.pack.MenuIcon;
 import me.blockcraft.api.menu.Menu;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.duell.game.Duel;
@@ -45,7 +46,7 @@ final class MapMenu extends Menu {
         this.mode = mode;
         backButton(player -> new ModeMenu(duel, messages, player).open(player));
         if (options.isEmpty()) {
-            info(COLUMNS + 4, Items.of(Material.BARRIER).name(messages.get("menu.maps.unavailable"))
+            info(COLUMNS + 4, MenuIcon.EMPTY_LIST.item().name(messages.get("menu.maps.unavailable"))
                     .lore(messages.get("menu.maps.unavailable-lore")).build());
         }
         var own = duel.votes().choiceOf(viewer.getUniqueId());
