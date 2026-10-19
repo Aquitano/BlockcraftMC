@@ -556,6 +556,14 @@ cp .env.example .env     # fill in the secrets
 docker compose up -d
 ```
 
+To update, pull, run `./gradlew stagePlugins` and restart the servers (`docker compose restart velocity lobby
+bedwars`). A plugin's `config.yml` and `messages.yml` in its data folder are copies of the bundled defaults, made on
+its first start: new keys arrive through the bundled default, but the copy keeps its own value for every key it
+already has, so changed texts and renamed config keys do not reach a server by themselves. Move a copy nobody edited
+aside before the restart (`docker compose exec bedwars mv /data/plugins/BedWars/messages.yml
+/data/plugins/BedWars/messages.yml.bak`) and the plugin writes the current default; carry the edits of an edited one
+over by hand.
+
 With Caddy in front, the pack needs one site block (`RESOURCE_PACK_PORT` 8081, `RESOURCE_PACK_URL`
 `https://mc.example.net/blockcraft.zip`):
 
