@@ -26,7 +26,7 @@ public final class MenuListener implements Listener {
         if (!(event.getInventory().getHolder(false) instanceof Menu menu) || !(event.getWhoClicked() instanceof Player player)) {
             return;
         }
-        if (!menu.locksPlayerInventory() && staysInPlayerInventory(event)) {
+        if (!menu.locksPlayerInventory() && staysOutOfMenu(event)) {
             return;
         }
         event.setCancelled(true);
@@ -39,9 +39,13 @@ public final class MenuListener implements Listener {
         }
     }
 
-    /** A shift-click or a double-click in the player's inventory moves items into or out of the menu as well. */
-    private static boolean staysInPlayerInventory(InventoryClickEvent event) {
-        return event.getClickedInventory() == event.getView().getBottomInventory()
+    /**
+     * A click in the player's inventory or outside the window, which drops the held item. A shift-click or a
+     * double-click in the player's inventory moves items into or out of the menu as well.
+     */
+    private static boolean staysOutOfMenu(InventoryClickEvent event) {
+        var clicked = event.getClickedInventory();
+        return (clicked == null || clicked == event.getView().getBottomInventory())
                 && event.getAction() != InventoryAction.MOVE_TO_OTHER_INVENTORY
                 && event.getAction() != InventoryAction.COLLECT_TO_CURSOR;
     }

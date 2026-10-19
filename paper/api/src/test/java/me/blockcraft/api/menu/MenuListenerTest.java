@@ -23,6 +23,7 @@ public class MenuListenerTest {
 
     private static final int MENU_SLOTS = 9;
     private static final int OWN_SLOT = MENU_SLOTS + 4;
+    private static final int OUTSIDE = -999;
 
     private final MenuListener listener = new MenuListener(null);
     private final Menu shop = new Menu(1, Component.empty()) {
@@ -50,24 +51,26 @@ public class MenuListenerTest {
         case "getTopInventory" -> top;
         case "getBottomInventory" -> bottom;
         case "getPlayer" -> player;
-        case "getInventory" -> (int) args[0] < MENU_SLOTS ? top : bottom;
+        case "getInventory" -> (int) args[0] == OUTSIDE ? null : (int) args[0] < MENU_SLOTS ? top : bottom;
         case "convertSlot" -> args[0];
         default -> throw new AssertionError(method.getName());
     });
 
     @Test
     public void aShopLeavesTheOwnInventoryToTheGameButKeepsItemsOutOfItsSlots() {
-        assertFalse(click(ClickType.LEFT, InventoryAction.PICKUP_ALL));
-        assertFalse(click(ClickType.NUMBER_KEY, InventoryAction.HOTBAR_SWAP));
-        assertTrue(click(ClickType.SHIFT_LEFT, InventoryAction.MOVE_TO_OTHER_INVENTORY));
-        assertTrue(click(ClickType.DOUBLE_CLICK, InventoryAction.COLLECT_TO_CURSOR));
+        assertFalse(click(OWN_SLOT, ClickType.LEFT, InventoryAction.PICKUP_ALL));
+        assertFalse(click(OWN_SLOT, ClickType.NUMBER_KEY, InventoryAction.HOTBAR_SWAP));
+        assertFalse(click(OUTSIDE, ClickType.LEFT, InventoryAction.DROP_ALL_CURSOR));
+        assertTrue(click(OWN_SLOT, ClickType.SHIFT_LEFT, InventoryAction.MOVE_TO_OTHER_INVENTORY));
+        assertTrue(click(OWN_SLOT, ClickType.DOUBLE_CLICK, InventoryAction.COLLECT_TO_CURSOR));
 
         assertFalse(drag(OWN_SLOT, OWN_SLOT + 1));
         assertTrue(drag(OWN_SLOT, MENU_SLOTS - 1));
     }
 
-    private boolean click(ClickType type, InventoryAction action) {
-        var event = new InventoryClickEvent(view, SlotType.CONTAINER, OWN_SLOT, type, action);
+    private boolean click(int rawSlot, ClickType type, InventoryAction action) {
+        var slotType = rawSlot == OUTSIDE ? SlotType.OUTSIDE : SlotType.CONTAINER;
+        var event = new InventoryClickEvent(view, slotType, rawSlot, type, action);
         listener.onClick(event);
         return event.isCancelled();
     }
