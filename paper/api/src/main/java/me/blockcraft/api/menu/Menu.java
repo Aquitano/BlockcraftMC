@@ -27,7 +27,8 @@ import java.util.function.Consumer;
 
 /**
  * A chest GUI identified by its holder instead of its title. Clicks inside it are cancelled and routed
- * to {@link #onClick} by {@link MenuListener}; clicks in the player's own inventory are cancelled too.
+ * to {@link #onClick} by {@link MenuListener}; clicks in the player's own inventory are cancelled too, unless the
+ * menu {@link #locksPlayerInventory() leaves it to the game}.
  * <p>
  * The inventory itself is created when the menu opens, because its look depends on the viewer: a client wearing
  * the network's resource pack sees the pack's panel behind the slots, the pack's tooltip and model on every item
@@ -110,6 +111,14 @@ public abstract class Menu implements InventoryHolder {
     }
 
     protected void onSettingChanged(Player player, PlayerSetting setting) {
+    }
+
+    /**
+     * A menu opened mid-game, like a shop, lets the player rearrange their own inventory under the game's rules;
+     * only moves that reach into the menu stay blocked.
+     */
+    protected boolean locksPlayerInventory() {
+        return true;
     }
 
     /** Menus whose layout lives off the gaps between items turn the filler off. */

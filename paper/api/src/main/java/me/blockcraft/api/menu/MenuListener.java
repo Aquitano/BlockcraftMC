@@ -5,6 +5,7 @@ import me.blockcraft.api.task.PlayerTasks;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
@@ -25,6 +26,9 @@ public final class MenuListener implements Listener {
         if (!(event.getInventory().getHolder(false) instanceof Menu menu) || !(event.getWhoClicked() instanceof Player player)) {
             return;
         }
+        if (!menu.locksPlayerInventory() && staysInPlayerInventory(event)) {
+            return;
+        }
         event.setCancelled(true);
         if (!menu.accepts(event.getClick())) {
             return;
@@ -35,9 +39,20 @@ public final class MenuListener implements Listener {
         }
     }
 
+    /** A shift-click or a double-click in the player's inventory moves items into or out of the menu as well. */
+    private static boolean staysInPlayerInventory(InventoryClickEvent event) {
+        return event.getClickedInventory() == event.getView().getBottomInventory()
+                && event.getAction() != InventoryAction.MOVE_TO_OTHER_INVENTORY
+                && event.getAction() != InventoryAction.COLLECT_TO_CURSOR;
+    }
+
     @EventHandler
     public void onDrag(InventoryDragEvent event) {
-        if (event.getInventory().getHolder(false) instanceof Menu) {
+        if (!(event.getInventory().getHolder(false) instanceof Menu menu)) {
+            return;
+        }
+        int menuSlots = event.getView().getTopInventory().getSize();
+        if (menu.locksPlayerInventory() || event.getRawSlots().stream().anyMatch(slot -> slot < menuSlots)) {
             event.setCancelled(true);
         }
     }
