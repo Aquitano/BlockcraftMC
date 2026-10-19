@@ -1,5 +1,6 @@
 package me.blockcraft.api.game;
 
+import me.blockcraft.api.BlockcraftApi;
 import org.bukkit.GameMode;
 import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.Attribute;
@@ -29,6 +30,7 @@ public final class PlayerReset {
         player.setFoodLevel(20);
         player.setSaturation(5.0f);
         player.setGameMode(gameMode);
+        BlockcraftApi.get().flight().set(player, false);
         player.setAllowFlight(false);
         player.setCollidable(true);
         player.setItemOnCursor(null);

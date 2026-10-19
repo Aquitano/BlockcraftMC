@@ -105,6 +105,7 @@ public final class Parkour implements Listener, AutoCloseable {
             }
             if (run == null && !player.isFlying() && !player.isGliding() && !player.isInsideVehicle()) {
                 runs.put(id, new ParkourRun(System.nanoTime()));
+                BlockcraftApi.get().flight().set(player, false);
                 player.setAllowFlight(false);
                 player.sendMessage(messages.get("parkour.start"));
                 Sounds.COUNTDOWN_GO.play(player);
