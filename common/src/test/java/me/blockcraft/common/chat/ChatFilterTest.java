@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertFalse;
@@ -14,7 +15,7 @@ import static org.junit.Assert.assertTrue;
 
 public class ChatFilterTest {
 
-    private static final ChatFilter FILTER = ChatFilter.fromYaml(bundledLists());
+    private static final ChatFilter FILTER = ChatFilter.fromYaml(bundledLists(), List.of("BlockcraftMC.net"));
 
     @Test
     public void everydayChatIsNoAdvertisement() {
@@ -36,6 +37,15 @@ public class ChatFilterTest {
         assertTrue(FILTER.isAdvertisement("blockcraft.de ist besser"));
         assertTrue(FILTER.isAdvertisement("connect 85,214,3,9"));
         assertTrue(FILTER.isAdvertisement("join myserver:25565"));
+    }
+
+    @Test
+    public void theNetworksOwnAddressesAreNoAdvertisement() {
+        var filter = ChatFilter.fromYaml(bundledLists(), List.of("mc.example.org", "https://shop.example.org"));
+
+        assertFalse(filter.isAdvertisement("kommt auf mc.example.org"));
+        assertFalse(filter.isAdvertisement("ränge gibt es auf shop.example.org"));
+        assertTrue(filter.isAdvertisement("kommt auf play.example.net"));
     }
 
     private static Map<String, Object> bundledLists() {

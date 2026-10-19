@@ -38,6 +38,7 @@ import me.blockcraft.common.shop.Shop;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.entity.Player;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -59,6 +60,7 @@ import java.util.Optional;
  * @param lobbyGroup   the group of the lobbies players fall back to
  * @param presence     what this server tells the proxy about itself
  * @param tags         the network addresses and the colour palette, resolved in every message of every Paper plugin
+ * @param addresses    the network addresses themselves, which chat never counts as advertising
  * @param xp           network XP and levels; games award {@link XpReward}s
  * @param map          the map this server runs, with the files each plugin keeps inside it
  * @param buildMode    who is allowed to change the map right now
@@ -93,6 +95,7 @@ public record BlockcraftApi(
         String lobbyGroup,
         ServerPresence presence,
         TagResolver tags,
+        List<String> addresses,
         Xp xp,
         MapBundle map,
         BuildMode buildMode,

@@ -89,7 +89,7 @@ public final class BlockcraftCorePlugin extends JavaPlugin {
         networkChat.start(this, chat.networkRefresh());
         pluginManager.registerEvents(new GlobalMuteListener(this, networkChat, messages), this);
         pluginManager.registerEvents(new ChatCooldownListener(this, chat.cooldown(), networkChat, messages), this);
-        pluginManager.registerEvents(new ChatFilterListener(this, ChatFilter.load(getDataPath()), api.server().name(), moderation.adLog(), messages), this);
+        pluginManager.registerEvents(new ChatFilterListener(this, ChatFilter.load(getDataPath(), api.addresses()), api.server().name(), moderation.adLog(), messages), this);
         var nickRepository = new NickRepository(api.database());
         var nickSection = YamlFile.section(config, "nick");
         var nicks = new Nicks(this, nickRepository, stringList(nickSection, "names"), stringList(nickSection, "skins"),

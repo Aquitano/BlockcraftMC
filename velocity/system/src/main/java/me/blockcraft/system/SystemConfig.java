@@ -28,6 +28,10 @@ import java.util.stream.Collectors;
 public final class SystemConfig {
 
     public record Network(String ip, String website, String shop, String teamspeak, String discord) {
+
+        public List<String> addresses() {
+            return List.of(ip, website, shop, teamspeak, discord);
+        }
     }
 
     public record JoinMe(int dailyLimit, int resetHour) {

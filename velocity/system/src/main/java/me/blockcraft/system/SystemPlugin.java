@@ -266,7 +266,7 @@ public final class SystemPlugin {
 
         register(new HubCommand(support, lobby).create(), "h", "lobby", "l");
         register(new PlayCommand(support, lobby, directory).create());
-        var privateChat = new PrivateChatGate(proxy, muteGate, ChatFilter.load(dataDirectory), repositories.adLog(), staffButtons,
+        var privateChat = new PrivateChatGate(proxy, muteGate, ChatFilter.load(dataDirectory, config.network().addresses()), repositories.adLog(), staffButtons,
                 config.privateChatCooldown(), messages, logger);
         events.register(this, privateChat);
         var privateMessages = new MessageCommand(support, proxy, visibility, lookup, choices, ignores, afk, privateChat, messages);

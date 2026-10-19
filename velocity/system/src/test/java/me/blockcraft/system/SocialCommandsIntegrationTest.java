@@ -88,7 +88,7 @@ public class SocialCommandsIntegrationTest {
         friends = new FriendManager(proxy.server, lookup, visibility, choices, ignores, directory, null, repository, null, config, messages);
         var support = new CommandSupport(visibility, messages);
         var muteGate = new MuteGate(new PunishmentRepository(db), null, messages, null);
-        var privateChat = new PrivateChatGate(proxy.server, muteGate, new ChatFilter("", List.of(), List.of()), null, null,
+        var privateChat = new PrivateChatGate(proxy.server, muteGate, new ChatFilter(List.of(), List.of(), List.of()), null, null,
                 Duration.ZERO, messages, null);
         var messaging = new MessageCommand(support, proxy.server, visibility, lookup, choices, ignores, new AfkPlayers(), privateChat, messages);
         commands = new CommandDispatcher<>();

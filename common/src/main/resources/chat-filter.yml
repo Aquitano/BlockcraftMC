@@ -1,6 +1,5 @@
 # Public chat on every Paper server and private chat on the proxy drop a line that holds a blocked word or looks
-# like an advertisement, and tell the staff. allowed-domain is the network's own address, which never counts.
-allowed-domain: blockcraftmc.net
+# like an advertisement, and tell the staff. The network's own addresses (network in config.yml) never count.
 blocked-words:
   - noob
   - l2p

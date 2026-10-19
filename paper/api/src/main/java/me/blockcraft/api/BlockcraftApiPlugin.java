@@ -143,7 +143,7 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         var api = new BlockcraftApi(notifications, new NetworkOperations(this, messages), playerTasks, database, coins,
                 unlocks, new Shop(database), new RoundRecapRepository(database), streaks(YamlFile.section(config, "streaks")),
                 settings, resourcePack, profiles, new Effects(settings), messages,
-                servers, self, groups, text(config, "lobby-group", "lobby"), presence, resources.tags(), xp, map,
+                servers, self, groups, text(config, "lobby-group", "lobby"), presence, resources.tags(), resources.addresses(), xp, map,
                 buildMode, flight, realNames, nickRanks, nickStats, achievements, elo, afk, ignores, vanished, audit, tabTeams,
                 NetworkCalendar.fromYaml(YamlFile.section(config, "calendar")), RoundConfig.from(config));
         BlockcraftApi.install(api);
