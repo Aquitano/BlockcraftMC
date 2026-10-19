@@ -4,10 +4,10 @@ teams:
   players-per-team: 2
   colors: [red, green, purple, yellow]
 
-# The lobby counts down for countdown.lobby seconds. The map vote shows one map per slot of voting.slots in its
-# one-row menu and closes countdown.vote-closes-at seconds before the start; /forcemap and /start no longer change
-# anything after that. A round ends without a winner after countdown.round seconds, and the server restarts
-# countdown.restart seconds after the last round.
+# The lobby counts down for countdown.lobby seconds. The map vote shows one map per slot of voting.slots (0 to 7;
+# slot 8 closes it) in its one-row menu and closes countdown.vote-closes-at seconds before the start; /forcemap and
+# /start no longer change anything after that. A round ends without a winner after countdown.round seconds, and the
+# server restarts countdown.restart seconds after the last round.
 countdown:
   lobby: 60
   vote-closes-at: 10

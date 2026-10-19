@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
 
-/** The maps up for the vote in one row, each with its builders and the votes it has. */
+/** The maps up for the vote in one row, each with its builders and the votes it has; the last slot closes. */
 public final class VoteMenu extends Menu {
 
     private final Map<Integer, ArenaMap> maps = new HashMap<>();
@@ -42,6 +42,7 @@ public final class VoteMenu extends Menu {
                     .hideAttributes()
                     .build());
         }
+        closeButton();
     }
 
     @Override

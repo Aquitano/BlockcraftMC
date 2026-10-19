@@ -23,7 +23,7 @@ final class SecretsMenu extends Menu {
         var messages = menus.messages();
         boolean riddles = found.size() >= menus.config().secretRiddlesAfter();
         for (Secret secret : Secret.values()) {
-            set(secret.ordinal(), found.contains(secret.item())
+            info(secret.ordinal(), found.contains(secret.item())
                     ? Items.of(Material.LIME_DYE)
                             .name(messages.get("secrets.found-item", Placeholder.component("name", messages.get(secret.messageKey()))))
                             .lore(messages.get("secrets.found-lore"))
@@ -35,14 +35,15 @@ final class SecretsMenu extends Menu {
                                     : messages.get("secrets.unknown-lore"))
                             .build());
         }
+        closeButton();
     }
 
+    /** A slot per secret and the last one for the close button. */
     private static int rows() {
-        return (Secret.values().length + COLUMNS - 1) / COLUMNS;
+        return (Secret.values().length + COLUMNS) / COLUMNS;
     }
 
     @Override
     protected void onClick(Player player, int slot, ItemStack clicked, InventoryClickEvent event) {
-        close(player);
     }
 }
