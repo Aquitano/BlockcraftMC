@@ -5,8 +5,10 @@ import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.command.CommandRegistry;
 import me.blockcraft.api.game.ArenaProtection;
 import me.blockcraft.api.game.LootChests;
+import me.blockcraft.api.game.StatsCommand;
 import me.blockcraft.api.game.StatsMenus;
 import me.blockcraft.api.game.StatsRepository;
+import me.blockcraft.api.game.TopCommand;
 import me.blockcraft.api.game.TopList;
 import me.blockcraft.common.duel.DuelPairRepository;
 import me.blockcraft.common.message.Messages;
@@ -63,8 +65,12 @@ public final class DuellPlugin extends JavaPlugin {
                 new SuperJumpListener(duel)
         ).forEach(this::register);
 
-        getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event ->
-                new CommandRegistry(event.registrar(), messages).register(SetSpawnCommand.create(spawns, config, messages)));
+        getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
+            var commands = new CommandRegistry(event.registrar(), messages);
+            commands.register(SetSpawnCommand.create(spawns, config, messages));
+            commands.register(StatsCommand.create(this, stats, messages));
+            commands.register(TopCommand.create(topList));
+        });
     }
 
     @Override

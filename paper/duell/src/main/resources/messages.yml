@@ -4,6 +4,10 @@ game-name: "<duell>Duell"
 commands:
   setspawn:
     description: "Setzt die Duell-Spawns"
+  stats:
+    description: "Zeigt die Stats eines Spielers"
+  top:
+    description: "Zeigt die Top 10 einer Kategorie"
 
 mode:
   vs: "1vs1"
@@ -60,6 +64,14 @@ setspawn:
   map: "<prefix><muted><mode> Spawn, Map <accent><map><muted> Spieler <accent><player> <muted>gesetzt."
   usage: "<prefix><error>/setspawn <spawn|1vs1<map>p<1-2>|SG<map>p<1-2>|SJ<map>p<1-2>>"
 
+stats:
+  header: "<muted>Stats von <accent><player>"
+  lines:
+    - "<arrow><primary>Siege<dark>: <muted><wins>"
+    - "<arrow><primary>Niederlagen<dark>: <muted><losses>"
+    - "<arrow><primary>Tode<dark>: <muted><deaths>"
+    - "<arrow><primary>Kills<dark>: <muted><kills>"
+    - "<arrow><primary>Punkte<dark>: <muted><points>"
 top:
   separator: "<muted><strikethrough>---------------------------------"
   first: "<accent><bold>#1 <reset><primary><name><muted> ( <white><value><muted> )"
