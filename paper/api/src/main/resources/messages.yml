@@ -607,12 +607,14 @@ curiosity:
   rod-hits: "<arrow><accent>Kurios <dark>· <white><player> <muted>hat <accent><value>-mal <muted>mit der Angel nachgeholfen. Der Teich hat sich beschwert."
   emeralds-mined: "<arrow><accent>Kurios <dark>· <white><player> <muted>schürfte <accent><value> Emeralds<muted>. Der Villager bestellt einen Tresor."
 
-# The waiting lobby and the round every game shares: the lobby hotbar, /start, the sidebar's frame, the lobby vote,
-# /forcemap and /setup. Their answers carry the game's prefix.
+# The waiting lobby and the round every game shares: the lobby hotbar, /start, /stats, the sidebar's frame, the lobby
+# vote, /forcemap and /setup. Their answers carry the game's prefix.
 hotbar:
   stats: "<arrow><primary>Stats"
   start: "<arrow><primary>Spiel starten"
   hub: "<arrow><primary>Zur Lobby"
+stats:
+  not-here: "<prefix><error>Der Spieler <accent><player><error> ist nicht auf diesem Server."
 start:
   running: "<prefix><error>Die Runde läuft bereits."
   too-few: "<prefix><error>Für eine Runde braucht es mindestens zwei Spieler."
