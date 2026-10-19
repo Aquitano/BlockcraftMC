@@ -31,6 +31,7 @@ public final class PlayerReset {
         player.setGameMode(gameMode);
         player.setAllowFlight(false);
         player.setCollidable(true);
+        player.setItemOnCursor(null);
         player.getInventory().clear();
         player.getInventory().setArmorContents(null);
     }
