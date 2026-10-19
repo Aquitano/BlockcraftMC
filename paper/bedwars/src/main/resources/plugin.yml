@@ -1,6 +1,6 @@
 name: BedWars
 version: '${version}'
 main: me.blockcraft.bedwars.BedWarsPlugin
-api-version: '26.2'
+api-version: '26.3'
 author: Aquitano
 depend: [BlockcraftAPI]

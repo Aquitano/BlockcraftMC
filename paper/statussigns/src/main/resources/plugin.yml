@@ -1,6 +1,6 @@
 name: StatusSigns
 version: '${version}'
 main: me.blockcraft.signs.StatusSignsPlugin
-api-version: '26.2'
+api-version: '26.3'
 author: Aquitano
 depend: [BlockcraftAPI]

@@ -24,8 +24,8 @@ x-paper-env: &paper-env
   <<: *luckperms
   EULA: "TRUE"
   TYPE: PAPER
-  VERSION: "26.2"
-  PAPER_BUILD: "134"
+  VERSION: "26.3"
+  PAPER_BUILD: "206"
   TZ: Europe/Berlin
   ONLINE_MODE: "FALSE"
   NETWORK_COMPRESSION_THRESHOLD: "-1"

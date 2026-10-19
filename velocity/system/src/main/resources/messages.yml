@@ -26,7 +26,7 @@ blocked-replies:
     - "<muted>Plugins (6): <success>Kaffee, Geduld, Redstone, Kevos, Spaghetti, Tagebuch"
     - "<muted>Plugins (6): <success>Kaffee, Kaffee, Kaffee, Kaffee, Kaffee, Kaffee"
   plugins: *plugins
-  version: "<muted>Dieser Server läuft auf <primary>Blockcraft 1.8.9-nostalgie <muted>(MC: 26.2). Neueste Version? Für uns schon."
+  version: "<muted>Dieser Server läuft auf <primary>Blockcraft 1.8.9-nostalgie <muted>(MC: 26.3). Neueste Version? Für uns schon."
 kicked-to-lobby: "<prefix><muted>Deine <error>Verbindung <muted>zum Server <error><server><muted> wurde getrennt. Grund: <error><reason>"
 resource-pack:
   prompt: "<primary><ip> <muted>braucht unser Texturenpaket für <white>eigene Menüs und Symbole<muted>."

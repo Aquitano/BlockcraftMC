@@ -1,6 +1,6 @@
 # BlockcraftMC
 
-Paper 26.2 / Velocity 4 plugin monorepo (Java 25, Gradle Kotlin DSL). Layout, build and dev-network instructions are in
+Paper 26.3 / Velocity 4 plugin monorepo (Java 25, Gradle Kotlin DSL). Layout, build and dev-network instructions are in
 README.md; this file only holds what the code does not say by itself.
 
 ## Commands
