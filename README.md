@@ -50,7 +50,9 @@ carries the name colour, so it ends in a colour code.
 `default` negates `minecraft.command.msg`, `minecraft.command.teammsg` and `minecraft.command.me`. Paper
 grants these vanilla chat commands, with their `tell`, `w` and `tm` aliases, to every player, and they reach the
 chat without passing the mute check or the chat filter. Every other group inherits `default` and loses them as well; the
-proxy's `/msg`, `/tell` and `/w` remain.
+proxy's `/msg`, `/tell` and `/w` remain. LuckPerms lets such an exact node win over any wildcard, so `dev` grants
+`velocity.command.server` by name: `default` closes `/server` to players, and `velocity.command.*` alone would not
+reopen it for staff.
 
 Import it once per LuckPerms database (`gzip -k luckperms/ranks.json`, copy the `.gz` into LuckPerms' data folder,
 `/lp import ranks`), then assign players with `/lp user <name> parent set <group>`.

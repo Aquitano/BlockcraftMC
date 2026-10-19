@@ -102,6 +102,7 @@
         {"type": "prefix", "key": "prefix.40.&bDEV &8● &b", "value": true},
         {"type": "permission", "key": "blockcraft.*", "value": true},
         {"type": "permission", "key": "velocity.command.*", "value": true},
+        {"type": "permission", "key": "velocity.command.server", "value": true},
         {"type": "permission", "key": "minecraft.command.time", "value": true}
       ]
     },
