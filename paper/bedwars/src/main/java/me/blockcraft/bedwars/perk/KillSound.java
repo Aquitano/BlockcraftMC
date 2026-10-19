@@ -1,5 +1,6 @@
 package me.blockcraft.bedwars.perk;
 
+import me.blockcraft.api.sound.Sounds;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -39,7 +40,7 @@ public enum KillSound implements Perk {
     }
 
     public void play(Player player) {
-        player.playSound(player.getLocation(), sound, 1.0f, 1.0f);
+        Sounds.playChosen(player, sound, 1.0f);
     }
 
     public static Optional<KillSound> byKey(String key) {

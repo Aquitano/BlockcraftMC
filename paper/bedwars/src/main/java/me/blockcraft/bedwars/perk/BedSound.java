@@ -1,5 +1,6 @@
 package me.blockcraft.bedwars.perk;
 
+import me.blockcraft.api.sound.Sounds;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -38,7 +39,7 @@ public enum BedSound implements Perk {
     }
 
     public void play(Player player) {
-        player.playSound(player.getLocation(), sound, 1.0f, PITCH);
+        Sounds.playChosen(player, sound, PITCH);
     }
 
     public static Optional<BedSound> byKey(String key) {

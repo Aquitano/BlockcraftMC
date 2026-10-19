@@ -75,6 +75,11 @@ public enum Sounds {
         playIfEnabled(player, feedback.sound(BlockcraftApi.get().resourcePack().applied(player)));
     }
 
+    /** A sound the player chose, such as a perk's, plays only for players who keep sounds on, like every feedback sound. */
+    public static void playChosen(Player player, Sound.Type sound, float pitch) {
+        playIfEnabled(player, Sound.sound(sound, Sound.Source.MASTER, 1.0f, pitch));
+    }
+
     private static void playIfEnabled(Player player, Sound sound) {
         if (BlockcraftApi.get().settings().enabled(player, PlayerSetting.SOUNDS)) {
             player.playSound(sound);
