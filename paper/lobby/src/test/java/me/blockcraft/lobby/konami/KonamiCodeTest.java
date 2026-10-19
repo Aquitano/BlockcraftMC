@@ -1,10 +1,12 @@
 package me.blockcraft.lobby.konami;
 
+import me.blockcraft.common.config.YamlFile;
 import me.blockcraft.lobby.konami.KonamiCode.Step;
 import org.junit.Test;
 
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static me.blockcraft.lobby.konami.KonamiKey.DOWN;
@@ -53,6 +55,16 @@ public class KonamiCodeTest {
         now += GAP.toNanos() + 1;
         assertEquals(new Step.Missed(0), code.press(LEFT, now));
         assertEquals(new Step.Advanced(1), press(UP));
+    }
+
+    @Test
+    public void everyKeyHasItsGlyph() throws Exception {
+        try (var messages = getClass().getResourceAsStream("/messages.yml")) {
+            var texts = YamlFile.flatten(YamlFile.load(messages));
+            var missing = Arrays.stream(KonamiKey.values()).map(KonamiKey::messageKey)
+                    .filter(key -> !texts.containsKey(key)).toList();
+            assertEquals(List.of(), missing);
+        }
     }
 
     private Step press(KonamiKey key) {

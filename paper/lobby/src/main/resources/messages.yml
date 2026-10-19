@@ -437,7 +437,7 @@ konami:
     left: "←"
     right: "→"
     b: "B"
-    hamburger: "A"
+    a: "A"
   bar: "<keys>"
   lit: "<success><key>"
   missed: "<error><key>"
