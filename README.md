@@ -494,8 +494,10 @@ links to one player. `/discord unlink` clears `discord_id` and `linked_at` again
 `resourcepack/src` is the pack the proxy offers at login, zipped by `./gradlew :resourcepack:pack` and staged next to
 the proxy plugin by `stagePlugins`. The proxy hashes `plugins/blockcraft-system/blockcraft.zip` at startup, serves it
 on `resource-pack.port` (8080 in the compose network) and offers `resource-pack.url` to every client while it is being
-configured; `required: true` kicks whoever declines. Only the proxy hears the client's answer, so it tells each
-backend on arrival (the `Pack` subchannel), and BlockcraftAPI keeps that in `resourcePack()`.
+configured. The pack is required (`required: true`): a client whose server list entry turns packs off would decline
+an optional pack without asking, while a required one is prompted for and declining it kicks. A proxy whose
+`config.yml` predates this still says `required: false` and needs the edit by hand. Only the proxy hears the client's
+answer, so it tells each backend on arrival (the `Pack` subchannel), and BlockcraftAPI keeps that in `resourcePack()`.
 
 Everything the pack changes has a plain fallback, so a player without it sees vanilla menus and text symbols:
 
