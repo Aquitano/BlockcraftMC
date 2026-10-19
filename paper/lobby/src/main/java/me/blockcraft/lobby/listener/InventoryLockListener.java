@@ -10,9 +10,12 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.inventory.InventoryType;
-import org.bukkit.inventory.BlockInventoryHolder;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
+import org.bukkit.inventory.BlockInventoryHolder;
+import org.bukkit.inventory.PlayerInventory;
+
+import java.util.stream.Stream;
 
 /**
  * Players cannot rearrange their own inventory or open the map's containers (builders can), and the lobby hotbar
@@ -33,9 +36,20 @@ public final class InventoryLockListener implements Listener {
         }
         boolean ownInventory = event.getClickedInventory() == player.getInventory()
                 || event.getView().getType() == InventoryType.CRAFTING;
-        if ((ownInventory && !buildMode.isEnabled(player)) || LobbyItem.of(event.getCurrentItem()).isPresent()) {
+        if ((ownInventory && !buildMode.isEnabled(player)) || movesLobbyItem(event, player.getInventory())) {
             event.setCancelled(true);
         }
+    }
+
+    /** A number key or F moves the hotbar or off-hand item into the hovered slot, which may well be empty. */
+    private static boolean movesLobbyItem(InventoryClickEvent event, PlayerInventory inventory) {
+        var swappedIn = switch (event.getClick()) {
+            case NUMBER_KEY -> inventory.getItem(event.getHotbarButton());
+            case SWAP_OFFHAND -> inventory.getItemInOffHand();
+            default -> null;
+        };
+        return Stream.of(event.getCurrentItem(), event.getCursor(), swappedIn)
+                .anyMatch(item -> LobbyItem.of(item).isPresent());
     }
 
     @EventHandler
