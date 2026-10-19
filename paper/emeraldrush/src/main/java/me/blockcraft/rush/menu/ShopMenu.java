@@ -70,6 +70,11 @@ final class ShopMenu extends Menu {
     }
 
     @Override
+    protected boolean locksPlayerInventory() {
+        return false;
+    }
+
+    @Override
     protected boolean automaticClickSound(int slot, InventoryClickEvent event) {
         return !entries.containsKey(slot);
     }
