@@ -496,9 +496,12 @@ public final class Duel {
         opponentsOf(winner).findFirst().ifPresent(loser -> ratings.settle(winner, loser, this::refreshScoreboards));
     }
 
-    /** A quitter has already left the participants, so the round names them as the loser itself. */
+    /**
+     * A quitter has already left the participants, so the round names them as the loser itself. Their leaving earns
+     * the winner no moment, so two accounts cannot farm it.
+     */
     private void rewardWinner(Player winner, Player quitter) {
-        awardWin(winner);
+        summary.awardWin(winner);
         ratings.settle(winner, quitter, this::refreshScoreboards);
     }
 

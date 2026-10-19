@@ -140,7 +140,7 @@ public final class Game {
         round.leave(player);
         kits.remove(player.getUniqueId());
         refreshScoreboards();
-        checkWinner();
+        checkWinner(true);
     }
 
     public void handleDeath(PlayerDeathEvent event) {
@@ -160,7 +160,7 @@ public final class Game {
         round.eliminate(victim);
         round.respawn(victim, RESPAWN_DELAY_TICKS);
         refreshScoreboards();
-        checkWinner();
+        checkWinner(false);
     }
 
     /** The spectator state is applied after the respawn; touching health or game mode on a dead player breaks the respawn. */
@@ -266,12 +266,16 @@ public final class Game {
         }));
     }
 
-    private void checkWinner() {
+    /** A win handed over by a leaving opponent earns no moments, so two accounts cannot farm them. */
+    private void checkWinner(boolean opponentLeft) {
         if (!isIngame() || round.playerCount() > 1) {
             return;
         }
         for (var winner : alivePlayers()) {
             summary.awardWin(winner);
+            if (opponentLeft) {
+                continue;
+            }
             if (summary.kills(winner) == 0) {
                 summary.moment(winner, ACHIEVEMENTS, "pazifist");
             }
