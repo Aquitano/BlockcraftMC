@@ -92,11 +92,11 @@ public final class TeamChests implements Listener {
         if (team == null) {
             return;
         }
-        event.setCancelled(true);
         var player = event.getPlayer();
         if (player.isSneaking() && event.getItem() != null) {
             return;
         }
+        event.setCancelled(true);
         if (!team.isMember(player)) {
             player.sendMessage(messages.get("team-chest.not-yours"));
             return;

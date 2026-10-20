@@ -60,7 +60,8 @@ final class MobileShop {
                 stalls.remove(stall[0]);
                 return;
             }
-            label.text(messages.get("items.mobile-shop.left", Formatter.number("seconds", left[0])));
+            label.text(messages.get(left[0] == 1 ? "items.mobile-shop.left-second" : "items.mobile-shop.left",
+                    Formatter.number("seconds", left[0])));
             left[0]--;
         }, 0L, 20L);
         stall[0] = new Stall(dealer, label, task);

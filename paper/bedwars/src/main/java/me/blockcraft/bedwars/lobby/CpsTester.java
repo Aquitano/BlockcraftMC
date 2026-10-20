@@ -2,12 +2,12 @@ package me.blockcraft.bedwars.lobby;
 
 import io.papermc.paper.datacomponent.item.ResolvableProfile;
 import io.papermc.paper.event.player.PrePlayerAttackEntityEvent;
+import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.Sound;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.Mannequin;
 import org.bukkit.entity.Player;
@@ -106,7 +106,7 @@ public final class CpsTester implements Listener {
         event.setCancelled(true);
         clicks.computeIfAbsent(player.getUniqueId(), ignored -> new int[2])[0]++;
         dummy.figure().playHurtAnimation(0.0f);
-        player.playSound(dummy.figure().getLocation(), Sound.ENTITY_PLAYER_HURT, 1.0f, 1.0f);
+        Sounds.PLAYER_HURT.play(player);
     }
 
     @EventHandler

@@ -41,6 +41,7 @@ public enum Sounds {
     NOTE_BASS(FeedbackSound.NOTE_BASS),
     SHOP_TALK(FeedbackSound.SHOP_TALK),
     SHOP_HURT(FeedbackSound.SHOP_HURT),
+    PLAYER_HURT(FeedbackSound.PLAYER_HURT),
     EASTER_EGG(FeedbackSound.EASTER_EGG),
     ADVENT_DOOR(FeedbackSound.ADVENT_DOOR),
     TRICK(FeedbackSound.TRICK);

@@ -31,7 +31,7 @@ final class Match {
     private static final double BORDER_VISIBLE = 10.0;
     private static final double WALL_HALF_WIDTH = 6.5;
     private static final double WALL_HALF_HEIGHT = 5.0;
-    private static final double WALL_STEP = 0.5;
+    private static final double WALL_STEP = 1.0;
 
     private final Plugin plugin;
     private final World world;

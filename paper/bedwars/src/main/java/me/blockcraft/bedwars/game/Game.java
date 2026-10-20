@@ -277,10 +277,7 @@ public final class Game {
     }
 
     public void quit(Player player) {
-        maps.withdraw(player);
-        cps.hide(player);
-        catchGame.left(player);
-        jumpAndRun.ifPresent(run -> run.forget(player));
+        leaveLobbyActivities(player);
         boolean wasPlaying = round.leave(player);
         var team = teams.of(player);
         var emptied = teams.leave(player);
@@ -296,16 +293,23 @@ public final class Game {
         scoreboard.refreshAll();
     }
 
-    /** Staff who vanish in the lobby watch instead of playing, so they give up their team and their vote. */
+    /** Staff who vanish in the lobby watch instead of playing, so they leave their team, the vote and the lobby games. */
     public void vanished(Player player) {
         if (phase() != GamePhase.LOBBY) {
             return;
         }
-        maps.withdraw(player);
+        leaveLobbyActivities(player);
         var team = teams.of(player);
         teams.leave(player);
         team.ifPresent(selector::show);
         scoreboard.refreshAll();
+    }
+
+    private void leaveLobbyActivities(Player player) {
+        maps.withdraw(player);
+        cps.hide(player);
+        catchGame.left(player);
+        jumpAndRun.ifPresent(run -> run.forget(player));
     }
 
     private void chooseTeam(Player player, TeamColor color) {
@@ -343,7 +347,6 @@ public final class Game {
         return maps.playable();
     }
 
-    /** Whether the lobby still votes, which /forcemap ends early. */
     /** Staff may force a map, also over a decided or forced one, until the vote's last seconds. */
     public boolean mapForceable() {
         return phase() == GamePhase.LOBBY
@@ -403,7 +406,12 @@ public final class Game {
         teams.splitLoneTeam().forEach((player, team) -> player.sendMessage(messages.get("team.moved", teamName(team))));
         for (var team : teams.all()) {
             var color = team.color();
-            team.settle(map.spawns().get(color).in(world), TeamBed.place(world, map.beds().get(color), color));
+            var bedSpot = map.beds().get(color);
+            if (team.size() == 0) {
+                TeamBed.remove(world, bedSpot);
+            } else {
+                team.settle(map.spawns().get(color).in(world), TeamBed.place(world, bedSpot, color));
+            }
         }
         selector.close();
         cps.stop();
@@ -618,9 +626,12 @@ public final class Game {
             }
         });
         Tasks.later(plugin, HIDDEN_AFTER_RESPAWN_TICKS, () -> {
-            if (player.isOnline() && round.isPlaying(player)) {
-                Bukkit.getOnlinePlayers().forEach(other -> other.showPlayer(plugin, player));
+            if (!player.isOnline()) {
+                return;
             }
+            boolean watching = round.isSpectator(player);
+            Bukkit.getOnlinePlayers().stream().filter(other -> !watching || round.isSpectator(other))
+                    .forEach(other -> other.showPlayer(plugin, player));
         });
     }
 

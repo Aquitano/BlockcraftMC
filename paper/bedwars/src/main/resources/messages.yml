@@ -162,6 +162,7 @@ items:
   mobile-shop:
     ground: "<prefix><error>Du kannst den mobilen Shop nur auf dem Boden platzieren."
     left: "<bedwars><seconds> Sekunden"
+    left-second: "<bedwars>1 Sekunde"
 
 item:
   vote: "<arrow><primary>Abstimmung"

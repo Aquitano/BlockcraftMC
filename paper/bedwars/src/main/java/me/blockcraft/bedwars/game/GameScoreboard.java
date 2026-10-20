@@ -44,7 +44,8 @@ public final class GameScoreboard {
             }
             case INGAME -> sidebar.round(player, game.capacity(), game.secondsLeft(), map(), List.of(
                     new GameSidebar.Section(messages.get("scoreboard.teams", icons),
-                            game.teams().all().stream().map(this::teamLine).toList()),
+                            game.teams().all().stream().filter(team -> team.bed().isPresent())
+                                    .map(this::teamLine).toList()),
                     new GameSidebar.Section(messages.get("scoreboard.kills", icons),
                             GameSidebar.value(Component.text(game.kills(player))))));
             case ENDING -> sidebar.end(player, game.winner().map(team -> messages.get("scoreboard.winner-team",

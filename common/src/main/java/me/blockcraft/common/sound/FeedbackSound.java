@@ -39,6 +39,7 @@ public enum FeedbackSound {
     NOTE_BASS("block.note_block.bass", 0.8f, 1.0f),
     SHOP_TALK("entity.villager.ambient", 0.8f, 1.0f),
     SHOP_HURT("entity.villager.hurt", 0.8f, 1.0f),
+    PLAYER_HURT("entity.player.hurt", 1.0f, 1.0f),
     EASTER_EGG("entity.chicken.egg", 1.0f, 1.3f),
     ADVENT_DOOR("block.note_block.chime", 0.9f, 1.2f),
     TRICK("entity.witch.celebrate", 0.8f, 1.0f);

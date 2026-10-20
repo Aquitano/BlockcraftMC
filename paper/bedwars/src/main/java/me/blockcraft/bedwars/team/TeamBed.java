@@ -31,6 +31,12 @@ public final class TeamBed {
         return new TeamBed(foot, head);
     }
 
+    /** Takes away the bed the map ships with where no team plays. */
+    public static void remove(World world, BedSpot spot) {
+        var foot = spot.foot(world);
+        new TeamBed(foot, foot.getRelative(spot.facing())).destroy();
+    }
+
     private static Bed half(TeamColor color, BedSpot spot, Bed.Part part) {
         var bed = (Bed) Bukkit.createBlockData(color.bed());
         bed.setFacing(spot.facing());
