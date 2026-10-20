@@ -7,13 +7,10 @@ import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.network.NetworkAddresses;
 import me.blockcraft.system.moderation.PunishmentPreset;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
-import org.yaml.snakeyaml.DumperOptions;
-import org.yaml.snakeyaml.Yaml;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -70,7 +67,6 @@ public final class SystemConfig {
     }
 
     private final Path file;
-    private final Map<String, Object> root;
     private final DatabaseConfig database;
     private final Network network;
     private final TagResolver networkTags;
@@ -107,7 +103,6 @@ public final class SystemConfig {
 
     private SystemConfig(Path file, Map<String, Object> root) {
         this.file = file;
-        this.root = root;
         this.database = DatabaseConfig.fromYaml(YamlFile.section(root, "database"));
         var network = NetworkAddresses.fromYaml(root);
         this.network = new Network(string(network, "ip"), string(network, "website"), string(network, "shop"),
@@ -331,15 +326,12 @@ public final class SystemConfig {
     }
 
     private void save() {
-        root.put("max-players", maxPlayers);
-        var motd = new LinkedHashMap<String, Object>();
-        motd.put("default", defaultMotd);
-        motd.put("random", List.copyOf(randomMotds));
-        root.put("motd", motd);
-        var options = new DumperOptions();
-        options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
         try {
-            Files.writeString(file, new Yaml(options).dump(root));
+            ConfigEditor.open(file)
+                    .set("max-players", maxPlayers)
+                    .set("motd.default", defaultMotd)
+                    .set("motd.random", List.copyOf(randomMotds))
+                    .save();
         } catch (IOException e) {
             throw new UncheckedIOException("Could not save " + file, e);
         }

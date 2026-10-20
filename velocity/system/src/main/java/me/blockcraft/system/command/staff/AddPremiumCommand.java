@@ -17,7 +17,6 @@ import net.luckperms.api.node.types.InheritanceNode;
 public final class AddPremiumCommand {
 
     private static final String LUCKPERMS_ID = "luckperms";
-    private static final String PREMIUM_GROUP = "premium";
 
     private final CommandSupport support;
     private final ProxyServer proxy;
@@ -50,7 +49,7 @@ public final class AddPremiumCommand {
     /** Touches LuckPerms classes only here, so the command still loads without the plugin. */
     private void grant(CommandSource source, Target target) {
         LuckPermsProvider.get().getUserManager()
-                .modifyUser(target.uuid(), user -> user.data().add(InheritanceNode.builder(PREMIUM_GROUP).build()))
+                .modifyUser(target.uuid(), user -> user.data().add(InheritanceNode.builder(SystemPermissions.PREMIUM_GROUP_NAME).build()))
                 .thenRun(() -> {
                     source.sendMessage(messages.get("addpremium.done"));
                     boolean granted = target.online().map(player -> player.hasPermission(SystemPermissions.PREMIUM_GROUP)).orElse(true);

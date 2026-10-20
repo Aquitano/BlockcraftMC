@@ -1,6 +1,6 @@
 prefix: "<primary><ip> <dark>» <reset>"
 
-# The network's colours, the same tags the Paper plugins use (BlockcraftAPI messages.yml).
+# The network's colours, the same tags the Paper plugins use (BlockcraftAPI messages.yml); youtuber only the proxy needs.
 palette:
   primary: "<blue>"
   accent: "<yellow>"
@@ -14,6 +14,8 @@ palette:
   emeraldrush: "<green>"
   duell: "<aqua>"
   bedwars: "<dark_aqua>"
+  premium: "<gold>"
+  youtuber: "<dark_purple>"
 player-only: "<error>Nur ein Spieler kann diesen Befehl verwenden!"
 player-unknown: "<prefix><error>Der Spieler <accent><player> <error>ist unbekannt."
 player-ambiguous: "<prefix><error>Der Name <accent><player> <error>passt gerade auf mehrere Spieler, darum passiert nichts."
@@ -26,7 +28,7 @@ blocked-replies:
     - "<muted>Plugins (6): <success>Kaffee, Geduld, Redstone, Kevos, Spaghetti, Tagebuch"
     - "<muted>Plugins (6): <success>Kaffee, Kaffee, Kaffee, Kaffee, Kaffee, Kaffee"
   plugins: *plugins
-  version: "<muted>Dieser Server läuft auf <primary>Blockcraft 1.8.9-nostalgie <muted>(MC: 26.3). Neueste Version? Für uns schon."
+  version: "<muted>Dieser Server läuft auf <primary>Blockcraft 1.8.9-nostalgie<muted>. Neueste Version? Für uns schon."
 kicked-to-lobby: "<prefix><muted>Deine <error>Verbindung <muted>zum Server <error><server><muted> wurde getrennt. Grund: <error><reason>"
 resource-pack:
   prompt: "<primary><ip> <muted>braucht unser Texturenpaket für <white>eigene Menüs und Symbole<muted>."
@@ -137,7 +139,7 @@ motd:
   welcome-back-friends: "<muted>Willkommen zurück, <accent><player><muted>! <success><count> <muted>Freunde online."
 
 setmax:
-  current: "<prefix><muted>Es können maximal <accent><max><muted> Spieler online!"
+  current: "<prefix><muted>Es können maximal <accent><max><muted> Spieler online sein!"
   done: "<prefix><muted>Die maximale <accent>Spieleranzahl<muted> wurde zu <accent><max><muted> gesetzt!"
 
 moderation:
@@ -360,7 +362,7 @@ strafe:
   list-entry: " <accent><number> <dark>| <type> <dark>| <white><reason> <dark>| <muted><duration>"
 
 strike:
-  usage: "<prefix><error>Falsche Benutzung! <muted>Nutze: <accent>/strike [Spieler] [Grund]"
+  usage: "<prefix><error>Falsche Benutzung! <muted>Nutze: <accent>/strike \\<Spieler> \\<Grund>"
   offline: "<prefix><error>Der Spieler ist nicht online!"
   target-needs-permission: "<prefix><error>Du musst der Gruppe von <accent><player><error> die Permission geben: <accent><permission>"
   received: "<prefix><error>Du hast einen <accent><bold>Strike <reset><error>erhalten! <dark>[<accent>#<count><dark>]"
@@ -375,16 +377,16 @@ strikes:
   entry: "<prefix><muted>Grund<number>: <white><reason> <dark>(<muted><issuer><dark>)"
   footer: "<prefix><dark><strikethrough>-----------------------------"
 showstrikes:
-  usage: "<prefix><error>Benutzung: <accent>/showstrikes [Spieler]"
+  usage: "<prefix><error>Benutzung: <accent>/showstrikes \\<Spieler>"
 delstrike:
-  usage: "<prefix><error>Benutzung: <accent>/delstrike [Spieler]"
+  usage: "<prefix><error>Benutzung: <accent>/delstrike \\<Spieler>"
   none: "<prefix><error>Der Spieler hat keine Strikes!"
   done: "<prefix><muted>Dem Spieler <accent><player><muted> wurde ein Strike entzogen <dark>[<accent>#<number><dark>]"
   received: "<prefix><muted>Dir wurde ein Strike entzogen! <dark>[<accent>#<number><dark>]"
   remaining: "<prefix><muted>Verbleibende Strikes: <accent><remaining>"
 
 warn:
-  usage: "<prefix><error>/warn \\<player> [reason]"
+  usage: "<prefix><error>/warn \\<Spieler> [Grund]"
   protected: "<prefix><muted>Du kannst diesen<error> Spieler<muted> nicht warnen."
   offline: "<prefix><muted>Der <error>Spieler<muted> wurde nicht gefunden oder ist offline! "
   offline-click: "<success>Hier klicken<error>, um \"<accent><player><error>\" trotzdem zu warnen."
@@ -397,11 +399,11 @@ warn:
   ban-hint:
     - ""
     - "<prefix><error>Der Spieler <accent><player><error> sollte jetzt, wegen"
-    - "<prefix><error>zuvielen <accent>Warns<error> gebannt <error>werden."
+    - "<prefix><error>zu vielen <accent>Warns<error> gebannt <error>werden."
   ban-click: "<success>Hier klicken<error>, um eine Strafe für \"<accent><player><error>\" zu wählen."
   ban-hover: "<success>/strafe <player> öffnen…"
 warns:
-  usage: "<prefix><error>/warns \\<clear|get|list> [player]"
+  usage: "<prefix><error>/warns \\<clear|get|list> [Spieler]"
   clear-all-confirm: "<success>Hier klicken<error>, um das Zurücksetzen aller Warns zu bestätigen."
   clear-confirm: "<success>Hier klicken<error>, um das Zurücksetzen der Warns von \"<accent><player><error>\" zu bestätigen."
   clear-hover: "<success>Alle Warns zurücksetzen…"
@@ -415,10 +417,10 @@ warns:
   list-header: "<dark>----------<primary>Verwarnungen (<count>)<dark>----------"
   list-entry: "<prefix><accent>  <player>: <error><count>"
 werbung:
-  too-many: "<prefix><error>Die Server können nicht angezeigt werden. Grund:<accent> Zu viele Server."
-  header: "<prefix><dark>---------<primary>Es sind <count> Server gefunden.<dark>----------"
+  too-many: "<prefix><error>Die Nachrichten können nicht angezeigt werden. Grund:<accent> Zu viele Einträge."
+  header: "<prefix><dark>---------<primary>Es sind <count> gefilterte Nachrichten gespeichert.<dark>----------"
   entry: "<prefix><error><player> <muted>(<server>): <error><message>"
-  cleared: "<prefix><muted><count> Server wurden gefunden."
+  cleared: "<prefix><muted><count> Einträge wurden gelöscht."
 
 tc:
   online-header: "<error>TeamChat <arrow><reset><muted>Im TeamChat sind gerade diese Spieler:"
@@ -497,7 +499,7 @@ restart:
   countdown-30: "<prefix><muted>Das <error><ip> Netzwerk <muted>startet in <error>30 Sekunden <muted>neu."
   countdown-10: "<prefix><muted>Das <error><ip> Netzwerk <muted>startet in <error>10 Sekunden <muted>neu."
   countdown-5: "<prefix><muted>Das <error><ip> Netzwerk <muted>startet in <error>5 Sekunden <muted>neu."
-  kick-screen: "<prefix><muted>Der Server restartet."
+  kick-screen: "<prefix><muted>Der Server startet neu."
   already-pending: "<prefix><error>Ein Neustart läuft bereits."
 addpremium:
   usage: "<prefix><error>/addpremium \\<Spieler>"
@@ -616,15 +618,15 @@ seen:
 playtime:
   total: "<prefix><accent><player> <muted>war bereits <accent><time> <muted>online."
 premium:
-  - "<bullet><primary>INFORMATIONEN ZUM <gold>PREMIUM<dark>-<primary>RANG <dark>●"
-  - "  <muted>Du möchtest den <gold>Premium<dark>-<muted>Rang kaufen und uns so unterstützen?"
+  - "<bullet><primary>INFORMATIONEN ZUM <premium>PREMIUM<dark>-<primary>RANG <dark>●"
+  - "  <muted>Du möchtest den <premium>Premium<dark>-<muted>Rang kaufen und uns so unterstützen?"
   - "  <muted>Dann besuche unseren Shop: <underlined><shop>"
   - "  <muted>Unsere Preise<dark>:"
   - "  <arrow><white>3 Monate<dark>: <muted>10€"
   - "  <arrow><white>Lifetime<dark>: <muted>30€"
 youtuber:
   info:
-    - "<bullet><primary>INFORMATIONEN ZUM <dark_purple>YOUTUBER<dark>-<primary>RANG <dark>●"
+    - "<bullet><primary>INFORMATIONEN ZUM <youtuber>YOUTUBER<dark>-<primary>RANG <dark>●"
     - ""
     - "<muted>Verwende <error>/youtuber 250 <muted>um die <error>Anforderungen <muted>für <error>Premium+ <muted>zu sehen."
     - "<muted>Verwende <error>/youtuber 500 <muted>um die <error>Anforderungen <muted>für <error>YouTuber <muted>zu sehen."
@@ -796,7 +798,6 @@ party:
   promote-self: "<primary>Party <arrow><reset><muted>Du bist bereits Party-Leader."
   promoted: "<primary>Party <arrow><reset><accent><player><success> leitet die Party jetzt."
   leader-handed-over: "<primary>Party <arrow><reset><muted>Der Party-Leader hat die Verbindung getrennt. <accent><player><muted> leitet die Party jetzt."
-  not-leader: "<primary>Party <arrow><reset><muted>Du bist kein Party-Leader."
   not-your-member: "<primary>Party <arrow><reset><muted>Dieser Spieler ist nicht in deiner Party."
   created: "<primary>Party <arrow><reset><success>Du hast eine neue Party erstellt."
   list-leader: "<primary>Party <arrow><reset><success>Leader: <accent><player> <success>- <accent><server>"

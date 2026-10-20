@@ -46,7 +46,8 @@ public final class SystemPermissions {
     public static final String FULL_JOIN = ROOT + "fulljoin";
     public static final String BLOCKED_COMMANDS_BYPASS = ROOT + "blockedcommands.bypass";
     public static final String BYPASS_RANK = ROOT + "bypass-rank";
-    public static final String PREMIUM_GROUP = "group.premium";
+    public static final String PREMIUM_GROUP_NAME = "premium";
+    public static final String PREMIUM_GROUP = "group." + PREMIUM_GROUP_NAME;
 
     /** The Paper side's nodes for looking through vanish and nicks; one node covers both sides. */
     public static final String SEE_VANISHED = "blockcraft.core.vanish.see";
