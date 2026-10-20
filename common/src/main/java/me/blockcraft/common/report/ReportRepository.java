@@ -42,8 +42,9 @@ public final class ReportRepository {
         return db.queryList("SELECT " + COLUMNS + " FROM Reports WHERE closed_at IS NULL AND Reportedname = ?" + ORDER, REPORT, name);
     }
 
+    /** Empty once the report is closed, so a menu opened before it was closed cannot act on it. */
     public Optional<Report> byId(int id) {
-        return db.queryOne("SELECT " + COLUMNS + " FROM Reports WHERE ID = ?", REPORT, id);
+        return db.queryOne("SELECT " + COLUMNS + " FROM Reports WHERE ID = ? AND closed_at IS NULL", REPORT, id);
     }
 
     public int count() {

@@ -22,21 +22,21 @@ public final class ChatFilter {
     private static final String FILE = "chat-filter.yml";
     private static final String NO_LETTER_AFTER = "(?!\\p{L})";
     private static final Pattern URL = Pattern.compile(
-            "(https?://)?(www\\.)?\\S{2,}\\.(com|ru|net|org|co\\.uk|fr|tk|info|me|es|de|arpa|edu|firm|int|mil|mobi|nato|to|ms|vu|nl|ch|us|dk)"
+            "(https?://)?(www\\.)?\\S{2,}(?<!\\.)\\.(com|ru|net|org|co\\.uk|fr|tk|info|me|de|arpa|edu|firm|int|mil|mobi|nato|to|ms|vu|nl|ch|us|dk|gg|at|io|xyz)"
                     + NO_LETTER_AFTER);
     private static final Pattern IP = Pattern.compile(
-            "(?<![0-9])((25[0-5]|2[0-4]\\d|[0-1]?\\d{1,2})[.,_ ]){3}(25[0-5]|2[0-4]\\d|[0-1]?\\d{1,2})(?![0-9])");
+            "(?<![0-9])((25[0-5]|2[0-4]\\d|[0-1]?\\d{1,2})(?: [.,_] |[.,_])){3}(25[0-5]|2[0-4]\\d|[0-1]?\\d{1,2})(?![0-9])");
 
     private static final Pattern SCHEME = Pattern.compile("^https?://");
 
-    private final List<String> ownAddresses;
+    private final List<Pattern> ownAddresses;
     private final List<String> blockedWords;
     private final List<Pattern> advertisementTerms;
 
     /** {@code ownAddresses} as configured under {@code network}; a website's scheme is not part of what players type. */
     public ChatFilter(Collection<String> ownAddresses, List<String> blockedWords, List<String> advertisementTerms) {
         this.ownAddresses = ownAddresses.stream().map(address -> SCHEME.matcher(address.toLowerCase(Locale.ROOT).strip()).replaceFirst(""))
-                .filter(address -> !address.isEmpty()).sorted(Comparator.comparingInt(String::length).reversed()).toList();
+                .filter(address -> !address.isEmpty()).sorted(Comparator.comparingInt(String::length).reversed()).map(ChatFilter::ownAddress).toList();
         this.blockedWords = blockedWords.stream().map(word -> word.toLowerCase(Locale.ROOT)).toList();
         this.advertisementTerms = advertisementTerms.stream().map(term -> term.toLowerCase(Locale.ROOT))
                 .filter(term -> !term.isEmpty()).map(ChatFilter::term).toList();
@@ -64,14 +64,18 @@ public final class ChatFilter {
     }
 
     private String withoutOwnAddresses(String text) {
-        for (String address : ownAddresses) {
-            text = text.replace(address, " ");
+        for (Pattern address : ownAddresses) {
+            text = address.matcher(text).replaceAll(" ");
         }
         return text;
     }
 
     private static List<String> strings(Map<String, Object> root, String key) {
         return root.get(key) instanceof List<?> values ? values.stream().map(String::valueOf).toList() : List.of();
+    }
+
+    private static Pattern ownAddress(String address) {
+        return Pattern.compile("(?<![\\p{L}\\p{N}_-])" + Pattern.quote(address) + "(?![\\p{L}\\p{N}_-]|\\.[\\p{L}\\p{N}])");
     }
 
     private static Pattern term(String term) {

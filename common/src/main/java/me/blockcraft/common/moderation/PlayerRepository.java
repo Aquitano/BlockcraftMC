@@ -61,8 +61,9 @@ public final class PlayerRepository {
         return db.queryOne("SELECT first_seen_verified FROM bc_players WHERE uuid = ?", row -> row.getBoolean(1), player.toString()).orElse(false);
     }
 
+    /** Called when a session ends, which is the last moment the player was seen. */
     public void addPlaytime(UUID player, long seconds) {
-        db.update("UPDATE bc_players SET playtime_seconds = playtime_seconds + ? WHERE uuid = ?", seconds, player.toString());
+        db.update("UPDATE bc_players SET playtime_seconds = playtime_seconds + ?, last_seen = NOW() WHERE uuid = ?", seconds, player.toString());
     }
 
     public Optional<KnownPlayer> byName(String name) {

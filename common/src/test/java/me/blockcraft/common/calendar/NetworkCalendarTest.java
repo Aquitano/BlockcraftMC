@@ -1,8 +1,11 @@
 package me.blockcraft.common.calendar;
 
 import me.blockcraft.common.calendar.NetworkCalendar.Occasion;
+import me.blockcraft.common.config.YamlFile;
 import org.junit.Test;
 
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.MonthDay;
@@ -41,5 +44,15 @@ public class NetworkCalendarTest {
         assertEquals(OptionalInt.empty(), CALENDAR.age(LocalDate.of(2018, 6, 3)));
         assertEquals(OptionalInt.of(24), CALENDAR.adventDoor(LocalDate.of(2026, 12, 24)));
         assertEquals(OptionalInt.empty(), CALENDAR.adventDoor(LocalDate.of(2026, 12, 25)));
+    }
+
+    @Test
+    public void foundedCountsWhetherOrNotYamlQuotesIt() {
+        for (String founded : new String[]{"2018-06-03", "\"2018-06-03\""}) {
+            var calendar = NetworkCalendar.fromYaml(YamlFile.load(
+                    new ByteArrayInputStream(("founded: " + founded).getBytes(StandardCharsets.UTF_8))));
+
+            assertEquals(OptionalInt.of(8), calendar.age(LocalDate.of(2026, 6, 3)));
+        }
     }
 }

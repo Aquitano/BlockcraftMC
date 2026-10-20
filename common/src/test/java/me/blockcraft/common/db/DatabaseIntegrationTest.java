@@ -6,7 +6,9 @@ import me.blockcraft.common.elo.EloRepository;
 import me.blockcraft.common.elo.Season;
 import me.blockcraft.common.moderation.PlayerAddressRepository;
 import me.blockcraft.common.moderation.PlayerRepository;
+import me.blockcraft.common.moderation.PunishmentCatalogRepository;
 import me.blockcraft.common.moderation.PunishmentRepository;
+import me.blockcraft.common.moderation.PunishmentType;
 import me.blockcraft.common.moderation.WarnRepository;
 import me.blockcraft.common.moderation.WatchRepository;
 import me.blockcraft.common.nick.Nick;
@@ -267,6 +269,18 @@ public class DatabaseIntegrationTest {
     }
 
     @Test
+    public void aRejectedCatalogEntryKeepsThePreviousCatalog() {
+        db.migrate();
+        var catalog = new PunishmentCatalogRepository(db);
+        var kept = new PunishmentCatalogRepository.Entry(1, PunishmentType.BAN, "Hacking");
+        catalog.replace(List.of(kept));
+        assertThrows(DatabaseException.class, () -> catalog.replace(List.of(
+                new PunishmentCatalogRepository.Entry(1, PunishmentType.MUTE, "Spam"),
+                new PunishmentCatalogRepository.Entry(1, PunishmentType.MUTE, "Werbung"))));
+        assertEquals(List.of(kept), catalog.all());
+    }
+
+    @Test
     public void reportsKeepIdentityAndClaimsAcrossNameChanges() {
         db.migrate();
         var reports = new ReportRepository(db);
@@ -295,8 +309,10 @@ public class DatabaseIntegrationTest {
         var target = PlayerReference.known(UUID.randomUUID(), "Target");
         assertTrue(reports.insert(reporter, target, "Reason", "lobby"));
 
-        reports.close(reports.all().getFirst().id(), UUID.randomUUID(), "Staff");
+        int id = reports.all().getFirst().id();
+        reports.close(id, UUID.randomUUID(), "Staff");
 
+        assertTrue(reports.byId(id).isEmpty());
         assertEquals(0, reports.count());
         assertEquals(0, reports.countByReported(target.uuid().orElseThrow(), "Target"));
         assertTrue(reports.insert(reporter, target, "Again", "lobby"));

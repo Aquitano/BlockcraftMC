@@ -24,6 +24,11 @@ public class ChatFilterTest {
         assertFalse(FILTER.isAdvertisement("und eine runde noch"));
         assertFalse(FILTER.isAdvertisement("kommt auf play.BlockcraftMC.net"));
         assertFalse(FILTER.isAdvertisement("wir starten um 12:20"));
+        assertFalse(FILTER.isAdvertisement("kaufe 64 32 16 8"));
+        assertFalse(FILTER.isAdvertisement("3 2 1 0 go"));
+        assertFalse(FILTER.isAdvertisement("naja...es geht"));
+        assertFalse(FILTER.isAdvertisement("ja.es war"));
+        assertFalse(FILTER.isAdvertisement("knapp...gg"));
     }
 
     @Test
@@ -36,6 +41,12 @@ public class ChatFilterTest {
         assertTrue(FILTER.isAdvertisement("kommt auf play.gommehd.net"));
         assertTrue(FILTER.isAdvertisement("blockcraft.de ist besser"));
         assertTrue(FILTER.isAdvertisement("connect 85,214,3,9"));
+        assertTrue(FILTER.isAdvertisement("connect 85 . 214 . 3 . 9"));
+        assertTrue(FILTER.isAdvertisement("join discord.gg/abcdef"));
+        assertTrue(FILTER.isAdvertisement("play.example.gg"));
+        assertTrue(FILTER.isAdvertisement("mc.example.at"));
+        assertTrue(FILTER.isAdvertisement("mc.example.io"));
+        assertTrue(FILTER.isAdvertisement("mc.example.xyz"));
         assertTrue(FILTER.isAdvertisement("join myserver:25565"));
     }
 
@@ -46,6 +57,8 @@ public class ChatFilterTest {
         assertFalse(filter.isAdvertisement("kommt auf mc.example.org"));
         assertFalse(filter.isAdvertisement("ränge gibt es auf shop.example.org"));
         assertTrue(filter.isAdvertisement("kommt auf play.example.net"));
+        assertTrue(filter.isAdvertisement("kommt auf notmc.example.org"));
+        assertTrue(filter.isAdvertisement("kommt auf mc.example.org.ru"));
     }
 
     private static Map<String, Object> bundledLists() {

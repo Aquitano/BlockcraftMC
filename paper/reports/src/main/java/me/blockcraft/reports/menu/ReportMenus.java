@@ -67,7 +67,7 @@ public final class ReportMenus {
             }
             current.ifPresentOrElse(updated -> new ReportDetailsDialog(this, messages, updated, reported,
                             player.getUniqueId(), BlockcraftApi.get().realName(player)).open(player),
-                    () -> openList(player, reported));
+                    () -> reportClosed(player, report, reported));
         });
     }
 
@@ -91,8 +91,13 @@ public final class ReportMenus {
             current.ifPresentOrElse(updated -> {
                 player.sendMessage(messages.get(claimResult(updated, player.getUniqueId(), staff), placeholders(messages, updated)));
                 openReport(player, updated, reported);
-            }, () -> openList(player, reported));
+            }, () -> reportClosed(player, report, reported));
         });
+    }
+
+    private void reportClosed(Player player, Report report, Optional<String> reported) {
+        player.sendMessage(messages.get("closed", Formatter.number("id", report.id())));
+        openList(player, reported);
     }
 
     private static String claimResult(Report report, UUID staffId, String staff) {

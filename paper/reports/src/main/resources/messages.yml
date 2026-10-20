@@ -10,6 +10,7 @@ none:
   - "<prefix><success>Keine Reports offen. <muted>Die Aktenklammer hat heute frei."
   - "<prefix><success>Keine Reports offen. <muted>Auch auf Seite 404 nicht."
   - "<prefix><success>Keine Reports offen. <muted>Der Papierkorb meldet sich freiwillig ab."
+closed: "<prefix><muted>Report <accent><id> <muted>wurde bereits erledigt."
 none-for-player: "<prefix>Der Spieler <error><bold><player><reset><muted> wurde nicht reportet!"
 join-one: "<prefix><muted>Es liegt gerade <error>ein <muted>Report vor."
 join-many: "<prefix><muted>Es liegen gerade <error><count> <muted>Reports vor."

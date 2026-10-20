@@ -19,12 +19,22 @@ public final class PunishmentCatalogRepository {
         this.db = db;
     }
 
+    /** All or nothing: a rejected entry leaves the previous catalogue in place. */
     public void replace(List<Entry> entries) {
-        db.update("DELETE FROM bc_punishment_catalog");
-        for (var entry : entries) {
-            db.update("INSERT INTO bc_punishment_catalog (number, type, reason) VALUES (?, ?, ?)",
-                    entry.number(), entry.type().name(), entry.reason());
-        }
+        db.transaction(connection -> {
+            try (var clear = connection.prepareStatement("DELETE FROM bc_punishment_catalog")) {
+                clear.executeUpdate();
+            }
+            try (var insert = connection.prepareStatement("INSERT INTO bc_punishment_catalog (number, type, reason) VALUES (?, ?, ?)")) {
+                for (var entry : entries) {
+                    insert.setInt(1, entry.number());
+                    insert.setString(2, entry.type().name());
+                    insert.setString(3, entry.reason());
+                    insert.executeUpdate();
+                }
+            }
+            return null;
+        });
     }
 
     public List<Entry> all() {

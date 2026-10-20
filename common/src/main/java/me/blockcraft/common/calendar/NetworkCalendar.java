@@ -8,8 +8,10 @@ import java.time.LocalDate;
 import java.time.Month;
 import java.time.MonthDay;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeParseException;
+import java.util.Date;
 import java.util.EnumSet;
 import java.util.Map;
 import java.util.Optional;
@@ -44,7 +46,10 @@ public final class NetworkCalendar {
         this.founded = founded;
     }
 
-    /** {@code calendar} of a config.yml: {@code zone}, {@code easter.days-before/-after}, {@code halloween.from/to}, {@code founded}. */
+    /**
+     * {@code calendar} of a config.yml: {@code zone}, {@code easter.days-before/-after}, {@code halloween.from/to},
+     * {@code founded}. SnakeYAML hands an unquoted founded over as a {@link Date} at UTC midnight.
+     */
     public static NetworkCalendar fromYaml(Map<String, Object> section) {
         var easter = YamlFile.section(section, "easter");
         var halloween = YamlFile.section(section, "halloween");
@@ -142,6 +147,9 @@ public final class NetworkCalendar {
     }
 
     private static Optional<LocalDate> date(Object value) {
+        if (value instanceof Date day) {
+            return Optional.of(day.toInstant().atZone(ZoneOffset.UTC).toLocalDate());
+        }
         try {
             return value instanceof String text && !text.isBlank() ? Optional.of(LocalDate.parse(text)) : Optional.empty();
         } catch (DateTimeParseException invalid) {
