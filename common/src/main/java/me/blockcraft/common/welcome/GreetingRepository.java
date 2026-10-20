@@ -51,12 +51,6 @@ public final class GreetingRepository {
         });
     }
 
-    /** False if the greeter had greeted this newcomer already. */
-    public boolean record(UUID greeter, String greeterName, UUID newcomer) {
-        return db.update("INSERT IGNORE INTO bc_greetings (greeter_uuid, newcomer_uuid, greeter_name) VALUES (?, ?, ?)",
-                greeter.toString(), newcomer.toString(), greeterName) > 0;
-    }
-
     /** The names the newcomer's greeters were seen under, first greeting first. */
     public List<String> greeters(UUID newcomer) {
         return db.queryList("SELECT greeter_name FROM bc_greetings WHERE newcomer_uuid = ? ORDER BY greeted_at, greeter_name",
@@ -66,11 +60,5 @@ public final class GreetingRepository {
     /** How many newcomers the player has greeted. */
     public int greetedBy(UUID greeter) {
         return db.queryOne("SELECT COUNT(*) FROM bc_greetings WHERE greeter_uuid = ?", row -> row.getInt(1), greeter.toString()).orElse(0);
-    }
-
-    /** How many newcomers the player has greeted since the database's midnight. */
-    public int greetedTodayBy(UUID greeter) {
-        return db.queryOne("SELECT COUNT(*) FROM bc_greetings WHERE greeter_uuid = ? AND greeted_at >= CURDATE()",
-                row -> row.getInt(1), greeter.toString()).orElse(0);
     }
 }

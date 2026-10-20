@@ -4,15 +4,15 @@ import me.blockcraft.common.nick.Nick;
 import me.blockcraft.common.settings.PlayerSetting;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
+
+import static me.blockcraft.common.network.WireFormat.uuid;
+import static me.blockcraft.common.network.WireFormat.write;
 
 /** The versioned wire format of {@link ProxyMessage}: a version byte, a type byte, then the record's fields. */
 public final class ProxyMessageCodec {
@@ -231,31 +231,5 @@ public final class ProxyMessageCodec {
             throw new IOException("Invalid count");
         }
         return count;
-    }
-
-    private static void uuid(DataOutputStream out, UUID id) throws IOException {
-        out.writeLong(id.getMostSignificantBits());
-        out.writeLong(id.getLeastSignificantBits());
-    }
-
-    private static UUID uuid(DataInputStream in) throws IOException {
-        return new UUID(in.readLong(), in.readLong());
-    }
-
-    @FunctionalInterface
-    private interface Writer {
-        void write(DataOutputStream out) throws IOException;
-    }
-
-    private static byte[] write(Writer writer) {
-        try {
-            var bytes = new ByteArrayOutputStream();
-            try (var out = new DataOutputStream(bytes)) {
-                writer.write(out);
-            }
-            return bytes.toByteArray();
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
     }
 }
