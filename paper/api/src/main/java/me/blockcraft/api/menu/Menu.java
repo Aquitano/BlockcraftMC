@@ -13,7 +13,6 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
@@ -105,9 +104,6 @@ public abstract class Menu implements InventoryHolder {
 
     protected boolean isEnabled(Player player, int slot, InventoryClickEvent event) {
         return true;
-    }
-
-    protected void onClose(Player player, InventoryCloseEvent event) {
     }
 
     protected void onSettingChanged(Player player, PlayerSetting setting) {
@@ -320,10 +316,6 @@ public abstract class Menu implements InventoryHolder {
             }
             onClick(player, slot, clicked, event);
         }
-    }
-
-    void handleClose(Player player, InventoryCloseEvent event) {
-        onClose(player, event);
     }
 
     private void build(boolean packApplied) {

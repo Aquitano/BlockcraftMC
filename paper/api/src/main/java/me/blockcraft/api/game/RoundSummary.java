@@ -7,6 +7,7 @@ import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.api.xp.XpReward;
+import me.blockcraft.common.db.DatabaseException;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.round.RoundRecap;
 import net.kyori.adventure.text.Component;
@@ -30,6 +31,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.logging.Level;
 
 /**
  * What a round paid and who won it. A game feeds it while the round runs and calls {@link #show()} once at the
@@ -318,7 +320,15 @@ public final class RoundSummary {
                 rows.add(new Row(id, score.name, delta));
             }
         });
-        Tasks.async(plugin, () -> rows.forEach(row -> stats.add(row.player(), row.name(), row.delta())));
+        Tasks.async(plugin, () -> rows.forEach(this::bookRow));
+    }
+
+    private void bookRow(Row row) {
+        try {
+            stats.add(row.player(), row.name(), row.delta());
+        } catch (DatabaseException e) {
+            plugin.getLogger().log(Level.WARNING, "Could not book the round's stats of " + row.name(), e);
+        }
     }
 
     private Component button(String key, Consumer<Player> action) {

@@ -2,6 +2,7 @@ package me.blockcraft.api.xp;
 
 import me.blockcraft.api.notification.Notifications;
 import me.blockcraft.api.task.JoinRetry;
+import me.blockcraft.api.task.SerialTasks;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.xp.XpRepository;
 import org.bukkit.entity.Player;
@@ -19,6 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Network XP and levels. Totals are cached per online player so chat and menus can show the level without a
  * query; awards go to the database first and the cache follows, so a level-up is judged on the stored total.
+ * Awards to one player run in order, because the stored total after one must not already include the next.
  */
 public final class Xp implements Listener {
 
@@ -29,6 +31,7 @@ public final class Xp implements Listener {
     private final Notifications notifications;
     private final Map<UUID, Object> sessions = new java.util.HashMap<>();
     private final Map<UUID, Long> totals = new ConcurrentHashMap<>();
+    private final SerialTasks<UUID> awards;
 
     public Xp(Plugin plugin, XpRepository repository, Levels levels, Map<XpReward, Integer> rewards,
               Notifications notifications) {
@@ -37,6 +40,7 @@ public final class Xp implements Listener {
         this.levels = levels;
         this.rewards = rewards;
         this.notifications = notifications;
+        this.awards = new SerialTasks<>(plugin);
     }
 
     public Levels levels() {
@@ -65,7 +69,7 @@ public final class Xp implements Listener {
         }
         var uuid = player.getUniqueId();
         var session = sessions.get(uuid);
-        Tasks.async(plugin, () -> repository.add(uuid, amount), total -> {
+        awards.submit(uuid, () -> repository.add(uuid, amount), total -> {
             if (!player.isOnline() || sessions.get(uuid) != session) {
                 return;
             }
@@ -76,7 +80,7 @@ public final class Xp implements Listener {
             if (after > before) {
                 plugin.getServer().getPluginManager().callEvent(new LevelUpEvent(player, after));
             }
-        });
+        }, () -> { });
     }
 
     @EventHandler(priority = EventPriority.LOWEST)

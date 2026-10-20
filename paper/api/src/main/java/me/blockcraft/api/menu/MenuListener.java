@@ -79,11 +79,9 @@ public final class MenuListener implements Listener {
 
     @EventHandler
     public void onClose(InventoryCloseEvent event) {
-        if (event.getInventory().getHolder(false) instanceof Menu menu && event.getPlayer() instanceof Player player) {
-            if (event.getReason() == InventoryCloseEvent.Reason.PLAYER) {
-                playerTasks.invalidate(player);
-            }
-            menu.handleClose(player, event);
+        if (event.getReason() == InventoryCloseEvent.Reason.PLAYER && event.getInventory().getHolder(false) instanceof Menu
+                && event.getPlayer() instanceof Player player) {
+            playerTasks.invalidate(player);
         }
     }
 }

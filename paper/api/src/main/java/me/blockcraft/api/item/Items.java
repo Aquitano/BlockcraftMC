@@ -97,7 +97,7 @@ public final class Items {
 
         /** Draws the item as its material again. */
         public Builder noModel() {
-            stack.unsetData(DataComponentTypes.ITEM_MODEL);
+            stack.resetData(DataComponentTypes.ITEM_MODEL);
             return this;
         }
 
