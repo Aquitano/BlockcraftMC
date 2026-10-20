@@ -22,6 +22,8 @@ import java.util.Locale;
  */
 public final class PunishmentCommands {
 
+    private static final int MAX_LISTED = 18;
+
     private final CommandSupport support;
     private final PlayerLookup lookup;
     private final ModerationActions actions;
@@ -89,17 +91,20 @@ public final class PunishmentCommands {
         return new BrigadierCommand(BrigadierCommand.literalArgumentBuilder(name)
                 .requires(CommandSupport.permission(permission))
                 .executes(support.run((source, context) -> {
-                    var active = punishments.listActive(type);
-                    if (active.isEmpty()) {
+                    int total = punishments.countActive(type);
+                    if (total == 0) {
                         source.sendMessage(messages.get(name + ".empty"));
                         return;
                     }
                     source.sendMessage(messages.get(name + ".header"));
-                    for (var punishment : active) {
+                    for (var punishment : punishments.listActive(type, MAX_LISTED)) {
                         String player = lookup.nameOf(punishment.player()).orElse(punishment.player().toString());
                         source.sendMessage(messages.get(name + ".entry", Placeholder.unparsed("player", player)));
                     }
-                    source.sendMessage(messages.get(name + ".count", Formatter.number("count", active.size())));
+                    if (total > MAX_LISTED) {
+                        source.sendMessage(messages.get(name + ".newest", Formatter.number("shown", MAX_LISTED)));
+                    }
+                    source.sendMessage(messages.get(name + ".count", Formatter.number("count", total)));
                 })));
     }
 }

@@ -21,6 +21,10 @@ public final class PunishmentRepository {
     private static final String COLUMNS = "id, player_uuid, type, reason, issuer, issuer_uuid, UNIX_TIMESTAMP(created_at) AS created_at, "
             + "UNIX_TIMESTAMP(expires_at) AS expires_at, UNIX_TIMESTAMP(revoked_at) AS revoked_at, revoked_by, revoked_by_uuid";
     static final String ACTIVE = "revoked_at IS NULL AND (expires_at IS NULL OR expires_at > NOW())";
+    private static final String INSERT = "INSERT INTO bc_punishments (player_uuid, type, reason, issuer, issuer_uuid, expires_at) "
+            + "VALUES (?, ?, ?, ?, ?, NOW() + INTERVAL ? SECOND)";
+    private static final String REVOKE = "UPDATE bc_punishments SET revoked_at = NOW(), revoked_by = ?, revoked_by_uuid = ? "
+            + "WHERE player_uuid = ? AND type = ? AND " + ACTIVE;
 
     private final Database db;
 
@@ -50,16 +54,25 @@ public final class PunishmentRepository {
     }
 
     public void create(UUID player, PunishmentType type, String reason, PlayerReference issuer, Optional<Duration> duration) {
-        db.update("INSERT INTO bc_punishments (player_uuid, type, reason, issuer, issuer_uuid, expires_at) "
-                        + "VALUES (?, ?, ?, ?, ?, NOW() + INTERVAL ? SECOND)",
-                player.toString(), type.name(), reason, issuer.name(), uuidOf(issuer), duration.map(Duration::toSeconds).orElse(null));
+        db.update(INSERT, player.toString(), type.name(), reason, issuer.name(), uuidOf(issuer), duration.map(Duration::toSeconds).orElse(null));
     }
 
     /** Ends every active punishment of that type; returns false if there was none. */
     public boolean revoke(UUID player, PunishmentType type, PlayerReference revokedBy) {
-        return db.update("UPDATE bc_punishments SET revoked_at = NOW(), revoked_by = ?, revoked_by_uuid = ? "
-                        + "WHERE player_uuid = ? AND type = ? AND " + ACTIVE,
-                revokedBy.name(), uuidOf(revokedBy), player.toString(), type.name()) > 0;
+        return db.update(REVOKE, revokedBy.name(), uuidOf(revokedBy), player.toString(), type.name()) > 0;
+    }
+
+    /**
+     * Ends the active punishment of that type and stores the new one in one transaction, so a failure in between
+     * leaves the old one standing; returns whether there was one to end.
+     */
+    public boolean replace(UUID player, PunishmentType type, String reason, PlayerReference issuer, Optional<Duration> duration) {
+        return db.transaction(connection -> {
+            boolean ended = db.update(connection, REVOKE, issuer.name(), uuidOf(issuer), player.toString(), type.name()) > 0;
+            db.update(connection, INSERT, player.toString(), type.name(), reason, issuer.name(), uuidOf(issuer),
+                    duration.map(Duration::toSeconds).orElse(null));
+            return ended;
+        });
     }
 
     public List<Punishment> history(UUID player, PunishmentType type) {
@@ -67,9 +80,14 @@ public final class PunishmentRepository {
                 PunishmentRepository::map, player.toString(), type.name());
     }
 
-    public List<Punishment> listActive(PunishmentType type) {
-        return db.queryList("SELECT " + COLUMNS + " FROM bc_punishments WHERE type = ? AND " + ACTIVE + " ORDER BY id DESC",
-                PunishmentRepository::map, type.name());
+    /** The newest active punishments of that type, at most {@code limit}. */
+    public List<Punishment> listActive(PunishmentType type, int limit) {
+        return db.queryList("SELECT " + COLUMNS + " FROM bc_punishments WHERE type = ? AND " + ACTIVE + " ORDER BY id DESC LIMIT ?",
+                PunishmentRepository::map, type.name(), limit);
+    }
+
+    public int countActive(PunishmentType type) {
+        return db.queryOne("SELECT COUNT(*) FROM bc_punishments WHERE type = ? AND " + ACTIVE, row -> row.getInt(1), type.name()).orElse(0);
     }
 
     private static Punishment map(ResultSet row) throws SQLException {

@@ -37,7 +37,7 @@ public final class StaffActionRepository {
         String id = player.toString();
         int total = db.queryOne("SELECT COUNT(*)" + INVOLVING, row -> row.getInt(1), id, id).orElse(0);
         var entries = db.queryList("SELECT " + COLUMNS + INVOLVING + " ORDER BY id DESC LIMIT ? OFFSET ?",
-                StaffActionRepository::map, id, id, size, page * size);
+                StaffActionRepository::map, id, id, size, (long) page * size);
         return new Page(entries, total);
     }
 

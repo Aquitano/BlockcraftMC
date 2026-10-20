@@ -78,11 +78,17 @@ public final class Database implements AutoCloseable {
     }
 
     public int update(String sql, Object... params) {
-        try (Connection connection = dataSource.getConnection();
-             PreparedStatement statement = prepare(connection, sql, params)) {
-            return statement.executeUpdate();
+        try (Connection connection = dataSource.getConnection()) {
+            return update(connection, sql, params);
         } catch (SQLException e) {
             throw new DatabaseException(sql, e);
+        }
+    }
+
+    /** The same statement on the connection of a {@link #transaction}, so it commits or rolls back with it. */
+    public int update(Connection connection, String sql, Object... params) throws SQLException {
+        try (PreparedStatement statement = prepare(connection, sql, params)) {
+            return statement.executeUpdate();
         }
     }
 

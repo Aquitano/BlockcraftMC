@@ -240,7 +240,7 @@ public final class SystemPlugin {
         register(new CheckCommand(support, lookup, punishments, messages).create());
         register(new HistoryCommand(support, lookup, punishments, config, messages).create());
         register(new StaffLogCommand(support, lookup, new StaffActionRepository(database), config, messages, staffButtons).create());
-        register(new StrafeCommand(support, moderationActions, messages).create());
+        register(new StrafeCommand(support, moderationActions, config, messages).create());
         new StrikeCommands(support, lookup, repositories.strikes(), punishments, config, messages).create().forEach(this::register);
         new WarnCommands(support, proxy, lookup, repositories.warns(), config, messages).create().forEach(this::register);
         register(new WerbungCommand(support, lookup, repositories.adLog(), messages).create());

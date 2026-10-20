@@ -53,7 +53,7 @@ public final class ModerationActions {
             return OperationResult.REJECTED;
         }
         if (!Durations.fits(duration.get())) {
-            source.sendMessage(messages.get(key + ".too-long", Formatter.number("years", Durations.LONGEST.toDays() / 365)));
+            source.sendMessage(messages.get(key + ".too-long", Formatter.number("days", Durations.longest().toDays())));
             return OperationResult.REJECTED;
         }
         if (!NetworkRequest.isText(reason)) {
@@ -87,12 +87,12 @@ public final class ModerationActions {
     }
 
     public OperationResult preset(CommandSource source, PlayerReference reference, int number) {
-        if (!permitted(source, SystemPermissions.BAN)) {
-            return OperationResult.REJECTED;
-        }
         PunishmentPreset preset = config.punishments().get(number);
         if (preset == null) {
             source.sendMessage(messages.get("strafe.unknown-number"));
+            return OperationResult.REJECTED;
+        }
+        if (!permitted(source, preset.type() == PunishmentType.BAN ? SystemPermissions.BAN : SystemPermissions.MUTE)) {
             return OperationResult.REJECTED;
         }
         var target = lookup.find(source, reference, messages.get("player-unknown", Placeholder.unparsed("player", reference.name())));
@@ -115,12 +115,8 @@ public final class ModerationActions {
         return store(source, () -> {
             if (existing.isPresent()) {
                 source.sendMessage(messages.get("strafe.overwrite"));
-                punishments.revokeQuietly(target.get(), preset.type(), issuer);
             }
-            switch (preset.type()) {
-                case BAN -> punishments.ban(target.get(), reason, issuer, preset.duration());
-                case MUTE -> punishments.mute(target.get(), reason, issuer, preset.duration());
-            }
+            punishments.replace(target.get(), preset.type(), reason, issuer, preset.duration());
             source.sendMessage(messages.get("strafe.done"));
         });
     }

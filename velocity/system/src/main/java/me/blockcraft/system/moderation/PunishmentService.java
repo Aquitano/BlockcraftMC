@@ -60,19 +60,21 @@ public final class PunishmentService {
 
     public void ban(Target target, String reason, PlayerReference issuer, Optional<Duration> duration) {
         punishments.ban(target.uuid(), reason, issuer, duration);
-        punishments.activeBan(target.uuid()).ifPresent(ban -> {
-            target.online().ifPresent(player -> player.disconnect(banScreen(ban)));
-            var placeholders = placeholders(target.name(), ban);
-            notify(SystemPermissions.KICK, "ban.notify", placeholders);
-        });
+        announceBan(target);
     }
 
     public void mute(Target target, String reason, PlayerReference issuer, Optional<Duration> duration) {
         punishments.mute(target.uuid(), reason, issuer, duration);
-        punishments.activeMute(target.uuid()).ifPresent(mute -> {
-            target.online().ifPresent(player -> player.sendMessage(muteScreen(mute)));
-            notify(SystemPermissions.TEAM, "mute.notify", placeholders(target.name(), mute));
-        });
+        announceMute(target);
+    }
+
+    /** Stores the punishment in place of the active one of its type, for a /strafe over an earlier punishment. */
+    public void replace(Target target, PunishmentType type, String reason, PlayerReference issuer, Optional<Duration> duration) {
+        punishments.replace(target.uuid(), type, reason, issuer, duration);
+        switch (type) {
+            case BAN -> announceBan(target);
+            case MUTE -> announceMute(target);
+        }
     }
 
     public void revoke(Target target, PunishmentType type, PlayerReference issuer) {
@@ -82,11 +84,6 @@ public final class PunishmentService {
             case BAN -> notify(SystemPermissions.KICK, "unban.notify", placeholders);
             case MUTE -> notify(SystemPermissions.TEAM, "unmute.notify", placeholders);
         }
-    }
-
-    /** Ends the active punishment without telling the staff, for a /strafe that replaces it right away. */
-    public void revokeQuietly(Target target, PunishmentType type, PlayerReference issuer) {
-        punishments.revoke(target.uuid(), type, issuer);
     }
 
     public Component banScreen(Punishment ban) {
@@ -109,6 +106,21 @@ public final class PunishmentService {
                 Placeholder.unparsed("reason", punishment.reason()),
                 Placeholder.unparsed("issuer", punishment.issuer().name()),
                 Placeholder.component("remaining", remaining(punishment)));
+    }
+
+    private void announceBan(Target target) {
+        punishments.activeBan(target.uuid()).ifPresent(ban -> {
+            target.online().ifPresent(player -> player.disconnect(banScreen(ban)));
+            var placeholders = placeholders(target.name(), ban);
+            notify(SystemPermissions.KICK, "ban.notify", placeholders);
+        });
+    }
+
+    private void announceMute(Target target) {
+        punishments.activeMute(target.uuid()).ifPresent(mute -> {
+            target.online().ifPresent(player -> player.sendMessage(muteScreen(mute)));
+            notify(SystemPermissions.TEAM, "mute.notify", placeholders(target.name(), mute));
+        });
     }
 
     private Component screen(String key, Punishment punishment) {

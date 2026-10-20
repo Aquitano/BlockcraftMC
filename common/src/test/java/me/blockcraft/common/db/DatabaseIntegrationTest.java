@@ -429,4 +429,20 @@ public class DatabaseIntegrationTest {
         assertTrue(listed.getFirst().issuer().isEmpty());
         assertEquals(Optional.of(staff), listed.getLast().issuer());
     }
+
+    @Test
+    public void replacingAPunishmentKeepsTheOldOneWhenTheNewOneIsNotStored() {
+        db.migrate();
+        var punishments = new PunishmentRepository(db);
+        var player = UUID.randomUUID();
+        var staff = PlayerReference.named("Console");
+        punishments.ban(player, "Fly", staff, Optional.empty());
+
+        assertThrows(DatabaseException.class, () -> punishments.replace(player, PunishmentType.BAN, null, staff, Optional.empty()));
+        assertEquals("Fly", punishments.activeBan(player).orElseThrow().reason());
+
+        assertTrue(punishments.replace(player, PunishmentType.BAN, "KillAura", staff, Optional.empty()));
+        assertEquals("KillAura", punishments.activeBan(player).orElseThrow().reason());
+        assertEquals(2, punishments.history(player, PunishmentType.BAN).size());
+    }
 }
