@@ -4,6 +4,7 @@ import me.blockcraft.api.menu.Menu;
 import me.blockcraft.api.pack.MenuIcon;
 import me.blockcraft.api.shop.Purchases;
 import me.blockcraft.api.task.Tasks;
+import me.blockcraft.common.shop.Premium;
 import me.blockcraft.lobby.LobbyPermissions;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import org.bukkit.Color;
@@ -15,7 +16,6 @@ import org.bukkit.inventory.ItemStack;
 public final class ShopMenu extends Menu {
 
     private static final int PREMIUM_SLOT = 13;
-    public static final String PREMIUM_ITEM = "lobby.premium";
     private static final Color SHIRT_ICON_COLOR = Color.fromRGB(0, 102, 204);
 
     private final Menus menus;
@@ -76,7 +76,7 @@ public final class ShopMenu extends Menu {
             activate(player);
             return;
         }
-        Purchases.confirm(player, premiumIcon(), PREMIUM_ITEM, menus.config().premiumPrice(), this::activate, this::open);
+        Purchases.confirm(player, premiumIcon(), Premium.ITEM, menus.config().premiumPrice(), this::activate, this::open);
     }
 
     private void activate(Player buyer) {

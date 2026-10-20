@@ -7,6 +7,7 @@ import me.blockcraft.api.config.Locations;
 import me.blockcraft.api.menu.Profiles;
 import me.blockcraft.common.config.YamlFile;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.common.shop.Premium;
 import me.blockcraft.lobby.activity.LobbyQuirks;
 import me.blockcraft.lobby.activity.Parkour;
 import me.blockcraft.lobby.activity.PondFishing;
@@ -48,7 +49,6 @@ import me.blockcraft.lobby.listener.SecretsListener;
 import me.blockcraft.lobby.listener.ShopNpcListener;
 import me.blockcraft.lobby.listener.WorldDownloaderListener;
 import me.blockcraft.lobby.menu.Menus;
-import me.blockcraft.lobby.menu.ShopMenu;
 import me.blockcraft.lobby.npc.Holograms;
 import me.blockcraft.lobby.npc.Leaderboards;
 import me.blockcraft.lobby.npc.ShopNpc;
@@ -210,7 +210,7 @@ public final class LobbyPlugin extends JavaPlugin {
         legacy.importYaml(getDataPath().resolve("shirts.yml"), key -> Shirt.byKey(key).map(Shirt::item));
         legacy.importYaml(getDataPath().resolve("secrets.yml"), key -> Secret.byKey(key).map(Secret::item));
         legacy.importYaml(getDataPath().resolve("premium-purchases.yml"),
-                key -> key.equals("name") ? Optional.of(ShopMenu.PREMIUM_ITEM) : Optional.empty());
+                key -> key.equals("name") ? Optional.of(Premium.ITEM) : Optional.empty());
     }
 
     private void register(Listener... listeners) {

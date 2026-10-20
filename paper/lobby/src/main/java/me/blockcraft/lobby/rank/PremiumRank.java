@@ -1,5 +1,6 @@
 package me.blockcraft.lobby.rank;
 
+import me.blockcraft.common.shop.Premium;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.node.types.InheritanceNode;
 import org.bukkit.plugin.Plugin;
@@ -10,8 +11,6 @@ import java.util.logging.Level;
 
 public final class PremiumRank {
 
-    private static final String GROUP = "premium";
-
     private final Plugin plugin;
     private final LuckPerms luckPerms;
 
@@ -20,9 +19,17 @@ public final class PremiumRank {
         this.luckPerms = luckPerms;
     }
 
-    /** The purchase is already recorded in bc_unlocks, so a failed grant is logged and healed on the next click. */
+    /**
+     * The purchase is already recorded in bc_unlocks, so a failed grant is logged and healed on the next click. The
+     * proxy and the other servers keep their copy of the player until they hear of the change.
+     */
     public CompletableFuture<Boolean> grant(UUID player) {
-        return luckPerms.getUserManager().modifyUser(player, user -> user.data().add(InheritanceNode.builder(GROUP).build()))
+        var users = luckPerms.getUserManager();
+        return users.loadUser(player)
+                .thenCompose(user -> {
+                    user.data().add(InheritanceNode.builder(Premium.GROUP).build());
+                    return users.saveUser(user).thenRun(() -> luckPerms.getMessagingService().ifPresent(service -> service.pushUserUpdate(user)));
+                })
                 .handle((ignored, error) -> {
                     if (error != null) {
                         plugin.getLogger().log(Level.SEVERE, "Could not grant the premium group to " + player, error);
