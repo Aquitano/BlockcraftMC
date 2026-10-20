@@ -54,8 +54,10 @@ proxy's `/msg`, `/tell` and `/w` remain. LuckPerms lets such an exact node win o
 `velocity.command.server` by name: `default` closes `/server` to players, and `velocity.command.*` alone would not
 reopen it for staff.
 
-Import it once per LuckPerms database (`gzip -k luckperms/ranks.json`, copy the `.gz` into LuckPerms' data folder,
-`/lp import ranks`), then assign players with `/lp user <name> parent set <group>`.
+Import it into every LuckPerms database, and again after every change to it (`gzip -k luckperms/ranks.json`, copy the
+`.gz` into LuckPerms' data folder, `/lp import ranks`), then assign players with `/lp user <name> parent set <group>`.
+The import replaces each group's permissions with the file's and leaves players' groups alone, so a permission set
+by hand in game is gone after the next import unless it is in the file.
 
 Every plugin ships a `messages.yml` (MiniMessage, German by default) and a `config.yml`; both are copied to the plugin's
 data folder on first start and can be edited there. Keys the edited file lacks come from the bundled default, so a
@@ -118,7 +120,8 @@ To run a second instance of a game, copy its service under a new name with its o
 `--scale`: the copies would share one volume, and with it one world folder that every start overwrites.
 
 `docker compose logs -f lobby` follows a server and `docker compose exec lobby rcon-cli <command>` runs a command.
-LuckPerms answers only on the real console, so on a fresh database run
+LuckPerms answers only on the real console, so on a fresh database, and the first two lines again after every change
+to `luckperms/ranks.json`, run
 
 ```
 docker compose exec -u 1000 lobby mc-send-to-console lp import ranks
@@ -142,7 +145,7 @@ docker compose up -d mariadb    # MariaDB on localhost:3306, database/user/passw
 under `run/` are seeded from `dev/` (proxy forwarding, ports, dev secret, LuckPerms on the compose MariaDB so proxy
 and backend share one permission database) and are git-ignored. The dev run tasks accept the Minecraft EULA on your
 behalf and drop `ranks.json.gz` next to LuckPerms; on a fresh database run `lp import ranks` and
-`lp user <name> parent set owner` in either console once.
+`lp user <name> parent set owner` in either console once, and `lp import ranks` again after a change to `ranks.json`.
 
 Both flavours share the database, announce a server called `lobby` and run the map in `worlds/lobby`, so run one of
 them at a time.
@@ -567,7 +570,8 @@ its first start: new keys arrive through the bundled default, but the copy keeps
 already has, so changed texts and renamed config keys do not reach a server by themselves. Move a copy nobody edited
 aside before the restart (`docker compose exec bedwars mv /data/plugins/BedWars/messages.yml
 /data/plugins/BedWars/messages.yml.bak`) and the plugin writes the current default; carry the edits of an edited one
-over by hand.
+over by hand. A changed `luckperms/ranks.json` reaches the network only through `lp import ranks` and
+`lp networksync` (see "Run locally"); `stagePlugins` already put the new `ranks.json.gz` next to LuckPerms.
 
 With Caddy in front, the pack needs one site block (`RESOURCE_PACK_PORT` 8081, `RESOURCE_PACK_URL`
 `https://mc.example.net/blockcraft.zip`):
@@ -580,7 +584,7 @@ mc.example.net {
 
 `.env` sets `COMPOSE_FILE`, so every `docker compose` command in that directory, the rank import from "Run locally"
 included, works on the production setup. An update is `git pull`, `./gradlew stagePlugins`, `docker compose up -d`
-and `docker compose restart`. Releasing a game means removing its `profiles` line. `/map save` writes into the
+and `docker compose restart`, plus the rank import when `ranks.json` changed. Releasing a game means removing its `profiles` line. `/map save` writes into the
 checkout's `worlds/`, so a map edited on the host is committed from there.
 
 Alt detection stores login addresses only as an HMAC-SHA256 under a secret the proxy generates once into
