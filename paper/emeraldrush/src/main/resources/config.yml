@@ -22,6 +22,40 @@ rewards:
   kill: 5
   win: 15
 
+# Coins that unlock a perk for good, by perk.
+perk-prices:
+  angel: 200
+  lucky-potion: 300
+  strength: 500
+
+# Emeralds each item of the round shop costs, by the item's key in messages.yml (shop.item).
+shop-prices:
+  chain-helmet: 50
+  chain-chestplate: 50
+  chain-leggings: 50
+  chain-boots: 50
+  iron-helmet: 80
+  iron-chestplate: 80
+  iron-leggings: 80
+  iron-boots: 80
+  stone-sword: 30
+  iron-sword: 45
+  diamond-sword: 60
+  bow: 40
+  arrows: 20
+  jump: 100
+  heal-1: 100
+  heal-2: 200
+  fire-resistance: 100
+  speed: 100
+  extra-heart: 40
+  golden-apple: 35
+  level: 30
+  lapis: 20
+  angel: 100
+  lucky-potion: 400
+  strength: 500
+
 # A winner who never spent an Emerald earns Dagobert with at least this many.
 moments:
   dagobert-emeralds: 100

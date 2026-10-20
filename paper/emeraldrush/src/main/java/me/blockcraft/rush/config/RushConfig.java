@@ -1,6 +1,9 @@
 package me.blockcraft.rush.config;
 
 import me.blockcraft.api.game.CombatStyle;
+import me.blockcraft.api.game.CompassTracker;
+import me.blockcraft.rush.kit.Perk;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 
 /** EmeraldRush's own keys; the ones every game shares are {@link me.blockcraft.api.game.GameConfig}'s. */
@@ -12,15 +15,23 @@ public record RushConfig(
         int shoppingSeconds,
         int deathmatchSeconds,
         int trackerAfterSeconds,
-        double trackerRangeHorizontal,
-        double trackerRangeVertical,
-        int trackerCooldownTicks,
+        CompassTracker.Settings tracker,
         int lives,
         int killCoins,
         int winCoins,
         int dagobertEmeralds,
+        ConfigurationSection perkPrices,
+        ConfigurationSection shopPrices,
         CombatStyle combat
 ) {
+
+    public int perkPrice(Perk perk) {
+        return perkPrices.getInt(perk.key());
+    }
+
+    public int shopPrice(String item) {
+        return shopPrices.getInt(item);
+    }
 
     public static RushConfig from(FileConfiguration config) {
         return new RushConfig(
@@ -31,13 +42,18 @@ public record RushConfig(
                 config.getInt("countdown.shopping", 90),
                 config.getInt("countdown.deathmatch", 1200),
                 config.getInt("countdown.deathmatch-tracker-after", 300),
-                config.getDouble("tracker.range-horizontal", 100.0),
-                config.getDouble("tracker.range-vertical", 25.0),
-                Math.max(0, config.getInt("tracker.cooldown-ticks", 20)),
+                CompassTracker.Settings.from(config),
                 config.getInt("lives", 3),
                 config.getInt("rewards.kill", 5),
                 config.getInt("rewards.win", 15),
                 config.getInt("moments.dagobert-emeralds", 100),
+                section(config, "perk-prices"),
+                section(config, "shop-prices"),
                 CombatStyle.from(config));
+    }
+
+    private static ConfigurationSection section(FileConfiguration config, String key) {
+        var section = config.getConfigurationSection(key);
+        return section != null ? section : config.createSection(key);
     }
 }

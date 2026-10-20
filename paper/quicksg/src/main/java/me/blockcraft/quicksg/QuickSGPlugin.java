@@ -5,6 +5,7 @@ import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.command.CommandRegistry;
 import me.blockcraft.api.config.Locations;
 import me.blockcraft.api.game.ArenaProtection;
+import me.blockcraft.api.game.CompassTracker;
 import me.blockcraft.api.game.GameConfig;
 import me.blockcraft.api.game.LobbyProtection;
 import me.blockcraft.api.game.SetupCommand;
@@ -68,7 +69,7 @@ public final class QuickSGPlugin extends JavaPlugin {
                 new LobbyProtection(game::isLobby, api.buildMode(), () -> locations.get(LocationKey.LOBBY)),
                 new ArenaProtection(game::frozen),
                 game.lobbyHotbar(),
-                new ItemListener(game, messages, lootChests, config.tracker())
+                new ItemListener(game, messages, lootChests, new CompassTracker(messages, config.tracker()))
         ).forEach(this::register);
 
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {

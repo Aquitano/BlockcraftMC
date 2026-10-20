@@ -7,6 +7,7 @@ import me.blockcraft.api.shop.Purchases;
 import me.blockcraft.api.shop.Unlocks;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.rush.config.RushConfig;
 import me.blockcraft.rush.config.SpawnPoint;
 import me.blockcraft.rush.config.Spawns;
 import me.blockcraft.rush.game.Game;
@@ -25,17 +26,19 @@ import java.util.Set;
 public final class RushMenus {
 
     private final Game game;
+    private final RushConfig config;
     private final Messages messages;
     private final Spawns spawns;
     private final Unlocks unlocks;
     private final ShopCatalog catalog;
 
-    public RushMenus(Game game, Messages messages, Spawns spawns, Unlocks unlocks) {
+    public RushMenus(Game game, RushConfig config, Messages messages, Spawns spawns, Unlocks unlocks) {
         this.game = game;
+        this.config = config;
         this.messages = messages;
         this.spawns = spawns;
         this.unlocks = unlocks;
-        this.catalog = new ShopCatalog(messages);
+        this.catalog = new ShopCatalog(messages, config);
     }
 
     public void openPerks(Player player) {
@@ -65,8 +68,12 @@ public final class RushMenus {
         if (game.phase() != GamePhase.LOBBY) {
             return;
         }
-        Purchases.confirm(player, perkIcon(perk), perk.item(), perk.price(), buyer -> game.phase() == GamePhase.LOBBY,
+        Purchases.confirm(player, perkIcon(perk), perk.item(), perkPrice(perk), buyer -> game.phase() == GamePhase.LOBBY,
                 ignored -> { }, buyer -> openPerk(buyer, perk));
+    }
+
+    int perkPrice(Perk perk) {
+        return config.perkPrice(perk);
     }
 
     private ItemStack perkIcon(Perk perk) {

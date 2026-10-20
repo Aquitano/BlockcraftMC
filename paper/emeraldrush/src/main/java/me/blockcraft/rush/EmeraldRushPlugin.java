@@ -2,6 +2,7 @@ package me.blockcraft.rush;
 
 import me.blockcraft.api.command.CommandRegistry;
 import me.blockcraft.api.game.ArenaProtection;
+import me.blockcraft.api.game.CompassTracker;
 import me.blockcraft.api.game.GameConfig;
 import me.blockcraft.api.game.LobbyProtection;
 import me.blockcraft.api.game.ServerRestart;
@@ -64,7 +65,7 @@ public final class EmeraldRushPlugin extends JavaPlugin {
         register(new ArenaProtection(() -> false));
         register(new BlockListener(this, game, config, api.buildMode()));
         register(game.lobbyHotbar());
-        register(new HotbarListener(game, game.menus(), config, messages));
+        register(new HotbarListener(game, game.menus(), new CompassTracker(messages, config.tracker())));
 
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             var commands = new CommandRegistry(event.registrar(), messages);

@@ -25,7 +25,7 @@ final class PerkMenu extends Menu {
         PERKS.forEach((slot, perk) -> {
             var icon = Items.of(perk.icon()).name(messages.get("perk.item", RushMenus.perkName(messages, perk)))
                     .lore(messages.get("perk.description." + perk.key()),
-                            messages.get(owned.contains(perk) ? "perk.unlocked" : "perk.price-lore", Formatter.number("price", perk.price())),
+                            messages.get(owned.contains(perk) ? "perk.unlocked" : "perk.price-lore", Formatter.number("price", menus.perkPrice(perk))),
                             messages.get("perk.inspect"));
             if (owned.contains(perk)) {
                 icon.glow();

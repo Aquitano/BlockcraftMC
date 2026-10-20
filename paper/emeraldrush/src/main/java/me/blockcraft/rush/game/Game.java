@@ -91,7 +91,7 @@ public final class Game {
         this.round = new Round(plugin, new Arena(messages, Sounds.RUSH_JOIN), summary, config.maxPlayers(), gameConfig);
         this.lobbyCountdown = new LobbyCountdown(plugin, round, gameConfig, this::beginSearch);
         this.scoreboard = new GameScoreboard(this, messages, round, map, config.maxPlayers());
-        this.menus = new RushMenus(this, messages, spawns, unlocks);
+        this.menus = new RushMenus(this, config, messages, spawns, unlocks);
         this.lobbyHotbar = new LobbyHotbar(plugin,
                 List.of(new LobbyHotbar.Choice(MenuIcon.EMERALDRUSH, messages.get("item.perks"), menus::openPerks)),
                 statsMenus, lobbyCountdown);

@@ -25,7 +25,7 @@ final class PerkBuyMenu extends Menu {
         this.owned = owned;
         info(0, Items.of(perk.icon()).name(messages.get("perk.item", RushMenus.perkName(messages, perk))).build());
         info(1, Items.of(Material.NAME_TAG).name(messages.get("perk.price"))
-                .lore(messages.get("perk.price-lore", Formatter.number("price", perk.price()))).build());
+                .lore(messages.get("perk.price-lore", Formatter.number("price", menus.perkPrice(perk)))).build());
         if (owned) {
             info(BUY, Items.of(Material.ORANGE_STAINED_GLASS_PANE).name(messages.get("perk.owned")).build());
         } else {

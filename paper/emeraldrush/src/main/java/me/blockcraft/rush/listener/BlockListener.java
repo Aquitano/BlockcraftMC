@@ -8,18 +8,13 @@ import me.blockcraft.rush.config.RushConfig;
 import me.blockcraft.rush.game.Game;
 import me.blockcraft.rush.game.GamePhase;
 import org.bukkit.Material;
-import org.bukkit.entity.TNTPrimed;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.plugin.Plugin;
 
 public final class BlockListener implements Listener {
-
-    private static final int TNT_FUSE_TICKS = 40;
-    private static final long COBWEB_LIFETIME_TICKS = 60L;
 
     private final Plugin plugin;
     private final Game game;
@@ -50,25 +45,10 @@ public final class BlockListener implements Listener {
         }
     }
 
-    /** Outside build mode only TNT, which goes off at once, and cobwebs in the deathmatch, which melt, are placed. */
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler
     public void onPlace(BlockPlaceEvent event) {
-        if (buildMode.isEnabled(event.getPlayer())) {
-            return;
-        }
-        var block = event.getBlock();
-        if (block.getType() == Material.TNT) {
-            block.setType(Material.AIR);
-            block.getWorld().spawn(block.getLocation().toCenterLocation(), TNTPrimed.class, tnt -> tnt.setFuseTicks(TNT_FUSE_TICKS));
-        } else if (block.getType() == Material.COBWEB && game.phase() == GamePhase.DEATHMATCH) {
-            Tasks.later(plugin, COBWEB_LIFETIME_TICKS, () -> block.setType(Material.AIR));
-        } else {
+        if (!buildMode.isEnabled(event.getPlayer())) {
             event.setCancelled(true);
         }
-    }
-
-    @EventHandler
-    public void onExplode(EntityExplodeEvent event) {
-        event.blockList().clear();
     }
 }

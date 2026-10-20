@@ -18,14 +18,6 @@ commands:
 join:
   introduction: "<prefix><muted>Baue Erze ab, kaufe Ausrüstung und gewinne das Deathmatch. <emeraldrush>Hrrm. Nur Barzahlung."
 
-lobby:
-  welcome:
-    - " "
-    - "<muted>Sammle bei <emeraldrush>EmeraldRush <muted>möglichst viele Emeralds!"
-    - "<muted>Pro Emerald, den du sammelst, erhältst du <emeralds> Punkte."
-    - "<muted>Nutze sie, um mit dem Villager zu handeln und rüste"
-    - "<muted>dich für das große Deathmatch gut aus!"
-    - " "
 search:
   started:
     - "<prefix><muted>Die Suchzeit hat begonnen. Baue so viele Emerald-Erze ab wie du kannst!"
@@ -114,12 +106,6 @@ shop:
   exact-change:
     - "<success>Gekauft <dark>· <muted>-<price> Emeralds <dark>· <success><emeralds> übrig <dark>· <muted>Hrrm. Passend."
     - "<success>Gekauft <dark>· <muted>-<price> Emeralds <dark>· <success><emeralds> übrig <dark>· <muted>Kein Wechselgeld nötig."
-  category:
-    chain: "Chain Rüstung"
-    iron: "Eisen Rüstung"
-    weapons: "Waffen"
-    potions: "Tränke"
-    special: "Spezial"
   nav:
     weapons: "<arrow><primary>Waffen"
     chain: "<arrow><primary>Chain"

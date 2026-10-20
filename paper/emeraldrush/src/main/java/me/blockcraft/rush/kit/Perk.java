@@ -10,9 +10,9 @@ import java.util.stream.Collectors;
 
 /** Perks are unlocked once with global coins and then buyable in the round shop with emeralds. */
 public enum Perk {
-    ANGEL("KIT1", "angel", 200, Material.FISHING_ROD),
-    LUCKY_POTION("KIT3", "lucky-potion", 300, Material.POTION),
-    STRENGTH("KIT4", "strength", 500, Material.REDSTONE);
+    ANGEL("KIT1", "angel", Material.FISHING_ROD),
+    LUCKY_POTION("KIT3", "lucky-potion", Material.POTION),
+    STRENGTH("KIT4", "strength", Material.REDSTONE);
 
     public static final String ITEM_PREFIX = "rush.perk.";
     /** The flag columns of the legacy em_kits table, for the one-time import into bc_unlocks. */
@@ -21,13 +21,11 @@ public enum Perk {
 
     private final String legacyColumn;
     private final String key;
-    private final int price;
     private final Material icon;
 
-    Perk(String legacyColumn, String key, int price, Material icon) {
+    Perk(String legacyColumn, String key, Material icon) {
         this.legacyColumn = legacyColumn;
         this.key = key;
-        this.price = price;
         this.icon = icon;
     }
 
@@ -42,10 +40,6 @@ public enum Perk {
 
     public String key() {
         return key;
-    }
-
-    public int price() {
-        return price;
     }
 
     public Material icon() {
