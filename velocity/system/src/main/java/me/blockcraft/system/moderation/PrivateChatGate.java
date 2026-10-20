@@ -87,10 +87,10 @@ public final class PrivateChatGate {
 
     private void notifyStaff(Player sender, String text) {
         var notice = messages.get("private-chat.filtered-notify", Placeholder.unparsed("player", sender.getUsername()),
-                        Placeholder.unparsed("message", text), Placeholder.unparsed("server", CommandSupport.currentServer(sender)))
-                .append(buttons.of(sender.getUsername(), StaffButtons.Button.GOTO, StaffButtons.Button.WHOIS));
+                        Placeholder.unparsed("message", text), Placeholder.unparsed("server", CommandSupport.currentServer(sender)));
         proxy.getAllPlayers().stream().filter(staff -> staff.hasPermission(SystemPermissions.CHAT_FILTER_NOTIFY))
-                .forEach(staff -> staff.sendMessage(notice));
+                .forEach(staff -> staff.sendMessage(notice.append(
+                        buttons.of(staff, sender.getUsername(), StaffButtons.Button.GOTO, StaffButtons.Button.WHOIS))));
     }
 
     private void logAdvertisement(Player sender, String text) {

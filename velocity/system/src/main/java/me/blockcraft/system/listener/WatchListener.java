@@ -64,22 +64,20 @@ public final class WatchListener {
         var notice = messages.get("watch.joined", Placeholder.unparsed("player", player.getUsername()),
                         Formatter.number("reports", watch.openReports()),
                         Formatter.number("punishments", watch.recentPunishments()),
-                        Formatter.number("days", recent.toDays()))
-                .append(buttons.of(player.getUsername(), Button.GOTO, Button.WHOIS));
+                        Formatter.number("days", recent.toDays()));
         for (Player staff : proxy.getAllPlayers()) {
             if (staff.hasPermission(SystemPermissions.TEAM)) {
-                staff.sendMessage(notice);
+                staff.sendMessage(notice.append(buttons.of(staff, player.getUsername(), Button.GOTO, Button.WHOIS)));
             }
         }
     }
 
     private void alertBannedAlts(Player player, int bannedAlts) {
         var notice = messages.get("watch.banned-alts", Placeholder.unparsed("player", player.getUsername()),
-                        Formatter.number("count", bannedAlts))
-                .append(buttons.of(player.getUsername(), Button.GOTO, Button.WHOIS, Button.ALTS));
+                        Formatter.number("count", bannedAlts));
         for (Player staff : proxy.getAllPlayers()) {
             if (staff.hasPermission(SystemPermissions.ALTS)) {
-                staff.sendMessage(notice);
+                staff.sendMessage(notice.append(buttons.of(staff, player.getUsername(), Button.GOTO, Button.WHOIS, Button.ALTS)));
             }
         }
     }

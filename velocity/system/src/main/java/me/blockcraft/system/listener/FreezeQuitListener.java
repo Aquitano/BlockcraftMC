@@ -82,11 +82,10 @@ public final class FreezeQuitListener {
                         name, config.quitPunishment());
                 return;
             }
-            var notice = messages.get("freeze.quit-punished", Placeholder.unparsed("player", name))
-                    .append(buttons.of(name, StaffButtons.Button.WHOIS));
+            var notice = messages.get("freeze.quit-punished", Placeholder.unparsed("player", name));
             for (Player staff : proxy.getAllPlayers()) {
                 if (staff.hasPermission(SystemPermissions.TEAM)) {
-                    staff.sendMessage(notice);
+                    staff.sendMessage(notice.append(buttons.of(staff, name, StaffButtons.Button.WHOIS)));
                 }
             }
         } catch (DatabaseException e) {

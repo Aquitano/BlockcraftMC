@@ -12,6 +12,7 @@ import me.blockcraft.common.player.PlayerReference;
 import me.blockcraft.common.report.ReportRepository;
 import me.blockcraft.system.PlayerLookup;
 import me.blockcraft.system.PlayerVisibility;
+import me.blockcraft.system.SystemPermissions;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.event.ClickEvent;
@@ -25,6 +26,7 @@ import org.slf4j.Logger;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -112,7 +114,6 @@ public final class ReportService {
         return OperationResult.APPLIED;
     }
 
-    /** The reported name is the whole notice: it jumps to the player on click and carries the details on hover. */
     private void notifyStaff(Player reporter, String reported, String reason, String server, int count) {
         var details = TagResolver.resolver(
                 Placeholder.unparsed("reporter", reporter.getUsername()),
@@ -120,21 +121,35 @@ public final class ReportService {
                 Placeholder.unparsed("reason", reason),
                 Placeholder.unparsed("server", server),
                 Formatter.number("count", count));
-        var target = messages.get("staff.target", details)
-                .hoverEvent(HoverEvent.showText(Component.join(JoinConfiguration.newlines(), messages.getLines("staff.hover", details))))
-                .clickEvent(ClickEvent.runCommand(PlainTextComponentSerializer.plainText()
-                        .serialize(messages.get("staff.goto-command", details))));
+        var withGoto = notice(details, count, true);
+        var withoutGoto = notice(details, count, false);
+        for (Player staff : proxy.getAllPlayers()) {
+            if (!staff.hasPermission(staffPermission) || !preferences.enabled(staff)) {
+                continue;
+            }
+            (staff.hasPermission(SystemPermissions.GOTO) ? withGoto : withoutGoto).forEach(staff::sendMessage);
+        }
+    }
+
+    /**
+     * The reported name is the whole notice: it carries the details on hover and, for a viewer who may /goto, jumps to
+     * the player on click.
+     */
+    private List<Component> notice(TagResolver details, int count, boolean jumpable) {
+        var hover = new ArrayList<>(messages.getLines("staff.hover", details));
+        var target = messages.get("staff.target", details);
+        if (jumpable) {
+            hover.addAll(messages.getLines("staff.hover-goto", details));
+            target = target.clickEvent(ClickEvent.runCommand(PlainTextComponentSerializer.plainText()
+                    .serialize(messages.get("staff.goto-command", details))));
+        }
+        target = target.hoverEvent(HoverEvent.showText(Component.join(JoinConfiguration.newlines(), hover)));
         var lines = new ArrayList<Component>();
         lines.add(messages.get("staff.notice", TagResolver.resolver(Placeholder.component("target", target), details)));
         lines.add(messages.get("staff.reason", details));
         if (count > 1) {
             lines.add(messages.get("staff.count", details));
         }
-        for (Player staff : proxy.getAllPlayers()) {
-            if (!staff.hasPermission(staffPermission) || !preferences.enabled(staff)) {
-                continue;
-            }
-            lines.forEach(staff::sendMessage);
-        }
+        return lines;
     }
 }

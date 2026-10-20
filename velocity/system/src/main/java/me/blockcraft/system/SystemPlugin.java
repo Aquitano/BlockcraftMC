@@ -261,7 +261,6 @@ public final class SystemPlugin {
         register(new AddPremiumCommand(support, proxy, lookup, messages).create());
         register(new SetMaxCommand(support, config, messages).create());
         register(new MotdCommand(support, config, messages).create());
-        register(new ServerJoinCommand(support, proxy, directory, messages).create());
         register(new ServersCommand(support, servers, config, messages).create());
         register(new ListCommand(support, visibility, messages).create());
         register(new WhoisCommand(support, lookup, repositories.players(), repositories.strikes(), repositories.warns(),
@@ -287,6 +286,7 @@ public final class SystemPlugin {
         register(new PartyChatCommand(support, parties, privateChat, messages).create());
         var joinMe = new JoinMeCommand(support, proxy, visibility, config, directory, messages);
         register(joinMe.create());
+        register(new ServerJoinCommand(support, proxy, directory, joinMe, messages).create());
         register(new SupportCommand(support, proxy, supportSessions, muteGate, messages).create());
         register(new YouTuberCommand(support, messages).create(), "youtube", "yt");
         register(new PremiumCommand(support, messages).create(), "shop");

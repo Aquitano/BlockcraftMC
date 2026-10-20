@@ -1,5 +1,6 @@
 package me.blockcraft.system;
 
+import com.velocitypowered.api.command.CommandSource;
 import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
@@ -11,7 +12,15 @@ import java.util.Locale;
 /** The follow-ups staff click on a line about a player; all of them are proxy commands, so a click works on any server. */
 public final class StaffButtons {
 
-    public enum Button { GOTO, WHOIS, ALTS }
+    public enum Button {
+        GOTO(SystemPermissions.GOTO), WHOIS(SystemPermissions.TEAM), ALTS(SystemPermissions.ALTS);
+
+        private final String permission;
+
+        Button(String permission) {
+            this.permission = permission;
+        }
+    }
 
     private final Messages messages;
 
@@ -25,11 +34,17 @@ public final class StaffButtons {
                 .hoverEvent(HoverEvent.showText(messages.get("staff-buttons.name-hover", Placeholder.unparsed("player", player))));
     }
 
-    /** Each button is led by a space, so the result goes straight after the notice. */
-    public Component of(String player, Button... buttons) {
+    /**
+     * Each button is led by a space, so the result goes straight after the notice. A viewer only gets the buttons whose
+     * command they may run.
+     */
+    public Component of(CommandSource viewer, String player, Button... buttons) {
         var name = Placeholder.unparsed("player", player);
         var row = Component.text();
         for (var button : buttons) {
+            if (!viewer.hasPermission(button.permission)) {
+                continue;
+            }
             String command = button.name().toLowerCase(Locale.ROOT);
             row.append(Component.space(), messages.get("staff-buttons." + command)
                     .clickEvent(ClickEvent.runCommand("/" + command + " " + player))

@@ -22,7 +22,6 @@ import me.blockcraft.common.sound.FeedbackSound;
 import me.blockcraft.system.pack.NetworkPack;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 
 import java.util.Map;
 import java.util.Optional;
@@ -107,7 +106,7 @@ public final class MessageCommand {
         var resolvers = TagResolver.resolver(
                 Placeholder.component("sender", ProxyRanks.displayName(sender, visibility.nick(sender))),
                 Placeholder.component("target", ProxyRanks.displayName(target, visibility.nick(target))),
-                Placeholder.component("message", LegacyComponentSerializer.legacyAmpersand().deserialize(text)));
+                Placeholder.component("message", CommandSupport.typedText(sender, text)));
         target.sendMessage(messages.get("msg.to-target", resolvers));
         if (choices.enabled(target, PlayerSetting.SOUNDS)) {
             target.playSound(FeedbackSound.NOTIFY.sound(NetworkPack.applied(target)));

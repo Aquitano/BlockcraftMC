@@ -16,6 +16,7 @@ import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -29,6 +30,7 @@ public final class JoinMeCommand {
     private final ServerDirectory directory;
     private final Messages messages;
     private final Map<UUID, Integer> usesToday = new ConcurrentHashMap<>();
+    private final Map<String, UUID> announcers = new ConcurrentHashMap<>();
 
     public JoinMeCommand(CommandSupport support, ProxyServer proxy, PlayerVisibility visibility, SystemConfig config,
                          ServerDirectory directory, Messages messages) {
@@ -56,6 +58,12 @@ public final class JoinMeCommand {
         usesToday.clear();
     }
 
+    /** A JoinMe stays live while the player who sent it is still on that server. */
+    public boolean isLive(String server) {
+        return Optional.ofNullable(announcers.get(server)).flatMap(proxy::getPlayer)
+                .filter(announcer -> server.equals(CommandSupport.currentServer(announcer))).isPresent();
+    }
+
     private void announce(Player player) {
         if (!player.hasPermission(SystemPermissions.JOIN_ME_NO_DELAY)) {
             int used = usesToday.merge(player.getUniqueId(), 1, Integer::sum);
@@ -65,6 +73,7 @@ public final class JoinMeCommand {
             }
         }
         String server = CommandSupport.currentServer(player);
+        announcers.put(server, player.getUniqueId());
         var frame = messages.get("joinme.frame");
         var blank = Component.space();
         var lines = List.of(

@@ -17,7 +17,6 @@ import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -187,6 +186,10 @@ public final class PartyManager {
             player.sendMessage(messages.get("party.full"));
             return;
         }
+        if (ignores.ignores(leader, player)) {
+            player.sendMessage(messages.get("party.join-requests-disabled", name(leader)));
+            return;
+        }
         var last = joinRequests.get(player.getUniqueId());
         if (last != null && Duration.between(last, Instant.now()).compareTo(JOIN_REQUEST_COOLDOWN) < 0) {
             player.sendMessage(messages.get("party.join-request-cooldown"));
@@ -274,9 +277,11 @@ public final class PartyManager {
             return;
         }
         var line = messages.get("party.chat", name(player),
-                Placeholder.component("message", LegacyComponentSerializer.legacyAmpersand().deserialize(message)));
-        proxy.getPlayer(party.get().leader()).ifPresent(leader -> leader.sendMessage(line));
-        broadcastToMembers(party.get(), line);
+                Placeholder.component("message", CommandSupport.typedText(player, message)));
+        Stream.concat(Stream.of(party.get().leader()), party.get().members().stream())
+                .flatMap(memberId -> proxy.getPlayer(memberId).stream())
+                .filter(recipient -> !ignores.ignores(recipient, player))
+                .forEach(recipient -> recipient.sendMessage(line));
     }
 
     public synchronized void followLeader(Player leader, RegisteredServer server) {

@@ -58,6 +58,7 @@ public final class SystemPermissions {
     public static final String CHAT_WORDS_BYPASS = "blockcraft.core.chatfilter.bypass.words";
     public static final String CHAT_ADS_BYPASS = "blockcraft.core.chatfilter.bypass.ads";
     public static final String CHAT_FILTER_NOTIFY = "blockcraft.core.chatfilter.notify";
+    public static final String CHAT_COLOR = "blockcraft.chat.color";
 
     public static final String SEEN = ROOT + "seen";
     public static final String PLAYTIME = ROOT + "playtime";

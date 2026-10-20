@@ -49,6 +49,7 @@ staff:
     - "<muted>Reporter: <accent><reporter>"
     - "<muted>Grund: <accent><reason>"
     - "<muted>Server: <accent><server>"
+  hover-goto:
     - ""
     - "<muted>Klicke, um zu <accent><reported><muted> zu springen."
   reason: "<prefix><muted>Grund: <accent><reason>"

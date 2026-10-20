@@ -510,6 +510,7 @@ addpremium:
   failed: "<prefix><error>Die Rechte für <accent><player> <error>konnten nicht gesetzt werden. Siehe Konsole."
 serverjoin:
   unknown: "<prefix><error>Der Server ist nicht verfügbar."
+  denied: "<prefix><error>Diesem Server kannst du gerade nicht direkt beitreten."
   closed: "<prefix><error>Auf diesem Server ist gerade kein Platz frei."
 servers:
   empty: "<prefix><error>Es ist kein Server eingetragen."
@@ -819,6 +820,7 @@ party:
   join-request: "<primary>Party <arrow><reset><accent><player><success> möchte deiner Party beitreten."
   join-request-click: "<primary>Party <arrow><reset><success>Lade <accent><player><success> mit <accent>/party invite <player><success> ein."
   join-request-hover: "<accent>Klicke, um <player> einzuladen."
+  join-requests-disabled: "<primary>Party <arrow><reset><error><player> <muted>nimmt gerade keine Beitrittsanfragen an."
   join-request-cooldown: "<primary>Party <arrow><reset><error>Du hast gerade erst um eine Einladung gebeten."
   not-invited: "<primary>Party <arrow><reset><muted>Du wurdest nicht eingeladen."
   invite-expired: "<primary>Party <arrow><reset><error>Diese Einladung ist abgelaufen."

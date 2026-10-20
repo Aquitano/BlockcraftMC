@@ -14,7 +14,9 @@ import me.blockcraft.common.player.PlayerReference;
 import me.blockcraft.system.PlayerVisibility;
 import me.blockcraft.system.SystemPermissions;
 import me.blockcraft.system.rank.ProxyRanks;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -121,6 +123,13 @@ public final class CommandSupport {
     /** Who acts: the player's account, or the console by name alone. */
     public static PlayerReference sender(CommandSource source) {
         return source instanceof Player player ? PlayerReference.known(player.getUniqueId(), player.getUsername()) : PlayerReference.named("Console");
+    }
+
+    /** What a player typed, with legacy {@code &} codes only for those who may colour public chat. */
+    public static Component typedText(Player sender, String text) {
+        return sender.hasPermission(SystemPermissions.CHAT_COLOR)
+                ? LegacyComponentSerializer.legacyAmpersand().deserialize(text)
+                : Component.text(text);
     }
 
     public static String currentServer(Player player) {

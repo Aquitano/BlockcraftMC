@@ -82,6 +82,10 @@ public final class ServerDirectory {
         return get(server).map(ServerRecord::group);
     }
 
+    public boolean isLobby(String server) {
+        return groupOf(server).filter(lobbyGroup::equals).isPresent();
+    }
+
     /** Whether a round is running there, which nobody joins but a friend may watch; a lobby is never watched. */
     public boolean isWatchable(String server) {
         return get(server)

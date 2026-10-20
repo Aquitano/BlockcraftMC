@@ -9,7 +9,9 @@ import me.blockcraft.system.command.player.PartyCommand;
 import me.blockcraft.system.ignore.IgnoreList;
 import me.blockcraft.system.network.ServerDirectory;
 import me.blockcraft.system.party.PartyManager;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -154,6 +156,21 @@ public class PartyManagerTest {
     }
 
     @Test
+    public void partyChatParsesLegacyCodesOnlyForSendersWhoMayColour() {
+        var leader = proxy.join("Leader");
+        var member = proxy.join("Member", SystemPermissions.CHAT_COLOR);
+        choices.set(member, PlayerSetting.PARTY_INVITES, PlayerSetting.value(true));
+        parties.invite(leader, member);
+        parties.accept(member);
+
+        parties.chat(leader, "&kplain");
+        assertEquals(chatLine("Leader", Component.text("&kplain")), proxy.received(member).getLast());
+
+        parties.chat(member, "&acoloured");
+        assertEquals(chatLine("Member", LegacyComponentSerializer.legacyAmpersand().deserialize("&acoloured")), proxy.received(leader).getLast());
+    }
+
+    @Test
     public void commandsKeepPermissionAndVisibilityChecksBeforePartyChanges() throws Exception {
         var commands = new CommandDispatcher<CommandSource>();
         commands.getRoot().addChild(new PartyCommand(new CommandSupport(visibility, messages), new PlayerLookup(proxy.server, visibility, null, messages), parties, messages).create().getNode());
@@ -172,5 +189,9 @@ public class PartyManagerTest {
         assertFalse(parties.isInParty(ordinary.getUniqueId()));
         assertFalse(parties.isInParty(inviter.getUniqueId()));
         assertTrue(proxy.received(target).isEmpty());
+    }
+
+    private Component chatLine(String sender, Component message) {
+        return messages.get("party.chat", Placeholder.unparsed("player", sender), Placeholder.component("message", message));
     }
 }
