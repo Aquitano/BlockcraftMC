@@ -5,6 +5,7 @@ import me.blockcraft.common.nick.Nick;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.luckperms.api.LuckPermsProvider;
+import net.luckperms.api.model.user.User;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -68,11 +69,15 @@ public final class ProxyRanks {
         }
     }
 
-    private static int weight(UUID player) {
-        var user = LuckPermsProvider.get().getUserManager().loadUser(player).join();
+    /** The heaviest group the user inherits. */
+    public static int weight(User user) {
         return user.getInheritedGroups(user.getQueryOptions()).stream()
                 .mapToInt(group -> group.getWeight().orElse(0))
                 .max()
                 .orElse(0);
+    }
+
+    private static int weight(UUID player) {
+        return weight(LuckPermsProvider.get().getUserManager().loadUser(player).join());
     }
 }

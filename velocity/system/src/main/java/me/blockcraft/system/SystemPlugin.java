@@ -56,7 +56,6 @@ import me.blockcraft.system.command.player.PremiumCommand;
 import me.blockcraft.system.command.player.SeenCommand;
 import me.blockcraft.system.command.player.SupportCommand;
 import me.blockcraft.system.command.player.YouTuberCommand;
-import me.blockcraft.system.command.staff.AddPremiumCommand;
 import me.blockcraft.system.command.staff.AltsCommand;
 import me.blockcraft.system.command.staff.BroadcastCommand;
 import me.blockcraft.system.command.staff.ChatSlowCommand;
@@ -65,6 +64,7 @@ import me.blockcraft.system.command.staff.FindCommand;
 import me.blockcraft.system.command.staff.GlobalMuteCommand;
 import me.blockcraft.system.command.staff.GotoCommand;
 import me.blockcraft.system.command.staff.ListCommand;
+import me.blockcraft.system.command.staff.RankCommand;
 import me.blockcraft.system.command.staff.MotdCommand;
 import me.blockcraft.system.command.staff.RestartCommand;
 import me.blockcraft.system.command.staff.ServerJoinCommand;
@@ -243,7 +243,8 @@ public final class SystemPlugin {
         register(new KickCommand(support, proxy, lookup, messages).create());
         register(new CheckCommand(support, lookup, punishments, messages).create());
         register(new HistoryCommand(support, lookup, punishments, config, messages).create());
-        register(new StaffLogCommand(support, lookup, new StaffActionRepository(database), config, messages, staffButtons).create());
+        var staffActions = new StaffActionRepository(database);
+        register(new StaffLogCommand(support, lookup, staffActions, config, messages, staffButtons).create());
         register(new StrafeCommand(support, moderationActions, config, messages).create());
         new StrikeCommands(support, lookup, repositories.strikes(), punishments, config, messages).create().forEach(this::register);
         new WarnCommands(support, proxy, lookup, repositories.warns(), config, messages).create().forEach(this::register);
@@ -258,7 +259,9 @@ public final class SystemPlugin {
         register(new BroadcastCommand(support, proxy, messages).create());
         register(new WartungenCommand(this, support, proxy, settings, messages).create());
         register(new RestartCommand(this, support, proxy, messages).create());
-        register(new AddPremiumCommand(support, proxy, lookup, messages).create());
+        if (proxy.getPluginManager().isLoaded("luckperms")) {
+            register(new RankCommand(support, lookup, staffActions, config.calendar().zone(), messages, logger).create());
+        }
         register(new SetMaxCommand(support, config, messages).create());
         register(new MotdCommand(support, config, messages).create());
         register(new ServersCommand(support, servers, config, messages).create());

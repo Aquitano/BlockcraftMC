@@ -102,6 +102,7 @@
         {"type": "weight", "key": "weight.40", "value": true},
         {"type": "prefix", "key": "prefix.40.&bDEV &8● &b", "value": true},
         {"type": "permission", "key": "blockcraft.*", "value": true},
+        {"type": "permission", "key": "blockcraft.system.rank", "value": false},
         {"type": "permission", "key": "velocity.command.*", "value": true},
         {"type": "permission", "key": "velocity.command.server", "value": true},
         {"type": "permission", "key": "minecraft.command.time", "value": true}
@@ -112,7 +113,8 @@
         {"type": "inheritance", "key": "group.dev", "value": true},
         {"type": "weight", "key": "weight.50", "value": true},
         {"type": "prefix", "key": "prefix.50.&4ADMIN &8● &4", "value": true},
-        {"type": "permission", "key": "luckperms.*", "value": true}
+        {"type": "permission", "key": "luckperms.*", "value": true},
+        {"type": "permission", "key": "blockcraft.system.rank", "value": true}
       ]
     },
     "owner": {

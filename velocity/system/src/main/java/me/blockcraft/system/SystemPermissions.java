@@ -29,7 +29,7 @@ public final class SystemPermissions {
     public static final String MAINTENANCE = ROOT + "wartungen";
     public static final String MAINTENANCE_JOIN = ROOT + "wartungen.join";
     public static final String RESTART = ROOT + "restart";
-    public static final String ADD_PREMIUM = ROOT + "addpremium";
+    public static final String RANK = ROOT + "rank";
     public static final String SET_MAX = ROOT + "setmax";
     public static final String MOTD = ROOT + "motd";
     public static final String JOIN_ME = ROOT + "joinme";
@@ -46,8 +46,6 @@ public final class SystemPermissions {
     public static final String FULL_JOIN = ROOT + "fulljoin";
     public static final String BLOCKED_COMMANDS_BYPASS = ROOT + "blockedcommands.bypass";
     public static final String BYPASS_RANK = ROOT + "bypass-rank";
-    public static final String PREMIUM_GROUP_NAME = "premium";
-    public static final String PREMIUM_GROUP = "group." + PREMIUM_GROUP_NAME;
 
     /** The Paper side's nodes for looking through vanish and nicks; one node covers both sides. */
     public static final String SEE_VANISHED = "blockcraft.core.vanish.see";

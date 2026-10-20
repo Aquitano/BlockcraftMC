@@ -342,6 +342,7 @@ stafflog:
     "kill.entities": "Entities entfernt"
     "nick.on": "Nick an"
     "nick.off": "Nick aus"
+    "rank": "Rang gesetzt"
     "speed": "Geschwindigkeit gesetzt"
     "staff.on": "Staff-Modus an"
     "staff.off": "Staff-Modus aus"
@@ -502,12 +503,24 @@ restart:
   countdown-5: "<prefix><muted>Das <error><ip> Netzwerk <muted>startet in <error>5 Sekunden <muted>neu."
   kick-screen: "<prefix><muted>Der Server startet neu."
   already-pending: "<prefix><error>Ein Neustart läuft bereits."
-addpremium:
-  usage: "<prefix><error>/addpremium \\<Spieler>"
-  done: "<prefix><muted>Du hast die <accent>Berechtigung <muted>erfolgreich hinzugefügt."
-  has-rights: "<prefix><accent><player><muted> hat nun die <accent>Rechte<muted>."
-  unavailable: "<prefix><error>LuckPerms ist nicht verfügbar."
-  failed: "<prefix><error>Die Rechte für <accent><player> <error>konnten nicht gesetzt werden. Siehe Konsole."
+rank:
+  usage: "<prefix><muted>Ausführung: <error>/rank \\<Spieler> [Rang] [Dauer]"
+  current: "<prefix><accent><player> <muted>hat den Rang <accent><rank><muted>."
+  current-temporary: "<prefix><accent><player> <muted>hat bis <accent><until> <muted>den Rang <accent><rank><muted>, danach wieder <accent><fallback><muted>."
+  done: "<prefix><accent><player> <muted>hat jetzt den Rang <accent><rank><muted>."
+  done-temporary: "<prefix><accent><player> <muted>hat jetzt bis <accent><until> <muted>den Rang <accent><rank><muted>, danach wieder <accent><fallback><muted>."
+  received: "<prefix><muted>Dein Rang ist jetzt <accent><rank><muted>."
+  received-temporary: "<prefix><muted>Du hast jetzt bis <accent><until> <muted>den Rang <accent><rank><muted>."
+  unknown: "<prefix><error>Den Rang <accent><rank> <error>gibt es nicht."
+  above-own: "<prefix><error>Du kannst nur Ränge unter deinem eigenen vergeben."
+  not-above: "<prefix><error>Ein Rang auf Zeit muss über dem festen Rang <accent><fallback> <error>liegen."
+  too-long: "<prefix><error>Ein Rang auf Zeit dauert höchstens <accent><days> Tage<error>. Für einen festen lass die Dauer weg."
+  units:
+    - "<prefix><muted>Die Dauer ist ein Wort aus Zahl und Einheit, zum Beispiel <error>12h<muted>, <error>7d <muted>oder <error>1mon<muted>."
+    - "<prefix><muted>Einheiten: <error>s <muted>| <error>m <muted>| <error>h <muted>| <error>d <muted>| <error>w <muted>| <error>mon <muted>| <error>y"
+  failed: "<prefix><error>Der Rang von <accent><player> <error>konnte nicht geladen oder gespeichert werden. Siehe Konsole."
+  # Java date pattern for <until>; the German order belongs to the text, not to the code.
+  date-format: "dd.MM.yyyy HH:mm"
 serverjoin:
   unknown: "<prefix><error>Der Server ist nicht verfügbar."
   denied: "<prefix><error>Diesem Server kannst du gerade nicht direkt beitreten."

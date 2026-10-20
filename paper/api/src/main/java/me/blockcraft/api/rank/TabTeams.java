@@ -34,7 +34,7 @@ import java.util.UUID;
 
 /**
  * Sorts the tab list by LuckPerms group weight and shows the group's prefix in front of each name, on every
- * Paper server. The heaviest inherited group counts, not the primary one: /addpremium and the shop only add an
+ * Paper server. The heaviest inherited group counts, not the primary one: a /rank on time and the shop only add an
  * inheritance node; a nicked player sorts and reads as the group their nick wears. Every player has their own
  * scoreboard for the sidebar, so the teams are written to all of them; entries are remembered per UUID because a
  * nick changes the name the tab list is keyed by. Vanished players get their own team per group, suffixed with a

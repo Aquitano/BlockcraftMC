@@ -43,8 +43,8 @@ carries the name colour, so it ends in a colour code.
 | `youtuber` | `&5YT &8● &5`      | premium plus `/joinme` without delay, `/bc`, `/nick`                              |
 | `supporter`| `&eSUP &8● &e`     | premium plus team chat, reports and support requests, mute, warn, kick, check and history, clear chat, chatting during a global mute, seeing through vanish and nicks |
 | `moderator`| `&cMOD &8● &c`     | supporter plus ban, strikes, warn lists, alts, `/goto`, global mute and slow chat, freeze, vanish, staff mode, invsee (read only), teleport |
-| `dev`      | `&bDEV &8● &b`     | premium plus every `blockcraft.*` and `velocity.command.*` permission             |
-| `admin`    | `&4ADMIN &8● &4`   | dev plus `luckperms.*`                                                            |
+| `dev`      | `&bDEV &8● &b`     | premium plus every `blockcraft.*` and `velocity.command.*` permission except `/rank` |
+| `admin`    | `&4ADMIN &8● &4`   | dev plus `luckperms.*` and `/rank`                                                |
 | `owner`    | `&bOWNER &8● &b`   | admin plus `*`                                                                    |
 
 `default` negates `minecraft.command.msg`, `minecraft.command.teammsg` and `minecraft.command.me`. Paper
@@ -55,9 +55,15 @@ proxy's `/msg`, `/tell` and `/w` remain. LuckPerms lets such an exact node win o
 reopen it for staff.
 
 Import it into every LuckPerms database, and again after every change to it (`gzip -k luckperms/ranks.json`, copy the
-`.gz` into LuckPerms' data folder, `/lp import ranks`), then assign players with `/lp user <name> parent set <group>`.
+`.gz` into LuckPerms' data folder, `/lp import ranks`), then assign players with `/rank <name> <group>`.
 The import replaces each group's permissions with the file's and leaves players' groups alone, so a permission set
 by hand in game is gone after the next import unless it is in the file.
+
+`/rank <name>` shows a player's rank on the proxy; `/rank <name> <group>` replaces every group they had, like
+`/lp user <name> parent set <group>`, and `/rank <name> <group> 30d` gives a rank on time on top of the one for good,
+which LuckPerms takes away again when it runs out. Staff change only players below them and only to groups below
+their own, by group weight; the console may do anything, so the first owner is still set from a console. Every change
+lands in `/stafflog`.
 
 Every plugin ships a `messages.yml` (MiniMessage, German by default) and a `config.yml`; both are copied to the plugin's
 data folder on first start and can be edited there. Keys the edited file lacks come from the bundled default, so a
@@ -313,7 +319,7 @@ item filters, enchantments) and add the rank guard; `/time` is vanilla's, with `
 console and `rcon-cli` run every core command that names a target. Every staff action on a player (gamemode,
 teleports, invsee, sudo, clear, kill, heal, fly, speed, vanish, freeze, staff mode, nick, `/build`, `/coins give|take|set`)
 is one row in
-`bc_staff_actions`, written through `BlockcraftApi.get().audit()`; the actions under `audit.notify` in
+`bc_staff_actions`, written through `BlockcraftApi.get().audit()`, and the proxy adds its `/rank` changes; the actions under `audit.notify` in
 BlockcraftAPI's `config.yml` also reach everyone with `blockcraft.audit.notify`. `/stafflog <player> [page]`
 (`blockcraft.system.stafflog`) lists what was done by or to a player, newest first.
 
