@@ -31,6 +31,7 @@ search:
     - "<prefix><muted>Die Suchzeit hat begonnen. Baue so viele Emerald-Erze ab wie du kannst!"
     - "<prefix><muted>Die Suchzeit endet in <accent><minutes><muted> Minuten!"
   ends-minutes: "<prefix><muted>Die <white>Such-Phase <muted>endet in <accent><minutes><muted> Minuten!"
+  ends-minute: "<prefix><muted>Die <white>Such-Phase <muted>endet in <accent>1<muted> Minute!"
   ends-seconds: "<prefix><muted>Die <white>Such-Phase <muted>endet in <accent><seconds> <muted>Sekunden!"
   actionbar: "<arrow><success>Emeralds: <muted><emeralds>"
 shopping:

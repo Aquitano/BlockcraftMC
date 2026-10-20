@@ -242,7 +242,8 @@ public final class Game {
             switch (remaining) {
                 case 120, 60 -> {
                     Sounds.NOTIFY.playToAll();
-                    broadcast("search.ends-minutes", Formatter.number("minutes", remaining / SECONDS_PER_MINUTE));
+                    int minutes = remaining / SECONDS_PER_MINUTE;
+                    broadcast(minutes == 1 ? "search.ends-minute" : "search.ends-minutes", Formatter.number("minutes", minutes));
                 }
                 case 15, 5 -> {
                     Sounds.NOTIFY.playToAll();
@@ -337,7 +338,7 @@ public final class Game {
     }
 
     public void respawn(PlayerRespawnEvent event) {
-        if (!phase.allowsDamage()) {
+        if (phase != GamePhase.DEATHMATCH && phase != GamePhase.ENDING) {
             return;
         }
         var player = event.getPlayer();
@@ -350,6 +351,9 @@ public final class Game {
             return;
         }
         spawns.get(spawns.randomDeathmatch()).ifPresent(event::setRespawnLocation);
+        if (phase == GamePhase.ENDING) {
+            return;
+        }
         Tasks.sync(plugin, () -> {
             config.combat().apply(player);
             player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 120, 1));

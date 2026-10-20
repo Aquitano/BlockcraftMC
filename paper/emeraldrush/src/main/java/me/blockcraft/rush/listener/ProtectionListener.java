@@ -18,7 +18,7 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 /**
- * EmeraldRush's rules beyond the shared lobby's: nobody is hurt or drops anything before the deathmatch, and falling
+ * EmeraldRush's rules beyond the shared lobby's: nobody is hurt or drops anything outside the deathmatch, and falling
  * into the void returns to the phase's spawn; the inventory stays locked while searching; nobody gets hungry; the
  * deathmatch remembers a healthy player's loadout for the respawn; water in the lobby lets players jump high.
  */

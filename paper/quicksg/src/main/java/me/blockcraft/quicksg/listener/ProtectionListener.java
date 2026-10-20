@@ -8,7 +8,10 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 
-/** QuickSG's rules beyond the shared lobby's: nobody is hurt in the protection time, and only build mode builds. */
+/**
+ * QuickSG's rules beyond the shared lobby's: nobody is hurt in the protection time or once the round has ended, and
+ * only build mode builds.
+ */
 public final class ProtectionListener implements Listener {
 
     private final Game game;
@@ -21,7 +24,7 @@ public final class ProtectionListener implements Listener {
 
     @EventHandler
     public void onDamage(EntityDamageEvent event) {
-        if (game.protection()) {
+        if (game.protection() || game.isEnding()) {
             event.setCancelled(true);
         }
     }

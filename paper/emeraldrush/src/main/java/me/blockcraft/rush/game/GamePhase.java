@@ -8,7 +8,7 @@ public enum GamePhase {
     ENDING;
 
     public boolean allowsDamage() {
-        return this == DEATHMATCH || this == ENDING;
+        return this == DEATHMATCH;
     }
 
     /** The shared round's step this phase belongs to; the three phases of play are all one running round. */

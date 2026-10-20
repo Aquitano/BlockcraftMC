@@ -268,7 +268,6 @@ public final class Duel {
         if (!isIngame() || !isParticipant(victim)) {
             return;
         }
-        event.deathMessage(null);
         if (mode == DuelMode.SUPERJUMP) {
             fell(victim);
             round.respawn(victim, RESPAWN_DELAY_TICKS);

@@ -108,6 +108,10 @@ public final class Game {
         return round.phase() == GamePhase.INGAME;
     }
 
+    public boolean isEnding() {
+        return round.phase() == GamePhase.ENDING;
+    }
+
     public boolean protection() {
         return protection;
     }
@@ -240,10 +244,10 @@ public final class Game {
 
     private void startProtection() {
         int seconds = config.countdowns().protection();
-        Bukkit.broadcast(messages.get("protection.ends-in", Formatter.number("seconds", seconds)));
+        announceProtection(seconds);
         protectionTimer = round.clock(new TimerBar(messages, "timer.protection", seconds), remaining -> {
             if (PROTECTION_ANNOUNCEMENTS.contains(remaining)) {
-                Bukkit.broadcast(messages.get("protection.ends-in", Formatter.number("seconds", remaining)));
+                announceProtection(remaining);
             }
             if (round.clockOnSidebar()) {
                 refreshScoreboards();
@@ -256,6 +260,11 @@ public final class Game {
                 BlockcraftApi.get().notifications().important(player, messages.get("protection.fight"));
             });
         });
+    }
+
+    private void announceProtection(int seconds) {
+        Bukkit.broadcast(messages.get(seconds == 1 ? "protection.ends-in-second" : "protection.ends-in",
+                Formatter.number("seconds", seconds)));
     }
 
     /** Without boss bars the sidebar tells the time: the protection's while it lasts, then the round's. */
