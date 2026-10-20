@@ -5,6 +5,7 @@ import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.command.CommandRegistry;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.signs.command.CreateSignCommand;
+import me.blockcraft.signs.listener.SignBreakListener;
 import me.blockcraft.signs.listener.SignClickListener;
 import me.blockcraft.signs.sign.SignRenderer;
 import me.blockcraft.signs.sign.SignStore;
@@ -25,6 +26,7 @@ public final class StatusSignsPlugin extends JavaPlugin {
         signs.start();
 
         getServer().getPluginManager().registerEvents(new SignClickListener(this, signs), this);
+        getServer().getPluginManager().registerEvents(new SignBreakListener(signs), this);
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event ->
                 new CommandRegistry(event.registrar(), messages).register(CreateSignCommand.create(signs, messages)));
     }

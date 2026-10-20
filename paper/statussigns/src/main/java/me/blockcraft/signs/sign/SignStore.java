@@ -48,11 +48,10 @@ public final class SignStore {
         return signs;
     }
 
+    /** Replaces every entry at the sign's location. */
     public void add(StatusSign sign) {
-        ConfigurationSection root = yaml.getConfigurationSection(ROOT);
-        if (root == null) {
-            root = yaml.createSection(ROOT);
-        }
+        var root = Optional.ofNullable(yaml.getConfigurationSection(ROOT)).orElseGet(() -> yaml.createSection(ROOT));
+        keysAt(root, sign.location()).forEach(key -> root.set(key, null));
         int nextId = root.getKeys(false).stream().mapToInt(SignStore::parseId).max().orElse(0) + 1;
         ConfigurationSection entry = root.createSection(String.valueOf(nextId));
         entry.set("group", sign.group());
@@ -62,6 +61,24 @@ public final class SignStore {
         loc.set("y", sign.location().getBlockY());
         loc.set("z", sign.location().getBlockZ());
         save();
+    }
+
+    public void remove(Location location) {
+        ConfigurationSection root = yaml.getConfigurationSection(ROOT);
+        if (root != null) {
+            keysAt(root, location).forEach(key -> root.set(key, null));
+            save();
+        }
+    }
+
+    private static List<String> keysAt(ConfigurationSection root, Location location) {
+        return root.getKeys(false).stream().filter(key -> {
+            ConfigurationSection loc = root.getConfigurationSection(key + ".loc");
+            return loc != null && location.getWorld().getName().equals(loc.getString("world"))
+                    && loc.getInt("x") == location.getBlockX()
+                    && loc.getInt("y") == location.getBlockY()
+                    && loc.getInt("z") == location.getBlockZ();
+        }).toList();
     }
 
     /** Empty while the sign's world is not loaded. */

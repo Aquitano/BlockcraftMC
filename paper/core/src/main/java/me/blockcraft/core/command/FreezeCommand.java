@@ -9,6 +9,7 @@ import me.blockcraft.api.audit.StaffAudit;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.core.staff.FreezeService;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import org.bukkit.entity.Player;
 
 public final class FreezeCommand {
 
@@ -24,17 +25,19 @@ public final class FreezeCommand {
                 })
                 .then(Commands.argument("player", ArgumentTypes.player())
                         .executes(context -> {
-                            var staff = context.getSource().getPlayerOrThrow();
-                            var target = Players.resolve(context, "player");
-                            if (!TargetGuard.notSelf(staff, target, messages) || !TargetGuard.mayTarget(staff, target, messages)) {
-                                return Command.SINGLE_SUCCESS;
-                            }
-                            boolean frozen = freeze.toggle(target, staff);
-                            audit.record(staff, frozen ? "freeze.on" : "freeze.off", target);
-                            staff.sendMessage(messages.get(frozen ? "freeze.frozen" : "freeze.unfrozen",
-                                    Placeholder.unparsed("player", target.getName())));
+                            toggle(context.getSource().getPlayerOrThrow(), Players.resolve(context, "player"), freeze, audit, messages);
                             return Command.SINGLE_SUCCESS;
                         }))
                 .build();
+    }
+
+    public static void toggle(Player staff, Player target, FreezeService freeze, StaffAudit audit, Messages messages) {
+        if (!TargetGuard.notSelf(staff, target, messages) || !TargetGuard.mayTarget(staff, target, messages)) {
+            return;
+        }
+        boolean frozen = freeze.toggle(target, staff);
+        audit.record(staff, frozen ? "freeze.on" : "freeze.off", target);
+        staff.sendMessage(messages.get(frozen ? "freeze.frozen" : "freeze.unfrozen",
+                Placeholder.unparsed("player", target.getName())));
     }
 }

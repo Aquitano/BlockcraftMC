@@ -1,6 +1,7 @@
 package me.blockcraft.core.staff;
 
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.menu.Menu;
 import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.api.task.SerialTasks;
 import me.blockcraft.common.message.Messages;
@@ -93,6 +94,7 @@ public final class FreezeService implements Listener {
         var uuid = target.getUniqueId();
         frozen.add(uuid);
         target.leaveVehicle();
+        Menu.close(target);
         writes.run(uuid, () -> repository.freeze(uuid, issuer));
         announce(target);
     }
@@ -135,6 +137,7 @@ public final class FreezeService implements Listener {
         if (pending.remove(player.getUniqueId())) {
             frozen.add(player.getUniqueId());
             player.leaveVehicle();
+            Menu.close(player);
             announce(player);
         }
     }

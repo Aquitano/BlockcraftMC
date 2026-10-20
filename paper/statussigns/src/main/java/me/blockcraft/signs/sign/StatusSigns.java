@@ -36,8 +36,14 @@ public final class StatusSigns {
         store.add(sign);
     }
 
+    public void remove(Location location) {
+        if (signs.remove(location) != null) {
+            store.remove(location);
+        }
+    }
+
     public Optional<StatusSign> find(Location location) {
-        return Optional.ofNullable(signs.get(location));
+        return Optional.ofNullable(signs.get(location)).filter(sign -> StatusSign.isSignType(location.getBlock().getType()));
     }
 
     public GroupStatus status(StatusSign sign) {

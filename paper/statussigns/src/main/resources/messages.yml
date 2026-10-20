@@ -11,5 +11,5 @@ sign:
   retry: "<muted>Erneut prüfen"
 createsign:
   usage: "<prefix><accent>/createsign <success>\\<Gruppe>"
-  not-a-sign: "<prefix><error>Du schaust nicht auf ein gültiges Schild!"
+  not-a-sign: "<prefix><error>Du schaust nicht auf ein Stand- oder Wandschild! Hängeschilder gehen nicht."
   created: "<prefix><muted>Status-Schild für <accent><name><muted> erstellt."

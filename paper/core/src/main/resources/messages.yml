@@ -26,7 +26,7 @@ commands:
   lag:
     description: "Zeigt TPS, MSPT, Speicher und Welten dieses Servers"
   sethealth:
-    description: "Setzt die Herzen eines Spielers"
+    description: "Setzt die Lebenspunkte eines Spielers"
   skull:
     description: "Gibt dir einen Spielerkopf"
   speed:
@@ -121,8 +121,8 @@ lag:
     - "<prefix><muted>Spieler: <white><online><muted>/<white><slots>"
   world: "<prefix><bullet><white><world><dark>: <white><chunks> <muted>Chunks, <white><entities> <muted>Entities"
 sethealth:
-  usage: "<prefix><error>benutze /sethealth [Name] [Herzen]"
-  done: "<prefix><white><player><muted> hat nun <white><health><muted> Herzen!"
+  usage: "<prefix><error>Benutze /sethealth [Name] [Lebenspunkte]"
+  done: "<prefix><white><player><muted> hat nun <white><health><muted> Lebenspunkte!"
 skull:
   usage: "<prefix><muted>Benutze <white>/skull [name]"
   received: "<prefix><muted>Du hast den Kopf von <white><player><muted> erhalten!"

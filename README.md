@@ -41,7 +41,7 @@ carries the name colour, so it ends in a colour code.
 | `default`  | `&7SPIELER &8● &7` | party invite and kick, `/msg` and `/r`, `/friend`, `/seen`, `/playtime`, `/discord` |
 | `premium`  | `&6PREMIUM &8● &6` | default plus premium lobby area, double jump, join when full, `/joinme`, chat colours, own `/ptime` kept across servers |
 | `youtuber` | `&5YT &8● &5`      | premium plus `/joinme` without delay, `/bc`, `/nick`                              |
-| `supporter`| `&eSUP &8● &e`     | premium plus team chat, reports and support requests, mute, warn, kick, check and history, clear chat, seeing through vanish and nicks |
+| `supporter`| `&eSUP &8● &e`     | premium plus team chat, reports and support requests, mute, warn, kick, check and history, clear chat, chatting during a global mute, seeing through vanish and nicks |
 | `moderator`| `&cMOD &8● &c`     | supporter plus ban, strikes, warn lists, alts, `/goto`, global mute and slow chat, freeze, vanish, staff mode, invsee (read only), teleport |
 | `dev`      | `&bDEV &8● &b`     | premium plus every `blockcraft.*` and `velocity.command.*` permission             |
 | `admin`    | `&4ADMIN &8● &4`   | dev plus `luckperms.*`                                                            |

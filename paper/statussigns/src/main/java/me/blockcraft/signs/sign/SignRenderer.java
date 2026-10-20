@@ -28,7 +28,8 @@ public final class SignRenderer {
 
     public void render(StatusSign statusSign, GroupStatus status) {
         if (!statusSign.location().isChunkLoaded()) return;
-        if (!(statusSign.location().getBlock().getState() instanceof Sign sign)) {
+        var signBlock = statusSign.location().getBlock();
+        if (!StatusSign.isSignType(signBlock.getType()) || !(signBlock.getState() instanceof Sign sign)) {
             return;
         }
         var front = sign.getSide(Side.FRONT);

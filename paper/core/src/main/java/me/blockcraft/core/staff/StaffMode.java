@@ -9,6 +9,7 @@ import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.moderation.PunishmentRepository;
 import me.blockcraft.common.report.ReportRepository;
+import me.blockcraft.core.command.FreezeCommand;
 import me.blockcraft.core.command.InvseeCommand;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
@@ -185,12 +186,7 @@ public final class StaffMode implements Listener {
         event.setCancelled(true);
         StaffTool.of(staff.getInventory().getItemInMainHand()).ifPresent(tool -> {
             switch (tool) {
-                case FREEZE -> {
-                    boolean frozen = freeze.toggle(target, staff);
-                    audit.record(staff, frozen ? "freeze.on" : "freeze.off", target);
-                    staff.sendMessage(messages.get(frozen ? "freeze.frozen" : "freeze.unfrozen",
-                            Placeholder.unparsed("player", target.getName())));
-                }
+                case FREEZE -> FreezeCommand.toggle(staff, target, freeze, audit, messages);
                 case INVSEE -> InvseeCommand.open(staff, target, audit, messages);
                 case INFO -> info.show(staff, target);
                 case SPECTATE -> spectate(staff, target);

@@ -9,7 +9,6 @@ import me.blockcraft.common.message.Messages;
 import me.blockcraft.signs.sign.StatusSign;
 import me.blockcraft.signs.sign.StatusSigns;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import org.bukkit.Tag;
 import org.bukkit.entity.Player;
 
 public final class CreateSignCommand {
@@ -34,7 +33,7 @@ public final class CreateSignCommand {
                         .executes(context -> {
                             var player = context.getSource().getPlayerOrThrow();
                             var target = player.getTargetBlockExact(TARGET_RANGE);
-                            if (target == null || !Tag.ALL_SIGNS.isTagged(target.getType())) {
+                            if (target == null || !StatusSign.isSignType(target.getType())) {
                                 player.sendMessage(messages.get("createsign.not-a-sign"));
                                 return Command.SINGLE_SUCCESS;
                             }

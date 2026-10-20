@@ -18,10 +18,12 @@ public final class ReflashCommand {
                 .requires(CorePermission.player("reflash"))
                 .executes(context -> {
                     var player = context.getSource().getPlayerOrThrow();
-                    for (var viewer : Bukkit.getOnlinePlayers()) {
-                        viewer.hidePlayer(plugin, player);
-                        viewer.showPlayer(plugin, player);
-                    }
+                    Bukkit.getOnlinePlayers().stream()
+                            .filter(other -> !other.equals(player) && player.canSee(other))
+                            .forEach(other -> {
+                                player.hidePlayer(plugin, other);
+                                player.showPlayer(plugin, other);
+                            });
                     player.sendMessage(messages.get("reflash.done"));
                     return Command.SINGLE_SUCCESS;
                 })

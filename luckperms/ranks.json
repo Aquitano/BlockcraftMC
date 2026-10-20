@@ -66,6 +66,7 @@
         {"type": "permission", "key": "blockcraft.system.wartungen.join", "value": true},
         {"type": "permission", "key": "blockcraft.core.chatfilter.notify", "value": true},
         {"type": "permission", "key": "blockcraft.core.chat.spam.bypass", "value": true},
+        {"type": "permission", "key": "blockcraft.globalmute.bypass", "value": true},
         {"type": "permission", "key": "blockcraft.core.vanish.see", "value": true},
         {"type": "permission", "key": "blockcraft.nick.see", "value": true}
       ]
