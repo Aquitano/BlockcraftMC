@@ -46,6 +46,7 @@ x-paper-env: &paper-env
 services:
   mariadb:
     image: mariadb:11.8
+    restart: unless-stopped
     environment:
       TZ: Europe/Berlin
       MARIADB_DATABASE: blockcraft

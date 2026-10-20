@@ -1,7 +1,7 @@
 # BlockcraftMC Plugins
 
 Paper and Velocity plugins for the BlockcraftMC minigame network, originally written for Spigot 1.8.8 / BungeeCord in
-2018-2019 and ported to Paper 26.2 / Velocity 4 in 2026.
+2018-2019 and ported to Paper 26.3 / Velocity 4 in 2026.
 
 See [Easter eggs and lobby activities](EASTER_EGGS.md) for rewards, calendar events, map setup, and gameplay checks.
 

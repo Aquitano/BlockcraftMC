@@ -28,7 +28,7 @@ writes only `run/map-inspector`. The web server listens on loopback. It does not
 commands or edit the map. Stop it with Ctrl+C.
 
 BlueMap 5.29 is pinned and its CLI download is checked against SHA-256. On first use it also
-downloads Mojang's Minecraft 26.2 rendering assets. Use it with a licensed Java Edition installation.
+downloads Mojang's Minecraft 26.3 rendering assets. Use it with a licensed Java Edition installation.
 Downloads, rendered tiles, and caches stay under the ignored `run/map-inspector` directory.
 
 Terrain appears in 3D. NPCs and floating text are represented by setup markers, so their real skins,

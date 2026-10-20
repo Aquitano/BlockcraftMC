@@ -91,7 +91,7 @@ def main():
             if args.whole_world:
                 value.pop("render-mask", None)
             write_config(config / "maps" / f"{group}.conf", value)
-        subprocess.run([java, "-Xmx2G", "-jar", str(jar), "-c", str(config), "-v", "26.2", "-r", "-f", "-g", "-s",
+        subprocess.run([java, "-Xmx2G", "-jar", str(jar), "-c", str(config), "-v", "26.3", "-r", "-f", "-g", "-s",
                         "--markers", "-m", ",".join(args.maps), "-l", str(work / "data/logs/render.log")], cwd=work, check=True)
     if not args.render_only:
         handler = functools.partial(http.server.SimpleHTTPRequestHandler, directory=str(work / "web"))
