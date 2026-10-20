@@ -60,7 +60,8 @@ The import replaces each group's permissions with the file's and leaves players'
 by hand in game is gone after the next import unless it is in the file.
 
 `/rank <name>` shows a player's rank on the proxy; `/rank <name> <group>` replaces every group they had, like
-`/lp user <name> parent set <group>`, and `/rank <name> <group> 30d` gives a rank on time on top of the one for good,
+`/lp user <name> parent set <group>`, except `premium` bought in the lobby shop when the new group lacks it, and
+`/rank <name> <group> 30d` gives a rank on time on top of the one for good,
 which LuckPerms takes away again when it runs out. Staff change only players below them and only to groups below
 their own, by group weight; the console may do anything, so the first owner is still set from a console. Every change
 lands in `/stafflog`.

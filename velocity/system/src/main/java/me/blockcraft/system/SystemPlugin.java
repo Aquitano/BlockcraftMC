@@ -26,6 +26,7 @@ import me.blockcraft.common.nick.NickRepository;
 import me.blockcraft.common.network.ServerRepository;
 import me.blockcraft.common.network.operation.NetworkRequest;
 import me.blockcraft.common.settings.PlayerSettingRepository;
+import me.blockcraft.common.shop.Premium;
 import me.blockcraft.common.welcome.GreetingRepository;
 import me.blockcraft.system.alt.AddressHasher;
 import me.blockcraft.system.alt.AltListener;
@@ -260,7 +261,8 @@ public final class SystemPlugin {
         register(new WartungenCommand(this, support, proxy, settings, messages).create());
         register(new RestartCommand(this, support, proxy, messages).create());
         if (proxy.getPluginManager().isLoaded("luckperms")) {
-            register(new RankCommand(support, lookup, staffActions, config.calendar().zone(), messages, logger).create());
+            register(new RankCommand(support, lookup, staffActions, new Premium(database), config.calendar().zone(), messages,
+                    logger).create());
         }
         register(new SetMaxCommand(support, config, messages).create());
         register(new MotdCommand(support, config, messages).create());

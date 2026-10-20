@@ -11,6 +11,7 @@ import me.blockcraft.common.db.DatabaseException;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.moderation.StaffActionRepository;
 import me.blockcraft.common.player.PlayerReference;
+import me.blockcraft.common.shop.Premium;
 import me.blockcraft.system.PlayerLookup;
 import me.blockcraft.system.PlayerLookup.Target;
 import me.blockcraft.system.SystemPermissions;
@@ -41,9 +42,9 @@ import java.util.stream.Stream;
 
 /**
  * {@code /rank <player> [rank] [duration]}: shows or sets a player's LuckPerms group. A rank for good replaces every
- * group the player had, like {@code /lp user <player> parent set}; a rank on time sits on top of the one for good until
- * LuckPerms lets it run out. Staff change only players below them, and only to ranks below their own. Construct only
- * while LuckPerms runs.
+ * group the player had, like {@code /lp user <player> parent set}, except premium bought in the shop when the new rank
+ * lacks it; a rank on time sits on top of the one for good until LuckPerms lets it run out. Staff change only players
+ * below them, and only to ranks below their own. Construct only while LuckPerms runs.
  */
 public final class RankCommand {
 
@@ -55,16 +56,18 @@ public final class RankCommand {
     private final CommandSupport support;
     private final PlayerLookup lookup;
     private final StaffActionRepository actions;
+    private final Premium premium;
     private final Messages messages;
     private final Logger logger;
     private final LuckPerms luckPerms = LuckPermsProvider.get();
     private final DateTimeFormatter dates;
 
-    public RankCommand(CommandSupport support, PlayerLookup lookup, StaffActionRepository actions, ZoneId zone, Messages messages,
-                       Logger logger) {
+    public RankCommand(CommandSupport support, PlayerLookup lookup, StaffActionRepository actions, Premium premium, ZoneId zone,
+                       Messages messages, Logger logger) {
         this.support = support;
         this.lookup = lookup;
         this.actions = actions;
+        this.premium = premium;
         this.messages = messages;
         this.logger = logger;
         this.dates = DateTimeFormatter.ofPattern(messages.raw("rank.date-format")).withZone(zone);
@@ -136,14 +139,15 @@ public final class RankCommand {
         var rank = Placeholder.unparsed("rank", group.getName());
         var until = term.map(chosen -> Instant.now().plus(chosen.length()));
         String permanent;
+        boolean keptPremium = false;
         try {
             if (!mayChange(source, target, group)) {
                 return;
             }
             var users = luckPerms.getUserManager();
             var user = users.loadUser(target.uuid()).join();
-            permanent = permanentRank(user);
             if (until.isPresent()) {
+                permanent = permanentRank(user);
                 if (weight(group) <= weight(permanent)) {
                     source.sendMessage(messages.get("rank.not-above", Placeholder.unparsed("fallback", permanent)));
                     return;
@@ -151,12 +155,17 @@ public final class RankCommand {
                 user.data().clear(node -> node instanceof InheritanceNode && node.hasExpiry());
                 user.data().add(InheritanceNode.builder(group).expiry(until.get().getEpochSecond()).build());
             } else {
+                keptPremium = !includes(group, Premium.GROUP) && premium.bought(target.uuid());
                 user.data().clear(NodeType.INHERITANCE::matches);
                 user.data().add(InheritanceNode.builder(group).build());
+                if (keptPremium) {
+                    user.data().add(InheritanceNode.builder(Premium.GROUP).build());
+                }
+                permanent = permanentRank(user);
             }
             users.saveUser(user).join();
             luckPerms.getMessagingService().ifPresent(service -> service.pushUserUpdate(user));
-        } catch (CompletionException e) {
+        } catch (CompletionException | DatabaseException e) {
             logger.warn("Could not set the rank of {} to {}", target.name(), group.getName(), e);
             source.sendMessage(messages.get("rank.failed", player));
             return;
@@ -166,8 +175,12 @@ public final class RankCommand {
             source.sendMessage(messages.get("rank.done-temporary", player, rank, end, Placeholder.unparsed("fallback", permanent)));
             target.online().ifPresent(online -> online.sendMessage(messages.get("rank.received-temporary", rank, end)));
         } else {
-            source.sendMessage(messages.get("rank.done", player, rank));
-            target.online().ifPresent(online -> online.sendMessage(messages.get("rank.received", rank)));
+            var held = Placeholder.unparsed("rank", permanent);
+            source.sendMessage(messages.get("rank.done", player, held));
+            if (keptPremium) {
+                source.sendMessage(messages.get("rank.premium-kept", player));
+            }
+            target.online().ifPresent(online -> online.sendMessage(messages.get("rank.received", held)));
         }
         audit(source, target, group.getName() + term.map(chosen -> " " + chosen.typed()).orElse(""));
     }
@@ -204,6 +217,11 @@ public final class RankCommand {
     /** The heaviest group the player holds for good; LuckPerms' primary group when they hold none. */
     private String permanentRank(User user) {
         return heaviest(parents(user).filter(node -> !node.hasExpiry())).map(InheritanceNode::getGroupName).orElseGet(user::getPrimaryGroup);
+    }
+
+    private static boolean includes(Group group, String name) {
+        return group.getName().equals(name)
+                || group.getInheritedGroups(group.getQueryOptions()).stream().anyMatch(parent -> parent.getName().equals(name));
     }
 
     private static Stream<InheritanceNode> parents(User user) {

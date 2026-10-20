@@ -510,6 +510,7 @@ rank:
   done: "<prefix><accent><player> <muted>hat jetzt den Rang <accent><rank><muted>."
   done-temporary: "<prefix><accent><player> <muted>hat jetzt bis <accent><until> <muted>den Rang <accent><rank><muted>, danach wieder <accent><fallback><muted>."
   received: "<prefix><muted>Dein Rang ist jetzt <accent><rank><muted>."
+  premium-kept: "<prefix><accent><player> <muted>hat <premium>Premium <muted>im Shop gekauft und behält es."
   received-temporary: "<prefix><muted>Du hast jetzt bis <accent><until> <muted>den Rang <accent><rank><muted>."
   unknown: "<prefix><error>Den Rang <accent><rank> <error>gibt es nicht."
   above-own: "<prefix><error>Du kannst nur Ränge unter deinem eigenen vergeben."
