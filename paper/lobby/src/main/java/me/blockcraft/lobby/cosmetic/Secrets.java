@@ -17,7 +17,12 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
 import java.time.Duration;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 
 /**
  * Finding a secret, however it was found. The first find pays the reward and says how far the player has come; if
@@ -37,6 +42,7 @@ public final class Secrets {
     private final CoinsRepository coins;
     private final int reward;
     private final UnlockRewards rewards;
+    private final Map<UUID, Set<Secret>> alreadyFound = new HashMap<>();
 
     public Secrets(Plugin plugin, Messages messages, Unlocks unlocks, CoinsRepository coins, int reward) {
         this.plugin = plugin;
@@ -47,9 +53,14 @@ public final class Secrets {
         this.rewards = new UnlockRewards(BlockcraftApi.get().database());
     }
 
+    /** A secret the player has found since joining is answered from memory: a sign can be clicked as fast as they like. */
     public void find(Player player, Secret secret) {
         var api = BlockcraftApi.get();
         var uuid = player.getUniqueId();
+        if (alreadyFound.getOrDefault(uuid, Set.of()).contains(secret)) {
+            player.sendMessage(messages.get("secrets.already-found"));
+            return;
+        }
         var name = api.realName(player);
         Tasks.async(plugin, () -> {
             if (!rewards.grant(uuid, name, secret.item(), reward)) {
@@ -65,9 +76,14 @@ public final class Secrets {
             if (!player.isOnline()) {
                 return;
             }
+            alreadyFound.computeIfAbsent(uuid, ignored -> EnumSet.noneOf(Secret.class)).add(secret);
             found.ifPresentOrElse(first -> celebrate(player, secret, first),
                     () -> player.sendMessage(messages.get("secrets.already-found")));
         });
+    }
+
+    public void forget(Player player) {
+        alreadyFound.remove(player.getUniqueId());
     }
 
     private void celebrate(Player player, Secret secret, Found found) {

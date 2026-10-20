@@ -33,7 +33,6 @@ import me.blockcraft.lobby.gadget.Gadgets;
 import me.blockcraft.lobby.hider.PlayerHider;
 import me.blockcraft.lobby.item.LobbyItems;
 import me.blockcraft.lobby.konami.KonamiListener;
-import me.blockcraft.lobby.listener.CommandBlockListener;
 import me.blockcraft.lobby.listener.CosmeticSettingsListener;
 import me.blockcraft.lobby.listener.DeathListener;
 import me.blockcraft.lobby.listener.DoubleJumpListener;
@@ -135,7 +134,6 @@ public final class LobbyPlugin extends JavaPlugin {
                 new RoundRecapListener(this, messages, config),
                 new LobbyItemListener(messages, menus, hider),
                 new ProtectionListener(api.buildMode()),
-                new CommandBlockListener(config.allowedCommands()),
                 new SecretsListener(messages, secrets),
                 new ShopNpcListener(messages, menus, hud, config),
                 new KonamiListener(this, messages, api.unlocks(), secrets, activities.konamiGap()),

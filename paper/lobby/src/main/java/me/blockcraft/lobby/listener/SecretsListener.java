@@ -7,6 +7,7 @@ import me.blockcraft.lobby.cosmetic.Secrets;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import org.bukkit.Tag;
 import org.bukkit.block.Sign;
 import org.bukkit.block.sign.Side;
 import org.bukkit.event.EventHandler;
@@ -14,6 +15,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.EquipmentSlot;
 
 import java.util.Arrays;
@@ -49,12 +51,18 @@ public final class SecretsListener implements Listener {
 
     @EventHandler
     public void onSignClick(PlayerInteractEvent event) {
+        var block = event.getClickedBlock();
         if (event.getAction() != Action.RIGHT_CLICK_BLOCK || event.getHand() != EquipmentSlot.HAND
-                || event.getClickedBlock() == null || !(event.getClickedBlock().getState() instanceof Sign sign)) {
+                || block == null || !Tag.ALL_SIGNS.isTagged(block.getType()) || !(block.getState() instanceof Sign sign)) {
             return;
         }
         String line = PLAIN.serialize(sign.getSide(Side.FRONT).line(NAME_LINE));
         secretOnSign(line).ifPresent(secret -> secrets.find(event.getPlayer(), secret));
+    }
+
+    @EventHandler
+    public void onQuit(PlayerQuitEvent event) {
+        secrets.forget(event.getPlayer());
     }
 
     private Optional<Secret> secretOnSign(String line) {

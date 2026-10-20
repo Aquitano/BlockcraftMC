@@ -3,7 +3,11 @@ package me.blockcraft.common.coins;
 import me.blockcraft.common.db.Database;
 import me.blockcraft.common.moderation.PlayerRepository;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -25,6 +29,19 @@ public final class CoinsRepository {
 
     public int get(UUID player) {
         return db.queryOne("SELECT COINS FROM VCOINS WHERE UUID = ?", row -> row.getInt("COINS"), player.toString()).orElse(0);
+    }
+
+    /** The balance of each of the players in one query; 0 for those without an account, like {@link #get}. */
+    public Map<UUID, Integer> balances(Collection<UUID> players) {
+        var balances = new HashMap<UUID, Integer>();
+        players.forEach(player -> balances.put(player, 0));
+        if (!players.isEmpty()) {
+            db.queryList("SELECT UUID, COINS FROM VCOINS WHERE UUID IN (" + String.join(", ", Collections.nCopies(players.size(), "?")) + ")",
+                    row -> Map.entry(UUID.fromString(row.getString("UUID")), row.getInt("COINS")),
+                    players.stream().map(UUID::toString).toArray())
+                    .forEach(balance -> balances.put(balance.getKey(), balance.getValue()));
+        }
+        return balances;
     }
 
     /** Whoever last logged in under {@code name}, or else a legacy account that still carries it. */

@@ -74,7 +74,6 @@ friends:
     - "<bullet><left>Annehmen"
     - "<bullet><right>Ablehnen"
   empty: "<arrow><muted>Noch keine Freunde"
-  empty-lore: "<bullet><muted>Schicke die erste Anfrage!"
   note: "<arrow><primary>Freunde hinzufügen"
   note-lore:
     - "<bullet><click>Spielernamen eingeben"
@@ -206,9 +205,7 @@ shop:
   premium-grant-failed: "<prefix><error>Premium konnte noch nicht aktiviert werden. Dein Kauf bleibt gespeichert. Klicke erneut auf Premium, um die Aktivierung kostenlos zu wiederholen."
   premium-retry: "<click>Kostenlos erneut aktivieren"
   premium-owned: "<success>Premium ist freigeschaltet."
-  already-premium: "<prefix><muted>Du hast bereits <premium>Premium<muted>."
   balance: "<prefix><muted>Kontostand <dark>· <accent><coins> Coins"
-  owned-lore: "<arrow><success>Gekauft!"
   price-lore: "<arrow><accent><coins> Coins"
 heads:
   title: "<arrow><primary>Köpfe"
@@ -253,7 +250,6 @@ premium-menu:
 pets:
   title: "<arrow><primary>Haustiere"
   entity-name: "<player>'s Haustier"
-  already: "<prefix><error>Entferne vorerst dein jetziges Pet."
   name:
     wolf: "<primary>Wolf"
     chicken: "<primary>Huhn"
@@ -310,13 +306,6 @@ extras:
   lobbies-lore: "<bullet><muted>Wechsle auf eine andere Lobby!"
 effects:
   preview-lore: "<right>Partikelvorschau"
-  preview: "<muted>Partikelvorschau. Das Menü öffnet sich gleich wieder."
-  preview-disabled: "<muted>Aktiviere kosmetische Effekte in den Einstellungen für die Vorschau."
-  price-lore: "<arrow><accent><coins> Coins"
-  owned-lore: "<click>Auswählen"
-  selected-lore: "<arrow><success>Ausgewählt"
-  reset: "<arrow><error>Effekt entfernen"
-  reset-lore: "<bullet><click>Keinen Effekt nutzen"
   reset-done: "<prefix><muted>Dein Effekt wurde entfernt."
   chosen: "<prefix><muted>Du hast <white><effect> <muted>ausgewählt."
   kill:
@@ -338,16 +327,11 @@ effects:
       notes: "<success>Noten"
 tags:
   title: "<arrow><primary>Chat-Tags"
-  select-lore: "<bullet><click>Auswählen"
   earned-lore: "<bullet><accent>Verdient, nicht gekauft"
-  remove: "<arrow><error>Tag entfernen"
   removed: "<prefix><muted>Dein Chat-Tag wurde entfernt."
   chosen: "<prefix><muted>Dein Chat-Tag ist jetzt <tag><muted>."
 gadgets:
   title: "<arrow><primary>Gadgets"
-  remove: "<arrow><error>Gadget ablegen"
-  removed: "<prefix><muted>Du hast dein Gadget abgelegt."
-  chosen: "<prefix><muted>Du hältst jetzt <white><gadget><muted>."
   held-lore: "<bullet><right>Benutzen"
   cooldown: "<prefix><error>Warte noch <white><seconds> <error>Sekunden!"
   name:
@@ -371,13 +355,9 @@ lobbies:
     - "<bullet><muted><online>/<max> Spieler <dark>● <status>"
     - "<muted>Mit Aktualisieren erneut prüfen."
   current-lore: "<bullet><muted><online>/<max> Spieler <dark>● <success>Du bist hier"
-  already: "<prefix><muted>Du bist bereits auf dieser Lobby."
   connecting: "<prefix><muted>Du wirst auf <primary><server> <muted>verbunden…"
 trails:
   title: "<arrow><primary>Spuren"
-  remove: "<arrow><error>Effekt entfernen"
-  remove-lore: "<bullet><click>Effekt entfernen"
-  removed: "<prefix><muted>Deine Effekte wurden entfernt."
   name:
     snow: "<primary>Schneespur"
     witch: "<arrow><primary>Zauber"

@@ -82,7 +82,6 @@ Both require `blockcraft.lobby.setspawn` and work from the console. Check valida
 and roster entry without changing blocks. Apply stops before editing if validation fails. It updates the
 heads, front sign text, and central title, and copies the input file into the active map.
 Run `/map save` afterward to keep the rendered blocks with the template.
-On an existing server, add `teamboard` to Lobby's `allowed-commands` list if setup staff lack the command bypass.
 
 On the local map preview, edit `run/map-review/preview-worlds/lobby/blockcraft/Lobby/team-board.yml`.
 Its saves remain in that preview directory until copied back to `worlds/lobby` deliberately.

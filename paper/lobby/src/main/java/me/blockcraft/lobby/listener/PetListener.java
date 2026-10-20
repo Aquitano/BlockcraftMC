@@ -2,6 +2,7 @@ package me.blockcraft.lobby.listener;
 
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.nick.NickChangeEvent;
 import me.blockcraft.common.settings.PlayerSetting;
 import me.blockcraft.lobby.cosmetic.PetType;
 import me.blockcraft.lobby.cosmetic.Pets;
@@ -25,6 +26,11 @@ public final class PetListener implements Listener {
     public PetListener(Pets pets, Messages messages) {
         this.pets = pets;
         this.messages = messages;
+    }
+
+    @EventHandler
+    public void onNickChange(NickChangeEvent event) {
+        pets.rename(event.getPlayer());
     }
 
     @EventHandler

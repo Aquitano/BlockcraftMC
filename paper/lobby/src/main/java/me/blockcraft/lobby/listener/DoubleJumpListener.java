@@ -30,10 +30,11 @@ public final class DoubleJumpListener implements Listener {
     @EventHandler
     public void onMove(PlayerMoveEvent event) {
         Player player = event.getPlayer();
-        if (parkour.running(player) || parkour.startsAt(event.getTo())) {
+        if (!event.hasChangedPosition() || parkour.running(player) || parkour.startsAt(event.getTo())) {
             return;
         }
-        if (canDoubleJump(player) && player.getLocation().getBlock().getRelative(BlockFace.DOWN).getType() != Material.AIR) {
+        if (canDoubleJump(player) && !player.getAllowFlight()
+                && player.getLocation().getBlock().getRelative(BlockFace.DOWN).getType() != Material.AIR) {
             player.setAllowFlight(true);
         }
         if (player.getLocation().getBlock().getType() == Material.LIGHT_WEIGHTED_PRESSURE_PLATE) {

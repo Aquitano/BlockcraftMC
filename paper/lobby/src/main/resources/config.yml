@@ -1,12 +1,4 @@
 max-players: 100
-allowed-commands:
-  - coins
-  - cc
-  - setspawn
-  - setholo
-  - lobbyset
-  - teamboard
-  - erfolge
 prices:
   premium: 15000
   head: 300

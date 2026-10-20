@@ -89,15 +89,12 @@ public final class LobbyHud implements Listener {
         var ids = players.stream().map(Player::getUniqueId).toList();
         var coins = BlockcraftApi.get().coins();
         Tasks.async(plugin, () -> {
-            var balances = new HashMap<UUID, Integer>();
             try {
-                for (var id : ids) {
-                    balances.put(id, coins.get(id));
-                }
+                return coins.balances(ids);
             } catch (DatabaseException e) {
                 plugin.getSLF4JLogger().warn("Could not refresh lobby balances", e);
+                return Map.<UUID, Integer>of();
             }
-            return balances;
         }, balances -> {
             done.run();
             for (var player : players) {

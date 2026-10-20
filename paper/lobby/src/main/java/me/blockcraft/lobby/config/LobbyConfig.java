@@ -8,12 +8,10 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 public record LobbyConfig(
         int maxPlayers,
-        Set<String> allowedCommands,
         int premiumPrice,
         int headPrice,
         int shirtPrice,
@@ -62,9 +60,6 @@ public record LobbyConfig(
                 .flatMap(entry -> LobbyLocation.byKey(String.valueOf(entry.getKey())).stream()
                         .map(location -> Map.entry(location, String.valueOf(entry.getValue()))))
                 .collect(Collectors.toUnmodifiableMap(Map.Entry::getKey, Map.Entry::getValue));
-        Set<String> allowedCommands = root.get("allowed-commands") instanceof List<?> commands
-                ? commands.stream().map(String::valueOf).map(String::toLowerCase).collect(Collectors.toUnmodifiableSet())
-                : Set.of();
         List<Vector> fireworkSpots = root.get("fireworks") instanceof List<?> spots
                 ? spots.stream().filter(Map.class::isInstance).map(spot -> {
                     var map = (Map<?, ?>) spot;
@@ -73,7 +68,6 @@ public record LobbyConfig(
                 : List.of();
         return new LobbyConfig(
                 (int) number(root, "max-players", 100),
-                allowedCommands,
                 (int) number(prices, "premium", 15000),
                 (int) number(prices, "head", 300),
                 (int) number(prices, "shirt", 500),
