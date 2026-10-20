@@ -34,6 +34,9 @@ public final class Playtime {
 
     @Subscribe
     public EventTask onDisconnect(DisconnectEvent event) {
+        if (!LiveSession.endedBy(event)) {
+            return null;
+        }
         UUID player = event.getPlayer().getUniqueId();
         return EventTask.async(() -> store(player));
     }

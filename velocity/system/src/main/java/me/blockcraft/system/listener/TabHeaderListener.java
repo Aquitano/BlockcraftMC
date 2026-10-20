@@ -6,6 +6,7 @@ import com.velocitypowered.api.event.player.ServerPostConnectEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.system.LiveSession;
 import me.blockcraft.system.PlayerVisibility;
 import me.blockcraft.system.SystemConfig;
 import me.blockcraft.system.SystemPermissions;
@@ -49,7 +50,9 @@ public final class TabHeaderListener implements Runnable {
 
     @Subscribe
     public synchronized void onDisconnect(DisconnectEvent event) {
-        refreshExcept(Set.of(event.getPlayer().getUniqueId()));
+        if (LiveSession.endedBy(event)) {
+            refreshExcept(Set.of(event.getPlayer().getUniqueId()));
+        }
     }
 
     @Override

@@ -36,6 +36,8 @@ public final class AfkPlayers {
 
     @Subscribe
     public void onDisconnect(DisconnectEvent event) {
-        away.remove(event.getPlayer().getUniqueId());
+        if (LiveSession.endedBy(event)) {
+            away.remove(event.getPlayer().getUniqueId());
+        }
     }
 }

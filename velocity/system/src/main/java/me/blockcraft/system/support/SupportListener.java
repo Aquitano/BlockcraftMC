@@ -4,6 +4,7 @@ import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.player.ServerPostConnectEvent;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.system.LiveSession;
 import me.blockcraft.system.SystemPermissions;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
@@ -23,7 +24,9 @@ public final class SupportListener {
 
     @Subscribe
     public void onDisconnect(DisconnectEvent event) {
-        sessions.onDisconnect(event.getPlayer().getUniqueId());
+        if (LiveSession.endedBy(event)) {
+            sessions.onDisconnect(event.getPlayer().getUniqueId());
+        }
     }
 
     /** The first server connect is when the client can show chat; a login-time message would be lost. */

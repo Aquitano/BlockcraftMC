@@ -6,6 +6,7 @@ import com.velocitypowered.api.event.player.KickedFromServerEvent;
 import com.velocitypowered.api.event.player.KickedFromServerEvent.RedirectPlayer;
 import com.velocitypowered.api.event.player.ServerPostConnectEvent;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.system.LiveSession;
 import me.blockcraft.system.LobbyConnector;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -54,6 +55,8 @@ public final class KickListener {
 
     @Subscribe
     public void onDisconnect(DisconnectEvent event) {
-        refused.remove(event.getPlayer().getUniqueId());
+        if (LiveSession.endedBy(event)) {
+            refused.remove(event.getPlayer().getUniqueId());
+        }
     }
 }

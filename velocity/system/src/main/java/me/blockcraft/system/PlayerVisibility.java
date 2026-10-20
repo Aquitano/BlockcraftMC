@@ -25,7 +25,8 @@ import java.util.stream.Stream;
  * What the rest of the network gets to know about a player: vanished players are left out of counts and lookups,
  * nicked players go by their nick. The Paper servers own both states ({@code bc_vanished}, {@code bc_nicks}) and
  * report every change over the plugin channel; the tables are read once at login for players who arrive
- * already vanished or nicked. Staff holding the see permissions look through both.
+ * already vanished or nicked, and {@code bc_vanished} again after a server switch ({@code VanishSwitchListener}).
+ * Staff holding the see permissions look through both.
  */
 public final class PlayerVisibility {
 
@@ -60,6 +61,9 @@ public final class PlayerVisibility {
 
     @Subscribe
     public void onDisconnect(DisconnectEvent event) {
+        if (!LiveSession.endedBy(event)) {
+            return;
+        }
         vanished.remove(event.getPlayer().getUniqueId());
         worn.remove(event.getPlayer().getUniqueId());
     }

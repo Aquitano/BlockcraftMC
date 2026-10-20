@@ -48,7 +48,9 @@ public final class PlayerChoices {
 
     @Subscribe
     public void onDisconnect(DisconnectEvent event) {
-        choices.remove(event.getPlayer().getUniqueId());
+        if (LiveSession.endedBy(event)) {
+            choices.remove(event.getPlayer().getUniqueId());
+        }
     }
 
     public boolean enabled(Player player, PlayerSetting setting) {

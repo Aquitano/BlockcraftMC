@@ -1,5 +1,6 @@
 package me.blockcraft.system;
 
+import com.velocitypowered.api.event.connection.DisconnectEvent;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.nick.Nick;
 import me.blockcraft.system.report.Reports;
@@ -13,6 +14,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class PlayerIdentityTest {
@@ -38,6 +40,20 @@ public class PlayerIdentityTest {
         var staff = proxy.join("Staff", SystemPermissions.SEE_NICKS, SystemPermissions.SEE_VANISHED);
         assertTrue(visibility.namesFor(staff).toList().contains("Account"));
         assertEquals(target.getUniqueId(), lookup.findVisible(staff, "Account", Component.empty()).orElseThrow().uuid());
+    }
+
+    @Test
+    public void aRefusedDuplicateLoginLeavesTheLiveSessionVanished() {
+        var proxy = new FakeProxy();
+        var staff = proxy.join("Staff");
+        var visibility = new PlayerVisibility(proxy.server, null, null, null);
+        visibility.setVanished(staff, true);
+
+        visibility.onDisconnect(new DisconnectEvent(staff, DisconnectEvent.LoginStatus.CONFLICTING_LOGIN));
+        assertTrue(visibility.isVanished(staff));
+
+        visibility.onDisconnect(new DisconnectEvent(staff, DisconnectEvent.LoginStatus.SUCCESSFUL_LOGIN));
+        assertFalse(visibility.isVanished(staff));
     }
 
     @Test

@@ -11,6 +11,7 @@ import me.blockcraft.common.ignore.IgnoreRepository;
 import me.blockcraft.common.ignore.IgnoreRepository.Ignored;
 import me.blockcraft.common.network.ProxyMessage;
 import me.blockcraft.common.network.ProxyMessageCodec;
+import me.blockcraft.system.LiveSession;
 import org.slf4j.Logger;
 
 import java.util.List;
@@ -53,7 +54,9 @@ public final class IgnoreList {
 
     @Subscribe
     public void onDisconnect(DisconnectEvent event) {
-        ignored.remove(event.getPlayer().getUniqueId());
+        if (LiveSession.endedBy(event)) {
+            ignored.remove(event.getPlayer().getUniqueId());
+        }
     }
 
     /** Both players are online, so the list read at login answers. */

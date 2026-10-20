@@ -447,6 +447,7 @@ staff-buttons:
   alts-hover: "<muted>Zeigt <primary>/alts <player>"
 freeze:
   quit-punished: "<prefix><error><player> <muted>hat das Netzwerk eingefroren verlassen und wurde automatisch bestraft."
+  switch-denied: "<prefix><error>Eingefroren: Du kannst den Server nicht wechseln."
 alts:
   usage: "<prefix><muted>Ausführung: <error>/alts \\<Spieler>"
   none: "<prefix><muted>Über die Verbindungen von <accent><player> <muted>hat in den letzten <accent><days> <muted>Tagen kein anderer Account gespielt."

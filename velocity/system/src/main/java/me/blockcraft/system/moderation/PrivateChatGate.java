@@ -8,6 +8,7 @@ import me.blockcraft.common.chat.ChatFilter;
 import me.blockcraft.common.db.DatabaseException;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.moderation.AdLogRepository;
+import me.blockcraft.system.LiveSession;
 import me.blockcraft.system.StaffButtons;
 import me.blockcraft.system.SystemPermissions;
 import me.blockcraft.system.command.CommandSupport;
@@ -79,7 +80,9 @@ public final class PrivateChatGate {
 
     @Subscribe
     public void onDisconnect(DisconnectEvent event) {
-        lastLine.remove(event.getPlayer().getUniqueId());
+        if (LiveSession.endedBy(event)) {
+            lastLine.remove(event.getPlayer().getUniqueId());
+        }
     }
 
     private void notifyStaff(Player sender, String text) {

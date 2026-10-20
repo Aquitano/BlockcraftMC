@@ -13,6 +13,7 @@ import com.velocitypowered.api.proxy.player.ResourcePackInfo;
 import me.blockcraft.common.network.PackStatus;
 import me.blockcraft.common.network.ProxyMessage;
 import me.blockcraft.common.network.ProxyMessageCodec;
+import me.blockcraft.system.LiveSession;
 import me.blockcraft.system.SystemConfig;
 import net.kyori.adventure.text.Component;
 import org.slf4j.Logger;
@@ -128,7 +129,9 @@ public final class NetworkPack {
 
     @Subscribe
     public void onDisconnect(DisconnectEvent event) {
-        statuses.remove(event.getPlayer().getUniqueId());
+        if (LiveSession.endedBy(event)) {
+            statuses.remove(event.getPlayer().getUniqueId());
+        }
     }
 
     public static boolean applied(Player player) {

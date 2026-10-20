@@ -81,12 +81,14 @@ import me.blockcraft.system.friends.SpectateRequests;
 import me.blockcraft.system.ignore.IgnoreList;
 import me.blockcraft.system.listener.CommandListener;
 import me.blockcraft.system.listener.FreezeQuitListener;
+import me.blockcraft.system.listener.FreezeSwitchListener;
 import me.blockcraft.system.listener.InitialServerListener;
 import me.blockcraft.system.listener.KickListener;
 import me.blockcraft.system.listener.LoginListener;
 import me.blockcraft.system.listener.OperationListener;
 import me.blockcraft.system.listener.ProxyMessageListener;
 import me.blockcraft.system.listener.TabHeaderListener;
+import me.blockcraft.system.listener.VanishSwitchListener;
 import me.blockcraft.system.listener.WatchListener;
 import me.blockcraft.system.moderation.ModerationActions;
 import me.blockcraft.system.moderation.MuteGate;
@@ -228,6 +230,8 @@ public final class SystemPlugin {
         events.register(this, alts);
         events.register(this, new FreezeQuitListener(this, proxy, repositories.frozen(), punishments, moderationActions,
                 config.freeze(), messages, staffButtons, logger));
+        events.register(this, new FreezeSwitchListener(repositories.frozen(), messages, logger));
+        events.register(this, new VanishSwitchListener(this, proxy, repositories.vanish(), visibility, logger));
         events.register(this, playtime);
         pack = NetworkPack.start(proxy, config.resourcePack(), dataDirectory, messages.get("resource-pack.prompt"), logger);
         pack.ifPresent(networkPack -> events.register(this, networkPack));

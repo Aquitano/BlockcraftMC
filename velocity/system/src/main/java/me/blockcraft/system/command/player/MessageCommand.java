@@ -9,6 +9,7 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.settings.PlayerSetting;
 import me.blockcraft.system.AfkPlayers;
+import me.blockcraft.system.LiveSession;
 import me.blockcraft.system.PlayerChoices;
 import me.blockcraft.system.PlayerLookup;
 import me.blockcraft.system.PlayerVisibility;
@@ -81,7 +82,9 @@ public final class MessageCommand {
 
     @Subscribe
     public void onDisconnect(DisconnectEvent event) {
-        lastPartner.remove(event.getPlayer().getUniqueId());
+        if (LiveSession.endedBy(event)) {
+            lastPartner.remove(event.getPlayer().getUniqueId());
+        }
     }
 
     private void deliver(Player sender, Player target, String text) {

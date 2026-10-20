@@ -8,6 +8,7 @@ import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import me.blockcraft.common.network.ProxyMessage;
 import me.blockcraft.common.network.ProxyMessageCodec;
+import me.blockcraft.system.LiveSession;
 
 import java.util.Map;
 import java.util.UUID;
@@ -45,7 +46,9 @@ public final class SpectateRequests {
 
     @Subscribe
     public void onDisconnect(DisconnectEvent event) {
-        intents.remove(event.getPlayer().getUniqueId());
+        if (LiveSession.endedBy(event)) {
+            intents.remove(event.getPlayer().getUniqueId());
+        }
     }
 
     private static void tell(ServerConnection connection, UUID friend) {

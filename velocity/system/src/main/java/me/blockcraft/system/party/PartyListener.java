@@ -3,6 +3,7 @@ package me.blockcraft.system.party;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.player.ServerConnectedEvent;
+import me.blockcraft.system.LiveSession;
 
 public final class PartyListener {
 
@@ -19,6 +20,8 @@ public final class PartyListener {
 
     @Subscribe
     public void onDisconnect(DisconnectEvent event) {
-        parties.onDisconnect(event.getPlayer());
+        if (LiveSession.endedBy(event)) {
+            parties.onDisconnect(event.getPlayer());
+        }
     }
 }

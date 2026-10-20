@@ -8,6 +8,7 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import me.blockcraft.common.network.ServerRecord;
 import me.blockcraft.common.network.ServerState;
+import me.blockcraft.system.LiveSession;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -172,7 +173,7 @@ public final class ServerDirectory {
 
     @Subscribe
     public synchronized void onDisconnect(DisconnectEvent event) {
-        if (seats.remove(event.getPlayer().getUniqueId()) != null) {
+        if (LiveSession.endedBy(event) && seats.remove(event.getPlayer().getUniqueId()) != null) {
             publishChanges();
         }
     }

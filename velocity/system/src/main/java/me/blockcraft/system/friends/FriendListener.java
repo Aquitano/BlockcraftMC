@@ -5,6 +5,7 @@ import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.player.ServerPostConnectEvent;
 import me.blockcraft.common.db.DatabaseException;
+import me.blockcraft.system.LiveSession;
 import me.blockcraft.system.PlayerVisibility;
 import org.slf4j.Logger;
 
@@ -35,7 +36,7 @@ public final class FriendListener {
     /** Runs before PlayerVisibility forgets the player, so a vanished staff member leaves as quietly as they came. */
     @Subscribe(priority = BEFORE_VISIBILITY)
     public EventTask onDisconnect(DisconnectEvent event) {
-        if (visibility.isVanished(event.getPlayer())) {
+        if (!LiveSession.endedBy(event) || visibility.isVanished(event.getPlayer())) {
             return null;
         }
         return EventTask.async(() -> announce(() -> friends.announceQuit(event.getPlayer())));
