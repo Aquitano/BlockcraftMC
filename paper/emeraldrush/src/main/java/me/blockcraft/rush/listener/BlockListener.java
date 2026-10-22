@@ -9,6 +9,7 @@ import me.blockcraft.rush.game.Game;
 import me.blockcraft.rush.game.GamePhase;
 import org.bukkit.Material;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
@@ -28,20 +29,28 @@ public final class BlockListener implements Listener {
         this.buildMode = buildMode;
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onBreak(BlockBreakEvent event) {
         event.setExpToDrop(0);
         event.setDropItems(false);
         var block = event.getBlock();
         var player = event.getPlayer();
-        if (game.phase() == GamePhase.SEARCH && block.getType() == Material.EMERALD_ORE) {
-            game.addEmeralds(player, config.emeraldsPerOre());
-            BlockcraftApi.get().notifications().rewardSound(player, Sounds.COINS);
-            Tasks.later(plugin, config.oreRespawnSeconds() * 20L, () -> block.setType(Material.EMERALD_ORE));
+        if (game.phase() == GamePhase.SEARCH && game.isAlive(player) && block.getType() == Material.EMERALD_ORE) {
             return;
         }
         if (!buildMode.isEnabled(player)) {
             event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onMine(BlockBreakEvent event) {
+        var player = event.getPlayer();
+        var block = event.getBlock();
+        if (game.phase() == GamePhase.SEARCH && game.isAlive(player) && block.getType() == Material.EMERALD_ORE) {
+            game.addEmeralds(player, config.emeraldsPerOre());
+            BlockcraftApi.get().notifications().rewardSound(player, Sounds.COINS);
+            Tasks.later(plugin, config.oreRespawnSeconds() * 20L, () -> block.setType(Material.EMERALD_ORE));
         }
     }
 

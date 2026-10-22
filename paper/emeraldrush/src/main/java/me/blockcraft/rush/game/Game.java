@@ -325,6 +325,7 @@ public final class Game {
         if (phase != GamePhase.DEATHMATCH || !isAlive(victim)) {
             return;
         }
+        saveLoadout(victim);
         var death = summary.resolveDeath(event);
         Bukkit.broadcast(death.line());
         int remaining = Math.max(0, lives(victim) - 1);

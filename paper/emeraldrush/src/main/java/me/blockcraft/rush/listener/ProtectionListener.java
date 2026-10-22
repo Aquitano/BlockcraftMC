@@ -20,11 +20,9 @@ import org.bukkit.potion.PotionEffectType;
 /**
  * EmeraldRush's rules beyond the shared lobby's: nobody is hurt or drops anything outside the deathmatch, and falling
  * into the void returns to the phase's spawn; the inventory stays locked while searching; nobody gets hungry; the
- * deathmatch remembers a healthy player's loadout for the respawn; water in the lobby lets players jump high.
+ * water in the lobby lets players jump high.
  */
 public final class ProtectionListener implements Listener {
-
-    private static final double LOADOUT_SNAPSHOT_MIN_HEALTH = 5.0;
 
     private final Game game;
     private final BuildMode buildMode;
@@ -42,9 +40,6 @@ public final class ProtectionListener implements Listener {
                 game.returnToPhaseSpawn(player);
             }
             return;
-        }
-        if (event.getEntity() instanceof Player player && player.getHealth() >= LOADOUT_SNAPSHOT_MIN_HEALTH) {
-            game.saveLoadout(player);
         }
     }
 
