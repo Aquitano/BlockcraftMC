@@ -50,6 +50,7 @@ import me.blockcraft.lobby.listener.SecretsListener;
 import me.blockcraft.lobby.listener.ShopNpcListener;
 import me.blockcraft.lobby.listener.WorldDownloaderListener;
 import me.blockcraft.lobby.menu.Menus;
+import me.blockcraft.lobby.menu.NavigatorTeleports;
 import me.blockcraft.lobby.npc.Holograms;
 import me.blockcraft.lobby.npc.Leaderboards;
 import me.blockcraft.lobby.npc.ShopNpc;
@@ -116,7 +117,8 @@ public final class LobbyPlugin extends JavaPlugin {
         friends = new FriendsChannel(this, config.friendsTimeoutTicks());
         previews = new CosmeticPreviews(this, messages, config.cosmeticPreviewTicks());
         var menus = new Menus(this, messages, config, locations, api.unlocks(), api.settings(), api.messages(),
-                api.servers(), api.server(), new PremiumRank(this, luckPerms), pets, api.groups(), friends, previews);
+                api.servers(), api.server(), new PremiumRank(this, luckPerms), pets, api.groups(), friends, previews,
+                new NavigatorTeleports());
         shopNpc = new ShopNpc(this, locations, messages, quirks::owns);
         shopNpc.start(config.shopNpcRespawnSeconds());
         var leaderboards = new Leaderboards(this, api.database(), messages, api.messages(), config.leaderboards());

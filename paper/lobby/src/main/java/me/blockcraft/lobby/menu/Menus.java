@@ -47,7 +47,8 @@ public record Menus(
         Pets pets,
         ServerGroups groups,
         FriendsChannel friends,
-        CosmeticPreviews previews
+        CosmeticPreviews previews,
+        NavigatorTeleports teleports
 ) {
 
     private static final int TELEPORT_PARTICLES = 20;
@@ -59,8 +60,12 @@ public record Menus(
             player.sendMessage(messages.get("navigator.place-unavailable"));
             return;
         }
+        var teleport = teleports.start(player, destination.get());
+        if (teleport.isEmpty()) {
+            return;
+        }
         Menu.close(player);
-        player.teleportAsync(destination.get()).whenComplete((teleported, failure) -> {
+        teleport.get().whenComplete((teleported, failure) -> {
             if (!plugin.isEnabled()) {
                 return;
             }
