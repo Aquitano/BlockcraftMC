@@ -163,6 +163,13 @@ public final class Game {
         round.follow(spectator, friend);
     }
 
+    public void vanished(Player player) {
+        if (isIngame() && isAlive(player)) {
+            quit(player);
+            round.watch(player);
+        }
+    }
+
     public void quit(Player player) {
         round.leave(player);
         kits.remove(player.getUniqueId());

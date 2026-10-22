@@ -298,8 +298,12 @@ public final class Game {
         scoreboard.refreshAll();
     }
 
-    /** Staff who vanish in the lobby watch instead of playing, so they leave their team, the vote and the lobby games. */
     public void vanished(Player player) {
+        if (phase() == GamePhase.INGAME && round.isPlaying(player)) {
+            quit(player);
+            round.watch(player);
+            return;
+        }
         if (phase() != GamePhase.LOBBY) {
             return;
         }

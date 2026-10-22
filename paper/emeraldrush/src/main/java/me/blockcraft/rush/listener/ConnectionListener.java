@@ -41,9 +41,11 @@ public final class ConnectionListener implements Listener {
         game.scoreboard().refreshAll();
     }
 
-    /** The round seats or unseats a player who vanishes in the lobby before this hears of it. */
     @EventHandler
     public void onVanish(VanishChangeEvent event) {
+        if (event.isVanished()) {
+            game.vanished(event.getPlayer());
+        }
         game.scoreboard().refreshAll();
     }
 }

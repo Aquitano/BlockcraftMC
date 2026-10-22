@@ -101,6 +101,13 @@ public final class RushGame {
         round.follow(player, friend);
     }
 
+    public void vanished(Player player) {
+        if (round.phase() == GamePhase.INGAME && round.isPlaying(player)) {
+            quit(player);
+            round.watch(player);
+        }
+    }
+
     public void quit(Player player) {
         boolean participant = round.leave(player);
         if (round.phase() == GamePhase.LOBBY) {

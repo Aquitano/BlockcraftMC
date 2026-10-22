@@ -17,6 +17,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
@@ -187,11 +188,15 @@ public final class Round implements Listener {
 
     /**
      * Puts a spectator into the state they watch in: flying unseen by the players, with the spectator hotbar. Only
-     * spectators see each other. A game calls it for an eliminated player once they have respawned.
+     * spectators see each other. A dead player is put into this state after respawning.
      */
     public void watch(Player player) {
         spectators.add(player.getUniqueId());
         WATCHING.add(player.getUniqueId());
+        if (player.isDead()) {
+            respawn(player, 1L);
+            return;
+        }
         PlayerReset.spectate(player);
         for (var other : Bukkit.getOnlinePlayers()) {
             if (other.equals(player)) {
@@ -204,6 +209,18 @@ public final class Round implements Listener {
             }
         }
         SpectatorItem.give(player, api.messages());
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onRespawn(PlayerRespawnEvent event) {
+        var player = event.getPlayer();
+        if (isSpectator(player) && isWatching(player)) {
+            Tasks.sync(plugin, () -> {
+                if (player.isOnline() && isSpectator(player)) {
+                    watch(player);
+                }
+            });
+        }
     }
 
     /** The spectator came to watch a friend, which the proxy names only after the join. */

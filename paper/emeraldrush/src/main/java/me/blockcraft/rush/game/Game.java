@@ -191,6 +191,13 @@ public final class Game {
         round.follow(spectator, friend);
     }
 
+    public void vanished(Player player) {
+        if (phase != GamePhase.LOBBY && phase != GamePhase.ENDING && isAlive(player)) {
+            quit(player);
+            round.watch(player);
+        }
+    }
+
     public void quit(Player player) {
         var id = player.getUniqueId();
         round.leave(player);

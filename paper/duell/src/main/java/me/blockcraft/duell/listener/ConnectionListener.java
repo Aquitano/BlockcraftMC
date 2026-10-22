@@ -50,6 +50,6 @@ public final class ConnectionListener implements Listener {
 
     @EventHandler
     public void onVanishChange(VanishChangeEvent event) {
-        duel.vanishChanged(event.getPlayer());
+        duel.vanishChanged(event.getPlayer(), event.isVanished());
     }
 }

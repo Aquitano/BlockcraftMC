@@ -37,6 +37,9 @@ public final class ConnectionListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onVanish(VanishChangeEvent event) {
+        if (event.isVanished()) {
+            game.vanished(event.getPlayer());
+        }
         game.updateLobby();
         game.refreshPresence();
     }

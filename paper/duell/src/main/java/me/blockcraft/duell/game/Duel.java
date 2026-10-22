@@ -182,8 +182,11 @@ public final class Duel {
         round.follow(spectator, friend);
     }
 
-    /** A player who vanishes in the lobby watches instead; the round, which hears it first, has unseated them already. */
-    public void vanishChanged(Player player) {
+    public void vanishChanged(Player player, boolean vanished) {
+        if (vanished && isIngame() && isParticipant(player)) {
+            quit(player);
+            round.watch(player);
+        }
         if (isLobby() && !isParticipant(player)) {
             votes.withdraw(player.getUniqueId());
         }
