@@ -34,14 +34,15 @@ public final class SpecialItems implements Listener {
     private final MobileShop mobileShop;
 
     public SpecialItems(Plugin plugin, Messages messages, BedWarsConfig config, Dealers dealers, Teams teams,
-                        Predicate<Player> playing, Predicate<Block> replaceable, Consumer<Block> placed) {
+                        Predicate<Player> playing, Predicate<Block> canPlace, Predicate<Block> replaceable,
+                        Consumer<Block> placed) {
         this.messages = messages;
         this.teams = teams;
         this.playing = playing;
         this.teleporter = new Teleporter(plugin, messages, config.teleporterSeconds(), config.teleporterHeight(),
                 player -> teams.of(player).flatMap(Team::spawn));
         this.parachute = new Parachute(plugin, messages, config.parachuteSeconds());
-        this.platform = new RescuePlatform(config.rescuePlatformRadius(), replaceable, placed);
+        this.platform = new RescuePlatform(config.rescuePlatformRadius(), canPlace, replaceable, placed);
         this.mobileShop = new MobileShop(plugin, messages, dealers, config.mobileShopSeconds());
     }
 
@@ -73,7 +74,7 @@ public final class SpecialItems implements Listener {
                 case RESCUE_PLATFORM -> {
                     boolean spread = platform.spread(player, team.get().color());
                     if (!spread) {
-                        player.sendMessage(messages.get("items.rescue-platform.grounded"));
+                        player.sendMessage(messages.get("items.rescue-platform.unavailable"));
                     }
                     yield spread;
                 }

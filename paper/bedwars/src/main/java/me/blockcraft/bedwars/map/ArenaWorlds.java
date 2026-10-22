@@ -34,7 +34,7 @@ public final class ArenaWorlds {
     }
 
     /** Blocking file work, run before {@link #load}; the copy replaces whatever an earlier load left there. */
-    public static void copy(MapPool pool, String map) {
+    public static synchronized void copy(MapPool pool, String map) {
         WorldTemplate.at(pool.world(map)).restore(folder(map));
     }
 
@@ -63,7 +63,7 @@ public final class ArenaWorlds {
     }
 
     /** Flushes the map a builder edited and copies it back into the pool. */
-    public static void publish(MapPool pool, World world, String map) {
+    public static synchronized void publish(MapPool pool, World world, String map) {
         world.save(true);
         WorldTemplate.at(pool.world(map)).publish(folder(map));
     }

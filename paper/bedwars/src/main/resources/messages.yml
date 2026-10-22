@@ -158,7 +158,7 @@ items:
     already: "<prefix><error>Du hast bereits einen aktiven Fallschirm."
     broke: "<prefix><error>Dein Fallschirm ist kaputt gegangen."
   rescue-platform:
-    grounded: "<prefix><error>Du stehst auf dem Boden."
+    unavailable: "<prefix><error>Hier kannst du keine Rettungsplattform einsetzen."
   mobile-shop:
     ground: "<prefix><error>Du kannst den mobilen Shop nur auf dem Boden platzieren."
     left: "<bedwars><seconds> Sekunden"

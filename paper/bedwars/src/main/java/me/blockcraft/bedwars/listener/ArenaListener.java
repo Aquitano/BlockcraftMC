@@ -66,12 +66,9 @@ public final class ArenaListener implements Listener {
             return;
         }
         var block = event.getBlockPlaced();
-        if (game.border().filter(border -> border.contains(block.getX(), block.getZ())).isEmpty()) {
+        if (!game.canBuild(block)) {
             event.setCancelled(true);
-            event.getPlayer().sendMessage(messages.get("build.outside"));
-        } else if (game.blocksSpawn(block)) {
-            event.setCancelled(true);
-            event.getPlayer().sendMessage(messages.get("build.spawn"));
+            event.getPlayer().sendMessage(messages.get(game.blocksSpawn(block) ? "build.spawn" : "build.outside"));
         }
     }
 

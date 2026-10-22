@@ -15,10 +15,12 @@ import java.util.function.Predicate;
 final class RescuePlatform {
 
     private final List<Vector> disc;
+    private final Predicate<Block> canPlace;
     private final Predicate<Block> replaceable;
     private final Consumer<Block> placed;
 
-    RescuePlatform(double radius, Predicate<Block> replaceable, Consumer<Block> placed) {
+    RescuePlatform(double radius, Predicate<Block> canPlace, Predicate<Block> replaceable, Consumer<Block> placed) {
+        this.canPlace = canPlace;
         this.replaceable = replaceable;
         this.placed = placed;
         var offsets = new ArrayList<Vector>();
@@ -32,19 +34,20 @@ final class RescuePlatform {
         this.disc = List.copyOf(offsets);
     }
 
-    /** False when the player is not in the air. */
     boolean spread(Player player, TeamColor team) {
         var feet = player.getLocation().getBlock();
         if (!feet.getRelative(BlockFace.DOWN).isEmpty()) {
             return false;
         }
+        boolean spread = false;
         for (var offset : disc) {
             var block = feet.getRelative(offset.getBlockX(), offset.getBlockY(), offset.getBlockZ());
-            if (block.isEmpty() || replaceable.test(block)) {
+            if (canPlace.test(block) && (block.isEmpty() || replaceable.test(block))) {
                 block.setType(team.glass());
                 placed.accept(block);
+                spread = true;
             }
         }
-        return true;
+        return spread;
     }
 }

@@ -136,8 +136,8 @@ public final class Game {
         this.shop = new Shop(catalog, messages, perks, teams::colorOf);
         this.dealers = new Dealers(messages, shop, round::isPlaying);
         this.chests = new TeamChests(plugin, messages, teams);
-        this.specials = new SpecialItems(plugin, messages, config, dealers, teams, round::isPlaying, Game::isDecoration,
-                placed::add);
+        this.specials = new SpecialItems(plugin, messages, config, dealers, teams, round::isPlaying, this::canBuild,
+                Game::isDecoration, placed::add);
         this.maps = new MapChoice(plugin, config, messages, pool);
         this.lobbyCountdown = new LobbyCountdown(plugin, round, gameConfig, this::lobbySecond, this::start);
         this.lobbyHotbar = new LobbyHotbar(plugin, List.of(
@@ -243,6 +243,11 @@ public final class Game {
 
     public Optional<Border> border() {
         return Optional.ofNullable(match).map(Match::border);
+    }
+
+    public boolean canBuild(Block block) {
+        return match != null && match.world().equals(block.getWorld())
+                && match.border().contains(block.getX(), block.getZ()) && !blocksSpawn(block);
     }
 
     public Optional<Location> lobbySpawn() {
