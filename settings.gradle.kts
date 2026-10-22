@@ -12,6 +12,7 @@ include(
     "paper:duell",
     "paper:emeraldrush",
     "paper:lobby",
+    "paper:mlgrush",
     "paper:quicksg",
     "paper:reports",
     "paper:statussigns",

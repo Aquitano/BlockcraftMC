@@ -18,6 +18,7 @@ palette:
   emeraldrush: "<green>"
   duell: "<aqua>"
   bedwars: "<dark_aqua>"
+  mlgrush: "<light_purple>"
   premium: "<gold>"
 
 games:
@@ -29,6 +30,8 @@ games:
     name: "<duell>Duell"
   bedwars:
     name: "<bedwars>BedWars"
+  mlgrush:
+    name: "<mlgrush>MLG Rush"
 game-status:
   available: "<success>Jetzt spielen"
   full: "<muted>Alle Plätze belegt"
@@ -319,6 +322,7 @@ profile:
     emeraldrush: "<arrow><primary>EmeraldRush"
     duell: "<arrow><primary>Duell"
     bedwars: "<arrow><primary>BedWars"
+    mlgrush: "<arrow><primary>MLG Rush"
 
 coins:
   self: "<prefix><muted>Du hast <accent><coins> <muted>Coins!"
@@ -378,6 +382,7 @@ achievements:
     emeraldrush: "<arrow><primary>EmeraldRush"
     duell: "<arrow><primary>Duell"
     bedwars: "<arrow><primary>BedWars"
+    mlgrush: "<arrow><primary>MLG Rush"
     network: "<arrow><primary>Netzwerk"
   group-lore: "<bullet><muted><unlocked><dark>/<muted><total> freigeschaltet"
   unlocked-name: "<arrow><success><name>"

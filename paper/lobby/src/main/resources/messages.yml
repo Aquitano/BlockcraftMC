@@ -1,6 +1,8 @@
 prefix: "<primary><ip> <dark>» <reset>"
 
 commands:
+  navigator:
+    description: "Öffnet den Navigator mit allen Spielmodi"
   teamboard:
     description: "Prüft und aktualisiert die Teamwand aus der Teamliste der Map"
   lobbyset:
@@ -104,6 +106,7 @@ navigator:
   rush: "<emeraldrush><bold>EmeraldRush"
   duell: "<duell><bold>Duell"
   bedwars: "<bedwars><bold>BedWars"
+  mlgrush: "<mlgrush><bold>MLG Rush"
   shop: "<accent>Lobby-Shop"
   shop-lore: "<click>Shop öffnen"
   spawn: "<primary>Zurück zum Spawn"
@@ -122,6 +125,9 @@ navigator:
       - "<muted>Ein Gegner. Ihr bestimmt den Modus."
       - "<muted>1vs1, SurvivalGames oder SuperJump."
       - "<dark>Ausreden bitte erst nach dem Duell einreichen."
+    mlgrush:
+      - "<muted>1vs1 mit Rückstoß-Sticks und eigenen Betten."
+      - "<muted>Eine schmale Brücke. Fünf Punkte zum Sieg."
     bedwars:
       - "<muted>Vier Teams zu zweit. Schütze dein Bett."
       - "<muted>Ohne Bett gibt es kein Zurück."

@@ -15,6 +15,7 @@ paper/core               BlockcraftCore: staff/utility commands, chat moderation
 paper/lobby              Lobby: join items, server compass, cosmetics, premium shop, secrets
 paper/duell              Duell: 1v1 duels (vs, sg, superjump)
 paper/emeraldrush        EmeraldRush minigame
+paper/mlgrush            MLG Rush: two players, knockback sticks, beds, first to five
 paper/quicksg            QuickSG survival games
 paper/reports            ReportsMenu: staff GUI over the reports table
 paper/statussigns        StatusSigns: clickable server-status signs
@@ -109,7 +110,7 @@ For repeatable server and client measurements, see [Measure Minecraft performanc
 
 ```
 ./gradlew stagePlugins   # plugin jars into build/docker/
-docker compose up -d     # MariaDB, Velocity on 25565, Paper servers lobby, duell, emeraldrush, quicksg and bedwars
+docker compose up -d     # MariaDB, Velocity on 25565, Paper servers lobby, duell, emeraldrush, quicksg, bedwars and mlgrush
 ```
 
 Connect to `localhost:25565`. Every Paper server runs BlockcraftAPI, BlockcraftCore and its game plugin (the lobby
@@ -120,7 +121,8 @@ lives in named volumes: `docker compose down` keeps it, `docker compose down -v`
 
 In the lobby, `/createsign quicksg` while looking at a sign makes a status sign for that group, `/setspawn qsg` and
 friends place the navigator warps, `/map save` keeps all of that, and `/play quicksg` joins a game from anywhere.
-In the compass, left-click a game to play or right-click to visit its lobby area. Cards and status signs share
+Use `/navigator` (aliases `/nav`, `/spiele`) or the compass to open the game menu in the lobby.
+Left-click a game to play or right-click to visit its lobby area. Cards and status signs share
 availability labels and group player counts; the proxy checks availability again when clicked. Unconfigured
 lobby areas explain that they are not ready.
 To run a second instance of a game, copy its service under a new name with its own `/data` volume. Avoid
@@ -196,6 +198,77 @@ name. On a server that already runs this layout without a template, those files 
 `blockcraft/` directory on the first start by themselves.
 
 The [Vanade map import](worlds/README.md) records the imported worlds, converted configuration, and remaining in-game checks.
+
+## MLG Rush
+
+`paper/mlgrush` runs human 1v1 matches in the `mlgrush` group. Each player gets a knockback stick, refillable
+terracotta, and a wooden pickaxe. Two players start the five-second countdown. Later arrivals watch.
+Breaking the enemy bed scores once and resets both players and the arena. Falls respawn immediately.
+The first player to reach `score-target` wins. Leaving an active match forfeits it.
+
+### Run a local MLG Rush network
+
+Build the plugins, then start the four local services:
+
+```sh
+./gradlew :paper:mlgrush:build :paper:lobby:build stagePlugins
+docker compose --env-file /dev/null -f docker-compose.yml up -d mariadb velocity lobby mlgrush
+```
+
+Connect two clients to `localhost:25565`. In the lobby, `/navigator`, `/nav`, `/spiele`, or the compass opens the
+same game menu. Left-click MLG Rush to play, or use `/play mlgrush` directly from any backend. `/hub` or `/lobby`
+returns from MLG Rush to the lobby, where `/navigator` works again. The waiting and ending hotbars also have a hub
+item. The active kit stays locked to its gameplay slots. No lobby warp or arena editing is required.
+
+`stagePlugins` writes `build/docker/paper/mlgrush/mlgrush.jar` with `config.yml`, `maps.yml`, and `messages.yml`
+bundled inside it. The service installs BlockcraftAPI, BlockcraftCore, MLGRush, LuckPerms, and ViaVersion.
+Its hostname is `mlgrush`, and `BLOCKCRAFT_SERVER_GROUP=mlgrush`. BlockcraftAPI announces two participant places
+and the game phase to `bc_servers`, with the shared five-second heartbeat. The Paper connection limit remains 200
+so spectators can connect. After a match, the normal lifecycle sends everyone to the lobby and shuts down this
+backend; Compose's `restart: unless-stopped` brings it back with a new map selection.
+
+### Select and configure maps
+
+On first start, MLGRush creates `plugins/MLGRush/maps.yml`. Its three enabled procedural maps are:
+
+- `sandstone`, Sandsteg: a 25 by 1 bridge and 7 by 7 bases, with sandstone and red/blue concrete.
+- `courtyard`, Burghof: a 17 by 3 bridge and 9 by 9 bases, with stone bricks, red sandstone, and prismarine bricks.
+- `quartz`, Quarzlinie: a 37 by 1 bridge and 11 by 11 bases, with quartz and white/light gray concrete.
+
+Every bridge connects both bases in a straight line. Spawns are centered across the bridge and face each other.
+Each map uses the generated void dimension `mlgrush:<key>`. Point resets restore that map's materials and paired
+beds after both players teleport to protected spawn spaces. Only player-placed blocks and the enemy bed can break.
+Combat applies knockback without health damage. Wins, losses, falls, and coins use `mlgrush_stats`.
+
+`selection: random` chooses one enabled map at each backend start. For repeatable testing, set `selection: courtyard`
+to an enabled key, then recreate or restart the backend. The chosen name appears on arrival, at match start, and
+in the sidebar; the log records its key. `maps.<key>.enabled` controls the random pool. Each definition must name
+its geometry and all three materials. Only the full solid blocks listed in the bundled pool are accepted.
+Empty pools, unknown or disabled selections, unsafe materials, and invalid geometry fail startup with the map key.
+
+`plugins/MLGRush/config.yml` controls the score target, countdowns, build margin/height, floor/void heights, kit,
+and rewards. A base radius is half its side length rounded down. Bridge widths must be 1, 3, or 5. Bounds are shared
+by all maps, and the stick's horizontal velocity is its level times `kit.horizontal-per-level`.
+
+For an existing installation, stage the updated jars and restart the backend. A missing `maps.yml` is created
+without replacing `config.yml` or `messages.yml`. Move any old `arena.bridge-length`, `arena.bridge-width`, and
+`arena.base-radius` customizations into a named entry in `maps.yml`; those three old config keys are no longer read.
+Pin that entry with `selection` if needed. New message keys fall back to bundled defaults.
+
+### Run MLG Rush with production forwarding
+
+Fill `.env` as described under "Deploy", then use both Compose files:
+
+```sh
+./gradlew stagePlugins
+docker compose --env-file .env -f docker-compose.yml -f docker-compose.prod.yml up -d mariadb velocity lobby mlgrush
+```
+
+MLG Rush is released by default. Its production override uses `prod/paper-global.yml`, the same forwarding secret
+as Velocity, the production database passwords and network addresses, and its own `mlgrush` data volume.
+For updates, stage the jars, run the same `up -d` command to apply Compose changes, then run
+`docker compose --env-file .env -f docker-compose.yml -f docker-compose.prod.yml restart velocity lobby mlgrush`
+to load changed jars and resource-pack assets. Persistent plugin files stay in the named data volume.
 
 ## BedWars
 
@@ -559,7 +632,8 @@ itself; `docker-compose.yml` shows the full set.
 
 `docker-compose.prod.yml` turns the dev network into the public one: MariaDB publishes no port, the resource pack
 is served on loopback for a web server in front of it, the passwords, the forwarding secret, the pack address and the
-network addresses come from `.env`, and the games under `profiles: [unreleased]` stay off. Players still connect to
+network addresses come from `.env`, and the games under `profiles: [unreleased]` stay off.
+Lobby, BedWars, and MLG Rush are enabled by default. Players still connect to
 the proxy's port 25565 directly: Minecraft is not HTTP, so neither a web server nor Cloudflare's proxy can carry it,
 and the DNS record players use has to point at the host itself. On the host, with Docker, git-lfs (otherwise the maps arrive as pointer files) and JDK 25 (`mise install`):
 
@@ -572,7 +646,7 @@ docker compose up -d
 ```
 
 To update, pull, run `./gradlew stagePlugins` and restart the servers (`docker compose restart velocity lobby
-bedwars`). A plugin's `config.yml` and `messages.yml` in its data folder are copies of the bundled defaults, made on
+bedwars mlgrush`). A plugin's `config.yml` and `messages.yml` in its data folder are copies of the bundled defaults, made on
 its first start: new keys arrive through the bundled default, but the copy keeps its own value for every key it
 already has, so changed texts and renamed config keys do not reach a server by themselves. Move a copy nobody edited
 aside before the restart (`docker compose exec bedwars mv /data/plugins/BedWars/messages.yml

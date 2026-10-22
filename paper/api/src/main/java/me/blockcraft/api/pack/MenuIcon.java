@@ -42,6 +42,7 @@ public enum MenuIcon {
     EMERALDRUSH(Material.EMERALD),
     DUELL(Material.SHIELD),
     BEDWARS(Material.RED_BED),
+    MLGRUSH(Material.STICK),
     GADGETS(Material.FISHING_ROD),
     KILL_EFFECTS(Material.IRON_SWORD),
     WIN_EFFECTS(Material.FIREWORK_ROCKET),

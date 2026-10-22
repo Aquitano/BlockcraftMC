@@ -1,0 +1,23 @@
+players:
+  min: 2
+global-stats-head: Kevos
+countdown:
+  lobby: 5
+  start: 3
+  restart: 10
+idle-restart-minutes: 50
+timer-bar: true
+score-target: 5
+arena:
+  build-margin: 4
+  build-height: 16
+  floor-y: 64
+  void-y: 48
+kit:
+  blocks: 64
+  knockback-level: 1
+  horizontal-per-level: 0.9
+  vertical-knockback: 0.35
+  hit-delay-ticks: 8
+rewards:
+  win: 10
