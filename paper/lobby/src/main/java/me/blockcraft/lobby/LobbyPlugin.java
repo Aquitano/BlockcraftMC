@@ -15,6 +15,7 @@ import me.blockcraft.lobby.activity.SeasonalEvents;
 import me.blockcraft.lobby.activity.ShootingStars;
 import me.blockcraft.lobby.command.ClearChatCommand;
 import me.blockcraft.lobby.command.LobbySetCommand;
+import me.blockcraft.lobby.command.NavigatorCommand;
 import me.blockcraft.lobby.command.SetHoloCommand;
 import me.blockcraft.lobby.command.SetSpawnCommand;
 import me.blockcraft.lobby.command.TeamBoardCommand;
@@ -154,6 +155,7 @@ public final class LobbyPlugin extends JavaPlugin {
                     Stream.concat(config.holograms().stream(), leaderboards.names().stream()).toList(),
                     holograms, locations, shopNpc));
             commands.register(ClearChatCommand.create(messages));
+            commands.register(NavigatorCommand.create(menus), "nav", "spiele");
             var activeTeamBoard = api.map().file(this, "team-board.yml");
             var teamBoardSource = api.map().template()
                     .map(template -> template.directory().resolve("blockcraft").resolve(getName()).resolve("team-board.yml"))

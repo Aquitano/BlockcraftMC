@@ -14,6 +14,7 @@ palette:
   emeraldrush: "<green>"
   duell: "<aqua>"
   bedwars: "<dark_aqua>"
+  mlgrush: "<light_purple>"
   premium: "<gold>"
   youtuber: "<dark_purple>"
 player-only: "<error>Nur ein Spieler kann diesen Befehl verwenden!"
@@ -591,6 +592,7 @@ play:
     emeraldrush: "<emeraldrush>EmeraldRush"
     duell: "<duell>Duell"
     bedwars: "<bedwars>BedWars"
+    mlgrush: "<mlgrush>MLG Rush"
 msg:
   usage: "<prefix><error>Benutze /msg \\<Name> \\<Nachricht>"
   reply-usage: "<prefix><error>Benutze /r \\<Nachricht>"
@@ -694,6 +696,7 @@ joinme:
     duell: "<arrow><accent><player><muted> spielt <duell>Duell<muted>!"
     emeraldrush: "<arrow><accent><player><muted> spielt <emeraldrush>EmeraldRush<muted>!"
     bedwars: "<arrow><accent><player><muted> spielt <bedwars>BedWars<muted>!"
+    mlgrush: "<arrow><accent><player><muted> spielt <mlgrush>MLG Rush<muted>!"
 
 support:
   already-open: "<primary>Support <arrow><reset><error>Du hast bereits einen offenen Supportantrag. Bitte warte, bis ein Supporter diesen bearbeitet."

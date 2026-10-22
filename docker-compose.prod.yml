@@ -41,6 +41,7 @@ services:
 
   lobby: *paper
   bedwars: *paper
+  mlgrush: *paper
 
   # Not released yet: `docker compose --profile unreleased up -d duell` starts one anyway.
   duell:

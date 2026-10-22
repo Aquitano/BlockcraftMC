@@ -1,0 +1,32 @@
+selection: random
+maps:
+  sandstone:
+    enabled: true
+    name: Sandsteg
+    bridge-length: 25
+    bridge-width: 1
+    base-radius: 3
+    materials:
+      bridge: SMOOTH_SANDSTONE
+      red-base: RED_CONCRETE
+      blue-base: BLUE_CONCRETE
+  courtyard:
+    enabled: true
+    name: Burghof
+    bridge-length: 17
+    bridge-width: 3
+    base-radius: 4
+    materials:
+      bridge: STONE_BRICKS
+      red-base: RED_SANDSTONE
+      blue-base: PRISMARINE_BRICKS
+  quartz:
+    enabled: true
+    name: Quarzlinie
+    bridge-length: 37
+    bridge-width: 1
+    base-radius: 5
+    materials:
+      bridge: QUARTZ_BLOCK
+      red-base: WHITE_CONCRETE
+      blue-base: LIGHT_GRAY_CONCRETE
