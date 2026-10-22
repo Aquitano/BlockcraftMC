@@ -2,6 +2,7 @@ package me.blockcraft.duell.listener;
 
 import me.blockcraft.api.world.BuildMode;
 import me.blockcraft.duell.game.Duel;
+import me.blockcraft.duell.game.DuelMode;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -18,7 +19,7 @@ import java.util.Set;
 
 /**
  * Duell's rules beyond the shared lobby's: nobody gets hungry, only build mode builds, falls, fire and water do not
- * hurt, players hurt each other and drop items only while the duel is fought, and nobody loses their inventory.
+ * hurt, players hurt each other only while the duel is fought, only SG permits item drops, and nobody loses their inventory.
  */
 public final class ProtectionListener implements Listener {
 
@@ -72,7 +73,7 @@ public final class ProtectionListener implements Listener {
 
     @EventHandler
     public void onDrop(PlayerDropItemEvent event) {
-        if (!duel.pvp()) {
+        if (!duel.pvp() || !duel.isMode(DuelMode.SG)) {
             event.setCancelled(true);
         }
     }

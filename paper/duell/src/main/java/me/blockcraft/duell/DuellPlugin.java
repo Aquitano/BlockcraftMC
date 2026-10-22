@@ -62,7 +62,7 @@ public final class DuellPlugin extends JavaPlugin {
         List.of(
                 new ConnectionListener(duel),
                 new ProtectionListener(duel, api.buildMode()),
-                new LobbyProtection(duel::isLobby, api.buildMode(), duel::lobbySpawn),
+                new LobbyProtection(() -> !duel.isIngame(), api.buildMode(), duel::lobbySpawn),
                 new ArenaProtection(duel::frozen),
                 duel.lobbyHotbar(),
                 new VsListener(this, duel, config, items),

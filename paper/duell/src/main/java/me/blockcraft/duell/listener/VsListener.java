@@ -7,6 +7,8 @@ import me.blockcraft.duell.game.DuelMode;
 import me.blockcraft.duell.game.GameItems;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
+import org.bukkit.entity.AbstractArrow;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -39,17 +41,20 @@ public final class VsListener implements Listener {
 
     @EventHandler
     public void onRespawn(PlayerRespawnEvent event) {
-        if (duel.isLobby() || !duel.isMode(DuelMode.VS)) {
+        if (duel.isLobby() || !duel.isMode(DuelMode.VS) || !duel.isParticipant(event.getPlayer())) {
             return;
         }
         var player = event.getPlayer();
-        duel.mapSpawn(1).ifPresent(event::setRespawnLocation);
+        duel.mapSpawn(1).ifPresent(spawn -> {
+            event.setRespawnLocation(spawn);
+            spawn.getWorld().getEntitiesByClass(AbstractArrow.class).forEach(Entity::remove);
+        });
         duel.mapSpawn(2).ifPresent(spawn -> duel.opponentsOf(player).forEach(other -> {
             other.teleport(spawn);
             rearm(other);
         }));
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            if (player.isOnline()) {
+            if (player.isOnline() && duel.isParticipant(player)) {
                 rearm(player);
             }
         }, KIT_DELAY_TICKS);
