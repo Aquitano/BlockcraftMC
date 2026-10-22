@@ -5,6 +5,7 @@ import me.blockcraft.mlgrush.config.RushConfig.Kit;
 import me.blockcraft.mlgrush.game.RushGame;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.block.data.type.Bed;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -105,7 +106,8 @@ public final class RushRules implements Listener {
 
     @EventHandler
     public void onInteract(PlayerInteractEvent event) {
-        if (event.getClickedBlock() != null && event.getAction().isRightClick()) {
+        if (event.getClickedBlock() != null && event.getAction().isRightClick()
+                && event.getClickedBlock().getBlockData() instanceof Bed) {
             event.setUseInteractedBlock(org.bukkit.event.Event.Result.DENY);
         }
     }

@@ -174,9 +174,9 @@ public final class TabTeams implements Listener {
         var team = board.getTeam(entry.team());
         if (team == null) {
             team = board.registerNewTeam(entry.team());
-            team.setAllowFriendlyFire(false);
             team.setCanSeeFriendlyInvisibles(true);
         }
+        team.setAllowFriendlyFire(true);
         team.prefix(entry.prefix());
         team.suffix(entry.suffix());
         entry.color().ifPresent(team::color);
