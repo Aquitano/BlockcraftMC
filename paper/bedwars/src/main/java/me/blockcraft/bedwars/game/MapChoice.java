@@ -51,7 +51,7 @@ final class MapChoice {
     }
 
     boolean hasMaps() {
-        return !choices.isEmpty();
+        return choices.stream().anyMatch(map -> ArenaWorlds.loaded(map.key()).isEmpty());
     }
 
     Optional<ArenaMap> chosen() {
@@ -59,11 +59,11 @@ final class MapChoice {
     }
 
     List<String> playable() {
-        return pool.playable(config.teams()).stream().map(ArenaMap::key).toList();
+        return available().stream().map(ArenaMap::key).toList();
     }
 
     Optional<ArenaMap> playable(String key) {
-        return pool.playable(config.teams()).stream().filter(map -> map.key().equals(key)).findFirst();
+        return available().stream().filter(map -> map.key().equals(key)).findFirst();
     }
 
     void openMenu(Player player) {
@@ -71,9 +71,10 @@ final class MapChoice {
             VoteMenu.closed(player, messages);
             return;
         }
-        var options = choices.stream().map(map -> new VoteMenu.Option(Optional.of(map.key()),
-                messages.get("vote.map", Placeholder.unparsed("map", map.name())), new ItemStack(map.icon()),
-                builders(map), ballot.votes(Optional.of(map.key())))).toList();
+        var options = choices.stream().filter(map -> ArenaWorlds.loaded(map.key()).isEmpty())
+                .map(map -> new VoteMenu.Option(Optional.of(map.key()),
+                        messages.get("vote.map", Placeholder.unparsed("map", map.name())), new ItemStack(map.icon()),
+                        builders(map), ballot.votes(Optional.of(map.key())))).toList();
         new VoteMenu(messages.get("vote.title"), options, Optional.of(ballot.votes(Optional.empty())),
                 ballot.choiceOf(player.getUniqueId()), Optional.empty(), this::vote).open(player);
     }
@@ -87,7 +88,13 @@ final class MapChoice {
         if (chosen.isPresent()) {
             return false;
         }
-        var winner = ballot.winner(choices.stream().map(ArenaMap::key).toList(), random).flatMap(this::choice);
+        var candidates = choices.stream().filter(map -> ArenaWorlds.loaded(map.key()).isEmpty())
+                .map(ArenaMap::key).toList();
+        if (candidates.isEmpty()) {
+            redraw();
+            candidates = choices.stream().map(ArenaMap::key).toList();
+        }
+        var winner = ballot.winner(candidates, random).flatMap(this::choice);
         winner.ifPresent(map -> choose(map, false));
         return winner.isPresent();
     }
@@ -108,7 +115,11 @@ final class MapChoice {
     /** Waits for the chosen map's copy, which normally finished while the lobby counted down its last seconds. */
     ArenaMap awaitCopy() {
         copied.join();
-        return chosen.orElseThrow();
+        var map = chosen.orElseThrow();
+        if (ArenaWorlds.loaded(map.key()).isPresent()) {
+            throw new IllegalStateException("The map is already loaded: " + map.key());
+        }
+        return map;
     }
 
     /** A fresh draw of maps for a new vote; a menu still showing the old draw closes. */
@@ -118,7 +129,7 @@ final class MapChoice {
                 .forEach(Menu::close);
         chosen = Optional.empty();
         forced = false;
-        var drawn = new ArrayList<>(pool.playable(config.teams()));
+        var drawn = new ArrayList<>(available());
         Collections.shuffle(drawn, random);
         choices = List.copyOf(drawn.subList(0, Math.min(config.voteMaps(), drawn.size())));
         ballot = new Ballot<>();
@@ -127,7 +138,7 @@ final class MapChoice {
     /** {@code key} empty is a vote to leave the map to chance. */
     private void vote(Player player, Optional<String> key) {
         Menu.close(player);
-        if (chosen.isPresent()) {
+        if (chosen.isPresent() || (key.isPresent() && choice(key.get()).isEmpty())) {
             VoteMenu.closed(player, messages);
             return;
         }
@@ -138,7 +149,11 @@ final class MapChoice {
     }
 
     private Optional<ArenaMap> choice(String key) {
-        return choices.stream().filter(map -> map.key().equals(key)).findFirst();
+        return choices.stream().filter(map -> map.key().equals(key) && ArenaWorlds.loaded(key).isEmpty()).findFirst();
+    }
+
+    private List<ArenaMap> available() {
+        return pool.playable(config.teams()).stream().filter(map -> ArenaWorlds.loaded(map.key()).isEmpty()).toList();
     }
 
     private List<Component> builders(ArenaMap map) {
@@ -148,6 +163,9 @@ final class MapChoice {
     }
 
     private void choose(ArenaMap map, boolean forcedChoice) {
+        if (ArenaWorlds.loaded(map.key()).isPresent()) {
+            throw new IllegalStateException("The map is already loaded: " + map.key());
+        }
         chosen = Optional.of(map);
         forced = forcedChoice;
         messages.getLines("vote.result", Placeholder.unparsed("map", map.name())).forEach(Bukkit::broadcast);

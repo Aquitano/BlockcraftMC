@@ -11,6 +11,8 @@ import org.bukkit.generator.ChunkGenerator;
 
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Since 26.2 every world of a server is a dimension of its one level, so a pool map is copied to
@@ -20,6 +22,7 @@ import java.util.Optional;
 public final class ArenaWorlds {
 
     private static final String NAMESPACE = "bedwars";
+    private static final Set<String> COPYING_OR_LOADING = ConcurrentHashMap.newKeySet();
 
     private ArenaWorlds() {
     }
@@ -33,23 +36,43 @@ public final class ArenaWorlds {
         return Optional.ofNullable(Bukkit.getWorld(key(map)));
     }
 
-    /** Blocking file work, run before {@link #load}; the copy replaces whatever an earlier load left there. */
+    /** Blocking file work, run before {@link #load}; only an unloaded dimension may be replaced. */
     public static synchronized void copy(MapPool pool, String map) {
-        WorldTemplate.at(pool.world(map)).restore(folder(map));
+        if (!COPYING_OR_LOADING.add(map)) {
+            throw new IllegalStateException("The map is being copied or loaded: " + map);
+        }
+        try {
+            if (loaded(map).isPresent()) {
+                throw new IllegalStateException("Cannot copy into a loaded map: " + map);
+            }
+            WorldTemplate.at(pool.world(map)).restore(folder(map));
+        } finally {
+            COPYING_OR_LOADING.remove(map);
+        }
     }
 
     public static World load(String map) {
-        return loaded(map).orElseGet(() -> {
-            var world = WorldCreator.ofKey(key(map))
-                    .generator(new ChunkGenerator() { })
-                    .createWorld();
-            if (world == null) {
-                throw new IllegalStateException("Could not load the map " + map);
-            }
-            world.setAutoSave(false);
-            settle(world);
-            return world;
-        });
+        if (!Bukkit.isPrimaryThread()) {
+            throw new IllegalStateException("Maps must be loaded on the main thread");
+        }
+        if (!COPYING_OR_LOADING.add(map)) {
+            throw new IllegalStateException("The map is being copied or loaded: " + map);
+        }
+        try {
+            return loaded(map).orElseGet(() -> {
+                var world = WorldCreator.ofKey(key(map))
+                        .generator(new ChunkGenerator() { })
+                        .createWorld();
+                if (world == null) {
+                    throw new IllegalStateException("Could not load the map " + map);
+                }
+                world.setAutoSave(false);
+                settle(world);
+                return world;
+            });
+        } finally {
+            COPYING_OR_LOADING.remove(map);
+        }
     }
 
     /** What every BedWars world keeps still: the time of day, the weather, growth and the locator bar. */

@@ -290,6 +290,10 @@ loads a map of the pool, or an empty one for a new key, and takes the builder th
 missing, and `save` copies the world back into the pool. `/map save` then publishes the lobby with its pool. A map is
 in the vote once nothing is missing for the teams `config.yml` plays with.
 
+Opening a map for editing keeps its loaded dimension out of votes and forced choices. Save changes you want to
+keep, then restart the backend to use that map in rounds. Editing a chosen map before the round starts cancels
+that start instead of replacing files beneath the loaded world.
+
 ## Server discovery and groups
 
 The proxy keeps no server list. Every Paper server writes a heartbeat row (name, group, address, state, player
