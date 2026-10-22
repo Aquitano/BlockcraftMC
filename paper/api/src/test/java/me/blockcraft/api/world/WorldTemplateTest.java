@@ -100,6 +100,63 @@ public class WorldTemplateTest {
         assertFalse(Files.exists(directory.resolve(".staging")));
     }
 
+    @Test
+    public void restoreRecoversAnInterruptedDimensionBackupWithoutDeletingUnmovedFiles() throws IOException {
+        Path directory = folder.newFolder("dimension").toPath();
+        write(directory, "region/r.0.0.mca", "old chunks");
+        write(directory, ".replaced/entities/r.0.0.mca", "old entities");
+        write(directory, ".staging/region/r.0.0.mca", "new chunks");
+        write(directory, ".staging/entities/r.0.0.mca", "new entities");
+        Path world = folder.newFolder("world").toPath();
+
+        WorldTemplate.at(directory).restore(world);
+
+        assertEquals("old chunks", Files.readString(directory.resolve("region/r.0.0.mca")));
+        assertEquals("old entities", Files.readString(directory.resolve("entities/r.0.0.mca")));
+        assertEquals("old chunks", Files.readString(world.resolve("region/r.0.0.mca")));
+        assertEquals("old entities", Files.readString(world.resolve("entities/r.0.0.mca")));
+        assertFalse(Files.exists(directory.resolve(".staging")));
+        assertFalse(Files.exists(directory.resolve(".replaced")));
+    }
+
+    @Test
+    public void aCompletedDimensionBackupFinishesInstallingTheNewMap() throws IOException {
+        Path directory = folder.newFolder("dimension").toPath();
+        write(directory, "region/r.0.0.mca", "new chunks");
+        write(directory, ".staging/entities/r.0.0.mca", "new entities");
+        write(directory, ".replaced/region/r.0.0.mca", "old chunks");
+        write(directory, ".replaced/entities/r.0.0.mca", "old entities");
+        write(directory, ".publish-ready", "");
+        var template = WorldTemplate.at(directory);
+
+        template.recover();
+        template.recover();
+
+        assertEquals("new chunks", Files.readString(directory.resolve("region/r.0.0.mca")));
+        assertEquals("new entities", Files.readString(directory.resolve("entities/r.0.0.mca")));
+        assertFalse(Files.exists(directory.resolve(".staging")));
+        assertFalse(Files.exists(directory.resolve(".replaced")));
+        assertFalse(Files.exists(directory.resolve(".publish-ready")));
+    }
+
+    @Test
+    public void dimensionsWithoutLevelDataCanBePublishedAndRestored() throws IOException {
+        Path world = folder.newFolder("dimension").toPath();
+        write(world, "region/r.0.0.mca", "chunks");
+        write(world, "entities/r.0.0.mca", "entities");
+        Path directory = folder.newFolder("template").toPath();
+        Path restored = folder.newFolder("restored").toPath();
+        var template = WorldTemplate.at(directory);
+
+        template.publish(world);
+        template.restore(restored);
+
+        assertEquals("chunks", Files.readString(restored.resolve("region/r.0.0.mca")));
+        assertEquals("entities", Files.readString(restored.resolve("entities/r.0.0.mca")));
+        assertFalse(Files.exists(restored.resolve("level.dat")));
+        assertFalse(Files.exists(directory.resolve(".publish-ready")));
+    }
+
     private static void write(Path root, String file, String content) throws IOException {
         Path path = root.resolve(file);
         Files.createDirectories(path.getParent());

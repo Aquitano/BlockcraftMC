@@ -76,3 +76,4 @@ run/
 .cloudflare/
 worlds/*/.staging/
 worlds/*/.replaced/
+worlds/**/.publish-ready

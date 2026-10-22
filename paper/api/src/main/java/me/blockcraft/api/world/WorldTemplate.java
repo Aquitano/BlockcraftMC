@@ -28,7 +28,8 @@ public final class WorldTemplate {
     private static final Set<String> TRANSIENT = Set.of("session.lock", "players", "playerdata", "stats", "advancements", "level.dat_old");
     private static final String STAGING = ".staging";
     private static final String REPLACED = ".replaced";
-    private static final Set<String> PUBLISHING = Set.of(STAGING, REPLACED);
+    private static final String READY = ".publish-ready";
+    private static final Set<String> PUBLISHING = Set.of(STAGING, REPLACED, READY);
 
     private final Path directory;
 
@@ -58,6 +59,7 @@ public final class WorldTemplate {
 
     public void restore(Path world) {
         try {
+            repair();
             Files.createDirectories(world);
             clear(world, name -> true);
             copyContents(directory, world, name -> !PUBLISHING.contains(name));
@@ -69,8 +71,7 @@ public final class WorldTemplate {
     /**
      * Copies the world into a staging directory inside the template and only then swaps the contents with renames,
      * which stay on the template's file system, so a copy that fails or is cut short leaves the old map in place.
-     * level.dat goes last in every copy and move, so a directory that holds it is complete; {@link #recover} relies on
-     * that to finish or undo a swap that was cut short.
+     * A marker records when the old contents have moved out, including for dimensions without level.dat.
      */
     public void publish(Path world) {
         Path staging = directory.resolve(STAGING);
@@ -79,11 +80,12 @@ public final class WorldTemplate {
             Files.createDirectories(directory);
             repair();
             Files.createDirectories(staging);
-            copyContents(world, staging, name -> !TRANSIENT.contains(name));
+            copyContents(world, staging, name -> !TRANSIENT.contains(name) && !PUBLISHING.contains(name));
             Files.createDirectories(replaced);
             moveContents(directory, replaced, name -> !PUBLISHING.contains(name));
+            Files.createFile(directory.resolve(READY));
             moveContents(staging, directory, name -> true);
-            clear(directory, PUBLISHING::contains);
+            clearPublishing();
         } catch (IOException e) {
             throw new UncheckedIOException("Could not copy " + world + " to " + directory, e);
         }
@@ -105,19 +107,21 @@ public final class WorldTemplate {
     private void repair() throws IOException {
         Path staging = directory.resolve(STAGING);
         Path replaced = directory.resolve(REPLACED);
-        if (Files.isDirectory(replaced) && !exists()) {
-            if (Files.isRegularFile(staging.resolve(LEVEL))) {
+        if (Files.isRegularFile(directory.resolve(READY)) || Files.isRegularFile(replaced.resolve(LEVEL))) {
+            if (Files.isDirectory(staging)) {
                 moveContents(staging, directory, name -> true);
-            } else {
-                clear(directory, name -> !PUBLISHING.contains(name));
-                moveContents(replaced, directory, name -> true);
             }
-        } else if (Files.isDirectory(replaced) && !Files.isRegularFile(replaced.resolve(LEVEL))) {
+        } else if (Files.isDirectory(replaced)) {
             moveContents(replaced, directory, name -> true);
         }
         if (Files.isDirectory(directory)) {
-            clear(directory, PUBLISHING::contains);
+            clearPublishing();
         }
+    }
+
+    private void clearPublishing() throws IOException {
+        clear(directory, name -> name.equals(STAGING) || name.equals(REPLACED));
+        Files.deleteIfExists(directory.resolve(READY));
     }
 
     private static void clear(Path directory, Predicate<String> include) throws IOException {
