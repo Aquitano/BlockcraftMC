@@ -26,6 +26,7 @@ public final class DuelVote {
     private static final int FALLBACK_MAP = 1;
 
     private final Map<UUID, Choice> choices = new HashMap<>();
+    private final Map<UUID, DuelSeries.Format> formats = new HashMap<>();
     private Optional<DuelMode> forced = Optional.empty();
 
     /** The voter's earlier choice, which this one replaces. */
@@ -35,6 +36,29 @@ public final class DuelVote {
 
     void withdraw(UUID voter) {
         choices.remove(voter);
+        formats.remove(voter);
+    }
+
+    void clearChoice(UUID voter) {
+        choices.remove(voter);
+    }
+
+    void chooseFormat(UUID voter, DuelSeries.Format format) {
+        formats.put(voter, format);
+    }
+
+    public DuelSeries.Format formatChoice(UUID voter) {
+        return formats.getOrDefault(voter, DuelSeries.Format.SINGLE);
+    }
+
+    public DuelSeries.Format selectedFormat(List<UUID> participants) {
+        return participants.size() == 2 && !participants.getFirst().equals(participants.getLast())
+                && participants.stream().allMatch(player -> formatChoice(player) == DuelSeries.Format.TOUR)
+                ? DuelSeries.Format.TOUR : DuelSeries.Format.SINGLE;
+    }
+
+    List<DuelMode> nominations() {
+        return choices.values().stream().map(Choice::mode).distinct().sorted().toList();
     }
 
     /** The mode is settled whatever the votes say; the votes for its maps still count. */
@@ -89,7 +113,10 @@ public final class DuelVote {
             modes = available;
         }
         var mode = pick(modes.isEmpty() ? List.of(DuelMode.values()) : modes, random);
-        var maps = playable.getOrDefault(mode, List.of());
+        return tally(mode, playable.getOrDefault(mode, List.of()), random);
+    }
+
+    Outcome tally(DuelMode mode, List<Integer> maps, Random random) {
         var votedMaps = mostVoted(mapVotes(mode).filter(maps::contains));
         var candidates = votedMaps.isEmpty() ? maps : votedMaps;
         return new Outcome(mode, candidates.isEmpty() ? FALLBACK_MAP : pick(candidates, random));

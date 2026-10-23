@@ -178,6 +178,12 @@ public final class RoundSummary {
         return tracking.undamaged(player);
     }
 
+    /** Starts another game within this round, retaining cumulative rewards, stats and the best kill streak. */
+    public void nextGame() {
+        tracking.nextGame();
+        scores.values().forEach(score -> score.streak = 0);
+    }
+
     /** Grants the moment achievement {@code game.name} and adds its {@code moments.<name>} line to the player's recap. */
     public void moment(Player player, String game, String name, TagResolver... resolvers) {
         note(player, messages.get("moments." + name, resolvers));

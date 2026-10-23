@@ -300,6 +300,24 @@ Duell's `sumo` config section controls the radius, floor and loss heights, spawn
 duration, knockback strength, and hit delay. Sumo uses Duell's stats, Elo, win rewards, and rematch flow.
 Each knockout counts as a kill for stats and network XP. The damage-free win achievement excludes Sumo.
 
+### Single game and three-mode tour
+
+Duell's vote menu offers `Einzelspiel` and `3-Modi-Tour`. Single game is the default. A tour requires both
+participants to select it before the lobby countdown finishes. It schedules three distinct playable modes from
+VS, SG, SuperJump, and Sumo. Each player's mode vote nominates that mode; remaining places are drawn randomly,
+and the order is shuffled and announced before play. Map votes still apply within their modes. Without nominations,
+all three modes are random. A forced mode takes one tour place. Fewer than three playable modes falls back to a
+single game with an explanation. MLG Rush remains a separate navigation entry.
+
+Every tour plays all three games, including at 2:0. A drawn game consumes its place; equal game wins after the third
+game draw the tour. Games retain their normal point rules, reset equipment and checkpoints, alternate starting
+slots, and continue on the same backend. `tour.intermission-seconds` controls the next game's freeze, three seconds
+by default. Leaving or vanishing during a tour forfeits the whole series, including during transitions.
+
+Kills and deaths accumulate across the tour. The final result grants win coins, win XP, participation XP, the
+account-level win or loss, and Elo once. One combined recap follows the tour. Duell's existing restart and rematch
+flow runs after the final result.
+
 ## BedWars
 
 `paper/bedwars` is a port of [rewi-bw](https://github.com/Marfien/rewi-bw), the Rewinside BedWars clone, under its

@@ -11,6 +11,7 @@ import org.bukkit.entity.Player;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.OptionalInt;
+import java.util.Optional;
 
 /**
  * The shared sidebar with the duel under it: the mode, with the viewer's rating while the lobby waits, the opponent
@@ -19,7 +20,7 @@ import java.util.OptionalInt;
 public final class GameScoreboard {
 
     /** What every viewer's sidebar shares until the duel ends. */
-    public record Board(Component mode, Component map, int secondsLeft) {
+    public record Board(Component mode, Component map, int secondsLeft, List<Component> tour) {
     }
 
     private final Messages messages;
@@ -33,7 +34,7 @@ public final class GameScoreboard {
     }
 
     public void showDuellist(Player viewer, Board board, TagResolver rating, List<String> opponents, OptionalInt kills,
-                             boolean sumo) {
+                             boolean sumo, Optional<Component> tourScore) {
         var icons = GameSidebar.icons(viewer);
         var sections = new ArrayList<GameSidebar.Section>();
         var mode = round.phase() == GamePhase.LOBBY
@@ -45,6 +46,11 @@ public final class GameScoreboard {
                 : opponents.stream().map(name -> GameSidebar.value(Component.text(name))).toList()));
         kills.ifPresent(count -> sections.add(new GameSidebar.Section(messages.get(sumo ? "scoreboard.points" : "scoreboard.kills", icons),
                 GameSidebar.value(Component.text(count)))));
+        if (!board.tour().isEmpty()) {
+            var lines = new ArrayList<>(board.tour());
+            tourScore.ifPresent(lines::add);
+            sections.add(new GameSidebar.Section(messages.get("scoreboard.tour", icons), lines));
+        }
         show(viewer, board, sections);
     }
 
@@ -55,6 +61,9 @@ public final class GameScoreboard {
         if (!duellists.isEmpty()) {
             sections.add(new GameSidebar.Section(messages.get("scoreboard.duellists", icons),
                     duellists.stream().map(GameSidebar::value).toList()));
+        }
+        if (!board.tour().isEmpty()) {
+            sections.add(new GameSidebar.Section(messages.get("scoreboard.tour", icons), board.tour()));
         }
         show(viewer, board, sections);
     }

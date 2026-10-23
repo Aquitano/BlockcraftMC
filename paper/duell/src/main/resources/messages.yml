@@ -20,7 +20,7 @@ mode:
   sumo: "Sumo"
 
 join:
-  introduction: "<prefix><muted>Stimm über Modus und Map ab. <duell>Ein Gegner. <muted>Keine Zeugen nötig."
+  introduction: "<prefix><muted>Wähle Einzelspiel oder 3-Modi-Tour und stimm über Modus und Map ab. <duell>Ein Gegner."
   spectator: "<prefix><muted>Du bist als Zuschauer beigetreten."
 
 # <map> is the map's name or vote.random-map; option names a vote in its confirmation.
@@ -28,6 +28,21 @@ vote:
   option: "<mode> <dark>· <accent><map>"
   random-map: "Zufällige Map"
   result: "<prefix><muted>Gespielt wird <accent><mode> <muted>auf <accent><map><muted>."
+  cleared: "<prefix><muted>Deine Modus- und Map-Stimme ist zurückgenommen. Dein Format bleibt ausgewählt."
+
+tour:
+  fallback: "<prefix><muted>Für die Tour fehlen spielbare Modi. Es sind drei nötig. Ihr spielt ein Einzelspiel."
+  schedule: "<prefix><muted>Eure 3-Modi-Tour: <accent><modes><muted>. Ihr spielt alle drei Spiele, auch bei 2:0."
+  next: "<prefix><muted>Spiel <accent><game><muted>/<accent><total><muted>: <accent><mode> <muted>startet in <accent><seconds> Sekunden<muted>."
+  game-win: "<prefix><accent><player> <muted>gewinnt das Spiel in <accent><mode><muted>."
+  game-draw: "<prefix><accent><mode> <muted>endet unentschieden. Das Spiel zählt zur Tour."
+  score: "<prefix><white><first> <accent><first-score> <dark>: <accent><second-score> <white><second>"
+  result-note: "<muted>Deine Tourbilanz: <accent><score><muted>/<accent><games> <muted>Spiele gewonnen."
+  format-chosen: "<prefix><muted>Deine Auswahl: <accent><format><muted>."
+  format-single: "Einzelspiel"
+  format-tour: "3-Modi-Tour"
+  format-waiting: "<prefix><muted>Die Tour startet nur, wenn ihr beide die 3-Modi-Tour wählt. Bis dahin bleibt es beim Einzelspiel."
+  format-request: "<prefix><accent><player> <muted>möchte eine 3-Modi-Tour. Wähle in der Abstimmung ebenfalls die Tour, um zuzustimmen."
 
 round:
   ended: "<prefix><muted>Die Runde wurde beendet."
@@ -90,8 +105,25 @@ item:
     arrows: "<primary>Pfeile"
 
 menu:
+  formats:
+    single: "<arrow><primary>Einzelspiel"
+    single-lore:
+      - "<bullet><muted>Standard: ein Spiel in einem Modus."
+      - "<bullet><muted>Eure Stimmen bestimmen Modus und Map."
+    tour: "<arrow><primary>3-Modi-Tour"
+    tour-lore:
+      - "<bullet><muted>Drei verschiedene Modi in zufälliger Reihenfolge."
+      - "<bullet><muted>Alle drei Spiele werden gespielt, auch bei 2:0."
+      - "<bullet><muted>Jeder nominiert über die Moduswahl einen Modus."
+      - "<bullet><muted>Bis zu zwei Nominierungen, der Rest zufällig."
+      - "<bullet><muted>Ohne Nominierungen: drei zufällige Modi."
+      - "<bullet><muted>Eure Map-Stimmen zählen im jeweiligen Modus."
+      - "<bullet><muted>Die Tour gilt nur, wenn ihr beide sie wählt."
+    current: "<bullet><muted>Aktuell: <accent><format>"
+    selected: "<success>Deine Auswahl"
+    choose: "<left>Format wählen"
   modes:
-    title: "<arrow><duell>Duell <dark>· <muted>Euer Modus"
+    title: "<arrow><duell>Duell <dark>· <muted>Euer Spiel"
     vs: "<arrow><primary>1vs1"
     vs-lore: "<bullet><muted>Schwert, Bogen und Angel. Besiege deinen Gegner."
     sg: "<arrow><primary>SurvivalGames"
@@ -100,6 +132,11 @@ menu:
     superjump-lore: "<bullet><muted>Erreiche die Checkpoints und das Ziel zuerst."
     sumo: "<arrow><primary>Sumo"
     sumo-lore: "<bullet><muted>Stoße deinen Gegner ohne Ausrüstung vom Ring und sammle Punkte."
+    random: "<arrow><primary>Dem Zufall überlassen"
+    random-lore:
+      - "<bullet><muted>Nimmt deine Modus- und Map-Stimme zurück."
+      - "<bullet><muted>Ohne Nominierungen ist die Tour vollständig zufällig."
+      - "<left>Stimme zurücknehmen"
     mlgrush: "<arrow><mlgrush>MLG Rush"
     mlgrush-lore:
       - "<bullet><muted>Baue zum gegnerischen Bett und zerstöre es."
@@ -137,6 +174,9 @@ scoreboard:
   kills: "<muted><icon:kills> KILLS"
   points: "<muted><icon:kills> PUNKTE"
   mode: "<muted><icon:mode> MODUS"
+  tour: "<muted><icon:mode> TOUR"
+  tour-progress: "<muted>Spiel <accent><game><muted>/<accent><total>"
+  tour-score: "<accent><wins> <dark>: <accent><opponent-wins>"
   mode-voting: "<muted>Abstimmung läuft"
   mode-leading: "<mode> <muted>führt"
   group-value: "<arrow><group> <dark>(<white><rating><dark>)"

@@ -16,6 +16,8 @@ rewards:
   win: 10
 vs:
   kills-to-end: 3
+tour:
+  intermission-seconds: 3
 sumo:
   radius: 4
   floor-y: 64

@@ -21,8 +21,16 @@ public record DuellConfig(
         LootTable loot,
         CombatStyle combat,
         Duration rematchWindow,
-        SumoConfig sumo
+        SumoConfig sumo,
+        Duration tourIntermission
 ) {
+
+    public DuellConfig {
+        if (tourIntermission.compareTo(Duration.ofSeconds(1)) < 0
+                || tourIntermission.compareTo(Duration.ofSeconds(30)) > 0) {
+            throw new IllegalArgumentException("tour.intermission-seconds must be between 1 and 30");
+        }
+    }
 
     public record Countdowns(int freeze, int round) {
     }
@@ -49,7 +57,8 @@ public record DuellConfig(
                 LootTable.fromYaml(chest, 1, 6),
                 CombatStyle.from(config),
                 Duration.ofSeconds(config.getInt("rematch.window-seconds", 15)),
-                SumoConfig.from(config));
+                SumoConfig.from(config),
+                Duration.ofSeconds(config.getInt("tour.intermission-seconds", 3)));
     }
 
     private static ConfigurationSection section(FileConfiguration config, String key) {

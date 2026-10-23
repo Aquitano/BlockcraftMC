@@ -9,6 +9,7 @@ import java.util.Random;
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class DuelVoteTest {
 
@@ -110,5 +111,60 @@ public class DuelVoteTest {
     @Test
     public void withoutAnyPlayableMapsOrVotesAnyModeKeepsItsFallbackMap() {
         assertEquals(new DuelVote.Outcome(DuelMode.SUMO, 1), new DuelVote().tally(Map.of(), LAST));
+    }
+
+    @Test
+    public void aTourRequiresBothParticipantsToChooseItAndEitherCanReturnToSingle() {
+        var vote = new DuelVote();
+        var first = UUID.randomUUID();
+        var second = UUID.randomUUID();
+        var spectator = UUID.randomUUID();
+        var participants = List.of(first, second);
+
+        assertEquals(DuelSeries.Format.SINGLE, vote.formatChoice(first));
+        assertEquals(DuelSeries.Format.SINGLE, vote.selectedFormat(participants));
+        vote.chooseFormat(first, DuelSeries.Format.TOUR);
+        vote.chooseFormat(spectator, DuelSeries.Format.TOUR);
+        assertEquals(DuelSeries.Format.SINGLE, vote.selectedFormat(participants));
+        assertEquals(DuelSeries.Format.SINGLE, vote.selectedFormat(List.of(first)));
+        assertEquals(DuelSeries.Format.SINGLE, vote.selectedFormat(List.of(first, first)));
+        vote.chooseFormat(second, DuelSeries.Format.TOUR);
+        assertEquals(DuelSeries.Format.TOUR, vote.selectedFormat(participants));
+        vote.chooseFormat(first, DuelSeries.Format.SINGLE);
+        assertEquals(DuelSeries.Format.SINGLE, vote.selectedFormat(participants));
+    }
+
+    @Test
+    public void leavingTheModesToChanceKeepsBothPlayersTourConsent() {
+        var vote = new DuelVote();
+        var first = UUID.randomUUID();
+        var second = UUID.randomUUID();
+        vote.cast(first, new DuelVote.Choice(DuelMode.SG, OptionalInt.of(2)));
+        vote.chooseFormat(first, DuelSeries.Format.TOUR);
+        vote.chooseFormat(second, DuelSeries.Format.TOUR);
+
+        vote.clearChoice(first);
+
+        assertTrue(vote.choiceOf(first).isEmpty());
+        assertTrue(vote.nominations().isEmpty());
+        assertEquals(DuelSeries.Format.TOUR, vote.selectedFormat(List.of(first, second)));
+    }
+
+    @Test
+    public void withdrawingClearsTheModeMapAndTourConsentForTheNextOpponent() {
+        var vote = new DuelVote();
+        var first = UUID.randomUUID();
+        var second = UUID.randomUUID();
+        vote.cast(first, new DuelVote.Choice(DuelMode.SG, OptionalInt.of(2)));
+        vote.chooseFormat(first, DuelSeries.Format.TOUR);
+        vote.chooseFormat(second, DuelSeries.Format.TOUR);
+
+        vote.withdraw(first);
+
+        assertTrue(vote.choiceOf(first).isEmpty());
+        assertEquals(0, vote.votes(DuelMode.SG));
+        assertEquals(DuelSeries.Format.SINGLE, vote.formatChoice(first));
+        assertEquals(DuelSeries.Format.TOUR, vote.formatChoice(second));
+        assertEquals(DuelSeries.Format.SINGLE, vote.selectedFormat(List.of(first, second)));
     }
 }

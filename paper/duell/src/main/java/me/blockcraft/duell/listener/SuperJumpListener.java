@@ -33,7 +33,7 @@ public final class SuperJumpListener implements Listener {
     @EventHandler
     public void onMove(PlayerMoveEvent event) {
         var player = event.getPlayer();
-        if (!duel.isPlaying(DuelMode.SUPERJUMP) || !event.hasChangedBlock() || !duel.isParticipant(player)) {
+        if (!duel.isPlaying(DuelMode.SUPERJUMP) || duel.frozen() || !event.hasChangedBlock() || !duel.isParticipant(player)) {
             return;
         }
         var block = event.getTo().getBlock();

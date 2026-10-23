@@ -1,12 +1,9 @@
 package me.blockcraft.duell.listener;
 
-import me.blockcraft.api.game.PlayerReset;
-import me.blockcraft.api.task.Tasks;
 import me.blockcraft.duell.config.SumoConfig;
 import me.blockcraft.duell.game.Duel;
 import me.blockcraft.duell.game.DuelMode;
 import org.bukkit.Bukkit;
-import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -15,9 +12,6 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
-import org.bukkit.event.player.PlayerRespawnEvent;
-import org.bukkit.plugin.Plugin;
-import org.bukkit.util.Vector;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -25,13 +19,11 @@ import java.util.UUID;
 
 public final class SumoListener implements Listener {
 
-    private final Plugin plugin;
     private final Duel duel;
     private final SumoConfig config;
     private final Map<UUID, Integer> lastHits = new HashMap<>();
 
-    public SumoListener(Plugin plugin, Duel duel, SumoConfig config) {
-        this.plugin = plugin;
+    public SumoListener(Duel duel, SumoConfig config) {
         this.duel = duel;
         this.config = config;
     }
@@ -82,20 +74,5 @@ public final class SumoListener implements Listener {
         if (duel.isPlaying(DuelMode.SUMO)) {
             duel.handleDeath(event);
         }
-    }
-
-    @EventHandler
-    public void onRespawn(PlayerRespawnEvent event) {
-        var player = event.getPlayer();
-        if (!duel.isMode(DuelMode.SUMO) || !duel.isParticipant(player)) {
-            return;
-        }
-        duel.participantSpawn(player).ifPresent(event::setRespawnLocation);
-        Tasks.sync(plugin, () -> {
-            if (player.isOnline() && duel.isParticipant(player)) {
-                PlayerReset.reset(player, duel.isIngame() ? GameMode.SURVIVAL : GameMode.ADVENTURE);
-                player.setVelocity(new Vector());
-            }
-        });
     }
 }

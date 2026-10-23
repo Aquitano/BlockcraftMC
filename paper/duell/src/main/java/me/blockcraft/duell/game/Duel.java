@@ -36,7 +36,11 @@ import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Item;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.util.Vector;
 
@@ -68,7 +72,7 @@ public final class Duel {
     private final Messages messages;
     private final Spawns spawns;
     private final SumoArena sumoArena;
-    private final SumoMatch sumoMatch;
+    private SumoMatch sumoMatch;
     private final GameScoreboard scoreboard;
     private final GameItems items;
     private final DuelRatings ratings;
@@ -81,6 +85,10 @@ public final class Duel {
     private final Rematch rematch;
     private final DuelPairRepository pairs;
     private List<UUID> duellists = List.of();
+    private DuelSeries series;
+    private final Map<UUID, Integer> gameKills = new HashMap<>();
+    private boolean gameActive;
+    private int gameIdentity;
 
     private DuelMode mode;
     private boolean pvp;
@@ -135,7 +143,7 @@ public final class Duel {
     }
 
     public boolean isPlaying(DuelMode mode) {
-        return isIngame() && this.mode == mode;
+        return isIngame() && gameActive && this.mode == mode;
     }
 
     public boolean isMode(DuelMode mode) {
@@ -154,6 +162,33 @@ public final class Duel {
         return votes;
     }
 
+    public DuelSeries.Format formatChoice(UUID player) {
+        return votes.formatChoice(player);
+    }
+
+    public DuelSeries.Format selectedFormat() {
+        return votes.selectedFormat(round.players().stream().map(Player::getUniqueId).toList());
+    }
+
+    public void chooseFormat(Player player, DuelSeries.Format format) {
+        if (!isLobby() || !isParticipant(player)) {
+            VoteMenu.closed(player, messages);
+            return;
+        }
+        var previous = votes.formatChoice(player.getUniqueId());
+        votes.chooseFormat(player.getUniqueId(), format);
+        player.sendMessage(messages.get("tour.format-chosen", Placeholder.component("format",
+                messages.get(format == DuelSeries.Format.TOUR ? "tour.format-tour" : "tour.format-single"))));
+        if (format == DuelSeries.Format.TOUR && selectedFormat() != DuelSeries.Format.TOUR) {
+            player.sendMessage(messages.get("tour.format-waiting"));
+            if (previous != format) {
+                opponentsOf(player).forEach(opponent -> opponent.sendMessage(messages.get("tour.format-request",
+                        Placeholder.unparsed("player", player.getName()))));
+            }
+        }
+        refreshScoreboards();
+    }
+
     public boolean isParticipant(Player player) {
         return round.isPlaying(player);
     }
@@ -169,7 +204,8 @@ public final class Duel {
 
     public Optional<Location> participantSpawn(Player player) {
         int slot = duellists.indexOf(player.getUniqueId());
-        return slot < 0 ? Optional.empty() : mapSpawn(slot + 1);
+        int offset = series == null ? 0 : series.gameIndex() % MAX_PARTICIPANTS;
+        return slot < 0 ? Optional.empty() : mapSpawn((slot + offset) % MAX_PARTICIPANTS + 1);
     }
 
     public Optional<Location> lobbySpawn() {
@@ -218,6 +254,7 @@ public final class Duel {
         switch (round.phase()) {
             case INGAME -> {
                 if (left && round.playerCount() <= 1) {
+                    gameActive = false;
                     participants().forEach(winner -> rewardWinner(winner, player));
                     endRound();
                 } else {
@@ -247,6 +284,16 @@ public final class Duel {
         VoteMenu.confirm(voter, messages, messages.get("vote.option",
                         Placeholder.component("mode", modeName(choice.mode())), Placeholder.component("map", map)),
                 earlier.filter(previous -> !previous.equals(choice)).isPresent());
+        refreshScoreboards();
+    }
+
+    public void clearModeVote(Player player) {
+        if (!isLobby() || !isParticipant(player)) {
+            VoteMenu.closed(player, messages);
+            return;
+        }
+        votes.clearChoice(player.getUniqueId());
+        player.sendMessage(messages.get("vote.cleared"));
         refreshScoreboards();
     }
 
@@ -301,14 +348,14 @@ public final class Duel {
         summary.death(victim);
         opponentsOf(victim).forEach(scorer -> {
             summary.awardKill(scorer, victim, Defeat.POINT);
+            gameKills.merge(scorer.getUniqueId(), 1, Integer::sum);
             Bukkit.broadcast(messages.get("sumo.point", Placeholder.unparsed("player", scorer.getName()),
                     Formatter.number("score", sumoMatch.score(scorer.getUniqueId())),
                     Formatter.number("target", config.sumo().pointsToWin())));
         });
         resetSumoPlayers();
         if (sumoMatch.state() == SumoMatch.State.FINISHED) {
-            sumoMatch.winner().map(Bukkit::getPlayer).ifPresent(this::rewardWinner);
-            endRound();
+            finishGame(sumoMatch.winner().map(Bukkit::getPlayer));
             return;
         }
         refreshScoreboards();
@@ -323,21 +370,22 @@ public final class Duel {
     }
 
     private void resetSumoPlayers() {
-        int slot = 1;
         for (var player : round.players()) {
             if (!player.isDead()) {
                 PlayerReset.reset(player, GameMode.SURVIVAL);
                 config.combat().apply(player);
-                teleportToMapSpawn(player, slot);
+                participantSpawn(player).ifPresent(player::teleport);
                 player.setVelocity(new Vector());
             }
-            slot++;
         }
     }
 
     public void handleDeath(PlayerDeathEvent event) {
         var victim = event.getPlayer();
-        if (!isIngame() || !isParticipant(victim)) {
+        if (!isIngame() || !gameActive || frozen || !isParticipant(victim)) {
+            if (isIngame() && isParticipant(victim)) {
+                round.respawn(victim, RESPAWN_DELAY_TICKS);
+            }
             return;
         }
         if (mode == DuelMode.SUPERJUMP) {
@@ -366,31 +414,31 @@ public final class Duel {
     private void handleVsKill(Player victim, Player killer) {
         vsRound++;
         summary.awardKill(killer, victim, Defeat.POINT);
+        gameKills.merge(killer.getUniqueId(), 1, Integer::sum);
         summary.death(victim);
         refreshScoreboards();
         round.respawn(victim, RESPAWN_DELAY_TICKS);
         if (vsRound > config.vsKillsToEnd()) {
-            var winner = summary.kills(victim) > summary.kills(killer) ? victim : killer;
-            rewardWinner(winner);
-            endRound();
+            var winner = gamePoints(victim) > gamePoints(killer) ? victim : killer;
+            finishGame(Optional.of(winner));
             return;
         }
         var title = Title.title(messages.get("title.vs-round", Formatter.number("round", vsRound)), messages.get("title.start"));
         BlockcraftApi.get().notifications().important(killer, title);
     }
 
-    /** Whoever dies loses the duel, whether the opponent or the map killed them. */
+    /** Whoever dies loses the game, whether the opponent or the map killed them. */
     private void handleSgDeath(Player victim, Optional<Player> killer) {
         summary.death(victim);
         killer.ifPresent(slayer -> summary.awardKill(slayer, victim, Defeat.OUT));
-        opponentsOf(victim).forEach(this::rewardWinner);
-        endRound();
+        finishGame(opponentsOf(victim).findFirst());
         round.respawn(victim, RESPAWN_DELAY_TICKS);
     }
 
     /** Returns true if this checkpoint is new for the player. */
     public boolean reachCheckpoint(Player player, int checkpoint) {
-        if (checkpoints.getOrDefault(player.getUniqueId(), 0) >= checkpoint) {
+        if (!isPlaying(DuelMode.SUPERJUMP) || frozen || !isParticipant(player)
+                || checkpoints.getOrDefault(player.getUniqueId(), 0) >= checkpoint) {
             return false;
         }
         checkpoints.put(player.getUniqueId(), checkpoint);
@@ -404,7 +452,7 @@ public final class Duel {
     }
 
     public void finishSuperJump(Player winner) {
-        if (superJumpFinished) {
+        if (!isPlaying(DuelMode.SUPERJUMP) || frozen || superJumpFinished) {
             return;
         }
         superJumpFinished = true;
@@ -413,15 +461,45 @@ public final class Duel {
         }
         Bukkit.broadcast(Component.empty());
         Bukkit.broadcast(messages.get("superjump.goal", Placeholder.unparsed("player", winner.getName())));
-        rewardWinner(winner);
         Bukkit.broadcast(Component.empty());
         winner.getWorld().spawnParticle(Particle.EXPLOSION, winner.getLocation(), 5);
         winner.setRespawnLocation(winner.getLocation(), true);
-        startRestart();
+        finishGame(Optional.of(winner));
     }
 
     public void fell(Player player) {
         fallen.add(player.getUniqueId());
+    }
+
+    public void respawn(PlayerRespawnEvent event) {
+        var player = event.getPlayer();
+        if (mode == null || !isParticipant(player)) {
+            return;
+        }
+        var spawn = !gameActive ? lobbySpawn().or(() -> participantSpawn(player))
+                : mode == DuelMode.SUPERJUMP
+                ? Optional.ofNullable(player.getRespawnLocation()).or(() -> participantSpawn(player))
+                : participantSpawn(player);
+        spawn.ifPresent(event::setRespawnLocation);
+        int identity = gameIdentity;
+        if (gameActive && mode == DuelMode.VS) {
+            removeGameEntities();
+            opponentsOf(player).filter(other -> !other.isDead()).forEach(other -> {
+                participantSpawn(other).ifPresent(other::teleport);
+                preparePlayer(other);
+            });
+        }
+        Tasks.sync(plugin, () -> {
+            if (!player.isOnline() || player.isDead() || !isParticipant(player) || gameIdentity != identity) {
+                return;
+            }
+            if (gameActive && isIngame()) {
+                preparePlayer(player);
+            } else {
+                PlayerReset.reset(player, GameMode.ADVENTURE);
+                lobbyHotbar.giveHub(player);
+            }
+        });
     }
 
     public void refreshScoreboards() {
@@ -431,11 +509,11 @@ public final class Duel {
             return;
         }
         var board = new GameScoreboard.Board(modeLine(), mapLine(),
-                roundTimer == null ? config.countdowns().round() : roundTimer.remaining());
+                roundTimer == null ? config.countdowns().round() : roundTimer.remaining(), tourProgress());
         participants().forEach(participant -> scoreboard.showDuellist(participant, board, ratings.placeholders(participant),
                 opponentsOf(participant).filter(participant::canSee).map(Player::getName).toList(),
                 isPlaying(DuelMode.VS) || isPlaying(DuelMode.SUMO)
-                        ? OptionalInt.of(summary.kills(participant)) : OptionalInt.empty(), isMode(DuelMode.SUMO)));
+                        ? OptionalInt.of(gamePoints(participant)) : OptionalInt.empty(), isMode(DuelMode.SUMO), tourScore(participant)));
         Bukkit.getOnlinePlayers().stream().filter(player -> !isParticipant(player)).forEach(viewer ->
                 scoreboard.showSpectator(viewer, board, participants().filter(viewer::canSee).map(this::duellistLine).toList()));
     }
@@ -466,7 +544,7 @@ public final class Duel {
                     Formatter.number("points", sumoMatch.score(duellist.getUniqueId())));
         }
         if (isPlaying(DuelMode.VS)) {
-            return messages.get("scoreboard.spectator-kills", name, Formatter.number("kills", summary.kills(duellist)));
+            return messages.get("scoreboard.spectator-kills", name, Formatter.number("kills", gamePoints(duellist)));
         }
         if (isPlaying(DuelMode.SUPERJUMP)) {
             return messages.get("scoreboard.spectator-checkpoint", name,
@@ -485,53 +563,99 @@ public final class Duel {
 
     private void startRound() {
         duellists = round.players().stream().map(Player::getUniqueId).toList();
-        round.enter(GamePhase.INGAME);
-        recognizeOpponents();
         var playable = new EnumMap<DuelMode, List<Integer>>(DuelMode.class);
         for (var candidate : DuelMode.values()) {
             playable.put(candidate, playableMaps(candidate));
         }
-        var outcome = votes.tally(playable, random);
+        var requested = selectedFormat();
+        var schedule = DuelSeries.plan(requested, votes, playable, random);
+        series = new DuelSeries(duellists, schedule);
+        round.enter(GamePhase.INGAME);
+        recognizeOpponents();
+        if (requested == DuelSeries.Format.TOUR && schedule.size() == 1) {
+            Bukkit.broadcast(messages.get("tour.fallback"));
+        } else if (isTour()) {
+            var modes = Component.join(net.kyori.adventure.text.JoinConfiguration.separator(Component.text(", ")),
+                    schedule.stream().map(game -> modeName(game.mode())).toList());
+            Bukkit.broadcast(messages.get("tour.schedule", Placeholder.component("modes", modes)));
+        }
+        startGame(config.countdowns().freeze());
+    }
+
+    private void startGame(int freezeSeconds) {
+        if (!isIngame() || series == null || series.finished() || round.playerCount() != MAX_PARTICIPANTS) {
+            return;
+        }
+        removeGameEntities();
+        var outcome = series.current().orElseThrow();
         mode = outcome.mode();
         mapNumber = outcome.map();
         mapName = mode == DuelMode.SUMO || !config.maps(mode).isEmpty() ? mapName(mode, mapNumber) : null;
+        gameIdentity++;
+        vsRound = 1;
+        superJumpFinished = false;
+        checkpoints.clear();
+        fallen.clear();
+        gameKills.clear();
+        summary.nextGame();
+        sumoMatch = new SumoMatch(config.sumo().pointsToWin());
+        frozen = true;
+        pvp = false;
+        gameActive = true;
+        round.enter(GamePhase.INGAME);
         if (mode == DuelMode.SUMO) {
             sumoMatch.start(duellists);
             Bukkit.broadcast(messages.get("sumo.started", Formatter.number("target", config.sumo().pointsToWin())));
         }
         Bukkit.broadcast(messages.get("vote.result", Placeholder.component("mode", modeName(mode)),
                 Placeholder.component("map", mapName == null ? messages.get("vote.random-map") : Component.text(mapName))));
-        int slot = 1;
         for (var player : round.players()) {
-            PlayerReset.reset(player, GameMode.SURVIVAL);
-            teleportToMapSpawn(player, slot++);
-            switch (mode) {
-                case VS -> {
-                    items.giveVsKit(player);
-                    config.combat().apply(player);
-                }
-                case SG -> config.combat().apply(player);
-                case SUPERJUMP -> player.setRespawnLocation(player.getLocation(), true);
-                case SUMO -> {
-                    config.combat().apply(player);
-                    player.setVelocity(new Vector());
-                }
+            if (player.isDead()) {
+                player.spigot().respawn();
             }
+            preparePlayer(player);
+            participantSpawn(player).ifPresent(spawn -> {
+                player.teleport(spawn);
+                player.setRespawnLocation(spawn, true);
+            });
         }
+        var spectatorSpawn = mode == DuelMode.SUMO ? Optional.of(sumoArena.spectatorSpawn())
+                : mapSpawn(1).map(location -> location.clone().add(0, 3, 0));
+        spectatorSpawn.ifPresent(spawn -> round.spectators().forEach(player -> player.teleport(spawn)));
         refreshScoreboards();
-        freeze();
+        freeze(freezeSeconds);
     }
 
-    private void teleportToMapSpawn(Player player, int slot) {
-        mapSpawn(slot).ifPresentOrElse(player::teleport,
-                () -> plugin.getLogger().warning("No spawn set for " + mode.setupKey() + " map " + mapNumber + " player " + slot));
+    private void preparePlayer(Player player) {
+        PlayerReset.reset(player, GameMode.SURVIVAL);
+        player.setVelocity(new Vector());
+        if (mode != DuelMode.SUPERJUMP) {
+            config.combat().apply(player);
+        }
+        if (mode == DuelMode.VS) {
+            items.giveVsKit(player);
+        }
     }
 
-    private void freeze() {
+    private void removeGameEntities() {
+        if (mode == null) {
+            return;
+        }
+        mapSpawn(1).ifPresent(spawn -> {
+            spawn.getWorld().getEntitiesByClass(Projectile.class).forEach(Entity::remove);
+            spawn.getWorld().getEntitiesByClass(Item.class).forEach(Entity::remove);
+        });
+    }
+
+    private void freeze(int seconds) {
         frozen = true;
         var introduction = messages.get("title.introduction",
                 Placeholder.component("mode", modeName(mode)), Placeholder.component("map", mapLine()));
-        round.timer(RoundStart.freeze(plugin, config.countdowns().freeze(), round::players, introduction, () -> {
+        int identity = gameIdentity;
+        round.timer(RoundStart.freeze(plugin, seconds, round::players, introduction, () -> {
+            if (!isIngame() || !gameActive || gameIdentity != identity) {
+                return;
+            }
             frozen = false;
             pvp = mode != DuelMode.SUPERJUMP;
             startRoundTimer();
@@ -539,22 +663,26 @@ public final class Duel {
     }
 
     private void startRoundTimer() {
+        int identity = gameIdentity;
         roundTimer = round.clock(new TimerBar(messages, "timer.round", config.countdowns().round()), remaining -> {
             if (round.clockOnSidebar()) {
                 refreshScoreboards();
             }
-        }, this::endByTimeout);
+        }, () -> {
+            if (isIngame() && gameActive && gameIdentity == identity) {
+                endByTimeout();
+            }
+        });
     }
 
     /** The clock decides: VS and Sumo by points, SuperJump by the furthest checkpoint, SG is a draw. */
     private void endByTimeout() {
         var winner = switch (mode) {
-            case VS, SUMO -> leaderBy(summary::kills);
+            case VS, SUMO -> leaderBy(this::gamePoints);
             case SUPERJUMP -> leaderBy(player -> checkpoints.getOrDefault(player.getUniqueId(), 0));
             case SG -> Optional.<Player>empty();
         };
-        winner.ifPresentOrElse(this::rewardWinner, () -> Bukkit.broadcast(messages.pick("round.draw")));
-        endRound();
+        finishGame(winner);
     }
 
     private Optional<Player> leaderBy(ToIntFunction<Player> score) {
@@ -568,10 +696,93 @@ public final class Duel {
     }
 
     private void endRound() {
+        gameActive = false;
         pvp = false;
         frozen = false;
         Bukkit.broadcast(messages.get("round.ended"));
         startRestart();
+    }
+
+    private int gamePoints(Player player) {
+        return mode == DuelMode.SUMO ? sumoMatch.score(player.getUniqueId())
+                : gameKills.getOrDefault(player.getUniqueId(), 0);
+    }
+
+    private boolean isTour() {
+        return series != null && series.schedule().size() == 3;
+    }
+
+    private List<Component> tourProgress() {
+        if (isTour()) {
+            return List.of(messages.get("scoreboard.tour-progress",
+                    Formatter.number("game", Math.min(series.gameIndex() + 1, series.schedule().size())),
+                    Formatter.number("total", series.schedule().size())));
+        }
+        return isLobby() && selectedFormat() == DuelSeries.Format.TOUR
+                ? List.of(messages.get("tour.format-tour")) : List.of();
+    }
+
+    private Optional<Component> tourScore(Player player) {
+        return isTour() ? opponentsOf(player).findFirst().map(opponent -> messages.get("scoreboard.tour-score",
+                Formatter.number("wins", series.wins(player.getUniqueId())),
+                Formatter.number("opponent-wins", series.wins(opponent.getUniqueId())))) : Optional.empty();
+    }
+
+    private void finishGame(Optional<Player> winner) {
+        if (!gameActive || series == null || !series.complete(series.gameIndex(), winner.map(Player::getUniqueId))) {
+            return;
+        }
+        gameActive = false;
+        pvp = false;
+        frozen = true;
+        round.stop();
+        roundTimer = null;
+        winner.filter(player -> mode == DuelMode.VS || mode == DuelMode.SG)
+                .filter(summary::undamaged).ifPresent(player -> summary.moment(player, "duell", "makellos"));
+        if (isTour()) {
+            var result = winner.map(player -> messages.get("tour.game-win",
+                            Placeholder.unparsed("player", player.getName()), Placeholder.component("mode", modeName(mode))))
+                    .orElseGet(() -> messages.get("tour.game-draw", Placeholder.component("mode", modeName(mode))));
+            round.players().forEach(player -> summary.note(player, result));
+            Bukkit.broadcast(result);
+            broadcastTourScore();
+        }
+        if (series.finished()) {
+            series.winner().map(Bukkit::getPlayer).ifPresent(this::rewardWinner);
+            if (isTour()) {
+                round.players().forEach(player -> summary.note(player, messages.get("tour.result-note",
+                        Formatter.number("score", series.wins(player.getUniqueId())),
+                        Formatter.number("games", series.schedule().size()))));
+            }
+            endRound();
+            return;
+        }
+        int nextIndex = series.gameIndex();
+        var next = series.current().orElseThrow();
+        Bukkit.broadcast(messages.get("tour.next", Formatter.number("game", nextIndex + 1),
+                Formatter.number("total", series.schedule().size()), Placeholder.component("mode", modeName(next.mode())),
+                Formatter.number("seconds", config.tourIntermission().toSeconds())));
+        refreshScoreboards();
+        // A mode must not change while the previous death event is still being dispatched.
+        Tasks.sync(plugin, () -> {
+            if (isIngame() && !gameActive && series.gameIndex() == nextIndex) {
+                startGame(Math.toIntExact(config.tourIntermission().toSeconds()));
+            }
+        });
+    }
+
+    private void broadcastTourScore() {
+        if (duellists.size() != MAX_PARTICIPANTS) {
+            return;
+        }
+        var first = Bukkit.getPlayer(duellists.getFirst());
+        var second = Bukkit.getPlayer(duellists.getLast());
+        if (first != null && second != null) {
+            Bukkit.broadcast(messages.get("tour.score", Placeholder.unparsed("first", first.getName()),
+                    Formatter.number("first-score", series.wins(first.getUniqueId())),
+                    Placeholder.unparsed("second", second.getName()),
+                    Formatter.number("second-score", series.wins(second.getUniqueId()))));
+        }
     }
 
     /** Duellists who are both still here are offered a rematch. */
@@ -623,7 +834,7 @@ public final class Duel {
 
     /** The round books the loss of everyone the winner beat; the rating moves here. */
     private void rewardWinner(Player winner) {
-        awardWin(winner);
+        summary.awardWin(winner);
         opponentsOf(winner).findFirst().ifPresent(loser -> ratings.settle(winner, loser, this::refreshScoreboards));
     }
 
@@ -634,13 +845,6 @@ public final class Duel {
     private void rewardWinner(Player winner, Player quitter) {
         summary.awardWin(winner);
         ratings.settle(winner, quitter, this::refreshScoreboards);
-    }
-
-    private void awardWin(Player winner) {
-        summary.awardWin(winner);
-        if ((mode == DuelMode.VS || mode == DuelMode.SG) && summary.undamaged(winner)) {
-            summary.moment(winner, "duell", "makellos");
-        }
     }
 
     public void shutdown() {

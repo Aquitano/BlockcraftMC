@@ -9,6 +9,7 @@ import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.duell.game.Duel;
 import me.blockcraft.duell.game.DuelMode;
+import me.blockcraft.duell.game.DuelSeries;
 import me.blockcraft.duell.game.DuelVote;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
@@ -23,7 +24,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
 
-/** Duell's vote in two steps: the mode, then one of its playable maps or chance. Only a participant votes, in the lobby. */
+/** Format and mode in the lobby, then one of the mode's playable maps or chance. */
 public final class VoteMenus {
 
     private final Duel duel;
@@ -67,7 +68,11 @@ public final class VoteMenus {
 
     private final class ModeMenu extends Menu {
 
-        private static final int MLG_RUSH_SLOT = 22;
+        private static final int SINGLE_SLOT = 11;
+        private static final int TOUR_SLOT = 15;
+        private static final int FIRST_MODE_SLOT = 19;
+        private static final int RANDOM_SLOT = 29;
+        private static final int MLG_RUSH_SLOT = 31;
         private final List<DuelMode> modes = List.of(DuelMode.values());
 
         private ModeMenu(Player player) {
@@ -76,6 +81,24 @@ public final class VoteMenus {
             var votes = duel.votes();
             var own = votes.choiceOf(player.getUniqueId()).map(DuelVote.Choice::mode);
             var voteMessages = BlockcraftApi.get().messages();
+            for (var format : DuelSeries.Format.values()) {
+                boolean mine = duel.formatChoice(player.getUniqueId()) == format;
+                String key = format == DuelSeries.Format.SINGLE ? "single" : "tour";
+                var lore = new ArrayList<>(messages.getLines("menu.formats." + key + "-lore"));
+                lore.add(messages.get("menu.formats.current", Placeholder.component("format",
+                        messages.get(duel.selectedFormat() == DuelSeries.Format.TOUR
+                                ? "tour.format-tour" : "tour.format-single"))));
+                if (mine) {
+                    lore.add(messages.get("menu.formats.selected"));
+                }
+                lore.add(messages.get("menu.formats.choose"));
+                var item = Items.of(format == DuelSeries.Format.SINGLE ? Material.IRON_SWORD : Material.CLOCK)
+                        .name(messages.get("menu.formats." + key)).lore(lore).hideAttributes();
+                if (mine) {
+                    item.glow();
+                }
+                set(format == DuelSeries.Format.SINGLE ? SINGLE_SLOT : TOUR_SLOT, item.build());
+            }
             for (int index = 0; index < modes.size(); index++) {
                 var mode = modes.get(index);
                 boolean mine = own.filter(choice -> choice == mode).isPresent();
@@ -90,10 +113,12 @@ public final class VoteMenus {
                 if (mine) {
                     item.glow();
                 }
-                set(10 + index * 2, item.build());
+                set(FIRST_MODE_SLOT + index * 2, item.build());
             }
             set(MLG_RUSH_SLOT, MenuIcon.MLGRUSH.item().name(messages.get("menu.modes.mlgrush"))
                     .lore(messages.getLines("menu.modes.mlgrush-lore")).build());
+            set(RANDOM_SLOT, Items.of(Material.ENDER_PEARL).name(messages.get("menu.modes.random"))
+                    .lore(messages.getLines("menu.modes.random-lore")).build());
         }
 
         @Override
@@ -102,12 +127,19 @@ public final class VoteMenus {
                 VoteMenu.closed(player, messages);
                 return;
             }
-            if (slot == MLG_RUSH_SLOT) {
+            if (slot == SINGLE_SLOT || slot == TOUR_SLOT) {
+                duel.chooseFormat(player, slot == SINGLE_SLOT ? DuelSeries.Format.SINGLE : DuelSeries.Format.TOUR);
+                openModes(player);
+            } else if (slot == RANDOM_SLOT) {
+                duel.clearModeVote(player);
+                openModes(player);
+            } else if (slot == MLG_RUSH_SLOT) {
                 var plugin = JavaPlugin.getProvidingPlugin(VoteMenus.class);
                 String group = plugin.getConfig().getString("navigation.mlgrush-group", "mlgrush");
                 Menu.close(player, closed -> ProxyMessaging.play(plugin, closed, group));
-            } else if (slot >= 10 && (slot - 10) % 2 == 0 && (slot - 10) / 2 < modes.size()) {
-                openMaps(player, modes.get((slot - 10) / 2));
+            } else if (slot >= FIRST_MODE_SLOT && (slot - FIRST_MODE_SLOT) % 2 == 0
+                    && (slot - FIRST_MODE_SLOT) / 2 < modes.size()) {
+                openMaps(player, modes.get((slot - FIRST_MODE_SLOT) / 2));
             }
         }
     }

@@ -36,4 +36,18 @@ public class RoundTrackingTest {
 
         assertTrue(attacks.take(victim, 1).isEmpty());
     }
+
+    @Test
+    public void startingAnotherGameClearsAllOutstandingHitCredits() {
+        var attacks = new RoundTracking.Attacks(Duration.ofSeconds(10));
+        var first = UUID.randomUUID();
+        var second = UUID.randomUUID();
+        attacks.record(first, new RoundTracking.Hit(second, Material.WOODEN_SWORD, 0, 0));
+        attacks.record(second, new RoundTracking.Hit(first, Material.FISHING_ROD, 0, 0));
+
+        attacks.clear();
+
+        assertTrue(attacks.take(first, 1).isEmpty());
+        assertTrue(attacks.take(second, 1).isEmpty());
+    }
 }

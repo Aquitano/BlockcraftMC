@@ -85,6 +85,11 @@ final class RoundTracking implements Listener {
         attacks.forget(player.getUniqueId());
     }
 
+    void nextGame() {
+        attacks.clear();
+        damaged.clear();
+    }
+
     void stop() {
         if (healthCheck != null) {
             healthCheck.cancel();

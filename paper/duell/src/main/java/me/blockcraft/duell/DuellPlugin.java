@@ -67,10 +67,10 @@ public final class DuellPlugin extends JavaPlugin {
                 new LobbyProtection(() -> !duel.isIngame(), api.buildMode(), duel::lobbySpawn),
                 new ArenaProtection(duel::frozen),
                 duel.lobbyHotbar(),
-                new VsListener(this, duel, config, items),
+                new VsListener(duel),
                 new SgListener(duel, lootChests),
                 new SuperJumpListener(duel),
-                new SumoListener(this, duel, config.sumo())
+                new SumoListener(duel, config.sumo())
         ).forEach(this::register);
 
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {

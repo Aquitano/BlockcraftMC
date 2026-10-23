@@ -10,7 +10,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.EquipmentSlot;
 
 public final class SgListener implements Listener {
@@ -45,20 +44,5 @@ public final class SgListener implements Listener {
             return;
         }
         duel.handleDeath(event);
-    }
-
-    @EventHandler
-    public void onRespawn(PlayerRespawnEvent event) {
-        if (duel.isLobby() || !duel.isMode(DuelMode.SG)) {
-            return;
-        }
-        duel.lobbySpawn().ifPresent(spawn -> {
-            event.setRespawnLocation(spawn);
-            duel.opponentsOf(event.getPlayer()).forEach(other -> {
-                other.teleport(spawn);
-                other.setFireTicks(0);
-            });
-        });
-        event.getPlayer().setFireTicks(0);
     }
 }

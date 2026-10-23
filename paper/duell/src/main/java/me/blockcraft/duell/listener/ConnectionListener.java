@@ -9,6 +9,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerResourcePackStatusEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 
 public final class ConnectionListener implements Listener {
 
@@ -28,6 +29,11 @@ public final class ConnectionListener implements Listener {
     public void onQuit(PlayerQuitEvent event) {
         event.quitMessage(null);
         duel.quit(event.getPlayer());
+    }
+
+    @EventHandler
+    public void onRespawn(PlayerRespawnEvent event) {
+        duel.respawn(event);
     }
 
     /** The proxy names the friend a watching player came for, which reaches the backend after the join. */
