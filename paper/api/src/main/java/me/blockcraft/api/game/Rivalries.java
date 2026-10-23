@@ -34,6 +34,7 @@ final class Rivalries {
     private final List<Runnable> afterLoad = new ArrayList<>();
     private Standings standings;
     private boolean loading;
+    private boolean closed;
 
     Rivalries(Plugin plugin, BlockcraftApi api, Messages messages, RivalryRepository repository, int lead) {
         this.plugin = plugin;
@@ -47,6 +48,9 @@ final class Rivalries {
         loading = true;
         var ids = players.stream().map(Player::getUniqueId).toList();
         Tasks.async(plugin, () -> new Standings(repository.among(ids)), loaded -> {
+            if (closed) {
+                return;
+            }
             standings = loaded;
             for (var player : players) {
                 loaded.nemesis(player.getUniqueId(), ids, lead).ifPresent(nemesis -> {
@@ -56,6 +60,11 @@ final class Rivalries {
             }
             finishLoading();
         }, this::finishLoading);
+    }
+
+    void close() {
+        closed = true;
+        afterLoad.clear();
     }
 
     private void finishLoading() {

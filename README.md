@@ -175,8 +175,9 @@ Name and builders show in the title every server greets a player with (`arrival`
 
 Every server group has a template directory, `worlds/<group>` in this repository, mounted into the container and
 named by `BLOCKCRAFT_WORLD_TEMPLATE` (or `world.template` in `plugins/BlockcraftAPI/config.yml`). BlockcraftAPI
-replaces the world folder with a copy of the template before Paper loads it, so a restart, which every game round
-ends in anyway, also resets the map: nothing a round, a gadget or a builder left behind survives. A template
+replaces the world folder with a copy of the template before Paper loads it, so a restart also resets the map:
+nothing a round, a gadget or a builder left behind survives. MLG Rush resets its generated arena between matches
+without restarting the server. A template
 without a `level.dat` is left alone and the server keeps whatever world it has, which is how a map is made in the
 first place; no template at all means a plain persistent world.
 
@@ -224,23 +225,33 @@ item. The active kit stays locked to its gameplay slots. No lobby warp or arena 
 bundled inside it. The service installs BlockcraftAPI, BlockcraftCore, MLGRush, LuckPerms, and ViaVersion.
 Its hostname is `mlgrush`, and `BLOCKCRAFT_SERVER_GROUP=mlgrush`. BlockcraftAPI announces two participant places
 and the game phase to `bc_servers`, with the shared five-second heartbeat. The Paper connection limit remains 200
-so spectators can connect. After a match, the normal lifecycle sends everyone to the lobby and shuts down this
-backend; Compose's `restart: unless-stopped` brings it back with a new map selection.
+so spectators can connect. After a match, both players can request a rematch through the recap's play-again button
+or the first hotbar item. Once both agree, the arena resets, a map is selected, and the next match starts after
+`countdown.start` seconds, three by default. Scores, kits, and round summaries start fresh without a backend restart.
+When an opponent leaves, the server returns to its waiting phase and fills open seats from non-vanished spectators
+in arrival order. An empty backend still stops after `idle-restart-minutes`.
+
+Duell's mode chooser also offers MLG Rush. That entry joins the existing `mlgrush` group, configured through
+Duell's `navigation.mlgrush-group`; MLG Rush keeps its own rules and stats.
 
 ### Select and configure maps
 
-On first start, MLGRush creates `plugins/MLGRush/maps.yml`. Its three enabled procedural maps are:
+On first start, MLGRush creates `plugins/MLGRush/maps.yml`. Its six enabled procedural maps are:
 
 - `sandstone`, Sandsteg: a 25 by 1 bridge and 7 by 7 bases, with sandstone and red/blue concrete.
 - `courtyard`, Burghof: a 17 by 3 bridge and 9 by 9 bases, with stone bricks, red sandstone, and prismarine bricks.
 - `quartz`, Quarzlinie: a 37 by 1 bridge and 11 by 11 bases, with quartz and white/light gray concrete.
+- `tightrope`, Drahtseil: a 29 by 1 bridge with one-block-wide bases.
+- `divide`, Schlucht: a 25 by 3 bridge with a five-block central gap and one-block-wide bases.
+- `stepping`, Sprunginseln: a 31 by 3 route with three-block segments, two-block gaps, and three-block-wide bases.
 
-Every bridge connects both bases in a straight line. Spawns are centered across the bridge and face each other.
-Each map uses the generated void dimension `mlgrush:<key>`. Point resets restore that map's materials and paired
+Spawns face each other and retain solid support, including on narrow bases. Both bed halves also have support.
+The generated void dimension starts as `mlgrush:<key>` and stays loaded when another map replaces its layout.
+Point resets restore the selected map's materials and paired
 beds after both players teleport to protected spawn spaces. Only player-placed blocks and the enemy bed can break.
 Combat applies knockback without health damage. Wins, losses, falls, and coins use `mlgrush_stats`.
 
-`selection: random` chooses one enabled map at each backend start. For repeatable testing, set `selection: courtyard`
+`selection: random` chooses one enabled map at backend start and between matches. For repeatable testing, set `selection: courtyard`
 to an enabled key, then recreate or restart the backend. The chosen name appears on arrival, at match start, and
 in the sidebar; the log records its key. `maps.<key>.enabled` controls the random pool. Each definition must name
 its geometry and all three materials. Only the full solid blocks listed in the bundled pool are accepted.
@@ -250,10 +261,17 @@ Empty pools, unknown or disabled selections, unsafe materials, and invalid geome
 and rewards. A base radius is half its side length rounded down. Bridge widths must be 1, 3, or 5. Bounds are shared
 by all maps, and the stick's horizontal velocity is its level times `kit.horizontal-per-level`.
 
+Optional map keys control the new layouts. `base-width` is an odd width within the base's full diameter and defaults
+to that diameter. `center-gap` defaults to zero and removes a centered stretch of bridge. `segment-length` and
+`segment-gap` default to zero; set both to positive lengths for separated bridge segments. Existing definitions
+without these keys keep their full platforms and continuous bridges.
+
 For an existing installation, stage the updated jars and restart the backend. A missing `maps.yml` is created
 without replacing `config.yml` or `messages.yml`. Move any old `arena.bridge-length`, `arena.bridge-width`, and
 `arena.base-radius` customizations into a named entry in `maps.yml`; those three old config keys are no longer read.
 Pin that entry with `selection` if needed. New message keys fall back to bundled defaults.
+Missing bundled map definitions are added to the loaded pool, preserving existing definitions, disabled flags,
+and the selected map. Set a bundled map's `enabled` flag to false to exclude it.
 
 ### Run MLG Rush with production forwarding
 

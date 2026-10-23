@@ -37,6 +37,9 @@ public class ArenaLayoutTest {
                 assertEquals(foot.z(), head.z());
                 assertEquals(slot == 0 ? Material.RED_BED : Material.BLUE_BED, layout.blocks().get(head));
                 assertTrue(layout.blocks().containsKey(new ArenaLayout.Position(head.x(), floor, head.z())));
+                assertTrue(layout.blocks().containsKey(new ArenaLayout.Position(foot.x(), floor, foot.z())));
+                assertTrue(layout.blocks().containsKey(new ArenaLayout.Position(layout.spawnX(slot), floor, 0)));
+                assertFalse(layout.blocks().containsKey(new ArenaLayout.Position(layout.spawnX(slot), floor + 2, 0)));
                 assertFalse(layout.canBuild(foot));
                 assertFalse(layout.canBuild(head));
                 assertFalse(layout.canBuild(new ArenaLayout.Position(layout.spawnX(slot), floor + 1, 0)));
@@ -47,12 +50,13 @@ public class ArenaLayoutTest {
     }
 
     @Test
-    public void allBridgesConnectTheBasesAndBuildLimitsContainTheMap() {
+    public void bridgesRespectConfiguredGapsAndBuildLimitsContainTheMap() {
         for (var layout : layouts()) {
             var dimensions = layout.dimensions();
-            for (int x = -1; x <= dimensions.bridgeLength(); x++) {
+            for (int x = 0; x < dimensions.bridgeLength(); x++) {
                 for (int z = -dimensions.bridgeWidth() / 2; z <= dimensions.bridgeWidth() / 2; z++) {
-                    assertTrue(layout.blocks().containsKey(new ArenaLayout.Position(x, dimensions.floorY(), z)));
+                    assertEquals(layout.geometry().bridgeAt(x, dimensions.bridgeLength()),
+                            layout.blocks().containsKey(new ArenaLayout.Position(x, dimensions.floorY(), z)));
                 }
             }
             assertTrue(layout.blocks().keySet().stream().allMatch(layout::contains));
@@ -88,10 +92,49 @@ public class ArenaLayoutTest {
         }
     }
 
+    @Test
+    public void narrowBasesAndGapsHaveTheExpectedEmptySpaces() {
+        var layouts = layouts();
+        var line = layouts.get(3);
+        assertFalse(line.blocks().containsKey(new ArenaLayout.Position(line.baseX(0), 64, 1)));
+        var divide = layouts.get(4);
+        for (int x = 10; x <= 14; x++) {
+            assertFalse(divide.blocks().containsKey(new ArenaLayout.Position(x, 64, 0)));
+        }
+        assertTrue(divide.blocks().containsKey(new ArenaLayout.Position(9, 64, 0)));
+        assertTrue(divide.blocks().containsKey(new ArenaLayout.Position(15, 64, 0)));
+        var stepping = layouts.get(5);
+        for (int x : new int[] {3, 4, 8, 9, 21, 22, 26, 27}) {
+            assertFalse(stepping.blocks().containsKey(new ArenaLayout.Position(x, 64, 0)));
+        }
+        for (int x : new int[] {0, 2, 5, 7, 10, 15, 20, 23, 25, 28, 30}) {
+            assertTrue(stepping.blocks().containsKey(new ArenaLayout.Position(x, 64, 0)));
+        }
+    }
+
+    @Test
+    public void changingLayoutsClearsOldTerrainAndTrackedBlocks() {
+        var layouts = layouts();
+        for (var old : layouts) {
+            for (var next : layouts) {
+                var world = new HashMap<>(old.blocks());
+                var playerBlock = new ArenaLayout.Position(old.maxX(), 65, 0);
+                var placed = new HashSet<ArenaLayout.Position>();
+                placed.add(playerBlock);
+                world.put(playerBlock, Material.RED_TERRACOTTA);
+                old.clear(placed, world::put);
+                next.reset(placed, world::put);
+                world.values().removeIf(material -> material == Material.AIR);
+                assertTrue(placed.isEmpty());
+                assertEquals(next.blocks(), world);
+            }
+        }
+    }
+
     private static List<ArenaLayout> layouts() {
         var yaml = YamlConfiguration.loadConfiguration(new InputStreamReader(
                 Objects.requireNonNull(ArenaLayoutTest.class.getResourceAsStream("/maps.yml")), StandardCharsets.UTF_8));
         return MapPool.from(yaml, new ArenaSettings(4, 16, 64, 48)).maps().stream()
-                .map(map -> new ArenaLayout(map.dimensions(), map.palette())).toList();
+                .map(map -> new ArenaLayout(map.dimensions(), map.palette(), map.geometry())).toList();
     }
 }

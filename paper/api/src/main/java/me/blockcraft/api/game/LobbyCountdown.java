@@ -95,7 +95,7 @@ public final class LobbyCountdown implements Listener {
         if (countdown.isRunning()) {
             countdown.remaining(toSeconds + 1);
         } else {
-            countdown.start(toSeconds + 1, this::tick, this::finish);
+            countdown.start(toSeconds, this::tick, this::finish);
         }
         return true;
     }

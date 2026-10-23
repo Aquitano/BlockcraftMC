@@ -31,6 +31,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.function.Consumer;
 import java.util.function.IntConsumer;
 
 /**
@@ -52,7 +53,7 @@ public final class Round implements Listener {
     private final Plugin plugin;
     private final BlockcraftApi api;
     private final Arena arena;
-    private final RoundSummary summary;
+    private RoundSummary summary;
     private final int capacity;
     private final GameConfig config;
     // Chat reads these off the main thread; copy-on-write keeps the join order players() hands out.
@@ -117,6 +118,7 @@ public final class Round implements Listener {
             return false;
         }
         players.add(player.getUniqueId());
+        spectators.remove(player.getUniqueId());
         WATCHING.remove(player.getUniqueId());
         // Whoever is online still hides this account if it watched here before and rejoined.
         for (var other : Bukkit.getOnlinePlayers()) {
@@ -382,19 +384,41 @@ public final class Round implements Listener {
 
     /** As {@link #end()}, with a longer wait before the restart for a game that still has something to offer. */
     public boolean end(int restartSeconds) {
+        if (!endInPlace(player -> ProxyMessaging.play(plugin, player, api.server().group()))) {
+            return false;
+        }
+        timer(ServerRestart.start(plugin, arena, restartSeconds, summary::closeRespects));
+        return true;
+    }
+
+    public boolean endInPlace(Consumer<Player> playAgain) {
         if (phase == GamePhase.ENDING) {
             return false;
         }
         enter(GamePhase.ENDING);
         stop();
-        summary.show();
-        timer(ServerRestart.start(plugin, arena, restartSeconds, summary::closeRespects));
+        summary.show(playAgain);
+        return true;
+    }
+
+    public boolean reopen(RoundSummary nextSummary) {
+        if (phase != GamePhase.ENDING) {
+            return false;
+        }
+        stop();
+        summary.close();
+        summary = nextSummary;
+        players().forEach(summary::join);
+        watched.clear();
+        enter(GamePhase.LOBBY);
         return true;
     }
 
     public void stop() {
         timers.forEach(Countdown::cancel);
         bars.forEach(TimerBar::hide);
+        timers.clear();
+        bars.clear();
     }
 
     private static List<Player> online(Set<UUID> ids) {

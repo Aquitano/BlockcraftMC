@@ -10,6 +10,7 @@ commands:
 join:
   introduction: "<prefix><muted>Stoße deinen Gegner von der Brücke und baue sein Bett ab. Jeder Bettabbau gibt einen Punkt."
   spectator: "<prefix><muted>Du schaust diesem Match zu."
+  next-match: "<prefix><muted>Ein Platz ist frei. Du spielst im nächsten Match mit."
 round:
   map: "<prefix><muted>Karte: <accent><map><muted>. Mit /hub kommst du zur Lobby, dort öffnet /navigator die Spielauswahl."
   cancelled: "<prefix><muted>Der Countdown wurde abgebrochen. Es werden zwei Spieler benötigt."
@@ -21,6 +22,12 @@ item:
   stick: "<primary>Rückstoß-Stick"
   blocks: "<primary>Baublöcke"
   pickaxe: "<primary>Spitzhacke"
+  rematch: "<arrow><mlgrush>Revanche anfragen"
+rematch:
+  unavailable: "<prefix><error>Eine Revanche ist nur direkt nach einem Match mit demselben Gegner möglich."
+  waiting: "<prefix><muted>Du bist bereit. Warte auf deinen Gegner."
+  request: "<prefix><accent><player> <muted>möchte eine Revanche. Klicke auf Nochmal spielen oder rechtsklicke das Revanche-Item."
+  starting: "<prefix><muted>Revanche auf <accent><map> <muted>in <accent><seconds> Sekunden<muted>!"
 scoreboard:
   map: "<muted>Karte: <accent><map>"
   title: "<mlgrush><bold>MLG Rush"

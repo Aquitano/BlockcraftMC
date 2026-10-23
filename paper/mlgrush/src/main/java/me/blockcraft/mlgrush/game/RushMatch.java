@@ -1,7 +1,9 @@
 package me.blockcraft.mlgrush.game;
 
 import java.util.List;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 public final class RushMatch {
@@ -13,6 +15,7 @@ public final class RushMatch {
     private List<UUID> players = List.of();
     private State state = State.WAITING;
     private UUID winner;
+    private final Set<UUID> rematchRequests = new HashSet<>();
 
     public RushMatch(int target) {
         if (target < 1) {
@@ -63,6 +66,11 @@ public final class RushMatch {
 
     public int slot(UUID player) {
         return players.indexOf(player);
+    }
+
+    public boolean requestRematch(UUID player) {
+        return state == State.FINISHED && slot(player) >= 0 && rematchRequests.add(player)
+                && rematchRequests.size() == players.size();
     }
 
     public int score(int slot) {

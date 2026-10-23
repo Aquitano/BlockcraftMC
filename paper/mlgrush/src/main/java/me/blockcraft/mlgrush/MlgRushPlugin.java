@@ -40,7 +40,8 @@ public final class MlgRushPlugin extends JavaPlugin {
         if (Files.notExists(mapsFile)) {
             saveResource("maps.yml", false);
         }
-        var map = MapPool.load(mapsFile, config.arena()).choose(ThreadLocalRandom.current());
+        var maps = MapPool.load(mapsFile, config.arena());
+        var map = maps.choose(ThreadLocalRandom.current());
         getLogger().info("MLG Rush map: " + map.key() + " (" + map.name() + ")");
         var api = BlockcraftApi.get();
         var messages = Messages.load(getDataPath(), () -> getResource("messages.yml"), api.tags());
@@ -49,7 +50,7 @@ public final class MlgRushPlugin extends JavaPlugin {
         var topList = new TopList(this, stats, messages);
         var statsMenus = StatsMenus.of(messages, stats, topList, gameConfig.globalStatsHead());
         var arena = new RushArena(map);
-        game = new RushGame(this, gameConfig, config, messages, arena, stats, statsMenus);
+        game = new RushGame(this, gameConfig, config, messages, arena, maps, stats, statsMenus);
         List.of(new ConnectionListener(game), new RushRules(this, game, arena, config.kit()),
                 new ArenaProtection(() -> false), game.hotbar()).forEach(this::register);
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {

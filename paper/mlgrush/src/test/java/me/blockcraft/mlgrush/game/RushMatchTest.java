@@ -82,6 +82,27 @@ public class RushMatchTest {
     }
 
     @Test
+    public void rematchRequiresBothParticipantsAfterTheMatchFinishes() {
+        var match = new RushMatch(1);
+        match.start(List.of(RED, BLUE));
+
+        assertFalse(match.requestRematch(RED));
+        match.score(RED, 1);
+        assertFalse(match.requestRematch(SPECTATOR));
+        assertFalse(match.requestRematch(RED));
+        assertFalse(match.requestRematch(RED));
+        assertTrue(match.requestRematch(BLUE));
+        assertFalse(match.requestRematch(BLUE));
+
+        var next = new RushMatch(1);
+        assertTrue(next.start(List.of(RED, BLUE)));
+        assertEquals(0, next.score(0));
+        assertEquals(0, next.score(1));
+        assertTrue(next.winner().isEmpty());
+        assertFalse(next.requestRematch(RED));
+    }
+
+    @Test
     public void shutdownPreventsPendingResetOrScoreFromRestartingPlay() {
         var match = new RushMatch(5);
         match.start(List.of(RED, BLUE));

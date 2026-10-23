@@ -11,12 +11,15 @@ import me.blockcraft.api.game.Round;
 import me.blockcraft.api.game.RoundSummary;
 import me.blockcraft.api.game.StatsMenus;
 import me.blockcraft.api.game.StatsRepository;
+import me.blockcraft.api.pack.MenuIcon;
 import me.blockcraft.api.scoreboard.Sidebar;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Tasks;
+import me.blockcraft.api.task.SerialTasks;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.mlgrush.arena.RushArena;
 import me.blockcraft.mlgrush.config.RushConfig;
+import me.blockcraft.mlgrush.config.MapPool;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -30,6 +33,7 @@ import org.bukkit.util.Vector;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
 public final class RushGame {
 
@@ -37,11 +41,15 @@ public final class RushGame {
 
     private final Plugin plugin;
     private final RushConfig config;
+    private final GameConfig gameConfig;
+    private final MapPool maps;
+    private final StatsRepository stats;
     private final Messages messages;
     private final RushArena arena;
-    private final RushMatch match;
+    private RushMatch match;
     private final RushKit kit;
-    private final RoundSummary summary;
+    private RoundSummary summary;
+    private final SerialTasks<UUID> recapWrites;
     private final Round round;
     private final LobbyCountdown countdown;
     private final LobbyHotbar hotbar;
@@ -50,17 +58,23 @@ public final class RushGame {
     private BukkitTask resetTask;
 
     public RushGame(Plugin plugin, GameConfig gameConfig, RushConfig config, Messages messages,
-                    RushArena arena, StatsRepository stats, StatsMenus statsMenus) {
+                    RushArena arena, MapPool maps, StatsRepository stats, StatsMenus statsMenus) {
         this.plugin = plugin;
         this.config = config;
+        this.gameConfig = gameConfig;
+        this.maps = maps;
+        this.stats = stats;
         this.messages = messages;
         this.arena = arena;
         match = new RushMatch(config.scoreTarget());
         kit = new RushKit(config.kit(), messages);
-        summary = new RoundSummary(plugin, messages, new RoundSummary.Rewards(0, config.winCoins()), stats);
+        recapWrites = new SerialTasks<>(plugin);
+        summary = new RoundSummary(plugin, messages, new RoundSummary.Rewards(0, config.winCoins()), stats, recapWrites);
         round = new Round(plugin, new Arena(messages, Sounds.DUELL_JOIN), summary, MAX_PARTICIPANTS, gameConfig);
         countdown = new LobbyCountdown(plugin, round, gameConfig, this::start);
-        hotbar = new LobbyHotbar(plugin, List.of(), statsMenus, countdown);
+        hotbar = new LobbyHotbar(plugin, List.of(new LobbyHotbar.Choice(MenuIcon.DUELL,
+                messages.get("item.rematch"), () -> round.phase() == GamePhase.ENDING,
+                player -> requestRematch(player, match))), statsMenus, countdown);
         sidebar = new Sidebar(messages.get("scoreboard.title"));
         voidCheck = Bukkit.getScheduler().runTaskTimer(plugin, this::checkVoid, 1L, 1L);
     }
@@ -79,7 +93,7 @@ public final class RushGame {
     }
 
     public int slot(Player player) {
-        return match.slot(player.getUniqueId());
+        return round.phase() == GamePhase.LOBBY ? round.players().indexOf(player) : match.slot(player.getUniqueId());
     }
 
     public void join(Player player) {
@@ -102,7 +116,7 @@ public final class RushGame {
     }
 
     public void vanished(Player player) {
-        if (round.phase() == GamePhase.INGAME && round.isPlaying(player)) {
+        if (round.phase() != GamePhase.LOBBY && round.isPlaying(player)) {
             quit(player);
             round.watch(player);
         }
@@ -115,6 +129,8 @@ public final class RushGame {
         } else if (participant && match.leave(player.getUniqueId())) {
             Bukkit.broadcast(messages.get("round.forfeit", Placeholder.unparsed("player", player.getName())));
             finish();
+        } else if (participant && round.phase() == GamePhase.ENDING) {
+            returnToLobbyLater();
         }
         Tasks.sync(plugin, this::refreshPresence);
         refresh();
@@ -135,6 +151,7 @@ public final class RushGame {
             if (running) {
                 Bukkit.broadcast(messages.get("round.cancelled"));
             }
+            seatWaitingPlayers();
             countdown.start();
         }
         refresh();
@@ -218,13 +235,81 @@ public final class RushGame {
         round.players().forEach(player -> {
             summary.note(player, messages.get("round.result", Formatter.number("score", match.score(slot(player))),
                     Formatter.number("target", config.scoreTarget())));
+        });
+        var completed = match;
+        round.endInPlace(player -> requestRematch(player, completed));
+        round.players().forEach(player -> {
             PlayerReset.reset(player, GameMode.ADVENTURE);
             teleport(player, slot(player));
-            hotbar.giveHub(player);
+            hotbar.give(player);
         });
         arena.reset();
-        round.end();
+        if (round.playerCount() < MAX_PARTICIPANTS) {
+            returnToLobbyLater();
+        }
         refresh();
+    }
+
+    private void requestRematch(Player player, RushMatch completed) {
+        if (completed != match || round.phase() != GamePhase.ENDING || !round.isPlaying(player)
+                || round.playerCount() != MAX_PARTICIPANTS) {
+            player.sendMessage(messages.get("rematch.unavailable"));
+            Sounds.MENU_DENY.play(player);
+            return;
+        }
+        if (!match.requestRematch(player.getUniqueId())) {
+            player.sendMessage(messages.get("rematch.waiting"));
+            round.players().stream().filter(opponent -> !opponent.equals(player)).forEach(opponent -> {
+                opponent.sendMessage(messages.get("rematch.request", Placeholder.unparsed("player", player.getName())));
+                Sounds.NOTIFY.play(opponent);
+            });
+            return;
+        }
+        reopen(true);
+    }
+
+    private void returnToLobbyLater() {
+        cancelReset();
+        resetTask = Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            resetTask = null;
+            if (round.phase() == GamePhase.ENDING && round.playerCount() < MAX_PARTICIPANTS) {
+                reopen(false);
+            }
+        }, gameConfig.startSeconds() * 20L);
+    }
+
+    private void reopen(boolean rematch) {
+        cancelReset();
+        arena.selectMap(maps.choose(ThreadLocalRandom.current()));
+        match = new RushMatch(config.scoreTarget());
+        summary = new RoundSummary(plugin, messages, new RoundSummary.Rewards(0, config.winCoins()), stats, recapWrites);
+        round.reopen(summary);
+        var players = round.players();
+        for (int slot = 0; slot < players.size(); slot++) {
+            var player = players.get(slot);
+            PlayerReset.reset(player, GameMode.ADVENTURE);
+            teleport(player, slot);
+            hotbar.give(player);
+        }
+        round.spectators().forEach(player -> player.teleport(arena.spectatorSpawn()));
+        if (rematch) {
+            Bukkit.broadcast(messages.get("rematch.starting", Formatter.number("seconds", gameConfig.startSeconds()),
+                    Placeholder.unparsed("map", arena.name())));
+            countdown.shorten(gameConfig.startSeconds());
+        } else {
+            seatWaitingPlayers();
+            countdown.start();
+        }
+        refreshPresence();
+        refresh();
+    }
+
+    private void seatWaitingPlayers() {
+        round.spectators().stream().filter(player -> !BlockcraftApi.get().isVanished(player))
+                .limit(Math.max(0, MAX_PARTICIPANTS - round.playerCount())).forEach(player -> {
+                    player.sendMessage(messages.get("join.next-match"));
+                    join(player);
+                });
     }
 
     public void refresh() {

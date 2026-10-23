@@ -20,14 +20,14 @@ import java.util.Set;
 public final class RushArena {
 
     private final World world;
-    private final ArenaMap map;
-    private final ArenaLayout layout;
+    private ArenaMap map;
+    private ArenaLayout layout;
     private final Set<ArenaLayout.Position> placed = new HashSet<>();
 
     public RushArena(ArenaMap map) {
         this.map = map;
         var dimensions = map.dimensions();
-        layout = new ArenaLayout(dimensions, map.palette());
+        layout = new ArenaLayout(dimensions, map.palette(), map.geometry());
         world = Objects.requireNonNull(WorldCreator.ofKey(new NamespacedKey("mlgrush", map.key()))
                 .generator(new ChunkGenerator() { }).createWorld(), "Could not create MLG Rush arena");
         world.setAutoSave(false);
@@ -46,6 +46,16 @@ public final class RushArena {
                 }
             }
         }
+        reset();
+        world.setSpawnLocation(spawn(0));
+    }
+
+    public void selectMap(ArenaMap next) {
+        Objects.requireNonNull(next, "map");
+        var nextLayout = new ArenaLayout(next.dimensions(), next.palette(), next.geometry());
+        layout.clear(placed, (position, material) -> block(position).setType(material, false));
+        map = next;
+        layout = nextLayout;
         reset();
         world.setSpawnLocation(spawn(0));
     }

@@ -19,11 +19,11 @@ public class MapPoolTest {
     private static final RushConfig.ArenaSettings BOUNDS = new RushConfig.ArenaSettings(4, 16, 64, 48);
 
     @Test
-    public void shipsThreeDifferentLayoutsAndCanPinAnEnabledMap() {
+    public void shipsSixDifferentLayoutsAndCanPinAnEnabledMap() {
         var yaml = defaults();
         var pool = MapPool.from(yaml, BOUNDS);
-        assertEquals(3, pool.maps().size());
-        assertEquals(3, pool.maps().stream().map(map -> map.dimensions().bridgeLength()).distinct().count());
+        assertEquals(6, pool.maps().size());
+        assertEquals(5, pool.maps().stream().map(map -> map.dimensions().bridgeLength()).distinct().count());
         assertEquals(3, pool.maps().stream().map(map -> map.dimensions().baseRadius()).distinct().count());
         assertEquals(3, pool.maps().stream().map(map -> map.palette().bridge()).distinct().count());
         assertNotEquals(pool.maps().getFirst().dimensions().bridgeWidth(), pool.maps().get(1).dimensions().bridgeWidth());
@@ -31,6 +31,26 @@ public class MapPoolTest {
         yaml.set("selection", "quartz");
         assertEquals("quartz", MapPool.from(yaml, BOUNDS).choose(new Random(1)).key());
         assertEquals("quartz", MapPool.from(yaml, BOUNDS).choose(new Random(2)).key());
+    }
+
+    @Test
+    public void oldPoolsGainMissingBundledMapsWithoutReplacingCustomizations() {
+        var yaml = defaults();
+        yaml.set("maps.tightrope", null);
+        yaml.set("maps.divide", null);
+        yaml.set("maps.stepping", null);
+        yaml.set("maps.sandstone.name", "Mein Steg");
+        yaml.set("maps.sandstone.bridge-length", 19);
+        yaml.set("maps.courtyard.enabled", false);
+        yaml.set("selection", "sandstone");
+
+        var pool = MapPool.from(yaml, BOUNDS, defaults());
+
+        assertEquals(5, pool.maps().size());
+        assertTrue(pool.maps().stream().anyMatch(map -> map.key().equals("divide")));
+        assertFalse(pool.maps().stream().anyMatch(map -> map.key().equals("courtyard")));
+        assertEquals("Mein Steg", pool.choose(new Random()).name());
+        assertEquals(19, pool.choose(new Random()).dimensions().bridgeLength());
     }
 
     @Test
@@ -58,8 +78,9 @@ public class MapPoolTest {
         yaml.set("maps.courtyard.enabled", false);
         assertThrows(IllegalArgumentException.class, () -> MapPool.from(yaml, BOUNDS));
         yaml.set("selection", "random");
-        yaml.set("maps.sandstone.enabled", false);
-        yaml.set("maps.quartz.enabled", false);
+        for (var key : yaml.getConfigurationSection("maps").getKeys(false)) {
+            yaml.set("maps." + key + ".enabled", false);
+        }
         assertTrue(assertThrows(IllegalArgumentException.class, () -> MapPool.from(yaml, BOUNDS))
                 .getMessage().contains("enable at least one"));
     }
@@ -94,6 +115,30 @@ public class MapPoolTest {
         invalid.set("maps.sandstone.enabled", "yes");
         assertTrue(assertThrows(IllegalArgumentException.class, () -> MapPool.from(invalid, BOUNDS))
                 .getMessage().contains("enabled"));
+    }
+
+    @Test
+    public void oldDefinitionsKeepFullBasesAndContinuousBridges() {
+        var pool = MapPool.from(defaults(), BOUNDS);
+        for (var map : pool.maps().subList(0, 3)) {
+            assertEquals(map.dimensions().baseRadius() * 2 + 1, map.geometry().baseWidth());
+            assertEquals(0, map.geometry().centerGap());
+            assertEquals(0, map.geometry().segmentLength());
+            assertEquals(new MapPool.ArenaMap(map.key(), map.name(), map.dimensions(), map.palette()), map);
+        }
+    }
+
+    @Test
+    public void rejectsInvalidOptionalGeometryWithMapContext() {
+        for (var entry : new Object[][] {
+                {"base-width", 0}, {"base-width", 2}, {"base-width", 9}, {"base-width", "one"},
+                {"center-gap", -1}, {"center-gap", 25}, {"center-gap", 2},
+                {"segment-length", 3}, {"segment-gap", 2}}) {
+            var yaml = defaults();
+            yaml.set("maps.sandstone." + entry[0], entry[1]);
+            assertTrue(assertThrows(IllegalArgumentException.class, () -> MapPool.from(yaml, BOUNDS))
+                    .getMessage().contains("maps.sandstone"));
+        }
     }
 
     private static YamlConfiguration defaults() {

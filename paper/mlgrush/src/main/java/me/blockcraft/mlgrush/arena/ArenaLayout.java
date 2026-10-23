@@ -2,6 +2,7 @@ package me.blockcraft.mlgrush.arena;
 
 import me.blockcraft.mlgrush.config.RushConfig.Dimensions;
 import me.blockcraft.mlgrush.config.MapPool.Palette;
+import me.blockcraft.mlgrush.config.MapPool.Geometry;
 import org.bukkit.Material;
 
 import java.util.LinkedHashMap;
@@ -9,7 +10,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
 
-public record ArenaLayout(Dimensions dimensions, Palette palette) {
+public record ArenaLayout(Dimensions dimensions, Palette palette, Geometry geometry) {
+
+    public ArenaLayout(Dimensions dimensions, Palette palette) {
+        this(dimensions, palette, new Geometry(dimensions.baseRadius() * 2 + 1, 0, 0, 0));
+    }
 
     public record Position(int x, int y, int z) { }
 
@@ -59,7 +64,7 @@ public record ArenaLayout(Dimensions dimensions, Palette palette) {
         var blocks = new LinkedHashMap<Position, Material>();
         for (int slot = 0; slot < 2; slot++) {
             for (int x = baseX(slot) - dimensions.baseRadius(); x <= baseX(slot) + dimensions.baseRadius(); x++) {
-                for (int z = -dimensions.baseRadius(); z <= dimensions.baseRadius(); z++) {
+                for (int z = -geometry.baseWidth() / 2; z <= geometry.baseWidth() / 2; z++) {
                     blocks.put(new Position(x, dimensions.floorY(), z), slot == 0 ? palette.redBase() : palette.blueBase());
                 }
             }
@@ -67,11 +72,20 @@ public record ArenaLayout(Dimensions dimensions, Palette palette) {
             blocks.put(bed(slot, true), slot == 0 ? Material.RED_BED : Material.BLUE_BED);
         }
         for (int x = 0; x < dimensions.bridgeLength(); x++) {
+            if (!geometry.bridgeAt(x, dimensions.bridgeLength())) {
+                continue;
+            }
             for (int z = -dimensions.bridgeWidth() / 2; z <= dimensions.bridgeWidth() / 2; z++) {
                 blocks.put(new Position(x, dimensions.floorY(), z), palette.bridge());
             }
         }
         return Map.copyOf(blocks);
+    }
+
+    public void clear(Set<Position> placed, BiConsumer<Position, Material> write) {
+        placed.forEach(position -> write.accept(position, Material.AIR));
+        placed.clear();
+        blocks().keySet().forEach(position -> write.accept(position, Material.AIR));
     }
 
     public void reset(Set<Position> placed, BiConsumer<Position, Material> write) {

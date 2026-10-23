@@ -6,6 +6,7 @@ import me.blockcraft.api.coins.Coins;
 import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Tasks;
+import me.blockcraft.api.task.SerialTasks;
 import me.blockcraft.api.xp.XpReward;
 import me.blockcraft.common.db.DatabaseException;
 import me.blockcraft.common.message.Messages;
@@ -20,6 +21,7 @@ import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.event.HandlerList;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.plugin.Plugin;
 
@@ -78,12 +80,20 @@ public final class RoundSummary {
     private final Accusations accusations;
     private final DeathLines deathLines;
     private final RoundTracking tracking;
+    private final SerialTasks<UUID> recapWrites;
+    private boolean closed;
 
     private record Row(UUID player, String name, Stats delta) {
     }
 
     /** {@code gameMessages} is the game's own file; it names the game as {@code game-name} and lends its prefix. */
     public RoundSummary(Plugin plugin, Messages gameMessages, Rewards rewards, StatsRepository stats) {
+        this(plugin, gameMessages, rewards, stats, new SerialTasks<>(plugin));
+    }
+
+    public RoundSummary(Plugin plugin, Messages gameMessages, Rewards rewards, StatsRepository stats,
+                        SerialTasks<UUID> recapWrites) {
+        this.recapWrites = recapWrites;
         this.plugin = plugin;
         this.api = BlockcraftApi.get();
         this.game = gameMessages.get("game-name");
@@ -211,6 +221,10 @@ public final class RoundSummary {
     }
 
     public void show() {
+        show(player -> ProxyMessaging.play(plugin, player, api.server().group()));
+    }
+
+    public void show(Consumer<Player> playAgain) {
         tracking.stop();
         var curiosity = tracking.curiosity(id -> {
             var player = Bukkit.getPlayer(id);
@@ -234,8 +248,7 @@ public final class RoundSummary {
         var subtitle = winners.isEmpty()
                 ? messages.get("summary.title.subtitle-draw")
                 : messages.get("summary.title.subtitle", Placeholder.unparsed("winner", names));
-        var group = api.server().group();
-        var again = button("summary.again", player -> ProxyMessaging.play(plugin, player, group));
+        var again = button("summary.again", playAgain);
         var lobby = button("summary.lobby", player -> ProxyMessaging.hub(plugin, player));
         for (var player : Bukkit.getOnlinePlayers()) {
             player.sendMessage(rule);
@@ -271,6 +284,15 @@ public final class RoundSummary {
         tracking.stop();
     }
 
+    void close() {
+        closed = true;
+        closeRespects();
+        rivalries.close();
+        HandlerList.unregisterAll(tracking);
+        HandlerList.unregisterAll(respects);
+        HandlerList.unregisterAll(accusations);
+    }
+
     /** The round's last kill ends it in the same tick, and the title that kill showed is read to the end first. */
     private void afterMoment(Player player, Runnable show) {
         var shown = moments.get(player.getUniqueId());
@@ -280,7 +302,7 @@ public final class RoundSummary {
             return;
         }
         Tasks.later(plugin, left, () -> {
-            if (player.isOnline()) {
+            if (!closed && player.isOnline()) {
                 show.run();
             }
         });
@@ -309,7 +331,7 @@ public final class RoundSummary {
         var recaps = new LinkedHashMap<UUID, RoundRecap>();
         scores.forEach((id, score) -> recaps.put(id, new RoundRecap(api.server().group(), winners.containsKey(id), names,
                 score.kills, score.deaths, score.bestStreak, score.coins, score.xp)));
-        Tasks.async(plugin, () -> api.recaps().save(recaps));
+        recaps.forEach((id, recap) -> recapWrites.run(id, () -> api.recaps().save(Map.of(id, recap))));
     }
 
     private void book() {

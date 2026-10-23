@@ -6,9 +6,12 @@ import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.random.RandomGenerator;
 
@@ -26,7 +29,38 @@ public record MapPool(List<ArenaMap> maps, String selection) {
         }
     }
 
-    public record ArenaMap(String key, String name, RushConfig.Dimensions dimensions, Palette palette) { }
+    public record Geometry(int baseWidth, int centerGap, int segmentLength, int segmentGap) {
+        public Geometry {
+            if (baseWidth < 1 || baseWidth > 17 || baseWidth % 2 == 0 || centerGap < 0
+                    || segmentLength < 0 || segmentGap < 0 || (segmentLength == 0) != (segmentGap == 0)) {
+                throw new IllegalArgumentException("Invalid base-width, center-gap or bridge segment settings");
+            }
+        }
+
+        public boolean bridgeAt(int x, int length) {
+            if (centerGap > 0 && x >= (length - centerGap) / 2 && x < (length + centerGap) / 2) {
+                return false;
+            }
+            return segmentLength == 0 || Math.min(x, length - 1 - x) % (segmentLength + segmentGap) < segmentLength;
+        }
+    }
+
+    public record ArenaMap(String key, String name, RushConfig.Dimensions dimensions, Palette palette,
+                           Geometry geometry) {
+        public ArenaMap(String key, String name, RushConfig.Dimensions dimensions, Palette palette) {
+            this(key, name, dimensions, palette, new Geometry(dimensions.baseRadius() * 2 + 1, 0, 0, 0));
+        }
+
+        public ArenaMap {
+            if (geometry.baseWidth() > dimensions.baseRadius() * 2 + 1
+                    || geometry.centerGap() >= dimensions.bridgeLength()
+                    || geometry.centerGap() > 0 && (dimensions.bridgeLength() - geometry.centerGap()) % 2 != 0
+                    || geometry.segmentLength() > dimensions.bridgeLength()
+                    || geometry.segmentGap() > dimensions.bridgeLength()) {
+                throw new IllegalArgumentException("Geometry must fit the bases and bridge; center-gap must be centered");
+            }
+        }
+    }
 
     public MapPool {
         maps = List.copyOf(maps);
@@ -50,6 +84,29 @@ public record MapPool(List<ArenaMap> maps, String selection) {
         } catch (IOException | InvalidConfigurationException e) {
             throw new IllegalArgumentException("Could not load " + file, e);
         }
+        try (var defaults = new InputStreamReader(
+                Objects.requireNonNull(MapPool.class.getResourceAsStream("/maps.yml")), StandardCharsets.UTF_8)) {
+            return from(yaml, bounds, YamlConfiguration.loadConfiguration(defaults));
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Could not read bundled maps.yml", e);
+        }
+    }
+
+    static MapPool from(ConfigurationSection yaml, RushConfig.ArenaSettings bounds, ConfigurationSection defaults) {
+        var bundled = Objects.requireNonNull(defaults.getConfigurationSection("maps"));
+        if (yaml.getConfigurationSection("maps") == null) {
+            return from(yaml, bounds);
+        }
+        for (var key : bundled.getKeys(false)) {
+            if (!yaml.contains("maps." + key)) {
+                var added = yaml.createSection("maps." + key);
+                Objects.requireNonNull(bundled.getConfigurationSection(key)).getValues(true).forEach((path, value) -> {
+                    if (!(value instanceof ConfigurationSection)) {
+                        added.set(path, value);
+                    }
+                });
+            }
+        }
         return from(yaml, bounds);
     }
 
@@ -72,7 +129,10 @@ public record MapPool(List<ArenaMap> maps, String selection) {
                         integer(map, "base-radius"), bounds.buildMargin(), bounds.buildHeight(), bounds.floorY(), bounds.voidY());
                 var definition = new ArenaMap(key, text(map, "name"), dimensions,
                         new Palette(surface(map, "materials.bridge"), surface(map, "materials.red-base"),
-                                surface(map, "materials.blue-base")));
+                                surface(map, "materials.blue-base")),
+                        new Geometry(optionalInteger(map, "base-width", dimensions.baseRadius() * 2 + 1),
+                                optionalInteger(map, "center-gap", 0), optionalInteger(map, "segment-length", 0),
+                                optionalInteger(map, "segment-gap", 0)));
                 if (enabled) {
                     maps.add(definition);
                 }
@@ -95,6 +155,10 @@ public record MapPool(List<ArenaMap> maps, String selection) {
             return value;
         }
         throw new IllegalArgumentException(path + " must be an integer");
+    }
+
+    private static int optionalInteger(ConfigurationSection section, String path, int fallback) {
+        return section.contains(path) ? integer(section, path) : fallback;
     }
 
     private static Material surface(ConfigurationSection section, String path) {
