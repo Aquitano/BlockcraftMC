@@ -471,6 +471,10 @@ deaths, coins and XP are counted in one place (`RoundSummary`), which announces 
 streaks at the lengths `streaks.announce` in BlockcraftAPI's `config.yml` names, writes every participant's stats
 once when the round ends (a loss for everyone knocked out or beaten by a winner), prints a compact result and
 reward line with actions, and stores the recap in `bc_round_recaps`. The Details action shows the full breakdown.
+The round also shows a brief result title. Winners see `Du hast gewonnen!`; everyone else sees who won, with
+plural wording for team wins. Dead players receive it after respawning. Before an automatic lobby transfer,
+titles count down 3, 2, 1. The restart delay is at least seven seconds so the result and countdown fit before the
+final shutdown grace second. MLG Rush shows the result without an automatic transfer countdown during rematches.
 The lobby offers a Details link after arrival and keeps the recap accessible through the profile during that
 session, with a button back into the same game. The `auto-recap` setting opts into opening the lobby dialog
 automatically while the arrival screen is still current; it defaults to off. Recaps older than

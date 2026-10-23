@@ -227,6 +227,14 @@ map:
 
 # The end-of-round recap every game shows; <game> is the game's own name, <winner> the player who won it.
 summary:
+  ending:
+    win: "<success><bold>Du hast gewonnen!"
+    finished: "<primary><bold>Runde vorbei!"
+    winner: "<accent><winner> <muted>hat gewonnen!"
+    winners: "<accent><winner> <muted>haben gewonnen!"
+    draw: "<accent><bold>Unentschieden!"
+    seconds: "<primary><bold><seconds>"
+    lobby: "<muted>Zurück zur Lobby"
   compact: "<arrow><game> <dark>· <result> <dark>· <accent>+<coins> Coins <dark>· <success>+<xp> XP"
   spectator: "<arrow><game> <dark>· <result>"
   result:

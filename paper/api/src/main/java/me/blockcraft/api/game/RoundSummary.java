@@ -27,10 +27,12 @@ import org.bukkit.plugin.Plugin;
 
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.BooleanSupplier;
@@ -56,6 +58,8 @@ public final class RoundSummary {
     }
 
     private static final Title.Times MOMENT = Title.Times.times(Duration.ofMillis(250), Duration.ofMillis(2500), Duration.ofMillis(500));
+    private static final Title.Times RESULT = Title.Times.times(Duration.ofMillis(150), Duration.ofMillis(2500), Duration.ofMillis(350));
+    private static final Title.Times RETURN_SECOND = Title.Times.times(Duration.ZERO, Duration.ofMillis(750), Duration.ofMillis(150));
     static final double HALF_A_HEART = 1.0;
 
     /** The buttons stay clickable past the restart countdown, which every game's config.yml sets for itself. */
@@ -72,6 +76,7 @@ public final class RoundSummary {
     private final StatsRepository stats;
     private final Map<UUID, Score> scores = new LinkedHashMap<>();
     private final Map<UUID, String> winners = new LinkedHashMap<>();
+    private final Set<UUID> resultViewers = new HashSet<>();
     private final Rivalries rivalries;
     private final Respects respects;
     private final Accusations accusations;
@@ -79,6 +84,8 @@ public final class RoundSummary {
     private final RoundTracking tracking;
     private final SerialTasks<UUID> recapWrites;
     private boolean closed;
+    private boolean resultsShown;
+    private boolean returning;
 
     private record Row(UUID player, String name, Stats delta) {
     }
@@ -248,6 +255,7 @@ public final class RoundSummary {
                 : messages.get("summary.winner", Placeholder.unparsed("winner", names));
         var spectatorResult = winners.isEmpty() ? messages.get("summary.result.draw")
                 : messages.get("summary.result.winner", Placeholder.unparsed("winner", names));
+        resultsShown = true;
         for (var player : Bukkit.getOnlinePlayers()) {
             var score = scores.get(player.getUniqueId());
             var result = messages.get(winners.containsKey(player.getUniqueId()) ? "summary.result.win"
@@ -261,10 +269,43 @@ public final class RoundSummary {
                     Placeholder.component("again", button("summary.again", player, () -> !closed, playAgain)),
                     Placeholder.component("lobby", button("summary.lobby", player, () -> true, viewer -> ProxyMessaging.hub(plugin, viewer))),
                     Placeholder.component("details", button("summary.details", player, () -> true, viewer -> details.forEach(viewer::sendMessage)))));
-            if (score != null) {
-                api.notifications().rewardSound(player, winners.containsKey(player.getUniqueId()) ? Sounds.WIN : Sounds.LOSE);
-            }
+            showResult(player);
         }
+    }
+
+    void showResult(Player player) {
+        if (!resultsShown || closed || returning || !player.isOnline() || player.isDead()
+                || !resultViewers.add(player.getUniqueId())) {
+            return;
+        }
+        var sound = scores.containsKey(player.getUniqueId())
+                ? winners.containsKey(player.getUniqueId()) ? Sounds.WIN : Sounds.LOSE : null;
+        api.notifications().important(player, resultTitle(messages, game, winners, player.getUniqueId()), sound);
+    }
+
+    static Title resultTitle(Messages messages, Component game, Map<UUID, String> winners, UUID viewer) {
+        if (winners.isEmpty()) {
+            return Title.title(messages.get("summary.ending.draw"), game, RESULT);
+        }
+        if (winners.containsKey(viewer)) {
+            return Title.title(messages.get("summary.ending.win"), game, RESULT);
+        }
+        return Title.title(messages.get("summary.ending.finished"),
+                messages.get(winners.size() == 1 ? "summary.ending.winner" : "summary.ending.winners",
+                        Placeholder.unparsed("winner", String.join(", ", winners.values()))), RESULT);
+    }
+
+    void returningIn(int seconds) {
+        if (closed) {
+            return;
+        }
+        returning = true;
+        var title = Title.title(messages.get("summary.ending.seconds", Formatter.number("seconds", seconds)),
+                messages.get("summary.ending.lobby"), RETURN_SECOND);
+        Bukkit.getOnlinePlayers().forEach(player -> {
+            api.notifications().important(player, title);
+            Sounds.countdownTick(player, seconds);
+        });
     }
 
     private List<Component> details(Score score, Component winner, Optional<Component> curiosity) {
@@ -301,7 +342,9 @@ public final class RoundSummary {
     }
 
     private void moment(Player player, Component title, Component subtitle) {
-        api.notifications().important(player, Title.title(title, subtitle, MOMENT));
+        if (!closed && !resultsShown) {
+            api.notifications().important(player, Title.title(title, subtitle, MOMENT));
+        }
     }
 
     /** Health in hearts as the bar draws it, where a started half heart shows whole, with a German decimal comma. */

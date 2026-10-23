@@ -216,6 +216,14 @@ public final class Round implements Listener {
     @EventHandler(priority = EventPriority.MONITOR)
     public void onRespawn(PlayerRespawnEvent event) {
         var player = event.getPlayer();
+        if (phase == GamePhase.ENDING) {
+            var completed = summary;
+            Tasks.sync(plugin, () -> {
+                if (phase == GamePhase.ENDING && summary == completed) {
+                    completed.showResult(player);
+                }
+            });
+        }
         if (isSpectator(player) && isWatching(player)) {
             Tasks.sync(plugin, () -> {
                 if (player.isOnline() && isSpectator(player)) {
@@ -387,7 +395,7 @@ public final class Round implements Listener {
         if (!endInPlace(player -> ProxyMessaging.play(plugin, player, api.server().group()))) {
             return false;
         }
-        timer(ServerRestart.start(plugin, arena, restartSeconds, summary::closeRespects));
+        timer(ServerRestart.start(plugin, arena, restartSeconds, summary::closeRespects, summary::returningIn));
         return true;
     }
 

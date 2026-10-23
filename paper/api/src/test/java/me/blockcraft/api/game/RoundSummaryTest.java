@@ -7,7 +7,10 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
 
@@ -47,6 +50,36 @@ public class RoundSummaryTest {
 
         assertEquals(List.of("» Kills: 4", "» Tode: 2", "» Beste Serie: 3 Kills", "» Coins: +19", "» XP: +11", "Makellos"),
                 details.stream().map(RoundSummaryTest::plain).toList());
+    }
+
+    @Test
+    public void theResultCongratulatesEveryWinnerAndNamesThemToEveryoneElse() throws Exception {
+        var first = UUID.randomUUID();
+        var second = UUID.randomUUID();
+        var viewer = UUID.randomUUID();
+        var game = Component.text("BedWars");
+        var messages = messages();
+        var winners = new LinkedHashMap<UUID, String>();
+        winners.put(first, "Steve");
+
+        var personal = RoundSummary.resultTitle(messages, game, winners, first);
+        assertEquals("Du hast gewonnen!", plain(personal.title()));
+        assertEquals("BedWars", plain(personal.subtitle()));
+        var watching = RoundSummary.resultTitle(messages, game, winners, viewer);
+        assertEquals("Runde vorbei!", plain(watching.title()));
+        assertEquals("Steve hat gewonnen!", plain(watching.subtitle()));
+
+        winners.put(second, "Alex");
+        assertEquals("Du hast gewonnen!", plain(RoundSummary.resultTitle(messages, game, winners, second).title()));
+        assertEquals("Steve, Alex haben gewonnen!", plain(RoundSummary.resultTitle(messages, game, winners, viewer).subtitle()));
+    }
+
+    @Test
+    public void aDrawNamesNoWinnerInTheResultTitle() throws Exception {
+        var title = RoundSummary.resultTitle(messages(), Component.text("Duell"), Map.of(), UUID.randomUUID());
+
+        assertEquals("Unentschieden!", plain(title.title()));
+        assertEquals("Duell", plain(title.subtitle()));
     }
 
     @Test
