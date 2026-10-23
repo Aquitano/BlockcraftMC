@@ -25,6 +25,7 @@ import me.blockcraft.common.duel.DuelPairRepository;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.duell.config.DuellConfig;
 import me.blockcraft.duell.config.Spawns;
+import me.blockcraft.duell.arena.SumoArena;
 import me.blockcraft.duell.menu.VoteMenus;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
@@ -37,6 +38,7 @@ import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.util.Vector;
 
 import java.util.Arrays;
 import java.util.EnumMap;
@@ -65,6 +67,8 @@ public final class Duel {
     private final DuellConfig config;
     private final Messages messages;
     private final Spawns spawns;
+    private final SumoArena sumoArena;
+    private final SumoMatch sumoMatch;
     private final GameScoreboard scoreboard;
     private final GameItems items;
     private final DuelRatings ratings;
@@ -89,7 +93,7 @@ public final class Duel {
     private final Map<UUID, Integer> checkpoints = new HashMap<>();
     private final Set<UUID> fallen = new HashSet<>();
 
-    public Duel(Plugin plugin, GameConfig gameConfig, DuellConfig config, Messages messages, Spawns spawns,
+    public Duel(Plugin plugin, GameConfig gameConfig, DuellConfig config, Messages messages, Spawns spawns, SumoArena sumoArena,
                 StatsRepository stats, StatsMenus statsMenus, GameItems items, DuelRatings ratings,
                 DuelPairRepository pairs) {
         this.plugin = plugin;
@@ -97,6 +101,8 @@ public final class Duel {
         this.config = config;
         this.messages = messages;
         this.spawns = spawns;
+        this.sumoArena = sumoArena;
+        this.sumoMatch = new SumoMatch(config.sumo().pointsToWin());
         this.items = items;
         this.ratings = ratings;
         this.summary = new RoundSummary(plugin, messages,
@@ -158,7 +164,12 @@ public final class Duel {
 
     /** Spawn of the current map for participant slot 1 or 2. */
     public Optional<Location> mapSpawn(int slot) {
-        return spawns.mapSpawn(mode, mapNumber, slot);
+        return mode == DuelMode.SUMO ? Optional.of(sumoArena.spawn(slot)) : spawns.mapSpawn(mode, mapNumber, slot);
+    }
+
+    public Optional<Location> participantSpawn(Player player) {
+        int slot = duellists.indexOf(player.getUniqueId());
+        return slot < 0 ? Optional.empty() : mapSpawn(slot + 1);
     }
 
     public Optional<Location> lobbySpawn() {
@@ -172,6 +183,9 @@ public final class Duel {
             lobbyHotbar.give(player);
             lobbyCountdown.start();
         } else {
+            if (isMode(DuelMode.SUMO)) {
+                player.teleport(sumoArena.spectatorSpawn());
+            }
             player.sendMessage(messages.get("join.spectator"));
         }
         ratings.load(player, this::refreshScoreboards);
@@ -256,6 +270,9 @@ public final class Duel {
 
     /** The maps of {@code mode} with a spawn for every slot, by number. */
     public List<Integer> playableMaps(DuelMode mode) {
+        if (mode == DuelMode.SUMO) {
+            return List.of(1);
+        }
         return IntStream.rangeClosed(1, config.maps(mode).size())
                 .filter(map -> spawns.hasMapSpawns(mode, map, MAX_PARTICIPANTS))
                 .boxed()
@@ -263,7 +280,59 @@ public final class Duel {
     }
 
     public String mapName(DuelMode mode, int map) {
-        return config.maps(mode).get(map - 1);
+        return mode == DuelMode.SUMO ? messages.raw("sumo.map-name") : config.maps(mode).get(map - 1);
+    }
+
+    public boolean sumoActive(Player player) {
+        return isPlaying(DuelMode.SUMO) && pvp && !frozen && isParticipant(player)
+                && sumoMatch.state() == SumoMatch.State.ACTIVE && sumoArena.owns(player.getLocation());
+    }
+
+    public boolean sumoLost(Location location) {
+        return sumoArena.lost(location);
+    }
+
+    public void sumoFall(Player victim) {
+        if (!sumoActive(victim) || !sumoMatch.fall(victim.getUniqueId())) {
+            return;
+        }
+        pvp = false;
+        frozen = true;
+        summary.death(victim);
+        opponentsOf(victim).forEach(scorer -> {
+            summary.awardKill(scorer, victim, Defeat.POINT);
+            Bukkit.broadcast(messages.get("sumo.point", Placeholder.unparsed("player", scorer.getName()),
+                    Formatter.number("score", sumoMatch.score(scorer.getUniqueId())),
+                    Formatter.number("target", config.sumo().pointsToWin())));
+        });
+        resetSumoPlayers();
+        if (sumoMatch.state() == SumoMatch.State.FINISHED) {
+            sumoMatch.winner().map(Bukkit::getPlayer).ifPresent(this::rewardWinner);
+            endRound();
+            return;
+        }
+        refreshScoreboards();
+        round.timer(RoundStart.freeze(plugin, config.sumo().resetSeconds(), round::players,
+                messages.get("sumo.next-point"), () -> {
+                    if (isPlaying(DuelMode.SUMO)) {
+                        sumoMatch.ready();
+                        frozen = false;
+                        pvp = true;
+                    }
+                }));
+    }
+
+    private void resetSumoPlayers() {
+        int slot = 1;
+        for (var player : round.players()) {
+            if (!player.isDead()) {
+                PlayerReset.reset(player, GameMode.SURVIVAL);
+                config.combat().apply(player);
+                teleportToMapSpawn(player, slot);
+                player.setVelocity(new Vector());
+            }
+            slot++;
+        }
     }
 
     public void handleDeath(PlayerDeathEvent event) {
@@ -273,6 +342,11 @@ public final class Duel {
         }
         if (mode == DuelMode.SUPERJUMP) {
             fell(victim);
+            round.respawn(victim, RESPAWN_DELAY_TICKS);
+            return;
+        }
+        if (mode == DuelMode.SUMO) {
+            sumoFall(victim);
             round.respawn(victim, RESPAWN_DELAY_TICKS);
             return;
         }
@@ -360,7 +434,8 @@ public final class Duel {
                 roundTimer == null ? config.countdowns().round() : roundTimer.remaining());
         participants().forEach(participant -> scoreboard.showDuellist(participant, board, ratings.placeholders(participant),
                 opponentsOf(participant).filter(participant::canSee).map(Player::getName).toList(),
-                isPlaying(DuelMode.VS) ? OptionalInt.of(summary.kills(participant)) : OptionalInt.empty()));
+                isPlaying(DuelMode.VS) || isPlaying(DuelMode.SUMO)
+                        ? OptionalInt.of(summary.kills(participant)) : OptionalInt.empty(), isMode(DuelMode.SUMO)));
         Bukkit.getOnlinePlayers().stream().filter(player -> !isParticipant(player)).forEach(viewer ->
                 scoreboard.showSpectator(viewer, board, participants().filter(viewer::canSee).map(this::duellistLine).toList()));
     }
@@ -386,6 +461,10 @@ public final class Duel {
 
     private Component duellistLine(Player duellist) {
         var name = Placeholder.unparsed("player", duellist.getName());
+        if (isPlaying(DuelMode.SUMO)) {
+            return messages.get("scoreboard.spectator-points", name,
+                    Formatter.number("points", sumoMatch.score(duellist.getUniqueId())));
+        }
         if (isPlaying(DuelMode.VS)) {
             return messages.get("scoreboard.spectator-kills", name, Formatter.number("kills", summary.kills(duellist)));
         }
@@ -415,7 +494,11 @@ public final class Duel {
         var outcome = votes.tally(playable, random);
         mode = outcome.mode();
         mapNumber = outcome.map();
-        mapName = config.maps(mode).isEmpty() ? null : mapName(mode, mapNumber);
+        mapName = mode == DuelMode.SUMO || !config.maps(mode).isEmpty() ? mapName(mode, mapNumber) : null;
+        if (mode == DuelMode.SUMO) {
+            sumoMatch.start(duellists);
+            Bukkit.broadcast(messages.get("sumo.started", Formatter.number("target", config.sumo().pointsToWin())));
+        }
         Bukkit.broadcast(messages.get("vote.result", Placeholder.component("mode", modeName(mode)),
                 Placeholder.component("map", mapName == null ? messages.get("vote.random-map") : Component.text(mapName))));
         int slot = 1;
@@ -429,6 +512,10 @@ public final class Duel {
                 }
                 case SG -> config.combat().apply(player);
                 case SUPERJUMP -> player.setRespawnLocation(player.getLocation(), true);
+                case SUMO -> {
+                    config.combat().apply(player);
+                    player.setVelocity(new Vector());
+                }
             }
         }
         refreshScoreboards();
@@ -459,10 +546,10 @@ public final class Duel {
         }, this::endByTimeout);
     }
 
-    /** The clock decides: VS by kills, SuperJump by the furthest checkpoint, SG is a draw. */
+    /** The clock decides: VS and Sumo by points, SuperJump by the furthest checkpoint, SG is a draw. */
     private void endByTimeout() {
         var winner = switch (mode) {
-            case VS -> leaderBy(summary::kills);
+            case VS, SUMO -> leaderBy(summary::kills);
             case SUPERJUMP -> leaderBy(player -> checkpoints.getOrDefault(player.getUniqueId(), 0));
             case SG -> Optional.<Player>empty();
         };
@@ -482,6 +569,7 @@ public final class Duel {
 
     private void endRound() {
         pvp = false;
+        frozen = false;
         Bukkit.broadcast(messages.get("round.ended"));
         startRestart();
     }
@@ -550,7 +638,7 @@ public final class Duel {
 
     private void awardWin(Player winner) {
         summary.awardWin(winner);
-        if (mode != DuelMode.SUPERJUMP && summary.undamaged(winner)) {
+        if ((mode == DuelMode.VS || mode == DuelMode.SG) && summary.undamaged(winner)) {
             summary.moment(winner, "duell", "makellos");
         }
     }

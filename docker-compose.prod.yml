@@ -42,11 +42,9 @@ services:
   lobby: *paper
   bedwars: *paper
   mlgrush: *paper
+  duell: *paper
 
-  # Not released yet: `docker compose --profile unreleased up -d duell` starts one anyway.
-  duell:
-    <<: *paper
-    profiles: [unreleased]
+  # Not released yet: `docker compose --profile unreleased up -d quicksg` starts one anyway.
   emeraldrush:
     <<: *paper
     profiles: [unreleased]

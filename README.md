@@ -13,7 +13,7 @@ paper/api                BlockcraftAPI: library plugin owning the database pool,
 paper/bedwars            BedWars, a port of rewi-bw (see "BedWars")
 paper/core               BlockcraftCore: staff/utility commands, chat moderation enforcement
 paper/lobby              Lobby: join items, server compass, cosmetics, premium shop, secrets
-paper/duell              Duell: 1v1 duels (vs, sg, superjump)
+paper/duell              Duell: 1v1 duels (vs, sg, superjump, sumo)
 paper/emeraldrush        EmeraldRush minigame
 paper/mlgrush            MLG Rush: two players, knockback sticks, beds, first to five
 paper/quicksg            QuickSG survival games
@@ -287,6 +287,18 @@ as Velocity, the production database passwords and network addresses, and its ow
 For updates, stage the jars, run the same `up -d` command to apply Compose changes, then run
 `docker compose --env-file .env -f docker-compose.yml -f docker-compose.prod.yml restart velocity lobby mlgrush`
 to load changed jars and resource-pack assets. Persistent plugin files stay in the named data volume.
+
+## Duell Sumo
+
+Sumo appears alongside VS, SG, and SuperJump in Duell's mode vote. `/forcemap sumo` forces it for the next duel.
+Its circular stone ring is generated in `duell:sumo`, so it needs no `/setup` locations or imported map.
+Both players fight with empty hands. Punches apply knockback without health damage. Falling below the ring's
+loss height gives the opponent one point, resets both players, and starts a three-second freeze before play resumes.
+The first player to three points wins. At the round time limit, the player with more points wins, or equal scores draw.
+
+Duell's `sumo` config section controls the radius, floor and loss heights, spawn distance, target score, reset
+duration, knockback strength, and hit delay. Sumo uses Duell's stats, Elo, win rewards, and rematch flow.
+Each knockout counts as a kill for stats and network XP. The damage-free win achievement excludes Sumo.
 
 ## BedWars
 
@@ -666,7 +678,7 @@ itself; `docker-compose.yml` shows the full set.
 `docker-compose.prod.yml` turns the dev network into the public one: MariaDB publishes no port, the resource pack
 is served on loopback for a web server in front of it, the passwords, the forwarding secret, the pack address and the
 network addresses come from `.env`, and the games under `profiles: [unreleased]` stay off.
-Lobby, BedWars, and MLG Rush are enabled by default. Players still connect to
+Lobby, BedWars, MLG Rush, and Duell are enabled by default. Players still connect to
 the proxy's port 25565 directly: Minecraft is not HTTP, so neither a web server nor Cloudflare's proxy can carry it,
 and the DNS record players use has to point at the host itself. On the host, with Docker, git-lfs (otherwise the maps arrive as pointer files) and JDK 25 (`mise install`):
 
@@ -679,7 +691,7 @@ docker compose up -d
 ```
 
 To update, pull, run `./gradlew stagePlugins` and restart the servers (`docker compose restart velocity lobby
-bedwars mlgrush`). A plugin's `config.yml` and `messages.yml` in its data folder are copies of the bundled defaults, made on
+bedwars mlgrush duell`). A plugin's `config.yml` and `messages.yml` in its data folder are copies of the bundled defaults, made on
 its first start: new keys arrive through the bundled default, but the copy keeps its own value for every key it
 already has, so changed texts and renamed config keys do not reach a server by themselves. Move a copy nobody edited
 aside before the restart (`docker compose exec bedwars mv /data/plugins/BedWars/messages.yml

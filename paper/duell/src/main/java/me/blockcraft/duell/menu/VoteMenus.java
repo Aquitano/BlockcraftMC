@@ -1,17 +1,24 @@
 package me.blockcraft.duell.menu;
 
 import me.blockcraft.api.game.VoteMenu;
+import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.menu.Menu;
+import me.blockcraft.api.pack.MenuIcon;
+import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.duell.game.Duel;
 import me.blockcraft.duell.game.DuelMode;
 import me.blockcraft.duell.game.DuelVote;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -28,16 +35,7 @@ public final class VoteMenus {
     }
 
     public void openModes(Player player) {
-        var votes = duel.votes();
-        var options = Arrays.stream(DuelMode.values()).map(mode -> new VoteMenu.Option(
-                Optional.of(mode.configKey()),
-                messages.get("menu.modes." + mode.configKey()),
-                Items.of(icon(mode)).build(),
-                List.of(messages.get("menu.modes." + mode.configKey() + "-lore")),
-                votes.votes(mode))).toList();
-        var own = votes.choiceOf(player.getUniqueId()).map(choice -> Optional.of(choice.mode().configKey()));
-        open(player, new VoteMenu(messages.get("menu.modes.title"), options, Optional.empty(), own, Optional.empty(),
-                (voter, key) -> key.flatMap(DuelMode::byConfigKey).ifPresent(mode -> openMaps(voter, mode))));
+        open(player, new ModeMenu(player));
     }
 
     /** Chance is offered only where a map is playable, so that nobody votes for a mode that cannot start. */
@@ -63,8 +61,55 @@ public final class VoteMenus {
         }));
     }
 
-    private void open(Player player, VoteMenu menu) {
+    private void open(Player player, Menu menu) {
         menu.open(player, () -> duel.isLobby() && duel.isParticipant(player));
+    }
+
+    private final class ModeMenu extends Menu {
+
+        private static final int MLG_RUSH_SLOT = 22;
+        private final List<DuelMode> modes = List.of(DuelMode.values());
+
+        private ModeMenu(Player player) {
+            super(4, messages.get("menu.modes.title"));
+            closeButton();
+            var votes = duel.votes();
+            var own = votes.choiceOf(player.getUniqueId()).map(DuelVote.Choice::mode);
+            var voteMessages = BlockcraftApi.get().messages();
+            for (int index = 0; index < modes.size(); index++) {
+                var mode = modes.get(index);
+                boolean mine = own.filter(choice -> choice == mode).isPresent();
+                var lore = new ArrayList<>(List.of(messages.get("menu.modes." + mode.configKey() + "-lore"),
+                        voteMessages.get("vote.votes", Formatter.number("votes", votes.votes(mode)))));
+                if (mine) {
+                    lore.add(voteMessages.get("vote.own"));
+                }
+                lore.add(voteMessages.get("vote.choose"));
+                var item = Items.of(icon(mode)).name(messages.get("menu.modes." + mode.configKey()))
+                        .lore(lore).hideAttributes();
+                if (mine) {
+                    item.glow();
+                }
+                set(10 + index * 2, item.build());
+            }
+            set(MLG_RUSH_SLOT, MenuIcon.MLGRUSH.item().name(messages.get("menu.modes.mlgrush"))
+                    .lore(messages.getLines("menu.modes.mlgrush-lore")).build());
+        }
+
+        @Override
+        protected void onClick(Player player, int slot, ItemStack clicked, InventoryClickEvent event) {
+            if (!duel.isLobby() || !duel.isParticipant(player)) {
+                VoteMenu.closed(player, messages);
+                return;
+            }
+            if (slot == MLG_RUSH_SLOT) {
+                var plugin = JavaPlugin.getProvidingPlugin(VoteMenus.class);
+                String group = plugin.getConfig().getString("navigation.mlgrush-group", "mlgrush");
+                Menu.close(player, closed -> ProxyMessaging.play(plugin, closed, group));
+            } else if (slot >= 10 && (slot - 10) % 2 == 0 && (slot - 10) / 2 < modes.size()) {
+                openMaps(player, modes.get((slot - 10) / 2));
+            }
+        }
     }
 
     private static Material icon(DuelMode mode) {
@@ -72,6 +117,7 @@ public final class VoteMenus {
             case VS -> Material.IRON_SWORD;
             case SG -> Material.CHAINMAIL_CHESTPLATE;
             case SUPERJUMP -> Material.GOLDEN_BOOTS;
+            case SUMO -> Material.SLIME_BLOCK;
         };
     }
 }

@@ -32,7 +32,8 @@ public final class GameScoreboard {
         this.sidebar = new GameSidebar(messages.get("scoreboard.title"), round);
     }
 
-    public void showDuellist(Player viewer, Board board, TagResolver rating, List<String> opponents, OptionalInt kills) {
+    public void showDuellist(Player viewer, Board board, TagResolver rating, List<String> opponents, OptionalInt kills,
+                             boolean sumo) {
         var icons = GameSidebar.icons(viewer);
         var sections = new ArrayList<GameSidebar.Section>();
         var mode = round.phase() == GamePhase.LOBBY
@@ -42,7 +43,7 @@ public final class GameScoreboard {
         sections.add(new GameSidebar.Section(messages.get("scoreboard.opponent", icons), opponents.isEmpty()
                 ? List.of(GameSidebar.value(messages.get("scoreboard.opponent-none")))
                 : opponents.stream().map(name -> GameSidebar.value(Component.text(name))).toList()));
-        kills.ifPresent(count -> sections.add(new GameSidebar.Section(messages.get("scoreboard.kills", icons),
+        kills.ifPresent(count -> sections.add(new GameSidebar.Section(messages.get(sumo ? "scoreboard.points" : "scoreboard.kills", icons),
                 GameSidebar.value(Component.text(count)))));
         show(viewer, board, sections);
     }

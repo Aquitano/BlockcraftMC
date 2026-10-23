@@ -1,6 +1,8 @@
 players:
   min: 2
 global-stats-head: Kevos
+navigation:
+  mlgrush-group: mlgrush
 countdown:
   lobby: 30
   start: 5
@@ -14,6 +16,15 @@ rewards:
   win: 10
 vs:
   kills-to-end: 3
+sumo:
+  radius: 4
+  floor-y: 64
+  lose-y: 61
+  spawn-distance: 2
+  points-to-win: 3
+  reset-seconds: 3
+  knockback-strength: 0.4
+  hit-delay-ticks: 8
 maps:
   vs: [Gefängnis, Hypixel-DM, DustMC-DM, Tippy]
   sg: [Bucht, Gefängnis, Bergwerk]

@@ -17,6 +17,7 @@ mode:
   vs: "1vs1"
   sg: "SurvivalGames"
   superjump: "SuperJump"
+  sumo: "Sumo"
 
 join:
   introduction: "<prefix><muted>Stimm über Modus und Map ab. <duell>Ein Gegner. <muted>Keine Zeugen nötig."
@@ -51,6 +52,12 @@ timer:
 superjump:
   checkpoint: "<prefix><white><player><muted> hat Checkpoint <accent><checkpoint> <muted>erreicht!"
   goal: "<prefix><white><player><muted> hat das <primary>Ziel <muted>erreicht!"
+
+sumo:
+  map-name: "Steinring"
+  started: "<prefix><muted>Stoße deinen Gegner vom Ring. Wer zuerst <accent><target> Punkte <muted>hat, gewinnt."
+  point: "<prefix><accent><player> <muted>erhält einen Punkt! <accent><score><muted>/<accent><target> <muted>Punkte."
+  next-point: "<duell>Sumo <dark>· <muted>Nächster Punkt"
 
 title:
   start: "<muted>Start!"
@@ -91,6 +98,13 @@ menu:
     sg-lore: "<bullet><muted>Sammle Beute und gewinne den letzten Kampf."
     superjump: "<arrow><primary>SuperJump"
     superjump-lore: "<bullet><muted>Erreiche die Checkpoints und das Ziel zuerst."
+    sumo: "<arrow><primary>Sumo"
+    sumo-lore: "<bullet><muted>Stoße deinen Gegner ohne Ausrüstung vom Ring und sammle Punkte."
+    mlgrush: "<arrow><mlgrush>MLG Rush"
+    mlgrush-lore:
+      - "<bullet><muted>Baue zum gegnerischen Bett und zerstöre es."
+      - "<bullet><muted>Wechselt zu MLG Rush mit eigener Warteschlange und Stats."
+      - "<left>MLG Rush spielen"
   maps:
     title: "<arrow><duell><mode> <dark>· <muted>Eure Map"
     map: "<arrow><primary><map>"
@@ -118,8 +132,10 @@ scoreboard:
   duellists: "<muted><icon:opponent> DUELLANTEN"
   spectator-player: "<primary><player>"
   spectator-kills: "<primary><player> <dark>· <duell><kills> Kills"
+  spectator-points: "<primary><player> <dark>· <duell><points> Punkte"
   spectator-checkpoint: "<primary><player> <dark>· <duell>Checkpoint <checkpoint>"
   kills: "<muted><icon:kills> KILLS"
+  points: "<muted><icon:kills> PUNKTE"
   mode: "<muted><icon:mode> MODUS"
   mode-voting: "<muted>Abstimmung läuft"
   mode-leading: "<mode> <muted>führt"

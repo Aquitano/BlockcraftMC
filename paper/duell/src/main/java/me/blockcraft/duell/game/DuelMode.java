@@ -6,7 +6,8 @@ import java.util.Optional;
 public enum DuelMode {
     VS("1vs1", "vs"),
     SG("SG", "sg"),
-    SUPERJUMP("SJ", "superjump");
+    SUPERJUMP("SJ", "superjump"),
+    SUMO("sumo", "sumo");
 
     private final String setupKey;
     private final String configKey;

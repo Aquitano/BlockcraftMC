@@ -36,6 +36,17 @@ public class DuelVoteTest {
     }
 
     @Test
+    public void sumoVotesUseTheGeneratedRingAlongsideExistingModes() {
+        var vote = new DuelVote();
+        vote.cast(UUID.randomUUID(), new DuelVote.Choice(DuelMode.SUMO, OptionalInt.of(1)));
+        vote.cast(UUID.randomUUID(), new DuelVote.Choice(DuelMode.SUMO, OptionalInt.empty()));
+        vote.cast(UUID.randomUUID(), new DuelVote.Choice(DuelMode.VS, OptionalInt.of(2)));
+
+        assertEquals(new DuelVote.Outcome(DuelMode.SUMO, 1), vote.tally(Map.of(
+                DuelMode.VS, List.of(1, 2), DuelMode.SUMO, List.of(1)), LAST));
+    }
+
+    @Test
     public void aTieFallsToTheRandom() {
         var vote = new DuelVote();
         vote.cast(UUID.randomUUID(), new DuelVote.Choice(DuelMode.SG, OptionalInt.of(1)));
@@ -98,6 +109,6 @@ public class DuelVoteTest {
 
     @Test
     public void withoutAnyPlayableMapsOrVotesAnyModeKeepsItsFallbackMap() {
-        assertEquals(new DuelVote.Outcome(DuelMode.SUPERJUMP, 1), new DuelVote().tally(Map.of(), LAST));
+        assertEquals(new DuelVote.Outcome(DuelMode.SUMO, 1), new DuelVote().tally(Map.of(), LAST));
     }
 }

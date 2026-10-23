@@ -20,7 +20,8 @@ public record DuellConfig(
         Map<DuelMode, List<String>> maps,
         LootTable loot,
         CombatStyle combat,
-        Duration rematchWindow
+        Duration rematchWindow,
+        SumoConfig sumo
 ) {
 
     public record Countdowns(int freeze, int round) {
@@ -47,7 +48,8 @@ public record DuellConfig(
                 maps,
                 LootTable.fromYaml(chest, 1, 6),
                 CombatStyle.from(config),
-                Duration.ofSeconds(config.getInt("rematch.window-seconds", 15)));
+                Duration.ofSeconds(config.getInt("rematch.window-seconds", 15)),
+                SumoConfig.from(config));
     }
 
     private static ConfigurationSection section(FileConfiguration config, String key) {

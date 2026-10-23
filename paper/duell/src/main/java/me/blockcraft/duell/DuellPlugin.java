@@ -20,6 +20,7 @@ import me.blockcraft.common.duel.DuelPairRepository;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.duell.config.DuellConfig;
 import me.blockcraft.duell.config.Spawns;
+import me.blockcraft.duell.arena.SumoArena;
 import me.blockcraft.duell.game.Duel;
 import me.blockcraft.duell.game.DuelRatings;
 import me.blockcraft.duell.game.GameItems;
@@ -28,6 +29,7 @@ import me.blockcraft.duell.listener.ProtectionListener;
 import me.blockcraft.duell.listener.SgListener;
 import me.blockcraft.duell.listener.SuperJumpListener;
 import me.blockcraft.duell.listener.VsListener;
+import me.blockcraft.duell.listener.SumoListener;
 import org.bukkit.Bukkit;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -54,7 +56,7 @@ public final class DuellPlugin extends JavaPlugin {
         var items = new GameItems(messages);
         var topList = new TopList(this, stats, messages);
         var statsMenus = StatsMenus.ranked(messages, stats, topList, gameConfig.globalStatsHead());
-        duel = new Duel(this, gameConfig, config, messages, spawns, stats, statsMenus, items,
+        duel = new Duel(this, gameConfig, config, messages, spawns, new SumoArena(config.sumo()), stats, statsMenus, items,
                 new DuelRatings(this, messages, api.elo()), pairs);
         api.presence().maxPlayers(Duel.MAX_PARTICIPANTS);
         var lootChests = new LootChests(config.loot());
@@ -67,7 +69,8 @@ public final class DuellPlugin extends JavaPlugin {
                 duel.lobbyHotbar(),
                 new VsListener(this, duel, config, items),
                 new SgListener(duel, lootChests),
-                new SuperJumpListener(duel)
+                new SuperJumpListener(duel),
+                new SumoListener(this, duel, config.sumo())
         ).forEach(this::register);
 
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
