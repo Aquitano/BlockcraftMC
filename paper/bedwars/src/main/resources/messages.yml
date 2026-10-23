@@ -1,0 +1,302 @@
+prefix: "<bedwars>BedWars <dark>» <reset>"
+game-name: "<bedwars>BedWars"
+
+commands:
+  start:
+    description: "Verkürzt den Countdown der Lobby"
+  forcemap:
+    description: "Legt die Map der nächsten Runde fest"
+  stats:
+    description: "Zeigt die Stats eines Spielers"
+  top:
+    description: "Zeigt die Top 10 einer Kategorie"
+  setup:
+    description: "Richtet die Lobby und die Maps von BedWars ein"
+
+join:
+  introduction: "<prefix><muted>Verteidige dein Bett, kaufe mit Bronze, Eisen und Gold ein und zerstöre die Betten der anderen Teams."
+
+# Team names; the colour comes from the team.
+teams:
+  red: "Rot"
+  yellow: "Gelb"
+  purple: "Lila"
+  green: "Grün"
+  white: "Weiß"
+  light_blue: "Blau"
+  orange: "Orange"
+  black: "Schwarz"
+  magenta: "Magenta"
+  pink: "Pink"
+  gray: "Dunkelgrau"
+  silver: "Hellgrau"
+  cyan: "Hellblau"
+  blue: "Dunkelblau"
+  brown: "Braun"
+  lime: "Dunkelgrün"
+
+# Resource names and prices; the colour comes from the resource.
+resources:
+  bronze:
+    name: "Bronze"
+    amount: "<amount> Bronze"
+  iron:
+    name: "Eisen"
+    amount: "<amount> Eisen"
+  gold:
+    name: "Gold"
+    amount: "<amount> Gold"
+
+team:
+  joined: "<prefix><muted>Du bist nun im Team <team><muted>."
+  assigned: "<prefix><muted>Du wurdest dem Team <team> <muted>zugewiesen."
+  moved: "<prefix><muted>Alle haben dasselbe Team gewählt, darum spielst du für Team <team><muted>."
+  already: "<prefix><error>Du bist bereits in diesem Team!"
+  full: "<prefix><error>Das Team ist bereits voll!"
+
+teams-list:
+  header: "<white>▆▆▆▆▆▆▆▆▆▆ <accent><bold>Teams</bold> <white>▆▆▆▆▆▆▆▆▆▆"
+  team: "<white>▆ Team <team><white>: <accent><players>"
+
+team-chest:
+  title: "<bedwars>Team Inventar"
+  not-yours: "<prefix><error>Diese Teamkiste gehört nicht deinem Team!"
+  destroyed: "<prefix><error>Eine Teamkiste wurde zerstört."
+
+bed:
+  own: "<prefix><error>Du kannst dein eigenes Bett nicht zerstören."
+  destroyed: "<prefix><muted>Das Bett von Team <team> <muted>wurde von <player> <muted>zerstört."
+  title: "<accent>Dein Bett"
+  subtitle: "<accent>wurde zerstört"
+
+round:
+  team-out: "<prefix><muted>Team <team> <muted>wurde vernichtet."
+  remaining: "<prefix><muted>Es verbleiben <accent><teams> <muted>Teams und <accent><players> <muted>Spieler."
+  winner: "<prefix><primary>Team <team> <primary>hat die Runde gewonnen!"
+  draw: "<prefix><muted>Es konnte kein Team die Runde für sich entscheiden."
+
+timer:
+  round: "<bedwars>Verbleibende Zeit <dark>● <white><time>"
+
+build:
+  outside: "<prefix><error>Du kannst hier keine Blöcke platzieren!"
+  spawn: "<prefix><error>Du kannst keine Blöcke auf einen Spawnpunkt setzen."
+  web-cooldown: "<prefix><error>Du kannst nur alle <seconds> Sekunden ein Spinnennetz platzieren."
+
+chat:
+  global: "<accent><bold>[GLOBAL]</bold>"
+
+dealer:
+  name: "<accent>Dealer"
+
+shop:
+  title: "<arrow><bedwars>BedWars <dark>· <muted>Shop"
+  not-enough: "<prefix><error>Du hast nicht genug <resource><error>."
+  no-room: "<prefix><error>Du hast nicht genug Platz in deinem Inventar."
+  categories:
+    blocks: "<arrow><bedwars>Blöcke"
+    armor: "<arrow><bedwars>Rüstung"
+    pickaxes: "<arrow><bedwars>Spitzhacken"
+    swords: "<arrow><bedwars>Schwerter"
+    bows: "<arrow><bedwars>Bögen"
+    food: "<arrow><bedwars>Essen"
+    chests: "<arrow><bedwars>Kisten"
+    potions: "<arrow><bedwars>Tränke"
+    extras: "<arrow><bedwars>Extras"
+  items:
+    sandstone: "<muted>Sandstein"
+    end-stone: "<muted>Endstein"
+    iron-block: "<muted>Eisenblock"
+    glass: "<muted>Glas"
+    glowstone: "<muted>Glowstone"
+    leather-helmet: "<primary>Lederhelm"
+    leather-leggings: "<primary>Lederhose"
+    leather-boots: "<primary>Lederschuhe"
+    chestplate-1: "<primary>Brustplatte I"
+    chestplate-2: "<primary>Brustplatte II"
+    chestplate-3: "<primary>Brustplatte III"
+    chestplate-4: "<primary>Brustplatte IV"
+    pickaxe-1: "<accent>Spitzhacke I"
+    pickaxe-2: "<accent>Spitzhacke II"
+    pickaxe-3: "<accent>Spitzhacke III"
+    stick: "<error>Knüppel"
+    sword-1: "<error>Schwert I"
+    sword-2: "<error>Schwert II"
+    sword-3: "<error>Schwert III"
+    sword-4: "<error>Schwert IV"
+    bow-1: "<bedwars>Bogen I"
+    bow-2: "<bedwars>Bogen II"
+    bow-3: "<bedwars>Bogen III"
+    arrow: "<bedwars>Pfeil"
+    apple: "<success>Apfel"
+    steak: "<success>Steak"
+    cake: "<success>Kuchen"
+    golden-apple: "<success>Goldapfel"
+    chest: "<success>Kiste"
+    team-chest: "<success>Teamkiste"
+    healing-1: "<bedwars>Heilung I"
+    healing-2: "<bedwars>Heilung II"
+    jump-boost: "<bedwars>Sprungkraft"
+    strength: "<bedwars>Stärke"
+    ladder: "<accent>Leiter"
+    teleporter: "<accent>Teleporter"
+    mobile-shop: "<accent>Mobiler Shop"
+    tnt: "<accent>TNT"
+    parachute: "<accent>Fallschirm"
+    rescue-platform: "<accent>Rettungsplattform"
+    ender-pearl: "<accent>Enderperle"
+    web: "<accent>Spinnennetz"
+
+items:
+  teleporter:
+    already: "<prefix><error>Du bist bereits im Teleportier-Vorgang!"
+    roof: "<prefix><error>Du musst unter freiem Himmel stehen!"
+    lost: "<prefix><error>Du hast keinen Teleporter mehr!"
+    cancelled: "<prefix><error>Der Teleport wurde abgebrochen!"
+  parachute:
+    grounded: "<prefix><error>Du stehst bereits auf dem Boden."
+    already: "<prefix><error>Du hast bereits einen aktiven Fallschirm."
+    broke: "<prefix><error>Dein Fallschirm ist kaputt gegangen."
+  rescue-platform:
+    unavailable: "<prefix><error>Hier kannst du keine Rettungsplattform einsetzen."
+  mobile-shop:
+    ground: "<prefix><error>Du kannst den mobilen Shop nur auf dem Boden platzieren."
+    left: "<bedwars><seconds> Sekunden"
+    left-second: "<bedwars>1 Sekunde"
+
+item:
+  vote: "<arrow><primary>Abstimmung"
+  jump-reset: "<arrow><primary>Zurück zum Start"
+  perks: "<arrow><primary>Perks"
+
+lobby:
+  no-map: "<prefix><error>Es gibt keine spielbare Map, die Runde kann nicht starten."
+  map-failed: "<prefix><error>Die Map konnte nicht geladen werden, es wird neu abgestimmt."
+  team-stand: "<team>"
+  cps:
+    name: "<bedwars>Schlag mich!"
+    counter: "<accent>CPS: <success><left-clicks> <muted>& <success><right-clicks>"
+  jump-and-run:
+    clock: "<success><time>s"
+    finished: "<prefix><muted>Du hast das Jump'n'Run in <success><time> <muted>Sekunden geschafft!"
+    record: "<prefix><muted>Du hast einen neuen Rekord aufgestellt: <success><time> <muted>Sekunden."
+  catch:
+    head: "<rainbow>Fang mich!"
+    yours: "<prefix><muted>Du hast jetzt den Kopf. Renn weg!"
+    caught: "<prefix><player> <muted>hat jetzt den Kopf. Schnell!"
+
+# The map vote; the votes, the chance option and the voter's confirmation are BlockcraftAPI's vote texts.
+vote:
+  title: "<arrow><bedwars>BedWars <dark>· <muted>Abstimmung"
+  map: "<arrow><primary><map>"
+  builders: "<bullet><muted>Erbaut von <accent><builders>"
+  chance: "den Zufall"
+  result: "<prefix><muted>Gespielt wird <accent><map><muted>."
+
+perks:
+  title: "<arrow><bedwars>BedWars <dark>· <muted>Perks"
+  choose: "<click>Auswählen"
+  selected: "<success><bold>Ausgewählt"
+  reset: "<error>Zurücksetzen"
+  chosen: "<prefix><muted>Du hast das Perk <success><perk> <muted>ausgewählt."
+  was-reset: "<prefix><muted>Dein Perk <success><group> <muted>wurde zurückgesetzt."
+  groups:
+    stick: "<accent>Knüppel"
+    bed-sound: "<accent>Bettabbau-Sound"
+    kill-sound: "<accent>Kill-Sound"
+    arrow-trail: "<accent>Bogen-Partikel"
+  stick:
+    bone: "<error>Knochen"
+    blaze-rod: "<error>Blazerod"
+    feather: "<error>Feder"
+    swiss-flag: "<error>Schweizer Flagge"
+    german-flag: "<error>Deutsche Flagge"
+    austrian-flag: "<error>Österreichische Flagge"
+  bed-sound:
+    ender-dragon: "<primary>Enderdrache-Grollen"
+    wither-spawn: "<primary>Wither-Spawn"
+    skeleton: "<primary>Skelett-Tod"
+    wither-death: "<primary>Wither-Tod"
+  kill-sound:
+    piston: "<accent>Kolben"
+    firework: "<accent>Feuerwerk"
+    ghast: "<accent>Ghast-Tod"
+    level-up: "<accent>Levelup"
+    wolf: "<accent>Hund"
+    skeleton: "<accent>Skelett"
+    tnt: "<accent>TNT"
+    cure: "<accent>Verwandlung"
+  arrow-trail:
+    hearts: "<bedwars>Herz"
+    flames: "<bedwars>Flammen"
+    notes: "<bedwars>Noten"
+    sparks: "<bedwars>Funken"
+    redstone: "<bedwars>Redstone Staub"
+    slime: "<bedwars>Slime"
+    lava: "<bedwars>Feuer"
+    rainbow: "<bedwars>Bunter Staub"
+
+setup:
+  help:
+    - " "
+    - "<muted>/setup lobby spawn<dark>|<muted>cps-tester<dark>|<muted>jump-start<dark>|<muted>jump-finish"
+    - "<muted>/setup lobby joiner <dark>[<muted>team<dark>]"
+    - "<muted>/setup lobby display <dark>[<muted>team<dark>] [<muted>nummer<dark>]"
+    - "<muted>/setup map <dark>[<muted>map<dark>] <muted>edit<dark>|<muted>save<dark>|<muted>info"
+    - "<muted>/setup map <dark>[<muted>map<dark>] <muted>name<dark>|<muted>icon<dark>|<muted>spectator<dark>|<muted>shop<dark>|<muted>remove"
+    - "<muted>/setup map <dark>[<muted>map<dark>] <muted>spawn<dark>|<muted>bed <dark>[<muted>team<dark>]"
+    - "<muted>/setup map <dark>[<muted>map<dark>] <muted>spawner <dark>[<muted>bronze<dark>|<muted>iron<dark>|<muted>gold<dark>]"
+    - "<muted>/setup map <dark>[<muted>map<dark>] <muted>border <dark>[<muted>x1<dark>] [<muted>z1<dark>] [<muted>x2<dark>] [<muted>z2<dark>]"
+    - " "
+  lobby-set: "<prefix><muted>Der Ort <white><spot> <muted>wurde gesetzt. Mit <white>/map save <muted>bleibt er."
+  invalid-key: "<prefix><error>Ein Map-Name darf nur aus a-z, 0-9, _, . und - bestehen."
+  editing: "<prefix><muted>Du bearbeitest <white><map><muted>. Mit <white>/setup map <map> save <muted>bleibt die Welt."
+  not-loaded: "<prefix><error>Diese Map ist gerade nicht geladen."
+  saved: "<prefix><muted>Die Welt von <white><map> <muted>wurde gespeichert."
+  ready: "<prefix><success><map> ist spielbar."
+  missing: "<prefix><muted>Für <white><map> <muted>fehlt noch: <error><missing>"
+  no-bed: "<prefix><error>Schau auf ein Bett."
+  not-in-map: "<prefix><error>Dafür musst du in <white><map> <error>stehen: <white>/setup map <map> edit"
+  changed: "<prefix><muted>Die Map <white><map> <muted>wurde geändert."
+
+stats:
+  header: "<muted>Stats von <accent><player>"
+  lines:
+    - "<arrow><primary>Siege<dark>: <muted><wins>"
+    - "<arrow><primary>Niederlagen<dark>: <muted><losses>"
+    - "<arrow><primary>Tode<dark>: <muted><deaths>"
+    - "<arrow><primary>Kills<dark>: <muted><kills>"
+    - "<arrow><primary>Punkte<dark>: <muted><points>"
+top:
+  separator: "<muted><strikethrough>---------------------------------"
+  first: "<accent><bold>#1 <reset><primary><name><muted> ( <white><value><muted> )"
+  entry: "<reset>#<rank> <primary><name> <muted>( <white><value><muted> )"
+menu:
+  stats:
+    title: "<arrow><bedwars>BedWars <dark>· <muted>Stats"
+    player: "<accent><player>"
+    player-lore:
+      - "<arrow><primary>Siege<dark>: <muted><wins>"
+      - "<arrow><primary>Niederlagen<dark>: <muted><losses>"
+      - "<arrow><primary>Tode<dark>: <muted><deaths>"
+      - "<arrow><primary>Kills<dark>: <muted><kills>"
+      - "<arrow><primary>Punkte<dark>: <muted><points>"
+    global: "<arrow><primary>Globale Stats"
+  global-stats:
+    title: "<arrow><bedwars>BedWars <dark>· <muted>Globale Stats"
+    wins: "<arrow><primary>Siege"
+    deaths: "<arrow><primary>Tode"
+    kills: "<arrow><primary>Kills"
+    losses: "<arrow><primary>Niederlagen"
+    points: "<arrow><primary>Punkte"
+
+scoreboard:
+  title: "<bedwars><bold>BedWars"
+  winner-team: "Team <team>"
+  team: "<muted><icon:mode> TEAM"
+  no-team: "<muted>Kein Team"
+  voting: "<muted>Abstimmung läuft"
+  teams: "<muted><icon:mode> TEAMS"
+  team-bed: "<error>❤ <team> <dark>· <white><players>"
+  team-no-bed: "<dark>❤ <team> <dark>· <white><players>"
+  kills: "<muted><icon:kills> KILLS"

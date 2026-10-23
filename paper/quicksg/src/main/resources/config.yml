@@ -1,0 +1,66 @@
+players:
+  min: 2
+  max: 8
+global-stats-head: Kevos
+countdown:
+  lobby: 30
+  start: 5
+  freeze: 5
+  protection: 20
+  round: 1200
+  tracker-after: 300
+  restart: 10
+idle-restart-minutes: 50
+timer-bar: true
+world-border:
+  enabled: false
+  lobby-radius: 30
+  ingame-radius: 60
+rewards:
+  kill: 5
+  death: 2
+  win: 15
+kit-price: 200
+chest:
+  min-items: 1
+  max-items: 7
+  loot:
+    - {item: GOLDEN_HELMET, weight: 9}
+    - {item: GOLDEN_CHESTPLATE, weight: 9}
+    - {item: GOLDEN_LEGGINGS, weight: 9}
+    - {item: GOLDEN_BOOTS, weight: 9}
+    - {item: CHAINMAIL_HELMET, weight: 8}
+    - {item: CHAINMAIL_CHESTPLATE, weight: 8}
+    - {item: CHAINMAIL_LEGGINGS, weight: 8}
+    - {item: CHAINMAIL_BOOTS, weight: 8}
+    - {item: IRON_HELMET, weight: 3}
+    - {item: IRON_CHESTPLATE, weight: 3}
+    - {item: IRON_LEGGINGS, weight: 3}
+    - {item: IRON_BOOTS, weight: 3}
+    - {item: DIAMOND_HELMET, weight: 1}
+    - {item: DIAMOND_CHESTPLATE, weight: 1}
+    - {item: DIAMOND_LEGGINGS, weight: 1}
+    - {item: DIAMOND_BOOTS, weight: 1}
+    - {item: WOODEN_SWORD, weight: 4}
+    - {item: STONE_SWORD, weight: 4}
+    - {item: IRON_SWORD, weight: 2}
+    - {item: DIAMOND_SWORD, weight: 1}
+    - {item: COOKED_BEEF, amount: 2, weight: 9}
+    - {item: COOKED_CHICKEN, amount: 2, weight: 9}
+    - {item: CARROT, amount: 2, weight: 9}
+    - {item: LAPIS_LAZULI, amount: 2, weight: 3}
+    - {item: LAPIS_LAZULI, amount: 3, weight: 1}
+    - {item: LAPIS_LAZULI, amount: 1, weight: 1}
+    - {item: ENCHANTED_BOOK, weight: 3}
+    - {item: MUSHROOM_STEW, weight: 5}
+    - {item: CAKE, weight: 2}
+    - {item: COMPASS, weight: 1}
+
+# 1.8 PvP: no attack cooldown, everything else stays vanilla.
+pvp:
+  legacy-combat: true
+
+tracker:
+  range-horizontal: 100.0
+  range-vertical: 25.0
+  cooldown-ticks: 20

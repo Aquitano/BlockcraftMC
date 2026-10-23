@@ -1,0 +1,361 @@
+prefix: "<primary><ip> <dark>» <reset>"
+
+commands:
+  team:
+    description: "Team-Hilfe"
+  enchant:
+    description: "Öffnet einen Zaubertisch oder verzaubert das gehaltene Item"
+  fly:
+    description: "Flugmodus für dich oder andere"
+  food:
+    description: "Füllt den Hunger von dir oder anderen"
+  gm:
+    description: "Ändert den Gamemode von dir oder anderen"
+  gms:
+    description: "Gamemode Überleben"
+  gmc:
+    description: "Gamemode Kreativ"
+  gma:
+    description: "Gamemode Abenteuer"
+  gmsp:
+    description: "Gamemode Zuschauer"
+  heal:
+    description: "Heilt dich oder andere"
+  invsee:
+    description: "Öffnet das Inventar eines Spielers"
+  lag:
+    description: "Zeigt TPS, MSPT, Speicher und Welten dieses Servers"
+  sethealth:
+    description: "Setzt die Lebenspunkte eines Spielers"
+  skull:
+    description: "Gibt dir einen Spielerkopf"
+  speed:
+    description: "Lauf- oder Fluggeschwindigkeit von 1 bis 10"
+  sudo:
+    description: "Lässt einen Spieler etwas schreiben"
+  kill:
+    description: "Tötet Spieler oder Entitäten"
+  rain:
+    description: "Aktiviert Regen"
+  sun:
+    description: "Deaktiviert Regen"
+  day:
+    description: "Stellt die Zeit auf Tag"
+  night:
+    description: "Stellt die Zeit auf Nacht"
+  tp:
+    description: "Teleportiert zu Spielern oder Koordinaten"
+  tphere:
+    description: "Holt Spieler zu dir"
+  tpall:
+    description: "Holt alle Spieler zu dir"
+  back:
+    description: "Zurück an den Ort vor dem letzten Teleport"
+  near:
+    description: "Zeigt Spieler in deiner Nähe"
+  ptime:
+    description: "Eigene Tageszeit für dich oder andere"
+  pweather:
+    description: "Eigenes Wetter für dich oder andere"
+  xp:
+    description: "Erfahrung und Level von Spielern"
+  v:
+    description: "Unsichtbarkeit"
+  freeze:
+    description: "Friert einen Spieler ein"
+  staff:
+    description: "Staff-Modus"
+  clear:
+    description: "Leert Inventare oder entfernt bestimmte Items"
+  connect:
+    description: "Wechselt den Server"
+  reflash:
+    description: "Aktualisiert die Spielerliste"
+  nick:
+    description: "Zufälliger Name, Skin und Rang; /nick <rang> wählt den Rang"
+  report:
+    description: "Meldet einen Spieler"
+  erfolge:
+    description: "Zeigt deine Erfolge"
+  elo:
+    description: "Zeigt dein Elo-Rating der Saison; /elo top die Top 10"
+fly:
+  usage: "<prefix><error>Benutze /fly [Spieler] [on|off]"
+  enabled: "<prefix><muted>Du kannst nun fliegen!"
+  disabled: "<prefix><muted>Du kannst nun <accent>nicht <muted>mehr fliegen!"
+  other-enabled: "<prefix><accent><player> <muted>kann nun fliegen."
+  other-disabled: "<prefix><accent><player> <muted>kann nun <accent>nicht <muted>mehr fliegen."
+food:
+  usage: "<prefix><error>Benutze /food [Spieler]"
+  done:
+    - "<prefix><success>Hunger aufgefüllt. <muted>Guten Appetit!"
+    - "<prefix><success>Hunger aufgefüllt. <muted>Einmal Sättigung, ohne Abwasch."
+    - "<prefix><success>Hunger aufgefüllt. <muted>Der Kuchen war tatsächlich echt."
+  other: "<prefix><accent><player> <muted>hat nun keinen Hunger mehr."
+gm:
+  usage: "<prefix><error>Benutze /gm \\<0-3, s, c, a, sp> [Spieler]"
+  changed: "<prefix><muted>Dein Gamemode wurde auf <accent><mode> <muted>gesetzt!"
+  changed-other: "<prefix><muted>Der Gamemode von <accent><player> <muted>ist nun <accent><mode><muted>."
+  mode:
+    survival: "Überleben"
+    creative: "Kreativ"
+    adventure: "Abenteuer"
+    spectator: "Zuschauer"
+heal:
+  usage: "<prefix><error>Benutze /heal [Spieler]"
+  done: "<prefix><muted>Du wurdest geheilt!"
+  other: "<prefix><accent><player> <muted>wurde geheilt."
+invsee:
+  usage: "<prefix><error>Benutze /invsee [Spieler]"
+  opened: "<prefix><muted>Du siehst nun das Inventar von <white><player>"
+  failed: "<prefix><error>Das Inventar von <white><player> <error>konnte nicht geöffnet werden."
+  read-only: "<prefix><muted>Nur ansehen: zum Verändern fehlt dir die Berechtigung."
+lag:
+  lines:
+    - ""
+    - "<prefix><muted>Server: <white><server> <dark>(<muted><group><dark>) <dark>| <accent><state>"
+    - "<prefix><muted>TPS (1, 5, 15 Min.): <white><tps1><dark>, <white><tps5><dark>, <white><tps15>"
+    - "<prefix><muted>MSPT: <white><mspt><muted> ms"
+    - "<prefix><muted>Uptime: <white><uptime>"
+    - "<prefix><muted>Ram: <white><used><muted>/<white><max><muted> MB"
+    - "<prefix><muted>Spieler: <white><online><muted>/<white><slots>"
+  world: "<prefix><bullet><white><world><dark>: <white><chunks> <muted>Chunks, <white><entities> <muted>Entities"
+sethealth:
+  usage: "<prefix><error>Benutze /sethealth [Name] [Lebenspunkte]"
+  done: "<prefix><white><player><muted> hat nun <white><health><muted> Lebenspunkte!"
+skull:
+  usage: "<prefix><muted>Benutze <white>/skull [name]"
+  received: "<prefix><muted>Du hast den Kopf von <white><player><muted> erhalten!"
+speed:
+  usage: "<prefix><error>Benutze /speed \\<1-10> [walk|fly] [Spieler]"
+  walk: "<prefix><muted>Deine Laufgeschwindigkeit ist nun <accent><speed><muted>."
+  fly: "<prefix><muted>Deine Fluggeschwindigkeit ist nun <accent><speed><muted>."
+  walk-other: "<prefix><muted>Die Laufgeschwindigkeit von <accent><player> <muted>ist nun <accent><speed><muted>."
+  fly-other: "<prefix><muted>Die Fluggeschwindigkeit von <accent><player> <muted>ist nun <accent><speed><muted>."
+sudo:
+  usage: "<prefix><error>Benutze /sudo \\<name> \\<nachricht>"
+  done: "<prefix><muted>Der Spieler <white><player> <muted>gibt automatisch <white><message> <muted>ein!"
+  protected: "<prefix><error>Der Sudo Command ist für diesen Spieler nicht erlaubt!"
+kill:
+  usage: "<prefix><error>Benutze /kill [Ziele]"
+  done: "<prefix><muted>Du hast <accent><player><muted> getötet!"
+  self: "<prefix><muted>Du hast dich selbst getötet."
+  entities: "<prefix><muted>Du hast <accent><count> <muted>Entitäten getötet!"
+rain:
+  done: "<prefix><muted>Du hast den Regen <white>aktiviert<muted>!"
+sun:
+  done: "<prefix><muted>Du hast den Regen <white>deaktiviert<muted>!"
+time:
+  day: "<prefix><muted>Du hast die Zeit zu <accent>Tag<muted> geändert!"
+  night: "<prefix><muted>Du hast die Zeit zu <accent>Nacht<muted> geändert!"
+# <to> is a player's name or the coordinates "x y z".
+tp:
+  usage: "<prefix><error>Benutze /tp [Ziele] \\<Spieler oder x y z>"
+  self: "<prefix><muted>Du hast dich zu <accent><to><muted> teleportiert!"
+  other: "<prefix><muted>Du hast <accent><player><muted> zu <accent><to><muted> teleportiert!"
+  many: "<prefix><muted>Du hast <accent><count> <muted>Entitäten zu <accent><to><muted> teleportiert!"
+tphere:
+  usage: "<prefix><error>Benutze /tphere \\<Spieler>"
+  done: "<prefix><muted>Du hast <accent><player><muted> zu dir geholt."
+  many: "<prefix><muted>Du hast <accent><count> <muted>Spieler zu dir geholt."
+tpall:
+  usage: "<prefix><error>Benutze /tpall \\<Spieler>"
+  done: "<prefix><accent><count> <muted>Spieler wurden zu <accent><player><muted> teleportiert."
+back:
+  usage: "<prefix><error>Benutze /back \\<Spieler>"
+  none: "<prefix><error>Du wurdest noch von keinem Teleport-Befehl bewegt."
+  none-other: "<prefix><error><player> <muted>wurde noch von keinem Teleport-Befehl bewegt."
+  done: "<prefix><muted>Du bist zurück an deinem vorherigen Ort."
+  other: "<prefix><accent><player> <muted>ist wieder am vorherigen Ort."
+near:
+  header: "<prefix><muted>Spieler im Umkreis von <accent><radius> <muted>Blöcken: <accent><count>"
+  entry: "<bullet><accent><player> <dark>(<muted><distance> Blöcke<dark>)"
+  none: "<prefix><muted>Im Umkreis von <accent><radius> <muted>Blöcken ist niemand."
+ptime:
+  usage: "<prefix><error>Benutze /ptime \\<day|night|noon|midnight|Ticks|reset> [Spieler]"
+  day: "Tag"
+  noon: "Mittag"
+  night: "Nacht"
+  midnight: "Mitternacht"
+  set: "<prefix><muted>Deine eigene Zeit steht nun auf <accent><time><muted>."
+  set-kept: "<prefix><muted>Deine eigene Zeit steht nun auf <accent><time><muted> und bleibt dir auf allen Servern erhalten."
+  set-other: "<prefix><muted>Die eigene Zeit von <accent><player> <muted>steht nun auf <accent><time><muted>."
+  reset: "<prefix><muted>Du siehst wieder die Zeit der Welt."
+  reset-other: "<prefix><accent><player> <muted>sieht wieder die Zeit der Welt."
+pweather:
+  usage: "<prefix><error>Benutze /pweather \\<clear|rain|reset> [Spieler]"
+  clear: "Klar"
+  rain: "Regen"
+  set: "<prefix><muted>Dein eigenes Wetter ist nun <accent><weather><muted>."
+  set-other: "<prefix><muted>Das eigene Wetter von <accent><player> <muted>ist nun <accent><weather><muted>."
+  reset: "<prefix><muted>Du siehst wieder das Wetter der Welt."
+  reset-other: "<prefix><accent><player> <muted>sieht wieder das Wetter der Welt."
+xp:
+  usage: "<prefix><error>Benutze /xp \\<add|set|query> \\<Spieler> \\<Menge> [points|levels]"
+  added-points: "<prefix><accent><player> <muted>hat <accent><amount> <muted>Erfahrungspunkte erhalten."
+  added-levels: "<prefix><accent><player> <muted>hat <accent><amount> <muted>Level erhalten."
+  set-points: "<prefix><muted>Die Erfahrungspunkte von <accent><player> <muted>stehen nun auf <accent><amount><muted>."
+  set-levels: "<prefix><muted>Das Level von <accent><player> <muted>steht nun auf <accent><amount><muted>."
+  query-points: "<prefix><accent><player> <muted>hat <accent><amount> <muted>Erfahrungspunkte im aktuellen Level."
+  query-levels: "<prefix><accent><player> <muted>hat Level <accent><amount><muted>."
+  points-too-high: "<prefix><error><player> <muted>braucht für das nächste Level nur <accent><max> <muted>Punkte."
+enchant:
+  usage: "<prefix><error>Benutze /enchant \\<Ziele> \\<Verzauberung> [Stufe]"
+  level-too-high: "<prefix><error>Diese Verzauberung geht nur bis Stufe <accent><max><error>."
+  no-item: "<prefix><error><player> <muted>hält kein Item in der Hand."
+  unsupported: "<prefix><error>Das Item von <player> <muted>kann diese Verzauberung nicht tragen."
+  conflict: "<prefix><error>Das Item von <player> <muted>trägt schon eine Verzauberung, die sich damit nicht verträgt."
+  done: "<prefix><muted>Verzaubert mit <accent><enchantment><muted>: <accent><count> <muted>Item(s)."
+vanish:
+  enabled: "<prefix><muted>Du bist nun unsichtbar!"
+  disabled: "<prefix><muted>Du bist nun wieder sichtbar!"
+freeze:
+  usage: "<prefix><error>Benutze /freeze <Name>"
+  frozen: "<prefix><muted>Du hast <white><player> <muted>eingefroren."
+  unfrozen: "<prefix><muted>Du hast <white><player> <muted>wieder freigegeben."
+  released: "<prefix><success>Du wurdest wieder freigegeben."
+  title: "<error><bold>EINGEFROREN"
+  subtitle: "<muted>Bleib stehen und komm auf den TeamSpeak!"
+  reminder:
+    - "<prefix><error>Du wurdest von einem Teammitglied eingefroren!"
+    - "<prefix><muted>Komm jetzt auf den TeamSpeak: <primary><teamspeak>"
+    - "<prefix><muted>Wer die Verbindung trennt, wird gebannt."
+  no-commands: "<prefix><error>Eingefroren: nur /msg und /r sind erlaubt."
+  left-while-frozen: "<prefix><error><player> <muted>hat den Server eingefroren verlassen!"
+staff:
+  entered: "<prefix><success>Staff-Modus aktiviert. <muted>Du bist unsichtbar und fliegst."
+  left: "<prefix><muted>Staff-Modus beendet. Dein Inventar ist wieder da."
+  inventory-restored: "<prefix><muted>Dein Inventar aus dem Staff-Modus wurde wiederhergestellt."
+  nobody-online: "<prefix><error>Kein Spieler online, zu dem du dich teleportieren könntest."
+  teleported: "<prefix><muted>Du bist jetzt bei <white><player><muted>."
+  no-reports: "<prefix><error>Die Report-Übersicht gibt es nur in der Lobby."
+  spectating: "<prefix><muted>Du schaust <accent><player> <muted>zu. Schleichen beendet das Zuschauen."
+  item:
+    random: "<primary>Zufälliger Spieler"
+    freeze: "<primary>Freeze <muted>(Rechtsklick auf Spieler)"
+    invsee: "<accent>Invsee <muted>(Rechtsklick auf Spieler)"
+    info: "<primary>Spielerinfo <muted>(Rechtsklick auf Spieler)"
+    spectate: "<primary>Zuschauen <muted>(Rechtsklick auf Spieler)"
+    reports: "<accent>Reports"
+    leave: "<error>Staff-Modus verlassen"
+  # The info tool; <rank> is the account's own LuckPerms group, whatever rank a nick shows.
+  info:
+    header: "<prefix><accent><player> <dark>| <muted>Rang <accent><rank> <dark>| <muted>Ping <accent><ping>ms <dark>| <muted>Client <accent><client>"
+    reports: "<bullet><muted>Offene Reports: <accent><count>"
+    ban: "<bullet><error>Gebannt<muted>: <accent><reason> <dark>(<muted><remaining><dark>)"
+    mute: "<bullet><error>Gemutet<muted>: <accent><reason> <dark>(<muted><remaining><dark>)"
+    clean: "<bullet><success>Keine aktive Strafe"
+clear:
+  usage: "<prefix><error>Benutze /clear \\<Spieler> [Item] [Anzahl]"
+  done: "<prefix><muted>Aus dem Inventar von <accent><player> <muted>wurden <accent><count> <muted>Items entfernt."
+  found: "<prefix><accent><player> <muted>hat <accent><count> <muted>passende Items."
+connect:
+  usage: "<prefix><error>Benutze /connect [ServerName]"
+  done: "<prefix><muted>Du betrittst den Server <white><server>"
+reflash:
+  done: "<prefix><muted>Alle Spieler müssten nun sichtbar sein!"
+team:
+  help-header:
+    - ""
+    - "<bullet><primary>DEINE BEFEHLE AUF DIESEM SERVER <dark>●"
+  help-entry: "  <primary>/<command> <dark>- <muted><description>"
+  help-footer:
+    - ""
+rank:
+  protected: "<prefix><error>Dieser Spieler steht im Rang über dir oder gleich mit dir."
+  self: "<prefix><error>Das kannst du nicht mit dir selbst machen."
+  skipped: "<prefix><error><count> <muted>Spieler stehen im Rang über dir oder gleich mit dir und wurden übersprungen."
+duration:
+  second: Sekunde
+  seconds: Sekunden
+  minute: Minute
+  minutes: Minuten
+  hour: Stunde
+  hours: Stunden
+  day: Tag
+  days: Tage
+  week: Woche
+  weeks: Wochen
+  month: Monat
+  months: Monate
+  year: Jahr
+  years: Jahre
+  remaining: "<time>"
+  permanent: "<dark_red>Permanent"
+mute:
+  blocked:
+    - "<prefix><muted>Derzeit ist der Chat für dich deaktiviert!"
+    - "<prefix><muted>Grund: <error><reason>"
+    - "<prefix><muted>Verbleibende Zeit: <error><remaining>"
+  check-failed: "<prefix><error>Deine Nachricht konnte gerade nicht geprüft werden. Versuche es gleich noch einmal."
+login:
+  retry: "<error>Deine Daten konnten gerade nicht geladen werden. <muted>Bitte versuche es gleich noch einmal."
+globalmute:
+  blocked: "<prefix><muted>Der Chat ist gerade für alle deaktiviert. <accent>GlobalMute <muted>ist aktiv."
+chat:
+  format: "<level><tag><rank><name> <arrow><white><message>"
+  level: "<dark>[<primary><level><dark>] "
+  nick-real: " <dark>(<muted><real><dark>)"
+  mention: "<accent><mention>"
+  hover:
+    - "<rank><name>"
+    - "<muted>Level <accent><level>"
+    - "<dark><ip>"
+    - ""
+    - "<muted>Klicke, um <accent><name><muted> zu schreiben."
+  msg-command: "/msg <name> "
+  level-asides:
+    42: "<dark>Die Antwort steht hier. Die Frage ist im Teich versunken."
+    64: "<dark>Ein ganzer Stack Erfahrung. Bitte nicht mit Rechtsklick teilen."
+    100: "<dark>Dreistellig. Der Villager hätte jetzt gern ein Autogramm."
+  spam: "<prefix><error>Bitte warte einen Moment… Verdacht auf Spam!"
+  slow: "<prefix><error>Der Chat ist verlangsamt. <muted>Du kannst alle <accent><seconds> Sekunden <muted>eine Nachricht schreiben."
+  word-filtered: "<prefix><muted>Deine Chatnachricht wurde gefiltert. <error>Grund: Gesperrtes Wort."
+  filtered-notify: "<prefix><muted>Der Spieler <error><player><muted> hat geschrieben: <error><message> <muted>auf <error><server>"
+  actions:
+    goto: "<dark>[<primary>Goto<dark>]"
+    goto-hover: "<muted>Bringt dich auf den Server von <accent><player>"
+    tempmute: "<dark>[<accent>Mute<dark>]"
+    tempmute-hover: "<muted>Schlägt <primary>/tempmute <player> <muted>vor; Dauer und Grund ergänzt du"
+    strafe: "<dark>[<error>Strafe<dark>]"
+    strafe-hover: "<muted>Schlägt <primary>/strafe <player> <muted>vor; die Nummer ergänzt du"
+  ad-filtered:
+    - "<prefix><muted>Deine Chatnachricht wurde gefiltert. <error>Grund: Mögliche Werbung."
+    - "<prefix><error>Die Teammitglieder werden diesen Sachverhalt nun prüfen."
+nick:
+  loading: "<prefix><muted>Dein neuer Nick wird geladen…"
+  assigned: "<prefix><muted>Du bist jetzt als <rank><nick> <muted>unterwegs. Teammitglieder sehen weiterhin deinen echten Namen. <primary>/nick off <muted>entfernt den Nick."
+  still-active: "<prefix><muted>Du bist weiterhin als <rank><nick> <muted>unterwegs. <primary>/nick off <muted>entfernt den Nick."
+  unknown-rank: "<prefix><error>Diesen Rang kann ein Nick nicht tragen. <muted>Zur Wahl stehen: <accent><ranks>"
+  removed: "<prefix><muted>Dein Nick wurde entfernt."
+  none: "<prefix><muted>Du trägst gerade keinen Nick."
+  failed: "<prefix><error>Der Nick konnte gerade nicht gesetzt werden. Versuche es gleich noch einmal."
+  auto: "<prefix><muted>Du startest die Runde als <rank><nick><muted>. <accent>/nick off <muted>entfernt den Nick."
+  auto-off: "<prefix><muted>In der Lobby trägst du wieder deinen echten Namen."
+report:
+  reason-missing: "<prefix><error>Wähle einen gültigen Grund oder gib Details an."
+  usage: "<prefix><error>Benutze /report [Spieler]"
+  invalid-player: "<prefix><error>Das ist kein gültiger Spielername."
+  self: "<prefix><muted>Ehrlich von dir. Melden kannst du dich trotzdem nicht."
+  title: "<arrow><error>Report <dark>· <accent><player>"
+  body: "<muted>Du meldest <error><player><muted>. Das Team schaut sich die Meldung an."
+  reason: "<primary>Grund"
+  details: "<primary>Details (optional)"
+  send: "<success>Melden"
+
+# Ranked 1vs1; <group> is the skill group's name from BlockcraftAPI's elo.groups, <season> the key like 2026-3.
+elo:
+  self: "<prefix><muted>Saison <accent><season><dark>: <muted>Du bist <group> <muted>mit <accent><rating> <muted>Elo <dark>(<success><wins> <muted>Siege, <error><losses> <muted>Niederlagen<dark>)"
+  other: "<prefix><muted>Saison <accent><season><dark>: <accent><player> <muted>ist <group> <muted>mit <accent><rating> <muted>Elo <dark>(<success><wins> <muted>Siege, <error><losses> <muted>Niederlagen<dark>)"
+  unknown: "<prefix><error><player> <muted>hat in dieser Saison noch kein Duell gespielt."
+  top:
+    separator: "<muted><strikethrough>---------------------------------"
+    title: "<arrow><primary>Top 10 <muted>der Saison <accent><season>"
+    empty: "<muted>Noch niemand hat in dieser Saison ein Duell gespielt."
+    first: "<accent><bold>#1 <reset><primary><name><muted> ( <white><rating><muted> ) <group>"
+    entry: "<reset>#<rank> <primary><name> <muted>( <white><rating><muted> ) <group>"
+
+# The Willkommenskomitee; <newcomer> is the name the newcomer joined with, <coins> the reward for one greeting.
+welcome:
+  rewarded: "<prefix><accent>+<coins> Coins <muted>fürs Begrüßen von <accent><newcomer><muted>."
+  unpaid: "<prefix><muted>Dein Gruß an <accent><newcomer> <muted>zählt. Coins fürs Begrüßen gibt es morgen wieder."

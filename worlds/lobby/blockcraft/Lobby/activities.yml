@@ -1,0 +1,32 @@
+parkour-start:
+  ==: org.bukkit.Location
+  world: world
+  x: -666.5
+  y: 8.0
+  z: 1601.5
+  yaw: 0.0
+  pitch: 0.0
+parkour-finish:
+  ==: org.bukkit.Location
+  world: world
+  x: -716.5
+  y: 50.0
+  z: 1632.5
+  yaw: 0.0
+  pitch: 0.0
+parkour-finish-sign:
+  ==: org.bukkit.Location
+  world: world
+  x: -716.0
+  y: 50.0
+  z: 1632.0
+  yaw: 0.0
+  pitch: 0.0
+parkour-top:
+  ==: org.bukkit.Location
+  world: world
+  x: -716.5
+  y: 52.2
+  z: 1630.5
+  yaw: 0.0
+  pitch: 0.0

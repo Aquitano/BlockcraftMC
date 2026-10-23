@@ -1,0 +1,88 @@
+dm1:
+  ==: org.bukkit.Location
+  world: world
+  x: 3.0
+  y: 3.0
+  z: -9.0
+  pitch: -2.8556585
+  yaw: -47.98217
+dm2:
+  ==: org.bukkit.Location
+  world: world
+  x: 35.0
+  y: 15.0
+  z: -31.0
+  pitch: -2.8556798
+  yaw: -320.69983
+dm3:
+  ==: org.bukkit.Location
+  world: world
+  x: 23.0
+  y: 10.0
+  z: -12.0
+  pitch: 0.94611025
+  yaw: 48.2367
+dm4:
+  ==: org.bukkit.Location
+  world: world
+  x: 18.0
+  y: 4.0
+  z: 11.0
+  pitch: -0.22368455
+  yaw: 180.86661
+dm5:
+  ==: org.bukkit.Location
+  world: world
+  x: 27.0
+  y: 3.0
+  z: 10.0
+  pitch: -16.601236
+  yaw: 142.7171
+dm6:
+  ==: org.bukkit.Location
+  world: world
+  x: 33.0
+  y: 10.0
+  z: -10.0
+  pitch: -0.6622739
+  yaw: 46.059387
+search:
+  ==: org.bukkit.Location
+  world: world
+  x: 157.0
+  y: 7.0
+  z: 132.0
+  pitch: 1.628622
+  yaw: 296.45105
+lobby:
+  ==: org.bukkit.Location
+  world: world
+  x: -194.0
+  y: 47.0
+  z: -318.0
+  pitch: 0.9463382
+  yaw: -0.5849185
+spectator:
+  ==: org.bukkit.Location
+  world: world
+  x: -194.0
+  y: 47.0
+  z: -318.0
+  pitch: -2.124425
+  yaw: 358.4079
+shopping:
+  ==: org.bukkit.Location
+  world: world
+  x: -194.0
+  y: 47.0
+  z: -318.0
+  pitch: -0.21508783
+  yaw: 0.5957031
+enchant:
+  ==: org.bukkit.Location
+  world: world
+  x: -216.0
+  y: 75.0
+  z: -248.0
+  pitch: 1.3935213
+  yaw: 88.15454

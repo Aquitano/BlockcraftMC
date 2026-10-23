@@ -1,0 +1,6 @@
+name: BlockcraftCore
+version: '${version}'
+main: me.blockcraft.core.BlockcraftCorePlugin
+api-version: '26.3'
+author: Aquitano
+depend: [BlockcraftAPI]

@@ -1,0 +1,12 @@
+{
+  "lobby": {
+    "name": "Main lobby",
+    "start-pos": { "x": -900, "z": 1579 },
+    "render-mask": [{ "min-x": -1010, "max-x": -640, "min-z": 1500, "max-z": 1760 }]
+  },
+  "bedwars": {
+    "name": "BedWars waiting island",
+    "start-pos": { "x": -194, "z": -294 },
+    "render-mask": [{ "min-x": -260, "max-x": -145, "min-z": -330, "max-z": -225 }]
+  }
+}

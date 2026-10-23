@@ -1,0 +1,6 @@
+name: Lobby
+version: '${version}'
+main: me.blockcraft.lobby.LobbyPlugin
+api-version: '26.3'
+author: Aquitano
+depend: [BlockcraftAPI, LuckPerms]
