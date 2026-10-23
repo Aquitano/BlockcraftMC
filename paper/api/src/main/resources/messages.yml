@@ -227,7 +227,13 @@ map:
 
 # The end-of-round recap every game shows; <game> is the game's own name, <winner> the player who won it.
 summary:
-  rule: "<dark><strikethrough>                                        "
+  compact: "<arrow><game> <dark>· <result> <dark>· <accent>+<coins> Coins <dark>· <success>+<xp> XP"
+  spectator: "<arrow><game> <dark>· <result>"
+  result:
+    win: "<success>Sieg"
+    lose: "<error>Niederlage"
+    draw: "<accent>Unentschieden"
+    winner: "<muted>Gewinner<dark>: <white><winner>"
   game: "<arrow><primary><game>"
   winner: "<arrow><muted>Gewinner<dark>: <white><winner>"
   draw: "<arrow><muted>Unentschieden"
@@ -236,16 +242,13 @@ summary:
   streak-best: "<arrow><muted>Beste Serie<dark>: <white><streak> Kills"
   coins: "<arrow><muted>Coins<dark>: <accent>+<coins>"
   xp: "<arrow><muted>XP<dark>: <success>+<xp>"
-  again: "<arrow><success>Nochmal spielen"
+  actions: "<again> <dark>· <lobby> <dark>· <details>"
+  details: "<primary>[Details]"
+  details-hover: "<muted>Ergebnis, Statistiken und Belohnungen ansehen."
+  again: "<success>[Nochmal spielen]"
   again-hover: "<muted>Klicke, um in die nächste Runde zu kommen."
-  lobby: "<arrow><accent>Zur Lobby"
+  lobby: "<accent>[Zur Lobby]"
   lobby-hover: "<muted>Klicke, um in die Lobby zurückzukehren."
-  title:
-    win: "<success>Sieg"
-    lose: "<error>Niederlage"
-    draw: "<accent>Unentschieden"
-    subtitle: "<white><winner> <muted>hat gewonnen."
-    subtitle-draw: "<muted>Niemand hat gewonnen."
   streak: "<prefix><accent><player> <muted>hat eine Serie von <accent><streak> Kills<muted>!"
 
 settings:
@@ -272,6 +275,7 @@ settings:
   player-visibility: "<arrow><primary>Spieler sichtbar"
   sounds: "<arrow><primary>Sounds"
   mentions: "<arrow><primary>Erwähnungen im Chat"
+  auto-recap: "<arrow><primary>Rundendetails in der Lobby automatisch öffnen"
   server-list-greeting: "<arrow><primary>Serverliste: Name für alle an deiner IP sichtbar"
   auto-nick: "<arrow><primary>Automatisch nicken"
   keep-nick: "<arrow><primary>Nick in der Lobby behalten"

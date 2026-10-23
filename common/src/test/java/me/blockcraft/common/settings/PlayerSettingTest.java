@@ -24,6 +24,16 @@ public class PlayerSettingTest {
     }
 
     @Test
+    public void automaticRecapsAreAnOptionalSharedToggle() {
+        assertFalse(PlayerSetting.AUTO_RECAP.enabled(Optional.empty()));
+        assertTrue(PlayerSetting.AUTO_RECAP.enabled(Optional.of(PlayerSetting.ON)));
+        assertFalse(PlayerSetting.AUTO_RECAP.enabled(Optional.of(PlayerSetting.OFF)));
+        assertTrue(PlayerSetting.toggles().contains(PlayerSetting.AUTO_RECAP));
+        assertEquals(Optional.of(PlayerSetting.AUTO_RECAP), PlayerSetting.byKey("auto-recap"));
+        assertEquals(Optional.empty(), PlayerSetting.AUTO_RECAP.permission());
+    }
+
+    @Test
     public void theNickTogglesAreOnlyForPlayersWhoMayNick() {
         assertEquals(Optional.of("blockcraft.nick"), PlayerSetting.AUTO_NICK.permission());
         assertEquals(Optional.empty(), PlayerSetting.SOUNDS.permission());

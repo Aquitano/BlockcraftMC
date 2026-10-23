@@ -66,8 +66,7 @@ gadgets:
   cooldown-seconds: 5
 hud:
   refresh-seconds: 5
-# The recap of a player's last round waits in bc_round_recaps and opens as a dialog when they arrive; one older
-# than this is dropped instead.
+# The last round remains available in the profile; automatic dialogs require the player's auto-recap setting.
 recap:
   max-age-minutes: 10
 # Navigator entry -> server group to join; stale-seconds matches the proxy's discovery setting.

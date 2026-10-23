@@ -278,6 +278,9 @@ pets:
     rabbit: "<prefix><muted>Dein <white>Hasen<muted> Haustier wurde entfernt."
 recap:
   empty: "<prefix><muted>Für diese Sitzung ist keine aktuelle Runde vorhanden."
+  available: "<prefix><muted>Letzte Runde <dark>· <details>"
+  details: "<primary>[Details]"
+  details-hover: "<muted>Ergebnis und Belohnungen der letzten Runde ansehen."
   title: "<arrow><primary>Runde vorbei <dark>· <game>"
   result:
     win: "<success><bold>Sieg"

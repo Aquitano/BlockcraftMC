@@ -451,9 +451,11 @@ adventure mode with a hotbar to pick a player, step to the previous or next one 
 touching, taking or opening anything, and while it runs their chat reaches only the other spectators. A round's kills,
 deaths, coins and XP are counted in one place (`RoundSummary`), which announces kill
 streaks at the lengths `streaks.announce` in BlockcraftAPI's `config.yml` names, writes every participant's stats
-once when the round ends (a loss for everyone knocked out or beaten by a winner), prints the recap in chat and
-stores it in `bc_round_recaps`; the lobby opens that recap as a dialog after arrival if the player has not opened another screen. The profile
-keeps the recap accessible during that lobby session, with a button back into the same game. Recaps older than
+once when the round ends (a loss for everyone knocked out or beaten by a winner), prints a compact result and
+reward line with actions, and stores the recap in `bc_round_recaps`. The Details action shows the full breakdown.
+The lobby offers a Details link after arrival and keeps the recap accessible through the profile during that
+session, with a button back into the same game. The `auto-recap` setting opts into opening the lobby dialog
+automatically while the arrival screen is still current; it defaults to off. Recaps older than
 `recap.max-age-minutes` are discarded. The `quicksg`,
 `emeraldrush`, `duell` and `bedwars` palette tags give the games distinct colours across menus,
 signs and sidebars. Their arrival sounds respect the player's sound setting. Kit and perk menus distinguish
@@ -567,7 +569,7 @@ Every remembered choice a player makes is one row in `bc_player_settings`, read 
 `common`'s `PlayerSettingRepository`. Cosmetic settings store the chosen key for tags, effects, trails, gadgets,
 pets, heads, and shirts. The toggles store `on` or `off` and count as their own default while no row exists, so nothing has to be seeded:
 `private-messages`, `party-invites`, `friend-requests`, `player-visibility`, `sounds`, `mentions`, and `effects` default to on.
-The nick toggles (`auto-nick`, `keep-nick`) and `server-list-greeting` default to off.
+The nick toggles (`auto-nick`, `keep-nick`), `server-list-greeting`, and `auto-recap` default to off.
 `report-notifications` defaults to on for staff with `blockcraft.report.notify`. A toggle may name a permission, and then it is only shown to, and only
 read for, the players who hold it.
 

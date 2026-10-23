@@ -19,13 +19,17 @@ import org.bukkit.plugin.Plugin;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BooleanSupplier;
 
 /** The round the player just came from: the result over the game's icon, the numbers below, and the way back in. */
 final class RoundRecapDialog {
 
     private final Dialog dialog;
+    private final BooleanSupplier eligible;
 
-    RoundRecapDialog(Plugin plugin, Messages messages, Player viewer, RoundRecap recap, Component game) {
+    RoundRecapDialog(Plugin plugin, Messages messages, Player viewer, RoundRecap recap, Component game,
+                     BooleanSupplier eligible) {
+        this.eligible = eligible;
         var result = messages.get("recap." + resultKey(recap));
         var icon = MenuIcon.byKey(recap.game()).map(MenuIcon::item)
                 .orElseGet(() -> Items.of(Material.IRON_SWORD).hideAttributes())
@@ -49,12 +53,16 @@ final class RoundRecapDialog {
                         DialogBody.plainMessage(Component.join(JoinConfiguration.newlines(), lines))),
                 List.of(),
                 Dialogs.actions(List.of(Dialogs.button(messages.get("recap.again"),
-                                player -> ProxyMessaging.play(plugin, player, recap.game()))),
+                                player -> {
+                                    if (player == viewer && eligible.getAsBoolean()) {
+                                        ProxyMessaging.play(plugin, player, recap.game());
+                                    }
+                                })),
                         Dialogs.button(messages.get("recap.close"))));
     }
 
     void open(Player player) {
-        Dialogs.show(player, dialog);
+        Dialogs.show(player, dialog, eligible);
     }
 
     private static String resultKey(RoundRecap recap) {

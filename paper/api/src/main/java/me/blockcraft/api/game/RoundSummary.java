@@ -29,19 +29,20 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.function.BooleanSupplier;
 import java.util.logging.Level;
 
 /**
  * What a round paid and who won it. A game feeds it while the round runs and calls {@link #show()} once at the
  * end; because every coin and every XP point of a round is handed out here, the recap names exactly what was
- * paid, adds the lines a game noted for one player, and closes with the two ways on: another round of the same
- * game, or the lobby. Kill streaks are counted here too and announced at the lengths {@link Streaks} names. The
- * recap is also stored for every participant, so the lobby can show it once more when they arrive there, and their
- * numbers go into the game's stats table in one write: the coins as points, and a loss for everyone knocked out or
+ * paid, keeps the player's numbers and notes behind Details, and offers another round or the lobby. Kill streaks
+ * are counted here too and announced at the lengths {@link Streaks} names. The recap is also stored for every
+ * participant, so the lobby can show it on request. Their numbers go into the game's stats table in one write:
+ * the coins as points, and a loss for everyone knocked out or
  * beaten by a winner.
  *
  * <p>Every kill and death passes through here, so here they also become what the network makes of them: the
@@ -54,9 +55,7 @@ public final class RoundSummary {
     public record Rewards(int kill, int win) {
     }
 
-    private static final Title.Times TIMES = Title.Times.times(Duration.ofMillis(300), Duration.ofSeconds(3), Duration.ofMillis(700));
     private static final Title.Times MOMENT = Title.Times.times(Duration.ofMillis(250), Duration.ofMillis(2500), Duration.ofMillis(500));
-    private static final long MOMENT_TICKS = MOMENT.fadeIn().plus(MOMENT.stay()).plus(MOMENT.fadeOut()).toMillis() / 50;
     static final double HALF_A_HEART = 1.0;
 
     /** The buttons stay clickable past the restart countdown, which every game's config.yml sets for itself. */
@@ -73,8 +72,6 @@ public final class RoundSummary {
     private final StatsRepository stats;
     private final Map<UUID, Score> scores = new LinkedHashMap<>();
     private final Map<UUID, String> winners = new LinkedHashMap<>();
-    /** The tick each player was last shown a kill's title, which the recap's title waits for. */
-    private final Map<UUID, Integer> moments = new HashMap<>();
     private final Rivalries rivalries;
     private final Respects respects;
     private final Accusations accusations;
@@ -240,42 +237,39 @@ public final class RoundSummary {
         store(names);
         book();
         api.achievements().afterRound(api.server().group(), participants);
-        var rule = messages.get("summary.rule");
-        var headline = messages.get("summary.game", Placeholder.component("game", game));
         var winnerLine = winners.isEmpty()
                 ? messages.get("summary.draw")
                 : messages.get("summary.winner", Placeholder.unparsed("winner", names));
-        var subtitle = winners.isEmpty()
-                ? messages.get("summary.title.subtitle-draw")
-                : messages.get("summary.title.subtitle", Placeholder.unparsed("winner", names));
-        var again = button("summary.again", playAgain);
-        var lobby = button("summary.lobby", player -> ProxyMessaging.hub(plugin, player));
+        var spectatorResult = winners.isEmpty() ? messages.get("summary.result.draw")
+                : messages.get("summary.result.winner", Placeholder.unparsed("winner", names));
         for (var player : Bukkit.getOnlinePlayers()) {
-            player.sendMessage(rule);
-            player.sendMessage(headline);
-            player.sendMessage(winnerLine);
             var score = scores.get(player.getUniqueId());
+            var result = messages.get(winners.containsKey(player.getUniqueId()) ? "summary.result.win"
+                    : winners.isEmpty() ? "summary.result.draw" : "summary.result.lose");
+            player.sendMessage(score == null
+                    ? messages.get("summary.spectator", Placeholder.component("game", game),
+                    Placeholder.component("result", spectatorResult))
+                    : score.compact(messages, game, result));
+            var details = details(score, winnerLine, curiosity);
+            player.sendMessage(messages.get("summary.actions",
+                    Placeholder.component("again", button("summary.again", player, () -> !closed, playAgain)),
+                    Placeholder.component("lobby", button("summary.lobby", player, () -> true, viewer -> ProxyMessaging.hub(plugin, viewer))),
+                    Placeholder.component("details", button("summary.details", player, () -> true, viewer -> details.forEach(viewer::sendMessage)))));
             if (score != null) {
-                player.sendMessage(messages.get("summary.kills", Formatter.number("kills", score.kills)));
-                player.sendMessage(messages.get("summary.deaths", Formatter.number("deaths", score.deaths)));
-                if (score.bestStreak > 1) {
-                    player.sendMessage(messages.get("summary.streak-best", Formatter.number("streak", score.bestStreak)));
-                }
-                player.sendMessage(messages.get("summary.coins", Formatter.number("coins", score.coins)));
-                player.sendMessage(messages.get("summary.xp", Formatter.number("xp", score.xp)));
-                score.notes.forEach(player::sendMessage);
+                api.notifications().rewardSound(player, winners.containsKey(player.getUniqueId()) ? Sounds.WIN : Sounds.LOSE);
             }
-            curiosity.ifPresent(player::sendMessage);
-            player.sendMessage(again);
-            player.sendMessage(lobby);
-            player.sendMessage(rule);
-            if (score == null) {
-                continue;
-            }
-            boolean won = winners.containsKey(player.getUniqueId());
-            var title = Title.title(messages.get(titleKey(won)), subtitle, TIMES);
-            afterMoment(player, () -> api.notifications().important(player, title, won ? Sounds.WIN : Sounds.LOSE));
         }
+    }
+
+    private List<Component> details(Score score, Component winner, Optional<Component> curiosity) {
+        var lines = new ArrayList<Component>();
+        lines.add(messages.get("summary.game", Placeholder.component("game", game)));
+        lines.add(winner);
+        if (score != null) {
+            lines.addAll(score.details(messages));
+        }
+        curiosity.ifPresent(lines::add);
+        return List.copyOf(lines);
     }
 
     /** The respects still being paid are said now, before the restart sends everyone away. */
@@ -293,21 +287,6 @@ public final class RoundSummary {
         HandlerList.unregisterAll(accusations);
     }
 
-    /** The round's last kill ends it in the same tick, and the title that kill showed is read to the end first. */
-    private void afterMoment(Player player, Runnable show) {
-        var shown = moments.get(player.getUniqueId());
-        long left = shown == null ? 0 : shown + MOMENT_TICKS - Bukkit.getCurrentTick();
-        if (left <= 0) {
-            show.run();
-            return;
-        }
-        Tasks.later(plugin, left, () -> {
-            if (!closed && player.isOnline()) {
-                show.run();
-            }
-        });
-    }
-
     private void avenge(Player killer, Player nemesis, Standings.Standing standing) {
         var resolvers = TagResolver.resolver(Placeholder.unparsed("nemesis", nemesis.getName()),
                 Formatter.number("won", standing.won()), Formatter.number("lost", standing.lost()));
@@ -317,7 +296,6 @@ public final class RoundSummary {
 
     private void moment(Player player, Component title, Component subtitle) {
         api.notifications().important(player, Title.title(title, subtitle, MOMENT));
-        moments.put(player.getUniqueId(), Bukkit.getCurrentTick());
     }
 
     /** Health in hearts as the bar draws it, where a started half heart shows whole, with a German decimal comma. */
@@ -326,7 +304,7 @@ public final class RoundSummary {
         return halves % 2 == 0 ? String.valueOf(halves / 2) : halves / 2 + ",5";
     }
 
-    /** Every participant's recap, the lobby shows it once they arrive; those who left early get theirs too. */
+    /** Every participant's recap remains available in the lobby; those who left early get theirs too. */
     private void store(String names) {
         var recaps = new LinkedHashMap<UUID, RoundRecap>();
         scores.forEach((id, score) -> recaps.put(id, new RoundRecap(api.server().group(), winners.containsKey(id), names,
@@ -353,22 +331,19 @@ public final class RoundSummary {
         }
     }
 
-    private Component button(String key, Consumer<Player> action) {
+    private Component button(String key, Player viewer, BooleanSupplier eligible, Consumer<Player> action) {
         return messages.get(key)
                 .hoverEvent(HoverEvent.showText(messages.get(key + "-hover")))
                 .clickEvent(ClickEvent.callback(audience -> {
-                    if (audience instanceof Player player) {
-                        Sounds.MENU_CLICK.play(player);
-                        action.accept(player);
+                    if (audience == viewer) {
+                        Tasks.sync(plugin, () -> {
+                            if (viewer.isOnline() && eligible.getAsBoolean()) {
+                                Sounds.MENU_CLICK.play(viewer);
+                                action.accept(viewer);
+                            }
+                        });
                     }
                 }, BUTTON));
-    }
-
-    private String titleKey(boolean won) {
-        if (won) {
-            return "summary.title.win";
-        }
-        return winners.isEmpty() ? "summary.title.draw" : "summary.title.lose";
     }
 
     private void pay(Player player, int coins) {
@@ -395,6 +370,24 @@ public final class RoundSummary {
 
         Score(String name) {
             this.name = name;
+        }
+
+        Component compact(Messages messages, Component game, Component result) {
+            return messages.get("summary.compact", Placeholder.component("game", game),
+                    Placeholder.component("result", result), Formatter.number("coins", coins), Formatter.number("xp", xp));
+        }
+
+        List<Component> details(Messages messages) {
+            var lines = new ArrayList<Component>();
+            lines.add(messages.get("summary.kills", Formatter.number("kills", kills)));
+            lines.add(messages.get("summary.deaths", Formatter.number("deaths", deaths)));
+            if (bestStreak > 1) {
+                lines.add(messages.get("summary.streak-best", Formatter.number("streak", bestStreak)));
+            }
+            lines.add(messages.get("summary.coins", Formatter.number("coins", coins)));
+            lines.add(messages.get("summary.xp", Formatter.number("xp", xp)));
+            lines.addAll(notes);
+            return List.copyOf(lines);
         }
 
         /**
