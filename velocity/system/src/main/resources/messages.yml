@@ -104,6 +104,7 @@ broadcast:
   secrets: "<primary>Wusstest du? <bullet><muted>Der Villager hat Quittungen verloren. Frag den Teich."
 
 motd:
+  brand: "         <dark><strikethrough>   </strikethrough> <primary><bold><ip></bold> <dark><strikethrough>   </strikethrough>"
   maintenance-version: "<error>Wartungsmodus <muted><online><dark>/<muted><max>"
   maintenance-line: "<muted>Der <error>Wartungsmodus<muted> ist derzeit aktiviert!"
   wrong-version: "<error><bold>Falsche Version!"

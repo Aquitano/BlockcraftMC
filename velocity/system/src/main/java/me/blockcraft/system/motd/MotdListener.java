@@ -24,6 +24,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
@@ -68,7 +69,7 @@ public final class MotdListener {
         var ping = original.asBuilder().onlinePlayers(online).maximumPlayers(max);
         favicon.ifPresent(ping::favicon);
         ping.clearSamplePlayers().samplePlayers(sample(online, max));
-        var firstLine = LegacyComponentSerializer.legacyAmpersand().deserialize(config.defaultMotd());
+        var firstLine = firstLine(config, messages);
         if (settings.maintenance()) {
             ping.version(new ServerPing.Version(MAINTENANCE_PROTOCOL, legacy(messages.get("motd.maintenance-version",
                     Formatter.number("online", online), Formatter.number("max", max)))));
@@ -78,6 +79,14 @@ public final class MotdListener {
             ping.description(firstLine.append(Component.newline()).append(secondLine(address)));
         }
         return ping.build();
+    }
+
+    static Component firstLine(SystemConfig config, Messages messages) {
+        if (!config.defaultMotd().isBlank()) {
+            return LegacyComponentSerializer.legacyAmpersand().deserialize(config.defaultMotd());
+        }
+        var address = String.join(" ", config.network().ip().toUpperCase(Locale.ROOT).split(""));
+        return messages.get("motd.brand", Placeholder.unparsed("ip", address));
     }
 
     private Component secondLine(InetAddress address) {

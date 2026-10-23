@@ -59,7 +59,8 @@ resource-pack:
 # Edited in-game by /setmax and /motd; MOTD lines use legacy & colour codes.
 max-players: 100
 motd:
-  default: "&cBlockcraftMC.net"
+  # Empty uses messages.yml's motd.brand with the uppercase, spaced network.ip; /motd setdefault overrides it.
+  default: ""
   random:
     - "&7Heute schon &6QuickSG &7gewonnen?"
     - "&7Die Smaragde warten. &aEmeraldRush"
