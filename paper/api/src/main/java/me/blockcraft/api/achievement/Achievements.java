@@ -1,6 +1,7 @@
 package me.blockcraft.api.achievement;
 
 import me.blockcraft.api.cosmetic.ChatTagChoice;
+import me.blockcraft.api.cosmetic.CosmeticReward;
 import me.blockcraft.api.game.Stats;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.menu.AchievementsMenu;
@@ -59,7 +60,7 @@ public final class Achievements implements Listener {
     private record Target(Player player, int level) {
     }
 
-    private record Rewards(List<Achievement> achievements, List<ChatTagChoice> tags) {
+    private record Rewards(List<Achievement> achievements, List<CosmeticReward> cosmetics) {
     }
 
     /** The games write their stats asynchronously around the summary, so the totals get a moment to land. */
@@ -87,7 +88,7 @@ public final class Achievements implements Listener {
         this.notifications = notifications;
     }
 
-    /** {@code achievements.<game>.<name>: {counts, threshold, xp, tag?}} of config.yml, in file order. */
+    /** {@code achievements.<game>.<name>: {counts, threshold, xp, tag?, cosmetic?}} of config.yml, in file order. */
     public static List<Achievement> parse(Map<String, Object> section) {
         var catalog = new ArrayList<Achievement>();
         section.keySet().forEach(game -> YamlFile.section(section, game).keySet().forEach(name -> {
@@ -95,13 +96,21 @@ public final class Achievements implements Listener {
             var counts = String.valueOf(entry.get("counts"));
             var metric = Metric.parse(counts).orElseThrow(() ->
                     new IllegalArgumentException("achievements." + game + "." + name + " counts unknown metric " + counts));
-            var tag = Optional.ofNullable(entry.get("tag")).map(value -> ChatTagChoice.parse(String.valueOf(value))
-                    .filter(choice -> choice.tag().earned()).orElseThrow(() ->
-                            new IllegalArgumentException("Invalid earned tag for achievements." + game + "." + name)));
-            if (tag.isPresent() && (!game.equals(Achievement.NETWORK) || metric != Metric.LEVEL)) {
-                throw new IllegalArgumentException("Tag rewards require a network level achievement: " + game + "." + name);
+            boolean tag = entry.containsKey("tag");
+            boolean cosmetic = entry.containsKey("cosmetic");
+            if (tag && cosmetic) {
+                throw new IllegalArgumentException("Multiple cosmetic rewards for achievements." + game + "." + name);
             }
-            catalog.add(new Achievement(game, name, metric, number(entry, "threshold"), number(entry, "xp"), tag));
+            if ((tag || cosmetic) && (!game.equals(Achievement.NETWORK) || metric != Metric.LEVEL)) {
+                throw new IllegalArgumentException("Cosmetic rewards require a network level achievement: " + game + "." + name);
+            }
+            Optional<CosmeticReward> reward = Optional.empty();
+            if (tag || cosmetic) {
+                var item = tag ? ChatTagChoice.ITEM_PREFIX + entry.get("tag") : String.valueOf(entry.get("cosmetic"));
+                reward = Optional.of(CosmeticReward.parse(item).orElseThrow(() ->
+                        new IllegalArgumentException("Invalid earned cosmetic for achievements." + game + "." + name + ": " + item)));
+            }
+            catalog.add(new Achievement(game, name, metric, number(entry, "threshold"), number(entry, "xp"), reward));
         }));
         return catalog;
     }
@@ -120,26 +129,44 @@ public final class Achievements implements Listener {
     }
 
     public static List<ChatTagChoice> missingTags(List<Achievement> catalog, int level, Set<String> owned) {
+        return missingCosmetics(catalog, level, owned).stream()
+                .filter(CosmeticReward.Tag.class::isInstance)
+                .map(CosmeticReward.Tag.class::cast)
+                .map(CosmeticReward.Tag::choice)
+                .toList();
+    }
+
+    public List<Achievement> levelRewards() {
+        return levelRewards(catalog);
+    }
+
+    public static List<Achievement> levelRewards(List<Achievement> catalog) {
         return catalog.stream()
                 .filter(achievement -> achievement.game().equals(Achievement.NETWORK) && achievement.metric() == Metric.LEVEL)
+                .filter(achievement -> achievement.cosmetic().isPresent())
+                .sorted(Comparator.comparingInt(Achievement::threshold))
+                .toList();
+    }
+
+    public static List<CosmeticReward> missingCosmetics(List<Achievement> catalog, int level, Set<String> owned) {
+        return levelRewards(catalog).stream()
                 .filter(achievement -> achievement.reached(level))
-                .flatMap(achievement -> achievement.tag().stream())
+                .flatMap(achievement -> achievement.cosmetic().stream())
                 .distinct()
-                .filter(tag -> !owned.contains(tag.item()))
+                .filter(reward -> !owned.contains(reward.item()))
                 .toList();
     }
 
     public static Optional<Achievement> nextCosmetic(List<Achievement> catalog, int level) {
-        return catalog.stream()
-                .filter(achievement -> achievement.game().equals(Achievement.NETWORK) && achievement.metric() == Metric.LEVEL)
-                .filter(achievement -> achievement.tag().isPresent() && achievement.threshold() > level)
-                .min(Comparator.comparingInt(Achievement::threshold));
+        return levelRewards(catalog).stream()
+                .filter(achievement -> achievement.threshold() > level)
+                .findFirst();
     }
 
     public Component nextCosmetic(int level) {
-        return nextCosmetic(catalog, level).map(achievement -> messages.get("level.next-cosmetic",
+        return nextCosmetic(catalog, level).map(achievement -> messages.get("level.next-reward",
                 Formatter.number("level", achievement.threshold()),
-                Placeholder.component("tag", achievement.tag().orElseThrow().text(messages))))
+                Placeholder.component("reward", achievement.cosmetic().orElseThrow().name(messages))))
                 .orElseGet(() -> messages.get("level.cosmetics-complete"));
     }
 
@@ -211,16 +238,16 @@ public final class Achievements implements Listener {
             for (var target : targets) {
                 UUID uuid = target.player().getUniqueId();
                 var stats = repository == null ? Stats.EMPTY : repository.get(uuid);
-                var owned = unlocks.owned(uuid, Achievement.ITEM_PREFIX);
-                var tags = game.equals(Achievement.NETWORK)
-                        ? missingTags(catalog, target.level(), unlocks.owned(uuid, ChatTagChoice.ITEM_PREFIX)).stream()
-                                .filter(tag -> unlocks.unlock(uuid, tag.item())).toList()
-                        : List.<ChatTagChoice>of();
+                var owned = unlocks.owned(uuid, game.equals(Achievement.NETWORK) ? "" : Achievement.ITEM_PREFIX);
+                var cosmetics = game.equals(Achievement.NETWORK)
+                        ? missingCosmetics(catalog, target.level(), owned).stream()
+                                .filter(reward -> unlocks.unlock(uuid, reward.item())).toList()
+                        : List.<CosmeticReward>of();
                 var fresh = reached(catalog, game, stats, target.level(), owned).stream()
                         .filter(achievement -> unlocks.unlock(uuid, achievement.item()))
                         .toList();
-                if (!fresh.isEmpty() || !tags.isEmpty()) {
-                    unlocked.put(target.player(), new Rewards(fresh, tags));
+                if (!fresh.isEmpty() || !cosmetics.isEmpty()) {
+                    unlocked.put(target.player(), new Rewards(fresh, cosmetics));
                 }
             }
             return unlocked;
@@ -229,8 +256,13 @@ public final class Achievements implements Listener {
                 celebrate(player, rewards.achievements());
             }
             if (plugin.getServer().getPlayer(player.getUniqueId()) == player) {
-                rewards.tags().forEach(tag -> player.sendMessage(messages.get("achievements.tag-unlocked",
-                        Placeholder.component("tag", tag.text(messages)))));
+                rewards.cosmetics().forEach(reward -> {
+                    if (reward instanceof CosmeticReward.Tag(var choice)) {
+                        player.sendMessage(messages.get("achievements.tag-unlocked", Placeholder.component("tag", choice.text(messages))));
+                    } else {
+                        player.sendMessage(messages.get("achievements.cosmetic-unlocked", Placeholder.component("reward", reward.name(messages))));
+                    }
+                });
             }
         }));
     }
@@ -260,6 +292,7 @@ public final class Achievements implements Listener {
     public Component description(Achievement achievement) {
         return messages.get("achievements." + achievement.key() + ".description",
                 Formatter.number("level", achievement.threshold()),
+                Placeholder.component("reward", achievement.cosmetic().map(reward -> reward.name(messages)).orElse(Component.empty())),
                 Placeholder.component("tag", achievement.tag().map(tag -> tag.text(messages)).orElse(Component.empty())));
     }
 

@@ -118,9 +118,12 @@ achievements:
     wins-10: {counts: wins, threshold: 10, xp: 100}
     wins-100: {counts: wins, threshold: 100, xp: 500}
   network:
+    level-3: {counts: level, threshold: 3, xp: 25, cosmetic: effect.win.confetti}
     level-5: {counts: level, threshold: 5, xp: 50, tag: aufsteiger}
     level-10: {counts: level, threshold: 10, xp: 100, tag: veteran}
+    level-15: {counts: level, threshold: 15, xp: 100, cosmetic: effect.kill.stardust}
     level-25: {counts: level, threshold: 25, xp: 250, tag: elite}
+    level-40: {counts: level, threshold: 40, xp: 300, cosmetic: effect.win.aurora}
     willkommenskomitee: {counts: moment, xp: 100}
     rache: {counts: moment, xp: 50}
     haarscharf: {counts: moment, xp: 50}

@@ -22,6 +22,7 @@ final class EffectPreviews {
             case FLAMES -> viewer.spawnParticle(Particle.FLAME, location, 50, 0.4, 0.6, 0.4, 0.05);
             case HEARTS -> viewer.spawnParticle(Particle.HEART, location, 12, 0.5, 0.5, 0.5);
             case SOUL -> viewer.spawnParticle(Particle.SOUL, location, 30, 0.3, 0.6, 0.3, 0.02);
+            case STARDUST -> effect.play(viewer);
         }
     }
 
@@ -33,6 +34,7 @@ final class EffectPreviews {
             case TOTEM -> viewer.spawnParticle(Particle.TOTEM_OF_UNDYING, location, 100, 0.5, 1.0, 0.5, 0.2);
             case DRAGON -> viewer.spawnParticle(Particle.DRAGON_BREATH, location, 80, 0.7, 0.5, 0.7, 0.05);
             case NOTES -> viewer.spawnParticle(Particle.NOTE, location, 25, 0.8, 0.5, 0.8, 1.0);
+            case CONFETTI, AURORA -> effect.play(viewer);
         }
     }
 

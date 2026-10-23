@@ -22,7 +22,9 @@ import org.bukkit.inventory.ItemStack;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 final class CosmeticKinds {
 
@@ -104,32 +106,34 @@ final class CosmeticKinds {
                 messages.get("tags.removed"), Optional.empty());
     }
 
-    static CosmeticKind<KillEffect> killEffects(Menus menus) {
-        return effects(menus, PlayerSetting.KILL_EFFECT, "effects.kill", List.of(KillEffect.values()), KillEffect::key,
+    static CosmeticKind<KillEffect> killEffects(Menus menus, Consumer<Player> back) {
+        return effects(menus, back, PlayerSetting.KILL_EFFECT, "effects.kill", List.of(KillEffect.values()), KillEffect::key,
                 KillEffect::icon, new Price<>(menus.config().killEffectPrice(), "effect.kill.", KillEffect::item),
-                EffectPreviews::kill);
+                KillEffect::earned, EffectPreviews::kill);
     }
 
-    static CosmeticKind<WinEffect> winEffects(Menus menus) {
-        return effects(menus, PlayerSetting.WIN_EFFECT, "effects.win", List.of(WinEffect.values()), WinEffect::key,
+    static CosmeticKind<WinEffect> winEffects(Menus menus, Consumer<Player> back) {
+        return effects(menus, back, PlayerSetting.WIN_EFFECT, "effects.win", List.of(WinEffect.values()), WinEffect::key,
                 WinEffect::icon, new Price<>(menus.config().winEffectPrice(), "effect.win.", WinEffect::item),
-                EffectPreviews::win);
+                WinEffect::earned, EffectPreviews::win);
     }
 
-    private static <E> CosmeticKind<E> effects(Menus menus, PlayerSetting setting, String prefix, List<E> effects,
+    private static <E> CosmeticKind<E> effects(Menus menus, Consumer<Player> back, PlayerSetting setting, String prefix, List<E> effects,
                                                Function<E, String> key,
                                                Function<E, Material> icon, Price<E> price,
-                                               BiConsumer<Player, E> preview) {
+                                               Predicate<E> earned, BiConsumer<Player, E> preview) {
         var messages = menus.messages();
-        return new CosmeticKind<>(setting, messages.get(prefix + ".title"), 1, menus::openExtras,
+        return new CosmeticKind<>(setting, messages.get(prefix + ".title"), 1, back,
                 effects, key, effect -> ItemStack.of(icon.apply(effect)),
                 effect -> messages.get(prefix + ".name." + key.apply(effect)), effect -> List.of(), false,
                 Optional.of(price),
-                Optional.of(new Preview<>("effects.preview-lore", (player, effect, back) ->
-                        menus.previews().effect(player, viewer -> preview.accept(viewer, effect), back))),
+                Optional.of(new Preview<>("effects.preview-lore", (player, effect, returnTo) ->
+                        menus.previews().effect(player, viewer -> preview.accept(viewer, effect), returnTo))),
                 Optional.empty(),
                 effect -> messages.get("effects.chosen", Placeholder.component("effect", messages.get(prefix + ".name." + key.apply(effect)))),
-                messages.get("effects.reset-done"), Optional.empty());
+                messages.get("effects.reset-done"),
+                Optional.of(new CosmeticKind.Unlock<>(price.itemPrefix(),
+                        effect -> earned.test(effect) ? Optional.of(price.item().apply(effect)) : Optional.empty())));
     }
 
     private static ItemStack shirt(Shirt shirt) {

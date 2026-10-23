@@ -14,33 +14,37 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.ArrayList;
 import java.util.Optional;
 import java.util.function.Consumer;
 
 /**
- * The player's own card: rank, level, coins and what every game remembers about them. The toolbar closes, opens
- * the settings and, where the server has one, the cosmetics; elsewhere its third button leads to the lobby.
+ * The player's own card, with separate destinations for permanent levels and spendable coins.
  */
 final class ProfileMenu extends Menu {
 
-    private static final int RECAP_SLOT = 11;
+    private static final int LEVEL_SLOT = 10;
     private static final int HEAD_SLOT = 13;
-    private static final int ACHIEVEMENTS_SLOT = 15;
-    private static final int ADVENT_SLOT = 17;
-    private static final int GAMES_ROW = 18;
+    private static final int COINS_SLOT = 16;
+    private static final int RECAP_SLOT = 19;
+    private static final int ACHIEVEMENTS_SLOT = 22;
+    private static final int ADVENT_SLOT = 25;
+    private static final int GAMES_ROW = 27;
 
     private final Consumer<Player> achievements;
+    private final Consumer<Player> progression;
+    private final Consumer<Player> shop;
     private final Optional<Consumer<Player>> recentRound;
     private final Optional<Consumer<Player>> advent;
 
     ProfileMenu(Profiles profiles, Player viewer, Profiles.Snapshot snapshot, Optional<Consumer<Player>> cosmetics) {
-        super(3, profiles.messages().get("profile.title"));
+        super(4, profiles.messages().get("profile.title"));
         recentRound = profiles.recentRound();
         advent = profiles.advent();
         var messages = profiles.messages();
         advent.ifPresent(open -> set(ADVENT_SLOT, MenuIcon.ADVENT.item().name(messages.get("profile.advent")).build()));
         achievements = player -> profiles.achievements().open(player, Optional.of(back -> profiles.open(back, cosmetics)));
+        progression = player -> profiles.progression(player, Optional.of(back -> profiles.open(back, cosmetics)));
+        shop = profiles.shop().orElse(player -> ProxyMessaging.hub(profiles.plugin(), player));
         closeButton(ToolbarButton.LEFT);
         toolbar(ToolbarButton.MIDDLE, button(messages, MenuIcon.TOOL_SETTINGS, "profile.settings"),
                 player -> new SettingsDialog(player, Optional.of(back -> profiles.open(back, cosmetics))).open(player));
@@ -52,17 +56,24 @@ final class ProfileMenu extends Menu {
         var progress = xp.levels().progress(xp.total(viewer));
         recentRound.ifPresent(open -> set(RECAP_SLOT, MenuIcon.RECAP.item()
                 .name(messages.get("profile.recap")).lore(messages.get("profile.recap-lore")).build()));
-        var headLore = new ArrayList<>(messages.getLines("profile.head-lore",
-                Placeholder.component("rank", Ranks.prefix(viewer).orElse(Component.empty())),
-                Formatter.number("level", progress.level()),
-                Formatter.number("next", progress.level() + 1),
-                Formatter.number("missing", progress.needed() - progress.into()),
-                Formatter.number("coins", snapshot.coins())));
-        headLore.add(messages.get("profile.level-cosmetic-lore",
-                Placeholder.component("cosmetic", profiles.achievements().nextCosmetic(progress.level()))));
         info(HEAD_SLOT, Items.head(viewer.getUniqueId(), profiles.realNames().of(viewer))
                 .name(messages.get("profile.head", Placeholder.unparsed("player", viewer.getName())))
-                .lore(headLore)
+                .lore(messages.getLines("profile.head-lore",
+                        Formatter.number("level", progress.level()),
+                        Formatter.number("missing", progress.needed() - progress.into()),
+                        Formatter.number("next", progress.level() + 1),
+                        Formatter.number("coins", snapshot.coins()),
+                        Placeholder.component("rank", Ranks.prefix(viewer).orElse(Component.empty()))))
+                .build());
+        set(LEVEL_SLOT, MenuIcon.ACHIEVEMENTS.item()
+                .name(messages.get("profile.level", Formatter.number("level", progress.level())))
+                .lore(messages.getLines("profile.level-lore",
+                        Formatter.number("xp", progress.into()), Formatter.number("needed", progress.needed()),
+                        Placeholder.component("reward", profiles.achievements().nextCosmetic(progress.level()))))
+                .build());
+        set(COINS_SLOT, MenuIcon.TOOL_SHOP.item()
+                .name(messages.get("profile.coins", Formatter.number("coins", snapshot.coins())))
+                .lore(messages.getLines(profiles.shop().isPresent() ? "profile.coins-lore" : "profile.coins-hub-lore"))
                 .build());
         set(ACHIEVEMENTS_SLOT, MenuIcon.ACHIEVEMENTS.item()
                 .name(messages.get("profile.achievements"))
@@ -82,7 +93,11 @@ final class ProfileMenu extends Menu {
 
     @Override
     protected void onClick(Player player, int slot, ItemStack clicked, InventoryClickEvent event) {
-        if (slot == ADVENT_SLOT) {
+        if (slot == LEVEL_SLOT) {
+            progression.accept(player);
+        } else if (slot == COINS_SLOT) {
+            shop.accept(player);
+        } else if (slot == ADVENT_SLOT) {
             advent.ifPresent(open -> open.accept(player));
         } else if (slot == RECAP_SLOT) {
             recentRound.ifPresent(open -> open.accept(player));

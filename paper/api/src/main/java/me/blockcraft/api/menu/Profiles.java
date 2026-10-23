@@ -14,6 +14,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -34,6 +35,7 @@ public final class Profiles {
 
     private Optional<Consumer<Player>> recentRound = Optional.empty();
     private Optional<Consumer<Player>> advent = Optional.empty();
+    private Optional<Consumer<Player>> shop = Optional.empty();
     private final Plugin plugin;
     private final CoinsRepository coins;
     private final Map<String, StatsRepository> games;
@@ -59,6 +61,18 @@ public final class Profiles {
 
     public void recentRound(Consumer<Player> open) {
         recentRound = Optional.of(open);
+    }
+
+    public void shop(Consumer<Player> open) {
+        shop = Optional.of(open);
+    }
+
+    public void clearShop() {
+        shop = Optional.empty();
+    }
+
+    Optional<Consumer<Player>> shop() {
+        return shop;
     }
 
     public void advent(Consumer<Player> open) {
@@ -100,6 +114,18 @@ public final class Profiles {
 
     RealNames realNames() {
         return realNames;
+    }
+
+    public void progression(Player player, Optional<Consumer<Player>> back) {
+        var rewards = achievements.levelRewards();
+        var uuid = player.getUniqueId();
+        playerTasks.latest(player, () -> {
+            var owned = new HashSet<String>();
+            rewards.stream().flatMap(reward -> reward.cosmetic().stream())
+                    .map(reward -> reward.item().substring(0, reward.item().lastIndexOf('.') + 1))
+                    .distinct().forEach(prefix -> owned.addAll(unlocks.owned(uuid, prefix)));
+            return owned;
+        }, owned -> new ProgressionMenu(this, player, rewards, owned, back).open(player));
     }
 
     /** {@code cosmetics} is the cosmetics menu of whatever server the player is on, where there is one. */

@@ -48,14 +48,30 @@ public enum KillEffect {
             victim.getWorld().spawnParticle(Particle.SOUL, victim.getLocation().add(0, 1, 0), 40, 0.3, 0.6, 0.3, 0.02);
             victim.getWorld().playSound(victim.getLocation(), Sound.PARTICLE_SOUL_ESCAPE, 2.0f, 0.8f);
         }
+    },
+    STARDUST("stardust", Material.GLOWSTONE_DUST, true) {
+        @Override
+        public void play(Player victim) {
+            var world = victim.getWorld();
+            var location = victim.getLocation().add(0, 1, 0);
+            world.spawnParticle(Particle.END_ROD, location, 36, 0.4, 0.7, 0.4, 0.04);
+            world.spawnParticle(Particle.ENCHANT, location, 24, 0.5, 0.5, 0.5, 0.15);
+            world.playSound(location, Sound.BLOCK_AMETHYST_BLOCK_CHIME, 0.8f, 1.6f);
+        }
     };
 
     private final String key;
     private final Material icon;
+    private final boolean earned;
 
     KillEffect(String key, Material icon) {
+        this(key, icon, false);
+    }
+
+    KillEffect(String key, Material icon, boolean earned) {
         this.key = key;
         this.icon = icon;
+        this.earned = earned;
     }
 
     public abstract void play(Player victim);
@@ -66,6 +82,10 @@ public enum KillEffect {
 
     public Material icon() {
         return icon;
+    }
+
+    public boolean earned() {
+        return earned;
     }
 
     public String item() {

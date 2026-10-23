@@ -42,12 +42,25 @@ final class CosmeticMenu<C> extends Menu {
         var choices = kind.choices();
         for (int slot = 0; slot < choices.size(); slot++) {
             var choice = choices.get(slot);
-            boolean equipped = equipped(player, choice);
+            boolean unlocked = owns(choice);
+            boolean equipped = unlocked && equipped(player, choice);
             var lore = new ArrayList<>(kind.description().apply(choice));
-            lore.add(owns(choice)
-                    ? messages.get(equipped ? "cosmetics.equipped" : "cosmetics.owned")
-                    : kind.price().map(price -> messages.get("cosmetics.locked", Formatter.number("coins", price.coins())))
-                            .orElseGet(() -> messages.get("cosmetics.earned-locked")));
+            var earned = earnedItem(choice);
+            var milestone = earned.flatMap(item -> BlockcraftApi.get().achievements().levelRewards().stream()
+                    .filter(reward -> reward.cosmetic().filter(cosmetic -> cosmetic.item().equals(item)).isPresent())
+                    .findFirst());
+            if (unlocked) {
+                lore.add(messages.get(equipped ? "cosmetics.equipped" : "cosmetics.owned"));
+            } else if (earned.isPresent()) {
+                lore.add(milestone.map(reward -> messages.get("cosmetics.level-locked", Formatter.number("level", reward.threshold())))
+                        .orElseGet(() -> messages.get("cosmetics.earned-locked")));
+            } else {
+                lore.add(kind.price().map(price -> messages.get("cosmetics.locked", Formatter.number("coins", price.coins())))
+                        .orElseGet(() -> messages.get("cosmetics.earned-locked")));
+            }
+            if (milestone.isPresent()) {
+                lore.add(messages.get("cosmetics.earned-only"));
+            }
             kind.preview().ifPresent(preview -> lore.add(messages.get(menus.settings().enabled(player, PlayerSetting.EFFECTS)
                     ? preview.loreKey() : "cosmetics.preview-disabled")));
             var icon = Items.of(kind.picture().apply(choice)).name(kind.name().apply(choice)).lore(lore);
@@ -70,8 +83,12 @@ final class CosmeticMenu<C> extends Menu {
     }
 
     private boolean owns(C choice) {
-        return kind.unlock().flatMap(unlock -> unlock.item().apply(choice)).map(owned::contains)
+        return earnedItem(choice).map(owned::contains)
                 .orElseGet(() -> kind.price().map(price -> owned.contains(price.item().apply(choice))).orElse(true));
+    }
+
+    private Optional<String> earnedItem(C choice) {
+        return kind.unlock().flatMap(unlock -> unlock.item().apply(choice));
     }
 
     private Optional<C> choiceAt(int slot) {
@@ -95,11 +112,16 @@ final class CosmeticMenu<C> extends Menu {
             return selected(player).isPresent();
         }
         return choiceAt(slot).map(choice -> {
-            boolean earned = kind.unlock().flatMap(unlock -> unlock.item().apply(choice)).isPresent();
+            boolean earned = earnedItem(choice).isPresent();
+            if (previews(event)) {
+                return menus.settings().enabled(player, PlayerSetting.EFFECTS)
+                        && (earned ? owns(choice) || kind.price().isPresent()
+                                : !kind.premium() || player.hasPermission(LobbyPermissions.PREMIUM));
+            }
             if (earned && !owns(choice) || !earned && kind.premium() && !player.hasPermission(LobbyPermissions.PREMIUM)) {
                 return false;
             }
-            return previews(event) ? menus.settings().enabled(player, PlayerSetting.EFFECTS) : !equipped(player, choice);
+            return !equipped(player, choice);
         }).orElse(true);
     }
 
@@ -127,6 +149,9 @@ final class CosmeticMenu<C> extends Menu {
         }
         if (owns(choice)) {
             select(player, choice);
+            return;
+        }
+        if (earnedItem(choice).isPresent()) {
             return;
         }
         var price = kind.price().orElseThrow();

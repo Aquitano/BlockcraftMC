@@ -43,7 +43,7 @@ commands:
   coins:
     description: "Zeigt deine Coins, mit /coins top die zehn reichsten Spieler"
   level:
-    description: "Zeigt dein Level"
+    description: "Öffnet deinen Level-Fortschritt und deine Belohnungen"
   build:
     description: "Schaltet den Baumodus um"
   map:
@@ -313,10 +313,21 @@ profile:
   head: "<arrow><primary><player>"
   head-lore:
     - "<bullet><muted>Rang <dark>● <rank>"
-    - "<bullet><muted>Level <dark>● <accent><level>"
-    - "<bullet><muted>Noch <accent><missing> <muted>XP bis Level <accent><next>"
-    - "<bullet><muted>Coins <dark>● <accent><coins>"
-  level-cosmetic-lore: "<bullet><cosmetic>"
+  level: "<arrow><primary>Level <level> <dark>· <muted>Dauerhaft"
+  level-lore:
+    - "<muted><xp><dark>/<muted><needed> XP bis zum nächsten Level"
+    - "<reward>"
+    - "<muted>Dein Level bleibt beim Einkaufen erhalten."
+    - "<click>Meilensteine ansehen"
+  coins: "<arrow><accent><coins> Coins <dark>· <muted>Zum Ausgeben"
+  coins-lore:
+    - "<muted>Köpfe, Hemden, Effekte und Premium kaufen."
+    - "<muted>Level-Belohnungen verdienst du mit XP."
+    - "<click>Coin-Shop öffnen"
+  coins-hub-lore:
+    - "<muted>Coins gibst du im Lobby-Shop aus."
+    - "<muted>Dein Level bleibt dabei erhalten."
+    - "<click>Zur Lobby"
   stats-lore:
     - "<bullet><muted>Kills <dark>● <accent><kills>"
     - "<bullet><muted>Tode <dark>● <accent><deaths>"
@@ -363,9 +374,40 @@ xp:
   level-up: "<prefix><muted>Du bist jetzt <accent>Level <level><muted>!"
 level:
   next-cosmetic: "<muted>Nächster Chat-Tag<dark>: <tag> <muted>ab Level <accent><level>"
-  cosmetics-complete: "<muted>Alle Level-Chat-Tags freigeschaltet."
+  next-reward: "<muted>Als Nächstes<dark>: <reward> <muted>ab Level <accent><level>"
+  cosmetics-complete: "<success>Alle Level-Belohnungen freigeschaltet."
   self: "<prefix><muted>Du bist <accent>Level <level> <muted>und hast <accent><xp><muted>/<accent><next> <muted>XP bis zum nächsten Level."
   other: "<prefix><accent><player> <muted>ist <accent>Level <level> <muted>mit <accent><xp> <muted>XP."
+  rewards:
+    confetti: "<accent>Konfettisieger"
+    stardust: "<primary>Sternenstaub"
+    aurora: "<success>Nordlicht"
+  menu:
+    title: "<arrow><primary>Level <dark>· <muted>Dein Fortschritt"
+    level: "<primary>Level <level>"
+    level-lore:
+      - "<muted>XP sammeln. Level behalten."
+      - "<dark>Kein Rückwärtsgang eingebaut."
+    xp: "<accent><xp><dark>/<accent><needed> XP"
+    xp-lore:
+      - "<muted>Noch <accent><missing> XP <muted>bis Level <accent><next>"
+      - "<muted>Coin-Käufe ändern deinen Level nicht."
+    next: "<primary>Nächste Belohnung"
+    next-lore:
+      - "<reward> <dark>· <muted>Level <accent><level>"
+      - "<muted>Automatisch verdient. Keine Coins nötig."
+    reward-lore:
+      - "<kind> <dark>· <muted>Level <accent><level>"
+    kind:
+      chat-tag: "<muted>Chat-Tag"
+      kill-effect: "<muted>Kill-Effekt"
+      win-effect: "<muted>Sieges-Effekt"
+    equipped: "<success>Ausgerüstet"
+    owned: "<success>Verdient <dark>· <left>Kostenlos ausrüsten"
+    next-locked: "<accent>Als Nächstes <dark>· <muted>Noch gesperrt"
+    locked: "<muted>Noch gesperrt <dark>· <muted>Mit XP verdienen"
+    pending: "<muted>Level erreicht. Freischaltung wird gespeichert."
+    selected: "<success><reward> <muted>ausgerüstet."
 tags:
   aufsteiger: "<dark>[<success>AUFSTEIGER<dark>]"
   veteran: "<dark>[<primary>VETERAN<dark>]"
@@ -392,6 +434,7 @@ operation:
 # Achievements: the moment one is earned, the menu, and every catalog entry of config.yml by its game and name.
 achievements:
   tag-unlocked: "<prefix><muted>Chat-Tag freigeschaltet<dark>: <tag><muted>. Wähle ihn in den Kosmetikeinstellungen."
+  cosmetic-unlocked: "<prefix><muted>Level-Belohnung freigeschaltet<dark>: <reward><muted>. Wähle sie mit <accent>/level<muted>."
   unlocked: "<prefix><muted>Erfolg freigeschaltet<dark>: <accent><name> <dark>(<success>+<xp> XP<dark>)"
   title: "<accent>Erfolg freigeschaltet"
   subtitle: "<white><name>"
@@ -514,15 +557,24 @@ achievements:
       name: "Meister"
       description: "Gewinne 100 Runden BedWars."
   network:
+    level-3:
+      name: "Konfettisieger"
+      description: "Erreiche Netzwerk-Level <level> und verdiene den Sieges-Effekt <reward>."
     level-5:
       name: "Aufsteiger"
       description: "Erreiche Netzwerk-Level <level> und erhalte den Chat-Tag <tag>."
     level-10:
       name: "Veteran"
       description: "Erreiche Netzwerk-Level <level> und erhalte den Chat-Tag <tag>."
+    level-15:
+      name: "Sternenstaub"
+      description: "Erreiche Netzwerk-Level <level> und verdiene den Kill-Effekt <reward>."
     level-25:
       name: "Elite"
       description: "Erreiche Netzwerk-Level <level> und erhalte den Chat-Tag <tag>."
+    level-40:
+      name: "Nordlicht"
+      description: "Erreiche Netzwerk-Level <level> und verdiene den Sieges-Effekt <reward>."
     willkommenskomitee:
       name: "Willkommenskomitee"
       description: "Begrüße zehn Spieler bei ihrem ersten Besuch."

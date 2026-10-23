@@ -31,6 +31,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 
 /** Everything the chest GUIs need, so they can open one another without re-wiring. */
 public record Menus(
@@ -52,6 +53,10 @@ public record Menus(
 ) {
 
     private static final int TELEPORT_PARTICLES = 20;
+
+    public Menus {
+        BlockcraftApi.get().profiles().shop(this::openShop);
+    }
 
     public void warp(Player player, LobbyLocation target) {
         var destination = locations.get(target);
@@ -96,7 +101,8 @@ public record Menus(
     }
 
     public void openShop(Player player) {
-        new ShopMenu(this, player).open(player);
+        BlockcraftApi.get().playerTasks().latest(player, () -> BlockcraftApi.get().coins().get(player.getUniqueId()),
+                coins -> new ShopMenu(this, player, coins).open(player));
     }
 
     public void openHeads(Player player) {
@@ -140,11 +146,19 @@ public record Menus(
     }
 
     public void openKillEffects(Player player) {
-        openCosmetics(player, CosmeticKinds.killEffects(this));
+        openKillEffects(player, this::openExtras);
+    }
+
+    void openKillEffects(Player player, Consumer<Player> back) {
+        openCosmetics(player, CosmeticKinds.killEffects(this, back));
     }
 
     public void openWinEffects(Player player) {
-        openCosmetics(player, CosmeticKinds.winEffects(this));
+        openWinEffects(player, this::openExtras);
+    }
+
+    void openWinEffects(Player player, Consumer<Player> back) {
+        openCosmetics(player, CosmeticKinds.winEffects(this, back));
     }
 
     private <C> void openCosmetics(Player player, CosmeticKind<C> kind) {

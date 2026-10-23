@@ -387,19 +387,34 @@ it drops back, under the same once-per-interval limit kept apart from the lobby 
 Every kill and win in a game awards XP through BlockcraftAPI (`xp.rewards` in its `config.yml`), stored in `bc_xp`
 as one total per player. The level follows a fixed curve: each level costs `xp.level-step` more than the one before,
 so with the default of 100 level 2 is 100 XP, level 3 is 300 and level 10 is 4500. Awards arriving together show as
-one XP total in the action bar; level-ups report the highest reached level in chat. `/level` shows the own progress, `/level <player>` needs
-`blockcraft.level.others`, and chat prefixes every message with the level (`chat.level` in core's `messages.yml`).
+one XP total in the action bar; level-ups report the highest reached level in chat. `/level` opens the milestone
+browser with current progress, the next reward, and owned cosmetics that can be equipped there. `/level <player>`
+needs `blockcraft.level.others`, and chat prefixes every message with the level (`chat.level` in core's `messages.yml`).
 The lobby experience bar shows this network level and progress. Its boss bar labels coins separately and refreshes
 from the database every `hud.refresh-seconds`. Purchases and secret rewards report the new balance in chat.
 Every timed phase of a game shows its time on a boss bar; `timer-bar: false` in a game's `config.yml` moves it to the
 sidebar. Levels bought or collected inside a game are labelled as enchantment levels and do not change network XP.
 
 The default XP rewards are 10 for a kill, 50 for a win, and 15 for staying through the round summary. XP is never
-spent and grants no combat advantage. Network level achievements unlock the Aufsteiger chat tag at level 5,
-Veteran at level 10, and Elite at level 25. Their `tag` rewards and level thresholds live under
-`achievements.network` in BlockcraftAPI's config. Earned tags are available without Premium in the lobby's cosmetic
-settings. Existing players receive missing rewards after their XP loads, including when they already own the
-achievement. `/level` and the profile show the next cosmetic milestone.
+spent and grants no combat advantage. Network level achievements automatically unlock these cosmetics:
+
+| Level | Reward |
+| --- | --- |
+| 3 | Konfettisieger win effect |
+| 5 | Aufsteiger chat tag |
+| 10 | Veteran chat tag |
+| 15 | Sternenstaub kill effect |
+| 25 | Elite chat tag |
+| 40 | Nordlicht win effect |
+
+Rewards and thresholds live under `achievements.network` in BlockcraftAPI's config. Earned cosmetics require no
+coins or Premium. Existing players receive missing rewards after their XP loads, including when they already own
+the achievement. Unlocking a reward leaves the current cosmetic choice intact.
+
+The profile gives levels and coins separate tiles. Coins are the spendable balance for permanent purchases; buying
+something never lowers the player's level. The lobby shop links heads, shirts, kill effects, win effects and Premium,
+and shows the current coin balance. Effect catalogues distinguish coin purchases from level rewards. Existing
+balances, purchases, Premium access and gameplay unlocks remain valid.
 
 BedWars, QuickSG, EmeraldRush, every Duell variant, and MLG Rush contribute to this same total. SuperJump and
 MLG Rush award win and participation XP without kill awards. MLG Rush bed points, BedWars bed breaks, EmeraldRush

@@ -191,6 +191,7 @@ public final class LobbyPlugin extends JavaPlugin {
         if (profiles != null) {
             profiles.clearRecentRound();
             profiles.clearAdvent();
+            profiles.clearShop();
         }
         if (friends != null) {
             friends.close();
