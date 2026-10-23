@@ -1,7 +1,6 @@
 package me.blockcraft.duell.menu;
 
 import me.blockcraft.api.game.VoteMenu;
-import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.menu.Menu;
 import me.blockcraft.api.pack.MenuIcon;
@@ -68,46 +67,25 @@ public final class VoteMenus {
 
     private final class ModeMenu extends Menu {
 
-        private static final int SINGLE_SLOT = 11;
-        private static final int TOUR_SLOT = 15;
         private static final int FIRST_MODE_SLOT = 19;
-        private static final int RANDOM_SLOT = 29;
-        private static final int MLG_RUSH_SLOT = 31;
+        private static final int RANDOM_SLOT = 30;
+        private static final int MLG_RUSH_SLOT = 32;
         private final List<DuelMode> modes = List.of(DuelMode.values());
 
         private ModeMenu(Player player) {
             super(4, messages.get("menu.modes.title"));
-            closeButton();
+            closeButton(ToolbarButton.LEFT);
+            formats(player);
             var votes = duel.votes();
             var own = votes.choiceOf(player.getUniqueId()).map(DuelVote.Choice::mode);
-            var voteMessages = BlockcraftApi.get().messages();
-            for (var format : DuelSeries.Format.values()) {
-                boolean mine = duel.formatChoice(player.getUniqueId()) == format;
-                String key = format == DuelSeries.Format.SINGLE ? "single" : "tour";
-                var lore = new ArrayList<>(messages.getLines("menu.formats." + key + "-lore"));
-                lore.add(messages.get("menu.formats.current", Placeholder.component("format",
-                        messages.get(duel.selectedFormat() == DuelSeries.Format.TOUR
-                                ? "tour.format-tour" : "tour.format-single"))));
-                if (mine) {
-                    lore.add(messages.get("menu.formats.selected"));
-                }
-                lore.add(messages.get("menu.formats.choose"));
-                var item = Items.of(format == DuelSeries.Format.SINGLE ? Material.IRON_SWORD : Material.CLOCK)
-                        .name(messages.get("menu.formats." + key)).lore(lore).hideAttributes();
-                if (mine) {
-                    item.glow();
-                }
-                set(format == DuelSeries.Format.SINGLE ? SINGLE_SLOT : TOUR_SLOT, item.build());
-            }
             for (int index = 0; index < modes.size(); index++) {
                 var mode = modes.get(index);
                 boolean mine = own.filter(choice -> choice == mode).isPresent();
                 var lore = new ArrayList<>(List.of(messages.get("menu.modes." + mode.configKey() + "-lore"),
-                        voteMessages.get("vote.votes", Formatter.number("votes", votes.votes(mode)))));
-                if (mine) {
-                    lore.add(voteMessages.get("vote.own"));
-                }
-                lore.add(voteMessages.get("vote.choose"));
+                        messages.get(mine ? "menu.modes.own-votes" : "menu.modes.votes",
+                                Formatter.number("votes", votes.votes(mode)))));
+                lore.add(messages.get(duel.formatChoice(player.getUniqueId()) == DuelSeries.Format.TOUR
+                        ? "menu.modes.nominate" : "menu.modes.choose"));
                 var item = Items.of(icon(mode)).name(messages.get("menu.modes." + mode.configKey()))
                         .lore(lore).hideAttributes();
                 if (mine) {
@@ -121,16 +99,37 @@ public final class VoteMenus {
                     .lore(messages.getLines("menu.modes.random-lore")).build());
         }
 
+        private void formats(Player player) {
+            for (var format : DuelSeries.Format.values()) {
+                boolean single = format == DuelSeries.Format.SINGLE;
+                boolean mine = duel.formatChoice(player.getUniqueId()) == format;
+                String key = single ? "single" : "tour";
+                var lore = new ArrayList<>(messages.getLines("menu.formats." + key + "-lore"));
+                lore.add(messages.get(mine ? "menu.formats.selected" : "menu.formats.choose"));
+                var item = (single ? MenuIcon.DUELL : MenuIcon.VOTE).item()
+                        .name(messages.get("menu.formats." + key)).lore(lore);
+                if (mine) {
+                    item.glow();
+                }
+                toolbar(single ? ToolbarButton.MIDDLE : ToolbarButton.RIGHT, item.build(), voter -> {
+                    duel.chooseFormat(voter, format);
+                    openModes(voter);
+                });
+            }
+        }
+
+        @Override
+        protected boolean fillEmptySlots() {
+            return false;
+        }
+
         @Override
         protected void onClick(Player player, int slot, ItemStack clicked, InventoryClickEvent event) {
             if (!duel.isLobby() || !duel.isParticipant(player)) {
                 VoteMenu.closed(player, messages);
                 return;
             }
-            if (slot == SINGLE_SLOT || slot == TOUR_SLOT) {
-                duel.chooseFormat(player, slot == SINGLE_SLOT ? DuelSeries.Format.SINGLE : DuelSeries.Format.TOUR);
-                openModes(player);
-            } else if (slot == RANDOM_SLOT) {
+            if (slot == RANDOM_SLOT) {
                 duel.clearModeVote(player);
                 openModes(player);
             } else if (slot == MLG_RUSH_SLOT) {
