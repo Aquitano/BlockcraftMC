@@ -5,7 +5,7 @@ import me.blockcraft.api.game.GameSidebar;
 import me.blockcraft.api.game.Round;
 import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
@@ -13,10 +13,6 @@ import java.util.List;
 import java.util.OptionalInt;
 import java.util.Optional;
 
-/**
- * The shared sidebar with the duel under it: the mode, with the viewer's rating while the lobby waits, the opponent
- * and, in 1vs1, the viewer's kills; a spectator follows both duellists instead.
- */
 public final class GameScoreboard {
 
     /** What every viewer's sidebar shares until the duel ends. */
@@ -33,13 +29,12 @@ public final class GameScoreboard {
         this.sidebar = new GameSidebar(messages.get("scoreboard.title"), round);
     }
 
-    public void showDuellist(Player viewer, Board board, TagResolver rating, List<String> opponents, OptionalInt kills,
+    public void showDuellist(Player viewer, Board board, Component rating, List<String> opponents, OptionalInt kills,
                              boolean sumo, Optional<Component> tourScore) {
         var icons = GameSidebar.icons(viewer);
         var sections = new ArrayList<GameSidebar.Section>();
-        var mode = round.phase() == GamePhase.LOBBY
-                ? List.of(GameSidebar.value(board.mode()), messages.get("scoreboard.group-value", rating))
-                : List.of(GameSidebar.value(board.mode()));
+        var mode = List.of(messages.get("scoreboard.mode-rating", Placeholder.component("mode", board.mode()),
+                Placeholder.component("rating", rating)));
         sections.add(new GameSidebar.Section(messages.get("scoreboard.mode", icons), mode));
         sections.add(new GameSidebar.Section(messages.get("scoreboard.opponent", icons), opponents.isEmpty()
                 ? List.of(GameSidebar.value(messages.get("scoreboard.opponent-none")))

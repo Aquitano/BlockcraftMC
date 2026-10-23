@@ -1,4 +1,4 @@
-package me.blockcraft.mlgrush.game;
+package me.blockcraft.api.game.rush;
 
 import org.junit.Test;
 

@@ -1,12 +1,10 @@
 players:
   min: 2
 global-stats-head: Kevos
-navigation:
-  mlgrush-group: mlgrush
 countdown:
-  lobby: 30
-  start: 5
-  freeze: 5
+  lobby: 10
+  start: 3
+  freeze: 3
   round: 600
   restart: 10
 idle-restart-minutes: 50
@@ -18,6 +16,21 @@ vs:
   kills-to-end: 3
 tour:
   intermission-seconds: 3
+rating:
+  enabled: false
+mlgrush:
+  score-target: 5
+  arena:
+    build-margin: 4
+    build-height: 16
+    floor-y: 64
+    void-y: 48
+  kit:
+    blocks: 64
+    knockback-level: 1
+    horizontal-per-level: 0.9
+    vertical-knockback: 0.35
+    hit-delay-ticks: 8
 sumo:
   radius: 4
   floor-y: 64
@@ -67,7 +80,5 @@ sg-chest:
 pvp:
   legacy-combat: true
 
-# A duel that ends with both duellists still here offers both a rematch; it is on once both asked within this long
-# of each other, and the restart countdown above is the last chance to ask.
 rematch:
   window-seconds: 15

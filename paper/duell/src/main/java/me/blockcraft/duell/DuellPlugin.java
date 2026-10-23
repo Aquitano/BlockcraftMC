@@ -22,14 +22,15 @@ import me.blockcraft.duell.config.DuellConfig;
 import me.blockcraft.duell.config.Spawns;
 import me.blockcraft.duell.arena.SumoArena;
 import me.blockcraft.duell.game.Duel;
+import me.blockcraft.duell.game.DuelGames;
+import me.blockcraft.api.game.rush.MapPool;
+import me.blockcraft.api.game.rush.RushArena;
+import me.blockcraft.api.game.rush.RushConfig;
+import org.bukkit.NamespacedKey;
 import me.blockcraft.duell.game.DuelRatings;
 import me.blockcraft.duell.game.GameItems;
 import me.blockcraft.duell.listener.ConnectionListener;
 import me.blockcraft.duell.listener.ProtectionListener;
-import me.blockcraft.duell.listener.SgListener;
-import me.blockcraft.duell.listener.SuperJumpListener;
-import me.blockcraft.duell.listener.VsListener;
-import me.blockcraft.duell.listener.SumoListener;
 import org.bukkit.Bukkit;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -55,22 +56,26 @@ public final class DuellPlugin extends JavaPlugin {
 
         var items = new GameItems(messages);
         var topList = new TopList(this, stats, messages);
-        var statsMenus = StatsMenus.ranked(messages, stats, topList, gameConfig.globalStatsHead());
-        duel = new Duel(this, gameConfig, config, messages, spawns, new SumoArena(config.sumo()), stats, statsMenus, items,
+        var statsMenus = config.ratedEnabled()
+                ? StatsMenus.ranked(messages, stats, topList, gameConfig.globalStatsHead())
+                : StatsMenus.of(messages, stats, topList, gameConfig.globalStatsHead(), "menu.stats.player-unrated-lore");
+        var rushConfig = RushConfig.from(getConfig().getConfigurationSection("mlgrush") == null
+                ? new org.bukkit.configuration.file.YamlConfiguration() : getConfig().getConfigurationSection("mlgrush"));
+        var rushMaps = MapPool.load(getDataPath().resolve("rush/maps.yml"), rushConfig.arena());
+        var rushArena = new RushArena(rushMaps.maps().getFirst(), new NamespacedKey(this, "rush"));
+        var lootChests = new LootChests(config.loot());
+        var games = new DuelGames(this, config, messages, spawns, new SumoArena(config.sumo()),
+                rushArena, rushConfig, rushMaps, items, lootChests);
+        duel = new Duel(this, gameConfig, config, messages, spawns, games, stats, statsMenus,
                 new DuelRatings(this, messages, api.elo()), pairs);
         api.presence().maxPlayers(Duel.MAX_PARTICIPANTS);
-        var lootChests = new LootChests(config.loot());
 
         List.of(
                 new ConnectionListener(duel),
                 new ProtectionListener(duel, api.buildMode()),
                 new LobbyProtection(() -> !duel.isIngame(), api.buildMode(), duel::lobbySpawn),
                 new ArenaProtection(duel::frozen),
-                duel.lobbyHotbar(),
-                new VsListener(duel),
-                new SgListener(duel, lootChests),
-                new SuperJumpListener(duel),
-                new SumoListener(duel, config.sumo())
+                duel.lobbyHotbar()
         ).forEach(this::register);
 
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {

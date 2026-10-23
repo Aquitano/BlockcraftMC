@@ -22,7 +22,8 @@ public record DuellConfig(
         CombatStyle combat,
         Duration rematchWindow,
         SumoConfig sumo,
-        Duration tourIntermission
+        Duration tourIntermission,
+        boolean ratedEnabled
 ) {
 
     public DuellConfig {
@@ -48,7 +49,7 @@ public record DuellConfig(
         }
         return new DuellConfig(
                 new Countdowns(
-                        countdown.getInt("freeze", 5),
+                        countdown.getInt("freeze", 3),
                         countdown.getInt("round", 600)),
                 config.getInt("rewards.kill", 0),
                 config.getInt("rewards.win", 10),
@@ -58,7 +59,8 @@ public record DuellConfig(
                 CombatStyle.from(config),
                 Duration.ofSeconds(config.getInt("rematch.window-seconds", 15)),
                 SumoConfig.from(config),
-                Duration.ofSeconds(config.getInt("tour.intermission-seconds", 3)));
+                Duration.ofSeconds(config.getInt("tour.intermission-seconds", 3)),
+                config.getBoolean("rating.enabled", false));
     }
 
     private static ConfigurationSection section(FileConfiguration config, String key) {

@@ -1,4 +1,4 @@
-package me.blockcraft.mlgrush.config;
+package me.blockcraft.api.game.rush;
 
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
@@ -80,13 +80,21 @@ public record MapPool(List<ArenaMap> maps, String selection) {
     public static MapPool load(Path file, RushConfig.ArenaSettings bounds) {
         var yaml = new YamlConfiguration();
         try {
+            if (java.nio.file.Files.notExists(file)) {
+                var parent = file.toAbsolutePath().getParent();
+                java.nio.file.Files.createDirectories(parent);
+                try (var bundled = Objects.requireNonNull(MapPool.class.getResourceAsStream("/rush/maps.yml"))) {
+                    java.nio.file.Files.copy(bundled, file);
+                }
+            }
             yaml.load(file.toFile());
         } catch (IOException | InvalidConfigurationException e) {
             throw new IllegalArgumentException("Could not load " + file, e);
         }
         try (var defaults = new InputStreamReader(
-                Objects.requireNonNull(MapPool.class.getResourceAsStream("/maps.yml")), StandardCharsets.UTF_8)) {
-            return from(yaml, bounds, YamlConfiguration.loadConfiguration(defaults));
+                Objects.requireNonNull(MapPool.class.getResourceAsStream("/rush/maps.yml")), StandardCharsets.UTF_8)) {
+            var bundled = YamlConfiguration.loadConfiguration(defaults);
+            return yaml.getConfigurationSection("maps") == null ? from(bundled, bounds) : from(yaml, bounds, bundled);
         } catch (IOException e) {
             throw new IllegalArgumentException("Could not read bundled maps.yml", e);
         }

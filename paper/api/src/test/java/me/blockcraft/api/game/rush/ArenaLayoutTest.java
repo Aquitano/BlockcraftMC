@@ -1,7 +1,7 @@
-package me.blockcraft.mlgrush.arena;
+package me.blockcraft.api.game.rush;
 
-import me.blockcraft.mlgrush.config.MapPool;
-import me.blockcraft.mlgrush.config.RushConfig.ArenaSettings;
+import me.blockcraft.api.game.rush.MapPool;
+import me.blockcraft.api.game.rush.RushConfig.ArenaSettings;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.junit.Test;
@@ -133,7 +133,7 @@ public class ArenaLayoutTest {
 
     private static List<ArenaLayout> layouts() {
         var yaml = YamlConfiguration.loadConfiguration(new InputStreamReader(
-                Objects.requireNonNull(ArenaLayoutTest.class.getResourceAsStream("/maps.yml")), StandardCharsets.UTF_8));
+                Objects.requireNonNull(ArenaLayoutTest.class.getResourceAsStream("/rush/maps.yml")), StandardCharsets.UTF_8));
         return MapPool.from(yaml, new ArenaSettings(4, 16, 64, 48)).maps().stream()
                 .map(map -> new ArenaLayout(map.dimensions(), map.palette(), map.geometry())).toList();
     }

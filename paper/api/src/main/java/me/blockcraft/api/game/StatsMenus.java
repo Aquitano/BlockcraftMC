@@ -47,23 +47,31 @@ public final class StatsMenus {
     private final TopList topList;
     private final String globalHead;
     private final boolean ranked;
+    private final String playerLore;
 
-    private StatsMenus(Messages messages, StatsRepository stats, TopList topList, String globalHead, boolean ranked) {
+    private StatsMenus(Messages messages, StatsRepository stats, TopList topList, String globalHead, boolean ranked,
+                       String playerLore) {
         this.messages = messages;
         this.stats = stats;
         this.topList = topList;
         this.globalHead = globalHead;
         this.ranked = ranked;
+        this.playerLore = playerLore;
     }
 
     /** {@code globalHead} names the player whose skin the global entry wears. */
     public static StatsMenus of(Messages messages, StatsRepository stats, TopList topList, String globalHead) {
-        return new StatsMenus(messages, stats, topList, globalHead, false);
+        return of(messages, stats, topList, globalHead, "menu.stats.player-lore");
+    }
+
+    public static StatsMenus of(Messages messages, StatsRepository stats, TopList topList, String globalHead,
+                                String playerLore) {
+        return new StatsMenus(messages, stats, topList, globalHead, false, playerLore);
     }
 
     /** Lore lines may use the rating's tags as well, {@code <rating>} and {@code <group>}. */
     public static StatsMenus ranked(Messages messages, StatsRepository stats, TopList topList, String globalHead) {
-        return new StatsMenus(messages, stats, topList, globalHead, true);
+        return new StatsMenus(messages, stats, topList, globalHead, true, "menu.stats.player-lore");
     }
 
     public void open(Player viewer) {
@@ -109,7 +117,7 @@ public final class StatsMenus {
         protected ItemStack icon(Entry entry) {
             return Items.head(entry.player().getUniqueId(), entry.player().getName())
                     .name(messages.get("menu.stats.player", entry.numbers()))
-                    .lore(messages.getLines("menu.stats.player-lore", entry.numbers()))
+                    .lore(messages.getLines(playerLore, entry.numbers()))
                     .build();
         }
 

@@ -27,6 +27,7 @@ public final class DuelVote {
 
     private final Map<UUID, Choice> choices = new HashMap<>();
     private final Map<UUID, DuelSeries.Format> formats = new HashMap<>();
+    private final Map<UUID, DuelRating> ratings = new HashMap<>();
     private Optional<DuelMode> forced = Optional.empty();
 
     /** The voter's earlier choice, which this one replaces. */
@@ -37,6 +38,7 @@ public final class DuelVote {
     void withdraw(UUID voter) {
         choices.remove(voter);
         formats.remove(voter);
+        ratings.remove(voter);
     }
 
     void clearChoice(UUID voter) {
@@ -57,6 +59,20 @@ public final class DuelVote {
                 ? DuelSeries.Format.TOUR : DuelSeries.Format.SINGLE;
     }
 
+    void chooseRating(UUID voter, DuelRating rating) {
+        ratings.put(voter, rating);
+    }
+
+    public DuelRating ratingChoice(UUID voter) {
+        return ratings.getOrDefault(voter, DuelRating.UNRATED);
+    }
+
+    public DuelRating selectedRating(List<UUID> participants, boolean ratedEnabled) {
+        return ratedEnabled && participants.size() == 2 && !participants.getFirst().equals(participants.getLast())
+                && participants.stream().allMatch(player -> ratingChoice(player) == DuelRating.RATED)
+                ? DuelRating.RATED : DuelRating.UNRATED;
+    }
+
     List<DuelMode> nominations() {
         return choices.values().stream().map(Choice::mode).distinct().sorted().toList();
     }
@@ -68,6 +84,14 @@ public final class DuelVote {
 
     public Optional<DuelMode> forced() {
         return forced;
+    }
+
+    void clearForced() {
+        forced = Optional.empty();
+    }
+
+    void clearRatings() {
+        ratings.clear();
     }
 
     public Optional<Choice> choiceOf(UUID voter) {

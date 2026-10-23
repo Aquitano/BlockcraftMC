@@ -1,4 +1,4 @@
-package me.blockcraft.mlgrush.listener;
+package me.blockcraft.api.game.rush;
 
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -19,7 +19,7 @@ public class RushRulesTest {
 
     @Test
     public void ordinaryBlocksAllowPlacementWhileBedsRemainUnusable() {
-        var rules = new RushRules(null, null, null, null);
+        var rules = new RushRules(null, null, null, player -> true);
         var bridge = interaction(Material.RED_TERRACOTTA);
         rules.onInteract(bridge);
         assertEquals(Event.Result.ALLOW, bridge.useInteractedBlock());
@@ -33,6 +33,15 @@ public class RushRulesTest {
         rules.onInteract(protectedClick);
         assertEquals(Event.Result.DENY, protectedClick.useInteractedBlock());
         assertEquals(Event.Result.DENY, protectedClick.useItemInHand());
+    }
+
+    @Test
+    public void outsidersAndOtherArenasKeepTheirInteractionState() {
+        var rules = new RushRules(null, null, null, player -> false);
+        var bed = interaction(Material.RED_BED);
+        rules.onInteract(bed);
+        assertEquals(Event.Result.ALLOW, bed.useInteractedBlock());
+        assertEquals(Event.Result.DEFAULT, bed.useItemInHand());
     }
 
     private static PlayerInteractEvent interaction(Material material) {

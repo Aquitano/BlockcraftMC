@@ -28,7 +28,7 @@ public class RushPresenceTest {
 
     private static ServerRecord server(int connected, int participants, int proxyOccupancy) {
         return new ServerRecord(new ServerIdentity("mlgrush", "mlgrush", "localhost", 25565),
-                new ServerStatus(ServerState.LOBBY, connected, RushGame.advertisedCapacity(connected, participants), 20, 0),
+                new ServerStatus(ServerState.LOBBY, connected, StandaloneRushGame.advertisedCapacity(connected, participants), 20, 0),
                 proxyOccupancy);
     }
 }

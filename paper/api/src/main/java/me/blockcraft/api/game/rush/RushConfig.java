@@ -1,4 +1,4 @@
-package me.blockcraft.mlgrush.config;
+package me.blockcraft.api.game.rush;
 
 import org.bukkit.configuration.ConfigurationSection;
 

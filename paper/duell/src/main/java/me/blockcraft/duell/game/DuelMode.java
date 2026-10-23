@@ -7,7 +7,8 @@ public enum DuelMode {
     VS("1vs1", "vs"),
     SG("SG", "sg"),
     SUPERJUMP("SJ", "superjump"),
-    SUMO("sumo", "sumo");
+    SUMO("sumo", "sumo"),
+    MLGRUSH("mlgrush", "mlgrush");
 
     private final String setupKey;
     private final String configKey;

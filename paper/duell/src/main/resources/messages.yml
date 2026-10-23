@@ -18,9 +18,10 @@ mode:
   sg: "SurvivalGames"
   superjump: "SuperJump"
   sumo: "Sumo"
+  mlgrush: "MLG Rush"
 
 join:
-  introduction: "<prefix><muted>Wähle Einzelspiel oder 3-Modi-Tour und stimm über Modus und Map ab. <duell>Ein Gegner."
+  introduction: "<prefix><muted>Ein Gegner, eure Spielauswahl. Wählt oben das Format und darunter Modus und Map."
   spectator: "<prefix><muted>Du bist als Zuschauer beigetreten."
 
 # <map> is the map's name or vote.random-map; option names a vote in its confirmation.
@@ -43,6 +44,13 @@ tour:
   format-tour: "3-Modi-Tour"
   format-waiting: "<prefix><muted>Die Tour startet nur, wenn ihr beide die 3-Modi-Tour wählt. Bis dahin bleibt es beim Einzelspiel."
   format-request: "<prefix><accent><player> <muted>möchte eine 3-Modi-Tour. Wähle in der Abstimmung ebenfalls die Tour, um zuzustimmen."
+
+rating:
+  chosen: "<prefix><muted>Deine Wertung: <accent><rating><muted>."
+  waiting: "<prefix><muted>Gewertet spielt ihr nur, wenn ihr beide zustimmt. Sonst bleibt es ungewertet."
+  request: "<prefix><accent><player> <muted>möchte gewertet spielen. Du kannst in der Spielauswahl zustimmen."
+  unrated: "Ungewertet"
+  rated: "Gewertet"
 
 round:
   ended: "<prefix><muted>Die Runde wurde beendet."
@@ -74,6 +82,14 @@ sumo:
   point: "<prefix><accent><player> <muted>erhält einen Punkt! <accent><score><muted>/<accent><target> <muted>Punkte."
   next-point: "<duell>Sumo <dark>· <muted>Nächster Punkt"
 
+mlgrush:
+  point: "<prefix><accent><player> <muted>bricht das Bett! <accent><score><muted>/<accent><target> <muted>Punkte."
+  started: "<prefix><muted>Baue zum Gegner und brich sein Bett. Wer zuerst <accent><target> Punkte <muted>hat, gewinnt."
+  result: "<muted>Deine Rush-Bilanz: <accent><score><muted>/<accent><target> <muted>Punkte."
+  item-stick: "<primary>Knockback-Stick"
+  item-blocks: "<primary>Baublöcke"
+  item-pickaxe: "<primary>Spitzhacke"
+
 title:
   start: "<muted>Start!"
   vs-round: "<primary>Runde <round>"
@@ -94,6 +110,7 @@ top:
 
 item:
   vote: "<arrow><primary>Abstimmung"
+  rematch: "<arrow><duell>Revanche"
   vs-kit:
     helmet: "<primary>Helm"
     chestplate: "<primary>Harnisch"
@@ -133,16 +150,31 @@ menu:
     random-lore:
       - "<muted>Keine Modus- oder Map-Vorgabe."
       - "<left>Dem Zufall überlassen"
-    mlgrush: "<arrow><mlgrush>Zu MLG Rush"
-    mlgrush-lore:
-      - "<muted>Eigener Spielserver und eigene Stats."
-      - "<left>Server wechseln"
+    mlgrush: "<arrow><primary>MLG Rush"
+    mlgrush-lore: "<muted>Brücken bauen, Betten brechen."
+  rating:
+    unrated: "<arrow><primary>Ungewertet"
+    unrated-lore:
+      - "<muted>XP, Coins und Stats zählen."
+      - "<muted>Deine Elo bleibt unverändert."
+    rated: "<arrow><primary>Gewertet"
+    rated-lore:
+      - "<muted>Die ganze Begegnung zählt für deine Elo."
+      - "<muted>Nur wenn ihr beide zustimmt."
+    waiting: "<muted>Aktuell: <accent>Ungewertet"
+    agreed: "<success>Beide spielen gewertet."
+    toggle: "<left>Wertung wechseln"
   maps:
     title: "<arrow><duell><mode> <dark>· <muted>Eure Map"
     map: "<arrow><primary><map>"
   stats:
     title: "<arrow><duell>Duell <dark>· <muted>Stats"
     player: "<accent><player>"
+    player-unrated-lore:
+      - "<arrow><primary>Kills<dark>: <muted><kills>"
+      - "<arrow><primary>Siege<dark>: <muted><wins>"
+      - "<arrow><primary>Tode<dark>: <muted><deaths>"
+      - "<arrow><primary>K/D<dark>: <muted><kdr>"
     player-lore:
       - "<arrow><primary>Kills<dark>: <muted><kills>"
       - "<arrow><primary>Siege<dark>: <muted><wins>"
@@ -169,12 +201,14 @@ scoreboard:
   kills: "<muted><icon:kills> KILLS"
   points: "<muted><icon:kills> PUNKTE"
   mode: "<muted><icon:mode> MODUS"
+  mode-rating: "<mode> <dark>· <muted><rating>"
   tour: "<muted><icon:mode> TOUR"
   tour-progress: "<muted>Spiel <accent><game><muted>/<accent><total>"
   tour-score: "<accent><wins> <dark>: <accent><opponent-wins>"
   mode-voting: "<muted>Abstimmung läuft"
   mode-leading: "<mode> <muted>führt"
   group-value: "<arrow><group> <dark>(<white><rating><dark>)"
+  rating: "<muted>Wertung <dark>· <accent><rating>"
   map-random: "<muted>Wird ausgewählt"
   opponent: "<muted><icon:opponent> GEGNER"
   opponent-none: "<muted>Warte auf einen Gegner"

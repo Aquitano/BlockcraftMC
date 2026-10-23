@@ -28,6 +28,11 @@ public final class LootChests {
         this.totalWeight = loot.entries().stream().mapToInt(LootTable.Entry::weight).sum();
     }
 
+    public void clear() {
+        opened.values().forEach(inventory -> inventory.getViewers().stream().toList().forEach(org.bukkit.entity.HumanEntity::closeInventory));
+        opened.clear();
+    }
+
     public boolean isFresh(Location location) {
         return !opened.containsKey(location.toBlockLocation());
     }

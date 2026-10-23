@@ -93,16 +93,22 @@ public final class GameSidebar {
         return sections.stream().mapToInt(section -> 1 + section.values().size()).sum() + Math.max(0, sections.size() - 1);
     }
 
-    /** A blank row between sections, none after the last, to keep within {@link #MAX_ROWS}. */
-    private void show(Player viewer, List<Section> frame, List<Section> game) {
+    static List<Component> layout(List<Section> sections) {
+        int contentRows = sections.stream().mapToInt(section -> 1 + section.values().size()).sum();
+        int gaps = Math.min(Math.max(0, MAX_ROWS - contentRows), Math.max(0, sections.size() - 1));
         var lines = new ArrayList<Component>();
-        for (var section : Stream.concat(frame.stream(), game.stream()).toList()) {
-            if (!lines.isEmpty()) {
+        for (var section : sections) {
+            if (!lines.isEmpty() && gaps > 0) {
                 lines.add(Component.empty());
+                gaps--;
             }
             lines.add(section.heading());
             lines.addAll(section.values());
         }
-        sidebar.show(viewer, lines);
+        return List.copyOf(lines);
+    }
+
+    private void show(Player viewer, List<Section> frame, List<Section> game) {
+        sidebar.show(viewer, layout(Stream.concat(frame.stream(), game.stream()).toList()));
     }
 }

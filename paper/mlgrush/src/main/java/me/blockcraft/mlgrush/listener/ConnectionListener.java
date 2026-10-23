@@ -2,7 +2,7 @@ package me.blockcraft.mlgrush.listener;
 
 import me.blockcraft.api.spectate.SpectateRequestEvent;
 import me.blockcraft.api.vanish.VanishChangeEvent;
-import me.blockcraft.mlgrush.game.RushGame;
+import me.blockcraft.mlgrush.game.StandaloneRushGame;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -12,9 +12,9 @@ import org.bukkit.event.player.PlayerResourcePackStatusEvent;
 
 public final class ConnectionListener implements Listener {
 
-    private final RushGame game;
+    private final StandaloneRushGame game;
 
-    public ConnectionListener(RushGame game) {
+    public ConnectionListener(StandaloneRushGame game) {
         this.game = game;
     }
 

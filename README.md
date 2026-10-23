@@ -13,7 +13,7 @@ paper/api                BlockcraftAPI: library plugin owning the database pool,
 paper/bedwars            BedWars, a port of rewi-bw (see "BedWars")
 paper/core               BlockcraftCore: staff/utility commands, chat moderation enforcement
 paper/lobby              Lobby: join items, server compass, cosmetics, premium shop, secrets
-paper/duell              Duell: 1v1 duels (vs, sg, superjump, sumo)
+paper/duell              Duell: single games and three-mode tours (vs, sg, superjump, sumo, mlgrush)
 paper/emeraldrush        EmeraldRush minigame
 paper/mlgrush            MLG Rush: two players, knockback sticks, beds, first to five
 paper/quicksg            QuickSG survival games
@@ -176,7 +176,7 @@ Name and builders show in the title every server greets a player with (`arrival`
 Every server group has a template directory, `worlds/<group>` in this repository, mounted into the container and
 named by `BLOCKCRAFT_WORLD_TEMPLATE` (or `world.template` in `plugins/BlockcraftAPI/config.yml`). BlockcraftAPI
 replaces the world folder with a copy of the template before Paper loads it, so a restart also resets the map:
-nothing a round, a gadget or a builder left behind survives. MLG Rush resets its generated arena between matches
+nothing a round, a gadget or a builder left behind survives. Duell and MLG Rush reset their gameplay between matches
 without restarting the server. A template
 without a `level.dat` is left alone and the server keeps whatever world it has, which is how a map is made in the
 first place; no template at all means a plain persistent world.
@@ -231,8 +231,11 @@ or the first hotbar item. Once both agree, the arena resets, a map is selected, 
 When an opponent leaves, the server returns to its waiting phase and fills open seats from non-vanished spectators
 in arrival order. An empty backend still stops after `idle-restart-minutes`.
 
-Duell's mode chooser also offers MLG Rush. That entry joins the existing `mlgrush` group, configured through
-Duell's `navigation.mlgrush-group`; MLG Rush keeps its own rules and stats.
+Duell also offers MLG Rush as a native mode in singles and tours. Both hosts use `paper/api/game/rush` for maps,
+equipment, knockback and scoring. The standalone `mlgrush` group keeps its existing entry point and `mlgrush_stats`;
+native Duell matches contribute only to `duell_stats`. Existing statistics are not moved or counted twice.
+Native gameplay settings live under `mlgrush` in Duell's config, with its procedural maps in
+`plugins/Duell/rush/maps.yml`. An explicit Duell map vote takes priority over that file's standalone selection preset.
 
 ### Select and configure maps
 
@@ -297,17 +300,17 @@ loss height gives the opponent one point, resets both players, and starts a thre
 The first player to three points wins. At the round time limit, the player with more points wins, or equal scores draw.
 
 Duell's `sumo` config section controls the radius, floor and loss heights, spawn distance, target score, reset
-duration, knockback strength, and hit delay. Sumo uses Duell's stats, Elo, win rewards, and rematch flow.
+duration, knockback strength, and hit delay. Sumo uses Duell's stats, win rewards, rating choice, and rematch flow.
 Each knockout counts as a kill for stats and network XP. The damage-free win achievement excludes Sumo.
 
 ### Single game and three-mode tour
 
 Duell's vote menu offers `Einzelspiel` and `3-Modi-Tour`. Single game is the default. A tour requires both
 participants to select it before the lobby countdown finishes. It schedules three distinct playable modes from
-VS, SG, SuperJump, and Sumo. Each player's mode vote nominates that mode; remaining places are drawn randomly,
+VS, SG, SuperJump, Sumo, and MLG Rush. Each player's mode vote nominates that mode; remaining places are drawn randomly,
 and the order is shuffled and announced before play. Map votes still apply within their modes. Without nominations,
 all three modes are random. A forced mode takes one tour place. Fewer than three playable modes falls back to a
-single game with an explanation. MLG Rush remains a separate navigation entry.
+single game with an explanation. Format tabs sit above the mode choices; map voting follows the selected mode.
 
 Every tour plays all three games, including at 2:0. A drawn game consumes its place; equal game wins after the third
 game draw the tour. Games retain their normal point rules, reset equipment and checkpoints, alternate starting
@@ -315,8 +318,14 @@ slots, and continue on the same backend. `tour.intermission-seconds` controls th
 by default. Leaving or vanishing during a tour forfeits the whole series, including during transitions.
 
 Kills and deaths accumulate across the tour. The final result grants win coins, win XP, participation XP, the
-account-level win or loss, and Elo once. One combined recap follows the tour. Duell's existing restart and rematch
-flow runs after the final result.
+account-level win or loss once. One combined recap follows the tour. Both players can accept a local rematch without
+restarting the backend. The same pair keeps its format and mode preferences; a new opponent starts with fresh choices.
+SG loot, equipment, scores and round accounting reset between matches.
+
+Format and rating are independent. `rating.enabled` defaults to `false`, so both single games and tours are
+unrated while still earning normal XP, coins and statistics. Historical Elo is preserved. Enabling the flag exposes
+a separate rating choice; a series is rated only when both players explicitly choose it. A decided rated series
+settles Elo once, including forfeits. Rematches reset rating consent.
 
 ## BedWars
 

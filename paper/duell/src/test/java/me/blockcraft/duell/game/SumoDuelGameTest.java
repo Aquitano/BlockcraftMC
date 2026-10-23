@@ -1,4 +1,4 @@
-package me.blockcraft.duell.listener;
+package me.blockcraft.duell.game;
 
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -11,7 +11,7 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
-public class SumoListenerTest {
+public class SumoDuelGameTest {
 
     @Test
     public void nativeKnockbackUsesTheAttackersDirectionAndSynchronizesTheResult() {
@@ -50,7 +50,7 @@ public class SumoListenerTest {
                     default -> throw new AssertionError(method.getName());
                 });
 
-        SumoListener.knockback(victim, attacker, 0.4);
+        SumoDuelGame.knockback(victim, attacker, 0.4);
 
         assertEquals(List.of("native", "read", "sync", "hurt"), calls);
     }

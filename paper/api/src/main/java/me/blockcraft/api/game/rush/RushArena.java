@@ -1,6 +1,6 @@
-package me.blockcraft.mlgrush.arena;
+package me.blockcraft.api.game.rush;
 
-import me.blockcraft.mlgrush.config.MapPool.ArenaMap;
+import me.blockcraft.api.game.rush.MapPool.ArenaMap;
 import org.bukkit.Difficulty;
 import org.bukkit.GameRules;
 import org.bukkit.Location;
@@ -25,10 +25,14 @@ public final class RushArena {
     private final Set<ArenaLayout.Position> placed = new HashSet<>();
 
     public RushArena(ArenaMap map) {
+        this(map, new NamespacedKey("mlgrush", map.key()));
+    }
+
+    public RushArena(ArenaMap map, NamespacedKey worldKey) {
         this.map = map;
         var dimensions = map.dimensions();
         layout = new ArenaLayout(dimensions, map.palette(), map.geometry());
-        world = Objects.requireNonNull(WorldCreator.ofKey(new NamespacedKey("mlgrush", map.key()))
+        world = Objects.requireNonNull(WorldCreator.ofKey(worldKey)
                 .generator(new ChunkGenerator() { }).createWorld(), "Could not create MLG Rush arena");
         world.setAutoSave(false);
         world.setDifficulty(Difficulty.PEACEFUL);

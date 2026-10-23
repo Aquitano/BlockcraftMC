@@ -1,7 +1,9 @@
-package me.blockcraft.mlgrush.config;
+package me.blockcraft.api.game.rush;
 
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.junit.Test;
+import org.junit.Rule;
+import org.junit.rules.TemporaryFolder;
 
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
@@ -17,6 +19,23 @@ import static org.junit.Assert.assertTrue;
 public class MapPoolTest {
 
     private static final RushConfig.ArenaSettings BOUNDS = new RushConfig.ArenaSettings(4, 16, 64, 48);
+
+    @Rule
+    public final TemporaryFolder temporary = new TemporaryFolder();
+
+    @Test
+    public void createsAnEditableNativePoolWithoutOverwritingExistingChoices() throws Exception {
+        var file = temporary.getRoot().toPath().resolve("rush/maps.yml");
+        assertEquals(6, MapPool.load(file, BOUNDS).maps().size());
+        assertTrue(java.nio.file.Files.isRegularFile(file));
+        var customized = YamlConfiguration.loadConfiguration(file.toFile());
+        customized.set("selection", "quartz");
+        customized.set("maps.quartz.name", "Meine Brücke");
+        customized.save(file.toFile());
+        var contents = java.nio.file.Files.readString(file);
+        assertEquals("Meine Brücke", MapPool.load(file, BOUNDS).choose(new Random()).name());
+        assertEquals(contents, java.nio.file.Files.readString(file));
+    }
 
     @Test
     public void shipsSixDifferentLayoutsAndCanPinAnEnabledMap() {
@@ -143,6 +162,6 @@ public class MapPoolTest {
 
     private static YamlConfiguration defaults() {
         return YamlConfiguration.loadConfiguration(new InputStreamReader(
-                Objects.requireNonNull(MapPoolTest.class.getResourceAsStream("/maps.yml")), StandardCharsets.UTF_8));
+                Objects.requireNonNull(MapPoolTest.class.getResourceAsStream("/rush/maps.yml")), StandardCharsets.UTF_8));
     }
 }

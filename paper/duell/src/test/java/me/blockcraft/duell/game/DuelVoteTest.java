@@ -110,7 +110,7 @@ public class DuelVoteTest {
 
     @Test
     public void withoutAnyPlayableMapsOrVotesAnyModeKeepsItsFallbackMap() {
-        assertEquals(new DuelVote.Outcome(DuelMode.SUMO, 1), new DuelVote().tally(Map.of(), LAST));
+        assertEquals(new DuelVote.Outcome(DuelMode.MLGRUSH, 1), new DuelVote().tally(Map.of(), LAST));
     }
 
     @Test
@@ -135,6 +135,32 @@ public class DuelVoteTest {
     }
 
     @Test
+    public void ratingRequiresTheReleaseSwitchAndBothPlayersConsentIndependentlyOfFormat() {
+        var vote = new DuelVote();
+        var first = UUID.randomUUID();
+        var second = UUID.randomUUID();
+        var spectator = UUID.randomUUID();
+        var players = List.of(first, second);
+
+        assertEquals(DuelRating.UNRATED, vote.selectedRating(players, true));
+        vote.chooseRating(first, DuelRating.RATED);
+        vote.chooseRating(spectator, DuelRating.RATED);
+        assertEquals(DuelRating.UNRATED, vote.selectedRating(players, true));
+        vote.chooseRating(second, DuelRating.RATED);
+        assertEquals(DuelRating.UNRATED, vote.selectedRating(players, false));
+        assertEquals(DuelRating.RATED, vote.selectedRating(players, true));
+        assertEquals(DuelSeries.Format.SINGLE, vote.selectedFormat(players));
+        vote.chooseFormat(first, DuelSeries.Format.TOUR);
+        vote.chooseFormat(second, DuelSeries.Format.TOUR);
+        assertEquals(DuelRating.RATED, vote.selectedRating(players, true));
+        assertEquals(DuelRating.UNRATED, vote.selectedRating(List.of(first), true));
+        assertEquals(DuelRating.UNRATED, vote.selectedRating(List.of(first, first), true));
+        vote.withdraw(second);
+        assertEquals(DuelRating.UNRATED, vote.ratingChoice(second));
+        assertEquals(DuelRating.UNRATED, vote.selectedRating(players, true));
+    }
+
+    @Test
     public void leavingTheModesToChanceKeepsBothPlayersTourConsent() {
         var vote = new DuelVote();
         var first = UUID.randomUUID();
@@ -148,6 +174,28 @@ public class DuelVoteTest {
         assertTrue(vote.choiceOf(first).isEmpty());
         assertTrue(vote.nominations().isEmpty());
         assertEquals(DuelSeries.Format.TOUR, vote.selectedFormat(List.of(first, second)));
+    }
+
+    @Test
+    public void aRematchRetainsThePairPreferencesButNeedsFreshRatingConsent() {
+        var vote = new DuelVote();
+        var first = UUID.randomUUID();
+        var second = UUID.randomUUID();
+        var choice = new DuelVote.Choice(DuelMode.MLGRUSH, OptionalInt.of(2));
+        vote.cast(first, choice);
+        vote.chooseFormat(first, DuelSeries.Format.TOUR);
+        vote.chooseFormat(second, DuelSeries.Format.TOUR);
+        vote.chooseRating(first, DuelRating.RATED);
+        vote.chooseRating(second, DuelRating.RATED);
+        vote.force(DuelMode.SG);
+
+        vote.clearRatings();
+        vote.clearForced();
+
+        assertEquals(java.util.Optional.of(choice), vote.choiceOf(first));
+        assertEquals(DuelSeries.Format.TOUR, vote.selectedFormat(List.of(first, second)));
+        assertEquals(DuelRating.UNRATED, vote.selectedRating(List.of(first, second), true));
+        assertTrue(vote.forced().isEmpty());
     }
 
     @Test

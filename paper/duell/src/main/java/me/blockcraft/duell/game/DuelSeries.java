@@ -67,6 +67,10 @@ public final class DuelSeries {
         return finished() ? Optional.empty() : Optional.of(schedule.get(gameIndex));
     }
 
+    public boolean complete(DuelSeries expectedSeries, int expectedGameIndex, Optional<UUID> winner) {
+        return this == expectedSeries && complete(expectedGameIndex, winner);
+    }
+
     public boolean complete(int expectedGameIndex, Optional<UUID> winner) {
         if (finished() || expectedGameIndex != gameIndex
                 || winner.filter(player -> !participants.contains(player)).isPresent()) {

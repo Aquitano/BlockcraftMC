@@ -1,8 +1,8 @@
-package me.blockcraft.mlgrush.arena;
+package me.blockcraft.api.game.rush;
 
-import me.blockcraft.mlgrush.config.RushConfig.Dimensions;
-import me.blockcraft.mlgrush.config.MapPool.Palette;
-import me.blockcraft.mlgrush.config.MapPool.Geometry;
+import me.blockcraft.api.game.rush.RushConfig.Dimensions;
+import me.blockcraft.api.game.rush.MapPool.Palette;
+import me.blockcraft.api.game.rush.MapPool.Geometry;
 import org.bukkit.Material;
 
 import java.util.LinkedHashMap;

@@ -15,21 +15,23 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * The ranked side of a duel. Ratings are loaded on join so the sidebar and the tab list can show the group
- * without a query, and a finished round moves them off the main thread before both players hear the result.
- */
+/** Ratings for opted-in series, with their final settlement off the main thread. */
 public final class DuelRatings {
 
     private final Plugin plugin;
     private final Messages messages;
     private final Elo elo;
+    private java.util.function.BooleanSupplier display = () -> false;
     private final Map<UUID, EloRating> ratings = new HashMap<>();
 
     public DuelRatings(Plugin plugin, Messages messages, Elo elo) {
         this.plugin = plugin;
         this.messages = messages;
         this.elo = elo;
+    }
+
+    public void displayWhen(java.util.function.BooleanSupplier display) {
+        this.display = display;
     }
 
     public void load(Player player, Runnable then) {
@@ -59,7 +61,10 @@ public final class DuelRatings {
         }
     }
 
-    public void settle(Player winner, Player loser, Runnable then) {
+    public void settle(DuelRating rating, Player winner, Player loser, Runnable then) {
+        if (rating != DuelRating.RATED) {
+            return;
+        }
         var api = BlockcraftApi.get();
         var winnerId = winner.getUniqueId();
         var winnerName = api.realName(winner);
@@ -96,7 +101,9 @@ public final class DuelRatings {
 
     /** The tab list team carries the rank; the group goes into the name the team wraps. */
     private void showInTab(Player player) {
-        player.playerListName(messages.get("tab.name", elo.placeholders(shown(player)), Placeholder.unparsed("name", player.getName())));
+        if (display.getAsBoolean()) {
+            player.playerListName(messages.get("tab.name", elo.placeholders(shown(player)), Placeholder.unparsed("name", player.getName())));
+        }
     }
 
     private EloRating shown(Player player) {

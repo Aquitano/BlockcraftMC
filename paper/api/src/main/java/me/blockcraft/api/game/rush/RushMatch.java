@@ -1,4 +1,4 @@
-package me.blockcraft.mlgrush.game;
+package me.blockcraft.api.game.rush;
 
 import java.util.List;
 import java.util.HashSet;

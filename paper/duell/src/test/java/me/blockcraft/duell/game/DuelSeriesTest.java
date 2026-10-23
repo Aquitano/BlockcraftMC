@@ -174,4 +174,17 @@ public class DuelSeriesTest {
         assertTrue(single.winner().isEmpty());
         assertFalse(single.complete(0, Optional.of(FIRST)));
     }
+
+    @Test
+    public void aCompletionFromThePreviousSeriesCannotAdvanceTheRematch() {
+        var players = List.of(UUID.randomUUID(), UUID.randomUUID());
+        var schedule = List.of(new DuelVote.Outcome(DuelMode.VS, 1));
+        var previous = new DuelSeries(players, schedule);
+        var rematch = new DuelSeries(players, schedule);
+        assertFalse(rematch.complete(previous, 0, Optional.of(players.getFirst())));
+        assertEquals(0, rematch.gameIndex());
+        assertTrue(rematch.complete(rematch, 0, Optional.of(players.getFirst())));
+        assertFalse(rematch.complete(rematch, 0, Optional.of(players.getLast())));
+        assertEquals(1, rematch.wins(players.getFirst()));
+    }
 }

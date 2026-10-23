@@ -1,7 +1,7 @@
 package me.blockcraft.duell.game;
 
-import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.api.sound.Sounds;
+import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickCallback;
@@ -18,15 +18,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.function.BiConsumer;
+import java.util.function.BiPredicate;
 
-/**
- * The rematch a duel offers when it ends with both duellists still here. The first to ask is told the request is
- * out, and the opponent hears it with a button to accept; once both asked within the window, the proxy seats them
- * together in a fresh duel, or tells them there is no room.
- */
 final class Rematch {
 
-    /** The buttons stay clickable past the restart countdown, like the recap's. */
     private static final ClickCallback.Options BUTTON = ClickCallback.Options.builder()
             .uses(ClickCallback.UNLIMITED_USES)
             .lifetime(Duration.ofMinutes(1))
@@ -69,21 +65,46 @@ final class Rematch {
     private final Plugin plugin;
     private final Messages messages;
     private final Requests requests;
+    private final String identity = UUID.randomUUID().toString();
+    private final BiPredicate<Player, Player> valid;
+    private final BiConsumer<Player, Player> agreed;
+    private final Map<UUID, UUID> opponents = new HashMap<>();
 
-    Rematch(Plugin plugin, Messages messages, Duration window) {
+    Rematch(Plugin plugin, Messages messages, Duration window, BiPredicate<Player, Player> valid,
+            BiConsumer<Player, Player> agreed) {
         this.plugin = plugin;
         this.messages = messages;
         this.requests = new Requests(window);
+        this.valid = valid;
+        this.agreed = agreed;
     }
 
     void offer(Player player, Player opponent) {
         var opponentId = opponent.getUniqueId();
+        opponents.put(player.getUniqueId(), opponentId);
         player.sendMessage(button("rematch.offer", player.getUniqueId(), opponent.getName(), clicker -> ask(clicker, opponentId)));
+    }
+
+    String identity() {
+        return identity;
+    }
+
+    void request(Player player, String itemIdentity) {
+        if (identity.equals(itemIdentity)) {
+            request(player);
+        }
+    }
+
+    void request(Player player) {
+        var opponent = opponents.get(player.getUniqueId());
+        if (opponent != null) {
+            ask(player, opponent);
+        }
     }
 
     private void ask(Player player, UUID opponentId) {
         var opponent = Bukkit.getPlayer(opponentId);
-        if (opponent == null) {
+        if (opponent == null || !valid.test(player, opponent)) {
             player.sendMessage(messages.get("rematch.gone"));
             Sounds.MENU_DENY.play(player);
             return;
@@ -98,7 +119,11 @@ final class Rematch {
                 Sounds.NOTIFY.play(opponent);
             }
             case WAITING -> player.sendMessage(messages.get("rematch.waiting", opponentName));
-            case AGREED -> ProxyMessaging.rematch(plugin, player, opponent);
+            case AGREED -> Tasks.sync(plugin, () -> {
+                if (valid.test(player, opponent)) {
+                    agreed.accept(player, opponent);
+                }
+            });
             case SETTLED -> {
             }
         }
@@ -111,7 +136,7 @@ final class Rematch {
                 .clickEvent(ClickEvent.callback(audience -> {
                     if (audience instanceof Player player && player.getUniqueId().equals(recipient)) {
                         Sounds.MENU_CLICK.play(player);
-                        action.accept(player);
+                        Tasks.sync(plugin, () -> action.accept(player));
                     }
                 }, BUTTON));
     }
