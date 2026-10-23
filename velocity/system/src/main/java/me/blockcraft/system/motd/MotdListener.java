@@ -86,7 +86,8 @@ public final class MotdListener {
             return LegacyComponentSerializer.legacyAmpersand().deserialize(config.defaultMotd());
         }
         var address = String.join(" ", config.network().ip().toUpperCase(Locale.ROOT).split(""));
-        return messages.get("motd.brand", Placeholder.unparsed("ip", address));
+        return messages.get("motd.brand").replaceText(replacement ->
+                replacement.matchLiteral(config.network().ip()).replacement(address));
     }
 
     private Component secondLine(InetAddress address) {
