@@ -11,11 +11,14 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * Every kill of a round, counted in {@code bc_rivalries} by account, and the nemesis (Erzfeind) the counts make. When
@@ -28,7 +31,8 @@ final class Rivalries {
     private final Plugin plugin;
     private final BlockcraftApi api;
     private final Messages messages;
-    private final RivalryRepository repository;
+    private final Function<Collection<UUID>, List<RivalryRepository.Rivalry>> read;
+    private final BiConsumer<UUID, UUID> record;
     private final int lead;
     private final Map<UUID, UUID> nemeses = new HashMap<>();
     private final List<Runnable> afterLoad = new ArrayList<>();
@@ -37,17 +41,23 @@ final class Rivalries {
     private boolean closed;
 
     Rivalries(Plugin plugin, BlockcraftApi api, Messages messages, RivalryRepository repository, int lead) {
+        this(plugin, api, messages, repository::among, repository::add, lead);
+    }
+
+    Rivalries(Plugin plugin, BlockcraftApi api, Messages messages,
+              Function<Collection<UUID>, List<RivalryRepository.Rivalry>> read, BiConsumer<UUID, UUID> record, int lead) {
         this.plugin = plugin;
         this.api = api;
         this.messages = messages;
-        this.repository = repository;
+        this.read = read;
+        this.record = record;
         this.lead = lead;
     }
 
     void load(List<Player> players) {
         loading = true;
         var ids = players.stream().map(Player::getUniqueId).toList();
-        Tasks.async(plugin, () -> new Standings(repository.among(ids)), loaded -> {
+        Tasks.async(plugin, () -> new Standings(read.apply(ids)), loaded -> {
             if (closed) {
                 return;
             }
@@ -64,7 +74,8 @@ final class Rivalries {
 
     void close() {
         closed = true;
-        afterLoad.clear();
+        standings = null;
+        finishLoading();
     }
 
     private void finishLoading() {
@@ -84,7 +95,7 @@ final class Rivalries {
         if (killerId.equals(victimId)) {
             return;
         }
-        Tasks.async(plugin, () -> repository.add(killerId, victimId));
+        Tasks.async(plugin, () -> record.accept(killerId, victimId));
         if (standings == null) {
             return;
         }

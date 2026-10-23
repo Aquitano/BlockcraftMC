@@ -1,6 +1,10 @@
 package me.blockcraft.api.world;
 
+import org.bukkit.Difficulty;
+import org.bukkit.GameRules;
+import org.bukkit.NamespacedKey;
 import org.bukkit.World;
+import org.bukkit.WorldCreator;
 import org.bukkit.entity.AreaEffectCloud;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.ExperienceOrb;
@@ -9,12 +13,30 @@ import org.bukkit.entity.Item;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Projectile;
 import org.bukkit.entity.TNTPrimed;
+import org.bukkit.generator.ChunkGenerator;
 
+import java.util.Objects;
 import java.util.function.Predicate;
 
 public final class Worlds {
 
     private Worlds() {
+    }
+
+    public static World createArena(NamespacedKey key) {
+        var world = Objects.requireNonNull(WorldCreator.ofKey(key)
+                .generator(new ChunkGenerator() { }).createWorld(), "Could not create arena " + key);
+        world.setAutoSave(false);
+        world.setDifficulty(Difficulty.PEACEFUL);
+        world.setGameRule(GameRules.ADVANCE_TIME, false);
+        world.setGameRule(GameRules.ADVANCE_WEATHER, false);
+        world.setGameRule(GameRules.SPAWN_MOBS, false);
+        world.setGameRule(GameRules.RANDOM_TICK_SPEED, 0);
+        world.setGameRule(GameRules.LOCATOR_BAR, false);
+        setTime(world, 6000);
+        world.setStorm(false);
+        world.setThundering(false);
+        return world;
     }
 
     /**

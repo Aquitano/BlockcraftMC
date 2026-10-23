@@ -156,6 +156,10 @@ public final class StandaloneRushGame {
             if (running) {
                 Bukkit.broadcast(messages.get("round.cancelled"));
             }
+            var players = round.players();
+            for (int slot = 0; slot < players.size(); slot++) {
+                teleport(players.get(slot), slot);
+            }
             seatWaitingPlayers();
             countdown.start();
         }
@@ -258,7 +262,6 @@ public final class StandaloneRushGame {
             teleport(player, slot(player));
             hotbar.give(player);
         });
-        arena.reset();
         if (round.playerCount() < MAX_PARTICIPANTS) {
             returnToLobbyLater();
         }

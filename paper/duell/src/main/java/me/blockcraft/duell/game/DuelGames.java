@@ -14,6 +14,7 @@ import org.bukkit.Location;
 import org.bukkit.plugin.Plugin;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -53,6 +54,11 @@ public final class DuelGames {
 
     public List<Integer> rushMaps() {
         return java.util.stream.IntStream.rangeClosed(1, maps.maps().size()).boxed().toList();
+    }
+
+    public Map<DuelMode, Integer> mapPresets() {
+        return rushMaps().stream().filter(map -> maps.maps().get(map - 1).key().equals(maps.selection()))
+                .findFirst().map(map -> Map.of(DuelMode.MLGRUSH, map)).orElseGet(Map::of);
     }
 
     public String rushMapName(int map) {

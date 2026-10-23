@@ -71,7 +71,7 @@ public final class Duel {
     private final LobbyHotbar lobbyHotbar;
     private final NamespacedKey rematchKey;
     private Rematch rematch;
-    private final DuelVote votes = new DuelVote();
+    private final DuelVote votes;
     private final DuelPairRepository pairs;
     private List<UUID> duellists = List.of();
     private DuelSeries series;
@@ -91,6 +91,7 @@ public final class Duel {
         this.messages = messages;
         this.spawns = spawns;
         this.games = games;
+        this.votes = new DuelVote(games.mapPresets());
         this.ratings = ratings;
         this.stats = stats;
         this.recapWrites = new SerialTasks<>(plugin);

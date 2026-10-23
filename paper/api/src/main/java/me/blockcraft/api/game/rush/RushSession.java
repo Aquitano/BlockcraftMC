@@ -137,6 +137,9 @@ public final class RushSession implements AutoCloseable {
     }
 
     private void respawn(Player player) {
+        if (player.isDead()) {
+            return;
+        }
         PlayerReset.reset(player, GameMode.SURVIVAL);
         var spawn = arena.spawn(slot(player));
         player.teleport(spawn);
@@ -148,7 +151,7 @@ public final class RushSession implements AutoCloseable {
 
     private void checkVoid() {
         for (var player : players()) {
-            if (scoped(player) && player.getY() <= config.arena().voidY() && active(player)) {
+            if (!player.isDead() && scoped(player) && player.getY() <= config.arena().voidY() && active(player)) {
                 events.fell(player);
                 if (!closed) {
                     respawn(player);

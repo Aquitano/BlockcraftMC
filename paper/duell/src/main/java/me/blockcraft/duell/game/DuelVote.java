@@ -25,10 +25,19 @@ public final class DuelVote {
     /** Without a playable map the first one is used, and the duel warns that its spawns are missing. */
     private static final int FALLBACK_MAP = 1;
 
+    private final Map<DuelMode, Integer> mapPresets;
     private final Map<UUID, Choice> choices = new HashMap<>();
     private final Map<UUID, DuelSeries.Format> formats = new HashMap<>();
     private final Map<UUID, DuelRating> ratings = new HashMap<>();
     private Optional<DuelMode> forced = Optional.empty();
+
+    public DuelVote() {
+        this(Map.of());
+    }
+
+    public DuelVote(Map<DuelMode, Integer> mapPresets) {
+        this.mapPresets = Map.copyOf(mapPresets);
+    }
 
     /** The voter's earlier choice, which this one replaces. */
     Optional<Choice> cast(UUID voter, Choice choice) {
@@ -123,7 +132,8 @@ public final class DuelVote {
     /**
      * The forced or most-voted mode and, among the votes for it, the most-voted of its {@code playable} maps; ties
      * fall to {@code random}. Without votes any mode with a playable map can come up, and without map votes any
-     * playable map. Votes for unavailable modes are ignored while another mode has a playable map.
+     * playable map unless the mode has a playable preset. Votes for unavailable modes are ignored while another
+     * mode has a playable map.
      */
     public Outcome tally(Map<DuelMode, List<Integer>> playable, Random random) {
         var available = playable.entrySet().stream()
@@ -142,6 +152,10 @@ public final class DuelVote {
 
     Outcome tally(DuelMode mode, List<Integer> maps, Random random) {
         var votedMaps = mostVoted(mapVotes(mode).filter(maps::contains));
+        var preset = mapPresets.get(mode);
+        if (votedMaps.isEmpty() && preset != null && maps.contains(preset)) {
+            return new Outcome(mode, preset);
+        }
         var candidates = votedMaps.isEmpty() ? maps : votedMaps;
         return new Outcome(mode, candidates.isEmpty() ? FALLBACK_MAP : pick(candidates, random));
     }

@@ -1,10 +1,16 @@
 package me.blockcraft.duell.game;
 
+import me.blockcraft.api.game.rush.MapPool;
+import me.blockcraft.api.game.rush.RushConfig;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.junit.Test;
 
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.OptionalInt;
+import java.util.Objects;
 import java.util.Random;
 import java.util.UUID;
 
@@ -45,6 +51,27 @@ public class DuelVoteTest {
 
         assertEquals(new DuelVote.Outcome(DuelMode.SUMO, 1), vote.tally(Map.of(
                 DuelMode.VS, List.of(1, 2), DuelMode.SUMO, List.of(1)), LAST));
+    }
+
+    @Test
+    public void rushUsesItsPinnedMapUnlessAPlayerVotesForAnotherEnabledMap() {
+        var yaml = YamlConfiguration.loadConfiguration(new InputStreamReader(Objects.requireNonNull(
+                getClass().getResourceAsStream("/rush/maps.yml")), StandardCharsets.UTF_8));
+        yaml.set("selection", "courtyard");
+        var pool = MapPool.from(yaml, new RushConfig.ArenaSettings(4, 16, 64, 48));
+        var games = new DuelGames(null, null, null, null, null, null, null, pool, null, null);
+        var vote = new DuelVote(games.mapPresets());
+        var playable = Map.of(DuelMode.MLGRUSH, games.rushMaps(), DuelMode.VS, List.of(1), DuelMode.SUMO, List.of(1));
+        vote.force(DuelMode.MLGRUSH);
+
+        for (var format : DuelSeries.Format.values()) {
+            assertTrue(DuelSeries.plan(format, vote, playable, LAST).contains(new DuelVote.Outcome(DuelMode.MLGRUSH, 2)));
+        }
+        vote.cast(UUID.randomUUID(), new DuelVote.Choice(DuelMode.MLGRUSH, OptionalInt.of(3)));
+        for (var format : DuelSeries.Format.values()) {
+            assertTrue(DuelSeries.plan(format, vote, playable, LAST).contains(new DuelVote.Outcome(DuelMode.MLGRUSH, 3)));
+        }
+        assertEquals(6, games.rushMaps().size());
     }
 
     @Test

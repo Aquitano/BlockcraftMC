@@ -35,7 +35,7 @@ final class SgDuelGame extends MapDuelGame {
     @EventHandler
     public void onChest(PlayerInteractEvent event) {
         var block = event.getClickedBlock();
-        if (!active || !participant(event.getPlayer()) || event.getHand() != EquipmentSlot.HAND
+        if (closed || !participant(event.getPlayer()) || event.getHand() != EquipmentSlot.HAND
                 || event.getAction() != Action.RIGHT_CLICK_BLOCK || block == null
                 || (block.getType() != Material.CHEST && block.getType() != Material.TRAPPED_CHEST)) {
             return;

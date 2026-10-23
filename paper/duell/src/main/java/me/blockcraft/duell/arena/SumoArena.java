@@ -1,14 +1,11 @@
 package me.blockcraft.duell.arena;
 
+import me.blockcraft.api.world.Worlds;
 import me.blockcraft.duell.config.SumoConfig;
-import org.bukkit.Difficulty;
-import org.bukkit.GameRules;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
-import org.bukkit.WorldCreator;
-import org.bukkit.generator.ChunkGenerator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,18 +25,7 @@ public final class SumoArena {
 
     public SumoArena(SumoConfig config) {
         this.config = Objects.requireNonNull(config, "config");
-        world = Objects.requireNonNull(WorldCreator.ofKey(new NamespacedKey("duell", "sumo"))
-                .generator(new ChunkGenerator() { }).createWorld(), "Could not create Sumo arena");
-        world.setAutoSave(false);
-        world.setDifficulty(Difficulty.PEACEFUL);
-        world.setGameRule(GameRules.ADVANCE_TIME, false);
-        world.setGameRule(GameRules.ADVANCE_WEATHER, false);
-        world.setGameRule(GameRules.SPAWN_MOBS, false);
-        world.setGameRule(GameRules.RANDOM_TICK_SPEED, 0);
-        world.setGameRule(GameRules.LOCATOR_BAR, false);
-        world.setTime(6000);
-        world.setStorm(false);
-        world.setThundering(false);
+        world = Worlds.createArena(new NamespacedKey("duell", "sumo"));
         generate(config, position -> world.getBlockAt(position.x(), position.y(), position.z()).getType(),
                 (position, material) -> world.getBlockAt(position.x(), position.y(), position.z()).setType(material, false));
         world.setSpawnLocation(spawn(1));

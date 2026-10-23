@@ -1,17 +1,14 @@
 package me.blockcraft.api.game.rush;
 
 import me.blockcraft.api.game.rush.MapPool.ArenaMap;
-import org.bukkit.Difficulty;
-import org.bukkit.GameRules;
+import me.blockcraft.api.world.Worlds;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
-import org.bukkit.WorldCreator;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.type.Bed;
-import org.bukkit.generator.ChunkGenerator;
 
 import java.util.HashSet;
 import java.util.Objects;
@@ -32,17 +29,7 @@ public final class RushArena {
         this.map = map;
         var dimensions = map.dimensions();
         layout = new ArenaLayout(dimensions, map.palette(), map.geometry());
-        world = Objects.requireNonNull(WorldCreator.ofKey(worldKey)
-                .generator(new ChunkGenerator() { }).createWorld(), "Could not create MLG Rush arena");
-        world.setAutoSave(false);
-        world.setDifficulty(Difficulty.PEACEFUL);
-        world.setGameRule(GameRules.ADVANCE_TIME, false);
-        world.setGameRule(GameRules.ADVANCE_WEATHER, false);
-        world.setGameRule(GameRules.SPAWN_MOBS, false);
-        world.setGameRule(GameRules.RANDOM_TICK_SPEED, 0);
-        world.setGameRule(GameRules.LOCATOR_BAR, false);
-        world.setTime(6000);
-        world.setStorm(false);
+        world = Worlds.createArena(worldKey);
         for (int x = layout.minX(); x <= layout.maxX(); x++) {
             for (int z = -layout.radiusZ(); z <= layout.radiusZ(); z++) {
                 for (int y = dimensions.floorY(); y <= dimensions.floorY() + dimensions.buildHeight(); y++) {
@@ -56,6 +43,10 @@ public final class RushArena {
 
     public void selectMap(ArenaMap next) {
         Objects.requireNonNull(next, "map");
+        if (map.equals(next)) {
+            reset();
+            return;
+        }
         var nextLayout = new ArenaLayout(next.dimensions(), next.palette(), next.geometry());
         layout.clear(placed, (position, material) -> block(position).setType(material, false));
         map = next;

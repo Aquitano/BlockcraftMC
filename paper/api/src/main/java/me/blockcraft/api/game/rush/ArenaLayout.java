@@ -10,13 +10,37 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
 
-public record ArenaLayout(Dimensions dimensions, Palette palette, Geometry geometry) {
+public final class ArenaLayout {
+
+    private final Dimensions dimensions;
+    private final Palette palette;
+    private final Geometry geometry;
+    private final Map<Position, Material> blocks;
+
+    public ArenaLayout(Dimensions dimensions, Palette palette, Geometry geometry) {
+        this.dimensions = dimensions;
+        this.palette = palette;
+        this.geometry = geometry;
+        blocks = createBlocks();
+    }
 
     public ArenaLayout(Dimensions dimensions, Palette palette) {
         this(dimensions, palette, new Geometry(dimensions.baseRadius() * 2 + 1, 0, 0, 0));
     }
 
     public record Position(int x, int y, int z) { }
+
+    public Dimensions dimensions() {
+        return dimensions;
+    }
+
+    public Palette palette() {
+        return palette;
+    }
+
+    public Geometry geometry() {
+        return geometry;
+    }
 
     public int baseX(int slot) {
         return slot == 0 ? -dimensions.baseRadius() - 1 : dimensions.bridgeLength() + dimensions.baseRadius();
@@ -61,6 +85,10 @@ public record ArenaLayout(Dimensions dimensions, Palette palette, Geometry geome
     }
 
     public Map<Position, Material> blocks() {
+        return blocks;
+    }
+
+    private Map<Position, Material> createBlocks() {
         var blocks = new LinkedHashMap<Position, Material>();
         for (int slot = 0; slot < 2; slot++) {
             for (int x = baseX(slot) - dimensions.baseRadius(); x <= baseX(slot) + dimensions.baseRadius(); x++) {
