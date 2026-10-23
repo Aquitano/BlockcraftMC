@@ -70,15 +70,18 @@ public final class Xp implements Listener {
         var uuid = player.getUniqueId();
         var session = sessions.get(uuid);
         awards.submit(uuid, () -> repository.add(uuid, amount), total -> {
-            if (!player.isOnline() || sessions.get(uuid) != session) {
+            var online = plugin.getServer().getPlayer(uuid);
+            if (online == null || !sessions.containsKey(uuid)) {
                 return;
             }
             long cached = totals.merge(uuid, total, Math::max);
             int before = levels.levelFor(total - amount);
             int after = levels.levelFor(total);
-            notifications.xp(player, amount, after > before ? levels.levelFor(cached) : 0);
+            if (online == player && sessions.get(uuid) == session) {
+                notifications.xp(player, amount, after > before ? levels.levelFor(cached) : 0);
+            }
             if (after > before) {
-                plugin.getServer().getPluginManager().callEvent(new LevelUpEvent(player, after));
+                plugin.getServer().getPluginManager().callEvent(new LevelUpEvent(online, levels.levelFor(cached)));
             }
         }, () -> { });
     }
@@ -95,6 +98,7 @@ public final class Xp implements Listener {
         Tasks.async(plugin, () -> repository.get(uuid), total -> {
             if (sessions.get(uuid) == session) {
                 totals.merge(uuid, total, Math::max);
+                plugin.getServer().getPluginManager().callEvent(new XpLoadedEvent(player));
             }
         }, () -> {
             if (sessions.get(uuid) == session) {

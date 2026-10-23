@@ -14,6 +14,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.ArrayList;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -51,14 +52,17 @@ final class ProfileMenu extends Menu {
         var progress = xp.levels().progress(xp.total(viewer));
         recentRound.ifPresent(open -> set(RECAP_SLOT, MenuIcon.RECAP.item()
                 .name(messages.get("profile.recap")).lore(messages.get("profile.recap-lore")).build()));
+        var headLore = new ArrayList<>(messages.getLines("profile.head-lore",
+                Placeholder.component("rank", Ranks.prefix(viewer).orElse(Component.empty())),
+                Formatter.number("level", progress.level()),
+                Formatter.number("next", progress.level() + 1),
+                Formatter.number("missing", progress.needed() - progress.into()),
+                Formatter.number("coins", snapshot.coins())));
+        headLore.add(messages.get("profile.level-cosmetic-lore",
+                Placeholder.component("cosmetic", profiles.achievements().nextCosmetic(progress.level()))));
         info(HEAD_SLOT, Items.head(viewer.getUniqueId(), profiles.realNames().of(viewer))
                 .name(messages.get("profile.head", Placeholder.unparsed("player", viewer.getName())))
-                .lore(messages.getLines("profile.head-lore",
-                        Placeholder.component("rank", Ranks.prefix(viewer).orElse(Component.empty())),
-                        Formatter.number("level", progress.level()),
-                        Formatter.number("next", progress.level() + 1),
-                        Formatter.number("missing", progress.needed() - progress.into()),
-                        Formatter.number("coins", snapshot.coins())))
+                .lore(headLore)
                 .build());
         set(ACHIEVEMENTS_SLOT, MenuIcon.ACHIEVEMENTS.item()
                 .name(messages.get("profile.achievements"))

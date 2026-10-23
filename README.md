@@ -346,6 +346,17 @@ from the database every `hud.refresh-seconds`. Purchases and secret rewards repo
 Every timed phase of a game shows its time on a boss bar; `timer-bar: false` in a game's `config.yml` moves it to the
 sidebar. Levels bought or collected inside a game are labelled as enchantment levels and do not change network XP.
 
+The default XP rewards are 10 for a kill, 50 for a win, and 15 for staying through the round summary. XP is never
+spent and grants no combat advantage. Network level achievements unlock the Aufsteiger chat tag at level 5,
+Veteran at level 10, and Elite at level 25. Their `tag` rewards and level thresholds live under
+`achievements.network` in BlockcraftAPI's config. Earned tags are available without Premium in the lobby's cosmetic
+settings. Existing players receive missing rewards after their XP loads, including when they already own the
+achievement. `/level` and the profile show the next cosmetic milestone.
+
+BedWars, QuickSG, EmeraldRush, every Duell variant, and MLG Rush contribute to this same total. SuperJump and
+MLG Rush award win and participation XP without kill awards. MLG Rush bed points, BedWars bed breaks, EmeraldRush
+mining, and SuperJump checkpoints award no XP directly. Lobby activities can grant one-time achievement XP.
+
 `BlockcraftApi.notifications()` coordinates action bars, titles, and reward sounds. Direct feedback takes priority
 over routine status updates and XP notices. Round titles take priority over achievement titles; interrupted titles
 do not replay. The `notifications` section in BlockcraftAPI's config controls display times, XP batching, and sound

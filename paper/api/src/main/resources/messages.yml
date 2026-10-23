@@ -304,6 +304,7 @@ profile:
     - "<bullet><muted>Level <dark>● <accent><level>"
     - "<bullet><muted>Noch <accent><missing> <muted>XP bis Level <accent><next>"
     - "<bullet><muted>Coins <dark>● <accent><coins>"
+  level-cosmetic-lore: "<bullet><cosmetic>"
   stats-lore:
     - "<bullet><muted>Kills <dark>● <accent><kills>"
     - "<bullet><muted>Tode <dark>● <accent><deaths>"
@@ -349,9 +350,14 @@ xp:
   gained: "<success>+<amount> XP"
   level-up: "<prefix><muted>Du bist jetzt <accent>Level <level><muted>!"
 level:
+  next-cosmetic: "<muted>Nächster Chat-Tag<dark>: <tag> <muted>ab Level <accent><level>"
+  cosmetics-complete: "<muted>Alle Level-Chat-Tags freigeschaltet."
   self: "<prefix><muted>Du bist <accent>Level <level> <muted>und hast <accent><xp><muted>/<accent><next> <muted>XP bis zum nächsten Level."
   other: "<prefix><accent><player> <muted>ist <accent>Level <level> <muted>mit <accent><xp> <muted>XP."
 tags:
+  aufsteiger: "<dark>[<success>AUFSTEIGER<dark>]"
+  veteran: "<dark>[<primary>VETERAN<dark>]"
+  elite: "<dark>[<accent>ELITE<dark>]"
   pro: "<dark>[<gold>PRO<dark>]"
   legend: "<dark>[<light_purple>LEGENDE<dark>]"
   gg: "<dark>[<success>GG<dark>]"
@@ -373,6 +379,7 @@ operation:
 
 # Achievements: the moment one is earned, the menu, and every catalog entry of config.yml by its game and name.
 achievements:
+  tag-unlocked: "<prefix><muted>Chat-Tag freigeschaltet<dark>: <tag><muted>. Wähle ihn in den Kosmetikeinstellungen."
   unlocked: "<prefix><muted>Erfolg freigeschaltet<dark>: <accent><name> <dark>(<success>+<xp> XP<dark>)"
   title: "<accent>Erfolg freigeschaltet"
   subtitle: "<white><name>"
@@ -497,13 +504,13 @@ achievements:
   network:
     level-5:
       name: "Aufsteiger"
-      description: "Erreiche Netzwerk-Level 5."
+      description: "Erreiche Netzwerk-Level <level> und erhalte den Chat-Tag <tag>."
     level-10:
       name: "Veteran"
-      description: "Erreiche Netzwerk-Level 10."
+      description: "Erreiche Netzwerk-Level <level> und erhalte den Chat-Tag <tag>."
     level-25:
       name: "Elite"
-      description: "Erreiche Netzwerk-Level 25."
+      description: "Erreiche Netzwerk-Level <level> und erhalte den Chat-Tag <tag>."
     willkommenskomitee:
       name: "Willkommenskomitee"
       description: "Begrüße zehn Spieler bei ihrem ersten Besuch."

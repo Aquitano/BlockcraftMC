@@ -172,7 +172,7 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             var commands = new CommandRegistry(event.registrar(), messages);
             commands.register(CoinsCommand.create(this, coins, audit, messages));
-            commands.register(LevelCommand.create(xp, messages));
+            commands.register(LevelCommand.create(xp, achievements, messages));
             commands.register(BuildCommand.create(buildMode, audit, messages));
             commands.register(MapCommand.create(this, map, messages));
             commands.register(AfkCommand.create(afk));

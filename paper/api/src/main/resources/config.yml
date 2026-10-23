@@ -118,9 +118,9 @@ achievements:
     wins-10: {counts: wins, threshold: 10, xp: 100}
     wins-100: {counts: wins, threshold: 100, xp: 500}
   network:
-    level-5: {counts: level, threshold: 5, xp: 50}
-    level-10: {counts: level, threshold: 10, xp: 100}
-    level-25: {counts: level, threshold: 25, xp: 250}
+    level-5: {counts: level, threshold: 5, xp: 50, tag: aufsteiger}
+    level-10: {counts: level, threshold: 10, xp: 100, tag: veteran}
+    level-25: {counts: level, threshold: 25, xp: 250, tag: elite}
     willkommenskomitee: {counts: moment, xp: 100}
     rache: {counts: moment, xp: 50}
     haarscharf: {counts: moment, xp: 50}

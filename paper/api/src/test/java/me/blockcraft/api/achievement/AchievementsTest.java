@@ -1,17 +1,28 @@
 package me.blockcraft.api.achievement;
 
+import me.blockcraft.api.cosmetic.ChatTagChoice;
 import me.blockcraft.api.game.Stats;
 import me.blockcraft.common.config.YamlFile;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
+import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 
 public class AchievementsTest {
+
+    @Rule
+    public TemporaryFolder folder = new TemporaryFolder();
 
     /** Granted outside any round, by the lobby parkour and by greeting newcomers, so no recap shows them. */
     private static final Set<String> OUTSIDE_ROUNDS = Set.of("network.ausdauer", "network.parkour-finish", "network.willkommenskomitee");
@@ -38,6 +49,79 @@ public class AchievementsTest {
         assertEquals(List.of(), Achievements.reached(CATALOG, Achievement.NETWORK, Stats.EMPTY, 4, Set.of()));
         assertEquals(List.of("network.level-5"),
                 Achievements.reached(CATALOG, Achievement.NETWORK, Stats.EMPTY, 5, Set.of()).stream().map(Achievement::key).toList());
+        assertEquals(Optional.empty(), CATALOG.stream().filter(achievement -> achievement.game().equals(Achievement.NETWORK))
+                .findFirst().orElseThrow().tag());
+    }
+
+    @Test
+    public void levelTagsReconcileEvenWhenAchievementsAreAlreadyOwned() throws Exception {
+        try (var config = getClass().getResourceAsStream("/config.yml")) {
+            var catalog = Achievements.parse(YamlFile.section(YamlFile.load(config), "achievements"));
+            var owned = Set.of("achievement.network.level-5", "achievement.network.level-10",
+                    "achievement.network.level-25", "tag.aufsteiger");
+
+            assertEquals(List.of(), Achievements.missingTags(catalog, 4, owned));
+            assertEquals(List.of("tag.veteran"), Achievements.missingTags(catalog, 10, owned).stream()
+                    .map(tag -> tag.item()).toList());
+            var missing = Achievements.missingTags(catalog, 25, owned);
+            assertEquals(List.of("tag.veteran", "tag.elite"), missing.stream().map(tag -> tag.item()).toList());
+            var reconciled = new HashSet<>(owned);
+            missing.forEach(tag -> reconciled.add(tag.item()));
+            assertEquals(List.of(), Achievements.missingTags(catalog, 25, reconciled));
+            assertEquals(List.of("aufsteiger", "veteran", "elite"),
+                    ChatTagChoice.available(false, reconciled).stream().map(ChatTagChoice::value).toList());
+        }
+    }
+
+    @Test
+    public void nextCosmeticAdvancesAtEachConfiguredMilestone() throws Exception {
+        try (var config = getClass().getResourceAsStream("/config.yml")) {
+            var catalog = Achievements.parse(YamlFile.section(YamlFile.load(config), "achievements"));
+            assertEquals(5, Achievements.nextCosmetic(catalog, 1).orElseThrow().threshold());
+            assertEquals(10, Achievements.nextCosmetic(catalog, 5).orElseThrow().threshold());
+            assertEquals(25, Achievements.nextCosmetic(catalog, 10).orElseThrow().threshold());
+            assertEquals(Optional.empty(), Achievements.nextCosmetic(catalog, 25));
+        }
+    }
+
+    @Test
+    public void nextCosmeticUsesThresholdsRatherThanCatalogOrderAndSkipsXpOnlyEntries() {
+        var catalog = Achievements.parse(Map.of("network", Map.of(
+                "later", Map.of("counts", "level", "threshold", 18, "xp", 50, "tag", "elite"),
+                "earlier", Map.of("counts", "level", "threshold", 7, "xp", 10, "tag", "aufsteiger"),
+                "xp-only", Map.of("counts", "level", "threshold", 3, "xp", 5)))).stream()
+                .sorted(Comparator.comparingInt(Achievement::threshold).reversed()).toList();
+
+        assertEquals(7, Achievements.nextCosmetic(catalog, 1).orElseThrow().threshold());
+        assertEquals(18, Achievements.nextCosmetic(catalog, 7).orElseThrow().threshold());
+    }
+
+    @Test
+    public void existingConfigInheritsTagsWhileKeepingItsLevelAndXpOverrides() throws Exception {
+        var config = folder.newFile("config.yml").toPath();
+        Files.writeString(config, "achievements:\n  network:\n    level-5: {counts: level, threshold: 8, xp: 75}\n");
+        var merged = YamlFile.loadWithDefaults(config, () -> getClass().getResourceAsStream("/config.yml"));
+        var catalog = Achievements.parse(YamlFile.section(merged, "achievements"));
+        var next = Achievements.nextCosmetic(catalog, 1).orElseThrow();
+
+        assertEquals(8, next.threshold());
+        assertEquals(75, next.xp());
+        assertEquals("tag.aufsteiger", next.tag().orElseThrow().item());
+        var messages = folder.newFile("messages.yml").toPath();
+        Files.writeString(messages, "profile:\n  head-lore: [Eigene Profilzeile]\n");
+        var texts = YamlFile.flatten(YamlFile.loadWithDefaults(messages, () -> getClass().getResourceAsStream("/messages.yml")));
+        assertEquals("Eigene Profilzeile", texts.get("profile.head-lore"));
+        assertEquals("<bullet><cosmetic>", texts.get("profile.level-cosmetic-lore"));
+    }
+
+    @Test
+    public void tagRewardsMustNameEarnedTagsOnNetworkLevelAchievements() {
+        assertThrows(IllegalArgumentException.class, () -> Achievements.parse(Map.of("network", Map.of(
+                "premium", Map.of("counts", "level", "threshold", 5, "tag", "pro")))));
+        assertThrows(IllegalArgumentException.class, () -> Achievements.parse(Map.of("network", Map.of(
+                "moment", Map.of("counts", "moment", "tag", "aufsteiger")))));
+        assertThrows(IllegalArgumentException.class, () -> Achievements.parse(Map.of("bedwars", Map.of(
+                "kills", Map.of("counts", "kills", "threshold", 5, "tag", "aufsteiger")))));
     }
 
     @Test
