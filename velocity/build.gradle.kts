@@ -31,7 +31,5 @@ tasks.runVelocity {
             .filter { !selectedPlugins.isPresent || it.name in selectedPlugins.get() }
             .map { it.tasks.named("shadowJar") }
     })
-    downloadPlugins {
-        url("https://download.luckperms.net/1669/velocity/LuckPerms-Velocity-5.5.82.jar")
-    }
+    pluginJars.from(rootProject.tasks.named("downloadLuckPermsVelocity"))
 }

@@ -1,6 +1,6 @@
-# The whole dev network: MariaDB, the Velocity proxy and one Paper server per game mode. Plugin jars come from
-# `./gradlew stagePlugins`; each Paper service lists the plugin directories it runs in COPY_PLUGINS_SRC, ViaVersion's
-# among them so clients newer than the server join (README, "Client versions"). The servers
+# The whole dev network: MariaDB, the Velocity proxy and one Paper server per game mode. Plugin jars, LuckPerms and
+# ViaVersion included, come from `./gradlew stagePlugins`; each Paper service lists the plugin directories it runs in
+# COPY_PLUGINS_SRC, ViaVersion's so clients newer than the server join (README, "Client versions"). The servers
 # find each other through the database (README, "Run locally"). Each server's map comes from worlds/<group>
 # (README, "Maps"): the world is copied fresh from there at every start and /map save writes it back.
 
@@ -38,7 +38,8 @@ x-paper-env: &paper-env
   MEMORY: 1G
   SYNC_SKIP_NEWER_IN_DESTINATION: "false"
   CREATE_CONSOLE_IN_PIPE: "true"
-  PLUGINS: https://download.luckperms.net/1669/bukkit/loader/LuckPerms-Bukkit-5.5.82.jar
+  # Empty rather than gone: the image then deletes the LuckPerms jar it downloaded before plugins were staged.
+  PLUGINS: ""
   BLOCKCRAFT_DB_HOST: mariadb
 
 services:
@@ -80,7 +81,11 @@ services:
       MEMORY: 512m
       SYNC_SKIP_NEWER_IN_DESTINATION: "false"
       BLOCKCRAFT_DB_HOST: mariadb
-      PLUGINS: https://download.luckperms.net/1669/velocity/LuckPerms-Velocity-5.5.82.jar
+      # The proxy's jars come only from build/docker/velocity: every start drops the old ones before copying, so a
+      # renamed jar never runs twice. The plugins' data directories stay.
+      REMOVE_OLD_PLUGINS: "TRUE"
+      REMOVE_OLD_MODS_INCLUDE: "*.jar"
+      REMOVE_OLD_MODS_DEPTH: "1"
     volumes:
       - ./build/docker/velocity:/plugins:ro
       - ./dev/velocity/velocity.toml:/config/velocity.toml:ro
