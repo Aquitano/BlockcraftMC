@@ -1,5 +1,6 @@
 # The whole dev network: MariaDB, the Velocity proxy and one Paper server per game mode. Plugin jars come from
-# `./gradlew stagePlugins`; each Paper service lists the plugin directories it runs in COPY_PLUGINS_SRC. The servers
+# `./gradlew stagePlugins`; each Paper service lists the plugin directories it runs in COPY_PLUGINS_SRC, ViaVersion's
+# among them so clients newer than the server join (README, "Client versions"). The servers
 # find each other through the database (README, "Run locally"). Each server's map comes from worlds/<group>
 # (README, "Maps"): the world is copied fresh from there at every start and /map save writes it back.
 
@@ -37,10 +38,7 @@ x-paper-env: &paper-env
   MEMORY: 1G
   SYNC_SKIP_NEWER_IN_DESTINATION: "false"
   CREATE_CONSOLE_IN_PIPE: "true"
-  # ViaVersion lets clients newer than the server join (README, "Client versions").
-  PLUGINS: |
-    https://download.luckperms.net/1669/bukkit/loader/LuckPerms-Bukkit-5.5.82.jar
-    https://github.com/ViaVersion/ViaVersion/releases/download/5.12.1/ViaVersion-5.12.1.jar
+  PLUGINS: https://download.luckperms.net/1669/bukkit/loader/LuckPerms-Bukkit-5.5.82.jar
   BLOCKCRAFT_DB_HOST: mariadb
 
 services:
@@ -96,7 +94,7 @@ services:
       <<: *paper-env
       BLOCKCRAFT_SERVER_GROUP: lobby
       BLOCKCRAFT_WORLD_TEMPLATE: /worlds/lobby
-      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/lobby,/blockcraft/statussigns,/blockcraft/reports
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/lobby,/blockcraft/statussigns,/blockcraft/reports,/blockcraft/viaversion
     volumes:
       - ./build/docker/paper:/blockcraft:ro
       - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
@@ -110,7 +108,7 @@ services:
       <<: *paper-env
       BLOCKCRAFT_SERVER_GROUP: duell
       BLOCKCRAFT_WORLD_TEMPLATE: /worlds/duell
-      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/duell
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/duell,/blockcraft/viaversion
     volumes:
       - ./build/docker/paper:/blockcraft:ro
       - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
@@ -124,7 +122,7 @@ services:
       <<: *paper-env
       BLOCKCRAFT_SERVER_GROUP: emeraldrush
       BLOCKCRAFT_WORLD_TEMPLATE: /worlds/emeraldrush
-      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/emeraldrush
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/emeraldrush,/blockcraft/viaversion
     volumes:
       - ./build/docker/paper:/blockcraft:ro
       - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
@@ -138,7 +136,7 @@ services:
       <<: *paper-env
       BLOCKCRAFT_SERVER_GROUP: bedwars
       BLOCKCRAFT_WORLD_TEMPLATE: /worlds/bedwars
-      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/bedwars
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/bedwars,/blockcraft/viaversion
     volumes:
       - ./build/docker/paper:/blockcraft:ro
       - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
@@ -152,7 +150,7 @@ services:
       <<: *paper-env
       BLOCKCRAFT_SERVER_GROUP: mlgrush
       BLOCKCRAFT_WORLD_TEMPLATE: ""
-      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/mlgrush
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/mlgrush,/blockcraft/viaversion
     volumes:
       - ./build/docker/paper:/blockcraft:ro
       - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
@@ -165,7 +163,7 @@ services:
       <<: *paper-env
       BLOCKCRAFT_SERVER_GROUP: quicksg
       BLOCKCRAFT_WORLD_TEMPLATE: /worlds/quicksg
-      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/quicksg
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/quicksg,/blockcraft/viaversion
     volumes:
       - ./build/docker/paper:/blockcraft:ro
       - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro

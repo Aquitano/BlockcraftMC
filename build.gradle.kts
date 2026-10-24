@@ -14,8 +14,35 @@ val packRanks = tasks.register("packRanks") {
     }
 }
 
+// ViaVersion is staged like our own jars, so no server start depends on a download. GitHub is where its releases
+// live; Modrinth carries the same release and steps in when GitHub cannot be reached.
+val downloadViaVersion = tasks.register("downloadViaVersion") {
+    val version = libs.versions.viaversion.get()
+    val sources = listOf(
+        "https://github.com/ViaVersion/ViaVersion/releases/download/$version/ViaVersion-$version.jar",
+        "https://api.modrinth.com/maven/maven/modrinth/viaversion/$version/viaversion-$version.jar",
+    )
+    val target = layout.buildDirectory.file("viaversion/ViaVersion-$version.jar")
+    inputs.property("sources", sources)
+    outputs.file(target)
+    doLast {
+        val file = target.get().asFile
+        file.parentFile.mkdirs()
+        val failures = mutableListOf<String>()
+        for (source in sources) {
+            try {
+                java.net.URI(source).toURL().openStream().use { input -> file.outputStream().use { input.copyTo(it) } }
+                return@doLast
+            } catch (e: java.io.IOException) {
+                failures += "$source: $e"
+            }
+        }
+        throw GradleException("Could not download ViaVersion $version:\n" + failures.joinToString("\n"))
+    }
+}
+
 // Lays out build/docker for docker-compose.yml: build/docker/paper/<module>/<module>.jar (one directory per plugin,
-// so a compose service lists the ones it runs), build/docker/velocity/<module>.jar, ranks.json.gz next to
+// so a compose service lists the ones it runs) next to paper/viaversion, build/docker/velocity/<module>.jar, ranks.json.gz next to
 // LuckPerms on both sides, and the resource pack in the proxy plugin's data directory.
 tasks.register<Sync>("stagePlugins") {
     project(":paper").subprojects.forEach { plugin ->
@@ -29,6 +56,10 @@ tasks.register<Sync>("stagePlugins") {
             into("velocity")
             rename { "${plugin.name}.jar" }
         }
+    }
+    from(downloadViaVersion) {
+        into("paper/viaversion")
+        rename { "ViaVersion.jar" }
     }
     from(packRanks) {
         into("paper/luckperms/LuckPerms")

@@ -31,8 +31,8 @@ tasks.runServer {
             .filter { it.name == "api" || !selectedPlugins.isPresent || it.name in selectedPlugins.get() }
             .map { it.tasks.named("shadowJar") }
     })
+    pluginJars.from(rootProject.tasks.named("downloadViaVersion"))
     downloadPlugins {
         url("https://download.luckperms.net/1669/bukkit/loader/LuckPerms-Bukkit-5.5.82.jar")
-        url("https://github.com/ViaVersion/ViaVersion/releases/download/5.12.1/ViaVersion-5.12.1.jar")
     }
 }

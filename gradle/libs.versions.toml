@@ -11,6 +11,7 @@ adventure = "5.2.0"
 snakeyaml = "2.2"
 slf4j = "2.0.18"
 luckperms = "5.5"
+viaversion = "5.12.1"
 
 [libraries]
 junit = { module = "junit:junit", version = "4.13.2" }
