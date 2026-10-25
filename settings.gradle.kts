@@ -16,6 +16,7 @@ include(
     "paper:quicksg",
     "paper:reports",
     "paper:statussigns",
+    "paper:zombies",
     "velocity:system",
     "resourcepack",
 )

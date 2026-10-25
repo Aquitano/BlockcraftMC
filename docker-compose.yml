@@ -158,6 +158,20 @@ services:
       - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
       - mlgrush:/data
 
+  zombies:
+    <<: *paper
+    hostname: zombies
+    environment:
+      <<: *paper-env
+      BLOCKCRAFT_SERVER_GROUP: zombies
+      BLOCKCRAFT_WORLD_TEMPLATE: /worlds/zombies
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/zombies
+    volumes:
+      - ./build/docker/paper:/blockcraft:ro
+      - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
+      - ./worlds/zombies:/worlds/zombies
+      - zombies:/data
+
   quicksg:
     <<: *paper
     hostname: quicksg
@@ -181,3 +195,4 @@ volumes:
   quicksg:
   bedwars:
   mlgrush:
+  zombies:

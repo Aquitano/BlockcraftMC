@@ -43,7 +43,11 @@ def markers(world):
         if "legacy" in relative.parts or "maps" in relative.parts:
             continue
         data = yaml.safe_load(path.read_text(encoding="utf8"))
+        origin = data.get("origin", {}) if isinstance(data, dict) else {}
+        if origin:
+            data = {key: value for key, value in data.items() if key != "origin"}
         for label, position in locations(data, relative.with_suffix("").as_posix()):
+            position = {axis: coordinate + float(origin.get(axis, 0)) for axis, coordinate in position.items()}
             result[label] = {"type": "poi", "label": label, "position": position}
     return {"setup": {"label": "Configured locations", "toggleable": True, "markers": result}}
 

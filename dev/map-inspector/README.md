@@ -18,6 +18,7 @@ To include every generated chunk, use `--whole-world`. Large legacy worlds take 
 
 ```powershell
 uv run dev/map-inspector/inspect.py --maps lobby bedwars --render-only
+uv run dev/map-inspector/inspect.py --maps zombies
 uv run dev/map-inspector/inspect.py --serve-only
 uv run dev/map-inspector/inspect.py --worlds run/map-review/preview-worlds
 ```
@@ -39,3 +40,6 @@ pack can look different in the client.
 For edits, use `/build` for blocks and `/setup lobby ...` for BedWars positions. Save with `/map save`.
 Moving existing BedWars selectors and the CPS tester takes a BedWars restart to apply completely.
 The local preview saves into `run/map-review/preview-worlds`, not the tracked `worlds` directory.
+
+Zombies includes the saved Außenposten template. After editing the running arena, run `/map save` before inspecting `worlds/zombies`.
+Its setup markers include the arena's configured origin offset.

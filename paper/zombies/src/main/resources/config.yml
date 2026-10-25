@@ -1,0 +1,77 @@
+players:
+  min: 1
+  max: 4
+countdown:
+  lobby: 30
+  start: 5
+  restart: 15
+  intermission: 12
+  wave-limit: 300
+idle-restart-minutes: 50
+timer-bar: true
+global-stats-head: Kevos
+waves:
+  total: 30
+  base-enemies: 6
+  enemies-per-wave: 2
+  extra-player: 0.6
+  health-per-wave: 0.07
+  spawn-ticks: 32
+  minimum-spawn-ticks: 8
+  max-alive: 32
+  boss-every: 10
+gold:
+  start: 300
+  hit: 5
+  kill: 25
+  repair: 10
+  repair-limit-per-wave: 100
+  wave-clear: 125
+rewards:
+  kill: 0
+  wave: 1
+  win: 40
+revive:
+  bleed-seconds: 25
+  hold-seconds: 4
+  radius: 2.5
+  protection-seconds: 4
+barricades:
+  repair-ticks: 25
+  break-ticks: 35
+regeneration:
+  delay-seconds: 5
+combat:
+  damage-immunity-ticks: 10
+  knife-cooldown-ticks: 10
+  headshot-multiplier: 1.75
+  knife-damage: 6
+prices:
+  ammo: 200
+  armor: 600
+  upgrade: 1500
+  mystery: 750
+  power: 1000
+  team-revive: 1200
+powerups:
+  drop-chance: 0.06
+  seconds: 20
+perks:
+  extra_health: 1000
+  quick_reload: 750
+  quick_revive: 500
+  frozen_bullets: 1250
+  extra-health-bonus: 20
+weapons:
+  pistol: {price: 0, damage: 6, range: 40, pellets: 1, spread: 0.005, clip: 12, reserve: 120, cooldown-ticks: 7, reload-ticks: 35, upgrade-multiplier: 2.5}
+  rifle: {price: 500, damage: 8, range: 45, pellets: 1, spread: 0.015, clip: 30, reserve: 240, cooldown-ticks: 4, reload-ticks: 45, upgrade-multiplier: 2.5}
+  shotgun: {price: 650, damage: 4, range: 22, pellets: 7, spread: 0.12, clip: 6, reserve: 72, cooldown-ticks: 18, reload-ticks: 55, upgrade-multiplier: 2.5}
+  sniper: {price: 900, damage: 36, range: 65, pellets: 1, spread: 0, clip: 5, reserve: 60, cooldown-ticks: 22, reload-ticks: 50, upgrade-multiplier: 2.5}
+  flamethrower: {price: 1200, damage: 3, range: 12, pellets: 4, spread: 0.1, clip: 60, reserve: 360, cooldown-ticks: 4, reload-ticks: 65, upgrade-multiplier: 2.5}
+enemies:
+  walker: {first-wave: 1, health: 20, damage: 4, speed: 0.21, weight: 12}
+  runner: {first-wave: 4, health: 16, damage: 3, speed: 0.30, weight: 5}
+  tank: {first-wave: 7, health: 65, damage: 6, speed: 0.17, weight: 3}
+  exploder: {first-wave: 9, health: 24, damage: 8, speed: 0.25, weight: 3}
+  hellhound: {first-wave: 5, health: 16, damage: 3, speed: 0.32, weight: 3}
+  inferno: {first-wave: 10, health: 300, damage: 8, speed: 0.20, weight: 1}

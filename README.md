@@ -4,6 +4,7 @@ Paper and Velocity plugins for the BlockcraftMC minigame network, originally wri
 2018-2019 and ported to Paper 26.3 / Velocity 4 in 2026.
 
 See [Easter eggs and lobby activities](EASTER_EGGS.md) for rewards, calendar events, map setup, and gameplay checks.
+See [Zombies setup](paper/zombies/README.md) to run the solo and cooperative survival mode.
 
 ## Layout
 
@@ -17,6 +18,7 @@ paper/duell              Duell: single games and three-mode tours (vs, sg, super
 paper/emeraldrush        EmeraldRush minigame
 paper/mlgrush            MLG Rush: two players, knockback sticks, beds, first to five
 paper/quicksg            QuickSG survival games
+paper/zombies            Solo or co-op Zombies survival
 paper/reports            ReportsMenu: staff GUI over the reports table
 paper/statussigns        StatusSigns: clickable server-status signs
 velocity/system          BlockcraftSystem: reports, moderation, parties, friends, routing and staff tools

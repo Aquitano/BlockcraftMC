@@ -13,8 +13,12 @@ public record GameConfig(int minPlayers, int lobbySeconds, int startSeconds, int
                          int idleRestartMinutes, boolean timerBar, String globalStatsHead) {
 
     public static GameConfig from(ConfigurationSection config) {
+        return from(config, LobbyCountdown.ROUND_MINIMUM);
+    }
+
+    public static GameConfig from(ConfigurationSection config, int minimumPlayers) {
         return new GameConfig(
-                Math.max(LobbyCountdown.ROUND_MINIMUM, config.getInt("players.min", LobbyCountdown.ROUND_MINIMUM)),
+                Math.max(minimumPlayers, config.getInt("players.min", minimumPlayers)),
                 config.getInt("countdown.lobby", 30),
                 Math.max(1, config.getInt("countdown.start", 5)),
                 config.getInt("countdown.restart", 10),

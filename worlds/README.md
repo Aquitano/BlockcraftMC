@@ -11,6 +11,10 @@ The backup does not identify the builders. Each `blockcraft/map.yml` leaves `bui
 BedWars reuses a copy of EmeraldRush's waiting island. Its two arena templates remain in
 `bedwars/blockcraft/BedWars/maps`.
 
+Zombies ships the original Außenposten arena as a saved Paper 26.2 world template.
+Its map-owned configuration includes four purchasable wings, seven stations, and eight barricades.
+The plugin can also generate the arena in a new empty world. See [Zombies setup](../paper/zombies/README.md).
+
 ## Configuration
 
 All active locations use the runtime world name `world` and Bukkit's location serialization.

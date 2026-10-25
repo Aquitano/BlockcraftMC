@@ -51,3 +51,6 @@ services:
   quicksg:
     <<: *paper
     profiles: [unreleased]
+  zombies:
+    <<: *paper
+    profiles: [unreleased]

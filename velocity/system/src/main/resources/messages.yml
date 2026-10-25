@@ -12,6 +12,7 @@ palette:
   arrow: "<dark_gray>» "
   quicksg: "<gold>"
   emeraldrush: "<green>"
+  zombies: "<dark_green>"
   duell: "<aqua>"
   bedwars: "<dark_aqua>"
   mlgrush: "<light_purple>"
@@ -594,6 +595,7 @@ play:
     duell: "<duell>Duell"
     bedwars: "<bedwars>BedWars"
     mlgrush: "<mlgrush>MLG Rush"
+    zombies: "<zombies>Zombies"
 msg:
   usage: "<prefix><error>Benutze /msg \\<Name> \\<Nachricht>"
   reply-usage: "<prefix><error>Benutze /r \\<Nachricht>"
@@ -698,6 +700,7 @@ joinme:
     emeraldrush: "<arrow><accent><player><muted> spielt <emeraldrush>EmeraldRush<muted>!"
     bedwars: "<arrow><accent><player><muted> spielt <bedwars>BedWars<muted>!"
     mlgrush: "<arrow><accent><player><muted> spielt <mlgrush>MLG Rush<muted>!"
+    zombies: "<arrow><accent><player><muted> spielt <zombies>Zombies<muted>!"
 
 support:
   already-open: "<primary>Support <arrow><reset><error>Du hast bereits einen offenen Supportantrag. Bitte warte, bis ein Supporter diesen bearbeitet."
