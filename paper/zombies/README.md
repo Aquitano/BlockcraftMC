@@ -29,15 +29,16 @@ The production overlay enables Zombies by default.
 The saved [Außenposten template](../../worlds/zombies) includes the arena and its map-owned `blockcraft/Zombies/arena.yml`.
 Both local launch options restore that template before starting the game.
 For a new world without an arena definition, the plugin copies the bundled [arena definition](src/main/resources/arena.yml).
-Its generator uses an empty 59 by 59 region above Y=95 and refuses to replace existing blocks.
+Its generator uses an empty 99 by 99 region above Y=95 and refuses to replace existing blocks.
+The courtyard has covered shelters and planters. Each larger wing has divided aisles, storage alcoves, and skylights.
 Change `origin` before generation if that region is occupied. Set `starter.build: false` for a hand-built arena.
 
 Edit `rooms`, `windows`, and `stations` in the map-owned file to change the layout.
 Window entries must lie in their named room. Station locations must also lie in their named room.
 The `yard` room starts unlocked. Each other room has a gold price and a door box.
 Door and window block data define the blocks the plugin resets at startup and shutdown.
-The four courtyard windows have enclosed spawn bays with permanent iron bars behind their repairable boards.
-Enemies enter through the courtyard windows after breaking the boards, even when the adjacent wings are open.
+All eight windows have enclosed spawn rooms. Mobs approach the boards inside those rooms, break them, and walk through the opening.
+Iron bars sit above the opening. Players cannot enter spawn rooms, even when the adjacent wings are open.
 Keep at least one window in `yard`, so the first wave can spawn before players buy a door.
 
 Use `/setup lobby`, `/setup spawn`, and `/setup spectator` while standing at each desired position.

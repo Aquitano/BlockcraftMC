@@ -1,7 +1,6 @@
 package me.blockcraft.zombies.game;
 
 import me.blockcraft.zombies.arena.ArenaMap;
-import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
@@ -39,15 +38,11 @@ public final class Enemies {
         boolean breached;
         UUID attacker;
         int specialAt;
-        int lastMoved;
-        Location previous;
 
-        Enemy(Mob mob, EnemyKind kind, ArenaMap.Window window, int tick) {
+        Enemy(Mob mob, EnemyKind kind, ArenaMap.Window window) {
             this.mob = mob;
             this.kind = kind;
             this.window = window;
-            this.previous = mob.getLocation();
-            this.lastMoved = tick;
         }
     }
 
@@ -64,13 +59,17 @@ public final class Enemies {
 
     public int remaining() { return unspawned + enemies.size(); }
     public boolean contains(Entity entity) { return enemies.containsKey(entity.getUniqueId()); }
+    public boolean breached(Entity entity) {
+        var enemy = enemies.get(entity.getUniqueId());
+        return enemy != null && enemy.breached;
+    }
     public boolean applyingDamage() { return applyingDamage; }
 
     public void tick(int tick) {
         if (unspawned > 0 && tick >= nextSpawn && enemies.size() < game.config().waves().maxAlive()) {
             var windows = game.arena().activeWindows();
             if (!windows.isEmpty()) {
-                spawn(windows.get(ThreadLocalRandom.current().nextInt(windows.size())), tick);
+                spawn(windows.get(ThreadLocalRandom.current().nextInt(windows.size())));
                 nextSpawn = tick + plan.spawnTicks();
             }
         }
@@ -87,7 +86,7 @@ public final class Enemies {
         }
     }
 
-    private void spawn(ArenaMap.Window window, int tick) {
+    private void spawn(ArenaMap.Window window) {
         EnemyKind kind = plan.boss() && unspawned == plan.enemies() ? EnemyKind.INFERNO : choose();
         var stats = game.config().enemies().get(kind);
         var mob = (Mob) game.arena().world().spawnEntity(window.spawn(), kind == EnemyKind.HELLHOUND ? EntityType.WOLF : EntityType.ZOMBIE,
@@ -100,7 +99,7 @@ public final class Enemies {
         mob.setPersistent(false);
         mob.setRemoveWhenFarAway(false);
         mob.setCanPickupItems(false);
-        mob.setAI(false);
+        mob.setAI(true);
         mob.setSilent(false);
         mob.customName(game.messages().get("enemy." + kind.key()));
         if (mob instanceof Zombie zombie) {
@@ -122,7 +121,7 @@ public final class Enemies {
                 equipment.setHelmetDropChance(0);
             }
         }
-        enemies.put(mob.getUniqueId(), new Enemy(mob, kind, window, tick));
+        enemies.put(mob.getUniqueId(), new Enemy(mob, kind, window));
         unspawned--;
     }
 
@@ -147,9 +146,15 @@ public final class Enemies {
         var boards = enemy.window.boards().blocks(game.arena().world());
         var remaining = boards.stream().filter(block -> !block.getType().isAir()).toList();
         if (remaining.isEmpty()) {
-            enemy.mob.teleport(enemy.window.entry());
-            enemy.mob.setAI(true);
             enemy.breached = true;
+            enemy.mob.getPathfinder().moveTo(enemy.window.entry(), 1.0);
+            return;
+        }
+        var approach = enemy.window.approach();
+        if (tick % 10 == 0) {
+            enemy.mob.getPathfinder().moveTo(approach, 1.0);
+        }
+        if (enemy.mob.getLocation().distanceSquared(approach) > 4) {
             return;
         }
         if (tick < breaking.getOrDefault(enemy.window.id(), 0)) {
@@ -170,13 +175,6 @@ public final class Enemies {
         Player player = target.get();
         enemy.mob.setTarget(player);
         enemy.mob.getPathfinder().moveTo(player, 1.0);
-        if (enemy.previous.distanceSquared(enemy.mob.getLocation()) > 0.25) {
-            enemy.previous = enemy.mob.getLocation();
-            enemy.lastMoved = tick;
-        } else if (tick - enemy.lastMoved > 300) {
-            enemy.mob.teleport(enemy.window.entry());
-            enemy.lastMoved = tick;
-        }
         if (tick < enemy.specialAt) {
             return;
         }

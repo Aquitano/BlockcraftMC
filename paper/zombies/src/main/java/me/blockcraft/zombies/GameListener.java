@@ -151,7 +151,8 @@ public final class GameListener implements Listener {
 
     @EventHandler
     public void onTarget(EntityTargetLivingEntityEvent event) {
-        if (game.enemies().contains(event.getEntity()) && (!(event.getTarget() instanceof Player player) || !game.fighting(player))) {
+        if (game.enemies().contains(event.getEntity()) && event.getTarget() != null
+                && (!(event.getTarget() instanceof Player player) || !game.fighting(player) || !game.enemies().breached(event.getEntity()))) {
             event.setCancelled(true);
         }
     }

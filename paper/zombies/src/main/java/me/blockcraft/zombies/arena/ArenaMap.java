@@ -27,7 +27,13 @@ import java.util.Set;
 public final class ArenaMap {
 
     public record Room(String id, BlockBox bounds, BlockBox door, int price) { }
-    public record Window(String id, String room, BlockBox boards, Location spawn, Location entry, Optional<BlockBox> bay) { }
+    public record Window(String id, String room, BlockBox boards, Location spawn, Location entry, Optional<BlockBox> bay) {
+        public Location approach() {
+            var direction = spawn.toVector().subtract(entry.toVector()).setY(0).normalize();
+            return new Location(spawn.getWorld(), (boards.minX() + boards.maxX() + 1) / 2.0,
+                    boards.minY(), (boards.minZ() + boards.maxZ() + 1) / 2.0).add(direction.multiply(1.5));
+        }
+    }
     public record Station(String id, String room, StationKind kind, Location location) { }
 
     private static final String DISPLAY_TAG = "blockcraft_zombies_display";
@@ -109,7 +115,8 @@ public final class ArenaMap {
     }
 
     public boolean enterable(Location location) {
-        return roomAt(location).map(room -> unlocked(room.id())).orElse(false);
+        return roomAt(location).map(room -> unlocked(room.id())).orElse(false)
+                && windows.stream().noneMatch(window -> window.bay().map(bay -> bay.contains(location)).orElse(false));
     }
 
     public List<Window> activeWindows() {
@@ -134,8 +141,13 @@ public final class ArenaMap {
         }
         if (yaml.getBoolean("starter.build") && !yaml.getBoolean("starter.built")) {
             var origin = section("origin");
-            var bounds = new BlockBox(origin.getInt("x") - 29, origin.getInt("y") - 1, origin.getInt("z") - 29,
-                    origin.getInt("x") + 29, origin.getInt("y") + 9, origin.getInt("z") + 29);
+            int radius = yaml.getInt("starter.radius", StarterArena.RADIUS);
+            int height = yaml.getInt("starter.height", StarterArena.HEIGHT);
+            if (radius < StarterArena.RADIUS || height < StarterArena.HEIGHT) {
+                return false;
+            }
+            var bounds = new BlockBox(origin.getInt("x") - radius, origin.getInt("y") - 1, origin.getInt("z") - radius,
+                    origin.getInt("x") + radius, origin.getInt("y") + height, origin.getInt("z") + radius);
             boolean contained = rooms.values().stream().allMatch(room -> bounds.contains(room.bounds()) && bounds.contains(room.door()))
                     && windows.stream().allMatch(window -> bounds.contains(window.boards()) && window.bay().map(bounds::contains).orElse(true))
                     && stations.stream().allMatch(station -> bounds.contains(station.location().clone().add(0, -1, 0))
