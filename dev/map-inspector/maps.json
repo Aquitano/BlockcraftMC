@@ -8,5 +8,10 @@
     "name": "BedWars waiting island",
     "start-pos": { "x": -194, "z": -294 },
     "render-mask": [{ "min-x": -260, "max-x": -145, "min-z": -330, "max-z": -225 }]
+  },
+  "zombies": {
+    "name": "Außenposten",
+    "start-pos": { "x": 0, "z": 0 },
+    "render-mask": [{ "min-x": -30, "max-x": 30, "min-z": -30, "max-z": 30 }]
   }
 }

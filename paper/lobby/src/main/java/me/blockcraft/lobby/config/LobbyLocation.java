@@ -11,6 +11,7 @@ public enum LobbyLocation {
     RUSH("rush"),
     BEDWARS("bedwars"),
     MLGRUSH("mlgrush"),
+    ZOMBIES("zombies"),
     SHOP("shop"),
     PREMIUM("premium"),
     SHOP_NPC("shop-npc");

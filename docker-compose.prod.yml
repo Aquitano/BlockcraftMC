@@ -43,6 +43,7 @@ services:
   bedwars: *paper
   mlgrush: *paper
   duell: *paper
+  zombies: *paper
 
   # Not released yet: `docker compose --profile unreleased up -d quicksg` starts one anyway.
   emeraldrush:

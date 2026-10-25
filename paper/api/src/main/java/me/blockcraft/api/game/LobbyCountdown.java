@@ -27,7 +27,7 @@ import java.util.function.IntConsumer;
  */
 public final class LobbyCountdown implements Listener {
 
-    /** Nobody plays a round alone. */
+    /** Competitive rounds need two players; cooperative games can opt into a lower minimum. */
     public static final int ROUND_MINIMUM = 2;
 
     private static final Set<Integer> ANNOUNCE_AT = Set.of(60, 30, 15, 10, 5, 4, 3, 2, 1);
@@ -39,6 +39,7 @@ public final class LobbyCountdown implements Listener {
     private final Round round;
     private final int seconds;
     private final int minPlayers;
+    private final int roundMinimum;
     private final int startSeconds;
     private final IntConsumer onSecond;
     private final Runnable onStart;
@@ -51,10 +52,15 @@ public final class LobbyCountdown implements Listener {
 
     /** {@code onSecond} hears every second the clock actually runs down, not the ones it waits at full. */
     public LobbyCountdown(Plugin plugin, Round round, GameConfig config, IntConsumer onSecond, Runnable onStart) {
+        this(plugin, round, config, ROUND_MINIMUM, onSecond, onStart);
+    }
+
+    public LobbyCountdown(Plugin plugin, Round round, GameConfig config, int roundMinimum, IntConsumer onSecond, Runnable onStart) {
         this.countdown = new Countdown(plugin);
         this.round = round;
         this.seconds = config.lobbySeconds();
         this.minPlayers = config.minPlayers();
+        this.roundMinimum = Math.max(1, roundMinimum);
         this.startSeconds = config.startSeconds();
         this.onSecond = onSecond;
         this.onStart = onStart;
@@ -75,7 +81,7 @@ public final class LobbyCountdown implements Listener {
         String outcome;
         if (round.phase() != GamePhase.LOBBY) {
             outcome = "start.running";
-        } else if (round.playerCount() < ROUND_MINIMUM) {
+        } else if (round.playerCount() < roundMinimum) {
             outcome = "start.too-few";
         } else if (shorten(startSeconds)) {
             outcome = "start.shortened";
@@ -172,11 +178,11 @@ public final class LobbyCountdown implements Listener {
         }
     }
 
-    /** A forced countdown may run out after players left; with fewer than two it waits again instead. */
+    /** A forced countdown may run out after players left; below the round's minimum it waits again. */
     private void finish() {
         forced = false;
         hideBar();
-        if (round.playerCount() < ROUND_MINIMUM) {
+        if (round.playerCount() < roundMinimum) {
             round.arena().announceCancelled();
             start();
             return;

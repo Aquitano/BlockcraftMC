@@ -19,6 +19,7 @@ palette:
   duell: "<aqua>"
   bedwars: "<dark_aqua>"
   mlgrush: "<light_purple>"
+  zombies: "<dark_green>"
   premium: "<gold>"
 
 games:
@@ -32,6 +33,8 @@ games:
     name: "<bedwars>BedWars"
   mlgrush:
     name: "<mlgrush>MLG Rush"
+  zombies:
+    name: "<zombies>Zombies"
 game-status:
   available: "<success>Jetzt spielen"
   full: "<muted>Alle Plätze belegt"
@@ -347,6 +350,7 @@ profile:
     duell: "<arrow><primary>Duell"
     bedwars: "<arrow><primary>BedWars"
     mlgrush: "<arrow><primary>MLG Rush"
+    zombies: "<arrow><primary>Zombies"
 
 coins:
   self: "<prefix><muted>Du hast <accent><coins> <muted>Coins!"
@@ -445,6 +449,7 @@ achievements:
     duell: "<arrow><primary>Duell"
     bedwars: "<arrow><primary>BedWars"
     mlgrush: "<arrow><primary>MLG Rush"
+    zombies: "<arrow><primary>Zombies"
     network: "<arrow><primary>Netzwerk"
   group-lore: "<bullet><muted><unlocked><dark>/<muted><total> freigeschaltet"
   unlocked-name: "<arrow><success><name>"

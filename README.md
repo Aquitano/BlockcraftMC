@@ -4,6 +4,7 @@ Paper and Velocity plugins for the BlockcraftMC minigame network, originally wri
 2018-2019 and ported to Paper 26.3 / Velocity 4 in 2026.
 
 See [Easter eggs and lobby activities](EASTER_EGGS.md) for rewards, calendar events, map setup, and gameplay checks.
+See [Zombies setup](paper/zombies/README.md) to run the solo and cooperative survival mode.
 
 ## Layout
 
@@ -17,6 +18,7 @@ paper/duell              Duell: single games and three-mode tours (vs, sg, super
 paper/emeraldrush        EmeraldRush minigame
 paper/mlgrush            MLG Rush: two players, knockback sticks, beds, first to five
 paper/quicksg            QuickSG survival games
+paper/zombies            Solo or co-op Zombies survival
 paper/reports            ReportsMenu: staff GUI over the reports table
 paper/statussigns        StatusSigns: clickable server-status signs
 velocity/system          BlockcraftSystem: reports, moderation, parties, friends, routing and staff tools
@@ -726,7 +728,7 @@ itself; `docker-compose.yml` shows the full set.
 `docker-compose.prod.yml` turns the dev network into the public one: MariaDB publishes no port, the resource pack
 is served on loopback for a web server in front of it, the passwords, the forwarding secret, the pack address and the
 network addresses come from `.env`, and the games under `profiles: [unreleased]` stay off.
-Lobby, BedWars, MLG Rush, and Duell are enabled by default. Players still connect to
+Lobby, BedWars, MLG Rush, Duell, and Zombies are enabled by default. Players still connect to
 the proxy's port 25565 directly: Minecraft is not HTTP, so neither a web server nor Cloudflare's proxy can carry it,
 and the DNS record players use has to point at the host itself. On the host, with Docker, git-lfs (otherwise the maps arrive as pointer files) and JDK 25 (`mise install`):
 
@@ -739,7 +741,7 @@ docker compose up -d
 ```
 
 To update, pull, run `./gradlew stagePlugins` and restart the servers (`docker compose restart velocity lobby
-bedwars mlgrush duell`). A plugin's `config.yml` and `messages.yml` in its data folder are copies of the bundled defaults, made on
+bedwars mlgrush duell zombies`). A plugin's `config.yml` and `messages.yml` in its data folder are copies of the bundled defaults, made on
 its first start: new keys arrive through the bundled default, but the copy keeps its own value for every key it
 already has, so changed texts and renamed config keys do not reach a server by themselves. Move a copy nobody edited
 aside before the restart (`docker compose exec bedwars mv /data/plugins/BedWars/messages.yml

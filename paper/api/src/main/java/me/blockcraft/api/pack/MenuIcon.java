@@ -43,6 +43,7 @@ public enum MenuIcon {
     DUELL(Material.SHIELD),
     BEDWARS(Material.RED_BED),
     MLGRUSH(Material.STICK),
+    ZOMBIES(Material.ZOMBIE_HEAD),
     GADGETS(Material.FISHING_ROD),
     KILL_EFFECTS(Material.IRON_SWORD),
     WIN_EFFECTS(Material.FIREWORK_ROCKET),

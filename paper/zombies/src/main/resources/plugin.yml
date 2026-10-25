@@ -1,0 +1,6 @@
+name: Zombies
+version: '${version}'
+main: me.blockcraft.zombies.ZombiesPlugin
+api-version: '26.3'
+author: Aquitano
+depend: [BlockcraftAPI]

@@ -41,6 +41,11 @@ public final class PackArt {
         Path font = root.resolve("assets/blockcraft/textures/font");
         Path item = root.resolve("assets/blockcraft/textures/item");
         Path tooltip = root.resolve("assets/blockcraft/textures/gui/sprites/tooltip");
+        if (args.length > 1) {
+            var icon = ICONS.get(args[1]);
+            write(pixels(icon.rows(), icon.palette()), item.resolve(args[1] + ".png"));
+            return;
+        }
         Files.createDirectories(font);
         Files.createDirectories(item);
         Files.createDirectories(tooltip);
@@ -497,6 +502,24 @@ public final class PackArt {
                     "..oo............",
                     "................",
             }, CHEST)),
+            Map.entry("zombies", new Icon(new String[] {
+                    "................",
+                    "...oooooooooo...",
+                    "..oHLLLLLLLGgo..",
+                    "..oHLLGGGGGGgo..",
+                    "..oLLGGGGGGggo..",
+                    "..oLGooGGooGgo..",
+                    "..oLGooGGooGgo..",
+                    "..oLGGGggGGggo..",
+                    "..oLGGgooggGgo..",
+                    "..oLGGGggGGggo..",
+                    "..oLGooooooGgo..",
+                    "..oGGGgGGGgggo..",
+                    "...oggggggggo...",
+                    "....oooooooo....",
+                    "................",
+                    "................",
+            }, GREEN)),
             Map.entry("bedwars", new Icon(new String[] {
                     "................",
                     "................",

@@ -107,6 +107,7 @@ navigator:
   duell: "<duell><bold>Duell"
   bedwars: "<bedwars><bold>BedWars"
   mlgrush: "<mlgrush><bold>MLG Rush"
+  zombies: "<zombies><bold>Zombies"
   shop: "<accent>Lobby-Shop"
   shop-lore: "<click>Shop öffnen"
   spawn: "<primary>Zurück zum Spawn"
@@ -132,6 +133,10 @@ navigator:
       - "<muted>Vier Teams zu zweit. Schütze dein Bett."
       - "<muted>Ohne Bett gibt es kein Zurück."
       - "<dark>Schlafen ist im Bett ausdrücklich verboten."
+    zombies:
+      - "<muted>Allein oder zu viert gegen 30 Wellen."
+      - "<muted>Waffen kaufen, Fenster reparieren, Freunde retten."
+      - "<dark>Die Nachtschicht dauert heute etwas länger."
 secrets:
   title: "<arrow><primary>Secrets <dark>· <muted><found>/<total>"
   unknown: "<error>???"

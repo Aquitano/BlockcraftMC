@@ -76,6 +76,7 @@ public final class RoundSummary {
     private final StatsRepository stats;
     private final Map<UUID, Score> scores = new LinkedHashMap<>();
     private final Map<UUID, String> winners = new LinkedHashMap<>();
+    private String opponentWinner;
     private final Set<UUID> resultViewers = new HashSet<>();
     private final Rivalries rivalries;
     private final Respects respects;
@@ -181,6 +182,12 @@ public final class RoundSummary {
         return score == null ? 0 : score.kills;
     }
 
+    /** Cooperative mob kills count toward stats without player rivalries or PvP kill XP. */
+    public void awardMobKill(Player player) {
+        score(player).kills++;
+        pay(player, rewards.kill());
+    }
+
     public boolean undamaged(Player player) {
         return tracking.undamaged(player);
     }
@@ -202,7 +209,11 @@ public final class RoundSummary {
     }
 
     public List<String> winnerNames() {
-        return List.copyOf(winners.values());
+        return opponentWinner == null ? List.copyOf(winners.values()) : List.of(opponentWinner);
+    }
+
+    public void defeatedBy(String opponent) {
+        opponentWinner = opponent;
     }
 
     public void death(Player victim) {
@@ -246,20 +257,20 @@ public final class RoundSummary {
             participants.forEach(player -> moment(player, Achievement.NETWORK, "nachteule"));
         }
         participants.forEach(player -> score(player).xp += api.xp().award(player, XpReward.PARTICIPATION));
-        var names = String.join(", ", winners.values());
+        var names = String.join(", ", winnerNames());
         store(names);
         book();
         api.achievements().afterRound(api.server().group(), participants);
-        var winnerLine = winners.isEmpty()
+        var winnerLine = winnerNames().isEmpty()
                 ? messages.get("summary.draw")
                 : messages.get("summary.winner", Placeholder.unparsed("winner", names));
-        var spectatorResult = winners.isEmpty() ? messages.get("summary.result.draw")
+        var spectatorResult = winnerNames().isEmpty() ? messages.get("summary.result.draw")
                 : messages.get("summary.result.winner", Placeholder.unparsed("winner", names));
         resultsShown = true;
         for (var player : Bukkit.getOnlinePlayers()) {
             var score = scores.get(player.getUniqueId());
             var result = messages.get(winners.containsKey(player.getUniqueId()) ? "summary.result.win"
-                    : winners.isEmpty() ? "summary.result.draw" : "summary.result.lose");
+                    : winnerNames().isEmpty() ? "summary.result.draw" : "summary.result.lose");
             player.sendMessage(score == null
                     ? messages.get("summary.spectator", Placeholder.component("game", game),
                     Placeholder.component("result", spectatorResult))
@@ -280,19 +291,23 @@ public final class RoundSummary {
         }
         var sound = scores.containsKey(player.getUniqueId())
                 ? winners.containsKey(player.getUniqueId()) ? Sounds.WIN : Sounds.LOSE : null;
-        api.notifications().important(player, resultTitle(messages, game, winners, player.getUniqueId()), sound);
+        api.notifications().important(player, resultTitle(messages, game, winners, winnerNames(), player.getUniqueId()), sound);
     }
 
     static Title resultTitle(Messages messages, Component game, Map<UUID, String> winners, UUID viewer) {
-        if (winners.isEmpty()) {
+        return resultTitle(messages, game, winners, List.copyOf(winners.values()), viewer);
+    }
+
+    static Title resultTitle(Messages messages, Component game, Map<UUID, String> winners, List<String> names, UUID viewer) {
+        if (names.isEmpty()) {
             return Title.title(messages.get("summary.ending.draw"), game, RESULT);
         }
         if (winners.containsKey(viewer)) {
             return Title.title(messages.get("summary.ending.win"), game, RESULT);
         }
         return Title.title(messages.get("summary.ending.finished"),
-                messages.get(winners.size() == 1 ? "summary.ending.winner" : "summary.ending.winners",
-                        Placeholder.unparsed("winner", String.join(", ", winners.values()))), RESULT);
+                messages.get(names.size() == 1 ? "summary.ending.winner" : "summary.ending.winners",
+                        Placeholder.unparsed("winner", String.join(", ", names))), RESULT);
     }
 
     void returningIn(int seconds) {
@@ -364,7 +379,7 @@ public final class RoundSummary {
     private void book() {
         var rows = new ArrayList<Row>();
         scores.forEach((id, score) -> {
-            var delta = score.stats(winners.containsKey(id), !winners.isEmpty());
+            var delta = score.stats(winners.containsKey(id), !winnerNames().isEmpty());
             if (!delta.equals(Stats.EMPTY)) {
                 rows.add(new Row(id, score.name, delta));
             }

@@ -4,17 +4,21 @@ plugins {
 
 val libs = the<VersionCatalogsExtension>().named("libs")
 
-// Runs one Paper server (port 25566, announced to the dev Velocity as "lobby") with every plugin in this directory
-// plus LuckPerms and ViaVersion, on the same lobby map as the compose network. Needs the MariaDB from docker-compose.yml.
-// `-Pplugins=core,lobby` limits the set (BlockcraftAPI is always included).
+// Runs one Paper server on port 25566 with LuckPerms and ViaVersion. Needs the dev MariaDB and Velocity.
+// `-Pgame=zombies` selects its group, map and isolated run directory; the default remains the lobby in run/paper.
+// `-Pplugins=core,lobby` limits the plugin set (BlockcraftAPI is always included).
 val selectedPlugins = providers.gradleProperty("plugins").map { it.split(",").map(String::trim).toSet() }
+val localGame = providers.gradleProperty("game").orElse("lobby")
 
 tasks.runServer {
     minecraftVersion(libs.findVersion("minecraft").get().requiredVersion)
-    runDirectory = rootProject.layout.projectDirectory.dir("run/paper")
+    runDirectory = rootProject.layout.projectDirectory.dir(if (providers.gradleProperty("game").isPresent) "run/paper-${localGame.get()}" else "run/paper")
     systemProperty("com.mojang.eula.agree", "true")
-    environment("BLOCKCRAFT_SERVER_NAME", "lobby")
-    environment("BLOCKCRAFT_WORLD_TEMPLATE", rootProject.file("worlds/lobby").absolutePath)
+    environment("BLOCKCRAFT_SERVER_NAME", localGame.get())
+    if (providers.gradleProperty("game").isPresent) {
+        environment("BLOCKCRAFT_SERVER_GROUP", localGame.get())
+    }
+    environment("BLOCKCRAFT_WORLD_TEMPLATE", rootProject.file("worlds/${localGame.get()}").absolutePath)
     dependsOn(":packRanks")
     doFirst {
         copy {

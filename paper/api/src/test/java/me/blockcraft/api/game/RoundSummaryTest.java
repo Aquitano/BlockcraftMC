@@ -83,6 +83,15 @@ public class RoundSummaryTest {
     }
 
     @Test
+    public void aCooperativeDefeatNamesTheEnemyInsteadOfShowingADraw() throws Exception {
+        var title = RoundSummary.resultTitle(messages(), Component.text("Zombies"), Map.of(),
+                List.of("Die Horde"), UUID.randomUUID());
+
+        assertEquals("Runde vorbei!", plain(title.title()));
+        assertEquals("Die Horde hat gewonnen!", plain(title.subtitle()));
+    }
+
+    @Test
     public void everyoneOutOrBeatenBooksOneLossAndADrawCostsTheStandingNone() {
         var knockedOut = new RoundSummary.Score("Steve");
         knockedOut.eliminated = true;
