@@ -52,7 +52,7 @@ Neither attempt should spend gold or grant an item.
 8. Use the knife and collect each powerup. Check team-wide ammo, double gold, and instant kills.
 9. Take damage at full food. Health must stay unchanged for five seconds, then recover through the mode's regeneration.
 10. Let an Inferno blast or Exploder explosion defeat the last fighter on the final wave. The result must remain a loss without clear rewards or another wave.
-11. Use the courtyard shelters and the wings' divided aisles to break line of sight. Check that enemies can still follow both routes around the cover.
+11. Use the courtyard features and each wing's cover (racks, jeep, generator, operating room) to break line of sight. Check that enemies can still follow both routes around the cover.
 12. Listen at the start of each wave for the horn, and during intermissions for groans behind the boards. A wave clear shows a title.
 
 ## Player states and integration

@@ -12,6 +12,6 @@
   "zombies": {
     "name": "Außenposten",
     "start-pos": { "x": 0, "z": 0 },
-    "render-mask": [{ "min-x": -50, "max-x": 50, "min-z": -50, "max-z": 50 }]
+    "render-mask": [{ "min-x": -64, "max-x": 64, "min-z": -64, "max-z": 64 }]
   }
 }

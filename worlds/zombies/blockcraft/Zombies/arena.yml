@@ -10,7 +10,7 @@ origin:
 starter:
   build: true
   built: true
-  radius: 49
+  radius: 63
   height: 12
 lobby:
   x: 0.5

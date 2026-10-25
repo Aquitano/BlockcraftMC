@@ -7,7 +7,7 @@ origin: {x: 0, y: 96, z: 0}
 starter:
   build: true
   built: false
-  radius: 49
+  radius: 63
   height: 12
 lobby: {x: 0.5, y: 0, z: 0.5, yaw: 180}
 spawn: {x: 0.5, y: 0, z: 0.5, yaw: 180}

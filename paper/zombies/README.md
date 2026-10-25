@@ -29,8 +29,11 @@ The production overlay enables Zombies by default.
 The saved [Außenposten template](../../worlds/zombies) includes the arena and its map-owned `blockcraft/Zombies/arena.yml`.
 Both local launch options restore that template before starting the game.
 For a new world without an arena definition, the plugin copies the bundled [arena definition](src/main/resources/arena.yml).
-Its generator uses an empty 99 by 99 region above Y=95 and refuses to replace existing blocks.
-The courtyard has covered shelters and planters. Each larger wing has divided aisles, storage alcoves, and skylights.
+Its generator uses an empty 127 by 127 region above Y=95 and refuses to replace existing blocks.
+A fixed seed makes every generated copy identical.
+The courtyard has a watchtower, a radio shelter, a collapsed shelter, a campfire, and the two supply kiosks.
+Each wing is furnished for its job: depot racks and a forklift, a workshop jeep on a lift, the generator, and the clinic ward.
+The yards between the wings hold a motor pool, a tank farm, a graveyard, and a helipad. A forest surrounds the fence.
 Change `origin` before generation if that region is occupied. Set `starter.build: false` for a hand-built arena.
 
 Edit `rooms`, `windows`, `stations`, and `notes` in the map-owned file to change the layout.
@@ -39,6 +42,7 @@ The `yard` room starts unlocked. Each other room has a gold price and a door box
 Door and window block data define the blocks the plugin resets at startup and shutdown.
 All eight windows have enclosed spawn rooms. Mobs approach the boards inside those rooms, break them, and walk through the opening.
 Iron bars sit above the opening. Players cannot enter spawn rooms, even when the adjacent wings are open.
+The courtyard windows lead into locked storerooms. Each outer window has a barred gate in the perimeter fence.
 
 Every waxed copper bulb inside a room is a power light. The plugin switches them off at startup.
 When the power is bought, they light up in order of distance from the power station.
