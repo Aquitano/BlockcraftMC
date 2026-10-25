@@ -37,6 +37,8 @@ wave:
   subtitle: "<muted><enemies> Gegner <dark>· <muted>Bleibt zusammen"
   bar: "<zombies>Welle <wave>/<total> <dark>· <primary><remaining> Gegner übrig"
   cleared: "<prefix><success>Welle <wave> überlebt! <accent>+<gold> Gold <muted>für jeden Spieler."
+  cleared-title: "<success>Welle <wave> überlebt"
+  cleared-subtitle: "<muted>Nächste Welle in <seconds>s <dark>· <muted>Repariert die Fenster"
 timer:
   intermission: "<zombies>Ausrüsten <dark>· <primary>Nächste Welle in <seconds>s"
   wave: "<zombies>Verbleibende Zeit <dark>· <primary><time>"

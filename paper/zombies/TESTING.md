@@ -34,6 +34,7 @@ Coordinates below are relative to `origin`, which defaults to world `(0, 96, 0)`
 | West clinic | 750 | Team revive `(-36, 0, -10)` | After power, recover both downed and bled-out teammates. Refuse payment when nobody needs help. |
 
 Open each wing and walk to its stations. Check that the floating labels identify the door price and station.
+Each bought door rolls up row by row. Turning on the power lights the bulbs outward from the generator, including the jeep's headlights.
 Try a purchase with too little gold, then move away with a shop open and try again.
 Neither attempt should spend gold or grant an item.
 
@@ -50,6 +51,7 @@ Neither attempt should spend gold or grant an item.
 9. Take damage at full food. Health must stay unchanged for five seconds, then recover through the mode's regeneration.
 10. Let an Inferno blast or Exploder explosion defeat the last fighter on the final wave. The result must remain a loss without clear rewards or another wave.
 11. Use the courtyard shelters and the wings' divided aisles to break line of sight. Check that enemies can still follow both routes around the cover.
+12. Listen at the start of each wave for the horn, and during intermissions for groans behind the boards. A wave clear shows a title.
 
 ## Player states and integration
 

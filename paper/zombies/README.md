@@ -39,6 +39,9 @@ The `yard` room starts unlocked. Each other room has a gold price and a door box
 Door and window block data define the blocks the plugin resets at startup and shutdown.
 All eight windows have enclosed spawn rooms. Mobs approach the boards inside those rooms, break them, and walk through the opening.
 Iron bars sit above the opening. Players cannot enter spawn rooms, even when the adjacent wings are open.
+
+Every waxed copper bulb inside a room is a power light. The plugin switches them off at startup.
+When the power is bought, they light up in order of distance from the power station.
 Keep at least one window in `yard`, so the first wave can spawn before players buy a door.
 
 Use `/setup lobby`, `/setup spawn`, and `/setup spectator` while standing at each desired position.

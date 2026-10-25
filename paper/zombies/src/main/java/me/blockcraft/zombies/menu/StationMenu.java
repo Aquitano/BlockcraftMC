@@ -69,7 +69,7 @@ public final class StationMenu extends Menu {
                         config.armorPrice() * (tier + 1), () -> survivor.armor() == tier && tier < 2, () -> game.armor(player)));
             }
             case POWER -> add(13, new Offer(game.messages().get("shop.power"), Material.REDSTONE, config.powerPrice(),
-                    () -> !game.powered(), game::powerOn));
+                    () -> !game.powered(), () -> game.powerOn(station)));
             case UPGRADE -> {
                 var selected = game.weapons().held(player);
                 add(13, new Offer(game.messages().get("shop.upgrade"), Material.ENCHANTED_BOOK, config.upgradePrice(),

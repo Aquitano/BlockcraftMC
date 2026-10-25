@@ -3,10 +3,10 @@ package me.blockcraft.zombies.arena;
 import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
+import org.bukkit.block.data.type.CopperBulb;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Display;
@@ -43,6 +43,7 @@ public final class ArenaMap {
     private final Map<String, Room> rooms = new LinkedHashMap<>();
     private final List<Window> windows = new ArrayList<>();
     private final List<Station> stations = new ArrayList<>();
+    private final List<Block> lights = new ArrayList<>();
     private final Set<String> unlocked = new HashSet<>(Set.of("yard"));
     private final List<BlockState> originals = new ArrayList<>();
     private final List<TextDisplay> labels = new ArrayList<>();
@@ -96,6 +97,7 @@ public final class ArenaMap {
     public List<Window> windows() { return List.copyOf(windows); }
     public List<Station> stations() { return List.copyOf(stations); }
     public List<Room> rooms() { return List.copyOf(rooms.values()); }
+    public List<Block> lights() { return List.copyOf(lights); }
     public boolean unlocked(String room) { return unlocked.contains(room); }
     public void unlock(String room) { unlocked.add(room); }
 
@@ -174,6 +176,12 @@ public final class ArenaMap {
             block.setBlockData(windowData, false);
             originals.add(block.getState());
         }));
+        rooms.values().stream().flatMap(room -> room.bounds().blocks(world).stream())
+                .filter(block -> block.getBlockData() instanceof CopperBulb).forEach(block -> {
+                    lit(block, false);
+                    originals.add(block.getState());
+                    lights.add(block);
+                });
         world.setDifficulty(org.bukkit.Difficulty.valueOf(yaml.getString("difficulty", "NORMAL")));
         world.setGameRule(org.bukkit.GameRules.NATURAL_HEALTH_REGENERATION, false);
         me.blockcraft.api.world.Worlds.setTime(world, yaml.getLong("time", 18000));
@@ -196,12 +204,23 @@ public final class ArenaMap {
                 && point("spawn").clone().add(0, -1, 0).getBlock().getType().isSolid();
     }
 
-    public void open(Room room) {
+    /** Unlocks the room and returns its door from the bottom row up; the caller clears the rows. */
+    public List<List<Block>> open(Room room) {
         unlocked.add(room.id());
-        room.door().blocks(world).forEach(block -> block.setType(Material.AIR, false));
         var label = doorLabels.get(room.id());
         if (label != null) {
             label.display().text(label.opened());
+        }
+        var door = room.door();
+        return java.util.stream.IntStream.rangeClosed(door.minY(), door.maxY())
+                .mapToObj(y -> door.blocks(world).stream().filter(block -> block.getY() == y).toList()).toList();
+    }
+
+    public static void lit(Block block, boolean lit) {
+        if (block.getBlockData() instanceof CopperBulb bulb) {
+            bulb.setLit(lit);
+            bulb.setPowered(false);
+            block.setBlockData(bulb, false);
         }
     }
 
@@ -250,6 +269,7 @@ public final class ArenaMap {
         labels.forEach(TextDisplay::remove);
         restoreBlocks();
         originals.clear();
+        lights.clear();
         if (chunkOwner != null) {
             world.removePluginChunkTickets(chunkOwner);
         }

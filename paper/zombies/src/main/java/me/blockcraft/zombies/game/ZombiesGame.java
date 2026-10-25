@@ -34,7 +34,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Display;
@@ -75,6 +74,7 @@ public final class ZombiesGame {
     private final GameSidebar sidebar;
     private final Weapons weapons;
     private final Enemies enemies;
+    private final ArenaEffects effects;
     private final Map<UUID, Survivor> survivors = new LinkedHashMap<>();
     private final Map<UUID, Location> downed = new HashMap<>();
     private final Map<UUID, TextDisplay> corpses = new HashMap<>();
@@ -111,6 +111,7 @@ public final class ZombiesGame {
         this.sidebar = new GameSidebar(messages.get("scoreboard.title"), round);
         this.weapons = new Weapons(this);
         this.enemies = new Enemies(this);
+        this.effects = new ArenaEffects(plugin, arena);
         this.task = Bukkit.getScheduler().runTaskTimer(plugin, this::tick, 1, 1);
         arena.labels(messages);
     }
@@ -211,6 +212,7 @@ public final class ZombiesGame {
         title(plan.boss() ? "wave.boss-title" : "wave.title", "wave.subtitle",
                 Formatter.number("wave", wave), Formatter.number("enemies", plan.enemies()));
         Sounds.COUNTDOWN_GO.playToAll();
+        effects.horn(plan.boss());
         waveBar = BossBar.bossBar(Component.empty(), 1, plan.boss() ? BossBar.Color.RED : BossBar.Color.GREEN, BossBar.Overlay.NOTCHED_10);
         timerBar = new TimerBar(messages, "timer.wave", config.waveSeconds());
         clock = round.clock(timerBar, remaining -> refreshSidebar(), () -> finish(false));
@@ -232,6 +234,9 @@ public final class ZombiesGame {
         if (wave >= config.waves().total()) {
             finish(true);
         } else {
+            title("wave.cleared-title", "wave.cleared-subtitle", Formatter.number("wave", wave),
+                    Formatter.number("seconds", config.intermissionSeconds()));
+            Sounds.LEVEL_UP.playToAll();
             intermission();
         }
     }
@@ -248,6 +253,9 @@ public final class ZombiesGame {
 
     private void tick() {
         tick++;
+        if (phase != Phase.ENDING) {
+            effects.tick(tick, !inWave());
+        }
         if (!running()) {
             return;
         }
@@ -497,15 +505,15 @@ public final class ZombiesGame {
             feedback(player, "shop.not-enough");
             return;
         }
-        arena.open(room);
+        effects.openDoor(room);
         broadcast("room.opened", Placeholder.unparsed("player", player.getName()), Placeholder.component("room", messages.get("room." + room.id())));
         Sounds.PURCHASE.playToAll();
     }
 
-    public void powerOn() {
+    public void powerOn(ArenaMap.Station generator) {
         powered = true;
         broadcast("game.powered");
-        arena.world().spawnParticle(Particle.ELECTRIC_SPARK, arena.point("spawn").add(0, 2, 0), 50, 6, 1, 6);
+        effects.powerOn(generator.location());
     }
 
     public void teamRevive() {
