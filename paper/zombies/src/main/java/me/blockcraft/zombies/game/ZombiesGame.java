@@ -75,6 +75,7 @@ public final class ZombiesGame {
     private final Weapons weapons;
     private final Enemies enemies;
     private final ArenaEffects effects;
+    private final Notes notes;
     private final Map<UUID, Survivor> survivors = new LinkedHashMap<>();
     private final Map<UUID, Location> downed = new HashMap<>();
     private final Map<UUID, TextDisplay> corpses = new HashMap<>();
@@ -112,6 +113,7 @@ public final class ZombiesGame {
         this.weapons = new Weapons(this);
         this.enemies = new Enemies(this);
         this.effects = new ArenaEffects(plugin, arena);
+        this.notes = new Notes(messages, arena, config.noteCoins());
         this.task = Bukkit.getScheduler().runTaskTimer(plugin, this::tick, 1, 1);
         arena.labels(messages);
     }
@@ -123,6 +125,7 @@ public final class ZombiesGame {
     public LobbyHotbar lobbyHotbar() { return lobbyHotbar; }
     public Weapons weapons() { return weapons; }
     public Enemies enemies() { return enemies; }
+    public Notes notes() { return notes; }
     public Survivor survivor(Player player) { return survivors.get(player.getUniqueId()); }
     public boolean isLobby() { return phase == Phase.LOBBY; }
     public boolean inWave() { return phase == Phase.WAVE; }
@@ -164,6 +167,7 @@ public final class ZombiesGame {
 
     public void quit(Player player) {
         boolean participated = survivors.remove(player.getUniqueId()) != null;
+        notes.forget(player);
         removeCorpse(player.getUniqueId());
         lastHurt.remove(player.getUniqueId());
         protectedUntil.remove(player.getUniqueId());

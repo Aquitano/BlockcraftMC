@@ -40,6 +40,20 @@ public class ArenaMapTest {
         }
     }
 
+    @Test
+    public void everyNoteIsItsOwnBlockInsideItsRoom() throws Exception {
+        var arena = arena();
+        assertFalse(arena.notes().isEmpty());
+        for (var note : arena.notes()) {
+            var at = note.location();
+            assertTrue(note.id(), arena.rooms().stream().anyMatch(room -> room.id().equals(note.room()) && room.bounds().contains(at)));
+            assertTrue(note.id(), arena.stations().stream().noneMatch(station -> station.location().toVector().toBlockVector().equals(at.toVector().toBlockVector())));
+            assertTrue(note.id(), arena.rooms().stream().noneMatch(room -> room.door().contains(at)));
+            assertTrue(note.id(), arena.windows().stream().noneMatch(window -> window.boards().contains(at)
+                    || window.bay().map(bay -> bay.contains(at)).orElse(false)));
+        }
+    }
+
     private ArenaMap arena() throws Exception {
         var file = temporary.newFile("arena.yml").toPath();
         try (var resource = getClass().getResourceAsStream("/arena.yml")) {

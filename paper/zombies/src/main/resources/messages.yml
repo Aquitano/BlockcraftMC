@@ -25,6 +25,7 @@ guide:
     - "<muted>Schleiche neben einem gefallenen Mitspieler, um ihn zu retten. Verblutete Spieler kehren nach der Welle zurück und verlieren ihre Perks. Fällt der letzte Spieler, verliert das Team."
     - "<muted>Im Solo-Spiel rettet dich der Perk Schnelle Wiederbelebung einmal vor dem Tod und wird dabei verbraucht."
     - "<muted>Nach <heal-delay> Sekunden ohne Schaden heilst du dich langsam. Gold und Ausrüstung gelten nur für diese Runde. Netzwerk-Coins und Stats bleiben erhalten."
+    - "<muted>Im Außenposten liegen Notizen auf Lesepulten. Sie erzählen, was hier passiert ist. Jede Notiz, die du zum ersten Mal liest, bringt Netzwerk-Coins."
 game:
   enemy-name: "Die Horde"
   started: "<prefix><muted>Ihr startet mit <accent><players> <muted>Spielern. Überlebt <accent><waves> <muted>Wellen!"
@@ -125,6 +126,47 @@ shop:
   not-enough: "<error>Du hast nicht genug Gold."
   bought: "<success>Gekauft <dark>· <accent><gold> Gold übrig"
   mystery-result: "<prefix><muted>Die Kiste enthält <zombies><weapon><muted>!"
+note:
+  title: "<arrow><zombies>Notiz <dark>· <muted><note>"
+  found-title: "<zombies>Notiz gefunden"
+  found-subtitle: "<accent>+<coins> Coins <dark>· <muted><found>/<total> Notizen"
+  found: "<prefix><muted>Du hast <zombies><note> <muted>gelesen. <accent>+<coins> Coins <dark>· <muted><found>/<total> Notizen gefunden"
+  yard:
+    name: "Wachbuch"
+    body:
+      - "<muted>Tag 1. Der Konvoi ist nicht gekommen. Der Funk ist seit 04:12 Uhr tot."
+      - "<muted>Tag 3. Bewegung am Waldrand. Wir haben die Fenster vernagelt. Der Kommandant sagt, es sind Plünderer."
+      - "<muted>Tag 4. Plünderer stöhnen nicht."
+      - "<dark>Wache Nord"
+  depot:
+    name: "Lieferschein"
+    body:
+      - "<muted>Lieferung 7. Vierzig Kisten, Inhalt medizinisch. Nicht öffnen, nur kühl lagern."
+      - "<muted>Der Kühlraum ist voll, deshalb steht Kiste 23 in der Halle."
+      - "<muted>Kiste 23 kratzt von innen. Wir haben sie nicht geöffnet. Jetzt ist sie offen."
+      - "<dark>Lagerist M. Brandt"
+  workshop:
+    name: "Werkstattbuch"
+    body:
+      - "<muted>Der Jeep bleibt auf der Hebebühne. Ohne Ersatzteile kommt hier keiner mehr weg."
+      - "<muted>Ich habe die alten Gewehre umgebaut. Sie schießen schneller und halten weniger aus. Wie wir."
+      - "<muted>Sobald der Strom wieder läuft, holt die Werkbank mehr aus jeder Waffe heraus."
+      - "<dark>Mechanikerin J. Albers"
+  power:
+    name: "Schichtprotokoll"
+    body:
+      - "<muted>23:40 Uhr. Generator abgeschaltet. Befehl des Kommandanten: Dunkelheit, damit sie uns nicht finden."
+      - "<muted>23:55 Uhr. Sie finden uns trotzdem. Mit Licht hätten wir sie wenigstens kommen sehen."
+      - "<muted>Wer das liest: Schalte ihn wieder ein. Die Krankenstation braucht den Strom."
+      - "<dark>Techniker O. Kranz"
+  clinic:
+    name: "Krankenakte"
+    body:
+      - "<muted>Patient 12. Biss am Unterarm, Fieber 41,2 Grad. Kein Puls seit 06:10 Uhr."
+      - "<muted>06:25 Uhr. Patient 12 sitzt aufrecht."
+      - "<muted>Die Leichenhalle ist verriegelt. Die Fächer sind von innen zerkratzt."
+      - "<muted>Wer das findet: Haltet die Fenster zu und bleibt zusammen."
+      - "<dark>Dr. E. Vogt"
 powerup:
   max_ammo: "<success>Volle Munition"
   double_gold: "<accent>Doppeltes Gold"

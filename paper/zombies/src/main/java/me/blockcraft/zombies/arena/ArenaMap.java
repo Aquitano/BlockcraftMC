@@ -35,6 +35,10 @@ public final class ArenaMap {
         }
     }
     public record Station(String id, String room, StationKind kind, Location location) { }
+    public record Note(String id, String room, Location location) {
+        public static final String ITEM_PREFIX = "zombies.note.";
+        public String item() { return ITEM_PREFIX + id; }
+    }
 
     private static final String DISPLAY_TAG = "blockcraft_zombies_display";
     private final Path file;
@@ -43,6 +47,7 @@ public final class ArenaMap {
     private final Map<String, Room> rooms = new LinkedHashMap<>();
     private final List<Window> windows = new ArrayList<>();
     private final List<Station> stations = new ArrayList<>();
+    private final List<Note> notes = new ArrayList<>();
     private final List<Block> lights = new ArrayList<>();
     private final Set<String> unlocked = new HashSet<>(Set.of("yard"));
     private final List<BlockState> originals = new ArrayList<>();
@@ -69,6 +74,12 @@ public final class ArenaMap {
             String path = "stations." + id + ".";
             stations.add(new Station(id, yaml.getString(path + "room", "yard"),
                     StationKind.valueOf(yaml.getString(path + "kind")), point(path + "location")));
+        }
+        if (yaml.isConfigurationSection("notes")) {
+            for (String id : section("notes").getKeys(false)) {
+                String path = "notes." + id + ".";
+                notes.add(new Note(id, yaml.getString(path + "room", "yard"), point(path + "location")));
+            }
         }
     }
 
@@ -97,6 +108,7 @@ public final class ArenaMap {
     public List<Window> windows() { return List.copyOf(windows); }
     public List<Station> stations() { return List.copyOf(stations); }
     public List<Room> rooms() { return List.copyOf(rooms.values()); }
+    public List<Note> notes() { return List.copyOf(notes); }
     public List<Block> lights() { return List.copyOf(lights); }
     public boolean unlocked(String room) { return unlocked.contains(room); }
     public void unlock(String room) { unlocked.add(room); }
@@ -114,6 +126,10 @@ public final class ArenaMap {
 
     public Optional<Station> stationAt(Block block) {
         return stations.stream().filter(station -> station.location().getBlock().equals(block)).findFirst();
+    }
+
+    public Optional<Note> noteAt(Block block) {
+        return notes.stream().filter(note -> note.location().getBlock().equals(block)).findFirst();
     }
 
     public boolean enterable(Location location) {
@@ -195,7 +211,9 @@ public final class ArenaMap {
                         && rooms.get(window.room()).bounds().contains(window.entry())
                         && window.bay().map(bay -> bay.contains(window.spawn()) && !bay.contains(window.entry())).orElse(true))
                 && stations.stream().allMatch(station -> rooms.containsKey(station.room())
-                        && rooms.get(station.room()).bounds().contains(station.location()));
+                        && rooms.get(station.room()).bounds().contains(station.location()))
+                && notes.stream().allMatch(note -> rooms.containsKey(note.room())
+                        && rooms.get(note.room()).bounds().contains(note.location()));
     }
 
     public boolean ready() {

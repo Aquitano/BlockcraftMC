@@ -17,6 +17,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Event;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityCombustEvent;
@@ -69,6 +70,20 @@ public final class GameListener implements Listener {
         event.quitMessage(null);
         game.quit(event.getPlayer());
         knifeReady.remove(event.getPlayer().getUniqueId());
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onReadNote(PlayerInteractEvent event) {
+        var block = event.getClickedBlock();
+        var player = event.getPlayer();
+        if (event.getHand() != EquipmentSlot.HAND || event.getAction() != Action.RIGHT_CLICK_BLOCK || block == null || building(player)
+                || game.running() && !game.fighting(player)) {
+            return;
+        }
+        game.arena().noteAt(block).ifPresent(note -> {
+            event.setCancelled(true);
+            game.notes().read(player, note);
+        });
     }
 
     @EventHandler(priority = EventPriority.HIGH)

@@ -33,8 +33,8 @@ Its generator uses an empty 99 by 99 region above Y=95 and refuses to replace ex
 The courtyard has covered shelters and planters. Each larger wing has divided aisles, storage alcoves, and skylights.
 Change `origin` before generation if that region is occupied. Set `starter.build: false` for a hand-built arena.
 
-Edit `rooms`, `windows`, and `stations` in the map-owned file to change the layout.
-Window entries must lie in their named room. Station locations must also lie in their named room.
+Edit `rooms`, `windows`, `stations`, and `notes` in the map-owned file to change the layout.
+Window entries must lie in their named room. Station and note locations must also lie in their named room.
 The `yard` room starts unlocked. Each other room has a gold price and a door box.
 Door and window block data define the blocks the plugin resets at startup and shutdown.
 All eight windows have enclosed spawn rooms. Mobs approach the boards inside those rooms, break them, and walk through the opening.
@@ -42,6 +42,8 @@ Iron bars sit above the opening. Players cannot enter spawn rooms, even when the
 
 Every waxed copper bulb inside a room is a power light. The plugin switches them off at startup.
 When the power is bought, they light up in order of distance from the power station.
+Each note is a lectern. Its text lives in `messages.yml` under `note.<id>`.
+The first read of a note unlocks `zombies.note.<id>` and pays `rewards.note` network coins.
 Keep at least one window in `yard`, so the first wave can spawn before players buy a door.
 
 Use `/setup lobby`, `/setup spawn`, and `/setup spectator` while standing at each desired position.

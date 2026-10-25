@@ -31,6 +31,7 @@ rewards:
   kill: 0
   wave: 1
   win: 40
+  note: 25
 revive:
   bleed-seconds: 25
   hold-seconds: 4

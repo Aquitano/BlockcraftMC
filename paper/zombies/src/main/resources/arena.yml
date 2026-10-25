@@ -90,3 +90,9 @@ stations:
   generator: {room: power, kind: POWER, location: {x: -10, y: 0, z: 36}}
   clinic-perks: {room: clinic, kind: PERKS, location: {x: -36, y: 0, z: 10}}
   clinic-revive: {room: clinic, kind: TEAM_REVIVE, location: {x: -36, y: 0, z: -10}}
+notes:
+  yard: {room: yard, location: {x: 7, y: 0, z: 5}}
+  depot: {room: depot, location: {x: 41, y: 0, z: 12}}
+  workshop: {room: workshop, location: {x: -13, y: 0, z: -41}}
+  power: {room: power, location: {x: 13, y: 0, z: 21}}
+  clinic: {room: clinic, location: {x: -41, y: 0, z: -13}}
