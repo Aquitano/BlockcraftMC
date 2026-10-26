@@ -177,7 +177,8 @@ public final class GameListener implements Listener {
         if (event.getEntity() instanceof Mob mob && game.enemies().contains(mob)) {
             event.getDrops().clear();
             event.setDroppedExp(0);
-            game.killed(game.enemies().killed(mob), mob.getLocation());
+            var spot = game.enemies().dropSpot(mob);
+            game.killed(game.enemies().killed(mob), spot);
         }
     }
 

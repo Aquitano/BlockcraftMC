@@ -1,6 +1,7 @@
 package me.blockcraft.zombies.game;
 
 import me.blockcraft.zombies.arena.ArenaMap;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
@@ -208,6 +209,12 @@ public final class Enemies {
         } finally {
             applyingDamage = false;
         }
+    }
+
+    /** Where what an enemy leaves behind can be reached: one still outside its window leaves it just inside. */
+    public Location dropSpot(Mob mob) {
+        var enemy = enemies.get(mob.getUniqueId());
+        return enemy == null || enemy.breached ? mob.getLocation() : enemy.window.entry();
     }
 
     public Player killed(Mob mob) {

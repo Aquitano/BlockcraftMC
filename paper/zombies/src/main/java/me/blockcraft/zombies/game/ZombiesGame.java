@@ -445,6 +445,7 @@ public final class ZombiesGame {
             item.setCustomNameVisible(true);
             item.setGlowing(true);
             item.setPersistent(false);
+            item.setVelocity(new org.bukkit.util.Vector());
             drops.put(item.getUniqueId(), new Drop(item, kind, tick + config.powerupTicks()));
         }
     }
