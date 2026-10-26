@@ -102,3 +102,15 @@ exploder:
   rush-speed: 0.34
   radius: 4.5
   knockback: 1.1
+# From from-wave, each wave that is neither a boss nor a hound wave gets one event with chance, picked by weight.
+# The blood moon is decided as the wave starts; the others strike once a random share between earliest-share and
+# latest-share of the wave has spawned. The power outage needs bought power, the toxic fog a second open room.
+events:
+  from-wave: 4
+  chance: 0.35
+  earliest-share: 0.2
+  latest-share: 0.6
+  blood_moon: {weight: 1, speed-multiplier: 1.25, gold-multiplier: 2}
+  power_outage: {weight: 1, fix-seconds: 4, radius: 2.5, gold: 150, darkness-seconds: 4}
+  bounty: {weight: 1, gold: 250, seconds: 45}
+  toxic_fog: {weight: 1, warning-seconds: 5, seconds: 12, pulse-ticks: 20, damage: 2, slow-seconds: 2}

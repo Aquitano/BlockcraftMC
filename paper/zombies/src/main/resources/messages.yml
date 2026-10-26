@@ -41,6 +41,40 @@ wave:
   cleared: "<prefix><success>Welle <wave> überlebt! <accent>+<gold> Gold <muted>für jeden Spieler."
   cleared-title: "<success>Welle <wave> überlebt"
   cleared-subtitle: "<muted>Nächste Welle in <seconds>s <dark>· <muted>Repariert die Fenster"
+event:
+  blood_moon:
+    name: "<arrow><error>Blutmond"
+    goal: "<arrow><muted>Jeder Kill <dark>· <accent><multiplier>x Gold"
+    title: "<error>Blutmond <dark>· <error>Welle <wave>"
+    subtitle: "<muted>Die Horde ist schneller <dark>· <accent><multiplier>x Gold pro Kill"
+    announce: "<prefix><error>Ein Blutmond geht auf! <muted>Die Gegner dieser Welle sind schneller, jeder Kill bringt <accent><multiplier>x Gold<muted>."
+  power_outage:
+    name: "<arrow><error>Stromausfall"
+    goal: "<arrow><muted>Generator reparieren <dark>· <accent><progress>%"
+    title: "<error>Stromausfall"
+    subtitle: "<muted>Schleiche <seconds>s am Generator, um ihn zu reparieren"
+    announce: "<prefix><error>Der Generator ist ausgefallen! <muted>Perks, Verbesserungen und die Team-Station haben keinen Strom. Schleiche am Generator, um ihn zu reparieren."
+    fixing: "<success>Generator wird repariert <dark>· <primary><progress>%"
+    fixed: "<prefix><primary><player> <muted>hat den Generator repariert. <accent>+<gold> Gold"
+    restored: "<prefix><muted>Der Generator springt wieder an."
+  bounty:
+    name: "<arrow><accent>Kopfgeld"
+    goal: "<arrow><muted>Leuchtendes Ziel <dark>· <accent><seconds>s"
+    tag: "<accent>Kopfgeld <dark>· <enemy> <dark>· <accent><gold> Gold"
+    title: "<accent>Kopfgeld"
+    subtitle: "<muted>Erledige den leuchtenden Gegner <dark>· <accent>+<gold> Gold"
+    announce: "<prefix><accent>Kopfgeld! <muted>Wer den leuchtenden Gegner in <accent><seconds>s <muted>erledigt, erhält <accent><gold> Gold<muted>."
+    claimed: "<prefix><primary><player> <muted>kassiert das Kopfgeld. <accent>+<gold> Gold"
+    expired: "<prefix><muted>Das Kopfgeld ist verfallen."
+    lost: "<prefix><muted>Das Ziel hat sich selbst gesprengt. Das Kopfgeld ist verfallen."
+  toxic_fog:
+    name: "<arrow><success>Giftnebel"
+    goal-warning: "<arrow><error>Gas <dark>· <muted><room> in <seconds>s"
+    goal: "<arrow><muted>Meidet <room> <dark>· <accent><seconds>s"
+    title: "<success>Giftnebel"
+    subtitle: "<muted>Gas im Bereich <room> in <seconds>s"
+    announce: "<prefix><success>Giftnebel! <muted>In <accent><seconds>s <muted>strömt Gas in den Bereich <zombies><room><muted>. Verlasst ihn!"
+    cleared: "<prefix><muted>Der Giftnebel im Bereich <zombies><room> <muted>hat sich verzogen."
 timer:
   intermission: "<zombies>Ausrüsten <dark>· <primary>Nächste Welle in <seconds>s"
   wave: "<zombies>Verbleibende Zeit <dark>· <primary><time>"
@@ -114,6 +148,7 @@ shop:
   buy: "<click>Kaufen"
   owned: "<muted>Bereits vorhanden oder gerade nicht verfügbar"
   requires-power: "<error>Schalte zuerst den Strom ein."
+  power-out: "<error>Der Strom ist ausgefallen. Repariert den Generator."
   weapon-hint:
     - "<muted>Du trägst höchstens zwei Waffen."
     - "<muted>Die gehaltene Waffe wird bei Bedarf ersetzt."
@@ -177,6 +212,7 @@ powerup:
 scoreboard:
   title: "<zombies><bold>Zombies"
   squad: "<muted><icon:mode> VERTEIDIGUNG"
+  event: "<muted><icon:time> EREIGNIS"
   wave: "<arrow><muted>Welle <primary><wave>/<total>"
   enemies: "<arrow><muted>Gegner <primary><enemies>"
   gold: "<arrow><accent><gold> Gold"

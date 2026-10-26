@@ -178,7 +178,7 @@ public final class GameListener implements Listener {
             event.getDrops().clear();
             event.setDroppedExp(0);
             var spot = game.enemies().dropSpot(mob);
-            game.killed(game.enemies().killed(mob), spot);
+            game.killed(game.enemies().killed(mob), mob, spot);
         }
     }
 

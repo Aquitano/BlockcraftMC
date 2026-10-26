@@ -58,6 +58,17 @@ Neither attempt should spend gold or grant an item.
 14. When three enemies remain in a wave, check that they speed up, and that a wave with nobody alive spawns its next enemy at once.
 15. Let an Exploder come within four blocks. It hisses, glows, smokes and rushes for 1.5 seconds. Shoot one before it goes off and nothing explodes; let another go off and the blast hurts less at its edge and throws you back. A wave drops at most two powerups.
 
+## Wave events
+
+To force one event, set `events.from-wave: 1`, `events.chance: 1` and every other event's `weight: 0`.
+Each event shows a title with a sound and a chat line, and its name and goal appear in the sidebar under EREIGNIS until it ends.
+
+1. Blutmond: the wave starts with a red title and a deeper horn instead of the normal one. The sky turns to midnight, red dust drifts around the fighters and the enemies, and the enemies move visibly faster. Each kill pays double gold. When the wave ends, the sky returns to dusk.
+2. Stromausfall: buy the power first; the event never comes without it. Mid-wave the bulbs go out from the generator outward and everyone sees darkness briefly. Perks, upgrade and team revive refuse with the outage notice. Sneak beside the generator: the action bar counts to 100 %, moving away resets it, and the fixer gets gold when the lights come back. Let a second outage run to the end of the wave and the power must return by itself.
+3. Kopfgeld: one enemy glows with a gold name tag. Kill it and the team reads who earned the bonus. Let another bounty run out and it expires with a chat line; a bounty exploder that blows itself up pays nobody.
+4. Giftnebel: open a second room first; the event never comes with only the courtyard open. A warning names the room you stand in and thin gas rises. After five seconds the room fills: staying inside poisons, slows and hurts you, and the hits can down you and be revived as usual. Step into another room and the hits stop.
+5. Boss and hound waves never get an event, and no wave gets two. Lose the round or stop the server during each event: the sky, the lights after a restart, and the enemy names must be back to normal.
+
 ## Player states and integration
 
 | Setup | Expected behavior |

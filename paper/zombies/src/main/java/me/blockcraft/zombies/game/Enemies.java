@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
@@ -75,6 +76,8 @@ public final class Enemies {
     }
 
     public int remaining() { return unspawned + enemies.size(); }
+    public double spawnedShare() { return plan == null ? 0 : 1 - unspawned / (double) plan.enemies(); }
+    public List<Mob> living() { return enemies.values().stream().map(enemy -> enemy.mob).filter(Mob::isValid).toList(); }
     public boolean contains(Entity entity) { return enemies.containsKey(entity.getUniqueId()); }
     public boolean breached(Entity entity) {
         var enemy = enemies.get(entity.getUniqueId());

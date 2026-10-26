@@ -2,6 +2,8 @@ package me.blockcraft.zombies.config;
 
 import me.blockcraft.zombies.game.Perk;
 import me.blockcraft.zombies.game.EnemyKind;
+import me.blockcraft.zombies.game.WaveEvent;
+import me.blockcraft.zombies.game.WavePlan;
 import me.blockcraft.zombies.game.Weapon;
 import org.bukkit.configuration.ConfigurationSection;
 
@@ -15,7 +17,8 @@ public record ZombiesConfig(int maxPlayers, int startingGold, int intermissionSe
                             int ammoPrice, int armorPrice, int upgradePrice, int mysteryPrice,
                             int powerPrice, int teamRevivePrice, double dropChance, int powerupTicks, int powerupsPerWave,
                             int noteCoins, int healthRegenTicks, double extraHealth, double headshotMultiplier, double knifeDamage, int damageImmunityTicks,
-                            Waves waves, Map<Weapon, Gun> guns, Map<Perk, Integer> perks, Map<EnemyKind, Enemy> enemies, Exploder exploder) {
+                            Waves waves, Map<Weapon, Gun> guns, Map<Perk, Integer> perks, Map<EnemyKind, Enemy> enemies, Exploder exploder,
+                            Events events) {
 
     /** The last {@code stragglers} enemies of a wave move at least at {@code stragglerSpeed}. */
     public record Waves(int total, int baseEnemies, int enemiesPerWave, double extraPlayer, double healthPerWave, double damagePerWave,
@@ -65,6 +68,44 @@ public record ZombiesConfig(int maxPlayers, int startingGold, int intermissionSe
      * {@code fuseTicks} it blasts everyone in sight within {@code radius}, harder the closer they stand.
      */
     public record Exploder(double triggerRange, int fuseTicks, double rushSpeed, double radius, double knockback) { }
+
+    /**
+     * From {@code fromWave}, a wave that is neither a boss nor a hound wave gets one event with {@code chance}, picked
+     * by {@code weights}. A mid-wave event strikes once a random share between {@code earliestShare} and
+     * {@code latestShare} of the wave has spawned.
+     */
+    public record Events(int fromWave, double chance, double earliestShare, double latestShare, Map<WaveEvent.Kind, Double> weights,
+                         BloodMoon bloodMoon, PowerOutage powerOutage, Bounty bounty, ToxicFog toxicFog) {
+
+        /** The events this wave may get, by weight; the outage needs bought power and the fog a second open room to flee to. */
+        public Map<WaveEvent.Kind, Double> choices(WavePlan plan, boolean powered, int openRooms) {
+            var choices = new EnumMap<WaveEvent.Kind, Double>(WaveEvent.Kind.class);
+            if (plan.boss() || plan.hounds() || plan.wave() < fromWave) {
+                return choices;
+            }
+            weights.forEach((kind, weight) -> {
+                boolean possible = switch (kind) {
+                    case POWER_OUTAGE -> powered;
+                    case TOXIC_FOG -> openRooms > 1;
+                    case BLOOD_MOON, BOUNTY -> true;
+                };
+                if (possible && weight > 0) {
+                    choices.put(kind, weight);
+                }
+            });
+            return choices;
+        }
+    }
+
+    public record BloodMoon(double speedMultiplier, int goldMultiplier) { }
+
+    /** A fighter sneaking within {@code radius} of the generator for {@code fixTicks} restores the power and earns {@code gold}. */
+    public record PowerOutage(int fixTicks, double radius, int gold, int darknessTicks) { }
+
+    public record Bounty(int gold, int ticks) { }
+
+    /** After {@code warningTicks} the room fills for {@code ticks}; every {@code pulseTicks} a fighter inside takes {@code damage}. */
+    public record ToxicFog(int warningTicks, int ticks, int pulseTicks, double damage, int slowTicks) { }
 
     public static ZombiesConfig from(ConfigurationSection yaml) {
         var waves = new Waves(positive(yaml, "waves.total"), positive(yaml, "waves.base-enemies"),
@@ -118,7 +159,27 @@ public record ZombiesConfig(int maxPlayers, int startingGold, int intermissionSe
                 waves, Map.copyOf(guns), Map.copyOf(perks), Map.copyOf(enemies),
                 new Exploder(Math.clamp(yaml.getDouble("exploder.trigger-range"), 1, 8), positive(yaml, "exploder.fuse-ticks"),
                         Math.clamp(yaml.getDouble("exploder.rush-speed"), 0.05, 0.6), Math.clamp(yaml.getDouble("exploder.radius"), 1, 8),
-                        Math.max(0, yaml.getDouble("exploder.knockback"))));
+                        Math.max(0, yaml.getDouble("exploder.knockback"))),
+                events(yaml));
+    }
+
+    private static Events events(ConfigurationSection yaml) {
+        var weights = new EnumMap<WaveEvent.Kind, Double>(WaveEvent.Kind.class);
+        for (var kind : WaveEvent.Kind.values()) {
+            weights.put(kind, Math.max(0, yaml.getDouble("events." + kind.key() + ".weight")));
+        }
+        double earliest = Math.clamp(yaml.getDouble("events.earliest-share"), 0, 0.9);
+        return new Events(positive(yaml, "events.from-wave"), Math.clamp(yaml.getDouble("events.chance"), 0, 1),
+                earliest, Math.clamp(yaml.getDouble("events.latest-share"), earliest, 0.9), Map.copyOf(weights),
+                new BloodMoon(Math.clamp(yaml.getDouble("events.blood_moon.speed-multiplier"), 1, 2),
+                        positive(yaml, "events.blood_moon.gold-multiplier")),
+                new PowerOutage(positive(yaml, "events.power_outage.fix-seconds") * 20,
+                        Math.clamp(yaml.getDouble("events.power_outage.radius"), 1, 5), Math.max(0, yaml.getInt("events.power_outage.gold")),
+                        Math.max(0, yaml.getInt("events.power_outage.darkness-seconds")) * 20),
+                new Bounty(Math.max(0, yaml.getInt("events.bounty.gold")), positive(yaml, "events.bounty.seconds") * 20),
+                new ToxicFog(positive(yaml, "events.toxic_fog.warning-seconds") * 20, positive(yaml, "events.toxic_fog.seconds") * 20,
+                        positive(yaml, "events.toxic_fog.pulse-ticks"), Math.max(0, yaml.getDouble("events.toxic_fog.damage")),
+                        Math.max(0, yaml.getInt("events.toxic_fog.slow-seconds")) * 20));
     }
 
     private static int positive(ConfigurationSection yaml, String path) {

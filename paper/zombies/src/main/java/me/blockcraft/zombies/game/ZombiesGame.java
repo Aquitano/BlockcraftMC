@@ -38,6 +38,7 @@ import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.Item;
+import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
 import org.bukkit.inventory.ItemStack;
@@ -76,6 +77,7 @@ public final class ZombiesGame {
     private final Enemies enemies;
     private final ArenaEffects effects;
     private final Notes notes;
+    private final WaveEvents events;
     private final Map<UUID, Survivor> survivors = new LinkedHashMap<>();
     private final Map<UUID, Location> downed = new HashMap<>();
     private final Map<UUID, TextDisplay> corpses = new HashMap<>();
@@ -115,6 +117,7 @@ public final class ZombiesGame {
         this.enemies = new Enemies(this);
         this.effects = new ArenaEffects(plugin, arena);
         this.notes = new Notes(messages, arena, config.noteCoins());
+        this.events = new WaveEvents(this, effects, config.events());
         this.task = Bukkit.getScheduler().runTaskTimer(plugin, this::tick, 1, 1);
         arena.labels(messages);
     }
@@ -131,10 +134,12 @@ public final class ZombiesGame {
     public boolean isLobby() { return phase == Phase.LOBBY; }
     public boolean inWave() { return phase == Phase.WAVE; }
     public boolean running() { return phase == Phase.WAVE || phase == Phase.INTERMISSION; }
-    public boolean powered() { return powered; }
+    public boolean powerBought() { return powered; }
+    public boolean powered() { return powered && !events.powerOut(); }
     public boolean instantKill() { return tick < instantKillUntil; }
     public int teamSize() { return teamSize; }
     public int tickNumber() { return tick; }
+    int wave() { return wave; }
 
     public boolean fighting(Player player) {
         var survivor = survivor(player);
@@ -215,16 +220,21 @@ public final class ZombiesGame {
         waveTotal = plan.enemies();
         powerupsThisWave = 0;
         enemies.begin(plan);
-        title(plan.boss() ? "wave.boss-title" : plan.hounds() ? "wave.hound-title" : "wave.title", "wave.subtitle",
-                Formatter.number("wave", wave), Formatter.number("enemies", plan.enemies()));
+        events.begin(plan);
+        if (!events.bloodMoon()) {
+            title(plan.boss() ? "wave.boss-title" : plan.hounds() ? "wave.hound-title" : "wave.title", "wave.subtitle",
+                    Formatter.number("wave", wave), Formatter.number("enemies", plan.enemies()));
+            effects.horn(plan.boss());
+        }
         Sounds.COUNTDOWN_GO.playToAll();
-        effects.horn(plan.boss());
-        waveBar = BossBar.bossBar(Component.empty(), 1, plan.boss() ? BossBar.Color.RED : BossBar.Color.GREEN, BossBar.Overlay.NOTCHED_10);
+        waveBar = BossBar.bossBar(Component.empty(), 1, plan.boss() || events.bloodMoon() ? BossBar.Color.RED : BossBar.Color.GREEN,
+                BossBar.Overlay.NOTCHED_10);
         timerBar = new TimerBar(messages, "timer.wave", config.waveSeconds());
         clock = round.clock(timerBar, remaining -> refreshSidebar(), () -> finish(false));
     }
 
     private void clearWave() {
+        events.end();
         clock.cancel();
         timerBar.hide();
         hideWaveBar();
@@ -269,6 +279,7 @@ public final class ZombiesGame {
         weapons.burn(tick);
         if (inWave()) {
             enemies.tick(tick);
+            events.tick(tick);
             if (inWave() && enemies.remaining() == 0) {
                 clearWave();
             }
@@ -430,12 +441,16 @@ public final class ZombiesGame {
         }
     }
 
-    public void killed(Player player, Location location) {
-        if (player == null || survivor(player) == null || !running()) {
+    public void killed(Player player, Mob mob, Location location) {
+        if (!running()) {
+            return;
+        }
+        events.killed(mob, player);
+        if (player == null || survivor(player) == null) {
             return;
         }
         summary.awardMobKill(player);
-        addGold(player, config.killGold());
+        addGold(player, events.killGold(config.killGold()));
         Sounds.KILL.play(player);
         if (powerupsThisWave < config.powerupsPerWave() && ThreadLocalRandom.current().nextDouble() < config.dropChance()) {
             powerupsThisWave++;
@@ -580,7 +595,7 @@ public final class ZombiesGame {
 
     private void hud() {
         for (var player : fighters()) {
-            if (reviving.contains(player.getUniqueId())) {
+            if (reviving.contains(player.getUniqueId()) || events.holding(player)) {
                 continue;
             }
             var held = weapons.held(player);
@@ -622,8 +637,10 @@ public final class ZombiesGame {
                     values.add(messages.get("scoreboard.gold", Formatter.number("gold", survivor.gold())));
                     values.add(messages.get("scoreboard.state." + survivor.life().name().toLowerCase(java.util.Locale.ROOT)));
                 }
-                sidebar.round(player, config.maxPlayers(), clock == null ? 0 : clock.remaining(), Component.text(arena.name()),
-                        List.of(new GameSidebar.Section(messages.get("scoreboard.squad", GameSidebar.icons(player)), values)));
+                var sections = new ArrayList<GameSidebar.Section>();
+                sections.add(new GameSidebar.Section(messages.get("scoreboard.squad", GameSidebar.icons(player)), values));
+                events.section(player).ifPresent(sections::add);
+                sidebar.round(player, config.maxPlayers(), clock == null ? 0 : clock.remaining(), Component.text(arena.name()), sections);
             }
         }
     }
@@ -638,6 +655,7 @@ public final class ZombiesGame {
             return;
         }
         phase = Phase.ENDING;
+        events.end();
         if (!won) {
             summary.defeatedBy(net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer.plainText()
                     .serialize(messages.get("game.enemy-name")));
@@ -674,8 +692,10 @@ public final class ZombiesGame {
 
     public void stop() {
         task.cancel();
+        phase = Phase.ENDING;
         lobbyCountdown.cancel();
         round.stop();
+        events.end();
         enemies.clear();
         hideWaveBar();
         drops.values().forEach(drop -> drop.item().remove());
@@ -683,8 +703,15 @@ public final class ZombiesGame {
         arena.restore();
     }
 
-    private void broadcast(String key, TagResolver... tags) {
+    void broadcast(String key, TagResolver... tags) {
         Bukkit.broadcast(messages.get(key, tags));
+    }
+
+    /** Shows {@code key.title} and {@code key.subtitle} with {@code sound} to everyone and writes {@code key.announce} to chat. */
+    void announce(String key, Sounds sound, TagResolver... tags) {
+        Bukkit.getOnlinePlayers().forEach(player -> BlockcraftApi.get().notifications().important(player,
+                Title.title(messages.get(key + ".title", tags), messages.get(key + ".subtitle", tags), TITLE_TIMES), sound));
+        broadcast(key + ".announce", tags);
     }
 
     private void title(String title, String subtitle, TagResolver... tags) {

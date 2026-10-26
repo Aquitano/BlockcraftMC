@@ -69,7 +69,7 @@ public final class StationMenu extends Menu {
                         config.armorPrice() * (tier + 1), () -> survivor.armor() == tier && tier < 2, () -> game.armor(player)));
             }
             case POWER -> add(13, new Offer(game.messages().get("shop.power"), Material.REDSTONE, config.powerPrice(),
-                    () -> !game.powered(), () -> game.powerOn(station)));
+                    () -> !game.powerBought(), () -> game.powerOn(station)));
             case UPGRADE -> {
                 var selected = game.weapons().held(player);
                 add(13, new Offer(game.messages().get("shop.upgrade"), Material.ENCHANTED_BOOK, config.upgradePrice(),
@@ -100,7 +100,7 @@ public final class StationMenu extends Menu {
         lore.addAll(java.util.Arrays.asList(details));
         lore.add(game.messages().get("shop.price", Formatter.number("price", offer.price())));
         if (needsPower() && !game.powered()) {
-            lore.add(game.messages().get("shop.requires-power"));
+            lore.add(game.messages().get(game.powerBought() ? "shop.power-out" : "shop.requires-power"));
         } else {
             lore.add(game.messages().get(offer.available().getAsBoolean() ? "shop.buy" : "shop.owned"));
         }

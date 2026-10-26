@@ -63,6 +63,8 @@ After `waves.late.from`, health and spawn pace grow faster, and health grows fas
 In every other wave, each enemy kind joins at its `first-wave` with `weight` and moves evenly to `late-weight` by the final wave.
 The last `waves.stragglers` enemies of a wave speed up to `waves.straggler-speed`, and a wave with nobody left alive spawns at once.
 The squad size is sampled at the start of each wave. Temporary deaths do not reduce the squad size.
+`events` sets the wave events: from `from-wave`, each wave that is neither a boss nor a hound wave gets one event with `chance`, picked by each event's `weight`.
+The blood moon covers a whole wave. The power outage, the bounty and the toxic fog strike mid-wave.
 `weapons`, `enemies`, `perks`, `prices`, and `gold` hold combat and economy values.
 `rewards` pays network coins through the shared round summary. Gold stays in the match.
 

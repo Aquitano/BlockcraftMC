@@ -13,7 +13,7 @@ import org.bukkit.plugin.Plugin;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
-/** What the arena does by itself: doors roll up, power spreads from the generator, lights flicker, the horde groans. */
+/** What the arena does by itself: doors roll up, power spreads from the generator and fails, lights flicker, the horde groans. */
 final class ArenaEffects {
 
     private static final int DOOR_ROW_TICKS = 6;
@@ -55,9 +55,27 @@ final class ArenaEffects {
         world.playSound(source, Sound.BLOCK_BEACON_ACTIVATE, 2, 0.7f);
         for (var light : arena.lights()) {
             Tasks.later(plugin, 1 + Math.round(light.getLocation().distance(source) * POWER_TICKS_PER_BLOCK), () -> {
+                if (!powered) {
+                    return;
+                }
                 ArenaMap.lit(light, true);
                 world.playSound(centerOf(light), Sound.BLOCK_COPPER_BULB_TURN_ON, 0.6f, 1);
                 world.spawnParticle(Particle.ELECTRIC_SPARK, centerOf(light), 6, 0.4, 0.4, 0.4);
+            });
+        }
+    }
+
+    void powerOff(Location source) {
+        powered = false;
+        world.playSound(source, Sound.BLOCK_BEACON_DEACTIVATE, 2, 0.6f);
+        world.spawnParticle(Particle.ELECTRIC_SPARK, source.clone().add(0.5, 1, 0.5), 30, 0.6, 0.6, 0.6);
+        for (var light : arena.lights()) {
+            Tasks.later(plugin, 1 + Math.round(light.getLocation().distance(source) * POWER_TICKS_PER_BLOCK / 2), () -> {
+                if (powered) {
+                    return;
+                }
+                ArenaMap.lit(light, false);
+                world.playSound(centerOf(light), Sound.BLOCK_COPPER_BULB_TURN_OFF, 0.6f, 0.7f);
             });
         }
     }
@@ -66,6 +84,15 @@ final class ArenaEffects {
         var windows = arena.activeWindows();
         if (!windows.isEmpty()) {
             world.playSound(pick(windows).spawn(), Sound.EVENT_RAID_HORN, 6, boss ? 0.7f : 1);
+        }
+    }
+
+    void bloodHorn() {
+        var windows = arena.activeWindows();
+        if (!windows.isEmpty()) {
+            var spawn = pick(windows).spawn();
+            world.playSound(spawn, Sound.EVENT_RAID_HORN, 8, 0.5f);
+            world.playSound(spawn, Sound.ENTITY_WITHER_AMBIENT, 3, 0.5f);
         }
     }
 
