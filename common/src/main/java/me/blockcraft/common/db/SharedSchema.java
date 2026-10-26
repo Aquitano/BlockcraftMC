@@ -237,6 +237,12 @@ final class SharedSchema {
             "DROP INDEX IF EXISTS uq_reports_accounts ON Reports",
             "CREATE UNIQUE INDEX IF NOT EXISTS uq_reports_open ON Reports (reporter_uuid, reported_uuid, open_pair)",
             "CREATE INDEX IF NOT EXISTS idx_reports_reported ON Reports (reported_uuid)"
+        )),
+        new Migration(20, List.of(
+            "CREATE TABLE IF NOT EXISTS bc_server_groups ("
+                + "group_name VARCHAR(64) NOT NULL PRIMARY KEY, "
+                + "state VARCHAR(16) NOT NULL, "
+                + "since TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)"
         ))
     );
 

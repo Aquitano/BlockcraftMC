@@ -48,6 +48,38 @@ public class GroupStatusTest {
                 GroupStatus.of(List.of(server("one", ServerState.RESTART, 0, 8))).availability());
     }
 
+    @Test
+    public void aSleepingGroupInvitesTheClickThatWakesIt() {
+        var asleep = GroupStatus.OFFLINE.withOnDemand(GroupState.ASLEEP);
+        var draining = GroupStatus.OFFLINE.withOnDemand(GroupState.DRAINING);
+        var starting = GroupStatus.OFFLINE.withOnDemand(GroupState.STARTING);
+
+        assertEquals(GroupStatus.Availability.SLEEPING, asleep.availability());
+        assertEquals(GroupStatus.Availability.SLEEPING, draining.availability());
+        assertEquals(GroupStatus.Availability.STARTING, starting.availability());
+        assertTrue(asleep.clickable());
+        assertTrue(starting.clickable());
+        assertFalse(asleep.joinable());
+    }
+
+    @Test
+    public void aRunningServerOutranksTheGroupsOnDemandState() {
+        var open = GroupStatus.of(List.of(server("one", ServerState.LOBBY, 1, 8))).withOnDemand(GroupState.STARTING);
+        var playing = GroupStatus.of(List.of(server("one", ServerState.INGAME, 8, 8))).withOnDemand(GroupState.AWAKE);
+
+        assertEquals(GroupStatus.Availability.AVAILABLE, open.availability());
+        assertEquals(GroupStatus.Availability.INGAME, playing.availability());
+        assertFalse(playing.clickable());
+    }
+
+    @Test
+    public void anAwakeGroupWithoutAServerIsDown() {
+        var status = GroupStatus.OFFLINE.withOnDemand(GroupState.AWAKE);
+
+        assertEquals(GroupStatus.Availability.OFFLINE, status.availability());
+        assertFalse(status.clickable());
+    }
+
     private static ServerRecord server(String name, ServerState state, int online, int max) {
         return server(name, state, online, max, 0);
     }
