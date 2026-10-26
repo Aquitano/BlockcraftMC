@@ -54,8 +54,8 @@ val downloadLuckPermsVelocity = downloadPlugin(
 
 // Lays out build/docker for docker-compose.yml: build/docker/paper/<module>/<module>.jar (one directory per plugin,
 // so a compose service lists the ones it runs, LuckPerms and ViaVersion among them), build/docker/velocity/<module>.jar
-// with LuckPerms, ranks.json.gz next to LuckPerms on both sides, and the resource pack in the proxy plugin's data
-// directory.
+// with LuckPerms, ranks.json.gz next to LuckPerms on both sides, the resource pack in the proxy plugin's data
+// directory, and build/docker/waker/waker.jar for the on-demand waker.
 tasks.register<Sync>("stagePlugins") {
     project(":paper").subprojects.forEach { plugin ->
         from(plugin.tasks.named("shadowJar")) {
@@ -89,6 +89,10 @@ tasks.register<Sync>("stagePlugins") {
     }
     from(project(":resourcepack").tasks.named("pack")) {
         into("velocity/blockcraft-system")
+    }
+    from(project(":waker").tasks.named("jar")) {
+        into("waker")
+        rename { "waker.jar" }
     }
     into(layout.buildDirectory.dir("docker"))
 }

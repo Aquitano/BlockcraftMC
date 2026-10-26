@@ -81,6 +81,7 @@ services:
       MEMORY: 512m
       SYNC_SKIP_NEWER_IN_DESTINATION: "false"
       BLOCKCRAFT_DB_HOST: mariadb
+      BLOCKCRAFT_WAKER_TOKEN: ${WAKER_TOKEN:-dev-waker-token}
       # The proxy's jars come only from build/docker/velocity: every start drops the old ones before copying, so a
       # renamed jar never runs twice. The plugins' data directories stay.
       REMOVE_OLD_PLUGINS: "TRUE"
@@ -242,6 +243,22 @@ services:
       - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
       - ./worlds/quicksg:/worlds/quicksg
       - quicksg:/data
+
+  # Starts and stops game servers when the proxy's on-demand is enabled (README, "Server discovery and groups"). The
+  # only service with the Docker socket, which is root on the host: no published port, a token, and nothing but the
+  # services in WAKER_SERVICES.
+  waker:
+    image: eclipse-temurin:25-jre
+    restart: unless-stopped
+    command: ["java", "-jar", "/waker/waker.jar"]
+    environment:
+      TZ: Europe/Berlin
+      WAKER_TOKEN: ${WAKER_TOKEN:-dev-waker-token}
+      WAKER_PROJECT: ${COMPOSE_PROJECT_NAME:-blockcraftmc}
+      WAKER_SERVICES: bedwars,mlgrush,duell,zombies,endergames,ttt,skywars,cores,quicksg,emeraldrush
+    volumes:
+      - ./build/docker/waker:/waker:ro
+      - /var/run/docker.sock:/var/run/docker.sock
 
 volumes:
   mariadb:

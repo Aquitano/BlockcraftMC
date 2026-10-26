@@ -38,6 +38,7 @@ services:
       <<: [*db-password, *network]
       VELOCITY_FORWARDING_SECRET: ${FORWARDING_SECRET:?set FORWARDING_SECRET in .env}
       BLOCKCRAFT_RESOURCE_PACK_URL: ${RESOURCE_PACK_URL:?set RESOURCE_PACK_URL in .env}
+      BLOCKCRAFT_WAKER_TOKEN: ${WAKER_TOKEN:-}
 
   lobby: *paper
   bedwars: *paper
@@ -60,3 +61,10 @@ services:
   skywars:
     <<: *paper
     profiles: [unreleased]
+
+  # Off until on-demand is enabled in the proxy's config.yml: `docker compose --profile ondemand up -d waker`
+  # (README, "Server discovery and groups"). An empty WAKER_TOKEN keeps it from starting at all.
+  waker:
+    profiles: [ondemand]
+    environment:
+      WAKER_TOKEN: ${WAKER_TOKEN:-}

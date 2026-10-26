@@ -23,4 +23,5 @@ include(
     "paper:zombies",
     "velocity:system",
     "resourcepack",
+    "waker",
 )
