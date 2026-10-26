@@ -4,7 +4,10 @@ import org.bukkit.attribute.Attribute;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 
-/** How a round swings: only the attack cooldown differs, sweep attacks, shields and damage values stay vanilla. */
+/**
+ * How a round swings: the attack cooldown differs and, in {@link #LEGACY}, the rod knocks back ({@link LegacyRod}); sweep
+ * attacks, shields and damage values stay vanilla.
+ */
 public enum CombatStyle {
 
     /** 1.8: the attack speed sits far above any swing rate, so the cooldown is charged on every click. */
@@ -24,6 +27,11 @@ public enum CombatStyle {
         if (attribute != null) {
             attribute.setBaseValue(attackSpeed);
         }
+    }
+
+    public static CombatStyle of(Player player) {
+        var attribute = player.getAttribute(Attribute.ATTACK_SPEED);
+        return attribute != null && attribute.getBaseValue() == LEGACY.attackSpeed ? LEGACY : MODERN;
     }
 
     public static CombatStyle from(ConfigurationSection config) {

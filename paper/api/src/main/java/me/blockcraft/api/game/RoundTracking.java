@@ -4,6 +4,7 @@ import com.destroystokyo.paper.event.player.PlayerJumpEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.AbstractArrow;
+import org.bukkit.entity.FishHook;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
@@ -149,7 +150,11 @@ final class RoundTracking implements Listener {
                 distance = (int) Math.round(origin.distance(victim.getLocation()));
             }
         }
-        Material weapon = event.getDamager() instanceof Player ? attacker.getInventory().getItemInMainHand().getType() : Material.AIR;
+        Material weapon = switch (event.getDamager()) {
+            case Player direct -> direct.getInventory().getItemInMainHand().getType();
+            case FishHook _ -> Material.FISHING_ROD;
+            default -> Material.AIR;
+        };
         hit(victim, new Hit(attacker.getUniqueId(), weapon, distance, System.nanoTime()));
     }
 

@@ -15,6 +15,7 @@ import me.blockcraft.api.cosmetic.Effects;
 import me.blockcraft.api.dialog.ServerMenu;
 import me.blockcraft.api.elo.Elo;
 import me.blockcraft.api.elo.SkillGroup;
+import me.blockcraft.api.game.LegacyRod;
 import me.blockcraft.api.game.RoundConfig;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.game.Streaks;
@@ -176,6 +177,7 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(buildMode, this);
         getServer().getPluginManager().registerEvents(flight, this);
         getServer().getPluginManager().registerEvents(new VanillaProgress(), this);
+        getServer().getPluginManager().registerEvents(new LegacyRod(), this);
 
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             var commands = new CommandRegistry(event.registrar(), messages);

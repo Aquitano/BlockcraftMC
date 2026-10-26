@@ -82,7 +82,7 @@ sg-chest:
     - {item: STONE_SWORD}
     - {item: STONE_AXE}
 
-# 1.8 PvP: no attack cooldown, everything else stays vanilla.
+# 1.8 PvP: no attack cooldown and the rod knocks back; everything else stays vanilla. false plays modern PvP.
 pvp:
   legacy-combat: true
 
