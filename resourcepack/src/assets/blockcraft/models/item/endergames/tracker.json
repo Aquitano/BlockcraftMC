@@ -2,7 +2,7 @@
   "textures": {
     "case": "minecraft:block/copper_block",
     "face": "minecraft:block/purple_stained_glass",
-    "eye": "minecraft:item/ender_eye",
+    "eye": "minecraft:block/end_portal_frame_eye",
     "needle": "minecraft:block/redstone_block",
     "particle": "minecraft:block/copper_block"
   },
