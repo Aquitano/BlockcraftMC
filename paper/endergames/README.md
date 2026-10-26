@@ -12,7 +12,8 @@ for a centre where at least 80% of 25 sample points are dry land (up to `world.s
 `world.search-step` blocks apart, else the driest one), puts the border `world.radius` blocks around it and loads
 every chunk inside, sixteen at a time. The sidebar shows whether the world is ready; a countdown that runs out before
 it is starts again. Time and weather stand still at day, phantoms, patrols and traders do not spawn, other mobs do,
-and portals lead nowhere. The waiting lobby is a platform built into an empty world.
+and portals lead nowhere. The waiting lobby is a floating island of end stone built into an empty world, with an end portal frame at its
+heart and obsidian pillars; barriers at its edge keep everyone on it.
 
 ## The round
 
