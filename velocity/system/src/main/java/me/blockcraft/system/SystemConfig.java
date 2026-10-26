@@ -6,16 +6,21 @@ import me.blockcraft.common.db.DatabaseConfig;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.network.NetworkAddresses;
 import me.blockcraft.system.moderation.PunishmentPreset;
+import me.blockcraft.system.network.OnDemand;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.net.URI;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -35,6 +40,10 @@ public final class SystemConfig {
     }
 
     public record Discovery(int pollSeconds, int staleSeconds, int seatSeconds) {
+    }
+
+    /** Game servers started and stopped through the waker at {@code url} with {@code token} (README, "Server discovery and groups"). */
+    public record OnDemandConfig(boolean enabled, URI url, String token, OnDemand.Settings settings) {
     }
 
     public record Friends(int max, int requestMinutes) {
@@ -72,6 +81,7 @@ public final class SystemConfig {
     private final TagResolver networkTags;
     private final String lobbyGroup;
     private final Discovery discovery;
+    private final OnDemandConfig onDemand;
     private final Alerts alerts;
     private final ServerHealth serverHealth;
     private final ResourcePack resourcePack;
@@ -113,6 +123,16 @@ public final class SystemConfig {
         var discovery = YamlFile.section(root, "discovery");
         this.discovery = new Discovery(number(discovery, "poll-seconds", 5), number(discovery, "stale-seconds", 20),
                 number(discovery, "seat-seconds", 15));
+        var onDemand = YamlFile.section(root, "on-demand");
+        var onDemandGroups = strings(onDemand, "groups").stream().map(group -> group.toLowerCase(Locale.ROOT))
+                .filter(group -> !group.equals(lobbyGroup)).collect(Collectors.toCollection(LinkedHashSet::new));
+        this.onDemand = new OnDemandConfig(Boolean.TRUE.equals(onDemand.get("enabled")),
+                URI.create(string(onDemand, "url").isBlank() ? "http://waker:8080" : string(onDemand, "url")),
+                env("BLOCKCRAFT_WAKER_TOKEN", string(onDemand, "token")),
+                new OnDemand.Settings(Collections.unmodifiableSet(onDemandGroups),
+                        Duration.ofMinutes(Math.max(1, number(onDemand, "idle-stop-minutes", 10))),
+                        Duration.ofSeconds(Math.max(30, number(onDemand, "start-timeout-seconds", 120))),
+                        Math.max(0, number(onDemand, "max-awake", 0))));
         var alerts = YamlFile.section(root, "alerts");
         this.alerts = new Alerts(env("BLOCKCRAFT_ALERTS_WEBHOOK_URL", string(alerts, "webhook-url")),
                 number(alerts, "min-interval-seconds", 300), number(alerts, "lag-mspt", 50), number(alerts, "lag-polls", 6));
@@ -183,6 +203,10 @@ public final class SystemConfig {
 
     public Discovery discovery() {
         return discovery;
+    }
+
+    public OnDemandConfig onDemand() {
+        return onDemand;
     }
 
     public Alerts alerts() {

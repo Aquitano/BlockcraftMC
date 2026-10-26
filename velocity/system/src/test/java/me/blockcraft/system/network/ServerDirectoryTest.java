@@ -108,6 +108,22 @@ public class ServerDirectoryTest {
         assertEquals(Integer.valueOf(1), published.get("quicksg-1"));
     }
 
+    @Test
+    public void aDrainingGroupSeatsNobodyAndOnlyAnIdleOneDrains() {
+        var directory = directoryOf(game("quicksg-1", 0, 8));
+        var player = UUID.randomUUID();
+
+        fill(directory, player);
+        assertFalse(directory.idle("quicksg"));
+        assertFalse(directory.drainIfIdle("quicksg"));
+        directory.release(player, "quicksg-1");
+        assertTrue(directory.drainIfIdle("quicksg"));
+        assertEquals(Optional.empty(), fill(directory, UUID.randomUUID()));
+        assertEquals(ServerDirectory.Entry.CLOSED, directory.enter(UUID.randomUUID(), "quicksg-1"));
+        directory.undrain("quicksg");
+        assertEquals(Optional.of("quicksg-1"), fill(directory, UUID.randomUUID()));
+    }
+
     /** Nobody is connected through the fake proxy, so the mirrored rows and the seats are all that count. */
     private ServerDirectory directoryOf(ServerRecord... servers) {
         var directory = new ServerDirectory(proxy, "lobby", SEAT_TIMEOUT, () -> now, published::putAll);

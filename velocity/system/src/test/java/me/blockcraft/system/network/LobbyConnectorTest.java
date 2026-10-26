@@ -151,7 +151,7 @@ public class LobbyConnectorTest {
                     quicksg: 'QuickSG'
                 """));
         var parties = new PartyManager(proxy, null, null, null, directory, messages);
-        return new Fixture(new LobbyConnector(directory, parties, config, messages), directory, messages);
+        return new Fixture(new LobbyConnector(directory, parties, config, messages, Optional.empty()), directory, messages);
     }
 
     private Optional<ServerConnection> connection() {

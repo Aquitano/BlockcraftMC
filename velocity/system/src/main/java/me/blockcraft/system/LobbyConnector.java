@@ -3,11 +3,13 @@ package me.blockcraft.system;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.system.network.OnDemandServers;
 import me.blockcraft.system.network.ServerDirectory;
 import me.blockcraft.system.party.PartyManager;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 
 import java.util.List;
 import java.util.Locale;
@@ -22,12 +24,22 @@ public final class LobbyConnector {
     private final PartyManager parties;
     private final SystemConfig config;
     private final Messages messages;
+    private final Optional<OnDemandServers> onDemand;
 
-    public LobbyConnector(ServerDirectory directory, PartyManager parties, SystemConfig config, Messages messages) {
+    /** {@code onDemand} starts a sleeping game's server for whoever wants in; empty while on-demand is off. */
+    public LobbyConnector(ServerDirectory directory, PartyManager parties, SystemConfig config, Messages messages,
+                          Optional<OnDemandServers> onDemand) {
         this.directory = directory;
         this.parties = parties;
         this.config = config;
         this.messages = messages;
+        this.onDemand = onDemand;
+    }
+
+    /** The game's name for messages, its id where the messages lack one. */
+    public TagResolver game(String group) {
+        String key = "play.games." + group;
+        return Placeholder.component("game", messages.has(key) ? messages.get(key) : Component.text(group));
     }
 
     public Optional<RegisteredServer> lobby() {
@@ -72,11 +84,14 @@ public final class LobbyConnector {
             send(player);
             return;
         }
-        String key = "play.games." + group;
-        var game = Placeholder.component("game", messages.has(key) ? messages.get(key) : Component.text(group));
+        var game = game(group);
         var seated = Stream.concat(Stream.of(player.getUniqueId()), parties.followersOf(player.getUniqueId()).stream()).toList();
         var target = directory.fill(group, seated);
         if (target.isEmpty()) {
+            String sleeping = group;
+            if (onDemand.filter(servers -> servers.request(player, sleeping, game)).isPresent()) {
+                return;
+            }
             player.sendMessage(seated.size() > 1
                     ? messages.get("play.no-room-for-party", game, Formatter.number("count", seated.size()))
                     : messages.get("play.unavailable", game));
@@ -107,12 +122,15 @@ public final class LobbyConnector {
         if (group.isEmpty()) {
             return;
         }
-        String key = "play.games." + group.get();
-        var game = Placeholder.component("game", messages.has(key) ? messages.get(key) : Component.text(group.get()));
+        var game = game(group.get());
         var pair = List.of(player, opponent);
         var target = directory.fill(group.get(), pair.stream().map(Player::getUniqueId).toList());
         if (target.isEmpty()) {
-            pair.forEach(each -> each.sendMessage(messages.get("play.rematch-unavailable", game)));
+            // The only instance is restarting after the round they just played: on demand, both wait for it to come back.
+            boolean waiting = onDemand.filter(servers -> pair.stream().allMatch(each -> servers.request(each, group.get(), game))).isPresent();
+            if (!waiting) {
+                pair.forEach(each -> each.sendMessage(messages.get("play.rematch-unavailable", game)));
+            }
             return;
         }
         String server = target.get().getServerInfo().getName();

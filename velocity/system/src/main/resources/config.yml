@@ -27,6 +27,20 @@ discovery:
   stale-seconds: 20
   seat-seconds: 15
 
+# Game servers that run only while someone plays (README, "Server discovery and groups"). Off by default; it needs
+# the waker service at url and its token (BLOCKCRAFT_WAKER_TOKEN overrides token). groups are the game groups started
+# this way, each named like its compose service. A group stops after idle-stop-minutes with nobody on it or on the
+# way; whoever asked for a sleeping group waits at most start-timeout-seconds for its server. max-awake caps how many
+# of these groups run or start at once, 0 for no cap.
+on-demand:
+  enabled: false
+  url: http://waker:8080
+  token: ""
+  groups: [bedwars, mlgrush, duell, zombies, endergames, ttt, skywars]
+  idle-stop-minutes: 10
+  start-timeout-seconds: 120
+  max-awake: 0
+
 # /servers colours a server's TPS below tps-warn and its milliseconds per tick at or above mspt-warn, stronger past
 # the critical values.
 server-health:

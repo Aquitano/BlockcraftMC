@@ -608,6 +608,9 @@ play:
   connecting: "<prefix><muted>Eine Runde <game> <muted>wird für dich geöffnet…"
   rematch: "<prefix><muted>Revanche! Eine neue Runde <game> <muted>wird für euch beide geöffnet…"
   rematch-unavailable: "<prefix><muted>Gerade hat keine Runde <game> <muted>Platz für euch beide. Versucht es gleich noch einmal."
+  starting: "<prefix><muted>Der Server für <game> <muted>startet für dich. Du wirst verbunden, sobald er bereit ist, das dauert etwa eine Minute."
+  waiting: "<prefix><muted>Der Server für <game> <muted>startet gerade. Du wirst verbunden, sobald er bereit ist."
+  start-failed: "<prefix><error>Der Server für <game> <error>konnte gerade nicht gestartet werden. Versuch es gleich noch einmal."
   games:
     quicksg: "<quicksg>QuickSG"
     emeraldrush: "<emeraldrush>EmeraldRush"

@@ -16,6 +16,7 @@ import java.time.InstantSource;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -50,6 +51,7 @@ public final class ServerDirectory {
     private final Consumer<Map<String, Integer>> publish;
     private final Map<UUID, Seat> seats = new HashMap<>();
     private final Map<String, Integer> published = new HashMap<>();
+    private final Set<String> draining = new HashSet<>();
     private volatile Map<String, ServerRecord> servers = Map.of();
 
     /** {@code publish} receives the counts that changed and must not block, since it is called while seats change. */
@@ -114,7 +116,7 @@ public final class ServerDirectory {
      */
     public synchronized Entry enter(UUID player, String server) {
         var record = get(server);
-        if (record.isEmpty()) {
+        if (record.isEmpty() || draining.contains(record.get().group())) {
             return Entry.CLOSED;
         }
         if (isWatchable(server)) {
@@ -193,8 +195,38 @@ public final class ServerDirectory {
                 .min(Comparator.comparingInt(this::occupancy)).flatMap(this::registered);
     }
 
+    /** Whether any server of the group has a live heartbeat. */
+    public synchronized boolean running(String group) {
+        return servers.values().stream().anyMatch(server -> server.group().equals(group));
+    }
+
+    /** Whether the group runs and every server of it waits in its lobby with nobody on it and nobody on the way. */
+    public synchronized boolean idle(String group) {
+        expireSeats();
+        var members = servers.values().stream().filter(server -> server.group().equals(group)).toList();
+        return !members.isEmpty() && members.stream()
+                .allMatch(server -> server.status().state() == ServerState.LOBBY && occupancy(server) == 0);
+    }
+
+    /**
+     * Closes an idle group to everyone before its servers are stopped, in the same lock that seats players, so nobody
+     * is sent to a server in the moment it shuts down; false, and nothing closed, if someone took a seat meanwhile.
+     */
+    public synchronized boolean drainIfIdle(String group) {
+        if (!idle(group)) {
+            return false;
+        }
+        draining.add(group);
+        return true;
+    }
+
+    public synchronized void undrain(String group) {
+        draining.remove(group);
+    }
+
     private Stream<ServerRecord> joinable(String group, int players) {
-        return servers.values().stream().filter(server -> server.group().equals(group) && hasRoom(server, players));
+        return servers.values().stream()
+                .filter(server -> server.group().equals(group) && !draining.contains(group) && hasRoom(server, players));
     }
 
     private boolean hasRoom(ServerRecord server, int players) {

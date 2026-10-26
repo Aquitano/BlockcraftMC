@@ -24,6 +24,7 @@ import me.blockcraft.common.moderation.PunishmentCatalogRepository;
 import me.blockcraft.common.moderation.PunishmentType;
 import me.blockcraft.common.moderation.StaffActionRepository;
 import me.blockcraft.common.nick.NickRepository;
+import me.blockcraft.common.network.GroupStateRepository;
 import me.blockcraft.common.network.ServerRepository;
 import me.blockcraft.common.network.operation.NetworkRequest;
 import me.blockcraft.common.settings.PlayerSettingRepository;
@@ -102,8 +103,11 @@ import me.blockcraft.system.motd.MotdListener;
 import me.blockcraft.system.motd.ReturningPlayers;
 import me.blockcraft.system.network.LagAlert;
 import me.blockcraft.system.network.LobbyAlert;
+import me.blockcraft.system.network.OnDemand;
+import me.blockcraft.system.network.OnDemandServers;
 import me.blockcraft.system.network.ServerDirectory;
 import me.blockcraft.system.network.ServerDiscovery;
+import me.blockcraft.system.network.WakerClient;
 import me.blockcraft.system.pack.NetworkPack;
 import me.blockcraft.system.party.PartyListener;
 import me.blockcraft.system.party.PartyManager;
@@ -120,6 +124,7 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 @Plugin(id = "blockcraft-system", name = "BlockcraftSystem", version = BuildConstants.VERSION, authors = {"Aquitano"},
@@ -182,7 +187,18 @@ public final class SystemPlugin {
         var directory = new ServerDirectory(proxy, config.lobbyGroup(), Duration.ofSeconds(config.discovery().seatSeconds()),
                 counts -> proxy.getScheduler().buildTask(this, () -> storeOccupancy(servers, counts)).schedule());
         var parties = new PartyManager(proxy, visibility, choices, ignores, directory, messages);
-        var lobby = new LobbyConnector(directory, parties, config, messages);
+        var groupStates = new GroupStateRepository(database);
+        var onDemand = config.onDemand().enabled()
+                ? Optional.of(new OnDemandServers(proxy, new OnDemand(config.onDemand().settings()),
+                        new WakerClient(config.onDemand().url(), config.onDemand().token(), logger), directory, groupStates,
+                        messages, logger))
+                : Optional.<OnDemandServers>empty();
+        if (onDemand.isEmpty()) {
+            // Off: no game is shown asleep or starting, whatever an earlier run left in the table.
+            proxy.getScheduler().buildTask(this, () -> groupStates.retain(Set.of())).schedule();
+        }
+        var lobby = new LobbyConnector(directory, parties, config, messages, onDemand);
+        onDemand.ifPresent(sleeping -> sleeping.connect(lobby));
         var punishments = new PunishmentService(proxy, repositories.punishments(), messages);
         var muteGate = new MuteGate(repositories.punishments(), punishments, messages, logger);
         var spectating = new SpectateRequests();
@@ -318,7 +334,7 @@ public final class SystemPlugin {
         var lobbyAlert = new LobbyAlert(proxy, directory, config, messages, logger);
         var lagAlert = new LagAlert(config, messages, logger);
         proxy.getScheduler().buildTask(this, new ServerDiscovery(proxy, servers, directory, lobbyAlert, lagAlert,
-                        config.discovery().staleSeconds(), logger))
+                        config.discovery().staleSeconds(), () -> onDemand.ifPresent(OnDemandServers::poll), logger))
                 .repeat(config.discovery().pollSeconds(), TimeUnit.SECONDS)
                 .schedule();
         proxy.getScheduler().buildTask(this, tabHeader)

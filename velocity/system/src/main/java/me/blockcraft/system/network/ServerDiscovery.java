@@ -27,18 +27,21 @@ public final class ServerDiscovery implements Runnable {
     private final LobbyAlert lobbyAlert;
     private final LagAlert lagAlert;
     private final int staleSeconds;
+    private final Runnable afterPoll;
     private final Logger logger;
     private final Map<String, ServerInfo> registered = new HashMap<>();
     private final Set<String> warnedUnreadable = new HashSet<>();
 
+    /** {@code afterPoll} runs once the directory holds a fresh read, as on-demand servers need it to decide. */
     public ServerDiscovery(ProxyServer proxy, ServerRepository servers, ServerDirectory directory, LobbyAlert lobbyAlert,
-                           LagAlert lagAlert, int staleSeconds, Logger logger) {
+                           LagAlert lagAlert, int staleSeconds, Runnable afterPoll, Logger logger) {
         this.proxy = proxy;
         this.servers = servers;
         this.directory = directory;
         this.lobbyAlert = lobbyAlert;
         this.lagAlert = lagAlert;
         this.staleSeconds = staleSeconds;
+        this.afterPoll = afterPoll;
         this.logger = logger;
     }
 
@@ -66,6 +69,7 @@ public final class ServerDiscovery implements Runnable {
         directory.update(alive);
         lobbyAlert.check();
         lagAlert.check(alive);
+        afterPoll.run();
     }
 
     /**
