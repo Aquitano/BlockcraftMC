@@ -1,0 +1,6 @@
+name: EnderGames
+version: '${version}'
+main: me.blockcraft.endergames.EnderGamesPlugin
+api-version: '26.3'
+author: Aquitano
+depend: [BlockcraftAPI]

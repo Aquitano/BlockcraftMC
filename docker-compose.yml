@@ -188,6 +188,21 @@ services:
       - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
       - cores:/data
 
+  endergames:
+    <<: *paper
+    hostname: endergames
+    environment:
+      <<: *paper-env
+      BLOCKCRAFT_SERVER_GROUP: endergames
+      # The round's world is generated fresh at every start, which needs more than the template servers.
+      MEMORY: 2G
+      BLOCKCRAFT_WORLD_TEMPLATE: ""
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/endergames,/blockcraft/viaversion
+    volumes:
+      - ./build/docker/paper:/blockcraft:ro
+      - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
+      - endergames:/data
+
   quicksg:
     <<: *paper
     hostname: quicksg
@@ -213,3 +228,4 @@ volumes:
   mlgrush:
   zombies:
   cores:
+  endergames:

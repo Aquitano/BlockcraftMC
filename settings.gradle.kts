@@ -12,6 +12,7 @@ include(
     "paper:cores",
     "paper:duell",
     "paper:emeraldrush",
+    "paper:endergames",
     "paper:lobby",
     "paper:mlgrush",
     "paper:quicksg",

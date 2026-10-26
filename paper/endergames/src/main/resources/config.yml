@@ -1,0 +1,123 @@
+players:
+  min: 4
+  max: 24
+global-stats-head: Kevos
+
+# The lobby counts down once players.min are there; a full lobby jumps to countdown.full seconds, /start to
+# countdown.start. In the round the players stand still for countdown.freeze seconds, nobody is hurt for
+# countdown.protection seconds, and countdown.round seconds later the round ends in a draw. Every player gets a
+# compass countdown.tracker-after seconds into the fight.
+countdown:
+  lobby: 60
+  start: 10
+  full: 15
+  freeze: 5
+  protection: 90
+  round: 1800
+  tracker-after: 900
+  restart: 15
+idle-restart-minutes: 50
+timer-bar: true
+
+# The round's world is generated anew at every server start. The border holds radius blocks around a centre on dry
+# land, searched for at most search-attempts times, search-step blocks apart. Players start on a ring at
+# spawn-ring of the radius. shrink-after seconds into the fight the border closes to final-radius by the end of the
+# round.
+world:
+  radius: 150
+  search-attempts: 8
+  search-step: 640
+  spawn-ring: 0.85
+  shrink-after: 1200
+  final-radius: 25
+
+# Ender chests wander the map: per-player of them for every player in the round (at least min, at most max). One
+# stays relocate-seconds, or after-open-seconds once somebody opened it, then appears elsewhere with fresh loot.
+enderchests:
+  per-player: 0.5
+  min: 4
+  max: 12
+  relocate-seconds: 150
+  after-open-seconds: 10
+  min-items: 3
+  max-items: 6
+  loot:
+    - {item: IRON_HELMET, weight: 6}
+    - {item: IRON_CHESTPLATE, weight: 4}
+    - {item: IRON_LEGGINGS, weight: 5}
+    - {item: IRON_BOOTS, weight: 6}
+    - {item: DIAMOND_HELMET, weight: 1}
+    - {item: DIAMOND_BOOTS, weight: 1}
+    - {item: IRON_SWORD, weight: 5}
+    - {item: DIAMOND_SWORD, weight: 1}
+    - {item: BOW, weight: 4}
+    - {item: ARROW, amount: 8, weight: 8}
+    - {item: GOLDEN_APPLE, weight: 4}
+    - {item: ENDER_PEARL, weight: 5}
+    - {item: COOKED_BEEF, amount: 4, weight: 10}
+    - {item: BREAD, amount: 4, weight: 8}
+    - {item: EXPERIENCE_BOTTLE, amount: 8, weight: 6}
+    - {item: LAPIS_LAZULI, amount: 4, weight: 4}
+    - {item: IRON_INGOT, amount: 3, weight: 8}
+    - {item: DIAMOND, weight: 2}
+    - {item: POTION, weight: 4}
+    - {item: SPLASH_POTION, weight: 2}
+    - {item: COBWEB, amount: 4, weight: 3}
+    - {item: FLINT_AND_STEEL, weight: 2}
+
+# Two random players swap places every swap.min-seconds to swap.max-seconds of the fight.
+swap:
+  min-seconds: 60
+  max-seconds: 120
+
+rewards:
+  kill: 5
+  win: 20
+
+# 1.8 PvP: no attack cooldown, everything else stays vanilla.
+pvp:
+  legacy-combat: true
+
+tracker:
+  range-horizontal: 300.0
+  range-vertical: 64.0
+  cooldown-ticks: 20
+
+# What each kit costs in coins; 0 is free for everyone.
+kits:
+  barbar: 0
+  bogenschuetze: 0
+  holzfaeller: 0
+  jaeger: 0
+  enderman: 500
+  bomber: 500
+  vampir: 400
+  kaenguru: 500
+  spinne: 300
+  stomper: 600
+  skorpion: 400
+  thor: 800
+  teleporter: 400
+  berserker: 400
+  angsthase: 300
+  suppenmeister: 500
+  tracker: 300
+
+# The numbers behind the kits' abilities; health is in half hearts.
+abilities:
+  headshot-multiplier: 1.5
+  lumberjack-max-logs: 96
+  enderman-pearls-per-kill: 2
+  vampire-mob-heal: 6
+  kangaroo-min-health: 8
+  spider-cobwebs-per-kill: 8
+  stomper-max-fall-damage: 4
+  stomper-radius: 2.5
+  scorpion-melee-seconds: 6
+  scorpion-arrow-seconds: 2
+  thor-cooldown-seconds: 5
+  thor-range: 40
+  teleporter-invulnerable-seconds: 10
+  berserker-seconds: 10
+  scaredy-seconds: 3
+  soup-heal: 7

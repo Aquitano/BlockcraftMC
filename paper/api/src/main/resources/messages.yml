@@ -21,6 +21,7 @@ palette:
   mlgrush: "<light_purple>"
   zombies: "<dark_green>"
   cores: "<yellow>"
+  endergames: "<dark_purple>"
   premium: "<gold>"
 
 games:
@@ -38,6 +39,8 @@ games:
     name: "<zombies>Zombies"
   cores:
     name: "<cores>Cores"
+  endergames:
+    name: "<endergames>EnderGames"
 game-status:
   available: "<success>Jetzt spielen"
   full: "<muted>Alle Plätze belegt"
@@ -355,6 +358,7 @@ profile:
     mlgrush: "<arrow><primary>MLG Rush"
     zombies: "<arrow><primary>Zombies"
     cores: "<arrow><primary>Cores"
+    endergames: "<arrow><primary>EnderGames"
 
 coins:
   self: "<prefix><muted>Du hast <accent><coins> <muted>Coins!"

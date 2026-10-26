@@ -46,6 +46,7 @@ public enum MenuIcon {
     ZOMBIES(Material.ZOMBIE_HEAD),
     CORES(Material.BEACON),
     TEAM(Material.WHITE_BANNER),
+    ENDERGAMES(Material.ENDER_PEARL),
     GADGETS(Material.FISHING_ROD),
     KILL_EFFECTS(Material.IRON_SWORD),
     WIN_EFFECTS(Material.FIREWORK_ROCKET),

@@ -79,6 +79,7 @@ navigator:
     mlgrush: mlgrush
     zombies: zombies
     cores: cores
+    endergames: endergames
   stale-seconds: 20
 
 friends:

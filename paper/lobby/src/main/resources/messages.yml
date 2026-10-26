@@ -111,6 +111,7 @@ navigator:
   mlgrush: "<mlgrush><bold>MLG Rush"
   zombies: "<zombies><bold>Zombies"
   cores: "<cores><bold>Cores"
+  endergames: "<endergames><bold>EnderGames"
   shop: "<accent>Lobby-Shop"
   shop-lore: "<click>Shop öffnen"
   spawn: "<primary>Zurück zum Spawn"
@@ -144,6 +145,10 @@ navigator:
       - "<muted>Rot gegen Blau, zwei Cores pro Team."
       - "<muted>Abbauen, craften, verzaubern, angreifen."
       - "<dark>Wie früher. Nur ohne Lag, hoffentlich."
+    endergames:
+      - "<muted>Survival Games in einer zufälligen Welt."
+      - "<muted>Kits mit Fähigkeiten, wandernde Enderkisten."
+      - "<dark>Und plötzlich stehst du woanders."
 secrets:
   title: "<arrow><primary>Secrets <dark>· <muted><found>/<total>"
   unknown: "<error>???"

@@ -55,3 +55,6 @@ services:
   cores:
     <<: *paper
     profiles: [unreleased]
+  endergames:
+    <<: *paper
+    profiles: [unreleased]

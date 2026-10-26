@@ -1,0 +1,230 @@
+prefix: "<endergames>EnderGames <dark>» <reset>"
+game-name: "<endergames>EnderGames"
+
+commands:
+  start:
+    description: "Verkürzt den Countdown der Lobby"
+  stats:
+    description: "Zeigt die Stats eines Spielers"
+  top:
+    description: "Zeigt die Top 10 einer Kategorie"
+
+join:
+  introduction: "<prefix><muted>Wähle ein Kit und überlebe in einer Welt, die noch niemand gesehen hat. <endergames>Enderkisten <muted>wandern, Spieler werden getauscht."
+
+lobby:
+  world-loading: "<prefix><muted>Die Welt wird noch erzeugt. Die Runde startet, sobald sie fertig ist."
+  world-ready: "<prefix><success>Die Welt ist bereit."
+
+round:
+  kit: "<prefix><muted>Du spielst mit dem Kit <endergames><kit><muted>."
+  subtitle: "<muted>Kits bereit <dark>· <endergames>Schutzzeit folgt"
+  winner: "<prefix><primary><player> <primary>hat EnderGames gewonnen!"
+  winner-left: "<prefix><primary><player> <primary>ist als Letzter übrig und gewinnt!"
+  draw: "<prefix><error>Die Zeit ist um. Unentschieden!"
+
+protection:
+  ends-in: "<prefix><muted>Die Schutzzeit endet in <accent><seconds><muted> Sekunden!"
+  ends-in-second: "<prefix><muted>Die Schutzzeit endet in <accent>1<muted> Sekunde!"
+  over: "<prefix><error>Die Schutzzeit ist vorbei!"
+  fight: "<error>Schutzzeit vorbei <dark>● <primary>Kampf frei"
+
+border:
+  shrinking: "<prefix><error>Die Grenze schrumpft! <muted>Am Ende bleiben <accent><radius><muted> Blöcke um die Mitte."
+
+swap:
+  broadcast: "<prefix><endergames><first> <muted>und <endergames><second> <muted>haben die Plätze getauscht!"
+  you: "<endergames>Getauscht <dark>● <primary><player>"
+
+timer:
+  protection: "<endergames>Schutzzeit <dark>● <white><seconds>s"
+  round: "<endergames>Verbleibende Zeit <dark>● <white><time>"
+
+tracker:
+  found: "<primary><player> <arrow><primary><distance><muted> Blöcke"
+  kit-found: "<primary><player> <dark>· <endergames><kit> <arrow><primary><distance><muted> Blöcke"
+  empty: "<muted>Kein Gegner in Reichweite"
+
+ability:
+  headshot: "<success>Kopfschuss <dark>● <primary><player>"
+  kangaroo-weak: "<error>Zu schwach zum Springen"
+  thor-no-target: "<error>Kein Ziel in Reichweite"
+  teleporter: "<success>Geheilt <dark>● <muted><seconds>s unverwundbar"
+
+kit:
+  selected: "<success>Kit <white><kit> <success>ausgewählt"
+  none: "<muted>Kein Kit"
+  thor:
+    name: "Thor"
+    item: "<endergames>Thors Hammer"
+    contents:
+      - "<arrow><muted>Thors Hammer"
+    ability:
+      - "<bullet><right>Blitz schleudern"
+      - "<bullet><muted>Selbst immun gegen Blitze"
+  tracker:
+    name: "Tracker"
+    item: "<endergames>Tracker-Kompass"
+    contents:
+      - "<arrow><muted>Tracker-Kompass"
+    ability:
+      - "<bullet><muted>Zeigt den nächsten Gegner"
+      - "<bullet><muted>und verrät dessen Kit"
+  barbar:
+    name: "Barbar"
+    contents:
+      - "<arrow><muted>Holzschwert"
+      - "<arrow><muted>Lederrüstung"
+    ability:
+      - "<bullet><muted>Keine Fähigkeit, nur Mut"
+  bogenschuetze:
+    name: "Bogenschütze"
+    contents:
+      - "<arrow><muted>Bogen"
+      - "<arrow><muted>16 Pfeile"
+    ability:
+      - "<bullet><muted>Kopfschüsse ohne Helm treffen härter"
+  holzfaeller:
+    name: "Holzfäller"
+    contents:
+      - "<arrow><muted>Holzaxt mit Schärfe I"
+    ability:
+      - "<bullet><muted>Fällt ganze Bäume auf einmal"
+      - "<bullet><muted>Gecraftete Äxte bekommen Schärfe I"
+  jaeger:
+    name: "Jäger"
+    contents:
+      - "<arrow><muted>Steinschwert"
+    ability:
+      - "<bullet><muted>Tiere lassen gebratenes Fleisch fallen"
+  enderman:
+    name: "Enderman"
+    contents:
+      - "<arrow><muted>5 Enderperlen"
+    ability:
+      - "<bullet><muted>Kein Schaden durch Enderperlen"
+      - "<bullet><muted>Perlen für jeden Kill"
+  bomber:
+    name: "Bomber"
+    contents:
+      - "<arrow><muted>5 TNT"
+      - "<arrow><muted>Feuerzeug"
+    ability:
+      - "<bullet><muted>Immun gegen Explosionen"
+  vampir:
+    name: "Vampir"
+    contents:
+      - "<arrow><muted>Nichts außer Durst"
+    ability:
+      - "<bullet><muted>Heilt sich bei jedem Kill"
+      - "<bullet><muted>Ein Spieler-Kill heilt voll"
+  kaenguru:
+    name: "Känguru"
+    contents:
+      - "<arrow><muted>Kräftige Beine"
+    ability:
+      - "<bullet><muted>Doppelsprung mit Leertaste"
+      - "<bullet><muted>Nicht unter 4 Herzen"
+  spinne:
+    name: "Spinne"
+    contents:
+      - "<arrow><muted>16 Spinnweben"
+      - "<arrow><muted>Schwarze Kappe"
+    ability:
+      - "<bullet><muted>Neue Spinnweben für jeden Kill"
+  stomper:
+    name: "Stomper"
+    contents:
+      - "<arrow><muted>Schwere Stiefelsohlen"
+    ability:
+      - "<bullet><muted>Landet er auf Gegnern, nehmen sie"
+      - "<bullet><muted>seinen Fallschaden, er höchstens 2 Herzen"
+  skorpion:
+    name: "Skorpion"
+    contents:
+      - "<arrow><muted>Grüne Lederjacke"
+    ability:
+      - "<bullet><muted>Treffer vergiften Gegner"
+      - "<bullet><muted>Selbst immun gegen Gift"
+  teleporter:
+    name: "Teleporter"
+    contents:
+      - "<arrow><muted>2 Enderperlen"
+    ability:
+      - "<bullet><muted>Nach einem Tausch voll geheilt"
+      - "<bullet><muted>und kurz unverwundbar"
+  berserker:
+    name: "Berserker"
+    contents:
+      - "<arrow><muted>Nichts als Wut"
+    ability:
+      - "<bullet><muted>Resistenz nach jedem Kill"
+      - "<bullet><muted>Kills in Folge verstärken sie"
+  angsthase:
+    name: "Angsthase"
+    contents:
+      - "<arrow><muted>Holzschwert mit Rückstoß II"
+    ability:
+      - "<bullet><muted>Wird schnell, sobald er getroffen wird"
+  suppenmeister:
+    name: "Suppenmeister"
+    contents:
+      - "<arrow><muted>6 Pilzsuppen"
+    ability:
+      - "<bullet><muted>Suppe heilt sofort 3,5 Herzen"
+
+item:
+  kits: "<arrow><primary>Kits"
+  tracker:
+    name: "<primary>Kompass"
+    lore: "<bullet><muted>Tracke Spieler in deiner Nähe"
+
+stats:
+  header: "<muted>Stats von <accent><player>"
+  lines:
+    - "<arrow><primary>Siege<dark>: <muted><wins>"
+    - "<arrow><primary>Niederlagen<dark>: <muted><losses>"
+    - "<arrow><primary>Tode<dark>: <muted><deaths>"
+    - "<arrow><primary>Kills<dark>: <muted><kills>"
+    - "<arrow><primary>Punkte<dark>: <muted><points>"
+
+top:
+  separator: "<muted><strikethrough>---------------------------------"
+  first: "<accent><bold>#1 <reset><primary><name><muted> ( <white><value><muted> )"
+  entry: "<reset>#<rank> <primary><name> <muted>( <white><value><muted> )"
+
+menu:
+  kits:
+    title: "<arrow><endergames>EnderGames <dark>· <muted>Kits"
+    entry: "<endergames><kit>"
+    selected: "<success>Für diese Runde ausgewählt"
+    owned: "<success>Freigeschaltet"
+    select: "<left>Auswählen"
+    locked: "<accent><price> Coins <dark>· <muted>Dauerhaft freischalten"
+    buy: "<left>Freischalten"
+  stats:
+    title: "<arrow><endergames>EnderGames <dark>· <muted>Stats"
+    player: "<accent><player>"
+    player-lore:
+      - "<arrow><primary>Siege<dark>: <muted><wins>"
+      - "<arrow><primary>Niederlagen<dark>: <muted><losses>"
+      - "<arrow><primary>Tode<dark>: <muted><deaths>"
+      - "<arrow><primary>Kills<dark>: <muted><kills>"
+      - "<arrow><primary>Punkte<dark>: <muted><points>"
+    global: "<arrow><primary>Globale Stats"
+  global-stats:
+    title: "<arrow><endergames>EnderGames <dark>· <muted>Globale Stats"
+    wins: "<arrow><primary>Siege"
+    deaths: "<arrow><primary>Tode"
+    kills: "<arrow><primary>Kills"
+    losses: "<arrow><primary>Niederlagen"
+    points: "<arrow><primary>Punkte"
+
+scoreboard:
+  title: "<endergames><bold>EnderGames"
+  map: "Zufällige Welt"
+  kit: "<muted><icon:kit> KIT"
+  kills: "<muted><icon:kills> KILLS"
+  world: "<muted><icon:map> WELT"
+  world-ready: "<success>Bereit"
+  world-loading: "<muted>Wird erzeugt"

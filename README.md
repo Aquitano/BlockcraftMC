@@ -5,6 +5,7 @@ Paper and Velocity plugins for the BlockcraftMC minigame network, originally wri
 
 See [Easter eggs and lobby activities](EASTER_EGGS.md) for rewards, calendar events, map setup, and gameplay checks.
 See [Zombies setup](paper/zombies/README.md) to run the solo and cooperative survival mode.
+See [EnderGames](paper/endergames/README.md) for kit survival games in a fresh random world.
 
 ## Layout
 
@@ -20,6 +21,7 @@ paper/mlgrush            MLG Rush: two players, knockback sticks, beds, first to
 paper/quicksg            QuickSG survival games
 paper/zombies            Solo or co-op Zombies survival
 paper/cores              Cores: red against blue, two beacons each, after GommeHD's mode
+paper/endergames         EnderGames: kit survival games in a fresh random world, after GommeHD's mode
 paper/reports            ReportsMenu: staff GUI over the reports table
 paper/statussigns        StatusSigns: clickable server-status signs
 velocity/system          BlockcraftSystem: reports, moderation, parties, friends, routing and staff tools
