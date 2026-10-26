@@ -2,6 +2,7 @@ package me.blockcraft.endergames.world;
 
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.endergames.config.EnderGamesConfig.WorldSettings;
+import me.blockcraft.endergames.config.MapSeed;
 import org.bukkit.Bukkit;
 import org.bukkit.Difficulty;
 import org.bukkit.GameRules;
@@ -27,20 +28,15 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
-import java.util.logging.Level;
 
 /**
- * The round's world: a vanilla overworld generated from a new seed at every server start. While the lobby waits it
- * looks for a centre on dry land, puts the border around it and loads every chunk inside, so the round starts
- * without generating terrain; only then is it {@link #ready()}.
+ * The round's world: a vanilla overworld generated at every server start from one of the configured seeds, picked
+ * at random. While the lobby waits it puts the border around that seed's centre and loads every chunk inside, so
+ * the round starts without generating terrain; only then is it {@link #ready()}.
  */
 public final class RoundWorld {
 
     private static final NamespacedKey KEY = new NamespacedKey("endergames", "runde");
-    private static final int SAMPLES_PER_SIDE = 5;
-    private static final double LAND_SHARE = 0.8;
     private static final int LOADS_IN_FLIGHT = 16;
     private static final long DAY = 1000L;
     private static final int SPECTATOR_HEIGHT = 20;
@@ -51,25 +47,26 @@ public final class RoundWorld {
             Material.CAMPFIRE, Material.SOUL_CAMPFIRE, Material.POWDER_SNOW, Material.SWEET_BERRY_BUSH,
             Material.POINTED_DRIPSTONE, Material.ICE, Material.PACKED_ICE, Material.BLUE_ICE);
 
-    private record Candidate(int x, int z, double land) {
-    }
-
     private final Plugin plugin;
     private final World world;
     private final WorldSettings settings;
     private final Random random = new Random();
-    private int centerX;
-    private int centerZ;
+    private final int centerX;
+    private final int centerZ;
     private boolean ready;
 
-    private RoundWorld(Plugin plugin, World world, WorldSettings settings) {
+    private RoundWorld(Plugin plugin, World world, WorldSettings settings, MapSeed seed) {
         this.plugin = plugin;
         this.world = world;
         this.settings = settings;
+        this.centerX = seed.x();
+        this.centerZ = seed.z();
     }
 
-    /** Throws the last start's world away and generates a new one; the dimension must not be loaded yet. */
+    /** Throws the last start's world away and generates the next from a random seed of the pool; the dimension must not be loaded yet. */
     public static RoundWorld create(Plugin plugin, WorldSettings settings) {
+        var seed = settings.seeds().get(new Random().nextInt(settings.seeds().size()));
+        plugin.getLogger().info("EnderGames world from seed " + seed.seed() + ", centred on " + seed.x() + ", " + seed.z());
         var stale = Bukkit.getWorld(KEY);
         if (stale != null) {
             Bukkit.unloadWorld(stale, false);
@@ -78,7 +75,7 @@ public final class RoundWorld {
         var world = Objects.requireNonNull(WorldCreator.ofKey(KEY)
                 .environment(World.Environment.NORMAL)
                 .type(WorldType.NORMAL)
-                .seed(new Random().nextLong())
+                .seed(seed.seed())
                 .generateStructures(true)
                 .createWorld(), "Could not create the EnderGames world");
         world.setAutoSave(false);
@@ -93,7 +90,7 @@ public final class RoundWorld {
         world.setStorm(false);
         world.setThundering(false);
         world.setTime(DAY);
-        return new RoundWorld(plugin, world, settings);
+        return new RoundWorld(plugin, world, settings, seed);
     }
 
     public World world() {
@@ -108,92 +105,17 @@ public final class RoundWorld {
         return world.equals(other);
     }
 
-    /** Finds the centre, sets the border and loads its chunks; {@code onReady} runs on the main thread. */
+    /** Sets the border round the seed's centre and loads its chunks; {@code onReady} runs on the main thread. */
     public void prepare(Runnable onReady) {
-        search(0, new Candidate(0, 0, -1), centre -> {
-            centerX = centre.x();
-            centerZ = centre.z();
-            plugin.getLogger().info("EnderGames world centred on " + centerX + ", " + centerZ
-                    + " with " + Math.round(centre.land() * 100) + "% land");
-            var border = world.getWorldBorder();
-            border.setCenter(centerX + 0.5, centerZ + 0.5);
-            border.setSize(settings.radius() * 2.0);
+        var border = world.getWorldBorder();
+        border.setCenter(centerX + 0.5, centerZ + 0.5);
+        border.setSize(settings.radius() * 2.0);
+        preload(chunksInside(), () -> {
             world.setSpawnLocation(spectatorSpawn());
-            preload(chunksInside(), () -> {
-                ready = true;
-                plugin.getLogger().info("EnderGames world is loaded");
-                onReady.run();
-            });
+            ready = true;
+            plugin.getLogger().info("EnderGames world is loaded");
+            onReady.run();
         });
-    }
-
-    /** Tries candidates on a spiral of {@code search-step} until one is mostly land, else keeps the best. */
-    private void search(int attempt, Candidate best, Consumer<Candidate> found) {
-        if (attempt >= settings.searchAttempts()) {
-            found.accept(best);
-            return;
-        }
-        int x = spiral(attempt, true) * settings.searchStep();
-        int z = spiral(attempt, false) * settings.searchStep();
-        var points = samples(x, z);
-        CompletableFuture.allOf(points.stream()
-                        .map(point -> world.getChunkAtAsync(point[0] >> 4, point[1] >> 4))
-                        .toArray(CompletableFuture[]::new))
-                .whenComplete((ignored, failure) -> Tasks.sync(plugin, () -> {
-                    if (failure != null) {
-                        plugin.getLogger().log(Level.WARNING, "Could not load a candidate centre", failure);
-                    }
-                    long land = points.stream().filter(point -> isLand(point[0], point[1])).count();
-                    var candidate = new Candidate(x, z, (double) land / points.size());
-                    var better = candidate.land() > best.land() ? candidate : best;
-                    if (candidate.land() >= LAND_SHARE) {
-                        found.accept(candidate);
-                    } else {
-                        search(attempt + 1, better, found);
-                    }
-                }));
-    }
-
-    /** The cells of a square spiral out from 0: the centre, then ring after ring of the search grid. */
-    static int spiral(int attempt, boolean x) {
-        if (attempt == 0) {
-            return 0;
-        }
-        int ring = (int) Math.ceil((Math.sqrt(attempt + 1) - 1) / 2);
-        int side = 2 * ring;
-        int index = attempt - (2 * ring - 1) * (2 * ring - 1);
-        int edge = index / side;
-        int offset = index % side;
-        int cx = switch (edge) {
-            case 0 -> ring;
-            case 1 -> ring - 1 - offset;
-            case 2 -> -ring;
-            default -> -ring + 1 + offset;
-        };
-        int cz = switch (edge) {
-            case 0 -> -ring + 1 + offset;
-            case 1 -> ring;
-            case 2 -> ring - 1 - offset;
-            default -> -ring;
-        };
-        return x ? cx : cz;
-    }
-
-    private List<int[]> samples(int x, int z) {
-        var points = new ArrayList<int[]>();
-        int radius = settings.radius();
-        for (int i = 0; i < SAMPLES_PER_SIDE; i++) {
-            for (int j = 0; j < SAMPLES_PER_SIDE; j++) {
-                points.add(new int[]{
-                        x - radius + 2 * radius * i / (SAMPLES_PER_SIDE - 1),
-                        z - radius + 2 * radius * j / (SAMPLES_PER_SIDE - 1)});
-            }
-        }
-        return points;
-    }
-
-    private boolean isLand(int x, int z) {
-        return !world.getHighestBlockAt(x, z, HeightMap.MOTION_BLOCKING_NO_LEAVES).isLiquid();
     }
 
     private List<int[]> chunksInside() {

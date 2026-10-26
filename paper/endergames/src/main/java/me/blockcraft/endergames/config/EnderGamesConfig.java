@@ -19,8 +19,7 @@ public record EnderGamesConfig(int maxPlayers, Countdowns countdowns, WorldSetti
     public record Countdowns(int full, int freeze, int protection, int round, int trackerAfter) {
     }
 
-    public record WorldSettings(int radius, int searchAttempts, int searchStep, double spawnRing, int shrinkAfter,
-                                int finalRadius) {
+    public record WorldSettings(int radius, List<MapSeed> seeds, double spawnRing, int shrinkAfter, int finalRadius) {
     }
 
     public record EnderChestSettings(double perPlayer, int min, int max, int relocateSeconds, int afterOpenSeconds,
@@ -63,8 +62,7 @@ public record EnderGamesConfig(int maxPlayers, Countdowns countdowns, WorldSetti
                         Math.max(1, countdown.getInt("tracker-after", 900))),
                 new WorldSettings(
                         Math.max(32, world.getInt("radius", 150)),
-                        Math.max(1, world.getInt("search-attempts", 8)),
-                        Math.max(64, world.getInt("search-step", 640)),
+                        seeds(world),
                         Math.clamp(world.getDouble("spawn-ring", 0.85), 0.1, 0.95),
                         Math.max(1, world.getInt("shrink-after", 1200)),
                         Math.max(5, world.getInt("final-radius", 25))),
@@ -117,5 +115,19 @@ public record EnderGamesConfig(int maxPlayers, Countdowns countdowns, WorldSetti
     private static ConfigurationSection section(ConfigurationSection config, String key) {
         var section = config.getConfigurationSection(key);
         return section != null ? section : config.createSection(key);
+    }
+
+    private static List<MapSeed> seeds(ConfigurationSection world) {
+        var seeds = world.getMapList("seeds").stream()
+                .map(entry -> new MapSeed(number(entry.get("seed")), (int) number(entry.get("x")), (int) number(entry.get("z"))))
+                .toList();
+        if (seeds.isEmpty()) {
+            throw new IllegalStateException("EnderGames needs at least one entry under world.seeds in config.yml");
+        }
+        return seeds;
+    }
+
+    private static long number(Object value) {
+        return value instanceof Number number ? number.longValue() : 0L;
     }
 }

@@ -6,11 +6,13 @@ have abilities. Up to `players.max` (24) play; `players.min` (4) start the lobby
 
 ## The world
 
-At every server start the plugin throws away the last round's world and generates a vanilla overworld from a new
-seed as the dimension `endergames:runde`, so the service needs no world template. While the lobby waits, it looks
-for a centre where at least 80% of 25 sample points are dry land (up to `world.search-attempts` candidates,
-`world.search-step` blocks apart, else the driest one), puts the border `world.radius` blocks around it and loads
-every chunk inside, sixteen at a time. The sidebar shows whether the world is ready; a countdown that runs out before
+At every server start the plugin throws away the last round's world and generates a vanilla overworld as the
+dimension `endergames:runde`, so the service needs no world template. The seed is one of `world.seeds`, picked at
+random; each comes with the centre the border goes round. The eight bundled ones were chosen from 360 centres of 40
+random seeds for land (at least 92%), tree cover and moderate relief, then by eye for variety: a giant spruce taiga,
+a forest round a lake, a bamboo jungle, a dark forest, a meadow below snowy slopes, a snowy taiga, a savanna plateau
+and a birch forest. While the lobby waits, the plugin puts the border `world.radius` blocks around the centre and
+loads every chunk inside, sixteen at a time. The sidebar shows whether the world is ready; a countdown that runs out before
 it is starts again. Time and weather stand still at day, phantoms, patrols and traders do not spawn, other mobs do,
 and portals lead nowhere. The waiting lobby is a floating island of end stone built into an empty world, with an end portal frame at its
 heart and obsidian pillars; barriers at its edge keep everyone on it.

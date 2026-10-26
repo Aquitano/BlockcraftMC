@@ -19,14 +19,21 @@ countdown:
 idle-restart-minutes: 50
 timer-bar: true
 
-# The round's world is generated anew at every server start. The border holds radius blocks around a centre on dry
-# land, searched for at most search-attempts times, search-step blocks apart. Players start on a ring at
-# spawn-ring of the radius. shrink-after seconds into the fight the border closes to final-radius by the end of the
-# round.
+# The round's world is generated anew at every server start from one of seeds, picked at random, and the border
+# holds radius blocks around that seed's centre x/z. The seeds were picked from 360 centres of 40 random seeds for
+# land, trees and relief, then by eye for variety. Players start on a ring at spawn-ring of the radius. shrink-after
+# seconds into the fight the border closes to final-radius by the end of the round.
 world:
   radius: 150
-  search-attempts: 8
-  search-step: 640
+  seeds:
+    - {seed: 2139215297105423308, x: 512, z: 512}    # giant spruce taiga with a river
+    - {seed: 7277626163180921831, x: -512, z: -512}  # forest round a lake
+    - {seed: -594798593157429144, x: 512, z: 512}    # bamboo jungle
+    - {seed: 3831662765844904176, x: 512, z: 512}    # dark forest with giant mushrooms
+    - {seed: -1109287713991315740, x: 512, z: 0}     # meadow below snowy slopes
+    - {seed: -4722652817683412901, x: 512, z: 512}   # snowy taiga
+    - {seed: 3779987867844568136, x: 0, z: 0}        # savanna plateau
+    - {seed: -6947711303906420817, x: 0, z: 0}       # birch forest with a river and a lake
   spawn-ring: 0.85
   shrink-after: 1200
   final-radius: 25
