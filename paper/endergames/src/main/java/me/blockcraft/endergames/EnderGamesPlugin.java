@@ -70,7 +70,7 @@ public final class EnderGamesPlugin extends JavaPlugin {
         });
 
         Bukkit.getOnlinePlayers().forEach(game::join);
-        world.prepare(game::worldReady);
+        world.prepare(config.startIsland().chests(), game::worldReady);
         ServerRestart.whenIdle(this, gameConfig);
     }
 

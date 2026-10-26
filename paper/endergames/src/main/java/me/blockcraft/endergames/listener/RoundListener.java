@@ -96,6 +96,14 @@ public final class RoundListener implements Listener {
             });
             return;
         }
+        if (event.getAction() == Action.RIGHT_CLICK_BLOCK && block != null && game.isStartChest(block)) {
+            event.setCancelled(true);
+            game.openStartChest(player, block).ifPresent(loot -> {
+                Sounds.MENU_OPEN.play(player);
+                player.openInventory(loot);
+            });
+            return;
+        }
         var item = event.getItem();
         if (item != null && item.getType() == Material.COMPASS && game.isIngame() && game.isPlaying(player)) {
             event.setCancelled(true);
@@ -117,6 +125,10 @@ public final class RoundListener implements Listener {
     @EventHandler(ignoreCancelled = true)
     public void onBreak(BlockBreakEvent event) {
         var block = event.getBlock();
+        if (game.isStartChest(block)) {
+            event.setCancelled(true);
+            return;
+        }
         if (block.getType() != Material.ENDER_CHEST || !game.world().contains(block.getWorld())) {
             return;
         }
@@ -129,12 +141,12 @@ public final class RoundListener implements Listener {
 
     @EventHandler
     public void onEntityExplode(EntityExplodeEvent event) {
-        event.blockList().removeIf(game::isEnderChest);
+        event.blockList().removeIf(block -> game.isEnderChest(block) || game.isStartChest(block));
     }
 
     @EventHandler
     public void onBlockExplode(BlockExplodeEvent event) {
-        event.blockList().removeIf(game::isEnderChest);
+        event.blockList().removeIf(block -> game.isEnderChest(block) || game.isStartChest(block));
     }
 
     /** TNT goes off by itself once placed, as in GommeHD's round. */

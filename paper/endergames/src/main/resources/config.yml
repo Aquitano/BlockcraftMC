@@ -21,8 +21,8 @@ timer-bar: true
 
 # The round's world is generated anew at every server start from one of seeds, picked at random, and the border
 # holds radius blocks around that seed's centre x/z. The seeds were picked from 360 centres of 40 random seeds for
-# land, trees and relief, then by eye for variety. Players start on a ring at spawn-ring of the radius. shrink-after
-# seconds into the fight the border closes to final-radius by the end of the round.
+# land, trees and relief, then by eye for variety. shrink-after seconds into the fight the border closes to
+# final-radius by the end of the round.
 world:
   radius: 150
   seeds:
@@ -34,9 +34,33 @@ world:
     - {seed: -4722652817683412901, x: 512, z: 512}   # snowy taiga
     - {seed: 3779987867844568136, x: 0, z: 0}        # savanna plateau
     - {seed: -6947711303906420817, x: 0, z: 0}       # birch forest with a river and a lake
-  spawn-ring: 0.85
   shrink-after: 1200
   final-radius: 25
+
+# Everyone starts together on an island of end stone floating 40 blocks over the centre, round chests of starter
+# loot, and jumps down into the world from there; nobody takes damage before the protection time is over. Each of
+# the chests rolls between min-items and max-items of loot. When the protection time ends the island crumbles, and
+# whoever is still on it floats down slowly.
+start-island:
+  chests: 6
+  min-items: 2
+  max-items: 4
+  loot:
+    - {item: WOODEN_SWORD, weight: 8}
+    - {item: STONE_SWORD, weight: 3}
+    - {item: WOODEN_AXE, weight: 6}
+    - {item: STONE_PICKAXE, weight: 5}
+    - {item: LEATHER_HELMET, weight: 5}
+    - {item: LEATHER_CHESTPLATE, weight: 4}
+    - {item: LEATHER_LEGGINGS, weight: 4}
+    - {item: LEATHER_BOOTS, weight: 5}
+    - {item: BREAD, amount: 3, weight: 8}
+    - {item: APPLE, amount: 2, weight: 6}
+    - {item: COOKED_BEEF, amount: 2, weight: 4}
+    - {item: OAK_PLANKS, amount: 16, weight: 6}
+    - {item: COBBLESTONE, amount: 16, weight: 5}
+    - {item: BOW, weight: 2}
+    - {item: ARROW, amount: 6, weight: 3}
 
 # Ender chests wander the map: per-player of them for every player in the round (at least min, at most max). One
 # stays relocate-seconds, or after-open-seconds once somebody opened it, then appears elsewhere with fresh loot.

@@ -8,6 +8,7 @@ import me.blockcraft.api.game.GamePhase;
 import me.blockcraft.api.game.GameSidebar;
 import me.blockcraft.api.game.LobbyCountdown;
 import me.blockcraft.api.game.LobbyHotbar;
+import me.blockcraft.api.game.LootChests;
 import me.blockcraft.api.game.LootTable;
 import me.blockcraft.api.game.PlayerReset;
 import me.blockcraft.api.game.Round;
@@ -43,6 +44,8 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -63,6 +66,8 @@ public final class EnderGamesGame implements KitPlayers {
     private static final Set<Integer> PROTECTION_ANNOUNCEMENTS = Set.of(60, 30, 10, 5, 4, 3, 2, 1);
     private static final int SECONDS_PER_MINUTE = 60;
     private static final long TICKS_PER_SECOND = 20L;
+    private static final int ISLAND_WARNING = 10;
+    private static final int SLOW_FALL_TICKS = 30 * 20;
 
     private final Plugin plugin;
     private final EnderGamesConfig config;
@@ -76,6 +81,7 @@ public final class EnderGamesGame implements KitPlayers {
     private final GameSidebar sidebar;
     private final KitAbilities abilities;
     private final EnderChests enderChests;
+    private final LootChests startLoot;
     private final PlayerSwaps swaps;
     private final Map<UUID, Kit> kits = new HashMap<>();
     private final int startSeconds;
@@ -103,6 +109,7 @@ public final class EnderGamesGame implements KitPlayers {
         this.sidebar = new GameSidebar(messages.get("scoreboard.title"), round);
         this.abilities = new KitAbilities(this, config.abilities(), messages);
         this.enderChests = new EnderChests(world, config.enderChests(), this::loot);
+        this.startLoot = new LootChests(config.startIsland().loot(), this::loot);
         this.swaps = new PlayerSwaps(config.swap());
     }
 
@@ -232,7 +239,7 @@ public final class EnderGamesGame implements KitPlayers {
         }
         round.enter(GamePhase.INGAME);
         var players = round.players();
-        var spawns = world.ringSpawns(players.size());
+        var spawns = world.startIsland().orElseThrow().spawns(players.size());
         for (int i = 0; i < players.size(); i++) {
             var player = players.get(i);
             PlayerReset.reset(player, GameMode.SURVIVAL);
@@ -260,11 +267,15 @@ public final class EnderGamesGame implements KitPlayers {
             if (PROTECTION_ANNOUNCEMENTS.contains(remaining)) {
                 announceProtection(remaining);
             }
+            if (remaining == ISLAND_WARNING) {
+                Bukkit.broadcast(messages.get("start-island.warning", Formatter.number("seconds", ISLAND_WARNING)));
+            }
             if (round.clockOnSidebar()) {
                 refreshAll();
             }
         }, () -> {
             protection = false;
+            crumbleStartIsland();
             Bukkit.broadcast(messages.get("protection.over"));
             round.players().forEach(player -> {
                 Sounds.PVP_ENABLED.play(player);
@@ -272,6 +283,31 @@ public final class EnderGamesGame implements KitPlayers {
             });
             startFight();
         });
+    }
+
+    /** Whoever still stands on the island when it goes floats down instead of falling to their death. */
+    private void crumbleStartIsland() {
+        world.startIsland().ifPresent(island -> round.players().stream()
+                .filter(player -> island.carries(player.getLocation()))
+                .forEach(player -> {
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW_FALLING, SLOW_FALL_TICKS, 0, false, false, true));
+                    player.sendMessage(messages.get("start-island.floating"));
+                }));
+        world.crumbleStartIsland();
+        startLoot.clear();
+        Bukkit.broadcast(messages.get("start-island.crumbled"));
+    }
+
+    /** The loot of the start chest at {@code block}, rolled the first time anyone opens it. */
+    public Optional<Inventory> openStartChest(Player player, Block block) {
+        if (!isIngame() || !round.isPlaying(player) || !isStartChest(block)) {
+            return Optional.empty();
+        }
+        return Optional.of(startLoot.open(block.getLocation()));
+    }
+
+    public boolean isStartChest(Block block) {
+        return world.startIsland().filter(island -> island.chests().contains(block)).isPresent();
     }
 
     private void announceProtection(int seconds) {

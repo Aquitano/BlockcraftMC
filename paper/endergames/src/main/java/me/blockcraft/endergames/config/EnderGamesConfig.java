@@ -12,14 +12,18 @@ import java.util.List;
 import java.util.Map;
 
 /** EnderGames' own keys of its config.yml; the lobby's are {@link me.blockcraft.api.game.GameConfig}'s. */
-public record EnderGamesConfig(int maxPlayers, Countdowns countdowns, WorldSettings world, EnderChestSettings enderChests,
+public record EnderGamesConfig(int maxPlayers, Countdowns countdowns, WorldSettings world, StartIslandSettings startIsland,
+                               EnderChestSettings enderChests,
                                SwapSettings swap, Rewards rewards, CombatStyle combat, CompassTracker.Settings tracker,
                                Map<Kit, Integer> kitPrices, Abilities abilities) {
 
     public record Countdowns(int full, int freeze, int protection, int round, int trackerAfter) {
     }
 
-    public record WorldSettings(int radius, List<MapSeed> seeds, double spawnRing, int shrinkAfter, int finalRadius) {
+    public record WorldSettings(int radius, List<MapSeed> seeds, int shrinkAfter, int finalRadius) {
+    }
+
+    public record StartIslandSettings(int chests, LootTable loot) {
     }
 
     public record EnderChestSettings(double perPlayer, int min, int max, int relocateSeconds, int afterOpenSeconds,
@@ -47,6 +51,7 @@ public record EnderGamesConfig(int maxPlayers, Countdowns countdowns, WorldSetti
     public static EnderGamesConfig from(ConfigurationSection config) {
         var countdown = section(config, "countdown");
         var world = section(config, "world");
+        var startIsland = section(config, "start-island");
         var chests = section(config, "enderchests");
         var swap = section(config, "swap");
         var rewards = section(config, "rewards");
@@ -63,9 +68,9 @@ public record EnderGamesConfig(int maxPlayers, Countdowns countdowns, WorldSetti
                 new WorldSettings(
                         Math.max(32, world.getInt("radius", 150)),
                         seeds(world),
-                        Math.clamp(world.getDouble("spawn-ring", 0.85), 0.1, 0.95),
                         Math.max(1, world.getInt("shrink-after", 1200)),
                         Math.max(5, world.getInt("final-radius", 25))),
+                new StartIslandSettings(Math.clamp(startIsland.getInt("chests", 6), 1, 8), LootTable.fromYaml(startIsland, 2, 4)),
                 new EnderChestSettings(
                         Math.max(0, chests.getDouble("per-player", 0.5)),
                         Math.max(0, chests.getInt("min", 4)),

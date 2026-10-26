@@ -36,10 +36,6 @@ public final class RoundWorld {
     private static final NamespacedKey KEY = new NamespacedKey("endergames", "runde");
     private static final int LOADS_IN_FLIGHT = 16;
     private static final long DAY = 1000L;
-    private static final int SPECTATOR_HEIGHT = 20;
-    private static final int SPOT_SEARCH_RADIUS = 12;
-    private static final int SPOT_SEARCH_STEP = 3;
-    private static final int RING_STEP_INWARD = 8;
     private static final Set<Material> UNSAFE = Set.of(Material.LAVA, Material.MAGMA_BLOCK, Material.CACTUS,
             Material.CAMPFIRE, Material.SOUL_CAMPFIRE, Material.POWDER_SNOW, Material.SWEET_BERRY_BUSH,
             Material.POINTED_DRIPSTONE, Material.ICE, Material.PACKED_ICE, Material.BLUE_ICE);
@@ -51,6 +47,7 @@ public final class RoundWorld {
     private final int centerX;
     private final int centerZ;
     private boolean ready;
+    private Optional<StartIsland> startIsland = Optional.empty();
 
     private RoundWorld(Plugin plugin, World world, WorldSettings settings, MapSeed seed) {
         this.plugin = plugin;
@@ -98,12 +95,16 @@ public final class RoundWorld {
         return world.equals(other);
     }
 
-    /** Sets the border round the seed's centre and loads its chunks; {@code onReady} runs on the main thread. */
-    public void prepare(Runnable onReady) {
+    /**
+     * Sets the border round the seed's centre, loads its chunks and builds the start island with {@code startChests}
+     * chests over them; {@code onReady} runs on the main thread.
+     */
+    public void prepare(int startChests, Runnable onReady) {
         var border = world.getWorldBorder();
         border.setCenter(centerX + 0.5, centerZ + 0.5);
         border.setSize(settings.radius() * 2.0);
         preload(chunksInside(), () -> {
+            startIsland = Optional.of(StartIsland.build(world, centerX, centerZ, startChests));
             world.setSpawnLocation(spectatorSpawn());
             ready = true;
             plugin.getLogger().info("EnderGames world is loaded");
@@ -167,43 +168,23 @@ public final class RoundWorld {
         return new Location(world, centerX + 0.5, world.getHighestBlockYAt(centerX, centerZ) + 1, centerZ + 0.5);
     }
 
+    /** Above the start island while it stands, then high over the centre. */
     public Location spectatorSpawn() {
-        return center().add(0, SPECTATOR_HEIGHT, 0);
+        return startIsland.map(StartIsland::spectatorSpawn).orElseGet(() -> center().add(0, StartIsland.HEIGHT_ABOVE_GROUND, 0));
+    }
+
+    public Optional<StartIsland> startIsland() {
+        return startIsland;
+    }
+
+    /** The island crumbles once the protection time is over; nothing the round places may land on it before. */
+    public void crumbleStartIsland() {
+        startIsland.ifPresent(StartIsland::crumble);
+        startIsland = Optional.empty();
     }
 
     public double borderRadius() {
         return world.getWorldBorder().getSize() / 2;
-    }
-
-    /**
-     * Where each of {@code count} players starts: evenly on the spawn ring, each moved inward until it stands on
-     * dry ground; facing the centre.
-     */
-    public List<Location> ringSpawns(int count) {
-        double radius = settings.radius() * settings.spawnRing();
-        var spawns = new ArrayList<Location>();
-        for (var point : Ring.points(centerX + 0.5, centerZ + 0.5, radius, count, random.nextDouble() * 2 * Math.PI)) {
-            spawns.add(towardsCentre(point).orElseGet(this::center));
-        }
-        return spawns;
-    }
-
-    private Optional<Location> towardsCentre(Ring.Point point) {
-        double dx = point.x() - centerX;
-        double dz = point.z() - centerZ;
-        double length = Math.max(1, Math.hypot(dx, dz));
-        for (double back = 0; back < length; back += RING_STEP_INWARD) {
-            double x = point.x() - dx / length * back;
-            double z = point.z() - dz / length * back;
-            var spot = near((int) Math.floor(x), (int) Math.floor(z));
-            if (spot.isPresent()) {
-                var location = spot.get();
-                location.setDirection(center().toVector().subtract(location.toVector()));
-                location.setPitch(0);
-                return spot;
-            }
-        }
-        return Optional.empty();
     }
 
     /** A random safe place inside the border, for an ender chest. */
@@ -211,24 +192,14 @@ public final class RoundWorld {
         for (int attempt = 0; attempt < 32; attempt++) {
             double angle = random.nextDouble() * 2 * Math.PI;
             double distance = Math.sqrt(random.nextDouble()) * insideRadius;
-            var spot = surface((int) Math.floor(centerX + Math.cos(angle) * distance),
-                    (int) Math.floor(centerZ + Math.sin(angle) * distance));
+            int x = (int) Math.floor(centerX + Math.cos(angle) * distance);
+            int z = (int) Math.floor(centerZ + Math.sin(angle) * distance);
+            if (startIsland.filter(island -> island.covers(x, z)).isPresent()) {
+                continue;
+            }
+            var spot = surface(x, z);
             if (spot.isPresent()) {
                 return spot;
-            }
-        }
-        return Optional.empty();
-    }
-
-    private Optional<Location> near(int x, int z) {
-        for (int radius = 0; radius <= SPOT_SEARCH_RADIUS; radius += SPOT_SEARCH_STEP) {
-            for (int dx = -radius; dx <= radius; dx += SPOT_SEARCH_STEP) {
-                for (int dz = -radius; dz <= radius; dz += SPOT_SEARCH_STEP) {
-                    var spot = surface(x + dx, z + dz);
-                    if (spot.isPresent()) {
-                        return spot;
-                    }
-                }
             }
         }
         return Optional.empty();

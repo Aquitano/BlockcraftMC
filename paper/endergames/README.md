@@ -19,10 +19,14 @@ heart and obsidian pillars; barriers at its edge keep everyone on it.
 
 ## The round
 
-Players start evenly spread on a ring at `world.spawn-ring` of the radius, each moved inward until it stands on dry
-ground, and stand still for `countdown.freeze` seconds. Nobody is hurt for `countdown.protection` (90) seconds, then
-the fight runs for `countdown.round` (30 minutes); the last player alive wins, otherwise it is a draw. Every player
-gets a compass `countdown.tracker-after` seconds into the fight. `world.shrink-after` seconds into the fight the border
+Everyone starts together on the start island, an island of end stone floating 40 blocks over the highest ground at the
+centre. They stand on a ring round an obsidian pillar for `countdown.freeze` seconds, with `start-island.chests` (6)
+chests of starter loot from `start-island.loot` between them and it, then grab what they can and jump down into the
+world. The start chests cannot be broken. Nobody is hurt for `countdown.protection` (90) seconds, so the jump is safe.
+Ten seconds before the protection ends everyone is warned, and when it ends the island crumbles with whatever is left
+in its chests. Whoever is still on it floats down with Slow Falling. Spectators watch from above the island. Then the
+fight runs for `countdown.round` (30 minutes); the last player alive wins, otherwise it is a draw. Every player gets a
+compass `countdown.tracker-after` seconds into the fight. `world.shrink-after` seconds into the fight the border
 starts closing to `world.final-radius` by the end of the round.
 
 - Ender chests wander the map: `enderchests.per-player` for every player, between `min` and `max`, each marked by a
@@ -62,7 +66,8 @@ is a `bc_unlocks` row `endergames.kit.<key>`. A player who picks nothing plays B
 
 ## Test it
 
-`./gradlew stagePlugins`, then start the `endergames` service (the production overlay keeps it under the
-`unreleased` profile) and `/play endergames`. Things to check in a client: the world finishes loading before the first
-countdown runs out on a 2 GB server; spawns are on land; ender chests appear, open, move after being opened and are
-visible from afar; swaps teleport both players; each kit's ability; the border shrink; the win and the recap.
+`./gradlew stagePlugins`, then restart the `endergames` service and `/play endergames`. Things to check in a client:
+the world finishes loading before the first countdown runs out on its 1.5 GB; everyone starts on the start island, its
+chests open, the jump down does no harm and the island crumbles at the end of the protection with Slow Falling for
+whoever stayed; ender chests appear, open, move after being opened and are visible from afar; swaps teleport both
+players; each kit's ability; the border shrink; the win and the recap.
