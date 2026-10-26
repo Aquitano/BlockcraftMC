@@ -5,7 +5,7 @@ renders the saved world templates without installing a Minecraft plugin or resta
 It uses Java 25 and `uv`. From the repository root, run:
 
 ```powershell
-uv run dev/map-inspector/inspect.py
+uv run dev/map-inspector/map_inspector.py
 ```
 
 Open <http://localhost:8100>. Select a map, then use the person button for free flight.
@@ -17,11 +17,24 @@ The default renders the lobby and BedWars build areas from `worlds`. Change thei
 To include every generated chunk, use `--whole-world`. Large legacy worlds take longer.
 
 ```powershell
-uv run dev/map-inspector/inspect.py --maps lobby bedwars --render-only
-uv run dev/map-inspector/inspect.py --maps zombies
-uv run dev/map-inspector/inspect.py --serve-only
-uv run dev/map-inspector/inspect.py --worlds run/map-review/preview-worlds
+uv run dev/map-inspector/map_inspector.py --maps lobby bedwars --render-only
+uv run dev/map-inspector/map_inspector.py --maps zombies
+uv run dev/map-inspector/map_inspector.py --serve-only
+uv run dev/map-inspector/map_inspector.py --worlds run/map-review/preview-worlds
 ```
+
+`--shot` saves screenshots instead of serving, so a change can be looked at without opening a browser. Each shot
+names its map, an optional label and BlueMap's camera: the point looked at, then distance, rotation and angle
+(radians). It needs a Chromium on the path (or `CHROME`) and renders with software WebGL, so no GPU is required.
+`--no-markers` leaves the configured-location markers out of the render for clean pictures.
+
+```powershell
+uv run dev/map-inspector/map_inspector.py --maps lobby --no-markers --shot "lobby-castle@-925,30,1565,40,0.9,1.1"
+```
+
+The shot lands in `run/map-inspector/shots/lobby-castle.png`. BlueMap draws blocks only. Mobs, NPC figures, holograms,
+displays and the seasonal decoration that Lobby sends to clients are not part of the saved world, so neither the
+viewer nor a shot shows them; their configured positions appear as markers.
 
 Rendering again refreshes saved terrain and reads location markers from the active map YAML files.
 Save in Minecraft with `/map save` before rendering the preview copies. Rendering reads worlds and

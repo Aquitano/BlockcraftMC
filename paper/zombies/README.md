@@ -82,7 +82,7 @@ The [arena playtest checklist](TESTING.md) covers every station, barricade, and 
 To inspect a saved arena in the local 3D viewer, use the [map inspector](../../dev/map-inspector/README.md):
 
 ```powershell
-uv run dev/map-inspector/inspect.py --maps zombies
+uv run dev/map-inspector/map_inspector.py --maps zombies
 ```
 
 After editing the running arena, run `/map save` first. The inspector reads `worlds/zombies`, not the running server's world.

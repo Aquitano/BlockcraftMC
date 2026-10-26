@@ -122,7 +122,7 @@ joining teams, displayed player skins, CPS interactions, map voting, and round t
 
 ## Inspect the maps in 3D
 
-Run `uv run dev/map-inspector/inspect.py` from the repository root, with Java 25 available through
+Run `uv run dev/map-inspector/map_inspector.py` from the repository root, with Java 25 available through
 `JAVA_HOME` or `PATH`. Open <http://localhost:8100> to inspect saved terrain and configured-location markers.
 The viewer reads templates without installing a Minecraft plugin or restarting a server. See
 [local map inspection](../dev/map-inspector/README.md) for rendering the preview copies and other worlds.
