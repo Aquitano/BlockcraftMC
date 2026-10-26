@@ -24,6 +24,8 @@ import java.util.concurrent.ThreadLocalRandom;
 public final class Enemies {
 
     private static final String OWNER_TAG = "blockcraft_zombies_enemy";
+    /** The server rejects a higher max health (spigot.yml, settings.attribute.maxHealth.max). */
+    private static final double HEALTH_LIMIT = 1024;
     private final ZombiesGame game;
     private final Map<UUID, Enemy> enemies = new LinkedHashMap<>();
     private final Map<String, Integer> breaking = new HashMap<>();
@@ -36,14 +38,17 @@ public final class Enemies {
         final Mob mob;
         final EnemyKind kind;
         final ArenaMap.Window window;
+        final double toughness;
         boolean breached;
         UUID attacker;
         int specialAt;
 
-        Enemy(Mob mob, EnemyKind kind, ArenaMap.Window window) {
+        /** {@code toughness} divides every hit, standing in for the health above the server's limit. */
+        Enemy(Mob mob, EnemyKind kind, ArenaMap.Window window, double toughness) {
             this.mob = mob;
             this.kind = kind;
             this.window = window;
+            this.toughness = toughness;
         }
     }
 
@@ -109,8 +114,9 @@ public final class Enemies {
         }
         double bossScale = kind == EnemyKind.INFERNO ? 1 + (game.teamSize() - 1) * game.config().waves().extraPlayer() : 1;
         double health = stats.health() * plan.healthMultiplier() * bossScale;
-        attribute(mob, Attribute.MAX_HEALTH, health);
-        mob.setHealth(health);
+        double toughness = Math.max(1, health / HEALTH_LIMIT);
+        attribute(mob, Attribute.MAX_HEALTH, health / toughness);
+        mob.setHealth(health / toughness);
         attribute(mob, Attribute.MOVEMENT_SPEED, stats.speed());
         attribute(mob, Attribute.ATTACK_DAMAGE, stats.damage());
         attribute(mob, Attribute.FOLLOW_RANGE, 100);
@@ -122,7 +128,7 @@ public final class Enemies {
                 equipment.setHelmetDropChance(0);
             }
         }
-        enemies.put(mob.getUniqueId(), new Enemy(mob, kind, window));
+        enemies.put(mob.getUniqueId(), new Enemy(mob, kind, window, toughness));
         unspawned--;
     }
 
@@ -205,7 +211,7 @@ public final class Enemies {
         mob.setNoDamageTicks(0);
         applyingDamage = true;
         try {
-            mob.damage(damage, player);
+            mob.damage(damage / enemy.toughness, player);
         } finally {
             applyingDamage = false;
         }
