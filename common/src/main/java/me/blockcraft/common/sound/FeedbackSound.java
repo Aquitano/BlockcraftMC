@@ -48,7 +48,9 @@ public enum FeedbackSound {
     CHAINS("block.chain.place", 0.8f, 0.7f),
     HEROBRINE("ambient.cave", 1.0f, 0.8f),
     CORE_ALARM("block.note_block.pling", 0.8f, 0.6f),
-    CORE_DESTROYED("entity.wither.spawn", 0.5f, 1.3f);
+    CORE_DESTROYED("entity.wither.spawn", 0.5f, 1.3f),
+    PUMPKIN("block.pumpkin.carve", 1.0f, 0.9f),
+    EYE("block.end_portal_frame.fill", 1.0f, 1.0f);
 
     private final Sound fallback;
     private final Optional<Sound> custom;

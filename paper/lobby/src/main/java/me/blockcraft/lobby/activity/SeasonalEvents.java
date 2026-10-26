@@ -47,6 +47,7 @@ import java.time.LocalDate;
 import java.time.Month;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -62,6 +63,35 @@ import static me.blockcraft.common.calendar.NetworkCalendar.Occasion.*;
 public final class SeasonalEvents implements Listener, AutoCloseable {
 
     private record Egg(String key, ItemDisplay display, Interaction interaction) { }
+
+    /**
+     * A hunt hides {@code activities.easter-eggs} of the map's egg spots for its occasion, a new draw every year:
+     * eggs at Easter, glowing pumpkins at Halloween. Each find is an unlock under its year's prefix.
+     */
+    private enum Hunt {
+        EASTER(NetworkCalendar.Occasion.EASTER, Material.TURTLE_EGG, "calendar.easter.", ChatTag.EASTER_BUNNY,
+                "seasonal.egg", "seasonal.egg-hint", Sounds.EASTER_EGG),
+        HALLOWEEN(NetworkCalendar.Occasion.HALLOWEEN, Material.JACK_O_LANTERN, "calendar.pumpkins.", ChatTag.PUMPKIN,
+                "seasonal.pumpkin", "seasonal.pumpkin-hint", Sounds.PUMPKIN);
+
+        private final NetworkCalendar.Occasion occasion;
+        private final Material item;
+        private final String prefix;
+        private final ChatTag tag;
+        private final String found;
+        private final String hint;
+        private final Sounds sound;
+
+        Hunt(NetworkCalendar.Occasion occasion, Material item, String prefix, ChatTag tag, String found, String hint, Sounds sound) {
+            this.occasion = occasion;
+            this.item = item;
+            this.prefix = prefix;
+            this.tag = tag;
+            this.found = found;
+            this.hint = hint;
+            this.sound = sound;
+        }
+    }
     private record Hat(ItemStack original, ItemStack temporary, long until) { }
     private enum Trick { PUMPKIN, BATS, GHOST }
     private static final NamespacedKey HAT = new NamespacedKey("lobby", "seasonal_hat");
@@ -84,6 +114,7 @@ public final class SeasonalEvents implements Listener, AutoCloseable {
     private LocalDate day;
     private BossBar countdown;
     private Mannequin santa;
+    private Hunt hunt;
 
     public SeasonalEvents(Plugin plugin, Locations<String> locations, ActivitiesConfig config, Messages messages,
                           Runnable fireworks, SeasonalDecor decor) {
@@ -142,7 +173,8 @@ public final class SeasonalEvents implements Listener, AutoCloseable {
         if (calendar.is(CHRISTMAS)) {
             locations.get("santa").ifPresent(this::spawnSanta);
         }
-        if (!calendar.is(EASTER)) {
+        hunt = Arrays.stream(Hunt.values()).filter(each -> calendar.is(each.occasion)).findFirst().orElse(null);
+        if (hunt == null) {
             return;
         }
         var spots = new ArrayList<String>();
@@ -152,12 +184,12 @@ public final class SeasonalEvents implements Listener, AutoCloseable {
                 spots.add(key);
             }
         }
-        Collections.shuffle(spots, new Random(day.getYear()));
+        Collections.shuffle(spots, new Random(day.getYear() * 31L + hunt.ordinal()));
         for (var key : spots.stream().limit(config.easterEggs()).toList()) {
             var location = locations.get(key).orElseThrow();
             hold(location);
             var display = location.getWorld().spawn(location.clone().add(0, 0.35, 0), ItemDisplay.class, egg -> {
-                egg.setItemStack(ItemStack.of(Material.TURTLE_EGG));
+                egg.setItemStack(ItemStack.of(hunt.item));
                 egg.setPersistent(false);
             });
             var interaction = location.getWorld().spawn(location, Interaction.class, target -> {
@@ -220,11 +252,14 @@ public final class SeasonalEvents implements Listener, AutoCloseable {
         if (santa != null) {
             player.sendMessage(messages.get("seasonal.christmas-hint"));
         }
+        if (hunt != null && !eggs.isEmpty()) {
+            player.sendMessage(messages.get(hunt.hint, Formatter.number("total", eggs.size())));
+        }
         hideFoundEggs(player);
     }
 
     private String eggPrefix() {
-        return "calendar.easter." + day.getYear() + ".";
+        return hunt.prefix + day.getYear() + ".";
     }
 
     private void hideFoundEggs(Player player) {
@@ -242,7 +277,7 @@ public final class SeasonalEvents implements Listener, AutoCloseable {
     @EventHandler
     public void onEgg(PlayerInteractEntityEvent event) {
         var egg = eggs.get(event.getRightClicked().getUniqueId());
-        if (egg == null || event.getHand() != EquipmentSlot.HAND || !calendar.is(EASTER)) {
+        if (egg == null || event.getHand() != EquipmentSlot.HAND || hunt == null || !calendar.is(hunt.occasion)) {
             return;
         }
         event.setCancelled(true);
@@ -251,6 +286,7 @@ public final class SeasonalEvents implements Listener, AutoCloseable {
             return;
         }
         var prefix = eggPrefix();
+        var current = hunt;
         var selected = eggs.values().stream().map(Egg::key).toList();
         Tasks.async(plugin, () -> {
             var unlocks = BlockcraftApi.get().unlocks();
@@ -258,18 +294,18 @@ public final class SeasonalEvents implements Listener, AutoCloseable {
             var owned = unlocks.owned(player.getUniqueId(), prefix);
             int found = (int) selected.stream().filter(key -> owned.contains(prefix + key)).count();
             if (found >= config.easterEggs()) {
-                unlocks.unlock(player.getUniqueId(), ChatTagChoice.of(ChatTag.EASTER_BUNNY).item());
+                unlocks.unlock(player.getUniqueId(), ChatTagChoice.of(current.tag).item());
             }
             return found;
         }, found -> {
             claiming.remove(player.getUniqueId());
             if (player.isOnline()) {
                 hide(player, egg);
-                Sounds.EASTER_EGG.play(player);
-                player.sendMessage(messages.get("seasonal.egg", Formatter.number("found", found), Formatter.number("total", config.easterEggs())));
+                current.sound.play(player);
+                player.sendMessage(messages.get(current.found, Formatter.number("found", found), Formatter.number("total", config.easterEggs())));
                 if (found >= config.easterEggs()) {
                     player.sendMessage(messages.get("seasonal.tag", Placeholder.component("tag",
-                            ChatTagChoice.of(ChatTag.EASTER_BUNNY).text(BlockcraftApi.get().messages()))));
+                            ChatTagChoice.of(current.tag).text(BlockcraftApi.get().messages()))));
                 }
             }
         }, () -> claiming.remove(player.getUniqueId()));

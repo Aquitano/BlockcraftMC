@@ -43,6 +43,7 @@ public final class Secrets {
     private final int reward;
     private final UnlockRewards rewards;
     private final Map<UUID, Set<Secret>> alreadyFound = new HashMap<>();
+    private final Map<UUID, Set<Secret>> searching = new HashMap<>();
 
     public Secrets(Plugin plugin, Messages messages, Unlocks unlocks, CoinsRepository coins, int reward) {
         this.plugin = plugin;
@@ -55,10 +56,24 @@ public final class Secrets {
 
     /** A secret the player has found since joining is answered from memory: a sign can be clicked as fast as they like. */
     public void find(Player player, Secret secret) {
+        find(player, secret, false);
+    }
+
+    /** Walking through a place finds its secret once; passing it again says nothing. */
+    public void discover(Player player, Secret secret) {
+        find(player, secret, true);
+    }
+
+    private void find(Player player, Secret secret, boolean quiet) {
         var api = BlockcraftApi.get();
         var uuid = player.getUniqueId();
         if (alreadyFound.getOrDefault(uuid, Set.of()).contains(secret)) {
-            player.sendMessage(messages.get("secrets.already-found"));
+            if (!quiet) {
+                player.sendMessage(messages.get("secrets.already-found"));
+            }
+            return;
+        }
+        if (!searching.computeIfAbsent(uuid, ignored -> EnumSet.noneOf(Secret.class)).add(secret)) {
             return;
         }
         var name = api.realName(player);
@@ -73,17 +88,22 @@ public final class Secrets {
                     secret.item(), uuid.toString()) > 0;
             return Optional.of(new Found(coins.get(uuid), owned.size(), first, explorer));
         }, found -> {
+            searching.getOrDefault(uuid, EnumSet.noneOf(Secret.class)).remove(secret);
             if (!player.isOnline()) {
                 return;
             }
             alreadyFound.computeIfAbsent(uuid, ignored -> EnumSet.noneOf(Secret.class)).add(secret);
-            found.ifPresentOrElse(first -> celebrate(player, secret, first),
-                    () -> player.sendMessage(messages.get("secrets.already-found")));
-        });
+            found.ifPresentOrElse(first -> celebrate(player, secret, first), () -> {
+                if (!quiet) {
+                    player.sendMessage(messages.get("secrets.already-found"));
+                }
+            });
+        }, () -> searching.getOrDefault(uuid, EnumSet.noneOf(Secret.class)).remove(secret));
     }
 
     public void forget(Player player) {
         alreadyFound.remove(player.getUniqueId());
+        searching.remove(player.getUniqueId());
     }
 
     private void celebrate(Player player, Secret secret, Found found) {

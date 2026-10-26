@@ -432,6 +432,7 @@ tags:
   entdecker: "<dark>[<dark_aqua>ENTDECKER<dark>]"
   spiegel: "<dark>[<primary>SPIEGEL<dark>]"
   osterhase: "<dark>[<light_purple>OSTERHASE<dark>]"
+  kuerbis: "<dark>[<gold>KÜRBIS<dark>]"
   neujahr: "<dark>[<accent><year><dark>]"
 
 operation:

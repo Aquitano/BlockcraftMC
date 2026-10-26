@@ -15,14 +15,24 @@ public enum Secret {
     STATUE("Statue", Trigger.SIGN),
     RUHE("Ruhe", Trigger.SIGN),
     ABGELEGEN("Abgelegen", Trigger.SIGN),
+    PRINZESSIN("Prinzessin", Trigger.PLACE),
+    KERKER("Kerker", Trigger.PLACE),
+    QUELLE("Quelle", Trigger.PLACE),
+    RUMHAENGEN("Rumhaengen", Trigger.PLACE),
+    BETA("Beta", Trigger.PLACE),
+    KUCHEN("Kuchen", Trigger.CAKE),
+    ENDERAUGE("Enderauge", Trigger.ENDER_EYES),
     RETRO("Retro", Trigger.KONAMI_CODE),
     GOLDEN_CARP("Karpfen", Trigger.FISHING),
     GOLDEN_EGG("GoldenesEi", Trigger.CHICKEN),
     SHOOTING_STAR("Sternschnuppe", Trigger.SHOOTING_STAR),
     HEROBRINE("Herobrine", Trigger.HEROBRINE);
 
-    /** A sign is placed in the map; the others need no map at all. The chicken is a premium pet. */
-    public enum Trigger { SIGN, KONAMI_CODE, FISHING, CHICKEN, SHOOTING_STAR, HEROBRINE }
+    /**
+     * A sign is placed in the map; a place, the cake and the ender eyes are spots of the map's activities.yml; the
+     * others need no map at all. The chicken is a premium pet.
+     */
+    public enum Trigger { SIGN, PLACE, CAKE, ENDER_EYES, KONAMI_CODE, FISHING, CHICKEN, SHOOTING_STAR, HEROBRINE }
 
     public static final String ITEM_PREFIX = "lobby.secret.";
 

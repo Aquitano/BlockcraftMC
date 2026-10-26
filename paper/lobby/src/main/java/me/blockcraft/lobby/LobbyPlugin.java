@@ -10,6 +10,7 @@ import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.shop.Premium;
 import me.blockcraft.lobby.activity.Herobrine;
 import me.blockcraft.lobby.activity.LobbyQuirks;
+import me.blockcraft.lobby.activity.MapSecrets;
 import me.blockcraft.lobby.activity.Parkour;
 import me.blockcraft.lobby.activity.PondFishing;
 import me.blockcraft.lobby.activity.Prisoner;
@@ -95,6 +96,7 @@ public final class LobbyPlugin extends JavaPlugin {
     private SantaSleigh sleigh;
     private Prisoner prisoner;
     private Herobrine herobrine;
+    private MapSecrets mapSecrets;
     private ShootingStars stars;
 
     @Override
@@ -121,6 +123,7 @@ public final class LobbyPlugin extends JavaPlugin {
         parkour = new Parkour(this, activityLocations, activities, messages);
         quirks = new LobbyQuirks(this, activities, messages, pets, secrets);
         prisoner = new Prisoner(this, activityLocations, messages);
+        mapSecrets = new MapSecrets(this, activityLocations, messages, secrets, activities.placeRadius());
         herobrine = new Herobrine(this, HerobrineConfig.fromYaml(YamlFile.section(yaml, "herobrine")), secrets);
         stars = new ShootingStars(this, ShootingStarConfig.fromYaml(YamlFile.section(yaml, "shooting-stars")), messages, secrets);
         var themes = SeasonTheme.all(YamlFile.section(yaml, "seasons"), getLogger());
@@ -149,7 +152,7 @@ public final class LobbyPlugin extends JavaPlugin {
 
         hud = new LobbyHud(this, messages);
         hud.start(config.hudRefreshSeconds() * 20L);
-        register(previews, hud, parkour, quirks, seasons, decor, sleigh, prisoner, stars.wishes(),
+        register(previews, hud, parkour, quirks, seasons, decor, sleigh, prisoner, mapSecrets, stars.wishes(),
                 new PondFishing(activityLocations, activities, messages, secrets),
                 new JoinQuitListener(messages, locations, items, trails, pets, hider),
                 new CosmeticSettingsListener(messages, trails, pets, gadgets),
@@ -217,6 +220,9 @@ public final class LobbyPlugin extends JavaPlugin {
         }
         if (herobrine != null) {
             herobrine.close();
+        }
+        if (mapSecrets != null) {
+            mapSecrets.close();
         }
         if (previews != null) {
             previews.close();

@@ -136,7 +136,16 @@ and disconnect. They are not stored in the database.
 
 The secrets menu shows progress and unlocks riddles after the configured number of discoveries. Each secret pays
 once. The first recorded finder gets a network announcement. Finding all sign, Konami-code, and pond discoveries
-unlocks `[ENTDECKER]`; the chicken's golden egg and the shooting star are bonus discoveries.
+unlocks `[ENTDECKER]`; the chicken's golden egg, the shooting star and Herobrine are bonus discoveries.
+
+Places the map's builders left without a sign count as well. Walking within `activities.place-radius` (four
+blocks) of the princess tower, the castle dungeon, the spring, the hanging-out spot or the old beta server finds
+them; passing them again stays silent. Clicking the cake next to "Gute Nacht!" finds `Der Kuchen` and reminds you
+that it is a lie. Three end portal frames around the map hold an eye each; clicking one takes it (stored per
+account), and with all three the empty frame in the hut lights up for that player, finds `Das vierte Auge` and
+carries them to the beta-server platform two seconds later. The spots are `secret-<name>`, `cake`, `eye-1` to
+`eye-3`, `eye-frame` and `eye-arrival` in the map's `activities.yml`; `/lobbyset` sets each, the block spots by
+looking at the block.
 
 Press forward twice, backward twice, left, right, left, right, sneak, then jump to enter the Konami code. Release
 each key between presses. The default bindings are `W W S S A D A D Shift Space`. A three-second gap resets the
@@ -206,8 +215,8 @@ It is empty by default because no founding date is assumed.
 
 | Occasion | Behavior |
 |---|---|
-| Easter | From two days before Easter Sunday through seven days after, configured egg displays appear in the lobby. Discoveries persist per player and year. Finding all selected eggs grants `[OSTERHASE]`. |
-| Halloween | October 17 through 31. Joining the lobby shows a hint with the phrase. Writing `Süßes oder Saures` in lobby chat gives either five coins or one of three tricks: a pumpkin hat for 300 seconds, a swarm of bats, or a ghost that darkens the screen. Each account can claim once per calendar day. The phrase and rewards are configurable under `activities`. |
+| Easter | From two days before Easter Sunday through seven days after, configured egg displays appear in the lobby. Discoveries persist per player and year. Finding all selected eggs grants `[OSTERHASE]`. The imported lobby has twenty hiding places, `egg-1` to `egg-20`, near its landmarks. |
+| Halloween | October 17 through 31. Glowing pumpkins sit at a yearly draw of the same hiding places as the Easter eggs; finding all of them grants `[KÜRBIS]`. Joining the lobby shows a hint with the phrase. Writing `Süßes oder Saures` in lobby chat gives either five coins or one of three tricks: a pumpkin hat for 300 seconds, a swarm of bats, or a ghost that darkens the screen. Each account can claim once per calendar day. The phrase and rewards are configurable under `activities`. |
 | Winter | December 1 through 31. Only the lobby's look and sound change (see below). |
 | Advent | December 1 through 24. The profile contains a calendar with today's door, and joining the lobby names it. Each account can claim 25 coins once per day. Door 24 also unlocks the snow trail. |
 | Christmas | December 24 through 26. The Weihnachtsmann stands at `/lobbyset santa` and gives each account `activities.christmas-coins` (100) once per year, with a jingle. Without that spot he does not appear. Every ten minutes his sleigh, pulled by four reindeer and Rudolph, flies over a lobby player ringing Jingle Bells and drops four presents; each player catches one per flight for 15 coins. Lobby's `sleigh` section sets the timing, and staff send it on any day with `/schlitten`. |

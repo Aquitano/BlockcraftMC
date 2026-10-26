@@ -7,6 +7,7 @@ import io.papermc.paper.command.brigadier.Commands;
 import me.blockcraft.api.config.Locations;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.lobby.LobbyPermissions;
+import me.blockcraft.lobby.activity.MapSecrets;
 import me.blockcraft.lobby.config.ActivitiesConfig;
 import me.blockcraft.lobby.config.LobbyLocation;
 import net.kyori.adventure.text.Component;
@@ -32,6 +33,7 @@ public final class LobbySetCommand {
                                                                Runnable refresh) {
         var root = Commands.literal("lobbyset").requires(source -> source.getSender().hasPermission(LobbyPermissions.SET_SPAWN));
         var keys = new ArrayList<>(List.of("pond", "parkour-start", "parkour-finish", "parkour-top", "parkour-finish-sign", "santa", "prisoner"));
+        keys.addAll(MapSecrets.SPOTS);
         for (int i = 1; i <= config.checkpoints(); i++) {
             keys.add("checkpoint-" + i);
         }
@@ -46,6 +48,13 @@ public final class LobbySetCommand {
                     var target = player.getTargetBlockExact(10);
                     if (target == null || !(target.getState() instanceof Sign)) {
                         player.sendMessage(messages.get("activities.setup-sign-target"));
+                        return 0;
+                    }
+                    point = target.getLocation();
+                } else if (MapSecrets.BLOCK_SPOTS.contains(key)) {
+                    var target = player.getTargetBlockExact(10);
+                    if (target == null) {
+                        player.sendMessage(messages.get("activities.setup-block-target"));
                         return 0;
                     }
                     point = target.getLocation();

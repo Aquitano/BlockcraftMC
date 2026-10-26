@@ -105,6 +105,7 @@ activities:
   halloween-phrase: "Süßes oder Saures"
   pumpkin-seconds: 300
   christmas-coins: 100
+  place-radius: 4
 
 shooting-stars:
   enabled: true

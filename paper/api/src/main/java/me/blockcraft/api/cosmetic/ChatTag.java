@@ -24,6 +24,7 @@ public enum ChatTag {
     EXPLORER("entdecker", true, false),
     MIRROR("spiegel", true, false),
     EASTER_BUNNY("osterhase", true, false),
+    PUMPKIN("kuerbis", true, false),
     NEW_YEAR("neujahr", true, true);
 
     private final String key;

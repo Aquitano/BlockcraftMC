@@ -51,7 +51,9 @@ public enum Sounds {
     CHAINS(FeedbackSound.CHAINS),
     HEROBRINE(FeedbackSound.HEROBRINE),
     CORE_ALARM(FeedbackSound.CORE_ALARM),
-    CORE_DESTROYED(FeedbackSound.CORE_DESTROYED);
+    CORE_DESTROYED(FeedbackSound.CORE_DESTROYED),
+    PUMPKIN(FeedbackSound.PUMPKIN),
+    EYE(FeedbackSound.EYE);
 
     private static final int COUNTDOWN_FROM = 5;
     private static final float COUNTDOWN_PITCH_STEP = 0.15f;
