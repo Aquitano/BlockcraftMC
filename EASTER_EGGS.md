@@ -188,6 +188,12 @@ Easter hiding places. It checks the setup, not whether the jumps are reachable o
 Look at the finish sign and run `/lobbyset parkour-finish-sign` to register it. Its text updates on both sides.
 The finish sign is optional. When configured, the check verifies that its block is a sign.
 
+Set pieces stand where staff run `/setprop <name>` (permission `blockcraft.lobby.setholo`): the trophy at spawn, and
+`skywars`, `ttt`, `bedwars` and `endergames` in front of their game areas. Each is a group of block and item displays
+from `props` in the lobby's `config.yml` that turns and bobs on the spot; the spot is kept in the map's `props.yml`,
+so `/map save` keeps it, and the displays themselves are spawned at every start, never saved. Without the pack the
+star on the trophy and the TTT knife are a nether star and an iron sword.
+
 The course requires all configured checkpoints in order. Falling more than four blocks below the last checkpoint
 returns the player there while the timer continues. Times and falls persist in `bc_parkour`. One hundred falls
 unlock `Ausdauer`. Flying, gliding, riding, or teleporting cancels a run. Double jumps and gadgets are disabled

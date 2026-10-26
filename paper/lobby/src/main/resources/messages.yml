@@ -13,6 +13,8 @@ commands:
     description: "Setzt die Lobby-Teleportpunkte"
   setholo:
     description: "Erstellt Hologramme"
+  setprop:
+    description: "Stellt eine bewegte Dekoration auf"
   cc:
     description: "Leert den Chat"
 
@@ -472,6 +474,9 @@ chat:
   cleared: "<prefix><muted>Der Chat wurde von <error><player><muted> geleert."
 setspawn:
   set: "<prefix><muted>Spawn gesetzt."
+setprop:
+  usage: "<prefix><error>Korrekte Verwendung <accent>/setprop \\<Name>"
+  set: "<prefix><muted>Dekoration <accent><prop> <muted>steht jetzt hier. Mit <accent>/map save <muted>bleibt sie."
 setholo:
   usage: "<prefix><error>Korrekte Verwendung <accent>/setholo \\<Typ>"
   set: "<prefix><muted>Hologramm gesetzt."

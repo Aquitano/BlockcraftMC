@@ -20,6 +20,7 @@ import me.blockcraft.lobby.activity.NoticeBoards;
 import me.blockcraft.lobby.activity.Parkour;
 import me.blockcraft.lobby.activity.PondFishing;
 import me.blockcraft.lobby.activity.Prisoner;
+import me.blockcraft.lobby.activity.Props;
 import me.blockcraft.lobby.activity.QuestGivers;
 import me.blockcraft.lobby.activity.SantaSleigh;
 import me.blockcraft.lobby.activity.SeasonalAtmosphere;
@@ -32,6 +33,7 @@ import me.blockcraft.lobby.command.LobbySetCommand;
 import me.blockcraft.lobby.command.NavigatorCommand;
 import me.blockcraft.lobby.command.SetHoloCommand;
 import me.blockcraft.lobby.command.SetSpawnCommand;
+import me.blockcraft.lobby.command.SetPropCommand;
 import me.blockcraft.lobby.command.SleighCommand;
 import me.blockcraft.lobby.command.TeamBoardCommand;
 import me.blockcraft.lobby.config.ActivitiesConfig;
@@ -41,6 +43,7 @@ import me.blockcraft.lobby.config.LobbyConfig;
 import me.blockcraft.lobby.config.LobbyLocation;
 import me.blockcraft.lobby.config.LoreNoteConfig;
 import me.blockcraft.lobby.config.Quest;
+import me.blockcraft.lobby.config.PropsConfig;
 import me.blockcraft.lobby.config.SeasonTheme;
 import me.blockcraft.lobby.config.SleighConfig;
 import me.blockcraft.lobby.config.ShootingStarConfig;
@@ -110,6 +113,7 @@ public final class LobbyPlugin extends JavaPlugin {
     private SeasonalEvents seasons;
     private SeasonalAtmosphere atmosphere;
     private SantaSleigh sleigh;
+    private Props props;
     private Prisoner prisoner;
     private Herobrine herobrine;
     private MapSecrets mapSecrets;
@@ -151,6 +155,9 @@ public final class LobbyPlugin extends JavaPlugin {
         var decor = new SeasonalDecor(api.calendar(), themes, snowfall);
         atmosphere = new SeasonalAtmosphere(this, api.calendar(), themes);
         sleigh = new SantaSleigh(this, SleighConfig.fromYaml(YamlFile.section(yaml, "sleigh")), messages, api.calendar());
+        props = new Props(this, PropsConfig.fromYaml(YamlFile.section(yaml, "props"), getLogger()),
+                Locations.load(api.map().file(this, "props.yml")));
+        props.start();
         seasons = new SeasonalEvents(this, activityLocations, activities, messages,
                 () -> locations.get(LobbyLocation.SPAWN).ifPresent(spawn -> config.fireworkSpots()
                         .forEach(spot -> MoveListener.launchFirework(spot.toLocation(spawn.getWorld())))), decor);
@@ -226,6 +233,7 @@ public final class LobbyPlugin extends JavaPlugin {
                     holograms, locations, shopNpc));
             commands.register(ClearChatCommand.create(messages));
             commands.register(SleighCommand.create(sleigh, messages));
+            commands.register(SetPropCommand.create(messages, props));
             commands.register(NavigatorCommand.create(menus), "nav", "spiele");
             var activeTeamBoard = api.map().file(this, "team-board.yml");
             var teamBoardSource = api.map().template()
@@ -270,6 +278,9 @@ public final class LobbyPlugin extends JavaPlugin {
         }
         if (atmosphere != null) {
             atmosphere.close();
+        }
+        if (props != null) {
+            props.stop();
         }
         if (sleigh != null) {
             sleigh.close();
