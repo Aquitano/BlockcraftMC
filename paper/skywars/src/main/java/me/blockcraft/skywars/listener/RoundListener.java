@@ -76,7 +76,7 @@ public final class RoundListener implements Listener {
 
     @EventHandler
     public void onMove(PlayerMoveEvent event) {
-        if (game.isIngame() && game.inArena(event.getTo().getWorld()) && event.getTo().getY() < game.config().arena().voidHeight()) {
+        if (game.inArena(event.getTo().getWorld()) && event.getTo().getY() < game.config().arena().voidHeight()) {
             game.fell(event.getPlayer());
         }
     }

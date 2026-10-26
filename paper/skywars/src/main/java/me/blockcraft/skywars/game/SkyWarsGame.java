@@ -142,12 +142,14 @@ public final class SkyWarsGame {
     }
 
     /** Only in the lobby: a purchase that completes after the start must not hand out a kit nobody equipped. */
-    public void selectKit(Player player, Kit kit) {
+    /** Only in the lobby; false if the round already started, as when a purchase completes too late. */
+    public boolean selectKit(Player player, Kit kit) {
         if (!isLobby()) {
-            return;
+            return false;
         }
         kits.put(player.getUniqueId(), kit);
         show(player);
+        return true;
     }
 
     public Component kitName(Kit kit) {
@@ -304,11 +306,19 @@ public final class SkyWarsGame {
     }
 
     /** Below the void line a player dies, falling from whoever hit them last; a spectator is put back above the map. */
+    /**
+     * Below the void line a player of the round dies; a spectator, and after the round anyone at all, is put back
+     * above the islands and may fly, because LobbyProtection keeps them from dying while the recap shows.
+     */
     public void fell(Player player) {
-        if (round.isPlaying(player) && !player.isDead()) {
+        if (isIngame() && round.isPlaying(player) && !player.isDead()) {
             player.damage(Float.MAX_VALUE, DamageSource.builder(DamageType.OUT_OF_WORLD).build());
-        } else if (round.isSpectator(player)) {
-            arena.ifPresent(built -> player.teleport(built.spectatorSpawn()));
+        } else if (round.isSpectator(player) || phase() == GamePhase.ENDING) {
+            arena.ifPresent(built -> {
+                player.teleport(built.spectatorSpawn());
+                player.setAllowFlight(true);
+                player.setFlying(true);
+            });
         }
     }
 

@@ -1,5 +1,6 @@
 package me.blockcraft.api.world;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Difficulty;
 import org.bukkit.GameRules;
 import org.bukkit.NamespacedKey;
@@ -15,6 +16,11 @@ import org.bukkit.entity.Projectile;
 import org.bukkit.entity.TNTPrimed;
 import org.bukkit.generator.ChunkGenerator;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.Objects;
 import java.util.function.Predicate;
 
@@ -37,6 +43,34 @@ public final class Worlds {
         world.setStorm(false);
         world.setThundering(false);
         return world;
+    }
+
+    /**
+     * Throws away what is left of the dimension {@code key} from the last start, unloading it first if it is
+     * loaded, so that the next {@link WorldCreator} for it starts from nothing. A game that plays one round per start
+     * builds its map into a fresh world this way instead of clearing the old one block by block.
+     */
+    public static void discard(NamespacedKey key) {
+        var loaded = Bukkit.getWorld(key);
+        if (loaded != null) {
+            Bukkit.unloadWorld(loaded, false);
+        }
+        var folder = Bukkit.getWorldContainer().toPath().resolve(Bukkit.getWorlds().getFirst().getName())
+                .resolve("dimensions").resolve(key.getNamespace()).resolve(key.getKey());
+        deleteRecursively(folder);
+    }
+
+    private static void deleteRecursively(Path path) {
+        if (Files.notExists(path)) {
+            return;
+        }
+        try (var walk = Files.walk(path)) {
+            for (var each : walk.sorted(Comparator.reverseOrder()).toList()) {
+                Files.delete(each);
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException("Could not delete the dimension " + path, e);
+        }
     }
 
     /**

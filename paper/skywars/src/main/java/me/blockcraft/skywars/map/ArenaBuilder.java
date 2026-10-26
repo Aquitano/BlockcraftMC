@@ -30,9 +30,6 @@ public final class ArenaBuilder {
     private static final int SLOTS = 12;
     private static final int SPAWN_RING = 40;
     private static final int SEMI_RING = 21;
-    private static final int CLEAR = 76;
-    private static final int CLEAR_LOW = 50;
-    private static final int CLEAR_HIGH = 112;
     private static final int BORDER_MARGIN = 14;
     private static final double TAU = Math.PI * 2;
 
@@ -80,7 +77,6 @@ public final class ArenaBuilder {
     }
 
     private SkyArena build() {
-        clear();
         var spawns = new ArrayList<Location>();
         for (var point : Ring.points(SLOTS, SPAWN_RING, 0)) {
             spawns.add(spawnIsland((int) Math.round(point.x()), (int) Math.round(point.z())));
@@ -96,20 +92,6 @@ public final class ArenaBuilder {
         chests.forEach((kind, blocks) -> byKind.put(kind, List.copyOf(blocks)));
         return new SkyArena(theme, world, List.copyOf(spawns), List.copyOf(cages), byKind, SPAWN_RING + BORDER_MARGIN,
                 new Location(world, 0.5, TOP + 22, SPAWN_RING * 0.6, 180, 35));
-    }
-
-    /** The world keeps what the last round built, and the last map may have been another one. */
-    private void clear() {
-        for (int x = -CLEAR; x <= CLEAR; x++) {
-            for (int z = -CLEAR; z <= CLEAR; z++) {
-                for (int y = CLEAR_LOW; y <= CLEAR_HIGH; y++) {
-                    var block = world.getBlockAt(x, y, z);
-                    if (!block.isEmpty()) {
-                        block.setType(Material.AIR, false);
-                    }
-                }
-            }
-        }
     }
 
     /**
@@ -227,7 +209,8 @@ public final class ArenaBuilder {
                 }
                 int x = cx + dx;
                 int z = cz + dz;
-                int below = (int) Math.round(depth * Math.pow(1 - distance / edge, 0.75)) + random.nextInt(2);
+                // At least one block under the top, so sand at the rim has something to rest on.
+                int below = Math.max(1, (int) Math.round(depth * Math.pow(1 - distance / edge, 0.75)) + random.nextInt(2));
                 set(x, TOP, z, theme.top());
                 for (int y = 1; y <= below; y++) {
                     set(x, TOP - y, z, y <= 2 ? theme.soil() : random.nextInt(8) == 0 ? vein() : theme.stone());

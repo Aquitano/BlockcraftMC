@@ -1,6 +1,7 @@
 package me.blockcraft.endergames.world;
 
 import me.blockcraft.api.task.Tasks;
+import me.blockcraft.api.world.Worlds;
 import me.blockcraft.endergames.config.EnderGamesConfig.WorldSettings;
 import me.blockcraft.endergames.config.MapSeed;
 import org.bukkit.Bukkit;
@@ -17,10 +18,6 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.plugin.Plugin;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -67,11 +64,7 @@ public final class RoundWorld {
     public static RoundWorld create(Plugin plugin, WorldSettings settings) {
         var seed = settings.seeds().get(new Random().nextInt(settings.seeds().size()));
         plugin.getLogger().info("EnderGames world from seed " + seed.seed() + ", centred on " + seed.x() + ", " + seed.z());
-        var stale = Bukkit.getWorld(KEY);
-        if (stale != null) {
-            Bukkit.unloadWorld(stale, false);
-        }
-        deleteRecursively(folder());
+        Worlds.discard(KEY);
         var world = Objects.requireNonNull(WorldCreator.ofKey(KEY)
                 .environment(World.Environment.NORMAL)
                 .type(WorldType.NORMAL)
@@ -268,24 +261,5 @@ public final class RoundWorld {
         world.getPlayers().forEach(player -> player.teleport(Bukkit.getWorlds().getFirst().getSpawnLocation()));
         world.removePluginChunkTickets(plugin);
         Bukkit.unloadWorld(world, false);
-    }
-
-    private static Path folder() {
-        var level = Bukkit.getWorlds().getFirst().getName();
-        return Bukkit.getWorldContainer().toPath().resolve(level).resolve("dimensions")
-                .resolve(KEY.getNamespace()).resolve(KEY.getKey());
-    }
-
-    private static void deleteRecursively(Path path) {
-        if (Files.notExists(path)) {
-            return;
-        }
-        try (var walk = Files.walk(path)) {
-            for (var each : walk.sorted(Comparator.reverseOrder()).toList()) {
-                Files.delete(each);
-            }
-        } catch (IOException e) {
-            throw new UncheckedIOException("Could not delete the last EnderGames world " + path, e);
-        }
     }
 }

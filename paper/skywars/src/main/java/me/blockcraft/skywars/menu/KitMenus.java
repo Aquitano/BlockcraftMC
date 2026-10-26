@@ -63,7 +63,9 @@ public final class KitMenus {
     }
 
     private void select(Player player, Kit kit) {
-        game.selectKit(player, kit);
+        if (!game.selectKit(player, kit)) {
+            return;
+        }
         Sounds.EQUIP.play(player);
         BlockcraftApi.get().notifications().feedback(player, messages.get("kit.selected",
                 Placeholder.component("kit", game.kitName(kit))));

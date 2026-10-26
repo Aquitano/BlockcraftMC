@@ -45,10 +45,15 @@ public final class SkyWarsPlugin extends JavaPlugin {
         var stats = new StatsRepository(api.database(), "bc_skywars_stats");
         stats.createTable();
 
-        var lobbyWorld = Worlds.createArena(new NamespacedKey("skywars", "lobby"));
+        // One round per start: both worlds begin empty, so nothing of the last round or the last map is left over.
+        var lobbyKey = new NamespacedKey("skywars", "lobby");
+        var arenaKey = new NamespacedKey("skywars", "inseln");
+        Worlds.discard(lobbyKey);
+        Worlds.discard(arenaKey);
+        var lobbyWorld = Worlds.createArena(lobbyKey);
         var lobbySpawn = ArenaBuilder.lobby(lobbyWorld);
         lobbyWorld.setSpawnLocation(lobbySpawn);
-        var arena = Worlds.createArena(new NamespacedKey("skywars", "inseln"));
+        var arena = Worlds.createArena(arenaKey);
         // Hunger and natural regeneration are part of the fight; no mob spawns anyway.
         arena.setDifficulty(Difficulty.NORMAL);
 
