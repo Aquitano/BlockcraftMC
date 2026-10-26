@@ -29,6 +29,8 @@ final class ProfileMenu extends Menu {
     private static final int ACHIEVEMENTS_SLOT = 22;
     private static final int ADVENT_SLOT = 25;
     private static final int GAMES_ROW = 27;
+    private static final int ROWS_ABOVE_GAMES = 3;
+    private static final int COLUMNS = 9;
 
     private final Consumer<Player> achievements;
     private final Consumer<Player> progression;
@@ -37,7 +39,7 @@ final class ProfileMenu extends Menu {
     private final Optional<Consumer<Player>> advent;
 
     ProfileMenu(Profiles profiles, Player viewer, Profiles.Snapshot snapshot, Optional<Consumer<Player>> cosmetics) {
-        super(4, profiles.messages().get("profile.title"));
+        super(ROWS_ABOVE_GAMES + gameRows(snapshot.games().size()), profiles.messages().get("profile.title"));
         recentRound = profiles.recentRound();
         advent = profiles.advent();
         var messages = profiles.messages();
@@ -115,7 +117,17 @@ final class ProfileMenu extends Menu {
         return MenuIcon.byKey(key).map(MenuIcon::item).orElseGet(() -> Items.of(Material.IRON_SWORD).hideAttributes());
     }
 
-    private static int gameSlot(int index, int games) {
-        return GAMES_ROW + (9 - games) / 2 + index;
+    /** One row per nine games, at least one. */
+    static int gameRows(int games) {
+        return Math.max(1, (games + COLUMNS - 1) / COLUMNS);
+    }
+
+    /** The games share their rows evenly, each row centred: ten games are two rows of five, not nine and one. */
+    static int gameSlot(int index, int games) {
+        int rows = gameRows(games);
+        int perRow = (games + rows - 1) / rows;
+        int row = index / perRow;
+        int inRow = Math.min(perRow, games - row * perRow);
+        return GAMES_ROW + row * COLUMNS + (COLUMNS - inRow) / 2 + index % perRow;
     }
 }
