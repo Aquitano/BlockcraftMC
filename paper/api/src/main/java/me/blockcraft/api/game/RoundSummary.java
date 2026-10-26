@@ -85,6 +85,7 @@ public final class RoundSummary {
     private final RoundTracking tracking;
     private final SerialTasks<UUID> recapWrites;
     private boolean closed;
+    private boolean secretKills;
     private boolean resultsShown;
     private boolean returning;
 
@@ -116,6 +117,15 @@ public final class RoundSummary {
         Bukkit.getPluginManager().registerEvents(accusations, plugin);
     }
 
+    /**
+     * For a game whose kills must stay secret, as TTT's: a kill still counts and pays, but nobody hears of a streak,
+     * no kill effect plays at the body, the victim's title names nobody, rivalries keep still and nobody pays
+     * respects to the dead. Each of those would tell the living who killed whom.
+     */
+    public void keepKillsSecret() {
+        secretKills = true;
+    }
+
     /** The round has started with these players; their rivalries load, and each hears of a nemesis among them. */
     void begin(List<Player> players) {
         tracking.begin(players);
@@ -145,22 +155,26 @@ public final class RoundSummary {
 
     /**
      * Pays the killer and plays their kill effect; the victim sees who beat them with how much health left, headed
-     * by what the kill cost them.
+     * by what the kill cost them. Unless {@link #keepKillsSecret kills are secret}, then it only pays.
      */
     public void awardKill(Player killer, Player victim, Defeat defeat) {
-        api.effects().onKill(killer, victim);
         Sounds.KILL.play(killer);
         var score = score(killer);
         score.kills++;
         score.streak++;
         score.bestStreak = Math.max(score.bestStreak, score.streak);
+        score.xp += api.xp().award(killer, XpReward.KILL);
+        pay(killer, rewards.kill());
+        accusations.killed(victim, killer);
+        if (secretKills) {
+            return;
+        }
+        api.effects().onKill(killer, victim);
         if (api.streaks().announces(score.streak)) {
             Bukkit.broadcast(messages.get("summary.streak",
                     Placeholder.unparsed("player", killer.getName()), Formatter.number("streak", score.streak)));
             Sounds.STREAK.play(killer);
         }
-        score.xp += api.xp().award(killer, XpReward.KILL);
-        pay(killer, rewards.kill());
         moment(victim, messages.get(switch (defeat) {
             case OUT -> "defeat.out";
             case LIFE -> "defeat.life";
@@ -169,7 +183,6 @@ public final class RoundSummary {
         }), messages.get("defeat.subtitle", Placeholder.unparsed("killer", killer.getName()),
                 Placeholder.unparsed("hearts", hearts(killer.getHealth()))));
         rivalries.kill(killer, victim, standing -> avenge(killer, victim, standing));
-        accusations.killed(victim, killer);
     }
 
     /** A line of the player's own recap, shown after their numbers. */
@@ -221,7 +234,9 @@ public final class RoundSummary {
         var score = score(victim);
         score.deaths++;
         score.streak = 0;
-        respects.died(victim);
+        if (!secretKills) {
+            respects.died(victim);
+        }
     }
 
     /** Pays the winner and plays their win effect; a win on half a heart or less is a close call. */

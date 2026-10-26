@@ -18,7 +18,8 @@ open Minecraft clones ([MTTT](https://github.com/phiph-s/MTTT), Apache 2.0, and
 4. The round runs `countdown.round` seconds (10 minutes). The innocents and detectives win when no traitor is left
    or the time runs out; the traitors win when nobody else is left. The whole side wins, dead members included.
 
-Nobody hears who killed whom. The dead lie where they fell as a figure in their skin, named "Unbekannte Leiche";
+Nobody hears who killed whom: the round keeps its kills secret (`RoundSummary.keepKillsSecret`), so no streak is
+announced, no kill effect plays, the victim's title names nobody and nobody pays respects with an F. The dead lie where they fell as a figure in their skin, named "Unbekannte Leiche";
 the first player to right-click it identifies it for everyone, which reveals the role. Holding the DNA scanner,
 a click also tells who the killer was. Dead players watch; their chat reaches only other spectators.
 
@@ -55,7 +56,7 @@ a point for every innocent or detective they kill, a detective for every traitor
 | Detective | DNA-Scanner | names the killer of a corpse it touches |
 | Detective | Goldenes Schwert | one blow kills a traitor; striking anyone else kills the wielder; used up either way |
 
-Explosions use `shop.explosion-power`, break no blocks and count as the owner's kill.
+Explosions use `shop.explosion-power`, break no blocks and count as the owner's kill, even once the owner is dead.
 
 ## Karma, health, rewards
 

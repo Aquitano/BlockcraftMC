@@ -87,6 +87,10 @@ public final class TttGame implements ShopMenu.Till {
     private final Map<UUID, Integer> karma = new HashMap<>();
     private final Map<UUID, Integer> points = new HashMap<>();
     private final Set<UUID> teamKillers = new HashSet<>();
+    private final Set<UUID> karmaLoaded = new HashSet<>();
+    private final Set<UUID> ownFault = new HashSet<>();
+    /** The name each player had when the roles were drawn, so a traitor who leaves is still named as seen. */
+    private final Map<UUID, String> names = new HashMap<>();
     private Stage stage = Stage.PREPARATION;
     private Optional<Faction> winner = Optional.empty();
     private boolean enderChestOpened;
@@ -101,6 +105,7 @@ public final class TttGame implements ShopMenu.Till {
         this.town = town;
         this.karmaRepository = karmaRepository;
         this.summary = new RoundSummary(plugin, messages, new RoundSummary.Rewards(config.rewards().kill(), config.rewards().win()), stats);
+        summary.keepKillsSecret();
         this.round = new Round(plugin, new Arena(messages, Sounds.JOIN), summary, config.capacity(), gameConfig);
         this.countdown = new LobbyCountdown(plugin, round, gameConfig, config.roundMinimum(), remaining -> { }, this::start);
         this.hotbar = new LobbyHotbar(plugin, List.of(), statsMenus, countdown);
@@ -170,7 +175,6 @@ public final class TttGame implements ShopMenu.Till {
             PlayerReset.reset(player, GameMode.ADVENTURE);
             player.teleport(town.lobbySpawn());
             hotbar.give(player);
-            player.sendMessage(messages.get("join.introduction"));
             loadKarma(player);
             countdown.start();
             if (round.playerCount() >= config.capacity()) {
@@ -210,6 +214,7 @@ public final class TttGame implements ShopMenu.Till {
         var id = player.getUniqueId();
         Tasks.async(plugin, () -> karmaRepository.get(id).orElse(config.karma().start()), value -> {
             karma.putIfAbsent(id, value);
+            karmaLoaded.add(id);
             refreshAll();
         });
     }
@@ -249,6 +254,7 @@ public final class TttGame implements ShopMenu.Till {
         stage = Stage.PLAYING;
         Collections.shuffle(players, ThreadLocalRandom.current());
         roles.putAll(config.roles().assign(players.stream().map(Player::getUniqueId).toList()));
+        players.forEach(player -> names.put(player.getUniqueId(), player.getName()));
         var detectives = players.stream().filter(player -> roles.get(player.getUniqueId()) == Role.DETECTIVE).toList();
         for (var player : players) {
             var role = roles.get(player.getUniqueId());
@@ -262,12 +268,19 @@ public final class TttGame implements ShopMenu.Till {
             }
             if (role.hasShop()) {
                 points.put(player.getUniqueId(), config.shop().startPoints());
+                var looted = player.getInventory().getItem(RoundItem.SLOT);
                 player.getInventory().setItem(RoundItem.SLOT, RoundItem.SHOP.build(player,
                         MenuIcon.TTT_SHOP.item().name(messages.get("item.shop", name))));
+                if (looted != null && !looted.isEmpty()) {
+                    give(player, looted);
+                }
             }
         }
         var traitors = traitors();
-        traitors.forEach(traitor -> traitor.sendMessage(messages.get("roles.partners", names(traitors))));
+        traitors.forEach(traitor -> {
+            var partners = traitors.stream().filter(other -> !other.equals(traitor)).toList();
+            traitor.sendMessage(partners.isEmpty() ? messages.get("roles.alone") : messages.get("roles.partners", names(partners)));
+        });
         if (!detectives.isEmpty()) {
             Bukkit.broadcast(messages.get("roles.detectives", names(detectives)));
         }
@@ -296,8 +309,9 @@ public final class TttGame implements ShopMenu.Till {
             return;
         }
         var death = summary.resolveDeath(event);
-        var killer = death.killer().or(() -> equipment.ownerOf(event.getDamageSource().getCausingEntity()))
-                .filter(other -> !other.equals(victim));
+        Optional<Player> killer = ownFault.remove(victim.getUniqueId()) ? Optional.empty()
+                : equipment.ownerOf(event.getDamageSource().getDirectEntity()).or(death::killer)
+                        .filter(other -> !other.equals(victim));
         var victimRole = roleOf(victim);
         killer.ifPresent(other -> victimRole.ifPresent(role -> credit(other, victim, role)));
         summary.death(victim);
@@ -373,6 +387,11 @@ public final class TttGame implements ShopMenu.Till {
             return;
         }
         tester.press(player);
+    }
+
+    /** The golden sword's wielder struck an innocent and dies of it; nobody earns that kill. */
+    public void blameSelf(Player player) {
+        ownFault.add(player.getUniqueId());
     }
 
     public void inspect(Player finder, Entity corpse, ItemStack hand) {
@@ -452,13 +471,13 @@ public final class TttGame implements ShopMenu.Till {
         }));
         roles.keySet().forEach(id -> karma.put(id, config.karma().afterRound(karma(id), teamKillers.contains(id))));
         var settled = new HashMap<UUID, Integer>();
-        roles.keySet().forEach(id -> settled.put(id, karma(id)));
+        roles.keySet().stream().filter(karmaLoaded::contains).forEach(id -> settled.put(id, karma(id)));
         Tasks.async(plugin, () -> karmaRepository.save(settled));
         Bukkit.broadcast(Component.empty());
         Bukkit.broadcast(won.map(faction -> messages.get("round.winner." + faction.key()))
                 .orElseGet(() -> messages.get("round.draw")));
         var traitorNames = roles.entrySet().stream().filter(entry -> entry.getValue() == Role.TRAITOR)
-                .map(entry -> Bukkit.getOfflinePlayer(entry.getKey()).getName()).filter(Objects::nonNull).toList();
+                .map(entry -> names.get(entry.getKey())).filter(Objects::nonNull).toList();
         if (!traitorNames.isEmpty()) {
             Bukkit.broadcast(messages.get("round.traitors", Placeholder.unparsed("players", String.join(", ", traitorNames))));
         }
@@ -514,7 +533,7 @@ public final class TttGame implements ShopMenu.Till {
                 return;
             }
             var partner = Bukkit.getPlayer(id);
-            var name = Placeholder.unparsed("player", String.valueOf(Bukkit.getOfflinePlayer(id).getName()));
+            var name = Placeholder.unparsed("player", names.getOrDefault(id, "?"));
             lines.add(messages.get(partner != null && round.isPlaying(partner) ? "scoreboard.partner-alive" : "scoreboard.partner-dead", name));
         });
         return lines.isEmpty() ? List.of(messages.get("scoreboard.partner-none")) : lines;

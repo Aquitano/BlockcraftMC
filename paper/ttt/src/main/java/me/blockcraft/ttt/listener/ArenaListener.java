@@ -161,6 +161,7 @@ public final class ArenaListener implements Listener {
         }
         event.setCancelled(true);
         attacker.sendMessage(messages.get("shop.golden-sword-wrong"));
+        game.blameSelf(attacker);
         attacker.damage(LETHAL, DamageSource.builder(DamageType.MAGIC).build());
         return true;
     }
@@ -172,7 +173,8 @@ public final class ArenaListener implements Listener {
         }
     }
 
-    @EventHandler
+    /** A hit SpectatorGuard cancelled passed through a spectator; the arrow flies on and must not hatch there. */
+    @EventHandler(ignoreCancelled = true)
     public void onProjectileHit(ProjectileHitEvent event) {
         game.equipment().land(event.getEntity());
     }

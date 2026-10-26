@@ -15,6 +15,7 @@ import org.bukkit.Particle;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Creeper;
+import org.bukkit.entity.TNTPrimed;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
@@ -55,7 +56,8 @@ public final class Equipment {
     private final Map<Block, UUID> mines = new HashMap<>();
     private final Map<Block, UUID> fakeChests = new HashMap<>();
     private final Map<Block, Integer> healStations = new HashMap<>();
-    private final Map<UUID, UUID> creepers = new HashMap<>();
+    /** Creepers and primed explosives by the player they belong to, who gets the kills they make. */
+    private final Map<UUID, UUID> explosives = new HashMap<>();
     private final Set<UUID> spoofers = new HashSet<>();
     private BukkitTask ticker;
 
@@ -184,15 +186,16 @@ public final class Equipment {
         projectile.remove();
         var creeper = projectile.getWorld().spawn(projectile.getLocation(), Creeper.class, spawned -> {
             spawned.setMaxFuseTicks(CREEPER_FUSE_TICKS);
+            spawned.setExplosionRadius(Math.round(config.explosionPower()));
             spawned.setPersistent(false);
         });
         creeper.ignite();
-        creepers.put(creeper.getUniqueId(), UUID.fromString(owner));
+        explosives.put(creeper.getUniqueId(), UUID.fromString(owner));
     }
 
     /** The player a creeper arrow or explosive belonged to, for the kill it made. */
     public Optional<Player> ownerOf(Entity cause) {
-        return Optional.ofNullable(cause).map(entity -> creepers.get(entity.getUniqueId()))
+        return Optional.ofNullable(cause).map(entity -> explosives.get(entity.getUniqueId()))
                 .map(plugin.getServer()::getPlayer);
     }
 
@@ -255,9 +258,17 @@ public final class Equipment {
         return roles.apply(player).filter(role -> role == Role.TRAITOR).isPresent();
     }
 
+    /**
+     * Through primed TNT rather than with the owner as the source: a dead owner is a spectator, whose damage
+     * SpectatorGuard cancels, and the mine must still go off.
+     */
     private void explode(Location location, UUID owner) {
-        var source = plugin.getServer().getPlayer(owner);
-        location.getWorld().createExplosion(source, location, config.explosionPower(), false, false);
+        var tnt = location.getWorld().spawn(location, TNTPrimed.class, primed -> {
+            primed.setFuseTicks(0);
+            primed.setYield(config.explosionPower());
+            primed.setSource(plugin.getServer().getPlayer(owner));
+        });
+        explosives.put(tnt.getUniqueId(), owner);
     }
 
     private static void give(Player player, ItemStack item) {
