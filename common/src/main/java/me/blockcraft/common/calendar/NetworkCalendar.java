@@ -20,43 +20,53 @@ import java.util.Set;
 
 /**
  * The days the network celebrates, counted in its own time zone so midnight falls when it does for its players.
- * Easter moves every year and is computed; Halloween and the network's birthday come from {@code calendar} in the
- * config, and Advent and New Year's Eve are what they always are.
+ * Easter moves every year and is computed; Halloween, winter and the network's birthday come from {@code calendar}
+ * in the config, and Advent, Christmas and New Year's Eve are what they always are.
  */
 public final class NetworkCalendar {
 
-    public enum Occasion { EASTER, HALLOWEEN, ADVENT, NEW_YEARS_EVE, BIRTHDAY }
+    public enum Occasion { EASTER, HALLOWEEN, WINTER, ADVENT, CHRISTMAS, NEW_YEARS_EVE, BIRTHDAY }
+
+    /** From one day to another, both included; a window whose end comes before its start runs across New Year. */
+    public record Window(MonthDay from, MonthDay to) {
+
+        public boolean includes(MonthDay day) {
+            return from.isAfter(to)
+                    ? !day.isBefore(from) || !day.isAfter(to)
+                    : !day.isBefore(from) && !day.isAfter(to);
+        }
+    }
 
     private static final int LAST_ADVENT_DOOR = 24;
+    private static final Window CHRISTMAS = new Window(MonthDay.of(Month.DECEMBER, 24), MonthDay.of(Month.DECEMBER, 26));
 
     private final Clock clock;
     private final int easterDaysBefore;
     private final int easterDaysAfter;
-    private final MonthDay halloweenFrom;
-    private final MonthDay halloweenTo;
+    private final Window halloween;
+    private final Window winter;
     private final Optional<LocalDate> founded;
 
-    public NetworkCalendar(Clock clock, int easterDaysBefore, int easterDaysAfter, MonthDay halloweenFrom, MonthDay halloweenTo,
+    public NetworkCalendar(Clock clock, int easterDaysBefore, int easterDaysAfter, Window halloween, Window winter,
                            Optional<LocalDate> founded) {
         this.clock = clock;
         this.easterDaysBefore = easterDaysBefore;
         this.easterDaysAfter = easterDaysAfter;
-        this.halloweenFrom = halloweenFrom;
-        this.halloweenTo = halloweenTo;
+        this.halloween = halloween;
+        this.winter = winter;
         this.founded = founded;
     }
 
     /**
      * {@code calendar} of a config.yml: {@code zone}, {@code easter.days-before/-after}, {@code halloween.from/to},
-     * {@code founded}. SnakeYAML hands an unquoted founded over as a {@link Date} at UTC midnight.
+     * {@code winter.from/to}, {@code founded}. SnakeYAML hands an unquoted founded over as a {@link Date} at UTC midnight.
      */
     public static NetworkCalendar fromYaml(Map<String, Object> section) {
         var easter = YamlFile.section(section, "easter");
-        var halloween = YamlFile.section(section, "halloween");
         return new NetworkCalendar(Clock.system(zone(section.get("zone"))),
                 number(easter, "days-before", 2), number(easter, "days-after", 7),
-                monthDay(halloween.get("from"), MonthDay.of(Month.OCTOBER, 25)),
-                monthDay(halloween.get("to"), MonthDay.of(Month.OCTOBER, 31)),
+                window(YamlFile.section(section, "halloween"), new Window(MonthDay.of(Month.OCTOBER, 17), MonthDay.of(Month.OCTOBER, 31))),
+                window(YamlFile.section(section, "winter"), new Window(MonthDay.of(Month.DECEMBER, 1), MonthDay.of(Month.DECEMBER, 31))),
                 date(section.get("founded")));
     }
 
@@ -83,11 +93,17 @@ public final class NetworkCalendar {
             occasions.add(Occasion.EASTER);
         }
         var monthDay = MonthDay.from(day);
-        if (!monthDay.isBefore(halloweenFrom) && !monthDay.isAfter(halloweenTo)) {
+        if (halloween.includes(monthDay)) {
             occasions.add(Occasion.HALLOWEEN);
+        }
+        if (winter.includes(monthDay)) {
+            occasions.add(Occasion.WINTER);
         }
         if (adventDoor(day).isPresent()) {
             occasions.add(Occasion.ADVENT);
+        }
+        if (CHRISTMAS.includes(monthDay)) {
+            occasions.add(Occasion.CHRISTMAS);
         }
         if (monthDay.equals(MonthDay.of(Month.DECEMBER, 31))) {
             occasions.add(Occasion.NEW_YEARS_EVE);
@@ -136,6 +152,10 @@ public final class NetworkCalendar {
         } catch (DateTimeException invalid) {
             return ZoneId.of("Europe/Berlin");
         }
+    }
+
+    private static Window window(Map<String, Object> section, Window fallback) {
+        return new Window(monthDay(section.get("from"), fallback.from()), monthDay(section.get("to"), fallback.to()));
     }
 
     private static MonthDay monthDay(Object value, MonthDay fallback) {

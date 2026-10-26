@@ -57,16 +57,19 @@ xp:
     participation: 15
 
 # The days the network celebrates, counted in zone. Easter runs from days-before Easter Sunday to days-after it,
-# Halloween from one month-day to the other; founded is the yyyy-MM-dd the network opened, and empty means it has
-# no birthday to celebrate. Mirrors calendar in BlockcraftSystem's config.yml on the proxy.
+# Halloween and winter from one month-day to the other (winter may run across New Year); founded is the yyyy-MM-dd
+# the network opened, and empty means it has no birthday to celebrate. Mirrors calendar in BlockcraftSystem's config.yml on the proxy.
 calendar:
   zone: Europe/Berlin
   easter:
     days-before: 2
     days-after: 7
   halloween:
-    from: "10-25"
+    from: "10-17"
     to: "10-31"
+  winter:
+    from: "12-01"
+    to: "12-31"
   founded: ""
 
 # A kill streak is announced to the round when it reaches one of these lengths.

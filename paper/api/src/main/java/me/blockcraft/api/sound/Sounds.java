@@ -44,7 +44,8 @@ public enum Sounds {
     PLAYER_HURT(FeedbackSound.PLAYER_HURT),
     EASTER_EGG(FeedbackSound.EASTER_EGG),
     ADVENT_DOOR(FeedbackSound.ADVENT_DOOR),
-    TRICK(FeedbackSound.TRICK);
+    TRICK(FeedbackSound.TRICK),
+    SCARE(FeedbackSound.SCARE);
 
     private static final int COUNTDOWN_FROM = 5;
     private static final float COUNTDOWN_PITCH_STEP = 0.15f;

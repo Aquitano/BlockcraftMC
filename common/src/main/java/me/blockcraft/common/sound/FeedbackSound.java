@@ -42,7 +42,8 @@ public enum FeedbackSound {
     PLAYER_HURT("entity.player.hurt", 1.0f, 1.0f),
     EASTER_EGG("entity.chicken.egg", 1.0f, 1.3f),
     ADVENT_DOOR("block.note_block.chime", 0.9f, 1.2f),
-    TRICK("entity.witch.celebrate", 0.8f, 1.0f);
+    TRICK("entity.witch.celebrate", 0.8f, 1.0f),
+    SCARE("entity.ghast.scream", 0.6f, 0.7f);
 
     private final Sound fallback;
     private final Optional<Sound> custom;

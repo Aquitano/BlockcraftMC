@@ -11,6 +11,8 @@ import me.blockcraft.common.shop.Premium;
 import me.blockcraft.lobby.activity.LobbyQuirks;
 import me.blockcraft.lobby.activity.Parkour;
 import me.blockcraft.lobby.activity.PondFishing;
+import me.blockcraft.lobby.activity.SeasonalAtmosphere;
+import me.blockcraft.lobby.activity.SeasonalDecor;
 import me.blockcraft.lobby.activity.SeasonalEvents;
 import me.blockcraft.lobby.activity.ShootingStars;
 import me.blockcraft.lobby.command.ClearChatCommand;
@@ -22,6 +24,7 @@ import me.blockcraft.lobby.command.TeamBoardCommand;
 import me.blockcraft.lobby.config.ActivitiesConfig;
 import me.blockcraft.lobby.config.LobbyConfig;
 import me.blockcraft.lobby.config.LobbyLocation;
+import me.blockcraft.lobby.config.SeasonTheme;
 import me.blockcraft.lobby.config.ShootingStarConfig;
 import me.blockcraft.lobby.cosmetic.CosmeticPreviews;
 import me.blockcraft.lobby.cosmetic.Head;
@@ -82,6 +85,7 @@ public final class LobbyPlugin extends JavaPlugin {
     private Parkour parkour;
     private LobbyQuirks quirks;
     private SeasonalEvents seasons;
+    private SeasonalAtmosphere atmosphere;
     private ShootingStars stars;
 
     @Override
@@ -108,9 +112,12 @@ public final class LobbyPlugin extends JavaPlugin {
         parkour = new Parkour(this, activityLocations, activities, messages);
         quirks = new LobbyQuirks(this, activities, messages, pets, secrets);
         stars = new ShootingStars(this, ShootingStarConfig.fromYaml(YamlFile.section(yaml, "shooting-stars")), messages, secrets);
+        var themes = SeasonTheme.all(YamlFile.section(yaml, "seasons"), getLogger());
+        var decor = new SeasonalDecor(api.calendar(), themes);
+        atmosphere = new SeasonalAtmosphere(this, api.calendar(), themes);
         seasons = new SeasonalEvents(this, activityLocations, activities, messages,
                 () -> locations.get(LobbyLocation.SPAWN).ifPresent(spawn -> config.fireworkSpots()
-                        .forEach(spot -> MoveListener.launchFirework(spot.toLocation(spawn.getWorld())))));
+                        .forEach(spot -> MoveListener.launchFirework(spot.toLocation(spawn.getWorld())))), decor);
         profiles.advent(player -> seasons.openAdvent(player, back -> profiles.open(back, Optional.empty())));
         importLegacyUnlocks(new LegacyUnlocks(api.unlocks(), getLogger()));
         gadgets = new Gadgets(this, messages, Duration.ofSeconds(config.gadgetCooldownSeconds()));
@@ -130,7 +137,7 @@ public final class LobbyPlugin extends JavaPlugin {
 
         hud = new LobbyHud(this, messages);
         hud.start(config.hudRefreshSeconds() * 20L);
-        register(previews, hud, parkour, quirks, seasons, stars.wishes(),
+        register(previews, hud, parkour, quirks, seasons, decor, stars.wishes(),
                 new PondFishing(activityLocations, activities, messages, secrets),
                 new JoinQuitListener(messages, locations, items, trails, pets, hider),
                 new CosmeticSettingsListener(messages, trails, pets, gadgets),
@@ -184,6 +191,9 @@ public final class LobbyPlugin extends JavaPlugin {
         }
         if (seasons != null) {
             seasons.close();
+        }
+        if (atmosphere != null) {
+            atmosphere.close();
         }
         if (previews != null) {
             previews.close();

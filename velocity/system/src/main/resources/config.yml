@@ -212,6 +212,9 @@ calendar:
     days-before: 2
     days-after: 7
   halloween:
-    from: "10-25"
+    from: "10-17"
     to: "10-31"
+  winter:
+    from: "12-01"
+    to: "12-31"
   founded: ""

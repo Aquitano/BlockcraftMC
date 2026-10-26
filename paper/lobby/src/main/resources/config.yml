@@ -103,6 +103,7 @@ activities:
   halloween-coins: 5
   halloween-phrase: "Süßes oder Saures"
   pumpkin-seconds: 300
+  christmas-coins: 100
 
 shooting-stars:
   enabled: true
@@ -116,3 +117,70 @@ shooting-stars:
   height: 24
   length: 60
   wish-prefixes: ["ich wünsche mir", "ich wuensche mir", "i wish"]
+
+# How the lobby looks and sounds while the network calendar celebrates; one section per occasion (halloween, winter,
+# christmas, ...), and every active one applies. The swaps happen only on the players' screens, so the map keeps its
+# blocks. blocks turns every block of a type (or of a #tag) into one of its list, drawn by position so it stays put;
+# keep the shapes alike, or players walk into blocks they do not see. cover lays one of its blocks on top of the
+# highest block of each column when that block is in on (any full block or leaves when on is empty), at chance;
+# snow on top also whitens the grass below. particle falls around every player, and one of sounds plays near them
+# about every every-seconds; both follow the player's effect and sound settings.
+seasons:
+  halloween:
+    blocks:
+      oak_leaves: [pale_oak_leaves, pale_oak_leaves, oak_leaves]
+      birch_leaves: [pale_oak_leaves]
+      dark_oak_leaves: [pale_oak_leaves]
+      spruce_leaves: [pale_oak_leaves, spruce_leaves]
+      grass_block: [grass_block, grass_block, grass_block, podzol]
+      short_grass: [short_grass, short_dry_grass, dead_bush]
+      "#small_flowers": [wither_rose, dead_bush]
+      torch: [soul_torch]
+      wall_torch: [soul_wall_torch]
+      lantern: [soul_lantern]
+      campfire: [soul_campfire]
+      glowstone: [jack_o_lantern]
+    cover:
+      on: [grass_block]
+      blocks:
+        - "leaf_litter[segment_amount=2,facing=north]"
+        - "leaf_litter[segment_amount=3,facing=east]"
+        - "leaf_litter[segment_amount=4,facing=south]"
+        - "leaf_litter[segment_amount=1,facing=west]"
+      chance: 0.2
+    particle:
+      type: ash
+      count: 6
+    sounds:
+      every-seconds: 45
+      list:
+        - {sound: ambient.cave, volume: 0.6, pitch: 1.0}
+        - {sound: entity.ghast.ambient, volume: 0.25, pitch: 0.6}
+        - {sound: entity.witch.celebrate, volume: 0.35, pitch: 0.8}
+        - {sound: entity.bat.ambient, volume: 0.5, pitch: 0.9}
+        - {sound: entity.creaking.ambient, volume: 0.5, pitch: 0.8}
+        - {sound: ambient.soul_sand_valley.mood, volume: 0.7, pitch: 1.0}
+        - {sound: block.wooden_door.close, volume: 0.4, pitch: 0.6}
+  winter:
+    blocks:
+      short_grass: [snow]
+      fern: [snow]
+    cover:
+      on: []
+      blocks: [snow]
+      chance: 1.0
+    particle:
+      type: snowflake
+      count: 14
+    sounds:
+      every-seconds: 60
+      list:
+        - {sound: item.elytra.flying, volume: 0.12, pitch: 0.5}
+        - {sound: block.campfire.crackle, volume: 0.8, pitch: 1.0}
+        - {sound: block.powder_snow.step, volume: 0.5, pitch: 0.8}
+  christmas:
+    sounds:
+      every-seconds: 90
+      list:
+        - {sound: block.note_block.chime, volume: 0.4, pitch: 1.5}
+        - {sound: block.bell.resonate, volume: 0.3, pitch: 2.0}

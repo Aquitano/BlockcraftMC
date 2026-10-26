@@ -1,6 +1,7 @@
 package me.blockcraft.common.calendar;
 
 import me.blockcraft.common.calendar.NetworkCalendar.Occasion;
+import me.blockcraft.common.calendar.NetworkCalendar.Window;
 import me.blockcraft.common.config.YamlFile;
 import org.junit.Test;
 
@@ -18,7 +19,8 @@ import static org.junit.Assert.assertEquals;
 public class NetworkCalendarTest {
 
     private static final NetworkCalendar CALENDAR = new NetworkCalendar(Clock.systemUTC(), 2, 7,
-            MonthDay.of(10, 25), MonthDay.of(10, 31), Optional.of(LocalDate.of(2018, 6, 3)));
+            new Window(MonthDay.of(10, 17), MonthDay.of(10, 31)), new Window(MonthDay.of(12, 1), MonthDay.of(12, 31)),
+            Optional.of(LocalDate.of(2018, 6, 3)));
 
     @Test
     public void easterSundayMovesWithTheMoon() {
@@ -32,10 +34,24 @@ public class NetworkCalendarTest {
     public void eachDayKnowsWhatItCelebrates() {
         assertEquals(Set.of(Occasion.EASTER), CALENDAR.occasions(LocalDate.of(2026, 4, 3)));
         assertEquals(Set.of(), CALENDAR.occasions(LocalDate.of(2026, 4, 13)));
+        assertEquals(Set.of(), CALENDAR.occasions(LocalDate.of(2026, 10, 16)));
+        assertEquals(Set.of(Occasion.HALLOWEEN), CALENDAR.occasions(LocalDate.of(2026, 10, 17)));
         assertEquals(Set.of(Occasion.HALLOWEEN), CALENDAR.occasions(LocalDate.of(2026, 10, 31)));
-        assertEquals(Set.of(Occasion.ADVENT), CALENDAR.occasions(LocalDate.of(2026, 12, 24)));
-        assertEquals(Set.of(Occasion.NEW_YEARS_EVE), CALENDAR.occasions(LocalDate.of(2026, 12, 31)));
+        assertEquals(Set.of(Occasion.WINTER, Occasion.ADVENT), CALENDAR.occasions(LocalDate.of(2026, 12, 1)));
+        assertEquals(Set.of(Occasion.WINTER, Occasion.ADVENT, Occasion.CHRISTMAS), CALENDAR.occasions(LocalDate.of(2026, 12, 24)));
+        assertEquals(Set.of(Occasion.WINTER, Occasion.CHRISTMAS), CALENDAR.occasions(LocalDate.of(2026, 12, 26)));
+        assertEquals(Set.of(Occasion.WINTER, Occasion.NEW_YEARS_EVE), CALENDAR.occasions(LocalDate.of(2026, 12, 31)));
         assertEquals(Set.of(Occasion.BIRTHDAY), CALENDAR.occasions(LocalDate.of(2026, 6, 3)));
+    }
+
+    @Test
+    public void aWindowEndingBeforeItStartsRunsAcrossNewYear() {
+        var winter = new Window(MonthDay.of(12, 1), MonthDay.of(1, 6));
+
+        assertEquals(true, winter.includes(MonthDay.of(12, 31)));
+        assertEquals(true, winter.includes(MonthDay.of(1, 6)));
+        assertEquals(false, winter.includes(MonthDay.of(1, 7)));
+        assertEquals(false, winter.includes(MonthDay.of(11, 30)));
     }
 
     @Test

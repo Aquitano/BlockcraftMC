@@ -193,10 +193,23 @@ It is empty by default because no founding date is assumed.
 | Occasion | Behavior |
 |---|---|
 | Easter | From two days before Easter Sunday through seven days after, configured egg displays appear in the lobby. Discoveries persist per player and year. Finding all selected eggs grants `[OSTERHASE]`. |
-| Halloween | October 25 through 31. Writing `Süßes oder Saures` in lobby chat gives either five coins or a pumpkin hat for 300 seconds. Each account can claim once per calendar day. The phrase and rewards are configurable under `activities`. |
-| Advent | December 1 through 24. The profile contains a calendar with today's door. Each account can claim 25 coins once per day. Door 24 also unlocks the snow trail. |
+| Halloween | October 17 through 31. Joining the lobby shows a hint with the phrase. Writing `Süßes oder Saures` in lobby chat gives either five coins or one of three tricks: a pumpkin hat for 300 seconds, a swarm of bats, or a ghost that darkens the screen. Each account can claim once per calendar day. The phrase and rewards are configurable under `activities`. |
+| Winter | December 1 through 31. Only the lobby's look and sound change (see below). |
+| Advent | December 1 through 24. The profile contains a calendar with today's door, and joining the lobby names it. Each account can claim 25 coins once per day. Door 24 also unlocks the snow trail. |
+| Christmas | December 24 through 26. The Weihnachtsmann stands at `/lobbyset santa` and gives each account `activities.christmas-coins` (100) once per year, with a jingle. Without that spot he does not appear. |
 | New Year | On December 31, a boss bar counts down the last ten seconds. At midnight the lobby's configured firework positions launch fireworks. Joining during January grants that year's tag. |
 | Network birthday | The proxy's MOTD counts the years. Lobby players receive a temporary cake hat for the rest of the day. |
+
+The calendar's `halloween` and `winter` windows can be moved in both `calendar` sections; a window whose end comes
+before its start runs across New Year.
+
+Lobby's `seasons` section dresses the lobby for each active occasion. Every block swap and the cover on top happen
+only in the packets players receive, so the map and `/map save` never contain them. The defaults turn leaves pale,
+torches and lanterns into soul flames, glowstone into jack-o'-lanterns and flowers into wither roses for Halloween, with
+leaf litter on some grass; in winter every full block and leaf open to the sky gets a snow layer and the grass under
+it turns snowy. Each occasion can also let a particle fall around players and play an occasional ambient sound near
+them; both respect the effect and sound settings. A player who clicks a swapped block may see the real one again
+until the chunk reloads.
 
 Temporary hats restore the previous helmet when they expire or the player leaves. Choosing another head while
 wearing a temporary hat keeps that new choice. Earned tags, the snow trail, and the birthday gadget are accessible
@@ -226,6 +239,9 @@ Before deploying, verify these interactions with Minecraft clients on a local te
 - Complete the configured course, fall at a checkpoint, and retry to confirm the best time and leaderboard.
 - Fish with the pond rod and collect a chicken egg. Lower the odds in local test config to exercise rare rewards.
 - Check seasonal hats, per-player egg visibility, calendar doors, and midnight behavior using a suitable test date.
+- During Halloween and winter, walk the lobby and look for swapped blocks that differ in shape from the real ones,
+  rejoin, teleport, and cross midnight with the client open. Trick-or-treat until each trick has appeared once.
+- At Christmas, set `/lobbyset santa`, check his skin and name, take the present, click again, and hit him.
 - Shorten sleep thresholds in local config, poke a sleeping account, and wake it. Check the growing label,
   absence of damage and knockback, and the private count using the poker’s current nick.
 - Set shooting-star odds to one in local config and choose a window containing the current hour in the network
