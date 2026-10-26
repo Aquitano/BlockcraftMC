@@ -60,13 +60,13 @@ public record EnderGamesConfig(int maxPlayers, Countdowns countdowns, WorldSetti
                         Math.max(0, countdown.getInt("freeze", 5)),
                         Math.max(0, countdown.getInt("protection", 90)),
                         Math.max(60, countdown.getInt("round", 1800)),
-                        Math.max(0, countdown.getInt("tracker-after", 900))),
+                        Math.max(1, countdown.getInt("tracker-after", 900))),
                 new WorldSettings(
                         Math.max(32, world.getInt("radius", 150)),
                         Math.max(1, world.getInt("search-attempts", 8)),
                         Math.max(64, world.getInt("search-step", 640)),
                         Math.clamp(world.getDouble("spawn-ring", 0.85), 0.1, 0.95),
-                        Math.max(0, world.getInt("shrink-after", 1200)),
+                        Math.max(1, world.getInt("shrink-after", 1200)),
                         Math.max(5, world.getInt("final-radius", 25))),
                 new EnderChestSettings(
                         Math.max(0, chests.getDouble("per-player", 0.5)),

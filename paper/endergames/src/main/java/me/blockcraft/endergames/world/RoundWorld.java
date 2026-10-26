@@ -154,12 +154,29 @@ public final class RoundWorld {
                 }));
     }
 
-    /** 0, then the eight neighbours round it, as steps of the search grid. */
-    private static int spiral(int attempt, boolean x) {
-        int[][] steps = {{0, 0}, {1, 0}, {0, 1}, {-1, 0}, {0, -1}, {1, 1}, {-1, 1}, {-1, -1}, {1, -1}};
-        var step = steps[attempt % steps.length];
-        int ring = attempt / steps.length + 1;
-        return (x ? step[0] : step[1]) * ring;
+    /** The cells of a square spiral out from 0: the centre, then ring after ring of the search grid. */
+    static int spiral(int attempt, boolean x) {
+        if (attempt == 0) {
+            return 0;
+        }
+        int ring = (int) Math.ceil((Math.sqrt(attempt + 1) - 1) / 2);
+        int side = 2 * ring;
+        int index = attempt - (2 * ring - 1) * (2 * ring - 1);
+        int edge = index / side;
+        int offset = index % side;
+        int cx = switch (edge) {
+            case 0 -> ring;
+            case 1 -> ring - 1 - offset;
+            case 2 -> -ring;
+            default -> -ring + 1 + offset;
+        };
+        int cz = switch (edge) {
+            case 0 -> -ring + 1 + offset;
+            case 1 -> ring;
+            case 2 -> ring - 1 - offset;
+            default -> -ring;
+        };
+        return x ? cx : cz;
     }
 
     private List<int[]> samples(int x, int z) {

@@ -65,6 +65,21 @@ public final class RoundListener implements Listener {
         }
     }
 
+    /** Frozen players keep their hands still too: no pearl, hammer or TNT away from the spawn before the start. */
+    @EventHandler(priority = EventPriority.LOW)
+    public void onFrozenInteract(PlayerInteractEvent event) {
+        if (game.frozen() && game.isPlaying(event.getPlayer())) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    public void onFrozenPlace(BlockPlaceEvent event) {
+        if (game.frozen() && game.isPlaying(event.getPlayer())) {
+            event.setCancelled(true);
+        }
+    }
+
     @EventHandler(priority = EventPriority.HIGH)
     public void onInteract(PlayerInteractEvent event) {
         if (event.getHand() != EquipmentSlot.HAND || !event.getAction().isRightClick()) {

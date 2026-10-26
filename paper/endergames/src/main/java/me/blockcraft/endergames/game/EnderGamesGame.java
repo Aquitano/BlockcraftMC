@@ -78,8 +78,10 @@ public final class EnderGamesGame implements KitPlayers {
     private final EnderChests enderChests;
     private final PlayerSwaps swaps;
     private final Map<UUID, Kit> kits = new HashMap<>();
+    private final int startSeconds;
     private boolean frozen;
     private boolean protection;
+    private boolean startWhenReady;
     private BukkitTask chestTask;
     private Countdown protectionTimer;
     private Countdown fightTimer;
@@ -91,6 +93,7 @@ public final class EnderGamesGame implements KitPlayers {
         this.messages = messages;
         this.world = world;
         this.lobbySpawn = lobbySpawn;
+        this.startSeconds = gameConfig.startSeconds();
         this.summary = new RoundSummary(plugin, messages, new RoundSummary.Rewards(config.rewards().kill(), config.rewards().win()), stats);
         this.round = new Round(plugin, new Arena(messages, Sounds.JOIN), summary, config.maxPlayers(), gameConfig);
         this.countdown = new LobbyCountdown(plugin, round, gameConfig, this::start);
@@ -152,7 +155,11 @@ public final class EnderGamesGame implements KitPlayers {
         return kits.getOrDefault(player.getUniqueId(), Kit.BARBAR);
     }
 
+    /** Only in the lobby: a purchase that completes after the start must not swap the kit under a player's items. */
     public void selectKit(Player player, Kit kit) {
+        if (!isLobby()) {
+            return;
+        }
         kits.put(player.getUniqueId(), kit);
         show(player);
     }
@@ -172,7 +179,6 @@ public final class EnderGamesGame implements KitPlayers {
             PlayerReset.reset(player, GameMode.ADVENTURE);
             player.teleport(lobbySpawn);
             hotbar.give(player);
-            player.sendMessage(messages.get("join.introduction"));
             if (!world.ready()) {
                 player.sendMessage(messages.get("lobby.world-loading"));
             }
@@ -207,14 +213,20 @@ public final class EnderGamesGame implements KitPlayers {
         }
     }
 
+    /** A countdown that ran out while the world was loading starts again now, even below players.min after /start. */
     public void worldReady() {
         Bukkit.broadcast(messages.get("lobby.world-ready"));
+        if (startWhenReady && isLobby() && !countdown.isRunning() && round.playerCount() >= LobbyCountdown.ROUND_MINIMUM) {
+            countdown.shorten(startSeconds);
+        }
+        startWhenReady = false;
         refreshAll();
     }
 
     private void start() {
         if (!world.ready()) {
             Bukkit.broadcast(messages.get("lobby.world-loading"));
+            startWhenReady = true;
             countdown.start();
             return;
         }

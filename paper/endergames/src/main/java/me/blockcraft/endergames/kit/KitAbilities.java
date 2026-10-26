@@ -18,6 +18,7 @@ import org.bukkit.entity.AbstractArrow;
 import org.bukkit.entity.Animals;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -272,9 +273,11 @@ public final class KitAbilities implements Listener {
         }
     }
 
-    @EventHandler(ignoreCancelled = true)
+    /** Not ignoreCancelled: Bukkit fires a right-click into the air as already cancelled, and the hammer must hear it. */
+    @EventHandler
     public void onInteract(PlayerInteractEvent event) {
-        if (event.getHand() != EquipmentSlot.HAND || !event.getAction().isRightClick() || event.getItem() == null) {
+        if (event.useItemInHand() == Event.Result.DENY || event.getHand() != EquipmentSlot.HAND
+                || !event.getAction().isRightClick() || event.getItem() == null) {
             return;
         }
         var player = event.getPlayer();

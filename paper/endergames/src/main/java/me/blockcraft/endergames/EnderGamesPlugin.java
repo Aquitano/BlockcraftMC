@@ -58,7 +58,8 @@ public final class EnderGamesPlugin extends JavaPlugin {
         register(game.hotbar());
         register(game.abilities());
         register(new ConnectionListener(game));
-        register(new LobbyProtection(() -> game.phase() != GamePhase.INGAME, api.buildMode(), () -> Optional.of(lobbySpawn)));
+        register(new LobbyProtection(() -> game.phase() != GamePhase.INGAME, api.buildMode(),
+                () -> game.isLobby() ? Optional.of(lobbySpawn) : Optional.empty()));
         register(new RoundListener(game, new CompassTracker(messages, config.tracker())));
 
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
