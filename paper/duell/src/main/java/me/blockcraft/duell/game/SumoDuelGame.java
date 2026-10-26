@@ -11,7 +11,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
-import org.bukkit.event.HandlerList;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
@@ -40,8 +39,7 @@ final class SumoDuelGame extends MapDuelGame {
         this.ammo = ammo;
         var settings = context.config().throwFight();
         throwFight = ammo.map(season -> new ThrowFight((shooter, victim) -> canPlay(shooter) && canPlay(victim),
-                (shooter, victim) -> { }, settings.knockback(), settings.cooldownTicks()));
-        throwFight.ifPresent(fight -> Bukkit.getPluginManager().registerEvents(fight, context.plugin()));
+                (shooter, victim) -> { }, settings.knockback(), settings.cooldownTicks()).start(context.plugin()));
         match = new SumoMatch(context.config().sumo().pointsToWin());
         match.start(context.participants());
         var target = Formatter.number("target", context.config().sumo().pointsToWin());
@@ -161,7 +159,7 @@ final class SumoDuelGame extends MapDuelGame {
         if (reset != null) {
             reset.cancel();
         }
-        throwFight.ifPresent(HandlerList::unregisterAll);
+        throwFight.ifPresent(ThrowFight::close);
         super.close();
     }
 }

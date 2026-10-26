@@ -47,8 +47,7 @@ public final class LobbyThrows implements Listener, AutoCloseable {
         var api = BlockcraftApi.get();
         this.fight = new ThrowFight((shooter, victim) -> ammo.isPresent() && shooter.getWorld().equals(victim.getWorld())
                 && shooter.canSee(victim) && !api.isVanished(victim) && !racing.test(victim), this::hit,
-                config.knockback(), config.cooldownTicks());
-        Bukkit.getPluginManager().registerEvents(fight, plugin);
+                config.knockback(), config.cooldownTicks()).start(plugin);
         ammo = current();
         this.check = Bukkit.getScheduler().runTaskTimer(plugin, this::check, CHECK_TICKS, CHECK_TICKS);
     }
@@ -93,5 +92,6 @@ public final class LobbyThrows implements Listener, AutoCloseable {
     @Override
     public void close() {
         check.cancel();
+        fight.close();
     }
 }
