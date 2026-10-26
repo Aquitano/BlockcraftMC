@@ -20,7 +20,7 @@ final class NavigatorMenu extends Menu {
 
     private static final Map<Integer, LobbyLocation> GAMES = Map.of(
             19, LobbyLocation.QSG, 21, LobbyLocation.RUSH, 23, LobbyLocation.DUELL, 25, LobbyLocation.BEDWARS,
-            30, LobbyLocation.MLGRUSH, 32, LobbyLocation.ZOMBIES);
+            29, LobbyLocation.MLGRUSH, 31, LobbyLocation.CORES, 33, LobbyLocation.ZOMBIES);
     private static final int JUMP_SLOT = 40;
 
     private final Menus menus;
@@ -48,6 +48,7 @@ final class NavigatorMenu extends Menu {
             case BEDWARS -> MenuIcon.BEDWARS;
             case MLGRUSH -> MenuIcon.MLGRUSH;
             case ZOMBIES -> MenuIcon.ZOMBIES;
+            case CORES -> MenuIcon.CORES;
             default -> MenuIcon.DUELL;
         };
     }

@@ -20,6 +20,7 @@ palette:
   bedwars: "<dark_aqua>"
   mlgrush: "<light_purple>"
   zombies: "<dark_green>"
+  cores: "<yellow>"
   premium: "<gold>"
 
 games:
@@ -35,6 +36,8 @@ games:
     name: "<mlgrush>MLG Rush"
   zombies:
     name: "<zombies>Zombies"
+  cores:
+    name: "<cores>Cores"
 game-status:
   available: "<success>Jetzt spielen"
   full: "<muted>Alle Plätze belegt"
@@ -351,6 +354,7 @@ profile:
     bedwars: "<arrow><primary>BedWars"
     mlgrush: "<arrow><primary>MLG Rush"
     zombies: "<arrow><primary>Zombies"
+    cores: "<arrow><primary>Cores"
 
 coins:
   self: "<prefix><muted>Du hast <accent><coins> <muted>Coins!"

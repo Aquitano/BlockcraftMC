@@ -9,6 +9,7 @@ include(
     "paper:api",
     "paper:bedwars",
     "paper:core",
+    "paper:cores",
     "paper:duell",
     "paper:emeraldrush",
     "paper:lobby",

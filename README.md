@@ -19,6 +19,7 @@ paper/emeraldrush        EmeraldRush minigame
 paper/mlgrush            MLG Rush: two players, knockback sticks, beds, first to five
 paper/quicksg            QuickSG survival games
 paper/zombies            Solo or co-op Zombies survival
+paper/cores              Cores: red against blue, two beacons each, after GommeHD's mode
 paper/reports            ReportsMenu: staff GUI over the reports table
 paper/statussigns        StatusSigns: clickable server-status signs
 velocity/system          BlockcraftSystem: reports, moderation, parties, friends, routing and staff tools
@@ -352,6 +353,26 @@ in the vote once nothing is missing for the teams `config.yml` plays with.
 Opening a map for editing keeps its loaded dimension out of votes and forced choices. Save changes you want to
 keep, then restart the backend to use that map in rounds. Editing a chosen map before the round starts cancels
 that start instead of replacing files beneath the loaded world.
+
+## Cores
+
+`paper/cores` plays GommeHD's Cores in the `cores` group: red against blue, `teams.players-per-team` each (2x4 by
+default). Players pick a team with the hotbar's team item; the rest are seated on the smaller side when the lobby
+countdown runs out, and a full lobby jumps to `countdown.full` seconds. Each team defends two beacons, left and
+right in its base. A core sits in a 3x3x3 cube that nobody can change, so it is only reached from above; an enemy
+within `cores.fatigue-radius` mines with Mining Fatigue, which makes a beacon take 15 seconds. An enemy within
+`cores.alarm-radius` alerts the team in chat and with a repeating sound, and the sidebar marks the core. The first
+team to break both enemy cores wins; after `countdown.round` seconds (45 minutes) the round is a draw.
+
+Respawns are unlimited, with the `kit` and leather armour in the team's colour, and players cannot be hurt by other
+players for `respawn.protection-seconds`. There is no shop: each base holds iron blocks to mine, workbenches, an
+enchanting table with shelves (lapis is provided), four anvils and a chest of experience bottles; the middle holds
+diamond blocks and the four side islands loot chests and gold. Base blocks other than the iron do not break; the
+rest of the map, and everything players place, does. A bow kill pays `bow-kill-arrows` arrows. Combat is 1.8-style.
+Team chat is the default during a round; a message that starts with `@` goes to everyone.
+
+The map, Himmelsfeste, is built by `SkyMap` into an empty world at every start, so the service needs no world
+template. The production compose file keeps the service under the `unreleased` profile until it is released.
 
 ## Server discovery and groups
 

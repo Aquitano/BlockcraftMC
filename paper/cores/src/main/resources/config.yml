@@ -1,0 +1,78 @@
+# Two teams, red and blue, of players-per-team each.
+teams:
+  players-per-team: 4
+
+# The lobby counts down once players.min are there. A full lobby jumps to countdown.full seconds, /start to
+# countdown.start. A round ends in a draw after countdown.round seconds, and the server restarts countdown.restart
+# seconds after it.
+players:
+  min: 4
+countdown:
+  lobby: 60
+  start: 10
+  full: 20
+  round: 2700
+  restart: 30
+idle-restart-minutes: 50
+timer-bar: true
+global-stats-head: Kevos
+
+# What a kill, a destroyed core and a win pay in coins.
+rewards:
+  kill: 5
+  core: 15
+  win: 25
+
+# An enemy within alarm-radius blocks of a core sounds its team's alarm, in chat at most every alarm-seconds and as a
+# sound every second while they stay. Within fatigue-radius blocks of an enemy core a player mines with Mining Fatigue
+# of fatigue-level (0 is level I): a beacon then takes 15 seconds instead of 4.5, with any tool or none.
+cores:
+  alarm-radius: 8
+  alarm-seconds: 10
+  fatigue-radius: 4
+  fatigue-level: 0
+
+# A respawned player cannot be hurt by players for protection-seconds. A kill with a bow pays bow-kill-arrows arrows.
+respawn:
+  protection-seconds: 5
+bow-kill-arrows: 4
+
+# Below void-height a player dies; nobody builds above build-height.
+void-height: 40
+build-height: 100
+
+# 1.8 PvP: no attack cooldown, everything else stays vanilla.
+pvp:
+  legacy-combat: true
+
+# What every player starts and respawns with, besides leather armour in the team's colour. Kit items do not drop on
+# death.
+kit:
+  - {item: STONE_SWORD}
+  - {item: BOW}
+  - {item: STONE_PICKAXE}
+  - {item: STONE_AXE}
+  - {item: OAK_PLANKS, amount: 32}
+  - {item: COOKED_BEEF, amount: 16}
+  - {item: ARROW, amount: 8}
+
+# The chests on the mid and side islands; each rolls between min-items and max-items of loot when the map is built.
+chests:
+  min-items: 3
+  max-items: 6
+  loot:
+    - {item: IRON_INGOT, amount: 4, weight: 10}
+    - {item: GOLD_INGOT, amount: 4, weight: 6}
+    - {item: DIAMOND, amount: 1, weight: 3}
+    - {item: ARROW, amount: 8, weight: 10}
+    - {item: GOLDEN_APPLE, amount: 1, weight: 4}
+    - {item: ENDER_PEARL, amount: 1, weight: 3}
+    - {item: COBBLESTONE, amount: 32, weight: 10}
+    - {item: EXPERIENCE_BOTTLE, amount: 16, weight: 6}
+    - {item: LAPIS_LAZULI, amount: 8, weight: 6}
+    - {item: COOKED_BEEF, amount: 8, weight: 6}
+    - {item: IRON_CHESTPLATE, amount: 1, weight: 2}
+    - {item: IRON_SWORD, amount: 1, weight: 2}
+    - {item: FLINT_AND_STEEL, amount: 1, weight: 2}
+    - {item: LAVA_BUCKET, amount: 1, weight: 1}
+    - {item: WATER_BUCKET, amount: 1, weight: 2}

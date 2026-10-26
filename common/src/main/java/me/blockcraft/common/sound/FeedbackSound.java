@@ -46,7 +46,9 @@ public enum FeedbackSound {
     SCARE("entity.ghast.scream", 0.6f, 0.7f),
     SLEIGH_BELLS("block.note_block.chime", 3.0f, 1.0f),
     CHAINS("block.chain.place", 0.8f, 0.7f),
-    HEROBRINE("ambient.cave", 1.0f, 0.8f);
+    HEROBRINE("ambient.cave", 1.0f, 0.8f),
+    CORE_ALARM("block.note_block.pling", 0.8f, 0.6f),
+    CORE_DESTROYED("entity.wither.spawn", 0.5f, 1.3f);
 
     private final Sound fallback;
     private final Optional<Sound> custom;

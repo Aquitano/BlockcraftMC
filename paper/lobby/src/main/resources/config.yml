@@ -78,6 +78,7 @@ navigator:
     bedwars: bedwars
     mlgrush: mlgrush
     zombies: zombies
+    cores: cores
   stale-seconds: 20
 
 friends:

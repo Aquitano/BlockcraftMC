@@ -45,6 +45,7 @@ profile:
     bedwars: bw_stats
     mlgrush: mlgrush_stats
     zombies: bc_zombies_stats
+    cores: bc_cores_stats
 
 # Network XP (bc_xp). Each level costs level-step more XP than the one before: level 2 at 100, level 3 at 300,
 # level 10 at 4500. rewards are what every game hands out per kill, per win and to every player who is still

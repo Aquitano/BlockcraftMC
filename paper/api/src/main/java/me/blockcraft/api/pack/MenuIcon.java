@@ -44,6 +44,8 @@ public enum MenuIcon {
     BEDWARS(Material.RED_BED),
     MLGRUSH(Material.STICK),
     ZOMBIES(Material.ZOMBIE_HEAD),
+    CORES(Material.BEACON),
+    TEAM(Material.WHITE_BANNER),
     GADGETS(Material.FISHING_ROD),
     KILL_EFFECTS(Material.IRON_SWORD),
     WIN_EFFECTS(Material.FIREWORK_ROCKET),

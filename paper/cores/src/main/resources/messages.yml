@@ -1,0 +1,101 @@
+prefix: "<cores>Cores <dark>» <reset>"
+game-name: "<cores>Cores"
+
+commands:
+  start:
+    description: "Verkürzt den Countdown der Lobby"
+  stats:
+    description: "Zeigt die Stats eines Spielers"
+  top:
+    description: "Zeigt die Top 10 einer Kategorie"
+
+join:
+  introduction: "<prefix><muted>Zerstöre beide Cores des Gegners und verteidige deine. Eisen, Diamanten und XP liegen auf der Map, gecraftet wird selbst."
+
+# Team names; the colour comes from the team.
+teams:
+  red: "Rot"
+  blue: "Blau"
+
+team:
+  title: "<arrow><cores>Cores <dark>· <muted>Team wählen"
+  name: "<arrow>Team <team>"
+  size: "<bullet><muted><players><dark>/<muted><max> Spieler"
+  member: "<bullet><primary><player>"
+  join: "<click>Beitreten"
+  joined: "<prefix><muted>Du bist nun im Team <team><muted>."
+  assigned: "<prefix><muted>Du wurdest dem Team <team> <muted>zugewiesen."
+  already: "<prefix><error>Du bist bereits in diesem Team!"
+  full: "<prefix><error>Das Team ist bereits voll!"
+
+item:
+  team: "<arrow><primary>Team wählen"
+
+lobby:
+  no-opponent: "<prefix><error>Beide Teams brauchen mindestens einen Spieler."
+
+core:
+  left: "Links"
+  right: "Rechts"
+  attacked: "<prefix><error>Dein Core <core> <error>wird angegriffen!"
+  own: "<prefix><error>Das ist dein eigener Core!"
+  destroyed: "<prefix><muted>Der Core <accent><core> <muted>von Team <team> <muted>wurde von <player> <muted>zerstört!"
+  title: "<error>Core zerstört"
+  subtitle: "<muted><core> <dark>· <muted>Team <team>"
+
+round:
+  team: "<arrow>Team <team><dark>: <accent><players>"
+  start: "<prefix><muted>Los geht's! Mit <accent>@ <muted>vor der Nachricht schreibst du allen."
+  winner: "<prefix><primary>Team <team> <primary>hat alle Cores zerstört und gewinnt!"
+  draw: "<prefix><muted>Die Zeit ist um. Kein Team konnte alle Cores zerstören."
+
+timer:
+  round: "<cores>Verbleibende Zeit <dark>● <white><time>"
+
+build:
+  outside: "<prefix><error>Hier kannst du keine Blöcke setzen."
+
+chat:
+  global: "<accent><bold>[GLOBAL]</bold>"
+
+stats:
+  header: "<muted>Stats von <accent><player>"
+  lines:
+    - "<arrow><primary>Siege<dark>: <muted><wins>"
+    - "<arrow><primary>Niederlagen<dark>: <muted><losses>"
+    - "<arrow><primary>Tode<dark>: <muted><deaths>"
+    - "<arrow><primary>Kills<dark>: <muted><kills>"
+    - "<arrow><primary>Punkte<dark>: <muted><points>"
+top:
+  separator: "<muted><strikethrough>---------------------------------"
+  first: "<accent><bold>#1 <reset><primary><name><muted> ( <white><value><muted> )"
+  entry: "<reset>#<rank> <primary><name> <muted>( <white><value><muted> )"
+menu:
+  stats:
+    title: "<arrow><cores>Cores <dark>· <muted>Stats"
+    player: "<accent><player>"
+    player-lore:
+      - "<arrow><primary>Siege<dark>: <muted><wins>"
+      - "<arrow><primary>Niederlagen<dark>: <muted><losses>"
+      - "<arrow><primary>Tode<dark>: <muted><deaths>"
+      - "<arrow><primary>Kills<dark>: <muted><kills>"
+      - "<arrow><primary>Punkte<dark>: <muted><points>"
+    global: "<arrow><primary>Globale Stats"
+  global-stats:
+    title: "<arrow><cores>Cores <dark>· <muted>Globale Stats"
+    wins: "<arrow><primary>Siege"
+    deaths: "<arrow><primary>Tode"
+    kills: "<arrow><primary>Kills"
+    losses: "<arrow><primary>Niederlagen"
+    points: "<arrow><primary>Punkte"
+
+scoreboard:
+  title: "<cores><bold>Cores"
+  winner-team: "Team <team>"
+  team: "<muted><icon:mode> TEAM"
+  no-team: "<muted>Kein Team"
+  cores: "<muted><icon:mode> CORES"
+  core-standing: "<success>✔ <team> <dark>· <white><core>"
+  core-attacked: "<error>⚠ <team> <dark>· <white><core>"
+  core-destroyed: "<dark>✘ <team> <dark>· <dark><core>"
+  kills: "<muted><icon:kills> KILLS"

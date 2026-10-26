@@ -26,6 +26,7 @@ public final class SetSpawnCommand {
         root.then(target("rush", LobbyLocation.RUSH, locations, messages));
         root.then(target("bedwars", LobbyLocation.BEDWARS, locations, messages));
         root.then(target("zombies", LobbyLocation.ZOMBIES, locations, messages));
+        root.then(target("cores", LobbyLocation.CORES, locations, messages));
         root.then(target("shop", LobbyLocation.SHOP, locations, messages));
         root.then(target("premium", LobbyLocation.PREMIUM, locations, messages));
         return root.build();

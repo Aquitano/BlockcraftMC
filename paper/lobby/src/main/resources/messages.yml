@@ -110,6 +110,7 @@ navigator:
   bedwars: "<bedwars><bold>BedWars"
   mlgrush: "<mlgrush><bold>MLG Rush"
   zombies: "<zombies><bold>Zombies"
+  cores: "<cores><bold>Cores"
   shop: "<accent>Lobby-Shop"
   shop-lore: "<click>Shop öffnen"
   spawn: "<primary>Zurück zum Spawn"
@@ -139,6 +140,10 @@ navigator:
       - "<muted>Allein oder zu viert gegen 30 Wellen."
       - "<muted>Waffen kaufen, Fenster reparieren, Freunde retten."
       - "<dark>Die Nachtschicht dauert heute etwas länger."
+    cores:
+      - "<muted>Rot gegen Blau, zwei Cores pro Team."
+      - "<muted>Abbauen, craften, verzaubern, angreifen."
+      - "<dark>Wie früher. Nur ohne Lag, hoffentlich."
 secrets:
   title: "<arrow><primary>Secrets <dark>· <muted><found>/<total>"
   unknown: "<error>???"
