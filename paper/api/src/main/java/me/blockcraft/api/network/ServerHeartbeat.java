@@ -4,6 +4,9 @@ import me.blockcraft.common.db.DatabaseConfig;
 import me.blockcraft.common.db.DatabaseException;
 import me.blockcraft.common.network.ServerIdentity;
 import me.blockcraft.common.network.ServerRepository;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.server.ServerLoadEvent;
 import org.bukkit.plugin.Plugin;
 
 import java.io.IOException;
@@ -22,7 +25,7 @@ import java.util.logging.Level;
  * beat runs on one thread, so a beat that read an older state can never commit after a newer one, and none lands
  * after {@link #stop()} removed the row.
  */
-public final class ServerHeartbeat {
+public final class ServerHeartbeat implements Listener {
 
     private static final Duration DRAIN_TIMEOUT = Duration.ofSeconds(10);
 
@@ -31,6 +34,8 @@ public final class ServerHeartbeat {
     private final ServerIdentity self;
     private final ServerPresence presence;
     private final AtomicBoolean failing = new AtomicBoolean();
+    private final AtomicBoolean loaded = new AtomicBoolean();
+    private volatile Duration interval;
     private volatile boolean stopped;
     private final ScheduledExecutorService beats = Executors.newSingleThreadScheduledExecutor(
             Thread.ofPlatform().name("BlockcraftAPI heartbeat").daemon().factory());
@@ -63,8 +68,20 @@ public final class ServerHeartbeat {
         return self;
     }
 
+    /**
+     * Arms the heartbeat; the first beat goes out on {@link ServerLoadEvent}, once the server takes connections. A row
+     * written during startup would have the proxy send players, or a whole queue waiting for this server, into a
+     * server that still refuses them.
+     */
     public void start(Duration interval) {
-        beats.scheduleWithFixedDelay(this::beat, 0L, interval.toMillis(), TimeUnit.MILLISECONDS);
+        this.interval = interval;
+    }
+
+    @EventHandler
+    public void onServerLoad(ServerLoadEvent event) {
+        if (interval != null && loaded.compareAndSet(false, true)) {
+            beats.scheduleWithFixedDelay(this::beat, 0L, interval.toMillis(), TimeUnit.MILLISECONDS);
+        }
     }
 
     /** Queued beats are dropped and a stuck one is interrupted, so nothing announces the server after its row is gone. */
@@ -88,7 +105,7 @@ public final class ServerHeartbeat {
     }
 
     private void beat() {
-        if (stopped) {
+        if (stopped || !loaded.get()) {
             return;
         }
         try {

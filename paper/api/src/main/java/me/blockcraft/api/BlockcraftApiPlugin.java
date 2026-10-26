@@ -187,6 +187,7 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
 
         int heartbeatSeconds = number(config, "heartbeat-seconds", 5);
         heartbeat.start(Duration.ofSeconds(heartbeatSeconds));
+        getServer().getPluginManager().registerEvents(heartbeat, this);
         groups.start(number(groupStatus, "refresh-ticks", 50));
         long occasionTicks = Math.max(1, number(calendarSection, "poll-seconds", 5)) * 20L;
         getServer().getScheduler().runTaskTimerAsynchronously(this, () -> {
