@@ -7,7 +7,7 @@ open Minecraft clones ([MTTT](https://github.com/phiph-s/MTTT), Apache 2.0, and
 
 ## A round
 
-1. The lobby waits on a platform above the town until `players.min` (4) are there; a round never starts with fewer
+1. The lobby waits in a timbered hall high above the village until `players.min` (4) are there; a round never starts with fewer
    than `players.round-minimum` (3).
 2. Preparation, `countdown.preparation` seconds (30): everyone starts around the fountain and loots. Nobody can be
    hurt, and nobody knows a role yet.
@@ -27,13 +27,16 @@ A traitor's chat message that starts with `#` reaches only the living traitors; 
 
 ## The town
 
-Eichenhain is built by `TownBuilder` into an empty world at every start, so the service needs no world template:
-a plaza with a fountain, two streets crossing it, two houses per quarter (doors, windows, some with an upper floor
-and a ladder to the roof), sheds, gardens and trees, a barn in the east and a market in the west, all inside a
-hedge and the world border. Nothing can be broken, and nothing placed but the shop's landmines, fake chests and heal
+Eichenhain is a village `TownBuilder` puts into an empty world at every start, so the service needs no world
+template; the decoration draws from a fixed seed, so it looks the same every time. Two streets cross at a plaza
+with a fountain and benches. Around it stand eight furnished houses with gable roofs (two with an upper floor and a
+ladder), an inn with a bar below and rooms above, an open smithy, a barn with a loft and a paddock, and a market
+with a well. The two western houses have cellars, joined by a tunnel under the street. A pond with a jetty and a
+footbridge lies in the north-east, fenced vegetable gardens behind the houses, a graveyard with an open grave beside
+the chapel, and a forest between the village and the hedge, inside the world border. Nothing can be broken, and nothing placed but the shop's landmines, fake chests and heal
 stations.
 
-- **Chests** (about 25): a right-click removes the chest and gives one item from `chests.loot`, picked by weight.
+- **Chests** (about 30, also in cellars, lofts, the tunnel, on the jetty and in the open grave): a right-click removes the chest and gives one item from `chests.loot`, picked by weight.
 - **Ender chest** in the chapel at the south end: an iron sword, once per round, only after the preparation.
 - **Traitor tester** at the north end: pressing the button inside closes the doorway with glass and, after
   `tester.delay-seconds`, the lamps over the doorway and on the back wall turn red if a traitor stands inside, lime
