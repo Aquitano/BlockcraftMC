@@ -194,8 +194,8 @@ services:
     environment:
       <<: *paper-env
       BLOCKCRAFT_SERVER_GROUP: endergames
-      # The round's world is generated fresh at every start, which needs more than the template servers.
-      MEMORY: 2G
+      # The round's world is generated fresh at every start; its 400 chunks peaked at 1.2G in a test run.
+      MEMORY: 1536M
       BLOCKCRAFT_WORLD_TEMPLATE: ""
       COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/endergames,/blockcraft/viaversion
     volumes:

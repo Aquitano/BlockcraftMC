@@ -44,6 +44,8 @@ services:
   mlgrush: *paper
   duell: *paper
   zombies: *paper
+  endergames: *paper
+  ttt: *paper
 
   # Not released yet: `docker compose --profile unreleased up -d quicksg` starts one anyway.
   emeraldrush:
@@ -53,11 +55,5 @@ services:
     <<: *paper
     profiles: [unreleased]
   cores:
-    <<: *paper
-    profiles: [unreleased]
-  endergames:
-    <<: *paper
-    profiles: [unreleased]
-  ttt:
     <<: *paper
     profiles: [unreleased]
