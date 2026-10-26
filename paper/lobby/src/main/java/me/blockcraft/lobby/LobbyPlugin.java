@@ -8,9 +8,11 @@ import me.blockcraft.api.menu.Profiles;
 import me.blockcraft.common.config.YamlFile;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.shop.Premium;
+import me.blockcraft.lobby.activity.Herobrine;
 import me.blockcraft.lobby.activity.LobbyQuirks;
 import me.blockcraft.lobby.activity.Parkour;
 import me.blockcraft.lobby.activity.PondFishing;
+import me.blockcraft.lobby.activity.Prisoner;
 import me.blockcraft.lobby.activity.SantaSleigh;
 import me.blockcraft.lobby.activity.SeasonalAtmosphere;
 import me.blockcraft.lobby.activity.SeasonalDecor;
@@ -24,6 +26,7 @@ import me.blockcraft.lobby.command.SetSpawnCommand;
 import me.blockcraft.lobby.command.SleighCommand;
 import me.blockcraft.lobby.command.TeamBoardCommand;
 import me.blockcraft.lobby.config.ActivitiesConfig;
+import me.blockcraft.lobby.config.HerobrineConfig;
 import me.blockcraft.lobby.config.LobbyConfig;
 import me.blockcraft.lobby.config.LobbyLocation;
 import me.blockcraft.lobby.config.SeasonTheme;
@@ -90,6 +93,8 @@ public final class LobbyPlugin extends JavaPlugin {
     private SeasonalEvents seasons;
     private SeasonalAtmosphere atmosphere;
     private SantaSleigh sleigh;
+    private Prisoner prisoner;
+    private Herobrine herobrine;
     private ShootingStars stars;
 
     @Override
@@ -115,6 +120,8 @@ public final class LobbyPlugin extends JavaPlugin {
         var activityLocations = Locations.load(api.map().file(this, "activities.yml"));
         parkour = new Parkour(this, activityLocations, activities, messages);
         quirks = new LobbyQuirks(this, activities, messages, pets, secrets);
+        prisoner = new Prisoner(this, activityLocations, messages);
+        herobrine = new Herobrine(this, HerobrineConfig.fromYaml(YamlFile.section(yaml, "herobrine")), secrets);
         stars = new ShootingStars(this, ShootingStarConfig.fromYaml(YamlFile.section(yaml, "shooting-stars")), messages, secrets);
         var themes = SeasonTheme.all(YamlFile.section(yaml, "seasons"), getLogger());
         var decor = new SeasonalDecor(api.calendar(), themes);
@@ -142,7 +149,7 @@ public final class LobbyPlugin extends JavaPlugin {
 
         hud = new LobbyHud(this, messages);
         hud.start(config.hudRefreshSeconds() * 20L);
-        register(previews, hud, parkour, quirks, seasons, decor, sleigh, stars.wishes(),
+        register(previews, hud, parkour, quirks, seasons, decor, sleigh, prisoner, stars.wishes(),
                 new PondFishing(activityLocations, activities, messages, secrets),
                 new JoinQuitListener(messages, locations, items, trails, pets, hider),
                 new CosmeticSettingsListener(messages, trails, pets, gadgets),
@@ -180,6 +187,7 @@ public final class LobbyPlugin extends JavaPlugin {
                     () -> {
                         parkour.refresh();
                         seasons.refresh();
+                        prisoner.refresh();
                     }));
         });
     }
@@ -203,6 +211,12 @@ public final class LobbyPlugin extends JavaPlugin {
         }
         if (sleigh != null) {
             sleigh.close();
+        }
+        if (prisoner != null) {
+            prisoner.close();
+        }
+        if (herobrine != null) {
+            herobrine.close();
         }
         if (previews != null) {
             previews.close();

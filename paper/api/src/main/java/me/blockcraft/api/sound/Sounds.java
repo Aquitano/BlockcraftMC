@@ -47,7 +47,9 @@ public enum Sounds {
     ADVENT_DOOR(FeedbackSound.ADVENT_DOOR),
     TRICK(FeedbackSound.TRICK),
     SCARE(FeedbackSound.SCARE),
-    SLEIGH_BELLS(FeedbackSound.SLEIGH_BELLS);
+    SLEIGH_BELLS(FeedbackSound.SLEIGH_BELLS),
+    CHAINS(FeedbackSound.CHAINS),
+    HEROBRINE(FeedbackSound.HEROBRINE);
 
     private static final int COUNTDOWN_FROM = 5;
     private static final float COUNTDOWN_PITCH_STEP = 0.15f;

@@ -107,6 +107,20 @@ every audience, including the console. Only the first wish per account and event
 other time such a message is ordinary chat. The event stores a deadline and account UUIDs, while the secret uses
 the existing unlock system. The wish text is never stored or forwarded by the Blockcraft plugins.
 
+## Herobrine
+
+Between 22:00 inclusive and 04:00 exclusive in the network calendar zone, each one-minute check has a one-in-120
+chance that Herobrine stands about 32 blocks ahead of one active, non-vanished player, on solid ground roughly at their
+height. Only that player sees him, and he keeps staring at them. He vanishes after 30 seconds, when the player
+leaves, or when they come within 16 blocks; the last finds `Herobrine`, a bonus secret that does not gate
+`[ENTDECKER]`. After an appearance he stays away for an hour. Lobby's `herobrine` section sets all of this.
+
+## The castle dungeon
+
+The ladder next to the `Burgkerker!` sign leads into the dungeon, where a prisoner in striped clothes stands at the
+map's `prisoner` spot (`/lobbyset prisoner`). Right-clicking him rattles his chains and gets one of his complaints;
+hitting him gets another kind. Without the spot he is not there.
+
 ## Sleeping players
 
 After ten AFK minutes, the floating label appears. It adds `Bitte nicht wecken` after 20 minutes and a duration

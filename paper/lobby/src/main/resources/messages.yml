@@ -160,6 +160,7 @@ secrets:
     karpfen: "Goldener Karpfen"
     goldenesei: "Goldenes Ei"
     sternschnuppe: "Sternschnuppe"
+    herobrine: "Herobrine"
   # Shown on every secret still missing, once a player found secrets.riddles-after of them (config.yml).
   riddle:
     zimmer: "Jedes Haus hat ein Zimmer, das niemand betritt."
@@ -175,6 +176,7 @@ secrets:
     karpfen: "Wer am Wasser Geduld hat, zieht manchmal Gold heraus."
     goldenesei: "Manche Hühner legen mehr als nur Frühstück."
     sternschnuppe: "Zwischen zehn am Abend und zwei in der Nacht hat der Himmel manchmal einen Wunsch frei."
+    herobrine: "Es gibt ihn nicht. Trotzdem steht nachts manchmal jemand in der Ferne. Geh hin, bevor er geht."
   sign:
     border: "<dark><strikethrough>-----------"
     tag: "<muted>[SECRET]"
@@ -576,6 +578,21 @@ seasonal:
   advent-reward: "<prefix><success>Türchen geöffnet: <accent>+<coins> Coins<muted>."
   door: "<accent>Türchen <day>"
   snow: "<prefix><muted>Die <primary>Schneespur <muted>wartet bei deinen Spuren. Frohe Weihnachten!"
+
+prisoner:
+  name: "<muted>Gefangener"
+  talk:
+    - "<prefix><primary>Gefangener: <muted>Ich hab nur ein Bett abgebaut! Ein einziges! Und plötzlich war Hausfriedensbruch."
+    - "<prefix><primary>Gefangener: <muted>Seit 2016 sitze ich hier. Ist BedWars noch aktuell?"
+    - "<prefix><primary>Gefangener: <muted>Hast du einen Löffel? Ich grabe seit Jahren. Bisher nur Erde."
+    - "<prefix><primary>Gefangener: <muted>Sag dem Wärter, die Spinnweben waren schon da, als ich kam."
+    - "<prefix><primary>Gefangener: <muted>Ich wollte nur die Prinzessin retten. Falsches Schloss, sagen sie."
+    - "<prefix><primary>Gefangener: <muted>Die Leiter da oben? Gehört nicht mir. Ich darf nicht drauf."
+    - "<prefix><primary>Gefangener: <muted>Psst. Wenn du nachts in die Ferne schaust ... schau lieber nicht zu lange."
+  hurt:
+    - "<prefix><primary>Gefangener: <muted>Au! Auch Gefangene haben Rechte. Glaube ich."
+    - "<prefix><primary>Gefangener: <muted>Das sag ich dem Wärter. Der kommt allerdings nie."
+    - "<prefix><primary>Gefangener: <muted>Schlag lieber die Wand. Die hält mich hier fest, nicht ich."
 
 shooting-star:
   announce: "<prefix><accent>Eine Sternschnuppe! <muted>Schreib in <seconds> Sekunden '<phrase> …'. Dein Wunsch bleibt privat."

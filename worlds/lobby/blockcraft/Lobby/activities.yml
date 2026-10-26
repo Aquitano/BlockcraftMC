@@ -30,3 +30,11 @@ parkour-top:
   z: 1630.5
   yaw: 0.0
   pitch: 0.0
+prisoner:
+  ==: org.bukkit.Location
+  world: world
+  x: -923.5
+  y: 24.0
+  z: 1559.5
+  yaw: 29.7
+  pitch: 0.0

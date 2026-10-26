@@ -31,7 +31,7 @@ public final class LobbySetCommand {
                                                                ActivitiesConfig config, Locations<LobbyLocation> warps,
                                                                Runnable refresh) {
         var root = Commands.literal("lobbyset").requires(source -> source.getSender().hasPermission(LobbyPermissions.SET_SPAWN));
-        var keys = new ArrayList<>(List.of("pond", "parkour-start", "parkour-finish", "parkour-top", "parkour-finish-sign", "santa"));
+        var keys = new ArrayList<>(List.of("pond", "parkour-start", "parkour-finish", "parkour-top", "parkour-finish-sign", "santa", "prisoner"));
         for (int i = 1; i <= config.checkpoints(); i++) {
             keys.add("checkpoint-" + i);
         }

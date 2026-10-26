@@ -1,7 +1,5 @@
 package me.blockcraft.lobby.activity;
 
-import com.destroystokyo.paper.profile.ProfileProperty;
-import io.papermc.paper.datacomponent.item.ResolvableProfile;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import io.papermc.paper.event.player.PrePlayerAttackEntityEvent;
 import me.blockcraft.api.BlockcraftApi;
@@ -70,21 +68,6 @@ public final class SeasonalEvents implements Listener, AutoCloseable {
     private static final int BATS = 6;
     private static final long BAT_TICKS = 60L;
     private static final int GHOST_TICKS = 80;
-    static final ResolvableProfile SANTA = ResolvableProfile.resolvableProfile()
-            .name("Santa")
-            .addProperty(new ProfileProperty("textures",
-                    "ewogICJ0aW1lc3RhbXAiIDogMTYxNzg4NTA1NTM5MSwKICAicHJvZmlsZUlkIiA6ICJjN2ZkZGI5YWFkZmQ0YmUzYjMyNmQ3MDBkZjI1MmU4OC"
-                            + "IsCiAgInByb2ZpbGVOYW1lIiA6ICJTYW50YSIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJT"
-                            + "S0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS8zZjg2NjgyMWJmYmY1MWMwNWZmNz"
-                            + "k4YWYxMDk1NzVhZmZhMThjNzc5MTUxODEwYjUyZTk5YzU0N2MzMzc5ZWI3IgogICAgfQogIH0KfQ==",
-                    "CGqEqHjnV96lvUfVkWc90BC0F+pp5a4pT4QUoKQCtSenomZxTZVEWdIqLs/LIUM3OKFDFBfrWpjD8bi3vCsNwYE9OMhcSmDz2QtzJYKncfV7EM"
-                            + "iEPP/aS1HF7RtUNrZx/5L9efkeFK1TvmnU45VGOGgfZPH1eerzvcrH+4Pswd3aLNwsivqar9zvOGD1ns/+Wlz5EB7pDiT+RUfSehhTp6xCiXKx"
-                            + "ikK7i+ia/G33dK5YTe3928jbdltZ5vZzY2UxudT1fDfvTpoh69XbBcZmCwOwSQlu9iN/IYdInY0nEGRc8Af49mxE8rBrLO0d/G5nmkJ9Vcibh4"
-                            + "ieQAqMahN9kb0p50UvMWy6J02n+hYvvnnVpdU5bbbB8lelKBIB4YZhhf6jE+KQ/aRf9roULhAZ/NYYzdKU3NKKq7dOI+y3tDxGrVdhNiepX0H0"
-                            + "IjfW1+AMGzLUkirr14ATqTPno36kqFyW3QbkMLFv5H2v10Y6JazzwIDuxPWcZBv+3KVx5MyNMcDgQF5TK/qKZCPo+BH5oCE03mwtS8tD0g4tom"
-                            + "kcCuA6+u0c76y3u7jlsqOxBzo4ZO3dk6L/2yuSzSmUSrScaHIUJFV/IdNOEMuA0zh5R/Vs3517iM6Lm8Q+KcQO8S0JBD0RW0U/Lo3QdFNBtG/q"
-                            + "VHAysmqHwIumxo+hiMNHJos="))
-            .build();
 
     private final Plugin plugin;
     private final Locations<String> locations;
@@ -208,17 +191,7 @@ public final class SeasonalEvents implements Listener, AutoCloseable {
 
     private void spawnSanta(Location spot) {
         hold(spot);
-        santa = spot.getWorld().spawn(spot, Mannequin.class, figure -> {
-            figure.setProfile(SANTA);
-            figure.setDescription(null);
-            figure.customName(messages.get("seasonal.santa-name"));
-            figure.setCustomNameVisible(true);
-            figure.setImmovable(true);
-            figure.setGravity(false);
-            figure.setInvulnerable(true);
-            figure.setPersistent(false);
-            figure.setRemoveWhenFarAway(false);
-        });
+        santa = Figures.spawn(spot, Skins.SANTA, messages.get("seasonal.santa-name"));
     }
 
     @EventHandler(priority = EventPriority.MONITOR)

@@ -23,7 +23,6 @@ import org.bukkit.entity.Display;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Interaction;
 import org.bukkit.entity.ItemDisplay;
-import org.bukkit.entity.Mannequin;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -160,15 +159,7 @@ public final class SantaSleigh implements Listener, AutoCloseable {
             root.addPassenger(block);
             sleigh.add(block);
         }
-        var santa = world.spawn(start, Mannequin.class, figure -> {
-            figure.setProfile(SeasonalEvents.SANTA);
-            figure.setDescription(null);
-            figure.setInvulnerable(true);
-            figure.setImmovable(true);
-            figure.setGravity(false);
-            figure.setSilent(true);
-            figure.setPersistent(false);
-        });
+        var santa = Figures.spawn(start, Skins.SANTA, figure -> { });
         root.addPassenger(santa);
         sleigh.add(santa);
         return root;
