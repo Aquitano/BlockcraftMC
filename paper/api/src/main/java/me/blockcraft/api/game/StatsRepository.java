@@ -3,6 +3,7 @@ package me.blockcraft.api.game;
 import me.blockcraft.common.db.Database;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 /** One legacy per-game stats table ({@code duell_stats}, {@code qsg_stats}, {@code em_stats}); they share a layout. */
@@ -47,5 +48,28 @@ public final class StatsRepository {
         String column = stat.column();
         return db.queryList("SELECT NAME, " + column + " FROM " + table + " ORDER BY " + column + " DESC LIMIT ?",
                 row -> new TopEntry(row.getString("NAME"), row.getInt(column)), limit);
+    }
+
+    /** The top of the board with each row's player, for a face or a skin next to the name. */
+    public List<Leader> leaders(Stat stat, int limit) {
+        String column = stat.column();
+        return db.queryList("SELECT UUID, NAME, " + column + " FROM " + table + " ORDER BY " + column + " DESC LIMIT ?",
+                row -> new Leader(uuid(row.getString("UUID")), String.valueOf(row.getString("NAME")), row.getInt(column)), limit);
+    }
+
+    /** Where {@code player} stands for {@code stat}, ties sharing the better place; empty without a row. */
+    public Optional<Placing> placing(UUID player, Stat stat) {
+        String column = stat.column();
+        return db.queryOne("SELECT " + column + " AS value, (SELECT COUNT(*) FROM " + table + " other WHERE other." + column
+                        + " > own." + column + ") + 1 AS place FROM " + table + " own WHERE own.UUID = ?",
+                row -> new Placing(row.getInt("place"), row.getInt("value")), player.toString());
+    }
+
+    private static Optional<UUID> uuid(String value) {
+        try {
+            return Optional.of(UUID.fromString(value));
+        } catch (IllegalArgumentException | NullPointerException e) {
+            return Optional.empty();
+        }
     }
 }
