@@ -7,6 +7,7 @@ import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.block.BlockFace;
@@ -60,10 +61,11 @@ final class SuperJumpDuelGame extends MapDuelGame {
         if (!active || !event.hasChangedBlock() || !participant(player)) {
             return;
         }
-        var block = event.getTo().getBlock();
+        var to = event.getTo();
+        var block = to.getBlock();
         switch (block.getType()) {
-            case HEAVY_WEIGHTED_PRESSURE_PLATE -> checkpoint(player, 1);
-            case LIGHT_WEIGHTED_PRESSURE_PLATE -> checkpoint(player, 2);
+            case HEAVY_WEIGHTED_PRESSURE_PLATE -> checkpoint(player, to, 1);
+            case LIGHT_WEIGHTED_PRESSURE_PLATE -> checkpoint(player, to, 2);
             case WATER, LAVA -> {
                 fallen.add(player.getUniqueId());
                 var spawn = player.getRespawnLocation();
@@ -79,24 +81,24 @@ final class SuperJumpDuelGame extends MapDuelGame {
                     Bukkit.broadcast(Component.empty());
                     Bukkit.broadcast(context.messages().get("superjump.goal", Placeholder.unparsed("player", player.getName())));
                     Bukkit.broadcast(Component.empty());
-                    player.getWorld().spawnParticle(Particle.EXPLOSION, player.getLocation(), 5);
-                    player.setRespawnLocation(player.getLocation(), true);
+                    player.getWorld().spawnParticle(Particle.EXPLOSION, to, 5);
+                    player.setRespawnLocation(to, true);
                     complete(java.util.Optional.of(player.getUniqueId()));
                 }
             }
         }
     }
 
-    private void checkpoint(Player player, int checkpoint) {
+    private void checkpoint(Player player, Location plate, int checkpoint) {
         if (progress(player.getUniqueId()) >= checkpoint) {
             return;
         }
         checkpoints.put(player.getUniqueId(), checkpoint);
-        player.setRespawnLocation(player.getLocation(), true);
+        player.setRespawnLocation(plate, true);
         Bukkit.broadcast(context.messages().get("superjump.checkpoint", Placeholder.unparsed("player", player.getName()),
                 Formatter.number("checkpoint", checkpoint)));
         Sounds.NOTIFY.play(player);
-        player.getWorld().spawnParticle(Particle.FLAME, player.getLocation(), 5);
+        player.getWorld().spawnParticle(Particle.FLAME, plate, 5);
         context.events().changed();
     }
 }
