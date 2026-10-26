@@ -19,6 +19,8 @@ holograms:
 # loses, points) in a game's stats table, under the game's name and icon, redrawn every refresh-seconds.
 leaderboards:
   refresh-seconds: 300
+  # Within own-radius blocks of a board a player sees a line only they see: their own place on it.
+  own-radius: 10
   holograms:
     quicksg-kills:
       game: quicksg
@@ -228,3 +230,77 @@ throw-fight:
   during: [winter, halloween, easter]
   knockback: 0.5
   cooldown-ticks: 10
+
+
+# A figure in front of each game's area, at the map's npc-<area> spot (/lobbyset npc-<area>, where you stand and
+# look). It turns to the nearest player within look-radius and one of them moves every idle-seconds. skins names
+# the player whose skin each figure wears; empty is the default look.
+game-npcs:
+  look-radius: 8
+  idle-seconds: 6
+  skins:
+    qsg: ""
+    rush: ""
+    duell: ""
+    bedwars: ""
+    mlgrush: ""
+    zombies: ""
+    cores: ""
+    endergames: ""
+    ttt: ""
+    skywars: ""
+
+# Notes and books lying in the lobby, at the map's note-<key> spots (/lobbyset note-<key>, looking at the block they
+# lie on), each as the item named here; their text is lore.<key> in messages.yml. The first read pays reward coins.
+lore-notes:
+  reward: 15
+  notes:
+    gruendung: WRITTEN_BOOK
+    baumeister: BOOK
+    zettel: PAPER
+    bahnhof: MAP
+    tagebuch: WRITABLE_BOOK
+
+# The boards at spawn, at board-changelog and board-rules (/lobbyset, looking at the block). The changelog opens once
+# for everyone who returns after version changes; the rules board runs the proxy's rules command.
+notice-boards:
+  changelog-version: "2026-10"
+  rules-command: regeln
+
+# The boss bar of news over the lobby: the next line of news.lines every seconds.
+news:
+  enabled: true
+  seconds: 12
+  color: purple
+
+# Particles round each game's figure, seen by players within radius who have effects on, every ticks.
+ambience:
+  enabled: true
+  radius: 32
+  ticks: 15
+  particles:
+    endergames: PORTAL
+    bedwars: SMALL_FLAME
+    ttt: CRIMSON_SPORE
+    skywars: CLOUD
+    zombies: SCULK_SOUL
+    cores: END_ROD
+    qsg: ENCHANT
+    rush: HAPPY_VILLAGER
+
+# One-off quests from figures at the map's quest-<key> spots (/lobbyset quest-<key>, where you stand). A task is
+# notes (find count lore notes), parkour (finish it once) or play (a row in the game's stats table). The reward is
+# paid once, with the unlock lobby.quest.<key>.
+quests:
+  archivarin:
+    skin: ""
+    reward: 50
+    task: {type: notes, count: 3}
+  laeuferin:
+    skin: ""
+    reward: 50
+    task: {type: parkour}
+  kundschafter:
+    skin: ""
+    reward: 50
+    task: {type: play, table: bc_skywars_stats}

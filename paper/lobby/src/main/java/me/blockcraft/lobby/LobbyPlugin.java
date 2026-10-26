@@ -9,13 +9,18 @@ import me.blockcraft.api.menu.Profiles;
 import me.blockcraft.common.config.YamlFile;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.shop.Premium;
+import me.blockcraft.lobby.activity.AreaAmbience;
 import me.blockcraft.lobby.activity.Herobrine;
+import me.blockcraft.lobby.activity.LobbyNews;
 import me.blockcraft.lobby.activity.LobbyQuirks;
 import me.blockcraft.lobby.activity.LobbyThrows;
+import me.blockcraft.lobby.activity.LoreNotes;
 import me.blockcraft.lobby.activity.MapSecrets;
+import me.blockcraft.lobby.activity.NoticeBoards;
 import me.blockcraft.lobby.activity.Parkour;
 import me.blockcraft.lobby.activity.PondFishing;
 import me.blockcraft.lobby.activity.Prisoner;
+import me.blockcraft.lobby.activity.QuestGivers;
 import me.blockcraft.lobby.activity.SantaSleigh;
 import me.blockcraft.lobby.activity.SeasonalAtmosphere;
 import me.blockcraft.lobby.activity.SeasonalDecor;
@@ -30,9 +35,12 @@ import me.blockcraft.lobby.command.SetSpawnCommand;
 import me.blockcraft.lobby.command.SleighCommand;
 import me.blockcraft.lobby.command.TeamBoardCommand;
 import me.blockcraft.lobby.config.ActivitiesConfig;
+import me.blockcraft.lobby.config.GameNpcConfig;
 import me.blockcraft.lobby.config.HerobrineConfig;
 import me.blockcraft.lobby.config.LobbyConfig;
 import me.blockcraft.lobby.config.LobbyLocation;
+import me.blockcraft.lobby.config.LoreNoteConfig;
+import me.blockcraft.lobby.config.Quest;
 import me.blockcraft.lobby.config.SeasonTheme;
 import me.blockcraft.lobby.config.SleighConfig;
 import me.blockcraft.lobby.config.ShootingStarConfig;
@@ -64,8 +72,11 @@ import me.blockcraft.lobby.listener.ShopNpcListener;
 import me.blockcraft.lobby.listener.WorldDownloaderListener;
 import me.blockcraft.lobby.menu.Menus;
 import me.blockcraft.lobby.menu.NavigatorTeleports;
+import me.blockcraft.lobby.npc.GameNpcs;
 import me.blockcraft.lobby.npc.Holograms;
 import me.blockcraft.lobby.npc.Leaderboards;
+import me.blockcraft.lobby.npc.OwnPlacings;
+import me.blockcraft.lobby.npc.Podiums;
 import me.blockcraft.lobby.npc.ShopNpc;
 import me.blockcraft.lobby.rank.PremiumRank;
 import me.blockcraft.lobby.recap.RoundRecapListener;
@@ -78,7 +89,9 @@ import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -102,6 +115,7 @@ public final class LobbyPlugin extends JavaPlugin {
     private MapSecrets mapSecrets;
     private LobbyThrows throwFight;
     private ShootingStars stars;
+    private final List<AutoCloseable> polish = new ArrayList<>();
 
     @Override
     public void onEnable() {
@@ -145,14 +159,39 @@ public final class LobbyPlugin extends JavaPlugin {
         gadgets = new Gadgets(this, messages, Duration.ofSeconds(config.gadgetCooldownSeconds()));
         friends = new FriendsChannel(this, config.friendsTimeoutTicks());
         previews = new CosmeticPreviews(this, messages, config.cosmeticPreviewTicks());
+        var loreNotes = new LoreNotes(this, activityLocations, LoreNoteConfig.fromYaml(YamlFile.section(yaml, "lore-notes")), messages);
         var menus = new Menus(this, messages, config, locations, api.unlocks(), api.settings(), api.messages(),
                 api.servers(), api.server(), new PremiumRank(this, luckPerms), pets, api.groups(), friends, previews,
-                new NavigatorTeleports());
+                new NavigatorTeleports(), loreNotes);
         shopNpc = new ShopNpc(this, locations, messages, quirks::owns);
         shopNpc.start(config.shopNpcRespawnSeconds());
         var leaderboards = new Leaderboards(this, api.database(), messages, api.messages(), config.leaderboards());
         holograms = new Holograms(this, messages, leaderboards);
+        var podiums = new Podiums(this, activityLocations, leaderboards, messages);
+        holograms.afterRefresh(podiums::refresh);
         holograms.start(config.leaderboardRefreshSeconds() * 20L);
+        var ownRadius = YamlFile.section(yaml, "leaderboards").get("own-radius") instanceof Number radius ? radius.doubleValue() : 10.0;
+        var ownPlacings = new OwnPlacings(this, leaderboards, messages, Math.clamp(ownRadius, 2.0, 48.0),
+                Duration.ofSeconds(config.leaderboardRefreshSeconds()));
+        var gameNpcs = new GameNpcs(this, activityLocations, GameNpcConfig.fromYaml(YamlFile.section(yaml, "game-npcs")),
+                config.navigatorGroups(), api.groups(), messages, api.messages());
+        var boardSettings = YamlFile.section(yaml, "notice-boards");
+        var noticeBoards = new NoticeBoards(this, activityLocations, messages,
+                String.valueOf(boardSettings.getOrDefault("changelog-version", "1")),
+                String.valueOf(boardSettings.getOrDefault("rules-command", "regeln")));
+        var quests = new QuestGivers(this, activityLocations, Quest.fromYaml(YamlFile.section(yaml, "quests")), messages);
+        polish.addAll(List.of(gameNpcs, podiums, ownPlacings, loreNotes, noticeBoards, quests));
+        register(gameNpcs, podiums, ownPlacings, loreNotes, noticeBoards, quests);
+        LobbyNews.start(this, messages, YamlFile.section(yaml, "news")).ifPresent(news -> {
+            polish.add(news);
+            register(news);
+        });
+        AreaAmbience.start(this, gameNpcs::places, YamlFile.section(yaml, "ambience")).ifPresent(polish::add);
+        var optionalSpots = new ArrayList<>(GameNpcs.spots());
+        leaderboards.names().stream().map(Podiums::spot).sorted().forEach(optionalSpots::add);
+        optionalSpots.addAll(quests.spots());
+        var optionalBlocks = new ArrayList<>(loreNotes.spots());
+        optionalBlocks.addAll(NoticeBoards.SPOTS);
 
         var messenger = getServer().getMessenger();
         messenger.registerIncomingPluginChannel(this, WorldDownloaderListener.INIT_CHANNEL, new WorldDownloaderListener(messages));
@@ -194,16 +233,29 @@ public final class LobbyPlugin extends JavaPlugin {
                     .orElse(activeTeamBoard);
             commands.register(TeamBoardCommand.create(new TeamBoard(teamBoardSource, activeTeamBoard, messages), messages));
             commands.register(LobbySetCommand.create(activityLocations, messages, activities, locations,
-                    () -> {
+                    List.copyOf(optionalSpots), List.copyOf(optionalBlocks), () -> {
                         parkour.refresh();
                         seasons.refresh();
                         prisoner.refresh();
+                        gameNpcs.refresh();
+                        podiums.placed();
+                        loreNotes.refresh();
+                        noticeBoards.refresh();
+                        quests.refresh();
                     }));
         });
     }
 
     @Override
     public void onDisable() {
+        for (var closing : polish) {
+            try {
+                closing.close();
+            } catch (Exception e) {
+                getSLF4JLogger().warn("Could not close {}", closing.getClass().getSimpleName(), e);
+            }
+        }
+        polish.clear();
         if (stars != null) {
             stars.close();
         }

@@ -26,6 +26,8 @@ public enum PlayerSetting {
     BEDWARS_BED_SOUND("bedwars-bed-sound"),
     BEDWARS_KILL_SOUND("bedwars-kill-sound"),
     BEDWARS_ARROW_TRAIL("bedwars-arrow-trail"),
+    /** The lobby changelog's version the player last saw, so it opens once after each update. */
+    SEEN_CHANGELOG("seen-changelog"),
     /** The {@code /ptime} clock in ticks, kept across servers for the players who may set their own. */
     PLAYER_TIME("player-time", null, "blockcraft.core.ptime"),
     PRIVATE_MESSAGES("private-messages", PlayerSetting.ON),

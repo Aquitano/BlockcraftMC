@@ -18,6 +18,7 @@ import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -39,6 +40,7 @@ public final class Holograms {
     private final Plugin plugin;
     private final Messages messages;
     private final Leaderboards leaderboards;
+    private final List<Runnable> afterRefresh = new ArrayList<>();
     private BukkitTask task;
 
     public Holograms(Plugin plugin, Messages messages, Leaderboards leaderboards) {
@@ -51,8 +53,16 @@ public final class Holograms {
     public void start(long intervalTicks) {
         task = Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, () -> {
             leaderboards.read();
-            Tasks.sync(plugin, () -> Bukkit.getWorlds().forEach(this::refresh));
+            Tasks.sync(plugin, () -> {
+                Bukkit.getWorlds().forEach(this::refresh);
+                afterRefresh.forEach(Runnable::run);
+            });
         }, 0L, intervalTicks);
+    }
+
+    /** Runs on the main thread after every refresh of the boards, for what shows their freshly read places. */
+    public void afterRefresh(Runnable action) {
+        afterRefresh.add(action);
     }
 
     public void stop() {
@@ -122,7 +132,8 @@ public final class Holograms {
         }
     }
 
-    private static Optional<String> nameOf(Entity entity) {
+    /** The name a placed hologram's displays are tagged with. */
+    public static Optional<String> nameOf(Entity entity) {
         return Optional.ofNullable(entity.getPersistentDataContainer().get(NAME, PersistentDataType.STRING));
     }
 }

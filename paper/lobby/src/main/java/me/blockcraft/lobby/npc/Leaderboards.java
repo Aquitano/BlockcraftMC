@@ -1,12 +1,14 @@
 package me.blockcraft.lobby.npc;
 
+import me.blockcraft.api.game.Leader;
+import me.blockcraft.api.game.Placing;
 import me.blockcraft.api.game.StatsRepository;
-import me.blockcraft.api.game.TopEntry;
 import me.blockcraft.common.db.Database;
 import me.blockcraft.common.db.DatabaseException;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.lobby.config.Leaderboard;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.object.ObjectContents;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.plugin.Plugin;
@@ -18,11 +20,13 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
- * The top ten of a stats table as the lines of a hologram, read from the database on a timer. A board that cannot
- * be read keeps the places it last showed; the table of a game that never ran is created empty.
+ * The top ten of a stats table as the lines of a hologram, read from the database on a timer, each line led by the
+ * player's face, which the client draws from the UUID without the pack. A board that cannot be read keeps the places
+ * it last showed; the table of a game that never ran is created empty.
  */
 public final class Leaderboards {
 
@@ -33,7 +37,7 @@ public final class Leaderboards {
     private final Messages shared;
     private final Map<String, Leaderboard> boards;
     private final Map<String, StatsRepository> tables;
-    private volatile Map<String, List<TopEntry>> places = Map.of();
+    private volatile Map<String, List<Leader>> places = Map.of();
 
     public Leaderboards(Plugin plugin, Database database, Messages messages, Messages shared, Map<String, Leaderboard> boards) {
         this.plugin = plugin;
@@ -68,7 +72,7 @@ public final class Leaderboards {
         var loaded = new HashMap<>(places);
         boards.forEach((name, board) -> {
             try {
-                loaded.put(name, tables.get(board.table()).top(board.stat(), PLACES));
+                loaded.put(name, tables.get(board.table()).leaders(board.stat(), PLACES));
             } catch (DatabaseException e) {
                 plugin.getSLF4JLogger().warn("Could not read the {} leaderboard", name, e);
             }
@@ -90,10 +94,26 @@ public final class Leaderboards {
             rank++;
             lines.add(messages.get(rank == 1 ? "holo.leaderboard.first" : "holo.leaderboard.entry",
                     Formatter.number("rank", rank),
-                    Placeholder.unparsed("name", String.valueOf(entry.name())),
+                    Placeholder.component("face", face(entry)),
+                    Placeholder.unparsed("name", entry.name()),
                     Formatter.number("value", entry.value())));
         }
         return List.copyOf(lines);
+    }
+
+    /** Who leads the board as last read, for the figure on its podium. */
+    public Optional<Leader> first(String name) {
+        return Optional.ofNullable(places.get(name)).flatMap(top -> top.stream().findFirst());
+    }
+
+    /** Where {@code player} stands on the board; blocking, the caller runs it off the main thread. */
+    public Optional<Placing> placing(String name, UUID player) {
+        return Optional.ofNullable(boards.get(name)).flatMap(board -> tables.get(board.table()).placing(player, board.stat()));
+    }
+
+    /** The face of a row's player: by UUID where the row has one, else by the name it was won under. */
+    private static Component face(Leader entry) {
+        return Component.object(entry.player().map(ObjectContents::playerHead).orElseGet(() -> ObjectContents.playerHead(entry.name())));
     }
 
     /** Games are named network-wide, the way the status signs and the profile card name them. */

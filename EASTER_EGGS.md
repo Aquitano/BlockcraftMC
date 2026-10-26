@@ -196,6 +196,30 @@ The first successfully saved completion grants "Im Ziel" and 100 XP through the 
 Later completions update best times without paying that achievement again. `/erfolge` opens the achievements menu.
 Signs can only be edited while `/build` is enabled, including for owners and players in creative mode.
 
+## Lobby figures, notes and quests
+
+These spots are optional: `/lobbyset check` does not report them missing, and a feature without its spot simply
+does not appear. Run `/lobbyset` where you stand and look for a figure, and while looking at a block for an item
+lying on it; the item turns the way you face.
+
+- **Game figures:** `/lobbyset npc-<area>` for `qsg`, `rush`, `duell`, `bedwars`, `mlgrush`, `zombies`, `cores`,
+  `endergames`, `ttt` and `skywars`, in front of each area. The figure holds the game's item, a card above it names
+  the game, its state and how many play, and a click of either hand joins it like the navigator. It turns to the
+  nearest player within `game-npcs.look-radius` and now and then swings its arm or crouches; `game-npcs.skins` names
+  whose skin each wears. Light particles of the game (`ambience.particles`) rise round it for players with effects
+  on. The area's `/setspawn` warp stays where players arrive, so nobody lands inside the figure.
+- **Podiums:** `/lobbyset podium-<board>` for any board of `leaderboards.holograms`. The board's first place stands
+  there in their own skin, named with their value, and changes with the board. Every board line starts with the
+  player's face, and within `leaderboards.own-radius` a line only you see shows your own place.
+- **Lore notes:** `/lobbyset note-<key>` for each of `lore-notes.notes`, looking at the block it lies on. A click
+  opens the note as a book; the first read pays `lore-notes.reward` coins and adds it to the secrets menu, where it
+  can be read again.
+- **Boards:** `/lobbyset board-changelog` and `/lobbyset board-rules` at spawn, looking at the block. The changelog
+  opens as a dialog, and once for every returning player after `notice-boards.changelog-version` changes; the rules
+  board runs the proxy's `notice-boards.rules-command`.
+- **Quest givers:** `/lobbyset quest-<key>` for each of `quests`. Talking opens the quest; a finished one pays its
+  reward once. A boss bar of news (`news`) rotates over the whole lobby.
+
 ## Friendship anniversaries
 
 Accepted friendships retain their existing `bc_friends.created_at` timestamp. New acceptances already reset it

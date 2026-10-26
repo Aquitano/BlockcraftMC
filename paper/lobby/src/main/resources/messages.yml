@@ -470,9 +470,12 @@ setholo:
 holo:
   leaderboard:
     title: "<dark>● <accent><bold>TOP 10</bold> <dark>● <game> <dark>· <muted><stat> <dark>●"
-    first: "<accent><bold>#1 <reset><primary><name> <muted>( <white><value><muted> )"
-    entry: "<muted>#<rank> <primary><name> <muted>( <white><value><muted> )"
+    first: "<face> <accent><bold>#1 <reset><primary><name> <muted>( <white><value><muted> )"
+    entry: "<face> <muted>#<rank> <primary><name> <muted>( <white><value><muted> )"
     empty: "<muted>Noch keine Einträge"
+    podium: "<accent><bold>#1</bold> <primary><name> <dark>· <white><value>"
+    own: "<muted>Dein Platz<dark>: <accent>#<rank> <dark>· <white><value>"
+    own-none: "<muted>Du stehst hier noch nicht. Spiel eine Runde!"
     stat:
       kills: "Kills"
       deaths: "Tode"
@@ -651,3 +654,100 @@ throw:
 shooting-star:
   announce: "<prefix><accent>Eine Sternschnuppe! <muted>Schreib in <seconds> Sekunden '<phrase> …'. Dein Wunsch bleibt privat."
   wish: "<prefix><muted>Wunsch notiert. Wir verraten ihn niemandem."
+
+# The figure in front of each game's area (game-npcs in config.yml): the game's name from navigator, then these.
+game-npcs:
+  online: "<muted><online> spielen gerade"
+  play: "<left>Jetzt spielen"
+  retry: "<left>Verfügbarkeit prüfen"
+  unavailable: "<muted>Gerade nicht verfügbar"
+
+# Notes lying about the lobby (lore-notes in config.yml). pages are the book's pages, one entry each; found answers
+# the first read of a note.
+lore:
+  found: "<prefix><success>Notiz gefunden: <accent><note><muted>! <dark>(<white><found><dark>/<white><total><dark>) <muted>+<accent><coins> Coins"
+  menu-found: "<click>Nochmal lesen"
+  menu-unknown: "<muted>Verlorene Notiz"
+  menu-unknown-lore: "<dark>Irgendwo in der Lobby liegt sie noch."
+  gruendung:
+    title: "Gründungsurkunde"
+    author: "Die Gründer"
+    pages:
+      - "<dark>Gründungsurkunde<newline><newline>Im Jahr 2018 wurde auf einem kleinen Server ein Netzwerk gegründet. Ein paar Spielmodi, eine Lobby und sehr viel Kaffee."
+      - "Die Regeln waren einfach:<newline><newline>1. Habt Spaß.<newline>2. Kein Teaming.<newline>3. Wer den Server zum Absturz bringt, gibt eine Runde aus."
+      - "2026 zog das Netzwerk um, von Spigot 1.8 auf eine neue Zeit. Die Lobby blieb. Manche sagen, die Kekse auch."
+  baumeister:
+    title: "Notizbuch des Baumeisters"
+    author: "Ein Baumeister"
+    pages:
+      - "Tag 1: Die Burg steht. Zu schief, sagt der Chef. Ich sage: mittelalterlich."
+      - "Tag 4: Jemand hat Kuchen ins Archiv gestellt. Ich lasse ihn da. Vielleicht findet ihn ja jemand, der ihn mehr braucht."
+      - "Tag 9: Im Kerker sitzt jetzt einer. Er sagt, er sei unschuldig. Das sagen sie alle."
+  zettel:
+    title: "Zerknitterter Zettel"
+    author: "Unbekannt"
+    pages:
+      - "Wenn du das liest, schau nachts mal genauer hin. Manchmal steht da jemand mit weißen Augen am Waldrand.<newline><newline>Sag ihm nicht, dass ich es dir verraten habe."
+  bahnhof:
+    title: "Fahrplan"
+    author: "Lobby-Bahnhof"
+    pages:
+      - "<dark>Abfahrten<newline><newline>BedWars: sofort<newline>SkyWars: sofort<newline>TTT: wenn alle bereit sind<newline>Zombies: Nachtschicht<newline>Beta: verschollen"
+  tagebuch:
+    title: "Tagebuch eines Neulings"
+    author: "Spieler #1"
+    pages:
+      - "Heute zum ersten Mal hier. Jemand hat mich im Chat begrüßt. Ich habe aus Versehen den Kompass gegessen. Kann man den essen?"
+      - "Später: Man kann ihn nicht essen. Aber man kann damit überallhin. Morgen probiere ich EnderGames. Angeblich steht man da plötzlich woanders."
+
+# The boards at spawn, the card above each.
+boards:
+  board-changelog: "<accent><bold>Neuigkeiten</bold><newline><click>Lesen"
+  board-rules: "<accent><bold>Regeln</bold><newline><click>Lesen"
+
+# What changed lately, shown once to everyone who comes back after changelog.version in config.yml changed.
+changelog:
+  title: "<arrow><primary>Neuigkeiten <dark>· <muted><version>"
+  entries:
+    - "<accent>Neue Spielmodi<dark>: <muted>EnderGames, TTT und SkyWars sind da."
+    - "<accent>EnderGames<dark>: <muted>acht ausgesuchte Welten statt Zufall."
+    - "<accent>Lobby<dark>: <muted>Figuren vor jedem Spielbereich, Notizen zum Finden und Aufgaben zum Erledigen."
+    - "<accent>Bestenlisten<dark>: <muted>mit Köpfen, dem Ersten auf dem Podest und deinem eigenen Platz."
+
+# The boss bar over the lobby (news in config.yml), one line after the other.
+news:
+  lines:
+    - "<accent>Neu<dark>: <muted>EnderGames, TTT und SkyWars <dark>· <muted>im Navigator"
+    - "<muted>Finde die verlorenen <accent>Notizen <muted>in der Lobby"
+    - "<muted>Die Leute in der Lobby haben <accent>Aufgaben <muted>für dich"
+    - "<muted>Mehr Infos auf <accent><website>"
+
+# The quest givers (quests in config.yml): their name, the dialog's title, what they say and what they ask.
+quests:
+  claim: "<success>Belohnung abholen <dark>(<accent><coins> Coins<dark>)"
+  status-open: "<muted>Fortschritt<dark>: <white><have><dark>/<white><need>"
+  status-done: "<success>Erledigt! Hol dir deine <accent><coins> Coins<success>."
+  status-claimed: "<muted>Danke nochmal! Mehr habe ich gerade nicht für dich."
+  claimed: "<prefix><success>Aufgabe erledigt! <muted>+<accent><coins> Coins"
+  claim-failed: "<prefix><error>Das hat nicht geklappt. Ist die Aufgabe wirklich erledigt?"
+  archivarin:
+    name: "<accent>Die Archivarin"
+    title: "<arrow><primary>Die Archivarin"
+    talk:
+      - "<muted>Ach, du schon wieder. Oder doch nicht?"
+      - "<muted>Mir sind ein paar Notizen davongeflogen. Sie liegen irgendwo in der Lobby herum."
+    task: "<accent>Aufgabe<dark>: <muted>Finde 3 Notizen in der Lobby."
+  laeuferin:
+    name: "<accent>Die Läuferin"
+    title: "<arrow><primary>Die Läuferin"
+    talk:
+      - "<muted>Ich laufe den Parcours jeden Morgen. Zweimal."
+      - "<muted>Schaffst du ihn wenigstens einmal?"
+    task: "<accent>Aufgabe<dark>: <muted>Schließe den Parcours ab."
+  kundschafter:
+    name: "<accent>Der Kundschafter"
+    title: "<arrow><primary>Der Kundschafter"
+    talk:
+      - "<muted>Hast du schon von SkyWars gehört? Inseln im Nichts, und unten wartet nichts."
+      - "<muted>Spiel eine Runde und erzähl mir, wie es war."
+    task: "<accent>Aufgabe<dark>: <muted>Spiele eine Runde SkyWars."

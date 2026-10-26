@@ -30,6 +30,7 @@ public final class LobbySetCommand {
 
     public static LiteralCommandNode<CommandSourceStack> create(Locations<String> locations, Messages messages,
                                                                ActivitiesConfig config, Locations<LobbyLocation> warps,
+                                                               List<String> optionalSpots, List<String> optionalBlocks,
                                                                Runnable refresh) {
         var root = Commands.literal("lobbyset").requires(source -> source.getSender().hasPermission(LobbyPermissions.SET_SPAWN));
         var keys = new ArrayList<>(List.of("pond", "parkour-start", "parkour-finish", "parkour-top", "parkour-finish-sign", "santa", "prisoner"));
@@ -40,7 +41,10 @@ public final class LobbySetCommand {
         for (int i = 1; i <= config.easterSpots(); i++) {
             keys.add("egg-" + i);
         }
-        for (var key : keys) {
+        var settable = new ArrayList<>(keys);
+        settable.addAll(optionalSpots);
+        settable.addAll(optionalBlocks);
+        for (var key : settable) {
             root.then(Commands.literal(key).requires(source -> source.getSender() instanceof Player).executes(context -> {
                 var player = context.getSource().getPlayerOrThrow();
                 var point = player.getLocation();
@@ -51,13 +55,14 @@ public final class LobbySetCommand {
                         return 0;
                     }
                     point = target.getLocation();
-                } else if (MapSecrets.BLOCK_SPOTS.contains(key)) {
+                } else if (MapSecrets.BLOCK_SPOTS.contains(key) || optionalBlocks.contains(key)) {
                     var target = player.getTargetBlockExact(10);
                     if (target == null) {
                         player.sendMessage(messages.get("activities.setup-block-target"));
                         return 0;
                     }
                     point = target.getLocation();
+                    point.setYaw(player.getYaw());
                 }
                 locations.set(key, point);
                 player.sendMessage(messages.get("activities.location-set", Placeholder.unparsed("location", key)));

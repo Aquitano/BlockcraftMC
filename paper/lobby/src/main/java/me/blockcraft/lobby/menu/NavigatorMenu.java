@@ -42,21 +42,6 @@ final class NavigatorMenu extends Menu {
         return false;
     }
 
-    private static MenuIcon icon(LobbyLocation game) {
-        return switch (game) {
-            case QSG -> MenuIcon.QUICKSG;
-            case RUSH -> MenuIcon.EMERALDRUSH;
-            case BEDWARS -> MenuIcon.BEDWARS;
-            case MLGRUSH -> MenuIcon.MLGRUSH;
-            case ZOMBIES -> MenuIcon.ZOMBIES;
-            case CORES -> MenuIcon.CORES;
-            case ENDERGAMES -> MenuIcon.ENDERGAMES;
-            case TTT -> MenuIcon.TTT;
-            case SKYWARS -> MenuIcon.SKYWARS;
-            default -> MenuIcon.DUELL;
-        };
-    }
-
     private ItemStack game(LobbyLocation target) {
         var messages = menus.messages();
         String group = menus.config().navigatorGroups().get(target);
@@ -70,7 +55,7 @@ final class NavigatorMenu extends Menu {
         if (menus.locations().get(target).isPresent()) {
             lore.add(messages.get("navigator.visit"));
         }
-        return icon(target).item().name(messages.get("navigator." + target.key())).lore(lore).build();
+        return target.game().orElse(MenuIcon.DUELL).item().name(messages.get("navigator." + target.key())).lore(lore).build();
     }
 
     private ItemStack place(MenuIcon icon, String key, String loreKey) {

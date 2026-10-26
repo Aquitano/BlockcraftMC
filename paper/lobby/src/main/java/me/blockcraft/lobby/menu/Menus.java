@@ -14,6 +14,7 @@ import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.network.ServerIdentity;
 import me.blockcraft.common.network.ServerRecord;
 import me.blockcraft.common.network.ServerRepository;
+import me.blockcraft.lobby.activity.LoreNotes;
 import me.blockcraft.lobby.config.LobbyConfig;
 import me.blockcraft.lobby.LobbyPermissions;
 import me.blockcraft.lobby.config.LobbyLocation;
@@ -28,6 +29,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -49,7 +51,8 @@ public record Menus(
         ServerGroups groups,
         FriendsChannel friends,
         CosmeticPreviews previews,
-        NavigatorTeleports teleports
+        NavigatorTeleports teleports,
+        LoreNotes loreNotes
 ) {
 
     private static final int TELEPORT_PARTICLES = 20;
@@ -96,8 +99,11 @@ public record Menus(
     }
 
     public void openSecrets(Player player) {
-        BlockcraftApi.get().playerTasks().latest(player, () -> unlocks.owned(player.getUniqueId(), Secret.ITEM_PREFIX),
-                found -> new SecretsMenu(this, found).open(player));
+        BlockcraftApi.get().playerTasks().latest(player, () -> {
+            var found = new HashSet<>(unlocks.owned(player.getUniqueId(), Secret.ITEM_PREFIX));
+            found.addAll(unlocks.owned(player.getUniqueId(), LoreNotes.ITEM_PREFIX));
+            return Set.copyOf(found);
+        }, found -> new SecretsMenu(this, found).open(player));
     }
 
     public void openShop(Player player) {

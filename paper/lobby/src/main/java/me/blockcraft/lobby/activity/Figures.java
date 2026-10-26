@@ -8,19 +8,19 @@ import org.bukkit.entity.Mannequin;
 import java.util.function.Consumer;
 
 /** The player-shaped figures of the lobby's activities: they stand still, cannot be hurt, and are never saved into the map. */
-final class Figures {
+public final class Figures {
 
     private Figures() {
     }
 
-    static Mannequin spawn(Location location, ResolvableProfile skin, Component name) {
+    public static Mannequin spawn(Location location, ResolvableProfile skin, Component name) {
         return spawn(location, skin, figure -> {
             figure.customName(name);
             figure.setCustomNameVisible(true);
         });
     }
 
-    static Mannequin spawn(Location location, ResolvableProfile skin, Consumer<Mannequin> extra) {
+    public static Mannequin spawn(Location location, ResolvableProfile skin, Consumer<Mannequin> extra) {
         return location.getWorld().spawn(location, Mannequin.class, figure -> {
             figure.setProfile(skin);
             figure.setDescription(null);
