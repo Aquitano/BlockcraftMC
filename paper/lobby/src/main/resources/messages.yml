@@ -112,6 +112,7 @@ navigator:
   zombies: "<zombies><bold>Zombies"
   cores: "<cores><bold>Cores"
   endergames: "<endergames><bold>EnderGames"
+  ttt: "<ttt><bold>TTT"
   shop: "<accent>Lobby-Shop"
   shop-lore: "<click>Shop öffnen"
   spawn: "<primary>Zurück zum Spawn"
@@ -149,6 +150,10 @@ navigator:
       - "<muted>Survival Games in einer zufälligen Welt."
       - "<muted>Kits mit Fähigkeiten, wandernde Enderkisten."
       - "<dark>Und plötzlich stehst du woanders."
+    ttt:
+      - "<muted>Innocents, Detectives und Traitors."
+      - "<muted>Finde die Verräter, bevor sie dich finden."
+      - "<dark>Vertrau niemandem. Auch nicht dem Tester."
 secrets:
   title: "<arrow><primary>Secrets <dark>· <muted><found>/<total>"
   unknown: "<error>???"

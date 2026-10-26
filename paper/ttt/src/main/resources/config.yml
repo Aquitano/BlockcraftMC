@@ -1,0 +1,95 @@
+# Up to players.max play a round; the lobby counts down once players.min are there, and a round needs at least
+# players.round-minimum. A full lobby jumps to countdown.full seconds, /start to countdown.start.
+players:
+  min: 4
+  max: 12
+  round-minimum: 3
+
+# After the lobby, everyone loots for countdown.preparation seconds without being able to hurt anyone; then the roles
+# are drawn and the round runs countdown.round seconds, after which the innocents win. The server restarts
+# countdown.restart seconds after the round.
+countdown:
+  lobby: 60
+  start: 10
+  full: 15
+  preparation: 30
+  round: 600
+  restart: 20
+idle-restart-minutes: 50
+timer-bar: true
+global-stats-head: Kevos
+
+# traitor-ratio of the players are traitors, at least one. From detective-min-players on, detective-ratio of them
+# are detectives, at least one.
+roles:
+  traitor-ratio: 0.25
+  detective-ratio: 0.125
+  detective-min-players: 6
+
+# Karma starts at start and never exceeds max. Killing your own side costs team-kill, an innocent or detective
+# killing a traitor earns enemy-kill, and a round without a team kill earns clean-round. Blows deal karma/max of
+# their damage, never less than damage-floor.
+karma:
+  start: 1000
+  max: 1000
+  team-kill: 100
+  enemy-kill: 20
+  clean-round: 30
+  damage-floor: 0.5
+
+# What a correct kill and a win pay in coins; a kill of your own side pays nothing.
+rewards:
+  kill: 5
+  win: 20
+
+# Traitors and detectives start with start-points shop points; a traitor earns one per innocent or detective killed,
+# a detective one per traitor. A radar points at the nearest target for radar-seconds; a heal station heals
+# per-second health points within radius blocks for seconds; a medipack heals medipack health points at once
+# (20 is full health). Creeper arrows come creeper-arrows at a time; landmines, fake chests and creeper arrows
+# explode with explosion-power (a creeper is 3) and break no blocks.
+shop:
+  start-points: 2
+  radar-seconds: 60
+  medipack: 10
+  creeper-arrows: 3
+  explosion-power: 3.0
+  heal-station:
+    seconds: 60
+    radius: 3.0
+    per-second: 1.0
+  prices:
+    medipack: 1
+    radar: 1
+    creeper-arrows: 2
+    landmine: 2
+    spoofer: 3
+    fake-chest: 2
+    heal-station: 1
+    dna-scanner: 1
+    golden-sword: 3
+
+# The tester shows its result delay-seconds after the button, for show-seconds, and rests cooldown-seconds after
+# every press.
+tester:
+  delay-seconds: 3
+  show-seconds: 4
+  cooldown-seconds: 20
+
+# Whether players heal on their own. Without it, only medipacks and heal stations heal.
+natural-regeneration: false
+
+# 1.8 PvP: no attack cooldown, everything else stays vanilla.
+pvp:
+  legacy-combat: true
+
+# A town chest gives one of these, picked by weight, and is gone. The ender chest gives an iron sword, once per
+# round and only after the preparation.
+chests:
+  loot:
+    - {item: WOODEN_SWORD, amount: 1, weight: 30}
+    - {item: STONE_SWORD, amount: 1, weight: 18}
+    - {item: BOW, amount: 1, weight: 14}
+    - {item: ARROW, amount: 12, weight: 16}
+    - {item: LEATHER_CHESTPLATE, amount: 1, weight: 6}
+    - {item: CHAINMAIL_HELMET, amount: 1, weight: 4}
+    - {item: GOLDEN_APPLE, amount: 1, weight: 2}

@@ -58,3 +58,6 @@ services:
   endergames:
     <<: *paper
     profiles: [unreleased]
+  ttt:
+    <<: *paper
+    profiles: [unreleased]

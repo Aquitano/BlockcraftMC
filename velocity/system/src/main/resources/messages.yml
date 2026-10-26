@@ -15,6 +15,7 @@ palette:
   zombies: "<dark_green>"
   cores: "<yellow>"
   endergames: "<dark_purple>"
+  ttt: "<red>"
   duell: "<aqua>"
   bedwars: "<dark_aqua>"
   mlgrush: "<light_purple>"
@@ -615,6 +616,7 @@ play:
     zombies: "<zombies>Zombies"
     cores: "<cores>Cores"
     endergames: "<endergames>EnderGames"
+    ttt: "<ttt>TTT"
 msg:
   usage: "<prefix><error>Benutze /msg \\<Name> \\<Nachricht>"
   reply-usage: "<prefix><error>Benutze /r \\<Nachricht>"
@@ -722,6 +724,7 @@ joinme:
     zombies: "<arrow><accent><player><muted> spielt <zombies>Zombies<muted>!"
     cores: "<arrow><accent><player><muted> spielt <cores>Cores<muted>!"
     endergames: "<arrow><accent><player><muted> spielt <endergames>EnderGames<muted>!"
+    ttt: "<arrow><accent><player><muted> spielt <ttt>TTT<muted>!"
 
 support:
   already-open: "<primary>Support <arrow><reset><error>Du hast bereits einen offenen Supportantrag. Bitte warte, bis ein Supporter diesen bearbeitet."

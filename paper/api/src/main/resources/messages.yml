@@ -22,6 +22,7 @@ palette:
   zombies: "<dark_green>"
   cores: "<yellow>"
   endergames: "<dark_purple>"
+  ttt: "<red>"
   premium: "<gold>"
 
 games:
@@ -41,6 +42,8 @@ games:
     name: "<cores>Cores"
   endergames:
     name: "<endergames>EnderGames"
+  ttt:
+    name: "<ttt>TTT"
 game-status:
   available: "<success>Jetzt spielen"
   full: "<muted>Alle Plätze belegt"
@@ -359,6 +362,7 @@ profile:
     zombies: "<arrow><primary>Zombies"
     cores: "<arrow><primary>Cores"
     endergames: "<arrow><primary>EnderGames"
+    ttt: "<arrow><primary>TTT"
 
 coins:
   self: "<prefix><muted>Du hast <accent><coins> <muted>Coins!"

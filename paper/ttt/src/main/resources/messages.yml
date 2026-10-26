@@ -1,0 +1,173 @@
+prefix: "<ttt>TTT <dark>» <reset>"
+game-name: "<ttt>TTT"
+
+commands:
+  start:
+    description: "Verkürzt den Countdown der Lobby"
+  stats:
+    description: "Zeigt die Stats eines Spielers"
+  top:
+    description: "Zeigt die Top 10 einer Kategorie"
+  tc:
+    description: "Schreibt den anderen Traitorn"
+
+join:
+  introduction: "<prefix><muted>Unter euch sind Traitor. Finde sie, bevor sie dich finden, und töte keine Unschuldigen."
+
+roles:
+  traitor: "Traitor"
+  detective: "Detective"
+  innocent: "Innocent"
+  title: "<role>"
+  assigned: "<prefix><muted>Du bist <role><muted>."
+  goal:
+    traitor: "<muted>Töte alle Innocents und Detectives."
+    detective: "<muted>Finde die Traitor. Alle vertrauen dir."
+    innocent: "<muted>Überlebe und finde die Traitor."
+  partners: "<prefix><muted>Deine Traitor-Partner<dark>: <error><players>"
+  detectives: "<prefix><muted>Detective<dark>: <accent><players>"
+  traitor-count: "<prefix><muted>Unter euch sind <error><traitors> Traitor<muted>. Mit <white>/tc <muted>schreiben Traitor einander."
+
+item:
+  shop: "<arrow><role>-Shop"
+
+round:
+  preparation: "<prefix><muted>Durchsucht die Kisten! In <accent><seconds> Sekunden <muted>werden die Rollen verteilt."
+  winner:
+    traitors: "<prefix><error>Die Traitor haben gewonnen!"
+    innocents: "<prefix><success>Die Innocents haben gewonnen!"
+  draw: "<prefix><muted>Die Runde ist ohne Sieger zu Ende."
+  traitors: "<prefix><muted>Die Traitor waren<dark>: <error><players>"
+
+timer:
+  preparation: "<ttt>Rollen in <dark>● <white><time>"
+  round: "<ttt>Verbleibende Zeit <dark>● <white><time>"
+
+karma:
+  team-kill: "<prefix><error>Du hast jemanden aus deinem eigenen Team getötet! <muted>Karma<dark>: <error>-<lost> <dark>(<white><karma><dark>)"
+
+shop:
+  title: "<arrow><ttt>TTT <dark>· <muted>Shop"
+  price: "<bullet><muted>Preis<dark>: <accent><price> Punkte"
+  buy: "<click>Kaufen"
+  missing: "<bullet><error>Dir fehlen <points> Punkte"
+  balance: "<arrow><primary>Deine Punkte<dark>: <accent><points>"
+  too-expensive: "<prefix><error>Dir fehlen noch <points> Punkte."
+  bought: "<prefix><muted>Gekauft<dark>: <accent><item>"
+  earned: "<prefix><muted>Du hast jetzt <accent><points> Punkte<muted>."
+  spoofer-ready: "<prefix><error>Dein Tester-Spoofer ist schon bereit."
+  fake-chest-own: "<prefix><muted>Das ist eine Falle für die anderen."
+  radar-expired: "<prefix><muted>Dein Radar ist erloschen."
+  radar-distance: "<muted>Radar<dark>: <accent><distance> Blöcke"
+  golden-sword-wrong: "<prefix><error>Das war kein Traitor. Das goldene Schwert richtet sich gegen dich."
+  items:
+    medipack:
+      name: "<success>Medipack"
+      lore:
+        - "<bullet><muted>Heilt dich um fünf Herzen."
+    radar:
+      name: "<accent>Radar"
+      lore:
+        - "<bullet><muted>Zeigt eine Minute lang auf den"
+        - "<muted>nächsten Spieler, den du jagst."
+    creeper-arrows:
+      name: "<success>Creeper-Pfeile"
+      lore:
+        - "<bullet><muted>Wo sie landen, zischt ein Creeper."
+    landmine:
+      name: "<error>Landmine"
+      lore:
+        - "<bullet><muted>Explodiert unter jedem, der kein Traitor ist."
+    spoofer:
+      name: "<accent>Tester-Spoofer"
+      lore:
+        - "<bullet><muted>Der Tester hält dich beim"
+        - "<muted>nächsten Mal für unschuldig."
+    fake-chest:
+      name: "<error>Fake-Kiste"
+      lore:
+        - "<bullet><muted>Explodiert, wenn jemand außer"
+        - "<muted>einem Traitor sie öffnet."
+    heal-station:
+      name: "<success>Heilstation"
+      lore:
+        - "<bullet><muted>Heilt eine Minute lang alle,"
+        - "<muted>die in der Nähe stehen."
+    dna-scanner:
+      name: "<accent>DNA-Scanner"
+      lore:
+        - "<bullet><muted>Zeigt an einer Leiche, wer"
+        - "<muted>der Mörder war."
+    golden-sword:
+      name: "<primary>Goldenes Schwert"
+      lore:
+        - "<bullet><muted>Tötet einen Traitor mit einem Schlag."
+        - "<bullet><error>Triffst du jemand anderen, stirbst du."
+
+ender-chest:
+  locked: "<prefix><error>Die Enderkiste öffnet sich erst, wenn die Rollen verteilt sind."
+  empty: "<prefix><error>Die Enderkiste ist leer."
+  taken: "<prefix><muted>Du hast das <accent>Eisenschwert <muted>aus der Enderkiste genommen."
+
+tester:
+  not-ready: "<prefix><error>Der Tester funktioniert erst, wenn die Rollen verteilt sind."
+  cooldown: "<prefix><error>Der Tester ist noch <seconds> Sekunden beschäftigt."
+  entered: "<prefix><accent><player> <muted>hat den Traitor-Tester betreten."
+
+corpse:
+  unknown: "<muted>Unbekannte Leiche"
+  identified: "<white><player> <dark>· <role>"
+  found: "<prefix><accent><finder> <muted>hat die Leiche von <white><player> <muted>gefunden<dark>: <role>"
+  known: "<prefix><muted>Das ist <white><player><muted>, <role><muted>."
+  killer: "<prefix><muted>Die DNA an <white><player> <muted>gehört <error><killer><muted>."
+  no-killer: "<prefix><muted>An <white><player> <muted>findest du keine fremde DNA."
+
+chat:
+  traitor: "<error><bold>[TRAITOR]</bold>"
+  usage: "<prefix><error>Benutze /tc \\<Nachricht>"
+  not-traitor: "<prefix><error>Nur lebende Traitor können sich so schreiben."
+
+stats:
+  header: "<muted>Stats von <accent><player>"
+  lines:
+    - "<arrow><primary>Siege<dark>: <muted><wins>"
+    - "<arrow><primary>Niederlagen<dark>: <muted><losses>"
+    - "<arrow><primary>Tode<dark>: <muted><deaths>"
+    - "<arrow><primary>Kills<dark>: <muted><kills>"
+    - "<arrow><primary>Punkte<dark>: <muted><points>"
+top:
+  separator: "<muted><strikethrough>---------------------------------"
+  first: "<accent><bold>#1 <reset><primary><name><muted> ( <white><value><muted> )"
+  entry: "<reset>#<rank> <primary><name> <muted>( <white><value><muted> )"
+menu:
+  stats:
+    title: "<arrow><ttt>TTT <dark>· <muted>Stats"
+    player: "<accent><player>"
+    player-lore:
+      - "<arrow><primary>Siege<dark>: <muted><wins>"
+      - "<arrow><primary>Niederlagen<dark>: <muted><losses>"
+      - "<arrow><primary>Tode<dark>: <muted><deaths>"
+      - "<arrow><primary>Kills<dark>: <muted><kills>"
+      - "<arrow><primary>Punkte<dark>: <muted><points>"
+    global: "<arrow><primary>Globale Stats"
+  global-stats:
+    title: "<arrow><ttt>TTT <dark>· <muted>Globale Stats"
+    wins: "<arrow><primary>Siege"
+    deaths: "<arrow><primary>Tode"
+    kills: "<arrow><primary>Kills"
+    losses: "<arrow><primary>Niederlagen"
+    points: "<arrow><primary>Punkte"
+
+scoreboard:
+  title: "<ttt><bold>TTT"
+  role: "<muted><icon:mode> ROLLE"
+  no-role: "<muted>Wird verteilt"
+  points: "<muted><icon:kit> PUNKTE"
+  partners: "<muted><icon:opponent> TRAITOR"
+  partner-alive: "<success>✔ <white><player>"
+  partner-dead: "<dark>✘ <dark><player>"
+  partner-none: "<muted>Du bist allein"
+  karma: "<muted><icon:profile> KARMA"
+  winner:
+    traitors: "<error>Traitor"
+    innocents: "<success>Innocents"

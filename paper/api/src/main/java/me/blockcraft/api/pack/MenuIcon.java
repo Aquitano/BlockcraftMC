@@ -47,6 +47,8 @@ public enum MenuIcon {
     CORES(Material.BEACON),
     TEAM(Material.WHITE_BANNER),
     ENDERGAMES(Material.ENDER_PEARL),
+    TTT(Material.REDSTONE),
+    TTT_SHOP(Material.EMERALD),
     GADGETS(Material.FISHING_ROD),
     KILL_EFFECTS(Material.IRON_SWORD),
     WIN_EFFECTS(Material.FIREWORK_ROCKET),

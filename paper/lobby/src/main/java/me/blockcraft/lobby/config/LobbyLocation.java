@@ -14,6 +14,7 @@ public enum LobbyLocation {
     ZOMBIES("zombies"),
     CORES("cores"),
     ENDERGAMES("endergames"),
+    TTT("ttt"),
     SHOP("shop"),
     PREMIUM("premium"),
     SHOP_NPC("shop-npc");

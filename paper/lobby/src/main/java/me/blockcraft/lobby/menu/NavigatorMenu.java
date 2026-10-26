@@ -19,8 +19,9 @@ import java.util.Map;
 final class NavigatorMenu extends Menu {
 
     private static final Map<Integer, LobbyLocation> GAMES = Map.of(
-            19, LobbyLocation.QSG, 21, LobbyLocation.RUSH, 23, LobbyLocation.DUELL, 25, LobbyLocation.BEDWARS,
-            28, LobbyLocation.MLGRUSH, 30, LobbyLocation.CORES, 32, LobbyLocation.ENDERGAMES, 34, LobbyLocation.ZOMBIES);
+            18, LobbyLocation.QSG, 20, LobbyLocation.RUSH, 22, LobbyLocation.DUELL, 24, LobbyLocation.BEDWARS,
+            26, LobbyLocation.TTT, 28, LobbyLocation.MLGRUSH, 30, LobbyLocation.CORES, 32, LobbyLocation.ENDERGAMES,
+            34, LobbyLocation.ZOMBIES);
     private static final int JUMP_SLOT = 40;
 
     private final Menus menus;
@@ -50,6 +51,7 @@ final class NavigatorMenu extends Menu {
             case ZOMBIES -> MenuIcon.ZOMBIES;
             case CORES -> MenuIcon.CORES;
             case ENDERGAMES -> MenuIcon.ENDERGAMES;
+            case TTT -> MenuIcon.TTT;
             default -> MenuIcon.DUELL;
         };
     }

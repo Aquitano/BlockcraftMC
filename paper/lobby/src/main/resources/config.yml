@@ -80,6 +80,7 @@ navigator:
     zombies: zombies
     cores: cores
     endergames: endergames
+    ttt: ttt
   stale-seconds: 20
 
 friends:

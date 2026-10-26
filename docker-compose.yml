@@ -203,6 +203,19 @@ services:
       - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
       - endergames:/data
 
+  ttt:
+    <<: *paper
+    hostname: ttt
+    environment:
+      <<: *paper-env
+      BLOCKCRAFT_SERVER_GROUP: ttt
+      BLOCKCRAFT_WORLD_TEMPLATE: ""
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/ttt,/blockcraft/viaversion
+    volumes:
+      - ./build/docker/paper:/blockcraft:ro
+      - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
+      - ttt:/data
+
   quicksg:
     <<: *paper
     hostname: quicksg
@@ -229,3 +242,4 @@ volumes:
   zombies:
   cores:
   endergames:
+  ttt:
