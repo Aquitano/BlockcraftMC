@@ -126,7 +126,9 @@ shooting-stars:
 # keep the shapes alike, or players walk into blocks they do not see. cover lays one of its blocks on top of the
 # highest block of each column when that block is in on (any full block or leaves when on is empty), at chance;
 # snow on top also whitens the grass below. particle falls around every player, and one of sounds plays near them
-# about every every-seconds; both follow the player's effect and sound settings.
+# about every every-seconds; both follow the player's effect and sound settings. snowfall-radius turns the lobby within
+# that many blocks of its spawn into a snowy biome while the season lasts and lets real snow fall for every player
+# with effects on; the map keeps its own biomes.
 seasons:
   halloween:
     blocks:
@@ -171,9 +173,10 @@ seasons:
       on: []
       blocks: [snow]
       chance: 1.0
+    snowfall-radius: 384
     particle:
       type: snowflake
-      count: 14
+      count: 6
     sounds:
       every-seconds: 60
       list:

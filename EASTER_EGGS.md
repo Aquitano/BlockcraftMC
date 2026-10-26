@@ -243,6 +243,12 @@ it turns snowy. Each occasion can also let a particle fall around players and pl
 them; both respect the effect and sound settings. A player who clicks a swapped block may see the real one again
 until the chunk reloads.
 
+Winter also lets real snow fall: every chunk within the season's `snowfall-radius` of the spawn becomes a snowy
+biome as it loads, and players with effects on get downfall, which the client draws as snowflakes. Players who set
+their own weather keep it. The original biomes return when the season ends, for an unloaded chunk when it next
+loads, and around every `/map save`. Snow and leaf litter only lie on the highest block of a column when that block
+is solid, so tall plants keep both halves.
+
 Temporary hats restore the previous helmet when they expire or the player leaves. Choosing another head while
 wearing a temporary hat keeps that new choice. Earned tags, the snow trail, and the birthday gadget are accessible
 through Extras without Premium. Existing purchased heads keep their original storage keys after their names change.

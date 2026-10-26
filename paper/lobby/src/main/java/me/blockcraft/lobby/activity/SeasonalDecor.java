@@ -39,10 +39,12 @@ public final class SeasonalDecor implements Listener {
     private final Map<ChunkId, Map<Position, BlockData>> decorated = new HashMap<>();
     private Set<Occasion> occasions = Set.of();
     private List<SeasonTheme> active = List.of();
+    private final Snowfall snowfall;
 
-    public SeasonalDecor(NetworkCalendar calendar, Map<Occasion, SeasonTheme> themes) {
+    public SeasonalDecor(NetworkCalendar calendar, Map<Occasion, SeasonTheme> themes, Snowfall snowfall) {
         this.calendar = calendar;
         this.themes = themes;
+        this.snowfall = snowfall;
     }
 
     /** Redresses every chunk players already see when the day brings other occasions. */
@@ -55,6 +57,7 @@ public final class SeasonalDecor implements Listener {
         decorated.clear();
         occasions = today;
         active = themes.entrySet().stream().filter(theme -> today.contains(theme.getKey())).map(Map.Entry::getValue).toList();
+        snowfall.set(active.stream().mapToInt(SeasonTheme::snowfallRadius).max().orElse(0));
         for (var player : Bukkit.getOnlinePlayers()) {
             for (var chunk : player.getSentChunks()) {
                 var changes = new HashMap<Position, BlockData>();
@@ -97,7 +100,14 @@ public final class SeasonalDecor implements Listener {
         for (int x = 0; x < 16; x++) {
             for (int z = 0; z < 16; z++) {
                 int top = snapshot.getHighestBlockYAt(x, z);
-                for (int y = world.getMinHeight(); y <= top; y++) {
+                if (top < world.getMinHeight()) {
+                    continue;
+                }
+                int surface = top;
+                while (surface + 1 < world.getMaxHeight() && !snapshot.getBlockType(x, surface + 1, z).isAir()) {
+                    surface++;
+                }
+                for (int y = world.getMinHeight(); y <= surface; y++) {
                     var replacement = swap(snapshot.getBlockType(x, y, z), baseX + x, y, baseZ + z);
                     if (replacement.isEmpty()) {
                         continue;
@@ -108,10 +118,13 @@ public final class SeasonalDecor implements Listener {
                     swapped = swapped.merge(replacement.orElseThrow());
                     if (!swapped.equals(original)) {
                         changes.put(Position.block(baseX + x, y, baseZ + z), swapped);
+                        if (swapped.getMaterial() == Material.SNOW && y > world.getMinHeight()) {
+                            whiten(snapshot, x, y - 1, z, baseX + x, baseZ + z, changes);
+                        }
                     }
                 }
-                if (top >= world.getMinHeight() && top + 1 < world.getMaxHeight()) {
-                    cover(snapshot, x, top, z, baseX + x, baseZ + z, changes);
+                if (surface + 1 < world.getMaxHeight()) {
+                    cover(snapshot, x, surface, z, baseX + x, baseZ + z, changes);
                 }
             }
         }
@@ -128,6 +141,10 @@ public final class SeasonalDecor implements Listener {
         return Optional.empty();
     }
 
+    /**
+     * Covers the column's surface, the highest block of any kind: a plant there is never covered, since a layer under a
+     * tall plant would leave its upper half floating.
+     */
     private void cover(ChunkSnapshot snapshot, int x, int top, int z, int worldX, int worldZ, Map<Position, BlockData> changes) {
         var ground = snapshot.getBlockType(x, top, z);
         for (var theme : active) {
@@ -137,12 +154,20 @@ public final class SeasonalDecor implements Listener {
             }
             var layer = theme.cover().get(Math.floorMod(hash(worldX, top + 1, worldZ) >>> 24, theme.cover().size()));
             changes.put(Position.block(worldX, top + 1, worldZ), layer);
-            var below = changes.getOrDefault(Position.block(worldX, top, worldZ), snapshot.getBlockData(x, top, z)).clone();
-            if (layer.getMaterial() == Material.SNOW && below instanceof Snowable snowable) {
-                snowable.setSnowy(true);
-                changes.put(Position.block(worldX, top, worldZ), below);
+            if (layer.getMaterial() == Material.SNOW) {
+                whiten(snapshot, x, top, z, worldX, worldZ, changes);
             }
             return;
+        }
+    }
+
+    /** Grass, podzol and mycelium under snow show their snowy side. */
+    private static void whiten(ChunkSnapshot snapshot, int x, int y, int z, int worldX, int worldZ, Map<Position, BlockData> changes) {
+        var position = Position.block(worldX, y, worldZ);
+        var below = changes.getOrDefault(position, snapshot.getBlockData(x, y, z)).clone();
+        if (below instanceof Snowable snowable) {
+            snowable.setSnowy(true);
+            changes.put(position, below);
         }
     }
 

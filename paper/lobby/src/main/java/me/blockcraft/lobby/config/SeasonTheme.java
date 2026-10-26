@@ -26,7 +26,7 @@ import java.util.logging.Logger;
 /** One section of the lobby's {@code seasons}: how the lobby looks and sounds while the calendar celebrates it. */
 public record SeasonTheme(Map<Material, List<BlockData>> blocks, Set<Material> coverOn, List<BlockData> cover,
                           double coverChance, Optional<Particle> particle, int particleCount, List<Sound> sounds,
-                          Duration soundEvery) {
+                          Duration soundEvery, int snowfallRadius) {
 
     /** Every section named after an {@link Occasion}; an entry the server does not know is logged and left out. */
     public static Map<Occasion, SeasonTheme> all(Map<String, Object> seasons, Logger logger) {
@@ -60,7 +60,8 @@ public record SeasonTheme(Map<Material, List<BlockData>> blocks, Set<Material> c
                 particle(particle.get("type"), logger),
                 particle.get("count") instanceof Number count ? Math.clamp(count.intValue(), 0, 100) : 0,
                 sounds(ambience.get("list"), logger),
-                Duration.ofSeconds(ambience.get("every-seconds") instanceof Number every ? Math.clamp(every.intValue(), 1, 3600) : 60));
+                Duration.ofSeconds(ambience.get("every-seconds") instanceof Number every ? Math.clamp(every.intValue(), 1, 3600) : 60),
+                section.get("snowfall-radius") instanceof Number radius ? Math.clamp(radius.intValue(), 0, 512) : 0);
     }
 
     /** A material, or every block of a tag written as {@code #name}. */
