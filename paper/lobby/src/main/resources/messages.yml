@@ -3,6 +3,8 @@ prefix: "<primary><ip> <dark>» <reset>"
 commands:
   navigator:
     description: "Öffnet den Navigator mit allen Spielmodi"
+  schlitten:
+    description: "Schickt den Schlitten des Weihnachtsmanns über dich hinweg"
   teamboard:
     description: "Prüft und aktualisiert die Teamwand aus der Teamliste der Map"
   lobbyset:
@@ -559,6 +561,10 @@ seasonal:
     - "<prefix><accent>Weihnachtsmann: <muted>Noch eins? Die Rentiere streiken, wenn ich zweimal liefere."
     - "<prefix><accent>Weihnachtsmann: <muted>Im Sack ist nur noch Kohle. Die willst du nicht."
     - "<prefix><accent>Weihnachtsmann: <muted>Frohe Weihnachten! Grüß die Wichtel in den anderen Spielmodi."
+  sleigh-announce: "<prefix><accent>Ho ho ho! <muted>Der <primary>Weihnachtsmann <muted>fliegt mit seinen Rentieren über die Lobby. Fang ein Geschenk!"
+  sleigh-present: "<prefix><success>Gefangen! <accent>+<coins> Coins<muted>, frisch vom Schlitten."
+  sleigh-greedy: "<prefix><muted>Ein Geschenk pro Flug. Rudolph zählt mit."
+  sleigh-busy: "<prefix><error>Der Schlitten ist gerade unterwegs."
   santa-hurt:
     - "<prefix><accent>Weihnachtsmann: <muted>Ho ho... nein. Das kommt auf die andere Liste."
     - "<prefix><accent>Weihnachtsmann: <muted>Ich hab den Kamin von 2019 überlebt. Du schaffst mich nicht."

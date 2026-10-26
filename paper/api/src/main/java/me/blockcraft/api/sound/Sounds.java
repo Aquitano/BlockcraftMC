@@ -5,6 +5,7 @@ import me.blockcraft.common.settings.PlayerSetting;
 import me.blockcraft.common.sound.FeedbackSound;
 import net.kyori.adventure.sound.Sound;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
 public enum Sounds {
@@ -45,7 +46,8 @@ public enum Sounds {
     EASTER_EGG(FeedbackSound.EASTER_EGG),
     ADVENT_DOOR(FeedbackSound.ADVENT_DOOR),
     TRICK(FeedbackSound.TRICK),
-    SCARE(FeedbackSound.SCARE);
+    SCARE(FeedbackSound.SCARE),
+    SLEIGH_BELLS(FeedbackSound.SLEIGH_BELLS);
 
     private static final int COUNTDOWN_FROM = 5;
     private static final float COUNTDOWN_PITCH_STEP = 0.15f;
@@ -68,9 +70,20 @@ public enum Sounds {
 
     /** A note on the note block's own scale, {@code semitone} 0 (F#3) to 24 (F#5); this sound's pitch is ignored. */
     public void note(Player player, int semitone) {
+        playIfEnabled(player, noteSound(semitone));
+    }
+
+    /** The same note, heard from {@code at} the way a world sound is. */
+    public void note(Player player, int semitone, Location at) {
+        if (BlockcraftApi.get().settings().enabled(player, PlayerSetting.SOUNDS)) {
+            player.playSound(noteSound(semitone), at.getX(), at.getY(), at.getZ());
+        }
+    }
+
+    private Sound noteSound(int semitone) {
         var base = sound();
         float pitch = (float) Math.pow(2, (Math.clamp(semitone, 0, NOTE_BLOCK_SEMITONES) - 12) / 12.0);
-        playIfEnabled(player, Sound.sound(base.name(), base.source(), base.volume(), pitch));
+        return Sound.sound(base.name(), base.source(), base.volume(), pitch);
     }
 
     public void play(Player player) {

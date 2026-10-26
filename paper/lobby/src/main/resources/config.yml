@@ -184,3 +184,17 @@ seasons:
       list:
         - {sound: block.note_block.chime, volume: 0.4, pitch: 1.5}
         - {sound: block.bell.resonate, volume: 0.3, pitch: 2.0}
+
+# Santa's sleigh crosses the sky above a lobby player every interval-seconds while one of during is celebrated, height
+# blocks up, length blocks long and flight-ticks long. It drops presents, each worth present-coins to the first to catch
+# it, one per player and flight; uncaught presents vanish after present-seconds. Staff send it with /schlitten.
+sleigh:
+  enabled: true
+  during: [christmas]
+  interval-seconds: 600
+  height: 18
+  length: 80
+  flight-ticks: 240
+  presents: 4
+  present-coins: 15
+  present-seconds: 30

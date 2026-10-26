@@ -196,7 +196,7 @@ It is empty by default because no founding date is assumed.
 | Halloween | October 17 through 31. Joining the lobby shows a hint with the phrase. Writing `Süßes oder Saures` in lobby chat gives either five coins or one of three tricks: a pumpkin hat for 300 seconds, a swarm of bats, or a ghost that darkens the screen. Each account can claim once per calendar day. The phrase and rewards are configurable under `activities`. |
 | Winter | December 1 through 31. Only the lobby's look and sound change (see below). |
 | Advent | December 1 through 24. The profile contains a calendar with today's door, and joining the lobby names it. Each account can claim 25 coins once per day. Door 24 also unlocks the snow trail. |
-| Christmas | December 24 through 26. The Weihnachtsmann stands at `/lobbyset santa` and gives each account `activities.christmas-coins` (100) once per year, with a jingle. Without that spot he does not appear. |
+| Christmas | December 24 through 26. The Weihnachtsmann stands at `/lobbyset santa` and gives each account `activities.christmas-coins` (100) once per year, with a jingle. Without that spot he does not appear. Every ten minutes his sleigh, pulled by four reindeer and Rudolph, flies over a lobby player ringing Jingle Bells and drops four presents; each player catches one per flight for 15 coins. Lobby's `sleigh` section sets the timing, and staff send it on any day with `/schlitten`. |
 | New Year | On December 31, a boss bar counts down the last ten seconds. At midnight the lobby's configured firework positions launch fireworks. Joining during January grants that year's tag. |
 | Network birthday | The proxy's MOTD counts the years. Lobby players receive a temporary cake hat for the rest of the day. |
 
@@ -242,6 +242,8 @@ Before deploying, verify these interactions with Minecraft clients on a local te
 - During Halloween and winter, walk the lobby and look for swapped blocks that differ in shape from the real ones,
   rejoin, teleport, and cross midnight with the client open. Trick-or-treat until each trick has appeared once.
 - At Christmas, set `/lobbyset santa`, check his skin and name, take the present, click again, and hit him.
+- Run `/schlitten` with two accounts: the reindeer must lead, Santa must sit in the sleigh, Rudolph's nose must glow,
+  the bells must follow the sleigh, and each account may catch only one present per flight.
 - Shorten sleep thresholds in local config, poke a sleeping account, and wake it. Check the growing label,
   absence of damage and knockback, and the private count using the poker’s current nick.
 - Set shooting-star odds to one in local config and choose a window containing the current hour in the network

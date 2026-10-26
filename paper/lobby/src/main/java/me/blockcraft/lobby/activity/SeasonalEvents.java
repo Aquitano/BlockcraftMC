@@ -70,9 +70,7 @@ public final class SeasonalEvents implements Listener, AutoCloseable {
     private static final int BATS = 6;
     private static final long BAT_TICKS = 60L;
     private static final int GHOST_TICKS = 80;
-    private static final int[] JINGLE_NOTES = {10, 10, 10, 10, 10, 10, 10, 13, 6, 8, 10};
-    private static final long[] JINGLE_TICKS = {0, 4, 8, 16, 20, 24, 32, 36, 40, 44, 48};
-    private static final ResolvableProfile SANTA = ResolvableProfile.resolvableProfile()
+    static final ResolvableProfile SANTA = ResolvableProfile.resolvableProfile()
             .name("Santa")
             .addProperty(new ProfileProperty("textures",
                     "ewogICJ0aW1lc3RhbXAiIDogMTYxNzg4NTA1NTM5MSwKICAicHJvZmlsZUlkIiA6ICJjN2ZkZGI5YWFkZmQ0YmUzYjMyNmQ3MDBkZjI1MmU4OC"
@@ -403,14 +401,11 @@ public final class SeasonalEvents implements Listener, AutoCloseable {
     }
 
     private void jingle(Player player) {
-        for (int i = 0; i < JINGLE_NOTES.length; i++) {
-            int note = JINGLE_NOTES[i];
-            Tasks.later(plugin, JINGLE_TICKS[i], () -> {
-                if (player.isOnline()) {
-                    Sounds.ADVENT_DOOR.note(player, note);
-                }
-            });
-        }
+        JingleBells.REFRAIN.forEach(note -> Tasks.later(plugin, note.tick(), () -> {
+            if (player.isOnline()) {
+                Sounds.ADVENT_DOOR.note(player, note.semitone());
+            }
+        }));
     }
 
     public void openAdvent(Player player, Consumer<Player> back) {
