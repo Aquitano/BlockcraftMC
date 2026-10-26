@@ -52,6 +52,8 @@ game-status:
   full: "<muted>Alle Plätze belegt"
   ingame: "<muted>Runde läuft"
   restart: "<accent>Startet neu"
+  sleeping: "<accent>Schläft, Klick weckt ihn"
+  starting: "<accent>Startet gerade…"
   offline: "<muted>Gerade offline"
 
 commands:

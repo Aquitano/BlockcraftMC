@@ -51,7 +51,7 @@ final class NavigatorMenu extends Menu {
         lore.add(menus.apiMessages().get("game-status." + status.availability().name().toLowerCase(Locale.ROOT)));
         lore.add(messages.get("navigator.online", Formatter.number("online", status.online())));
         lore.add(Component.empty());
-        lore.add(messages.get(status.joinable() ? "navigator.play" : "navigator.retry"));
+        lore.add(messages.get(status.clickable() ? "navigator.play" : "navigator.retry"));
         if (menus.locations().get(target).isPresent()) {
             lore.add(messages.get("navigator.visit"));
         }

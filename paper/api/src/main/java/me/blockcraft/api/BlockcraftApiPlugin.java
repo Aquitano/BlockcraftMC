@@ -57,6 +57,7 @@ import me.blockcraft.common.ignore.IgnoreRepository;
 import me.blockcraft.common.moderation.SettingsRepository;
 import me.blockcraft.common.moderation.VanishRepository;
 import me.blockcraft.common.moderation.StaffActionRepository;
+import me.blockcraft.common.network.GroupStateRepository;
 import me.blockcraft.common.network.ProxyMessageCodec;
 import me.blockcraft.common.network.ServerRepository;
 import me.blockcraft.common.round.RoundRecapRepository;
@@ -103,7 +104,7 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         var self = heartbeat.self();
         getLogger().info("Announcing as " + self.name() + " (group " + self.group() + ") at " + self.host() + ":" + self.port());
         var groupStatus = YamlFile.section(config, "group-status");
-        groups = new ServerGroups(this, servers, number(groupStatus, "stale-seconds", 20));
+        groups = new ServerGroups(this, servers, new GroupStateRepository(database), number(groupStatus, "stale-seconds", 20));
 
         var messages = resources.messages();
         notifications = new Notifications(this, messages, Notifications.Timing.from(YamlFile.section(config, "notifications")));

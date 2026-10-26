@@ -1,6 +1,7 @@
 package me.blockcraft.api.network;
 
 import me.blockcraft.common.db.DatabaseException;
+import me.blockcraft.common.network.GroupStateRepository;
 import me.blockcraft.common.network.GroupStatus;
 import me.blockcraft.common.network.ServerRecord;
 import me.blockcraft.common.network.ServerRepository;
@@ -8,6 +9,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -22,14 +24,17 @@ public final class ServerGroups {
 
     private final Plugin plugin;
     private final ServerRepository servers;
+    private final GroupStateRepository states;
     private final int staleSeconds;
     private final List<Subscriber> subscribers = new CopyOnWriteArrayList<>();
     private volatile Map<String, GroupStatus> groups = Map.of();
     private BukkitTask task;
 
-    public ServerGroups(Plugin plugin, ServerRepository servers, int staleSeconds) {
+    /** {@code states} tells a game whose server sleeps on demand, or is starting, from one that is down. */
+    public ServerGroups(Plugin plugin, ServerRepository servers, GroupStateRepository states, int staleSeconds) {
         this.plugin = plugin;
         this.servers = servers;
+        this.states = states;
         this.staleSeconds = staleSeconds;
     }
 
@@ -37,7 +42,7 @@ public final class ServerGroups {
         return groups.getOrDefault(group, GroupStatus.OFFLINE);
     }
 
-    /** Every group with a live server. */
+    /** Every group with a live server or a state on demand. */
     public Set<String> known() {
         return groups.keySet();
     }
@@ -59,9 +64,11 @@ public final class ServerGroups {
 
     private void refresh() {
         try {
-            groups = servers.alive(staleSeconds).stream()
+            var live = new HashMap<>(servers.alive(staleSeconds).stream()
                     .collect(Collectors.groupingBy(ServerRecord::group,
-                            Collectors.collectingAndThen(Collectors.toList(), GroupStatus::of)));
+                            Collectors.collectingAndThen(Collectors.toList(), GroupStatus::of))));
+            states.all().forEach((group, state) -> live.put(group, live.getOrDefault(group, GroupStatus.OFFLINE).withOnDemand(state)));
+            groups = Map.copyOf(live);
         } catch (DatabaseException e) {
             plugin.getLogger().warning("Could not read bc_servers: " + e.getCause().getMessage());
             return;

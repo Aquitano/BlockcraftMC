@@ -28,7 +28,7 @@ public final class SignClickListener implements Listener {
         }
         signs.find(event.getClickedBlock().getLocation()).ifPresent(sign -> {
             event.setCancelled(true);
-            (signs.status(sign).joinable() ? Sounds.MENU_CLICK : Sounds.MENU_DENY).play(event.getPlayer());
+            (signs.status(sign).clickable() ? Sounds.MENU_CLICK : Sounds.MENU_DENY).play(event.getPlayer());
             ProxyMessaging.play(plugin, event.getPlayer(), sign.group());
         });
     }

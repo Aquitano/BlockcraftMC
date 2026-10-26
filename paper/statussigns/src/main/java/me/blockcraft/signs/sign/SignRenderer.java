@@ -41,7 +41,7 @@ public final class SignRenderer {
                 messages.get("sign.name", Placeholder.component("name", name)),
                 shared.get("game-status." + status.availability().name().toLowerCase(Locale.ROOT)),
                 messages.get("sign.players", Formatter.number("online", status.online()), Formatter.number("max", status.maxPlayers())),
-                messages.get(status.joinable() ? joinKey : "sign.retry"));
+                messages.get(status.clickable() ? joinKey : "sign.retry"));
         boolean changed = false;
         for (int index = 0; index < lines.size(); index++) {
             if (!front.line(index).equals(lines.get(index))) {
@@ -50,7 +50,9 @@ public final class SignRenderer {
             }
         }
         var block = attachedBlock(sign);
-        var material = status.state().map(state -> indicator(state, status.joinable())).orElse(Material.RED_TERRACOTTA);
+        // A sleeping or starting game is yellow like a restarting one: not open yet, but a click gets the player in.
+        var material = status.state().map(state -> indicator(state, status.joinable()))
+                .orElse(status.clickable() ? Material.YELLOW_TERRACOTTA : Material.RED_TERRACOTTA);
         if (block.getLocation().isChunkLoaded() && block.getType() != material) {
             block.setType(material);
         }
