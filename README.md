@@ -438,7 +438,8 @@ like the group. To enable it on the host:
 
 1. Put `WAKER_TOKEN=$(openssl rand -hex 24)` into `.env`; the proxy reads it as `BLOCKCRAFT_WAKER_TOKEN`.
 2. Run `./gradlew stagePlugins`, then `docker compose --profile ondemand up -d waker`.
-3. Set `on-demand.enabled: true` in the proxy's `config.yml` in its data volume and restart `velocity`.
+3. Set `on-demand.enabled: true` in the proxy's `config.yml` in its data volume and recreate the proxy with
+   `docker compose up -d velocity`; a `restart` keeps the environment it started with, without the token.
 
 A deploy's `docker compose up -d` or `restart` starts every game again; the proxy stops each after
 `idle-stop-minutes`. `docker compose stop <game>` puts one to sleep by hand, and the next click wakes it.
@@ -836,7 +837,8 @@ mc.example.net {
 
 `.env` sets `COMPOSE_FILE`, so every `docker compose` command in that directory, the rank import from "Run locally"
 included, works on the production setup. An update is `git pull`, `./gradlew stagePlugins`, `docker compose up -d`
-and `docker compose restart`, plus the rank import when `ranks.json` changed. Releasing a game means removing its `profiles` line. `/map save` writes into the
+and `docker compose restart`, plus the rank import when `ranks.json` changed. Releasing a game means removing its `profiles` line
+and, with on-demand on, adding it to `on-demand.groups`. `/map save` writes into the
 checkout's `worlds/`, so a map edited on the host is committed from there.
 
 Alt detection stores login addresses only as an HMAC-SHA256 under a secret the proxy generates once into

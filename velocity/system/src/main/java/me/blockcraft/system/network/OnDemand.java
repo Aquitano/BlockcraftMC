@@ -161,9 +161,8 @@ public final class OnDemand {
                     }
                 }
                 case DRAINING -> {
-                    if (!observation.running()) {
-                        effects.addAll(stopped(group, true, now));
-                    }
+                    // Only the stop's answer ends a drain: a server leaves the directory before its container exits,
+                    // and a start sent in between would find it still running.
                 }
             }
             if (!entry.published) {

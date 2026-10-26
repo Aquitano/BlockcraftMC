@@ -80,6 +80,14 @@ public class OnDemandTest {
     }
 
     @Test
+    public void aDrainingServerThatLeftTheDirectoryWaitsForItsStopToReturn() {
+        drained();
+        onDemand.request("bedwars", first, now);
+
+        assertEquals(List.of(), onDemand.observe(Map.of(), later(5)));
+    }
+
+    @Test
     public void aFailedStopKeepsTheGroupAwakeForWhoeverWaited() {
         drained();
         onDemand.request("bedwars", first, now);
