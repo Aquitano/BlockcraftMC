@@ -115,6 +115,10 @@ public record Menus(
         openCosmetics(player, CosmeticKinds.heads(this));
     }
 
+    public void openHats(Player player) {
+        openCosmetics(player, CosmeticKinds.hats(this));
+    }
+
     public void openShirts(Player player) {
         openCosmetics(player, CosmeticKinds.shirts(this));
     }

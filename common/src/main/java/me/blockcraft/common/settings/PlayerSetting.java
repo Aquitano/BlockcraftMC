@@ -17,6 +17,8 @@ public enum PlayerSetting {
     GADGET("gadget"),
     PET("pet"),
     HEAD("head"),
+    /** A 3D hat; it takes the head slot, so choosing one takes off the {@link #HEAD} and the other way round. */
+    HAT("hat"),
     SHIRT("shirt"),
     CHAT_TAG("chat-tag"),
     KILL_EFFECT("kill-effect"),

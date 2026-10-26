@@ -18,10 +18,11 @@ import java.util.Optional;
 /** Coin catalogues and Premium, beside the permanent rewards earned through levels. */
 public final class ShopMenu extends Menu {
 
-    private static final int HEADS_SLOT = 10;
-    private static final int SHIRTS_SLOT = 12;
-    private static final int KILL_EFFECTS_SLOT = 14;
-    private static final int WIN_EFFECTS_SLOT = 16;
+    private static final int HEADS_SLOT = 9;
+    private static final int HATS_SLOT = 11;
+    private static final int SHIRTS_SLOT = 13;
+    private static final int KILL_EFFECTS_SLOT = 15;
+    private static final int WIN_EFFECTS_SLOT = 17;
     private static final int BALANCE_SLOT = 19;
     private static final int PREMIUM_SLOT = 22;
     private static final int LEVEL_SLOT = 25;
@@ -46,6 +47,8 @@ public final class ShopMenu extends Menu {
                 .name(messages.get("shop.cosmetics")).lore(messages.get("shop.cosmetics-lore")).build(), menus::openExtras);
         set(HEADS_SLOT, MenuIcon.TOOL_HEADS.item()
                 .name(messages.get("shop.heads")).lore(messages.get("shop.heads-lore")).build());
+        set(HATS_SLOT, MenuIcon.TOOL_HATS.item()
+                .name(messages.get("shop.hats")).lore(messages.get("shop.hats-lore")).build());
         set(SHIRTS_SLOT, MenuIcon.TOOL_SHIRTS.item().color(SHIRT_ICON_COLOR)
                 .name(messages.get("shop.shirts")).lore(messages.get("shop.shirts-lore")).build());
         set(KILL_EFFECTS_SLOT, MenuIcon.KILL_EFFECTS.item()
@@ -90,6 +93,7 @@ public final class ShopMenu extends Menu {
     protected void onClick(Player player, int slot, ItemStack clicked, InventoryClickEvent event) {
         switch (slot) {
             case HEADS_SLOT -> menus.openHeads(player);
+            case HATS_SLOT -> menus.openHats(player);
             case SHIRTS_SLOT -> menus.openShirts(player);
             case KILL_EFFECTS_SLOT -> menus.openKillEffects(player, menus::openShop);
             case WIN_EFFECTS_SLOT -> menus.openWinEffects(player, menus::openShop);

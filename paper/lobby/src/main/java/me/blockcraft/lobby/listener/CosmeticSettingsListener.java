@@ -8,6 +8,7 @@ import me.blockcraft.api.settings.PlayerSettingsLoadedEvent;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.settings.PlayerSetting;
 import me.blockcraft.lobby.LobbyPermissions;
+import me.blockcraft.lobby.cosmetic.Hat;
 import me.blockcraft.lobby.cosmetic.Head;
 import me.blockcraft.lobby.cosmetic.PetType;
 import me.blockcraft.lobby.cosmetic.Pets;
@@ -20,6 +21,7 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.inventory.ItemStack;
 
 public final class CosmeticSettingsListener implements Listener {
 
@@ -45,13 +47,23 @@ public final class CosmeticSettingsListener implements Listener {
         restore(event.getPlayer());
     }
 
+    /** A hat and a head share the head slot, so putting one on takes the other off. */
     @EventHandler
     public void onChanged(PlayerSettingChangedEvent event) {
-        apply(event.getPlayer(), event.setting());
+        var player = event.getPlayer();
+        var setting = event.setting();
+        if ((setting == PlayerSetting.HEAD || setting == PlayerSetting.HAT)
+                && BlockcraftApi.get().settings().get(player, setting).isPresent()) {
+            var other = setting == PlayerSetting.HEAD ? PlayerSetting.HAT : PlayerSetting.HEAD;
+            if (BlockcraftApi.get().settings().get(player, other).isPresent()) {
+                BlockcraftApi.get().settings().clear(player, other);
+            }
+        }
+        apply(player, setting);
     }
 
     private void restore(Player player) {
-        apply(player, PlayerSetting.HEAD);
+        apply(player, PlayerSetting.HAT);
         apply(player, PlayerSetting.SHIRT);
         apply(player, PlayerSetting.TRAIL);
         apply(player, PlayerSetting.PET);
@@ -61,9 +73,7 @@ public final class CosmeticSettingsListener implements Listener {
     private void apply(Player player, PlayerSetting setting) {
         var value = BlockcraftApi.get().settings().get(player, setting);
         switch (setting) {
-            case HEAD -> player.getInventory().setHelmet(value.flatMap(Head::byKey)
-                    .map(head -> Items.head(head.owner()).name(messages.get("heads.name." + head.key())).build())
-                    .orElse(null));
+            case HEAD, HAT -> player.getInventory().setHelmet(helmet(player));
             case SHIRT -> player.getInventory().setChestplate(value.flatMap(Shirt::byKey)
                     .map(shirt -> Items.of(Material.LEATHER_CHESTPLATE).color(shirt.color())
                             .name(messages.get("shirts.name." + shirt.key())).build())
@@ -86,5 +96,15 @@ public final class CosmeticSettingsListener implements Listener {
             default -> {
             }
         }
+    }
+
+    /** The hat if one is chosen, otherwise the head, otherwise nothing. */
+    private ItemStack helmet(Player player) {
+        var settings = BlockcraftApi.get().settings();
+        return settings.get(player, PlayerSetting.HAT).flatMap(Hat::byKey)
+                .map(hat -> hat.stack(messages.get("hats.name." + hat.key())))
+                .or(() -> settings.get(player, PlayerSetting.HEAD).flatMap(Head::byKey)
+                        .map(head -> Items.head(head.owner()).name(messages.get("heads.name." + head.key())).build()))
+                .orElse(null);
     }
 }

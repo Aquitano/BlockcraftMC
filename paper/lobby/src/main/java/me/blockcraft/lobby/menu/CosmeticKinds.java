@@ -5,6 +5,7 @@ import me.blockcraft.api.cosmetic.KillEffect;
 import me.blockcraft.api.cosmetic.WinEffect;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.common.settings.PlayerSetting;
+import me.blockcraft.lobby.cosmetic.Hat;
 import me.blockcraft.lobby.cosmetic.Head;
 import me.blockcraft.lobby.cosmetic.PetType;
 import me.blockcraft.lobby.cosmetic.Shirt;
@@ -54,6 +55,18 @@ final class CosmeticKinds {
                 Optional.of(new Preview<>(FITTING_LORE, (player, head, back) ->
                         menus.previews().equipment(player, Items.head(head.owner()).build(), EquipmentSlot.HEAD, back))),
                 Optional.empty(), head -> messages.get("heads.equipped"), messages.get("cosmetics.removed"), Optional.empty());
+    }
+
+    static CosmeticKind<Hat> hats(Menus menus) {
+        var messages = menus.messages();
+        Function<Hat, ItemStack> stack = hat -> hat.stack(messages.get("hats.name." + hat.key()));
+        return new CosmeticKind<>(PlayerSetting.HAT, messages.get("hats.title"), 1, menus::openShop,
+                List.of(Hat.values()), Hat::key, stack,
+                hat -> messages.get("hats.name." + hat.key()), hat -> List.of(messages.get("hats.lore")), false,
+                Optional.of(new Price<>(menus.config().hatPrice(), Hat.ITEM_PREFIX, Hat::item)),
+                Optional.of(new Preview<>(FITTING_LORE, (player, hat, back) ->
+                        menus.previews().equipment(player, stack.apply(hat), EquipmentSlot.HEAD, back))),
+                Optional.empty(), hat -> messages.get("hats.equipped"), messages.get("cosmetics.removed"), Optional.empty());
     }
 
     static CosmeticKind<Trail> trails(Menus menus) {

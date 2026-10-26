@@ -262,6 +262,8 @@ shop:
   cosmetics-lore: "<click>Effekte, Gadgets und Tags ausrüsten"
   heads: "<arrow><primary>Köpfe"
   heads-lore: "<click>Köpfe für Coins aussuchen"
+  hats: "<arrow><primary>Hüte"
+  hats-lore: "<click>Hüte für Coins aussuchen"
   shirts: "<arrow><primary>Hemden"
   shirts-lore: "<click>Hemden für Coins aussuchen"
   kill-effects: "<arrow><primary>Kill-Effekte"
@@ -305,6 +307,14 @@ heads:
     boba: "<primary>Boba's Kopf"
     chief: "<primary>Master Chief's Kopf"
     iron: "<primary>Iron Man's Kopf"
+hats:
+  title: "<arrow><primary>Hüte"
+  equipped: "<prefix><muted>Du hast einen Hut aufgesetzt!"
+  lore: "<muted>In 3D mit dem Ressourcenpaket"
+  name:
+    crown: "<primary>Krone"
+    top-hat: "<primary>Zylinder"
+    witch-hat: "<primary>Hexenhut"
 shirts:
   title: "<arrow><primary>Hemden"
   equipped: "<prefix><muted>Du hast ein Hemd angezogen!"
