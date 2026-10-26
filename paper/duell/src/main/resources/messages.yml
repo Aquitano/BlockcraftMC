@@ -19,6 +19,7 @@ mode:
   superjump: "SuperJump"
   sumo: "Sumo"
   mlgrush: "MLG Rush"
+  throw: "Wurfschlacht"
 
 join:
   introduction: "<prefix><muted>Ein Gegner, eure Spielauswahl. Wählt oben das Format und darunter Modus und Map."
@@ -81,6 +82,14 @@ sumo:
   started: "<prefix><muted>Stoße deinen Gegner vom Ring. Wer zuerst <accent><target> Punkte <muted>hat, gewinnt."
   point: "<prefix><accent><player> <muted>erhält einen Punkt! <accent><score><muted>/<accent><target> <muted>Punkte."
   next-point: "<duell>Sumo <dark>· <muted>Nächster Punkt"
+
+throw:
+  started: "<prefix><muted>Wirf deinen Gegner vom Ring. Treffer schubsen nur. Wer zuerst <accent><target> Punkte <muted>hat, gewinnt."
+  next-point: "<duell>Wurfschlacht <dark>· <muted>Nächster Punkt"
+  item:
+    snowball: "<primary>Schneeball"
+    pumpkin: "<accent>Wurfkürbis"
+    egg: "<success>Osterei"
 
 mlgrush:
   point: "<prefix><accent><player> <muted>bricht das Bett! <accent><score><muted>/<accent><target> <muted>Punkte."
@@ -152,6 +161,8 @@ menu:
       - "<left>Dem Zufall überlassen"
     mlgrush: "<arrow><primary>MLG Rush"
     mlgrush-lore: "<muted>Brücken bauen, Betten brechen."
+    throw: "<arrow><primary>Wurfschlacht"
+    throw-lore: "<muted>Nur in der Saison: Schneebälle, Kürbisse oder Eier. Wirf ihn vom Ring."
   rating:
     unrated: "<arrow><primary>Ungewertet"
     unrated-lore:

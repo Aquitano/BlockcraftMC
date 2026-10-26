@@ -40,6 +40,12 @@ sumo:
   reset-seconds: 3
   knockback-strength: 0.4
   hit-delay-ticks: 8
+# Wurfschlacht: Sumo's ring and points with the season's throwables instead of fists, offered only during these
+# occasions; a hit pushes with knockback, and cooldown-ticks pass between two throws.
+throw-fight:
+  during: [winter, halloween, easter]
+  knockback: 0.7
+  cooldown-ticks: 8
 maps:
   vs: [Gefängnis, Hypixel-DM, DustMC-DM, Tippy]
   sg: [Bucht, Gefängnis, Bergwerk]

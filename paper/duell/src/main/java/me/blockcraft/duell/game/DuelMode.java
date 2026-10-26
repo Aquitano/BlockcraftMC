@@ -8,7 +8,8 @@ public enum DuelMode {
     SG("SG", "sg"),
     SUPERJUMP("SJ", "superjump"),
     SUMO("sumo", "sumo"),
-    MLGRUSH("mlgrush", "mlgrush");
+    MLGRUSH("mlgrush", "mlgrush"),
+    THROW("wurf", "throw");
 
     private final String setupKey;
     private final String configKey;
@@ -26,6 +27,11 @@ public enum DuelMode {
     /** The mode in config.yml, the location file, the messages, the vote and {@code /forcemap}. */
     public String configKey() {
         return configKey;
+    }
+
+    /** Offered only while its season lasts, so never the fallback when nothing is playable. */
+    public boolean seasonal() {
+        return this == THROW;
     }
 
     public static Optional<DuelMode> byConfigKey(String key) {

@@ -4,12 +4,14 @@ import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.command.CommandRegistry;
 import me.blockcraft.api.config.Locations;
+import me.blockcraft.api.game.ThrowFight;
 import me.blockcraft.api.menu.Profiles;
 import me.blockcraft.common.config.YamlFile;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.shop.Premium;
 import me.blockcraft.lobby.activity.Herobrine;
 import me.blockcraft.lobby.activity.LobbyQuirks;
+import me.blockcraft.lobby.activity.LobbyThrows;
 import me.blockcraft.lobby.activity.MapSecrets;
 import me.blockcraft.lobby.activity.Parkour;
 import me.blockcraft.lobby.activity.PondFishing;
@@ -98,6 +100,7 @@ public final class LobbyPlugin extends JavaPlugin {
     private Prisoner prisoner;
     private Herobrine herobrine;
     private MapSecrets mapSecrets;
+    private LobbyThrows throwFight;
     private ShootingStars stars;
 
     @Override
@@ -118,7 +121,9 @@ public final class LobbyPlugin extends JavaPlugin {
         var trails = new Trails(config.trailIntervalTicks(), config.trailViewDistance());
         var pets = new Pets(messages);
         var hider = new PlayerHider(this, api.settings(), config.hiderCooldownMillis());
-        var items = new LobbyItems(messages);
+        throwFight = new LobbyThrows(this, messages, api.calendar(), ThrowFight.Settings.fromYaml(YamlFile.section(yaml, "throw-fight")),
+                player -> parkour != null && parkour.running(player));
+        var items = new LobbyItems(messages, throwFight::item);
         var secrets = new Secrets(this, messages, api.unlocks(), coins, config.secretReward());
         var activityLocations = Locations.load(api.map().file(this, "activities.yml"));
         parkour = new Parkour(this, activityLocations, activities, messages);
@@ -154,8 +159,8 @@ public final class LobbyPlugin extends JavaPlugin {
 
         hud = new LobbyHud(this, messages);
         hud.start(config.hudRefreshSeconds() * 20L);
-        register(previews, hud, parkour, quirks, seasons, decor, snowfall, sleigh, prisoner, mapSecrets, stars.wishes(),
-                new PondFishing(activityLocations, activities, messages, secrets),
+        register(previews, hud, parkour, quirks, seasons, decor, snowfall, sleigh, throwFight, prisoner, mapSecrets, stars.wishes(),
+                new PondFishing(activityLocations, activities, messages, secrets, throwFight::item),
                 new JoinQuitListener(messages, locations, items, trails, pets, hider),
                 new CosmeticSettingsListener(messages, trails, pets, gadgets),
                 new RoundRecapListener(this, messages, config),
@@ -225,6 +230,9 @@ public final class LobbyPlugin extends JavaPlugin {
         }
         if (mapSecrets != null) {
             mapSecrets.close();
+        }
+        if (throwFight != null) {
+            throwFight.close();
         }
         if (previews != null) {
             previews.close();

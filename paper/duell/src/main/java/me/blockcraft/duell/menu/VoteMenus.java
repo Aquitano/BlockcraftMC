@@ -34,7 +34,7 @@ public final class VoteMenus {
     }
 
     public void openModes(Player player) {
-        open(player, new ModeMenu(player));
+        open(player, new ModeMenu(player, duel.offeredModes()));
     }
 
     /** Chance is offered only where a map is playable, so that nobody votes for a mode that cannot start. */
@@ -66,17 +66,19 @@ public final class VoteMenus {
 
     private final class ModeMenu extends Menu {
 
-        private static final List<DuelMode> MODES = List.of(DuelMode.values());
-        private static final DuelMenuLayout LAYOUT = new DuelMenuLayout(MODES.size());
+        private final List<DuelMode> modes;
+        private final DuelMenuLayout layout;
 
-        private ModeMenu(Player player) {
-            super(LAYOUT.rows(), messages.get("menu.modes.title"));
+        private ModeMenu(Player player, List<DuelMode> modes) {
+            super(new DuelMenuLayout(modes.size()).rows(), messages.get("menu.modes.title"));
+            this.modes = modes;
+            this.layout = new DuelMenuLayout(modes.size());
             closeButton(ToolbarButton.LEFT);
             formats(player);
             var votes = duel.votes();
             var own = votes.choiceOf(player.getUniqueId()).map(DuelVote.Choice::mode);
-            for (int index = 0; index < MODES.size(); index++) {
-                var mode = MODES.get(index);
+            for (int index = 0; index < modes.size(); index++) {
+                var mode = modes.get(index);
                 boolean mine = own.filter(choice -> choice == mode).isPresent();
                 var lore = new ArrayList<>(List.of(messages.get("menu.modes." + mode.configKey() + "-lore"),
                         messages.get(mine ? "menu.modes.own-votes" : "menu.modes.votes",
@@ -88,10 +90,10 @@ public final class VoteMenus {
                 if (mine) {
                     item.glow();
                 }
-                set(LAYOUT.modeSlot(index), item.build());
+                set(layout.modeSlot(index), item.build());
             }
             rating(player);
-            set(LAYOUT.randomSlot(), Items.of(Material.ENDER_PEARL).name(messages.get("menu.modes.random"))
+            set(layout.randomSlot(), Items.of(Material.ENDER_PEARL).name(messages.get("menu.modes.random"))
                     .lore(messages.getLines("menu.modes.random-lore")).build());
         }
 
@@ -107,9 +109,9 @@ public final class VoteMenus {
             var item = Items.of(choice == DuelRating.RATED ? Material.IRON_INGOT : Material.FEATHER)
                     .name(messages.get("menu.rating." + key)).lore(lore).build();
             if (duel.ratedEnabled()) {
-                set(LAYOUT.ratingSlot(), item);
+                set(layout.ratingSlot(), item);
             } else {
-                info(LAYOUT.ratingSlot(), item);
+                info(layout.ratingSlot(), item);
             }
         }
 
@@ -143,15 +145,15 @@ public final class VoteMenus {
                 VoteMenu.closed(player, messages);
                 return;
             }
-            if (slot == LAYOUT.randomSlot()) {
+            if (slot == layout.randomSlot()) {
                 duel.clearModeVote(player);
                 openModes(player);
-            } else if (slot == LAYOUT.ratingSlot() && duel.ratedEnabled()) {
+            } else if (slot == layout.ratingSlot() && duel.ratedEnabled()) {
                 duel.chooseRating(player, duel.ratingChoice(player.getUniqueId()) == DuelRating.RATED
                         ? DuelRating.UNRATED : DuelRating.RATED);
                 openModes(player);
             } else {
-                LAYOUT.modeIndex(slot).ifPresent(index -> openMaps(player, MODES.get(index)));
+                layout.modeIndex(slot).ifPresent(index -> openMaps(player, modes.get(index)));
             }
         }
     }
@@ -163,6 +165,7 @@ public final class VoteMenus {
             case SUPERJUMP -> Material.GOLDEN_BOOTS;
             case SUMO -> Material.SLIME_BLOCK;
             case MLGRUSH -> Material.STICK;
+            case THROW -> Material.SNOWBALL;
         };
     }
 }

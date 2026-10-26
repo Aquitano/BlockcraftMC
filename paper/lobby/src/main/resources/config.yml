@@ -218,3 +218,10 @@ herobrine:
   distance: 32
   vanish-distance: 16
   seconds: 30
+
+# During these occasions everyone holds the season's throwable in the fourth slot (snowballs, pumpkins at Halloween,
+# eggs at Easter) and pushes whoever they hit by knockback; cooldown-ticks pass between two throws.
+throw-fight:
+  during: [winter, halloween, easter]
+  knockback: 0.5
+  cooldown-ticks: 10

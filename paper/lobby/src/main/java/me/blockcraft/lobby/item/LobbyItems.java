@@ -8,15 +8,21 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.Optional;
+import java.util.function.Supplier;
+
 /** The hotbar; an item built from a {@link MenuIcon} wears the pack's icon once the proxy has said the client has it. */
 public final class LobbyItems {
 
     private static final double HEALTH_SCALE = 6.0;
 
     private final Messages messages;
+    private final Supplier<Optional<ItemStack>> seasonal;
 
-    public LobbyItems(Messages messages) {
+    /** {@code seasonal} is what the season hands out in the fourth slot, if anything. */
+    public LobbyItems(Messages messages, Supplier<Optional<ItemStack>> seasonal) {
         this.messages = messages;
+        this.seasonal = seasonal;
     }
 
     public void give(Player player, boolean playersVisible) {
@@ -29,6 +35,7 @@ public final class LobbyItems {
         inventory.setItem(LobbyItem.SETTINGS.slot(), item(player, LobbyItem.SETTINGS, MenuIcon.TOOL_SETTINGS.item(), "item.settings"));
         inventory.setItem(LobbyItem.FRIENDS.slot(), item(player, LobbyItem.FRIENDS, head(player), "item.friends"));
         inventory.setItem(LobbyItem.SECRETS.slot(), item(player, LobbyItem.SECRETS, Items.of(Material.EMERALD), "item.secrets"));
+        seasonal.get().ifPresent(item -> inventory.setItem(LobbyItem.THROW.slot(), item));
         player.setHealth(20.0);
         player.setFoodLevel(20);
         player.setHealthScale(HEALTH_SCALE);

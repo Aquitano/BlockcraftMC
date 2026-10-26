@@ -626,6 +626,13 @@ prisoner:
     - "<prefix><primary>Gefangener: <muted>Das sag ich dem Wärter. Der kommt allerdings nie."
     - "<prefix><primary>Gefangener: <muted>Schlag lieber die Wand. Die hält mich hier fest, nicht ich."
 
+throw:
+  snowball: "<arrow><primary>Schneeball <dark>· <muted>Werfen"
+  pumpkin: "<arrow><accent>Wurfkürbis <dark>· <muted>Werfen"
+  egg: "<arrow><success>Osterei <dark>· <muted>Werfen"
+  hit: "<success>Volltreffer! <muted><player> <dark>· <accent><hits> Treffer"
+  hit-by: "<player> <muted>hat dich erwischt!"
+
 shooting-star:
   announce: "<prefix><accent>Eine Sternschnuppe! <muted>Schreib in <seconds> Sekunden '<phrase> …'. Dein Wunsch bleibt privat."
   wish: "<prefix><muted>Wunsch notiert. Wir verraten ihn niemandem."

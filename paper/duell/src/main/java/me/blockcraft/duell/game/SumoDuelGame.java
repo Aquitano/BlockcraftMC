@@ -2,6 +2,7 @@ package me.blockcraft.duell.game;
 
 import me.blockcraft.api.game.RoundStart;
 import me.blockcraft.api.game.Defeat;
+import me.blockcraft.api.game.ThrowFight;
 import me.blockcraft.api.task.Countdown;
 import me.blockcraft.duell.arena.SumoArena;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
@@ -10,27 +11,48 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
+import org.bukkit.event.HandlerList;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 
 import java.util.HashMap;
+import java.util.Optional;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * Pushing the opponent off the ring: with bare fists in Sumo, or in the seasonal Wurfschlacht with the season's
+ * throwables, which push and never hurt.
+ */
 final class SumoDuelGame extends MapDuelGame {
     private final SumoArena arena;
     private final SumoMatch match;
+    private final Optional<ThrowFight.Ammo> ammo;
+    private final Optional<ThrowFight> throwFight;
     private final Map<UUID, Integer> lastHits = new HashMap<>();
     private Countdown reset;
 
-    SumoDuelGame(DuelGames.Context context, SumoArena arena) {
+    SumoDuelGame(DuelGames.Context context, SumoArena arena, Optional<ThrowFight.Ammo> ammo) {
         super(context);
         this.arena = arena;
+        this.ammo = ammo;
+        var settings = context.config().throwFight();
+        throwFight = ammo.map(season -> new ThrowFight((shooter, victim) -> canPlay(shooter) && canPlay(victim),
+                (shooter, victim) -> { }, settings.knockback(), settings.cooldownTicks()));
+        throwFight.ifPresent(fight -> Bukkit.getPluginManager().registerEvents(fight, context.plugin()));
         match = new SumoMatch(context.config().sumo().pointsToWin());
         match.start(context.participants());
-        Bukkit.broadcast(context.messages().get("sumo.started", Formatter.number("target", context.config().sumo().pointsToWin())));
+        var target = Formatter.number("target", context.config().sumo().pointsToWin());
+        Bukkit.broadcast(ammo.isPresent() ? context.messages().get("throw.started", target) : context.messages().get("sumo.started", target));
+    }
+
+    @Override
+    protected void equip(Player player) {
+        super.equip(player);
+        ammo.ifPresent(season -> player.getInventory().setItem(0,
+                ThrowFight.item(season, context.messages().get("throw.item." + season.key()))));
     }
 
     private boolean canPlay(Player player) {
@@ -83,7 +105,7 @@ final class SumoDuelGame extends MapDuelGame {
             ready.run();
         } else {
             reset = RoundStart.freeze(context.plugin(), context.config().sumo().resetSeconds(), this::players,
-                    context.messages().get("sumo.next-point"), ready);
+                    context.messages().get(ammo.isPresent() ? "throw.next-point" : "sumo.next-point"), ready);
         }
     }
 
@@ -108,7 +130,7 @@ final class SumoDuelGame extends MapDuelGame {
             return;
         }
         event.setCancelled(true);
-        if (!(event instanceof EntityDamageByEntityEvent hit) || !(hit.getDamager() instanceof Player attacker)
+        if (ammo.isPresent() || !(event instanceof EntityDamageByEntityEvent hit) || !(hit.getDamager() instanceof Player attacker)
                 || hit.getCause() != EntityDamageEvent.DamageCause.ENTITY_ATTACK || attacker.equals(victim)
                 || !canPlay(attacker) || !canPlay(victim) || !attacker.getInventory().getItemInMainHand().isEmpty()) {
             return;
@@ -139,6 +161,7 @@ final class SumoDuelGame extends MapDuelGame {
         if (reset != null) {
             reset.cancel();
         }
+        throwFight.ifPresent(HandlerList::unregisterAll);
         super.close();
     }
 }

@@ -330,19 +330,25 @@ public final class Duel {
         });
     }
 
+    /** The modes the vote offers: a seasonal one only while its season lasts. */
+    public List<DuelMode> offeredModes() {
+        return Arrays.stream(DuelMode.values()).filter(mode -> !mode.seasonal() || !playableMaps(mode).isEmpty()).toList();
+    }
+
     private Stream<DuelMode> forcible() {
         return Arrays.stream(DuelMode.values()).filter(mode -> !playableMaps(mode).isEmpty());
     }
 
     public List<Integer> playableMaps(DuelMode mode) {
         if (mode == DuelMode.SUMO) { return List.of(1); }
+        if (mode == DuelMode.THROW) { return config.throwFight().ammo(BlockcraftApi.get().calendar()).isPresent() ? List.of(1) : List.of(); }
         if (mode == DuelMode.MLGRUSH) { return games.rushMaps(); }
         return IntStream.rangeClosed(1, config.maps(mode).size())
                 .filter(map -> spawns.hasMapSpawns(mode, map, MAX_PARTICIPANTS)).boxed().toList();
     }
 
     public String mapName(DuelMode mode, int map) {
-        return mode == DuelMode.SUMO ? messages.raw("sumo.map-name")
+        return mode == DuelMode.SUMO || mode == DuelMode.THROW ? messages.raw("sumo.map-name")
                 : mode == DuelMode.MLGRUSH ? games.rushMapName(map) : config.maps(mode).get(map - 1);
     }
 
@@ -372,9 +378,9 @@ public final class Duel {
                 roundTimer == null ? config.countdowns().round() : roundTimer.remaining(), tourProgress());
         participants().forEach(participant -> scoreboard.showDuellist(participant, board, ratingName(selectedRating()),
                 opponentsOf(participant).filter(participant::canSee).map(Player::getName).toList(),
-                current != null && (mode == DuelMode.VS || mode == DuelMode.SUMO || mode == DuelMode.MLGRUSH)
+                current != null && (mode == DuelMode.VS || mode == DuelMode.SUMO || mode == DuelMode.THROW || mode == DuelMode.MLGRUSH)
                         ? OptionalInt.of(current.progress(participant.getUniqueId())) : OptionalInt.empty(),
-                isMode(DuelMode.SUMO) || isMode(DuelMode.MLGRUSH), tourScore(participant)));
+                isMode(DuelMode.SUMO) || isMode(DuelMode.THROW) || isMode(DuelMode.MLGRUSH), tourScore(participant)));
         Bukkit.getOnlinePlayers().stream().filter(player -> !isParticipant(player)).forEach(viewer ->
                 scoreboard.showSpectator(viewer, board, participants().filter(viewer::canSee).map(this::duellistLine).toList()));
     }
@@ -401,7 +407,7 @@ public final class Duel {
     private Component duellistLine(Player player) {
         String key = isMode(DuelMode.SUPERJUMP) ? "scoreboard.spectator-checkpoint"
                 : isMode(DuelMode.VS) ? "scoreboard.spectator-kills"
-                : isMode(DuelMode.SUMO) || isMode(DuelMode.MLGRUSH) ? "scoreboard.spectator-points"
+                : isMode(DuelMode.SUMO) || isMode(DuelMode.THROW) || isMode(DuelMode.MLGRUSH) ? "scoreboard.spectator-points"
                 : "scoreboard.spectator-player";
         int progress = current == null ? 0 : current.progress(player.getUniqueId());
         return messages.get(key, Placeholder.unparsed("player", player.getName()),

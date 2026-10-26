@@ -1,6 +1,7 @@
 package me.blockcraft.duell.game;
 
 import java.util.HashMap;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -146,7 +147,7 @@ public final class DuelVote {
         if (modes.isEmpty()) {
             modes = available;
         }
-        var mode = pick(modes.isEmpty() ? List.of(DuelMode.values()) : modes, random);
+        var mode = pick(modes.isEmpty() ? Arrays.stream(DuelMode.values()).filter(each -> !each.seasonal()).toList() : modes, random);
         return tally(mode, playable.getOrDefault(mode, List.of()), random);
     }
 

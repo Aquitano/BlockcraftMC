@@ -17,8 +17,11 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerFishEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.inventory.ItemStack;
 
+import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Supplier;
 
 public final class PondFishing implements Listener {
 
@@ -26,8 +29,11 @@ public final class PondFishing implements Listener {
     private final ActivitiesConfig config;
     private final Messages messages;
     private final Secrets secrets;
+    private final Supplier<Optional<ItemStack>> seasonal;
 
-    public PondFishing(Locations<String> locations, ActivitiesConfig config, Messages messages, Secrets secrets) {
+    public PondFishing(Locations<String> locations, ActivitiesConfig config, Messages messages, Secrets secrets,
+                       Supplier<Optional<ItemStack>> seasonal) {
+        this.seasonal = seasonal;
         this.locations = locations;
         this.config = config;
         this.messages = messages;
@@ -45,14 +51,15 @@ public final class PondFishing implements Listener {
         }
         var current = player.getInventory().getItem(LobbyItem.POND_ROD.slot());
         boolean hasRod = LobbyItem.of(current).filter(LobbyItem.POND_ROD::equals).isPresent();
-        if (nearPond(event.getTo()) && !hasRod && (current == null || current.isEmpty())) {
+        boolean free = current == null || current.isEmpty() || LobbyItem.of(current).filter(LobbyItem.THROW::equals).isPresent();
+        if (nearPond(event.getTo()) && !hasRod && free) {
             var rod = Items.of(Material.FISHING_ROD).name(messages.get("fishing.rod"))
                     .lore(messages.get("fishing.rod-lore")).build();
             rod.editMeta(meta -> meta.setUnbreakable(true));
             player.getInventory().setItem(LobbyItem.POND_ROD.slot(), LobbyItem.POND_ROD.tag(rod));
             player.sendMessage(messages.get("fishing.arrived"));
         } else if (!nearPond(event.getTo()) && hasRod) {
-            player.getInventory().setItem(LobbyItem.POND_ROD.slot(), null);
+            player.getInventory().setItem(LobbyItem.POND_ROD.slot(), seasonal.get().orElse(null));
         }
     }
 

@@ -243,6 +243,15 @@ it turns snowy. Each occasion can also let a particle fall around players and pl
 them; both respect the effect and sound settings. A player who clicks a swapped block may see the real one again
 until the chunk reloads.
 
+## Wurfschlacht
+
+During winter, Halloween and Easter (`throw-fight.during` in Lobby's and Duell's config), the season has its own
+throwable: snowballs, pumpkins at Halloween, eggs at Easter. They are eggs in the season's look that never run out,
+never hatch and only push. In the lobby everyone holds one in the fourth slot, which the pond rod takes over at the
+pond; a hit tells the thrower their count and the target who it was. Hidden, vanished and racing players are left
+alone. Duell offers the same fight as the mode Wurfschlacht while the season lasts: Sumo's ring and points, with
+throws instead of fists. The shared mechanics are `ThrowFight` in BlockcraftAPI.
+
 Winter also lets real snow fall: every chunk within the season's `snowfall-radius` of the spawn becomes a snowy
 biome as it loads, and players with effects on get downfall, which the client draws as snowflakes. Players who set
 their own weather keep it. The original biomes return when the season ends, for an unloaded chunk when it next

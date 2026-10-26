@@ -3,6 +3,7 @@ package me.blockcraft.duell.config;
 import me.blockcraft.duell.game.DuelMode;
 import me.blockcraft.api.game.CombatStyle;
 import me.blockcraft.api.game.LootTable;
+import me.blockcraft.api.game.ThrowFight;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 
@@ -22,6 +23,7 @@ public record DuellConfig(
         CombatStyle combat,
         Duration rematchWindow,
         SumoConfig sumo,
+        ThrowFight.Settings throwFight,
         Duration tourIntermission,
         boolean ratedEnabled
 ) {
@@ -59,6 +61,7 @@ public record DuellConfig(
                 CombatStyle.from(config),
                 Duration.ofSeconds(config.getInt("rematch.window-seconds", 15)),
                 SumoConfig.from(config),
+                ThrowFight.Settings.fromYaml(section(config, "throw-fight").getValues(false)),
                 Duration.ofSeconds(config.getInt("tour.intermission-seconds", 3)),
                 config.getBoolean("rating.enabled", false));
     }

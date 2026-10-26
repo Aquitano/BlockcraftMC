@@ -1,7 +1,9 @@
 package me.blockcraft.duell.game;
 
+import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.game.LootChests;
 import me.blockcraft.api.game.RoundSummary;
+import me.blockcraft.api.game.ThrowFight;
 import me.blockcraft.api.game.rush.MapPool;
 import me.blockcraft.api.game.rush.RushArena;
 import me.blockcraft.api.game.rush.RushConfig;
@@ -76,14 +78,16 @@ public final class DuelGames {
             return new MlgRushDuelGame(plugin, rushConfig, messages, rush, participants, summary, events);
         }
         var locations = java.util.stream.IntStream.rangeClosed(1, 2)
-                .mapToObj(slot -> mode == DuelMode.SUMO ? sumo.spawn(slot)
+                .mapToObj(slot -> mode == DuelMode.SUMO || mode == DuelMode.THROW ? sumo.spawn(slot)
                         : spawns.mapSpawn(mode, outcome.map(), slot).orElse(null)).toList();
         var context = new Context(plugin, config, messages, items, summary, List.copyOf(participants), locations, events);
         MapDuelGame game = switch (mode) {
             case VS -> new VsDuelGame(context);
             case SG -> new SgDuelGame(context, chests);
             case SUPERJUMP -> new SuperJumpDuelGame(context);
-            case SUMO -> new SumoDuelGame(context, sumo);
+            case SUMO -> new SumoDuelGame(context, sumo, Optional.empty());
+            case THROW -> new SumoDuelGame(context, sumo, config.throwFight().ammo(BlockcraftApi.get().calendar())
+                    .or(() -> Optional.of(ThrowFight.Ammo.SNOWBALL)));
             case MLGRUSH -> throw new IllegalStateException();
         };
         game.prepare();
