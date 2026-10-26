@@ -5,6 +5,27 @@
     "index": 0,
     "cases": [
       {
+        "when": "blockcraft:zombies/arsonist_mask",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/zombies/arsonist_mask"
+        }
+      },
+      {
+        "when": "blockcraft:zombies/brood_sacs",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/zombies/brood_sacs"
+        }
+      },
+      {
+        "when": "blockcraft:zombies/crawler_eyes",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/zombies/crawler_eyes"
+        }
+      },
+      {
         "when": "blockcraft:zombies/gas_mask",
         "model": {
           "type": "minecraft:model",
@@ -23,6 +44,27 @@
         "model": {
           "type": "minecraft:model",
           "model": "blockcraft:item/zombies/runner_goggles"
+        }
+      },
+      {
+        "when": "blockcraft:zombies/shadow_hood",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/zombies/shadow_hood"
+        }
+      },
+      {
+        "when": "blockcraft:zombies/shield_helm",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/zombies/shield_helm"
+        }
+      },
+      {
+        "when": "blockcraft:zombies/tesla_helmet",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/zombies/tesla_helmet"
         }
       }
     ],

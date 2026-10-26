@@ -10,6 +10,13 @@
           "type": "minecraft:model",
           "model": "blockcraft:item/staff_freeze"
         }
+      },
+      {
+        "when": "blockcraft:zombies/frost_crown",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/zombies/frost_crown"
+        }
       }
     ],
     "fallback": {
