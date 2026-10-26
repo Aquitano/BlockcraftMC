@@ -13,9 +13,9 @@ public record ZombiesConfig(int maxPlayers, int startingGold, int intermissionSe
                             int hitGold, int killGold, int repairGold, int repairLimit, int clearGold,
                             int repairTicks, int breakTicks, int killCoins, int waveCoins, int winCoins,
                             int ammoPrice, int armorPrice, int upgradePrice, int mysteryPrice,
-                            int powerPrice, int teamRevivePrice, double dropChance, int powerupTicks,
+                            int powerPrice, int teamRevivePrice, double dropChance, int powerupTicks, int powerupsPerWave,
                             int noteCoins, int healthRegenTicks, double extraHealth, double headshotMultiplier, double knifeDamage, int damageImmunityTicks,
-                            Waves waves, Map<Weapon, Gun> guns, Map<Perk, Integer> perks, Map<EnemyKind, Enemy> enemies) {
+                            Waves waves, Map<Weapon, Gun> guns, Map<Perk, Integer> perks, Map<EnemyKind, Enemy> enemies, Exploder exploder) {
 
     /** The last {@code stragglers} enemies of a wave move at least at {@code stragglerSpeed}. */
     public record Waves(int total, int baseEnemies, int enemiesPerWave, double extraPlayer, double healthPerWave,
@@ -59,6 +59,12 @@ public record ZombiesConfig(int maxPlayers, int startingGold, int intermissionSe
         });
         return weights;
     }
+
+    /**
+     * An exploder within {@code triggerRange} of a player lights its fuse and rushes at {@code rushSpeed}; after
+     * {@code fuseTicks} it blasts everyone in sight within {@code radius}, harder the closer they stand.
+     */
+    public record Exploder(double triggerRange, int fuseTicks, double rushSpeed, double radius, double knockback) { }
 
     public static ZombiesConfig from(ConfigurationSection yaml) {
         var waves = new Waves(positive(yaml, "waves.total"), positive(yaml, "waves.base-enemies"),
@@ -104,11 +110,14 @@ public record ZombiesConfig(int maxPlayers, int startingGold, int intermissionSe
                 Math.max(0, yaml.getInt("rewards.kill")), Math.max(0, yaml.getInt("rewards.wave")), Math.max(0, yaml.getInt("rewards.win")),
                 positive(yaml, "prices.ammo"), positive(yaml, "prices.armor"), positive(yaml, "prices.upgrade"),
                 positive(yaml, "prices.mystery"), positive(yaml, "prices.power"), positive(yaml, "prices.team-revive"),
-                Math.clamp(yaml.getDouble("powerups.drop-chance"), 0, 1), positive(yaml, "powerups.seconds") * 20,
+                Math.clamp(yaml.getDouble("powerups.drop-chance"), 0, 1), positive(yaml, "powerups.seconds") * 20, positive(yaml, "powerups.max-per-wave"),
                 Math.max(0, yaml.getInt("rewards.note")), positive(yaml, "regeneration.delay-seconds") * 20, Math.max(0, yaml.getDouble("perks.extra-health-bonus")),
                 Math.max(1, yaml.getDouble("combat.headshot-multiplier")), Math.max(1, yaml.getDouble("combat.knife-damage")),
                 positive(yaml, "combat.damage-immunity-ticks"),
-                waves, Map.copyOf(guns), Map.copyOf(perks), Map.copyOf(enemies));
+                waves, Map.copyOf(guns), Map.copyOf(perks), Map.copyOf(enemies),
+                new Exploder(Math.clamp(yaml.getDouble("exploder.trigger-range"), 1, 8), positive(yaml, "exploder.fuse-ticks"),
+                        Math.clamp(yaml.getDouble("exploder.rush-speed"), 0.05, 0.6), Math.clamp(yaml.getDouble("exploder.radius"), 1, 8),
+                        Math.max(0, yaml.getDouble("exploder.knockback"))));
     }
 
     private static int positive(ConfigurationSection yaml, String path) {

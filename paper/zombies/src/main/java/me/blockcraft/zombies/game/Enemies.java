@@ -52,6 +52,7 @@ public final class Enemies {
         boolean breached;
         UUID attacker;
         int specialAt;
+        int fuseAt;
 
         /** {@code toughness} divides every hit, standing in for the health above the server's limit. */
         Enemy(Mob mob, EnemyKind kind, ArenaMap.Window window, double toughness) {
@@ -95,6 +96,17 @@ public final class Enemies {
             if (!enemy.mob.isValid() || enemy.mob.isDead()) {
                 enemies.remove(enemy.mob.getUniqueId());
                 continue;
+            }
+            if (enemy.fuseAt > 0) {
+                if (tick >= enemy.fuseAt) {
+                    explode(enemy);
+                    continue;
+                }
+                if (tick % 2 == 0) {
+                    var fuse = enemy.mob.getEyeLocation().add(0, 0.5, 0);
+                    enemy.mob.getWorld().spawnParticle(Particle.SMOKE, fuse, 2, 0.1, 0.1, 0.1, 0.01);
+                    enemy.mob.getWorld().spawnParticle(Particle.FLAME, fuse, 1, 0.05, 0.05, 0.05, 0.01);
+                }
             }
             if (stragglers && enemy.kind != EnemyKind.INFERNO) {
                 hurry(enemy.mob, waves.stragglerSpeed());
@@ -238,16 +250,13 @@ public final class Enemies {
         if (tick < enemy.specialAt) {
             return;
         }
-        if (enemy.kind == EnemyKind.EXPLODER && enemy.mob.getLocation().distanceSquared(player.getLocation()) < 5) {
-            enemy.specialAt = tick + 100;
-            enemy.mob.getWorld().spawnParticle(Particle.EXPLOSION, enemy.mob.getLocation(), 1);
-            enemy.mob.getWorld().playSound(enemy.mob.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 0.7f, 1.2f);
-            for (var fighter : game.fighters()) {
-                if (fighter.getLocation().distanceSquared(enemy.mob.getLocation()) < 12 && enemy.mob.hasLineOfSight(fighter)) {
-                    fighter.damage(game.config().enemies().get(enemy.kind).damage(), enemy.mob);
-                }
-            }
-            enemy.mob.setHealth(0);
+        var exploder = game.config().exploder();
+        if (enemy.kind == EnemyKind.EXPLODER && enemy.fuseAt == 0
+                && enemy.mob.getLocation().distanceSquared(player.getLocation()) < exploder.triggerRange() * exploder.triggerRange()) {
+            enemy.fuseAt = tick + exploder.fuseTicks();
+            enemy.mob.setGlowing(true);
+            enemy.mob.getWorld().playSound(enemy.mob.getLocation(), Sound.ENTITY_CREEPER_PRIMED, 1.4f, 0.8f);
+            hurry(enemy.mob, exploder.rushSpeed());
         } else if (enemy.kind == EnemyKind.TOXIC && stats(enemy).slowTicks() > 0
                 && enemy.mob.getLocation().distanceSquared(player.getLocation()) < 6 && enemy.mob.hasLineOfSight(player)) {
             int slowTicks = stats(enemy).slowTicks();
@@ -260,6 +269,30 @@ public final class Enemies {
             enemy.mob.getWorld().spawnParticle(Particle.FLAME, enemy.mob.getEyeLocation(), 20, 0.3, 0.3, 0.3, 0.05);
             player.damage(game.config().enemies().get(enemy.kind).damage(), enemy.mob);
         }
+    }
+
+    /** Nobody earns an exploder that blew itself up, even if someone hit it before. */
+    private void explode(Enemy enemy) {
+        var settings = game.config().exploder();
+        var mob = enemy.mob;
+        var center = mob.getLocation();
+        mob.getWorld().spawnParticle(Particle.EXPLOSION_EMITTER, center, 1);
+        mob.getWorld().playSound(center, Sound.ENTITY_GENERIC_EXPLODE, 1.6f, 0.8f);
+        for (var fighter : game.fighters()) {
+            double distance = fighter.getLocation().distance(center);
+            if (distance > settings.radius() || !mob.hasLineOfSight(fighter)) {
+                continue;
+            }
+            double closeness = 1 - distance / settings.radius();
+            fighter.damage(stats(enemy).damage() * (0.4 + 0.6 * closeness), mob);
+            var push = fighter.getLocation().toVector().subtract(center.toVector()).setY(0);
+            if (push.lengthSquared() > 0) {
+                push.normalize();
+            }
+            fighter.setVelocity(push.multiply(settings.knockback() * closeness).setY(0.3 + 0.4 * closeness));
+        }
+        enemy.attacker = null;
+        mob.setHealth(0);
     }
 
     public void hit(Player player, Mob mob, double damage) {

@@ -67,8 +67,9 @@ prices:
   power: 1000
   team-revive: 1200
 powerups:
-  drop-chance: 0.06
+  drop-chance: 0.03
   seconds: 20
+  max-per-wave: 2
 perks:
   extra_health: 1000
   quick_reload: 750
@@ -87,7 +88,16 @@ enemies:
   walker: {first-wave: 1, health: 20, damage: 4, speed: 0.23, weight: 12, late-weight: 5}
   runner: {first-wave: 4, health: 16, damage: 3, speed: 0.30, weight: 3, late-weight: 6}
   tank: {first-wave: 6, health: 65, damage: 6, speed: 0.17, weight: 2, late-weight: 5}
-  exploder: {first-wave: 9, health: 24, damage: 8, speed: 0.25, weight: 2, late-weight: 4}
+  exploder: {first-wave: 9, health: 24, damage: 10, speed: 0.25, weight: 2, late-weight: 4}
   toxic: {first-wave: 12, health: 30, damage: 4, speed: 0.22, weight: 2, late-weight: 4, slow-seconds: 3}
   hellhound: {first-wave: 7, health: 16, damage: 3, speed: 0.32, weight: 0}
   inferno: {first-wave: 10, health: 300, damage: 8, speed: 0.20, weight: 0}
+# An exploder within trigger-range blocks of a player lights its fuse, hisses, glows and rushes; after fuse-ticks it
+# blasts everyone in sight within radius for up to its damage, less towards the edge, and throws them back. Shooting
+# it while the fuse burns kills it before it goes off.
+exploder:
+  trigger-range: 4
+  fuse-ticks: 30
+  rush-speed: 0.34
+  radius: 4.5
+  knockback: 1.1

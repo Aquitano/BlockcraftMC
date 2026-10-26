@@ -94,6 +94,7 @@ public final class ZombiesGame {
     private int teamSize;
     private int waveTotal;
     private int doubleGoldUntil;
+    private int powerupsThisWave;
     private int instantKillUntil;
     private boolean powered;
 
@@ -212,6 +213,7 @@ public final class ZombiesGame {
         teamSize = round.playerCount();
         var plan = WavePlan.forSquad(wave, teamSize, config.waves());
         waveTotal = plan.enemies();
+        powerupsThisWave = 0;
         enemies.begin(plan);
         title(plan.boss() ? "wave.boss-title" : plan.hounds() ? "wave.hound-title" : "wave.title", "wave.subtitle",
                 Formatter.number("wave", wave), Formatter.number("enemies", plan.enemies()));
@@ -435,7 +437,8 @@ public final class ZombiesGame {
         summary.awardMobKill(player);
         addGold(player, config.killGold());
         Sounds.KILL.play(player);
-        if (ThreadLocalRandom.current().nextDouble() < config.dropChance()) {
+        if (powerupsThisWave < config.powerupsPerWave() && ThreadLocalRandom.current().nextDouble() < config.dropChance()) {
+            powerupsThisWave++;
             var kind = Powerup.values()[ThreadLocalRandom.current().nextInt(Powerup.values().length)];
             var item = arena.world().dropItem(location, ItemStack.of(switch (kind) {
                 case MAX_AMMO -> Material.FIREWORK_STAR;

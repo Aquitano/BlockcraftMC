@@ -56,6 +56,7 @@ Neither attempt should spend gold or grant an item.
 12. Listen at the start of each wave for the horn, and during intermissions for groans behind the boards. A wave clear shows a title.
 13. Reach wave 7. It sends only black hellhounds under its own title. Get slowed by a Giftzombie from wave 12 on.
 14. When three enemies remain in a wave, check that they speed up, and that a wave with nobody alive spawns its next enemy at once.
+15. Let an Exploder come within four blocks. It hisses, glows, smokes and rushes for 1.5 seconds. Shoot one before it goes off and nothing explodes; let another go off and the blast hurts less at its edge and throws you back. A wave drops at most two powerups.
 
 ## Player states and integration
 
