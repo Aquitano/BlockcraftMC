@@ -29,6 +29,7 @@ public final class SetSpawnCommand {
         root.then(target("cores", LobbyLocation.CORES, locations, messages));
         root.then(target("endergames", LobbyLocation.ENDERGAMES, locations, messages));
         root.then(target("ttt", LobbyLocation.TTT, locations, messages));
+        root.then(target("skywars", LobbyLocation.SKYWARS, locations, messages));
         root.then(target("shop", LobbyLocation.SHOP, locations, messages));
         root.then(target("premium", LobbyLocation.PREMIUM, locations, messages));
         return root.build();

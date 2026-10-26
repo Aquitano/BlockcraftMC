@@ -20,8 +20,8 @@ final class NavigatorMenu extends Menu {
 
     private static final Map<Integer, LobbyLocation> GAMES = Map.of(
             18, LobbyLocation.QSG, 20, LobbyLocation.RUSH, 22, LobbyLocation.DUELL, 24, LobbyLocation.BEDWARS,
-            26, LobbyLocation.TTT, 28, LobbyLocation.MLGRUSH, 30, LobbyLocation.CORES, 32, LobbyLocation.ENDERGAMES,
-            34, LobbyLocation.ZOMBIES);
+            26, LobbyLocation.SKYWARS, 27, LobbyLocation.TTT, 29, LobbyLocation.MLGRUSH, 31, LobbyLocation.CORES,
+            33, LobbyLocation.ENDERGAMES, 35, LobbyLocation.ZOMBIES);
     private static final int JUMP_SLOT = 40;
 
     private final Menus menus;
@@ -52,6 +52,7 @@ final class NavigatorMenu extends Menu {
             case CORES -> MenuIcon.CORES;
             case ENDERGAMES -> MenuIcon.ENDERGAMES;
             case TTT -> MenuIcon.TTT;
+            case SKYWARS -> MenuIcon.SKYWARS;
             default -> MenuIcon.DUELL;
         };
     }

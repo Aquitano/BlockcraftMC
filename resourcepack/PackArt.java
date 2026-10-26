@@ -246,6 +246,7 @@ public final class PackArt {
     static final Map<Character, Integer> TEAMS = Map.of('W', 0xFFBB8958, 'w', 0xFF936344, 'R', 0xFFEB655E, 'r', 0xFFB83F48, 'B', 0xFF3E8EF7, 'b', 0xFF1F55A8);
     static final Map<Character, Integer> PEARL = Map.of('H', 0xFFD3FAF6, 'C', 0xFF4FB7A8, 'c', 0xFF2A7A6E, 'd', 0xFF1C4A44, 'P', 0xFFB06BD6, 'p', 0xFF6B3A8C);
     static final Map<Character, Integer> KNIFE = Map.of('H', 0xFFF2FAFC, 'W', 0xFFCCDCE5, 'w', 0xFF8CA3B4, 'R', 0xFFEB655E, 'r', 0xFFB83F48, 'B', 0xFFBB8958, 'b', 0xFF936344);
+    static final Map<Character, Integer> ISLAND = Map.of('H', 0xFFCCFAD4, 'G', 0xFF42BF83, 'g', 0xFF26895F, 'B', 0xFFBB8958, 'b', 0xFF936344, 'd', 0xFF553E37, 'S', 0xFF8CA3B4, 's', 0xFF52697F);
     static final Map<Character, Integer> GIFT = Map.of('H', 0xFFFFB6A4, 'R', 0xFFEB655E, 'r', 0xFFB83F48, 'd', 0xFF743349, 'Y', 0xFFFFF0AE, 'G', 0xFFEAC05B, 'g', 0xFFB67C38);
     static final Map<Character, Integer> CLIPBOARD = Map.of('H', 0xFFF2FAFC, 'W', 0xFFD4E0E5, 'w', 0xFF8CA3B4, 'D', 0xFF52697F, 'B', 0xFFBB8958, 'b', 0xFF936344, 'd', 0xFF553E37, 'G', 0xFF42BF83);
     static final Map<Character, Integer> MEDAL = Map.of('H', 0xFFFFF0AE, 'G', 0xFFEAC05B, 'g', 0xFFB67C38, 'd', 0xFF795033, 'R', 0xFFEB655E, 'r', 0xFFB83F48, 'P', 0xFFFFB6A4);
@@ -578,6 +579,24 @@ public final class PackArt {
                     "................",
                     "................",
             }, GREEN)),
+            Map.entry("skywars", new Icon(new String[] {
+                    "................",
+                    "......oooo......",
+                    ".....oHGGGo.....",
+                    "....oHGGGggo....",
+                    "....oGGGGggo....",
+                    ".....oobboo.....",
+                    "......obo.......",
+                    "..oooooooooooo..",
+                    ".oHHGGGGGGGGGgo.",
+                    ".oGGGGGGGGGGggo.",
+                    "..oBBBBbbbbbbo..",
+                    "...oBBbbbbbdo...",
+                    "....oSSssssso...",
+                    ".....oSssso.....",
+                    "......osso......",
+                    ".......oo.......",
+            }, ISLAND)),
             Map.entry("cores", new Icon(new String[] {
                     "................",
                     ".......oo.......",

@@ -57,3 +57,6 @@ services:
   cores:
     <<: *paper
     profiles: [unreleased]
+  skywars:
+    <<: *paper
+    profiles: [unreleased]

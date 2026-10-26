@@ -17,6 +17,7 @@ include(
     "paper:mlgrush",
     "paper:quicksg",
     "paper:reports",
+    "paper:skywars",
     "paper:statussigns",
     "paper:ttt",
     "paper:zombies",

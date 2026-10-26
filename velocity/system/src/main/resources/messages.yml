@@ -16,6 +16,7 @@ palette:
   cores: "<yellow>"
   endergames: "<dark_purple>"
   ttt: "<red>"
+  skywars: "<blue>"
   duell: "<aqua>"
   bedwars: "<dark_aqua>"
   mlgrush: "<light_purple>"
@@ -617,6 +618,7 @@ play:
     cores: "<cores>Cores"
     endergames: "<endergames>EnderGames"
     ttt: "<ttt>TTT"
+    skywars: "<skywars>SkyWars"
 msg:
   usage: "<prefix><error>Benutze /msg \\<Name> \\<Nachricht>"
   reply-usage: "<prefix><error>Benutze /r \\<Nachricht>"
@@ -725,6 +727,7 @@ joinme:
     cores: "<arrow><accent><player><muted> spielt <cores>Cores<muted>!"
     endergames: "<arrow><accent><player><muted> spielt <endergames>EnderGames<muted>!"
     ttt: "<arrow><accent><player><muted> spielt <ttt>TTT<muted>!"
+    skywars: "<arrow><accent><player><muted> spielt <skywars>SkyWars<muted>!"
 
 support:
   already-open: "<primary>Support <arrow><reset><error>Du hast bereits einen offenen Supportantrag. Bitte warte, bis ein Supporter diesen bearbeitet."

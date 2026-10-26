@@ -216,6 +216,19 @@ services:
       - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
       - ttt:/data
 
+  skywars:
+    <<: *paper
+    hostname: skywars
+    environment:
+      <<: *paper-env
+      BLOCKCRAFT_SERVER_GROUP: skywars
+      BLOCKCRAFT_WORLD_TEMPLATE: ""
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/skywars,/blockcraft/viaversion
+    volumes:
+      - ./build/docker/paper:/blockcraft:ro
+      - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
+      - skywars:/data
+
   quicksg:
     <<: *paper
     hostname: quicksg
@@ -243,3 +256,4 @@ volumes:
   cores:
   endergames:
   ttt:
+  skywars:

@@ -1,0 +1,155 @@
+prefix: "<skywars>SkyWars <dark>» <reset>"
+game-name: "<skywars>SkyWars"
+
+commands:
+  start:
+    description: "Verkürzt den Countdown der Lobby"
+  forcemap:
+    description: "Legt die Map der nächsten Runde fest"
+  stats:
+    description: "Zeigt die Stats eines Spielers"
+  top:
+    description: "Zeigt die Top 10 einer Kategorie"
+
+join:
+  introduction: "<prefix><muted>Jeder startet auf seiner eigenen Insel. Plündere die Kisten, baue Brücken zur Mitte und wirf die anderen ins Nichts."
+
+round:
+  kit: "<prefix><muted>Du spielst mit dem Kit <skywars><kit><muted>."
+  subtitle: "<muted>Gleich öffnen sich die Käfige"
+  start: "<prefix><muted>Die Käfige sind offen. Die besten Kisten warten in der <skywars>Mitte<muted>."
+  winner: "<prefix><primary><player> <primary>hat SkyWars gewonnen!"
+  winner-left: "<prefix><primary><player> <primary>ist als Letzter übrig und gewinnt!"
+  draw: "<prefix><error>Die Zeit ist um. Unentschieden!"
+
+refill:
+  soon: "<prefix><muted>Die Kisten füllen sich in <accent><seconds><muted> Sekunden neu."
+  done: "<prefix><success>Alle Kisten wurden neu gefüllt!"
+
+border:
+  shrinking: "<prefix><error>Die Grenze schrumpft! <muted>Am Ende bleiben <accent><radius><muted> Blöcke um die Mitte."
+
+build:
+  too-high: "<prefix><error>So hoch kannst du nicht bauen."
+
+timer:
+  round: "<skywars>Verbleibende Zeit <dark>● <white><time>"
+
+map:
+  wolkenhain:
+    name: "Wolkenhain"
+    lore:
+      - "<bullet><muted>Grüne Inseln mit Eichen"
+      - "<bullet><muted>zwischen weißen Wolken"
+  frostspitze:
+    name: "Frostspitze"
+    lore:
+      - "<bullet><muted>Schnee, Fichten und Eiszapfen"
+      - "<bullet><muted>über dem kalten Nichts"
+  wuestenwind:
+    name: "Wüstenwind"
+    lore:
+      - "<bullet><muted>Sand, Kakteen und Palmen"
+      - "<bullet><muted>auf Inseln aus Terrakotta"
+
+vote:
+  title: "<arrow><skywars>SkyWars <dark>· <muted>Abstimmung"
+  map: "<arrow><primary><map>"
+  chance: "den Zufall"
+  result:
+    - "<prefix><muted>Gespielt wird <accent><map><muted>."
+
+kit:
+  selected: "<success>Kit <white><kit> <success>ausgewählt"
+  standard:
+    name: "Standard"
+    contents:
+      - "<arrow><muted>Holzschwert"
+      - "<arrow><muted>Holzspitzhacke"
+  bauarbeiter:
+    name: "Bauarbeiter"
+    contents:
+      - "<arrow><muted>Steinspitzhacke"
+      - "<arrow><muted>64 Ziegel"
+  bogenschuetze:
+    name: "Bogenschütze"
+    contents:
+      - "<arrow><muted>Bogen"
+      - "<arrow><muted>12 Pfeile"
+  ritter:
+    name: "Ritter"
+    contents:
+      - "<arrow><muted>Kettenbrustpanzer"
+      - "<arrow><muted>Kettenhose"
+  enderman:
+    name: "Enderman"
+    contents:
+      - "<arrow><muted>2 Enderperlen"
+  bomber:
+    name: "Bomber"
+    contents:
+      - "<arrow><muted>3 TNT"
+      - "<arrow><muted>Feuerzeug"
+  fischer:
+    name: "Fischer"
+    contents:
+      - "<arrow><muted>Angel"
+      - "<arrow><muted>16 Schneebälle"
+  heiler:
+    name: "Heiler"
+    contents:
+      - "<arrow><muted>2 Wurftränke der Heilung"
+      - "<arrow><muted>Goldener Apfel"
+
+item:
+  kits: "<arrow><primary>Kits"
+  vote: "<arrow><primary>Abstimmung"
+
+stats:
+  header: "<muted>Stats von <accent><player>"
+  lines:
+    - "<arrow><primary>Siege<dark>: <muted><wins>"
+    - "<arrow><primary>Niederlagen<dark>: <muted><losses>"
+    - "<arrow><primary>Tode<dark>: <muted><deaths>"
+    - "<arrow><primary>Kills<dark>: <muted><kills>"
+    - "<arrow><primary>Punkte<dark>: <muted><points>"
+
+top:
+  separator: "<muted><strikethrough>---------------------------------"
+  first: "<accent><bold>#1 <reset><primary><name><muted> ( <white><value><muted> )"
+  entry: "<reset>#<rank> <primary><name> <muted>( <white><value><muted> )"
+
+menu:
+  kits:
+    title: "<arrow><skywars>SkyWars <dark>· <muted>Kits"
+    entry: "<skywars><kit>"
+    selected: "<success>Für diese Runde ausgewählt"
+    owned: "<success>Freigeschaltet"
+    select: "<left>Auswählen"
+    locked: "<accent><price> Coins <dark>· <muted>Dauerhaft freischalten"
+    buy: "<left>Freischalten"
+  stats:
+    title: "<arrow><skywars>SkyWars <dark>· <muted>Stats"
+    player: "<accent><player>"
+    player-lore:
+      - "<arrow><primary>Siege<dark>: <muted><wins>"
+      - "<arrow><primary>Niederlagen<dark>: <muted><losses>"
+      - "<arrow><primary>Tode<dark>: <muted><deaths>"
+      - "<arrow><primary>Kills<dark>: <muted><kills>"
+      - "<arrow><primary>Punkte<dark>: <muted><points>"
+    global: "<arrow><primary>Globale Stats"
+  global-stats:
+    title: "<arrow><skywars>SkyWars <dark>· <muted>Globale Stats"
+    wins: "<arrow><primary>Siege"
+    deaths: "<arrow><primary>Tode"
+    kills: "<arrow><primary>Kills"
+    losses: "<arrow><primary>Niederlagen"
+    points: "<arrow><primary>Punkte"
+
+scoreboard:
+  title: "<skywars><bold>SkyWars"
+  map-vote: "Abstimmung läuft"
+  kit: "<muted><icon:kit> KIT"
+  kills: "<muted><icon:kills> KILLS"
+  refill: "<muted><icon:time> REFILL"
+  refilled: "<muted>Vorbei"

@@ -81,6 +81,7 @@ navigator:
     cores: cores
     endergames: endergames
     ttt: ttt
+    skywars: skywars
   stale-seconds: 20
 
 friends:

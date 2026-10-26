@@ -113,6 +113,7 @@ navigator:
   cores: "<cores><bold>Cores"
   endergames: "<endergames><bold>EnderGames"
   ttt: "<ttt><bold>TTT"
+  skywars: "<skywars><bold>SkyWars"
   shop: "<accent>Lobby-Shop"
   shop-lore: "<click>Shop öffnen"
   spawn: "<primary>Zurück zum Spawn"
@@ -154,6 +155,10 @@ navigator:
       - "<muted>Innocents, Detectives und Traitors."
       - "<muted>Finde die Verräter, bevor sie dich finden."
       - "<dark>Vertrau niemandem. Auch nicht dem Tester."
+    skywars:
+      - "<muted>Jeder auf seiner Insel, darunter das Nichts."
+      - "<muted>Kisten plündern, Brücken bauen, runterschubsen."
+      - "<dark>Der Boden ist Lava. Nur ohne Boden."
 secrets:
   title: "<arrow><primary>Secrets <dark>· <muted><found>/<total>"
   unknown: "<error>???"

@@ -49,6 +49,7 @@ public enum MenuIcon {
     ENDERGAMES(Material.ENDER_PEARL),
     TTT(Material.REDSTONE),
     TTT_SHOP(Material.EMERALD),
+    SKYWARS(Material.FEATHER),
     GADGETS(Material.FISHING_ROD),
     KILL_EFFECTS(Material.IRON_SWORD),
     WIN_EFFECTS(Material.FIREWORK_ROCKET),
