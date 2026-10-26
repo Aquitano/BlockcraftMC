@@ -16,6 +16,7 @@ waves:
   enemies-per-wave: 2
   extra-player: 0.6
   health-per-wave: 0.07
+  damage-per-wave: 0.04
   spawn-ticks: 20
   spawn-ticks-per-wave: 0.5
   minimum-spawn-ticks: 7

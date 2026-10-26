@@ -7,7 +7,7 @@ import static org.junit.Assert.*;
 
 public class WavePlanTest {
 
-    private final ZombiesConfig.Waves waves = new ZombiesConfig.Waves(30, 6, 2, 0.6, 0.07, 20, 0.5, 7, 32, 10,
+    private final ZombiesConfig.Waves waves = new ZombiesConfig.Waves(30, 6, 2, 0.6, 0.07, 0.04, 20, 0.5, 7, 32, 10,
             new ZombiesConfig.Late(10, 0.1, 0.05, 0.5), new ZombiesConfig.Hounds(5, 10, 0.5), 3, 0.3);
 
     @Test
@@ -35,6 +35,12 @@ public class WavePlanTest {
     }
 
     @Test
+    public void enemiesHitHarderEveryWave() {
+        assertEquals(1, WavePlan.forSquad(1, 1, waves).damageMultiplier(), 0);
+        assertEquals(1.76, WavePlan.forSquad(20, 4, waves).damageMultiplier(), 0.001);
+    }
+
+    @Test
     public void houndWavesComeEveryTenthWaveFromTheFirstWithHalfTheCountButNeverOnBossWaves() {
         assertFalse(WavePlan.forSquad(4, 1, waves).hounds());
         var hounds = WavePlan.forSquad(5, 1, waves);
@@ -42,7 +48,7 @@ public class WavePlanTest {
         assertEquals(7, hounds.enemies());
         assertTrue(WavePlan.forSquad(15, 2, waves).hounds());
         assertFalse(WavePlan.forSquad(10, 1, waves).hounds());
-        var everyFive = new ZombiesConfig.Waves(30, 6, 2, 0.6, 0.07, 20, 0.5, 7, 32, 10,
+        var everyFive = new ZombiesConfig.Waves(30, 6, 2, 0.6, 0.07, 0.04, 20, 0.5, 7, 32, 10,
                 waves.late(), new ZombiesConfig.Hounds(5, 5, 0.5), 3, 0.3);
         assertFalse(WavePlan.forSquad(10, 1, everyFive).hounds());
     }

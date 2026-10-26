@@ -18,7 +18,7 @@ public record ZombiesConfig(int maxPlayers, int startingGold, int intermissionSe
                             Waves waves, Map<Weapon, Gun> guns, Map<Perk, Integer> perks, Map<EnemyKind, Enemy> enemies, Exploder exploder) {
 
     /** The last {@code stragglers} enemies of a wave move at least at {@code stragglerSpeed}. */
-    public record Waves(int total, int baseEnemies, int enemiesPerWave, double extraPlayer, double healthPerWave,
+    public record Waves(int total, int baseEnemies, int enemiesPerWave, double extraPlayer, double healthPerWave, double damagePerWave,
                         int spawnTicks, double spawnTicksPerWave, int minimumSpawnTicks, int maxAlive, int bossEvery,
                         Late late, Hounds hounds, int stragglers, double stragglerSpeed) { }
 
@@ -69,7 +69,8 @@ public record ZombiesConfig(int maxPlayers, int startingGold, int intermissionSe
     public static ZombiesConfig from(ConfigurationSection yaml) {
         var waves = new Waves(positive(yaml, "waves.total"), positive(yaml, "waves.base-enemies"),
                 positive(yaml, "waves.enemies-per-wave"), Math.max(0, yaml.getDouble("waves.extra-player")),
-                Math.max(0, yaml.getDouble("waves.health-per-wave")), positive(yaml, "waves.spawn-ticks"),
+                Math.max(0, yaml.getDouble("waves.health-per-wave")), Math.max(0, yaml.getDouble("waves.damage-per-wave")),
+                positive(yaml, "waves.spawn-ticks"),
                 Math.max(0, yaml.getDouble("waves.spawn-ticks-per-wave")), positive(yaml, "waves.minimum-spawn-ticks"),
                 positive(yaml, "waves.max-alive"), positive(yaml, "waves.boss-every"),
                 new Late(positive(yaml, "waves.late.from"), Math.max(0, yaml.getDouble("waves.late.health-per-wave")),

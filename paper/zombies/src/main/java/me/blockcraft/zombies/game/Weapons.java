@@ -127,7 +127,7 @@ public final class Weapons {
             if (stats.burnDamage() > 0) {
                 flames.ignite(player, mob, stats.burnDamage() * multiplier, stats.burnTicks(), tick);
             }
-            game.enemies().hit(player, mob, game.instantKill() ? mob.getHealth() * 100 : entry.getValue());
+            game.enemies().hit(player, mob, entry.getValue());
         }
         if (!volley.hits().isEmpty()) {
             Sounds.NOTE_PLING.note(player, volley.headshot() ? 20 : 12);

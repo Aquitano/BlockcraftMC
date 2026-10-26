@@ -150,7 +150,7 @@ public final class Enemies {
         attribute(mob, Attribute.MAX_HEALTH, health / toughness);
         mob.setHealth(health / toughness);
         attribute(mob, Attribute.MOVEMENT_SPEED, stats.speed());
-        attribute(mob, Attribute.ATTACK_DAMAGE, stats.damage());
+        attribute(mob, Attribute.ATTACK_DAMAGE, stats.damage() * plan.damageMultiplier());
         attribute(mob, Attribute.FOLLOW_RANGE, 100);
         var equipment = mob.getEquipment();
         if (equipment != null) {
@@ -267,7 +267,7 @@ public final class Enemies {
         } else if (enemy.kind == EnemyKind.INFERNO && enemy.mob.hasLineOfSight(player)) {
             enemy.specialAt = tick + 80;
             enemy.mob.getWorld().spawnParticle(Particle.FLAME, enemy.mob.getEyeLocation(), 20, 0.3, 0.3, 0.3, 0.05);
-            player.damage(game.config().enemies().get(enemy.kind).damage(), enemy.mob);
+            player.damage(stats(enemy).damage() * plan.damageMultiplier(), enemy.mob);
         }
     }
 
@@ -284,7 +284,7 @@ public final class Enemies {
                 continue;
             }
             double closeness = 1 - distance / settings.radius();
-            fighter.damage(stats(enemy).damage() * (0.4 + 0.6 * closeness), mob);
+            fighter.damage(stats(enemy).damage() * plan.damageMultiplier() * (0.4 + 0.6 * closeness), mob);
             var push = fighter.getLocation().toVector().subtract(center.toVector()).setY(0);
             if (push.lengthSquared() > 0) {
                 push.normalize();
@@ -304,7 +304,7 @@ public final class Enemies {
         mob.setNoDamageTicks(0);
         applyingDamage = true;
         try {
-            mob.damage(damage / enemy.toughness, player);
+            mob.damage(game.instantKill() && enemy.kind != EnemyKind.INFERNO ? mob.getHealth() * 100 : damage / enemy.toughness, player);
         } finally {
             applyingDamage = false;
         }

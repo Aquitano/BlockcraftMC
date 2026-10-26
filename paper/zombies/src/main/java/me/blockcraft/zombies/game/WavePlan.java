@@ -2,7 +2,8 @@ package me.blockcraft.zombies.game;
 
 import me.blockcraft.zombies.config.ZombiesConfig;
 
-public record WavePlan(int wave, int enemies, int spawnTicks, double healthMultiplier, boolean boss, boolean hounds) {
+public record WavePlan(int wave, int enemies, int spawnTicks, double healthMultiplier, double damageMultiplier,
+                       boolean boss, boolean hounds) {
 
     public static WavePlan forSquad(int wave, int players, ZombiesConfig.Waves config) {
         int extraPlayers = Math.clamp(players, 1, 4) - 1;
@@ -16,6 +17,6 @@ public record WavePlan(int wave, int enemies, int spawnTicks, double healthMulti
                 - (wave - 1) * config.spawnTicksPerWave() - lateWaves * config.late().spawnTicksPerWave()));
         double health = 1 + (wave - 1) * config.healthPerWave()
                 + lateWaves * (config.late().healthPerWave() + extraPlayers * config.late().healthPerExtraPlayer());
-        return new WavePlan(wave, enemies, spawnTicks, health, boss, houndWave);
+        return new WavePlan(wave, enemies, spawnTicks, health, 1 + (wave - 1) * config.damagePerWave(), boss, houndWave);
     }
 }
