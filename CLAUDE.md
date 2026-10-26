@@ -81,7 +81,8 @@ README.md; this file only holds what the code does not say by itself.
   proxy registers them at runtime; `velocity.toml` lists no servers. Players join groups, never server names: Paper
   code uses `ProxyMessaging.play`/`hub`, the proxy's `ServerDirectory` picks the instance. Game plugins report their
   phase through `BlockcraftApi.presence()`. Server identity and database settings can come from `BLOCKCRAFT_*`
-  environment variables (README, "Server discovery and groups").
+  environment variables (README, "Server discovery and groups"). Whether a game's server runs on demand is the
+  proxy's decision (`OnDemand`); only the `waker` service touches Docker, and nothing else gets the socket.
 - Anything that concerns the whole network (private messages, staff notices, parties, moderation) lives on the
   proxy; Paper plugins only do what needs the world.
 - No NMS, no legacy `§` codes in code. Legacy `&` is only parsed for text humans typed (MOTD, chat, LuckPerms prefixes, report statuses).

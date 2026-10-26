@@ -28,6 +28,7 @@ paper/reports            ReportsMenu: staff GUI over the reports table
 paper/statussigns        StatusSigns: clickable server-status signs
 velocity/system          BlockcraftSystem: reports, moderation, parties, friends, routing and staff tools
 resourcepack/            The client-side look: menu panels, HUD icons and button textures (see "Resource pack")
+waker/                   Starts and stops game servers for the proxy (see "Game servers on demand")
 dev/                     Config templates for the local dev network (see below)
 worlds/                  One map template per server group, restored at every start (see "Maps")
 docker-compose.yml       The local dev network: MariaDB, Velocity and one Paper server per game mode
@@ -408,8 +409,39 @@ of the interface that reaches the database, on its `server-port`. Set the variab
 host or the proxy reaches them through another address. The same works unchanged on Kubernetes: one Deployment per
 group, the pod name becomes the server name and the pod IP its address.
 
+A server writes its first heartbeat on `ServerLoadEvent`, once it takes connections, so the proxy never sends anyone
+into a server that is still starting.
+
 A Paper server that cannot reach the database at startup shuts itself down instead of running without its plugins,
 so the container's restart policy tries again; the proxy does the same.
+
+### Game servers on demand
+
+Off by default. With `on-demand.enabled` in BlockcraftSystem's `config.yml`, only the proxy, MariaDB and the lobby
+need to run around the clock; the game groups in `on-demand.groups` run only while someone plays.
+
+- A player who wants into a group with no running server (navigator, sign, `/play`) starts it. They are told so and
+  sent once its server is up, about a minute later; everyone who asks meanwhile waits in order. Whoever waited past
+  `start-timeout-seconds` is told it failed.
+- A group whose servers sat in their lobby with nobody on them or on the way for `idle-stop-minutes` is closed to new
+  seats and stopped. A round in progress is never stopped, and a click while it stops starts it again.
+- A server restarting after its round counts as starting, so whoever clicks, or asks for a rematch, waits for it.
+- `max-awake` caps how many of these groups run or start at once (0 for no cap).
+
+The navigator and the status signs show such a game as sleeping or starting (`bc_server_groups`), and both invite the
+click.
+
+The proxy decides, because only it sees seats, parties and rounds; the `waker` service carries it out. The waker is
+the only service with the Docker socket, which is root on the host. So it publishes no port, wants the bearer token
+`WAKER_TOKEN` and starts or stops nothing but the compose services in `WAKER_SERVICES`, a group's service being named
+like the group. To enable it on the host:
+
+1. Put `WAKER_TOKEN=$(openssl rand -hex 24)` into `.env`; the proxy reads it as `BLOCKCRAFT_WAKER_TOKEN`.
+2. Run `./gradlew stagePlugins`, then `docker compose --profile ondemand up -d waker`.
+3. Set `on-demand.enabled: true` in the proxy's `config.yml` in its data volume and restart `velocity`.
+
+A deploy's `docker compose up -d` or `restart` starts every game again; the proxy stops each after
+`idle-stop-minutes`. `docker compose stop <game>` puts one to sleep by hand, and the next click wakes it.
 
 When a discovery poll finds no joinable server left in the lobby group, BlockcraftSystem posts the `alerts.no-lobby`
 text to the Discord webhook in `alerts.webhook-url`, and `alerts.lobby-back` once a lobby is joinable again. Each
@@ -745,7 +777,7 @@ In containers, environment variables replace the config edits: `BLOCKCRAFT_DB_HO
 `BLOCKCRAFT_DB_NAME`, `BLOCKCRAFT_DB_USER` and `BLOCKCRAFT_DB_PASSWORD` override the `database` section of every
 Blockcraft plugin, `BLOCKCRAFT_NETWORK_<KEY>` an entry of every `network` section (`BLOCKCRAFT_NETWORK_IP` for
 `<ip>`), `BLOCKCRAFT_WORLD_TEMPLATE` the map template (see "Maps"), `BLOCKCRAFT_RESOURCE_PACK_URL` the proxy's
-`resource-pack.url`, and LuckPerms reads `LUCKPERMS_STORAGE_METHOD`, `LUCKPERMS_DATA_ADDRESS` and friends
+`resource-pack.url`, `BLOCKCRAFT_WAKER_TOKEN` its `on-demand.token` (see "Game servers on demand"), and LuckPerms reads `LUCKPERMS_STORAGE_METHOD`, `LUCKPERMS_DATA_ADDRESS` and friends
 itself; `docker-compose.yml` shows the full set.
 
 ### One host with Docker
@@ -766,7 +798,7 @@ docker compose up -d
 ```
 
 To update, pull, run `./gradlew stagePlugins` and restart the servers (`docker compose restart velocity lobby
-bedwars mlgrush duell zombies endergames ttt`). A plugin's `config.yml` and `messages.yml` in its data folder are copies of the bundled defaults, made on
+bedwars mlgrush duell zombies endergames ttt`, plus `waker` when on-demand runs; see "Game servers on demand"). A plugin's `config.yml` and `messages.yml` in its data folder are copies of the bundled defaults, made on
 its first start: new keys arrive through the bundled default, but the copy keeps its own value for every key it
 already has, so changed texts and renamed config keys do not reach a server by themselves. Move a copy nobody edited
 aside before the restart (`docker compose exec bedwars mv /data/plugins/BedWars/messages.yml
