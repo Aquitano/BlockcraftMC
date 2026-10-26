@@ -21,6 +21,12 @@ public enum PackModel {
     ZOMBIES_SHOTGUN(Material.STONE_HOE, "zombies/shotgun"),
     ZOMBIES_SNIPER(Material.DIAMOND_HOE, "zombies/sniper"),
     ZOMBIES_FLAMETHROWER(Material.GOLDEN_HOE, "zombies/flamethrower"),
+    ZOMBIES_DYNAMITE(Material.TNT, "zombies/dynamite"),
+    ZOMBIES_INFERNO(Material.CARVED_PUMPKIN, "zombies/inferno"),
+    // A stone button worn on the head sits inside it, so a client without the pack shows the bare head.
+    ZOMBIES_RIOT_HELMET(Material.STONE_BUTTON, "zombies/riot_helmet"),
+    ZOMBIES_RUNNER_GOGGLES(Material.STONE_BUTTON, "zombies/runner_goggles"),
+    ZOMBIES_GAS_MASK(Material.STONE_BUTTON, "zombies/gas_mask"),
     TTT_MEDIPACK(Material.GLISTERING_MELON_SLICE, "ttt/medipack"),
     TTT_RADAR(Material.COMPASS, "ttt/radar"),
     TTT_DNA_SCANNER(Material.BLAZE_ROD, "ttt/dna_scanner"),
