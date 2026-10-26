@@ -11,6 +11,7 @@ import org.junit.Test;
 
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -63,6 +64,21 @@ public class ZombiesConfigTest {
         assertEquals(Set.of(WaveEvent.Kind.BLOOD_MOON, WaveEvent.Kind.BOUNTY), config.events().choices(plan, false, 1).keySet());
         assertTrue(config.events().choices(plan, true, 1).containsKey(WaveEvent.Kind.POWER_OUTAGE));
         assertTrue(config.events().choices(plan, false, 2).containsKey(WaveEvent.Kind.TOXIC_FOG));
+    }
+
+    @Test
+    public void bundledSpecialsJoinTheMixOneAtATimeFromWaveSix() {
+        var config = ZombiesConfig.from(bundled());
+        var specials = List.of(EnemyKind.CRAWLER, EnemyKind.SHIELD_BEARER, EnemyKind.FROST, EnemyKind.ARSONIST,
+                EnemyKind.ELECTRIC, EnemyKind.BREEDER, EnemyKind.SHADOW);
+        int previous = 4;
+        for (var kind : specials) {
+            int first = config.enemies().get(kind).firstWave();
+            assertTrue(kind + " joins at " + first, first >= previous + 2 && first <= 24);
+            assertEquals(0, config.mix(first - 1).get(kind), 0);
+            assertTrue(share(config, first, kind) > 0);
+            previous = first;
+        }
     }
 
     private static double share(ZombiesConfig config, int wave, EnemyKind kind) {

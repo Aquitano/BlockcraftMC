@@ -11,7 +11,14 @@ public enum EnemyKind {
     EXPLODER(EntityType.ZOMBIE),
     TOXIC(EntityType.HUSK),
     HELLHOUND(EntityType.WOLF),
-    INFERNO(EntityType.ZOMBIE);
+    INFERNO(EntityType.ZOMBIE),
+    CRAWLER(EntityType.ZOMBIE),
+    SHIELD_BEARER(EntityType.ZOMBIE),
+    FROST(EntityType.ZOMBIE),
+    ARSONIST(EntityType.ZOMBIE),
+    ELECTRIC(EntityType.ZOMBIE),
+    BREEDER(EntityType.ZOMBIE),
+    SHADOW(EntityType.ZOMBIE);
 
     private final EntityType entity;
 

@@ -93,6 +93,13 @@ enemies:
   toxic: {first-wave: 12, health: 30, damage: 4, speed: 0.22, weight: 2, late-weight: 4, slow-seconds: 3}
   hellhound: {first-wave: 7, health: 16, damage: 3, speed: 0.32, weight: 0}
   inferno: {first-wave: 10, health: 300, damage: 8, speed: 0.20, weight: 0}
+  crawler: {first-wave: 8, health: 8, damage: 2, speed: 0.33, weight: 1, late-weight: 2, scale: 0.5}
+  shield_bearer: {first-wave: 11, health: 40, damage: 5, speed: 0.20, weight: 1.5, late-weight: 3}
+  frost: {first-wave: 13, health: 30, damage: 4, speed: 0.23, weight: 1.5, late-weight: 3, slow-seconds: 2}
+  arsonist: {first-wave: 15, health: 24, damage: 2, speed: 0.25, weight: 1, late-weight: 2.5}
+  electric: {first-wave: 18, health: 32, damage: 5, speed: 0.23, weight: 1, late-weight: 2.5}
+  breeder: {first-wave: 21, health: 120, damage: 7, speed: 0.15, weight: 0.8, late-weight: 2, scale: 1.6}
+  shadow: {first-wave: 23, health: 36, damage: 6, speed: 0.36, weight: 1, late-weight: 2.5}
 # An exploder within trigger-range blocks of a player lights its fuse, hisses, glows and rushes; after fuse-ticks it
 # blasts everyone in sight within radius for up to its damage, less towards the edge, and throws them back. Shooting
 # it while the fuse burns kills it before it goes off.
@@ -114,3 +121,43 @@ events:
   power_outage: {weight: 1, fix-seconds: 4, radius: 2.5, gold: 150, darkness-seconds: 4}
   bounty: {weight: 1, gold: 250, seconds: 45}
   toxic_fog: {weight: 1, warning-seconds: 5, seconds: 12, pulse-ticks: 20, damage: 2, slow-seconds: 2}
+# What the special enemies do. An arsonist's damage above is what its fire deals per pulse, an electric zombie's what
+# its zap deals to the first fighter, and a frost zombie's slow-seconds how long its chill lasts. Angles are degrees.
+abilities:
+  # Chosen as a pack of up to this many at one window; each counts as one enemy of the wave.
+  crawler:
+    pack: 3
+  # A hit from a shooter within front-angle of where it faces loses blocked-share of its damage.
+  shield_bearer:
+    front-angle: 60
+    blocked-share: 0.75
+  # Bursts into this many crawlers when it dies; they belong to the running wave.
+  breeder:
+    brood: 4
+  # Its touch and its aura add frost (the client's freeze overlay) and slow at the given level.
+  frost:
+    aura-radius: 3
+    aura-freeze-ticks: 30
+    touch-freeze-ticks: 70
+    slowness: 1
+  # Once inside, it keeps keep-distance from the nearest fighter and every throw-ticks lobs a Molotov at a fighter
+  # within throw-range; the bottle lands after flight-ticks and the ground burns within fire-radius for fire-seconds.
+  arsonist:
+    keep-distance: 6
+    throw-range: 13
+    throw-ticks: 100
+    flight-ticks: 22
+    fire-radius: 2
+    fire-seconds: 4
+    pulse-ticks: 20
+  # Every zap-ticks it zaps the nearest fighter within range; the zap jumps up to jumps times to a fighter within
+  # jump-range of the last one, each jump dealing jump-share of the damage before.
+  electric:
+    zap-ticks: 80
+    range: 10
+    jumps: 2
+    jump-range: 4
+    jump-share: 0.6
+  # Freezes in place while a fighter with line of sight looks within watch-angle of it.
+  shadow:
+    watch-angle: 30

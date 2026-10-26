@@ -75,7 +75,7 @@ public final class ZombiesPlugin extends JavaPlugin {
         game = new ZombiesGame(this, gameConfig, config, messages, arena, stats,
                 StatsMenus.of(messages, stats, top, gameConfig.globalStatsHead()));
         api.presence().maxPlayers(config.maxPlayers());
-        List.of(new GameListener(this, game), game.lobbyHotbar(), new ArenaProtection(() -> false),
+        List.of(new GameListener(this, game), new AbilityListener(game), game.lobbyHotbar(), new ArenaProtection(() -> false),
                 new LobbyProtection(() -> !game.running(), api.buildMode(), () -> java.util.Optional.of(arena.point("lobby"))))
                 .forEach(listener -> getServer().getPluginManager().registerEvents(listener, this));
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {

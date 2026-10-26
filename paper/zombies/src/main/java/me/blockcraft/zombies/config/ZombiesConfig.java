@@ -18,7 +18,7 @@ public record ZombiesConfig(int maxPlayers, int startingGold, int intermissionSe
                             int powerPrice, int teamRevivePrice, double dropChance, int powerupTicks, int powerupsPerWave,
                             int noteCoins, int healthRegenTicks, double extraHealth, double headshotMultiplier, double knifeDamage, int damageImmunityTicks,
                             Waves waves, Map<Weapon, Gun> guns, Map<Perk, Integer> perks, Map<EnemyKind, Enemy> enemies, Exploder exploder,
-                            Events events) {
+                            Events events, Abilities abilities) {
 
     /** The last {@code stragglers} enemies of a wave move at least at {@code stragglerSpeed}. */
     public record Waves(int total, int baseEnemies, int enemiesPerWave, double extraPlayer, double healthPerWave, double damagePerWave,
@@ -38,10 +38,11 @@ public record ZombiesConfig(int maxPlayers, int startingGold, int intermissionSe
 
     /**
      * In mixed waves the kind's {@code weight} at its {@code firstWave} moves evenly to {@code lateWeight} at the final
-     * wave. {@code slowTicks} is how long its touch slows a player; 0 for a kind that does not slow.
+     * wave. {@code slowTicks} is how long its touch slows a player; 0 for a kind that does not slow. {@code scale}
+     * sizes its body and its hitbox.
      */
     public record Enemy(int firstWave, double health, double damage, double speed, double weight, double lateWeight,
-                        int slowTicks) {
+                        int slowTicks, double scale) {
 
         public double weightAt(int wave, int finalWave) {
             if (wave < firstWave) {
@@ -107,6 +108,39 @@ public record ZombiesConfig(int maxPlayers, int startingGold, int intermissionSe
     /** After {@code warningTicks} the room fills for {@code ticks}; every {@code pulseTicks} a fighter inside takes {@code damage}. */
     public record ToxicFog(int warningTicks, int ticks, int pulseTicks, double damage, int slowTicks) { }
 
+    /** What the special kinds do beyond chasing and biting, each read from {@code abilities.<kind>}. */
+    public record Abilities(Arsonist arsonist, ShieldBearer shieldBearer, Breeder breeder, Frost frost, Crawler crawler,
+                            Electric electric, Shadow shadow) { }
+
+    /**
+     * Stays between {@code keepDistance} and {@code throwRange} from the nearest fighter and every {@code throwTicks}
+     * lobs a Molotov that lands after {@code flightTicks}. The ground then burns within {@code fireRadius} for
+     * {@code fireTicks}, and every {@code pulseTicks} it deals the kind's damage to a fighter standing in it.
+     */
+    public record Arsonist(double keepDistance, double throwRange, int throwTicks, int flightTicks, double fireRadius,
+                           int fireTicks, int pulseTicks) { }
+
+    /** A hit from a shooter within {@code frontAngle} degrees of where it faces loses {@code blockedShare} of its damage. */
+    public record ShieldBearer(double frontAngle, double blockedShare) { }
+
+    /** Bursts into {@code brood} crawlers when it dies. */
+    public record Breeder(int brood) { }
+
+    /** A touch adds {@code touchFreezeTicks} of frost, the aura within {@code auraRadius} {@code auraFreezeTicks}; both slow at {@code slowness}. */
+    public record Frost(double auraRadius, int auraFreezeTicks, int touchFreezeTicks, int slowness) { }
+
+    /** Comes in packs of up to {@code pack}, each one enemy of the wave. */
+    public record Crawler(int pack) { }
+
+    /**
+     * Every {@code zapTicks} it zaps the nearest fighter within {@code range}. The zap jumps up to {@code jumps} times
+     * to the next fighter within {@code jumpRange}, each jump dealing {@code jumpShare} of the one before.
+     */
+    public record Electric(int zapTicks, double range, int jumps, double jumpRange, double jumpShare) { }
+
+    /** Freezes while a fighter with line of sight looks at it within {@code watchAngle} degrees. */
+    public record Shadow(double watchAngle) { }
+
     public static ZombiesConfig from(ConfigurationSection yaml) {
         var waves = new Waves(positive(yaml, "waves.total"), positive(yaml, "waves.base-enemies"),
                 positive(yaml, "waves.enemies-per-wave"), Math.max(0, yaml.getDouble("waves.extra-player")),
@@ -140,7 +174,7 @@ public record ZombiesConfig(int maxPlayers, int startingGold, int intermissionSe
             enemies.put(kind, new Enemy(positive(yaml, path + "first-wave"), Math.max(1, yaml.getDouble(path + "health")),
                     Math.max(1, yaml.getDouble(path + "damage")), Math.clamp(yaml.getDouble(path + "speed"), 0.05, 0.6),
                     Math.max(0, yaml.getDouble(path + "weight")), Math.max(0, yaml.getDouble(path + "late-weight", yaml.getDouble(path + "weight"))),
-                    Math.max(0, yaml.getInt(path + "slow-seconds")) * 20));
+                    Math.max(0, yaml.getInt(path + "slow-seconds")) * 20, Math.clamp(yaml.contains(path + "scale") ? yaml.getDouble(path + "scale") : 1, 0.3, 3)));
         }
         return new ZombiesConfig(Math.clamp(yaml.getInt("players.max", 4), 1, 4), positive(yaml, "gold.start"),
                 positive(yaml, "countdown.intermission"), positive(yaml, "countdown.wave-limit"),
@@ -160,7 +194,26 @@ public record ZombiesConfig(int maxPlayers, int startingGold, int intermissionSe
                 new Exploder(Math.clamp(yaml.getDouble("exploder.trigger-range"), 1, 8), positive(yaml, "exploder.fuse-ticks"),
                         Math.clamp(yaml.getDouble("exploder.rush-speed"), 0.05, 0.6), Math.clamp(yaml.getDouble("exploder.radius"), 1, 8),
                         Math.max(0, yaml.getDouble("exploder.knockback"))),
-                events(yaml));
+                events(yaml), abilities(yaml));
+    }
+
+    private static Abilities abilities(ConfigurationSection yaml) {
+        double keepDistance = Math.clamp(yaml.getDouble("abilities.arsonist.keep-distance"), 2, 16);
+        return new Abilities(
+                new Arsonist(keepDistance, Math.clamp(yaml.getDouble("abilities.arsonist.throw-range"), keepDistance + 1, 24),
+                        positive(yaml, "abilities.arsonist.throw-ticks"), Math.clamp(yaml.getInt("abilities.arsonist.flight-ticks"), 5, 60),
+                        Math.clamp(yaml.getDouble("abilities.arsonist.fire-radius"), 0.5, 5), positive(yaml, "abilities.arsonist.fire-seconds") * 20,
+                        positive(yaml, "abilities.arsonist.pulse-ticks")),
+                new ShieldBearer(Math.clamp(yaml.getDouble("abilities.shield_bearer.front-angle"), 0, 180),
+                        Math.clamp(yaml.getDouble("abilities.shield_bearer.blocked-share"), 0, 1)),
+                new Breeder(Math.clamp(yaml.getInt("abilities.breeder.brood"), 0, 8)),
+                new Frost(Math.clamp(yaml.getDouble("abilities.frost.aura-radius"), 0, 8), Math.max(0, yaml.getInt("abilities.frost.aura-freeze-ticks")),
+                        Math.max(0, yaml.getInt("abilities.frost.touch-freeze-ticks")), Math.clamp(yaml.getInt("abilities.frost.slowness"), 0, 4)),
+                new Crawler(Math.clamp(yaml.getInt("abilities.crawler.pack"), 1, 6)),
+                new Electric(positive(yaml, "abilities.electric.zap-ticks"), Math.clamp(yaml.getDouble("abilities.electric.range"), 1, 24),
+                        Math.clamp(yaml.getInt("abilities.electric.jumps"), 0, 3), Math.clamp(yaml.getDouble("abilities.electric.jump-range"), 0, 8),
+                        Math.clamp(yaml.getDouble("abilities.electric.jump-share"), 0, 1)),
+                new Shadow(Math.clamp(yaml.getDouble("abilities.shadow.watch-angle"), 5, 90)));
     }
 
     private static Events events(ConfigurationSection yaml) {

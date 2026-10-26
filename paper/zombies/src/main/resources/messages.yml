@@ -104,6 +104,13 @@ enemy:
   toxic: "<success>Giftzombie"
   hellhound: "<error>Höllenhund"
   inferno: "<error><bold>Inferno"
+  crawler: "<zombies>Kriecher"
+  shield_bearer: "<muted>Schildträger"
+  frost: "<primary>Frost-Zombie"
+  arsonist: "<error>Brandstifter"
+  electric: "<accent>Elektro-Zombie"
+  breeder: "<success>Brüter"
+  shadow: "<dark>Schattenläufer"
 revive:
   solo: "<prefix><success>Selbstrettung! <muted>Dein Wiederbelebungs-Perk wurde verbraucht."
   downed: "<prefix><error><player> ist gefallen! <muted>Du hast <accent><seconds>s <muted>für die Rettung."

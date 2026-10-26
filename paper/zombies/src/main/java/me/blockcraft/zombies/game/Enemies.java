@@ -38,6 +38,7 @@ public final class Enemies {
     /** The server rejects a higher max health (spigot.yml, settings.attribute.maxHealth.max). */
     private static final double HEALTH_LIMIT = 1024;
     private final ZombiesGame game;
+    private final Abilities abilities;
     private final Map<UUID, Enemy> enemies = new LinkedHashMap<>();
     private final Map<String, Integer> breaking = new HashMap<>();
     private int nextSpawn;
@@ -45,7 +46,7 @@ public final class Enemies {
     private WavePlan plan;
     private boolean applyingDamage;
 
-    private static final class Enemy {
+    static final class Enemy {
         final Mob mob;
         final EnemyKind kind;
         final ArenaMap.Window window;
@@ -66,6 +67,7 @@ public final class Enemies {
 
     public Enemies(ZombiesGame game) {
         this.game = game;
+        this.abilities = new Abilities(game, this);
         game.arena().world().getEntities().stream().filter(entity -> entity.getScoreboardTags().contains(OWNER_TAG)).forEach(Entity::remove);
     }
 
@@ -84,6 +86,9 @@ public final class Enemies {
         return enemy != null && enemy.breached;
     }
     public boolean applyingDamage() { return applyingDamage; }
+    public Abilities abilities() { return abilities; }
+    Enemy enemy(Entity entity) { return enemies.get(entity.getUniqueId()); }
+    double damage(Enemy enemy) { return stats(enemy).damage() * plan.damageMultiplier(); }
 
     public void tick(int tick) {
         var waves = game.config().waves();
@@ -94,10 +99,14 @@ public final class Enemies {
                 nextSpawn = tick + plan.spawnTicks();
             }
         }
+        abilities.tick(tick);
         boolean stragglers = unspawned == 0 && enemies.size() <= waves.stragglers();
         for (var enemy : new ArrayList<>(enemies.values())) {
             if (!enemy.mob.isValid() || enemy.mob.isDead()) {
                 enemies.remove(enemy.mob.getUniqueId());
+                continue;
+            }
+            if (abilities.of(enemy.kind).holds(enemy)) {
                 continue;
             }
             if (enemy.fuseAt > 0) {
@@ -124,12 +133,22 @@ public final class Enemies {
 
     private void spawn(ArenaMap.Window window) {
         EnemyKind kind = plan.boss() && unspawned == plan.enemies() ? EnemyKind.INFERNO : plan.hounds() ? EnemyKind.HELLHOUND : choose();
+        int pack = Math.min(abilities.of(kind).pack(), game.config().waves().maxAlive() - enemies.size());
+        for (int member = 0; member < pack && unspawned > 0; member++) {
+            if (summon(kind, window, window.spawn(), false) != null) {
+                unspawned--;
+            }
+        }
+    }
+
+    /** Adds an enemy to the running wave, which clears only once it is dead, whether or not its plan counted it. */
+    Enemy summon(EnemyKind kind, ArenaMap.Window window, Location at, boolean breached) {
         var stats = game.config().enemies().get(kind);
-        var mob = (Mob) game.arena().world().spawnEntity(window.spawn(), kind.entity(),
+        var mob = (Mob) game.arena().world().spawnEntity(at, kind.entity(),
                 org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.CUSTOM);
         if (!mob.isValid()) {
             mob.remove();
-            return;
+            return null;
         }
         mob.addScoreboardTag(OWNER_TAG);
         mob.setPersistent(false);
@@ -155,13 +174,17 @@ public final class Enemies {
         attribute(mob, Attribute.MOVEMENT_SPEED, stats.speed());
         attribute(mob, Attribute.ATTACK_DAMAGE, stats.damage() * plan.damageMultiplier());
         attribute(mob, Attribute.FOLLOW_RANGE, 100);
+        attribute(mob, Attribute.SCALE, stats.scale());
         var equipment = mob.getEquipment();
         if (equipment != null) {
             equipment.clear();
             dress(kind, equipment);
+            abilities.of(kind).equip(mob, equipment);
         }
-        enemies.put(mob.getUniqueId(), new Enemy(mob, kind, window, toughness));
-        unspawned--;
+        var enemy = new Enemy(mob, kind, window, toughness);
+        enemy.breached = breached;
+        enemies.put(mob.getUniqueId(), enemy);
+        return enemy;
     }
 
     private EnemyKind choose() {
@@ -204,7 +227,7 @@ public final class Enemies {
         }
     }
 
-    private static ItemStack gear(Items.Builder item) {
+    static ItemStack gear(Items.Builder item) {
         var stack = item.build();
         stack.setData(DataComponentTypes.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.itemAttributes().build());
         return stack;
@@ -248,6 +271,9 @@ public final class Enemies {
             return;
         }
         Player player = target.get();
+        if (abilities.of(enemy.kind).hunt(enemy, player, tick)) {
+            return;
+        }
         enemy.mob.setTarget(player);
         enemy.mob.getPathfinder().moveTo(player, 1.0);
         if (tick < enemy.specialAt) {
@@ -307,7 +333,8 @@ public final class Enemies {
         mob.setNoDamageTicks(0);
         applyingDamage = true;
         try {
-            mob.damage(game.instantKill() && enemy.kind != EnemyKind.INFERNO ? mob.getHealth() * 100 : damage / enemy.toughness, player);
+            mob.damage(game.instantKill() && enemy.kind != EnemyKind.INFERNO ? mob.getHealth() * 100
+                    : abilities.of(enemy.kind).shot(enemy, player, damage) / enemy.toughness, player);
         } finally {
             applyingDamage = false;
         }
@@ -321,12 +348,16 @@ public final class Enemies {
 
     public Player killed(Mob mob) {
         var enemy = enemies.remove(mob.getUniqueId());
+        if (enemy != null) {
+            abilities.of(enemy.kind).died(enemy);
+        }
         return enemy == null || enemy.attacker == null ? null : org.bukkit.Bukkit.getPlayer(enemy.attacker);
     }
 
     public void clear() {
         enemies.values().forEach(enemy -> enemy.mob.remove());
         enemies.clear();
+        abilities.clear();
         breaking.clear();
         unspawned = 0;
     }
