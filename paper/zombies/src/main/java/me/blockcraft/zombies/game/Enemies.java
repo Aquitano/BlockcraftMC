@@ -1,17 +1,26 @@
 package me.blockcraft.zombies.game;
 
+import io.papermc.paper.datacomponent.DataComponentTypes;
+import io.papermc.paper.datacomponent.item.ItemAttributeModifiers;
+import me.blockcraft.api.item.Items;
+import me.blockcraft.api.pack.PackModel;
 import me.blockcraft.zombies.arena.ArenaMap;
+import me.blockcraft.zombies.config.ZombiesConfig;
+import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Wolf;
 import org.bukkit.entity.Zombie;
+import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -24,6 +33,7 @@ import java.util.concurrent.ThreadLocalRandom;
 public final class Enemies {
 
     private static final String OWNER_TAG = "blockcraft_zombies_enemy";
+    private static final Color RUNNER_COLOR = Color.fromRGB(0xE0, 0x6C, 0x1F);
     /** The server rejects a higher max health (spigot.yml, settings.attribute.maxHealth.max). */
     private static final double HEALTH_LIMIT = 1024;
     private final ZombiesGame game;
@@ -72,17 +82,22 @@ public final class Enemies {
     public boolean applyingDamage() { return applyingDamage; }
 
     public void tick(int tick) {
-        if (unspawned > 0 && tick >= nextSpawn && enemies.size() < game.config().waves().maxAlive()) {
+        var waves = game.config().waves();
+        if (unspawned > 0 && (tick >= nextSpawn || enemies.isEmpty()) && enemies.size() < waves.maxAlive()) {
             var windows = game.arena().activeWindows();
             if (!windows.isEmpty()) {
                 spawn(windows.get(ThreadLocalRandom.current().nextInt(windows.size())));
                 nextSpawn = tick + plan.spawnTicks();
             }
         }
+        boolean stragglers = unspawned == 0 && enemies.size() <= waves.stragglers();
         for (var enemy : new ArrayList<>(enemies.values())) {
             if (!enemy.mob.isValid() || enemy.mob.isDead()) {
                 enemies.remove(enemy.mob.getUniqueId());
                 continue;
+            }
+            if (stragglers && enemy.kind != EnemyKind.INFERNO) {
+                hurry(enemy.mob, waves.stragglerSpeed());
             }
             if (!enemy.breached) {
                 breach(enemy, tick);
@@ -93,9 +108,9 @@ public final class Enemies {
     }
 
     private void spawn(ArenaMap.Window window) {
-        EnemyKind kind = plan.boss() && unspawned == plan.enemies() ? EnemyKind.INFERNO : choose();
+        EnemyKind kind = plan.boss() && unspawned == plan.enemies() ? EnemyKind.INFERNO : plan.hounds() ? EnemyKind.HELLHOUND : choose();
         var stats = game.config().enemies().get(kind);
-        var mob = (Mob) game.arena().world().spawnEntity(window.spawn(), kind == EnemyKind.HELLHOUND ? EntityType.WOLF : EntityType.ZOMBIE,
+        var mob = (Mob) game.arena().world().spawnEntity(window.spawn(), kind.entity(),
                 org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.CUSTOM);
         if (!mob.isValid()) {
             mob.remove();
@@ -112,6 +127,11 @@ public final class Enemies {
             zombie.setAdult();
             zombie.setShouldBurnInDay(false);
         }
+        if (mob instanceof Wolf wolf) {
+            wolf.setVariant(Wolf.Variant.BLACK);
+            wolf.setSoundVariant(Wolf.SoundVariant.ANGRY);
+            wolf.setAngry(true);
+        }
         double bossScale = kind == EnemyKind.INFERNO ? 1 + (game.teamSize() - 1) * game.config().waves().extraPlayer() : 1;
         double health = stats.health() * plan.healthMultiplier() * bossScale;
         double toughness = Math.max(1, health / HEALTH_LIMIT);
@@ -123,30 +143,63 @@ public final class Enemies {
         var equipment = mob.getEquipment();
         if (equipment != null) {
             equipment.clear();
-            if (kind == EnemyKind.TANK || kind == EnemyKind.INFERNO) {
-                equipment.setHelmet(ItemStack.of(kind == EnemyKind.INFERNO ? Material.CARVED_PUMPKIN : Material.IRON_HELMET));
-                equipment.setHelmetDropChance(0);
-            }
+            dress(kind, equipment);
         }
         enemies.put(mob.getUniqueId(), new Enemy(mob, kind, window, toughness));
         unspawned--;
     }
 
     private EnemyKind choose() {
-        var candidates = game.config().enemies().entrySet().stream()
-                .filter(entry -> entry.getKey() != EnemyKind.INFERNO && entry.getValue().firstWave() <= plan.wave()).toList();
-        int total = candidates.stream().mapToInt(entry -> entry.getValue().weight()).sum();
-        if (total == 0) {
+        var weights = game.config().mix(plan.wave());
+        double total = weights.values().stream().mapToDouble(Double::doubleValue).sum();
+        if (total <= 0) {
             return EnemyKind.WALKER;
         }
-        int selection = ThreadLocalRandom.current().nextInt(total);
-        for (var candidate : candidates) {
-            selection -= candidate.getValue().weight();
+        double selection = ThreadLocalRandom.current().nextDouble(total);
+        for (var weight : weights.entrySet()) {
+            selection -= weight.getValue();
             if (selection < 0) {
-                return candidate.getKey();
+                return weight.getKey();
             }
         }
         return EnemyKind.WALKER;
+    }
+
+    /** The head slot asks for the pack's model; the rest reads without the pack. Gear adds no armour beyond the config's health. */
+    private static void dress(EnemyKind kind, EntityEquipment equipment) {
+        switch (kind) {
+            case RUNNER -> {
+                equipment.setHelmet(PackModel.ZOMBIES_RUNNER_GOGGLES.item().build());
+                equipment.setChestplate(gear(Items.of(Material.LEATHER_CHESTPLATE).color(RUNNER_COLOR)));
+                equipment.setBoots(gear(Items.of(Material.LEATHER_BOOTS).color(RUNNER_COLOR)));
+            }
+            case TANK -> {
+                equipment.setHelmet(PackModel.ZOMBIES_RIOT_HELMET.item().build());
+                equipment.setChestplate(gear(Items.of(Material.IRON_CHESTPLATE)));
+                equipment.setLeggings(gear(Items.of(Material.IRON_LEGGINGS)));
+                equipment.setBoots(gear(Items.of(Material.IRON_BOOTS)));
+            }
+            case EXPLODER -> equipment.setHelmet(PackModel.ZOMBIES_DYNAMITE.item().build());
+            case TOXIC -> equipment.setHelmet(PackModel.ZOMBIES_GAS_MASK.item().build());
+            case INFERNO -> {
+                equipment.setHelmet(PackModel.ZOMBIES_INFERNO.item().build());
+                equipment.setChestplate(gear(Items.of(Material.NETHERITE_CHESTPLATE)));
+            }
+            case WALKER, HELLHOUND -> { }
+        }
+    }
+
+    private static ItemStack gear(Items.Builder item) {
+        var stack = item.build();
+        stack.setData(DataComponentTypes.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.itemAttributes().build());
+        return stack;
+    }
+
+    private static void hurry(Mob mob, double speed) {
+        var movement = mob.getAttribute(Attribute.MOVEMENT_SPEED);
+        if (movement != null && movement.getBaseValue() < speed) {
+            movement.setBaseValue(speed);
+        }
     }
 
     private void breach(Enemy enemy, int tick) {
@@ -195,6 +248,13 @@ public final class Enemies {
                 }
             }
             enemy.mob.setHealth(0);
+        } else if (enemy.kind == EnemyKind.TOXIC && stats(enemy).slowTicks() > 0
+                && enemy.mob.getLocation().distanceSquared(player.getLocation()) < 6 && enemy.mob.hasLineOfSight(player)) {
+            int slowTicks = stats(enemy).slowTicks();
+            enemy.specialAt = tick + slowTicks;
+            player.getWorld().spawnParticle(Particle.ITEM_SLIME, player.getLocation().add(0, 1, 0), 16, 0.3, 0.5, 0.3, 0);
+            player.getWorld().playSound(player.getLocation(), Sound.ENTITY_SLIME_SQUISH, 0.8f, 0.7f);
+            player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, slowTicks, 1));
         } else if (enemy.kind == EnemyKind.INFERNO && enemy.mob.hasLineOfSight(player)) {
             enemy.specialAt = tick + 80;
             enemy.mob.getWorld().spawnParticle(Particle.FLAME, enemy.mob.getEyeLocation(), 20, 0.3, 0.3, 0.3, 0.05);
@@ -233,6 +293,10 @@ public final class Enemies {
         enemies.clear();
         breaking.clear();
         unspawned = 0;
+    }
+
+    private ZombiesConfig.Enemy stats(Enemy enemy) {
+        return game.config().enemies().get(enemy.kind);
     }
 
     private static void attribute(Mob mob, Attribute attribute, double value) {

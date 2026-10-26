@@ -213,7 +213,7 @@ public final class ZombiesGame {
         var plan = WavePlan.forSquad(wave, teamSize, config.waves());
         waveTotal = plan.enemies();
         enemies.begin(plan);
-        title(plan.boss() ? "wave.boss-title" : "wave.title", "wave.subtitle",
+        title(plan.boss() ? "wave.boss-title" : plan.hounds() ? "wave.hound-title" : "wave.title", "wave.subtitle",
                 Formatter.number("wave", wave), Formatter.number("enemies", plan.enemies()));
         Sounds.COUNTDOWN_GO.playToAll();
         effects.horn(plan.boss());

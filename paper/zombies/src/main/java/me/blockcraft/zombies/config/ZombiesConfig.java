@@ -17,21 +17,61 @@ public record ZombiesConfig(int maxPlayers, int startingGold, int intermissionSe
                             int noteCoins, int healthRegenTicks, double extraHealth, double headshotMultiplier, double knifeDamage, int damageImmunityTicks,
                             Waves waves, Map<Weapon, Gun> guns, Map<Perk, Integer> perks, Map<EnemyKind, Enemy> enemies) {
 
+    /** The last {@code stragglers} enemies of a wave move at least at {@code stragglerSpeed}. */
     public record Waves(int total, int baseEnemies, int enemiesPerWave, double extraPlayer, double healthPerWave,
-                        int spawnTicks, int minimumSpawnTicks, int maxAlive, int bossEvery) { }
+                        int spawnTicks, double spawnTicksPerWave, int minimumSpawnTicks, int maxAlive, int bossEvery,
+                        Late late, Hounds hounds, int stragglers, double stragglerSpeed) { }
+
+    /** Every wave after {@code from} adds these on top of the per-wave growth. */
+    public record Late(int from, double healthPerWave, double healthPerExtraPlayer, double spawnTicksPerWave) { }
+
+    /** From wave {@code first}, every {@code every}th wave that is no boss wave sends only hellhounds, {@code share} as many. */
+    public record Hounds(int first, int every, double share) { }
 
     /** {@code burnDamage} per second for {@code burnTicks} after a hit; 0 for a gun that does not set fire. */
     public record Gun(int price, double damage, double range, int pellets, double spread,
                       int clip, int reserve, int cooldownTicks, int reloadTicks, double upgradeMultiplier,
                       double burnDamage, int burnTicks) { }
 
-    public record Enemy(int firstWave, double health, double damage, double speed, int weight) { }
+    /**
+     * In mixed waves the kind's {@code weight} at its {@code firstWave} moves evenly to {@code lateWeight} at the final
+     * wave. {@code slowTicks} is how long its touch slows a player; 0 for a kind that does not slow.
+     */
+    public record Enemy(int firstWave, double health, double damage, double speed, double weight, double lateWeight,
+                        int slowTicks) {
+
+        public double weightAt(int wave, int finalWave) {
+            if (wave < firstWave) {
+                return 0;
+            }
+            double progress = finalWave <= firstWave ? 1 : Math.min(1, (wave - firstWave) / (double) (finalWave - firstWave));
+            return weight + (lateWeight - weight) * progress;
+        }
+    }
+
+    /** Each kind's weight in a mixed wave; the boss comes only on boss waves. */
+    public Map<EnemyKind, Double> mix(int wave) {
+        var weights = new EnumMap<EnemyKind, Double>(EnemyKind.class);
+        enemies.forEach((kind, enemy) -> {
+            if (kind != EnemyKind.INFERNO) {
+                weights.put(kind, enemy.weightAt(wave, waves.total()));
+            }
+        });
+        return weights;
+    }
 
     public static ZombiesConfig from(ConfigurationSection yaml) {
         var waves = new Waves(positive(yaml, "waves.total"), positive(yaml, "waves.base-enemies"),
                 positive(yaml, "waves.enemies-per-wave"), Math.max(0, yaml.getDouble("waves.extra-player")),
                 Math.max(0, yaml.getDouble("waves.health-per-wave")), positive(yaml, "waves.spawn-ticks"),
-                positive(yaml, "waves.minimum-spawn-ticks"), positive(yaml, "waves.max-alive"), positive(yaml, "waves.boss-every"));
+                Math.max(0, yaml.getDouble("waves.spawn-ticks-per-wave")), positive(yaml, "waves.minimum-spawn-ticks"),
+                positive(yaml, "waves.max-alive"), positive(yaml, "waves.boss-every"),
+                new Late(positive(yaml, "waves.late.from"), Math.max(0, yaml.getDouble("waves.late.health-per-wave")),
+                        Math.max(0, yaml.getDouble("waves.late.health-per-extra-player")),
+                        Math.max(0, yaml.getDouble("waves.late.spawn-ticks-per-wave"))),
+                new Hounds(positive(yaml, "waves.hounds.first"), positive(yaml, "waves.hounds.every"),
+                        Math.clamp(yaml.getDouble("waves.hounds.share"), 0.1, 1)),
+                Math.max(0, yaml.getInt("waves.stragglers")), Math.clamp(yaml.getDouble("waves.straggler-speed"), 0.05, 0.6));
         var guns = new EnumMap<Weapon, Gun>(Weapon.class);
         for (var weapon : Weapon.values()) {
             String path = "weapons." + weapon.key() + ".";
@@ -51,7 +91,8 @@ public record ZombiesConfig(int maxPlayers, int startingGold, int intermissionSe
             String path = "enemies." + kind.key() + ".";
             enemies.put(kind, new Enemy(positive(yaml, path + "first-wave"), Math.max(1, yaml.getDouble(path + "health")),
                     Math.max(1, yaml.getDouble(path + "damage")), Math.clamp(yaml.getDouble(path + "speed"), 0.05, 0.6),
-                    positive(yaml, path + "weight")));
+                    Math.max(0, yaml.getDouble(path + "weight")), Math.max(0, yaml.getDouble(path + "late-weight", yaml.getDouble(path + "weight"))),
+                    Math.max(0, yaml.getInt(path + "slow-seconds")) * 20));
         }
         return new ZombiesConfig(Math.clamp(yaml.getInt("players.max", 4), 1, 4), positive(yaml, "gold.start"),
                 positive(yaml, "countdown.intermission"), positive(yaml, "countdown.wave-limit"),

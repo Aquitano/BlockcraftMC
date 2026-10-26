@@ -10,9 +10,9 @@ From the repository root, build the plugins and start the local services:
 docker compose up -d mariadb velocity lobby zombies
 ```
 
-Join through Velocity and run `/play zombies`. One player starts the 30-second lobby countdown.
+Join through Velocity and run `/play zombies`. One player starts the 20-second lobby countdown.
 Staff can shorten it with `/start`. A player who joins after the match starts watches that match.
-The resource pack adds weapon models and a navigator icon. Controls, names, and menus also work without the pack.
+The resource pack adds weapon models, enemy headgear, and a navigator icon. Controls, names, and menus also work without the pack.
 
 For the host run task, start the local database first, then run:
 
@@ -58,6 +58,10 @@ A map save writes the intact doors and barricades, even during a match. It resto
 
 Edit [config.yml](src/main/resources/config.yml) in the plugin's data directory and restart the game server.
 `waves` controls the final wave, squad scaling, spawn pacing, health growth, and boss interval.
+After `waves.late.from`, health and spawn pace grow faster, and health grows faster still for each extra player.
+`waves.hounds` sets the hellhound waves: from `first`, every `every`th wave that is no boss wave sends only hellhounds.
+In every other wave, each enemy kind joins at its `first-wave` with `weight` and moves evenly to `late-weight` by the final wave.
+The last `waves.stragglers` enemies of a wave speed up to `waves.straggler-speed`, and a wave with nobody left alive spawns at once.
 The squad size is sampled at the start of each wave. Temporary deaths do not reduce the squad size.
 `weapons`, `enemies`, `perks`, `prices`, and `gold` hold combat and economy values.
 `rewards` pays network coins through the shared round summary. Gold stays in the match.
@@ -76,7 +80,7 @@ In solo play, Quick Revive is consumed to survive one lethal hit. Losing the las
 
 For MariaDB integration tests, set `BLOCKCRAFT_TEST_DB_PORT` and `BLOCKCRAFT_TEST_DB_PASSWORD` for an isolated test database.
 In a Minecraft client, check a solo start, gun controls, a room purchase, power and upgrades, and a cooperative revive.
-Check the weapon models with the resource pack both enabled and declined.
+Check the weapon models and the enemies' headgear with the resource pack both enabled and declined.
 The [arena playtest checklist](TESTING.md) covers every station, barricade, and player state.
 
 To inspect a saved arena in the local 3D viewer, use the [map inspector](../../dev/map-inspector/README.md):

@@ -2,10 +2,10 @@ players:
   min: 1
   max: 4
 countdown:
-  lobby: 30
+  lobby: 20
   start: 5
   restart: 15
-  intermission: 12
+  intermission: 10
   wave-limit: 300
 idle-restart-minutes: 50
 timer-bar: true
@@ -16,10 +16,22 @@ waves:
   enemies-per-wave: 2
   extra-player: 0.6
   health-per-wave: 0.07
-  spawn-ticks: 32
-  minimum-spawn-ticks: 8
+  spawn-ticks: 20
+  spawn-ticks-per-wave: 0.5
+  minimum-spawn-ticks: 7
   max-alive: 32
   boss-every: 10
+  late:
+    from: 10
+    health-per-wave: 0.10
+    health-per-extra-player: 0.05
+    spawn-ticks-per-wave: 0.5
+  hounds:
+    first: 7
+    every: 10
+    share: 0.75
+  stragglers: 3
+  straggler-speed: 0.30
 gold:
   start: 300
   hit: 5
@@ -39,7 +51,7 @@ revive:
   protection-seconds: 4
 barricades:
   repair-ticks: 25
-  break-ticks: 35
+  break-ticks: 30
 regeneration:
   delay-seconds: 5
 combat:
@@ -72,9 +84,10 @@ weapons:
   sniper: {price: 900, damage: 36, range: 65, pellets: 1, spread: 0, clip: 5, reserve: 60, cooldown-ticks: 22, reload-ticks: 50, upgrade-multiplier: 2.5}
   flamethrower: {price: 1200, damage: 8, range: 12, pellets: 1, spread: 0.3, clip: 60, reserve: 360, cooldown-ticks: 4, reload-ticks: 65, upgrade-multiplier: 2.5, burn-damage: 4, burn-seconds: 4}
 enemies:
-  walker: {first-wave: 1, health: 20, damage: 4, speed: 0.21, weight: 12}
-  runner: {first-wave: 4, health: 16, damage: 3, speed: 0.30, weight: 5}
-  tank: {first-wave: 7, health: 65, damage: 6, speed: 0.17, weight: 3}
-  exploder: {first-wave: 9, health: 24, damage: 8, speed: 0.25, weight: 3}
-  hellhound: {first-wave: 5, health: 16, damage: 3, speed: 0.32, weight: 3}
-  inferno: {first-wave: 10, health: 300, damage: 8, speed: 0.20, weight: 1}
+  walker: {first-wave: 1, health: 20, damage: 4, speed: 0.23, weight: 12, late-weight: 5}
+  runner: {first-wave: 4, health: 16, damage: 3, speed: 0.30, weight: 3, late-weight: 6}
+  tank: {first-wave: 6, health: 65, damage: 6, speed: 0.17, weight: 2, late-weight: 5}
+  exploder: {first-wave: 9, health: 24, damage: 8, speed: 0.25, weight: 2, late-weight: 4}
+  toxic: {first-wave: 12, health: 30, damage: 4, speed: 0.22, weight: 2, late-weight: 4, slow-seconds: 3}
+  hellhound: {first-wave: 7, health: 16, damage: 3, speed: 0.32, weight: 0}
+  inferno: {first-wave: 10, health: 300, damage: 8, speed: 0.20, weight: 0}

@@ -54,6 +54,8 @@ Neither attempt should spend gold or grant an item.
 10. Let an Inferno blast or Exploder explosion defeat the last fighter on the final wave. The result must remain a loss without clear rewards or another wave.
 11. Use the courtyard features and each wing's cover (racks, jeep, generator, operating room) to break line of sight. Check that enemies can still follow both routes around the cover.
 12. Listen at the start of each wave for the horn, and during intermissions for groans behind the boards. A wave clear shows a title.
+13. Reach wave 7. It sends only black hellhounds under its own title. Get slowed by a Giftzombie from wave 12 on.
+14. When three enemies remain in a wave, check that they speed up, and that a wave with nobody alive spawns its next enemy at once.
 
 ## Player states and integration
 
@@ -67,8 +69,8 @@ Neither attempt should spend gold or grant an item.
 | A fighter leaves | The player records a loss. The next wave uses the smaller squad. Losing the last fighter ends the round. |
 | Staff freezes a fighter | Door purchases and shooting stop. Unfreezing restores those interactions. |
 | A clear or team wipe | Rewards, stats, sidebar, recap, and the restart agree on the outcome. |
-| The resource pack is declined | Guns, controls, menus, and navigator entries remain readable. |
-| The resource pack is applied | Check every weapon in first person, third person, and the hotbar. |
+| The resource pack is declined | Guns, controls, menus, and navigator entries remain readable. Runners wear orange, tanks iron, exploders a TNT block and the Inferno a carved pumpkin. |
+| The resource pack is applied | Check every weapon in first person, third person, and the hotbar. Runners wear goggles, tanks a riot helmet, exploders dynamite, Giftzombies a gas mask and the Inferno a burning pumpkin. |
 
 During a local match, run `/map save` after opening a door and breaking a barricade.
 The live match must retain those changes. After a restart, the published template must have closed doors and intact boards.
