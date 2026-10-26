@@ -42,7 +42,7 @@ public final class StationMenu extends Menu {
                     if (weapon == Weapon.PISTOL) {
                         continue;
                     }
-                    add(slot, new Offer(game.messages().get("weapon." + weapon.key()), weapon.material(), config.guns().get(weapon).price(),
+                    add(slot, new Offer(game.messages().get("weapon." + weapon.key()), weapon.model().fallback(), config.guns().get(weapon).price(),
                             () -> !survivor.weapons().containsKey(weapon), () -> game.weapons().give(player, weapon)),
                             game.messages().get("shop.weapon-stats", Formatter.number("damage", config.guns().get(weapon).damage() * config.guns().get(weapon).pellets()),
                                     Formatter.number("clip", config.guns().get(weapon).clip())));

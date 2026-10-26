@@ -33,7 +33,7 @@ enum StaffTool implements HotbarItem {
 
     static void giveAll(Player player, Messages messages) {
         for (var tool : values()) {
-            player.getInventory().setItem(tool.slot, tool.build(player, tool.icon.item().name(tool.name(messages))));
+            player.getInventory().setItem(tool.slot, tool.build(tool.icon.item().name(tool.name(messages))));
         }
     }
 

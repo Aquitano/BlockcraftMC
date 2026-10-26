@@ -1,28 +1,29 @@
 package me.blockcraft.zombies.game;
 
-import org.bukkit.Material;
 import me.blockcraft.api.item.HotbarItem;
+import me.blockcraft.api.pack.PackModel;
 
 import java.util.Locale;
 
+/** The guns; each is a vanilla hoe that the pack draws as the gun's {@link PackModel}. */
 public enum Weapon implements HotbarItem {
-    PISTOL(Material.WOODEN_HOE),
-    RIFLE(Material.IRON_HOE),
-    SHOTGUN(Material.STONE_HOE),
-    SNIPER(Material.DIAMOND_HOE),
-    FLAMETHROWER(Material.GOLDEN_HOE);
+    PISTOL(PackModel.ZOMBIES_PISTOL),
+    RIFLE(PackModel.ZOMBIES_RIFLE),
+    SHOTGUN(PackModel.ZOMBIES_SHOTGUN),
+    SNIPER(PackModel.ZOMBIES_SNIPER),
+    FLAMETHROWER(PackModel.ZOMBIES_FLAMETHROWER);
 
-    private final Material material;
+    private final PackModel model;
 
-    Weapon(Material material) {
-        this.material = material;
+    Weapon(PackModel model) {
+        this.model = model;
     }
 
     public String key() {
         return name().toLowerCase(Locale.ROOT);
     }
 
-    public Material material() {
-        return material;
+    public PackModel model() {
+        return model;
     }
 }

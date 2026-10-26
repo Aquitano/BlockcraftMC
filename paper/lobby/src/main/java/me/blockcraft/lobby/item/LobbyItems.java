@@ -54,6 +54,6 @@ public final class LobbyItems {
     }
 
     private ItemStack item(Player player, LobbyItem item, Items.Builder icon, String nameKey) {
-        return item.build(player, icon.name(messages.get(nameKey)).lore(messages.get("item.lore")));
+        return item.build(icon.name(messages.get(nameKey)).lore(messages.get("item.lore")));
     }
 }

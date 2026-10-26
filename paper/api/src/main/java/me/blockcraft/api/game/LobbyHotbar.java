@@ -65,18 +65,18 @@ public final class LobbyHotbar implements Listener {
         var messages = BlockcraftApi.get().messages();
         var inventory = player.getInventory();
         refreshChoices(player);
-        inventory.setItem(STATS_SLOT, LobbyItem.STATS.build(player,
+        inventory.setItem(STATS_SLOT, LobbyItem.STATS.build(
                 MenuIcon.TOOL_PROFILE.mark(Items.head(player.getUniqueId(), BlockcraftApi.get().realName(player)))
                         .name(messages.get("hotbar.stats"))));
         if (player.hasPermission(GamePermissions.START)) {
-            inventory.setItem(START_SLOT, LobbyItem.START.build(player, MenuIcon.START.item().name(messages.get("hotbar.start"))));
+            inventory.setItem(START_SLOT, LobbyItem.START.build(MenuIcon.START.item().name(messages.get("hotbar.start"))));
         }
         giveHub(player);
     }
 
     /** Only the way back to the hub, for a game whose players wait for the restart in its lobby. */
     public void giveHub(Player player) {
-        player.getInventory().setItem(HUB_SLOT, LobbyItem.HUB.build(player,
+        player.getInventory().setItem(HUB_SLOT, LobbyItem.HUB.build(
                 MenuIcon.TOOL_HOME.item().name(BlockcraftApi.get().messages().get("hotbar.hub"))));
     }
 
@@ -85,7 +85,7 @@ public final class LobbyHotbar implements Listener {
         for (int slot = 0; slot < choices.size(); slot++) {
             var choice = choices.get(slot);
             player.getInventory().setItem(slot, choice.available().getAsBoolean()
-                    ? LobbyItem.values()[slot].build(player, choice.icon().item().name(choice.name()))
+                    ? LobbyItem.values()[slot].build(choice.icon().item().name(choice.name()))
                     : null);
         }
     }

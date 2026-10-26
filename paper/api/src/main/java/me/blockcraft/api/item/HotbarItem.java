@@ -1,9 +1,7 @@
 package me.blockcraft.api.item;
 
-import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.pack.MenuIcon;
 import org.bukkit.NamespacedKey;
-import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 
@@ -27,11 +25,12 @@ public interface HotbarItem {
         return stack;
     }
 
-    /** The tagged item, its {@link MenuIcon} drawn the way {@code viewer}'s client can show it. */
-    default ItemStack build(Player viewer, Items.Builder item) {
-        var stack = tag(item.build());
-        MenuIcon.style(stack, BlockcraftApi.get().resourcePack().applied(viewer));
-        return stack;
+    /**
+     * The tagged item. Its {@link MenuIcon} reaches the pack through custom_model_data, never as a model set for the
+     * holder, because everyone near the holder sees the item in their hand, with or without the pack.
+     */
+    default ItemStack build(Items.Builder item) {
+        return tag(item.build());
     }
 
     static <T extends Enum<T> & HotbarItem> Optional<T> of(ItemStack stack, Class<T> type) {

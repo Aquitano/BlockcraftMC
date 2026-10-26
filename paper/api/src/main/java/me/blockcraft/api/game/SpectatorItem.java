@@ -25,7 +25,7 @@ enum SpectatorItem implements HotbarItem {
 
     static void give(Player player, Messages messages) {
         for (var item : values()) {
-            player.getInventory().setItem(item.slot, item.build(player, item.icon.item().name(messages.get(item.messageKey))));
+            player.getInventory().setItem(item.slot, item.build(item.icon.item().name(messages.get(item.messageKey))));
         }
     }
 }

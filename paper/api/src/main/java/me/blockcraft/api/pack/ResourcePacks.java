@@ -57,13 +57,6 @@ public final class ResourcePacks implements Listener {
         if (wearing == previouslyApplied) {
             return;
         }
-        var inventory = player.getInventory();
-        for (int slot = 0; slot < inventory.getSize(); slot++) {
-            var item = inventory.getItem(slot);
-            if (item != null && MenuIcon.style(item, wearing)) {
-                inventory.setItem(slot, item);
-            }
-        }
         new PlayerResourcePackStatusEvent(player, ID, wearing
                 ? PlayerResourcePackStatusEvent.Status.SUCCESSFULLY_LOADED
                 : PlayerResourcePackStatusEvent.Status.DECLINED).callEvent();

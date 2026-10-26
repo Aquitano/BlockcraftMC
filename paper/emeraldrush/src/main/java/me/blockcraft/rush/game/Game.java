@@ -274,7 +274,7 @@ public final class Game {
             player.sendMessage(messages.get("shopping.info", Formatter.number("seconds", config.shoppingSeconds())));
             player.sendMessage(messages.get("shopping.hint"));
             player.getInventory().clear();
-            player.getInventory().setItem(4, GameItem.SHOP.build(player, MenuIcon.TOOL_SHOP.item().name(messages.get("item.shop"))));
+            player.getInventory().setItem(4, GameItem.SHOP.build(MenuIcon.TOOL_SHOP.item().name(messages.get("item.shop"))));
             spawns.teleport(player, SpawnPoint.SHOPPING);
             lives.put(player.getUniqueId(), config.lives());
         }

@@ -13,8 +13,10 @@ import java.util.Optional;
 
 /**
  * The pictures a menu or a hotbar can show on an item: the pack's {@code items/<key>.json} model for clients
- * wearing it, the vanilla item everyone else sees, decided in one place. An item built here carries its icon, so
- * {@link #style} can draw it right for its viewer wherever it ends up.
+ * wearing it, the vanilla item everyone else sees, decided in one place. An item built here carries its icon twice:
+ * as custom_model_data, which the pack's override of the vanilla item answers, so a held hotbar item or a display
+ * shows right to every viewer; and as a tag, so {@link #style} can also put the model on directly in a menu, which
+ * only its one viewer sees.
  */
 public enum MenuIcon {
 
@@ -34,6 +36,7 @@ public enum MenuIcon {
     TOOL_PROFILE(Material.PLAYER_HEAD),
     TOOL_HEADS(Material.PLAYER_HEAD),
     TOOL_SHIRTS(Material.LEATHER_CHESTPLATE),
+    TOOL_HATS(Material.GOLDEN_HELMET),
     TOOL_FRIENDS(Material.PLAYER_HEAD),
     TOOL_REQUESTS(Material.PAPER),
     TOOL_ADD_FRIEND(Material.WRITABLE_BOOK),
@@ -102,13 +105,25 @@ public enum MenuIcon {
         return Arrays.stream(values()).filter(icon -> icon.key().equals(key)).findFirst();
     }
 
+    public Material fallback() {
+        return fallback;
+    }
+
+    /** The custom_model_data the pack's override of the {@code fallback} item selects this icon by. */
+    public String modelData() {
+        return "blockcraft:icon/" + key();
+    }
+
     public Items.Builder item() {
         return mark(Items.of(fallback));
     }
 
-    /** Marks an item built elsewhere, such as a player's own head, so the pack draws this icon over it. */
+    /**
+     * Marks an item built elsewhere, such as a player's own head, so the pack draws this icon over it. Outside a
+     * menu that only works on the {@code fallback} material, whose override knows the icon.
+     */
     public Items.Builder mark(Items.Builder item) {
-        return item.hideAttributes()
+        return item.hideAttributes().modelData(modelData())
                 .edit(meta -> meta.getPersistentDataContainer().set(MARKER, PersistentDataType.STRING, key()));
     }
 

@@ -148,7 +148,7 @@ public final class Game {
         this.selector = new TeamSelector(plugin, layout, teams, messages, this::chooseTeam);
         this.cps = new CpsTester(plugin, layout.get(LobbyLayout.CPS_TESTER), messages);
         this.jumpAndRun = layout.get(LobbyLayout.JUMP_START).flatMap(start -> layout.get(LobbyLayout.JUMP_FINISH)
-                .map(finish -> new JumpAndRun(plugin, start, finish, messages, player -> GameItem.JUMP_RESET.build(player,
+                .map(finish -> new JumpAndRun(plugin, start, finish, messages, player -> GameItem.JUMP_RESET.build(
                         MenuIcon.JUMP.item().name(messages.get("item.jump-reset"))))));
         this.catchGame = new CatchGame(plugin, messages, round::players);
     }

@@ -269,7 +269,7 @@ public final class TttGame implements ShopMenu.Till {
             if (role.hasShop()) {
                 points.put(player.getUniqueId(), config.shop().startPoints());
                 var looted = player.getInventory().getItem(RoundItem.SLOT);
-                player.getInventory().setItem(RoundItem.SLOT, RoundItem.SHOP.build(player,
+                player.getInventory().setItem(RoundItem.SLOT, RoundItem.SHOP.build(
                         MenuIcon.TTT_SHOP.item().name(messages.get("item.shop", name))));
                 if (looted != null && !looted.isEmpty()) {
                     give(player, looted);

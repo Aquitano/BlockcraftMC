@@ -745,7 +745,7 @@ Everything the pack changes has a plain fallback, so a player without it sees va
   wide coloured buttons; the icon item sits in the middle slot and the outer slots hold invisible items, so the
   whole bar answers the click. An item built from a `MenuIcon` carries its icon, so every menu draws it with the
   pack's `items/<icon>.json` for pack wearers and as the vanilla item for everyone else; the lobby's and the games'
-  hotbars carry the same icons, restyled the moment the proxy's answer about the pack arrives. A hotbar item is a
+  hotbars carry the same icons through the pack's item overrides (below), so they need no restyling. A hotbar item is a
   `HotbarItem`, recognised by a tag in its data rather than its material. Every item in a menu gets the
   pack's tooltip (`tooltip_style`, the `gui/sprites/tooltip/menu_*` nine-slices), so the item names read on the same
   dark card as the panel.
@@ -756,8 +756,27 @@ Everything the pack changes has a plain fallback, so a player without it sees va
   active and vanilla sounds otherwise. `python3 resourcepack/SoundArt.py` regenerates the Ogg Vorbis files with
   Python and FFmpeg. `FeedbackSoundTest` checks that every custom sound has a definition and an audio asset.
 
+- Anything other players can see, such as a held or worn item or a display, keeps its vanilla item and asks for the
+  pack's model through custom_model_data: a `MenuIcon` as `blockcraft:icon/<key>`, a 3D model as a `PackModel`
+  (`blockcraft:<set>/<name>`). The pack overrides the vanilla item in `assets/minecraft/items/<item>.json` with a
+  `select` on that string, whose fallback is the item's own vanilla definition. A client without the pack draws the
+  vanilla item, so nobody ever sees a missing model, and no item depends on who holds it. `item_model` set for one
+  viewer (`MenuIcon.style`) is only for menus, which nobody else sees. The overrides are written from `MenuIcon` and
+  `PackModel` by `./gradlew :paper:api:packOverrides -PclientJar=<minecraft client jar>`, which copies each item's
+  vanilla definition out of the client jar (the map inspector downloads one to `run/map-inspector/data`); run it after
+  adding an icon or a model, and again for a new Minecraft version. `PackOverridesTest` fails when an override, a case,
+  a model or one of its `blockcraft:` textures is missing, or an override is left over.
+
 The textures are drawn by `java resourcepack/PackArt.java resourcepack/src` (panel colours, slots and the pixel
-icons live in that file). Item icons use a native 16-pixel grid, transparent margins, and upper-left lighting.
+icons live in that file). `PackArt` draws the UI art only. The hand-made 3D models live in
+`assets/blockcraft/models/item/<set>/` (`zombies`, `ttt`, `endergames`, `skywars`, `hats`, `gadgets`, `props`), each
+named by its `PackModel`. They are cuboids textured with vanilla block textures, which keeps the pack small and the
+look vanilla; a model that needs its own texture puts it under `textures/item/<set>/`. Made in Blockbench, a model is
+exported with "Java Block/Item"; its elements must stay between -16 and 32 on every axis, so a larger set piece is
+scaled up by its display rather than in the model, and textures stay at 16 to 64 pixels, because every change makes
+every client download the whole pack again. A held model points along +z and borrows the Zombies guns' display
+transforms; a hat stands on the head's 0..16 cube, worn on an item that is neither armour nor a skull, since the
+client draws a worn skull as a skull whatever its model. Item icons use a native 16-pixel grid, transparent margins, and upper-left lighting.
 HUD symbols use seven pixels of ink in each eight-pixel tile to align with the text baseline.
 A redrawn pack needs `stagePlugins` and a proxy restart, and the client re-downloads it
 because the hash changed. `UiFontTest` keeps the code's glyph table in step with `ui.json`. Open menus restyle when the pack becomes active

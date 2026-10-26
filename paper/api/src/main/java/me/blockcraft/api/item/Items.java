@@ -2,6 +2,7 @@ package me.blockcraft.api.item;
 
 import com.destroystokyo.paper.profile.PlayerProfile;
 import io.papermc.paper.datacomponent.DataComponentTypes;
+import io.papermc.paper.datacomponent.item.CustomModelData;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -89,7 +90,19 @@ public final class Items {
             return this;
         }
 
-        /** Draws the item with a model from the resource pack, whatever the material; only for clients wearing it. */
+        /**
+         * Asks the pack for the model {@code key} names. A client without the pack, or a pack without that model,
+         * draws the item as its material, so this is safe on anything other players see.
+         */
+        public Builder modelData(String key) {
+            stack.setData(DataComponentTypes.CUSTOM_MODEL_DATA, CustomModelData.customModelData().addString(key).build());
+            return this;
+        }
+
+        /**
+         * Draws the item with a model from the resource pack, whatever the material. Only for an item no client
+         * without the pack ever sees, such as one in a menu: anywhere else it is a missing model to them.
+         */
         public Builder model(Key model) {
             stack.setData(DataComponentTypes.ITEM_MODEL, model);
             return this;

@@ -86,10 +86,16 @@ public final class Holograms {
         });
     }
 
-    /** Messages and places change, the holograms in the world do not. */
+    /**
+     * Messages and places change, the holograms in the world do not. The icons are rewritten too, so one saved with
+     * the map before the pack could draw it on a display picks up the pack's model.
+     */
     public void refresh(World world) {
         for (var display : world.getEntitiesByClass(TextDisplay.class)) {
             nameOf(display).ifPresent(name -> display.text(text(name)));
+        }
+        for (var display : world.getEntitiesByClass(ItemDisplay.class)) {
+            nameOf(display).flatMap(this::icon).ifPresent(icon -> display.setItemStack(icon.item().build()));
         }
     }
 

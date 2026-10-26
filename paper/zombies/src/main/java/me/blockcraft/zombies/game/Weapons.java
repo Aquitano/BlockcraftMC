@@ -52,17 +52,14 @@ public final class Weapons {
         for (var entry : survivor.weapons().entrySet()) {
             var weapon = entry.getKey();
             var ammo = entry.getValue();
-            var builder = Items.of(weapon.material()).name(game.messages().get(ammo.upgraded() ? "weapon.upgraded" : "weapon.name",
+            var builder = weapon.model().item().name(game.messages().get(ammo.upgraded() ? "weapon.upgraded" : "weapon.name",
                             Placeholder.component("weapon", game.messages().get("weapon." + weapon.key()))))
                     .lore(game.messages().getLines("weapon.lore", Formatter.number("clip", ammo.clip()), Formatter.number("reserve", ammo.reserve())))
                     .hideAttributes().edit(meta -> meta.setUnbreakable(true));
             if (ammo.upgraded()) {
                 builder.glow();
             }
-            if (BlockcraftApi.get().resourcePack().applied(player)) {
-                builder.model(net.kyori.adventure.key.Key.key("blockcraft", "zombies_" + weapon.key()));
-            }
-            player.getInventory().setItem(slot++, weapon.build(player, builder));
+            player.getInventory().setItem(slot++, weapon.build(builder));
         }
         if (slot < 2) {
             player.getInventory().setItem(1, null);

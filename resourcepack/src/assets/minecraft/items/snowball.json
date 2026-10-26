@@ -1,0 +1,27 @@
+{
+  "model": {
+    "type": "minecraft:select",
+    "property": "minecraft:custom_model_data",
+    "index": 0,
+    "cases": [
+      {
+        "when": "blockcraft:gadgets/paint_gun",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/gadgets/paint_gun"
+        }
+      },
+      {
+        "when": "blockcraft:icon/trails",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/trails"
+        }
+      }
+    ],
+    "fallback": {
+      "type": "minecraft:model",
+      "model": "minecraft:item/snowball"
+    }
+  }
+}
