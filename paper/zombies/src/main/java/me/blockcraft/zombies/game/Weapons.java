@@ -4,9 +4,11 @@ import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.item.HotbarItem;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.sound.Sounds;
+import me.blockcraft.zombies.config.ZombiesConfig;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.FluidCollisionMode;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
@@ -14,17 +16,23 @@ import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.util.Vector;
 
 import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 
 public final class Weapons {
 
+    private static final int FLAME_PARTICLES = 8;
+
     private final ZombiesGame game;
+    private final Flames flames;
 
     public Weapons(ZombiesGame game) {
         this.game = game;
+        this.flames = new Flames(game);
     }
 
     public Optional<Weapon> held(Player player) {
@@ -106,16 +114,39 @@ public final class Weapons {
             return;
         }
         var eye = player.getEyeLocation();
-        var world = player.getWorld();
-        world.playSound(eye, weapon == Weapon.FLAMETHROWER ? Sound.ITEM_FIRECHARGE_USE : Sound.ENTITY_FIREWORK_ROCKET_BLAST,
+        eye.getWorld().playSound(eye, weapon == Weapon.FLAMETHROWER ? Sound.ITEM_FIRECHARGE_USE : Sound.ENTITY_FIREWORK_ROCKET_BLAST,
                 0.35f, weapon == Weapon.SNIPER ? 0.7f : 1.7f);
+        double multiplier = ammo.upgraded() ? stats.upgradeMultiplier() : 1;
+        var volley = weapon == Weapon.FLAMETHROWER ? spray(eye, stats, multiplier) : fire(eye, stats, multiplier);
+        for (var entry : volley.hits().entrySet()) {
+            var mob = entry.getKey();
+            game.addGold(player, game.config().hitGold());
+            if (survivor.perks().contains(Perk.FROZEN_BULLETS)) {
+                mob.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 40, 1));
+            }
+            if (stats.burnDamage() > 0) {
+                flames.ignite(player, mob, stats.burnDamage() * multiplier, stats.burnTicks(), tick);
+            }
+            game.enemies().hit(player, mob, game.instantKill() ? mob.getHealth() * 100 : entry.getValue());
+        }
+        if (!volley.hits().isEmpty()) {
+            Sounds.NOTE_PLING.note(player, volley.headshot() ? 20 : 12);
+        }
+        render(player);
+    }
+
+    private record Volley(Map<Mob, Double> hits, boolean headshot) {
+    }
+
+    private Volley fire(Location eye, ZombiesConfig.Gun stats, double multiplier) {
+        var world = eye.getWorld();
         var hits = new LinkedHashMap<Mob, Double>();
         boolean headshot = false;
         for (int pellet = 0; pellet < stats.pellets(); pellet++) {
             var random = ThreadLocalRandom.current();
             var direction = eye.getDirection();
             if (stats.spread() > 0) {
-                direction.add(new org.bukkit.util.Vector(random.nextDouble(-stats.spread(), stats.spread()),
+                direction.add(new Vector(random.nextDouble(-stats.spread(), stats.spread()),
                         random.nextDouble(-stats.spread(), stats.spread()), random.nextDouble(-stats.spread(), stats.spread()))).normalize();
             }
             var wall = world.rayTraceBlocks(eye, direction, stats.range(), FluidCollisionMode.NEVER, true);
@@ -123,29 +154,60 @@ public final class Weapons {
             var hit = range <= 0 ? null : world.rayTraceEntities(eye, direction, range, 0.08,
                     entity -> entity instanceof Mob && game.enemies().contains(entity) && !entity.isDead());
             double length = hit == null ? range : hit.getHitPosition().distance(eye.toVector());
-            for (double step = 0.5; step < length; step += weapon == Weapon.FLAMETHROWER ? 0.7 : 1.5) {
-                world.spawnParticle(weapon == Weapon.FLAMETHROWER ? Particle.FLAME : Particle.CRIT,
-                        eye.clone().add(direction.clone().multiply(step)), 1, 0, 0, 0, 0);
+            for (double step = 0.5; step < length; step += 1.5) {
+                world.spawnParticle(Particle.CRIT, eye.clone().add(direction.clone().multiply(step)), 1, 0, 0, 0, 0);
             }
             if (hit != null && hit.getHitEntity() instanceof Mob mob) {
                 boolean head = hit.getHitPosition().getY() > mob.getLocation().getY() + mob.getHeight() * 0.8;
                 headshot |= head;
-                double damage = stats.damage() * (head ? game.config().headshotMultiplier() : 1) * (ammo.upgraded() ? stats.upgradeMultiplier() : 1);
-                hits.merge(mob, damage, Double::sum);
+                hits.merge(mob, stats.damage() * (head ? game.config().headshotMultiplier() : 1) * multiplier, Double::sum);
             }
         }
-        for (var entry : hits.entrySet()) {
-            var mob = entry.getKey();
-            game.addGold(player, game.config().hitGold());
-            if (survivor.perks().contains(Perk.FROZEN_BULLETS)) {
-                mob.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 40, 1));
+        return new Volley(hits, headshot);
+    }
+
+    /** Every enemy in sight inside a cone whose half-angle is the spread, not only the first one in the flame's way. */
+    private Volley spray(Location eye, ZombiesConfig.Gun stats, double multiplier) {
+        var world = eye.getWorld();
+        var direction = eye.getDirection();
+        flameJet(eye, direction, stats);
+        var hits = new LinkedHashMap<Mob, Double>();
+        for (var entity : world.getNearbyEntities(eye, stats.range(), stats.range(), stats.range(),
+                entity -> game.enemies().contains(entity) && !entity.isDead())) {
+            if (!(entity instanceof Mob mob)) {
+                continue;
             }
-            game.enemies().hit(player, mob, game.instantKill() ? mob.getHealth() * 100 : entry.getValue());
+            var toward = mob.getLocation().add(0, mob.getHeight() / 2, 0).toVector().subtract(eye.toVector());
+            double distance = toward.length();
+            if (distance == 0 || distance > stats.range() || direction.angle(toward) > stats.spread() + Math.atan2(mob.getWidth(), distance)
+                    || world.rayTraceBlocks(eye, toward.normalize(), distance, FluidCollisionMode.NEVER, true) != null) {
+                continue;
+            }
+            hits.put(mob, stats.damage() * multiplier);
         }
-        if (!hits.isEmpty()) {
-            Sounds.NOTE_PLING.note(player, headshot ? 20 : 12);
+        return new Volley(hits, false);
+    }
+
+    /** Flames leave the muzzle at a speed that carries them, slowing, about as far as the gun reaches. */
+    private static void flameJet(Location eye, Vector direction, ZombiesConfig.Gun stats) {
+        var world = eye.getWorld();
+        var random = ThreadLocalRandom.current();
+        var right = direction.clone().crossProduct(new Vector(0, 1, 0));
+        if (right.lengthSquared() > 0) {
+            right.normalize().multiply(0.3);
         }
-        render(player);
+        var muzzle = eye.clone().add(direction.clone().multiply(0.7)).add(right).subtract(0, 0.25, 0);
+        for (int particle = 0; particle < FLAME_PARTICLES; particle++) {
+            var flight = direction.clone().add(new Vector(random.nextGaussian(), random.nextGaussian(), random.nextGaussian())
+                    .multiply(stats.spread() / 2)).normalize();
+            world.spawnParticle(Particle.FLAME, muzzle, 0, flight.getX(), flight.getY(), flight.getZ(),
+                    stats.range() * random.nextDouble(0.04, 0.06));
+        }
+        world.spawnParticle(Particle.SMOKE, muzzle, 0, direction.getX(), direction.getY(), direction.getZ(), 0.1);
+    }
+
+    public void burn(int tick) {
+        flames.tick(tick);
     }
 
     public void tick(Player player, int tick) {

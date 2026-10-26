@@ -20,8 +20,10 @@ public record ZombiesConfig(int maxPlayers, int startingGold, int intermissionSe
     public record Waves(int total, int baseEnemies, int enemiesPerWave, double extraPlayer, double healthPerWave,
                         int spawnTicks, int minimumSpawnTicks, int maxAlive, int bossEvery) { }
 
+    /** {@code burnDamage} per second for {@code burnTicks} after a hit; 0 for a gun that does not set fire. */
     public record Gun(int price, double damage, double range, int pellets, double spread,
-                      int clip, int reserve, int cooldownTicks, int reloadTicks, double upgradeMultiplier) { }
+                      int clip, int reserve, int cooldownTicks, int reloadTicks, double upgradeMultiplier,
+                      double burnDamage, int burnTicks) { }
 
     public record Enemy(int firstWave, double health, double damage, double speed, int weight) { }
 
@@ -37,7 +39,8 @@ public record ZombiesConfig(int maxPlayers, int startingGold, int intermissionSe
                     Math.max(1, yaml.getDouble(path + "range")), Math.clamp(yaml.getInt(path + "pellets"), 1, 16),
                     Math.clamp(yaml.getDouble(path + "spread"), 0, 0.5), positive(yaml, path + "clip"),
                     positive(yaml, path + "reserve"), positive(yaml, path + "cooldown-ticks"), positive(yaml, path + "reload-ticks"),
-                    Math.max(1, yaml.getDouble(path + "upgrade-multiplier"))));
+                    Math.max(1, yaml.getDouble(path + "upgrade-multiplier")), Math.max(0, yaml.getDouble(path + "burn-damage")),
+                    Math.max(0, yaml.getInt(path + "burn-seconds")) * 20));
         }
         var perks = new EnumMap<Perk, Integer>(Perk.class);
         for (var perk : Perk.values()) {

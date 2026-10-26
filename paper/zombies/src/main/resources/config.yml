@@ -63,12 +63,14 @@ perks:
   quick_revive: 500
   frozen_bullets: 1250
   extra-health-bonus: 20
+# A gun with burn-damage sets what it hits burning for burn-seconds. The flamethrower hits every enemy in a cone
+# whose half-angle, in radians, is its spread.
 weapons:
   pistol: {price: 0, damage: 6, range: 40, pellets: 1, spread: 0.005, clip: 12, reserve: 120, cooldown-ticks: 7, reload-ticks: 35, upgrade-multiplier: 2.5}
   rifle: {price: 500, damage: 8, range: 45, pellets: 1, spread: 0.015, clip: 30, reserve: 240, cooldown-ticks: 4, reload-ticks: 45, upgrade-multiplier: 2.5}
   shotgun: {price: 650, damage: 4, range: 22, pellets: 7, spread: 0.12, clip: 6, reserve: 72, cooldown-ticks: 18, reload-ticks: 55, upgrade-multiplier: 2.5}
   sniper: {price: 900, damage: 36, range: 65, pellets: 1, spread: 0, clip: 5, reserve: 60, cooldown-ticks: 22, reload-ticks: 50, upgrade-multiplier: 2.5}
-  flamethrower: {price: 1200, damage: 3, range: 12, pellets: 4, spread: 0.1, clip: 60, reserve: 360, cooldown-ticks: 4, reload-ticks: 65, upgrade-multiplier: 2.5}
+  flamethrower: {price: 1200, damage: 8, range: 12, pellets: 1, spread: 0.3, clip: 60, reserve: 360, cooldown-ticks: 4, reload-ticks: 65, upgrade-multiplier: 2.5, burn-damage: 4, burn-seconds: 4}
 enemies:
   walker: {first-wave: 1, health: 20, damage: 4, speed: 0.21, weight: 12}
   runner: {first-wave: 4, health: 16, damage: 3, speed: 0.30, weight: 5}

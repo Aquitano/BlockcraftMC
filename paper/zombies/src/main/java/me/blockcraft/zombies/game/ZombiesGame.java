@@ -264,6 +264,7 @@ public final class ZombiesGame {
             return;
         }
         round.players().forEach(player -> weapons.tick(player, tick));
+        weapons.burn(tick);
         if (inWave()) {
             enemies.tick(tick);
             if (inWave() && enemies.remaining() == 0) {
