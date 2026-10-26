@@ -99,6 +99,7 @@ public final class SystemConfig {
     private final boolean serverListFriends;
     private final Duration serverListCache;
     private final NetworkCalendar calendar;
+    private final int calendarPollSeconds;
     private final Duration privateChatCooldown;
 
     private SystemConfig(Path file, Map<String, Object> root) {
@@ -155,6 +156,7 @@ public final class SystemConfig {
         this.serverListFriends = Boolean.TRUE.equals(YamlFile.section(root, "server-list").get("show-friends"));
         this.serverListCache = Duration.ofSeconds(Math.max(1, number(YamlFile.section(root, "server-list"), "cache-seconds", 30)));
         this.calendar = NetworkCalendar.fromYaml(YamlFile.section(root, "calendar"));
+        this.calendarPollSeconds = Math.max(1, number(YamlFile.section(root, "calendar"), "poll-seconds", 5));
         this.privateChatCooldown = Duration.ofSeconds(Math.max(0, number(YamlFile.section(root, "private-chat"), "cooldown-seconds", 2)));
     }
 
@@ -295,6 +297,10 @@ public final class SystemConfig {
 
     public NetworkCalendar calendar() {
         return calendar;
+    }
+
+    public int calendarPollSeconds() {
+        return calendarPollSeconds;
     }
 
     public synchronized void setMaxPlayers(int maxPlayers) {

@@ -112,6 +112,7 @@ public final class SeasonalEvents implements Listener, AutoCloseable {
     private final Map<UUID, Hat> hats = new HashMap<>();
     private final Set<UUID> claiming = new HashSet<>();
     private LocalDate day;
+    private Set<NetworkCalendar.Occasion> occasions;
     private BossBar countdown;
     private Mannequin santa;
     private Hunt hunt;
@@ -127,6 +128,7 @@ public final class SeasonalEvents implements Listener, AutoCloseable {
         this.fireworks = fireworks;
         this.decor = decor;
         day = calendar.today();
+        occasions = calendar.occasions();
         Bukkit.getScheduler().runTaskTimer(plugin, this::tick, 1L, 20L);
         refresh();
     }
@@ -134,9 +136,11 @@ public final class SeasonalEvents implements Listener, AutoCloseable {
     private void tick() {
         var now = calendar.now();
         var today = now.toLocalDate();
-        if (!today.equals(day)) {
+        var active = calendar.occasions();
+        if (!today.equals(day) || !active.equals(occasions)) {
             boolean newYear = today.getYear() > day.getYear();
             day = today;
+            occasions = active;
             refresh();
             Bukkit.getOnlinePlayers().forEach(this::arrive);
             if (newYear) {

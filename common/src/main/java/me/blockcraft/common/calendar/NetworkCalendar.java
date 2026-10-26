@@ -11,6 +11,7 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeParseException;
+import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.Map;
@@ -21,7 +22,8 @@ import java.util.Set;
 /**
  * The days the network celebrates, counted in its own time zone so midnight falls when it does for its players.
  * Easter moves every year and is computed; Halloween, winter and the network's birthday come from {@code calendar}
- * in the config, and Advent, Christmas and New Year's Eve are what they always are.
+ * in the config, and Advent, Christmas and New Year's Eve are what they always are. Staff can force a set of
+ * occasions network-wide with {@code /event}; while one is forced, it is what today celebrates.
  */
 public final class NetworkCalendar {
 
@@ -46,6 +48,7 @@ public final class NetworkCalendar {
     private final Window halloween;
     private final Window winter;
     private final Optional<LocalDate> founded;
+    private volatile Optional<Set<Occasion>> forced = Optional.empty();
 
     public NetworkCalendar(Clock clock, int easterDaysBefore, int easterDaysAfter, Window halloween, Window winter,
                            Optional<LocalDate> founded) {
@@ -83,9 +86,28 @@ public final class NetworkCalendar {
     }
 
     public boolean is(Occasion occasion) {
-        return occasions(today()).contains(occasion);
+        return occasions().contains(occasion);
     }
 
+    /** What today celebrates: the forced occasions while there are any, else what the date says. */
+    public Set<Occasion> occasions() {
+        return forced.orElseGet(() -> occasions(today()));
+    }
+
+    public Optional<Set<Occasion>> forced() {
+        return forced;
+    }
+
+    /** Replaces what the date says with exactly {@code occasions}; empty lets the date decide again. */
+    public void force(Optional<Set<Occasion>> occasions) {
+        forced = occasions.map(chosen -> {
+            var copy = EnumSet.noneOf(Occasion.class);
+            copy.addAll(chosen);
+            return Collections.unmodifiableSet(copy);
+        });
+    }
+
+    /** What the date alone celebrates, whatever staff have forced. */
     public Set<Occasion> occasions(LocalDate day) {
         var occasions = EnumSet.noneOf(Occasion.class);
         var easter = easterSunday(day.getYear());

@@ -32,6 +32,7 @@ public final class SystemPermissions {
     public static final String RANK = ROOT + "rank";
     public static final String SET_MAX = ROOT + "setmax";
     public static final String MOTD = ROOT + "motd";
+    public static final String EVENT = ROOT + "event";
     public static final String JOIN_ME = ROOT + "joinme";
     public static final String MSG = ROOT + "msg";
     public static final String IGNORE = ROOT + "ignore";

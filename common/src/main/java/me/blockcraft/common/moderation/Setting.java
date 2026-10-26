@@ -4,7 +4,8 @@ package me.blockcraft.common.moderation;
 public enum Setting {
     GLOBAL_MUTE("globalmute"),
     MAINTENANCE("maintenance"),
-    CHAT_SLOW("chatslow");
+    CHAT_SLOW("chatslow"),
+    FORCED_OCCASIONS("occasions");
 
     private final String key;
 

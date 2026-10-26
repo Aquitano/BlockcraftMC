@@ -226,6 +226,15 @@ It is empty by default because no founding date is assumed.
 The calendar's `halloween` and `winter` windows can be moved in both `calendar` sections; a window whose end comes
 before its start runs across New Year.
 
+Staff with `blockcraft.system.event` switch the occasions network-wide on the proxy. `/event` shows what is active
+and whether it is forced, `/event christmas winter` makes exactly those occasions active whatever the date,
+`/event none` turns every occasion off, and `/event auto` hands back to the date. The choice is the `occasions` row
+in `bc_settings`, so it survives restarts. Every server reads it back every `calendar.poll-seconds` (5), and the
+lobby redresses itself on its next tick. The staff log records each switch under the issuer. Date-bound details stay
+on the date: the Advent door, the birthday's age and the January tag. While an occasion is active, the second line
+of the server list shows its seasonal line from `motd.season`; the order is the birthday, then New Year's Eve,
+Christmas, Advent, winter, Halloween and Easter.
+
 Lobby's `seasons` section dresses the lobby for each active occasion. Every block swap and the cover on top happen
 only in the packets players receive, so the map and `/map save` never contain them. The defaults turn leaves pale,
 torches and lanterns into soul flames, glowstone into jack-o'-lanterns and flowers into wither roses for Halloween, with

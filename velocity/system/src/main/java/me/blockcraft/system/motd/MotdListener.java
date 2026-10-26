@@ -5,6 +5,8 @@ import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyPingEvent;
 import com.velocitypowered.api.proxy.server.ServerPing;
 import com.velocitypowered.api.util.Favicon;
+import me.blockcraft.common.calendar.NetworkCalendar;
+import me.blockcraft.common.calendar.NetworkCalendar.Occasion;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.system.PlayerVisibility;
 import me.blockcraft.system.ProxySettings;
@@ -25,6 +27,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
@@ -32,12 +35,20 @@ import java.util.UUID;
 /**
  * Server list entry: default MOTD plus a second line, the configured player cap, the maintenance banner, the icon
  * from {@code server-icon.png} and the network's addresses where the client would list player names. The second line
- * celebrates the network's birthday, else greets the returning player behind the address, else is a random one.
+ * celebrates the network's birthday or the most special occasion active today, else greets the returning player behind
+ * the address, else is a random one.
  */
 public final class MotdListener {
 
     private static final int MAINTENANCE_PROTOCOL = 0;
     private static final String ICON_FILE = "server-icon.png";
+    private static final List<Map.Entry<Occasion, String>> SEASONS = List.of(
+            Map.entry(Occasion.NEW_YEARS_EVE, "motd.season.new-years-eve"),
+            Map.entry(Occasion.CHRISTMAS, "motd.season.christmas"),
+            Map.entry(Occasion.ADVENT, "motd.season.advent"),
+            Map.entry(Occasion.WINTER, "motd.season.winter"),
+            Map.entry(Occasion.HALLOWEEN, "motd.season.halloween"),
+            Map.entry(Occasion.EASTER, "motd.season.easter"));
 
     private final PlayerVisibility visibility;
     private final SystemConfig config;
@@ -91,14 +102,22 @@ public final class MotdListener {
     }
 
     private Component secondLine(InetAddress address) {
-        var calendar = config.calendar();
+        return seasonalLine(config.calendar(), messages)
+                .or(() -> returning.at(address).map(this::greeting))
+                .orElseGet(this::randomLine);
+    }
+
+    /** A forced birthday has no age to count on any other day, so it gives way to the next occasion. */
+    static Optional<Component> seasonalLine(NetworkCalendar calendar, Messages messages) {
+        var today = calendar.occasions();
         var age = calendar.age(calendar.today());
-        if (age.isPresent()) {
-            return age.getAsInt() == 1
+        if (today.contains(Occasion.BIRTHDAY) && age.isPresent()) {
+            return Optional.of(age.getAsInt() == 1
                     ? messages.get("motd.birthday-one")
-                    : messages.get("motd.birthday", Formatter.number("years", age.getAsInt()));
+                    : messages.get("motd.birthday", Formatter.number("years", age.getAsInt())));
         }
-        return returning.at(address).map(this::greeting).orElseGet(this::randomLine);
+        return SEASONS.stream().filter(season -> today.contains(season.getKey())).findFirst()
+                .map(season -> messages.get(season.getValue()));
     }
 
     private Component greeting(ReturningPlayers.Returning player) {

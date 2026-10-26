@@ -45,13 +45,16 @@ import me.blockcraft.api.xp.Xp;
 import me.blockcraft.api.notification.Notifications;
 import me.blockcraft.api.xp.XpReward;
 import me.blockcraft.common.coins.CoinsRepository;
+import me.blockcraft.common.calendar.ForcedOccasions;
 import me.blockcraft.common.calendar.NetworkCalendar;
 import me.blockcraft.common.config.YamlFile;
 import me.blockcraft.common.db.Database;
 import me.blockcraft.common.db.DatabaseConfig;
+import me.blockcraft.common.db.DatabaseException;
 import me.blockcraft.common.elo.EloFormula;
 import me.blockcraft.common.elo.EloRepository;
 import me.blockcraft.common.ignore.IgnoreRepository;
+import me.blockcraft.common.moderation.SettingsRepository;
 import me.blockcraft.common.moderation.VanishRepository;
 import me.blockcraft.common.moderation.StaffActionRepository;
 import me.blockcraft.common.network.ProxyMessageCodec;
@@ -140,12 +143,16 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         var audit = new StaffAudit(this, new StaffActionRepository(database), realNames, self.name(),
                 StaffAudit.Notices.from(YamlFile.section(config, "audit")), messages);
         var tabTeams = new TabTeams(this, LuckPermsProvider.get(), messages, nickRanks, afk);
+        var calendarSection = YamlFile.section(config, "calendar");
+        var calendar = NetworkCalendar.fromYaml(calendarSection);
+        var forcedOccasions = new ForcedOccasions(new SettingsRepository(database), calendar);
+        forcedOccasions.reload();
         var api = new BlockcraftApi(notifications, new NetworkOperations(this, messages), playerTasks, database, coins,
                 unlocks, new Shop(database), new RoundRecapRepository(database), streaks(YamlFile.section(config, "streaks")),
                 settings, resourcePack, profiles, new Effects(settings), messages,
                 servers, self, groups, text(config, "lobby-group", "lobby"), presence, resources.tags(), resources.addresses(), xp, map,
                 buildMode, flight, realNames, nickRanks, nickStats, achievements, elo, afk, ignores, vanished, audit, tabTeams,
-                NetworkCalendar.fromYaml(YamlFile.section(config, "calendar")), RoundConfig.from(config));
+                calendar, RoundConfig.from(config));
         BlockcraftApi.install(api);
         getLogger().info("Running map " + map.name() + map.template().map(template -> " from " + template.directory()).orElse(""));
         int startingCoins = number(config, "starting-coins", 10);
@@ -181,6 +188,14 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         int heartbeatSeconds = number(config, "heartbeat-seconds", 5);
         heartbeat.start(Duration.ofSeconds(heartbeatSeconds));
         groups.start(number(groupStatus, "refresh-ticks", 50));
+        long occasionTicks = Math.max(1, number(calendarSection, "poll-seconds", 5)) * 20L;
+        getServer().getScheduler().runTaskTimerAsynchronously(this, () -> {
+            try {
+                forcedOccasions.reload();
+            } catch (DatabaseException e) {
+                getLogger().warning("Could not read the forced occasions: " + e.getCause().getMessage());
+            }
+        }, occasionTicks, occasionTicks);
     }
 
     /**

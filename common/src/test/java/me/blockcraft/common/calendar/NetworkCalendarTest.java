@@ -8,8 +8,10 @@ import org.junit.Test;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.MonthDay;
+import java.time.ZoneOffset;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Set;
@@ -42,6 +44,23 @@ public class NetworkCalendarTest {
         assertEquals(Set.of(Occasion.WINTER, Occasion.CHRISTMAS), CALENDAR.occasions(LocalDate.of(2026, 12, 26)));
         assertEquals(Set.of(Occasion.WINTER, Occasion.NEW_YEARS_EVE), CALENDAR.occasions(LocalDate.of(2026, 12, 31)));
         assertEquals(Set.of(Occasion.BIRTHDAY), CALENDAR.occasions(LocalDate.of(2026, 6, 3)));
+    }
+
+    @Test
+    public void forcedOccasionsReplaceTheDateUntilTheDateDecidesAgain() {
+        var october = new NetworkCalendar(Clock.fixed(Instant.parse("2026-10-20T12:00:00Z"), ZoneOffset.UTC), 2, 7,
+                new Window(MonthDay.of(10, 17), MonthDay.of(10, 31)), new Window(MonthDay.of(12, 1), MonthDay.of(12, 31)),
+                Optional.empty());
+
+        october.force(Optional.of(Set.of(Occasion.CHRISTMAS, Occasion.WINTER)));
+        assertEquals(Set.of(Occasion.CHRISTMAS, Occasion.WINTER), october.occasions());
+        assertEquals(false, october.is(Occasion.HALLOWEEN));
+
+        october.force(Optional.of(Set.of()));
+        assertEquals(Set.of(), october.occasions());
+
+        october.force(Optional.empty());
+        assertEquals(Set.of(Occasion.HALLOWEEN), october.occasions());
     }
 
     @Test

@@ -21,6 +21,10 @@ public final class SettingsRepository {
                 setting.key(), value);
     }
 
+    public void clear(Setting setting) {
+        db.update("DELETE FROM bc_settings WHERE `key` = ?", setting.key());
+    }
+
     public boolean isEnabled(Setting setting) {
         return get(setting).map(Boolean::parseBoolean).orElse(false);
     }

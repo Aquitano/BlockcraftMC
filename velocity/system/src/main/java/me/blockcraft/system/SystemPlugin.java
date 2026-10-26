@@ -10,6 +10,7 @@ import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
 import me.blockcraft.build.BuildConstants;
+import me.blockcraft.common.calendar.ForcedOccasions;
 import me.blockcraft.common.chat.ChatFilter;
 import me.blockcraft.common.coins.CoinsRepository;
 import me.blockcraft.common.db.Database;
@@ -61,6 +62,7 @@ import me.blockcraft.system.command.staff.AltsCommand;
 import me.blockcraft.system.command.staff.BroadcastCommand;
 import me.blockcraft.system.command.staff.ChatSlowCommand;
 import me.blockcraft.system.command.staff.ClearChatCommand;
+import me.blockcraft.system.command.staff.EventCommand;
 import me.blockcraft.system.command.staff.FindCommand;
 import me.blockcraft.system.command.staff.GlobalMuteCommand;
 import me.blockcraft.system.command.staff.GotoCommand;
@@ -170,6 +172,8 @@ public final class SystemPlugin {
                 .toList());
 
         var settings = new ProxySettings(repositories.settings());
+        var forcedOccasions = new ForcedOccasions(repositories.settings(), config.calendar());
+        forcedOccasions.reload();
         var visibility = new PlayerVisibility(proxy, repositories.vanish(), nicks, logger);
         var choices = new PlayerChoices(playerSettings, logger);
         var ignores = new IgnoreList(new IgnoreRepository(database), logger);
@@ -266,6 +270,7 @@ public final class SystemPlugin {
         }
         register(new SetMaxCommand(support, config, messages).create());
         register(new MotdCommand(support, config, messages).create());
+        register(new EventCommand(support, config.calendar(), forcedOccasions, staffActions, messages, logger).create());
         register(new ServersCommand(support, servers, config, messages).create());
         register(new ListCommand(support, visibility, messages).create());
         register(new WhoisCommand(support, lookup, repositories.players(), repositories.strikes(), repositories.warns(),
@@ -330,6 +335,16 @@ public final class SystemPlugin {
                     }
                 })
                 .repeat(1, TimeUnit.MINUTES)
+                .schedule();
+        proxy.getScheduler().buildTask(this, () -> {
+                    try {
+                        forcedOccasions.reload();
+                    } catch (DatabaseException e) {
+                        logger.warn("Could not read the forced occasions", e);
+                    }
+                })
+                .delay(config.calendarPollSeconds(), TimeUnit.SECONDS)
+                .repeat(config.calendarPollSeconds(), TimeUnit.SECONDS)
                 .schedule();
         proxy.getScheduler().buildTask(this, new AutoBroadcast(proxy, messages))
                 .repeat(config.autoBroadcastMinutes(), TimeUnit.MINUTES)
