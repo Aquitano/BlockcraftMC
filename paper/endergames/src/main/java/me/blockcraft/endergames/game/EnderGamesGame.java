@@ -19,6 +19,7 @@ import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.game.TimerBar;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.pack.MenuIcon;
+import me.blockcraft.api.pack.PackModel;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Countdown;
 import me.blockcraft.api.task.Tasks;
@@ -457,7 +458,7 @@ public final class EnderGamesGame implements KitPlayers {
     }
 
     public ItemStack tracker() {
-        return Items.of(Material.COMPASS).name(messages.get("item.tracker.name")).lore(messages.get("item.tracker.lore")).build();
+        return PackModel.ENDERGAMES_TRACKER.item().name(messages.get("item.tracker.name")).lore(messages.get("item.tracker.lore")).build();
     }
 
     /** Potions in the ender chests heal when drunk and harm when thrown; everything else is the plain item. */

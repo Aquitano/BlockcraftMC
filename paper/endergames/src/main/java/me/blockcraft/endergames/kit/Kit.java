@@ -1,6 +1,7 @@
 package me.blockcraft.endergames.kit;
 
 import me.blockcraft.api.item.Items;
+import me.blockcraft.api.pack.PackModel;
 import me.blockcraft.common.message.Messages;
 import org.bukkit.Color;
 import org.bukkit.Material;
@@ -126,7 +127,7 @@ public enum Kit {
     TRACKER(Material.COMPASS, 300) {
         @Override
         public void equip(Player player, Messages messages) {
-            player.getInventory().addItem(Items.of(Material.COMPASS).name(messages.get("kit.tracker.item")).build());
+            player.getInventory().addItem(PackModel.ENDERGAMES_TRACKER.item().name(messages.get("kit.tracker.item")).build());
         }
     };
 

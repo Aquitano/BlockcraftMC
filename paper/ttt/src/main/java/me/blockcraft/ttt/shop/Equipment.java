@@ -82,10 +82,11 @@ public final class Equipment {
     }
 
     public ItemStack item(ShopItem item, int amount) {
-        return item.tag(Items.of(item.material(), amount)
+        var builder = Items.of(item.material(), amount)
                 .name(messages.get("shop.items." + item.key() + ".name"))
-                .lore(messages.getLines("shop.items." + item.key() + ".lore"))
-                .build());
+                .lore(messages.getLines("shop.items." + item.key() + ".lore"));
+        item.model().ifPresent(model -> model.mark(builder));
+        return item.tag(builder.build());
     }
 
     public void deliver(Player buyer, ShopItem item) {

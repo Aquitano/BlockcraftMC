@@ -1,5 +1,6 @@
 package me.blockcraft.skywars.kit;
 
+import me.blockcraft.api.pack.PackModel;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -23,7 +24,7 @@ public enum Kit {
     BAUARBEITER(Material.BRICKS, 300) {
         @Override
         public void equip(Player player) {
-            player.getInventory().addItem(ItemStack.of(Material.STONE_PICKAXE), ItemStack.of(Material.BRICKS, 64));
+            player.getInventory().addItem(PackModel.SKYWARS_HAMMER.item().build(), ItemStack.of(Material.BRICKS, 64));
         }
     },
     BOGENSCHUETZE(Material.BOW, 400) {
