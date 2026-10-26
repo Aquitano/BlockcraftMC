@@ -98,7 +98,7 @@ final class CosmeticKinds {
     static CosmeticKind<Gadget> gadgets(Menus menus) {
         var messages = menus.messages();
         return new CosmeticKind<>(PlayerSetting.GADGET, messages.get("gadgets.title"), 1, menus::openExtras,
-                List.of(Gadget.values()), Gadget::key, gadget -> ItemStack.of(gadget.material()),
+                List.of(Gadget.values()), Gadget::key, gadget -> gadget.item().build(),
                 gadget -> messages.get("gadgets.name." + gadget.key()),
                 gadget -> List.of(messages.get("gadgets.lore." + gadget.key())), false, Optional.empty(),
                 Optional.empty(), Optional.empty(), gadget -> messages.get("cosmetics.selected"), messages.get("cosmetics.removed"),

@@ -1,7 +1,6 @@
 package me.blockcraft.lobby.gadget;
 
 import me.blockcraft.api.BlockcraftApi;
-import me.blockcraft.api.item.Items;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.lobby.item.LobbyItem;
@@ -42,7 +41,7 @@ public final class Gadgets {
     }
 
     public void select(Player player, Gadget gadget) {
-        player.getInventory().setItem(LobbyItem.GADGET.slot(), LobbyItem.GADGET.tag(Items.of(gadget.material())
+        player.getInventory().setItem(LobbyItem.GADGET.slot(), LobbyItem.GADGET.tag(gadget.item()
                 .name(messages.get("gadgets.name." + gadget.key()))
                 .lore(messages.get("gadgets.held-lore"))
                 .build()));
