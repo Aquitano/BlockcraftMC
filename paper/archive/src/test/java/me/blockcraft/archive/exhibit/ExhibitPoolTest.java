@@ -24,7 +24,7 @@ public class ExhibitPoolTest {
     @Test
     public void anExhibitReadsBackAsItWasSaved() throws IOException {
         var pool = pool();
-        var exhibit = new Exhibit("neue_lobby", "Neue Lobby", "Vanade", OptionalInt.of(2018), "Die Lobby von damals.",
+        var exhibit = new Exhibit("neue_lobby", "Neue Lobby", "Vanade", OptionalInt.of(2018), Optional.of("Lobbys"), "Die Lobby von damals.",
                 Material.GRASS_BLOCK, Optional.of(new Point(0.5, 65.0, 0.5, 90.0f, 0.0f)),
                 List.of(new Checkpoint("Brunnen", "Hier traf man sich.", new Point(10.5, 64.0, -3.5, 180.0f, 15.0f)),
                         new Checkpoint("Turm", "", new Point(-20.0, 90.0, 4.0, 0.0f, 0.0f))));
@@ -45,6 +45,7 @@ public class ExhibitPoolTest {
         withWorld("no_origin");
 
         assertEquals(List.of("ready"), pool().exhibits().stream().map(Exhibit::key).toList());
+        assertEquals(Optional.empty(), pool().exhibits().getFirst().category());
     }
 
     @Test
@@ -60,15 +61,36 @@ public class ExhibitPoolTest {
     }
 
     @Test
-    public void erasFollowTheYearTheirServerOpenedWithUndatedOnesLast() {
-        var eras = Era.of(List.of(
-                minimal("spaet", "Blockcraft", OptionalInt.of(2020)),
-                minimal("ohne", "Unbekannt", OptionalInt.empty()),
-                minimal("frueh", "Blockcraft", OptionalInt.of(2019)),
-                minimal("vanade", "Vanade", OptionalInt.of(2018))));
+    public void sectionsGroupByOriginYearAndCategoryWithUndatedLast() {
+        var sections = Section.of(List.of(
+                categorized("spaet", "Blockcraft", OptionalInt.of(2020), "BedWars"),
+                minimal("ohne", "Blockcraft", OptionalInt.empty()),
+                categorized("b", "Blockcraft", OptionalInt.of(2016), "BedWars"),
+                categorized("a", "Blockcraft", OptionalInt.of(2016), "BedWars"),
+                categorized("lobby", "Blockcraft", OptionalInt.of(2016), "Lobbys"),
+                categorized("alt", "Vanade", OptionalInt.of(2016), "BedWars")), "Sonstiges");
 
-        assertEquals(List.of("Vanade", "Blockcraft", "Unbekannt"), eras.stream().map(Era::origin).toList());
-        assertEquals(List.of("frueh", "spaet"), eras.get(1).exhibits().stream().map(Exhibit::key).toList());
+        assertEquals(List.of("Blockcraft/2016/BedWars", "Vanade/2016/BedWars", "Blockcraft/2016/Lobbys",
+                        "Blockcraft/2020/BedWars", "Blockcraft/?/Sonstiges"),
+                sections.stream().map(section -> section.origin() + "/"
+                        + (section.year().isPresent() ? section.year().getAsInt() : "?") + "/" + section.category()).toList());
+        assertEquals(List.of("a", "b"), sections.getFirst().exhibits().stream().map(Exhibit::key).toList());
+    }
+
+    @Test
+    public void categorySurvivesSetupEditsAndSaving() throws IOException {
+        write("map", "origin: Blockcraft\ncategory: SkyWars\n");
+        withWorld("map");
+        var exhibit = pool().exhibits().getFirst();
+        var point = new Point(1.0, 2.0, 3.0, 0.0f, 0.0f);
+        pool().save(exhibit.withArrival(point).withCheckpoint(new Checkpoint("A", "", point)).withoutCheckpoint("A"));
+
+        assertEquals(Optional.of("SkyWars"), pool().exhibits().getFirst().category());
+        assertEquals(Optional.empty(), minimal("other", "Blockcraft", OptionalInt.empty()).category());
+    }
+
+    private static Exhibit categorized(String key, String origin, OptionalInt year, String category) {
+        return new Exhibit(key, key, origin, year, Optional.of(category), "", Material.PAPER, Optional.empty(), List.of());
     }
 
     private ExhibitPool pool() {
@@ -85,6 +107,6 @@ public class ExhibitPoolTest {
     }
 
     private static Exhibit minimal(String key, String origin, OptionalInt year) {
-        return new Exhibit(key, key, origin, year, "", Material.PAPER, Optional.empty(), List.of());
+        return new Exhibit(key, key, origin, year, Optional.empty(), "", Material.PAPER, Optional.empty(), List.of());
     }
 }

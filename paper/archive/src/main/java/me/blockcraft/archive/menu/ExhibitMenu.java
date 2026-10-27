@@ -43,7 +43,7 @@ final class ExhibitMenu extends ListMenu<ExhibitMenu.Stop> {
         this.menus = menus;
         this.exhibit = exhibit;
         this.mayDelete = mayDelete;
-        backButton(player -> menus.openEra(player, exhibit.origin()));
+        backButton(player -> menus.openSection(player, exhibit));
         var stops = new ArrayList<Stop>();
         stops.add(new Stop.Arrival());
         exhibit.checkpoints().forEach(checkpoint -> stops.add(new Stop.Spot(checkpoint)));

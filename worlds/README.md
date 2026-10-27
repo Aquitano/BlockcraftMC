@@ -278,15 +278,16 @@ in code. The exhibits live apart from it, one directory each under `archive-exhi
 in place and copies a world out of only when someone visits it:
 
 ```
-exhibits/neue_lobby/
+archive-exhibits/neue_lobby/
   exhibit.yml
   world/          the old map as a dimension folder (region/, entities/, poi/, data/), like a BedWars pool map
 ```
 
 ```yaml
 name: Neue Lobby
-origin: Vanade                # the old server; the guide groups exhibits by it
-year: 2018                    # optional; eras and exhibits sort oldest first
+origin: Vanade                # the old server
+year: 2018                    # optional; sections sort oldest first, undated last
+category: Lobbys              # optional; defaults to Sonstiges in the guide
 description: Die Lobby, mit der Vanade öffnete.
 icon: grass_block             # the item the guide shows; paper when unknown
 arrival: {x: -900.5, y: 31.0, z: 1579.5, yaw: -90.0}    # optional; else the world's spawn
@@ -306,6 +307,11 @@ To add an exhibit after importing an old map:
 3. Start the archive server, travel to the exhibit and set its arrival and checkpoints with `/setup`; they land
    in `exhibit.yml` at once. Everything beyond the build stays void.
 4. Commit the template; its region files go through git-lfs.
+
+The guide groups exhibits into sections by origin, year and category, ordered by year and then category. Missing
+categories use the fallback from `messages.yml` (Sonstiges by default). With one section, the watch opens its exhibit
+list directly. Left-click an exhibit to travel to its arrival, or right-click for checkpoints and notes. Setup edits
+preserve its category.
 
 Neither a start nor `/map save` copies the exhibits, so many old maps cost nothing until they are visited. Block
 edits inside an exhibit are not saved. The text in `exhibit.yml` shows as written, without MiniMessage tags.

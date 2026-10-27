@@ -52,7 +52,7 @@ final class ArchiveHotbar implements Listener {
         HotbarItem.of(event.getItem(), Item.class).ifPresent(item -> {
             event.setCancelled(true);
             switch (item) {
-                case GUIDE -> menus.openEras(player);
+                case GUIDE -> menus.openSections(player);
                 case HUB -> ProxyMessaging.hub(plugin, player);
             }
         });

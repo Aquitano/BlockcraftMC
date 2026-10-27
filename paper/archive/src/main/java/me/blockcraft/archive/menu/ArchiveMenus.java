@@ -6,7 +6,7 @@ import me.blockcraft.api.menu.Menu;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.archive.command.NoteCommand;
 import me.blockcraft.archive.exhibit.Checkpoint;
-import me.blockcraft.archive.exhibit.Era;
+import me.blockcraft.archive.exhibit.Section;
 import me.blockcraft.archive.exhibit.Exhibit;
 import me.blockcraft.archive.exhibit.ExhibitPool;
 import me.blockcraft.archive.exhibit.ExhibitWorlds;
@@ -22,7 +22,6 @@ import org.bukkit.inventory.ItemStack;
 import java.util.ArrayList;
 import java.util.List;
 
-/** The way through the archive: eras, then an era's exhibits, then an exhibit's checkpoints and notes. */
 public final class ArchiveMenus {
 
     private static final int LORE_WIDTH = 40;
@@ -45,19 +44,36 @@ public final class ArchiveMenus {
         return messages;
     }
 
-    public void openEras(Player player) {
-        new EraMenu(this, Era.of(pool.exhibits())).open(player);
+    public void openSections(Player player) {
+        var sections = sections();
+        if (sections.size() == 1) {
+            new ExhibitListMenu(this, sections.getFirst(), true).open(player);
+        } else {
+            new SectionMenu(this, sections).open(player);
+        }
     }
 
-    void openEra(Player player, String origin) {
-        Era.of(pool.exhibits()).stream().filter(era -> era.origin().equals(origin)).findFirst()
-                .ifPresentOrElse(era -> new ExhibitListMenu(this, era).open(player), () -> openEras(player));
+    private List<Section> sections() {
+        return Section.of(pool.exhibits(), messages.raw("menu.section.fallback-category"));
+    }
+
+    void openSection(Player player, Exhibit exhibit) {
+        var sections = sections();
+        sections.stream().filter(section -> section.exhibits().stream().anyMatch(value -> value.key().equals(exhibit.key())))
+                .findFirst().ifPresentOrElse(section -> new ExhibitListMenu(this, section, sections.size() == 1).open(player),
+                        () -> openSections(player));
+    }
+
+    Component sectionName(Section section) {
+        return messages.get(section.year().isPresent() ? "menu.section.name-year" : "menu.section.name",
+                Placeholder.unparsed("category", section.category()),
+                Placeholder.unparsed("year", Integer.toString(section.year().orElse(0))));
     }
 
     void openExhibit(Player player, String key) {
         pool.exhibit(key).ifPresentOrElse(exhibit -> BlockcraftApi.get().playerTasks().latest(player, () -> notes.list(key),
                         list -> new ExhibitMenu(this, exhibit, list, player.hasPermission(NoteCommand.PERMISSION)).open(player)),
-                () -> openEras(player));
+                () -> openSections(player));
     }
 
     void toEntrance(Player player) {

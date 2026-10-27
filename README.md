@@ -389,9 +389,10 @@ template. The production compose file keeps the service under the `unreleased` p
 `paper/archive` runs the `archive` group, the Zeitkapsel: old maps of earlier servers to walk and fly through, with no
 game. Everyone arrives in a small entrance hall that `EntranceHall` builds into an empty world at every start, in
 adventure mode with flight; nobody is hurt or hungry, and nothing is built or dropped outside `/build`. The pocket
-watch in the first hotbar slot opens the guide: the old servers, then their exhibits, then an exhibit's arrival,
-checkpoints and notes, and a click travels there. Its last row leads back to the entrance hall, and the hotbar's last
-slot back to the lobby.
+watch in the first hotbar slot opens the guide, grouped by server, year and category. Sections sort oldest year
+first, then by category, with undated exhibits last. A single section opens its exhibit list directly. Left-click
+an exhibit to travel to its arrival; right-click to open its checkpoints and notes. The sections screen also leads
+back to the entrance hall, and the hotbar's last slot back to the lobby.
 
 Exhibits live in their own template folder beside the archive's map bundle, one directory per exhibit under
 `worlds/archive-exhibits/<key>/` with its `exhibit.yml` and `world/` ([layout](worlds/README.md#zeitkapsel-exhibits)),

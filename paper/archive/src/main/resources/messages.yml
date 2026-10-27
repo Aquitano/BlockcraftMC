@@ -21,27 +21,27 @@ hotbar:
 menu:
   text: "<muted><line>"
   travel: "<left>Hinreisen"
-  eras:
+  sections:
     title: "<arrow><archive>Zeitkapsel"
     empty: "<muted>Noch keine Ausstellungen. Schau bald wieder vorbei."
   entrance: "<arrow><primary>Zur Eingangshalle"
   entrance-lore:
     - "<bullet><muted>Zurück an den Anfang"
-  era:
-    title: "<arrow><archive>Zeitkapsel <dark>· <muted><origin>"
-    name: "<arrow><archive><origin>"
-    year: "<bullet><muted>Aus dem Jahr <accent><year>"
-    years: "<bullet><muted>Aus den Jahren <accent><from> <muted>bis <accent><until>"
+  section:
+    fallback-category: "Sonstiges"
+    name: "<arrow><archive><category>"
+    name-year: "<arrow><archive><category> <dark>· <muted><year>"
+    origin: "<bullet><muted><origin>"
     one-exhibit: "<bullet><muted>Eine Ausstellung"
     exhibits: "<bullet><accent><count> <muted>Ausstellungen"
-    open: "<left>Ausstellungen ansehen"
+    open: "<left>Ansehen"
   exhibit:
     title: "<arrow><archive><exhibit> <dark>· <muted><origin>"
     name: "<arrow><primary><exhibit>"
     year: "<bullet><muted><origin>, <accent><year>"
     one-checkpoint: "<bullet><muted>Ein Checkpoint"
     checkpoints: "<bullet><accent><count> <muted>Checkpoints"
-    open: "<left>Checkpoints und Notizen"
+    open: "<right>Checkpoints und Notizen"
   arrival: "<arrow><primary>Ankunft"
   checkpoint: "<arrow><primary><checkpoint>"
   note:
