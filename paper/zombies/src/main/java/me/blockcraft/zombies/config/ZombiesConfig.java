@@ -18,7 +18,7 @@ public record ZombiesConfig(int maxPlayers, int startingGold, int intermissionSe
                             int powerPrice, int teamRevivePrice, double dropChance, int powerupTicks, int powerupsPerWave,
                             int noteCoins, int healthRegenTicks, double extraHealth, double headshotMultiplier, double knifeDamage, int damageImmunityTicks,
                             Waves waves, Map<Weapon, Gun> guns, Map<Perk, Integer> perks, Map<EnemyKind, Enemy> enemies, Exploder exploder,
-                            Events events, Abilities abilities) {
+                            Events events, Abilities abilities, Mystery mystery, Armory armory) {
 
     /** The last {@code stragglers} enemies of a wave move at least at {@code stragglerSpeed}. */
     public record Waves(int total, int baseEnemies, int enemiesPerWave, double extraPlayer, double healthPerWave, double damagePerWave,
@@ -141,6 +141,15 @@ public record ZombiesConfig(int maxPlayers, int startingGold, int intermissionSe
     /** Freezes while a fighter with line of sight looks at it within {@code watchAngle} degrees. */
     public record Shadow(double watchAngle) { }
 
+    /**
+     * The mystery box's gun rises {@code riseHeight} blocks over {@code riseTicks} and changes for {@code rollTicks};
+     * the buyer then has {@code takeTicks} to take it before it sinks back over {@code sinkTicks}.
+     */
+    public record Mystery(int riseTicks, double riseHeight, int rollTicks, int takeTicks, int sinkTicks, float scale) { }
+
+    /** An armory's guns turn once every {@code spinTicks} in a ring of {@code radius} blocks, {@code height} blocks above it. */
+    public record Armory(double height, double radius, float scale, int spinTicks) { }
+
     public static ZombiesConfig from(ConfigurationSection yaml) {
         var waves = new Waves(positive(yaml, "waves.total"), positive(yaml, "waves.base-enemies"),
                 positive(yaml, "waves.enemies-per-wave"), Math.max(0, yaml.getDouble("waves.extra-player")),
@@ -194,7 +203,12 @@ public record ZombiesConfig(int maxPlayers, int startingGold, int intermissionSe
                 new Exploder(Math.clamp(yaml.getDouble("exploder.trigger-range"), 1, 8), positive(yaml, "exploder.fuse-ticks"),
                         Math.clamp(yaml.getDouble("exploder.rush-speed"), 0.05, 0.6), Math.clamp(yaml.getDouble("exploder.radius"), 1, 8),
                         Math.max(0, yaml.getDouble("exploder.knockback"))),
-                events(yaml), abilities(yaml));
+                events(yaml), abilities(yaml),
+                new Mystery(positive(yaml, "mystery.rise-ticks"), Math.clamp(yaml.getDouble("mystery.rise-height"), 0.2, 2),
+                        positive(yaml, "mystery.roll-seconds") * 20, positive(yaml, "mystery.take-seconds") * 20,
+                        positive(yaml, "mystery.sink-ticks"), (float) Math.clamp(yaml.getDouble("mystery.scale"), 0.2, 2)),
+                new Armory(Math.clamp(yaml.getDouble("armory.height"), 0, 4), Math.clamp(yaml.getDouble("armory.radius"), 0, 2),
+                        (float) Math.clamp(yaml.getDouble("armory.scale"), 0.2, 2), positive(yaml, "armory.spin-seconds") * 20));
     }
 
     private static Abilities abilities(ConfigurationSection yaml) {

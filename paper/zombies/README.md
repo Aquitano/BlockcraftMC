@@ -66,6 +66,8 @@ The squad size is sampled at the start of each wave. Temporary deaths do not red
 `events` sets the wave events: from `from-wave`, each wave that is neither a boss nor a hound wave gets one event with `chance`, picked by each event's `weight`.
 The blood moon covers a whole wave. The power outage, the bounty and the toxic fog strike mid-wave.
 `weapons`, `enemies`, `perks`, `prices`, and `gold` hold combat and economy values.
+`mystery` times the mystery box: how high and fast the gun rises, how long it changes, and how long the buyer has to take it before it sinks back.
+`armory` places the ring of guns that turns above each armory.
 `abilities` tunes what the special kinds do: crawler packs, the shield's front angle, the breeder's brood, frost, Molotovs, the electric zap's jumps, and how wide a fighter's gaze freezes a shadow walker. An enemy's `scale` sizes its body and hitbox.
 `rewards` pays network coins through the shared round summary. Gold stays in the match.
 

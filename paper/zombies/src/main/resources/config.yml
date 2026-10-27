@@ -71,6 +71,23 @@ powerups:
   drop-chance: 0.03
   seconds: 20
   max-per-wave: 2
+# After a purchase at the mystery box a gun rises rise-height blocks out of it over rise-ticks and changes, slower and
+# slower, for roll-seconds. The buyer has take-seconds to click the box for the gun it stops on; then it sinks back
+# over sink-ticks and is gone without a refund. scale sizes the gun.
+mystery:
+  rise-ticks: 20
+  rise-height: 0.7
+  roll-seconds: 5
+  take-seconds: 10
+  sink-ticks: 20
+  scale: 0.6
+# Each armory shows the guns it sells in a ring of radius blocks, height blocks above the station, turning once every
+# spin-seconds.
+armory:
+  height: 2.35
+  radius: 0.7
+  scale: 0.6
+  spin-seconds: 12
 perks:
   extra_health: 1000
   quick_reload: 750

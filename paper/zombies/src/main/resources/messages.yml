@@ -169,7 +169,12 @@ shop:
   unavailable: "<error>Dieser Kauf ist gerade nicht verfügbar."
   not-enough: "<error>Du hast nicht genug Gold."
   bought: "<success>Gekauft <dark>· <accent><gold> Gold übrig"
-  mystery-result: "<prefix><muted>Die Kiste enthält <zombies><weapon><muted>!"
+  mystery-take: "<muted>Nimm die Waffe innerhalb von <accent><seconds>s <muted>aus der Kiste."
+mystery:
+  result: "<prefix><muted>Die Kiste zeigt <zombies><weapon><muted>! Klicke sie innerhalb von <accent><seconds>s <muted>an, um sie zu nehmen."
+  gone: "<prefix><muted>Die Kiste hat <zombies><weapon> <muted>wieder verschluckt."
+  spinning: "<muted>Warte, bis die Kiste stehen bleibt."
+  busy: "<error>Die Kiste ist gerade in Benutzung."
 note:
   title: "<arrow><zombies>Notiz <dark>· <muted><note>"
   found-title: "<zombies>Notiz gefunden"

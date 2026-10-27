@@ -78,6 +78,8 @@ public final class ZombiesGame {
     private final ArenaEffects effects;
     private final Notes notes;
     private final WaveEvents events;
+    private final MysteryBox mysteryBox;
+    private final WeaponRacks racks;
     private final Map<UUID, Survivor> survivors = new LinkedHashMap<>();
     private final Map<UUID, Location> downed = new HashMap<>();
     private final Map<UUID, TextDisplay> corpses = new HashMap<>();
@@ -118,6 +120,8 @@ public final class ZombiesGame {
         this.effects = new ArenaEffects(plugin, arena);
         this.notes = new Notes(messages, arena, config.noteCoins());
         this.events = new WaveEvents(this, effects, config.events());
+        this.mysteryBox = new MysteryBox(this);
+        this.racks = new WeaponRacks(arena, config.armory());
         this.task = Bukkit.getScheduler().runTaskTimer(plugin, this::tick, 1, 1);
         arena.labels(messages);
     }
@@ -130,6 +134,7 @@ public final class ZombiesGame {
     public Weapons weapons() { return weapons; }
     public Enemies enemies() { return enemies; }
     public Notes notes() { return notes; }
+    public MysteryBox mysteryBox() { return mysteryBox; }
     public Survivor survivor(Player player) { return survivors.get(player.getUniqueId()); }
     public boolean isLobby() { return phase == Phase.LOBBY; }
     public boolean inWave() { return phase == Phase.WAVE; }
@@ -204,6 +209,7 @@ public final class ZombiesGame {
             weapons.give(player, Weapon.PISTOL);
             protectedUntil.put(player.getUniqueId(), tick + config.protectionTicks());
         }
+        racks.show(tick);
         broadcast("game.started", Formatter.number("players", teamSize), Formatter.number("waves", config.waves().total()));
         intermission();
     }
@@ -277,6 +283,8 @@ public final class ZombiesGame {
         }
         round.players().forEach(player -> weapons.tick(player, tick));
         weapons.burn(tick);
+        mysteryBox.tick(tick);
+        racks.tick(tick);
         if (inWave()) {
             enemies.tick(tick);
             events.tick(tick);
@@ -492,7 +500,7 @@ public final class ZombiesGame {
     }
 
     public void openStation(Player player, ArenaMap.Station station) {
-        if (canUse(player, station)) {
+        if (canUse(player, station) && !mysteryBox.click(player, station)) {
             new StationMenu(this, player, station).open(player, () -> canUse(player, station));
         }
     }
@@ -661,6 +669,8 @@ public final class ZombiesGame {
                     .serialize(messages.get("game.enemy-name")));
         }
         enemies.clear();
+        mysteryBox.clear();
+        racks.clear();
         hideWaveBar();
         drops.values().forEach(drop -> drop.item().remove());
         drops.clear();
@@ -697,6 +707,8 @@ public final class ZombiesGame {
         round.stop();
         events.end();
         enemies.clear();
+        mysteryBox.clear();
+        racks.clear();
         hideWaveBar();
         drops.values().forEach(drop -> drop.item().remove());
         List.copyOf(corpses.keySet()).forEach(this::removeCorpse);

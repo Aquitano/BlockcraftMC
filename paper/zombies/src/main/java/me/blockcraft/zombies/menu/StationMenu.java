@@ -18,7 +18,6 @@ import org.bukkit.inventory.ItemStack;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.BooleanSupplier;
 
 public final class StationMenu extends Menu {
@@ -77,12 +76,8 @@ public final class StationMenu extends Menu {
                         () -> survivor.weapons().get(selected.orElseThrow()).upgrade()));
             }
             case MYSTERY -> add(13, new Offer(game.messages().get("shop.mystery"), Material.ENDER_CHEST, config.mysteryPrice(),
-                    () -> true, () -> {
-                        var choices = java.util.Arrays.stream(Weapon.values()).filter(weapon -> weapon != Weapon.PISTOL && !survivor.weapons().containsKey(weapon)).toList();
-                        var weapon = choices.get(ThreadLocalRandom.current().nextInt(choices.size()));
-                        game.weapons().give(player, weapon);
-                        player.sendMessage(game.messages().get("shop.mystery-result", Placeholder.component("weapon", game.messages().get("weapon." + weapon.key()))));
-                    }));
+                    () -> !game.mysteryBox().busy(station), () -> game.mysteryBox().roll(player, station)),
+                    game.messages().get("shop.mystery-take", Formatter.number("seconds", config.mystery().takeTicks() / 20)));
             case TEAM_REVIVE -> add(13, new Offer(game.messages().get("shop.team-revive"), Material.TOTEM_OF_UNDYING,
                     config.teamRevivePrice(), game::needsRevive, game::teamRevive));
         }
@@ -121,7 +116,12 @@ public final class StationMenu extends Menu {
         if (offer == null) {
             return;
         }
-        if (game.purchase(player, station, offer.price(), offer.available().getAsBoolean() && (!needsPower() || game.powered()), offer.grant())) {
+        if (!game.purchase(player, station, offer.price(), offer.available().getAsBoolean() && (!needsPower() || game.powered()), offer.grant())) {
+            return;
+        }
+        if (station.kind() == StationKind.MYSTERY) {
+            Menu.close(player);
+        } else {
             game.openStation(player, station);
         }
     }

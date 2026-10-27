@@ -25,9 +25,9 @@ Coordinates below are relative to `origin`, which defaults to world `(0, 96, 0)`
 
 | Area | Door price | Station position | What to check |
 | --- | ---: | --- | --- |
-| Courtyard | Open | Armory `(-4, 0, 12)` | Buy every gun, replace a held gun, buy ammo, and refuse duplicate purchases. |
+| Courtyard | Open | Armory `(-4, 0, 12)` | The four guns it sells turn above it. Buy every gun, replace a held gun, buy ammo, and refuse duplicate purchases. |
 | Courtyard | Open | Armor `(4, 0, 12)` | Buy iron armor, then diamond armor. Refuse a third upgrade. |
-| East depot | 500 | Mystery box `(36, 0, -10)` | Draw a weapon that the player does not own. Check the two-weapon limit. |
+| East depot | 500 | Mystery box `(36, 0, -10)` | A gun rises from the chest, changes ever slower and stops on one the player does not own. Take it by clicking the chest or the gun; another player's click and a second purchase are refused. Wait out the timeout once: the gun sinks back without a refund. Check the two-weapon limit. |
 | North workshop | 750 | Upgrade `(10, 0, -36)` | Refuse upgrades before power. After power, improve damage and refill the selected gun once. |
 | South generator room | 1,000 | Power `(-10, 0, 36)` | Turn on power for the whole team. Refuse a second payment. |
 | West clinic | 750 | Perks `(-36, 0, 10)` | Refuse purchases before power. Check extra hearts, faster reload, faster revive, and slowing bullets. |

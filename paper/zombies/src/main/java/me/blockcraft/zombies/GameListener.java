@@ -158,7 +158,13 @@ public final class GameListener implements Listener {
     public void onInteractEntity(PlayerInteractEntityEvent event) {
         if (game.running() && !building(event.getPlayer())) {
             event.setCancelled(true);
-            if (event.getHand() == EquipmentSlot.HAND) {
+            if (event.getHand() != EquipmentSlot.HAND) {
+                return;
+            }
+            var mystery = game.mysteryBox().stationOf(event.getRightClicked());
+            if (mystery.isPresent()) {
+                game.openStation(event.getPlayer(), mystery.get());
+            } else {
                 game.weapons().shoot(event.getPlayer(), game.tickNumber());
             }
         }
