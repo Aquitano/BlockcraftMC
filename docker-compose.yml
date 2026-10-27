@@ -256,6 +256,8 @@ services:
       WAKER_TOKEN: ${WAKER_TOKEN:-dev-waker-token}
       WAKER_PROJECT: ${COMPOSE_PROJECT_NAME:-blockcraftmc}
       WAKER_SERVICES: bedwars,mlgrush,duell,zombies,endergames,ttt,skywars,cores,quicksg,emeraldrush
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
     volumes:
       - ./build/docker/waker:/waker:ro
       - /var/run/docker.sock:/var/run/docker.sock
