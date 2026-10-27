@@ -136,6 +136,82 @@ Run `uv run dev/map-inspector/map_inspector.py` from the repository root, with J
 The viewer reads templates without installing a Minecraft plugin or restarting a server. See
 [local map inspection](../dev/map-inspector/README.md) for rendering the preview copies and other worlds.
 
+## Importing an old 1.8 map
+
+`map-import` turns a world folder from an old server into a template in this layout, one command per map. Run it
+from the repository root with Java 25:
+
+```sh
+./gradlew importMap -Psource=/path/to/OldWorld -PdryRun
+./gradlew importMap -Psource=/path/to/OldWorld -Ptarget=worlds/archive
+```
+
+The source is the old world folder with its `level.dat`. The task reads the pre-26.1 layout, with `region/` next to
+`level.dat` as in 1.8, and the 26.x layout. It never changes the source. It works in `run/map-import` in three steps:
+
+1. It copies the overworld and the map item pictures, switches structures off in the copy, and records every stored
+   chunk and every entity UUID.
+2. It starts Paper 26.3 (the build `:paper:runServer` uses) with a helper plugin. The plugin freezes the game and
+   holds each recorded chunk until it ticks. Paper then converts the chunk to status `full` with the world's own
+   generator and applies the upgrade data and post processing, the shape fixes against neighbouring blocks. Nothing
+   ticks while the game is frozen: water does not flow, sand does not fall, and mobs do not move. The server stops and
+   saves the chunks.
+3. It keeps the chunks the mode selects. Loose item entities are dropped. So is any entity whose UUID the old world
+   did not store, such as a mob the generator spawned. Everything else stays, including item frames, armor stands,
+   and the map's animals.
+
+Without a target, or with `-PdryRun`, the task only reports. The report shows the superflat ground, the chunk counts,
+and the kept chunks grouped into areas, each printed as a `-Pbounds` box. It also counts entities and chunks that
+still hold scheduled block or fluid updates. The finished world is reused while the source is unchanged, so a dry
+run and the real run convert only once. Delete `run/map-import/finished` to convert again. A failed conversion stops the task,
+and so does a recorded chunk that is not `full`. Both leave the target unchanged.
+
+| Mode   | Keeps                                                                 | New chunks generate as                  |
+|--------|-----------------------------------------------------------------------|-----------------------------------------|
+| `flat` | chunks that differ from the superflat ground, its biome, or hold a block entity or entity | the same superflat ground |
+| `void` | chunks with any block, block entity or entity                         | void                                    |
+| `all`  | every chunk                                                           | the old generator, without structures   |
+
+`flat` is the default for a superflat world. Other worlds need an explicit mode. `void` suits maps built over
+nothing, including those made with a void generator plugin. `all` suits natural terrain.
+`-Pbounds=x1,z1,x2,z2;...` limits any mode to these block boxes, and `-Pmargin=<chunks>` widens them. Use bounds
+when an old superflat generator built villages, because each village is a small separate area in the report. In
+natural terrain, the bounds and margin decide how much original land stays around the build. The old generator
+regenerates terrain beyond them.
+
+The target receives `region/`, `entities/`, `poi/`, and the generator in
+`dimensions/minecraft/overworld/data/minecraft/world_gen_settings.dat`, with structures off. It receives Paper's
+dimension metadata in `data/paper` only when the target lacks it, because Paper otherwise migrates the world at
+every start. The same applies to `level.dat` and the map pictures in `data/minecraft/maps`. Game rules and other
+data the finishing server wrote stay in `run/map-import`. When the target already holds a map, the task replaces
+its chunks and generator and keeps everything else, such as `level.dat` with the spawn and the `blockcraft/`
+directory.
+
+A BedWars pool map is one dimension folder, `maps/<key>/world`. The key must use lowercase letters, digits, `_`,
+`.`, or `-`:
+
+```sh
+./gradlew importMap -Psource=/path/to/Castle -Pmode=void -Playout=dimension \
+  -Ptarget=worlds/bedwars/blockcraft/BedWars/maps/castle/world
+```
+
+A dimension cannot hold map item pictures, so the report warns when the old world had them.
+
+Afterwards:
+
+- Look at the result before committing. A level layout template renders with
+  `uv run dev/map-inspector/map_inspector.py --worlds run/map-import --maps template`. To walk it, run a server on
+  the target as in the main README's "One server on the host", for example `./gradlew :paper:runServer -Pgame=<group>`.
+- Check signs, heads, chests, item frames, and water that the report lists under scheduled updates.
+  Paper's conversion also removes blocks that cannot stand where they are, such as an unsupported torch, and their
+  drops do not enter the map.
+- Old plugin data is not imported. Place spawns and locations again with the game's `/setup`, name the map in
+  `blockcraft/map.yml`, and publish it with `/map save`. A BedWars pool map needs its `map.yml` before it can be
+  voted. Use `/setup map <key> edit` to load the imported world and create an empty `map.yml`. Then use `spawn`,
+  `bed`, `shop`, `spawner`, `spectator`, `border`, `name`, and `icon`. `info` lists missing settings, and `save`
+  stores the world in the pool. After that, run `/map save`.
+- Region files go through Git LFS, as every template's do.
+
 ## Storage and validation
 
 All 103 source overworld region files and their 48,070 chunks are retained. The initial

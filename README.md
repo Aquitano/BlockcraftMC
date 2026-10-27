@@ -30,6 +30,7 @@ paper/statussigns        StatusSigns: clickable server-status signs
 velocity/system          BlockcraftSystem: reports, moderation, parties, friends, routing and staff tools
 resourcepack/            The client-side look: menu panels, HUD icons and button textures (see "Resource pack")
 waker/                   Starts and stops game servers for the proxy (see "Game servers on demand")
+map-import/              Turns an old world into a map template (worlds/README.md, "Importing an old 1.8 map")
 dev/                     Config templates for the local dev network (see below)
 worlds/                  One map template per server group, restored at every start (see "Maps")
 docker-compose.yml       The local dev network: MariaDB, Velocity and one Paper server per game mode
@@ -202,9 +203,10 @@ A map edited without `/map save` is gone at the next restart, and so is a `/setu
 point. The running server publishes its own copy of `map.yml` too, so edit that file in the template and restart
 rather than while the server runs.
 
-Templates from a server that predates this layout: copy its world folder into `worlds/<group>`, start the server
-and set the spawns again, since the plugin files used to live in `plugins/<Plugin>` and pointed at the old world
-name. On a server that already runs this layout without a template, those files move into the world's
+Templates from a server that predates this layout: `./gradlew importMap -Psource=<old world> -Ptarget=worlds/<group>`
+converts the world once on Paper 26.3 and keeps only the chunks that matter ([Importing an old 1.8
+map](worlds/README.md#importing-an-old-18-map)). Then set the spawns again, since the plugin files used to live in
+`plugins/<Plugin>` and pointed at the old world name. On a server that already runs this layout without a template, those files move into the world's
 `blockcraft/` directory on the first start by themselves.
 
 The [Vanade map import](worlds/README.md) records the imported worlds, converted configuration, and remaining in-game checks.

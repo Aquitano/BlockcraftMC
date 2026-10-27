@@ -25,4 +25,5 @@ include(
     "velocity:system",
     "resourcepack",
     "waker",
+    "map-import",
 )

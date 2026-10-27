@@ -1,0 +1,5 @@
+name: BlockcraftMapImport
+version: '${version}'
+main: me.blockcraft.mapimport.FinishPlugin
+api-version: '26.3'
+author: Aquitano
