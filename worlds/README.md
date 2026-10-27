@@ -58,6 +58,8 @@ start. Each world's `world_gen_settings.dat` rebuilds the rest without structure
 lobby, QuickSG, and EmeraldRush, and open sea at the old sea level for Duell. Duell keeps the waiting lobby's
 surroundings, Bucht, every arena island, and the islands in view of one. EmeraldRush keeps its lobby, mine, and
 deathmatch; the villages the old superflat generated are gone.
+BedWars' waiting island and arena maps and the Zombies arena keep only the chunks that hold blocks; their
+generators leave everything else empty, and Zombies stores no nether or end.
 
 The old HolographicDisplays database is retained under
 `lobby/blockcraft/legacy/HolographicDisplays/database.yml` for reference. Its welcome and
