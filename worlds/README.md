@@ -50,7 +50,14 @@ QuickSG has its eight player spawns, lobby, spectator, and both world border cen
 The saved border settings match the current defaults: disabled, with radii of 30 and 60.
 The backup has no `DM1` through `DM4` locations. The current QuickSG game does not use those keys.
 EmeraldRush has all eleven locations, including its six deathmatch spawns and the search,
-shopping, and enchanting locations.
+shopping, and enchanting locations. Its mine had lost all but one emerald ore, because the old plugin never reset
+its world; the plugin now places the ore itself every round (`ores` in its `config.yml`).
+
+The templates keep only the chunks a game uses, finished once on Paper 26.3, so no chunk is converted again at a
+start. Each world's `world_gen_settings.dat` rebuilds the rest without structures: the old superflat ground for the
+lobby, QuickSG, and EmeraldRush, and open sea at the old sea level for Duell. Duell keeps the waiting lobby's
+surroundings, Bucht, every arena island, and the islands in view of one. EmeraldRush keeps its lobby, mine, and
+deathmatch; the villages the old superflat generated are gone.
 
 The old HolographicDisplays database is retained under
 `lobby/blockcraft/legacy/HolographicDisplays/database.yml` for reference. Its welcome and
