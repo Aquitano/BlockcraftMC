@@ -258,6 +258,7 @@ It is empty by default because no founding date is assumed.
 | Christmas | December 24 through 26. The Weihnachtsmann stands at `/lobbyset santa` and gives each account `activities.christmas-coins` (100) once per year, with a jingle. Without that spot he does not appear. Every ten minutes his sleigh, pulled by four reindeer and Rudolph, flies over a lobby player ringing Jingle Bells and drops four presents; each player catches one per flight for 15 coins. Lobby's `sleigh` section sets the timing, and staff send it on any day with `/schlitten`. |
 | New Year | On December 31, a boss bar counts down the last ten seconds. At midnight the lobby's configured firework positions launch fireworks. Joining during January grants that year's tag. |
 | Network birthday | The proxy's MOTD counts the years. Lobby players receive a temporary cake hat for the rest of the day. |
+| OG | No date; staff switch it on with `/event og`. The BedWars map vote offers the old server's maps (`era: og`) instead of the current ones. |
 
 The calendar's `halloween` and `winter` windows can be moved in both `calendar` sections; a window whose end comes
 before its start runs across New Year.
@@ -269,7 +270,7 @@ in `bc_settings`, so it survives restarts. Every server reads it back every `cal
 lobby redresses itself on its next tick. The staff log records each switch under the issuer. Date-bound details stay
 on the date: the Advent door, the birthday's age and the January tag. While an occasion is active, the second line
 of the server list shows its seasonal line from `motd.season`; the order is the birthday, then New Year's Eve,
-Christmas, Advent, winter, Halloween and Easter.
+Christmas, Advent, winter, Halloween, Easter and OG.
 
 Lobby's `seasons` section dresses the lobby for each active occasion. Every block swap and the cover on top happen
 only in the packets players receive, so the map and `/map save` never contain them. The defaults turn leaves pale,

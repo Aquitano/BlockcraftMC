@@ -8,9 +8,11 @@ players:
   min: 4
 
 # The lobby counts down for countdown.lobby seconds, or countdown.start after /start. The map vote offers voting.maps
-# maps of the pool and closes countdown.vote-closes-at seconds before the start, after which /forcemap changes nothing;
-# the chosen map is copied in those seconds, so countdown.start should not be shorter. A round ends without a winner
-# after countdown.round seconds, and the server restarts countdown.restart seconds after the last round.
+# maps of the pool, those with era: og in their map.yml while the OG occasion is on and the others otherwise (either
+# set stands in when the other has none), and closes countdown.vote-closes-at seconds before the start, after which
+# /forcemap changes nothing; the chosen map is copied in those seconds, so countdown.start should not be shorter. A
+# round ends without a winner after countdown.round seconds, and the server restarts countdown.restart seconds after
+# the last round.
 countdown:
   lobby: 60
   start: 10

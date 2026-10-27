@@ -138,7 +138,7 @@ public final class Game {
         this.chests = new TeamChests(plugin, messages, teams);
         this.specials = new SpecialItems(plugin, messages, config, dealers, teams, round::isPlaying, this::canBuild,
                 Game::isDecoration, placed::add);
-        this.maps = new MapChoice(plugin, config, messages, pool);
+        this.maps = new MapChoice(plugin, config, messages, pool, api.calendar());
         this.lobbyCountdown = new LobbyCountdown(plugin, round, gameConfig, this::lobbySecond, this::start);
         this.lobbyHotbar = new LobbyHotbar(plugin, List.of(
                 new LobbyHotbar.Choice(MenuIcon.BEDWARS, messages.get("item.perks"), this::openPerks),

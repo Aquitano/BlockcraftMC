@@ -188,6 +188,7 @@ lobby:
 # The map vote; the votes, the chance option and the voter's confirmation are BlockcraftAPI's vote texts.
 vote:
   title: "<arrow><bedwars>BedWars <dark>· <muted>Abstimmung"
+  title-og: "<arrow><bedwars>BedWars <dark>· <muted>OG-Abstimmung"
   map: "<arrow><primary><map>"
   builders: "<bullet><muted>Erbaut von <accent><builders>"
   chance: "den Zufall"

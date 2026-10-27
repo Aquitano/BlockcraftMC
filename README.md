@@ -353,7 +353,9 @@ throws it away again.
 loads a map of the pool, or an empty one for a new key, and takes the builder there; standing in it, `spawn`, `bed`,
 `shop`, `spawner`, `spectator`, `border`, `name` and `icon` change its `map.yml` at once, `info` names what is still
 missing, and `save` copies the world back into the pool. `/map save` then publishes the lobby with its pool. A map is
-in the vote once nothing is missing for the teams `config.yml` plays with.
+in the vote once nothing is missing for the teams `config.yml` plays with. `era: og` in a `map.yml` marks a map of
+the old server: the vote draws only from those while the OG occasion is on (`/event og` on the proxy) and only from
+the others otherwise, unless that set has no playable map. `/forcemap` takes any map.
 
 Opening a map for editing keeps its loaded dimension out of votes and forced choices. Save changes you want to
 keep, then restart the backend to use that map in rounds. Editing a chosen map before the round starts cancels

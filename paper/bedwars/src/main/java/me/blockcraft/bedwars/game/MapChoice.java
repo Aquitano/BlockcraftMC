@@ -8,7 +8,9 @@ import me.blockcraft.api.task.Tasks;
 import me.blockcraft.bedwars.config.BedWarsConfig;
 import me.blockcraft.bedwars.map.ArenaMap;
 import me.blockcraft.bedwars.map.ArenaWorlds;
+import me.blockcraft.bedwars.map.Era;
 import me.blockcraft.bedwars.map.MapPool;
+import me.blockcraft.common.calendar.NetworkCalendar;
 import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -26,8 +28,10 @@ import java.util.concurrent.CompletableFuture;
 
 /**
  * Which map the round is played on. The lobby votes among a few maps drawn from the pool, or leaves it to chance,
- * until shortly before the start, when the vote decides, unless someone forced a map before. The chosen map is copied
- * into place in the background at once, so that the start only has to load it.
+ * until shortly before the start, when the vote decides, unless someone forced a map before. The draw takes the
+ * old server's maps while OG mode is on and the current ones otherwise, and is drawn again when staff switch it
+ * before the vote is decided. The chosen map is copied into place in the background at once, so that the start only
+ * has to load it.
  */
 final class MapChoice {
 
@@ -35,18 +39,21 @@ final class MapChoice {
     private final BedWarsConfig config;
     private final Messages messages;
     private final MapPool pool;
+    private final NetworkCalendar calendar;
     private final Random random = new Random();
+    private Era drawnFor;
     private Ballot<String> ballot;
     private List<ArenaMap> choices;
     private Optional<ArenaMap> chosen = Optional.empty();
     private boolean forced;
     private CompletableFuture<Void> copied = CompletableFuture.completedFuture(null);
 
-    MapChoice(Plugin plugin, BedWarsConfig config, Messages messages, MapPool pool) {
+    MapChoice(Plugin plugin, BedWarsConfig config, Messages messages, MapPool pool, NetworkCalendar calendar) {
         this.plugin = plugin;
         this.config = config;
         this.messages = messages;
         this.pool = pool;
+        this.calendar = calendar;
         redraw();
     }
 
@@ -71,11 +78,13 @@ final class MapChoice {
             VoteMenu.closed(player, messages);
             return;
         }
+        followEra();
         var options = choices.stream().filter(map -> ArenaWorlds.loaded(map.key()).isEmpty())
                 .map(map -> new VoteMenu.Option(Optional.of(map.key()),
                         messages.get("vote.map", Placeholder.unparsed("map", map.name())), new ItemStack(map.icon()),
                         builders(map), ballot.votes(Optional.of(map.key())))).toList();
-        new VoteMenu(messages.get("vote.title"), options, Optional.of(ballot.votes(Optional.empty())),
+        var title = choices.stream().anyMatch(map -> map.era() == Era.OG) ? "vote.title-og" : "vote.title";
+        new VoteMenu(messages.get(title), options, Optional.of(ballot.votes(Optional.empty())),
                 ballot.choiceOf(player.getUniqueId()), Optional.empty(), this::vote).open(player);
     }
 
@@ -88,6 +97,7 @@ final class MapChoice {
         if (chosen.isPresent()) {
             return false;
         }
+        followEra();
         var candidates = choices.stream().filter(map -> ArenaWorlds.loaded(map.key()).isEmpty())
                 .map(ArenaMap::key).toList();
         if (candidates.isEmpty()) {
@@ -129,10 +139,17 @@ final class MapChoice {
                 .forEach(Menu::close);
         chosen = Optional.empty();
         forced = false;
-        var drawn = new ArrayList<>(available());
+        drawnFor = Era.of(calendar);
+        var drawn = new ArrayList<>(drawnFor.pick(available()));
         Collections.shuffle(drawn, random);
         choices = List.copyOf(drawn.subList(0, Math.min(config.voteMaps(), drawn.size())));
         ballot = new Ballot<>();
+    }
+
+    private void followEra() {
+        if (Era.of(calendar) != drawnFor) {
+            redraw();
+        }
     }
 
     /** {@code key} empty is a vote to leave the map to chance. */
