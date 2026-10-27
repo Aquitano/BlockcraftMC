@@ -1,5 +1,6 @@
 package me.blockcraft.bedwars.map;
 
+import me.blockcraft.api.world.Point;
 import me.blockcraft.bedwars.resource.Resource;
 import me.blockcraft.bedwars.team.TeamColor;
 import org.bukkit.Material;

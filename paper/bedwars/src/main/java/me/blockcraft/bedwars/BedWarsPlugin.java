@@ -15,6 +15,7 @@ import me.blockcraft.api.game.StatsMenus;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.game.TopCommand;
 import me.blockcraft.api.game.TopList;
+import me.blockcraft.api.world.TemplateDimensions;
 import me.blockcraft.bedwars.command.BedWarsSetup;
 import me.blockcraft.bedwars.config.BedWarsConfig;
 import me.blockcraft.bedwars.game.Game;
@@ -24,7 +25,6 @@ import me.blockcraft.bedwars.listener.ConnectionListener;
 import me.blockcraft.bedwars.listener.ItemListener;
 import me.blockcraft.bedwars.listener.WorldRules;
 import me.blockcraft.bedwars.lobby.LobbyLayout;
-import me.blockcraft.bedwars.map.ArenaWorlds;
 import me.blockcraft.bedwars.map.MapPool;
 import me.blockcraft.bedwars.shop.ShopCatalog;
 import me.blockcraft.common.message.Messages;
@@ -48,12 +48,13 @@ public final class BedWarsPlugin extends JavaPlugin {
         var stats = new StatsRepository(api.database(), "bw_stats");
         stats.createTable();
 
-        ArenaWorlds.settle(Bukkit.getWorlds().getFirst());
+        WorldRules.settle(Bukkit.getWorlds().getFirst());
         var layout = LobbyLayout.load(api.map().file(this, "lobby.yml"));
         var pool = new MapPool(api.map().file(this, "maps"), getLogger());
+        var arenas = new TemplateDimensions("bedwars", WorldRules::settle);
         var topList = new TopList(this, stats, messages);
         var statsMenus = StatsMenus.of(messages, stats, topList, gameConfig.globalStatsHead());
-        game = new Game(this, gameConfig, config, messages, pool, layout, catalog, stats, statsMenus);
+        game = new Game(this, gameConfig, config, messages, pool, arenas, layout, catalog, stats, statsMenus);
         api.presence().maxPlayers(config.capacity());
 
         game.listeners().forEach(this::register);
@@ -72,7 +73,7 @@ public final class BedWarsPlugin extends JavaPlugin {
             commands.register(ForceMapCommand.create(messages, game::playableMaps, game::mapForceable, game::forceMap));
             commands.register(StatsCommand.create(this, stats, messages));
             commands.register(TopCommand.create(topList));
-            commands.register(BedWarsSetup.create(pool, layout, config.teams(), messages));
+            commands.register(BedWarsSetup.create(pool, arenas, layout, config.teams(), messages));
         });
 
         game.open();

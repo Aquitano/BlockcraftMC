@@ -1,7 +1,10 @@
 package me.blockcraft.bedwars.listener;
 
 import io.papermc.paper.event.player.PlayerItemFrameChangeEvent;
+import org.bukkit.Difficulty;
+import org.bukkit.GameRules;
 import org.bukkit.Tag;
+import org.bukkit.World;
 import org.bukkit.block.data.Bisected;
 import org.bukkit.entity.Hanging;
 import org.bukkit.event.EventHandler;
@@ -23,6 +26,16 @@ import org.bukkit.event.player.PlayerBedEnterEvent;
  * nothing grows, burns, melts, flows or spreads, item frames and paintings stay, nobody crafts or sleeps.
  */
 public final class WorldRules implements Listener {
+
+    /** What every BedWars world keeps still: the time of day, the weather, growth and the locator bar. */
+    public static void settle(World world) {
+        world.setDifficulty(Difficulty.NORMAL);
+        world.setGameRule(GameRules.ADVANCE_TIME, false);
+        world.setGameRule(GameRules.ADVANCE_WEATHER, false);
+        world.setGameRule(GameRules.RANDOM_TICK_SPEED, 0);
+        world.setGameRule(GameRules.LOCATOR_BAR, false);
+        world.setGameRule(GameRules.SPAWN_MOBS, false);
+    }
 
     @EventHandler
     public void onPhysics(BlockPhysicsEvent event) {

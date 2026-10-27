@@ -1,5 +1,6 @@
 package me.blockcraft.bedwars.map;
 
+import me.blockcraft.api.world.TemplateDimensions;
 import me.blockcraft.bedwars.team.TeamColor;
 
 import java.io.IOException;
@@ -13,7 +14,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 /**
@@ -25,8 +25,6 @@ public final class MapPool {
 
     private static final String CONFIG = "map.yml";
     private static final String WORLD = "world";
-    /** A map's key becomes the path of its dimension, so it keeps to what a namespaced key allows. */
-    private static final Pattern KEY = Pattern.compile("[a-z0-9_.-]+");
 
     private final Path directory;
     private final Logger logger;
@@ -34,10 +32,6 @@ public final class MapPool {
     public MapPool(Path directory, Logger logger) {
         this.directory = directory;
         this.logger = logger;
-    }
-
-    public static boolean isValidKey(String key) {
-        return KEY.matcher(key).matches();
     }
 
     public List<ArenaMap> maps() {
@@ -82,7 +76,7 @@ public final class MapPool {
 
     private Optional<ArenaMap> read(Path folder) {
         String key = folder.getFileName().toString();
-        if (!isValidKey(key)) {
+        if (!TemplateDimensions.isValidName(key)) {
             logger.warning("Skipping map " + key + ": a key may only hold a-z, 0-9, _, . and -");
             return Optional.empty();
         }

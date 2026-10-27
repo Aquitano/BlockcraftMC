@@ -1,5 +1,6 @@
 package me.blockcraft.bedwars.map;
 
+import me.blockcraft.api.world.Point;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;

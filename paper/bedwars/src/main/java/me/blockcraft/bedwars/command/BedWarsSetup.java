@@ -11,13 +11,13 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import me.blockcraft.api.game.SetupCommand;
+import me.blockcraft.api.world.Point;
+import me.blockcraft.api.world.TemplateDimensions;
 import me.blockcraft.bedwars.lobby.LobbyLayout;
 import me.blockcraft.bedwars.map.ArenaMap;
-import me.blockcraft.bedwars.map.ArenaWorlds;
 import me.blockcraft.bedwars.map.BedSpot;
 import me.blockcraft.bedwars.map.Border;
 import me.blockcraft.bedwars.map.MapPool;
-import me.blockcraft.bedwars.map.Point;
 import me.blockcraft.bedwars.resource.Resource;
 import me.blockcraft.bedwars.team.TeamColor;
 import me.blockcraft.common.message.Messages;
@@ -47,20 +47,22 @@ public final class BedWarsSetup {
     private static final Point NEW_MAP_START = new Point(0.5, 100.0, 0.5, 0.0f, 0.0f);
 
     private final MapPool pool;
+    private final TemplateDimensions arenas;
     private final LobbyLayout layout;
     private final List<TeamColor> teams;
     private final Messages messages;
 
-    private BedWarsSetup(MapPool pool, LobbyLayout layout, List<TeamColor> teams, Messages messages) {
+    private BedWarsSetup(MapPool pool, TemplateDimensions arenas, LobbyLayout layout, List<TeamColor> teams, Messages messages) {
         this.pool = pool;
+        this.arenas = arenas;
         this.layout = layout;
         this.teams = teams;
         this.messages = messages;
     }
 
-    public static LiteralCommandNode<CommandSourceStack> create(MapPool pool, LobbyLayout layout, List<TeamColor> teams,
-                                                                Messages messages) {
-        return new BedWarsSetup(pool, layout, teams, messages).tree();
+    public static LiteralCommandNode<CommandSourceStack> create(MapPool pool, TemplateDimensions arenas, LobbyLayout layout,
+                                                                List<TeamColor> teams, Messages messages) {
+        return new BedWarsSetup(pool, arenas, layout, teams, messages).tree();
     }
 
     private LiteralCommandNode<CommandSourceStack> tree() {
@@ -142,7 +144,7 @@ public final class BedWarsSetup {
     }
 
     private int edit(Player player, String key) {
-        if (!MapPool.isValidKey(key)) {
+        if (!TemplateDimensions.isValidName(key)) {
             player.sendMessage(messages.get("setup.invalid-key"));
             return Command.SINGLE_SUCCESS;
         }
@@ -151,22 +153,22 @@ public final class BedWarsSetup {
             pool.save(created);
             return created;
         });
-        if (ArenaWorlds.loaded(key).isEmpty() && Files.isDirectory(pool.world(key))) {
-            ArenaWorlds.copy(pool, key);
+        if (arenas.loaded(key).isEmpty() && Files.isDirectory(pool.world(key))) {
+            arenas.copy(pool.world(key), key);
         }
-        var world = ArenaWorlds.load(key);
+        var world = arenas.load(key);
         player.teleport(map.spectator().orElse(NEW_MAP_START).in(world));
         player.sendMessage(messages.get("setup.editing", Placeholder.unparsed("map", key)));
         return Command.SINGLE_SUCCESS;
     }
 
     private int save(Player player, String key) {
-        var world = ArenaWorlds.loaded(key);
+        var world = arenas.loaded(key);
         if (world.isEmpty()) {
             player.sendMessage(messages.get("setup.not-loaded"));
             return Command.SINGLE_SUCCESS;
         }
-        ArenaWorlds.publish(pool, world.get(), key);
+        arenas.publish(world.get(), pool.world(key));
         player.sendMessage(messages.get("setup.saved", Placeholder.unparsed("map", key)));
         return Command.SINGLE_SUCCESS;
     }
@@ -206,7 +208,7 @@ public final class BedWarsSetup {
     private int change(CommandContext<CommandSourceStack> context, BiFunction<ArenaMap, Player, ArenaMap> edit) throws CommandSyntaxException {
         var player = player(context);
         var key = map(context);
-        if (!player.getWorld().getKey().equals(ArenaWorlds.key(key))) {
+        if (!player.getWorld().getKey().equals(arenas.key(key))) {
             player.sendMessage(messages.get("setup.not-in-map", Placeholder.unparsed("map", key)));
             return Command.SINGLE_SUCCESS;
         }

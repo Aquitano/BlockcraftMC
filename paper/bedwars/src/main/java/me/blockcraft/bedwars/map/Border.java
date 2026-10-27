@@ -1,5 +1,7 @@
 package me.blockcraft.bedwars.map;
 
+import me.blockcraft.api.world.Point;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 

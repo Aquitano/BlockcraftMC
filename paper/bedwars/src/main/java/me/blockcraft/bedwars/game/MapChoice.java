@@ -5,9 +5,9 @@ import me.blockcraft.api.game.VoteMenu;
 import me.blockcraft.api.menu.Menu;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Tasks;
+import me.blockcraft.api.world.TemplateDimensions;
 import me.blockcraft.bedwars.config.BedWarsConfig;
 import me.blockcraft.bedwars.map.ArenaMap;
-import me.blockcraft.bedwars.map.ArenaWorlds;
 import me.blockcraft.bedwars.map.Era;
 import me.blockcraft.bedwars.map.MapPool;
 import me.blockcraft.common.calendar.NetworkCalendar;
@@ -39,6 +39,7 @@ final class MapChoice {
     private final BedWarsConfig config;
     private final Messages messages;
     private final MapPool pool;
+    private final TemplateDimensions arenas;
     private final NetworkCalendar calendar;
     private final Random random = new Random();
     private Era drawnFor;
@@ -48,17 +49,19 @@ final class MapChoice {
     private boolean forced;
     private CompletableFuture<Void> copied = CompletableFuture.completedFuture(null);
 
-    MapChoice(Plugin plugin, BedWarsConfig config, Messages messages, MapPool pool, NetworkCalendar calendar) {
+    MapChoice(Plugin plugin, BedWarsConfig config, Messages messages, MapPool pool, TemplateDimensions arenas,
+              NetworkCalendar calendar) {
         this.plugin = plugin;
         this.config = config;
         this.messages = messages;
         this.pool = pool;
+        this.arenas = arenas;
         this.calendar = calendar;
         redraw();
     }
 
     boolean hasMaps() {
-        return choices.stream().anyMatch(map -> ArenaWorlds.loaded(map.key()).isEmpty());
+        return choices.stream().anyMatch(map -> arenas.loaded(map.key()).isEmpty());
     }
 
     Optional<ArenaMap> chosen() {
@@ -79,7 +82,7 @@ final class MapChoice {
             return;
         }
         followEra();
-        var options = choices.stream().filter(map -> ArenaWorlds.loaded(map.key()).isEmpty())
+        var options = choices.stream().filter(map -> arenas.loaded(map.key()).isEmpty())
                 .map(map -> new VoteMenu.Option(Optional.of(map.key()),
                         messages.get("vote.map", Placeholder.unparsed("map", map.name())), new ItemStack(map.icon()),
                         builders(map), ballot.votes(Optional.of(map.key())))).toList();
@@ -98,7 +101,7 @@ final class MapChoice {
             return false;
         }
         followEra();
-        var candidates = choices.stream().filter(map -> ArenaWorlds.loaded(map.key()).isEmpty())
+        var candidates = choices.stream().filter(map -> arenas.loaded(map.key()).isEmpty())
                 .map(ArenaMap::key).toList();
         if (candidates.isEmpty()) {
             redraw();
@@ -126,7 +129,7 @@ final class MapChoice {
     ArenaMap awaitCopy() {
         copied.join();
         var map = chosen.orElseThrow();
-        if (ArenaWorlds.loaded(map.key()).isPresent()) {
+        if (arenas.loaded(map.key()).isPresent()) {
             throw new IllegalStateException("The map is already loaded: " + map.key());
         }
         return map;
@@ -166,11 +169,11 @@ final class MapChoice {
     }
 
     private Optional<ArenaMap> choice(String key) {
-        return choices.stream().filter(map -> map.key().equals(key) && ArenaWorlds.loaded(key).isEmpty()).findFirst();
+        return choices.stream().filter(map -> map.key().equals(key) && arenas.loaded(key).isEmpty()).findFirst();
     }
 
     private List<ArenaMap> available() {
-        return pool.playable(config.teams()).stream().filter(map -> ArenaWorlds.loaded(map.key()).isEmpty()).toList();
+        return pool.playable(config.teams()).stream().filter(map -> arenas.loaded(map.key()).isEmpty()).toList();
     }
 
     private List<Component> builders(ArenaMap map) {
@@ -180,7 +183,7 @@ final class MapChoice {
     }
 
     private void choose(ArenaMap map, boolean forcedChoice) {
-        if (ArenaWorlds.loaded(map.key()).isPresent()) {
+        if (arenas.loaded(map.key()).isPresent()) {
             throw new IllegalStateException("The map is already loaded: " + map.key());
         }
         chosen = Optional.of(map);
@@ -190,7 +193,7 @@ final class MapChoice {
         var copy = new CompletableFuture<Void>();
         Tasks.async(plugin, () -> {
             try {
-                ArenaWorlds.copy(pool, map.key());
+                arenas.copy(pool.world(map.key()), map.key());
                 copy.complete(null);
             } catch (RuntimeException e) {
                 copy.completeExceptionally(e);

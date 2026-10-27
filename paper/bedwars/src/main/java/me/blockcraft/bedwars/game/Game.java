@@ -17,6 +17,7 @@ import me.blockcraft.api.game.TimerBar;
 import me.blockcraft.api.pack.MenuIcon;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Tasks;
+import me.blockcraft.api.world.TemplateDimensions;
 import me.blockcraft.bedwars.config.BedWarsConfig;
 import me.blockcraft.bedwars.item.SpecialItems;
 import me.blockcraft.bedwars.lobby.CatchGame;
@@ -25,7 +26,6 @@ import me.blockcraft.bedwars.lobby.JumpAndRun;
 import me.blockcraft.bedwars.lobby.LobbyLayout;
 import me.blockcraft.bedwars.lobby.TeamSelector;
 import me.blockcraft.bedwars.map.ArenaMap;
-import me.blockcraft.bedwars.map.ArenaWorlds;
 import me.blockcraft.bedwars.map.Border;
 import me.blockcraft.bedwars.map.MapPool;
 import me.blockcraft.bedwars.perk.Perks;
@@ -115,6 +115,7 @@ public final class Game {
     private final Optional<JumpAndRun> jumpAndRun;
     private final CatchGame catchGame;
     private final MapChoice maps;
+    private final TemplateDimensions arenas;
     private final Set<Block> placed = new HashSet<>();
     /** Who started the round for which team; a win counts for all of them, also those out before the end. */
     private final Map<UUID, Team> roster = new HashMap<>();
@@ -123,12 +124,13 @@ public final class Game {
     private int secondsLeft;
 
     public Game(Plugin plugin, GameConfig gameConfig, BedWarsConfig config, Messages messages, MapPool pool,
-                LobbyLayout layout, ShopCatalog catalog, StatsRepository stats, StatsMenus statsMenus) {
+                TemplateDimensions arenas, LobbyLayout layout, ShopCatalog catalog, StatsRepository stats, StatsMenus statsMenus) {
         var api = BlockcraftApi.get();
         this.plugin = plugin;
         this.config = config;
         this.messages = messages;
         this.layout = layout;
+        this.arenas = arenas;
         this.teams = new Teams(config.teams(), config.playersPerTeam(), messages, api.tabTeams());
         this.perks = new Perks(api.settings());
         this.summary = new RoundSummary(plugin, messages, new RoundSummary.Rewards(config.killCoins(), config.winCoins()), stats);
@@ -138,7 +140,7 @@ public final class Game {
         this.chests = new TeamChests(plugin, messages, teams);
         this.specials = new SpecialItems(plugin, messages, config, dealers, teams, round::isPlaying, this::canBuild,
                 Game::isDecoration, placed::add);
-        this.maps = new MapChoice(plugin, config, messages, pool, api.calendar());
+        this.maps = new MapChoice(plugin, config, messages, pool, arenas, api.calendar());
         this.lobbyCountdown = new LobbyCountdown(plugin, round, gameConfig, this::lobbySecond, this::start);
         this.lobbyHotbar = new LobbyHotbar(plugin, List.of(
                 new LobbyHotbar.Choice(MenuIcon.BEDWARS, messages.get("item.perks"), this::openPerks),
@@ -401,7 +403,7 @@ public final class Game {
         ArenaMap map;
         try {
             map = maps.awaitCopy();
-            match = new Match(plugin, ArenaWorlds.load(map.key()), map, messages, config, dealers);
+            match = new Match(plugin, arenas.load(map.key()), map, messages, config, dealers);
         } catch (RuntimeException e) {
             plugin.getLogger().log(Level.SEVERE, "Could not load the map " + maps.chosen().map(ArenaMap::key).orElse("?"), e);
             broadcast("lobby.map-failed");
