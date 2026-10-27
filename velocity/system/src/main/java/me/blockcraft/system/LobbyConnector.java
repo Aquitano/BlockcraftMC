@@ -89,7 +89,10 @@ public final class LobbyConnector {
         var target = directory.fill(group, seated);
         if (target.isEmpty()) {
             String sleeping = group;
-            if (onDemand.filter(servers -> servers.request(player, sleeping, game)).isPresent()) {
+            // Play again from the round that just ended: its server restarts before it has room, so wait for it.
+            boolean playedHere = player.getCurrentServer().flatMap(connection -> directory.groupOf(connection.getServerInfo().getName()))
+                    .filter(sleeping::equals).isPresent();
+            if (onDemand.filter(servers -> playedHere ? servers.rejoin(player, sleeping, game) : servers.request(player, sleeping, game)).isPresent()) {
                 return;
             }
             player.sendMessage(seated.size() > 1

@@ -74,6 +74,8 @@ public final class OnDemand {
         private boolean startIssued;
         private boolean published;
         private final LinkedHashSet<UUID> waiting = new LinkedHashSet<>();
+        /** When the first player started waiting for an awake group's server to come back from its restart. */
+        private Optional<Instant> rejoinedSince = Optional.empty();
     }
 
     private final Settings settings;
@@ -134,6 +136,7 @@ public final class OnDemand {
         var entry = groups.get(group);
         if (entry != null && entry.state == GroupState.AWAKE) {
             entry.waiting.add(player);
+            entry.rejoinedSince = Optional.of(entry.rejoinedSince.orElse(now));
             return Optional.of(new Outcome(Reply.WAITING, List.of()));
         }
         return request(group, player, now);
@@ -162,7 +165,18 @@ public final class OnDemand {
                     if (!observation.running()) {
                         move(group, entry, GroupState.STARTING, now, effects);
                         entry.startIssued = false;
-                    } else if (!observation.idle()) {
+                        entry.rejoinedSince = Optional.empty();
+                        break;
+                    }
+                    if (!entry.waiting.isEmpty() && observation.idle()) {
+                        // Back from a restart the poll did not see, or another server of the group has room.
+                        entry.rejoinedSince = Optional.empty();
+                        effects.add(new Effect.Admit(group, drain(entry.waiting)));
+                    } else if (entry.rejoinedSince.filter(since -> !now.isBefore(since.plus(settings.startTimeout()))).isPresent()) {
+                        entry.rejoinedSince = Optional.empty();
+                        fail(group, entry, effects);
+                    }
+                    if (!observation.idle()) {
                         entry.idleSince = Optional.empty();
                     } else {
                         var idleSince = entry.idleSince.orElse(now);

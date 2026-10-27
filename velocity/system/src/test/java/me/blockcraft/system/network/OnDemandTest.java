@@ -118,6 +118,23 @@ public class OnDemandTest {
     }
 
     @Test
+    public void aRematchIsAdmittedOnceTheGroupHasRoomEvenIfThePollMissedTheRestart() {
+        onDemand.observe(Map.of("bedwars", UP), now);
+        onDemand.rejoin("bedwars", first, now);
+
+        assertEquals(List.of(new Effect.Admit("bedwars", List.of(first))), onDemand.observe(Map.of("bedwars", EMPTY), later(30)));
+    }
+
+    @Test
+    public void aRematchWhoseServerNeverComesBackHearsItFailed() {
+        onDemand.observe(Map.of("bedwars", UP), now);
+        onDemand.rejoin("bedwars", first, now);
+
+        assertEquals(List.of(), onDemand.observe(Map.of("bedwars", UP), later(60)));
+        assertEquals(List.of(new Effect.Fail("bedwars", List.of(first))), onDemand.observe(Map.of("bedwars", UP), later(60)));
+    }
+
+    @Test
     public void aRunningGroupIsLeftToTheUsualMessages() {
         onDemand.observe(Map.of("bedwars", UP), now);
 
