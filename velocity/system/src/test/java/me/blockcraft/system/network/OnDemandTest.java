@@ -106,6 +106,18 @@ public class OnDemandTest {
     }
 
     @Test
+    public void aRematchOnARunningGroupWaitsForItsServerToComeBackFromTheRestart() {
+        onDemand.observe(Map.of("bedwars", UP), now);
+
+        assertEquals(OnDemand.Reply.WAITING, onDemand.rejoin("bedwars", first, now).orElseThrow().reply());
+        onDemand.rejoin("bedwars", second, now);
+        onDemand.observe(Map.of(), later(5));
+
+        assertEquals(List.of(new Effect.Publish("bedwars", GroupState.AWAKE), new Effect.Admit("bedwars", List.of(first, second))),
+                onDemand.observe(Map.of("bedwars", UP), later(20)));
+    }
+
+    @Test
     public void aRunningGroupIsLeftToTheUsualMessages() {
         onDemand.observe(Map.of("bedwars", UP), now);
 

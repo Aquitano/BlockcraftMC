@@ -127,7 +127,7 @@ public final class LobbyConnector {
         var target = directory.fill(group.get(), pair.stream().map(Player::getUniqueId).toList());
         if (target.isEmpty()) {
             // The only instance is restarting after the round they just played: on demand, both wait for it to come back.
-            boolean waiting = onDemand.filter(servers -> pair.stream().allMatch(each -> servers.request(each, group.get(), game))).isPresent();
+            boolean waiting = onDemand.filter(servers -> pair.stream().allMatch(each -> servers.rejoin(each, group.get(), game))).isPresent();
             if (!waiting) {
                 pair.forEach(each -> each.sendMessage(messages.get("play.rematch-unavailable", game)));
             }

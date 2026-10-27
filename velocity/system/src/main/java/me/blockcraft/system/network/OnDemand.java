@@ -126,6 +126,19 @@ public final class OnDemand {
         };
     }
 
+    /**
+     * As {@link #request}, for a player who just played the group's only server and wants another round there: an awake
+     * group, whose server restarts after every round, takes them too and sends them once it is back.
+     */
+    public synchronized Optional<Outcome> rejoin(String group, UUID player, Instant now) {
+        var entry = groups.get(group);
+        if (entry != null && entry.state == GroupState.AWAKE) {
+            entry.waiting.add(player);
+            return Optional.of(new Outcome(Reply.WAITING, List.of()));
+        }
+        return request(group, player, now);
+    }
+
     /** One poll of the servers; a group missing from {@code seen} has no server running. */
     public synchronized List<Effect> observe(Map<String, Observation> seen, Instant now) {
         var effects = new ArrayList<Effect>();

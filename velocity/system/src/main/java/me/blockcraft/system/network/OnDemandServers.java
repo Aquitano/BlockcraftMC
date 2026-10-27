@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import java.time.InstantSource;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -61,7 +62,15 @@ public final class OnDemandServers {
      * the group's server starts, or is already on its way; false leaves the player to the usual messages.
      */
     public boolean request(Player player, String group, TagResolver game) {
-        var outcome = onDemand.request(group, player.getUniqueId(), clock.instant());
+        return answer(player, onDemand.request(group, player.getUniqueId(), clock.instant()), game);
+    }
+
+    /** As {@link #request}, for a rematch on the server the player just played on, which restarts before it has room. */
+    public boolean rejoin(Player player, String group, TagResolver game) {
+        return answer(player, onDemand.rejoin(group, player.getUniqueId(), clock.instant()), game);
+    }
+
+    private boolean answer(Player player, Optional<OnDemand.Outcome> outcome, TagResolver game) {
         if (outcome.isEmpty()) {
             return false;
         }
