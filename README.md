@@ -776,7 +776,8 @@ look vanilla; a model that needs its own texture puts it under `textures/item/<s
 exported with "Java Block/Item"; its elements must stay between -16 and 32 on every axis, so a larger set piece is
 scaled up by its display rather than in the model, and textures stay at 16 to 64 pixels, because every change makes
 every client download the whole pack again. A held model points along +z and borrows the Zombies guns' display
-transforms; a hat stands on the head's 0..16 cube, worn on an item that is neither armour nor a skull, since the
+transforms. The guns' `fixed` transform turns them side-on into the plane where a vanilla item sprite lies on an
+item display, so a display shows the same profile with or without the pack. A hat stands on the head's 0..16 cube, worn on an item that is neither armour nor a skull, since the
 client draws a worn skull as a skull whatever its model. Item icons use a native 16-pixel grid, transparent margins, and upper-left lighting.
 HUD symbols use seven pixels of ink in each eight-pixel tile to align with the text baseline.
 A redrawn pack needs `stagePlugins` and a proxy restart, and the client re-downloads it
