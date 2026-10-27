@@ -41,6 +41,20 @@ public class WorldTemplateTest {
     }
 
     @Test
+    public void publishLeavesOutTheDimensionsPluginsLoadAtRuntime() throws IOException {
+        Path world = folder.newFolder("world").toPath();
+        write(world, "level.dat", "level");
+        write(world, "dimensions/minecraft/overworld/region/r.0.0.mca", "map");
+        write(world, "dimensions/bedwars/meteor/region/r.0.0.mca", "round");
+        Path directory = folder.newFolder("template").toPath();
+
+        WorldTemplate.at(directory).publish(world);
+
+        assertEquals("map", Files.readString(directory.resolve("dimensions/minecraft/overworld/region/r.0.0.mca")));
+        assertFalse(Files.exists(directory.resolve("dimensions/bedwars")));
+    }
+
+    @Test
     public void restoreReplacesWhatTheWorldHadWithTheTemplate() throws IOException {
         Path directory = folder.newFolder("template").toPath();
         write(directory, "level.dat", "template");

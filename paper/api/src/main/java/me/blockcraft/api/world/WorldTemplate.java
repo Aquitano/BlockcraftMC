@@ -30,6 +30,12 @@ public final class WorldTemplate {
     private static final String REPLACED = ".replaced";
     private static final String READY = ".publish-ready";
     private static final Set<String> PUBLISHING = Set.of(STAGING, REPLACED, READY);
+    /**
+     * Only the vanilla dimensions belong to a map. Worlds a plugin loads from a pool ({@link TemplateDimensions}) or
+     * builds at every start live beside them in the level and would otherwise be published along with it.
+     */
+    private static final String DIMENSIONS = "dimensions";
+    private static final String VANILLA_DIMENSIONS = "minecraft";
 
     private final Path directory;
 
@@ -80,7 +86,11 @@ public final class WorldTemplate {
             Files.createDirectories(directory);
             repair();
             Files.createDirectories(staging);
-            copyContents(world, staging, name -> !TRANSIENT.contains(name) && !PUBLISHING.contains(name));
+            Path vanilla = world.resolve(DIMENSIONS).resolve(VANILLA_DIMENSIONS);
+            if (Files.isDirectory(vanilla)) {
+                copyRecursively(vanilla, Files.createDirectories(staging.resolve(DIMENSIONS)).resolve(VANILLA_DIMENSIONS));
+            }
+            copyContents(world, staging, name -> !TRANSIENT.contains(name) && !PUBLISHING.contains(name) && !name.equals(DIMENSIONS));
             Files.createDirectories(replaced);
             moveContents(directory, replaced, name -> !PUBLISHING.contains(name));
             Files.createFile(directory.resolve(READY));
