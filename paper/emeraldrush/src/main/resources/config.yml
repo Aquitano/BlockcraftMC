@@ -5,8 +5,8 @@ players:
 global-stats-head: Kevos
 emeralds-per-ore: 12
 ore-respawn-seconds: 12
-# Every round places count emerald ores at random into blocks of hosts that touch air within radius blocks of the
-# search spot, so the mine's walls hold them wherever they were mined out before.
+# Every round places count emerald ores at random into blocks of hosts that border the open space players reach from
+# the search spot within radius blocks, so the mine's walls hold them wherever they were mined out before.
 ores:
   count: 40
   radius: 30

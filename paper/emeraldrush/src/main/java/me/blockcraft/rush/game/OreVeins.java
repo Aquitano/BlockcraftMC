@@ -6,8 +6,11 @@ import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -20,23 +23,34 @@ final class OreVeins {
     private OreVeins() {
     }
 
+    /**
+     * Fills outward from the search spot through every block a player can move through within the radius, and takes
+     * the host blocks that border it, so no ore ends up next to a sealed pocket nobody can reach.
+     */
     static void seed(Location centre, RushConfig.Ores ores) {
-        var world = centre.getWorld();
+        var start = centre.getBlock();
         int radius = ores.radius();
-        int minY = Math.max(world.getMinHeight(), centre.getBlockY() - radius);
-        int maxY = Math.min(world.getMaxHeight() - 1, centre.getBlockY() + radius);
-        var walls = new ArrayList<Block>();
-        for (int x = centre.getBlockX() - radius; x <= centre.getBlockX() + radius; x++) {
-            for (int z = centre.getBlockZ() - radius; z <= centre.getBlockZ() + radius; z++) {
-                for (int y = minY; y <= maxY; y++) {
-                    var block = world.getBlockAt(x, y, z);
-                    if (ores.hosts().contains(block.getType()) && SIDES.stream().anyMatch(side -> block.getRelative(side).isEmpty())) {
-                        walls.add(block);
-                    }
+        var open = new HashSet<Block>(List.of(start));
+        var queue = new ArrayDeque<Block>(List.of(start));
+        var walls = new LinkedHashSet<Block>();
+        while (!queue.isEmpty()) {
+            var block = queue.poll();
+            for (var side : SIDES) {
+                var next = block.getRelative(side);
+                if (Math.abs(next.getX() - start.getX()) > radius || Math.abs(next.getY() - start.getY()) > radius
+                        || Math.abs(next.getZ() - start.getZ()) > radius || open.contains(next)) {
+                    continue;
+                }
+                if (next.isPassable()) {
+                    open.add(next);
+                    queue.add(next);
+                } else if (ores.hosts().contains(next.getType())) {
+                    walls.add(next);
                 }
             }
         }
-        Collections.shuffle(walls, ThreadLocalRandom.current());
-        walls.stream().limit(ores.count()).forEach(block -> block.setType(Material.EMERALD_ORE, false));
+        var shuffled = new ArrayList<>(walls);
+        Collections.shuffle(shuffled, ThreadLocalRandom.current());
+        shuffled.stream().limit(ores.count()).forEach(block -> block.setType(Material.EMERALD_ORE, false));
     }
 }
