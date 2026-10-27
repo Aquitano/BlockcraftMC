@@ -403,7 +403,8 @@ arrival, `/setup point add <name>` places a checkpoint and asks for its descript
 moves and rewrites it), and `/setup point remove <name>` takes one away. Each lands in the exhibit's
 `exhibit.yml` at once.
 
-Staff with `blockcraft.archive.note` leave a note where they stand with `/archive note`. Notes are rows of
+Staff with `blockcraft.archive.note` leave a note where they stand with `/archive note` or by left- or right-clicking
+the note item next to the pocket watch in the hotbar. Both open the note dialog inside an exhibit. Notes are rows of
 `bc_archive_notes` (exhibit, where the author stood, author UUID and name, text, time). While their exhibit is loaded
 they hang as text displays in front of where the author stood; the exhibit's menu lists them for everyone, and staff
 delete one there with a right-click and a confirmation.

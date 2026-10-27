@@ -38,7 +38,7 @@ public final class NoteCommand {
                 .build();
     }
 
-    private static void write(Player player, Messages messages, ExhibitWorlds worlds, NoteRepository notes, int maxLength) {
+    public static void write(Player player, Messages messages, ExhibitWorlds worlds, NoteRepository notes, int maxLength) {
         var exhibit = worlds.exhibitOf(player.getWorld());
         if (exhibit.isEmpty()) {
             player.sendMessage(messages.get("note.not-in-exhibit"));

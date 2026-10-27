@@ -36,7 +36,8 @@ public final class ArchivePlugin extends JavaPlugin {
         var worlds = new ExhibitWorlds(this, pool, notes, messages, config.unloadAfter());
         var hall = EntranceHall.build(messages.get("hall.welcome"));
         var menus = new ArchiveMenus(messages, pool, worlds, notes, hall);
-        var hotbar = new ArchiveHotbar(this, messages, menus);
+        var hotbar = new ArchiveHotbar(this, messages, menus,
+                player -> NoteCommand.write(player, messages, worlds, notes, config.noteMaxLength()));
         api.presence().maxPlayers(config.maxPlayers());
 
         register(hotbar);

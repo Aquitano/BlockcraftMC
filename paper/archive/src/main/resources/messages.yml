@@ -17,6 +17,9 @@ hotbar:
   guide: "<arrow><archive>Ausstellungen"
   guide-lore:
     - "<bullet><muted>Alte Maps, Checkpoints und Notizen"
+  note: "<arrow><archive>Notiz"
+  note-lore:
+    - "<click>Notiz hinterlassen"
 
 menu:
   text: "<muted><line>"
