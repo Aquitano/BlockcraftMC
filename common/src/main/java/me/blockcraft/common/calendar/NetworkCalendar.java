@@ -22,12 +22,13 @@ import java.util.Set;
 /**
  * The days the network celebrates, counted in its own time zone so midnight falls when it does for its players.
  * Easter moves every year and is computed; Halloween, winter and the network's birthday come from {@code calendar}
- * in the config, and Advent, Christmas and New Year's Eve are what they always are. Staff can force a set of
- * occasions network-wide with {@code /event}; while one is forced, it is what today celebrates.
+ * in the config, and Advent, Christmas and New Year's Eve are what they always are. OG, the rounds on the maps of the
+ * old server, has no date. Staff can force a set of occasions network-wide with {@code /event}; while one is forced,
+ * it is what today celebrates.
  */
 public final class NetworkCalendar {
 
-    public enum Occasion { EASTER, HALLOWEEN, WINTER, ADVENT, CHRISTMAS, NEW_YEARS_EVE, BIRTHDAY }
+    public enum Occasion { EASTER, HALLOWEEN, WINTER, ADVENT, CHRISTMAS, NEW_YEARS_EVE, BIRTHDAY, OG }
 
     /** From one day to another, both included; a window whose end comes before its start runs across New Year. */
     public record Window(MonthDay from, MonthDay to) {

@@ -149,6 +149,7 @@ motd:
     winter: "<gradient:#e3f2fd:#4fc3f7><bold>Es schneit!</bold></gradient> <muted>Zieh dich warm an."
     halloween: "<gradient:#ff8f00:#7b1fa2><bold>Halloween!</bold></gradient> <muted>Süßes oder Saures?"
     easter: "<gradient:#f8bbd0:#aed581><bold>Frohe Ostern!</bold></gradient> <muted>In der Lobby liegen Eier."
+    og: "<gradient:#ffd54f:#8d6e63><bold>OG-Modus!</bold></gradient> <muted>BedWars auf den alten Maps."
   welcome-back: "<muted>Willkommen zurück, <accent><player><muted>."
   welcome-back-friend: "<muted>Willkommen zurück, <accent><player><muted>! <success>1 <muted>Freund online."
   welcome-back-friends: "<muted>Willkommen zurück, <accent><player><muted>! <success><count> <muted>Freunde online."
@@ -487,7 +488,7 @@ goto:
   offline: "<prefix><accent>Der Spieler ist nicht online."
 cc:
   cleared: "<prefix><muted>Der <success>Chat <muted>wurde geleert!"
-# /event names the occasions as staff type them (christmas, new-years-eve); <occasions> is nothing when none is active.
+# /event names the occasions as staff type them (christmas, new-years-eve, og for the old BedWars maps); <occasions> is nothing when none is active.
 event:
   status-auto: "<prefix><muted>Aktive Events nach Datum: <accent><occasions>"
   status-forced: "<prefix><muted>Erzwungene Events: <accent><occasions> <dark>| <muted>Zurück zum Datum mit <accent>/event auto"

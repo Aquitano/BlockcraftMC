@@ -62,8 +62,8 @@ xp:
 
 # The days the network celebrates, counted in zone. Easter runs from days-before Easter Sunday to days-after it,
 # Halloween and winter from one month-day to the other (winter may run across New Year); founded is the yyyy-MM-dd
-# the network opened, and empty means it has no birthday to celebrate. poll-seconds is how often the occasions staff
-# force with the proxy's /event are read back. Mirrors calendar in BlockcraftSystem's config.yml on the proxy.
+# the network opened, and empty means it has no birthday to celebrate. OG has no date; staff switch it on with the
+# proxy's /event. poll-seconds is how often the occasions staff force with /event are read back. Mirrors calendar in BlockcraftSystem's config.yml on the proxy.
 calendar:
   zone: Europe/Berlin
   easter:

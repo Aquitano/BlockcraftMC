@@ -219,7 +219,7 @@ server-list:
   show-friends: false
 
 # The days the network celebrates, counted in zone; founded is the yyyy-MM-dd the network opened, and empty means it
-# has no birthday to celebrate; poll-seconds is how often the occasions forced with /event are read back. Mirrors
+# has no birthday to celebrate; OG has no date and is only switched on with /event; poll-seconds is how often the occasions forced with /event are read back. Mirrors
 # calendar in BlockcraftAPI's config.yml, so keep the two the same.
 calendar:
   zone: Europe/Berlin

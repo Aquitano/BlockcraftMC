@@ -48,7 +48,8 @@ public final class MotdListener {
             Map.entry(Occasion.ADVENT, "motd.season.advent"),
             Map.entry(Occasion.WINTER, "motd.season.winter"),
             Map.entry(Occasion.HALLOWEEN, "motd.season.halloween"),
-            Map.entry(Occasion.EASTER, "motd.season.easter"));
+            Map.entry(Occasion.EASTER, "motd.season.easter"),
+            Map.entry(Occasion.OG, "motd.season.og"));
 
     private final PlayerVisibility visibility;
     private final SystemConfig config;
