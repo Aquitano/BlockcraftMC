@@ -1,0 +1,303 @@
+{
+  "textures": {
+    "blade": "minecraft:block/iron_block",
+    "guard": "minecraft:block/polished_deepslate",
+    "grip": "minecraft:block/stripped_dark_oak_log",
+    "particle": "minecraft:block/iron_block"
+  },
+  "gui_light": "front",
+  "display": {
+    "fixed": {
+      "rotation": [
+        0,
+        180,
+        0
+      ],
+      "translation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    "gui": {
+      "rotation": [
+        30,
+        225,
+        0
+      ],
+      "translation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.6,
+        0.6,
+        0.6
+      ]
+    },
+    "ground": {
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "translation": [
+        0,
+        2,
+        0
+      ],
+      "scale": [
+        0.4,
+        0.4,
+        0.4
+      ]
+    },
+    "thirdperson_righthand": {
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "translation": [
+        0,
+        2,
+        1
+      ],
+      "scale": [
+        0.4,
+        0.4,
+        0.4
+      ]
+    },
+    "firstperson_righthand": {
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "translation": [
+        0,
+        2,
+        0
+      ],
+      "scale": [
+        0.4,
+        0.4,
+        0.4
+      ]
+    }
+  },
+  "elements": [
+    {
+      "from": [
+        7,
+        -3,
+        7
+      ],
+      "to": [
+        9,
+        -1,
+        9
+      ],
+      "rotation": {
+        "angle": -45,
+        "axis": "z",
+        "origin": [
+          8,
+          8,
+          8
+        ]
+      },
+      "faces": {
+        "north": {
+          "texture": "#guard"
+        },
+        "south": {
+          "texture": "#guard"
+        },
+        "east": {
+          "texture": "#guard"
+        },
+        "west": {
+          "texture": "#guard"
+        },
+        "up": {
+          "texture": "#guard"
+        },
+        "down": {
+          "texture": "#guard"
+        }
+      }
+    },
+    {
+      "from": [
+        7.25,
+        -1,
+        7.25
+      ],
+      "to": [
+        8.75,
+        4,
+        8.75
+      ],
+      "rotation": {
+        "angle": -45,
+        "axis": "z",
+        "origin": [
+          8,
+          8,
+          8
+        ]
+      },
+      "faces": {
+        "north": {
+          "texture": "#grip"
+        },
+        "south": {
+          "texture": "#grip"
+        },
+        "east": {
+          "texture": "#grip"
+        },
+        "west": {
+          "texture": "#grip"
+        },
+        "up": {
+          "texture": "#grip"
+        },
+        "down": {
+          "texture": "#grip"
+        }
+      }
+    },
+    {
+      "from": [
+        4.5,
+        4,
+        7
+      ],
+      "to": [
+        11.5,
+        5.5,
+        9
+      ],
+      "rotation": {
+        "angle": -45,
+        "axis": "z",
+        "origin": [
+          8,
+          8,
+          8
+        ]
+      },
+      "faces": {
+        "north": {
+          "texture": "#guard"
+        },
+        "south": {
+          "texture": "#guard"
+        },
+        "east": {
+          "texture": "#guard"
+        },
+        "west": {
+          "texture": "#guard"
+        },
+        "up": {
+          "texture": "#guard"
+        },
+        "down": {
+          "texture": "#guard"
+        }
+      }
+    },
+    {
+      "from": [
+        6.75,
+        5.5,
+        7.5
+      ],
+      "to": [
+        9.25,
+        16.5,
+        8.5
+      ],
+      "rotation": {
+        "angle": -45,
+        "axis": "z",
+        "origin": [
+          8,
+          8,
+          8
+        ]
+      },
+      "faces": {
+        "north": {
+          "texture": "#blade"
+        },
+        "south": {
+          "texture": "#blade"
+        },
+        "east": {
+          "texture": "#blade"
+        },
+        "west": {
+          "texture": "#blade"
+        },
+        "up": {
+          "texture": "#blade"
+        },
+        "down": {
+          "texture": "#blade"
+        }
+      }
+    },
+    {
+      "from": [
+        7.25,
+        16.5,
+        7.5
+      ],
+      "to": [
+        8.75,
+        19,
+        8.5
+      ],
+      "rotation": {
+        "angle": -45,
+        "axis": "z",
+        "origin": [
+          8,
+          8,
+          8
+        ]
+      },
+      "faces": {
+        "north": {
+          "texture": "#blade"
+        },
+        "south": {
+          "texture": "#blade"
+        },
+        "east": {
+          "texture": "#blade"
+        },
+        "west": {
+          "texture": "#blade"
+        },
+        "up": {
+          "texture": "#blade"
+        },
+        "down": {
+          "texture": "#blade"
+        }
+      }
+    }
+  ]
+}

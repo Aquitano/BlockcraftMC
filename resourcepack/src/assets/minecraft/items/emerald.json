@@ -17,6 +17,13 @@
           "type": "minecraft:model",
           "model": "blockcraft:item/ttt_shop"
         }
+      },
+      {
+        "when": "blockcraft:props/emerald",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/props/emerald"
+        }
       }
     ],
     "fallback": {

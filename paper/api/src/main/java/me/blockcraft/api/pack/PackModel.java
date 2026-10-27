@@ -47,7 +47,11 @@ public enum PackModel {
     GADGET_GRAPPLING_HOOK(Material.FISHING_ROD, "gadgets/grappling_hook"),
     GADGET_PAINT_GUN(Material.SNOWBALL, "gadgets/paint_gun"),
     PROP_STAR(Material.NETHER_STAR, "props/star"),
-    PROP_KNIFE(Material.IRON_SWORD, "props/knife");
+    PROP_KNIFE(Material.IRON_SWORD, "props/knife"),
+    PROP_SWORD(Material.IRON_SWORD, "props/sword"),
+    PROP_EMERALD(Material.EMERALD, "props/emerald"),
+    // Stands where the zombie head would peek out of a grave, so a client without the pack sees the head instead.
+    PROP_ZOMBIE_HAND(Material.ZOMBIE_HEAD, "props/zombie_hand");
 
     private final Material fallback;
     private final String path;

@@ -24,6 +24,13 @@
           "type": "minecraft:model",
           "model": "blockcraft:item/props/knife"
         }
+      },
+      {
+        "when": "blockcraft:props/sword",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/props/sword"
+        }
       }
     ],
     "fallback": {
