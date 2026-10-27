@@ -47,11 +47,9 @@ services:
   zombies: *paper
   endergames: *paper
   ttt: *paper
+  emeraldrush: *paper
 
   # Not released yet: `docker compose --profile unreleased up -d quicksg` starts one anyway.
-  emeraldrush:
-    <<: *paper
-    profiles: [unreleased]
   quicksg:
     <<: *paper
     profiles: [unreleased]

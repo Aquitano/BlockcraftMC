@@ -36,7 +36,7 @@ on-demand:
   enabled: false
   url: http://waker:8080
   token: ""
-  groups: [bedwars, mlgrush, duell, zombies, endergames, ttt]
+  groups: [bedwars, mlgrush, duell, zombies, endergames, ttt, emeraldrush]
   idle-stop-minutes: 10
   start-timeout-seconds: 120
   max-awake: 0

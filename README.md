@@ -818,7 +818,7 @@ docker compose up -d
 ```
 
 To update, pull, run `./gradlew stagePlugins` and restart the servers (`docker compose restart velocity lobby
-bedwars mlgrush duell zombies endergames ttt`, plus `waker` when on-demand runs; see "Game servers on demand"). A plugin's `config.yml` and `messages.yml` in its data folder are copies of the bundled defaults, made on
+bedwars mlgrush duell zombies endergames ttt emeraldrush`, plus `waker` when on-demand runs; see "Game servers on demand"). A plugin's `config.yml` and `messages.yml` in its data folder are copies of the bundled defaults, made on
 its first start: new keys arrive through the bundled default, but the copy keeps its own value for every key it
 already has, so changed texts and renamed config keys do not reach a server by themselves. Move a copy nobody edited
 aside before the restart (`docker compose exec bedwars mv /data/plugins/BedWars/messages.yml
