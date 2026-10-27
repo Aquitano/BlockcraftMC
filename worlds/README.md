@@ -143,7 +143,7 @@ from the repository root with Java 25:
 
 ```sh
 ./gradlew importMap -Psource=/path/to/OldWorld -PdryRun
-./gradlew importMap -Psource=/path/to/OldWorld -Ptarget=worlds/archive
+./gradlew importMap -Psource=/path/to/OldWorld -Ptarget=worlds/<group>
 ```
 
 The source is the old world folder with its `level.dat`. The task reads the pre-26.1 layout, with `region/` next to
@@ -179,6 +179,9 @@ when an old superflat generator built villages, because each village is a small 
 natural terrain, the bounds and margin decide how much original land stays around the build. The old generator
 regenerates terrain beyond them.
 
+A dimension (`-Playout=dimension`) always uses `void`, because the server loads it over void: a superflat chunk left
+out would be a hole, not ground. Trim it with `-Pbounds` instead.
+
 The target receives `region/`, `entities/`, `poi/`, and the generator in
 `dimensions/minecraft/overworld/data/minecraft/world_gen_settings.dat`, with structures off. It receives Paper's
 dimension metadata in `data/paper` only when the target lacks it, because Paper otherwise migrates the world at
@@ -191,7 +194,7 @@ A BedWars pool map is one dimension folder, `maps/<key>/world`. The key must use
 `.`, or `-`:
 
 ```sh
-./gradlew importMap -Psource=/path/to/Castle -Pmode=void -Playout=dimension \
+./gradlew importMap -Psource=/path/to/Castle -Playout=dimension \
   -Ptarget=worlds/bedwars/blockcraft/BedWars/maps/castle/world
 ```
 

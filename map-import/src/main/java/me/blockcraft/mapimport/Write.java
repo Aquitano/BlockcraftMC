@@ -193,6 +193,9 @@ final class Write {
     private Mode mode(CompoundBinaryTag generator) {
         String type = generator.getString("type");
         boolean flat = type.equals(Mode.FLAT_GENERATOR);
+        if (settings.layout() == Layout.DIMENSION) {
+            return dimensionMode();
+        }
         String name = settings.mode().orElse(flat ? "flat" : "");
         return switch (name) {
             case "flat" -> {
@@ -207,6 +210,16 @@ final class Write {
                     + "); choose -Pmode=void (keep every chunk with a block) or all (keep every chunk, best with -Pbounds)");
             default -> throw new IllegalArgumentException("Unknown mode " + name + "; use flat, void or all");
         };
+    }
+
+    /** TemplateDimensions loads a dimension over void, so a chunk left out would be a hole rather than generated ground. */
+    private Mode dimensionMode() {
+        var name = settings.mode().orElse("void");
+        if (!name.equals("void")) {
+            throw new IllegalArgumentException("A dimension loads over void, so it keeps every chunk with a block; leave out -Pmode=" + name
+                    + " and limit it with -Pbounds instead");
+        }
+        return new Mode.Void();
     }
 
     private static CompoundBinaryTag voidGenerator() {
