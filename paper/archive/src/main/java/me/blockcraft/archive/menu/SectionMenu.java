@@ -2,7 +2,6 @@ package me.blockcraft.archive.menu;
 
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.menu.ListMenu;
-import me.blockcraft.api.pack.MenuIcon;
 import me.blockcraft.archive.exhibit.Section;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
@@ -22,9 +21,7 @@ final class SectionMenu extends ListMenu<Section> {
     SectionMenu(ArchiveMenus menus, List<Section> sections) {
         super(rowsFor(sections.size()), menus.messages().get("menu.sections.title"));
         this.menus = menus;
-        var messages = menus.messages();
-        set(lastRowSlot(), MenuIcon.ARCHIVE_ENTRANCE.item().name(messages.get("menu.entrance"))
-                .lore(messages.getLines("menu.entrance-lore")).build());
+        set(lastRowSlot(), menus.entranceButton());
         closeButton();
         show(sections);
     }

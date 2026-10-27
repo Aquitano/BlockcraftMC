@@ -17,11 +17,14 @@ import java.util.ArrayList;
 final class ExhibitListMenu extends ListMenu<Exhibit> {
 
     private final ArchiveMenus menus;
+    private final boolean onlySection;
 
     ExhibitListMenu(ArchiveMenus menus, Section section, boolean onlySection) {
         super(rowsFor(section.exhibits().size()), menus.sectionName(section));
         this.menus = menus;
+        this.onlySection = onlySection;
         if (onlySection) {
+            set(lastRowSlot(), menus.entranceButton());
             closeButton();
         } else {
             backButton(menus::openSections);
@@ -51,6 +54,13 @@ final class ExhibitListMenu extends ListMenu<Exhibit> {
             menus.toArrival(player, exhibit);
         } else if (event.isRightClick()) {
             menus.openExhibit(player, exhibit.key());
+        }
+    }
+
+    @Override
+    protected void onButton(Player player, int slot, InventoryClickEvent event) {
+        if (onlySection && slot == lastRowSlot()) {
+            menus.toEntrance(player);
         }
     }
 }

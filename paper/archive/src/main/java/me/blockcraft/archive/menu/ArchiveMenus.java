@@ -3,6 +3,7 @@ package me.blockcraft.archive.menu;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.dialog.ConfirmDialog;
 import me.blockcraft.api.menu.Menu;
+import me.blockcraft.api.pack.MenuIcon;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.archive.command.NoteCommand;
 import me.blockcraft.archive.exhibit.Checkpoint;
@@ -74,6 +75,11 @@ public final class ArchiveMenus {
         pool.exhibit(key).ifPresentOrElse(exhibit -> BlockcraftApi.get().playerTasks().latest(player, () -> notes.list(key),
                         list -> new ExhibitMenu(this, exhibit, list, player.hasPermission(NoteCommand.PERMISSION)).open(player)),
                 () -> openSections(player));
+    }
+
+    ItemStack entranceButton() {
+        return MenuIcon.ARCHIVE_ENTRANCE.item().name(messages.get("menu.entrance"))
+                .lore(messages.getLines("menu.entrance-lore")).build();
     }
 
     void toEntrance(Player player) {
