@@ -40,8 +40,14 @@ public final class Dialogs {
                 .type(type));
     }
 
-    /** {@code buttons} in the vanilla two columns, then {@code exit}, which leads back or only closes the dialog. */
+    /**
+     * {@code buttons} in the vanilla two columns, then {@code exit}, which leads back or only closes the dialog; with no
+     * buttons only {@code exit}, since a multi-action dialog must have at least one.
+     */
     public static DialogType actions(List<ActionButton> buttons, ActionButton exit) {
+        if (buttons.isEmpty()) {
+            return DialogType.notice(exit);
+        }
         return DialogType.multiAction(buttons).exitAction(exit).build();
     }
 
