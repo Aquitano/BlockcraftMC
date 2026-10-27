@@ -199,9 +199,11 @@ seasons:
 # Set pieces staff place with /setprop <name>; the spots are kept with the map (props.yml, /map save). A piece is a
 # group of parts round its spot that turns once every spin-seconds and rises and sinks by bob blocks every
 # bob-seconds; a still part, such as a pedestal, stays put. A part is a block, or an item that may ask for one of the
-# pack's models (model, a PackModel path) and is its vanilla self without the pack; it is centred at blocks from the
-# spot, size blocks large and turned by yaw degrees. Displays are drawn up to view-range times the vanilla distance
-# and move one smoothed keyframe every keyframe-ticks, which is one update per moving part and keyframe.
+# pack's models (model, a PackModel path) and is its vanilla self without the pack; glint: true gives the item the
+# enchantment glint. A part is centred at blocks from the spot, size blocks large, turned by yaw degrees and tilted by
+# roll degrees round its own z axis (a sword at roll -135 stands on its point). A game's piece is named after its area,
+# as in npc-<area>. Displays are drawn up to view-range times the vanilla distance and move one smoothed keyframe every
+# keyframe-ticks, which is one update per moving part and keyframe.
 props:
   view-range: 0.5
   keyframe-ticks: 20
@@ -242,7 +244,7 @@ props:
       parts:
         - {block: END_STONE_BRICKS, at: [0, 0.3, 0], size: [1.4, 0.6, 1.4], still: true}
         - {item: RED_BED, at: [0, 1.25, 0], size: 1.1}
-        - {item: IRON_SWORD, at: [0, 2.0, 0], size: 0.8, yaw: 45}
+        - {model: props/sword, at: [0, 2.0, 0], size: 0.8, yaw: 45}
     endergames:
       spin-seconds: 12
       bob: 0.2
@@ -251,6 +253,73 @@ props:
         - {block: END_PORTAL_FRAME, at: [0, 0.4, 0], size: [1, 0.8, 1], still: true}
         - {item: ENDER_EYE, at: [0, 1.6, 0], size: 0.9}
         - {block: END_ROD, at: [0, 2.3, 0], size: [0.12, 0.6, 0.12]}
+    duell:
+      spin-seconds: 20
+      bob: 0.08
+      bob-seconds: 5
+      parts:
+        - {block: POLISHED_DEEPSLATE, at: [0, 0.25, 0], size: [1.7, 0.5, 1.7], still: true}
+        - {block: SMOOTH_STONE, at: [0, 0.55, 0], size: [1.4, 0.1, 1.4], still: true}
+        - {block: RED_CONCRETE, at: [0.6, 0.75, 0.6], size: [0.12, 0.3, 0.12], still: true}
+        - {block: RED_CONCRETE, at: [0.6, 0.75, -0.6], size: [0.12, 0.3, 0.12], still: true}
+        - {block: BLUE_CONCRETE, at: [-0.6, 0.75, 0.6], size: [0.12, 0.3, 0.12], still: true}
+        - {block: BLUE_CONCRETE, at: [-0.6, 0.75, -0.6], size: [0.12, 0.3, 0.12], still: true}
+        - {model: props/sword, at: [0, 1.7, 0.04], size: 1.4}
+        - {model: props/sword, at: [0, 1.7, -0.04], size: 1.4, yaw: 180}
+    rush:
+      spin-seconds: 22
+      parts:
+        - {block: COBBLED_DEEPSLATE, at: [0, 0.25, 0], size: [1.7, 0.5, 1.7], still: true}
+        - {block: RAIL, at: [0, 1.0, 0], size: [1.2, 1, 1.4]}
+        - {block: COAL_BLOCK, at: [0.3, 0.65, 0.3], size: 0.18}
+        - {block: COAL_BLOCK, at: [0.3, 0.65, -0.3], size: 0.18}
+        - {block: COAL_BLOCK, at: [-0.3, 0.65, 0.3], size: 0.18}
+        - {block: COAL_BLOCK, at: [-0.3, 0.65, -0.3], size: 0.18}
+        - {block: IRON_BLOCK, at: [0, 0.92, 0], size: [0.7, 0.36, 1.0]}
+        - {block: EMERALD_ORE, at: [0, 1.12, 0], size: [0.58, 0.12, 0.86]}
+        - {block: EMERALD_ORE, at: [0, 1.22, 0], size: [0.38, 0.12, 0.5]}
+        - {model: props/emerald, at: [0, 2.05, 0], size: 1.2}
+    mlgrush:
+      spin-seconds: 18
+      parts:
+        - {block: SMOOTH_SANDSTONE, at: [0, 0.25, 0], size: [1.7, 0.5, 1.7], still: true}
+        - {block: OAK_PLANKS, at: [0.3, 0.58, 0], size: [0.55, 0.16, 1.1]}
+        - {block: RED_WOOL, at: [0.3, 0.7, 0.15], size: [0.57, 0.1, 0.8]}
+        - {block: WHITE_WOOL, at: [0.3, 0.7, -0.4], size: [0.45, 0.1, 0.25]}
+        - {block: SANDSTONE, at: [-0.35, 0.7, 0.2], size: 0.4}
+        - {block: SANDSTONE, at: [-0.35, 1.1, 0.2], size: 0.4}
+        - {block: SANDSTONE, at: [-0.35, 1.5, 0.2], size: 0.4}
+        - {block: SANDSTONE, at: [0.05, 1.5, 0.2], size: 0.4}
+        - {item: STICK, glint: true, at: [0, 2.3, -0.1], size: 1.1}
+    zombies:
+      spin-seconds: 30
+      parts:
+        - {block: DEEPSLATE_BRICKS, at: [0, 0.2, 0], size: [1.7, 0.4, 1.7], still: true}
+        - {block: PODZOL, at: [0, 0.45, 0], size: [1.2, 0.1, 1.2]}
+        - {block: COARSE_DIRT, at: [0, 0.6, 0.15], size: [0.7, 0.2, 0.85]}
+        - {block: ROOTED_DIRT, at: [0, 0.75, 0.15], size: [0.5, 0.1, 0.65]}
+        - {block: CHISELED_STONE_BRICKS, at: [0, 0.95, -0.45], size: [0.6, 0.9, 0.16]}
+        - {block: STONE_BRICKS, at: [0, 1.46, -0.45], size: [0.44, 0.12, 0.16]}
+        - {model: props/zombie_hand, at: [0, 0.85, 0.2], size: 1.2}
+    cores:
+      spin-seconds: 24
+      parts:
+        - {block: POLISHED_BLACKSTONE, at: [0, 0.25, 0], size: [1.7, 0.5, 1.7], still: true}
+        - {block: RED_CONCRETE, at: [0.3, 0.55, 0], size: [0.6, 0.1, 1.2], still: true}
+        - {block: BLUE_CONCRETE, at: [-0.3, 0.55, 0], size: [0.6, 0.1, 1.2], still: true}
+        - {block: DIAMOND_BLOCK, at: [0, 0.75, 0], size: [0.8, 0.2, 0.8]}
+        - {block: BEACON, at: [0, 1.15, 0], size: 0.6}
+        - {block: LIGHT_BLUE_STAINED_GLASS, at: [0, 2.05, 0], size: [0.16, 1.2, 0.16]}
+        - {item: DIAMOND_PICKAXE, at: [0.6, 1.75, 0], size: 0.75, yaw: 180}
+    qsg:
+      spin-seconds: 20
+      parts:
+        - {block: MOSSY_COBBLESTONE, at: [0, 0.25, 0], size: [1.7, 0.5, 1.7], still: true}
+        - {block: DIRT, at: [0, 0.6, 0], size: [1.2, 0.2, 1.2]}
+        - {block: GRASS_BLOCK, at: [0, 0.75, 0], size: [1.2, 0.1, 1.2]}
+        - {block: CHEST, at: [-0.3, 1.05, -0.25], size: 0.5, yaw: 20}
+        - {block: COBBLESTONE, at: [0.3, 0.88, 0.25], size: [0.36, 0.16, 0.36]}
+        - {model: props/sword, at: [0.3, 1.45, 0.25], size: 1.0, roll: -135}
 
 # Santa's sleigh crosses the sky above a lobby player every interval-seconds while one of during is celebrated, height
 # blocks up, length blocks long and flight-ticks long. It drops presents, each worth present-coins to the first to catch

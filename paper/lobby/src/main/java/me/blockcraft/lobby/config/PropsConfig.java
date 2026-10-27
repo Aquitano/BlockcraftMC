@@ -22,18 +22,24 @@ public record PropsConfig(float viewRange, int keyframeTicks, Map<String, Prop> 
     public record Prop(double spinSeconds, double bob, double bobSeconds, List<Part> parts) {
     }
 
-    /** What a part shows: a block, or an item, which may ask for a pack model and is its vanilla self without it. */
+    /**
+     * What a part shows: a block, or an item, which may ask for a pack model and is its vanilla self without it, and
+     * may carry the enchantment glint.
+     */
     public sealed interface Look {
     }
 
     public record BlockLook(Material material) implements Look {
     }
 
-    public record ItemLook(Material material, Optional<PackModel> model) implements Look {
+    public record ItemLook(Material material, Optional<PackModel> model, boolean glint) implements Look {
     }
 
-    /** One display: centred on {@code at} blocks from the spot, {@code size} blocks large, turned by {@code yaw} degrees. */
-    public record Part(Look look, Vector3f at, Vector3f size, float yaw, boolean still) {
+    /**
+     * One display: centred on {@code at} blocks from the spot, {@code size} blocks large, turned by {@code yaw} degrees
+     * and tilted by {@code roll} degrees round its own z axis, which stands a sword on its point.
+     */
+    public record Part(Look look, Vector3f at, Vector3f size, float yaw, float roll, boolean still) {
     }
 
     public static PropsConfig fromYaml(Map<String, Object> config, Logger logger) {
@@ -64,7 +70,8 @@ public record PropsConfig(float viewRange, int keyframeTicks, Map<String, Prop> 
 
     private static Optional<Part> part(Map<?, ?> part) {
         return look(part).map(look -> new Part(look, vector(part.get("at"), 0), vector(part.get("size"), 1),
-                (float) number(part, "yaw", 0, -360, 360), Boolean.TRUE.equals(part.get("still"))));
+                (float) number(part, "yaw", 0, -360, 360), (float) number(part, "roll", 0, -360, 360),
+                Boolean.TRUE.equals(part.get("still"))));
     }
 
     private static Optional<Look> look(Map<?, ?> part) {
@@ -72,11 +79,12 @@ public record PropsConfig(float viewRange, int keyframeTicks, Map<String, Prop> 
             return Optional.ofNullable(Material.matchMaterial(block)).filter(Material::isBlock).map(BlockLook::new);
         }
         var model = part.get("model") instanceof String path ? PackModel.byPath(path) : Optional.<PackModel>empty();
+        var glint = Boolean.TRUE.equals(part.get("glint"));
         if (part.get("item") instanceof String item) {
             return Optional.ofNullable(Material.matchMaterial(item)).filter(Material::isItem)
-                    .map(material -> new ItemLook(material, model.filter(found -> found.fallback() == material)));
+                    .map(material -> new ItemLook(material, model.filter(found -> found.fallback() == material), glint));
         }
-        return model.map(found -> new ItemLook(found.fallback(), Optional.of(found)));
+        return model.map(found -> new ItemLook(found.fallback(), Optional.of(found), glint));
     }
 
     /** {@code [x, y, z]}, or one number for all three. */

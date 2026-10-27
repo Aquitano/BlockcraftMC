@@ -189,10 +189,16 @@ Look at the finish sign and run `/lobbyset parkour-finish-sign` to register it. 
 The finish sign is optional. When configured, the check verifies that its block is a sign.
 
 Set pieces stand where staff run `/setprop <name>` (permission `blockcraft.lobby.setholo`): the trophy at spawn, and
-`skywars`, `ttt`, `bedwars` and `endergames` in front of their game areas. Each is a group of block and item displays
-from `props` in the lobby's `config.yml` that turns and bobs on the spot; the spot is kept in the map's `props.yml`,
-so `/map save` keeps it, and the displays themselves are spawned at every start, never saved. Without the pack the
-star on the trophy and the TTT knife are a nether star and an iron sword.
+one piece per game named after its area, as in `npc-<area>`: `skywars`, `ttt`, `bedwars`, `endergames`, `duell`
+(crossed swords over a red and blue arena), `rush` (EmeraldRush: an emerald over a mine cart of ore), `mlgrush` (a
+bed, a sandstone tower and a glinting stick), `zombies` (a grave with a tombstone), `cores` (a beacon with its beam
+over a red and blue plate) and `qsg` (a chest and a sword stuck in the ground). Stand next to or behind the game's
+figure, so the piece does not hide it. Each is a group of block and item displays from `props` in the lobby's
+`config.yml` that turns and bobs on the spot; the spot is kept in the map's `props.yml`, so `/map save` keeps it, and
+the displays themselves are spawned at every start, never saved. The blocks carry each shape without the pack; the
+pack's models only refine the items: without it, the trophy's star is a nether star, the TTT knife and the swords of
+BedWars, Duell and QuickSG are iron swords, the EmeraldRush gem is an emerald, and the zombie hand reaching out of the
+grave is a zombie head peeking out of it.
 
 The course requires all configured checkpoints in order. Falling more than four blocks below the last checkpoint
 returns the player there while the timer continues. Times and falls persist in `bc_parkour`. One hundred falls

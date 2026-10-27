@@ -14,7 +14,7 @@ public class PropsTest {
 
     @Test
     public void aTurningBlockStaysCentredOnItsPartOfTheCircle() {
-        var part = new Part(new BlockLook(Material.GOLD_BLOCK), new Vector3f(1, 0.5f, 0), new Vector3f(0.4f), 0, false);
+        var part = new Part(new BlockLook(Material.GOLD_BLOCK), new Vector3f(1, 0.5f, 0), new Vector3f(0.4f), 0, 0, false);
 
         var pose = Props.pose(part, (float) (Math.PI / 2), 0.25f);
 
@@ -25,8 +25,20 @@ public class PropsTest {
     }
 
     @Test
+    public void aRolledBlockTiltsRoundItsOwnCentre() {
+        var part = new Part(new BlockLook(Material.STONE), new Vector3f(0, 1, 0), new Vector3f(0.2f, 1, 0.2f), 0, 90, false);
+
+        var pose = Props.pose(part, 0, 0);
+
+        var centre = new Vector3f(0.1f, 0.5f, 0.1f).rotate(pose.getLeftRotation()).add(pose.getTranslation());
+        var top = new Vector3f(0.1f, 1, 0.1f).rotate(pose.getLeftRotation()).add(pose.getTranslation());
+        assertEquals(0, centre.distance(0, 1, 0), EPSILON);
+        assertEquals(0, top.distance(-0.5f, 1, 0), EPSILON);
+    }
+
+    @Test
     public void aStillPartNeitherTurnsNorBobs() {
-        var part = new Part(new BlockLook(Material.STONE), new Vector3f(0, 0.3f, 0), new Vector3f(1.6f, 0.6f, 1.6f), 0, true);
+        var part = new Part(new BlockLook(Material.STONE), new Vector3f(0, 0.3f, 0), new Vector3f(1.6f, 0.6f, 1.6f), 0, 0, true);
 
         var pose = Props.pose(part, 2f, 0.5f);
 

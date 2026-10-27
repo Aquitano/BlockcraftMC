@@ -85,6 +85,9 @@ public final class Props {
                 case ItemLook item -> spot.getWorld().spawn(spot, ItemDisplay.class, spawned -> {
                     var stack = Items.of(item.material());
                     item.model().ifPresent(model -> model.mark(stack));
+                    if (item.glint()) {
+                        stack.glow();
+                    }
                     spawned.setItemStack(stack.build());
                     spawned.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.FIXED);
                 });
@@ -128,7 +131,8 @@ public final class Props {
      */
     static Transformation pose(Part part, float spin, float lift) {
         float angle = part.still() ? 0 : spin;
-        var rotation = new Quaternionf().rotateY(angle + (float) Math.toRadians(part.yaw()));
+        var rotation = new Quaternionf().rotateY(angle + (float) Math.toRadians(part.yaw()))
+                .rotateZ((float) Math.toRadians(part.roll()));
         var centre = new Quaternionf().rotateY(angle).transform(new Vector3f(part.at()))
                 .add(0, part.still() ? 0 : lift, 0);
         if (part.look() instanceof BlockLook) {
