@@ -54,11 +54,20 @@ public final class MysteryBox {
         return rolls.containsKey(station);
     }
 
+    /** Whether the box has a gun left for the player, who never rolls one they already own. */
+    public boolean hasGunFor(Player player) {
+        return !choices(player).isEmpty();
+    }
+
     public void roll(Player buyer, ArenaMap.Station station) {
-        var survivor = game.survivor(buyer);
-        var choices = Weapon.buyable().stream().filter(weapon -> !survivor.weapons().containsKey(weapon)).toList();
+        var choices = choices(buyer);
         var weapon = choices.get(ThreadLocalRandom.current().nextInt(choices.size()));
         rolls.put(station, new Roll(buyer.getUniqueId(), station, weapon, game.tickNumber()));
+    }
+
+    private List<Weapon> choices(Player player) {
+        var owned = game.survivor(player).weapons();
+        return Weapon.buyable().stream().filter(weapon -> !owned.containsKey(weapon)).toList();
     }
 
     /** Answers a click on a box that is rolling and returns true; a box at rest is left to its menu. */

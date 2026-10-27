@@ -76,7 +76,8 @@ public final class StationMenu extends Menu {
                         () -> survivor.weapons().get(selected.orElseThrow()).upgrade()));
             }
             case MYSTERY -> add(13, new Offer(game.messages().get("shop.mystery"), Material.ENDER_CHEST, config.mysteryPrice(),
-                    () -> !game.mysteryBox().busy(station), () -> game.mysteryBox().roll(player, station)),
+                    () -> !game.mysteryBox().busy(station) && game.mysteryBox().hasGunFor(player),
+                    () -> game.mysteryBox().roll(player, station)),
                     game.messages().get("shop.mystery-take", Formatter.number("seconds", config.mystery().takeTicks() / 20)));
             case TEAM_REVIVE -> add(13, new Offer(game.messages().get("shop.team-revive"), Material.TOTEM_OF_UNDYING,
                     config.teamRevivePrice(), game::needsRevive, game::teamRevive));
