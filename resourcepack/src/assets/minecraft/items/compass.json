@@ -12,6 +12,13 @@
         }
       },
       {
+        "when": "blockcraft:icon/archive_entrance",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/archive_entrance"
+        }
+      },
+      {
         "when": "blockcraft:icon/spectate_players",
         "model": {
           "type": "minecraft:model",

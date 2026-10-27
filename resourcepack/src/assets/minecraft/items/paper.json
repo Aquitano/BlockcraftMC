@@ -5,6 +5,13 @@
     "index": 0,
     "cases": [
       {
+        "when": "blockcraft:icon/archive_note",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/archive_note"
+        }
+      },
+      {
         "when": "blockcraft:icon/page",
         "model": {
           "type": "minecraft:model",

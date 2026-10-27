@@ -5,6 +5,13 @@
     "index": 0,
     "cases": [
       {
+        "when": "blockcraft:icon/archive",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/archive"
+        }
+      },
+      {
         "when": "blockcraft:icon/loading",
         "model": {
           "type": "minecraft:model",
