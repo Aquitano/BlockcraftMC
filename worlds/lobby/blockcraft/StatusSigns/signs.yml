@@ -160,3 +160,10 @@ signs:
       x: -991
       y: 30
       z: 1563
+  '27':
+    group: emeraldrush
+    loc:
+      world: world
+      x: -884
+      y: 31
+      z: 1610
