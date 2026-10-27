@@ -190,3 +190,41 @@ round checks below.
 - Use `/map save` after map or setup changes to publish them to the template.
 
 These checks did not start or change a production server.
+
+## Zeitkapsel exhibits
+
+The `archive` template holds an empty overworld: BedWars' `level.dat` and world generation settings without any
+chunks, so the server restores the bundle at every start and generates nothing but void. The entrance hall is built
+in code. Every exhibit is one directory under `archive/blockcraft/Archive/exhibits/<key>/`:
+
+```
+exhibits/neue_lobby/
+  exhibit.yml
+  world/          the old map as a dimension folder (region/, entities/, poi/, data/), like a BedWars pool map
+```
+
+```yaml
+name: Neue Lobby
+origin: Vanade                # the old server; the guide groups exhibits by it
+year: 2018                    # optional; eras and exhibits sort oldest first
+description: Die Lobby, mit der Vanade öffnete.
+icon: grass_block             # the item the guide shows; paper when unknown
+arrival: {x: -900.5, y: 31.0, z: 1579.5, yaw: -90.0}    # optional; else the world's spawn
+checkpoints:
+  - name: Teamraum
+    description: Hier hingen die Köpfe des Teams.
+    at: {x: -974.5, y: 27.0, z: 1645.5, yaw: 180.0, pitch: 10.0}
+```
+
+To add an exhibit after importing an old map:
+
+1. Convert the map into a dimension folder for the current Paper version and copy it to
+   `exhibits/<key>/world`. The key may only hold a-z, 0-9, `_`, `.` and `-`.
+2. Write `exhibits/<key>/exhibit.yml` with at least `origin`. The guide leaves out a directory without
+   `exhibit.yml` or `world/`; one with an invalid key or without `origin` is left out and named in the server log.
+3. Start the archive server, travel to the exhibit, set its arrival and checkpoints with `/setup`, and run
+   `/map save`. Everything beyond the build stays void.
+4. Commit the template; its region files go through git-lfs.
+
+Every exhibit is copied at every start and with every `/map save`, so the bundle grows with each old map. The text in
+`exhibit.yml` shows as written, without MiniMessage tags.

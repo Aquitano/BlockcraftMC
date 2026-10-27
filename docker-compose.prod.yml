@@ -59,6 +59,10 @@ services:
   skywars:
     <<: *paper
     profiles: [unreleased]
+  # No exhibits yet; it is released once the old maps are imported.
+  archive:
+    <<: *paper
+    profiles: [unreleased]
 
   # Off until on-demand is enabled in the proxy's config.yml: `docker compose --profile ondemand up -d waker`
   # (README, "Server discovery and groups"). An empty WAKER_TOKEN keeps it from starting at all.

@@ -230,6 +230,20 @@ services:
       - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
       - skywars:/data
 
+  archive:
+    <<: *paper
+    hostname: archive
+    environment:
+      <<: *paper-env
+      BLOCKCRAFT_SERVER_GROUP: archive
+      BLOCKCRAFT_WORLD_TEMPLATE: /worlds/archive
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/archive,/blockcraft/viaversion
+    volumes:
+      - ./build/docker/paper:/blockcraft:ro
+      - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
+      - ./worlds/archive:/worlds/archive
+      - archive:/data
+
   quicksg:
     <<: *paper
     hostname: quicksg
@@ -255,7 +269,7 @@ services:
       TZ: Europe/Berlin
       WAKER_TOKEN: ${WAKER_TOKEN:-dev-waker-token}
       WAKER_PROJECT: ${COMPOSE_PROJECT_NAME:-blockcraftmc}
-      WAKER_SERVICES: bedwars,mlgrush,duell,zombies,endergames,ttt,skywars,cores,quicksg,emeraldrush
+      WAKER_SERVICES: bedwars,mlgrush,duell,zombies,endergames,ttt,skywars,cores,quicksg,emeraldrush,archive
     security_opt: [no-new-privileges:true]
     cap_drop: [ALL]
     volumes:
@@ -276,3 +290,4 @@ volumes:
   endergames:
   ttt:
   skywars:
+  archive:

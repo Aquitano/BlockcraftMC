@@ -17,6 +17,7 @@ palette:
   endergames: "<dark_purple>"
   ttt: "<red>"
   skywars: "<blue>"
+  archive: "<#d4a85a>"
   duell: "<aqua>"
   bedwars: "<dark_aqua>"
   mlgrush: "<light_purple>"
@@ -623,6 +624,7 @@ play:
     endergames: "<endergames>EnderGames"
     ttt: "<ttt>TTT"
     skywars: "<skywars>SkyWars"
+    archive: "<archive>Zeitkapsel"
 msg:
   usage: "<prefix><error>Benutze /msg \\<Name> \\<Nachricht>"
   reply-usage: "<prefix><error>Benutze /r \\<Nachricht>"

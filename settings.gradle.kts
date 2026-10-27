@@ -7,6 +7,7 @@ rootProject.name = "blockcraft"
 include(
     "common",
     "paper:api",
+    "paper:archive",
     "paper:bedwars",
     "paper:core",
     "paper:cores",

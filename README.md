@@ -24,6 +24,7 @@ paper/cores              Cores: red against blue, two beacons each, after GommeH
 paper/endergames         EnderGames: kit survival games in a fresh random world, after GommeHD's mode
 paper/ttt                TTT: Traitors, Detectives and Innocents in a town built in code, after GommeHD's mode
 paper/skywars            SkyWars: everyone on their own island over the void, after GommeHD's mode
+paper/archive            Archive: the Zeitkapsel, old maps of earlier servers to walk through (see "Zeitkapsel")
 paper/reports            ReportsMenu: staff GUI over the reports table
 paper/statussigns        StatusSigns: clickable server-status signs
 velocity/system          BlockcraftSystem: reports, moderation, parties, friends, routing and staff tools
@@ -380,6 +381,31 @@ Team chat is the default during a round; a message that starts with `@` goes to 
 
 The map, Himmelsfeste, is built by `SkyMap` into an empty world at every start, so the service needs no world
 template. The production compose file keeps the service under the `unreleased` profile until it is released.
+
+## Zeitkapsel
+
+`paper/archive` runs the `archive` group, the Zeitkapsel: old maps of earlier servers to walk and fly through, with no
+game. Everyone arrives in a small entrance hall that `EntranceHall` builds into an empty world at every start, in
+adventure mode with flight; nobody is hurt or hungry, and nothing is built or dropped outside `/build`. The pocket
+watch in the first hotbar slot opens the guide: the old servers, then their exhibits, then an exhibit's arrival,
+checkpoints and notes, and a click travels there. Its last row leads back to the entrance hall, and the hotbar's last
+slot back to the lobby.
+
+Exhibits travel inside the archive's map bundle like BedWars' pool maps, one directory per exhibit under
+`blockcraft/Archive/exhibits/<key>/` with its `exhibit.yml` and `world/` ([layout](worlds/README.md#zeitkapsel-exhibits)).
+An exhibit's world is copied out and loaded as `exhibit:<key>` when its first visitor travels there, and dropped again
+once nobody has been in it for `exhibits.unload-after-seconds`. Standing in an exhibit, `/setup spawn` sets its
+arrival, `/setup point add <name>` places a checkpoint and asks for its description in a dialog (the same name again
+moves and rewrites it), and `/setup point remove <name>` takes one away. Each lands in the `exhibit.yml` of the
+running bundle at once, and `/map save` keeps it.
+
+Staff with `blockcraft.archive.note` leave a note where they stand with `/archive note`. Notes are rows of
+`bc_archive_notes` (exhibit, where the author stood, author UUID and name, text, time). While their exhibit is loaded
+they hang as text displays in front of where the author stood; the exhibit's menu lists them for everyone, and staff
+delete one there with a right-click and a confirmation.
+
+The production compose file keeps the service under the `unreleased` profile until the first exhibits are imported;
+releasing it also means adding `archive` to `on-demand.groups`, as for every game.
 
 ## Server discovery and groups
 

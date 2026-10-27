@@ -24,6 +24,7 @@ palette:
   endergames: "<dark_purple>"
   ttt: "<red>"
   skywars: "<blue>"
+  archive: "<#d4a85a>"
   premium: "<gold>"
 
 games:
@@ -47,6 +48,8 @@ games:
     name: "<ttt>TTT"
   skywars:
     name: "<skywars>SkyWars"
+  archive:
+    name: "<archive>Zeitkapsel"
 game-status:
   available: "<success>Jetzt spielen"
   full: "<muted>Alle Plätze belegt"

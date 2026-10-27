@@ -1,0 +1,10 @@
+max-players: 60
+
+# An exhibit's world is copied out of the map bundle and loaded when the first visitor travels there, and dropped
+# again once nobody has been in it for unload-after-seconds.
+exhibits:
+  unload-after-seconds: 300
+
+# The most characters a staff note may hold.
+notes:
+  max-length: 256
