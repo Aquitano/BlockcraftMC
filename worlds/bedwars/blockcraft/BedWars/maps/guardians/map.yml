@@ -2,7 +2,7 @@ name: Guardians
 builders: [eventseen]
 icon: prismarine
 era: og
-border: {x1: -95, z1: -99, x2: 70, z2: 86}
+border: {x1: -95, z1: -99, x2: 83, z2: 86}
 spectator: {x: -12.0, y: 130.0, z: -6.0, pitch: 90.0}
 shops:
 - {x: -2.5, y: 60.0, z: 58.5, yaw: 0.0}

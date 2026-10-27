@@ -2,7 +2,7 @@ name: Castle
 builders: []
 icon: stone_bricks
 era: og
-border: {x1: -72, z1: -231, x2: 57, z2: -96}
+border: {x1: -72, z1: -238, x2: 57, z2: -96}
 spectator: {x: -7.0, y: 188.0, z: -163.0, pitch: 90.0}
 shops:
 - {x: -9.5, y: 122.0, z: -225.5, yaw: -8.9}
