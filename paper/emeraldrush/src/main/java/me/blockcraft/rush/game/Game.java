@@ -227,6 +227,7 @@ public final class Game {
 
     private void beginSearch() {
         setPhase(GamePhase.SEARCH);
+        spawns.get(SpawnPoint.SEARCH).ifPresent(search -> OreVeins.seed(search, config.ores()));
         RoundStart.go(alivePlayers());
         messages.getLines("search.started", Formatter.number("minutes", config.searchSeconds() / SECONDS_PER_MINUTE)).forEach(Bukkit::broadcast);
         var pickaxe = Items.of(Material.IRON_PICKAXE).name(messages.get("item.pickaxe")).edit(meta -> {
