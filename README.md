@@ -393,13 +393,14 @@ watch in the first hotbar slot opens the guide: the old servers, then their exhi
 checkpoints and notes, and a click travels there. Its last row leads back to the entrance hall, and the hotbar's last
 slot back to the lobby.
 
-Exhibits travel inside the archive's map bundle like BedWars' pool maps, one directory per exhibit under
-`blockcraft/Archive/exhibits/<key>/` with its `exhibit.yml` and `world/` ([layout](worlds/README.md#zeitkapsel-exhibits)).
+Exhibits live in their own template folder beside the archive's map bundle, one directory per exhibit under
+`worlds/archive-exhibits/<key>/` with its `exhibit.yml` and `world/` ([layout](worlds/README.md#zeitkapsel-exhibits)),
+mounted at `exhibits.directory`; neither a start nor `/map save` copies them.
 An exhibit's world is copied out and loaded as `exhibit:<key>` when its first visitor travels there, and dropped again
 once nobody has been in it for `exhibits.unload-after-seconds`. Standing in an exhibit, `/setup spawn` sets its
 arrival, `/setup point add <name>` places a checkpoint and asks for its description in a dialog (the same name again
-moves and rewrites it), and `/setup point remove <name>` takes one away. Each lands in the `exhibit.yml` of the
-running bundle at once, and `/map save` keeps it.
+moves and rewrites it), and `/setup point remove <name>` takes one away. Each lands in the exhibit's
+`exhibit.yml` at once.
 
 Staff with `blockcraft.archive.note` leave a note where they stand with `/archive note`. Notes are rows of
 `bc_archive_notes` (exhibit, where the author stood, author UUID and name, text, time). While their exhibit is loaded

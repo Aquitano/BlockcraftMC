@@ -23,7 +23,7 @@ import java.util.function.Consumer;
 /**
  * The archive's /setup, taken standing in an exhibit: {@code spawn} puts its arrival here, {@code point add} a
  * checkpoint, whose description a dialog asks for, and {@code point remove} takes one away. Every change lands in the
- * exhibit's {@code exhibit.yml} inside the running map bundle at once, and {@code /map save} keeps it.
+ * exhibit's {@code exhibit.yml} in the exhibits directory at once, so it needs no {@code /map save}.
  */
 public final class ArchiveSetup {
 

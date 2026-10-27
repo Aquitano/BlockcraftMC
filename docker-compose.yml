@@ -242,6 +242,7 @@ services:
       - ./build/docker/paper:/blockcraft:ro
       - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
       - ./worlds/archive:/worlds/archive
+      - ./worlds/archive-exhibits:/exhibits
       - archive:/data
 
   quicksg:

@@ -271,7 +271,8 @@ These checks did not start or change a production server.
 
 The `archive` template holds an empty overworld: BedWars' `level.dat` and world generation settings without any
 chunks, so the server restores the bundle at every start and generates nothing but void. The entrance hall is built
-in code. Every exhibit is one directory under `archive/blockcraft/Archive/exhibits/<key>/`:
+in code. The exhibits live apart from it, one directory each under `archive-exhibits/<key>/`, which the server reads
+in place and copies a world out of only when someone visits it:
 
 ```
 exhibits/neue_lobby/
@@ -294,13 +295,14 @@ checkpoints:
 
 To add an exhibit after importing an old map:
 
-1. Convert the map into a dimension folder for the current Paper version and copy it to
-   `exhibits/<key>/world`. The key may only hold a-z, 0-9, `_`, `.` and `-`.
-2. Write `exhibits/<key>/exhibit.yml` with at least `origin`. The guide leaves out a directory without
+1. Import the map as a dimension folder with `./gradlew importMap -Psource=<old world> -Playout=dimension
+   -Ptarget=worlds/archive-exhibits/<key>/world` (see "Importing an old 1.8 map"). The key may only hold a-z, 0-9,
+   `_`, `.` and `-`.
+2. Write `archive-exhibits/<key>/exhibit.yml` with at least `origin`. The guide leaves out a directory without
    `exhibit.yml` or `world/`; one with an invalid key or without `origin` is left out and named in the server log.
-3. Start the archive server, travel to the exhibit, set its arrival and checkpoints with `/setup`, and run
-   `/map save`. Everything beyond the build stays void.
+3. Start the archive server, travel to the exhibit and set its arrival and checkpoints with `/setup`; they land
+   in `exhibit.yml` at once. Everything beyond the build stays void.
 4. Commit the template; its region files go through git-lfs.
 
-Every exhibit is copied at every start and with every `/map save`, so the bundle grows with each old map. The text in
-`exhibit.yml` shows as written, without MiniMessage tags.
+Neither a start nor `/map save` copies the exhibits, so many old maps cost nothing until they are visited. Block
+edits inside an exhibit are not saved. The text in `exhibit.yml` shows as written, without MiniMessage tags.

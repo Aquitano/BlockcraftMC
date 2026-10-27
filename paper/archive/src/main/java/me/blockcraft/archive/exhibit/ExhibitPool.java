@@ -15,9 +15,10 @@ import java.util.logging.Logger;
 import java.util.stream.Stream;
 
 /**
- * The exhibits, kept inside the archive's own map bundle so they travel with it: one directory per exhibit, named by
- * its key, holding its {@code exhibit.yml} and the dimension folder of its world. Only an exhibit with both is on
- * show. They are read on every call, so an exhibit copied in or changed by a setup command shows at once.
+ * The exhibits, kept in their own template directory beside the archive's map bundle, so that neither a start nor
+ * {@code /map save} copies them: one directory per exhibit, named by its key, holding its {@code exhibit.yml} and the
+ * dimension folder of its world. Only an exhibit with both is on show. They are read on every call, so an exhibit
+ * copied in or changed by a setup command shows at once.
  */
 public final class ExhibitPool {
 
