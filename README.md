@@ -409,8 +409,8 @@ the note item next to the pocket watch in the hotbar. Both open the note dialog 
 they hang as text displays in front of where the author stood; the exhibit's menu lists them for everyone, and staff
 delete one there with a right-click and a confirmation.
 
-The production compose file keeps the service under the `unreleased` profile until the first exhibits are imported;
-releasing it also means adding `archive` to `on-demand.groups`, as for every game.
+Production runs the Zeitkapsel like a released game, and `archive` is one of the `on-demand.groups` the waker starts
+at the first visit and stops when it stays empty.
 
 ## Server discovery and groups
 

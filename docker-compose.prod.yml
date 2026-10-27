@@ -48,6 +48,7 @@ services:
   endergames: *paper
   ttt: *paper
   emeraldrush: *paper
+  archive: *paper
 
   # Not released yet: `docker compose --profile unreleased up -d quicksg` starts one anyway.
   quicksg:
@@ -57,10 +58,6 @@ services:
     <<: *paper
     profiles: [unreleased]
   skywars:
-    <<: *paper
-    profiles: [unreleased]
-  # No exhibits yet; it is released once the old maps are imported.
-  archive:
     <<: *paper
     profiles: [unreleased]
 
