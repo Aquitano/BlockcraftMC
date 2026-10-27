@@ -48,8 +48,17 @@ public class AbilitiesTest {
         var next = new Vector(6, 0, 0);
         var far = new Vector(20, 0, 0);
         var fighters = List.of(far, next, first, near);
-        assertEquals(List.of(first, near, next), Electric.chain(first, fighters, Function.identity(), 4, 2));
-        assertEquals(List.of(first, near), Electric.chain(first, fighters, Function.identity(), 4, 1));
-        assertEquals(List.of(far), Electric.chain(far, fighters, Function.identity(), 4, 2));
+        assertEquals(List.of(first, near, next), Electric.chain(first, fighters, Function.identity(), (a, b) -> true, 4, 2));
+        assertEquals(List.of(first, near), Electric.chain(first, fighters, Function.identity(), (a, b) -> true, 4, 1));
+        assertEquals(List.of(far), Electric.chain(far, fighters, Function.identity(), (a, b) -> true, 4, 2));
+    }
+
+    @Test
+    public void aZapNeverJumpsToAFighterBehindAWall() {
+        var first = new Vector(0, 0, 0);
+        var walledOff = new Vector(2, 0, 0);
+        var open = new Vector(0, 0, 3);
+        var fighters = List.of(first, walledOff, open);
+        assertEquals(List.of(first, open), Electric.chain(first, fighters, Function.identity(), (from, to) -> to != walledOff, 4, 2));
     }
 }

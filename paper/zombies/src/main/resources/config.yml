@@ -115,7 +115,8 @@ enemies:
   frost: {first-wave: 13, health: 30, damage: 4, speed: 0.23, weight: 1.5, late-weight: 3, slow-seconds: 2}
   arsonist: {first-wave: 15, health: 24, damage: 2, speed: 0.25, weight: 1, late-weight: 2.5}
   electric: {first-wave: 18, health: 32, damage: 5, speed: 0.23, weight: 1, late-weight: 2.5}
-  breeder: {first-wave: 21, health: 120, damage: 7, speed: 0.15, weight: 0.8, late-weight: 2, scale: 1.6}
+  # A zombie taller than scale 1.02 no longer fits through the arena's two-block windows.
+  breeder: {first-wave: 21, health: 120, damage: 7, speed: 0.15, weight: 0.8, late-weight: 2}
   shadow: {first-wave: 23, health: 36, damage: 6, speed: 0.36, weight: 1, late-weight: 2.5}
 # An exploder within trigger-range blocks of a player lights its fuse, hisses, glows and rushes; after fuse-ticks it
 # blasts everyone in sight within radius for up to its damage, less towards the edge, and throws them back. Shooting

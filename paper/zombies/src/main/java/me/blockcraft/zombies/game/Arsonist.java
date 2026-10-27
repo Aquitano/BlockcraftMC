@@ -171,11 +171,19 @@ final class Arsonist implements Ability {
             var feet = fighter.getLocation();
             double dx = feet.getX() - fire.center().getX();
             double dz = feet.getZ() - fire.center().getZ();
-            if (dx * dx + dz * dz <= radius * radius && Math.abs(feet.getY() - fire.center().getY()) <= 1.5) {
+            if (dx * dx + dz * dz <= radius * radius && Math.abs(feet.getY() - fire.center().getY()) <= 1.5 && exposed(fire, fighter)) {
                 game.hurt(fighter, fire.damage());
                 fighter.getWorld().spawnParticle(Particle.FLAME, feet.add(0, 0.5, 0), 6, 0.2, 0.4, 0.2, 0.02);
             }
         }
+    }
+
+    /** Whether nothing solid stands between the fire and the fighter's body. */
+    private static boolean exposed(Fire fire, Player fighter) {
+        var from = fire.center().clone().add(0, 0.5, 0);
+        var line = fighter.getLocation().add(0, fighter.getHeight() / 2, 0).toVector().subtract(from.toVector());
+        double length = line.length();
+        return length < 0.01 || from.getWorld().rayTraceBlocks(from, line.normalize(), length, FluidCollisionMode.NEVER, true) == null;
     }
 
     @Override

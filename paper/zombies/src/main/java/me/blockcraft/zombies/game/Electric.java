@@ -18,6 +18,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.BiPredicate;
 import java.util.function.Function;
 
 /** Zaps the nearest fighter, and the zap jumps on to fighters standing close by, so the team must spread out. */
@@ -51,7 +52,7 @@ final class Electric implements Ability {
         double damage = game.enemies().damage(enemy);
         var from = mob.getEyeLocation();
         mob.getWorld().playSound(from, Sound.ENTITY_LIGHTNING_BOLT_IMPACT, 0.8f, 1.7f);
-        for (var fighter : chain(target, game.fighters(), player -> center(player).toVector(), config.jumpRange(), config.jumps())) {
+        for (var fighter : chain(target, game.fighters(), player -> center(player).toVector(), Player::hasLineOfSight, config.jumpRange(), config.jumps())) {
             var to = center(fighter);
             arc(from, to);
             fighter.damage(damage, mob);
@@ -61,14 +62,20 @@ final class Electric implements Ability {
         return false;
     }
 
-    /** {@code first}, then up to {@code jumps} more, each the closest not yet struck within {@code range} of the one before. */
-    static <T> List<T> chain(T first, Collection<T> candidates, Function<T, Vector> position, double range, int jumps) {
+    /**
+     * {@code first}, then up to {@code jumps} more, each the closest not yet struck within {@code range} of the one
+     * before that it {@code reaches}, so the spark never jumps through a wall.
+     */
+    static <T> List<T> chain(T first, Collection<T> candidates, Function<T, Vector> position, BiPredicate<T, T> reaches,
+                             double range, int jumps) {
         var chain = new ArrayList<T>(List.of(first));
         var left = new ArrayList<T>(candidates);
         left.remove(first);
         while (chain.size() <= jumps) {
-            var from = position.apply(chain.getLast());
-            var next = left.stream().filter(candidate -> position.apply(candidate).distanceSquared(from) <= range * range)
+            var last = chain.getLast();
+            var from = position.apply(last);
+            var next = left.stream().filter(candidate -> position.apply(candidate).distanceSquared(from) <= range * range
+                            && reaches.test(last, candidate))
                     .min(Comparator.comparingDouble(candidate -> position.apply(candidate).distanceSquared(from)));
             if (next.isEmpty()) {
                 break;
