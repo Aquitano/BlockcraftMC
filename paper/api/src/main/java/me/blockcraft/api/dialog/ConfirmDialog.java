@@ -27,6 +27,17 @@ public final class ConfirmDialog {
     }
 
     public ConfirmDialog(ItemStack subject, List<Component> details, Optional<Consumer<Player>> onAccept, Consumer<Player> onCancel) {
+        this(subject, details, BlockcraftApi.get().messages().get("menu.confirm.accept"), onAccept, onCancel);
+    }
+
+    /** A confirmation that is no purchase, such as a deletion, names its own {@code accept} button. */
+    public ConfirmDialog(ItemStack subject, List<Component> details, Component accept, Consumer<Player> onAccept,
+                         Consumer<Player> onCancel) {
+        this(subject, details, accept, Optional.of(onAccept), onCancel);
+    }
+
+    private ConfirmDialog(ItemStack subject, List<Component> details, Component accept, Optional<Consumer<Player>> onAccept,
+                          Consumer<Player> onCancel) {
         var messages = BlockcraftApi.get().messages();
         var body = new ArrayList<DialogBody>();
         body.add(DialogBody.item(subject).build());
@@ -34,7 +45,7 @@ public final class ConfirmDialog {
         dialog = Dialogs.create(messages.get(onAccept.isPresent() ? "menu.confirm.title" : "menu.confirm.unavailable"),
                 body, List.of(),
                 onAccept.isPresent() ? DialogType.confirmation(
-                        Dialogs.button(messages.get("menu.confirm.accept"), onAccept.get()),
+                        Dialogs.button(accept, onAccept.get()),
                         Dialogs.button(messages.get("menu.cancel"), onCancel))
                         : DialogType.notice(Dialogs.button(messages.get("menu.back"), onCancel)));
     }
