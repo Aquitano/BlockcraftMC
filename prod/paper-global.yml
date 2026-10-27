@@ -3,3 +3,4 @@ proxies:
     enabled: true
     online-mode: true
     secret: ${CFG_FORWARDING_SECRET}
+_version: 31

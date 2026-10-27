@@ -3,3 +3,4 @@ proxies:
     enabled: true
     online-mode: true
     secret: blockcraft-dev-secret
+_version: 31
