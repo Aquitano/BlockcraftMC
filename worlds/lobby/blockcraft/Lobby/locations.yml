@@ -70,3 +70,35 @@ bedwars:
   z: 1579.5
   yaw: 270.0
   pitch: 0.0
+zombies:
+  ==: org.bukkit.Location
+  world: world
+  x: -952.5
+  y: 21.0
+  z: 1551.5
+  pitch: 0.0
+  yaw: 90.0
+endergames:
+  ==: org.bukkit.Location
+  world: world
+  x: -957.5
+  y: 25.0
+  z: 1698.5
+  pitch: 0.0
+  yaw: 0.0
+ttt:
+  ==: org.bukkit.Location
+  world: world
+  x: -992.5
+  y: 28.0
+  z: 1566.5
+  pitch: 0.0
+  yaw: 180.0
+mlgrush:
+  ==: org.bukkit.Location
+  world: world
+  x: -895.5
+  y: 30.0
+  z: 1581.5
+  pitch: 0.0
+  yaw: 0.0
