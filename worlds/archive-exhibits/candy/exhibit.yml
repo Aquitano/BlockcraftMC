@@ -1,0 +1,13 @@
+name: Candy
+origin: Blockcraft
+category: SkyWars
+year: 2016
+description: Eine SkyWars-Karte aus dem Blockcraft-Bestand mit rosa Süßigkeiteninseln
+  um eine helle Mittelplattform.
+icon: pink_wool
+arrival:
+  x: 0.5
+  y: 81.0
+  z: 0.5
+  yaw: 0.0
+  pitch: 0.0

@@ -1,0 +1,13 @@
+name: JumpUp
+origin: Blockcraft
+category: Parkour
+year: 2016
+description: Ein schmaler, hoher JumpUp-Parcours von Blockcraft aus bunten Sprungblöcken
+  mit einem Bedrock-Kasten am oberen Ende.
+icon: feather
+arrival:
+  x: 3.5
+  y: 168.0
+  z: 0.5
+  yaw: 104.04
+  pitch: 0.0

@@ -1,0 +1,11 @@
+name: Castle
+origin: Blockcraft
+category: BedWars
+year: 2016
+description: Vier Burgen mit Flaggen um eine Mitte, für vier Teams.
+icon: stone_bricks
+arrival:
+  x: -3.5
+  y: 123.0
+  z: -132.4
+  yaw: -178.0

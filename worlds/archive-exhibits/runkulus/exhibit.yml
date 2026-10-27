@@ -1,0 +1,13 @@
+name: Runkulus
+origin: Blockcraft
+category: SurvivalGames
+year: 2016
+description: Die als SurvivalGames-Karte hinterlegte Freizeitparklandschaft Runkulus
+  mit Riesenrad, Achterbahn und einem großen Baum. Erbaut von PixelBiester.
+icon: minecart
+arrival:
+  x: 15.5
+  y: 14.0
+  z: 0.5
+  yaw: 125.31
+  pitch: 0.0

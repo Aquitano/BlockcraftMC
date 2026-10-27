@@ -1,0 +1,13 @@
+name: Creative-Grundstücke
+origin: Blockcraft
+category: Kreativ
+year: 2016
+description: Die Creative-Welt von Blockcraft mit erhaltenen Grundstücksbauten, darunter
+  Felsen, Wasserfälle und kleinere Bauwerke.
+icon: grass_block
+arrival:
+  x: -0.5
+  y: 65.0
+  z: 0.5
+  yaw: 91.02
+  pitch: 0.0

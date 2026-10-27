@@ -1,0 +1,13 @@
+name: Mine
+origin: Blockcraft
+category: SurvivalGames
+year: 2016
+description: Die SurvivalGames-Arena Mine von Blockcraft mit einer großen Steinkuppel
+  und einem äußeren Kletterweg.
+icon: iron_pickaxe
+arrival:
+  x: -28.5
+  y: 4.0
+  z: -31.5
+  yaw: 1.949942
+  pitch: 0.0

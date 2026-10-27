@@ -1,0 +1,22 @@
+name: DiaLobby
+origin: Blockcraft
+category: Lobbys
+year: 2016
+description: Eine für Diawars aufbewahrte Fantasy-Lobby von Blockcraft mit hohen Felsspitzen
+  und einem ausgeschilderten Jump-and-Run. Erbaut von Phizzle.
+icon: diamond
+arrival:
+  x: 369.5
+  y: 38.0
+  z: -872.5
+  yaw: 90.0
+  pitch: 0.0
+checkpoints:
+- name: Jump-and-Run
+  description: Hier weist das alte Schild auf das Jump-and-Run hin.
+  at:
+    x: 358.5
+    y: 45.0
+    z: -873.5
+    yaw: 90.0
+    pitch: 0.0

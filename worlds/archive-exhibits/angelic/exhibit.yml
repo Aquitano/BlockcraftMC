@@ -1,0 +1,13 @@
+name: Angelic
+origin: Blockcraft
+category: SkyWars
+year: 2016
+description: Eine SkyWars-Karte aus dem Blockcraft-Bestand mit weiß-goldenem Turm,
+  Wolkenplattformen und Garteninseln.
+icon: quartz_block
+arrival:
+  x: -0.5
+  y: 112.0
+  z: -12.5
+  yaw: 0.0
+  pitch: -10.0

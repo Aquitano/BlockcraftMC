@@ -1,0 +1,13 @@
+name: Glass
+origin: Blockcraft
+category: SkyWars
+year: 2016
+description: Eine SkyWars-Karte aus dem Blockcraft-Bestand mit Garteninseln unter
+  verschiedenfarbigen Glaskuppeln.
+icon: lime_stained_glass
+arrival:
+  x: 0.5
+  y: 71.0
+  z: 0.5
+  yaw: 173.66
+  pitch: 0.0

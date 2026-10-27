@@ -1,0 +1,13 @@
+name: SkyWars
+origin: Blockcraft
+category: SkyWars
+year: 2016
+description: Eine SkyWars-Karte von Blockcraft mit vier kleinen Startinseln um eine
+  Mittelinsel mit Baum und Teich.
+icon: bow
+arrival:
+  x: 8.5
+  y: 25.0
+  z: 1.5
+  yaw: 102.53
+  pitch: 0.0

@@ -1,0 +1,11 @@
+name: Halloween
+origin: Blockcraft
+category: BedWars
+year: 2016
+description: Zwei gruselige Inseln und ein Kürbis in der Mitte, für zwei Teams.
+icon: carved_pumpkin
+arrival:
+  x: -3.5
+  y: 123.0
+  z: -224.5
+  yaw: 0.8

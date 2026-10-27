@@ -1,0 +1,13 @@
+name: MWYD
+origin: Blockcraft
+category: Minispiele
+year: 2016
+description: Diese erhaltene Welt von Blockcraft zeigt ein bewaldetes Tal mit einem
+  modernen Haus und kleineren Gebäuden.
+icon: dark_oak_sapling
+arrival:
+  x: -66.5
+  y: 9.0
+  z: 76.5
+  yaw: -138.96
+  pitch: 0.0

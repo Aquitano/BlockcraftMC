@@ -1,0 +1,46 @@
+name: LobbyH
+origin: Blockcraft
+category: Lobbys
+year: 2016
+description: Die Lobby von Blockcraft mit vier Themenlandschaften, Spielauswahl und
+  einem Ballon über dem Spawn.
+icon: compass
+arrival:
+  x: 0.5
+  y: 22.0
+  z: 0.5
+  yaw: 180.44615
+  pitch: 0.0
+checkpoints:
+- name: BedWars
+  description: Das frühere Navigatorziel BedWars in der Lobby.
+  at:
+    x: -3.6745397961475286
+    y: 21.0
+    z: 69.0439525171899
+    yaw: 2.467865
+    pitch: 0.0
+- name: SurvivalGames
+  description: Das frühere Navigatorziel SurvivalGames in der Lobby.
+  at:
+    x: -52.795115257239296
+    y: 21.0
+    z: 0.205883690928222
+    yaw: 90.75971
+    pitch: 0.0
+- name: SkyWars
+  description: Das frühere Navigatorziel SkyWars in der Lobby.
+  at:
+    x: 64.68051099905675
+    y: 21.0
+    z: -1.3370571615426066
+    yaw: -117.43168
+    pitch: 0.0
+- name: Ballon
+  description: Das frühere Navigatorziel Ballon in der Lobby.
+  at:
+    x: -0.5
+    y: 57.0
+    z: 0.5
+    yaw: 181.71878
+    pitch: 0.0

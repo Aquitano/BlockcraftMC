@@ -1,0 +1,13 @@
+name: JumpupV
+origin: Blockcraft
+category: Parkour
+year: 2016
+description: Ein kleiner JumpUp-Parcours von Blockcraft mit buntem Trichter über einer
+  gemusterten Startplattform.
+icon: slime_block
+arrival:
+  x: 1.5
+  y: 13.0
+  z: 0.5
+  yaw: -40.6
+  pitch: 0.0
