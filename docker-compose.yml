@@ -36,6 +36,9 @@ x-paper-env: &paper-env
   LEVEL_TYPE: minecraft:flat
   GENERATOR_SETTINGS: '{"layers":[{"block":"minecraft:bedrock","height":1},{"block":"minecraft:dirt","height":2},{"block":"minecraft:grass_block","height":1}],"biome":"minecraft:plains"}'
   MEMORY: 1G
+  # After an OutOfMemoryError Paper hangs halfway through stopping and still answers pings; exiting lets Docker
+  # restart it.
+  JVM_XX_OPTS: "-XX:+ExitOnOutOfMemoryError"
   SYNC_SKIP_NEWER_IN_DESTINATION: "false"
   CREATE_CONSOLE_IN_PIPE: "true"
   # Empty rather than gone: the image then deletes the LuckPerms jar it downloaded before plugins were staged.
