@@ -1,5 +1,6 @@
 package me.blockcraft.archive.exhibit;
 
+import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.api.world.TemplateDimensions;
@@ -74,17 +75,18 @@ public final class ExhibitWorlds {
 
     /** Takes the player to {@code destination} in the exhibit, loading its world first, and tells them {@code arrived}. */
     public void travel(Player player, Exhibit exhibit, Function<World, Location> destination, Component arrived) {
+        var current = BlockcraftApi.get().playerTasks().currentScreen(player);
         if (dimensions.loaded(exhibit.key()).isEmpty()) {
             player.sendMessage(messages.get("travel.loading", Placeholder.unparsed("exhibit", exhibit.name())));
         }
         open(exhibit, world -> {
-            if (player.isOnline()) {
+            if (current.getAsBoolean()) {
                 player.teleport(destination.apply(world));
                 Sounds.TELEPORT.play(player);
                 player.sendMessage(arrived);
             }
         }, () -> {
-            if (player.isOnline()) {
+            if (current.getAsBoolean()) {
                 Sounds.MENU_DENY.play(player);
                 player.sendMessage(messages.get("travel.failed", Placeholder.unparsed("exhibit", exhibit.name())));
             }
