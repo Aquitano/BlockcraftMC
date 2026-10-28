@@ -779,6 +779,16 @@ an optional pack without asking, while a required one is prompted for and declin
 `config.yml` predates this still says `required: false` and needs the edit by hand. Only the proxy hears the client's
 answer, so it tells each backend on arrival (the `Pack` subchannel), and BlockcraftAPI keeps that in `resourcePack()`.
 
+To regenerate the textures, UI sounds, and vanilla item overrides, install Python 3 and FFmpeg, then run:
+
+```sh
+./gradlew :resourcepack:regenerate -PclientJar=/path/to/minecraft-client.jar
+```
+
+Use a client jar matching `minecraft` in `gradle/libs.versions.toml`; the map inspector caches one in
+`run/map-inspector/data`. Run this command after changing the art generators, adding an icon or model, or updating
+Minecraft. It updates the generated assets in `resourcepack/src`. Normal builds package the checked-in assets.
+
 Everything the pack changes has a plain fallback, so a player without it sees vanilla menus and text symbols:
 
 - Menu panels are glyphs of the `blockcraft:ui` font, drawn from the inventory title and moved back into the corner
@@ -795,22 +805,19 @@ Everything the pack changes has a plain fallback, so a player without it sees va
   BlockcraftAPI's `messages.yml` without. The lobby's and every game's sidebar headings carry them.
 - Vanilla inventory labels remain intact. The pack does not override container translations.
 - Short UI sounds live in `assets/blockcraft/sounds/ui`. `FeedbackSound` selects custom sounds when the pack is
-  active and vanilla sounds otherwise. `python3 resourcepack/SoundArt.py` regenerates the Ogg Vorbis files with
-  Python and FFmpeg. `FeedbackSoundTest` checks that every custom sound has a definition and an audio asset.
+  active and vanilla sounds otherwise. `SoundArt.py` generates the Ogg Vorbis files. `FeedbackSoundTest` checks that
+  every custom sound has a definition and an audio asset.
 
 - Anything other players can see, such as a held or worn item or a display, keeps its vanilla item and asks for the
   pack's model through custom_model_data: a `MenuIcon` as `blockcraft:icon/<key>`, a 3D model as a `PackModel`
   (`blockcraft:<set>/<name>`). The pack overrides the vanilla item in `assets/minecraft/items/<item>.json` with a
   `select` on that string, whose fallback is the item's own vanilla definition. A client without the pack draws the
   vanilla item, so nobody ever sees a missing model, and no item depends on who holds it. `item_model` set for one
-  viewer (`MenuIcon.style`) is only for menus, which nobody else sees. The overrides are written from `MenuIcon` and
-  `PackModel` by `./gradlew :paper:api:packOverrides -PclientJar=<minecraft client jar>`, which copies each item's
-  vanilla definition out of the client jar (the map inspector downloads one to `run/map-inspector/data`); run it after
-  adding an icon or a model, and again for a new Minecraft version. `PackOverridesTest` fails when an override, a case,
-  a model or one of its `blockcraft:` textures is missing, or an override is left over.
+  viewer (`MenuIcon.style`) is only for menus, which nobody else sees. The regeneration task writes the overrides
+  from `MenuIcon` and `PackModel`, copying each item's vanilla definition from the client jar. `PackOverridesTest`
+  fails when an override, a case, a model or one of its `blockcraft:` textures is missing, or an override is left over.
 
-The textures are drawn by `java resourcepack/PackArt.java resourcepack/src` (panel colours, slots and the pixel
-icons live in that file). `PackArt` draws the UI art only. The hand-made 3D models live in
+`PackArt.java` draws the panels, slots, HUD glyphs, and pixel icons. The hand-made 3D models live in
 `assets/blockcraft/models/item/<set>/` (`zombies`, `ttt`, `endergames`, `skywars`, `hats`, `gadgets`, `props`), each
 named by its `PackModel`. They are cuboids textured with vanilla block textures, which keeps the pack small and the
 look vanilla; a model that needs its own texture puts it under `textures/item/<set>/`. Made in Blockbench, a model is
