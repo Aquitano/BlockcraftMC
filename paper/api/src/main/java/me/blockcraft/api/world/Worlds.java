@@ -32,7 +32,6 @@ public final class Worlds {
     public static World createArena(NamespacedKey key) {
         var world = Objects.requireNonNull(WorldCreator.ofKey(key)
                 .generator(new ChunkGenerator() { }).createWorld(), "Could not create arena " + key);
-        world.setAutoSave(false);
         world.setDifficulty(Difficulty.PEACEFUL);
         world.setGameRule(GameRules.ADVANCE_TIME, false);
         world.setGameRule(GameRules.ADVANCE_WEATHER, false);

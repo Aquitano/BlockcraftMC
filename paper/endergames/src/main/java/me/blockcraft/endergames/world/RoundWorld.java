@@ -68,7 +68,6 @@ public final class RoundWorld {
                 .seed(seed.seed())
                 .generateStructures(true)
                 .createWorld(), "Could not create the EnderGames world");
-        world.setAutoSave(false);
         world.setDifficulty(Difficulty.NORMAL);
         world.setGameRule(GameRules.ADVANCE_TIME, false);
         world.setGameRule(GameRules.ADVANCE_WEATHER, false);

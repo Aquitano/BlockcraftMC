@@ -17,6 +17,8 @@ import java.util.regex.Pattern;
  * Worlds kept as templates inside a map bundle and loaded only when needed. Since 26.2 every world of a server is a
  * dimension of its one level, so a template is copied to {@code <level>/dimensions/<namespace>/<name>} before it loads
  * as the world {@code <namespace>:<name>}. Nothing generates around it: what lies beyond its build is void.
+ * The copy saves like any world, because it is replaced before every load anyway. Minecraft never unloads a chunk
+ * of a world with saving off, so such a world would keep every chunk a visitor has seen in memory.
  */
 public final class TemplateDimensions {
 
@@ -81,7 +83,6 @@ public final class TemplateDimensions {
                 if (world == null) {
                     throw new IllegalStateException("Could not load the world " + name);
                 }
-                world.setAutoSave(false);
                 settle.accept(world);
                 return world;
             });
