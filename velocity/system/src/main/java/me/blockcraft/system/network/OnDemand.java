@@ -99,6 +99,7 @@ public final class OnDemand {
      * and is only full or playing a round.
      */
     public synchronized Optional<Outcome> request(String group, UUID player, Instant now) {
+        select(group, player);
         var entry = groups.get(group);
         if (entry == null) {
             return Optional.empty();
@@ -133,6 +134,7 @@ public final class OnDemand {
      * group, whose server restarts after every round, takes them too and sends them once it is back.
      */
     public synchronized Optional<Outcome> rejoin(String group, UUID player, Instant now) {
+        select(group, player);
         var entry = groups.get(group);
         if (entry != null && entry.state == GroupState.AWAKE) {
             entry.waiting.add(player);
@@ -140,6 +142,25 @@ public final class OnDemand {
             return Optional.of(new Outcome(Reply.WAITING, List.of()));
         }
         return request(group, player, now);
+    }
+
+    public synchronized void cancel(UUID player) {
+        groups.values().forEach(entry -> remove(entry, player));
+    }
+
+    private void select(String group, UUID player) {
+        groups.forEach((name, entry) -> {
+            if (!name.equals(group)) {
+                remove(entry, player);
+            }
+        });
+    }
+
+    private static void remove(Group entry, UUID player) {
+        entry.waiting.remove(player);
+        if (entry.waiting.isEmpty()) {
+            entry.rejoinedSince = Optional.empty();
+        }
     }
 
     /** One poll of the servers; a group missing from {@code seen} has no server running. */

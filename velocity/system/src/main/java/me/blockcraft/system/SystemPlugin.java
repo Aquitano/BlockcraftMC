@@ -241,6 +241,7 @@ public final class SystemPlugin {
         var returning = new ReturningPlayers(addressHasher, repositories.players(), choices, friends, config.serverListCache(), config.serverListFriends(), logger);
         events.register(this, new MotdListener(visibility, config, settings, returning, messages, dataDirectory, logger));
         events.register(this, directory);
+        onDemand.ifPresent(sleeping -> events.register(this, sleeping));
         events.register(this, new PartyListener(parties));
         events.register(this, new FriendListener(friends, visibility, logger));
         events.register(this, spectating);

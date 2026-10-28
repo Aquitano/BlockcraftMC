@@ -49,6 +49,55 @@ public class OnDemandTest {
     }
 
     @Test
+    public void choosingAnotherGameReplacesTheEarlierWait() {
+        var games = new OnDemand(new OnDemand.Settings(Set.of("bedwars", "ttt"),
+                Duration.ofMinutes(10), Duration.ofMinutes(2), 0));
+        games.request("bedwars", first, now);
+        games.request("ttt", first, now);
+
+        var admissions = games.observe(Map.of("bedwars", UP, "ttt", UP), later(30)).stream()
+                .filter(Effect.Admit.class::isInstance).toList();
+
+        assertEquals(List.of(new Effect.Admit("ttt", List.of(first))), admissions);
+    }
+
+    @Test
+    public void choosingAnotherRematchReplacesTheEarlierWait() {
+        var games = new OnDemand(new OnDemand.Settings(Set.of("bedwars", "ttt"),
+                Duration.ofMinutes(10), Duration.ofMinutes(2), 0));
+        games.observe(Map.of("bedwars", UP, "ttt", UP), now);
+        games.rejoin("bedwars", first, now);
+        games.rejoin("ttt", first, now);
+
+        var admissions = games.observe(Map.of("bedwars", EMPTY, "ttt", EMPTY), later(30)).stream()
+                .filter(Effect.Admit.class::isInstance).toList();
+
+        assertEquals(List.of(new Effect.Admit("ttt", List.of(first))), admissions);
+    }
+
+    @Test
+    public void cancellingAWaitLeavesTheOtherPlayersQueued() {
+        onDemand.request("bedwars", first, now);
+        onDemand.request("bedwars", second, now);
+
+        onDemand.cancel(first);
+
+        assertEquals(List.of(new Effect.Publish("bedwars", GroupState.AWAKE), new Effect.Admit("bedwars", List.of(second))),
+                onDemand.observe(Map.of("bedwars", UP), later(30)));
+    }
+
+    @Test
+    public void aCancelledRematchDoesNotLeaveItsDeadlineForTheNextPlayer() {
+        onDemand.observe(Map.of("bedwars", UP), now);
+        onDemand.rejoin("bedwars", first, now);
+        onDemand.cancel(first);
+        onDemand.rejoin("bedwars", second, later(90));
+
+        assertEquals(List.of(), onDemand.observe(Map.of("bedwars", UP), later(30)));
+        assertEquals(List.of(new Effect.Fail("bedwars", List.of(second))), onDemand.observe(Map.of("bedwars", UP), later(90)));
+    }
+
+    @Test
     public void whoeverWaitsPastTheTimeoutHearsItFailed() {
         onDemand.observe(Map.of(), now);
         onDemand.request("bedwars", first, now);

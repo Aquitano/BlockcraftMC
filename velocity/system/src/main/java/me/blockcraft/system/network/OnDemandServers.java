@@ -1,5 +1,7 @@
 package me.blockcraft.system.network;
 
+import com.velocitypowered.api.event.Subscribe;
+import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import me.blockcraft.common.db.DatabaseException;
@@ -7,6 +9,7 @@ import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.network.GroupState;
 import me.blockcraft.common.network.GroupStateRepository;
 import me.blockcraft.system.LobbyConnector;
+import me.blockcraft.system.LiveSession;
 import me.blockcraft.system.network.OnDemand.Effect;
 import me.blockcraft.system.network.OnDemand.Observation;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
@@ -68,6 +71,17 @@ public final class OnDemandServers {
     /** As {@link #request}, for a rematch on the server the player just played on, which restarts before it has room. */
     public boolean rejoin(Player player, String group, TagResolver game) {
         return answer(player, onDemand.rejoin(group, player.getUniqueId(), clock.instant()), game);
+    }
+
+    public void cancel(Player player) {
+        onDemand.cancel(player.getUniqueId());
+    }
+
+    @Subscribe
+    public void onDisconnect(DisconnectEvent event) {
+        if (LiveSession.endedBy(event)) {
+            cancel(event.getPlayer());
+        }
     }
 
     private boolean answer(Player player, Optional<OnDemand.Outcome> outcome, TagResolver game) {
