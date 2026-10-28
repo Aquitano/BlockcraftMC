@@ -8,10 +8,10 @@ The `VanadeSicherung` backup supplies four overworld templates:
 - `emeraldrush` contains `TW1/world`, named Mine. The old plugin was called TradeWars.
 
 The backup does not identify the builders. Each `blockcraft/map.yml` leaves `builders` empty.
-BedWars reuses a copy of EmeraldRush's waiting island. Its two arena templates remain in
+BedWars reuses a copy of EmeraldRush's waiting island. Its arena templates live in
 `bedwars/blockcraft/BedWars/maps`.
 
-Zombies ships the original Außenposten arena as a saved Paper 26.2 world template.
+Zombies ships the original Außenposten arena as a saved Paper world template.
 Its map-owned configuration includes four purchasable wings, seven stations, and eight barricades.
 The plugin can also generate the arena in a new empty world. See [Zombies setup](../paper/zombies/README.md).
 
@@ -215,40 +215,23 @@ Afterwards:
   stores the world in the pool. After that, run `/map save`.
 - Region files go through Git LFS, as every template's do.
 
-## Storage and validation
+## Storage
 
-All 103 source overworld region files and their 48,070 chunks are retained. The initial
-import occupies about 197 MiB. No area of a build was trimmed.
-The old shop villager and its two title armor stands were removed from the imported lobby.
-The current Lobby plugin creates their replacements at the saved `shop-npc` location.
-Every other source entity is retained.
-The templates use the Paper 26.2 layout under `dimensions/minecraft/overworld`, with world
-data and `level.dat` at the template root. Region, entity, and POI files use the repository's
-existing Git LFS rule.
+Level templates keep `level.dat` and shared world data at the root. Overworld chunks and dimension settings live
+under `dimensions/minecraft/overworld`. BedWars pool maps and archive exhibits store a dimension directly in their
+`world/` directory.
 
-The temporary copies were force-upgraded with the cached Mojang 26.2 server, then loaded
-and stopped cleanly with cached Paper 26.2 build 133. Paper's `--forceUpgrade` option reports
-that world upgrades are unimplemented in this build. The compose files currently pin build 134.
-Every source chunk coordinate was checked against the imported overworld, and the original
-files were checked against their SHA-256 hashes after conversion. All 54 active locations
-resolve to retained chunks, and all eight imported sign positions contain sign blocks.
-An independent review decoded all chunks and checked entity positions, container contents,
-and the conversion of old flower-pot and note-block records. A separate JVM check loaded
-all 54 locations and eight signs through the current plugin classes with a stub Bukkit world.
-The initial Paper checks loaded no Blockcraft plugins. A subsequent local Docker preview loaded the
-actual plugin stack on pinned Paper build 134, registered all five backend groups, and loaded all eight
-status signs. Multiplayer gameplay still needs the checks below.
+Region, entity, and POI files use Git LFS. Paper's dimension metadata stays with each template so the server can
+load it without repeating a world migration.
 
 Player records, statistics, session locks, legacy `uid.dat` files, old level backups, the Nether,
 and the End are excluded. Newly generated Paper world UUID metadata remains in the templates.
 Plugin jars, logs, permissions, customer records, and database credentials
 from the backup are excluded. The original backup is unchanged.
 
-## Accepted layout and gameplay checks
+## Gameplay checks
 
-The imported layouts and the final lobby board placement have been accepted on the local preview.
-The pond and Easter hiding places remain unset. Acceptance of the layout does not replace the multiplayer
-round checks below.
+Run these checks after changing the imported maps or their setup data.
 
 - Check the lobby warps, signs, shop NPC, and the jump landing. The saved jump point at Y=7.5 stands
   on bottom stone-brick slabs at Y=7. Its headroom is clear.
@@ -267,8 +250,6 @@ round checks below.
 - Supply `LobbyMap` to restore Duell's third SG arena, or keep it unavailable.
 - Add the builders to each `blockcraft/map.yml` when their identities are known.
 - Use `/map save` after map or setup changes to publish them to the template.
-
-These checks did not start or change a production server.
 
 ## Zeitkapsel exhibits
 
