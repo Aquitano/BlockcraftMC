@@ -4,7 +4,6 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.velocitypowered.api.command.BrigadierCommand;
 import me.blockcraft.system.LobbyConnector;
 import me.blockcraft.system.command.CommandSupport;
-import me.blockcraft.system.network.ServerDirectory;
 
 import java.util.Locale;
 
@@ -13,12 +12,10 @@ public final class PlayCommand {
 
     private final CommandSupport support;
     private final LobbyConnector lobby;
-    private final ServerDirectory directory;
 
-    public PlayCommand(CommandSupport support, LobbyConnector lobby, ServerDirectory directory) {
+    public PlayCommand(CommandSupport support, LobbyConnector lobby) {
         this.support = support;
         this.lobby = lobby;
-        this.directory = directory;
     }
 
     public BrigadierCommand create() {
@@ -27,7 +24,7 @@ public final class PlayCommand {
                 .then(BrigadierCommand.requiredArgumentBuilder("game", StringArgumentType.word())
                         .suggests((context, builder) -> {
                             String typed = builder.getRemainingLowerCase();
-                            directory.groups().stream().filter(group -> group.toLowerCase(Locale.ROOT).startsWith(typed)).forEach(builder::suggest);
+                            lobby.groups().stream().filter(group -> group.toLowerCase(Locale.ROOT).startsWith(typed)).forEach(builder::suggest);
                             return builder.buildFuture();
                         })
                         .executes(support.asPlayer((player, context) -> lobby.play(player, StringArgumentType.getString(context, "game"))))));

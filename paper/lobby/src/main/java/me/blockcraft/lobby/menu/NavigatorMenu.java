@@ -18,10 +18,11 @@ import java.util.Map;
 /** The toolbar closes, opens the shop or warps to spawn; the games sit above JumpAndRun. */
 final class NavigatorMenu extends Menu {
 
-    private static final Map<Integer, LobbyLocation> GAMES = Map.of(
-            18, LobbyLocation.QSG, 20, LobbyLocation.RUSH, 22, LobbyLocation.DUELL, 24, LobbyLocation.BEDWARS,
-            26, LobbyLocation.SKYWARS, 27, LobbyLocation.TTT, 29, LobbyLocation.MLGRUSH, 31, LobbyLocation.CORES,
-            33, LobbyLocation.ENDERGAMES, 35, LobbyLocation.ZOMBIES);
+    private static final Map<Integer, LobbyLocation> GAMES = Map.ofEntries(
+            Map.entry(18, LobbyLocation.QSG), Map.entry(20, LobbyLocation.RUSH), Map.entry(22, LobbyLocation.DUELL),
+            Map.entry(24, LobbyLocation.BEDWARS), Map.entry(26, LobbyLocation.SKYWARS), Map.entry(27, LobbyLocation.TTT),
+            Map.entry(29, LobbyLocation.MLGRUSH), Map.entry(31, LobbyLocation.CORES), Map.entry(33, LobbyLocation.ENDERGAMES),
+            Map.entry(35, LobbyLocation.ZOMBIES), Map.entry(42, LobbyLocation.ARCHIVE));
     private static final int JUMP_SLOT = 40;
 
     private final Menus menus;

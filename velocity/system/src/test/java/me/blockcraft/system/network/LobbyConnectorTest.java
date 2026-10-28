@@ -101,7 +101,7 @@ public class LobbyConnectorTest {
         var fixture = fixture(server("quicksg-1", "quicksg", 0, 8));
         var dispatcher = new CommandDispatcher<CommandSource>();
         dispatcher.getRoot().addChild(new PlayCommand(new CommandSupport(null, fixture.messages()),
-                fixture.connector(), fixture.directory()).create().getNode());
+                fixture.connector()).create().getNode());
         Locale original = Locale.getDefault();
         try {
             Locale.setDefault(Locale.forLanguageTag("tr-TR"));
@@ -118,7 +118,35 @@ public class LobbyConnectorTest {
         }
     }
 
+    @Test
+    public void sleepingGamesCompleteOnlyWhileOnDemandIsEnabled() throws Exception {
+        for (boolean enabled : List.of(false, true)) {
+            var fixture = fixture(enabled, server("quicksg-1", "quicksg", 0, 8));
+            var dispatcher = new CommandDispatcher<CommandSource>();
+            dispatcher.getRoot().addChild(new PlayCommand(new CommandSupport(null, fixture.messages()),
+                    fixture.connector()).create().getNode());
+
+            var suggestions = dispatcher.getCompletionSuggestions(dispatcher.parse("play ", player)).get();
+            assertEquals(enabled ? List.of("archive", "quicksg") : List.of("quicksg"),
+                    suggestions.getList().stream().map(Suggestion::getText).toList());
+            var archive = dispatcher.getCompletionSuggestions(dispatcher.parse("play AR", player)).get();
+            assertEquals(enabled ? List.of("archive") : List.of(),
+                    archive.getList().stream().map(Suggestion::getText).toList());
+
+            fixture.directory().update(List.of());
+            var stopped = dispatcher.getCompletionSuggestions(dispatcher.parse("play ", player)).get();
+            assertEquals(enabled ? List.of("archive", "quicksg") : List.of(),
+                    stopped.getList().stream().map(Suggestion::getText).toList());
+        }
+        assertTrue(requested.isEmpty());
+        assertTrue(received.isEmpty());
+    }
+
     private Fixture fixture(ServerRecord... records) throws Exception {
+        return fixture(false, records);
+    }
+
+    private Fixture fixture(boolean onDemandEnabled, ServerRecord... records) throws Exception {
         var proxy = (ProxyServer) Proxy.newProxyInstance(ProxyServer.class.getClassLoader(), new Class<?>[]{ProxyServer.class},
                 (fake, method, args) -> switch (method.getName()) {
                     case "getServer" -> Optional.ofNullable(registered.get(args[0]));
@@ -139,7 +167,12 @@ public class LobbyConnectorTest {
         var directory = new ServerDirectory(proxy, "lobby", Duration.ofSeconds(15), counts -> { });
         directory.update(List.of(records));
         var data = folder.newFolder().toPath();
-        var config = SystemConfig.load(data.resolve("config.yml"), () -> bytes("lobby-group: lobby\n"));
+        var config = SystemConfig.load(data.resolve("config.yml"), () -> bytes("""
+                lobby-group: lobby
+                on-demand:
+                  enabled: %s
+                  groups: [archive, quicksg]
+                """.formatted(onDemandEnabled)));
         var messages = Messages.load(data, () -> bytes("""
                 hub:
                   already: 'Already on a lobby'

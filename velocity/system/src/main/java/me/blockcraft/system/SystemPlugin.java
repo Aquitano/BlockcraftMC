@@ -294,7 +294,7 @@ public final class SystemPlugin {
         register(new AltsCommand(support, lookup, addresses, config.alts().retention(), messages).create());
 
         register(new HubCommand(support, lobby).create(), "h", "lobby", "l");
-        register(new PlayCommand(support, lobby, directory).create());
+        register(new PlayCommand(support, lobby).create());
         var privateChat = new PrivateChatGate(proxy, muteGate, ChatFilter.load(dataDirectory, config.network().addresses()), repositories.adLog(), staffButtons,
                 config.privateChatCooldown(), messages, logger);
         events.register(this, privateChat);

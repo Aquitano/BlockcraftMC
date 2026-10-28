@@ -18,6 +18,7 @@ public enum LobbyLocation {
     ENDERGAMES("endergames"),
     TTT("ttt"),
     SKYWARS("skywars"),
+    ARCHIVE("archive"),
     SHOP("shop"),
     PREMIUM("premium"),
     SHOP_NPC("shop-npc");
@@ -45,6 +46,7 @@ public enum LobbyLocation {
             case ENDERGAMES -> MenuIcon.ENDERGAMES;
             case TTT -> MenuIcon.TTT;
             case SKYWARS -> MenuIcon.SKYWARS;
+            case ARCHIVE -> MenuIcon.ARCHIVE;
             case SPAWN, JUMP, SHOP, PREMIUM, SHOP_NPC -> null;
         });
     }

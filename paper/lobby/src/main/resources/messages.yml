@@ -116,12 +116,16 @@ navigator:
   endergames: "<endergames><bold>EnderGames"
   ttt: "<ttt><bold>TTT"
   skywars: "<skywars><bold>SkyWars"
+  archive: "<archive><bold>Zeitkapsel"
   shop: "<accent>Lobby-Shop"
   shop-lore: "<click>Shop öffnen"
   spawn: "<primary>Zurück zum Spawn"
   spawn-lore: "<click>Teleportieren"
   jump: "<primary>JumpAndRun"
   description:
+    archive:
+      - "<muted>Alte Maps von Blockcraft 2015–16."
+      - "<muted>Erkunden, fliegen und Erinnerungen finden."
     qsg:
       - "<muted>Kit wählen, Beute sammeln, überleben."
       - "<muted>Jeder gegen jeden. Keine Teams."

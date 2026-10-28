@@ -82,6 +82,7 @@ services:
       SYNC_SKIP_NEWER_IN_DESTINATION: "false"
       BLOCKCRAFT_DB_HOST: mariadb
       BLOCKCRAFT_WAKER_TOKEN: ${WAKER_TOKEN:-dev-waker-token}
+      BLOCKCRAFT_ON_DEMAND_GROUPS: ${ON_DEMAND_GROUPS:-bedwars,mlgrush,duell,zombies,endergames,ttt,emeraldrush,archive}
       # The proxy's jars come only from build/docker/velocity: every start drops the old ones before copying, so a
       # renamed jar never runs twice. The plugins' data directories stay.
       REMOVE_OLD_PLUGINS: "TRUE"

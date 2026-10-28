@@ -16,6 +16,7 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -112,7 +113,7 @@ public final class SystemConfig {
     private final int calendarPollSeconds;
     private final Duration privateChatCooldown;
 
-    private SystemConfig(Path file, Map<String, Object> root) {
+    private SystemConfig(Path file, Map<String, Object> root, Map<String, String> environment) {
         this.file = file;
         this.database = DatabaseConfig.fromYaml(YamlFile.section(root, "database"));
         var network = NetworkAddresses.fromYaml(root);
@@ -124,23 +125,26 @@ public final class SystemConfig {
         this.discovery = new Discovery(number(discovery, "poll-seconds", 5), number(discovery, "stale-seconds", 20),
                 number(discovery, "seat-seconds", 15));
         var onDemand = YamlFile.section(root, "on-demand");
-        var onDemandGroups = strings(onDemand, "groups").stream().map(group -> group.toLowerCase(Locale.ROOT))
-                .filter(group -> !group.equals(lobbyGroup)).collect(Collectors.toCollection(LinkedHashSet::new));
+        var onDemandGroups = Arrays.stream(env(environment, "BLOCKCRAFT_ON_DEMAND_GROUPS",
+                        String.join(",", strings(onDemand, "groups"))).split(","))
+                .map(String::strip).map(group -> group.toLowerCase(Locale.ROOT))
+                .filter(group -> !group.isEmpty() && !group.equals(lobbyGroup))
+                .collect(Collectors.toCollection(LinkedHashSet::new));
         this.onDemand = new OnDemandConfig(Boolean.TRUE.equals(onDemand.get("enabled")),
                 URI.create(string(onDemand, "url").isBlank() ? "http://waker:8080" : string(onDemand, "url")),
-                env("BLOCKCRAFT_WAKER_TOKEN", string(onDemand, "token")),
+                env(environment, "BLOCKCRAFT_WAKER_TOKEN", string(onDemand, "token")),
                 new OnDemand.Settings(Collections.unmodifiableSet(onDemandGroups),
                         Duration.ofMinutes(Math.max(1, number(onDemand, "idle-stop-minutes", 10))),
                         Duration.ofSeconds(Math.max(30, number(onDemand, "start-timeout-seconds", 120))),
                         Math.max(0, number(onDemand, "max-awake", 0))));
         var alerts = YamlFile.section(root, "alerts");
-        this.alerts = new Alerts(env("BLOCKCRAFT_ALERTS_WEBHOOK_URL", string(alerts, "webhook-url")),
+        this.alerts = new Alerts(env(environment, "BLOCKCRAFT_ALERTS_WEBHOOK_URL", string(alerts, "webhook-url")),
                 number(alerts, "min-interval-seconds", 300), number(alerts, "lag-mspt", 50), number(alerts, "lag-polls", 6));
         var serverHealth = YamlFile.section(root, "server-health");
         this.serverHealth = new ServerHealth(number(serverHealth, "tps-warn", 19), number(serverHealth, "tps-critical", 15),
                 number(serverHealth, "mspt-warn", 40), number(serverHealth, "mspt-critical", 50));
         var resourcePack = YamlFile.section(root, "resource-pack");
-        var packUrl = System.getenv("BLOCKCRAFT_RESOURCE_PACK_URL");
+        var packUrl = environment.get("BLOCKCRAFT_RESOURCE_PACK_URL");
         this.resourcePack = new ResourcePack(string(resourcePack, "file"),
                 packUrl == null || packUrl.isBlank() ? string(resourcePack, "url") : packUrl,
                 number(resourcePack, "port", 0), Boolean.TRUE.equals(resourcePack.get("required")));
@@ -181,7 +185,11 @@ public final class SystemConfig {
     }
 
     public static SystemConfig load(Path file, Supplier<InputStream> bundledDefault) {
-        return new SystemConfig(file, YamlFile.loadWithDefaults(file, bundledDefault));
+        return load(file, bundledDefault, System.getenv());
+    }
+
+    static SystemConfig load(Path file, Supplier<InputStream> bundledDefault, Map<String, String> environment) {
+        return new SystemConfig(file, YamlFile.loadWithDefaults(file, bundledDefault), environment);
     }
 
     public DatabaseConfig database() {
@@ -396,8 +404,8 @@ public final class SystemConfig {
     }
 
     /** Production sets these instead of editing the copied config.yml; blank counts as unset, as for the database. */
-    private static String env(String variable, String fallback) {
-        String value = System.getenv(variable);
+    private static String env(Map<String, String> environment, String variable, String fallback) {
+        String value = environment.get(variable);
         return value == null || value.isBlank() ? fallback : value;
     }
 

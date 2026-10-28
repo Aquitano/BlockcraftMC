@@ -29,7 +29,8 @@ discovery:
 
 # Game servers that run only while someone plays (README, "Server discovery and groups"). Off by default; it needs
 # the waker service at url and its token (BLOCKCRAFT_WAKER_TOKEN overrides token). groups are the released game groups
-# (no profile in docker-compose.prod.yml) started this way, each named like its compose service. A group stops after
+# (no profile in docker-compose.prod.yml) started this way, each named like its compose service. Compose overrides
+# groups through BLOCKCRAFT_ON_DEMAND_GROUPS, set by ON_DEMAND_GROUPS in .env. A group stops after
 # idle-stop-minutes with nobody on it or on the way; whoever asked for a sleeping group waits at most
 # start-timeout-seconds for its server. max-awake caps how many of these groups run or start at once, 0 for no cap.
 on-demand:

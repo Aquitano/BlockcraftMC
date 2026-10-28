@@ -410,7 +410,9 @@ they hang as text displays in front of where the author stood; the exhibit's men
 delete one there with a right-click and a confirmation.
 
 Production runs the Zeitkapsel like a released game, and `archive` is one of the `on-demand.groups` the waker starts
-at the first visit and stops when it stays empty.
+at the first visit and stops when it stays empty. The lobby navigator includes a Zeitkapsel entry.
+Exhibit configurations are cached until their files change. Travel loads destination chunks asynchronously, and
+only one trip per player runs at a time.
 
 ## Server discovery and groups
 
@@ -453,6 +455,11 @@ so the container's restart policy tries again; the proxy does the same.
 Off by default. With `on-demand.enabled` in BlockcraftSystem's `config.yml`, only the proxy, MariaDB and the lobby
 need to run around the clock; the game groups in `on-demand.groups` run only while someone plays.
 
+Compose supplies the released groups through `BLOCKCRAFT_ON_DEMAND_GROUPS`, overriding a proxy's saved
+`on-demand.groups` list so an update includes newly released games. Set `ON_DEMAND_GROUPS` in `.env` to choose a
+different comma-separated list. Recreate the proxy after changing this variable. Outside Compose, the saved list
+controls the groups.
+
 - A player who wants into a group with no running server (navigator, sign, `/play`) starts it. They are told so and
   sent once its server is up, about a minute later; everyone who asks meanwhile waits in order. Whoever waited past
   `start-timeout-seconds` is told it failed.
@@ -462,7 +469,8 @@ need to run around the clock; the game groups in `on-demand.groups` run only whi
 - `max-awake` caps how many of these groups run or start at once (0 for no cap).
 
 The navigator and the status signs show such a game as sleeping or starting (`bc_server_groups`), and both invite the
-click.
+click. `/play` autocompletes the configured on-demand groups even while their servers are stopped. Selecting a
+suggestion leaves the server stopped; executing the command starts it.
 
 The proxy decides, because only it sees seats, parties and rounds; the `waker` service carries it out. The waker is
 the only service with the Docker socket, which is root on the host. So it publishes no port, wants the bearer token
@@ -831,7 +839,8 @@ In containers, environment variables replace the config edits: `BLOCKCRAFT_DB_HO
 `BLOCKCRAFT_DB_NAME`, `BLOCKCRAFT_DB_USER` and `BLOCKCRAFT_DB_PASSWORD` override the `database` section of every
 Blockcraft plugin, `BLOCKCRAFT_NETWORK_<KEY>` an entry of every `network` section (`BLOCKCRAFT_NETWORK_IP` for
 `<ip>`), `BLOCKCRAFT_WORLD_TEMPLATE` the map template (see "Maps"), `BLOCKCRAFT_RESOURCE_PACK_URL` the proxy's
-`resource-pack.url`, `BLOCKCRAFT_WAKER_TOKEN` its `on-demand.token` (see "Game servers on demand"), and LuckPerms reads `LUCKPERMS_STORAGE_METHOD`, `LUCKPERMS_DATA_ADDRESS` and friends
+`resource-pack.url`, `BLOCKCRAFT_WAKER_TOKEN` its `on-demand.token`, and `BLOCKCRAFT_ON_DEMAND_GROUPS` its
+`on-demand.groups` (see "Game servers on demand"). LuckPerms reads `LUCKPERMS_STORAGE_METHOD`, `LUCKPERMS_DATA_ADDRESS` and friends
 itself; `docker-compose.yml` shows the full set.
 
 ### One host with Docker
@@ -852,7 +861,7 @@ docker compose up -d
 ```
 
 To update, pull, run `./gradlew stagePlugins` and restart the servers (`docker compose restart velocity lobby
-bedwars mlgrush duell zombies endergames ttt emeraldrush`, plus `waker` when on-demand runs; see "Game servers on demand"). A plugin's `config.yml` and `messages.yml` in its data folder are copies of the bundled defaults, made on
+bedwars mlgrush duell zombies endergames ttt emeraldrush archive`, plus `waker` when on-demand runs; see "Game servers on demand"). A plugin's `config.yml` and `messages.yml` in its data folder are copies of the bundled defaults, made on
 its first start: new keys arrive through the bundled default, but the copy keeps its own value for every key it
 already has, so changed texts and renamed config keys do not reach a server by themselves. Move a copy nobody edited
 aside before the restart (`docker compose exec bedwars mv /data/plugins/BedWars/messages.yml

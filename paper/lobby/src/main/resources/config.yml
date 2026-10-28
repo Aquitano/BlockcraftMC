@@ -85,6 +85,7 @@ navigator:
     endergames: endergames
     ttt: ttt
     skywars: skywars
+    archive: archive
   stale-seconds: 20
 
 friends:

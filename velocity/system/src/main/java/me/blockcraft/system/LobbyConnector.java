@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Stream;
 
 /** Sends players to the emptiest lobby of the configured lobby group. */
@@ -40,6 +41,14 @@ public final class LobbyConnector {
     public TagResolver game(String group) {
         String key = "play.games." + group;
         return Placeholder.component("game", messages.has(key) ? messages.get(key) : Component.text(group));
+    }
+
+    public Set<String> groups() {
+        var groups = new TreeSet<>(directory.groups());
+        if (config.onDemand().enabled()) {
+            groups.addAll(config.onDemand().settings().groups());
+        }
+        return groups;
     }
 
     public Optional<RegisteredServer> lobby() {
