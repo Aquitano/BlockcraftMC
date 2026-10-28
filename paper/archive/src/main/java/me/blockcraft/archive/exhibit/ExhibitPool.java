@@ -6,8 +6,11 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.logging.Level;
@@ -17,16 +20,25 @@ import java.util.stream.Stream;
 /**
  * The exhibits, kept in their own template directory beside the archive's map bundle, so that neither a start nor
  * {@code /map save} copies them: one directory per exhibit, named by its key, holding its {@code exhibit.yml} and the
- * dimension folder of its world. Only an exhibit with both is on show. They are read on every call, so an exhibit
- * copied in or changed by a setup command shows at once.
+ * dimension folder of its world. Only an exhibit with both is on show. File metadata is checked on every call;
+ * unchanged exhibits reuse their parsed configuration, while imports and setup edits show at once.
  */
 public final class ExhibitPool {
 
     private static final String CONFIG = "exhibit.yml";
     private static final String WORLD = "world";
 
+    private record Cached(BasicFileAttributes attributes, Exhibit exhibit) {
+        boolean matches(BasicFileAttributes current) {
+            return attributes.size() == current.size()
+                    && attributes.lastModifiedTime().equals(current.lastModifiedTime())
+                    && Objects.equals(attributes.fileKey(), current.fileKey());
+        }
+    }
+
     private final Path directory;
     private final Logger logger;
+    private final Map<String, Cached> cached = new HashMap<>();
 
     public ExhibitPool(Path directory, Logger logger) {
         this.directory = directory;
@@ -49,7 +61,15 @@ public final class ExhibitPool {
     }
 
     public Optional<Exhibit> exhibit(String key) {
-        return exhibits().stream().filter(exhibit -> exhibit.key().equals(key)).findFirst();
+        if (!TemplateDimensions.isValidName(key)) {
+            return Optional.empty();
+        }
+        var folder = directory.resolve(key);
+        if (!Files.isRegularFile(folder.resolve(CONFIG)) || !Files.isDirectory(folder.resolve(WORLD))) {
+            cached.remove(key);
+            return Optional.empty();
+        }
+        return read(folder);
     }
 
     public Path world(String key) {
@@ -58,6 +78,7 @@ public final class ExhibitPool {
 
     public void save(Exhibit exhibit) {
         exhibit.save(directory.resolve(exhibit.key()).resolve(CONFIG));
+        cached.remove(exhibit.key());
     }
 
     private Optional<Exhibit> read(Path folder) {
@@ -67,8 +88,17 @@ public final class ExhibitPool {
             return Optional.empty();
         }
         try {
-            return Optional.of(Exhibit.load(key, folder.resolve(CONFIG)));
-        } catch (RuntimeException e) {
+            var file = folder.resolve(CONFIG);
+            var attributes = Files.readAttributes(file, BasicFileAttributes.class);
+            var previous = cached.get(key);
+            if (previous != null && previous.matches(attributes)) {
+                return Optional.of(previous.exhibit());
+            }
+            var exhibit = Exhibit.load(key, file);
+            cached.put(key, new Cached(attributes, exhibit));
+            return Optional.of(exhibit);
+        } catch (IOException | RuntimeException e) {
+            cached.remove(key);
             logger.log(Level.WARNING, "Skipping exhibit " + key + ": " + Objects.requireNonNullElse(e.getMessage(), e.toString()));
             return Optional.empty();
         }

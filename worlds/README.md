@@ -313,5 +313,8 @@ categories use the fallback from `messages.yml` (Sonstiges by default). With one
 list directly. Left-click an exhibit to travel to its arrival, or right-click for checkpoints and notes. Setup edits
 preserve its category.
 
+The catalogue reuses parsed configurations while their file metadata stays unchanged. A lookup reads only the
+requested exhibit's metadata. New imports and setup edits appear on the next lookup without a restart.
+
 Neither a start nor `/map save` copies the exhibits, so many old maps cost nothing until they are visited. Block
 edits inside an exhibit are not saved. The text in `exhibit.yml` shows as written, without MiniMessage tags.

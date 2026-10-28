@@ -9,17 +9,42 @@ import org.junit.rules.TemporaryFolder;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.logging.Logger;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
 
 public class ExhibitPoolTest {
 
     @Rule
     public final TemporaryFolder temporary = new TemporaryFolder();
+
+    @Test
+    public void unchangedExhibitsAreReusedAndEditsAppearAtOnce() throws IOException {
+        write("map", "origin: Blockcraft\nname: Before\n");
+        withWorld("map");
+        var pool = pool();
+        var before = pool.exhibit("map").orElseThrow();
+        assertSame(before, pool.exhibit("map").orElseThrow());
+        assertSame(before, pool.exhibits().getFirst());
+
+        var file = temporary.getRoot().toPath().resolve("map/exhibit.yml");
+        var previous = Files.getLastModifiedTime(file);
+        write("map", "origin: Blockcraft\nname: After!\n");
+        Files.setLastModifiedTime(file, FileTime.fromMillis(previous.toMillis() + 1000));
+        assertEquals("After!", pool.exhibit("map").orElseThrow().name());
+
+        var here = new Point(1.0, 2.0, 3.0, 0.0f, 0.0f);
+        pool.save(pool.exhibit("map").orElseThrow().withArrival(here));
+        assertEquals(Optional.of(here), pool.exhibit("map").orElseThrow().arrival());
+        Files.delete(file);
+        assertEquals(Optional.empty(), pool.exhibit("map"));
+        assertEquals(List.of(), pool.exhibits());
+    }
 
     @Test
     public void anExhibitReadsBackAsItWasSaved() throws IOException {

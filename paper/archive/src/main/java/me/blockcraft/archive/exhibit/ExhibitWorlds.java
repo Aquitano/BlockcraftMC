@@ -25,9 +25,12 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.logging.Level;
@@ -52,6 +55,7 @@ public final class ExhibitWorlds {
     private final Duration unloadAfter;
     private final TemplateDimensions dimensions = new TemplateDimensions("exhibit", ExhibitWorlds::settle);
     private final Map<String, List<Trip>> opening = new HashMap<>();
+    private final Set<UUID> travelling = new HashSet<>();
     private final Map<String, Instant> emptySince = new HashMap<>();
     private final Map<Long, TextDisplay> displays = new HashMap<>();
 
@@ -74,21 +78,43 @@ public final class ExhibitWorlds {
 
     /** Takes the player to {@code destination} in the exhibit, loading its world first, and tells them {@code arrived}. */
     public void travel(Player player, Exhibit exhibit, Function<World, Location> destination, Component arrived) {
+        var id = player.getUniqueId();
+        if (!travelling.add(id)) {
+            return;
+        }
         if (dimensions.loaded(exhibit.key()).isEmpty()) {
             player.sendMessage(messages.get("travel.loading", Placeholder.unparsed("exhibit", exhibit.name())));
         }
-        open(exhibit, world -> {
-            if (player.isOnline()) {
-                player.teleport(destination.apply(world));
-                Sounds.TELEPORT.play(player);
-                player.sendMessage(arrived);
-            }
-        }, () -> {
+        Runnable failed = () -> {
+            travelling.remove(id);
             if (player.isOnline()) {
                 Sounds.MENU_DENY.play(player);
                 player.sendMessage(messages.get("travel.failed", Placeholder.unparsed("exhibit", exhibit.name())));
             }
-        });
+        };
+        open(exhibit, world -> {
+            if (!player.isOnline()) {
+                travelling.remove(id);
+                return;
+            }
+            try {
+                player.teleportAsync(destination.apply(world)).whenComplete((teleported, failure) -> Tasks.sync(plugin, () -> {
+                    travelling.remove(id);
+                    if (!player.isOnline()) {
+                        return;
+                    }
+                    if (failure != null || !Boolean.TRUE.equals(teleported)) {
+                        failed.run();
+                    } else {
+                        Sounds.TELEPORT.play(player);
+                        player.sendMessage(arrived);
+                    }
+                }));
+            } catch (RuntimeException e) {
+                plugin.getLogger().log(Level.WARNING, "Could not travel to the exhibit " + exhibit.key(), e);
+                failed.run();
+            }
+        }, failed);
     }
 
     /**
