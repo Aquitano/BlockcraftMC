@@ -67,8 +67,11 @@ public final class SystemConfig {
     public record InfoCommand(String name, List<String> aliases) {
     }
 
-    /** {@code file} is relative to the plugin directory and empty disables the pack; {@code port} 0 serves nothing. */
-    public record ResourcePack(String file, String url, int port, boolean required) {
+    /**
+     * {@code file} is relative to the plugin directory and empty disables the pack; {@code port} 0 serves nothing;
+     * a joining player waits at most {@code waitSeconds} for their client to load it.
+     */
+    public record ResourcePack(String file, String url, int port, boolean required, int waitSeconds) {
     }
 
     /** {@code groups} are the server groups that see a first join announced and count greetings for it. */
@@ -143,7 +146,8 @@ public final class SystemConfig {
         var packUrl = System.getenv("BLOCKCRAFT_RESOURCE_PACK_URL");
         this.resourcePack = new ResourcePack(string(resourcePack, "file"),
                 packUrl == null || packUrl.isBlank() ? string(resourcePack, "url") : packUrl,
-                number(resourcePack, "port", 0), Boolean.TRUE.equals(resourcePack.get("required")));
+                number(resourcePack, "port", 0), Boolean.TRUE.equals(resourcePack.get("required")),
+                Math.max(0, number(resourcePack, "wait-seconds", 15)));
         this.maxWarns = number(root, "max-warns", 8);
         this.maxStrikes = number(root, "max-strikes", 5);
         this.autoBroadcastMinutes = number(root, "auto-broadcast-minutes", 5);

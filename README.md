@@ -771,6 +771,9 @@ configured. The pack is required (`required: true`): a client whose server list 
 an optional pack without asking, while a required one is prompted for and declining it kicks. A proxy whose
 `config.yml` predates this still says `required: false` and needs the edit by hand. Only the proxy hears the client's
 answer, so it tells each backend on arrival (the `Pack` subchannel), and BlockcraftAPI keeps that in `resourcePack()`.
+A joining player stays on the loading screen until the client has loaded, declined or failed the pack, at most
+`resource-pack.wait-seconds` (15): chat lines that reach a client while it reloads its resources stay garbled, and the
+lobby greets every arrival in chat. Only the first offer of a session waits.
 
 Everything the pack changes has a plain fallback, so a player without it sees vanilla menus and text symbols:
 
