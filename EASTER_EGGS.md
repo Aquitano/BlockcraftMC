@@ -208,6 +208,19 @@ The first successfully saved completion grants "Im Ziel" and 100 XP through the 
 Later completions update best times without paying that achievement again. `/erfolge` opens the achievements menu.
 Signs can only be edited while `/build` is enabled, including for owners and players in creative mode.
 
+## CookieClicker
+
+Open CookieClicker from the lobby's Extras menu or with `/cookies`. Click the cookie to earn cookies, then buy
+oven upgrades. The default upgrades cost 50, 200 and 1,000 cookies and raise earnings to 2, 5 and 10 cookies per
+click. Cookies are separate from network coins and buy only these upgrades. There is no passive production.
+
+Lobby's `cookies` config section sets the upgrades, balance cap, accepted click rate and save interval. Defaults
+are 1,000,000 cookies, five clicks per second and a 30-second checkpoint. Clicks update memory; changed progress
+is saved asynchronously in `bc_lobby_cookies`, including when the menu closes or the player leaves. Shutdown waits
+up to `shutdown-save-seconds` for pending saves, five seconds by default, then cancels remaining work and logs a
+warning. A crash or an expired shutdown deadline can lose progress since the last save. Conflicting saves from
+another lobby reload the stored progress and notify the player.
+
 ## Lobby figures, notes and quests
 
 These spots are optional: `/lobbyset check` does not report them missing, and a feature without its spot simply

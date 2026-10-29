@@ -90,6 +90,16 @@ navigator:
 friends:
   timeout-ticks: 200
 
+cookies:
+  max-cookies: 1000000
+  clicks-per-second: 5
+  save-seconds: 30
+  shutdown-save-seconds: 5
+  upgrades:
+    - {cost: 50, per-click: 2}
+    - {cost: 200, per-click: 5}
+    - {cost: 1000, per-click: 10}
+
 activities:
   konami-gap-seconds: 3
   firework-cooldown-seconds: 30

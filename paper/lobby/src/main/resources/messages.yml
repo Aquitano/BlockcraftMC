@@ -1,6 +1,8 @@
 prefix: "<primary><ip> <dark>» <reset>"
 
 commands:
+  cookies:
+    description: "Öffnet den CookieClicker"
   navigator:
     description: "Öffnet den Navigator mit allen Spielmodi"
   schlitten:
@@ -395,6 +397,23 @@ extras:
   tags-lore: "<bullet><muted>Ein Tag vor deinem Namen, gekauft oder verdient"
   lobbies: "<arrow><primary>Lobby-Wechsel"
   lobbies-lore: "<bullet><muted>Wechsle auf eine andere Lobby!"
+  cookies: "<arrow><accent>CookieClicker"
+  cookies-lore: "<bullet><click>Kekse backen und den Ofen verbessern"
+cookies:
+  title: "<arrow><primary>CookieClicker"
+  balance: "<accent><cookies> Kekse"
+  click-lore:
+    - "<click><amount> Kekse backen"
+    - "<muted>Platz für <limit> Kekse."
+    - "<dark>Kekse sind eigene Spielpunkte und keine Coins."
+  upgrade: "<primary>Ofenstufe <level>"
+  upgrade-lore:
+    - "<muted>Preis: <accent><cost> Kekse"
+    - "<muted>Danach: <accent><amount> Kekse pro Klick"
+    - "<click>Ofen verbessern"
+  complete: "<success>Der Ofen ist vollständig ausgebaut."
+  save-failed: "<prefix><error>Deine Kekse konnten nicht gespeichert werden. Wir versuchen es erneut."
+  conflict: "<prefix><muted>Deine Kekse wurden in einer anderen Lobby geändert. Dieser Stand wurde geladen; die letzten Änderungen hier wurden verworfen."
 effects:
   preview-lore: "<right>Partikelvorschau"
   reset-done: "<prefix><muted>Dein Effekt wurde entfernt."

@@ -21,6 +21,7 @@ import me.blockcraft.lobby.config.LobbyLocation;
 import me.blockcraft.lobby.cosmetic.CosmeticPreviews;
 import me.blockcraft.lobby.cosmetic.Pets;
 import me.blockcraft.lobby.cosmetic.Secret;
+import me.blockcraft.lobby.cookies.CookieClicker;
 import me.blockcraft.lobby.friends.FriendsChannel;
 import me.blockcraft.api.network.ServerGroups;
 import me.blockcraft.lobby.rank.PremiumRank;
@@ -52,7 +53,8 @@ public record Menus(
         FriendsChannel friends,
         CosmeticPreviews previews,
         NavigatorTeleports teleports,
-        LoreNotes loreNotes
+        LoreNotes loreNotes,
+        CookieClicker cookies
 ) {
 
     private static final int TELEPORT_PARTICLES = 20;
@@ -149,6 +151,10 @@ public record Menus(
 
     public void openExtras(Player player) {
         new ExtrasMenu(this, player).open(player);
+    }
+
+    public void openCookies(Player player) {
+        cookies.open(player, this::openExtras);
     }
 
     public void openGadgets(Player player) {
