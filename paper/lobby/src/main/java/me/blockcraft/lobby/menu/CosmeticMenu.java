@@ -3,6 +3,7 @@ package me.blockcraft.lobby.menu;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.menu.Menu;
+import me.blockcraft.api.pack.MenuState;
 import me.blockcraft.api.shop.Purchases;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.common.settings.PlayerSetting;
@@ -63,7 +64,8 @@ final class CosmeticMenu<C> extends Menu {
             }
             kind.preview().ifPresent(preview -> lore.add(messages.get(menus.settings().enabled(player, PlayerSetting.EFFECTS)
                     ? preview.loreKey() : "cosmetics.preview-disabled")));
-            var icon = Items.of(kind.picture().apply(choice)).name(kind.name().apply(choice)).lore(lore);
+            var icon = Items.of(kind.picture().apply(choice)).name(kind.name().apply(choice)).lore(lore)
+                    .state(equipped ? MenuState.ACTIVE : unlocked ? MenuState.OWNED : MenuState.LOCKED);
             if (equipped) {
                 icon.glow();
             }

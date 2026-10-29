@@ -1,5 +1,10 @@
 {
   "providers": [
+    {"type":"bitmap","file":"blockcraft:font/cards_2.png","ascent":13,"height":150,"chars":["\ue122"]},
+    {"type":"bitmap","file":"blockcraft:font/cards_3.png","ascent":13,"height":168,"chars":["\ue123"]},
+    {"type":"bitmap","file":"blockcraft:font/cards_4.png","ascent":13,"height":186,"chars":["\ue124"]},
+    {"type":"bitmap","file":"blockcraft:font/cards_5.png","ascent":13,"height":204,"chars":["\ue125"]},
+    {"type":"bitmap","file":"blockcraft:font/cards_6.png","ascent":13,"height":222,"chars":["\ue126"]},
     {
       "type": "space",
       "advances": {

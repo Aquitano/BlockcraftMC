@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -66,6 +68,7 @@ public final class PackArt {
         for (var icon : ICONS.entrySet()) {
             write(pixels(icon.getValue().rows(), icon.getValue().palette()), item.resolve(icon.getKey() + ".png"));
         }
+        TileArt.write(root);
     }
 
     static BufferedImage panel(int rows, boolean toolbar) {
@@ -1752,4 +1755,246 @@ public final class PackArt {
             "..###...",
             "........",
     };
+    static final class TileArt {
+        record Card(String key, String icon, int accent, Scene scene) { }
+        record State(String key, int colour, String[] pixels) { }
+        enum Scene { FOREST, MINE, ARENA, ISLAND, CITY, END, CRYPT, STUDIO, TREASURE }
+
+        static final List<State> STATES = List.of(
+                new State("available", 0xFF8AD9A7, new String[] {"....#", "...##", "#.#..", ".#...", "....."}),
+                new State("locked", 0xFFE5A478, new String[] {".###.", ".#.#.", "#####", "##.##", "#####"}),
+                new State("owned", 0xFF8AD9C5, new String[] {".###.", "#...#", "#.#.#", "#...#", ".###."}),
+                new State("active", 0xFF9DBDF6, new String[] {"..#..", ".###.", "#####", ".###.", "..#.."}),
+                new State("pending", 0xFFE8C582, new String[] {"#####", ".#.#.", "..#..", ".#.#.", "#####"}),
+                new State("offline", 0xFF9CA6B8, new String[] {".###.", "#...#", "#...#", "#...#", ".###."}));
+
+        static final List<Card> CARDS = List.of(
+                new Card("quicksg", "quicksg", 0xFF69B982, Scene.FOREST),
+                new Card("emeraldrush", "emeraldrush", 0xFF5ED7AE, Scene.MINE),
+                new Card("duell", "duell", 0xFFE7A66A, Scene.ARENA),
+                new Card("bedwars", "bedwars", 0xFFED7B83, Scene.ISLAND),
+                new Card("skywars", "skywars", 0xFF8ABEF0, Scene.ISLAND),
+                new Card("ttt", "ttt", 0xFFDFB574, Scene.CITY),
+                new Card("mlgrush", "mlgrush", 0xFF7FC5EA, Scene.ARENA),
+                new Card("cores", "cores", 0xFF9BDADC, Scene.MINE),
+                new Card("endergames", "endergames", 0xFFBD99E8, Scene.END),
+                new Card("zombies", "zombies", 0xFF9EC175, Scene.CRYPT),
+                new Card("heads", "tool_heads", 0xFF85BBD5, Scene.STUDIO),
+                new Card("hats", "tool_hats", 0xFFE2BB78, Scene.STUDIO),
+                new Card("shirts", "tool_shirts", 0xFF8EAFEB, Scene.STUDIO),
+                new Card("kill_effects", "kill_effects", 0xFFDC8D8C, Scene.ARENA),
+                new Card("win_effects", "win_effects", 0xFFE3BF78, Scene.TREASURE),
+                new Card("premium", "premium", 0xFFF0C375, Scene.TREASURE),
+                new Card("level", "achievements", 0xFF9FC7F6, Scene.TREASURE),
+                new Card("coins", "tool_shop", 0xFFE8CB7E, Scene.TREASURE),
+                new Card("recap", "recap", 0xFF8BC8CC, Scene.STUDIO),
+                new Card("achievements", "achievements", 0xFFE1BE78, Scene.TREASURE),
+                new Card("gadgets", "gadgets", 0xFF8CCCD0, Scene.STUDIO),
+                new Card("trails", "trails", 0xFFCCAFE8, Scene.END),
+                new Card("tags", "chat_tags", 0xFF9AB8F0, Scene.STUDIO),
+                new Card("lobbies", "lobbies", 0xFF9AB8F0, Scene.CITY));
+
+        static final String LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789ÄÖÜ-.:!?…/+&";
+        static final Map<Character, String> LETTER_PIXELS = Map.ofEntries(
+                Map.entry('A', "010101111101101"), Map.entry('B', "110101110101110"),
+                Map.entry('C', "011100100100011"), Map.entry('D', "110101101101110"),
+                Map.entry('E', "111100110100111"), Map.entry('F', "111100110100100"),
+                Map.entry('G', "011100101101011"), Map.entry('H', "101101111101101"),
+                Map.entry('I', "111010010010111"), Map.entry('J', "001001001101111"),
+                Map.entry('K', "101101110101101"), Map.entry('L', "100100100100111"),
+                Map.entry('M', "101111111101101"), Map.entry('N', "111101101101101"),
+                Map.entry('O', "111101101101111"), Map.entry('P', "110101110100100"),
+                Map.entry('Q', "111101101111001"), Map.entry('R', "110101110101101"),
+                Map.entry('S', "011100111001110"), Map.entry('T', "111010010010010"),
+                Map.entry('U', "101101101101111"), Map.entry('V', "101101101101010"),
+                Map.entry('W', "101101111111101"), Map.entry('X', "101101010101101"),
+                Map.entry('Y', "101101010010010"), Map.entry('Z', "111001010100111"),
+                Map.entry('0', "111101101101111"), Map.entry('1', "011001001001111"),
+                Map.entry('2', "110001010100111"), Map.entry('3', "110001010001110"),
+                Map.entry('4', "101101111001001"), Map.entry('5', "111100110001110"),
+                Map.entry('6', "011100111101111"), Map.entry('7', "111001010010010"),
+                Map.entry('8', "111101111101111"), Map.entry('9', "111101111001110"),
+                Map.entry('-', "000000111000000"), Map.entry('.', "000000000000001"),
+                Map.entry(':', "000001000001000"), Map.entry('!', "001001001000001"),
+                Map.entry('?', "111001010000010"), Map.entry('…', "000000000000101"),
+                Map.entry('/', "001001010100100"), Map.entry('+', "000010111010000"),
+                Map.entry('&', "010101010101011"));
+
+        static void write(Path root) throws IOException {
+            Path textures = root.resolve("assets/blockcraft/textures/font");
+            Path fonts = root.resolve("assets/blockcraft/font");
+            Files.createDirectories(textures.resolve("tiles"));
+            var providers = new ArrayList<String>();
+            for (var state : STATES) {
+                var sprite = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
+                PackArt.paint(sprite, state.pixels(), 9, 9, Map.of('#', state.colour()));
+                String name = "state_" + state.key();
+                PackArt.write(sprite, root.resolve("assets/blockcraft/textures/item/" + name + ".png"));
+                Files.writeString(root.resolve("assets/blockcraft/items/" + name + ".json"),
+                        "{\"model\":{\"type\":\"minecraft:model\",\"model\":\"blockcraft:item/" + name + "\"}}\n");
+                Files.writeString(root.resolve("assets/blockcraft/models/item/" + name + ".json"),
+                        "{\"parent\":\"minecraft:item/generated\",\"textures\":{\"layer0\":\"blockcraft:item/" + name + "\"}}\n");
+                var frame = PackArt.tooltipFrame();
+                for (int y = 0; y < frame.getHeight(); y++) {
+                    for (int x = 0; x < frame.getWidth(); x++) {
+                        if (frame.getRGB(x, y) == PackArt.ACCENT) frame.setRGB(x, y, state.colour());
+                    }
+                }
+                Path tooltip = root.resolve("assets/blockcraft/textures/gui/sprites/tooltip");
+                PackArt.write(frame, tooltip.resolve(name + "_frame.png"));
+                PackArt.write(PackArt.tooltipBackground(), tooltip.resolve(name + "_background.png"));
+                for (String part : new String[] {"frame", "background"}) {
+                    Files.copy(tooltip.resolve("menu_" + part + ".png.mcmeta"),
+                            tooltip.resolve(name + "_" + part + ".png.mcmeta"), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                }
+            }
+            for (int index = 0; index < CARDS.size(); index++) {
+                var card = CARDS.get(index);
+                for (boolean large : new boolean[] {false, true}) {
+                    String shape = large ? "large" : "wide";
+                    String file = "tiles/" + card.key() + "_" + shape + ".png";
+                    PackArt.write(card(card, large), textures.resolve(file));
+                    for (int row = 0; row < (large ? 5 : 6); row++) {
+                        providers.add(bitmap(file, 13 - 18 * (row + 1), large ? 34 : 16,
+                                String.valueOf((char) ((large ? 0xE600 : 0xE400) + index * 8 + row))));
+                    }
+                }
+            }
+            Files.writeString(fonts.resolve("tiles.json"), "{\n  \"providers\": [\n    " + String.join(",\n    ", providers) + "\n  ]\n}\n");
+            PackArt.write(letters(), textures.resolve("labels.png"));
+            for (boolean large : new boolean[] {false, true}) {
+                for (int row = 0; row < (large ? 5 : 6); row++) {
+                    String shape = large ? "large" : "wide";
+                    Files.writeString(fonts.resolve("label_" + shape + "_" + row + ".json"),
+                            "{\n  \"providers\": [\n    {\"type\":\"space\",\"advances\":{\" \":4}},\n    "
+                                    + bitmap("labels.png", 13 - (18 * (row + 1) + (large ? 25 : 2)), 7, LETTERS)
+                                    + "\n  ]\n}\n");
+                }
+            }
+            for (int rows = 2; rows <= 6; rows++) {
+                var panel = PackArt.panel(rows, true);
+                PackArt.fill(panel, 7, 35, 162, (rows - 1) * 18, PackArt.BODY);
+                PackArt.write(panel, textures.resolve("cards_" + rows + ".png"));
+            }
+        }
+
+        static String bitmap(String file, int ascent, int height, String chars) {
+            var encoded = new StringBuilder();
+            chars.chars().forEach(glyph -> encoded.append(String.format(Locale.ROOT, "\\u%04x", glyph)));
+            return "{\"type\":\"bitmap\",\"file\":\"blockcraft:font/" + file + "\",\"ascent\":" + ascent
+                    + ",\"height\":" + height + ",\"chars\":[\"" + encoded + "\"]}";
+        }
+
+        static BufferedImage letters() {
+            var sheet = new BufferedImage(LETTERS.length() * 3, 7, BufferedImage.TYPE_INT_ARGB);
+            for (int index = 0; index < LETTERS.length(); index++) {
+                char letter = LETTERS.charAt(index);
+                String pixels = LETTER_PIXELS.get(PackArt.UMLAUTS.getOrDefault(letter, letter));
+                for (int y = 0; y < 5; y++) {
+                    for (int x = 0; x < 3; x++) {
+                        if (pixels.charAt(y * 3 + x) == '1') {
+                            sheet.setRGB(index * 3 + x, y + 2, PackArt.WHITE);
+                        }
+                    }
+                }
+                if (PackArt.UMLAUTS.containsKey(letter)) {
+                    sheet.setRGB(index * 3, 0, PackArt.WHITE);
+                    sheet.setRGB(index * 3 + 2, 0, PackArt.WHITE);
+                }
+            }
+            return sheet;
+        }
+
+        static BufferedImage card(Card card, boolean large) {
+            int width = large ? 52 : 70;
+            int height = large ? 34 : 16;
+            var image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+            PackArt.fill(image, 0, 0, width, height, PackArt.BORDER);
+            PackArt.fill(image, 1, 1, width - 2, height - 2, 0xFF252E40);
+            int artWidth = large ? width - 2 : 23;
+            int artHeight = large ? 22 : height - 2;
+            scene(image, 1, 1, artWidth, artHeight, card);
+            PackArt.fill(image, large ? 1 : 24, large ? 24 : 1, large ? width - 2 : width - 25,
+                    large ? 9 : height - 2, 0xFF252E40);
+            PackArt.fill(image, 1, height - 2, width - 2, 1, mix(card.accent(), 0xFF252E40, 0.3));
+            PackArt.fill(image, 1, 1, large ? width - 2 : 23, 1, mix(card.accent(), 0xFFFFFFFF, 0.7));
+            var icon = PackArt.ICONS.get(card.icon());
+            var sprite = PackArt.pixels(icon.rows(), icon.palette());
+            int iconX = large ? (width - 16) / 2 : 4;
+            int iconY = large ? 4 : 0;
+            for (int y = 0; y < 16; y++) {
+                for (int x = 0; x < 16; x++) {
+                    int pixel = sprite.getRGB(x, y);
+                    if ((pixel >>> 24) != 0 && iconY + y < height - (large ? 10 : 1)) {
+                        image.setRGB(iconX + x, iconY + y, pixel);
+                    }
+                }
+            }
+            return image;
+        }
+
+        static void scene(BufferedImage image, int x, int y, int width, int height, Card card) {
+            for (int row = 0; row < height; row++) {
+                int sky = mix(card.accent(), 0xFF111C31, 0.18 + row / (double) height * 0.14);
+                PackArt.fill(image, x, y + row, width, 1, sky);
+            }
+            for (int column = 0; column < width; column++) {
+                int ridge = height / 2 + Math.floorMod(column / 3 + column / 7, Math.max(1, height / 3));
+                PackArt.fill(image, x + column, y + ridge, 1, height - ridge, mix(card.accent(), 0xFF101929, 0.3));
+            }
+            switch (card.scene()) {
+                case FOREST -> {
+                    for (int tree = 2; tree < width - 2; tree += 10) {
+                        int top = 2 + tree % 3;
+                        PackArt.fill(image, x + tree + 2, y + top + 3, 1, height - top - 3, 0xFF3E3F39);
+                        PackArt.fill(image, x + tree, y + top, 5, 5, 0xFF285648);
+                        PackArt.fill(image, x + tree + 1, y + top, 3, 2, 0xFF3D7758);
+                    }
+                }
+                case ISLAND -> {
+                    for (int island = 1; island < width - 6; island += 15) {
+                        int top = height / 2 + island % 4;
+                        PackArt.fill(image, x + island, y + top, 9, 2, 0xFF608966);
+                        PackArt.fill(image, x + island + 1, y + top + 2, 7, 2, 0xFF66513F);
+                        if (top + 5 < height) PackArt.fill(image, x + island + 3, y + top + 4, 3, 2, 0xFF3D3840);
+                    }
+                    PackArt.fill(image, x + width - 8, y + 3, 5, 1, 0xFFB1CFD8);
+                }
+                case ARENA, CITY -> {
+                    for (int wall = 1; wall < width - 4; wall += 6) {
+                        int top = 3 + wall % 5;
+                        PackArt.fill(image, x + wall, y + top, 4, height - top, 0xFF364357);
+                        PackArt.fill(image, x + wall, y + top, 4, 1, 0xFF566176);
+                        PackArt.fill(image, x + wall + 1, y + top + 2, 1, 2, 0xFFD4A869);
+                    }
+                }
+                case MINE, CRYPT -> {
+                    for (int rock = 0; rock < width - 3; rock += 5) {
+                        int drop = 2 + rock % 4;
+                        PackArt.fill(image, x + rock, y, 4, drop, 0xFF3F4855);
+                        PackArt.fill(image, x + rock + 1, y + height - drop, 3, drop, 0xFF3F4855);
+                        PackArt.fill(image, x + rock + 1, y + height - drop, 1, 1, card.accent());
+                    }
+                }
+                case END, TREASURE -> {
+                    for (int star = 0; star < width / 4; star++) {
+                        int left = Math.floorMod(star * 17 + 3, width - 2);
+                        int top = Math.floorMod(star * 7 + 1, height - 2);
+                        PackArt.fill(image, x + left, y + top, 1, 1, mix(card.accent(), 0xFFFFFFFF, 0.6));
+                    }
+                }
+                case STUDIO -> {
+                    PackArt.fill(image, x + 3, y + 3, width - 6, 1, mix(card.accent(), 0xFF263348, 0.3));
+                    PackArt.fill(image, x + 2, y + height - 3, width - 4, 1, mix(card.accent(), 0xFF263348, 0.4));
+                }
+            }
+        }
+
+        static int mix(int a, int b, double weight) {
+            int red = (int) (((a >> 16) & 255) * weight + ((b >> 16) & 255) * (1 - weight));
+            int green = (int) (((a >> 8) & 255) * weight + ((b >> 8) & 255) * (1 - weight));
+            int blue = (int) ((a & 255) * weight + (b & 255) * (1 - weight));
+            return 0xFF000000 | red << 16 | green << 8 | blue;
+        }
+    }
 }

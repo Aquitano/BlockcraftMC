@@ -2,6 +2,8 @@ package me.blockcraft.lobby.menu;
 
 import me.blockcraft.api.menu.Menu;
 import me.blockcraft.api.pack.MenuIcon;
+import me.blockcraft.api.pack.MenuTile;
+import me.blockcraft.api.pack.MenuState;
 import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.common.network.GroupStatus;
 import me.blockcraft.lobby.config.LobbyLocation;
@@ -15,13 +17,13 @@ import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Map;
 
-/** The toolbar closes, opens the shop or warps to spawn; the games sit above JumpAndRun. */
+/** Ten illustrated game cards share the screen with the toolbar and JumpAndRun. */
 final class NavigatorMenu extends Menu {
 
     private static final Map<Integer, LobbyLocation> GAMES = Map.of(
-            18, LobbyLocation.QSG, 20, LobbyLocation.RUSH, 22, LobbyLocation.DUELL, 24, LobbyLocation.BEDWARS,
-            26, LobbyLocation.SKYWARS, 27, LobbyLocation.TTT, 29, LobbyLocation.MLGRUSH, 31, LobbyLocation.CORES,
-            33, LobbyLocation.ENDERGAMES, 35, LobbyLocation.ZOMBIES);
+            9, LobbyLocation.QSG, 14, LobbyLocation.RUSH, 18, LobbyLocation.DUELL, 23, LobbyLocation.BEDWARS,
+            27, LobbyLocation.SKYWARS, 32, LobbyLocation.TTT, 36, LobbyLocation.MLGRUSH, 41, LobbyLocation.CORES,
+            45, LobbyLocation.ENDERGAMES, 50, LobbyLocation.ZOMBIES);
     private static final int JUMP_SLOT = 40;
 
     private final Menus menus;
@@ -33,7 +35,8 @@ final class NavigatorMenu extends Menu {
         toolbar(ToolbarButton.MIDDLE, place(MenuIcon.TOOL_SHOP, "shop", "navigator.shop-lore"), menus::openShop);
         toolbar(ToolbarButton.RIGHT, place(MenuIcon.TOOL_HOME, "spawn", "navigator.spawn-lore"),
                 player -> menus.warp(player, LobbyLocation.SPAWN));
-        GAMES.forEach((slot, target) -> set(slot, game(target)));
+        GAMES.forEach((slot, target) -> tile(slot, MenuTile.valueOf(target.game().orElseThrow().name()),
+                MenuTile.Shape.WIDE, game(target)));
         set(JUMP_SLOT, place(MenuIcon.JUMP, "jump", "navigator.lore"));
     }
 
@@ -55,7 +58,14 @@ final class NavigatorMenu extends Menu {
         if (menus.locations().get(target).isPresent()) {
             lore.add(messages.get("navigator.visit"));
         }
-        return target.game().orElse(MenuIcon.DUELL).item().name(messages.get("navigator." + target.key())).lore(lore).build();
+        var state = switch (status.availability()) {
+            case AVAILABLE, SLEEPING -> MenuState.AVAILABLE;
+            case STARTING, RESTART -> MenuState.PENDING;
+            case OFFLINE -> MenuState.OFFLINE;
+            case FULL, INGAME -> MenuState.LOCKED;
+        };
+        return target.game().orElse(MenuIcon.DUELL).item().name(messages.get("navigator." + target.key()))
+                .lore(lore).state(state).build();
     }
 
     private ItemStack place(MenuIcon icon, String key, String loreKey) {

@@ -787,6 +787,17 @@ Everything the pack changes has a plain fallback, so a player without it sees va
   `HotbarItem`, recognised by a tag in its data rather than its material. Every item in a menu gets the
   pack's tooltip (`tooltip_style`, the `gui/sprites/tooltip/menu_*` nine-slices), so the item names read on the same
   dark card as the panel.
+- Navigator, profile, extras and shop use `Menu.tile` for illustrated cards. `MenuTile.Shape.WIDE` spans four slots
+  in one row; `LARGE` spans three slots in two rows. Every covered slot routes to the card's first slot, including
+  its enabled check and click sound. With the pack, `UiFont` draws the artwork and labels from BlockcraftAPI's
+  `messages.yml` under `tiles`; without it, each card shows a vanilla item between named panes. Updating the card's
+  first slot updates its whole area. `PackArt` regenerates the card textures and their `blockcraft:tiles` and label
+  fonts. Label whitespace becomes spaces, and unsupported characters become `?` before the label is shortened.
+  `MenuTileAssetsTest` checks the assets; `UiFontTest` verifies that composed card labels restore the text cursor
+  using the fonts' actual glyph widths.
+- `Items.Builder.state` marks a menu item's availability or unlock state. Cards show a small badge in their last
+  slot; cosmetics and level rewards keep their actual picture and show the state's tooltip frame. The existing
+  German lore explains the state with and without the pack. `MenuState` does not change permissions or purchases.
 - HUD icons are `<icon:name>` in a message (`Icon`): a font glyph with the pack, the symbol under `icons.<name>` in
   BlockcraftAPI's `messages.yml` without. The lobby's and every game's sidebar headings carry them, and the red error
   icon, drawn in its own colours, leads core's answer to a command the server cannot run.
