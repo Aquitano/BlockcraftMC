@@ -3,6 +3,7 @@ package me.blockcraft.core.listener;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -19,8 +20,9 @@ import java.util.UUID;
 
 /**
  * Paper raises {@link UnknownCommandEvent} for every command it cannot parse, a typo in the arguments of a real one
- * included. A command the player was never sent, whether it does not exist or they may not use it, gets the network's
- * own line; one they can see keeps Minecraft's explanation of what is wrong with it. Both lead with the error icon.
+ * included. A command the player was never sent gets the network's own line: staff learn that it exists but is not
+ * theirs to use, everyone else that it does not exist, as vanilla says too. One they can see keeps Minecraft's
+ * explanation of what is wrong with it. All lead with the error icon.
  */
 public final class UnknownCommandListener implements Listener {
 
@@ -47,6 +49,8 @@ public final class UnknownCommandListener implements Listener {
         var reason = event.message();
         if (reason != null && visible.getOrDefault(player.getUniqueId(), Set.of()).contains(label)) {
             event.message(messages.get("unknown-command.invalid", icons, Placeholder.component("reason", reason)));
+        } else if (player.hasPermission(ChatPermissions.TEAM) && Bukkit.getCommandMap().getCommand(label) != null) {
+            event.message(messages.get("unknown-command.forbidden", icons, Placeholder.unparsed("command", label)));
         } else {
             event.message(messages.get("unknown-command.missing", icons, Placeholder.unparsed("command", label)));
         }
