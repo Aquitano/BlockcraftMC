@@ -50,6 +50,7 @@ import me.blockcraft.core.listener.ChatFormatListener;
 import me.blockcraft.core.listener.GlobalMuteListener;
 import me.blockcraft.core.listener.MuteListener;
 import me.blockcraft.core.listener.NetworkChat;
+import me.blockcraft.core.listener.UnknownCommandListener;
 import me.blockcraft.core.staff.FreezeService;
 import me.blockcraft.core.staff.InvseeGuard;
 import me.blockcraft.core.staff.StaffInventoryRepository;
@@ -96,6 +97,7 @@ public final class BlockcraftCorePlugin extends JavaPlugin {
                 stringList(nickSection, "ranks"));
         pluginManager.registerEvents(new NickListener(nicks, messages), this);
         pluginManager.registerEvents(new ChatFormatListener(this, messages, nicks), this);
+        pluginManager.registerEvents(new UnknownCommandListener(messages), this);
         pluginManager.registerEvents(new WelcomeCommittee(this, WelcomeConfig.fromYaml(config), new GreetingRepository(api.database()),
                 messages), this);
         pluginManager.registerEvents(new PlayerTimeListener(), this);

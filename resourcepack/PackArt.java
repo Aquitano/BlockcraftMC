@@ -61,6 +61,7 @@ public final class PackArt {
         write(glyphSheet(ICON_PROFILE, ICON_COINS, ICON_LEVEL, ICON_CHAT, ICON_SERVER, ICON_PLAYERS, ICON_MAP, ICON_KIT,
                 ICON_SPECTATOR, ICON_TIME, ICON_EMERALD, ICON_WINNER, ICON_MODE, ICON_OPPONENT, ICON_KILLS), font.resolve("icons.png"));
         write(badges(), font.resolve("badges.png"));
+        write(glyph(ICON_ERROR, ERROR), font.resolve("error.png"));
         for (var icon : ICONS.entrySet()) {
             write(pixels(icon.getValue().rows(), icon.getValue().palette()), item.resolve(icon.getKey() + ".png"));
         }
@@ -229,6 +230,13 @@ public final class PackArt {
             }
             left += rows[0].length() + 1;
         }
+    }
+
+    /** A glyph in its own colours rather than white, so it is shown untinted. */
+    static BufferedImage glyph(String[] rows, Map<Character, Integer> palette) {
+        var image = new BufferedImage(rows[0].length(), rows.length, BufferedImage.TYPE_INT_ARGB);
+        paint(image, rows, 0, 0, palette);
+        return image;
     }
 
     static BufferedImage pixels(String[] rows, Map<Character, Integer> palette) {
@@ -1605,6 +1613,19 @@ public final class PackArt {
             ".##.##..",
             "##...##.",
             "........",
+    };
+
+    static final Map<Character, Integer> ERROR = Map.of('h', 0xFFF08A8A, 'R', 0xFFE04E4E, 's', 0xFF9E2B2B, 'W', WHITE);
+
+    static final String[] ICON_ERROR = {
+            ".hhhhhh.",
+            "RRRWWsRR",
+            "RRRWWsRR",
+            "RRRWWsRR",
+            "RRRRRRRR",
+            "RRRWWsRR",
+            "RRRRRRRR",
+            ".ssssss.",
     };
 
     static final String[] ICON_KILLS = {

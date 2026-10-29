@@ -785,7 +785,8 @@ Everything the pack changes has a plain fallback, so a player without it sees va
   pack's tooltip (`tooltip_style`, the `gui/sprites/tooltip/menu_*` nine-slices), so the item names read on the same
   dark card as the panel.
 - HUD icons are `<icon:name>` in a message (`Icon`): a font glyph with the pack, the symbol under `icons.<name>` in
-  BlockcraftAPI's `messages.yml` without. The lobby's and every game's sidebar headings carry them.
+  BlockcraftAPI's `messages.yml` without. The lobby's and every game's sidebar headings carry them, and the red error
+  icon, drawn in its own colours, leads core's answer to a command the server cannot run.
 - Rank badges are glyphs of `blockcraft:ui` drawn in each rank's colour (`badges.png`); `RankPrefix` shows a
   viewer the badge with the pack and the LuckPerms prefix text without, in chat, the tab list, above heads, on the lobby
   sidebar and in the profile. `UiFontTest` fails when a badge in `ranks.json` has no glyph.

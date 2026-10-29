@@ -131,6 +131,15 @@
     },
     {
       "type": "bitmap",
+      "file": "blockcraft:font/error.png",
+      "ascent": 7,
+      "height": 8,
+      "chars": [
+        "\ue20f"
+      ]
+    },
+    {
+      "type": "bitmap",
       "file": "blockcraft:font/badges.png",
       "ascent": 7,
       "height": 7,
