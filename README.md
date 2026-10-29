@@ -790,6 +790,10 @@ Everything the pack changes has a plain fallback, so a player without it sees va
 - Rank badges are glyphs of `blockcraft:ui` drawn in each rank's colour (`badges.png`); `RankPrefix` shows a
   viewer the badge with the pack and the LuckPerms prefix text without, in chat, the tab list, above heads, on the lobby
   sidebar and in the profile. `UiFontTest` fails when a badge in `ranks.json` has no glyph.
+- Title lettering is `<display>` in a message (`DisplayFont`, `font/display.json`): outlined capitals with two-pixel
+  strokes, upper and lower case drawn alike, any other character from the vanilla font. `Notifications` turns it into
+  bold text for a client without the pack, so only titles carry it; at title scale about thirteen letters fit a
+  1366x768 screen. The countdowns, the round result and BedWars' lost bed use it.
 - Vanilla inventory labels remain intact. The pack does not override container translations.
 - Short UI sounds live in `assets/blockcraft/sounds/ui`. `FeedbackSound` selects custom sounds when the pack is
   active and vanilla sounds otherwise. `python3 resourcepack/SoundArt.py` regenerates the Ogg Vorbis files with

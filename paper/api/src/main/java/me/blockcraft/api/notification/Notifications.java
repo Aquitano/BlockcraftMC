@@ -1,5 +1,7 @@
 package me.blockcraft.api.notification;
 
+import me.blockcraft.api.pack.DisplayFont;
+import me.blockcraft.api.pack.ResourcePacks;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.text.Component;
@@ -54,13 +56,15 @@ public final class Notifications implements Listener {
 
     private final Plugin plugin;
     private final Messages messages;
+    private final ResourcePacks resourcePacks;
     private final Timing timing;
     private final Map<UUID, State> players = new HashMap<>();
     private BukkitTask task;
 
-    public Notifications(Plugin plugin, Messages messages, Timing timing) {
+    public Notifications(Plugin plugin, Messages messages, ResourcePacks resourcePacks, Timing timing) {
         this.plugin = plugin;
         this.messages = messages;
+        this.resourcePacks = resourcePacks;
         this.timing = timing;
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
@@ -125,6 +129,14 @@ public final class Notifications implements Listener {
         }
     }
 
+    /** Decided when the title shows rather than when it was queued, since the pack can arrive in between. */
+    private Title drawnFor(Player player, Title title) {
+        if (resourcePacks.applied(player)) {
+            return title;
+        }
+        return Title.title(DisplayFont.plain(title.title()), DisplayFont.plain(title.subtitle()), title.times());
+    }
+
     private State state(Player player) {
         if (task == null) {
             task = Bukkit.getScheduler().runTaskTimer(plugin, this::tick, 1L, 1L);
@@ -183,7 +195,7 @@ public final class Notifications implements Listener {
     private void showTitle(Player player, State state, long now) {
         var selected = state.titles.next(now).orElse(null);
         if (selected != null && selected != state.shownTitle) {
-            player.showTitle(selected.value.title());
+            player.showTitle(drawnFor(player, selected.value.title()));
             if (selected.priority == Priority.IMPORTANT) {
                 state.sounds.blockUntil(selected.until);
                 if (selected.value.sound() != null) {

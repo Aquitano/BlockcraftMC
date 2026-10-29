@@ -66,7 +66,7 @@ team-chest:
 bed:
   own: "<prefix><error>Du kannst dein eigenes Bett nicht zerstören."
   destroyed: "<prefix><muted>Das Bett von Team <team> <muted>wurde von <player> <muted>zerstört."
-  title: "<accent>Dein Bett"
+  title: "<accent><display>Dein Bett"
   subtitle: "<accent>wurde zerstört"
 
 round:

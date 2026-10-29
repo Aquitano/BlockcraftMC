@@ -62,6 +62,7 @@ public final class PackArt {
                 ICON_SPECTATOR, ICON_TIME, ICON_EMERALD, ICON_WINNER, ICON_MODE, ICON_OPPONENT, ICON_KILLS), font.resolve("icons.png"));
         write(badges(), font.resolve("badges.png"));
         write(glyph(ICON_ERROR, ERROR), font.resolve("error.png"));
+        write(display(), font.resolve("display.png"));
         for (var icon : ICONS.entrySet()) {
             write(pixels(icon.getValue().rows(), icon.getValue().palette()), item.resolve(icon.getKey() + ".png"));
         }
@@ -232,6 +233,65 @@ public final class PackArt {
         }
     }
 
+    /**
+     * The title lettering, laid out as font/display.json reads it: letters with two-pixel strokes, white over a
+     * lighter shade so the text colour tints a two-tone face, inside a dark outline that the tint only darkens.
+     */
+    static BufferedImage display() {
+        var image = new BufferedImage(DISPLAY_CELL_WIDTH * DISPLAY_COLUMNS, DISPLAY_CELL_HEIGHT * DISPLAY_SHEET.length,
+                BufferedImage.TYPE_INT_ARGB);
+        for (int row = 0; row < DISPLAY_SHEET.length; row++) {
+            for (int column = 0; column < DISPLAY_SHEET[row].length(); column++) {
+                displayGlyph(image, DISPLAY_SHEET[row].charAt(column), column * DISPLAY_CELL_WIDTH, row * DISPLAY_CELL_HEIGHT);
+            }
+        }
+        return image;
+    }
+
+    /** The letter stands on the cell's last row but one, the outline below it; an umlaut's dots sit two rows above. */
+    static void displayGlyph(BufferedImage image, char glyph, int x, int y) {
+        char letter = UMLAUTS.getOrDefault(glyph, glyph);
+        var rows = DISPLAY_LETTERS.get(letter);
+        int top = DISPLAY_CELL_HEIGHT - 1 - rows.length;
+        var ink = new int[DISPLAY_CELL_HEIGHT][DISPLAY_CELL_WIDTH];
+        for (int dy = 0; dy < rows.length; dy++) {
+            for (int dx = 0; dx < rows[dy].length(); dx++) {
+                if (rows[dy].charAt(dx) == '#') {
+                    ink[top + dy][1 + dx] = dy < rows.length / 2 ? WHITE : DISPLAY_SHADE;
+                }
+            }
+        }
+        if (UMLAUTS.containsKey(glyph)) {
+            for (int dx = 0; dx < UMLAUT_DOTS.length(); dx++) {
+                if (UMLAUT_DOTS.charAt(dx) == '#') {
+                    ink[top - 2][1 + dx] = WHITE;
+                }
+            }
+        }
+        for (int dy = 0; dy < DISPLAY_CELL_HEIGHT; dy++) {
+            for (int dx = 0; dx < DISPLAY_CELL_WIDTH; dx++) {
+                if (ink[dy][dx] != 0) {
+                    image.setRGB(x + dx, y + dy, ink[dy][dx]);
+                } else if (touchesInk(ink, dx, dy)) {
+                    image.setRGB(x + dx, y + dy, DISPLAY_OUTLINE);
+                }
+            }
+        }
+    }
+
+    static boolean touchesInk(int[][] ink, int x, int y) {
+        for (int dy = -1; dy <= 1; dy++) {
+            for (int dx = -1; dx <= 1; dx++) {
+                int row = y + dy;
+                int column = x + dx;
+                if (row >= 0 && row < ink.length && column >= 0 && column < ink[row].length && ink[row][column] != 0) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     /** A glyph in its own colours rather than white, so it is shown untinted. */
     static BufferedImage glyph(String[] rows, Map<Character, Integer> palette) {
         var image = new BufferedImage(rows[0].length(), rows.length, BufferedImage.TYPE_INT_ARGB);
@@ -300,6 +360,60 @@ public final class PackArt {
             Map.entry('V', new String[] {"#...#", "#...#", ".#.#.", ".#.#.", "..#.."}),
             Map.entry('W', new String[] {"#...#", "#...#", "#.#.#", "##.##", "#...#"}),
             Map.entry('Y', new String[] {"#...#", ".#.#.", "..#..", "..#..", "..#.."})
+    );
+
+    /** The widest letter and its outline across; an umlaut's dots, the letter and both outlines down. */
+    static final int DISPLAY_CELL_WIDTH = 9;
+    static final int DISPLAY_CELL_HEIGHT = 12;
+    static final int DISPLAY_COLUMNS = 16;
+    static final int DISPLAY_SHADE = 0xFFC4C4C4;
+    static final int DISPLAY_OUTLINE = 0xFF262626;
+    static final String[] DISPLAY_SHEET = {"ABCDEFGHIJKLMNOP", "QRSTUVWXYZÄÖÜ012", "3456789!?.:-"};
+    static final Map<Character, Character> UMLAUTS = Map.of('Ä', 'A', 'Ö', 'O', 'Ü', 'U');
+    static final String UMLAUT_DOTS = "##..##";
+
+    static final Map<Character, String[]> DISPLAY_LETTERS = Map.ofEntries(
+            Map.entry('A', new String[] {".####.", "##..##", "##..##", "##..##", "######", "##..##", "##..##", "##..##"}),
+            Map.entry('B', new String[] {"#####.", "##..##", "##..##", "#####.", "##..##", "##..##", "##..##", "#####."}),
+            Map.entry('C', new String[] {".####.", "##..##", "##....", "##....", "##....", "##....", "##..##", ".####."}),
+            Map.entry('D', new String[] {"#####.", "##..##", "##..##", "##..##", "##..##", "##..##", "##..##", "#####."}),
+            Map.entry('E', new String[] {"#####", "##...", "##...", "####.", "##...", "##...", "##...", "#####"}),
+            Map.entry('F', new String[] {"#####", "##...", "##...", "####.", "##...", "##...", "##...", "##..."}),
+            Map.entry('G', new String[] {".####.", "##..##", "##....", "##....", "##.###", "##..##", "##..##", ".####."}),
+            Map.entry('H', new String[] {"##..##", "##..##", "##..##", "######", "##..##", "##..##", "##..##", "##..##"}),
+            Map.entry('I', new String[] {"##", "##", "##", "##", "##", "##", "##", "##"}),
+            Map.entry('J', new String[] {"....##", "....##", "....##", "....##", "....##", "##..##", "##..##", ".####."}),
+            Map.entry('K', new String[] {"##..##", "##.##.", "####..", "###...", "####..", "##.##.", "##..##", "##..##"}),
+            Map.entry('L', new String[] {"##...", "##...", "##...", "##...", "##...", "##...", "##...", "#####"}),
+            Map.entry('M', new String[] {"##...##", "###.###", "#######", "##.#.##", "##...##", "##...##", "##...##", "##...##"}),
+            Map.entry('N', new String[] {"##..##", "###.##", "######", "##.###", "##..##", "##..##", "##..##", "##..##"}),
+            Map.entry('O', new String[] {".####.", "##..##", "##..##", "##..##", "##..##", "##..##", "##..##", ".####."}),
+            Map.entry('P', new String[] {"#####.", "##..##", "##..##", "#####.", "##....", "##....", "##....", "##...."}),
+            Map.entry('Q', new String[] {".####.", "##..##", "##..##", "##..##", "##..##", "##.###", ".####.", "....##"}),
+            Map.entry('R', new String[] {"#####.", "##..##", "##..##", "#####.", "####..", "##.##.", "##..##", "##..##"}),
+            Map.entry('S', new String[] {".####.", "##..##", "##....", ".####.", "....##", "....##", "##..##", ".####."}),
+            Map.entry('T', new String[] {"######", "..##..", "..##..", "..##..", "..##..", "..##..", "..##..", "..##.."}),
+            Map.entry('U', new String[] {"##..##", "##..##", "##..##", "##..##", "##..##", "##..##", "##..##", ".####."}),
+            Map.entry('V', new String[] {"##..##", "##..##", "##..##", "##..##", "##..##", ".####.", ".####.", "..##.."}),
+            Map.entry('W', new String[] {"##...##", "##...##", "##...##", "##.#.##", "##.#.##", "#######", "###.###", "##...##"}),
+            Map.entry('X', new String[] {"##..##", "##..##", ".####.", "..##..", "..##..", ".####.", "##..##", "##..##"}),
+            Map.entry('Y', new String[] {"##..##", "##..##", "##..##", ".####.", "..##..", "..##..", "..##..", "..##.."}),
+            Map.entry('Z', new String[] {"######", "....##", "...##.", "..##..", ".##...", "##....", "##....", "######"}),
+            Map.entry('0', new String[] {".####.", "##..##", "##.###", "######", "###.##", "##..##", "##..##", ".####."}),
+            Map.entry('1', new String[] {"..##", ".###", "####", "..##", "..##", "..##", "..##", "..##"}),
+            Map.entry('2', new String[] {".####.", "##..##", "....##", "...##.", "..##..", ".##...", "##....", "######"}),
+            Map.entry('3', new String[] {".####.", "##..##", "....##", "..###.", "....##", "....##", "##..##", ".####."}),
+            Map.entry('4', new String[] {"...###", "..####", ".##.##", "##..##", "######", "....##", "....##", "....##"}),
+            Map.entry('5', new String[] {"######", "##....", "##....", "#####.", "....##", "....##", "##..##", ".####."}),
+            Map.entry('6', new String[] {".####.", "##..##", "##....", "#####.", "##..##", "##..##", "##..##", ".####."}),
+            Map.entry('7', new String[] {"######", "....##", "....##", "...##.", "..##..", "..##..", "..##..", "..##.."}),
+            Map.entry('8', new String[] {".####.", "##..##", "##..##", ".####.", "##..##", "##..##", "##..##", ".####."}),
+            Map.entry('9', new String[] {".####.", "##..##", "##..##", "##..##", ".#####", "....##", "##..##", ".####."}),
+            Map.entry('!', new String[] {"##", "##", "##", "##", "##", "..", "##", "##"}),
+            Map.entry('?', new String[] {".####.", "##..##", "....##", "...##.", "..##..", "..##..", "......", "..##.."}),
+            Map.entry('.', new String[] {"..", "..", "..", "..", "..", "..", "##", "##"}),
+            Map.entry(':', new String[] {"..", "##", "##", "..", "..", "##", "##", ".."}),
+            Map.entry('-', new String[] {"....", "....", "....", "####", "####", "....", "....", "...."})
     );
 
     static final Map<Character, Integer> LIGHT = Map.of('H', 0xFFF4FAFC, 'W', 0xFFCCDCE5, 'w', 0xFF8CA3B4, 'd', 0xFF52697F);

@@ -1,0 +1,36 @@
+{
+  "providers": [
+    {
+      "type": "space",
+      "advances": {
+        " ": 6
+      }
+    },
+    {
+      "type": "bitmap",
+      "file": "blockcraft:font/display.png",
+      "ascent": 11,
+      "height": 12,
+      "chars": [
+        "ABCDEFGHIJKLMNOP",
+        "QRSTUVWXYZÄÖÜ012",
+        "3456789!?.:-\u0000\u0000\u0000\u0000"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "blockcraft:font/display.png",
+      "ascent": 11,
+      "height": 12,
+      "chars": [
+        "abcdefghijklmnop",
+        "qrstuvwxyzäöü\u0000\u0000\u0000",
+        "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
+      ]
+    },
+    {
+      "type": "reference",
+      "id": "minecraft:default"
+    }
+  ]
+}

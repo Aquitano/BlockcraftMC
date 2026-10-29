@@ -180,12 +180,13 @@ spectator:
     player: "<accent><player>"
     player-lore: "<bullet><click>Zu <player> fliegen"
 
-# The shared countdown: the last seconds as a title, then the start.
+# The shared countdown: the last seconds as a title, then the start. <display> is the pack's title lettering, which
+# fits about thirteen letters; Notifications shows it as bold text to a client without the pack.
 countdown:
   waiting: "<muted>Warten auf Spieler <dark>● <accent>Noch <players> benötigt"
   starting: "<muted>Rundenstart in <accent><seconds>s"
-  seconds: "<primary><seconds>"
-  go: "<success><bold>LOS!"
+  seconds: "<primary><display><seconds>"
+  go: "<success><display>LOS!"
 
 build:
   enabled: "<prefix><success>Baumodus aktiviert. <muted>Speichere die Map mit <accent>/map save<muted>, sonst ist sie beim Neustart wieder wie vorher."
@@ -249,12 +250,12 @@ map:
 # The end-of-round recap every game shows; <game> is the game's own name, <winner> the player who won it.
 summary:
   ending:
-    win: "<success><bold>Du hast gewonnen!"
-    finished: "<primary><bold>Runde vorbei!"
+    win: "<success><display>Gewonnen!"
+    finished: "<primary><display>Runde vorbei!"
     winner: "<accent><winner> <muted>hat gewonnen!"
     winners: "<accent><winner> <muted>haben gewonnen!"
-    draw: "<accent><bold>Unentschieden!"
-    seconds: "<primary><bold><seconds>"
+    draw: "<accent><display>Gleichstand!"
+    seconds: "<primary><display><seconds>"
     lobby: "<muted>Zurück zur Lobby"
   compact: "<arrow><game> <dark>· <result> <dark>· <accent>+<coins> Coins <dark>· <success>+<xp> XP"
   spectator: "<arrow><game> <dark>· <result>"
