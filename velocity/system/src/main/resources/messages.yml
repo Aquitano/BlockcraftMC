@@ -364,6 +364,8 @@ stafflog:
     "speed": "Geschwindigkeit gesetzt"
     "staff.on": "Staff-Modus an"
     "staff.off": "Staff-Modus aus"
+    "staff.spectate.start": "Zuschauen begonnen"
+    "staff.spectate.stop": "Zuschauen beendet"
     "sudo": "Als Spieler ausgeführt"
     "tp": "Spieler teleportiert"
     "tp.to": "Selbst teleportiert"

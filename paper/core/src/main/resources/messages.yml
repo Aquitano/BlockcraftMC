@@ -65,6 +65,8 @@ commands:
     description: "Friert einen Spieler ein"
   staff:
     description: "Staff-Modus"
+  spec:
+    description: "Schaut im Staff-Modus einem Spieler zu; /spec stop beendet es"
   clear:
     description: "Leert Inventare oder entfernt bestimmte Items"
   connect:
@@ -230,6 +232,14 @@ staff:
   teleported: "<prefix><muted>Du bist jetzt bei <white><player><muted>."
   no-reports: "<prefix><error>Die Report-Übersicht gibt es nur in der Lobby."
   spectating: "<prefix><muted>Du schaust <accent><player> <muted>zu. Schleichen beendet das Zuschauen."
+  spec-usage: "<prefix><muted>Benutze /spec \\<Spieler> oder /spec stop."
+  spec-requires-staff: "<prefix><error>Aktiviere zuerst den Staff-Modus mit /staff."
+  spec-unavailable: "<prefix><error>Diesem Spieler kannst du gerade nicht zuschauen."
+  spec-failed: "<prefix><error>Das Zuschauen konnte nicht gestartet werden."
+  spec-stopped: "<prefix><muted>Zuschauen beendet."
+  spec-not-active: "<prefix><muted>Du schaust gerade keinem Spieler zu."
+  spec-return-failed: "<prefix><error>Du konntest nicht an deinen Ausgangspunkt zurückkehren."
+  spec-target-left: "<prefix><accent><player> <muted>hat den Server verlassen. Zuschauen beendet."
   item:
     random: "<primary>Zufälliger Spieler"
     freeze: "<primary>Freeze <muted>(Rechtsklick auf Spieler)"
