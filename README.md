@@ -573,6 +573,11 @@ In `/staff` mode, `/spec <player>` follows a player's camera and `/spec stop` en
 `blockcraft.core.staff`, like the spectate hotbar tool. Stopping returns the moderator to the position and game
 mode from before spectating. Switching targets keeps that original return point.
 
+`/serverinfo` (also `/lag`, permission `blockcraft.core.lag`) shows server performance and runtime versions.
+`/serverinfo plugins` lists loaded plugins with their versions and enabled state. Click an entry or run
+`/serverinfo plugins <name>` to see its required and optional dependencies and which loaded plugins depend on it.
+Versions from CI include the Git commit, so the list identifies the build running on this backend.
+
 Core's `/tp`, `/kill`, `/clear`, `/xp` and `/enchant` take the vanilla argument forms (coordinates, selectors,
 item filters, enchantments) and add the rank guard; `/time` is vanilla's, with `/day` and `/night` as shortcuts. The
 console and `rcon-cli` run every core command that names a target. Every staff action on a player (gamemode,
