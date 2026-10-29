@@ -29,6 +29,7 @@ import me.blockcraft.lobby.activity.SeasonalEvents;
 import me.blockcraft.lobby.activity.ShootingStars;
 import me.blockcraft.lobby.activity.Snowfall;
 import me.blockcraft.lobby.command.ClearChatCommand;
+import me.blockcraft.lobby.command.CookiesCommand;
 import me.blockcraft.lobby.command.LobbySetCommand;
 import me.blockcraft.lobby.command.NavigatorCommand;
 import me.blockcraft.lobby.command.SetHoloCommand;
@@ -54,6 +55,8 @@ import me.blockcraft.lobby.cosmetic.Secret;
 import me.blockcraft.lobby.cosmetic.Secrets;
 import me.blockcraft.lobby.cosmetic.Shirt;
 import me.blockcraft.lobby.cosmetic.Trails;
+import me.blockcraft.lobby.cookies.CookieClicker;
+import me.blockcraft.lobby.cookies.CookieProgress;
 import me.blockcraft.lobby.friends.FriendsChannel;
 import me.blockcraft.lobby.gadget.Gadgets;
 import me.blockcraft.lobby.hider.PlayerHider;
@@ -167,9 +170,13 @@ public final class LobbyPlugin extends JavaPlugin {
         friends = new FriendsChannel(this, config.friendsTimeoutTicks());
         previews = new CosmeticPreviews(this, messages, config.cosmeticPreviewTicks());
         var loreNotes = new LoreNotes(this, activityLocations, LoreNoteConfig.fromYaml(YamlFile.section(yaml, "lore-notes")), messages);
+        var cookies = new CookieClicker(this, api.database(), messages,
+                CookieProgress.Rules.fromYaml(YamlFile.section(yaml, "cookies")));
+        polish.add(cookies);
+        register(cookies);
         var menus = new Menus(this, messages, config, locations, api.unlocks(), api.settings(), api.messages(),
                 api.servers(), api.server(), new PremiumRank(this, luckPerms), pets, api.groups(), friends, previews,
-                new NavigatorTeleports(), loreNotes);
+                new NavigatorTeleports(), loreNotes, cookies);
         shopNpc = new ShopNpc(this, locations, messages, quirks::owns);
         shopNpc.start(config.shopNpcRespawnSeconds());
         var leaderboards = new Leaderboards(this, api.database(), messages, api.messages(), config.leaderboards());
@@ -232,6 +239,7 @@ public final class LobbyPlugin extends JavaPlugin {
                     Stream.concat(config.holograms().stream(), leaderboards.names().stream()).toList(),
                     holograms, locations, shopNpc));
             commands.register(ClearChatCommand.create(messages));
+            commands.register(CookiesCommand.create(menus));
             commands.register(SleighCommand.create(sleigh, messages));
             commands.register(SetPropCommand.create(messages, props));
             commands.register(NavigatorCommand.create(menus), "nav", "spiele");

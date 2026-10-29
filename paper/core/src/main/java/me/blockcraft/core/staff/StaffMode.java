@@ -14,6 +14,7 @@ import me.blockcraft.core.command.InvseeCommand;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -50,6 +51,12 @@ public final class StaffMode implements Listener {
     private record Session(ItemStack[] contents, boolean vanishedBefore, boolean flightBefore, boolean flightGrantedBefore) {
     }
 
+    private record Spectating(GameMode gameMode, Location location, boolean allowFlight, boolean flying, UUID target) {
+        Spectating watching(UUID nextTarget) {
+            return new Spectating(gameMode, location, allowFlight, flying, nextTarget);
+        }
+    }
+
     private final Plugin plugin;
     private final Messages messages;
     private final VanishService vanish;
@@ -61,7 +68,7 @@ public final class StaffMode implements Listener {
     private final Random random = new Random();
     private final StaffAudit audit;
     private final PlayerInfo info;
-    private final Map<UUID, GameMode> spectating = new HashMap<>();
+    private final Map<UUID, Spectating> spectating = new HashMap<>();
 
     public StaffMode(Plugin plugin, Messages messages, VanishService vanish, FreezeService freeze, StaffInventoryRepository inventories,
                      StaffAudit audit, ReportRepository reports, PunishmentRepository punishments) {
@@ -152,9 +159,25 @@ public final class StaffMode implements Listener {
 
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
-        var session = sessions.remove(event.getPlayer().getUniqueId());
+        var player = event.getPlayer();
+        var uuid = player.getUniqueId();
+        var session = sessions.remove(uuid);
         if (session != null) {
-            restore(event.getPlayer(), session);
+            restore(player, session);
+        } else {
+            endSpectating(player);
+        }
+        var observers = spectating.entrySet().stream()
+                .filter(entry -> entry.getValue().target().equals(uuid))
+                .map(Map.Entry::getKey).toList();
+        for (UUID observer : observers) {
+            var staff = Bukkit.getPlayer(observer);
+            if (staff != null) {
+                endSpectating(staff);
+                staff.sendMessage(messages.get("staff.spec-target-left", Placeholder.unparsed("player", player.getName())));
+            } else {
+                spectating.remove(observer);
+            }
         }
     }
 
@@ -196,32 +219,82 @@ public final class StaffMode implements Listener {
         });
     }
 
-    /** The camera follows the target until the staff member sneaks out of it or leaves staff mode. */
-    private void spectate(Player staff, Player target) {
-        spectating.putIfAbsent(staff.getUniqueId(), staff.getGameMode());
+    public void spectate(Player staff, Player target) {
+        if (freeze.isFrozen(staff)) {
+            staff.sendMessage(messages.get("freeze.no-commands"));
+            return;
+        }
+        if (!isActive(staff)) {
+            staff.sendMessage(messages.get("staff.spec-requires-staff"));
+            return;
+        }
+        if (staff.equals(target)) {
+            staff.sendMessage(messages.get("rank.self"));
+            return;
+        }
+        if (!target.isOnline() || target.isDead() || !staff.canSee(target)) {
+            staff.sendMessage(messages.get("staff.spec-unavailable"));
+            return;
+        }
+        var uuid = staff.getUniqueId();
+        var previous = spectating.get(uuid);
+        var next = previous == null
+                ? new Spectating(staff.getGameMode(), staff.getLocation(), staff.getAllowFlight(), staff.isFlying(), target.getUniqueId())
+                : previous.watching(target.getUniqueId());
+        if (!staff.teleport(target)) {
+            staff.sendMessage(messages.get("staff.spec-failed"));
+            return;
+        }
+        spectating.put(uuid, next);
         staff.setGameMode(GameMode.SPECTATOR);
+        if (staff.getGameMode() != GameMode.SPECTATOR) {
+            endSpectating(staff);
+            staff.sendMessage(messages.get("staff.spec-failed"));
+            return;
+        }
         staff.setSpectatorTarget(target);
+        if (!target.equals(staff.getSpectatorTarget())) {
+            endSpectating(staff);
+            staff.sendMessage(messages.get("staff.spec-failed"));
+            return;
+        }
+        audit.record(staff, "staff.spectate.start", target);
         staff.sendMessage(messages.get("staff.spectating", Placeholder.unparsed("player", target.getName())));
     }
 
-    @EventHandler
+    public void stopSpectating(Player staff) {
+        staff.sendMessage(messages.get(endSpectating(staff) ? "staff.spec-stopped" : "staff.spec-not-active"));
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onStopSpectating(PlayerStopSpectatingEntityEvent event) {
         var staff = event.getPlayer();
-        if (spectating.containsKey(staff.getUniqueId())) {
-            Tasks.sync(plugin, () -> endSpectating(staff));
+        var session = spectating.get(staff.getUniqueId());
+        if (session != null && session.target().equals(event.getSpectatorTarget().getUniqueId())) {
+            Tasks.sync(plugin, () -> {
+                if (staff.isOnline() && spectating.get(staff.getUniqueId()) == session && staff.getSpectatorTarget() == null) {
+                    stopSpectating(staff);
+                }
+            });
         }
     }
 
-    private void endSpectating(Player staff) {
+    private boolean endSpectating(Player staff) {
         var previous = spectating.remove(staff.getUniqueId());
         if (previous == null) {
-            return;
+            return false;
         }
-        staff.setGameMode(previous);
-        if (isActive(staff)) {
-            staff.setAllowFlight(true);
-            staff.setFlying(true);
+        if (staff.getGameMode() == GameMode.SPECTATOR) {
+            staff.setSpectatorTarget(null);
         }
+        staff.setGameMode(previous.gameMode());
+        staff.setAllowFlight(previous.allowFlight());
+        staff.setFlying(previous.flying());
+        if (!previous.location().isWorldLoaded() || !staff.teleport(previous.location())) {
+            staff.sendMessage(messages.get("staff.spec-return-failed"));
+        }
+        audit.record(staff, "staff.spectate.stop");
+        return true;
     }
 
     @EventHandler

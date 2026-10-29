@@ -34,6 +34,7 @@ import me.blockcraft.core.command.ReportCommand;
 import me.blockcraft.core.command.SetHealthCommand;
 import me.blockcraft.core.command.SkullCommand;
 import me.blockcraft.core.command.SpeedCommand;
+import me.blockcraft.core.command.SpectateCommand;
 import me.blockcraft.core.command.StaffCommand;
 import me.blockcraft.core.command.SudoCommand;
 import me.blockcraft.core.command.SunCommand;
@@ -152,6 +153,7 @@ public final class BlockcraftCorePlugin extends JavaPlugin {
             commands.register(VanishCommand.create(vanish, audit, messages), "vanish");
             commands.register(FreezeCommand.create(freeze, audit, messages));
             commands.register(StaffCommand.create(staffMode));
+            commands.register(SpectateCommand.create(staffMode, messages));
             commands.register(ClearCommand.create(audit, messages));
             commands.register(ConnectCommand.create(this, messages));
             commands.register(ReflashCommand.create(this, messages));

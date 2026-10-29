@@ -24,7 +24,7 @@ commands:
   invsee:
     description: "Öffnet das Inventar eines Spielers"
   lag:
-    description: "Zeigt TPS, MSPT, Speicher und Welten dieses Servers"
+    description: "Zeigt Serverleistung, Versionen und mit /serverinfo plugins die Plugins"
   sethealth:
     description: "Setzt die Lebenspunkte eines Spielers"
   skull:
@@ -65,6 +65,8 @@ commands:
     description: "Friert einen Spieler ein"
   staff:
     description: "Staff-Modus"
+  spec:
+    description: "Schaut im Staff-Modus einem Spieler zu; /spec stop beendet es"
   clear:
     description: "Leert Inventare oder entfernt bestimmte Items"
   connect:
@@ -114,12 +116,29 @@ lag:
   lines:
     - ""
     - "<prefix><muted>Server: <white><server> <dark>(<muted><group><dark>) <dark>| <accent><state>"
+    - "<prefix><muted>Paper: <white><paper>"
+    - "<prefix><muted>Java: <white><java>"
     - "<prefix><muted>TPS (1, 5, 15 Min.): <white><tps1><dark>, <white><tps5><dark>, <white><tps15>"
     - "<prefix><muted>MSPT: <white><mspt><muted> ms"
     - "<prefix><muted>Uptime: <white><uptime>"
     - "<prefix><muted>Ram: <white><used><muted>/<white><max><muted> MB"
     - "<prefix><muted>Spieler: <white><online><muted>/<white><slots>"
+    - "<prefix><muted>Plugin-Versionen und Abhängigkeiten: <white>/serverinfo plugins"
   world: "<prefix><bullet><white><world><dark>: <white><chunks> <muted>Chunks, <white><entities> <muted>Entities"
+  plugins:
+    title: "<prefix><muted>Plugins auf <white><server><muted>: <white><count>"
+    entry: "<prefix><bullet><white><plugin> <muted><version> <dark>(<status><dark>)"
+    hint: "<click>Version und Abhängigkeiten anzeigen"
+    enabled: "<success>aktiv"
+    disabled: "<error>inaktiv"
+    none: "<muted>keine"
+    unknown: "<prefix><error>Kein geladenes Plugin namens <white><plugin>"
+    details:
+      - "<prefix><white><plugin> <muted><version> <dark>(<status><dark>)"
+      - "<prefix><muted>Benötigt: <white><required>"
+      - "<prefix><muted>Optional: <white><optional>"
+      - "<prefix><muted>Direkt benötigt von: <white><required_by>"
+      - "<prefix><muted>Als optional geführt von: <white><optional_for>"
 sethealth:
   usage: "<prefix><error>Benutze /sethealth [Name] [Lebenspunkte]"
   done: "<prefix><white><player><muted> hat nun <white><health><muted> Lebenspunkte!"
@@ -230,6 +249,14 @@ staff:
   teleported: "<prefix><muted>Du bist jetzt bei <white><player><muted>."
   no-reports: "<prefix><error>Die Report-Übersicht gibt es nur in der Lobby."
   spectating: "<prefix><muted>Du schaust <accent><player> <muted>zu. Schleichen beendet das Zuschauen."
+  spec-usage: "<prefix><muted>Benutze /spec \\<Spieler> oder /spec stop."
+  spec-requires-staff: "<prefix><error>Aktiviere zuerst den Staff-Modus mit /staff."
+  spec-unavailable: "<prefix><error>Diesem Spieler kannst du gerade nicht zuschauen."
+  spec-failed: "<prefix><error>Das Zuschauen konnte nicht gestartet werden."
+  spec-stopped: "<prefix><muted>Zuschauen beendet."
+  spec-not-active: "<prefix><muted>Du schaust gerade keinem Spieler zu."
+  spec-return-failed: "<prefix><error>Du konntest nicht an deinen Ausgangspunkt zurückkehren."
+  spec-target-left: "<prefix><accent><player> <muted>hat den Server verlassen. Zuschauen beendet."
   item:
     random: "<primary>Zufälliger Spieler"
     freeze: "<primary>Freeze <muted>(Rechtsklick auf Spieler)"
