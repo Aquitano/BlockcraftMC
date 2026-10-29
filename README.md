@@ -161,6 +161,7 @@ completion. A player who is online while their rank changes has to rejoin before
 ### One server on the host
 
 ```
+./gradlew stagePlugins         # stages the runtime settings Compose requires
 docker compose up -d mariadb    # MariaDB on localhost:3306, database/user/password "blockcraft"
 ./gradlew :paper:runServer      # Paper 26.3 on 25566 with all Paper plugins + LuckPerms, announced as "lobby"
 ./gradlew :velocity:runVelocity # Velocity on 25565 with all Velocity plugins + LuckPerms
