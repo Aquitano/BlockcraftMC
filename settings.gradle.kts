@@ -18,6 +18,7 @@ include(
     "paper:mlgrush",
     "paper:quicksg",
     "paper:reports",
+    "paper:replay",
     "paper:skywars",
     "paper:statussigns",
     "paper:ttt",

@@ -5,6 +5,7 @@ Paper and Velocity plugins for the BlockcraftMC minigame network, originally wri
 
 See [Easter eggs and lobby activities](EASTER_EGGS.md) for rewards, calendar events, map setup, and gameplay checks.
 See [Zombies setup](paper/zombies/README.md) to run the solo and cooperative survival mode.
+See [BlockcraftReplay](paper/replay/README.md) for match recording, playback controls, and recording limits.
 See [EnderGames](paper/endergames/README.md), [TTT](paper/ttt/README.md) and [SkyWars](paper/skywars/README.md) for those modes, after GommeHD's.
 
 ## Layout
@@ -26,6 +27,7 @@ paper/ttt                TTT: Traitors, Detectives and Innocents in a town built
 paper/skywars            SkyWars: everyone on their own island over the void, after GommeHD's mode
 paper/archive            Archive: the Zeitkapsel, old maps of earlier servers to walk through (see "Zeitkapsel")
 paper/reports            ReportsMenu: staff GUI over the reports table
+paper/replay             BlockcraftReplay: bounded match recording and isolated playback
 paper/statussigns        StatusSigns: clickable server-status signs
 velocity/system          BlockcraftSystem: reports, moderation, parties, friends, routing and staff tools
 resourcepack/            The client-side look: menu panels, HUD icons and button textures (see "Resource pack")

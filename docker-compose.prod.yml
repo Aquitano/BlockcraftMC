@@ -49,6 +49,7 @@ services:
   ttt: *paper
   emeraldrush: *paper
   archive: *paper
+  replay: *paper
 
   # Not released yet: `docker compose --profile unreleased up -d quicksg` starts one anyway.
   quicksg:

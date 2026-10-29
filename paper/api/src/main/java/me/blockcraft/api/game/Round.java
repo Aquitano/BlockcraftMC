@@ -97,6 +97,7 @@ public final class Round implements Listener {
      * the lobby gives way to play, the summary learns who plays and everyone hears that the round started.
      */
     public void enter(GamePhase phase) {
+        var previous = this.phase;
         boolean starts = this.phase == GamePhase.LOBBY && phase == GamePhase.INGAME;
         this.phase = phase;
         Bukkit.getOnlinePlayers().forEach(player -> {
@@ -107,6 +108,9 @@ public final class Round implements Listener {
         if (starts) {
             summary.begin(players());
             arena.announceStarted();
+        }
+        if (previous != phase) {
+            Bukkit.getPluginManager().callEvent(new RoundPhaseChangeEvent(this, previous, phase));
         }
     }
 

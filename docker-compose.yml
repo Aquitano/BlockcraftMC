@@ -21,6 +21,8 @@ x-paper: &paper
   depends_on:
     mariadb:
       condition: service_healthy
+    replay-storage:
+      condition: service_completed_successfully
 
 x-paper-env: &paper-env
   <<: *luckperms
@@ -43,8 +45,17 @@ x-paper-env: &paper-env
   # Empty rather than gone: the image then deletes the LuckPerms jar it downloaded before plugins were staged.
   PLUGINS: ""
   BLOCKCRAFT_DB_HOST: mariadb
+  BLOCKCRAFT_REPLAY_DIRECTORY: /replays
 
 services:
+  replay-storage:
+    image: itzg/minecraft-server:2026.10.0-java25
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["chown 1000:1000 /replays"]
+    restart: "no"
+    volumes:
+      - replays:/replays
+
   mariadb:
     image: mariadb:11.8
     restart: unless-stopped
@@ -102,12 +113,13 @@ services:
       <<: *paper-env
       BLOCKCRAFT_SERVER_GROUP: lobby
       BLOCKCRAFT_WORLD_TEMPLATE: /worlds/lobby
-      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/lobby,/blockcraft/statussigns,/blockcraft/reports,/blockcraft/viaversion
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/lobby,/blockcraft/statussigns,/blockcraft/reports,/blockcraft/viaversion
     volumes:
       - ./build/docker/paper:/blockcraft:ro
       - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
       - ./worlds/lobby:/worlds/lobby
       - lobby:/data
+      - replays:/replays
 
   duell:
     <<: *paper
@@ -116,12 +128,13 @@ services:
       <<: *paper-env
       BLOCKCRAFT_SERVER_GROUP: duell
       BLOCKCRAFT_WORLD_TEMPLATE: /worlds/duell
-      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/duell,/blockcraft/viaversion
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/duell,/blockcraft/viaversion
     volumes:
       - ./build/docker/paper:/blockcraft:ro
       - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
       - ./worlds/duell:/worlds/duell
       - duell:/data
+      - replays:/replays
 
   emeraldrush:
     <<: *paper
@@ -130,12 +143,13 @@ services:
       <<: *paper-env
       BLOCKCRAFT_SERVER_GROUP: emeraldrush
       BLOCKCRAFT_WORLD_TEMPLATE: /worlds/emeraldrush
-      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/emeraldrush,/blockcraft/viaversion
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/emeraldrush,/blockcraft/viaversion
     volumes:
       - ./build/docker/paper:/blockcraft:ro
       - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
       - ./worlds/emeraldrush:/worlds/emeraldrush
       - emeraldrush:/data
+      - replays:/replays
 
   bedwars:
     <<: *paper
@@ -144,12 +158,13 @@ services:
       <<: *paper-env
       BLOCKCRAFT_SERVER_GROUP: bedwars
       BLOCKCRAFT_WORLD_TEMPLATE: /worlds/bedwars
-      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/bedwars,/blockcraft/viaversion
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/bedwars,/blockcraft/viaversion
     volumes:
       - ./build/docker/paper:/blockcraft:ro
       - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
       - ./worlds/bedwars:/worlds/bedwars
       - bedwars:/data
+      - replays:/replays
 
   mlgrush:
     <<: *paper
@@ -158,11 +173,12 @@ services:
       <<: *paper-env
       BLOCKCRAFT_SERVER_GROUP: mlgrush
       BLOCKCRAFT_WORLD_TEMPLATE: ""
-      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/mlgrush,/blockcraft/viaversion
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/mlgrush,/blockcraft/viaversion
     volumes:
       - ./build/docker/paper:/blockcraft:ro
       - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
       - mlgrush:/data
+      - replays:/replays
 
   zombies:
     <<: *paper
@@ -171,12 +187,13 @@ services:
       <<: *paper-env
       BLOCKCRAFT_SERVER_GROUP: zombies
       BLOCKCRAFT_WORLD_TEMPLATE: /worlds/zombies
-      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/zombies,/blockcraft/viaversion
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/zombies,/blockcraft/viaversion
     volumes:
       - ./build/docker/paper:/blockcraft:ro
       - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
       - ./worlds/zombies:/worlds/zombies
       - zombies:/data
+      - replays:/replays
 
   cores:
     <<: *paper
@@ -185,11 +202,12 @@ services:
       <<: *paper-env
       BLOCKCRAFT_SERVER_GROUP: cores
       BLOCKCRAFT_WORLD_TEMPLATE: ""
-      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/cores,/blockcraft/viaversion
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/cores,/blockcraft/viaversion
     volumes:
       - ./build/docker/paper:/blockcraft:ro
       - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
       - cores:/data
+      - replays:/replays
 
   endergames:
     <<: *paper
@@ -200,11 +218,12 @@ services:
       # The round's world is generated fresh at every start; its 400 chunks peaked at 1.2G in a test run.
       MEMORY: 1536M
       BLOCKCRAFT_WORLD_TEMPLATE: ""
-      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/endergames,/blockcraft/viaversion
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/endergames,/blockcraft/viaversion
     volumes:
       - ./build/docker/paper:/blockcraft:ro
       - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
       - endergames:/data
+      - replays:/replays
 
   ttt:
     <<: *paper
@@ -213,11 +232,12 @@ services:
       <<: *paper-env
       BLOCKCRAFT_SERVER_GROUP: ttt
       BLOCKCRAFT_WORLD_TEMPLATE: ""
-      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/ttt,/blockcraft/viaversion
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/ttt,/blockcraft/viaversion
     volumes:
       - ./build/docker/paper:/blockcraft:ro
       - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
       - ttt:/data
+      - replays:/replays
 
   skywars:
     <<: *paper
@@ -226,11 +246,12 @@ services:
       <<: *paper-env
       BLOCKCRAFT_SERVER_GROUP: skywars
       BLOCKCRAFT_WORLD_TEMPLATE: ""
-      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/skywars,/blockcraft/viaversion
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/skywars,/blockcraft/viaversion
     volumes:
       - ./build/docker/paper:/blockcraft:ro
       - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
       - skywars:/data
+      - replays:/replays
 
   archive:
     <<: *paper
@@ -239,13 +260,14 @@ services:
       <<: *paper-env
       BLOCKCRAFT_SERVER_GROUP: archive
       BLOCKCRAFT_WORLD_TEMPLATE: /worlds/archive
-      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/archive,/blockcraft/viaversion
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/archive,/blockcraft/viaversion
     volumes:
       - ./build/docker/paper:/blockcraft:ro
       - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
       - ./worlds/archive:/worlds/archive
       - ./worlds/archive-exhibits:/exhibits
       - archive:/data
+      - replays:/replays
 
   quicksg:
     <<: *paper
@@ -254,12 +276,26 @@ services:
       <<: *paper-env
       BLOCKCRAFT_SERVER_GROUP: quicksg
       BLOCKCRAFT_WORLD_TEMPLATE: /worlds/quicksg
-      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/quicksg,/blockcraft/viaversion
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/quicksg,/blockcraft/viaversion
     volumes:
       - ./build/docker/paper:/blockcraft:ro
       - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
       - ./worlds/quicksg:/worlds/quicksg
       - quicksg:/data
+      - replays:/replays
+
+  replay:
+    <<: *paper
+    hostname: replay
+    environment:
+      <<: *paper-env
+      BLOCKCRAFT_SERVER_GROUP: replay
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/viaversion
+    volumes:
+      - ./build/docker/paper:/blockcraft:ro
+      - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
+      - replay:/data
+      - replays:/replays
 
   # Starts and stops game servers when the proxy's on-demand is enabled (README, "Server discovery and groups"). The
   # only service with the Docker socket, which is root on the host: no published port, a token, and nothing but the
@@ -294,3 +330,5 @@ volumes:
   ttt:
   skywars:
   archive:
+  replay:
+  replays:

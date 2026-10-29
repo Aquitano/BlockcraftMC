@@ -1,0 +1,24 @@
+playback-group: replay
+history-limit: 100
+storage:
+  directory: recordings
+  max-total-mib: 8192
+  min-free-mib: 512
+  retention-days: 7
+  cleanup-minutes: 15
+recording:
+  sample-ticks: 2
+  max-duration-minutes: 30
+  max-participants: 32
+  max-chunks: 128
+  capture-radius: 1
+  chunks-per-tick: 1
+  max-block-changes-per-tick: 2048
+  queue-capacity: 32
+  max-events: 100000
+  max-archive-mib: 64
+  max-decoded-mib: 128
+playback:
+  max-viewers: 2
+  blocks-per-tick: 4096
+  blocks-scanned-per-tick: 65536

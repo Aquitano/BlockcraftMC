@@ -1,0 +1,52 @@
+commands:
+  replay:
+    description: "Aufgezeichnete eigene Runden ansehen und die Wiedergabe steuern."
+menu:
+  title: "<arrow><primary>Aufzeichnungen"
+  empty: "<muted>Noch keine gespeicherten Runden vorhanden."
+  entry: "<primary><game> <dark>· <muted><map>"
+  complete: "<success>Runde beendet"
+  partial: "<accent>Teilaufzeichnung"
+  lore:
+    - "<muted><date:'dd.MM.yyyy HH:mm'> <dark>· <muted><seconds> Sekunden"
+    - "<result>"
+    - "<muted><id>"
+    - "<left>Aufzeichnung ansehen"
+playback:
+  starting: "<prefix><muted>Das Replay-System startet noch. Bitte versuche es gleich erneut."
+  invalid-speed: "<prefix><error>Wähle als Tempo 0.5, 1 oder 2."
+  loading: "<prefix><muted>Aufzeichnung wird geladen … Mit /replay stop abbrechen."
+  connecting: "<prefix><muted>Verbinde mit dem Replay-Server …"
+  started: "<prefix><success>Wiedergabe geöffnet. <muted>Mit den Werkzeugen pausieren, springen oder das Tempo ändern."
+  stopped: "<prefix><muted>Wiedergabe beendet. Mit /replay eine andere Runde wählen oder mit /hub zurückkehren."
+  unavailable: "<prefix><error>Diese Aufzeichnung ist nicht verfügbar, gehört zu einer anderen Minecraft-Version oder du darfst sie nicht ansehen."
+  full: "<prefix><accent>Der Replay-Server ist ausgelastet. Bitte versuche es gleich erneut."
+  busy: "<prefix><muted>Beende zuerst die laufende Wiedergabe mit /replay stop."
+  failed: "<prefix><error>Die Wiedergabe konnte nicht fortgesetzt werden. Dein vorheriger Zustand wird wiederhergestellt."
+  invalid-id: "<prefix><error>Ungültige Replay-ID. Wähle eine Runde mit /replay."
+  not-active: "<prefix><muted>Es läuft keine Wiedergabe. Öffne eine Runde mit /replay."
+  seek-failed: "<prefix><error>Diese Zeit kann gerade nicht geöffnet werden. Warte, bis die Karte geladen ist."
+  command-denied: "<prefix><muted>Beende zuerst die Wiedergabe mit /replay stop. /hub bleibt verfügbar."
+  status: "<primary><time> <dark>/ <muted><duration> <dark>· <accent><speed>× <dark>· <state>"
+  restore-failed: "<prefix><error>Dein vorheriger Standort ist nicht erreichbar. Mit /hub kommst du zurück zur Lobby."
+  state:
+    playing: "<success>Wiedergabe"
+    paused: "<accent>Pausiert"
+    preparing: "<muted>Karte wird aufgebaut"
+    finished: "<muted>Ende der Aufzeichnung"
+controls:
+  pause:
+    name: "<primary>Pause / Weiter"
+    hint: "<right>Wiedergabe pausieren oder fortsetzen"
+  back:
+    name: "<primary>10 Sekunden zurück"
+    hint: "<right>Zur vorherigen Stelle springen"
+  forward:
+    name: "<primary>10 Sekunden vor"
+    hint: "<right>Zur nächsten Stelle springen"
+  speed:
+    name: "<primary>Wiedergabetempo"
+    hint: "<right>Zwischen 0,5×, 1× und 2× wechseln"
+  exit:
+    name: "<error>Wiedergabe verlassen"
+    hint: "<right>Zur Replay-Lobby zurückkehren"
