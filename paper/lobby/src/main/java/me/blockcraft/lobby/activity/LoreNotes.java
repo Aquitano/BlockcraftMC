@@ -7,12 +7,12 @@ import me.blockcraft.api.item.Items;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.lobby.ChunkTickets;
 import me.blockcraft.common.shop.UnlockRewards;
 import me.blockcraft.lobby.config.LoreNoteConfig;
 import net.kyori.adventure.inventory.Book;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import org.bukkit.Chunk;
 import org.bukkit.Material;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -24,7 +24,6 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -48,11 +47,12 @@ public final class LoreNotes implements Listener, AutoCloseable {
     private final Messages messages;
     private final UnlockRewards rewards;
     private final Map<String, LyingItem> lying = new HashMap<>();
-    private final List<Chunk> held = new ArrayList<>();
+    private final ChunkTickets.Owner held;
     private final Set<UUID> busy = new HashSet<>();
 
-    public LoreNotes(Plugin plugin, Locations<String> spots, LoreNoteConfig config, Messages messages) {
+    public LoreNotes(Plugin plugin, ChunkTickets chunks, Locations<String> spots, LoreNoteConfig config, Messages messages) {
         this.plugin = plugin;
+        held = chunks.owner();
         this.spots = spots;
         this.config = config;
         this.messages = messages;
@@ -80,7 +80,6 @@ public final class LoreNotes implements Listener, AutoCloseable {
         close();
         config.notes().forEach((key, material) -> spots.get(spot(key)).ifPresent(spot -> {
             var chunk = spot.getChunk();
-            chunk.addPluginChunkTicket(plugin);
             held.add(chunk);
             lying.put(key, LyingItem.place(spot, ItemStack.of(material)));
         }));
@@ -154,7 +153,6 @@ public final class LoreNotes implements Listener, AutoCloseable {
     public void close() {
         lying.values().forEach(LyingItem::remove);
         lying.clear();
-        held.forEach(chunk -> chunk.removePluginChunkTicket(plugin));
         held.clear();
     }
 }

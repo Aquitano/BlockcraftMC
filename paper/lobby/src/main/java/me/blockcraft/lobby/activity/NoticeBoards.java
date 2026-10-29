@@ -7,10 +7,10 @@ import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.lobby.ChunkTickets;
 import me.blockcraft.common.settings.PlayerSetting;
 import me.blockcraft.lobby.menu.ChangelogDialog;
 import me.blockcraft.lobby.npc.Holograms;
-import org.bukkit.Chunk;
 import org.bukkit.Material;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -50,10 +50,11 @@ public final class NoticeBoards implements Listener, AutoCloseable {
     private final ChangelogDialog changelog;
     private final Map<String, LyingItem> lying = new HashMap<>();
     private final List<TextDisplay> cards = new ArrayList<>();
-    private final List<Chunk> held = new ArrayList<>();
+    private final ChunkTickets.Owner held;
 
-    public NoticeBoards(Plugin plugin, Locations<String> spots, Messages messages, String version, String rulesCommand) {
+    public NoticeBoards(Plugin plugin, ChunkTickets chunks, Locations<String> spots, Messages messages, String version, String rulesCommand) {
         this.plugin = plugin;
+        held = chunks.owner();
         this.spots = spots;
         this.messages = messages;
         this.version = version;
@@ -67,7 +68,6 @@ public final class NoticeBoards implements Listener, AutoCloseable {
         for (var spot : SPOTS) {
             spots.get(spot).ifPresent(at -> {
                 var chunk = at.getChunk();
-                chunk.addPluginChunkTicket(plugin);
                 held.add(chunk);
                 lying.put(spot, LyingItem.place(at, ItemStack.of(spot.equals("board-rules") ? Material.WRITABLE_BOOK : Material.BOOK)));
                 var card = Holograms.line(at.toBlockLocation().add(0.5, CARD_HEIGHT, 0.5), messages.get("boards." + spot));
@@ -135,7 +135,6 @@ public final class NoticeBoards implements Listener, AutoCloseable {
         lying.clear();
         cards.forEach(TextDisplay::remove);
         cards.clear();
-        held.forEach(chunk -> chunk.removePluginChunkTicket(plugin));
         held.clear();
     }
 }

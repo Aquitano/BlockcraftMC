@@ -107,11 +107,15 @@ heal:
   usage: "<prefix><error>Benutze /heal [Spieler]"
   done: "<prefix><muted>Du wurdest geheilt!"
   other: "<prefix><accent><player> <muted>wurde geheilt."
+teleport:
+  failed: "<prefix><error><player> konnte nicht teleportiert werden. Der Zielort ist nicht verfügbar oder der Teleport wurde verhindert."
+  failed-many: "<prefix><error>Der Teleport ist für <count> Ziele fehlgeschlagen."
 invsee:
   usage: "<prefix><error>Benutze /invsee [Spieler]"
   opened: "<prefix><muted>Du siehst nun das Inventar von <white><player>"
   failed: "<prefix><error>Das Inventar von <white><player> <error>konnte nicht geöffnet werden."
   read-only: "<prefix><muted>Nur ansehen: zum Verändern fehlt dir die Berechtigung."
+  editable: "<prefix><muted>Du kannst dieses Inventar bearbeiten. Änderungen werden sofort übernommen."
 lag:
   lines:
     - ""
@@ -242,11 +246,13 @@ freeze:
   no-commands: "<prefix><error>Eingefroren: nur /msg und /r sind erlaubt."
   left-while-frozen: "<prefix><error><player> <muted>hat den Server eingefroren verlassen!"
 staff:
-  entered: "<prefix><success>Staff-Modus aktiviert. <muted>Du bist unsichtbar und fliegst."
+  entered: "<prefix><success>Staff-Modus aktiviert. <muted>Du bist unsichtbar und fliegst. Mit /staff kehrst du zurück."
   left: "<prefix><muted>Staff-Modus beendet. Dein Inventar ist wieder da."
   inventory-restored: "<prefix><muted>Dein Inventar aus dem Staff-Modus wurde wiederhergestellt."
   nobody-online: "<prefix><error>Kein Spieler online, zu dem du dich teleportieren könntest."
   teleported: "<prefix><muted>Du bist jetzt bei <white><player><muted>."
+  teleport-failed: "<prefix><error>Du konntest nicht zu <white><player> <error>teleportiert werden."
+  tool-denied: "<prefix><error>Für dieses Werkzeug fehlt dir die Berechtigung."
   no-reports: "<prefix><error>Die Report-Übersicht gibt es nur in der Lobby."
   spectating: "<prefix><muted>Du schaust <accent><player> <muted>zu. Schleichen beendet das Zuschauen."
   spec-usage: "<prefix><muted>Benutze /spec \\<Spieler> oder /spec stop."
@@ -257,6 +263,14 @@ staff:
   spec-not-active: "<prefix><muted>Du schaust gerade keinem Spieler zu."
   spec-return-failed: "<prefix><error>Du konntest nicht an deinen Ausgangspunkt zurückkehren."
   spec-target-left: "<prefix><accent><player> <muted>hat den Server verlassen. Zuschauen beendet."
+  hint:
+    random: "<right>Zu einem Spieler teleportieren"
+    freeze: "<right>Spieler einfrieren oder freigeben"
+    invsee: "<right>Inventar eines Spielers öffnen"
+    info: "<right>Rang, Reports und Strafen ansehen"
+    spectate: "<right>Aus den Augen eines Spielers zuschauen"
+    reports: "<right>Report-Übersicht öffnen"
+    leave: "<right>Staff-Modus beenden und Inventar zurückholen"
   item:
     random: "<primary>Zufälliger Spieler"
     freeze: "<primary>Freeze <muted>(Rechtsklick auf Spieler)"
@@ -267,7 +281,8 @@ staff:
     leave: "<error>Staff-Modus verlassen"
   # The info tool; <rank> is the account's own LuckPerms group, whatever rank a nick shows.
   info:
-    header: "<prefix><accent><player> <dark>| <muted>Rang <accent><rank> <dark>| <muted>Ping <accent><ping>ms <dark>| <muted>Client <accent><client>"
+    title: "<arrow><primary>Spielerinfo <dark>· <muted><player>"
+    header: "<accent><player> <dark>| <muted>Rang <accent><rank> <dark>| <muted>Ping <accent><ping>ms <dark>| <muted>Client <accent><client>"
     reports: "<bullet><muted>Offene Reports: <accent><count>"
     ban: "<bullet><error>Gebannt<muted>: <accent><reason> <dark>(<muted><remaining><dark>)"
     mute: "<bullet><error>Gemutet<muted>: <accent><reason> <dark>(<muted><remaining><dark>)"
@@ -282,6 +297,8 @@ connect:
 reflash:
   done: "<prefix><muted>Alle Spieler müssten nun sichtbar sein!"
 team:
+  help-title: "<arrow><primary>Team-Befehle"
+  help-body: "<muted>Fahre über einen Befehl für seine Beschreibung. Ein Klick trägt ihn in die Chatzeile ein. Du kannst die Angaben vor dem Absenden ergänzen."
   help-header:
     - ""
     - "<bullet><primary>DEINE BEFEHLE AUF DIESEM SERVER <dark>●"

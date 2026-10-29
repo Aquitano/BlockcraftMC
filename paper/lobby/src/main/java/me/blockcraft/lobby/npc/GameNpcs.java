@@ -9,6 +9,7 @@ import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.lobby.ChunkTickets;
 import me.blockcraft.lobby.activity.Figures;
 import me.blockcraft.lobby.config.GameNpcConfig;
 import me.blockcraft.lobby.config.LobbyLocation;
@@ -16,7 +17,6 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import org.bukkit.Bukkit;
-import org.bukkit.Chunk;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
@@ -68,15 +68,16 @@ public final class GameNpcs implements Listener, AutoCloseable {
     private final Messages messages;
     private final Messages shared;
     private final List<Npc> npcs = new ArrayList<>();
-    private final List<Chunk> held = new ArrayList<>();
+    private final ChunkTickets.Owner held;
     private final Map<UUID, Long> lastClick = new HashMap<>();
     private final Random random = new Random();
     private final BukkitTask look;
     private final BukkitTask idle;
 
-    public GameNpcs(Plugin plugin, Locations<String> spots, GameNpcConfig config, Map<LobbyLocation, String> groups,
+    public GameNpcs(Plugin plugin, ChunkTickets chunks, Locations<String> spots, GameNpcConfig config, Map<LobbyLocation, String> groups,
                     ServerGroups status, Messages messages, Messages shared) {
         this.plugin = plugin;
+        held = chunks.owner();
         this.spots = spots;
         this.config = config;
         this.groups = groups;
@@ -111,7 +112,6 @@ public final class GameNpcs implements Listener, AutoCloseable {
         for (var area : LobbyLocation.values()) {
             area.game().ifPresent(icon -> spots.get(spot(area)).ifPresent(base -> {
                 var chunk = base.getChunk();
-                chunk.addPluginChunkTicket(plugin);
                 held.add(chunk);
                 var figure = Figures.spawn(base, skin(area), spawned -> spawned.getEquipment().setItemInMainHand(icon.item().build()));
                 var card = Holograms.line(base.clone().add(0, CARD_HEIGHT, 0), card(area));
@@ -230,7 +230,6 @@ public final class GameNpcs implements Listener, AutoCloseable {
             npc.card().remove();
         });
         npcs.clear();
-        held.forEach(chunk -> chunk.removePluginChunkTicket(plugin));
         held.clear();
     }
 

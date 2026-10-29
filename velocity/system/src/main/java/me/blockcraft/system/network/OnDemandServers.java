@@ -128,9 +128,9 @@ public final class OnDemandServers {
                         waker.stop(stop.group()).thenAccept(stopped -> apply(onDemand.stopped(stop.group(), stopped, clock.instant())));
                     }
                 }
-                case Effect.Admit admit -> admit.players().forEach(id -> proxy.getPlayer(id)
+                case Effect.Admit admit -> admit.players().forEach(id -> onDemand.admit(admit, id, () -> proxy.getPlayer(id)
                         .filter(player -> lobby != null && lobby.isOnLobby(player))
-                        .ifPresent(player -> lobby.play(player, admit.group())));
+                        .ifPresent(player -> lobby.play(player, admit.group()))));
                 case Effect.Fail fail -> fail.players().forEach(id -> proxy.getPlayer(id).ifPresent(player ->
                         player.sendMessage(messages.get("play.start-failed", lobby == null ? TagResolver.empty() : lobby.game(fail.group())))));
             }

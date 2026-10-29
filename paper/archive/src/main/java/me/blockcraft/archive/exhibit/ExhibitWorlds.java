@@ -6,24 +6,21 @@ import me.blockcraft.api.task.Tasks;
 import me.blockcraft.api.world.TemplateDimensions;
 import me.blockcraft.api.world.Worlds;
 import me.blockcraft.archive.note.Note;
+import me.blockcraft.archive.note.NoteDisplays;
 import me.blockcraft.archive.note.NoteRepository;
 import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
 import org.bukkit.Difficulty;
 import org.bukkit.GameRules;
 import org.bukkit.Location;
 import org.bukkit.World;
-import org.bukkit.entity.Display;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.TextDisplay;
 import org.bukkit.plugin.Plugin;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -41,7 +38,6 @@ import java.util.logging.Level;
 public final class ExhibitWorlds {
 
     private static final long SWEEP_TICKS = 20L * 10;
-    private static final int NOTE_LINE_WIDTH = 180;
 
     private record Trip(Consumer<World> arrive, Runnable failed) {
     }
@@ -54,17 +50,19 @@ public final class ExhibitWorlds {
     private final TemplateDimensions dimensions = new TemplateDimensions("exhibit", ExhibitWorlds::settle);
     private final Map<String, List<Trip>> opening = new HashMap<>();
     private final Map<String, Instant> emptySince = new HashMap<>();
-    private final Map<Long, TextDisplay> displays = new HashMap<>();
+    private final NoteDisplays displays;
 
     public ExhibitWorlds(Plugin plugin, ExhibitPool pool, NoteRepository notes, Messages messages, Duration unloadAfter) {
         this.plugin = plugin;
         this.pool = pool;
         this.notes = notes;
         this.messages = messages;
+        displays = new NoteDisplays(messages);
         this.unloadAfter = unloadAfter;
     }
 
     public void start() {
+        plugin.getServer().getPluginManager().registerEvents(displays, plugin);
         Bukkit.getScheduler().runTaskTimer(plugin, this::sweep, SWEEP_TICKS, SWEEP_TICKS);
     }
 
@@ -150,33 +148,16 @@ public final class ExhibitWorlds {
     }
 
     public void show(Note note) {
-        dimensions.loaded(note.exhibit()).ifPresent(world -> display(world, note));
+        dimensions.loaded(note.exhibit()).ifPresent(world -> displays.show(world, note));
     }
 
     public void hide(Note note) {
-        Optional.ofNullable(displays.remove(note.id())).ifPresent(TextDisplay::remove);
+        displays.hide(note);
     }
 
     private void showNotes(World world, String key) {
-        Tasks.async(plugin, () -> notes.list(key), list -> {
-            if (dimensions.loaded(key).filter(world::equals).isPresent()) {
-                list.forEach(note -> display(world, note));
-            }
-        });
-    }
-
-    private void display(World world, Note note) {
-        hide(note);
-        var text = messages.get("note.display", Placeholder.unparsed("text", note.text()),
-                Placeholder.unparsed("author", note.author().name()),
-                Formatter.date("date", note.createdAt().atZone(ZoneId.systemDefault())));
-        displays.put(note.id(), world.spawn(note.display(world), TextDisplay.class, entity -> {
-            entity.text(text);
-            entity.setBillboard(Display.Billboard.CENTER);
-            entity.setLineWidth(NOTE_LINE_WIDTH);
-            entity.setPersistent(false);
-            entity.setShadowed(true);
-        }));
+        var loaded = displays.load(world);
+        Tasks.async(plugin, () -> notes.list(key), loaded);
     }
 
     private void sweep() {
@@ -190,7 +171,6 @@ public final class ExhibitWorlds {
                 emptySince.remove(key.get());
             } else if (Duration.between(emptySince.computeIfAbsent(key.get(), ignored -> now), now).compareTo(unloadAfter) >= 0) {
                 emptySince.remove(key.get());
-                displays.values().removeIf(display -> display.getWorld().equals(world));
                 Bukkit.unloadWorld(world, false);
             }
         }

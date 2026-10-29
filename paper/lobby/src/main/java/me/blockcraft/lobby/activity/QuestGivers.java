@@ -7,11 +7,11 @@ import me.blockcraft.api.config.Locations;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.lobby.ChunkTickets;
 import me.blockcraft.common.shop.UnlockRewards;
 import me.blockcraft.lobby.config.Quest;
 import me.blockcraft.lobby.menu.QuestDialog;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
-import org.bukkit.Chunk;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Mannequin;
 import org.bukkit.entity.Player;
@@ -19,9 +19,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.inventory.EquipmentSlot;
-import org.bukkit.plugin.Plugin;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,16 +35,15 @@ public final class QuestGivers implements Listener, AutoCloseable {
 
     private static final String PARKOUR_FINISHED = "SELECT best_millis FROM bc_parkour WHERE player_uuid = ? AND best_millis IS NOT NULL";
 
-    private final Plugin plugin;
     private final Locations<String> spots;
     private final List<Quest> quests;
     private final Messages messages;
     private final UnlockRewards rewards;
     private final Map<Mannequin, Quest> givers = new HashMap<>();
-    private final List<Chunk> held = new ArrayList<>();
+    private final ChunkTickets.Owner held;
 
-    public QuestGivers(Plugin plugin, Locations<String> spots, List<Quest> quests, Messages messages) {
-        this.plugin = plugin;
+    public QuestGivers(ChunkTickets chunks, Locations<String> spots, List<Quest> quests, Messages messages) {
+        held = chunks.owner();
         this.spots = spots;
         this.quests = quests;
         this.messages = messages;
@@ -67,7 +64,6 @@ public final class QuestGivers implements Listener, AutoCloseable {
         for (var quest : quests) {
             spots.get(spot(quest)).ifPresent(at -> {
                 var chunk = at.getChunk();
-                chunk.addPluginChunkTicket(plugin);
                 held.add(chunk);
                 var skin = quest.skin().isBlank() ? Mannequin.defaultProfile()
                         : ResolvableProfile.resolvableProfile().name(quest.skin()).build();
@@ -143,7 +139,6 @@ public final class QuestGivers implements Listener, AutoCloseable {
     public void close() {
         givers.keySet().forEach(Entity::remove);
         givers.clear();
-        held.forEach(chunk -> chunk.removePluginChunkTicket(plugin));
         held.clear();
     }
 }

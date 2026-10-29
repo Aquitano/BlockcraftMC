@@ -5,19 +5,16 @@ import io.papermc.paper.event.player.PrePlayerAttackEntityEvent;
 import me.blockcraft.api.config.Locations;
 import me.blockcraft.api.game.Leader;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.lobby.ChunkTickets;
 import me.blockcraft.lobby.activity.Figures;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import org.bukkit.Chunk;
 import org.bukkit.entity.Mannequin;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
-import org.bukkit.plugin.Plugin;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -31,15 +28,14 @@ public final class Podiums implements Listener, AutoCloseable {
     private record Standing(Leader leader, Mannequin figure) {
     }
 
-    private final Plugin plugin;
     private final Locations<String> spots;
     private final Leaderboards leaderboards;
     private final Messages messages;
     private final Map<String, Standing> standing = new HashMap<>();
-    private final List<Chunk> held = new ArrayList<>();
+    private final ChunkTickets.Owner held;
 
-    public Podiums(Plugin plugin, Locations<String> spots, Leaderboards leaderboards, Messages messages) {
-        this.plugin = plugin;
+    public Podiums(ChunkTickets chunks, Locations<String> spots, Leaderboards leaderboards, Messages messages) {
+        held = chunks.owner();
         this.spots = spots;
         this.leaderboards = leaderboards;
         this.messages = messages;
@@ -65,10 +61,7 @@ public final class Podiums implements Listener, AutoCloseable {
             }
             current.ifPresent(old -> old.figure().remove());
             var chunk = place.get().getChunk();
-            if (!held.contains(chunk)) {
-                chunk.addPluginChunkTicket(plugin);
-                held.add(chunk);
-            }
+            held.add(chunk);
             var first = leader.get();
             var figure = Figures.spawn(place.get(), skin(first), messages.get("holo.leaderboard.podium",
                     Placeholder.unparsed("name", first.name()), Formatter.number("value", first.value())));
@@ -111,7 +104,6 @@ public final class Podiums implements Listener, AutoCloseable {
     public void close() {
         standing.values().forEach(each -> each.figure().remove());
         standing.clear();
-        held.forEach(chunk -> chunk.removePluginChunkTicket(plugin));
         held.clear();
     }
 }

@@ -25,9 +25,12 @@ public final class TpHereCommand {
                 .then(Commands.argument("players", ArgumentTypes.players())
                         .executes(context -> {
                             var staff = context.getSource().getPlayerOrThrow();
-                            var moved = TargetGuard.permitted(staff, Players.resolveAll(context, "players"), messages).stream()
-                                    .filter(target -> !target.equals(staff) && back.teleport(target, staff.getLocation()))
-                                    .toList();
+                            var permitted = TargetGuard.permitted(staff, Players.resolveAll(context, "players"), messages).stream()
+                                    .filter(target -> !target.equals(staff)).toList();
+                            var moved = permitted.stream().filter(target -> back.teleport(target, staff.getLocation())).toList();
+                            if (moved.size() < permitted.size()) {
+                                staff.sendMessage(messages.get("teleport.failed-many", Formatter.number("count", permitted.size() - moved.size())));
+                            }
                             moved.forEach(target -> audit.record(staff, "tphere", target));
                             if (moved.size() == 1) {
                                 staff.sendMessage(messages.get("tphere.done", Placeholder.unparsed("player", moved.getFirst().getName())));

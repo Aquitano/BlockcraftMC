@@ -1,10 +1,12 @@
 package me.blockcraft.system;
 
 import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.ConnectionRequestBuilder;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.messages.ChannelRegistrar;
 import com.velocitypowered.api.proxy.server.ServerInfo;
+import com.velocitypowered.api.proxy.server.RegisteredServer;
 
 import java.lang.reflect.Proxy;
 import java.net.InetSocketAddress;
@@ -15,6 +17,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Just enough of the Velocity API for the unit tests: players with a name, id and permissions on a proxy that lists
@@ -25,6 +28,8 @@ final class FakeProxy {
     private final Map<UUID, Player> online = new LinkedHashMap<>();
     private final Map<UUID, ServerConnection> connections = new LinkedHashMap<>();
     private final Map<UUID, List<Object>> received = new LinkedHashMap<>();
+    private final Map<String, RegisteredServer> servers = new LinkedHashMap<>();
+    private final Map<UUID, List<RegisteredServer>> requested = new LinkedHashMap<>();
 
     final ChannelRegistrar registrar = (ChannelRegistrar) Proxy.newProxyInstance(ChannelRegistrar.class.getClassLoader(),
             new Class<?>[]{ChannelRegistrar.class}, (proxy, method, args) -> switch (method.getName()) {
@@ -37,6 +42,7 @@ final class FakeProxy {
                 case "getAllPlayers" -> List.copyOf(online.values());
                 case "getPlayer" -> args[0] instanceof UUID id ? Optional.ofNullable(online.get(id)) : byName(String.valueOf(args[0]));
                 case "getChannelRegistrar" -> registrar;
+                case "getServer" -> Optional.ofNullable(servers.get(args[0]));
                 default -> throw new AssertionError(method.getName());
             });
 
@@ -50,6 +56,7 @@ final class FakeProxy {
                     case "hasPermission" -> granted.contains(args[0]);
                     case "isActive" -> online.containsKey(id);
                     case "getCurrentServer" -> Optional.ofNullable(connections.get(id));
+                    case "createConnectionRequest" -> request(id, (RegisteredServer) args[0]);
                     case "getAppliedResourcePacks" -> List.of();
                     case "playSound" -> null;
                     case "sendPlayerListHeaderAndFooter" -> received.computeIfAbsent(id, key -> new ArrayList<>()).add(args[0]);
@@ -70,11 +77,19 @@ final class FakeProxy {
     /** Moves the player onto a backend; the connection records every plugin message the proxy sends to that server. */
     ServerConnection connect(Player player, String serverName) {
         var info = new ServerInfo(serverName, new InetSocketAddress("127.0.0.1", 25566));
+        var registered = servers.computeIfAbsent(serverName, name -> (RegisteredServer) Proxy.newProxyInstance(
+                RegisteredServer.class.getClassLoader(), new Class<?>[]{RegisteredServer.class}, (proxy, method, args) -> switch (method.getName()) {
+                    case "getServerInfo" -> info;
+                    case "equals" -> proxy == args[0];
+                    case "hashCode" -> info.hashCode();
+                    default -> throw new AssertionError(method.getName());
+                }));
         var sent = new ArrayList<byte[]>();
         var connection = (ServerConnection) Proxy.newProxyInstance(ServerConnection.class.getClassLoader(),
                 new Class<?>[]{ServerConnection.class, Sent.class}, (proxy, method, args) -> switch (method.getName()) {
                     case "getPlayer" -> player;
                     case "getServerInfo" -> info;
+                    case "getServer" -> registered;
                     case "sendPluginMessage" -> sent.add((byte[]) args[1]);
                     case "sent" -> List.copyOf(sent);
                     case "hashCode" -> info.hashCode();
@@ -91,6 +106,19 @@ final class FakeProxy {
 
     List<Object> received(Player player) {
         return received.getOrDefault(player.getUniqueId(), List.of());
+    }
+
+    List<RegisteredServer> requested(Player player) {
+        return requested.getOrDefault(player.getUniqueId(), List.of());
+    }
+
+    private ConnectionRequestBuilder request(UUID player, RegisteredServer target) {
+        requested.computeIfAbsent(player, id -> new ArrayList<>()).add(target);
+        return (ConnectionRequestBuilder) Proxy.newProxyInstance(ConnectionRequestBuilder.class.getClassLoader(),
+                new Class<?>[]{ConnectionRequestBuilder.class}, (proxy, method, args) -> switch (method.getName()) {
+                    case "connectWithIndication" -> CompletableFuture.completedFuture(true);
+                    default -> throw new AssertionError(method.getName());
+                });
     }
 
     private Optional<Player> byName(String name) {

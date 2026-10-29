@@ -2,6 +2,7 @@ package me.blockcraft.core.staff;
 
 import me.blockcraft.api.item.HotbarItem;
 import me.blockcraft.api.pack.MenuIcon;
+import me.blockcraft.api.player.InventoryInspection;
 import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
@@ -33,8 +34,21 @@ enum StaffTool implements HotbarItem {
 
     static void giveAll(Player player, Messages messages) {
         for (var tool : values()) {
-            player.getInventory().setItem(tool.slot, tool.build(tool.icon.item().name(tool.name(messages))));
+            if (tool.permitted(player)) {
+                player.getInventory().setItem(tool.slot, tool.build(tool.icon.item().name(tool.name(messages))
+                        .lore(messages.get("staff.hint." + tool.name().toLowerCase(java.util.Locale.ROOT)))));
+            }
         }
+    }
+
+    boolean permitted(Player player) {
+        return switch (this) {
+            case FREEZE -> player.hasPermission("blockcraft.core.freeze");
+            case INVSEE -> player.hasPermission(InventoryInspection.PERMISSION);
+            case REPORTS -> player.hasPermission("blockcraft.reports.menu");
+            case LEAVE -> true;
+            default -> player.hasPermission("blockcraft.core.staff");
+        };
     }
 
     private Component name(Messages messages) {

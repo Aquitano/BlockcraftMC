@@ -109,6 +109,8 @@ public final class TpCommand {
         if (back.teleport(self, destination.location().apply(self))) {
             self.sendMessage(messages.get("tp.self", Placeholder.unparsed("to", destination.label())));
             recordSelf(sender, destination, audit);
+        } else {
+            sender.sendMessage(messages.get("teleport.failed", Placeholder.component("player", self.name())));
         }
         return Command.SINGLE_SUCCESS;
     }
@@ -116,9 +118,11 @@ public final class TpCommand {
     private static int move(CommandContext<CommandSourceStack> context, Destination destination, Optional<Location> facing,
                             BackLocations back, StaffAudit audit, Messages messages) throws CommandSyntaxException {
         var sender = context.getSource().getSender();
-        List<Entity> moved = TargetGuard.permitted(sender, Players.entities(context, "targets"), messages).stream()
-                .filter(target -> back.teleport(target, destination.location().apply(target)))
-                .toList();
+        var permitted = TargetGuard.permitted(sender, Players.entities(context, "targets"), messages);
+        List<Entity> moved = permitted.stream().filter(target -> back.teleport(target, destination.location().apply(target))).toList();
+        if (moved.size() < permitted.size()) {
+            sender.sendMessage(messages.get("teleport.failed-many", Formatter.number("count", permitted.size() - moved.size())));
+        }
         for (var target : moved) {
             facing.ifPresent(point -> target.lookAt(point.getX(), point.getY(), point.getZ(), LookAnchor.EYES));
             if (target.equals(sender)) {

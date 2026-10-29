@@ -4,6 +4,7 @@ import com.destroystokyo.paper.event.player.PlayerStopSpectatingEntityEvent;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.audit.StaffAudit;
 import me.blockcraft.api.game.Round;
+import me.blockcraft.api.player.InventoryInspection;
 import me.blockcraft.api.task.SerialTasks;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
@@ -21,6 +22,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
@@ -79,7 +81,7 @@ public final class StaffMode implements Listener {
         this.inventories = inventories;
         this.writes = new SerialTasks<>(plugin);
         this.audit = audit;
-        this.info = new PlayerInfo(plugin, reports, punishments, messages);
+        this.info = new PlayerInfo(reports, punishments, messages);
     }
 
     public boolean isActive(Player player) {
@@ -105,11 +107,11 @@ public final class StaffMode implements Listener {
         sessions.put(uuid, new Session(contents, vanish.isVanished(player), player.getAllowFlight(), flight.granted(player)));
         byte[] serialized = ItemStack.serializeItemsAsBytes(contents);
         writes.run(uuid, () -> inventories.save(uuid, serialized));
-        player.getInventory().clear();
-        StaffTool.giveAll(player, messages);
         if (!vanish.isVanished(player)) {
             vanish.set(player, true);
         }
+        player.getInventory().clear();
+        StaffTool.giveAll(player, messages);
         flight.set(player, true);
         player.setAllowFlight(true);
         player.setFlying(true);
@@ -190,6 +192,9 @@ public final class StaffMode implements Listener {
         }
         event.setCancelled(true);
         StaffTool.of(event.getItem()).ifPresent(tool -> {
+            if (!mayUse(player, tool)) {
+                return;
+            }
             switch (tool) {
                 case RANDOM -> teleportToRandomPlayer(player);
                 case REPORTS -> openReports(player);
@@ -208,15 +213,30 @@ public final class StaffMode implements Listener {
         }
         event.setCancelled(true);
         StaffTool.of(staff.getInventory().getItemInMainHand()).ifPresent(tool -> {
+            if (!mayUse(staff, tool)) {
+                return;
+            }
             switch (tool) {
                 case FREEZE -> FreezeCommand.toggle(staff, target, freeze, audit, messages);
                 case INVSEE -> InvseeCommand.open(staff, target, audit, messages);
-                case INFO -> info.show(staff, target);
+                case INFO -> info.show(staff, target, () -> isActive(staff) && !freeze.isFrozen(staff) && StaffTool.INFO.permitted(staff));
                 case SPECTATE -> spectate(staff, target);
                 default -> {
                 }
             }
         });
+    }
+
+    private boolean mayUse(Player staff, StaffTool tool) {
+        if (freeze.isFrozen(staff)) {
+            staff.sendMessage(messages.get("freeze.no-commands"));
+            return false;
+        }
+        if (!tool.permitted(staff)) {
+            staff.sendMessage(messages.get("staff.tool-denied"));
+            return false;
+        }
+        return true;
     }
 
     public void spectate(Player staff, Player target) {
@@ -306,7 +326,25 @@ public final class StaffMode implements Listener {
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
-        if (event.getWhoClicked() instanceof Player player && isActive(player)) {
+        if (!(event.getWhoClicked() instanceof Player player) || !isActive(player)) {
+            return;
+        }
+        boolean inspection = InventoryInspection.permitted(player, event.getView().getTopInventory());
+        boolean editsTarget = event.getClickedInventory() == event.getView().getTopInventory();
+        boolean movesHotbar = switch (event.getAction()) {
+            case MOVE_TO_OTHER_INVENTORY, HOTBAR_SWAP, HOTBAR_MOVE_AND_READD, COLLECT_TO_CURSOR -> true;
+            default -> false;
+        };
+        if (!inspection || !editsTarget || movesHotbar) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onInventoryDrag(InventoryDragEvent event) {
+        if (event.getWhoClicked() instanceof Player player && isActive(player)
+                && (!InventoryInspection.permitted(player, event.getView().getTopInventory())
+                || event.getRawSlots().stream().anyMatch(slot -> slot >= event.getView().getTopInventory().getSize()))) {
             event.setCancelled(true);
         }
     }
@@ -331,8 +369,8 @@ public final class StaffMode implements Listener {
                 .filter(other -> other.getGameMode() != GameMode.SPECTATOR && !Round.isWatching(other)).toList();
         var pool = playing.isEmpty() ? candidates : playing;
         var target = pool.get(random.nextInt(pool.size()));
-        staff.teleport(target);
-        staff.sendMessage(messages.get("staff.teleported", Placeholder.unparsed("player", target.getName())));
+        staff.sendMessage(messages.get(staff.teleport(target) ? "staff.teleported" : "staff.teleport-failed",
+                Placeholder.unparsed("player", target.getName())));
     }
 
     private void openReports(Player staff) {

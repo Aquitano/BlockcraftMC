@@ -6,6 +6,7 @@ import me.blockcraft.reports.ReportsPlugin;
 import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.moderation.PunishmentCatalogRepository;
+import me.blockcraft.common.moderation.PunishmentType;
 import me.blockcraft.common.network.operation.NetworkRequest.PresetPunishment;
 import me.blockcraft.common.network.operation.NetworkRequest.TimedPunishment;
 import me.blockcraft.common.report.Report;
@@ -20,7 +21,9 @@ import org.bukkit.plugin.Plugin;
 
 import java.time.Duration;
 import java.util.Optional;
+import java.util.List;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 /**
  * Opens the report menus and routes their actions; {@code reported} filters a list to one accused player. Moving
@@ -48,11 +51,6 @@ public final class ReportMenus {
             if (!allowed(player)) {
                 return;
             }
-            if (list.isEmpty()) {
-                player.sendMessage(reported.map(name -> messages.get("none-for-player", Placeholder.unparsed("player", name)))
-                        .orElseGet(() -> messages.pick("none")));
-                return;
-            }
             new ReportListMenu(this, messages, list, reported).open(player);
         });
     }
@@ -65,10 +63,20 @@ public final class ReportMenus {
             if (!allowed(player)) {
                 return;
             }
-            current.ifPresentOrElse(updated -> new ReportDetailsDialog(this, messages, updated, reported,
-                            player.getUniqueId(), BlockcraftApi.get().realName(player)).open(player),
+            current.ifPresentOrElse(updated -> new ReportDetailsDialog(this, messages, updated, reported, player).open(player),
                     () -> reportClosed(player, report, reported));
         });
+    }
+
+    void reloadList(Player player, Optional<String> reported, Consumer<List<Report>> complete, Runnable failed) {
+        if (!allowed(player)) {
+            return;
+        }
+        BlockcraftApi.get().playerTasks().latest(player, () -> reported.map(reports::byReported).orElseGet(reports::all), list -> {
+            if (allowed(player)) {
+                complete.accept(list);
+            }
+        }, ignored -> { }, ignored -> failed.run());
     }
 
     /** The claim is guarded in SQL, so a lost race simply reopens the report with whoever actually holds it. */
@@ -77,6 +85,7 @@ public final class ReportMenus {
             return;
         }
         String staff = BlockcraftApi.get().realName(player);
+        var screen = BlockcraftApi.get().playerTasks().currentScreen(player);
         BlockcraftApi.get().playerTasks().write(player, () -> {
             if (report.isClaimedBy(player.getUniqueId(), staff)) {
                 reports.release(report.id(), player.getUniqueId(), staff);
@@ -90,8 +99,15 @@ public final class ReportMenus {
             }
             current.ifPresentOrElse(updated -> {
                 player.sendMessage(messages.get(claimResult(updated, player.getUniqueId(), staff), placeholders(messages, updated)));
-                openReport(player, updated, reported);
-            }, () -> reportClosed(player, report, reported));
+                if (screen.getAsBoolean()) {
+                    openReport(player, updated, reported);
+                }
+            }, () -> {
+                player.sendMessage(messages.get("closed", Formatter.number("id", report.id())));
+                if (screen.getAsBoolean()) {
+                    openList(player, reported);
+                }
+            });
         });
     }
 
@@ -112,14 +128,17 @@ public final class ReportMenus {
             return;
         }
         String staff = BlockcraftApi.get().realName(player);
-        BlockcraftApi.get().playerTasks().write(player, () -> {
-            reports.close(report.id(), player.getUniqueId(), staff);
-            return report;
-        }, closed -> openList(player, reported));
+        var screen = BlockcraftApi.get().playerTasks().currentScreen(player);
+        BlockcraftApi.get().playerTasks().write(player, () -> reports.close(report.id(), player.getUniqueId(), staff), closed -> {
+            player.sendMessage(messages.get(closed ? "resolved" : "closed", Formatter.number("id", report.id())));
+            if (screen.getAsBoolean()) {
+                openList(player, reported);
+            }
+        });
     }
 
     public void goTo(Player player, String target) {
-        if (!allowed(player)) {
+        if (!allowed(player, "blockcraft.system.goto")) {
             return;
         }
         Menu.close(player);
@@ -132,25 +151,24 @@ public final class ReportMenus {
 
     /** {@code draft} is the custom punishment a rejected form carried, so the moderator corrects it instead of retyping it. */
     private void openPunish(Player player, Report report, Optional<String> reported, Optional<PunishDialog.Custom> draft) {
-        if (!allowed(player)) {
+        if (!allowed(player) || !punishmentsAllowed(player)) {
             return;
         }
         BlockcraftApi.get().playerTasks().latest(player, catalog::all, entries -> {
-            if (!allowed(player)) {
+            if (!allowed(player) || !punishmentsAllowed(player)) {
                 return;
             }
-            new PunishDialog(this, messages, report, reported, entries, draft).open(player);
+            new PunishDialog(this, messages, report, reported, entries, draft, player).open(player);
         });
     }
 
     public void punish(Player player, Report report, PunishmentCatalogRepository.Entry entry) {
-        if (!allowed(player)) {
+        if (!allowed(player, permission(entry.type()))) {
             return;
         }
         BlockcraftApi.get().operations().submit(player, new PresetPunishment(report.target(), entry.number()));
     }
 
-    /** A punishment outside the catalogue; the proxy checks rank and permission and answers, so only the form is checked here. */
     void punish(Player player, Report report, Optional<String> reported, Optional<PunishDialog.Custom> form) {
         if (!allowed(player)) {
             return;
@@ -161,6 +179,9 @@ public final class ReportMenus {
             return;
         }
         var custom = form.get();
+        if (!allowed(player, permission(custom.type()))) {
+            return;
+        }
         if (custom.reason().isEmpty() || custom.totalHours() <= 0) {
             player.sendMessage(messages.get(custom.reason().isEmpty() ? "punish.reason-missing" : "punish.duration-missing"));
             openPunish(player, report, reported, form);
@@ -188,14 +209,54 @@ public final class ReportMenus {
             return;
         }
         String status = entered.get();
+        var screen = BlockcraftApi.get().playerTasks().currentScreen(player);
         BlockcraftApi.get().playerTasks().write(player, () -> {
             reports.updateStatus(report.id(), status);
-            return report.withStatus(status);
-        }, updated -> {
-            player.sendMessage(messages.get("status.updated", Formatter.number("id", updated.id()),
-                    Placeholder.component("status", status(updated))));
-            openReport(player, updated, reported);
+            return reports.byId(report.id());
+        }, current -> {
+            current.ifPresentOrElse(updated -> {
+                player.sendMessage(messages.get("status.updated", Formatter.number("id", updated.id()),
+                        Placeholder.component("status", status(updated))));
+                if (screen.getAsBoolean()) {
+                    openReport(player, updated, reported);
+                }
+            }, () -> {
+                player.sendMessage(messages.get("closed", Formatter.number("id", report.id())));
+                if (screen.getAsBoolean()) {
+                    openList(player, reported);
+                }
+            });
         });
+    }
+
+    static boolean canPunish(Player player, PunishmentType type) {
+        return player.hasPermission(permission(type));
+    }
+
+    private static String permission(PunishmentType type) {
+        return switch (type) {
+            case BAN -> "blockcraft.system.ban";
+            case MUTE -> "blockcraft.system.mute";
+        };
+    }
+
+    private boolean punishmentsAllowed(Player player) {
+        if (canPunish(player, PunishmentType.BAN) || canPunish(player, PunishmentType.MUTE)) {
+            return true;
+        }
+        player.sendMessage(messages.get("no-permission"));
+        return false;
+    }
+
+    private boolean allowed(Player player, String permission) {
+        if (!allowed(player)) {
+            return false;
+        }
+        if (player.hasPermission(permission)) {
+            return true;
+        }
+        player.sendMessage(messages.get("no-permission"));
+        return false;
     }
 
     private boolean allowed(Player player) {

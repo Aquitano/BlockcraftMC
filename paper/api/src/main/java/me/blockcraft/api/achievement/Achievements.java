@@ -63,8 +63,6 @@ public final class Achievements implements Listener {
     private record Rewards(List<Achievement> achievements, List<CosmeticReward> cosmetics) {
     }
 
-    /** The games write their stats asynchronously around the summary, so the totals get a moment to land. */
-    private static final long ROUND_SETTLE_TICKS = 40L;
     private static final Title.Times TIMES = Title.Times.times(Duration.ofMillis(300), Duration.ofSeconds(2), Duration.ofMillis(500));
 
     private final Plugin plugin;
@@ -203,8 +201,7 @@ public final class Achievements implements Listener {
     }
 
     public void afterRound(String game, Collection<? extends Player> participants) {
-        List<Player> players = List.copyOf(participants);
-        Tasks.later(plugin, ROUND_SETTLE_TICKS, () -> evaluate(game, players.stream().filter(Player::isOnline).toList()));
+        evaluate(game, List.copyOf(participants));
     }
 
     @EventHandler

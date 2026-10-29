@@ -490,6 +490,8 @@ find:
 goto:
   usage: "<prefix><muted>Syntax: /goto \\<Spieler>"
   offline: "<prefix><accent>Der Spieler ist nicht online."
+  already: "<prefix><muted>Du bist bereits mit <accent><player> <muted>auf <accent><server><muted>."
+  connecting: "<prefix><muted>Verbinde dich mit <accent><server> <muted>zu <accent><player><muted> …"
 cc:
   cleared: "<prefix><muted>Der <success>Chat <muted>wurde geleert!"
 # /event names the occasions as staff type them (christmas, new-years-eve, og for the old BedWars maps); <occasions> is nothing when none is active.

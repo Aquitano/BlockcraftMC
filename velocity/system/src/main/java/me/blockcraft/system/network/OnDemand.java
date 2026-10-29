@@ -80,6 +80,7 @@ public final class OnDemand {
 
     private final Settings settings;
     private final Map<String, Group> groups = new LinkedHashMap<>();
+    private final Map<UUID, Effect.Admit> pendingAdmissions = new LinkedHashMap<>();
 
     public OnDemand(Settings settings) {
         this.settings = settings;
@@ -145,10 +146,21 @@ public final class OnDemand {
     }
 
     public synchronized void cancel(UUID player) {
+        pendingAdmissions.remove(player);
         groups.values().forEach(entry -> remove(entry, player));
     }
 
+    public synchronized void admit(Effect.Admit admission, UUID player, Runnable send) {
+        // The same players can wait for the same group again, so an older, equal effect must not claim their new wait.
+        if (pendingAdmissions.get(player) != admission) {
+            return;
+        }
+        pendingAdmissions.remove(player);
+        send.run();
+    }
+
     private void select(String group, UUID player) {
+        pendingAdmissions.remove(player);
         groups.forEach((name, entry) -> {
             if (!name.equals(group)) {
                 remove(entry, player);
@@ -192,7 +204,7 @@ public final class OnDemand {
                     if (!entry.waiting.isEmpty() && observation.idle()) {
                         // Back from a restart the poll did not see, or another server of the group has room.
                         entry.rejoinedSince = Optional.empty();
-                        effects.add(new Effect.Admit(group, drain(entry.waiting)));
+                        queueAdmission(group, entry, effects);
                     } else if (entry.rejoinedSince.filter(since -> !now.isBefore(since.plus(settings.startTimeout()))).isPresent()) {
                         entry.rejoinedSince = Optional.empty();
                         fail(group, entry, effects);
@@ -232,7 +244,7 @@ public final class OnDemand {
             move(group, entry, GroupState.AWAKE, now, effects);
             entry.idleSince = Optional.of(now);
             if (!entry.waiting.isEmpty()) {
-                effects.add(new Effect.Admit(group, drain(entry.waiting)));
+                queueAdmission(group, entry, effects);
             }
             return effects;
         }
@@ -273,8 +285,14 @@ public final class OnDemand {
         move(group, entry, GroupState.AWAKE, now, effects);
         entry.idleSince = Optional.empty();
         if (!entry.waiting.isEmpty()) {
-            effects.add(new Effect.Admit(group, drain(entry.waiting)));
+            queueAdmission(group, entry, effects);
         }
+    }
+
+    private void queueAdmission(String group, Group entry, List<Effect> effects) {
+        var admission = new Effect.Admit(group, drain(entry.waiting));
+        admission.players().forEach(player -> pendingAdmissions.put(player, admission));
+        effects.add(admission);
     }
 
     private void move(String group, Group entry, GroupState state, Instant now, List<Effect> effects) {

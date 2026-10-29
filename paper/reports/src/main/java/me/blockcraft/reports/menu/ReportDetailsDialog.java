@@ -7,6 +7,7 @@ import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.dialog.Dialogs;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.common.moderation.PunishmentType;
 import me.blockcraft.common.report.Report;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
@@ -14,6 +15,7 @@ import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.entity.Player;
 
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -23,15 +25,22 @@ final class ReportDetailsDialog {
 
     private final Dialog dialog;
 
-    ReportDetailsDialog(ReportMenus menus, Messages messages, Report report, Optional<String> reported, UUID staffId, String staff) {
+    ReportDetailsDialog(ReportMenus menus, Messages messages, Report report, Optional<String> reported, Player staff) {
         var placeholders = ReportMenus.placeholders(messages, report);
-        var buttons = List.of(
-                button(messages, "menu.goto-reporter", placeholders, viewer -> menus.goTo(viewer, report.reporter())),
-                button(messages, "menu.goto-reported", placeholders, viewer -> menus.goTo(viewer, report.reported())),
-                button(messages, claim(report, staffId, staff), placeholders, viewer -> menus.toggleClaim(viewer, report, reported)),
-                button(messages, "menu.set-status", placeholders, viewer -> menus.promptStatus(viewer, report, reported)),
-                button(messages, "menu.punish", placeholders, viewer -> menus.openPunish(viewer, report, reported)),
-                button(messages, "menu.resolve", placeholders, viewer -> menus.resolve(viewer, report, reported)));
+        var buttons = new ArrayList<ActionButton>();
+        if (staff.hasPermission("blockcraft.system.goto")) {
+            buttons.add(button(messages, "menu.goto-reporter", placeholders, viewer -> menus.goTo(viewer, report.reporter())));
+            buttons.add(button(messages, "menu.goto-reported", placeholders, viewer -> menus.goTo(viewer, report.reported())));
+        }
+        var claim = claim(report, staff.getUniqueId(), BlockcraftApi.get().realName(staff));
+        if (!claim.equals("menu.claimed")) {
+            buttons.add(button(messages, claim, placeholders, viewer -> menus.toggleClaim(viewer, report, reported)));
+        }
+        buttons.add(button(messages, "menu.set-status", placeholders, viewer -> menus.promptStatus(viewer, report, reported)));
+        if (ReportMenus.canPunish(staff, PunishmentType.BAN) || ReportMenus.canPunish(staff, PunishmentType.MUTE)) {
+            buttons.add(button(messages, "menu.punish", placeholders, viewer -> menus.openPunish(viewer, report, reported)));
+        }
+        buttons.add(button(messages, "menu.resolve", placeholders, viewer -> menus.resolve(viewer, report, reported)));
         dialog = Dialogs.create(messages.get("menu.title-report", placeholders),
                 List.of(
                         DialogBody.item(Items.head(report.reported()).build())

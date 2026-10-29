@@ -11,6 +11,7 @@ none:
   - "<prefix><success>Keine Reports offen. <muted>Auch auf Seite 404 nicht."
   - "<prefix><success>Keine Reports offen. <muted>Der Papierkorb meldet sich freiwillig ab."
 closed: "<prefix><muted>Report <accent><id> <muted>wurde bereits erledigt."
+resolved: "<prefix><success>Report <accent><id> <success>ist erledigt."
 none-for-player: "<prefix>Der Spieler <error><bold><player><reset><muted> wurde nicht reportet!"
 join-one: "<prefix><muted>Es liegt gerade <error>ein <muted>Report vor."
 join-many: "<prefix><muted>Es liegen gerade <error><count> <muted>Reports vor."
@@ -40,6 +41,9 @@ status:
   updated: "<prefix>Status von Report <accent><id> <muted>gesetzt: <accent><status>"
   cancelled: "<prefix>Statusänderung abgebrochen."
 menu:
+  empty: "<success>Keine offenen Reports"
+  empty-player: "<success>Keine offenen Reports gegen <accent><player>"
+  open: "<left>Details und Aktionen öffnen"
   title-all: "<arrow><error>Reports"
   title-player: "<arrow><error>Reports <dark>· <accent>Spieler"
   title-report: "<arrow><error>Report <dark>· <accent><id>"

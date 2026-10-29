@@ -146,10 +146,11 @@ public final class LobbyPlugin extends JavaPlugin {
                 player -> parkour != null && parkour.running(player));
         var items = new LobbyItems(messages, throwFight::item);
         var secrets = new Secrets(this, messages, api.unlocks(), coins, config.secretReward());
+        var chunks = new ChunkTickets(this);
         var activityLocations = Locations.load(api.map().file(this, "activities.yml"));
         parkour = new Parkour(this, activityLocations, activities, messages);
         quirks = new LobbyQuirks(this, activities, messages, pets, secrets);
-        prisoner = new Prisoner(this, activityLocations, messages);
+        prisoner = new Prisoner(chunks, activityLocations, messages);
         mapSecrets = new MapSecrets(this, activityLocations, messages, secrets, activities.placeRadius());
         herobrine = new Herobrine(this, HerobrineConfig.fromYaml(YamlFile.section(yaml, "herobrine")), secrets);
         stars = new ShootingStars(this, ShootingStarConfig.fromYaml(YamlFile.section(yaml, "shooting-stars")), messages, secrets);
@@ -161,7 +162,7 @@ public final class LobbyPlugin extends JavaPlugin {
         props = new Props(this, PropsConfig.fromYaml(YamlFile.section(yaml, "props"), getLogger()),
                 Locations.load(api.map().file(this, "props.yml")));
         props.start();
-        seasons = new SeasonalEvents(this, activityLocations, activities, messages,
+        seasons = new SeasonalEvents(this, chunks, activityLocations, activities, messages,
                 () -> locations.get(LobbyLocation.SPAWN).ifPresent(spawn -> config.fireworkSpots()
                         .forEach(spot -> MoveListener.launchFirework(spot.toLocation(spawn.getWorld())))), decor);
         profiles.advent(player -> seasons.openAdvent(player, back -> profiles.open(back, Optional.empty())));
@@ -169,7 +170,7 @@ public final class LobbyPlugin extends JavaPlugin {
         gadgets = new Gadgets(this, messages, Duration.ofSeconds(config.gadgetCooldownSeconds()));
         friends = new FriendsChannel(this, config.friendsTimeoutTicks());
         previews = new CosmeticPreviews(this, messages, config.cosmeticPreviewTicks());
-        var loreNotes = new LoreNotes(this, activityLocations, LoreNoteConfig.fromYaml(YamlFile.section(yaml, "lore-notes")), messages);
+        var loreNotes = new LoreNotes(this, chunks, activityLocations, LoreNoteConfig.fromYaml(YamlFile.section(yaml, "lore-notes")), messages);
         var cookies = new CookieClicker(this, api.database(), messages,
                 CookieProgress.Rules.fromYaml(YamlFile.section(yaml, "cookies")));
         polish.add(cookies);
@@ -181,19 +182,19 @@ public final class LobbyPlugin extends JavaPlugin {
         shopNpc.start(config.shopNpcRespawnSeconds());
         var leaderboards = new Leaderboards(this, api.database(), messages, api.messages(), config.leaderboards());
         holograms = new Holograms(this, messages, leaderboards);
-        var podiums = new Podiums(this, activityLocations, leaderboards, messages);
+        var podiums = new Podiums(chunks, activityLocations, leaderboards, messages);
         holograms.afterRefresh(podiums::refresh);
         holograms.start(config.leaderboardRefreshSeconds() * 20L);
         var ownRadius = YamlFile.section(yaml, "leaderboards").get("own-radius") instanceof Number radius ? radius.doubleValue() : 10.0;
         var ownPlacings = new OwnPlacings(this, leaderboards, messages, Math.clamp(ownRadius, 2.0, 48.0),
                 Duration.ofSeconds(config.leaderboardRefreshSeconds()));
-        var gameNpcs = new GameNpcs(this, activityLocations, GameNpcConfig.fromYaml(YamlFile.section(yaml, "game-npcs")),
+        var gameNpcs = new GameNpcs(this, chunks, activityLocations, GameNpcConfig.fromYaml(YamlFile.section(yaml, "game-npcs")),
                 config.navigatorGroups(), api.groups(), messages, api.messages());
         var boardSettings = YamlFile.section(yaml, "notice-boards");
-        var noticeBoards = new NoticeBoards(this, activityLocations, messages,
+        var noticeBoards = new NoticeBoards(this, chunks, activityLocations, messages,
                 String.valueOf(boardSettings.getOrDefault("changelog-version", "1")),
                 String.valueOf(boardSettings.getOrDefault("rules-command", "regeln")));
-        var quests = new QuestGivers(this, activityLocations, Quest.fromYaml(YamlFile.section(yaml, "quests")), messages);
+        var quests = new QuestGivers(chunks, activityLocations, Quest.fromYaml(YamlFile.section(yaml, "quests")), messages);
         polish.addAll(List.of(gameNpcs, podiums, ownPlacings, loreNotes, noticeBoards, quests));
         register(gameNpcs, podiums, ownPlacings, loreNotes, noticeBoards, quests);
         LobbyNews.start(this, messages, YamlFile.section(yaml, "news")).ifPresent(news -> {

@@ -44,7 +44,8 @@ public final class BackCommand {
             sender.sendMessage(messages.get(target.equals(sender) ? "back.none" : "back.none-other", player));
             return;
         }
-        if (!back.teleport(target, location.get())) {
+        if (!location.get().isWorldLoaded() || !back.teleport(target, location.get())) {
+            sender.sendMessage(messages.get("teleport.failed", player));
             return;
         }
         target.sendMessage(messages.get("back.done"));

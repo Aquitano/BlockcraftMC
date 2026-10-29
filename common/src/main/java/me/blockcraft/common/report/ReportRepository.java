@@ -75,22 +75,23 @@ public final class ReportRepository {
         }
     }
 
-    public void updateStatus(int id, String status) {
-        db.update("UPDATE Reports SET Status = ? WHERE ID = ?", status, id);
+    public boolean updateStatus(int id, String status) {
+        return db.update("UPDATE Reports SET Status = ? WHERE ID = ? AND closed_at IS NULL", status, id) > 0;
     }
 
     /** Only a free report can be taken, so two moderators clicking at the same moment cannot both hold it. */
     public boolean claim(int id, UUID staffId, String staff) {
-        return db.update("UPDATE Reports SET claimed_by = ?, claimed_uuid = ? WHERE ID = ? AND claimed_by IS NULL", staff, staffId.toString(), id) > 0;
+        return db.update("UPDATE Reports SET claimed_by = ?, claimed_uuid = ? WHERE ID = ? AND claimed_by IS NULL AND closed_at IS NULL",
+                staff, staffId.toString(), id) > 0;
     }
 
     public void release(int id, UUID staffId, String staff) {
-        db.update("UPDATE Reports SET claimed_by = NULL, claimed_uuid = NULL WHERE ID = ? AND "
+        db.update("UPDATE Reports SET claimed_by = NULL, claimed_uuid = NULL WHERE ID = ? AND closed_at IS NULL AND "
                 + "(claimed_uuid = ? OR (claimed_uuid IS NULL AND claimed_by = ?))", id, staffId.toString(), staff);
     }
 
-    public void close(int id, UUID staffId, String staff) {
-        db.update("UPDATE Reports SET closed_at = CURRENT_TIMESTAMP, closed_by = ?, closed_uuid = ? WHERE ID = ? AND closed_at IS NULL",
-                staff, staffId.toString(), id);
+    public boolean close(int id, UUID staffId, String staff) {
+        return db.update("UPDATE Reports SET closed_at = CURRENT_TIMESTAMP, closed_by = ?, closed_uuid = ? WHERE ID = ? AND closed_at IS NULL",
+                staff, staffId.toString(), id) > 0;
     }
 }

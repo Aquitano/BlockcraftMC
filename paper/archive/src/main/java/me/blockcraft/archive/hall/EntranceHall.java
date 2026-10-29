@@ -41,7 +41,7 @@ public final class EntranceHall {
             display.text(welcome);
             display.setBillboard(Display.Billboard.CENTER);
             display.setLineWidth(WELCOME_LINE_WIDTH);
-            display.setPersistent(false);
+            display.setPersistent(true);
             display.setShadowed(true);
         });
         return new EntranceHall(spawn);

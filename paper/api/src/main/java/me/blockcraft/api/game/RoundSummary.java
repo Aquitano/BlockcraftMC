@@ -274,8 +274,7 @@ public final class RoundSummary {
         participants.forEach(player -> score(player).xp += api.xp().award(player, XpReward.PARTICIPATION));
         var names = String.join(", ", winnerNames());
         store(names);
-        book();
-        api.achievements().afterRound(api.server().group(), participants);
+        book(participants);
         var winnerLine = winnerNames().isEmpty()
                 ? messages.get("summary.draw")
                 : messages.get("summary.winner", Placeholder.unparsed("winner", names));
@@ -391,7 +390,7 @@ public final class RoundSummary {
         recaps.forEach((id, recap) -> recapWrites.run(id, () -> api.recaps().save(Map.of(id, recap))));
     }
 
-    private void book() {
+    private void book(List<? extends Player> participants) {
         var rows = new ArrayList<Row>();
         scores.forEach((id, score) -> {
             var delta = score.stats(winners.containsKey(id), !winnerNames().isEmpty());
@@ -399,7 +398,10 @@ public final class RoundSummary {
                 rows.add(new Row(id, score.name, delta));
             }
         });
-        Tasks.async(plugin, () -> rows.forEach(this::bookRow));
+        Tasks.async(plugin, () -> {
+            rows.forEach(this::bookRow);
+            return participants;
+        }, players -> api.achievements().afterRound(api.server().group(), players));
     }
 
     private void bookRow(Row row) {

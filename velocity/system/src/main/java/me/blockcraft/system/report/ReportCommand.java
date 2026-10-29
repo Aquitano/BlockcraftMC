@@ -47,6 +47,7 @@ public final class ReportCommand {
                                 Placeholder.unparsed("author", String.join(", ", description.getAuthors())),
                                 Placeholder.unparsed("version", description.getVersion().orElse("?"))).forEach(player::sendMessage))))
                 .then(BrigadierCommand.literalArgumentBuilder("notify")
+                        .requires(source -> source.hasPermission(staffPermission))
                         .executes(asStaff((player, context) -> player.sendMessage(
                                 messages.get(preferences.enabled(player) ? "notify.status-on" : "notify.status-off"))))
                         .then(BrigadierCommand.literalArgumentBuilder("on").executes(asStaff((player, context) -> toggle(player, true))))

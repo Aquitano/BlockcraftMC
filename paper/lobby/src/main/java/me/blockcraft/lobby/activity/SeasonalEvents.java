@@ -12,6 +12,7 @@ import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.calendar.NetworkCalendar;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.lobby.ChunkTickets;
 import me.blockcraft.common.shop.UnlockRewards;
 import me.blockcraft.lobby.config.ActivitiesConfig;
 import me.blockcraft.lobby.cosmetic.Trail;
@@ -21,7 +22,6 @@ import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
-import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -108,7 +108,7 @@ public final class SeasonalEvents implements Listener, AutoCloseable {
     private final Runnable fireworks;
     private final SeasonalDecor decor;
     private final Map<UUID, Egg> eggs = new HashMap<>();
-    private final Set<Chunk> heldChunks = new HashSet<>();
+    private final ChunkTickets.Owner heldChunks;
     private final Map<UUID, Hat> hats = new HashMap<>();
     private final Set<UUID> claiming = new HashSet<>();
     private LocalDate day;
@@ -117,9 +117,10 @@ public final class SeasonalEvents implements Listener, AutoCloseable {
     private Mannequin santa;
     private Hunt hunt;
 
-    public SeasonalEvents(Plugin plugin, Locations<String> locations, ActivitiesConfig config, Messages messages,
+    public SeasonalEvents(Plugin plugin, ChunkTickets chunks, Locations<String> locations, ActivitiesConfig config, Messages messages,
                           Runnable fireworks, SeasonalDecor decor) {
         this.plugin = plugin;
+        heldChunks = chunks.owner();
         this.locations = locations;
         this.config = config;
         this.messages = messages;
@@ -210,7 +211,6 @@ public final class SeasonalEvents implements Listener, AutoCloseable {
     /** Non-persistent entities vanish with their chunk, so a seasonal figure keeps its chunk loaded while it stands. */
     private void hold(Location location) {
         var chunk = location.getChunk();
-        chunk.addPluginChunkTicket(plugin);
         heldChunks.add(chunk);
     }
 
@@ -221,7 +221,6 @@ public final class SeasonalEvents implements Listener, AutoCloseable {
             santa.remove();
             santa = null;
         }
-        heldChunks.forEach(chunk -> chunk.removePluginChunkTicket(plugin));
         heldChunks.clear();
     }
 

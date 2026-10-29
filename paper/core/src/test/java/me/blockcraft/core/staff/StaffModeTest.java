@@ -14,6 +14,12 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.InventoryView;
+import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.event.inventory.InventoryAction;
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.junit.After;
@@ -160,6 +166,36 @@ public class StaffModeTest {
         assertEquals(10, observer.location.getX(), 0);
     }
 
+    @Test
+    public void inventoryEditorsCanChangeTargetSlotsWithoutMovingStaffTools() {
+        var target = new FakePlayer(10);
+        var top = fake(PlayerInventory.class, (proxy, method, args) -> switch (method.getName()) {
+            case "getHolder" -> target.player;
+            default -> throw new AssertionError(method.getName());
+        });
+        var bottom = fake(PlayerInventory.class, (proxy, method, args) -> switch (method.getName()) {
+            case "getHolder" -> observer.player;
+            default -> throw new AssertionError(method.getName());
+        });
+        var view = fake(InventoryView.class, (proxy, method, args) -> switch (method.getName()) {
+            case "getPlayer" -> observer.player;
+            case "getTopInventory" -> top;
+            case "getInventory" -> (int) args[0] < 41 ? top : bottom;
+            case "convertSlot" -> args[0];
+            default -> throw new AssertionError(method.getName());
+        });
+        for (var action : new InventoryAction[]{InventoryAction.PICKUP_ALL, InventoryAction.MOVE_TO_OTHER_INVENTORY,
+                InventoryAction.HOTBAR_SWAP, InventoryAction.COLLECT_TO_CURSOR}) {
+            var event = new InventoryClickEvent(view, InventoryType.SlotType.CONTAINER, 0, ClickType.LEFT, action);
+            staffMode.onInventoryClick(event);
+            new InvseeGuard().onClick(event);
+            assertEquals(action != InventoryAction.PICKUP_ALL, event.isCancelled());
+        }
+        var ownSlot = new InventoryClickEvent(view, InventoryType.SlotType.CONTAINER, 41, ClickType.LEFT, InventoryAction.PICKUP_ALL);
+        staffMode.onInventoryClick(ownSlot);
+        assertTrue(ownSlot.isCancelled());
+    }
+
     private void assertRestored() {
         assertNull(observer.target);
         assertEquals(GameMode.CREATIVE, observer.gameMode);
@@ -207,7 +243,7 @@ public class StaffModeTest {
             player = fake(Player.class, (proxy, method, args) -> switch (method.getName()) {
                 case "getUniqueId" -> id;
                 case "getName" -> "Player" + id.toString().substring(0, 8);
-                case "isOnline", "canSee" -> true;
+                case "isOnline", "canSee", "hasPermission" -> true;
                 case "isDead" -> false;
                 case "getGameMode" -> gameMode;
                 case "getLocation" -> location.clone();

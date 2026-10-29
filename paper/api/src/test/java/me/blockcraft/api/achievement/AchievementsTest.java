@@ -3,12 +3,22 @@ package me.blockcraft.api.achievement;
 import me.blockcraft.api.cosmetic.ChatTagChoice;
 import me.blockcraft.api.cosmetic.CosmeticReward;
 import me.blockcraft.api.game.Stats;
+import me.blockcraft.api.xp.Levels;
+import me.blockcraft.api.xp.Xp;
 import me.blockcraft.common.config.YamlFile;
+import org.bukkit.Bukkit;
+import org.bukkit.Server;
+import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
+import org.bukkit.scheduler.BukkitScheduler;
+import org.bukkit.scheduler.BukkitTask;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.nio.file.Files;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -16,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
@@ -44,6 +55,42 @@ public class AchievementsTest {
         var reached = Achievements.reached(CATALOG, "quicksg", totals, 1, Set.of("achievement.quicksg.first-win"));
 
         assertEquals(List.of("quicksg.kills-10"), reached.stream().map(Achievement::key).toList());
+    }
+
+    @Test
+    public void savedRoundStatsAreEvaluatedImmediatelyEvenAfterThePlayerLeaves() throws Exception {
+        var workers = new ArrayList<Runnable>();
+        var task = fake(BukkitTask.class, (proxy, method, args) -> null);
+        var scheduler = fake(BukkitScheduler.class, (proxy, method, args) -> {
+            if (!method.getName().equals("runTaskAsynchronously")) {
+                throw new AssertionError("Unexpected scheduler call: " + method.getName());
+            }
+            workers.add((Runnable) args[1]);
+            return task;
+        });
+        var server = fake(Server.class, (proxy, method, args) -> switch (method.getName()) {
+            case "getScheduler" -> scheduler;
+            default -> throw new AssertionError(method.getName());
+        });
+        var plugin = fake(Plugin.class, (proxy, method, args) -> { throw new AssertionError(method.getName()); });
+        var id = UUID.randomUUID();
+        var player = fake(Player.class, (proxy, method, args) -> switch (method.getName()) {
+            case "getUniqueId" -> id;
+            case "isOnline" -> false;
+            default -> throw new AssertionError(method.getName());
+        });
+        var xp = new Xp(plugin, null, new Levels(100), Map.of(), null);
+        var achievements = new Achievements(plugin, CATALOG, Map.of(), null, xp, null, null, null);
+        var field = Bukkit.class.getDeclaredField("server");
+        field.setAccessible(true);
+        var previous = field.get(null);
+        try {
+            field.set(null, server);
+            achievements.afterRound("quicksg", List.of(player));
+            assertEquals(1, workers.size());
+        } finally {
+            field.set(null, previous);
+        }
     }
 
     @Test
@@ -199,5 +246,9 @@ public class AchievementsTest {
             }
             assertEquals(List.of(), missing);
         }
+    }
+
+    private static <T> T fake(Class<T> type, InvocationHandler calls) {
+        return type.cast(Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[]{type}, calls));
     }
 }

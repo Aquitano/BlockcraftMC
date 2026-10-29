@@ -44,9 +44,7 @@ public final class InvseeCommand {
         }
         viewer.sendMessage(messages.get("invsee.opened", name));
         boolean readOnly = InvseeGuard.isReadOnly(viewer, view);
-        if (readOnly) {
-            viewer.sendMessage(messages.get("invsee.read-only"));
-        }
+        viewer.sendMessage(messages.get(readOnly ? "invsee.read-only" : "invsee.editable"));
         audit.record(viewer, readOnly ? "invsee.read" : "invsee.edit", target);
     }
 }

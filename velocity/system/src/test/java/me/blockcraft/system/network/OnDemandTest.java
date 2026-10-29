@@ -7,6 +7,7 @@ import org.junit.Test;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -84,6 +85,52 @@ public class OnDemandTest {
 
         assertEquals(List.of(new Effect.Publish("bedwars", GroupState.AWAKE), new Effect.Admit("bedwars", List.of(second))),
                 onDemand.observe(Map.of("bedwars", UP), later(30)));
+    }
+
+    @Test
+    public void cancellingAfterThePollPreventsAdmissionWithoutCancellingOtherPlayers() {
+        onDemand.request("bedwars", first, now);
+        onDemand.request("bedwars", second, now);
+        var admission = admission(onDemand.observe(Map.of("bedwars", UP), later(30)));
+        var sent = new ArrayList<UUID>();
+
+        onDemand.cancel(first);
+        admission.players().forEach(player -> onDemand.admit(admission, player, () -> sent.add(player)));
+
+        assertEquals(List.of(second), sent);
+    }
+
+    @Test
+    public void choosingAnotherGameInvalidatesAnAdmissionThePollAlreadyReturned() {
+        var games = new OnDemand(new OnDemand.Settings(Set.of("bedwars", "ttt"),
+                Duration.ofMinutes(10), Duration.ofMinutes(2), 0));
+        games.request("bedwars", first, now);
+        var old = admission(games.observe(Map.of("bedwars", UP), later(30)));
+        var sent = new ArrayList<String>();
+
+        games.request("ttt", first, now);
+        games.admit(old, first, () -> sent.add(old.group()));
+        var current = admission(games.observe(Map.of("bedwars", UP, "ttt", UP), later(30)));
+        games.admit(current, first, () -> sent.add(current.group()));
+
+        assertEquals(List.of("ttt"), sent);
+    }
+
+    @Test
+    public void anOldAdmissionCannotClaimANewWaitForTheSameGroup() {
+        onDemand.request("bedwars", first, now);
+        var old = admission(onDemand.observe(Map.of("bedwars", UP), later(30)));
+        onDemand.cancel(first);
+        onDemand.rejoin("bedwars", first, now);
+        var current = admission(onDemand.observe(Map.of("bedwars", EMPTY), later(1)));
+        var sent = new ArrayList<String>();
+
+        assertEquals(old, current);
+        onDemand.admit(old, first, () -> sent.add("old"));
+        onDemand.admit(current, first, () -> sent.add("current"));
+        onDemand.admit(current, first, () -> sent.add("duplicate"));
+
+        assertEquals(List.of("current"), sent);
     }
 
     @Test
@@ -212,5 +259,9 @@ public class OnDemandTest {
     private Instant later(long seconds) {
         now = now.plusSeconds(seconds);
         return now;
+    }
+
+    private static Effect.Admit admission(List<Effect> effects) {
+        return effects.stream().filter(Effect.Admit.class::isInstance).map(Effect.Admit.class::cast).findFirst().orElseThrow();
     }
 }

@@ -2,6 +2,7 @@ package me.blockcraft.api.game;
 
 import com.destroystokyo.paper.event.player.PlayerPickupExperienceEvent;
 import me.blockcraft.api.menu.Menu;
+import me.blockcraft.api.player.InventoryInspection;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -148,28 +149,28 @@ final class SpectatorGuard implements Listener {
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onInventoryOpen(InventoryOpenEvent event) {
-        if (watching(event.getPlayer()) && !(event.getInventory().getHolder(false) instanceof Menu)) {
+        if (watching(event.getPlayer()) && !allowedInventory(event.getView())) {
             event.setCancelled(true);
         }
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onInventoryClick(InventoryClickEvent event) {
-        if (watching(event.getWhoClicked()) && !inMenu(event.getView())) {
+        if (watching(event.getWhoClicked()) && !allowedInventory(event.getView())) {
             event.setCancelled(true);
         }
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onInventoryDrag(InventoryDragEvent event) {
-        if (watching(event.getWhoClicked()) && !inMenu(event.getView())) {
+        if (watching(event.getWhoClicked()) && !allowedInventory(event.getView())) {
             event.setCancelled(true);
         }
     }
 
-    /** A menu handles its own clicks; everything else a spectator could rearrange is their own hotbar. */
-    private static boolean inMenu(InventoryView view) {
-        return view.getTopInventory().getHolder(false) instanceof Menu;
+    private static boolean allowedInventory(InventoryView view) {
+        return view.getTopInventory().getHolder(false) instanceof Menu
+                || view.getPlayer() instanceof Player viewer && InventoryInspection.permitted(viewer, view.getTopInventory());
     }
 
     @EventHandler(priority = EventPriority.LOWEST)

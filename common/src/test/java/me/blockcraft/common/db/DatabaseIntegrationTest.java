@@ -310,7 +310,10 @@ public class DatabaseIntegrationTest {
         assertTrue(reports.insert(reporter, target, "Reason", "lobby"));
 
         int id = reports.all().getFirst().id();
-        reports.close(id, UUID.randomUUID(), "Staff");
+        assertTrue(reports.close(id, UUID.randomUUID(), "Staff"));
+        assertFalse(reports.close(id, UUID.randomUUID(), "Other"));
+        assertFalse(reports.claim(id, UUID.randomUUID(), "Other"));
+        assertFalse(reports.updateStatus(id, "Reopened by stale dialog"));
 
         assertTrue(reports.byId(id).isEmpty());
         assertEquals(0, reports.count());

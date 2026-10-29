@@ -48,10 +48,13 @@ final class PunishDialog {
     private final Dialog dialog;
 
     PunishDialog(ReportMenus menus, Messages messages, Report report, Optional<String> reported, List<Entry> catalog,
-                 Optional<Custom> draft) {
+                 Optional<Custom> draft, Player staff) {
         var placeholders = ReportMenus.placeholders(messages, report);
         var buttons = new ArrayList<ActionButton>();
         for (var entry : catalog) {
+            if (!ReportMenus.canPunish(staff, entry.type())) {
+                continue;
+            }
             var entryPlaceholders = TagResolver.resolver(
                     Formatter.number("number", entry.number()),
                     Placeholder.unparsed("reason", entry.reason()),
@@ -68,7 +71,7 @@ final class PunishDialog {
                 List.of(DialogBody.plainMessage(messages.get("punish.body", placeholders))),
                 List.of(
                                 DialogInput.singleOption(TYPE, messages.get("punish.type"),
-                                        typeOptions(messages, draft.map(Custom::type).orElse(PunishmentType.BAN))).build(),
+                                        typeOptions(messages, draft.map(Custom::type).orElse(PunishmentType.BAN), staff)).build(),
                                 DialogInput.numberRange(DAYS, messages.get("punish.days"), 0, MAX_DAYS).step(1f)
                                         .initial(draft.map(custom -> (float) custom.days()).orElse(1f)).build(),
                                 DialogInput.numberRange(HOURS, messages.get("punish.hours"), 0, HOURS_PER_DAY - 1).step(1f)
@@ -83,10 +86,12 @@ final class PunishDialog {
         Dialogs.show(player, dialog);
     }
 
-    private static List<OptionEntry> typeOptions(Messages messages, PunishmentType selected) {
-        return Arrays.stream(PunishmentType.values())
+    private static List<OptionEntry> typeOptions(Messages messages, PunishmentType selected, Player staff) {
+        var allowed = Arrays.stream(PunishmentType.values()).filter(type -> ReportMenus.canPunish(staff, type)).toList();
+        var initial = allowed.contains(selected) ? selected : allowed.getFirst();
+        return allowed.stream()
                 .map(type -> OptionEntry.create(type.name(), messages.get("menu.punish-type." + type.name().toLowerCase()),
-                        type == selected))
+                        type == initial))
                 .toList();
     }
 

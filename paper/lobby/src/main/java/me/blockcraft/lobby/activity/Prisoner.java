@@ -4,25 +4,23 @@ import io.papermc.paper.event.player.PrePlayerAttackEntityEvent;
 import me.blockcraft.api.config.Locations;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.common.message.Messages;
-import org.bukkit.Chunk;
+import me.blockcraft.lobby.ChunkTickets;
 import org.bukkit.entity.Mannequin;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.inventory.EquipmentSlot;
-import org.bukkit.plugin.Plugin;
 
 /** The prisoner in the castle's dungeon, at the map's {@code prisoner} spot: he complains to whoever visits him. */
 public final class Prisoner implements Listener, AutoCloseable {
 
-    private final Plugin plugin;
     private final Locations<String> locations;
     private final Messages messages;
     private Mannequin prisoner;
-    private Chunk held;
+    private final ChunkTickets.Owner held;
 
-    public Prisoner(Plugin plugin, Locations<String> locations, Messages messages) {
-        this.plugin = plugin;
+    public Prisoner(ChunkTickets chunks, Locations<String> locations, Messages messages) {
+        held = chunks.owner();
         this.locations = locations;
         this.messages = messages;
         refresh();
@@ -31,8 +29,7 @@ public final class Prisoner implements Listener, AutoCloseable {
     public void refresh() {
         close();
         locations.get("prisoner").ifPresent(cell -> {
-            held = cell.getChunk();
-            held.addPluginChunkTicket(plugin);
+            held.add(cell.getChunk());
             prisoner = Figures.spawn(cell, Skins.PRISONER, messages.get("prisoner.name"));
         });
     }
@@ -63,9 +60,6 @@ public final class Prisoner implements Listener, AutoCloseable {
             prisoner.remove();
             prisoner = null;
         }
-        if (held != null) {
-            held.removePluginChunkTicket(plugin);
-            held = null;
-        }
+        held.clear();
     }
 }
