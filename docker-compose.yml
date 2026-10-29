@@ -15,6 +15,7 @@ x-luckperms: &luckperms
 # Game servers restart themselves after a round (Bukkit.shutdown), so the container has to come back on its own.
 x-paper: &paper
   image: itzg/minecraft-server:2026.10.0-java25
+  env_file: ./build/docker/runtime.env
   restart: unless-stopped
   stop_grace_period: 1m
   depends_on:
@@ -25,8 +26,6 @@ x-paper-env: &paper-env
   <<: *luckperms
   EULA: "TRUE"
   TYPE: PAPER
-  VERSION: "26.3"
-  PAPER_BUILD: "206"
   TZ: Europe/Berlin
   ONLINE_MODE: "FALSE"
   NETWORK_COMPRESSION_THRESHOLD: "-1"
@@ -67,6 +66,7 @@ services:
 
   velocity:
     image: itzg/mc-proxy:2026.10.1-java25
+    env_file: ./build/docker/runtime.env
     restart: unless-stopped
     stop_grace_period: 1m
     depends_on:
@@ -78,8 +78,6 @@ services:
     environment:
       <<: *luckperms
       TYPE: VELOCITY
-      VELOCITY_VERSION: "4.2.0"
-      VELOCITY_BUILD_ID: "30"
       TZ: Europe/Berlin
       MEMORY: 512m
       SYNC_SKIP_NEWER_IN_DESTINATION: "false"

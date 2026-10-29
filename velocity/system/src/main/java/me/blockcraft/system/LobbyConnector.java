@@ -70,6 +70,7 @@ public final class LobbyConnector {
 
     public void send(Player player) {
         if (isOnLobby(player)) {
+            onDemand.ifPresent(servers -> servers.cancel(player));
             player.sendMessage(messages.get("hub.already"));
             return;
         }
@@ -90,6 +91,7 @@ public final class LobbyConnector {
     public void play(Player player, String group) {
         group = group.toLowerCase(Locale.ROOT);
         if (group.equals(config.lobbyGroup())) {
+            onDemand.ifPresent(servers -> servers.cancel(player));
             send(player);
             return;
         }
@@ -109,6 +111,7 @@ public final class LobbyConnector {
                     : messages.get("play.unavailable", game));
             return;
         }
+        onDemand.ifPresent(servers -> servers.cancel(player));
         String server = target.get().getServerInfo().getName();
         if (player.getCurrentServer().map(connection -> connection.getServer().equals(target.get())).orElse(false)) {
             seated.forEach(id -> directory.release(id, server));
@@ -147,6 +150,7 @@ public final class LobbyConnector {
         }
         String server = target.get().getServerInfo().getName();
         for (var each : pair) {
+            onDemand.ifPresent(servers -> servers.cancel(each));
             each.sendMessage(messages.get("play.rematch", game));
             directory.send(each, target.get()).thenAccept(connected -> {
                 if (!connected) {

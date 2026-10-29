@@ -3,6 +3,7 @@ package me.blockcraft.api.item;
 import com.destroystokyo.paper.profile.PlayerProfile;
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.CustomModelData;
+import me.blockcraft.api.pack.MenuState;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -83,6 +84,10 @@ public final class Items {
         public Builder glow() {
             stack.editMeta(meta -> meta.setEnchantmentGlintOverride(true));
             return this;
+        }
+
+        public Builder state(MenuState state) {
+            return state.mark(this);
         }
 
         public Builder color(Color color) {

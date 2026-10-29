@@ -1,5 +1,6 @@
 package me.blockcraft.api.game;
 
+import me.blockcraft.api.pack.DisplayFont;
 import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
@@ -63,14 +64,14 @@ public class RoundSummaryTest {
         winners.put(first, "Steve");
 
         var personal = RoundSummary.resultTitle(messages, game, winners, first);
-        assertEquals("Du hast gewonnen!", plain(personal.title()));
+        assertEquals("Gewonnen!", plain(personal.title()));
         assertEquals("BedWars", plain(personal.subtitle()));
         var watching = RoundSummary.resultTitle(messages, game, winners, viewer);
         assertEquals("Runde vorbei!", plain(watching.title()));
         assertEquals("Steve hat gewonnen!", plain(watching.subtitle()));
 
         winners.put(second, "Alex");
-        assertEquals("Du hast gewonnen!", plain(RoundSummary.resultTitle(messages, game, winners, second).title()));
+        assertEquals("Gewonnen!", plain(RoundSummary.resultTitle(messages, game, winners, second).title()));
         assertEquals("Steve, Alex haben gewonnen!", plain(RoundSummary.resultTitle(messages, game, winners, viewer).subtitle()));
     }
 
@@ -78,7 +79,7 @@ public class RoundSummaryTest {
     public void aDrawNamesNoWinnerInTheResultTitle() throws Exception {
         var title = RoundSummary.resultTitle(messages(), Component.text("Duell"), Map.of(), UUID.randomUUID());
 
-        assertEquals("Unentschieden!", plain(title.title()));
+        assertEquals("Gleichstand!", plain(title.title()));
         assertEquals("Duell", plain(title.subtitle()));
     }
 
@@ -123,7 +124,7 @@ public class RoundSummaryTest {
 
     private Messages messages() throws Exception {
         var messages = Messages.load(folder.newFolder().toPath(), () -> getClass().getResourceAsStream("/messages.yml"));
-        return messages.with(messages.tagsOf("palette"));
+        return messages.with(messages.tagsOf("palette"), DisplayFont.TAG);
     }
 
     private static String plain(Component component) {

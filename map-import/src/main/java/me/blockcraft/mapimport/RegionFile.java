@@ -85,20 +85,21 @@ public final class RegionFile {
             if (sector == 0) {
                 continue;
             }
-            int start = sector * SECTOR;
-            int length = start + 5 <= bytes.length ? buffer.getInt(start) : 0;
+            long start = (long) sector * SECTOR;
+            int length = start + 5 <= bytes.length ? buffer.getInt((int) start) : 0;
             if (length < 1 || start + 4 + length > bytes.length) {
                 System.err.println("Leaving out chunk " + ChunkPos.inRegion(region, index) + " of " + file + ", whose entry is broken");
                 continue;
             }
-            byte compression = bytes[start + 4];
+            int offset = (int) start;
+            byte compression = bytes[offset + 4];
             byte[] payload;
             if ((compression & EXTERNAL) != 0) {
                 payload = Files.readAllBytes(file.resolveSibling(external(ChunkPos.inRegion(region, index))));
                 compression = (byte) (compression & ~EXTERNAL);
             } else {
                 payload = new byte[length - 1];
-                System.arraycopy(bytes, start + 5, payload, 0, length - 1);
+                System.arraycopy(bytes, offset + 5, payload, 0, length - 1);
             }
             chunks.put(index, new Entry(buffer.getInt(SECTOR + index * 4), compression, payload));
         }
@@ -106,6 +107,7 @@ public final class RegionFile {
     }
 
     public static void write(Path file, Map<Integer, Entry> chunks) throws IOException {
+        Files.createDirectories(file.getParent());
         var header = ByteBuffer.allocate(2 * SECTOR);
         var body = new ByteArrayOutputStream();
         var region = position(file);
@@ -127,7 +129,6 @@ public final class RegionFile {
             header.putInt(SECTOR + chunk.getKey() * 4, entry.timestamp());
             sector += sectors;
         }
-        Files.createDirectories(file.getParent());
         try (var out = Files.newOutputStream(file)) {
             out.write(header.array());
             body.writeTo(out);

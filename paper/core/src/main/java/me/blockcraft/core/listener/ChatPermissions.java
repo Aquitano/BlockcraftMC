@@ -9,6 +9,8 @@ final class ChatPermissions {
     static final String FILTER_NOTIFY = "blockcraft.core.chatfilter.notify";
     static final String CHAT_COLOR = "blockcraft.chat.color";
     static final String NICK_SEE = "blockcraft.nick.see";
+    /** Whoever may run /team counts as staff. */
+    static final String TEAM = "blockcraft.core.team";
 
     private ChatPermissions() {
     }

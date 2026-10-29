@@ -292,6 +292,12 @@ login:
   retry: "<error>Deine Daten konnten gerade nicht geladen werden. <muted>Bitte versuche es gleich noch einmal."
 globalmute:
   blocked: "<prefix><muted>Der Chat ist gerade für alle deaktiviert. <accent>GlobalMute <muted>ist aktiv."
+# A command the server cannot run: <command> one the player was never sent (forbidden for staff when it exists,
+# missing for everyone else), <reason> Minecraft's own explanation of what is wrong with one they can see.
+unknown-command:
+  missing: "<icon:error> <error>Den Befehl <accent>/<command> <error>gibt es nicht. <muted>Hilfe gibt es mit <accent>/help<muted>."
+  forbidden: "<icon:error> <error>Den Befehl <accent>/<command> <error>gibt es, aber dein Rang darf ihn nicht nutzen."
+  invalid: "<icon:error> <reason>"
 chat:
   format: "<level><tag><rank><name> <arrow><white><message>"
   level: "<dark>[<primary><level><dark>] "

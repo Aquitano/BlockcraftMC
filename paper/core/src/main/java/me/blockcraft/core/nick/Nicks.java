@@ -63,7 +63,8 @@ public final class Nicks {
     /** {@code <rank><nick>}: the worn nick as others read it, with the prefix of the group it wears. */
     public static TagResolver shown(Player player, Nick nick) {
         return TagResolver.resolver(
-                Placeholder.component("rank", Ranks.prefix(player).orElse(Component.empty())),
+                Placeholder.component("rank",
+                        Ranks.prefix(player).map(rank -> rank.shownTo(player)).orElse(Component.empty())),
                 Placeholder.unparsed("nick", nick.name()));
     }
 

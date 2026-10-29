@@ -108,7 +108,9 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         groups = new ServerGroups(this, servers, new GroupStateRepository(database), number(groupStatus, "stale-seconds", 20));
 
         var messages = resources.messages();
-        notifications = new Notifications(this, messages, Notifications.Timing.from(YamlFile.section(config, "notifications")));
+        var resourcePack = new ResourcePacks(messages);
+        notifications = new Notifications(this, messages, resourcePack,
+                Notifications.Timing.from(YamlFile.section(config, "notifications")));
         var settingRepository = new PlayerSettingRepository(database);
         var settings = new PlayerSettings(this, settingRepository, messages);
         var realNames = new RealNames();
@@ -125,7 +127,6 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         });
         var buildMode = new BuildMode();
         var flight = new FlightGrants();
-        var resourcePack = new ResourcePacks(messages);
         var eloSection = YamlFile.section(config, "elo");
         var elo = new Elo(new EloRepository(database,
                 new EloFormula(number(eloSection, "start-rating", 1000), number(eloSection, "k-factor", 32))),

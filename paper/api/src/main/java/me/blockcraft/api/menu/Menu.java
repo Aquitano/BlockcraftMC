@@ -3,6 +3,8 @@ package me.blockcraft.api.menu;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.pack.MenuIcon;
+import me.blockcraft.api.pack.MenuState;
+import me.blockcraft.api.pack.MenuTile;
 import me.blockcraft.api.pack.UiFont;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.common.settings.PlayerSetting;
@@ -19,10 +21,13 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.BitSet;
 import java.util.EnumMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import java.util.stream.IntStream;
 
 /**
  * A chest GUI identified by its holder instead of its title. Clicks inside it are cancelled and routed
@@ -72,6 +77,7 @@ public abstract class Menu implements InventoryHolder {
     private final Component title;
     private final ItemStack[] items;
     private final Map<ToolbarButton, ToolbarEntry> toolbar = new EnumMap<>(ToolbarButton.class);
+    private final Map<Integer, MenuTile.Placement> tiles = new LinkedHashMap<>();
     private final BitSet fillerSlots = new BitSet();
     private Inventory inventory;
     private boolean packApplied;
@@ -129,11 +135,26 @@ public abstract class Menu implements InventoryHolder {
         }
         items[slot] = item == null ? null : item.clone();
         if (inventory != null) {
-            var rendered = renderSlot(slot);
-            if (!Objects.equals(inventory.getItem(slot), rendered)) {
-                inventory.setItem(slot, rendered);
-            }
+            var tile = tiles.get(slot);
+            var slots = tile == null ? IntStream.of(slot) : tile.slots();
+            slots.forEach(covered -> {
+                var rendered = renderSlot(covered);
+                if (!Objects.equals(inventory.getItem(covered), rendered)) {
+                    inventory.setItem(covered, rendered);
+                }
+            });
         }
+    }
+
+    protected void tile(int slot, MenuTile art, MenuTile.Shape shape, ItemStack item) {
+        var tile = new MenuTile.Placement(slot, art, shape);
+        if (inventory != null || tile.slots().anyMatch(covered -> covered >= items.length || items[covered] != null
+                || tiles.values().stream().anyMatch(other -> other.covers(covered))
+                || toolbar.keySet().stream().anyMatch(button -> button.covers(covered)))) {
+            throw new IllegalArgumentException("Tile overlaps another control or exceeds this menu: " + tile);
+        }
+        tiles.put(slot, tile);
+        set(slot, item);
     }
 
     protected void info(int slot, ItemStack item) {
@@ -293,6 +314,11 @@ public abstract class Menu implements InventoryHolder {
     }
 
     void handleClick(Player player, int slot, ItemStack clicked, InventoryClickEvent event) {
+        var tile = tileAt(slot);
+        if (tile != null) {
+            slot = tile.slot();
+            clicked = items[slot];
+        }
         if (fillerSlots.get(slot) || informational.get(slot) || !isEnabled(player, slot, event)) {
             return;
         }
@@ -320,8 +346,15 @@ public abstract class Menu implements InventoryHolder {
 
     private void build(boolean packApplied) {
         this.packApplied = packApplied;
-        inventory = Bukkit.createInventory(this, items.length,
-                packApplied ? UiFont.menuTitle(rows, hasToolbar(), title) : title);
+        Component shownTitle = title;
+        if (packApplied) {
+            shownTitle = UiFont.menuTitle(rows, hasToolbar(), hasToolbar() && !tiles.isEmpty(), Component.empty());
+            for (var tile : tiles.values()) {
+                shownTitle = shownTitle.append(UiFont.tile(tile, BlockcraftApi.get().messages().get("tiles." + tile.tile().key())));
+            }
+            shownTitle = shownTitle.append(title);
+        }
+        inventory = Bukkit.createInventory(this, items.length, shownTitle);
         if (exit != null) {
             items[exitSlot()] = button(exit.icon(), exit.messageKey());
         }
@@ -334,6 +367,23 @@ public abstract class Menu implements InventoryHolder {
     private ItemStack renderSlot(int slot) {
         fillerSlots.clear(slot);
         ItemStack item = items[slot];
+        var tile = tileAt(slot);
+        if (tile != null) {
+            item = items[tile.slot()];
+            if (item != null && packApplied) {
+                int badgeSlot = tile.slot() + (tile.shape().rows() - 1) * COLUMNS + tile.shape().columns() - 1;
+                var state = MenuState.of(item);
+                var rendered = Items.of(item.clone()).model(slot == badgeSlot
+                        ? state.map(MenuState::model).orElse(MenuIcon.EMPTY_MODEL) : MenuIcon.EMPTY_MODEL)
+                        .tooltipStyle(MenuIcon.TOOLTIP_STYLE).build();
+                MenuState.style(rendered);
+                return rendered;
+            }
+            if (item != null && slot != tile.iconSlot()) {
+                return Items.of(Material.GRAY_STAINED_GLASS_PANE).name(item.getItemMeta().displayName())
+                        .lore(item.getItemMeta().lore() == null ? List.of() : item.getItemMeta().lore()).build();
+            }
+        }
         if (packApplied) {
             for (var entry : toolbar.entrySet()) {
                 if (entry.getKey().covers(slot) && slot != entry.getKey().iconSlot()) {
@@ -353,8 +403,13 @@ public abstract class Menu implements InventoryHolder {
         MenuIcon.style(rendered, packApplied);
         if (packApplied) {
             Items.of(rendered).tooltipStyle(MenuIcon.TOOLTIP_STYLE);
+            MenuState.style(rendered);
         }
         return rendered;
+    }
+
+    private MenuTile.Placement tileAt(int slot) {
+        return tiles.values().stream().filter(tile -> tile.covers(slot)).findFirst().orElse(null);
     }
 
     private static ItemStack button(MenuIcon icon, String messageKey) {

@@ -36,6 +36,7 @@ import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
@@ -186,6 +187,19 @@ public class PlayerTasksTest {
         tick();
 
         assertEquals(List.of("new screen"), completed);
+    }
+
+    @Test
+    public void navigationInvalidatesCallbacksEvenWhenTheInventoryStaysTheSame() {
+        var current = tasks.currentScreen(player);
+        assertTrue(current.getAsBoolean());
+
+        tasks.navigate(player, ignored -> { });
+
+        assertFalse(current.getAsBoolean());
+        tick();
+        assertFalse(current.getAsBoolean());
+        assertTrue(tasks.currentScreen(player).getAsBoolean());
     }
 
     @Test

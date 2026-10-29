@@ -1,6 +1,7 @@
 package me.blockcraft.system.pack;
 
 import com.sun.net.httpserver.HttpServer;
+import com.velocitypowered.api.event.EventTask;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
@@ -26,16 +27,21 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * The network's resource pack: read from the plugin directory and hashed once at startup, served over plain HTTP
  * from the same process, offered while a player is being configured and tracked per client. Every backend the
  * player arrives on is told whether the client wears it, because the client's answer never reaches the backends.
+ * A joining player's configuration waits for that answer, at most {@code wait}: a client that is still reloading its
+ * resources when it arrives lays out the first chat lines wrongly and keeps them that way.
  */
 public final class NetworkPack {
 
@@ -44,12 +50,15 @@ public final class NetworkPack {
 
     private final ResourcePackInfo info;
     private final Optional<HttpServer> server;
+    private final Duration wait;
     private final Logger logger;
     private final Map<UUID, PackStatus> statuses = new ConcurrentHashMap<>();
+    private final Map<UUID, CompletableFuture<Void>> answers = new ConcurrentHashMap<>();
 
-    private NetworkPack(ResourcePackInfo info, Optional<HttpServer> server, Logger logger) {
+    private NetworkPack(ResourcePackInfo info, Optional<HttpServer> server, Duration wait, Logger logger) {
         this.info = info;
         this.server = server;
+        this.wait = wait;
         this.logger = logger;
     }
 
@@ -75,7 +84,7 @@ public final class NetworkPack {
                 .build();
         var server = config.port() > 0 ? Optional.of(serve(config.port(), file.getFileName().toString(), bytes)) : Optional.<HttpServer>empty();
         logger.info("Offering resource pack {} ({} KiB) as {}", file.getFileName(), bytes.length / 1024, config.url());
-        return Optional.of(new NetworkPack(info, server, logger));
+        return Optional.of(new NetworkPack(info, server, Duration.ofSeconds(config.waitSeconds()), logger));
     }
 
     public void stop() {
@@ -83,11 +92,19 @@ public final class NetworkPack {
     }
 
     @Subscribe
-    public void onConfiguration(PlayerConfigurationEvent event) {
+    public EventTask onConfiguration(PlayerConfigurationEvent event) {
         var player = event.player();
-        if (!applied(player) && statuses.get(player.getUniqueId()) != PackStatus.DECLINED) {
-            retry(player);
+        var id = player.getUniqueId();
+        if (applied(player) || statuses.get(id) == PackStatus.DECLINED) {
+            return EventTask.resumeWhenComplete(CompletableFuture.completedFuture(null));
         }
+        // Only the session's first offer waits, so a client whose download failed is not held up again at every switch.
+        var answer = statuses.containsKey(id)
+                ? CompletableFuture.<Void>completedFuture(null)
+                : answers.computeIfAbsent(id, ignored -> new CompletableFuture<>())
+                        .completeOnTimeout(null, wait.toMillis(), TimeUnit.MILLISECONDS);
+        retry(player);
+        return EventTask.resumeWhenComplete(answer);
     }
 
     public synchronized void retry(Player player) {
@@ -119,6 +136,16 @@ public final class NetworkPack {
         }
         statuses.put(event.getPlayer().getUniqueId(), status);
         tell(event.getPlayer(), status);
+        if (status != PackStatus.DOWNLOADING) {
+            answered(event.getPlayer().getUniqueId());
+        }
+    }
+
+    private void answered(UUID player) {
+        var answer = answers.remove(player);
+        if (answer != null) {
+            answer.complete(null);
+        }
     }
 
     @Subscribe
@@ -130,6 +157,7 @@ public final class NetworkPack {
     @Subscribe
     public void onDisconnect(DisconnectEvent event) {
         if (LiveSession.endedBy(event)) {
+            answered(event.getPlayer().getUniqueId());
             statuses.remove(event.getPlayer().getUniqueId());
         }
     }

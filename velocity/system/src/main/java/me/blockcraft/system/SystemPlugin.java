@@ -84,6 +84,7 @@ import me.blockcraft.system.friends.FriendRepository;
 import me.blockcraft.system.friends.SpectateRequests;
 import me.blockcraft.system.ignore.IgnoreList;
 import me.blockcraft.system.listener.CommandListener;
+import me.blockcraft.system.listener.ClientVersionListener;
 import me.blockcraft.system.listener.FreezeQuitListener;
 import me.blockcraft.system.listener.FreezeSwitchListener;
 import me.blockcraft.system.listener.InitialServerListener;
@@ -223,6 +224,7 @@ public final class SystemPlugin {
         var tabHeader = new TabHeaderListener(proxy, visibility, config, messages);
 
         var events = proxy.getEventManager();
+        events.register(this, new ClientVersionListener(BuildConstants.MINECRAFT, messages));
         var newcomers = new Newcomers(this, proxy, directory, repositories.players(), new GreetingRepository(database),
                 new OgTag(database), config.welcome(), messages, logger);
         events.register(this, new LoginListener(this, proxy, config, settings, repositories.players(), repositories.punishments(),
@@ -241,6 +243,7 @@ public final class SystemPlugin {
         var returning = new ReturningPlayers(addressHasher, repositories.players(), choices, friends, config.serverListCache(), config.serverListFriends(), logger);
         events.register(this, new MotdListener(visibility, config, settings, returning, messages, dataDirectory, logger));
         events.register(this, directory);
+        onDemand.ifPresent(sleeping -> events.register(this, sleeping));
         events.register(this, new PartyListener(parties));
         events.register(this, new FriendListener(friends, visibility, logger));
         events.register(this, spectating);

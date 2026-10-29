@@ -1,6 +1,6 @@
 name: Archive
 version: '${version}'
 main: me.blockcraft.archive.ArchivePlugin
-api-version: '26.3'
+api-version: '${minecraft}'
 author: Aquitano
 depend: [BlockcraftAPI]

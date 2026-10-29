@@ -1,6 +1,26 @@
 group = "me.blockcraft"
 version = "2.0.0-SNAPSHOT" + providers.environmentVariable("BLOCKCRAFT_BUILD").map { "+$it" }.getOrElse("")
 
+val stageRuntime = tasks.register("stageRuntime") {
+    val minecraft = libs.versions.minecraft.get()
+    val paper = libs.versions.paper.api.get()
+    require(paper.startsWith("$minecraft.build.")) { "Paper API must match the Minecraft server version" }
+    val versions = mapOf(
+        "VERSION" to minecraft,
+        "PAPER_BUILD" to paper.substringAfter(".build.").substringBefore('-'),
+        "VELOCITY_VERSION" to libs.versions.velocity.api.get(),
+        "VELOCITY_BUILD_ID" to libs.versions.velocity.build.get(),
+    )
+    val target = layout.buildDirectory.file("runtime/runtime.env")
+    inputs.properties(versions)
+    outputs.file(target)
+    doLast {
+        val file = target.get().asFile
+        file.parentFile.mkdirs()
+        file.writeText(versions.entries.joinToString("\n", postfix = "\n") { (key, value) -> "$key=$value" })
+    }
+}
+
 // LuckPerms only imports gzipped exports; the dev run tasks place this next to LuckPerms for `/lp import ranks`.
 val packRanks = tasks.register("packRanks") {
     val source = layout.projectDirectory.file("luckperms/ranks.json")
@@ -57,6 +77,7 @@ val downloadLuckPermsVelocity = downloadPlugin(
 // with LuckPerms, ranks.json.gz next to LuckPerms on both sides, the resource pack in the proxy plugin's data
 // directory, and build/docker/waker/waker.jar for the on-demand waker.
 tasks.register<Sync>("stagePlugins") {
+    from(stageRuntime)
     project(":paper").subprojects.forEach { plugin ->
         from(plugin.tasks.named("shadowJar")) {
             into("paper/${plugin.name}")

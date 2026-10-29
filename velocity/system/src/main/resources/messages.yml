@@ -72,6 +72,7 @@ duration:
   permanent: "<error>Permanent"
 
 login:
+  version: "<prefix><error>Diese Minecraft-Version ist zu alt. <muted>Bitte verwende Minecraft Java <accent><version><muted> oder eine unterstützte neuere Version."
   maintenance:
     - "<prefix><muted>Du kannst <error><ip> <muted>derzeit nicht betreten."
     - " <muted>Derzeit sind <error>Wartungsarbeiten<muted>."

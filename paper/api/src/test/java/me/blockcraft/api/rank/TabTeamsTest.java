@@ -42,11 +42,12 @@ public class TabTeamsTest {
         var entryType = Class.forName(TabTeams.class.getName() + "$Entry");
         var constructor = entryType.getDeclaredConstructors()[0];
         constructor.setAccessible(true);
-        var apply = TabTeams.class.getDeclaredMethod("apply", Scoreboard.class, entryType);
+        var apply = TabTeams.class.getDeclaredMethod("apply", Scoreboard.class, entryType, Component.class);
         apply.setAccessible(true);
         for (String name : new String[]{"Red", "Blue"}) {
-            var entry = constructor.newInstance("9999default--", Component.empty(), Component.empty(), Optional.empty(), name);
-            apply.invoke(null, board, entry);
+            var prefix = new RankPrefix(Component.empty(), Component.empty());
+            var entry = constructor.newInstance("9999default--", prefix, Component.empty(), Optional.empty(), name);
+            apply.invoke(null, board, entry, Component.empty());
             assertTrue("Tab-list groups must allow combat", friendlyFire.get());
             friendlyFire.set(false);
         }

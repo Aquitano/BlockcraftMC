@@ -1,6 +1,6 @@
 name: SkyWars
 version: '${version}'
 main: me.blockcraft.skywars.SkyWarsPlugin
-api-version: '26.3'
+api-version: '${minecraft}'
 author: Aquitano
 depend: [BlockcraftAPI]

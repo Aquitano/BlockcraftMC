@@ -3,6 +3,7 @@ package me.blockcraft.api.menu;
 import me.blockcraft.api.dialog.SettingsDialog;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.pack.MenuIcon;
+import me.blockcraft.api.pack.MenuTile;
 import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.api.rank.Ranks;
 import me.blockcraft.common.message.Messages;
@@ -22,12 +23,12 @@ import java.util.function.Consumer;
  */
 final class ProfileMenu extends Menu {
 
-    private static final int LEVEL_SLOT = 10;
+    private static final int LEVEL_SLOT = 9;
     private static final int HEAD_SLOT = 13;
-    private static final int COINS_SLOT = 16;
-    private static final int RECAP_SLOT = 19;
-    private static final int ACHIEVEMENTS_SLOT = 22;
-    private static final int ADVENT_SLOT = 25;
+    private static final int COINS_SLOT = 14;
+    private static final int RECAP_SLOT = 18;
+    private static final int ACHIEVEMENTS_SLOT = 23;
+    private static final int ADVENT_SLOT = 22;
     private static final int GAMES_ROW = 27;
     private static final int ROWS_ABOVE_GAMES = 3;
     private static final int COLUMNS = 9;
@@ -56,7 +57,7 @@ final class ProfileMenu extends Menu {
                         player -> ProxyMessaging.hub(profiles.plugin(), player)));
         var xp = profiles.xp();
         var progress = xp.levels().progress(xp.total(viewer));
-        recentRound.ifPresent(open -> set(RECAP_SLOT, MenuIcon.RECAP.item()
+        recentRound.ifPresent(open -> tile(RECAP_SLOT, MenuTile.RECAP, MenuTile.Shape.WIDE, MenuIcon.RECAP.item()
                 .name(messages.get("profile.recap")).lore(messages.get("profile.recap-lore")).build()));
         info(HEAD_SLOT, Items.head(viewer.getUniqueId(), profiles.realNames().of(viewer))
                 .name(messages.get("profile.head", Placeholder.unparsed("player", viewer.getName())))
@@ -65,19 +66,20 @@ final class ProfileMenu extends Menu {
                         Formatter.number("missing", progress.needed() - progress.into()),
                         Formatter.number("next", progress.level() + 1),
                         Formatter.number("coins", snapshot.coins()),
-                        Placeholder.component("rank", Ranks.prefix(viewer).orElse(Component.empty()))))
+                        Placeholder.component("rank",
+                                Ranks.prefix(viewer).map(rank -> rank.shownTo(viewer)).orElse(Component.empty()))))
                 .build());
-        set(LEVEL_SLOT, MenuIcon.ACHIEVEMENTS.item()
+        tile(LEVEL_SLOT, MenuTile.LEVEL, MenuTile.Shape.WIDE, MenuIcon.ACHIEVEMENTS.item()
                 .name(messages.get("profile.level", Formatter.number("level", progress.level())))
                 .lore(messages.getLines("profile.level-lore",
                         Formatter.number("xp", progress.into()), Formatter.number("needed", progress.needed()),
                         Placeholder.component("reward", profiles.achievements().nextCosmetic(progress.level()))))
                 .build());
-        set(COINS_SLOT, MenuIcon.TOOL_SHOP.item()
+        tile(COINS_SLOT, MenuTile.COINS, MenuTile.Shape.WIDE, MenuIcon.TOOL_SHOP.item()
                 .name(messages.get("profile.coins", Formatter.number("coins", snapshot.coins())))
                 .lore(messages.getLines(profiles.shop().isPresent() ? "profile.coins-lore" : "profile.coins-hub-lore"))
                 .build());
-        set(ACHIEVEMENTS_SLOT, MenuIcon.ACHIEVEMENTS.item()
+        tile(ACHIEVEMENTS_SLOT, MenuTile.ACHIEVEMENTS, MenuTile.Shape.WIDE, MenuIcon.ACHIEVEMENTS.item()
                 .name(messages.get("profile.achievements"))
                 .lore(messages.get("profile.achievements-lore",
                         Formatter.number("unlocked", snapshot.achievements()),

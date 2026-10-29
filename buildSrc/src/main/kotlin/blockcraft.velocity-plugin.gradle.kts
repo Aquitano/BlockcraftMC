@@ -31,7 +31,9 @@ tasks.runVelocity {
 val generateBuildConstants = tasks.register("generateBuildConstants") {
     val outputDir = layout.buildDirectory.dir("generated/sources/buildConstants/java/main")
     val version = project.version.toString()
+    val minecraft = libs.findVersion("minecraft").get().requiredVersion
     inputs.property("version", version)
+    inputs.property("minecraft", minecraft)
     outputs.dir(outputDir)
     doLast {
         val file = outputDir.get().file("me/blockcraft/build/BuildConstants.java").asFile
@@ -43,6 +45,7 @@ val generateBuildConstants = tasks.register("generateBuildConstants") {
             public final class BuildConstants {
 
                 public static final String VERSION = "$version";
+                public static final String MINECRAFT = "$minecraft";
 
                 private BuildConstants() {
                 }

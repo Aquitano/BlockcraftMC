@@ -1,6 +1,6 @@
 name: MLGRush
 version: '${version}'
 main: me.blockcraft.mlgrush.MlgRushPlugin
-api-version: '26.3'
+api-version: '${minecraft}'
 author: Aquitano
 depend: [BlockcraftAPI]

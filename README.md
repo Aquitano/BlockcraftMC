@@ -45,7 +45,8 @@ one LuckPerms database, otherwise a rank set on one side is unknown on the other
 
 `luckperms/ranks.json` is a LuckPerms export with the groups the plugins expect. Chat and the tab list of every
 Paper server render the group's prefix in front of the name and sort the tab list by group weight; the prefix
-carries the name colour, so it ends in a colour code.
+carries the name colour, so it ends in a colour code. Each group's `badge` meta is a glyph of the resource pack's font
+(U+E300 onwards) that replaces the prefix for a player who wears the pack.
 
 | Group      | Prefix             | Grants                                                                            |
 |------------|--------------------|-----------------------------------------------------------------------------------|
@@ -102,15 +103,20 @@ Deployable jars land in `<module>/build/libs/<module>-<version>.jar` (the `-slim
 `BlockcraftAPI` shades HikariCP and the MariaDB driver; the other Paper plugins reach the pool through it. Velocity
 plugins shade them too.
 
-Versions live in `gradle/libs.versions.toml` (`paper-api`, `velocity-api`, `minecraft`, `viaversion`).
+Versions live in `gradle/libs.versions.toml` (`paper-api`, `velocity-api`, `velocity-build`, `minecraft`, `viaversion`).
+`stagePlugins` writes the server versions to `build/docker/runtime.env`, which Compose loads for Paper and Velocity.
+The plugins' API declarations and the proxy's minimum client version also come from the catalog.
 
 ### Client versions
 
+The proxy rejects clients older than `minecraft` before login and tells them which version to use.
 The servers speak `minecraft`; every Paper server also runs [ViaVersion](https://github.com/ViaVersion/ViaVersion),
 so clients newer than that join as well, as far as the proxy knows their protocol (Velocity 4.2.0 knows 26.3).
-Older clients would need ViaBackwards on top. A new client version therefore needs a ViaVersion release that
+Supporting older clients would require ViaBackwards, compatible resource packs and dialog fallbacks, and a lower
+client minimum after testing those features. The current pack's vanilla fallback does not provide older-client support.
+A new client version therefore needs a ViaVersion release that
 supports it, `viaversion` bumped in `gradle/libs.versions.toml` and `./gradlew stagePlugins` again, and, when the proxy does not
-know it yet, a newer `VELOCITY_VERSION` and `velocity-api`.
+know it yet, newer `velocity-api` and `velocity-build` values.
 
 ## Run locally
 
@@ -778,6 +784,9 @@ configured. The pack is required (`required: true`): a client whose server list 
 an optional pack without asking, while a required one is prompted for and declining it kicks. A proxy whose
 `config.yml` predates this still says `required: false` and needs the edit by hand. Only the proxy hears the client's
 answer, so it tells each backend on arrival (the `Pack` subchannel), and BlockcraftAPI keeps that in `resourcePack()`.
+A joining player stays on the loading screen until the client has loaded, declined or failed the pack, at most
+`resource-pack.wait-seconds` (15): chat lines that reach a client while it reloads its resources stay garbled, and the
+lobby greets every arrival in chat. Only the first offer of a session waits.
 
 To regenerate the textures, UI sounds, and vanilla item overrides, install Python 3 and FFmpeg, then run:
 
@@ -801,8 +810,27 @@ Everything the pack changes has a plain fallback, so a player without it sees va
   `HotbarItem`, recognised by a tag in its data rather than its material. Every item in a menu gets the
   pack's tooltip (`tooltip_style`, the `gui/sprites/tooltip/menu_*` nine-slices), so the item names read on the same
   dark card as the panel.
+- Navigator, profile, extras and shop use `Menu.tile` for illustrated cards. `MenuTile.Shape.WIDE` spans four slots
+  in one row; `LARGE` spans three slots in two rows. Every covered slot routes to the card's first slot, including
+  its enabled check and click sound. With the pack, `UiFont` draws the artwork and labels from BlockcraftAPI's
+  `messages.yml` under `tiles`; without it, each card shows a vanilla item between named panes. Updating the card's
+  first slot updates its whole area. `PackArt` regenerates the card textures and their `blockcraft:tiles` and label
+  fonts. Label whitespace becomes spaces, and unsupported characters become `?` before the label is shortened.
+  `MenuTileAssetsTest` checks the assets; `UiFontTest` verifies that composed card labels restore the text cursor
+  using the fonts' actual glyph widths.
+- `Items.Builder.state` marks a menu item's availability or unlock state. Cards show a small badge in their last
+  slot; cosmetics and level rewards keep their actual picture and show the state's tooltip frame. The existing
+  German lore explains the state with and without the pack. `MenuState` does not change permissions or purchases.
 - HUD icons are `<icon:name>` in a message (`Icon`): a font glyph with the pack, the symbol under `icons.<name>` in
-  BlockcraftAPI's `messages.yml` without. The lobby's and every game's sidebar headings carry them.
+  BlockcraftAPI's `messages.yml` without. The lobby's and every game's sidebar headings carry them, and the red error
+  icon, drawn in its own colours, leads core's answer to a command the server cannot run.
+- Rank badges are glyphs of `blockcraft:ui` drawn in each rank's colour (`badges.png`); `RankPrefix` shows a
+  viewer the badge with the pack and the LuckPerms prefix text without, in chat, the tab list, above heads, on the lobby
+  sidebar and in the profile. `UiFontTest` fails when a badge in `ranks.json` has no glyph.
+- Title lettering is `<display>` in a message (`DisplayFont`, `font/display.json`): outlined capitals with two-pixel
+  strokes, upper and lower case drawn alike, any other character from the vanilla font. `Notifications` turns it into
+  bold text for a client without the pack, so only titles carry it; at title scale about thirteen letters fit a
+  1366x768 screen. The countdowns, the round result and BedWars' lost bed use it.
 - Vanilla inventory labels remain intact. The pack does not override container translations.
 - Short UI sounds live in `assets/blockcraft/sounds/ui`. `FeedbackSound` selects custom sounds when the pack is
   active and vanilla sounds otherwise. `SoundArt.py` generates the Ogg Vorbis files. `FeedbackSoundTest` checks that

@@ -12,9 +12,9 @@ import org.bukkit.event.player.PlayerResourcePackStatusEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Which clients wear the network's resource pack. The proxy offers it and is the only one to hear the client's
@@ -27,7 +27,7 @@ public final class ResourcePacks implements Listener {
     private static final UUID ID = UUID.nameUUIDFromBytes("blockcraft:pack".getBytes(StandardCharsets.UTF_8));
 
     private final Messages messages;
-    private final Map<UUID, PackStatus> statuses = new HashMap<>();
+    private final Map<UUID, PackStatus> statuses = new ConcurrentHashMap<>();
 
     public ResourcePacks(Messages messages) {
         this.messages = messages;

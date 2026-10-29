@@ -11,7 +11,7 @@ dependencies {
 }
 
 tasks.processResources {
-    val props = mapOf("version" to project.version)
+    val props = mapOf("version" to project.version, "minecraft" to libs.versions.minecraft.get())
     inputs.properties(props)
     filesMatching("plugin.yml") {
         expand(props)

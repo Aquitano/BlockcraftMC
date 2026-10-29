@@ -5,6 +5,7 @@ import me.blockcraft.api.achievement.Achievement;
 import me.blockcraft.api.cosmetic.CosmeticReward;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.pack.MenuIcon;
+import me.blockcraft.api.pack.MenuState;
 import me.blockcraft.api.settings.PlayerSettings;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Tasks;
@@ -95,7 +96,12 @@ final class ProgressionMenu extends ListMenu<Achievement> {
             case LOCKED -> "level.menu.locked";
             case PENDING -> "level.menu.pending";
         }));
-        var icon = Items.of(reward.icon()).name(reward.name(messages)).lore(lore);
+        var icon = Items.of(reward.icon()).name(reward.name(messages)).lore(lore)
+                .state(equipped ? MenuState.ACTIVE : switch (state) {
+                    case OWNED -> MenuState.OWNED;
+                    case NEXT, LOCKED -> MenuState.LOCKED;
+                    case PENDING -> MenuState.PENDING;
+                });
         if (state == State.OWNED) {
             icon.glow();
         }

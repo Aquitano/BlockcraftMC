@@ -1,6 +1,6 @@
 name: TTT
 version: '${version}'
 main: me.blockcraft.ttt.TttPlugin
-api-version: '26.3'
+api-version: '${minecraft}'
 author: Aquitano
 depend: [BlockcraftAPI]
