@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -59,6 +60,7 @@ public final class PackArt {
         write(tooltipFrame(), tooltip.resolve("menu_frame.png"));
         write(glyphSheet(ICON_PROFILE, ICON_COINS, ICON_LEVEL, ICON_CHAT, ICON_SERVER, ICON_PLAYERS, ICON_MAP, ICON_KIT,
                 ICON_SPECTATOR, ICON_TIME, ICON_EMERALD, ICON_WINNER, ICON_MODE, ICON_OPPONENT, ICON_KILLS), font.resolve("icons.png"));
+        write(badges(), font.resolve("badges.png"));
         for (var icon : ICONS.entrySet()) {
             write(pixels(icon.getValue().rows(), icon.getValue().palette()), item.resolve(icon.getKey() + ".png"));
         }
@@ -187,6 +189,48 @@ public final class PackArt {
         return image;
     }
 
+    /** The badges side by side in cells as wide as the widest; the client trims each glyph to its own width. */
+    static BufferedImage badges() {
+        int cell = BADGES.stream().mapToInt(badge -> badgeWidth(badge.name())).max().orElseThrow();
+        var image = new BufferedImage(cell * BADGES.size(), BADGE_HEIGHT, BufferedImage.TYPE_INT_ARGB);
+        for (int index = 0; index < BADGES.size(); index++) {
+            badge(image, BADGES.get(index), index * cell);
+        }
+        return image;
+    }
+
+    /** Two pixels before the first letter, each letter followed by the column its shade falls on, one pixel after. */
+    static int badgeWidth(String name) {
+        return 2 + name.chars().map(letter -> BADGE_LETTERS.get((char) letter)[0].length() + 1).sum() + 1;
+    }
+
+    /** As tall as a capital letter: a bevelled bar with cut corners, the name in white with a shade to its right. */
+    static void badge(BufferedImage image, Badge badge, int x) {
+        int width = badgeWidth(badge.name());
+        fill(image, x, 0, width, 1, badge.shine());
+        fill(image, x, 1, width, BADGE_HEIGHT - 2, badge.fill());
+        fill(image, x, BADGE_HEIGHT - 1, width, 1, badge.shade());
+        for (int[] corner : new int[][] {{x, 0}, {x + width - 1, 0}, {x, BADGE_HEIGHT - 1}, {x + width - 1, BADGE_HEIGHT - 1}}) {
+            image.setRGB(corner[0], corner[1], 0);
+        }
+        int left = x + 2;
+        for (char letter : badge.name().toCharArray()) {
+            var rows = BADGE_LETTERS.get(letter);
+            for (int dy = 0; dy < rows.length; dy++) {
+                for (int dx = 0; dx < rows[dy].length(); dx++) {
+                    if (rows[dy].charAt(dx) != '#') {
+                        continue;
+                    }
+                    image.setRGB(left + dx, 1 + dy, WHITE);
+                    if (dx + 1 == rows[dy].length() || rows[dy].charAt(dx + 1) != '#') {
+                        image.setRGB(left + dx + 1, 1 + dy, badge.shade());
+                    }
+                }
+            }
+            left += rows[0].length() + 1;
+        }
+    }
+
     static BufferedImage pixels(String[] rows, Map<Character, Integer> palette) {
         var image = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
         paint(image, rows, 0, 0, palette);
@@ -213,6 +257,42 @@ public final class PackArt {
 
     record Icon(String[] rows, Map<Character, Integer> palette) {
     }
+
+    record Badge(String name, int fill, int shade, int shine) {
+    }
+
+    static final int BADGE_HEIGHT = 7;
+
+    /** In the order of their glyphs from U+E300, which luckperms/ranks.json hands each group as its badge. */
+    static final List<Badge> BADGES = List.of(
+            new Badge("SPIELER", 0xFF7D8DA1, 0xFF52697F, 0xFF9DADC0),
+            new Badge("PREMIUM", 0xFFE8891C, 0xFFA0560C, 0xFFF6B060),
+            new Badge("YT", 0xFFA347BA, 0xFF6B2A80, 0xFFC273D6),
+            new Badge("SUP", 0xFFD9B814, 0xFF8F7608, 0xFFF0D84E),
+            new Badge("MOD", 0xFFE04E4E, 0xFF9E2B2B, 0xFFF08A8A),
+            new Badge("DEV", 0xFF2FA9C4, 0xFF1B6E82, 0xFF6CCBE0),
+            new Badge("ADMIN", 0xFFB3262B, 0xFF70161A, 0xFFD3555A),
+            new Badge("OWNER", 0xFF3E8EF7, 0xFF1F55A8, 0xFF8BBCFA)
+    );
+
+    static final Map<Character, String[]> BADGE_LETTERS = Map.ofEntries(
+            Map.entry('A', new String[] {".##.", "#..#", "####", "#..#", "#..#"}),
+            Map.entry('D', new String[] {"###.", "#..#", "#..#", "#..#", "###."}),
+            Map.entry('E', new String[] {"####", "#...", "###.", "#...", "####"}),
+            Map.entry('I', new String[] {"###", ".#.", ".#.", ".#.", "###"}),
+            Map.entry('L', new String[] {"#...", "#...", "#...", "#...", "####"}),
+            Map.entry('M', new String[] {"#...#", "##.##", "#.#.#", "#...#", "#...#"}),
+            Map.entry('N', new String[] {"#..#", "##.#", "#.##", "#..#", "#..#"}),
+            Map.entry('O', new String[] {".##.", "#..#", "#..#", "#..#", ".##."}),
+            Map.entry('P', new String[] {"###.", "#..#", "###.", "#...", "#..."}),
+            Map.entry('R', new String[] {"###.", "#..#", "###.", "#.#.", "#..#"}),
+            Map.entry('S', new String[] {".###", "#...", ".##.", "...#", "###."}),
+            Map.entry('T', new String[] {"###", ".#.", ".#.", ".#.", ".#."}),
+            Map.entry('U', new String[] {"#..#", "#..#", "#..#", "#..#", ".##."}),
+            Map.entry('V', new String[] {"#...#", "#...#", ".#.#.", ".#.#.", "..#.."}),
+            Map.entry('W', new String[] {"#...#", "#...#", "#.#.#", "##.##", "#...#"}),
+            Map.entry('Y', new String[] {"#...#", ".#.#.", "..#..", "..#..", "..#.."})
+    );
 
     static final Map<Character, Integer> LIGHT = Map.of('H', 0xFFF4FAFC, 'W', 0xFFCCDCE5, 'w', 0xFF8CA3B4, 'd', 0xFF52697F);
     static final Map<Character, Integer> RED = Map.of('H', 0xFFFFB6A4, 'R', 0xFFEB655E, 'r', 0xFFB83F48, 'd', 0xFF743349);

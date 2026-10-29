@@ -51,28 +51,35 @@ public final class ChatFormatListener implements Listener {
         var tag = api.settings().get(source, PlayerSetting.CHAT_TAG).flatMap(ChatTagChoice::parse)
                 .map(chosen -> chosen.text(api.messages()).append(Component.space()))
                 .orElse(Component.empty());
-        var rank = Ranks.prefix(source).orElse(Component.empty());
+        var rank = Ranks.prefix(source);
         int level = api.nickStats().level(source, api.xp().level(source));
         var levelBadge = messages.get("chat.level", Formatter.number("level", level));
         // The proxy resolves the nick, so the hover and the /msg it suggests both go by the name others see.
         String shown = shownName(source);
-        var hoverText = Component.join(JoinConfiguration.newlines(), messages.getLines("chat.hover",
+        var click = ClickEvent.suggestCommand(PlainTextComponentSerializer.plainText()
+                .serialize(messages.get("chat.msg-command", Placeholder.unparsed("name", shown))));
+        event.renderer((ChatRenderer) (player, displayName, message, viewer) -> {
+            var shownRank = rank.map(prefix -> prefix.shownTo(viewer)).orElse(Component.empty());
+            var hover = hover(shownRank, shown, level);
+            return messages.get("chat.format",
+                    Placeholder.component("level", levelBadge),
+                    Placeholder.component("tag", tag),
+                    Placeholder.component("rank", shownRank.hoverEvent(hover).clickEvent(click)),
+                    Placeholder.component("name", name(player, displayName, viewer).hoverEvent(hover).clickEvent(click)),
+                    Placeholder.component("message", rendered(player, colour(player, message), viewer)));
+        });
+    }
+
+    private HoverEvent<Component> hover(Component rank, String shown, int level) {
+        var text = Component.join(JoinConfiguration.newlines(), messages.getLines("chat.hover",
                 Placeholder.component("rank", rank),
                 Placeholder.unparsed("name", shown),
                 Formatter.number("level", level)));
         String aside = "chat.level-asides." + level;
         if (messages.has(aside) && !messages.raw(aside).isEmpty()) {
-            hoverText = hoverText.append(Component.newline()).append(messages.get(aside));
+            text = text.append(Component.newline()).append(messages.get(aside));
         }
-        var hover = HoverEvent.showText(hoverText);
-        var click = ClickEvent.suggestCommand(PlainTextComponentSerializer.plainText()
-                .serialize(messages.get("chat.msg-command", Placeholder.unparsed("name", shown))));
-        event.renderer((ChatRenderer) (player, displayName, message, viewer) -> messages.get("chat.format",
-                Placeholder.component("level", levelBadge),
-                Placeholder.component("tag", tag),
-                Placeholder.component("rank", rank.hoverEvent(hover).clickEvent(click)),
-                Placeholder.component("name", name(player, displayName, viewer).hoverEvent(hover).clickEvent(click)),
-                Placeholder.component("message", rendered(player, colour(player, message), viewer))));
+        return HoverEvent.showText(text);
     }
 
     /**

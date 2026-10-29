@@ -13,12 +13,15 @@ import java.util.Map;
 import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /** The code's idea of the pack's font must match the font the pack ships. */
 public class UiFontTest {
 
     private static final Path FONT = Path.of("../../resourcepack/src/assets/blockcraft/font/ui.json");
+    private static final Path RANKS = Path.of("../../luckperms/ranks.json");
+    private static final String BADGE = "meta.badge.";
 
     @Test
     public void everyGlyphTheCodeUsesIsInThePacksFont() throws IOException {
@@ -45,6 +48,28 @@ public class UiFontTest {
         for (int pixels : new int[] {-8, -169, 1, 255, -255}) {
             assertEquals(pixels, width(UiFont.shift(pixels), advances));
         }
+    }
+
+    @Test
+    public void everyRankBadgeIsInThePacksFont() throws IOException {
+        var bitmaps = new HashSet<Character>();
+        for (var provider : JsonParser.parseString(Files.readString(FONT)).getAsJsonObject().getAsJsonArray("providers")) {
+            var json = provider.getAsJsonObject();
+            if (json.get("type").getAsString().equals("bitmap")) {
+                json.getAsJsonArray("chars").forEach(row -> row.getAsString().chars().forEach(c -> bitmaps.add((char) c)));
+            }
+        }
+        var badges = new HashMap<String, String>();
+        JsonParser.parseString(Files.readString(RANKS)).getAsJsonObject().getAsJsonObject("groups").entrySet()
+                .forEach(group -> group.getValue().getAsJsonObject().getAsJsonArray("nodes").forEach(node -> {
+                    String key = node.getAsJsonObject().get("key").getAsString();
+                    if (key.startsWith(BADGE)) {
+                        badges.put(group.getKey(), key.substring(BADGE.length()));
+                    }
+                }));
+        assertFalse("no badges in " + RANKS, badges.isEmpty());
+        badges.forEach((group, glyph) ->
+                assertTrue(group + "'s badge", glyph.length() == 1 && bitmaps.contains(glyph.charAt(0))));
     }
 
     private static int width(String glyphs, Map<Character, Integer> advances) {

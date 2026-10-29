@@ -114,7 +114,8 @@ public final class LobbyHud implements Listener {
         player.setExp(Math.clamp(progress.into() / (float) progress.needed(), 0.0f, 1.0f));
         sidebar.show(player, messages.getLines("sidebar.lines",
                 api.resourcePack().icons(player),
-                Placeholder.component("rank", Ranks.prefix(player).orElse(messages.get("sidebar.no-rank"))),
+                Placeholder.component("rank",
+                        Ranks.prefix(player).map(rank -> rank.shownTo(player)).orElse(messages.get("sidebar.no-rank"))),
                 Formatter.number("coins", coins),
                 Formatter.number("level", progress.level())));
     }

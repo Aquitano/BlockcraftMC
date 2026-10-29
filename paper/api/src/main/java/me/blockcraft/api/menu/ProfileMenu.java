@@ -65,7 +65,8 @@ final class ProfileMenu extends Menu {
                         Formatter.number("missing", progress.needed() - progress.into()),
                         Formatter.number("next", progress.level() + 1),
                         Formatter.number("coins", snapshot.coins()),
-                        Placeholder.component("rank", Ranks.prefix(viewer).orElse(Component.empty()))))
+                        Placeholder.component("rank",
+                                Ranks.prefix(viewer).map(rank -> rank.shownTo(viewer)).orElse(Component.empty()))))
                 .build());
         set(LEVEL_SLOT, MenuIcon.ACHIEVEMENTS.item()
                 .name(messages.get("profile.level", Formatter.number("level", progress.level())))

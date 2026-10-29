@@ -45,7 +45,8 @@ one LuckPerms database, otherwise a rank set on one side is unknown on the other
 
 `luckperms/ranks.json` is a LuckPerms export with the groups the plugins expect. Chat and the tab list of every
 Paper server render the group's prefix in front of the name and sort the tab list by group weight; the prefix
-carries the name colour, so it ends in a colour code.
+carries the name colour, so it ends in a colour code. Each group's `badge` meta is a glyph of the resource pack's font
+(U+E300 onwards) that replaces the prefix for a player who wears the pack.
 
 | Group      | Prefix             | Grants                                                                            |
 |------------|--------------------|-----------------------------------------------------------------------------------|
@@ -785,6 +786,9 @@ Everything the pack changes has a plain fallback, so a player without it sees va
   dark card as the panel.
 - HUD icons are `<icon:name>` in a message (`Icon`): a font glyph with the pack, the symbol under `icons.<name>` in
   BlockcraftAPI's `messages.yml` without. The lobby's and every game's sidebar headings carry them.
+- Rank badges are glyphs of `blockcraft:ui` drawn in each rank's colour (`badges.png`); `RankPrefix` shows a
+  viewer the badge with the pack and the LuckPerms prefix text without, in chat, the tab list, above heads, on the lobby
+  sidebar and in the profile. `UiFontTest` fails when a badge in `ranks.json` has no glyph.
 - Vanilla inventory labels remain intact. The pack does not override container translations.
 - Short UI sounds live in `assets/blockcraft/sounds/ui`. `FeedbackSound` selects custom sounds when the pack is
   active and vanilla sounds otherwise. `python3 resourcepack/SoundArt.py` regenerates the Ogg Vorbis files with

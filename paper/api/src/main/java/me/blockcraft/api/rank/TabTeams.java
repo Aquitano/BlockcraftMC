@@ -19,6 +19,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerResourcePackStatusEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scoreboard.Scoreboard;
 
@@ -34,14 +35,14 @@ import java.util.UUID;
 
 /**
  * Sorts the tab list by LuckPerms group weight and shows the group's prefix in front of each name, on every
- * Paper server. The heaviest inherited group counts, not the primary one: a /rank on time and the shop only add an
- * inheritance node; a nicked player sorts and reads as the group their nick wears. Every player has their own
- * scoreboard for the sidebar, so the teams are written to all of them; entries are remembered per UUID because a
- * nick changes the name the tab list is keyed by. Vanished players get their own team per group, suffixed with a
- * marker: only staff who see through vanish still list them. Players away from the keyboard get a team of their own
- * with an AFK marker, unless they are vanished. A game that plays in teams colours its players' names, in the tab
- * list and above their heads, without taking the rank prefix away. A rank change shows as soon as LuckPerms
- * recalculates the player.
+ * Paper server; a viewer who wears the pack sees the group's badge instead. The heaviest inherited group counts, not
+ * the primary one: a /rank on time and the shop only add an inheritance node; a nicked player sorts and reads as the
+ * group their nick wears. Every player has their own scoreboard for the sidebar, so the teams are written to all of
+ * them; entries are remembered per UUID because a nick changes the name the tab list is keyed by. Vanished players
+ * get their own team per group, suffixed with a marker: only staff who see through vanish still list them. Players
+ * away from the keyboard get a team of their own with an AFK marker, unless they are vanished. A game that plays in
+ * teams colours its players' names, in the tab list and above their heads, without taking the rank prefix away. A
+ * rank change shows as soon as LuckPerms recalculates the player.
  */
 public final class TabTeams implements Listener {
 
@@ -62,7 +63,7 @@ public final class TabTeams implements Listener {
     private final Set<UUID> vanished = new HashSet<>();
     private final Map<UUID, NamedTextColor> colors = new HashMap<>();
 
-    private record Entry(String team, Component prefix, Component suffix, Optional<NamedTextColor> color, String name) {
+    private record Entry(String team, RankPrefix prefix, Component suffix, Optional<NamedTextColor> color, String name) {
     }
 
     public TabTeams(Plugin plugin, LuckPerms luckPerms, Messages messages, NickRanks nickRanks, Afk afk) {
@@ -102,6 +103,12 @@ public final class TabTeams implements Listener {
         update(event.getPlayer());
     }
 
+    /** The proxy's word on the pack arrives after the join, and whether a viewer sees badges depends on it. */
+    @EventHandler
+    public void onResourcePack(PlayerResourcePackStatusEvent event) {
+        entries.values().forEach(known -> show(event.getPlayer(), known));
+    }
+
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
         vanished.remove(event.getPlayer().getUniqueId());
@@ -133,9 +140,8 @@ public final class TabTeams implements Listener {
         remove(player);
         var entry = entryOf(player);
         entries.put(player.getUniqueId(), entry);
-        Bukkit.getOnlinePlayers().forEach(viewer -> apply(Boards.of(viewer), entry));
-        var own = Boards.of(player);
-        entries.values().forEach(known -> apply(own, known));
+        Bukkit.getOnlinePlayers().forEach(viewer -> show(viewer, entry));
+        entries.values().forEach(known -> show(player, known));
     }
 
     public void remove(Player player) {
@@ -160,7 +166,10 @@ public final class TabTeams implements Listener {
                         .orElseGet(() -> luckPerms.getGroupManager().getGroup(user.getPrimaryGroup())));
         int weight = group == null ? 0 : group.getWeight().orElse(0);
         String groupName = group == null ? user.getPrimaryGroup() : group.getName();
-        Component prefix = Ranks.prefix(player).orElseGet(() -> messages.get("tab.default-prefix"));
+        var prefix = Ranks.prefix(player).orElseGet(() -> {
+            var plain = messages.get("tab.default-prefix");
+            return new RankPrefix(plain, plain);
+        });
         boolean isVanished = vanished.contains(player.getUniqueId());
         boolean isAfk = !isVanished && afk.isAfk(player);
         Component suffix = isVanished ? messages.get("tab.vanished-suffix")
@@ -170,14 +179,18 @@ public final class TabTeams implements Listener {
                 color, player.getName());
     }
 
-    private static void apply(Scoreboard board, Entry entry) {
+    private static void show(Player viewer, Entry entry) {
+        apply(Boards.of(viewer), entry, entry.prefix().shownTo(viewer));
+    }
+
+    private static void apply(Scoreboard board, Entry entry, Component prefix) {
         var team = board.getTeam(entry.team());
         if (team == null) {
             team = board.registerNewTeam(entry.team());
             team.setCanSeeFriendlyInvisibles(true);
         }
         team.setAllowFriendlyFire(true);
-        team.prefix(entry.prefix());
+        team.prefix(prefix);
         team.suffix(entry.suffix());
         entry.color().ifPresent(team::color);
         team.addEntry(entry.name());
