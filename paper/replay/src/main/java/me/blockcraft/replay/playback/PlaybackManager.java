@@ -1,13 +1,9 @@
 package me.blockcraft.replay.playback;
 
 import me.blockcraft.common.message.Messages;
-import me.blockcraft.replay.data.ReplayData;
+import me.blockcraft.replay.data.ReplayHeader;
 import me.blockcraft.replay.data.ReplayLimits;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
-import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
@@ -20,7 +16,6 @@ import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -31,7 +26,11 @@ import java.util.logging.Level;
 
 public final class PlaybackManager implements AutoCloseable {
 
-    public record State(UUID replay, int tick, int durationTicks, boolean paused, double speed, boolean preparing) { }
+    public record State(UUID replay, int tick, int durationTicks, boolean paused, double speed, boolean preparing) {
+        public boolean finished() {
+            return tick >= durationTicks;
+        }
+    }
 
     private final Plugin plugin;
     private final ReplayLimits limits;
@@ -41,7 +40,6 @@ public final class PlaybackManager implements AutoCloseable {
     private final PlaybackGuard guard;
     private final BukkitTask task;
     private boolean closed;
-    private int statusTicks;
 
     public PlaybackManager(Plugin plugin, ReplayLimits limits, Messages messages) {
         this.plugin = plugin;
@@ -55,14 +53,14 @@ public final class PlaybackManager implements AutoCloseable {
         task = Bukkit.getScheduler().runTaskTimer(plugin, this::pulse, 1L, 1L);
     }
 
-    public boolean start(Player viewer, ReplayData data) {
+    public boolean start(Player viewer, PlaybackTimeline timeline) {
         if (closed || active(viewer)
                 || sessions.size() + cleanup.getActiveCount() + cleanup.getQueue().size() >= limits.maxPlaybacks() || !viewer.isOnline()
-                || viewer.isDead() || data.events().isEmpty()
-                || data.header().participants().size() > limits.maxParticipants()) {
+                || viewer.isDead() || timeline.empty()
+                || timeline.header().participants().size() > limits.maxParticipants()) {
             return false;
         }
-        var session = new PlaybackSession(viewer, data);
+        var session = new PlaybackSession(plugin, viewer, timeline, messages);
         sessions.put(viewer.getUniqueId(), session);
         try {
             session.begin();
@@ -87,10 +85,10 @@ public final class PlaybackManager implements AutoCloseable {
         return Optional.ofNullable(sessions.get(viewer.getUniqueId())).map(PlaybackSession::state);
     }
 
-    public void pause(Player viewer) {
+    public void toggle(Player viewer) {
         var session = sessions.get(viewer.getUniqueId());
         if (session != null) {
-            session.pause();
+            session.toggle();
         }
     }
 
@@ -104,34 +102,71 @@ public final class PlaybackManager implements AutoCloseable {
         return session != null && session.seek(ticks);
     }
 
+    /** The participants on screen right now, for the viewer to jump to. */
+    public List<ReplayHeader.Participant> present(Player viewer) {
+        var session = sessions.get(viewer.getUniqueId());
+        return session == null ? List.of() : session.present();
+    }
+
+    public boolean focus(Player viewer, UUID participant) {
+        var session = sessions.get(viewer.getUniqueId());
+        return session != null && session.focus(participant);
+    }
+
+    /** Freezes the playback without leaving its world, while the viewer is on the way to another server. */
+    public void leave(Player viewer) {
+        var session = sessions.get(viewer.getUniqueId());
+        if (session != null) {
+            session.leave();
+        }
+    }
+
+    /** Ends the playback here and takes the viewer back to where they stood on this server. */
     public void stop(Player viewer) {
+        end(viewer, false);
+    }
+
+    /** Ends the playback of a viewer leaving the server, whom a failed return no longer concerns. */
+    void quit(Player viewer) {
+        end(viewer, true);
+    }
+
+    private void end(Player viewer, boolean quitting) {
         var session = sessions.remove(viewer.getUniqueId());
         if (session == null) {
             return;
         }
         try {
-            session.restore();
+            if (!session.restore() && !quitting) {
+                viewer.sendMessage(messages.get("playback.restore-failed"));
+                Bukkit.getWorlds().stream().filter(world -> !world.getKey().getNamespace().equals("replay"))
+                        .findFirst().ifPresent(world -> viewer.teleport(world.getSpawnLocation()));
+            }
         } catch (RuntimeException failure) {
             plugin.getLogger().log(Level.SEVERE, "Could not restore replay viewer " + viewer.getUniqueId(), failure);
-            viewer.sendMessage(messages.get("playback.restore-failed"));
-            Bukkit.getWorlds().stream().filter(world -> !world.getKey().getNamespace().equals("replay"))
-                    .findFirst().ifPresent(world -> {
-                        if (!viewer.teleport(world.getSpawnLocation())) {
-                            plugin.getLogger().severe("Could not move replay viewer to fallback world " + viewer.getUniqueId());
-                        }
-                    });
         } finally {
-            viewer.sendActionBar(Component.empty());
             for (var other : Bukkit.getOnlinePlayers()) {
                 if (!active(other)) {
                     other.showPlayer(plugin, viewer);
                     viewer.showPlayer(plugin, other);
                 }
             }
-            var folders = session.worlds().stream().map(this::unload).flatMap(Optional::stream).toList();
+            discard(session.worlds());
+        }
+    }
+
+    /** Unloads a tick later, once a viewer who is quitting has been taken out of the world. */
+    private void discard(List<World> worlds) {
+        Runnable unload = () -> {
+            var folders = worlds.stream().map(this::unload).flatMap(Optional::stream).toList();
             if (!folders.isEmpty()) {
                 cleanup.execute(() -> folders.forEach(this::deleteDimension));
             }
+        };
+        if (closed) {
+            unload.run();
+        } else {
+            Bukkit.getScheduler().runTask(plugin, unload);
         }
     }
 
@@ -147,11 +182,6 @@ public final class PlaybackManager implements AutoCloseable {
         return !replayWorld(world);
     }
 
-    boolean permittedPosition(Player viewer, Location location) {
-        var session = sessions.get(viewer.getUniqueId());
-        return session == null || session.permittedPosition(location);
-    }
-
     void hideFrom(Player joined) {
         for (var session : sessions.values()) {
             var viewer = session.viewer();
@@ -163,40 +193,18 @@ public final class PlaybackManager implements AutoCloseable {
     }
 
     private void pulse() {
-        int sessionCount = Math.max(1, sessions.size());
-        int budget = Math.max(1, limits.blocksPerTick() / sessionCount);
-        int scans = Math.max(1, limits.blocksScannedPerTick() / sessionCount);
-        boolean showStatus = ++statusTicks % 20 == 0;
+        int writes = Math.max(1, limits.blocksPerTick() / Math.max(1, sessions.size()));
         for (var session : List.copyOf(sessions.values())) {
             if (!session.viewer().isOnline()) {
-                stop(session.viewer());
+                quit(session.viewer());
                 continue;
             }
             try {
-                session.pulse(budget, scans);
-                if (showStatus) {
-                    showStatus(session);
-                }
+                session.pulse(writes);
             } catch (RuntimeException failure) {
                 fail(session.viewer(), failure);
             }
         }
-    }
-
-    private void showStatus(PlaybackSession session) {
-        var state = session.state();
-        String stateKey = state.preparing() ? "preparing"
-                : state.tick() >= state.durationTicks() ? "finished"
-                : state.paused() ? "paused" : "playing";
-        session.viewer().sendActionBar(messages.get("playback.status",
-                Placeholder.unparsed("time", time(state.tick())),
-                Placeholder.unparsed("duration", time(state.durationTicks())),
-                Formatter.number("speed", state.speed()),
-                Placeholder.component("state", messages.get("playback.state." + stateKey))));
-    }
-
-    private static String time(int ticks) {
-        return String.format(Locale.ROOT, "%d:%02d", ticks / 1200, ticks / 20 % 60);
     }
 
     private void fail(Player viewer, RuntimeException failure) {

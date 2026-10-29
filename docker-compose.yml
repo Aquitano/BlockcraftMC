@@ -290,6 +290,8 @@ services:
     environment:
       <<: *paper-env
       BLOCKCRAFT_SERVER_GROUP: replay
+      # Viewers wait in the default world while a recording loads; nothing hostile may spawn there.
+      DIFFICULTY: peaceful
       COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/viaversion
     volumes:
       - ./build/docker/paper:/blockcraft:ro

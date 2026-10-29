@@ -17,36 +17,52 @@ playback:
   invalid-speed: "<prefix><error>Wähle als Tempo 0.5, 1 oder 2."
   loading: "<prefix><muted>Aufzeichnung wird geladen … Mit /replay stop abbrechen."
   connecting: "<prefix><muted>Verbinde mit dem Replay-Server …"
-  started: "<prefix><success>Wiedergabe geöffnet. <muted>Mit den Werkzeugen pausieren, springen oder das Tempo ändern."
+  started: "<prefix><success>Wiedergabe geöffnet: <primary><game> <dark>· <muted><map>"
   stopped: "<prefix><muted>Wiedergabe beendet. Mit /replay eine andere Runde wählen oder mit /hub zurückkehren."
+  returning: "<prefix><muted>Wiedergabe beendet. Du kehrst zurück …"
   unavailable: "<prefix><error>Diese Aufzeichnung ist nicht verfügbar, gehört zu einer anderen Minecraft-Version oder du darfst sie nicht ansehen."
   full: "<prefix><accent>Der Replay-Server ist ausgelastet. Bitte versuche es gleich erneut."
   busy: "<prefix><muted>Beende zuerst die laufende Wiedergabe mit /replay stop."
   failed: "<prefix><error>Die Wiedergabe konnte nicht fortgesetzt werden. Dein vorheriger Zustand wird wiederhergestellt."
   invalid-id: "<prefix><error>Ungültige Replay-ID. Wähle eine Runde mit /replay."
   not-active: "<prefix><muted>Es läuft keine Wiedergabe. Öffne eine Runde mit /replay."
-  seek-failed: "<prefix><error>Diese Zeit kann gerade nicht geöffnet werden. Warte, bis die Karte geladen ist."
+  seek-failed: "<prefix><muted>Die Karte wird noch geladen. Springe gleich noch einmal."
   command-denied: "<prefix><muted>Beende zuerst die Wiedergabe mit /replay stop. /hub bleibt verfügbar."
   status: "<primary><time> <dark>/ <muted><duration> <dark>· <accent><speed>× <dark>· <state>"
   restore-failed: "<prefix><error>Dein vorheriger Standort ist nicht erreichbar. Mit /hub kommst du zurück zur Lobby."
   state:
     playing: "<success>Wiedergabe"
     paused: "<accent>Pausiert"
-    preparing: "<muted>Karte wird aufgebaut"
+    preparing: "<muted>Karte wird geladen"
     finished: "<muted>Ende der Aufzeichnung"
 controls:
-  pause:
-    name: "<primary>Pause / Weiter"
-    hint: "<right>Wiedergabe pausieren oder fortsetzen"
+  players:
+    name: "<primary>Spieler"
+    hint: "<right>Zu einem Spieler der Runde springen"
   back:
     name: "<primary>10 Sekunden zurück"
     hint: "<right>Zur vorherigen Stelle springen"
+  pause:
+    name: "<primary>Pausieren"
+    hint: "<right>Wiedergabe anhalten"
+  resume:
+    name: "<primary>Fortsetzen"
+    hint: "<right>Wiedergabe fortsetzen"
+  restart:
+    name: "<primary>Von vorn"
+    hint: "<right>Die Runde noch einmal abspielen"
   forward:
     name: "<primary>10 Sekunden vor"
     hint: "<right>Zur nächsten Stelle springen"
   speed:
-    name: "<primary>Wiedergabetempo"
+    name: "<primary>Tempo <dark>· <accent><speed>×"
     hint: "<right>Zwischen 0,5×, 1× und 2× wechseln"
   exit:
     name: "<error>Wiedergabe verlassen"
-    hint: "<right>Zur Replay-Lobby zurückkehren"
+    hint: "<right>Dorthin zurück, wo du hergekommen bist"
+players:
+  title: "<arrow><primary>Aufzeichnung <dark>· <muted>Spieler"
+  entry: "<primary><player>"
+  hint: "<left>Hinter <player> springen"
+  empty: "<muted>Gerade ist kein Spieler zu sehen."
+  gone: "<prefix><muted><player> ist gerade nicht zu sehen."

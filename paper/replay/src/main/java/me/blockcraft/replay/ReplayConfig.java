@@ -19,6 +19,7 @@ record ReplayConfig(String playbackGroup, Path directory, int historyLimit, long
                 number(config, "recording.sample-ticks", 1, 20),
                 number(config, "recording.max-duration-minutes", 1, 60) * 1200,
                 number(config, "recording.max-participants", 1, 64),
+                number(config, "recording.max-entities", 0, 256),
                 number(config, "recording.max-chunks", 1, 256),
                 number(config, "recording.capture-radius", 0, 2),
                 number(config, "recording.chunks-per-tick", 1, 2),
@@ -28,8 +29,7 @@ record ReplayConfig(String playbackGroup, Path directory, int historyLimit, long
                 number(config, "recording.max-archive-mib", 1, 128) * MIB,
                 number(config, "recording.max-decoded-mib", 1, 256) * MIB,
                 number(config, "playback.max-viewers", 1, 4),
-                number(config, "playback.blocks-per-tick", 256, 16384),
-                number(config, "playback.blocks-scanned-per-tick", 256, 131072));
+                number(config, "playback.blocks-per-tick", 256, 16384));
         return new ReplayConfig(config.getString("playback-group", "replay"), directory.toAbsolutePath().normalize(),
                 number(config, "history-limit", 1, 200),
                 number(config, "storage.max-total-mib", 128, 1048576) * MIB,

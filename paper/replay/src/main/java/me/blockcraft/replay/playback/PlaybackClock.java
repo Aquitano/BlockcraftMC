@@ -15,8 +15,24 @@ final class PlaybackClock {
     int tick() { return tick; }
     boolean paused() { return paused; }
     double speed() { return speed; }
+    boolean finished() { return tick >= duration; }
 
-    void pause() { paused = !paused; }
+    /** The recorded moment shown, between two ticks while playing slower than recorded. */
+    double time() {
+        return Math.min(duration, tick + remainder);
+    }
+
+    /** Pauses or resumes; at the end of the recording, resuming starts it over. */
+    void toggle() {
+        if (paused || !finished()) {
+            paused = !paused;
+        }
+        if (!paused && finished()) {
+            seek(0);
+        }
+    }
+
+    void pause() { paused = true; }
 
     boolean speed(double speed) {
         if (speed != 0.5 && speed != 1 && speed != 2) {
@@ -26,17 +42,13 @@ final class PlaybackClock {
         return true;
     }
 
-    boolean seek(int tick) {
-        if (tick < 0 || tick > duration) {
-            return false;
-        }
-        this.tick = tick;
+    void seek(int tick) {
+        this.tick = Math.clamp(tick, 0, duration);
         remainder = 0;
-        return true;
     }
 
     void advance() {
-        if (paused || tick >= duration) {
+        if (paused || finished()) {
             return;
         }
         remainder += speed;

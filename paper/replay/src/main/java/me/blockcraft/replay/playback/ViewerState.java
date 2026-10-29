@@ -24,7 +24,8 @@ record ViewerState(Location location, GameMode gameMode, ItemStack[] contents, I
                 viewer.isMarkedInvulnerable());
     }
 
-    void restore(Player viewer) {
+    /** Puts everything back and reports whether the viewer could be moved to where they stood. */
+    boolean restore(Player viewer) {
         viewer.closeInventory();
         viewer.closeDialog();
         viewer.getInventory().setContents(contents);
@@ -39,8 +40,6 @@ record ViewerState(Location location, GameMode gameMode, ItemStack[] contents, I
         viewer.setAffectsSpawning(affectsSpawning);
         viewer.setInvulnerable(invulnerable);
         viewer.setFallDistance(0);
-        if (!viewer.teleport(location)) {
-            throw new IllegalStateException("Could not return replay viewer to their original location");
-        }
+        return viewer.teleport(location);
     }
 }

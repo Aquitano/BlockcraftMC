@@ -30,8 +30,12 @@ public final class Worlds {
     }
 
     public static World createArena(NamespacedKey key) {
-        var world = Objects.requireNonNull(WorldCreator.ofKey(key)
-                .generator(new ChunkGenerator() { }).createWorld(), "Could not create arena " + key);
+        return createArena(WorldCreator.ofKey(key).generator(new ChunkGenerator() { }));
+    }
+
+    /** An arena from {@code creator}, whose generator decides the terrain; time, weather and mobs stand still. */
+    public static World createArena(WorldCreator creator) {
+        var world = Objects.requireNonNull(creator.createWorld(), "Could not create arena " + creator.name());
         world.setDifficulty(Difficulty.PEACEFUL);
         world.setGameRule(GameRules.ADVANCE_TIME, false);
         world.setGameRule(GameRules.ADVANCE_WEATHER, false);

@@ -32,8 +32,7 @@ public final class ReplayPlugin extends JavaPlugin {
         var repository = new ReplayRepository(BlockcraftApi.get().database());
         playback = new PlaybackManager(this, config.limits(), messages);
         service = new ReplayService(this, repository, store, playback, config, messages);
-        var controls = new ReplayControls(service, playback, messages);
-        service.controls(controls);
+        var controls = new ReplayControls(service, playback);
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event ->
                 new CommandRegistry(event.registrar(), messages).register(ReplayCommand.create(service, messages)));
         Tasks.async(this, () -> {

@@ -5,9 +5,11 @@ import me.blockcraft.api.menu.Menu;
 import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
-import me.blockcraft.replay.data.ReplayData;
+import me.blockcraft.common.network.GroupStatus;
 import me.blockcraft.replay.playback.PlaybackManager;
+import me.blockcraft.replay.playback.PlaybackTimeline;
 import me.blockcraft.replay.storage.ReplayStore;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -21,6 +23,7 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
@@ -30,6 +33,8 @@ import java.util.function.Consumer;
 import java.util.logging.Level;
 
 final class ReplayService implements Listener, AutoCloseable {
+
+    private static final long RETURN_TIMEOUT_TICKS = 100L;
 
     private final Plugin plugin;
     private final ReplayRepository repository;
@@ -41,13 +46,13 @@ final class ReplayService implements Listener, AutoCloseable {
     private final String minecraft = Bukkit.getMinecraftVersion();
     private final Map<UUID, Object> loading = new HashMap<>();
     private final Map<UUID, Object> pendingNavigation = new HashMap<>();
+    private final Map<UUID, String> origins = new HashMap<>();
     private final ThreadPoolExecutor reads = new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS,
             new ArrayBlockingQueue<>(4), Thread.ofPlatform().name("blockcraft-replay-reader").daemon().factory(),
             new ThreadPoolExecutor.AbortPolicy());
     private final ThreadPoolExecutor maintenance = new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS,
             new ArrayBlockingQueue<>(1), Thread.ofPlatform().name("blockcraft-replay-retention").daemon().factory(),
             new ThreadPoolExecutor.AbortPolicy());
-    private ReplayControls controls;
     private boolean ready;
 
     ReplayService(Plugin plugin, ReplayRepository repository, ReplayStore store, PlaybackManager playback,
@@ -59,10 +64,6 @@ final class ReplayService implements Listener, AutoCloseable {
         this.config = config;
         this.messages = messages;
         playbackBackend = BlockcraftApi.get().server().group().equals(config.playbackGroup());
-    }
-
-    void controls(ReplayControls controls) {
-        this.controls = controls;
     }
 
     void ready() {
@@ -132,7 +133,7 @@ final class ReplayService implements Listener, AutoCloseable {
             if (repository.accessible(replay, player.getUniqueId(), staff).isEmpty()) {
                 return false;
             }
-            repository.request(player.getUniqueId(), replay, token);
+            repository.request(player.getUniqueId(), replay, token, BlockcraftApi.get().server().group());
             return true;
         }, found -> {
             if (loading.get(viewer) != token || !current.getAsBoolean() || !allowed(player)) {
@@ -167,19 +168,19 @@ final class ReplayService implements Listener, AutoCloseable {
         player.sendMessage(messages.get("playback.loading"));
         try {
             reads.execute(() -> {
-                ReplayData data = null;
+                PlaybackTimeline timeline = null;
                 try {
                     var entry = repository.accessible(replay, id, staff);
                     if (entry.isPresent() && entry.get().minecraft().equals(minecraft)) {
-                        data = store.load(replay);
-                        if (!data.header().minecraft().equals(minecraft)) {
-                            data = null;
+                        var data = store.load(replay);
+                        if (data.header().minecraft().equals(minecraft)) {
+                            timeline = PlaybackTimeline.of(data);
                         }
                     }
                 } catch (IOException | RuntimeException error) {
                     plugin.getLogger().log(Level.WARNING, "Could not load replay " + replay, error);
                 }
-                var loaded = data;
+                var loaded = timeline;
                 Tasks.sync(plugin, () -> {
                     if (loading.get(id) != token) {
                         return;
@@ -189,11 +190,12 @@ final class ReplayService implements Listener, AutoCloseable {
                         return;
                     }
                     boolean owns = loaded != null && loaded.header().participants().stream().anyMatch(p -> p.id().equals(id));
-                    if (loaded == null || !owns && !player.hasPermission(ReplayPlugin.STAFF_PERMISSION)) {
+                    if (loaded == null || loaded.empty() || !owns && !player.hasPermission(ReplayPlugin.STAFF_PERMISSION)) {
                         player.sendMessage(messages.get("playback.unavailable"));
                     } else if (playback.start(player, loaded)) {
-                        controls.give(player);
-                        player.sendMessage(messages.get("playback.started"));
+                        player.sendMessage(messages.get("playback.started",
+                                Placeholder.unparsed("game", loaded.header().game()),
+                                Placeholder.unparsed("map", loaded.header().map())));
                     } else {
                         player.sendMessage(messages.get("playback.full"));
                     }
@@ -205,11 +207,29 @@ final class ReplayService implements Listener, AutoCloseable {
         }
     }
 
+    /**
+     * Leaves playback. On the replay backend that means going back to the group the viewer came from if it can take
+     * them right now, otherwise to the lobby, since waking a sleeping server would outlast the wait here. The last
+     * picture stays until the proxy has moved them; if it does not, they wait on this server instead.
+     */
     void stop(Player player) {
         pendingNavigation.remove(player.getUniqueId());
         cancelLoading(player);
-        playback.stop(player);
-        player.sendMessage(messages.get("playback.stopped"));
+        if (!playbackBackend) {
+            player.sendMessage(messages.get("playback.stopped"));
+            return;
+        }
+        playback.leave(player);
+        player.sendMessage(messages.get("playback.returning"));
+        Optional.ofNullable(origins.get(player.getUniqueId()))
+                .filter(origin -> BlockcraftApi.get().groups().status(origin).availability() == GroupStatus.Availability.AVAILABLE)
+                .ifPresentOrElse(origin -> ProxyMessaging.play(plugin, player, origin), () -> ProxyMessaging.hub(plugin, player));
+        Tasks.later(plugin, RETURN_TIMEOUT_TICKS, () -> {
+            if (player.isOnline() && playback.active(player)) {
+                playback.stop(player);
+                player.sendMessage(messages.get("playback.stopped"));
+            }
+        });
     }
 
     private void cancelLoading(Player player) {
@@ -220,11 +240,17 @@ final class ReplayService implements Listener, AutoCloseable {
         }
     }
 
-    void pause(Player player) {
+    void toggle(Player player) {
         if (playback.active(player)) {
-            playback.pause(player);
+            playback.toggle(player);
         } else {
             player.sendMessage(messages.get("playback.not-active"));
+        }
+    }
+
+    void players(Player player) {
+        if (playback.active(player)) {
+            new ReplayPlayersMenu(playback, messages, playback.present(player)).open(player);
         }
     }
 
@@ -245,7 +271,11 @@ final class ReplayService implements Listener, AutoCloseable {
     }
 
     void step(Player player, int seconds) {
-        playback.state(player).ifPresent(state -> seek(player, Math.clamp(state.tick() / 20 + seconds, 0, state.durationTicks() / 20)));
+        playback.state(player).ifPresent(state -> {
+            if (!playback.seek(player, state.tick() + seconds * 20)) {
+                player.sendMessage(messages.get("playback.seek-failed"));
+            }
+        });
     }
 
     void cycleSpeed(Player player) {
@@ -269,7 +299,8 @@ final class ReplayService implements Listener, AutoCloseable {
             if (player.isOnline() && pendingNavigation.get(viewer) == token) {
                 BlockcraftApi.get().playerTasks().write(player, () -> repository.takeRequest(viewer), request -> {
                     if (pendingNavigation.remove(viewer, token)) {
-                        request.ifPresentOrElse(id -> play(player, id), () -> open(player));
+                        request.flatMap(ReplayRepository.Request::origin).ifPresent(origin -> origins.put(viewer, origin));
+                        request.ifPresentOrElse(found -> play(player, found.replay()), () -> open(player));
                     }
                 }, ignored -> pendingNavigation.remove(viewer, token));
             }
@@ -280,6 +311,7 @@ final class ReplayService implements Listener, AutoCloseable {
     public void onQuit(PlayerQuitEvent event) {
         pendingNavigation.remove(event.getPlayer().getUniqueId());
         loading.remove(event.getPlayer().getUniqueId());
+        origins.remove(event.getPlayer().getUniqueId());
     }
 
     void maintenance() {

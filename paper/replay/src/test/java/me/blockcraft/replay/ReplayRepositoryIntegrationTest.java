@@ -99,21 +99,21 @@ public class ReplayRepositoryIntegrationTest {
         var second = recording(Instant.now(), viewer);
         repository.save(first);
         repository.save(second);
-        repository.request(viewer, first.header().id(), UUID.randomUUID());
+        repository.request(viewer, first.header().id(), UUID.randomUUID(), "lobby");
         var replaced = UUID.randomUUID();
-        repository.request(viewer, second.header().id(), replaced);
-        repository.request(viewer, second.header().id(), UUID.randomUUID());
+        repository.request(viewer, second.header().id(), replaced, "lobby");
+        repository.request(viewer, second.header().id(), UUID.randomUUID(), "bedwars");
         repository.cancelRequest(viewer, replaced);
         assertEquals(1, count("SELECT COUNT(*) FROM bc_replay_requests WHERE player_uuid=?", viewer.toString()));
 
         try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
-            Callable<Optional<UUID>> consume = () -> repository.takeRequest(viewer);
+            Callable<Optional<ReplayRepository.Request>> consume = () -> repository.takeRequest(viewer);
             var results = executor.invokeAll(List.of(consume, consume, consume, consume));
             int consumed = 0;
             for (var result : results) {
                 var request = result.get();
                 if (request.isPresent()) {
-                    assertEquals(second.header().id(), request.orElseThrow());
+                    assertEquals(new ReplayRepository.Request(second.header().id(), Optional.of("bedwars")), request.orElseThrow());
                     consumed++;
                 }
             }
@@ -128,13 +128,13 @@ public class ReplayRepositoryIntegrationTest {
         var saved = recording(Instant.now(), viewer);
         var replay = saved.header().id();
         repository.save(saved);
-        repository.request(viewer, replay, UUID.randomUUID());
+        repository.request(viewer, replay, UUID.randomUUID(), "lobby");
         db.update("UPDATE bc_replay_requests SET expires_at=DATE_SUB(NOW(),INTERVAL 1 SECOND) WHERE player_uuid=?", viewer.toString());
 
         assertTrue(repository.takeRequest(viewer).isEmpty());
         assertEquals(0, count("SELECT COUNT(*) FROM bc_replay_requests WHERE player_uuid=?", viewer.toString()));
 
-        repository.request(viewer, replay, UUID.randomUUID());
+        repository.request(viewer, replay, UUID.randomUUID(), "lobby");
         repository.remove(replay);
 
         assertFalse(repository.accessible(replay, viewer, true).isPresent());
@@ -151,8 +151,8 @@ public class ReplayRepositoryIntegrationTest {
     @Test
     public void retentionRecoversOnlyPublishedArchivesAndRemovesExpiredFilesAndHistory() throws Exception {
         var directory = files.getRoot().toPath();
-        var limits = new ReplayLimits(2, 1200, 2, 2, 1, 1, 16, 4, 100,
-                1024 * 1024, 2 * 1024 * 1024, 1, 256, 4096);
+        var limits = new ReplayLimits(2, 1200, 2, 16, 2, 1, 1, 16, 4, 100,
+                1024 * 1024, 2 * 1024 * 1024, 1, 256);
         var config = new ReplayConfig("replay", directory, 10, 8 * 1024 * 1024, 0,
                 Duration.ofDays(7), Duration.ofMinutes(15), limits);
         var owner = UUID.randomUUID();

@@ -16,6 +16,9 @@ final class ReplayRepository {
     record Entry(UUID id, String game, String map, Instant startedAt, int durationTicks,
                  String endReason, long bytes, String minecraft) { }
 
+    /** A viewing request; {@code origin} is the group the viewer left for it, empty when unknown. */
+    record Request(UUID replay, Optional<String> origin) { }
+
     private final Database db;
 
     ReplayRepository(Database db) {
@@ -33,6 +36,7 @@ final class ReplayRepository {
         db.execute("CREATE TABLE IF NOT EXISTS bc_replay_requests (player_uuid CHAR(36) PRIMARY KEY, replay_uuid CHAR(36) NOT NULL, "
                 + "request_uuid CHAR(36) NOT NULL, "
                 + "expires_at TIMESTAMP NOT NULL, FOREIGN KEY (replay_uuid) REFERENCES bc_replays(replay_uuid) ON DELETE CASCADE)");
+        db.execute("ALTER TABLE bc_replay_requests ADD COLUMN IF NOT EXISTS origin VARCHAR(64) NULL");
     }
 
     void save(ReplayStore.Saved saved) {
@@ -63,11 +67,12 @@ final class ReplayRepository {
                 ReplayRepository::entry, staff ? new Object[]{id.toString()} : new Object[]{id.toString(), viewer.toString()});
     }
 
-    void request(UUID viewer, UUID replay, UUID request) {
-        db.update("INSERT INTO bc_replay_requests (player_uuid,replay_uuid,request_uuid,expires_at) "
-                        + "VALUES (?,?,?,DATE_ADD(NOW(),INTERVAL 60 SECOND)) "
-                        + "ON DUPLICATE KEY UPDATE replay_uuid=VALUES(replay_uuid),request_uuid=VALUES(request_uuid),expires_at=VALUES(expires_at)",
-                viewer.toString(), replay.toString(), request.toString());
+    void request(UUID viewer, UUID replay, UUID request, String origin) {
+        db.update("INSERT INTO bc_replay_requests (player_uuid,replay_uuid,request_uuid,origin,expires_at) "
+                        + "VALUES (?,?,?,?,DATE_ADD(NOW(),INTERVAL 60 SECOND)) "
+                        + "ON DUPLICATE KEY UPDATE replay_uuid=VALUES(replay_uuid),request_uuid=VALUES(request_uuid),"
+                        + "origin=VALUES(origin),expires_at=VALUES(expires_at)",
+                viewer.toString(), replay.toString(), request.toString(), origin);
     }
 
     void cancelRequest(UUID viewer, UUID request) {
@@ -75,15 +80,16 @@ final class ReplayRepository {
                 viewer.toString(), request.toString());
     }
 
-    Optional<UUID> takeRequest(UUID viewer) {
+    Optional<Request> takeRequest(UUID viewer) {
         return db.transaction(connection -> {
-            try (var statement = connection.prepareStatement("SELECT replay_uuid,expires_at > NOW() AS valid "
+            try (var statement = connection.prepareStatement("SELECT replay_uuid,origin,expires_at > NOW() AS valid "
                     + "FROM bc_replay_requests WHERE player_uuid=? FOR UPDATE")) {
                 statement.setString(1, viewer.toString());
-                Optional<UUID> result;
+                Optional<Request> result;
                 try (var rows = statement.executeQuery()) {
                     result = rows.next() && rows.getBoolean("valid")
-                            ? Optional.of(UUID.fromString(rows.getString("replay_uuid"))) : Optional.empty();
+                            ? Optional.of(new Request(UUID.fromString(rows.getString("replay_uuid")),
+                            Optional.ofNullable(rows.getString("origin")))) : Optional.empty();
                 }
                 db.update(connection, "DELETE FROM bc_replay_requests WHERE player_uuid=?", viewer.toString());
                 return result;

@@ -39,7 +39,7 @@ final class ReplayCommand {
                     return Command.SINGLE_SUCCESS;
                 }))
                 .then(Commands.literal("pause").executes(context -> {
-                    service.pause(context.getSource().getPlayerOrThrow());
+                    service.toggle(context.getSource().getPlayerOrThrow());
                     return Command.SINGLE_SUCCESS;
                 }))
                 .then(Commands.literal("speed").then(Commands.argument("speed", DoubleArgumentType.doubleArg(0.5, 2))

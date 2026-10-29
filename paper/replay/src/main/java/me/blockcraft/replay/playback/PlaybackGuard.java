@@ -1,9 +1,9 @@
 package me.blockcraft.replay.playback;
 
 import com.destroystokyo.paper.event.player.PlayerPickupExperienceEvent;
+import me.blockcraft.api.menu.Menu;
 import me.blockcraft.common.message.Messages;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.Mannequin;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -22,14 +22,17 @@ import org.bukkit.event.block.BlockRedstoneEvent;
 import org.bukkit.event.block.BlockSpreadEvent;
 import org.bukkit.event.block.LeavesDecayEvent;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
+import org.bukkit.event.entity.EntityCombustEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
+import org.bukkit.event.entity.EntityPortalEvent;
 import org.bukkit.event.entity.EntityMountEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.EntityPotionEffectEvent;
 import org.bukkit.event.entity.EntitySpawnEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
+import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
@@ -41,8 +44,8 @@ import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerPickupArrowEvent;
+import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
@@ -151,7 +154,7 @@ final class PlaybackGuard implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onInventoryOpen(InventoryOpenEvent event) {
-        if (watching(event.getPlayer())) {
+        if (watching(event.getPlayer()) && !(event.getInventory().getHolder(false) instanceof Menu)) {
             event.setCancelled(true);
         }
     }
@@ -212,12 +215,17 @@ final class PlaybackGuard implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onMove(PlayerMoveEvent event) {
-        if (manager.active(event.getPlayer()) && event.hasChangedPosition()
-                && !manager.permittedPosition(event.getPlayer(), event.getTo())) {
+    /** Portals have their own events, which the teleport guard never sees; a recorded map may contain some. */
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onPortal(PlayerPortalEvent event) {
+        if (watching(event.getPlayer()) || manager.replayWorld(event.getFrom().getWorld())) {
             event.setCancelled(true);
         }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onEntityPortal(EntityPortalEvent event) {
+        if (manager.replayWorld(event.getFrom().getWorld())) { event.setCancelled(true); }
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -244,13 +252,24 @@ final class PlaybackGuard implements Listener {
     public void onJoin(PlayerJoinEvent event) { manager.hideFrom(event.getPlayer()); }
 
     @EventHandler(priority = EventPriority.LOWEST)
-    public void onQuit(PlayerQuitEvent event) { manager.stop(event.getPlayer()); }
+    public void onQuit(PlayerQuitEvent event) { manager.quit(event.getPlayer()); }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onSpawn(EntitySpawnEvent event) {
-        if (manager.replayWorld(event.getLocation().getWorld()) && !(event.getEntity() instanceof Mannequin)) {
+        if (manager.replayWorld(event.getLocation().getWorld()) && !PlaybackCast.figure(event.getEntity())) {
             event.setCancelled(true);
         }
+    }
+
+    /** Recorded undead would burn in the replay world's daylight. */
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onCombust(EntityCombustEvent event) {
+        if (manager.replayWorld(event.getEntity().getWorld())) { event.setCancelled(true); }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onProjectileHit(ProjectileHitEvent event) {
+        if (manager.replayWorld(event.getEntity().getWorld())) { event.setCancelled(true); }
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)

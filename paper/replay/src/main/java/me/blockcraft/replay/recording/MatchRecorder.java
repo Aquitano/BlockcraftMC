@@ -1,5 +1,6 @@
 package me.blockcraft.replay.recording;
 
+import io.papermc.paper.event.player.PlayerArmSwingEvent;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.game.GamePhase;
 import me.blockcraft.api.game.Round;
@@ -12,7 +13,14 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChunkSnapshot;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntitySnapshot;
+import org.bukkit.entity.FishHook;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
+import org.bukkit.entity.TNTPrimed;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
@@ -32,6 +40,9 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.BlockSpreadEvent;
 import org.bukkit.event.block.SpongeAbsorbEvent;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerBucketFillEvent;
@@ -42,6 +53,7 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -63,6 +75,7 @@ public final class MatchRecorder implements Listener, AutoCloseable {
     private static final List<EquipmentSlot> SLOTS = List.of(EquipmentSlot.HAND, EquipmentSlot.OFF_HAND,
             EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET);
     private static final int MAX_EQUIPMENT_BYTES = 65_536;
+    private static final int MAX_APPEARANCE_BYTES = 16_384;
     private static final List<BlockFace> NEIGHBORS = List.of(BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST,
             BlockFace.WEST, BlockFace.UP, BlockFace.DOWN);
     private final Plugin plugin;
@@ -77,6 +90,15 @@ public final class MatchRecorder implements Listener, AutoCloseable {
         ChunkKey chunk() { return new ChunkKey(world, x >> 4, z >> 4); }
     }
     private record Equipment(List<ItemStack> items, List<byte[]> bytes) { }
+
+    /** An entity seen for the first time; its data is written out on the writer thread. */
+    private record Sighting(UUID id, EntitySnapshot snapshot) {
+        ReplayEvent.Appearance appearance() {
+            String entity = snapshot.getAsString();
+            return new ReplayEvent.Appearance(id, entity.getBytes(StandardCharsets.UTF_8).length <= MAX_APPEARANCE_BYTES
+                    ? entity : "{id:\"" + snapshot.getEntityType().getKey() + "\"}");
+        }
+    }
 
     /** The publication callback can run on the server thread and must submit its work without blocking. */
     public MatchRecorder(Plugin plugin, ReplayStore store, ReplayLimits limits, Consumer<ReplayStore.Saved> saved) {
@@ -129,8 +151,10 @@ public final class MatchRecorder implements Listener, AutoCloseable {
                 texture.map(property -> property.getSignature()).orElse(""));
     }
 
+    /** A dead player waiting to respawn is out of the picture, like a dying mob. */
     private static boolean visible(Round round, Player player) {
-        return round.isPlaying(player) && !Round.isWatching(player) && !BlockcraftApi.get().isVanished(player);
+        return round.isPlaying(player) && !Round.isWatching(player) && !BlockcraftApi.get().isVanished(player)
+                && !player.isDead();
     }
 
     private void tick() {
@@ -138,6 +162,7 @@ public final class MatchRecorder implements Listener, AutoCloseable {
         if (current == null) { return; }
         try {
             if (current.tick >= limits.maxDurationTicks()) { finish("DURATION_LIMIT"); return; }
+            if (current.writer.full()) { finish("OBJECT_LIMIT"); return; }
             var players = current.participants.stream().map(Bukkit::getPlayer)
                     .filter(player -> player != null && visible(current.round, player)).toList();
             if (!discover(current, players)) { return; }
@@ -145,7 +170,7 @@ public final class MatchRecorder implements Listener, AutoCloseable {
             if (session != current) { return; }
             captureBlocks(current);
             if (session != current) { return; }
-            if (current.tick % limits.sampleTicks() == 0) { captureActors(current, players); }
+            if (current.tick % limits.sampleTicks() == 0) { captureFrame(current, players); }
             current.tick++;
         } catch (RuntimeException failure) {
             abort("Replay capture failed", failure);
@@ -222,7 +247,7 @@ public final class MatchRecorder implements Listener, AutoCloseable {
         }
     }
 
-    private void captureActors(Session current, List<Player> players) {
+    private void captureFrame(Session current, List<Player> players) {
         var actors = new ArrayList<ReplayEvent.Actor>();
         for (var player : players) {
             var location = player.getLocation();
@@ -240,10 +265,98 @@ public final class MatchRecorder implements Listener, AutoCloseable {
             actors.add(new ReplayEvent.Actor(player.getUniqueId(), player.getWorld().getUID(), location.getX(),
                     location.getY(), location.getZ(), location.getYaw(), location.getPitch(), player.getPose().name(), previous.bytes()));
         }
-        if (!ActorFrames.same(current.actors, actors)) {
-            current.actors = List.copyOf(actors);
-            var event = new ReplayEvent.Actors(current.tick, actors);
-            offer(current, () -> event);
+        var props = new ArrayList<ReplayEvent.Prop>();
+        var sightings = new ArrayList<Sighting>();
+        captureProps(current, players, props, sightings);
+        var animations = List.copyOf(current.animations);
+        current.animations.clear();
+        if (ActorFrames.same(current.actors, actors) && props.equals(current.props) && sightings.isEmpty()
+                && animations.isEmpty()) {
+            return;
+        }
+        current.actors = List.copyOf(actors);
+        current.props = List.copyOf(props);
+        current.onScreen.clear();
+        actors.forEach(actor -> current.onScreen.add(actor.id()));
+        props.forEach(prop -> current.onScreen.add(prop.id()));
+        int tick = current.tick;
+        offer(current, () -> new ReplayEvent.Frame(tick, actors, props,
+                sightings.stream().map(Sighting::appearance).toList(), animations));
+    }
+
+    /**
+     * Mobs, projectiles and primed TNT in the captured chunks. Entities may use half of a recording's object budget;
+     * once that is spent, the rest of the round records participants and terrain only.
+     */
+    private void captureProps(Session current, List<Player> players, List<ReplayEvent.Prop> props, List<Sighting> sightings) {
+        if (current.propSamples >= limits.objectBudget() / 2) {
+            return;
+        }
+        for (var world : players.stream().map(Player::getWorld).distinct().toList()) {
+            for (var entity : world.getEntities()) {
+                if (props.size() >= limits.maxEntities()) {
+                    break;
+                }
+                if (!prop(entity) || current.unrecordable.contains(entity.getUniqueId())) {
+                    continue;
+                }
+                var location = entity.getLocation();
+                if (!current.captured.contains(new ChunkKey(world.getUID(), location.getBlockX() >> 4, location.getBlockZ() >> 4))) {
+                    continue;
+                }
+                if (!current.seen.contains(entity.getUniqueId())) {
+                    var snapshot = snapshot(entity);
+                    if (snapshot == null) {
+                        current.unrecordable.add(entity.getUniqueId());
+                        continue;
+                    }
+                    current.seen.add(entity.getUniqueId());
+                    sightings.add(new Sighting(entity.getUniqueId(), snapshot));
+                }
+                props.add(new ReplayEvent.Prop(entity.getUniqueId(), world.getUID(), location.getX(), location.getY(),
+                        location.getZ(), location.getYaw(), location.getPitch()));
+            }
+        }
+        current.propSamples += props.size();
+        if (current.propSamples >= limits.objectBudget() / 2) {
+            plugin.getLogger().info("Replay entity budget spent; the rest of the round records players and terrain only");
+        }
+    }
+
+    /** Paper only serialises persistent entities, and games keep their mobs out of the world save. */
+    private static EntitySnapshot snapshot(Entity entity) {
+        boolean persistent = entity.isPersistent();
+        entity.setPersistent(true);
+        try {
+            return entity.createSnapshot();
+        } finally {
+            entity.setPersistent(persistent);
+        }
+    }
+
+    /**
+     * A fishing hook removes itself without its angler, so playback could not hold one still; a vanished player's
+     * projectile would give them away.
+     */
+    private static boolean prop(Entity entity) {
+        if (!entity.isValid() || entity.isInsideVehicle()) {
+            return false;
+        }
+        return switch (entity) {
+            case Mob ignored -> true;
+            case TNTPrimed ignored -> true;
+            case FishHook ignored -> false;
+            case Projectile projectile -> !(projectile.getShooter() instanceof Player shooter)
+                    || !BlockcraftApi.get().isVanished(shooter);
+            default -> false;
+        };
+    }
+
+    /** Only someone the last sample showed can move on screen, which also bounds a sample's animations. */
+    private void animate(Entity subject, ReplayEvent.Motion motion) {
+        var current = session;
+        if (current != null && current.onScreen.contains(subject.getUniqueId())) {
+            current.animations.add(new ReplayEvent.Animation(subject.getUniqueId(), motion));
         }
     }
 
@@ -330,7 +443,10 @@ public final class MatchRecorder implements Listener, AutoCloseable {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onEntityBlock(EntityChangeBlockEvent event) { changed(event.getBlock()); }
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onEntityExplosion(EntityExplodeEvent event) { event.blockList().forEach(this::changed); }
+    public void onEntityExplosion(EntityExplodeEvent event) {
+        event.blockList().forEach(this::changed);
+        animate(event.getEntity(), ReplayEvent.Motion.EXPLOSION);
+    }
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBlockExplosion(BlockExplodeEvent event) { changed(event.getBlock()); event.blockList().forEach(this::changed); }
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -351,6 +467,26 @@ public final class MatchRecorder implements Listener, AutoCloseable {
         });
     }
 
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onSwing(PlayerArmSwingEvent event) {
+        animate(event.getPlayer(), event.getHand() == EquipmentSlot.OFF_HAND
+                ? ReplayEvent.Motion.SWING_OFF_HAND : ReplayEvent.Motion.SWING_MAIN_HAND);
+    }
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onHurt(EntityDamageEvent event) {
+        if (event.getEntity() instanceof LivingEntity && event.getFinalDamage() > 0) {
+            animate(event.getEntity(), ReplayEvent.Motion.HURT);
+        }
+    }
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onAttack(EntityDamageByEntityEvent event) {
+        if (event.getDamager() instanceof Mob) {
+            animate(event.getDamager(), ReplayEvent.Motion.SWING_MAIN_HAND);
+        }
+    }
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onDeath(EntityDeathEvent event) { animate(event.getEntity(), ReplayEvent.Motion.DEATH); }
+
     @Override
     public void close() {
         finish("SHUTDOWN");
@@ -368,8 +504,14 @@ public final class MatchRecorder implements Listener, AutoCloseable {
         final ArrayDeque<ChunkKey> pending = new ArrayDeque<>();
         final Set<BlockKey> dirty = new LinkedHashSet<>();
         final Map<UUID, Equipment> equipment = new HashMap<>();
+        final Set<UUID> seen = new HashSet<>();
+        final Set<UUID> unrecordable = new HashSet<>();
+        final Set<UUID> onScreen = new HashSet<>();
+        final Set<ReplayEvent.Animation> animations = new LinkedHashSet<>();
         final PublicationGate<ReplayStore.Saved> publication = new PublicationGate<>();
         List<ReplayEvent.Actor> actors = List.of();
+        List<ReplayEvent.Prop> props = List.of();
+        long propSamples;
         BukkitTask task;
         int tick;
         int events;

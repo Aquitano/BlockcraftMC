@@ -10,6 +10,7 @@ recording:
   sample-ticks: 2
   max-duration-minutes: 30
   max-participants: 32
+  max-entities: 64
   max-chunks: 128
   capture-radius: 1
   chunks-per-tick: 1
@@ -21,4 +22,3 @@ recording:
 playback:
   max-viewers: 2
   blocks-per-tick: 4096
-  blocks-scanned-per-tick: 65536

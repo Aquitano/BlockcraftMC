@@ -7,6 +7,7 @@ import me.blockcraft.replay.data.ReplayLimits;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -35,6 +36,9 @@ import java.util.function.Supplier;
 import java.util.zip.GZIPOutputStream;
 
 public final class ReplayStore implements AutoCloseable {
+
+    private static final int FOOTER_RESERVE = 64;
+    private static final String FULL_REASON = "OBJECT_LIMIT";
     public record Saved(ReplayHeader header, long bytes, int durationTicks, String endReason) { }
 
     private final Path directory;
@@ -203,6 +207,7 @@ public final class ReplayStore implements AutoCloseable {
         private boolean aborted;
         private int duration;
         private String reason;
+        private volatile boolean full;
 
         private Writer(ReplayHeader header) throws IOException {
             this.header = header;
@@ -227,6 +232,11 @@ public final class ReplayStore implements AutoCloseable {
             return result;
         }
 
+        /** Whether the recording reached its object or decoded-size budget; it ends where it filled up, as partial. */
+        public boolean full() {
+            return full;
+        }
+
         public void abort() {
             synchronized (ReplayStore.this) {
                 synchronized (this) {
@@ -241,6 +251,8 @@ public final class ReplayStore implements AutoCloseable {
             Path temporary = directory.resolve(header.id() + ".part");
             boolean created = false;
             Saved saved = null;
+            int endTick = 0;
+            String endReason = null;
             Throwable failure = null;
             try {
                 Files.createDirectories(directory);
@@ -252,15 +264,35 @@ public final class ReplayStore implements AutoCloseable {
                     try (GZIPOutputStream gzip = new GZIPOutputStream(new BufferedOutputStream(compressed, 65_536))) {
                         DataOutputStream out = new DataOutputStream(ReplayStreams.limited(gzip, limits.maxDecodedBytes()));
                         ReplayCodec.writeHeader(out, header);
+                        int filledAt = -1;
                         while (true) {
                             synchronized (this) {
                                 if (aborted) throw new IOException("Replay recording aborted");
                                 if (finishing && queue.isEmpty()) break;
                             }
                             Supplier<ReplayEvent> event = queue.poll(100, TimeUnit.MILLISECONDS);
-                            if (event != null) codec.writeEvent(out, Objects.requireNonNull(event.get()));
+                            if (event == null || full) continue;
+                            ReplayEvent next = Objects.requireNonNull(event.get());
+                            var encoded = new ByteArrayOutputStream();
+                            try {
+                                codec.writeEvent(new DataOutputStream(encoded), next);
+                            } catch (ReplayCodec.BudgetExceeded exceeded) {
+                                filledAt = next.tick();
+                                full = true;
+                                continue;
+                            }
+                            if ((long) out.size() + encoded.size() > limits.maxDecodedBytes() - FOOTER_RESERVE) {
+                                filledAt = next.tick();
+                                full = true;
+                                continue;
+                            }
+                            encoded.writeTo(out);
                         }
-                        codec.writeFooter(out, duration, reason);
+                        synchronized (this) {
+                            endTick = full ? filledAt : duration;
+                            endReason = full ? FULL_REASON : reason;
+                        }
+                        codec.writeFooter(out, endTick, endReason);
                         out.flush();
                         gzip.finish();
                         gzip.flush();
@@ -271,7 +303,7 @@ public final class ReplayStore implements AutoCloseable {
                     if (aborted) throw new IOException("Replay recording aborted");
                     Files.move(temporary, path(header.id()), StandardCopyOption.ATOMIC_MOVE);
                 }
-                saved = new Saved(header, Files.size(path(header.id())), duration, reason);
+                saved = new Saved(header, Files.size(path(header.id())), endTick, endReason);
             } catch (Exception exception) {
                 failure = exception;
                 if (created) {

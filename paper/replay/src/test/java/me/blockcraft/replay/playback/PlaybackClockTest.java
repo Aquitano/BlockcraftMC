@@ -14,36 +14,35 @@ public class PlaybackClockTest {
         assertTrue(clock.speed(0.5));
         clock.advance();
         assertEquals(0, clock.tick());
-        clock.pause();
+        assertEquals(0.5, clock.time(), 0);
+        clock.toggle();
         clock.advance();
         assertEquals(0, clock.tick());
-        clock.pause();
+        clock.toggle();
         clock.advance();
         assertEquals(1, clock.tick());
         assertTrue(clock.speed(2));
         clock.advance();
         assertEquals(3, clock.tick());
+        assertFalse(clock.speed(Double.NaN));
+        assertFalse(clock.speed(10));
     }
 
     @Test
-    public void seekStaysInsideRecordingAndResetsFractionalTime() {
+    public void seekStaysInsideTheRecordingAndPlayingOnAtTheEndStartsOver() {
         var clock = new PlaybackClock(20);
-        clock.speed(0.5);
-        clock.advance();
-        assertTrue(clock.seek(18));
-        clock.advance();
-        assertEquals(18, clock.tick());
-        assertFalse(clock.seek(-1));
-        assertFalse(clock.seek(21));
-        assertFalse(clock.speed(Double.NaN));
-        assertFalse(clock.speed(10));
-        assertEquals(18, clock.tick());
-        clock.speed(2);
-        clock.advance();
-        clock.advance();
+        clock.seek(-5);
+        assertEquals(0, clock.tick());
+        clock.seek(25);
         assertEquals(20, clock.tick());
+        assertTrue(clock.finished());
+        clock.toggle();
+        assertEquals(0, clock.tick());
+        assertFalse(clock.paused());
+        clock.seek(20);
         clock.pause();
-        assertTrue(clock.seek(0));
-        assertTrue(clock.paused());
+        clock.toggle();
+        assertEquals(0, clock.tick());
+        assertFalse(clock.paused());
     }
 }

@@ -23,15 +23,26 @@ import java.util.Set;
 import java.util.UUID;
 
 final class ReplayCodec {
+
+    /** The event would take the recording past its object budget; everything before it still fits. */
+    static final class BudgetExceeded extends IOException {
+        BudgetExceeded() {
+            super("Replay object budget exceeded");
+        }
+    }
+
     private static final int MAGIC = 0x42435250;
-    private static final int VERSION = 2;
+    private static final int VERSION = 3;
+    private static final int FIRST_READABLE_VERSION = 2;
     private static final int MAX_TEXT_BYTES = 32_768;
     private static final int MAX_ITEM_BYTES = 65_536;
     private static final int ALL_EQUIPMENT_SLOTS = 63;
     private static final byte[] EMPTY_ITEM = new byte[0];
+    private static final ReplayEvent.Motion[] MOTIONS = ReplayEvent.Motion.values();
     private final ReplayLimits limits;
     private final Set<UUID> participants;
     private final Map<UUID, List<byte[]>> equipmentByActor = new HashMap<>();
+    private final Map<UUID, UUID> uuids = new HashMap<>();
     private int eventCount;
     private int chunkCount;
     private int previousTick;
@@ -67,7 +78,8 @@ final class ReplayCodec {
 
     static ReplayHeader readHeader(DataInputStream in, ReplayLimits limits) throws IOException {
         require(in.readInt() == MAGIC, "Invalid replay magic");
-        require(in.readInt() == VERSION, "Unsupported replay version");
+        int version = in.readInt();
+        require(version >= FIRST_READABLE_VERSION && version <= VERSION, "Unsupported replay version");
         UUID id = uuid(in);
         String game = text(in);
         String server = text(in);
@@ -86,9 +98,9 @@ final class ReplayCodec {
     void writeEvent(DataOutputStream out, ReplayEvent event) throws IOException {
         checkTick(event.tick());
         switch (event) {
-            case ReplayEvent.Actors frame -> {
-                checkActors(frame.actors());
-                out.writeByte(1);
+            case ReplayEvent.Frame frame -> {
+                checkFrame(frame);
+                out.writeByte(4);
                 out.writeInt(frame.tick());
                 out.writeInt(frame.actors().size());
                 for (ReplayEvent.Actor actor : frame.actors()) {
@@ -101,6 +113,26 @@ final class ReplayCodec {
                     out.writeFloat(actor.pitch());
                     text(out, actor.pose());
                     writeEquipment(out, actor.id(), actor.equipment());
+                }
+                out.writeInt(frame.props().size());
+                for (ReplayEvent.Prop prop : frame.props()) {
+                    uuid(out, prop.id());
+                    uuid(out, prop.world());
+                    out.writeDouble(prop.x());
+                    out.writeDouble(prop.y());
+                    out.writeDouble(prop.z());
+                    out.writeFloat(prop.yaw());
+                    out.writeFloat(prop.pitch());
+                }
+                out.writeInt(frame.appearances().size());
+                for (ReplayEvent.Appearance appearance : frame.appearances()) {
+                    uuid(out, appearance.id());
+                    text(out, appearance.entity());
+                }
+                out.writeInt(frame.animations().size());
+                for (ReplayEvent.Animation animation : frame.animations()) {
+                    uuid(out, animation.subject());
+                    out.writeByte(animation.motion().ordinal());
                 }
             }
             case ReplayEvent.Chunk chunk -> {
@@ -148,23 +180,32 @@ final class ReplayCodec {
             checkTick(tick);
             ReplayEvent event = switch (type) {
                 case 1 -> {
-                    int size = count(in.readInt(), limits.maxParticipants(), "actors");
-                    List<ReplayEvent.Actor> actors = new ArrayList<>(size);
-                    for (int i = 0; i < size; i++) {
-                        UUID id = uuid(in);
-                        UUID world = uuid(in);
-                        double x = in.readDouble();
-                        double y = in.readDouble();
-                        double z = in.readDouble();
-                        float yaw = in.readFloat();
-                        float pitch = in.readFloat();
-                        String pose = text(in);
-                        require(participants.contains(id), "Unknown equipment actor");
-                        List<byte[]> equipment = readEquipment(in, id);
-                        actors.add(new ReplayEvent.Actor(id, world, x, y, z, yaw, pitch, pose, equipment));
+                    var frame = new ReplayEvent.Frame(tick, readActors(in));
+                    checkFrame(frame);
+                    yield frame;
+                }
+                case 4 -> {
+                    var actors = readActors(in);
+                    int propCount = count(in.readInt(), limits.maxEntities(), "props");
+                    List<ReplayEvent.Prop> props = new ArrayList<>(propCount);
+                    for (int i = 0; i < propCount; i++) {
+                        props.add(new ReplayEvent.Prop(shared(uuid(in)), shared(uuid(in)), in.readDouble(), in.readDouble(),
+                                in.readDouble(), in.readFloat(), in.readFloat()));
                     }
-                    checkActors(actors);
-                    yield new ReplayEvent.Actors(tick, actors);
+                    int appearanceCount = count(in.readInt(), limits.maxEntities(), "appearances");
+                    List<ReplayEvent.Appearance> appearances = new ArrayList<>(appearanceCount);
+                    for (int i = 0; i < appearanceCount; i++) {
+                        appearances.add(new ReplayEvent.Appearance(shared(uuid(in)), text(in)));
+                    }
+                    int animationCount = count(in.readInt(), maxAnimations(), "animations");
+                    List<ReplayEvent.Animation> animations = new ArrayList<>(animationCount);
+                    for (int i = 0; i < animationCount; i++) {
+                        animations.add(new ReplayEvent.Animation(shared(uuid(in)),
+                                MOTIONS[count(in.readUnsignedByte(), MOTIONS.length - 1, "motion")]));
+                    }
+                    var frame = new ReplayEvent.Frame(tick, actors, props, appearances, animations);
+                    checkFrame(frame);
+                    yield frame;
                 }
                 case 2 -> {
                     require(++chunkCount <= limits.maxChunks(), "Too many chunks");
@@ -198,6 +239,35 @@ final class ReplayCodec {
             };
             if (retainEvents) events.add(event);
         }
+    }
+
+    private List<ReplayEvent.Actor> readActors(DataInputStream in) throws IOException {
+        int size = count(in.readInt(), limits.maxParticipants(), "actors");
+        List<ReplayEvent.Actor> actors = new ArrayList<>(size);
+        for (int i = 0; i < size; i++) {
+            UUID id = shared(uuid(in));
+            UUID world = shared(uuid(in));
+            double x = in.readDouble();
+            double y = in.readDouble();
+            double z = in.readDouble();
+            float yaw = in.readFloat();
+            float pitch = in.readFloat();
+            String pose = text(in);
+            require(participants.contains(id), "Unknown equipment actor");
+            List<byte[]> equipment = readEquipment(in, id);
+            actors.add(new ReplayEvent.Actor(id, world, x, y, z, yaw, pitch, pose, equipment));
+        }
+        return actors;
+    }
+
+    /** One instance per id, so the worlds and props repeated in every frame cost their memory once. */
+    private UUID shared(UUID id) {
+        var known = uuids.putIfAbsent(id, id);
+        return known == null ? id : known;
+    }
+
+    private int maxAnimations() {
+        return MOTIONS.length * (limits.maxParticipants() + limits.maxEntities());
     }
 
     void writeFooter(DataOutputStream out, int duration, String reason) throws IOException {
@@ -273,16 +343,27 @@ final class ReplayCodec {
         require(duration >= previousTick && duration <= limits.maxDurationTicks(), "Invalid replay duration");
     }
 
-    private void checkActors(List<ReplayEvent.Actor> actors) throws IOException {
-        count(actors.size(), limits.maxParticipants(), "actors");
-        addObjects(actors.size());
+    private void checkFrame(ReplayEvent.Frame frame) throws IOException {
+        count(frame.actors().size(), limits.maxParticipants(), "actors");
+        count(frame.props().size(), limits.maxEntities(), "props");
+        count(frame.appearances().size(), limits.maxEntities(), "appearances");
+        count(frame.animations().size(), maxAnimations(), "animations");
+        addObjects(frame.actors().size() + frame.props().size() + frame.appearances().size() + frame.animations().size());
         Set<UUID> seen = new HashSet<>();
-        for (ReplayEvent.Actor actor : actors) {
+        for (ReplayEvent.Actor actor : frame.actors()) {
             require(participants.contains(actor.id()) && seen.add(actor.id()), "Unknown or duplicate actor");
-            require(Double.isFinite(actor.x()) && Double.isFinite(actor.y()) && Double.isFinite(actor.z())
-                    && Float.isFinite(actor.yaw()) && Float.isFinite(actor.pitch()), "Invalid actor position");
+            checkPosition(actor);
             require(actor.equipment().size() == 6, "Expected six equipment slots");
         }
+        for (ReplayEvent.Prop prop : frame.props()) {
+            require(seen.add(prop.id()), "Duplicate prop");
+            checkPosition(prop);
+        }
+    }
+
+    private static void checkPosition(ReplayEvent.Body<?> body) throws IOException {
+        require(Double.isFinite(body.x()) && Double.isFinite(body.y()) && Double.isFinite(body.z())
+                && Float.isFinite(body.yaw()) && Float.isFinite(body.pitch()), "Invalid position");
     }
 
     private void checkChunk(ReplayEvent.Chunk chunk) throws IOException {
@@ -304,7 +385,7 @@ final class ReplayCodec {
 
     private void addObjects(long count) throws IOException {
         objects += count;
-        require(objects <= Math.min(1_000_000, limits.maxDecodedBytes() / 64), "Replay object budget exceeded");
+        if (objects > limits.objectBudget()) throw new BudgetExceeded();
     }
 
     private static void text(DataOutputStream out, String value) throws IOException {
