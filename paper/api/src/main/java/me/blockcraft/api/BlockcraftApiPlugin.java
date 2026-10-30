@@ -124,9 +124,12 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         var map = MapBundle.load(getServer().getWorlds().getFirst(), WorldTemplate.configured(config));
         // The locator bar would take the level bar's place and point at hidden or hunted players. No server lets mobs
         // spawn by themselves (the games' ArenaProtection, the lobby's ProtectionListener), so none spends ticks trying.
+        // The map is restored at every start, so nothing in it has to grow, spread or melt in between either; a world
+        // created later, like EnderGames' round, keeps the vanilla rules.
         getServer().getWorlds().forEach(world -> {
             world.setGameRule(GameRules.LOCATOR_BAR, false);
             world.setGameRule(GameRules.SPAWN_MOBS, false);
+            world.setGameRule(GameRules.RANDOM_TICK_SPEED, 0);
         });
         var buildMode = new BuildMode();
         var flight = new FlightGrants();
