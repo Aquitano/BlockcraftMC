@@ -5,8 +5,8 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 
 /**
- * How a round swings: the attack cooldown differs and, in {@link #LEGACY}, the rod knocks back ({@link LegacyRod}); sweep
- * attacks, shields and damage values stay vanilla.
+ * How a round swings: the attack cooldown differs and, in {@link #LEGACY}, the rod knocks back ({@link LegacyRod}) and
+ * weapons deal 1.8's damage ({@link LegacyDamage}); sweep attacks and shields stay vanilla.
  */
 public enum CombatStyle {
 
