@@ -2,9 +2,12 @@ package me.blockcraft.api.game;
 
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.ItemAttributeModifiers;
+import io.papermc.paper.event.player.PrePlayerAttackEntityEvent;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -17,6 +20,7 @@ import org.bukkit.inventory.ItemStack;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * 1.8's weapon damage for players in {@link CombatStyle#LEGACY}. Modern values are balanced by the attack cooldown that
@@ -45,7 +49,12 @@ public final class LegacyDamage implements Listener {
         }
     }
 
+    private record Swing(UUID attacker, UUID target, int tick) {
+    }
+
     private static final Map<Material, Integer> BONUS = bonuses();
+
+    private Swing swing;
 
     private static Map<Material, Integer> bonuses() {
         var bonuses = new EnumMap<Material, Integer>(Material.class);
@@ -65,20 +74,42 @@ public final class LegacyDamage implements Listener {
         return Optional.ofNullable(BONUS.get(weapon));
     }
 
+    /**
+     * Only a swing is a weapon hit: damage a plugin deals with a player as its source reads as that player's attack too,
+     * and keeps the amount its caller chose.
+     */
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onSwing(PrePlayerAttackEntityEvent event) {
+        if (event.willAttack()) {
+            swing = new Swing(event.getPlayer().getUniqueId(), event.getAttacked().getUniqueId(), Bukkit.getCurrentTick());
+        }
+    }
+
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
     public void onHit(EntityDamageByEntityEvent event) {
         if (event.getCause() != EntityDamageEvent.DamageCause.ENTITY_ATTACK || !(event.getDamager() instanceof Player attacker)
-                || CombatStyle.of(attacker) != CombatStyle.LEGACY) {
+                || !new Swing(attacker.getUniqueId(), event.getEntity().getUniqueId(), Bukkit.getCurrentTick()).equals(swing)) {
             return;
         }
+        swing = null;
         var weapon = attacker.getInventory().getItemInMainHand();
-        if (weapon.isDataOverridden(DataComponentTypes.ATTRIBUTE_MODIFIERS)) {
+        if (CombatStyle.of(attacker) != CombatStyle.LEGACY || weapon.isDataOverridden(DataComponentTypes.ATTRIBUTE_MODIFIERS)) {
             return;
         }
         bonus(weapon.getType()).ifPresent(legacy -> {
-            double difference = legacy - modernBonus(weapon);
-            event.setDamage(event.getDamage() + difference * (event.isCritical() ? 1.5 : 1));
+            double damage = event.getDamage() + (legacy - modernBonus(weapon)) * (event.isCritical() ? 1.5 : 1);
+            if (event.getEntity() instanceof LivingEntity victim && invulnerable(victim) && damage <= victim.getLastDamage()) {
+                // Vanilla turns away a hit no stronger than the last one while the victim is invulnerable, but it judged
+                // the modern value; below the last hit the 1.8 value would otherwise land in full.
+                event.setCancelled(true);
+            } else {
+                event.setDamage(damage);
+            }
         });
+    }
+
+    private static boolean invulnerable(LivingEntity victim) {
+        return victim.getNoDamageTicks() > victim.getMaximumNoDamageTicks() / 2;
     }
 
     private static double modernBonus(ItemStack weapon) {
