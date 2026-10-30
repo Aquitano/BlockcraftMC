@@ -13,6 +13,7 @@ snakeyaml = "2.2"
 slf4j = "2.0.18"
 luckperms = "5.5"
 viaversion = "5.12.1"
+grimac = "2.3.75-1299a2a"
 
 [libraries]
 junit = { module = "junit:junit", version = "4.13.2" }

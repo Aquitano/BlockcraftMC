@@ -13,6 +13,10 @@ chat:
   # How often global mute and /chatslow, both switched on the proxy, are re-read from the database.
   network-refresh-seconds: 3
 
+# GrimAC's staff notices (README, "Anticheat"): at most one per player and check within this many seconds.
+anticheat:
+  notice-cooldown-seconds: 30
+
 # What a player can pick in the /report dialog; the choice is stored as the report's reason, free text appended.
 report:
   reasons:

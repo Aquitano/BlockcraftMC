@@ -53,6 +53,7 @@ import me.blockcraft.core.listener.MuteListener;
 import me.blockcraft.core.listener.NetworkChat;
 import me.blockcraft.core.listener.UnknownCommandListener;
 import me.blockcraft.core.staff.FreezeService;
+import me.blockcraft.core.staff.GrimAlerts;
 import me.blockcraft.core.staff.InvseeGuard;
 import me.blockcraft.core.staff.StaffInventoryRepository;
 import me.blockcraft.core.staff.StaffMode;
@@ -67,9 +68,11 @@ import me.blockcraft.common.welcome.GreetingRepository;
 import org.bukkit.GameMode;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 public final class BlockcraftCorePlugin extends JavaPlugin {
@@ -114,6 +117,15 @@ public final class BlockcraftCorePlugin extends JavaPlugin {
         var staffMode = new StaffMode(this, messages, vanish, freeze, staffInventories, audit, new ReportRepository(api.database()),
                 moderation.punishments());
         pluginManager.registerEvents(staffMode, this);
+        if (pluginManager.isPluginEnabled("GrimAC")) {
+            // Grim ships its API in alpha builds; a change there must cost the notices, not core's moderation.
+            try {
+                GrimAlerts.register(this, messages, api.server().name(),
+                        Duration.ofSeconds(number(YamlFile.section(config, "anticheat"), "notice-cooldown-seconds", 30)));
+            } catch (LinkageError | RuntimeException e) {
+                getLogger().log(Level.SEVERE, "GrimAC's API did not take the anticheat notices; Grim still alerts on the console", e);
+            }
+        }
         var back = new BackLocations();
         pluginManager.registerEvents(back, this);
         var nearSection = YamlFile.section(config, "near");

@@ -69,6 +69,7 @@
         {"type": "permission", "key": "blockcraft.system.msg.bypass", "value": true},
         {"type": "permission", "key": "blockcraft.system.wartungen.join", "value": true},
         {"type": "permission", "key": "blockcraft.core.chatfilter.notify", "value": true},
+        {"type": "permission", "key": "blockcraft.core.anticheat.notify", "value": true},
         {"type": "permission", "key": "blockcraft.core.chat.spam.bypass", "value": true},
         {"type": "permission", "key": "blockcraft.globalmute.bypass", "value": true},
         {"type": "permission", "key": "blockcraft.core.vanish.see", "value": true},
@@ -130,7 +131,12 @@
         {"type": "weight", "key": "weight.60", "value": true},
         {"type": "prefix", "key": "prefix.60.&bOWNER &8● &b", "value": true},
         {"type": "meta", "key": "meta.badge.\ue307", "value": true},
-        {"type": "permission", "key": "*", "value": true}
+        {"type": "permission", "key": "*", "value": true},
+        {"type": "permission", "key": "grim.alerts", "value": false},
+        {"type": "permission", "key": "grim.exempt", "value": false},
+        {"type": "permission", "key": "grim.disabled", "value": false},
+        {"type": "permission", "key": "grim.nosetback", "value": false},
+        {"type": "permission", "key": "grim.nomodifypacket", "value": false}
       ]
     }
   }

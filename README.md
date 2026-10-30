@@ -695,6 +695,38 @@ and lets the same player report that account again.
 `/party promote <player>` transfers leadership to a member. On disconnect, leadership passes to the first remaining
 member in join order. Pending invitations follow the new leader and expire when the party disbands.
 
+## Anticheat
+
+[GrimAC](https://grim.ac) runs on the PvP game servers (bedwars, skywars, quicksg, endergames, ttt, cores,
+emeraldrush, duell, mlgrush), not on the lobby, replay, archive or zombies. Its punishments only alert, so no
+violation kicks or bans anyone, and staff decide with the usual tools. Grim still pulls a player back from a move it
+rejects, cancels hits past its own limit, and disconnects a client that stops answering it or floods packets (its
+`config.yml`), as any anticheat must.
+
+`grim/punishments.yml` is Grim's default punishments file, staged into `plugins/GrimAC` at every start, so an edit
+in a container is gone after the next one. Next to each `[alert]` it has a `[staff] %vl%` line at the same thresholds,
+which BlockcraftCore turns into one staff notice on the whole network for everyone with
+`blockcraft.core.anticheat.notify` (the supporter group, and dev, admin and owner through their wildcards); like any
+change to `luckperms/ranks.json` it reaches the network through `lp import ranks`. The notice names the player, the
+check, that check's violation count (the threshold counts the whole punishment group, so it can be lower) and the
+server, shows the check's description on hover and carries a `[Goto]`. It comes at most once per player and
+check every `anticheat.notice-cooldown-seconds` (core's `config.yml`, 30). Grim's own `[alert]` keeps writing to the
+console and feeding `/grim verbose`; its chat alerts reach only players with `grim.alerts`, which `owner` negates
+because `*` would grant it, so staff get each alert once. `owner` negates `grim.exempt`, `grim.disabled`,
+`grim.nosetback` and `grim.nomodifypacket` for the same reason, so Grim checks every player. If Grim's API changes
+under core, core logs it and runs on without the notices.
+
+The network's own movement needs no exemptions: Grim follows what the server sends the client, so knockback a plugin
+sets (throw fights, the legacy rod, harmless hits, MLG Rush sticks), BedWars' parachute and teleporter, the
+Känguru's jump, potion effects such as the jump boost in EmeraldRush's lobby water, flight for spectators and staff
+mode, `/speed` and teleports are all predicted. Staff spectating with `/spec` are in spectator mode, which Grim
+leaves alone.
+
+The build is pinned by `grimac` in `gradle/libs.versions.toml` and the Modrinth version id in `build.gradle.kts`'s
+`downloadGrimAC`; an update changes both, then `./gradlew stagePlugins` and a restart of the game servers. Core
+compiles against the API classes of that same jar, because Grim publishes no API artifact for its builds, so a change
+in Grim's API shows up as a build error.
+
 ## Shared modules and upgrades
 
 `common` holds what both platforms use: storage and migrations, purchases, player references and the operation

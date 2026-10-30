@@ -372,6 +372,13 @@ chat:
   ad-filtered:
     - "<prefix><muted>Deine Chatnachricht wurde gefiltert. <error>Grund: Mögliche Werbung."
     - "<prefix><error>Die Teammitglieder werden diesen Sachverhalt nun prüfen."
+
+# GrimAC's staff notice; <check> is Grim's check, <vl> that check's own violations (the punishment group's threshold
+# counts the whole group, so it can be lower), the details its hover.
+anticheat:
+  notice: "<prefix><error>Anticheat<dark>: <accent><player> <muted>ist bei <error><check> <muted>aufgefallen <dark>(<muted>VL <accent><vl><dark>) <muted>auf <accent><server>"
+  details: "<muted><description><newline><dark><verbose>"
+
 nick:
   loading: "<prefix><muted>Dein neuer Nick wird geladen…"
   assigned: "<prefix><muted>Du bist jetzt als <rank><nick> <muted>unterwegs. Teammitglieder sehen weiterhin deinen echten Namen. <primary>/nick off <muted>entfernt den Nick."

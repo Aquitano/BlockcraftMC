@@ -1,0 +1,99 @@
+# GrimAC's punishments on the PvP game servers (README, "Anticheat"), staged into plugins/GrimAC at every start.
+# Grim's defaults, which only alert: nothing here kicks or bans, and Grim's setbacks stay on.
+# "[staff] %vl%" is not a Grim command: BlockcraftCore turns it into one staff notice for the whole network and keeps
+# Grim from running it. "[alert]" still writes Grim's line to the console and feeds /grim verbose; the [webhook] and
+# [proxy] defaults are left out because that notice replaces them.
+#
+# "N:M command" runs the command at N active violations, then every M more; M = 0 runs it once.
+
+Punishments:
+  Simulation:
+    remove-violations-after: 300
+    checks:
+      - "Simulation"
+      - "GroundSpoof"
+      - "Timer"
+      - "TimerLimit"
+      - "NoFall"
+    commands:
+      - "100:40 [alert]"
+      - "100:40 [staff] %vl%"
+      - "1:1 [log]"
+  Knockback:
+    remove-violations-after: 300
+    checks:
+      - "Knockback"
+      - "Explosion"
+    commands:
+      - "5:5 [alert]"
+      - "5:5 [staff] %vl%"
+      - "1:1 [log]"
+  Post:
+    remove-violations-after: 300
+    checks:
+      - "Post"
+    commands:
+      - "20:20 [alert]"
+      - "20:20 [staff] %vl%"
+      - "1:1 [log]"
+  BadPackets:
+    remove-violations-after: 300
+    checks:
+      - "BadPackets"
+      - "PacketOrder"
+      - "Crash"
+    commands:
+      - "20:20 [alert]"
+      - "20:20 [staff] %vl%"
+      - "1:1 [log]"
+  Reach:
+    remove-violations-after: 300
+    checks:
+      - "Reach"
+    commands:
+      - "1:1 [alert]"
+      - "1:1 [staff] %vl%"
+      - "1:1 [log]"
+  Hitboxes:
+    remove-violations-after: 300
+    checks:
+      - "Hitboxes"
+    commands:
+      - "5:3 [alert]"
+      - "5:3 [staff] %vl%"
+      - "1:1 [log]"
+  Misc:
+    remove-violations-after: 300
+    checks:
+      - "Vehicle"
+      - "NoSlow"
+      - "Sprint"
+      - "MultiActions"
+      - "Place"
+      - "Baritone"
+      - "Break"
+      - "TransactionOrder"
+      - "Elytra"
+      - "Chat"
+      - "Exploit"
+    commands:
+      - "10:5 [alert]"
+      - "10:5 [staff] %vl%"
+      - "1:1 [log]"
+  Combat:
+    remove-violations-after: 300
+    checks:
+      - "Interact"
+      - "Aim"
+    commands:
+      - "20:40 [alert]"
+      - "20:40 [staff] %vl%"
+      - "1:1 [log]"
+  Autoclicker:
+    remove-violations-after: 300
+    checks:
+      - "Autoclicker"
+    commands:
+      - "20:40 [alert]"
+      - "20:40 [staff] %vl%"
+      - "1:1 [log]"

@@ -63,6 +63,11 @@ val downloadViaVersion = downloadPlugin(
     "https://github.com/ViaVersion/ViaVersion/releases/download/$viaVersion/ViaVersion-$viaVersion.jar",
     "https://api.modrinth.com/maven/maven/modrinth/viaversion/$viaVersion/viaversion-$viaVersion.jar",
 )
+// Modrinth addresses a file by its version id, so a new Grim build changes that id along with `grimac`.
+val downloadGrimAC = downloadPlugin(
+    "GrimAC",
+    "https://cdn.modrinth.com/data/LJNGWSvH/versions/QNc4r5Qj/grimac-bukkit-${libs.versions.grimac.get()}.jar",
+)
 val downloadLuckPermsPaper = downloadPlugin(
     "LuckPermsPaper",
     "https://download.luckperms.net/1669/bukkit/loader/LuckPerms-Bukkit-5.5.82.jar",
@@ -73,9 +78,9 @@ val downloadLuckPermsVelocity = downloadPlugin(
 )
 
 // Lays out build/docker for docker-compose.yml: build/docker/paper/<module>/<module>.jar (one directory per plugin,
-// so a compose service lists the ones it runs, LuckPerms and ViaVersion among them), build/docker/velocity/<module>.jar
-// with LuckPerms, ranks.json.gz next to LuckPerms on both sides, the resource pack in the proxy plugin's data
-// directory, and build/docker/waker/waker.jar for the on-demand waker.
+// so a compose service lists the ones it runs, LuckPerms, ViaVersion and GrimAC among them), build/docker/velocity/<module>.jar
+// with LuckPerms, ranks.json.gz next to LuckPerms on both sides, Grim's punishments.yml in its data directory, the
+// resource pack in the proxy plugin's data directory, and build/docker/waker/waker.jar for the on-demand waker.
 tasks.register<Sync>("stagePlugins") {
     from(stageRuntime)
     project(":paper").subprojects.forEach { plugin ->
@@ -93,6 +98,13 @@ tasks.register<Sync>("stagePlugins") {
     from(downloadViaVersion) {
         into("paper/viaversion")
         rename { "ViaVersion.jar" }
+    }
+    from(downloadGrimAC) {
+        into("paper/grimac")
+        rename { "GrimAC.jar" }
+    }
+    from("grim/punishments.yml") {
+        into("paper/grimac/GrimAC")
     }
     from(downloadLuckPermsPaper) {
         into("paper/luckperms")

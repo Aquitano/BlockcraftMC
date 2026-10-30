@@ -1,8 +1,9 @@
 # The whole dev network: MariaDB, the Velocity proxy and one Paper server per game mode. Plugin jars, LuckPerms and
 # ViaVersion included, come from `./gradlew stagePlugins`; each Paper service lists the plugin directories it runs in
-# COPY_PLUGINS_SRC, ViaVersion's so clients newer than the server join (README, "Client versions"). The servers
-# find each other through the database (README, "Run locally"). Each server's map comes from worlds/<group>
-# (README, "Maps"): the world is copied fresh from there at every start and /map save writes it back.
+# COPY_PLUGINS_SRC, ViaVersion's so clients newer than the server join (README, "Client versions"), and the PvP games
+# GrimAC's (README, "Anticheat"). The servers find each other through the database (README, "Run locally"). Each
+# server's map comes from worlds/<group> (README, "Maps"): the world is copied fresh from there at every start and
+# /map save writes it back.
 
 x-luckperms: &luckperms
   LUCKPERMS_STORAGE_METHOD: mariadb
@@ -128,7 +129,7 @@ services:
       <<: *paper-env
       BLOCKCRAFT_SERVER_GROUP: duell
       BLOCKCRAFT_WORLD_TEMPLATE: /worlds/duell
-      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/duell,/blockcraft/viaversion
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/duell,/blockcraft/viaversion,/blockcraft/grimac
     volumes:
       - ./build/docker/paper:/blockcraft:ro
       - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
@@ -143,7 +144,7 @@ services:
       <<: *paper-env
       BLOCKCRAFT_SERVER_GROUP: emeraldrush
       BLOCKCRAFT_WORLD_TEMPLATE: /worlds/emeraldrush
-      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/emeraldrush,/blockcraft/viaversion
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/emeraldrush,/blockcraft/viaversion,/blockcraft/grimac
     volumes:
       - ./build/docker/paper:/blockcraft:ro
       - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
@@ -158,7 +159,7 @@ services:
       <<: *paper-env
       BLOCKCRAFT_SERVER_GROUP: bedwars
       BLOCKCRAFT_WORLD_TEMPLATE: /worlds/bedwars
-      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/bedwars,/blockcraft/viaversion
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/bedwars,/blockcraft/viaversion,/blockcraft/grimac
     volumes:
       - ./build/docker/paper:/blockcraft:ro
       - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
@@ -173,7 +174,7 @@ services:
       <<: *paper-env
       BLOCKCRAFT_SERVER_GROUP: mlgrush
       BLOCKCRAFT_WORLD_TEMPLATE: ""
-      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/mlgrush,/blockcraft/viaversion
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/mlgrush,/blockcraft/viaversion,/blockcraft/grimac
     volumes:
       - ./build/docker/paper:/blockcraft:ro
       - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
@@ -202,7 +203,7 @@ services:
       <<: *paper-env
       BLOCKCRAFT_SERVER_GROUP: cores
       BLOCKCRAFT_WORLD_TEMPLATE: ""
-      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/cores,/blockcraft/viaversion
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/cores,/blockcraft/viaversion,/blockcraft/grimac
     volumes:
       - ./build/docker/paper:/blockcraft:ro
       - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
@@ -218,7 +219,7 @@ services:
       # The round's world is generated fresh at every start; its 400 chunks peaked at 1.2G in a test run.
       MEMORY: 1536M
       BLOCKCRAFT_WORLD_TEMPLATE: ""
-      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/endergames,/blockcraft/viaversion
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/endergames,/blockcraft/viaversion,/blockcraft/grimac
     volumes:
       - ./build/docker/paper:/blockcraft:ro
       - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
@@ -232,7 +233,7 @@ services:
       <<: *paper-env
       BLOCKCRAFT_SERVER_GROUP: ttt
       BLOCKCRAFT_WORLD_TEMPLATE: ""
-      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/ttt,/blockcraft/viaversion
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/ttt,/blockcraft/viaversion,/blockcraft/grimac
     volumes:
       - ./build/docker/paper:/blockcraft:ro
       - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
@@ -246,7 +247,7 @@ services:
       <<: *paper-env
       BLOCKCRAFT_SERVER_GROUP: skywars
       BLOCKCRAFT_WORLD_TEMPLATE: ""
-      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/skywars,/blockcraft/viaversion
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/skywars,/blockcraft/viaversion,/blockcraft/grimac
     volumes:
       - ./build/docker/paper:/blockcraft:ro
       - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
@@ -276,7 +277,7 @@ services:
       <<: *paper-env
       BLOCKCRAFT_SERVER_GROUP: quicksg
       BLOCKCRAFT_WORLD_TEMPLATE: /worlds/quicksg
-      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/quicksg,/blockcraft/viaversion
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/quicksg,/blockcraft/viaversion,/blockcraft/grimac
     volumes:
       - ./build/docker/paper:/blockcraft:ro
       - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
