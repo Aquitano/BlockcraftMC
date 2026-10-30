@@ -145,7 +145,8 @@ final class PlaybackSession {
         pending.putAll(terrain.seek(clock.tick()));
         write(writes);
         var motion = timeline.motion();
-        if (!jumped) {
+        boolean continued = !jumped;
+        if (continued) {
             cast.perform(motion.animations(shownTick, clock.tick()));
         }
         jumped = false;
@@ -155,6 +156,7 @@ final class PlaybackSession {
         var actors = motion.actors(time);
         boolean advancing = !clock.paused() && !clock.finished() && pending.isEmpty();
         cast.show(actors, motion.props(time), motion.props(advancing ? time + clock.speed() : time));
+        cast.place(timeline.fixtures().at(clock.tick()), continued ? clock.speed() : 0);
         if (!arrived) {
             arrive(actors);
         }

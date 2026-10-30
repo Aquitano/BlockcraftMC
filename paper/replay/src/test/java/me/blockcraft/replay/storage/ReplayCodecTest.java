@@ -88,6 +88,23 @@ public class ReplayCodecTest {
     }
 
     @Test
+    public void fixturesKeepTheirChangesAndNeedEntityDataFirst() throws Exception {
+        var id = UUID.randomUUID();
+        var world = new UUID(0, 1);
+        var spin = new float[]{0, 0, 1, 0, 0.7F, 0, 0.7F, 0.5F, 0.5F, 0.5F, 0, 0, 0, 1};
+        var shown = new ReplayEvent.Fixture(2, id, world, 4.5, 65, -2.5, 90, 0, "{id:\"minecraft:item_display\"}", spin, 10);
+        var turned = new ReplayEvent.Fixture(6, id, world, 4.5, 65, -2.5, 90, 0, "", new float[ReplayEvent.Fixture.TRANSFORMATION_SIZE], 10);
+        var events = decode(encode(header(), List.of(shown, turned, new ReplayEvent.FixtureGone(9, id)))).events();
+
+        var first = (ReplayEvent.Fixture) events.get(0);
+        assertEquals(shown.entity(), first.entity());
+        assertArrayEquals(spin, first.transformation(), 0);
+        assertEquals("", ((ReplayEvent.Fixture) events.get(1)).entity());
+        assertEquals(new ReplayEvent.FixtureGone(9, id), events.get(2));
+        assertThrows(IOException.class, () -> encode(header(), List.of(turned)));
+    }
+
+    @Test
     public void readsVersionTwoArchivesAsFramesWithoutProps() throws Exception {
         var header = header();
         var bytes = new ByteArrayOutputStream();

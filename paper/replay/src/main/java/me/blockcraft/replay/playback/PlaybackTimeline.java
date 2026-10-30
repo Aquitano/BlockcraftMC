@@ -18,7 +18,7 @@ import java.util.UUID;
 
 /**
  * A loaded recording indexed for playback: terrain per recorded world, the block change log, the motion track, how
- * every recorded entity looked and the time of day in each world.
+ * every recorded entity looked, the displays and dropped items and the time of day in each world.
  */
 public final class PlaybackTimeline {
 
@@ -30,10 +30,12 @@ public final class PlaybackTimeline {
     private final MotionTrack motion;
     private final Map<UUID, String> appearances;
     private final Map<UUID, NavigableMap<Integer, Long>> daytimes;
+    private final FixtureTrack fixtures;
 
     private PlaybackTimeline(ReplayHeader header, int durationTicks, Map<UUID, RecordedTerrain> terrain,
                              List<TerrainLog.Change> changes, Map<String, BlockData> blocks, MotionTrack motion,
-                             Map<UUID, String> appearances, Map<UUID, NavigableMap<Integer, Long>> daytimes) {
+                             Map<UUID, String> appearances, Map<UUID, NavigableMap<Integer, Long>> daytimes,
+                             FixtureTrack fixtures) {
         this.header = header;
         this.durationTicks = durationTicks;
         this.terrain = terrain;
@@ -42,6 +44,7 @@ public final class PlaybackTimeline {
         this.motion = motion;
         this.appearances = appearances;
         this.daytimes = daytimes;
+        this.fixtures = fixtures;
     }
 
     /** Parses every block state and indexes the recording; meant for a background thread. */
@@ -61,6 +64,8 @@ public final class PlaybackTimeline {
                 case ReplayEvent.Blocks ignored -> { }
                 case ReplayEvent.Daytime daytime -> daytimes.computeIfAbsent(daytime.world(), ignored -> new TreeMap<>())
                         .put(daytime.tick(), daytime.time());
+                case ReplayEvent.Fixture ignored -> { }
+                case ReplayEvent.FixtureGone ignored -> { }
             }
         }
         var changes = TerrainLog.changes(data.events());
@@ -72,7 +77,7 @@ public final class PlaybackTimeline {
         var terrain = new HashMap<UUID, RecordedTerrain>();
         chunks.forEach((world, recorded) -> terrain.put(world, new RecordedTerrain(recorded, parsed)));
         return new PlaybackTimeline(data.header(), data.durationTicks(), Map.copyOf(terrain), changes, parsed,
-                new MotionTrack(frames), Map.copyOf(appearances), Map.copyOf(daytimes));
+                new MotionTrack(frames), Map.copyOf(appearances), Map.copyOf(daytimes), FixtureTrack.of(data.events()));
     }
 
     public ReplayHeader header() {
@@ -88,6 +93,7 @@ public final class PlaybackTimeline {
     List<TerrainLog.Change> changes() { return changes; }
     BlockData block(String state) { return blocks.get(state); }
     MotionTrack motion() { return motion; }
+    FixtureTrack fixtures() { return fixtures; }
     Optional<String> appearance(UUID prop) { return Optional.ofNullable(appearances.get(prop)); }
 
     /** The world's time of day at {@code tick}; before the first record, the time the recording started with. */

@@ -43,6 +43,7 @@ final class ReplayCodec {
     private final Set<UUID> participants;
     private final Map<UUID, List<byte[]>> equipmentByActor = new HashMap<>();
     private final Map<UUID, UUID> uuids = new HashMap<>();
+    private final Set<UUID> fixtures = new HashSet<>();
     private int eventCount;
     private int chunkCount;
     private int previousTick;
@@ -168,6 +169,27 @@ final class ReplayCodec {
                 uuid(out, daytime.world());
                 out.writeLong(daytime.time());
             }
+            case ReplayEvent.Fixture fixture -> {
+                checkFixture(fixture);
+                out.writeByte(6);
+                out.writeInt(fixture.tick());
+                uuid(out, fixture.id());
+                uuid(out, fixture.world());
+                out.writeDouble(fixture.x());
+                out.writeDouble(fixture.y());
+                out.writeDouble(fixture.z());
+                out.writeFloat(fixture.yaw());
+                out.writeFloat(fixture.pitch());
+                text(out, fixture.entity());
+                out.writeByte(fixture.transformation().length);
+                for (float value : fixture.transformation()) out.writeFloat(value);
+                out.writeInt(fixture.interpolation());
+            }
+            case ReplayEvent.FixtureGone gone -> {
+                out.writeByte(7);
+                out.writeInt(gone.tick());
+                uuid(out, gone.id());
+            }
         }
     }
 
@@ -242,6 +264,23 @@ final class ReplayCodec {
                     yield new ReplayEvent.Blocks(tick, blocks);
                 }
                 case 5 -> new ReplayEvent.Daytime(tick, uuid(in), in.readLong());
+                case 6 -> {
+                    UUID id = shared(uuid(in));
+                    UUID world = shared(uuid(in));
+                    double x = in.readDouble();
+                    double y = in.readDouble();
+                    double z = in.readDouble();
+                    float yaw = in.readFloat();
+                    float pitch = in.readFloat();
+                    String entity = text(in);
+                    float[] transformation = new float[count(in.readUnsignedByte(),
+                            ReplayEvent.Fixture.TRANSFORMATION_SIZE, "transformation size")];
+                    for (int i = 0; i < transformation.length; i++) transformation[i] = in.readFloat();
+                    var fixture = new ReplayEvent.Fixture(tick, id, world, x, y, z, yaw, pitch, entity, transformation, in.readInt());
+                    checkFixture(fixture);
+                    yield fixture;
+                }
+                case 7 -> new ReplayEvent.FixtureGone(tick, shared(uuid(in)));
                 default -> throw new IOException("Unknown replay event type: " + type);
             };
             if (retainEvents) events.add(event);
@@ -365,6 +404,21 @@ final class ReplayCodec {
         for (ReplayEvent.Prop prop : frame.props()) {
             require(seen.add(prop.id()), "Duplicate prop");
             checkPosition(prop);
+        }
+    }
+
+    private void checkFixture(ReplayEvent.Fixture fixture) throws IOException {
+        require(Double.isFinite(fixture.x()) && Double.isFinite(fixture.y()) && Double.isFinite(fixture.z())
+                && Float.isFinite(fixture.yaw()) && Float.isFinite(fixture.pitch()), "Invalid position");
+        int size = fixture.transformation().length;
+        require(size == 0 || size == ReplayEvent.Fixture.TRANSFORMATION_SIZE, "Invalid transformation size");
+        for (float value : fixture.transformation()) require(Float.isFinite(value), "Invalid transformation");
+        count(fixture.interpolation(), limits.maxDurationTicks(), "interpolation ticks");
+        if (fixture.entity().isEmpty()) {
+            require(fixtures.contains(fixture.id()), "Fixture without entity data");
+        } else {
+            fixtures.add(fixture.id());
+            addObjects(1);
         }
     }
 

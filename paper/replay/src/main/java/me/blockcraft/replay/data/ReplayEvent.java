@@ -74,4 +74,18 @@ public sealed interface ReplayEvent {
 
     /** A recorded world's time of day from this tick on. */
     record Daytime(int tick, UUID world, long time) implements ReplayEvent { }
+
+    /**
+     * An entity that mostly stays where it is, such as a display or a dropped item, as it shows from this tick on.
+     * {@code entity} is its Minecraft entity data, empty while it shows what it showed before; {@code transformation}
+     * is a display's translation, left rotation, scale and right rotation, which it eases into over
+     * {@code interpolation} ticks, and empty for anything else.
+     */
+    record Fixture(int tick, UUID id, UUID world, double x, double y, double z, float yaw, float pitch, String entity,
+                   float[] transformation, int interpolation) implements ReplayEvent {
+        public static final int TRANSFORMATION_SIZE = 14;
+    }
+
+    /** A fixture is gone from this tick on. */
+    record FixtureGone(int tick, UUID id) implements ReplayEvent { }
 }

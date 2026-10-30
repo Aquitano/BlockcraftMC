@@ -17,14 +17,19 @@ import org.bukkit.ChunkSnapshot;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.entity.BlockDisplay;
+import org.bukkit.entity.Display;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntitySnapshot;
 import org.bukkit.entity.FishHook;
+import org.bukkit.entity.Item;
+import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.entity.TNTPrimed;
+import org.bukkit.entity.TextDisplay;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
@@ -61,6 +66,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
@@ -102,10 +108,54 @@ public final class MatchRecorder implements Listener, AutoCloseable, ReplayRecor
     /** An entity seen for the first time; its data is written out on the writer thread. */
     private record Sighting(UUID id, EntitySnapshot snapshot) {
         ReplayEvent.Appearance appearance() {
-            String entity = snapshot.getAsString();
-            return new ReplayEvent.Appearance(id, entity.getBytes(StandardCharsets.UTF_8).length <= MAX_APPEARANCE_BYTES
-                    ? entity : "{id:\"" + snapshot.getEntityType().getKey() + "\"}");
+            return new ReplayEvent.Appearance(id, entityData(snapshot));
         }
+    }
+
+    /** What a fixture showed when it was last written; {@code content} is what its entity data has to follow. */
+    private record Fixed(UUID world, double x, double y, double z, float yaw, float pitch, Object content,
+                         float[] transformation, int interpolation) {
+        static Fixed of(Entity entity) {
+            var location = entity.getLocation();
+            return new Fixed(location.getWorld().getUID(), location.getX(), location.getY(), location.getZ(),
+                    location.getYaw(), location.getPitch(), content(entity), transformation(entity),
+                    entity instanceof Display display ? display.getInterpolationDuration() : 0);
+        }
+
+        boolean same(Fixed other) {
+            return other != null && world.equals(other.world) && x == other.x && y == other.y && z == other.z
+                    && yaw == other.yaw && pitch == other.pitch && content.equals(other.content)
+                    && Arrays.equals(transformation, other.transformation) && interpolation == other.interpolation;
+        }
+
+        private static Object content(Entity entity) {
+            return switch (entity) {
+                case TextDisplay text -> text.text();
+                case ItemDisplay item -> item.getItemStack();
+                case BlockDisplay block -> block.getBlock();
+                case Item item -> item.getItemStack();
+                default -> entity.getType();
+            };
+        }
+
+        private static float[] transformation(Entity entity) {
+            if (!(entity instanceof Display display)) {
+                return new float[0];
+            }
+            var transformation = display.getTransformation();
+            var translation = transformation.getTranslation();
+            var left = transformation.getLeftRotation();
+            var scale = transformation.getScale();
+            var right = transformation.getRightRotation();
+            return new float[]{translation.x, translation.y, translation.z, left.x, left.y, left.z, left.w,
+                    scale.x, scale.y, scale.z, right.x, right.y, right.z, right.w};
+        }
+    }
+
+    private static String entityData(EntitySnapshot snapshot) {
+        String entity = snapshot.getAsString();
+        return entity.getBytes(StandardCharsets.UTF_8).length <= MAX_APPEARANCE_BYTES
+                ? entity : "{id:\"" + snapshot.getEntityType().getKey() + "\"}";
     }
 
     /** The publication callback can run on the server thread and must submit its work without blocking. */
@@ -200,7 +250,11 @@ public final class MatchRecorder implements Listener, AutoCloseable, ReplayRecor
             if (session != current) { return; }
             captureDaytime(current);
             if (session != current) { return; }
-            if (current.tick % limits.sampleTicks() == 0) { captureFrame(current, players); }
+            if (current.tick % limits.sampleTicks() == 0) {
+                captureFixtures(current, players);
+                if (session != current) { return; }
+                captureFrame(current, players);
+            }
             if (session != current) { return; }
             positions.update(current.id, current.tick, players.stream().map(Player::getUniqueId).toList());
             current.tick++;
@@ -376,6 +430,68 @@ public final class MatchRecorder implements Listener, AutoCloseable, ReplayRecor
         if (current.propSamples >= limits.objectBudget() / 2) {
             plugin.getLogger().info("Replay entity budget spent; the rest of the round records players and terrain only");
         }
+    }
+
+    /**
+     * The displays and dropped items in the captured chunks, written when they appear, move, change or leave rather
+     * than in every sample, since most of them stand still the whole round.
+     */
+    private void captureFixtures(Session current, List<Player> players) {
+        var present = new HashSet<UUID>();
+        for (var world : players.stream().map(Player::getWorld).distinct().toList()) {
+            for (var entity : world.getEntities()) {
+                var id = entity.getUniqueId();
+                if (!fixture(entity) || current.unrecordable.contains(id)) {
+                    continue;
+                }
+                var location = entity.getLocation();
+                if (!current.captured.contains(new ChunkKey(world.getUID(), location.getBlockX() >> 4, location.getBlockZ() >> 4))) {
+                    continue;
+                }
+                var previous = current.fixtures.get(id);
+                if (previous == null && current.fixtures.size() >= limits.maxEntities()) {
+                    continue;
+                }
+                present.add(id);
+                var fixed = Fixed.of(entity);
+                if (fixed.same(previous)) {
+                    continue;
+                }
+                EntitySnapshot snapshot = null;
+                if (previous == null || !fixed.content().equals(previous.content())) {
+                    snapshot = snapshot(entity);
+                    if (snapshot == null) {
+                        current.unrecordable.add(id);
+                        present.remove(id);
+                        continue;
+                    }
+                }
+                current.fixtures.put(id, fixed);
+                int tick = current.tick;
+                var data = snapshot;
+                if (!offer(current, () -> new ReplayEvent.Fixture(tick, id, fixed.world(), fixed.x(), fixed.y(), fixed.z(),
+                        fixed.yaw(), fixed.pitch(), data == null ? "" : entityData(data), fixed.transformation(),
+                        fixed.interpolation()))) {
+                    return;
+                }
+            }
+        }
+        for (var id : List.copyOf(current.fixtures.keySet())) {
+            if (present.contains(id)) {
+                continue;
+            }
+            current.fixtures.remove(id);
+            int tick = current.tick;
+            if (!offer(current, () -> new ReplayEvent.FixtureGone(tick, id))) {
+                return;
+            }
+        }
+    }
+
+    /** Displays and dropped items everyone can see; one riding something, like a name above a player, goes with it. */
+    private static boolean fixture(Entity entity) {
+        return (entity instanceof Display || entity instanceof Item) && entity.isValid() && !entity.isInsideVehicle()
+                && entity.isVisibleByDefault();
     }
 
     /** Paper only serialises persistent entities, and games keep their mobs out of the world save. */
@@ -574,6 +690,7 @@ public final class MatchRecorder implements Listener, AutoCloseable, ReplayRecor
         final Set<UUID> onScreen = new HashSet<>();
         final Set<ReplayEvent.Animation> animations = new LinkedHashSet<>();
         final Map<UUID, Long> daytimes = new HashMap<>();
+        final Map<UUID, Fixed> fixtures = new HashMap<>();
         final PublicationGate<ReplayStore.Saved> publication = new PublicationGate<>();
         List<ReplayEvent.Actor> actors = List.of();
         List<ReplayEvent.Prop> props = List.of();

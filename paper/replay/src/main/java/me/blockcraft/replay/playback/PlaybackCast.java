@@ -13,8 +13,10 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.World;
+import org.bukkit.entity.Display;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Fireball;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Mannequin;
 import org.bukkit.entity.Mob;
@@ -25,7 +27,10 @@ import org.bukkit.entity.TNTPrimed;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.util.Transformation;
 import org.bukkit.util.Vector;
+import org.joml.Quaternionf;
+import org.joml.Vector3f;
 
 import java.util.Arrays;
 import java.util.Comparator;
@@ -41,7 +46,8 @@ import java.util.function.Function;
 
 /**
  * Everyone on screen: a mannequin for each participant and a frozen copy of each recorded mob, projectile and primed
- * TNT, placed where the recording says and made to swing, flinch, die and explode when it did.
+ * TNT, placed where the recording says and made to swing, flinch, die and explode when it did, and the displays and
+ * dropped items around them.
  */
 final class PlaybackCast {
 
@@ -63,6 +69,7 @@ final class PlaybackCast {
     private final Map<UUID, World> worlds;
     private final Map<UUID, ReplayHeader.Participant> participants = new HashMap<>();
     private final Map<UUID, Figure> figures = new HashMap<>();
+    private final Map<UUID, Fixture> fixtures = new HashMap<>();
     private final Set<UUID> unplayable = new HashSet<>();
 
     private static final class Figure {
@@ -72,6 +79,16 @@ final class PlaybackCast {
 
         Figure(Entity entity) {
             this.entity = entity;
+        }
+    }
+
+    private static final class Fixture {
+        private final Entity entity;
+        private FixtureTrack.Shown shown;
+
+        Fixture(Entity entity, FixtureTrack.Shown shown) {
+            this.entity = entity;
+            this.shown = shown;
         }
     }
 
@@ -206,18 +223,19 @@ final class PlaybackCast {
      * in its data are dropped, since they would never join the world.
      */
     private Optional<Entity> prop(UUID id, Location location) {
+        return timeline.appearance(id).flatMap(appearance -> spawn(id, appearance, location));
+    }
+
+    private Optional<Entity> spawn(UUID id, String appearance, Location location) {
         if (unplayable.contains(id)) {
             return Optional.empty();
         }
         try {
-            var appearance = timeline.appearance(id);
-            if (appearance.isPresent()) {
-                var entity = Bukkit.getEntityFactory().createEntitySnapshot(appearance.get()).createEntity(location.getWorld());
-                entity.eject();
-                freeze(entity);
-                if (entity.spawnAt(location)) {
-                    return Optional.of(entity);
-                }
+            var entity = Bukkit.getEntityFactory().createEntitySnapshot(appearance).createEntity(location.getWorld());
+            entity.eject();
+            freeze(entity);
+            if (entity.spawnAt(location)) {
+                return Optional.of(entity);
             }
         } catch (IllegalArgumentException ignored) {
         }
@@ -245,8 +263,72 @@ final class PlaybackCast {
             }
             case Projectile projectile -> projectile.setShooter(null);
             case TNTPrimed tnt -> tnt.setFuseTicks(Integer.MAX_VALUE);
+            case Item item -> {
+                item.setCanPlayerPickup(false);
+                item.setCanMobPickup(false);
+                item.setUnlimitedLifetime(true);
+            }
             default -> { }
         }
+    }
+
+    /**
+     * Places the displays and dropped items of the moment shown. A display eases into a new transformation over the
+     * recorded ticks divided by {@code speed}; a speed of 0, after a jump, sets it at once.
+     */
+    void place(List<FixtureTrack.Shown> shown, double speed) {
+        var present = new HashSet<UUID>();
+        for (var fixture : shown) {
+            var world = worlds.get(fixture.world());
+            if (world == null) {
+                continue;
+            }
+            var location = new Location(world, fixture.x(), fixture.y(), fixture.z(), fixture.yaw(), fixture.pitch());
+            var placed = fixtures.get(fixture.id());
+            if (placed != null && (!placed.entity.isValid() || !placed.entity.getWorld().equals(world)
+                    || !placed.shown.entity().equals(fixture.entity()))) {
+                placed.entity.remove();
+                fixtures.remove(fixture.id());
+                placed = null;
+            }
+            if (placed == null) {
+                var spawned = spawn(fixture.id(), fixture.entity(), location);
+                if (spawned.isEmpty()) {
+                    continue;
+                }
+                transform(spawned.get(), fixture, 0);
+                fixtures.put(fixture.id(), new Fixture(spawned.get(), fixture));
+            } else {
+                if (fixture.x() != placed.shown.x() || fixture.y() != placed.shown.y() || fixture.z() != placed.shown.z()
+                        || fixture.yaw() != placed.shown.yaw() || fixture.pitch() != placed.shown.pitch()) {
+                    placed.entity.teleport(location);
+                }
+                if (!Arrays.equals(fixture.transformation(), placed.shown.transformation())) {
+                    transform(placed.entity, fixture, speed > 0 ? (int) Math.round(fixture.interpolation() / speed) : 0);
+                }
+                placed.shown = fixture;
+            }
+            present.add(fixture.id());
+        }
+        fixtures.entrySet().removeIf(entry -> {
+            if (present.contains(entry.getKey())) {
+                return false;
+            }
+            entry.getValue().entity.remove();
+            return true;
+        });
+    }
+
+    private static void transform(Entity entity, FixtureTrack.Shown fixture, int ticks) {
+        var values = fixture.transformation();
+        if (!(entity instanceof Display display) || values.length != ReplayEvent.Fixture.TRANSFORMATION_SIZE) {
+            return;
+        }
+        display.setInterpolationDelay(0);
+        display.setInterpolationDuration(ticks);
+        display.setTransformation(new Transformation(new Vector3f(values[0], values[1], values[2]),
+                new Quaternionf(values[3], values[4], values[5], values[6]), new Vector3f(values[7], values[8], values[9]),
+                new Quaternionf(values[10], values[11], values[12], values[13])));
     }
 
     /**
@@ -359,5 +441,7 @@ final class PlaybackCast {
     void clear() {
         figures.values().forEach(figure -> figure.entity.remove());
         figures.clear();
+        fixtures.values().forEach(fixture -> fixture.entity.remove());
+        fixtures.clear();
     }
 }

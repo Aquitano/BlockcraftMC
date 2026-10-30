@@ -32,6 +32,7 @@ import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.EntityPotionEffectEvent;
 import org.bukkit.event.entity.EntitySpawnEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
+import org.bukkit.event.entity.ItemMergeEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
@@ -264,6 +265,11 @@ final class PlaybackGuard implements Listener {
     /** Recorded undead would burn in the replay world's daylight. */
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onCombust(EntityCombustEvent event) {
+        if (manager.replayWorld(event.getEntity().getWorld())) { event.setCancelled(true); }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onMerge(ItemMergeEvent event) {
         if (manager.replayWorld(event.getEntity().getWorld())) { event.setCancelled(true); }
     }
 
