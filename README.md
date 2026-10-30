@@ -830,6 +830,9 @@ Everything the pack changes has a plain fallback, so a player without it sees va
   fonts. Label whitespace becomes spaces, and unsupported characters become `?` before the label is shortened.
   `MenuTileAssetsTest` checks the assets; `UiFontTest` verifies that composed card labels restore the text cursor
   using the fonts' actual glyph widths.
+- The pack blanks the client's slot hover highlight (`container/slot_highlight_back` and `_front`), because it would
+  mark one square of a card or toolbar button. The client has no per-screen switch, so this holds in every
+  inventory; the tooltip is what shows the hovered item.
 - `Items.Builder.state` marks a menu item's availability or unlock state. Cards show a small badge in their last
   slot; cosmetics and level rewards keep their actual picture and show the state's tooltip frame. The existing
   German lore explains the state with and without the pack. `MenuState` does not change permissions or purchases.

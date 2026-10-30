@@ -44,6 +44,7 @@ public final class PackArt {
         Path font = root.resolve("assets/blockcraft/textures/font");
         Path item = root.resolve("assets/blockcraft/textures/item");
         Path tooltip = root.resolve("assets/blockcraft/textures/gui/sprites/tooltip");
+        Path container = root.resolve("assets/minecraft/textures/gui/sprites/container");
         if (args.length > 1) {
             var icon = ICONS.get(args[1]);
             write(pixels(icon.rows(), icon.palette()), item.resolve(args[1] + ".png"));
@@ -52,6 +53,11 @@ public final class PackArt {
         Files.createDirectories(font);
         Files.createDirectories(item);
         Files.createDirectories(tooltip);
+        Files.createDirectories(container);
+        // Cards and toolbar buttons span several slots, so the hover highlight would single out one square of them.
+        for (String layer : new String[] {"back", "front"}) {
+            write(new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB), container.resolve("slot_highlight_" + layer + ".png"));
+        }
         for (int rows = 1; rows <= 6; rows++) {
             write(panel(rows, false), font.resolve("menu_" + rows + ".png"));
         }
