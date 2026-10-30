@@ -17,7 +17,7 @@ public class SumoArenaTest {
 
     @Test
     public void generatesOneSymmetricCircularFloorAtTheConfiguredHeight() {
-        var config = new SumoConfig(4, 64, 61, 2, 3, 3, 0.4, 8);
+        var config = new SumoConfig(4, 64, 61, 2, 3, 3);
         var blocks = new HashSet<>(SumoArena.floorBlocks(config));
 
         assertEquals(49, blocks.size());
@@ -33,8 +33,8 @@ public class SumoArenaTest {
 
     @Test
     public void changingRadiusAndHeightRemovesOldFloorAndClearsSupportedSpawns() {
-        var previous = new SumoConfig(16, 200, 197, 15, 3, 3, 0.4, 8);
-        var next = new SumoConfig(2, 199, 196, 1, 3, 3, 0.4, 8);
+        var previous = new SumoConfig(16, 200, 197, 15, 3, 3);
+        var next = new SumoConfig(2, 199, 196, 1, 3, 3);
         var world = new HashMap<SumoArena.Position, Material>();
         for (var position : SumoArena.floorBlocks(previous)) {
             world.put(position, Material.STONE);
@@ -69,8 +69,8 @@ public class SumoArenaTest {
 
     @Test
     public void bothSpawnsStandOnTheRingAndFaceEachOtherAcrossItsCenter() {
-        for (var config : new SumoConfig[] {new SumoConfig(4, 64, 61, 2, 3, 3, 0.4, 8),
-                new SumoConfig(6, 80, 75, 3.5, 5, 4, 0.6, 10)}) {
+        for (var config : new SumoConfig[] {new SumoConfig(4, 64, 61, 2, 3, 3),
+                new SumoConfig(6, 80, 75, 3.5, 5, 4)}) {
             var first = SumoArena.spawn(config, null, 1);
             var second = SumoArena.spawn(config, null, 2);
             var blocks = SumoArena.floorBlocks(config);

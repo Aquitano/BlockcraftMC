@@ -35,8 +35,6 @@ sumo:
   spawn-distance: 2
   points-to-win: 3
   reset-seconds: 3
-  knockback-strength: 0.4
-  hit-delay-ticks: 8
 # Wurfschlacht: Sumo's ring and points with the season's throwables instead of fists, offered only during these
 # occasions; a hit pushes with knockback, and cooldown-ticks pass between two throws.
 throw-fight:

@@ -315,12 +315,12 @@ to load changed jars and resource-pack assets. Persistent plugin files stay in t
 
 Sumo appears alongside VS, SG, and SuperJump in Duell's mode vote. `/forcemap sumo` forces it for the next duel.
 Its circular stone ring is generated in `duell:sumo`, so it needs no `/setup` locations or imported map.
-Both players fight with empty hands. Punches apply knockback without health damage. Falling below the ring's
+Both players fight with empty hands. Punches knock back as in vanilla without health damage. Falling below the ring's
 loss height gives the opponent one point, resets both players, and starts a three-second freeze before play resumes.
 The first player to three points wins. At the round time limit, the player with more points wins, or equal scores draw.
 
-Duell's `sumo` config section controls the radius, floor and loss heights, spawn distance, target score, reset
-duration, knockback strength, and hit delay. Sumo uses Duell's stats, win rewards, rating choice, and rematch flow.
+Duell's `sumo` config section controls the radius, floor and loss heights, spawn distance, target score, and reset
+duration. Sumo uses Duell's stats, win rewards, rating choice, and rematch flow.
 Each knockout counts as a kill for stats and network XP. The damage-free win achievement excludes Sumo.
 
 ### Single game and three-mode tour

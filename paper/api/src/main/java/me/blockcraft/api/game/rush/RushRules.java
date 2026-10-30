@@ -1,5 +1,6 @@
 package me.blockcraft.api.game.rush;
 
+import me.blockcraft.api.game.HarmlessHit;
 import org.bukkit.Material;
 import org.bukkit.block.data.type.Bed;
 import org.bukkit.entity.Player;
@@ -82,15 +83,12 @@ public final class RushRules implements Listener {
         if (!(event.getEntity() instanceof Player victim) || !scoped.test(victim)) {
             return;
         }
-        // A hit that deals nothing leaves vanilla's lastHurt at zero, so inside the invulnerability window every
-        // further click would pass its check and knock back again.
         if (event instanceof EntityDamageByEntityEvent hit && hit.getCause() == EntityDamageEvent.DamageCause.ENTITY_ATTACK
-                && hit.getDamager() instanceof Player attacker && game.active(attacker) && game.active(victim)
-                && victim.getNoDamageTicks() <= victim.getMaximumNoDamageTicks() / 2) {
-            event.setDamage(0);
-            return;
+                && hit.getDamager() instanceof Player attacker && game.active(attacker) && game.active(victim)) {
+            HarmlessHit.land(hit, victim);
+        } else {
+            event.setCancelled(true);
         }
-        event.setCancelled(true);
     }
 
     @EventHandler

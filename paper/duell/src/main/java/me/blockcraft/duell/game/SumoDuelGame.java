@@ -2,6 +2,7 @@ package me.blockcraft.duell.game;
 
 import me.blockcraft.api.game.RoundStart;
 import me.blockcraft.api.game.Defeat;
+import me.blockcraft.api.game.HarmlessHit;
 import me.blockcraft.api.game.ThrowFight;
 import me.blockcraft.api.task.Countdown;
 import me.blockcraft.duell.arena.SumoArena;
@@ -16,9 +17,7 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 
-import java.util.HashMap;
 import java.util.Optional;
-import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -30,7 +29,6 @@ final class SumoDuelGame extends MapDuelGame {
     private final SumoMatch match;
     private final Optional<ThrowFight.Ammo> ammo;
     private final Optional<ThrowFight> throwFight;
-    private final Map<UUID, Integer> lastHits = new HashMap<>();
     private Countdown reset;
 
     SumoDuelGame(DuelGames.Context context, SumoArena arena, Optional<ThrowFight.Ammo> ammo) {
@@ -94,7 +92,6 @@ final class SumoDuelGame extends MapDuelGame {
         context.events().changed();
         Runnable ready = () -> {
             if (!closed) {
-                lastHits.clear();
                 match.ready();
             }
         };
@@ -127,30 +124,12 @@ final class SumoDuelGame extends MapDuelGame {
         if (!(event.getEntity() instanceof Player victim) || !participant(victim)) {
             return;
         }
-        event.setCancelled(true);
-        if (ammo.isPresent() || !(event instanceof EntityDamageByEntityEvent hit) || !(hit.getDamager() instanceof Player attacker)
-                || hit.getCause() != EntityDamageEvent.DamageCause.ENTITY_ATTACK || attacker.equals(victim)
-                || !canPlay(attacker) || !canPlay(victim) || !attacker.getInventory().getItemInMainHand().isEmpty()) {
-            return;
-        }
-        int tick = Bukkit.getCurrentTick();
-        var previous = lastHits.get(victim.getUniqueId());
-        if (previous != null && tick - previous < context.config().sumo().hitDelayTicks()) {
-            return;
-        }
-        lastHits.put(victim.getUniqueId(), tick);
-        knockback(victim, attacker, context.config().sumo().knockbackStrength());
-    }
-
-    static void knockback(Player victim, Player attacker, double strength) {
-        var source = attacker.getLocation().toVector().subtract(victim.getLocation().toVector()).setY(0);
-        if (source.lengthSquared() < 0.0001) {
-            source = attacker.getLocation().getDirection().setY(0).multiply(-1);
-        }
-        if (source.lengthSquared() > 0) {
-            victim.knockback(strength, source.getX(), source.getZ());
-            victim.setVelocity(victim.getVelocity());
-            victim.playHurtAnimation(attacker.getYaw());
+        if (ammo.isEmpty() && event instanceof EntityDamageByEntityEvent hit
+                && hit.getCause() == EntityDamageEvent.DamageCause.ENTITY_ATTACK
+                && hit.getDamager() instanceof Player attacker && canPlay(attacker) && canPlay(victim)) {
+            HarmlessHit.land(hit, victim);
+        } else {
+            event.setCancelled(true);
         }
     }
 
