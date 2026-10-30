@@ -293,6 +293,7 @@ public final class Game {
             round.respawn(player, 1L);
             return;
         }
+        PlayerReset.settle(player);
         teams.of(player).flatMap(Team::spawn).ifPresent(player::teleport);
         player.setGameMode(GameMode.SURVIVAL);
         config.combat().apply(player);

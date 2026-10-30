@@ -5,6 +5,7 @@ import org.bukkit.GameMode;
 import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
+import org.bukkit.util.Vector;
 
 import java.util.Objects;
 
@@ -36,6 +37,16 @@ public final class PlayerReset {
         player.setItemOnCursor(null);
         player.getInventory().clear();
         player.getInventory().setArmorContents(null);
+    }
+
+    /**
+     * Ends what was under way when a player dropped out of a round, a fall, a fire or a push, so that coming back is
+     * a fresh start at the spawn like a respawn; inventory, health and effects stay.
+     */
+    public static void settle(Player player) {
+        player.setFallDistance(0.0f);
+        player.setFireTicks(0);
+        player.setVelocity(new Vector());
     }
 
     /**

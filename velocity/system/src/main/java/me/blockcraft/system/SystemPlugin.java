@@ -246,7 +246,7 @@ public final class SystemPlugin {
         events.register(this, tabHeader);
         events.register(this, new CommandListener(config, messages));
         events.register(this, new KickListener(lobby, messages));
-        var rejoins = new Rejoins(proxy, directory, new RejoinRepository(database), messages, logger);
+        var rejoins = new Rejoins(this, proxy, directory, new RejoinRepository(database), messages, logger);
         events.register(this, rejoins);
         events.register(this, ranked);
         events.register(this, new InitialServerListener(lobby, rejoins));

@@ -177,20 +177,23 @@ public final class CoresGame {
         round.follow(spectator, friend);
     }
 
-    /** Back within the time the round kept their place: at the side's spawn with the kit, as after a death. */
+    /** Back within the time the round kept their place: at the side's spawn, protected, with what they carried. */
     private void rejoined(Player player) {
+        var side = teams.of(player.getUniqueId());
+        if (side.isEmpty()) {
+            return;
+        }
+        BlockcraftApi.get().tabTeams().color(player, side.get().text());
         if (player.isDead()) {
             round.respawn(player, 1L);
             return;
         }
-        teams.of(player.getUniqueId()).ifPresent(side -> {
-            player.teleport(map.spawn(side));
-            player.setGameMode(GameMode.SURVIVAL);
-            config.combat().apply(player);
-            dress(player, side);
-            kit.give(player, side);
-            protectedUntil.put(player.getUniqueId(), System.nanoTime() + Duration.ofSeconds(config.protectionSeconds()).toNanos());
-        });
+        PlayerReset.settle(player);
+        player.teleport(map.spawn(side.get()));
+        player.setGameMode(GameMode.SURVIVAL);
+        config.combat().apply(player);
+        dress(player, side.get());
+        protectedUntil.put(player.getUniqueId(), System.nanoTime() + Duration.ofSeconds(config.protectionSeconds()).toNanos());
     }
 
     /** A player who drops out of the running round keeps their place for a while. */
@@ -220,7 +223,7 @@ public final class CoresGame {
         if (phase() == GamePhase.INGAME && wasPlaying) {
             roster.remove(player.getUniqueId());
             for (var side : Side.values()) {
-                if (members(side).isEmpty()) {
+                if (teams.members(side).isEmpty()) {
                     endRound(Optional.of(side.enemy()));
                     break;
                 }

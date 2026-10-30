@@ -1,6 +1,5 @@
 package me.blockcraft.system.network;
 
-import com.velocitypowered.api.event.EventTask;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.player.ServerPostConnectEvent;
 import com.velocitypowered.api.proxy.Player;
@@ -16,6 +15,7 @@ import org.slf4j.Logger;
 
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Sends a player back into the round whose server keeps their place ({@code bc_rejoins}): straight there when they
@@ -23,13 +23,19 @@ import java.util.UUID;
  */
 public final class Rejoins {
 
+    /** A switch to the lobby reaches the game server only after the lobby, so its place is written a moment later. */
+    private static final long OFFER_DELAY_SECONDS = 2;
+
+    private final Object plugin;
     private final ProxyServer proxy;
     private final ServerDirectory directory;
     private final RejoinRepository repository;
     private final Messages messages;
     private final Logger logger;
 
-    public Rejoins(ProxyServer proxy, ServerDirectory directory, RejoinRepository repository, Messages messages, Logger logger) {
+    public Rejoins(Object plugin, ProxyServer proxy, ServerDirectory directory, RejoinRepository repository, Messages messages,
+                   Logger logger) {
+        this.plugin = plugin;
         this.proxy = proxy;
         this.directory = directory;
         this.repository = repository;
@@ -59,13 +65,21 @@ public final class Rejoins {
     }
 
     @Subscribe
-    public EventTask onServerPostConnect(ServerPostConnectEvent event) {
+    public void onServerPostConnect(ServerPostConnectEvent event) {
         var player = event.getPlayer();
-        if (player.getCurrentServer().filter(connection -> directory.isLobby(connection.getServerInfo().getName())).isEmpty()) {
-            return null;
+        if (!onLobby(player)) {
+            return;
         }
-        return EventTask.async(() -> place(player.getUniqueId()).ifPresent(server ->
-                player.sendMessage(messages.get("rejoin.offer").append(Component.space()).append(button()))));
+        proxy.getScheduler().buildTask(plugin, () -> {
+            if (onLobby(player) && place(player.getUniqueId()).isPresent()) {
+                player.sendMessage(messages.get("rejoin.offer").append(Component.space()).append(button()));
+            }
+        }).delay(OFFER_DELAY_SECONDS, TimeUnit.SECONDS).schedule();
+    }
+
+    private boolean onLobby(Player player) {
+        return player.isActive() && player.getCurrentServer()
+                .filter(connection -> directory.isLobby(connection.getServerInfo().getName())).isPresent();
     }
 
     private Component button() {
