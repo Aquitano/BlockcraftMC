@@ -4,6 +4,7 @@ import me.blockcraft.api.world.Worlds;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.replay.data.ReplayEvent;
 import me.blockcraft.replay.data.ReplayHeader;
+import org.bukkit.Difficulty;
 import org.bukkit.GameMode;
 import org.bukkit.GameRules;
 import org.bukkit.Location;
@@ -73,6 +74,8 @@ final class PlaybackSession {
             var world = Worlds.createArena(WorldCreator.ofKey(new NamespacedKey("replay", session + "_" + source))
                     .generator(recorded));
             worlds.put(source, world);
+            // Monsters cannot even be created in Peaceful; the recorded ones are frozen copies that hurt nobody.
+            world.setDifficulty(Difficulty.EASY);
             world.setAutoSave(false);
             world.setGameRule(GameRules.BLOCK_DROPS, false);
             world.setGameRule(GameRules.ENTITY_DROPS, false);
