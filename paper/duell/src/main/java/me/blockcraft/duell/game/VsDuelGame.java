@@ -38,7 +38,9 @@ final class VsDuelGame extends MapDuelGame {
         var death = context.summary().resolveDeath(event);
         Bukkit.broadcast(death.line());
         context.summary().death(victim);
-        death.killer().filter(this::participant).ifPresent(killer -> {
+        var scorer = death.killer().filter(this::participant)
+                .or(() -> players().stream().filter(other -> !other.equals(victim)).findFirst());
+        scorer.ifPresent(killer -> {
             context.summary().awardKill(killer, victim, Defeat.POINT);
             kills.merge(killer.getUniqueId(), 1, Integer::sum);
             round++;
