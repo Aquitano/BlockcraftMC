@@ -3,10 +3,12 @@ package me.blockcraft.system;
 import me.blockcraft.common.calendar.NetworkCalendar;
 import me.blockcraft.common.config.YamlFile;
 import me.blockcraft.common.db.DatabaseConfig;
+import me.blockcraft.common.elo.EloFormula;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.network.NetworkAddresses;
 import me.blockcraft.system.moderation.PunishmentPreset;
 import me.blockcraft.system.network.OnDemand;
+import me.blockcraft.system.ranked.RankedQueue;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 
 import java.io.IOException;
@@ -50,6 +52,10 @@ public final class SystemConfig {
     public record Friends(int max, int requestMinutes) {
     }
 
+    /** The ranked Duell queue and the Elo it reads, which must match BlockcraftAPI's {@code elo} section. */
+    public record Ranked(RankedQueue.Settings queue, EloFormula elo) {
+    }
+
     public record Alerts(String webhookUrl, int minIntervalSeconds, int lagMspt, int lagPolls) {
     }
 
@@ -86,6 +92,7 @@ public final class SystemConfig {
     private final String lobbyGroup;
     private final Discovery discovery;
     private final OnDemandConfig onDemand;
+    private final Ranked ranked;
     private final Alerts alerts;
     private final ServerHealth serverHealth;
     private final ResourcePack resourcePack;
@@ -140,6 +147,13 @@ public final class SystemConfig {
                         Duration.ofMinutes(Math.max(1, number(onDemand, "idle-stop-minutes", 10))),
                         Duration.ofSeconds(Math.max(30, number(onDemand, "start-timeout-seconds", 120))),
                         Math.max(0, number(onDemand, "max-awake", 0))));
+        var ranked = YamlFile.section(root, "ranked");
+        this.ranked = new Ranked(new RankedQueue.Settings(
+                string(ranked, "group").isBlank() ? "duell" : string(ranked, "group").toLowerCase(Locale.ROOT),
+                Math.max(0, number(ranked, "base-range", 100)), Math.max(0, number(ranked, "range-per-second", 5)),
+                Math.max(0, number(ranked, "max-range", 400)),
+                Duration.ofSeconds(Math.max(30, number(ranked, "match-timeout-seconds", 180)))),
+                new EloFormula(number(ranked, "start-rating", 1000), number(ranked, "k-factor", 32)));
         var alerts = YamlFile.section(root, "alerts");
         this.alerts = new Alerts(env(environment, "BLOCKCRAFT_ALERTS_WEBHOOK_URL", string(alerts, "webhook-url")),
                 number(alerts, "min-interval-seconds", 300), number(alerts, "lag-mspt", 50), number(alerts, "lag-polls", 6));
@@ -219,6 +233,10 @@ public final class SystemConfig {
 
     public OnDemandConfig onDemand() {
         return onDemand;
+    }
+
+    public Ranked ranked() {
+        return ranked;
     }
 
     public Alerts alerts() {

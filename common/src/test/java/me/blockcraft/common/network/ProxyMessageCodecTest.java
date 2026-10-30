@@ -35,7 +35,8 @@ public class ProxyMessageCodecTest {
                 new ProxyMessage.Welcome("{\"text\":\"Regeln\"}"),
                 new ProxyMessage.Announcement("{\"text\":\"Gefunden\"}"),
                 new ProxyMessage.Rematch(UUID.randomUUID()),
-                new ProxyMessage.Newcomer(UUID.randomUUID(), "Mia", 60));
+                new ProxyMessage.Newcomer(UUID.randomUUID(), "Mia", 60),
+                new ProxyMessage.RankedMatch(UUID.randomUUID()));
         for (var message : messages) {
             assertEquals(Optional.of(message), ProxyMessageCodec.decode(ProxyMessageCodec.encode(message), ProxyMessage.class));
         }

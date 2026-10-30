@@ -100,6 +100,11 @@ public final class VoteMenus {
         }
 
         private void rating(Player player) {
+            if (duel.rankedPair()) {
+                info(layout.ratingSlot(), Items.of(Material.IRON_INGOT).name(messages.get("menu.rating.rated"))
+                        .lore(messages.getLines("menu.rating.ranked-lore")).build());
+                return;
+            }
             var choice = duel.ratingChoice(player.getUniqueId());
             String key = choice == DuelRating.RATED ? "rated" : "unrated";
             var lore = new ArrayList<>(messages.getLines("menu.rating." + key + "-lore"));

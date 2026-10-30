@@ -58,6 +58,8 @@ rating:
   chosen: "<prefix><muted>Deine Wertung: <accent><rating><muted>."
   waiting: "<prefix><muted>Gewertet spielt ihr nur, wenn ihr beide zustimmt. Sonst bleibt es ungewertet."
   request: "<prefix><accent><player> <muted>möchte gewertet spielen. Du kannst in der Spielauswahl zustimmen."
+  ranked: "<prefix><muted>Ihr kommt aus der gewerteten Warteschlange: dieses Duell zählt für eure Elo."
+  ranked-locked: "<prefix><muted>Ein Duell aus der gewerteten Warteschlange ist immer gewertet."
   unrated: "Ungewertet"
   rated: "Gewertet"
 
@@ -184,6 +186,9 @@ menu:
     waiting: "<muted>Aktuell: <accent>Ungewertet"
     agreed: "<success>Beide spielen gewertet."
     toggle: "<left>Wertung wechseln"
+    ranked-lore:
+      - "<muted>Ihr kommt aus der gewerteten Warteschlange."
+      - "<muted>Die ganze Begegnung zählt für eure Elo."
   combat:
     legacy: "<arrow><primary>Kampfsystem 1.8"
     legacy-lore:
@@ -202,11 +207,6 @@ menu:
   stats:
     title: "<arrow><duell>Duell <dark>· <muted>Stats"
     player: "<accent><player>"
-    player-unrated-lore:
-      - "<arrow><primary>Kills<dark>: <muted><kills>"
-      - "<arrow><primary>Siege<dark>: <muted><wins>"
-      - "<arrow><primary>Tode<dark>: <muted><deaths>"
-      - "<arrow><primary>K/D<dark>: <muted><kdr>"
     player-lore:
       - "<arrow><primary>Kills<dark>: <muted><kills>"
       - "<arrow><primary>Siege<dark>: <muted><wins>"

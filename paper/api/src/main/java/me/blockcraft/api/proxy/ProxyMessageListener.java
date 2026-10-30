@@ -4,6 +4,7 @@ import me.blockcraft.api.dialog.WelcomeDialog;
 import me.blockcraft.api.ignore.Ignores;
 import me.blockcraft.api.pack.ResourcePacks;
 import me.blockcraft.api.player.NewcomerEvent;
+import me.blockcraft.api.ranked.RankedMatchEvent;
 import me.blockcraft.api.settings.PlayerSettings;
 import me.blockcraft.api.spectate.SpectateRequestEvent;
 import me.blockcraft.api.task.Tasks;
@@ -54,6 +55,7 @@ public final class ProxyMessageListener implements PluginMessageListener {
                 }
                 case ProxyMessage.Newcomer newcomer ->
                         new NewcomerEvent(newcomer.player(), newcomer.name(), Duration.ofSeconds(newcomer.seconds())).callEvent();
+                case ProxyMessage.RankedMatch match -> new RankedMatchEvent(player, match.opponent()).callEvent();
                 // The lobby's FriendsChannel waits for these.
                 case ProxyMessage.FriendsReply _ -> {
                 }

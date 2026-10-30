@@ -56,9 +56,7 @@ public final class DuellPlugin extends JavaPlugin {
 
         var items = new GameItems(messages);
         var topList = new TopList(this, stats, messages);
-        var statsMenus = config.ratedEnabled()
-                ? StatsMenus.ranked(messages, stats, topList, gameConfig.globalStatsHead())
-                : StatsMenus.of(messages, stats, topList, gameConfig.globalStatsHead(), "menu.stats.player-unrated-lore");
+        var statsMenus = StatsMenus.ranked(messages, stats, topList, gameConfig.globalStatsHead());
         var rushConfig = RushConfig.from(getConfig().getConfigurationSection("mlgrush") == null
                 ? new org.bukkit.configuration.file.YamlConfiguration() : getConfig().getConfigurationSection("mlgrush"));
         var rushMaps = MapPool.load(getDataPath().resolve("rush/maps.yml"), rushConfig.arena());

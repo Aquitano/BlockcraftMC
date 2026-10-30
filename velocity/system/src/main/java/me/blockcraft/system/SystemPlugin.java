@@ -14,6 +14,7 @@ import me.blockcraft.common.calendar.ForcedOccasions;
 import me.blockcraft.common.chat.ChatFilter;
 import me.blockcraft.common.coins.CoinsRepository;
 import me.blockcraft.common.db.Database;
+import me.blockcraft.common.elo.EloRepository;
 import me.blockcraft.common.db.DatabaseException;
 import me.blockcraft.common.discord.DiscordLinkRepository;
 import me.blockcraft.common.ignore.IgnoreRepository;
@@ -55,6 +56,7 @@ import me.blockcraft.system.command.player.PartyChatCommand;
 import me.blockcraft.system.command.player.PartyCommand;
 import me.blockcraft.system.command.player.PingCommand;
 import me.blockcraft.system.command.player.PlayCommand;
+import me.blockcraft.system.command.player.RankedCommand;
 import me.blockcraft.system.command.player.RejoinCommand;
 import me.blockcraft.system.command.player.PlaytimeCommand;
 import me.blockcraft.system.command.player.PremiumCommand;
@@ -115,6 +117,7 @@ import me.blockcraft.system.network.WakerClient;
 import me.blockcraft.system.pack.NetworkPack;
 import me.blockcraft.system.party.PartyListener;
 import me.blockcraft.system.party.PartyManager;
+import me.blockcraft.system.ranked.RankedQueue;
 import me.blockcraft.system.support.SupportListener;
 import me.blockcraft.system.support.SupportSessions;
 import me.blockcraft.system.task.AutoBroadcast;
@@ -125,6 +128,7 @@ import me.blockcraft.system.welcome.OgTag;
 import org.slf4j.Logger;
 
 import java.nio.file.Path;
+import java.time.Clock;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
@@ -203,6 +207,8 @@ public final class SystemPlugin {
         }
         var lobby = new LobbyConnector(directory, parties, config, messages, onDemand);
         onDemand.ifPresent(sleeping -> sleeping.connect(lobby));
+        var ranked = new RankedQueue(proxy, directory, lobby, parties, onDemand,
+                new EloRepository(database, config.ranked().elo()), config.ranked().queue(), messages, logger, Clock.systemUTC());
         var punishments = new PunishmentService(proxy, repositories.punishments(), messages);
         var muteGate = new MuteGate(repositories.punishments(), punishments, messages, logger);
         var spectating = new SpectateRequests();
@@ -242,6 +248,7 @@ public final class SystemPlugin {
         events.register(this, new KickListener(lobby, messages));
         var rejoins = new Rejoins(proxy, directory, new RejoinRepository(database), messages, logger);
         events.register(this, rejoins);
+        events.register(this, ranked);
         events.register(this, new InitialServerListener(lobby, rejoins));
         events.register(this, new ProxyMessageListener(proxy, lobby, visibility, choices, afk, friends, tabHeader, logger, () -> pack));
         var addressHasher = AddressHasher.load(dataDirectory);
@@ -304,6 +311,7 @@ public final class SystemPlugin {
         register(new HubCommand(support, lobby).create(), "h", "lobby", "l");
         register(new PlayCommand(support, lobby).create());
         register(new RejoinCommand(support, rejoins).create());
+        register(new RankedCommand(support, ranked).create());
         var privateChat = new PrivateChatGate(proxy, muteGate, ChatFilter.load(dataDirectory, config.network().addresses()), repositories.adLog(), staffButtons,
                 config.privateChatCooldown(), messages, logger);
         events.register(this, privateChat);
@@ -349,6 +357,7 @@ public final class SystemPlugin {
         proxy.getScheduler().buildTask(this, tabHeader)
                 .repeat(config.tabRefreshSeconds(), TimeUnit.SECONDS)
                 .schedule();
+        proxy.getScheduler().buildTask(this, ranked::tick).repeat(1, TimeUnit.SECONDS).schedule();
         proxy.getScheduler().buildTask(this, friends::purgeExpiredRequests)
                 .repeat(config.friends().requestMinutes(), TimeUnit.MINUTES)
                 .schedule();

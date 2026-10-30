@@ -41,6 +41,7 @@ public final class ProxyMessageCodec {
     private static final int ANNOUNCEMENT = 16;
     private static final int REMATCH = 17;
     private static final int NEWCOMER = 18;
+    private static final int RANKED_MATCH = 19;
 
     private ProxyMessageCodec() {
     }
@@ -142,6 +143,10 @@ public final class ProxyMessageCodec {
                     out.writeUTF(newcomer.name());
                     out.writeInt(newcomer.seconds());
                 }
+                case ProxyMessage.RankedMatch match -> {
+                    out.writeByte(RANKED_MATCH);
+                    uuid(out, match.opponent());
+                }
             }
         });
         if (bytes.length > MAX_BYTES) {
@@ -195,6 +200,7 @@ public final class ProxyMessageCodec {
             case ANNOUNCEMENT -> new ProxyMessage.Announcement(in.readUTF());
             case REMATCH -> new ProxyMessage.Rematch(uuid(in));
             case NEWCOMER -> new ProxyMessage.Newcomer(uuid(in), in.readUTF(), in.readInt());
+            case RANKED_MATCH -> new ProxyMessage.RankedMatch(uuid(in));
             default -> throw new IOException("Unknown message type");
         };
     }

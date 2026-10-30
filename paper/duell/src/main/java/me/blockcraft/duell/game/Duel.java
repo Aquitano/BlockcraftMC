@@ -43,7 +43,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -78,6 +80,7 @@ public final class Duel {
     private DuelSeries series;
     private DuelGame current;
     private DuelRating activeRating = DuelRating.UNRATED;
+    private final Map<UUID, UUID> rankedOpponents = new HashMap<>();
     private CombatStyle activeCombat;
     private boolean gameActive;
     private boolean frozen;
@@ -137,12 +140,38 @@ public final class Duel {
     public DuelRating ratingChoice(UUID player) { return votes.ratingChoice(player); }
     public boolean ratedEnabled() { return config.ratedEnabled(); }
     public DuelRating selectedRating() {
-        return isLobby() ? votes.selectedRating(round.players().stream().map(Player::getUniqueId).toList(), ratedEnabled()) : activeRating;
+        if (!isLobby()) {
+            return activeRating;
+        }
+        return rankedPair() ? DuelRating.RATED
+                : votes.selectedRating(round.players().stream().map(Player::getUniqueId).toList(), ratedEnabled());
+    }
+
+    /** The two in the lobby were paired by the proxy's ranked queue, so their series is rated whatever they vote. */
+    public boolean rankedPair() {
+        var players = round.players().stream().map(Player::getUniqueId).toList();
+        return players.size() == MAX_PARTICIPANTS && players.getFirst().equals(rankedOpponents.get(players.getLast()))
+                && players.getLast().equals(rankedOpponents.get(players.getFirst()));
+    }
+
+    public void rankedMatch(Player player, UUID opponent) {
+        if (!isLobby() || !isParticipant(player)) {
+            return;
+        }
+        rankedOpponents.put(player.getUniqueId(), opponent);
+        if (rankedPair()) {
+            Bukkit.broadcast(messages.get("rating.ranked"));
+        }
+        refreshScoreboards();
     }
 
     public void chooseRating(Player player, DuelRating rating) {
         if (!isLobby() || !isParticipant(player) || rating == DuelRating.RATED && !ratedEnabled()) {
             VoteMenu.closed(player, messages);
+            return;
+        }
+        if (rankedPair()) {
+            player.sendMessage(messages.get("rating.ranked-locked"));
             return;
         }
         var previous = votes.ratingChoice(player.getUniqueId());
@@ -290,6 +319,7 @@ public final class Duel {
     public void quit(Player player) {
         boolean left = round.leave(player);
         votes.withdraw(player.getUniqueId());
+        rankedOpponents.remove(player.getUniqueId());
         if (left && isIngame() && series != null) {
             closeGame();
             participants().findFirst().ifPresent(winner -> rewardWinner(winner, player));
@@ -655,6 +685,7 @@ public final class Duel {
         }
         votes.clearForced();
         votes.clearRatings();
+        rankedOpponents.clear();
         series = null;
         rematch = null;
         mode = null;

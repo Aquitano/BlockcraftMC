@@ -96,4 +96,8 @@ public sealed interface ProxyMessage {
     /** Someone joined the network for the first time; greetings written on this server count for them for {@code seconds}. */
     record Newcomer(UUID player, String name, int seconds) implements ToBackend {
     }
+
+    /** The ranked queue paired the player with {@code opponent}, and both reached this server: their series is rated. */
+    record RankedMatch(UUID opponent) implements ToBackend {
+    }
 }

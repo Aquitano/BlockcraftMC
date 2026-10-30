@@ -42,6 +42,19 @@ on-demand:
   start-timeout-seconds: 120
   max-awake: 0
 
+# /ranked pairs two players of the group's game whose Elo differs by at most base-range, plus range-per-second for
+# every second both waited, up to max-range, and sends them to an empty server of the group, which plays their series
+# rated. A pair that has not met there after match-timeout-seconds is dropped. start-rating and k-factor must match
+# BlockcraftAPI's elo section.
+ranked:
+  group: duell
+  base-range: 100
+  range-per-second: 5
+  max-range: 400
+  match-timeout-seconds: 180
+  start-rating: 1000
+  k-factor: 32
+
 # /servers colours a server's TPS below tps-warn and its milliseconds per tick at or above mspt-warn, stronger past
 # the critical values.
 server-health:

@@ -1,6 +1,7 @@
 package me.blockcraft.duell.listener;
 
 import me.blockcraft.api.nick.NickChangeEvent;
+import me.blockcraft.api.ranked.RankedMatchEvent;
 import me.blockcraft.api.spectate.SpectateRequestEvent;
 import me.blockcraft.api.vanish.VanishChangeEvent;
 import me.blockcraft.duell.game.Duel;
@@ -40,6 +41,12 @@ public final class ConnectionListener implements Listener {
     @EventHandler
     public void onSpectateRequest(SpectateRequestEvent event) {
         duel.follow(event.getPlayer(), event.target());
+    }
+
+    /** The proxy's ranked queue paired this player, which it says once both arrived. */
+    @EventHandler
+    public void onRankedMatch(RankedMatchEvent event) {
+        duel.rankedMatch(event.getPlayer(), event.opponent());
     }
 
     /** The tab list and the sidebar show the group a nick wears, not the account's. */

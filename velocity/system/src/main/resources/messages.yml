@@ -607,6 +607,19 @@ hub:
   unavailable: "<prefix><error>Derzeit sind keine Lobby-Server verfügbar."
   already: "<prefix><error>Du bist bereits auf der Lobby."
   connecting: "<prefix><success>Du wirst zur <accent>Lobby <success>verbunden."
+# /ranked: the queue for rated Duell series against a player of similar Elo.
+ranked:
+  joined: "<prefix><muted>Du suchst einen gewerteten Gegner. Deine Elo: <accent><rating> <dark>(Saison <season>)<muted>. /ranked leave bricht ab."
+  already: "<prefix><muted>Du suchst bereits einen gewerteten Gegner."
+  left: "<prefix><muted>Du hast die gewertete Warteschlange verlassen."
+  not-queued: "<prefix><muted>Du bist nicht in der gewerteten Warteschlange."
+  lobby-only: "<prefix><error>In die gewertete Warteschlange kommst du nur aus der Lobby."
+  party: "<prefix><error>Gewertete Duelle spielst du allein. Verlasse zuerst deine Party."
+  failed: "<prefix><error>Deine Elo konnte gerade nicht geladen werden. Versuch es gleich noch einmal."
+  searching: "<duell>Gewertet <dark>· <muted>Suche <accent><time> <dark>· <muted>± <range> Elo"
+  found: "<prefix><muted>Gegner gefunden: <accent><opponent> <dark>(<white><rating> Elo<dark>)<muted>. Euer Duell zählt für die Elo."
+  cancelled: "<prefix><muted>Das gewertete Duell kam nicht zustande. Mit /ranked suchst du erneut."
+
 # A running round keeps the place of a player who dropped out for a while; /rejoin goes back.
 rejoin:
   offer: "<prefix><muted>Deine Runde läuft noch und hält deinen Platz frei."

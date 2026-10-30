@@ -351,6 +351,19 @@ The combat button between chance and rating picks 1.8 or modern combat. `pvp.leg
 other style applies only when both players choose it; the same pair keeps the choice for a rematch. It covers every
 mode of the series except MLG Rush, which always plays 1.8.
 
+### Ranked queue
+
+`/ranked` in a lobby queues a player for a rated series; `/ranked leave` or leaving the lobby ends the wait, and
+parties cannot queue. The proxy pairs two players whose Elo for the current season differs by at most
+`ranked.base-range`. Each second either player waits adds `ranked.range-per-second`, up to `ranked.max-range`. The
+pair goes to an empty server of `ranked.group`, which on-demand starts if the group sleeps. Once both stand on it, the
+proxy sends each a `RankedMatch` message. That server then plays their series rated, whatever `rating.enabled` and
+the rating vote say, and Elo settles as for any rated series. A pair that has not met after
+`ranked.match-timeout-seconds` is dropped. A rematch is unrated unless both vote for it. `ranked.start-rating` and
+`ranked.k-factor` in the proxy's config must match BlockcraftAPI's `elo` section. Seasons last three months (`Season`),
+so every January, April, July and October everyone starts again at the start rating, and `/elo` keeps the past
+seasons' tables.
+
 ## BedWars
 
 `paper/bedwars` is a port of [rewi-bw](https://github.com/Marfien/rewi-bw), the Rewinside BedWars clone, under its
