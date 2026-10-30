@@ -18,8 +18,9 @@ import org.bukkit.event.player.PlayerDropItemEvent;
 import java.util.Set;
 
 /**
- * Duell's rules beyond the shared lobby's: nobody gets hungry, only build mode builds, falls, fire and water do not
- * hurt, players hurt each other only while the duel is fought, only SG permits item drops, and nobody loses their inventory.
+ * Duell's rules beyond the shared lobby's: only SG fighters get hungry, only build mode builds, falls, fire and water
+ * hurt only SG and 1vs1 fighters, players hurt each other only while the duel is fought, only SG permits item drops,
+ * and nobody loses their inventory.
  */
 public final class ProtectionListener implements Listener {
 
@@ -40,7 +41,9 @@ public final class ProtectionListener implements Listener {
 
     @EventHandler
     public void onFoodLevelChange(FoodLevelChangeEvent event) {
-        event.setCancelled(true);
+        if (!(event.getEntity() instanceof Player player && fighting(player, DuelMode.SG))) {
+            event.setCancelled(true);
+        }
     }
 
     @EventHandler
@@ -59,7 +62,8 @@ public final class ProtectionListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onDamage(EntityDamageEvent event) {
-        if (event.getEntity() instanceof Player && BLOCKED_CAUSES.contains(event.getCause())) {
+        if (event.getEntity() instanceof Player player && BLOCKED_CAUSES.contains(event.getCause())
+                && !fighting(player, DuelMode.SG) && !fighting(player, DuelMode.VS)) {
             event.setCancelled(true);
         }
     }
@@ -76,6 +80,10 @@ public final class ProtectionListener implements Listener {
         if (!duel.pvp() || !duel.isMode(DuelMode.SG)) {
             event.setCancelled(true);
         }
+    }
+
+    private boolean fighting(Player player, DuelMode mode) {
+        return duel.pvp() && duel.isMode(mode) && duel.isParticipant(player);
     }
 
     @EventHandler
