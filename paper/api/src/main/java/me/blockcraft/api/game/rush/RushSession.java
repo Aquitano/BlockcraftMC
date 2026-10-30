@@ -47,7 +47,7 @@ public final class RushSession implements AutoCloseable {
             throw new IllegalArgumentException("A Rush session needs two distinct participants");
         }
         arena.reset();
-        rules = new RushRules(this, arena, config.kit());
+        rules = new RushRules(this, arena);
         Bukkit.getPluginManager().registerEvents(rules, plugin);
         players().forEach(this::respawn);
     }

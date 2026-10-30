@@ -19,7 +19,7 @@ public class RushRulesTest {
 
     @Test
     public void ordinaryBlocksAllowPlacementWhileBedsRemainUnusable() {
-        var rules = new RushRules(null, null, null, player -> true);
+        var rules = new RushRules(null, null, player -> true);
         var bridge = interaction(Material.RED_TERRACOTTA);
         rules.onInteract(bridge);
         assertEquals(Event.Result.ALLOW, bridge.useInteractedBlock());
@@ -37,7 +37,7 @@ public class RushRulesTest {
 
     @Test
     public void outsidersAndOtherArenasKeepTheirInteractionState() {
-        var rules = new RushRules(null, null, null, player -> false);
+        var rules = new RushRules(null, null, player -> false);
         var bed = interaction(Material.RED_BED);
         rules.onInteract(bed);
         assertEquals(Event.Result.ALLOW, bed.useInteractedBlock());

@@ -16,8 +16,5 @@ arena:
 kit:
   blocks: 64
   knockback-level: 1
-  horizontal-per-level: 0.9
-  vertical-knockback: 0.35
-  hit-delay-ticks: 8
 rewards:
   win: 10

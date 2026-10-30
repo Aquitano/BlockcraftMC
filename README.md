@@ -282,7 +282,7 @@ Empty pools, unknown or disabled selections, unsafe materials, and invalid geome
 
 `plugins/MLGRush/config.yml` controls the score target, countdowns, build margin/height, floor/void heights, kit,
 and rewards. A base radius is half its side length rounded down. Bridge widths must be 1, 3, or 5. Bounds are shared
-by all maps, and the stick's horizontal velocity is its level times `kit.horizontal-per-level`.
+by all maps. Hits knock back as in vanilla, with any item; `kit.knockback-level` is the stick's Knockback enchantment.
 
 Optional map keys control the new layouts. `base-width` is an odd width within the base's full diameter and defaults
 to that diameter. `center-gap` defaults to zero and removes a centered stretch of bridge. `segment-length` and

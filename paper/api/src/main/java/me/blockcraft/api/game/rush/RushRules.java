@@ -1,7 +1,5 @@
 package me.blockcraft.api.game.rush;
 
-import me.blockcraft.api.game.rush.RushConfig.Kit;
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.block.data.type.Bed;
 import org.bukkit.entity.Player;
@@ -29,27 +27,20 @@ import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-
 public final class RushRules implements Listener {
 
     private final RushSession game;
     private final java.util.function.Predicate<Player> scoped;
     private final RushArena arena;
-    private final Kit kit;
-    private final Map<UUID, Integer> lastHits = new HashMap<>();
 
-    public RushRules(RushSession game, RushArena arena, Kit kit) {
-        this(game, arena, kit, game::scoped);
+    public RushRules(RushSession game, RushArena arena) {
+        this(game, arena, game::scoped);
     }
 
-    RushRules(RushSession game, RushArena arena, Kit kit, java.util.function.Predicate<Player> scoped) {
+    RushRules(RushSession game, RushArena arena, java.util.function.Predicate<Player> scoped) {
         this.game = game;
         this.scoped = scoped;
         this.arena = arena;
-        this.kit = kit;
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -88,32 +79,18 @@ public final class RushRules implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onDamage(EntityDamageEvent event) {
-        if (!(event.getEntity() instanceof Player player) || !scoped.test(player)) {
+        if (!(event.getEntity() instanceof Player victim) || !scoped.test(victim)) {
+            return;
+        }
+        // A hit that deals nothing leaves vanilla's lastHurt at zero, so inside the invulnerability window every
+        // further click would pass its check and knock back again.
+        if (event instanceof EntityDamageByEntityEvent hit && hit.getCause() == EntityDamageEvent.DamageCause.ENTITY_ATTACK
+                && hit.getDamager() instanceof Player attacker && game.active(attacker) && game.active(victim)
+                && victim.getNoDamageTicks() <= victim.getMaximumNoDamageTicks() / 2) {
+            event.setDamage(0);
             return;
         }
         event.setCancelled(true);
-        if (!(event instanceof EntityDamageByEntityEvent hit) || !(hit.getEntity() instanceof Player victim)
-                || !(hit.getDamager() instanceof Player attacker) || attacker.equals(victim)
-                || !game.active(attacker) || !game.active(victim)
-                || hit.getCause() != EntityDamageEvent.DamageCause.ENTITY_ATTACK
-                || attacker.getInventory().getItemInMainHand().getType() != Material.STICK) {
-            return;
-        }
-        int tick = Bukkit.getCurrentTick();
-        var previous = lastHits.get(victim.getUniqueId());
-        if (previous != null && tick - previous < kit.hitDelayTicks()) {
-            return;
-        }
-        lastHits.put(victim.getUniqueId(), tick);
-        var direction = victim.getLocation().toVector().subtract(attacker.getLocation().toVector()).setY(0);
-        if (direction.lengthSquared() < 0.0001) {
-            direction = attacker.getLocation().getDirection().setY(0);
-        }
-        if (direction.lengthSquared() > 0) {
-            direction.normalize();
-        }
-        victim.setVelocity(direction.multiply(kit.horizontalPerLevel() * kit.knockbackLevel()).setY(kit.verticalKnockback()));
-        victim.playHurtAnimation(attacker.getYaw());
     }
 
     @EventHandler

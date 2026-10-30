@@ -24,13 +24,9 @@ public record RushConfig(int scoreTarget, ArenaSettings arena, Kit kit, int winC
         }
     }
 
-    public record Kit(int blocks, int knockbackLevel, double horizontalPerLevel,
-                      double verticalKnockback, int hitDelayTicks) {
+    public record Kit(int blocks, int knockbackLevel) {
         public Kit {
-            if (blocks < 1 || blocks > 64 || knockbackLevel < 1 || knockbackLevel > 5
-                    || !Double.isFinite(horizontalPerLevel) || horizontalPerLevel <= 0 || horizontalPerLevel > 2
-                    || !Double.isFinite(verticalKnockback) || verticalKnockback < 0 || verticalKnockback > 1
-                    || hitDelayTicks < 1 || hitDelayTicks > 20) {
+            if (blocks < 1 || blocks > 64 || knockbackLevel < 1 || knockbackLevel > 5) {
                 throw new IllegalArgumentException("Invalid MLG Rush kit settings");
             }
         }
@@ -51,9 +47,7 @@ public record RushConfig(int scoreTarget, ArenaSettings arena, Kit kit, int winC
                 new ArenaSettings(config.getInt("arena.build-margin", 4),
                         config.getInt("arena.build-height", 16), config.getInt("arena.floor-y", 64),
                         config.getInt("arena.void-y", 48)),
-                new Kit(config.getInt("kit.blocks", 64), config.getInt("kit.knockback-level", 1),
-                        config.getDouble("kit.horizontal-per-level", 0.9),
-                        config.getDouble("kit.vertical-knockback", 0.35), config.getInt("kit.hit-delay-ticks", 8)),
+                new Kit(config.getInt("kit.blocks", 64), config.getInt("kit.knockback-level", 1)),
                 config.getInt("rewards.win", 10));
     }
 }
