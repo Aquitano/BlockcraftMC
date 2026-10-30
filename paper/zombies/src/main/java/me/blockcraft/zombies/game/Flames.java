@@ -2,6 +2,7 @@ package me.blockcraft.zombies.game;
 
 import net.kyori.adventure.util.TriState;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 
@@ -10,8 +11,9 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Enemies set burning by a gun. Zombies cancels real fire, so this one is only drawn, and its damage goes through
- * {@link Enemies#hit} in the shooter's name, who earns the gold and the kill.
+ * Enemies set burning by a gun, and the fighters they hit. Zombies cancels real fire damage, so an enemy's fire is only
+ * drawn and hurts through {@link Enemies#hit} in the shooter's name, who earns the gold and the kill; a fighter's is
+ * vanilla fire ticks, which wear off and go out in water by themselves, and hurts through {@link ZombiesGame#burn}.
  */
 final class Flames {
 
@@ -32,9 +34,20 @@ final class Flames {
         mob.setVisualFire(TriState.TRUE);
     }
 
+    void struck(Entity damager, Player player) {
+        if (damager instanceof Mob mob && burning.containsKey(mob)) {
+            player.setFireTicks(Math.max(player.getFireTicks(), game.config().burnTicks()));
+        }
+    }
+
     void tick(int tick) {
         if (tick % INTERVAL != 0) {
             return;
+        }
+        for (var fighter : game.fighters()) {
+            if (fighter.getFireTicks() > 0) {
+                game.burn(fighter, game.config().burnDamage() * INTERVAL / 20);
+            }
         }
         burning.entrySet().removeIf(entry -> {
             var mob = entry.getKey();

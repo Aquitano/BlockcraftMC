@@ -27,6 +27,7 @@ public final class AbilityListener implements Listener {
     public void onStrike(EntityDamageByEntityEvent event) {
         if (event.getEntity() instanceof Player player && game.fighting(player)) {
             game.enemies().abilities().struck(event.getDamager(), player);
+            game.weapons().struck(event.getDamager(), player);
         }
     }
 }

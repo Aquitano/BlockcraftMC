@@ -14,6 +14,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
@@ -211,6 +212,10 @@ public final class Weapons {
 
     public void burn(int tick) {
         flames.tick(tick);
+    }
+
+    public void struck(Entity damager, Player player) {
+        flames.struck(damager, player);
     }
 
     public void tick(Player player, int tick) {

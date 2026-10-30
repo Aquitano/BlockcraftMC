@@ -5,7 +5,6 @@ import me.blockcraft.api.menu.Menu;
 import me.blockcraft.zombies.arena.ArenaMap;
 import me.blockcraft.zombies.arena.StationKind;
 import me.blockcraft.zombies.game.Perk;
-import me.blockcraft.zombies.game.Weapon;
 import me.blockcraft.zombies.game.ZombiesGame;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
@@ -37,10 +36,7 @@ public final class StationMenu extends Menu {
         switch (station.kind()) {
             case ARMORY -> {
                 int slot = 10;
-                for (var weapon : Weapon.values()) {
-                    if (weapon == Weapon.PISTOL) {
-                        continue;
-                    }
+                for (var weapon : config.forSale()) {
                     add(slot, new Offer(game.messages().get("weapon." + weapon.key()), weapon.model().fallback(), config.guns().get(weapon).price(),
                             () -> !survivor.weapons().containsKey(weapon), () -> game.weapons().give(player, weapon)),
                             game.messages().get("shop.weapon-stats", Formatter.number("damage", config.guns().get(weapon).damage() * config.guns().get(weapon).pellets()),

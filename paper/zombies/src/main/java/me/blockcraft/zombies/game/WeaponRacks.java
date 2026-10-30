@@ -26,16 +26,17 @@ final class WeaponRacks {
 
     private final ArenaMap arena;
     private final ZombiesConfig.Armory config;
+    private final List<Weapon> guns;
     private final List<Shown> shown = new ArrayList<>();
 
-    WeaponRacks(ArenaMap arena, ZombiesConfig.Armory config) {
+    WeaponRacks(ArenaMap arena, ZombiesConfig.Armory config, List<Weapon> guns) {
         this.arena = arena;
         this.config = config;
+        this.guns = guns;
     }
 
     void show(int tick) {
         clear();
-        var guns = Weapon.buyable();
         for (var station : arena.stations()) {
             if (station.kind() != StationKind.ARMORY) {
                 continue;

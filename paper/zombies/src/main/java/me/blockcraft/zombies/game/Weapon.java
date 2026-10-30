@@ -29,7 +29,7 @@ public enum Weapon implements HotbarItem {
         return model;
     }
 
-    /** What the armory sells and the mystery box gives; everyone starts with the pistol. */
+    /** What the mystery box gives; everyone starts with the pistol. */
     public static List<Weapon> buyable() {
         return Arrays.stream(values()).filter(weapon -> weapon != PISTOL).toList();
     }

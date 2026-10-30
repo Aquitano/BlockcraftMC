@@ -7,7 +7,9 @@ import me.blockcraft.zombies.game.WavePlan;
 import me.blockcraft.zombies.game.Weapon;
 import org.bukkit.configuration.ConfigurationSection;
 
+import java.util.Arrays;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 
 public record ZombiesConfig(int maxPlayers, int startingGold, int intermissionSeconds, int waveSeconds,
@@ -17,6 +19,7 @@ public record ZombiesConfig(int maxPlayers, int startingGold, int intermissionSe
                             int ammoPrice, int armorPrice, int upgradePrice, int mysteryPrice,
                             int powerPrice, int teamRevivePrice, double dropChance, int powerupTicks, int powerupsPerWave,
                             int noteCoins, int healthRegenTicks, double extraHealth, double headshotMultiplier, double knifeDamage, int damageImmunityTicks,
+                            double burnDamage, int burnTicks,
                             Waves waves, Map<Weapon, Gun> guns, Map<Perk, Integer> perks, Map<EnemyKind, Enemy> enemies, Exploder exploder,
                             Events events, Abilities abilities, Mystery mystery, Armory armory) {
 
@@ -31,7 +34,7 @@ public record ZombiesConfig(int maxPlayers, int startingGold, int intermissionSe
     /** From wave {@code first}, every {@code every}th wave that is no boss wave sends only hellhounds, {@code share} as many. */
     public record Hounds(int first, int every, double share) { }
 
-    /** {@code burnDamage} per second for {@code burnTicks} after a hit; 0 for a gun that does not set fire. */
+    /** {@code burnDamage} per second for {@code burnTicks} after a hit; 0 for a gun that does not set fire. No price keeps it out of the armory. */
     public record Gun(int price, double damage, double range, int pellets, double spread,
                       int clip, int reserve, int cooldownTicks, int reloadTicks, double upgradeMultiplier,
                       double burnDamage, int burnTicks) { }
@@ -51,6 +54,11 @@ public record ZombiesConfig(int maxPlayers, int startingGold, int intermissionSe
             double progress = finalWave <= firstWave ? 1 : Math.min(1, (wave - firstWave) / (double) (finalWave - firstWave));
             return weight + (lateWeight - weight) * progress;
         }
+    }
+
+    /** The guns the armory sells: those with a price. */
+    public List<Weapon> forSale() {
+        return Arrays.stream(Weapon.values()).filter(weapon -> guns.get(weapon).price() > 0).toList();
     }
 
     /** Each kind's weight in a mixed wave; the boss comes only on boss waves. */
@@ -199,6 +207,7 @@ public record ZombiesConfig(int maxPlayers, int startingGold, int intermissionSe
                 Math.max(0, yaml.getInt("rewards.note")), positive(yaml, "regeneration.delay-seconds") * 20, Math.max(0, yaml.getDouble("perks.extra-health-bonus")),
                 Math.max(1, yaml.getDouble("combat.headshot-multiplier")), Math.max(1, yaml.getDouble("combat.knife-damage")),
                 positive(yaml, "combat.damage-immunity-ticks"),
+                Math.max(0, yaml.getDouble("combat.burn-damage")), Math.max(0, yaml.getInt("combat.burn-seconds")) * 20,
                 waves, Map.copyOf(guns), Map.copyOf(perks), Map.copyOf(enemies),
                 new Exploder(Math.clamp(yaml.getDouble("exploder.trigger-range"), 1, 8), positive(yaml, "exploder.fuse-ticks"),
                         Math.clamp(yaml.getDouble("exploder.rush-speed"), 0.05, 0.6), Math.clamp(yaml.getDouble("exploder.radius"), 1, 8),

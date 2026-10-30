@@ -122,7 +122,7 @@ public final class ZombiesGame {
         this.notes = new Notes(messages, arena, config.noteCoins());
         this.events = new WaveEvents(this, effects, config.events());
         this.mysteryBox = new MysteryBox(this);
-        this.racks = new WeaponRacks(arena, config.armory());
+        this.racks = new WeaponRacks(arena, config.armory(), config.forSale());
         this.task = Bukkit.getScheduler().runTaskTimer(plugin, this::tick, 1, 1);
         arena.labels(messages);
     }
@@ -320,11 +320,26 @@ public final class ZombiesGame {
     }
 
     public void hurt(Player player, double damage) {
-        if (!fighting(player) || tick < protectedUntil.getOrDefault(player.getUniqueId(), 0) || damage <= 0
+        if (!vulnerable(player, damage)
                 || tick - lastHurt.getOrDefault(player.getUniqueId(), -config.damageImmunityTicks()) < config.damageImmunityTicks()) {
             return;
         }
         lastHurt.put(player.getUniqueId(), tick);
+        wound(player, damage);
+    }
+
+    /** Damage from burning, which unlike {@link #hurt} leaves the fighter open to the next hit. */
+    public void burn(Player player, double damage) {
+        if (vulnerable(player, damage)) {
+            wound(player, damage);
+        }
+    }
+
+    private boolean vulnerable(Player player, double damage) {
+        return fighting(player) && tick >= protectedUntil.getOrDefault(player.getUniqueId(), 0) && damage > 0;
+    }
+
+    private void wound(Player player, double damage) {
         player.playHurtAnimation(0);
         if (player.getHealth() > damage) {
             player.setHealth(player.getHealth() - damage);
