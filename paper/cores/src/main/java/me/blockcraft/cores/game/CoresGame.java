@@ -145,10 +145,14 @@ public final class CoresGame {
         return round.isPlaying(player);
     }
 
-    /** Freshly respawned players cannot be hurt by other players for a few seconds. */
+    /** Freshly respawned players cannot be hurt by other players for a few seconds, or until they hit someone. */
     public boolean isSpawnProtected(Player player) {
         var until = protectedUntil.get(player.getUniqueId());
         return until != null && System.nanoTime() - until < 0;
+    }
+
+    public void endSpawnProtection(Player player) {
+        protectedUntil.remove(player.getUniqueId());
     }
 
     public void join(Player player) {

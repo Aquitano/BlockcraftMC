@@ -388,7 +388,7 @@ within `cores.fatigue-radius` mines with Mining Fatigue, which makes a beacon ta
 team to break both enemy cores wins; after `countdown.round` seconds (45 minutes) the round is a draw.
 
 Respawns are unlimited, with the `kit` and leather armour in the team's colour, and players cannot be hurt by other
-players for `respawn.protection-seconds`. There is no shop: each base holds iron blocks to mine, workbenches, an
+players for `respawn.protection-seconds` or until they hit someone. There is no shop: each base holds iron blocks to mine, workbenches, an
 enchanting table with shelves (lapis is provided), four anvils and a chest of experience bottles; the middle holds
 diamond blocks and the four side islands loot chests and gold. Base blocks other than the iron do not break; the
 rest of the map, and everything players place, does. A bow kill pays `bow-kill-arrows` arrows. Combat is 1.8-style.

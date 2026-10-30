@@ -6,7 +6,9 @@ import me.blockcraft.rush.game.GamePhase;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
@@ -19,8 +21,8 @@ import org.bukkit.potion.PotionEffectType;
 
 /**
  * EmeraldRush's rules beyond the shared lobby's: nobody is hurt or drops anything outside the deathmatch, and falling
- * into the void returns to the phase's spawn; the inventory stays locked while searching; nobody gets hungry; the
- * water in the lobby lets players jump high.
+ * into the void returns to the phase's spawn; a respawned player's immunity ends with their first hit; the inventory
+ * stays locked while searching; nobody gets hungry; the water in the lobby lets players jump high.
  */
 public final class ProtectionListener implements Listener {
 
@@ -40,6 +42,14 @@ public final class ProtectionListener implements Listener {
                 game.returnToPhaseSpawn(player);
             }
             return;
+        }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onHit(EntityDamageByEntityEvent event) {
+        if (event.getEntity() instanceof Player victim && event.getDamageSource().getCausingEntity() instanceof Player attacker
+                && !attacker.equals(victim)) {
+            game.endRespawnProtection(attacker);
         }
     }
 

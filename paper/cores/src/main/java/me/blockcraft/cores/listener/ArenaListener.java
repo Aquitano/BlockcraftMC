@@ -131,6 +131,14 @@ public final class ArenaListener implements Listener {
         }
     }
 
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
+    public void onLandedHit(EntityDamageByEntityEvent event) {
+        if (event.getEntity() instanceof Player victim && event.getDamageSource().getCausingEntity() instanceof Player attacker
+                && !attacker.equals(victim)) {
+            game.endSpawnProtection(attacker);
+        }
+    }
+
     @EventHandler(ignoreCancelled = true)
     public void onEnchantingOpen(InventoryOpenEvent event) {
         if (event.getInventory() instanceof EnchantingInventory table) {

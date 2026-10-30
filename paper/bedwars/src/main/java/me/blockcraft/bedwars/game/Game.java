@@ -119,6 +119,7 @@ public final class Game {
     private final Set<Block> placed = new HashSet<>();
     /** Who started the round for which team; a win counts for all of them, also those out before the end. */
     private final Map<UUID, Team> roster = new HashMap<>();
+    private final Set<UUID> hiddenAfterRespawn = new HashSet<>();
     private Match match;
     private Optional<Team> winner = Optional.empty();
     private int secondsLeft;
@@ -631,19 +632,23 @@ public final class Game {
     }
 
     private void hideBriefly(Player player) {
+        hiddenAfterRespawn.add(player.getUniqueId());
         Bukkit.getOnlinePlayers().forEach(other -> {
             if (!other.equals(player)) {
                 other.hidePlayer(plugin, player);
             }
         });
-        Tasks.later(plugin, HIDDEN_AFTER_RESPAWN_TICKS, () -> {
-            if (!player.isOnline()) {
-                return;
-            }
-            boolean watching = round.isSpectator(player);
-            Bukkit.getOnlinePlayers().stream().filter(other -> !watching || round.isSpectator(other))
-                    .forEach(other -> other.showPlayer(plugin, player));
-        });
+        Tasks.later(plugin, HIDDEN_AFTER_RESPAWN_TICKS, () -> reveal(player));
+    }
+
+    /** A player hidden after respawning shows up when the moment passes, or at once when they hit someone. */
+    public void reveal(Player player) {
+        if (!hiddenAfterRespawn.remove(player.getUniqueId()) || !player.isOnline()) {
+            return;
+        }
+        boolean watching = round.isSpectator(player);
+        Bukkit.getOnlinePlayers().stream().filter(other -> !watching || round.isSpectator(other))
+                .forEach(other -> other.showPlayer(plugin, player));
     }
 
     /** After the round everyone meets in the lobby again, seen by all, with nothing but the way out. */

@@ -57,6 +57,7 @@ public final class Game {
 
     private static final int SECONDS_PER_MINUTE = 60;
     private static final long RESPAWN_DELAY_TICKS = 1L;
+    private static final int RESPAWN_BOOST_TICKS = 120;
 
     private final Plugin plugin;
     private final RushConfig config;
@@ -74,6 +75,7 @@ public final class Game {
     private final Map<UUID, Integer> emeralds = new HashMap<>();
     private final Map<UUID, Integer> lives = new HashMap<>();
     private final Map<UUID, Loadout> loadouts = new HashMap<>();
+    private final Map<UUID, Integer> protectedUntil = new HashMap<>();
     private final Set<UUID> spentEmeralds = new HashSet<>();
     private final Set<UUID> purchased = new HashSet<>();
 
@@ -365,15 +367,25 @@ public final class Game {
         }
         Tasks.sync(plugin, () -> {
             config.combat().apply(player);
-            player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 120, 1));
-            player.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 120, 5));
-            player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 120, 5));
+            player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, RESPAWN_BOOST_TICKS, 1));
+            player.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, RESPAWN_BOOST_TICKS, 5));
+            player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, RESPAWN_BOOST_TICKS, 5));
+            protectedUntil.put(player.getUniqueId(), Bukkit.getCurrentTick() + RESPAWN_BOOST_TICKS);
             var loadout = loadouts.get(player.getUniqueId());
             if (loadout != null) {
                 player.getInventory().setContents(loadout.contents());
                 player.getInventory().setArmorContents(loadout.armor());
             }
         });
+    }
+
+    /** The immunity after a respawn ends with the player's first hit on someone else; the speed stays. */
+    public void endRespawnProtection(Player player) {
+        var until = protectedUntil.remove(player.getUniqueId());
+        if (until != null && Bukkit.getCurrentTick() < until) {
+            player.removePotionEffect(PotionEffectType.RESISTANCE);
+            player.removePotionEffect(PotionEffectType.REGENERATION);
+        }
     }
 
     public void saveLoadout(Player player) {
