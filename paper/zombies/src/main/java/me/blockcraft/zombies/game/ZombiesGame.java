@@ -110,6 +110,7 @@ public final class ZombiesGame {
         this.arena = arena;
         this.summary = new RoundSummary(plugin, messages, new RoundSummary.Rewards(config.killCoins(), config.winCoins()), stats);
         this.round = new Round(plugin, new Arena(messages, Sounds.JOIN), summary, config.maxPlayers(), gameConfig);
+        round.playArea(arena.world(), arena.bounds());
         this.lobbyCountdown = new LobbyCountdown(plugin, round, gameConfig, 1, remaining -> { }, this::begin);
         this.lobbyHotbar = new LobbyHotbar(plugin,
                 List.of(new LobbyHotbar.Choice(MenuIcon.ZOMBIES, messages.get("guide.item"), player -> new GuideDialog(messages).show(player))),

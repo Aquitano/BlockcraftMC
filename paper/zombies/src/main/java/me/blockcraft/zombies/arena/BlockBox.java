@@ -3,6 +3,7 @@ package me.blockcraft.zombies.arena;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.util.BoundingBox;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,6 +29,10 @@ public record BlockBox(int minX, int minY, int minZ, int maxX, int maxY, int max
     public boolean contains(BlockBox other) {
         return other.minX >= minX && other.maxX <= maxX && other.minY >= minY && other.maxY <= maxY
                 && other.minZ >= minZ && other.maxZ <= maxZ;
+    }
+
+    public BoundingBox bounds() {
+        return new BoundingBox(minX, minY, minZ, maxX + 1, maxY + 1, maxZ + 1);
     }
 
     public List<Block> blocks(World world) {

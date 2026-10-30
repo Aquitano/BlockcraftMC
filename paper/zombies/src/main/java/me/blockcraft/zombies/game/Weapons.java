@@ -1,12 +1,14 @@
 package me.blockcraft.zombies.game;
 
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.game.ShotEvent;
 import me.blockcraft.api.item.HotbarItem;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.zombies.config.ZombiesConfig;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import org.bukkit.Bukkit;
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -113,6 +115,7 @@ public final class Weapons {
             }
             return;
         }
+        Bukkit.getPluginManager().callEvent(new ShotEvent(player));
         var eye = player.getEyeLocation();
         eye.getWorld().playSound(eye, weapon == Weapon.FLAMETHROWER ? Sound.ITEM_FIRECHARGE_USE : Sound.ENTITY_FIREWORK_ROCKET_BLAST,
                 0.35f, weapon == Weapon.SNIPER ? 0.7f : 1.7f);

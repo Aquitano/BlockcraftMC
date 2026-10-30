@@ -260,7 +260,7 @@ public final class Enemies {
         }
         var block = remaining.getFirst();
         block.getWorld().spawnParticle(Particle.BLOCK, block.getLocation().add(0.5, 0.5, 0.5), 8, 0.3, 0.3, 0.3, block.getBlockData());
-        block.setType(Material.AIR, false);
+        ArenaMap.change(block, Material.AIR.createBlockData());
         block.getWorld().playSound(block.getLocation(), Sound.BLOCK_WOOD_BREAK, 0.6f, 0.8f);
         breaking.put(enemy.window.id(), tick + game.config().breakTicks());
     }

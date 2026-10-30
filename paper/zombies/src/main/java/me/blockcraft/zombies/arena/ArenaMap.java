@@ -1,17 +1,21 @@
 package me.blockcraft.zombies.arena;
 
+import me.blockcraft.api.world.BlocksChangedEvent;
 import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.type.CopperBulb;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.TextDisplay;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.util.BoundingBox;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -141,6 +145,17 @@ public final class ArenaMap {
         return windows.stream().filter(window -> unlocked(window.room())).toList();
     }
 
+    /** The rooms and everywhere enemies come from. */
+    public BoundingBox bounds() {
+        var bounds = rooms.get("yard").bounds().bounds();
+        rooms.values().forEach(room -> bounds.union(room.bounds().bounds()));
+        windows.forEach(window -> {
+            bounds.union(window.spawn());
+            window.bay().ifPresent(bay -> bounds.union(bay.bounds()));
+        });
+        return bounds;
+    }
+
     public void keepLoaded(Plugin plugin) {
         chunkOwner = plugin;
         for (var room : rooms.values()) {
@@ -234,17 +249,23 @@ public final class ArenaMap {
                 .mapToObj(y -> door.blocks(world).stream().filter(block -> block.getY() == y).toList()).toList();
     }
 
+    /** Changes a block without physics and reports it, because Bukkit fires no event for a block a plugin sets. */
+    public static void change(Block block, BlockData data) {
+        block.setBlockData(data, false);
+        Bukkit.getPluginManager().callEvent(new BlocksChangedEvent(List.of(block)));
+    }
+
     public static void lit(Block block, boolean lit) {
         if (block.getBlockData() instanceof CopperBulb bulb) {
             bulb.setLit(lit);
             bulb.setPowered(false);
-            block.setBlockData(bulb, false);
+            change(block, bulb);
         }
     }
 
     public Optional<Block> repair(Window window) {
         return window.boards().blocks(world).stream().filter(block -> block.getType().isAir()).findFirst().map(block -> {
-            block.setBlockData(windowData, false);
+            change(block, windowData);
             return block;
         });
     }
