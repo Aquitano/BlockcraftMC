@@ -243,6 +243,13 @@ final class SharedSchema {
                 + "group_name VARCHAR(64) NOT NULL PRIMARY KEY, "
                 + "state VARCHAR(16) NOT NULL, "
                 + "since TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)"
+        )),
+        new Migration(21, List.of(
+            "CREATE TABLE IF NOT EXISTS bc_rejoins ("
+                + "player_uuid CHAR(36) NOT NULL PRIMARY KEY, "
+                + "server_name VARCHAR(64) NOT NULL, "
+                + "until_at TIMESTAMP NOT NULL, "
+                + "INDEX idx_bc_rejoins_server (server_name))"
         ))
     );
 

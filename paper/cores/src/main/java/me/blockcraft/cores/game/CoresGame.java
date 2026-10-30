@@ -156,7 +156,9 @@ public final class CoresGame {
     }
 
     public void join(Player player) {
-        if (round.join(player)) {
+        if (round.rejoin(player)) {
+            rejoined(player);
+        } else if (round.join(player)) {
             PlayerReset.reset(player, GameMode.ADVENTURE);
             player.teleport(map.lobbySpawn());
             hotbar.give(player);
@@ -175,7 +177,42 @@ public final class CoresGame {
         round.follow(spectator, friend);
     }
 
+    /** Back within the time the round kept their place: at the side's spawn with the kit, as after a death. */
+    private void rejoined(Player player) {
+        if (player.isDead()) {
+            round.respawn(player, 1L);
+            return;
+        }
+        teams.of(player.getUniqueId()).ifPresent(side -> {
+            player.teleport(map.spawn(side));
+            player.setGameMode(GameMode.SURVIVAL);
+            config.combat().apply(player);
+            dress(player, side);
+            kit.give(player, side);
+            protectedUntil.put(player.getUniqueId(), System.nanoTime() + Duration.ofSeconds(config.protectionSeconds()).toNanos());
+        });
+    }
+
+    /** A player who drops out of the running round keeps their place for a while. */
     public void quit(Player player) {
+        if (round.stepOut(player, this::forfeited)) {
+            protectedUntil.remove(player.getUniqueId());
+            refreshAll();
+            return;
+        }
+        leave(player);
+    }
+
+    private void forfeited(UUID player) {
+        roster.remove(player);
+        var side = teams.leave(player);
+        if (side.isPresent() && teams.members(side.get()).isEmpty()) {
+            endRound(Optional.of(side.get().enemy()));
+        }
+        refreshAll();
+    }
+
+    private void leave(Player player) {
         boolean wasPlaying = round.leave(player);
         teams.leave(player.getUniqueId());
         BlockcraftApi.get().tabTeams().clearColor(player);
@@ -194,7 +231,7 @@ public final class CoresGame {
 
     public void vanished(Player player) {
         if (phase() == GamePhase.INGAME && round.isPlaying(player)) {
-            quit(player);
+            leave(player);
             round.watch(player);
         } else if (phase() == GamePhase.LOBBY) {
             teams.leave(player.getUniqueId());

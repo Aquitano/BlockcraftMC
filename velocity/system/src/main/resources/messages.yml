@@ -607,6 +607,14 @@ hub:
   unavailable: "<prefix><error>Derzeit sind keine Lobby-Server verfügbar."
   already: "<prefix><error>Du bist bereits auf der Lobby."
   connecting: "<prefix><success>Du wirst zur <accent>Lobby <success>verbunden."
+# A running round keeps the place of a player who dropped out for a while; /rejoin goes back.
+rejoin:
+  offer: "<prefix><muted>Deine Runde läuft noch und hält deinen Platz frei."
+  button: "<success>[Zurück in die Runde]"
+  button-hover: "<muted>Klicke, um in deine laufende Runde zurückzukehren."
+  returning: "<prefix><muted>Du kehrst in deine Runde zurück…"
+  none: "<prefix><muted>Keine laufende Runde hält gerade einen Platz für dich frei."
+
 play:
   usage: "<prefix><error>Benutze /play \\<Spiel>"
   unavailable: "<prefix><muted>Für <game> <muted>ist gerade keine Runde frei. Versuch es gleich noch einmal."

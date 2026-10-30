@@ -505,6 +505,16 @@ Every heartbeat also carries the server's one-minute TPS and its average millise
 `alerts.lag-mspt` for `alerts.lag-polls` polls in a row is posted as `alerts.lag`, and `alerts.lag-over` follows once
 it drops back, under the same once-per-interval limit kept apart from the lobby alert's.
 
+### Rejoining a running round
+
+BedWars and Cores keep the place of a player who drops out of a running round for `rejoin-seconds` (180; 0 turns it
+off). In BedWars the place is kept only while the team's bed stands, and breaking the bed ends the wait. The player
+stays on their team, the team is not out, and the server writes the place to `bc_rejoins`. When the player connects
+again, the proxy starts them on that server instead of the lobby. A player who reaches a lobby gets a button for
+`/rejoin` instead. Back in the round, they continue at the team's spawn as after a death, with their inventory. If
+they do not return in time, the quit counts as a death and a loss, and their team can be out. The database's clock
+decides when a place runs out. A server releases its places at the end of the round and when it starts.
+
 ## Network XP and levels
 
 Every kill and win in a game awards XP through BlockcraftAPI (`xp.rewards` in its `config.yml`), stored in `bc_xp`

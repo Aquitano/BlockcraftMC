@@ -10,6 +10,7 @@ import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Countdown;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.api.vanish.VanishChangeEvent;
+import me.blockcraft.common.network.RejoinRepository;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -39,7 +40,8 @@ import java.util.function.IntConsumer;
  * the lobby is open and has room, they play, unless they are vanished; everyone else watches, and a vanished
  * spectator is neither announced nor counted. A player who vanishes while the lobby waits moves to the spectators
  * the same way. It tells the proxy the phase, owns the countdowns and boss bars that
- * end with the round, counts a mid-round quit as a death and a loss, and ends the round once. While the round runs,
+ * end with the round, counts a mid-round quit as a death and a loss unless the game keeps the quitter's place for a
+ * while ({@link #stepOut}), and ends the round once. While the round runs,
  * what a spectator writes reaches only the other spectators, so nobody can tell the players where their enemies are.
  * Spectators fly unseen in adventure mode with a hotbar to pick a player, step to the previous or next one and leave,
  * and {@link SpectatorGuard} keeps them off the round.
@@ -47,6 +49,7 @@ import java.util.function.IntConsumer;
 public final class Round implements Listener {
 
     private static final Set<Integer> END_ANNOUNCEMENTS = Set.of(600, 300, 180, 60);
+    private static final long TICKS_PER_SECOND = 20L;
     private static final int SECONDS_PER_MINUTE = 60;
     private static final Set<UUID> WATCHING = ConcurrentHashMap.newKeySet();
 
@@ -62,6 +65,8 @@ public final class Round implements Listener {
     private final List<Countdown> timers = new ArrayList<>();
     private final List<TimerBar> bars = new ArrayList<>();
     private final Map<UUID, UUID> watched = new HashMap<>();
+    private final Map<UUID, Away> away = new HashMap<>();
+    private final RejoinRepository rejoins;
     private volatile GamePhase phase = GamePhase.LOBBY;
 
     public Round(Plugin plugin, Arena arena, RoundSummary summary, int capacity, GameConfig config) {
@@ -71,8 +76,13 @@ public final class Round implements Listener {
         this.summary = summary;
         this.capacity = capacity;
         this.config = config;
+        this.rejoins = new RejoinRepository(api.database());
         Bukkit.getPluginManager().registerEvents(this, plugin);
         Bukkit.getPluginManager().registerEvents(new SpectatorGuard(this::isSpectator), plugin);
+        releaseRejoins();
+    }
+
+    private record Away(String name, Consumer<UUID> onForfeit) {
     }
 
     /** Whether the player watches a round on this server, which their game mode no longer tells. */
@@ -159,6 +169,79 @@ public final class Round implements Listener {
         }
         arena.farewell(player, players.size(), capacity);
         return true;
+    }
+
+    /**
+     * Keeps a running round's place for {@code rejoin-seconds} when a player drops out: the proxy sends them back
+     * here when they reconnect or ask, and {@link #rejoin} seats them again. Staying away runs {@code onForfeit}, and
+     * the quit then counts as a death and a loss. False, and nothing kept, when the game or its config keeps no place.
+     */
+    public boolean stepOut(Player player, Consumer<UUID> onForfeit) {
+        var id = player.getUniqueId();
+        int seconds = config.rejoinSeconds();
+        if (phase != GamePhase.INGAME || seconds <= 0 || !players.contains(id)) {
+            return false;
+        }
+        spectators.remove(id);
+        watched.remove(id);
+        WATCHING.remove(id);
+        var kept = new Away(player.getName(), onForfeit);
+        away.put(id, kept);
+        var server = api.server().name();
+        Tasks.async(plugin, () -> rejoins.hold(id, server, seconds));
+        Tasks.later(plugin, seconds * TICKS_PER_SECOND, () -> {
+            if (away.get(id) == kept) {
+                forfeit(id);
+            }
+        });
+        arena.steppedOut(player, seconds);
+        return true;
+    }
+
+    /** Seats a player who stepped out of this round again; false if no place was kept for them here. */
+    public boolean rejoin(Player player) {
+        var id = player.getUniqueId();
+        if (phase != GamePhase.INGAME || away.remove(id) == null) {
+            return false;
+        }
+        release(id);
+        for (var other : Bukkit.getOnlinePlayers()) {
+            if (!other.equals(player)) {
+                other.showPlayer(plugin, player);
+                if (isSpectator(other)) {
+                    player.hidePlayer(plugin, other);
+                }
+            }
+        }
+        arena.back(player);
+        return true;
+    }
+
+    /** The place kept for a player who stepped out is lost, as when their time runs out. */
+    public void forfeit(UUID id) {
+        var kept = away.remove(id);
+        if (kept == null) {
+            return;
+        }
+        release(id);
+        players.remove(id);
+        summary.forfeit(id);
+        arena.gaveUp(kept.name());
+        kept.onForfeit().accept(id);
+    }
+
+    public boolean isAway(UUID id) {
+        return away.containsKey(id);
+    }
+
+    private void release(UUID id) {
+        var server = api.server().name();
+        Tasks.async(plugin, () -> rejoins.release(id, server));
+    }
+
+    private void releaseRejoins() {
+        var server = api.server().name();
+        Tasks.async(plugin, () -> rejoins.releaseAll(server));
     }
 
     @EventHandler
@@ -431,6 +514,10 @@ public final class Round implements Listener {
         bars.forEach(TimerBar::hide);
         timers.clear();
         bars.clear();
+        if (!away.isEmpty()) {
+            away.clear();
+            releaseRejoins();
+        }
     }
 
     private static List<Player> online(Set<UUID> ids) {

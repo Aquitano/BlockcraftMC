@@ -24,6 +24,8 @@ voting:
 idle-restart-minutes: 50
 timer-bar: true
 global-stats-head: Kevos
+# How long a running round keeps the place of a player who dropped out while their bed stands; 0 turns it off.
+rejoin-seconds: 180
 
 # What a kill and a win pay in coins.
 rewards:

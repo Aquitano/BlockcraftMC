@@ -68,23 +68,40 @@ public final class Teams {
         if (team.isFull()) {
             return Joined.FULL;
         }
-        of(player).ifPresent(old -> old.remove(player));
+        of(player).ifPresent(old -> old.remove(player.getUniqueId()));
         team.add(player);
         byPlayer.put(player.getUniqueId(), team);
+        wear(player, team);
+        return Joined.JOINED;
+    }
+
+    /** A member who came back wears their team's colour again. */
+    public void restore(Player player) {
+        of(player).ifPresent(team -> wear(player, team));
+    }
+
+    private void wear(Player player, Team team) {
         tabTeams.color(player, team.color().text());
         player.displayName(Component.text(player.getName(), team.color().text()));
-        return Joined.JOINED;
     }
 
     /** Takes the player out of their team; the team that is left empty is returned. */
     public Optional<Team> leave(Player player) {
-        var team = byPlayer.remove(player.getUniqueId());
+        if (!byPlayer.containsKey(player.getUniqueId())) {
+            return Optional.empty();
+        }
+        tabTeams.clearColor(player);
+        player.displayName(null);
+        return leave(player.getUniqueId());
+    }
+
+    /** As {@link #leave(Player)}, for a player who is gone. */
+    public Optional<Team> leave(UUID player) {
+        var team = byPlayer.remove(player);
         if (team == null) {
             return Optional.empty();
         }
         team.remove(player);
-        tabTeams.clearColor(player);
-        player.displayName(null);
         return team.size() == 0 ? Optional.of(team) : Optional.empty();
     }
 

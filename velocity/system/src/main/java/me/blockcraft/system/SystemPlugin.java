@@ -25,6 +25,7 @@ import me.blockcraft.common.moderation.PunishmentType;
 import me.blockcraft.common.moderation.StaffActionRepository;
 import me.blockcraft.common.nick.NickRepository;
 import me.blockcraft.common.network.GroupStateRepository;
+import me.blockcraft.common.network.RejoinRepository;
 import me.blockcraft.common.network.ServerRepository;
 import me.blockcraft.common.network.operation.NetworkRequest;
 import me.blockcraft.common.settings.PlayerSettingRepository;
@@ -54,6 +55,7 @@ import me.blockcraft.system.command.player.PartyChatCommand;
 import me.blockcraft.system.command.player.PartyCommand;
 import me.blockcraft.system.command.player.PingCommand;
 import me.blockcraft.system.command.player.PlayCommand;
+import me.blockcraft.system.command.player.RejoinCommand;
 import me.blockcraft.system.command.player.PlaytimeCommand;
 import me.blockcraft.system.command.player.PremiumCommand;
 import me.blockcraft.system.command.player.SeenCommand;
@@ -106,6 +108,7 @@ import me.blockcraft.system.network.LagAlert;
 import me.blockcraft.system.network.LobbyAlert;
 import me.blockcraft.system.network.OnDemand;
 import me.blockcraft.system.network.OnDemandServers;
+import me.blockcraft.system.network.Rejoins;
 import me.blockcraft.system.network.ServerDirectory;
 import me.blockcraft.system.network.ServerDiscovery;
 import me.blockcraft.system.network.WakerClient;
@@ -237,7 +240,9 @@ public final class SystemPlugin {
         events.register(this, tabHeader);
         events.register(this, new CommandListener(config, messages));
         events.register(this, new KickListener(lobby, messages));
-        events.register(this, new InitialServerListener(lobby));
+        var rejoins = new Rejoins(proxy, directory, new RejoinRepository(database), messages, logger);
+        events.register(this, rejoins);
+        events.register(this, new InitialServerListener(lobby, rejoins));
         events.register(this, new ProxyMessageListener(proxy, lobby, visibility, choices, afk, friends, tabHeader, logger, () -> pack));
         var addressHasher = AddressHasher.load(dataDirectory);
         var returning = new ReturningPlayers(addressHasher, repositories.players(), choices, friends, config.serverListCache(), config.serverListFriends(), logger);
@@ -298,6 +303,7 @@ public final class SystemPlugin {
 
         register(new HubCommand(support, lobby).create(), "h", "lobby", "l");
         register(new PlayCommand(support, lobby).create());
+        register(new RejoinCommand(support, rejoins).create());
         var privateChat = new PrivateChatGate(proxy, muteGate, ChatFilter.load(dataDirectory, config.network().addresses()), repositories.adLog(), staffButtons,
                 config.privateChatCooldown(), messages, logger);
         events.register(this, privateChat);

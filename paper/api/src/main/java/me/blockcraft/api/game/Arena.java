@@ -12,8 +12,8 @@ import org.bukkit.entity.Player;
 
 /**
  * What every game says at the moments they share, from BlockcraftAPI's {@code arena} texts but under the game's
- * own prefix: the arrival card, who joined and left the round, whom a spectator came for or picked to watch, the tag
- * on spectator chat, the countdowns that {@link LobbyCountdown} and {@link ServerRestart} run, and the trackers and
+ * own prefix: the arrival card, who joined and left the round, who dropped out and may come back, whom a spectator
+ * came for or picked to watch, the tag on spectator chat, the countdowns that {@link LobbyCountdown} and {@link ServerRestart} run, and the trackers and
  * last minutes of a {@link Round}.
  */
 public final class Arena {
@@ -60,6 +60,19 @@ public final class Arena {
 
     public void farewell(Player player, int online, int max) {
         broadcast("arena.left", player, online, max);
+    }
+
+    void steppedOut(Player player, int seconds) {
+        Bukkit.broadcast(messages.get("arena.stepped-out", Placeholder.unparsed("player", player.getName()),
+                Formatter.number("seconds", seconds)));
+    }
+
+    void back(Player player) {
+        Bukkit.broadcast(messages.get("arena.back", Placeholder.unparsed("player", player.getName())));
+    }
+
+    void gaveUp(String player) {
+        Bukkit.broadcast(messages.get("arena.gave-up", Placeholder.unparsed("player", player)));
     }
 
     /** One of the round's own answers to {@code player}, such as the outcome of /start. */

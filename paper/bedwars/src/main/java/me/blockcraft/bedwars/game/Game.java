@@ -267,7 +267,9 @@ public final class Game {
     }
 
     public void join(Player player) {
-        if (round.join(player)) {
+        if (round.rejoin(player)) {
+            rejoined(player);
+        } else if (round.join(player)) {
             lobbySpawn().ifPresent(player::teleport);
             PlayerReset.reset(player, GameMode.ADVENTURE);
             lobbyHotbar.give(player);
@@ -284,7 +286,39 @@ public final class Game {
         round.follow(spectator, friend);
     }
 
+    /** Back within the time the round kept their place: at the team's spawn, as after a death. */
+    private void rejoined(Player player) {
+        teams.restore(player);
+        if (player.isDead()) {
+            round.respawn(player, 1L);
+            return;
+        }
+        teams.of(player).flatMap(Team::spawn).ifPresent(player::teleport);
+        player.setGameMode(GameMode.SURVIVAL);
+        config.combat().apply(player);
+        hideBriefly(player);
+    }
+
+    /** A player whose team can still respawn keeps their place for a while; anyone else is out at once. */
     public void quit(Player player) {
+        if (phase() == GamePhase.INGAME && teams.of(player).filter(Team::hasBed).isPresent()
+                && round.stepOut(player, this::forfeited)) {
+            scoreboard.refreshAll();
+            return;
+        }
+        leave(player);
+    }
+
+    private void forfeited(UUID player) {
+        roster.remove(player);
+        teams.leave(player).ifPresent(this::announceOut);
+        if (!checkWinner()) {
+            announceRemaining();
+        }
+        scoreboard.refreshAll();
+    }
+
+    private void leave(Player player) {
         leaveLobbyActivities(player);
         boolean wasPlaying = round.leave(player);
         var team = teams.of(player);
@@ -303,7 +337,7 @@ public final class Game {
 
     public void vanished(Player player) {
         if (phase() == GamePhase.INGAME && round.isPlaying(player)) {
-            quit(player);
+            leave(player);
             round.watch(player);
             return;
         }
@@ -545,6 +579,7 @@ public final class Game {
         Bukkit.getOnlinePlayers().forEach(player -> perks.bedSound(player).play(player));
         var title = Title.title(messages.get("bed.title"), messages.get("bed.subtitle"), BED_TITLE);
         owner.members().forEach(member -> BlockcraftApi.get().notifications().important(member, title));
+        owner.memberIds().stream().filter(round::isAway).forEach(round::forfeit);
         scoreboard.refreshAll();
     }
 

@@ -153,6 +153,16 @@ public final class RoundSummary {
         score(player).eliminated = true;
     }
 
+    /** A player who stepped out and never came back: a death and a loss, as a quit. */
+    void forfeit(UUID player) {
+        var score = scores.get(player);
+        if (score != null) {
+            score.deaths++;
+            score.streak = 0;
+            score.eliminated = true;
+        }
+    }
+
     /**
      * Pays the killer and plays their kill effect; the victim sees who beat them with how much health left, headed
      * by what the kill cost them. Unless {@link #keepKillsSecret kills are secret}, then it only pays.

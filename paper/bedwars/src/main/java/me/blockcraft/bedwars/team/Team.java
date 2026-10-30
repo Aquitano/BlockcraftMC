@@ -50,6 +50,11 @@ public final class Team {
         return members.contains(player.getUniqueId());
     }
 
+    /** Everyone on the team, online or not. */
+    public List<UUID> memberIds() {
+        return List.copyOf(members);
+    }
+
     public int size() {
         return members.size();
     }
@@ -62,8 +67,8 @@ public final class Team {
         return members.add(player.getUniqueId());
     }
 
-    boolean remove(Player player) {
-        return members.remove(player.getUniqueId());
+    boolean remove(UUID player) {
+        return members.remove(player);
     }
 
     public Inventory chest() {
