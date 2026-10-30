@@ -1,5 +1,6 @@
 package me.blockcraft.duell.game;
 
+import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.game.RoundStart;
 import me.blockcraft.api.game.Defeat;
 import me.blockcraft.api.game.HarmlessHit;
@@ -124,12 +125,14 @@ final class SumoDuelGame extends MapDuelGame {
         if (!(event.getEntity() instanceof Player victim) || !participant(victim)) {
             return;
         }
-        if (ammo.isEmpty() && event instanceof EntityDamageByEntityEvent hit
-                && hit.getCause() == EntityDamageEvent.DamageCause.ENTITY_ATTACK
-                && hit.getDamager() instanceof Player attacker && canPlay(attacker) && canPlay(victim)) {
-            HarmlessHit.land(hit, victim);
-        } else {
+        if (!(event instanceof EntityDamageByEntityEvent hit) || hit.getCause() != EntityDamageEvent.DamageCause.ENTITY_ATTACK
+                || !(hit.getDamager() instanceof Player attacker) || !canPlay(attacker) || !canPlay(victim)) {
             event.setCancelled(true);
+        } else if (ammo.isPresent()) {
+            event.setCancelled(true);
+            BlockcraftApi.get().notifications().feedback(attacker, context.messages().get("throw.melee"));
+        } else {
+            HarmlessHit.land(hit, victim);
         }
     }
 

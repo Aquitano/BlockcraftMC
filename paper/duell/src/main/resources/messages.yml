@@ -94,6 +94,7 @@ sumo:
 throw:
   started: "<prefix><muted>Wirf deinen Gegner vom Ring. Treffer schubsen nur. Wer zuerst <accent><target> Punkte <muted>hat, gewinnt."
   next-point: "<duell>Wurfschlacht <dark>· <muted>Nächster Punkt"
+  melee: "<muted>Hier zählen nur Würfe, Schläge schubsen nicht."
   item:
     snowball: "<primary>Schneeball"
     pumpkin: "<accent>Wurfkürbis"
