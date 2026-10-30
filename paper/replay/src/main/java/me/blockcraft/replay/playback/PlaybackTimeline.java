@@ -10,12 +10,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableMap;
 import java.util.Optional;
+import java.util.OptionalLong;
+import java.util.TreeMap;
 import java.util.UUID;
 
 /**
- * A loaded recording indexed for playback: terrain per recorded world, the block change log, the motion track and
- * how every recorded entity looked.
+ * A loaded recording indexed for playback: terrain per recorded world, the block change log, the motion track, how
+ * every recorded entity looked and the time of day in each world.
  */
 public final class PlaybackTimeline {
 
@@ -26,10 +29,11 @@ public final class PlaybackTimeline {
     private final Map<String, BlockData> blocks;
     private final MotionTrack motion;
     private final Map<UUID, String> appearances;
+    private final Map<UUID, NavigableMap<Integer, Long>> daytimes;
 
     private PlaybackTimeline(ReplayHeader header, int durationTicks, Map<UUID, RecordedTerrain> terrain,
                              List<TerrainLog.Change> changes, Map<String, BlockData> blocks, MotionTrack motion,
-                             Map<UUID, String> appearances) {
+                             Map<UUID, String> appearances, Map<UUID, NavigableMap<Integer, Long>> daytimes) {
         this.header = header;
         this.durationTicks = durationTicks;
         this.terrain = terrain;
@@ -37,6 +41,7 @@ public final class PlaybackTimeline {
         this.blocks = blocks;
         this.motion = motion;
         this.appearances = appearances;
+        this.daytimes = daytimes;
     }
 
     /** Parses every block state and indexes the recording; meant for a background thread. */
@@ -44,6 +49,7 @@ public final class PlaybackTimeline {
         var chunks = new HashMap<UUID, Map<Long, ReplayEvent.Chunk>>();
         var frames = new ArrayList<ReplayEvent.Frame>();
         var appearances = new HashMap<UUID, String>();
+        var daytimes = new HashMap<UUID, NavigableMap<Integer, Long>>();
         for (var event : data.events()) {
             switch (event) {
                 case ReplayEvent.Chunk chunk -> chunks.computeIfAbsent(chunk.world(), ignored -> new HashMap<>())
@@ -53,6 +59,8 @@ public final class PlaybackTimeline {
                     frame.appearances().forEach(appearance -> appearances.putIfAbsent(appearance.id(), appearance.entity()));
                 }
                 case ReplayEvent.Blocks ignored -> { }
+                case ReplayEvent.Daytime daytime -> daytimes.computeIfAbsent(daytime.world(), ignored -> new TreeMap<>())
+                        .put(daytime.tick(), daytime.time());
             }
         }
         var changes = TerrainLog.changes(data.events());
@@ -64,7 +72,7 @@ public final class PlaybackTimeline {
         var terrain = new HashMap<UUID, RecordedTerrain>();
         chunks.forEach((world, recorded) -> terrain.put(world, new RecordedTerrain(recorded, parsed)));
         return new PlaybackTimeline(data.header(), data.durationTicks(), Map.copyOf(terrain), changes, parsed,
-                new MotionTrack(frames), Map.copyOf(appearances));
+                new MotionTrack(frames), Map.copyOf(appearances), Map.copyOf(daytimes));
     }
 
     public ReplayHeader header() {
@@ -81,4 +89,14 @@ public final class PlaybackTimeline {
     BlockData block(String state) { return blocks.get(state); }
     MotionTrack motion() { return motion; }
     Optional<String> appearance(UUID prop) { return Optional.ofNullable(appearances.get(prop)); }
+
+    /** The world's time of day at {@code tick}; before the first record, the time the recording started with. */
+    OptionalLong daytime(UUID world, int tick) {
+        var times = daytimes.get(world);
+        if (times == null) {
+            return OptionalLong.empty();
+        }
+        var entry = times.floorEntry(tick);
+        return OptionalLong.of((entry == null ? times.firstEntry() : entry).getValue());
+    }
 }

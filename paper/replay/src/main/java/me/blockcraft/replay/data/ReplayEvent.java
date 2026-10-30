@@ -59,7 +59,7 @@ public sealed interface ReplayEvent {
 
     record Animation(UUID subject, Motion motion) { }
 
-    enum Motion { SWING_MAIN_HAND, SWING_OFF_HAND, HURT, DEATH, EXPLOSION }
+    enum Motion { SWING_MAIN_HAND, SWING_OFF_HAND, HURT, DEATH, EXPLOSION, SHOT }
 
     record Chunk(int tick, UUID world, int x, int z, int minY, int height,
                  List<String> palette, int[] blocks) implements ReplayEvent { }
@@ -71,4 +71,7 @@ public sealed interface ReplayEvent {
     }
 
     record Block(UUID world, int x, int y, int z, String data) { }
+
+    /** A recorded world's time of day from this tick on. */
+    record Daytime(int tick, UUID world, long time) implements ReplayEvent { }
 }

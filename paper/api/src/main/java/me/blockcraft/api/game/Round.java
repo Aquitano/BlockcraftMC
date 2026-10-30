@@ -13,6 +13,7 @@ import me.blockcraft.api.vanish.VanishChangeEvent;
 import me.blockcraft.common.network.RejoinRepository;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -22,12 +23,14 @@ import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.util.BoundingBox;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -68,6 +71,9 @@ public final class Round implements Listener {
     private final Map<UUID, Away> away = new HashMap<>();
     private final RejoinRepository rejoins;
     private volatile GamePhase phase = GamePhase.LOBBY;
+    private PlayArea playArea;
+
+    public record PlayArea(World world, BoundingBox box) { }
 
     public Round(Plugin plugin, Arena arena, RoundSummary summary, int capacity, GameConfig config) {
         this.plugin = plugin;
@@ -385,6 +391,15 @@ public final class Round implements Listener {
     private void nobodyToWatch(Player spectator) {
         api.notifications().feedback(spectator, api.messages().get("spectator.nobody"));
         Sounds.MENU_DENY.play(spectator);
+    }
+
+    /** Where the round plays, for whoever records all of it rather than only what is near the players, such as a replay. */
+    public void playArea(World world, BoundingBox box) {
+        playArea = new PlayArea(world, box.clone());
+    }
+
+    public Optional<PlayArea> playArea() {
+        return Optional.ofNullable(playArea);
     }
 
     public boolean isPlaying(Player player) {

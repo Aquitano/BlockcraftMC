@@ -6,12 +6,15 @@ import me.blockcraft.api.replay.ReplayRecording;
 import me.blockcraft.api.game.GamePhase;
 import me.blockcraft.api.game.Round;
 import me.blockcraft.api.game.RoundPhaseChangeEvent;
+import me.blockcraft.api.game.ShotEvent;
+import me.blockcraft.api.world.BlocksChangedEvent;
 import me.blockcraft.replay.data.ReplayEvent;
 import me.blockcraft.replay.data.ReplayHeader;
 import me.blockcraft.replay.data.ReplayLimits;
 import me.blockcraft.replay.storage.ReplayStore;
 import org.bukkit.Bukkit;
 import org.bukkit.ChunkSnapshot;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Entity;
@@ -78,6 +81,8 @@ public final class MatchRecorder implements Listener, AutoCloseable, ReplayRecor
             EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET);
     private static final int MAX_EQUIPMENT_BYTES = 65_536;
     private static final int MAX_APPEARANCE_BYTES = 16_384;
+    /** Five seconds of a running day, too little for the light to change visibly. */
+    private static final long DAYTIME_STEP = 100;
     private static final List<BlockFace> NEIGHBORS = List.of(BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST,
             BlockFace.WEST, BlockFace.UP, BlockFace.DOWN);
     private final Plugin plugin;
@@ -134,7 +139,7 @@ public final class MatchRecorder implements Listener, AutoCloseable, ReplayRecor
                 Bukkit.getMinecraftVersion(), plugin.getPluginMeta().getVersion(), api.map().name(), Instant.now(),
                 players.stream().map(MatchRecorder::participant).toList());
         try {
-            session = new Session(round, store.begin(header), header.id(), players.stream().map(Player::getUniqueId).toList());
+            session = new Session(round, store.begin(header), header.id(), players.stream().map(Player::getUniqueId).toList(), area(round));
             positions.update(header.id(), 0, session.participants);
             publications.computeIfAbsent(round, ignored -> new ArrayList<>()).add(session.publication);
             session.publication.ready().thenAccept(saved).exceptionally(failure -> {
@@ -145,6 +150,20 @@ public final class MatchRecorder implements Listener, AutoCloseable, ReplayRecor
         } catch (IOException failure) {
             plugin.getLogger().log(Level.WARNING, "Could not begin replay", failure);
         }
+    }
+
+    /** The chunks of the round's play area, which are captured whole so that the map is complete from the start. */
+    private static List<ChunkKey> area(Round round) {
+        return round.playArea().map(area -> {
+            var box = area.box();
+            var chunks = new ArrayList<ChunkKey>();
+            for (int x = (int) Math.floor(box.getMinX()) >> 4; x <= (int) Math.ceil(box.getMaxX() - 1) >> 4; x++) {
+                for (int z = (int) Math.floor(box.getMinZ()) >> 4; z <= (int) Math.ceil(box.getMaxZ() - 1) >> 4; z++) {
+                    chunks.add(new ChunkKey(area.world().getUID(), x, z));
+                }
+            }
+            return List.copyOf(chunks);
+        }).orElse(List.of());
     }
 
     private static ReplayHeader.Participant participant(Player player) {
@@ -179,6 +198,8 @@ public final class MatchRecorder implements Listener, AutoCloseable, ReplayRecor
             if (session != current) { return; }
             captureBlocks(current);
             if (session != current) { return; }
+            captureDaytime(current);
+            if (session != current) { return; }
             if (current.tick % limits.sampleTicks() == 0) { captureFrame(current, players); }
             if (session != current) { return; }
             positions.update(current.id, current.tick, players.stream().map(Player::getUniqueId).toList());
@@ -188,6 +209,7 @@ public final class MatchRecorder implements Listener, AutoCloseable, ReplayRecor
         }
     }
 
+    /** The chunks around the participants first, then the rest of the play area. */
     private boolean discover(Session current, List<Player> players) {
         for (var player : players) {
             var location = player.getLocation();
@@ -196,14 +218,22 @@ public final class MatchRecorder implements Listener, AutoCloseable, ReplayRecor
             int centerZ = location.getBlockZ() >> 4;
             for (int x = centerX - limits.captureRadius(); x <= centerX + limits.captureRadius(); x++) {
                 for (int z = centerZ - limits.captureRadius(); z <= centerZ + limits.captureRadius(); z++) {
-                    var key = new ChunkKey(world.getUID(), x, z);
-                    if (!world.isChunkLoaded(x, z) || current.known.contains(key)) { continue; }
-                    if (current.known.size() >= limits.maxChunks()) { finish("CHUNK_LIMIT"); return false; }
-                    current.known.add(key);
-                    current.pending.add(key);
+                    if (!discover(current, world, new ChunkKey(world.getUID(), x, z))) { return false; }
                 }
             }
         }
+        for (var key : current.area) {
+            var world = Bukkit.getWorld(key.world());
+            if (world != null && !discover(current, world, key)) { return false; }
+        }
+        return true;
+    }
+
+    private boolean discover(Session current, World world, ChunkKey key) {
+        if (!world.isChunkLoaded(key.x(), key.z()) || current.known.contains(key)) { return true; }
+        if (current.known.size() >= limits.maxChunks()) { finish("CHUNK_LIMIT"); return false; }
+        current.known.add(key);
+        current.pending.add(key);
         return true;
     }
 
@@ -255,6 +285,20 @@ public final class MatchRecorder implements Listener, AutoCloseable, ReplayRecor
         if (!changes.isEmpty()) {
             var event = new ReplayEvent.Blocks(current.tick, changes);
             offer(current, () -> event);
+        }
+    }
+
+    /** Each recorded world's time of day, again whenever it has moved on, so that playback lights the map the same way. */
+    private void captureDaytime(Session current) {
+        for (var id : current.captured.stream().map(ChunkKey::world).distinct().toList()) {
+            var world = Bukkit.getWorld(id);
+            if (world == null) { continue; }
+            long time = world.getTime();
+            var recorded = current.daytimes.get(id);
+            if (recorded != null && Math.abs(time - recorded) < DAYTIME_STEP) { continue; }
+            current.daytimes.put(id, time);
+            int tick = current.tick;
+            if (!offer(current, () -> new ReplayEvent.Daytime(tick, id, time))) { return; }
         }
     }
 
@@ -480,6 +524,12 @@ public final class MatchRecorder implements Listener, AutoCloseable, ReplayRecor
         });
     }
 
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onReportedChange(BlocksChangedEvent event) { event.blocks().forEach(this::changed); }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onShot(ShotEvent event) { animate(event.shooter(), ReplayEvent.Motion.SHOT); }
+
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onSwing(PlayerArmSwingEvent event) {
         animate(event.getPlayer(), event.getHand() == EquipmentSlot.OFF_HAND
@@ -513,6 +563,7 @@ public final class MatchRecorder implements Listener, AutoCloseable, ReplayRecor
         final ReplayStore.Writer writer;
         final UUID id;
         final List<UUID> participants;
+        final List<ChunkKey> area;
         final Set<ChunkKey> known = new HashSet<>();
         final Set<ChunkKey> captured = new HashSet<>();
         final ArrayDeque<ChunkKey> pending = new ArrayDeque<>();
@@ -522,6 +573,7 @@ public final class MatchRecorder implements Listener, AutoCloseable, ReplayRecor
         final Set<UUID> unrecordable = new HashSet<>();
         final Set<UUID> onScreen = new HashSet<>();
         final Set<ReplayEvent.Animation> animations = new LinkedHashSet<>();
+        final Map<UUID, Long> daytimes = new HashMap<>();
         final PublicationGate<ReplayStore.Saved> publication = new PublicationGate<>();
         List<ReplayEvent.Actor> actors = List.of();
         List<ReplayEvent.Prop> props = List.of();
@@ -530,11 +582,12 @@ public final class MatchRecorder implements Listener, AutoCloseable, ReplayRecor
         int tick;
         int events;
 
-        Session(Round round, ReplayStore.Writer writer, UUID id, List<UUID> participants) {
+        Session(Round round, ReplayStore.Writer writer, UUID id, List<UUID> participants, List<ChunkKey> area) {
             this.round = round;
             this.writer = writer;
             this.id = id;
             this.participants = List.copyOf(participants);
+            this.area = area;
         }
     }
 }

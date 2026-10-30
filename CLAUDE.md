@@ -58,6 +58,9 @@ README.md; this file only holds what the code does not say by itself.
   vote, and `StartCommand`, `SetupCommand`, `StatsCommand`, `TopCommand`. No game writes its own lobby hotbar,
   /start, sidebar frame or lobby rules, and a game with more to set up than named spots hangs it off
   `SetupCommand.root()`.
+- Replays only see what Bukkit announces. A game that sets blocks itself (`setBlockData`, `setType`) fires
+  `BlocksChangedEvent`, a hitscan gun fires `ShotEvent`, and a game with a fixed arena sets `Round.playArea` so the
+  whole map is recorded from the start.
 - The client-side look lives in `resourcepack/` (README, "Resource pack"): menu panels and HUD icons are glyphs of
   the `blockcraft:ui` font, addressed only through `UiFont` and `<icon:name>`, and never assumed: whatever the pack
   draws must also read without it, because `BlockcraftApi.get().resourcePack().applied(player)` may be false.

@@ -150,6 +150,7 @@ final class PlaybackSession {
         }
         jumped = false;
         shownTick = clock.tick();
+        daylight();
         double time = clock.time();
         var actors = motion.actors(time);
         boolean advancing = !clock.paused() && !clock.finished() && pending.isEmpty();
@@ -158,6 +159,14 @@ final class PlaybackSession {
             arrive(actors);
         }
         hud.update(state());
+    }
+
+    private void daylight() {
+        worlds.forEach((source, world) -> timeline.daytime(source, clock.tick()).ifPresent(time -> {
+            if (world.getTime() != time) {
+                Worlds.setTime(world, time);
+            }
+        }));
     }
 
     private void write(int budget) {

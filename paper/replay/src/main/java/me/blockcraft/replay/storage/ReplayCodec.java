@@ -32,7 +32,7 @@ final class ReplayCodec {
     }
 
     private static final int MAGIC = 0x42435250;
-    private static final int VERSION = 3;
+    private static final int VERSION = 4;
     private static final int FIRST_READABLE_VERSION = 2;
     private static final int MAX_TEXT_BYTES = 32_768;
     private static final int MAX_ITEM_BYTES = 65_536;
@@ -162,6 +162,12 @@ final class ReplayCodec {
                     text(out, block.data());
                 }
             }
+            case ReplayEvent.Daytime daytime -> {
+                out.writeByte(5);
+                out.writeInt(daytime.tick());
+                uuid(out, daytime.world());
+                out.writeLong(daytime.time());
+            }
         }
     }
 
@@ -235,6 +241,7 @@ final class ReplayCodec {
                     }
                     yield new ReplayEvent.Blocks(tick, blocks);
                 }
+                case 5 -> new ReplayEvent.Daytime(tick, uuid(in), in.readLong());
                 default -> throw new IOException("Unknown replay event type: " + type);
             };
             if (retainEvents) events.add(event);

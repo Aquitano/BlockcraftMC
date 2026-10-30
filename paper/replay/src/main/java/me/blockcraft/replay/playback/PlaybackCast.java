@@ -7,6 +7,7 @@ import me.blockcraft.replay.data.ReplayHeader;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.util.TriState;
 import org.bukkit.Bukkit;
+import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Particle;
@@ -52,6 +53,10 @@ final class PlaybackCast {
     private static final double HEADING = 1.0E-3;
     private static final float EXPLOSION_VOLUME = 4;
     private static final float EXPLOSION_PITCH = 0.7F;
+    private static final double SHOT_RANGE = 48;
+    private static final double TRACER_SPACING = 1.5;
+    private static final float SHOT_VOLUME = 0.35F;
+    private static final float SHOT_PITCH = 1.7F;
 
     private final Player viewer;
     private final PlaybackTimeline timeline;
@@ -297,6 +302,11 @@ final class PlaybackCast {
                         entity.remove();
                     }
                 }
+                case SHOT -> {
+                    if (entity instanceof LivingEntity living) {
+                        shot(living);
+                    }
+                }
                 case EXPLOSION -> {
                     figures.remove(animation.subject());
                     var location = entity.getLocation();
@@ -306,6 +316,20 @@ final class PlaybackCast {
                 }
             }
         }
+    }
+
+    /** A trail of sparks from the shooter's eyes to the first figure or wall in their line of sight. */
+    private void shot(LivingEntity shooter) {
+        var eye = shooter.getEyeLocation();
+        var direction = eye.getDirection();
+        var world = eye.getWorld();
+        var hit = world.rayTrace(eye, direction, SHOT_RANGE, FluidCollisionMode.NEVER, true, 0,
+                entity -> entity != shooter && entity instanceof LivingEntity && !(entity instanceof Player));
+        double length = hit == null ? SHOT_RANGE : hit.getHitPosition().distance(eye.toVector());
+        for (double step = 0.5; step < length; step += TRACER_SPACING) {
+            world.spawnParticle(Particle.CRIT, eye.clone().add(direction.clone().multiply(step)), 1, 0, 0, 0, 0);
+        }
+        viewer.playSound(eye, Sound.ENTITY_FIREWORK_ROCKET_BLAST, SHOT_VOLUME, SHOT_PITCH);
     }
 
     private void sound(Entity entity, Sound sound) {

@@ -73,12 +73,18 @@ public class ReplayCodecTest {
         var zombie = new ReplayEvent.Prop(UUID.randomUUID(), new UUID(0, 1), 2.5, 64, -3, 90, 10);
         var frame = new ReplayEvent.Frame(0, List.of(actor), List.of(zombie),
                 List.of(new ReplayEvent.Appearance(zombie.id(), "{id:\"minecraft:zombie\"}")),
-                List.of(new ReplayEvent.Animation(actor.id(), ReplayEvent.Motion.SWING_MAIN_HAND),
+                List.of(new ReplayEvent.Animation(actor.id(), ReplayEvent.Motion.SHOT),
                         new ReplayEvent.Animation(zombie.id(), ReplayEvent.Motion.DEATH)));
         var decoded = (ReplayEvent.Frame) decode(encode(header, List.of(frame))).events().getFirst();
         assertEquals(frame.props(), decoded.props());
         assertEquals(frame.appearances(), decoded.appearances());
         assertEquals(frame.animations(), decoded.animations());
+    }
+
+    @Test
+    public void daytimeKeepsItsWorldAndTime() throws Exception {
+        var daytime = new ReplayEvent.Daytime(3, new UUID(0, 1), 13_000);
+        assertEquals(List.of(daytime), decode(encode(header(), List.of(daytime))).events());
     }
 
     @Test
