@@ -50,6 +50,16 @@ public class OnDemandTest {
     }
 
     @Test
+    public void wakingStartsASleepingGroupOnceAndAdmitsNobody() {
+        onDemand.observe(Map.of(), now);
+
+        assertEquals(List.of(new Effect.Publish("bedwars", GroupState.STARTING), new Effect.Start("bedwars")),
+                onDemand.wake("bedwars", now));
+        assertEquals(List.of(), onDemand.wake("bedwars", now));
+        assertEquals(List.of(new Effect.Publish("bedwars", GroupState.AWAKE)), onDemand.observe(Map.of("bedwars", UP), later(30)));
+    }
+
+    @Test
     public void choosingAnotherGameReplacesTheEarlierWait() {
         var games = new OnDemand(new OnDemand.Settings(Set.of("bedwars", "ttt"),
                 Duration.ofMinutes(10), Duration.ofMinutes(2), 0));

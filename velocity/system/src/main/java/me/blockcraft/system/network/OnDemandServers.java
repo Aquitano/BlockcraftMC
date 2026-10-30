@@ -73,6 +73,11 @@ public final class OnDemandServers {
         return answer(player, onDemand.rejoin(group, player.getUniqueId(), clock.instant()), game);
     }
 
+    /** Starts the group if it sleeps, without queuing anyone; see {@link OnDemand#wake}. */
+    public void wake(String group) {
+        apply(onDemand.wake(group, clock.instant()));
+    }
+
     public void cancel(Player player) {
         onDemand.cancel(player.getUniqueId());
     }

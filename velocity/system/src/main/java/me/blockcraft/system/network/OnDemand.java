@@ -145,6 +145,18 @@ public final class OnDemand {
         return request(group, player, now);
     }
 
+    /**
+     * Starts a sleeping group without anyone waiting in it, for a caller that sends its players itself once a server
+     * runs, such as the ranked queue with a pair that must arrive together. Nothing while it starts or runs already.
+     */
+    public synchronized List<Effect> wake(String group, Instant now) {
+        var entry = groups.get(group);
+        if (entry == null || entry.state != GroupState.ASLEEP || settings.maxAwake() > 0 && awake() >= settings.maxAwake()) {
+            return List.of();
+        }
+        return wake(group, entry, now);
+    }
+
     public synchronized void cancel(UUID player) {
         pendingAdmissions.remove(player);
         groups.values().forEach(entry -> remove(entry, player));

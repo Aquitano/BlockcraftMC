@@ -35,7 +35,7 @@ import java.util.UUID;
 /**
  * The ranked Duell queue. Players wait in a lobby, two whose Elo is close enough ({@link Matchmaking}) meet on an empty
  * server of the Duell group, and once both are there the proxy tells that server to play their series rated. A
- * sleeping group is started for them. Parties cannot queue, and leaving the lobby leaves the queue.
+ * sleeping group is woken for them while they keep waiting. Parties cannot queue, and leaving the lobby leaves the queue.
  */
 public final class RankedQueue {
 
@@ -148,33 +148,63 @@ public final class RankedQueue {
         pairs.forEach(pair -> start(pair, now));
     }
 
-    /** A pair meets on an empty server of the group, or on the one that starts for them; otherwise both keep waiting. */
+    /**
+     * A pair meets on an empty server of the group, both seated at once. Without one both keep waiting, and a sleeping
+     * group is woken so that a later tick finds its server; nobody is queued on it, which could split the pair.
+     */
     private void start(Matchmaking.Pair pair, Instant now) {
         var first = proxy.getPlayer(pair.first().player());
         var second = proxy.getPlayer(pair.second().player());
         if (first.isEmpty() || second.isEmpty()) {
             return;
         }
-        var server = directory.fill(settings.group(), List.of(pair.first().player(), pair.second().player()));
-        boolean starting = server.isEmpty() && onDemand.filter(servers ->
-                servers.request(first.get(), settings.group(), lobby.game(settings.group()))
-                        && servers.request(second.get(), settings.group(), lobby.game(settings.group()))).isPresent();
-        if (server.isEmpty() && !starting) {
+        for (var player : List.of(first.get(), second.get())) {
+            if (parties.isInParty(player.getUniqueId())) {
+                synchronized (this) {
+                    seekers.remove(player.getUniqueId());
+                }
+                player.sendMessage(messages.get("ranked.party"));
+                return;
+            }
+        }
+        var ids = List.of(pair.first().player(), pair.second().player());
+        var server = directory.fill(settings.group(), ids);
+        if (server.isEmpty()) {
+            onDemand.ifPresent(servers -> servers.wake(settings.group()));
             return;
         }
+        var target = server.get();
+        var match = new Match(pair.first().player(), pair.second().player(), now);
         synchronized (this) {
-            seekers.remove(pair.first().player());
-            seekers.remove(pair.second().player());
-            var match = new Match(pair.first().player(), pair.second().player(), now);
+            if (!seekers.containsKey(match.first()) || !seekers.containsKey(match.second())) {
+                ids.forEach(id -> directory.release(id, target.getServerInfo().getName()));
+                return;
+            }
+            seekers.remove(match.first());
+            seekers.remove(match.second());
             matches.put(match.first(), match);
             matches.put(match.second(), match);
         }
         found(first.get(), pair.second());
         found(second.get(), pair.first());
-        server.ifPresent(target -> {
-            directory.send(first.get(), target);
-            directory.send(second.get(), target);
-        });
+        for (var player : List.of(first.get(), second.get())) {
+            directory.send(player, target).thenAccept(arrived -> {
+                if (!arrived) {
+                    abandon(match);
+                }
+            });
+        }
+    }
+
+    /** Both hear that the match is off; whoever already stands on its server plays there unrated. */
+    private void abandon(Match match) {
+        boolean dropped;
+        synchronized (this) {
+            dropped = matches.remove(match.first(), match) | matches.remove(match.second(), match);
+        }
+        if (dropped) {
+            List.of(match.first(), match.second()).forEach(this::cancelled);
+        }
     }
 
     private void found(Player player, Matchmaking.Seeker opponent) {
@@ -215,15 +245,13 @@ public final class RankedQueue {
                     together = Optional.of(match);
                 }
             } else if (match != null && !directory.isLobby(server)) {
-                matches.remove(match.first());
-                matches.remove(match.second());
                 abandoned = Optional.of(match);
             }
         }
         if (leftQueue) {
             player.sendMessage(messages.get("ranked.left"));
         }
-        abandoned.ifPresent(match -> List.of(match.first(), match.second()).forEach(this::cancelled));
+        abandoned.ifPresent(this::abandon);
         together.ifPresent(this::rate);
     }
 
