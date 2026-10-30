@@ -45,6 +45,25 @@ jcmd $javaProcessId JFR.start name=blockcraft settings=profile duration=120s "fi
 
 Wait for the recording to finish before passing it to `summarize.py jfr`. Velocity recordings have no Minecraft tick events.
 
+## Profile a game while playing
+
+Paper bundles Spark. In game, as a player with the `spark` permission, start a profile once the round runs, play its
+busiest part for three to five minutes, and stop it before the round ends, since the restart after a round discards
+a running profile:
+
+```text
+/spark profiler start --thread *
+/spark profiler stop --save-to-file
+/mspt
+```
+
+`--save-to-file` keeps the profile on the server instead of uploading it; copy the printed file out with
+`docker compose cp <service>:/data/plugins/spark/<file>.sparkprofile run/performance/`. The profile also holds the
+tick times, players, entities and loaded chunks of every minute. To find what makes single ticks slow, record a
+second run with `--only-ticks-over 50`. Do not start `jfr` during a Spark profile: re-instrumenting the classes
+stalled the lobby's main thread for about three seconds, and `jfr stop` forces a full GC that showed up as a 790 ms
+tick.
+
 ## Capture client frame times on Windows
 
 Use the [PresentMon console application](https://github.com/GameTechDev/PresentMon/blob/main/README-ConsoleApplication.md)
