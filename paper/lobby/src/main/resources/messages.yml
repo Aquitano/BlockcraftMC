@@ -3,6 +3,8 @@ prefix: "<primary><ip> <dark>» <reset>"
 commands:
   cookies:
     description: "Öffnet den CookieClicker"
+  daily:
+    description: "Zeigt deine tägliche Belohnung und deine Serie"
   navigator:
     description: "Öffnet den Navigator mit allen Spielmodi"
   schlitten:
@@ -789,3 +791,20 @@ quests:
       - "<muted>Hast du schon von SkyWars gehört? Inseln im Nichts, und unten wartet nichts."
       - "<muted>Spiel eine Runde und erzähl mir, wie es war."
     task: "<accent>Aufgabe<dark>: <muted>Spiele eine Runde SkyWars."
+
+daily:
+  name: "<accent>Der Postbote"
+  title: "<arrow><primary>Tägliche Belohnung"
+  streak-open: "<muted>Heute ist Tag <accent><streak> <muted>deiner Serie."
+  streak-claimed: "<muted>Du bist bei Tag <accent><streak> <muted>deiner Serie."
+  today: "<muted>Heutige Belohnung<dark>: <accent><coins> Coins"
+  next-in: "<muted>Die nächste Belohnung gibt es in <white><hours> Std. <minutes> Min.<muted>."
+  upcoming: "<muted>Die nächsten Tage<dark>:"
+  upcoming-day: "<bullet><muted>Tag <white><day><dark>: <accent><coins> Coins"
+  missed: "<muted>Verpasst du einen Tag, beginnt deine Serie wieder bei Tag 1."
+  claim: "<success>Abholen <dark>(<accent><coins> Coins<dark>)"
+  claimed: "<prefix><success>Tägliche Belohnung abgeholt! <muted>+<accent><coins> Coins <dark>· <muted>Tag <accent><streak> <muted>deiner Serie"
+  already-claimed: "<prefix><error>Deine heutige Belohnung hast du schon abgeholt."
+  available: "<prefix><muted>Deine tägliche Belohnung wartet<dark>: <accent><coins> Coins <dark>· <claim>"
+  claim-button: "<success>[Abholen]"
+  claim-hover: "<muted>Serie und Belohnung ansehen."

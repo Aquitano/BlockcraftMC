@@ -30,6 +30,7 @@ import me.blockcraft.lobby.activity.ShootingStars;
 import me.blockcraft.lobby.activity.Snowfall;
 import me.blockcraft.lobby.command.ClearChatCommand;
 import me.blockcraft.lobby.command.CookiesCommand;
+import me.blockcraft.lobby.command.DailyCommand;
 import me.blockcraft.lobby.command.LobbySetCommand;
 import me.blockcraft.lobby.command.NavigatorCommand;
 import me.blockcraft.lobby.command.SetHoloCommand;
@@ -57,6 +58,8 @@ import me.blockcraft.lobby.cosmetic.Shirt;
 import me.blockcraft.lobby.cosmetic.Trails;
 import me.blockcraft.lobby.cookies.CookieClicker;
 import me.blockcraft.lobby.cookies.CookieProgress;
+import me.blockcraft.lobby.daily.DailyCourier;
+import me.blockcraft.lobby.daily.DailyRewards;
 import me.blockcraft.lobby.friends.FriendsChannel;
 import me.blockcraft.lobby.gadget.Gadgets;
 import me.blockcraft.lobby.hider.PlayerHider;
@@ -195,8 +198,9 @@ public final class LobbyPlugin extends JavaPlugin {
                 String.valueOf(boardSettings.getOrDefault("changelog-version", "1")),
                 String.valueOf(boardSettings.getOrDefault("rules-command", "regeln")));
         var quests = new QuestGivers(chunks, activityLocations, Quest.fromYaml(YamlFile.section(yaml, "quests")), messages);
-        polish.addAll(List.of(gameNpcs, podiums, ownPlacings, loreNotes, noticeBoards, quests));
-        register(gameNpcs, podiums, ownPlacings, loreNotes, noticeBoards, quests);
+        var daily = new DailyCourier(this, chunks, activityLocations, DailyRewards.fromYaml(YamlFile.section(yaml, "daily-rewards")), messages);
+        polish.addAll(List.of(gameNpcs, podiums, ownPlacings, loreNotes, noticeBoards, quests, daily));
+        register(gameNpcs, podiums, ownPlacings, loreNotes, noticeBoards, quests, daily);
         LobbyNews.start(this, messages, YamlFile.section(yaml, "news")).ifPresent(news -> {
             polish.add(news);
             register(news);
@@ -205,6 +209,7 @@ public final class LobbyPlugin extends JavaPlugin {
         var optionalSpots = new ArrayList<>(GameNpcs.spots());
         leaderboards.names().stream().map(Podiums::spot).sorted().forEach(optionalSpots::add);
         optionalSpots.addAll(quests.spots());
+        optionalSpots.add(DailyCourier.SPOT);
         var optionalBlocks = new ArrayList<>(loreNotes.spots());
         optionalBlocks.addAll(NoticeBoards.SPOTS);
 
@@ -241,6 +246,7 @@ public final class LobbyPlugin extends JavaPlugin {
                     holograms, locations, shopNpc));
             commands.register(ClearChatCommand.create(messages));
             commands.register(CookiesCommand.create(menus));
+            commands.register(DailyCommand.create(daily));
             commands.register(SleighCommand.create(sleigh, messages));
             commands.register(SetPropCommand.create(messages, props));
             commands.register(NavigatorCommand.create(menus), "nav", "spiele");
@@ -259,6 +265,7 @@ public final class LobbyPlugin extends JavaPlugin {
                         loreNotes.refresh();
                         noticeBoards.refresh();
                         quests.refresh();
+                        daily.refresh();
                     }));
         });
     }

@@ -571,6 +571,19 @@ over routine status updates and XP notices. Round titles take priority over achi
 do not replay. The `notifications` section in BlockcraftAPI's config controls display times, XP batching, and sound
 spacing. Queued notices expire, and the shared scheduler stops when no notifications remain.
 
+## Daily reward
+
+The lobby pays coins once a day. `/daily` opens a dialog with the streak, today's coins and the next days' rewards,
+or how long until the next one once today's is taken. While today's is open, every lobby arrival gets a chat line
+whose `[Abholen]` runs `/daily`, and `/lobbyset daily` places an optional courier figure that opens the same dialog.
+A day is a date in BlockcraftAPI's `calendar.zone`. A claim on the day after the last one raises the streak, a
+missed day starts it again at day 1.
+
+`daily-rewards` in the lobby's `config.yml` holds `coins` (day 1, 2, ... of a streak; past the end the last value
+repeats), `preview-days` (how many coming days the dialog lists) and `skin` (the figure's player name). The lobby
+keeps `bc_daily_rewards` (player, streak, date of the last claim) itself. A claim locks the player's row, moves the
+streak and credits `VCOINS` in one transaction, so two lobbies cannot pay the same day twice.
+
 ## Nick and vanish across the network
 
 Both states are set on a Paper server (`/nick`, `/v`, `/staff`) and stored in `bc_nicks` and `bc_vanished` so every
