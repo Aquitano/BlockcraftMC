@@ -347,6 +347,10 @@ unrated while still earning normal XP, coins and statistics. Historical Elo is p
 a separate rating choice; a series is rated only when both players explicitly choose it. A decided rated series
 settles Elo once, including forfeits. Rematches reset rating consent.
 
+The combat button between chance and rating picks 1.8 or modern combat. `pvp.legacy-combat` sets the default, and the
+other style applies only when both players choose it; the same pair keeps the choice for a rematch. It covers every
+mode of the series except MLG Rush, which always plays 1.8.
+
 ## BedWars
 
 `paper/bedwars` is a port of [rewi-bw](https://github.com/Marfien/rewi-bw), the Rewinside BedWars clone, under its

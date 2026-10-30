@@ -1,5 +1,6 @@
 package me.blockcraft.duell.game;
 
+import me.blockcraft.api.game.CombatStyle;
 import me.blockcraft.api.game.rush.MapPool;
 import me.blockcraft.api.game.rush.RushConfig;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -185,6 +186,22 @@ public class DuelVoteTest {
         vote.withdraw(second);
         assertEquals(DuelRating.UNRATED, vote.ratingChoice(second));
         assertEquals(DuelRating.UNRATED, vote.selectedRating(players, true));
+    }
+
+    @Test
+    public void theOtherCombatStyleNeedsBothDuellists() {
+        var vote = new DuelVote();
+        var first = UUID.randomUUID();
+        var second = UUID.randomUUID();
+        var players = List.of(first, second);
+
+        vote.chooseCombat(first, CombatStyle.MODERN);
+        assertEquals(CombatStyle.LEGACY, vote.selectedCombat(players, CombatStyle.LEGACY));
+        vote.chooseCombat(second, CombatStyle.MODERN);
+        assertEquals(CombatStyle.MODERN, vote.selectedCombat(players, CombatStyle.LEGACY));
+        assertEquals(CombatStyle.LEGACY, vote.selectedCombat(List.of(first, first), CombatStyle.LEGACY));
+        vote.withdraw(second);
+        assertEquals(CombatStyle.LEGACY, vote.selectedCombat(players, CombatStyle.LEGACY));
     }
 
     @Test

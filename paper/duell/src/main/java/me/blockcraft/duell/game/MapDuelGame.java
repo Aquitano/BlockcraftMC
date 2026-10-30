@@ -44,7 +44,7 @@ abstract class MapDuelGame implements DuelGame, Listener {
     protected void equip(Player player) {
         PlayerReset.reset(player, GameMode.SURVIVAL);
         player.setVelocity(new Vector());
-        context.config().combat().apply(player);
+        context.combat().apply(player);
     }
 
     final void prepare() {

@@ -1,6 +1,7 @@
 package me.blockcraft.duell.game;
 
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.game.CombatStyle;
 import me.blockcraft.api.game.LootChests;
 import me.blockcraft.api.game.RoundSummary;
 import me.blockcraft.api.game.ThrowFight;
@@ -27,7 +28,7 @@ public final class DuelGames {
     }
 
     record Context(Plugin plugin, DuellConfig config, Messages messages, GameItems items, RoundSummary summary,
-                   List<UUID> participants, List<Location> spawns, Events events) { }
+                   List<UUID> participants, List<Location> spawns, CombatStyle combat, Events events) { }
 
     private final Plugin plugin;
     private final DuellConfig config;
@@ -71,7 +72,8 @@ public final class DuelGames {
         return rush.owns(location);
     }
 
-    public DuelGame open(DuelVote.Outcome outcome, List<UUID> participants, RoundSummary summary, Events events) {
+    public DuelGame open(DuelVote.Outcome outcome, List<UUID> participants, RoundSummary summary, CombatStyle combat,
+                         Events events) {
         var mode = outcome.mode();
         if (mode == DuelMode.MLGRUSH) {
             rush.selectMap(maps.maps().get(outcome.map() - 1));
@@ -80,7 +82,7 @@ public final class DuelGames {
         var locations = java.util.stream.IntStream.rangeClosed(1, 2)
                 .mapToObj(slot -> mode == DuelMode.SUMO || mode == DuelMode.THROW ? sumo.spawn(slot)
                         : spawns.mapSpawn(mode, outcome.map(), slot).orElse(null)).toList();
-        var context = new Context(plugin, config, messages, items, summary, List.copyOf(participants), locations, events);
+        var context = new Context(plugin, config, messages, items, summary, List.copyOf(participants), locations, combat, events);
         MapDuelGame game = switch (mode) {
             case VS -> new VsDuelGame(context);
             case SG -> new SgDuelGame(context, chests);

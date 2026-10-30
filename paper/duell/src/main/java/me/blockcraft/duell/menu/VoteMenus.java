@@ -1,5 +1,6 @@
 package me.blockcraft.duell.menu;
 
+import me.blockcraft.api.game.CombatStyle;
 import me.blockcraft.api.game.VoteMenu;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.menu.Menu;
@@ -22,7 +23,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
 
-/** Format and mode in the lobby, then one of the mode's playable maps or chance. */
+/** Format, mode, combat style and rating in the lobby, then one of the mode's playable maps or chance. */
 public final class VoteMenus {
 
     private final Duel duel;
@@ -93,6 +94,7 @@ public final class VoteMenus {
                 set(layout.modeSlot(index), item.build());
             }
             rating(player);
+            combat(player);
             set(layout.randomSlot(), Items.of(Material.ENDER_PEARL).name(messages.get("menu.modes.random"))
                     .lore(messages.getLines("menu.modes.random-lore")).build());
         }
@@ -113,6 +115,17 @@ public final class VoteMenus {
             } else {
                 info(layout.ratingSlot(), item);
             }
+        }
+
+        private void combat(Player player) {
+            var choice = duel.combatChoice(player.getUniqueId());
+            String key = choice == CombatStyle.LEGACY ? "legacy" : "modern";
+            var lore = new ArrayList<>(messages.getLines("menu.combat." + key + "-lore"));
+            lore.add(messages.get("menu.combat.rush"));
+            lore.add(messages.get("menu.combat.current", Placeholder.component("combat", duel.combatName(duel.selectedCombat()))));
+            lore.add(messages.get("menu.combat.toggle"));
+            set(layout.combatSlot(), Items.of(choice == CombatStyle.LEGACY ? Material.DIAMOND_SWORD : Material.SHIELD)
+                    .name(messages.get("menu.combat." + key)).lore(lore).hideAttributes().build());
         }
 
         private void formats(Player player) {
@@ -147,6 +160,10 @@ public final class VoteMenus {
             }
             if (slot == layout.randomSlot()) {
                 duel.clearModeVote(player);
+                openModes(player);
+            } else if (slot == layout.combatSlot()) {
+                duel.chooseCombat(player, duel.combatChoice(player.getUniqueId()) == CombatStyle.LEGACY
+                        ? CombatStyle.MODERN : CombatStyle.LEGACY);
                 openModes(player);
             } else if (slot == layout.ratingSlot() && duel.ratedEnabled()) {
                 duel.chooseRating(player, duel.ratingChoice(player.getUniqueId()) == DuelRating.RATED

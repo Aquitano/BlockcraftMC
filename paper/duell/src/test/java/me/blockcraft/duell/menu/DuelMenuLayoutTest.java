@@ -19,6 +19,7 @@ public class DuelMenuLayoutTest {
         assertEquals(List.of(18, 20, 22, 24, 26),
                 IntStream.range(0, 5).map(layout::modeSlot).boxed().toList());
         assertEquals(30, layout.randomSlot());
+        assertEquals(31, layout.combatSlot());
         assertEquals(32, layout.ratingSlot());
         assertEquals(OptionalInt.of(4), layout.modeIndex(26));
         assertTrue(layout.modeIndex(4).isEmpty());
@@ -33,6 +34,7 @@ public class DuelMenuLayoutTest {
         assertEquals(31, layout.modeSlot(5));
         assertEquals(OptionalInt.of(5), layout.modeIndex(31));
         assertEquals(39, layout.randomSlot());
+        assertEquals(40, layout.combatSlot());
         assertEquals(41, layout.ratingSlot());
     }
 }

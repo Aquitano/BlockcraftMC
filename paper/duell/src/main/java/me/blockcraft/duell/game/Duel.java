@@ -4,6 +4,7 @@ import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.cosmetic.ChatTag;
 import me.blockcraft.api.cosmetic.ChatTagChoice;
 import me.blockcraft.api.game.Arena;
+import me.blockcraft.api.game.CombatStyle;
 import me.blockcraft.api.game.GameConfig;
 import me.blockcraft.api.game.GamePhase;
 import me.blockcraft.api.game.LobbyCountdown;
@@ -77,6 +78,7 @@ public final class Duel {
     private DuelSeries series;
     private DuelGame current;
     private DuelRating activeRating = DuelRating.UNRATED;
+    private CombatStyle activeCombat;
     private boolean gameActive;
     private boolean frozen;
     private DuelMode mode;
@@ -88,6 +90,7 @@ public final class Duel {
                 DuelGames games, StatsRepository stats, StatsMenus statsMenus, DuelRatings ratings, DuelPairRepository pairs) {
         this.plugin = plugin;
         this.config = config;
+        this.activeCombat = config.combat();
         this.messages = messages;
         this.spawns = spawns;
         this.games = games;
@@ -157,6 +160,33 @@ public final class Duel {
 
     private Component ratingName(DuelRating rating) {
         return messages.get(rating == DuelRating.RATED ? "rating.rated" : "rating.unrated");
+    }
+
+    public CombatStyle combatChoice(UUID player) { return votes.combatChoice(player, config.combat()); }
+    public CombatStyle selectedCombat() {
+        return isLobby() ? votes.selectedCombat(round.players().stream().map(Player::getUniqueId).toList(), config.combat())
+                : activeCombat;
+    }
+
+    public void chooseCombat(Player player, CombatStyle style) {
+        if (!isLobby() || !isParticipant(player)) {
+            VoteMenu.closed(player, messages);
+            return;
+        }
+        var previous = combatChoice(player.getUniqueId());
+        votes.chooseCombat(player.getUniqueId(), style);
+        player.sendMessage(messages.get("combat.chosen", Placeholder.component("combat", combatName(style))));
+        if (selectedCombat() != style) {
+            player.sendMessage(messages.get("combat.waiting", Placeholder.component("combat", combatName(selectedCombat()))));
+            if (previous != style) {
+                opponentsOf(player).forEach(opponent -> opponent.sendMessage(messages.get("combat.request",
+                        Placeholder.unparsed("player", player.getName()), Placeholder.component("combat", combatName(style)))));
+            }
+        }
+    }
+
+    public Component combatName(CombatStyle style) {
+        return messages.get(style == CombatStyle.LEGACY ? "combat.legacy" : "combat.modern");
     }
 
     public void chooseFormat(Player player, DuelSeries.Format format) {
@@ -439,6 +469,7 @@ public final class Duel {
         var requested = selectedFormat();
         var schedule = DuelSeries.plan(requested, votes, playable, random);
         activeRating = selectedRating();
+        activeCombat = selectedCombat();
         series = new DuelSeries(duellists, schedule);
         round.enter(GamePhase.INGAME);
         if (activeRating == DuelRating.RATED) { players.forEach(player -> ratings.load(player, this::refreshScoreboards)); }
@@ -449,6 +480,9 @@ public final class Duel {
             var modes = Component.join(net.kyori.adventure.text.JoinConfiguration.separator(Component.text(", ")),
                     schedule.stream().map(game -> modeName(game.mode())).toList());
             Bukkit.broadcast(messages.get("tour.schedule", Placeholder.component("modes", modes)));
+        }
+        if (activeCombat != config.combat()) {
+            Bukkit.broadcast(messages.get("combat.agreed", Placeholder.component("combat", combatName(activeCombat))));
         }
         startGame(freezeSeconds);
     }
@@ -469,7 +503,7 @@ public final class Duel {
         var sides = new ArrayList<>(duellists);
         if (index % MAX_PARTICIPANTS != 0) { Collections.reverse(sides); }
         round.players().stream().filter(Player::isDead).forEach(player -> player.spigot().respawn());
-        current = games.open(outcome, sides, summary, new DuelGames.Events() {
+        current = games.open(outcome, sides, summary, activeCombat, new DuelGames.Events() {
             @Override
             public void changed() {
                 if (series == started && series.gameIndex() == index && gameActive) { refreshScoreboards(); }
@@ -626,6 +660,7 @@ public final class Duel {
         mode = null;
         mapName = null;
         activeRating = DuelRating.UNRATED;
+        activeCombat = config.combat();
         summary = nextSummary();
         round.reopen(summary);
         round.players().forEach(this::prepareLobby);

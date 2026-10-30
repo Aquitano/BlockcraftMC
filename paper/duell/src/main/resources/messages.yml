@@ -46,6 +46,14 @@ tour:
   format-waiting: "<prefix><muted>Die Tour startet nur, wenn ihr beide die 3-Modi-Tour wählt. Bis dahin bleibt es beim Einzelspiel."
   format-request: "<prefix><accent><player> <muted>möchte eine 3-Modi-Tour. Wähle in der Abstimmung ebenfalls die Tour, um zuzustimmen."
 
+combat:
+  legacy: "1.8"
+  modern: "Neu"
+  chosen: "<prefix><muted>Dein Kampfsystem: <accent><combat><muted>."
+  waiting: "<prefix><muted>Ein anderes Kampfsystem gilt nur, wenn ihr beide zustimmt. Sonst bleibt es bei <accent><combat><muted>."
+  request: "<prefix><accent><player> <muted>möchte mit dem Kampfsystem <accent><combat> <muted>kämpfen. Du kannst in der Spielauswahl zustimmen."
+  agreed: "<prefix><muted>Ihr kämpft mit dem Kampfsystem <accent><combat><muted>."
+
 rating:
   chosen: "<prefix><muted>Deine Wertung: <accent><rating><muted>."
   waiting: "<prefix><muted>Gewertet spielt ihr nur, wenn ihr beide zustimmt. Sonst bleibt es ungewertet."
@@ -175,6 +183,18 @@ menu:
     waiting: "<muted>Aktuell: <accent>Ungewertet"
     agreed: "<success>Beide spielen gewertet."
     toggle: "<left>Wertung wechseln"
+  combat:
+    legacy: "<arrow><primary>Kampfsystem 1.8"
+    legacy-lore:
+      - "<muted>Keine Abklingzeit zwischen den Schlägen."
+      - "<muted>Schwerter schlagen härter als Äxte."
+    modern: "<arrow><primary>Kampfsystem Neu"
+    modern-lore:
+      - "<muted>Abklingzeit wie in aktuellen Versionen."
+      - "<muted>Äxte sind langsam, aber hart."
+    rush: "<muted>MLG Rush spielt immer mit 1.8."
+    current: "<muted>Aktuell: <accent><combat>"
+    toggle: "<left>Kampfsystem wechseln"
   maps:
     title: "<arrow><duell><mode> <dark>· <muted>Eure Map"
     map: "<arrow><primary><map>"

@@ -36,6 +36,10 @@ record DuelMenuLayout(int modes) {
         return (rows() - 1) * 9 + 3;
     }
 
+    int combatSlot() {
+        return (rows() - 1) * 9 + 4;
+    }
+
     int ratingSlot() {
         return (rows() - 1) * 9 + 5;
     }

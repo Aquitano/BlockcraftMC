@@ -1,5 +1,7 @@
 package me.blockcraft.duell.game;
 
+import me.blockcraft.api.game.CombatStyle;
+
 import java.util.HashMap;
 import java.util.Arrays;
 import java.util.List;
@@ -30,6 +32,7 @@ public final class DuelVote {
     private final Map<UUID, Choice> choices = new HashMap<>();
     private final Map<UUID, DuelSeries.Format> formats = new HashMap<>();
     private final Map<UUID, DuelRating> ratings = new HashMap<>();
+    private final Map<UUID, CombatStyle> combats = new HashMap<>();
     private Optional<DuelMode> forced = Optional.empty();
 
     public DuelVote() {
@@ -49,6 +52,7 @@ public final class DuelVote {
         choices.remove(voter);
         formats.remove(voter);
         ratings.remove(voter);
+        combats.remove(voter);
     }
 
     void clearChoice(UUID voter) {
@@ -81,6 +85,21 @@ public final class DuelVote {
         return ratedEnabled && participants.size() == 2 && !participants.getFirst().equals(participants.getLast())
                 && participants.stream().allMatch(player -> ratingChoice(player) == DuelRating.RATED)
                 ? DuelRating.RATED : DuelRating.UNRATED;
+    }
+
+    void chooseCombat(UUID voter, CombatStyle style) {
+        combats.put(voter, style);
+    }
+
+    public CombatStyle combatChoice(UUID voter, CombatStyle standard) {
+        return combats.getOrDefault(voter, standard);
+    }
+
+    /** The other style only when both duellists chose it, like the tour. */
+    public CombatStyle selectedCombat(List<UUID> participants, CombatStyle standard) {
+        var choices = participants.stream().map(player -> combatChoice(player, standard)).distinct().toList();
+        return participants.size() == 2 && !participants.getFirst().equals(participants.getLast()) && choices.size() == 1
+                ? choices.getFirst() : standard;
     }
 
     List<DuelMode> nominations() {

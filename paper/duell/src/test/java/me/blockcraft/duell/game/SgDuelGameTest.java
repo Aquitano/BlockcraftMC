@@ -53,7 +53,7 @@ public class SgDuelGameTest {
                     default -> throw new AssertionError(method.getName());
                 });
         var context = new DuelGames.Context(null, null, null, null, null,
-                List.of(participant, UUID.randomUUID()), List.of(), null);
+                List.of(participant, UUID.randomUUID()), List.of(), null, null);
         var chests = new LootChests(new LootTable(1, 1, List.of()));
         var game = new SgDuelGame(context, chests);
         var cached = LootChests.class.getDeclaredField("opened");
