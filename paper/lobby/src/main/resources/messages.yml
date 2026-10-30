@@ -141,6 +141,7 @@ navigator:
     duell:
       - "<muted>Ein Gegner. Ihr bestimmt den Modus."
       - "<muted>1vs1, SurvivalGames oder SuperJump."
+      - "<muted>Gewertet gegen gleich Starke: <accent>/ranked"
       - "<dark>Ausreden bitte erst nach dem Duell einreichen."
     mlgrush:
       - "<muted>1vs1 mit Rückstoß-Sticks und eigenen Betten."
