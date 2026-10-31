@@ -1,0 +1,85 @@
+players:
+  min: 2
+global-stats-head: Kevos
+countdown:
+  lobby: 10
+  start: 3
+  freeze: 3
+  round: 600
+  restart: 10
+idle-restart-minutes: 50
+timer-bar: true
+rewards:
+  kill: 0
+  win: 10
+vs:
+  kills-to-end: 3
+tour:
+  intermission-seconds: 3
+rating:
+  enabled: false
+mlgrush:
+  score-target: 5
+  arena:
+    build-margin: 4
+    build-height: 16
+    floor-y: 64
+    void-y: 48
+  kit:
+    blocks: 64
+    knockback-level: 1
+sumo:
+  radius: 4
+  floor-y: 64
+  lose-y: 61
+  spawn-distance: 2
+  points-to-win: 3
+  reset-seconds: 3
+# Wurfschlacht: Sumo's ring and points with the season's throwables instead of fists, offered only during these
+# occasions; a hit pushes with knockback, and cooldown-ticks pass between two throws.
+throw-fight:
+  during: [winter, halloween, easter]
+  knockback: 0.7
+  cooldown-ticks: 8
+maps:
+  vs: [Gefängnis, Hypixel-DM, DustMC-DM, Tippy]
+  sg: [Bucht, Gefängnis, Bergwerk]
+  superjump: [FrozenRiver, Dimensions, FrostValley, Trains, Dungeons]
+sg-chest:
+  min-items: 1
+  max-items: 6
+  loot:
+    - {item: POTATO, amount: 4}
+    - {item: MELON_SLICE}
+    - {item: PUMPKIN_PIE}
+    - {item: BREAD}
+    - {item: IRON_INGOT, weight: 2}
+    - {item: IRON_INGOT, amount: 2, weight: 2}
+    - {item: BOW}
+    - {item: ARROW}
+    - {item: ARROW, amount: 5}
+    - {item: ARROW, amount: 11}
+    - {item: COOKED_BEEF}
+    - {item: COOKED_BEEF, amount: 2}
+    - {item: IRON_LEGGINGS}
+    - {item: IRON_BOOTS}
+    - {item: IRON_HELMET}
+    - {item: CHAINMAIL_BOOTS}
+    - {item: CHAINMAIL_HELMET}
+    - {item: CHAINMAIL_CHESTPLATE}
+    - {item: CHAINMAIL_LEGGINGS}
+    - {item: LEATHER_BOOTS}
+    - {item: LEATHER_HELMET}
+    - {item: LEATHER_CHESTPLATE}
+    - {item: LEATHER_LEGGINGS}
+    - {item: WOODEN_AXE}
+    - {item: WOODEN_SWORD}
+    - {item: STONE_SWORD}
+    - {item: STONE_AXE}
+
+# 1.8 PvP: no attack cooldown and the rod knocks back; everything else stays vanilla. false plays modern PvP.
+pvp:
+  legacy-combat: true
+
+rematch:
+  window-seconds: 15

@@ -1,0 +1,9 @@
+# Dev network: proxy and backend share one LuckPerms database (the docker-compose MariaDB),
+# so a group set on either side is seen by both. Everything not listed keeps the LuckPerms default.
+storage-method: mariadb
+data:
+  address: localhost:3306
+  database: blockcraft
+  username: blockcraft
+  password: blockcraft
+messaging-service: sql

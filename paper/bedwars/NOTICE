@@ -1,0 +1,6 @@
+BedWars for BlockcraftMC
+
+The rules, the shop and its prices, the lobby and the maps Mushroom and Medieval Mansion come from rewi-bw by Marfien,
+https://github.com/Marfien/rewi-bw, licensed under the Apache License, Version 2.0 (see LICENSE-rewi-bw). The plugin
+was rewritten for Paper 26.2 on BlockcraftMC's own game API, and the lobby and both maps (worlds/bedwars) were
+converted from the Minecraft 1.8 world format to the 26.2 one.

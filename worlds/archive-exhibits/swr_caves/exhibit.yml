@@ -1,0 +1,12 @@
+name: Caves
+origin: Blockcraft 2015–16
+category: SkyWars
+description: Eine mit SkyWarsReloaded gelieferte Beispielkarte aus dem Blockcraft-Backup
+  mit felsigen Höhleninseln und einer Mittelplattform.
+icon: stone_pickaxe
+arrival:
+  x: 0.5
+  y: 22.0
+  z: 5.5
+  yaw: 180.0
+  pitch: 0.0

@@ -1,0 +1,67 @@
+prefix: "<mlgrush>MLG Rush <dark>» <reset>"
+game-name: "<mlgrush>MLG Rush"
+commands:
+  start:
+    description: "Startet das Match"
+  stats:
+    description: "Zeigt die Stats eines Spielers"
+  top:
+    description: "Zeigt die Top 10 einer Kategorie"
+join:
+  introduction: "<prefix><muted>Stoße deinen Gegner von der Brücke und baue sein Bett ab. Jeder Bettabbau gibt einen Punkt."
+  spectator: "<prefix><muted>Du schaust diesem Match zu."
+  next-match: "<prefix><muted>Ein Platz ist frei. Du spielst im nächsten Match mit."
+round:
+  map: "<prefix><muted>Karte: <accent><map><muted>. Mit /hub kommst du zur Lobby, dort öffnet /navigator die Spielauswahl."
+  cancelled: "<prefix><muted>Der Countdown wurde abgebrochen. Es werden zwei Spieler benötigt."
+  start: "<prefix><muted>Los geht's auf <accent><map><muted>! Wer zuerst <accent><target> Punkte <muted>erreicht, gewinnt."
+  point: "<prefix><accent><player> <muted>punktet! <red>Rot <red_score> <dark>· <blue>Blau <blue_score>"
+  forfeit: "<prefix><accent><player> <muted>hat das Match verlassen. Der Gegner gewinnt."
+  result: "<arrow><muted>Betten abgebaut: <accent><score> <dark>· <muted>Ziel: <accent><target>"
+item:
+  stick: "<primary>Rückstoß-Stick"
+  blocks: "<primary>Baublöcke"
+  pickaxe: "<primary>Spitzhacke"
+  rematch: "<arrow><mlgrush>Revanche anfragen"
+rematch:
+  unavailable: "<prefix><error>Eine Revanche ist nur direkt nach einem Match mit demselben Gegner möglich."
+  waiting: "<prefix><muted>Du bist bereit. Warte auf deinen Gegner."
+  request: "<prefix><accent><player> <muted>möchte eine Revanche. Klicke auf Nochmal spielen oder rechtsklicke das Revanche-Item."
+  starting: "<prefix><muted>Revanche auf <accent><map> <muted>in <accent><seconds> Sekunden<muted>!"
+scoreboard:
+  map: "<muted>Karte: <accent><map>"
+  title: "<mlgrush><bold>MLG Rush"
+  red: "<red>Rot <dark>· <white><player> <dark>· <white><score>"
+  blue: "<blue>Blau <dark>· <white><player> <dark>· <white><score>"
+  target: "<muted>Ziel: <accent><target> Punkte"
+  lobby: "<muted>Warte auf zwei Spieler"
+  ingame: "<muted>Baue das gegnerische Bett ab!"
+  ending: "<muted>Match beendet"
+stats:
+  header: "<muted>MLG-Rush-Stats von <accent><player>"
+  lines:
+    - "<arrow><primary>Siege<dark>: <muted><wins>"
+    - "<arrow><primary>Niederlagen<dark>: <muted><losses>"
+    - "<arrow><primary>Stürze<dark>: <muted><deaths>"
+    - "<arrow><primary>Münzen<dark>: <muted><points>"
+top:
+  separator: "<muted><strikethrough>---------------------------------"
+  first: "<accent><bold>#1 <reset><primary><name><muted> ( <white><value><muted> )"
+  entry: "<reset>#<rank> <primary><name> <muted>( <white><value><muted> )"
+menu:
+  stats:
+    title: "<arrow><mlgrush>MLG Rush <dark>· <muted>Stats"
+    player: "<accent><player>"
+    player-lore:
+      - "<arrow><primary>Siege<dark>: <muted><wins>"
+      - "<arrow><primary>Niederlagen<dark>: <muted><losses>"
+      - "<arrow><primary>Stürze<dark>: <muted><deaths>"
+      - "<arrow><primary>Münzen<dark>: <muted><points>"
+    global: "<arrow><primary>Globale Stats"
+  global-stats:
+    title: "<arrow><mlgrush>MLG Rush <dark>· <muted>Globale Stats"
+    wins: "<arrow><primary>Siege"
+    deaths: "<arrow><primary>Stürze"
+    kills: "<arrow><primary>Kills"
+    losses: "<arrow><primary>Niederlagen"
+    points: "<arrow><primary>Münzen"

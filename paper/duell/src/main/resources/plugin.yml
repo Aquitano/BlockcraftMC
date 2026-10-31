@@ -1,0 +1,6 @@
+name: Duell
+version: '${version}'
+main: me.blockcraft.duell.DuellPlugin
+api-version: '${minecraft}'
+author: Aquitano
+depend: [BlockcraftAPI]

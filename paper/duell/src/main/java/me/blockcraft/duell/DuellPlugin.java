@@ -1,0 +1,103 @@
+package me.blockcraft.duell;
+
+import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
+import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.command.CommandRegistry;
+import me.blockcraft.api.game.ArenaProtection;
+import me.blockcraft.api.game.ForceMapCommand;
+import me.blockcraft.api.game.GameConfig;
+import me.blockcraft.api.game.LobbyProtection;
+import me.blockcraft.api.game.LootChests;
+import me.blockcraft.api.game.ServerRestart;
+import me.blockcraft.api.game.SetupCommand;
+import me.blockcraft.api.game.StartCommand;
+import me.blockcraft.api.game.StatsCommand;
+import me.blockcraft.api.game.StatsMenus;
+import me.blockcraft.api.game.StatsRepository;
+import me.blockcraft.api.game.TopCommand;
+import me.blockcraft.api.game.TopList;
+import me.blockcraft.common.duel.DuelPairRepository;
+import me.blockcraft.common.message.Messages;
+import me.blockcraft.duell.config.DuellConfig;
+import me.blockcraft.duell.config.Spawns;
+import me.blockcraft.duell.arena.SumoArena;
+import me.blockcraft.duell.game.Duel;
+import me.blockcraft.duell.game.DuelGames;
+import me.blockcraft.api.game.rush.MapPool;
+import me.blockcraft.api.game.rush.RushArena;
+import me.blockcraft.api.game.rush.RushConfig;
+import org.bukkit.NamespacedKey;
+import me.blockcraft.duell.game.DuelRatings;
+import me.blockcraft.duell.game.GameItems;
+import me.blockcraft.duell.listener.ConnectionListener;
+import me.blockcraft.duell.listener.ProtectionListener;
+import org.bukkit.Bukkit;
+import org.bukkit.event.Listener;
+import org.bukkit.plugin.java.JavaPlugin;
+
+import java.util.List;
+
+public final class DuellPlugin extends JavaPlugin {
+
+    private Duel duel;
+
+    @Override
+    public void onEnable() {
+        saveDefaultConfig();
+        var gameConfig = GameConfig.from(getConfig());
+        var config = DuellConfig.from(getConfig());
+        var api = BlockcraftApi.get();
+        var spawns = Spawns.load(api.map().file(this, "locations.yml"));
+        var messages = Messages.load(getDataPath(), () -> getResource("messages.yml"), api.tags());
+        var stats = new StatsRepository(api.database(), "duell_stats");
+        stats.createTable();
+        var pairs = new DuelPairRepository(api.database());
+        pairs.createTable();
+
+        var items = new GameItems(messages);
+        var topList = new TopList(this, stats, messages);
+        var statsMenus = StatsMenus.ranked(messages, stats, topList, gameConfig.globalStatsHead());
+        var rushConfig = RushConfig.from(getConfig().getConfigurationSection("mlgrush") == null
+                ? new org.bukkit.configuration.file.YamlConfiguration() : getConfig().getConfigurationSection("mlgrush"));
+        var rushMaps = MapPool.load(getDataPath().resolve("rush/maps.yml"), rushConfig.arena());
+        var rushArena = new RushArena(rushMaps.maps().getFirst(), new NamespacedKey(this, "rush"));
+        var lootChests = new LootChests(config.loot());
+        var games = new DuelGames(this, config, messages, spawns, new SumoArena(config.sumo()),
+                rushArena, rushConfig, rushMaps, items, lootChests);
+        duel = new Duel(this, gameConfig, config, messages, spawns, games, stats, statsMenus,
+                new DuelRatings(this, messages, api.elo()), pairs);
+        api.presence().maxPlayers(Duel.MAX_PARTICIPANTS);
+
+        List.of(
+                new ConnectionListener(duel),
+                new ProtectionListener(duel, api.buildMode()),
+                new LobbyProtection(() -> !duel.isIngame(), api.buildMode(), duel::lobbySpawn),
+                new ArenaProtection(duel::frozen),
+                duel.lobbyHotbar()
+        ).forEach(this::register);
+
+        getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
+            var commands = new CommandRegistry(event.registrar(), messages);
+            commands.register(StartCommand.of(duel.lobbyCountdown()).build());
+            commands.register(SetupCommand.locations(messages, Spawns.places(config, Duel.MAX_PARTICIPANTS),
+                    Spawns.Place::name, spawns::set));
+            commands.register(ForceMapCommand.create(messages, duel::forcibleModes, duel::isLobby, duel::forceMode));
+            commands.register(StatsCommand.create(this, stats, messages));
+            commands.register(TopCommand.create(topList));
+        });
+
+        ServerRestart.whenIdle(this, gameConfig);
+    }
+
+    @Override
+    public void onDisable() {
+        if (duel != null) {
+            duel.shutdown();
+        }
+        Bukkit.getScheduler().cancelTasks(this);
+    }
+
+    private void register(Listener listener) {
+        getServer().getPluginManager().registerEvents(listener, this);
+    }
+}

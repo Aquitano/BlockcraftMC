@@ -1,0 +1,13 @@
+name: BlockcraftAPI
+version: '${version}'
+main: me.blockcraft.api.BlockcraftApiPlugin
+bootstrapper: me.blockcraft.api.BlockcraftApiBootstrap
+api-version: '${minecraft}'
+author: Aquitano
+description: Shared database connection and coins for the Blockcraft plugins
+dependencies:
+  server:
+    LuckPerms:
+      load: BEFORE
+      required: true
+      join-classpath: true

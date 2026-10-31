@@ -1,0 +1,12 @@
+name: Kugellobby
+origin: Blockcraft 2015–16
+category: Lobbys
+description: Diese Lobby verband fünf gläserne Kugeln durch kurze Übergänge und diente
+  auch als Warteraum für SurvivalGames.
+icon: glass
+arrival:
+  x: 10.5
+  y: 26.0
+  z: -13.5
+  yaw: -170.48277
+  pitch: 0.0

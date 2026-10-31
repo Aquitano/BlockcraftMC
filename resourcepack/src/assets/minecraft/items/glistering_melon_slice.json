@@ -1,0 +1,27 @@
+{
+  "model": {
+    "type": "minecraft:select",
+    "property": "minecraft:custom_model_data",
+    "index": 0,
+    "cases": [
+      {
+        "when": "blockcraft:icon/premium",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/premium"
+        }
+      },
+      {
+        "when": "blockcraft:ttt/medipack",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/ttt/medipack"
+        }
+      }
+    ],
+    "fallback": {
+      "type": "minecraft:model",
+      "model": "minecraft:item/glistering_melon_slice"
+    }
+  }
+}

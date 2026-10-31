@@ -1,0 +1,273 @@
+prefix: "<zombies>Zombies <dark>» <reset>"
+game-name: "<zombies>Zombies"
+commands:
+  start:
+    description: "Startet die Zombies-Runde"
+  stats:
+    description: "Zeigt die Zombies-Stats eines Spielers"
+  top:
+    description: "Zeigt die Zombies-Bestenliste"
+  setup:
+    description: "Richtet die Zombies-Arena ein"
+  zombies:
+    description: "Erklärt Zombies und seine Steuerung"
+join:
+  introduction: "<prefix><muted>Überlebe allein oder im Team <max-waves> Wellen. <accent>/zombies <muted>erklärt dir die Steuerung."
+guide:
+  item: "<arrow><zombies>Spielanleitung"
+  title: "<arrow><zombies>Zombies <dark>· <muted>Spielanleitung"
+  body:
+    - "<zombies>Ein bis vier Spieler verteidigen den Außenposten. Die Gegnerzahl wächst mit eurem Team."
+    - "<muted>Mit Rechtsklick schießt du, mit Linksklick lädst du nach. Dein Messer liegt im dritten Slot. Kopftreffer verursachen mehr Schaden."
+    - "<muted>Treffer, Kills und reparierte Fenster bringen Gold. Kaufe an Stationen Waffen und Rüstung. Bei zwei Waffen ersetzt ein Kauf die gehaltene Waffe."
+    - "<muted>Öffne die Kupfertore und schalte den Strom ein. Dann stehen Perks, Waffenverbesserungen und die Team-Wiederbelebung bereit."
+    - "<muted>Schleiche neben einem Fenster, um es zu reparieren. Nahe Gegner verhindern die Reparatur. Reparaturgold ist pro Welle begrenzt."
+    - "<muted>Schleiche neben einem gefallenen Mitspieler, um ihn zu retten. Verblutete Spieler kehren nach der Welle zurück und verlieren ihre Perks. Fällt der letzte Spieler, verliert das Team."
+    - "<muted>Im Solo-Spiel rettet dich der Perk Schnelle Wiederbelebung einmal vor dem Tod und wird dabei verbraucht."
+    - "<muted>Nach <heal-delay> Sekunden ohne Schaden heilst du dich langsam. Gold und Ausrüstung gelten nur für diese Runde. Netzwerk-Coins und Stats bleiben erhalten."
+    - "<muted>Im Außenposten liegen Notizen auf Lesepulten. Sie erzählen, was hier passiert ist. Jede Notiz, die du zum ersten Mal liest, bringt Netzwerk-Coins."
+game:
+  enemy-name: "Die Horde"
+  started: "<prefix><muted>Ihr startet mit <accent><players> <muted>Spielern. Überlebt <accent><waves> <muted>Wellen!"
+  powered: "<prefix><success>Der Strom ist an! Perks, Verbesserungen und die Team-Station sind bereit."
+  won: "<prefix><success>Alle Wellen überlebt! Der Außenposten ist gesichert."
+  lost: "<prefix><error>Das Team ist gefallen. Ihr habt Welle <accent><wave> <error>erreicht."
+wave:
+  title: "<zombies>Welle <wave>"
+  boss-title: "<error>Bosswelle <wave>"
+  hound-title: "<error>Höllenhunde <dark>· <error>Welle <wave>"
+  subtitle: "<muted><enemies> Gegner <dark>· <muted>Bleibt zusammen"
+  bar: "<zombies>Welle <wave>/<total> <dark>· <primary><remaining> Gegner übrig"
+  cleared: "<prefix><success>Welle <wave> überlebt! <accent>+<gold> Gold <muted>für jeden Spieler."
+  cleared-title: "<success>Welle <wave> überlebt"
+  cleared-subtitle: "<muted>Nächste Welle in <seconds>s <dark>· <muted>Repariert die Fenster"
+event:
+  blood_moon:
+    name: "<arrow><error>Blutmond"
+    goal: "<arrow><muted>Jeder Kill <dark>· <accent><multiplier>x Gold"
+    title: "<error>Blutmond <dark>· <error>Welle <wave>"
+    subtitle: "<muted>Die Horde ist schneller <dark>· <accent><multiplier>x Gold pro Kill"
+    announce: "<prefix><error>Ein Blutmond geht auf! <muted>Die Gegner dieser Welle sind schneller, jeder Kill bringt <accent><multiplier>x Gold<muted>."
+  power_outage:
+    name: "<arrow><error>Stromausfall"
+    goal: "<arrow><muted>Generator reparieren <dark>· <accent><progress>%"
+    title: "<error>Stromausfall"
+    subtitle: "<muted>Schleiche <seconds>s am Generator, um ihn zu reparieren"
+    announce: "<prefix><error>Der Generator ist ausgefallen! <muted>Perks, Verbesserungen und die Team-Station haben keinen Strom. Schleiche am Generator, um ihn zu reparieren."
+    fixing: "<success>Generator wird repariert <dark>· <primary><progress>%"
+    fixed: "<prefix><primary><player> <muted>hat den Generator repariert. <accent>+<gold> Gold"
+    restored: "<prefix><muted>Der Generator springt wieder an."
+  bounty:
+    name: "<arrow><accent>Kopfgeld"
+    goal: "<arrow><muted>Leuchtendes Ziel <dark>· <accent><seconds>s"
+    tag: "<accent>Kopfgeld <dark>· <enemy> <dark>· <accent><gold> Gold"
+    title: "<accent>Kopfgeld"
+    subtitle: "<muted>Erledige den leuchtenden Gegner <dark>· <accent>+<gold> Gold"
+    announce: "<prefix><accent>Kopfgeld! <muted>Wer den leuchtenden Gegner in <accent><seconds>s <muted>erledigt, erhält <accent><gold> Gold<muted>."
+    claimed: "<prefix><primary><player> <muted>kassiert das Kopfgeld. <accent>+<gold> Gold"
+    expired: "<prefix><muted>Das Kopfgeld ist verfallen."
+    lost: "<prefix><muted>Das Ziel hat sich selbst gesprengt. Das Kopfgeld ist verfallen."
+  toxic_fog:
+    name: "<arrow><success>Giftnebel"
+    goal-warning: "<arrow><error>Gas <dark>· <muted><room> in <seconds>s"
+    goal: "<arrow><muted>Meidet <room> <dark>· <accent><seconds>s"
+    title: "<success>Giftnebel"
+    subtitle: "<muted>Gas im Bereich <room> in <seconds>s"
+    announce: "<prefix><success>Giftnebel! <muted>In <accent><seconds>s <muted>strömt Gas in den Bereich <zombies><room><muted>. Verlasst ihn!"
+    cleared: "<prefix><muted>Der Giftnebel im Bereich <zombies><room> <muted>hat sich verzogen."
+timer:
+  intermission: "<zombies>Ausrüsten <dark>· <primary>Nächste Welle in <seconds>s"
+  wave: "<zombies>Verbleibende Zeit <dark>· <primary><time>"
+weapon:
+  pistol: "Pistole"
+  rifle: "Sturmgewehr"
+  shotgun: "Schrotflinte"
+  sniper: "Scharfschützengewehr"
+  flamethrower: "Flammenwerfer"
+  knife: "<primary>Messer"
+  knife-lore: "<muted>Für den Nahkampf, wenn die Munition knapp wird."
+  name: "<zombies><weapon>"
+  upgraded: "<accent><weapon> <dark>· <success>Verbessert"
+  lore:
+    - "<muted>Munition <primary><clip> <dark>/ <muted><reserve>"
+    - "<right>Schießen <dark>· <left>Nachladen"
+  empty: "<error>Keine Munition. Kaufe Nachschub an der Waffenstation."
+hud:
+  downed: "<error>Du brauchst Hilfe <dark>· <accent>Noch <seconds>s"
+  weapon: "<zombies><weapon> <dark>· <primary><clip><dark>/<muted><reserve> <dark>· <accent><gold> Gold"
+  reload: "<accent>Nachladen <seconds>s <dark>· <muted><weapon> <dark>· <accent><gold> Gold"
+enemy:
+  walker: "<zombies>Zombie"
+  runner: "<error>Sprinter"
+  tank: "<muted>Panzerzombie"
+  exploder: "<error>Sprengzombie"
+  toxic: "<success>Giftzombie"
+  hellhound: "<error>Höllenhund"
+  inferno: "<error><bold>Inferno"
+  crawler: "<zombies>Kriecher"
+  shield_bearer: "<muted>Schildträger"
+  frost: "<primary>Frost-Zombie"
+  arsonist: "<error>Brandstifter"
+  electric: "<accent>Elektro-Zombie"
+  breeder: "<success>Brüter"
+  shadow: "<dark>Schattenläufer"
+revive:
+  solo: "<prefix><success>Selbstrettung! <muted>Dein Wiederbelebungs-Perk wurde verbraucht."
+  downed: "<prefix><error><player> ist gefallen! <muted>Du hast <accent><seconds>s <muted>für die Rettung."
+  marker: "<error><player> <dark>· <accent><seconds>s\n<muted>Schleichen zum Retten <dark>· <success><progress>%"
+  helping: "<success>Du rettest <player> <dark>· <primary><progress>%"
+  saved: "<prefix><success><player> ist wieder auf den Beinen!"
+  out: "<prefix><muted><player> kehrt nach dieser Welle zurück."
+window:
+  repaired: "<success>Fenster repariert <dark>· <accent>+<gold> Gold"
+room:
+  yard: "Hof"
+  depot: "Depot"
+  workshop: "Werkstatt"
+  power: "Generatorraum"
+  clinic: "Krankenstation"
+  label: "<zombies><room>\n<accent><price> Gold <dark>· <muted>Tor anklicken"
+  open-label: "<zombies><room>\n<success>Geöffnet"
+  opened: "<prefix><primary><player> <muted>hat <zombies><room> <muted>für das Team geöffnet."
+station:
+  armory: "Waffen & Munition"
+  armor: "Rüstung"
+  perks: "Perks"
+  power: "Strom einschalten"
+  upgrade: "Waffe verbessern"
+  mystery: "Zufallskiste"
+  team_revive: "Team-Wiederbelebung"
+  label: "<zombies><station>\n<muted>Station anklicken"
+perk:
+  extra_health: "Zusätzliche Herzen"
+  quick_reload: "Schnelles Nachladen"
+  quick_revive: "Schnelle Wiederbelebung"
+  frozen_bullets: "Eisgeschosse"
+  description:
+    extra_health: "<muted>Erhöht deine maximale Gesundheit um <hearts> Herzen."
+    quick_reload: "<muted>Halbiert die Nachladezeit deiner Waffen."
+    quick_revive: "<muted>Rettet Mitspieler doppelt so schnell oder dich selbst einmal im Solo-Spiel."
+    frozen_bullets: "<muted>Deine Treffer verlangsamen Gegner."
+shop:
+  title: "<arrow><zombies>Zombies <dark>· <muted><station>"
+  price: "<muted>Preis <dark>· <accent><price> Gold"
+  balance: "<accent><gold> Gold verfügbar"
+  buy: "<click>Kaufen"
+  owned: "<muted>Bereits vorhanden oder gerade nicht verfügbar"
+  requires-power: "<error>Schalte zuerst den Strom ein."
+  power-out: "<error>Der Strom ist ausgefallen. Repariert den Generator."
+  weapon-hint:
+    - "<muted>Du trägst höchstens zwei Waffen."
+    - "<muted>Die gehaltene Waffe wird bei Bedarf ersetzt."
+  weapon-stats: "<muted>Schaden pro Schuss <primary><damage> <dark>· <muted>Magazin <primary><clip>"
+  ammo: "<primary>Gehaltene Waffe vollständig nachladen"
+  armor: "<primary>Rüstung <dark>· <muted>Stufe <tier>"
+  power: "<primary>Strom für das Team einschalten"
+  upgrade: "<primary>Gehaltene Waffe verbessern"
+  mystery: "<primary>Zufällige Waffe ziehen"
+  team-revive: "<primary>Alle gefallenen Mitspieler retten"
+  unavailable: "<error>Dieser Kauf ist gerade nicht verfügbar."
+  not-enough: "<error>Du hast nicht genug Gold."
+  bought: "<success>Gekauft <dark>· <accent><gold> Gold übrig"
+  mystery-take: "<muted>Nimm die Waffe innerhalb von <accent><seconds>s <muted>aus der Kiste."
+mystery:
+  result: "<prefix><muted>Die Kiste zeigt <zombies><weapon><muted>! Klicke sie innerhalb von <accent><seconds>s <muted>an, um sie zu nehmen."
+  gone: "<prefix><muted>Die Kiste hat <zombies><weapon> <muted>wieder verschluckt."
+  spinning: "<muted>Warte, bis die Kiste stehen bleibt."
+  busy: "<error>Die Kiste ist gerade in Benutzung."
+note:
+  title: "<arrow><zombies>Notiz <dark>· <muted><note>"
+  found-title: "<zombies>Notiz gefunden"
+  found-subtitle: "<accent>+<coins> Coins <dark>· <muted><found>/<total> Notizen"
+  found: "<prefix><muted>Du hast <zombies><note> <muted>gelesen. <accent>+<coins> Coins <dark>· <muted><found>/<total> Notizen gefunden"
+  yard:
+    name: "Wachbuch"
+    body:
+      - "<muted>Tag 1. Der Konvoi ist nicht gekommen. Der Funk ist seit 04:12 Uhr tot."
+      - "<muted>Tag 3. Bewegung am Waldrand. Wir haben die Fenster vernagelt. Der Kommandant sagt, es sind Plünderer."
+      - "<muted>Tag 4. Plünderer stöhnen nicht."
+      - "<dark>Wache Nord"
+  depot:
+    name: "Lieferschein"
+    body:
+      - "<muted>Lieferung 7. Vierzig Kisten, Inhalt medizinisch. Nicht öffnen, nur kühl lagern."
+      - "<muted>Der Kühlraum ist voll, deshalb steht Kiste 23 in der Halle."
+      - "<muted>Kiste 23 kratzt von innen. Wir haben sie nicht geöffnet. Jetzt ist sie offen."
+      - "<dark>Lagerist M. Brandt"
+  workshop:
+    name: "Werkstattbuch"
+    body:
+      - "<muted>Der Jeep bleibt auf der Hebebühne. Ohne Ersatzteile kommt hier keiner mehr weg."
+      - "<muted>Ich habe die alten Gewehre umgebaut. Sie schießen schneller und halten weniger aus. Wie wir."
+      - "<muted>Sobald der Strom wieder läuft, holt die Werkbank mehr aus jeder Waffe heraus."
+      - "<dark>Mechanikerin J. Albers"
+  power:
+    name: "Schichtprotokoll"
+    body:
+      - "<muted>23:40 Uhr. Generator abgeschaltet. Befehl des Kommandanten: Dunkelheit, damit sie uns nicht finden."
+      - "<muted>23:55 Uhr. Sie finden uns trotzdem. Mit Licht hätten wir sie wenigstens kommen sehen."
+      - "<muted>Wer das liest: Schalte ihn wieder ein. Die Krankenstation braucht den Strom."
+      - "<dark>Techniker O. Kranz"
+  clinic:
+    name: "Krankenakte"
+    body:
+      - "<muted>Patient 12. Biss am Unterarm, Fieber 41,2 Grad. Kein Puls seit 06:10 Uhr."
+      - "<muted>06:25 Uhr. Patient 12 sitzt aufrecht."
+      - "<muted>Die Leichenhalle ist verriegelt. Die Fächer sind von innen zerkratzt."
+      - "<muted>Wer das findet: Haltet die Fenster zu und bleibt zusammen."
+      - "<dark>Dr. E. Vogt"
+powerup:
+  max_ammo: "<success>Volle Munition"
+  double_gold: "<accent>Doppeltes Gold"
+  instant_kill: "<error>Sofort-Kill"
+  collected: "<prefix><powerup> <muted>für das ganze Team!"
+scoreboard:
+  title: "<zombies><bold>Zombies"
+  squad: "<muted><icon:mode> VERTEIDIGUNG"
+  event: "<muted><icon:time> EREIGNIS"
+  wave: "<arrow><muted>Welle <primary><wave>/<total>"
+  enemies: "<arrow><muted>Gegner <primary><enemies>"
+  gold: "<arrow><accent><gold> Gold"
+  state:
+    fighting: "<arrow><success>Im Einsatz"
+    downed: "<arrow><error>Warte auf Rettung"
+    out: "<arrow><muted>Zurück nach der Welle"
+summary:
+  wave: "<arrow><zombies>Erreichte Welle <dark>· <primary><wave>/<total>"
+  revives: "<arrow><zombies>Gerettete Mitspieler <dark>· <primary><revives>"
+setup:
+  help: "<prefix><muted>/setup lobby, spawn, spectator oder check. Räume, Fenster und Stationen stehen in der map-eigenen arena.yml."
+  saved: "<prefix><success>Position <point> gespeichert. Nutze /map save, um die Map-Vorlage zu aktualisieren."
+  lobby-only: "<prefix><error>Das geht nur vor Rundenbeginn in der Arena-Welt."
+  ready: "<prefix><success>Arena und Spawn sind bereit. Nutze /map save nach Änderungen."
+  invalid: "<prefix><error>Prüfe die Räume, Fenster, Stationen und den sicheren Spawn in arena.yml."
+stats:
+  header: "<muted>Zombies-Stats von <accent><player>"
+  lines:
+    - "<arrow><primary>Siege<dark>: <muted><wins>"
+    - "<arrow><primary>Niederlagen<dark>: <muted><losses>"
+    - "<arrow><primary>Tode<dark>: <muted><deaths>"
+    - "<arrow><primary>Zombie-Kills<dark>: <muted><kills>"
+    - "<arrow><primary>Coins<dark>: <muted><points>"
+top:
+  separator: "<muted><strikethrough>---------------------------------"
+  first: "<accent><bold>#1 <reset><primary><name> <dark>· <primary><value>"
+  entry: "<muted>#<rank> <primary><name> <dark>· <muted><value>"
+menu:
+  stats:
+    title: "<arrow><zombies>Zombies <dark>· <muted>Stats"
+    player: "<accent><player>"
+    player-lore:
+      - "<arrow><primary>Siege<dark>: <muted><wins>"
+      - "<arrow><primary>Niederlagen<dark>: <muted><losses>"
+      - "<arrow><primary>Tode<dark>: <muted><deaths>"
+      - "<arrow><primary>Zombie-Kills<dark>: <muted><kills>"
+      - "<arrow><primary>Coins<dark>: <muted><points>"
+    global: "<arrow><primary>Globale Stats"
+  global-stats:
+    title: "<arrow><zombies>Zombies <dark>· <muted>Globale Stats"
+    wins: "<arrow><primary>Siege"
+    deaths: "<arrow><primary>Tode"
+    kills: "<arrow><primary>Zombie-Kills"
+    losses: "<arrow><primary>Niederlagen"
+    points: "<arrow><primary>Coins"

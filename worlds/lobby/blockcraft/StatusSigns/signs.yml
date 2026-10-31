@@ -1,0 +1,169 @@
+signs:
+  '1':
+    group: duell
+    loc:
+      world: world
+      x: -931
+      y: 33
+      z: 1560
+  '2':
+    group: duell
+    loc:
+      world: world
+      x: -931
+      y: 33
+      z: 1559
+  '3':
+    group: duell
+    loc:
+      world: world
+      x: -931
+      y: 33
+      z: 1558
+  '7':
+    group: emeraldrush
+    loc:
+      world: world
+      x: -884
+      y: 31
+      z: 1612
+  '8':
+    group: emeraldrush
+    loc:
+      world: world
+      x: -884
+      y: 31
+      z: 1614
+  '9':
+    group: quicksg
+    loc:
+      world: world
+      x: -946
+      y: 28
+      z: 1687
+  '10':
+    group: quicksg
+    loc:
+      world: world
+      x: -948
+      y: 28
+      z: 1687
+  '11':
+    group: quicksg
+    loc:
+      world: world
+      x: -950
+      y: 28
+      z: 1687
+  '12':
+    group: bedwars
+    loc:
+      world: world
+      x: -889
+      y: 32
+      z: 1577
+  '13':
+    group: bedwars
+    loc:
+      world: world
+      x: -889
+      y: 32
+      z: 1579
+  '14':
+    group: bedwars
+    loc:
+      world: world
+      x: -889
+      y: 32
+      z: 1581
+  '15':
+    group: mlgrush
+    loc:
+      world: world
+      x: -898
+      y: 32
+      z: 1584
+  '16':
+    group: mlgrush
+    loc:
+      world: world
+      x: -896
+      y: 32
+      z: 1584
+  '17':
+    group: mlgrush
+    loc:
+      world: world
+      x: -894
+      y: 32
+      z: 1584
+  '18':
+    group: zombies
+    loc:
+      world: world
+      x: -956
+      y: 23
+      z: 1549
+  '19':
+    group: zombies
+    loc:
+      world: world
+      x: -956
+      y: 23
+      z: 1551
+  '20':
+    group: zombies
+    loc:
+      world: world
+      x: -956
+      y: 23
+      z: 1553
+  '21':
+    group: endergames
+    loc:
+      world: world
+      x: -960
+      y: 27
+      z: 1701
+  '22':
+    group: endergames
+    loc:
+      world: world
+      x: -958
+      y: 27
+      z: 1701
+  '23':
+    group: endergames
+    loc:
+      world: world
+      x: -956
+      y: 27
+      z: 1701
+  '24':
+    group: ttt
+    loc:
+      world: world
+      x: -995
+      y: 30
+      z: 1563
+  '25':
+    group: ttt
+    loc:
+      world: world
+      x: -993
+      y: 30
+      z: 1563
+  '26':
+    group: ttt
+    loc:
+      world: world
+      x: -991
+      y: 30
+      z: 1563
+  '27':
+    group: emeraldrush
+    loc:
+      world: world
+      x: -884
+      y: 31
+      z: 1610

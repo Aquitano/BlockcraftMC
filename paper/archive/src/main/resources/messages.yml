@@ -1,0 +1,98 @@
+prefix: "<archive>Zeitkapsel <dark>» <reset>"
+arrival: "<archive>Zeitkapsel"
+
+commands:
+  setup:
+    description: "Setzt die Ankunft und die Checkpoints der Ausstellung, in der du stehst"
+  archive:
+    description: "Hinterlässt mit /archive note eine Notiz für spätere Besucher"
+
+join:
+  introduction: "<prefix><muted>Hier stehen die Maps früherer Server. Öffne mit der Taschenuhr die Ausstellungen, fliege frei herum und lies, was das Team für dich hinterlassen hat."
+
+hall:
+  welcome: "<archive>Zeitkapsel\n<muted>Maps früherer Server, so wie sie waren.\n<muted>Die Taschenuhr führt dich hin."
+
+hotbar:
+  guide: "<arrow><archive>Ausstellungen"
+  guide-lore:
+    - "<bullet><muted>Alte Maps, Checkpoints und Notizen"
+  note: "<arrow><archive>Notiz"
+  note-lore:
+    - "<click>Notiz hinterlassen"
+
+menu:
+  text: "<muted><line>"
+  travel: "<left>Hinreisen"
+  sections:
+    title: "<arrow><archive>Zeitkapsel"
+    empty: "<muted>Noch keine Ausstellungen. Schau bald wieder vorbei."
+  entrance: "<arrow><primary>Zur Eingangshalle"
+  entrance-lore:
+    - "<bullet><muted>Zurück an den Anfang"
+  section:
+    fallback-category: "Sonstiges"
+    name: "<arrow><archive><category>"
+    name-year: "<arrow><archive><category> <dark>· <muted><year>"
+    origin: "<bullet><muted><origin>"
+    one-exhibit: "<bullet><muted>Eine Ausstellung"
+    exhibits: "<bullet><accent><count> <muted>Ausstellungen"
+    open: "<left>Ansehen"
+  exhibit:
+    title: "<arrow><archive><exhibit> <dark>· <muted><origin>"
+    name: "<arrow><primary><exhibit>"
+    year: "<bullet><muted><origin>, <accent><year>"
+    one-checkpoint: "<bullet><muted>Ein Checkpoint"
+    checkpoints: "<bullet><accent><count> <muted>Checkpoints"
+    open: "<right>Checkpoints und Notizen"
+  arrival: "<arrow><primary>Ankunft"
+  checkpoint: "<arrow><primary><checkpoint>"
+  note:
+    name: "<arrow><accent>Notiz"
+    written: "<dark>von <muted><author> <dark>· <muted><date:'dd.MM.yyyy'>"
+    delete: "<right>Notiz löschen"
+
+travel:
+  loading: "<prefix><muted>Die Ausstellung <archive><exhibit> <muted>wird hervorgeholt …"
+  failed: "<prefix><error>Die Ausstellung <accent><exhibit> <error>konnte gerade nicht geladen werden. Versuch es gleich noch einmal."
+  arrived: "<prefix><muted>Willkommen in <archive><exhibit> <dark>· <muted><origin>"
+  checkpoint: "<prefix><muted>Du stehst bei <archive><checkpoint><muted>."
+  checkpoint-described: "<prefix><archive><checkpoint><dark>: <muted><description>"
+  note: "<prefix><muted>Hier hat <accent><author> <muted>eine Notiz hinterlassen."
+
+figure:
+  name: "<accent><name>"
+
+note:
+  display: "<accent><text>\n<dark>von <muted><author> <dark>· <muted><date:'dd.MM.yyyy'>"
+  usage: "<prefix><muted>Benutze <accent>/archive note<muted>, um hier eine Notiz zu hinterlassen."
+  not-in-exhibit: "<prefix><error>Notizen gehören in eine Ausstellung. Reise zuerst in eine hinein."
+  empty: "<prefix><error>Eine Notiz braucht Text."
+  left: "<prefix><success>Deine Notiz hängt jetzt hier."
+  deleted: "<prefix><success>Die Notiz wurde gelöscht."
+  already-deleted: "<prefix><muted>Die Notiz war schon gelöscht."
+  dialog:
+    title: "<arrow><archive>Notiz <dark>· <muted><exhibit>"
+    label: "Was sollen spätere Besucher hier wissen?"
+    leave: "<success>Hinterlassen"
+  delete:
+    accept: "<error>Löschen"
+
+setup:
+  help:
+    - " "
+    - "<muted>In einer Ausstellung:"
+    - "<muted>/setup spawn <dark>· <muted>Ankunft hierher"
+    - "<muted>/setup point add <dark>[<muted>Name<dark>] · <muted>Checkpoint hier setzen oder ändern"
+    - "<muted>/setup point remove <dark>[<muted>Name<dark>] · <muted>Checkpoint entfernen"
+    - " "
+  not-in-exhibit: "<prefix><error>Dafür musst du in einer Ausstellung stehen."
+  invalid-name: "<prefix><error>Ein Checkpoint-Name hat höchstens 32 Zeichen."
+  unknown-checkpoint: "<prefix><error>Hier gibt es keinen Checkpoint <accent><checkpoint><error>."
+  spawn-set: "<prefix><muted>Die Ankunft von <accent><what> <muted>wurde gesetzt. Mit <accent>/map save <muted>bleibt sie."
+  checkpoint-set: "<prefix><muted>Der Checkpoint <accent><what> <muted>wurde gesetzt. Mit <accent>/map save <muted>bleibt er."
+  checkpoint-removed: "<prefix><muted>Der Checkpoint <accent><what> <muted>wurde entfernt. Mit <accent>/map save <muted>bleibt das so."
+  checkpoint:
+    title: "<arrow><archive>Checkpoint <dark>· <muted><checkpoint>"
+    label: "Was gibt es hier zu sehen?"
+    save: "<success>Speichern"

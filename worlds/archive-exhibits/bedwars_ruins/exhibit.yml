@@ -1,0 +1,10 @@
+name: Ruins
+origin: Blockcraft 2015–16
+category: BedWars
+description: Vier verfallene Inseln um eine Ruine in der Mitte.
+icon: mossy_stone_bricks
+arrival:
+  x: 57.5
+  y: 76.0
+  z: 1.5
+  yaw: -269.1

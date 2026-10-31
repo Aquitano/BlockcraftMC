@@ -1,0 +1,104 @@
+spawn:
+  ==: org.bukkit.Location
+  world: world
+  x: -974.406914733093
+  y: 27.0
+  z: 1631.667395534014
+  pitch: 5.454737
+  yaw: 270.42798
+shop-npc:
+  ==: org.bukkit.Location
+  world: world
+  x: -944.6256029474946
+  y: 24.0
+  z: 1586.5123903033145
+  pitch: -1.8821448
+  yaw: 0.2135175
+jump:
+  ==: org.bukkit.Location
+  world: world
+  x: -699.639348320377
+  y: 7.5
+  z: 1576.9258316658504
+  pitch: 0.6309638
+  yaw: 88.572266
+shop:
+  ==: org.bukkit.Location
+  world: world
+  x: -944.5426913846899
+  y: 24.0
+  z: 1589.8860315210893
+  pitch: 6.2937365
+  yaw: -179.9867
+premium:
+  ==: org.bukkit.Location
+  world: world
+  x: -879.5066364759521
+  y: 76.5
+  z: 1621.6942889195989
+  pitch: 3.146962
+  yaw: -0.19751234
+duell:
+  ==: org.bukkit.Location
+  world: world
+  x: -921.4334343988269
+  y: 32.0
+  z: 1569.1306017893917
+  pitch: 1.678632
+  yaw: 167.0041
+qsg:
+  ==: org.bukkit.Location
+  world: world
+  x: -947.5061596652985
+  y: 26.0
+  z: 1677.4239367509515
+  pitch: 2.3078172
+  yaw: 0.85125655
+rush:
+  ==: org.bukkit.Location
+  world: world
+  x: -894.4461362930937
+  y: 30.0
+  z: 1612.4453278069464
+  pitch: 3.1469066
+  yaw: -90.197815
+bedwars:
+  ==: org.bukkit.Location
+  world: world
+  x: -899.5
+  y: 31.0
+  z: 1579.5
+  yaw: 270.0
+  pitch: 0.0
+zombies:
+  ==: org.bukkit.Location
+  world: world
+  x: -952.5
+  y: 21.0
+  z: 1551.5
+  pitch: 0.0
+  yaw: 90.0
+endergames:
+  ==: org.bukkit.Location
+  world: world
+  x: -957.5
+  y: 25.0
+  z: 1698.5
+  pitch: 0.0
+  yaw: 0.0
+ttt:
+  ==: org.bukkit.Location
+  world: world
+  x: -992.5
+  y: 28.0
+  z: 1566.5
+  pitch: 0.0
+  yaw: 180.0
+mlgrush:
+  ==: org.bukkit.Location
+  world: world
+  x: -895.5
+  y: 30.0
+  z: 1581.5
+  pitch: 0.0
+  yaw: 0.0

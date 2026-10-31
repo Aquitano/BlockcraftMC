@@ -1,0 +1,35 @@
+{
+  "model": {
+    "type": "minecraft:select",
+    "property": "minecraft:custom_model_data",
+    "index": 0,
+    "cases": [
+      {
+        "when": "blockcraft:gadgets/grappling_hook",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/gadgets/grappling_hook"
+        }
+      },
+      {
+        "when": "blockcraft:icon/gadgets",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/gadgets"
+        }
+      }
+    ],
+    "fallback": {
+      "type": "minecraft:condition",
+      "on_false": {
+        "type": "minecraft:model",
+        "model": "minecraft:item/fishing_rod"
+      },
+      "on_true": {
+        "type": "minecraft:model",
+        "model": "minecraft:item/fishing_rod_cast"
+      },
+      "property": "minecraft:fishing_rod/cast"
+    }
+  }
+}

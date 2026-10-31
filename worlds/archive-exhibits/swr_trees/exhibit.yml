@@ -1,0 +1,12 @@
+name: Trees
+origin: Blockcraft 2015–16
+category: SkyWars
+description: Eine mit SkyWarsReloaded gelieferte Beispielkarte aus dem Blockcraft-Backup
+  mit baumbestandenen Inseln um eine kleine Mittelinsel.
+icon: oak_sapling
+arrival:
+  x: -4.5
+  y: 93.0
+  z: 16.5
+  yaw: 180.0
+  pitch: 0.0

@@ -1,0 +1,337 @@
+# The whole dev network: MariaDB, the Velocity proxy and one Paper server per game mode. Plugin jars, LuckPerms and
+# ViaVersion included, come from `./gradlew stagePlugins`; each Paper service lists the plugin directories it runs in
+# COPY_PLUGINS_SRC, ViaVersion's so clients newer than the server join (README, "Client versions"), and the PvP games
+# GrimAC's (README, "Anticheat"). The servers find each other through the database (README, "Run locally"). Each
+# server's map comes from worlds/<group> (README, "Maps"): the world is copied fresh from there at every start and
+# /map save writes it back.
+
+x-luckperms: &luckperms
+  LUCKPERMS_STORAGE_METHOD: mariadb
+  LUCKPERMS_DATA_ADDRESS: mariadb:3306
+  LUCKPERMS_DATA_DATABASE: blockcraft
+  LUCKPERMS_DATA_USERNAME: blockcraft
+  LUCKPERMS_DATA_PASSWORD: blockcraft
+  LUCKPERMS_MESSAGING_SERVICE: sql
+
+# Game servers restart themselves after a round (Bukkit.shutdown), so the container has to come back on its own.
+x-paper: &paper
+  image: itzg/minecraft-server:2026.10.0-java25
+  env_file: ./build/docker/runtime.env
+  restart: unless-stopped
+  stop_grace_period: 1m
+  depends_on:
+    mariadb:
+      condition: service_healthy
+    replay-storage:
+      condition: service_completed_successfully
+
+x-paper-env: &paper-env
+  <<: *luckperms
+  EULA: "TRUE"
+  TYPE: PAPER
+  TZ: Europe/Berlin
+  ONLINE_MODE: "FALSE"
+  NETWORK_COMPRESSION_THRESHOLD: "-1"
+  MAX_PLAYERS: "200"
+  SPAWN_PROTECTION: "0"
+  ALLOW_FLIGHT: "TRUE"
+  LEVEL_TYPE: minecraft:flat
+  GENERATOR_SETTINGS: '{"layers":[{"block":"minecraft:bedrock","height":1},{"block":"minecraft:dirt","height":2},{"block":"minecraft:grass_block","height":1}],"biome":"minecraft:plains"}'
+  MEMORY: 1G
+  # After an OutOfMemoryError Paper hangs halfway through stopping and still answers pings; exiting lets Docker
+  # restart it.
+  JVM_XX_OPTS: "-XX:+ExitOnOutOfMemoryError"
+  SYNC_SKIP_NEWER_IN_DESTINATION: "false"
+  CREATE_CONSOLE_IN_PIPE: "true"
+  # Empty rather than gone: the image then deletes the LuckPerms jar it downloaded before plugins were staged.
+  PLUGINS: ""
+  BLOCKCRAFT_DB_HOST: mariadb
+  BLOCKCRAFT_REPLAY_DIRECTORY: /replays
+
+services:
+  replay-storage:
+    image: itzg/minecraft-server:2026.10.0-java25
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["chown 1000:1000 /replays"]
+    restart: "no"
+    volumes:
+      - replays:/replays
+
+  mariadb:
+    image: mariadb:11.8
+    restart: unless-stopped
+    environment:
+      TZ: Europe/Berlin
+      MARIADB_DATABASE: blockcraft
+      MARIADB_USER: blockcraft
+      MARIADB_PASSWORD: blockcraft
+      MARIADB_ROOT_PASSWORD: root
+    ports:
+      - "127.0.0.1:3306:3306"
+    volumes:
+      - mariadb:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  velocity:
+    image: itzg/mc-proxy:2026.10.1-java25
+    env_file: ./build/docker/runtime.env
+    restart: unless-stopped
+    stop_grace_period: 1m
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    ports:
+      - "25565:25565"
+      - "8080:8080"
+    environment:
+      <<: *luckperms
+      TYPE: VELOCITY
+      TZ: Europe/Berlin
+      MEMORY: 512m
+      SYNC_SKIP_NEWER_IN_DESTINATION: "false"
+      BLOCKCRAFT_DB_HOST: mariadb
+      BLOCKCRAFT_WAKER_TOKEN: ${WAKER_TOKEN:-dev-waker-token}
+      BLOCKCRAFT_ON_DEMAND_GROUPS: ${ON_DEMAND_GROUPS:-bedwars,mlgrush,duell,zombies,endergames,ttt,emeraldrush,archive}
+      # The proxy's jars come only from build/docker/velocity: every start drops the old ones before copying, so a
+      # renamed jar never runs twice. The plugins' data directories stay.
+      REMOVE_OLD_PLUGINS: "TRUE"
+      REMOVE_OLD_MODS_INCLUDE: "*.jar"
+      REMOVE_OLD_MODS_DEPTH: "1"
+    volumes:
+      - ./build/docker/velocity:/plugins:ro
+      - ./dev/velocity/velocity.toml:/config/velocity.toml:ro
+      - ./dev/velocity/forwarding.secret:/config/forwarding.secret:ro
+      - velocity:/server
+
+  lobby:
+    <<: *paper
+    hostname: lobby
+    environment:
+      <<: *paper-env
+      BLOCKCRAFT_SERVER_GROUP: lobby
+      BLOCKCRAFT_WORLD_TEMPLATE: /worlds/lobby
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/lobby,/blockcraft/statussigns,/blockcraft/reports,/blockcraft/viaversion
+    volumes:
+      - ./build/docker/paper:/blockcraft:ro
+      - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
+      - ./worlds/lobby:/worlds/lobby
+      - lobby:/data
+      - replays:/replays
+
+  duell:
+    <<: *paper
+    hostname: duell
+    environment:
+      <<: *paper-env
+      BLOCKCRAFT_SERVER_GROUP: duell
+      BLOCKCRAFT_WORLD_TEMPLATE: /worlds/duell
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/duell,/blockcraft/viaversion,/blockcraft/grimac
+    volumes:
+      - ./build/docker/paper:/blockcraft:ro
+      - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
+      - ./worlds/duell:/worlds/duell
+      - duell:/data
+      - replays:/replays
+
+  emeraldrush:
+    <<: *paper
+    hostname: emeraldrush
+    environment:
+      <<: *paper-env
+      BLOCKCRAFT_SERVER_GROUP: emeraldrush
+      BLOCKCRAFT_WORLD_TEMPLATE: /worlds/emeraldrush
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/emeraldrush,/blockcraft/viaversion,/blockcraft/grimac
+    volumes:
+      - ./build/docker/paper:/blockcraft:ro
+      - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
+      - ./worlds/emeraldrush:/worlds/emeraldrush
+      - emeraldrush:/data
+      - replays:/replays
+
+  bedwars:
+    <<: *paper
+    hostname: bedwars
+    environment:
+      <<: *paper-env
+      BLOCKCRAFT_SERVER_GROUP: bedwars
+      BLOCKCRAFT_WORLD_TEMPLATE: /worlds/bedwars
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/bedwars,/blockcraft/viaversion,/blockcraft/grimac
+    volumes:
+      - ./build/docker/paper:/blockcraft:ro
+      - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
+      - ./worlds/bedwars:/worlds/bedwars
+      - bedwars:/data
+      - replays:/replays
+
+  mlgrush:
+    <<: *paper
+    hostname: mlgrush
+    environment:
+      <<: *paper-env
+      BLOCKCRAFT_SERVER_GROUP: mlgrush
+      BLOCKCRAFT_WORLD_TEMPLATE: ""
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/mlgrush,/blockcraft/viaversion,/blockcraft/grimac
+    volumes:
+      - ./build/docker/paper:/blockcraft:ro
+      - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
+      - mlgrush:/data
+      - replays:/replays
+
+  zombies:
+    <<: *paper
+    hostname: zombies
+    environment:
+      <<: *paper-env
+      BLOCKCRAFT_SERVER_GROUP: zombies
+      BLOCKCRAFT_WORLD_TEMPLATE: /worlds/zombies
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/zombies,/blockcraft/viaversion
+    volumes:
+      - ./build/docker/paper:/blockcraft:ro
+      - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
+      - ./worlds/zombies:/worlds/zombies
+      - zombies:/data
+      - replays:/replays
+
+  cores:
+    <<: *paper
+    hostname: cores
+    environment:
+      <<: *paper-env
+      BLOCKCRAFT_SERVER_GROUP: cores
+      BLOCKCRAFT_WORLD_TEMPLATE: ""
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/cores,/blockcraft/viaversion,/blockcraft/grimac
+    volumes:
+      - ./build/docker/paper:/blockcraft:ro
+      - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
+      - cores:/data
+      - replays:/replays
+
+  endergames:
+    <<: *paper
+    hostname: endergames
+    environment:
+      <<: *paper-env
+      BLOCKCRAFT_SERVER_GROUP: endergames
+      # The round's world is generated fresh at every start; its 400 chunks peaked at 1.2G in a test run.
+      MEMORY: 1536M
+      BLOCKCRAFT_WORLD_TEMPLATE: ""
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/endergames,/blockcraft/viaversion,/blockcraft/grimac
+    volumes:
+      - ./build/docker/paper:/blockcraft:ro
+      - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
+      - endergames:/data
+      - replays:/replays
+
+  ttt:
+    <<: *paper
+    hostname: ttt
+    environment:
+      <<: *paper-env
+      BLOCKCRAFT_SERVER_GROUP: ttt
+      BLOCKCRAFT_WORLD_TEMPLATE: ""
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/ttt,/blockcraft/viaversion,/blockcraft/grimac
+    volumes:
+      - ./build/docker/paper:/blockcraft:ro
+      - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
+      - ttt:/data
+      - replays:/replays
+
+  skywars:
+    <<: *paper
+    hostname: skywars
+    environment:
+      <<: *paper-env
+      BLOCKCRAFT_SERVER_GROUP: skywars
+      BLOCKCRAFT_WORLD_TEMPLATE: ""
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/skywars,/blockcraft/viaversion,/blockcraft/grimac
+    volumes:
+      - ./build/docker/paper:/blockcraft:ro
+      - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
+      - skywars:/data
+      - replays:/replays
+
+  archive:
+    <<: *paper
+    hostname: archive
+    environment:
+      <<: *paper-env
+      BLOCKCRAFT_SERVER_GROUP: archive
+      BLOCKCRAFT_WORLD_TEMPLATE: /worlds/archive
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/archive,/blockcraft/viaversion
+    volumes:
+      - ./build/docker/paper:/blockcraft:ro
+      - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
+      - ./worlds/archive:/worlds/archive
+      - ./worlds/archive-exhibits:/exhibits
+      - archive:/data
+      - replays:/replays
+
+  quicksg:
+    <<: *paper
+    hostname: quicksg
+    environment:
+      <<: *paper-env
+      BLOCKCRAFT_SERVER_GROUP: quicksg
+      BLOCKCRAFT_WORLD_TEMPLATE: /worlds/quicksg
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/quicksg,/blockcraft/viaversion,/blockcraft/grimac
+    volumes:
+      - ./build/docker/paper:/blockcraft:ro
+      - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
+      - ./worlds/quicksg:/worlds/quicksg
+      - quicksg:/data
+      - replays:/replays
+
+  replay:
+    <<: *paper
+    hostname: replay
+    environment:
+      <<: *paper-env
+      BLOCKCRAFT_SERVER_GROUP: replay
+      # Viewers wait in the default world while a recording loads; nothing hostile may spawn there.
+      DIFFICULTY: peaceful
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/viaversion
+    volumes:
+      - ./build/docker/paper:/blockcraft:ro
+      - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
+      - replay:/data
+      - replays:/replays
+
+  # Starts and stops game servers when the proxy's on-demand is enabled (README, "Server discovery and groups"). The
+  # only service with the Docker socket, which is root on the host: no published port, a token, and nothing but the
+  # services in WAKER_SERVICES.
+  waker:
+    image: eclipse-temurin:25-jre
+    restart: unless-stopped
+    command: ["java", "-jar", "/waker/waker.jar"]
+    environment:
+      TZ: Europe/Berlin
+      WAKER_TOKEN: ${WAKER_TOKEN:-dev-waker-token}
+      WAKER_PROJECT: ${COMPOSE_PROJECT_NAME:-blockcraftmc}
+      WAKER_SERVICES: bedwars,mlgrush,duell,zombies,endergames,ttt,skywars,cores,quicksg,emeraldrush,archive
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    volumes:
+      - ./build/docker/waker:/waker:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+
+volumes:
+  mariadb:
+  velocity:
+  lobby:
+  duell:
+  emeraldrush:
+  quicksg:
+  bedwars:
+  mlgrush:
+  zombies:
+  cores:
+  endergames:
+  ttt:
+  skywars:
+  archive:
+  replay:
+  replays:

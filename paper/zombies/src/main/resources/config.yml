@@ -1,0 +1,181 @@
+players:
+  min: 1
+  max: 4
+countdown:
+  lobby: 20
+  start: 5
+  restart: 15
+  intermission: 10
+  wave-limit: 300
+idle-restart-minutes: 50
+timer-bar: true
+global-stats-head: Kevos
+waves:
+  total: 30
+  base-enemies: 6
+  enemies-per-wave: 2
+  extra-player: 0.6
+  health-per-wave: 0.07
+  damage-per-wave: 0.04
+  spawn-ticks: 20
+  spawn-ticks-per-wave: 0.5
+  minimum-spawn-ticks: 7
+  max-alive: 32
+  boss-every: 10
+  late:
+    from: 10
+    health-per-wave: 0.10
+    health-per-extra-player: 0.05
+    spawn-ticks-per-wave: 0.5
+  hounds:
+    first: 7
+    every: 10
+    share: 0.75
+  stragglers: 3
+  straggler-speed: 0.30
+gold:
+  start: 300
+  hit: 5
+  kill: 25
+  repair: 10
+  repair-limit-per-wave: 100
+  wave-clear: 125
+rewards:
+  kill: 0
+  wave: 1
+  win: 40
+  note: 25
+revive:
+  bleed-seconds: 25
+  hold-seconds: 4
+  radius: 2.5
+  protection-seconds: 4
+barricades:
+  repair-ticks: 25
+  break-ticks: 30
+regeneration:
+  delay-seconds: 5
+combat:
+  damage-immunity-ticks: 10
+  knife-cooldown-ticks: 10
+  headshot-multiplier: 1.75
+  knife-damage: 6
+prices:
+  ammo: 200
+  armor: 600
+  upgrade: 1500
+  mystery: 750
+  power: 1000
+  team-revive: 1200
+powerups:
+  drop-chance: 0.03
+  seconds: 20
+  max-per-wave: 2
+# After a purchase at the mystery box a gun rises rise-height blocks out of it over rise-ticks and changes, slower and
+# slower, for roll-seconds. The buyer has take-seconds to click the box for the gun it stops on; then it sinks back
+# over sink-ticks and is gone without a refund. scale sizes the gun.
+mystery:
+  rise-ticks: 20
+  rise-height: 0.7
+  roll-seconds: 5
+  take-seconds: 10
+  sink-ticks: 20
+  scale: 0.6
+# Each armory shows the guns it sells in a ring of radius blocks, height blocks above the station, turning once every
+# spin-seconds.
+armory:
+  height: 2.35
+  radius: 0.7
+  scale: 0.6
+  spin-seconds: 12
+perks:
+  extra_health: 1000
+  quick_reload: 750
+  quick_revive: 500
+  frozen_bullets: 1250
+  extra-health-bonus: 20
+# A gun with burn-damage sets what it hits burning for burn-seconds. The flamethrower hits every enemy in a cone
+# whose half-angle, in radians, is its spread.
+weapons:
+  pistol: {price: 0, damage: 6, range: 40, pellets: 1, spread: 0.005, clip: 12, reserve: 120, cooldown-ticks: 7, reload-ticks: 35, upgrade-multiplier: 2.5}
+  rifle: {price: 500, damage: 8, range: 45, pellets: 1, spread: 0.015, clip: 30, reserve: 240, cooldown-ticks: 4, reload-ticks: 45, upgrade-multiplier: 2.5}
+  shotgun: {price: 650, damage: 4, range: 22, pellets: 7, spread: 0.12, clip: 6, reserve: 72, cooldown-ticks: 18, reload-ticks: 55, upgrade-multiplier: 2.5}
+  sniper: {price: 900, damage: 36, range: 65, pellets: 1, spread: 0, clip: 5, reserve: 60, cooldown-ticks: 22, reload-ticks: 50, upgrade-multiplier: 2.5}
+  flamethrower: {price: 1200, damage: 8, range: 12, pellets: 1, spread: 0.3, clip: 60, reserve: 360, cooldown-ticks: 4, reload-ticks: 65, upgrade-multiplier: 2.5, burn-damage: 4, burn-seconds: 4}
+enemies:
+  walker: {first-wave: 1, health: 20, damage: 4, speed: 0.23, weight: 12, late-weight: 5}
+  runner: {first-wave: 4, health: 16, damage: 3, speed: 0.30, weight: 3, late-weight: 6}
+  tank: {first-wave: 6, health: 65, damage: 6, speed: 0.17, weight: 2, late-weight: 5}
+  exploder: {first-wave: 9, health: 24, damage: 10, speed: 0.25, weight: 2, late-weight: 4}
+  toxic: {first-wave: 12, health: 30, damage: 4, speed: 0.22, weight: 2, late-weight: 4, slow-seconds: 3}
+  hellhound: {first-wave: 7, health: 16, damage: 3, speed: 0.32, weight: 0}
+  inferno: {first-wave: 10, health: 300, damage: 8, speed: 0.20, weight: 0}
+  crawler: {first-wave: 8, health: 8, damage: 2, speed: 0.33, weight: 1, late-weight: 2, scale: 0.5}
+  shield_bearer: {first-wave: 11, health: 40, damage: 5, speed: 0.20, weight: 1.5, late-weight: 3}
+  frost: {first-wave: 13, health: 30, damage: 4, speed: 0.23, weight: 1.5, late-weight: 3, slow-seconds: 2}
+  arsonist: {first-wave: 15, health: 24, damage: 2, speed: 0.25, weight: 1, late-weight: 2.5}
+  electric: {first-wave: 18, health: 32, damage: 5, speed: 0.23, weight: 1, late-weight: 2.5}
+  # A zombie taller than scale 1.02 no longer fits through the arena's two-block windows.
+  breeder: {first-wave: 21, health: 120, damage: 7, speed: 0.15, weight: 0.8, late-weight: 2}
+  shadow: {first-wave: 23, health: 36, damage: 6, speed: 0.36, weight: 1, late-weight: 2.5}
+# An exploder within trigger-range blocks of a player lights its fuse, hisses, glows and rushes; after fuse-ticks it
+# blasts everyone in sight within radius for up to its damage, less towards the edge, and throws them back. Shooting
+# it while the fuse burns kills it before it goes off.
+exploder:
+  trigger-range: 4
+  fuse-ticks: 30
+  rush-speed: 0.34
+  radius: 4.5
+  knockback: 1.1
+# From from-wave, each wave that is neither a boss nor a hound wave gets one event with chance, picked by weight.
+# The blood moon is decided as the wave starts; the others strike once a random share between earliest-share and
+# latest-share of the wave has spawned. The power outage needs bought power, the toxic fog a second open room.
+events:
+  from-wave: 4
+  chance: 0.35
+  earliest-share: 0.2
+  latest-share: 0.6
+  blood_moon: {weight: 1, speed-multiplier: 1.25, gold-multiplier: 2}
+  power_outage: {weight: 1, fix-seconds: 4, radius: 2.5, gold: 150, darkness-seconds: 4}
+  bounty: {weight: 1, gold: 250, seconds: 45}
+  toxic_fog: {weight: 1, warning-seconds: 5, seconds: 12, pulse-ticks: 20, damage: 2, slow-seconds: 2}
+# What the special enemies do. An arsonist's damage above is what its fire deals per pulse, an electric zombie's what
+# its zap deals to the first fighter, and a frost zombie's slow-seconds how long its chill lasts. Angles are degrees.
+abilities:
+  # Chosen as a pack of up to this many at one window; each counts as one enemy of the wave.
+  crawler:
+    pack: 3
+  # A hit from a shooter within front-angle of where it faces loses blocked-share of its damage.
+  shield_bearer:
+    front-angle: 60
+    blocked-share: 0.75
+  # Bursts into this many crawlers when it dies; they belong to the running wave.
+  breeder:
+    brood: 4
+  # Its touch and its aura add frost (the client's freeze overlay) and slow at the given level.
+  frost:
+    aura-radius: 3
+    aura-freeze-ticks: 30
+    touch-freeze-ticks: 70
+    slowness: 1
+  # Once inside, it keeps keep-distance from the nearest fighter and every throw-ticks lobs a Molotov at a fighter
+  # within throw-range; the bottle lands after flight-ticks and the ground burns within fire-radius for fire-seconds.
+  arsonist:
+    keep-distance: 6
+    throw-range: 13
+    throw-ticks: 100
+    flight-ticks: 22
+    fire-radius: 2
+    fire-seconds: 4
+    pulse-ticks: 20
+  # Every zap-ticks it zaps the nearest fighter within range; the zap jumps up to jumps times to a fighter within
+  # jump-range of the last one, each jump dealing jump-share of the damage before.
+  electric:
+    zap-ticks: 80
+    range: 10
+    jumps: 2
+    jump-range: 4
+    jump-share: 0.6
+  # Freezes in place while a fighter with line of sight looks within watch-angle of it.
+  shadow:
+    watch-angle: 30

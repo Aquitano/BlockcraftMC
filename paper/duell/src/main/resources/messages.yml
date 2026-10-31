@@ -1,0 +1,264 @@
+prefix: "<duell>Duell <dark>» <reset>"
+game-name: "<duell>Duell"
+
+commands:
+  start:
+    description: "Startet die Runde"
+  setup:
+    description: "Setzt die Duell-Spawns"
+  forcemap:
+    description: "Legt den Modus der Runde fest"
+  stats:
+    description: "Zeigt die Stats eines Spielers"
+  top:
+    description: "Zeigt die Top 10 einer Kategorie"
+
+mode:
+  vs: "1vs1"
+  sg: "SurvivalGames"
+  superjump: "SuperJump"
+  sumo: "Sumo"
+  mlgrush: "MLG Rush"
+  throw: "Wurfschlacht"
+
+join:
+  introduction: "<prefix><muted>Ein Gegner, eure Spielauswahl. Wählt oben das Format und darunter Modus und Map."
+  spectator: "<prefix><muted>Du bist als Zuschauer beigetreten."
+
+# <map> is the map's name or vote.random-map; option names a vote in its confirmation.
+vote:
+  option: "<mode> <dark>· <accent><map>"
+  random-map: "Zufällige Map"
+  result: "<prefix><muted>Gespielt wird <accent><mode> <muted>auf <accent><map><muted>."
+  cleared: "<prefix><muted>Deine Modus- und Map-Stimme ist zurückgenommen. Dein Format bleibt ausgewählt."
+
+tour:
+  fallback: "<prefix><muted>Für die Tour fehlen spielbare Modi. Es sind drei nötig. Ihr spielt ein Einzelspiel."
+  schedule: "<prefix><muted>Eure 3-Modi-Tour: <accent><modes><muted>. Ihr spielt alle drei Spiele, auch bei 2:0."
+  next: "<prefix><muted>Spiel <accent><game><muted>/<accent><total><muted>: <accent><mode> <muted>startet in <accent><seconds> Sekunden<muted>."
+  game-win: "<prefix><accent><player> <muted>gewinnt das Spiel in <accent><mode><muted>."
+  game-draw: "<prefix><accent><mode> <muted>endet unentschieden. Das Spiel zählt zur Tour."
+  score: "<prefix><white><first> <accent><first-score> <dark>: <accent><second-score> <white><second>"
+  result-note: "<muted>Deine Tourbilanz: <accent><score><muted>/<accent><games> <muted>Spiele gewonnen."
+  format-chosen: "<prefix><muted>Deine Auswahl: <accent><format><muted>."
+  format-single: "Einzelspiel"
+  format-tour: "3-Modi-Tour"
+  format-waiting: "<prefix><muted>Die Tour startet nur, wenn ihr beide die 3-Modi-Tour wählt. Bis dahin bleibt es beim Einzelspiel."
+  format-request: "<prefix><accent><player> <muted>möchte eine 3-Modi-Tour. Wähle in der Abstimmung ebenfalls die Tour, um zuzustimmen."
+
+combat:
+  legacy: "1.8"
+  modern: "Neu"
+  chosen: "<prefix><muted>Dein Kampfsystem: <accent><combat><muted>."
+  waiting: "<prefix><muted>Ein anderes Kampfsystem gilt nur, wenn ihr beide zustimmt. Sonst bleibt es bei <accent><combat><muted>."
+  request: "<prefix><accent><player> <muted>möchte mit dem Kampfsystem <accent><combat> <muted>kämpfen. Du kannst in der Spielauswahl zustimmen."
+  agreed: "<prefix><muted>Ihr kämpft mit dem Kampfsystem <accent><combat><muted>."
+
+rating:
+  chosen: "<prefix><muted>Deine Wertung: <accent><rating><muted>."
+  waiting: "<prefix><muted>Gewertet spielt ihr nur, wenn ihr beide zustimmt. Sonst bleibt es ungewertet."
+  request: "<prefix><accent><player> <muted>möchte gewertet spielen. Du kannst in der Spielauswahl zustimmen."
+  ranked: "<prefix><muted>Ihr kommt aus der gewerteten Warteschlange: dieses Duell zählt für eure Elo."
+  ranked-locked: "<prefix><muted>Ein Duell aus der gewerteten Warteschlange ist immer gewertet."
+  unrated: "Ungewertet"
+  rated: "Gewertet"
+
+round:
+  ended: "<prefix><muted>Die Runde wurde beendet."
+  draw:
+    - "<prefix><muted>Die Zeit ist um. Das Duell endet <accent>unentschieden<muted>."
+    - "<prefix><accent>Unentschieden. <muted>Selbst das Schwert will eine zweite Meinung."
+    - "<prefix><accent>Unentschieden. <muted>Ihr habt beide den Endgegner gespielt."
+
+# The ranked result of a round; <group> is the skill group's name from BlockcraftAPI's elo.groups.
+elo:
+  changed: "<prefix><muted>Elo <accent><delta> <dark>● <muted>Du stehst jetzt bei <accent><rating> <dark>(<group><dark>)<muted>."
+  promoted: "<prefix><success>Aufstieg! <muted>Du spielst ab jetzt in <group><muted>."
+  demoted: "<prefix><error>Abstieg. <muted>Du spielst ab jetzt in <group><muted>."
+
+tab:
+  name: "<dark>[<group><dark>] <name>"
+
+
+timer:
+  round: "<duell>Verbleibende Zeit <dark>● <white><time>"
+
+superjump:
+  checkpoint: "<prefix><white><player><muted> hat Checkpoint <accent><checkpoint> <muted>erreicht!"
+  goal: "<prefix><white><player><muted> hat das <primary>Ziel <muted>erreicht!"
+
+sumo:
+  map-name: "Steinring"
+  started: "<prefix><muted>Stoße deinen Gegner vom Ring. Wer zuerst <accent><target> Punkte <muted>hat, gewinnt."
+  point: "<prefix><accent><player> <muted>erhält einen Punkt! <accent><score><muted>/<accent><target> <muted>Punkte."
+  next-point: "<duell>Sumo <dark>· <muted>Nächster Punkt"
+
+throw:
+  started: "<prefix><muted>Wirf deinen Gegner vom Ring. Treffer schubsen nur. Wer zuerst <accent><target> Punkte <muted>hat, gewinnt."
+  next-point: "<duell>Wurfschlacht <dark>· <muted>Nächster Punkt"
+  melee: "<muted>Hier zählen nur Würfe, Schläge schubsen nicht."
+  item:
+    snowball: "<primary>Schneeball"
+    pumpkin: "<accent>Wurfkürbis"
+    egg: "<success>Osterei"
+
+mlgrush:
+  point: "<prefix><accent><player> <muted>bricht das Bett! <accent><score><muted>/<accent><target> <muted>Punkte."
+  started: "<prefix><muted>Baue zum Gegner und brich sein Bett. Wer zuerst <accent><target> Punkte <muted>hat, gewinnt."
+  result: "<muted>Deine Rush-Bilanz: <accent><score><muted>/<accent><target> <muted>Punkte."
+  item-stick: "<primary>Knockback-Stick"
+  item-blocks: "<primary>Baublöcke"
+  item-pickaxe: "<primary>Spitzhacke"
+
+title:
+  start: "<muted>Start!"
+  vs-round: "<primary>Runde <round>"
+  introduction: "<duell><mode> <dark>· <muted><map>"
+
+stats:
+  header: "<muted>Stats von <accent><player>"
+  lines:
+    - "<arrow><primary>Siege<dark>: <muted><wins>"
+    - "<arrow><primary>Niederlagen<dark>: <muted><losses>"
+    - "<arrow><primary>Tode<dark>: <muted><deaths>"
+    - "<arrow><primary>Kills<dark>: <muted><kills>"
+    - "<arrow><primary>Punkte<dark>: <muted><points>"
+top:
+  separator: "<muted><strikethrough>---------------------------------"
+  first: "<accent><bold>#1 <reset><primary><name><muted> ( <white><value><muted> )"
+  entry: "<reset>#<rank> <primary><name> <muted>( <white><value><muted> )"
+
+item:
+  vote: "<arrow><primary>Abstimmung"
+  rematch: "<arrow><duell>Revanche"
+  vs-kit:
+    helmet: "<primary>Helm"
+    chestplate: "<primary>Harnisch"
+    leggings: "<primary>Hose"
+    boots: "<primary>Schuhe"
+    sword: "<primary>Schwert"
+    rod: "<primary>Angel"
+    bow: "<primary>Bogen"
+    arrows: "<primary>Pfeile"
+
+menu:
+  formats:
+    single: "<arrow><primary>Einzelspiel"
+    single-lore:
+      - "<muted>Ein Spiel in eurem gewählten Modus."
+    tour: "<arrow><primary>3-Modi-Tour"
+    tour-lore:
+      - "<muted>Drei verschiedene Modi, auch bei 2:0."
+      - "<muted>Startet nur, wenn ihr beide die Tour wählt."
+    selected: "<success>Deine Auswahl"
+    choose: "<left>Format wählen"
+  modes:
+    title: "<arrow><duell>Duell <dark>· <muted>Spielauswahl"
+    vs: "<arrow><primary>1vs1"
+    vs-lore: "<muted>Schwert, Bogen und Angel."
+    sg: "<arrow><primary>SurvivalGames"
+    sg-lore: "<muted>Beute sammeln und überleben."
+    superjump: "<arrow><primary>SuperJump"
+    superjump-lore: "<muted>Als Erster durchs Ziel."
+    sumo: "<arrow><primary>Sumo"
+    sumo-lore: "<muted>Stoße deinen Gegner vom Ring."
+    votes: "<muted>Stimmen: <accent><votes>"
+    own-votes: "<muted>Stimmen: <accent><votes> <dark>· <success>Deine Wahl"
+    choose: "<left>Modus und Map wählen"
+    nominate: "<left>Modus wünschen und Map wählen"
+    random: "<arrow><primary>Zufällig"
+    random-lore:
+      - "<muted>Keine Modus- oder Map-Vorgabe."
+      - "<left>Dem Zufall überlassen"
+    mlgrush: "<arrow><primary>MLG Rush"
+    mlgrush-lore: "<muted>Brücken bauen, Betten brechen."
+    throw: "<arrow><primary>Wurfschlacht"
+    throw-lore: "<muted>Nur in der Saison: Schneebälle, Kürbisse oder Eier. Wirf ihn vom Ring."
+  rating:
+    unrated: "<arrow><primary>Ungewertet"
+    unrated-lore:
+      - "<muted>XP, Coins und Stats zählen."
+      - "<muted>Deine Elo bleibt unverändert."
+    rated: "<arrow><primary>Gewertet"
+    rated-lore:
+      - "<muted>Die ganze Begegnung zählt für deine Elo."
+      - "<muted>Nur wenn ihr beide zustimmt."
+    waiting: "<muted>Aktuell: <accent>Ungewertet"
+    agreed: "<success>Beide spielen gewertet."
+    toggle: "<left>Wertung wechseln"
+    ranked-lore:
+      - "<muted>Ihr kommt aus der gewerteten Warteschlange."
+      - "<muted>Die ganze Begegnung zählt für eure Elo."
+  combat:
+    legacy: "<arrow><primary>Kampfsystem 1.8"
+    legacy-lore:
+      - "<muted>Keine Abklingzeit zwischen den Schlägen."
+      - "<muted>Schwerter schlagen härter als Äxte."
+    modern: "<arrow><primary>Kampfsystem Neu"
+    modern-lore:
+      - "<muted>Abklingzeit wie in aktuellen Versionen."
+      - "<muted>Äxte sind langsam, aber hart."
+    rush: "<muted>MLG Rush spielt immer mit 1.8."
+    current: "<muted>Aktuell: <accent><combat>"
+    toggle: "<left>Kampfsystem wechseln"
+  maps:
+    title: "<arrow><duell><mode> <dark>· <muted>Eure Map"
+    map: "<arrow><primary><map>"
+  stats:
+    title: "<arrow><duell>Duell <dark>· <muted>Stats"
+    player: "<accent><player>"
+    player-lore:
+      - "<arrow><primary>Kills<dark>: <muted><kills>"
+      - "<arrow><primary>Siege<dark>: <muted><wins>"
+      - "<arrow><primary>Tode<dark>: <muted><deaths>"
+      - "<arrow><primary>K/D<dark>: <muted><kdr>"
+      - "<arrow><primary>Liga<dark>: <group>"
+      - "<arrow><primary>Elo<dark>: <muted><rating>"
+    global: "<arrow><primary>Globale Stats"
+  global-stats:
+    title: "<arrow><duell>Duell <dark>· <muted>Globale Stats"
+    wins: "<arrow><primary>Siege"
+    deaths: "<arrow><primary>Tode"
+    kills: "<arrow><primary>Kills"
+    losses: "<arrow><primary>Niederlagen"
+    points: "<arrow><primary>Punkte"
+
+scoreboard:
+  title: "<duell><bold>Duell"
+  duellists: "<muted><icon:opponent> DUELLANTEN"
+  spectator-player: "<primary><player>"
+  spectator-kills: "<primary><player> <dark>· <duell><kills> Kills"
+  spectator-points: "<primary><player> <dark>· <duell><points> Punkte"
+  spectator-checkpoint: "<primary><player> <dark>· <duell>Checkpoint <checkpoint>"
+  kills: "<muted><icon:kills> KILLS"
+  points: "<muted><icon:kills> PUNKTE"
+  mode: "<muted><icon:mode> MODUS"
+  mode-rating: "<mode> <dark>· <muted><rating>"
+  tour: "<muted><icon:mode> TOUR"
+  tour-progress: "<muted>Spiel <accent><game><muted>/<accent><total>"
+  tour-score: "<accent><wins> <dark>: <accent><opponent-wins>"
+  mode-voting: "<muted>Abstimmung läuft"
+  mode-leading: "<mode> <muted>führt"
+  group-value: "<arrow><group> <dark>(<white><rating><dark>)"
+  rating: "<muted>Wertung <dark>· <accent><rating>"
+  map-random: "<muted>Wird ausgewählt"
+  opponent: "<muted><icon:opponent> GEGNER"
+  opponent-none: "<muted>Warte auf einen Gegner"
+
+# The rematch offered when a duel ends; <opponent> is the other duellist.
+rematch:
+  offer: "<arrow><duell>[Revanche]"
+  offer-hover: "<muted>Klicke, um gleich noch einmal gegen <white><opponent> <muted>anzutreten."
+  asked:
+    - "<prefix><muted>Deine Revanche-Anfrage ist bei <white><opponent> <muted>angekommen."
+    - "<prefix><muted>Revanche bei <white><opponent> <muted>angefragt. Diesmal kennst du den Endgegner."
+    - "<prefix><muted>Revanche bei <white><opponent> <muted>angefragt. Das war nur die Generalprobe."
+  request: "<prefix><white><player> <muted>will eine Revanche. "
+  accept: "<success>[Annehmen]"
+  accept-hover: "<muted>Klicke, um die Revanche gegen <white><opponent> <muted>anzunehmen."
+  waiting: "<prefix><muted>Deine Anfrage steht, jetzt ist <white><opponent> <muted>am Zug."
+  gone: "<prefix><muted>Dein Gegner ist schon weg, die Revanche muss warten."
+
+mirror:
+  familiar: "<prefix><muted>Den Kampfstil von <accent><opponent> <muted>kennst du schon. Willkommen zur nächsten Begegnung."
+  inspection: "<prefix><muted>Zweimal unentschieden? Der Schiedsrichter verlangt eine Spiegelkontrolle. Euer Tag <dark>[<primary>SPIEGEL<dark>] <muted>wartet in den Lobby-Extras."

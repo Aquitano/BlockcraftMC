@@ -1,0 +1,136 @@
+# The teams a round seats, in the order the scoreboard lists them, and how many players each takes.
+teams:
+  players-per-team: 2
+  colors: [red, green, purple, yellow]
+
+# The lobby counts down once players.min are there, half of the default teams' places; /start makes do with two.
+players:
+  min: 4
+
+# The lobby counts down for countdown.lobby seconds, or countdown.start after /start. The map vote offers voting.maps
+# maps of the pool, those with era: og in their map.yml while the OG occasion is on and the others otherwise (either
+# set stands in when the other has none), and closes countdown.vote-closes-at seconds before the start, after which
+# /forcemap changes nothing; the chosen map is copied in those seconds, so countdown.start should not be shorter. A
+# round ends without a winner after countdown.round seconds, and the server restarts countdown.restart seconds after
+# the last round.
+countdown:
+  lobby: 60
+  start: 10
+  vote-closes-at: 10
+  round: 3600
+  restart: 30
+voting:
+  maps: 3
+idle-restart-minutes: 50
+timer-bar: true
+global-stats-head: Kevos
+# How long a running round keeps the place of a player who dropped out while their bed stands; 0 turns it off.
+rejoin-seconds: 180
+
+# What a kill and a win pay in coins.
+rewards:
+  kill: 5
+  win: 20
+
+# Ticks between two drops of each resource at every one of its spawners; the first drop comes after twice that.
+resources:
+  bronze-ticks: 12
+  iron-ticks: 200
+  gold-ticks: 600
+
+# Below this height a player dies and a spectator is put back above the map.
+void-height: -50
+
+# A cobweb melts after lifetime-seconds and a player may place one every cooldown-seconds, unless it guards a bed.
+webs:
+  cooldown-seconds: 20
+  lifetime-seconds: 10
+
+items:
+  mobile-shop-seconds: 20
+  parachute-seconds: 30
+  teleporter-seconds: 5
+  teleporter-height: 150
+  rescue-platform-radius: 2.5
+
+# 1.8 PvP: no attack cooldown, everything else stays vanilla.
+pvp:
+  legacy-combat: true
+
+# The shop, category by category, each in one row below the row of categories. An offer names its item (its name
+# is shop.items.<item> in messages.yml), the material and amount it gives, its price in bronze, iron or gold, and how
+# often a shift-click buys it at most. color: glass gives the buyer's team glass, color: dye dyes leather armour in
+# the team's colour; special marks the items that do something when used, stick the knockback stick that wears the
+# buyer's perk. A spacer leaves a slot empty.
+shop:
+  - category: blocks
+    icon: red_sandstone
+    offers:
+      - {item: sandstone, material: red_sandstone, amount: 2, price: 1 bronze, shift: 32}
+      - {item: end-stone, material: end_stone, price: 7 bronze, shift: 64}
+      - {item: iron-block, material: iron_block, price: 3 iron, shift: 64}
+      - {item: glass, material: white_stained_glass, color: glass, price: 4 bronze, shift: 64}
+      - {item: glowstone, material: glowstone, amount: 4, price: 16 bronze, shift: 16}
+  - category: armor
+    icon: chainmail_chestplate
+    offers:
+      - {item: leather-helmet, material: leather_helmet, color: dye, price: 1 bronze}
+      - {item: leather-leggings, material: leather_leggings, color: dye, price: 1 bronze}
+      - {item: leather-boots, material: leather_boots, color: dye, price: 1 bronze}
+      - {item: chestplate-1, material: chainmail_chestplate, price: 1 iron}
+      - {item: chestplate-2, material: chainmail_chestplate, enchantments: {protection: 1}, price: 3 iron}
+      - {item: chestplate-3, material: chainmail_chestplate, enchantments: {protection: 2}, price: 7 iron}
+      - {item: chestplate-4, material: chainmail_chestplate, enchantments: {protection: 2, thorns: 1}, price: 11 iron}
+  - category: pickaxes
+    icon: iron_pickaxe
+    offers:
+      - {item: pickaxe-1, material: wooden_pickaxe, price: 7 bronze}
+      - {item: pickaxe-2, material: stone_pickaxe, price: 2 iron}
+      - {item: pickaxe-3, material: iron_pickaxe, price: 1 gold}
+  - category: swords
+    icon: wooden_sword
+    offers:
+      - {item: stick, material: stick, stick: true, enchantments: {knockback: 1}, price: 10 bronze}
+      - {item: sword-1, material: wooden_sword, price: 1 iron}
+      - {item: sword-2, material: wooden_sword, enchantments: {sharpness: 1}, price: 3 iron}
+      - {item: sword-3, material: wooden_sword, enchantments: {sharpness: 2}, price: 5 iron}
+      - {item: sword-4, material: iron_sword, enchantments: {sharpness: 1, knockback: 1}, price: 5 gold}
+  - category: bows
+    icon: bow
+    offers:
+      - {item: bow-1, material: bow, damage: 120, enchantments: {infinity: 1}, price: 3 gold}
+      - {item: bow-2, material: bow, damage: 120, enchantments: {infinity: 1, power: 1}, price: 7 gold}
+      - {item: bow-3, material: bow, damage: 120, enchantments: {infinity: 1, power: 2, punch: 1}, price: 11 gold}
+      - spacer
+      - {item: arrow, material: arrow, price: 1 gold}
+  - category: food
+    icon: cake
+    offers:
+      - {item: apple, material: apple, price: 2 bronze, shift: 64}
+      - {item: steak, material: cooked_beef, price: 4 bronze, shift: 64}
+      - {item: cake, material: cake, price: 1 iron, shift: 64}
+      - spacer
+      - {item: golden-apple, material: golden_apple, price: 2 gold, shift: 64}
+  - category: chests
+    icon: ender_chest
+    offers:
+      - {item: chest, material: chest, price: 2 iron, shift: 64}
+      - {item: team-chest, material: ender_chest, price: 1 gold, shift: 64}
+  - category: potions
+    icon: potion
+    offers:
+      - {item: healing-1, material: potion, potion: healing, price: 5 iron}
+      - {item: healing-2, material: potion, potion: strong_healing, price: 7 iron}
+      - {item: jump-boost, material: potion, potion: leaping, price: 10 iron}
+      - {item: strength, material: potion, potion: strength, price: 5 gold}
+  - category: extras
+    icon: emerald
+    offers:
+      - {item: ladder, material: ladder, price: 4 bronze, shift: 64}
+      - {item: teleporter, material: firework_rocket, special: teleporter, price: 10 iron, shift: 64}
+      - {item: mobile-shop, material: armor_stand, special: mobile-shop, price: 12 iron, shift: 64}
+      - {item: tnt, material: tnt, price: 5 gold, shift: 64}
+      - {item: parachute, material: chicken_spawn_egg, special: parachute, price: 2 gold, shift: 64}
+      - {item: rescue-platform, material: nether_star, special: rescue-platform, price: 3 gold, shift: 64}
+      - {item: ender-pearl, material: ender_pearl, price: 14 gold, shift: 64}
+      - {item: web, material: cobweb, price: 20 bronze, shift: 64}

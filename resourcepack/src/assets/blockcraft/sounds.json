@@ -1,0 +1,32 @@
+{
+  "ui.click": {
+    "sounds": [
+      "blockcraft:ui/click"
+    ]
+  },
+  "ui.open": {
+    "sounds": [
+      "blockcraft:ui/open"
+    ]
+  },
+  "ui.equip": {
+    "sounds": [
+      "blockcraft:ui/equip"
+    ]
+  },
+  "ui.purchase": {
+    "sounds": [
+      "blockcraft:ui/purchase"
+    ]
+  },
+  "ui.notify": {
+    "sounds": [
+      "blockcraft:ui/notify"
+    ]
+  },
+  "ui.win": {
+    "sounds": [
+      "blockcraft:ui/win"
+    ]
+  }
+}

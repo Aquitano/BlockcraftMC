@@ -1,0 +1,452 @@
+max-players: 100
+prices:
+  premium: 15000
+  head: 300
+  shirt: 500
+  hat: 800
+secrets:
+  reward: 50
+  # Once a player found this many secrets, the menu shows a riddle on each one still missing.
+  riddles-after: 3
+shop-npc:
+  respawn-seconds: 500
+# /setholo accepts these names; every one needs a holo.<name> block in messages.yml. Placing a name again replaces
+# its hologram, and the lines are re-read from messages.yml on every start.
+holograms:
+  - quicksg
+  - emeraldrush
+  - duell
+# /setholo accepts these names too. Each one is a hologram that shows the top ten of stat (kills, deaths, wins,
+# loses, points) in a game's stats table, under the game's name and icon, redrawn every refresh-seconds.
+leaderboards:
+  refresh-seconds: 300
+  # Within own-radius blocks of a board a player sees a line only they see: their own place on it.
+  own-radius: 10
+  holograms:
+    quicksg-kills:
+      game: quicksg
+      table: qsg_stats
+      stat: kills
+    quicksg-wins:
+      game: quicksg
+      table: qsg_stats
+      stat: wins
+    emeraldrush-kills:
+      game: emeraldrush
+      table: em_stats
+      stat: kills
+    emeraldrush-wins:
+      game: emeraldrush
+      table: em_stats
+      stat: wins
+    duell-kills:
+      game: duell
+      table: duell_stats
+      stat: kills
+    duell-wins:
+      game: duell
+      table: duell_stats
+      stat: wins
+fireworks:
+  - { x: -65, y: 22.5, z: 56 }
+  - { x: -69, y: 22.5, z: 56 }
+double-jump:
+  height: 0.6
+  multiply: 1.0
+jump-pad:
+  y: 0.18
+  multiply: 5.0
+  max-length: 6.0
+player-hider:
+  cooldown-millis: 3000
+effects:
+  kill-price: 500
+  win-price: 500
+  trail-interval-ticks: 2
+  trail-view-distance: 32
+  preview-ticks: 60
+gadgets:
+  cooldown-seconds: 5
+hud:
+  refresh-seconds: 5
+# The last round remains available in the profile; automatic dialogs require the player's auto-recap setting.
+recap:
+  max-age-minutes: 10
+# Navigator entry -> server group to join; stale-seconds matches the proxy's discovery setting.
+navigator:
+  groups:
+    qsg: quicksg
+    rush: emeraldrush
+    duell: duell
+    bedwars: bedwars
+    mlgrush: mlgrush
+    zombies: zombies
+    cores: cores
+    endergames: endergames
+    ttt: ttt
+    skywars: skywars
+    archive: archive
+  stale-seconds: 20
+
+friends:
+  timeout-ticks: 200
+
+cookies:
+  max-cookies: 1000000
+  clicks-per-second: 5
+  save-seconds: 30
+  shutdown-save-seconds: 5
+  upgrades:
+    - {cost: 50, per-click: 2}
+    - {cost: 200, per-click: 5}
+    - {cost: 1000, per-click: 10}
+
+activities:
+  konami-gap-seconds: 3
+  firework-cooldown-seconds: 30
+  sleep-after-seconds: 600
+  sleep-warning-seconds: 1200
+  sleep-duration-hours: 1
+  chicken-interval-seconds: 180
+  golden-egg-odds: 200
+  egg-lifetime-seconds: 20
+  pond-radius: 20
+  golden-carp-odds: 500
+  parkour-checkpoints: 7
+  parkour-fall-below: 4
+  perseverance-falls: 100
+  easter-spots: 20
+  easter-eggs: 10
+  advent-coins: 25
+  halloween-coins: 5
+  halloween-phrase: "Süßes oder Saures"
+  pumpkin-seconds: 300
+  christmas-coins: 100
+  place-radius: 4
+
+shooting-stars:
+  enabled: true
+  from-hour: 22
+  until-hour: 2
+  check-seconds: 60
+  odds: 30
+  cooldown-seconds: 1800
+  wish-seconds: 15
+  animation-ticks: 40
+  height: 24
+  length: 60
+  wish-prefixes: ["ich wünsche mir", "ich wuensche mir", "i wish"]
+
+# How the lobby looks and sounds while the network calendar celebrates; one section per occasion (halloween, winter,
+# christmas, ...), and every active one applies. The swaps happen only on the players' screens, so the map keeps its
+# blocks. blocks turns every block of a type (or of a #tag) into one of its list, drawn by position so it stays put;
+# keep the shapes alike, or players walk into blocks they do not see. cover lays one of its blocks on top of the
+# highest block of each column when that block is in on (any full block or leaves when on is empty), at chance;
+# snow on top also whitens the grass below. particle falls around every player, and one of sounds plays near them
+# about every every-seconds; both follow the player's effect and sound settings. snowfall-radius turns the lobby within
+# that many blocks of its spawn into a snowy biome while the season lasts and lets real snow fall for every player
+# with effects on; the map keeps its own biomes.
+seasons:
+  halloween:
+    blocks:
+      oak_leaves: [pale_oak_leaves, pale_oak_leaves, oak_leaves]
+      birch_leaves: [pale_oak_leaves]
+      dark_oak_leaves: [pale_oak_leaves]
+      spruce_leaves: [pale_oak_leaves, spruce_leaves]
+      grass_block: [grass_block, grass_block, grass_block, podzol]
+      short_grass: [short_grass, short_dry_grass, dead_bush]
+      "#small_flowers": [wither_rose, dead_bush]
+      torch: [soul_torch]
+      wall_torch: [soul_wall_torch]
+      lantern: [soul_lantern]
+      campfire: [soul_campfire]
+      glowstone: [jack_o_lantern]
+    cover:
+      on: [grass_block]
+      blocks:
+        - "leaf_litter[segment_amount=2,facing=north]"
+        - "leaf_litter[segment_amount=3,facing=east]"
+        - "leaf_litter[segment_amount=4,facing=south]"
+        - "leaf_litter[segment_amount=1,facing=west]"
+      chance: 0.2
+    particle:
+      type: ash
+      count: 6
+    sounds:
+      every-seconds: 45
+      list:
+        - {sound: ambient.cave, volume: 0.6, pitch: 1.0}
+        - {sound: entity.ghast.ambient, volume: 0.25, pitch: 0.6}
+        - {sound: entity.witch.celebrate, volume: 0.35, pitch: 0.8}
+        - {sound: entity.bat.ambient, volume: 0.5, pitch: 0.9}
+        - {sound: entity.creaking.ambient, volume: 0.5, pitch: 0.8}
+        - {sound: ambient.soul_sand_valley.mood, volume: 0.7, pitch: 1.0}
+        - {sound: block.wooden_door.close, volume: 0.4, pitch: 0.6}
+  winter:
+    blocks:
+      short_grass: [snow]
+      fern: [snow]
+    cover:
+      on: []
+      blocks: [snow]
+      chance: 1.0
+    snowfall-radius: 384
+    particle:
+      type: snowflake
+      count: 6
+    sounds:
+      every-seconds: 60
+      list:
+        - {sound: item.elytra.flying, volume: 0.12, pitch: 0.5}
+        - {sound: block.campfire.crackle, volume: 0.8, pitch: 1.0}
+        - {sound: block.powder_snow.step, volume: 0.5, pitch: 0.8}
+  christmas:
+    sounds:
+      every-seconds: 90
+      list:
+        - {sound: block.note_block.chime, volume: 0.4, pitch: 1.5}
+        - {sound: block.bell.resonate, volume: 0.3, pitch: 2.0}
+
+# Set pieces staff place with /setprop <name>; the spots are kept with the map (props.yml, /map save). A piece is a
+# group of parts round its spot that turns once every spin-seconds and rises and sinks by bob blocks every
+# bob-seconds; a still part, such as a pedestal, stays put. A part is a block, or an item that may ask for one of the
+# pack's models (model, a PackModel path) and is its vanilla self without the pack; glint: true gives the item the
+# enchantment glint. A part is centred at blocks from the spot, size blocks large, turned by yaw degrees and tilted by
+# roll degrees round its own z axis (a sword at roll -135 stands on its point). A game's piece is named after its area,
+# as in npc-<area>. Displays are drawn up to view-range times the vanilla distance and move one smoothed keyframe every
+# keyframe-ticks, which is one update per moving part and keyframe.
+props:
+  view-range: 0.5
+  keyframe-ticks: 20
+  pieces:
+    trophy:
+      spin-seconds: 16
+      bob: 0.08
+      bob-seconds: 5
+      parts:
+        - {block: POLISHED_BLACKSTONE_BRICKS, at: [0, 0.3, 0], size: [1.6, 0.6, 1.6], still: true}
+        - {block: SMOOTH_QUARTZ, at: [0, 0.7, 0], size: [1.2, 0.2, 1.2], still: true}
+        - {block: GOLD_BLOCK, at: [0, 0.88, 0], size: [0.7, 0.16, 0.7]}
+        - {block: GOLD_BLOCK, at: [0, 1.2, 0], size: [0.18, 0.5, 0.18]}
+        - {block: GOLD_BLOCK, at: [0, 1.7, 0], size: [0.85, 0.55, 0.85]}
+        - {block: GOLD_BLOCK, at: [0.55, 1.75, 0], size: [0.12, 0.35, 0.12]}
+        - {block: GOLD_BLOCK, at: [-0.55, 1.75, 0], size: [0.12, 0.35, 0.12]}
+        - {model: props/star, at: [0, 2.45, 0], size: 0.55}
+    skywars:
+      spin-seconds: 24
+      bob: 0.15
+      bob-seconds: 6
+      parts:
+        - {block: STONE, at: [0, 1.0, 0], size: [0.5, 0.4, 0.5]}
+        - {block: DIRT, at: [0, 1.35, 0], size: [0.95, 0.35, 0.95]}
+        - {block: GRASS_BLOCK, at: [0, 1.65, 0], size: [1.3, 0.25, 1.3]}
+        - {block: OAK_LOG, at: [0.3, 2.0, 0.25], size: [0.16, 0.5, 0.16]}
+        - {block: OAK_LEAVES, at: [0.3, 2.35, 0.25], size: [0.55, 0.4, 0.55]}
+        - {block: CHEST, at: [-0.35, 1.9, -0.2], size: 0.28, yaw: 30}
+    ttt:
+      spin-seconds: 20
+      parts:
+        - {block: POLISHED_ANDESITE, at: [0, 0.3, 0], size: [1.2, 0.6, 1.2], still: true}
+        - {block: RED_CARPET, at: [0, 0.62, 0], size: [0.9, 0.04, 0.9], still: true}
+        - {model: props/knife, at: [0, 1.5, 0], size: 1.5}
+    bedwars:
+      spin-seconds: 18
+      bob: 0.1
+      parts:
+        - {block: END_STONE_BRICKS, at: [0, 0.3, 0], size: [1.4, 0.6, 1.4], still: true}
+        - {item: RED_BED, at: [0, 1.25, 0], size: 1.1}
+        - {model: props/sword, at: [0, 2.0, 0], size: 0.8, yaw: 45}
+    endergames:
+      spin-seconds: 12
+      bob: 0.2
+      bob-seconds: 4
+      parts:
+        - {block: END_PORTAL_FRAME, at: [0, 0.4, 0], size: [1, 0.8, 1], still: true}
+        - {item: ENDER_EYE, at: [0, 1.6, 0], size: 0.9}
+        - {block: END_ROD, at: [0, 2.3, 0], size: [0.12, 0.6, 0.12]}
+    duell:
+      spin-seconds: 20
+      bob: 0.08
+      bob-seconds: 5
+      parts:
+        - {block: POLISHED_DEEPSLATE, at: [0, 0.25, 0], size: [1.7, 0.5, 1.7], still: true}
+        - {block: SMOOTH_STONE, at: [0, 0.55, 0], size: [1.4, 0.1, 1.4], still: true}
+        - {block: RED_CONCRETE, at: [0.6, 0.75, 0.6], size: [0.12, 0.3, 0.12], still: true}
+        - {block: RED_CONCRETE, at: [0.6, 0.75, -0.6], size: [0.12, 0.3, 0.12], still: true}
+        - {block: BLUE_CONCRETE, at: [-0.6, 0.75, 0.6], size: [0.12, 0.3, 0.12], still: true}
+        - {block: BLUE_CONCRETE, at: [-0.6, 0.75, -0.6], size: [0.12, 0.3, 0.12], still: true}
+        - {model: props/sword, at: [0, 1.7, 0.04], size: 1.4}
+        - {model: props/sword, at: [0, 1.7, -0.04], size: 1.4, yaw: 180}
+    rush:
+      spin-seconds: 22
+      parts:
+        - {block: COBBLED_DEEPSLATE, at: [0, 0.25, 0], size: [1.7, 0.5, 1.7], still: true}
+        - {block: RAIL, at: [0, 1.0, 0], size: [1.2, 1, 1.4]}
+        - {block: COAL_BLOCK, at: [0.3, 0.65, 0.3], size: 0.18}
+        - {block: COAL_BLOCK, at: [0.3, 0.65, -0.3], size: 0.18}
+        - {block: COAL_BLOCK, at: [-0.3, 0.65, 0.3], size: 0.18}
+        - {block: COAL_BLOCK, at: [-0.3, 0.65, -0.3], size: 0.18}
+        - {block: IRON_BLOCK, at: [0, 0.92, 0], size: [0.7, 0.36, 1.0]}
+        - {block: EMERALD_ORE, at: [0, 1.12, 0], size: [0.58, 0.12, 0.86]}
+        - {block: EMERALD_ORE, at: [0, 1.22, 0], size: [0.38, 0.12, 0.5]}
+        - {model: props/emerald, at: [0, 2.05, 0], size: 1.2}
+    mlgrush:
+      spin-seconds: 18
+      parts:
+        - {block: SMOOTH_SANDSTONE, at: [0, 0.25, 0], size: [1.7, 0.5, 1.7], still: true}
+        - {block: OAK_PLANKS, at: [0.3, 0.58, 0], size: [0.55, 0.16, 1.1]}
+        - {block: RED_WOOL, at: [0.3, 0.7, 0.15], size: [0.57, 0.1, 0.8]}
+        - {block: WHITE_WOOL, at: [0.3, 0.7, -0.4], size: [0.45, 0.1, 0.25]}
+        - {block: SANDSTONE, at: [-0.35, 0.7, 0.2], size: 0.4}
+        - {block: SANDSTONE, at: [-0.35, 1.1, 0.2], size: 0.4}
+        - {block: SANDSTONE, at: [-0.35, 1.5, 0.2], size: 0.4}
+        - {block: SANDSTONE, at: [0.05, 1.5, 0.2], size: 0.4}
+        - {item: STICK, glint: true, at: [0, 2.3, -0.1], size: 1.1}
+    zombies:
+      spin-seconds: 30
+      parts:
+        - {block: DEEPSLATE_BRICKS, at: [0, 0.2, 0], size: [1.7, 0.4, 1.7], still: true}
+        - {block: PODZOL, at: [0, 0.45, 0], size: [1.2, 0.1, 1.2]}
+        - {block: COARSE_DIRT, at: [0, 0.6, 0.15], size: [0.7, 0.2, 0.85]}
+        - {block: ROOTED_DIRT, at: [0, 0.75, 0.15], size: [0.5, 0.1, 0.65]}
+        - {block: CHISELED_STONE_BRICKS, at: [0, 0.95, -0.45], size: [0.6, 0.9, 0.16]}
+        - {block: STONE_BRICKS, at: [0, 1.46, -0.45], size: [0.44, 0.12, 0.16]}
+        - {model: props/zombie_hand, at: [0, 0.85, 0.2], size: 1.2}
+    cores:
+      spin-seconds: 24
+      parts:
+        - {block: POLISHED_BLACKSTONE, at: [0, 0.25, 0], size: [1.7, 0.5, 1.7], still: true}
+        - {block: RED_CONCRETE, at: [0.3, 0.55, 0], size: [0.6, 0.1, 1.2], still: true}
+        - {block: BLUE_CONCRETE, at: [-0.3, 0.55, 0], size: [0.6, 0.1, 1.2], still: true}
+        - {block: DIAMOND_BLOCK, at: [0, 0.75, 0], size: [0.8, 0.2, 0.8]}
+        - {block: BEACON, at: [0, 1.15, 0], size: 0.6}
+        - {block: LIGHT_BLUE_STAINED_GLASS, at: [0, 2.05, 0], size: [0.16, 1.2, 0.16]}
+        - {item: DIAMOND_PICKAXE, at: [0.6, 1.75, 0], size: 0.75, yaw: 180}
+    qsg:
+      spin-seconds: 20
+      parts:
+        - {block: MOSSY_COBBLESTONE, at: [0, 0.25, 0], size: [1.7, 0.5, 1.7], still: true}
+        - {block: DIRT, at: [0, 0.6, 0], size: [1.2, 0.2, 1.2]}
+        - {block: GRASS_BLOCK, at: [0, 0.75, 0], size: [1.2, 0.1, 1.2]}
+        - {block: CHEST, at: [-0.3, 1.05, -0.25], size: 0.5, yaw: 20}
+        - {block: COBBLESTONE, at: [0.3, 0.88, 0.25], size: [0.36, 0.16, 0.36]}
+        - {model: props/sword, at: [0.3, 1.45, 0.25], size: 1.0, roll: -135}
+
+# Santa's sleigh crosses the sky above a lobby player every interval-seconds while one of during is celebrated, height
+# blocks up, length blocks long and flight-ticks long. It drops presents, each worth present-coins to the first to catch
+# it, one per player and flight; uncaught presents vanish after present-seconds. Staff send it with /schlitten.
+sleigh:
+  enabled: true
+  during: [christmas]
+  interval-seconds: 600
+  height: 18
+  length: 80
+  flight-ticks: 240
+  presents: 4
+  present-coins: 15
+  present-seconds: 30
+
+# Between from-hour and until-hour in the network calendar zone, each check has a one-in-odds chance that Herobrine
+# stands about distance blocks ahead of one active player, visible only to them, for at most seconds. Coming within
+# vanish-distance makes him vanish and finds the Herobrine bonus secret. After an appearance he waits
+# cooldown-seconds.
+herobrine:
+  enabled: true
+  from-hour: 22
+  until-hour: 4
+  check-seconds: 60
+  odds: 120
+  cooldown-seconds: 3600
+  distance: 32
+  vanish-distance: 16
+  seconds: 30
+
+# During these occasions everyone holds the season's throwable in the fourth slot (snowballs, pumpkins at Halloween,
+# eggs at Easter) and pushes whoever they hit by knockback; cooldown-ticks pass between two throws.
+throw-fight:
+  during: [winter, halloween, easter]
+  knockback: 0.5
+  cooldown-ticks: 10
+
+
+# A figure in front of each game's area, at the map's npc-<area> spot (/lobbyset npc-<area>, where you stand and
+# look). It turns to the nearest player within look-radius and one of them moves every idle-seconds. skins names
+# the player whose skin each figure wears; empty is the default look.
+game-npcs:
+  look-radius: 8
+  idle-seconds: 6
+  skins:
+    qsg: ""
+    rush: ""
+    duell: ""
+    bedwars: ""
+    mlgrush: ""
+    zombies: ""
+    cores: ""
+    endergames: ""
+    ttt: ""
+    skywars: ""
+
+# Notes and books lying in the lobby, at the map's note-<key> spots (/lobbyset note-<key>, looking at the block they
+# lie on), each as the item named here; their text is lore.<key> in messages.yml. The first read pays reward coins.
+lore-notes:
+  reward: 15
+  notes:
+    gruendung: WRITTEN_BOOK
+    baumeister: BOOK
+    zettel: PAPER
+    bahnhof: MAP
+    tagebuch: WRITABLE_BOOK
+
+# The boards at spawn, at board-changelog and board-rules (/lobbyset, looking at the block). The changelog opens once
+# for everyone who returns after version changes; the rules board runs the proxy's rules command.
+notice-boards:
+  changelog-version: "2026-10"
+  rules-command: regeln
+
+# The boss bar of news over the lobby: the next line of news.lines every seconds.
+news:
+  enabled: true
+  seconds: 12
+  color: purple
+
+# Particles round each game's figure, seen by players within radius who have effects on, every ticks.
+ambience:
+  enabled: true
+  radius: 32
+  ticks: 15
+  particles:
+    endergames: PORTAL
+    bedwars: SMALL_FLAME
+    ttt: CRIMSON_SPORE
+    skywars: CLOUD
+    zombies: SCULK_SOUL
+    cores: END_ROD
+    qsg: ENCHANT
+    rush: HAPPY_VILLAGER
+
+# One-off quests from figures at the map's quest-<key> spots (/lobbyset quest-<key>, where you stand). A task is
+# notes (find count lore notes), parkour (finish it once) or play (a row in the game's stats table). The reward is
+# paid once, with the unlock lobby.quest.<key>.
+quests:
+  archivarin:
+    skin: ""
+    reward: 50
+    task: {type: notes, count: 3}
+  laeuferin:
+    skin: ""
+    reward: 50
+    task: {type: parkour}
+  kundschafter:
+    skin: ""
+    reward: 50
+    task: {type: play, table: bc_skywars_stats}
+
+# The daily login reward (/daily, a chat line on arrival, and a figure at the optional /lobbyset daily spot). One claim
+# per day in the network's calendar zone; consecutive days raise the streak, a missed day starts it again at day 1.
+# coins pays day 1, 2, ... of a streak, the last value every day after. preview-days is how many coming days the
+# dialog lists (0 to 7); skin is the figure's player name, empty for the default look.
+daily-rewards:
+  coins: [10, 15, 20, 25, 30, 40, 60]
+  preview-days: 3
+  skin: ""
