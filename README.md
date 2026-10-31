@@ -767,10 +767,10 @@ member in join order. Pending invitations follow the new leader and expire when 
 
 ## Anticheat
 
-[GrimAC](https://grim.ac) runs on the PvP game servers (bedwars, skywars, quicksg, endergames, ttt, cores,
-emeraldrush, duell, mlgrush), not on the lobby, replay, archive or zombies. Its punishments only alert, so no
-violation kicks or bans anyone, and staff decide with the usual tools. Grim still pulls a player back from a move it
-rejects, cancels hits past its own limit, and disconnects a client that stops answering it or floods packets (its
+[GrimAC](https://grim.ac) runs on every Paper server, including lobby, replay, archive and zombies. It does not run
+on the Velocity proxy. Its punishments only alert, so no violation kicks or bans anyone. Staff decide with the
+usual tools. Grim still pulls a player back from a move it rejects, cancels hits past its own limit, and disconnects
+a client that stops answering it or floods packets (its
 `config.yml`), as any anticheat must.
 
 `grim/punishments.yml` is Grim's default punishments file, staged into `plugins/GrimAC` at every start, so an edit
@@ -783,8 +783,10 @@ server, shows the check's description on hover and carries a `[Goto]`. It comes 
 check every `anticheat.notice-cooldown-seconds` (core's `config.yml`, 30). Grim's own `[alert]` keeps writing to the
 console and feeding `/grim verbose`; its chat alerts reach only players with `grim.alerts`, which `owner` negates
 because `*` would grant it, so staff get each alert once. `owner` negates `grim.exempt`, `grim.disabled`,
-`grim.nosetback` and `grim.nomodifypacket` for the same reason, so Grim checks every player. If Grim's API changes
-under core, core logs it and runs on without the notices.
+`grim.nosetback` and `grim.nomodifypacket` for the same reason. Those denials cover only the global permissions.
+The owner's `*` still grants the per-check bypasses `grim.exempt.<check>`, `grim.nosetback.<check>` and
+`grim.nomodifypacket.<check>`, so the owner currently bypasses individual checks. Admins and the other ranks have
+no such bypass and can be flagged. If Grim's API changes under core, core logs it and runs on without the notices.
 
 Staff with the same notice permission can use `/anticheat history [name|UUID]` to read the latest 20 saved notices.
 History records the player's UUID and real name, server, UTC time, check, violations and details. Core retains seven
@@ -800,13 +802,16 @@ punishment.
 The network's own movement needs no exemptions: Grim follows what the server sends the client, so knockback a plugin
 sets (throw fights, the legacy rod, harmless hits, MLG Rush sticks), BedWars' parachute and teleporter, the
 Känguru's jump, potion effects such as the jump boost in EmeraldRush's lobby water, flight for spectators and staff
-mode, `/speed` and teleports are all predicted. Staff spectating with `/spec` are in spectator mode, which Grim
-leaves alone.
+mode, `/speed` and teleports are all predicted. Lobby double jumps and grappling hooks use server-sent velocity.
+Archive visitors and replay viewers have server-authorized flight. Staff spectating with `/spec` are in spectator
+mode, which Grim leaves alone.
 
 The build is pinned by `grimac` in `gradle/libs.versions.toml` and the Modrinth version id in `build.gradle.kts`'s
 `downloadGrimAC`; an update changes both, then `./gradlew stagePlugins` and a restart of the game servers. Core
 compiles against the API classes of that same jar, because Grim publishes no API artifact for its builds, so a change
-in Grim's API shows up as a build error.
+in Grim's API shows up as a build error. After adding Grim to a service's `COPY_PLUGINS_SRC`, recreate that container
+with `docker compose up -d --no-deps <service>` before relying on on-demand starts. A restart keeps the old plugin
+paths, and the waker only starts existing containers.
 
 ## Shared modules and upgrades
 

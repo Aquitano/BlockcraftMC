@@ -1,7 +1,7 @@
 # The whole dev network: MariaDB, the Velocity proxy and one Paper server per game mode. Plugin jars, LuckPerms and
 # ViaVersion included, come from `./gradlew stagePlugins`; each Paper service lists the plugin directories it runs in
-# COPY_PLUGINS_SRC, ViaVersion's so clients newer than the server join (README, "Client versions"), and the PvP games
-# GrimAC's (README, "Anticheat"). The servers find each other through the database (README, "Run locally"). Each
+# COPY_PLUGINS_SRC, ViaVersion's so clients newer than the server join (README, "Client versions"), and GrimAC's
+# (README, "Anticheat"). The servers find each other through the database (README, "Run locally"). Each
 # server's map comes from worlds/<group> (README, "Maps"): the world is copied fresh from there at every start and
 # /map save writes it back.
 
@@ -114,7 +114,7 @@ services:
       <<: *paper-env
       BLOCKCRAFT_SERVER_GROUP: lobby
       BLOCKCRAFT_WORLD_TEMPLATE: /worlds/lobby
-      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/lobby,/blockcraft/statussigns,/blockcraft/reports,/blockcraft/viaversion
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/lobby,/blockcraft/statussigns,/blockcraft/reports,/blockcraft/viaversion,/blockcraft/grimac
     volumes:
       - ./build/docker/paper:/blockcraft:ro
       - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
@@ -188,7 +188,7 @@ services:
       <<: *paper-env
       BLOCKCRAFT_SERVER_GROUP: zombies
       BLOCKCRAFT_WORLD_TEMPLATE: /worlds/zombies
-      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/zombies,/blockcraft/viaversion
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/zombies,/blockcraft/viaversion,/blockcraft/grimac
     volumes:
       - ./build/docker/paper:/blockcraft:ro
       - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
@@ -275,7 +275,7 @@ services:
       <<: *paper-env
       BLOCKCRAFT_SERVER_GROUP: archive
       BLOCKCRAFT_WORLD_TEMPLATE: /worlds/archive
-      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/archive,/blockcraft/viaversion
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/archive,/blockcraft/viaversion,/blockcraft/grimac
     volumes:
       - ./build/docker/paper:/blockcraft:ro
       - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
@@ -307,7 +307,7 @@ services:
       BLOCKCRAFT_SERVER_GROUP: replay
       # Viewers wait in the default world while a recording loads; nothing hostile may spawn there.
       DIFFICULTY: peaceful
-      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/viaversion
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/viaversion,/blockcraft/grimac
     volumes:
       - ./build/docker/paper:/blockcraft:ro
       - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro

@@ -1,4 +1,4 @@
-# GrimAC's punishments on the PvP game servers (README, "Anticheat"), staged into plugins/GrimAC at every start.
+# GrimAC's punishments on every Paper server (README, "Anticheat"), staged into plugins/GrimAC at every start.
 # Grim's defaults, which only alert: nothing here kicks or bans, and Grim's setbacks stay on.
 # "[staff] %vl%" is not a Grim command: BlockcraftCore turns it into one staff notice for the whole network and keeps
 # Grim from running it. "[alert]" still writes Grim's line to the console and feeds /grim verbose; the [webhook] and
