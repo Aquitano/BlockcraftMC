@@ -5,4 +5,5 @@ plugins {
 dependencies {
     compileOnly(project(":paper:api"))
     compileOnly(libs.luckperms.api)
+    testImplementation(libs.hikaricp)
 }

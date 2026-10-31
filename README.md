@@ -678,6 +678,10 @@ on death, world change, either participant leaving, and core shutdown. Existing 
 Changing that potion type elsewhere hands its cleanup back to Minecraft. These tools have no
 match or progression integration: using them during a game does not stop its stats or rewards.
 
+During a lobby parkour run, `/parkour` or `/parkour retry` returns to the last checkpoint, or the start before the first
+checkpoint. The start message includes a clickable retry button. The clock keeps running, and a voluntary retry
+does not add a fall or grant fall achievements.
+
 `/serverinfo` (also `/lag`, permission `blockcraft.core.lag`) shows server performance and runtime versions.
 `/serverinfo plugins` lists loaded plugins with their versions and enabled state. Click an entry or run
 `/serverinfo plugins <name>` to see its required and optional dependencies and which loaded plugins depend on it.

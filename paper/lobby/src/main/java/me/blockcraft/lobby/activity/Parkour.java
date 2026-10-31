@@ -10,6 +10,7 @@ import me.blockcraft.lobby.config.ActivitiesConfig;
 import me.blockcraft.lobby.npc.Holograms;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
+import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
@@ -78,9 +79,7 @@ public final class Parkour implements Listener, AutoCloseable {
                     && event.getTo().getY() < point.getY() - config.fallBelow()).isPresent()) {
                 run.fall();
                 event.setCancelled(true);
-                returning.add(id);
-                player.teleport(checkpoint.orElseThrow());
-                returning.remove(id);
+                returnTo(player, checkpoint.orElseThrow());
                 var name = BlockcraftApi.get().realName(player);
                 Tasks.async(plugin, () -> {
                     db.update("INSERT INTO bc_parkour (player_uuid, name, falls) VALUES (?, ?, 1) "
@@ -107,7 +106,8 @@ public final class Parkour implements Listener, AutoCloseable {
                 runs.put(id, new ParkourRun(System.nanoTime()));
                 BlockcraftApi.get().flight().set(player, false);
                 player.setAllowFlight(false);
-                player.sendMessage(messages.get("parkour.start"));
+                player.sendMessage(messages.get("parkour.start").append(Component.space())
+                        .append(messages.get("parkour.retry-button").clickEvent(ClickEvent.runCommand("/parkour retry"))));
                 Sounds.COUNTDOWN_GO.play(player);
             }
         } else if (run != null && at("checkpoint-" + (run.checkpoint() + 1), event.getTo())
@@ -162,6 +162,35 @@ public final class Parkour implements Listener, AutoCloseable {
 
     public boolean running(Player player) {
         return runs.containsKey(player.getUniqueId());
+    }
+
+    public void retry(Player player) {
+        var run = runs.get(player.getUniqueId());
+        if (run == null) {
+            player.sendMessage(messages.get("parkour.not-running"));
+            return;
+        }
+        var checkpoint = locations.get(run.checkpoint() == 0 ? "parkour-start" : "checkpoint-" + run.checkpoint());
+        if (checkpoint.isEmpty()) {
+            player.sendMessage(messages.get("parkour.unavailable"));
+            return;
+        }
+        if (returnTo(player, checkpoint.orElseThrow())) {
+            Sounds.TELEPORT.play(player);
+            player.sendMessage(messages.get("parkour.retried"));
+        } else {
+            player.sendMessage(messages.get("parkour.retry-failed"));
+        }
+    }
+
+    private boolean returnTo(Player player, Location checkpoint) {
+        var id = player.getUniqueId();
+        returning.add(id);
+        try {
+            return player.teleport(checkpoint);
+        } finally {
+            returning.remove(id);
+        }
     }
 
     private boolean at(String key, Location location) {

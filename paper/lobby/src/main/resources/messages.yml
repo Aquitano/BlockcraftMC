@@ -3,6 +3,8 @@ prefix: "<primary><ip> <dark>» <reset>"
 commands:
   cookies:
     description: "Öffnet den CookieClicker"
+  parkour:
+    description: "Zurück zum letzten Parcours-Checkpoint; die Zeit läuft weiter"
   daily:
     description: "Zeigt deine tägliche Belohnung und deine Serie"
   navigator:
@@ -634,6 +636,10 @@ fishing:
 
 parkour:
   unavailable: "<prefix><muted>Dieser Parcours ist noch nicht fertig eingerichtet."
+  retry-button: "<accent>[Checkpoint zurück]"
+  not-running: "<prefix><muted>Starte zuerst einen Lauf auf der Parcours-Startplatte."
+  retried: "<prefix><accent>Zurück am Checkpoint. <muted>Die Zeit läuft weiter."
+  retry-failed: "<prefix><error>Der Rücksprung wurde verhindert. Dein Lauf bleibt aktiv."
   start: "<prefix><accent>Die Zeit läuft. <muted>Jeder Checkpoint zählt."
   status: "<accent>Checkpoint <checkpoint>/<total> <dark>· <primary><time>"
   finish: "<prefix><success>Geschafft: <accent><time><muted>. Deine Bestzeit: <accent><best><muted>."

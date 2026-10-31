@@ -18,6 +18,7 @@ import me.blockcraft.lobby.activity.LoreNotes;
 import me.blockcraft.lobby.activity.MapSecrets;
 import me.blockcraft.lobby.activity.NoticeBoards;
 import me.blockcraft.lobby.activity.Parkour;
+import me.blockcraft.lobby.command.ParkourCommand;
 import me.blockcraft.lobby.activity.PondFishing;
 import me.blockcraft.lobby.activity.Prisoner;
 import me.blockcraft.lobby.activity.Props;
@@ -246,6 +247,7 @@ public final class LobbyPlugin extends JavaPlugin {
                     holograms, locations, shopNpc));
             commands.register(ClearChatCommand.create(messages));
             commands.register(CookiesCommand.create(menus));
+            commands.register(ParkourCommand.create(parkour));
             commands.register(DailyCommand.create(daily));
             commands.register(SleighCommand.create(sleigh, messages));
             commands.register(SetPropCommand.create(messages, props));
