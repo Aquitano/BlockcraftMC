@@ -7,10 +7,12 @@ import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.messages.ChannelRegistrar;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
+import com.velocitypowered.api.scheduler.Scheduler;
 
 import java.lang.reflect.Proxy;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,13 +25,28 @@ import java.util.concurrent.CompletableFuture;
  * Just enough of the Velocity API for the unit tests: players with a name, id and permissions on a proxy that lists
  * them, backends a player can be connected to, and the messages each side received.
  */
-final class FakeProxy {
+public final class FakeProxy {
 
     private final Map<UUID, Player> online = new LinkedHashMap<>();
     private final Map<UUID, ServerConnection> connections = new LinkedHashMap<>();
     private final Map<UUID, List<Object>> received = new LinkedHashMap<>();
     private final Map<String, RegisteredServer> servers = new LinkedHashMap<>();
     private final Map<UUID, List<RegisteredServer>> requested = new LinkedHashMap<>();
+    private final List<Runnable> scheduled = new ArrayList<>();
+
+    private final Scheduler scheduler = (Scheduler) Proxy.newProxyInstance(Scheduler.class.getClassLoader(),
+            new Class<?>[]{Scheduler.class}, (proxy, method, args) -> switch (method.getName()) {
+                case "buildTask" -> Proxy.newProxyInstance(Scheduler.TaskBuilder.class.getClassLoader(),
+                        new Class<?>[]{Scheduler.TaskBuilder.class}, (builder, action, values) -> switch (action.getName()) {
+                            case "delay" -> builder;
+                            case "schedule" -> {
+                                scheduled.add((Runnable) args[1]);
+                                yield null;
+                            }
+                            default -> throw new AssertionError(action.getName());
+                        });
+                default -> throw new AssertionError(method.getName());
+            });
 
     final ChannelRegistrar registrar = (ChannelRegistrar) Proxy.newProxyInstance(ChannelRegistrar.class.getClassLoader(),
             new Class<?>[]{ChannelRegistrar.class}, (proxy, method, args) -> switch (method.getName()) {
@@ -37,16 +54,17 @@ final class FakeProxy {
                 default -> throw new AssertionError(method.getName());
             });
 
-    final ProxyServer server = (ProxyServer) Proxy.newProxyInstance(ProxyServer.class.getClassLoader(),
+    public final ProxyServer server = (ProxyServer) Proxy.newProxyInstance(ProxyServer.class.getClassLoader(),
             new Class<?>[]{ProxyServer.class}, (proxy, method, args) -> switch (method.getName()) {
                 case "getAllPlayers" -> List.copyOf(online.values());
                 case "getPlayer" -> args[0] instanceof UUID id ? Optional.ofNullable(online.get(id)) : byName(String.valueOf(args[0]));
                 case "getChannelRegistrar" -> registrar;
                 case "getServer" -> Optional.ofNullable(servers.get(args[0]));
+                case "getScheduler" -> scheduler;
                 default -> throw new AssertionError(method.getName());
             });
 
-    Player join(String name, String... permissions) {
+    public Player join(String name, String... permissions) {
         var id = UUID.randomUUID();
         var granted = Set.of(permissions);
         var player = (Player) Proxy.newProxyInstance(Player.class.getClassLoader(), new Class<?>[]{Player.class},
@@ -75,16 +93,19 @@ final class FakeProxy {
     }
 
     /** Moves the player onto a backend; the connection records every plugin message the proxy sends to that server. */
-    ServerConnection connect(Player player, String serverName) {
+    public ServerConnection connect(Player player, String serverName) {
         var info = new ServerInfo(serverName, new InetSocketAddress("127.0.0.1", 25566));
         var registered = servers.computeIfAbsent(serverName, name -> (RegisteredServer) Proxy.newProxyInstance(
                 RegisteredServer.class.getClassLoader(), new Class<?>[]{RegisteredServer.class}, (proxy, method, args) -> switch (method.getName()) {
                     case "getServerInfo" -> info;
+                    case "getPlayersConnected" -> connections.values().stream()
+                            .filter(connection -> connection.getServerInfo().getName().equals(name))
+                            .map(ServerConnection::getPlayer).toList();
                     case "equals" -> proxy == args[0];
                     case "hashCode" -> info.hashCode();
                     default -> throw new AssertionError(method.getName());
                 }));
-        var sent = new ArrayList<byte[]>();
+        var sent = Collections.synchronizedList(new ArrayList<byte[]>());
         var connection = (ServerConnection) Proxy.newProxyInstance(ServerConnection.class.getClassLoader(),
                 new Class<?>[]{ServerConnection.class, Sent.class}, (proxy, method, args) -> switch (method.getName()) {
                     case "getPlayer" -> player;
@@ -108,8 +129,14 @@ final class FakeProxy {
         return received.getOrDefault(player.getUniqueId(), List.of());
     }
 
-    List<RegisteredServer> requested(Player player) {
+    public List<RegisteredServer> requested(Player player) {
         return requested.getOrDefault(player.getUniqueId(), List.of());
+    }
+
+    public void runScheduled() {
+        var tasks = List.copyOf(scheduled);
+        scheduled.clear();
+        tasks.forEach(Runnable::run);
     }
 
     private ConnectionRequestBuilder request(UUID player, RegisteredServer target) {

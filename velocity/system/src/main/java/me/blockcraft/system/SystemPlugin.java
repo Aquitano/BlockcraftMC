@@ -193,6 +193,7 @@ public final class SystemPlugin {
         var afk = new AfkPlayers();
         var lookup = new PlayerLookup(proxy, visibility, repositories.players(), messages);
         var directory = new ServerDirectory(proxy, config.lobbyGroup(), Duration.ofSeconds(config.discovery().seatSeconds()),
+                Duration.ofSeconds(config.discovery().maxSnapshotAgeSeconds()),
                 counts -> proxy.getScheduler().buildTask(this, () -> storeOccupancy(servers, counts)).schedule());
         var parties = new PartyManager(proxy, visibility, choices, ignores, directory, messages);
         var groupStates = new GroupStateRepository(database);

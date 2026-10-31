@@ -47,29 +47,43 @@ public final class ServerDirectory {
     private final ProxyServer proxy;
     private final String lobbyGroup;
     private final Duration seatTimeout;
+    private final Duration maxSnapshotAge;
     private final InstantSource clock;
     private final Consumer<Map<String, Integer>> publish;
     private final Map<UUID, Seat> seats = new HashMap<>();
     private final Map<String, Integer> published = new HashMap<>();
     private final Set<String> draining = new HashSet<>();
     private volatile Map<String, ServerRecord> servers = Map.of();
+    private volatile Instant snapshotExpires = Instant.MIN;
 
     /** {@code publish} receives the counts that changed and must not block, since it is called while seats change. */
     public ServerDirectory(ProxyServer proxy, String lobbyGroup, Duration seatTimeout, Consumer<Map<String, Integer>> publish) {
-        this(proxy, lobbyGroup, seatTimeout, InstantSource.system(), publish);
+        this(proxy, lobbyGroup, seatTimeout, Duration.ofSeconds(30), InstantSource.system(), publish);
+    }
+
+    public ServerDirectory(ProxyServer proxy, String lobbyGroup, Duration seatTimeout, Duration maxSnapshotAge,
+                           Consumer<Map<String, Integer>> publish) {
+        this(proxy, lobbyGroup, seatTimeout, maxSnapshotAge, InstantSource.system(), publish);
     }
 
     ServerDirectory(ProxyServer proxy, String lobbyGroup, Duration seatTimeout, InstantSource clock,
                     Consumer<Map<String, Integer>> publish) {
+        this(proxy, lobbyGroup, seatTimeout, Duration.ofSeconds(30), clock, publish);
+    }
+
+    ServerDirectory(ProxyServer proxy, String lobbyGroup, Duration seatTimeout, Duration maxSnapshotAge, InstantSource clock,
+                    Consumer<Map<String, Integer>> publish) {
         this.proxy = proxy;
         this.lobbyGroup = lobbyGroup;
         this.seatTimeout = seatTimeout;
+        this.maxSnapshotAge = maxSnapshotAge;
         this.clock = clock;
         this.publish = publish;
     }
 
     synchronized void update(List<ServerRecord> alive) {
         servers = alive.stream().collect(Collectors.toUnmodifiableMap(ServerRecord::name, Function.identity()));
+        snapshotExpires = clock.instant().plus(maxSnapshotAge);
         // Every poll writes all counts again, which also mends a write that arrived out of order.
         published.clear();
         expireSeats();
@@ -78,6 +92,10 @@ public final class ServerDirectory {
 
     public Optional<ServerRecord> get(String server) {
         return Optional.ofNullable(servers.get(server));
+    }
+
+    public Optional<ServerRecord> getForRouting(String server) {
+        return fresh() ? get(server) : Optional.empty();
     }
 
     public Optional<String> groupOf(String server) {
@@ -90,7 +108,7 @@ public final class ServerDirectory {
 
     /** Whether a round is running there, which nobody joins but a friend may watch; a lobby is never watched. */
     public boolean isWatchable(String server) {
-        return get(server)
+        return getForRouting(server)
                 .map(record -> record.status().state() == ServerState.INGAME && !record.group().equals(lobbyGroup))
                 .orElse(false);
     }
@@ -116,7 +134,7 @@ public final class ServerDirectory {
      */
     public synchronized Entry enter(UUID player, String server) {
         var record = get(server);
-        if (record.isEmpty() || draining.contains(record.get().group())) {
+        if (!fresh() || record.isEmpty() || draining.contains(record.get().group())) {
             return Entry.CLOSED;
         }
         if (isWatchable(server)) {
@@ -141,7 +159,7 @@ public final class ServerDirectory {
      */
     public synchronized boolean admit(UUID player, String server) {
         var record = get(server);
-        return record.isEmpty() || record.get().group().equals(lobbyGroup) || enter(player, server) != Entry.CLOSED;
+        return record.isEmpty() || fresh() && (record.get().group().equals(lobbyGroup) || enter(player, server) != Entry.CLOSED);
     }
 
     /** Gives up the seat the player holds on that server, if any; a seat elsewhere belongs to a newer attempt. */
@@ -158,6 +176,11 @@ public final class ServerDirectory {
 
     /** Connects the player with Velocity's own error messages and releases their seat there unless they arrive. */
     public CompletableFuture<Boolean> send(Player player, RegisteredServer server) {
+        String destination = server.getServerInfo().getName();
+        if (get(destination).isPresent() && getForRouting(destination).isEmpty()) {
+            release(player.getUniqueId(), destination);
+            return CompletableFuture.completedFuture(false);
+        }
         return player.createConnectionRequest(server).connectWithIndication().handle((connected, error) -> {
             boolean arrived = error == null && connected;
             if (!arrived) {
@@ -202,6 +225,9 @@ public final class ServerDirectory {
 
     /** Whether the group runs and every server of it waits in its lobby with nobody on it and nobody on the way. */
     public synchronized boolean idle(String group) {
+        if (!fresh()) {
+            return false;
+        }
         expireSeats();
         var members = servers.values().stream().filter(server -> server.group().equals(group)).toList();
         return !members.isEmpty() && members.stream()
@@ -226,7 +252,11 @@ public final class ServerDirectory {
 
     private Stream<ServerRecord> joinable(String group, int players) {
         return servers.values().stream()
-                .filter(server -> server.group().equals(group) && !draining.contains(group) && hasRoom(server, players));
+                .filter(server -> fresh() && server.group().equals(group) && !draining.contains(group) && hasRoom(server, players));
+    }
+
+    private boolean fresh() {
+        return clock.instant().isBefore(snapshotExpires);
     }
 
     private boolean hasRoom(ServerRecord server, int players) {

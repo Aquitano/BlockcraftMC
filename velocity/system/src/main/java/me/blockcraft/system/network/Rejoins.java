@@ -46,7 +46,7 @@ public final class Rejoins {
     /** The server that keeps the player's place, while it still runs. Blocks on the database. */
     public Optional<RegisteredServer> place(UUID player) {
         try {
-            return repository.find(player).filter(server -> directory.get(server).isPresent()).flatMap(proxy::getServer);
+            return repository.find(player).filter(server -> directory.getForRouting(server).isPresent()).flatMap(proxy::getServer);
         } catch (DatabaseException e) {
             logger.warn("Could not look up a kept round place for {}", player, e);
             return Optional.empty();

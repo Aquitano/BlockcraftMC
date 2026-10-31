@@ -8,6 +8,7 @@ import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.network.operation.NetworkRequest;
 import me.blockcraft.common.network.operation.OperationCodec;
 import me.blockcraft.common.network.operation.OperationResult;
+import me.blockcraft.common.player.PlayerReference;
 import me.blockcraft.system.listener.OperationListener;
 import org.junit.Before;
 import org.junit.Test;
@@ -15,9 +16,14 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.file.Files;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 public class OperationListenerTest {
@@ -85,12 +91,114 @@ public class OperationListenerTest {
         assertEquals(1, proxy.received(player).size());
     }
 
+    @Test
+    public void aSlowOperationDoesNotBlockAnotherPlayer() throws Exception {
+        var entered = new CountDownLatch(1);
+        var release = new CountDownLatch(1);
+        var first = proxy.join("First");
+        var second = proxy.join("Second");
+        var firstBackend = proxy.connect(first, "lobby");
+        var secondBackend = proxy.connect(second, "lobby");
+        var listener = listener((player, request) -> {
+            if (player == first) {
+                entered.countDown();
+                await(release);
+            }
+            return OperationResult.APPLIED;
+        });
+        try (var workers = Executors.newFixedThreadPool(2)) {
+            var blocked = workers.submit(() -> deliver(listener, firstBackend, UUID.randomUUID()));
+            try {
+                assertTrue(entered.await(5, TimeUnit.SECONDS));
+                workers.submit(() -> deliver(listener, secondBackend, UUID.randomUUID())).get(2, TimeUnit.SECONDS);
+                assertEquals(1, proxy.sentTo(secondBackend).size());
+            } finally {
+                release.countDown();
+                blocked.get(5, TimeUnit.SECONDS);
+            }
+        }
+    }
+
+    @Test
+    public void concurrentDuplicatesStillExecuteOnlyOnce() throws Exception {
+        var entered = new CountDownLatch(1);
+        var release = new CountDownLatch(1);
+        var player = proxy.join("Player");
+        var backend = proxy.connect(player, "lobby");
+        var id = UUID.randomUUID();
+        var listener = listener((actor, request) -> {
+            executions.incrementAndGet();
+            entered.countDown();
+            await(release);
+            return OperationResult.APPLIED;
+        });
+        try (var workers = Executors.newFixedThreadPool(2)) {
+            var first = workers.submit(() -> deliver(listener, backend, id));
+            try {
+                assertTrue(entered.await(5, TimeUnit.SECONDS));
+                var duplicate = workers.submit(() -> deliver(listener, backend, id));
+                release.countDown();
+                first.get(5, TimeUnit.SECONDS);
+                duplicate.get(5, TimeUnit.SECONDS);
+                assertEquals(1, executions.get());
+                assertEquals(2, proxy.sentTo(backend).size());
+            } finally {
+                release.countDown();
+            }
+        }
+    }
+
+    @Test
+    public void punishmentChecksRemainSerializedWhileOtherOperationsContinue() throws Exception {
+        var entered = new CountDownLatch(1);
+        var release = new CountDownLatch(1);
+        var first = proxy.connect(proxy.join("FirstStaff"), "lobby");
+        var second = proxy.connect(proxy.join("SecondStaff"), "lobby");
+        var other = proxy.connect(proxy.join("Other"), "lobby");
+        var punishment = new NetworkRequest.PresetPunishment(PlayerReference.named("Target"), 1);
+        var listener = listener((player, request) -> {
+            if (request instanceof NetworkRequest.PresetPunishment && player == first.getPlayer()) {
+                entered.countDown();
+                await(release);
+            }
+            return OperationResult.APPLIED;
+        });
+        try (var workers = Executors.newFixedThreadPool(3)) {
+            var blocked = workers.submit(() -> deliver(listener, first, UUID.randomUUID(), punishment));
+            try {
+                assertTrue(entered.await(5, TimeUnit.SECONDS));
+                var waiting = workers.submit(() -> deliver(listener, second, UUID.randomUUID(), punishment));
+                assertThrows(TimeoutException.class, () -> waiting.get(150, TimeUnit.MILLISECONDS));
+                workers.submit(() -> deliver(listener, other, UUID.randomUUID())).get(2, TimeUnit.SECONDS);
+                release.countDown();
+                blocked.get(5, TimeUnit.SECONDS);
+                waiting.get(5, TimeUnit.SECONDS);
+                assertEquals(1, proxy.sentTo(second).size());
+            } finally {
+                release.countDown();
+            }
+        }
+    }
+
+    private static void await(CountDownLatch signal) {
+        try {
+            assertTrue(signal.await(10, TimeUnit.SECONDS));
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            throw new AssertionError(exception);
+        }
+    }
+
     private OperationListener listener(OperationListener.Handler handler) {
         return new OperationListener(proxy.server, handler, messages, LoggerFactory.getLogger(OperationListenerTest.class));
     }
 
     private static void deliver(OperationListener listener, ServerConnection backend, UUID id) {
-        var data = OperationCodec.encode(new OperationCodec.Request(id, REPORT));
+        deliver(listener, backend, id, REPORT);
+    }
+
+    private static void deliver(OperationListener listener, ServerConnection backend, UUID id, NetworkRequest request) {
+        var data = OperationCodec.encode(new OperationCodec.Request(id, request));
         var task = listener.onMessage(new PluginMessageEvent(backend, backend.getPlayer(), CHANNEL, data));
         task.execute(new Continuation() {
             @Override

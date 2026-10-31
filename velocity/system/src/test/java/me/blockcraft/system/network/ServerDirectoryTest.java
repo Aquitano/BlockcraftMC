@@ -7,6 +7,7 @@ import me.blockcraft.common.network.ServerIdentity;
 import me.blockcraft.common.network.ServerRecord;
 import me.blockcraft.common.network.ServerState;
 import me.blockcraft.common.network.ServerStatus;
+import me.blockcraft.system.FakeProxy;
 import org.junit.Test;
 
 import java.lang.reflect.Proxy;
@@ -36,6 +37,68 @@ public class ServerDirectoryTest {
             });
     private final Map<String, Integer> published = new HashMap<>();
     private Instant now = Instant.parse("2026-01-01T00:00:00Z");
+
+    @Test
+    public void staleDiscoveryClosesNewAdmissionsUntilAFreshRead() {
+        var directory = directoryOf(game("quicksg-1", 0, 8),
+                server("playing", "quicksg", ServerState.INGAME));
+        var reserved = UUID.randomUUID();
+        assertTrue(directory.getForRouting("playing").isPresent());
+        assertEquals(Optional.of("quicksg-1"), fill(directory, reserved));
+        now = now.plusSeconds(29);
+        assertEquals(ServerDirectory.Entry.SEATED, directory.enter(reserved, "quicksg-1"));
+
+        now = now.plusSeconds(1);
+        assertEquals(Optional.empty(), fill(directory, UUID.randomUUID()));
+        assertEquals(Optional.empty(), directory.balance("quicksg"));
+        assertEquals(ServerDirectory.Entry.CLOSED, directory.enter(reserved, "quicksg-1"));
+        assertEquals(ServerDirectory.Entry.CLOSED, directory.enter(UUID.randomUUID(), "playing"));
+        assertFalse(directory.admit(UUID.randomUUID(), "quicksg-1"));
+        assertFalse(directory.idle("quicksg"));
+        assertFalse(directory.drainIfIdle("quicksg"));
+        assertEquals(Optional.of("quicksg"), directory.groupOf("playing"));
+        assertTrue(directory.get("playing").isPresent());
+        assertTrue(directory.getForRouting("playing").isEmpty());
+
+        directory.update(List.of(game("quicksg-1", 0, 8)));
+        assertEquals(Optional.of("quicksg-1"), fill(directory, UUID.randomUUID()));
+    }
+
+    @Test
+    public void staleEmptyGroupsDoNotDrainAndLobbyIdentityRemainsReadable() {
+        var directory = new ServerDirectory(proxy, "lobby", SEAT_TIMEOUT, Duration.ofSeconds(7),
+                () -> now, published::putAll);
+        directory.update(List.of(game("quicksg-1", 0, 8), server("lobby-1", "lobby", ServerState.LOBBY)));
+        assertTrue(directory.idle("quicksg"));
+        assertTrue(directory.admit(UUID.randomUUID(), "lobby-1"));
+
+        now = now.plusSeconds(7);
+
+        assertFalse(directory.idle("quicksg"));
+        assertFalse(directory.drainIfIdle("quicksg"));
+        assertFalse(directory.admit(UUID.randomUUID(), "lobby-1"));
+        assertEquals(Optional.empty(), directory.balance("lobby"));
+        assertTrue(directory.isLobby("lobby-1"));
+        assertTrue(directory.running("quicksg"));
+    }
+
+    @Test
+    public void anExpiredSelectionCannotStartAConnectionUntilDiscoveryRecovers() {
+        var fake = new FakeProxy();
+        var player = fake.join("Player");
+        var target = fake.connect(fake.join("Target"), "quicksg-1").getServer();
+        var directory = new ServerDirectory(fake.server, "lobby", SEAT_TIMEOUT, () -> now, counts -> { });
+        directory.update(List.of(game("quicksg-1", 0, 8)));
+        assertEquals(ServerDirectory.Entry.SEATED, directory.enter(player.getUniqueId(), "quicksg-1"));
+        now = now.plusSeconds(30);
+
+        assertFalse(directory.send(player, target).join());
+        assertTrue(fake.requested(player).isEmpty());
+
+        directory.update(List.of(game("quicksg-1", 0, 8)));
+        assertTrue(directory.send(player, target).join());
+        assertEquals(List.of(target), fake.requested(player));
+    }
 
     @Test
     public void continuousGamesSeatPlayersAndOnlyDrainWhenEmpty() {

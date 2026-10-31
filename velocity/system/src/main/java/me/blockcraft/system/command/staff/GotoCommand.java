@@ -43,8 +43,13 @@ public final class GotoCommand {
                         player.sendMessage(messages.get("goto.already", targetName, serverName));
                         return;
                     }
+                    String destination = server.getServerInfo().getName();
+                    if (directory.get(destination).isPresent() && directory.getForRouting(destination).isEmpty()) {
+                        player.sendMessage(messages.get("serverjoin.closed"));
+                        return;
+                    }
                     // Staff go even where it is full; the seat only keeps a waiting round from overfilling meanwhile.
-                    directory.enter(player.getUniqueId(), server.getServerInfo().getName());
+                    directory.enter(player.getUniqueId(), destination);
                     player.sendMessage(messages.get("goto.connecting", targetName, serverName));
                     directory.send(player, server);
                 },

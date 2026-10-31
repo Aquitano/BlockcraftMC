@@ -26,6 +26,8 @@ discovery:
   poll-seconds: 5
   stale-seconds: 20
   seat-seconds: 15
+  # Stop new routing after this long without a successful discovery read; existing connections stay open.
+  max-snapshot-age-seconds: 30
 
 # Game servers that run only while someone plays (README, "Server discovery and groups"). Off by default; it needs
 # the waker service at url and its token (BLOCKCRAFT_WAKER_TOKEN overrides token). groups are the released game groups

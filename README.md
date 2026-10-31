@@ -463,6 +463,10 @@ count) to `bc_servers` through BlockcraftAPI, and BlockcraftSystem on the proxy 
 heartbeat and drops those whose heartbeat went stale (`discovery` in its `config.yml`). `[servers]` in
 `velocity.toml` stays empty; servers listed there anyway keep their static address.
 
+If discovery cannot refresh its data for `discovery.max-snapshot-age-seconds` (30 by default), the proxy stops new
+joins to discovered servers and stops treating them as idle. Current connections stay in place. A successful poll
+opens routing again; static servers outside discovery keep their usual admission rules.
+
 Servers of one game form a group, and players join groups, not servers: `/play <group>`, a status sign or a game's
 "back to the lobby" item ask the proxy, which picks the instance. Games fill the fullest open instance, lobbies
 (`lobby-group`) take the emptiest. A server is open while its state is `LOBBY` and it has room; the game plugins
@@ -513,6 +517,9 @@ controls the groups.
 The navigator and the status signs show such a game as sleeping or starting (`bc_server_groups`), and both invite the
 click. `/play` autocompletes the configured on-demand groups even while their servers are stopped. Selecting a
 suggestion leaves the server stopped; executing the command starts it.
+
+Failed writes to `bc_server_groups` retry on subsequent successful discovery polls. Each group keeps only its latest
+pending state, so an outage does not build a queue of obsolete transitions.
 
 The proxy decides, because only it sees seats, parties and rounds; the `waker` service carries it out. The waker is
 the only service with the Docker socket, which is root on the host. So it publishes no port, wants the bearer token

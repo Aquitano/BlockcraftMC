@@ -24,6 +24,18 @@ public class SystemConfigTest {
     public final TemporaryFolder folder = new TemporaryFolder();
 
     @Test
+    public void discoverySnapshotExpiryDefaultsForOlderConfigsAndCanBeConfigured() throws IOException {
+        var file = folder.getRoot().toPath().resolve("config.yml");
+        Files.writeString(file, "discovery:\n  poll-seconds: 5\n");
+        assertEquals(30, SystemConfig.load(file, () -> getClass().getResourceAsStream("/config.yml"))
+                .discovery().maxSnapshotAgeSeconds());
+
+        Files.writeString(file, "discovery:\n  max-snapshot-age-seconds: 45\n");
+        assertEquals(45, SystemConfig.load(file, () -> getClass().getResourceAsStream("/config.yml"))
+                .discovery().maxSnapshotAgeSeconds());
+    }
+
+    @Test
     public void composeGroupsWakeArchiveEvenWithAnOlderSavedList() throws IOException {
         var file = folder.getRoot().toPath().resolve("config.yml");
         var saved = "on-demand:\n  enabled: true\n  groups: [bedwars]\n";

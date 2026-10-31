@@ -38,8 +38,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Gate at login (maintenance, player cap, active ban), remember the player, then welcome first-timers, congratulate
- * a player on the anniversary of their first join and pull everyone to the lobby two seconds after they joined, as
- * the old proxy did. A first-timer's first lobby is also told to greet them with the rules.
+ * a player on the anniversary of their first join. A first-timer's first lobby is also told to greet them with the rules.
  */
 public final class LoginListener {
 
@@ -128,9 +127,6 @@ public final class LoginListener {
             anniversaries.years(player.getUniqueId()).ifPresent(years -> player.sendMessage(years == 1
                     ? messages.get("welcome.anniversary-one")
                     : messages.get("welcome.anniversary", Formatter.number("years", years))));
-            if (!lobby.isOnLobby(player)) {
-                lobby.send(player);
-            }
         }).delay(2, TimeUnit.SECONDS).schedule();
     }
 

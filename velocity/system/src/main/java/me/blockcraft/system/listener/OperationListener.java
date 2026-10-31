@@ -43,6 +43,8 @@ public final class OperationListener {
             .maximumSize(REMEMBERED_RESULTS)
             .expireAfterWrite(RESULT_MEMORY)
             .build();
+    private final Cache<UUID, Object> playerLocks = CacheBuilder.newBuilder().weakValues().build();
+    private final Object punishmentLock = new Object();
     private final Handler handler;
     private final Messages messages;
     private final Logger logger;
@@ -78,8 +80,20 @@ public final class OperationListener {
         });
     }
 
-    /** Serialized so a duplicate cannot run while its first execution is still changing storage. */
-    private synchronized OperationResult execute(ServerConnection connection, OperationCodec.Request request) {
+    private OperationResult execute(ServerConnection connection, OperationCodec.Request request) {
+        var lock = playerLocks.asMap().computeIfAbsent(connection.getPlayer().getUniqueId(), ignored -> new Object());
+        synchronized (lock) {
+            if (request.operation() instanceof NetworkRequest.TimedPunishment
+                    || request.operation() instanceof NetworkRequest.PresetPunishment) {
+                synchronized (punishmentLock) {
+                    return executeForPlayer(connection, request);
+                }
+            }
+            return executeForPlayer(connection, request);
+        }
+    }
+
+    private OperationResult executeForPlayer(ServerConnection connection, OperationCodec.Request request) {
         var player = connection.getPlayer();
         if (!player.isActive() || !isCurrent(connection)) {
             return OperationResult.REJECTED;

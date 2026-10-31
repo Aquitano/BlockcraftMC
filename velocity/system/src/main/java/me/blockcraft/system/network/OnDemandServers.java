@@ -4,7 +4,6 @@ import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
-import me.blockcraft.common.db.DatabaseException;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.network.GroupState;
 import me.blockcraft.common.network.GroupStateRepository;
@@ -34,9 +33,8 @@ public final class OnDemandServers {
     private final OnDemand onDemand;
     private final WakerClient waker;
     private final ServerDirectory directory;
-    private final GroupStateRepository states;
+    private final GroupStatePublisher states;
     private final Messages messages;
-    private final Logger logger;
     private final InstantSource clock = InstantSource.system();
     /** One writer, so the table never ends on an older state than the last one decided. */
     private final ExecutorService writes = Executors.newSingleThreadExecutor(
@@ -49,10 +47,8 @@ public final class OnDemandServers {
         this.onDemand = onDemand;
         this.waker = waker;
         this.directory = directory;
-        this.states = states;
+        this.states = new GroupStatePublisher(onDemand.groups(), states::put, () -> states.retain(onDemand.groups()), writes, logger);
         this.messages = messages;
-        this.logger = logger;
-        writes.execute(() -> write(() -> states.retain(onDemand.groups())));
     }
 
     /** The connector that sends players who waited; it is built with this, so it is handed over once both exist. */
@@ -109,6 +105,7 @@ public final class OnDemandServers {
             seen.put(group, new Observation(directory.running(group), directory.idle(group)));
         }
         apply(onDemand.observe(seen, clock.instant()));
+        states.retry();
     }
 
     private void apply(List<Effect> effects) {
@@ -118,7 +115,7 @@ public final class OnDemandServers {
                     if (publish.state() != GroupState.DRAINING) {
                         directory.undrain(publish.group());
                     }
-                    writes.execute(() -> write(() -> states.put(publish.group(), publish.state())));
+                    states.publish(publish.group(), publish.state());
                 }
                 case Effect.Start start -> waker.start(start.group()).thenAccept(started -> {
                     if (!started) {
@@ -139,14 +136,6 @@ public final class OnDemandServers {
                 case Effect.Fail fail -> fail.players().forEach(id -> proxy.getPlayer(id).ifPresent(player ->
                         player.sendMessage(messages.get("play.start-failed", lobby == null ? TagResolver.empty() : lobby.game(fail.group())))));
             }
-        }
-    }
-
-    private void write(Runnable write) {
-        try {
-            write.run();
-        } catch (DatabaseException e) {
-            logger.warn("Could not write bc_server_groups; the lobbies show the last state until the next change", e);
         }
     }
 }

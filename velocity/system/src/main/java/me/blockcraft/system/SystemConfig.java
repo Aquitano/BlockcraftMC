@@ -42,7 +42,7 @@ public final class SystemConfig {
     public record JoinMe(int dailyLimit, int resetHour) {
     }
 
-    public record Discovery(int pollSeconds, int staleSeconds, int seatSeconds) {
+    public record Discovery(int pollSeconds, int staleSeconds, int seatSeconds, int maxSnapshotAgeSeconds) {
     }
 
     /** Game servers started and stopped through the waker at {@code url} with {@code token} (README, "Server discovery and groups"). */
@@ -133,7 +133,7 @@ public final class SystemConfig {
         this.lobbyGroup = string(root, "lobby-group");
         var discovery = YamlFile.section(root, "discovery");
         this.discovery = new Discovery(number(discovery, "poll-seconds", 5), number(discovery, "stale-seconds", 20),
-                number(discovery, "seat-seconds", 15));
+                number(discovery, "seat-seconds", 15), Math.clamp(number(discovery, "max-snapshot-age-seconds", 30), 1, 3600));
         var onDemand = YamlFile.section(root, "on-demand");
         var onDemandGroups = Arrays.stream(env(environment, "BLOCKCRAFT_ON_DEMAND_GROUPS",
                         String.join(",", strings(onDemand, "groups"))).split(","))
