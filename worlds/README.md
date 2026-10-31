@@ -358,6 +358,17 @@ and headroom at all three arrivals and eleven checkpoints, and void generation b
 stored chunks have status `minecraft:full`. Client inspection is still needed for skins, signs, armor-stand
 poses, and lighting. Scheduled block and fluid updates remain as reported by `importMap`.
 
+`claymc_lobby_2020` is a fourth, separate lobby, imported on 2026-10-31 from `Maps/Lobby World` in
+`Blockcraft Server/2/ClayMC-7.0-7.1` (`ClayMCLobby`). None of its chunks matches one of the 2019 lobbies. It dates
+itself: a hologram over the team figures reads "Stand: 08.04.2020", a sign reads "Covid-19 / Ich war dabei", and
+`LastPlayed` is 2020-04-21. Its name follows the backup's folder, and a sign credits the ClayMC-Bauteam. It keeps
+the 316 built chunks of its round island (`-160,-96,159,207`) out of 1,250 stored; the rest were empty. All 163
+armor stands and 7 item frames remain, and 72 loose items are gone. It occupies 2.4 MiB. Its arrival is the old
+world spawn. Its eight checkpoints face the team room, the signs of the game modes, ClayShop, the event stage, the
+ice cream stand and the MC ClayMC restaurant. Five secret signs, numbered 1 to 4 and 6, are left for visitors to
+find. A Paper run checked the exhibit's discovery, its loading, the support and headroom at the arrival and every
+checkpoint, and void beyond the build.
+
 ## TTT
 
 The TTT server's template is `worlds/ttt`: the waiting lobby as its overworld and three imported maps in
