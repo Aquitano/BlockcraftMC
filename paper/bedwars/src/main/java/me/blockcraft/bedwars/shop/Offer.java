@@ -15,6 +15,7 @@ import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.potion.PotionType;
 
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.Optional;
 
@@ -50,13 +51,20 @@ public record Offer(String key, Material material, int amount, Resource currency
             if (damage > 0 && meta instanceof Damageable damageable) {
                 damageable.setDamage(damage);
             }
-        }).build();
-        special.ifPresent(tag -> tag.tag(item));
-        return stick ? skin.skin(StickSkin.tag(item)) : item;
+        });
+        special.ifPresent(tag -> item.lore(messages.getLines("shop.descriptions." + tag.key())));
+        var stack = item.build();
+        special.ifPresent(tag -> tag.tag(stack));
+        return stick ? skin.skin(StickSkin.tag(stack)) : stack;
     }
 
     /** The item as the shop shows it: what the buyer would get, with the price below. */
     ItemStack display(Messages messages, Optional<TeamColor> team, StickSkin skin) {
-        return Items.of(create(messages, team, skin)).lore(Component.empty(), currency.amount(messages, price)).build();
+        var item = create(messages, team, skin);
+        var lore = new ArrayList<Component>();
+        Optional.ofNullable(item.lore()).ifPresent(lore::addAll);
+        lore.add(Component.empty());
+        lore.add(currency.amount(messages, price));
+        return Items.of(item).lore(lore).build();
     }
 }

@@ -146,6 +146,23 @@ shop:
     rescue-platform: "<accent>Rettungsplattform"
     ender-pearl: "<accent>Enderperle"
     web: "<accent>Spinnennetz"
+  descriptions:
+    teleporter:
+      - "<muted>Bringt dich nach dem Aufladen zum Teamspawn."
+      - "<right>Unter freiem Himmel aufladen"
+      - "<muted>Verlässt du deinen Block, bricht das Aufladen ab."
+    mobile-shop:
+      - "<muted>Stellt vorübergehend einen Shop auf."
+      - "<right>Auf der Oberseite eines Blocks platzieren"
+      - "<muted>Die Restzeit steht über dem Händler."
+    parachute:
+      - "<right>In der Luft zum Gleiten öffnen"
+      - "<muted>Steuere mit deiner Blickrichtung."
+      - "<muted>Endet bei der Landung oder nach Ablauf der Zeit."
+      - "<muted>Gegner können das Huhn abschießen."
+    rescue-platform:
+      - "<muted>Erzeugt eine Plattform aus Teamglas unter dir."
+      - "<right>In der Luft einsetzen"
 
 items:
   teleporter:
