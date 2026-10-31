@@ -17,17 +17,28 @@ public final class DuelSeries {
     private final List<DuelVote.Outcome> schedule;
     private final int[] wins = new int[2];
     private int gameIndex;
+    private final int winsNeeded;
 
     public DuelSeries(List<UUID> participants, List<DuelVote.Outcome> schedule) {
+        this(participants, schedule, 0);
+    }
+
+    private DuelSeries(List<UUID> participants, List<DuelVote.Outcome> schedule, int winsNeeded) {
         this.participants = List.copyOf(participants);
         this.schedule = List.copyOf(schedule);
+        this.winsNeeded = winsNeeded;
         if (this.participants.size() != 2 || this.participants.getFirst().equals(this.participants.getLast())) {
             throw new IllegalArgumentException("A duel series needs two distinct participants");
         }
         if ((this.schedule.size() != 1 && this.schedule.size() != 3)
-                || this.schedule.stream().map(DuelVote.Outcome::mode).distinct().count() != this.schedule.size()) {
+                || winsNeeded == 0 && this.schedule.stream().map(DuelVote.Outcome::mode).distinct().count() != this.schedule.size()) {
             throw new IllegalArgumentException("A duel series needs one game or three distinct modes");
         }
+    }
+
+    public static DuelSeries challenge(List<UUID> players, DuelVote.Outcome game, int bestOf) {
+        if (bestOf != 1 && bestOf != 3) throw new IllegalArgumentException("Invalid series length");
+        return new DuelSeries(players, Collections.nCopies(bestOf, game), bestOf / 2 + 1);
     }
 
     public static List<DuelVote.Outcome> plan(Format format, DuelVote votes,
@@ -82,7 +93,7 @@ public final class DuelSeries {
     }
 
     public boolean finished() {
-        return gameIndex == schedule.size();
+        return gameIndex == schedule.size() || winsNeeded > 0 && (wins[0] >= winsNeeded || wins[1] >= winsNeeded);
     }
 
     public int wins(UUID participant) {

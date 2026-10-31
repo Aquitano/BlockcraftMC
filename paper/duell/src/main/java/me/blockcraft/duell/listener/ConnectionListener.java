@@ -1,5 +1,8 @@
 package me.blockcraft.duell.listener;
 
+import me.blockcraft.api.game.DuelCancelledEvent;
+import me.blockcraft.api.game.DuelSetupEvent;
+import me.blockcraft.api.game.DuelAcceptedEvent;
 import me.blockcraft.api.nick.NickChangeEvent;
 import me.blockcraft.api.ranked.RankedMatchEvent;
 import me.blockcraft.api.spectate.SpectateRequestEvent;
@@ -47,6 +50,21 @@ public final class ConnectionListener implements Listener {
     @EventHandler
     public void onRankedMatch(RankedMatchEvent event) {
         duel.rankedMatch(event.getPlayer(), event.opponent());
+    }
+
+    @EventHandler
+    public void onDuelSetup(DuelSetupEvent event) {
+        duel.setupChallenge(event.getPlayer(), event.setup());
+    }
+
+    @EventHandler
+    public void onDuelAccepted(DuelAcceptedEvent event) {
+        duel.acceptChallenge(event.getPlayer(), event.ticket());
+    }
+
+    @EventHandler
+    public void onDuelCancelled(DuelCancelledEvent event) {
+        duel.cancelChallenge(event.ticket());
     }
 
     /** The tab list and the sidebar show the group a nick wears, not the account's. */

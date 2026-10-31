@@ -1,5 +1,7 @@
 package me.blockcraft.system.listener;
 
+import me.blockcraft.system.duel.DuelChallenges;
+
 import com.velocitypowered.api.event.EventTask;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.PluginMessageEvent.ForwardResult;
@@ -41,10 +43,13 @@ public final class ProxyMessageListener {
     private final TabHeaderListener tabHeader;
     private final Logger logger;
     private final Supplier<Optional<NetworkPack>> pack;
+    private final DuelChallenges challenges;
 
     public ProxyMessageListener(ProxyServer proxy, LobbyConnector lobby, PlayerVisibility visibility, PlayerChoices choices,
-                                AfkPlayers afk, FriendManager friends, TabHeaderListener tabHeader, Logger logger, Supplier<Optional<NetworkPack>> pack) {
+                                AfkPlayers afk, FriendManager friends, TabHeaderListener tabHeader, Logger logger, Supplier<Optional<NetworkPack>> pack,
+                                DuelChallenges challenges) {
         this.proxy = proxy;
+        this.challenges = challenges;
         this.lobby = lobby;
         this.visibility = visibility;
         this.choices = choices;
@@ -72,6 +77,8 @@ public final class ProxyMessageListener {
             return null;
         }
         switch (message.get()) {
+            case ProxyMessage.DuelInvitation invitation -> challenges.invite(player, invitation);
+            case ProxyMessage.DuelCancel cancel -> challenges.cancel(player, cancel.ticket());
             case ProxyMessage.PackRequest _ -> pack.get().ifPresentOrElse(networkPack -> networkPack.retry(player),
                     () -> NetworkPack.tell(player, PackStatus.UNAVAILABLE));
             case ProxyMessage.Play play -> lobby.play(player, play.group());

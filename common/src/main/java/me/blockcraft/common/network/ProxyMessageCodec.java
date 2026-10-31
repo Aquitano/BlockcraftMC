@@ -1,5 +1,6 @@
 package me.blockcraft.common.network;
 
+import me.blockcraft.common.duel.DuelRules;
 import me.blockcraft.common.nick.Nick;
 import me.blockcraft.common.settings.PlayerSetting;
 
@@ -42,6 +43,11 @@ public final class ProxyMessageCodec {
     private static final int REMATCH = 17;
     private static final int NEWCOMER = 18;
     private static final int RANKED_MATCH = 19;
+    private static final int DUEL_SETUP = 20;
+    private static final int DUEL_INVITATION = 21;
+    private static final int DUEL_ACCEPTED = 22;
+    private static final int DUEL_CANCEL = 23;
+    private static final int DUEL_CANCELLED = 24;
 
     private ProxyMessageCodec() {
     }
@@ -51,6 +57,35 @@ public final class ProxyMessageCodec {
         var bytes = write(out -> {
             out.writeByte(VERSION);
             switch (message) {
+                case ProxyMessage.DuelSetup setup -> {
+                    out.writeByte(DUEL_SETUP);
+                    uuid(out, setup.ticket());
+                    uuid(out, setup.opponent());
+                    out.writeUTF(setup.name());
+                }
+                case ProxyMessage.DuelInvitation invitation -> {
+                    out.writeByte(DUEL_INVITATION);
+                    uuid(out, invitation.ticket());
+                    var rules = invitation.rules();
+                    out.writeUTF(rules.mode());
+                    out.writeInt(rules.map());
+                    out.writeBoolean(rules.legacy());
+                    out.writeBoolean(rules.rated());
+                    out.writeInt(rules.bestOf());
+                    out.writeUTF(invitation.mapName());
+                }
+                case ProxyMessage.DuelAccepted accepted -> {
+                    out.writeByte(DUEL_ACCEPTED);
+                    uuid(out, accepted.ticket());
+                }
+                case ProxyMessage.DuelCancelled cancelled -> {
+                    out.writeByte(DUEL_CANCELLED);
+                    uuid(out, cancelled.ticket());
+                }
+                case ProxyMessage.DuelCancel cancel -> {
+                    out.writeByte(DUEL_CANCEL);
+                    uuid(out, cancel.ticket());
+                }
                 case ProxyMessage.Play play -> {
                     out.writeByte(PLAY);
                     out.writeUTF(play.group());
@@ -179,6 +214,12 @@ public final class ProxyMessageCodec {
 
     private static ProxyMessage read(DataInputStream in) throws IOException {
         return switch (in.readUnsignedByte()) {
+            case DUEL_SETUP -> new ProxyMessage.DuelSetup(uuid(in), uuid(in), in.readUTF());
+            case DUEL_INVITATION -> new ProxyMessage.DuelInvitation(uuid(in), new DuelRules(
+                    in.readUTF(), in.readInt(), in.readBoolean(), in.readBoolean(), in.readInt()), in.readUTF());
+            case DUEL_ACCEPTED -> new ProxyMessage.DuelAccepted(uuid(in));
+            case DUEL_CANCELLED -> new ProxyMessage.DuelCancelled(uuid(in));
+            case DUEL_CANCEL -> new ProxyMessage.DuelCancel(uuid(in));
             case PLAY -> new ProxyMessage.Play(in.readUTF());
             case HUB -> new ProxyMessage.Hub();
             case COMMAND -> new ProxyMessage.Command(in.readUTF());

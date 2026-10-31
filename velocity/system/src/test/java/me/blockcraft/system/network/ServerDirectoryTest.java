@@ -27,6 +27,20 @@ import static org.junit.Assert.assertTrue;
 
 public class ServerDirectoryTest {
 
+    @Test
+    public void privateDuelsKeepStrangersOutUntilTheirOwnerReleasesTheArena() {
+        var directory = directoryOf(game("quicksg-1", 0, 2));
+        var players = java.util.Set.of(UUID.randomUUID(), UUID.randomUUID());
+        assertTrue(directory.reserveDuel("quicksg", players).isPresent());
+        assertTrue(fill(directory, UUID.randomUUID()).isEmpty());
+        assertEquals(ServerDirectory.Entry.CLOSED, directory.enter(UUID.randomUUID(), "quicksg-1"));
+        assertEquals(ServerDirectory.Entry.SEATED, directory.enter(players.iterator().next(), "quicksg-1"));
+        directory.releaseDuel("quicksg-1", java.util.Set.of(UUID.randomUUID(), UUID.randomUUID()));
+        assertTrue(fill(directory, UUID.randomUUID()).isEmpty());
+        directory.releaseDuel("quicksg-1", players);
+        assertTrue(fill(directory, UUID.randomUUID()).isPresent());
+    }
+
     private static final Duration SEAT_TIMEOUT = Duration.ofSeconds(15);
 
     private final Map<String, RegisteredServer> registered = new HashMap<>();

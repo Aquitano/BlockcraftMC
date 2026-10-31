@@ -91,7 +91,7 @@ public final class RankedQueue {
             player.sendMessage(messages.get("ranked.party"));
             return;
         }
-        if (waiting(id)) {
+        if (isWaiting(id)) {
             player.sendMessage(messages.get("ranked.already"));
             return;
         }
@@ -119,7 +119,7 @@ public final class RankedQueue {
         player.sendMessage(messages.get(left ? "ranked.left" : "ranked.not-queued"));
     }
 
-    private synchronized boolean waiting(UUID player) {
+    public synchronized boolean isWaiting(UUID player) {
         return seekers.containsKey(player) || matches.containsKey(player);
     }
 

@@ -51,6 +51,7 @@ public final class ServerDirectory {
     private final InstantSource clock;
     private final Consumer<Map<String, Integer>> publish;
     private final Map<UUID, Seat> seats = new HashMap<>();
+    private final Map<String, Set<UUID>> privateDuels = new HashMap<>();
     private final Map<String, Integer> published = new HashMap<>();
     private final Set<String> draining = new HashSet<>();
     private volatile Map<String, ServerRecord> servers = Map.of();
@@ -133,12 +134,21 @@ public final class ServerDirectory {
      * they already hold there; a running round they may only watch, and a full or restarting server stays closed.
      */
     public synchronized Entry enter(UUID player, String server) {
+        if (privateDuels.containsKey(server) && !privateDuels.get(server).contains(player)) {
+            return Entry.CLOSED;
+        }
         var record = get(server);
         if (!fresh() || record.isEmpty() || draining.contains(record.get().group())) {
             return Entry.CLOSED;
         }
         if (isWatchable(server)) {
             return Entry.WATCHING;
+        }
+        if (privateDuels.getOrDefault(server, Set.of()).contains(player)) {
+            if (!record.get().status().state().acceptsPlayers()) return Entry.CLOSED;
+            seat(player, server);
+            publishChanges();
+            return Entry.SEATED;
         }
         expireSeats();
         var held = seats.get(player);
@@ -252,7 +262,26 @@ public final class ServerDirectory {
 
     private Stream<ServerRecord> joinable(String group, int players) {
         return servers.values().stream()
+                .filter(server -> !privateDuels.containsKey(server.name()))
                 .filter(server -> fresh() && server.group().equals(group) && !draining.contains(group) && hasRoom(server, players));
+    }
+
+    public synchronized Optional<RegisteredServer> reserveDuel(String group, Set<UUID> players) {
+        expireSeats();
+        var server = joinable(group, players.size()).filter(record -> occupancy(record) == 0).findFirst().flatMap(this::registered);
+        server.ifPresent(target -> {
+            privateDuels.put(target.getServerInfo().getName(), Set.copyOf(players));
+            players.forEach(player -> seat(player, target.getServerInfo().getName()));
+            publishChanges();
+        });
+        return server;
+    }
+
+    public synchronized void releaseDuel(String server, Set<UUID> players) {
+        if (privateDuels.remove(server, players)) {
+            players.forEach(player -> unseat(player, server));
+            publishChanges();
+        }
     }
 
     private boolean fresh() {
@@ -270,9 +299,10 @@ public final class ServerDirectory {
     private int occupancy(ServerRecord server) {
         var arrived = registered(server).map(RegisteredServer::getPlayersConnected).orElse(List.of()).stream()
                 .map(Player::getUniqueId).collect(Collectors.toSet());
-        long onTheirWay = seats.entrySet().stream()
-                .filter(seat -> seat.getValue().server().equals(server.name()) && !arrived.contains(seat.getKey()))
-                .count();
+        var reserved = new HashSet<>(privateDuels.getOrDefault(server.name(), Set.of()));
+        seats.entrySet().stream().filter(seat -> seat.getValue().server().equals(server.name()))
+                .map(Map.Entry::getKey).forEach(reserved::add);
+        long onTheirWay = reserved.stream().filter(player -> !arrived.contains(player)).count();
         return Math.max(server.status().online(), arrived.size()) + (int) onTheirWay;
     }
 

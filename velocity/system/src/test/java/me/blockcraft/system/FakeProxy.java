@@ -32,6 +32,7 @@ public final class FakeProxy {
     private final Map<UUID, List<Object>> received = new LinkedHashMap<>();
     private final Map<String, RegisteredServer> servers = new LinkedHashMap<>();
     private final Map<UUID, List<RegisteredServer>> requested = new LinkedHashMap<>();
+    private final Map<UUID, CompletableFuture<Boolean>> nextConnections = new LinkedHashMap<>();
     private final List<Runnable> scheduled = new ArrayList<>();
 
     private final Scheduler scheduler = (Scheduler) Proxy.newProxyInstance(Scheduler.class.getClassLoader(),
@@ -121,7 +122,7 @@ public final class FakeProxy {
         return connection;
     }
 
-    List<byte[]> sentTo(ServerConnection connection) {
+    public List<byte[]> sentTo(ServerConnection connection) {
         return ((Sent) connection).sent();
     }
 
@@ -139,11 +140,18 @@ public final class FakeProxy {
         tasks.forEach(Runnable::run);
     }
 
+    public CompletableFuture<Boolean> deferNextConnection(Player player) {
+        var connection = new CompletableFuture<Boolean>();
+        nextConnections.put(player.getUniqueId(), connection);
+        return connection;
+    }
+
     private ConnectionRequestBuilder request(UUID player, RegisteredServer target) {
         requested.computeIfAbsent(player, id -> new ArrayList<>()).add(target);
         return (ConnectionRequestBuilder) Proxy.newProxyInstance(ConnectionRequestBuilder.class.getClassLoader(),
                 new Class<?>[]{ConnectionRequestBuilder.class}, (proxy, method, args) -> switch (method.getName()) {
-                    case "connectWithIndication" -> CompletableFuture.completedFuture(true);
+                    case "connectWithIndication" -> Optional.ofNullable(nextConnections.remove(player))
+                            .orElseGet(() -> CompletableFuture.completedFuture(true));
                     default -> throw new AssertionError(method.getName());
                 });
     }

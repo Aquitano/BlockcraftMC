@@ -35,6 +35,10 @@ public final class VoteMenus {
     }
 
     public void openModes(Player player) {
+        if (duel.challengeLocked()) {
+            player.sendMessage(messages.get("challenge.locked"));
+            return;
+        }
         open(player, new ModeMenu(player, duel.offeredModes()));
     }
 

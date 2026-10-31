@@ -288,6 +288,7 @@ summary:
   streak: "<prefix><accent><player> <muted>hat eine Serie von <accent><streak> Kills<muted>!"
 
 settings:
+  duel-invites: "Duelleinladungen erhalten"
   pack-details: "Ressourcenpaket"
   pack-title: "<arrow><primary>Ressourcenpaket"
   pack-retry: "Erneut laden"

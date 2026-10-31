@@ -1,5 +1,7 @@
 package me.blockcraft.system;
 
+import me.blockcraft.system.duel.DuelChallenges;
+
 import com.google.inject.Inject;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.event.Subscribe;
@@ -211,6 +213,8 @@ public final class SystemPlugin {
         var ranked = new RankedQueue(proxy, directory, lobby, parties, onDemand,
                 new EloRepository(database, config.ranked().elo()), config.ranked().queue(), messages, logger, Clock.systemUTC());
         var punishments = new PunishmentService(proxy, repositories.punishments(), messages);
+        var challenges = new DuelChallenges(proxy, directory, lobby, parties, ranked,
+                visibility, choices, ignores, onDemand, messages, Clock.systemUTC(), config);
         var muteGate = new MuteGate(repositories.punishments(), punishments, messages, logger);
         var spectating = new SpectateRequests();
         var anniversaries = new Anniversaries(config.calendar(), database);
@@ -252,8 +256,9 @@ public final class SystemPlugin {
         var rejoins = new Rejoins(this, proxy, directory, new RejoinRepository(database), messages, logger);
         events.register(this, rejoins);
         events.register(this, ranked);
+        events.register(this, challenges);
         events.register(this, new InitialServerListener(lobby, rejoins));
-        events.register(this, new ProxyMessageListener(proxy, lobby, visibility, choices, afk, friends, tabHeader, logger, () -> pack));
+        events.register(this, new ProxyMessageListener(proxy, lobby, visibility, choices, afk, friends, tabHeader, logger, () -> pack, challenges));
         var addressHasher = AddressHasher.load(dataDirectory);
         var returning = new ReturningPlayers(addressHasher, repositories.players(), choices, friends, config.serverListCache(), config.serverListFriends(), logger);
         events.register(this, new MotdListener(visibility, config, settings, returning, messages, dataDirectory, logger));
@@ -329,6 +334,7 @@ public final class SystemPlugin {
         register(friendCommands.create());
         register(friendCommands.list());
         register(new PartyCommand(support, lookup, parties, messages).create());
+        register(challenges.command(support));
         register(new PartyChatCommand(support, parties, privateChat, messages).create());
         var joinMe = new JoinMeCommand(support, proxy, visibility, config, directory, messages);
         register(joinMe.create());
@@ -361,6 +367,7 @@ public final class SystemPlugin {
                 .repeat(config.tabRefreshSeconds(), TimeUnit.SECONDS)
                 .schedule();
         proxy.getScheduler().buildTask(this, ranked::tick).repeat(1, TimeUnit.SECONDS).schedule();
+        proxy.getScheduler().buildTask(this, challenges::tick).repeat(1, TimeUnit.SECONDS).schedule();
         proxy.getScheduler().buildTask(this, friends::purgeExpiredRequests)
                 .repeat(config.friends().requestMinutes(), TimeUnit.MINUTES)
                 .schedule();

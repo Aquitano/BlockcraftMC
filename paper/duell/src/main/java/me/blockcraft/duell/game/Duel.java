@@ -1,5 +1,9 @@
 package me.blockcraft.duell.game;
 
+import me.blockcraft.common.network.ProxyMessage;
+import me.blockcraft.common.duel.DuelRules;
+import me.blockcraft.api.proxy.ProxyMessaging;
+import me.blockcraft.duell.menu.ChallengeMenu;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.cosmetic.ChatTag;
 import me.blockcraft.api.cosmetic.ChatTagChoice;
@@ -88,6 +92,56 @@ public final class Duel {
     private String mapName;
     private Countdown roundTimer;
     private boolean stopped;
+    private ProxyMessage.DuelSetup challenge;
+    private DuelRules challengeRules;
+    private UUID challenger;
+    private boolean challengeAccepted;
+    private ChallengeMenu challengeMenu;
+
+    public boolean challengeLocked() { return challenge != null; }
+
+    public void cancelChallenge(UUID ticket) {
+        if (challenge != null && challenge.ticket().equals(ticket) && isLobby()) {
+            challenge = null;
+            challengeRules = null;
+            challenger = null;
+            challengeAccepted = false;
+            round.players().forEach(Player::closeInventory);
+            updateLobby();
+        }
+    }
+
+    public void setupChallenge(Player player, ProxyMessage.DuelSetup setup) {
+        if (challenge != null && challenge.ticket().equals(setup.ticket()) && challengeRules == null && challengeMenu != null) {
+            challengeMenu.open(player, () -> isLobby() && player.getUniqueId().equals(challenger));
+            return;
+        }
+        if (!isLobby() || !isParticipant(player) || round.playerCount() != 1 || challenge != null) return;
+        challenge = setup;
+        challenger = player.getUniqueId();
+        lobbyCountdown.cancel();
+        if (offeredModes().stream().noneMatch(candidate -> !playableMaps(candidate).isEmpty())) {
+            ProxyMessaging.send(plugin, player, new ProxyMessage.DuelCancel(setup.ticket()));
+            return;
+        }
+        challengeMenu = new ChallengeMenu(this, messages, setup, rules -> {
+            var selected = DuelMode.byConfigKey(rules.mode()).orElseThrow();
+            if (!isLobby() || challenge != setup || !playableMaps(selected).contains(rules.map()) || rules.rated() && !ratedEnabled()) return;
+            challengeRules = rules;
+            ProxyMessaging.send(plugin, player,
+                    new ProxyMessage.DuelInvitation(setup.ticket(), rules, mapName(selected, rules.map())));
+        }, viewer -> ProxyMessaging.send(plugin, viewer,
+                new ProxyMessage.DuelCancel(setup.ticket())));
+        challengeMenu.open(player,
+                () -> isLobby() && challenge == setup && isParticipant(player));
+    }
+
+    public void acceptChallenge(Player player, UUID ticket) {
+        if (challenge != null && challenge.ticket().equals(ticket) && player.getUniqueId().equals(challenger) && challengeRules != null) {
+            challengeAccepted = true;
+            updateLobby();
+        }
+    }
 
     public Duel(Plugin plugin, GameConfig gameConfig, DuellConfig config, Messages messages, Spawns spawns,
                 DuelGames games, StatsRepository stats, StatsMenus statsMenus, DuelRatings ratings, DuelPairRepository pairs) {
@@ -134,12 +188,14 @@ public final class Duel {
     public Optional<Location> lobbySpawn() { return spawns.spawn(); }
     public DuelSeries.Format formatChoice(UUID player) { return votes.formatChoice(player); }
     public DuelSeries.Format selectedFormat() {
+        if (challengeRules != null) return challengeRules.bestOf() == 3 ? DuelSeries.Format.TOUR : DuelSeries.Format.SINGLE;
         return !isLobby() && series != null ? series.schedule().size() == 3 ? DuelSeries.Format.TOUR : DuelSeries.Format.SINGLE
                 : votes.selectedFormat(round.players().stream().map(Player::getUniqueId).toList());
     }
     public DuelRating ratingChoice(UUID player) { return votes.ratingChoice(player); }
     public boolean ratedEnabled() { return config.ratedEnabled(); }
     public DuelRating selectedRating() {
+        if (challengeRules != null) return challengeRules.rated() ? DuelRating.RATED : DuelRating.UNRATED;
         if (!isLobby()) {
             return activeRating;
         }
@@ -166,6 +222,7 @@ public final class Duel {
     }
 
     public void chooseRating(Player player, DuelRating rating) {
+        if (challengeLocked()) return;
         if (!isLobby() || !isParticipant(player) || rating == DuelRating.RATED && !ratedEnabled()) {
             VoteMenu.closed(player, messages);
             return;
@@ -193,11 +250,13 @@ public final class Duel {
 
     public CombatStyle combatChoice(UUID player) { return votes.combatChoice(player, config.combat()); }
     public CombatStyle selectedCombat() {
+        if (challengeRules != null) return challengeRules.legacy() ? CombatStyle.LEGACY : CombatStyle.MODERN;
         return isLobby() ? votes.selectedCombat(round.players().stream().map(Player::getUniqueId).toList(), config.combat())
                 : activeCombat;
     }
 
     public void chooseCombat(Player player, CombatStyle style) {
+        if (challengeLocked()) return;
         if (!isLobby() || !isParticipant(player)) {
             VoteMenu.closed(player, messages);
             return;
@@ -219,6 +278,7 @@ public final class Duel {
     }
 
     public void chooseFormat(Player player, DuelSeries.Format format) {
+        if (challengeLocked()) return;
         if (!isLobby() || !isParticipant(player)) {
             VoteMenu.closed(player, messages);
             return;
@@ -242,10 +302,14 @@ public final class Duel {
     }
 
     public void join(Player player) {
+        if (challenge != null && isLobby() && !player.getUniqueId().equals(challenger) && !player.getUniqueId().equals(challenge.opponent())) {
+            ProxyMessaging.hub(plugin, player);
+            return;
+        }
         lobbySpawn().ifPresent(player::teleport);
         if (round.join(player)) {
             prepareLobby(player);
-            lobbyCountdown.start();
+            if (challenge == null || challengeAccepted) lobbyCountdown.start();
         } else {
             if (current != null) {
                 current.spectate(player);
@@ -335,6 +399,12 @@ public final class Duel {
             Tasks.sync(plugin, this::updateLobby);
         }
         ratings.forget(player);
+        if (challenge != null && (player.getUniqueId().equals(challenger) || player.getUniqueId().equals(challenge.opponent()))) {
+            challenge = null;
+            challengeRules = null;
+            challenger = null;
+            challengeAccepted = false;
+        }
         refreshScoreboards();
     }
 
@@ -347,11 +417,12 @@ public final class Duel {
             round.spectators().stream().filter(player -> !BlockcraftApi.get().isVanished(player))
                     .limit(MAX_PARTICIPANTS - round.playerCount()).forEach(this::join);
         }
-        lobbyCountdown.start();
+        if (challenge == null || challengeAccepted) lobbyCountdown.start();
         refreshScoreboards();
     }
 
     public void vote(Player voter, DuelVote.Choice choice) {
+        if (challengeLocked()) return;
         if (!isLobby() || !isParticipant(voter)) {
             VoteMenu.closed(voter, messages);
             return;
@@ -367,6 +438,7 @@ public final class Duel {
     }
 
     public void clearModeVote(Player player) {
+        if (challengeLocked()) return;
         if (!isLobby() || !isParticipant(player)) {
             VoteMenu.closed(player, messages);
             return;
@@ -492,6 +564,9 @@ public final class Duel {
                 || players.stream().anyMatch(BlockcraftApi.get()::isVanished)) {
             return;
         }
+        if (challenge != null && (!challengeAccepted || challengeRules == null
+                || !players.stream().map(Player::getUniqueId).collect(java.util.stream.Collectors.toSet())
+                        .equals(java.util.Set.of(challenger, challenge.opponent())))) return;
         lobbyCountdown.cancel();
         duellists = players.stream().map(Player::getUniqueId).toList();
         var playable = new EnumMap<DuelMode, List<Integer>>(DuelMode.class);
@@ -500,7 +575,10 @@ public final class Duel {
         var schedule = DuelSeries.plan(requested, votes, playable, random);
         activeRating = selectedRating();
         activeCombat = selectedCombat();
-        series = new DuelSeries(duellists, schedule);
+        series = challengeRules == null ? new DuelSeries(duellists, schedule)
+                : DuelSeries.challenge(duellists, new DuelVote.Outcome(DuelMode.byConfigKey(challengeRules.mode()).orElseThrow(),
+                        challengeRules.map()), challengeRules.bestOf());
+        schedule = series.schedule();
         round.enter(GamePhase.INGAME);
         if (activeRating == DuelRating.RATED) { players.forEach(player -> ratings.load(player, this::refreshScoreboards)); }
         recognizeOpponents();
@@ -682,6 +760,10 @@ public final class Duel {
         closeGame();
         if (!samePair) {
             duellists.forEach(votes::withdraw);
+            challenge = null;
+            challengeRules = null;
+            challenger = null;
+            challengeAccepted = false;
         }
         votes.clearForced();
         votes.clearRatings();

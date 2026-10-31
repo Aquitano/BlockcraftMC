@@ -93,6 +93,7 @@ public final class SystemConfig {
     private final Discovery discovery;
     private final OnDemandConfig onDemand;
     private final Ranked ranked;
+    private final me.blockcraft.system.duel.DuelChallenges.Settings duels;
     private final Alerts alerts;
     private final ServerHealth serverHealth;
     private final ResourcePack resourcePack;
@@ -148,6 +149,12 @@ public final class SystemConfig {
                         Duration.ofSeconds(Math.max(30, number(onDemand, "start-timeout-seconds", 120))),
                         Math.max(0, number(onDemand, "max-awake", 0))));
         var ranked = YamlFile.section(root, "ranked");
+        var duels = YamlFile.section(root, "duels");
+        this.duels = new me.blockcraft.system.duel.DuelChallenges.Settings(
+                Math.clamp(number(duels, "setup-seconds", 60), 15, 300),
+                Math.clamp(number(duels, "invite-seconds", 30), 5, 120),
+                Math.clamp(number(duels, "transfer-seconds", 15), 5, 60),
+                Math.clamp(number(duels, "cooldown-seconds", 10), 1, 60));
         this.ranked = new Ranked(new RankedQueue.Settings(
                 string(ranked, "group").isBlank() ? "duell" : string(ranked, "group").toLowerCase(Locale.ROOT),
                 Math.max(0, number(ranked, "base-range", 100)), Math.max(0, number(ranked, "range-per-second", 5)),
@@ -238,6 +245,8 @@ public final class SystemConfig {
     public Ranked ranked() {
         return ranked;
     }
+
+    public me.blockcraft.system.duel.DuelChallenges.Settings duels() { return duels; }
 
     public Alerts alerts() {
         return alerts;

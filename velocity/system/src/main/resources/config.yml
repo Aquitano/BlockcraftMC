@@ -147,6 +147,12 @@ friends:
   max: 50
   request-minutes: 10
 
+duels:
+  setup-seconds: 60
+  invite-seconds: 30
+  transfer-seconds: 15
+  cooldown-seconds: 10
+
 # How many accounts one player may /ignore (bc_ignores).
 ignore:
   max: 50

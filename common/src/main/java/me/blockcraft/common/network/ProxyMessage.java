@@ -1,5 +1,6 @@
 package me.blockcraft.common.network;
 
+import me.blockcraft.common.duel.DuelRules;
 import me.blockcraft.common.nick.Nick;
 import me.blockcraft.common.settings.PlayerSetting;
 
@@ -16,6 +17,12 @@ import java.util.UUID;
  * a server that greetings for such a newcomer count, which travels with whichever player is on that server.
  */
 public sealed interface ProxyMessage {
+
+    record DuelSetup(UUID ticket, UUID opponent, String name) implements ToBackend { }
+    record DuelInvitation(UUID ticket, DuelRules rules, String mapName) implements ToProxy { }
+    record DuelAccepted(UUID ticket) implements ToBackend { }
+    record DuelCancelled(UUID ticket) implements ToBackend { }
+    record DuelCancel(UUID ticket) implements ToProxy { }
 
     sealed interface ToProxy extends ProxyMessage {
     }

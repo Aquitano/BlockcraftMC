@@ -371,6 +371,20 @@ the rating vote say, and Elo settles as for any rated series. A pair that has no
 so every January, April, July and October everyone starts again at the start rating, and `/elo` keeps the past
 seasons' tables.
 
+### Direct duel challenges
+
+`/duel <player>` reserves a private Duell server and moves the challenger there to choose its playable mode and map,
+1.8 or modern combat, rated or unrated play, and best of one or three. Both players must start in lobbies, outside
+parties and the ranked queue. Ranked selection is available only when the Duell server enables rated play.
+The opponent sees the complete rules in chat and accepts or declines them. Best of three ends when someone wins
+two games, or after three games if neither does. Accepted rules also apply to rematches.
+
+Setup expires after 60 seconds, a sent invitation after 30 seconds, and an accepted transfer after 15 seconds.
+The proxy's `duels` configuration sets these durations and the request cooldown.
+`/duel cancel` cancels your outgoing challenge. Failed or cancelled transfers return players already on the private
+server to the lobby. Other players cannot join that arena while it is reserved. Duel invitations have their own
+toggle in the settings dialog and respect ignores and vanished players.
+
 SkyWars, EnderGames and QuickSG remember the last selected kit separately in `bc_player_settings`. A join restores
 only a known kit the player still owns or can use for free. A late load cannot change a newer choice or a running round.
 

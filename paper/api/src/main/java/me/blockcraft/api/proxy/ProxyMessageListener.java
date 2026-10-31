@@ -1,5 +1,8 @@
 package me.blockcraft.api.proxy;
 
+import me.blockcraft.api.game.DuelCancelledEvent;
+import me.blockcraft.api.game.DuelSetupEvent;
+import me.blockcraft.api.game.DuelAcceptedEvent;
 import me.blockcraft.api.dialog.WelcomeDialog;
 import me.blockcraft.api.ignore.Ignores;
 import me.blockcraft.api.pack.ResourcePacks;
@@ -41,6 +44,9 @@ public final class ProxyMessageListener implements PluginMessageListener {
         }
         ProxyMessageCodec.decode(message, ProxyMessage.ToBackend.class).ifPresentOrElse(received -> {
             switch (received) {
+                case ProxyMessage.DuelSetup setup -> new DuelSetupEvent(player, setup).callEvent();
+                case ProxyMessage.DuelAccepted accepted -> new DuelAcceptedEvent(player, accepted.ticket()).callEvent();
+                case ProxyMessage.DuelCancelled cancelled -> new DuelCancelledEvent(player, cancelled.ticket()).callEvent();
                 case ProxyMessage.Pack pack -> resourcePacks.update(player, pack.status());
                 case ProxyMessage.Spectate spectate -> new SpectateRequestEvent(player, spectate.friend()).callEvent();
                 case ProxyMessage.Ignore ignore -> ignores.update(player, ignore.other(), ignore.ignoring());

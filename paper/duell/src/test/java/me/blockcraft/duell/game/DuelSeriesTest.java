@@ -19,6 +19,22 @@ import static org.junit.Assert.assertTrue;
 
 public class DuelSeriesTest {
 
+    @Test
+    public void challengeRepeatsTheChosenMapAndStopsAfterTwoWins() {
+        var game = new DuelVote.Outcome(DuelMode.SUMO, 1);
+        var series = DuelSeries.challenge(List.of(FIRST, SECOND), game, 3);
+        assertEquals(List.of(game, game, game), series.schedule());
+        assertTrue(series.complete(0, Optional.of(FIRST)));
+        assertFalse(series.finished());
+        assertTrue(series.complete(1, Optional.of(FIRST)));
+        assertTrue(series.finished());
+        assertEquals(Optional.of(FIRST), series.winner());
+        assertFalse(series.complete(2, Optional.of(SECOND)));
+        var single = DuelSeries.challenge(List.of(FIRST, SECOND), game, 1);
+        single.complete(0, Optional.of(SECOND));
+        assertEquals(Optional.of(SECOND), single.winner());
+    }
+
     private static final UUID FIRST = UUID.randomUUID();
     private static final UUID SECOND = UUID.randomUUID();
     private static final UUID SPECTATOR = UUID.randomUUID();

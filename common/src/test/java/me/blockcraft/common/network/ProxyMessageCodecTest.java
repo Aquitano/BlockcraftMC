@@ -36,7 +36,12 @@ public class ProxyMessageCodecTest {
                 new ProxyMessage.Announcement("{\"text\":\"Gefunden\"}"),
                 new ProxyMessage.Rematch(UUID.randomUUID()),
                 new ProxyMessage.Newcomer(UUID.randomUUID(), "Mia", 60),
-                new ProxyMessage.RankedMatch(UUID.randomUUID()));
+                new ProxyMessage.RankedMatch(UUID.randomUUID()),
+                new ProxyMessage.DuelSetup(UUID.randomUUID(), UUID.randomUUID(), "Thomas"),
+                new ProxyMessage.DuelInvitation(UUID.randomUUID(), new me.blockcraft.common.duel.DuelRules("vs", 2, true, true, 3), "Arena"),
+                new ProxyMessage.DuelAccepted(UUID.randomUUID()),
+                new ProxyMessage.DuelCancelled(UUID.randomUUID()),
+                new ProxyMessage.DuelCancel(UUID.randomUUID()));
         for (var message : messages) {
             assertEquals(Optional.of(message), ProxyMessageCodec.decode(ProxyMessageCodec.encode(message), ProxyMessage.class));
         }

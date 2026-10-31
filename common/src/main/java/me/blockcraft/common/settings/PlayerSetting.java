@@ -37,6 +37,7 @@ public enum PlayerSetting {
     PLAYER_TIME("player-time", null, "blockcraft.core.ptime"),
     PRIVATE_MESSAGES("private-messages", PlayerSetting.ON),
     PARTY_INVITES("party-invites", PlayerSetting.ON),
+    DUEL_INVITES("duel-invites", PlayerSetting.ON),
     FRIEND_REQUESTS("friend-requests", PlayerSetting.ON),
     PLAYER_VISIBILITY("player-visibility", PlayerSetting.ON),
     SOUNDS("sounds", PlayerSetting.ON),
