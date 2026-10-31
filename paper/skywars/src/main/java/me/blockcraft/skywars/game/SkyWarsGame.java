@@ -1,6 +1,8 @@
 package me.blockcraft.skywars.game;
 
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.settings.KitPreferences;
+import me.blockcraft.common.settings.PlayerSetting;
 import me.blockcraft.api.game.Arena;
 import me.blockcraft.api.game.Defeat;
 import me.blockcraft.api.game.GameConfig;
@@ -72,6 +74,7 @@ public final class SkyWarsGame {
     private final GameSidebar sidebar;
     private final MapVote vote;
     private final Map<UUID, Kit> kits = new HashMap<>();
+    private final KitPreferences<Kit> preferences;
     private Optional<SkyArena> arena = Optional.empty();
     private Optional<Chests> chests = Optional.empty();
     private boolean frozen;
@@ -94,6 +97,13 @@ public final class SkyWarsGame {
                 new LobbyHotbar.Choice(MenuIcon.VOTE, messages.get("item.vote"), this::isLobby, this::openVote)),
                 statsMenus, countdown);
         this.sidebar = new GameSidebar(messages.get("scoreboard.title"), round);
+        this.preferences = new KitPreferences<>(plugin, PlayerSetting.SKYWARS_KIT, java.util.List.of(Kit.values()),
+                Kit::item, config.freeKits()::contains, (player, kit) -> {
+                    if (isLobby() && round.isPlaying(player)) {
+                        kits.put(player.getUniqueId(), kit);
+                        show(player);
+                    }
+                });
     }
 
     public GamePhase phase() {
@@ -148,6 +158,7 @@ public final class SkyWarsGame {
             return false;
         }
         kits.put(player.getUniqueId(), kit);
+        preferences.remember(player, kit);
         show(player);
         return true;
     }
@@ -161,6 +172,7 @@ public final class SkyWarsGame {
             PlayerReset.reset(player, GameMode.ADVENTURE);
             player.teleport(lobbySpawn);
             hotbar.give(player);
+            preferences.restore(player);
             countdown.start();
             if (round.playerCount() >= config.maxPlayers()) {
                 countdown.shorten(config.countdowns().full());

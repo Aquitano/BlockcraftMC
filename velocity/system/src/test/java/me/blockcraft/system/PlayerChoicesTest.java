@@ -13,6 +13,19 @@ import static org.junit.Assert.assertTrue;
 public class PlayerChoicesTest {
 
     @Test
+    public void kitChoicesReachTheNextBackendBeforeItsDatabaseReadCompletes() {
+        var proxy = new FakeProxy();
+        var choices = new PlayerChoices(null, LoggerFactory.getLogger(PlayerChoicesTest.class));
+        var player = proxy.join("Player");
+        var previous = proxy.connect(player, "skywars-1");
+        choices.set(player, PlayerSetting.SKYWARS_KIT, "skywars.kit.archer");
+        var current = proxy.connect(player, "skywars-2");
+        choices.onServerConnected(new ServerPostConnectEvent(player, previous.getServer()));
+        assertEquals(new ProxyMessage.Setting(PlayerSetting.SKYWARS_KIT, "skywars.kit.archer"),
+                ProxyMessageCodec.decode(proxy.sentTo(current).getFirst(), ProxyMessage.ToBackend.class).orElseThrow());
+    }
+
+    @Test
     public void aSharedWeaponChoiceFollowsThePlayerToTheirNewBackend() {
         var proxy = new FakeProxy();
         var choices = new PlayerChoices(null, LoggerFactory.getLogger(PlayerChoicesTest.class));

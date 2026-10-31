@@ -1,6 +1,8 @@
 package me.blockcraft.endergames.game;
 
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.settings.KitPreferences;
+import me.blockcraft.common.settings.PlayerSetting;
 import me.blockcraft.api.game.Arena;
 import me.blockcraft.api.game.Defeat;
 import me.blockcraft.api.game.GameConfig;
@@ -85,6 +87,7 @@ public final class EnderGamesGame implements KitPlayers {
     private final LootChests startLoot;
     private final PlayerSwaps swaps;
     private final Map<UUID, Kit> kits = new HashMap<>();
+    private final KitPreferences<Kit> preferences;
     private final int startSeconds;
     private boolean frozen;
     private boolean protection;
@@ -112,6 +115,13 @@ public final class EnderGamesGame implements KitPlayers {
         this.enderChests = new EnderChests(world, config.enderChests(), this::loot);
         this.startLoot = new LootChests(config.startIsland().loot(), this::loot);
         this.swaps = new PlayerSwaps(config.swap());
+        this.preferences = new KitPreferences<>(plugin, PlayerSetting.ENDERGAMES_KIT, java.util.List.of(Kit.values()),
+                Kit::item, config.freeKits()::contains, (player, kit) -> {
+                    if (isLobby() && round.isPlaying(player)) {
+                        kits.put(player.getUniqueId(), kit);
+                        show(player);
+                    }
+                });
     }
 
     public GamePhase phase() {
@@ -169,6 +179,7 @@ public final class EnderGamesGame implements KitPlayers {
             return;
         }
         kits.put(player.getUniqueId(), kit);
+        preferences.remember(player, kit);
         show(player);
     }
 
@@ -187,6 +198,7 @@ public final class EnderGamesGame implements KitPlayers {
             PlayerReset.reset(player, GameMode.ADVENTURE);
             player.teleport(lobbySpawn);
             hotbar.give(player);
+            preferences.restore(player);
             if (!world.ready()) {
                 player.sendMessage(messages.get("lobby.world-loading"));
             }

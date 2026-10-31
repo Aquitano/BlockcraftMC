@@ -1,6 +1,8 @@
 package me.blockcraft.quicksg.game;
 
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.settings.KitPreferences;
+import me.blockcraft.common.settings.PlayerSetting;
 import me.blockcraft.api.config.Locations;
 import me.blockcraft.api.game.Arena;
 import me.blockcraft.api.game.Defeat;
@@ -70,6 +72,7 @@ public final class Game {
     private boolean protection;
     private boolean frozen;
     private final Map<UUID, Kit> kits = new HashMap<>();
+    private final KitPreferences<Kit> preferences;
     private Countdown protectionTimer;
     private Countdown gameTimer;
 
@@ -90,6 +93,13 @@ public final class Game {
         this.lobbyHotbar = new LobbyHotbar(plugin,
                 List.of(new LobbyHotbar.Choice(MenuIcon.QUICKSG, messages.get("item.kits"), kitMenus::openSelector)),
                 statsMenus, lobbyCountdown);
+        this.preferences = new KitPreferences<>(plugin, PlayerSetting.QUICKSG_KIT, java.util.List.of(Kit.values()),
+                Kit::item, Kit::free, (player, kit) -> {
+                    if (isLobby() && round.isPlaying(player)) {
+                        kits.put(player.getUniqueId(), kit);
+                        refreshScoreboard(player);
+                    }
+                });
     }
 
     public LobbyCountdown lobbyCountdown() {
@@ -134,6 +144,7 @@ public final class Game {
 
     public void selectKit(Player player, Kit kit) {
         kits.put(player.getUniqueId(), kit);
+        preferences.remember(player, kit);
         refreshScoreboard(player);
     }
 
@@ -155,6 +166,7 @@ public final class Game {
         PlayerReset.reset(player, GameMode.ADVENTURE);
         locations.get(LocationKey.LOBBY).ifPresent(player::teleport);
         lobbyHotbar.give(player);
+        preferences.restore(player);
         refreshScoreboards();
         lobbyCountdown.start();
     }

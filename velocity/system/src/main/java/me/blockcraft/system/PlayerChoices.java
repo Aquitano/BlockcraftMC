@@ -90,6 +90,13 @@ public final class PlayerChoices {
     @Subscribe
     public void onServerConnected(ServerPostConnectEvent event) {
         sendWeaponStyle(event.getPlayer());
+        var player = event.getPlayer();
+        for (var setting : java.util.List.of(PlayerSetting.SKYWARS_KIT, PlayerSetting.ENDERGAMES_KIT, PlayerSetting.QUICKSG_KIT)) {
+            Optional.ofNullable(choices.get(player.getUniqueId())).map(stored -> stored.get(setting))
+                    .ifPresent(value -> player.getCurrentServer().ifPresent(connection -> connection.sendPluginMessage(
+                            MinecraftChannelIdentifier.from(ProxyMessageCodec.CHANNEL),
+                            ProxyMessageCodec.encode(new ProxyMessage.Setting(setting, value)))));
+        }
     }
 
     private void sendWeaponStyle(Player player) {

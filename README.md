@@ -371,6 +371,9 @@ the rating vote say, and Elo settles as for any rated series. A pair that has no
 so every January, April, July and October everyone starts again at the start rating, and `/elo` keeps the past
 seasons' tables.
 
+SkyWars, EnderGames and QuickSG remember the last selected kit separately in `bc_player_settings`. A join restores
+only a known kit the player still owns or can use for free. A late load cannot change a newer choice or a running round.
+
 ## BedWars
 
 `paper/bedwars` is a port of [rewi-bw](https://github.com/Marfien/rewi-bw), the Rewinside BedWars clone, under its

@@ -23,6 +23,9 @@ public enum PlayerSetting {
     CHAT_TAG("chat-tag"),
     KILL_EFFECT("kill-effect"),
     WIN_EFFECT("win-effect"),
+    SKYWARS_KIT("skywars-kit"),
+    ENDERGAMES_KIT("endergames-kit"),
+    QUICKSG_KIT("quicksg-kit"),
     /** The legacy storage key keeps existing BedWars choices when other games share the style. */
     WEAPON_STYLE("bedwars-stick"),
     BEDWARS_BED_SOUND("bedwars-bed-sound"),
