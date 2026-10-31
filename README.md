@@ -427,7 +427,8 @@ An exhibit's world is copied out and loaded as `exhibit:<key>` when its first vi
 once nobody has been in it for `exhibits.unload-after-seconds`. Standing in an exhibit, `/setup spawn` sets its
 arrival, `/setup point add <name>` places a checkpoint and asks for its description in a dialog (the same name again
 moves and rewrites it), and `/setup point remove <name>` takes one away. Each lands in the exhibit's
-`exhibit.yml` at once.
+`exhibit.yml` at once. The `figures` in `exhibit.yml` stand in the exhibit as Mannequins in their old skins while it is
+loaded, such as the shopkeepers of an old survival server.
 
 Staff with `blockcraft.archive.note` leave a note where they stand with `/archive note` or by left- or right-clicking
 the note item next to the pocket watch in the hotbar. Both open the note dialog inside an exhibit. Notes are rows of

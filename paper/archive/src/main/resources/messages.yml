@@ -60,6 +60,9 @@ travel:
   checkpoint-described: "<prefix><archive><checkpoint><dark>: <muted><description>"
   note: "<prefix><muted>Hier hat <accent><author> <muted>eine Notiz hinterlassen."
 
+figure:
+  name: "<accent><name>"
+
 note:
   display: "<accent><text>\n<dark>von <muted><author> <dark>· <muted><date:'dd.MM.yyyy'>"
   usage: "<prefix><muted>Benutze <accent>/archive note<muted>, um hier eine Notiz zu hinterlassen."

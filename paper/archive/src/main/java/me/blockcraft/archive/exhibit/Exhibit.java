@@ -17,16 +17,17 @@ import java.util.OptionalInt;
 
 /**
  * One old map on show, as its {@code exhibit.yml} describes it: what the menu calls it, which server and year it comes
- * from, where a visitor arrives and the checkpoints worth a jump. Without an arrival a visitor lands on the world's
- * own spawn.
+ * from, where a visitor arrives, the checkpoints worth a jump and the figures standing in it. Without an arrival a
+ * visitor lands on the world's own spawn.
  */
 public record Exhibit(String key, String name, String origin, OptionalInt year, Optional<String> category, String description, Material icon,
-                      Optional<Point> arrival, List<Checkpoint> checkpoints) {
+                      Optional<Point> arrival, List<Checkpoint> checkpoints, List<Figure> figures) {
 
     private static final Material DEFAULT_ICON = Material.PAPER;
 
     public Exhibit {
         checkpoints = List.copyOf(checkpoints);
+        figures = List.copyOf(figures);
     }
 
     public static Exhibit load(String key, Path file) {
@@ -40,12 +41,13 @@ public record Exhibit(String key, String name, String origin, OptionalInt year, 
         }
         var icon = Material.matchMaterial(yaml.getString("icon", ""));
         var checkpoints = yaml.getMapList("checkpoints").stream().map(Exhibit::checkpoint).toList();
+        var figures = yaml.getMapList("figures").stream().map(Exhibit::figure).toList();
         return new Exhibit(key, yaml.getString("name", key), origin,
                 yaml.isInt("year") ? OptionalInt.of(yaml.getInt("year")) : OptionalInt.empty(),
                 Optional.ofNullable(yaml.getString("category")).map(String::strip).filter(value -> !value.isEmpty()),
                 yaml.getString("description", ""), icon == null ? DEFAULT_ICON : icon,
                 Optional.ofNullable(yaml.getConfigurationSection("arrival")).map(section -> Point.parse(section.getValues(false))),
-                checkpoints);
+                checkpoints, figures);
     }
 
     public void save(Path file) {
@@ -66,6 +68,9 @@ public record Exhibit(String key, String name, String origin, OptionalInt year, 
         yaml.set("icon", icon.getKey().getKey());
         arrival.ifPresent(point -> yaml.set("arrival", point.serialize()));
         yaml.set("checkpoints", checkpoints.stream().map(Exhibit::serialize).toList());
+        if (!figures.isEmpty()) {
+            yaml.set("figures", figures.stream().map(Exhibit::serialize).toList());
+        }
         return yaml;
     }
 
@@ -74,7 +79,7 @@ public record Exhibit(String key, String name, String origin, OptionalInt year, 
     }
 
     public Exhibit withArrival(Point value) {
-        return new Exhibit(key, name, origin, year, category, description, icon, Optional.of(value), checkpoints);
+        return new Exhibit(key, name, origin, year, category, description, icon, Optional.of(value), checkpoints, figures);
     }
 
     /** Adds the checkpoint, or puts it in the place of the one with its name. */
@@ -92,12 +97,12 @@ public record Exhibit(String key, String name, String origin, OptionalInt year, 
         if (!replaced) {
             changed.add(value);
         }
-        return new Exhibit(key, name, origin, year, category, description, icon, arrival, changed);
+        return new Exhibit(key, name, origin, year, category, description, icon, arrival, changed, figures);
     }
 
     public Exhibit withoutCheckpoint(String name) {
         return new Exhibit(key, this.name, origin, year, category, description, icon, arrival,
-                checkpoints.stream().filter(checkpoint -> !checkpoint.name().equalsIgnoreCase(name)).toList());
+                checkpoints.stream().filter(checkpoint -> !checkpoint.name().equalsIgnoreCase(name)).toList(), figures);
     }
 
     private static Checkpoint checkpoint(Map<?, ?> values) {
@@ -106,6 +111,23 @@ public record Exhibit(String key, String name, String origin, OptionalInt year, 
         }
         var description = values.get("description") instanceof String text ? text : "";
         return new Checkpoint(name, description, Point.parse(at));
+    }
+
+    private static Figure figure(Map<?, ?> values) {
+        if (!(values.get("name") instanceof String name) || !(values.get("at") instanceof Map<?, ?> at)
+                || !(values.get("skin") instanceof String skin) || !(values.get("signature") instanceof String signature)) {
+            throw new IllegalArgumentException("a figure needs a name, 'at', a skin and its signature: " + values.get("name"));
+        }
+        return new Figure(name, Point.parse(at), skin, signature);
+    }
+
+    private static Map<String, Object> serialize(Figure figure) {
+        var values = new LinkedHashMap<String, Object>();
+        values.put("name", figure.name());
+        values.put("at", figure.at().serialize());
+        values.put("skin", figure.skin());
+        values.put("signature", figure.signature());
+        return values;
     }
 
     private static Map<String, Object> serialize(Checkpoint checkpoint) {

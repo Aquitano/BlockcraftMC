@@ -52,7 +52,8 @@ public class ExhibitPoolTest {
         var exhibit = new Exhibit("neue_lobby", "Neue Lobby", "Vanade", OptionalInt.of(2018), Optional.of("Lobbys"), "Die Lobby von damals.",
                 Material.GRASS_BLOCK, Optional.of(new Point(0.5, 65.0, 0.5, 90.0f, 0.0f)),
                 List.of(new Checkpoint("Brunnen", "Hier traf man sich.", new Point(10.5, 64.0, -3.5, 180.0f, 15.0f)),
-                        new Checkpoint("Turm", "", new Point(-20.0, 90.0, 4.0, 0.0f, 0.0f))));
+                        new Checkpoint("Turm", "", new Point(-20.0, 90.0, 4.0, 0.0f, 0.0f))),
+                List.of(new Figure("Holzfäller", new Point(257.7, 64.0, 28.55, 102.75f, 0.0f), "ewogICJ0aW1lc3RhbXAiIDog", "tU59/HLy")));
         withWorld("neue_lobby");
         pool.save(exhibit);
 
@@ -115,7 +116,7 @@ public class ExhibitPoolTest {
     }
 
     private static Exhibit categorized(String key, String origin, OptionalInt year, String category) {
-        return new Exhibit(key, key, origin, year, Optional.of(category), "", Material.PAPER, Optional.empty(), List.of());
+        return new Exhibit(key, key, origin, year, Optional.of(category), "", Material.PAPER, Optional.empty(), List.of(), List.of());
     }
 
     private ExhibitPool pool() {
@@ -132,6 +133,6 @@ public class ExhibitPoolTest {
     }
 
     private static Exhibit minimal(String key, String origin, OptionalInt year) {
-        return new Exhibit(key, key, origin, year, Optional.empty(), "", Material.PAPER, Optional.empty(), List.of());
+        return new Exhibit(key, key, origin, year, Optional.empty(), "", Material.PAPER, Optional.empty(), List.of(), List.of());
     }
 }

@@ -128,7 +128,7 @@ public class ExhibitWorldsTest {
     @Test
     public void navigationDuringChunkLoadingCancelsTheOldTripAndAllowsTheNewOne() {
         var exhibit = new Exhibit("test", "Test", "Test", OptionalInt.empty(), Optional.empty(), "", Material.PAPER,
-                Optional.empty(), List.of());
+                Optional.empty(), List.of(), List.of());
         worlds.travel(player, exhibit, world -> new Location(world, 0, 64, 0), Component.text("old"));
         tasks.invalidate(player);
         worlds.travel(player, exhibit, world -> new Location(world, 32, 64, 0), Component.text("new"));

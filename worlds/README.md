@@ -276,6 +276,11 @@ checkpoints:
   - name: Teamraum
     description: Hier hingen die Köpfe des Teams.
     at: {x: -974.5, y: 27.0, z: 1645.5, yaw: 180.0, pitch: 10.0}
+figures:                      # optional; who stood in the map, without what they did
+  - name: Händler
+    at: {x: 67.23, y: 63.0, z: 47.52, yaw: -127.27}
+    skin: ewogICJ0aW1l...     # the signed textures property of the old profile
+    signature: kEpcT3Br...
 ```
 
 To add an exhibit after importing an old map:
@@ -299,3 +304,8 @@ requested exhibit's metadata. New imports and setup edits appear on the next loo
 
 Neither a start nor `/map save` copies the exhibits, so many old maps cost nothing until they are visited. Block
 edits inside an exhibit are not saved. The text in `exhibit.yml` shows as written, without MiniMessage tags.
+
+A figure stands where `at` puts it, in the old skin and under the old name, while its exhibit is loaded; it does not
+move, talk or open a shop. Notes tell what it once did. Like a note, a figure is not saved into the world; it stands
+whenever its chunk is loaded. Citizens kept an NPC's skin in `plugins/Citizens/saves.yml` as `textureRaw` and
+`signature`; those two are `skin` and `signature`.

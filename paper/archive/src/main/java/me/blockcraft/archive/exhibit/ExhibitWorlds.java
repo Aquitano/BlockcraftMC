@@ -33,7 +33,8 @@ import java.util.logging.Level;
 /**
  * The exhibits' worlds while someone visits them. The first visitor's trip copies the world out of the pool in the
  * background and loads it as {@code exhibit:<key>}; whoever asks meanwhile waits for the same copy. Its notes hang in
- * it as text displays while it is loaded, and a world nobody has been in for {@code unloadAfter} is dropped again.
+ * it as text displays and its figures stand in it while it is loaded, and a world nobody has been in for
+ * {@code unloadAfter} is dropped again.
  */
 public final class ExhibitWorlds {
 
@@ -51,6 +52,7 @@ public final class ExhibitWorlds {
     private final Map<String, List<Trip>> opening = new HashMap<>();
     private final Map<String, Instant> emptySince = new HashMap<>();
     private final NoteDisplays displays;
+    private final FigureDisplays figures;
 
     public ExhibitWorlds(Plugin plugin, ExhibitPool pool, NoteRepository notes, Messages messages, Duration unloadAfter) {
         this.plugin = plugin;
@@ -58,11 +60,13 @@ public final class ExhibitWorlds {
         this.notes = notes;
         this.messages = messages;
         displays = new NoteDisplays(messages);
+        figures = new FigureDisplays(messages);
         this.unloadAfter = unloadAfter;
     }
 
     public void start() {
         plugin.getServer().getPluginManager().registerEvents(displays, plugin);
+        plugin.getServer().getPluginManager().registerEvents(figures, plugin);
         Bukkit.getScheduler().runTaskTimer(plugin, this::sweep, SWEEP_TICKS, SWEEP_TICKS);
     }
 
@@ -138,6 +142,7 @@ public final class ExhibitWorlds {
                 return;
             }
             showNotes(world, key);
+            figures.load(world, exhibit.figures());
             trips.forEach(trip -> trip.arrive().accept(world));
         }, () -> opening.remove(key).forEach(trip -> trip.failed().run()));
     }
