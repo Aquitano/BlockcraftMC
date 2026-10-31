@@ -41,6 +41,7 @@ import me.blockcraft.core.command.StaffCommand;
 import me.blockcraft.core.command.SudoCommand;
 import me.blockcraft.core.command.SunCommand;
 import me.blockcraft.core.command.TeamCommand;
+import me.blockcraft.core.command.TrollCommand;
 import me.blockcraft.core.command.TpAllCommand;
 import me.blockcraft.core.command.TpHereCommand;
 import me.blockcraft.core.command.TpCommand;
@@ -60,6 +61,7 @@ import me.blockcraft.core.staff.GrimAlerts;
 import me.blockcraft.core.staff.InvseeGuard;
 import me.blockcraft.core.staff.StaffInventoryRepository;
 import me.blockcraft.core.staff.StaffMode;
+import me.blockcraft.core.staff.TrollMode;
 import me.blockcraft.core.staff.VanishService;
 import me.blockcraft.core.nick.NickListener;
 import me.blockcraft.core.nick.Nicks;
@@ -81,6 +83,7 @@ import java.util.stream.Collectors;
 public final class BlockcraftCorePlugin extends JavaPlugin {
 
     private AnticheatHistory anticheatHistory;
+    private TrollMode trolls;
 
     @Override
     public void onEnable() {
@@ -119,6 +122,10 @@ public final class BlockcraftCorePlugin extends JavaPlugin {
         var staffInventories = new StaffInventoryRepository(api.database());
         staffInventories.createTable();
         var audit = api.audit();
+        if (!Boolean.FALSE.equals(YamlFile.section(config, "troll").get("enabled"))) {
+            trolls = new TrollMode(this);
+            pluginManager.registerEvents(trolls, this);
+        }
         var staffMode = new StaffMode(this, messages, vanish, freeze, staffInventories, audit, new ReportRepository(api.database()),
                 moderation.punishments());
         pluginManager.registerEvents(staffMode, this);
@@ -145,6 +152,9 @@ public final class BlockcraftCorePlugin extends JavaPlugin {
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             var commands = new CommandRegistry(event.registrar(), messages);
             commands.register(TeamCommand.create(messages));
+            if (trolls != null) {
+                commands.register(new TrollCommand(trolls, audit, messages).create());
+            }
             commands.register(EnchantCommand.create(messages));
             commands.register(FlyCommand.create(audit, messages));
             commands.register(FoodCommand.create(audit, messages), "feed");
@@ -190,6 +200,9 @@ public final class BlockcraftCorePlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (trolls != null) {
+            trolls.close();
+        }
         if (anticheatHistory != null) {
             anticheatHistory.close();
         }

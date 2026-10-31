@@ -669,6 +669,15 @@ In `/staff` mode, `/spec <player>` follows a player's camera and `/spec stop` en
 `blockcraft.core.staff`, like the spectate hotbar tool. Stopping returns the moderator to the position and game
 mode from before spectating. Switching targets keeps that original return point.
 
+`/troll` opens a player picker and `/troll <player>` opens that player's tools. Core ships with `troll.enabled: true`;
+the permission is `blockcraft.core.troll` (operators by default), with the same rank guard and action log as the other
+staff commands. Push, launch, private creeper sounds, fake explosions, thunder, confetti and a guardian scare are
+one-shot actions. Levitation, slowness, blindness and nausea last six seconds; `/troll <player> <effect>` also triggers
+them directly. `/troll <player> stop` removes the active troll potion effect. Temporary potion effects are cleaned up
+on death, world change, either participant leaving, and core shutdown. Existing potion effects are left alone.
+Changing that potion type elsewhere hands its cleanup back to Minecraft. These tools have no
+match or progression integration: using them during a game does not stop its stats or rewards.
+
 `/serverinfo` (also `/lag`, permission `blockcraft.core.lag`) shows server performance and runtime versions.
 `/serverinfo plugins` lists loaded plugins with their versions and enabled state. Click an entry or run
 `/serverinfo plugins <name>` to see its required and optional dependencies and which loaded plugins depend on it.

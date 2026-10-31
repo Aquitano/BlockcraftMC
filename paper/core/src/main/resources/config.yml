@@ -2,6 +2,9 @@ sudo:
   protected-players:
     - Aquitano
 
+troll:
+  enabled: true
+
 # /near without a radius looks this far, in blocks; a typed radius may not exceed max-radius.
 near:
   default-radius: 100

@@ -3,6 +3,8 @@ prefix: "<primary><ip> <dark>» <reset>"
 commands:
   team:
     description: "Team-Hilfe"
+  troll:
+    description: "Öffnet die Troll-Werkzeuge; /troll <spieler> [effekt|stop]"
   enchant:
     description: "Öffnet einen Zaubertisch oder verzaubert das gehaltene Item"
   fly:
@@ -83,6 +85,55 @@ commands:
     description: "Zeigt dein Elo-Rating der Saison; /elo top die Top 10"
   anticheat:
     description: "Zeigt gespeicherte Anticheat-Meldungen des Netzwerks"
+
+troll:
+  players-title: "<arrow><primary>Troll-Werkzeuge"
+  title: "<arrow><primary>Troll <dark>· <primary><player>"
+  player: "<primary><player>"
+  choose: "<click> Werkzeuge öffnen"
+  trigger: "<click> Auslösen"
+  stop: "<primary>Effekt beenden"
+  stop-lore: "<click> Aktiven Troll-Trankeffekt entfernen"
+  denied: "<prefix><error>Du darfst die Troll-Werkzeuge nicht benutzen."
+  offline: "<prefix><error>Dieser Spieler ist nicht mehr erreichbar."
+  cooldown: "<prefix><muted>Warte zwei Sekunden zwischen Streichen beim selben Spieler."
+  effect-present: "<prefix><muted>Dieser Trankeffekt ist bereits aktiv oder wurde verhindert."
+  applied: "<prefix><success><effect> <muted>für <primary><player><muted> ausgelöst."
+  stopped: "<prefix><success>Troll-Trankeffekt von <primary><player><success> beendet."
+  effects:
+    push:
+      name: "<primary>Schubs"
+      lore: "<muted>Ein kleiner Stoß nach hinten."
+    launch:
+      name: "<primary>Abflug"
+      lore: "<muted>Ein Sprung senkrecht nach oben."
+    creeper:
+      name: "<primary>Creeper hinter dir"
+      lore: "<muted>Nur der Spieler hört das Zischen."
+    explosion:
+      name: "<primary>Knalleffekt"
+      lore: "<muted>Private Explosionspartikel und Ton, ohne Explosion."
+    thunder:
+      name: "<primary>Donnerwetter"
+      lore: "<muted>Private Funken und Donner, ohne echten Blitz."
+    confetti:
+      name: "<primary>Konfetti"
+      lore: "<muted>Ein privater Feuerwerksregen aus Partikeln."
+    guardian:
+      name: "<primary>Wächter-Schreck"
+      lore: "<muted>Das Wächter-Gesicht erscheint mit seinem Geräusch."
+    levitate:
+      name: "<primary>Schweben"
+      lore: "<muted>Sechs Sekunden langsam nach oben schweben."
+    slow:
+      name: "<primary>Schneckentempo"
+      lore: "<muted>Sechs Sekunden langsamer laufen."
+    blind:
+      name: "<primary>Licht aus"
+      lore: "<muted>Sechs Sekunden Blindheit."
+    nausea:
+      name: "<primary>Seekrank"
+      lore: "<muted>Sechs Sekunden Übelkeit."
 fly:
   usage: "<prefix><error>Benutze /fly [Spieler] [on|off]"
   enabled: "<prefix><muted>Du kannst nun fliegen!"
