@@ -109,3 +109,36 @@ figures:
     yaw: -61.48
   skin: ewogICJ0aW1lc3RhbXAiIDogMTYwNTQzNDQ5NjQ5NSwKICAicHJvZmlsZUlkIiA6ICJkODY1NjliNzg1ODU0OGU3OTJlYmJjNDM2MGYxNjkwNyIsCiAgInByb2ZpbGVOYW1lIiA6ICJPY2FuYW0iLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNDA0YzZkNjFhNjNlOGQwMDZmNGI4MDIxZDI0YjJhZDY5OWQ4Zjc2YzQ1MmQ4OTE5ZjM3Nzg2YTBkZTYxZDg0OSIKICAgIH0KICB9Cn0=
   signature: SJcydSXbKuYKLelBVdmbAeM2aKNJYUJ89Yvcb08YIjZB5R87Z9utFlmzdNK3+9hzZVYDuRC2kGIJW+z/1sAEPi4aSGeeD9dnMAvmISX/Ke1Qp9ODExT8TZBmsrGFZzihEsyDCYHhtsLOz1XfFMyY34kDBXS6cLfwK89Ms3bcyZbIn6YOh09nB7Bxbup5Jtb44tu5L01eISuZHQfZBqLXb5X8pFeTHQJAyUza34C3MDx8sq9Sae2eWICFSvrdqZyFYZhY9sd66HGZacjvGd0PdYZabkvfW8lGQSGqdLKewj8ajBMZol3FD98vamElZak2uDrAqVKsjX5B0LvC7mbjS2vJDhq12HzlI/XFpcxImsh3jm3ZQVqwZKGwvOj1QRcZxIMoVm8puMS2BiBGc/ut7y7fk4kN+yYl8eZ+YDbmg9svjRkW+IC0dvNy6HwQhinIv9vIXEVm2zUHlOSPOAw24qPGjvCQ51XL8fhEQvtf6JM8w4prsUEftcfhddStz9lAD1768umxNbKdvGkSYPO2X7n65pgbIT3uUSkEg3hiDGTl5Om9PXQ0tvUASXxR7qP7r8iiilpWU1c2mYf+ryAcW28Km9nwXWfQx49YE1kASOdGUhdXGVQtUUltmskXHNjaQJU9mr0Ada/RjxaFWHSdHkmBeEd143hSvG+vZDRmPoc=
+notes:
+- text: 'Hier hing das Begrüßungsschild: Mit /spawn ging es zurück zum Spawn, mit /sethome und /home nach Hause. Die NPCs kauften und verkauften Items auf Rechtsklick. Abbauen und bauen durfte man erst außerhalb der Startregion.'
+  author: Aquitano
+  date: 2026-10-31
+  at: {x: 133.44, y: 64.0, z: -7.08, yaw: 180.0}
+- text: 'Hier hing das Schild zur Farmwelt: Durch das Portal ging es in eine eigene Welt zum Abbauen.'
+  author: Aquitano
+  date: 2026-10-31
+  at: {x: 166.52, y: 64.0, z: -8.56, yaw: 180.0}
+- text: 'Der Händler kaufte und verkaufte Baublöcke (/shop blocks).'
+  author: Aquitano
+  date: 2026-10-31
+  at: {x: 69.5, y: 63.0, z: 49.5, yaw: 156.1}
+- text: 'Der Erzkäufer kaufte und verkaufte Erze, Barren und Edelsteine (/shop ores).'
+  author: Aquitano
+  date: 2026-10-31
+  at: {x: 74.5, y: 63.0, z: 42.5, yaw: 108.9}
+- text: 'Beim Schmuggler gab es Verzauberungsbücher zu kaufen (/shop enchantbooks).'
+  author: Aquitano
+  date: 2026-10-31
+  at: {x: 100.5, y: 63.0, z: 66.5, yaw: 24.2}
+- text: 'In der Schmiede verkaufte der Schmied Werkzeuge (/shop tools) und der Waffenschmied Waffen und Rüstungen (/shop armorweapon).'
+  author: Aquitano
+  date: 2026-10-31
+  at: {x: 189.5, y: 75.0, z: -11.5, yaw: -133.1}
+- text: 'Der Bauer grüßte mit „Guten Tag!“ und machte einen auf Rechtsklick satt, höchstens alle zwei Minuten.'
+  author: Aquitano
+  date: 2026-10-31
+  at: {x: 182.5, y: 64.0, z: 13.5, yaw: -150.6}
+- text: 'In der Hütte dahinter stand der Holzfäller. Er verkaufte Holz und nahm manches davon auch an (/shop wood).'
+  author: Aquitano
+  date: 2026-10-31
+  at: {x: 257.5, y: 64.0, z: 32.5, yaw: 157.9}

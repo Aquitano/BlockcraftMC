@@ -326,6 +326,7 @@ or an emptied database has them at once.
 
 - `aq_survival` holds two boxes of its overworld: the town around the old spawn with its harbor
   (`-80,-208,399,191`) and Aquitano's base in a desert village (`-912,-624,-577,-289`). The seven Citizens
-  shopkeepers stand in it as figures.
+  shopkeepers stand in it as figures, and its notes tell what they did and what the old welcome and farm world signs
+  said.
 - `novigrad` holds the island of Novigrad, Elysium Fire's recreation of the city from The Witcher 3, which the server
   loaded as a world of its own (`96,256,1903,1855`).
