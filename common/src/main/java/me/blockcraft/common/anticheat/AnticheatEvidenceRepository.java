@@ -3,6 +3,7 @@ package me.blockcraft.common.anticheat;
 import me.blockcraft.common.db.Database;
 
 import java.sql.Timestamp;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +13,8 @@ import java.util.UUID;
 public final class AnticheatEvidenceRepository {
 
     public record Entry(long id, AnticheatEvidence evidence, boolean replayPublished) { }
+
+    private record Participant(UUID replay, UUID player) { }
 
     private final Database db;
 
@@ -57,13 +60,19 @@ public final class AnticheatEvidenceRepository {
         if (!tablesExist) {
             return rows;
         }
-        var published = new HashMap<UUID, Map<AnticheatEvidence.Replay, Boolean>>();
+        var replays = rows.stream().flatMap(entry -> entry.evidence().replay().stream())
+                .map(replay -> replay.id().toString()).distinct().toList();
+        var published = new HashMap<Participant, Integer>();
+        db.queryList("SELECT r.replay_uuid, p.player_uuid, r.duration_ticks FROM bc_replays r JOIN bc_replay_players p "
+                        + "ON p.replay_uuid = r.replay_uuid WHERE r.replay_uuid IN ("
+                        + String.join(",", Collections.nCopies(replays.size(), "?")) + ")",
+                row -> Map.entry(new Participant(UUID.fromString(row.getString("replay_uuid")), UUID.fromString(row.getString("player_uuid"))),
+                        row.getInt("duration_ticks")), replays.toArray())
+                .forEach(entry -> published.put(entry.getKey(), entry.getValue()));
         return rows.stream().map(entry -> {
             var evidence = entry.evidence();
-            boolean available = evidence.replay().map(replay -> published.computeIfAbsent(evidence.player(), ignored -> new HashMap<>())
-                    .computeIfAbsent(replay, ignored -> db.queryOne("SELECT 1 FROM bc_replays r JOIN bc_replay_players p "
-                                    + "ON p.replay_uuid = r.replay_uuid WHERE r.replay_uuid = ? AND p.player_uuid = ? AND r.duration_ticks > ?",
-                            row -> true, replay.id().toString(), evidence.player().toString(), replay.tick()).orElse(false))).orElse(false);
+            boolean available = evidence.replay().map(replay ->
+                    published.getOrDefault(new Participant(replay.id(), evidence.player()), 0) > replay.tick()).orElse(false);
             return new Entry(entry.id(), evidence, available);
         }).toList();
     }

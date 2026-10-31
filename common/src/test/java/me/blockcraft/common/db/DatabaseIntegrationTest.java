@@ -126,6 +126,14 @@ public class DatabaseIntegrationTest {
         assertFalse(repository.latest(Optional.of(player), 7, 20).getFirst().replayPublished());
         db.update("INSERT INTO bc_replay_players VALUES (?, ?)", replay.id().toString(), player.toString());
         assertTrue(repository.latest(Optional.of(player), 7, 20).getFirst().replayPublished());
+        repository.append(new AnticheatEvidence(player, "RealAccount", "bw-1", Instant.now(),
+                "Simulation", "Movement", "4", "offset=0.3", Optional.of(new AnticheatEvidence.Replay(replay.id(), 100))));
+        repository.append(new AnticheatEvidence(other, "Other", "ttt-1", Instant.now(),
+                "Reach", "Combat", "2", "distance=4", Optional.of(replay)));
+        var recent = repository.latest(Optional.empty(), 7, 20);
+        assertFalse(recent.getFirst().replayPublished());
+        assertFalse(recent.get(1).replayPublished());
+        assertTrue(recent.getLast().replayPublished());
         repository.prune(7, 1);
         assertEquals(1, count("SELECT COUNT(*) FROM bc_anticheat_evidence"));
         assertEquals(other, repository.latest(Optional.empty(), 7, 20).getFirst().evidence().player());
