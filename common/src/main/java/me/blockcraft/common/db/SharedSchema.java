@@ -250,6 +250,14 @@ final class SharedSchema {
                 + "server_name VARCHAR(64) NOT NULL, "
                 + "until_at TIMESTAMP NOT NULL, "
                 + "INDEX idx_bc_rejoins_server (server_name))"
+        )),
+        new Migration(22, List.of(
+            "CREATE TABLE IF NOT EXISTS bc_anticheat_evidence ("
+                + "id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, "
+                + "player_uuid CHAR(36) NOT NULL, player_name VARCHAR(16) NOT NULL, server VARCHAR(64) NOT NULL, "
+                + "recorded_at TIMESTAMP(3) NOT NULL, check_name VARCHAR(64) NOT NULL, description VARCHAR(255) NOT NULL, "
+                + "violations VARCHAR(32) NOT NULL, verbose VARCHAR(1024) NOT NULL, replay_uuid CHAR(36) NULL, replay_tick INT NULL, "
+                + "INDEX idx_bc_anticheat_player (player_uuid, id), INDEX idx_bc_anticheat_time (recorded_at))"
         ))
     );
 

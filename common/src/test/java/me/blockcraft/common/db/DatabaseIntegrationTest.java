@@ -1,6 +1,8 @@
 package me.blockcraft.common.db;
 
 import me.blockcraft.common.elo.EloFormula;
+import me.blockcraft.common.anticheat.AnticheatEvidence;
+import me.blockcraft.common.anticheat.AnticheatEvidenceRepository;
 import me.blockcraft.common.duel.DuelPairRepository;
 import me.blockcraft.common.elo.EloRepository;
 import me.blockcraft.common.elo.Season;
@@ -32,6 +34,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -94,6 +97,38 @@ public class DatabaseIntegrationTest {
 
     private int count(String sql, Object... params) {
         return db.queryOne(sql, row -> row.getInt(1), params).orElseThrow();
+    }
+
+    @Test
+    public void anticheatHistoryKeepsRealIdentityBoundsRetentionAndOnlyLinksPublishedParticipantReplays() {
+        db.migrate();
+        var repository = new AnticheatEvidenceRepository(db);
+        var player = UUID.randomUUID();
+        new PlayerRepository(db).upsert(player, "RealAccount");
+        var replay = new AnticheatEvidence.Replay(UUID.randomUUID(), 40);
+        repository.append(new AnticheatEvidence(player, "FakeNick", "bw-1", Instant.now().minus(Duration.ofDays(8)),
+                "Simulation", "Movement", "2", "offset=0.1", Optional.empty()));
+        repository.append(new AnticheatEvidence(player, "FakeNick", "bw-1", Instant.now(),
+                "Simulation", "Movement", "3", "offset=0.2", Optional.of(replay)));
+        var other = UUID.randomUUID();
+        repository.append(new AnticheatEvidence(other, "Other", "ttt-1", Instant.now(),
+                "Reach", "Combat", "1", "distance=4", Optional.empty()));
+        repository.prune(7, 20);
+        assertEquals(2, count("SELECT COUNT(*) FROM bc_anticheat_evidence"));
+        var entry = repository.latest(Optional.of(player), 7, 20).getFirst();
+        assertEquals("RealAccount", entry.evidence().name());
+        assertEquals(replay, entry.evidence().replay().orElseThrow());
+        assertFalse(entry.replayPublished());
+
+        db.update("CREATE TABLE bc_replays (replay_uuid CHAR(36) PRIMARY KEY, duration_ticks INT NOT NULL)");
+        db.update("CREATE TABLE bc_replay_players (replay_uuid CHAR(36), player_uuid CHAR(36))");
+        db.update("INSERT INTO bc_replays VALUES (?, 100)", replay.id().toString());
+        assertFalse(repository.latest(Optional.of(player), 7, 20).getFirst().replayPublished());
+        db.update("INSERT INTO bc_replay_players VALUES (?, ?)", replay.id().toString(), player.toString());
+        assertTrue(repository.latest(Optional.of(player), 7, 20).getFirst().replayPublished());
+        repository.prune(7, 1);
+        assertEquals(1, count("SELECT COUNT(*) FROM bc_anticheat_evidence"));
+        assertEquals(other, repository.latest(Optional.empty(), 7, 20).getFirst().evidence().player());
     }
 
     @Test

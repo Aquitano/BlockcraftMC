@@ -2,6 +2,7 @@ package me.blockcraft.replay;
 
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.replay.ReplayRecording;
 import me.blockcraft.api.command.CommandRegistry;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
@@ -9,6 +10,7 @@ import me.blockcraft.replay.playback.PlaybackManager;
 import me.blockcraft.replay.recording.MatchRecorder;
 import me.blockcraft.replay.storage.ReplayStore;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.plugin.ServicePriority;
 
 import java.io.IOException;
 import java.util.logging.Level;
@@ -44,6 +46,7 @@ public final class ReplayPlugin extends JavaPlugin {
             getServer().getPluginManager().registerEvents(controls, this);
             if (!BlockcraftApi.get().server().group().equals(config.playbackGroup())) {
                 recorder = new MatchRecorder(this, store, config.limits(), service::publish);
+                getServer().getServicesManager().register(ReplayRecording.class, recorder, this, ServicePriority.Normal);
                 getServer().getPluginManager().registerEvents(recorder, this);
             }
             getServer().getScheduler().runTaskTimer(this, service::maintenance, 20L,
@@ -53,6 +56,7 @@ public final class ReplayPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        getServer().getServicesManager().unregisterAll(this);
         if (recorder != null) {
             recorder.close();
         }

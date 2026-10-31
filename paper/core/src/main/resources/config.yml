@@ -16,6 +16,9 @@ chat:
 # GrimAC's staff notices (README, "Anticheat"): at most one per player and check within this many seconds.
 anticheat:
   notice-cooldown-seconds: 30
+  history-days: 7
+  history-max-entries: 10000
+  history-pending-capacity: 256
 
 # What a player can pick in the /report dialog; the choice is stored as the report's reason, free text appended.
 report:

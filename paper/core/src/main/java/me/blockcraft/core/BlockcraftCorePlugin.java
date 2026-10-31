@@ -4,10 +4,12 @@ import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.command.CommandRegistry;
 import me.blockcraft.common.chat.ChatFilter;
+import me.blockcraft.common.anticheat.AnticheatEvidenceRepository;
 import me.blockcraft.common.config.YamlFile;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.moderation.ModerationRepositories;
 import me.blockcraft.core.command.AchievementsCommand;
+import me.blockcraft.core.command.AnticheatCommand;
 import me.blockcraft.core.command.BackCommand;
 import me.blockcraft.core.command.BackLocations;
 import me.blockcraft.core.command.ClearCommand;
@@ -53,6 +55,7 @@ import me.blockcraft.core.listener.MuteListener;
 import me.blockcraft.core.listener.NetworkChat;
 import me.blockcraft.core.listener.UnknownCommandListener;
 import me.blockcraft.core.staff.FreezeService;
+import me.blockcraft.core.staff.AnticheatHistory;
 import me.blockcraft.core.staff.GrimAlerts;
 import me.blockcraft.core.staff.InvseeGuard;
 import me.blockcraft.core.staff.StaffInventoryRepository;
@@ -76,6 +79,8 @@ import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 public final class BlockcraftCorePlugin extends JavaPlugin {
+
+    private AnticheatHistory anticheatHistory;
 
     @Override
     public void onEnable() {
@@ -117,11 +122,17 @@ public final class BlockcraftCorePlugin extends JavaPlugin {
         var staffMode = new StaffMode(this, messages, vanish, freeze, staffInventories, audit, new ReportRepository(api.database()),
                 moderation.punishments());
         pluginManager.registerEvents(staffMode, this);
+        var anticheat = YamlFile.section(config, "anticheat");
+        var historySettings = AnticheatHistory.Settings.fromYaml(anticheat);
+        var evidence = new AnticheatEvidenceRepository(api.database());
+        anticheatHistory = new AnticheatHistory(evidence, historySettings, getLogger());
+        getServer().getScheduler().runTaskTimer(this, anticheatHistory::maintain, 1L, 1200L);
         if (pluginManager.isPluginEnabled("GrimAC")) {
             // Grim ships its API in alpha builds; a change there must cost the notices, not core's moderation.
             try {
                 GrimAlerts.register(this, messages, api.server().name(),
-                        Duration.ofSeconds(number(YamlFile.section(config, "anticheat"), "notice-cooldown-seconds", 30)));
+                        Duration.ofSeconds(Math.clamp(number(anticheat, "notice-cooldown-seconds", 30), 1, 3600)),
+                        anticheatHistory, historySettings.pending());
             } catch (LinkageError | RuntimeException e) {
                 getLogger().log(Level.SEVERE, "GrimAC's API did not take the anticheat notices; Grim still alerts on the console", e);
             }
@@ -171,9 +182,17 @@ public final class BlockcraftCorePlugin extends JavaPlugin {
             commands.register(ReflashCommand.create(this, messages));
             commands.register(NickCommand.create(nicks, audit, messages));
             commands.register(ReportCommand.create(stringList(YamlFile.section(config, "report"), "reasons"), messages));
+            commands.register(AnticheatCommand.create(evidence, moderation.players(), historySettings.days(), messages));
             commands.register(AchievementsCommand.create());
             commands.register(EloCommand.create(this, api.elo(), messages));
         });
+    }
+
+    @Override
+    public void onDisable() {
+        if (anticheatHistory != null) {
+            anticheatHistory.close();
+        }
     }
 
     private static List<String> stringList(Map<String, Object> section, String key) {

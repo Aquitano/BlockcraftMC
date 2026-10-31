@@ -756,6 +756,17 @@ because `*` would grant it, so staff get each alert once. `owner` negates `grim.
 `grim.nosetback` and `grim.nomodifypacket` for the same reason, so Grim checks every player. If Grim's API changes
 under core, core logs it and runs on without the notices.
 
+Staff with the same notice permission can use `/anticheat history [name|UUID]` to read the latest 20 saved notices.
+History records the player's UUID and real name, server, UTC time, check, violations and details. Core retains seven
+days and 10,000 entries network-wide by default (`anticheat.history-days` and `anticheat.history-max-entries`), trims
+periodically and writes through a bounded queue (`anticheat.history-pending-capacity`, 256). If the database stalls
+and the queue fills, new history entries are dropped with a rate-limited warning.
+
+An alert during an active replay recording also records its real replay ID and position. History offers playback
+only after the matching replay and participant metadata are published and the reader has both replay permissions.
+Recordings that were not saved remain marked unavailable. History is evidence for staff review, and triggers no
+punishment.
+
 The network's own movement needs no exemptions: Grim follows what the server sends the client, so knockback a plugin
 sets (throw fights, the legacy rod, harmless hits, MLG Rush sticks), BedWars' parachute and teleporter, the
 Känguru's jump, potion effects such as the jump boost in EmeraldRush's lobby water, flight for spectators and staff

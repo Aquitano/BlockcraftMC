@@ -2,6 +2,7 @@ package me.blockcraft.replay.recording;
 
 import io.papermc.paper.event.player.PlayerArmSwingEvent;
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.replay.ReplayRecording;
 import me.blockcraft.api.game.GamePhase;
 import me.blockcraft.api.game.Round;
 import me.blockcraft.api.game.RoundPhaseChangeEvent;
@@ -64,13 +65,14 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 
-public final class MatchRecorder implements Listener, AutoCloseable {
+public final class MatchRecorder implements Listener, AutoCloseable, ReplayRecording {
 
     private static final List<EquipmentSlot> SLOTS = List.of(EquipmentSlot.HAND, EquipmentSlot.OFF_HAND,
             EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET);
@@ -83,6 +85,7 @@ public final class MatchRecorder implements Listener, AutoCloseable {
     private final ReplayLimits limits;
     private final Consumer<ReplayStore.Saved> saved;
     private final Map<Round, List<PublicationGate<ReplayStore.Saved>>> publications = new IdentityHashMap<>();
+    private final RecordingPositions positions = new RecordingPositions();
     private Session session;
 
     record ChunkKey(UUID world, int x, int z) { }
@@ -131,7 +134,8 @@ public final class MatchRecorder implements Listener, AutoCloseable {
                 Bukkit.getMinecraftVersion(), plugin.getPluginMeta().getVersion(), api.map().name(), Instant.now(),
                 players.stream().map(MatchRecorder::participant).toList());
         try {
-            session = new Session(round, store.begin(header), players.stream().map(Player::getUniqueId).toList());
+            session = new Session(round, store.begin(header), header.id(), players.stream().map(Player::getUniqueId).toList());
+            positions.update(header.id(), 0, session.participants);
             publications.computeIfAbsent(round, ignored -> new ArrayList<>()).add(session.publication);
             session.publication.ready().thenAccept(saved).exceptionally(failure -> {
                 plugin.getLogger().log(Level.WARNING, "Replay metadata could not be published", failure);
@@ -149,6 +153,11 @@ public final class MatchRecorder implements Listener, AutoCloseable {
         return new ReplayHeader.Participant(player.getUniqueId(), player.getName(),
                 texture.map(property -> property.getValue()).orElse(""),
                 texture.map(property -> property.getSignature()).orElse(""));
+    }
+
+    @Override
+    public Optional<Position> position(UUID player) {
+        return positions.position(player);
     }
 
     /** A dead player waiting to respawn is out of the picture, like a dying mob. */
@@ -171,6 +180,8 @@ public final class MatchRecorder implements Listener, AutoCloseable {
             captureBlocks(current);
             if (session != current) { return; }
             if (current.tick % limits.sampleTicks() == 0) { captureFrame(current, players); }
+            if (session != current) { return; }
+            positions.update(current.id, current.tick, players.stream().map(Player::getUniqueId).toList());
             current.tick++;
         } catch (RuntimeException failure) {
             abort("Replay capture failed", failure);
@@ -375,6 +386,7 @@ public final class MatchRecorder implements Listener, AutoCloseable {
             if (session != current) { return; }
         }
         session = null;
+        positions.clear();
         current.task.cancel();
         current.writer.finish(current.tick, reason).whenComplete((recording, failure) -> {
             if (failure != null) { plugin.getLogger().log(Level.WARNING, "Replay could not be saved", failure); }
@@ -385,6 +397,7 @@ public final class MatchRecorder implements Listener, AutoCloseable {
     private void abort(String message, Throwable failure) {
         var current = session;
         session = null;
+        positions.clear();
         if (current != null) { current.task.cancel(); current.writer.abort(); }
         if (failure == null) { plugin.getLogger().warning(message); }
         else { plugin.getLogger().log(Level.WARNING, message, failure); }
@@ -498,6 +511,7 @@ public final class MatchRecorder implements Listener, AutoCloseable {
     private static final class Session {
         final Round round;
         final ReplayStore.Writer writer;
+        final UUID id;
         final List<UUID> participants;
         final Set<ChunkKey> known = new HashSet<>();
         final Set<ChunkKey> captured = new HashSet<>();
@@ -516,9 +530,10 @@ public final class MatchRecorder implements Listener, AutoCloseable {
         int tick;
         int events;
 
-        Session(Round round, ReplayStore.Writer writer, List<UUID> participants) {
+        Session(Round round, ReplayStore.Writer writer, UUID id, List<UUID> participants) {
             this.round = round;
             this.writer = writer;
+            this.id = id;
             this.participants = List.copyOf(participants);
         }
     }

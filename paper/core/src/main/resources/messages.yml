@@ -81,6 +81,8 @@ commands:
     description: "Zeigt deine Erfolge"
   elo:
     description: "Zeigt dein Elo-Rating der Saison; /elo top die Top 10"
+  anticheat:
+    description: "Zeigt gespeicherte Anticheat-Meldungen des Netzwerks"
 fly:
   usage: "<prefix><error>Benutze /fly [Spieler] [on|off]"
   enabled: "<prefix><muted>Du kannst nun fliegen!"
@@ -378,6 +380,17 @@ chat:
 anticheat:
   notice: "<prefix><error>Anticheat<dark>: <accent><player> <muted>ist bei <error><check> <muted>aufgefallen <dark>(<muted>VL <accent><vl><dark>) <muted>auf <accent><server>"
   details: "<muted><description><newline><dark><verbose>"
+  history:
+    usage: "<prefix><muted>Benutze /anticheat history [Spieler|UUID]"
+    header: "<prefix><primary>Anticheat-Verlauf <dark>· <muted>Neueste 20 Meldungen der letzten <accent><days> <muted>Tage"
+    empty: "<prefix><muted>Keine gespeicherten Meldungen gefunden."
+    unknown: "<prefix><error>Dieser Spielername ist nicht bekannt. Verwende den echten Namen oder die UUID."
+    entry: "<dark>#<id> <muted><time> <accent><player> <dark>· <muted><server> <dark>· <error><check> <muted>VL <accent><vl>"
+    details: "<muted>UUID: <accent><uuid><newline><muted><description><newline><dark><verbose>"
+    replay: "<primary>[Replay bei <seconds>s]"
+    replay-unavailable: "<dark>[Aufnahme bei <seconds>s, hier nicht abspielbar]"
+    replay-details: "<muted>Aufnahme: <accent><replay><newline><muted>Nach dem Öffnen: <primary>/replay seek <seconds><newline><muted>Die Aufnahme kann unvollständig sein und ersetzt keine Prüfung."
+    footer: "<prefix><muted>Gespeichert werden Meldungen nach dem Hinweis-Cooldown, keine vollständigen Check-Protokolle. Ein Verdacht ist kein Beweis."
 
 nick:
   loading: "<prefix><muted>Dein neuer Nick wird geladen…"
