@@ -64,7 +64,7 @@ public final class PlayerSettings implements Listener {
     }
 
     public CompletableFuture<Boolean> set(Player player, PlayerSetting setting, String value) {
-        if (get(player, setting).filter(value::equals).isPresent()) {
+        if (setting != PlayerSetting.WEAPON_STYLE && get(player, setting).filter(value::equals).isPresent()) {
             return writes.submit(player.getUniqueId(), () -> true);
         }
         return change(player, setting, Optional.of(value));
