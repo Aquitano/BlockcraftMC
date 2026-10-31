@@ -331,6 +331,33 @@ or an emptied database has them at once.
 - `novigrad` holds the island of Novigrad, Elysium Fire's recreation of the city from The Witcher 3, which the server
   loaded as a world of its own (`96,256,1903,1855`).
 
+### ClayMC
+
+The three ClayMC lobbies come from `Blockcraft Server/2/ClayMC-Lobbys`, imported on 2026-10-31 with
+Paper 26.3 build 234. Their exhibit names and year follow the supplied folder names. All three `level.dat` files
+have a `LastPlayed` date of 2020-11-15, so that timestamp does not establish when the lobbies were built or used.
+The season of `Unknown-2019` remains unknown.
+
+- `claymc_summer_2019` comes from `Sommer-2019` (`clay123`). It keeps all 742 nonempty chunks, including the
+  connected islands, the separate island copy to the east, and the small build fragment to the southeast.
+- `claymc_winter_2019` comes from `Winter-2019` (`alobby`). It keeps the 127 built chunks within
+  `-96,-128,127,95`. The two detached areas of untouched superflat ground are excluded.
+- `claymc_unknown_2019` comes from `Unknown-2019` (`sdasdsad`). It keeps 912 chunks containing blocks above
+  the original superflat ground within `-384,-368,255,159`, except chunk `(-19,9)`, a clipped generated village
+  house. The round lobby, detached trees, building samples, and glass surface remain. A scratch copy of these
+  original chunks was passed to `importMap`; empty chunks, unchanged superflat ground, and generated villages
+  were left out before conversion.
+
+The three exhibits occupy about 11 MiB. They retain all 208 original armor stands and 68 item frames in the
+selected builds, with their stored equipment, names, and items. Loose item drops, player records, village data,
+and unused dimensions are excluded. The Downloads backups remain unchanged. Region files use the existing
+Git LFS rule.
+
+An isolated Paper run checked discovery through `ExhibitPool`, loading through `TemplateDimensions`, support
+and headroom at all three arrivals and eleven checkpoints, and void generation beyond each build. All 1,781
+stored chunks have status `minecraft:full`. Client inspection is still needed for skins, signs, armor-stand
+poses, and lighting. Scheduled block and fluid updates remain as reported by `importMap`.
+
 ## TTT
 
 The TTT server's template is `worlds/ttt`: the waiting lobby as its overworld and three imported maps in

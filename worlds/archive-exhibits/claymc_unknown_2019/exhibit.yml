@@ -1,0 +1,14 @@
+name: Lobby ohne Saisonangabe
+origin: ClayMC
+year: 2019
+category: Lobbys
+description: Die als Unknown-2019 gesicherte ClayMC-Lobby. Die Saison ist unbekannt. Neben der runden Lobby bleiben die separaten Bäume und Bauvorlagen erhalten.
+icon: oak_sapling
+arrival: {x: 0.5, y: 11.0, z: 0.5, yaw: 180.0}
+checkpoints:
+  - name: Nördlicher Lobbybereich
+    at: {x: -84.5, y: 10.0, z: -217.5, yaw: 0.0}
+  - name: Bauvorlagen
+    at: {x: -319.5, y: 142.0, z: -69.5, yaw: 0.0}
+  - name: Glasfläche
+    at: {x: -249.5, y: 80.0, z: 125.5, yaw: 180.0}
