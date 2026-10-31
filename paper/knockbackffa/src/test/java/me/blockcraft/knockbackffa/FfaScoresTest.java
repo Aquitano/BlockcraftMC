@@ -12,6 +12,24 @@ import static org.junit.Assert.assertTrue;
 public class FfaScoresTest {
 
     @Test
+    public void rotationClearsHitCreditButKeepsScoresStreaksAndRewardCooldowns() {
+        var scores = scores();
+        var attacker = UUID.randomUUID();
+        var victim = UUID.randomUUID();
+        scores.join(attacker);
+        scores.join(victim);
+        scores.hit(attacker, victim, 0);
+        assertTrue(scores.death(victim, second(1)).orElseThrow().rewarded());
+        scores.hit(victim, attacker, second(2));
+        scores.clearHits();
+        assertFalse(scores.inCombat(attacker, second(3)));
+        assertEquals(1, scores.score(attacker).streak());
+        scores.hit(attacker, victim, second(4));
+        assertFalse(scores.death(victim, second(5)).orElseThrow().rewarded());
+        assertEquals(2, scores.score(attacker).kills());
+    }
+
+    @Test
     public void onlyTheLatestUnexpiredHitCreditsOneKill() {
         var scores = scores();
         var first = UUID.randomUUID();

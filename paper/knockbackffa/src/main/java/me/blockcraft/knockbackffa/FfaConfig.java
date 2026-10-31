@@ -5,7 +5,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import java.time.Duration;
 
 record FfaConfig(int capacity, int knockback, Duration creditWindow, Duration spawnProtection,
-                 int killCoins, Duration rewardCooldown, int pickupSeconds, boolean launch, int launchSeconds) {
+                 int killCoins, Duration rewardCooldown, int pickupSeconds, boolean launch, int launchSeconds, int rotationSeconds) {
 
     static FfaConfig from(ConfigurationSection config) {
         return new FfaConfig(Math.clamp(config.getInt("players.max", 24), 2, 100),
@@ -16,6 +16,7 @@ record FfaConfig(int capacity, int knockback, Duration creditWindow, Duration sp
                 Duration.ofSeconds(Math.max(1, config.getInt("rewards.same-player-cooldown-seconds", 120))),
                 Math.clamp(config.getInt("pickups.respawn-seconds", 25), 5, 600),
                 config.getBoolean("launch.enabled", false),
-                Math.clamp(config.getInt("launch.interval-seconds", 100), 20, 600));
+                Math.clamp(config.getInt("launch.interval-seconds", 100), 20, 600),
+                config.getBoolean("rotation.enabled", true) ? Math.clamp(config.getInt("rotation.interval-seconds", 300), 60, 3600) : 0);
     }
 }

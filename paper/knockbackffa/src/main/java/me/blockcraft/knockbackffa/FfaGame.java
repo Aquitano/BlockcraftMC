@@ -83,6 +83,7 @@ final class FfaGame implements Listener, AutoCloseable {
     private final Map<Block, Integer> pickups = new HashMap<>();
     private final Sidebar sidebar;
     private int launchIn;
+    private int rotationIn;
 
     FfaGame(Plugin plugin, FfaConfig config, Messages messages, FfaArena arena, StatsRepository stats) {
         this.plugin = plugin;
@@ -93,6 +94,7 @@ final class FfaGame implements Listener, AutoCloseable {
         scores = new FfaScores(config.creditWindow(), config.rewardCooldown());
         sidebar = new Sidebar(messages.get("scoreboard.title"));
         launchIn = config.launchSeconds();
+        rotationIn = config.rotationSeconds();
     }
 
     void start() {
@@ -217,6 +219,13 @@ final class FfaGame implements Listener, AutoCloseable {
     }
 
     private void tick() {
+        if (config.rotationSeconds() > 0 && !playing.isEmpty()) {
+            if (--rotationIn <= 0) {
+                rotate();
+            } else if (rotationIn == 30 || rotationIn <= 5) {
+                Bukkit.broadcast(messages.get("rotation.countdown", Formatter.number("seconds", rotationIn)));
+            }
+        }
         pickups.replaceAll((block, seconds) -> seconds - 1);
         pickups.entrySet().removeIf(entry -> {
             if (entry.getValue() > 0) {
@@ -238,7 +247,8 @@ final class FfaGame implements Listener, AutoCloseable {
             var score = scores.score(player.getUniqueId());
             sidebar.show(player, messages.getLines("scoreboard.lines", Formatter.number("players", playing.size()),
                     Formatter.number("max", config.capacity()), Formatter.number("kills", score.kills()),
-                    Formatter.number("deaths", score.deaths()), Formatter.number("streak", score.streak())));
+                    Formatter.number("deaths", score.deaths()), Formatter.number("streak", score.streak()),
+                    Placeholder.component("map", messages.get("arena." + arena.name()))));
             if (protectedNow(player) && active(player)) {
                 BlockcraftApi.get().notifications().status(player, messages.get("spawn.protected"));
             }
@@ -246,6 +256,19 @@ final class FfaGame implements Listener, AutoCloseable {
                 BlockcraftApi.get().notifications().status(player, messages.get("launch.countdown", Formatter.number("seconds", launchIn)));
             }
         }
+    }
+
+    private void rotate() {
+        rotationIn = config.rotationSeconds();
+        scores.clearHits();
+        pickups.clear();
+        arena.world().getEntitiesByClass(Snowball.class).stream()
+                .filter(ball -> ball.getPersistentDataContainer().has(REPULSOR)).forEach(Snowball::remove);
+        Bukkit.getOnlinePlayers().stream().filter(this::active).forEach(player -> player.teleport(arena.watch()));
+        arena.rotate();
+        Bukkit.getOnlinePlayers().stream().filter(this::active).forEach(this::spawn);
+        Bukkit.broadcast(messages.get("rotation.changed", Placeholder.component("map", messages.get("arena." + arena.name()))));
+        launchIn = config.launchSeconds();
     }
 
     LiteralCommandNode<CommandSourceStack> command() {
@@ -426,7 +449,8 @@ final class FfaGame implements Listener, AutoCloseable {
             player.getInventory().setItem(1, special.build(Items.of(material).name(messages.get("item." + special.name().toLowerCase(java.util.Locale.ROOT)))));
             block.setType(Material.GRAY_CONCRETE, false);
             pickups.put(block, config.pickupSeconds());
-            player.sendMessage(messages.get("pickup.received"));
+            player.sendMessage(messages.get("pickup.received", Placeholder.component("item",
+                    messages.get("item." + special.name().toLowerCase(java.util.Locale.ROOT)))));
             Sounds.NOTIFY.play(player);
         }
     }

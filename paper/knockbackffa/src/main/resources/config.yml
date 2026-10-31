@@ -9,6 +9,9 @@ rewards:
   same-player-cooldown-seconds: 120
 pickups:
   respawn-seconds: 25
+rotation:
+  enabled: true
+  interval-seconds: 300
 launch:
   enabled: false
   interval-seconds: 100

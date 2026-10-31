@@ -23,7 +23,14 @@ spawn:
   protected: "<success>Startschutz <dark>· <muted>Du kannst kurz niemanden treffen."
 pickup:
   full: "<prefix><muted>Benutze zuerst dein Spezialitem im zweiten Slot."
-  received: "<prefix><success>Ein Spezialitem liegt in deinem zweiten Slot. Benutze es mit Rechtsklick."
+  received: "<prefix><success>Du erhältst <item><success>. Benutze das Item im zweiten Slot mit Rechtsklick."
+arena:
+  islands: "Inseln"
+  ring: "Ring"
+  crossroads: "Kreuzwege"
+rotation:
+  countdown: "<prefix><accent>Arenawechsel in <seconds> Sekunden. <muted>Deine Serie bleibt erhalten."
+  changed: "<prefix><success>Neue Arena: <map><success>! Deine Punkte und Serien bleiben erhalten."
 death:
   kill: "<prefix><success>Du hast <accent><player> <success>von der Insel gestoßen."
   killed: "<prefix><accent><player> <muted>hat dich von der Insel gestoßen."
@@ -36,6 +43,7 @@ scoreboard:
   title: "<primary><bold>Knockback FFA"
   lines:
     - "<muted>Spieler: <accent><players>/<max>"
+    - "<muted>Arena: <accent><map>"
     - ""
     - "<muted>Deine Kills: <accent><kills>"
     - "<muted>Deine Stürze: <accent><deaths>"

@@ -70,4 +70,8 @@ final class FfaScores {
         hits.remove(player);
         hits.values().removeIf(hit -> hit.attacker().equals(player));
     }
+
+    void clearHits() {
+        hits.clear();
+    }
 }

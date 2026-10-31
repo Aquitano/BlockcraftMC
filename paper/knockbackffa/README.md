@@ -1,7 +1,7 @@
 # Knockback FFA
 
-`paper/knockbackffa` runs continuous knockback combat in the `knockbackffa` server group. It builds a quartz centre,
-four side islands and connecting bridges in an empty world. Players join immediately and respawn after each fall.
+`paper/knockbackffa` runs continuous knockback combat in the `knockbackffa` server group. Players fight on islands,
+a ring or crossroads in an empty world. Players join immediately and respawn after each fall.
 The mode has no round timer, winner or round recap.
 
 ## Commands
@@ -58,3 +58,10 @@ To enable on-demand starting later, add `knockbackffa` to the configured on-dema
 - Repeat a kill before and after the reward cooldown. Enable the launch event and check its countdown.
 
 Continuous FFA sessions do not currently produce match replays.
+
+## Arena rotation
+
+`rotation.enabled` turns rotation on, and `rotation.interval-seconds` sets the interval, 300 seconds by default.
+The timer pauses while nobody plays. Warnings appear 30 seconds before the switch and during its final five seconds.
+The switch preserves scores, streaks and reward cooldowns. It clears recent hit credit, special items and projectiles,
+then respawns active players with fresh spawn protection. The sidebar names the current arena.
