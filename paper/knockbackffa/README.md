@@ -20,6 +20,8 @@ The last accepted hit within `hit-credit-seconds` earns a kill when the victim f
 streak. Leaving or switching to spectator while recently hit also counts as a death. A short spawn protection
 prevents both receiving and dealing hits.
 
+Leaving vanish or staff mode returns the player to spectator mode. `/ffa play` rejoins combat.
+
 `rewards.kill-coins` controls the coin reward. The same attacker and victim can earn it only once per
 `rewards.same-player-cooldown-seconds`. That cooldown survives a reconnect within the same server process.
 Kills and falls still count during the cooldown. Persistent statistics use `knockbackffa_stats`.

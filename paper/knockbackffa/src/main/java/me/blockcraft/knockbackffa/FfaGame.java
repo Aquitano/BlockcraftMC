@@ -14,6 +14,7 @@ import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.item.HotbarItem;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.menu.Menu;
+import me.blockcraft.api.player.InventoryInspection;
 import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.api.scoreboard.Sidebar;
 import me.blockcraft.api.sound.Sounds;
@@ -386,13 +387,20 @@ final class FfaGame implements Listener, AutoCloseable {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onVanish(VanishChangeEvent event) {
+        var player = event.getPlayer();
         if (event.isVanished()) {
-            var player = event.getPlayer();
             if (playing.contains(player.getUniqueId()) && scores.inCombat(player.getUniqueId(), System.nanoTime())) {
                 countDeath(player);
             }
             remove(player);
             presence();
+        } else {
+            // Staff mode restores flight after publishing the vanish event.
+            Tasks.sync(plugin, () -> {
+                if (player.isOnline() && !BlockcraftApi.get().isVanished(player) && !playing.contains(player.getUniqueId())) {
+                    watch(player);
+                }
+            });
         }
     }
 
@@ -506,7 +514,8 @@ final class FfaGame implements Listener, AutoCloseable {
     @EventHandler
     public void onClick(InventoryClickEvent event) {
         if (event.getWhoClicked() instanceof Player player && !BlockcraftApi.get().buildMode().isEnabled(player)
-                && !(event.getView().getTopInventory().getHolder(false) instanceof Menu)) {
+                && !(event.getView().getTopInventory().getHolder(false) instanceof Menu)
+                && !InventoryInspection.permitted(player, event.getView().getTopInventory())) {
             event.setCancelled(true);
         }
     }
@@ -514,7 +523,8 @@ final class FfaGame implements Listener, AutoCloseable {
     @EventHandler
     public void onDrag(InventoryDragEvent event) {
         if (event.getWhoClicked() instanceof Player player && !BlockcraftApi.get().buildMode().isEnabled(player)
-                && !(event.getView().getTopInventory().getHolder(false) instanceof Menu)) {
+                && !(event.getView().getTopInventory().getHolder(false) instanceof Menu)
+                && !InventoryInspection.permitted(player, event.getView().getTopInventory())) {
             event.setCancelled(true);
         }
     }
