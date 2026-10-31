@@ -218,8 +218,8 @@ Afterwards:
 ## Storage
 
 Level templates keep `level.dat` and shared world data at the root. Overworld chunks and dimension settings live
-under `dimensions/minecraft/overworld`. BedWars pool maps and archive exhibits store a dimension directly in their
-`world/` directory.
+under `dimensions/minecraft/overworld`. BedWars and TTT pool maps and archive exhibits store a dimension directly in
+their `world/` directory.
 
 Region, entity, and POI files use Git LFS. Paper's dimension metadata stays with each template so the server can
 load it without repeating a world migration.
@@ -330,3 +330,42 @@ or an emptied database has them at once.
   said.
 - `novigrad` holds the island of Novigrad, Elysium Fire's recreation of the city from The Witcher 3, which the server
   loaded as a world of its own (`96,256,1903,1855`).
+
+## TTT
+
+The TTT server's template is `worlds/ttt`: the waiting lobby as its overworld and three imported maps in
+`blockcraft/TTT/maps`, each with a `map.yml` ([TTT](../paper/ttt/README.md#the-maps)). All four come from
+`Blockcraft Server/2/ClayMC-7.0-7.1/Maps` and were imported on 2026-10-31 with Paper 26.3 build 234.
+
+- The lobby comes from `TTT World`. It was saved as the level `Wartelobby`, using WorldDownloader on ClayMc.net in 2017
+  (`WorldDownloader.txt`). All 37 built chunks of the round waiting island remain (`-144,16,-33,127`). The lobby
+  spawn in `blockcraft/TTT/locations.yml` is the old world spawn, `(-71.5, 51, 90.5)`, turned toward the middle of
+  the island. The six signs at `(-97, 47..49, 77..81)` are blank.
+- `vineyard` comes from `Vineyard` (`Welten//TTT-Vineyard`): a valley ringed by stone mountains. The tester stands in
+  the building at its middle. A sign there says "Build by ClayMC". All 81 built chunks remain.
+- `minecraft` comes from `TTTMinecraft` (`Welten//TTT-Minecraft`): an island in a sea with a beach, a pond, rails and
+  a nether portal, inside a wall of barriers. All 88 built chunks and its two minecarts remain.
+- `raid` comes from `Raid`: a villa with a pool, a basketball court and a fountain in a roundabout, inside a ring of
+  barriers. Signs in a cave below it credit youtube.com/NiicKNumber1. The import keeps the 324 chunks of its raised
+  terrain (`-1120,-1184,-833,-897`) and drops the 496 chunks of flat grass around it.
+
+Vineyard and Minecraft come with ClayMC's tester: a 3x3 iron room with a doorway in front, a glass lamp on each side
+of the doorway and a button on the back wall. Below the floor is the pit of ClayMC's traitor trap: three blocks of
+air over lava. Its hidden button is a stone button on an iron block at `(0, 73, 12)` in Vineyard and a wooden button
+on a quartz block at `(35, 94, 11)` in Minecraft. Raid had no tester and no ender chest. Its lawn is a single layer of
+grass over a hollow. A tester was built the same way, pit included, on the west lawn at
+`(-1063..-1059, 41..50, -1059..-1055)`. Its trap button is on the outside of the back wall at `(-1061, 48, -1060)`.
+The chest at `(-996, 48, -1026)` became the ender chest.
+
+Each map has twelve spawns, all in the open: in a ring round Vineyard's tester building, near Minecraft's old world
+spawn and round Raid's fountain. The border is a square round the playable area. Every chest of a map is a loot
+chest: Vineyard has 36, Minecraft 31 and Raid 101. Vineyard and Minecraft also have two ender chests each.
+
+The template occupies about 2.4 MiB. Player records, statistics, village data, 80 loose items in Vineyard and the
+unused dimensions are excluded. The Downloads backups remain unchanged.
+
+A throwaway Paper run loaded every map through `TownMaps` and `TemplateDimensions`. For all 48 spawns it checked the
+floor and headroom, and for each spectator spot open air. It also checked each tester's button, lamps, doorway, room
+and floor, each trap's button and its pit with lava, each map's border, and its chests and ender chests. A dev
+server with BlockcraftAPI, core and TTT then started on the template and copied the three maps into its level.
+Client checks are still needed for the vote, a round on each map, the tester, the trap and the lobby.

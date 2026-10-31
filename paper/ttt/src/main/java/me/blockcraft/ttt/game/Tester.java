@@ -10,18 +10,23 @@ import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 /**
  * The traitor tester: whoever presses the button from inside shuts the doorway with glass, and a few seconds later
  * the lamps turn red if a traitor stands in the room, lime otherwise. Everyone hears who went in, and the tester
- * rests a while after every run.
+ * rests a while after every run. Lamps and doorway go back to what the map had there, so a map's own lamps may be
+ * any block. Where the map has a traitor trap, its floor drops away once per round, for a moment, under whoever
+ * stands in the room.
  */
 public final class Tester {
 
@@ -31,8 +36,12 @@ public final class Tester {
     private final Messages messages;
     private final Supplier<List<Player>> alive;
     private final Predicate<Player> showsAsTraitor;
+    private final Map<Block, BlockData> atRest = new HashMap<>();
+    private final Map<Block, BlockData> floor = new HashMap<>();
     private long readyAt;
     private boolean running;
+    private boolean trapUsed;
+    private boolean trapOpen;
 
     public Tester(Plugin plugin, TesterRoom room, TttConfig.Tester config, Messages messages,
                   Supplier<List<Player>> alive, Predicate<Player> showsAsTraitor) {
@@ -42,10 +51,37 @@ public final class Tester {
         this.messages = messages;
         this.alive = alive;
         this.showsAsTraitor = showsAsTraitor;
+        room.lamps().forEach(block -> atRest.put(block, block.getBlockData()));
+        room.entrance().forEach(block -> atRest.put(block, block.getBlockData()));
+        room.trap().ifPresent(trap -> trap.floor().forEach(block -> floor.put(block, block.getBlockData())));
     }
 
     public boolean isButton(Block block) {
         return block.equals(room.button());
+    }
+
+    public boolean isTrapButton(Block block) {
+        return room.trap().filter(trap -> trap.button().equals(block)).isPresent();
+    }
+
+    public boolean trapUsed() {
+        return trapUsed;
+    }
+
+    /** Drops the floor and closes it again after a moment; returns who stood in the room and fell. */
+    public List<Player> springTrap() {
+        trapUsed = true;
+        trapOpen = true;
+        var inside = alive.get().stream().filter(player -> room.zone().contains(player.getLocation())).toList();
+        floor.keySet().forEach(block -> block.setType(Material.AIR, false));
+        Tasks.later(plugin, config.trapSeconds() * 20L, this::closeTrap);
+        return inside;
+    }
+
+    /** At the round's end: lamps, doorway and floor go back to the map's blocks at once. */
+    public void stop() {
+        reset();
+        closeTrap();
     }
 
     public void press(Player presser) {
@@ -79,12 +115,19 @@ public final class Tester {
         inside.forEach(player -> (traitor ? Sounds.NOTE_BASS : Sounds.NOTE_PLING).play(player));
     }
 
-    public void reset() {
+    private void reset() {
         if (!running) {
             return;
         }
         running = false;
-        room.lamps().forEach(block -> block.setType(Material.REDSTONE_LAMP, false));
-        room.entrance().forEach(block -> block.setType(Material.AIR, false));
+        atRest.forEach((block, data) -> block.setBlockData(data, false));
+    }
+
+    private void closeTrap() {
+        if (!trapOpen) {
+            return;
+        }
+        trapOpen = false;
+        floor.forEach((block, data) -> block.setBlockData(data, false));
     }
 }

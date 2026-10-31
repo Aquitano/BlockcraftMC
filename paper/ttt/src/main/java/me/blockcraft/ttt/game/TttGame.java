@@ -20,6 +20,7 @@ import me.blockcraft.api.pack.MenuIcon;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.ttt.arena.MapVote;
 import me.blockcraft.ttt.arena.Town;
 import me.blockcraft.ttt.config.TttConfig;
 import me.blockcraft.ttt.shop.Equipment;
@@ -33,6 +34,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
@@ -54,15 +56,16 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
- * One server, one round of TTT, as GommeHD played it. Everyone loots the town's chests during the preparation, then
- * the roles are drawn: a few traitors who know each other, a detective everyone knows, and innocents. The traitors
- * win when nobody else is left; everyone else wins when the traitors are dead or the time runs out. Nobody hears
- * who killed whom: the dead lie where they fell until someone identifies them, the tester tells a traitor from an
- * innocent, and traitors and detectives spend their kills in a shop. Killing your own side costs karma, and with
- * it the strength of your blows.
+ * One server, one round of TTT, as GommeHD played it. The lobby votes for the map, everyone loots its chests during
+ * the preparation, then the roles are drawn: a few traitors who know each other, a detective everyone knows, and
+ * innocents. The traitors win when nobody else is left; everyone else wins when the traitors are dead or the time runs
+ * out. Nobody hears who killed whom: the dead lie where they fell until someone identifies them, the tester tells a
+ * traitor from an innocent, and traitors and detectives spend their kills in a shop. Killing your own side costs
+ * karma, and with it the strength of your blows.
  */
 public final class TttGame implements ShopMenu.Till {
 
@@ -73,7 +76,8 @@ public final class TttGame implements ShopMenu.Till {
     private final Plugin plugin;
     private final TttConfig config;
     private final Messages messages;
-    private final Town town;
+    private final MapVote vote;
+    private final Supplier<Location> lobbySpawn;
     private final KarmaRepository karmaRepository;
     private final RoundSummary summary;
     private final Round round;
@@ -82,37 +86,41 @@ public final class TttGame implements ShopMenu.Till {
     private final GameSidebar sidebar;
     private final Corpses corpses;
     private final Equipment equipment;
-    private final Tester tester;
     private final Map<UUID, Role> roles = new HashMap<>();
     private final Map<UUID, Integer> karma = new HashMap<>();
     private final Map<UUID, Integer> points = new HashMap<>();
     private final Set<UUID> teamKillers = new HashSet<>();
     private final Set<UUID> karmaLoaded = new HashSet<>();
     private final Set<UUID> ownFault = new HashSet<>();
+    /** Who fell through the traitor trap, and the traitor who sprang it, to be credited with their deaths. */
+    private final Map<UUID, UUID> trappedBy = new HashMap<>();
     /** The name each player had when the roles were drawn, so a traitor who leaves is still named as seen. */
     private final Map<UUID, String> names = new HashMap<>();
+    private Optional<Town> town = Optional.empty();
+    private Optional<Tester> tester = Optional.empty();
     private Stage stage = Stage.PREPARATION;
     private Optional<Faction> winner = Optional.empty();
     private boolean enderChestOpened;
     private int secondsLeft;
     private volatile Set<UUID> traitorChat = Set.of();
 
-    public TttGame(Plugin plugin, GameConfig gameConfig, TttConfig config, Messages messages, Town town,
-                   StatsRepository stats, StatsMenus statsMenus, KarmaRepository karmaRepository) {
+    public TttGame(Plugin plugin, GameConfig gameConfig, TttConfig config, Messages messages, MapVote vote,
+                   Supplier<Location> lobbySpawn, StatsRepository stats, StatsMenus statsMenus, KarmaRepository karmaRepository) {
         this.plugin = plugin;
         this.config = config;
         this.messages = messages;
-        this.town = town;
+        this.vote = vote;
+        this.lobbySpawn = lobbySpawn;
         this.karmaRepository = karmaRepository;
         this.summary = new RoundSummary(plugin, messages, new RoundSummary.Rewards(config.rewards().kill(), config.rewards().win()), stats);
         summary.keepKillsSecret();
         this.round = new Round(plugin, new Arena(messages, Sounds.JOIN), summary, config.capacity(), gameConfig);
         this.countdown = new LobbyCountdown(plugin, round, gameConfig, config.roundMinimum(), remaining -> { }, this::start);
-        this.hotbar = new LobbyHotbar(plugin, List.of(), statsMenus, countdown);
+        this.hotbar = new LobbyHotbar(plugin, List.of(new LobbyHotbar.Choice(MenuIcon.VOTE, messages.get("item.vote"),
+                () -> phase() == GamePhase.LOBBY, this::openVote)), statsMenus, countdown);
         this.sidebar = new GameSidebar(messages.get("scoreboard.title"), round);
         this.corpses = new Corpses(messages);
         this.equipment = new Equipment(plugin, config.shop(), messages, this::roleOf, round::players);
-        this.tester = new Tester(plugin, town.tester(), config.tester(), messages, round::players, equipment::showsAsTraitor);
         this.secondsLeft = config.roundSeconds();
     }
 
@@ -128,16 +136,16 @@ public final class TttGame implements ShopMenu.Till {
         return hotbar;
     }
 
-    public Town town() {
-        return town;
-    }
-
     public Equipment equipment() {
         return equipment;
     }
 
-    public Tester tester() {
-        return tester;
+    public boolean isTesterButton(Block block) {
+        return tester.filter(each -> each.isButton(block)).isPresent();
+    }
+
+    public boolean isTrapButton(Block block) {
+        return tester.filter(each -> each.isTrapButton(block)).isPresent();
     }
 
     public Corpses corpses() {
@@ -173,7 +181,7 @@ public final class TttGame implements ShopMenu.Till {
     public void join(Player player) {
         if (round.join(player)) {
             PlayerReset.reset(player, GameMode.ADVENTURE);
-            player.teleport(town.lobbySpawn());
+            player.teleport(lobbySpawn.get());
             hotbar.give(player);
             loadKarma(player);
             countdown.start();
@@ -181,9 +189,19 @@ public final class TttGame implements ShopMenu.Till {
                 countdown.shorten(config.fullSeconds());
             }
         } else {
-            player.teleport(phase() == GamePhase.INGAME ? town.spectatorSpawn() : town.lobbySpawn());
+            player.teleport(phase() == GamePhase.INGAME ? spectatorSpawn() : lobbySpawn.get());
         }
         refreshAll();
+    }
+
+    private Location spectatorSpawn() {
+        return town.map(Town::spectatorSpawn).orElseGet(lobbySpawn);
+    }
+
+    private void openVote(Player player) {
+        if (phase() == GamePhase.LOBBY) {
+            vote.open(player);
+        }
     }
 
     public void follow(Player spectator, UUID friend) {
@@ -195,6 +213,7 @@ public final class TttGame implements ShopMenu.Till {
         BlockcraftApi.get().tabTeams().clearColor(player);
         if (phase() == GamePhase.LOBBY) {
             karma.remove(player.getUniqueId());
+            vote.withdraw(player);
         }
         if (phase() == GamePhase.INGAME && wasPlaying) {
             updateTraitorChat();
@@ -207,6 +226,8 @@ public final class TttGame implements ShopMenu.Till {
         if (phase() == GamePhase.INGAME && round.isPlaying(player)) {
             quit(player);
             round.watch(player);
+        } else if (phase() == GamePhase.LOBBY) {
+            vote.withdraw(player);
         }
     }
 
@@ -224,15 +245,18 @@ public final class TttGame implements ShopMenu.Till {
     }
 
     private void start() {
+        var built = vote.decide().town().get();
+        town = Optional.of(built);
+        tester = Optional.of(new Tester(plugin, built.tester(), config.tester(), messages, round::players, equipment::showsAsTraitor));
         round.enter(GamePhase.INGAME);
         stage = Stage.PREPARATION;
         int index = 0;
         for (var player : round.players()) {
             PlayerReset.reset(player, GameMode.SURVIVAL);
             config.combat().apply(player);
-            player.teleport(town.spawn(index++));
+            player.teleport(built.spawn(index++));
         }
-        round.spectators().forEach(spectator -> spectator.teleport(town.spectatorSpawn()));
+        round.spectators().forEach(spectator -> spectator.teleport(built.spectatorSpawn()));
         RoundStart.go(round.players());
         Bukkit.broadcast(messages.get("round.preparation", Formatter.number("seconds", config.preparationSeconds())));
         secondsLeft = config.preparationSeconds();
@@ -309,8 +333,9 @@ public final class TttGame implements ShopMenu.Till {
             return;
         }
         var death = summary.resolveDeath(event);
+        var trapper = Optional.ofNullable(trappedBy.remove(victim.getUniqueId())).map(Bukkit::getPlayer);
         Optional<Player> killer = ownFault.remove(victim.getUniqueId()) ? Optional.empty()
-                : equipment.ownerOf(event.getDamageSource().getDirectEntity()).or(death::killer)
+                : equipment.ownerOf(event.getDamageSource().getDirectEntity()).or(() -> trapper).or(death::killer)
                         .filter(other -> !other.equals(victim));
         var victimRole = roleOf(victim);
         killer.ifPresent(other -> victimRole.ifPresent(role -> credit(other, victim, role)));
@@ -347,15 +372,15 @@ public final class TttGame implements ShopMenu.Till {
 
     public void respawn(PlayerRespawnEvent event) {
         var player = event.getPlayer();
-        event.setRespawnLocation(phase() == GamePhase.INGAME ? town.spectatorSpawn() : town.lobbySpawn());
+        event.setRespawnLocation(phase() == GamePhase.INGAME ? spectatorSpawn() : lobbySpawn.get());
         if (round.isSpectator(player)) {
             Tasks.sync(plugin, () -> round.watch(player));
         }
     }
 
-    /** A town chest gives one thing and is gone; true if {@code block} was one. */
+    /** A chest of the map gives one thing and is gone; true if {@code block} was one. */
     public boolean openChest(Player player, Block block) {
-        if (!town.chests().contains(block) || block.getType() != Material.CHEST) {
+        if (block.getType() != Material.CHEST) {
             return false;
         }
         block.setType(Material.AIR, false);
@@ -386,7 +411,24 @@ public final class TttGame implements ShopMenu.Till {
             player.sendMessage(messages.get("tester.not-ready"));
             return;
         }
-        tester.press(player);
+        tester.ifPresent(each -> each.press(player));
+    }
+
+    /** The traitor trap opens for living traitors only, once per round; whoever falls is the presser's kill. */
+    public void pressTrap(Player player) {
+        if (!rolesDrawn() || !round.isPlaying(player) || roleOf(player).filter(role -> role == Role.TRAITOR).isEmpty()) {
+            player.sendMessage(messages.get("tester.trap.traitors-only"));
+            Sounds.MENU_DENY.play(player);
+            return;
+        }
+        var trap = tester.orElseThrow();
+        if (trap.trapUsed()) {
+            player.sendMessage(messages.get("tester.trap.used"));
+            Sounds.MENU_DENY.play(player);
+            return;
+        }
+        trap.springTrap().forEach(fallen -> trappedBy.put(fallen.getUniqueId(), player.getUniqueId()));
+        player.sendMessage(messages.get("tester.trap.sprung"));
     }
 
     /** The golden sword's wielder struck an innocent and dies of it; nobody earns that kill. */
@@ -462,7 +504,8 @@ public final class TttGame implements ShopMenu.Till {
         winner = won;
         traitorChat = Set.of();
         equipment.stop();
-        tester.reset();
+        tester.ifPresent(Tester::stop);
+        trappedBy.clear();
         won.ifPresent(faction -> roles.forEach((id, role) -> {
             var player = Bukkit.getPlayer(id);
             if (role.faction() == faction && player != null) {
@@ -486,7 +529,7 @@ public final class TttGame implements ShopMenu.Till {
             BlockcraftApi.get().tabTeams().clearColor(player);
             if (!player.isDead()) {
                 PlayerReset.reset(player, GameMode.ADVENTURE);
-                player.teleport(town.lobbySpawn());
+                player.teleport(lobbySpawn.get());
                 hotbar.giveHub(player);
             }
         }
@@ -501,7 +544,7 @@ public final class TttGame implements ShopMenu.Till {
 
     private void show(Player player) {
         var icons = GameSidebar.icons(player);
-        var mapName = Component.text(town.name());
+        var mapName = town.<Component>map(each -> Component.text(each.name())).orElseGet(() -> messages.get("scoreboard.map-vote"));
         var karmaSection = new GameSidebar.Section(messages.get("scoreboard.karma", icons),
                 GameSidebar.value(Component.text(karma(player.getUniqueId()))));
         switch (phase()) {

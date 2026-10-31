@@ -36,6 +36,12 @@ public final class Worlds {
     /** An arena from {@code creator}, whose generator decides the terrain; time, weather and mobs stand still. */
     public static World createArena(WorldCreator creator) {
         var world = Objects.requireNonNull(creator.createWorld(), "Could not create arena " + creator.name());
+        settle(world);
+        return world;
+    }
+
+    /** Stops time, weather and mobs in a world that was loaded rather than created as an arena. */
+    public static void settle(World world) {
         world.setDifficulty(Difficulty.PEACEFUL);
         world.setGameRule(GameRules.ADVANCE_TIME, false);
         world.setGameRule(GameRules.ADVANCE_WEATHER, false);
@@ -45,7 +51,6 @@ public final class Worlds {
         setTime(world, 6000);
         world.setStorm(false);
         world.setThundering(false);
-        return world;
     }
 
     /**

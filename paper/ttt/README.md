@@ -1,15 +1,16 @@
 # TTT
 
-`paper/ttt` plays GommeHD's TTT (Trouble in Terrorist Town) in the `ttt` group: up to `players.max` (12) players in
-one town, a few of them traitors. The rules follow GommeHD's mode and Garry's Mod's original, checked against two
+`paper/ttt` plays GommeHD's TTT (Trouble in Terrorist Town) in the `ttt` group: up to `players.max` (12) players on
+one map, a few of them traitors. The rules follow GommeHD's mode and Garry's Mod's original, checked against two
 open Minecraft clones ([MTTT](https://github.com/phiph-s/MTTT), Apache 2.0, and
 [caseif/TTT](https://github.com/caseif/TTT), MIT); no code was taken from either.
 
 ## A round
 
-1. The lobby waits in a timbered hall high above the village until `players.min` (4) are there; a round never starts with fewer
-   than `players.round-minimum` (3).
-2. Preparation, `countdown.preparation` seconds (30): everyone starts around the fountain and loots. Nobody can be
+1. The lobby waits on ClayMC's old TTT waiting island until `players.min` (4) are there; a round never starts with
+   fewer than `players.round-minimum` (3). Meanwhile everyone votes for the map with the hotbar's vote item, or
+   leaves it to chance; staff decide it with `/forcemap <map>`.
+2. Preparation, `countdown.preparation` seconds (30): everyone starts at the map's spawns and loots. Nobody can be
    hurt, and nobody knows a role yet.
 3. The roles are drawn: `roles.traitor-ratio` of the players are traitors (at least one), from
    `roles.detective-min-players` (6) on `roles.detective-ratio` are detectives (at least one), the rest innocents. Each
@@ -25,22 +26,59 @@ a click also tells who the killer was. Dead players watch; their chat reaches on
 
 A traitor's chat message that starts with `#` reaches only the living traitors; `/tc <Nachricht>` writes one.
 
-## The town
+## The maps
 
-Eichenhain is a village `TownBuilder` puts into an empty world at every start, so the service needs no world
-template; the decoration draws from a fixed seed, so it looks the same every time. Two streets cross at a plaza
-with a fountain and benches. Around it stand eight furnished houses with gable roofs (two with an upper floor and a
-ladder), an inn with a bar below and rooms above, an open smithy, a barn with a loft and a paddock, and a market
-with a well. The two western houses have cellars, joined by a tunnel under the street. A pond with a jetty and a
-footbridge lies in the north-east, fenced vegetable gardens behind the houses, a graveyard with an open grave beside
-the chapel, and a forest between the village and the hedge, inside the world border. Nothing can be broken, and nothing placed but the shop's landmines, fake chests and heal
-stations.
+On every map, a right-click on any chest removes it and gives one item from `chests.loot`, picked by weight. Every
+ender chest holds the round's one iron sword, given once and only after the preparation. Nothing can be broken, and
+nothing placed but the shop's landmines, fake chests and heal stations. The **traitor tester** works the same way on
+every map. Pressing its button from inside closes the doorway with glass. After `tester.delay-seconds`, the lamps
+turn red if a traitor stands inside, lime otherwise, for `tester.show-seconds`. Then the lamps and doorway return to
+the map's own blocks. Everyone is told who pressed it; the tester then rests `tester.cooldown-seconds`.
 
-- **Chests** (about 30, also in cellars, lofts, the tunnel, on the jetty and in the open grave): a right-click removes the chest and gives one item from `chests.loot`, picked by weight.
-- **Ender chest** in the chapel at the south end: an iron sword, once per round, only after the preparation.
-- **Traitor tester** at the north end: pressing the button inside closes the doorway with glass and, after
-  `tester.delay-seconds`, the lamps over the doorway and on the back wall turn red if a traitor stands inside, lime
-  otherwise, for `tester.show-seconds`. Everyone is told who pressed it; the tester then rests `tester.cooldown-seconds`.
+The imported maps also have ClayMC's **traitor trap**: a pit with lava under the tester's floor and a hidden button
+elsewhere. Only a living traitor can press it, once per round. The floor drops away for `tester.trap-seconds` (3),
+then closes over the pit. Whoever stood in the room falls, and their deaths count as the kills of the traitor who
+pressed the button, like an explosion's. Eichenhain's tester has no trap.
+
+**Eichenhain** is a village `TownBuilder` puts into an empty world at every start; the decoration draws from a fixed
+seed, so it looks the same every time. Two streets cross at a plaza with a fountain, where the round starts, and
+benches. Around it stand eight furnished houses with gable roofs (two with an upper floor and a ladder), an inn with
+a bar below and rooms above, an open smithy, a barn with a loft and a paddock, and a market with a well. The two
+western houses have cellars, joined by a tunnel under the street. A pond with a jetty and a footbridge lies in the
+north-east, fenced vegetable gardens behind the houses, a graveyard with an open grave beside the chapel, and a
+forest between the village and the hedge, inside the world border. About 30 chests hide in the houses, cellars,
+lofts, the tunnel, on the jetty and in the open grave; the ender chest stands in the chapel at the south end, the
+tester at the north end.
+
+**Vineyard**, **Minecraft** and **Raid** are imported maps from ClayMC (see [the import](../../worlds/README.md#ttt)).
+They live in the TTT map bundle, `worlds/ttt/blockcraft/TTT/maps/<key>/`, each as a `map.yml` and the dimension
+folder of its world, `world/`. At startup, the server copies every imported map into place and adds it to the vote;
+a round loads only the chosen one. A map whose `map.yml` lacks something a round needs is skipped and named in the
+log:
+
+```yaml
+name: Vineyard
+builders: [ClayMC]
+icon: vine                               # what the vote shows
+border: {x: 6.5, z: 8.5, size: 128}      # the world border, a square round x/z
+spectator: {x: 6.5, y: 105.0, z: 45.5, yaw: 180.0, pitch: 35.0}
+spawns:                                  # one per player; more players than spawns share them
+  - {x: 0.5, y: 71.0, z: -12.5, yaw: 0.0}
+tester:
+  zone: {x1: -1, y1: 75, z1: -2, x2: 1, y2: 77, z2: 0}      # who stands here is tested
+  button: {x: 0, y: 76, z: -2}
+  entrance: {x1: -1, y1: 75, z1: 1, x2: 1, y2: 76, z2: 1}   # shut with glass during a test
+  lamps:                                                    # any blocks; red or lime while the result shows
+    - {x: -2, y: 77, z: 1}
+  trap:                                                     # optional
+    button: {x: 0, y: 73, z: 12}
+    floor: {x1: -1, y1: 74, z1: -2, x2: 1, y2: 74, z2: 0}   # opens over the pit
+```
+
+Chests and ender chests need no entry. To add a map, import it with `./gradlew importMap -Psource=<old world>
+-Playout=dimension -Pmode=void -Ptarget=worlds/ttt/blockcraft/TTT/maps/<key>/world` and write its `map.yml`.
+
+The lobby template is `worlds/ttt`. `/setup lobby` moves its spawn, and `/map save` keeps it.
 
 ## Shops and points
 
@@ -74,7 +112,7 @@ Stats go to `bc_ttt_stats`.
 
 ## Testing
 
-`./gradlew :paper:ttt:build` runs the unit tests (role counts, the win check, shop points, karma). A round needs a
-client smoke test with at least three accounts (`/start` shortens the lobby): roles and titles, a chest and the
-ender chest, the tester with and without a traitor and with a spoofer, a corpse identified and scanned, every shop
-item, a team kill's karma, and both endings.
+`./gradlew :paper:ttt:build` runs the unit tests (role counts, the win check, shop points, karma, reading a
+`map.yml`). A round needs a client smoke test with at least three accounts (`/start` shortens the lobby, `/forcemap`
+picks the map): the vote, roles and titles, a chest and the ender chest, the tester on every map with and without a
+traitor and with a spoofer, the traitor trap, a corpse identified and scanned, every shop item, a team kill's karma, and both endings.

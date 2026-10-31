@@ -69,11 +69,12 @@ shop:
     golden-sword: 3
 
 # The tester shows its result delay-seconds after the button, for show-seconds, and rests cooldown-seconds after
-# every press.
+# every press. On a map with a traitor trap, its floor stays open for trap-seconds.
 tester:
   delay-seconds: 3
   show-seconds: 4
   cooldown-seconds: 20
+  trap-seconds: 3
 
 # Whether players heal on their own. Without it, only medipacks and heal stations heal.
 natural-regeneration: false

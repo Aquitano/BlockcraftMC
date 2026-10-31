@@ -33,7 +33,8 @@ public record TttConfig(int capacity, int roundMinimum, int fullSeconds, int pre
         }
     }
 
-    public record Tester(int delaySeconds, int showSeconds, int cooldownSeconds) {
+    /** {@code trapSeconds} the traitor trap's floor stays open. */
+    public record Tester(int delaySeconds, int showSeconds, int cooldownSeconds, int trapSeconds) {
     }
 
     public static TttConfig from(ConfigurationSection config) {
@@ -63,7 +64,8 @@ public record TttConfig(int capacity, int roundMinimum, int fullSeconds, int pre
                         (float) config.getDouble("shop.explosion-power", 3.0)),
                 new Tester(Math.max(1, config.getInt("tester.delay-seconds", 3)),
                         Math.max(1, config.getInt("tester.show-seconds", 4)),
-                        Math.max(1, config.getInt("tester.cooldown-seconds", 20))),
+                        Math.max(1, config.getInt("tester.cooldown-seconds", 20)),
+                        Math.max(1, config.getInt("tester.trap-seconds", 3))),
                 config.getBoolean("natural-regeneration", false),
                 CombatStyle.from(config),
                 chests == null ? new LootTable(1, 1, List.of()) : LootTable.fromYaml(chests, 1, 1));

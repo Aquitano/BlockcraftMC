@@ -7,6 +7,7 @@ import me.blockcraft.ttt.game.Role;
 import me.blockcraft.ttt.game.RoundItem;
 import me.blockcraft.ttt.game.TttGame;
 import me.blockcraft.ttt.shop.ShopItem;
+import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.damage.DamageSource;
 import org.bukkit.damage.DamageType;
@@ -35,7 +36,8 @@ import org.bukkit.inventory.EquipmentSlot;
 /**
  * The round's rules for the town: nothing is built or broken but what the shop sells, explosions leave the houses
  * standing, nobody is hurt or hungry before the roles are drawn, and blows land as hard as the attacker's karma
- * allows. Town chests, the ender chest, the tester's button and the corpses answer a click.
+ * allows. The map's chests and ender chests, the tester's and the traitor trap's buttons and the corpses answer a
+ * click.
  */
 public final class ArenaListener implements Listener {
 
@@ -99,12 +101,14 @@ public final class ArenaListener implements Listener {
         if (game.equipment().openFake(player, block) || game.openChest(player, block)) {
             return true;
         }
-        if (block.equals(game.town().enderChest())) {
+        if (block.getType() == Material.ENDER_CHEST) {
             game.openEnderChest(player);
             return true;
         }
-        if (game.tester().isButton(block)) {
+        if (game.isTesterButton(block)) {
             game.pressTester(player);
+        } else if (game.isTrapButton(block)) {
+            game.pressTrap(player);
         }
         return false;
     }

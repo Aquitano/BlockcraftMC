@@ -4,6 +4,10 @@ game-name: "<ttt>TTT"
 commands:
   start:
     description: "Verkürzt den Countdown der Lobby"
+  forcemap:
+    description: "Legt die Map der nächsten Runde fest"
+  setup:
+    description: "Setzt den Spawn der TTT-Lobby"
   stats:
     description: "Zeigt die Stats eines Spielers"
   top:
@@ -31,6 +35,15 @@ roles:
 
 item:
   shop: "<arrow><role>-Shop"
+  vote: "<arrow><primary>Abstimmung"
+
+vote:
+  title: "<arrow><ttt>TTT <dark>· <muted>Abstimmung"
+  map: "<arrow><primary><map>"
+  builders: "<bullet><muted>Erbaut von <accent><builders>"
+  chance: "den Zufall"
+  result:
+    - "<prefix><muted>Gespielt wird <accent><map><muted>."
 
 round:
   preparation: "<prefix><muted>Durchsucht die Kisten! In <accent><seconds> Sekunden <muted>werden die Rollen verteilt."
@@ -114,6 +127,10 @@ tester:
   not-ready: "<prefix><error>Der Tester funktioniert erst, wenn die Rollen verteilt sind."
   cooldown: "<prefix><error>Der Tester ist noch <seconds> Sekunden beschäftigt."
   entered: "<prefix><accent><player> <muted>hat den Traitor-Tester betreten."
+  trap:
+    traitors-only: "<prefix><error>Nur Traitor können diesen Knopf benutzen."
+    used: "<prefix><error>Die Traitor-Falle wurde in dieser Runde schon benutzt."
+    sprung: "<prefix><muted>Die Traitor-Falle ist offen."
 
 corpse:
   unknown: "<muted>Unbekannte Leiche"
@@ -161,6 +178,7 @@ menu:
 
 scoreboard:
   title: "<ttt><bold>TTT"
+  map-vote: "Abstimmung läuft"
   role: "<muted><icon:mode> ROLLE"
   no-role: "<muted>Wird verteilt"
   points: "<muted><icon:kit> PUNKTE"

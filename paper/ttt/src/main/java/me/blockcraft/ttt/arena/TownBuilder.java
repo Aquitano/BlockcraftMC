@@ -27,10 +27,9 @@ import org.bukkit.block.data.type.Stairs;
 import org.bukkit.block.data.type.TrapDoor;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
-import java.util.Set;
 
 /**
  * Eichenhain, the village TTT builds into an empty world at every start. Two streets cross at a plaza with a
@@ -50,9 +49,9 @@ public final class TownBuilder {
     private static final int EDGE = 44;
     private static final int CLEARED = 52;
     private static final int BEDROCK = GROUND - 9;
-    private static final int LOBBY_Y = 150;
     private static final int SPAWN_RADIUS = 6;
     private static final int SPAWNS = 12;
+    private static final int BORDER_SIZE = 89;
     private static final long SEED = 0x7177L;
     private static final List<BlockFace> SIDES = List.of(BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST);
     private static final List<Material> FLOWERS = List.of(Material.DANDELION, Material.POPPY, Material.AZURE_BLUET,
@@ -98,19 +97,18 @@ public final class TownBuilder {
 
     private final World world;
     private final Random random = new Random(SEED);
-    private final Set<Block> chests = new HashSet<>();
     private final List<Block> connecting = new ArrayList<>();
 
     private TownBuilder(World world) {
         this.world = world;
     }
 
+    /** Builds the village into {@code world}, which must be empty, and draws the world border round it. */
     public static Town build(World world) {
         return new TownBuilder(world).build();
     }
 
     private Town build() {
-        clear();
         ground();
         streets();
         plaza();
@@ -122,29 +120,15 @@ public final class TownBuilder {
         pond();
         cellarTunnel();
         gardens();
-        var enderChest = chapel();
+        chapel();
         graveyard();
         var tester = tester();
         forest();
         decorate();
-        var lobby = lobby();
         connect();
-        return new Town(NAME, world, spawns(), Set.copyOf(chests), enderChest, tester, lobby,
-                new Location(world, 0.5, GROUND + 18, 12.5, 180, 45));
-    }
-
-    /** The world keeps what the last round left, so everything the village may cover goes first. */
-    private void clear() {
-        for (int x = -CLEARED; x <= CLEARED; x++) {
-            for (int z = -CLEARED; z <= CLEARED; z++) {
-                for (int y = BEDROCK; y <= LOBBY_Y + 12; y++) {
-                    var block = world.getBlockAt(x, y, z);
-                    if (!block.isEmpty()) {
-                        block.setType(Material.AIR, false);
-                    }
-                }
-            }
-        }
+        world.getWorldBorder().setCenter(0.5, 0.5);
+        world.getWorldBorder().setSize(BORDER_SIZE);
+        return new Town(NAME, world, spawns(), tester, new Location(world, 0.5, GROUND + 18, 12.5, 180, 45));
     }
 
     /**
@@ -760,7 +744,7 @@ public final class TownBuilder {
     }
 
     /** The chapel at the south end of the street; its altar is the round's only ender chest. */
-    private Block chapel() {
+    private void chapel() {
         int x1 = -5;
         int x2 = 5;
         int z1 = 30;
@@ -809,7 +793,7 @@ public final class TownBuilder {
         set(1, GROUND + 2, z2 - 1, Material.CANDLE.createBlockData(data -> ((Candle) data).setCandles(3)));
         fill(0, GROUND + 1, z1 + 1, 0, GROUND + 1, z2 - 2, Material.RED_CARPET);
         lantern(0, GROUND + 7, z1 + 5, true);
-        return set(0, GROUND + 2, z2 - 1, directional(Material.ENDER_CHEST, BlockFace.NORTH));
+        set(0, GROUND + 2, z2 - 1, directional(Material.ENDER_CHEST, BlockFace.NORTH));
     }
 
     /** The graveyard beside the chapel: rows of stones, an open grave with something in it, and a fence round it all. */
@@ -893,7 +877,8 @@ public final class TownBuilder {
         lantern(0, GROUND + 5, (z1 + z2) / 2, true);
         lampPost(-3, z2 + 2);
         lampPost(3, z2 + 2);
-        return new TesterRoom(Box.of(x1 + 1, GROUND + 1, z1 + 1, x2 - 1, GROUND + 4, z2 - 1), button, entrance, List.copyOf(lamps));
+        return new TesterRoom(Box.of(x1 + 1, GROUND + 1, z1 + 1, x2 - 1, GROUND + 4, z2 - 1), button, entrance, List.copyOf(lamps),
+                Optional.empty());
     }
 
     /** Trees fill the space between the village and the hedge wherever there is grass to stand on. */
@@ -971,63 +956,6 @@ public final class TownBuilder {
 
     private Material flower() {
         return FLOWERS.get(random.nextInt(FLOWERS.size()));
-    }
-
-    /**
-     * The waiting hall high above the village: a timbered room with a long table and benches, open on all sides
-     * behind a railing so the village shows below.
-     */
-    private Location lobby() {
-        int half = 8;
-        for (int x = -half; x <= half; x++) {
-            for (int z = -half; z <= half; z++) {
-                boolean edge = Math.abs(x) == half || Math.abs(z) == half;
-                boolean corner = Math.abs(x) == half && Math.abs(z) == half;
-                set(x, LOBBY_Y - 1, z, Material.STONE_BRICKS);
-                set(x, LOBBY_Y, z, edge ? Material.STRIPPED_DARK_OAK_LOG : (x + z) % 2 == 0 ? Material.DARK_OAK_PLANKS : Material.SPRUCE_PLANKS);
-                if (corner) {
-                    fill(x, LOBBY_Y + 1, z, x, LOBBY_Y + 5, z, Material.DARK_OAK_LOG);
-                } else if (edge) {
-                    fence(x, LOBBY_Y + 1, z, Material.DARK_OAK_FENCE);
-                    set(x, LOBBY_Y + 2, z, Material.AIR);
-                    if (Math.abs(x) == half && z % 4 == 0 || Math.abs(z) == half && x % 4 == 0) {
-                        lantern(x, LOBBY_Y + 2, z, false);
-                    }
-                }
-                set(x, LOBBY_Y + 5, z, edge ? Material.DARK_OAK_PLANKS : Material.AIR);
-            }
-        }
-        for (int x = -half; x <= half; x++) {
-            for (int z = -half; z <= half; z += 2 * half) {
-                fill(x, LOBBY_Y + 2, z, x, LOBBY_Y + 4, z, Material.AIR);
-            }
-        }
-        for (int x = -half; x <= half; x += 2 * half) {
-            for (int z = -half + 1; z < half; z++) {
-                fill(x, LOBBY_Y + 2, z, x, LOBBY_Y + 4, z, Material.AIR);
-            }
-        }
-        for (int x = -half; x <= half; x += 4) {
-            for (int z = -half; z <= half; z += 2 * half) {
-                fill(x, LOBBY_Y + 1, z, x, LOBBY_Y + 5, z, Material.DARK_OAK_LOG);
-            }
-        }
-        roof(-half, -half, half, half, LOBBY_Y + 6, TIMBER);
-        for (int x = -4; x <= 4; x++) {
-            table(x, LOBBY_Y + 1, 0);
-            set(x, LOBBY_Y + 1, -1, stairs(Material.SPRUCE_STAIRS, BlockFace.NORTH, Bisected.Half.BOTTOM));
-            set(x, LOBBY_Y + 1, 1, stairs(Material.SPRUCE_STAIRS, BlockFace.SOUTH, Bisected.Half.BOTTOM));
-        }
-        set(0, LOBBY_Y + 2, 0, Material.CANDLE.createBlockData(data -> ((Candle) data).setCandles(4)));
-        set(-3, LOBBY_Y + 2, 0, Material.SKELETON_SKULL);
-        set(3, LOBBY_Y + 2, 0, Material.POTTED_WITHER_ROSE);
-        for (int x : new int[]{-5, 0, 5}) {
-            lantern(x, LOBBY_Y + 4, 0, true);
-        }
-        fill(-half + 1, LOBBY_Y + 1, half - 1, -half + 2, LOBBY_Y + 1, half - 1, Material.BOOKSHELF);
-        set(half - 1, LOBBY_Y + 1, half - 1, directional(Material.BARREL, BlockFace.UP));
-        set(half - 1, LOBBY_Y + 1, -half + 1, directional(Material.BARREL, BlockFace.UP));
-        return new Location(world, 0.5, LOBBY_Y + 1, -5.5, 0, 10);
     }
 
     /** Where the round starts: a ring around the fountain, everyone facing it. */
@@ -1118,7 +1046,7 @@ public final class TownBuilder {
     }
 
     private void chest(int x, int y, int z, BlockFace facing) {
-        chests.add(set(x, y, z, directional(Material.CHEST, facing)));
+        set(x, y, z, directional(Material.CHEST, facing));
     }
 
     private void fence(int x, int y, int z, Material material) {
