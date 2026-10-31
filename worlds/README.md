@@ -309,3 +309,13 @@ A figure stands where `at` puts it, in the old skin and under the old name, whil
 move, talk or open a shop. Notes tell what it once did. Like a note, a figure is not saved into the world; it stands
 whenever its chunk is loaded. Citizens kept an NPC's skin in `plugins/Citizens/saves.yml` as `textureRaw` and
 `signature`; those two are `skin` and `signature`.
+
+### AQ Survival
+
+`aq_survival` and `novigrad` come from AQ Survival, a Paper 1.16.4 survival server of 2020 and 2021:
+
+- `aq_survival` holds two boxes of its overworld: the town around the old spawn with its harbor
+  (`-80,-208,399,191`) and Aquitano's base in a desert village (`-912,-624,-577,-289`). The seven Citizens
+  shopkeepers stand in it as figures.
+- `novigrad` holds the island of Novigrad, Elysium Fire's recreation of the city from The Witcher 3, which the server
+  loaded as a world of its own (`96,256,1903,1855`).
