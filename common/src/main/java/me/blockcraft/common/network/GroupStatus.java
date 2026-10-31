@@ -20,7 +20,7 @@ public record GroupStatus(Optional<ServerState> state, int online, int maxPlayer
             return Availability.AVAILABLE;
         }
         return state.map(value -> switch (value) {
-            case LOBBY -> Availability.FULL;
+            case LOBBY, OPEN -> Availability.FULL;
             case INGAME -> Availability.INGAME;
             case RESTART -> Availability.RESTART;
         }).orElseGet(() -> onDemand.map(group -> switch (group) {

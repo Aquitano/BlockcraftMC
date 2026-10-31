@@ -26,6 +26,7 @@ final class NavigatorMenu extends Menu {
             45, LobbyLocation.ENDERGAMES, 50, LobbyLocation.ZOMBIES);
     private static final int JUMP_SLOT = 40;
     private static final int ARCHIVE_SLOT = 31;
+    private static final int FFA_SLOT = 22;
 
     private final Menus menus;
 
@@ -40,6 +41,7 @@ final class NavigatorMenu extends Menu {
                 MenuTile.Shape.WIDE, game(target)));
         set(JUMP_SLOT, place(MenuIcon.JUMP, "jump", "navigator.lore"));
         set(ARCHIVE_SLOT, game(LobbyLocation.ARCHIVE));
+        set(FFA_SLOT, game(LobbyLocation.KNOCKBACKFFA));
     }
 
     @Override
@@ -79,7 +81,11 @@ final class NavigatorMenu extends Menu {
         if (!event.isLeftClick() && !event.isRightClick()) {
             return;
         }
-        var game = slot == ARCHIVE_SLOT ? LobbyLocation.ARCHIVE : GAMES.get(slot);
+        var game = switch (slot) {
+            case ARCHIVE_SLOT -> LobbyLocation.ARCHIVE;
+            case FFA_SLOT -> LobbyLocation.KNOCKBACKFFA;
+            default -> GAMES.get(slot);
+        };
         if (game != null) {
             if (event.isRightClick()) {
                 menus.warp(player, game);

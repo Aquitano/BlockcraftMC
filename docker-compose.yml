@@ -240,6 +240,19 @@ services:
       - ttt:/data
       - replays:/replays
 
+  knockbackffa:
+    <<: *paper
+    hostname: knockbackffa
+    environment:
+      <<: *paper-env
+      BLOCKCRAFT_SERVER_GROUP: knockbackffa
+      BLOCKCRAFT_WORLD_TEMPLATE: ""
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/knockbackffa,/blockcraft/viaversion,/blockcraft/grimac
+    volumes:
+      - ./build/docker/paper:/blockcraft:ro
+      - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
+      - knockbackffa:/data
+
   skywars:
     <<: *paper
     hostname: skywars
@@ -311,7 +324,7 @@ services:
       TZ: Europe/Berlin
       WAKER_TOKEN: ${WAKER_TOKEN:-dev-waker-token}
       WAKER_PROJECT: ${COMPOSE_PROJECT_NAME:-blockcraftmc}
-      WAKER_SERVICES: bedwars,mlgrush,duell,zombies,endergames,ttt,skywars,cores,quicksg,emeraldrush,archive
+      WAKER_SERVICES: bedwars,mlgrush,duell,zombies,endergames,ttt,skywars,cores,quicksg,emeraldrush,archive,knockbackffa
     security_opt: [no-new-privileges:true]
     cap_drop: [ALL]
     volumes:
@@ -332,6 +345,7 @@ volumes:
   endergames:
   ttt:
   skywars:
+  knockbackffa:
   archive:
   replay:
   replays:

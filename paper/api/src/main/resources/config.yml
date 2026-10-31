@@ -44,6 +44,7 @@ profile:
     duell: duell_stats
     bedwars: bw_stats
     mlgrush: mlgrush_stats
+    knockbackffa: knockbackffa_stats
     zombies: bc_zombies_stats
     cores: bc_cores_stats
     endergames: bc_endergames_stats

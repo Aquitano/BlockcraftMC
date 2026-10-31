@@ -19,6 +19,6 @@ public record ServerRecord(ServerIdentity identity, ServerStatus status, int occ
     }
 
     public boolean joinable() {
-        return status.state() == ServerState.LOBBY && online() < status.maxPlayers();
+        return status.state().acceptsPlayers() && online() < status.maxPlayers();
     }
 }

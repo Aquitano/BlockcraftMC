@@ -205,7 +205,7 @@ public final class ServerDirectory {
         expireSeats();
         var members = servers.values().stream().filter(server -> server.group().equals(group)).toList();
         return !members.isEmpty() && members.stream()
-                .allMatch(server -> server.status().state() == ServerState.LOBBY && occupancy(server) == 0);
+                .allMatch(server -> server.status().state().acceptsPlayers() && occupancy(server) == 0);
     }
 
     /**
@@ -230,7 +230,7 @@ public final class ServerDirectory {
     }
 
     private boolean hasRoom(ServerRecord server, int players) {
-        return server.status().state() == ServerState.LOBBY && occupancy(server) + players <= server.status().maxPlayers();
+        return server.status().state().acceptsPlayers() && occupancy(server) + players <= server.status().maxPlayers();
     }
 
     /**

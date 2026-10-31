@@ -38,6 +38,17 @@ public class ServerDirectoryTest {
     private Instant now = Instant.parse("2026-01-01T00:00:00Z");
 
     @Test
+    public void continuousGamesSeatPlayersAndOnlyDrainWhenEmpty() {
+        var directory = directoryOf(new ServerRecord(new ServerIdentity("ffa", "knockbackffa", "127.0.0.1", 25566),
+                new ServerStatus(ServerState.OPEN, 0, 8, 20, 5), 0));
+
+        assertTrue(directory.idle("knockbackffa"));
+        assertEquals(ServerDirectory.Entry.SEATED, directory.enter(UUID.randomUUID(), "ffa"));
+        assertFalse(directory.isWatchable("ffa"));
+        assertFalse(directory.drainIfIdle("knockbackffa"));
+    }
+
+    @Test
     public void onlyAGameServerWithARunningRoundIsWatchable() {
         var directory = directoryOf(
                 server("quicksg-1", "quicksg", ServerState.INGAME),

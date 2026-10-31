@@ -1,0 +1,14 @@
+players:
+  max: 24
+idle-restart-minutes: 50
+knockback-level: 2
+hit-credit-seconds: 10
+spawn-protection-seconds: 3
+rewards:
+  kill-coins: 2
+  same-player-cooldown-seconds: 120
+pickups:
+  respawn-seconds: 25
+launch:
+  enabled: false
+  interval-seconds: 100

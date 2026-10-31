@@ -13,6 +13,7 @@ public enum LobbyLocation {
     RUSH("rush"),
     BEDWARS("bedwars"),
     MLGRUSH("mlgrush"),
+    KNOCKBACKFFA("knockbackffa"),
     ZOMBIES("zombies"),
     CORES("cores"),
     ENDERGAMES("endergames"),
@@ -41,6 +42,7 @@ public enum LobbyLocation {
             case DUELL -> MenuIcon.DUELL;
             case BEDWARS -> MenuIcon.BEDWARS;
             case MLGRUSH -> MenuIcon.MLGRUSH;
+            case KNOCKBACKFFA -> MenuIcon.MLGRUSH;
             case ZOMBIES -> MenuIcon.ZOMBIES;
             case CORES -> MenuIcon.CORES;
             case ENDERGAMES -> MenuIcon.ENDERGAMES;

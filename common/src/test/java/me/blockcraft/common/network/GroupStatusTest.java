@@ -11,6 +11,17 @@ import static org.junit.Assert.assertTrue;
 public class GroupStatusTest {
 
     @Test
+    public void continuousGamesStayJoinableUntilTheirCapacityIsReached() {
+        var available = GroupStatus.of(List.of(server("ffa", ServerState.OPEN, 3, 8)));
+        var full = GroupStatus.of(List.of(server("ffa", ServerState.OPEN, 8, 8)));
+
+        assertTrue(available.clickable());
+        assertEquals(GroupStatus.Availability.AVAILABLE, available.availability());
+        assertFalse(full.clickable());
+        assertEquals(GroupStatus.Availability.FULL, full.availability());
+    }
+
+    @Test
     public void anOpenInstanceKeepsTheGameJoinableWhileOtherRoundsRun() {
         var status = GroupStatus.of(List.of(server("one", ServerState.INGAME, 8, 8),
                 server("two", ServerState.LOBBY, 1, 8), server("three", ServerState.RESTART, 0, 8)));

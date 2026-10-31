@@ -15,6 +15,7 @@ include(
     "paper:emeraldrush",
     "paper:endergames",
     "paper:lobby",
+    "paper:knockbackffa",
     "paper:mlgrush",
     "paper:quicksg",
     "paper:reports",

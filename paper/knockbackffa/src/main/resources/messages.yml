@@ -1,0 +1,55 @@
+prefix: "<primary>Knockback FFA <dark>» <reset>"
+game-name: "<primary>Knockback FFA"
+commands:
+  ffa:
+    description: "Wechselt zwischen Mitspielen und Zuschauen"
+  stats:
+    description: "Zeigt die Knockback-FFA-Stats"
+  top:
+    description: "Zeigt die Top 10 einer Kategorie"
+command:
+  usage: "<prefix><muted>/ffa play zum Mitspielen, /ffa spectate zum Zuschauen, /hub zur Lobby."
+join:
+  introduction: "<prefix><muted>Stoße andere Spieler von den Inseln. Nach jedem Sturz spielst du sofort weiter. Smaragdblöcke geben dir per Rechtsklick ein Spezialitem."
+  playing: "<prefix><success>Du spielst mit! Nach dem Erscheinen schützt dich kurz ein Schild. Währenddessen kannst du auch niemanden treffen."
+  spectator: "<prefix><muted>Du schaust zu. Mit <accent>/ffa play <muted>spielst du wieder mit, mit <accent>/hub <muted>kehrst du zur Lobby zurück."
+item:
+  stick: "<primary>Rückstoß-Stick"
+  rescue: "<accent>Rettungssprung <dark>· <muted>Rechtsklick"
+  repulsor: "<accent>Stoßball <dark>· <muted>Rechtsklick"
+  watch: "<primary>Zuschauen <dark>· <muted>Rechtsklick"
+  hub: "<primary>Zur Lobby <dark>· <muted>Rechtsklick"
+spawn:
+  protected: "<success>Startschutz <dark>· <muted>Du kannst kurz niemanden treffen."
+pickup:
+  full: "<prefix><muted>Benutze zuerst dein Spezialitem im zweiten Slot."
+  received: "<prefix><success>Ein Spezialitem liegt in deinem zweiten Slot. Benutze es mit Rechtsklick."
+death:
+  kill: "<prefix><success>Du hast <accent><player> <success>von der Insel gestoßen."
+  killed: "<prefix><accent><player> <muted>hat dich von der Insel gestoßen."
+  fell: "<prefix><muted>Du bist gefallen. Neuer Versuch!"
+  streak: "<prefix><accent><player> <muted>hat eine Serie von <accent><streak> Kills<muted>!"
+launch:
+  countdown: "<accent>Sprungwelle in <seconds> Sekunden!"
+  now: "<prefix><accent>Sprungwelle! Halte dich auf den Inseln."
+scoreboard:
+  title: "<primary><bold>Knockback FFA"
+  lines:
+    - "<muted>Spieler: <accent><players>/<max>"
+    - ""
+    - "<muted>Deine Kills: <accent><kills>"
+    - "<muted>Deine Stürze: <accent><deaths>"
+    - "<muted>Deine Serie: <accent><streak>"
+    - " "
+    - "<muted>/ffa spectate <dark>· <muted>/hub"
+stats:
+  header: "<muted>Knockback-FFA-Stats von <accent><player>"
+  lines:
+    - "<arrow><primary>Kills<dark>: <muted><kills>"
+    - "<arrow><primary>Stürze<dark>: <muted><deaths>"
+    - "<arrow><primary>K/D<dark>: <muted><kdr>"
+    - "<arrow><primary>Münzen<dark>: <muted><points>"
+top:
+  separator: "<muted><strikethrough>---------------------------------"
+  first: "<accent><bold>#1 <reset><primary><name><muted> ( <white><value><muted> )"
+  entry: "<reset>#<rank> <primary><name> <muted>( <white><value><muted> )"

@@ -72,7 +72,7 @@ public final class SignRenderer {
             return Material.LIME_TERRACOTTA;
         }
         return switch (state) {
-            case LOBBY, INGAME -> Material.RED_TERRACOTTA;
+            case LOBBY, OPEN, INGAME -> Material.RED_TERRACOTTA;
             case RESTART -> Material.YELLOW_TERRACOTTA;
         };
     }
