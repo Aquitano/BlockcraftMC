@@ -29,6 +29,7 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.logging.Level;
+import java.util.stream.Stream;
 
 /**
  * The exhibits' worlds while someone visits them. The first visitor's trip copies the world out of the pool in the
@@ -141,7 +142,7 @@ public final class ExhibitWorlds {
                 trips.forEach(trip -> trip.failed().run());
                 return;
             }
-            showNotes(world, key);
+            showNotes(world, exhibit);
             figures.load(world, exhibit.figures());
             trips.forEach(trip -> trip.arrive().accept(world));
         }, () -> opening.remove(key).forEach(trip -> trip.failed().run()));
@@ -160,9 +161,11 @@ public final class ExhibitWorlds {
         displays.hide(note);
     }
 
-    private void showNotes(World world, String key) {
+    /** The exhibit's own notes from its file, then those staff left in the database; without the database only the first. */
+    private void showNotes(World world, Exhibit exhibit) {
         var loaded = displays.load(world);
-        Tasks.async(plugin, () -> notes.list(key), loaded);
+        Tasks.async(plugin, () -> Stream.concat(exhibit.notes().stream(), notes.list(exhibit.key()).stream()).toList(), loaded,
+                () -> loaded.accept(exhibit.notes()));
     }
 
     private void sweep() {

@@ -434,7 +434,9 @@ Staff with `blockcraft.archive.note` leave a note where they stand with `/archiv
 the note item next to the pocket watch in the hotbar. Both open the note dialog inside an exhibit. Notes are rows of
 `bc_archive_notes` (exhibit, where the author stood, author UUID and name, text, time). While their exhibit is loaded
 they hang as text displays in front of where the author stood; the exhibit's menu lists them for everyone, and staff
-delete one there with a right-click and a confirmation.
+delete one there with a right-click and a confirmation. Notes that belong to a map itself, such as what its old NPCs
+did, live in its `exhibit.yml` instead ([layout](worlds/README.md#zeitkapsel-exhibits)), so they come back with the map
+on any server and database; they hang and read the same, come first in the menu and are edited only in the file.
 
 Production runs the Zeitkapsel like a released game, and `archive` is one of the `on-demand.groups` the waker starts
 at the first visit and stops when it stays empty. The lobby navigator includes a Zeitkapsel entry.

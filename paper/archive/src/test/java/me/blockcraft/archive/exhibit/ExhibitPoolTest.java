@@ -1,6 +1,8 @@
 package me.blockcraft.archive.exhibit;
 
 import me.blockcraft.api.world.Point;
+import me.blockcraft.archive.note.Note;
+import me.blockcraft.common.player.PlayerReference;
 import org.bukkit.Material;
 import org.junit.Rule;
 import org.junit.Test;
@@ -10,6 +12,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -53,11 +56,26 @@ public class ExhibitPoolTest {
                 Material.GRASS_BLOCK, Optional.of(new Point(0.5, 65.0, 0.5, 90.0f, 0.0f)),
                 List.of(new Checkpoint("Brunnen", "Hier traf man sich.", new Point(10.5, 64.0, -3.5, 180.0f, 15.0f)),
                         new Checkpoint("Turm", "", new Point(-20.0, 90.0, 4.0, 0.0f, 0.0f))),
-                List.of(new Figure("Holzfäller", new Point(257.7, 64.0, 28.55, 102.75f, 0.0f), "ewogICJ0aW1lc3RhbXAiIDog", "tU59/HLy")));
+                List.of(new Figure("Holzfäller", new Point(257.7, 64.0, 28.55, 102.75f, 0.0f), "ewogICJ0aW1lc3RhbXAiIDog", "tU59/HLy")),
+                List.of(new Note(-1, "neue_lobby", new Point(-974.5, 27.0, 1648.5, 180.0f, 0.0f), new PlayerReference("Aquitano", Optional.empty()),
+                        "Hier hingen die Köpfe des Teams.", Instant.parse("2026-10-31T00:00:00Z"))));
         withWorld("neue_lobby");
         pool.save(exhibit);
 
         assertEquals(List.of(exhibit), pool.exhibits());
+    }
+
+    @Test
+    public void notesWrittenByHandGetTheirDayAndIdsThatNoStoredNoteHas() throws IOException {
+        write("map", "origin: AQ Survival\nnotes:\n- text: Hallo\n  author: Aquitano\n  date: 2026-10-31\n"
+                + "  at: {x: 1, y: 64, z: 3, yaw: 90}\n- text: Zweite\n  author: Aquitano\n  date: '2026-11-01'\n  at: {x: 0, y: 64, z: 0}\n");
+        withWorld("map");
+
+        var notes = pool().exhibit("map").orElseThrow().notes();
+        assertEquals(List.of(-1L, -2L), notes.stream().map(Note::id).toList());
+        assertEquals(List.of(Instant.parse("2026-10-31T00:00:00Z"), Instant.parse("2026-11-01T00:00:00Z")),
+                notes.stream().map(Note::createdAt).toList());
+        assertEquals(new Point(1, 64, 3, 90.0f, 0.0f), notes.getFirst().at());
     }
 
     @Test
@@ -116,7 +134,7 @@ public class ExhibitPoolTest {
     }
 
     private static Exhibit categorized(String key, String origin, OptionalInt year, String category) {
-        return new Exhibit(key, key, origin, year, Optional.of(category), "", Material.PAPER, Optional.empty(), List.of(), List.of());
+        return new Exhibit(key, key, origin, year, Optional.of(category), "", Material.PAPER, Optional.empty(), List.of(), List.of(), List.of());
     }
 
     private ExhibitPool pool() {
@@ -133,6 +151,6 @@ public class ExhibitPoolTest {
     }
 
     private static Exhibit minimal(String key, String origin, OptionalInt year) {
-        return new Exhibit(key, key, origin, year, Optional.empty(), "", Material.PAPER, Optional.empty(), List.of(), List.of());
+        return new Exhibit(key, key, origin, year, Optional.empty(), "", Material.PAPER, Optional.empty(), List.of(), List.of(), List.of());
     }
 }

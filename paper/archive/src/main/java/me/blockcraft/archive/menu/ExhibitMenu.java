@@ -17,8 +17,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * One exhibit: where a visitor arrives, its checkpoints and the notes staff left in it. A click travels there; staff
- * who may write notes delete one with a right-click.
+ * One exhibit: where a visitor arrives, its checkpoints, the notes it brings along and those staff left in it. A click
+ * travels there; staff who may write notes delete one of theirs with a right-click.
  */
 final class ExhibitMenu extends ListMenu<ExhibitMenu.Stop> {
 
@@ -29,25 +29,24 @@ final class ExhibitMenu extends ListMenu<ExhibitMenu.Stop> {
         record Spot(Checkpoint checkpoint) implements Stop {
         }
 
-        record Written(Note note) implements Stop {
+        record Written(Note note, boolean deletable) implements Stop {
         }
     }
 
     private final ArchiveMenus menus;
     private final Exhibit exhibit;
-    private final boolean mayDelete;
 
     ExhibitMenu(ArchiveMenus menus, Exhibit exhibit, List<Note> notes, boolean mayDelete) {
-        super(rowsFor(1 + exhibit.checkpoints().size() + notes.size()), menus.messages().get("menu.exhibit.title",
+        super(rowsFor(1 + exhibit.checkpoints().size() + exhibit.notes().size() + notes.size()), menus.messages().get("menu.exhibit.title",
                 Placeholder.unparsed("exhibit", exhibit.name()), Placeholder.unparsed("origin", exhibit.origin())));
         this.menus = menus;
         this.exhibit = exhibit;
-        this.mayDelete = mayDelete;
         backButton(player -> menus.openSection(player, exhibit));
         var stops = new ArrayList<Stop>();
         stops.add(new Stop.Arrival());
         exhibit.checkpoints().forEach(checkpoint -> stops.add(new Stop.Spot(checkpoint)));
-        notes.forEach(note -> stops.add(new Stop.Written(note)));
+        exhibit.notes().forEach(note -> stops.add(new Stop.Written(note, false)));
+        notes.forEach(note -> stops.add(new Stop.Written(note, mayDelete)));
         show(stops);
     }
 
@@ -67,7 +66,7 @@ final class ExhibitMenu extends ListMenu<ExhibitMenu.Stop> {
                         .name(messages.get("menu.checkpoint", Placeholder.unparsed("checkpoint", checkpoint.name())))
                         .lore(lore).build();
             }
-            case Stop.Written(Note note) -> noteIcon(note, true);
+            case Stop.Written(Note note, boolean deletable) -> noteIcon(note, true, deletable);
         };
     }
 
@@ -76,9 +75,9 @@ final class ExhibitMenu extends ListMenu<ExhibitMenu.Stop> {
         switch (stop) {
             case Stop.Arrival() -> menus.toArrival(player, exhibit);
             case Stop.Spot(Checkpoint checkpoint) -> menus.toCheckpoint(player, exhibit, checkpoint);
-            case Stop.Written(Note note) -> {
-                if (event.isRightClick() && mayDelete) {
-                    menus.confirmDelete(player, exhibit, note, noteIcon(note, false));
+            case Stop.Written(Note note, boolean deletable) -> {
+                if (event.isRightClick() && deletable) {
+                    menus.confirmDelete(player, exhibit, note, noteIcon(note, false, false));
                 } else {
                     menus.toNote(player, exhibit, note);
                 }
@@ -86,7 +85,7 @@ final class ExhibitMenu extends ListMenu<ExhibitMenu.Stop> {
         }
     }
 
-    private ItemStack noteIcon(Note note, boolean withHints) {
+    private ItemStack noteIcon(Note note, boolean withHints, boolean deletable) {
         var messages = menus.messages();
         var lore = new ArrayList<Component>(menus.text(note.text()));
         lore.add(messages.get("menu.note.written", Placeholder.unparsed("author", note.author().name()),
@@ -94,7 +93,7 @@ final class ExhibitMenu extends ListMenu<ExhibitMenu.Stop> {
         if (withHints) {
             lore.add(messages.get("menu.travel"));
         }
-        if (withHints && mayDelete) {
+        if (withHints && deletable) {
             lore.add(messages.get("menu.note.delete"));
         }
         return MenuIcon.ARCHIVE_NOTE.item().name(messages.get("menu.note.name")).lore(lore).build();

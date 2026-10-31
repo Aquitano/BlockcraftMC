@@ -281,6 +281,11 @@ figures:                      # optional; who stood in the map, without what the
     at: {x: 67.23, y: 63.0, z: 47.52, yaw: -127.27}
     skin: ewogICJ0aW1l...     # the signed textures property of the old profile
     signature: kEpcT3Br...
+notes:                        # optional; notes that come with the map instead of the database
+  - text: 'Der Händler kaufte und verkaufte Baublöcke (/shop blocks).'
+    author: Aquitano
+    date: 2026-10-31
+    at: {x: 69.5, y: 63.0, z: 49.5, yaw: 156.1}    # where the reader stands and looks
 ```
 
 To add an exhibit after importing an old map:
@@ -309,6 +314,11 @@ A figure stands where `at` puts it, in the old skin and under the old name, whil
 move, talk or open a shop. Notes tell what it once did. Like a note, a figure is not saved into the world; it stands
 whenever its chunk is loaded. Citizens kept an NPC's skin in `plugins/Citizens/saves.yml` as `textureRaw` and
 `signature`; those two are `skin` and `signature`.
+
+A note in `exhibit.yml` hangs like one staff left with `/archive note`: `at` is where the reader stands and looks, and
+the note hangs 1.5 blocks ahead at eye height. Leave about two blocks of air above that point for the text. The
+exhibit's menu lists these notes first and offers no delete for them; they change only in the file, and a new server
+or an emptied database has them at once.
 
 ### AQ Survival
 
