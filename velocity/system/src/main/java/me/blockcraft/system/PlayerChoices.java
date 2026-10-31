@@ -4,8 +4,13 @@ import com.velocitypowered.api.event.EventTask;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.connection.PostLoginEvent;
+import com.velocitypowered.api.event.player.ServerPostConnectEvent;
 import com.velocitypowered.api.proxy.Player;
 import me.blockcraft.common.db.DatabaseException;
+import me.blockcraft.common.network.ProxyMessage;
+import me.blockcraft.common.network.ProxyMessageCodec;
+import me.blockcraft.common.network.operation.OperationResult;
+import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import me.blockcraft.common.settings.PlayerSetting;
 import me.blockcraft.common.settings.PlayerSettingRepository;
 import org.slf4j.Logger;
@@ -67,5 +72,31 @@ public final class PlayerChoices {
 
     public void set(Player player, PlayerSetting setting, String value) {
         choices.computeIfAbsent(player.getUniqueId(), ignored -> new ConcurrentHashMap<>()).put(setting, value);
+    }
+
+    public OperationResult saveWeaponStyle(Player player, String style) {
+        if (style.isEmpty()) {
+            repository.clear(player.getUniqueId(), PlayerSetting.WEAPON_STYLE);
+        } else {
+            repository.set(player.getUniqueId(), PlayerSetting.WEAPON_STYLE, style);
+        }
+        if (player.isActive()) {
+            set(player, PlayerSetting.WEAPON_STYLE, style);
+            sendWeaponStyle(player);
+        }
+        return OperationResult.APPLIED;
+    }
+
+    @Subscribe
+    public void onServerConnected(ServerPostConnectEvent event) {
+        sendWeaponStyle(event.getPlayer());
+    }
+
+    private void sendWeaponStyle(Player player) {
+        var value = Optional.ofNullable(choices.get(player.getUniqueId()))
+                .map(stored -> stored.get(PlayerSetting.WEAPON_STYLE));
+        value.ifPresent(style -> player.getCurrentServer().ifPresent(connection -> connection.sendPluginMessage(
+                MinecraftChannelIdentifier.from(ProxyMessageCodec.CHANNEL),
+                ProxyMessageCodec.encode(new ProxyMessage.Setting(PlayerSetting.WEAPON_STYLE, style)))));
     }
 }

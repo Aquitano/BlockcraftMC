@@ -11,6 +11,13 @@ import static org.junit.Assert.assertTrue;
 public class PlayerSettingTest {
 
     @Test
+    public void sharedWeaponStylesReadTheExistingBedwarsChoice() {
+        assertEquals("bedwars-stick", PlayerSetting.WEAPON_STYLE.key());
+        assertEquals(Optional.of(PlayerSetting.WEAPON_STYLE), PlayerSetting.byKey("bedwars-stick"));
+        assertFalse(PlayerSetting.WEAPON_STYLE.isToggle());
+    }
+
+    @Test
     public void aPlayerWithoutARowKeepsTheSettingsOwnDefault() {
         assertTrue(PlayerSetting.PRIVATE_MESSAGES.enabled(Optional.empty()));
         assertFalse(PlayerSetting.AUTO_NICK.enabled(Optional.empty()));

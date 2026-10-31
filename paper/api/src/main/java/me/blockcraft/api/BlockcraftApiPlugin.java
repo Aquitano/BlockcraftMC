@@ -12,6 +12,7 @@ import me.blockcraft.api.command.CommandRegistry;
 import me.blockcraft.api.command.LevelCommand;
 import me.blockcraft.api.command.MapCommand;
 import me.blockcraft.api.cosmetic.Effects;
+import me.blockcraft.api.cosmetic.WeaponStyles;
 import me.blockcraft.api.dialog.ServerMenu;
 import me.blockcraft.api.elo.Elo;
 import me.blockcraft.api.elo.SkillGroup;
@@ -114,6 +115,7 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
                 Notifications.Timing.from(YamlFile.section(config, "notifications")));
         var settingRepository = new PlayerSettingRepository(database);
         var settings = new PlayerSettings(this, settingRepository, messages);
+        var weapons = new WeaponStyles(settings);
         var realNames = new RealNames();
         var nickRanks = new NickRanks();
         var xpRepository = new XpRepository(database);
@@ -153,7 +155,7 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         forcedOccasions.reload();
         var api = new BlockcraftApi(notifications, new NetworkOperations(this, messages), playerTasks, database, coins,
                 unlocks, new Shop(database), new RoundRecapRepository(database), streaks(YamlFile.section(config, "streaks")),
-                settings, resourcePack, profiles, new Effects(settings), messages,
+                settings, resourcePack, profiles, new Effects(settings), weapons, messages,
                 servers, self, groups, text(config, "lobby-group", "lobby"), presence, resources.tags(), resources.addresses(), xp, map,
                 buildMode, flight, realNames, nickRanks, nickStats, achievements, elo, afk, ignores, vanished, audit, tabTeams,
                 calendar, RoundConfig.from(config));
@@ -167,6 +169,7 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(achievements, this);
         getServer().getPluginManager().registerEvents(new CoinsJoinListener(this, coins, realNames, startingCoins), this);
         getServer().getPluginManager().registerEvents(settings, this);
+        getServer().getPluginManager().registerEvents(weapons, this);
         getServer().getPluginManager().registerEvents(resourcePack, this);
         getServer().getPluginManager().registerEvents(ignores, this);
         getServer().getMessenger().registerIncomingPluginChannel(this, ProxyMessageCodec.CHANNEL,

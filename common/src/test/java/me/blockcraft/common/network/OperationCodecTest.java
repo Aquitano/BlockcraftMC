@@ -23,6 +23,7 @@ public class OperationCodecTest {
         var operations = List.of(
                 new NetworkRequest.SubmitReport("Nick", "Werbung"),
                 new NetworkRequest.ClaimReport(17),
+                new NetworkRequest.SetWeaponStyle("swiss-flag"),
                 new NetworkRequest.TimedPunishment(account, PunishmentType.MUTE, 3600, "Spam"),
                 new NetworkRequest.PresetPunishment(PlayerReference.named("Legacy"), 3));
         for (var operation : operations) {
@@ -50,6 +51,7 @@ public class OperationCodecTest {
     @Test
     public void requestsValidateTheirFields() {
         assertThrows(IllegalArgumentException.class, () -> new NetworkRequest.ClaimReport(0));
+        assertThrows(IllegalArgumentException.class, () -> new NetworkRequest.SetWeaponStyle("unknown"));
         assertThrows(IllegalArgumentException.class, () -> new NetworkRequest.SubmitReport("Player", "\ncommand"));
         assertThrows(IllegalArgumentException.class, () -> new NetworkRequest.SubmitReport("Player", "x".repeat(201)));
         assertThrows(IllegalArgumentException.class, () -> new NetworkRequest.SubmitReport("foo.bar", "Reason"));

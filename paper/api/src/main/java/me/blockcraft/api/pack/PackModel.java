@@ -39,6 +39,13 @@ public enum PackModel {
     TTT_RADAR(Material.COMPASS, "ttt/radar"),
     TTT_DNA_SCANNER(Material.BLAZE_ROD, "ttt/dna_scanner"),
     TTT_GOLDEN_SWORD(Material.GOLDEN_SWORD, "ttt/golden_sword"),
+
+    STICK_BONE(Material.STICK, "weapons/bone"),
+    STICK_BLAZE_ROD(Material.STICK, "weapons/blaze_rod"),
+    STICK_FEATHER(Material.STICK, "weapons/feather"),
+    STICK_SWISS_FLAG(Material.STICK, "weapons/swiss_flag"),
+    STICK_GERMAN_FLAG(Material.STICK, "weapons/german_flag"),
+    STICK_AUSTRIAN_FLAG(Material.STICK, "weapons/austrian_flag"),
     ENDERGAMES_TRACKER(Material.COMPASS, "endergames/tracker"),
     SKYWARS_HAMMER(Material.STONE_PICKAXE, "skywars/hammer"),
     HAT_CROWN(Material.GOLDEN_HELMET, "hats/crown"),

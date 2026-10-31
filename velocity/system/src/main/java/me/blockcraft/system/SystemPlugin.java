@@ -226,6 +226,7 @@ public final class SystemPlugin {
         proxy.getEventManager().register(this, new OperationListener(proxy, (player, request) -> switch (request) {
             case NetworkRequest.SubmitReport report -> reports.service().submit(player, report.target(), report.reason());
             case NetworkRequest.ClaimReport report -> reports.service().claim(player, report.reportId());
+            case NetworkRequest.SetWeaponStyle selection -> choices.saveWeaponStyle(player, selection.style());
             case NetworkRequest.TimedPunishment punishment -> moderationActions.timed(player, punishment.target(),
                     punishment.type(), Optional.of(Duration.ofSeconds(punishment.seconds())), punishment.reason());
             case NetworkRequest.PresetPunishment punishment -> moderationActions.preset(player, punishment.target(), punishment.number());

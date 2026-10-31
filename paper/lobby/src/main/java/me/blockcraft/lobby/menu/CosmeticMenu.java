@@ -136,8 +136,16 @@ final class CosmeticMenu<C> extends Menu {
     @Override
     protected void onClick(Player player, int slot, ItemStack clicked, InventoryClickEvent event) {
         if (slot == removeSlot) {
-            menus.settings().clear(player, kind.setting());
-            BlockcraftApi.get().notifications().feedback(player, kind.removed());
+            var cleared = menus.settings().clear(player, kind.setting());
+            if (kind.setting() == PlayerSetting.WEAPON_STYLE) {
+                cleared.thenAccept(saved -> {
+                    if (saved && player.isOnline()) {
+                        BlockcraftApi.get().notifications().feedback(player, kind.removed());
+                    }
+                });
+            } else {
+                BlockcraftApi.get().notifications().feedback(player, kind.removed());
+            }
             return;
         }
         var target = choiceAt(slot);
@@ -177,7 +185,15 @@ final class CosmeticMenu<C> extends Menu {
             live.get().restore().accept(player, choice);
             refresh(player);
         } else {
-            menus.settings().set(player, kind.setting(), kind.key().apply(choice));
+            var saved = menus.settings().set(player, kind.setting(), kind.key().apply(choice));
+            if (kind.setting() == PlayerSetting.WEAPON_STYLE) {
+                saved.thenAccept(applied -> {
+                    if (applied && player.isOnline()) {
+                        BlockcraftApi.get().notifications().feedback(player, kind.selected().apply(choice));
+                    }
+                });
+                return;
+            }
         }
         BlockcraftApi.get().notifications().feedback(player, kind.selected().apply(choice));
     }

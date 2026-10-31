@@ -4,6 +4,7 @@ import me.blockcraft.common.moderation.PunishmentType;
 import me.blockcraft.common.player.PlayerReference;
 
 import java.util.Objects;
+import java.util.Set;
 
 /** What a backend may ask the proxy to do on a player's behalf; every field is validated before it is sent. */
 public sealed interface NetworkRequest {
@@ -25,6 +26,15 @@ public sealed interface NetworkRequest {
         public ClaimReport {
             if (reportId < 1) {
                 throw new IllegalArgumentException("Invalid report id");
+            }
+        }
+    }
+
+    record SetWeaponStyle(String style) implements NetworkRequest {
+
+        public SetWeaponStyle {
+            if (!Set.of("", "stick", "bone", "blaze-rod", "feather", "swiss-flag", "german-flag", "austrian-flag").contains(style)) {
+                throw new IllegalArgumentException("Invalid weapon style");
             }
         }
     }

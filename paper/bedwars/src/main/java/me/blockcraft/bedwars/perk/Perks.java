@@ -5,6 +5,7 @@ import me.blockcraft.common.settings.PlayerSetting;
 import org.bukkit.entity.Player;
 
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
 /** Every player's perks, read from their settings, which the network remembers between rounds. */
@@ -17,7 +18,7 @@ public final class Perks {
     }
 
     public StickSkin stick(Player player) {
-        return chosen(player, PlayerSetting.BEDWARS_STICK, StickSkin::byKey).orElse(StickSkin.STICK);
+        return chosen(player, PlayerSetting.WEAPON_STYLE, StickSkin::byKey).orElse(StickSkin.STICK);
     }
 
     public BedSound bedSound(Player player) {
@@ -36,12 +37,12 @@ public final class Perks {
         return settings.get(player, group.setting()).filter(perk.key()::equals).isPresent();
     }
 
-    public void select(Player player, PerkGroup group, Perk perk) {
-        settings.set(player, group.setting(), perk.key());
+    public CompletableFuture<Boolean> select(Player player, PerkGroup group, Perk perk) {
+        return settings.set(player, group.setting(), perk.key());
     }
 
-    public void reset(Player player, PerkGroup group) {
-        settings.clear(player, group.setting());
+    public CompletableFuture<Boolean> reset(Player player, PerkGroup group) {
+        return settings.clear(player, group.setting());
     }
 
     private <P extends Perk> Optional<P> chosen(Player player, PlayerSetting setting, Function<String, Optional<P>> byKey) {

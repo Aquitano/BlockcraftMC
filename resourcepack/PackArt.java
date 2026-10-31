@@ -75,6 +75,7 @@ public final class PackArt {
             write(pixels(icon.getValue().rows(), icon.getValue().palette()), item.resolve(icon.getKey() + ".png"));
         }
         TileArt.write(root);
+        WeaponArt.write(root);
     }
 
     static BufferedImage panel(int rows, boolean toolbar) {

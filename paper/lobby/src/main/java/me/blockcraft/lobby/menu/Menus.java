@@ -161,6 +161,10 @@ public record Menus(
         openCosmetics(player, CosmeticKinds.gadgets(this));
     }
 
+    public void openWeapons(Player player) {
+        openCosmetics(player, CosmeticKinds.weapons(this));
+    }
+
     public void openKillEffects(Player player) {
         openKillEffects(player, this::openExtras);
     }

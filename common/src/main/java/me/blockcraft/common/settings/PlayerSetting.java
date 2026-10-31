@@ -23,8 +23,8 @@ public enum PlayerSetting {
     CHAT_TAG("chat-tag"),
     KILL_EFFECT("kill-effect"),
     WIN_EFFECT("win-effect"),
-    /** The BedWars perks: what the knockback stick looks like, the sounds of a broken bed and a kill, the arrow trail. */
-    BEDWARS_STICK("bedwars-stick"),
+    /** The legacy storage key keeps existing BedWars choices when other games share the style. */
+    WEAPON_STYLE("bedwars-stick"),
     BEDWARS_BED_SOUND("bedwars-bed-sound"),
     BEDWARS_KILL_SOUND("bedwars-kill-sound"),
     BEDWARS_ARROW_TRAIL("bedwars-arrow-trail"),
@@ -47,6 +47,9 @@ public enum PlayerSetting {
 
     public static final String ON = "on";
     public static final String OFF = "off";
+
+    @Deprecated
+    public static final PlayerSetting BEDWARS_STICK = WEAPON_STYLE;
 
     private final String key;
     private final String fallback;

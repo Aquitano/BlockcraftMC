@@ -1,9 +1,12 @@
 package me.blockcraft.api.settings;
 
+import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.api.task.JoinRetry;
 import me.blockcraft.api.task.SerialTasks;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.common.network.operation.NetworkRequest;
+import me.blockcraft.common.network.operation.OperationResult;
 import me.blockcraft.common.settings.PlayerSetting;
 import me.blockcraft.common.settings.PlayerSettingRepository;
 import org.bukkit.Bukkit;
@@ -68,6 +71,12 @@ public final class PlayerSettings implements Listener {
     }
 
     private CompletableFuture<Boolean> change(Player player, PlayerSetting setting, Optional<String> value) {
+        if (setting == PlayerSetting.WEAPON_STYLE) {
+            var completion = new CompletableFuture<Boolean>();
+            BlockcraftApi.get().operations().submit(player, new NetworkRequest.SetWeaponStyle(value.orElse("")),
+                    result -> completion.complete(result == OperationResult.APPLIED));
+            return completion;
+        }
         var uuid = player.getUniqueId();
         var revision = new Object();
         revisions.computeIfAbsent(uuid, ignored -> new EnumMap<>(PlayerSetting.class)).put(setting, revision);

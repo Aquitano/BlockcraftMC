@@ -12,6 +12,7 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * The perks, as the original laid them out: the groups down the left with a marker on the open one, its choices
@@ -81,16 +82,28 @@ public final class PerksMenu extends Menu {
             return;
         }
         if (slot == RESET_SLOT) {
-            perks.reset(player, group);
-            player.sendMessage(messages.get("perks.was-reset", Placeholder.component("group", messages.get("perks.groups." + group.key()))));
+            feedback(player, perks.reset(player, group), messages.get("perks.was-reset",
+                    Placeholder.component("group", messages.get("perks.groups." + group.key()))));
             close(player);
             return;
         }
         var perk = choices.get(slot);
         if (perk != null) {
-            perks.select(player, group, perk);
-            player.sendMessage(messages.get("perks.chosen", Placeholder.component("perk", messages.get("perks." + group.key() + "." + perk.key()))));
+            feedback(player, perks.select(player, group, perk), messages.get("perks.chosen",
+                    Placeholder.component("perk", messages.get("perks." + group.key() + "." + perk.key()))));
             close(player);
+        }
+    }
+
+    private void feedback(Player player, CompletableFuture<Boolean> saved, Component message) {
+        if (group == PerkGroup.STICK) {
+            saved.thenAccept(applied -> {
+                if (applied && player.isOnline()) {
+                    player.sendMessage(message);
+                }
+            });
+        } else {
+            player.sendMessage(message);
         }
     }
 }

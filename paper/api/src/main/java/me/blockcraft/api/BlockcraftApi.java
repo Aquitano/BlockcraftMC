@@ -4,6 +4,7 @@ import me.blockcraft.api.achievement.Achievements;
 import me.blockcraft.api.afk.Afk;
 import me.blockcraft.api.audit.StaffAudit;
 import me.blockcraft.api.cosmetic.Effects;
+import me.blockcraft.api.cosmetic.WeaponStyles;
 import me.blockcraft.api.elo.Elo;
 import me.blockcraft.api.game.RoundConfig;
 import me.blockcraft.api.game.Streaks;
@@ -88,6 +89,7 @@ public record BlockcraftApi(
         ResourcePacks resourcePack,
         Profiles profiles,
         Effects effects,
+        WeaponStyles weapons,
         Messages messages,
         ServerRepository servers,
         ServerIdentity server,

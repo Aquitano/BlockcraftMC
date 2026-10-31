@@ -12,7 +12,7 @@ import java.util.Locale;
  * resetting the group returns to; a group without a standard plays nothing until something is chosen.
  */
 public enum PerkGroup {
-    STICK(PlayerSetting.BEDWARS_STICK, Material.STICK, choices(StickSkin.values(), StickSkin.STICK)),
+    STICK(PlayerSetting.WEAPON_STYLE, Material.STICK, choices(StickSkin.values(), StickSkin.STICK)),
     BED_SOUND(PlayerSetting.BEDWARS_BED_SOUND, Material.RED_BED, choices(BedSound.values(), BedSound.IRON_GOLEM)),
     KILL_SOUND(PlayerSetting.BEDWARS_KILL_SOUND, Material.NOTE_BLOCK, List.of(KillSound.values())),
     ARROW_TRAIL(PlayerSetting.BEDWARS_ARROW_TRAIL, Material.BOW, List.of(ArrowTrail.values()));

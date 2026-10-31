@@ -22,6 +22,7 @@ final class ExtrasMenu extends Menu {
     private static final int PREMIUM_SLOT = 30;
     private static final int TAGS_SLOT = 33;
     private static final int LOBBIES_SLOT = 45;
+    private static final int WEAPONS_SLOT = 49;
     private static final int COOKIES_SLOT = 51;
 
     private final Menus menus;
@@ -47,6 +48,8 @@ final class ExtrasMenu extends Menu {
                 .name(messages.get("extras.lobbies")).lore(messages.get("extras.lobbies-lore")).build());
         set(COOKIES_SLOT, Items.of(Material.COOKIE).name(messages.get("extras.cookies"))
                 .lore(messages.get("extras.cookies-lore")).build());
+        set(WEAPONS_SLOT, Items.of(Material.STICK).name(messages.get("extras.weapons"))
+                .lore(messages.get("extras.weapons-lore")).build());
     }
 
     @Override
@@ -67,6 +70,7 @@ final class ExtrasMenu extends Menu {
             case TAGS_SLOT -> menus.openChatTags(player);
             case LOBBIES_SLOT -> menus.openLobbies(player);
             case COOKIES_SLOT -> menus.openCookies(player);
+            case WEAPONS_SLOT -> menus.openWeapons(player);
             default -> close(player);
         }
     }

@@ -406,6 +406,24 @@ extras:
   lobbies-lore: "<bullet><muted>Wechsle auf eine andere Lobby!"
   cookies: "<arrow><accent>CookieClicker"
   cookies-lore: "<bullet><click>Kekse backen und den Ofen verbessern"
+  weapons: "<arrow><primary>Stick-Aussehen"
+  weapons-lore: "<bullet><click>Ein Aussehen für BedWars, MLG Rush und Knockback FFA"
+weapons:
+  title: "<arrow><primary>Stick-Aussehen"
+  lore:
+    - "<muted>In BedWars, MLG Rush und Knockback FFA."
+    - "<muted>Schaden und Rückstoß bleiben unverändert."
+    - "<muted>Ohne Ressourcenpaket siehst du einen Stick."
+  selected: "<prefix><success>Dein Stick-Aussehen gilt jetzt in allen unterstützten Spielen."
+  reset: "<prefix><muted>Dein Stick sieht wieder normal aus."
+  name:
+    stick: "<primary>Stick"
+    bone: "<primary>Knochen"
+    blaze-rod: "<primary>Lohenrute"
+    feather: "<primary>Feder"
+    swiss-flag: "<primary>Schweizer Flagge"
+    german-flag: "<primary>Deutsche Flagge"
+    austrian-flag: "<primary>Österreichische Flagge"
 cookies:
   title: "<arrow><primary>CookieClicker"
   balance: "<accent><cookies> Kekse"

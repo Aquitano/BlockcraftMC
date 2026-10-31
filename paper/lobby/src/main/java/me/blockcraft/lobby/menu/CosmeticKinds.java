@@ -3,6 +3,7 @@ package me.blockcraft.lobby.menu;
 import me.blockcraft.api.cosmetic.ChatTagChoice;
 import me.blockcraft.api.cosmetic.KillEffect;
 import me.blockcraft.api.cosmetic.WinEffect;
+import me.blockcraft.api.cosmetic.WeaponStyle;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.common.settings.PlayerSetting;
 import me.blockcraft.lobby.cosmetic.Hat;
@@ -129,6 +130,15 @@ final class CosmeticKinds {
         return effects(menus, back, PlayerSetting.WIN_EFFECT, "effects.win", List.of(WinEffect.values()), WinEffect::key,
                 WinEffect::icon, new Price<>(menus.config().winEffectPrice(), "effect.win.", WinEffect::item),
                 WinEffect::earned, EffectPreviews::win);
+    }
+
+    static CosmeticKind<WeaponStyle> weapons(Menus menus) {
+        var messages = menus.messages();
+        return new CosmeticKind<>(PlayerSetting.WEAPON_STYLE, messages.get("weapons.title"), 1, menus::openExtras,
+                List.of(WeaponStyle.values()), WeaponStyle::key, WeaponStyle::icon,
+                style -> messages.get("weapons.name." + style.key()),
+                style -> messages.getLines("weapons.lore"), false, Optional.empty(), Optional.empty(), Optional.empty(),
+                style -> messages.get("weapons.selected"), messages.get("weapons.reset"), Optional.empty());
     }
 
     private static <E> CosmeticKind<E> effects(Menus menus, Consumer<Player> back, PlayerSetting setting, String prefix, List<E> effects,

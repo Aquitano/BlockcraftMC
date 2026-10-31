@@ -390,6 +390,12 @@ Opening a map for editing keeps its loaded dimension out of votes and forced cho
 keep, then restart the backend to use that map in rounds. Editing a chosen map before the round starts cancels
 that start instead of replacing files beneath the loaded world.
 
+Knockback-stick appearances are shared by BedWars, MLG Rush, Duell's MLG Rush mode and Knockback FFA.
+Choose one in the lobby's Extras menu or BedWars' stick menu. Existing BedWars selections remain stored under
+`bedwars-stick`. The proxy confirms a selection after saving it and sends it to the current backend after a server
+switch. All appearances use a vanilla stick with the same combat properties. Their pictures require the resource
+pack. Swords and other weapons keep their existing appearances.
+
 ## Cores
 
 `paper/cores` plays GommeHD's Cores in the `cores` group: red against blue, `teams.players-per-team` each (2x4 by

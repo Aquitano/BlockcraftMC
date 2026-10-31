@@ -1,6 +1,7 @@
 package me.blockcraft.api.game.rush;
 
 import me.blockcraft.api.game.CombatStyle;
+import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.api.game.rush.RushConfig.Kit;
@@ -28,7 +29,7 @@ public final class RushKit {
     public void give(Player player, int slot) {
         var stick = Items.of(Material.STICK).name(messages.get(prefix + "stick")).build();
         stick.addUnsafeEnchantment(Enchantment.KNOCKBACK, config.knockbackLevel());
-        player.getInventory().setItem(0, stick);
+        player.getInventory().setItem(0, BlockcraftApi.get().weapons().stick(player, stick));
         player.getInventory().setItem(1, blocks(slot));
         player.getInventory().setItem(2, Items.of(Material.WOODEN_PICKAXE).name(messages.get(prefix + "pickaxe"))
                 .edit(meta -> meta.setUnbreakable(true)).build());

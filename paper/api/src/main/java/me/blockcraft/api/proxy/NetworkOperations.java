@@ -51,10 +51,12 @@ public final class NetworkOperations implements PluginMessageListener, Listener 
     /** The proxy answers the player itself; {@code completion} is for what the backend does afterwards. */
     public void submit(Player player, NetworkRequest operation, Consumer<OperationResult> completion) {
         if (!player.isOnline()) {
+            completion.accept(OperationResult.REJECTED);
             return;
         }
         if (pending.containsKey(player.getUniqueId())) {
             player.sendMessage(messages.get("operation.pending"));
+            completion.accept(OperationResult.REJECTED);
             return;
         }
         var id = UUID.randomUUID();
@@ -81,6 +83,7 @@ public final class NetworkOperations implements PluginMessageListener, Listener 
         var operation = pending.remove(event.getPlayer().getUniqueId());
         if (operation != null) {
             operation.timeout().cancel();
+            operation.completion().accept(OperationResult.REJECTED);
         }
     }
 
@@ -93,6 +96,7 @@ public final class NetworkOperations implements PluginMessageListener, Listener 
         pending.remove(player.getUniqueId());
         operation.timeout().cancel();
         if (!player.isOnline()) {
+            operation.completion().accept(OperationResult.REJECTED);
             return;
         }
         if (result == OperationResult.TIMED_OUT) {

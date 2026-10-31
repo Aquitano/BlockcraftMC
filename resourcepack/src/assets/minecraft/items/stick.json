@@ -10,6 +10,48 @@
           "type": "minecraft:model",
           "model": "blockcraft:item/mlgrush"
         }
+      },
+      {
+        "when": "blockcraft:weapons/austrian_flag",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/weapons/austrian_flag"
+        }
+      },
+      {
+        "when": "blockcraft:weapons/blaze_rod",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/weapons/blaze_rod"
+        }
+      },
+      {
+        "when": "blockcraft:weapons/bone",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/weapons/bone"
+        }
+      },
+      {
+        "when": "blockcraft:weapons/feather",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/weapons/feather"
+        }
+      },
+      {
+        "when": "blockcraft:weapons/german_flag",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/weapons/german_flag"
+        }
+      },
+      {
+        "when": "blockcraft:weapons/swiss_flag",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/weapons/swiss_flag"
+        }
       }
     ],
     "fallback": {
