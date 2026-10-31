@@ -40,6 +40,10 @@ public final class OperationCodec {
                     out.writeUTF(report.target());
                     out.writeUTF(report.reason());
                 }
+                case NetworkRequest.ClaimReport report -> {
+                    out.writeUTF("claim-report");
+                    out.writeInt(report.reportId());
+                }
                 case NetworkRequest.TimedPunishment punishment -> {
                     out.writeUTF("timed-punishment");
                     target(out, punishment.target());
@@ -61,6 +65,7 @@ public final class OperationCodec {
             var id = uuid(in);
             NetworkRequest operation = switch (in.readUTF()) {
                 case "report" -> new NetworkRequest.SubmitReport(in.readUTF(), in.readUTF());
+                case "claim-report" -> new NetworkRequest.ClaimReport(in.readInt());
                 case "timed-punishment" -> new NetworkRequest.TimedPunishment(target(in), PunishmentType.valueOf(in.readUTF()),
                         in.readLong(), in.readUTF());
                 case "preset-punishment" -> new NetworkRequest.PresetPunishment(target(in), in.readInt());

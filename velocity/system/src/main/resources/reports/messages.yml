@@ -38,7 +38,12 @@ report:
   error: "<prefix>Dein Report konnte nicht gespeichert werden, bitte versuche es später erneut!"
   cooldown: "<prefix>Du kannst diesen Befehl erst wieder in <error><bold><seconds> <reset><muted>Sekunden nutzen!"
   success: "<prefix><muted>Du hast den Spieler <error><bold><player><reset><muted> erfolgreich gemeldet!"
+  claimed: "<prefix><muted>Ein Teammitglied bearbeitet jetzt deinen Report <accent>#<id><muted>. Danke für deine Unterstützung!"
   offline-server: "Offline"
+claim:
+  taken: "<prefix><muted>Du bearbeitest jetzt Report <accent>#<id><muted>."
+  unavailable: "<prefix><muted>Report <accent>#<id><muted> wurde bereits übernommen oder geschlossen."
+  closed: "<prefix><muted>Report <accent>#<id><muted> ist bereits geschlossen."
 staff:
   notice: "<prefix><accent><bold><reporter> <reset><muted>hat <target><muted> gemeldet!"
   target: "<error><bold><reported>"

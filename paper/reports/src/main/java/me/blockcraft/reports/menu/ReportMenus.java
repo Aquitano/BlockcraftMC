@@ -8,6 +8,7 @@ import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.moderation.PunishmentCatalogRepository;
 import me.blockcraft.common.moderation.PunishmentType;
 import me.blockcraft.common.network.operation.NetworkRequest.PresetPunishment;
+import me.blockcraft.common.network.operation.NetworkRequest.ClaimReport;
 import me.blockcraft.common.network.operation.NetworkRequest.TimedPunishment;
 import me.blockcraft.common.report.Report;
 import me.blockcraft.common.report.ReportRepository;
@@ -86,12 +87,16 @@ public final class ReportMenus {
         }
         String staff = BlockcraftApi.get().realName(player);
         var screen = BlockcraftApi.get().playerTasks().currentScreen(player);
+        if (!report.isClaimedBy(player.getUniqueId(), staff)) {
+            BlockcraftApi.get().operations().submit(player, new ClaimReport(report.id()), result -> {
+                if (screen.getAsBoolean()) {
+                    openReport(player, report, reported);
+                }
+            });
+            return;
+        }
         BlockcraftApi.get().playerTasks().write(player, () -> {
-            if (report.isClaimedBy(player.getUniqueId(), staff)) {
-                reports.release(report.id(), player.getUniqueId(), staff);
-            } else {
-                reports.claim(report.id(), player.getUniqueId(), staff);
-            }
+            reports.release(report.id(), player.getUniqueId(), staff);
             return reports.byId(report.id());
         }, current -> {
             if (!allowed(player)) {

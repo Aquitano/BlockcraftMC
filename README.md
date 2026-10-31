@@ -708,6 +708,10 @@ which staff claim it, edit its status and choose catalogue or custom timed punis
 closes a report instead of deleting it: the row keeps who closed it and when, leaves the lists and the open counts,
 and lets the same player report that account again.
 
+Taking a report goes through the proxy. Only the successful claimant triggers an acknowledgement to its online
+reporter, across server groups. The acknowledgement contains the report number and does not name the staff member
+or reveal the accused player's identity behind a nick. Offline reporters receive no queued notice.
+
 `/party promote <player>` transfers leadership to a member. On disconnect, leadership passes to the first remaining
 member in join order. Pending invitations follow the new leader and expire when the party disbands.
 

@@ -114,6 +114,29 @@ public final class ReportService {
         return OperationResult.APPLIED;
     }
 
+    public OperationResult claim(Player staff, int reportId) {
+        if (!staff.hasPermission("blockcraft.reports.menu")) {
+            staff.sendMessage(messages.get("no-permission"));
+            return OperationResult.REJECTED;
+        }
+        var report = reports.byId(reportId);
+        if (report.isEmpty()) {
+            staff.sendMessage(messages.get("claim.closed", Formatter.number("id", reportId)));
+            return OperationResult.REJECTED;
+        }
+        if (!reports.claim(reportId, staff.getUniqueId(), staff.getUsername())) {
+            staff.sendMessage(messages.get("claim.unavailable", Formatter.number("id", reportId)));
+            return OperationResult.REJECTED;
+        }
+        var claimed = report.get();
+        var reporter = claimed.reporterId().isPresent()
+                ? proxy.getPlayer(claimed.reporterId().get())
+                : proxy.getPlayer(claimed.reporter());
+        reporter.ifPresent(player -> player.sendMessage(messages.get("report.claimed", Formatter.number("id", reportId))));
+        staff.sendMessage(messages.get("claim.taken", Formatter.number("id", reportId)));
+        return OperationResult.APPLIED;
+    }
+
     private void notifyStaff(Player reporter, String reported, String reason, String server, int count) {
         var details = TagResolver.resolver(
                 Placeholder.unparsed("reporter", reporter.getUsername()),

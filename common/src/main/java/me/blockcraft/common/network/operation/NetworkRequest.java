@@ -20,6 +20,15 @@ public sealed interface NetworkRequest {
         }
     }
 
+    record ClaimReport(int reportId) implements NetworkRequest {
+
+        public ClaimReport {
+            if (reportId < 1) {
+                throw new IllegalArgumentException("Invalid report id");
+            }
+        }
+    }
+
     record TimedPunishment(PlayerReference target, PunishmentType type, long seconds, String reason) implements NetworkRequest {
 
         public TimedPunishment {
