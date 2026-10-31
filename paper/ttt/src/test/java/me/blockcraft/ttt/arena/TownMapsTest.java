@@ -66,6 +66,9 @@ public class TownMapsTest {
         write("no_tester", PLAYABLE.replace(TESTER, ""), true);
         write("no_spawns", PLAYABLE.replaceAll("(?s)spawns:.*?tester:", "tester:"), true);
         write("Bad-Key", PLAYABLE, true);
+        write("zero_border", PLAYABLE.replace("size: 128", "size: 0"), true);
+        write("oversized_border", PLAYABLE.replace("size: 128", "size: 60000000"), true);
+        write("nonfinite_border", PLAYABLE.replace("x: 6.5, z: 8.5, size: 128", "x: .nan, z: 8.5, size: 128"), true);
 
         assertEquals(List.of("ready"), pool().maps().stream().map(TownMap::key).toList());
     }

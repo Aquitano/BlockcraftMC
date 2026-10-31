@@ -27,6 +27,14 @@ public record TownMap(String key, String name, List<String> builders, Material i
 
     /** A square of {@code size} blocks round {@code x}/{@code z}. */
     public record Border(double x, double z, double size) {
+        private static final double MAX_CENTER = 29_999_984;
+
+        public Border {
+            if (!Double.isFinite(x) || !Double.isFinite(z) || !Double.isFinite(size)
+                    || Math.abs(x) > MAX_CENTER || Math.abs(z) > MAX_CENTER || size < 1 || size > MAX_CENTER * 2) {
+                throw new IllegalArgumentException("border is outside Minecraft's limits");
+            }
+        }
     }
 
     /**

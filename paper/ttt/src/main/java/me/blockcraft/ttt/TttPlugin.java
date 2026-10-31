@@ -70,7 +70,7 @@ public final class TttPlugin extends JavaPlugin {
         Worlds.settle(lobby);
         var locations = Locations.load(api.map().file(this, "locations.yml"));
         Supplier<Location> lobbySpawn = () -> locations.get(LOBBY).orElseGet(lobby::getSpawnLocation);
-        var vote = new MapVote(messages, choices(config));
+        var vote = new MapVote(messages, choices(config), getLogger());
         var topList = new TopList(this, stats, messages);
         var statsMenus = StatsMenus.of(messages, stats, topList, gameConfig.globalStatsHead());
         game = new TttGame(this, gameConfig, config, messages, vote, lobbySpawn, stats, statsMenus, karma);

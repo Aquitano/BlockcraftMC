@@ -37,8 +37,8 @@ the map's own blocks. Everyone is told who pressed it; the tester then rests `te
 
 The imported maps also have ClayMC's **traitor trap**: a pit with lava under the tester's floor and a hidden button
 elsewhere. Only a living traitor can press it, once per round. The floor drops away for `tester.trap-seconds` (3),
-then closes over the pit. Whoever stood in the room falls, and their deaths count as the kills of the traitor who
-pressed the button, like an explosion's. Eichenhain's tester has no trap.
+then closes over the pit. Lava and fire deaths inside the pit count as the presser's kills unless combat credits
+another player. Escaping the pit leaves no trap attribution. Eichenhain's tester has no trap.
 
 **Eichenhain** is a village `TownBuilder` puts into an empty world at every start; the decoration draws from a fixed
 seed, so it looks the same every time. Two streets cross at a plaza with a fountain, where the round starts, and
@@ -54,7 +54,10 @@ tester at the north end.
 They live in the TTT map bundle, `worlds/ttt/blockcraft/TTT/maps/<key>/`, each as a `map.yml` and the dimension
 folder of its world, `world/`. At startup, the server copies every imported map into place and adds it to the vote;
 a round loads only the chosen one. A map whose `map.yml` lacks something a round needs is skipped and named in the
-log:
+log. Invalid world borders are rejected before voting. If the chosen world fails to load at round start, the
+round uses Eichenhain and announces it.
+
+Each `map.yml` uses this format:
 
 ```yaml
 name: Vineyard

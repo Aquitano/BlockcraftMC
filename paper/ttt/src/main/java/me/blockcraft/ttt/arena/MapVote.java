@@ -16,6 +16,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 import java.util.function.Supplier;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Which map the round is played on: the lobby votes among the maps or leaves it to chance until the round starts,
@@ -34,16 +36,18 @@ public final class MapVote {
 
     private final Messages messages;
     private final List<Choice> choices;
+    private final Logger logger;
     private final Random random = new Random();
     private final Ballot<String> ballot = new Ballot<>();
     private Optional<Choice> forced = Optional.empty();
 
-    public MapVote(Messages messages, List<Choice> choices) {
+    public MapVote(Messages messages, List<Choice> choices, Logger logger) {
         if (choices.isEmpty()) {
             throw new IllegalArgumentException("A vote needs a map");
         }
         this.messages = messages;
         this.choices = List.copyOf(choices);
+        this.logger = logger;
     }
 
     public void open(Player player) {
@@ -69,12 +73,20 @@ public final class MapVote {
         return choice.map(chosen -> Component.text(chosen.name()));
     }
 
-    /** The map of the round: the forced one, else the vote's winner. */
-    public Choice decide() {
+    /** Loads the chosen map, falling back to the first, already-built map if loading fails. */
+    public Town decide() {
         var choice = forced.or(() -> ballot.winner(keys(), random).flatMap(this::choice)).orElseThrow();
+        Town town;
+        try {
+            town = choice.town().get();
+        } catch (RuntimeException failure) {
+            logger.log(Level.WARNING, "Could not load TTT map " + choice.key() + "; using " + choices.getFirst().key(), failure);
+            choice = choices.getFirst();
+            town = choice.town().get();
+        }
         messages.getLines("vote.result", Placeholder.unparsed("map", choice.name())).forEach(Bukkit::broadcast);
         Sounds.NOTIFY.playToAll();
-        return choice;
+        return town;
     }
 
     /** {@code key} empty is a vote to leave the map to chance. */

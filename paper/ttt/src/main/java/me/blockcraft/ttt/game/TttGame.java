@@ -92,8 +92,6 @@ public final class TttGame implements ShopMenu.Till {
     private final Set<UUID> teamKillers = new HashSet<>();
     private final Set<UUID> karmaLoaded = new HashSet<>();
     private final Set<UUID> ownFault = new HashSet<>();
-    /** Who fell through the traitor trap, and the traitor who sprang it, to be credited with their deaths. */
-    private final Map<UUID, UUID> trappedBy = new HashMap<>();
     /** The name each player had when the roles were drawn, so a traitor who leaves is still named as seen. */
     private final Map<UUID, String> names = new HashMap<>();
     private Optional<Town> town = Optional.empty();
@@ -245,7 +243,7 @@ public final class TttGame implements ShopMenu.Till {
     }
 
     private void start() {
-        var built = vote.decide().town().get();
+        var built = vote.decide();
         town = Optional.of(built);
         tester = Optional.of(new Tester(plugin, built.tester(), config.tester(), messages, round::players, equipment::showsAsTraitor));
         round.enter(GamePhase.INGAME);
@@ -333,9 +331,10 @@ public final class TttGame implements ShopMenu.Till {
             return;
         }
         var death = summary.resolveDeath(event);
-        var trapper = Optional.ofNullable(trappedBy.remove(victim.getUniqueId())).map(Bukkit::getPlayer);
+        var trapper = tester.flatMap(trap -> trap.trapper(victim.getLocation(), event.getDamageSource().getDamageType().getKey().getKey()))
+                .map(Bukkit::getPlayer);
         Optional<Player> killer = ownFault.remove(victim.getUniqueId()) ? Optional.empty()
-                : equipment.ownerOf(event.getDamageSource().getDirectEntity()).or(() -> trapper).or(death::killer)
+                : equipment.ownerOf(event.getDamageSource().getDirectEntity()).or(death::killer).or(() -> trapper)
                         .filter(other -> !other.equals(victim));
         var victimRole = roleOf(victim);
         killer.ifPresent(other -> victimRole.ifPresent(role -> credit(other, victim, role)));
@@ -427,7 +426,7 @@ public final class TttGame implements ShopMenu.Till {
             Sounds.MENU_DENY.play(player);
             return;
         }
-        trap.springTrap().forEach(fallen -> trappedBy.put(fallen.getUniqueId(), player.getUniqueId()));
+        trap.springTrap(player.getUniqueId());
         player.sendMessage(messages.get("tester.trap.sprung"));
     }
 
@@ -505,7 +504,6 @@ public final class TttGame implements ShopMenu.Till {
         traitorChat = Set.of();
         equipment.stop();
         tester.ifPresent(Tester::stop);
-        trappedBy.clear();
         won.ifPresent(faction -> roles.forEach((id, role) -> {
             var player = Bukkit.getPlayer(id);
             if (role.faction() == faction && player != null) {

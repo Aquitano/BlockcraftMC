@@ -8,6 +8,7 @@ import me.blockcraft.ttt.config.TttConfig;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.BlockData;
@@ -18,6 +19,8 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
@@ -40,7 +43,7 @@ public final class Tester {
     private final Map<Block, BlockData> floor = new HashMap<>();
     private long readyAt;
     private boolean running;
-    private boolean trapUsed;
+    private Optional<UUID> trapper = Optional.empty();
     private boolean trapOpen;
 
     public Tester(Plugin plugin, TesterRoom room, TttConfig.Tester config, Messages messages,
@@ -65,23 +68,30 @@ public final class Tester {
     }
 
     public boolean trapUsed() {
-        return trapUsed;
+        return trapper.isPresent();
     }
 
-    /** Drops the floor and closes it again after a moment; returns who stood in the room and fell. */
-    public List<Player> springTrap() {
-        trapUsed = true;
+    public Optional<UUID> trapper(Location location, String damageType) {
+        if (!List.of("lava", "in_fire", "on_fire").contains(damageType)) {
+            return Optional.empty();
+        }
+        return trapper.filter(ignored -> floor.keySet().stream().anyMatch(block -> block.getWorld().equals(location.getWorld())
+                && block.getX() == location.getBlockX() && block.getZ() == location.getBlockZ() && location.getY() < block.getY()));
+    }
+
+    /** Drops the floor and closes it again after a moment. */
+    public void springTrap(UUID player) {
+        trapper = Optional.of(player);
         trapOpen = true;
-        var inside = alive.get().stream().filter(player -> room.zone().contains(player.getLocation())).toList();
         floor.keySet().forEach(block -> block.setType(Material.AIR, false));
         Tasks.later(plugin, config.trapSeconds() * 20L, this::closeTrap);
-        return inside;
     }
 
     /** At the round's end: lamps, doorway and floor go back to the map's blocks at once. */
     public void stop() {
         reset();
         closeTrap();
+        trapper = Optional.empty();
     }
 
     public void press(Player presser) {

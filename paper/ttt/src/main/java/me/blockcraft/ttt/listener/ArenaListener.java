@@ -30,6 +30,7 @@ import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.EquipmentSlot;
 
@@ -49,6 +50,11 @@ public final class ArenaListener implements Listener {
     public ArenaListener(TttGame game, Messages messages) {
         this.game = game;
         this.messages = messages;
+    }
+
+    @EventHandler
+    public void onPortal(PlayerPortalEvent event) {
+        event.setCancelled(true);
     }
 
     @EventHandler(ignoreCancelled = true)
