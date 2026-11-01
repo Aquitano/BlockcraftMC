@@ -209,8 +209,8 @@ seasons:
 # roll degrees round its own z axis (a sword at roll -135 stands on its point). A game's piece is named after its area,
 # as in npc-<area>. Displays are drawn up to view-range times the vanilla distance and move one smoothed keyframe every
 # keyframe-ticks, which is one update per moving part and keyframe. A piece turns round axis, upright unless given
-# ([1, 0, 0] turns a windmill's sails facing west or east), and a part may be tipped by pitch degrees round its own x
-# axis, which lays a sail along its arm.
+# ([1, 0, 0] turns a windmill's sails facing west or east) through pivot, blocks from the spot (the spot unless given,
+# a windmill's hub), and a part may be tipped by pitch degrees round its own x axis, which lays a sail along its arm.
 props:
   view-range: 0.5
   keyframe-ticks: 20
@@ -331,6 +331,7 @@ props:
     windmill:
       spin-seconds: 30
       axis: [1, 0, 0]
+      pivot: [0, 0.5, 0]
       parts:
         - {block: DARK_OAK_LOG, at: [0.05, 0.5, 0], size: [0.5, 1.2, 1.2]}
         - {block: STRIPPED_DARK_OAK_LOG, at: [0.55, 0.5, 0], size: [0.6, 0.5, 0.5]}
@@ -359,6 +360,7 @@ props:
     windmill-large:
       spin-seconds: 36
       axis: [1, 0, 0]
+      pivot: [0, 0.5, 0]
       parts:
         - {block: DARK_OAK_LOG, at: [0.05, 0.5, 0], size: [0.5, 1.2, 1.2]}
         - {block: STRIPPED_DARK_OAK_LOG, at: [0.55, 0.5, 0], size: [0.6, 0.5, 0.5]}

@@ -36,6 +36,7 @@ public final class Props {
     private static final float FULL_TURN = (float) (Math.PI * 2);
     private static final float BLOCK_CENTRE = 0.5f;
     private static final Vector3fc UPRIGHT = new Vector3f(0, 1, 0);
+    private static final Vector3fc SPOT = new Vector3f();
 
     private record Placed(Display display, Part part) {
     }
@@ -104,7 +105,7 @@ public final class Props {
         };
         display.setPersistent(false);
         display.setViewRange(viewRange);
-        display.setTransformation(pose(part, UPRIGHT, 0, 0));
+        display.setTransformation(pose(part, UPRIGHT, SPOT, 0, 0));
         return display;
     }
 
@@ -127,21 +128,21 @@ public final class Props {
                 }
                 each.display().setInterpolationDelay(0);
                 each.display().setInterpolationDuration(config.keyframeTicks());
-                each.display().setTransformation(pose(each.part(), prop.axis(), spin, lift));
+                each.display().setTransformation(pose(each.part(), prop.axis(), prop.pivot(), spin, lift));
             }
         });
     }
 
     /**
-     * Where a part stands with the whole prop turned by {@code spin} radians round {@code axis} through its spot and
-     * lifted by {@code lift} blocks. A block display spans its unit cube from its corner, so the turn has to happen
+     * Where a part stands with the whole prop turned by {@code spin} radians round {@code axis} through {@code pivot},
+     * blocks from its spot, and lifted by {@code lift} blocks. A block display spans its unit cube from its corner, so the turn has to happen
      * round the block's centre; an item display is centred on its origin already.
      */
-    static Transformation pose(Part part, Vector3fc axis, float spin, float lift) {
+    static Transformation pose(Part part, Vector3fc axis, Vector3fc pivot, float spin, float lift) {
         var turn = new Quaternionf().rotateAxis(part.still() ? 0 : spin, axis);
         var rotation = new Quaternionf(turn).rotateY((float) Math.toRadians(part.yaw()))
                 .rotateX((float) Math.toRadians(part.pitch())).rotateZ((float) Math.toRadians(part.roll()));
-        var centre = turn.transform(new Vector3f(part.at())).add(0, part.still() ? 0 : lift, 0);
+        var centre = turn.transform(new Vector3f(part.at()).sub(pivot)).add(pivot).add(0, part.still() ? 0 : lift, 0);
         if (part.look() instanceof BlockLook) {
             var half = new Vector3f(part.size()).mul(BLOCK_CENTRE);
             centre.sub(new Quaternionf(rotation).transform(half));

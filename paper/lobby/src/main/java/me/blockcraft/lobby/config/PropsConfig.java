@@ -14,13 +14,14 @@ import java.util.logging.Logger;
 /**
  * Lobby's {@code props} section: the set pieces staff place with /setprop. Each is a group of block and item displays
  * round its spot that turns once every {@code spin-seconds} round its {@code axis} (upright unless given, a windmill's
- * points out of its sails) and rises and sinks by {@code bob} blocks every {@code bob-seconds}; a part marked
+ * points out of its sails) through its {@code pivot} blocks from the spot (the spot unless given, a windmill's hub) and
+ * rises and sinks by {@code bob} blocks every {@code bob-seconds}; a part marked
  * {@code still} stays put, such as a pedestal. Displays are drawn up to
  * {@code view-range} times the vanilla distance, and move by one smoothed keyframe every {@code keyframe-ticks}.
  */
 public record PropsConfig(float viewRange, int keyframeTicks, Map<String, Prop> props) {
 
-    public record Prop(double spinSeconds, Vector3f axis, double bob, double bobSeconds, List<Part> parts) {
+    public record Prop(double spinSeconds, Vector3f axis, Vector3f pivot, double bob, double bobSeconds, List<Part> parts) {
     }
 
     /**
@@ -68,7 +69,8 @@ public record PropsConfig(float viewRange, int keyframeTicks, Map<String, Prop> 
         }
         var axis = vector(prop.get("axis"), 0);
         return new Prop(number(prop, "spin-seconds", 0, 0, 3600),
-                axis.lengthSquared() > 0 ? axis.normalize() : new Vector3f(0, 1, 0), number(prop, "bob", 0, 0, 4),
+                axis.lengthSquared() > 0 ? axis.normalize() : new Vector3f(0, 1, 0), vector(prop.get("pivot"), 0),
+                number(prop, "bob", 0, 0, 4),
                 number(prop, "bob-seconds", 4, 0.5, 600), List.copyOf(parts));
     }
 
