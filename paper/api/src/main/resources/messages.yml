@@ -51,6 +51,8 @@ games:
     name: "<skywars>SkyWars"
   archive:
     name: "<archive>Zeitkapsel"
+  knockbackffa:
+    name: "<knockbackffa>Knockback FFA"
 game-status:
   available: "<success>Jetzt spielen"
   full: "<muted>Alle Plätze belegt"

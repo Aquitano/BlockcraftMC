@@ -11,6 +11,7 @@ import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.lobby.ChunkTickets;
 import me.blockcraft.lobby.activity.Figures;
+import me.blockcraft.lobby.activity.Skins;
 import me.blockcraft.lobby.config.GameNpcConfig;
 import me.blockcraft.lobby.config.LobbyLocation;
 import net.kyori.adventure.text.Component;
@@ -123,7 +124,7 @@ public final class GameNpcs implements Listener, AutoCloseable {
 
     private ResolvableProfile skin(LobbyLocation area) {
         return config.skin(area).map(name -> ResolvableProfile.resolvableProfile().name(name).build())
-                .orElseGet(Mannequin::defaultProfile);
+                .orElse(Skins.GAME_HOST);
     }
 
     private Component card(LobbyLocation area) {

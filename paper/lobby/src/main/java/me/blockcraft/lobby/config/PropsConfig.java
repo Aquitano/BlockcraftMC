@@ -13,13 +13,14 @@ import java.util.logging.Logger;
 
 /**
  * Lobby's {@code props} section: the set pieces staff place with /setprop. Each is a group of block and item displays
- * round its spot that turns once every {@code spin-seconds} and rises and sinks by {@code bob} blocks every
- * {@code bob-seconds}; a part marked {@code still} stays put, such as a pedestal. Displays are drawn up to
+ * round its spot that turns once every {@code spin-seconds} round its {@code axis} (upright unless given, a windmill's
+ * points out of its sails) and rises and sinks by {@code bob} blocks every {@code bob-seconds}; a part marked
+ * {@code still} stays put, such as a pedestal. Displays are drawn up to
  * {@code view-range} times the vanilla distance, and move by one smoothed keyframe every {@code keyframe-ticks}.
  */
 public record PropsConfig(float viewRange, int keyframeTicks, Map<String, Prop> props) {
 
-    public record Prop(double spinSeconds, double bob, double bobSeconds, List<Part> parts) {
+    public record Prop(double spinSeconds, Vector3f axis, double bob, double bobSeconds, List<Part> parts) {
     }
 
     /**
@@ -36,10 +37,11 @@ public record PropsConfig(float viewRange, int keyframeTicks, Map<String, Prop> 
     }
 
     /**
-     * One display: centred on {@code at} blocks from the spot, {@code size} blocks large, turned by {@code yaw} degrees
-     * and tilted by {@code roll} degrees round its own z axis, which stands a sword on its point.
+     * One display: centred on {@code at} blocks from the spot, {@code size} blocks large, turned by {@code yaw} degrees,
+     * tipped by {@code pitch} degrees round its own x axis, which lays a windmill's sail along its arm, and tilted by
+     * {@code roll} degrees round its own z axis, which stands a sword on its point.
      */
-    public record Part(Look look, Vector3f at, Vector3f size, float yaw, float roll, boolean still) {
+    public record Part(Look look, Vector3f at, Vector3f size, float yaw, float pitch, float roll, boolean still) {
     }
 
     public static PropsConfig fromYaml(Map<String, Object> config, Logger logger) {
@@ -64,13 +66,16 @@ public record PropsConfig(float viewRange, int keyframeTicks, Map<String, Prop> 
                 }
             }
         }
-        return new Prop(number(prop, "spin-seconds", 0, 0, 3600), number(prop, "bob", 0, 0, 4),
+        var axis = vector(prop.get("axis"), 0);
+        return new Prop(number(prop, "spin-seconds", 0, 0, 3600),
+                axis.lengthSquared() > 0 ? axis.normalize() : new Vector3f(0, 1, 0), number(prop, "bob", 0, 0, 4),
                 number(prop, "bob-seconds", 4, 0.5, 600), List.copyOf(parts));
     }
 
     private static Optional<Part> part(Map<?, ?> part) {
         return look(part).map(look -> new Part(look, vector(part.get("at"), 0), vector(part.get("size"), 1),
-                (float) number(part, "yaw", 0, -360, 360), (float) number(part, "roll", 0, -360, 360),
+                (float) number(part, "yaw", 0, -360, 360), (float) number(part, "pitch", 0, -360, 360),
+                (float) number(part, "roll", 0, -360, 360),
                 Boolean.TRUE.equals(part.get("still"))));
     }
 

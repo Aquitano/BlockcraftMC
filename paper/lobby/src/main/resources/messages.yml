@@ -11,6 +11,8 @@ commands:
     description: "Öffnet den Navigator mit allen Spielmodi"
   schlitten:
     description: "Schickt den Schlitten des Weihnachtsmanns über dich hinweg"
+  ueberflug:
+    description: "Schickt ein Luftschiff oder einen Vogelschwarm über dich hinweg"
   teamboard:
     description: "Prüft und aktualisiert die Teamwand aus der Teamliste der Map"
   lobbyset:
@@ -524,6 +526,9 @@ chat:
   cleared: "<prefix><muted>Der Chat wurde von <error><player><muted> geleert."
 setspawn:
   set: "<prefix><muted>Spawn gesetzt."
+flights:
+  usage: "<prefix><error>Korrekte Verwendung <accent>/ueberflug \\<Modell> <muted>(<models>)"
+  busy: "<prefix><error>Gerade ist schon etwas am Himmel unterwegs."
 setprop:
   usage: "<prefix><error>Korrekte Verwendung <accent>/setprop \\<Name>"
   set: "<prefix><muted>Dekoration <accent><prop> <muted>steht jetzt hier. Mit <accent>/map save <muted>bleibt sie."
