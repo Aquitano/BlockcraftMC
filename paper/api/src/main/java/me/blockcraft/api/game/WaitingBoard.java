@@ -49,11 +49,17 @@ public final class WaitingBoard {
                 display.setTransformation(new Transformation(new Vector3f(), new Quaternionf(), new Vector3f(SCALE), new Quaternionf()));
                 display.text(render(messages, game, List.of()));
             });
-            Bukkit.getScheduler().runTaskTimer(plugin, () -> Tasks.async(plugin, () -> stats.leaders(Stat.WINS, PLACES), leaders -> {
-                if (board.isValid()) {
-                    board.text(render(messages, game, leaders));
+            Bukkit.getScheduler().runTaskTimer(plugin, task -> {
+                if (!board.isValid()) {
+                    task.cancel();
+                    return;
                 }
-            }), 1L, REFRESH_TICKS);
+                Tasks.async(plugin, () -> stats.leaders(Stat.WINS, PLACES), leaders -> {
+                    if (board.isValid()) {
+                        board.text(render(messages, game, leaders));
+                    }
+                });
+            }, 1L, REFRESH_TICKS);
         });
     }
 
