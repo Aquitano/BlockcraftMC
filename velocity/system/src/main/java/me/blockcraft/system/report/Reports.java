@@ -1,6 +1,5 @@
 package me.blockcraft.system.report;
 
-import com.velocitypowered.api.plugin.PluginDescription;
 import com.velocitypowered.api.proxy.ProxyServer;
 import me.blockcraft.common.config.YamlFile;
 import me.blockcraft.common.db.Database;
@@ -29,7 +28,7 @@ public record Reports(ReportCommand command, ReportService service) {
 
     public static Reports load(Object plugin, ProxyServer proxy, Logger logger, Path systemDirectory,
                                Database database, PlayerLookup lookup, PlayerVisibility visibility, PlayerChoices choices,
-                               PlayerSettingRepository settings, PluginDescription description) {
+                               PlayerSettingRepository settings) {
         Path directory = systemDirectory.resolve("reports");
         importLegacy(systemDirectory.resolveSibling("blockcraft-report"), directory);
         var config = YamlFile.loadWithDefaults(directory.resolve("config.yml"), () -> Reports.class.getResourceAsStream("/reports/config.yml"));
@@ -41,7 +40,7 @@ public record Reports(ReportCommand command, ReportService service) {
         String permission = String.valueOf(config.getOrDefault("staff-permission", "blockcraft.report.notify"));
         var cooldown = Duration.ofSeconds(Math.max(0, ((Number) config.getOrDefault("report-cooldown-seconds", 10)).longValue()));
         var service = new ReportService(proxy, logger, repository, preferences, messages, permission, cooldown, lookup, visibility);
-        return new Reports(new ReportCommand(plugin, proxy, description, preferences, messages,
+        return new Reports(new ReportCommand(plugin, proxy, preferences, messages,
                 permission, service, visibility), service);
     }
 

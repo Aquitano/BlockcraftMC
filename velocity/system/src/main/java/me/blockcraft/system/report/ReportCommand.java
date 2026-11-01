@@ -5,13 +5,11 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
-import com.velocitypowered.api.plugin.PluginDescription;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import me.blockcraft.common.db.DatabaseException;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.system.PlayerVisibility;
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 
 import java.util.Locale;
 
@@ -20,18 +18,16 @@ public final class ReportCommand {
 
     private final Object plugin;
     private final ProxyServer proxy;
-    private final PluginDescription description;
     private final NotifyPreferences preferences;
     private final Messages messages;
     private final String staffPermission;
     private final ReportService service;
     private final PlayerVisibility visibility;
 
-    public ReportCommand(Object plugin, ProxyServer proxy, PluginDescription description, NotifyPreferences preferences,
+    public ReportCommand(Object plugin, ProxyServer proxy, NotifyPreferences preferences,
                          Messages messages, String staffPermission, ReportService service, PlayerVisibility visibility) {
         this.plugin = plugin;
         this.proxy = proxy;
-        this.description = description;
         this.preferences = preferences;
         this.messages = messages;
         this.staffPermission = staffPermission;
@@ -42,10 +38,6 @@ public final class ReportCommand {
     public BrigadierCommand create() {
         return new BrigadierCommand(BrigadierCommand.literalArgumentBuilder("report")
                 .executes(asPlayer((player, context) -> player.sendMessage(messages.get("usage"))))
-                .then(BrigadierCommand.literalArgumentBuilder("info")
-                        .executes(asPlayer((player, context) -> messages.getLines("info",
-                                Placeholder.unparsed("author", String.join(", ", description.getAuthors())),
-                                Placeholder.unparsed("version", description.getVersion().orElse("?"))).forEach(player::sendMessage))))
                 .then(BrigadierCommand.literalArgumentBuilder("notify")
                         .requires(source -> source.hasPermission(staffPermission))
                         .executes(asStaff((player, context) -> player.sendMessage(

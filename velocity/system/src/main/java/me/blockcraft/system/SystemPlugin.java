@@ -225,8 +225,7 @@ public final class SystemPlugin {
         var support = new CommandSupport(visibility, messages);
         var staffButtons = new StaffButtons(messages);
         var moderationActions = new ModerationActions(support, lookup, punishments, config, messages);
-        var reports = Reports.load(this, proxy, logger, dataDirectory, database, lookup, visibility, choices, playerSettings,
-                proxy.getPluginManager().fromInstance(this).orElseThrow().getDescription());
+        var reports = Reports.load(this, proxy, logger, dataDirectory, database, lookup, visibility, choices, playerSettings);
         register(reports.command().create());
         proxy.getEventManager().register(this, new OperationListener(proxy, (player, request) -> switch (request) {
             case NetworkRequest.SubmitReport report -> reports.service().submit(player, report.target(), report.reason());

@@ -87,10 +87,6 @@ public final class OnDemand {
         settings.groups().forEach(group -> groups.put(group, new Group()));
     }
 
-    public boolean manages(String group) {
-        return groups.containsKey(group);
-    }
-
     public Set<String> groups() {
         return groups.keySet();
     }

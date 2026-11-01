@@ -63,7 +63,7 @@ public class PartyManagerTest {
 
         proxy.leave(member);
         parties.onDisconnect(member);
-        assertTrue(parties.isLeader(leader.getUniqueId()));
+        assertEquals(leader.getUniqueId(), parties.partyOf(leader.getUniqueId()).orElseThrow().leader());
         assertEquals(leader.getUniqueId(), parties.partyOf(invited.getUniqueId()).orElseThrow().leader());
     }
 
@@ -106,7 +106,7 @@ public class PartyManagerTest {
 
         assertFalse(parties.isInParty(inviter.getUniqueId()));
         assertEquals(List.of(messages.get("party.target-in-party")), proxy.received(inviter));
-        assertTrue(parties.isLeader(target.getUniqueId()));
+        assertEquals(target.getUniqueId(), parties.partyOf(target.getUniqueId()).orElseThrow().leader());
     }
 
     @Test

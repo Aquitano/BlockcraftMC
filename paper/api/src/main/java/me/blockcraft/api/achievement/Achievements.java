@@ -126,14 +126,6 @@ public final class Achievements implements Listener {
         return catalog;
     }
 
-    public static List<ChatTagChoice> missingTags(List<Achievement> catalog, int level, Set<String> owned) {
-        return missingCosmetics(catalog, level, owned).stream()
-                .filter(CosmeticReward.Tag.class::isInstance)
-                .map(CosmeticReward.Tag.class::cast)
-                .map(CosmeticReward.Tag::choice)
-                .toList();
-    }
-
     public List<Achievement> levelRewards() {
         return levelRewards(catalog);
     }

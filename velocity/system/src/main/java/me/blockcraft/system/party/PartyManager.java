@@ -65,10 +65,6 @@ public final class PartyManager {
         return byLeader.containsKey(player) || leaderByMember.containsKey(player);
     }
 
-    public synchronized boolean isLeader(UUID player) {
-        return byLeader.containsKey(player);
-    }
-
     public synchronized Optional<Party> partyOf(UUID player) {
         var own = byLeader.get(player);
         if (own != null) {

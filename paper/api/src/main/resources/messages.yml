@@ -436,10 +436,8 @@ xp:
   gained: "<success>+<amount> XP"
   level-up: "<prefix><muted>Du bist jetzt <accent>Level <level><muted>!"
 level:
-  next-cosmetic: "<muted>Nächster Chat-Tag<dark>: <tag> <muted>ab Level <accent><level>"
   next-reward: "<muted>Als Nächstes<dark>: <reward> <muted>ab Level <accent><level>"
   cosmetics-complete: "<success>Alle Level-Belohnungen freigeschaltet."
-  self: "<prefix><muted>Du bist <accent>Level <level> <muted>und hast <accent><xp><muted>/<accent><next> <muted>XP bis zum nächsten Level."
   other: "<prefix><accent><player> <muted>ist <accent>Level <level> <muted>mit <accent><xp> <muted>XP."
   rewards:
     confetti: "<accent>Konfettisieger"

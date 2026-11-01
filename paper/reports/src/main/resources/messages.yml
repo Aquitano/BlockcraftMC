@@ -12,7 +12,6 @@ none:
   - "<prefix><success>Keine Reports offen. <muted>Der Papierkorb meldet sich freiwillig ab."
 closed: "<prefix><muted>Report <accent><id> <muted>wurde bereits erledigt."
 resolved: "<prefix><success>Report <accent><id> <success>ist erledigt."
-none-for-player: "<prefix>Der Spieler <error><bold><player><reset><muted> wurde nicht reportet!"
 join-one: "<prefix><muted>Es liegt gerade <error>ein <muted>Report vor."
 join-many: "<prefix><muted>Es liegen gerade <error><count> <muted>Reports vor."
 age:

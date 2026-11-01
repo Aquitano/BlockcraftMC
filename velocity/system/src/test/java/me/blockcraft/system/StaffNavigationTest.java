@@ -58,7 +58,7 @@ public class StaffNavigationTest {
         var proxy = new FakeProxy();
         var player = proxy.join("Player");
         var staff = proxy.join("Staff", "blockcraft.report.notify");
-        var command = new ReportCommand(null, proxy.server, null, null, null, "blockcraft.report.notify", null, null)
+        var command = new ReportCommand(null, proxy.server, null, null, "blockcraft.report.notify", null, null)
                 .create().getNode();
 
         assertTrue(command.canUse(player));

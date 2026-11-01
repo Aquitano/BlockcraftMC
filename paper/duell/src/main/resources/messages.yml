@@ -239,7 +239,6 @@ scoreboard:
   tour-score: "<accent><wins> <dark>: <accent><opponent-wins>"
   mode-voting: "<muted>Abstimmung läuft"
   mode-leading: "<mode> <muted>führt"
-  group-value: "<arrow><group> <dark>(<white><rating><dark>)"
   rating: "<muted>Wertung <dark>· <accent><rating>"
   map-random: "<muted>Wird ausgewählt"
   opponent: "<muted><icon:opponent> GEGNER"

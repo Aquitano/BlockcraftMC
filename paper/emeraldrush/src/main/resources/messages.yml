@@ -132,7 +132,7 @@ shop:
     heal-2: "<arrow><primary>Heilung II"
     fire-resistance: "<arrow><primary>Feuerresistenz"
     speed: "<arrow><primary>Schnelligkeit"
-    extra-heart: "<arrow><dark_red>Extra Herz"
+    extra-heart: "<arrow><error>Extra Herz"
     golden-apple: "<arrow><accent>Goldapfel"
     level: "<arrow><accent>1 Verzauberungslevel"
     lapis: "<arrow><primary>Lapis"

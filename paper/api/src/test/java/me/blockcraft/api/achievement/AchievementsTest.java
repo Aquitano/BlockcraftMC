@@ -1,6 +1,5 @@
 package me.blockcraft.api.achievement;
 
-import me.blockcraft.api.cosmetic.ChatTagChoice;
 import me.blockcraft.api.cosmetic.CosmeticReward;
 import me.blockcraft.api.game.Stats;
 import me.blockcraft.api.xp.Levels;
@@ -100,26 +99,6 @@ public class AchievementsTest {
                 Achievements.reached(CATALOG, Achievement.NETWORK, Stats.EMPTY, 5, Set.of()).stream().map(Achievement::key).toList());
         assertEquals(Optional.empty(), CATALOG.stream().filter(achievement -> achievement.game().equals(Achievement.NETWORK))
                 .findFirst().orElseThrow().tag());
-    }
-
-    @Test
-    public void levelTagsReconcileEvenWhenAchievementsAreAlreadyOwned() throws Exception {
-        try (var config = getClass().getResourceAsStream("/config.yml")) {
-            var catalog = Achievements.parse(YamlFile.section(YamlFile.load(config), "achievements"));
-            var owned = Set.of("achievement.network.level-5", "achievement.network.level-10",
-                    "achievement.network.level-25", "tag.aufsteiger");
-
-            assertEquals(List.of(), Achievements.missingTags(catalog, 4, owned));
-            assertEquals(List.of("tag.veteran"), Achievements.missingTags(catalog, 10, owned).stream()
-                    .map(tag -> tag.item()).toList());
-            var missing = Achievements.missingTags(catalog, 25, owned);
-            assertEquals(List.of("tag.veteran", "tag.elite"), missing.stream().map(tag -> tag.item()).toList());
-            var reconciled = new HashSet<>(owned);
-            missing.forEach(tag -> reconciled.add(tag.item()));
-            assertEquals(List.of(), Achievements.missingTags(catalog, 25, reconciled));
-            assertEquals(List.of("aufsteiger", "veteran", "elite"),
-                    ChatTagChoice.available(false, reconciled).stream().map(ChatTagChoice::value).toList());
-        }
     }
 
     @Test

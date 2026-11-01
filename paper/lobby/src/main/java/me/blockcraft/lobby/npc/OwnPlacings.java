@@ -1,6 +1,7 @@
 package me.blockcraft.lobby.npc;
 
 import me.blockcraft.api.game.Placing;
+import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
@@ -96,7 +97,7 @@ public final class OwnPlacings implements Listener, AutoCloseable {
         if (!reading.add(key)) {
             return;
         }
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+        Tasks.async(plugin, () -> {
             Optional<Placing> placing;
             try {
                 placing = leaderboards.placing(key.board(), key.player());
@@ -105,7 +106,7 @@ public final class OwnPlacings implements Listener, AutoCloseable {
                 placing = Optional.empty();
             }
             var read = new Known(placing, System.currentTimeMillis());
-            Bukkit.getScheduler().runTask(plugin, () -> {
+            Tasks.sync(plugin, () -> {
                 reading.remove(key);
                 if (Bukkit.getPlayer(key.player()) != null) {
                     known.put(key, read);
