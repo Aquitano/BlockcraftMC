@@ -33,8 +33,8 @@ public class LobbyProtectionTest {
         assertTrue(lobbyBreak.isCancelled());
         assertFalse(arenaBreak.isCancelled());
 
-        var lobbyHunger = new FoodLevelChangeEvent(visitor, 10);
-        var arenaHunger = new FoodLevelChangeEvent(fighter, 10);
+        var lobbyHunger = new FoodLevelChangeEvent(visitor, 10, null);
+        var arenaHunger = new FoodLevelChangeEvent(fighter, 10, null);
         protection.onHunger(lobbyHunger);
         protection.onHunger(arenaHunger);
         assertTrue(lobbyHunger.isCancelled());
