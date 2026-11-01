@@ -88,7 +88,10 @@ stations:
   depot-mystery: {room: depot, kind: MYSTERY, location: {x: 36, y: 0, z: -10}}
   workshop-upgrade: {room: workshop, kind: UPGRADE, location: {x: 10, y: 0, z: -36}}
   generator: {room: power, kind: POWER, location: {x: -10, y: 0, z: 36}}
-  clinic-perks: {room: clinic, kind: PERKS, location: {x: -36, y: 0, z: 10}}
+  depot-quick-reload: {room: depot, kind: PERKS, perk: QUICK_RELOAD, location: {x: 36, y: 0, z: 10}}
+  workshop-frozen-bullets: {room: workshop, kind: PERKS, perk: FROZEN_BULLETS, location: {x: -10, y: 0, z: -36}}
+  power-extra-health: {room: power, kind: PERKS, perk: EXTRA_HEALTH, location: {x: 10, y: 0, z: 36}}
+  clinic-quick-revive: {room: clinic, kind: PERKS, perk: QUICK_REVIVE, location: {x: -36, y: 0, z: 10}}
   clinic-revive: {room: clinic, kind: TEAM_REVIVE, location: {x: -36, y: 0, z: -10}}
 notes:
   yard: {room: yard, location: {x: 7, y: 0, z: 5}}

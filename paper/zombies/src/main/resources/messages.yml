@@ -20,7 +20,7 @@ guide:
     - "<zombies>Ein bis vier Spieler verteidigen den Außenposten. Die Gegnerzahl wächst mit eurem Team."
     - "<muted>Mit Rechtsklick schießt du, mit Linksklick lädst du nach. Dein Messer liegt im dritten Slot. Kopftreffer verursachen mehr Schaden."
     - "<muted>Treffer, Kills und reparierte Fenster bringen Gold. Kaufe an Stationen Waffen und Rüstung. Bei zwei Waffen ersetzt ein Kauf die gehaltene Waffe."
-    - "<muted>Öffne die Kupfertore und schalte den Strom ein. Dann stehen Perks, Waffenverbesserungen und die Team-Wiederbelebung bereit."
+    - "<muted>Öffne die Kupfertore und schalte den Strom ein. Dann stehen Waffenverbesserungen, die Team-Wiederbelebung und die Perks bereit, von denen jeder Flügel einen verkauft."
     - "<muted>Schleiche neben einem Fenster, um es zu reparieren. Nahe Gegner verhindern die Reparatur. Reparaturgold ist pro Welle begrenzt."
     - "<muted>Schleiche neben einem gefallenen Mitspieler, um ihn zu retten. Verblutete Spieler kehren nach der Welle zurück und verlieren ihre Perks. Fällt der letzte Spieler, verliert das Team."
     - "<muted>Im Solo-Spiel rettet dich der Perk Schnelle Wiederbelebung einmal vor dem Tod und wird dabei verbraucht."
@@ -138,6 +138,8 @@ station:
   mystery: "Zufallskiste"
   team_revive: "Team-Wiederbelebung"
   label: "<zombies><station>\n<muted>Station anklicken"
+  powered-label: "<zombies><station>\n<success>Eingeschaltet"
+  outage-label: "<zombies><station>\n<error>Ausgefallen"
 perk:
   extra_health: "Zusätzliche Herzen"
   quick_reload: "Schnelles Nachladen"

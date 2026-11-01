@@ -2,6 +2,7 @@ package me.blockcraft.zombies.arena;
 
 import me.blockcraft.api.world.BlocksChangedEvent;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.zombies.game.Perk;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -13,6 +14,7 @@ import org.bukkit.block.data.type.CopperBulb;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Display;
+import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.util.BoundingBox;
@@ -24,6 +26,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -38,7 +41,14 @@ public final class ArenaMap {
                     boards.minY(), (boards.minZ() + boards.maxZ() + 1) / 2.0).add(direction.multiply(1.5));
         }
     }
-    public record Station(String id, String room, StationKind kind, Location location) { }
+    /** A perk station with a {@code perk} sells that one perk; without one it sells them all. */
+    public record Station(String id, String room, StationKind kind, Location location, Optional<Perk> perk) {
+
+        /** The message key of the station's name, which for a single perk is the perk's. */
+        public String nameKey() {
+            return perk.map(each -> "perk." + each.key()).orElse("station." + kind.key());
+        }
+    }
     public record Note(String id, String room, Location location) {
         public static final String ITEM_PREFIX = "zombies.note.";
         public String item() { return ITEM_PREFIX + id; }
@@ -56,6 +66,7 @@ public final class ArenaMap {
     private final Set<String> unlocked = new HashSet<>(Set.of("yard"));
     private final List<BlockState> originals = new ArrayList<>();
     private final List<TextDisplay> labels = new ArrayList<>();
+    private final Map<Station, TextDisplay> stationLabels = new LinkedHashMap<>();
     private record DoorLabel(TextDisplay display, net.kyori.adventure.text.Component opened) { }
     private final Map<String, DoorLabel> doorLabels = new LinkedHashMap<>();
     private Plugin chunkOwner;
@@ -77,7 +88,8 @@ public final class ArenaMap {
         for (String id : section("stations").getKeys(false)) {
             String path = "stations." + id + ".";
             stations.add(new Station(id, yaml.getString(path + "room", "yard"),
-                    StationKind.valueOf(yaml.getString(path + "kind")), point(path + "location")));
+                    StationKind.valueOf(yaml.getString(path + "kind")), point(path + "location"),
+                    Optional.ofNullable(yaml.getString(path + "perk")).map(perk -> Perk.valueOf(perk.toUpperCase(Locale.ROOT)))));
         }
         if (yaml.isConfigurationSection("notes")) {
             for (String id : section("notes").getKeys(false)) {
@@ -193,6 +205,10 @@ public final class ArenaMap {
             yaml.set("starter.built", true);
             save();
         }
+        // A station added to the file after the starter map was built and saved has no block yet; it gets the starter's.
+        if (yaml.getBoolean("starter.build")) {
+            stations.stream().filter(station -> station.location().getBlock().getType().isAir()).forEach(StarterArena::station);
+        }
         var doorData = org.bukkit.Bukkit.createBlockData(yaml.getString("door-block-data", "minecraft:waxed_cut_copper"));
         windowData = org.bukkit.Bukkit.createBlockData(yaml.getString("window-block-data", "minecraft:oak_slab[type=top,waterlogged=false]"));
         for (var room : rooms.values()) {
@@ -226,7 +242,8 @@ public final class ArenaMap {
                         && rooms.get(window.room()).bounds().contains(window.entry())
                         && window.bay().map(bay -> bay.contains(window.spawn()) && !bay.contains(window.entry())).orElse(true))
                 && stations.stream().allMatch(station -> rooms.containsKey(station.room())
-                        && rooms.get(station.room()).bounds().contains(station.location()))
+                        && rooms.get(station.room()).bounds().contains(station.location())
+                        && (station.perk().isEmpty() || station.kind() == StationKind.PERKS))
                 && notes.stream().allMatch(note -> rooms.containsKey(note.room())
                         && rooms.get(note.room()).bounds().contains(note.location()));
     }
@@ -272,9 +289,10 @@ public final class ArenaMap {
 
     public void labels(Messages messages) {
         world.getEntitiesByClass(TextDisplay.class).stream().filter(entity -> entity.getScoreboardTags().contains(DISPLAY_TAG)).forEach(TextDisplay::remove);
+        stationLabels.clear();
         for (var station : stations) {
-            label(station.location().clone().add(0.5, 1.5, 0.5), messages.get("station.label",
-                    Placeholder.component("station", messages.get("station." + station.kind().key()))));
+            stationLabels.put(station, label(station.location().clone().add(0.5, 1.5, 0.5), messages.get("station.label",
+                    Placeholder.component("station", messages.get(station.nameKey())))));
         }
         rooms.values().stream().filter(room -> !room.id().equals("yard")).forEach(room -> {
             var location = new Location(world, (room.door().minX() + room.door().maxX() + 1) / 2.0,
@@ -287,6 +305,24 @@ public final class ArenaMap {
             var display = label(location, messages.get("room.label", roomName,
                     net.kyori.adventure.text.minimessage.tag.resolver.Formatter.number("price", room.price())));
             doorLabels.put(room.id(), new DoorLabel(display, messages.get("room.open-label", roomName)));
+        });
+    }
+
+    /** Tells everyone the stations of this kind have nothing left to sell, as the door labels do for an opened room. */
+    public void relabelStations(StationKind kind, net.kyori.adventure.text.Component text) {
+        stationLabels.forEach((station, display) -> {
+            if (station.kind() == kind) {
+                display.text(text);
+            }
+        });
+    }
+
+    /** Takes the labels of this kind away from one player, for whom these stations have nothing left to sell. */
+    public void hideStationLabels(StationKind kind, Player player, Plugin plugin) {
+        stationLabels.forEach((station, display) -> {
+            if (station.kind() == kind) {
+                player.hideEntity(plugin, display);
+            }
         });
     }
 

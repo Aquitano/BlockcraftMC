@@ -5,6 +5,7 @@ import me.blockcraft.api.menu.Menu;
 import me.blockcraft.zombies.arena.ArenaMap;
 import me.blockcraft.zombies.arena.StationKind;
 import me.blockcraft.zombies.game.Perk;
+import me.blockcraft.zombies.game.Survivor;
 import me.blockcraft.zombies.game.ZombiesGame;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
@@ -16,6 +17,7 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.BooleanSupplier;
 
@@ -28,7 +30,7 @@ public final class StationMenu extends Menu {
     private final Map<Integer, Offer> offers = new LinkedHashMap<>();
 
     public StationMenu(ZombiesGame game, Player player, ArenaMap.Station station) {
-        super(4, game.messages().get("shop.title", Placeholder.component("station", game.messages().get("station." + station.kind().key()))));
+        super(4, game.messages().get("shop.title", Placeholder.component("station", game.messages().get(station.nameKey()))));
         this.game = game;
         this.station = station;
         var survivor = game.survivor(player);
@@ -49,8 +51,9 @@ public final class StationMenu extends Menu {
                         }));
             }
             case PERKS -> {
-                int slot = 10;
-                for (var perk : Perk.values()) {
+                var perks = station.perk().map(List::of).orElse(List.of(Perk.values()));
+                int slot = perks.size() == 1 ? 13 : 10;
+                for (var perk : perks) {
                     add(slot, new Offer(game.messages().get("perk." + perk.key()), perk.material(), config.perks().get(perk),
                             () -> !survivor.perks().contains(perk), () -> game.grantPerk(player, perk)),
                             game.messages().get("perk.description." + perk.key(), Formatter.number("hearts", config.extraHealth() / 2)));
@@ -61,7 +64,7 @@ public final class StationMenu extends Menu {
                 int tier = survivor.armor();
                 add(13, new Offer(game.messages().get("shop.armor", Formatter.number("tier", tier + 1)),
                         tier == 0 ? Material.IRON_CHESTPLATE : Material.DIAMOND_CHESTPLATE,
-                        config.armorPrice() * (tier + 1), () -> survivor.armor() == tier && tier < 2, () -> game.armor(player)));
+                        config.armorPrice() * (tier + 1), () -> survivor.armor() == tier && tier < Survivor.MAX_ARMOR, () -> game.armor(player)));
             }
             case POWER -> add(13, new Offer(game.messages().get("shop.power"), Material.REDSTONE, config.powerPrice(),
                     () -> !game.powerBought(), () -> game.powerOn(station)));

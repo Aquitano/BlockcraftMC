@@ -92,7 +92,7 @@ final class StarterArena {
         builder.generatorHall();
         builder.clinic();
         arena.windows().forEach(builder::spawnRoom);
-        arena.stations().forEach(builder::station);
+        arena.stations().forEach(StarterArena::station);
         arena.notes().forEach(note -> builder.note(arena, note));
     }
 
@@ -1256,7 +1256,7 @@ final class StarterArena {
         }
     }
 
-    private void station(ArenaMap.Station station) {
+    static void station(ArenaMap.Station station) {
         var location = station.location();
         location.clone().add(0, -1, 0).getBlock().setType(Material.WAXED_CUT_COPPER, false);
         location.getBlock().setType(station.kind().material(), false);

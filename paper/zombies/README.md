@@ -36,6 +36,8 @@ Each wing is furnished for its job: depot racks and a forklift, a workshop jeep 
 The yards between the wings hold a motor pool, a tank farm, a graveyard, and a helipad. A forest surrounds the fence.
 Change `origin` before generation if that region is occupied. Set `starter.build: false` for a hand-built arena.
 
+Each wing also sells one perk at a `PERKS` station with a `perk`; a `PERKS` station without one sells them all. A
+station added to the file after the map was saved gets its block from the starter at the next start.
 Edit `rooms`, `windows`, `stations`, and `notes` in the map-owned file to change the layout.
 Window entries must lie in their named room. Station and note locations must also lie in their named room.
 The `yard` room starts unlocked. Each other room has a gold price and a door box.

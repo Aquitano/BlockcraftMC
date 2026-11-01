@@ -21,6 +21,7 @@ import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Countdown;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.zombies.arena.ArenaMap;
+import me.blockcraft.zombies.arena.StationKind;
 import me.blockcraft.zombies.config.ZombiesConfig;
 import me.blockcraft.zombies.menu.GuideDialog;
 import me.blockcraft.zombies.menu.StationMenu;
@@ -564,6 +565,13 @@ public final class ZombiesGame {
         powered = true;
         broadcast("game.powered");
         effects.powerOn(generator.location());
+        powerLabel(false);
+    }
+
+    /** The generator's label: bought power reads as on, or as out while an outage waits for its repair. */
+    public void powerLabel(boolean out) {
+        arena.relabelStations(StationKind.POWER, messages.get(out ? "station.outage-label" : "station.powered-label",
+                Placeholder.component("station", messages.get("station.power"))));
     }
 
     public void teamRevive() {
@@ -583,6 +591,9 @@ public final class ZombiesGame {
         inventory.setLeggings(unbreakable(iron ? Material.IRON_LEGGINGS : Material.DIAMOND_LEGGINGS));
         inventory.setChestplate(unbreakable(iron ? Material.IRON_CHESTPLATE : Material.DIAMOND_CHESTPLATE));
         inventory.setHelmet(unbreakable(iron ? Material.IRON_HELMET : Material.DIAMOND_HELMET));
+        if (survivor.armorMaxed()) {
+            arena.hideStationLabels(StationKind.ARMOR, player, plugin);
+        }
     }
 
     private static ItemStack unbreakable(Material material) {

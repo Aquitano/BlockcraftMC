@@ -9,6 +9,8 @@ public final class Survivor {
 
     public enum Life { FIGHTING, DOWNED, OUT }
 
+    public static final int MAX_ARMOR = 2;
+
     private Life life = Life.FIGHTING;
     private int gold;
     private int bleedAt;
@@ -25,6 +27,7 @@ public final class Survivor {
     public int reviveProgress() { return reviveProgress; }
     public int revives() { return revives; }
     public int armor() { return armor; }
+    public boolean armorMaxed() { return armor >= MAX_ARMOR; }
     public Map<Weapon, Ammo> weapons() { return weapons; }
     public Set<Perk> perks() { return perks; }
     public boolean fighting() { return life == Life.FIGHTING; }
