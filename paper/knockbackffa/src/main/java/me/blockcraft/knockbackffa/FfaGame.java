@@ -70,9 +70,6 @@ import java.util.concurrent.ThreadLocalRandom;
 
 final class FfaGame implements Listener, AutoCloseable {
 
-    private static final double GRAPPLE_PULL = 1.6;
-    private static final double GRAPPLE_LIFT = 0.4;
-    private static final int WARNING_SECONDS = 5;
 
     private final Plugin plugin;
     private final FfaConfig config;
@@ -168,7 +165,7 @@ final class FfaGame implements Listener, AutoCloseable {
         var inventory = player.getInventory();
         inventory.clear();
         var stick = FfaItem.STICK.build(Items.of(Material.STICK).name(messages.get("item.stick")));
-        stick.addUnsafeEnchantment(Enchantment.KNOCKBACK, kit == FfaKit.HEAVY ? Math.min(5, config.knockback() + 1) : config.knockback());
+        stick.addUnsafeEnchantment(Enchantment.KNOCKBACK, kit == FfaKit.HEAVY ? config.kits().heavyKnockback() : config.knockback());
         inventory.setItem(0, BlockcraftApi.get().weapons().stick(player, stick));
         var kits = config.kits();
         switch (kit) {
@@ -282,10 +279,10 @@ final class FfaGame implements Listener, AutoCloseable {
             if (protectedNow(player) && active(player)) {
                 BlockcraftApi.get().notifications().status(player, messages.get("spawn.protected"));
             }
-            if (kitIn <= WARNING_SECONDS && active(player)) {
+            if (kitIn <= config.kits().warningSeconds() && active(player)) {
                 BlockcraftApi.get().notifications().status(player, messages.get("kit.countdown", Formatter.number("seconds", kitIn)));
             }
-            if (config.launch() && launchIn <= WARNING_SECONDS && active(player)) {
+            if (config.launch() && launchIn <= config.kits().warningSeconds() && active(player)) {
                 BlockcraftApi.get().notifications().status(player, messages.get("launch.countdown", Formatter.number("seconds", launchIn)));
             }
         }
@@ -486,7 +483,7 @@ final class FfaGame implements Listener, AutoCloseable {
         if (pull.lengthSquared() < 1) {
             return;
         }
-        player.setVelocity(pull.normalize().multiply(GRAPPLE_PULL).setY(Math.max(pull.getY() / 4, GRAPPLE_LIFT)));
+        player.setVelocity(pull.normalize().multiply(config.kits().grapplePull()).setY(Math.max(pull.getY() / 4, config.kits().grappleLift())));
         player.setCooldown(Material.FISHING_ROD, config.kits().grappleCooldownTicks());
         Sounds.GRAPPLE.play(player);
     }

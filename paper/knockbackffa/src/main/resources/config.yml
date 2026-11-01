@@ -13,6 +13,10 @@ kits:
   pearls: 3
   projectile-push: 0.6
   grapple-cooldown-seconds: 3
+  heavy-knockback-level: 3
+  grapple-pull: 1.6
+  grapple-lift: 0.4
+  warning-seconds: 5
 rotation:
   enabled: true
   interval-seconds: 300
