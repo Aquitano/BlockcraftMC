@@ -16,6 +16,7 @@ import me.blockcraft.api.game.StatsMenus;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.game.TopCommand;
 import me.blockcraft.api.game.TopList;
+import me.blockcraft.api.game.WaitingBoard;
 import me.blockcraft.common.duel.DuelPairRepository;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.duell.config.DuellConfig;
@@ -56,6 +57,7 @@ public final class DuellPlugin extends JavaPlugin {
 
         var items = new GameItems(messages);
         var topList = new TopList(this, stats, messages);
+        WaitingBoard.show(this, stats);
         var statsMenus = StatsMenus.ranked(messages, stats, topList, gameConfig.globalStatsHead());
         var rushConfig = RushConfig.from(getConfig().getConfigurationSection("mlgrush") == null
                 ? new org.bukkit.configuration.file.YamlConfiguration() : getConfig().getConfigurationSection("mlgrush"));

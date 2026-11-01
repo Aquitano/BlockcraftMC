@@ -91,3 +91,9 @@ teams:
         z: -299.5
         yaw: 90.0
         pitch: 0.0
+leaderboard:
+  x: -193.5
+  y: 49.8
+  z: -319.95
+  yaw: 0.0
+  pitch: 0.0

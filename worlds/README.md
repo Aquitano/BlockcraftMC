@@ -142,7 +142,8 @@ The waiting-world copy keeps 49 chunks around EmeraldRush's built island, with s
 all 44 block entities. Unrelated ground below the island and its two horses are excluded. New terrain generates
 as void. Both root and Paper dimension spawn metadata point to `(-194, 47, -318)`.
 `waiting-lobby/lobby.yml` places the arrival, CPS tester, four team selectors, and two member displays
-per team. The selectors occupy four existing alcoves beside the interior path, facing that path.
+per team. The selectors occupy four existing alcoves beside the interior path, facing that path. Its `leaderboard` point
+is the front of the spruce board behind the arrival, where every game shows its top five by wins (`WaitingBoard`).
 All thirteen NPC positions have natural support and four blocks of clearance. Walking routes from spawn
 reach every selector's front at Y=47. The CPS tester stands at `(-183.5, 47, -303.5)`, off the arrival path.
 The old waiting area's jump locations are removed because this island has no configured BedWars course.

@@ -18,6 +18,7 @@ import me.blockcraft.api.game.StatsMenus;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.game.TopCommand;
 import me.blockcraft.api.game.TopList;
+import me.blockcraft.api.game.WaitingBoard;
 import me.blockcraft.api.world.TemplateDimensions;
 import me.blockcraft.api.world.Worlds;
 import me.blockcraft.common.message.Messages;
@@ -74,6 +75,7 @@ public final class TttPlugin extends JavaPlugin {
                 .or(() -> locations.get(LOBBY)).orElseGet(lobby::getSpawnLocation);
         var vote = new MapVote(messages, choices(config), getLogger());
         var topList = new TopList(this, stats, messages);
+        WaitingBoard.show(this, stats);
         var statsMenus = StatsMenus.of(messages, stats, topList, gameConfig.globalStatsHead());
         game = new TttGame(this, gameConfig, config, messages, vote, lobbySpawn, stats, statsMenus, karma);
         api.presence().maxPlayers(config.capacity());

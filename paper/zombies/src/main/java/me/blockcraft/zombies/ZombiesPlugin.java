@@ -16,6 +16,7 @@ import me.blockcraft.api.game.StatsMenus;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.game.TopCommand;
 import me.blockcraft.api.game.TopList;
+import me.blockcraft.api.game.WaitingBoard;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.zombies.arena.ArenaMap;
 import me.blockcraft.zombies.config.ZombiesConfig;
@@ -72,6 +73,7 @@ public final class ZombiesPlugin extends JavaPlugin {
         var stats = new StatsRepository(api.database(), "bc_zombies_stats");
         stats.createTable();
         var top = new TopList(this, stats, messages);
+        WaitingBoard.show(this, stats);
         game = new ZombiesGame(this, gameConfig, config, messages, arena, stats,
                 StatsMenus.of(messages, stats, top, gameConfig.globalStatsHead()));
         api.presence().maxPlayers(config.maxPlayers());

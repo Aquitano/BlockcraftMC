@@ -17,6 +17,7 @@ import me.blockcraft.api.game.StatsMenus;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.game.TopCommand;
 import me.blockcraft.api.game.TopList;
+import me.blockcraft.api.game.WaitingBoard;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.quicksg.command.DebugCommands;
 import me.blockcraft.quicksg.config.LocationKey;
@@ -55,6 +56,7 @@ public final class QuickSGPlugin extends JavaPlugin {
 
         var items = new GameItems(messages);
         var topList = new TopList(this, stats, messages);
+        WaitingBoard.show(this, stats);
         var statsMenus = StatsMenus.of(messages, stats, topList, gameConfig.globalStatsHead());
         game = new Game(this, gameConfig, config, messages, locations, stats, statsMenus, api.unlocks(), api.map(), items);
         api.presence().maxPlayers(config.maxPlayers());

@@ -13,6 +13,7 @@ import me.blockcraft.api.game.StatsMenus;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.game.TopCommand;
 import me.blockcraft.api.game.TopList;
+import me.blockcraft.api.game.WaitingBoard;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.common.message.Messages;
@@ -55,6 +56,7 @@ public final class EmeraldRushPlugin extends JavaPlugin {
 
         var topList = new TopList(this, stats, messages);
 
+        WaitingBoard.show(this, stats);
         var statsMenus = StatsMenus.of(messages, stats, topList, gameConfig.globalStatsHead());
         game = new Game(this, gameConfig, config, spawns, messages, stats, statsMenus, api.unlocks(), api.map());
         api.presence().maxPlayers(config.maxPlayers());

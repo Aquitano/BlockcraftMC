@@ -16,6 +16,7 @@ import me.blockcraft.api.game.StatsMenus;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.game.TopCommand;
 import me.blockcraft.api.game.TopList;
+import me.blockcraft.api.game.WaitingBoard;
 import me.blockcraft.api.world.Worlds;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.cores.arena.SkyMap;
@@ -52,6 +53,7 @@ public final class CoresPlugin extends JavaPlugin {
         var map = SkyMap.build(world, new LootChests(config.chests()), api.waitingLobby().map(WaitingLobby::spawn));
         map.lobbySpawn().getWorld().setSpawnLocation(map.lobbySpawn());
         var topList = new TopList(this, stats, messages);
+        WaitingBoard.show(this, stats);
         var statsMenus = StatsMenus.of(messages, stats, topList, gameConfig.globalStatsHead());
         game = new CoresGame(this, gameConfig, config, messages, map, stats, statsMenus);
         api.presence().maxPlayers(config.capacity());

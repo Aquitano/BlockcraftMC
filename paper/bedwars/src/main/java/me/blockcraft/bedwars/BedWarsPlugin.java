@@ -15,6 +15,7 @@ import me.blockcraft.api.game.StatsMenus;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.game.TopCommand;
 import me.blockcraft.api.game.TopList;
+import me.blockcraft.api.game.WaitingBoard;
 import me.blockcraft.api.world.TemplateDimensions;
 import me.blockcraft.bedwars.command.BedWarsSetup;
 import me.blockcraft.bedwars.config.BedWarsConfig;
@@ -53,6 +54,7 @@ public final class BedWarsPlugin extends JavaPlugin {
         var pool = new MapPool(api.map().file(this, "maps"), getLogger());
         var arenas = new TemplateDimensions("bedwars", WorldRules::settle);
         var topList = new TopList(this, stats, messages);
+        WaitingBoard.show(this, stats);
         var statsMenus = StatsMenus.of(messages, stats, topList, gameConfig.globalStatsHead());
         game = new Game(this, gameConfig, config, messages, pool, arenas, layout, catalog, stats, statsMenus);
         api.presence().maxPlayers(config.capacity());

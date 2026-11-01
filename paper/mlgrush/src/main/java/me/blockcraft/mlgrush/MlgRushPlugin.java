@@ -13,6 +13,7 @@ import me.blockcraft.api.game.StatsMenus;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.game.TopCommand;
 import me.blockcraft.api.game.TopList;
+import me.blockcraft.api.game.WaitingBoard;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.api.game.rush.RushArena;
 import me.blockcraft.api.game.rush.MapPool;
@@ -48,6 +49,7 @@ public final class MlgRushPlugin extends JavaPlugin {
         var stats = new StatsRepository(api.database(), "mlgrush_stats");
         stats.createTable();
         var topList = new TopList(this, stats, messages);
+        WaitingBoard.show(this, stats);
         var statsMenus = StatsMenus.of(messages, stats, topList, gameConfig.globalStatsHead());
         var arena = new RushArena(map);
         game = new StandaloneRushGame(this, gameConfig, config, messages, arena, maps, stats, statsMenus);

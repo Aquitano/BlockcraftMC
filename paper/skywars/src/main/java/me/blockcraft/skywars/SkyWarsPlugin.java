@@ -16,6 +16,7 @@ import me.blockcraft.api.game.StatsMenus;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.game.TopCommand;
 import me.blockcraft.api.game.TopList;
+import me.blockcraft.api.game.WaitingBoard;
 import me.blockcraft.api.world.Worlds;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.skywars.config.SkyWarsConfig;
@@ -61,6 +62,7 @@ public final class SkyWarsPlugin extends JavaPlugin {
 
         var topList = new TopList(this, stats, messages);
 
+        WaitingBoard.show(this, stats);
         var statsMenus = StatsMenus.of(messages, stats, topList, gameConfig.globalStatsHead());
         game = new SkyWarsGame(this, gameConfig, config, messages, arena, lobbySpawn, stats, statsMenus);
         api.presence().maxPlayers(config.maxPlayers());

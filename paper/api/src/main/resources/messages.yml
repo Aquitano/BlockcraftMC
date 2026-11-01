@@ -754,6 +754,11 @@ hotbar:
   stats: "<arrow><primary>Stats"
   start: "<arrow><primary>Spiel starten"
   hub: "<arrow><primary>Zur Lobby"
+waiting-board:
+  title: "<dark>● <accent><bold>TOP 5</bold> <dark>● <game> <dark>· <muted>Siege <dark>●"
+  first: "<face> <accent><bold>#1 <reset><primary><name> <muted>( <white><value><muted> )"
+  entry: "<face> <muted>#<rank> <primary><name> <muted>( <white><value><muted> )"
+  empty: "<muted>Noch keine Einträge"
 stats:
   not-here: "<prefix><error>Der Spieler <accent><player><error> ist nicht auf diesem Server."
 start:
