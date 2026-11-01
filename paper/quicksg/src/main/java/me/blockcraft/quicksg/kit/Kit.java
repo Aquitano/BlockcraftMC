@@ -7,34 +7,29 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.Arrays;
-import java.util.EnumSet;
 import java.util.Locale;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 public enum Kit implements UnlockableKit {
-    STARTER(Material.WOODEN_SWORD, true) {
+    STARTER(Material.WOODEN_SWORD, 0) {
         @Override
         public void apply(Player player) {
             player.getInventory().addItem(ItemStack.of(Material.WOODEN_SWORD));
         }
     },
-    BOW(Material.BOW, false) {
+    BOW(Material.BOW, 200) {
         @Override
         public void apply(Player player) {
             player.getInventory().addItem(ItemStack.of(Material.BOW), ItemStack.of(Material.ARROW, 12));
         }
     },
-    HEARTS(Material.REDSTONE, false) {
+    HEARTS(Material.REDSTONE, 200) {
         @Override
         public void apply(Player player) {
             player.getAttribute(Attribute.MAX_HEALTH).setBaseValue(20.0);
             player.setHealth(20.0);
         }
     },
-    CHAIN(Material.CHAINMAIL_CHESTPLATE, false) {
+    CHAIN(Material.CHAINMAIL_CHESTPLATE, 200) {
         @Override
         public void apply(Player player) {
             player.getInventory().setHelmet(ItemStack.of(Material.CHAINMAIL_HELMET));
@@ -42,7 +37,7 @@ public enum Kit implements UnlockableKit {
             player.getInventory().setBoots(ItemStack.of(Material.CHAINMAIL_BOOTS));
         }
     },
-    DIAMOND(Material.DIAMOND_CHESTPLATE, false) {
+    DIAMOND(Material.DIAMOND_CHESTPLATE, 200) {
         @Override
         public void apply(Player player) {
             player.getInventory().addItem(ItemStack.of(Material.WOODEN_SWORD));
@@ -54,11 +49,11 @@ public enum Kit implements UnlockableKit {
 
     public static final String ITEM_PREFIX = "qsg.kit.";
     private final Material icon;
-    private final boolean free;
+    private final int defaultPrice;
 
-    Kit(Material icon, boolean free) {
+    Kit(Material icon, int defaultPrice) {
         this.icon = icon;
-        this.free = free;
+        this.defaultPrice = defaultPrice;
     }
 
     public abstract void apply(Player player);
@@ -73,25 +68,18 @@ public enum Kit implements UnlockableKit {
         return ITEM_PREFIX;
     }
 
-    public static Set<Kit> ownedAmong(Set<String> items) {
-        return Arrays.stream(values()).filter(kit -> kit.free || items.contains(kit.item()))
-                .collect(Collectors.toCollection(() -> EnumSet.noneOf(Kit.class)));
-    }
 
     @Override
     public Material icon() {
         return icon;
     }
 
-    public boolean free() {
-        return free;
+    public int defaultPrice() {
+        return defaultPrice;
     }
 
     public String messageKey() {
         return "kit." + key();
     }
 
-    public static Optional<Kit> bySlot(int slot) {
-        return slot >= 0 && slot < values().length ? Optional.of(values()[slot]) : Optional.empty();
-    }
 }

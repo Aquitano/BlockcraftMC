@@ -3,6 +3,8 @@ package me.blockcraft.quicksg.config;
 import me.blockcraft.api.game.CombatStyle;
 import me.blockcraft.api.game.CompassTracker;
 import me.blockcraft.api.game.LootTable;
+import me.blockcraft.api.kit.KitCatalog;
+import me.blockcraft.quicksg.kit.Kit;
 
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -15,7 +17,7 @@ public record QuickSGConfig(
         WorldBorderSettings worldBorder,
         CompassTracker.Settings tracker,
         Rewards rewards,
-        int kitPrice,
+        KitCatalog<Kit> kits,
         LootTable loot,
         CombatStyle combat
 ) {
@@ -47,7 +49,7 @@ public record QuickSGConfig(
                         border.getDouble("ingame-radius", 60)),
                 CompassTracker.Settings.from(config),
                 new Rewards(rewards.getInt("kill", 5), rewards.getInt("death", 2), rewards.getInt("win", 15)),
-                config.getInt("kit-price", 200),
+                KitCatalog.from(section(config, "kits"), Kit.class, Kit::defaultPrice),
                 LootTable.fromYaml(chest, 1, 7),
                 CombatStyle.from(config));
     }

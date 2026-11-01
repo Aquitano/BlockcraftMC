@@ -20,7 +20,13 @@ rewards:
   kill: 5
   death: 2
   win: 15
-kit-price: 200
+# A kit's price in coins, 0 is free for everyone; a kit left out costs its default.
+kits:
+  starter: 0
+  bow: 200
+  hearts: 200
+  chain: 200
+  diamond: 200
 chest:
   min-items: 1
   max-items: 7

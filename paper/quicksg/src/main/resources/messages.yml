@@ -57,7 +57,6 @@ top:
 
 kit:
   selected: "<prefix><muted>Du hast das <white><kit><muted> ausgewählt!"
-  not-owned: "<prefix><error>Du hast dieses Kit noch nicht gekauft!"
   starter:
     name: "Starter-Kit"
     contents:
@@ -88,18 +87,10 @@ menu:
     title: "<arrow><quicksg>QuickSG <dark>· <muted>Dein Start-Kit"
     selected: "<success>Für diese Runde ausgewählt"
     owned: "<success>Freigeschaltet"
+    select: "<left>Auswählen"
     locked: "<accent><price> Coins <dark>· <muted>Dauerhaft freischalten"
-    inspect: "<click><quicksg>Kit ansehen"
+    buy: "<left>Freischalten"
     entry: "<quicksg><kit>"
-  kit-detail:
-    title: "<arrow><quicksg><kit> <dark>· <muted>QuickSG"
-    price: "<muted>Dauerhaft freischalten"
-    price-free: "<success>kostenlos"
-    price-coins: "<arrow><accent><price> Coins"
-    selected: "<success>Ausgewählt"
-    select: "<success>Für diese Runde auswählen"
-    buy: "<success>Mit Coins freischalten"
-    bought: "<success>bereits gekauft!"
   stats:
     title: "<arrow><quicksg>QuickSG <dark>· <muted>Stats"
     player: "<accent><player>"

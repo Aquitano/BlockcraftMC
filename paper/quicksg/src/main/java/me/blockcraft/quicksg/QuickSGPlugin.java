@@ -42,7 +42,7 @@ public final class QuickSGPlugin extends JavaPlugin {
         var locations = Locations.load(api.map().file(this, "locations.yml"), LocationKey::key);
 
         var items = new GameItems(messages);
-        game = new Game(this, gameConfig, config, messages, locations, stats, services.menus(), api.unlocks(), api.map(), items);
+        game = new Game(this, gameConfig, config, messages, locations, stats, services.menus(), api.map(), items);
         api.presence().maxPlayers(config.maxPlayers());
         game.applyLobbyWorldBorder();
 

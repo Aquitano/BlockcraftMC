@@ -3,6 +3,7 @@ package me.blockcraft.quicksg.game;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.world.WaitingLobby;
 import me.blockcraft.api.kit.KitSelection;
+import me.blockcraft.api.kit.KitShop;
 import me.blockcraft.common.settings.PlayerSetting;
 import me.blockcraft.api.config.Locations;
 import me.blockcraft.api.game.Arena;
@@ -21,7 +22,6 @@ import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.game.TimerBar;
 import me.blockcraft.api.game.LobbyEntrance;
 import me.blockcraft.api.pack.MenuIcon;
-import me.blockcraft.api.shop.Unlocks;
 import me.blockcraft.api.world.MapBundle;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Countdown;
@@ -30,7 +30,6 @@ import me.blockcraft.common.message.Messages;
 import me.blockcraft.quicksg.config.LocationKey;
 import me.blockcraft.quicksg.config.QuickSGConfig;
 import me.blockcraft.quicksg.kit.Kit;
-import me.blockcraft.quicksg.menu.KitMenus;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -67,7 +66,6 @@ public final class Game implements RoundConnections.Seating {
     private final RoundSummary summary;
     private final Round round;
     private final LobbyCountdown lobbyCountdown;
-    private final KitMenus kitMenus;
     private final LobbyHotbar lobbyHotbar;
     private final LobbyEntrance entrance;
 
@@ -78,7 +76,7 @@ public final class Game implements RoundConnections.Seating {
     private Countdown gameTimer;
 
     public Game(Plugin plugin, GameConfig gameConfig, QuickSGConfig config, Messages messages,
-                Locations<LocationKey> locations, StatsRepository stats, StatsMenus statsMenus, Unlocks unlocks,
+                Locations<LocationKey> locations, StatsRepository stats, StatsMenus statsMenus,
                 MapBundle map, GameItems items) {
         this.plugin = plugin;
         this.config = config;
@@ -90,10 +88,10 @@ public final class Game implements RoundConnections.Seating {
         this.round = new Round(plugin, new Arena(messages, Sounds.QUICKSG_JOIN), summary, config.maxPlayers(), gameConfig);
         this.scoreboard = new GameScoreboard(messages, round, map, config.maxPlayers());
         this.lobbyCountdown = new LobbyCountdown(plugin, round, gameConfig, this::start);
-        this.kits = new KitSelection<>(plugin, round, PlayerSetting.QUICKSG_KIT, Kit.STARTER, Kit::free, this::refreshScoreboard);
-        this.kitMenus = new KitMenus(messages, kits, unlocks, config.kitPrice());
+        this.kits = new KitSelection<>(plugin, round, PlayerSetting.QUICKSG_KIT, Kit.STARTER, config.kits()::free, this::refreshScoreboard);
+        var kitShop = new KitShop<>(messages, kits, config.kits(), kit -> messages.getLines("kit." + kit.key() + ".contents"));
         this.lobbyHotbar = new LobbyHotbar(plugin,
-                List.of(new LobbyHotbar.Choice(MenuIcon.QUICKSG, messages.get("item.kits"), kitMenus::openSelector)),
+                List.of(new LobbyHotbar.Choice(MenuIcon.QUICKSG, messages.get("item.kits"), kitShop::open)),
                 statsMenus, lobbyCountdown);
         this.entrance = new LobbyEntrance(round, lobbyCountdown, lobbyHotbar, this::lobbySpawn,
                 () -> isLobby() ? lobbySpawn() : locations.get(LocationKey.SPECTATOR), OptionalInt.empty(), kits::restore);
