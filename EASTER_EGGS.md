@@ -270,7 +270,7 @@ It is empty by default because no founding date is assumed.
 | Advent | December 1 through 24. The profile contains a calendar with today's door, and joining the lobby names it. Each account can claim 25 coins once per day. Door 24 also unlocks the snow trail. |
 | Christmas | December 24 through 26. The Weihnachtsmann stands at `/lobbyset santa` and gives each account `activities.christmas-coins` (100) once per year, with a jingle. Without that spot he does not appear. Every ten minutes his sleigh, pulled by four reindeer and Rudolph, flies over a lobby player ringing Jingle Bells and drops four presents; each player catches one per flight for 15 coins. Lobby's `sleigh` section sets the timing, and staff send it on any day with `/schlitten`. |
 | New Year | On December 31, a boss bar counts down the last ten seconds. At midnight the lobby's configured firework positions launch fireworks. Joining during January grants that year's tag. |
-| Network birthday | The proxy's MOTD counts the years. Lobby players receive a temporary cake hat for the rest of the day. |
+| Network birthday | The proxy's MOTD counts the years. Lobby players receive a temporary cake hat for the rest of the day. The lobby's `seasons.birthday` theme scatters cakes, candle cakes and lit candles over the grass, turns torches into coloured candles and plays distant fireworks, on the players' screens only. |
 | OG | No date; staff switch it on with `/event og`. The BedWars map vote offers the old server's maps (`era: og`) instead of the current ones. |
 
 The calendar's `halloween` and `winter` windows can be moved in both `calendar` sections; a window whose end comes
@@ -299,7 +299,7 @@ The adjacent `furniture.yml` files place the Nexo props and choose seasonal vari
 winter, and baskets, garlands, presents, and the shared island's tree appear for their configured occasions.
 See [furniture setup](nexo/README.md).
 
-Lobby's `seasons` section still supplies cosmetic Halloween swaps: pale leaves, soul flames, jack-o'-lanterns,
+Lobby's `seasons` section still supplies cosmetic Halloween and birthday swaps. Halloween uses pale leaves, soul flames, jack-o'-lanterns,
 wither roses, and leaf litter. These changes appear only in player packets. Clicking a swapped block may show
 the real block until the chunk reloads. Seasonal particles and ambient sounds respect each player's settings.
 

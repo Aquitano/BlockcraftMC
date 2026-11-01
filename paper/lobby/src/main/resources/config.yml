@@ -200,6 +200,27 @@ seasons:
       list:
         - {sound: block.note_block.chime, volume: 0.4, pitch: 1.5}
         - {sound: block.bell.resonate, volume: 0.3, pitch: 2.0}
+  birthday:
+    blocks:
+      torch: [torch, "red_candle[candles=3,lit=true]", "yellow_candle[candles=2,lit=true]", "light_blue_candle[candles=3,lit=true]", "magenta_candle[candles=4,lit=true]"]
+    cover:
+      on: [grass_block, moss_block, podzol, snow]
+      blocks:
+        - cake
+        - "red_candle_cake[lit=true]"
+        - "lime_candle_cake[lit=true]"
+        - "light_blue_candle_cake[lit=true]"
+        - "pink_candle[candles=3,lit=true]"
+        - "yellow_candle[candles=4,lit=true]"
+        - "orange_candle[candles=2,lit=true]"
+      chance: 0.025
+    sounds:
+      every-seconds: 45
+      list:
+        - {sound: entity.firework_rocket.blast_far, volume: 0.5, pitch: 1.0}
+        - {sound: entity.firework_rocket.twinkle_far, volume: 0.5, pitch: 1.0}
+        - {sound: entity.villager.celebrate, volume: 0.4, pitch: 1.2}
+        - {sound: block.note_block.bell, volume: 0.4, pitch: 1.3}
 
 # Set pieces staff place with /setprop <name>; the spots are kept with the map (props.yml, /map save). A piece is a
 # group of parts round its spot that turns once every spin-seconds and rises and sinks by bob blocks every
