@@ -168,7 +168,7 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         forcedOccasions.reload();
         var waitingPath = Optional.ofNullable(System.getenv("BLOCKCRAFT_WAITING_TEMPLATE"))
                 .filter(value -> !value.isBlank()).orElse(text(YamlFile.section(config, "waiting-lobby"), "template", ""));
-        var waiting = WaitingLobby.supports(self.group()) && !waitingPath.isBlank()
+        var waiting = !waitingPath.isBlank()
                 ? waitingLobby(Path.of(waitingPath)) : Optional.<WaitingLobby>empty();
         var api = new BlockcraftApi(notifications, new NetworkOperations(this, messages), playerTasks, database, coins,
                 unlocks, new Shop(database), new RoundRecapRepository(database), streaks(YamlFile.section(config, "streaks")),

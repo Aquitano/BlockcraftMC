@@ -8,13 +8,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 public final class WaitingLobby {
 
     private static final String NAME = "waiting_lobby";
-    private static final Set<String> GROUPS = Set.of("bedwars", "duell", "quicksg", "emeraldrush", "ttt",
-            "endergames", "skywars", "cores", "mlgrush", "zombies");
 
     private final Path directory;
     private final TemplateDimensions dimensions;
@@ -26,10 +23,6 @@ public final class WaitingLobby {
         this.dimensions = dimensions;
         this.world = world;
         this.layout = layout;
-    }
-
-    public static boolean supports(String group) {
-        return GROUPS.contains(group);
     }
 
     public static WaitingLobby load(Path directory) {
