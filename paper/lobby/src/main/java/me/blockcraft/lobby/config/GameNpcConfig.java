@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 /**
  * Lobby's {@code game-npcs} section: how near a player comes before a game's figure turns to them, how often one of
  * the figures moves on its own, and whose skin each game's figure wears, by player name; a game without a name
- * wears the default look.
+ * wears the game host's skin.
  */
 public record GameNpcConfig(double lookRadius, int idleSeconds, Map<LobbyLocation, String> skins) {
 

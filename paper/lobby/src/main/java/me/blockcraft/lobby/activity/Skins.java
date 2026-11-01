@@ -3,8 +3,8 @@ package me.blockcraft.lobby.activity;
 import com.destroystokyo.paper.profile.ProfileProperty;
 import io.papermc.paper.datacomponent.item.ResolvableProfile;
 
-/** The signed skins of the lobby's figures, taken from MineSkin; a figure without a signed skin shows as Steve. */
-final class Skins {
+/** The skins of the lobby's figures, taken from MineSkin. */
+public final class Skins {
 
     static final ResolvableProfile SANTA = ResolvableProfile.resolvableProfile()
             .name("Santa")
@@ -53,6 +53,23 @@ final class Skins {
                             + "Ae6cpXczL7dK2VyJ6ksMdonsYVzrBO7RA1KV8I+AQ9+gwuGd/cvudOUz2+ZoBcGiCWafvg9xsHX/imW3RSfqhXdgMocgLMRqV4IXbpzoLsMJx1"
                             + "EgwKHwlKFJZy1TgzT6So7gO1thhOpfR56JBxdGRpb5rKurAAJjajZ6w4RzqkEVjJvDhrP45nq2BoGIjk65szMbU0ktckYdy/qSPKwiavKUWAtY"
                             + "8Iku51R9Cg2fnOuyq4vbfw4="))
+            .build();
+
+    /** What every game's figure wears, unless {@code game-npcs.skins} names a player for that game. */
+    public static final ResolvableProfile GAME_HOST = ResolvableProfile.resolvableProfile()
+            .name("Spielleiter")
+            .addProperty(new ProfileProperty("textures",
+                    "ewogICJ0aW1lc3RhbXAiIDogMTc4OTUwODEwNTAxNywKICAicHJvZmlsZUlkIiA6ICIwMTIxYzFjZDUxOTM0M2NmYWM4YzgyZThiNjVjYTFjZiIs"
+                            + "CiAgInByb2ZpbGVOYW1lIiA6ICJfVmV4X1RWIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNL"
+                            + "SU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzM2YmJhYTc5YzUzYjBmN2MxMTNhMDgz"
+                            + "OGI0ZDM0ZjhlODRhYWE0OGY1YTk3ZGEyM2Q5ZTMwODJjMjNiMDQwZTkiCiAgICB9CiAgfQp9",
+                    "CcspnTzUm2Wx12WVuMWHclhly1sz6PrGNCieGnB7bGRqTDSVcHCQjiIcceEt78lisR7ZeRnT8LUncFan169ziRiv7l6F2LU++cTRTfPdzJ+cC75i"
+                            + "0UOX7AO5EU+0DKyq3R0jI/+kuEvYAO2X2DC/5Pm9+0zhkVQ49fp2zaLH31NOu7aE3jhKyeWm01eh8Kf0so61JKb+Jc/tgOqSYLbG/ntVTPJ6Iy/T"
+                            + "mE9jJ1OOondbMf8D6XsDhxwkAJwr4U+mAZpgV+gJ+IJceMvRI/Gz31H+wBXsXbfs7B1ni5lQrmfziD1dac+UmjgHoNeo/84qiu76/o5Y4T+xZ5Iv"
+                            + "25VxAlFOGnnajJCJzRMLL9CKJ5xzPh5YnOebPaeJTX3hLOMHChz+RCJeM4cYCg5i1vkIZ6kfnrK/ULRAR+l7gw3hgPnYz40lyiHQvg6kXZWxSOap"
+                            + "egRu0XSpb2S3JIpdYLXRKo9rt94grE+Est44X8nsXXVlJub2RUfRCZFpg9XX3TiCDqPbIJ5iMX3XtJdiHVHztulBcSehHGlsl+/cPvHSMu8EEGbw"
+                            + "1T1XDM5hP/QfUVnSL8o1/xbBRiiB8WIN+6vsyEfqm1QKWzOdq6ka6ByX7S9ci8khi5sLOiCz+fWOiHuQYcEGBLDPRUMPFK0g1JHwgyipklf8JStP"
+                            + "LLkhlF1qtAA="))
             .build();
 
     private Skins() {
