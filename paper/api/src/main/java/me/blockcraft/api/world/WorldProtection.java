@@ -9,7 +9,6 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Hanging;
-import org.bukkit.entity.ItemFrame;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
@@ -49,9 +48,10 @@ import java.util.function.Supplier;
 /**
  * Keeps a world as it was built, for everyone but a player in build mode: no block answers a click or a step unless it
  * is {@code usable}, nothing is built, emptied, hung up, dressed, dropped, picked up or moved in an inventory, and no
- * entity's inventory opens. Nobody and nothing is hurt, hungry or given experience, and nothing explodes. Items still
- * work in the hand, so rods cast and snowballs fly. The void and /kill still kill, so whoever no {@code rescue} spawn
- * catches does not fall forever.
+ * entity answers a right click or opens its inventory, so a listener that makes an NPC answer must not ignore cancelled
+ * clicks. Nobody and nothing is hurt, hungry or given experience, and nothing explodes. Items still work in the hand,
+ * so rods cast and snowballs fly. The void and /kill still kill, so whoever no {@code rescue} spawn catches does not
+ * fall forever.
  */
 public final class WorldProtection implements Listener {
 
@@ -148,10 +148,8 @@ public final class WorldProtection implements Listener {
     }
 
     @EventHandler
-    public void onItemFrame(PlayerInteractEntityEvent event) {
-        if (event.getRightClicked() instanceof ItemFrame) {
-            deny(event, event.getPlayer());
-        }
+    public void onInteractEntity(PlayerInteractEntityEvent event) {
+        deny(event, event.getPlayer());
     }
 
     @EventHandler

@@ -3,6 +3,7 @@ package me.blockcraft.signs.listener;
 import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.signs.sign.StatusSigns;
+import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -21,9 +22,14 @@ public final class SignClickListener implements Listener {
         this.signs = signs;
     }
 
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    /**
+     * The lobby's protection denies only the sign block, so it cannot be dyed, waxed or edited; a click someone
+     * cancelled outright, such as a frozen player's, also denies the item in hand.
+     */
+    @EventHandler(priority = EventPriority.HIGH)
     public void onClick(PlayerInteractEvent event) {
-        if (event.getAction() != Action.RIGHT_CLICK_BLOCK || event.getHand() != EquipmentSlot.HAND || event.getClickedBlock() == null) {
+        if (event.getAction() != Action.RIGHT_CLICK_BLOCK || event.getHand() != EquipmentSlot.HAND || event.getClickedBlock() == null
+                || event.useItemInHand() == Event.Result.DENY) {
             return;
         }
         signs.find(event.getClickedBlock().getLocation()).ifPresent(sign -> {

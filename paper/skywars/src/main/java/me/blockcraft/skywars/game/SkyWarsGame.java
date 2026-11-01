@@ -286,10 +286,9 @@ public final class SkyWarsGame implements RoundConnections.Seating {
         }
     }
 
-    /** Below the void line a player dies, falling from whoever hit them last; a spectator is put back above the map. */
     /**
      * Below the void line a player of the round dies; a spectator, and after the round anyone at all, is put back
-     * above the islands and may fly, because WorldProtection keeps them from dying while the recap shows.
+     * above the islands and may fly, because the void still kills while the recap shows.
      */
     public void fell(Player player) {
         if (isIngame() && round.isPlaying(player) && !player.isDead()) {

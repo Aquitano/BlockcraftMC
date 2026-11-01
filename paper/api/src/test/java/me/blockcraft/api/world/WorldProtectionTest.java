@@ -5,10 +5,12 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Sheep;
 import org.bukkit.event.Event;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.junit.Test;
 
@@ -87,6 +89,27 @@ public class WorldProtectionTest {
         assertTrue(denied(exhibitLever));
         assertFalse(denied(exhibitDoor));
         assertTrue(denied(exhibitPlate));
+    }
+
+    @Test
+    public void noEntityAnswersAClickButForBuilders() {
+        var world = world();
+        var player = player(world);
+        var building = new BuildMode();
+        var protection = WorldProtection.in(world, building);
+        var sheep = (Sheep) Proxy.newProxyInstance(Sheep.class.getClassLoader(), new Class<?>[]{Sheep.class},
+                (proxy, method, args) -> {
+                    throw new AssertionError(method);
+                });
+
+        var shearing = new PlayerInteractEntityEvent(player, sheep);
+        protection.onInteractEntity(shearing);
+        assertTrue(shearing.isCancelled());
+
+        building.toggle(player);
+        var naming = new PlayerInteractEntityEvent(player, sheep);
+        protection.onInteractEntity(naming);
+        assertFalse(naming.isCancelled());
     }
 
     private static boolean denied(PlayerInteractEvent click) {

@@ -95,7 +95,6 @@ import me.blockcraft.lobby.rank.PremiumRank;
 import me.blockcraft.lobby.recap.RoundRecapListener;
 import me.blockcraft.lobby.team.TeamBoard;
 import net.luckperms.api.LuckPermsProvider;
-import org.bukkit.Tag;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -237,8 +236,7 @@ public final class LobbyPlugin extends JavaPlugin {
                 new RoundRecapListener(this, messages, config),
                 new LobbyItemListener(messages, menus, hider),
                 new ProtectionListener(),
-                // StatusSigns ignores a cancelled click.
-                WorldProtection.during(() -> true, api.buildMode()).usable(block -> Tag.ALL_SIGNS.isTagged(block.getType())),
+                WorldProtection.during(() -> true, api.buildMode()),
                 new SecretsListener(messages, secrets),
                 new ShopNpcListener(messages, menus, hud, config),
                 new KonamiListener(this, messages, api.unlocks(), secrets, activities.konamiGap()),
