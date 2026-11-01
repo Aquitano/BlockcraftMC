@@ -165,9 +165,6 @@ public final class SystemPlugin {
     }
 
     private void enable() {
-        if (proxy.getPluginManager().getPlugin("blockcraft-report").isPresent()) {
-            throw new IllegalStateException("Remove the old BlockcraftReport jar; reports are now part of BlockcraftSystem");
-        }
         var config = SystemConfig.load(dataDirectory.resolve("config.yml"), () -> getClass().getResourceAsStream("/config.yml"));
         var loaded = Messages.load(dataDirectory, () -> getClass().getResourceAsStream("/messages.yml"));
         var messages = loaded.with(config.networkTags(), loaded.tagsOf("palette"));

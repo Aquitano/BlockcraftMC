@@ -10,32 +10,31 @@ import org.bukkit.inventory.ItemStack;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 public enum Kit implements UnlockableKit {
-    STARTER("KIT1", Material.WOODEN_SWORD, true) {
+    STARTER(Material.WOODEN_SWORD, true) {
         @Override
         public void apply(Player player) {
             player.getInventory().addItem(ItemStack.of(Material.WOODEN_SWORD));
         }
     },
-    BOW("KIT2", Material.BOW, false) {
+    BOW(Material.BOW, false) {
         @Override
         public void apply(Player player) {
             player.getInventory().addItem(ItemStack.of(Material.BOW), ItemStack.of(Material.ARROW, 12));
         }
     },
-    HEARTS("KIT3", Material.REDSTONE, false) {
+    HEARTS(Material.REDSTONE, false) {
         @Override
         public void apply(Player player) {
             player.getAttribute(Attribute.MAX_HEALTH).setBaseValue(20.0);
             player.setHealth(20.0);
         }
     },
-    CHAIN("KIT4", Material.CHAINMAIL_CHESTPLATE, false) {
+    CHAIN(Material.CHAINMAIL_CHESTPLATE, false) {
         @Override
         public void apply(Player player) {
             player.getInventory().setHelmet(ItemStack.of(Material.CHAINMAIL_HELMET));
@@ -43,7 +42,7 @@ public enum Kit implements UnlockableKit {
             player.getInventory().setBoots(ItemStack.of(Material.CHAINMAIL_BOOTS));
         }
     },
-    DIAMOND("KIT5", Material.DIAMOND_CHESTPLATE, false) {
+    DIAMOND(Material.DIAMOND_CHESTPLATE, false) {
         @Override
         public void apply(Player player) {
             player.getInventory().addItem(ItemStack.of(Material.WOODEN_SWORD));
@@ -54,17 +53,10 @@ public enum Kit implements UnlockableKit {
     };
 
     public static final String ITEM_PREFIX = "qsg.kit.";
-    /** The flag columns of the legacy qsg_kits table, for the one-time import into bc_unlocks. */
-    public static final Map<String, String> LEGACY_COLUMNS = Arrays.stream(values())
-            .filter(kit -> !kit.free)
-            .collect(Collectors.toUnmodifiableMap(kit -> kit.legacyColumn, Kit::item));
-
-    private final String legacyColumn;
     private final Material icon;
     private final boolean free;
 
-    Kit(String legacyColumn, Material icon, boolean free) {
-        this.legacyColumn = legacyColumn;
+    Kit(Material icon, boolean free) {
         this.icon = icon;
         this.free = free;
     }

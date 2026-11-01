@@ -19,7 +19,6 @@ import me.blockcraft.quicksg.game.GameItems;
 import me.blockcraft.quicksg.listener.DeathListener;
 import me.blockcraft.quicksg.listener.ItemListener;
 import me.blockcraft.quicksg.listener.ProtectionListener;
-import me.blockcraft.quicksg.kit.Kit;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -41,7 +40,6 @@ public final class QuickSGPlugin extends JavaPlugin {
         var messages = services.messages();
         var stats = services.stats();
         var locations = Locations.load(api.map().file(this, "locations.yml"), LocationKey::key);
-        api.unlocks().importLegacyTable("qsg_kits", Kit.LEGACY_COLUMNS);
 
         var items = new GameItems(messages);
         game = new Game(this, gameConfig, config, messages, locations, stats, services.menus(), api.unlocks(), api.map(), items);

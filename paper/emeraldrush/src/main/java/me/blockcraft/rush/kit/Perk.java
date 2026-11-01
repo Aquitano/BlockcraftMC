@@ -4,27 +4,20 @@ import org.bukkit.Material;
 
 import java.util.Arrays;
 import java.util.EnumSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 /** Perks are unlocked once with global coins and then buyable in the round shop with emeralds. */
 public enum Perk {
-    ANGEL("KIT1", "angel", Material.FISHING_ROD),
-    LUCKY_POTION("KIT3", "lucky-potion", Material.POTION),
-    STRENGTH("KIT4", "strength", Material.REDSTONE);
+    ANGEL("angel", Material.FISHING_ROD),
+    LUCKY_POTION("lucky-potion", Material.POTION),
+    STRENGTH("strength", Material.REDSTONE);
 
     public static final String ITEM_PREFIX = "rush.perk.";
-    /** The flag columns of the legacy em_kits table, for the one-time import into bc_unlocks. */
-    public static final Map<String, String> LEGACY_COLUMNS = Arrays.stream(values())
-            .collect(Collectors.toUnmodifiableMap(perk -> perk.legacyColumn, Perk::item));
-
-    private final String legacyColumn;
     private final String key;
     private final Material icon;
 
-    Perk(String legacyColumn, String key, Material icon) {
-        this.legacyColumn = legacyColumn;
+    Perk(String key, Material icon) {
         this.key = key;
         this.icon = icon;
     }

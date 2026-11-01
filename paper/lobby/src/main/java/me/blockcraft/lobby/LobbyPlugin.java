@@ -9,7 +9,6 @@ import me.blockcraft.api.menu.Profiles;
 import me.blockcraft.api.world.WorldProtection;
 import me.blockcraft.common.config.YamlFile;
 import me.blockcraft.common.message.Messages;
-import me.blockcraft.common.shop.Premium;
 import me.blockcraft.lobby.activity.AmbientSpots;
 import me.blockcraft.lobby.activity.AreaAmbience;
 import me.blockcraft.lobby.activity.Flights;
@@ -58,11 +57,8 @@ import me.blockcraft.lobby.config.SeasonTheme;
 import me.blockcraft.lobby.config.SleighConfig;
 import me.blockcraft.lobby.config.ShootingStarConfig;
 import me.blockcraft.lobby.cosmetic.CosmeticPreviews;
-import me.blockcraft.lobby.cosmetic.Head;
 import me.blockcraft.lobby.cosmetic.Pets;
-import me.blockcraft.lobby.cosmetic.Secret;
 import me.blockcraft.lobby.cosmetic.Secrets;
-import me.blockcraft.lobby.cosmetic.Shirt;
 import me.blockcraft.lobby.cosmetic.Trails;
 import me.blockcraft.lobby.cookies.CookieClicker;
 import me.blockcraft.lobby.cookies.CookieProgress;
@@ -97,7 +93,6 @@ import me.blockcraft.lobby.npc.Podiums;
 import me.blockcraft.lobby.npc.ShopNpc;
 import me.blockcraft.lobby.rank.PremiumRank;
 import me.blockcraft.lobby.recap.RoundRecapListener;
-import me.blockcraft.lobby.storage.LegacyUnlocks;
 import me.blockcraft.lobby.team.TeamBoard;
 import net.luckperms.api.LuckPermsProvider;
 import org.bukkit.Tag;
@@ -181,7 +176,6 @@ public final class LobbyPlugin extends JavaPlugin {
                 () -> locations.get(LobbyLocation.SPAWN).ifPresent(spawn -> config.fireworkSpots()
                         .forEach(spot -> MoveListener.launchFirework(spot.toLocation(spawn.getWorld())))), decor);
         profiles.advent(player -> seasons.openAdvent(player, back -> profiles.open(back, Optional.empty())));
-        importLegacyUnlocks(new LegacyUnlocks(api.unlocks(), getSLF4JLogger()));
         gadgets = new Gadgets(this, messages, Duration.ofSeconds(config.gadgetCooldownSeconds()));
         friends = new FriendsChannel(this, config.friendsTimeoutTicks());
         previews = new CosmeticPreviews(this, messages, config.cosmeticPreviewTicks());
@@ -359,13 +353,6 @@ public final class LobbyPlugin extends JavaPlugin {
         }
     }
 
-    private void importLegacyUnlocks(LegacyUnlocks legacy) {
-        legacy.importYaml(getDataPath().resolve("heads.yml"), key -> Head.byKey(key).map(Head::item));
-        legacy.importYaml(getDataPath().resolve("shirts.yml"), key -> Shirt.byKey(key).map(Shirt::item));
-        legacy.importYaml(getDataPath().resolve("secrets.yml"), key -> Secret.byKey(key).map(Secret::item));
-        legacy.importYaml(getDataPath().resolve("premium-purchases.yml"),
-                key -> key.equals("name") ? Optional.of(Premium.ITEM) : Optional.empty());
-    }
 
     private void register(Listener... listeners) {
         for (Listener listener : listeners) {

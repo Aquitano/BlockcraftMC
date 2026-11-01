@@ -31,10 +31,9 @@ README.md; this file only holds what the code does not say by itself.
   edit a deployed migration. Tables one plugin owns alone (game stats, staff inventories, friends) keep their own
   `createTable`.
 - Database access goes through `common`'s `Database` with prepared statements. Table and column names of the legacy
-  tables (`VCOINS`, `*_stats`, `*_kits`, `Reports`) stay as they are; new tables are `bc_*`.
+  tables (`VCOINS`, `*_stats`, `Reports`) stay as they are; new tables are `bc_*`.
 - Anything a player unlocks with coins or by finding it (cosmetics, kits, perks, secrets) is one row in `bc_unlocks`
-  through `BlockcraftApi.unlocks()`, bought via `BlockcraftApi.shop()`; the legacy `*_kits` tables are only read once for
-  the import. No per-plugin unlock tables or YAML stores.
+  through `BlockcraftApi.unlocks()`, bought via `BlockcraftApi.shop()`. No per-plugin unlock tables or YAML stores.
 - Anything the network remembers about a player's own choices (cosmetics, on/off toggles) is one row in
   `bc_player_settings` through `common`'s `PlayerSetting`; Paper reads it from `BlockcraftApi.get().settings()` and
   reports every change to the proxy over the `Setting` subchannel. No per-plugin settings store.
@@ -98,8 +97,7 @@ README.md; this file only holds what the code does not say by itself.
   proxy; Paper plugins only do what needs the world.
 - No NMS, no legacy `§` codes in code. Legacy `&` is only parsed for text humans typed (MOTD, chat, LuckPerms prefixes, report statuses).
 - Names and structure should carry the meaning; comments only for a non-obvious why.
-- Reports live in `velocity/system/report`, using the system pool and visibility-aware player lookup. The retired
-  `velocity/report` jar must not run.
+- Reports live in `velocity/system/report`, using the system pool and visibility-aware player lookup.
 - Whoever a row is about or by (reporter, reported, claimer, issuer) is a `PlayerReference`: the account UUID next to
   the name it had at the time; the console has only a name. Names stay for legacy rows and display.
 - Reports and punishments from Paper use `BlockcraftApi.operations()` and the common versioned operation codec.

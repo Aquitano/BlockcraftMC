@@ -821,13 +821,9 @@ payloads. `paper/api` holds what every backend shares: menus, dialogs, player ta
 `paper/core` is the backend's commands and enforcement; the games keep their own match rules on top of the shared
 countdowns, rewards and menus.
 
-Reports run inside BlockcraftSystem on its database pool and player identity rules. Remove the old BlockcraftReport
-jar when deploying this version; the proxy refuses to start while it is loaded. On first start the old plugin's
-`config.yml`, `messages.yml` and `ignored-staff.yml` are copied from `plugins/blockcraft-report` into
-`plugins/blockcraft-system/reports` where no file exists yet, so messages, cooldown and muted staff survive. The old
-plugin's own database section is gone; if it pointed at a different database, move its `Reports` table first.
-The staff listed in `ignored-staff.yml` get the `report-notifications` setting turned off on that start, and the
-file is renamed to `ignored-staff.yml.imported`; from then on `/report notify` and the settings dialog change it.
+Reports run inside BlockcraftSystem on its database pool and player identity rules, with their config and messages in
+`plugins/blockcraft-system/reports`. Staff turn report notices on and off with `/report notify` or the settings
+dialog.
 
 Deploy the Paper and Velocity jars together: reports and punishments from a backend travel on `blockcraft:operations`
 as versioned payloads with a request id, and the proxy answers with a result. The proxy accepts a request only from
