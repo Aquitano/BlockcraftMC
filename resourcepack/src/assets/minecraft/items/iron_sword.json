@@ -17,20 +17,6 @@
           "type": "minecraft:model",
           "model": "blockcraft:item/quicksg"
         }
-      },
-      {
-        "when": "blockcraft:props/knife",
-        "model": {
-          "type": "minecraft:model",
-          "model": "blockcraft:item/props/knife"
-        }
-      },
-      {
-        "when": "blockcraft:props/sword",
-        "model": {
-          "type": "minecraft:model",
-          "model": "blockcraft:item/props/sword"
-        }
       }
     ],
     "fallback": {

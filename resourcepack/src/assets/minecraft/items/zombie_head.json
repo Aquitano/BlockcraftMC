@@ -10,13 +10,6 @@
           "type": "minecraft:model",
           "model": "blockcraft:item/zombies"
         }
-      },
-      {
-        "when": "blockcraft:props/zombie_hand",
-        "model": {
-          "type": "minecraft:model",
-          "model": "blockcraft:item/props/zombie_hand"
-        }
       }
     ],
     "fallback": {
