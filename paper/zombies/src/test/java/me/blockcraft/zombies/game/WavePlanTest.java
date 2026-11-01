@@ -7,19 +7,22 @@ import static org.junit.Assert.*;
 
 public class WavePlanTest {
 
-    private final ZombiesConfig.Waves waves = new ZombiesConfig.Waves(30, 6, 2, 0.6, 0.07, 0.04, 20, 0.5, 7, 32, 10,
+    private final ZombiesConfig.Waves waves = new ZombiesConfig.Waves(30, 6, 2, 0.6, 0.15, 1.5, 0.07, 0.04, 20, 0.5, 7, 32, 10,
             new ZombiesConfig.Late(10, 0.1, 0.05, 0.5), new ZombiesConfig.Hounds(5, 10, 0.5), 3, 0.3);
 
     @Test
-    public void squadSizeScalesEnemyCountAndOnlyLateHealth() {
+    public void squadSizeScalesEnemyCountHealthAndSpawnPaceFromTheFirstWave() {
         var solo = WavePlan.forSquad(1, 1, waves);
         var squad = WavePlan.forSquad(1, 4, waves);
         assertEquals(6, solo.enemies());
         assertEquals(17, squad.enemies());
-        assertEquals(solo.healthMultiplier(), squad.healthMultiplier(), 0);
+        assertEquals(1, solo.healthMultiplier(), 0);
+        assertEquals(1.45, squad.healthMultiplier(), 0.001);
+        assertEquals(20, solo.spawnTicks());
+        assertEquals(16, squad.spawnTicks());
         assertEquals(squad, WavePlan.forSquad(1, 20, waves));
         assertEquals(2.48, WavePlan.forSquad(15, 1, waves).healthMultiplier(), 0.001);
-        assertEquals(2.73, WavePlan.forSquad(15, 2, waves).healthMultiplier(), 0.001);
+        assertEquals(2.88, WavePlan.forSquad(15, 2, waves).healthMultiplier(), 0.001);
     }
 
     @Test
@@ -48,7 +51,7 @@ public class WavePlanTest {
         assertEquals(7, hounds.enemies());
         assertTrue(WavePlan.forSquad(15, 2, waves).hounds());
         assertFalse(WavePlan.forSquad(10, 1, waves).hounds());
-        var everyFive = new ZombiesConfig.Waves(30, 6, 2, 0.6, 0.07, 0.04, 20, 0.5, 7, 32, 10,
+        var everyFive = new ZombiesConfig.Waves(30, 6, 2, 0.6, 0.15, 1.5, 0.07, 0.04, 20, 0.5, 7, 32, 10,
                 waves.late(), new ZombiesConfig.Hounds(5, 5, 0.5), 3, 0.3);
         assertFalse(WavePlan.forSquad(10, 1, everyFive).hounds());
     }

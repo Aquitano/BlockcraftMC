@@ -59,7 +59,9 @@ A map save writes the intact doors and barricades, even during a match. It resto
 ## Tune the match
 
 Edit [config.yml](src/main/resources/config.yml) in the plugin's data directory and restart the game server.
-`waves` controls the final wave, squad scaling, spawn pacing, health growth, and boss interval.
+`waves` controls the final wave, squad scaling, spawn pacing, health growth, and boss interval. Every player beyond
+the first adds enemies, enemy health and spawn pace from the first wave on (`extra-player`, `health-per-extra-player`,
+`spawn-ticks-per-extra-player`), and more health again in the late waves.
 After `waves.late.from`, health and spawn pace grow faster, and health grows faster still for each extra player.
 `waves.hounds` sets the hellhound waves: from `first`, every `every`th wave that is no boss wave sends only hellhounds.
 In every other wave, each enemy kind joins at its `first-wave` with `weight` and moves evenly to `late-weight` by the final wave.

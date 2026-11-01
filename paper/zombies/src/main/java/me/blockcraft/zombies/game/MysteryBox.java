@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.ToDoubleFunction;
 
 /**
  * A paid roll at a mystery station: a gun rises out of the ender chest and changes until it stops on the one rolled.
@@ -60,9 +61,30 @@ public final class MysteryBox {
     }
 
     public void roll(Player buyer, ArenaMap.Station station) {
-        var choices = choices(buyer);
-        var weapon = choices.get(ThreadLocalRandom.current().nextInt(choices.size()));
+        var guns = game.config().guns();
+        var weapon = pick(choices(buyer), gun -> guns.get(gun).mysteryWeight(), ThreadLocalRandom.current().nextDouble());
         rolls.put(station, new Roll(buyer.getUniqueId(), station, weapon, game.tickNumber()));
+    }
+
+    /** The gun {@code roll}, in [0, 1), lands on when each has its {@code weight} of the total; all equal when every weight is 0. */
+    static Weapon pick(List<Weapon> choices, ToDoubleFunction<Weapon> weight, double roll) {
+        double total = choices.stream().mapToDouble(weight).sum();
+        if (total <= 0) {
+            return choices.get((int) (roll * choices.size()));
+        }
+        double remaining = roll * total;
+        Weapon last = choices.getFirst();
+        for (var weapon : choices) {
+            if (weight.applyAsDouble(weapon) <= 0) {
+                continue;
+            }
+            last = weapon;
+            remaining -= weight.applyAsDouble(weapon);
+            if (remaining < 0) {
+                return weapon;
+            }
+        }
+        return last;
     }
 
     private List<Weapon> choices(Player player) {

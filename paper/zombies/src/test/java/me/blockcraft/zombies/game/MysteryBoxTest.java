@@ -2,6 +2,9 @@ package me.blockcraft.zombies.game;
 
 import org.junit.Test;
 
+import java.util.List;
+import java.util.Map;
+
 import static org.junit.Assert.*;
 
 public class MysteryBoxTest {
@@ -16,6 +19,18 @@ public class MysteryBoxTest {
         assertTrue(swaps.getFirst() <= 3);
         assertTrue(swaps.getLast() - swaps.get(swaps.size() - 2) >= 10);
         assertEquals(20, (int) MysteryBox.swapTicks(20).getLast());
+    }
+
+    @Test
+    public void heavierGunsTakeMoreOfTheRollAndEqualWeightsShareItEvenly() {
+        var pool = List.of(Weapon.RIFLE, Weapon.SHOTGUN, Weapon.FLAMETHROWER);
+        Map<Weapon, Double> weights = Map.of(Weapon.RIFLE, 4.0, Weapon.SHOTGUN, 3.0, Weapon.FLAMETHROWER, 1.0);
+        assertEquals(Weapon.RIFLE, MysteryBox.pick(pool, weights::get, 0.0));
+        assertEquals(Weapon.RIFLE, MysteryBox.pick(pool, weights::get, 0.49));
+        assertEquals(Weapon.SHOTGUN, MysteryBox.pick(pool, weights::get, 0.5));
+        assertEquals(Weapon.FLAMETHROWER, MysteryBox.pick(pool, weights::get, 0.875));
+        assertEquals(Weapon.FLAMETHROWER, MysteryBox.pick(pool, weights::get, 0.999));
+        assertEquals(Weapon.SHOTGUN, MysteryBox.pick(pool, weapon -> 0, 0.4));
     }
 
     @Test

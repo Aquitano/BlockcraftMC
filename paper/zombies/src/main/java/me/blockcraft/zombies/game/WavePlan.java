@@ -14,8 +14,9 @@ public record WavePlan(int wave, int enemies, int spawnTicks, double healthMulti
         double horde = Math.ceil((config.baseEnemies() + (wave - 1) * config.enemiesPerWave()) * (1 + extraPlayers * config.extraPlayer()));
         int enemies = (int) Math.ceil(houndWave ? horde * hounds.share() : horde);
         int spawnTicks = Math.max(config.minimumSpawnTicks(), (int) Math.round(config.spawnTicks()
+                - extraPlayers * config.spawnTicksPerExtraPlayer()
                 - (wave - 1) * config.spawnTicksPerWave() - lateWaves * config.late().spawnTicksPerWave()));
-        double health = 1 + (wave - 1) * config.healthPerWave()
+        double health = 1 + extraPlayers * config.healthPerExtraPlayer() + (wave - 1) * config.healthPerWave()
                 + lateWaves * (config.late().healthPerWave() + extraPlayers * config.late().healthPerExtraPlayer());
         return new WavePlan(wave, enemies, spawnTicks, health, 1 + (wave - 1) * config.damagePerWave(), boss, houndWave);
     }

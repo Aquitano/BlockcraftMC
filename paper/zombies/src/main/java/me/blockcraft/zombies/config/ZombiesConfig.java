@@ -24,7 +24,8 @@ public record ZombiesConfig(int maxPlayers, int startingGold, int intermissionSe
                             Events events, Abilities abilities, Mystery mystery, Armory armory) {
 
     /** The last {@code stragglers} enemies of a wave move at least at {@code stragglerSpeed}. */
-    public record Waves(int total, int baseEnemies, int enemiesPerWave, double extraPlayer, double healthPerWave, double damagePerWave,
+    public record Waves(int total, int baseEnemies, int enemiesPerWave, double extraPlayer, double healthPerExtraPlayer,
+                        double spawnTicksPerExtraPlayer, double healthPerWave, double damagePerWave,
                         int spawnTicks, double spawnTicksPerWave, int minimumSpawnTicks, int maxAlive, int bossEvery,
                         Late late, Hounds hounds, int stragglers, double stragglerSpeed) { }
 
@@ -34,10 +35,13 @@ public record ZombiesConfig(int maxPlayers, int startingGold, int intermissionSe
     /** From wave {@code first}, every {@code every}th wave that is no boss wave sends only hellhounds, {@code share} as many. */
     public record Hounds(int first, int every, double share) { }
 
-    /** {@code burnDamage} per second for {@code burnTicks} after a hit; 0 for a gun that does not set fire. No price keeps it out of the armory. */
+    /**
+     * {@code burnDamage} per second for {@code burnTicks} after a hit; 0 for a gun that does not set fire. No price keeps
+     * it out of the armory; {@code mysteryWeight} is its chance at the mystery box next to the other guns the buyer lacks.
+     */
     public record Gun(int price, double damage, double range, int pellets, double spread,
                       int clip, int reserve, int cooldownTicks, int reloadTicks, double upgradeMultiplier,
-                      double burnDamage, int burnTicks) { }
+                      double burnDamage, int burnTicks, double mysteryWeight) { }
 
     /**
      * In mixed waves the kind's {@code weight} at its {@code firstWave} moves evenly to {@code lateWeight} at the final
@@ -161,6 +165,8 @@ public record ZombiesConfig(int maxPlayers, int startingGold, int intermissionSe
     public static ZombiesConfig from(ConfigurationSection yaml) {
         var waves = new Waves(positive(yaml, "waves.total"), positive(yaml, "waves.base-enemies"),
                 positive(yaml, "waves.enemies-per-wave"), Math.max(0, yaml.getDouble("waves.extra-player")),
+                Math.max(0, yaml.getDouble("waves.health-per-extra-player")),
+                Math.max(0, yaml.getDouble("waves.spawn-ticks-per-extra-player")),
                 Math.max(0, yaml.getDouble("waves.health-per-wave")), Math.max(0, yaml.getDouble("waves.damage-per-wave")),
                 positive(yaml, "waves.spawn-ticks"),
                 Math.max(0, yaml.getDouble("waves.spawn-ticks-per-wave")), positive(yaml, "waves.minimum-spawn-ticks"),
@@ -179,7 +185,7 @@ public record ZombiesConfig(int maxPlayers, int startingGold, int intermissionSe
                     Math.clamp(yaml.getDouble(path + "spread"), 0, 0.5), positive(yaml, path + "clip"),
                     positive(yaml, path + "reserve"), positive(yaml, path + "cooldown-ticks"), positive(yaml, path + "reload-ticks"),
                     Math.max(1, yaml.getDouble(path + "upgrade-multiplier")), Math.max(0, yaml.getDouble(path + "burn-damage")),
-                    Math.max(0, yaml.getInt(path + "burn-seconds")) * 20));
+                    Math.max(0, yaml.getInt(path + "burn-seconds")) * 20, Math.max(0, yaml.getDouble(path + "mystery-weight"))));
         }
         var perks = new EnumMap<Perk, Integer>(Perk.class);
         for (var perk : Perk.values()) {

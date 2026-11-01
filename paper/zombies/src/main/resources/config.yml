@@ -10,11 +10,15 @@ countdown:
 idle-restart-minutes: 50
 timer-bar: true
 global-stats-head: Kevos
+# Every player beyond the first adds extra-player to the horde, health-per-extra-player to every enemy's health and
+# takes spawn-ticks-per-extra-player off the pause between spawns, from the first wave on.
 waves:
   total: 30
   base-enemies: 6
   enemies-per-wave: 2
   extra-player: 0.6
+  health-per-extra-player: 0.15
+  spawn-ticks-per-extra-player: 1.5
   health-per-wave: 0.07
   damage-per-wave: 0.04
   spawn-ticks: 20
@@ -97,15 +101,16 @@ perks:
   quick_revive: 500
   frozen_bullets: 1250
   extra-health-bonus: 20
-# The armory sells the guns with a price; the mystery box gives every gun but the pistol. A gun with burn-damage sets
-# what it hits burning for burn-seconds. The flamethrower hits every enemy in a cone whose half-angle, in radians, is
-# its spread.
+# The armory sells the guns with a price; the mystery box gives every gun but the pistol, each as likely as its
+# mystery-weight among the guns the buyer lacks (all alike once every remaining weight is 0). A gun with burn-damage sets what it hits burning for burn-seconds.
+# The flamethrower hits every enemy in a cone whose half-angle, in radians, is its spread; the upgrade multiplies the
+# burn too, which is why its upgrade-multiplier stays low.
 weapons:
   pistol: {price: 0, damage: 6, range: 40, pellets: 1, spread: 0.005, clip: 12, reserve: 120, cooldown-ticks: 7, reload-ticks: 35, upgrade-multiplier: 2.5}
-  rifle: {price: 500, damage: 8, range: 45, pellets: 1, spread: 0.015, clip: 30, reserve: 240, cooldown-ticks: 4, reload-ticks: 45, upgrade-multiplier: 2.5}
-  shotgun: {price: 650, damage: 4, range: 22, pellets: 7, spread: 0.12, clip: 6, reserve: 72, cooldown-ticks: 18, reload-ticks: 55, upgrade-multiplier: 2.5}
-  sniper: {price: 900, damage: 36, range: 65, pellets: 1, spread: 0, clip: 5, reserve: 60, cooldown-ticks: 22, reload-ticks: 50, upgrade-multiplier: 2.5}
-  flamethrower: {damage: 8, range: 12, pellets: 1, spread: 0.3, clip: 60, reserve: 360, cooldown-ticks: 4, reload-ticks: 120, upgrade-multiplier: 2.5, burn-damage: 4, burn-seconds: 4}
+  rifle: {price: 500, damage: 8, range: 45, pellets: 1, spread: 0.015, clip: 30, reserve: 240, cooldown-ticks: 4, reload-ticks: 45, upgrade-multiplier: 2.5, mystery-weight: 4}
+  shotgun: {price: 650, damage: 4, range: 22, pellets: 7, spread: 0.12, clip: 6, reserve: 72, cooldown-ticks: 18, reload-ticks: 55, upgrade-multiplier: 2.5, mystery-weight: 3}
+  sniper: {price: 900, damage: 36, range: 65, pellets: 1, spread: 0, clip: 5, reserve: 60, cooldown-ticks: 22, reload-ticks: 50, upgrade-multiplier: 2.5, mystery-weight: 2}
+  flamethrower: {damage: 6, range: 9, pellets: 1, spread: 0.3, clip: 60, reserve: 360, cooldown-ticks: 4, reload-ticks: 120, upgrade-multiplier: 1.6, burn-damage: 3, burn-seconds: 4, mystery-weight: 1}
 enemies:
   walker: {first-wave: 1, health: 20, damage: 4, speed: 0.23, weight: 12, late-weight: 5}
   runner: {first-wave: 4, health: 16, damage: 3, speed: 0.30, weight: 3, late-weight: 6}
