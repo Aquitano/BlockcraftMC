@@ -9,7 +9,9 @@ import me.blockcraft.api.menu.Profiles;
 import me.blockcraft.common.config.YamlFile;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.shop.Premium;
+import me.blockcraft.lobby.activity.AmbientSpots;
 import me.blockcraft.lobby.activity.AreaAmbience;
+import me.blockcraft.lobby.activity.Flights;
 import me.blockcraft.lobby.activity.Herobrine;
 import me.blockcraft.lobby.activity.LobbyNews;
 import me.blockcraft.lobby.activity.LobbyQuirks;
@@ -27,11 +29,13 @@ import me.blockcraft.lobby.activity.SantaSleigh;
 import me.blockcraft.lobby.activity.SeasonalAtmosphere;
 import me.blockcraft.lobby.activity.SeasonalDecor;
 import me.blockcraft.lobby.activity.SeasonalEvents;
+import me.blockcraft.lobby.activity.SeasonalScenes;
 import me.blockcraft.lobby.activity.ShootingStars;
 import me.blockcraft.lobby.activity.Snowfall;
 import me.blockcraft.lobby.command.ClearChatCommand;
 import me.blockcraft.lobby.command.CookiesCommand;
 import me.blockcraft.lobby.command.DailyCommand;
+import me.blockcraft.lobby.command.FlightCommand;
 import me.blockcraft.lobby.command.LobbySetCommand;
 import me.blockcraft.lobby.command.NavigatorCommand;
 import me.blockcraft.lobby.command.SetHoloCommand;
@@ -40,6 +44,7 @@ import me.blockcraft.lobby.command.SetPropCommand;
 import me.blockcraft.lobby.command.SleighCommand;
 import me.blockcraft.lobby.command.TeamBoardCommand;
 import me.blockcraft.lobby.config.ActivitiesConfig;
+import me.blockcraft.lobby.config.FlightsConfig;
 import me.blockcraft.lobby.config.GameNpcConfig;
 import me.blockcraft.lobby.config.HerobrineConfig;
 import me.blockcraft.lobby.config.LobbyConfig;
@@ -47,6 +52,7 @@ import me.blockcraft.lobby.config.LobbyLocation;
 import me.blockcraft.lobby.config.LoreNoteConfig;
 import me.blockcraft.lobby.config.Quest;
 import me.blockcraft.lobby.config.PropsConfig;
+import me.blockcraft.lobby.config.ScenesConfig;
 import me.blockcraft.lobby.config.SeasonTheme;
 import me.blockcraft.lobby.config.SleighConfig;
 import me.blockcraft.lobby.config.ShootingStarConfig;
@@ -163,9 +169,12 @@ public final class LobbyPlugin extends JavaPlugin {
         var decor = new SeasonalDecor(api.calendar(), themes, snowfall);
         atmosphere = new SeasonalAtmosphere(this, api.calendar(), themes);
         sleigh = new SantaSleigh(this, SleighConfig.fromYaml(YamlFile.section(yaml, "sleigh")), messages, api.calendar());
-        props = new Props(this, PropsConfig.fromYaml(YamlFile.section(yaml, "props"), getLogger()),
-                Locations.load(api.map().file(this, "props.yml")));
+        var pieces = PropsConfig.fromYaml(YamlFile.section(yaml, "props"), getLogger());
+        props = new Props(this, pieces, Locations.load(api.map().file(this, "props.yml")));
         props.start();
+        var flights = new Flights(this, FlightsConfig.fromYaml(YamlFile.section(yaml, "flights")), pieces,
+                () -> locations.get(LobbyLocation.SPAWN));
+        polish.add(flights);
         seasons = new SeasonalEvents(this, chunks, activityLocations, activities, messages,
                 () -> locations.get(LobbyLocation.SPAWN).ifPresent(spawn -> config.fireworkSpots()
                         .forEach(spot -> MoveListener.launchFirework(spot.toLocation(spawn.getWorld())))), decor);
@@ -207,10 +216,16 @@ public final class LobbyPlugin extends JavaPlugin {
             register(news);
         });
         AreaAmbience.start(this, gameNpcs::places, YamlFile.section(yaml, "ambience")).ifPresent(polish::add);
+        var ambientSpots = new AmbientSpots(this, activityLocations, YamlFile.section(yaml, "ambient"));
+        var scenes = new SeasonalScenes(this, chunks, api.calendar(), activityLocations, ScenesConfig.fromYaml(YamlFile.section(yaml, "scenes")));
+        polish.addAll(List.of(ambientSpots, scenes));
+        register(scenes);
         var optionalSpots = new ArrayList<>(GameNpcs.spots());
         leaderboards.names().stream().map(Podiums::spot).sorted().forEach(optionalSpots::add);
         optionalSpots.addAll(quests.spots());
         optionalSpots.add(DailyCourier.SPOT);
+        optionalSpots.addAll(scenes.spots());
+        optionalSpots.addAll(ambientSpots.spots());
         var optionalBlocks = new ArrayList<>(loreNotes.spots());
         optionalBlocks.addAll(NoticeBoards.SPOTS);
 
@@ -250,6 +265,7 @@ public final class LobbyPlugin extends JavaPlugin {
             commands.register(ParkourCommand.create(parkour));
             commands.register(DailyCommand.create(daily));
             commands.register(SleighCommand.create(sleigh, messages));
+            commands.register(FlightCommand.create(flights, messages));
             commands.register(SetPropCommand.create(messages, props));
             commands.register(NavigatorCommand.create(menus), "nav", "spiele");
             var activeTeamBoard = api.map().file(this, "team-board.yml");
@@ -268,6 +284,7 @@ public final class LobbyPlugin extends JavaPlugin {
                         noticeBoards.refresh();
                         quests.refresh();
                         daily.refresh();
+                        scenes.refresh();
                     }));
         });
     }

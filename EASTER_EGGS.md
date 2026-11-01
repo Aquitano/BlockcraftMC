@@ -265,8 +265,8 @@ It is empty by default because no founding date is assumed.
 | Occasion | Behavior |
 |---|---|
 | Easter | From two days before Easter Sunday through seven days after, configured egg displays appear in the lobby. Discoveries persist per player and year. Finding all selected eggs grants `[OSTERHASE]`. The imported lobby has twenty hiding places, `egg-1` to `egg-20`, near its landmarks. |
-| Halloween | October 17 through 31. Glowing pumpkins sit at a yearly draw of the same hiding places as the Easter eggs; finding all of them grants `[KÜRBIS]`. Joining the lobby shows a hint with the phrase. Writing `Süßes oder Saures` in lobby chat gives either five coins or one of three tricks: a pumpkin hat for 300 seconds, a swarm of bats, or a ghost that darkens the screen. Each account can claim once per calendar day. The phrase and rewards are configurable under `activities`. |
-| Winter | December 1 through 31. Only the lobby's look and sound change (see below). |
+| Halloween | October 17 through 31. Glowing pumpkins sit at a yearly draw of the same hiding places as the Easter eggs; finding all of them grants `[KÜRBIS]`. Joining the lobby shows a hint with the phrase. Writing `Süßes oder Saures` in lobby chat gives either five coins or one of three tricks: a pumpkin hat for 300 seconds, a swarm of bats, or a ghost that darkens the screen. Each account can claim once per calendar day. The phrase and rewards are configurable under `activities`. A witch stirs a bubbling cauldron, bats circle the big tree and a ghost drifts round the central pond (see Seasonal scenes). |
+| Winter | December 1 through 31. The lobby's look and sound change (see below), and two teams of figures hold a snowball fight on the green east of the central pond (see Seasonal scenes). |
 | Advent | December 1 through 24. The profile contains a calendar with today's door, and joining the lobby names it. Each account can claim 25 coins once per day. Door 24 also unlocks the snow trail. |
 | Christmas | December 24 through 26. The Weihnachtsmann stands at `/lobbyset santa` and gives each account `activities.christmas-coins` (100) once per year, with a jingle. Without that spot he does not appear. Every ten minutes his sleigh, pulled by four reindeer and Rudolph, flies over a lobby player ringing Jingle Bells and drops four presents; each player catches one per flight for 15 coins. Lobby's `sleigh` section sets the timing, and staff send it on any day with `/schlitten`. |
 | New Year | On December 31, a boss bar counts down the last ten seconds. At midnight the lobby's configured firework positions launch fireworks. Joining during January grants that year's tag. |
@@ -292,6 +292,24 @@ leaf litter on some grass; in winter every full block and leaf open to the sky g
 it turns snowy. Each occasion can also let a particle fall around players and play an occasional ambient sound near
 them; both respect the effect and sound settings. A player who clicks a swapped block may see the real one again
 until the chunk reloads.
+
+## Seasonal scenes
+
+Lobby's `SeasonalScenes` stands up staged scenes while their occasion lasts and removes them when it ends; nothing is
+saved into the map. In winter the figures at `snowfight-a-<n>` and `snowfight-b-<n>` (red and blue caps, wearing the
+skin textures in `scenes.snowfight-skins`) crouch behind snow walls, stand up in turn and throw arcing
+snowballs at the other side; a snowball bursts into snow where it lands. A figure a player hits, with the season's
+throwable or a punch, throws back at that player. At Halloween a witch at `halloween-witch` stirs the cauldron one
+block ahead of her, bats circle `halloween-bats`, and a ghost drifts along `halloween-ghost-1` to `-5` and back to the
+first. Every spot is moved with `/lobbyset`, and the timing lives in Lobby's `scenes` section.
+
+## Living lobby
+
+The two windmills' sails are props that turn (`windmill` and `windmill-large` in `props.yml`, the pieces in
+Lobby's `props` section, which can now turn a piece round any `axis`). Every `flights.interval-seconds` an airship or
+a flock of birds crosses the sky above the spawn while someone is about; staff send one with `/ueberflug <model>`.
+The map's `ambient-<effect>-<n>` spots show small effects to players with effects on: fireflies over the ponds,
+spray where the waterfall lands, and drifting spores under the big tree (Lobby's `ambient` section).
 
 ## Wurfschlacht
 
@@ -339,6 +357,10 @@ Before deploying, verify these interactions with Minecraft clients on a local te
 - During Halloween and winter, walk the lobby and look for swapped blocks that differ in shape from the real ones,
   rejoin, teleport, and cross midnight with the client open. Trick-or-treat until each trick has appeared once.
 - At Christmas, set `/lobbyset santa`, check his skin and name, take the present, click again, and hit him.
+- With `/event winter halloween`, watch the snowball fight, hit a fighter with the seasonal throwable and punch
+  one (each throws back), and check the witch, the bats and the ghost. `/event auto` must remove them.
+- Run `/ueberflug airship` and `/ueberflug birds`; both must fly front first, and a second call while one is up
+  must be refused.
 - Run `/schlitten` with two accounts: the reindeer must lead, Santa must sit in the sleigh, Rudolph's nose must glow,
   the bells must follow the sleigh, and each account may catch only one present per flight.
 - Shorten sleep thresholds in local config, poke a sleeping account, and wake it. Check the growing label,

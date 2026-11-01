@@ -1,0 +1,16 @@
+windmill:
+  ==: org.bukkit.Location
+  world: world
+  x: -918.5
+  y: 43.0
+  z: 1618.5
+  yaw: 0.0
+  pitch: 0.0
+windmill-large:
+  ==: org.bukkit.Location
+  world: world
+  x: -900.5
+  y: 85.0
+  z: 1587.5
+  yaw: 0.0
+  pitch: 0.0

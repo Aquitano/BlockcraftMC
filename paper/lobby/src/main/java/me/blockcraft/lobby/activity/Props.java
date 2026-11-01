@@ -16,6 +16,7 @@ import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Transformation;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
+import org.joml.Vector3fc;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -34,6 +35,7 @@ public final class Props {
 
     private static final float FULL_TURN = (float) (Math.PI * 2);
     private static final float BLOCK_CENTRE = 0.5f;
+    private static final Vector3fc UPRIGHT = new Vector3f(0, 1, 0);
 
     private record Placed(Display display, Part part) {
     }
@@ -79,25 +81,31 @@ public final class Props {
         var prop = config.props().get(name);
         var displays = new ArrayList<Placed>();
         for (var part : prop.parts()) {
-            Display display = switch (part.look()) {
-                case BlockLook block -> spot.getWorld().spawn(spot, BlockDisplay.class,
-                        spawned -> spawned.setBlock(block.material().createBlockData()));
-                case ItemLook item -> spot.getWorld().spawn(spot, ItemDisplay.class, spawned -> {
-                    var stack = Items.of(item.material());
-                    item.model().ifPresent(model -> model.mark(stack));
-                    if (item.glint()) {
-                        stack.glow();
-                    }
-                    spawned.setItemStack(stack.build());
-                    spawned.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.FIXED);
-                });
-            };
-            display.setPersistent(false);
-            display.setViewRange(config.viewRange());
-            display.setTransformation(pose(part, 0, 0));
+            var display = display(spot, part, config.viewRange());
             displays.add(new Placed(display, part));
         }
         placed.put(name, displays);
+    }
+
+    /** One part's display at {@code spot}, standing as the prop does before it turns; it is never saved with the map. */
+    static Display display(Location spot, Part part, float viewRange) {
+        Display display = switch (part.look()) {
+            case BlockLook block -> spot.getWorld().spawn(spot, BlockDisplay.class,
+                    spawned -> spawned.setBlock(block.material().createBlockData()));
+            case ItemLook item -> spot.getWorld().spawn(spot, ItemDisplay.class, spawned -> {
+                var stack = Items.of(item.material());
+                item.model().ifPresent(model -> model.mark(stack));
+                if (item.glint()) {
+                    stack.glow();
+                }
+                spawned.setItemStack(stack.build());
+                spawned.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.FIXED);
+            });
+        };
+        display.setPersistent(false);
+        display.setViewRange(viewRange);
+        display.setTransformation(pose(part, UPRIGHT, 0, 0));
+        return display;
     }
 
     private void despawn(String name) {
@@ -119,22 +127,21 @@ public final class Props {
                 }
                 each.display().setInterpolationDelay(0);
                 each.display().setInterpolationDuration(config.keyframeTicks());
-                each.display().setTransformation(pose(each.part(), spin, lift));
+                each.display().setTransformation(pose(each.part(), prop.axis(), spin, lift));
             }
         });
     }
 
     /**
-     * Where a part stands with the whole prop turned by {@code spin} radians round its spot and lifted by {@code lift}
-     * blocks. A block display spans its unit cube from its corner, so the turn has to happen round the block's
-     * centre; an item display is centred on its origin already.
+     * Where a part stands with the whole prop turned by {@code spin} radians round {@code axis} through its spot and
+     * lifted by {@code lift} blocks. A block display spans its unit cube from its corner, so the turn has to happen
+     * round the block's centre; an item display is centred on its origin already.
      */
-    static Transformation pose(Part part, float spin, float lift) {
-        float angle = part.still() ? 0 : spin;
-        var rotation = new Quaternionf().rotateY(angle + (float) Math.toRadians(part.yaw()))
-                .rotateZ((float) Math.toRadians(part.roll()));
-        var centre = new Quaternionf().rotateY(angle).transform(new Vector3f(part.at()))
-                .add(0, part.still() ? 0 : lift, 0);
+    static Transformation pose(Part part, Vector3fc axis, float spin, float lift) {
+        var turn = new Quaternionf().rotateAxis(part.still() ? 0 : spin, axis);
+        var rotation = new Quaternionf(turn).rotateY((float) Math.toRadians(part.yaw()))
+                .rotateX((float) Math.toRadians(part.pitch())).rotateZ((float) Math.toRadians(part.roll()));
+        var centre = turn.transform(new Vector3f(part.at())).add(0, part.still() ? 0 : lift, 0);
         if (part.look() instanceof BlockLook) {
             var half = new Vector3f(part.size()).mul(BLOCK_CENTRE);
             centre.sub(new Quaternionf(rotation).transform(half));

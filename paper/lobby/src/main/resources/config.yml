@@ -215,7 +215,9 @@ seasons:
 # enchantment glint. A part is centred at blocks from the spot, size blocks large, turned by yaw degrees and tilted by
 # roll degrees round its own z axis (a sword at roll -135 stands on its point). A game's piece is named after its area,
 # as in npc-<area>. Displays are drawn up to view-range times the vanilla distance and move one smoothed keyframe every
-# keyframe-ticks, which is one update per moving part and keyframe.
+# keyframe-ticks, which is one update per moving part and keyframe. A piece turns round axis, upright unless given
+# ([1, 0, 0] turns a windmill's sails facing west or east), and a part may be tipped by pitch degrees round its own x
+# axis, which lays a sail along its arm.
 props:
   view-range: 0.5
   keyframe-ticks: 20
@@ -333,6 +335,97 @@ props:
         - {block: COBBLESTONE, at: [0.3, 0.88, 0.25], size: [0.36, 0.16, 0.36]}
         - {model: props/sword, at: [0.3, 1.45, 0.25], size: 1.0, roll: -135}
 
+    windmill:
+      spin-seconds: 30
+      axis: [1, 0, 0]
+      parts:
+        - {block: DARK_OAK_LOG, at: [0.05, 0.5, 0], size: [0.5, 1.2, 1.2]}
+        - {block: STRIPPED_DARK_OAK_LOG, at: [0.55, 0.5, 0], size: [0.6, 0.5, 0.5]}
+        - {block: STRIPPED_DARK_OAK_LOG, at: [0, 0.5, 0], size: [0.3, 20, 0.3]}
+        - {block: STRIPPED_DARK_OAK_LOG, at: [0, 0.5, 0], size: [0.3, 0.3, 20]}
+        - {block: WHITE_WOOL, at: [-0.12, 6.45, 0.85], size: [0.12, 7.5, 1.4], pitch: 0}
+        - {block: DARK_OAK_PLANKS, at: [-0.12, 6.45, 1.62], size: [0.14, 7.5, 0.14], pitch: 0}
+        - {block: DARK_OAK_PLANKS, at: [-0.14, 4.2, 0.85], size: [0.1, 0.12, 1.7], pitch: 0}
+        - {block: DARK_OAK_PLANKS, at: [-0.14, 6.45, 0.85], size: [0.1, 0.12, 1.7], pitch: 0}
+        - {block: DARK_OAK_PLANKS, at: [-0.14, 8.7, 0.85], size: [0.1, 0.12, 1.7], pitch: 0}
+        - {block: WHITE_WOOL, at: [-0.12, -0.35, 5.95], size: [0.12, 7.5, 1.4], pitch: 90}
+        - {block: DARK_OAK_PLANKS, at: [-0.12, -1.12, 5.95], size: [0.14, 7.5, 0.14], pitch: 90}
+        - {block: DARK_OAK_PLANKS, at: [-0.14, -0.35, 3.7], size: [0.1, 0.12, 1.7], pitch: 90}
+        - {block: DARK_OAK_PLANKS, at: [-0.14, -0.35, 5.95], size: [0.1, 0.12, 1.7], pitch: 90}
+        - {block: DARK_OAK_PLANKS, at: [-0.14, -0.35, 8.2], size: [0.1, 0.12, 1.7], pitch: 90}
+        - {block: WHITE_WOOL, at: [-0.12, -5.45, -0.85], size: [0.12, 7.5, 1.4], pitch: 180}
+        - {block: DARK_OAK_PLANKS, at: [-0.12, -5.45, -1.62], size: [0.14, 7.5, 0.14], pitch: 180}
+        - {block: DARK_OAK_PLANKS, at: [-0.14, -3.2, -0.85], size: [0.1, 0.12, 1.7], pitch: 180}
+        - {block: DARK_OAK_PLANKS, at: [-0.14, -5.45, -0.85], size: [0.1, 0.12, 1.7], pitch: 180}
+        - {block: DARK_OAK_PLANKS, at: [-0.14, -7.7, -0.85], size: [0.1, 0.12, 1.7], pitch: 180}
+        - {block: WHITE_WOOL, at: [-0.12, 1.35, -5.95], size: [0.12, 7.5, 1.4], pitch: 270}
+        - {block: DARK_OAK_PLANKS, at: [-0.12, 2.12, -5.95], size: [0.14, 7.5, 0.14], pitch: 270}
+        - {block: DARK_OAK_PLANKS, at: [-0.14, 1.35, -3.7], size: [0.1, 0.12, 1.7], pitch: 270}
+        - {block: DARK_OAK_PLANKS, at: [-0.14, 1.35, -5.95], size: [0.1, 0.12, 1.7], pitch: 270}
+        - {block: DARK_OAK_PLANKS, at: [-0.14, 1.35, -8.2], size: [0.1, 0.12, 1.7], pitch: 270}
+    windmill-large:
+      spin-seconds: 36
+      axis: [1, 0, 0]
+      parts:
+        - {block: DARK_OAK_LOG, at: [0.05, 0.5, 0], size: [0.5, 1.2, 1.2]}
+        - {block: STRIPPED_DARK_OAK_LOG, at: [0.55, 0.5, 0], size: [0.6, 0.5, 0.5]}
+        - {block: STRIPPED_DARK_OAK_LOG, at: [0, 0.5, 0], size: [0.3, 23.0, 0.3]}
+        - {block: STRIPPED_DARK_OAK_LOG, at: [0, 0.5, 0], size: [0.3, 0.3, 23.0]}
+        - {block: WHITE_WOOL, at: [-0.12, 7.45, 1.05], size: [0.12, 8.5, 1.8], pitch: 0}
+        - {block: DARK_OAK_PLANKS, at: [-0.12, 7.45, 2.02], size: [0.14, 8.5, 0.14], pitch: 0}
+        - {block: DARK_OAK_PLANKS, at: [-0.14, 4.9, 1.05], size: [0.1, 0.12, 2.1], pitch: 0}
+        - {block: DARK_OAK_PLANKS, at: [-0.14, 7.45, 1.05], size: [0.1, 0.12, 2.1], pitch: 0}
+        - {block: DARK_OAK_PLANKS, at: [-0.14, 10.0, 1.05], size: [0.1, 0.12, 2.1], pitch: 0}
+        - {block: WHITE_WOOL, at: [-0.12, -0.55, 6.95], size: [0.12, 8.5, 1.8], pitch: 90}
+        - {block: DARK_OAK_PLANKS, at: [-0.12, -1.52, 6.95], size: [0.14, 8.5, 0.14], pitch: 90}
+        - {block: DARK_OAK_PLANKS, at: [-0.14, -0.55, 4.4], size: [0.1, 0.12, 2.1], pitch: 90}
+        - {block: DARK_OAK_PLANKS, at: [-0.14, -0.55, 6.95], size: [0.1, 0.12, 2.1], pitch: 90}
+        - {block: DARK_OAK_PLANKS, at: [-0.14, -0.55, 9.5], size: [0.1, 0.12, 2.1], pitch: 90}
+        - {block: WHITE_WOOL, at: [-0.12, -6.45, -1.05], size: [0.12, 8.5, 1.8], pitch: 180}
+        - {block: DARK_OAK_PLANKS, at: [-0.12, -6.45, -2.02], size: [0.14, 8.5, 0.14], pitch: 180}
+        - {block: DARK_OAK_PLANKS, at: [-0.14, -3.9, -1.05], size: [0.1, 0.12, 2.1], pitch: 180}
+        - {block: DARK_OAK_PLANKS, at: [-0.14, -6.45, -1.05], size: [0.1, 0.12, 2.1], pitch: 180}
+        - {block: DARK_OAK_PLANKS, at: [-0.14, -9.0, -1.05], size: [0.1, 0.12, 2.1], pitch: 180}
+        - {block: WHITE_WOOL, at: [-0.12, 1.55, -6.95], size: [0.12, 8.5, 1.8], pitch: 270}
+        - {block: DARK_OAK_PLANKS, at: [-0.12, 2.52, -6.95], size: [0.14, 8.5, 0.14], pitch: 270}
+        - {block: DARK_OAK_PLANKS, at: [-0.14, 1.55, -4.4], size: [0.1, 0.12, 2.1], pitch: 270}
+        - {block: DARK_OAK_PLANKS, at: [-0.14, 1.55, -6.95], size: [0.1, 0.12, 2.1], pitch: 270}
+        - {block: DARK_OAK_PLANKS, at: [-0.14, 1.55, -9.5], size: [0.1, 0.12, 2.1], pitch: 270}
+    # Flights: models fly with their front along +z.
+    airship:
+      parts:
+        - {block: WHITE_WOOL, at: [0, 4.2, 0], size: [3.4, 3.2, 8]}
+        - {block: WHITE_WOOL, at: [0, 4.2, 4.6], size: [2.6, 2.4, 1.4]}
+        - {block: WHITE_WOOL, at: [0, 4.2, -4.6], size: [2.6, 2.4, 1.4]}
+        - {block: RED_WOOL, at: [0, 4.2, 0], size: [3.45, 0.5, 8.05]}
+        - {block: DARK_OAK_PLANKS, at: [0, 5.9, -5.2], size: [0.15, 1.6, 1.5]}
+        - {block: DARK_OAK_PLANKS, at: [0, 4.2, -5.2], size: [4.2, 0.15, 1.3]}
+        - {block: DARK_OAK_PLANKS, at: [0.8, 2.0, 1.6], size: [0.07, 1.6, 0.07]}
+        - {block: DARK_OAK_PLANKS, at: [-0.8, 2.0, 1.6], size: [0.07, 1.6, 0.07]}
+        - {block: DARK_OAK_PLANKS, at: [0.8, 2.0, -1.6], size: [0.07, 1.6, 0.07]}
+        - {block: DARK_OAK_PLANKS, at: [-0.8, 2.0, -1.6], size: [0.07, 1.6, 0.07]}
+        - {block: SPRUCE_PLANKS, at: [0, 0.85, 0], size: [1.8, 0.7, 3.6]}
+        - {block: DARK_OAK_PLANKS, at: [0, 1.25, 0], size: [1.9, 0.12, 3.7]}
+        - {block: DARK_OAK_PLANKS, at: [0, 0.85, -2.05], size: [0.15, 1.6, 0.15]}
+        - {block: DARK_OAK_PLANKS, at: [0, 0.85, -2.05], size: [1.6, 0.15, 0.15]}
+        - {item: LANTERN, at: [0, 1.55, 1.3], size: 0.5}
+    birds:
+      parts:
+        - {block: BLACK_CONCRETE, at: [0, 0.1, 0], size: [0.22, 0.18, 0.5]}
+        - {block: GRAY_CONCRETE, at: [0, 0.18, -0.05], size: [1.3, 0.05, 0.3], roll: -12}
+        - {block: BLACK_CONCRETE, at: [-1.6, 0.35, -1.7], size: [0.22, 0.18, 0.5]}
+        - {block: GRAY_CONCRETE, at: [-1.6, 0.43, -1.75], size: [1.3, 0.05, 0.3], roll: 12}
+        - {block: BLACK_CONCRETE, at: [1.6, 0.6, -1.7], size: [0.22, 0.18, 0.5]}
+        - {block: GRAY_CONCRETE, at: [1.6, 0.68, -1.75], size: [1.3, 0.05, 0.3], roll: -12}
+        - {block: BLACK_CONCRETE, at: [-3.2, 0.1, -3.4], size: [0.22, 0.18, 0.5]}
+        - {block: GRAY_CONCRETE, at: [-3.2, 0.18, -3.45], size: [1.3, 0.05, 0.3], roll: 12}
+        - {block: BLACK_CONCRETE, at: [3.2, 0.35, -3.4], size: [0.22, 0.18, 0.5]}
+        - {block: GRAY_CONCRETE, at: [3.2, 0.43, -3.45], size: [1.3, 0.05, 0.3], roll: -12}
+        - {block: BLACK_CONCRETE, at: [-4.8, 0.6, -5.1], size: [0.22, 0.18, 0.5]}
+        - {block: GRAY_CONCRETE, at: [-4.8, 0.68, -5.15], size: [1.3, 0.05, 0.3], roll: 12}
+        - {block: BLACK_CONCRETE, at: [4.8, 0.1, -5.1], size: [0.22, 0.18, 0.5]}
+        - {block: GRAY_CONCRETE, at: [4.8, 0.18, -5.15], size: [1.3, 0.05, 0.3], roll: -12}
+
 # Santa's sleigh crosses the sky above a lobby player every interval-seconds while one of during is celebrated, height
 # blocks up, length blocks long and flight-ticks long. It drops presents, each worth present-coins to the first to catch
 # it, one per player and flight; uncaught presents vanish after present-seconds. Staff send it with /schlitten.
@@ -346,6 +439,50 @@ sleigh:
   presents: 4
   present-coins: 15
   present-seconds: 30
+
+# Now and then one of models, props pieces with their front along +z, crosses the sky height blocks above the spawn,
+# length blocks from end to end in flight-ticks, every interval-seconds while anyone is about. Staff send one with
+# /ueberflug.
+flights:
+  enabled: true
+  interval-seconds: 240
+  height: 75
+  length: 200
+  flight-ticks: 1000
+  models: [airship, birds]
+
+# Small effects at the map's ambient-<effect>-<n> spots (/lobbyset, up to spots of each), seen by players within radius
+# who have effects on: count particles of particle, spread blocks round the spot at speed, every ticks.
+ambient:
+  enabled: true
+  radius: 40
+  effects:
+    fireflies: {particle: FIREFLY, count: 2, spread: 3, speed: 0, ticks: 10, spots: 4}
+    mist: {particle: SPLASH, count: 8, spread: 1.2, speed: 0.1, ticks: 5, spots: 2}
+    motes: {particle: SPORE_BLOSSOM_AIR, count: 3, spread: 4, speed: 0, ticks: 10, spots: 2}
+
+# Seasonal scenes at the map's spots (/lobbyset). In winter snowfight-figures figures stand at each of snowfight-a-<n>
+# and snowfight-b-<n> behind a snow wall, wearing the skin textures in snowfight-skins in turn (the value of a head's
+# textures property, as NameMC's /give commands carry it; the default look while it is empty); one throws every
+# throw-ticks, and one a player hits throws back after answer-ticks. At Halloween a witch stirs the cauldron one block
+# ahead of halloween-witch, bats circle bat-radius blocks round halloween-bats once every bat-lap-seconds, and a ghost
+# drifts ghost-speed blocks a tick along halloween-ghost-1 to ghost-spots and back.
+scenes:
+  snowfight-figures: 3
+  snowfight-skins:
+    - e3RleHR1cmVzOntTS0lOOnt1cmw6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvODk5MzZiYTExN2JhOWE4M2NjNzAwMzg5OTFjMTIzYjM5NzJhZWJlMDQxYmVmZDA0YzhmNTk4ZGU0ZWM3ZWQyMCJ9fX0=
+    - e3RleHR1cmVzOntTS0lOOnt1cmw6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOWU2YzJiNjBmNDlkZTYwMjY3NWM3YzY2OGFiMjViMmE0MDBkNzY2YzA1NzU4YmNlODZlM2YwODczMGZiNGMyMCJ9fX0=
+    - eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZDUxYjc4ODU0MzljZjM5MDQwZjkxODkwYjVlMjllZDE2NDFkOWMzZDdjYTJiMTZjMTFhZmRhZjM1OTgyNGZjIiwibWV0YWRhdGEiOnsibW9kZWwiOiJzbGltIn19fX0=
+    - e3RleHR1cmVzOntTS0lOOnt1cmw6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNGM1NjQxZjY5YTlkMGY5NWJkMGQ5MzhjMjIxZDI3MjIxMDRmZTk2MDAyMjlmZGExNGRjN2ExMTU5MWI1ZDJiNSJ9fX0=
+    - e3RleHR1cmVzOntTS0lOOnt1cmw6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNDNiZGExNmNlOGJiNzlkNTRjODgxOTg3ZDg2M2M4MDc2YzU3Y2I4N2ZkMmY3YWIxMmVmOGZhNWM0MTI4ZCJ9fX0=
+    - e3RleHR1cmVzOntTS0lOOnt1cmw6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNDAyZWMyZTA5MWQ0YmNhZDllYzhmYTRjZDE5YTMyMDVmNDVkNTBmOTRhMDliM2U4OTQ4YTE2ZmZiMTQyNTZkYyJ9fX0=
+  throw-ticks: 25
+  answer-ticks: 12
+  bats: 6
+  bat-radius: 4
+  bat-lap-seconds: 8
+  ghost-spots: 5
+  ghost-speed: 0.12
 
 # Between from-hour and until-hour in the network calendar zone, each check has a one-in-odds chance that Herobrine
 # stands about distance blocks ahead of one active player, visible only to them, for at most seconds. Coming within
