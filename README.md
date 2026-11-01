@@ -672,11 +672,12 @@ mode from before spectating. Switching targets keeps that original return point.
 `/troll` opens a player picker and `/troll <player>` opens that player's tools. Core ships with `troll.enabled: true`;
 the permission is `blockcraft.core.troll` (operators by default), with the same rank guard and action log as the other
 staff commands. Push, launch, private creeper sounds, fake explosions, thunder, confetti and a guardian scare are
-one-shot actions. Levitation, slowness, blindness and nausea last six seconds; `/troll <player> <effect>` also triggers
-them directly. `/troll <player> stop` removes the active troll potion effect. Temporary potion effects are cleaned up
-on death, world change, either participant leaving, and core shutdown. Existing potion effects are left alone.
-Changing that potion type elsewhere hands its cleanup back to Minecraft. These tools have no
-match or progression integration: using them during a game does not stop its stats or rewards.
+one-shot actions, and so are fake op and deop notices, which only the target sees, in their client's own language.
+Levitation, slowness, blindness, nausea and lag, which keeps pulling the target back half a second, last six seconds;
+`/troll <player> <effect>` also triggers them directly. `/troll <player> stop` ends the active timed effect. Timed
+effects are cleaned up on death, world change, either participant leaving, and core shutdown. Existing potion effects
+are left alone. Changing that potion type elsewhere hands its cleanup back to Minecraft. These tools have no match or
+progression integration: using them during a game does not stop its stats or rewards.
 
 During a lobby parkour run, `/parkour` or `/parkour retry` returns to the last checkpoint, or the start before the first
 checkpoint. The start message includes a clickable retry button. The clock keeps running, and a voluntary retry

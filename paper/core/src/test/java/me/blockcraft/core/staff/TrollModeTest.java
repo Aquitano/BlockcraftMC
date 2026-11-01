@@ -1,6 +1,12 @@
 package me.blockcraft.core.staff;
 
+import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.TranslatableComponent;
+import net.kyori.adventure.text.format.TextDecoration;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityPotionEffectEvent;
@@ -10,8 +16,12 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.scheduler.BukkitTask;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
@@ -23,6 +33,9 @@ import java.util.UUID;
 import static org.junit.Assert.*;
 
 public class TrollModeTest {
+
+    @Rule
+    public final TemporaryFolder folder = new TemporaryFolder();
 
     @Test
     public void effectsExpireAndEitherParticipantLeavingCleansThemUp() {
@@ -99,12 +112,45 @@ public class TrollModeTest {
         assertTrue(other.potions.isEmpty());
     }
 
-    private static final class Fixture {
+    @Test
+    public void lagPullsBackEveryOtherStepKeepingTheViewAndEndsAfterSixSeconds() {
+        var fixture = new Fixture();
+        var target = new Target();
+        assertTrue(fixture.mode.apply(new Target().player, target.player, TrollMode.Trick.LAG));
+        var step = fixture.tasks.getFirst();
+        step.run();
+        target.location = new Location(null, 3, 64, 0, 90, 10);
+        step.run();
+        assertEquals(new Location(null, 0, 64, 0, 90, 10), target.location);
+
+        for (int run = 2; run < 11; run++) step.run();
+        assertEquals(0, fixture.cancelled);
+        step.run();
+        assertEquals(1, fixture.cancelled);
+    }
+
+    @Test
+    public void fakeOpReadsAsTheClientsOwnOperatorNotice() {
+        var fixture = new Fixture();
+        var target = new Target();
+        assertTrue(fixture.mode.apply(new Target().player, target.player, TrollMode.Trick.FAKEOP));
+        var notice = (TranslatableComponent) target.chat.getFirst();
+        assertEquals("chat.type.admin", notice.key());
+        assertTrue(notice.hasDecoration(TextDecoration.ITALIC));
+        var success = (TranslatableComponent) notice.arguments().get(1).asComponent();
+        assertEquals("commands.op.success", success.key());
+        assertEquals("Target", ((TextComponent) success.arguments().getFirst().asComponent()).content());
+    }
+
+    private final class Fixture {
         final List<Runnable> tasks = new ArrayList<>();
         int cancelled;
         final BukkitScheduler scheduler = fake(BukkitScheduler.class, (proxy, method, args) -> {
-            assertEquals("runTaskLater", method.getName());
-            assertEquals(120L, args[2]);
+            switch (method.getName()) {
+                case "runTaskLater" -> assertEquals(120L, args[2]);
+                case "runTaskTimer" -> assertArrayEquals(new Object[]{10L, 10L}, new Object[]{args[2], args[3]});
+                default -> throw new AssertionError(method.getName());
+            }
             tasks.add((Runnable) args[1]);
             return fake(BukkitTask.class, (task, called, values) -> {
                 assertEquals("cancel", called.getName());
@@ -114,12 +160,14 @@ public class TrollModeTest {
         });
         final Server server = fake(Server.class, (proxy, method, args) -> scheduler);
         final Plugin plugin = fake(Plugin.class, (proxy, method, args) -> server);
-        final TrollMode mode = new TrollMode(plugin);
+        final TrollMode mode = new TrollMode(plugin, messages());
     }
 
     private static final class Target {
         final UUID id = UUID.randomUUID();
         final Map<PotionEffectType, PotionEffect> potions = new HashMap<>();
+        final List<Component> chat = new ArrayList<>();
+        Location location = new Location(null, 0, 64, 0, 0, 0);
         final Player player = fake(Player.class, (proxy, method, args) -> switch (method.getName()) {
             case "getUniqueId" -> id;
             case "hasPotionEffect" -> potions.containsKey(args[0]);
@@ -129,8 +177,21 @@ public class TrollModeTest {
                 yield true;
             }
             case "removePotionEffect" -> { potions.remove(args[0]); yield null; }
+            case "getName" -> "Target";
+            case "sendMessage" -> { chat.add((Component) args[0]); yield null; }
+            case "getLocation" -> location.clone();
+            case "teleport" -> { location = ((Location) args[0]).clone(); yield true; }
             default -> throw new AssertionError(method.getName());
         });
+    }
+
+    private Messages messages() {
+        try {
+            return Messages.load(folder.newFolder().toPath(), () -> TrollModeTest.class.getResourceAsStream("/messages.yml"),
+                    Placeholder.parsed("muted", "<gray>"));
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 
     private static <T> T fake(Class<T> type, InvocationHandler calls) {

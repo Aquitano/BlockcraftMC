@@ -123,7 +123,7 @@ public final class BlockcraftCorePlugin extends JavaPlugin {
         staffInventories.createTable();
         var audit = api.audit();
         if (!Boolean.FALSE.equals(YamlFile.section(config, "troll").get("enabled"))) {
-            trolls = new TrollMode(this);
+            trolls = new TrollMode(this, messages);
             pluginManager.registerEvents(trolls, this);
         }
         var staffMode = new StaffMode(this, messages, vanish, freeze, staffInventories, audit, new ReportRepository(api.database()),

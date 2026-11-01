@@ -1,5 +1,8 @@
 package me.blockcraft.core.staff;
 
+import me.blockcraft.common.message.Messages;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
@@ -33,10 +36,13 @@ public final class TrollMode implements Listener, AutoCloseable {
         THUNDER(Material.LIGHTNING_ROD),
         CONFETTI(Material.PINK_DYE),
         GUARDIAN(Material.PRISMARINE_SHARD),
+        FAKEOP(Material.COMMAND_BLOCK),
+        FAKEDEOP(Material.BARRIER),
         LEVITATE(Material.FEATHER, PotionEffectType.LEVITATION),
         SLOW(Material.COBWEB, PotionEffectType.SLOWNESS),
         BLIND(Material.INK_SAC, PotionEffectType.BLINDNESS),
-        NAUSEA(Material.PUFFERFISH, PotionEffectType.NAUSEA);
+        NAUSEA(Material.PUFFERFISH, PotionEffectType.NAUSEA),
+        LAG(Material.CLOCK);
 
         private final Material material;
         private final PotionEffectType potion;
@@ -59,18 +65,21 @@ public final class TrollMode implements Listener, AutoCloseable {
         }
     }
 
-    private record ActiveEffect(UUID actor, Player target, PotionEffectType potion, BukkitTask task) {
+    private record ActiveEffect(UUID actor, Player target, Trick trick, BukkitTask task) {
     }
 
     private static final int EFFECT_TICKS = 120;
+    private static final int LAG_STEP_TICKS = 10;
     private static final long COOLDOWN_NANOS = 2_000_000_000L;
 
     private final Plugin plugin;
+    private final Messages messages;
     private final Map<UUID, ActiveEffect> active = new HashMap<>();
     private final Map<UUID, Long> cooldowns = new HashMap<>();
 
-    public TrollMode(Plugin plugin) {
+    public TrollMode(Plugin plugin, Messages messages) {
         this.plugin = plugin;
+        this.messages = messages;
     }
 
     public boolean coolingDown(Player target) {
@@ -84,7 +93,7 @@ public final class TrollMode implements Listener, AutoCloseable {
         }
         if (trick.potion != null) {
             var previous = active.get(target.getUniqueId());
-            if (target.hasPotionEffect(trick.potion) && (previous == null || previous.potion() != trick.potion)) {
+            if (target.hasPotionEffect(trick.potion) && (previous == null || previous.trick().potion != trick.potion)) {
                 return false;
             }
             stop(target);
@@ -92,7 +101,7 @@ public final class TrollMode implements Listener, AutoCloseable {
                 return false;
             }
             var task = plugin.getServer().getScheduler().runTaskLater(plugin, () -> stop(target), EFFECT_TICKS);
-            active.put(target.getUniqueId(), new ActiveEffect(actor.getUniqueId(), target, trick.potion, task));
+            active.put(target.getUniqueId(), new ActiveEffect(actor.getUniqueId(), target, trick, task));
         } else {
             var at = target.getLocation().add(0, 1, 0);
             switch (trick) {
@@ -121,6 +130,14 @@ public final class TrollMode implements Listener, AutoCloseable {
                     target.spawnParticle(Particle.ELDER_GUARDIAN, at, 1);
                     target.playSound(at, Sound.ENTITY_ELDER_GUARDIAN_CURSE, 0.5f, 1);
                 }
+                case FAKEOP, FAKEDEOP -> target.sendMessage(messages.get("troll.effects." + trick.key() + ".message",
+                        Placeholder.unparsed("player", target.getName())));
+                case LAG -> {
+                    stop(target);
+                    var task = plugin.getServer().getScheduler().runTaskTimer(plugin, new Rubberband(target),
+                            LAG_STEP_TICKS, LAG_STEP_TICKS);
+                    active.put(target.getUniqueId(), new ActiveEffect(actor.getUniqueId(), target, trick, task));
+                }
                 default -> throw new IllegalStateException("Potion trick has no potion: " + trick);
             }
         }
@@ -132,14 +149,16 @@ public final class TrollMode implements Listener, AutoCloseable {
         var effect = active.remove(target.getUniqueId());
         if (effect != null) {
             effect.task().cancel();
-            target.removePotionEffect(effect.potion());
+            if (effect.trick().potion != null) {
+                target.removePotionEffect(effect.trick().potion);
+            }
         }
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPotionChange(EntityPotionEffectEvent event) {
         var effect = active.get(event.getEntity().getUniqueId());
-        if (effect != null && effect.potion().equals(event.getModifiedType())) {
+        if (effect != null && event.getModifiedType().equals(effect.trick().potion)) {
             active.remove(event.getEntity().getUniqueId());
             effect.task().cancel();
         }
@@ -162,6 +181,29 @@ public final class TrollMode implements Listener, AutoCloseable {
     @EventHandler
     public void onWorldChange(PlayerChangedWorldEvent event) {
         stop(event.getPlayer());
+    }
+
+    private final class Rubberband implements Runnable {
+        private final Player target;
+        private Location anchor;
+        private int steps;
+
+        Rubberband(Player target) {
+            this.target = target;
+        }
+
+        @Override
+        public void run() {
+            if (++steps * LAG_STEP_TICKS >= EFFECT_TICKS) {
+                stop(target);
+            } else if (anchor == null) {
+                anchor = target.getLocation();
+            } else {
+                var now = target.getLocation();
+                target.teleport(anchor.setRotation(now.getYaw(), now.getPitch()));
+                anchor = null;
+            }
+        }
     }
 
     @Override

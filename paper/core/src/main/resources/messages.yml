@@ -93,13 +93,13 @@ troll:
   choose: "<click> Werkzeuge öffnen"
   trigger: "<click> Auslösen"
   stop: "<primary>Effekt beenden"
-  stop-lore: "<click> Aktiven Troll-Trankeffekt entfernen"
+  stop-lore: "<click> Aktiven Troll-Effekt beenden"
   denied: "<prefix><error>Du darfst die Troll-Werkzeuge nicht benutzen."
   offline: "<prefix><error>Dieser Spieler ist nicht mehr erreichbar."
   cooldown: "<prefix><muted>Warte zwei Sekunden zwischen Streichen beim selben Spieler."
   effect-present: "<prefix><muted>Dieser Trankeffekt ist bereits aktiv oder wurde verhindert."
   applied: "<prefix><success><effect> <muted>für <primary><player><muted> ausgelöst."
-  stopped: "<prefix><success>Troll-Trankeffekt von <primary><player><success> beendet."
+  stopped: "<prefix><success>Troll-Effekt von <primary><player><success> beendet."
   effects:
     push:
       name: "<primary>Schubs"
@@ -122,6 +122,14 @@ troll:
     guardian:
       name: "<primary>Wächter-Schreck"
       lore: "<muted>Das Wächter-Gesicht erscheint mit seinem Geräusch."
+    fakeop:
+      name: "<primary>Fake-OP"
+      lore: "<muted>Nur der Spieler liest, er sei jetzt Operator."
+      message: '<muted><italic><lang:chat.type.admin:Server:"<lang:commands.op.success:''<player>''>">'
+    fakedeop:
+      name: "<primary>Fake-DeOP"
+      lore: "<muted>Nur der Spieler liest, er sei kein Operator mehr."
+      message: '<muted><italic><lang:chat.type.admin:Server:"<lang:commands.deop.success:''<player>''>">'
     levitate:
       name: "<primary>Schweben"
       lore: "<muted>Sechs Sekunden langsam nach oben schweben."
@@ -134,6 +142,9 @@ troll:
     nausea:
       name: "<primary>Seekrank"
       lore: "<muted>Sechs Sekunden Übelkeit."
+    lag:
+      name: "<primary>Lag"
+      lore: "<muted>Sechs Sekunden lang immer wieder zurückgezogen."
 fly:
   usage: "<prefix><error>Benutze /fly [Spieler] [on|off]"
   enabled: "<prefix><muted>Du kannst nun fliegen!"
