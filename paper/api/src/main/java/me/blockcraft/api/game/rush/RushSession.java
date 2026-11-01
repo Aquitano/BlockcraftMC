@@ -10,7 +10,9 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public final class RushSession implements AutoCloseable {
@@ -29,6 +31,7 @@ public final class RushSession implements AutoCloseable {
     private final RushMatch match;
     private final Events events;
     private final RushRules rules;
+    private final Map<UUID, RushLayout> dealt = new HashMap<>();
     private BukkitTask voidCheck;
     private BukkitTask reset;
     private boolean activated;
@@ -99,10 +102,14 @@ public final class RushSession implements AutoCloseable {
         });
     }
 
+    boolean holdsBlocks(Player player) {
+        return kit.holdsBlocks(player, dealt.getOrDefault(player.getUniqueId(), RushLayout.DEFAULT));
+    }
+
     void refill(Player player) {
         Bukkit.getScheduler().runTask(plugin, () -> {
             if (active(player)) {
-                kit.refill(player, slot(player));
+                kit.refill(player, slot(player), dealt.getOrDefault(player.getUniqueId(), RushLayout.DEFAULT));
             }
         });
     }
@@ -146,7 +153,7 @@ public final class RushSession implements AutoCloseable {
         player.setRespawnLocation(spawn, true);
         player.setVelocity(new Vector());
         player.setFallDistance(0);
-        kit.give(player, slot(player));
+        dealt.put(player.getUniqueId(), kit.give(player, slot(player)));
     }
 
     private void checkVoid() {

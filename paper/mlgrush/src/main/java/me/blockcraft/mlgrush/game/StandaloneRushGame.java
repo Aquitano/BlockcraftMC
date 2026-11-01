@@ -20,6 +20,7 @@ import me.blockcraft.api.task.SerialTasks;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.api.game.rush.RushArena;
 import me.blockcraft.api.game.rush.RushKit;
+import me.blockcraft.api.game.rush.RushLayoutMenu;
 import me.blockcraft.api.game.rush.RushSession;
 import me.blockcraft.api.game.rush.RushConfig;
 import me.blockcraft.api.game.rush.MapPool;
@@ -79,9 +80,11 @@ public final class StandaloneRushGame {
         summary = new RoundSummary(plugin, messages, new RoundSummary.Rewards(0, config.winCoins()), stats, recapWrites);
         round = new Round(plugin, new Arena(messages, Sounds.DUELL_JOIN), summary, MAX_PARTICIPANTS, gameConfig);
         countdown = new LobbyCountdown(plugin, round, gameConfig, this::start);
-        hotbar = new LobbyHotbar(plugin, List.of(new LobbyHotbar.Choice(MenuIcon.DUELL,
-                messages.get("item.rematch"), () -> round.phase() == GamePhase.ENDING,
-                player -> requestRematch(player, identity))), statsMenus, countdown);
+        hotbar = new LobbyHotbar(plugin, List.of(
+                new LobbyHotbar.Choice(MenuIcon.MLGRUSH, messages.get("item.layout"),
+                        player -> new RushLayoutMenu(kit, messages, "layout.", player).open(player)),
+                new LobbyHotbar.Choice(MenuIcon.DUELL, messages.get("item.rematch"), () -> round.phase() == GamePhase.ENDING,
+                        player -> requestRematch(player, identity))), statsMenus, countdown);
         sidebar = new Sidebar(messages.get("scoreboard.title"));
         voidRecovery = Bukkit.getScheduler().runTaskTimer(plugin, this::recoverWaitingPlayers, 1L, 1L);
     }

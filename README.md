@@ -246,14 +246,17 @@ docker compose --env-file /dev/null -f docker-compose.yml up -d mariadb velocity
 Connect two clients to `localhost:25565`. In the lobby, `/navigator`, `/nav`, `/spiele`, or the compass opens the
 same game menu. Left-click MLG Rush to play, or use `/play mlgrush` directly from any backend. `/hub` or `/lobby`
 returns from MLG Rush to the lobby, where `/navigator` works again. The waiting and ending hotbars also have a hub
-item. The active kit stays locked to its gameplay slots. No lobby warp or arena editing is required.
+item. The active kit stays locked to its gameplay slots. The waiting hotbar's layout item opens a menu in which a
+player picks the hotbar slot of the stick, the blocks and the pickaxe. The order is a player setting, so it holds
+across servers and in Duell's MLG Rush mode, where a right click on the mode's tile in the vote menu opens the same
+menu. No lobby warp or arena editing is required.
 
 `stagePlugins` writes `build/docker/paper/mlgrush/mlgrush.jar` with `config.yml`, `maps.yml`, and `messages.yml`
 bundled inside it. The service installs BlockcraftAPI, BlockcraftCore, MLGRush, LuckPerms, and ViaVersion.
 Its hostname is `mlgrush`, and `BLOCKCRAFT_SERVER_GROUP=mlgrush`. BlockcraftAPI announces two participant places
 and the game phase to `bc_servers`, with the shared five-second heartbeat. The Paper connection limit remains 200
 so spectators can connect. After a match, both players can request a rematch through the recap's play-again button
-or the first hotbar item. Once both agree, the arena resets, a map is selected, and the next match starts after
+or the rematch item in the hotbar. Once both agree, the arena resets, a map is selected, and the next match starts after
 `countdown.start` seconds, three by default. Scores, kits, and round summaries start fresh without a backend restart.
 When an opponent leaves, the server returns to its waiting phase and fills open seats from non-vanished spectators
 in arrival order. An empty backend still stops after `idle-restart-minutes`.

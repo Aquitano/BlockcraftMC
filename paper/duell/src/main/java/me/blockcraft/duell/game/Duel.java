@@ -14,6 +14,7 @@ import me.blockcraft.api.game.GameConfig;
 import me.blockcraft.api.game.GamePhase;
 import me.blockcraft.api.game.LobbyCountdown;
 import me.blockcraft.api.game.LobbyHotbar;
+import me.blockcraft.api.game.rush.RushKit;
 import me.blockcraft.api.game.PlayerReset;
 import me.blockcraft.api.game.Round;
 import me.blockcraft.api.game.RoundStart;
@@ -177,6 +178,7 @@ public final class Duel {
 
     public LobbyCountdown lobbyCountdown() { return lobbyCountdown; }
     public LobbyHotbar lobbyHotbar() { return lobbyHotbar; }
+    public RushKit rushKit() { return games.rushKit(); }
     public boolean isLobby() { return round.phase() == GamePhase.LOBBY; }
     public boolean isIngame() { return round.phase() == GamePhase.INGAME; }
     public boolean isPlaying(DuelMode mode) { return isIngame() && gameActive && this.mode == mode; }

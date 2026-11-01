@@ -2,6 +2,7 @@ package me.blockcraft.duell.menu;
 
 import me.blockcraft.api.game.CombatStyle;
 import me.blockcraft.api.game.VoteMenu;
+import me.blockcraft.api.game.rush.RushLayoutMenu;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.menu.Menu;
 import me.blockcraft.api.pack.MenuIcon;
@@ -90,6 +91,9 @@ public final class VoteMenus {
                                 Formatter.number("votes", votes.votes(mode)))));
                 lore.add(messages.get(duel.formatChoice(player.getUniqueId()) == DuelSeries.Format.TOUR
                         ? "menu.modes.nominate" : "menu.modes.choose"));
+                if (mode == DuelMode.MLGRUSH) {
+                    lore.add(messages.get("menu.modes.mlgrush-layout"));
+                }
                 var item = Items.of(icon(mode)).name(messages.get("menu.modes." + mode.configKey()))
                         .lore(lore).hideAttributes();
                 if (mine) {
@@ -179,7 +183,15 @@ public final class VoteMenus {
                         ? DuelRating.UNRATED : DuelRating.RATED);
                 openModes(player);
             } else {
-                layout.modeIndex(slot).ifPresent(index -> openMaps(player, modes.get(index)));
+                layout.modeIndex(slot).ifPresent(index -> {
+                    var mode = modes.get(index);
+                    if (mode == DuelMode.MLGRUSH && event.isRightClick()) {
+                        VoteMenus.this.open(player, new RushLayoutMenu(duel.rushKit(), messages, "mlgrush.layout-", player,
+                                VoteMenus.this::openModes));
+                    } else {
+                        openMaps(player, mode);
+                    }
+                });
             }
         }
     }

@@ -70,7 +70,7 @@ public final class RushRules implements Listener {
         }
         var material = game.slot(player) == 0 ? Material.RED_TERRACOTTA : Material.BLUE_TERRACOTTA;
         if (!game.active(player) || !arena.canPlace(event.getBlock()) || event.getBlock().getType() != material
-                || player.getInventory().getHeldItemSlot() != 1) {
+                || !game.holdsBlocks(player)) {
             event.setCancelled(true);
             return;
         }

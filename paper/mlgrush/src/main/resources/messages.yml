@@ -23,6 +23,14 @@ item:
   blocks: "<primary>Baublöcke"
   pickaxe: "<primary>Spitzhacke"
   rematch: "<arrow><mlgrush>Revanche anfragen"
+  layout: "<arrow><mlgrush>Hotbar anpassen"
+layout:
+  title: "<arrow><mlgrush>MLG Rush <dark>· <muted>Hotbar"
+  empty: "<muted>Platz <slot>"
+  select: "<left>Auswählen"
+  selected: "<muted>Ausgewählt <dark>· <left>Neuen Platz wählen"
+  place: "<left>Hierhin legen"
+  reset: "<primary>Standard wiederherstellen"
 rematch:
   unavailable: "<prefix><error>Eine Revanche ist nur direkt nach einem Match mit demselben Gegner möglich."
   waiting: "<prefix><muted>Du bist bereit. Warte auf deinen Gegner."

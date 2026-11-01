@@ -8,6 +8,7 @@ import me.blockcraft.api.game.ThrowFight;
 import me.blockcraft.api.game.rush.MapPool;
 import me.blockcraft.api.game.rush.RushArena;
 import me.blockcraft.api.game.rush.RushConfig;
+import me.blockcraft.api.game.rush.RushKit;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.duell.arena.SumoArena;
 import me.blockcraft.duell.config.DuellConfig;
@@ -55,6 +56,10 @@ public final class DuelGames {
         this.chests = chests;
     }
 
+    public RushKit rushKit() {
+        return new RushKit(rushConfig.kit(), messages, "mlgrush.item-");
+    }
+
     public List<Integer> rushMaps() {
         return java.util.stream.IntStream.rangeClosed(1, maps.maps().size()).boxed().toList();
     }
@@ -77,7 +82,7 @@ public final class DuelGames {
         var mode = outcome.mode();
         if (mode == DuelMode.MLGRUSH) {
             rush.selectMap(maps.maps().get(outcome.map() - 1));
-            return new MlgRushDuelGame(plugin, rushConfig, messages, rush, participants, summary, events);
+            return new MlgRushDuelGame(plugin, rushConfig, rushKit(), messages, rush, participants, summary, events);
         }
         var locations = java.util.stream.IntStream.rangeClosed(1, 2)
                 .mapToObj(slot -> mode == DuelMode.SUMO || mode == DuelMode.THROW ? sumo.spawn(slot)

@@ -27,14 +27,14 @@ final class MlgRushDuelGame implements DuelGame {
     private final int[] scores = new int[2];
     private boolean closed;
 
-    MlgRushDuelGame(Plugin plugin, RushConfig config, Messages messages, RushArena arena,
+    MlgRushDuelGame(Plugin plugin, RushConfig config, RushKit kit, Messages messages, RushArena arena,
                     List<UUID> participants, RoundSummary summary, DuelGames.Events events) {
         this.arena = arena;
         this.summary = summary;
         this.config = config;
         this.messages = messages;
         this.participants = List.copyOf(participants);
-        session = new RushSession(plugin, config, arena, new RushKit(config.kit(), messages, "mlgrush.item-"), participants,
+        session = new RushSession(plugin, config, arena, kit, participants,
                 new RushSession.Events() {
                     @Override
                     public void fell(Player player) {

@@ -109,6 +109,12 @@ mlgrush:
   item-stick: "<primary>Knockback-Stick"
   item-blocks: "<primary>Baublöcke"
   item-pickaxe: "<primary>Spitzhacke"
+  layout-title: "<arrow><duell>Duell <dark>· <muted>MLG-Rush-Hotbar"
+  layout-empty: "<muted>Platz <slot>"
+  layout-select: "<left>Auswählen"
+  layout-selected: "<muted>Ausgewählt <dark>· <left>Neuen Platz wählen"
+  layout-place: "<left>Hierhin legen"
+  layout-reset: "<primary>Standard wiederherstellen"
 
 title:
   start: "<muted>Start!"
@@ -172,6 +178,7 @@ menu:
       - "<left>Dem Zufall überlassen"
     mlgrush: "<arrow><primary>MLG Rush"
     mlgrush-lore: "<muted>Brücken bauen, Betten brechen."
+    mlgrush-layout: "<right>Hotbar anpassen"
     throw: "<arrow><primary>Wurfschlacht"
     throw-lore: "<muted>Nur in der Saison: Schneebälle, Kürbisse oder Eier. Wirf ihn vom Ring."
   rating:

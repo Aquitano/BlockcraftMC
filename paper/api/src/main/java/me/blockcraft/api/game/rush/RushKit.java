@@ -26,18 +26,44 @@ public final class RushKit {
         this.messages = messages;
     }
 
-    public void give(Player player, int slot) {
-        var stick = Items.of(Material.STICK).name(messages.get(prefix + "stick")).build();
-        stick.addUnsafeEnchantment(Enchantment.KNOCKBACK, config.knockbackLevel());
-        player.getInventory().setItem(0, BlockcraftApi.get().weapons().stick(player, stick));
-        player.getInventory().setItem(1, blocks(slot));
-        player.getInventory().setItem(2, Items.of(Material.WOODEN_PICKAXE).name(messages.get(prefix + "pickaxe"))
-                .edit(meta -> meta.setUnbreakable(true)).build());
+    /** Deals the kit in the player's current layout and returns it, so refills follow the same order until the next deal. */
+    public RushLayout give(Player player, int slot) {
+        var layout = RushLayout.of(player);
+        var inventory = player.getInventory();
+        inventory.setItem(layout.stick(), stick(player));
+        inventory.setItem(layout.blocks(), blocks(slot));
+        inventory.setItem(layout.pickaxe(), pickaxe());
         CombatStyle.LEGACY.apply(player);
+        return layout;
     }
 
-    public void refill(Player player, int slot) {
-        player.getInventory().setItem(1, blocks(slot));
+    public void refill(Player player, int slot, RushLayout layout) {
+        player.getInventory().setItem(layout.blocks(), blocks(slot));
+    }
+
+    /** Whether the player holds the blocks, wherever the dealt layout put them. */
+    public boolean holdsBlocks(Player player, RushLayout layout) {
+        return player.getInventory().getHeldItemSlot() == layout.blocks();
+    }
+
+    /** The piece as the player would carry it, for a menu that shows the kit. */
+    public ItemStack preview(Player player, RushLayout.Item item) {
+        return switch (item) {
+            case STICK -> stick(player);
+            case BLOCKS -> blocks(0);
+            case PICKAXE -> pickaxe();
+        };
+    }
+
+    private ItemStack stick(Player player) {
+        var stick = Items.of(Material.STICK).name(messages.get(prefix + "stick")).build();
+        stick.addUnsafeEnchantment(Enchantment.KNOCKBACK, config.knockbackLevel());
+        return BlockcraftApi.get().weapons().stick(player, stick);
+    }
+
+    private ItemStack pickaxe() {
+        return Items.of(Material.WOODEN_PICKAXE).name(messages.get(prefix + "pickaxe"))
+                .edit(meta -> meta.setUnbreakable(true)).build();
     }
 
     private ItemStack blocks(int slot) {

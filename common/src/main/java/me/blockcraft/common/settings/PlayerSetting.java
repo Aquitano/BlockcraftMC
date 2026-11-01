@@ -26,6 +26,8 @@ public enum PlayerSetting {
     SKYWARS_KIT("skywars-kit"),
     ENDERGAMES_KIT("endergames-kit"),
     QUICKSG_KIT("quicksg-kit"),
+    /** The hotbar slots of the stick, the blocks and the pickaxe in MLG Rush, as its layout menu writes them. */
+    MLGRUSH_LAYOUT("mlgrush-layout"),
     /** The legacy storage key keeps existing BedWars choices when other games share the style. */
     WEAPON_STYLE("bedwars-stick"),
     BEDWARS_BED_SOUND("bedwars-bed-sound"),
