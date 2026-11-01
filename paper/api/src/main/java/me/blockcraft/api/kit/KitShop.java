@@ -51,13 +51,13 @@ public final class KitShop<K extends Enum<K> & UnlockableKit> {
                 });
     }
 
-    private void choose(Player player, K kit, boolean owned) {
+    private void choose(Player player, K kit, Set<K> owned) {
         if (!selection.isOpen()) {
             return;
         }
-        if (owned) {
+        if (owned.contains(kit)) {
             select(player, kit);
-            open(player);
+            new KitMenu(owned, selection.kit(player)).open(player, selection::isOpen);
             return;
         }
         Purchases.confirm(player, icon(kit, Stream.empty()), kit.item(), catalog.price(kit),
@@ -119,7 +119,7 @@ public final class KitShop<K extends Enum<K> & UnlockableKit> {
 
         @Override
         protected void onSelect(Player player, K kit, InventoryClickEvent event) {
-            choose(player, kit, owned.contains(kit));
+            choose(player, kit, owned);
         }
     }
 }
