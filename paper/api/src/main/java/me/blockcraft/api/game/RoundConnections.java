@@ -1,19 +1,34 @@
-package me.blockcraft.bedwars.listener;
+package me.blockcraft.api.game;
 
-import me.blockcraft.api.spectate.SpectateRequestEvent;
 import me.blockcraft.api.vanish.VanishChangeEvent;
-import me.blockcraft.bedwars.game.Game;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerResourcePackStatusEvent;
 
-public final class ConnectionListener implements Listener {
+/**
+ * Players coming and going on a game server: joins and quits go to the game without a chat line, a vanish change
+ * reaches it after the {@link Round} has moved the player, and every change redraws the sidebars, as does the
+ * proxy's word on the pack, which arrives after the join and decides the sidebar's icons.
+ */
+public final class RoundConnections implements Listener {
 
-    private final Game game;
+    public interface Seating {
 
-    public ConnectionListener(Game game) {
+        void join(Player player);
+
+        void quit(Player player);
+
+        void vanished(Player player);
+
+        void refreshAll();
+    }
+
+    private final Seating game;
+
+    public RoundConnections(Seating game) {
         this.game = game;
     }
 
@@ -29,16 +44,9 @@ public final class ConnectionListener implements Listener {
         game.quit(event.getPlayer());
     }
 
-    /** The proxy names the friend a watching player came for, which reaches the backend after the join. */
-    @EventHandler
-    public void onSpectateRequest(SpectateRequestEvent event) {
-        game.follow(event.getPlayer(), event.target());
-    }
-
-    /** The proxy's word on the pack arrives after the join, and the sidebar's icons depend on it. */
     @EventHandler
     public void onResourcePack(PlayerResourcePackStatusEvent event) {
-        game.scoreboard().refreshAll();
+        game.refreshAll();
     }
 
     @EventHandler
@@ -46,5 +54,6 @@ public final class ConnectionListener implements Listener {
         if (event.isVanished()) {
             game.vanished(event.getPlayer());
         }
+        game.refreshAll();
     }
 }

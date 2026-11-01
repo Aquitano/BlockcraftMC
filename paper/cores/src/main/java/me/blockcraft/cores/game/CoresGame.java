@@ -11,11 +11,13 @@ import me.blockcraft.api.game.LobbyCountdown;
 import me.blockcraft.api.game.LobbyHotbar;
 import me.blockcraft.api.game.PlayerReset;
 import me.blockcraft.api.game.Round;
+import me.blockcraft.api.game.RoundConnections;
 import me.blockcraft.api.game.RoundStart;
 import me.blockcraft.api.game.RoundSummary;
 import me.blockcraft.api.game.StatsMenus;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.game.TimerBar;
+import me.blockcraft.api.game.LobbyEntrance;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.pack.MenuIcon;
 import me.blockcraft.api.sound.Sounds;
@@ -55,13 +57,14 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.OptionalInt;
 
 /**
  * One server, one round of Cores, as GommeHD played it: red against blue, two cores each. Players pick a team in
  * the lobby; in the round they respawn without end, mine and craft their gear from what the map holds, and the
  * first team to break every enemy core wins. An enemy near a core sounds its team's alarm and mines it slowly.
  */
-public final class CoresGame {
+public final class CoresGame implements RoundConnections.Seating {
 
     private static final long RESPAWN_TICKS = 10L;
     private static final long WATCH_TICKS = 10L;
@@ -80,6 +83,7 @@ public final class CoresGame {
     private final Round round;
     private final LobbyCountdown countdown;
     private final LobbyHotbar hotbar;
+    private final LobbyEntrance entrance;
     private final GameSidebar sidebar;
     /** Who started the round for which team; a win counts for those of them still on the server. */
     private final Map<UUID, Side> roster = new HashMap<>();
@@ -103,6 +107,9 @@ public final class CoresGame {
                 player -> new TeamMenu(messages, teams, config.playersPerTeam(), this::choose).open(player))),
                 statsMenus, countdown);
         this.sidebar = new GameSidebar(messages.get("scoreboard.title"), round);
+        this.entrance = new LobbyEntrance(round, countdown, hotbar, () -> Optional.of(map.lobbySpawn()),
+                () -> Optional.of(phase() == GamePhase.INGAME ? map.spectatorSpawn() : map.lobbySpawn()),
+                OptionalInt.of(config.fullSeconds()), player -> player.sendMessage(messages.get("join.introduction")));
     }
 
     public GamePhase phase() {
@@ -155,27 +162,16 @@ public final class CoresGame {
         protectedUntil.remove(player.getUniqueId());
     }
 
+    @Override
     public void join(Player player) {
         if (round.rejoin(player)) {
             rejoined(player);
-        } else if (round.join(player)) {
-            PlayerReset.reset(player, GameMode.ADVENTURE);
-            player.teleport(map.lobbySpawn());
-            hotbar.give(player);
-            player.sendMessage(messages.get("join.introduction"));
-            countdown.start();
-            if (round.playerCount() >= config.capacity()) {
-                countdown.shorten(config.fullSeconds());
-            }
         } else {
-            player.teleport(phase() == GamePhase.INGAME ? map.spectatorSpawn() : map.lobbySpawn());
+            entrance.admit(player);
         }
         refreshAll();
     }
 
-    public void follow(Player spectator, UUID friend) {
-        round.follow(spectator, friend);
-    }
 
     /** Back within the time the round kept their place: at the side's spawn, protected, with what they carried. */
     private void rejoined(Player player) {
@@ -197,6 +193,7 @@ public final class CoresGame {
     }
 
     /** A player who drops out of the running round keeps their place for a while. */
+    @Override
     public void quit(Player player) {
         if (round.stepOut(player, this::forfeited)) {
             protectedUntil.remove(player.getUniqueId());
@@ -232,6 +229,7 @@ public final class CoresGame {
         refreshAll();
     }
 
+    @Override
     public void vanished(Player player) {
         if (phase() == GamePhase.INGAME && round.isPlaying(player)) {
             leave(player);
@@ -443,6 +441,7 @@ public final class CoresGame {
         refreshAll();
     }
 
+    @Override
     public void refreshAll() {
         Bukkit.getOnlinePlayers().forEach(this::show);
     }

@@ -52,12 +52,19 @@ README.md; this file only holds what the code does not say by itself.
   `closeButton` otherwise; a coin purchase goes through `ConfirmDialog` first. A list of entries is a `ListMenu`,
   which pages from the middle of the last row and shows loading, failure and an empty list in the middle of the page;
   no menu draws its own pager or loading state.
-- A game plugin builds its lobby and round from `paper/api`'s `game` package: `GameConfig` for the shared
-  config keys, `Round` (with `clock` for every timed phase), `LobbyCountdown`, `RoundStart`, `LobbyHotbar`,
-  `LobbyProtection`, `GameSidebar` sections under the shared frame, `VoteMenu`/`Ballot`/`ForceMapCommand` for a lobby
-  vote, and `StartCommand`, `SetupCommand`, `StatsCommand`, `TopCommand`. No game writes its own lobby hotbar,
-  /start, sidebar frame or lobby rules, and a game with more to set up than named spots hangs it off
-  `SetupCommand.root()`.
+- A game plugin builds its lobby and round from `paper/api`'s `game` package: `GameServices` for its messages,
+  stats, stats screens, /stats, /top and listeners, `GameConfig` for the shared config keys, `Round` (with `clock` for
+  every timed phase; it also takes the proxy's spectate requests), `RoundConnections` for joins, quits, vanish and pack
+  changes, `LobbyEntrance` to seat a joiner, `LobbyCountdown`, `RoundStart`, `LobbyHotbar`, `GameSidebar` sections
+  under the shared frame, `VoteMenu`/`Ballot`/`ForceMapCommand` for a lobby vote, and `StartCommand`, `SetupCommand`;
+  its lobby phase is a `WorldProtection.during`. Kits a player picks in the lobby are an `UnlockableKit` enum held by
+  `paper/api`'s `kit` package: `KitSelection` for who took which, `KitCatalog` for prices, `KitShop` for the menu. No
+  game writes its own lobby hotbar, /start, sidebar frame or lobby rules, no new one its own connection listener or
+  kit menu, and a game with more to set up than named spots hangs it off `SetupCommand.root()`.
+- Every world players must leave as built (the lobby, a game's lobby phase, the waiting island, the archive) is
+  guarded by `paper/api`'s `WorldProtection`, never by a plugin's own block or item list: it denies by default,
+  `usable` names the blocks that still answer a right click, and build mode is the only way past it. Round rules,
+  where players fight, loot and build, stay with the game.
 - Replays only see what Bukkit announces. A game that sets blocks itself (`setBlockData`, `setType`) fires
   `BlocksChangedEvent`, a hitscan gun fires `ShotEvent`, and a game with a fixed arena sets `Round.playArea` so the
   whole map is recorded from the start.

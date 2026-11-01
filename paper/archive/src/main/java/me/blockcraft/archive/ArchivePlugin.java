@@ -3,7 +3,7 @@ package me.blockcraft.archive;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.command.CommandRegistry;
-import me.blockcraft.api.game.LobbyProtection;
+import me.blockcraft.api.world.WorldProtection;
 import me.blockcraft.archive.command.ArchiveSetup;
 import me.blockcraft.archive.command.NoteCommand;
 import me.blockcraft.archive.exhibit.ExhibitPool;
@@ -14,8 +14,6 @@ import me.blockcraft.archive.note.NoteRepository;
 import me.blockcraft.common.message.Messages;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
-
-import java.util.Optional;
 
 /**
  * The Zeitkapsel: old maps of earlier servers to walk and fly through, checkpoints to jump between and notes staff
@@ -43,7 +41,7 @@ public final class ArchivePlugin extends JavaPlugin {
         register(hotbar);
         register(new VisitorListener(messages, hall, worlds, hotbar));
         // Falling is the visitor listener's: below an exhibit it leads back to the exhibit's arrival, not the hall.
-        register(new LobbyProtection(() -> true, api.buildMode(), Optional::empty));
+        register(WorldProtection.during(() -> true, api.buildMode()).usable(WorldProtection::passage));
 
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             var commands = new CommandRegistry(event.registrar(), messages);

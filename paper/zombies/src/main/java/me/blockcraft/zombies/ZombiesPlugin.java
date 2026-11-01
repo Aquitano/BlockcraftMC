@@ -2,26 +2,18 @@ package me.blockcraft.zombies;
 
 import com.mojang.brigadier.Command;
 import io.papermc.paper.command.brigadier.Commands;
-import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import me.blockcraft.api.BlockcraftApi;
-import me.blockcraft.api.command.CommandRegistry;
 import me.blockcraft.api.game.ArenaProtection;
 import me.blockcraft.api.game.GameConfig;
-import me.blockcraft.api.game.LobbyProtection;
-import me.blockcraft.api.game.ServerRestart;
+import me.blockcraft.api.game.GameServices;
 import me.blockcraft.api.game.SetupCommand;
 import me.blockcraft.api.game.StartCommand;
-import me.blockcraft.api.game.StatsCommand;
-import me.blockcraft.api.game.StatsMenus;
-import me.blockcraft.api.game.StatsRepository;
-import me.blockcraft.api.game.TopCommand;
-import me.blockcraft.api.game.TopList;
-import me.blockcraft.api.game.WaitingBoard;
-import me.blockcraft.common.message.Messages;
+import me.blockcraft.api.world.WorldProtection;
 import me.blockcraft.zombies.arena.ArenaMap;
 import me.blockcraft.zombies.config.ZombiesConfig;
 import me.blockcraft.zombies.game.ZombiesGame;
 import me.blockcraft.zombies.menu.GuideDialog;
+import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -50,9 +42,6 @@ public final class ZombiesPlugin extends JavaPlugin {
         saveDefaultConfig();
         var api = BlockcraftApi.get();
         var config = ZombiesConfig.from(getConfig());
-        var messages = Messages.load(getDataPath(), () -> getResource("messages.yml"), api.tags()).with(
-                net.kyori.adventure.text.minimessage.tag.resolver.Formatter.number("max-waves", config.waves().total()),
-                net.kyori.adventure.text.minimessage.tag.resolver.Formatter.number("heal-delay", config.healthRegenTicks() / 20));
         var gameConfig = GameConfig.from(getConfig(), 1);
         var arenaFile = api.map().file(this, "arena.yml");
         if (Files.notExists(arenaFile)) {
@@ -70,21 +59,16 @@ public final class ZombiesPlugin extends JavaPlugin {
             throw new IllegalStateException("Zombies arena is not ready. Starter generation needs an empty region; configure " + arenaFile);
         }
         arena.keepLoaded(this);
-        var stats = new StatsRepository(api.database(), "bc_zombies_stats");
-        stats.createTable();
-        var top = new TopList(this, stats, messages);
-        WaitingBoard.show(this, stats);
-        game = new ZombiesGame(this, gameConfig, config, messages, arena, stats,
-                StatsMenus.of(messages, stats, top, gameConfig.globalStatsHead()));
+        var services = GameServices.load(this, gameConfig, "bc_zombies_stats");
+        var messages = services.messages().with(
+                Formatter.number("max-waves", config.waves().total()),
+                Formatter.number("heal-delay", config.healthRegenTicks() / 20));
+        game = new ZombiesGame(this, gameConfig, config, messages, arena, services.stats(), services.menus());
         api.presence().maxPlayers(config.maxPlayers());
-        List.of(new GameListener(this, game), new AbilityListener(game), game.lobbyHotbar(), new ArenaProtection(() -> false),
-                new LobbyProtection(() -> !game.running(), api.buildMode(), () -> java.util.Optional.of(game.lobbySpawn())))
-                .forEach(listener -> getServer().getPluginManager().registerEvents(listener, this));
-        getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
-            var commands = new CommandRegistry(event.registrar(), messages);
+        services.listen(new GameListener(this, game), new AbilityListener(game), game.lobbyHotbar(), new ArenaProtection(() -> false),
+                WorldProtection.during(() -> !game.running(), api.buildMode()).rescue(() -> java.util.Optional.of(game.lobbySpawn())));
+        services.commands(commands -> {
             commands.register(StartCommand.of(game.lobbyCountdown()).build());
-            commands.register(StatsCommand.create(this, stats, messages));
-            commands.register(TopCommand.create(top));
             var setup = SetupCommand.root().executes(context -> {
                 context.getSource().getSender().sendMessage(messages.get("setup.help"));
                 return Command.SINGLE_SUCCESS;
@@ -116,7 +100,6 @@ public final class ZombiesPlugin extends JavaPlugin {
                         return Command.SINGLE_SUCCESS;
                     }).build());
         });
-        ServerRestart.whenIdle(this, gameConfig);
         Bukkit.getOnlinePlayers().forEach(game::join);
     }
 

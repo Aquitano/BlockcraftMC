@@ -2,11 +2,11 @@ package me.blockcraft.quicksg.menu;
 
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.item.Items;
+import me.blockcraft.api.kit.KitSelection;
 import me.blockcraft.api.shop.Purchases;
 import me.blockcraft.api.shop.Unlocks;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.common.message.Messages;
-import me.blockcraft.quicksg.game.Game;
 import me.blockcraft.quicksg.kit.Kit;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
@@ -17,13 +17,13 @@ import org.bukkit.inventory.ItemStack;
 public final class KitMenus {
 
     private final Messages messages;
-    private final Game game;
+    private final KitSelection<Kit> kits;
     private final Unlocks unlocks;
     private final int price;
 
-    public KitMenus(Messages messages, Game game, Unlocks unlocks, int price) {
+    public KitMenus(Messages messages, KitSelection<Kit> kits, Unlocks unlocks, int price) {
         this.messages = messages;
-        this.game = game;
+        this.kits = kits;
         this.unlocks = unlocks;
         this.price = price;
     }
@@ -37,31 +37,31 @@ public final class KitMenus {
     }
 
     public void openSelector(Player player) {
-        if (!game.isLobby()) {
+        if (!kits.isOpen()) {
             return;
         }
         BlockcraftApi.get().playerTasks().latest(player, () -> Kit.ownedAmong(unlocks.owned(player.getUniqueId(), Kit.ITEM_PREFIX)),
                 owned -> {
-                    if (game.isLobby()) {
-                        new KitSelectorMenu(this, owned, game.kit(player)).open(player, game::isLobby);
+                    if (kits.isOpen()) {
+                        new KitSelectorMenu(this, owned, kits.kit(player)).open(player, kits::isOpen);
                     }
                 });
     }
 
     void openDetail(Player player, Kit kit) {
-        if (!game.isLobby()) {
+        if (!kits.isOpen()) {
             return;
         }
         BlockcraftApi.get().playerTasks().latest(player, () -> kit.free() || unlocks.owns(player.getUniqueId(), kit.item()),
                 owned -> {
-                    if (game.isLobby()) {
-                        new KitDetailMenu(this, kit, owned, player).open(player, game::isLobby);
+                    if (kits.isOpen()) {
+                        new KitDetailMenu(this, kit, owned, player).open(player, kits::isOpen);
                     }
                 });
     }
 
     void select(Player player, Kit kit, boolean owned) {
-        if (!game.isLobby()) {
+        if (!kits.isOpen()) {
             return;
         }
         if (!owned) {
@@ -69,19 +69,19 @@ public final class KitMenus {
             player.sendMessage(messages.get("kit.not-owned"));
             return;
         }
-        game.selectKit(player, kit);
+        kits.select(player, kit);
         BlockcraftApi.get().notifications().feedback(player, messages.get("kit.selected", kitName(kit)));
     }
 
     boolean selected(Player player, Kit kit) {
-        return game.kit(player) == kit;
+        return kits.kit(player) == kit;
     }
 
     void buy(Player player, Kit kit) {
-        if (!game.isLobby()) {
+        if (!kits.isOpen()) {
             return;
         }
-        Purchases.confirm(player, icon(kit), kit.item(), price, buyer -> game.isLobby(),
+        Purchases.confirm(player, icon(kit), kit.item(), price, buyer -> kits.isOpen(),
                 ignored -> { }, buyer -> openDetail(buyer, kit));
     }
 

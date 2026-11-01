@@ -1,5 +1,6 @@
 package me.blockcraft.quicksg.kit;
 
+import me.blockcraft.api.kit.UnlockableKit;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.enchantments.Enchantment;
@@ -8,12 +9,13 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public enum Kit {
+public enum Kit implements UnlockableKit {
     STARTER("KIT1", Material.WOODEN_SWORD, true) {
         @Override
         public void apply(Player player) {
@@ -69,8 +71,14 @@ public enum Kit {
 
     public abstract void apply(Player player);
 
-    public String item() {
-        return ITEM_PREFIX + name().toLowerCase();
+    @Override
+    public String key() {
+        return name().toLowerCase(Locale.ROOT);
+    }
+
+    @Override
+    public String itemPrefix() {
+        return ITEM_PREFIX;
     }
 
     public static Set<Kit> ownedAmong(Set<String> items) {
@@ -78,6 +86,7 @@ public enum Kit {
                 .collect(Collectors.toCollection(() -> EnumSet.noneOf(Kit.class)));
     }
 
+    @Override
     public Material icon() {
         return icon;
     }
@@ -87,7 +96,7 @@ public enum Kit {
     }
 
     public String messageKey() {
-        return "kit." + name().toLowerCase();
+        return "kit." + key();
     }
 
     public static Optional<Kit> bySlot(int slot) {

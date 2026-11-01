@@ -9,11 +9,13 @@ import me.blockcraft.api.game.LobbyCountdown;
 import me.blockcraft.api.game.LobbyHotbar;
 import me.blockcraft.api.game.PlayerReset;
 import me.blockcraft.api.game.Round;
+import me.blockcraft.api.game.RoundConnections;
 import me.blockcraft.api.game.RoundStart;
 import me.blockcraft.api.game.RoundSummary;
 import me.blockcraft.api.game.StatsMenus;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.game.TimerBar;
+import me.blockcraft.api.game.LobbyEntrance;
 import me.blockcraft.api.pack.MenuIcon;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Tasks;
@@ -76,13 +78,14 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
+import java.util.OptionalInt;
 
 /**
  * One server, one round of BedWars. The lobby seats the players, lets them pick a team and vote for a map; when its
  * countdown runs out the map loads, teams are filled up and everyone starts at their bed. A player whose bed still
  * stands comes back after a death; without it they are out, and the last team with anyone left wins.
  */
-public final class Game {
+public final class Game implements RoundConnections.Seating {
 
     private static final long RESPAWN_TICKS = 20L;
     private static final long HIDDEN_AFTER_RESPAWN_TICKS = 20L;
@@ -109,6 +112,7 @@ public final class Game {
     private final Round round;
     private final LobbyCountdown lobbyCountdown;
     private final LobbyHotbar lobbyHotbar;
+    private final LobbyEntrance entrance;
     private final GameScoreboard scoreboard;
     private final TeamSelector selector;
     private final CpsTester cps;
@@ -154,6 +158,11 @@ public final class Game {
                 .map(finish -> new JumpAndRun(plugin, start, finish, messages, player -> GameItem.JUMP_RESET.build(
                         MenuIcon.JUMP.item().name(messages.get("item.jump-reset"))))));
         this.catchGame = new CatchGame(plugin, messages, round::players);
+        this.entrance = new LobbyEntrance(round, lobbyCountdown, lobbyHotbar, this::lobbySpawn, this::arrival,
+                OptionalInt.empty(), player -> {
+                    cps.show(player);
+                    catchGame.joined();
+                });
     }
 
     /** Everything that hears the game's events besides the round, which registers itself. */
@@ -211,8 +220,9 @@ public final class Game {
         return chests;
     }
 
-    public GameScoreboard scoreboard() {
-        return scoreboard;
+    @Override
+    public void refreshAll() {
+        scoreboard.refreshAll();
     }
 
     public Optional<JumpAndRun> jumpAndRun() {
@@ -266,25 +276,16 @@ public final class Game {
         return Optional.ofNullable(match).map(Match::spectatorSpawn);
     }
 
+    @Override
     public void join(Player player) {
         if (round.rejoin(player)) {
             rejoined(player);
-        } else if (round.join(player)) {
-            lobbySpawn().ifPresent(player::teleport);
-            PlayerReset.reset(player, GameMode.ADVENTURE);
-            lobbyHotbar.give(player);
-            cps.show(player);
-            catchGame.joined();
-            lobbyCountdown.start();
         } else {
-            arrival().ifPresent(player::teleport);
+            entrance.admit(player);
         }
         scoreboard.refreshAll();
     }
 
-    public void follow(Player spectator, UUID friend) {
-        round.follow(spectator, friend);
-    }
 
     /** Back within the time the round kept their place: at the team's spawn, as after a death. */
     private void rejoined(Player player) {
@@ -301,6 +302,7 @@ public final class Game {
     }
 
     /** A player whose team can still respawn keeps their place for a while; anyone else is out at once. */
+    @Override
     public void quit(Player player) {
         if (phase() == GamePhase.INGAME && teams.of(player).filter(Team::hasBed).isPresent()
                 && round.stepOut(player, this::forfeited)) {
@@ -336,6 +338,7 @@ public final class Game {
         scoreboard.refreshAll();
     }
 
+    @Override
     public void vanished(Player player) {
         if (phase() == GamePhase.INGAME && round.isPlaying(player)) {
             leave(player);

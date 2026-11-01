@@ -1,6 +1,7 @@
 package me.blockcraft.endergames.kit;
 
 import me.blockcraft.api.item.Items;
+import me.blockcraft.api.kit.UnlockableKit;
 import me.blockcraft.api.pack.PackModel;
 import me.blockcraft.common.message.Messages;
 import org.bukkit.Color;
@@ -10,13 +11,12 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.Locale;
-import java.util.Optional;
 
 /**
  * The kits of GommeHD's EnderGames that this server plays: what each starts the round with. What a kit can do
  * beyond its items is {@link KitAbilities}'; its name and description are {@code kit.<key>} in messages.yml.
  */
-public enum Kit {
+public enum Kit implements UnlockableKit {
     BARBAR(Material.LEATHER_CHESTPLATE, 0) {
         @Override
         public void equip(Player player, Messages messages) {
@@ -131,7 +131,7 @@ public enum Kit {
         }
     };
 
-    public static final String ITEM_PREFIX = "endergames.kit.";
+    private static final String ITEM_PREFIX = "endergames.kit.";
 
     private final Material icon;
     private final int defaultPrice;
@@ -143,15 +143,17 @@ public enum Kit {
 
     public abstract void equip(Player player, Messages messages);
 
+    @Override
     public String key() {
         return name().toLowerCase(Locale.ROOT);
     }
 
-    /** The row in bc_unlocks that says a player bought this kit. */
-    public String item() {
-        return ITEM_PREFIX + key();
+    @Override
+    public String itemPrefix() {
+        return ITEM_PREFIX;
     }
 
+    @Override
     public Material icon() {
         return icon;
     }
@@ -160,16 +162,4 @@ public enum Kit {
         return defaultPrice;
     }
 
-    public static Optional<Kit> byItem(String item) {
-        if (!item.startsWith(ITEM_PREFIX)) {
-            return Optional.empty();
-        }
-        var key = item.substring(ITEM_PREFIX.length());
-        for (var kit : values()) {
-            if (kit.key().equals(key)) {
-                return Optional.of(kit);
-            }
-        }
-        return Optional.empty();
-    }
 }

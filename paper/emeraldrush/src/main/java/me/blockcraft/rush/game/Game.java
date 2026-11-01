@@ -7,11 +7,13 @@ import me.blockcraft.api.game.LobbyCountdown;
 import me.blockcraft.api.game.LobbyHotbar;
 import me.blockcraft.api.game.PlayerReset;
 import me.blockcraft.api.game.Round;
+import me.blockcraft.api.game.RoundConnections;
 import me.blockcraft.api.game.RoundStart;
 import me.blockcraft.api.game.RoundSummary;
 import me.blockcraft.api.game.StatsMenus;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.game.TimerBar;
+import me.blockcraft.api.game.LobbyEntrance;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.item.HotbarItem;
 import me.blockcraft.api.item.Items;
@@ -52,8 +54,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.IntConsumer;
+import java.util.OptionalInt;
 
-public final class Game {
+public final class Game implements RoundConnections.Seating {
 
     private static final int SECONDS_PER_MINUTE = 60;
     private static final long RESPAWN_DELAY_TICKS = 1L;
@@ -69,6 +72,7 @@ public final class Game {
     private final GameScoreboard scoreboard;
     private final RushMenus menus;
     private final LobbyHotbar lobbyHotbar;
+    private final LobbyEntrance entrance;
 
     private GamePhase phase = GamePhase.LOBBY;
     private Countdown clock;
@@ -97,6 +101,9 @@ public final class Game {
         this.lobbyHotbar = new LobbyHotbar(plugin,
                 List.of(new LobbyHotbar.Choice(MenuIcon.EMERALDRUSH, messages.get("item.perks"), menus::openPerks)),
                 statsMenus, lobbyCountdown);
+        this.entrance = new LobbyEntrance(round, lobbyCountdown, lobbyHotbar, () -> spawns.get(SpawnPoint.LOBBY),
+                () -> spawns.get(phase == GamePhase.LOBBY ? SpawnPoint.LOBBY : SpawnPoint.SPECTATOR),
+                OptionalInt.empty(), player -> { });
     }
 
     public GamePhase phase() {
@@ -105,6 +112,11 @@ public final class Game {
 
     public GameScoreboard scoreboard() {
         return scoreboard;
+    }
+
+    @Override
+    public void refreshAll() {
+        scoreboard.refreshAll();
     }
 
     public RushMenus menus() {
@@ -167,17 +179,10 @@ public final class Game {
         return lives.getOrDefault(player.getUniqueId(), 0);
     }
 
+    @Override
     public void join(Player player) {
-        if (!round.join(player)) {
-            spawns.teleport(player, phase == GamePhase.LOBBY ? SpawnPoint.LOBBY : SpawnPoint.SPECTATOR);
-            scoreboard.refreshAll();
-            return;
-        }
-        spawns.teleport(player, SpawnPoint.LOBBY);
-        PlayerReset.reset(player, GameMode.ADVENTURE);
-        lobbyHotbar.give(player);
+        entrance.admit(player);
         scoreboard.refreshAll();
-        lobbyCountdown.start();
     }
 
     public void returnToPhaseSpawn(Player player) {
@@ -189,10 +194,8 @@ public final class Game {
         });
     }
 
-    public void follow(Player spectator, UUID friend) {
-        round.follow(spectator, friend);
-    }
 
+    @Override
     public void vanished(Player player) {
         if (phase != GamePhase.LOBBY && phase != GamePhase.ENDING && isAlive(player)) {
             quit(player);
@@ -200,6 +203,7 @@ public final class Game {
         }
     }
 
+    @Override
     public void quit(Player player) {
         var id = player.getUniqueId();
         round.leave(player);

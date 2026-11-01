@@ -1,6 +1,5 @@
 package me.blockcraft.mlgrush.listener;
 
-import me.blockcraft.api.spectate.SpectateRequestEvent;
 import me.blockcraft.api.vanish.VanishChangeEvent;
 import me.blockcraft.mlgrush.game.StandaloneRushGame;
 import org.bukkit.event.EventHandler;
@@ -28,11 +27,6 @@ public final class ConnectionListener implements Listener {
     public void onQuit(PlayerQuitEvent event) {
         event.quitMessage(null);
         game.quit(event.getPlayer());
-    }
-
-    @EventHandler
-    public void onSpectate(SpectateRequestEvent event) {
-        game.follow(event.getPlayer(), event.target());
     }
 
     @EventHandler(priority = EventPriority.MONITOR)

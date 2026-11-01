@@ -107,7 +107,7 @@ public final class RoundListener implements Listener {
         var item = event.getItem();
         if (item != null && item.getType() == Material.COMPASS && game.isIngame() && game.isPlaying(player)) {
             event.setCancelled(true);
-            if (game.kit(player) == Kit.TRACKER) {
+            if (game.activeKit(player).filter(Kit.TRACKER::equals).isPresent()) {
                 game.abilities().track(player);
             } else {
                 compass.track(player, game.fighting());

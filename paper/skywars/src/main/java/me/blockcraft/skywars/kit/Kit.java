@@ -1,5 +1,6 @@
 package me.blockcraft.skywars.kit;
 
+import me.blockcraft.api.kit.UnlockableKit;
 import me.blockcraft.api.pack.PackModel;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -8,13 +9,12 @@ import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.potion.PotionType;
 
 import java.util.Locale;
-import java.util.Optional;
 
 /**
  * The kits of GommeHD's SkyWars that this server plays: items to start with, no abilities. A kit's name and what it
  * holds are {@code kit.<key>} in messages.yml, its price {@code kits.<key>} in config.yml.
  */
-public enum Kit {
+public enum Kit implements UnlockableKit {
     STANDARD(Material.WOODEN_SWORD, 0) {
         @Override
         public void equip(Player player) {
@@ -65,7 +65,7 @@ public enum Kit {
         }
     };
 
-    public static final String ITEM_PREFIX = "skywars.kit.";
+    private static final String ITEM_PREFIX = "skywars.kit.";
 
     private final Material icon;
     private final int defaultPrice;
@@ -77,34 +77,23 @@ public enum Kit {
 
     public abstract void equip(Player player);
 
+    @Override
     public String key() {
         return name().toLowerCase(Locale.ROOT);
     }
 
-    /** The row in bc_unlocks that says a player bought this kit. */
-    public String item() {
-        return ITEM_PREFIX + key();
+    @Override
+    public String itemPrefix() {
+        return ITEM_PREFIX;
     }
 
+    @Override
     public Material icon() {
         return icon;
     }
 
     public int defaultPrice() {
         return defaultPrice;
-    }
-
-    public static Optional<Kit> byItem(String item) {
-        if (!item.startsWith(ITEM_PREFIX)) {
-            return Optional.empty();
-        }
-        var key = item.substring(ITEM_PREFIX.length());
-        for (var kit : values()) {
-            if (kit.key().equals(key)) {
-                return Optional.of(kit);
-            }
-        }
-        return Optional.empty();
     }
 
     private static ItemStack healing() {

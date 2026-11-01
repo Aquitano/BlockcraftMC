@@ -7,6 +7,7 @@ import me.blockcraft.api.item.HotbarItem;
 import me.blockcraft.api.menu.Menu;
 import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.api.sound.Sounds;
+import me.blockcraft.api.spectate.SpectateRequestEvent;
 import me.blockcraft.api.task.Countdown;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.api.vanish.VanishChangeEvent;
@@ -132,7 +133,7 @@ public final class Round implements Listener {
 
     /** Seats a joiner and returns whether they play; a spectator watches already. */
     public boolean join(Player player) {
-        if (phase != GamePhase.LOBBY || players.size() >= capacity || api.isVanished(player)) {
+        if (phase != GamePhase.LOBBY || full() || api.isVanished(player)) {
             watch(player);
             arena.arrive(player);
             return false;
@@ -327,10 +328,13 @@ public final class Round implements Listener {
     }
 
     /** The spectator came to watch a friend, which the proxy names only after the join. */
-    public void follow(Player spectator, UUID friend) {
+    @EventHandler
+    public void onSpectateRequest(SpectateRequestEvent event) {
+        var spectator = event.getPlayer();
         if (!isSpectator(spectator)) {
             return;
         }
+        var friend = event.target();
         var target = Bukkit.getPlayer(friend);
         if (target != null && spectator.canSee(target)) {
             watched.put(spectator.getUniqueId(), friend);
@@ -416,6 +420,10 @@ public final class Round implements Listener {
 
     public int playerCount() {
         return players.size();
+    }
+
+    public boolean full() {
+        return players.size() >= capacity;
     }
 
     public List<Player> spectators() {

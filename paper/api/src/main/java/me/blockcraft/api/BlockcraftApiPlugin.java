@@ -18,7 +18,6 @@ import me.blockcraft.api.elo.Elo;
 import me.blockcraft.api.elo.SkillGroup;
 import me.blockcraft.api.game.LegacyDamage;
 import me.blockcraft.api.game.LegacyRod;
-import me.blockcraft.api.game.LobbyProtection;
 import me.blockcraft.api.game.RoundConfig;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.game.Streaks;
@@ -45,6 +44,7 @@ import me.blockcraft.api.world.BuildMode;
 import me.blockcraft.api.world.MapBundle;
 import me.blockcraft.api.world.WorldTemplate;
 import me.blockcraft.api.world.WaitingLobby;
+import me.blockcraft.api.world.WorldProtection;
 import me.blockcraft.api.scenery.NexoScenery;
 import me.blockcraft.api.season.SeasonalBlocks;
 import me.blockcraft.api.xp.Levels;
@@ -183,8 +183,8 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         }
         waiting.ifPresent(lobby -> startScenery(lobby.world(), calendar, self.group(), lobby.directory()));
         waiting.ifPresent(lobby -> getServer().getPluginManager().registerEvents(
-                new LobbyProtection(lobby.world(), buildMode, () -> Optional.of(lobby.spawn())), this));
-        getLogger().info("Running map " + map.name() + map.template().map(template -> " from " + template.directory()).orElse(""));
+                WorldProtection.in(lobby.world(), buildMode).rescue(() -> Optional.of(lobby.spawn())), this));
+        getSLF4JLogger().info("Running map {}{}", map.name(), map.template().map(template -> " from " + template.directory()).orElse(""));
         int startingCoins = number(config, "starting-coins", 10);
         getServer().getPluginManager().registerEvents(realNames, this);
         getServer().getPluginManager().registerEvents(nickRanks, this);

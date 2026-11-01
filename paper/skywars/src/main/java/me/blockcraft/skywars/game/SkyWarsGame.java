@@ -1,7 +1,7 @@
 package me.blockcraft.skywars.game;
 
-import me.blockcraft.api.BlockcraftApi;
-import me.blockcraft.api.settings.KitPreferences;
+import me.blockcraft.api.kit.KitSelection;
+import me.blockcraft.api.kit.KitShop;
 import me.blockcraft.common.settings.PlayerSetting;
 import me.blockcraft.api.game.Arena;
 import me.blockcraft.api.game.Defeat;
@@ -12,11 +12,13 @@ import me.blockcraft.api.game.LobbyCountdown;
 import me.blockcraft.api.game.LobbyHotbar;
 import me.blockcraft.api.game.PlayerReset;
 import me.blockcraft.api.game.Round;
+import me.blockcraft.api.game.RoundConnections;
 import me.blockcraft.api.game.RoundStart;
 import me.blockcraft.api.game.RoundSummary;
 import me.blockcraft.api.game.StatsMenus;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.game.TimerBar;
+import me.blockcraft.api.game.LobbyEntrance;
 import me.blockcraft.api.pack.MenuIcon;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Tasks;
@@ -27,7 +29,6 @@ import me.blockcraft.skywars.map.ArenaBuilder;
 import me.blockcraft.skywars.map.MapVote;
 import me.blockcraft.skywars.map.Ring;
 import me.blockcraft.skywars.map.SkyArena;
-import me.blockcraft.skywars.menu.KitMenus;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -45,19 +46,17 @@ import org.bukkit.plugin.Plugin;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
+import java.util.OptionalInt;
 
 /**
  * One server, one round of SkyWars, as GommeHD played it: every player on their own island over the void with a
  * kit and three chests, the better loot on the semi-middles and the best in the middle. The chests fill once more
  * after a while, later the border closes on the middle, and the last player alive wins.
  */
-public final class SkyWarsGame {
+public final class SkyWarsGame implements RoundConnections.Seating {
 
     private static final long TICKS_PER_SECOND = 20L;
     private static final Set<Integer> REFILL_WARNINGS = Set.of(60, 10);
@@ -71,10 +70,10 @@ public final class SkyWarsGame {
     private final Round round;
     private final LobbyCountdown countdown;
     private final LobbyHotbar hotbar;
+    private final LobbyEntrance entrance;
     private final GameSidebar sidebar;
     private final MapVote vote;
-    private final Map<UUID, Kit> kits = new HashMap<>();
-    private final KitPreferences<Kit> preferences;
+    private final KitSelection<Kit> kits;
     private Optional<SkyArena> arena = Optional.empty();
     private Optional<Chests> chests = Optional.empty();
     private boolean frozen;
@@ -91,19 +90,16 @@ public final class SkyWarsGame {
         this.round = new Round(plugin, new Arena(messages, Sounds.JOIN), summary, config.maxPlayers(), gameConfig);
         this.countdown = new LobbyCountdown(plugin, round, gameConfig, this::start);
         this.vote = new MapVote(messages);
-        var kitMenus = new KitMenus(messages, this, BlockcraftApi.get().unlocks(), config);
+        this.kits = new KitSelection<>(plugin, round, PlayerSetting.SKYWARS_KIT, Kit.STANDARD, config.kits()::free, this::show);
+        var kitShop = new KitShop<>(messages, kits, config.kits(), kit -> messages.getLines("kit." + kit.key() + ".contents"));
         this.hotbar = new LobbyHotbar(plugin, List.of(
-                new LobbyHotbar.Choice(MenuIcon.SKYWARS, messages.get("item.kits"), kitMenus::open),
+                new LobbyHotbar.Choice(MenuIcon.SKYWARS, messages.get("item.kits"), kitShop::open),
                 new LobbyHotbar.Choice(MenuIcon.VOTE, messages.get("item.vote"), this::isLobby, this::openVote)),
                 statsMenus, countdown);
         this.sidebar = new GameSidebar(messages.get("scoreboard.title"), round);
-        this.preferences = new KitPreferences<>(plugin, PlayerSetting.SKYWARS_KIT, java.util.List.of(Kit.values()),
-                Kit::item, config.freeKits()::contains, (player, kit) -> {
-                    if (isLobby() && round.isPlaying(player)) {
-                        kits.put(player.getUniqueId(), kit);
-                        show(player);
-                    }
-                });
+        this.entrance = new LobbyEntrance(round, countdown, hotbar, () -> Optional.of(lobbySpawn),
+                () -> Optional.of(arena.map(SkyArena::spectatorSpawn).filter(spawn -> isIngame()).orElse(lobbySpawn)),
+                OptionalInt.of(config.countdowns().full()), kits::restore);
     }
 
     public GamePhase phase() {
@@ -147,49 +143,21 @@ public final class SkyWarsGame {
         return world.equals(other);
     }
 
-    public Kit kit(Player player) {
-        return kits.getOrDefault(player.getUniqueId(), Kit.STANDARD);
-    }
-
-    /** Only in the lobby: a purchase that completes after the start must not hand out a kit nobody equipped. */
-    /** Only in the lobby; false if the round already started, as when a purchase completes too late. */
-    public boolean selectKit(Player player, Kit kit) {
-        if (!isLobby()) {
-            return false;
-        }
-        kits.put(player.getUniqueId(), kit);
-        preferences.remember(player, kit);
-        show(player);
-        return true;
-    }
-
-    public Component kitName(Kit kit) {
+    private Component kitName(Kit kit) {
         return messages.get("kit." + kit.key() + ".name");
     }
 
+    @Override
     public void join(Player player) {
-        if (round.join(player)) {
-            PlayerReset.reset(player, GameMode.ADVENTURE);
-            player.teleport(lobbySpawn);
-            hotbar.give(player);
-            preferences.restore(player);
-            countdown.start();
-            if (round.playerCount() >= config.maxPlayers()) {
-                countdown.shorten(config.countdowns().full());
-            }
-        } else {
-            player.teleport(arena.map(SkyArena::spectatorSpawn).filter(spawn -> isIngame()).orElse(lobbySpawn));
-        }
+        entrance.admit(player);
         refreshAll();
     }
 
-    public void follow(Player spectator, UUID friend) {
-        round.follow(spectator, friend);
-    }
 
+    @Override
     public void quit(Player player) {
         boolean wasPlaying = round.leave(player);
-        kits.remove(player.getUniqueId());
+        kits.forget(player);
         vote.withdraw(player);
         refreshAll();
         if (wasPlaying) {
@@ -197,6 +165,7 @@ public final class SkyWarsGame {
         }
     }
 
+    @Override
     public void vanished(Player player) {
         if (isIngame() && round.isPlaying(player)) {
             quit(player);
@@ -236,8 +205,8 @@ public final class SkyWarsGame {
             PlayerReset.reset(player, GameMode.SURVIVAL);
             config.combat().apply(player);
             player.teleport(built.spawns().get(slots.get(index)));
-            kit(player).equip(player);
-            player.sendMessage(messages.get("round.kit", Placeholder.component("kit", kitName(kit(player)))));
+            kits.kit(player).equip(player);
+            player.sendMessage(messages.get("round.kit", Placeholder.component("kit", kitName(kits.kit(player)))));
         }
         round.spectators().forEach(spectator -> spectator.teleport(built.spectatorSpawn()));
         frozen = true;
@@ -320,7 +289,7 @@ public final class SkyWarsGame {
     /** Below the void line a player dies, falling from whoever hit them last; a spectator is put back above the map. */
     /**
      * Below the void line a player of the round dies; a spectator, and after the round anyone at all, is put back
-     * above the islands and may fly, because LobbyProtection keeps them from dying while the recap shows.
+     * above the islands and may fly, because WorldProtection keeps them from dying while the recap shows.
      */
     public void fell(Player player) {
         if (isIngame() && round.isPlaying(player) && !player.isDead()) {
@@ -353,13 +322,14 @@ public final class SkyWarsGame {
         refreshAll();
     }
 
+    @Override
     public void refreshAll() {
         Bukkit.getOnlinePlayers().forEach(this::show);
     }
 
     private void show(Player player) {
         var icons = GameSidebar.icons(player);
-        var kit = new GameSidebar.Section(messages.get("scoreboard.kit", icons), GameSidebar.value(kitName(kit(player))));
+        var kit = new GameSidebar.Section(messages.get("scoreboard.kit", icons), GameSidebar.value(kitName(kits.kit(player))));
         switch (phase()) {
             case LOBBY -> sidebar.lobby(player, config.maxPlayers(), messages.get("scoreboard.map-vote"), List.of(kit));
             case INGAME -> {

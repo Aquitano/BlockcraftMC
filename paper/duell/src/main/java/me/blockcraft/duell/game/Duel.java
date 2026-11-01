@@ -360,7 +360,6 @@ public final class Duel {
         }
     }
 
-    public void follow(Player spectator, UUID friend) { round.follow(spectator, friend); }
 
     public void vanishChanged(Player player, boolean vanished) {
         if (vanished && isParticipant(player) && !isLobby()) {

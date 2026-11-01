@@ -129,9 +129,6 @@ public final class StandaloneRushGame {
         refresh();
     }
 
-    public void follow(Player player, UUID friend) {
-        round.follow(player, friend);
-    }
 
     public void vanished(Player player) {
         if (round.phase() != GamePhase.LOBBY && round.isPlaying(player)) {

@@ -2,17 +2,14 @@ package me.blockcraft.skywars.config;
 
 import me.blockcraft.api.game.CombatStyle;
 import me.blockcraft.api.game.LootTable;
+import me.blockcraft.api.kit.KitCatalog;
 import me.blockcraft.skywars.kit.Kit;
 import org.bukkit.configuration.ConfigurationSection;
 
-import java.util.Arrays;
-import java.util.EnumMap;
-import java.util.List;
-import java.util.Map;
 
 /** SkyWars' own keys of its config.yml; the lobby's are {@link me.blockcraft.api.game.GameConfig}'s. */
 public record SkyWarsConfig(int maxPlayers, Countdowns countdowns, Arena arena, Loot loot, Rewards rewards,
-                            CombatStyle combat, Map<Kit, Integer> prices) {
+                            CombatStyle combat, KitCatalog<Kit> kits) {
 
     public record Countdowns(int full, int freeze, int round, int refillAfter, int borderAfter) {
     }
@@ -48,26 +45,11 @@ public record SkyWarsConfig(int maxPlayers, Countdowns countdowns, Arena arena, 
                         table(chests, "semi-middle"), table(chests, "middle")),
                 new Rewards(Math.max(0, rewards.getInt("kill", 5)), Math.max(0, rewards.getInt("win", 20))),
                 CombatStyle.from(config),
-                prices(section(config, "kits")));
+                KitCatalog.from(section(config, "kits"), Kit.class, Kit::defaultPrice));
     }
 
     private static LootTable table(ConfigurationSection chests, String key) {
         return LootTable.fromYaml(section(chests, key), 3, 5);
-    }
-
-    /** A kit the file leaves out costs what the kit itself asks by default. */
-    static Map<Kit, Integer> prices(ConfigurationSection kits) {
-        var prices = new EnumMap<Kit, Integer>(Kit.class);
-        Arrays.stream(Kit.values()).forEach(kit -> prices.put(kit, Math.max(0, kits.getInt(kit.key(), kit.defaultPrice()))));
-        return prices;
-    }
-
-    public int price(Kit kit) {
-        return prices.getOrDefault(kit, kit.defaultPrice());
-    }
-
-    public List<Kit> freeKits() {
-        return Arrays.stream(Kit.values()).filter(kit -> price(kit) == 0).toList();
     }
 
     private static ConfigurationSection section(ConfigurationSection config, String key) {

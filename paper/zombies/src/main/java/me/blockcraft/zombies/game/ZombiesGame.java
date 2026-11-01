@@ -21,7 +21,6 @@ import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Countdown;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.zombies.arena.ArenaMap;
-import me.blockcraft.zombies.arena.StationKind;
 import me.blockcraft.zombies.config.ZombiesConfig;
 import me.blockcraft.zombies.menu.GuideDialog;
 import me.blockcraft.zombies.menu.StationMenu;
@@ -178,9 +177,6 @@ public final class ZombiesGame {
         refreshSidebar();
     }
 
-    public void follow(Player player, UUID friend) {
-        round.follow(player, friend);
-    }
 
     public void quit(Player player) {
         boolean participated = survivors.remove(player.getUniqueId()) != null;

@@ -1,7 +1,8 @@
 package me.blockcraft.endergames.game;
 
 import me.blockcraft.api.BlockcraftApi;
-import me.blockcraft.api.settings.KitPreferences;
+import me.blockcraft.api.kit.KitSelection;
+import me.blockcraft.api.kit.KitShop;
 import me.blockcraft.common.settings.PlayerSetting;
 import me.blockcraft.api.game.Arena;
 import me.blockcraft.api.game.Defeat;
@@ -14,12 +15,13 @@ import me.blockcraft.api.game.LootChests;
 import me.blockcraft.api.game.LootTable;
 import me.blockcraft.api.game.PlayerReset;
 import me.blockcraft.api.game.Round;
+import me.blockcraft.api.game.RoundConnections;
 import me.blockcraft.api.game.RoundStart;
 import me.blockcraft.api.game.RoundSummary;
 import me.blockcraft.api.game.StatsMenus;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.game.TimerBar;
-import me.blockcraft.api.item.Items;
+import me.blockcraft.api.game.LobbyEntrance;
 import me.blockcraft.api.pack.MenuIcon;
 import me.blockcraft.api.pack.PackModel;
 import me.blockcraft.api.sound.Sounds;
@@ -30,7 +32,6 @@ import me.blockcraft.endergames.config.EnderGamesConfig;
 import me.blockcraft.endergames.kit.Kit;
 import me.blockcraft.endergames.kit.KitAbilities;
 import me.blockcraft.endergames.kit.KitPlayers;
-import me.blockcraft.endergames.menu.KitMenus;
 import me.blockcraft.endergames.world.RoundWorld;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
@@ -52,19 +53,18 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
 import org.bukkit.scheduler.BukkitTask;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
+import java.util.stream.Stream;
+import java.util.OptionalInt;
 
 /**
  * One server, one round of EnderGames, as GommeHD played it: survival games in a world nobody has seen before. Every
  * player brings a kit; after a short protection time it is every player for themselves until one is left. Ender
  * chests with loot wander the map, two players trade places now and then, and the border closes in towards the end.
  */
-public final class EnderGamesGame implements KitPlayers {
+public final class EnderGamesGame implements KitPlayers, RoundConnections.Seating {
 
     private static final Set<Integer> PROTECTION_ANNOUNCEMENTS = Set.of(60, 30, 10, 5, 4, 3, 2, 1);
     private static final int SECONDS_PER_MINUTE = 60;
@@ -81,13 +81,13 @@ public final class EnderGamesGame implements KitPlayers {
     private final Round round;
     private final LobbyCountdown countdown;
     private final LobbyHotbar hotbar;
+    private final LobbyEntrance entrance;
     private final GameSidebar sidebar;
     private final KitAbilities abilities;
     private final EnderChests enderChests;
     private final LootChests startLoot;
     private final PlayerSwaps swaps;
-    private final Map<UUID, Kit> kits = new HashMap<>();
-    private final KitPreferences<Kit> preferences;
+    private final KitSelection<Kit> kits;
     private final int startSeconds;
     private boolean frozen;
     private boolean protection;
@@ -107,21 +107,19 @@ public final class EnderGamesGame implements KitPlayers {
         this.summary = new RoundSummary(plugin, messages, new RoundSummary.Rewards(config.rewards().kill(), config.rewards().win()), stats);
         this.round = new Round(plugin, new Arena(messages, Sounds.JOIN), summary, config.maxPlayers(), gameConfig);
         this.countdown = new LobbyCountdown(plugin, round, gameConfig, this::start);
-        var kitMenus = new KitMenus(messages, this, BlockcraftApi.get().unlocks(), config);
+        this.kits = new KitSelection<>(plugin, round, PlayerSetting.ENDERGAMES_KIT, Kit.BARBAR, config.kits()::free, this::show);
+        var kitShop = new KitShop<>(messages, kits, config.kits(), kit -> Stream.of("contents", "ability")
+                .flatMap(part -> messages.getLines("kit." + kit.key() + "." + part).stream()).toList());
         this.hotbar = new LobbyHotbar(plugin, List.of(new LobbyHotbar.Choice(MenuIcon.ENDERGAMES, messages.get("item.kits"),
-                kitMenus::open)), statsMenus, countdown);
+                kitShop::open)), statsMenus, countdown);
         this.sidebar = new GameSidebar(messages.get("scoreboard.title"), round);
         this.abilities = new KitAbilities(this, config.abilities(), messages);
         this.enderChests = new EnderChests(world, config.enderChests(), this::loot);
         this.startLoot = new LootChests(config.startIsland().loot(), this::loot);
         this.swaps = new PlayerSwaps(config.swap());
-        this.preferences = new KitPreferences<>(plugin, PlayerSetting.ENDERGAMES_KIT, java.util.List.of(Kit.values()),
-                Kit::item, config.freeKits()::contains, (player, kit) -> {
-                    if (isLobby() && round.isPlaying(player)) {
-                        kits.put(player.getUniqueId(), kit);
-                        show(player);
-                    }
-                });
+        this.entrance = new LobbyEntrance(round, countdown, hotbar, () -> Optional.of(lobbySpawn),
+                () -> Optional.of(isIngame() ? world.spectatorSpawn() : lobbySpawn),
+                OptionalInt.of(config.countdowns().full()), this::welcome);
     }
 
     public GamePhase phase() {
@@ -169,23 +167,9 @@ public final class EnderGamesGame implements KitPlayers {
         return round.isPlaying(player);
     }
 
-    public Kit kit(Player player) {
-        return kits.getOrDefault(player.getUniqueId(), Kit.BARBAR);
-    }
-
-    /** Only in the lobby: a purchase that completes after the start must not swap the kit under a player's items. */
-    public void selectKit(Player player, Kit kit) {
-        if (!isLobby()) {
-            return;
-        }
-        kits.put(player.getUniqueId(), kit);
-        preferences.remember(player, kit);
-        show(player);
-    }
-
     @Override
     public Optional<Kit> activeKit(Player player) {
-        return isIngame() && round.isPlaying(player) ? Optional.of(kit(player)) : Optional.empty();
+        return isIngame() && round.isPlaying(player) ? Optional.of(kits.kit(player)) : Optional.empty();
     }
 
     @Override
@@ -193,32 +177,24 @@ public final class EnderGamesGame implements KitPlayers {
         return round.players();
     }
 
+    @Override
     public void join(Player player) {
-        if (round.join(player)) {
-            PlayerReset.reset(player, GameMode.ADVENTURE);
-            player.teleport(lobbySpawn);
-            hotbar.give(player);
-            preferences.restore(player);
-            if (!world.ready()) {
-                player.sendMessage(messages.get("lobby.world-loading"));
-            }
-            countdown.start();
-            if (round.playerCount() >= config.maxPlayers()) {
-                countdown.shorten(config.countdowns().full());
-            }
-        } else {
-            player.teleport(isIngame() ? world.spectatorSpawn() : lobbySpawn);
-        }
+        entrance.admit(player);
         refreshAll();
     }
 
-    public void follow(Player spectator, UUID friend) {
-        round.follow(spectator, friend);
+    private void welcome(Player player) {
+        kits.restore(player);
+        if (!world.ready()) {
+            player.sendMessage(messages.get("lobby.world-loading"));
+        }
     }
 
+
+    @Override
     public void quit(Player player) {
         boolean wasPlaying = round.leave(player);
-        kits.remove(player.getUniqueId());
+        kits.forget(player);
         abilities.forget(player);
         refreshAll();
         if (wasPlaying) {
@@ -226,6 +202,7 @@ public final class EnderGamesGame implements KitPlayers {
         }
     }
 
+    @Override
     public void vanished(Player player) {
         if (isIngame() && round.isPlaying(player)) {
             quit(player);
@@ -258,8 +235,8 @@ public final class EnderGamesGame implements KitPlayers {
             PlayerReset.reset(player, GameMode.SURVIVAL);
             config.combat().apply(player);
             player.teleport(spawns.get(i));
-            kit(player).equip(player, messages);
-            player.sendMessage(messages.get("round.kit", Placeholder.component("kit", kitName(kit(player)))));
+            kits.kit(player).equip(player, messages);
+            player.sendMessage(messages.get("round.kit", Placeholder.component("kit", kitName(kits.kit(player)))));
         }
         round.spectators().forEach(spectator -> spectator.teleport(world.spectatorSpawn()));
         enderChests.spawn(config.enderChests().countFor(players.size()));
@@ -434,6 +411,7 @@ public final class EnderGamesGame implements KitPlayers {
         refreshAll();
     }
 
+    @Override
     public void refreshAll() {
         Bukkit.getOnlinePlayers().forEach(this::show);
     }
@@ -441,7 +419,7 @@ public final class EnderGamesGame implements KitPlayers {
     private void show(Player player) {
         var icons = GameSidebar.icons(player);
         var map = messages.get("scoreboard.map");
-        var kitSection = new GameSidebar.Section(messages.get("scoreboard.kit", icons), GameSidebar.value(kitName(kit(player))));
+        var kitSection = new GameSidebar.Section(messages.get("scoreboard.kit", icons), GameSidebar.value(kitName(kits.kit(player))));
         switch (phase()) {
             case LOBBY -> sidebar.lobby(player, config.maxPlayers(), map, List.of(kitSection,
                     new GameSidebar.Section(messages.get("scoreboard.world", icons),
@@ -465,7 +443,7 @@ public final class EnderGamesGame implements KitPlayers {
         return config.countdowns().protection();
     }
 
-    public Component kitName(Kit kit) {
+    private Component kitName(Kit kit) {
         return messages.get("kit." + kit.key() + ".name");
     }
 

@@ -2,7 +2,7 @@ package me.blockcraft.quicksg.game;
 
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.world.WaitingLobby;
-import me.blockcraft.api.settings.KitPreferences;
+import me.blockcraft.api.kit.KitSelection;
 import me.blockcraft.common.settings.PlayerSetting;
 import me.blockcraft.api.config.Locations;
 import me.blockcraft.api.game.Arena;
@@ -13,11 +13,13 @@ import me.blockcraft.api.game.LobbyCountdown;
 import me.blockcraft.api.game.LobbyHotbar;
 import me.blockcraft.api.game.PlayerReset;
 import me.blockcraft.api.game.Round;
+import me.blockcraft.api.game.RoundConnections;
 import me.blockcraft.api.game.RoundStart;
 import me.blockcraft.api.game.RoundSummary;
 import me.blockcraft.api.game.StatsMenus;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.game.TimerBar;
+import me.blockcraft.api.game.LobbyEntrance;
 import me.blockcraft.api.pack.MenuIcon;
 import me.blockcraft.api.shop.Unlocks;
 import me.blockcraft.api.world.MapBundle;
@@ -43,13 +45,11 @@ import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.plugin.Plugin;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
+import java.util.OptionalInt;
 
-public final class Game {
+public final class Game implements RoundConnections.Seating {
 
     private static final Set<Integer> PROTECTION_ANNOUNCEMENTS = Set.of(15, 10, 5, 4, 3, 2, 1);
     private static final double INGAME_MAX_HEALTH = 14.0;
@@ -69,11 +69,11 @@ public final class Game {
     private final LobbyCountdown lobbyCountdown;
     private final KitMenus kitMenus;
     private final LobbyHotbar lobbyHotbar;
+    private final LobbyEntrance entrance;
 
     private boolean protection;
     private boolean frozen;
-    private final Map<UUID, Kit> kits = new HashMap<>();
-    private final KitPreferences<Kit> preferences;
+    private final KitSelection<Kit> kits;
     private Countdown protectionTimer;
     private Countdown gameTimer;
 
@@ -90,17 +90,13 @@ public final class Game {
         this.round = new Round(plugin, new Arena(messages, Sounds.QUICKSG_JOIN), summary, config.maxPlayers(), gameConfig);
         this.scoreboard = new GameScoreboard(messages, round, map, config.maxPlayers());
         this.lobbyCountdown = new LobbyCountdown(plugin, round, gameConfig, this::start);
-        this.kitMenus = new KitMenus(messages, this, unlocks, config.kitPrice());
+        this.kits = new KitSelection<>(plugin, round, PlayerSetting.QUICKSG_KIT, Kit.STARTER, Kit::free, this::refreshScoreboard);
+        this.kitMenus = new KitMenus(messages, kits, unlocks, config.kitPrice());
         this.lobbyHotbar = new LobbyHotbar(plugin,
                 List.of(new LobbyHotbar.Choice(MenuIcon.QUICKSG, messages.get("item.kits"), kitMenus::openSelector)),
                 statsMenus, lobbyCountdown);
-        this.preferences = new KitPreferences<>(plugin, PlayerSetting.QUICKSG_KIT, java.util.List.of(Kit.values()),
-                Kit::item, Kit::free, (player, kit) -> {
-                    if (isLobby() && round.isPlaying(player)) {
-                        kits.put(player.getUniqueId(), kit);
-                        refreshScoreboard(player);
-                    }
-                });
+        this.entrance = new LobbyEntrance(round, lobbyCountdown, lobbyHotbar, this::lobbySpawn,
+                () -> isLobby() ? lobbySpawn() : locations.get(LocationKey.SPECTATOR), OptionalInt.empty(), kits::restore);
     }
 
     public LobbyCountdown lobbyCountdown() {
@@ -139,16 +135,6 @@ public final class Game {
         return round.isSpectator(player);
     }
 
-    public Kit kit(Player player) {
-        return kits.getOrDefault(player.getUniqueId(), Kit.STARTER);
-    }
-
-    public void selectKit(Player player, Kit kit) {
-        kits.put(player.getUniqueId(), kit);
-        preferences.remember(player, kit);
-        refreshScoreboard(player);
-    }
-
     public List<Player> alivePlayers() {
         return round.players();
     }
@@ -164,25 +150,13 @@ public final class Game {
                 .or(() -> locations.get(LocationKey.LOBBY));
     }
 
+    @Override
     public void join(Player player) {
-        if (!round.join(player)) {
-            (isLobby() ? lobbySpawn() : locations.get(LocationKey.SPECTATOR)).ifPresent(player::teleport);
-            refreshScoreboards();
-            return;
-        }
-        kits.put(player.getUniqueId(), Kit.STARTER);
-        PlayerReset.reset(player, GameMode.ADVENTURE);
-        lobbySpawn().ifPresent(player::teleport);
-        lobbyHotbar.give(player);
-        preferences.restore(player);
-        refreshScoreboards();
-        lobbyCountdown.start();
+        entrance.admit(player);
+        refreshAll();
     }
 
-    public void follow(Player spectator, UUID friend) {
-        round.follow(spectator, friend);
-    }
-
+    @Override
     public void vanished(Player player) {
         if (isIngame() && isAlive(player)) {
             quit(player);
@@ -190,10 +164,11 @@ public final class Game {
         }
     }
 
+    @Override
     public void quit(Player player) {
         round.leave(player);
-        kits.remove(player.getUniqueId());
-        refreshScoreboards();
+        kits.forget(player);
+        refreshAll();
         checkWinner(true);
     }
 
@@ -206,14 +181,14 @@ public final class Game {
         Bukkit.broadcast(death.line());
         death.killer().ifPresentOrElse(killer -> {
             summary.awardKill(killer, victim, Defeat.OUT);
-            if (kit(killer) == Kit.STARTER && kit(victim) == Kit.DIAMOND) {
+            if (kits.kit(killer) == Kit.STARTER && kits.kit(victim) == Kit.DIAMOND) {
                 summary.moment(killer, ACHIEVEMENTS, "david-gegen-goliath", Placeholder.unparsed("player", victim.getName()));
             }
         }, () -> summary.awardCoins(victim, config.rewards().death()));
         summary.death(victim);
         round.eliminate(victim);
         round.respawn(victim, RESPAWN_DELAY_TICKS);
-        refreshScoreboards();
+        refreshAll();
         checkWinner(false);
     }
 
@@ -232,13 +207,14 @@ public final class Game {
         }
     }
 
-    public void refreshScoreboards() {
+    @Override
+    public void refreshAll() {
         Bukkit.getOnlinePlayers().forEach(this::refreshScoreboard);
     }
 
     private void refreshScoreboard(Player player) {
         switch (round.phase()) {
-            case LOBBY -> scoreboard.showLobby(player, kit(player));
+            case LOBBY -> scoreboard.showLobby(player, kits.kit(player));
             case INGAME -> scoreboard.showIngame(player, secondsLeft());
             case ENDING -> scoreboard.showEnding(player, summary.winnerNames());
         }
@@ -256,11 +232,11 @@ public final class Game {
             }
             player.getWorld().spawnParticle(Particle.LARGE_SMOKE, player.getLocation(), 5);
             maxHealth(player, INGAME_MAX_HEALTH);
-            kit(player).apply(player);
+            kits.kit(player).apply(player);
             config.combat().apply(player);
         }
         locations.get(LocationKey.SPECTATOR).ifPresent(spawn -> round.spectators().forEach(player -> player.teleport(spawn)));
-        refreshScoreboards();
+        refreshAll();
         applyWorldBorder(LocationKey.GAME_CENTER, config.worldBorder().ingameRadius());
         frozen = true;
         round.timer(RoundStart.freeze(plugin, config.countdowns().freeze(), round::players, Component.empty(), () -> {
@@ -278,7 +254,7 @@ public final class Game {
                 announceProtection(remaining);
             }
             if (round.clockOnSidebar()) {
-                refreshScoreboards();
+                refreshAll();
             }
         }, () -> {
             protection = false;
@@ -312,7 +288,7 @@ public final class Game {
             }
             round.announceEnd(remaining);
             if (round.clockOnSidebar()) {
-                refreshScoreboards();
+                refreshAll();
             }
         }, () -> {
             Bukkit.broadcast(messages.get("game.draw"));
@@ -343,7 +319,7 @@ public final class Game {
     private void endRound() {
         frozen = false;
         round.end();
-        refreshScoreboards();
+        refreshAll();
     }
 
     private List<Location> spawns() {

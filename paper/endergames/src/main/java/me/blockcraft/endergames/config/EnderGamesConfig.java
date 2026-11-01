@@ -3,19 +3,17 @@ package me.blockcraft.endergames.config;
 import me.blockcraft.api.game.CombatStyle;
 import me.blockcraft.api.game.CompassTracker;
 import me.blockcraft.api.game.LootTable;
+import me.blockcraft.api.kit.KitCatalog;
 import me.blockcraft.endergames.kit.Kit;
 import org.bukkit.configuration.ConfigurationSection;
 
-import java.util.Arrays;
-import java.util.EnumMap;
 import java.util.List;
-import java.util.Map;
 
 /** EnderGames' own keys of its config.yml; the lobby's are {@link me.blockcraft.api.game.GameConfig}'s. */
 public record EnderGamesConfig(int maxPlayers, Countdowns countdowns, WorldSettings world, StartIslandSettings startIsland,
                                EnderChestSettings enderChests,
                                SwapSettings swap, Rewards rewards, CombatStyle combat, CompassTracker.Settings tracker,
-                               Map<Kit, Integer> kitPrices, Abilities abilities) {
+                               KitCatalog<Kit> kits, Abilities abilities) {
 
     public record Countdowns(int full, int freeze, int protection, int round, int trackerAfter) {
     }
@@ -82,7 +80,7 @@ public record EnderGamesConfig(int maxPlayers, Countdowns countdowns, WorldSetti
                 new Rewards(Math.max(0, rewards.getInt("kill", 5)), Math.max(0, rewards.getInt("win", 20))),
                 CombatStyle.from(config),
                 CompassTracker.Settings.from(config),
-                prices(section(config, "kits")),
+                KitCatalog.from(section(config, "kits"), Kit.class, Kit::defaultPrice),
                 new Abilities(
                         Math.max(1, abilities.getDouble("headshot-multiplier", 1.5)),
                         Math.max(1, abilities.getInt("lumberjack-max-logs", 96)),
@@ -100,21 +98,6 @@ public record EnderGamesConfig(int maxPlayers, Countdowns countdowns, WorldSetti
                         Math.max(0, abilities.getInt("berserker-seconds", 10)),
                         Math.max(0, abilities.getInt("scaredy-seconds", 3)),
                         Math.max(0, abilities.getDouble("soup-heal", 7))));
-    }
-
-    /** A kit the file leaves out costs what the kit itself asks by default. */
-    static Map<Kit, Integer> prices(ConfigurationSection kits) {
-        var prices = new EnumMap<Kit, Integer>(Kit.class);
-        Arrays.stream(Kit.values()).forEach(kit -> prices.put(kit, Math.max(0, kits.getInt(kit.key(), kit.defaultPrice()))));
-        return prices;
-    }
-
-    public int price(Kit kit) {
-        return kitPrices.getOrDefault(kit, kit.defaultPrice());
-    }
-
-    public List<Kit> freeKits() {
-        return Arrays.stream(Kit.values()).filter(kit -> price(kit) == 0).toList();
     }
 
     private static ConfigurationSection section(ConfigurationSection config, String key) {

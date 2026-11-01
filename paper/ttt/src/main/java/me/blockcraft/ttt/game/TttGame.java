@@ -10,11 +10,13 @@ import me.blockcraft.api.game.LobbyCountdown;
 import me.blockcraft.api.game.LobbyHotbar;
 import me.blockcraft.api.game.PlayerReset;
 import me.blockcraft.api.game.Round;
+import me.blockcraft.api.game.RoundConnections;
 import me.blockcraft.api.game.RoundStart;
 import me.blockcraft.api.game.RoundSummary;
 import me.blockcraft.api.game.StatsMenus;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.game.TimerBar;
+import me.blockcraft.api.game.LobbyEntrance;
 import me.blockcraft.api.item.HotbarItem;
 import me.blockcraft.api.pack.MenuIcon;
 import me.blockcraft.api.sound.Sounds;
@@ -58,6 +60,7 @@ import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.OptionalInt;
 
 /**
  * One server, one round of TTT, as GommeHD played it. The lobby votes for the map, everyone loots its chests during
@@ -67,7 +70,7 @@ import java.util.stream.Collectors;
  * traitor from an innocent, and traitors and detectives spend their kills in a shop. Killing your own side costs
  * karma, and with it the strength of your blows.
  */
-public final class TttGame implements ShopMenu.Till {
+public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
 
     private enum Stage { PREPARATION, PLAYING }
 
@@ -83,6 +86,7 @@ public final class TttGame implements ShopMenu.Till {
     private final Round round;
     private final LobbyCountdown countdown;
     private final LobbyHotbar hotbar;
+    private final LobbyEntrance entrance;
     private final GameSidebar sidebar;
     private final Corpses corpses;
     private final Equipment equipment;
@@ -120,6 +124,9 @@ public final class TttGame implements ShopMenu.Till {
         this.corpses = new Corpses(messages);
         this.equipment = new Equipment(plugin, config.shop(), messages, this::roleOf, round::players);
         this.secondsLeft = config.roundSeconds();
+        this.entrance = new LobbyEntrance(round, countdown, hotbar, () -> Optional.of(lobbySpawn.get()),
+                () -> Optional.of(phase() == GamePhase.INGAME ? spectatorSpawn() : lobbySpawn.get()),
+                OptionalInt.of(config.fullSeconds()), this::loadKarma);
     }
 
     public GamePhase phase() {
@@ -176,19 +183,9 @@ public final class TttGame implements ShopMenu.Till {
         return config.karma().damageFactor(karma(attacker.getUniqueId()));
     }
 
+    @Override
     public void join(Player player) {
-        if (round.join(player)) {
-            PlayerReset.reset(player, GameMode.ADVENTURE);
-            player.teleport(lobbySpawn.get());
-            hotbar.give(player);
-            loadKarma(player);
-            countdown.start();
-            if (round.playerCount() >= config.capacity()) {
-                countdown.shorten(config.fullSeconds());
-            }
-        } else {
-            player.teleport(phase() == GamePhase.INGAME ? spectatorSpawn() : lobbySpawn.get());
-        }
+        entrance.admit(player);
         refreshAll();
     }
 
@@ -202,10 +199,8 @@ public final class TttGame implements ShopMenu.Till {
         }
     }
 
-    public void follow(Player spectator, UUID friend) {
-        round.follow(spectator, friend);
-    }
 
+    @Override
     public void quit(Player player) {
         boolean wasPlaying = round.leave(player);
         BlockcraftApi.get().tabTeams().clearColor(player);
@@ -220,6 +215,7 @@ public final class TttGame implements ShopMenu.Till {
         refreshAll();
     }
 
+    @Override
     public void vanished(Player player) {
         if (phase() == GamePhase.INGAME && round.isPlaying(player)) {
             quit(player);
@@ -536,6 +532,7 @@ public final class TttGame implements ShopMenu.Till {
         refreshAll();
     }
 
+    @Override
     public void refreshAll() {
         Bukkit.getOnlinePlayers().forEach(this::show);
     }

@@ -6,6 +6,7 @@ import me.blockcraft.api.command.CommandRegistry;
 import me.blockcraft.api.config.Locations;
 import me.blockcraft.api.game.ThrowFight;
 import me.blockcraft.api.menu.Profiles;
+import me.blockcraft.api.world.WorldProtection;
 import me.blockcraft.common.config.YamlFile;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.shop.Premium;
@@ -99,6 +100,7 @@ import me.blockcraft.lobby.recap.RoundRecapListener;
 import me.blockcraft.lobby.storage.LegacyUnlocks;
 import me.blockcraft.lobby.team.TeamBoard;
 import net.luckperms.api.LuckPermsProvider;
+import org.bukkit.Tag;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -240,7 +242,9 @@ public final class LobbyPlugin extends JavaPlugin {
                 new CosmeticSettingsListener(messages, trails, pets, gadgets),
                 new RoundRecapListener(this, messages, config),
                 new LobbyItemListener(messages, menus, hider),
-                new ProtectionListener(api.buildMode()),
+                new ProtectionListener(),
+                // StatusSigns ignores a cancelled click.
+                WorldProtection.during(() -> true, api.buildMode()).usable(block -> Tag.ALL_SIGNS.isTagged(block.getType())),
                 new SecretsListener(messages, secrets),
                 new ShopNpcListener(messages, menus, hud, config),
                 new KonamiListener(this, messages, api.unlocks(), secrets, activities.konamiGap()),
@@ -248,7 +252,7 @@ public final class LobbyPlugin extends JavaPlugin {
                 new MoveListener(messages, config, locations, trails, activities.fireworkCooldown(), parkour),
                 new DoubleJumpListener(config, parkour),
                 new GadgetListener(gadgets, parkour),
-                new InventoryLockListener(api.buildMode()),
+                new InventoryLockListener(),
                 new DeathListener(locations, items, hider));
         api.presence().maxPlayers(config.maxPlayers());
 

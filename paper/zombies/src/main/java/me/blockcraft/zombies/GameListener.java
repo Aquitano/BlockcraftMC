@@ -4,7 +4,6 @@ import com.destroystokyo.paper.event.player.PlayerPostRespawnEvent;
 import io.papermc.paper.event.player.PrePlayerAttackEntityEvent;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.task.Tasks;
-import me.blockcraft.api.spectate.SpectateRequestEvent;
 import me.blockcraft.api.vanish.VanishChangeEvent;
 import me.blockcraft.api.world.MapSaveEvent;
 import me.blockcraft.zombies.game.Survivor;
@@ -309,11 +308,6 @@ public final class GameListener implements Listener {
         if (game.survivor(event.getPlayer()) != null) {
             game.weapons().render(event.getPlayer());
         }
-    }
-
-    @EventHandler
-    public void onSpectateRequest(SpectateRequestEvent event) {
-        game.follow(event.getPlayer(), event.target());
     }
 
     @EventHandler

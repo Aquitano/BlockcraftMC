@@ -5,7 +5,6 @@ import me.blockcraft.api.game.DuelSetupEvent;
 import me.blockcraft.api.game.DuelAcceptedEvent;
 import me.blockcraft.api.nick.NickChangeEvent;
 import me.blockcraft.api.ranked.RankedMatchEvent;
-import me.blockcraft.api.spectate.SpectateRequestEvent;
 import me.blockcraft.api.vanish.VanishChangeEvent;
 import me.blockcraft.duell.game.Duel;
 import org.bukkit.event.EventHandler;
@@ -38,12 +37,6 @@ public final class ConnectionListener implements Listener {
     @EventHandler
     public void onRespawn(PlayerRespawnEvent event) {
         duel.respawn(event);
-    }
-
-    /** The proxy names the friend a watching player came for, which reaches the backend after the join. */
-    @EventHandler
-    public void onSpectateRequest(SpectateRequestEvent event) {
-        duel.follow(event.getPlayer(), event.target());
     }
 
     /** The proxy's ranked queue paired this player, which it says once both arrived. */
