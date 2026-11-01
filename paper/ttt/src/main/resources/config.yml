@@ -19,8 +19,9 @@ idle-restart-minutes: 50
 timer-bar: true
 global-stats-head: Kevos
 
-# traitor-ratio of the players are traitors, at least one. From detective-min-players on, detective-ratio of them
-# are detectives, at least one.
+# traitor-ratio of the players are traitors, rounded to the nearest and at least one, so six players already face
+# two. From detective-min-players on, detective-ratio of them are detectives, rounded down and at least one. Nobody
+# is told how many traitors there are.
 roles:
   traitor-ratio: 0.25
   detective-ratio: 0.125

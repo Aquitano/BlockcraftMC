@@ -12,10 +12,11 @@ open Minecraft clones ([MTTT](https://github.com/phiph-s/MTTT), Apache 2.0, and
    leaves it to chance; staff decide it with `/forcemap <map>`.
 2. Preparation, `countdown.preparation` seconds (30): everyone starts at the map's spawns and loots. Nobody can be
    hurt, and nobody knows a role yet.
-3. The roles are drawn: `roles.traitor-ratio` of the players are traitors (at least one), from
-   `roles.detective-min-players` (6) on `roles.detective-ratio` are detectives (at least one), the rest innocents. Each
-   learns their role by title; traitors also learn each other (chat, and a sidebar section only they see), and
-   everyone learns who the detectives are, whose names turn blue. The number of traitors is announced.
+3. The roles are drawn: `roles.traitor-ratio` of the players are traitors (rounded to the nearest, at least one, so
+   two from six players on), from `roles.detective-min-players` (6) on `roles.detective-ratio` are detectives (rounded
+   down, at least one), the rest innocents. Each learns their role by title; traitors also learn each other (chat, and
+   a sidebar section only they see), and everyone learns who the detectives are, whose names turn blue. How many
+   traitors there are is never announced.
 4. The round runs `countdown.round` seconds (10 minutes). The innocents and detectives win when no traitor is left
    or the time runs out; the traitors win when nobody else is left. The whole side wins, dead members included.
 

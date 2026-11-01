@@ -302,7 +302,7 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
         if (!detectives.isEmpty()) {
             Bukkit.broadcast(messages.get("roles.detectives", names(detectives)));
         }
-        Bukkit.broadcast(messages.get("roles.traitor-count", Formatter.number("traitors", traitors.size())));
+        Bukkit.broadcast(messages.get("roles.traitors"));
         Sounds.PVP_ENABLED.playToAll();
         updateTraitorChat();
         equipment.start();

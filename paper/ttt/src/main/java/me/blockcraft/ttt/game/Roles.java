@@ -5,11 +5,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-/** How many traitors and detectives a round of {@code players} gets; everyone else is innocent. */
+/**
+ * How many traitors and detectives a round of {@code players} gets; everyone else is innocent. Traitors round to the
+ * nearest, so six players already face two, detectives round down.
+ */
 public record Roles(double traitorRatio, double detectiveRatio, int detectiveMinPlayers) {
 
     public int traitors(int players) {
-        return Math.min(players, Math.max(1, (int) Math.floor(players * traitorRatio)));
+        return Math.min(players, Math.max(1, (int) Math.round(players * traitorRatio)));
     }
 
     public int detectives(int players) {

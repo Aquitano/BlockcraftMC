@@ -31,7 +31,7 @@ roles:
   partners: "<prefix><muted>Deine Traitor-Partner<dark>: <error><players>"
   alone: "<prefix><muted>Du bist der einzige Traitor. Viel Glück."
   detectives: "<prefix><muted>Detective<dark>: <accent><players>"
-  traitor-count: "<prefix><muted>Unter euch sind <error><traitors> Traitor<muted>. Mit <white>/tc <muted>schreiben Traitor einander."
+  traitors: "<prefix><muted>Die Rollen sind verteilt. Wie viele Traitor unter euch sind, weiß niemand. Mit <accent>/tc <muted>schreiben Traitor einander."
 
 item:
   shop: "<arrow><role>-Shop"

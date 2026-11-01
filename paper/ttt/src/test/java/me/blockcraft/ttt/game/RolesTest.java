@@ -40,6 +40,14 @@ public class RolesTest {
     }
 
     @Test
+    public void sixPlayersAlreadyFaceTwoTraitors() {
+        assertEquals(1, ROLES.traitors(5));
+        assertEquals(2, ROLES.traitors(6));
+        assertEquals(2, ROLES.traitors(7));
+        assertEquals(3, ROLES.traitors(10));
+    }
+
+    @Test
     public void aDetectiveJoinsFromTheMinimumOn() {
         assertEquals(0, ROLES.detectives(5));
         assertEquals(1, ROLES.detectives(6));
