@@ -1059,6 +1059,8 @@ cp .env.example .env     # fill in the secrets
 docker compose up -d
 ```
 
+The lobby furniture needs the licensed Nexo jar, which stays outside git: put its path in `BLOCKCRAFT_NEXO_JAR` (or pass
+`-PnexoJar=...`) before every `stagePlugins`, or the servers start without furniture ([Nexo setup](nexo/README.md)).
 To update, pull, run `./gradlew stagePlugins` and restart the servers (`docker compose restart velocity lobby
 bedwars mlgrush duell zombies endergames ttt emeraldrush archive`, plus `waker` when on-demand runs; see "Game servers on demand"). A plugin's `config.yml` and `messages.yml` in its data folder are copies of the bundled defaults, made on
 its first start: new keys arrive through the bundled default, but the copy keeps its own value for every key it

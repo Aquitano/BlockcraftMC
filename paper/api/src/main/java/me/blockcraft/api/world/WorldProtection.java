@@ -37,6 +37,8 @@ import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
+import org.bukkit.event.vehicle.VehicleDamageEvent;
+import org.bukkit.event.vehicle.VehicleDestroyEvent;
 
 import java.util.EnumSet;
 import java.util.Optional;
@@ -47,7 +49,8 @@ import java.util.function.Supplier;
 
 /**
  * Keeps a world as it was built, for everyone but a player in build mode: no block answers a click or a step unless it
- * is {@code usable}, nothing is built, emptied, hung up, dressed, dropped, picked up or moved in an inventory, and no
+ * is {@code usable}, nothing is built, emptied, hung up, dressed, dropped, picked up or moved in an inventory, no boat
+ * or minecart is broken, and no
  * entity answers a right click or opens its inventory, so a listener that makes an NPC answer must not ignore cancelled
  * clicks. Nobody and nothing is hurt, hungry or given experience, and nothing explodes. Items still work in the hand,
  * so rods cast and snowballs fly. The void and /kill still kill, so whoever no {@code rescue} spawn catches does not
@@ -150,6 +153,20 @@ public final class WorldProtection implements Listener {
     @EventHandler
     public void onInteractEntity(PlayerInteractEntityEvent event) {
         deny(event, event.getPlayer());
+    }
+
+    @EventHandler
+    public void onVehicleDamage(VehicleDamageEvent event) {
+        if (!byBuilder(event.getAttacker())) {
+            deny(event, event.getVehicle().getWorld());
+        }
+    }
+
+    @EventHandler
+    public void onVehicleDestroy(VehicleDestroyEvent event) {
+        if (!byBuilder(event.getAttacker())) {
+            deny(event, event.getVehicle().getWorld());
+        }
     }
 
     @EventHandler
