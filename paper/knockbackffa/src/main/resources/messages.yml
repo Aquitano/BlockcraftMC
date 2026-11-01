@@ -10,20 +10,33 @@ commands:
 command:
   usage: "<prefix><muted>/ffa play zum Mitspielen, /ffa spectate zum Zuschauen, /hub zur Lobby."
 join:
-  introduction: "<prefix><muted>Stoße andere Spieler von den Inseln. Nach jedem Sturz spielst du sofort weiter. Smaragdblöcke geben dir per Rechtsklick ein Spezialitem."
+  introduction: "<prefix><muted>Stoße andere Spieler von den Inseln. Nach jedem Sturz spielst du sofort weiter. Alle kämpfen mit demselben Kit, das alle <accent><seconds> Sekunden <muted>wechselt."
   playing: "<prefix><success>Du spielst mit! Nach dem Erscheinen schützt dich kurz ein Schild. Währenddessen kannst du auch niemanden treffen."
   spectator: "<prefix><muted>Du schaust zu. Mit <accent>/ffa play <muted>spielst du wieder mit, mit <accent>/hub <muted>kehrst du zur Lobby zurück."
 item:
   stick: "<primary>Rückstoß-Stick"
-  rescue: "<accent>Rettungssprung <dark>· <muted>Rechtsklick"
-  repulsor: "<accent>Stoßball <dark>· <muted>Rechtsklick"
+  bow: "<accent>Bogen"
+  arrow: "<accent>Pfeil"
+  rod: "<accent>Angel"
+  snowball: "<accent>Schneeball"
+  grapple: "<accent>Enterhaken"
+  grapple-hint: "<right>Am Boden einholen, um dich hinzuziehen"
+  pearl: "<accent>Enderperle"
   watch: "<primary>Zuschauen <dark>· <muted>Rechtsklick"
   hub: "<primary>Zur Lobby <dark>· <muted>Rechtsklick"
 spawn:
   protected: "<success>Startschutz <dark>· <muted>Du kannst kurz niemanden treffen."
-pickup:
-  full: "<prefix><muted>Benutze zuerst dein Spezialitem im zweiten Slot."
-  received: "<prefix><success>Du erhältst <item><success>. Benutze das Item im zweiten Slot mit Rechtsklick."
+kit:
+  title: "<primary><display>Kitwechsel"
+  subtitle: "<accent><kit>"
+  countdown: "<accent>Kitwechsel in <seconds> Sekunden!"
+  standard: "Standard"
+  heavy: "Schwerer Stick"
+  archer: "Bogenschütze"
+  angler: "Angler"
+  snowman: "Schneemann"
+  grapple: "Enterhaken"
+  enderman: "Enderman"
 arena:
   islands: "Inseln"
   ring: "Ring"
@@ -44,6 +57,7 @@ scoreboard:
   lines:
     - "<muted>Spieler: <accent><players>/<max>"
     - "<muted>Arena: <accent><map>"
+    - "<muted>Kit: <accent><kit> <dark>· <muted><kit_seconds>s"
     - ""
     - "<muted>Deine Kills: <accent><kills>"
     - "<muted>Deine Stürze: <accent><deaths>"

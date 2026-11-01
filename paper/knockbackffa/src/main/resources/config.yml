@@ -7,8 +7,12 @@ spawn-protection-seconds: 3
 rewards:
   kill-coins: 2
   same-player-cooldown-seconds: 120
-pickups:
-  respawn-seconds: 25
+kits:
+  interval-seconds: 120
+  ammo: 16
+  pearls: 3
+  projectile-push: 0.6
+  grapple-cooldown-seconds: 3
 rotation:
   enabled: true
   interval-seconds: 300

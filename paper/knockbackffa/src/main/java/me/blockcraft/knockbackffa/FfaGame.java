@@ -23,18 +23,18 @@ import me.blockcraft.api.task.Tasks;
 import me.blockcraft.api.vanish.VanishChangeEvent;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.network.ServerState;
-import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
-import org.bukkit.Particle;
-import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.AbstractArrow;
+import org.bukkit.entity.EnderPearl;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.Snowball;
+import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventPriority;
@@ -50,6 +50,7 @@ import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
+import org.bukkit.event.player.PlayerFishEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
@@ -58,7 +59,6 @@ import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
 
 import java.util.HashMap;
@@ -70,7 +70,9 @@ import java.util.concurrent.ThreadLocalRandom;
 
 final class FfaGame implements Listener, AutoCloseable {
 
-    private static final NamespacedKey REPULSOR = new NamespacedKey("knockbackffa", "repulsor");
+    private static final double GRAPPLE_PULL = 1.6;
+    private static final double GRAPPLE_LIFT = 0.4;
+    private static final int WARNING_SECONDS = 5;
 
     private final Plugin plugin;
     private final FfaConfig config;
@@ -81,8 +83,9 @@ final class FfaGame implements Listener, AutoCloseable {
     private final Set<UUID> playing = new HashSet<>();
     private final Set<UUID> respawning = new HashSet<>();
     private final Map<UUID, Long> protectedUntil = new HashMap<>();
-    private final Map<Block, Integer> pickups = new HashMap<>();
     private final Sidebar sidebar;
+    private FfaKit kit = FfaKit.STANDARD;
+    private int kitIn;
     private int launchIn;
     private int rotationIn;
 
@@ -94,6 +97,7 @@ final class FfaGame implements Listener, AutoCloseable {
         this.stats = stats;
         scores = new FfaScores(config.creditWindow(), config.rewardCooldown());
         sidebar = new Sidebar(messages.get("scoreboard.title"));
+        kitIn = config.kits().intervalSeconds();
         launchIn = config.launchSeconds();
         rotationIn = config.rotationSeconds();
     }
@@ -115,7 +119,7 @@ final class FfaGame implements Listener, AutoCloseable {
             return;
         }
         play(player);
-        player.sendMessage(messages.get("join.introduction"));
+        player.sendMessage(messages.get("join.introduction", Formatter.number("seconds", config.kits().intervalSeconds())));
     }
 
     private void play(Player player) {
@@ -154,13 +158,42 @@ final class FfaGame implements Listener, AutoCloseable {
         PlayerReset.reset(player, GameMode.SURVIVAL);
         PlayerReset.settle(player);
         CombatStyle.LEGACY.apply(player);
-        var stick = FfaItem.STICK.build(Items.of(Material.STICK).name(messages.get("item.stick")));
-        stick.addUnsafeEnchantment(Enchantment.KNOCKBACK, config.knockback());
-        player.getInventory().setItem(0, BlockcraftApi.get().weapons().stick(player, stick));
-        player.getInventory().setItem(7, FfaItem.WATCH.build(Items.of(Material.ENDER_EYE).name(messages.get("item.watch"))));
-        player.getInventory().setItem(8, FfaItem.HUB.build(Items.of(Material.MAGMA_CREAM).name(messages.get("item.hub"))));
+        removeProjectiles(player);
+        equip(player);
         player.teleport(arena.spawn());
         protectedUntil.put(player.getUniqueId(), System.nanoTime() + config.spawnProtection().toNanos());
+    }
+
+    private void equip(Player player) {
+        var inventory = player.getInventory();
+        inventory.clear();
+        var stick = FfaItem.STICK.build(Items.of(Material.STICK).name(messages.get("item.stick")));
+        stick.addUnsafeEnchantment(Enchantment.KNOCKBACK, kit == FfaKit.HEAVY ? Math.min(5, config.knockback() + 1) : config.knockback());
+        inventory.setItem(0, BlockcraftApi.get().weapons().stick(player, stick));
+        var kits = config.kits();
+        switch (kit) {
+            case STANDARD, HEAVY -> { }
+            case ARCHER -> {
+                inventory.setItem(1, unbreakable(Items.of(Material.BOW).name(messages.get("item.bow"))));
+                inventory.setItem(2, FfaItem.TOOL.build(Items.of(Material.ARROW, kits.ammo()).name(messages.get("item.arrow"))));
+            }
+            case ANGLER -> inventory.setItem(1, unbreakable(Items.of(Material.FISHING_ROD).name(messages.get("item.rod"))));
+            case SNOWMAN -> inventory.setItem(1, FfaItem.TOOL.build(Items.of(Material.SNOWBALL, kits.ammo()).name(messages.get("item.snowball"))));
+            case GRAPPLE -> inventory.setItem(1, FfaItem.GRAPPLE.build(Items.of(Material.FISHING_ROD).name(messages.get("item.grapple"))
+                    .lore(messages.get("item.grapple-hint")).edit(meta -> meta.setUnbreakable(true))));
+            case ENDERMAN -> inventory.setItem(1, FfaItem.TOOL.build(Items.of(Material.ENDER_PEARL, kits.pearls()).name(messages.get("item.pearl"))));
+        }
+        inventory.setItem(7, FfaItem.WATCH.build(Items.of(Material.ENDER_EYE).name(messages.get("item.watch"))));
+        inventory.setItem(8, FfaItem.HUB.build(Items.of(Material.MAGMA_CREAM).name(messages.get("item.hub"))));
+    }
+
+    private static ItemStack unbreakable(Items.Builder item) {
+        return FfaItem.TOOL.build(item.edit(meta -> meta.setUnbreakable(true)));
+    }
+
+    private void removeProjectiles(Player shooter) {
+        arena.world().getEntitiesByClass(Projectile.class).stream()
+                .filter(projectile -> shooter.equals(projectile.getShooter())).forEach(Entity::remove);
     }
 
     private boolean active(Player player) {
@@ -227,14 +260,9 @@ final class FfaGame implements Listener, AutoCloseable {
                 Bukkit.broadcast(messages.get("rotation.countdown", Formatter.number("seconds", rotationIn)));
             }
         }
-        pickups.replaceAll((block, seconds) -> seconds - 1);
-        pickups.entrySet().removeIf(entry -> {
-            if (entry.getValue() > 0) {
-                return false;
-            }
-            entry.getKey().setType(Material.EMERALD_BLOCK, false);
-            return true;
-        });
+        if (!playing.isEmpty() && --kitIn <= 0) {
+            changeKit();
+        }
         if (config.launch() && --launchIn <= 0) {
             launchIn = config.launchSeconds();
             for (var player : Bukkit.getOnlinePlayers()) {
@@ -249,12 +277,29 @@ final class FfaGame implements Listener, AutoCloseable {
             sidebar.show(player, messages.getLines("scoreboard.lines", Formatter.number("players", playing.size()),
                     Formatter.number("max", config.capacity()), Formatter.number("kills", score.kills()),
                     Formatter.number("deaths", score.deaths()), Formatter.number("streak", score.streak()),
-                    Placeholder.component("map", messages.get("arena." + arena.name()))));
+                    Placeholder.component("map", messages.get("arena." + arena.name())),
+                    Placeholder.component("kit", messages.get("kit." + kit.key())), Formatter.number("kit_seconds", kitIn)));
             if (protectedNow(player) && active(player)) {
                 BlockcraftApi.get().notifications().status(player, messages.get("spawn.protected"));
             }
-            if (config.launch() && launchIn <= 5 && active(player)) {
+            if (kitIn <= WARNING_SECONDS && active(player)) {
+                BlockcraftApi.get().notifications().status(player, messages.get("kit.countdown", Formatter.number("seconds", kitIn)));
+            }
+            if (config.launch() && launchIn <= WARNING_SECONDS && active(player)) {
                 BlockcraftApi.get().notifications().status(player, messages.get("launch.countdown", Formatter.number("seconds", launchIn)));
+            }
+        }
+    }
+
+    private void changeKit() {
+        kit = kit.next(ThreadLocalRandom.current());
+        kitIn = config.kits().intervalSeconds();
+        var title = Title.title(messages.get("kit.title"), messages.get("kit.subtitle", Placeholder.component("kit", messages.get("kit." + kit.key()))));
+        for (var player : Bukkit.getOnlinePlayers()) {
+            if (active(player)) {
+                removeProjectiles(player);
+                equip(player);
+                BlockcraftApi.get().notifications().important(player, title, Sounds.EQUIP);
             }
         }
     }
@@ -262,9 +307,7 @@ final class FfaGame implements Listener, AutoCloseable {
     private void rotate() {
         rotationIn = config.rotationSeconds();
         scores.clearHits();
-        pickups.clear();
-        arena.world().getEntitiesByClass(Snowball.class).stream()
-                .filter(ball -> ball.getPersistentDataContainer().has(REPULSOR)).forEach(Snowball::remove);
+        arena.world().getEntitiesByClass(Projectile.class).forEach(Entity::remove);
         Bukkit.getOnlinePlayers().stream().filter(this::active).forEach(player -> player.teleport(arena.watch()));
         arena.rotate();
         Bukkit.getOnlinePlayers().stream().filter(this::active).forEach(this::spawn);
@@ -325,15 +368,12 @@ final class FfaGame implements Listener, AutoCloseable {
         var attacker = attacker(event);
         if (attacker != null && event.getEntity() instanceof Player victim && canHit(attacker, victim)) {
             scores.hit(attacker.getUniqueId(), victim.getUniqueId(), System.nanoTime());
-            if (event.getDamager() instanceof Snowball) {
-                var direction = victim.getLocation().toVector().subtract(attacker.getLocation().toVector()).setY(0);
-                if (direction.lengthSquared() < 0.01) {
-                    direction = attacker.getLocation().getDirection().setY(0);
-                }
-                if (direction.lengthSquared() > 0.01) {
-                    victim.setVelocity(direction.normalize().multiply(1.4).setY(0.5));
-                    victim.getWorld().spawnParticle(Particle.CLOUD, victim.getLocation(), 8, 0.3, 0.3, 0.3, 0);
-                }
+            // Paper drops vanilla knockback for a player hit that dealt no damage at all, as snowballs and rods do.
+            if (event.getDamager() instanceof Projectile && !(event.getDamager() instanceof AbstractArrow)) {
+                var away = victim.getLocation().toVector().subtract(attacker.getLocation().toVector());
+                victim.knockback(config.kits().projectilePush(), -away.getX(), -away.getZ());
+                victim.setVelocity(victim.getVelocity());
+                victim.playHurtAnimation(attacker.getYaw());
             }
         }
     }
@@ -343,8 +383,8 @@ final class FfaGame implements Listener, AutoCloseable {
                 && HotbarItem.of(player.getInventory().getItemInMainHand(), FfaItem.class).filter(item -> item == FfaItem.STICK).isPresent()) {
             return player;
         }
-        if (event.getDamager() instanceof Snowball snowball && snowball.getPersistentDataContainer().has(REPULSOR)
-                && snowball.getShooter() instanceof Player player) {
+        if (event.getDamager() instanceof Projectile projectile && !(projectile instanceof EnderPearl)
+                && projectile.getShooter() instanceof Player player) {
             return player;
         }
         return null;
@@ -424,51 +464,38 @@ final class FfaGame implements Listener, AutoCloseable {
         if (!active(player)) {
             return;
         }
-        event.setCancelled(true);
-        var item = HotbarItem.of(event.getItem(), FfaItem.class);
-        if (item.isPresent()) {
-            switch (item.get()) {
-                case HUB -> ProxyMessaging.hub(plugin, player);
-                case WATCH -> watch(player);
-                case RESCUE -> {
-                    player.getInventory().setItemInMainHand(null);
-                    player.setFallDistance(0);
-                    player.setVelocity(player.getVelocity().setY(1.15));
-                    Sounds.TELEPORT.play(player);
-                }
-                case REPULSOR -> {
-                    player.getInventory().setItemInMainHand(null);
-                    var snowball = player.launchProjectile(Snowball.class);
-                    snowball.getPersistentDataContainer().set(REPULSOR, PersistentDataType.BYTE, (byte) 1);
-                    Tasks.later(plugin, 100L, snowball::remove);
-                }
-                default -> { }
-            }
-        }
-        var block = event.getClickedBlock();
-        if (!protectedNow(player) && block != null && arena.pickups().contains(block) && !pickups.containsKey(block)) {
-            var held = player.getInventory().getItem(1);
-            if (held != null && !held.isEmpty()) {
-                player.sendMessage(messages.get("pickup.full"));
+        switch (HotbarItem.of(event.getItem(), FfaItem.class).orElse(null)) {
+            case TOOL, GRAPPLE -> {
                 return;
             }
-            var special = ThreadLocalRandom.current().nextBoolean() ? FfaItem.RESCUE : FfaItem.REPULSOR;
-            var material = special == FfaItem.RESCUE ? Material.BLAZE_ROD : Material.SNOWBALL;
-            player.getInventory().setItem(1, special.build(Items.of(material).name(messages.get("item." + special.name().toLowerCase(java.util.Locale.ROOT)))));
-            block.setType(Material.GRAY_CONCRETE, false);
-            pickups.put(block, config.pickupSeconds());
-            player.sendMessage(messages.get("pickup.received", Placeholder.component("item",
-                    messages.get("item." + special.name().toLowerCase(java.util.Locale.ROOT)))));
-            Sounds.NOTIFY.play(player);
+            case HUB -> ProxyMessaging.hub(plugin, player);
+            case WATCH -> watch(player);
+            case null, default -> { }
         }
+        event.setCancelled(true);
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onFish(PlayerFishEvent event) {
+        var player = event.getPlayer();
+        if (event.getState() != PlayerFishEvent.State.IN_GROUND || !active(player)
+                || HotbarItem.of(player.getInventory().getItemInMainHand(), FfaItem.class).filter(FfaItem.GRAPPLE::equals).isEmpty()) {
+            return;
+        }
+        var pull = event.getHook().getLocation().toVector().subtract(player.getLocation().toVector());
+        if (pull.lengthSquared() < 1) {
+            return;
+        }
+        player.setVelocity(pull.normalize().multiply(GRAPPLE_PULL).setY(Math.max(pull.getY() / 4, GRAPPLE_LIFT)));
+        player.setCooldown(Material.FISHING_ROD, config.kits().grappleCooldownTicks());
+        Sounds.GRAPPLE.play(player);
     }
 
     @EventHandler(ignoreCancelled = true)
     public void onProjectile(ProjectileHitEvent event) {
-        if (!(event.getEntity() instanceof Snowball snowball) || !snowball.getPersistentDataContainer().has(REPULSOR)) {
-            return;
+        if (event.getEntity() instanceof AbstractArrow arrow) {
+            Tasks.later(plugin, 1L, arrow::remove);
         }
-        Tasks.later(plugin, 1L, snowball::remove);
     }
 
     @EventHandler
@@ -532,8 +559,6 @@ final class FfaGame implements Listener, AutoCloseable {
     @Override
     public void close() {
         BlockcraftApi.get().presence().state(ServerState.RESTART);
-        arena.pickups().forEach(block -> block.setType(Material.EMERALD_BLOCK, false));
-        arena.world().getEntitiesByClass(Snowball.class).stream()
-                .filter(snowball -> snowball.getPersistentDataContainer().has(REPULSOR)).forEach(Snowball::remove);
+        arena.world().getEntitiesByClass(Projectile.class).forEach(Entity::remove);
     }
 }

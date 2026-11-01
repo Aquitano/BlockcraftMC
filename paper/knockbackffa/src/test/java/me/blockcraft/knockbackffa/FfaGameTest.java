@@ -44,7 +44,7 @@ public class FfaGameTest {
         var messages = Messages.load(temporary.newFolder().toPath(), () -> new ByteArrayInputStream(
                 "scoreboard:\n  title: Test\n".getBytes(StandardCharsets.UTF_8)));
         var config = new FfaConfig(24, 2, Duration.ofSeconds(10), Duration.ofSeconds(3), 2,
-                Duration.ofSeconds(120), 25, false, 100, 0);
+                Duration.ofSeconds(120), new FfaConfig.Kits(120, 16, 3, 0.6, 60), false, 100, 0);
         var game = new FfaGame(null, config, messages, null, null);
         var apiField = BlockcraftApi.class.getDeclaredField("instance");
         apiField.setAccessible(true);

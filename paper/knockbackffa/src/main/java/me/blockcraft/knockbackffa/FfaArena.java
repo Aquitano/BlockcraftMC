@@ -5,7 +5,6 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
-import org.bukkit.block.Block;
 
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
@@ -17,7 +16,6 @@ final class FfaArena {
 
     private final World world = Worlds.createArena(new NamespacedKey("knockbackffa", "inseln"));
     private final List<Location> spawns = List.of(at(18, 0), at(-18, 0), at(0, 18), at(0, -18));
-    private List<Block> pickups = List.of();
     private ArenaLayout layout = ArenaLayout.ISLANDS;
 
     FfaArena() {
@@ -53,10 +51,6 @@ final class FfaArena {
                 world.getBlockAt(point[0], FLOOR + 2, point[1]).setType(Material.QUARTZ_PILLAR, false);
             }
         }
-        int offset = layout.pickupOffset();
-        pickups = List.of(world.getBlockAt(offset, FLOOR, offset), world.getBlockAt(-offset, FLOOR, offset),
-                world.getBlockAt(offset, FLOOR, -offset), world.getBlockAt(-offset, FLOOR, -offset));
-        pickups.forEach(block -> block.setType(Material.EMERALD_BLOCK, false));
     }
 
     private Location at(int x, int z) {
@@ -75,9 +69,5 @@ final class FfaArena {
 
     Location watch() {
         return new Location(world, 0.5, FLOOR + 12, 0.5);
-    }
-
-    List<Block> pickups() {
-        return pickups;
     }
 }

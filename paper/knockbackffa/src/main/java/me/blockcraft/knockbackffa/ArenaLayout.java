@@ -17,10 +17,6 @@ enum ArenaLayout {
         };
     }
 
-    int pickupOffset() {
-        return this == RING ? 12 : this == CROSSROADS ? 9 : 6;
-    }
-
     ArenaLayout next() {
         return values()[(ordinal() + 1) % values().length];
     }

@@ -134,7 +134,7 @@ navigator:
   description:
     knockbackffa:
       - "<muted>Mit dem Knockback-Stick jeden von der Insel stoßen."
-      - "<muted>Sofort wieder einsteigen und Rettungsitems sammeln."
+      - "<muted>Sofort wieder einsteigen, alle paar Minuten ein neues Kit."
     archive:
       - "<muted>Alte Maps von Blockcraft 2015–16."
       - "<muted>Erkunden, fliegen und Erinnerungen finden."

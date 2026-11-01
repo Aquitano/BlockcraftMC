@@ -19,7 +19,7 @@ paper/lobby              Lobby: join items, server compass, cosmetics, premium s
 paper/duell              Duell: single games and three-mode tours (vs, sg, superjump, sumo, mlgrush)
 paper/emeraldrush        EmeraldRush minigame
 paper/mlgrush            MLG Rush: two players, knockback sticks, beds, first to five
-paper/knockbackffa        Continuous knockback arena, instant respawns and special-item pickups
+paper/knockbackffa        Continuous knockback arena, instant respawns and a shared rotating kit
 paper/quicksg            QuickSG survival games
 paper/zombies            Solo or co-op Zombies survival
 paper/cores              Cores: red against blue, two beacons each, after GommeHD's mode
@@ -225,7 +225,7 @@ The [Vanade map import](worlds/README.md) records the imported worlds, converted
 
 `paper/knockbackffa` runs a continuous arena in the `knockbackffa` group. `/play knockbackffa` joins immediately,
 including while other players are fighting. Falls respawn the player, and the last recent attacker gets the kill.
-See [Knockback FFA setup](paper/knockbackffa/README.md) for commands, rewards, pickups and local verification.
+See [Knockback FFA setup](paper/knockbackffa/README.md) for commands, kits, rewards and local verification.
 
 ## MLG Rush
 
