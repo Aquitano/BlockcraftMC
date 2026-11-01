@@ -236,7 +236,7 @@ public final class LobbyPlugin extends JavaPlugin {
                 new RoundRecapListener(this, messages, config),
                 new LobbyItemListener(messages, menus, hider),
                 new ProtectionListener(),
-                WorldProtection.during(() -> true, api.buildMode()),
+                WorldProtection.during(() -> true, api.buildMode()).withHeldItems(),
                 new SecretsListener(messages, secrets),
                 new ShopNpcListener(messages, menus, hud, config),
                 new KonamiListener(this, messages, api.unlocks(), secrets, activities.konamiGap()),

@@ -1,14 +1,18 @@
 package me.blockcraft.api.world;
 
+import com.destroystokyo.paper.event.block.BlockDestroyEvent;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Sheep;
+import org.bukkit.entity.Snowball;
 import org.bukkit.event.Event;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -18,7 +22,9 @@ import java.lang.reflect.Proxy;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 public class WorldProtectionTest {
@@ -89,6 +95,50 @@ public class WorldProtectionTest {
         assertTrue(denied(exhibitLever));
         assertFalse(denied(exhibitDoor));
         assertTrue(denied(exhibitPlate));
+    }
+
+    @Test
+    public void heldItemsWorkOnlyWhereTheWorldLetsThem() {
+        var world = world();
+        var player = player(world);
+        var waiting = WorldProtection.in(world, new BuildMode());
+        var lobby = WorldProtection.in(world, new BuildMode()).withHeldItems();
+
+        var waitingThrow = new PlayerInteractEvent(player, Action.RIGHT_CLICK_AIR, null, null, BlockFace.SELF);
+        var lobbyThrow = new PlayerInteractEvent(player, Action.RIGHT_CLICK_AIR, null, null, BlockFace.SELF);
+        var waitingCast = click(player, block(world, Material.GRASS_BLOCK));
+        var lobbyCast = click(player, block(world, Material.GRASS_BLOCK));
+        waiting.onInteract(waitingThrow);
+        waiting.onInteract(waitingCast);
+        lobby.onInteract(lobbyThrow);
+        lobby.onInteract(lobbyCast);
+        assertEquals(Event.Result.DENY, waitingThrow.useItemInHand());
+        assertEquals(Event.Result.DENY, waitingCast.useItemInHand());
+        assertNotEquals(Event.Result.DENY, lobbyThrow.useItemInHand());
+        assertNotEquals(Event.Result.DENY, lobbyCast.useItemInHand());
+        assertTrue(denied(lobbyCast));
+    }
+
+    @Test
+    public void noProjectileChangesABlock() {
+        var world = world();
+        var protection = WorldProtection.in(world, new BuildMode());
+        var snowball = (Snowball) Proxy.newProxyInstance(Snowball.class.getClassLoader(), new Class<?>[]{Snowball.class},
+                (proxy, method, args) -> {
+                    throw new AssertionError(method);
+                });
+        var data = (BlockData) Proxy.newProxyInstance(BlockData.class.getClassLoader(), new Class<?>[]{BlockData.class},
+                (proxy, method, args) -> {
+                    throw new AssertionError(method);
+                });
+
+        var shatteredPot = new EntityChangeBlockEvent(snowball, block(world, Material.DECORATED_POT), data);
+        protection.onEntityChangeBlock(shatteredPot);
+        assertTrue(shatteredPot.isCancelled());
+
+        var poppedCane = new BlockDestroyEvent(block(world, Material.SUGAR_CANE), data, data, 0, true);
+        protection.onLostSupport(poppedCane);
+        assertTrue(poppedCane.isCancelled());
     }
 
     @Test
