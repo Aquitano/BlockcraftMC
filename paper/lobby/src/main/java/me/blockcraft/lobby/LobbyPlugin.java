@@ -31,7 +31,7 @@ import me.blockcraft.lobby.activity.SeasonalDecor;
 import me.blockcraft.lobby.activity.SeasonalEvents;
 import me.blockcraft.lobby.activity.SeasonalScenes;
 import me.blockcraft.lobby.activity.ShootingStars;
-import me.blockcraft.lobby.activity.Snowfall;
+import me.blockcraft.api.season.Snowfall;
 import me.blockcraft.lobby.command.ClearChatCommand;
 import me.blockcraft.lobby.command.CookiesCommand;
 import me.blockcraft.lobby.command.DailyCommand;
@@ -164,7 +164,8 @@ public final class LobbyPlugin extends JavaPlugin {
         herobrine = new Herobrine(this, HerobrineConfig.fromYaml(YamlFile.section(yaml, "herobrine")), secrets);
         stars = new ShootingStars(this, ShootingStarConfig.fromYaml(YamlFile.section(yaml, "shooting-stars")), messages, secrets);
         var themes = SeasonTheme.all(YamlFile.section(yaml, "seasons"), getLogger());
-        var snowfall = new Snowfall(() -> locations.get(LobbyLocation.SPAWN));
+        var snowfall = new Snowfall(this, () -> locations.get(LobbyLocation.SPAWN));
+        polish.add(snowfall);
         var decor = new SeasonalDecor(api.calendar(), themes, snowfall);
         atmosphere = new SeasonalAtmosphere(this, api.calendar(), themes);
         sleigh = new SantaSleigh(this, SleighConfig.fromYaml(YamlFile.section(yaml, "sleigh")), messages, api.calendar());

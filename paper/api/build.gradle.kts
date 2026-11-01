@@ -3,11 +3,18 @@ plugins {
     `java-library`
 }
 
+repositories {
+    maven("https://repo.nexomc.com/releases") {
+        content { includeGroup("com.nexomc") }
+    }
+}
+
 dependencies {
     api(project(":common"))
     implementation(libs.hikaricp)
     implementation(libs.mariadb.client)
     compileOnly(libs.luckperms.api)
+    compileOnly(libs.nexo) { isTransitive = false }
 }
 
 // Rewrites the pack's overrides of vanilla items from MenuIcon and PackModel. The vanilla client jar supplies each

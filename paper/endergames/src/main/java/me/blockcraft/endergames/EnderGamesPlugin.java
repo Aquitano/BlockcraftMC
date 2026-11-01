@@ -2,6 +2,7 @@ package me.blockcraft.endergames;
 
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.world.WaitingLobby;
 import me.blockcraft.api.command.CommandRegistry;
 import me.blockcraft.api.game.CompassTracker;
 import me.blockcraft.api.game.GameConfig;
@@ -45,12 +46,13 @@ public final class EnderGamesPlugin extends JavaPlugin {
         var stats = new StatsRepository(api.database(), "bc_endergames_stats");
         stats.createTable();
 
-        var lobbyWorld = Worlds.createArena(new NamespacedKey("endergames", "lobby"));
-        var lobbySpawn = LobbyPlatform.build(lobbyWorld);
-        lobbyWorld.setSpawnLocation(lobbySpawn);
+        var lobbySpawn = api.waitingLobby().map(WaitingLobby::spawn)
+                .orElseGet(() -> LobbyPlatform.build(Worlds.createArena(new NamespacedKey("endergames", "lobby"))));
+        lobbySpawn.getWorld().setSpawnLocation(lobbySpawn);
         world = RoundWorld.create(this, config.world());
 
         var topList = new TopList(this, stats, messages);
+
         var statsMenus = StatsMenus.of(messages, stats, topList, gameConfig.globalStatsHead());
         game = new EnderGamesGame(this, gameConfig, config, messages, world, lobbySpawn, stats, statsMenus);
         api.presence().maxPlayers(config.maxPlayers());

@@ -18,6 +18,7 @@ import me.blockcraft.api.elo.Elo;
 import me.blockcraft.api.elo.SkillGroup;
 import me.blockcraft.api.game.LegacyDamage;
 import me.blockcraft.api.game.LegacyRod;
+import me.blockcraft.api.game.LobbyProtection;
 import me.blockcraft.api.game.RoundConfig;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.game.Streaks;
@@ -43,6 +44,9 @@ import me.blockcraft.api.vanish.VanishedPlayers;
 import me.blockcraft.api.world.BuildMode;
 import me.blockcraft.api.world.MapBundle;
 import me.blockcraft.api.world.WorldTemplate;
+import me.blockcraft.api.world.WaitingLobby;
+import me.blockcraft.api.scenery.NexoScenery;
+import me.blockcraft.api.season.SeasonalBlocks;
 import me.blockcraft.api.xp.Levels;
 import me.blockcraft.api.xp.Xp;
 import me.blockcraft.api.notification.Notifications;
@@ -72,6 +76,10 @@ import org.bukkit.GameRules;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.time.Duration;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Optional;
 import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -83,6 +91,7 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
     private Database database;
     private ServerHeartbeat heartbeat;
     private ServerGroups groups;
+    private final List<AutoCloseable> scenery = new ArrayList<>();
 
     @Override
     public void onEnable() {
@@ -156,13 +165,25 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         var calendar = NetworkCalendar.fromYaml(calendarSection);
         var forcedOccasions = new ForcedOccasions(new SettingsRepository(database), calendar);
         forcedOccasions.reload();
+        var waitingPath = Optional.ofNullable(System.getenv("BLOCKCRAFT_WAITING_TEMPLATE"))
+                .filter(value -> !value.isBlank()).orElse(text(YamlFile.section(config, "waiting-lobby"), "template", ""));
+        var waiting = WaitingLobby.supports(self.group()) && !waitingPath.isBlank()
+                ? Optional.of(WaitingLobby.load(Path.of(waitingPath))) : Optional.<WaitingLobby>empty();
         var api = new BlockcraftApi(notifications, new NetworkOperations(this, messages), playerTasks, database, coins,
                 unlocks, new Shop(database), new RoundRecapRepository(database), streaks(YamlFile.section(config, "streaks")),
                 settings, resourcePack, profiles, new Effects(settings), weapons, messages,
                 servers, self, groups, text(config, "lobby-group", "lobby"), presence, resources.tags(), resources.addresses(), xp, map,
-                buildMode, flight, realNames, nickRanks, nickStats, achievements, elo, afk, ignores, vanished, audit, tabTeams,
+                waiting, buildMode, flight, realNames, nickRanks, nickStats, achievements, elo, afk, ignores, vanished, audit, tabTeams,
                 calendar, RoundConfig.from(config));
         BlockcraftApi.install(api);
+        if (api.isLobby()) {
+            var world = getServer().getWorlds().getFirst();
+            startScenery(world, calendar, self.group(), getServer().getWorldContainer().toPath()
+                    .resolve(world.getName()).resolve("blockcraft/scenery"));
+        }
+        waiting.ifPresent(lobby -> startScenery(lobby.world(), calendar, self.group(), lobby.directory()));
+        waiting.ifPresent(lobby -> getServer().getPluginManager().registerEvents(
+                new LobbyProtection(lobby.world(), buildMode, () -> Optional.of(lobby.spawn())), this));
         getLogger().info("Running map " + map.name() + map.template().map(template -> " from " + template.directory()).orElse(""));
         int startingCoins = number(config, "starting-coins", 10);
         getServer().getPluginManager().registerEvents(realNames, this);
@@ -193,7 +214,7 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
             commands.register(CoinsCommand.create(this, coins, audit, messages));
             commands.register(LevelCommand.create(xp, achievements, messages));
             commands.register(BuildCommand.create(buildMode, audit, messages));
-            commands.register(MapCommand.create(this, map, messages));
+            commands.register(MapCommand.create(this, map, waiting, messages));
             commands.register(AfkCommand.create(afk));
         });
 
@@ -209,6 +230,21 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
                 getLogger().warning("Could not read the forced occasions: " + e.getCause().getMessage());
             }
         }, occasionTicks, occasionTicks);
+    }
+
+    private void startScenery(org.bukkit.World world, NetworkCalendar calendar, String group, Path directory) {
+        var furniture = directory.resolve("furniture.yml");
+        if (Files.isRegularFile(furniture)) {
+            if (getServer().getPluginManager().isPluginEnabled("Nexo")) {
+                scenery.add(new NexoScenery(this, world, calendar, group, furniture));
+            } else {
+                getLogger().warning("Nexo is not installed; furniture from " + furniture + " cannot be placed");
+            }
+        }
+        var seasons = directory.resolve("seasons.yml");
+        if (Files.isRegularFile(seasons)) {
+            scenery.add(SeasonalBlocks.start(this, world, calendar, seasons));
+        }
     }
 
     /**
@@ -249,6 +285,14 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        for (var service : scenery.reversed()) {
+            try {
+                service.close();
+            } catch (Exception failure) {
+                getSLF4JLogger().error("Could not restore lobby scenery", failure);
+            }
+        }
+        scenery.clear();
         if (notifications != null) {
             notifications.close();
         }

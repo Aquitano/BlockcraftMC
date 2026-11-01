@@ -255,6 +255,6 @@ calendar:
     to: "10-31"
   winter:
     from: "12-01"
-    to: "12-31"
+    to: "02-29"
   founded: ""
   poll-seconds: 5

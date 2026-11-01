@@ -66,11 +66,13 @@ public final class BedWarsSetup {
     }
 
     private LiteralCommandNode<CommandSourceStack> tree() {
-        return SetupCommand.root()
+        var root = SetupCommand.root()
                 .executes(context -> help(player(context)))
-                .then(lobby())
-                .then(Commands.literal("map").then(map()))
-                .build();
+                .then(Commands.literal("map").then(map()));
+        if (!layout.shared()) {
+            root.then(lobby());
+        }
+        return root.build();
     }
 
     private ArgumentBuilder<CommandSourceStack, ?> map() {

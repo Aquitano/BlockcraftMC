@@ -17,6 +17,7 @@ import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -57,10 +58,14 @@ public final class SkyMap {
     }
 
     public static CoresMap build(World world, LootChests loot) {
-        return new SkyMap(world, loot).build();
+        return build(world, loot, Optional.empty());
     }
 
-    private CoresMap build() {
+    public static CoresMap build(World world, LootChests loot, Optional<Location> lobby) {
+        return new SkyMap(world, loot).build(lobby);
+    }
+
+    private CoresMap build(Optional<Location> sharedLobby) {
         clear();
         for (var side : Side.values()) {
             base(side);
@@ -69,7 +74,7 @@ public final class SkyMap {
         for (int sign : new int[]{-1, 1}) {
             flank(sign);
         }
-        var lobby = lobby();
+        var lobby = sharedLobby.orElseGet(this::lobby);
         lootChests.forEach(this::fillLoot);
         return new CoresMap(NAME, world, Map.copyOf(spawns), List.copyOf(cores), Set.copyOf(protectedBlocks),
                 List.copyOf(noBuild), BORDER, lobby, new Location(world, 0.5, 90, 0.5, 0, 60));

@@ -26,6 +26,7 @@ import me.blockcraft.api.task.PlayerTasks;
 import me.blockcraft.api.vanish.VanishedPlayers;
 import me.blockcraft.api.world.BuildMode;
 import me.blockcraft.api.world.MapBundle;
+import me.blockcraft.api.world.WaitingLobby;
 import me.blockcraft.api.xp.Xp;
 import me.blockcraft.api.xp.XpReward;
 import me.blockcraft.common.calendar.NetworkCalendar;
@@ -100,6 +101,7 @@ public record BlockcraftApi(
         List<String> addresses,
         Xp xp,
         MapBundle map,
+        Optional<WaitingLobby> waitingLobby,
         BuildMode buildMode,
         FlightGrants flight,
         RealNames realNames,

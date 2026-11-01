@@ -79,7 +79,8 @@ public final class DuellPlugin extends JavaPlugin {
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             var commands = new CommandRegistry(event.registrar(), messages);
             commands.register(StartCommand.of(duel.lobbyCountdown()).build());
-            commands.register(SetupCommand.locations(messages, Spawns.places(config, Duel.MAX_PARTICIPANTS),
+            commands.register(SetupCommand.locations(messages, Spawns.places(config, Duel.MAX_PARTICIPANTS).stream()
+                            .filter(place -> api.waitingLobby().isEmpty() || !place.name().equals("lobby")).toList(),
                     Spawns.Place::name, spawns::set));
             commands.register(ForceMapCommand.create(messages, duel::forcibleModes, duel::isLobby, duel::forceMode));
             commands.register(StatsCommand.create(this, stats, messages));

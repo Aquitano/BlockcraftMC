@@ -200,7 +200,7 @@ public final class GameListener implements Listener {
 
     @EventHandler
     public void onRespawn(PlayerRespawnEvent event) {
-        event.setRespawnLocation(game.arena().point(game.running() ? "spawn" : "lobby"));
+        event.setRespawnLocation(game.running() ? game.arena().point("spawn") : game.lobbySpawn());
     }
 
     @EventHandler

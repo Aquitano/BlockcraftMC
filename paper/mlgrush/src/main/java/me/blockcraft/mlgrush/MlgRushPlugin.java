@@ -53,7 +53,7 @@ public final class MlgRushPlugin extends JavaPlugin {
         game = new StandaloneRushGame(this, gameConfig, config, messages, arena, maps, stats, statsMenus);
         List.of(new ConnectionListener(game),
                 new ArenaProtection(() -> false),
-                new LobbyProtection(() -> !game.isIngame(), api.buildMode(), java.util.Optional::empty),
+                new LobbyProtection(() -> !game.isIngame(), api.buildMode(), game::lobbySpawn),
                 game.hotbar()).forEach(this::register);
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             var commands = new CommandRegistry(event.registrar(), messages);

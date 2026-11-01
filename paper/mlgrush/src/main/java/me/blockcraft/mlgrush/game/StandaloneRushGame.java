@@ -1,6 +1,7 @@
 package me.blockcraft.mlgrush.game;
 
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.world.WaitingLobby;
 import me.blockcraft.api.game.Arena;
 import me.blockcraft.api.game.GameConfig;
 import me.blockcraft.api.game.GamePhase;
@@ -93,6 +94,18 @@ public final class StandaloneRushGame {
         return hotbar;
     }
 
+    public java.util.Optional<Location> lobbySpawn() {
+        return BlockcraftApi.get().waitingLobby().map(WaitingLobby::spawn);
+    }
+
+    private Location waitingSpawn(int slot) {
+        return lobbySpawn().orElseGet(() -> arena.spawn(slot));
+    }
+
+    private Location spectatorSpawn() {
+        return isIngame() ? arena.spectatorSpawn() : lobbySpawn().orElseGet(arena::spectatorSpawn);
+    }
+
     public boolean isIngame() {
         return round.phase() == GamePhase.INGAME;
     }
@@ -108,7 +121,7 @@ public final class StandaloneRushGame {
             hotbar.give(player);
             countdown.start();
         } else {
-            player.teleport(arena.spectatorSpawn());
+            player.teleport(spectatorSpawn());
             player.sendMessage(messages.get("join.spectator"));
         }
         player.sendMessage(messages.get("round.map", Placeholder.unparsed("map", arena.name())));
@@ -204,6 +217,7 @@ public final class StandaloneRushGame {
             }
         });
         session.activate();
+        round.spectators().forEach(player -> player.teleport(spectatorSpawn()));
         Bukkit.broadcast(messages.get("round.start", Formatter.number("target", config.scoreTarget()),
                 Placeholder.unparsed("map", arena.name())));
         refresh();
@@ -216,11 +230,13 @@ public final class StandaloneRushGame {
     private void recoverWaitingPlayers() {
         if (!isIngame()) {
             for (var player : round.players()) {
-                recoverVoid(player, arena.spawn(Math.max(0, slot(player))), config.arena().voidY());
+                var spawn = waitingSpawn(Math.max(0, slot(player)));
+                recoverVoid(player, spawn, Math.min(config.arena().voidY(), spawn.getBlockY() - 16));
             }
         }
         for (var player : round.spectators()) {
-            recoverVoid(player, arena.spectatorSpawn(), config.arena().voidY());
+            var spawn = spectatorSpawn();
+            recoverVoid(player, spawn, Math.min(config.arena().voidY(), spawn.getBlockY() - 16));
         }
     }
 
@@ -233,7 +249,7 @@ public final class StandaloneRushGame {
     }
 
     private void teleport(Player player, int slot) {
-        teleport(player, arena.spawn(slot));
+        teleport(player, waitingSpawn(slot));
     }
 
     private static void teleport(Player player, Location spawn) {
@@ -262,6 +278,7 @@ public final class StandaloneRushGame {
             teleport(player, slot(player));
             hotbar.give(player);
         });
+        round.spectators().forEach(player -> player.teleport(spectatorSpawn()));
         if (round.playerCount() < MAX_PARTICIPANTS) {
             returnToLobbyLater();
         }
@@ -319,7 +336,7 @@ public final class StandaloneRushGame {
             teleport(player, slot);
             hotbar.give(player);
         }
-        round.spectators().forEach(player -> player.teleport(arena.spectatorSpawn()));
+        round.spectators().forEach(player -> player.teleport(spectatorSpawn()));
         if (rematch) {
             Bukkit.broadcast(messages.get("rematch.starting", Formatter.number("seconds", gameConfig.startSeconds()),
                     Placeholder.unparsed("map", arena.name())));

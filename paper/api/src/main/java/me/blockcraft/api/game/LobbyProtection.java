@@ -5,6 +5,7 @@ import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Tag;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
@@ -43,33 +44,43 @@ public final class LobbyProtection implements Listener {
     private final BooleanSupplier inLobby;
     private final BuildMode buildMode;
     private final Supplier<Optional<Location>> spawn;
+    private final Optional<World> world;
 
     public LobbyProtection(BooleanSupplier inLobby, BuildMode buildMode, Supplier<Optional<Location>> spawn) {
+        this(inLobby, buildMode, spawn, Optional.empty());
+    }
+
+    public LobbyProtection(World world, BuildMode buildMode, Supplier<Optional<Location>> spawn) {
+        this(() -> true, buildMode, spawn, Optional.of(world));
+    }
+
+    private LobbyProtection(BooleanSupplier inLobby, BuildMode buildMode, Supplier<Optional<Location>> spawn, Optional<World> world) {
         this.inLobby = inLobby;
         this.buildMode = buildMode;
         this.spawn = spawn;
+        this.world = world;
     }
 
     @EventHandler
     public void onDamage(EntityDamageEvent event) {
-        cancelInLobby(event);
+        cancelInLobby(event, event.getEntity().getWorld());
     }
 
     @EventHandler
     public void onHunger(FoodLevelChangeEvent event) {
-        cancelInLobby(event);
+        cancelInLobby(event, event.getEntity().getWorld());
     }
 
     @EventHandler
     public void onExperience(PlayerExpChangeEvent event) {
-        if (inLobby()) {
+        if (inLobby(event.getPlayer().getWorld())) {
             event.setAmount(0);
         }
     }
 
     @EventHandler
     public void onInteract(PlayerInteractEvent event) {
-        if (!inLobby() || building(event.getPlayer())) {
+        if (!inLobby(event.getPlayer().getWorld()) || building(event.getPlayer())) {
             return;
         }
         var block = event.getClickedBlock();
@@ -80,66 +91,66 @@ public final class LobbyProtection implements Listener {
 
     @EventHandler
     public void onInteractEntity(PlayerInteractEntityEvent event) {
-        if (inLobby() && !building(event.getPlayer())) {
+        if (inLobby(event.getPlayer().getWorld()) && !building(event.getPlayer())) {
             event.setCancelled(true);
         }
     }
 
     @EventHandler
     public void onInventory(InventoryClickEvent event) {
-        if (inLobby() && event.getWhoClicked() instanceof Player player && !building(player)) {
+        if (inLobby(event.getWhoClicked().getWorld()) && event.getWhoClicked() instanceof Player player && !building(player)) {
             event.setCancelled(true);
         }
     }
 
     @EventHandler
     public void onSwap(PlayerSwapHandItemsEvent event) {
-        if (inLobby() && !building(event.getPlayer())) {
+        if (inLobby(event.getPlayer().getWorld()) && !building(event.getPlayer())) {
             event.setCancelled(true);
         }
     }
 
     @EventHandler
     public void onPickup(EntityPickupItemEvent event) {
-        if (inLobby() && event.getEntity() instanceof Player player && !building(player)) {
+        if (inLobby(event.getEntity().getWorld()) && event.getEntity() instanceof Player player && !building(player)) {
             event.setCancelled(true);
         }
     }
 
     @EventHandler
     public void onDrop(PlayerDropItemEvent event) {
-        if (inLobby() && !building(event.getPlayer())) {
+        if (inLobby(event.getPlayer().getWorld()) && !building(event.getPlayer())) {
             event.setCancelled(true);
         }
     }
 
     @EventHandler(priority = EventPriority.LOW)
     public void onBreak(BlockBreakEvent event) {
-        if (inLobby() && !building(event.getPlayer())) {
+        if (inLobby(event.getBlock().getWorld()) && !building(event.getPlayer())) {
             event.setCancelled(true);
         }
     }
 
     @EventHandler(priority = EventPriority.LOW)
     public void onPlace(BlockPlaceEvent event) {
-        if (inLobby() && !building(event.getPlayer())) {
+        if (inLobby(event.getBlock().getWorld()) && !building(event.getPlayer())) {
             event.setCancelled(true);
         }
     }
 
     @EventHandler
     public void onEntityExplode(EntityExplodeEvent event) {
-        cancelInLobby(event);
+        cancelInLobby(event, event.getEntity().getWorld());
     }
 
     @EventHandler
     public void onBlockExplode(BlockExplodeEvent event) {
-        cancelInLobby(event);
+        cancelInLobby(event, event.getBlock().getWorld());
     }
 
     @EventHandler
     public void onFall(PlayerMoveEvent event) {
-        if (inLobby() && event.getTo().getY() < FALL_HEIGHT) {
+        if (inLobby(event.getTo().getWorld()) && event.getTo().getY() < FALL_HEIGHT) {
             spawn.get().ifPresent(lobby -> {
                 event.getPlayer().teleport(lobby);
                 lobby.getWorld().playEffect(lobby, Effect.ENDER_SIGNAL, 0);
@@ -147,14 +158,14 @@ public final class LobbyProtection implements Listener {
         }
     }
 
-    private void cancelInLobby(Cancellable event) {
-        if (inLobby()) {
+    private void cancelInLobby(Cancellable event, World affected) {
+        if (inLobby(affected)) {
             event.setCancelled(true);
         }
     }
 
-    private boolean inLobby() {
-        return inLobby.getAsBoolean();
+    private boolean inLobby(World affected) {
+        return inLobby.getAsBoolean() && world.map(affected::equals).orElse(true);
     }
 
     private boolean building(Player player) {

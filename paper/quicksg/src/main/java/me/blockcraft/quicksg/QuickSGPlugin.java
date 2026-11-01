@@ -66,7 +66,7 @@ public final class QuickSGPlugin extends JavaPlugin {
                 new ConnectionListener(game),
                 new DeathListener(game),
                 new ProtectionListener(game, api.buildMode()),
-                new LobbyProtection(game::isLobby, api.buildMode(), () -> locations.get(LocationKey.LOBBY)),
+                new LobbyProtection(game::isLobby, api.buildMode(), game::lobbySpawn),
                 new ArenaProtection(game::frozen),
                 game.lobbyHotbar(),
                 new ItemListener(game, messages, lootChests, new CompassTracker(messages, config.tracker()))
@@ -79,7 +79,8 @@ public final class QuickSGPlugin extends JavaPlugin {
                     .then(DebugCommands.wins(this, stats))
                     .build());
             commands.register(StatsCommand.create(this, stats, messages));
-            commands.register(SetupCommand.locations(messages, List.of(LocationKey.values()),
+            commands.register(SetupCommand.locations(messages, List.of(LocationKey.values()).stream()
+                            .filter(key -> api.waitingLobby().isEmpty() || key != LocationKey.LOBBY && key != LocationKey.LOBBY_CENTER).toList(),
                     key -> key.key().toLowerCase(Locale.ROOT), locations::set));
             commands.register(TopCommand.create(topList));
         });

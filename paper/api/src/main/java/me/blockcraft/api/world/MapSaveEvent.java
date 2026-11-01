@@ -14,6 +14,21 @@ public final class MapSaveEvent extends Event {
 
     private static final HandlerList HANDLERS = new HandlerList();
     private final List<Runnable> restorations = new ArrayList<>();
+    private RuntimeException failure;
+
+    public void abort(RuntimeException failure) {
+        if (this.failure == null) {
+            this.failure = failure;
+        } else {
+            this.failure.addSuppressed(failure);
+        }
+    }
+
+    void checkReady() {
+        if (failure != null) {
+            throw failure;
+        }
+    }
 
     /** Restores temporary state after the save attempt, including when flushing or publishing fails. */
     public void afterSave(Runnable restore) {

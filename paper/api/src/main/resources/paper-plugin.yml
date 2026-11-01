@@ -7,6 +7,10 @@ author: Aquitano
 description: Shared database connection and coins for the Blockcraft plugins
 dependencies:
   server:
+    Nexo:
+      load: BEFORE
+      required: false
+      join-classpath: true
     LuckPerms:
       load: BEFORE
       required: true

@@ -46,7 +46,7 @@ public final class EmeraldRushPlugin extends JavaPlugin {
         var gameConfig = GameConfig.from(getConfig());
         var config = RushConfig.from(getConfig());
         var api = BlockcraftApi.get();
-        var spawns = Spawns.load(api.map().file(this, "locations.yml"));
+        var spawns = Spawns.load(api.map().file(this, "locations.yml"), api.waitingLobby());
         var messages = Messages.load(getDataPath(), () -> getResource("messages.yml"), api.tags());
 
         var stats = new StatsRepository(api.database(), "em_stats");
@@ -54,6 +54,7 @@ public final class EmeraldRushPlugin extends JavaPlugin {
         api.unlocks().importLegacyTable("em_kits", Perk.LEGACY_COLUMNS);
 
         var topList = new TopList(this, stats, messages);
+
         var statsMenus = StatsMenus.of(messages, stats, topList, gameConfig.globalStatsHead());
         game = new Game(this, gameConfig, config, spawns, messages, stats, statsMenus, api.unlocks(), api.map());
         api.presence().maxPlayers(config.maxPlayers());
@@ -71,7 +72,8 @@ public final class EmeraldRushPlugin extends JavaPlugin {
             var commands = new CommandRegistry(event.registrar(), messages);
             commands.register(StartCommand.of(game.lobbyCountdown()).build());
             commands.register(StatsCommand.create(this, stats, messages));
-            commands.register(SetupCommand.locations(messages, List.of(SpawnPoint.values()), SpawnPoint::key, spawns::set));
+            commands.register(SetupCommand.locations(messages, List.of(SpawnPoint.values()).stream()
+                    .filter(point -> api.waitingLobby().isEmpty() || point != SpawnPoint.LOBBY).toList(), SpawnPoint::key, spawns::set));
             commands.register(TopCommand.create(topList));
             commands.register(ChestCommand.create(game, game.menus(), messages));
             commands.register(RushCommand.create(game, game.menus(), messages));

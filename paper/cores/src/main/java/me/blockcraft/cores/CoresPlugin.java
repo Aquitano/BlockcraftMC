@@ -2,6 +2,7 @@ package me.blockcraft.cores;
 
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.world.WaitingLobby;
 import me.blockcraft.api.command.CommandRegistry;
 import me.blockcraft.api.game.ArenaProtection;
 import me.blockcraft.api.game.GameConfig;
@@ -48,8 +49,8 @@ public final class CoresPlugin extends JavaPlugin {
         var world = Worlds.createArena(new NamespacedKey("cores", "himmelsfeste"));
         // Hunger and natural regeneration are part of the fight; no mob spawns anyway.
         world.setDifficulty(Difficulty.NORMAL);
-        var map = SkyMap.build(world, new LootChests(config.chests()));
-        world.setSpawnLocation(map.lobbySpawn());
+        var map = SkyMap.build(world, new LootChests(config.chests()), api.waitingLobby().map(WaitingLobby::spawn));
+        map.lobbySpawn().getWorld().setSpawnLocation(map.lobbySpawn());
         var topList = new TopList(this, stats, messages);
         var statsMenus = StatsMenus.of(messages, stats, topList, gameConfig.globalStatsHead());
         game = new CoresGame(this, gameConfig, config, messages, map, stats, statsMenus);

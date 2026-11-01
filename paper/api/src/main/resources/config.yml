@@ -23,6 +23,10 @@ network:
 world:
   template: ""
 
+# Shared source copied into each round server's own waiting dimension. BLOCKCRAFT_WAITING_TEMPLATE overrides it.
+waiting-lobby:
+  template: ""
+
 # Balance a player starts with on their first join anywhere on the network.
 starting-coins: 10
 
@@ -75,7 +79,7 @@ calendar:
     to: "10-31"
   winter:
     from: "12-01"
-    to: "12-31"
+    to: "02-29"
   founded: ""
   poll-seconds: 5
 

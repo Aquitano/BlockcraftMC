@@ -81,7 +81,25 @@ val downloadLuckPermsVelocity = downloadPlugin(
 // so a compose service lists the ones it runs, LuckPerms, ViaVersion and GrimAC among them), build/docker/velocity/<module>.jar
 // with LuckPerms, ranks.json.gz next to LuckPerms on both sides, Grim's punishments.yml in its data directory, the
 // resource pack in the proxy plugin's data directory, and build/docker/waker/waker.jar for the on-demand waker.
+val nexoJar = providers.gradleProperty("nexoJar").orElse(providers.environmentVariable("BLOCKCRAFT_NEXO_JAR"))
+    .filter { it.isNotBlank() }
+val stageNexo = tasks.register<Sync>("stageNexo") {
+    from("nexo") { into("Nexo") }
+    from("resourcepack/src/assets/blockcraft") {
+        include("models/item/props/**", "items/props/**", "textures/item/props/**")
+        into("Nexo/pack/assets/blockcraft")
+    }
+    if (nexoJar.isPresent) {
+        val source = file(nexoJar.get())
+        inputs.file(source)
+        doFirst { require(source.isFile) { "The licensed Nexo jar does not exist: $source" } }
+        from(source) { rename { "Nexo.jar" } }
+    }
+    into(layout.buildDirectory.dir("nexo"))
+}
+
 tasks.register<Sync>("stagePlugins") {
+    from(stageNexo) { into("paper/nexo") }
     from(stageRuntime)
     project(":paper").subprojects.forEach { plugin ->
         from(plugin.tasks.named("shadowJar")) {

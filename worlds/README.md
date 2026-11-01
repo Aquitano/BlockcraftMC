@@ -8,8 +8,8 @@ The `VanadeSicherung` backup supplies four overworld templates:
 - `emeraldrush` contains `TW1/world`, named Mine. The old plugin was called TradeWars.
 
 The backup does not identify the builders. Each `blockcraft/map.yml` leaves `builders` empty.
-BedWars reuses a copy of EmeraldRush's waiting island. Its arena templates live in
-`bedwars/blockcraft/BedWars/maps`.
+All ten round-based game modes use the waiting island in `waiting-lobby`. It comes from EmeraldRush's
+original island. BedWars' arena templates remain in `bedwars/blockcraft/BedWars/maps`.
 
 Zombies ships the original Außenposten arena as a saved Paper world template.
 Its map-owned configuration includes four purchasable wings, seven stations, and eight barricades.
@@ -116,12 +116,32 @@ distinct hiding places using the [setup commands](../EASTER_EGGS.md#configure-th
 `/lobbyset check` reports the remaining setup gaps. On the running preview, only the pond and missing Easter
 hiding places remain. Use `/map save` after recording positions.
 
-## BedWars waiting island
+## Shared waiting island
+
+`waiting-lobby/world` is the single editable source for BedWars, Duell, QuickSG, EmeraldRush, TTT,
+EnderGames, SkyWars, Cores, MLGRush, and Zombies. Each server copies it into its own
+`blockcraft:waiting_lobby` dimension at startup. Players stay in their game's queue, while the map and its
+decoration files are shared. KnockbackFFA has no waiting phase.
+The imported template omits Paper's copied world identity so it can load alongside the original BedWars world.
+
+Compose and the local Paper task set `BLOCKCRAFT_WAITING_TEMPLATE`. Without it, the games retain their
+existing waiting locations. `waiting-lobby/lobby.yml` holds the shared arrival and BedWars selector positions.
+Edit that file for shared positions. The old BedWars setup commands for its private lobby are hidden while
+the shared template is active.
+
+Run `/map save` as a player standing in the shared waiting world to publish that world back to the shared
+template. From the main game world or console, the command still publishes the game's map. Restart the other
+game servers to load the changed template. Publish from one builder server at a time.
+
+`waiting-lobby/furniture.yml` and `lobby/blockcraft/scenery/furniture.yml` place the Nexo models.
+Their adjacent `seasons.yml` files define real snow, ice, and seasonal block decorations. The original blocks
+return before map publication and when the occasion ends. See [furniture setup](../nexo/README.md) for the
+licensed plugin staging and model definitions.
 
 The waiting-world copy keeps 49 chunks around EmeraldRush's built island, with sections 2 through 7 and
 all 44 block entities. Unrelated ground below the island and its two horses are excluded. New terrain generates
 as void. Both root and Paper dimension spawn metadata point to `(-194, 47, -318)`.
-`bedwars/blockcraft/BedWars/lobby.yml` places the arrival, CPS tester, four team selectors, and two member displays
+`waiting-lobby/lobby.yml` places the arrival, CPS tester, four team selectors, and two member displays
 per team. The selectors occupy four existing alcoves beside the interior path, facing that path.
 All thirteen NPC positions have natural support and four blocks of clearance. Walking routes from spawn
 reach every selector's front at Y=47. The CPS tester stands at `(-183.5, 47, -303.5)`, off the arrival path.

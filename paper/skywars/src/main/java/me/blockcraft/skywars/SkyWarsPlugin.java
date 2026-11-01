@@ -2,6 +2,7 @@ package me.blockcraft.skywars;
 
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.world.WaitingLobby;
 import me.blockcraft.api.command.CommandRegistry;
 import me.blockcraft.api.game.ArenaProtection;
 import me.blockcraft.api.game.ForceMapCommand;
@@ -48,16 +49,18 @@ public final class SkyWarsPlugin extends JavaPlugin {
         // One round per start: both worlds begin empty, so nothing of the last round or the last map is left over.
         var lobbyKey = new NamespacedKey("skywars", "lobby");
         var arenaKey = new NamespacedKey("skywars", "inseln");
-        Worlds.discard(lobbyKey);
         Worlds.discard(arenaKey);
-        var lobbyWorld = Worlds.createArena(lobbyKey);
-        var lobbySpawn = ArenaBuilder.lobby(lobbyWorld);
-        lobbyWorld.setSpawnLocation(lobbySpawn);
+        var lobbySpawn = api.waitingLobby().map(WaitingLobby::spawn).orElseGet(() -> {
+            Worlds.discard(lobbyKey);
+            return ArenaBuilder.lobby(Worlds.createArena(lobbyKey));
+        });
+        lobbySpawn.getWorld().setSpawnLocation(lobbySpawn);
         var arena = Worlds.createArena(arenaKey);
         // Hunger and natural regeneration are part of the fight; no mob spawns anyway.
         arena.setDifficulty(Difficulty.NORMAL);
 
         var topList = new TopList(this, stats, messages);
+
         var statsMenus = StatsMenus.of(messages, stats, topList, gameConfig.globalStatsHead());
         game = new SkyWarsGame(this, gameConfig, config, messages, arena, lobbySpawn, stats, statsMenus);
         api.presence().maxPlayers(config.maxPlayers());

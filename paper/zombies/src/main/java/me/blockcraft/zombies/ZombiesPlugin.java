@@ -76,7 +76,7 @@ public final class ZombiesPlugin extends JavaPlugin {
                 StatsMenus.of(messages, stats, top, gameConfig.globalStatsHead()));
         api.presence().maxPlayers(config.maxPlayers());
         List.of(new GameListener(this, game), new AbilityListener(game), game.lobbyHotbar(), new ArenaProtection(() -> false),
-                new LobbyProtection(() -> !game.running(), api.buildMode(), () -> java.util.Optional.of(arena.point("lobby"))))
+                new LobbyProtection(() -> !game.running(), api.buildMode(), () -> java.util.Optional.of(game.lobbySpawn())))
                 .forEach(listener -> getServer().getPluginManager().registerEvents(listener, this));
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             var commands = new CommandRegistry(event.registrar(), messages);
@@ -88,6 +88,9 @@ public final class ZombiesPlugin extends JavaPlugin {
                 return Command.SINGLE_SUCCESS;
             });
             for (String point : List.of("lobby", "spawn", "spectator")) {
+                if (point.equals("lobby") && api.waitingLobby().isPresent()) {
+                    continue;
+                }
                 setup.then(Commands.literal(point).executes(context -> {
                     var player = context.getSource().getPlayerOrThrow();
                     if (!game.isLobby() || !player.getWorld().equals(arena.world())) {

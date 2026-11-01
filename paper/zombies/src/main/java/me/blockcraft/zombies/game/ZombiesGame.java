@@ -1,6 +1,7 @@
 package me.blockcraft.zombies.game;
 
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.world.WaitingLobby;
 import me.blockcraft.api.game.Arena;
 import me.blockcraft.api.game.GameConfig;
 import me.blockcraft.api.game.GamePhase;
@@ -130,6 +131,10 @@ public final class ZombiesGame {
     public ZombiesConfig config() { return config; }
     public Messages messages() { return messages; }
     public ArenaMap arena() { return arena; }
+    public Location lobbySpawn() {
+        return BlockcraftApi.get().waitingLobby().map(WaitingLobby::spawn)
+                .orElseGet(() -> arena.point("lobby"));
+    }
     public LobbyCountdown lobbyCountdown() { return lobbyCountdown; }
     public LobbyHotbar lobbyHotbar() { return lobbyHotbar; }
     public Weapons weapons() { return weapons; }
@@ -164,11 +169,11 @@ public final class ZombiesGame {
     public void join(Player player) {
         if (round.join(player)) {
             PlayerReset.reset(player, GameMode.ADVENTURE);
-            player.teleport(arena.point("lobby"));
+            player.teleport(lobbySpawn());
             lobbyHotbar.give(player);
             lobbyCountdown.start();
         } else {
-            player.teleport(arena.point("spectator"));
+            player.teleport(isLobby() ? lobbySpawn() : arena.point("spectator"));
         }
         refreshSidebar();
     }
@@ -210,6 +215,7 @@ public final class ZombiesGame {
             weapons.give(player, Weapon.PISTOL);
             protectedUntil.put(player.getUniqueId(), tick + config.protectionTicks());
         }
+        round.spectators().forEach(player -> player.teleport(arena.point("spectator")));
         racks.show(tick);
         broadcast("game.started", Formatter.number("players", teamSize), Formatter.number("waves", config.waves().total()));
         intermission();
@@ -701,7 +707,7 @@ public final class ZombiesGame {
             }
             removeCorpse(player.getUniqueId());
             PlayerReset.reset(player, GameMode.ADVENTURE);
-            player.teleport(arena.point("lobby"));
+            player.teleport(lobbySpawn());
             lobbyHotbar.giveHub(player);
         }
         broadcast(won ? "game.won" : "game.lost", Formatter.number("wave", wave));

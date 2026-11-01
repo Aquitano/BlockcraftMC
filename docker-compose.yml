@@ -114,7 +114,7 @@ services:
       <<: *paper-env
       BLOCKCRAFT_SERVER_GROUP: lobby
       BLOCKCRAFT_WORLD_TEMPLATE: /worlds/lobby
-      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/lobby,/blockcraft/statussigns,/blockcraft/reports,/blockcraft/viaversion,/blockcraft/grimac
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/lobby,/blockcraft/statussigns,/blockcraft/reports,/blockcraft/viaversion,/blockcraft/grimac,/blockcraft/nexo
     volumes:
       - ./build/docker/paper:/blockcraft:ro
       - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
@@ -128,10 +128,12 @@ services:
     environment:
       <<: *paper-env
       BLOCKCRAFT_SERVER_GROUP: duell
+      BLOCKCRAFT_WAITING_TEMPLATE: /waiting-lobby
       BLOCKCRAFT_WORLD_TEMPLATE: /worlds/duell
-      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/duell,/blockcraft/viaversion,/blockcraft/grimac
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/duell,/blockcraft/viaversion,/blockcraft/grimac,/blockcraft/nexo
     volumes:
       - ./build/docker/paper:/blockcraft:ro
+      - ./worlds/waiting-lobby:/waiting-lobby
       - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
       - ./worlds/duell:/worlds/duell
       - duell:/data
@@ -143,10 +145,12 @@ services:
     environment:
       <<: *paper-env
       BLOCKCRAFT_SERVER_GROUP: emeraldrush
+      BLOCKCRAFT_WAITING_TEMPLATE: /waiting-lobby
       BLOCKCRAFT_WORLD_TEMPLATE: /worlds/emeraldrush
-      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/emeraldrush,/blockcraft/viaversion,/blockcraft/grimac
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/emeraldrush,/blockcraft/viaversion,/blockcraft/grimac,/blockcraft/nexo
     volumes:
       - ./build/docker/paper:/blockcraft:ro
+      - ./worlds/waiting-lobby:/waiting-lobby
       - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
       - ./worlds/emeraldrush:/worlds/emeraldrush
       - emeraldrush:/data
@@ -158,10 +162,12 @@ services:
     environment:
       <<: *paper-env
       BLOCKCRAFT_SERVER_GROUP: bedwars
+      BLOCKCRAFT_WAITING_TEMPLATE: /waiting-lobby
       BLOCKCRAFT_WORLD_TEMPLATE: /worlds/bedwars
-      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/bedwars,/blockcraft/viaversion,/blockcraft/grimac
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/bedwars,/blockcraft/viaversion,/blockcraft/grimac,/blockcraft/nexo
     volumes:
       - ./build/docker/paper:/blockcraft:ro
+      - ./worlds/waiting-lobby:/waiting-lobby
       - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
       - ./worlds/bedwars:/worlds/bedwars
       - bedwars:/data
@@ -173,10 +179,12 @@ services:
     environment:
       <<: *paper-env
       BLOCKCRAFT_SERVER_GROUP: mlgrush
+      BLOCKCRAFT_WAITING_TEMPLATE: /waiting-lobby
       BLOCKCRAFT_WORLD_TEMPLATE: ""
-      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/mlgrush,/blockcraft/viaversion,/blockcraft/grimac
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/mlgrush,/blockcraft/viaversion,/blockcraft/grimac,/blockcraft/nexo
     volumes:
       - ./build/docker/paper:/blockcraft:ro
+      - ./worlds/waiting-lobby:/waiting-lobby
       - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
       - mlgrush:/data
       - replays:/replays
@@ -187,10 +195,12 @@ services:
     environment:
       <<: *paper-env
       BLOCKCRAFT_SERVER_GROUP: zombies
+      BLOCKCRAFT_WAITING_TEMPLATE: /waiting-lobby
       BLOCKCRAFT_WORLD_TEMPLATE: /worlds/zombies
-      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/zombies,/blockcraft/viaversion,/blockcraft/grimac
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/zombies,/blockcraft/viaversion,/blockcraft/grimac,/blockcraft/nexo
     volumes:
       - ./build/docker/paper:/blockcraft:ro
+      - ./worlds/waiting-lobby:/waiting-lobby
       - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
       - ./worlds/zombies:/worlds/zombies
       - zombies:/data
@@ -202,10 +212,12 @@ services:
     environment:
       <<: *paper-env
       BLOCKCRAFT_SERVER_GROUP: cores
+      BLOCKCRAFT_WAITING_TEMPLATE: /waiting-lobby
       BLOCKCRAFT_WORLD_TEMPLATE: ""
-      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/cores,/blockcraft/viaversion,/blockcraft/grimac
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/cores,/blockcraft/viaversion,/blockcraft/grimac,/blockcraft/nexo
     volumes:
       - ./build/docker/paper:/blockcraft:ro
+      - ./worlds/waiting-lobby:/waiting-lobby
       - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
       - cores:/data
       - replays:/replays
@@ -216,12 +228,14 @@ services:
     environment:
       <<: *paper-env
       BLOCKCRAFT_SERVER_GROUP: endergames
+      BLOCKCRAFT_WAITING_TEMPLATE: /waiting-lobby
       # The round's world is generated fresh at every start; its 400 chunks peaked at 1.2G in a test run.
       MEMORY: 1536M
       BLOCKCRAFT_WORLD_TEMPLATE: ""
-      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/endergames,/blockcraft/viaversion,/blockcraft/grimac
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/endergames,/blockcraft/viaversion,/blockcraft/grimac,/blockcraft/nexo
     volumes:
       - ./build/docker/paper:/blockcraft:ro
+      - ./worlds/waiting-lobby:/waiting-lobby
       - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
       - endergames:/data
       - replays:/replays
@@ -232,10 +246,12 @@ services:
     environment:
       <<: *paper-env
       BLOCKCRAFT_SERVER_GROUP: ttt
+      BLOCKCRAFT_WAITING_TEMPLATE: /waiting-lobby
       BLOCKCRAFT_WORLD_TEMPLATE: /worlds/ttt
-      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/ttt,/blockcraft/viaversion,/blockcraft/grimac
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/ttt,/blockcraft/viaversion,/blockcraft/grimac,/blockcraft/nexo
     volumes:
       - ./build/docker/paper:/blockcraft:ro
+      - ./worlds/waiting-lobby:/waiting-lobby
       - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
       - ./worlds/ttt:/worlds/ttt
       - ttt:/data
@@ -260,10 +276,12 @@ services:
     environment:
       <<: *paper-env
       BLOCKCRAFT_SERVER_GROUP: skywars
+      BLOCKCRAFT_WAITING_TEMPLATE: /waiting-lobby
       BLOCKCRAFT_WORLD_TEMPLATE: ""
-      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/skywars,/blockcraft/viaversion,/blockcraft/grimac
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/skywars,/blockcraft/viaversion,/blockcraft/grimac,/blockcraft/nexo
     volumes:
       - ./build/docker/paper:/blockcraft:ro
+      - ./worlds/waiting-lobby:/waiting-lobby
       - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
       - skywars:/data
       - replays:/replays
@@ -290,10 +308,12 @@ services:
     environment:
       <<: *paper-env
       BLOCKCRAFT_SERVER_GROUP: quicksg
+      BLOCKCRAFT_WAITING_TEMPLATE: /waiting-lobby
       BLOCKCRAFT_WORLD_TEMPLATE: /worlds/quicksg
-      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/quicksg,/blockcraft/viaversion,/blockcraft/grimac
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/quicksg,/blockcraft/viaversion,/blockcraft/grimac,/blockcraft/nexo
     volumes:
       - ./build/docker/paper:/blockcraft:ro
+      - ./worlds/waiting-lobby:/waiting-lobby
       - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
       - ./worlds/quicksg:/worlds/quicksg
       - quicksg:/data

@@ -1,0 +1,123 @@
+{
+  "ambientocclusion": true,
+  "textures": {
+    "particle": "blockcraft:item/props/timber",
+    "glass": "blockcraft:item/props/glass",
+    "snow": "blockcraft:item/props/snow"
+  },
+  "display": {
+    "gui": {"rotation": [25, 225, 0], "translation": [0, -2, 0], "scale": [0.4, 0.4, 0.4]},
+    "ground": {"translation": [0, 3, 0], "scale": [0.25, 0.25, 0.25]},
+    "fixed": {"translation": [0, 0, 0], "scale": [1, 1, 1]}
+  },
+  "elements": [
+    {
+      "from": [0, 13, 7],
+      "to": [16, 15, 10],
+      "faces": {
+        "north": {"uv": [0, 0, 16, 2], "texture": "#snow"},
+        "south": {"uv": [0, 0, 16, 2], "texture": "#snow"},
+        "east": {"uv": [0, 0, 3, 2], "texture": "#snow"},
+        "west": {"uv": [0, 0, 3, 2], "texture": "#snow"},
+        "up": {"uv": [0, 0, 16, 3], "texture": "#snow"},
+        "down": {"uv": [0, 0, 16, 3], "texture": "#snow"}
+      }
+    },
+    {
+      "from": [1, 7, 7],
+      "to": [3, 13, 9],
+      "faces": {
+        "north": {"uv": [0, 0, 2, 6], "texture": "#glass"},
+        "south": {"uv": [0, 0, 2, 6], "texture": "#glass"},
+        "east": {"uv": [0, 0, 2, 6], "texture": "#glass"},
+        "west": {"uv": [0, 0, 2, 6], "texture": "#glass"},
+        "up": {"uv": [0, 0, 2, 2], "texture": "#glass"},
+        "down": {"uv": [0, 0, 2, 2], "texture": "#glass"}
+      }
+    },
+    {
+      "from": [1.5, 3, 7.5],
+      "to": [2.5, 7, 8.5],
+      "faces": {
+        "north": {"uv": [0, 0, 1, 4], "texture": "#snow"},
+        "south": {"uv": [0, 0, 1, 4], "texture": "#snow"},
+        "east": {"uv": [0, 0, 1, 4], "texture": "#snow"},
+        "west": {"uv": [0, 0, 1, 4], "texture": "#snow"},
+        "up": {"uv": [0, 0, 1, 1], "texture": "#snow"},
+        "down": {"uv": [0, 0, 1, 1], "texture": "#snow"}
+      }
+    },
+    {
+      "from": [5, 10, 7],
+      "to": [7, 13, 9],
+      "faces": {
+        "north": {"uv": [0, 0, 2, 3], "texture": "#glass"},
+        "south": {"uv": [0, 0, 2, 3], "texture": "#glass"},
+        "east": {"uv": [0, 0, 2, 3], "texture": "#glass"},
+        "west": {"uv": [0, 0, 2, 3], "texture": "#glass"},
+        "up": {"uv": [0, 0, 2, 2], "texture": "#glass"},
+        "down": {"uv": [0, 0, 2, 2], "texture": "#glass"}
+      }
+    },
+    {
+      "from": [5.5, 6, 7.5],
+      "to": [6.5, 10, 8.5],
+      "faces": {
+        "north": {"uv": [0, 0, 1, 4], "texture": "#snow"},
+        "south": {"uv": [0, 0, 1, 4], "texture": "#snow"},
+        "east": {"uv": [0, 0, 1, 4], "texture": "#snow"},
+        "west": {"uv": [0, 0, 1, 4], "texture": "#snow"},
+        "up": {"uv": [0, 0, 1, 1], "texture": "#snow"},
+        "down": {"uv": [0, 0, 1, 1], "texture": "#snow"}
+      }
+    },
+    {
+      "from": [10, 7, 7],
+      "to": [12, 13, 9],
+      "faces": {
+        "north": {"uv": [0, 0, 2, 6], "texture": "#glass"},
+        "south": {"uv": [0, 0, 2, 6], "texture": "#glass"},
+        "east": {"uv": [0, 0, 2, 6], "texture": "#glass"},
+        "west": {"uv": [0, 0, 2, 6], "texture": "#glass"},
+        "up": {"uv": [0, 0, 2, 2], "texture": "#glass"},
+        "down": {"uv": [0, 0, 2, 2], "texture": "#glass"}
+      }
+    },
+    {
+      "from": [10.5, 3, 7.5],
+      "to": [11.5, 7, 8.5],
+      "faces": {
+        "north": {"uv": [0, 0, 1, 4], "texture": "#snow"},
+        "south": {"uv": [0, 0, 1, 4], "texture": "#snow"},
+        "east": {"uv": [0, 0, 1, 4], "texture": "#snow"},
+        "west": {"uv": [0, 0, 1, 4], "texture": "#snow"},
+        "up": {"uv": [0, 0, 1, 1], "texture": "#snow"},
+        "down": {"uv": [0, 0, 1, 1], "texture": "#snow"}
+      }
+    },
+    {
+      "from": [14, 10, 7],
+      "to": [16, 13, 9],
+      "faces": {
+        "north": {"uv": [0, 0, 2, 3], "texture": "#glass"},
+        "south": {"uv": [0, 0, 2, 3], "texture": "#glass"},
+        "east": {"uv": [0, 0, 2, 3], "texture": "#glass"},
+        "west": {"uv": [0, 0, 2, 3], "texture": "#glass"},
+        "up": {"uv": [0, 0, 2, 2], "texture": "#glass"},
+        "down": {"uv": [0, 0, 2, 2], "texture": "#glass"}
+      }
+    },
+    {
+      "from": [14.5, 6, 7.5],
+      "to": [15.5, 10, 8.5],
+      "faces": {
+        "north": {"uv": [0, 0, 1, 4], "texture": "#snow"},
+        "south": {"uv": [0, 0, 1, 4], "texture": "#snow"},
+        "east": {"uv": [0, 0, 1, 4], "texture": "#snow"},
+        "west": {"uv": [0, 0, 1, 4], "texture": "#snow"},
+        "up": {"uv": [0, 0, 1, 1], "texture": "#snow"},
+        "down": {"uv": [0, 0, 1, 1], "texture": "#snow"}
+      }
+    }
+  ]
+}

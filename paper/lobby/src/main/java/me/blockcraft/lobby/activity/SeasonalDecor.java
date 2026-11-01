@@ -2,6 +2,7 @@ package me.blockcraft.lobby.activity;
 
 import io.papermc.paper.event.packet.PlayerChunkLoadEvent;
 import io.papermc.paper.math.Position;
+import me.blockcraft.api.season.Snowfall;
 import me.blockcraft.common.calendar.NetworkCalendar;
 import me.blockcraft.common.calendar.NetworkCalendar.Occasion;
 import me.blockcraft.lobby.config.SeasonTheme;
@@ -56,8 +57,9 @@ public final class SeasonalDecor implements Listener {
         var previous = Map.copyOf(decorated);
         decorated.clear();
         occasions = today;
-        active = themes.entrySet().stream().filter(theme -> today.contains(theme.getKey())).map(Map.Entry::getValue).toList();
-        snowfall.set(active.stream().mapToInt(SeasonTheme::snowfallRadius).max().orElse(0));
+        var current = themes.entrySet().stream().filter(theme -> today.contains(theme.getKey())).toList();
+        active = current.stream().filter(theme -> theme.getKey() != Occasion.WINTER).map(Map.Entry::getValue).toList();
+        snowfall.set(current.stream().map(Map.Entry::getValue).mapToInt(SeasonTheme::snowfallRadius).max().orElse(0));
         for (var player : Bukkit.getOnlinePlayers()) {
             for (var chunk : player.getSentChunks()) {
                 var changes = new HashMap<Position, BlockData>();

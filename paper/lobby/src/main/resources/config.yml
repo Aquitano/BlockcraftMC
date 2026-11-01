@@ -184,13 +184,6 @@ seasons:
         - {sound: ambient.soul_sand_valley.mood, volume: 0.7, pitch: 1.0}
         - {sound: block.wooden_door.close, volume: 0.4, pitch: 0.6}
   winter:
-    blocks:
-      short_grass: [snow]
-      fern: [snow]
-    cover:
-      on: []
-      blocks: [snow]
-      chance: 1.0
     snowfall-radius: 384
     particle:
       type: snowflake

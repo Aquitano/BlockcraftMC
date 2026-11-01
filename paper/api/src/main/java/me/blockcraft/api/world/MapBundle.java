@@ -86,6 +86,7 @@ public final class MapBundle {
         var event = new MapSaveEvent();
         try {
             Bukkit.getPluginManager().callEvent(event);
+            event.checkReady();
             Bukkit.getWorlds().forEach(dimension -> dimension.save(true));
             publishing.publish(root(world));
         } finally {

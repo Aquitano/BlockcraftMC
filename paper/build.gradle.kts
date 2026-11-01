@@ -9,6 +9,8 @@ val libs = the<VersionCatalogsExtension>().named("libs")
 // `-Pplugins=core,lobby` limits the plugin set (BlockcraftAPI is always included).
 val selectedPlugins = providers.gradleProperty("plugins").map { it.split(",").map(String::trim).toSet() }
 val localGame = providers.gradleProperty("game").orElse("lobby")
+val nexoJar = providers.gradleProperty("nexoJar").orElse(providers.environmentVariable("BLOCKCRAFT_NEXO_JAR"))
+    .filter { it.isNotBlank() }
 
 tasks.runServer {
     minecraftVersion(libs.findVersion("minecraft").get().requiredVersion)
@@ -19,7 +21,8 @@ tasks.runServer {
         environment("BLOCKCRAFT_SERVER_GROUP", localGame.get())
     }
     environment("BLOCKCRAFT_WORLD_TEMPLATE", rootProject.file("worlds/${localGame.get()}").absolutePath)
-    dependsOn(":packRanks")
+    environment("BLOCKCRAFT_WAITING_TEMPLATE", rootProject.file("worlds/waiting-lobby").absolutePath)
+    dependsOn(":packRanks", ":stageNexo")
     doFirst {
         copy {
             from(rootProject.file("dev/paper"))
@@ -29,6 +32,10 @@ tasks.runServer {
             from(rootProject.layout.buildDirectory.file("luckperms/ranks.json.gz"))
             into(runDirectory.dir("plugins/LuckPerms"))
         }
+        copy {
+            from(rootProject.layout.buildDirectory.dir("nexo/Nexo"))
+            into(runDirectory.dir("plugins/Nexo"))
+        }
     }
     pluginJars.from(provider {
         subprojects
@@ -36,4 +43,7 @@ tasks.runServer {
             .map { it.tasks.named("shadowJar") }
     })
     pluginJars.from(rootProject.tasks.named("downloadLuckPermsPaper"), rootProject.tasks.named("downloadViaVersion"))
+    if (nexoJar.isPresent) {
+        pluginJars.from(nexoJar.map { rootProject.file(it) })
+    }
 }

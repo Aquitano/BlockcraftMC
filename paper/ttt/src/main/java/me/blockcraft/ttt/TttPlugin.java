@@ -2,6 +2,7 @@ package me.blockcraft.ttt;
 
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.world.WaitingLobby;
 import me.blockcraft.api.command.CommandRegistry;
 import me.blockcraft.api.config.Locations;
 import me.blockcraft.api.game.ArenaProtection;
@@ -69,7 +70,8 @@ public final class TttPlugin extends JavaPlugin {
         var lobby = Bukkit.getWorlds().getFirst();
         Worlds.settle(lobby);
         var locations = Locations.load(api.map().file(this, "locations.yml"));
-        Supplier<Location> lobbySpawn = () -> locations.get(LOBBY).orElseGet(lobby::getSpawnLocation);
+        Supplier<Location> lobbySpawn = () -> api.waitingLobby().map(WaitingLobby::spawn)
+                .or(() -> locations.get(LOBBY)).orElseGet(lobby::getSpawnLocation);
         var vote = new MapVote(messages, choices(config), getLogger());
         var topList = new TopList(this, stats, messages);
         var statsMenus = StatsMenus.of(messages, stats, topList, gameConfig.globalStatsHead());
@@ -87,7 +89,9 @@ public final class TttPlugin extends JavaPlugin {
             var commands = new CommandRegistry(event.registrar(), messages);
             commands.register(StartCommand.of(game.countdown()).build());
             commands.register(ForceMapCommand.create(messages, vote::keys, () -> game.phase() == GamePhase.LOBBY, vote::force));
-            commands.register(SetupCommand.locations(messages, List.of(LOBBY), Function.identity(), locations::set));
+            if (api.waitingLobby().isEmpty()) {
+                commands.register(SetupCommand.locations(messages, List.of(LOBBY), Function.identity(), locations::set));
+            }
             commands.register(StatsCommand.create(this, stats, messages));
             commands.register(TopCommand.create(topList));
             commands.register(TraitorChatCommand.create(game, messages));

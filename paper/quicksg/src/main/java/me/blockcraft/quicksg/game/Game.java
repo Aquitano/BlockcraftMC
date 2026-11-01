@@ -1,6 +1,7 @@
 package me.blockcraft.quicksg.game;
 
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.world.WaitingLobby;
 import me.blockcraft.api.settings.KitPreferences;
 import me.blockcraft.common.settings.PlayerSetting;
 import me.blockcraft.api.config.Locations;
@@ -153,18 +154,25 @@ public final class Game {
     }
 
     public void applyLobbyWorldBorder() {
-        applyWorldBorder(LocationKey.LOBBY_CENTER, config.worldBorder().lobbyRadius());
+        if (BlockcraftApi.get().waitingLobby().isEmpty()) {
+            applyWorldBorder(LocationKey.LOBBY_CENTER, config.worldBorder().lobbyRadius());
+        }
+    }
+
+    public java.util.Optional<Location> lobbySpawn() {
+        return BlockcraftApi.get().waitingLobby().map(WaitingLobby::spawn)
+                .or(() -> locations.get(LocationKey.LOBBY));
     }
 
     public void join(Player player) {
         if (!round.join(player)) {
-            locations.get(LocationKey.SPECTATOR).ifPresent(player::teleport);
+            (isLobby() ? lobbySpawn() : locations.get(LocationKey.SPECTATOR)).ifPresent(player::teleport);
             refreshScoreboards();
             return;
         }
         kits.put(player.getUniqueId(), Kit.STARTER);
         PlayerReset.reset(player, GameMode.ADVENTURE);
-        locations.get(LocationKey.LOBBY).ifPresent(player::teleport);
+        lobbySpawn().ifPresent(player::teleport);
         lobbyHotbar.give(player);
         preferences.restore(player);
         refreshScoreboards();
@@ -212,7 +220,7 @@ public final class Game {
     /** The spectator state is applied after the respawn; touching health or game mode on a dead player breaks the respawn. */
     public void respawn(PlayerRespawnEvent event) {
         var player = event.getPlayer();
-        locations.get(LocationKey.SPECTATOR).ifPresent(event::setRespawnLocation);
+        (isLobby() ? lobbySpawn() : locations.get(LocationKey.SPECTATOR)).ifPresent(event::setRespawnLocation);
         if (isSpectator(player)) {
             Tasks.sync(plugin, () -> round.watch(player));
         }
@@ -251,6 +259,7 @@ public final class Game {
             kit(player).apply(player);
             config.combat().apply(player);
         }
+        locations.get(LocationKey.SPECTATOR).ifPresent(spawn -> round.spectators().forEach(player -> player.teleport(spawn)));
         refreshScoreboards();
         applyWorldBorder(LocationKey.GAME_CENTER, config.worldBorder().ingameRadius());
         frozen = true;

@@ -5,6 +5,7 @@ import me.blockcraft.common.duel.DuelRules;
 import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.duell.menu.ChallengeMenu;
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.world.WaitingLobby;
 import me.blockcraft.api.cosmetic.ChatTag;
 import me.blockcraft.api.cosmetic.ChatTagChoice;
 import me.blockcraft.api.game.Arena;
@@ -185,7 +186,9 @@ public final class Duel {
     public DuelVote votes() { return votes; }
     public boolean isParticipant(Player player) { return round.isPlaying(player); }
     public Stream<Player> opponentsOf(Player player) { return participants().filter(other -> !other.equals(player)); }
-    public Optional<Location> lobbySpawn() { return spawns.spawn(); }
+    public Optional<Location> lobbySpawn() {
+        return BlockcraftApi.get().waitingLobby().map(WaitingLobby::spawn).or(spawns::spawn);
+    }
     public DuelSeries.Format formatChoice(UUID player) { return votes.formatChoice(player); }
     public DuelSeries.Format selectedFormat() {
         if (challengeRules != null) return challengeRules.bestOf() == 3 ? DuelSeries.Format.TOUR : DuelSeries.Format.SINGLE;

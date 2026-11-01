@@ -266,7 +266,7 @@ It is empty by default because no founding date is assumed.
 |---|---|
 | Easter | From two days before Easter Sunday through seven days after, configured egg displays appear in the lobby. Discoveries persist per player and year. Finding all selected eggs grants `[OSTERHASE]`. The imported lobby has twenty hiding places, `egg-1` to `egg-20`, near its landmarks. |
 | Halloween | October 17 through 31. Glowing pumpkins sit at a yearly draw of the same hiding places as the Easter eggs; finding all of them grants `[KÜRBIS]`. Joining the lobby shows a hint with the phrase. Writing `Süßes oder Saures` in lobby chat gives either five coins or one of three tricks: a pumpkin hat for 300 seconds, a swarm of bats, or a ghost that darkens the screen. Each account can claim once per calendar day. The phrase and rewards are configurable under `activities`. A witch stirs a bubbling cauldron, bats circle the big tree and a ghost drifts round the central pond (see Seasonal scenes). |
-| Winter | December 1 through 31. The lobby's look and sound change (see below), and two teams of figures hold a snowball fight on the green east of the central pond (see Seasonal scenes). |
+| Winter | December 1 through the last day of February. Real snow covers the configured outdoor areas, and the main lobby pond freezes around an open fishing spot. Two teams of figures hold a snowball fight on the green east of the central pond (see Seasonal scenes). |
 | Advent | December 1 through 24. The profile contains a calendar with today's door, and joining the lobby names it. Each account can claim 25 coins once per day. Door 24 also unlocks the snow trail. |
 | Christmas | December 24 through 26. The Weihnachtsmann stands at `/lobbyset santa` and gives each account `activities.christmas-coins` (100) once per year, with a jingle. Without that spot he does not appear. Every ten minutes his sleigh, pulled by four reindeer and Rudolph, flies over a lobby player ringing Jingle Bells and drops four presents; each player catches one per flight for 15 coins. Lobby's `sleigh` section sets the timing, and staff send it on any day with `/schlitten`. |
 | New Year | On December 31, a boss bar counts down the last ten seconds. At midnight the lobby's configured firework positions launch fireworks. Joining during January grants that year's tag. |
@@ -285,13 +285,23 @@ on the date: the Advent door, the birthday's age and the January tag. While an o
 of the server list shows its seasonal line from `motd.season`; the order is the birthday, then New Year's Eve,
 Christmas, Advent, winter, Halloween, Easter and OG.
 
-Lobby's `seasons` section dresses the lobby for each active occasion. Every block swap and the cover on top happen
-only in the packets players receive, so the map and `/map save` never contain them. The defaults turn leaves pale,
-torches and lanterns into soul flames, glowstone into jack-o'-lanterns and flowers into wither roses for Halloween, with
-leaf litter on some grass; in winter every full block and leaf open to the sky gets a snow layer and the grass under
-it turns snowy. Each occasion can also let a particle fall around players and play an occasional ambient sound near
-them; both respect the effect and sound settings. A player who clicks a swapped block may see the real one again
-until the chunk reloads.
+The main lobby and shared waiting island use map-owned `seasons.yml` files for physical seasonal changes.
+Winter places real snow layers on exposed solid blocks and leaves within the configured areas. Every open source
+water surface in a `freeze` box becomes real ice and takes the lily pads on it; in the `frozen-pads` area (the main
+pond by the spawn) they show frozen inside the ice. While it is frozen,
+no water in a freeze box flows, so streams fed by frozen sources keep their shape; a builder's water there stays put
+until the season ends. The fishing opening, parkour, selectors, and furniture footprints stay clear.
+Advent and Christmas place small decorations from real blocks at authored positions. The service records each
+original block before changing it, restores it when the occasion ends, and removes temporary changes around
+`/map save`. A builder's later edit is preserved if it differs from the seasonal block.
+
+The adjacent `furniture.yml` files place the Nexo props and choose seasonal variants. Benches gain snow in
+winter, and baskets, garlands, presents, and the shared island's tree appear for their configured occasions.
+See [furniture setup](nexo/README.md).
+
+Lobby's `seasons` section still supplies cosmetic Halloween swaps: pale leaves, soul flames, jack-o'-lanterns,
+wither roses, and leaf litter. These changes appear only in player packets. Clicking a swapped block may show
+the real block until the chunk reloads. Seasonal particles and ambient sounds respect each player's settings.
 
 ## Seasonal scenes
 
@@ -322,9 +332,9 @@ throws instead of fists. The shared mechanics are `ThrowFight` in BlockcraftAPI.
 
 Winter also lets real snow fall: every chunk within the season's `snowfall-radius` of the spawn becomes a snowy
 biome as it loads, and players with effects on get downfall, which the client draws as snowflakes. Players who set
-their own weather keep it. The original biomes return when the season ends, for an unloaded chunk when it next
-loads, and around every `/map save`. Snow and leaf litter only lie on the highest block of a column when that block
-is solid, so tall plants keep both halves.
+their own weather keep it. The shared waiting island has the same snowfall within its configured radius.
+The original biomes return when the season ends and before every `/map save`, including unloaded chunks.
+Physical snow and cosmetic leaf litter only cover suitable surface blocks, so tall plants keep both halves.
 
 Temporary hats restore the previous helmet when they expire or the player leaves. Choosing another head while
 wearing a temporary hat keeps that new choice. Earned tags, the snow trail, and the birthday gadget are accessible

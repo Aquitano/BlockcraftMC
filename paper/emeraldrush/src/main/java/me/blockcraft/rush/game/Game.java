@@ -169,7 +169,7 @@ public final class Game {
 
     public void join(Player player) {
         if (!round.join(player)) {
-            spawns.teleport(player, SpawnPoint.SPECTATOR);
+            spawns.teleport(player, phase == GamePhase.LOBBY ? SpawnPoint.LOBBY : SpawnPoint.SPECTATOR);
             scoreboard.refreshAll();
             return;
         }
