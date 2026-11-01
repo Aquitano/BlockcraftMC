@@ -166,3 +166,9 @@ members:
   slot-1:
     name: Aquitano
     role: Owner
+  slot-2:
+    name: eventseen
+    role: Admin
+  slot-3:
+    name: noelzocker
+    role: Admin
