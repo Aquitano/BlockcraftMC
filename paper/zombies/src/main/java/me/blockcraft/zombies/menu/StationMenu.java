@@ -6,6 +6,7 @@ import me.blockcraft.zombies.arena.ArenaMap;
 import me.blockcraft.zombies.arena.StationKind;
 import me.blockcraft.zombies.game.Perk;
 import me.blockcraft.zombies.game.Survivor;
+import me.blockcraft.zombies.game.Weapon;
 import me.blockcraft.zombies.game.ZombiesGame;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
@@ -28,6 +29,7 @@ public final class StationMenu extends Menu {
     private final ZombiesGame game;
     private final ArenaMap.Station station;
     private final Map<Integer, Offer> offers = new LinkedHashMap<>();
+    private final Map<Integer, Weapon> guns = new LinkedHashMap<>();
 
     public StationMenu(ZombiesGame game, Player player, ArenaMap.Station station) {
         super(4, game.messages().get("shop.title", Placeholder.component("station", game.messages().get(station.nameKey()))));
@@ -39,6 +41,7 @@ public final class StationMenu extends Menu {
             case ARMORY -> {
                 int slot = 10;
                 for (var weapon : config.forSale()) {
+                    guns.put(slot, weapon);
                     add(slot, new Offer(game.messages().get("weapon." + weapon.key()), weapon.model().fallback(), config.guns().get(weapon).price(),
                             () -> !survivor.weapons().containsKey(weapon), () -> game.weapons().give(player, weapon)),
                             game.messages().get("shop.weapon-stats", Formatter.number("damage", config.guns().get(weapon).damage() * config.guns().get(weapon).pellets()),
@@ -100,7 +103,7 @@ public final class StationMenu extends Menu {
             lore.add(game.messages().get(offer.available().getAsBoolean() ? "shop.buy" : "shop.owned"));
         }
         if (station.kind() == StationKind.ARMORY || station.kind() == StationKind.MYSTERY) {
-            lore.addAll(game.messages().getLines("shop.weapon-hint"));
+            lore.addAll(game.messages().getLines(station.kind() == StationKind.ARMORY ? "shop.weapon-hint" : "shop.mystery-hint"));
         }
         set(slot, Items.of(offer.material()).name(offer.name()).lore(lore).hideAttributes().build());
     }
@@ -114,6 +117,16 @@ public final class StationMenu extends Menu {
     protected void onClick(Player player, int slot, ItemStack clicked, InventoryClickEvent event) {
         var offer = offers.get(slot);
         if (offer == null) {
+            return;
+        }
+        var gun = guns.get(slot);
+        var survivor = game.survivor(player);
+        if (gun != null && offer.available().getAsBoolean() && game.weapons().full(player) && survivor.gold() >= offer.price()) {
+            new ReplaceWeaponDialog(game, player, gun, replaced -> {
+                game.purchase(player, station, offer.price(), offer.available().getAsBoolean() && survivor.weapons().containsKey(replaced),
+                        () -> game.weapons().give(player, gun, replaced));
+                game.openStation(player, station);
+            }, () -> game.openStation(player, station)).open(player, () -> game.canUse(player, station));
             return;
         }
         if (!game.purchase(player, station, offer.price(), offer.available().getAsBoolean() && (!needsPower() || game.powered()), offer.grant())) {

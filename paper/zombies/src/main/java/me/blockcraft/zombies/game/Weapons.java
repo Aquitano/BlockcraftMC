@@ -6,6 +6,7 @@ import me.blockcraft.api.item.HotbarItem;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.zombies.config.ZombiesConfig;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
@@ -29,6 +30,7 @@ import java.util.concurrent.ThreadLocalRandom;
 public final class Weapons {
 
     private static final int FLAME_PARTICLES = 8;
+    private static final int MAX_WEAPONS = 2;
 
     private final ZombiesGame game;
     private final Flames flames;
@@ -43,15 +45,36 @@ public final class Weapons {
                 .filter(weapon -> game.survivor(player) != null && game.survivor(player).weapons().containsKey(weapon));
     }
 
+    /** Hands out the gun; a player with two guns loses the held one, or the newer one when holding neither. */
     public void give(Player player, Weapon weapon) {
-        var stats = game.config().guns().get(weapon);
         var survivor = game.survivor(player);
-        if (!survivor.weapons().containsKey(weapon) && survivor.weapons().size() == 2) {
-            var replacing = held(player).orElse(survivor.weapons().keySet().stream().skip(1).findFirst().orElseThrow());
-            survivor.weapons().remove(replacing);
+        give(player, weapon, held(player).orElse(survivor.weapons().keySet().stream().skip(1).findFirst().orElse(weapon)));
+    }
+
+    /** Hands out the gun in the slot of {@code replaced}, which only matters for a player who already has two. */
+    public void give(Player player, Weapon weapon, Weapon replaced) {
+        var stats = game.config().guns().get(weapon);
+        var owned = game.survivor(player).weapons();
+        var ammo = new Ammo(stats.clip(), stats.reserve());
+        if (!owned.containsKey(weapon) && owned.size() == MAX_WEAPONS && owned.containsKey(replaced)) {
+            var kept = new LinkedHashMap<>(owned);
+            owned.clear();
+            kept.forEach((gun, rounds) -> owned.put(gun == replaced ? weapon : gun, gun == replaced ? ammo : rounds));
+        } else {
+            owned.put(weapon, ammo);
         }
-        survivor.weapons().put(weapon, new Ammo(stats.clip(), stats.reserve()));
         render(player);
+    }
+
+    /** Whether another gun would have to take one of the player's place. */
+    public boolean full(Player player) {
+        return game.survivor(player).weapons().size() >= MAX_WEAPONS;
+    }
+
+    public Component displayName(Player player, Weapon weapon) {
+        var ammo = game.survivor(player).weapons().get(weapon);
+        return game.messages().get(ammo != null && ammo.upgraded() ? "weapon.upgraded" : "weapon.name",
+                Placeholder.component("weapon", game.messages().get("weapon." + weapon.key())));
     }
 
     public void render(Player player) {
@@ -63,8 +86,7 @@ public final class Weapons {
         for (var entry : survivor.weapons().entrySet()) {
             var weapon = entry.getKey();
             var ammo = entry.getValue();
-            var builder = weapon.model().item().name(game.messages().get(ammo.upgraded() ? "weapon.upgraded" : "weapon.name",
-                            Placeholder.component("weapon", game.messages().get("weapon." + weapon.key()))))
+            var builder = weapon.model().item().name(displayName(player, weapon))
                     .lore(game.messages().getLines("weapon.lore", Formatter.number("clip", ammo.clip()), Formatter.number("reserve", ammo.reserve())))
                     .hideAttributes().edit(meta -> meta.setUnbreakable(true));
             if (ammo.upgraded()) {
@@ -72,7 +94,7 @@ public final class Weapons {
             }
             player.getInventory().setItem(slot++, weapon.build(builder));
         }
-        if (slot < 2) {
+        if (slot < MAX_WEAPONS) {
             player.getInventory().setItem(1, null);
         }
         player.getInventory().setItem(2, Items.of(Material.IRON_SWORD).name(game.messages().get("weapon.knife"))
