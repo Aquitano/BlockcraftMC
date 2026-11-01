@@ -42,6 +42,7 @@ import org.joml.Vector3f;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -64,6 +65,7 @@ public final class SeasonalBlocks implements Listener, AutoCloseable {
     private final Map<SeasonalJournal.Chunk, List<Change>> changed = new HashMap<>();
     private final Map<Point, Change> protectedBlocks = new HashMap<>();
     private final Map<Point, BlockDisplay> frozenPads = new HashMap<>();
+    private final Set<Occasion> shown;
     private Set<Occasion> occasions = Set.of();
     private BukkitTask task;
     private boolean suspended = true;
@@ -74,6 +76,9 @@ public final class SeasonalBlocks implements Listener, AutoCloseable {
         this.world = world;
         this.calendar = calendar;
         this.layout = SeasonalLayout.load(settings);
+        var shown = EnumSet.of(Occasion.WINTER);
+        layout.decorations().forEach(decoration -> shown.addAll(decoration.during()));
+        this.shown = Set.copyOf(shown);
         this.journal = new SeasonalJournal(world.getWorldFolder().toPath().resolve("data/blockcraft-seasons"));
         // Before the snowfall starts its sweep, so a journal that cannot be restored leaves nothing running.
         restoreAll();
@@ -94,18 +99,23 @@ public final class SeasonalBlocks implements Listener, AutoCloseable {
         if (closed || suspended) {
             return;
         }
-        var today = calendar.occasions();
+        var today = EnumSet.noneOf(Occasion.class);
+        calendar.occasions().stream().filter(shown::contains).forEach(today::add);
         if (today.equals(occasions)) {
             return;
         }
         suspended = true;
         try {
             restoreAll();
+        } catch (RuntimeException failure) {
             occasions = Set.copyOf(today);
-            snowfall.ifPresent(snow -> snow.set(occasions.contains(Occasion.WINTER) ? layout.snowfallRadius() : 0));
+            plugin.getSLF4JLogger().error("Could not take back the seasonal blocks in {}; trying again at the next occasion", world.getName(), failure);
+            return;
         } finally {
             suspended = false;
         }
+        occasions = Set.copyOf(today);
+        snowfall.ifPresent(snow -> snow.set(occasions.contains(Occasion.WINTER) ? layout.snowfallRadius() : 0));
         applyLoaded();
     }
 
