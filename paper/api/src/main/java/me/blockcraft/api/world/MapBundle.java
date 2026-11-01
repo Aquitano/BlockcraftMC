@@ -79,19 +79,15 @@ public final class MapBundle {
     /**
      * Publishes the running world to the template; the caller checks that one is configured. Every world is flushed,
      * because the other dimensions live in the same folder, and the copy runs on the main thread, so no chunk unload
-     * writes a region file while it is taken. The template only changes once the copy is complete.
+     * writes a region file while it is taken. The template only changes once the copy is complete. Returns what could
+     * not be restored after a publish that went through.
      */
-    public void save() {
+    public List<RuntimeException> save() {
         var publishing = template.orElseThrow();
-        var event = new MapSaveEvent();
-        try {
-            Bukkit.getPluginManager().callEvent(event);
-            event.checkReady();
+        return MapSaveEvent.publish(world, () -> {
             Bukkit.getWorlds().forEach(dimension -> dimension.save(true));
             publishing.publish(root(world));
-        } finally {
-            event.complete();
-        }
+        });
     }
 
     /**

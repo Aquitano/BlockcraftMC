@@ -3,10 +3,16 @@ package me.blockcraft.api.world;
 import me.blockcraft.common.config.YamlFile;
 
 import java.io.IOException;
+import java.io.InterruptedIOException;
 import java.io.UncheckedIOException;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
+import java.nio.channels.OverlappingFileLockException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
+import java.time.Duration;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -19,7 +25,8 @@ import java.util.stream.Stream;
  * A map kept outside the server. The world folder is replaced by a copy of the template at every start, so
  * nothing a round or a builder left behind survives, and {@link #publish} copies the running world back once a
  * change is meant to stay. Player state and the session lock never travel with a map. Both directions replace the
- * contents of a directory rather than the directory, because either side may be a mount point.
+ * contents of a directory rather than the directory, because either side may be a mount point. Every server that
+ * mounts a template takes its lock file for a publish and for a copy, so none reads a template another is swapping.
  */
 public final class WorldTemplate {
 
@@ -29,7 +36,10 @@ public final class WorldTemplate {
     private static final String STAGING = ".staging";
     private static final String REPLACED = ".replaced";
     private static final String READY = ".publish-ready";
-    private static final Set<String> PUBLISHING = Set.of(STAGING, REPLACED, READY);
+    private static final String LOCK = ".template.lock";
+    private static final Set<String> PUBLISHING = Set.of(STAGING, REPLACED, READY, LOCK);
+    private static final Duration LOCK_WAIT = Duration.ofMinutes(2);
+    private static final Duration LOCK_POLL = Duration.ofMillis(100);
     /**
      * Only the vanilla dimensions belong to a map. Worlds a plugin loads from a pool ({@link TemplateDimensions}) or
      * builds at every start live beside them in the level and would otherwise be published along with it.
@@ -65,10 +75,12 @@ public final class WorldTemplate {
 
     public void restore(Path world) {
         try {
-            repair();
-            Files.createDirectories(world);
-            clear(world, name -> true);
-            copyContents(directory, world, name -> !PUBLISHING.contains(name));
+            exclusively(() -> {
+                repair();
+                Files.createDirectories(world);
+                clear(world, name -> true);
+                copyContents(directory, world, name -> !PUBLISHING.contains(name));
+            });
         } catch (IOException e) {
             throw new UncheckedIOException("Could not copy " + directory + " to " + world, e);
         }
@@ -84,18 +96,20 @@ public final class WorldTemplate {
         Path replaced = directory.resolve(REPLACED);
         try {
             Files.createDirectories(directory);
-            repair();
-            Files.createDirectories(staging);
-            Path vanilla = world.resolve(DIMENSIONS).resolve(VANILLA_DIMENSIONS);
-            if (Files.isDirectory(vanilla)) {
-                copyRecursively(vanilla, Files.createDirectories(staging.resolve(DIMENSIONS)).resolve(VANILLA_DIMENSIONS));
-            }
-            copyContents(world, staging, name -> !TRANSIENT.contains(name) && !PUBLISHING.contains(name) && !name.equals(DIMENSIONS));
-            Files.createDirectories(replaced);
-            moveContents(directory, replaced, name -> !PUBLISHING.contains(name));
-            Files.createFile(directory.resolve(READY));
-            moveContents(staging, directory, name -> true);
-            clearPublishing();
+            exclusively(() -> {
+                repair();
+                Files.createDirectories(staging);
+                Path vanilla = world.resolve(DIMENSIONS).resolve(VANILLA_DIMENSIONS);
+                if (Files.isDirectory(vanilla)) {
+                    copyRecursively(vanilla, Files.createDirectories(staging.resolve(DIMENSIONS)).resolve(VANILLA_DIMENSIONS));
+                }
+                copyContents(world, staging, name -> !TRANSIENT.contains(name) && !PUBLISHING.contains(name) && !name.equals(DIMENSIONS));
+                Files.createDirectories(replaced);
+                moveContents(directory, replaced, name -> !PUBLISHING.contains(name));
+                Files.createFile(directory.resolve(READY));
+                moveContents(staging, directory, name -> true);
+                clearPublishing();
+            });
         } catch (IOException e) {
             throw new UncheckedIOException("Could not copy " + world + " to " + directory, e);
         }
@@ -107,10 +121,52 @@ public final class WorldTemplate {
      * that already moved out go back. Leftovers of a copy that never got to the swap are dropped.
      */
     public void recover() {
+        if (!Files.isDirectory(directory)) {
+            return;
+        }
         try {
-            repair();
+            exclusively(this::repair);
         } catch (IOException e) {
             throw new UncheckedIOException("Could not repair " + directory, e);
+        }
+    }
+
+    private interface FileWork {
+        void run() throws IOException;
+    }
+
+    private void exclusively(FileWork work) throws IOException {
+        try (var channel = FileChannel.open(directory.resolve(LOCK), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+             var _ = lock(channel)) {
+            work.run();
+        }
+    }
+
+    private FileLock lock(FileChannel channel) throws IOException {
+        long deadline = System.nanoTime() + LOCK_WAIT.toNanos();
+        while (true) {
+            var lock = tryLock(channel);
+            if (lock.isPresent()) {
+                return lock.orElseThrow();
+            }
+            if (System.nanoTime() - deadline > 0) {
+                throw new IOException("Another server held " + directory + " for longer than " + LOCK_WAIT);
+            }
+            try {
+                Thread.sleep(LOCK_POLL);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new InterruptedIOException("Interrupted while waiting for " + directory);
+            }
+        }
+    }
+
+    /** Empty while another process or another thread of this one holds the lock. */
+    private static Optional<FileLock> tryLock(FileChannel channel) throws IOException {
+        try {
+            return Optional.ofNullable(channel.tryLock());
+        } catch (OverlappingFileLockException _) {
+            return Optional.empty();
         }
     }
 

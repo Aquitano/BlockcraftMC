@@ -5,8 +5,12 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
+import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -169,6 +173,26 @@ public class WorldTemplateTest {
         assertEquals("entities", Files.readString(restored.resolve("entities/r.0.0.mca")));
         assertFalse(Files.exists(restored.resolve("level.dat")));
         assertFalse(Files.exists(directory.resolve(".publish-ready")));
+    }
+
+    @Test
+    public void aPublishWaitsUntilNoOtherServerHoldsTheTemplate() throws Exception {
+        Path directory = folder.newFolder("template").toPath();
+        write(directory, "level.dat", "old");
+        Path world = folder.newFolder("world").toPath();
+        write(world, "level.dat", "new");
+        var publish = new FutureTask<Void>(() -> WorldTemplate.at(directory).publish(world), null);
+
+        try (var channel = FileChannel.open(directory.resolve(".template.lock"), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+             var _ = channel.lock()) {
+            Thread.ofVirtual().start(publish);
+            Thread.sleep(300);
+            assertFalse(publish.isDone());
+            assertEquals("old", Files.readString(directory.resolve("level.dat")));
+        }
+        publish.get(10, TimeUnit.SECONDS);
+
+        assertEquals("new", Files.readString(directory.resolve("level.dat")));
     }
 
     private static void write(Path root, String file, String content) throws IOException {

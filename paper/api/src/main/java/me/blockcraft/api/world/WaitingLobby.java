@@ -6,6 +6,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -79,14 +80,8 @@ public final class WaitingLobby {
         return Optional.of(Point.parse(value.getValues(false)).in(world));
     }
 
-    public void save() {
-        var event = new MapSaveEvent();
-        try {
-            org.bukkit.Bukkit.getPluginManager().callEvent(event);
-            event.checkReady();
-            dimensions.publish(world, directory.resolve("world"));
-        } finally {
-            event.complete();
-        }
+    /** Returns what could not be restored after a publish that went through. */
+    public List<RuntimeException> save() {
+        return MapSaveEvent.publish(world, () -> dimensions.publish(world, directory.resolve("world")));
     }
 }

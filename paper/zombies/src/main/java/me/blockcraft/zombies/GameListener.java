@@ -321,6 +321,9 @@ public final class GameListener implements Listener {
 
     @EventHandler
     public void onMapSave(MapSaveEvent event) {
+        if (!event.world().equals(game.arena().world())) {
+            return;
+        }
         var current = game.arena().snapshot();
         game.arena().restoreBlocks();
         event.afterSave(() -> current.forEach(state -> state.update(true, false)));

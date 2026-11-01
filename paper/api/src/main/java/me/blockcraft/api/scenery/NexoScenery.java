@@ -16,6 +16,7 @@ import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.block.BlockFace;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.Display;
@@ -40,6 +41,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 public final class NexoScenery implements Listener, AutoCloseable {
@@ -102,7 +104,10 @@ public final class NexoScenery implements Listener, AutoCloseable {
             if (current != null && current.entity().isValid() && desired.filter(current.item()::equals).isPresent()) {
                 continue;
             }
-            remove(placement.id());
+            if (!remove(placement.id())) {
+                warn(placement, "Nexo refused to remove the furniture placed before");
+                continue;
+            }
             if (desired.isEmpty() || !NexoFurniture.isFurniture(desired.orElseThrow())) {
                 continue;
             }
@@ -113,13 +118,18 @@ public final class NexoScenery implements Listener, AutoCloseable {
                 warn(placement, "occupied footprint");
                 continue;
             }
+            var fallback = fallback(placement, item);
+            if (fallback.isEmpty()) {
+                continue;
+            }
             var entity = NexoFurniture.place(item, at, placement.yaw(), BlockFace.UP);
             if (entity == null) {
+                fallback.orElseThrow().remove();
                 warn(placement, "Nexo refused the placement");
                 continue;
             }
             entity.getPersistentDataContainer().set(owner, PersistentDataType.STRING, placement.id());
-            placed.put(placement.id(), new Placed(item, entity, fallback(placement, item)));
+            placed.put(placement.id(), new Placed(item, entity, fallback.orElseThrow()));
             added = true;
         }
         if (added) {
@@ -127,27 +137,37 @@ public final class NexoScenery implements Listener, AutoCloseable {
         }
     }
 
-    private Display fallback(Placement placement, String item) {
+    private Optional<Display> fallback(Placement placement, String item) {
         var at = location(placement).getBlock().getLocation();
-        Display display;
         if (placement.fallbackBlock().isPresent()) {
-            display = world.spawn(at, BlockDisplay.class, block -> {
-                block.setBlock(Bukkit.createBlockData(placement.fallbackBlock().orElseThrow()));
+            BlockData data;
+            try {
+                data = Bukkit.createBlockData(placement.fallbackBlock().orElseThrow());
+            } catch (IllegalArgumentException invalid) {
+                warn(placement, "invalid fallback-block " + placement.fallbackBlock().orElseThrow());
+                return Optional.empty();
+            }
+            return Optional.of(world.spawn(at, BlockDisplay.class, block -> {
+                block.setBlock(data);
                 block.setTransformation(new Transformation(new Vector3f(), new Quaternionf(),
                         new Vector3f(1, placement.fallbackHeight(), 1), new Quaternionf()));
                 block.setVisibleByDefault(false);
                 block.setPersistent(false);
-            });
-        } else {
-            display = world.spawn(at.add(0.5, 0.5, 0.5), ItemDisplay.class, fallback -> {
-                fallback.setItemStack(new ItemStack(NexoItems.itemFromId(item).build().getType()));
-                fallback.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.FIXED);
-                fallback.setRotation(placement.yaw(), 0);
-                fallback.setVisibleByDefault(false);
-                fallback.setPersistent(false);
-            });
+            }));
         }
-        return display;
+        var builder = NexoItems.itemFromId(item);
+        if (builder == null) {
+            warn(placement, "unknown Nexo item " + item);
+            return Optional.empty();
+        }
+        var material = builder.build().getType();
+        return Optional.of(world.spawn(at.add(0.5, 0.5, 0.5), ItemDisplay.class, fallback -> {
+            fallback.setItemStack(new ItemStack(material));
+            fallback.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.FIXED);
+            fallback.setRotation(placement.yaw(), 0);
+            fallback.setVisibleByDefault(false);
+            fallback.setPersistent(false);
+        }));
     }
 
     private void show(Player player) {
@@ -207,20 +227,24 @@ public final class NexoScenery implements Listener, AutoCloseable {
         }
     }
 
-    private void remove(String id) {
+    private boolean remove(String id) {
         var previous = placed.get(id);
         if (previous == null) {
-            return;
+            return true;
         }
         if (previous.entity().isValid() && !NexoFurniture.remove(previous.entity())) {
-            throw new IllegalStateException("Could not remove furniture " + id);
+            return false;
         }
         previous.fallback().remove();
         placed.remove(id);
+        return true;
     }
 
     private void clear() {
-        List.copyOf(placed.keySet()).forEach(this::remove);
+        var stuck = List.copyOf(placed.keySet()).stream().filter(id -> !remove(id)).toList();
+        if (!stuck.isEmpty()) {
+            throw new IllegalStateException("Could not remove furniture " + String.join(", ", stuck) + " in " + world.getName());
+        }
     }
 
     @EventHandler
@@ -243,6 +267,9 @@ public final class NexoScenery implements Listener, AutoCloseable {
 
     @EventHandler
     public void onSave(MapSaveEvent event) {
+        if (!event.world().equals(world)) {
+            return;
+        }
         saving = true;
         event.afterSave(() -> plugin.getServer().getScheduler().runTask(plugin, () -> {
             saving = false;

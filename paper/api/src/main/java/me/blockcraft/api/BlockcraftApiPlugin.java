@@ -84,6 +84,7 @@ import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 public final class BlockcraftApiPlugin extends JavaPlugin {
 
@@ -168,7 +169,7 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         var waitingPath = Optional.ofNullable(System.getenv("BLOCKCRAFT_WAITING_TEMPLATE"))
                 .filter(value -> !value.isBlank()).orElse(text(YamlFile.section(config, "waiting-lobby"), "template", ""));
         var waiting = WaitingLobby.supports(self.group()) && !waitingPath.isBlank()
-                ? Optional.of(WaitingLobby.load(Path.of(waitingPath))) : Optional.<WaitingLobby>empty();
+                ? waitingLobby(Path.of(waitingPath)) : Optional.<WaitingLobby>empty();
         var api = new BlockcraftApi(notifications, new NetworkOperations(this, messages), playerTasks, database, coins,
                 unlocks, new Shop(database), new RoundRecapRepository(database), streaks(YamlFile.section(config, "streaks")),
                 settings, resourcePack, profiles, new Effects(settings), weapons, messages,
@@ -232,18 +233,36 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         }, occasionTicks, occasionTicks);
     }
 
+    /** Every game server shares these files, so a broken one leaves each game in its own lobby instead of stopping them all. */
+    private Optional<WaitingLobby> waitingLobby(Path directory) {
+        try {
+            return Optional.of(WaitingLobby.load(directory));
+        } catch (RuntimeException e) {
+            getSLF4JLogger().error("The shared waiting lobby at {} could not load, so this game waits in its own lobby", directory, e);
+            return Optional.empty();
+        }
+    }
+
     private void startScenery(org.bukkit.World world, NetworkCalendar calendar, String group, Path directory) {
         var furniture = directory.resolve("furniture.yml");
         if (Files.isRegularFile(furniture)) {
             if (getServer().getPluginManager().isPluginEnabled("Nexo")) {
-                scenery.add(new NexoScenery(this, world, calendar, group, furniture));
+                startScenery(furniture, () -> new NexoScenery(this, world, calendar, group, furniture));
             } else {
                 getSLF4JLogger().warn("Nexo is not installed; furniture from {} cannot be placed", furniture);
             }
         }
         var seasons = directory.resolve("seasons.yml");
         if (Files.isRegularFile(seasons)) {
-            scenery.add(SeasonalBlocks.start(this, world, calendar, seasons));
+            startScenery(seasons, () -> SeasonalBlocks.start(this, world, calendar, seasons));
+        }
+    }
+
+    private void startScenery(Path file, Supplier<AutoCloseable> start) {
+        try {
+            scenery.add(start.get());
+        } catch (RuntimeException e) {
+            getSLF4JLogger().error("Running without the scenery of {}: {}", file, e.getMessage(), e);
         }
     }
 

@@ -48,11 +48,8 @@ public final class MapCommand {
             return;
         }
         try {
-            if (lobby.isPresent()) {
-                lobby.orElseThrow().save();
-            } else {
-                map.save();
-            }
+            var unrestored = lobby.isPresent() ? lobby.orElseThrow().save() : map.save();
+            unrestored.forEach(failure -> plugin.getSLF4JLogger().error("Published the map, but could not restore what the save took down", failure));
             sender.sendMessage(messages.get("map.saved", tags(map, lobby)));
         } catch (RuntimeException e) {
             plugin.getSLF4JLogger().error("Could not publish the map", e);

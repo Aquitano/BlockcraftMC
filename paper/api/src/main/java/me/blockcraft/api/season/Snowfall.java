@@ -223,7 +223,7 @@ public final class Snowfall implements Listener, AutoCloseable {
 
     @EventHandler
     public void onMapSave(MapSaveEvent event) {
-        if (spawn == null || closed) {
+        if (spawn == null || closed || !event.world().equals(spawn.getWorld())) {
             return;
         }
         suspended = true;

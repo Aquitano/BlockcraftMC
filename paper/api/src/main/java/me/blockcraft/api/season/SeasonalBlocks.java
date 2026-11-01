@@ -75,12 +75,13 @@ public final class SeasonalBlocks implements Listener, AutoCloseable {
         this.calendar = calendar;
         this.layout = SeasonalLayout.load(settings);
         this.journal = new SeasonalJournal(world.getWorldFolder().toPath().resolve("data/blockcraft-seasons"));
+        // Before the snowfall starts its sweep, so a journal that cannot be restored leaves nothing running.
+        restoreAll();
         this.snowfall = layout.snowfallRadius() > 0 ? Optional.of(new Snowfall(plugin, () -> Optional.of(world.getSpawnLocation()))) : Optional.empty();
     }
 
     public static SeasonalBlocks start(Plugin plugin, World world, NetworkCalendar calendar, Path settings) {
         var blocks = new SeasonalBlocks(plugin, world, calendar, settings);
-        blocks.restoreAll();
         Bukkit.getPluginManager().registerEvents(blocks, plugin);
         blocks.snowfall.ifPresent(snow -> Bukkit.getPluginManager().registerEvents(snow, plugin));
         blocks.suspended = false;
@@ -299,7 +300,7 @@ public final class SeasonalBlocks implements Listener, AutoCloseable {
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onMapSave(MapSaveEvent event) {
-        if (closed) {
+        if (closed || !event.world().equals(world)) {
             return;
         }
         suspended = true;

@@ -77,3 +77,4 @@ run/
 worlds/*/.staging/
 worlds/*/.replaced/
 worlds/**/.publish-ready
+worlds/**/.template.lock
