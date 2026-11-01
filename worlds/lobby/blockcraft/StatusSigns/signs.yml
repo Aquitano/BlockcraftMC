@@ -76,6 +76,90 @@ signs:
       x: -889
       y: 32
       z: 1581
+  '21':
+    group: endergames
+    loc:
+      world: world
+      x: -966
+      y: 28
+      z: 1686
+  '22':
+    group: endergames
+    loc:
+      world: world
+      x: -964
+      y: 28
+      z: 1686
+  '23':
+    group: endergames
+    loc:
+      world: world
+      x: -962
+      y: 28
+      z: 1686
+  '27':
+    group: emeraldrush
+    loc:
+      world: world
+      x: -884
+      y: 31
+      z: 1610
+  '76':
+    group: archive
+    loc:
+      world: world
+      x: -962
+      y: 29
+      z: 1696
+  '77':
+    group: archive
+    loc:
+      world: world
+      x: -962
+      y: 28
+      z: 1695
+  '78':
+    group: archive
+    loc:
+      world: world
+      x: -962
+      y: 28
+      z: 1697
+  '79':
+    group: archive
+    loc:
+      world: world
+      x: -962
+      y: 27
+      z: 1694
+  '80':
+    group: archive
+    loc:
+      world: world
+      x: -962
+      y: 27
+      z: 1696
+  '81':
+    group: archive
+    loc:
+      world: world
+      x: -962
+      y: 27
+      z: 1698
+  '82':
+    group: archive
+    loc:
+      world: world
+      x: -962
+      y: 26
+      z: 1695
+  '83':
+    group: archive
+    loc:
+      world: world
+      x: -962
+      y: 26
+      z: 1697
   '15':
     group: mlgrush
     loc:
@@ -97,73 +181,108 @@ signs:
       x: -894
       y: 32
       z: 1584
-  '18':
-    group: zombies
+  '93':
+    group: knockbackffa
     loc:
       world: world
-      x: -956
-      y: 23
-      z: 1549
-  '19':
-    group: zombies
+      x: -889
+      y: 37
+      z: 1634
+  '94':
+    group: knockbackffa
     loc:
       world: world
-      x: -956
-      y: 23
-      z: 1551
-  '20':
-    group: zombies
+      x: -887
+      y: 37
+      z: 1634
+  '95':
+    group: knockbackffa
     loc:
       world: world
-      x: -956
-      y: 23
-      z: 1553
-  '21':
-    group: endergames
+      x: -885
+      y: 37
+      z: 1634
+  '99':
+    group: skywars
     loc:
       world: world
-      x: -960
-      y: 27
-      z: 1701
-  '22':
-    group: endergames
+      x: -996
+      y: 29
+      z: 1596
+  '100':
+    group: skywars
     loc:
       world: world
-      x: -958
-      y: 27
-      z: 1701
-  '23':
-    group: endergames
+      x: -996
+      y: 29
+      z: 1598
+  '101':
+    group: skywars
     loc:
       world: world
-      x: -956
-      y: 27
-      z: 1701
-  '24':
+      x: -996
+      y: 29
+      z: 1600
+  '102':
     group: ttt
     loc:
       world: world
       x: -995
       y: 30
       z: 1563
-  '25':
+  '103':
     group: ttt
     loc:
       world: world
       x: -993
       y: 30
       z: 1563
-  '26':
+  '104':
     group: ttt
     loc:
       world: world
       x: -991
       y: 30
       z: 1563
-  '27':
-    group: emeraldrush
+  '109':
+    group: zombies
     loc:
       world: world
-      x: -884
-      y: 31
-      z: 1610
+      x: -957
+      y: 23
+      z: 1548
+  '110':
+    group: zombies
+    loc:
+      world: world
+      x: -957
+      y: 23
+      z: 1550
+  '111':
+    group: zombies
+    loc:
+      world: world
+      x: -957
+      y: 23
+      z: 1552
+  '112':
+    group: cores
+    loc:
+      world: world
+      x: -939
+      y: 23
+      z: 1554
+  '113':
+    group: cores
+    loc:
+      world: world
+      x: -939
+      y: 23
+      z: 1552
+  '114':
+    group: cores
+    loc:
+      world: world
+      x: -939
+      y: 23
+      z: 1550

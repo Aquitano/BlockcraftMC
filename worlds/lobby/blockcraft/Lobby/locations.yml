@@ -73,27 +73,27 @@ bedwars:
 zombies:
   ==: org.bukkit.Location
   world: world
-  x: -952.5
+  x: -954.5
   y: 21.0
-  z: 1551.5
+  z: 1550.5
   pitch: 0.0
   yaw: 90.0
 endergames:
   ==: org.bukkit.Location
   world: world
-  x: -957.5
+  x: -963.5
   y: 25.0
-  z: 1698.5
+  z: 1682.5
   pitch: 0.0
   yaw: 0.0
 ttt:
   ==: org.bukkit.Location
   world: world
-  x: -992.5
-  y: 28.0
-  z: 1566.5
+  x: -987.5
+  y: 30.0
+  z: 1574.5
   pitch: 0.0
-  yaw: 180.0
+  yaw: 90.0
 mlgrush:
   ==: org.bukkit.Location
   world: world
@@ -102,3 +102,35 @@ mlgrush:
   z: 1581.5
   pitch: 0.0
   yaw: 0.0
+skywars:
+  ==: org.bukkit.Location
+  world: world
+  x: -987.5
+  y: 26.0
+  z: 1598.5
+  pitch: 0.0
+  yaw: 90.0
+cores:
+  ==: org.bukkit.Location
+  world: world
+  x: -941.5
+  y: 21.0
+  z: 1552.5
+  pitch: 0.0
+  yaw: 270.0
+knockbackffa:
+  ==: org.bukkit.Location
+  world: world
+  x: -886.5
+  y: 35.5
+  z: 1636.5
+  pitch: 0.0
+  yaw: 180.0
+archive:
+  ==: org.bukkit.Location
+  world: world
+  x: -957.5
+  y: 25.0
+  z: 1696.5
+  pitch: -10.0
+  yaw: 90.0

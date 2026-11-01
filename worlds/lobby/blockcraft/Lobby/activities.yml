@@ -286,6 +286,102 @@ eye-arrival:
   z: 1618.5
   yaw: 180.0
   pitch: 0.0
+npc-qsg:
+  ==: org.bukkit.Location
+  world: world
+  x: -952.5
+  y: 26.0
+  z: 1684.5
+  yaw: 180.0
+  pitch: 0.0
+npc-endergames:
+  ==: org.bukkit.Location
+  world: world
+  x: -967.5
+  y: 26.0
+  z: 1683.5
+  yaw: 180.0
+  pitch: 0.0
+npc-rush:
+  ==: org.bukkit.Location
+  world: world
+  x: -887.5
+  y: 29.5
+  z: 1616.5
+  yaw: 90.0
+  pitch: 0.0
+npc-bedwars:
+  ==: org.bukkit.Location
+  world: world
+  x: -891.5
+  y: 30.0
+  z: 1583.5
+  yaw: 90.0
+  pitch: 0.0
+npc-mlgrush:
+  ==: org.bukkit.Location
+  world: world
+  x: -896.5
+  y: 30.0
+  z: 1578.5
+  yaw: 0.0
+  pitch: 0.0
+npc-duell:
+  ==: org.bukkit.Location
+  world: world
+  x: -927.5
+  y: 31.0
+  z: 1562.5
+  yaw: 90.0
+  pitch: 0.0
+npc-zombies:
+  ==: org.bukkit.Location
+  world: world
+  x: -954.5
+  y: 21.0
+  z: 1547.5
+  pitch: 0.0
+  yaw: 135.0
+npc-ttt:
+  ==: org.bukkit.Location
+  world: world
+  x: -989.5
+  y: 30.0
+  z: 1576.5
+  pitch: 0.0
+  yaw: 90.0
+npc-cores:
+  ==: org.bukkit.Location
+  world: world
+  x: -941.5
+  y: 21.0
+  z: 1549.5
+  pitch: 0.0
+  yaw: 225.0
+npc-skywars:
+  ==: org.bukkit.Location
+  world: world
+  x: -989.5
+  y: 26.0
+  z: 1595.5
+  pitch: 0.0
+  yaw: 45.0
+npc-knockbackffa:
+  ==: org.bukkit.Location
+  world: world
+  x: -883.5
+  y: 36.0
+  z: 1635.5
+  pitch: 0.0
+  yaw: 180.0
+npc-archive:
+  ==: org.bukkit.Location
+  world: world
+  x: -960.5
+  y: 25.0
+  z: 1698.5
+  yaw: 180.0
+  pitch: 0.0
 snowfight-a-1:
   ==: org.bukkit.Location
   world: world

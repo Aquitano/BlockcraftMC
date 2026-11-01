@@ -562,6 +562,10 @@ ambience:
     cores: END_ROD
     qsg: ENCHANT
     rush: HAPPY_VILLAGER
+    duell: CRIT
+    mlgrush: SCRAPE
+    knockbackffa: POOF
+    archive: WHITE_ASH
 
 # One-off quests from figures at the map's quest-<key> spots (/lobbyset quest-<key>, where you stand). A task is
 # notes (find count lore notes), parkour (finish it once) or play (a row in the game's stats table). The reward is
