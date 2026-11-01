@@ -14,6 +14,7 @@ import org.bukkit.event.entity.EntityPotionEffectEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -76,6 +77,7 @@ public final class TrollMode implements Listener, AutoCloseable {
     private final Messages messages;
     private final Map<UUID, ActiveEffect> active = new HashMap<>();
     private final Map<UUID, Long> cooldowns = new HashMap<>();
+    private boolean rubberbanding;
 
     public TrollMode(Plugin plugin, Messages messages) {
         this.plugin = plugin;
@@ -183,6 +185,14 @@ public final class TrollMode implements Listener, AutoCloseable {
         stop(event.getPlayer());
     }
 
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onTeleport(PlayerTeleportEvent event) {
+        var effect = active.get(event.getPlayer().getUniqueId());
+        if (!rubberbanding && effect != null && effect.trick() == Trick.LAG) {
+            stop(event.getPlayer());
+        }
+    }
+
     private final class Rubberband implements Runnable {
         private final Player target;
         private Location anchor;
@@ -200,7 +210,12 @@ public final class TrollMode implements Listener, AutoCloseable {
                 anchor = target.getLocation();
             } else {
                 var now = target.getLocation();
-                target.teleport(anchor.setRotation(now.getYaw(), now.getPitch()));
+                rubberbanding = true;
+                try {
+                    target.teleport(anchor.setRotation(now.getYaw(), now.getPitch()));
+                } finally {
+                    rubberbanding = false;
+                }
                 anchor = null;
             }
         }
