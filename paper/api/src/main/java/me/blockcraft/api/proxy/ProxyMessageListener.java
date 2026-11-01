@@ -66,6 +66,6 @@ public final class ProxyMessageListener implements PluginMessageListener {
                 case ProxyMessage.FriendsReply _ -> {
                 }
             }
-        }, () -> plugin.getLogger().warning("Dropped an unreadable message on " + channel + " for " + player.getName()));
+        }, () -> plugin.getSLF4JLogger().warn("Dropped an unreadable message on {} for {}", channel, player.getName()));
     }
 }

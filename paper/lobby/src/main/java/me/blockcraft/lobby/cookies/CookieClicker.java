@@ -20,7 +20,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
-import java.util.logging.Level;
 
 public final class CookieClicker implements Listener, AutoCloseable {
 
@@ -150,7 +149,7 @@ public final class CookieClicker implements Listener, AutoCloseable {
                 var result = save(id, session, snapshot);
                 Tasks.sync(plugin, () -> saved(id, session, edits, result));
             } catch (RuntimeException failure) {
-                plugin.getLogger().log(Level.WARNING, "Could not save cookies for " + id, failure);
+                plugin.getSLF4JLogger().warn("Could not save cookies for {}", id, failure);
                 Tasks.sync(plugin, () -> {
                     if (closed) {
                         return;
@@ -235,10 +234,10 @@ public final class CookieClicker implements Listener, AutoCloseable {
                 saves.execute(() -> {
                     try {
                         if (session.conflicted || save(id, session, snapshot).conflict()) {
-                            plugin.getLogger().warning("Cookie progress changed on another lobby for " + id + "; kept the stored progress");
+                            plugin.getSLF4JLogger().warn("Cookie progress changed on another lobby for {}; kept the stored progress", id);
                         }
                     } catch (RuntimeException failure) {
-                        plugin.getLogger().log(Level.SEVERE, "Could not save cookies during shutdown for " + id, failure);
+                        plugin.getSLF4JLogger().error("Could not save cookies during shutdown for {}", id, failure);
                     }
                 });
             }
@@ -248,12 +247,12 @@ public final class CookieClicker implements Listener, AutoCloseable {
         try {
             if (!saves.awaitTermination(rules.shutdownSaveSeconds(), TimeUnit.SECONDS)) {
                 saves.shutdownNow();
-                plugin.getLogger().warning("Cookie saves exceeded the shutdown deadline; some progress may not have been saved");
+                plugin.getSLF4JLogger().warn("Cookie saves exceeded the shutdown deadline; some progress may not have been saved");
             }
         } catch (InterruptedException interrupted) {
             saves.shutdownNow();
             Thread.currentThread().interrupt();
-            plugin.getLogger().warning("Interrupted while saving cookies during shutdown; some progress may not have been saved");
+            plugin.getSLF4JLogger().warn("Interrupted while saving cookies during shutdown; some progress may not have been saved");
         }
         sessions.clear();
     }

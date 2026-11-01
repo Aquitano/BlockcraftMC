@@ -203,7 +203,7 @@ public final class NexoScenery implements Listener, AutoCloseable {
 
     private void warn(Placement placement, String reason) {
         if (warned.add(placement.id())) {
-            plugin.getLogger().warning("Furniture " + placement.id() + " in " + world.getName() + ": " + reason);
+            plugin.getSLF4JLogger().warn("Furniture {} in {}: {}", placement.id(), world.getName(), reason);
         }
     }
 

@@ -7,6 +7,7 @@ import org.bukkit.Material;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.slf4j.helpers.NOPLogger;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -16,7 +17,6 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
-import java.util.logging.Logger;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
@@ -138,7 +138,7 @@ public class ExhibitPoolTest {
     }
 
     private ExhibitPool pool() {
-        return new ExhibitPool(temporary.getRoot().toPath(), Logger.getAnonymousLogger());
+        return new ExhibitPool(temporary.getRoot().toPath(), NOPLogger.NOP_LOGGER);
     }
 
     private void withWorld(String key) throws IOException {

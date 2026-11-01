@@ -24,7 +24,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.logging.Level;
 
 /**
  * {@link PlayerSettingRepository} cached per online player, so games can read a choice on the main thread
@@ -105,11 +104,11 @@ public final class PlayerSettings implements Listener {
             }
             return new Saved(true, value);
         } catch (RuntimeException error) {
-            plugin.getLogger().log(Level.WARNING, "Could not save setting " + setting.key() + " for " + uuid, error);
+            plugin.getSLF4JLogger().warn("Could not save setting {} for {}", setting.key(), uuid, error);
             try {
                 return new Saved(false, repository.get(uuid, setting));
             } catch (RuntimeException readError) {
-                plugin.getLogger().log(Level.WARNING, "Could not reload setting " + setting.key() + " for " + uuid, readError);
+                plugin.getSLF4JLogger().warn("Could not reload setting {} for {}", setting.key(), uuid, readError);
                 return new Saved(false, previousValue);
             }
         }

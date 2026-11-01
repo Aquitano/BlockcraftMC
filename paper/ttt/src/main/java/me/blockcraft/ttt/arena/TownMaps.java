@@ -1,6 +1,7 @@
 package me.blockcraft.ttt.arena;
 
 import me.blockcraft.api.world.TemplateDimensions;
+import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -10,8 +11,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Stream;
 
 /**
@@ -54,13 +53,13 @@ public final class TownMaps {
     private Optional<TownMap> read(Path folder) {
         String key = folder.getFileName().toString();
         if (!TemplateDimensions.isValidName(key)) {
-            logger.warning("Skipping map " + key + ": a key may only hold a-z, 0-9, _, . and -");
+            logger.warn("Skipping map {}: a key may only hold a-z, 0-9, _, . and -", key);
             return Optional.empty();
         }
         try {
             return Optional.of(TownMap.load(key, folder.resolve(CONFIG)));
         } catch (RuntimeException e) {
-            logger.log(Level.WARNING, "Skipping map " + key + ": " + Objects.requireNonNullElse(e.getMessage(), e.toString()));
+            logger.warn("Skipping map {}: {}", key, Objects.requireNonNullElse(e.getMessage(), e.toString()));
             return Optional.empty();
         }
     }

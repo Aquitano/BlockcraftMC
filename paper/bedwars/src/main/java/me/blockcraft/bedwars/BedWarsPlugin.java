@@ -40,7 +40,7 @@ public final class BedWarsPlugin extends JavaPlugin {
 
         WorldRules.settle(Bukkit.getWorlds().getFirst());
         var layout = LobbyLayout.load(api.map().file(this, "lobby.yml"), api.waitingLobby());
-        var pool = new MapPool(api.map().file(this, "maps"), getLogger());
+        var pool = new MapPool(api.map().file(this, "maps"), getSLF4JLogger());
         var arenas = new TemplateDimensions("bedwars", WorldRules::settle);
         game = new Game(this, gameConfig, config, messages, pool, arenas, layout, catalog, services.stats(), services.menus());
         api.presence().maxPlayers(config.capacity());

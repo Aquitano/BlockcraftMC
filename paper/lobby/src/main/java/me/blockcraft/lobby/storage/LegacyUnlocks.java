@@ -2,6 +2,7 @@ package me.blockcraft.lobby.storage;
 
 import me.blockcraft.api.shop.Unlocks;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -10,7 +11,6 @@ import java.nio.file.Path;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
-import java.util.logging.Logger;
 
 /**
  * Moves the per-server YAML stores of the old lobby ({@code <uuid>.<key>: true}) into {@code bc_unlocks}.
@@ -49,6 +49,6 @@ public final class LegacyUnlocks {
         } catch (IOException e) {
             throw new UncheckedIOException("Could not rename " + file + " after importing it", e);
         }
-        logger.info("Imported " + imported + " unlocks from " + file.getFileName() + " into bc_unlocks");
+        logger.info("Imported {} unlocks from {} into bc_unlocks", imported, file.getFileName());
     }
 }

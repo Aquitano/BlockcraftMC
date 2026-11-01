@@ -30,7 +30,7 @@ public final class ArchivePlugin extends JavaPlugin {
         var notes = new NoteRepository(api.database());
         notes.createTable();
 
-        var pool = new ExhibitPool(config.exhibits(), getLogger());
+        var pool = new ExhibitPool(config.exhibits(), getSLF4JLogger());
         var worlds = new ExhibitWorlds(this, pool, notes, messages, config.unloadAfter());
         var hall = EntranceHall.build(messages.get("hall.welcome"));
         var menus = new ArchiveMenus(messages, pool, worlds, notes, hall);

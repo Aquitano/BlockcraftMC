@@ -11,6 +11,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.slf4j.helpers.NOPLogger;
 
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -24,7 +25,6 @@ import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Logger;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -158,7 +158,7 @@ public class ReplayRepositoryIntegrationTest {
         var owner = UUID.randomUUID();
         var header = recording(Instant.now(), owner).header();
         var now = Instant.now();
-        var logger = Logger.getLogger("replay-test");
+        var logger = NOPLogger.NOP_LOGGER;
         try (var store = new ReplayStore(directory, limits, config.maxStoredBytes(), 0)) {
             store.begin(header).finish(200, "DURATION_LIMIT").get(5, TimeUnit.SECONDS);
             ReplayRetention.clean(store, repository, config, Set.of(), now, logger);

@@ -20,7 +20,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.logging.Level;
 
 final class PlaybackSession {
 
@@ -93,7 +92,7 @@ final class PlaybackSession {
         world.getChunkAtAsync(chunk.x(), chunk.z()).whenComplete((loaded, failure) -> {
             loadingChunks--;
             if (failure != null) {
-                plugin.getLogger().log(Level.WARNING, "Could not generate replay chunk " + chunk.x() + "," + chunk.z(), failure);
+                plugin.getSLF4JLogger().warn("Could not generate replay chunk {},{}", chunk.x(), chunk.z(), failure);
             } else if (!closed && plugin.isEnabled()) {
                 world.addPluginChunkTicket(chunk.x(), chunk.z(), plugin);
             }

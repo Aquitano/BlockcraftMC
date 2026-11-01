@@ -7,7 +7,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import java.util.logging.Level;
 
 /**
  * Blocking work off the main thread that runs one job at a time per key, in the order it was submitted; different
@@ -60,12 +59,12 @@ public final class SerialTasks<K> {
                 try {
                     job.complete(work.get());
                 } catch (RuntimeException e) {
-                    plugin.getLogger().log(Level.WARNING, "Queued task for " + key + " failed", e);
+                    plugin.getSLF4JLogger().warn("Queued task for {} failed", key, e);
                     job.completeExceptionally(e);
                 }
             });
         } catch (RuntimeException e) {
-            plugin.getLogger().log(Level.WARNING, "Could not queue a task for " + key, e);
+            plugin.getSLF4JLogger().warn("Could not queue a task for {}", key, e);
             job.completeExceptionally(e);
         }
     }

@@ -77,7 +77,6 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 public final class BlockcraftCorePlugin extends JavaPlugin {
@@ -98,7 +97,7 @@ public final class BlockcraftCorePlugin extends JavaPlugin {
         var chat = ChatConfig.fromYaml(config);
         var pluginManager = getServer().getPluginManager();
         pluginManager.registerEvents(new MuteListener(this, moderation.punishments(), messages), this);
-        var networkChat = new NetworkChat(moderation.settings(), getLogger());
+        var networkChat = new NetworkChat(moderation.settings(), getSLF4JLogger());
         networkChat.start(this, chat.networkRefresh());
         pluginManager.registerEvents(new GlobalMuteListener(this, networkChat, messages), this);
         pluginManager.registerEvents(new ChatCooldownListener(this, chat.cooldown(), networkChat, messages), this);
@@ -132,7 +131,7 @@ public final class BlockcraftCorePlugin extends JavaPlugin {
         var anticheat = YamlFile.section(config, "anticheat");
         var historySettings = AnticheatHistory.Settings.fromYaml(anticheat);
         var evidence = new AnticheatEvidenceRepository(api.database());
-        anticheatHistory = new AnticheatHistory(evidence, historySettings, getLogger());
+        anticheatHistory = new AnticheatHistory(evidence, historySettings, getSLF4JLogger());
         getServer().getScheduler().runTaskTimer(this, anticheatHistory::maintain, 1L, 1200L);
         if (pluginManager.isPluginEnabled("GrimAC")) {
             // Grim ships its API in alpha builds; a change there must cost the notices, not core's moderation.
@@ -141,7 +140,7 @@ public final class BlockcraftCorePlugin extends JavaPlugin {
                         Duration.ofSeconds(Math.clamp(number(anticheat, "notice-cooldown-seconds", 30), 1, 3600)),
                         anticheatHistory, historySettings.pending());
             } catch (LinkageError | RuntimeException e) {
-                getLogger().log(Level.SEVERE, "GrimAC's API did not take the anticheat notices; Grim still alerts on the console", e);
+                getSLF4JLogger().error("GrimAC's API did not take the anticheat notices; Grim still alerts on the console", e);
             }
         }
         var back = new BackLocations();

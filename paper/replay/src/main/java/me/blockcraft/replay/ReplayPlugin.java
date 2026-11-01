@@ -13,7 +13,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.plugin.ServicePriority;
 
 import java.io.IOException;
-import java.util.logging.Level;
 
 public final class ReplayPlugin extends JavaPlugin {
 
@@ -64,7 +63,7 @@ public final class ReplayPlugin extends JavaPlugin {
             try {
                 store.close();
             } catch (IOException error) {
-                getLogger().log(Level.SEVERE, "Replay storage could not finish shutdown", error);
+                getSLF4JLogger().error("Replay storage could not finish shutdown", error);
             }
         }
         if (service != null) {

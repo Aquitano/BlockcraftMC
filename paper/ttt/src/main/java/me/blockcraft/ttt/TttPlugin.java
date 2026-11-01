@@ -62,7 +62,7 @@ public final class TttPlugin extends JavaPlugin {
         var locations = Locations.load(api.map().file(this, "locations.yml"));
         Supplier<Location> lobbySpawn = () -> api.waitingLobby().map(WaitingLobby::spawn)
                 .or(() -> locations.get(LOBBY)).orElseGet(lobby::getSpawnLocation);
-        var vote = new MapVote(messages, choices(config), getLogger());
+        var vote = new MapVote(messages, choices(config), getSLF4JLogger());
         game = new TttGame(this, gameConfig, config, messages, vote, lobbySpawn, services.stats(), services.menus(), karma);
         api.presence().maxPlayers(config.capacity());
 
@@ -109,7 +109,7 @@ public final class TttPlugin extends JavaPlugin {
         playable(eichenhainWorld, config);
         var eichenhain = TownBuilder.build(eichenhainWorld);
         choices.add(new MapVote.Choice(eichenhainKey.getKey(), eichenhain.name(), List.of(), Material.OAK_SAPLING, () -> eichenhain));
-        var pool = new TownMaps(BlockcraftApi.get().map().file(this, "maps"), getLogger());
+        var pool = new TownMaps(BlockcraftApi.get().map().file(this, "maps"), getSLF4JLogger());
         var arenas = new TemplateDimensions(NAMESPACE, world -> {
             Worlds.settle(world);
             playable(world, config);
@@ -119,7 +119,7 @@ public final class TttPlugin extends JavaPlugin {
                 arenas.copy(pool.world(map.key()), map.key());
                 choices.add(new MapVote.Choice(map.key(), map.name(), map.builders(), map.icon(), () -> map.in(arenas.load(map.key()))));
             } catch (UncheckedIOException | IllegalStateException e) {
-                getLogger().warning("Skipping map " + map.key() + ": " + e.getMessage());
+                getSLF4JLogger().warn("Skipping map {}: {}", map.key(), e.getMessage());
             }
         }
         return choices;

@@ -4,7 +4,6 @@ import me.blockcraft.common.message.Messages;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.plugin.Plugin;
 
-import java.util.logging.Level;
 
 /**
  * A pre-login read whose answer must be in place when the player arrives: a vanished staffer must not show up, a
@@ -24,7 +23,7 @@ final class LoginLookup {
         try {
             lookup.run();
         } catch (RuntimeException e) {
-            plugin.getLogger().log(Level.SEVERE, "Could not read the " + what + " of " + event.getName() + ", turning the login away", e);
+            plugin.getSLF4JLogger().error("Could not read the {} of {}, turning the login away", what, event.getName(), e);
             event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, messages.get("login.retry"));
         }
     }

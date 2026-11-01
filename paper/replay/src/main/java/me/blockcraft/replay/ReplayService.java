@@ -30,7 +30,6 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
-import java.util.logging.Level;
 
 final class ReplayService implements Listener, AutoCloseable {
 
@@ -178,7 +177,7 @@ final class ReplayService implements Listener, AutoCloseable {
                         }
                     }
                 } catch (IOException | RuntimeException error) {
-                    plugin.getLogger().log(Level.WARNING, "Could not load replay " + replay, error);
+                    plugin.getSLF4JLogger().warn("Could not load replay {}", replay, error);
                 }
                 var loaded = timeline;
                 Tasks.sync(plugin, () -> {
@@ -324,7 +323,7 @@ final class ReplayService implements Listener, AutoCloseable {
             return;
         }
         try {
-            maintenance.execute(() -> ReplayRetention.clean(store, repository, config, active, Instant.now(), plugin.getLogger()));
+            maintenance.execute(() -> ReplayRetention.clean(store, repository, config, active, Instant.now(), plugin.getSLF4JLogger()));
         } catch (RejectedExecutionException ignored) {
         }
     }
@@ -332,7 +331,7 @@ final class ReplayService implements Listener, AutoCloseable {
     void publish(ReplayStore.Saved saved) {
         store.markReadyAsync(saved.header().id()).whenComplete((ignored, failure) -> {
             if (failure != null) {
-                plugin.getLogger().log(Level.SEVERE, "Could not mark replay ready: " + saved.header().id(), failure);
+                plugin.getSLF4JLogger().error("Could not mark replay ready: {}", saved.header().id(), failure);
                 return;
             }
             try {
@@ -340,11 +339,11 @@ final class ReplayService implements Listener, AutoCloseable {
                     try {
                         repository.save(saved);
                     } catch (RuntimeException error) {
-                        plugin.getLogger().log(Level.SEVERE, "Replay saved but history publication failed: " + saved.header().id(), error);
+                        plugin.getSLF4JLogger().error("Replay saved but history publication failed: {}", saved.header().id(), error);
                     }
                 });
             } catch (RejectedExecutionException error) {
-                plugin.getLogger().log(Level.SEVERE, "Replay history publication queue is full: " + saved.header().id(), error);
+                plugin.getSLF4JLogger().error("Replay history publication queue is full: {}", saved.header().id(), error);
             }
         });
     }
@@ -358,7 +357,7 @@ final class ReplayService implements Listener, AutoCloseable {
         try {
             if (!reads.awaitTermination(5, TimeUnit.SECONDS)) {
                 reads.shutdownNow();
-                plugin.getLogger().warning("Replay background tasks did not finish within five seconds");
+                plugin.getSLF4JLogger().warn("Replay background tasks did not finish within five seconds");
             }
         } catch (InterruptedException error) {
             reads.shutdownNow();

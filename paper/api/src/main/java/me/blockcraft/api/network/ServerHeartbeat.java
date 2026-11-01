@@ -18,7 +18,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.logging.Level;
 
 /**
  * Announces this server in {@code bc_servers} while it runs so the proxy can register it without configuration. Every
@@ -91,7 +90,7 @@ public final class ServerHeartbeat implements Listener {
         try {
             if (!beats.awaitTermination(DRAIN_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS)) {
                 beats.shutdownNow();
-                plugin.getLogger().warning("A heartbeat was still running after " + DRAIN_TIMEOUT.toSeconds() + "s");
+                plugin.getSLF4JLogger().warn("A heartbeat was still running after {}s", DRAIN_TIMEOUT.toSeconds());
             }
         } catch (InterruptedException e) {
             beats.shutdownNow();
@@ -100,7 +99,7 @@ public final class ServerHeartbeat implements Listener {
         try {
             servers.delete(self.name());
         } catch (DatabaseException e) {
-            plugin.getLogger().warning("Could not unregister " + self.name() + ", the proxy drops it once the heartbeat is stale");
+            plugin.getSLF4JLogger().warn("Could not unregister {}, the proxy drops it once the heartbeat is stale", self.name());
         }
     }
 
@@ -111,15 +110,15 @@ public final class ServerHeartbeat implements Listener {
         try {
             servers.heartbeat(self, presence.status());
             if (failing.getAndSet(false)) {
-                plugin.getLogger().info("Heartbeat recovered");
+                plugin.getSLF4JLogger().info("Heartbeat recovered");
             }
         } catch (DatabaseException e) {
             if (!failing.getAndSet(true)) {
-                plugin.getLogger().warning("Heartbeat failed, retrying quietly until it recovers: " + e.getCause().getMessage());
+                plugin.getSLF4JLogger().warn("Heartbeat failed, retrying quietly until it recovers: {}", e.getCause().getMessage());
             }
         } catch (RuntimeException e) {
             // Escaping the executor would cancel every later beat.
-            plugin.getLogger().log(Level.WARNING, "Heartbeat failed", e);
+            plugin.getSLF4JLogger().warn("Heartbeat failed", e);
         }
     }
 

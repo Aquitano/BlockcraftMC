@@ -22,7 +22,6 @@ import java.util.UUID;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
 
 public final class PlaybackManager implements AutoCloseable {
 
@@ -143,7 +142,7 @@ public final class PlaybackManager implements AutoCloseable {
                         .findFirst().ifPresent(world -> viewer.teleport(world.getSpawnLocation()));
             }
         } catch (RuntimeException failure) {
-            plugin.getLogger().log(Level.SEVERE, "Could not restore replay viewer " + viewer.getUniqueId(), failure);
+            plugin.getSLF4JLogger().error("Could not restore replay viewer {}", viewer.getUniqueId(), failure);
         } finally {
             for (var other : Bukkit.getOnlinePlayers()) {
                 if (!active(other)) {
@@ -208,7 +207,7 @@ public final class PlaybackManager implements AutoCloseable {
     }
 
     private void fail(Player viewer, RuntimeException failure) {
-        plugin.getLogger().log(Level.WARNING, "Replay playback failed for " + viewer.getUniqueId(), failure);
+        plugin.getSLF4JLogger().warn("Replay playback failed for {}", viewer.getUniqueId(), failure);
         stop(viewer);
         viewer.sendMessage(messages.get("playback.failed"));
     }
@@ -217,13 +216,13 @@ public final class PlaybackManager implements AutoCloseable {
         var key = world.getKey();
         var folder = world.getWorldFolder().toPath().toAbsolutePath().normalize();
         if (!world.getPlayers().isEmpty() || !Bukkit.unloadWorld(world, false)) {
-            plugin.getLogger().warning("Could not unload replay dimension " + key);
+            plugin.getSLF4JLogger().warn("Could not unload replay dimension {}", key);
             return Optional.empty();
         }
         if (!key.getNamespace().equals("replay") || !key.getKey().matches("[a-f0-9-]{36}_[a-f0-9-]{36}")
                 || !folder.getFileName().toString().equals(key.getKey())
                 || !folder.getParent().getFileName().toString().equals("replay")) {
-            plugin.getLogger().warning("Refusing to delete unexpected replay dimension path " + folder);
+            plugin.getSLF4JLogger().warn("Refusing to delete unexpected replay dimension path {}", folder);
             return Optional.empty();
         }
         return Optional.of(folder);
@@ -245,7 +244,7 @@ public final class PlaybackManager implements AutoCloseable {
                 }
             }
         } catch (IOException failure) {
-            plugin.getLogger().log(Level.WARNING, "Could not remove replay dimension " + folder, failure);
+            plugin.getSLF4JLogger().warn("Could not remove replay dimension {}", folder, failure);
         }
     }
 

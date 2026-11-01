@@ -3,13 +3,13 @@ package me.blockcraft.lobby.config;
 import me.blockcraft.api.pack.PackModel;
 import org.bukkit.Material;
 import org.joml.Vector3f;
+import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.logging.Logger;
 
 /**
  * Lobby's {@code props} section: the set pieces staff place with /setprop. Each is a group of block and item displays
@@ -63,7 +63,7 @@ public record PropsConfig(float viewRange, int keyframeTicks, Map<String, Prop> 
         if (prop.get("parts") instanceof List<?> list) {
             for (var entry : list) {
                 if (entry instanceof Map<?, ?> part) {
-                    part(part).ifPresentOrElse(parts::add, () -> logger.warning("Prop " + name + " has a part without a known block, item or model: " + part));
+                    part(part).ifPresentOrElse(parts::add, () -> logger.warn("Prop {} has a part without a known block, item or model: {}", name, part));
                 }
             }
         }

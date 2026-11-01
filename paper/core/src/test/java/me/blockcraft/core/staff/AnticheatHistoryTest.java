@@ -2,7 +2,10 @@ package me.blockcraft.core.staff;
 
 import me.blockcraft.common.anticheat.AnticheatEvidence;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.helpers.NOPLogger;
 
+import java.lang.reflect.Proxy;
 import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
@@ -10,9 +13,6 @@ import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Handler;
-import java.util.logging.LogRecord;
-import java.util.logging.Logger;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -26,13 +26,16 @@ public class AnticheatHistoryTest {
         var release = new CountDownLatch(1);
         var written = new AtomicInteger();
         var warnings = new AtomicInteger();
-        var logger = Logger.getAnonymousLogger();
-        logger.setUseParentHandlers(false);
-        logger.addHandler(new Handler() {
-            @Override public void publish(LogRecord record) { warnings.incrementAndGet(); }
-            @Override public void flush() { }
-            @Override public void close() { }
-        });
+        var logger = (Logger) Proxy.newProxyInstance(Logger.class.getClassLoader(), new Class<?>[]{Logger.class},
+                (proxy, method, args) -> {
+                    if (method.getReturnType() == boolean.class) {
+                        return true;
+                    }
+                    if (method.getName().equals("warn")) {
+                        warnings.incrementAndGet();
+                    }
+                    return null;
+                });
         var history = new AnticheatHistory(evidence -> {
             writing.countDown();
             await(release);
@@ -61,7 +64,7 @@ public class AnticheatHistoryTest {
             if (trims.incrementAndGet() == 1) {
                 throw new IllegalStateException("Database unavailable");
             }
-        }, 2, Logger.getAnonymousLogger());
+        }, 2, NOPLogger.NOP_LOGGER);
         history.record(evidence());
         history.record(evidence());
         history.close();
@@ -84,7 +87,7 @@ public class AnticheatHistoryTest {
                 } catch (InterruptedException ignored) {
                 }
             }
-        }, () -> { }, 1, Logger.getAnonymousLogger());
+        }, () -> { }, 1, NOPLogger.NOP_LOGGER);
         try {
             history.record(evidence());
             assertTrue(writing.await(1, TimeUnit.SECONDS));

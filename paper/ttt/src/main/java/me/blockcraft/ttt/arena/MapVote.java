@@ -11,13 +11,12 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.slf4j.Logger;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 import java.util.function.Supplier;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Which map the round is played on: the lobby votes among the maps or leaves it to chance until the round starts,
@@ -80,7 +79,7 @@ public final class MapVote {
         try {
             town = choice.town().get();
         } catch (RuntimeException failure) {
-            logger.log(Level.WARNING, "Could not load TTT map " + choice.key() + "; using " + choices.getFirst().key(), failure);
+            logger.warn("Could not load TTT map {}; using {}", choice.key(), choices.getFirst().key(), failure);
             choice = choices.getFirst();
             town = choice.town().get();
         }

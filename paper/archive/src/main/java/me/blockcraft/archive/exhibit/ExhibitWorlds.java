@@ -28,7 +28,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.logging.Level;
 import java.util.stream.Stream;
 
 /**
@@ -106,7 +105,7 @@ public final class ExhibitWorlds {
                     }
                 }));
             } catch (RuntimeException e) {
-                plugin.getLogger().log(Level.WARNING, "Could not travel to the exhibit " + exhibit.key(), e);
+                plugin.getSLF4JLogger().warn("Could not travel to the exhibit {}", exhibit.key(), e);
                 failed.run();
             }
         }, failed);
@@ -138,7 +137,7 @@ public final class ExhibitWorlds {
             try {
                 world = dimensions.load(key);
             } catch (RuntimeException e) {
-                plugin.getLogger().log(Level.WARNING, "Could not load the exhibit " + key, e);
+                plugin.getSLF4JLogger().warn("Could not load the exhibit {}", key, e);
                 trips.forEach(trip -> trip.failed().run());
                 return;
             }

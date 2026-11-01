@@ -5,12 +5,12 @@ import org.bukkit.Material;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.slf4j.helpers.NOPLogger;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Optional;
-import java.util.logging.Logger;
 
 import static org.junit.Assert.assertEquals;
 
@@ -74,7 +74,7 @@ public class TownMapsTest {
     }
 
     private TownMaps pool() {
-        return new TownMaps(temporary.getRoot().toPath(), Logger.getAnonymousLogger());
+        return new TownMaps(temporary.getRoot().toPath(), NOPLogger.NOP_LOGGER);
     }
 
     private void write(String key, String yaml, boolean world) throws IOException {

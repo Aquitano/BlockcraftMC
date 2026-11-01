@@ -3,10 +3,9 @@ package me.blockcraft.core.listener;
 import me.blockcraft.common.moderation.Setting;
 import me.blockcraft.common.moderation.SettingsRepository;
 import org.bukkit.plugin.Plugin;
+import org.slf4j.Logger;
 
 import java.time.Duration;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Global mute and chat slow as the proxy last stored them in {@code bc_settings}, re-read on a timer off the chat
@@ -48,7 +47,7 @@ public final class NetworkChat {
             failing = false;
         } catch (RuntimeException e) {
             if (!failing) {
-                logger.log(Level.WARNING, "Could not read global mute and chat slow, keeping the last known values", e);
+                logger.warn("Could not read global mute and chat slow, keeping the last known values", e);
             }
             failing = true;
         }

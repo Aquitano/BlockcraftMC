@@ -1,6 +1,7 @@
 package me.blockcraft.replay;
 
 import me.blockcraft.replay.storage.ReplayStore;
+import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -11,8 +12,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Set;
 import java.util.UUID;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 final class ReplayRetention {
 
@@ -37,7 +36,7 @@ final class ReplayRetention {
                         Files.getLastModifiedTime(path, LinkOption.NOFOLLOW_LINKS).toInstant()));
             }
         } catch (IOException error) {
-            logger.log(Level.WARNING, "Could not inspect replay retention", error);
+            logger.warn("Could not inspect replay retention", error);
             return;
         }
         archives.sort(Comparator.comparing(Archive::modified));
@@ -62,7 +61,7 @@ final class ReplayRetention {
                     repository.save(saved);
                 }
             } catch (IOException | RuntimeException error) {
-                logger.log(Level.WARNING, "Could not maintain replay " + archive.id(), error);
+                logger.warn("Could not maintain replay {}", archive.id(), error);
             }
         }
         try (var files = Files.newDirectoryStream(config.directory(), "*.part")) {
@@ -75,7 +74,7 @@ final class ReplayRetention {
                 }
             }
         } catch (IOException error) {
-            logger.log(Level.WARNING, "Could not remove expired incomplete replays", error);
+            logger.warn("Could not remove expired incomplete replays", error);
         }
     }
 }

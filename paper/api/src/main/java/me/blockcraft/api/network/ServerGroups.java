@@ -70,7 +70,7 @@ public final class ServerGroups {
             states.all().forEach((group, state) -> live.put(group, live.getOrDefault(group, GroupStatus.OFFLINE).withOnDemand(state)));
             groups = Map.copyOf(live);
         } catch (DatabaseException e) {
-            plugin.getLogger().warning("Could not read bc_servers: " + e.getCause().getMessage());
+            plugin.getSLF4JLogger().warn("Could not read bc_servers: {}", e.getCause().getMessage());
             return;
         }
         if (plugin.isEnabled() && !subscribers.isEmpty()) {

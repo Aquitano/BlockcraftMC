@@ -36,7 +36,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.BooleanSupplier;
-import java.util.logging.Level;
 
 /**
  * What a round paid and who won it. A game feeds it while the round runs and calls {@link #show()} once at the
@@ -418,7 +417,7 @@ public final class RoundSummary {
         try {
             stats.add(row.player(), row.name(), row.delta());
         } catch (DatabaseException e) {
-            plugin.getLogger().log(Level.WARNING, "Could not book the round's stats of " + row.name(), e);
+            plugin.getSLF4JLogger().warn("Could not book the round's stats of {}", row.name(), e);
         }
     }
 

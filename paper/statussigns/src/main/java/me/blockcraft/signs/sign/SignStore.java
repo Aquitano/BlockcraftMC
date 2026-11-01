@@ -4,6 +4,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -11,7 +12,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.logging.Logger;
 
 /** Persists signs in {@code signs.yml} as {@code signs.<id>: {group, loc: {world, x, y, z}}}. */
 public final class SignStore {
@@ -37,12 +37,12 @@ public final class SignStore {
         for (String key : root.getKeys(false)) {
             ConfigurationSection entry = root.getConfigurationSection(key);
             if (entry == null || !entry.isConfigurationSection("loc") || !entry.isString("group")) {
-                logger.warning("Dropping invalid status sign entry " + key);
+                logger.warn("Dropping invalid status sign entry {}", key);
                 root.set(key, null);
                 continue;
             }
             read(entry).ifPresentOrElse(signs::add,
-                    () -> logger.warning("Skipping status sign " + key + ": world " + entry.getString("loc.world") + " is not loaded"));
+                    () -> logger.warn("Skipping status sign {}: world {} is not loaded", key, entry.getString("loc.world")));
         }
         save();
         return signs;

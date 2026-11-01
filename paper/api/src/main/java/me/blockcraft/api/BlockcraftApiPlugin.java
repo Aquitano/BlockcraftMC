@@ -114,7 +114,7 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         var presence = new ServerPresence();
         heartbeat = new ServerHeartbeat(this, servers, ServerHeartbeat.local(databaseConfig, getServer().getPort()), presence);
         var self = heartbeat.self();
-        getLogger().info("Announcing as " + self.name() + " (group " + self.group() + ") at " + self.host() + ":" + self.port());
+        getSLF4JLogger().info("Announcing as {} (group {}) at {}:{}", self.name(), self.group(), self.host(), self.port());
         var groupStatus = YamlFile.section(config, "group-status");
         groups = new ServerGroups(this, servers, new GroupStateRepository(database), number(groupStatus, "stale-seconds", 20));
 
@@ -227,7 +227,7 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
             try {
                 forcedOccasions.reload();
             } catch (DatabaseException e) {
-                getLogger().warning("Could not read the forced occasions: " + e.getCause().getMessage());
+                getSLF4JLogger().warn("Could not read the forced occasions: {}", e.getCause().getMessage());
             }
         }, occasionTicks, occasionTicks);
     }
@@ -238,7 +238,7 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
             if (getServer().getPluginManager().isPluginEnabled("Nexo")) {
                 scenery.add(new NexoScenery(this, world, calendar, group, furniture));
             } else {
-                getLogger().warning("Nexo is not installed; furniture from " + furniture + " cannot be placed");
+                getSLF4JLogger().warn("Nexo is not installed; furniture from {} cannot be placed", furniture);
             }
         }
         var seasons = directory.resolve("seasons.yml");

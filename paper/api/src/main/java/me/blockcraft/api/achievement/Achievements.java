@@ -180,7 +180,7 @@ public final class Achievements implements Listener {
                 .filter(achievement -> achievement.isMoment() && achievement.game().equals(game) && achievement.name().equals(name))
                 .findFirst();
         if (entry.isEmpty()) {
-            plugin.getLogger().warning("No moment achievement " + game + "." + name + " in the catalog");
+            plugin.getSLF4JLogger().warn("No moment achievement {}.{} in the catalog", game, name);
             return;
         }
         var achievement = entry.get();

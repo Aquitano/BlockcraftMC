@@ -1,6 +1,7 @@
 package me.blockcraft.archive.exhibit;
 
 import me.blockcraft.api.world.TemplateDimensions;
+import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -13,8 +14,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Stream;
 
 /**
@@ -84,7 +83,7 @@ public final class ExhibitPool {
     private Optional<Exhibit> read(Path folder) {
         String key = folder.getFileName().toString();
         if (!TemplateDimensions.isValidName(key)) {
-            logger.warning("Skipping exhibit " + key + ": a key may only hold a-z, 0-9, _, . and -");
+            logger.warn("Skipping exhibit {}: a key may only hold a-z, 0-9, _, . and -", key);
             return Optional.empty();
         }
         try {
@@ -99,7 +98,7 @@ public final class ExhibitPool {
             return Optional.of(exhibit);
         } catch (IOException | RuntimeException e) {
             cached.remove(key);
-            logger.log(Level.WARNING, "Skipping exhibit " + key + ": " + Objects.requireNonNullElse(e.getMessage(), e.toString()));
+            logger.warn("Skipping exhibit {}: {}", key, Objects.requireNonNullElse(e.getMessage(), e.toString()));
             return Optional.empty();
         }
     }

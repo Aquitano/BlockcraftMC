@@ -76,7 +76,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.OptionalInt;
 
@@ -178,7 +177,7 @@ public final class Game implements RoundConnections.Seating {
         jumpAndRun.ifPresent(JumpAndRun::open);
         catchGame.open();
         if (!maps.hasMaps()) {
-            plugin.getLogger().severe("No map of the pool seats the teams " + config.teams() + "; the lobby will wait for one.");
+            plugin.getSLF4JLogger().error("No map of the pool seats the teams {}; the lobby will wait for one.", config.teams());
         }
     }
 
@@ -444,7 +443,7 @@ public final class Game implements RoundConnections.Seating {
             map = maps.awaitCopy();
             match = new Match(plugin, arenas.load(map.key()), map, messages, config, dealers);
         } catch (RuntimeException e) {
-            plugin.getLogger().log(Level.SEVERE, "Could not load the map " + maps.chosen().map(ArenaMap::key).orElse("?"), e);
+            plugin.getSLF4JLogger().error("Could not load the map {}", maps.chosen().map(ArenaMap::key).orElse("?"), e);
             broadcast("lobby.map-failed");
             maps.redraw();
             voteChanged();

@@ -165,13 +165,13 @@ public final class LobbyPlugin extends JavaPlugin {
         mapSecrets = new MapSecrets(this, activityLocations, messages, secrets, activities.placeRadius());
         herobrine = new Herobrine(this, HerobrineConfig.fromYaml(YamlFile.section(yaml, "herobrine")), secrets);
         stars = new ShootingStars(this, ShootingStarConfig.fromYaml(YamlFile.section(yaml, "shooting-stars")), messages, secrets);
-        var themes = SeasonTheme.all(YamlFile.section(yaml, "seasons"), getLogger());
+        var themes = SeasonTheme.all(YamlFile.section(yaml, "seasons"), getSLF4JLogger());
         var snowfall = new Snowfall(this, () -> locations.get(LobbyLocation.SPAWN));
         polish.add(snowfall);
         var decor = new SeasonalDecor(api.calendar(), themes, snowfall);
         atmosphere = new SeasonalAtmosphere(this, api.calendar(), themes);
         sleigh = new SantaSleigh(this, SleighConfig.fromYaml(YamlFile.section(yaml, "sleigh")), messages, api.calendar());
-        var pieces = PropsConfig.fromYaml(YamlFile.section(yaml, "props"), getLogger());
+        var pieces = PropsConfig.fromYaml(YamlFile.section(yaml, "props"), getSLF4JLogger());
         props = new Props(this, pieces, Locations.load(api.map().file(this, "props.yml")));
         props.start();
         var flights = new Flights(this, FlightsConfig.fromYaml(YamlFile.section(yaml, "flights")), pieces,
@@ -181,7 +181,7 @@ public final class LobbyPlugin extends JavaPlugin {
                 () -> locations.get(LobbyLocation.SPAWN).ifPresent(spawn -> config.fireworkSpots()
                         .forEach(spot -> MoveListener.launchFirework(spot.toLocation(spawn.getWorld())))), decor);
         profiles.advent(player -> seasons.openAdvent(player, back -> profiles.open(back, Optional.empty())));
-        importLegacyUnlocks(new LegacyUnlocks(api.unlocks(), getLogger()));
+        importLegacyUnlocks(new LegacyUnlocks(api.unlocks(), getSLF4JLogger()));
         gadgets = new Gadgets(this, messages, Duration.ofSeconds(config.gadgetCooldownSeconds()));
         friends = new FriendsChannel(this, config.friendsTimeoutTicks());
         previews = new CosmeticPreviews(this, messages, config.cosmeticPreviewTicks());

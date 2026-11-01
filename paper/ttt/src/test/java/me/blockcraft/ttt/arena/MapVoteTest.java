@@ -8,13 +8,13 @@ import org.bukkit.Server;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.slf4j.helpers.NOPLogger;
 
 import java.io.ByteArrayInputStream;
 import java.lang.reflect.Proxy;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
@@ -44,13 +44,11 @@ public class MapVoteTest {
             var messages = Messages.load(temporary.newFolder().toPath(), () -> new ByteArrayInputStream(
                     "vote:\n  result: '<map>'\n".getBytes(StandardCharsets.UTF_8)));
             var fallback = new Town("Fallback", null, List.of(), null, null);
-            var logger = Logger.getAnonymousLogger();
-            logger.setUseParentHandlers(false);
             var vote = new MapVote(messages, List.of(
                     new MapVote.Choice("fallback", "Fallback", List.of(), Material.OAK_SAPLING, () -> fallback),
                     new MapVote.Choice("broken", "Broken", List.of(), Material.PAPER, () -> {
                         throw new IllegalStateException("unreadable world");
-                    })), logger);
+                    })), NOPLogger.NOP_LOGGER);
             vote.force("broken");
 
             assertSame(fallback, vote.decide());

@@ -32,7 +32,7 @@ public final class MlgRushPlugin extends JavaPlugin {
         }
         var maps = MapPool.load(mapsFile, config.arena());
         var map = maps.choose(ThreadLocalRandom.current());
-        getLogger().info("MLG Rush map: " + map.key() + " (" + map.name() + ")");
+        getSLF4JLogger().info("MLG Rush map: {} ({})", map.key(), map.name());
         var api = BlockcraftApi.get();
         var services = GameServices.load(this, gameConfig, "mlgrush_stats");
         var arena = new RushArena(map);

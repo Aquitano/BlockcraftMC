@@ -79,7 +79,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import java.util.logging.Level;
 
 public final class MatchRecorder implements Listener, AutoCloseable, ReplayRecording {
 
@@ -182,7 +181,7 @@ public final class MatchRecorder implements Listener, AutoCloseable, ReplayRecor
         var api = BlockcraftApi.get();
         var players = round.players().stream().filter(player -> visible(round, player)).toList();
         if (players.isEmpty() || players.size() > limits.maxParticipants()) {
-            plugin.getLogger().warning("Replay skipped: participant count outside recording limits");
+            plugin.getSLF4JLogger().warn("Replay skipped: participant count outside recording limits");
             return;
         }
         var header = new ReplayHeader(UUID.randomUUID(), api.server().group(), api.server().name(),
@@ -193,12 +192,12 @@ public final class MatchRecorder implements Listener, AutoCloseable, ReplayRecor
             positions.update(header.id(), 0, session.participants);
             publications.computeIfAbsent(round, ignored -> new ArrayList<>()).add(session.publication);
             session.publication.ready().thenAccept(saved).exceptionally(failure -> {
-                plugin.getLogger().log(Level.WARNING, "Replay metadata could not be published", failure);
+                plugin.getSLF4JLogger().warn("Replay metadata could not be published", failure);
                 return null;
             });
             session.task = Bukkit.getScheduler().runTaskTimer(plugin, this::tick, 1L, 1L);
         } catch (IOException failure) {
-            plugin.getLogger().log(Level.WARNING, "Could not begin replay", failure);
+            plugin.getSLF4JLogger().warn("Could not begin replay", failure);
         }
     }
 
@@ -428,7 +427,7 @@ public final class MatchRecorder implements Listener, AutoCloseable, ReplayRecor
         }
         current.propSamples += props.size();
         if (current.propSamples >= limits.objectBudget() / 2) {
-            plugin.getLogger().info("Replay entity budget spent; the rest of the round records players and terrain only");
+            plugin.getSLF4JLogger().info("Replay entity budget spent; the rest of the round records players and terrain only");
         }
     }
 
@@ -549,7 +548,7 @@ public final class MatchRecorder implements Listener, AutoCloseable, ReplayRecor
         positions.clear();
         current.task.cancel();
         current.writer.finish(current.tick, reason).whenComplete((recording, failure) -> {
-            if (failure != null) { plugin.getLogger().log(Level.WARNING, "Replay could not be saved", failure); }
+            if (failure != null) { plugin.getSLF4JLogger().warn("Replay could not be saved", failure); }
             else { current.publication.completed(recording); }
         });
     }
@@ -559,8 +558,8 @@ public final class MatchRecorder implements Listener, AutoCloseable, ReplayRecor
         session = null;
         positions.clear();
         if (current != null) { current.task.cancel(); current.writer.abort(); }
-        if (failure == null) { plugin.getLogger().warning(message); }
-        else { plugin.getLogger().log(Level.WARNING, message, failure); }
+        if (failure == null) { plugin.getSLF4JLogger().warn(message); }
+        else { plugin.getSLF4JLogger().warn(message, failure); }
     }
 
     private void changed(Block block) {

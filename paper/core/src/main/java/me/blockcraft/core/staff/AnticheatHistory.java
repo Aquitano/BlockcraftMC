@@ -2,6 +2,7 @@ package me.blockcraft.core.staff;
 
 import me.blockcraft.common.anticheat.AnticheatEvidence;
 import me.blockcraft.common.anticheat.AnticheatEvidenceRepository;
+import org.slf4j.Logger;
 
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -11,8 +12,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public final class AnticheatHistory implements AutoCloseable {
 
@@ -107,7 +106,7 @@ public final class AnticheatHistory implements AutoCloseable {
         long now = System.currentTimeMillis();
         long previous = lastWarning.get();
         if (now - previous >= 60_000 && lastWarning.compareAndSet(previous, now)) {
-            logger.log(Level.WARNING, message, failure);
+            logger.warn(message, failure);
         }
     }
 

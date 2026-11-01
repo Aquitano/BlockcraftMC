@@ -60,7 +60,7 @@ public final class RoundWorld {
     /** Throws the last start's world away and generates the next from a random seed of the pool; the dimension must not be loaded yet. */
     public static RoundWorld create(Plugin plugin, WorldSettings settings) {
         var seed = settings.seeds().get(new Random().nextInt(settings.seeds().size()));
-        plugin.getLogger().info("EnderGames world from seed " + seed.seed() + ", centred on " + seed.x() + ", " + seed.z());
+        plugin.getSLF4JLogger().info("EnderGames world from seed {}, centred on {}, {}", seed.seed(), seed.x(), seed.z());
         Worlds.discard(KEY);
         var world = Objects.requireNonNull(WorldCreator.ofKey(KEY)
                 .environment(World.Environment.NORMAL)
@@ -106,7 +106,7 @@ public final class RoundWorld {
             startIsland = Optional.of(StartIsland.build(world, centerX, centerZ, startChests));
             world.setSpawnLocation(spectatorSpawn());
             ready = true;
-            plugin.getLogger().info("EnderGames world is loaded");
+            plugin.getSLF4JLogger().info("EnderGames world is loaded");
             onReady.run();
         });
     }

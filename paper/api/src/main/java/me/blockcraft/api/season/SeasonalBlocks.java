@@ -156,7 +156,7 @@ public final class SeasonalBlocks implements Listener, AutoCloseable {
         try {
             journal.write(key, written);
         } catch (IOException failure) {
-            plugin.getLogger().severe("Could not journal seasonal blocks in " + world.getName() + ": " + failure.getMessage());
+            plugin.getSLF4JLogger().error("Could not journal seasonal blocks in {}: {}", world.getName(), failure.getMessage());
             return;
         }
         changed.put(key, written);

@@ -2,6 +2,7 @@ package me.blockcraft.bedwars.map;
 
 import me.blockcraft.api.world.TemplateDimensions;
 import me.blockcraft.bedwars.team.TeamColor;
+import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -12,8 +13,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Stream;
 
 /**
@@ -77,13 +76,13 @@ public final class MapPool {
     private Optional<ArenaMap> read(Path folder) {
         String key = folder.getFileName().toString();
         if (!TemplateDimensions.isValidName(key)) {
-            logger.warning("Skipping map " + key + ": a key may only hold a-z, 0-9, _, . and -");
+            logger.warn("Skipping map {}: a key may only hold a-z, 0-9, _, . and -", key);
             return Optional.empty();
         }
         try {
             return Optional.of(ArenaMap.load(key, folder.resolve(CONFIG)));
         } catch (RuntimeException e) {
-            logger.log(Level.WARNING, "Skipping map " + key + ": " + Objects.requireNonNullElse(e.getMessage(), e.toString()));
+            logger.warn("Skipping map {}: {}", key, Objects.requireNonNullElse(e.getMessage(), e.toString()));
             return Optional.empty();
         }
     }

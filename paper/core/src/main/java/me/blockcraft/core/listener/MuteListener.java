@@ -14,7 +14,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.Plugin;
 
-import java.util.logging.Level;
 
 /**
  * Blocks chat for players with an active proxy mute; the event is already async, so the lookup may block.
@@ -45,7 +44,7 @@ public final class MuteListener implements Listener {
                 Tasks.sync(plugin, () -> Sounds.MENU_DENY.play(event.getPlayer()));
             });
         } catch (DatabaseException e) {
-            plugin.getLogger().log(Level.SEVERE, "Could not check " + event.getPlayer().getName() + " for a mute, holding the message back", e);
+            plugin.getSLF4JLogger().error("Could not check {} for a mute, holding the message back", event.getPlayer().getName(), e);
             event.setCancelled(true);
             event.getPlayer().sendMessage(messages.get("mute.check-failed"));
             Tasks.sync(plugin, () -> Sounds.MENU_DENY.play(event.getPlayer()));

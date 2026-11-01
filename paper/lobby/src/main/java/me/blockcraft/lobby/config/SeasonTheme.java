@@ -11,6 +11,7 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.Particle;
 import org.bukkit.Tag;
 import org.bukkit.block.data.BlockData;
+import org.slf4j.Logger;
 
 import java.time.Duration;
 import java.util.EnumMap;
@@ -21,7 +22,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.logging.Logger;
 
 /** One section of the lobby's {@code seasons}: how the lobby looks and sounds while the calendar celebrates it. */
 public record SeasonTheme(Map<Material, List<BlockData>> blocks, Set<Material> coverOn, List<BlockData> cover,
@@ -69,14 +69,14 @@ public record SeasonTheme(Map<Material, List<BlockData>> blocks, Set<Material> c
         if (key.startsWith("#")) {
             var tag = Bukkit.getTag(Tag.REGISTRY_BLOCKS, NamespacedKey.minecraft(key.substring(1)), Material.class);
             if (tag == null) {
-                logger.warning("seasons: unknown block tag " + key);
+                logger.warn("seasons: unknown block tag {}", key);
                 return Set.of();
             }
             return tag.getValues();
         }
         var material = Material.matchMaterial(key);
         if (material == null || !material.isBlock()) {
-            logger.warning("seasons: unknown block " + key);
+            logger.warn("seasons: unknown block {}", key);
             return Set.of();
         }
         return Set.of(material);
@@ -88,7 +88,7 @@ public record SeasonTheme(Map<Material, List<BlockData>> blocks, Set<Material> c
             try {
                 valid.accept(Bukkit.createBlockData(entry));
             } catch (IllegalArgumentException invalid) {
-                logger.warning("seasons: unknown block " + entry);
+                logger.warn("seasons: unknown block {}", entry);
             }
         }).toList();
     }
@@ -104,7 +104,7 @@ public record SeasonTheme(Map<Material, List<BlockData>> blocks, Set<Material> c
             particle = Optional.empty();
         }
         if (particle.isEmpty()) {
-            logger.warning("seasons: particle " + name + " is unknown or needs data");
+            logger.warn("seasons: particle {} is unknown or needs data", name);
         }
         return particle;
     }
@@ -119,7 +119,7 @@ public record SeasonTheme(Map<Material, List<BlockData>> blocks, Set<Material> c
                         entry.get("volume") instanceof Number volume ? volume.floatValue() : 1,
                         entry.get("pitch") instanceof Number pitch ? pitch.floatValue() : 1));
             } catch (InvalidKeyException invalid) {
-                logger.warning("seasons: invalid sound " + entry.get("sound"));
+                logger.warn("seasons: invalid sound {}", entry.get("sound"));
             }
         }).toList();
     }

@@ -74,7 +74,7 @@ public final class NetworkOperations implements PluginMessageListener, Listener 
             var reply = OperationCodec.reply(message);
             finish(player, reply.id(), reply.result());
         } catch (IOException e) {
-            plugin.getLogger().warning("Invalid operation reply: " + e.getMessage());
+            plugin.getSLF4JLogger().warn("Invalid operation reply: {}", e.getMessage());
         }
     }
 

@@ -14,7 +14,6 @@ import org.bukkit.plugin.Plugin;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Level;
 
 /**
  * Who is vanished on this server, already while their join is handled: core hides a vanished joiner only at the
@@ -51,7 +50,7 @@ public final class VanishedPlayers implements Listener {
                 vanished.remove(event.getUniqueId());
             }
         } catch (DatabaseException e) {
-            plugin.getLogger().log(Level.SEVERE, "Could not read the vanish state of " + event.getName() + ", turning the login away", e);
+            plugin.getSLF4JLogger().error("Could not read the vanish state of {}, turning the login away", event.getName(), e);
             event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, messages.get("login.retry"));
         }
     }

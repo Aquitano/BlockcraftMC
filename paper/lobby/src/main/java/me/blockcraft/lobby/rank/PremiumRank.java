@@ -7,7 +7,6 @@ import org.bukkit.plugin.Plugin;
 
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.logging.Level;
 
 public final class PremiumRank {
 
@@ -32,7 +31,7 @@ public final class PremiumRank {
                 })
                 .handle((ignored, error) -> {
                     if (error != null) {
-                        plugin.getLogger().log(Level.SEVERE, "Could not grant the premium group to " + player, error);
+                        plugin.getSLF4JLogger().error("Could not grant the premium group to {}", player, error);
                     }
                     return error == null;
                 });

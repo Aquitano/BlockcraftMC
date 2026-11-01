@@ -20,6 +20,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.slf4j.Logger;
 
 import java.io.ByteArrayInputStream;
 import java.lang.reflect.Field;
@@ -31,9 +32,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.logging.Handler;
-import java.util.logging.LogRecord;
-import java.util.logging.Logger;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -49,7 +47,7 @@ public class PlayerTasksTest {
     private final ArrayDeque<Runnable> workers = new ArrayDeque<>();
     private final ArrayDeque<Runnable> delayed = new ArrayDeque<>();
     private final List<Component> received = new ArrayList<>();
-    private final List<LogRecord> logs = new ArrayList<>();
+    private final List<LogEntry> logs = new ArrayList<>();
     private final UUID id = UUID.randomUUID();
     private boolean online = true;
     private boolean enabled = true;
@@ -62,12 +60,14 @@ public class PlayerTasksTest {
 
     @Before
     public void setUp() throws Exception {
-        var logger = Logger.getAnonymousLogger();
-        logger.setUseParentHandlers(false);
-        logger.addHandler(new Handler() {
-            @Override public void publish(LogRecord record) { logs.add(record); }
-            @Override public void flush() { }
-            @Override public void close() { }
+        var logger = fake(Logger.class, (proxy, method, args) -> {
+            if (method.getReturnType() == boolean.class) {
+                return true;
+            }
+            if (args != null && args.length > 0 && args[0] instanceof String message) {
+                logs.add(new LogEntry(message, thrown(args)));
+            }
+            return null;
         });
         var task = fake(BukkitTask.class, (proxy, method, args) -> null);
         var scheduler = fake(BukkitScheduler.class, (proxy, method, args) -> {
@@ -97,7 +97,7 @@ public class PlayerTasksTest {
         plugin = fake(Plugin.class, (proxy, method, args) -> switch (method.getName()) {
             case "getServer" -> server;
             case "isEnabled" -> enabled;
-            case "getLogger" -> logger;
+            case "getSLF4JLogger" -> logger;
             default -> throw new AssertionError(method.getName());
         });
         player = fake(Player.class, (proxy, method, args) -> switch (method.getName()) {
@@ -271,8 +271,8 @@ public class PlayerTasksTest {
         assertTrue(completed.isEmpty());
         assertTrue(received.isEmpty());
         assertEquals(1, logs.size());
-        assertTrue(logs.getFirst().getMessage().contains(id.toString()));
-        assertSame(failure, logs.getFirst().getThrown());
+        assertTrue(logs.getFirst().message().contains(id.toString()));
+        assertSame(failure, logs.getFirst().thrown());
         tick();
 
         assertEquals(List.of("failed"), completed);
@@ -322,7 +322,7 @@ public class PlayerTasksTest {
         tick();
 
         assertEquals(List.of("failed"), failed);
-        assertEquals("Background task failed", logs.getFirst().getMessage());
+        assertEquals("Background task failed", logs.getFirst().message());
     }
 
     private InventoryView view(InventoryHolder holder) {
@@ -354,6 +354,17 @@ public class PlayerTasksTest {
         while (!queue.isEmpty()) {
             queue.remove().run();
         }
+    }
+
+    private record LogEntry(String message, Throwable thrown) {
+    }
+
+    private static Throwable thrown(Object[] args) {
+        var last = args[args.length - 1];
+        if (last instanceof Object[] varargs && varargs.length > 0) {
+            last = varargs[varargs.length - 1];
+        }
+        return last instanceof Throwable throwable ? throwable : null;
     }
 
     private static <T> T fake(Class<T> type, InvocationHandler handler) {

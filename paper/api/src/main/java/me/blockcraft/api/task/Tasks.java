@@ -5,7 +5,6 @@ import org.bukkit.plugin.Plugin;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import java.util.logging.Level;
 
 public final class Tasks {
 
@@ -33,7 +32,7 @@ public final class Tasks {
                 T result = work.get();
                 completion = () -> onMainThread.accept(result);
             } catch (RuntimeException e) {
-                plugin.getLogger().log(Level.WARNING, failureContext, e);
+                plugin.getSLF4JLogger().warn(failureContext, e);
                 completion = onFailure;
             }
             sync(plugin, completion);

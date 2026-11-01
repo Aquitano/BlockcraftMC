@@ -151,7 +151,7 @@ public final class FreezeService implements Listener {
         var notice = messages.get("freeze.left-while-frozen", Placeholder.unparsed("player", player.getName()));
         Bukkit.getOnlinePlayers().stream().filter(other -> !other.equals(player)).findFirst().ifPresentOrElse(
                 carrier -> ProxyMessaging.notifyStaff(plugin, carrier, NOTIFY_PERMISSION, notice),
-                () -> plugin.getLogger().warning(player.getName() + " left while frozen and nobody was online to carry the staff notice"));
+                () -> plugin.getSLF4JLogger().warn("{} left while frozen and nobody was online to carry the staff notice", player.getName()));
     }
 
     @EventHandler
