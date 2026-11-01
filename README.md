@@ -170,6 +170,12 @@ docker compose up -d mariadb    # MariaDB on localhost:3306, database/user/passw
 ./gradlew :velocity:runVelocity # Velocity on 25565 with all Velocity plugins + LuckPerms
 ```
 
+`-Pgame=zombies` runs a game server instead of the lobby: announced as that group, with the map from `worlds/zombies`
+and its own run directory `run/paper-zombies`. A game server stops itself after every round, which also ends the
+Gradle task, so for several rounds in a row run `dev/run-game.sh zombies` instead: it starts the task again every
+time the server stops on its own, a console `stop` included, and the game's lobby comes back without a hand-started
+task. Ctrl-C ends the loop together with the server.
+
 `-Pplugins=core,lobby` limits either run task to a subset (`BlockcraftAPI` is always included). The run directories
 under `run/` are seeded from `dev/` (proxy forwarding, ports, dev secret, LuckPerms on the compose MariaDB so proxy
 and backend share one permission database) and are git-ignored. The dev run tasks accept the Minecraft EULA on your
