@@ -10,7 +10,6 @@ import org.bukkit.entity.ItemDisplay;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
-import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,7 +19,7 @@ import java.util.function.Supplier;
 
 /**
  * Now and then something crosses the sky above the lobby: one of the configured props pieces, an airship or a flock
- * of birds, on a straight line through the air above the spawn. Like the sleigh, the model rides one invisible
+ * of birds, on a straight line through the air above the spawn, high enough to clear every building on its way. Like the sleigh, the model rides one invisible
  * display that moves, so a flight costs one teleport per step whatever its size.
  */
 public final class Flights implements AutoCloseable {
@@ -29,6 +28,7 @@ public final class Flights implements AutoCloseable {
     private static final long CHECK_TICKS = 20L * 15;
     private static final float VIEW_RANGE = 4f;
     private static final double SWAY = 1.5;
+    private static final double WINGSPAN = 6;
 
     private final Plugin plugin;
     private final FlightsConfig config;
@@ -70,13 +70,8 @@ public final class Flights implements AutoCloseable {
         if (flight != null || prop == null) {
             return false;
         }
-        var random = ThreadLocalRandom.current();
-        double angle = random.nextDouble(Math.PI * 2);
-        var direction = new Vector(Math.cos(angle), 0, Math.sin(angle));
-        var aside = new Vector(-direction.getZ(), 0, direction.getX()).multiply(random.nextDouble(-config.length() / 6.0, config.length() / 6.0));
-        var start = over.clone().add(direction.clone().multiply(-config.length() / 2.0)).add(aside).add(0, config.height(), 0);
-        start.setDirection(direction);
-        start.setPitch(0);
+        var start = Airspace.lowestRoute(over, config.height(), config.length(), WINGSPAN, SWAY, config.length() / 6.0);
+        var direction = start.getDirection();
         var root = start.getWorld().spawn(start, ItemDisplay.class, display -> {
             display.setPersistent(false);
             display.setTeleportDuration((int) STEP_TICKS);

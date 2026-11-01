@@ -439,7 +439,7 @@ sleigh:
 flights:
   enabled: true
   interval-seconds: 240
-  height: 75
+  height: 40
   length: 200
   flight-ticks: 1000
   models: [airship, birds]

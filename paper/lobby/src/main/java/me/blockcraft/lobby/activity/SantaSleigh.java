@@ -62,6 +62,8 @@ public final class SantaSleigh implements Listener, AutoCloseable {
     private static final Display.Brightness LIT = new Display.Brightness(15, 15);
     private static final Vector3f RUDOLPHS_NOSE = new Vector3f(0, 0.91f, 7.9f);
     private static final Vector3f BEHIND = new Vector3f(0, 0.2f, -1.6f);
+    private static final double REACH = 8;
+    private static final double BELOW = 1.5;
     private static final Particle.DustOptions NOSE_GLOW = new Particle.DustOptions(Color.RED, 1.5f);
 
     private final Plugin plugin;
@@ -102,10 +104,8 @@ public final class SantaSleigh implements Listener, AutoCloseable {
         if (flight != null) {
             return false;
         }
-        double angle = ThreadLocalRandom.current().nextDouble(Math.PI * 2);
-        var direction = new Vector(Math.cos(angle), 0, Math.sin(angle));
-        var start = center.clone().add(direction.clone().multiply(-config.length() / 2.0)).add(0, config.height(), 0);
-        start.setDirection(direction);
+        var start = Airspace.lowestRoute(center, config.height(), config.length(), REACH, BELOW, 0);
+        var direction = start.getDirection();
         var root = spawn(start);
         caught.clear();
         Bukkit.getOnlinePlayers().forEach(player -> player.sendMessage(messages.get("seasonal.sleigh-announce")));
@@ -183,7 +183,7 @@ public final class SantaSleigh implements Listener, AutoCloseable {
     private void drop(Location at) {
         var from = local(at, BEHIND);
         var world = from.getWorld();
-        var hit = world.rayTraceBlocks(from, new Vector(0, -1, 0), config.height() + 32.0, FluidCollisionMode.ALWAYS, true);
+        var hit = world.rayTraceBlocks(from, new Vector(0, -1, 0), from.getY() - world.getMinHeight(), FluidCollisionMode.ALWAYS, true);
         if (hit == null) {
             return;
         }
