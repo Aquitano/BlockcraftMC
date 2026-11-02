@@ -1,27 +1,20 @@
 package me.blockcraft.api.game;
 
-import io.papermc.paper.chat.ChatRenderer;
-import io.papermc.paper.event.player.AsyncChatEvent;
 import me.blockcraft.api.BlockcraftApi;
-import me.blockcraft.api.item.HotbarItem;
 import me.blockcraft.api.menu.Menu;
 import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.api.sound.Sounds;
-import me.blockcraft.api.spectate.SpectateRequestEvent;
 import me.blockcraft.api.task.Countdown;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.api.vanish.VanishChangeEvent;
 import me.blockcraft.common.network.RejoinRepository;
-import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
-import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.util.BoundingBox;
@@ -34,7 +27,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.function.Consumer;
 import java.util.function.IntConsumer;
@@ -45,17 +37,14 @@ import java.util.function.IntConsumer;
  * spectator is neither announced nor counted. A player who vanishes while the lobby waits moves to the spectators
  * the same way. It tells the proxy the phase, owns the countdowns and boss bars that
  * end with the round, counts a mid-round quit as a death and a loss unless the game keeps the quitter's place for a
- * while ({@link #stepOut}), and ends the round once. While the round runs,
- * what a spectator writes reaches only the other spectators, so nobody can tell the players where their enemies are.
- * Spectators fly unseen in adventure mode with a hotbar to pick a player, step to the previous or next one and leave,
- * and {@link SpectatorGuard} keeps them off the round.
+ * while ({@link #stepOut}), and ends the round once. Its spectators are {@link Spectators}, whose chat stays among
+ * themselves while the round runs, so nobody can tell the players where their enemies are.
  */
 public final class Round implements Listener {
 
     private static final Set<Integer> END_ANNOUNCEMENTS = Set.of(600, 300, 180, 60);
     private static final long TICKS_PER_SECOND = 20L;
     private static final int SECONDS_PER_MINUTE = 60;
-    private static final Set<UUID> WATCHING = ConcurrentHashMap.newKeySet();
 
     private final Plugin plugin;
     private final BlockcraftApi api;
@@ -65,10 +54,9 @@ public final class Round implements Listener {
     private final GameConfig config;
     // Chat reads these off the main thread; copy-on-write keeps the join order players() hands out.
     private final Set<UUID> players = new CopyOnWriteArraySet<>();
-    private final Set<UUID> spectators = new CopyOnWriteArraySet<>();
+    private final Spectators spectators;
     private final List<Countdown> timers = new ArrayList<>();
     private final List<TimerBar> bars = new ArrayList<>();
-    private final Map<UUID, UUID> watched = new HashMap<>();
     private final Map<UUID, Away> away = new HashMap<>();
     private final RejoinRepository rejoins;
     private volatile GamePhase phase = GamePhase.LOBBY;
@@ -84,17 +72,12 @@ public final class Round implements Listener {
         this.capacity = capacity;
         this.config = config;
         this.rejoins = new RejoinRepository(api.database());
+        this.spectators = new Spectators(plugin, arena, this::players, () -> phase == GamePhase.INGAME);
         Bukkit.getPluginManager().registerEvents(this, plugin);
-        Bukkit.getPluginManager().registerEvents(new SpectatorGuard(this::isSpectator), plugin);
         releaseRejoins();
     }
 
     private record Away(String name, Consumer<UUID> onForfeit) {
-    }
-
-    /** Whether the player watches a round on this server, which their game mode no longer tells. */
-    public static boolean isWatching(Player player) {
-        return WATCHING.contains(player.getUniqueId());
     }
 
     public Arena arena() {
@@ -139,17 +122,8 @@ public final class Round implements Listener {
             return false;
         }
         players.add(player.getUniqueId());
-        spectators.remove(player.getUniqueId());
-        WATCHING.remove(player.getUniqueId());
         // Whoever is online still hides this account if it watched here before and rejoined.
-        for (var other : Bukkit.getOnlinePlayers()) {
-            if (!other.equals(player)) {
-                other.showPlayer(plugin, player);
-                if (isSpectator(other)) {
-                    player.hidePlayer(plugin, other);
-                }
-            }
-        }
+        spectators.release(player);
         summary.join(player);
         arena.welcome(player, players.size(), capacity);
         return true;
@@ -158,9 +132,7 @@ public final class Round implements Listener {
     /** Returns whether the player was playing; leaving a running round counts as a death and a loss. */
     public boolean leave(Player player) {
         var id = player.getUniqueId();
-        spectators.remove(id);
-        watched.remove(id);
-        WATCHING.remove(id);
+        spectators.forget(id);
         bars.forEach(bar -> bar.hide(player));
         if (!players.remove(id)) {
             return false;
@@ -189,9 +161,7 @@ public final class Round implements Listener {
         if (phase != GamePhase.INGAME || seconds <= 0 || !players.contains(id)) {
             return false;
         }
-        spectators.remove(id);
-        watched.remove(id);
-        WATCHING.remove(id);
+        spectators.forget(id);
         var kept = new Away(player.getName(), onForfeit);
         away.put(id, kept);
         var server = api.server().name();
@@ -212,14 +182,7 @@ public final class Round implements Listener {
             return false;
         }
         release(id);
-        for (var other : Bukkit.getOnlinePlayers()) {
-            if (!other.equals(player)) {
-                other.showPlayer(plugin, player);
-                if (isSpectator(other)) {
-                    player.hidePlayer(plugin, other);
-                }
-            }
-        }
+        spectators.release(player);
         arena.back(player);
         return true;
     }
@@ -262,49 +225,16 @@ public final class Round implements Listener {
         arena.farewell(player, players.size(), capacity);
     }
 
-    /** Runs after core's chat format, whose line it marks rather than replaces. */
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-    public void onChat(AsyncChatEvent event) {
-        if (phase != GamePhase.INGAME || !isSpectator(event.getPlayer())) {
-            return;
-        }
-        event.viewers().removeIf(viewer -> viewer instanceof Player reader && !isSpectator(reader));
-        var tag = arena.spectatorChatTag().append(Component.space());
-        var line = event.renderer();
-        event.renderer((ChatRenderer) (source, displayName, message, viewer) ->
-                tag.append(line.render(source, displayName, message, viewer)));
-    }
-
     /** Out for good: the player watches the rest, once the game has respawned them and called {@link #watch}. */
     public void eliminate(Player player) {
         players.remove(player.getUniqueId());
-        spectators.add(player.getUniqueId());
+        spectators.add(player);
         summary.eliminate(player);
     }
 
-    /**
-     * Puts a spectator into the state they watch in: flying unseen by the players, with the spectator hotbar. Only
-     * spectators see each other. A dead player is put into this state after respawning.
-     */
+    /** Puts a spectator into the state they watch in; see {@link Spectators#watch}. */
     public void watch(Player player) {
-        spectators.add(player.getUniqueId());
-        WATCHING.add(player.getUniqueId());
-        if (player.isDead()) {
-            respawn(player, 1L);
-            return;
-        }
-        PlayerReset.spectate(player);
-        for (var other : Bukkit.getOnlinePlayers()) {
-            if (other.equals(player)) {
-                continue;
-            }
-            if (isSpectator(other)) {
-                player.showPlayer(plugin, other);
-            } else {
-                other.hidePlayer(plugin, player);
-            }
-        }
-        SpectatorItem.give(player, api.messages());
+        spectators.watch(player);
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -318,83 +248,6 @@ public final class Round implements Listener {
                 }
             });
         }
-        if (isSpectator(player) && isWatching(player)) {
-            Tasks.sync(plugin, () -> {
-                if (player.isOnline() && isSpectator(player)) {
-                    watch(player);
-                }
-            });
-        }
-    }
-
-    /** The spectator came to watch a friend, which the proxy names only after the join. */
-    @EventHandler
-    public void onSpectateRequest(SpectateRequestEvent event) {
-        var spectator = event.getPlayer();
-        if (!isSpectator(spectator)) {
-            return;
-        }
-        var friend = event.target();
-        var target = Bukkit.getPlayer(friend);
-        if (target != null && spectator.canSee(target)) {
-            watched.put(spectator.getUniqueId(), friend);
-            arena.follow(spectator, target);
-        }
-    }
-
-    @EventHandler
-    public void onSpectatorItem(PlayerInteractEvent event) {
-        var spectator = event.getPlayer();
-        if (event.getHand() != EquipmentSlot.HAND || !event.getAction().isRightClick() || !isSpectator(spectator)) {
-            return;
-        }
-        HotbarItem.of(event.getItem(), SpectatorItem.class).ifPresent(item -> {
-            event.setCancelled(true);
-            switch (item) {
-                case PICK_PLAYER -> pick(spectator);
-                case PREVIOUS_PLAYER -> step(spectator, -1);
-                case NEXT_PLAYER -> step(spectator, 1);
-                case LEAVE_ROUND -> ProxyMessaging.hub(plugin, spectator);
-            }
-        });
-    }
-
-    private void pick(Player spectator) {
-        var targets = watchable(spectator);
-        if (targets.isEmpty()) {
-            nobodyToWatch(spectator);
-            return;
-        }
-        new SpectatorMenu(api.messages(), targets, this::jump).open(spectator);
-    }
-
-    /** Goes through the players in join order from the one last watched; without one, from the first or the last. */
-    private void step(Player spectator, int step) {
-        var targets = watchable(spectator);
-        if (targets.isEmpty()) {
-            nobodyToWatch(spectator);
-            return;
-        }
-        int current = targets.stream().map(Player::getUniqueId).toList().indexOf(watched.get(spectator.getUniqueId()));
-        int next = current < 0 ? (step > 0 ? 0 : targets.size() - 1) : Math.floorMod(current + step, targets.size());
-        jump(spectator, targets.get(next));
-    }
-
-    private void jump(Player spectator, Player target) {
-        if (!isSpectator(spectator) || !isPlaying(target) || !spectator.canSee(target)) {
-            return;
-        }
-        watched.put(spectator.getUniqueId(), target.getUniqueId());
-        arena.jump(spectator, target);
-    }
-
-    private List<Player> watchable(Player spectator) {
-        return players().stream().filter(spectator::canSee).toList();
-    }
-
-    private void nobodyToWatch(Player spectator) {
-        api.notifications().feedback(spectator, api.messages().get("spectator.nobody"));
-        Sounds.MENU_DENY.play(spectator);
     }
 
     /** Where the round plays, for whoever records all of it rather than only what is near the players, such as a replay. */
@@ -411,7 +264,7 @@ public final class Round implements Listener {
     }
 
     public boolean isSpectator(Player player) {
-        return spectators.contains(player.getUniqueId());
+        return spectators.isSpectator(player);
     }
 
     public List<Player> players() {
@@ -427,12 +280,12 @@ public final class Round implements Listener {
     }
 
     public List<Player> spectators() {
-        return online(spectators);
+        return spectators.list();
     }
 
     /** Vanished staff watch uncounted. */
     public int spectatorCount() {
-        return (int) spectators().stream().filter(player -> !api.isVanished(player)).count();
+        return spectators.count();
     }
 
     /** Registers a countdown that the end of the round stops. */
@@ -527,7 +380,7 @@ public final class Round implements Listener {
         summary.close();
         summary = nextSummary;
         players().forEach(summary::join);
-        watched.clear();
+        spectators.clearTargets();
         enter(GamePhase.LOBBY);
         return true;
     }

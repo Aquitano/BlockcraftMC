@@ -5,6 +5,7 @@ import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.replay.ReplayRecording;
 import me.blockcraft.api.game.GamePhase;
 import me.blockcraft.api.game.Round;
+import me.blockcraft.api.game.Spectators;
 import me.blockcraft.api.game.RoundPhaseChangeEvent;
 import me.blockcraft.api.game.ShotEvent;
 import me.blockcraft.api.world.BlocksChangedEvent;
@@ -230,7 +231,7 @@ public final class MatchRecorder implements Listener, AutoCloseable, ReplayRecor
 
     /** A dead player waiting to respawn is out of the picture, like a dying mob. */
     private static boolean visible(Round round, Player player) {
-        return round.isPlaying(player) && !Round.isWatching(player) && !BlockcraftApi.get().isVanished(player)
+        return round.isPlaying(player) && !Spectators.isWatching(player) && !BlockcraftApi.get().isVanished(player)
                 && !player.isDead();
     }
 

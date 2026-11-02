@@ -10,6 +10,8 @@ import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BooleanSupplier;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 /**
@@ -27,15 +29,30 @@ public final class GameSidebar {
         }
     }
 
+    /** Who the frame says is still in and how many watch. */
+    public record Headcount(int players, int spectators) {
+
+        public static Supplier<Headcount> of(Round round) {
+            return () -> new Headcount(round.playerCount(), round.spectatorCount());
+        }
+    }
+
     /** The client shows no more; during the round the map makes room for the game's lines when they need it. */
     private static final int MAX_ROWS = 15;
 
     private final Sidebar sidebar;
-    private final Round round;
+    private final Supplier<Headcount> headcount;
+    private final BooleanSupplier clockOnSidebar;
 
     public GameSidebar(Component title, Round round) {
+        this(title, Headcount.of(round), round::clockOnSidebar);
+    }
+
+    /** For a game that counts its players itself, such as one whose deaths are secret or one without a {@link Round}. */
+    public GameSidebar(Component title, Supplier<Headcount> headcount, BooleanSupplier clockOnSidebar) {
         this.sidebar = new Sidebar(title);
-        this.round = round;
+        this.headcount = headcount;
+        this.clockOnSidebar = clockOnSidebar;
     }
 
     /** The headings carry icons, which only the viewer's client knows how to draw. */
@@ -50,7 +67,7 @@ public final class GameSidebar {
 
     public void lobby(Player viewer, int max, Component map, List<Section> game) {
         var frame = new ArrayList<Section>();
-        frame.add(players(viewer, max));
+        frame.add(players(viewer, max, headcount.get()));
         frame.add(new Section(heading(viewer, "sidebar.map"), value(map)));
         show(viewer, frame, game);
     }
@@ -58,12 +75,13 @@ public final class GameSidebar {
     public void round(Player viewer, int max, int secondsLeft, Component map, List<Section> game) {
         var frame = new ArrayList<Section>();
         var messages = BlockcraftApi.get().messages();
-        var players = new ArrayList<>(players(viewer, max).values());
-        if (round.spectatorCount() > 0) {
-            players.add(messages.get("sidebar.spectators-value", Formatter.number("spectators", round.spectatorCount())));
+        var count = headcount.get();
+        var players = new ArrayList<>(players(viewer, max, count).values());
+        if (count.spectators() > 0) {
+            players.add(messages.get("sidebar.spectators-value", Formatter.number("spectators", count.spectators())));
         }
         frame.add(new Section(heading(viewer, "sidebar.players"), players));
-        if (round.clockOnSidebar()) {
+        if (clockOnSidebar.getAsBoolean()) {
             frame.add(new Section(heading(viewer, "sidebar.time"), value(Component.text(TimerBar.clock(secondsLeft)))));
         }
         var withMap = new ArrayList<>(frame);
@@ -79,9 +97,9 @@ public final class GameSidebar {
         show(viewer, List.of(new Section(heading(viewer, "sidebar.winner"), values)), List.of());
     }
 
-    private Section players(Player viewer, int max) {
+    private static Section players(Player viewer, int max, Headcount count) {
         return new Section(heading(viewer, "sidebar.players"), BlockcraftApi.get().messages().get("sidebar.players-value",
-                Formatter.number("players", round.playerCount()), Formatter.number("max", max)));
+                Formatter.number("players", count.players()), Formatter.number("max", max)));
     }
 
     private static Component heading(Player viewer, String key) {

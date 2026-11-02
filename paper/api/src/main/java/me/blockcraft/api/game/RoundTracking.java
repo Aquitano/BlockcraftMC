@@ -195,6 +195,6 @@ final class RoundTracking implements Listener {
 
     /** In the round and not watching it, which an eliminated player does. */
     private boolean playing(Player player) {
-        return active.contains(player.getUniqueId()) && !Round.isWatching(player);
+        return active.contains(player.getUniqueId()) && !Spectators.isWatching(player);
     }
 }
