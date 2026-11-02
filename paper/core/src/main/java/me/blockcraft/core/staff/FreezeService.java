@@ -29,7 +29,6 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.scheduler.BukkitTask;
 
 import java.util.EnumSet;
 import java.util.Locale;
@@ -57,7 +56,6 @@ public final class FreezeService implements Listener {
     private final SerialTasks<UUID> writes;
     private final Set<UUID> frozen = ConcurrentHashMap.newKeySet();
     private final Set<UUID> pending = ConcurrentHashMap.newKeySet();
-    private BukkitTask reminder;
 
     public FreezeService(Plugin plugin, FreezeRepository repository, Messages messages) {
         this.plugin = plugin;
@@ -67,13 +65,7 @@ public final class FreezeService implements Listener {
     }
 
     public void start() {
-        reminder = Bukkit.getScheduler().runTaskTimer(plugin, this::remind, REMINDER_TICKS, REMINDER_TICKS);
-    }
-
-    public void stop() {
-        if (reminder != null) {
-            reminder.cancel();
-        }
+        Bukkit.getScheduler().runTaskTimer(plugin, this::remind, REMINDER_TICKS, REMINDER_TICKS);
     }
 
     public boolean isFrozen(Player player) {
@@ -121,14 +113,23 @@ public final class FreezeService implements Listener {
         }
     }
 
-
     @EventHandler(priority = EventPriority.LOWEST)
     public void onPreLogin(AsyncPlayerPreLoginEvent event) {
+        var uuid = event.getUniqueId();
         LoginLookup.run(plugin, messages, event, "freeze state", () -> {
-            if (repository.issuer(event.getUniqueId()).isPresent()) {
-                pending.add(event.getUniqueId());
+            if (repository.issuer(uuid).isPresent()) {
+                pending.add(uuid);
+            } else {
+                pending.remove(uuid);
             }
         });
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onPreLoginResult(AsyncPlayerPreLoginEvent event) {
+        if (event.getLoginResult() != AsyncPlayerPreLoginEvent.Result.ALLOWED) {
+            pending.remove(event.getUniqueId());
+        }
     }
 
     @EventHandler

@@ -81,7 +81,7 @@ public final class XpCommand {
             case SET -> {
                 if (unit == Unit.LEVELS) {
                     target.setLevel(amount);
-                } else if (amount > target.getExpToLevel()) {
+                } else if (amount >= target.getExpToLevel()) {
                     sender.sendMessage(messages.get("xp.points-too-high", player, Formatter.number("max", target.getExpToLevel())));
                     return;
                 } else {

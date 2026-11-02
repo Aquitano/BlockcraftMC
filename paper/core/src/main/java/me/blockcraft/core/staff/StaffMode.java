@@ -43,8 +43,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Staff mode: vanished, flying, with a locked hotbar of moderation tools instead of the player's inventory.
- * The inventory is kept in memory and in {@code bc_staff_inventories}; leaving, quitting or rejoining after a
- * crash all hand it back.
+ * The inventory is kept in memory and in {@code bc_staff_inventories}; leaving, quitting or rejoining this server
+ * after a crash all hand it back.
  */
 public final class StaffMode implements Listener {
 
@@ -124,26 +124,51 @@ public final class StaffMode implements Listener {
             return;
         }
         restore(player, session);
-        player.sendMessage(messages.get("staff.left"));
-    }
-
-    private void restore(Player player, Session session) {
-        endSpectating(player);
         var uuid = player.getUniqueId();
-        player.getInventory().setContents(session.contents());
         writes.run(uuid, () -> inventories.delete(uuid));
         if (!session.vanishedBefore()) {
             vanish.set(player, false);
         }
+        player.sendMessage(messages.get("staff.left"));
+    }
+
+    /** Vanish stays as it is: a quit may be a server switch, and the next server has already read it. */
+    private void restore(Player player, Session session) {
+        endSpectating(player);
+        player.getInventory().setContents(session.contents());
         BlockcraftApi.get().flight().set(player, session.flightGrantedBefore());
         player.setAllowFlight(session.flightBefore());
         player.setFlying(false);
     }
 
+    /** Runs while the plugin is disabled, when nothing can be queued any more, so the rows go synchronously. */
+    public void close() {
+        sessions.forEach((uuid, session) -> {
+            var player = Bukkit.getPlayer(uuid);
+            if (player != null) {
+                restore(player, session);
+            }
+            try {
+                inventories.delete(uuid);
+            } catch (RuntimeException e) {
+                plugin.getSLF4JLogger().warn("Could not delete the staff-mode inventory of {}", uuid, e);
+            }
+        });
+        sessions.clear();
+    }
+
     @EventHandler(priority = EventPriority.LOWEST)
     public void onPreLogin(AsyncPlayerPreLoginEvent event) {
-        LoginLookup.run(plugin, messages, event, "staff-mode inventory", () ->
-                inventories.find(event.getUniqueId()).ifPresent(contents -> pendingRestore.put(event.getUniqueId(), contents)));
+        var uuid = event.getUniqueId();
+        LoginLookup.run(plugin, messages, event, "staff-mode inventory", () -> inventories.find(uuid).ifPresentOrElse(
+                contents -> pendingRestore.put(uuid, contents), () -> pendingRestore.remove(uuid)));
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onPreLoginResult(AsyncPlayerPreLoginEvent event) {
+        if (event.getLoginResult() != AsyncPlayerPreLoginEvent.Result.ALLOWED) {
+            pendingRestore.remove(event.getUniqueId());
+        }
     }
 
     @EventHandler
@@ -166,6 +191,7 @@ public final class StaffMode implements Listener {
         var session = sessions.remove(uuid);
         if (session != null) {
             restore(player, session);
+            writes.run(uuid, () -> inventories.delete(uuid));
         } else {
             endSpectating(player);
         }
@@ -313,7 +339,9 @@ public final class StaffMode implements Listener {
         if (!previous.location().isWorldLoaded() || !staff.teleport(previous.location())) {
             staff.sendMessage(messages.get("staff.spec-return-failed"));
         }
-        audit.record(staff, "staff.spectate.stop");
+        if (plugin.isEnabled()) {
+            audit.record(staff, "staff.spectate.stop");
+        }
         return true;
     }
 

@@ -30,7 +30,6 @@ import me.blockcraft.core.command.NickCommand;
 import me.blockcraft.core.command.PTimeCommand;
 import me.blockcraft.core.command.PlayerTimeListener;
 import me.blockcraft.core.command.PWeatherCommand;
-import me.blockcraft.core.command.RainCommand;
 import me.blockcraft.core.command.ReflashCommand;
 import me.blockcraft.core.command.ReportCommand;
 import me.blockcraft.core.command.SetHealthCommand;
@@ -39,13 +38,13 @@ import me.blockcraft.core.command.SpeedCommand;
 import me.blockcraft.core.command.SpectateCommand;
 import me.blockcraft.core.command.StaffCommand;
 import me.blockcraft.core.command.SudoCommand;
-import me.blockcraft.core.command.SunCommand;
 import me.blockcraft.core.command.TeamCommand;
 import me.blockcraft.core.command.TrollCommand;
 import me.blockcraft.core.command.TpAllCommand;
 import me.blockcraft.core.command.TpHereCommand;
 import me.blockcraft.core.command.TpCommand;
 import me.blockcraft.core.command.VanishCommand;
+import me.blockcraft.core.command.WeatherCommand;
 import me.blockcraft.core.command.XpCommand;
 import me.blockcraft.core.listener.ChatCooldownListener;
 import me.blockcraft.core.listener.ChatConfig;
@@ -83,6 +82,7 @@ public final class BlockcraftCorePlugin extends JavaPlugin {
 
     private AnticheatHistory anticheatHistory;
     private TrollMode trolls;
+    private StaffMode staffMode;
 
     @Override
     public void onEnable() {
@@ -117,14 +117,14 @@ public final class BlockcraftCorePlugin extends JavaPlugin {
         var freeze = new FreezeService(this, moderation.frozen(), messages);
         pluginManager.registerEvents(freeze, this);
         freeze.start();
-        var staffInventories = new StaffInventoryRepository(api.database());
+        var staffInventories = new StaffInventoryRepository(api.database(), api.server().name());
         staffInventories.createTable();
         var audit = api.audit();
         if (!Boolean.FALSE.equals(YamlFile.section(config, "troll").get("enabled"))) {
             trolls = new TrollMode(this, messages);
             pluginManager.registerEvents(trolls, this);
         }
-        var staffMode = new StaffMode(this, messages, vanish, freeze, staffInventories, audit, new ReportRepository(api.database()),
+        staffMode = new StaffMode(this, messages, vanish, freeze, staffInventories, audit, new ReportRepository(api.database()),
                 moderation.punishments());
         pluginManager.registerEvents(staffMode, this);
         var anticheat = YamlFile.section(config, "anticheat");
@@ -169,8 +169,8 @@ public final class BlockcraftCorePlugin extends JavaPlugin {
             commands.register(SpeedCommand.create(audit, messages));
             commands.register(SudoCommand.create(audit, messages, sudoProtected));
             commands.register(KillCommand.create(audit, messages));
-            commands.register(RainCommand.create(messages));
-            commands.register(SunCommand.create(messages));
+            commands.register(WeatherCommand.rain(messages));
+            commands.register(WeatherCommand.sun(messages));
             commands.register(DayTimeCommand.day(messages));
             commands.register(DayTimeCommand.night(messages));
             commands.register(TpCommand.create(back, audit, messages));
@@ -198,6 +198,9 @@ public final class BlockcraftCorePlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (staffMode != null) {
+            staffMode.close();
+        }
         if (trolls != null) {
             trolls.close();
         }
