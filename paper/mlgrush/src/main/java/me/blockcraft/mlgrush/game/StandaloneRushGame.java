@@ -5,6 +5,7 @@ import me.blockcraft.api.world.WaitingLobby;
 import me.blockcraft.api.game.Arena;
 import me.blockcraft.api.game.GameConfig;
 import me.blockcraft.api.game.GamePhase;
+import me.blockcraft.api.game.GameSidebar;
 import me.blockcraft.api.game.LobbyCountdown;
 import me.blockcraft.api.game.LobbyHotbar;
 import me.blockcraft.api.game.PlayerReset;
@@ -13,7 +14,6 @@ import me.blockcraft.api.game.RoundSummary;
 import me.blockcraft.api.game.StatsMenus;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.pack.MenuIcon;
-import me.blockcraft.api.scoreboard.Sidebar;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.api.task.SerialTasks;
@@ -37,6 +37,7 @@ import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -53,6 +54,7 @@ public final class StandaloneRushGame {
     private final RushArena arena;
     private RushSession session;
     private List<UUID> participants = List.of();
+    private Optional<String> winnerName = Optional.empty();
     private final java.util.Set<UUID> rematches = new java.util.HashSet<>();
     private Object identity = new Object();
     private final int[] previousScores = new int[2];
@@ -62,7 +64,7 @@ public final class StandaloneRushGame {
     private final Round round;
     private final LobbyCountdown countdown;
     private final LobbyHotbar hotbar;
-    private final Sidebar sidebar;
+    private final GameSidebar sidebar;
     private final BukkitTask voidRecovery;
     private BukkitTask resetTask;
 
@@ -85,7 +87,7 @@ public final class StandaloneRushGame {
                         player -> new RushLayoutMenu(kit, messages, "layout.", player).open(player)),
                 new LobbyHotbar.Choice(MenuIcon.DUELL, messages.get("item.rematch"), () -> round.phase() == GamePhase.ENDING,
                         player -> requestRematch(player, identity))), statsMenus, countdown);
-        sidebar = new Sidebar(messages.get("scoreboard.title"));
+        sidebar = new GameSidebar(messages.get("scoreboard.title"), GameSidebar.Headcount.of(round), () -> false);
         voidRecovery = Bukkit.getScheduler().runTaskTimer(plugin, this::recoverWaitingPlayers, 1L, 1L);
     }
 
@@ -187,6 +189,7 @@ public final class StandaloneRushGame {
         }
         countdown.cancel();
         participants = players.stream().map(Player::getUniqueId).toList();
+        winnerName = Optional.empty();
         round.enter(GamePhase.INGAME);
         var started = identity;
         session = new RushSession(plugin, config, arena, kit, participants, new RushSession.Events() {
@@ -264,6 +267,7 @@ public final class StandaloneRushGame {
         }
         cancelReset();
         winner.map(Bukkit::getPlayer).ifPresent(summary::awardWin);
+        winnerName = winner.map(Bukkit::getPlayer).map(Player::getName);
         if (session != null) {
             session.close();
         }
@@ -358,22 +362,30 @@ public final class StandaloneRushGame {
     }
 
     public void refresh() {
+        var map = Component.text(arena.name());
+        var winners = winnerName.stream().<Component>map(Component::text).toList();
+        for (var viewer : Bukkit.getOnlinePlayers()) {
+            var icons = GameSidebar.icons(viewer);
+            var target = new GameSidebar.Section(messages.get("scoreboard.target", icons),
+                    GameSidebar.value(messages.get("scoreboard.target-value", Formatter.number("target", config.scoreTarget()))));
+            switch (round.phase()) {
+                case LOBBY -> sidebar.lobby(viewer, MAX_PARTICIPANTS, map, List.of(target));
+                case INGAME -> sidebar.round(viewer, MAX_PARTICIPANTS, 0, map,
+                        List.of(new GameSidebar.Section(messages.get("scoreboard.score", icons), scores()), target));
+                case ENDING -> sidebar.end(viewer, winners);
+            }
+        }
+    }
+
+    private List<Component> scores() {
         var lines = new ArrayList<Component>();
-        lines.add(Component.empty());
-        for (int slot = 0; slot < 2; slot++) {
-            final int side = slot;
-            var players = round.players();
-            var name = players.stream().filter(player -> round.phase() == GamePhase.LOBBY
-                            ? players.indexOf(player) == side : participants.indexOf(player.getUniqueId()) == side)
-                    .map(Player::getName).findFirst().orElse("-");
+        for (int slot = 0; slot < MAX_PARTICIPANTS; slot++) {
+            var name = participants.size() > slot
+                    ? Optional.ofNullable(Bukkit.getPlayer(participants.get(slot))).map(Player::getName).orElse("-") : "-";
             lines.add(messages.get(slot == 0 ? "scoreboard.red" : "scoreboard.blue",
                     Placeholder.unparsed("player", name), Formatter.number("score", score(slot))));
         }
-        lines.add(Component.empty());
-        lines.add(messages.get("scoreboard.map", Placeholder.unparsed("map", arena.name())));
-        lines.add(messages.get("scoreboard.target", Formatter.number("target", config.scoreTarget())));
-        lines.add(messages.get("scoreboard." + round.phase().name().toLowerCase(java.util.Locale.ROOT)));
-        Bukkit.getOnlinePlayers().forEach(player -> sidebar.show(player, lines));
+        return lines;
     }
 
     private void cancelReset() {

@@ -37,14 +37,12 @@ rematch:
   request: "<prefix><accent><player> <muted>möchte eine Revanche. Klicke auf Nochmal spielen oder rechtsklicke das Revanche-Item."
   starting: "<prefix><muted>Revanche auf <accent><map> <muted>in <accent><seconds> Sekunden<muted>!"
 scoreboard:
-  map: "<muted>Karte: <accent><map>"
   title: "<mlgrush><bold>MLG Rush"
-  red: "<red>Rot <dark>· <white><player> <dark>· <white><score>"
-  blue: "<blue>Blau <dark>· <white><player> <dark>· <white><score>"
-  target: "<muted>Ziel: <accent><target> Punkte"
-  lobby: "<muted>Warte auf zwei Spieler"
-  ingame: "<muted>Baue das gegnerische Bett ab!"
-  ending: "<muted>Match beendet"
+  score: "<muted><icon:kills> PUNKTE"
+  red: "<arrow><red>Rot <dark>· <white><player> <dark>· <white><score>"
+  blue: "<arrow><blue>Blau <dark>· <white><player> <dark>· <white><score>"
+  target: "<muted><icon:mode> ZIEL"
+  target-value: "<target> Punkte"
 stats:
   header: "<muted>MLG-Rush-Stats von <accent><player>"
   lines:
