@@ -1,7 +1,6 @@
 package me.blockcraft.lobby.npc;
 
 import io.papermc.paper.datacomponent.item.ResolvableProfile;
-import io.papermc.paper.event.player.PrePlayerAttackEntityEvent;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.config.Locations;
 import me.blockcraft.api.display.Cards;
@@ -11,7 +10,7 @@ import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
-import me.blockcraft.lobby.ChunkTickets;
+import me.blockcraft.lobby.SpotEntities;
 import me.blockcraft.lobby.activity.Skins;
 import me.blockcraft.lobby.config.GameNpcConfig;
 import me.blockcraft.lobby.config.LobbyLocation;
@@ -21,16 +20,13 @@ import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Mannequin;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Pose;
 import org.bukkit.entity.TextDisplay;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -70,16 +66,16 @@ public final class GameNpcs implements Listener, AutoCloseable {
     private final Messages messages;
     private final Messages shared;
     private final List<Npc> npcs = new ArrayList<>();
-    private final ChunkTickets.Owner held;
+    private final SpotEntities.Group<Npc> placed;
     private final Map<UUID, Long> lastClick = new HashMap<>();
     private final Random random = new Random();
     private final BukkitTask look;
     private final BukkitTask idle;
 
-    public GameNpcs(Plugin plugin, ChunkTickets chunks, Locations<String> spots, GameNpcConfig config, Map<LobbyLocation, String> groups,
+    public GameNpcs(Plugin plugin, SpotEntities entities, Locations<String> spots, GameNpcConfig config, Map<LobbyLocation, String> groups,
                     ServerGroups status, Messages messages, Messages shared) {
         this.plugin = plugin;
-        held = chunks.owner();
+        placed = entities.group(this::play);
         this.spots = spots;
         this.config = config;
         this.groups = groups;
@@ -113,12 +109,12 @@ public final class GameNpcs implements Listener, AutoCloseable {
         removeAll();
         for (var area : LobbyLocation.values()) {
             area.game().ifPresent(icon -> spots.get(spot(area)).ifPresent(base -> {
-                var chunk = base.getChunk();
-                held.add(chunk);
                 var figure = Figures.spawn(base, skin(area), spawned -> spawned.getEquipment().setItemInMainHand(icon.item().build()));
                 var card = Cards.line(base.clone().add(0, CARD_HEIGHT, 0), card(area));
                 card.setPersistent(false);
-                npcs.add(new Npc(area, base.clone(), figure, card));
+                var npc = new Npc(area, base.clone(), figure, card);
+                npcs.add(npc);
+                placed.add(npc, base, figure, card);
             }));
         }
     }
@@ -143,24 +139,6 @@ public final class GameNpcs implements Listener, AutoCloseable {
         npcs.forEach(npc -> npc.card().text(card(npc.area())));
     }
 
-    @EventHandler
-    public void onClick(PlayerInteractEntityEvent event) {
-        byFigure(event.getRightClicked()).ifPresent(npc -> {
-            event.setCancelled(true);
-            if (event.getHand() == EquipmentSlot.HAND) {
-                play(event.getPlayer(), npc);
-            }
-        });
-    }
-
-    @EventHandler
-    public void onHit(PrePlayerAttackEntityEvent event) {
-        byFigure(event.getAttacked()).ifPresent(npc -> {
-            event.setCancelled(true);
-            play(event.getPlayer(), npc);
-        });
-    }
-
     /** The proxy checks availability at the moment of the click, as it does for the navigator and the signs. */
     private void play(Player player, Npc npc) {
         long now = System.currentTimeMillis();
@@ -177,10 +155,6 @@ public final class GameNpcs implements Listener, AutoCloseable {
         Sounds.MENU_CLICK.play(player);
         npc.figure().swingMainHand();
         ProxyMessaging.play(plugin, player, group);
-    }
-
-    private Optional<Npc> byFigure(Entity entity) {
-        return npcs.stream().filter(npc -> npc.figure().equals(entity)).findFirst();
     }
 
     private void look() {
@@ -227,12 +201,8 @@ public final class GameNpcs implements Listener, AutoCloseable {
     }
 
     private void removeAll() {
-        npcs.forEach(npc -> {
-            npc.figure().remove();
-            npc.card().remove();
-        });
+        placed.close();
         npcs.clear();
-        held.clear();
     }
 
     @Override

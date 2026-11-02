@@ -1,7 +1,6 @@
 package me.blockcraft.lobby.activity;
 
 import io.papermc.paper.event.player.AsyncChatEvent;
-import io.papermc.paper.event.player.PrePlayerAttackEntityEvent;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.config.Locations;
 import me.blockcraft.api.cosmetic.ChatTag;
@@ -13,7 +12,7 @@ import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.calendar.NetworkCalendar;
 import me.blockcraft.common.message.Messages;
-import me.blockcraft.lobby.ChunkTickets;
+import me.blockcraft.lobby.SpotEntities;
 import me.blockcraft.common.shop.UnlockRewards;
 import me.blockcraft.lobby.config.ActivitiesConfig;
 import me.blockcraft.lobby.cosmetic.Trail;
@@ -23,21 +22,17 @@ import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
-import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Bat;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Interaction;
 import org.bukkit.entity.ItemDisplay;
-import org.bukkit.entity.Mannequin;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
@@ -52,6 +47,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
@@ -95,6 +91,7 @@ public final class SeasonalEvents implements Listener, AutoCloseable {
     }
     private record Hat(ItemStack original, ItemStack temporary, long until) { }
     private enum Trick { PUMPKIN, BATS, GHOST }
+    private static final String SANTA = "santa";
     private static final NamespacedKey HAT = new NamespacedKey("lobby", "seasonal_hat");
     private static final int BATS = 6;
     private static final long BAT_TICKS = 60L;
@@ -108,25 +105,27 @@ public final class SeasonalEvents implements Listener, AutoCloseable {
     private final UnlockRewards rewards;
     private final Runnable fireworks;
     private final SeasonalDecor decor;
-    private final Map<UUID, Egg> eggs = new HashMap<>();
-    private final ChunkTickets.Owner heldChunks;
+    private final List<Egg> eggs = new ArrayList<>();
+    private final SpotEntities.Group<Egg> eggSpots;
+    private final SpotEntities.Group<String> santa;
     private final Map<UUID, Hat> hats = new HashMap<>();
     private final Set<UUID> claiming = new HashSet<>();
     private LocalDate day;
     private Set<NetworkCalendar.Occasion> occasions;
     private BossBar countdown;
-    private Mannequin santa;
     private Hunt hunt;
 
-    public SeasonalEvents(Plugin plugin, ChunkTickets chunks, Locations<String> locations, ActivitiesConfig config, Messages messages,
+    public SeasonalEvents(Plugin plugin, SpotEntities entities, Locations<String> locations, ActivitiesConfig config, Messages messages,
                           Runnable fireworks, SeasonalDecor decor) {
         this.plugin = plugin;
-        heldChunks = chunks.owner();
         this.locations = locations;
         this.config = config;
         this.messages = messages;
         this.calendar = BlockcraftApi.get().calendar();
         this.rewards = new UnlockRewards(BlockcraftApi.get().database());
+        eggSpots = entities.group(this::findEgg, (player, egg) -> { });
+        santa = entities.group((player, spot) -> visitSanta(player),
+                (player, spot) -> player.sendMessage(messages.pick("seasonal.santa-hurt")));
         this.fireworks = fireworks;
         this.decor = decor;
         day = calendar.today();
@@ -177,7 +176,7 @@ public final class SeasonalEvents implements Listener, AutoCloseable {
         clear();
         decor.refresh();
         if (calendar.is(CHRISTMAS)) {
-            locations.get("santa").ifPresent(this::spawnSanta);
+            locations.get(SANTA).ifPresent(spot -> santa.add(SANTA, spot, Figures.spawn(spot, Skins.SANTA, messages.get("seasonal.santa-name"))));
         }
         hunt = Arrays.stream(Hunt.values()).filter(each -> calendar.is(each.occasion)).findFirst().orElse(null);
         if (hunt == null) {
@@ -193,7 +192,6 @@ public final class SeasonalEvents implements Listener, AutoCloseable {
         Collections.shuffle(spots, new Random(day.getYear() * 31L + hunt.ordinal()));
         for (var key : spots.stream().limit(config.easterEggs()).toList()) {
             var location = locations.get(key).orElseThrow();
-            hold(location);
             var display = location.getWorld().spawn(location.clone().add(0, 0.35, 0), ItemDisplay.class, egg -> {
                 egg.setItemStack(ItemStack.of(hunt.item));
                 egg.setPersistent(false);
@@ -204,30 +202,17 @@ public final class SeasonalEvents implements Listener, AutoCloseable {
                 target.setResponsive(true);
                 target.setPersistent(false);
             });
-            eggs.put(interaction.getUniqueId(), new Egg(key, display, interaction));
+            var egg = new Egg(key, display, interaction);
+            eggs.add(egg);
+            eggSpots.add(egg, location, display, interaction);
         }
         Bukkit.getOnlinePlayers().forEach(this::hideFoundEggs);
     }
 
-    /** Non-persistent entities vanish with their chunk, so a seasonal figure keeps its chunk loaded while it stands. */
-    private void hold(Location location) {
-        var chunk = location.getChunk();
-        heldChunks.add(chunk);
-    }
-
     private void clear() {
-        eggs.values().forEach(egg -> { egg.display().remove(); egg.interaction().remove(); });
+        eggSpots.close();
         eggs.clear();
-        if (santa != null) {
-            Figures.remove(santa);
-            santa = null;
-        }
-        heldChunks.clear();
-    }
-
-    private void spawnSanta(Location spot) {
-        hold(spot);
-        santa = Figures.spawn(spot, Skins.SANTA, messages.get("seasonal.santa-name"));
+        santa.close();
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -253,7 +238,7 @@ public final class SeasonalEvents implements Listener, AutoCloseable {
         }
         calendar.adventDoor(calendar.today()).ifPresent(door ->
                 player.sendMessage(messages.get("seasonal.advent-hint", Formatter.number("day", door))));
-        if (santa != null) {
+        if (santa.stands(SANTA)) {
             player.sendMessage(messages.get("seasonal.christmas-hint"));
         }
         if (hunt != null && !eggs.isEmpty()) {
@@ -273,25 +258,18 @@ public final class SeasonalEvents implements Listener, AutoCloseable {
         var prefix = eggPrefix();
         Tasks.async(plugin, () -> BlockcraftApi.get().unlocks().owned(player.getUniqueId(), prefix), owned -> {
             if (player.isOnline()) {
-                eggs.values().stream().filter(egg -> owned.contains(prefix + egg.key())).forEach(egg -> hide(player, egg));
+                eggs.stream().filter(egg -> owned.contains(prefix + egg.key())).forEach(egg -> hide(player, egg));
             }
         });
     }
 
-    @EventHandler
-    public void onEgg(PlayerInteractEntityEvent event) {
-        var egg = eggs.get(event.getRightClicked().getUniqueId());
-        if (egg == null || event.getHand() != EquipmentSlot.HAND || hunt == null || !calendar.is(hunt.occasion)) {
-            return;
-        }
-        event.setCancelled(true);
-        var player = event.getPlayer();
-        if (!claiming.add(player.getUniqueId())) {
+    private void findEgg(Player player, Egg egg) {
+        if (hunt == null || !calendar.is(hunt.occasion) || !claiming.add(player.getUniqueId())) {
             return;
         }
         var prefix = eggPrefix();
         var current = hunt;
-        var selected = eggs.values().stream().map(Egg::key).toList();
+        var selected = eggs.stream().map(Egg::key).toList();
         Tasks.async(plugin, () -> {
             var unlocks = BlockcraftApi.get().unlocks();
             unlocks.unlock(player.getUniqueId(), prefix + egg.key());
@@ -379,14 +357,8 @@ public final class SeasonalEvents implements Listener, AutoCloseable {
         }
     }
 
-    @EventHandler
-    public void onSanta(PlayerInteractEntityEvent event) {
-        if (santa == null || !event.getRightClicked().equals(santa)) {
-            return;
-        }
-        event.setCancelled(true);
-        var player = event.getPlayer();
-        if (event.getHand() != EquipmentSlot.HAND || !calendar.is(CHRISTMAS) || !claiming.add(player.getUniqueId())) {
+    private void visitSanta(Player player) {
+        if (!calendar.is(CHRISTMAS) || !claiming.add(player.getUniqueId())) {
             return;
         }
         var name = BlockcraftApi.get().realName(player);
@@ -403,14 +375,6 @@ public final class SeasonalEvents implements Listener, AutoCloseable {
                 player.sendMessage(messages.pick("seasonal.santa-talk"));
             }
         }, () -> claiming.remove(player.getUniqueId()));
-    }
-
-    @EventHandler
-    public void onSantaHit(PrePlayerAttackEntityEvent event) {
-        if (santa != null && event.getAttacked().equals(santa)) {
-            event.setCancelled(true);
-            event.getPlayer().sendMessage(messages.pick("seasonal.santa-hurt"));
-        }
     }
 
     private void jingle(Player player) {

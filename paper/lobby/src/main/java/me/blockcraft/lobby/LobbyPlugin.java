@@ -136,8 +136,10 @@ public final class LobbyPlugin extends JavaPlugin {
         var items = new LobbyItems(messages, throwFight::item);
         var secrets = new Secrets(this, messages, api.unlocks(), coins, config.secretReward());
         var chunks = new ChunkTickets(this);
+        var spotEntities = new SpotEntities(chunks);
+        register(spotEntities);
         var quirks = new LobbyQuirks(this, activities, messages, pets, secrets);
-        var prisoner = new Prisoner(chunks, activityLocations, messages);
+        var prisoner = new Prisoner(spotEntities, activityLocations, messages);
         var mapSecrets = new MapSecrets(this, activityLocations, messages, secrets, activities.placeRadius());
         var herobrine = new Herobrine(this, HerobrineConfig.fromYaml(YamlFile.section(yaml, "herobrine")), secrets);
         var stars = new ShootingStars(this, ShootingStarConfig.fromYaml(YamlFile.section(yaml, "shooting-stars")), messages, secrets);
@@ -156,7 +158,7 @@ public final class LobbyPlugin extends JavaPlugin {
         var flights = new Flights(this, FlightsConfig.fromYaml(YamlFile.section(yaml, "flights")), pieces,
                 () -> locations.get(LobbyLocation.SPAWN));
         closables.add(flights);
-        var seasons = new SeasonalEvents(this, chunks, activityLocations, activities, messages,
+        var seasons = new SeasonalEvents(this, spotEntities, activityLocations, activities, messages,
                 () -> locations.get(LobbyLocation.SPAWN).ifPresent(spawn -> config.fireworkSpots()
                         .forEach(spot -> MoveListener.launchFirework(spot.toLocation(spawn.getWorld())))), decor);
         closables.add(seasons);
@@ -172,7 +174,7 @@ public final class LobbyPlugin extends JavaPlugin {
         closables.add(friends::close);
         var previews = new CosmeticPreviews(this, messages, config.cosmeticPreviewTicks());
         closables.add(previews::close);
-        var loreNotes = new LoreNotes(this, chunks, activityLocations, LoreNoteConfig.fromYaml(YamlFile.section(yaml, "lore-notes")), messages);
+        var loreNotes = new LoreNotes(this, spotEntities, activityLocations, LoreNoteConfig.fromYaml(YamlFile.section(yaml, "lore-notes")), messages);
         var cookies = new CookieClicker(this, api.database(), messages,
                 CookieProgress.Rules.fromYaml(YamlFile.section(yaml, "cookies")));
         closables.add(cookies);
@@ -188,23 +190,23 @@ public final class LobbyPlugin extends JavaPlugin {
         closables.add(shopNpc::stop);
         var leaderboards = new Leaderboards(this, api.database(), messages, api.messages(), config.leaderboards());
         var holograms = new Holograms(this, messages, leaderboards);
-        var podiums = new Podiums(chunks, activityLocations, leaderboards, messages);
+        var podiums = new Podiums(spotEntities, activityLocations, leaderboards, messages);
         holograms.afterRefresh(podiums::refresh);
         holograms.start(config.leaderboardRefreshSeconds() * 20L);
         closables.add(holograms::stop);
         var ownRadius = YamlFile.section(yaml, "leaderboards").get("own-radius") instanceof Number radius ? radius.doubleValue() : 10.0;
         var ownPlacings = new OwnPlacings(this, leaderboards, messages, Math.clamp(ownRadius, 2.0, 48.0),
                 Duration.ofSeconds(config.leaderboardRefreshSeconds()));
-        var gameNpcs = new GameNpcs(this, chunks, activityLocations, GameNpcConfig.fromYaml(YamlFile.section(yaml, "game-npcs")),
+        var gameNpcs = new GameNpcs(this, spotEntities, activityLocations, GameNpcConfig.fromYaml(YamlFile.section(yaml, "game-npcs")),
                 config.navigatorGroups(), api.groups(), messages, api.messages());
         var boardSettings = YamlFile.section(yaml, "notice-boards");
-        var noticeBoards = new NoticeBoards(this, chunks, activityLocations, messages,
+        var noticeBoards = new NoticeBoards(this, spotEntities, activityLocations, messages,
                 String.valueOf(boardSettings.getOrDefault("changelog-version", "1")),
                 String.valueOf(boardSettings.getOrDefault("rules-command", "regeln")));
-        var quests = new QuestGivers(chunks, activityLocations, Quest.fromYaml(YamlFile.section(yaml, "quests")), messages);
-        var daily = new DailyCourier(this, chunks, activityLocations, DailyRewards.fromYaml(YamlFile.section(yaml, "daily-rewards")), messages);
+        var quests = new QuestGivers(spotEntities, activityLocations, Quest.fromYaml(YamlFile.section(yaml, "quests")), messages);
+        var daily = new DailyCourier(this, spotEntities, activityLocations, DailyRewards.fromYaml(YamlFile.section(yaml, "daily-rewards")), messages);
         closables.addAll(List.of(gameNpcs, podiums, ownPlacings, loreNotes, noticeBoards, quests, daily));
-        register(gameNpcs, podiums, ownPlacings, loreNotes, noticeBoards, quests, daily);
+        register(gameNpcs, ownPlacings, loreNotes, noticeBoards, daily);
         LobbyNews.start(this, messages, YamlFile.section(yaml, "news")).ifPresent(news -> {
             closables.add(news);
             register(news);
@@ -229,7 +231,7 @@ public final class LobbyPlugin extends JavaPlugin {
         var hud = new LobbyHud(this, messages);
         hud.start(config.hudRefreshSeconds() * 20L);
         closables.add(hud::stop);
-        register(previews, hud, parkour, quirks, seasons, decor, snowfall, sleigh, throwFight, prisoner, mapSecrets, stars.wishes(),
+        register(previews, hud, parkour, quirks, seasons, decor, snowfall, sleigh, throwFight, mapSecrets, stars.wishes(),
                 new PondFishing(activityLocations, activities, messages, secrets, throwFight::item),
                 new JoinQuitListener(messages, locations, items, trails, pets, hider),
                 new CosmeticSettingsListener(messages, trails, pets, gadgets),

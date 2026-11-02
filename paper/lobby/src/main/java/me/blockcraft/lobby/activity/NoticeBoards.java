@@ -1,6 +1,5 @@
 package me.blockcraft.lobby.activity;
 
-import io.papermc.paper.event.player.PrePlayerAttackEntityEvent;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.config.Locations;
 import me.blockcraft.api.display.Cards;
@@ -8,26 +7,18 @@ import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
-import me.blockcraft.lobby.ChunkTickets;
+import me.blockcraft.lobby.SpotEntities;
 import me.blockcraft.common.settings.PlayerSetting;
 import me.blockcraft.lobby.menu.ChangelogDialog;
 import org.bukkit.Material;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.TextDisplay;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
 /**
  * The two boards at spawn, books lying at the map's {@code board-changelog} and {@code board-rules} spots under a
@@ -48,13 +39,11 @@ public final class NoticeBoards implements Listener, AutoCloseable {
     private final String version;
     private final String rulesCommand;
     private final ChangelogDialog changelog;
-    private final Map<String, LyingItem> lying = new HashMap<>();
-    private final List<TextDisplay> cards = new ArrayList<>();
-    private final ChunkTickets.Owner held;
+    private final SpotEntities.Group<String> boards;
 
-    public NoticeBoards(Plugin plugin, ChunkTickets chunks, Locations<String> spots, Messages messages, String version, String rulesCommand) {
+    public NoticeBoards(Plugin plugin, SpotEntities entities, Locations<String> spots, Messages messages, String version, String rulesCommand) {
         this.plugin = plugin;
-        held = chunks.owner();
+        boards = entities.group(this::open);
         this.spots = spots;
         this.messages = messages;
         this.version = version;
@@ -67,36 +56,12 @@ public final class NoticeBoards implements Listener, AutoCloseable {
         close();
         for (var spot : SPOTS) {
             spots.get(spot).ifPresent(at -> {
-                var chunk = at.getChunk();
-                held.add(chunk);
-                lying.put(spot, LyingItem.place(at, ItemStack.of(spot.equals("board-rules") ? Material.WRITABLE_BOOK : Material.BOOK)));
+                var book = LyingItem.place(at, ItemStack.of(spot.equals("board-rules") ? Material.WRITABLE_BOOK : Material.BOOK));
                 var card = Cards.line(at.toBlockLocation().add(0.5, CARD_HEIGHT, 0.5), messages.get("boards." + spot));
                 card.setPersistent(false);
-                cards.add(card);
+                boards.add(spot, at, book.display(), book.box(), card);
             });
         }
-    }
-
-    @EventHandler
-    public void onClick(PlayerInteractEntityEvent event) {
-        board(event.getRightClicked()).ifPresent(board -> {
-            event.setCancelled(true);
-            if (event.getHand() == EquipmentSlot.HAND) {
-                open(event.getPlayer(), board);
-            }
-        });
-    }
-
-    @EventHandler
-    public void onHit(PrePlayerAttackEntityEvent event) {
-        board(event.getAttacked()).ifPresent(board -> {
-            event.setCancelled(true);
-            open(event.getPlayer(), board);
-        });
-    }
-
-    private Optional<String> board(Entity entity) {
-        return lying.entrySet().stream().filter(entry -> entry.getValue().owns(entity)).map(Map.Entry::getKey).findFirst();
     }
 
     private void open(Player player, String board) {
@@ -131,10 +96,6 @@ public final class NoticeBoards implements Listener, AutoCloseable {
 
     @Override
     public void close() {
-        lying.values().forEach(LyingItem::remove);
-        lying.clear();
-        cards.forEach(TextDisplay::remove);
-        cards.clear();
-        held.clear();
+        boards.close();
     }
 }

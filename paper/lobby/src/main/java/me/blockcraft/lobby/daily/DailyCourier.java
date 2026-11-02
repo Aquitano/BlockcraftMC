@@ -1,27 +1,23 @@
 package me.blockcraft.lobby.daily;
 
 import io.papermc.paper.datacomponent.item.ResolvableProfile;
-import io.papermc.paper.event.player.PrePlayerAttackEntityEvent;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.config.Locations;
 import me.blockcraft.api.display.Figures;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
-import me.blockcraft.lobby.ChunkTickets;
+import me.blockcraft.lobby.SpotEntities;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Mannequin;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.plugin.Plugin;
 
 import java.time.Duration;
@@ -41,16 +37,15 @@ public final class DailyCourier implements Listener, AutoCloseable {
     private final DailyRewards rewards;
     private final DailyRewardTable table;
     private final Messages messages;
-    private final ChunkTickets.Owner held;
+    private final SpotEntities.Group<String> courier;
     private final Component claimButton;
-    private Mannequin figure;
 
-    public DailyCourier(Plugin plugin, ChunkTickets chunks, Locations<String> spots, DailyRewards rewards, Messages messages) {
+    public DailyCourier(Plugin plugin, SpotEntities entities, Locations<String> spots, DailyRewards rewards, Messages messages) {
         this.plugin = plugin;
         this.spots = spots;
         this.rewards = rewards;
         this.messages = messages;
-        held = chunks.owner();
+        courier = entities.group((player, spot) -> talk(player));
         table = new DailyRewardTable(BlockcraftApi.get().database(), rewards);
         claimButton = messages.get("daily.claim-button")
                 .hoverEvent(HoverEvent.showText(messages.get("daily.claim-hover")))
@@ -61,10 +56,9 @@ public final class DailyCourier implements Listener, AutoCloseable {
     public void refresh() {
         close();
         spots.get(SPOT).ifPresent(at -> {
-            held.add(at.getChunk());
             var skin = rewards.skin().isBlank() ? Mannequin.defaultProfile()
                     : ResolvableProfile.resolvableProfile().name(rewards.skin()).build();
-            figure = Figures.spawn(at, skin, messages.get("daily.name"));
+            courier.add(SPOT, at, Figures.spawn(at, skin, messages.get("daily.name")));
         });
     }
 
@@ -85,28 +79,6 @@ public final class DailyCourier implements Listener, AutoCloseable {
                 }
             });
         });
-    }
-
-    @EventHandler
-    public void onTalk(PlayerInteractEntityEvent event) {
-        if (isFigure(event.getRightClicked())) {
-            event.setCancelled(true);
-            if (event.getHand() == EquipmentSlot.HAND) {
-                talk(event.getPlayer());
-            }
-        }
-    }
-
-    @EventHandler
-    public void onHit(PrePlayerAttackEntityEvent event) {
-        if (isFigure(event.getAttacked())) {
-            event.setCancelled(true);
-            talk(event.getPlayer());
-        }
-    }
-
-    private boolean isFigure(Entity entity) {
-        return figure != null && figure.equals(entity);
     }
 
     private void talk(Player player) {
@@ -140,10 +112,6 @@ public final class DailyCourier implements Listener, AutoCloseable {
 
     @Override
     public void close() {
-        if (figure != null) {
-            Figures.remove(figure);
-            figure = null;
-        }
-        held.clear();
+        courier.close();
     }
 }

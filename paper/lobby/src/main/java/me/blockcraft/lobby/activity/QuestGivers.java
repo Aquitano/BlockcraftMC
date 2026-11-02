@@ -1,30 +1,21 @@
 package me.blockcraft.lobby.activity;
 
 import io.papermc.paper.datacomponent.item.ResolvableProfile;
-import io.papermc.paper.event.player.PrePlayerAttackEntityEvent;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.config.Locations;
 import me.blockcraft.api.display.Figures;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.common.message.Messages;
-import me.blockcraft.lobby.ChunkTickets;
+import me.blockcraft.lobby.SpotEntities;
 import me.blockcraft.common.shop.UnlockRewards;
 import me.blockcraft.lobby.config.Quest;
 import me.blockcraft.lobby.menu.QuestDialog;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Mannequin;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerInteractEntityEvent;
-import org.bukkit.inventory.EquipmentSlot;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -32,7 +23,7 @@ import java.util.UUID;
  * reads the player's progress and shows it in a {@link QuestDialog}; a finished quest pays its reward once, written
  * with its unlock {@code lobby.quest.<key>} in one go so it cannot be claimed twice.
  */
-public final class QuestGivers implements Listener, AutoCloseable {
+public final class QuestGivers implements AutoCloseable {
 
     private static final String PARKOUR_FINISHED = "SELECT best_millis FROM bc_parkour WHERE player_uuid = ? AND best_millis IS NOT NULL";
 
@@ -40,15 +31,14 @@ public final class QuestGivers implements Listener, AutoCloseable {
     private final List<Quest> quests;
     private final Messages messages;
     private final UnlockRewards rewards;
-    private final Map<Mannequin, Quest> givers = new HashMap<>();
-    private final ChunkTickets.Owner held;
+    private final SpotEntities.Group<Quest> givers;
 
-    public QuestGivers(ChunkTickets chunks, Locations<String> spots, List<Quest> quests, Messages messages) {
-        held = chunks.owner();
+    public QuestGivers(SpotEntities entities, Locations<String> spots, List<Quest> quests, Messages messages) {
         this.spots = spots;
         this.quests = quests;
         this.messages = messages;
         this.rewards = new UnlockRewards(BlockcraftApi.get().database());
+        givers = entities.group(this::talk);
         refresh();
     }
 
@@ -64,35 +54,11 @@ public final class QuestGivers implements Listener, AutoCloseable {
         close();
         for (var quest : quests) {
             spots.get(spot(quest)).ifPresent(at -> {
-                var chunk = at.getChunk();
-                held.add(chunk);
                 var skin = quest.skin().isBlank() ? Mannequin.defaultProfile()
                         : ResolvableProfile.resolvableProfile().name(quest.skin()).build();
-                givers.put(Figures.spawn(at, skin, messages.get("quests." + quest.key() + ".name")), quest);
+                givers.add(quest, at, Figures.spawn(at, skin, messages.get("quests." + quest.key() + ".name")));
             });
         }
-    }
-
-    @EventHandler
-    public void onTalk(PlayerInteractEntityEvent event) {
-        quest(event.getRightClicked()).ifPresent(quest -> {
-            event.setCancelled(true);
-            if (event.getHand() == EquipmentSlot.HAND) {
-                talk(event.getPlayer(), quest);
-            }
-        });
-    }
-
-    @EventHandler
-    public void onHit(PrePlayerAttackEntityEvent event) {
-        quest(event.getAttacked()).ifPresent(quest -> {
-            event.setCancelled(true);
-            talk(event.getPlayer(), quest);
-        });
-    }
-
-    private Optional<Quest> quest(Entity entity) {
-        return entity instanceof Mannequin figure ? Optional.ofNullable(givers.get(figure)) : Optional.empty();
     }
 
     private void talk(Player player, Quest quest) {
@@ -138,8 +104,6 @@ public final class QuestGivers implements Listener, AutoCloseable {
 
     @Override
     public void close() {
-        givers.keySet().forEach(Figures::remove);
-        givers.clear();
-        held.clear();
+        givers.close();
     }
 }

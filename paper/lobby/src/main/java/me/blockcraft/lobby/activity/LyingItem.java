@@ -1,7 +1,6 @@
 package me.blockcraft.lobby.activity;
 
 import org.bukkit.Location;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Interaction;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.inventory.ItemStack;
@@ -38,14 +37,5 @@ record LyingItem(ItemDisplay display, Interaction box) {
             spawned.setPersistent(false);
         });
         return new LyingItem(display, box);
-    }
-
-    boolean owns(Entity entity) {
-        return box.equals(entity) || display.equals(entity);
-    }
-
-    void remove() {
-        display.remove();
-        box.remove();
     }
 }
