@@ -6,7 +6,7 @@ prices:
   hat: 800
 secrets:
   reward: 50
-  # Once a player found this many secrets, the menu shows a riddle on each one still missing.
+  # Once a player found this many secrets, the achievements menu shows a riddle on each one still missing.
   riddles-after: 3
 shop-npc:
   respawn-seconds: 500

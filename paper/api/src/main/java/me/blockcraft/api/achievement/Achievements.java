@@ -28,6 +28,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -63,6 +64,9 @@ public final class Achievements implements Listener {
     private record Rewards(List<Achievement> achievements, List<CosmeticReward> cosmetics) {
     }
 
+    private record Loaded(Snapshot snapshot, Set<String> sectionOwned) {
+    }
+
     private static final Title.Times TIMES = Title.Times.times(Duration.ofMillis(300), Duration.ofSeconds(2), Duration.ofMillis(500));
 
     private final Plugin plugin;
@@ -73,6 +77,7 @@ public final class Achievements implements Listener {
     private final Messages messages;
     private final PlayerTasks playerTasks;
     private final Notifications notifications;
+    private Optional<AchievementSection> section = Optional.empty();
 
     public Achievements(Plugin plugin, List<Achievement> catalog, Map<String, StatsRepository> games, Unlocks unlocks,
                         Xp xp, Messages messages, PlayerTasks playerTasks, Notifications notifications) {
@@ -206,14 +211,26 @@ public final class Achievements implements Listener {
         evaluate(Achievement.NETWORK, List.of(event.getPlayer()));
     }
 
+    public void section(AchievementSection section) {
+        this.section = Optional.of(section);
+    }
+
+    public void clearSection() {
+        section = Optional.empty();
+    }
+
     public void open(Player player, Optional<Consumer<Player>> back) {
         var uuid = player.getUniqueId();
         int level = xp.level(player);
+        var shown = section;
         playerTasks.latest(player, () -> {
             var stats = new LinkedHashMap<String, Stats>();
             games().forEach(game -> Optional.ofNullable(games.get(game)).ifPresent(repository -> stats.put(game, repository.get(uuid))));
-            return new Snapshot(stats, level, unlocks.owned(uuid, Achievement.ITEM_PREFIX));
-        }, snapshot -> new AchievementsMenu(this, messages, snapshot, back).open(player));
+            var sectionOwned = new HashSet<String>();
+            shown.ifPresent(extra -> extra.prefixes().forEach(prefix -> sectionOwned.addAll(unlocks.owned(uuid, prefix))));
+            return new Loaded(new Snapshot(stats, level, unlocks.owned(uuid, Achievement.ITEM_PREFIX)), sectionOwned);
+        }, loaded -> new AchievementsMenu(this, messages, loaded.snapshot(),
+                shown.map(extra -> extra.rows(loaded.sectionOwned())).orElse(List.of()), back).open(player));
     }
 
     private void evaluate(String game, List<Player> players) {

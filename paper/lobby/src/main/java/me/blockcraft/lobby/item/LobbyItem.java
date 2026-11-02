@@ -12,9 +12,7 @@ public enum LobbyItem implements HotbarItem {
     PROFILE(2),
     EXTRAS(4),
     GADGET(5),
-    SETTINGS(6),
-    FRIENDS(7),
-    SECRETS(8),
+    FRIENDS(8),
     POND_ROD(3),
     THROW(3);
 

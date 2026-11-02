@@ -34,11 +34,9 @@ public final class LobbyItemListener implements Listener {
         LobbyItem.of(event.getItem()).ifPresent(item -> {
             switch (item) {
                 case NAVIGATOR -> menus.openNavigator(player);
-                case SECRETS -> menus.openSecrets(player);
                 case EXTRAS -> menus.openExtras(player);
                 case PLAYER_HIDER -> toggleHider(player);
                 case PROFILE -> menus.openProfile(player);
-                case SETTINGS -> menus.openSettings(player);
                 case FRIENDS -> menus.openFriends(player);
                 case GADGET, POND_ROD, THROW -> {
                 }

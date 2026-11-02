@@ -21,7 +21,7 @@ public class AchievementPagesTest {
         try (var config = getClass().getResourceAsStream("/config.yml")) {
             catalog = Achievements.parse(YamlFile.section(YamlFile.load(config), "achievements"));
         }
-        var pages = new AchievementPages(catalog);
+        var pages = new AchievementPages<>(AchievementPages.byGame(catalog));
         var shown = visible(pages);
 
         assertEquals(catalog, shown);
@@ -30,7 +30,7 @@ public class AchievementPagesTest {
             assertTrue(pages.page(page).size() <= AchievementPages.ROWS_PER_PAGE);
             pages.page(page).forEach(row -> {
                 assertTrue(row.entries().size() <= AchievementPages.ENTRIES_PER_ROW);
-                assertTrue(row.entries().stream().allMatch(entry -> entry.game().equals(row.game())));
+                assertTrue(row.entries().stream().allMatch(entry -> entry.game().equals(row.heading())));
             });
         }
     }
@@ -38,7 +38,7 @@ public class AchievementPagesTest {
     @Test
     public void aGameContinuesOnTheNextRowAfterItsEighthEntry() {
         var catalog = entries("quicksg", 9);
-        var pages = new AchievementPages(catalog);
+        var pages = new AchievementPages<>(AchievementPages.byGame(catalog));
 
         assertEquals(1, pages.count());
         assertEquals(3, pages.inventoryRows());
@@ -52,18 +52,18 @@ public class AchievementPagesTest {
         for (int game = 0; game < 6; game++) {
             catalog.addAll(entries("game" + game, 8));
         }
-        var pages = new AchievementPages(catalog);
+        var pages = new AchievementPages<>(AchievementPages.byGame(catalog));
 
         assertEquals(2, pages.count());
         assertEquals(6, pages.inventoryRows());
         assertEquals(5, pages.page(0).size());
-        assertEquals("game5", pages.page(1).getFirst().game());
+        assertEquals("game5", pages.page(1).getFirst().heading());
         assertEquals(catalog, visible(pages));
     }
 
     @Test
     public void anEmptyCatalogStillHasAFooter() {
-        var pages = new AchievementPages(List.of());
+        var pages = new AchievementPages<String, Achievement>(List.of());
 
         assertEquals(1, pages.count());
         assertEquals(1, pages.inventoryRows());
@@ -75,7 +75,7 @@ public class AchievementPagesTest {
                 .mapToObj(index -> new Achievement(game, "entry" + index, Metric.WINS, 1, 25)).toList();
     }
 
-    private static List<Achievement> visible(AchievementPages pages) {
+    private static List<Achievement> visible(AchievementPages<String, Achievement> pages) {
         return IntStream.range(0, pages.count()).boxed()
                 .flatMap(page -> pages.page(page).stream())
                 .flatMap(row -> row.entries().stream()).toList();
