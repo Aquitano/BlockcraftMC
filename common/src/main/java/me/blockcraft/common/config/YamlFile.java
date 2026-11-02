@@ -1,5 +1,6 @@
 package me.blockcraft.common.config;
 
+import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.IOException;
@@ -7,6 +8,7 @@ import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,12 +34,40 @@ public final class YamlFile {
             if (Files.notExists(target)) {
                 return defaults;
             }
+            Map<String, Object> overrides;
             try (InputStream in = Files.newInputStream(target)) {
-                return merge(defaults, load(in));
+                overrides = load(in);
             }
+            var unknown = unknownKeys(defaults, overrides);
+            if (!unknown.isEmpty()) {
+                LoggerFactory.getLogger(YamlFile.class).warn(
+                        "{} sets keys this version does not know, so they do nothing; renamed or removed? {}", target, unknown);
+            }
+            return merge(defaults, overrides);
         } catch (IOException e) {
             throw new UncheckedIOException("Could not load " + target, e);
         }
+    }
+
+    /**
+     * The dotted keys of {@code overrides} that {@code defaults} lacks, each down to its first missing level. An entry
+     * an operator added to an open catalog shows up too, which is why this only warns.
+     */
+    public static List<String> unknownKeys(Map<?, ?> defaults, Map<?, ?> overrides) {
+        var unknown = new ArrayList<String>();
+        collectUnknown(unknown, "", defaults, overrides);
+        return unknown;
+    }
+
+    private static void collectUnknown(List<String> unknown, String prefix, Map<?, ?> defaults, Map<?, ?> overrides) {
+        overrides.forEach((key, value) -> {
+            String path = prefix + key;
+            if (!defaults.containsKey(key)) {
+                unknown.add(path);
+            } else if (defaults.get(key) instanceof Map<?, ?> nested && value instanceof Map<?, ?> override) {
+                collectUnknown(unknown, path + ".", nested, override);
+            }
+        });
     }
 
     /** Nested sections may be keyed by numbers (the /strafe catalogue), so keys stay untyped here. */

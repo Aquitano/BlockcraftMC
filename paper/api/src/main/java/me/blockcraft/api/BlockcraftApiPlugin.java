@@ -11,6 +11,7 @@ import me.blockcraft.api.command.CoinsCommand;
 import me.blockcraft.api.command.CommandRegistry;
 import me.blockcraft.api.command.LevelCommand;
 import me.blockcraft.api.command.MapCommand;
+import me.blockcraft.api.config.ConfigOverrides;
 import me.blockcraft.api.cosmetic.Effects;
 import me.blockcraft.api.cosmetic.WeaponStyles;
 import me.blockcraft.api.dialog.ServerMenu;
@@ -208,6 +209,7 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(flight, this);
         getServer().getPluginManager().registerEvents(new VanillaProgress(), this);
         getServer().getPluginManager().registerEvents(new LegacyProjectiles(), this);
+        getServer().getPluginManager().registerEvents(new ConfigOverrides(), this);
         getServer().getPluginManager().registerEvents(new LegacyDamage(), this);
 
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
