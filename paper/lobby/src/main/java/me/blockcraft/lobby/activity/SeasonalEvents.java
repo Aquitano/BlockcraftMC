@@ -297,7 +297,7 @@ public final class SeasonalEvents implements Listener, AutoCloseable {
             unlocks.unlock(player.getUniqueId(), prefix + egg.key());
             var owned = unlocks.owned(player.getUniqueId(), prefix);
             int found = (int) selected.stream().filter(key -> owned.contains(prefix + key)).count();
-            if (found >= config.easterEggs()) {
+            if (found >= selected.size()) {
                 unlocks.unlock(player.getUniqueId(), ChatTagChoice.of(current.tag).item());
             }
             return found;
@@ -306,8 +306,8 @@ public final class SeasonalEvents implements Listener, AutoCloseable {
             if (player.isOnline()) {
                 hide(player, egg);
                 current.sound.play(player);
-                player.sendMessage(messages.get(current.found, Formatter.number("found", found), Formatter.number("total", config.easterEggs())));
-                if (found >= config.easterEggs()) {
+                player.sendMessage(messages.get(current.found, Formatter.number("found", found), Formatter.number("total", selected.size())));
+                if (found >= selected.size()) {
                     player.sendMessage(messages.get("seasonal.tag", Placeholder.component("tag",
                             ChatTagChoice.of(current.tag).text(BlockcraftApi.get().messages()))));
                 }

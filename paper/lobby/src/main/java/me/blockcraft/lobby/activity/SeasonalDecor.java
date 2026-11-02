@@ -3,6 +3,7 @@ package me.blockcraft.lobby.activity;
 import io.papermc.paper.event.packet.PlayerChunkLoadEvent;
 import io.papermc.paper.math.Position;
 import me.blockcraft.api.season.Snowfall;
+import me.blockcraft.api.world.BlocksChangedEvent;
 import me.blockcraft.common.calendar.NetworkCalendar;
 import me.blockcraft.common.calendar.NetworkCalendar.Occasion;
 import me.blockcraft.lobby.config.SeasonTheme;
@@ -12,12 +13,15 @@ import org.bukkit.ChunkSnapshot;
 import org.bukkit.Material;
 import org.bukkit.Tag;
 import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.Snowable;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
 
 import java.util.HashMap;
 import java.util.List;
@@ -77,6 +81,25 @@ public final class SeasonalDecor implements Listener {
         if (!active.isEmpty()) {
             send(event.getPlayer(), decorations(event.getChunk()));
         }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onPlace(BlockPlaceEvent event) {
+        forget(event.getBlock());
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onBreak(BlockBreakEvent event) {
+        forget(event.getBlock());
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onBlocksChanged(BlocksChangedEvent event) {
+        event.blocks().forEach(this::forget);
+    }
+
+    private void forget(Block block) {
+        decorated.remove(id(block.getChunk()));
     }
 
     private static void send(Player player, Map<Position, BlockData> changes) {

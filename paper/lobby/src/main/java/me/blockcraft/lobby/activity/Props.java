@@ -2,6 +2,7 @@ package me.blockcraft.lobby.activity;
 
 import me.blockcraft.api.config.Locations;
 import me.blockcraft.api.item.Items;
+import me.blockcraft.lobby.ChunkTickets;
 import me.blockcraft.lobby.config.PropsConfig;
 import me.blockcraft.lobby.config.PropsConfig.BlockLook;
 import me.blockcraft.lobby.config.PropsConfig.ItemLook;
@@ -31,7 +32,7 @@ import java.util.Set;
  * each part gets its next transformation and the client interpolates towards it, which costs the server one update
  * per part and keyframe.
  */
-public final class Props {
+public final class Props implements AutoCloseable {
 
     private static final float FULL_TURN = (float) (Math.PI * 2);
     private static final float BLOCK_CENTRE = 0.5f;
@@ -44,14 +45,16 @@ public final class Props {
     private final Plugin plugin;
     private final PropsConfig config;
     private final Locations<String> spots;
+    private final ChunkTickets.Owner held;
     private final Map<String, List<Placed>> placed = new HashMap<>();
     private BukkitTask task;
     private long ticks;
 
-    public Props(Plugin plugin, PropsConfig config, Locations<String> spots) {
+    public Props(Plugin plugin, ChunkTickets chunks, PropsConfig config, Locations<String> spots) {
         this.plugin = plugin;
         this.config = config;
         this.spots = spots;
+        this.held = chunks.owner();
     }
 
     public Set<String> names() {
@@ -63,11 +66,13 @@ public final class Props {
         task = Bukkit.getScheduler().runTaskTimer(plugin, this::animate, config.keyframeTicks(), config.keyframeTicks());
     }
 
-    public void stop() {
+    @Override
+    public void close() {
         if (task != null) {
             task.cancel();
         }
         placed.keySet().stream().toList().forEach(this::despawn);
+        held.clear();
     }
 
     /** Puts the prop {@code name} at {@code spot}, where it stays after restarts. */
@@ -79,6 +84,7 @@ public final class Props {
 
     private void spawn(String name, Location spot) {
         despawn(name);
+        held.add(spot.getChunk());
         var prop = config.props().get(name);
         var displays = new ArrayList<Placed>();
         for (var part : prop.parts()) {

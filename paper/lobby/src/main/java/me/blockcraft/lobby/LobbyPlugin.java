@@ -2,11 +2,9 @@ package me.blockcraft.lobby;
 
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import me.blockcraft.api.BlockcraftApi;
-import me.blockcraft.api.achievement.Achievements;
 import me.blockcraft.api.command.CommandRegistry;
 import me.blockcraft.api.config.Locations;
 import me.blockcraft.api.game.ThrowFight;
-import me.blockcraft.api.menu.Profiles;
 import me.blockcraft.api.world.WorldProtection;
 import me.blockcraft.common.config.YamlFile;
 import me.blockcraft.common.message.Messages;
@@ -111,26 +109,7 @@ import java.util.stream.Stream;
 
 public final class LobbyPlugin extends JavaPlugin {
 
-    private Profiles profiles;
-    private Achievements achievements;
-    private CosmeticPreviews previews;
-    private ShopNpc shopNpc;
-    private FriendsChannel friends;
-    private Gadgets gadgets;
-    private LobbyHud hud;
-    private Holograms holograms;
-    private Parkour parkour;
-    private LobbyQuirks quirks;
-    private SeasonalEvents seasons;
-    private SeasonalAtmosphere atmosphere;
-    private SantaSleigh sleigh;
-    private Props props;
-    private Prisoner prisoner;
-    private Herobrine herobrine;
-    private MapSecrets mapSecrets;
-    private LobbyThrows throwFight;
-    private ShootingStars stars;
-    private final List<AutoCloseable> polish = new ArrayList<>();
+    private final List<AutoCloseable> closables = new ArrayList<>();
 
     @Override
     public void onEnable() {
@@ -140,7 +119,7 @@ public final class LobbyPlugin extends JavaPlugin {
         var activitySettings = new LinkedHashMap<>(YamlFile.section(yaml, "activities"));
         activitySettings.putAll(YamlConfiguration.loadConfiguration(api.map().file(this, "activity-settings.yml").toFile()).getValues(false));
         var activities = ActivitiesConfig.fromYaml(Map.of("activities", activitySettings));
-        profiles = api.profiles();
+        var profiles = api.profiles();
         var messages = Messages.load(getDataPath(), () -> getResource("messages.yml"), api.tags());
         var locations = Locations.load(api.map().file(this, "locations.yml"), LobbyLocation::key);
         var coins = api.coins();
@@ -149,54 +128,71 @@ public final class LobbyPlugin extends JavaPlugin {
         var trails = new Trails(config.trailIntervalTicks(), config.trailViewDistance());
         var pets = new Pets(messages);
         var hider = new PlayerHider(this, api.settings(), config.hiderCooldownMillis());
-        throwFight = new LobbyThrows(this, messages, api.calendar(), ThrowFight.Settings.fromYaml(YamlFile.section(yaml, "throw-fight")),
-                player -> parkour != null && parkour.running(player));
+        var activityLocations = Locations.load(api.map().file(this, "activities.yml"));
+        var parkour = new Parkour(this, activityLocations, activities, messages);
+        closables.add(parkour);
+        var throwFight = new LobbyThrows(this, messages, api.calendar(), ThrowFight.Settings.fromYaml(YamlFile.section(yaml, "throw-fight")),
+                parkour::running);
+        closables.add(throwFight);
         var items = new LobbyItems(messages, throwFight::item);
         var secrets = new Secrets(this, messages, api.unlocks(), coins, config.secretReward());
         var chunks = new ChunkTickets(this);
-        var activityLocations = Locations.load(api.map().file(this, "activities.yml"));
-        parkour = new Parkour(this, activityLocations, activities, messages);
-        quirks = new LobbyQuirks(this, activities, messages, pets, secrets);
-        prisoner = new Prisoner(chunks, activityLocations, messages);
-        mapSecrets = new MapSecrets(this, activityLocations, messages, secrets, activities.placeRadius());
-        herobrine = new Herobrine(this, HerobrineConfig.fromYaml(YamlFile.section(yaml, "herobrine")), secrets);
-        stars = new ShootingStars(this, ShootingStarConfig.fromYaml(YamlFile.section(yaml, "shooting-stars")), messages, secrets);
+        var quirks = new LobbyQuirks(this, activities, messages, pets, secrets);
+        var prisoner = new Prisoner(chunks, activityLocations, messages);
+        var mapSecrets = new MapSecrets(this, activityLocations, messages, secrets, activities.placeRadius());
+        var herobrine = new Herobrine(this, HerobrineConfig.fromYaml(YamlFile.section(yaml, "herobrine")), secrets);
+        var stars = new ShootingStars(this, ShootingStarConfig.fromYaml(YamlFile.section(yaml, "shooting-stars")), messages, secrets);
+        closables.addAll(List.of(quirks, prisoner, mapSecrets, herobrine, stars));
         var themes = SeasonTheme.all(YamlFile.section(yaml, "seasons"), getSLF4JLogger());
         var snowfall = new Snowfall(this, () -> locations.get(LobbyLocation.SPAWN));
-        polish.add(snowfall);
+        closables.add(snowfall);
         var decor = new SeasonalDecor(api.calendar(), themes, snowfall);
-        atmosphere = new SeasonalAtmosphere(this, api.calendar(), themes);
-        sleigh = new SantaSleigh(this, SleighConfig.fromYaml(YamlFile.section(yaml, "sleigh")), messages, api.calendar());
+        var atmosphere = new SeasonalAtmosphere(this, api.calendar(), themes);
+        var sleigh = new SantaSleigh(this, SleighConfig.fromYaml(YamlFile.section(yaml, "sleigh")), messages, api.calendar());
+        closables.addAll(List.of(atmosphere, sleigh));
         var pieces = PropsConfig.fromYaml(YamlFile.section(yaml, "props"), getSLF4JLogger());
-        props = new Props(this, pieces, Locations.load(api.map().file(this, "props.yml")));
+        var props = new Props(this, chunks, pieces, Locations.load(api.map().file(this, "props.yml")));
         props.start();
+        closables.add(props);
         var flights = new Flights(this, FlightsConfig.fromYaml(YamlFile.section(yaml, "flights")), pieces,
                 () -> locations.get(LobbyLocation.SPAWN));
-        polish.add(flights);
-        seasons = new SeasonalEvents(this, chunks, activityLocations, activities, messages,
+        closables.add(flights);
+        var seasons = new SeasonalEvents(this, chunks, activityLocations, activities, messages,
                 () -> locations.get(LobbyLocation.SPAWN).ifPresent(spawn -> config.fireworkSpots()
                         .forEach(spot -> MoveListener.launchFirework(spot.toLocation(spawn.getWorld())))), decor);
+        closables.add(seasons);
         profiles.advent(player -> seasons.openAdvent(player, back -> profiles.open(back, Optional.empty())));
-        gadgets = new Gadgets(this, messages, Duration.ofSeconds(config.gadgetCooldownSeconds()));
-        friends = new FriendsChannel(this, config.friendsTimeoutTicks());
-        previews = new CosmeticPreviews(this, messages, config.cosmeticPreviewTicks());
+        closables.add(() -> {
+            profiles.clearRecentRound();
+            profiles.clearAdvent();
+            profiles.clearShop();
+        });
+        var gadgets = new Gadgets(this, messages, Duration.ofSeconds(config.gadgetCooldownSeconds()));
+        closables.add(gadgets::restorePaint);
+        var friends = new FriendsChannel(this, config.friendsTimeoutTicks());
+        closables.add(friends::close);
+        var previews = new CosmeticPreviews(this, messages, config.cosmeticPreviewTicks());
+        closables.add(previews::close);
         var loreNotes = new LoreNotes(this, chunks, activityLocations, LoreNoteConfig.fromYaml(YamlFile.section(yaml, "lore-notes")), messages);
         var cookies = new CookieClicker(this, api.database(), messages,
                 CookieProgress.Rules.fromYaml(YamlFile.section(yaml, "cookies")));
-        polish.add(cookies);
+        closables.add(cookies);
         register(cookies);
         var menus = new Menus(this, messages, config, locations, api.unlocks(), api.settings(), api.messages(),
                 api.servers(), api.server(), new PremiumRank(this, luckPerms), pets, api.groups(), friends, previews,
                 new NavigatorTeleports(), cookies);
-        achievements = api.achievements();
+        var achievements = api.achievements();
         achievements.section(new SecretsSection(messages, loreNotes, config.secretRiddlesAfter()));
-        shopNpc = new ShopNpc(this, locations, messages, quirks::owns);
+        closables.add(achievements::clearSection);
+        var shopNpc = new ShopNpc(this, locations, messages, quirks::owns);
         shopNpc.start(config.shopNpcRespawnSeconds());
+        closables.add(shopNpc::stop);
         var leaderboards = new Leaderboards(this, api.database(), messages, api.messages(), config.leaderboards());
-        holograms = new Holograms(this, messages, leaderboards);
+        var holograms = new Holograms(this, messages, leaderboards);
         var podiums = new Podiums(chunks, activityLocations, leaderboards, messages);
         holograms.afterRefresh(podiums::refresh);
         holograms.start(config.leaderboardRefreshSeconds() * 20L);
+        closables.add(holograms::stop);
         var ownRadius = YamlFile.section(yaml, "leaderboards").get("own-radius") instanceof Number radius ? radius.doubleValue() : 10.0;
         var ownPlacings = new OwnPlacings(this, leaderboards, messages, Math.clamp(ownRadius, 2.0, 48.0),
                 Duration.ofSeconds(config.leaderboardRefreshSeconds()));
@@ -208,16 +204,16 @@ public final class LobbyPlugin extends JavaPlugin {
                 String.valueOf(boardSettings.getOrDefault("rules-command", "regeln")));
         var quests = new QuestGivers(chunks, activityLocations, Quest.fromYaml(YamlFile.section(yaml, "quests")), messages);
         var daily = new DailyCourier(this, chunks, activityLocations, DailyRewards.fromYaml(YamlFile.section(yaml, "daily-rewards")), messages);
-        polish.addAll(List.of(gameNpcs, podiums, ownPlacings, loreNotes, noticeBoards, quests, daily));
+        closables.addAll(List.of(gameNpcs, podiums, ownPlacings, loreNotes, noticeBoards, quests, daily));
         register(gameNpcs, podiums, ownPlacings, loreNotes, noticeBoards, quests, daily);
         LobbyNews.start(this, messages, YamlFile.section(yaml, "news")).ifPresent(news -> {
-            polish.add(news);
+            closables.add(news);
             register(news);
         });
-        AreaAmbience.start(this, gameNpcs::places, YamlFile.section(yaml, "ambience")).ifPresent(polish::add);
+        AreaAmbience.start(this, gameNpcs::places, YamlFile.section(yaml, "ambience")).ifPresent(closables::add);
         var ambientSpots = new AmbientSpots(this, activityLocations, YamlFile.section(yaml, "ambient"));
         var scenes = new SeasonalScenes(this, chunks, api.calendar(), activityLocations, ScenesConfig.fromYaml(YamlFile.section(yaml, "scenes")));
-        polish.addAll(List.of(ambientSpots, scenes));
+        closables.addAll(List.of(ambientSpots, scenes));
         register(scenes);
         var optionalSpots = new ArrayList<>(GameNpcs.spots());
         leaderboards.names().stream().map(Podiums::spot).sorted().forEach(optionalSpots::add);
@@ -231,8 +227,9 @@ public final class LobbyPlugin extends JavaPlugin {
         var messenger = getServer().getMessenger();
         messenger.registerIncomingPluginChannel(this, WorldDownloaderListener.INIT_CHANNEL, new WorldDownloaderListener(messages));
 
-        hud = new LobbyHud(this, messages);
+        var hud = new LobbyHud(this, messages);
         hud.start(config.hudRefreshSeconds() * 20L);
+        closables.add(hud::stop);
         register(previews, hud, parkour, quirks, seasons, decor, snowfall, sleigh, throwFight, prisoner, mapSecrets, stars.wishes(),
                 new PondFishing(activityLocations, activities, messages, secrets, throwFight::item),
                 new JoinQuitListener(messages, locations, items, trails, pets, hider),
@@ -289,75 +286,15 @@ public final class LobbyPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        for (var closing : polish) {
+        for (var closing : closables.reversed()) {
             try {
                 closing.close();
             } catch (Exception e) {
                 getSLF4JLogger().warn("Could not close {}", closing.getClass().getSimpleName(), e);
             }
         }
-        polish.clear();
-        if (stars != null) {
-            stars.close();
-        }
-        if (parkour != null) {
-            parkour.close();
-        }
-        if (quirks != null) {
-            quirks.close();
-        }
-        if (seasons != null) {
-            seasons.close();
-        }
-        if (atmosphere != null) {
-            atmosphere.close();
-        }
-        if (props != null) {
-            props.stop();
-        }
-        if (sleigh != null) {
-            sleigh.close();
-        }
-        if (prisoner != null) {
-            prisoner.close();
-        }
-        if (herobrine != null) {
-            herobrine.close();
-        }
-        if (mapSecrets != null) {
-            mapSecrets.close();
-        }
-        if (throwFight != null) {
-            throwFight.close();
-        }
-        if (previews != null) {
-            previews.close();
-        }
-        if (profiles != null) {
-            profiles.clearRecentRound();
-            profiles.clearAdvent();
-            profiles.clearShop();
-        }
-        if (achievements != null) {
-            achievements.clearSection();
-        }
-        if (friends != null) {
-            friends.close();
-        }
-        if (hud != null) {
-            hud.stop();
-        }
-        if (holograms != null) {
-            holograms.stop();
-        }
-        if (shopNpc != null) {
-            shopNpc.stop();
-        }
-        if (gadgets != null) {
-            gadgets.restorePaint();
-        }
+        closables.clear();
     }
-
 
     private void register(Listener... listeners) {
         for (Listener listener : listeners) {
