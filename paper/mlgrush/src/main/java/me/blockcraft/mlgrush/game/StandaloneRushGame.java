@@ -36,8 +36,12 @@ import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -55,7 +59,7 @@ public final class StandaloneRushGame {
     private RushSession session;
     private List<UUID> participants = List.of();
     private Optional<String> winnerName = Optional.empty();
-    private final java.util.Set<UUID> rematches = new java.util.HashSet<>();
+    private final Set<UUID> rematches = new HashSet<>();
     private Object identity = new Object();
     private final int[] previousScores = new int[2];
     private final RushKit kit;
@@ -99,7 +103,7 @@ public final class StandaloneRushGame {
         return hotbar;
     }
 
-    public java.util.Optional<Location> lobbySpawn() {
+    public Optional<Location> lobbySpawn() {
         return BlockcraftApi.get().waitingLobby().map(WaitingLobby::spawn);
     }
 
@@ -215,7 +219,7 @@ public final class StandaloneRushGame {
             @Override
             public void won(UUID player) {
                 if (identity == started) {
-                    finish(java.util.Optional.of(player));
+                    finish(Optional.of(player));
                 }
             }
         });
@@ -245,7 +249,7 @@ public final class StandaloneRushGame {
 
     static void recoverVoid(Player player, Location spawn, int voidY) {
         var location = player.getLocation();
-        if (player.isDead() || !java.util.Objects.equals(location.getWorld(), spawn.getWorld()) || location.getY() > voidY) {
+        if (player.isDead() || !Objects.equals(location.getWorld(), spawn.getWorld()) || location.getY() > voidY) {
             return;
         }
         teleport(player, spawn);
@@ -261,7 +265,7 @@ public final class StandaloneRushGame {
         player.setFallDistance(0);
     }
 
-    private void finish(java.util.Optional<UUID> winner) {
+    private void finish(Optional<UUID> winner) {
         if (round.phase() != GamePhase.INGAME) {
             return;
         }
@@ -327,7 +331,7 @@ public final class StandaloneRushGame {
         cancelReset();
         arena.selectMap(maps.choose(ThreadLocalRandom.current()));
         identity = new Object();
-        java.util.Arrays.fill(previousScores, 0);
+        Arrays.fill(previousScores, 0);
         rematches.clear();
         session = null;
         participants = List.of();
