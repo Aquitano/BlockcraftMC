@@ -38,11 +38,14 @@ import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
+import org.bukkit.block.BlockFace;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Pose;
 import org.bukkit.entity.TextDisplay;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
@@ -68,6 +71,7 @@ public final class ZombiesGame implements RoundConnections.Seating {
     public enum Powerup { MAX_AMMO, DOUBLE_GOLD, INSTANT_KILL }
     private record Drop(Item item, Powerup kind, int expires) { }
 
+    private static final BlockData CEILING = Material.BARRIER.createBlockData();
     private static final Title.Times TITLE_TIMES = Title.Times.times(Duration.ofMillis(200), Duration.ofSeconds(2), Duration.ofMillis(400));
     private final Plugin plugin;
     private final ZombiesConfig config;
@@ -372,7 +376,8 @@ public final class ZombiesGame implements RoundConnections.Seating {
         player.setCollidable(false);
         var location = player.getLocation();
         downed.put(player.getUniqueId(), location);
-        corpses.put(player.getUniqueId(), arena.world().spawn(location.clone().add(0, 2, 0), TextDisplay.class, display -> {
+        lieDown(player);
+        corpses.put(player.getUniqueId(), arena.world().spawn(location.clone().add(0, 1.2, 0), TextDisplay.class, display -> {
             display.setBillboard(Display.Billboard.CENTER);
             display.setPersistent(false);
             display.setSeeThrough(true);
@@ -438,8 +443,27 @@ public final class ZombiesGame implements RoundConnections.Seating {
         Sounds.HEAL.play(player);
     }
 
+    /** A player's own client decides its pose, so a ceiling only it sees makes it crawl; the fixed pose shows everyone else the same. */
+    private static void lieDown(Player player) {
+        player.setPose(Pose.SWIMMING, true);
+        var head = player.getLocation().getBlock().getRelative(BlockFace.UP);
+        if (head.isPassable()) {
+            player.sendBlockChange(head.getLocation(), CEILING);
+        }
+    }
+
+    private static void standUp(Player player, Location lying) {
+        player.setPose(Pose.STANDING, false);
+        var head = lying.getBlock().getRelative(BlockFace.UP);
+        player.sendBlockChange(head.getLocation(), head.getBlockData());
+    }
+
     private void removeCorpse(UUID id) {
-        downed.remove(id);
+        var lying = downed.remove(id);
+        var player = Bukkit.getPlayer(id);
+        if (lying != null && player != null) {
+            standUp(player, lying);
+        }
         var corpse = corpses.remove(id);
         if (corpse != null) {
             corpse.remove();
