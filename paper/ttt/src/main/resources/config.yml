@@ -126,8 +126,11 @@ tester:
   cooldown-seconds: 20
   trap-seconds: 3
 
-# Whether players heal on their own. Without it, only medipacks and heal stations heal.
+# Whether players heal on their own. Without it, only medipacks, heal stations and a traitor's kills heal.
 natural-regeneration: false
+
+# A living traitor who kills an innocent or detective heals traitor-kill-heal health points (20 is full health).
+traitor-kill-heal: 4.0
 
 # 1.8 PvP: no attack cooldown, everything else stays vanilla.
 pvp:

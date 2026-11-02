@@ -187,7 +187,8 @@ Karma lives in `bc_ttt_karma` and starts at `karma.start` (1000, also the maximu
 earns `karma.clean-round`. Every blow deals `karma / karma.max` of its damage, never less than `karma.damage-floor`.
 The sidebar shows it.
 
-There is no hunger, and without `natural-regeneration` only medipacks and heal stations heal. Combat is 1.8-style
+There is no hunger, and without `natural-regeneration` only medipacks, heal stations and kills heal: a living traitor
+heals `traitor-kill-heal` (4) health points for every innocent or detective they kill. Combat is 1.8-style
 (`pvp.legacy-combat`). A correct kill pays `rewards.kill` coins and a win `rewards.win`; a team kill pays nothing.
 Stats go to `bc_ttt_stats`.
 

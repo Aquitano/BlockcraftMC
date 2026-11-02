@@ -45,6 +45,7 @@ import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.Openable;
@@ -390,6 +391,10 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
                     Formatter.number("lost", before - karma(id))));
         } else {
             summary.awardKill(killer, victim, Defeat.OUT);
+            if (killerRole.get() == Role.TRAITOR && round.isPlaying(killer)) {
+                double max = killer.getAttribute(Attribute.MAX_HEALTH).getValue();
+                killer.setHealth(Math.min(max, killer.getHealth() + config.traitorKillHeal()));
+            }
         }
         int earned = killerRole.get().shopPointsFor(victimRole);
         if (earned > 0 && points.containsKey(id)) {

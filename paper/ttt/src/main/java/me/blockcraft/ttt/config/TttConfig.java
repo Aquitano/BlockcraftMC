@@ -15,7 +15,7 @@ import java.util.Map;
 /** TTT's own keys of its config.yml; the lobby's are {@link me.blockcraft.api.game.GameConfig}'s. */
 public record TttConfig(int capacity, int roundMinimum, int fullSeconds, int preparationSeconds, int roundSeconds,
                         Roles roles, Karma karma, Rewards rewards, Shop shop, Tester tester, boolean regeneration,
-                        CombatStyle combat, LootTable chests, Tasks tasks) {
+                        double traitorKillHeal, CombatStyle combat, LootTable chests, Tasks tasks) {
 
     public record Rewards(int kill, int win) {
     }
@@ -90,6 +90,7 @@ public record TttConfig(int capacity, int roundMinimum, int fullSeconds, int pre
                         Math.max(1, config.getInt("tester.cooldown-seconds", 20)),
                         Math.max(1, config.getInt("tester.trap-seconds", 3))),
                 config.getBoolean("natural-regeneration", false),
+                Math.max(0.0, config.getDouble("traitor-kill-heal", 4.0)),
                 CombatStyle.from(config),
                 loot(config.getConfigurationSection("chests")),
                 tasks(config));
