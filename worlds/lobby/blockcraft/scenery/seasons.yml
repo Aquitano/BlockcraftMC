@@ -180,7 +180,7 @@ keep-clear:
   max: {x: -931, y: 27, z: 1618}
 - min: {x: -977, y: 26, z: 1629}
   max: {x: -961, y: 29, z: 1633}
-snow-layers: 1
+snow-layers: 3
 decorations:
 - during:
   - advent

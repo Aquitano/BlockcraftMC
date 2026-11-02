@@ -36,6 +36,7 @@ import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Transformation;
+import org.bukkit.util.noise.SimplexNoiseGenerator;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
@@ -55,6 +56,7 @@ public final class SeasonalBlocks implements Listener, AutoCloseable {
     private static final float UNDER_ICE = 0.85f;
     private static final Display.Brightness FROZEN_PAD_LIGHT = new Display.Brightness(12, 15);
     private static final float PAD_VIEW_RANGE = 0.5f;
+    private static final double DRIFT_SPAN = 7;
 
     private final Plugin plugin;
     private final World world;
@@ -209,8 +211,6 @@ public final class SeasonalBlocks implements Listener, AutoCloseable {
         if (zones.isEmpty()) {
             return;
         }
-        var layer = (Snow) Material.SNOW.createBlockData();
-        layer.setLayers(layout.snowLayers());
         for (int x = chunk.getX() << 4; x < (chunk.getX() << 4) + 16; x++) {
             for (int z = chunk.getZ() << 4; z < (chunk.getZ() << 4) + 16; z++) {
                 int y = world.getHighestBlockYAt(x, z, HeightMap.WORLD_SURFACE);
@@ -227,13 +227,21 @@ public final class SeasonalBlocks implements Listener, AutoCloseable {
                         || (!plant && !block(at).getType().isAir())) {
                     continue;
                 }
-                prepare(changes, at, layer);
+                prepare(changes, at, snowLayer(x, z));
                 if (changes.containsKey(at) && ground.getBlockData() instanceof Snowable snowy) {
                     snowy.setSnowy(true);
                     prepare(changes, new Point(x, ground.getY(), z), snowy);
                 }
             }
         }
+    }
+
+    /** Drifts: the depth wanders between one layer and {@code snow-layers} across the ground, the same at every load. */
+    private Snow snowLayer(int x, int z) {
+        double drift = (SimplexNoiseGenerator.getNoise(x / DRIFT_SPAN, z / DRIFT_SPAN) + 1) / 2;
+        var layer = (Snow) Material.SNOW.createBlockData();
+        layer.setLayers(Math.min(layout.snowLayers(), 1 + (int) (drift * layout.snowLayers())));
+        return layer;
     }
 
     private void freeze(Chunk chunk, Map<Point, Change> changes) {

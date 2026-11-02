@@ -57,7 +57,8 @@ Each lobby's `seasons.yml` defines inclusive `min` and `max` coordinates under `
 `freeze` becomes ice. `keep-clear` excludes positions from every physical change, including authored decorations.
 
 `decorations` places its `to` block data at `at` while any listed `during` occasion is active. Its `from` value
-must be air. `snow-layers` controls the general cover. The waiting island also sets `snowfall-radius`; the main
+must be air. `snow-layers` is the depth of the deepest drift: the cover wanders between one layer and that many across
+the ground, the same on every load. The waiting island also sets `snowfall-radius`; the main
 lobby already controls falling snow through its existing season settings.
 
 Original block states are journaled in the runtime dimension's `data/blockcraft-seasons` directory before edits.
