@@ -11,11 +11,11 @@ import org.bukkit.event.player.PlayerRespawnEvent;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 final class VsDuelGame extends MapDuelGame {
     private final Map<UUID, Integer> kills = new HashMap<>();
-    private int round = 1;
 
     VsDuelGame(DuelGames.Context context) {
         super(context);
@@ -42,13 +42,12 @@ final class VsDuelGame extends MapDuelGame {
                 .or(() -> players().stream().filter(other -> !other.equals(victim)).findFirst());
         scorer.ifPresent(killer -> {
             context.summary().awardKill(killer, victim, Defeat.POINT);
-            kills.merge(killer.getUniqueId(), 1, Integer::sum);
-            round++;
+            int scored = kills.merge(killer.getUniqueId(), 1, Integer::sum);
             context.events().changed();
-            if (round > context.config().vsKillsToEnd()) {
-                complete(java.util.Optional.of(progress(victim.getUniqueId()) > progress(killer.getUniqueId())
-                        ? victim.getUniqueId() : killer.getUniqueId()));
+            if (scored > context.config().vsBestOf() / 2) {
+                complete(Optional.of(killer.getUniqueId()));
             } else {
+                int round = kills.values().stream().mapToInt(Integer::intValue).sum() + 1;
                 BlockcraftApi.get().notifications().important(killer, Title.title(
                         context.messages().get("title.vs-round", Formatter.number("round", round)),
                         context.messages().get("title.start")));

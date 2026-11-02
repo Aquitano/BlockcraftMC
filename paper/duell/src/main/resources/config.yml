@@ -13,7 +13,7 @@ rewards:
   kill: 0
   win: 10
 vs:
-  kills-to-end: 3
+  best-of: 3
 tour:
   intermission-seconds: 3
 rating:
