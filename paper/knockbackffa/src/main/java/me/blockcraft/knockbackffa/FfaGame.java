@@ -6,9 +6,12 @@ import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.coins.Coins;
+import me.blockcraft.api.game.Arena;
 import me.blockcraft.api.game.CombatStyle;
+import me.blockcraft.api.game.GameSidebar;
 import me.blockcraft.api.game.HarmlessHit;
 import me.blockcraft.api.game.PlayerReset;
+import me.blockcraft.api.game.Spectators;
 import me.blockcraft.api.game.Stat;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.item.HotbarItem;
@@ -16,7 +19,6 @@ import me.blockcraft.api.item.Items;
 import me.blockcraft.api.menu.Menu;
 import me.blockcraft.api.player.InventoryInspection;
 import me.blockcraft.api.proxy.ProxyMessaging;
-import me.blockcraft.api.scoreboard.Sidebar;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.spectate.SpectateRequestEvent;
 import me.blockcraft.api.task.Tasks;
@@ -61,9 +63,13 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
@@ -77,10 +83,12 @@ final class FfaGame implements Listener, AutoCloseable {
     private final FfaArena arena;
     private final StatsRepository stats;
     private final FfaScores scores;
-    private final Set<UUID> playing = new HashSet<>();
+    private final Set<UUID> playing = new LinkedHashSet<>();
     private final Set<UUID> respawning = new HashSet<>();
     private final Map<UUID, Long> protectedUntil = new HashMap<>();
-    private final Sidebar sidebar;
+    /** Set by {@link #start}, since it registers its listeners with the running server. */
+    private Spectators spectators;
+    private final GameSidebar sidebar;
     private FfaKit kit = FfaKit.STANDARD;
     private int kitIn;
     private int launchIn;
@@ -93,13 +101,15 @@ final class FfaGame implements Listener, AutoCloseable {
         this.arena = arena;
         this.stats = stats;
         scores = new FfaScores(config.creditWindow(), config.rewardCooldown());
-        sidebar = new Sidebar(messages.get("scoreboard.title"));
+        sidebar = new GameSidebar(messages.get("scoreboard.title"),
+                () -> new GameSidebar.Headcount(playing.size(), spectators.count()), () -> false);
         kitIn = config.kits().intervalSeconds();
         launchIn = config.launchSeconds();
         rotationIn = config.rotationSeconds();
     }
 
     void start() {
+        spectators = new Spectators(plugin, new Arena(messages, Sounds.JOIN), this::players, () -> false);
         presence();
         Bukkit.getScheduler().runTaskTimer(plugin, this::tick, 20L, 20L);
     }
@@ -130,9 +140,7 @@ final class FfaGame implements Listener, AutoCloseable {
         if (playing.contains(player.getUniqueId())) {
             return;
         }
-        if (player.getGameMode() == GameMode.SPECTATOR) {
-            player.setSpectatorTarget(null);
-        }
+        spectators.release(player);
         playing.add(player.getUniqueId());
         scores.join(player.getUniqueId());
         spawn(player);
@@ -145,10 +153,14 @@ final class FfaGame implements Listener, AutoCloseable {
             countDeath(player);
         }
         remove(player);
-        PlayerReset.reset(player, GameMode.SPECTATOR);
+        spectators.watch(player);
         player.teleport(arena.watch());
         player.sendMessage(messages.get("join.spectator"));
         presence();
+    }
+
+    private List<Player> players() {
+        return playing.stream().map(Bukkit::getPlayer).filter(Objects::nonNull).toList();
     }
 
     private void spawn(Player player) {
@@ -270,12 +282,7 @@ final class FfaGame implements Listener, AutoCloseable {
             }
         }
         for (var player : Bukkit.getOnlinePlayers()) {
-            var score = scores.score(player.getUniqueId());
-            sidebar.show(player, messages.getLines("scoreboard.lines", Formatter.number("players", playing.size()),
-                    Formatter.number("max", config.capacity()), Formatter.number("kills", score.kills()),
-                    Formatter.number("deaths", score.deaths()), Formatter.number("streak", score.streak()),
-                    Placeholder.component("map", messages.get("arena." + arena.name())),
-                    Placeholder.component("kit", messages.get("kit." + kit.key())), Formatter.number("kit_seconds", kitIn)));
+            showSidebar(player);
             if (protectedNow(player) && active(player)) {
                 BlockcraftApi.get().notifications().status(player, messages.get("spawn.protected"));
             }
@@ -286,6 +293,21 @@ final class FfaGame implements Listener, AutoCloseable {
                 BlockcraftApi.get().notifications().status(player, messages.get("launch.countdown", Formatter.number("seconds", launchIn)));
             }
         }
+    }
+
+    private void showSidebar(Player viewer) {
+        var icons = GameSidebar.icons(viewer);
+        var sections = new ArrayList<GameSidebar.Section>();
+        sections.add(new GameSidebar.Section(messages.get("scoreboard.kit", icons), GameSidebar.value(messages.get("scoreboard.kit-value",
+                Placeholder.component("kit", messages.get("kit." + kit.key())), Formatter.number("kit_seconds", kitIn)))));
+        if (playing.contains(viewer.getUniqueId())) {
+            var score = scores.score(viewer.getUniqueId());
+            sections.add(new GameSidebar.Section(messages.get("scoreboard.score", icons), List.of(
+                    messages.get("scoreboard.kills", Formatter.number("kills", score.kills())),
+                    messages.get("scoreboard.deaths", Formatter.number("deaths", score.deaths())),
+                    messages.get("scoreboard.streak", Formatter.number("streak", score.streak())))));
+        }
+        sidebar.round(viewer, config.capacity(), 0, messages.get("arena." + arena.name()), sections);
     }
 
     private void changeKit() {
@@ -342,6 +364,7 @@ final class FfaGame implements Listener, AutoCloseable {
             countDeath(player);
         }
         remove(player);
+        spectators.forget(player.getUniqueId());
         Tasks.later(plugin, 1L, this::presence);
     }
 
@@ -430,6 +453,7 @@ final class FfaGame implements Listener, AutoCloseable {
                 countDeath(player);
             }
             remove(player);
+            spectators.forget(player.getUniqueId());
             presence();
         } else {
             // Staff mode restores flight after publishing the vanish event.
@@ -441,14 +465,10 @@ final class FfaGame implements Listener, AutoCloseable {
         }
     }
 
-    @EventHandler
+    /** Before {@link Spectators}, which takes the new spectator to the friend they came for. */
+    @EventHandler(priority = EventPriority.LOW)
     public void onSpectate(SpectateRequestEvent event) {
         watch(event.getPlayer());
-        var target = Bukkit.getPlayer(event.target());
-        if (target != null && active(target) && event.getPlayer().canSee(target)) {
-            event.getPlayer().teleport(target.getLocation());
-            event.getPlayer().setSpectatorTarget(target);
-        }
     }
 
     @EventHandler(priority = EventPriority.HIGH)

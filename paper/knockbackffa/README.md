@@ -7,7 +7,7 @@ The mode has no round timer, winner or round recap.
 ## Commands
 
 - `/play knockbackffa` joins from another backend. The lobby navigator has the same entry.
-- `/ffa spectate` watches in vanilla spectator mode. `/ffa play` rejoins the fight.
+- `/ffa spectate` watches the way every game's spectators do, unseen with the spectator hotbar. `/ffa play` rejoins the fight.
 - `/hub` returns to the lobby.
 - `/stats [player]` shows kills, falls and earned coins. `/top kills` shows the kill leaderboard.
 

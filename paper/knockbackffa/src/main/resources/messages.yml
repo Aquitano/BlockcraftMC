@@ -54,16 +54,12 @@ launch:
   now: "<prefix><accent>Sprungwelle! Halte dich auf den Inseln."
 scoreboard:
   title: "<primary><bold>Knockback FFA"
-  lines:
-    - "<muted>Spieler: <accent><players>/<max>"
-    - "<muted>Arena: <accent><map>"
-    - "<muted>Kit: <accent><kit> <dark>· <muted><kit_seconds>s"
-    - ""
-    - "<muted>Deine Kills: <accent><kills>"
-    - "<muted>Deine Stürze: <accent><deaths>"
-    - "<muted>Deine Serie: <accent><streak>"
-    - " "
-    - "<muted>/ffa spectate <dark>· <muted>/hub"
+  kit: "<muted><icon:kit> KIT"
+  kit-value: "<kit> <dark>· <muted><kit_seconds>s"
+  score: "<muted><icon:kills> DEINE RUNDE"
+  kills: "<arrow><white><kills> <muted>Kills"
+  deaths: "<arrow><white><deaths> <muted>Stürze"
+  streak: "<arrow><white><streak> <muted>Serie"
 stats:
   header: "<muted>Knockback-FFA-Stats von <accent><player>"
   lines:
