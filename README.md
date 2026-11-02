@@ -448,7 +448,7 @@ rest of the map, and everything players place, does. A bow kill pays `bow-kill-a
 Team chat is the default during a round; a message that starts with `@` goes to everyone.
 
 The map, Himmelsfeste, is built by `SkyMap` into an empty world at every start, so the service needs no world
-template. The production compose file keeps the service under the `unreleased` profile until it is released.
+template.
 
 ## Zeitkapsel
 
@@ -1056,8 +1056,8 @@ itself; `docker-compose.yml` shows the full set.
 
 `docker-compose.prod.yml` turns the dev network into the public one: MariaDB publishes no port, the resource pack
 is served on loopback for a web server in front of it, the passwords, the forwarding secret, the pack address and the
-network addresses come from `.env`, and the games under `profiles: [unreleased]` stay off.
-Lobby, BedWars, MLG Rush, Duell, Zombies, EnderGames and TTT are enabled by default. Players still connect to
+network addresses come from `.env`. Every game is in `on-demand.groups`, so each sleeps until a player asks for it
+(see "Game servers on demand"). Players still connect to
 the proxy's port 25565 directly: Minecraft is not HTTP, so neither a web server nor Cloudflare's proxy can carry it,
 and the DNS record players use has to point at the host itself. On the host, with Docker, git-lfs (otherwise the maps arrive as pointer files) and JDK 25 (`mise install`):
 
@@ -1072,7 +1072,8 @@ docker compose up -d
 The lobby furniture needs the licensed Nexo jar, which stays outside git: put its path in `BLOCKCRAFT_NEXO_JAR` (or pass
 `-PnexoJar=...`) before every `stagePlugins`, or the servers start without furniture ([Nexo setup](nexo/README.md)).
 To update, pull, run `./gradlew stagePlugins` and restart the servers (`docker compose restart velocity lobby
-bedwars mlgrush duell zombies endergames ttt emeraldrush archive`, plus `waker` when on-demand runs; see "Game servers on demand"). A plugin's `config.yml` and `messages.yml` in its data folder are copies of the bundled defaults, made on
+bedwars mlgrush duell zombies endergames ttt emeraldrush archive quicksg cores skywars knockbackffa`, plus `waker` when
+on-demand runs; see "Game servers on demand"). A plugin's `config.yml` and `messages.yml` in its data folder are copies of the bundled defaults, made on
 its first start: new keys arrive through the bundled default, but the copy keeps its own value for every key it
 already has, so changed texts and renamed config keys do not reach a server by themselves. Move a copy nobody edited
 aside before the restart (`docker compose exec bedwars mv /data/plugins/BedWars/messages.yml

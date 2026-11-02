@@ -50,20 +50,10 @@ services:
   emeraldrush: *paper
   archive: *paper
   replay: *paper
-
-  # Not released yet: `docker compose --profile unreleased up -d quicksg` starts one anyway.
-  quicksg:
-    <<: *paper
-    profiles: [unreleased]
-  cores:
-    <<: *paper
-    profiles: [unreleased]
-  skywars:
-    <<: *paper
-    profiles: [unreleased]
-  knockbackffa:
-    <<: *paper
-    profiles: [unreleased]
+  quicksg: *paper
+  cores: *paper
+  skywars: *paper
+  knockbackffa: *paper
 
   # Off until on-demand is enabled in the proxy's config.yml: `docker compose --profile ondemand up -d waker`
   # (README, "Server discovery and groups"). An empty WAKER_TOKEN keeps it from starting at all.
