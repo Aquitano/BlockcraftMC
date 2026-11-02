@@ -2,6 +2,7 @@ package me.blockcraft.bedwars.lobby;
 
 import io.papermc.paper.datacomponent.item.ResolvableProfile;
 import io.papermc.paper.event.player.PrePlayerAttackEntityEvent;
+import me.blockcraft.api.display.Figures;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.text.Component;
@@ -30,7 +31,7 @@ import java.util.UUID;
  */
 public final class CpsTester implements Listener {
 
-    private static final double COUNTER_HEIGHT = 2.2;
+    private static final double COUNTER_HEIGHT = 2.4;
     private static final long SECOND = 20L;
 
     private record Dummy(Mannequin figure, TextDisplay counter) {
@@ -60,15 +61,15 @@ public final class CpsTester implements Listener {
         spot.ifPresent(location -> {
             hide(viewer);
             var figure = Figures.spawn(location, ResolvableProfile.resolvableProfile(viewer.getPlayerProfile()),
-                    messages.get("lobby.cps.name"));
+                    messages.get("lobby.cps.name"), hidden -> hidden.setVisibleByDefault(false));
             var counter = location.getWorld().spawn(location.clone().add(0, COUNTER_HEIGHT, 0), TextDisplay.class, display -> {
                 display.text(line(0, 0));
                 display.setBillboard(Display.Billboard.CENTER);
                 display.setPersistent(false);
             });
-            figure.setVisibleByDefault(false);
             counter.setVisibleByDefault(false);
             viewer.showEntity(plugin, figure);
+            figure.getPassengers().forEach(card -> viewer.showEntity(plugin, card));
             viewer.showEntity(plugin, counter);
             dummies.put(viewer.getUniqueId(), new Dummy(figure, counter));
         });
@@ -78,7 +79,7 @@ public final class CpsTester implements Listener {
         var dummy = dummies.remove(viewer.getUniqueId());
         clicks.remove(viewer.getUniqueId());
         if (dummy != null) {
-            dummy.figure().remove();
+            Figures.remove(dummy.figure());
             dummy.counter().remove();
         }
     }
@@ -89,7 +90,7 @@ public final class CpsTester implements Listener {
             task = null;
         }
         dummies.values().forEach(dummy -> {
-            dummy.figure().remove();
+            Figures.remove(dummy.figure());
             dummy.counter().remove();
         });
         dummies.clear();

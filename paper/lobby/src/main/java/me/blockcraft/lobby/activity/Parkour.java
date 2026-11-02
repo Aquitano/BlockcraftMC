@@ -2,12 +2,12 @@ package me.blockcraft.lobby.activity;
 
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.config.Locations;
+import me.blockcraft.api.display.Cards;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.db.Database;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.lobby.config.ActivitiesConfig;
-import me.blockcraft.lobby.npc.Holograms;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.event.ClickEvent;
@@ -276,7 +276,7 @@ public final class Parkour implements Listener, AutoCloseable {
             if (leaderboard != null) {
                 leaderboard.remove();
             }
-            leaderboard = Holograms.line(location.orElseThrow(), Component.join(JoinConfiguration.newlines(), lines));
+            leaderboard = Cards.line(location.orElseThrow(), Component.join(JoinConfiguration.newlines(), lines));
             leaderboard.setPersistent(false);
         }, () -> reading = false);
     }

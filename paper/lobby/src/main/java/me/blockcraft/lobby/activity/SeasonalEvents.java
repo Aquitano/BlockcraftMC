@@ -6,6 +6,7 @@ import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.config.Locations;
 import me.blockcraft.api.cosmetic.ChatTag;
 import me.blockcraft.api.cosmetic.ChatTagChoice;
+import me.blockcraft.api.display.Figures;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.settings.PlayerSettingsLoadedEvent;
 import me.blockcraft.api.sound.Sounds;
@@ -218,7 +219,7 @@ public final class SeasonalEvents implements Listener, AutoCloseable {
         eggs.values().forEach(egg -> { egg.display().remove(); egg.interaction().remove(); });
         eggs.clear();
         if (santa != null) {
-            santa.remove();
+            Figures.remove(santa);
             santa = null;
         }
         heldChunks.clear();

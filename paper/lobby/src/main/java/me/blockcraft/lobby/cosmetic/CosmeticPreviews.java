@@ -2,6 +2,7 @@ package me.blockcraft.lobby.cosmetic;
 
 import io.papermc.paper.datacomponent.item.ResolvableProfile;
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.display.Figures;
 import me.blockcraft.api.menu.Menu;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.settings.PlayerSetting;
@@ -10,7 +11,6 @@ import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Mannequin;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -52,11 +52,8 @@ public final class CosmeticPreviews implements Listener {
 
     public void equipment(Player player, ItemStack item, EquipmentSlot slot, Consumer<Player> back) {
         startEntity(player, false, preview -> {
-            var mannequin = preview.location.getWorld().spawn(preview.location, Mannequin.class, entity -> {
+            var mannequin = Figures.spawn(preview.location, ResolvableProfile.resolvableProfile(player.getPlayerProfile()), entity -> {
                 prepare(entity);
-                entity.setProfile(ResolvableProfile.resolvableProfile(player.getPlayerProfile()));
-                entity.setImmovable(true);
-                entity.setDescription(null);
                 entity.getEquipment().setArmorContents(player.getInventory().getArmorContents());
                 entity.getEquipment().setItem(slot, item.clone(), true);
             });

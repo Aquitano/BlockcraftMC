@@ -3,10 +3,10 @@ package me.blockcraft.lobby.npc;
 import io.papermc.paper.datacomponent.item.ResolvableProfile;
 import io.papermc.paper.event.player.PrePlayerAttackEntityEvent;
 import me.blockcraft.api.config.Locations;
+import me.blockcraft.api.display.Figures;
 import me.blockcraft.api.game.Leader;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.lobby.ChunkTickets;
-import me.blockcraft.lobby.activity.Figures;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.entity.Mannequin;
@@ -52,14 +52,14 @@ public final class Podiums implements Listener, AutoCloseable {
             var leader = leaderboards.first(board);
             var current = Optional.ofNullable(standing.get(board));
             if (place.isEmpty() || leader.isEmpty()) {
-                current.ifPresent(old -> old.figure().remove());
+                current.ifPresent(old -> Figures.remove(old.figure()));
                 standing.remove(board);
                 continue;
             }
             if (current.filter(old -> old.leader().equals(leader.get()) && old.figure().isValid()).isPresent()) {
                 continue;
             }
-            current.ifPresent(old -> old.figure().remove());
+            current.ifPresent(old -> Figures.remove(old.figure()));
             var chunk = place.get().getChunk();
             held.add(chunk);
             var first = leader.get();
@@ -71,7 +71,7 @@ public final class Podiums implements Listener, AutoCloseable {
 
     /** Refreshes at once, for a podium just placed; the boards' own timer keeps them current afterwards. */
     public void placed() {
-        standing.values().forEach(old -> old.figure().remove());
+        standing.values().forEach(old -> Figures.remove(old.figure()));
         standing.clear();
         refresh();
     }
@@ -102,7 +102,7 @@ public final class Podiums implements Listener, AutoCloseable {
 
     @Override
     public void close() {
-        standing.values().forEach(each -> each.figure().remove());
+        standing.values().forEach(each -> Figures.remove(each.figure()));
         standing.clear();
         held.clear();
     }

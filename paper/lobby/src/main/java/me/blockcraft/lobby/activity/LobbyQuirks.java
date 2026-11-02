@@ -3,6 +3,7 @@ package me.blockcraft.lobby.activity;
 import io.papermc.paper.event.player.PrePlayerAttackEntityEvent;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.afk.AfkChangeEvent;
+import me.blockcraft.api.display.Cards;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.settings.PlayerSetting;
@@ -11,7 +12,6 @@ import me.blockcraft.lobby.cosmetic.PetType;
 import me.blockcraft.lobby.cosmetic.Pets;
 import me.blockcraft.lobby.cosmetic.Secret;
 import me.blockcraft.lobby.cosmetic.Secrets;
-import me.blockcraft.lobby.npc.Holograms;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
@@ -72,7 +72,7 @@ public final class LobbyQuirks implements Listener, AutoCloseable {
             var id = player.getUniqueId();
             if (api.isAfk(player) && api.afk().awayFor(player).compareTo(config.sleepAfter()) >= 0) {
                 var display = sleeping.computeIfAbsent(id, ignored -> {
-                    var text = Holograms.line(player.getLocation().add(0, 2.5, 0), messages.get("quirks.sleep"));
+                    var text = Cards.line(player.getLocation().add(0, 2.5, 0), messages.get("quirks.sleep"));
                     text.setPersistent(false);
                     text.setVisibleByDefault(false);
                     text.setViewRange(0.5f);

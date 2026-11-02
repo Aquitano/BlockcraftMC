@@ -1,6 +1,7 @@
 package me.blockcraft.lobby.activity;
 
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.display.Figures;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.lobby.config.HerobrineConfig;
 import me.blockcraft.lobby.cosmetic.Secret;

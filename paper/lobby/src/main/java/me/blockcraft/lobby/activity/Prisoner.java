@@ -2,6 +2,7 @@ package me.blockcraft.lobby.activity;
 
 import io.papermc.paper.event.player.PrePlayerAttackEntityEvent;
 import me.blockcraft.api.config.Locations;
+import me.blockcraft.api.display.Figures;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.lobby.ChunkTickets;
@@ -57,7 +58,7 @@ public final class Prisoner implements Listener, AutoCloseable {
     @Override
     public void close() {
         if (prisoner != null) {
-            prisoner.remove();
+            Figures.remove(prisoner);
             prisoner = null;
         }
         held.clear();

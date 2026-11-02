@@ -4,11 +4,11 @@ import io.papermc.paper.datacomponent.item.ResolvableProfile;
 import io.papermc.paper.event.player.PrePlayerAttackEntityEvent;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.config.Locations;
+import me.blockcraft.api.display.Figures;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.lobby.ChunkTickets;
-import me.blockcraft.lobby.activity.Figures;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
@@ -141,7 +141,7 @@ public final class DailyCourier implements Listener, AutoCloseable {
     @Override
     public void close() {
         if (figure != null) {
-            figure.remove();
+            Figures.remove(figure);
             figure = null;
         }
         held.clear();

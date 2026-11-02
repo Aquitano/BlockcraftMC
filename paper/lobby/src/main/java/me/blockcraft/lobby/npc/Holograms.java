@@ -1,12 +1,12 @@
 package me.blockcraft.lobby.npc;
 
+import me.blockcraft.api.display.Cards;
 import me.blockcraft.api.pack.MenuIcon;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
 import org.bukkit.Bukkit;
-import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
@@ -30,8 +30,6 @@ import java.util.Optional;
 public final class Holograms {
 
     private static final NamespacedKey NAME = new NamespacedKey("blockcraft", "hologram");
-    /** The pack's tooltip card, so the holograms match the menus. */
-    private static final Color CARD = Color.fromARGB(0xC8, 0x14, 0x17, 0x20);
     private static final Display.Brightness FULL = new Display.Brightness(15, 15);
     private static final double TEXT_OFFSET = 0.9;
     private static final double LINE_HEIGHT = 0.25;
@@ -73,7 +71,7 @@ public final class Holograms {
 
     public void place(String name, Location base) {
         remove(name, base.getWorld());
-        var text = line(base.clone().add(0, TEXT_OFFSET, 0), text(name));
+        var text = Cards.line(base.clone().add(0, TEXT_OFFSET, 0), text(name));
         text.getPersistentDataContainer().set(NAME, PersistentDataType.STRING, name);
         icon(name).ifPresent(icon -> {
             var item = base.getWorld().spawn(base.clone().add(0, iconOffset(name), 0), ItemDisplay.class, display -> {
@@ -97,19 +95,6 @@ public final class Holograms {
         for (var display : world.getEntitiesByClass(ItemDisplay.class)) {
             nameOf(display).flatMap(this::icon).ifPresent(icon -> display.setItemStack(icon.item().build()));
         }
-    }
-
-    /** One line of floating text; the caller decides whether it survives a restart. */
-    public static TextDisplay line(Location location, Component text) {
-        return location.getWorld().spawn(location, TextDisplay.class, display -> {
-            display.text(text);
-            display.setAlignment(TextDisplay.TextAlignment.CENTER);
-            display.setBillboard(Display.Billboard.CENTER);
-            display.setDefaultBackground(false);
-            display.setBackgroundColor(CARD);
-            display.setShadowed(true);
-            display.setBrightness(FULL);
-        });
     }
 
     private Component text(String name) {

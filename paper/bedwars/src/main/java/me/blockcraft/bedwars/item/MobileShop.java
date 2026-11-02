@@ -21,7 +21,7 @@ import java.util.List;
 /** A dealer set down on the ground for a few seconds, the time it has left floating above it. */
 final class MobileShop {
 
-    private static final double LABEL_HEIGHT = 2.2;
+    private static final double LABEL_HEIGHT = 2.4;
 
     private record Stall(Entity dealer, TextDisplay label, BukkitTask task) {
     }

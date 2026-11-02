@@ -3,6 +3,7 @@ package me.blockcraft.lobby.activity;
 import io.papermc.paper.event.player.PrePlayerAttackEntityEvent;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.coins.Coins;
+import me.blockcraft.api.display.Figures;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Tasks;

@@ -4,6 +4,7 @@ import io.papermc.paper.datacomponent.item.ResolvableProfile;
 import io.papermc.paper.event.player.PrePlayerAttackEntityEvent;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.config.Locations;
+import me.blockcraft.api.display.Figures;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.common.message.Messages;
@@ -137,7 +138,7 @@ public final class QuestGivers implements Listener, AutoCloseable {
 
     @Override
     public void close() {
-        givers.keySet().forEach(Entity::remove);
+        givers.keySet().forEach(Figures::remove);
         givers.clear();
         held.clear();
     }

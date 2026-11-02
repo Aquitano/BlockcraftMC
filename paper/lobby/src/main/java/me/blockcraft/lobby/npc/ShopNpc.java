@@ -1,6 +1,7 @@
 package me.blockcraft.lobby.npc;
 
 import me.blockcraft.api.config.Locations;
+import me.blockcraft.api.display.Cards;
 import me.blockcraft.api.world.Worlds;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.lobby.config.LobbyLocation;
@@ -70,7 +71,7 @@ public final class ShopNpc {
     }
 
     private static TextDisplay ownLine(Location location, Component text) {
-        var line = Holograms.line(location, text);
+        var line = Cards.line(location, text);
         line.setPersistent(false);
         return line;
     }

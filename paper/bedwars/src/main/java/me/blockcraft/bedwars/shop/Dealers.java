@@ -3,8 +3,8 @@ package me.blockcraft.bedwars.shop;
 import com.destroystokyo.paper.profile.ProfileProperty;
 import io.papermc.paper.datacomponent.item.ResolvableProfile;
 import io.papermc.paper.event.player.PrePlayerAttackEntityEvent;
+import me.blockcraft.api.display.Figures;
 import me.blockcraft.api.sound.Sounds;
-import me.blockcraft.bedwars.lobby.Figures;
 import me.blockcraft.common.message.Messages;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
@@ -49,7 +49,7 @@ public final class Dealers implements Listener {
 
     public void remove(Entity dealer) {
         dealers.remove(dealer.getUniqueId());
-        dealer.remove();
+        Figures.remove(dealer);
     }
 
     @EventHandler

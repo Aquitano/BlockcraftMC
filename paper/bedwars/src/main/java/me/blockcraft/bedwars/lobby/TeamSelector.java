@@ -1,6 +1,7 @@
 package me.blockcraft.bedwars.lobby;
 
 import io.papermc.paper.datacomponent.item.ResolvableProfile;
+import me.blockcraft.api.display.Figures;
 import me.blockcraft.bedwars.team.Team;
 import me.blockcraft.bedwars.team.TeamColor;
 import me.blockcraft.bedwars.team.Teams;
@@ -78,21 +79,21 @@ public final class TeamSelector implements Listener {
         if (!open) {
             return;
         }
-        figures.getOrDefault(team.color(), List.of()).forEach(Entity::remove);
+        figures.getOrDefault(team.color(), List.of()).forEach(Figures::remove);
         var shown = new ArrayList<Entity>();
         var spots = layout.displays(team.color());
         var members = team.members();
         for (int index = 0; index < Math.min(spots.size(), members.size()); index++) {
             var member = members.get(index);
             shown.add(Figures.spawn(spots.get(index), ResolvableProfile.resolvableProfile(member.getPlayerProfile()),
-                    member.displayName(), team.armor()));
+                    member.displayName(), figure -> figure.getEquipment().setArmorContents(team.armor())));
         }
         figures.put(team.color(), shown);
     }
 
     public void close() {
         open = false;
-        figures.values().forEach(list -> list.forEach(Entity::remove));
+        figures.values().forEach(list -> list.forEach(Figures::remove));
         figures.clear();
         spawned.forEach(Entity::remove);
         spawned.clear();

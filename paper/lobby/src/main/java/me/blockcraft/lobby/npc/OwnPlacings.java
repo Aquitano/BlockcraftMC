@@ -1,5 +1,6 @@
 package me.blockcraft.lobby.npc;
 
+import me.blockcraft.api.display.Cards;
 import me.blockcraft.api.game.Placing;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
@@ -122,7 +123,7 @@ public final class OwnPlacings implements Listener, AutoCloseable {
             existing.text(text);
             return;
         }
-        var display = Holograms.line(board.clone().subtract(0, BELOW_BOARD, 0), text);
+        var display = Cards.line(board.clone().subtract(0, BELOW_BOARD, 0), text);
         display.setPersistent(false);
         display.setVisibleByDefault(false);
         player.showEntity(plugin, display);

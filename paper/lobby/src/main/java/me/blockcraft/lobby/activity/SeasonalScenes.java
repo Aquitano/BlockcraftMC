@@ -7,6 +7,7 @@ import io.papermc.paper.datacomponent.item.ResolvableProfile;
 import io.papermc.paper.event.player.PrePlayerAttackEntityEvent;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.config.Locations;
+import me.blockcraft.api.display.Figures;
 import me.blockcraft.common.calendar.NetworkCalendar;
 import me.blockcraft.common.calendar.NetworkCalendar.Occasion;
 import me.blockcraft.common.settings.PlayerSetting;
