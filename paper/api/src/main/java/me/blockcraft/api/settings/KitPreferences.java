@@ -10,7 +10,9 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.Plugin;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -25,6 +27,7 @@ public final class KitPreferences<K> implements Listener {
     private final Predicate<K> free;
     private final BiConsumer<Player, K> restore;
     private final LatestRequests<UUID> requests = new LatestRequests<>();
+    private final Set<UUID> remembering = new HashSet<>();
 
     public KitPreferences(Plugin plugin, PlayerSetting setting, List<K> kits, Function<K, String> item,
                           Predicate<K> free, BiConsumer<Player, K> restore) {
@@ -38,8 +41,14 @@ public final class KitPreferences<K> implements Listener {
     }
 
     public void remember(Player player, K kit) {
-        requests.invalidate(player.getUniqueId());
-        BlockcraftApi.get().settings().set(player, setting, item.apply(kit));
+        var id = player.getUniqueId();
+        requests.invalidate(id);
+        remembering.add(id);
+        try {
+            BlockcraftApi.get().settings().set(player, setting, item.apply(kit));
+        } finally {
+            remembering.remove(id);
+        }
     }
 
     public void restore(Player player) {
@@ -66,7 +75,9 @@ public final class KitPreferences<K> implements Listener {
 
     @EventHandler
     public void onSettingChanged(PlayerSettingChangedEvent event) {
-        if (event.setting() == setting) restore(event.getPlayer());
+        if (event.setting() == setting && !remembering.contains(event.getPlayer().getUniqueId())) {
+            restore(event.getPlayer());
+        }
     }
 
     @EventHandler

@@ -1,6 +1,7 @@
 package me.blockcraft.api.season;
 
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.settings.PlayerSettingChangedEvent;
 import me.blockcraft.api.settings.PlayerSettingsLoadedEvent;
 import me.blockcraft.api.world.MapSaveEvent;
 import me.blockcraft.common.settings.PlayerSetting;
@@ -214,6 +215,13 @@ public final class Snowfall implements Listener, AutoCloseable {
     @EventHandler(priority = EventPriority.MONITOR)
     public void onSettingsLoaded(PlayerSettingsLoadedEvent event) {
         snowOn(event.getPlayer());
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onSettingChanged(PlayerSettingChangedEvent event) {
+        if (event.setting() == PlayerSetting.EFFECTS) {
+            snowOn(event.getPlayer());
+        }
     }
 
     @EventHandler

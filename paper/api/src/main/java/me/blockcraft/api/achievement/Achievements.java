@@ -243,17 +243,21 @@ public final class Achievements implements Listener {
             var unlocked = new LinkedHashMap<Player, Rewards>();
             for (var target : targets) {
                 UUID uuid = target.player().getUniqueId();
-                var stats = repository == null ? Stats.EMPTY : repository.get(uuid);
-                var owned = unlocks.owned(uuid, game.equals(Achievement.NETWORK) ? "" : Achievement.ITEM_PREFIX);
-                var cosmetics = game.equals(Achievement.NETWORK)
-                        ? missingCosmetics(catalog, target.level(), owned).stream()
-                                .filter(reward -> unlocks.unlock(uuid, reward.item())).toList()
-                        : List.<CosmeticReward>of();
-                var fresh = reached(catalog, game, stats, target.level(), owned).stream()
-                        .filter(achievement -> unlocks.unlock(uuid, achievement.item()))
-                        .toList();
-                if (!fresh.isEmpty() || !cosmetics.isEmpty()) {
-                    unlocked.put(target.player(), new Rewards(fresh, cosmetics));
+                try {
+                    var stats = repository == null ? Stats.EMPTY : repository.get(uuid);
+                    var owned = unlocks.owned(uuid, game.equals(Achievement.NETWORK) ? "" : Achievement.ITEM_PREFIX);
+                    var cosmetics = game.equals(Achievement.NETWORK)
+                            ? missingCosmetics(catalog, target.level(), owned).stream()
+                                    .filter(reward -> unlocks.unlock(uuid, reward.item())).toList()
+                            : List.<CosmeticReward>of();
+                    var fresh = reached(catalog, game, stats, target.level(), owned).stream()
+                            .filter(achievement -> unlocks.unlock(uuid, achievement.item()))
+                            .toList();
+                    if (!fresh.isEmpty() || !cosmetics.isEmpty()) {
+                        unlocked.put(target.player(), new Rewards(fresh, cosmetics));
+                    }
+                } catch (RuntimeException failure) {
+                    plugin.getSLF4JLogger().warn("Could not evaluate {} achievements for {}", game, uuid, failure);
                 }
             }
             return unlocked;

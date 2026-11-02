@@ -93,10 +93,19 @@ public final class LobbyCountdown implements Listener {
 
     /** Runs the clock down to {@code toSeconds} whatever the player count says; false if it is already there. */
     public boolean shorten(int toSeconds) {
+        return runDown(toSeconds, true);
+    }
+
+    /** A full lobby runs the clock down to {@code toSeconds}, but it still waits at full while below {@code players.min}. */
+    public boolean hurry(int toSeconds) {
+        return runDown(toSeconds, false);
+    }
+
+    private boolean runDown(int toSeconds, boolean force) {
         if (countdown.isRunning() && countdown.remaining() <= toSeconds) {
             return false;
         }
-        forced = true;
+        forced |= force;
         updateBar(toSeconds);
         if (countdown.isRunning()) {
             countdown.remaining(toSeconds + 1);

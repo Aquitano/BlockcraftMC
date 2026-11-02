@@ -4,10 +4,13 @@ import org.bukkit.Location;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 import java.util.function.Function;
+import java.util.stream.IntStream;
 
 /** Rolls one inventory per chest block the first time it is opened; every later opener sees the same one. */
 public final class LootChests {
@@ -43,10 +46,13 @@ public final class LootChests {
 
     private Inventory generate() {
         var inventory = new LootChest().getInventory();
-        int count = random.nextInt(loot.minItems(), loot.maxItems() + 1);
-        for (int i = 0; i < count; i++) {
-            inventory.setItem(random.nextInt(inventory.getSize()), items.apply(roll()));
+        if (totalWeight <= 0) {
+            return inventory;
         }
+        var slots = new ArrayList<>(IntStream.range(0, inventory.getSize()).boxed().toList());
+        Collections.shuffle(slots, random);
+        int count = Math.min(random.nextInt(loot.minItems(), loot.maxItems() + 1), slots.size());
+        slots.subList(0, count).forEach(slot -> inventory.setItem(slot, items.apply(roll())));
         return inventory;
     }
 

@@ -47,7 +47,7 @@ public final class LobbyEntrance {
         welcome.accept(player);
         countdown.start();
         if (round.full()) {
-            fullSeconds.ifPresent(countdown::shorten);
+            fullSeconds.ifPresent(countdown::hurry);
         }
     }
 }
