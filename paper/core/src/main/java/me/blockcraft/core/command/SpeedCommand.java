@@ -2,19 +2,13 @@ package me.blockcraft.core.command;
 
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
-import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
-import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
 import me.blockcraft.api.audit.StaffAudit;
 import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 
 import java.util.Locale;
 import java.util.Optional;
@@ -46,53 +40,35 @@ public final class SpeedCommand {
     }
 
     public static LiteralCommandNode<CommandSourceStack> create(StaffAudit audit, Messages messages) {
+        var targets = new SelfOrOthers("speed", messages);
         return Commands.literal("speed")
                 .requires(CorePermission.of("speed"))
                 .executes(context -> {
                     context.getSource().getSender().sendMessage(messages.get("speed.usage"));
                     return Command.SINGLE_SUCCESS;
                 })
-                .then(withTargets(Commands.argument("level", IntegerArgumentType.integer(1, MAX_LEVEL)), Optional.empty(), audit, messages)
-                        .then(withTargets(Commands.literal("walk"), Optional.of(Kind.WALK), audit, messages))
-                        .then(withTargets(Commands.literal("fly"), Optional.of(Kind.FLY), audit, messages)))
+                .then(targets.executes(Commands.argument("level", IntegerArgumentType.integer(1, MAX_LEVEL)),
+                                context -> speed(context, Optional.empty(), audit, messages))
+                        .then(targets.executes(Commands.literal("walk"),
+                                context -> speed(context, Optional.of(Kind.WALK), audit, messages)))
+                        .then(targets.executes(Commands.literal("fly"),
+                                context -> speed(context, Optional.of(Kind.FLY), audit, messages))))
                 .build();
     }
 
-    private static <T extends ArgumentBuilder<CommandSourceStack, T>> T withTargets(T node, Optional<Kind> kind, StaffAudit audit,
-                                                                                  Messages messages) {
-        return node
-                .executes(context -> {
-                    int level = IntegerArgumentType.getInteger(context, "level");
-                    Players.self(context.getSource(), messages.get("speed.usage"))
-                            .ifPresent(player -> apply(player, player, level, kind, audit, messages));
-                    return Command.SINGLE_SUCCESS;
-                })
-                .then(Commands.argument("players", ArgumentTypes.players())
-                        .requires(CorePermission.of("speed.others"))
-                        .executes(context -> others(context, kind, audit, messages)));
-    }
-
-    private static int others(CommandContext<CommandSourceStack> context, Optional<Kind> kind, StaffAudit audit, Messages messages)
-            throws CommandSyntaxException {
-        var sender = context.getSource().getSender();
+    private static Optional<SelfOrOthers.Action> speed(CommandContext<CommandSourceStack> context, Optional<Kind> requested,
+                                                       StaffAudit audit, Messages messages) {
         int level = IntegerArgumentType.getInteger(context, "level");
-        TargetGuard.permitted(sender, Players.resolveAll(context, "players"), messages)
-                .forEach(target -> apply(sender, target, level, kind, audit, messages));
-        return Command.SINGLE_SUCCESS;
-    }
-
-    private static void apply(CommandSender sender, Player target, int level, Optional<Kind> requested, StaffAudit audit, Messages messages) {
-        var kind = requested.orElse(target.isFlying() ? Kind.FLY : Kind.WALK);
-        switch (kind) {
-            case WALK -> target.setWalkSpeed(kind.speed(level));
-            case FLY -> target.setFlySpeed(kind.speed(level));
-        }
-        var speed = Formatter.number("speed", level);
-        target.sendMessage(messages.get(kind == Kind.FLY ? "speed.fly" : "speed.walk", speed));
-        if (!target.equals(sender)) {
-            sender.sendMessage(messages.get(kind == Kind.FLY ? "speed.fly-other" : "speed.walk-other", speed,
-                    Placeholder.unparsed("player", target.getName())));
-            audit.record(sender, "speed", target, kind.name().toLowerCase(Locale.ROOT) + " " + level);
-        }
+        return Optional.of((sender, target) -> {
+            var kind = requested.orElse(target.isFlying() ? Kind.FLY : Kind.WALK);
+            switch (kind) {
+                case WALK -> target.setWalkSpeed(kind.speed(level));
+                case FLY -> target.setFlySpeed(kind.speed(level));
+            }
+            var speed = Formatter.number("speed", level);
+            target.sendMessage(messages.get(kind == Kind.FLY ? "speed.fly" : "speed.walk", speed));
+            return SelfOrOthers.Outcome.told(kind == Kind.FLY ? "speed.fly-other" : "speed.walk-other", speed)
+                    .audited(audit, "speed", kind.name().toLowerCase(Locale.ROOT) + " " + level);
+        });
     }
 }
