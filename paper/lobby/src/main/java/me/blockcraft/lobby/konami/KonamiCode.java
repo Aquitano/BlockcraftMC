@@ -3,6 +3,7 @@ package me.blockcraft.lobby.konami;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.IntStream;
 
 import static me.blockcraft.lobby.konami.KonamiKey.A;
 import static me.blockcraft.lobby.konami.KonamiKey.B;
@@ -14,7 +15,7 @@ import static me.blockcraft.lobby.konami.KonamiKey.UP;
 /**
  * How far one player has come through the code. Every press must follow the last one within the gap, or the run
  * starts over. A wrong key keeps the longest tail of the presses that still starts the code, so a third tap of up
- * keeps two.
+ * keeps two. The A also answers to left: the server only sees movement, and the A key strafes left.
  */
 public final class KonamiCode {
 
@@ -48,7 +49,7 @@ public final class KonamiCode {
         }
         lastPress = nanoTime;
         int had = matched;
-        if (SEQUENCE.get(had) != key) {
+        if (!answers(SEQUENCE.get(had), key)) {
             matched = restart(had, key);
             return new Step.Missed(had);
         }
@@ -64,10 +65,18 @@ public final class KonamiCode {
         var presses = new ArrayList<>(SEQUENCE.subList(0, had));
         presses.add(key);
         for (int length = had; length > 0; length--) {
-            if (presses.subList(presses.size() - length, presses.size()).equals(SEQUENCE.subList(0, length))) {
+            if (startsTheCode(presses.subList(presses.size() - length, presses.size()))) {
                 return length;
             }
         }
         return 0;
+    }
+
+    private static boolean startsTheCode(List<KonamiKey> presses) {
+        return IntStream.range(0, presses.size()).allMatch(index -> answers(SEQUENCE.get(index), presses.get(index)));
+    }
+
+    private static boolean answers(KonamiKey expected, KonamiKey pressed) {
+        return expected == pressed || expected == A && pressed == LEFT;
     }
 }

@@ -37,6 +37,12 @@ public class KonamiCodeTest {
     }
 
     @Test
+    public void theAKeyFinishesTheCodeThoughTheServerSeesItAsLeft() {
+        KonamiCode.SEQUENCE.subList(0, KonamiCode.SEQUENCE.size() - 1).forEach(this::press);
+        assertEquals(new Step.Completed(), press(LEFT));
+    }
+
+    @Test
     public void aWrongKeyReportsTheRunItBrokeAndKeepsWhatStillStartsTheCode() {
         List.of(UP, UP, DOWN, DOWN).forEach(this::press);
         assertEquals(new Step.Missed(4), press(UP));

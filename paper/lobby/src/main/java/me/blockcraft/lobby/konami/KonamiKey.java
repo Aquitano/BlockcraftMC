@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.function.Predicate;
 
-/** A button of the code on the movement keys: B is sneak and A is jump. */
+/** A button of the code on the movement keys: B is sneak and A is jump, or left as {@link KonamiCode} reads it. */
 public enum KonamiKey {
     UP(Input::isForward),
     DOWN(Input::isBackward),
