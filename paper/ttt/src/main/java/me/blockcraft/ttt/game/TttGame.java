@@ -120,7 +120,7 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
         this.countdown = new LobbyCountdown(plugin, round, gameConfig, config.roundMinimum(), remaining -> { }, this::start);
         this.hotbar = new LobbyHotbar(plugin, List.of(new LobbyHotbar.Choice(MenuIcon.VOTE, messages.get("item.vote"),
                 () -> phase() == GamePhase.LOBBY, this::openVote)), statsMenus, countdown);
-        this.sidebar = new GameSidebar(messages.get("scoreboard.title"), round);
+        this.sidebar = new GameSidebar(messages.get("scoreboard.title"), this::headcount, round::clockOnSidebar);
         this.corpses = new Corpses(messages);
         this.equipment = new Equipment(plugin, config.shop(), messages, this::roleOf, round::players);
         this.secondsLeft = config.roundSeconds();
@@ -371,6 +371,7 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
         if (round.isSpectator(player)) {
             Tasks.sync(plugin, () -> round.watch(player));
         }
+
     }
 
     /** A chest of the map gives one thing and is gone; true if {@code block} was one. */
@@ -432,7 +433,18 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
     }
 
     public void inspect(Player finder, Entity corpse, ItemStack hand) {
-        corpses.inspect(finder, corpse, HotbarItem.of(hand, ShopItem.class).filter(item -> item == ShopItem.DNA_SCANNER).isPresent());
+        corpses.inspect(finder, corpse, HotbarItem.of(hand, ShopItem.class).filter(item -> item == ShopItem.DNA_SCANNER).isPresent())
+                .ifPresent(dead -> refreshAll());
+    }
+
+    /** Until their corpse is identified, the dead count as playing, so that the sidebar does not give their death away. */
+    private GameSidebar.Headcount headcount() {
+        if (phase() != GamePhase.INGAME) {
+            return new GameSidebar.Headcount(round.playerCount(), round.spectatorCount());
+        }
+        var unidentified = corpses.unidentified();
+        int hidden = (int) round.spectators().stream().filter(player -> unidentified.contains(player.getUniqueId())).count();
+        return new GameSidebar.Headcount(round.playerCount() + hidden, Math.max(0, round.spectatorCount() - hidden));
     }
 
     public void openShop(Player player) {

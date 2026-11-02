@@ -14,7 +14,9 @@ import org.bukkit.entity.Pose;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * The dead stay where they fell, as a figure wearing their skin. Whoever finds one identifies it for everyone,
@@ -23,12 +25,14 @@ import java.util.UUID;
 public final class Corpses {
 
     private static final class Corpse {
+        private final UUID player;
         private final String name;
         private final Role role;
         private final Optional<String> killer;
         private boolean identified;
 
-        private Corpse(String name, Role role, Optional<String> killer) {
+        private Corpse(UUID player, String name, Role role, Optional<String> killer) {
+            this.player = player;
             this.name = name;
             this.role = role;
             this.killer = killer;
@@ -43,7 +47,7 @@ public final class Corpses {
     }
 
     public void spawn(Player victim, Role role, Optional<Player> killer) {
-        var corpse = new Corpse(victim.getName(), role, killer.filter(other -> !other.equals(victim)).map(Player::getName));
+        var corpse = new Corpse(victim.getUniqueId(), victim.getName(), role, killer.filter(other -> !other.equals(victim)).map(Player::getName));
         var location = victim.getLocation();
         location.setPitch(0);
         var pose = Mannequin.validPoses().contains(Pose.SLEEPING) ? Pose.SLEEPING : Pose.SWIMMING;
@@ -67,15 +71,24 @@ public final class Corpses {
         return corpses.containsKey(entity.getUniqueId());
     }
 
-    /** Identifies the corpse on first touch; with the DNA scanner in hand, the finder also learns the killer. */
-    public void inspect(Player finder, Entity entity, boolean scanner) {
+    /** The dead nobody has identified yet, whom everyone else still counts among the living. */
+    public Set<UUID> unidentified() {
+        return corpses.values().stream().filter(corpse -> !corpse.identified).map(corpse -> corpse.player).collect(Collectors.toSet());
+    }
+
+    /**
+     * Identifies the corpse on first touch, and returns whose it was then; with the DNA scanner in hand, the finder
+     * also learns the killer.
+     */
+    public Optional<UUID> inspect(Player finder, Entity entity, boolean scanner) {
         var corpse = corpses.get(entity.getUniqueId());
         if (corpse == null) {
-            return;
+            return Optional.empty();
         }
+        boolean firstFind = !corpse.identified;
         var who = TagResolver.resolver(Placeholder.unparsed("player", corpse.name),
                 Placeholder.component("role", corpse.role.displayName(messages)));
-        if (!corpse.identified) {
+        if (firstFind) {
             corpse.identified = true;
             entity.customName(messages.get("corpse.identified", who));
             Bukkit.broadcast(messages.get("corpse.found", who, Placeholder.unparsed("finder", finder.getName())));
@@ -89,6 +102,7 @@ public final class Corpses {
                     .orElseGet(() -> messages.get("corpse.no-killer", who)));
             Sounds.NOTE_PLING.play(finder);
         }
+        return firstFind ? Optional.of(corpse.player) : Optional.empty();
     }
 
     public void clear() {

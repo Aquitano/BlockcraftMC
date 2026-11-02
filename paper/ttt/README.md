@@ -23,7 +23,7 @@ open Minecraft clones ([MTTT](https://github.com/phiph-s/MTTT), Apache 2.0, and
 Nobody hears who killed whom: the round keeps its kills secret (`RoundSummary.keepKillsSecret`), so no streak is
 announced, no kill effect plays, the victim's title names nobody and nobody pays respects with an F. The dead lie where they fell as a figure in their skin, named "Unbekannte Leiche";
 the first player to right-click it identifies it for everyone, which reveals the role. Holding the DNA scanner,
-a click also tells who the killer was. Dead players watch; their chat reaches only other spectators.
+a click also tells who the killer was. Dead players watch; their chat reaches only other spectators. The sidebar counts them among the living until their corpse is identified.
 
 A traitor's chat message that starts with `#` reaches only the living traitors; `/tc <Nachricht>` writes one.
 
