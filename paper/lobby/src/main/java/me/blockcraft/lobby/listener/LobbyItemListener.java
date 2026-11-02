@@ -1,7 +1,6 @@
 package me.blockcraft.lobby.listener;
 
 import me.blockcraft.api.BlockcraftApi;
-import me.blockcraft.api.dialog.SettingsDialog;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.lobby.hider.PlayerHider;
@@ -13,8 +12,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
-
-import java.util.Optional;
 
 public final class LobbyItemListener implements Listener {
 
@@ -37,12 +34,9 @@ public final class LobbyItemListener implements Listener {
         LobbyItem.of(event.getItem()).ifPresent(item -> {
             switch (item) {
                 case NAVIGATOR -> menus.openNavigator(player);
-                case EXTRAS -> menus.openExtras(player);
                 case PLAYER_HIDER -> toggleHider(player);
                 case PROFILE -> menus.openProfile(player);
                 case FRIENDS -> menus.openFriends(player);
-                case SETTINGS -> new SettingsDialog(player, Optional.empty()).open(player);
-                case ACHIEVEMENTS -> BlockcraftApi.get().achievements().open(player, Optional.empty());
                 case GADGET, POND_ROD, THROW -> {
                 }
             }

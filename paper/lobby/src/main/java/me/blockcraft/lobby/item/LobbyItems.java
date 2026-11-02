@@ -31,10 +31,7 @@ public final class LobbyItems {
         inventory.setItem(LobbyItem.NAVIGATOR.slot(), item(player, LobbyItem.NAVIGATOR, Items.of(Material.COMPASS), "item.navigator"));
         inventory.setItem(LobbyItem.PLAYER_HIDER.slot(), hiderItem(playersVisible));
         inventory.setItem(LobbyItem.PROFILE.slot(), item(player, LobbyItem.PROFILE, head(player), "item.profile"));
-        inventory.setItem(LobbyItem.EXTRAS.slot(), item(player, LobbyItem.EXTRAS, MenuIcon.TOOL_COSMETICS.item(), "item.extras"));
         inventory.setItem(LobbyItem.FRIENDS.slot(), item(player, LobbyItem.FRIENDS, MenuIcon.TOOL_FRIENDS.item(), "item.friends"));
-        inventory.setItem(LobbyItem.SETTINGS.slot(), item(player, LobbyItem.SETTINGS, MenuIcon.TOOL_SETTINGS.item(), "item.settings"));
-        inventory.setItem(LobbyItem.ACHIEVEMENTS.slot(), item(player, LobbyItem.ACHIEVEMENTS, MenuIcon.ACHIEVEMENTS.item(), "item.achievements"));
         seasonal.get().ifPresent(item -> inventory.setItem(LobbyItem.THROW.slot(), item));
         player.setHealth(20.0);
         player.setFoodLevel(20);

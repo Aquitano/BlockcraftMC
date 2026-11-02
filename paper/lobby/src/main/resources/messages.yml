@@ -58,10 +58,7 @@ item:
   hider-on: "<arrow><primary>Spieler <dark>● <success>AN"
   hider-off: "<arrow><primary>Spieler <dark>● <error>AUS"
   profile: "<arrow><primary>Profil <dark>● <muted>Rechtsklick"
-  extras: "<arrow><primary>Extras <dark>● <muted>Rechtsklick"
   friends: "<arrow><primary>Freunde <dark>● <muted>Rechtsklick"
-  settings: "<arrow><primary>Einstellungen <dark>● <muted>Rechtsklick"
-  achievements: "<arrow><primary>Erfolge <dark>● <muted>Rechtsklick"
 hider:
   wait: "<muted>Spieler-Anzeige lädt wieder auf."
   hidden: "<muted>Andere Spieler sind ausgeblendet."
