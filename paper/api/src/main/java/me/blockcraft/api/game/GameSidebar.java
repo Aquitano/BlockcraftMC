@@ -33,7 +33,7 @@ public final class GameSidebar {
     public record Headcount(int players, int spectators) {
 
         public static Supplier<Headcount> of(Round round) {
-            return () -> new Headcount(round.playerCount(), round.spectatorCount());
+            return round::headcount;
         }
     }
 

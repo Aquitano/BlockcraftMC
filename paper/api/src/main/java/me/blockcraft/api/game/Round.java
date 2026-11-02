@@ -30,6 +30,7 @@ import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.function.Consumer;
 import java.util.function.IntConsumer;
+import java.util.function.Supplier;
 
 /**
  * The bookkeeping every game's round shares, held by the game next to its own rules. It seats every joiner: while
@@ -61,6 +62,7 @@ public final class Round implements Listener {
     private final RejoinRepository rejoins;
     private volatile GamePhase phase = GamePhase.LOBBY;
     private PlayArea playArea;
+    private Supplier<GameSidebar.Headcount> headcount = () -> new GameSidebar.Headcount(playerCount(), spectatorCount());
 
     public record PlayArea(World world, BoundingBox box) { }
 
@@ -146,7 +148,7 @@ public final class Round implements Listener {
             case ENDING -> {
             }
         }
-        arena.farewell(player, players.size(), capacity);
+        arena.farewell(player, headcount().players(), capacity);
         return true;
     }
 
@@ -222,7 +224,7 @@ public final class Round implements Listener {
         }
         summary.forget(player);
         watch(player);
-        arena.farewell(player, players.size(), capacity);
+        arena.farewell(player, headcount().players(), capacity);
     }
 
     /** Out for good: the player watches the rest, once the game has respawned them and called {@link #watch}. */
@@ -281,6 +283,16 @@ public final class Round implements Listener {
 
     public List<Player> spectators() {
         return spectators.list();
+    }
+
+    /** Who the round says is still in and how many watch, on the sidebar and when someone leaves. */
+    public GameSidebar.Headcount headcount() {
+        return headcount.get();
+    }
+
+    /** For a game that tells who is in itself, such as one whose deaths stay secret for a while. */
+    public void countWith(Supplier<GameSidebar.Headcount> headcount) {
+        this.headcount = headcount;
     }
 
     /** Vanished staff watch uncounted. */

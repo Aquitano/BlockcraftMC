@@ -120,7 +120,8 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
         this.countdown = new LobbyCountdown(plugin, round, gameConfig, config.roundMinimum(), remaining -> { }, this::start);
         this.hotbar = new LobbyHotbar(plugin, List.of(new LobbyHotbar.Choice(MenuIcon.VOTE, messages.get("item.vote"),
                 () -> phase() == GamePhase.LOBBY, this::openVote)), statsMenus, countdown);
-        this.sidebar = new GameSidebar(messages.get("scoreboard.title"), this::headcount, round::clockOnSidebar);
+        round.countWith(this::headcount);
+        this.sidebar = new GameSidebar(messages.get("scoreboard.title"), round);
         this.corpses = new Corpses(messages);
         this.equipment = new Equipment(plugin, config.shop(), messages, this::roleOf, round::players);
         this.secondsLeft = config.roundSeconds();
