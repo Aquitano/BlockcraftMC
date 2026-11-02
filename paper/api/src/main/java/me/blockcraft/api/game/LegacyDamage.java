@@ -54,6 +54,14 @@ public final class LegacyDamage implements Listener {
 
     private static final Map<Material, Integer> BONUS = bonuses();
 
+    /**
+     * What {@link CombatStyle#LEGACY} adds to a player's attack damage and every hit here takes off again. While the
+     * victim is invulnerable, vanilla turns away a hit no stronger than the last one before any event, judging the
+     * modern value, which for swords and pickaxes is one below 1.8's: a stone sword hit followed by an iron one would be
+     * lost. With the headroom no modern value falls below 1.8's, and {@link #onHit} makes 1.8's call itself.
+     */
+    static final double HEADROOM = 1.0;
+
     private Swing swing;
 
     private static Map<Material, Integer> bonuses() {
@@ -92,20 +100,19 @@ public final class LegacyDamage implements Listener {
             return;
         }
         swing = null;
-        var weapon = attacker.getInventory().getItemInMainHand();
-        if (CombatStyle.of(attacker) != CombatStyle.LEGACY || weapon.isDataOverridden(DataComponentTypes.ATTRIBUTE_MODIFIERS)) {
+        if (CombatStyle.of(attacker) != CombatStyle.LEGACY) {
             return;
         }
-        bonus(weapon.getType()).ifPresent(legacy -> {
-            double damage = event.getDamage() + (legacy - modernBonus(weapon)) * (event.isCritical() ? 1.5 : 1);
-            if (event.getEntity() instanceof LivingEntity victim && invulnerable(victim) && damage <= victim.getLastDamage()) {
-                // Vanilla turns away a hit no stronger than the last one while the victim is invulnerable, but it judged
-                // the modern value; below the last hit the 1.8 value would otherwise land in full.
-                event.setCancelled(true);
-            } else {
-                event.setDamage(damage);
-            }
-        });
+        var weapon = attacker.getInventory().getItemInMainHand();
+        double critical = event.isCritical() ? 1.5 : 1;
+        double weaponBonus = weapon.isDataOverridden(DataComponentTypes.ATTRIBUTE_MODIFIERS) ? 0
+                : bonus(weapon.getType()).map(legacy -> legacy - modernBonus(weapon)).orElse(0.0);
+        double damage = event.getDamage() + (weaponBonus - HEADROOM) * critical;
+        if (event.getEntity() instanceof LivingEntity victim && invulnerable(victim) && damage <= victim.getLastDamage()) {
+            event.setCancelled(true);
+        } else {
+            event.setDamage(damage);
+        }
     }
 
     private static boolean invulnerable(LivingEntity victim) {

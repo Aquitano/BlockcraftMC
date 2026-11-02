@@ -11,22 +11,31 @@ import org.bukkit.entity.Player;
  */
 public enum CombatStyle {
 
-    /** 1.8: the attack speed sits far above any swing rate, so the cooldown is charged on every click. */
-    LEGACY(1024.0),
-    MODERN(4.0);
+    /**
+     * 1.8: the attack speed sits far above any swing rate, so the cooldown is charged on every click, and the attack
+     * damage carries {@link LegacyDamage}'s headroom.
+     */
+    LEGACY(1024.0, 1.0 + LegacyDamage.HEADROOM),
+    MODERN(4.0, 1.0);
 
     private static final String CONFIG_KEY = "pvp.legacy-combat";
 
     private final double attackSpeed;
+    private final double attackDamage;
 
-    CombatStyle(double attackSpeed) {
+    CombatStyle(double attackSpeed, double attackDamage) {
         this.attackSpeed = attackSpeed;
+        this.attackDamage = attackDamage;
     }
 
     public void apply(Player player) {
-        var attribute = player.getAttribute(Attribute.ATTACK_SPEED);
-        if (attribute != null) {
-            attribute.setBaseValue(attackSpeed);
+        var speed = player.getAttribute(Attribute.ATTACK_SPEED);
+        if (speed != null) {
+            speed.setBaseValue(attackSpeed);
+        }
+        var damage = player.getAttribute(Attribute.ATTACK_DAMAGE);
+        if (damage != null) {
+            damage.setBaseValue(attackDamage);
         }
     }
 
