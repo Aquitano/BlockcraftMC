@@ -4,7 +4,6 @@ import com.destroystokyo.paper.event.player.PlayerPostRespawnEvent;
 import io.papermc.paper.event.player.PrePlayerAttackEntityEvent;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.task.Tasks;
-import me.blockcraft.api.vanish.VanishChangeEvent;
 import me.blockcraft.api.world.MapSaveEvent;
 import me.blockcraft.zombies.game.Survivor;
 import me.blockcraft.zombies.game.ZombiesGame;
@@ -33,13 +32,11 @@ import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
-import org.bukkit.event.player.PlayerResourcePackStatusEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.plugin.Plugin;
 
@@ -59,15 +56,7 @@ public final class GameListener implements Listener {
     }
 
     @EventHandler
-    public void onJoin(PlayerJoinEvent event) {
-        event.joinMessage(null);
-        game.join(event.getPlayer());
-    }
-
-    @EventHandler
     public void onQuit(PlayerQuitEvent event) {
-        event.quitMessage(null);
-        game.quit(event.getPlayer());
         knifeReady.remove(event.getPlayer().getUniqueId());
     }
 
@@ -300,23 +289,6 @@ public final class GameListener implements Listener {
     @EventHandler
     public void onExplode(EntityExplodeEvent event) {
         event.blockList().clear();
-    }
-
-    @EventHandler
-    public void onPack(PlayerResourcePackStatusEvent event) {
-        game.refreshSidebar();
-        if (game.survivor(event.getPlayer()) != null) {
-            game.weapons().render(event.getPlayer());
-        }
-    }
-
-    @EventHandler
-    public void onVanish(VanishChangeEvent event) {
-        if (event.isVanished()) {
-            game.vanished(event.getPlayer());
-            knifeReady.remove(event.getPlayer().getUniqueId());
-        }
-        game.refreshSidebar();
     }
 
     @EventHandler

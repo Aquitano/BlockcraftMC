@@ -6,6 +6,7 @@ import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.game.ArenaProtection;
 import me.blockcraft.api.game.GameConfig;
 import me.blockcraft.api.game.GameServices;
+import me.blockcraft.api.game.RoundConnections;
 import me.blockcraft.api.game.SetupCommand;
 import me.blockcraft.api.game.StartCommand;
 import me.blockcraft.api.world.WorldProtection;
@@ -65,7 +66,7 @@ public final class ZombiesPlugin extends JavaPlugin {
                 Formatter.number("heal-delay", config.healthRegenTicks() / 20));
         game = new ZombiesGame(this, gameConfig, config, messages, arena, services.stats(), services.menus());
         api.presence().maxPlayers(config.maxPlayers());
-        services.listen(new GameListener(this, game), new AbilityListener(game), game.lobbyHotbar(), new ArenaProtection(() -> false),
+        services.listen(new RoundConnections(game), new GameListener(this, game), new AbilityListener(game), game.lobbyHotbar(), new ArenaProtection(() -> false),
                 WorldProtection.during(() -> !game.running(), api.buildMode()).rescue(() -> java.util.Optional.of(game.lobbySpawn())));
         services.commands(commands -> {
             commands.register(StartCommand.of(game.lobbyCountdown()).build());

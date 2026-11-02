@@ -8,7 +8,9 @@ import me.blockcraft.api.game.GamePhase;
 import me.blockcraft.api.game.GameSidebar;
 import me.blockcraft.api.game.LobbyCountdown;
 import me.blockcraft.api.game.LobbyHotbar;
+import me.blockcraft.api.game.LobbyEntrance;
 import me.blockcraft.api.game.PlayerReset;
+import me.blockcraft.api.game.RoundConnections;
 import me.blockcraft.api.game.Round;
 import me.blockcraft.api.game.RoundStart;
 import me.blockcraft.api.game.RoundSummary;
@@ -51,6 +53,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
@@ -58,7 +62,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
-public final class ZombiesGame {
+public final class ZombiesGame implements RoundConnections.Seating {
 
     private enum Phase { LOBBY, WAVE, INTERMISSION, ENDING }
     public enum Powerup { MAX_AMMO, DOUBLE_GOLD, INSTANT_KILL }
@@ -73,6 +77,7 @@ public final class ZombiesGame {
     private final RoundSummary summary;
     private final LobbyCountdown lobbyCountdown;
     private final LobbyHotbar lobbyHotbar;
+    private final LobbyEntrance entrance;
     private final GameSidebar sidebar;
     private final Weapons weapons;
     private final Enemies enemies;
@@ -116,6 +121,8 @@ public final class ZombiesGame {
         this.lobbyHotbar = new LobbyHotbar(plugin,
                 List.of(new LobbyHotbar.Choice(MenuIcon.ZOMBIES, messages.get("guide.item"), player -> new GuideDialog(messages).show(player))),
                 statsMenus, lobbyCountdown);
+        this.entrance = new LobbyEntrance(round, lobbyCountdown, lobbyHotbar, () -> Optional.of(lobbySpawn()),
+                () -> Optional.of(isLobby() ? lobbySpawn() : arena.point("spectator")), OptionalInt.empty(), player -> { });
         this.sidebar = new GameSidebar(messages.get("scoreboard.title"), round);
         this.weapons = new Weapons(this);
         this.enemies = new Enemies(this);
@@ -166,19 +173,19 @@ public final class ZombiesGame {
         return running() && survivor != null && survivor.life() == Survivor.Life.DOWNED;
     }
 
+    @Override
     public void join(Player player) {
-        if (round.join(player)) {
-            PlayerReset.reset(player, GameMode.ADVENTURE);
-            player.teleport(lobbySpawn());
-            lobbyHotbar.give(player);
-            lobbyCountdown.start();
-        } else {
-            player.teleport(isLobby() ? lobbySpawn() : arena.point("spectator"));
-        }
+        entrance.admit(player);
         refreshSidebar();
     }
 
+    @Override
+    public void refreshAll() {
+        refreshSidebar();
+        round.players().stream().filter(player -> survivor(player) != null).forEach(weapons::render);
+    }
 
+    @Override
     public void quit(Player player) {
         boolean participated = survivors.remove(player.getUniqueId()) != null;
         notes.forget(player);
@@ -193,6 +200,7 @@ public final class ZombiesGame {
         refreshSidebar();
     }
 
+    @Override
     public void vanished(Player player) {
         if (running() && survivor(player) != null) {
             quit(player);
