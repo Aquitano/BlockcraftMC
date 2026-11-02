@@ -136,8 +136,7 @@ public final class SystemConfig {
         this.discovery = new Discovery(number(discovery, "poll-seconds", 5), number(discovery, "stale-seconds", 20),
                 number(discovery, "seat-seconds", 15), Math.clamp(number(discovery, "max-snapshot-age-seconds", 30), 1, 3600));
         var onDemand = YamlFile.section(root, "on-demand");
-        var onDemandGroups = Arrays.stream(env(environment, "BLOCKCRAFT_ON_DEMAND_GROUPS",
-                        String.join(",", strings(onDemand, "groups"))).split(","))
+        var onDemandGroups = Arrays.stream(env(environment, "BLOCKCRAFT_ON_DEMAND_GROUPS", "").split(","))
                 .map(String::strip).map(group -> group.toLowerCase(Locale.ROOT))
                 .filter(group -> !group.isEmpty() && !group.equals(lobbyGroup))
                 .collect(Collectors.toCollection(LinkedHashSet::new));
@@ -213,7 +212,7 @@ public final class SystemConfig {
         return load(file, bundledDefault, System.getenv());
     }
 
-    static SystemConfig load(Path file, Supplier<InputStream> bundledDefault, Map<String, String> environment) {
+    public static SystemConfig load(Path file, Supplier<InputStream> bundledDefault, Map<String, String> environment) {
         return new SystemConfig(file, YamlFile.loadWithDefaults(file, bundledDefault), environment);
     }
 

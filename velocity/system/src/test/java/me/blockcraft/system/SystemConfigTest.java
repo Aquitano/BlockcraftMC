@@ -36,9 +36,9 @@ public class SystemConfigTest {
     }
 
     @Test
-    public void composeGroupsWakeArchiveEvenWithAnOlderSavedList() throws IOException {
+    public void composeGroupsWakeArchive() throws IOException {
         var file = folder.getRoot().toPath().resolve("config.yml");
-        var saved = "on-demand:\n  enabled: true\n  groups: [bedwars]\n";
+        var saved = "on-demand:\n  enabled: true\n";
         Files.writeString(file, saved);
         var config = SystemConfig.load(file, () -> getClass().getResourceAsStream("/config.yml"),
                 Map.of("BLOCKCRAFT_ON_DEMAND_GROUPS", "bedwars, ARCHIVE, lobby, , archive"));
@@ -50,16 +50,6 @@ public class SystemConfigTest {
         assertEquals(List.of(new OnDemand.Effect.Publish("archive", GroupState.STARTING),
                 new OnDemand.Effect.Start("archive")), wake.effects());
         assertEquals(saved, Files.readString(file));
-    }
-
-    @Test
-    public void withoutAComposeOverrideTheSavedGroupsAndEnableSwitchRemainInControl() throws IOException {
-        var file = folder.getRoot().toPath().resolve("config.yml");
-        Files.writeString(file, "on-demand:\n  enabled: false\n  groups: [bedwars]\n");
-        var config = SystemConfig.load(file, () -> getClass().getResourceAsStream("/config.yml"), Map.of());
-
-        assertFalse(config.onDemand().enabled());
-        assertEquals(Set.of("bedwars"), config.onDemand().settings().groups());
     }
 
     @Test

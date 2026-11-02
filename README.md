@@ -478,7 +478,7 @@ delete one there with a right-click and a confirmation. Notes that belong to a m
 did, live in its `exhibit.yml` instead ([layout](worlds/README.md#zeitkapsel-exhibits)), so they come back with the map
 on any server and database; they hang and read the same, come first in the menu and are edited only in the file.
 
-Production runs the Zeitkapsel like a released game, and `archive` is one of the `on-demand.groups` the waker starts
+Production runs the Zeitkapsel like a released game, and `archive` is one of the on-demand groups the waker starts
 at the first visit and stops when it stays empty. The lobby navigator includes a Zeitkapsel entry.
 Exhibit configurations are cached until their files change. Travel loads destination chunks asynchronously, and
 only one trip per player runs at a time.
@@ -526,12 +526,11 @@ so the container's restart policy tries again; the proxy does the same.
 ### Game servers on demand
 
 Off by default. With `on-demand.enabled` in BlockcraftSystem's `config.yml`, only the proxy, MariaDB and the lobby
-need to run around the clock; the game groups in `on-demand.groups` run only while someone plays.
+need to run around the clock; the on-demand game groups run only while someone plays.
 
-Compose supplies the released groups through `BLOCKCRAFT_ON_DEMAND_GROUPS`, overriding a proxy's saved
-`on-demand.groups` list so an update includes newly released games. Set `ON_DEMAND_GROUPS` in `.env` to choose a
-different comma-separated list. Recreate the proxy after changing this variable. Outside Compose, the saved list
-controls the groups.
+`docker-compose.yml` lists those groups once, in `x-on-demand-groups`, and hands the list to the proxy as
+`BLOCKCRAFT_ON_DEMAND_GROUPS` and to the waker as `WAKER_SERVICES`. Set `ON_DEMAND_GROUPS` in `.env` to choose a
+different comma-separated list, then recreate the proxy and the waker.
 
 - A player who wants into a group with no running server (navigator, sign, `/play`) starts it. They are told so and
   sent once its server is up, about a minute later; everyone who asks meanwhile waits in order. Whoever waited past
@@ -550,7 +549,7 @@ pending state, so an outage does not build a queue of obsolete transitions.
 
 The proxy decides, because only it sees seats, parties and rounds; the `waker` service carries it out. The waker is
 the only service with the Docker socket, which is root on the host. So it publishes no port, wants the bearer token
-`WAKER_TOKEN` and starts or stops nothing but the compose services in `WAKER_SERVICES`, a group's service being named
+`WAKER_TOKEN` and starts or stops nothing but the on-demand groups' compose services, a group's service being named
 like the group. To enable it on the host:
 
 1. Put `WAKER_TOKEN=$(openssl rand -hex 24)` into `.env`; the proxy reads it as `BLOCKCRAFT_WAKER_TOKEN`.
@@ -1049,15 +1048,15 @@ In containers, environment variables replace the config edits: `BLOCKCRAFT_DB_HO
 `BLOCKCRAFT_DB_NAME`, `BLOCKCRAFT_DB_USER` and `BLOCKCRAFT_DB_PASSWORD` override the `database` section of every
 Blockcraft plugin, `BLOCKCRAFT_NETWORK_<KEY>` an entry of every `network` section (`BLOCKCRAFT_NETWORK_IP` for
 `<ip>`), `BLOCKCRAFT_WORLD_TEMPLATE` the map template (see "Maps"), `BLOCKCRAFT_RESOURCE_PACK_URL` the proxy's
-`resource-pack.url`, `BLOCKCRAFT_WAKER_TOKEN` its `on-demand.token`, and `BLOCKCRAFT_ON_DEMAND_GROUPS` its
-`on-demand.groups` (see "Game servers on demand"). LuckPerms reads `LUCKPERMS_STORAGE_METHOD`, `LUCKPERMS_DATA_ADDRESS` and friends
+`resource-pack.url`, `BLOCKCRAFT_WAKER_TOKEN` its `on-demand.token`, and `BLOCKCRAFT_ON_DEMAND_GROUPS` names the groups
+it starts on demand (see "Game servers on demand"). LuckPerms reads `LUCKPERMS_STORAGE_METHOD`, `LUCKPERMS_DATA_ADDRESS` and friends
 itself; `docker-compose.yml` shows the full set.
 
 ### One host with Docker
 
 `docker-compose.prod.yml` turns the dev network into the public one: MariaDB publishes no port, the resource pack
 is served on loopback for a web server in front of it, the passwords, the forwarding secret, the pack address and the
-network addresses come from `.env`. Every game is in `on-demand.groups`, so each sleeps until a player asks for it
+network addresses come from `.env`. Every game is an on-demand group, so each sleeps until a player asks for it
 (see "Game servers on demand"). Players still connect to
 the proxy's port 25565 directly: Minecraft is not HTTP, so neither a web server nor Cloudflare's proxy can carry it,
 and the DNS record players use has to point at the host itself. On the host, with Docker, git-lfs (otherwise the maps arrive as pointer files) and JDK 25 (`mise install`):

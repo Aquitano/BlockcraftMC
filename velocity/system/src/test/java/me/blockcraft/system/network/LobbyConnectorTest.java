@@ -171,8 +171,7 @@ public class LobbyConnectorTest {
                 lobby-group: lobby
                 on-demand:
                   enabled: %s
-                  groups: [archive, quicksg]
-                """.formatted(onDemandEnabled)));
+                """.formatted(onDemandEnabled)), Map.of("BLOCKCRAFT_ON_DEMAND_GROUPS", "archive,quicksg"));
         var messages = Messages.load(data, () -> bytes("""
                 hub:
                   already: 'Already on a lobby'

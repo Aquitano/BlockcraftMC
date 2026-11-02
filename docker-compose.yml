@@ -5,6 +5,10 @@
 # server's map comes from worlds/<group> (README, "Maps"): the world is copied fresh from there at every start and
 # /map save writes it back.
 
+# The game groups that run on demand, each named like its compose service: the proxy wakes them and the waker may
+# start and stop nothing else. ON_DEMAND_GROUPS in .env replaces the list.
+x-on-demand-groups: &on-demand-groups ${ON_DEMAND_GROUPS:-bedwars,mlgrush,duell,zombies,endergames,ttt,skywars,cores,quicksg,emeraldrush,archive,knockbackffa}
+
 x-luckperms: &luckperms
   LUCKPERMS_STORAGE_METHOD: mariadb
   LUCKPERMS_DATA_ADDRESS: mariadb:3306
@@ -95,7 +99,7 @@ services:
       SYNC_SKIP_NEWER_IN_DESTINATION: "false"
       BLOCKCRAFT_DB_HOST: mariadb
       BLOCKCRAFT_WAKER_TOKEN: ${WAKER_TOKEN:-dev-waker-token}
-      BLOCKCRAFT_ON_DEMAND_GROUPS: ${ON_DEMAND_GROUPS:-bedwars,mlgrush,duell,zombies,endergames,ttt,skywars,cores,quicksg,emeraldrush,archive,knockbackffa}
+      BLOCKCRAFT_ON_DEMAND_GROUPS: *on-demand-groups
       # The proxy's jars come only from build/docker/velocity: every start drops the old ones before copying, so a
       # renamed jar never runs twice. The plugins' data directories stay.
       REMOVE_OLD_PLUGINS: "TRUE"
@@ -336,7 +340,7 @@ services:
 
   # Starts and stops game servers when the proxy's on-demand is enabled (README, "Server discovery and groups"). The
   # only service with the Docker socket, which is root on the host: no published port, a token, and nothing but the
-  # services in WAKER_SERVICES.
+  # on-demand groups.
   waker:
     image: eclipse-temurin:25-jre
     restart: unless-stopped
@@ -345,7 +349,7 @@ services:
       TZ: Europe/Berlin
       WAKER_TOKEN: ${WAKER_TOKEN:-dev-waker-token}
       WAKER_PROJECT: ${COMPOSE_PROJECT_NAME:-blockcraftmc}
-      WAKER_SERVICES: bedwars,mlgrush,duell,zombies,endergames,ttt,skywars,cores,quicksg,emeraldrush,archive,knockbackffa
+      WAKER_SERVICES: *on-demand-groups
     security_opt: [no-new-privileges:true]
     cap_drop: [ALL]
     volumes:
