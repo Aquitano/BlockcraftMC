@@ -15,7 +15,6 @@ import me.blockcraft.system.SystemConfig;
 import me.blockcraft.system.SystemPermissions;
 import me.blockcraft.system.command.CommandSupport;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
@@ -146,7 +145,7 @@ public final class WarnCommands {
         target.online().ifPresent(player -> {
             player.sendMessage(messages.get("warn.you-have", placeholders));
             if (limitReached) {
-                player.disconnect(Component.join(JoinConfiguration.newlines(), messages.getLines("warn.kick-screen", placeholders)));
+                player.disconnect(messages.getJoined("warn.kick-screen", placeholders));
             }
         });
         if (limitReached) {

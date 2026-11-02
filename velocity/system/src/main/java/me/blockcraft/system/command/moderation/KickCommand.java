@@ -9,8 +9,6 @@ import me.blockcraft.common.message.Messages;
 import me.blockcraft.system.PlayerLookup;
 import me.blockcraft.system.SystemPermissions;
 import me.blockcraft.system.command.CommandSupport;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 
@@ -59,6 +57,6 @@ public final class KickCommand {
                 notification.forEach(staff::sendMessage);
             }
         }
-        target.get().disconnect(Component.join(JoinConfiguration.newlines(), messages.getLines("kick.screen", placeholders)));
+        target.get().disconnect(messages.getJoined("kick.screen", placeholders));
     }
 }

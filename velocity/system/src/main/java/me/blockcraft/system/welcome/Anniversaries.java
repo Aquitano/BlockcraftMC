@@ -48,7 +48,7 @@ public final class Anniversaries {
     }
 
     /** A first join on February 29 comes round on February 28 in the years without one. */
-    static OptionalInt years(LocalDate firstDay, LocalDate today) {
+    public static OptionalInt years(LocalDate firstDay, LocalDate today) {
         int years = today.getYear() - firstDay.getYear();
         return years > 0 && firstDay.plusYears(years).equals(today) ? OptionalInt.of(years) : OptionalInt.empty();
     }

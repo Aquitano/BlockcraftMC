@@ -5,13 +5,12 @@ import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.connection.PostLoginEvent;
 import com.velocitypowered.api.proxy.Player;
-import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import me.blockcraft.common.db.DatabaseException;
 import me.blockcraft.common.ignore.IgnoreRepository;
 import me.blockcraft.common.ignore.IgnoreRepository.Ignored;
 import me.blockcraft.common.network.ProxyMessage;
-import me.blockcraft.common.network.ProxyMessageCodec;
 import me.blockcraft.system.LiveSession;
+import me.blockcraft.system.network.ProxyChannel;
 import org.slf4j.Logger;
 
 import java.util.List;
@@ -27,8 +26,6 @@ import java.util.stream.Collectors;
  * player out.
  */
 public final class IgnoreList {
-
-    private static final MinecraftChannelIdentifier CHANNEL = MinecraftChannelIdentifier.from(ProxyMessageCodec.CHANNEL);
 
     private final IgnoreRepository repository;
     private final Logger logger;
@@ -101,7 +98,6 @@ public final class IgnoreList {
     }
 
     private static void tell(Player player, UUID other, boolean ignoring) {
-        var payload = ProxyMessageCodec.encode(new ProxyMessage.Ignore(other, ignoring));
-        player.getCurrentServer().ifPresent(connection -> connection.sendPluginMessage(CHANNEL, payload));
+        ProxyChannel.send(player, new ProxyMessage.Ignore(other, ignoring));
     }
 }

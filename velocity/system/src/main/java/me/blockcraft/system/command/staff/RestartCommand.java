@@ -7,7 +7,6 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.system.SystemPermissions;
 import me.blockcraft.system.command.CommandSupport;
-import net.kyori.adventure.text.Component;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -39,21 +38,12 @@ public final class RestartCommand {
             source.sendMessage(messages.get("restart.already-pending"));
             return;
         }
-        var scheduler = proxy.getScheduler();
-        proxy.sendMessage(countdown("restart.countdown-60"));
-        scheduler.buildTask(plugin, () -> proxy.sendMessage(countdown("restart.countdown-30"))).delay(30, TimeUnit.SECONDS).schedule();
-        scheduler.buildTask(plugin, () -> proxy.sendMessage(countdown("restart.countdown-10"))).delay(50, TimeUnit.SECONDS).schedule();
-        scheduler.buildTask(plugin, () -> proxy.sendMessage(countdown("restart.countdown-5"))).delay(55, TimeUnit.SECONDS).schedule();
-        scheduler.buildTask(plugin, () -> {
+        MinuteCountdown.start(plugin, proxy, messages, "restart", () -> {
             var screen = messages.get("restart.kick-screen");
             for (Player player : proxy.getAllPlayers()) {
                 player.disconnect(screen);
             }
-        }).delay(60, TimeUnit.SECONDS).schedule();
-        scheduler.buildTask(plugin, () -> proxy.shutdown(messages.get("restart.kick-screen"))).delay(61, TimeUnit.SECONDS).schedule();
-    }
-
-    private Component countdown(String key) {
-        return messages.get(key);
+            proxy.getScheduler().buildTask(plugin, () -> proxy.shutdown(screen)).delay(1, TimeUnit.SECONDS).schedule();
+        });
     }
 }

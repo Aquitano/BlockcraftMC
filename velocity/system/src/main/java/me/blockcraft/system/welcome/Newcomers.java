@@ -2,15 +2,14 @@ package me.blockcraft.system.welcome;
 
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
-import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import me.blockcraft.common.db.DatabaseException;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.moderation.PlayerRepository;
 import me.blockcraft.common.network.ProxyMessage;
-import me.blockcraft.common.network.ProxyMessageCodec;
 import me.blockcraft.common.welcome.GreetingRepository;
 import me.blockcraft.system.SystemConfig;
+import me.blockcraft.system.network.ProxyChannel;
 import me.blockcraft.system.network.ServerDirectory;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
@@ -35,7 +34,6 @@ public final class Newcomers {
     public record Arrival(OptionalInt joinNumber, boolean og) {
     }
 
-    private static final MinecraftChannelIdentifier CHANNEL = MinecraftChannelIdentifier.from(ProxyMessageCodec.CHANNEL);
     /** A greeting typed in the window's last second still has to reach {@code bc_greetings} from its server. */
     private static final Duration WRITE_GRACE = Duration.ofSeconds(5);
 
@@ -92,9 +90,8 @@ public final class Newcomers {
         }
         messages.getLines("welcome.newcomer", details).forEach(newcomer::sendMessage);
         // A plugin message travels with a player, so a server nobody is on hears nothing; nobody there could greet.
-        var counting = ProxyMessageCodec.encode(new ProxyMessage.Newcomer(newcomer.getUniqueId(), newcomer.getUsername(),
-                config.greetingSeconds()));
-        proxy.getAllServers().stream().filter(this::welcoming).forEach(server -> server.sendPluginMessage(CHANNEL, counting));
+        var counting = new ProxyMessage.Newcomer(newcomer.getUniqueId(), newcomer.getUsername(), config.greetingSeconds());
+        proxy.getAllServers().stream().filter(this::welcoming).forEach(server -> ProxyChannel.send(server, counting));
         proxy.getScheduler().buildTask(plugin, () -> thank(newcomer))
                 .delay(Duration.ofSeconds(config.greetingSeconds()).plus(WRITE_GRACE))
                 .schedule();

@@ -1,6 +1,7 @@
 package me.blockcraft.common.duel;
 
 import me.blockcraft.common.db.Database;
+import me.blockcraft.common.player.PlayerPair;
 
 import java.util.List;
 import java.util.UUID;
@@ -10,15 +11,6 @@ import java.util.UUID;
  * whoever is named first, with how many of their duels in a row ended in a draw.
  */
 public final class DuelPairRepository {
-
-    private record Pair(String first, String second) {
-
-        static Pair of(UUID one, UUID two) {
-            String a = one.toString();
-            String b = two.toString();
-            return a.compareTo(b) <= 0 ? new Pair(a, b) : new Pair(b, a);
-        }
-    }
 
     private final Database db;
 
@@ -35,7 +27,7 @@ public final class DuelPairRepository {
     }
 
     public boolean met(UUID one, UUID two) {
-        var pair = Pair.of(one, two);
+        var pair = PlayerPair.of(one, two);
         return db.queryOne("SELECT 1 FROM bc_duel_pairs WHERE first_uuid = ? AND second_uuid = ?",
                 row -> true, pair.first(), pair.second()).isPresent();
     }
@@ -45,7 +37,7 @@ public final class DuelPairRepository {
      * {@code reward} in the same transaction. True if either did not own it yet.
      */
     public boolean finish(UUID one, UUID two, boolean draw, int rewardDraws, String reward) {
-        var pair = Pair.of(one, two);
+        var pair = PlayerPair.of(one, two);
         return db.transaction(connection -> {
             try (var upsert = connection.prepareStatement("INSERT INTO bc_duel_pairs (first_uuid, second_uuid, draws_in_a_row) "
                     + "VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE draws_in_a_row = IF(VALUES(draws_in_a_row) = 0, 0, draws_in_a_row + 1)")) {

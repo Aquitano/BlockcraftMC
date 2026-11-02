@@ -9,7 +9,6 @@ import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.ServerConnection;
-import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import me.blockcraft.common.db.DatabaseException;
 import me.blockcraft.common.network.PackStatus;
 import me.blockcraft.common.network.ProxyMessage;
@@ -21,6 +20,7 @@ import me.blockcraft.system.PlayerChoices;
 import me.blockcraft.system.PlayerVisibility;
 import me.blockcraft.system.SystemPermissions;
 import me.blockcraft.system.friends.FriendManager;
+import me.blockcraft.system.network.ProxyChannel;
 import me.blockcraft.system.pack.NetworkPack;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import org.slf4j.Logger;
@@ -31,8 +31,6 @@ import java.util.function.Supplier;
 
 /** Answers the backends' requests on the Blockcraft channel; the player the message travelled with is the subject. */
 public final class ProxyMessageListener {
-
-    private static final MinecraftChannelIdentifier CHANNEL = MinecraftChannelIdentifier.from(ProxyMessageCodec.CHANNEL);
 
     private final ProxyServer proxy;
     private final LobbyConnector lobby;
@@ -58,12 +56,12 @@ public final class ProxyMessageListener {
         this.tabHeader = tabHeader;
         this.logger = logger;
         this.pack = pack;
-        proxy.getChannelRegistrar().register(CHANNEL);
+        proxy.getChannelRegistrar().register(ProxyChannel.ID);
     }
 
     @Subscribe
     public EventTask onPluginMessage(PluginMessageEvent event) {
-        if (!CHANNEL.equals(event.getIdentifier())) {
+        if (!ProxyChannel.ID.equals(event.getIdentifier())) {
             return null;
         }
         event.setResult(ForwardResult.handled());
@@ -134,6 +132,6 @@ public final class ProxyMessageListener {
     }
 
     private void reply(ServerConnection connection, FriendsReply reply) {
-        connection.sendPluginMessage(CHANNEL, ProxyMessageCodec.encode(reply));
+        ProxyChannel.send(connection, reply);
     }
 }

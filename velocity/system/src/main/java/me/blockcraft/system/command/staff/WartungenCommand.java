@@ -9,11 +9,9 @@ import me.blockcraft.system.ProxySettings;
 import me.blockcraft.system.SystemPermissions;
 import me.blockcraft.system.command.CommandSupport;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.JoinConfiguration;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Maintenance mode: announced over a minute (or immediately with "now"), toggled off by running it again.
@@ -59,12 +57,7 @@ public final class WartungenCommand {
             proxy.sendMessage(messages.get("wartungen.cancelled"));
             return;
         }
-        var scheduler = proxy.getScheduler();
-        proxy.sendMessage(countdown("wartungen.countdown-60"));
-        pending.add(scheduler.buildTask(plugin, () -> proxy.sendMessage(countdown("wartungen.countdown-30"))).delay(30, TimeUnit.SECONDS).schedule());
-        pending.add(scheduler.buildTask(plugin, () -> proxy.sendMessage(countdown("wartungen.countdown-10"))).delay(50, TimeUnit.SECONDS).schedule());
-        pending.add(scheduler.buildTask(plugin, () -> proxy.sendMessage(countdown("wartungen.countdown-5"))).delay(55, TimeUnit.SECONDS).schedule());
-        pending.add(scheduler.buildTask(plugin, () -> enable(countdown("wartungen.enabled"))).delay(60, TimeUnit.SECONDS).schedule());
+        pending.addAll(MinuteCountdown.start(plugin, proxy, messages, "wartungen", () -> enable(messages.get("wartungen.enabled"))));
     }
 
     private synchronized void cancelPending() {
@@ -76,15 +69,11 @@ public final class WartungenCommand {
         cancelPending();
         settings.setMaintenance(true);
         proxy.sendMessage(announcement);
-        var screen = Component.join(JoinConfiguration.newlines(), messages.getLines("wartungen.kick-screen"));
+        var screen = messages.getJoined("wartungen.kick-screen");
         for (Player player : proxy.getAllPlayers()) {
             if (!player.hasPermission(SystemPermissions.MAINTENANCE_JOIN)) {
                 player.disconnect(screen);
             }
         }
-    }
-
-    private Component countdown(String key) {
-        return messages.get(key);
     }
 }

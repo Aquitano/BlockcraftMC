@@ -1,6 +1,7 @@
 package me.blockcraft.system.friends;
 
 import me.blockcraft.common.db.Database;
+import me.blockcraft.common.player.PlayerPair;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -63,7 +64,7 @@ public final class FriendRepository {
     }
 
     public boolean areFriends(UUID player, UUID other) {
-        var pair = Pair.of(player, other);
+        var pair = PlayerPair.of(player, other);
         return db.queryOne("SELECT 1 FROM bc_friends WHERE status = '" + ACCEPTED + "' "
                         + "AND first_player = ? AND second_player = ?",
                 row -> true, pair.first(), pair.second()).isPresent();
@@ -71,7 +72,7 @@ public final class FriendRepository {
 
     /** Whether either side already has an open request to the other. */
     public boolean hasOpenRequest(UUID player, UUID other, int validMinutes) {
-        var pair = Pair.of(player, other);
+        var pair = PlayerPair.of(player, other);
         return db.queryOne("SELECT 1 FROM bc_friends WHERE status = '" + PENDING + "' "
                         + "AND first_player = ? AND second_player = ? "
                         + "AND TIMESTAMPDIFF(MINUTE, created_at, NOW()) < ?",
@@ -80,7 +81,7 @@ public final class FriendRepository {
 
     /** Replaces whatever stale row the pair had, so an expired request can be sent again. */
     public void request(UUID requester, UUID target) {
-        var pair = Pair.of(requester, target);
+        var pair = PlayerPair.of(requester, target);
         db.update("INSERT INTO bc_friends (first_player, second_player, requester, status) VALUES (?, ?, ?, '" + PENDING + "') "
                         + "ON DUPLICATE KEY UPDATE requester = VALUES(requester), status = VALUES(status), created_at = NOW()",
                 pair.first(), pair.second(), requester.toString());
@@ -88,7 +89,7 @@ public final class FriendRepository {
 
     /** False when there was no open request from {@code requester}. */
     public boolean accept(UUID requester, UUID target, int validMinutes) {
-        var pair = Pair.of(requester, target);
+        var pair = PlayerPair.of(requester, target);
         return db.update("UPDATE bc_friends SET status = '" + ACCEPTED + "', created_at = NOW() "
                         + "WHERE first_player = ? AND second_player = ? AND requester = ? AND status = '" + PENDING + "' "
                         + "AND TIMESTAMPDIFF(MINUTE, created_at, NOW()) < ?",
@@ -96,14 +97,14 @@ public final class FriendRepository {
     }
 
     public boolean deleteRequest(UUID requester, UUID target) {
-        var pair = Pair.of(requester, target);
+        var pair = PlayerPair.of(requester, target);
         return db.update("DELETE FROM bc_friends WHERE first_player = ? AND second_player = ? AND requester = ? "
                         + "AND status = '" + PENDING + "'",
                 pair.first(), pair.second(), requester.toString()) > 0;
     }
 
     public boolean remove(UUID player, UUID other) {
-        var pair = Pair.of(player, other);
+        var pair = PlayerPair.of(player, other);
         return db.update("DELETE FROM bc_friends WHERE status = '" + ACCEPTED + "' "
                         + "AND first_player = ? AND second_player = ?",
                 pair.first(), pair.second()) > 0;
@@ -116,15 +117,5 @@ public final class FriendRepository {
 
     private static Friend map(ResultSet row) throws SQLException {
         return new Friend(UUID.fromString(row.getString("uuid")), row.getString("name"), row.getTimestamp("created_at").toInstant());
-    }
-
-    /** The two sides of a friendship in the order the primary key stores them, so a pair has one row whoever asked. */
-    private record Pair(String first, String second) {
-
-        static Pair of(UUID player, UUID other) {
-            var one = player.toString();
-            var two = other.toString();
-            return one.compareTo(two) <= 0 ? new Pair(one, two) : new Pair(two, one);
-        }
     }
 }

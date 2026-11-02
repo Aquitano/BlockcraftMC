@@ -1,5 +1,7 @@
 package me.blockcraft.system.friends;
 
+import me.blockcraft.system.welcome.Anniversaries;
+
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -15,8 +17,6 @@ public record Friend(UUID uuid, String name, Instant createdAt) {
     }
 
     public OptionalInt anniversary(LocalDate today, ZoneId zone) {
-        var firstDay = LocalDate.ofInstant(createdAt, zone);
-        int years = today.getYear() - firstDay.getYear();
-        return years > 0 && firstDay.plusYears(years).equals(today) ? OptionalInt.of(years) : OptionalInt.empty();
+        return Anniversaries.years(LocalDate.ofInstant(createdAt, zone), today);
     }
 }

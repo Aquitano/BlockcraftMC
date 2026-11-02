@@ -11,7 +11,6 @@ import me.blockcraft.common.player.PlayerReference;
 import me.blockcraft.system.PlayerLookup.Target;
 import me.blockcraft.system.SystemPermissions;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 
@@ -124,7 +123,7 @@ public final class PunishmentService {
     }
 
     private Component screen(String key, Punishment punishment) {
-        return Component.join(JoinConfiguration.newlines(), messages.getLines(key, placeholders("", punishment)));
+        return messages.getJoined(key, placeholders("", punishment));
     }
 
     private void notify(String permission, String key, TagResolver... placeholders) {

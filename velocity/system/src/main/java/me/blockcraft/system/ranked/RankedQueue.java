@@ -5,16 +5,15 @@ import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.player.ServerPostConnectEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
-import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import me.blockcraft.common.db.DatabaseException;
 import me.blockcraft.common.elo.EloRepository;
 import me.blockcraft.common.elo.Season;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.network.ProxyMessage;
-import me.blockcraft.common.network.ProxyMessageCodec;
 import me.blockcraft.system.LiveSession;
 import me.blockcraft.system.LobbyConnector;
 import me.blockcraft.system.network.OnDemandServers;
+import me.blockcraft.system.network.ProxyChannel;
 import me.blockcraft.system.network.ServerDirectory;
 import me.blockcraft.system.party.PartyManager;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
@@ -39,7 +38,6 @@ import java.util.UUID;
  */
 public final class RankedQueue {
 
-    private static final MinecraftChannelIdentifier CHANNEL = MinecraftChannelIdentifier.from(ProxyMessageCodec.CHANNEL);
     private static final int SECONDS_PER_MINUTE = 60;
 
     public record Settings(String group, int baseRange, int rangePerSecond, int maxRange, Duration matchTimeout) {
@@ -257,9 +255,8 @@ public final class RankedQueue {
 
     private void rate(Match match) {
         for (var id : List.of(match.first(), match.second())) {
-            var payload = ProxyMessageCodec.encode(new ProxyMessage.RankedMatch(match.opponentOf(id)));
-            proxy.getPlayer(id).flatMap(Player::getCurrentServer)
-                    .ifPresent(connection -> connection.sendPluginMessage(CHANNEL, payload));
+            var opponent = new ProxyMessage.RankedMatch(match.opponentOf(id));
+            proxy.getPlayer(id).ifPresent(player -> ProxyChannel.send(player, opponent));
         }
     }
 

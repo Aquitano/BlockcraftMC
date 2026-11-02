@@ -5,10 +5,9 @@ import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.player.ServerPostConnectEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ServerConnection;
-import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import me.blockcraft.common.network.ProxyMessage;
-import me.blockcraft.common.network.ProxyMessageCodec;
 import me.blockcraft.system.LiveSession;
+import me.blockcraft.system.network.ProxyChannel;
 
 import java.util.Map;
 import java.util.UUID;
@@ -20,8 +19,6 @@ import java.util.concurrent.ConcurrentHashMap;
  * moment a game can put the arriving spectator next to them.
  */
 public final class SpectateRequests {
-
-    private static final MinecraftChannelIdentifier CHANNEL = MinecraftChannelIdentifier.from(ProxyMessageCodec.CHANNEL);
 
     private record Intent(UUID friend, String server) {
     }
@@ -52,6 +49,6 @@ public final class SpectateRequests {
     }
 
     private static void tell(ServerConnection connection, UUID friend) {
-        connection.sendPluginMessage(CHANNEL, ProxyMessageCodec.encode(new ProxyMessage.Spectate(friend)));
+        ProxyChannel.send(connection, new ProxyMessage.Spectate(friend));
     }
 }

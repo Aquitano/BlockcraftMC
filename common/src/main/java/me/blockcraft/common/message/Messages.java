@@ -2,6 +2,7 @@ package me.blockcraft.common.message;
 
 import me.blockcraft.common.config.YamlFile;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
@@ -86,6 +87,11 @@ public final class Messages {
     public List<Component> getLines(String key, TagResolver... resolvers) {
         TagResolver all = TagResolver.resolver(globals, TagResolver.resolver(resolvers));
         return Arrays.stream(raw(key).split("\n", -1)).map(line -> MINI.deserialize(line, all)).toList();
+    }
+
+    /** A multi-line message as one component, for screens, headers and tooltips. */
+    public Component getJoined(String key, TagResolver... resolvers) {
+        return Component.join(JoinConfiguration.newlines(), getLines(key, resolvers));
     }
 
     public boolean has(String key) {

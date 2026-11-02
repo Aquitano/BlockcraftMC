@@ -8,13 +8,13 @@ import com.velocitypowered.api.event.player.ServerPostConnectEvent;
 import com.velocitypowered.api.proxy.Player;
 import me.blockcraft.common.db.DatabaseException;
 import me.blockcraft.common.network.ProxyMessage;
-import me.blockcraft.common.network.ProxyMessageCodec;
 import me.blockcraft.common.network.operation.OperationResult;
-import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import me.blockcraft.common.settings.PlayerSetting;
 import me.blockcraft.common.settings.PlayerSettingRepository;
+import me.blockcraft.system.network.ProxyChannel;
 import org.slf4j.Logger;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -82,28 +82,21 @@ public final class PlayerChoices {
         }
         if (player.isActive()) {
             set(player, PlayerSetting.WEAPON_STYLE, style);
-            sendWeaponStyle(player);
+            send(player, PlayerSetting.WEAPON_STYLE);
         }
         return OperationResult.APPLIED;
     }
 
     @Subscribe
     public void onServerConnected(ServerPostConnectEvent event) {
-        sendWeaponStyle(event.getPlayer());
-        var player = event.getPlayer();
-        for (var setting : java.util.List.of(PlayerSetting.SKYWARS_KIT, PlayerSetting.ENDERGAMES_KIT, PlayerSetting.QUICKSG_KIT)) {
-            Optional.ofNullable(choices.get(player.getUniqueId())).map(stored -> stored.get(setting))
-                    .ifPresent(value -> player.getCurrentServer().ifPresent(connection -> connection.sendPluginMessage(
-                            MinecraftChannelIdentifier.from(ProxyMessageCodec.CHANNEL),
-                            ProxyMessageCodec.encode(new ProxyMessage.Setting(setting, value)))));
+        for (var setting : List.of(PlayerSetting.WEAPON_STYLE, PlayerSetting.SKYWARS_KIT, PlayerSetting.ENDERGAMES_KIT,
+                PlayerSetting.QUICKSG_KIT)) {
+            send(event.getPlayer(), setting);
         }
     }
 
-    private void sendWeaponStyle(Player player) {
-        var value = Optional.ofNullable(choices.get(player.getUniqueId()))
-                .map(stored -> stored.get(PlayerSetting.WEAPON_STYLE));
-        value.ifPresent(style -> player.getCurrentServer().ifPresent(connection -> connection.sendPluginMessage(
-                MinecraftChannelIdentifier.from(ProxyMessageCodec.CHANNEL),
-                ProxyMessageCodec.encode(new ProxyMessage.Setting(PlayerSetting.WEAPON_STYLE, style)))));
+    private void send(Player player, PlayerSetting setting) {
+        Optional.ofNullable(choices.get(player.getUniqueId())).map(stored -> stored.get(setting))
+                .ifPresent(value -> ProxyChannel.send(player, new ProxyMessage.Setting(setting, value)));
     }
 }

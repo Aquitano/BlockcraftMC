@@ -7,11 +7,9 @@ import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.player.ServerPostConnectEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
-import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.network.ProxyMessage;
-import me.blockcraft.common.network.ProxyMessageCodec;
 import me.blockcraft.common.settings.PlayerSetting;
 import me.blockcraft.system.LiveSession;
 import me.blockcraft.system.LobbyConnector;
@@ -20,6 +18,7 @@ import me.blockcraft.system.PlayerVisibility;
 import me.blockcraft.system.command.CommandSupport;
 import me.blockcraft.system.ignore.IgnoreList;
 import me.blockcraft.system.network.OnDemandServers;
+import me.blockcraft.system.network.ProxyChannel;
 import me.blockcraft.system.network.ServerDirectory;
 import me.blockcraft.system.party.PartyManager;
 import me.blockcraft.system.ranked.RankedQueue;
@@ -38,7 +37,6 @@ import java.util.UUID;
 
 public final class DuelChallenges {
     public record Settings(int setupSeconds, int inviteSeconds, int transferSeconds, int cooldownSeconds) { }
-    private static final MinecraftChannelIdentifier CHANNEL = MinecraftChannelIdentifier.from(ProxyMessageCodec.CHANNEL);
 
     private static final class Challenge {
         final UUID ticket = UUID.randomUUID();
@@ -112,7 +110,7 @@ public final class DuelChallenges {
         var challenge = pending.get(player.getUniqueId());
         if (challenge != null && challenge.sender == player && challenge.opened && !challenge.invited
                 && here(player).filter(server -> server.equals(challenge.server)).isPresent()) {
-            send(player, new ProxyMessage.DuelSetup(challenge.ticket, challenge.target.getUniqueId(), visibility.shownName(challenge.target)));
+            ProxyChannel.send(player, new ProxyMessage.DuelSetup(challenge.ticket, challenge.target.getUniqueId(), visibility.shownName(challenge.target)));
         } else player.sendMessage(messages.get("duel.usage"));
     }
 
@@ -217,7 +215,7 @@ public final class DuelChallenges {
                 cancel(challenge);
                 return;
             }
-            send(challenge.sender, new ProxyMessage.DuelAccepted(challenge.ticket));
+            ProxyChannel.send(challenge.sender, new ProxyMessage.DuelAccepted(challenge.ticket));
             transfer(challenge, player, server.get());
         }
     }
@@ -242,7 +240,7 @@ public final class DuelChallenges {
 
     private void returnToLobby(Challenge challenge, Player player) {
         if (player.isActive() && here(player).filter(server -> server.equals(challenge.server)).isPresent()) {
-            if (player == challenge.sender) send(player, new ProxyMessage.DuelCancelled(challenge.ticket));
+            if (player == challenge.sender) ProxyChannel.send(player, new ProxyMessage.DuelCancelled(challenge.ticket));
             lobby.send(player);
         }
     }
@@ -268,7 +266,7 @@ public final class DuelChallenges {
         if (challenge == null || challenge.server == null) return;
         if (event.getPlayer() == challenge.sender && !challenge.opened && here(challenge.sender).filter(challenge.server::equals).isPresent()) {
             challenge.opened = true;
-            send(challenge.sender, new ProxyMessage.DuelSetup(challenge.ticket, challenge.target.getUniqueId(), visibility.shownName(challenge.target)));
+            ProxyChannel.send(challenge.sender, new ProxyMessage.DuelSetup(challenge.ticket, challenge.target.getUniqueId(), visibility.shownName(challenge.target)));
         } else if (event.getPlayer() == challenge.target && challenge.accepted && here(challenge.target).filter(challenge.server::equals).isPresent()) {
             pending.remove(challenge.sender.getUniqueId(), challenge);
             pending.remove(challenge.target.getUniqueId(), challenge);
@@ -284,9 +282,5 @@ public final class DuelChallenges {
             var challenge = pending.get(event.getPlayer().getUniqueId());
             if (challenge != null) cancel(challenge);
         }
-    }
-
-    private void send(Player player, ProxyMessage.ToBackend message) {
-        player.getCurrentServer().ifPresent(connection -> connection.sendPluginMessage(CHANNEL, ProxyMessageCodec.encode(message)));
     }
 }
