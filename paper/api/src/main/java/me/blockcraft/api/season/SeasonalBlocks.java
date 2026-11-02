@@ -322,12 +322,7 @@ public final class SeasonalBlocks implements Listener, AutoCloseable {
             return;
         }
         suspended = true;
-        try {
-            restoreAll();
-        } catch (RuntimeException failure) {
-            event.abort(failure);
-        }
-        event.afterSave(() -> {
+        event.suspend(this::restoreAll, () -> {
             suspended = false;
             applyLoaded();
         });

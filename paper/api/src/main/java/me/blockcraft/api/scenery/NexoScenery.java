@@ -271,15 +271,10 @@ public final class NexoScenery implements Listener, AutoCloseable {
             return;
         }
         saving = true;
-        event.afterSave(() -> plugin.getServer().getScheduler().runTask(plugin, () -> {
+        event.suspend(this::clear, () -> plugin.getServer().getScheduler().runTask(plugin, () -> {
             saving = false;
             refresh();
         }));
-        try {
-            clear();
-        } catch (RuntimeException failure) {
-            event.abort(failure);
-        }
     }
 
     @Override

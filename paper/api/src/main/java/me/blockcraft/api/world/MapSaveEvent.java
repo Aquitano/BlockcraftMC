@@ -58,6 +58,16 @@ public final class MapSaveEvent extends Event {
         }
     }
 
+    /** Clears temporary state for the save, aborting it if that fails, and restores the state afterwards either way. */
+    public void suspend(Runnable clear, Runnable restore) {
+        afterSave(restore);
+        try {
+            clear.run();
+        } catch (RuntimeException failure) {
+            abort(failure);
+        }
+    }
+
     /** Restores temporary state after the save attempt, including when flushing or publishing fails. */
     public void afterSave(Runnable restore) {
         restorations.add(restore);
