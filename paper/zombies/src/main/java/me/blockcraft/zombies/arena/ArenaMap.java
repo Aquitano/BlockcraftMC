@@ -1,15 +1,13 @@
 package me.blockcraft.zombies.arena;
 
-import me.blockcraft.api.world.BlocksChangedEvent;
+import me.blockcraft.api.game.BlockChanges;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.zombies.game.Perk;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
-import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.type.CopperBulb;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -266,23 +264,17 @@ public final class ArenaMap {
                 .mapToObj(y -> door.blocks(world).stream().filter(block -> block.getY() == y).toList()).toList();
     }
 
-    /** Changes a block without physics and reports it, because Bukkit fires no event for a block a plugin sets. */
-    public static void change(Block block, BlockData data) {
-        block.setBlockData(data, false);
-        Bukkit.getPluginManager().callEvent(new BlocksChangedEvent(List.of(block)));
-    }
-
     public static void lit(Block block, boolean lit) {
         if (block.getBlockData() instanceof CopperBulb bulb) {
             bulb.setLit(lit);
             bulb.setPowered(false);
-            change(block, bulb);
+            BlockChanges.set(block, bulb);
         }
     }
 
     public Optional<Block> repair(Window window) {
         return window.boards().blocks(world).stream().filter(block -> block.getType().isAir()).findFirst().map(block -> {
-            change(block, windowData);
+            BlockChanges.set(block, windowData);
             return block;
         });
     }

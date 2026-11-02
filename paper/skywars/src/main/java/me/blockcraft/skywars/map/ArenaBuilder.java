@@ -1,5 +1,6 @@
 package me.blockcraft.skywars.map;
 
+import me.blockcraft.api.game.Ring;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;

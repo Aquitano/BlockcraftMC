@@ -26,7 +26,6 @@ import me.blockcraft.api.pack.MenuIcon;
 import me.blockcraft.api.pack.PackModel;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Countdown;
-import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.endergames.config.EnderGamesConfig;
 import me.blockcraft.endergames.kit.Kit;
@@ -376,13 +375,8 @@ public final class EnderGamesGame implements KitPlayers, RoundConnections.Seatin
         checkWinner(false);
     }
 
-    /** The spectator state is applied after the respawn; touching a dead player breaks the respawn. */
     public void respawn(PlayerRespawnEvent event) {
-        var player = event.getPlayer();
         event.setRespawnLocation(isLobby() ? lobbySpawn : world.spectatorSpawn());
-        if (round.isSpectator(player)) {
-            Tasks.sync(plugin, () -> round.watch(player));
-        }
     }
 
     private void checkWinner(boolean opponentLeft) {

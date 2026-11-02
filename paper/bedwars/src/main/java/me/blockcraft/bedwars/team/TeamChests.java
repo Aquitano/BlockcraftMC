@@ -1,5 +1,6 @@
 package me.blockcraft.bedwars.team;
 
+import me.blockcraft.api.game.BlockChanges;
 import me.blockcraft.common.message.Messages;
 import org.bukkit.Bukkit;
 import org.bukkit.Effect;
@@ -139,7 +140,7 @@ public final class TeamChests implements Listener {
                     && player.getOpenInventory().getTopInventory().equals(team.chest())).forEach(Player::closeInventory);
         }
         block.getWorld().playEffect(block.getLocation(), Effect.DESTROY_BLOCK, block.getBlockData());
-        block.setType(Material.AIR);
+        BlockChanges.set(block, Material.AIR);
     }
 
     private void glitter() {

@@ -1,5 +1,6 @@
 package me.blockcraft.endergames.game;
 
+import me.blockcraft.api.game.BlockChanges;
 import me.blockcraft.api.game.LootChests;
 import me.blockcraft.api.game.LootTable;
 import me.blockcraft.endergames.config.EnderGamesConfig.EnderChestSettings;
@@ -41,7 +42,7 @@ final class EnderChests {
 
         private void place(Block at) {
             block = at;
-            block.setType(Material.ENDER_CHEST, false);
+            BlockChanges.set(block, Material.ENDER_CHEST);
             loot = new LootChests(settings.loot(), items);
             secondsLeft = settings.relocateSeconds();
             opened = false;
@@ -119,7 +120,7 @@ final class EnderChests {
         new ArrayList<>(roamer.inventory().getViewers()).forEach(HumanEntity::closeInventory);
         var location = roamer.block.getLocation().add(0.5, 0.5, 0.5);
         location.getWorld().spawnParticle(Particle.REVERSE_PORTAL, location, 40, 0.3, 0.3, 0.3, 0.05);
-        roamer.block.setType(Material.AIR, false);
+        BlockChanges.set(roamer.block, Material.AIR);
     }
 
     private Optional<Block> freeSpot() {

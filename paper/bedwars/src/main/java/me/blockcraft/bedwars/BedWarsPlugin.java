@@ -8,13 +8,13 @@ import me.blockcraft.api.game.GamePhase;
 import me.blockcraft.api.game.GameServices;
 import me.blockcraft.api.game.RoundConnections;
 import me.blockcraft.api.game.StartCommand;
+import me.blockcraft.api.game.TeamChat;
 import me.blockcraft.api.world.TemplateDimensions;
 import me.blockcraft.api.world.WorldProtection;
 import me.blockcraft.bedwars.command.BedWarsSetup;
 import me.blockcraft.bedwars.config.BedWarsConfig;
 import me.blockcraft.bedwars.game.Game;
 import me.blockcraft.bedwars.listener.ArenaListener;
-import me.blockcraft.bedwars.listener.ChatListener;
 import me.blockcraft.bedwars.listener.ItemListener;
 import me.blockcraft.bedwars.listener.WorldRules;
 import me.blockcraft.bedwars.lobby.LobbyLayout;
@@ -54,7 +54,7 @@ public final class BedWarsPlugin extends JavaPlugin {
                 new WorldRules(),
                 new ArenaProtection(() -> false),
                 new ItemListener(this, game),
-                new ChatListener(game, messages, config.playersPerTeam() == 1));
+                new TeamChat(() -> game.phase() == GamePhase.INGAME, game::sameTeam, messages, config.playersPerTeam() == 1));
 
         services.commands(commands -> {
             commands.register(StartCommand.of(game.lobbyCountdown()).build());

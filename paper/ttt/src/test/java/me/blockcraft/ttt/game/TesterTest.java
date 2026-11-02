@@ -9,6 +9,7 @@ import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.BlockData;
+import org.bukkit.plugin.PluginManager;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.junit.Test;
 
@@ -31,7 +32,8 @@ public class TesterTest {
             scheduled.add((Runnable) args[1]);
             return null;
         });
-        var server = fake(Server.class, (proxy, method, args) -> scheduler);
+        var plugins = fake(PluginManager.class, (proxy, method, args) -> null);
+        var server = fake(Server.class, (proxy, method, args) -> method.getName().equals("getPluginManager") ? plugins : scheduler);
         var world = fake(World.class, (proxy, method, args) -> method.getName().equals("equals") && proxy == args[0]);
         var data = fake(BlockData.class, (proxy, method, args) -> null);
         var block = fake(Block.class, (proxy, method, args) -> switch (method.getName()) {

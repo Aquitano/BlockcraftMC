@@ -1,5 +1,8 @@
 package me.blockcraft.skywars.game;
 
+import me.blockcraft.api.game.BlockChanges;
+import me.blockcraft.api.game.Ring;
+import me.blockcraft.api.game.VoidLine;
 import me.blockcraft.api.kit.KitSelection;
 import me.blockcraft.api.kit.KitShop;
 import me.blockcraft.common.settings.PlayerSetting;
@@ -21,13 +24,11 @@ import me.blockcraft.api.game.TimerBar;
 import me.blockcraft.api.game.LobbyEntrance;
 import me.blockcraft.api.pack.MenuIcon;
 import me.blockcraft.api.sound.Sounds;
-import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.skywars.config.SkyWarsConfig;
 import me.blockcraft.skywars.kit.Kit;
 import me.blockcraft.skywars.map.ArenaBuilder;
 import me.blockcraft.skywars.map.MapVote;
-import me.blockcraft.skywars.map.Ring;
 import me.blockcraft.skywars.map.SkyArena;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
@@ -37,12 +38,11 @@ import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
-import org.bukkit.damage.DamageSource;
-import org.bukkit.damage.DamageType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.util.BoundingBox;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -196,6 +196,8 @@ public final class SkyWarsGame implements RoundConnections.Seating {
         var filled = new Chests(config.loot(), built.chests());
         filled.fill();
         chests = Optional.of(filled);
+        int radius = built.borderRadius();
+        round.playArea(world, new BoundingBox(-radius, world.getMinHeight(), -radius, radius + 1, world.getMaxHeight(), radius + 1));
         round.enter(GamePhase.INGAME);
         var players = new ArrayList<>(round.players());
         Collections.shuffle(players);
@@ -222,7 +224,7 @@ public final class SkyWarsGame implements RoundConnections.Seating {
 
     /** Nobody could touch a cage while the players stood frozen, so all of it goes. */
     private static void openCages(SkyArena built) {
-        built.cages().forEach(block -> block.setType(Material.AIR, false));
+        BlockChanges.set(built.cages(), Material.AIR);
     }
 
     private void startClock() {
@@ -277,29 +279,13 @@ public final class SkyWarsGame implements RoundConnections.Seating {
         checkWinner(false);
     }
 
-    /** The spectator state is applied after the respawn; touching a dead player breaks the respawn. */
     public void respawn(PlayerRespawnEvent event) {
-        var player = event.getPlayer();
         event.setRespawnLocation(isLobby() ? lobbySpawn : arena.map(SkyArena::spectatorSpawn).orElse(lobbySpawn));
-        if (round.isSpectator(player)) {
-            Tasks.sync(plugin, () -> round.watch(player));
-        }
     }
 
-    /**
-     * Below the void line a player of the round dies; a spectator, and after the round anyone at all, is put back
-     * above the islands and may fly, because the void still kills while the recap shows.
-     */
-    public void fell(Player player) {
-        if (isIngame() && round.isPlaying(player) && !player.isDead()) {
-            player.damage(Float.MAX_VALUE, DamageSource.builder(DamageType.OUT_OF_WORLD).build());
-        } else if (round.isSpectator(player) || phase() == GamePhase.ENDING) {
-            arena.ifPresent(built -> {
-                player.teleport(built.spectatorSpawn());
-                player.setAllowFlight(true);
-                player.setFlying(true);
-            });
-        }
+    /** After the round everyone stays above the islands, where the void still kills while the recap shows. */
+    public VoidLine voidLine() {
+        return new VoidLine(round, config.arena()::voidHeight, () -> arena.map(SkyArena::spectatorSpawn));
     }
 
     private void checkWinner(boolean opponentLeft) {

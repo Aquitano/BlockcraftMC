@@ -1,4 +1,4 @@
-package me.blockcraft.skywars.map;
+package me.blockcraft.api.game;
 
 import java.util.ArrayList;
 import java.util.List;

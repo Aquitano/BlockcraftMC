@@ -51,6 +51,7 @@ public final class Round implements Listener {
     private final BlockcraftApi api;
     private final Arena arena;
     private RoundSummary summary;
+    private Consumer<Player> backToLobby;
     private final int capacity;
     private final GameConfig config;
     // Chat reads these off the main thread; copy-on-write keeps the join order players() hands out.
@@ -227,7 +228,7 @@ public final class Round implements Listener {
         arena.farewell(player, headcount().players(), capacity);
     }
 
-    /** Out for good: the player watches the rest, once the game has respawned them and called {@link #watch}. */
+    /** Out for good: a dead player watches the rest from their respawn on, a living one once the game calls {@link #watch}. */
     public void eliminate(Player player) {
         players.remove(player.getUniqueId());
         spectators.add(player);
@@ -239,17 +240,36 @@ public final class Round implements Listener {
         spectators.watch(player);
     }
 
+    /** For a game whose players leave the arena when the round ends: whoever respawns after the end goes there too. */
+    public void backToLobby(Consumer<Player> sendBack) {
+        backToLobby = sendBack;
+    }
+
+    /**
+     * A player out of the round watches from their respawn on, also after it ended unless the game sends everyone
+     * back to its lobby; whoever respawns after the end sees the result.
+     */
     @EventHandler(priority = EventPriority.MONITOR)
     public void onRespawn(PlayerRespawnEvent event) {
         var player = event.getPlayer();
-        if (phase == GamePhase.ENDING) {
-            var completed = summary;
-            Tasks.sync(plugin, () -> {
-                if (phase == GamePhase.ENDING && summary == completed) {
-                    completed.showResult(player);
-                }
-            });
+        var respawnedIn = phase;
+        if (respawnedIn != GamePhase.INGAME && respawnedIn != GamePhase.ENDING) {
+            return;
         }
+        var completed = summary;
+        Tasks.sync(plugin, () -> {
+            if (phase != respawnedIn || !player.isOnline()) {
+                return;
+            }
+            if (phase == GamePhase.ENDING && backToLobby != null) {
+                backToLobby.accept(player);
+            } else if (isSpectator(player)) {
+                watch(player);
+            }
+            if (phase == GamePhase.ENDING && summary == completed) {
+                completed.showResult(player);
+            }
+        });
     }
 
     /** Where the round plays, for whoever records all of it rather than only what is near the players, such as a replay. */

@@ -2,6 +2,7 @@ package me.blockcraft.skywars;
 
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.game.ArenaProtection;
+import me.blockcraft.api.game.EnchantingLapis;
 import me.blockcraft.api.game.ForceMapCommand;
 import me.blockcraft.api.game.GameConfig;
 import me.blockcraft.api.game.GamePhase;
@@ -58,6 +59,8 @@ public final class SkyWarsPlugin extends JavaPlugin {
                 WorldProtection.during(() -> game.phase() != GamePhase.INGAME, api.buildMode())
                         .rescue(() -> game.isLobby() ? Optional.of(lobbySpawn) : Optional.empty()),
                 new ArenaProtection(() -> false),
+                game.voidLine(),
+                new EnchantingLapis(),
                 new RoundListener(game, messages));
 
         services.commands(commands -> {

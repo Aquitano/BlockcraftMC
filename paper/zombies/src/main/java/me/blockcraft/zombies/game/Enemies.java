@@ -2,6 +2,7 @@ package me.blockcraft.zombies.game;
 
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.ItemAttributeModifiers;
+import me.blockcraft.api.game.BlockChanges;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.pack.PackModel;
 import me.blockcraft.zombies.arena.ArenaMap;
@@ -260,7 +261,7 @@ public final class Enemies {
         }
         var block = remaining.getFirst();
         block.getWorld().spawnParticle(Particle.BLOCK, block.getLocation().add(0.5, 0.5, 0.5), 8, 0.3, 0.3, 0.3, block.getBlockData());
-        ArenaMap.change(block, Material.AIR.createBlockData());
+        BlockChanges.set(block, Material.AIR);
         block.getWorld().playSound(block.getLocation(), Sound.BLOCK_WOOD_BREAK, 0.6f, 0.8f);
         breaking.put(enemy.window.id(), tick + game.config().breakTicks());
     }

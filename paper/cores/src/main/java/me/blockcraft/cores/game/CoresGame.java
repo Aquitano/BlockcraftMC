@@ -19,6 +19,7 @@ import me.blockcraft.api.game.StatsMenus;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.game.TimerBar;
 import me.blockcraft.api.game.LobbyEntrance;
+import me.blockcraft.api.game.VoidLine;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.pack.MenuIcon;
 import me.blockcraft.api.sound.Sounds;
@@ -36,8 +37,6 @@ import org.bukkit.Effect;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
-import org.bukkit.damage.DamageSource;
-import org.bukkit.damage.DamageType;
 import org.bukkit.entity.AbstractArrow;
 import org.bukkit.entity.Player;
 import org.bukkit.event.block.BlockBreakEvent;
@@ -103,6 +102,8 @@ public final class CoresGame implements RoundConnections.Seating {
         this.kit = new Kit(config.kit());
         this.summary = new RoundSummary(plugin, messages, new RoundSummary.Rewards(config.killCoins(), config.winCoins()), stats);
         this.round = new Round(plugin, new Arena(messages, Sounds.JOIN), summary, config.capacity(), gameConfig);
+        round.backToLobby(this::backToLobby);
+        round.playArea(map.world(), map.border().bounds());
         this.countdown = new LobbyCountdown(plugin, round, gameConfig, this::start);
         this.hotbar = new LobbyHotbar(plugin, List.of(new LobbyHotbar.Choice(MenuIcon.TEAM, messages.get("item.team"),
                 player -> new TeamMenu(messages, teams, config.playersPerTeam(), this::choose).open(player))),
@@ -137,16 +138,13 @@ public final class CoresGame implements RoundConnections.Seating {
         return config.buildHeight();
     }
 
-    public int voidHeight() {
-        return config.voidHeight();
+    /** Only during the round: afterwards everyone waits in the lobby, which the world protection rescues to. */
+    public VoidLine voidLine() {
+        return new VoidLine(round, config::voidHeight, () -> Optional.of(map.spectatorSpawn()).filter(spawn -> phase() == GamePhase.INGAME));
     }
 
     public boolean sameTeam(Player one, Player other) {
         return teams.sameSide(one.getUniqueId(), other.getUniqueId());
-    }
-
-    public Optional<Side> sideOf(Player player) {
-        return teams.of(player.getUniqueId());
     }
 
     public List<Player> members(Side side) {
@@ -397,16 +395,6 @@ public final class CoresGame implements RoundConnections.Seating {
             });
         } else {
             event.setRespawnLocation(map.spectatorSpawn());
-            Tasks.sync(plugin, () -> round.watch(player));
-        }
-    }
-
-    /** Below the void line a player dies, falling from whoever hit them last; a spectator is put back above the map. */
-    public void fell(Player player) {
-        if (round.isPlaying(player) && !player.isDead()) {
-            player.damage(Float.MAX_VALUE, DamageSource.builder(DamageType.OUT_OF_WORLD).build());
-        } else if (round.isSpectator(player)) {
-            player.teleport(map.spectatorSpawn());
         }
     }
 
@@ -425,13 +413,19 @@ public final class CoresGame implements RoundConnections.Seating {
         Bukkit.broadcast(Component.empty());
         for (var player : Bukkit.getOnlinePlayers()) {
             if (!player.isDead()) {
-                PlayerReset.reset(player, GameMode.ADVENTURE);
-                player.teleport(map.lobbySpawn());
-                hotbar.giveHub(player);
+                backToLobby(player);
             }
         }
         round.end();
         refreshAll();
+    }
+
+    /** After the round everyone meets in the lobby again, seen by all, with nothing but the way out. */
+    private void backToLobby(Player player) {
+        Bukkit.getOnlinePlayers().forEach(other -> other.showPlayer(plugin, player));
+        PlayerReset.reset(player, GameMode.ADVENTURE);
+        player.teleport(map.lobbySpawn());
+        hotbar.giveHub(player);
     }
 
     @Override

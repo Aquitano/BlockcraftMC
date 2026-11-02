@@ -1,6 +1,7 @@
 package me.blockcraft.rush.listener;
 
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.game.BlockChanges;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.api.world.BuildMode;
@@ -50,7 +51,7 @@ public final class BlockListener implements Listener {
         if (game.phase() == GamePhase.SEARCH && game.isAlive(player) && block.getType() == Material.EMERALD_ORE) {
             game.addEmeralds(player, config.emeraldsPerOre());
             BlockcraftApi.get().notifications().rewardSound(player, Sounds.COINS);
-            Tasks.later(plugin, config.oreRespawnSeconds() * 20L, () -> block.setType(Material.EMERALD_ORE));
+            Tasks.later(plugin, config.oreRespawnSeconds() * 20L, () -> BlockChanges.set(block, Material.EMERALD_ORE));
         }
     }
 

@@ -1,5 +1,6 @@
 package me.blockcraft.ttt.game;
 
+import me.blockcraft.api.game.BlockChanges;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
@@ -83,7 +84,7 @@ public final class Tester {
     public void springTrap(UUID player) {
         trapper = Optional.of(player);
         trapOpen = true;
-        floor.keySet().forEach(block -> block.setType(Material.AIR, false));
+        BlockChanges.set(floor.keySet(), Material.AIR);
         Tasks.later(plugin, config.trapSeconds() * 20L, this::closeTrap);
     }
 
@@ -108,7 +109,7 @@ public final class Tester {
         running = true;
         readyAt = now + Duration.ofSeconds(config.cooldownSeconds()).toNanos();
         Bukkit.broadcast(messages.get("tester.entered", Placeholder.unparsed("player", presser.getName())));
-        room.entrance().forEach(block -> block.setType(Material.GLASS, false));
+        BlockChanges.set(room.entrance(), Material.GLASS);
         Tasks.later(plugin, config.delaySeconds() * 20L, this::reveal);
         Tasks.later(plugin, (config.delaySeconds() + config.showSeconds()) * 20L, this::reset);
     }
@@ -121,7 +122,7 @@ public final class Tester {
         // Counted rather than matched, so that every traitor inside uses up their spoofer, not just the first.
         boolean traitor = inside.stream().filter(showsAsTraitor).count() > 0;
         var lamp = traitor ? Material.RED_CONCRETE : Material.LIME_CONCRETE;
-        room.lamps().forEach(block -> block.setType(lamp, false));
+        BlockChanges.set(room.lamps(), lamp);
         inside.forEach(player -> (traitor ? Sounds.NOTE_BASS : Sounds.NOTE_PLING).play(player));
     }
 
@@ -130,7 +131,7 @@ public final class Tester {
             return;
         }
         running = false;
-        atRest.forEach((block, data) -> block.setBlockData(data, false));
+        BlockChanges.set(atRest);
     }
 
     private void closeTrap() {
@@ -138,6 +139,6 @@ public final class Tester {
             return;
         }
         trapOpen = false;
-        floor.forEach((block, data) -> block.setBlockData(data, false));
+        BlockChanges.set(floor);
     }
 }

@@ -18,26 +18,20 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
-import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
-import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
-import org.bukkit.inventory.EnchantingInventory;
 import org.bukkit.inventory.EquipmentSlot;
-import org.bukkit.inventory.ItemStack;
 
 /**
  * The round's rules besides the kits': nobody is hurt while the players are frozen, during the protection time and
  * after the round; the wandering ender chests open their loot and cannot be broken or blown up; placed TNT lights
- * itself; enchanting tables bring their own lapis; portals lead nowhere; compasses track.
+ * itself; portals lead nowhere; compasses track.
  */
 public final class RoundListener implements Listener {
 
-    private static final ItemStack LAPIS = ItemStack.of(Material.LAPIS_LAZULI, 64);
-    private static final int LAPIS_SLOT = 1;
     private static final int TNT_FUSE_TICKS = 30;
 
     private final EnderGamesGame game;
@@ -161,28 +155,6 @@ public final class RoundListener implements Listener {
             tnt.setFuseTicks(TNT_FUSE_TICKS);
             tnt.setSource(event.getPlayer());
         });
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onEnchantingOpen(InventoryOpenEvent event) {
-        if (event.getInventory() instanceof EnchantingInventory table) {
-            table.setSecondary(LAPIS.clone());
-        }
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onEnchantingClick(InventoryClickEvent event) {
-        if (event.getView().getTopInventory() instanceof EnchantingInventory && event.getRawSlot() == LAPIS_SLOT) {
-            event.setCancelled(true);
-        }
-    }
-
-    /** The lapis belongs to the table, not to whoever closes it. */
-    @EventHandler
-    public void onEnchantingClose(InventoryCloseEvent event) {
-        if (event.getInventory() instanceof EnchantingInventory table) {
-            table.setSecondary(null);
-        }
     }
 
     @EventHandler(ignoreCancelled = true)

@@ -16,6 +16,7 @@ import me.blockcraft.api.game.StatsMenus;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.game.TimerBar;
 import me.blockcraft.api.game.LobbyEntrance;
+import me.blockcraft.api.game.VoidLine;
 import me.blockcraft.api.pack.MenuIcon;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Tasks;
@@ -56,8 +57,6 @@ import org.bukkit.Particle;
 import org.bukkit.Tag;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.damage.DamageSource;
-import org.bukkit.damage.DamageType;
 import org.bukkit.entity.Firework;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
@@ -139,6 +138,7 @@ public final class Game implements RoundConnections.Seating {
         this.perks = new Perks(api.settings());
         this.summary = new RoundSummary(plugin, messages, new RoundSummary.Rewards(config.killCoins(), config.winCoins()), stats);
         this.round = new Round(plugin, new Arena(messages, Sounds.JOIN), summary, config.capacity(), gameConfig);
+        round.backToLobby(this::backToLobby);
         this.shop = new Shop(catalog, messages, perks, teams::colorOf);
         this.dealers = new Dealers(messages, shop, round::isPlaying);
         this.chests = new TeamChests(plugin, messages, teams);
@@ -166,7 +166,8 @@ public final class Game implements RoundConnections.Seating {
 
     /** Everything that hears the game's events besides the round, which registers itself. */
     public List<Listener> listeners() {
-        var listeners = new ArrayList<Listener>(List.of(lobbyHotbar, dealers, chests, specials, selector, cps, catchGame));
+        var listeners = new ArrayList<Listener>(List.of(lobbyHotbar, dealers, chests, specials, selector, cps, catchGame,
+                new VoidLine(round, config::voidHeight, this::spectatorSpawn)));
         jumpAndRun.ifPresent(listeners::add);
         return listeners;
     }
@@ -466,6 +467,7 @@ public final class Game implements RoundConnections.Seating {
         cps.stop();
         jumpAndRun.ifPresent(JumpAndRun::close);
         catchGame.close();
+        round.playArea(world, match.border().bounds(world));
         round.enter(GamePhase.INGAME);
         for (var player : round.players()) {
             var team = teams.of(player);
@@ -527,9 +529,6 @@ public final class Game implements RoundConnections.Seating {
         var player = event.getPlayer();
         if (phase() != GamePhase.INGAME) {
             lobbySpawn().ifPresent(event::setRespawnLocation);
-            if (phase() == GamePhase.ENDING) {
-                Tasks.sync(plugin, () -> backToLobby(player));
-            }
             return;
         }
         if (round.isPlaying(player)) {
@@ -541,22 +540,9 @@ public final class Game implements RoundConnections.Seating {
             });
         } else if (match != null) {
             event.setRespawnLocation(match.spectatorSpawn());
-            Tasks.sync(plugin, () -> round.watch(player));
         }
     }
 
-    /** Below the void line a player dies, falling from whoever hit them last; a spectator is put back above the map. */
-    public void fell(Player player) {
-        if (round.isPlaying(player) && !player.isDead()) {
-            player.damage(Float.MAX_VALUE, DamageSource.builder(DamageType.OUT_OF_WORLD).build());
-        } else if (round.isSpectator(player)) {
-            spectatorSpawn().ifPresent(player::teleport);
-        }
-    }
-
-    public double voidHeight() {
-        return config.voidHeight();
-    }
 
     /** The team whose standing bed has {@code block} as one of its halves. */
     public Optional<Team> bedAt(Block block) {

@@ -1,5 +1,6 @@
 package me.blockcraft.zombies.game;
 
+import me.blockcraft.api.game.BlockChanges;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.zombies.arena.ArenaMap;
 import org.bukkit.Location;
@@ -43,7 +44,7 @@ final class ArenaEffects {
             Tasks.later(plugin, (long) DOOR_ROW_TICKS * (row + 1), () -> {
                 blocks.stream().filter(block -> !block.getType().isAir()).forEach(block -> {
                     world.spawnParticle(Particle.BLOCK, centerOf(block), 6, 0.3, 0.3, 0.3, block.getBlockData());
-                    ArenaMap.change(block, Material.AIR.createBlockData());
+                    BlockChanges.set(block, Material.AIR);
                 });
                 world.playSound(center, Sound.BLOCK_IRON_TRAPDOOR_OPEN, 0.8f, pitch);
             });

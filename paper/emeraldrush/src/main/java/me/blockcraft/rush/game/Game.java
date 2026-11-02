@@ -365,7 +365,6 @@ public final class Game implements RoundConnections.Seating {
         var player = event.getPlayer();
         if (round.isSpectator(player)) {
             spawns.get(SpawnPoint.DEATHMATCH_1).ifPresent(event::setRespawnLocation);
-            Tasks.sync(plugin, () -> round.watch(player));
             return;
         }
         if (!isAlive(player)) {

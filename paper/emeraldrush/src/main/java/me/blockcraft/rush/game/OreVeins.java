@@ -1,5 +1,6 @@
 package me.blockcraft.rush.game;
 
+import me.blockcraft.api.game.BlockChanges;
 import me.blockcraft.rush.config.RushConfig;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -51,6 +52,6 @@ final class OreVeins {
         }
         var shuffled = new ArrayList<>(walls);
         Collections.shuffle(shuffled, ThreadLocalRandom.current());
-        shuffled.stream().limit(ores.count()).forEach(block -> block.setType(Material.EMERALD_ORE, false));
+        BlockChanges.set(shuffled.stream().limit(ores.count()).toList(), Material.EMERALD_ORE);
     }
 }

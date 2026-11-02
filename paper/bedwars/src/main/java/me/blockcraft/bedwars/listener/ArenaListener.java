@@ -1,5 +1,6 @@
 package me.blockcraft.bedwars.listener;
 
+import me.blockcraft.api.game.BlockChanges;
 import me.blockcraft.api.game.GamePhase;
 import me.blockcraft.bedwars.config.BedWarsConfig;
 import me.blockcraft.bedwars.game.Game;
@@ -21,7 +22,6 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
-import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
@@ -36,8 +36,7 @@ import java.util.UUID;
 /**
  * The round's rules for the map: players build inside its border and break only what players placed, grass,
  * flowers and the beds of other teams; TNT goes off when placed and takes only placed blocks with it; a cobweb
- * melts after a while unless it guards a bed. Falling below the void line kills, and teammates do not hurt each
- * other, with arrows and TNT neither.
+ * melts after a while unless it guards a bed. Teammates do not hurt each other, with arrows and TNT neither.
  */
 public final class ArenaListener implements Listener {
 
@@ -92,6 +91,7 @@ public final class ArenaListener implements Listener {
             melting.remove(block);
             placed.remove(block);
             replaced.update(true, false);
+            BlockChanges.announce(List.of(block));
         }, config.webLifetimeSeconds() * 20L));
     }
 
@@ -156,13 +156,6 @@ public final class ArenaListener implements Listener {
     public void onBlockExplode(BlockExplodeEvent event) {
         if (inRound()) {
             keepMap(event.blockList());
-        }
-    }
-
-    @EventHandler
-    public void onMove(PlayerMoveEvent event) {
-        if (inRound() && event.getTo().getY() < game.voidHeight()) {
-            game.fell(event.getPlayer());
         }
     }
 

@@ -4,6 +4,7 @@ import org.bukkit.block.Block;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -15,7 +16,7 @@ public final class BlocksChangedEvent extends Event {
     private static final HandlerList HANDLERS = new HandlerList();
     private final List<Block> blocks;
 
-    public BlocksChangedEvent(List<Block> blocks) {
+    public BlocksChangedEvent(Collection<Block> blocks) {
         this.blocks = List.copyOf(blocks);
     }
 

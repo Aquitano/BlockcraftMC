@@ -3,7 +3,6 @@ package me.blockcraft.cores.listener;
 import me.blockcraft.api.game.GamePhase;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.cores.game.CoresGame;
-import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
@@ -18,26 +17,17 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryCloseEvent;
-import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
-import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
-import org.bukkit.inventory.EnchantingInventory;
-import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
 
 /**
  * The round's rules for the map: the bases keep their blocks except the iron, a core's cube and a spawn take no
  * block, and everything else breaks and builds inside the border. Enemies break cores; teammates do not hurt each
- * other. The enchanting tables come with lapis.
+ * other.
  */
 public final class ArenaListener implements Listener {
-
-    private static final ItemStack LAPIS = ItemStack.of(Material.LAPIS_LAZULI, 64);
-    private static final int LAPIS_SLOT = 1;
 
     private final CoresGame game;
     private final Messages messages;
@@ -102,13 +92,6 @@ public final class ArenaListener implements Listener {
         keepBases(event.blockList());
     }
 
-    @EventHandler
-    public void onMove(PlayerMoveEvent event) {
-        if (inRound() && event.getTo().getY() < game.voidHeight()) {
-            game.fell(event.getPlayer());
-        }
-    }
-
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
     public void onHit(EntityDamageByEntityEvent event) {
         if (!(event.getEntity() instanceof Player victim)) {
@@ -128,28 +111,6 @@ public final class ArenaListener implements Listener {
             if (damager instanceof Projectile) {
                 damager.remove();
             }
-        }
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onEnchantingOpen(InventoryOpenEvent event) {
-        if (event.getInventory() instanceof EnchantingInventory table) {
-            table.setSecondary(LAPIS.clone());
-        }
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onEnchantingClick(InventoryClickEvent event) {
-        if (event.getView().getTopInventory() instanceof EnchantingInventory && event.getRawSlot() == LAPIS_SLOT) {
-            event.setCancelled(true);
-        }
-    }
-
-    /** The lapis belongs to the table, not to whoever closes it. */
-    @EventHandler
-    public void onEnchantingClose(InventoryCloseEvent event) {
-        if (event.getInventory() instanceof EnchantingInventory table) {
-            table.setSecondary(null);
         }
     }
 

@@ -2,6 +2,7 @@ package me.blockcraft.ttt.game;
 
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.game.Arena;
+import me.blockcraft.api.game.BlockChanges;
 import me.blockcraft.api.game.Defeat;
 import me.blockcraft.api.game.GameConfig;
 import me.blockcraft.api.game.GamePhase;
@@ -117,6 +118,7 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
         this.summary = new RoundSummary(plugin, messages, new RoundSummary.Rewards(config.rewards().kill(), config.rewards().win()), stats);
         summary.keepKillsSecret();
         this.round = new Round(plugin, new Arena(messages, Sounds.JOIN), summary, config.capacity(), gameConfig);
+        round.backToLobby(this::backToLobby);
         this.countdown = new LobbyCountdown(plugin, round, gameConfig, config.roundMinimum(), remaining -> { }, this::start);
         this.hotbar = new LobbyHotbar(plugin, List.of(new LobbyHotbar.Choice(MenuIcon.VOTE, messages.get("item.vote"),
                 () -> phase() == GamePhase.LOBBY, this::openVote)), statsMenus, countdown);
@@ -369,10 +371,6 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
     public void respawn(PlayerRespawnEvent event) {
         var player = event.getPlayer();
         event.setRespawnLocation(phase() == GamePhase.INGAME ? spectatorSpawn() : lobbySpawn.get());
-        if (round.isSpectator(player)) {
-            Tasks.sync(plugin, () -> round.watch(player));
-        }
-
     }
 
     /** A chest of the map gives one thing and is gone; true if {@code block} was one. */
@@ -380,7 +378,7 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
         if (block.getType() != Material.CHEST) {
             return false;
         }
-        block.setType(Material.AIR, false);
+        BlockChanges.set(block, Material.AIR);
         ChestLoot.pick(config.chests(), ThreadLocalRandom.current()).map(ChestLoot::item).ifPresent(item -> give(player, item));
         Sounds.MENU_OPEN.play(player);
         return true;
@@ -535,14 +533,20 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
         for (var player : Bukkit.getOnlinePlayers()) {
             BlockcraftApi.get().tabTeams().clearColor(player);
             if (!player.isDead()) {
-                PlayerReset.reset(player, GameMode.ADVENTURE);
-                player.teleport(lobbySpawn.get());
-                hotbar.giveHub(player);
+                backToLobby(player);
             }
         }
         corpses.clear();
         round.end();
         refreshAll();
+    }
+
+    /** After the round everyone meets in the lobby again, seen by all, with nothing but the way out. */
+    private void backToLobby(Player player) {
+        Bukkit.getOnlinePlayers().forEach(other -> other.showPlayer(plugin, player));
+        PlayerReset.reset(player, GameMode.ADVENTURE);
+        player.teleport(lobbySpawn.get());
+        hotbar.giveHub(player);
     }
 
     @Override

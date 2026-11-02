@@ -1,5 +1,6 @@
 package me.blockcraft.bedwars.item;
 
+import me.blockcraft.api.game.BlockChanges;
 import me.blockcraft.api.item.HotbarItem;
 import me.blockcraft.bedwars.config.BedWarsConfig;
 import me.blockcraft.bedwars.shop.Dealers;
@@ -19,6 +20,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.plugin.Plugin;
 
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -42,7 +44,8 @@ public final class SpecialItems implements Listener {
         this.teleporter = new Teleporter(plugin, messages, config.teleporterSeconds(), config.teleporterHeight(),
                 player -> teams.of(player).flatMap(Team::spawn));
         this.parachute = new Parachute(plugin, messages, config.parachuteSeconds());
-        this.platform = new RescuePlatform(config.rescuePlatformRadius(), canPlace, replaceable, placed);
+        this.platform = new RescuePlatform(config.rescuePlatformRadius(), canPlace, replaceable,
+                placed.andThen(block -> BlockChanges.announce(List.of(block))));
         this.mobileShop = new MobileShop(plugin, messages, dealers, config.mobileShopSeconds());
     }
 

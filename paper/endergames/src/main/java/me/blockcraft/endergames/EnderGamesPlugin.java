@@ -2,6 +2,7 @@ package me.blockcraft.endergames;
 
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.game.CompassTracker;
+import me.blockcraft.api.game.EnchantingLapis;
 import me.blockcraft.api.game.GameConfig;
 import me.blockcraft.api.game.GamePhase;
 import me.blockcraft.api.game.GameServices;
@@ -50,6 +51,7 @@ public final class EnderGamesPlugin extends JavaPlugin {
                 new RoundConnections(game),
                 WorldProtection.during(() -> game.phase() != GamePhase.INGAME, api.buildMode())
                         .rescue(() -> game.isLobby() ? Optional.of(lobbySpawn) : Optional.empty()),
+                new EnchantingLapis(),
                 new RoundListener(game, new CompassTracker(messages, config.tracker())));
 
         services.commands(commands -> commands.register(StartCommand.of(game.countdown()).build()));

@@ -25,7 +25,6 @@ import me.blockcraft.api.pack.MenuIcon;
 import me.blockcraft.api.world.MapBundle;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Countdown;
-import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.quicksg.config.LocationKey;
 import me.blockcraft.quicksg.config.QuickSGConfig;
@@ -190,13 +189,8 @@ public final class Game implements RoundConnections.Seating {
         checkWinner(false);
     }
 
-    /** The spectator state is applied after the respawn; touching health or game mode on a dead player breaks the respawn. */
     public void respawn(PlayerRespawnEvent event) {
-        var player = event.getPlayer();
         (isLobby() ? lobbySpawn() : locations.get(LocationKey.SPECTATOR)).ifPresent(event::setRespawnLocation);
-        if (isSpectator(player)) {
-            Tasks.sync(plugin, () -> round.watch(player));
-        }
     }
 
     public void skipGameTimer(int remainingSeconds) {

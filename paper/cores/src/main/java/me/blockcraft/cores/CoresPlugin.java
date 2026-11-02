@@ -2,12 +2,14 @@ package me.blockcraft.cores;
 
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.game.ArenaProtection;
+import me.blockcraft.api.game.EnchantingLapis;
 import me.blockcraft.api.game.GameConfig;
 import me.blockcraft.api.game.GamePhase;
 import me.blockcraft.api.game.GameServices;
 import me.blockcraft.api.game.LootChests;
 import me.blockcraft.api.game.RoundConnections;
 import me.blockcraft.api.game.StartCommand;
+import me.blockcraft.api.game.TeamChat;
 import me.blockcraft.api.world.WaitingLobby;
 import me.blockcraft.api.world.WorldProtection;
 import me.blockcraft.api.world.Worlds;
@@ -15,7 +17,6 @@ import me.blockcraft.cores.arena.SkyMap;
 import me.blockcraft.cores.config.CoresConfig;
 import me.blockcraft.cores.game.CoresGame;
 import me.blockcraft.cores.listener.ArenaListener;
-import me.blockcraft.cores.listener.ChatListener;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Difficulty;
@@ -51,8 +52,10 @@ public final class CoresPlugin extends JavaPlugin {
                         .rescue(() -> Optional.of(map.lobbySpawn())),
                 new ArenaProtection(() -> false),
                 game.spawnProtection(),
+                game.voidLine(),
+                new EnchantingLapis(),
                 new ArenaListener(game, messages),
-                new ChatListener(game, messages));
+                new TeamChat(() -> game.phase() == GamePhase.INGAME, game::sameTeam, messages, false));
 
         services.commands(commands -> commands.register(StartCommand.of(game.countdown()).build()));
 

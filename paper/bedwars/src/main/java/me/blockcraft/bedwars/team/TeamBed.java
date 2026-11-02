@@ -1,5 +1,6 @@
 package me.blockcraft.bedwars.team;
 
+import me.blockcraft.api.game.BlockChanges;
 import me.blockcraft.bedwars.map.BedSpot;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -7,6 +8,8 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.type.Bed;
+
+import java.util.List;
 
 /**
  * A team's bed: two blocks, made over in the team's colour when the round starts, since the maps come from a time
@@ -64,7 +67,6 @@ public final class TeamBed {
     /** Both halves go without dropping anything; a bed only falls once. */
     public void destroy() {
         standing = false;
-        head.setType(Material.AIR, false);
-        foot.setType(Material.AIR, false);
+        BlockChanges.set(List.of(head, foot), Material.AIR);
     }
 }

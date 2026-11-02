@@ -5,6 +5,7 @@ import me.blockcraft.cores.game.Side;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.util.BoundingBox;
 
 import java.util.List;
 import java.util.Map;
@@ -27,6 +28,10 @@ public record CoresMap(String name, World world, Map<Side, Location> spawns, Lis
 
         public boolean contains(Block block) {
             return contains(block.getX(), block.getY(), block.getZ());
+        }
+
+        public BoundingBox bounds() {
+            return new BoundingBox(minX, minY, minZ, maxX + 1, maxY + 1, maxZ + 1);
         }
     }
 

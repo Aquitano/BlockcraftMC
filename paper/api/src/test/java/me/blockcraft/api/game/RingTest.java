@@ -1,4 +1,4 @@
-package me.blockcraft.skywars.map;
+package me.blockcraft.api.game;
 
 import org.junit.Test;
 

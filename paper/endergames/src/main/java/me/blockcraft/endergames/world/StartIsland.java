@@ -1,5 +1,7 @@
 package me.blockcraft.endergames.world;
 
+import me.blockcraft.api.game.BlockChanges;
+import me.blockcraft.api.game.Ring;
 import org.bukkit.HeightMap;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -100,7 +102,7 @@ public final class StartIsland {
 
     /** Evenly round the pillar, each chest's front turned out towards the players. */
     private void chests(int count) {
-        for (var point : Ring.points(0, 0, CHEST_RADIUS, count, Math.PI / count)) {
+        for (var point : Ring.points(count, CHEST_RADIUS, 180.0 / count)) {
             int dx = (int) Math.round(point.x());
             int dz = (int) Math.round(point.z());
             var facing = Math.abs(dx) >= Math.abs(dz)
@@ -122,8 +124,8 @@ public final class StartIsland {
     /** Where each of {@code count} players starts: evenly on the ring round the pillar, facing it. */
     public List<Location> spawns(int count) {
         var spawns = new ArrayList<Location>();
-        for (var point : Ring.points(centerX + 0.5, centerZ + 0.5, SPAWN_RADIUS, Math.max(1, count), 0)) {
-            var spawn = new Location(world, point.x(), top + 1, point.z());
+        for (var point : Ring.points(Math.max(1, count), SPAWN_RADIUS, 0)) {
+            var spawn = new Location(world, centerX + 0.5 + point.x(), top + 1, centerZ + 0.5 + point.z());
             spawn.setDirection(new Location(world, centerX + 0.5, top + 1, centerZ + 0.5).toVector().subtract(spawn.toVector()));
             spawn.setPitch(0);
             spawns.add(spawn);
@@ -155,7 +157,7 @@ public final class StartIsland {
         var center = new Location(world, centerX + 0.5, top, centerZ + 0.5);
         world.spawnParticle(Particle.BLOCK, center, 300, RADIUS / 2.0, 2, RADIUS / 2.0, Material.END_STONE.createBlockData());
         world.playSound(center, Sound.BLOCK_STONE_BREAK, 2.0f, 0.6f);
-        blocks.forEach(block -> block.setType(Material.AIR, false));
+        BlockChanges.set(blocks, Material.AIR);
         blocks.clear();
         chests.clear();
     }

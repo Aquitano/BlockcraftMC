@@ -1,6 +1,7 @@
 package me.blockcraft.ttt.shop;
 
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.game.BlockChanges;
 import me.blockcraft.api.item.HotbarItem;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.sound.Sounds;
@@ -153,7 +154,7 @@ public final class Equipment {
             return;
         }
         mines.remove(block);
-        block.setType(Material.AIR, false);
+        BlockChanges.set(block, Material.AIR);
         explode(block.getLocation().add(0.5, 0.2, 0.5), owner);
     }
 
@@ -168,7 +169,7 @@ public final class Equipment {
             return true;
         }
         fakeChests.remove(block);
-        block.setType(Material.AIR, false);
+        BlockChanges.set(block, Material.AIR);
         explode(block.getLocation().add(0.5, 0.5, 0.5), owner);
         return true;
     }
@@ -234,7 +235,7 @@ public final class Equipment {
             }
             center.getWorld().spawnParticle(Particle.HEART, center, 2, 0.6, 0.3, 0.6);
             if (left <= 0) {
-                block.setType(Material.AIR, false);
+                BlockChanges.set(block, Material.AIR);
                 return true;
             }
             return false;

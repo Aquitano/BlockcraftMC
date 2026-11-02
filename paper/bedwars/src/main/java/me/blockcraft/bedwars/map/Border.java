@@ -1,6 +1,8 @@
 package me.blockcraft.bedwars.map;
 
 import me.blockcraft.api.world.Point;
+import org.bukkit.World;
+import org.bukkit.util.BoundingBox;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -14,6 +16,10 @@ public record Border(int minX, int maxX, int minZ, int maxZ) {
 
     public boolean contains(int x, int z) {
         return x >= minX && x <= maxX && z >= minZ && z <= maxZ;
+    }
+
+    public BoundingBox bounds(World world) {
+        return new BoundingBox(minX, world.getMinHeight(), minZ, maxX + 1, world.getMaxHeight(), maxZ + 1);
     }
 
     static Border parse(Map<?, ?> values) {
