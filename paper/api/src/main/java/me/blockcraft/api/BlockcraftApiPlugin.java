@@ -17,7 +17,7 @@ import me.blockcraft.api.dialog.ServerMenu;
 import me.blockcraft.api.elo.Elo;
 import me.blockcraft.api.elo.SkillGroup;
 import me.blockcraft.api.game.LegacyDamage;
-import me.blockcraft.api.game.LegacyRod;
+import me.blockcraft.api.game.LegacyProjectiles;
 import me.blockcraft.api.game.RoundConfig;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.game.Streaks;
@@ -207,7 +207,7 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(buildMode, this);
         getServer().getPluginManager().registerEvents(flight, this);
         getServer().getPluginManager().registerEvents(new VanillaProgress(), this);
-        getServer().getPluginManager().registerEvents(new LegacyRod(), this);
+        getServer().getPluginManager().registerEvents(new LegacyProjectiles(), this);
         getServer().getPluginManager().registerEvents(new LegacyDamage(), this);
 
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {

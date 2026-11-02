@@ -7,14 +7,13 @@ import java.time.Duration;
 record FfaConfig(int capacity, int knockback, Duration creditWindow, Duration spawnProtection,
                  int killCoins, Duration rewardCooldown, Kits kits, boolean launch, int launchSeconds, int rotationSeconds) {
 
-    record Kits(int intervalSeconds, int ammo, int pearls, double projectilePush, int grappleCooldownTicks,
+    record Kits(int intervalSeconds, int ammo, int pearls, int grappleCooldownTicks,
                 int heavyKnockback, double grapplePull, double grappleLift, int warningSeconds) {
 
         static Kits from(ConfigurationSection config) {
             return new Kits(Math.clamp(config.getInt("kits.interval-seconds", 120), 20, 3600),
                     Math.clamp(config.getInt("kits.ammo", 16), 1, 16),
                     Math.clamp(config.getInt("kits.pearls", 3), 1, 16),
-                    Math.clamp(config.getDouble("kits.projectile-push", 0.6), 0, 3),
                     Math.clamp(config.getInt("kits.grapple-cooldown-seconds", 3), 0, 30) * 20,
                     Math.clamp(config.getInt("kits.heavy-knockback-level", 3), 1, 5),
                     Math.clamp(config.getDouble("kits.grapple-pull", 1.6), 0, 4),

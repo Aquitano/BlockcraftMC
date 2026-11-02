@@ -361,7 +361,9 @@ unrated while still earning normal XP, coins and statistics. Historical Elo is p
 a separate rating choice; a series is rated only when both players explicitly choose it. A decided rated series
 settles Elo once, including forfeits. Rematches reset rating consent.
 
-The combat button between chance and rating picks 1.8 or modern combat. `pvp.legacy-combat` sets the default, and the
+The combat button between chance and rating picks 1.8 or modern combat. 1.8 combat has no attack cooldown, deals
+1.8's weapon damage, and its rods, snowballs, eggs and pearls knock players back for no damage, so a melee hit right
+after a rod hit lands as in 1.8. `pvp.legacy-combat` sets the default, and the
 other style applies only when both players choose it; the same pair keeps the choice for a rematch. It covers every
 mode of the series except MLG Rush, which always plays 1.8.
 
@@ -809,7 +811,7 @@ Recordings that were not saved remain marked unavailable. History is evidence fo
 punishment.
 
 The network's own movement needs no exemptions: Grim follows what the server sends the client, so knockback a plugin
-sets (throw fights, the legacy rod, harmless hits, MLG Rush sticks), BedWars' parachute and teleporter, the
+sets (throw fights, harmless hits, MLG Rush sticks), BedWars' parachute and teleporter, the
 Känguru's jump, potion effects such as the jump boost in EmeraldRush's lobby water, flight for spectators and staff
 mode, `/speed` and teleports are all predicted. Lobby double jumps and grappling hooks use server-sent velocity.
 Archive visitors and replay viewers have server-authorized flight. Staff spectating with `/spec` are in spectator

@@ -26,8 +26,8 @@ hotbar. The change takes back thrown projectiles and hands out the new kit in pl
   `kits.grapple-cooldown-seconds`.
 - Enderman: `kits.pearls` ender pearls.
 
-Projectiles never deal damage. Arrow, snowball and rod hits credit the shooter like a stick hit; Paper gives a hit
-without any damage no knockback, so snowballs and rods push by `kits.projectile-push`. Pearl hits credit nobody.
+Projectiles never deal damage. Arrow, snowball and rod hits credit the shooter like a stick hit and knock back as in
+1.8 (BlockcraftAPI's `LegacyProjectiles`). Pearl hits credit nobody.
 Ammunition refills on every respawn.
 
 The last accepted hit within `hit-credit-seconds` earns a kill when the victim falls. Every death resets the victim's

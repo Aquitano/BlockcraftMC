@@ -378,13 +378,6 @@ final class FfaGame implements Listener, AutoCloseable {
         var attacker = attacker(event);
         if (attacker != null && event.getEntity() instanceof Player victim && canHit(attacker, victim)) {
             scores.hit(attacker.getUniqueId(), victim.getUniqueId(), System.nanoTime());
-            // Paper drops vanilla knockback for a player hit that dealt no damage at all, as snowballs and rods do.
-            if (event.getDamager() instanceof Projectile && !(event.getDamager() instanceof AbstractArrow)) {
-                var away = victim.getLocation().toVector().subtract(attacker.getLocation().toVector());
-                victim.knockback(config.kits().projectilePush(), -away.getX(), -away.getZ());
-                victim.setVelocity(victim.getVelocity());
-                victim.playHurtAnimation(attacker.getYaw());
-            }
         }
     }
 
