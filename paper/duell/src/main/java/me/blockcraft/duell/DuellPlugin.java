@@ -33,7 +33,7 @@ public final class DuellPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        saveDefaultConfig();
+        getConfig().options().copyDefaults(true);
         var gameConfig = GameConfig.from(getConfig());
         var config = DuellConfig.from(getConfig());
         var api = BlockcraftApi.get();

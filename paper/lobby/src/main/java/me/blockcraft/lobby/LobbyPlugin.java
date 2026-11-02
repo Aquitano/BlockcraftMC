@@ -134,7 +134,6 @@ public final class LobbyPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        saveDefaultConfig();
         var yaml = YamlFile.loadWithDefaults(getDataPath().resolve("config.yml"), () -> getResource("config.yml"));
         var config = LobbyConfig.fromYaml(yaml);
         var api = BlockcraftApi.get();

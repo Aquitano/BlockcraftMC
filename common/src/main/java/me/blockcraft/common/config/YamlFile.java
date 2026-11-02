@@ -7,7 +7,6 @@ import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,21 +19,18 @@ public final class YamlFile {
     }
 
     /**
-     * Copies the bundled default to {@code target} if it does not exist yet, then loads the file with every key it
-     * lacks taken from the bundled default, so a plugin update never runs on missing settings. Sections merge
-     * key by key; lists and scalars in the file win as a whole.
+     * The bundled default with {@code target}'s keys on top, if the file exists. The file holds only what an operator
+     * changed and is never written here, so every other key follows the bundled default of the running version.
+     * Sections merge key by key; lists and scalars in the file win as a whole.
      */
     public static Map<String, Object> loadWithDefaults(Path target, Supplier<InputStream> bundledDefault) {
         try {
-            if (Files.notExists(target)) {
-                Files.createDirectories(target.getParent());
-                try (InputStream in = bundledDefault.get()) {
-                    Files.copy(in, target, StandardCopyOption.REPLACE_EXISTING);
-                }
-            }
             Map<String, Object> defaults;
             try (InputStream in = bundledDefault.get()) {
                 defaults = load(in);
+            }
+            if (Files.notExists(target)) {
+                return defaults;
             }
             try (InputStream in = Files.newInputStream(target)) {
                 return merge(defaults, load(in));

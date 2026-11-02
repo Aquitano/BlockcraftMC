@@ -23,7 +23,7 @@ public final class MlgRushPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        saveDefaultConfig();
+        getConfig().options().copyDefaults(true);
         var config = RushConfig.from(getConfig());
         var gameConfig = GameConfig.from(getConfig());
         var mapsFile = getDataPath().resolve("maps.yml");

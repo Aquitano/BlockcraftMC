@@ -20,7 +20,7 @@ public final class KnockbackFfaPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        saveDefaultConfig();
+        getConfig().options().copyDefaults(true);
         var api = BlockcraftApi.get();
         var messages = Messages.load(getDataPath(), () -> getResource("messages.yml"), api.tags());
         var stats = new StatsRepository(api.database(), "knockbackffa_stats");

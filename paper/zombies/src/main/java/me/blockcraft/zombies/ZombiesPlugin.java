@@ -39,7 +39,7 @@ public final class ZombiesPlugin extends JavaPlugin {
     }
 
     private void enable() {
-        saveDefaultConfig();
+        getConfig().options().copyDefaults(true);
         var api = BlockcraftApi.get();
         var config = ZombiesConfig.from(getConfig());
         var gameConfig = GameConfig.from(getConfig(), 1);

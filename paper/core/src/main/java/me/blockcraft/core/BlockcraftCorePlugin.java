@@ -86,7 +86,6 @@ public final class BlockcraftCorePlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        saveDefaultConfig();
         var config = YamlFile.loadWithDefaults(getDataPath().resolve("config.yml"), () -> getResource("config.yml"));
         Set<String> sudoProtected = YamlFile.section(config, "sudo").get("protected-players") instanceof List<?> names
                 ? names.stream().map(String::valueOf).map(String::toLowerCase).collect(Collectors.toUnmodifiableSet())

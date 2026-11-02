@@ -49,7 +49,7 @@ public final class TttPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        saveDefaultConfig();
+        getConfig().options().copyDefaults(true);
         var gameConfig = GameConfig.from(getConfig());
         var config = TttConfig.from(getConfig());
         var api = BlockcraftApi.get();

@@ -47,6 +47,9 @@ final class ConfigEditor {
         dumper.setIndentWithIndicator(true);
         dumper.setWidth(Integer.MAX_VALUE);
         var yaml = new Yaml(new Constructor(loader), new Representer(dumper), dumper, loader);
+        if (Files.notExists(file)) {
+            return new ConfigEditor(file, yaml, mapping());
+        }
         try (var reader = Files.newBufferedReader(file)) {
             var root = yaml.compose(reader) instanceof MappingNode mapping ? mapping : mapping();
             return new ConfigEditor(file, yaml, root);
@@ -66,6 +69,7 @@ final class ConfigEditor {
     }
 
     void save() throws IOException {
+        Files.createDirectories(file.getParent());
         var temporary = file.resolveSibling(file.getFileName() + ".tmp");
         try (var writer = Files.newBufferedWriter(temporary)) {
             yaml.serialize(root, writer);

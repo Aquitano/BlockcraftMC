@@ -23,7 +23,7 @@ public final class ArchivePlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        saveDefaultConfig();
+        getConfig().options().copyDefaults(true);
         var config = ArchiveConfig.from(getConfig());
         var api = BlockcraftApi.get();
         var messages = Messages.load(getDataPath(), () -> getResource("messages.yml"), api.tags());

@@ -26,7 +26,7 @@ public final class ReplayPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        saveDefaultConfig();
+        getConfig().options().copyDefaults(true);
         var config = ReplayConfig.load(getConfig(), getDataPath());
         var messages = Messages.load(getDataPath(), () -> getResource("messages.yml"), BlockcraftApi.get().tags());
         store = new ReplayStore(config.directory(), config.limits(), config.maxStoredBytes(), config.minFreeBytes());

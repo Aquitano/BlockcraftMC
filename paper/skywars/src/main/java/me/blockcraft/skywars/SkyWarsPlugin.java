@@ -29,7 +29,7 @@ public final class SkyWarsPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        saveDefaultConfig();
+        getConfig().options().copyDefaults(true);
         var gameConfig = GameConfig.from(getConfig());
         var config = SkyWarsConfig.from(getConfig());
         var api = BlockcraftApi.get();

@@ -20,6 +20,8 @@ README.md; this file only holds what the code does not say by itself.
   (`<primary>`, `<accent>`, `<muted>`, `<dark>`, `<success>`, `<error>`, `<bullet>`, `<arrow>`) and the network
   addresses (`<ip>`, `<website>`, `<shop>`, `<teamspeak>`, `<discord>`). Paper plugins get both from
   `BlockcraftApi.get().tags()` when they load their messages; the proxy plugins build them from their own config.
+  A plugin never writes its `config.yml` or `messages.yml` to its data folder (no `saveDefaultConfig`): the bundled
+  file is the default and a file there holds only an operator's overrides.
   Paper's tags also hold `<display>`, the pack's title lettering, which only a title may carry, because
   `Notifications` is what turns it into bold text for players without the pack. Write colours as palette tags, never the raw ones, and the brand only as `<ip>`. A click hint in a menu is
   `<left>`, `<right>` or `<click>` before the action (`<left>Jetzt spielen`), and a menu or dialog title is

@@ -81,9 +81,9 @@ which LuckPerms takes away again when it runs out. Staff change only players bel
 their own, by group weight; the console may do anything, so the first owner is still set from a console. Every change
 lands in `/stafflog`.
 
-Every plugin ships a `messages.yml` (MiniMessage, German by default) and a `config.yml`; both are copied to the plugin's
-data folder on first start and can be edited there. Keys the edited file lacks come from the bundled default, so a
-plugin update never runs on missing settings.
+Every plugin ships a `messages.yml` (MiniMessage, German by default) and a `config.yml` inside its jar, and never writes
+either to its data folder. A file of the same name there holds only the keys an operator changed; every other key
+follows the bundled default of the running version, so an update brings its new texts and settings along.
 
 Two sets of tags resolve in every message. The network addresses (`<ip>`, `<website>`, `<shop>`, `<teamspeak>`,
 `<discord>`) come from `network` in `BlockcraftAPI/config.yml` on the Paper side and from `network` in
@@ -1074,12 +1074,9 @@ The lobby furniture needs the licensed Nexo jar, which stays outside git: put it
 `-PnexoJar=...`) before every `stagePlugins`, or the servers start without furniture ([Nexo setup](nexo/README.md)).
 To update, pull, run `./gradlew stagePlugins` and restart the servers (`docker compose restart velocity lobby
 bedwars mlgrush duell zombies endergames ttt emeraldrush archive quicksg cores skywars knockbackffa`, plus `waker` when
-on-demand runs; see "Game servers on demand"). A plugin's `config.yml` and `messages.yml` in its data folder are copies of the bundled defaults, made on
-its first start: new keys arrive through the bundled default, but the copy keeps its own value for every key it
-already has, so changed texts and renamed config keys do not reach a server by themselves. Move a copy nobody edited
-aside before the restart (`docker compose exec bedwars mv /data/plugins/BedWars/messages.yml
-/data/plugins/BedWars/messages.yml.bak`) and the plugin writes the current default; carry the edits of an edited one
-over by hand. A changed `luckperms/ranks.json` reaches the network only through `lp import ranks` and
+on-demand runs; see "Game servers on demand"). A plugin's `config.yml` and `messages.yml` in its data folder hold only
+local changes, so new and changed defaults arrive with the jar; a renamed key needs its local override renamed by
+hand. A changed `luckperms/ranks.json` reaches the network only through `lp import ranks` and
 `lp networksync` (see "Run locally"); `stagePlugins` already put the new `ranks.json.gz` next to LuckPerms.
 
 With Caddy in front, the pack needs one site block (`RESOURCE_PACK_PORT` 8081, `RESOURCE_PACK_URL`
