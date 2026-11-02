@@ -31,6 +31,7 @@ public final class ModerationActions {
     private final SystemConfig config;
     private final Messages messages;
     private final Random random = new Random();
+    private final Object punishmentLock = new Object();
 
     public ModerationActions(CommandSupport support, PlayerLookup lookup, PunishmentService punishments, SystemConfig config,
                              Messages messages) {
@@ -71,19 +72,21 @@ public final class ModerationActions {
         if (!support.mayModerate(source, target.get().uuid())) {
             return OperationResult.REJECTED;
         }
-        var active = ban ? punishments.activeBan(target.get()) : punishments.activeMute(target.get());
-        if (active.isPresent()) {
-            source.sendMessage(messages.get(key + (ban ? ".already-banned" : ".already-muted")));
-            return OperationResult.REJECTED;
-        }
-        return store(source, () -> {
-            if (ban) {
-                punishments.ban(target.get(), reason, CommandSupport.sender(source), duration);
-            } else {
-                punishments.mute(target.get(), reason, CommandSupport.sender(source), duration);
+        synchronized (punishmentLock) {
+            var active = ban ? punishments.activeBan(target.get()) : punishments.activeMute(target.get());
+            if (active.isPresent()) {
+                source.sendMessage(messages.get(key + (ban ? ".already-banned" : ".already-muted")));
+                return OperationResult.REJECTED;
             }
-            source.sendMessage(messages.get(key + ".done", Placeholder.unparsed("player", target.get().name())));
-        });
+            return store(source, () -> {
+                if (ban) {
+                    punishments.ban(target.get(), reason, CommandSupport.sender(source), duration);
+                } else {
+                    punishments.mute(target.get(), reason, CommandSupport.sender(source), duration);
+                }
+                source.sendMessage(messages.get(key + ".done", Placeholder.unparsed("player", target.get().name())));
+            });
+        }
     }
 
     public OperationResult preset(CommandSource source, PlayerReference reference, int number) {
@@ -106,19 +109,21 @@ public final class ModerationActions {
         if (!support.mayModerate(source, target.get().uuid())) {
             return OperationResult.REJECTED;
         }
-        var existing = preset.type() == PunishmentType.BAN ? punishments.activeBan(target.get()) : punishments.activeMute(target.get());
-        if (existing.isPresent() && !support.mayOverrule(source, existing.get().issuer())) {
-            return OperationResult.REJECTED;
-        }
         var issuer = CommandSupport.sender(source);
         String reason = preset.reason() + " #" + banId();
-        return store(source, () -> {
-            if (existing.isPresent()) {
-                source.sendMessage(messages.get("strafe.overwrite"));
+        synchronized (punishmentLock) {
+            var existing = preset.type() == PunishmentType.BAN ? punishments.activeBan(target.get()) : punishments.activeMute(target.get());
+            if (existing.isPresent() && !support.mayOverrule(source, existing.get().issuer())) {
+                return OperationResult.REJECTED;
             }
-            punishments.replace(target.get(), preset.type(), reason, issuer, preset.duration());
-            source.sendMessage(messages.get("strafe.done"));
-        });
+            return store(source, () -> {
+                if (existing.isPresent()) {
+                    source.sendMessage(messages.get("strafe.overwrite"));
+                }
+                punishments.replace(target.get(), preset.type(), reason, issuer, preset.duration());
+                source.sendMessage(messages.get("strafe.done"));
+            });
+        }
     }
 
     /**
@@ -130,16 +135,18 @@ public final class ModerationActions {
         if (preset == null || config.isUnbannable(target.name())) {
             return false;
         }
-        var existing = preset.type() == PunishmentType.BAN ? punishments.activeBan(target) : punishments.activeMute(target);
-        if (existing.isPresent()) {
-            return false;
-        }
         String reason = preset.reason() + " #" + banId();
-        switch (preset.type()) {
-            case BAN -> punishments.ban(target, reason, issuer, preset.duration());
-            case MUTE -> punishments.mute(target, reason, issuer, preset.duration());
+        synchronized (punishmentLock) {
+            var existing = preset.type() == PunishmentType.BAN ? punishments.activeBan(target) : punishments.activeMute(target);
+            if (existing.isPresent()) {
+                return false;
+            }
+            switch (preset.type()) {
+                case BAN -> punishments.ban(target, reason, issuer, preset.duration());
+                case MUTE -> punishments.mute(target, reason, issuer, preset.duration());
+            }
+            return true;
         }
-        return true;
     }
 
     public OperationResult revoke(CommandSource source, PlayerReference reference, PunishmentType type) {

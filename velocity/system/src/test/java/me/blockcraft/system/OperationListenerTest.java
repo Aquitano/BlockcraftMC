@@ -8,7 +8,6 @@ import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.network.operation.NetworkRequest;
 import me.blockcraft.common.network.operation.OperationCodec;
 import me.blockcraft.common.network.operation.OperationResult;
-import me.blockcraft.common.player.PlayerReference;
 import me.blockcraft.system.listener.OperationListener;
 import org.junit.Before;
 import org.junit.Test;
@@ -19,11 +18,9 @@ import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 public class OperationListenerTest {
@@ -142,38 +139,6 @@ public class OperationListenerTest {
                 duplicate.get(5, TimeUnit.SECONDS);
                 assertEquals(1, executions.get());
                 assertEquals(2, proxy.sentTo(backend).size());
-            } finally {
-                release.countDown();
-            }
-        }
-    }
-
-    @Test
-    public void punishmentChecksRemainSerializedWhileOtherOperationsContinue() throws Exception {
-        var entered = new CountDownLatch(1);
-        var release = new CountDownLatch(1);
-        var first = proxy.connect(proxy.join("FirstStaff"), "lobby");
-        var second = proxy.connect(proxy.join("SecondStaff"), "lobby");
-        var other = proxy.connect(proxy.join("Other"), "lobby");
-        var punishment = new NetworkRequest.PresetPunishment(PlayerReference.named("Target"), 1);
-        var listener = listener((player, request) -> {
-            if (request instanceof NetworkRequest.PresetPunishment && player == first.getPlayer()) {
-                entered.countDown();
-                await(release);
-            }
-            return OperationResult.APPLIED;
-        });
-        try (var workers = Executors.newFixedThreadPool(3)) {
-            var blocked = workers.submit(() -> deliver(listener, first, UUID.randomUUID(), punishment));
-            try {
-                assertTrue(entered.await(5, TimeUnit.SECONDS));
-                var waiting = workers.submit(() -> deliver(listener, second, UUID.randomUUID(), punishment));
-                assertThrows(TimeoutException.class, () -> waiting.get(150, TimeUnit.MILLISECONDS));
-                workers.submit(() -> deliver(listener, other, UUID.randomUUID())).get(2, TimeUnit.SECONDS);
-                release.countDown();
-                blocked.get(5, TimeUnit.SECONDS);
-                waiting.get(5, TimeUnit.SECONDS);
-                assertEquals(1, proxy.sentTo(second).size());
             } finally {
                 release.countDown();
             }

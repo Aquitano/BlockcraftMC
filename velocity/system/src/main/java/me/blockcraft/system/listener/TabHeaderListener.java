@@ -12,7 +12,6 @@ import me.blockcraft.system.SystemConfig;
 import me.blockcraft.system.SystemPermissions;
 import me.blockcraft.system.command.CommandSupport;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 
@@ -68,14 +67,14 @@ public final class TabHeaderListener implements Runnable {
         var max = Formatter.number("max", config.maxPlayers());
         var players = proxy.getAllPlayers().stream().filter(player -> player.isActive() && !excluded.contains(player.getUniqueId())).toList();
         rendered.keySet().retainAll(players.stream().map(Player::getUniqueId).collect(Collectors.toSet()));
-        int publicCount = (int) players.stream().filter(player -> !visibility.isVanished(player)).count();
+        int publicCount = visibility.publicCount(players);
         for (Player player : players) {
             int visible = player.hasPermission(SystemPermissions.SEE_VANISHED) ? players.size()
                     : publicCount + (visibility.isVanished(player) ? 1 : 0);
             var online = Formatter.number("online", visible);
-            var header = Component.join(JoinConfiguration.newlines(), messages.getLines("tab.header", max, online));
-            var footer = Component.join(JoinConfiguration.newlines(), messages.getLines("tab.footer", max, online,
-                    Placeholder.unparsed("server", CommandSupport.currentServer(player))));
+            var header = messages.getJoined("tab.header", max, online);
+            var footer = messages.getJoined("tab.footer", max, online,
+                    Placeholder.unparsed("server", CommandSupport.currentServer(player)));
             var next = new Rendered(header, footer);
             if (!next.equals(rendered.put(player.getUniqueId(), next))) {
                 player.sendPlayerListHeaderAndFooter(header, footer);

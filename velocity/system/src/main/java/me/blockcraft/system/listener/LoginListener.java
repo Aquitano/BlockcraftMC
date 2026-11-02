@@ -9,24 +9,20 @@ import com.velocitypowered.api.event.connection.PostLoginEvent;
 import com.velocitypowered.api.event.player.ServerPostConnectEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
-import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import me.blockcraft.common.db.DatabaseException;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.moderation.PlayerRepository;
 import me.blockcraft.common.moderation.PunishmentRepository;
 import me.blockcraft.common.network.ProxyMessage;
-import me.blockcraft.common.network.ProxyMessageCodec;
 import me.blockcraft.system.LobbyConnector;
 import me.blockcraft.system.ProxySettings;
 import me.blockcraft.system.SystemConfig;
 import me.blockcraft.system.SystemPermissions;
 import me.blockcraft.system.moderation.PunishmentService;
+import me.blockcraft.system.network.ProxyChannel;
 import me.blockcraft.system.welcome.Anniversaries;
 import me.blockcraft.system.welcome.Newcomers;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
-import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import org.slf4j.Logger;
 
@@ -42,7 +38,8 @@ import java.util.concurrent.TimeUnit;
  */
 public final class LoginListener {
 
-    private static final MinecraftChannelIdentifier CHANNEL = MinecraftChannelIdentifier.from(ProxyMessageCodec.CHANNEL);
+    /** After AltListener, so a login it refuses spends no join number and no OG thanks. */
+    private static final short AFTER_ALT_GATE = -2;
 
     private final Object plugin;
     private final ProxyServer proxy;
@@ -81,19 +78,34 @@ public final class LoginListener {
         return EventTask.async(() -> {
             Player player = event.getPlayer();
             if (settings.maintenance() && !player.hasPermission(SystemPermissions.MAINTENANCE_JOIN)) {
-                event.setResult(ComponentResult.denied(screen("login.maintenance")));
+                event.setResult(ComponentResult.denied(messages.getJoined("login.maintenance")));
                 return;
             }
             if (proxy.getPlayerCount() >= config.maxPlayers() && !player.hasPermission(SystemPermissions.FULL_JOIN)) {
-                event.setResult(ComponentResult.denied(screen("login.full", Formatter.number("max", config.maxPlayers()))));
+                event.setResult(ComponentResult.denied(messages.getJoined("login.full", Formatter.number("max", config.maxPlayers()))));
                 return;
             }
             try {
                 var ban = punishments.activeBan(player.getUniqueId());
                 if (ban.isPresent()) {
                     event.setResult(ComponentResult.denied(punishmentService.banScreen(ban.get())));
-                    return;
                 }
+            } catch (DatabaseException e) {
+                // Velocity would log the exception and let the login through, ban check included.
+                logger.error("Could not check {} against the database, refusing the login", player.getUsername(), e);
+                event.setResult(ComponentResult.denied(messages.getJoined("login.error")));
+            }
+        });
+    }
+
+    @Subscribe(priority = AFTER_ALT_GATE)
+    public EventTask onAdmittedLogin(LoginEvent event) {
+        if (!event.getResult().isAllowed()) {
+            return null;
+        }
+        return EventTask.async(() -> {
+            Player player = event.getPlayer();
+            try {
                 var known = players.byUuid(player.getUniqueId());
                 players.upsert(player.getUniqueId(), player.getUsername());
                 known.ifPresentOrElse(returning -> {
@@ -106,9 +118,8 @@ public final class LoginListener {
                     awaitingWelcome.add(player.getUniqueId());
                 });
             } catch (DatabaseException e) {
-                // Velocity would log the exception and let the login through, ban check included.
-                logger.error("Could not check {} against the database, refusing the login", player.getUsername(), e);
-                event.setResult(ComponentResult.denied(screen("login.error")));
+                logger.error("Could not record the login of {}, refusing it", player.getUsername(), e);
+                event.setResult(ComponentResult.denied(messages.getJoined("login.error")));
             }
         });
     }
@@ -136,18 +147,13 @@ public final class LoginListener {
         if (!lobby.isOnLobby(player) || !awaitingWelcome.remove(player.getUniqueId())) {
             return;
         }
-        var rules = GsonComponentSerializer.gson().serialize(screen("info.regeln"));
-        player.getCurrentServer().ifPresent(connection ->
-                connection.sendPluginMessage(CHANNEL, ProxyMessageCodec.encode(new ProxyMessage.Welcome(rules))));
+        var rules = GsonComponentSerializer.gson().serialize(messages.getJoined("info.regeln"));
+        ProxyChannel.send(player, new ProxyMessage.Welcome(rules));
     }
 
     @Subscribe
     public void onDisconnect(DisconnectEvent event) {
         firstJoins.remove(event.getPlayer().getUniqueId());
         awaitingWelcome.remove(event.getPlayer().getUniqueId());
-    }
-
-    private Component screen(String key, TagResolver... placeholders) {
-        return Component.join(JoinConfiguration.newlines(), messages.getLines(key, placeholders));
     }
 }

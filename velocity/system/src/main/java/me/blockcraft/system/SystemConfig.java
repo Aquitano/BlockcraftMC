@@ -27,6 +27,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
 /** config.yml; the MOTD and player cap are editable in-game and written back to the same file. */
@@ -367,39 +368,35 @@ public final class SystemConfig {
 
     public synchronized void setMaxPlayers(int maxPlayers) {
         this.maxPlayers = maxPlayers;
-        save();
+        save(editor -> editor.set("max-players", maxPlayers));
     }
 
     public synchronized void setDefaultMotd(String motd) {
         this.defaultMotd = motd;
-        save();
+        save(editor -> editor.set("motd.default", motd));
     }
 
     public synchronized void addRandomMotd(String motd) {
         randomMotds.add(motd);
-        save();
+        save(editor -> editor.set("motd.random", List.copyOf(randomMotds)));
     }
 
     public synchronized String removeRandomMotd(int index) {
         var removed = randomMotds.remove(index);
-        save();
+        save(editor -> editor.set("motd.random", List.copyOf(randomMotds)));
         return removed;
     }
 
     public synchronized int clearRandomMotds() {
         int count = randomMotds.size();
         randomMotds.clear();
-        save();
+        save(editor -> editor.set("motd.random", List.copyOf(randomMotds)));
         return count;
     }
 
-    private void save() {
+    private void save(UnaryOperator<ConfigEditor> change) {
         try {
-            ConfigEditor.open(file)
-                    .set("max-players", maxPlayers)
-                    .set("motd.default", defaultMotd)
-                    .set("motd.random", List.copyOf(randomMotds))
-                    .save();
+            change.apply(ConfigEditor.open(file)).save();
         } catch (IOException e) {
             throw new UncheckedIOException("Could not save " + file, e);
         }

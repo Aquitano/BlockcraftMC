@@ -13,6 +13,7 @@ import me.blockcraft.common.nick.Nick;
 import me.blockcraft.common.nick.NickRepository;
 import org.slf4j.Logger;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -49,9 +50,7 @@ public final class PlayerVisibility {
         UUID player = event.getPlayer().getUniqueId();
         return EventTask.async(() -> {
             try {
-                if (vanish.isVanished(player)) {
-                    vanished.add(player);
-                }
+                setVanished(event.getPlayer(), vanish.isVanished(player));
                 nicks.get(player).ifPresent(nick -> worn.put(player, nick));
             } catch (DatabaseException e) {
                 logger.warn("Could not read the vanish and nick state of {}", player, e);
@@ -69,7 +68,7 @@ public final class PlayerVisibility {
     }
 
     public void setVanished(Player player, boolean isVanished) {
-        if (isVanished) {
+        if (isVanished && player.isActive()) {
             vanished.add(player.getUniqueId());
         } else {
             vanished.remove(player.getUniqueId());
@@ -111,7 +110,11 @@ public final class PlayerVisibility {
 
     /** The count shown to the outside world, vanished players excluded. */
     public int publicCount() {
-        return proxy.getPlayerCount() - vanished.size();
+        return publicCount(proxy.getAllPlayers());
+    }
+
+    public int publicCount(Collection<Player> players) {
+        return (int) players.stream().filter(player -> !isVanished(player)).count();
     }
 
     /** Names worth suggesting to the viewer: what they would see in the tab list. */

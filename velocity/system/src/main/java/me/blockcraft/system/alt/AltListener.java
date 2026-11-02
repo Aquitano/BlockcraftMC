@@ -8,8 +8,6 @@ import me.blockcraft.common.db.DatabaseException;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.moderation.PlayerAddressRepository;
 import me.blockcraft.system.SystemConfig;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.JoinConfiguration;
 import org.slf4j.Logger;
 
 /**
@@ -46,12 +44,12 @@ public final class AltListener {
                 addresses.record(player.getUniqueId(), address);
                 if (gate && addresses.sharedWithBannedAccount(player.getUniqueId(), address, config.retention())) {
                     logger.info("Refused {}: their address was used by a banned account", player.getUsername());
-                    event.setResult(ComponentResult.denied(screen("alts.blocked")));
+                    event.setResult(ComponentResult.denied(messages.getJoined("alts.blocked")));
                 }
             } catch (DatabaseException e) {
                 if (gate) {
                     logger.error("Could not check {} for banned alts, refusing the login", player.getUsername(), e);
-                    event.setResult(ComponentResult.denied(screen("login.error")));
+                    event.setResult(ComponentResult.denied(messages.getJoined("login.error")));
                 } else {
                     logger.warn("Could not record the address hash of {}", player.getUsername(), e);
                 }
@@ -66,9 +64,5 @@ public final class AltListener {
         } catch (DatabaseException e) {
             logger.warn("Could not purge expired address hashes", e);
         }
-    }
-
-    private Component screen(String key) {
-        return Component.join(JoinConfiguration.newlines(), messages.getLines(key));
     }
 }

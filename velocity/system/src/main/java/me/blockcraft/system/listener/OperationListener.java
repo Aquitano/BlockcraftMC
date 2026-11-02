@@ -44,7 +44,6 @@ public final class OperationListener {
             .expireAfterWrite(RESULT_MEMORY)
             .build();
     private final Cache<UUID, Object> playerLocks = CacheBuilder.newBuilder().weakValues().build();
-    private final Object punishmentLock = new Object();
     private final Handler handler;
     private final Messages messages;
     private final Logger logger;
@@ -83,12 +82,6 @@ public final class OperationListener {
     private OperationResult execute(ServerConnection connection, OperationCodec.Request request) {
         var lock = playerLocks.asMap().computeIfAbsent(connection.getPlayer().getUniqueId(), ignored -> new Object());
         synchronized (lock) {
-            if (request.operation() instanceof NetworkRequest.TimedPunishment
-                    || request.operation() instanceof NetworkRequest.PresetPunishment) {
-                synchronized (punishmentLock) {
-                    return executeForPlayer(connection, request);
-                }
-            }
             return executeForPlayer(connection, request);
         }
     }

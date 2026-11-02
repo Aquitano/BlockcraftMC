@@ -9,18 +9,16 @@ import com.velocitypowered.api.event.player.ServerPostConnectEvent;
 import com.velocitypowered.api.event.player.configuration.PlayerConfigurationEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
-import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import com.velocitypowered.api.proxy.player.ResourcePackInfo;
 import me.blockcraft.common.network.PackStatus;
 import me.blockcraft.common.network.ProxyMessage;
-import me.blockcraft.common.network.ProxyMessageCodec;
 import me.blockcraft.system.LiveSession;
 import me.blockcraft.system.SystemConfig;
+import me.blockcraft.system.network.ProxyChannel;
 import net.kyori.adventure.text.Component;
 import org.slf4j.Logger;
 
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -46,7 +44,6 @@ import java.util.concurrent.TimeUnit;
 public final class NetworkPack {
 
     private static final UUID ID = UUID.nameUUIDFromBytes("blockcraft:pack".getBytes(StandardCharsets.UTF_8));
-    private static final MinecraftChannelIdentifier CHANNEL = MinecraftChannelIdentifier.from(ProxyMessageCodec.CHANNEL);
 
     private final ResourcePackInfo info;
     private final Optional<HttpServer> server;
@@ -82,7 +79,15 @@ public final class NetworkPack {
                 .setShouldForce(config.required())
                 .setPrompt(prompt)
                 .build();
-        var server = config.port() > 0 ? Optional.of(serve(config.port(), file.getFileName().toString(), bytes)) : Optional.<HttpServer>empty();
+        Optional<HttpServer> server = Optional.empty();
+        if (config.port() > 0) {
+            try {
+                server = Optional.of(serve(config.port(), file.getFileName().toString(), bytes));
+            } catch (IOException e) {
+                logger.warn("Could not serve the resource pack on port {}, so none is offered", config.port(), e);
+                return Optional.empty();
+            }
+        }
         logger.info("Offering resource pack {} ({} KiB) as {}", file.getFileName(), bytes.length / 1024, config.url());
         return Optional.of(new NetworkPack(info, server, Duration.ofSeconds(config.waitSeconds()), logger));
     }
@@ -167,26 +172,21 @@ public final class NetworkPack {
     }
 
     public static void tell(Player player, PackStatus status) {
-        player.getCurrentServer().ifPresent(connection ->
-                connection.sendPluginMessage(CHANNEL, ProxyMessageCodec.encode(new ProxyMessage.Pack(status))));
+        ProxyChannel.send(player, new ProxyMessage.Pack(status));
     }
 
-    private static HttpServer serve(int port, String fileName, byte[] bytes) {
-        try {
-            var server = HttpServer.create(new InetSocketAddress(port), 0);
-            server.createContext("/" + fileName, exchange -> {
-                try (exchange) {
-                    exchange.getResponseHeaders().add("Content-Type", "application/zip");
-                    exchange.sendResponseHeaders(200, bytes.length);
-                    exchange.getResponseBody().write(bytes);
-                }
-            });
-            server.setExecutor(Executors.newVirtualThreadPerTaskExecutor());
-            server.start();
-            return server;
-        } catch (IOException e) {
-            throw new UncheckedIOException("Could not serve the resource pack on port " + port, e);
-        }
+    private static HttpServer serve(int port, String fileName, byte[] bytes) throws IOException {
+        var server = HttpServer.create(new InetSocketAddress(port), 0);
+        server.createContext("/" + fileName, exchange -> {
+            try (exchange) {
+                exchange.getResponseHeaders().add("Content-Type", "application/zip");
+                exchange.sendResponseHeaders(200, bytes.length);
+                exchange.getResponseBody().write(bytes);
+            }
+        });
+        server.setExecutor(Executors.newVirtualThreadPerTaskExecutor());
+        server.start();
+        return server;
     }
 
     private static byte[] sha1(byte[] bytes) {
