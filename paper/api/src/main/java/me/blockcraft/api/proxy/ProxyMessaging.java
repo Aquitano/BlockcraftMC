@@ -71,7 +71,7 @@ public final class ProxyMessaging {
         send(plugin, via, new ProxyMessage.StaffNotice(permission, GsonComponentSerializer.gson().serialize(notice)));
     }
 
-    /** Delivers the line to every player on the network; {@code via} only carries the message. */
+    /** Delivers the line to every player on a lobby of the network; {@code via} only carries the message. */
     public static void announce(Plugin plugin, Player via, Component line) {
         send(plugin, via, new ProxyMessage.Announcement(GsonComponentSerializer.gson().serialize(line)));
     }

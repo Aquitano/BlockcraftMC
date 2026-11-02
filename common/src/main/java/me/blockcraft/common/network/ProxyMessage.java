@@ -54,7 +54,7 @@ public sealed interface ProxyMessage {
     record StaffNotice(String permission, String noticeJson) implements ToProxy {
     }
 
-    /** A line for every player of the network, such as the first find of a secret; JSON like a staff notice. */
+    /** A line for every player on a lobby, such as the first find of a secret; JSON like a staff notice. */
     record Announcement(String noticeJson) implements ToProxy {
     }
 
