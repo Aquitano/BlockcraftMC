@@ -9,10 +9,12 @@ import java.util.Optional;
 public enum LobbyItem implements HotbarItem {
     NAVIGATOR(0),
     PLAYER_HIDER(1),
-    PROFILE(2),
+    FRIENDS(2),
     EXTRAS(4),
     GADGET(5),
-    FRIENDS(8),
+    SETTINGS(6),
+    ACHIEVEMENTS(7),
+    PROFILE(8),
     POND_ROD(3),
     THROW(3);
 

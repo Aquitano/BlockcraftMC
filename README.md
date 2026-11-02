@@ -890,7 +890,7 @@ read for, the players who hold it.
 
 Paper caches a player's settings for as long as they are online (`BlockcraftApi.get().settings()`) and fires
 `PlayerSettingsLoadedEvent` once the cache is filled; the lobby waits for it before re-applying a stored "players
-hidden". The settings screen is `SettingsDialog` in BlockcraftAPI, opened from the lobby's hotbar, the pause menu or
+hidden". The settings screen is `SettingsDialog` in BlockcraftAPI, opened from the pause menu or
 the profile card (`ProfileMenu`, rank, level, coins and the per-game stats listed in `profile.games` of BlockcraftAPI's
 `config.yml`). `Sounds.play` and proxy notifications stay silent for players who turned sounds off. Settings apply immediately,
 and saving reports success after the database write completes. Failed writes restore the stored choice when it
