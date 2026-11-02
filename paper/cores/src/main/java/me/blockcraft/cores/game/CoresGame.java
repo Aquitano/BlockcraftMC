@@ -14,6 +14,7 @@ import me.blockcraft.api.game.Round;
 import me.blockcraft.api.game.RoundConnections;
 import me.blockcraft.api.game.RoundStart;
 import me.blockcraft.api.game.RoundSummary;
+import me.blockcraft.api.game.SpawnProtection;
 import me.blockcraft.api.game.StatsMenus;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.game.TimerBar;
@@ -87,7 +88,7 @@ public final class CoresGame implements RoundConnections.Seating {
     private final GameSidebar sidebar;
     /** Who started the round for which team; a win counts for those of them still on the server. */
     private final Map<UUID, Side> roster = new HashMap<>();
-    private final Map<UUID, Long> protectedUntil = new HashMap<>();
+    private final SpawnProtection spawnProtection = new SpawnProtection();
     private BukkitTask watch;
     private Optional<Side> winner = Optional.empty();
     private int secondsLeft;
@@ -124,6 +125,10 @@ public final class CoresGame implements RoundConnections.Seating {
         return hotbar;
     }
 
+    public SpawnProtection spawnProtection() {
+        return spawnProtection;
+    }
+
     public CoresMap map() {
         return map;
     }
@@ -150,16 +155,6 @@ public final class CoresGame implements RoundConnections.Seating {
 
     public boolean isPlaying(Player player) {
         return round.isPlaying(player);
-    }
-
-    /** Freshly respawned players cannot be hurt by other players for a few seconds, or until they hit someone. */
-    public boolean isSpawnProtected(Player player) {
-        var until = protectedUntil.get(player.getUniqueId());
-        return until != null && System.nanoTime() - until < 0;
-    }
-
-    public void endSpawnProtection(Player player) {
-        protectedUntil.remove(player.getUniqueId());
     }
 
     @Override
@@ -189,14 +184,13 @@ public final class CoresGame implements RoundConnections.Seating {
         player.setGameMode(GameMode.SURVIVAL);
         config.combat().apply(player);
         dress(player, side.get());
-        protectedUntil.put(player.getUniqueId(), System.nanoTime() + Duration.ofSeconds(config.protectionSeconds()).toNanos());
+        spawnProtection.protect(player, Duration.ofSeconds(config.protectionSeconds()));
     }
 
     /** A player who drops out of the running round keeps their place for a while. */
     @Override
     public void quit(Player player) {
         if (round.stepOut(player, this::forfeited)) {
-            protectedUntil.remove(player.getUniqueId());
             refreshAll();
             return;
         }
@@ -216,7 +210,6 @@ public final class CoresGame implements RoundConnections.Seating {
         boolean wasPlaying = round.leave(player);
         teams.leave(player.getUniqueId());
         BlockcraftApi.get().tabTeams().clearColor(player);
-        protectedUntil.remove(player.getUniqueId());
         if (phase() == GamePhase.INGAME && wasPlaying) {
             roster.remove(player.getUniqueId());
             for (var side : Side.values()) {
@@ -400,7 +393,7 @@ public final class CoresGame implements RoundConnections.Seating {
                 config.combat().apply(player);
                 kit.give(player, side.get());
                 player.setSaturation(RESPAWN_SATURATION);
-                protectedUntil.put(player.getUniqueId(), System.nanoTime() + Duration.ofSeconds(config.protectionSeconds()).toNanos());
+                spawnProtection.protect(player, Duration.ofSeconds(config.protectionSeconds()));
             });
         } else {
             event.setRespawnLocation(map.spectatorSpawn());

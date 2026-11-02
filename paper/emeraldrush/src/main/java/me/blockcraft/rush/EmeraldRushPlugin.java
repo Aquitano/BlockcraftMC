@@ -47,6 +47,7 @@ public final class EmeraldRushPlugin extends JavaPlugin {
                 new RoundConnections(game),
                 new DeathListener(game),
                 new ProtectionListener(game, api.buildMode()),
+                game.spawnProtection(),
                 WorldProtection.during(() -> game.phase() == GamePhase.LOBBY, api.buildMode())
                         .rescue(() -> spawns.get(SpawnPoint.LOBBY)),
                 new ArenaProtection(() -> false),

@@ -31,6 +31,7 @@ public final class KnockbackFfaPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new ArenaProtection(() -> false), this);
         getServer().getPluginManager().registerEvents(WorldProtection.in(arena.world(), api.buildMode()).withHeldItems().withDamage(), this);
         getServer().getPluginManager().registerEvents(game, this);
+        getServer().getPluginManager().registerEvents(game.spawnProtection(), this);
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             var commands = new CommandRegistry(event.registrar(), messages);
             commands.register(game.command());

@@ -11,6 +11,7 @@ import me.blockcraft.api.game.CombatStyle;
 import me.blockcraft.api.game.GameSidebar;
 import me.blockcraft.api.game.HarmlessHit;
 import me.blockcraft.api.game.PlayerReset;
+import me.blockcraft.api.game.SpawnProtection;
 import me.blockcraft.api.game.Spectators;
 import me.blockcraft.api.game.Stat;
 import me.blockcraft.api.game.StatsRepository;
@@ -54,11 +55,9 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -75,7 +74,7 @@ final class FfaGame implements Listener, AutoCloseable {
     private final FfaScores scores;
     private final Set<UUID> playing = new LinkedHashSet<>();
     private final Set<UUID> respawning = new HashSet<>();
-    private final Map<UUID, Long> protectedUntil = new HashMap<>();
+    private final SpawnProtection spawnProtection = new SpawnProtection();
     /** Set by {@link #start}, since it registers its listeners with the running server. */
     private Spectators spectators;
     private final GameSidebar sidebar;
@@ -96,6 +95,10 @@ final class FfaGame implements Listener, AutoCloseable {
         kitIn = config.kits().intervalSeconds();
         launchIn = config.launchSeconds();
         rotationIn = config.rotationSeconds();
+    }
+
+    SpawnProtection spawnProtection() {
+        return spawnProtection;
     }
 
     void start() {
@@ -160,7 +163,7 @@ final class FfaGame implements Listener, AutoCloseable {
         removeProjectiles(player);
         equip(player);
         player.teleport(arena.spawn());
-        protectedUntil.put(player.getUniqueId(), System.nanoTime() + config.spawnProtection().toNanos());
+        spawnProtection.protect(player, config.spawnProtection());
     }
 
     private void equip(Player player) {
@@ -201,13 +204,8 @@ final class FfaGame implements Listener, AutoCloseable {
                 && !BlockcraftApi.get().isVanished(player) && !BlockcraftApi.get().buildMode().isEnabled(player);
     }
 
-    private boolean protectedNow(Player player) {
-        var until = protectedUntil.get(player.getUniqueId());
-        return until != null && System.nanoTime() - until < 0;
-    }
-
     private boolean canHit(Player attacker, Player victim) {
-        return !attacker.equals(victim) && active(attacker) && active(victim) && !protectedNow(attacker) && !protectedNow(victim);
+        return !attacker.equals(victim) && active(attacker) && active(victim);
     }
 
     private void countDeath(Player victim) {
@@ -240,7 +238,6 @@ final class FfaGame implements Listener, AutoCloseable {
     private void remove(Player player) {
         playing.remove(player.getUniqueId());
         scores.leave(player.getUniqueId());
-        protectedUntil.remove(player.getUniqueId());
         respawning.remove(player.getUniqueId());
     }
 
@@ -265,7 +262,7 @@ final class FfaGame implements Listener, AutoCloseable {
         if (config.launch() && --launchIn <= 0) {
             launchIn = config.launchSeconds();
             for (var player : Bukkit.getOnlinePlayers()) {
-                if (active(player) && !protectedNow(player)) {
+                if (active(player) && !spawnProtection.isProtected(player)) {
                     player.setVelocity(player.getVelocity().setY(1.4));
                     player.sendMessage(messages.get("launch.now"));
                 }
@@ -273,7 +270,7 @@ final class FfaGame implements Listener, AutoCloseable {
         }
         for (var player : Bukkit.getOnlinePlayers()) {
             showSidebar(player);
-            if (protectedNow(player) && active(player)) {
+            if (spawnProtection.isProtected(player) && active(player)) {
                 BlockcraftApi.get().notifications().status(player, messages.get("spawn.protected"));
             }
             if (kitIn <= config.kits().warningSeconds() && active(player)) {

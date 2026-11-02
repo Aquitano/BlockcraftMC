@@ -440,8 +440,8 @@ within `cores.fatigue-radius` mines with Mining Fatigue, which makes a beacon ta
 `cores.alarm-radius` alerts the team in chat and with a repeating sound, and the sidebar marks the core. The first
 team to break both enemy cores wins; after `countdown.round` seconds (45 minutes) the round is a draw.
 
-Respawns are unlimited, with the `kit` and leather armour in the team's colour, and players cannot be hurt by other
-players for `respawn.protection-seconds` or until they hit someone. There is no shop: each base holds iron blocks to mine, workbenches, an
+Respawns are unlimited, with the `kit` and leather armour in the team's colour, and a respawned player has spawn
+protection for `respawn.protection-seconds`. There is no shop: each base holds iron blocks to mine, workbenches, an
 enchanting table with shelves (lapis is provided), four anvils and a chest of experience bottles; the middle holds
 diamond blocks and the four side islands loot chests and gold. Base blocks other than the iron do not break; the
 rest of the map, and everything players place, does. A bow kill pays `bow-kill-arrows` arrows. Combat is 1.8-style.
@@ -744,7 +744,10 @@ many watch, the time when no boss bar does and the map, then the game's own line
 lobby vote (BedWars' maps, Duell's mode and then its map) marks the voter's choice, offers to leave the map to
 chance, confirms the vote to the voter alone and can be decided with `/forcemap` (`blockcraft.game.forcemap`; in
 Duell it decides the mode). `/setup` (`blockcraft.game.setup`) places a game's spots, its lobby spot always as
-`lobby`.
+`lobby`. Spawn protection is `SpawnProtection` in every game that has it (Cores, EmeraldRush and Knockback FFA): for
+the game's own duration other players cannot hurt or knock back a freshly spawned player, because their hits are
+cancelled before the game counts them. The protection ends early the moment that player lands a hit. EmeraldRush
+protects a respawn in the deathmatch for six seconds.
 
 `/globalmute` and `/chatslow <seconds>|off` (`blockcraft.system.chatslow`) are stored in `bc_settings`. Every Paper
 server re-reads both every `chat.network-refresh-seconds` of core's `config.yml` and keeps the last known values while

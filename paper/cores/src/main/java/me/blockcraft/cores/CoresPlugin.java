@@ -50,6 +50,7 @@ public final class CoresPlugin extends JavaPlugin {
                 WorldProtection.during(() -> game.phase() != GamePhase.INGAME, api.buildMode())
                         .rescue(() -> Optional.of(map.lobbySpawn())),
                 new ArenaProtection(() -> false),
+                game.spawnProtection(),
                 new ArenaListener(game, messages),
                 new ChatListener(game, messages));
 

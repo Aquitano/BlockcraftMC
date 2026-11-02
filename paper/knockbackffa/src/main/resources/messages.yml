@@ -25,7 +25,7 @@ item:
   watch: "<primary>Zuschauen <dark>· <muted>Rechtsklick"
   hub: "<primary>Zur Lobby <dark>· <muted>Rechtsklick"
 spawn:
-  protected: "<success>Startschutz <dark>· <muted>Du kannst kurz niemanden treffen."
+  protected: "<success>Startschutz <dark>· <muted>Dein erster Treffer beendet ihn."
 kit:
   title: "<primary><display>Kitwechsel"
   subtitle: "<accent><kit>"

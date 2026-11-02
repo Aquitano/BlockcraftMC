@@ -34,7 +34,8 @@ cores:
   fatigue-radius: 4
   fatigue-level: 0
 
-# A respawned player cannot be hurt by players for protection-seconds. A kill with a bow pays bow-kill-arrows arrows.
+# A respawned player cannot be hurt or knocked back by players for protection-seconds, or until they land a hit.
+# A kill with a bow pays bow-kill-arrows arrows.
 respawn:
   protection-seconds: 5
 bow-kill-arrows: 4

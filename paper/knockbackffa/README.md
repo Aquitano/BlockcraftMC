@@ -31,8 +31,9 @@ Projectiles never deal damage. Arrow, snowball and rod hits credit the shooter l
 Ammunition refills on every respawn.
 
 The last accepted hit within `hit-credit-seconds` earns a kill when the victim falls. Every death resets the victim's
-streak. Leaving or switching to spectator while recently hit also counts as a death. A short spawn protection
-prevents both receiving and dealing hits.
+streak. Leaving or switching to spectator while recently hit also counts as a death. For `spawn-protection-seconds`
+after a spawn nobody can hit the player, until the player lands a hit of their own (BlockcraftAPI's
+`SpawnProtection`).
 
 Leaving vanish or staff mode returns the player to spectator mode. `/ffa play` rejoins combat.
 

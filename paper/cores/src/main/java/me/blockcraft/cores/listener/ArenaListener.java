@@ -32,7 +32,7 @@ import java.util.List;
 /**
  * The round's rules for the map: the bases keep their blocks except the iron, a core's cube and a spawn take no
  * block, and everything else breaks and builds inside the border. Enemies break cores; teammates do not hurt each
- * other, and nobody hurts a player who just respawned. The enchanting tables come with lapis.
+ * other. The enchanting tables come with lapis.
  */
 public final class ArenaListener implements Listener {
 
@@ -123,19 +123,11 @@ public final class ArenaListener implements Listener {
         if (attacker == null || attacker.equals(victim)) {
             return;
         }
-        if (game.sameTeam(attacker, victim) || game.isSpawnProtected(victim)) {
+        if (game.sameTeam(attacker, victim)) {
             event.setCancelled(true);
             if (damager instanceof Projectile) {
                 damager.remove();
             }
-        }
-    }
-
-    @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
-    public void onLandedHit(EntityDamageByEntityEvent event) {
-        if (event.getEntity() instanceof Player victim && event.getDamageSource().getCausingEntity() instanceof Player attacker
-                && !attacker.equals(victim)) {
-            game.endSpawnProtection(attacker);
         }
     }
 

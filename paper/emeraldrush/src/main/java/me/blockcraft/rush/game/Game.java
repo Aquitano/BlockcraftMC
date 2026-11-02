@@ -1,5 +1,6 @@
 package me.blockcraft.rush.game;
 
+import io.papermc.paper.util.Tick;
 import me.blockcraft.api.game.Arena;
 import me.blockcraft.api.game.Defeat;
 import me.blockcraft.api.game.GameConfig;
@@ -10,6 +11,7 @@ import me.blockcraft.api.game.Round;
 import me.blockcraft.api.game.RoundConnections;
 import me.blockcraft.api.game.RoundStart;
 import me.blockcraft.api.game.RoundSummary;
+import me.blockcraft.api.game.SpawnProtection;
 import me.blockcraft.api.game.StatsMenus;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.game.TimerBar;
@@ -79,7 +81,7 @@ public final class Game implements RoundConnections.Seating {
     private final Map<UUID, Integer> emeralds = new HashMap<>();
     private final Map<UUID, Integer> lives = new HashMap<>();
     private final Map<UUID, Loadout> loadouts = new HashMap<>();
-    private final Map<UUID, Integer> protectedUntil = new HashMap<>();
+    private final SpawnProtection spawnProtection = new SpawnProtection();
     private final Set<UUID> spentEmeralds = new HashSet<>();
     private final Set<UUID> purchased = new HashSet<>();
 
@@ -129,6 +131,10 @@ public final class Game implements RoundConnections.Seating {
 
     public LobbyHotbar lobbyHotbar() {
         return lobbyHotbar;
+    }
+
+    public SpawnProtection spawnProtection() {
+        return spawnProtection;
     }
 
     public int secondsLeft() {
@@ -372,24 +378,13 @@ public final class Game implements RoundConnections.Seating {
         Tasks.sync(plugin, () -> {
             config.combat().apply(player);
             player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, RESPAWN_BOOST_TICKS, 1));
-            player.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, RESPAWN_BOOST_TICKS, 5));
-            player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, RESPAWN_BOOST_TICKS, 5));
-            protectedUntil.put(player.getUniqueId(), Bukkit.getCurrentTick() + RESPAWN_BOOST_TICKS);
+            spawnProtection.protect(player, Tick.of(RESPAWN_BOOST_TICKS));
             var loadout = loadouts.get(player.getUniqueId());
             if (loadout != null) {
                 player.getInventory().setContents(loadout.contents());
                 player.getInventory().setArmorContents(loadout.armor());
             }
         });
-    }
-
-    /** The immunity after a respawn ends with the player's first hit on someone else; the speed stays. */
-    public void endRespawnProtection(Player player) {
-        var until = protectedUntil.remove(player.getUniqueId());
-        if (until != null && Bukkit.getCurrentTick() < until) {
-            player.removePotionEffect(PotionEffectType.RESISTANCE);
-            player.removePotionEffect(PotionEffectType.REGENERATION);
-        }
     }
 
     public void saveLoadout(Player player) {
