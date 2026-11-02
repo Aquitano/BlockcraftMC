@@ -5,13 +5,12 @@ import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.DyedItemColor;
 import io.papermc.paper.datacomponent.item.ResolvableProfile;
 import io.papermc.paper.event.player.PrePlayerAttackEntityEvent;
-import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.config.Locations;
 import me.blockcraft.api.display.Figures;
 import me.blockcraft.common.calendar.NetworkCalendar;
 import me.blockcraft.common.calendar.NetworkCalendar.Occasion;
-import me.blockcraft.common.settings.PlayerSetting;
 import me.blockcraft.lobby.ChunkTickets;
+import me.blockcraft.lobby.ParticleViewers;
 import me.blockcraft.lobby.config.ScenesConfig;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
@@ -51,7 +50,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.function.Consumer;
 import java.util.stream.IntStream;
 
 /**
@@ -321,7 +319,7 @@ public final class SeasonalScenes implements Listener, AutoCloseable {
         double sway = Math.sin(ticks / 12.0) * 25;
         witch.setRotation((float) (witchSpot.getYaw() + sway), 35);
         var cauldron = witchSpot.clone().add(witchSpot.getDirection().setY(0).normalize()).add(0, 0.3, 0);
-        effects(cauldron, player -> {
+        ParticleViewers.near(cauldron, EFFECT_RANGE).forEach(player -> {
             player.spawnParticle(Particle.WITCH, cauldron, 2, 0.25, 0.1, 0.25, 0);
             player.spawnParticle(Particle.BUBBLE_POP, cauldron, 2, 0.25, 0.05, 0.25, 0.02);
         });
@@ -361,7 +359,7 @@ public final class SeasonalScenes implements Listener, AutoCloseable {
                 at.setDirection(heading);
                 at.setPitch(0);
                 ghost.teleport(at);
-                effects(at, player -> player.spawnParticle(Particle.WHITE_ASH, at.clone().add(0, 0.4, 0), 3, 0.2, 0.2, 0.2, 0));
+                ParticleViewers.near(at, EFFECT_RANGE).forEach(player -> player.spawnParticle(Particle.WHITE_ASH, at.clone().add(0, 0.4, 0), 3, 0.2, 0.2, 0.2, 0));
                 return;
             }
             along -= leg;
@@ -375,16 +373,6 @@ public final class SeasonalScenes implements Listener, AutoCloseable {
             total += ghostPath.get(i).distance(ghostPath.get((i + 1) % ghostPath.size()));
         }
         return total;
-    }
-
-    /** Particles near {@code at} go only to players close by who have effects on. */
-    private static void effects(Location at, Consumer<Player> show) {
-        var settings = BlockcraftApi.get().settings();
-        for (var player : at.getWorld().getPlayers()) {
-            if (player.getLocation().distanceSquared(at) <= EFFECT_RANGE * EFFECT_RANGE && settings.enabled(player, PlayerSetting.EFFECTS)) {
-                show.accept(player);
-            }
-        }
     }
 
     private void clearWinter() {

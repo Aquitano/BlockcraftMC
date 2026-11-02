@@ -8,8 +8,7 @@ import me.blockcraft.api.game.ThrowFight;
 import me.blockcraft.api.world.WorldProtection;
 import me.blockcraft.common.config.YamlFile;
 import me.blockcraft.common.message.Messages;
-import me.blockcraft.lobby.activity.AmbientSpots;
-import me.blockcraft.lobby.activity.AreaAmbience;
+import me.blockcraft.lobby.activity.Ambience;
 import me.blockcraft.lobby.activity.Flights;
 import me.blockcraft.lobby.activity.Herobrine;
 import me.blockcraft.lobby.activity.LobbyNews;
@@ -210,17 +209,17 @@ public final class LobbyPlugin extends JavaPlugin {
             closables.add(news);
             register(news);
         });
-        AreaAmbience.start(this, gameNpcs::places, YamlFile.section(yaml, "ambience")).ifPresent(closables::add);
-        var ambientSpots = new AmbientSpots(this, activityLocations, YamlFile.section(yaml, "ambient"));
+        var ambience = new Ambience(this, activityLocations, YamlFile.section(yaml, "ambient"), gameNpcs::places,
+                YamlFile.section(yaml, "ambience"));
         var scenes = new SeasonalScenes(this, chunks, api.calendar(), activityLocations, ScenesConfig.fromYaml(YamlFile.section(yaml, "scenes")));
-        closables.addAll(List.of(ambientSpots, scenes));
+        closables.addAll(List.of(ambience, scenes));
         register(scenes);
         var optionalSpots = new ArrayList<>(GameNpcs.spots());
         leaderboards.names().stream().map(Podiums::spot).sorted().forEach(optionalSpots::add);
         optionalSpots.addAll(quests.spots());
         optionalSpots.add(DailyCourier.SPOT);
         optionalSpots.addAll(scenes.spots());
-        optionalSpots.addAll(ambientSpots.spots());
+        optionalSpots.addAll(ambience.spots());
         var optionalBlocks = new ArrayList<>(loreNotes.spots());
         optionalBlocks.addAll(NoticeBoards.SPOTS);
 

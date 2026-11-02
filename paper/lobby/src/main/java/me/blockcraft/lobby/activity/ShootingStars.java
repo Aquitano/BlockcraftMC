@@ -3,7 +3,7 @@ package me.blockcraft.lobby.activity;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
-import me.blockcraft.common.settings.PlayerSetting;
+import me.blockcraft.lobby.ParticleViewers;
 import me.blockcraft.lobby.config.ShootingStarConfig;
 import me.blockcraft.lobby.cosmetic.Secret;
 import me.blockcraft.lobby.cosmetic.Secrets;
@@ -85,8 +85,7 @@ public final class ShootingStars implements AutoCloseable {
                 for (int tail = 0; tail < 6 && frame - tail >= 0; tail++) {
                     var position = start.clone().add(delta.clone().multiply((double) (frame - tail) / config.animationTicks()));
                     for (var viewer : viewers) {
-                        if (viewer.isOnline() && viewer.getWorld().equals(center.getWorld())
-                                && BlockcraftApi.get().settings().enabled(viewer, PlayerSetting.EFFECTS)) {
+                        if (viewer.isOnline() && viewer.getWorld().equals(center.getWorld()) && ParticleViewers.wants(viewer)) {
                             viewer.spawnParticle(tail == 0 ? Particle.FIREWORK : Particle.END_ROD, position, 1, 0, 0, 0, 0);
                         }
                     }

@@ -6,7 +6,7 @@ import me.blockcraft.api.cosmetic.ChatTagChoice;
 import me.blockcraft.api.shop.Unlocks;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
-import me.blockcraft.common.settings.PlayerSetting;
+import me.blockcraft.lobby.ParticleViewers;
 import me.blockcraft.lobby.cosmetic.Secret;
 import me.blockcraft.lobby.cosmetic.Secrets;
 import me.blockcraft.lobby.konami.KonamiCode.Step;
@@ -116,12 +116,11 @@ public final class KonamiListener implements Listener {
 
     /** A ring of notes in every colour, for the player and whoever sees them, unless they turned effects off. */
     private static void burst(Player player) {
-        var settings = BlockcraftApi.get().settings();
         var center = player.getLocation().add(0, BURST_HEIGHT, 0);
         var viewers = new ArrayList<>(player.getTrackedBy());
         viewers.add(player);
         for (var viewer : viewers) {
-            if (!settings.enabled(viewer, PlayerSetting.EFFECTS)) {
+            if (!ParticleViewers.wants(viewer)) {
                 continue;
             }
             for (int i = 0; i < BURST_NOTES; i++) {

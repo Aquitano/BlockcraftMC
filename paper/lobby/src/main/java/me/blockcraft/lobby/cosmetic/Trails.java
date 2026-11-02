@@ -1,7 +1,6 @@
 package me.blockcraft.lobby.cosmetic;
 
-import me.blockcraft.api.BlockcraftApi;
-import me.blockcraft.common.settings.PlayerSetting;
+import me.blockcraft.lobby.ParticleViewers;
 import org.bukkit.entity.Player;
 
 import java.util.HashMap;
@@ -47,11 +46,8 @@ public final class Trails {
             }
             lastEmission.put(player.getUniqueId(), now);
             var location = player.getLocation();
-            for (var viewer : player.getWorld().getNearbyPlayers(location, viewDistance)) {
-                if (viewer.canSee(player)
-                        && BlockcraftApi.get().settings().enabled(viewer, PlayerSetting.EFFECTS)) {
-                    viewer.spawnParticle(trail.particle(), location, COUNT, OFFSET, OFFSET, OFFSET, SPEED);
-                }
+            for (var viewer : ParticleViewers.seeing(player, viewDistance)) {
+                viewer.spawnParticle(trail.particle(), location, COUNT, OFFSET, OFFSET, OFFSET, SPEED);
             }
         });
     }

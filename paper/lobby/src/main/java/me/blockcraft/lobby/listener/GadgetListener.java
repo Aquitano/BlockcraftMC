@@ -1,9 +1,8 @@
 package me.blockcraft.lobby.listener;
 
-import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.world.MapSaveEvent;
-import me.blockcraft.common.settings.PlayerSetting;
+import me.blockcraft.lobby.ParticleViewers;
 import me.blockcraft.lobby.activity.Parkour;
 import me.blockcraft.lobby.gadget.Gadget;
 import me.blockcraft.lobby.gadget.Gadgets;
@@ -66,11 +65,8 @@ public final class GadgetListener implements Listener {
                     event.setCancelled(true);
                     if (gadgets.tryUse(player)) {
                         Sounds.ACHIEVEMENT.play(player);
-                        for (var viewer : player.getWorld().getNearbyPlayers(player.getLocation(), 24)) {
-                            if (viewer.canSee(player) && BlockcraftApi.get().settings()
-                                    .enabled(viewer, PlayerSetting.EFFECTS)) {
-                                viewer.spawnParticle(Particle.HAPPY_VILLAGER, player.getLocation().add(0, 1, 0), 20, 0.6, 0.6, 0.6, 0);
-                            }
+                        for (var viewer : ParticleViewers.seeing(player, 24)) {
+                            viewer.spawnParticle(Particle.HAPPY_VILLAGER, player.getLocation().add(0, 1, 0), 20, 0.6, 0.6, 0.6, 0);
                         }
                     }
                 }

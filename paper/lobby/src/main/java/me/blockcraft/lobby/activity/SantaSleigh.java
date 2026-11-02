@@ -9,7 +9,7 @@ import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.calendar.NetworkCalendar;
 import me.blockcraft.common.message.Messages;
-import me.blockcraft.common.settings.PlayerSetting;
+import me.blockcraft.lobby.ParticleViewers;
 import me.blockcraft.lobby.config.SleighConfig;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import org.bukkit.Bukkit;
@@ -167,12 +167,11 @@ public final class SantaSleigh implements Listener, AutoCloseable {
     }
 
     private void ring(Location at, long tick) {
-        var settings = BlockcraftApi.get().settings();
         var nose = local(at, RUDOLPHS_NOSE);
         var behind = local(at, BEHIND);
         var notes = JingleBells.REFRAIN.stream().filter(note -> note.tick() == tick % JingleBells.LOOP_TICKS).toList();
         for (var player : at.getWorld().getPlayers()) {
-            if (settings.enabled(player, PlayerSetting.EFFECTS)) {
+            if (ParticleViewers.wants(player)) {
                 player.spawnParticle(Particle.DUST, nose, 2, 0.05, 0.05, 0.05, 0, NOSE_GLOW);
                 player.spawnParticle(Particle.FIREWORK, behind, 3, 0.3, 0.1, 0.3, 0.01);
                 player.spawnParticle(Particle.SNOWFLAKE, behind, 2, 0.4, 0.2, 0.4, 0);

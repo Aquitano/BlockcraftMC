@@ -97,12 +97,7 @@ public record SeasonTheme(Map<Material, List<BlockData>> blocks, Set<Material> c
         if (!(value instanceof String name) || name.isBlank()) {
             return Optional.empty();
         }
-        Optional<Particle> particle;
-        try {
-            particle = Optional.of(Particle.valueOf(name.toUpperCase(Locale.ROOT))).filter(type -> type.getDataType() == Void.class);
-        } catch (IllegalArgumentException invalid) {
-            particle = Optional.empty();
-        }
+        var particle = ParticleEffect.named(name);
         if (particle.isEmpty()) {
             logger.warn("seasons: particle {} is unknown or needs data", name);
         }
