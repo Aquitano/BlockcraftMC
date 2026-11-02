@@ -86,7 +86,7 @@ final class MapChoice {
                 .map(map -> new VoteMenu.Option(Optional.of(map.key()),
                         messages.get("vote.map", Placeholder.unparsed("map", map.name())), new ItemStack(map.icon()),
                         builders(map), ballot.votes(Optional.of(map.key())))).toList();
-        var title = choices.stream().anyMatch(map -> map.era() == Era.OG) ? "vote.title-og" : "vote.title";
+        var title = drawnFor == Era.OG ? "vote.title-og" : "vote.title";
         new VoteMenu(messages.get(title), options, Optional.of(ballot.votes(Optional.empty())),
                 ballot.choiceOf(player.getUniqueId()), Optional.empty(), this::vote).open(player);
     }

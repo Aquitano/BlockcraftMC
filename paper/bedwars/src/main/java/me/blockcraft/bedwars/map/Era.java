@@ -25,9 +25,9 @@ public enum Era {
         return name().toLowerCase(Locale.ROOT);
     }
 
-    /** The maps of this era, or the others when it has none, so that a vote never runs out of maps. */
+    /** The maps of this era and those in every vote, or all when that leaves none, so that a vote never runs out of maps. */
     public List<ArenaMap> pick(List<ArenaMap> maps) {
-        var own = maps.stream().filter(map -> map.era() == this).toList();
+        var own = maps.stream().filter(map -> map.era() == this || map.always()).toList();
         return own.isEmpty() ? maps : own;
     }
 }

@@ -2,6 +2,7 @@ name: Ruins
 builders: []
 icon: mossy_stone_bricks
 era: og
+always: true
 border: {x1: -88, z1: -71, x2: 90, z2: 72}
 spectator: {x: 1.5, y: 161.0, z: 1.0, pitch: 90.0}
 shops:

@@ -14,11 +14,13 @@ public class EraTest {
     @Test
     public void theVoteTakesTheMapsOfItsEraAndTheOthersWhenItHasNone() {
         var current = ArenaMap.empty("meteor");
-        var og = new ArenaMap("classic", "Classic", List.of(), Material.PAPER, Era.OG, Optional.empty(), Optional.empty(),
+        var og = new ArenaMap("classic", "Classic", List.of(), Material.PAPER, Era.OG, false, Optional.empty(), Optional.empty(),
+                List.of(), Map.of(), Map.of(), Map.of());
+        var staple = new ArenaMap("castle", "Castle", List.of(), Material.PAPER, Era.OG, true, Optional.empty(), Optional.empty(),
                 List.of(), Map.of(), Map.of(), Map.of());
 
-        assertEquals(List.of(og), Era.OG.pick(List.of(current, og)));
-        assertEquals(List.of(current), Era.CURRENT.pick(List.of(current, og)));
+        assertEquals(List.of(og, staple), Era.OG.pick(List.of(current, og, staple)));
+        assertEquals(List.of(current, staple), Era.CURRENT.pick(List.of(current, og, staple)));
         assertEquals(List.of(current), Era.OG.pick(List.of(current)));
     }
 }
