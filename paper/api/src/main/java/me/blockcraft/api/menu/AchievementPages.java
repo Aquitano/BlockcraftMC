@@ -6,31 +6,37 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 
-/** Keeps a game's entries together in rows without dropping entries that outgrow a chest page. */
-final class AchievementPages {
+/** Keeps a group's entries together in rows without dropping entries that outgrow a chest page. */
+final class AchievementPages<H, T> {
 
     static final int COLUMNS = 9;
     static final int ENTRIES_PER_ROW = COLUMNS - 1;
     static final int ROWS_PER_PAGE = 5;
 
-    record Row(String game, List<Achievement> entries) {
+    record Row<H, T>(H heading, List<T> entries) {
         Row {
             entries = List.copyOf(entries);
         }
     }
 
-    private final List<Row> rows;
+    private final List<Row<H, T>> rows;
 
-    AchievementPages(List<Achievement> catalog) {
+    /** Each group is one heading with all of its entries; a group without entries takes no row. */
+    AchievementPages(List<Row<H, T>> groups) {
+        var rows = new ArrayList<Row<H, T>>();
+        for (var group : groups) {
+            var entries = group.entries();
+            for (int start = 0; start < entries.size(); start += ENTRIES_PER_ROW) {
+                rows.add(new Row<>(group.heading(), entries.subList(start, Math.min(start + ENTRIES_PER_ROW, entries.size()))));
+            }
+        }
+        this.rows = List.copyOf(rows);
+    }
+
+    static List<Row<String, Achievement>> byGame(List<Achievement> catalog) {
         var games = new LinkedHashMap<String, List<Achievement>>();
         catalog.forEach(entry -> games.computeIfAbsent(entry.game(), ignored -> new ArrayList<>()).add(entry));
-        var rows = new ArrayList<Row>();
-        games.forEach((game, entries) -> {
-            for (int start = 0; start < entries.size(); start += ENTRIES_PER_ROW) {
-                rows.add(new Row(game, entries.subList(start, Math.min(start + ENTRIES_PER_ROW, entries.size()))));
-            }
-        });
-        this.rows = List.copyOf(rows);
+        return games.entrySet().stream().map(game -> new Row<>(game.getKey(), game.getValue())).toList();
     }
 
     int inventoryRows() {
@@ -41,7 +47,7 @@ final class AchievementPages {
         return Math.max(1, (rows.size() + ROWS_PER_PAGE - 1) / ROWS_PER_PAGE);
     }
 
-    List<Row> page(int page) {
+    List<Row<H, T>> page(int page) {
         if (page < 0 || page >= count()) {
             throw new IndexOutOfBoundsException(page);
         }

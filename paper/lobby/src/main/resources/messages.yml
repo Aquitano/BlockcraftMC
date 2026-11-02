@@ -59,9 +59,7 @@ item:
   hider-off: "<arrow><primary>Spieler <dark>● <error>AUS"
   profile: "<arrow><primary>Profil <dark>● <muted>Rechtsklick"
   extras: "<arrow><primary>Extras <dark>● <muted>Rechtsklick"
-  settings: "<arrow><primary>Einstellungen <dark>● <muted>Rechtsklick"
   friends: "<arrow><primary>Freunde <dark>● <muted>Rechtsklick"
-  secrets: "<arrow><primary>Secrets <dark>● <muted>Rechtsklick"
 hider:
   wait: "<muted>Spieler-Anzeige lädt wieder auf."
   hidden: "<muted>Andere Spieler sind ausgeblendet."
@@ -179,7 +177,8 @@ navigator:
       - "<muted>Kisten plündern, Brücken bauen, runterschubsen."
       - "<dark>Der Boden ist Lava. Nur ohne Boden."
 secrets:
-  title: "<arrow><primary>Secrets <dark>· <muted><found>/<total>"
+  heading: "<arrow><primary>Secrets"
+  heading-lore: "<bullet><muted><found><dark>/<muted><total> gefunden"
   unknown: "<error>???"
   unknown-lore: "<bullet><muted>Noch nicht gefunden!"
   riddle-lore: "<bullet><muted><italic><riddle>"
@@ -571,8 +570,8 @@ konami:
     down: "↓"
     left: "←"
     right: "→"
-    b: "B"
-    a: "A"
+    b: "<key:key.sneak> (B)"
+    a: "<key:key.jump> (A)"
   bar: "<keys>"
   lit: "<success><key>"
   missed: "<error><key>"
@@ -739,6 +738,7 @@ game-npcs:
 # Notes lying about the lobby (lore-notes in config.yml). pages are the book's pages, one entry each; found answers
 # the first read of a note.
 lore:
+  heading: "<arrow><primary>Notizen"
   found: "<prefix><success>Notiz gefunden: <accent><note><muted>! <dark>(<white><found><dark>/<white><total><dark>) <muted>+<accent><coins> Coins"
   menu-found: "<click>Nochmal lesen"
   menu-unknown: "<muted>Verlorene Notiz"

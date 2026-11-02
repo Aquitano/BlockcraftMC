@@ -4,7 +4,6 @@ import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.config.Locations;
 import me.blockcraft.api.cosmetic.ChatTagChoice;
 import me.blockcraft.api.menu.Menu;
-import me.blockcraft.api.dialog.SettingsDialog;
 import me.blockcraft.api.settings.PlayerSettings;
 import me.blockcraft.api.shop.Unlocks;
 import me.blockcraft.api.sound.Sounds;
@@ -14,13 +13,11 @@ import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.network.ServerIdentity;
 import me.blockcraft.common.network.ServerRecord;
 import me.blockcraft.common.network.ServerRepository;
-import me.blockcraft.lobby.activity.LoreNotes;
 import me.blockcraft.lobby.config.LobbyConfig;
 import me.blockcraft.lobby.LobbyPermissions;
 import me.blockcraft.lobby.config.LobbyLocation;
 import me.blockcraft.lobby.cosmetic.CosmeticPreviews;
 import me.blockcraft.lobby.cosmetic.Pets;
-import me.blockcraft.lobby.cosmetic.Secret;
 import me.blockcraft.lobby.cookies.CookieClicker;
 import me.blockcraft.lobby.friends.FriendsChannel;
 import me.blockcraft.api.network.ServerGroups;
@@ -30,7 +27,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -53,7 +49,6 @@ public record Menus(
         FriendsChannel friends,
         CosmeticPreviews previews,
         NavigatorTeleports teleports,
-        LoreNotes loreNotes,
         CookieClicker cookies
 ) {
 
@@ -100,14 +95,6 @@ public record Menus(
         new NavigatorMenu(this).open(player);
     }
 
-    public void openSecrets(Player player) {
-        BlockcraftApi.get().playerTasks().latest(player, () -> {
-            var found = new HashSet<>(unlocks.owned(player.getUniqueId(), Secret.ITEM_PREFIX));
-            found.addAll(unlocks.owned(player.getUniqueId(), LoreNotes.ITEM_PREFIX));
-            return Set.copyOf(found);
-        }, found -> new SecretsMenu(this, found).open(player));
-    }
-
     public void openShop(Player player) {
         BlockcraftApi.get().playerTasks().latest(player, () -> BlockcraftApi.get().coins().get(player.getUniqueId()),
                 coins -> new ShopMenu(this, player, coins).open(player));
@@ -143,10 +130,6 @@ public record Menus(
 
     public void openProfile(Player player) {
         BlockcraftApi.get().profiles().open(player, Optional.of(this::openExtras));
-    }
-
-    public void openSettings(Player player) {
-        new SettingsDialog(player, Optional.empty()).open(player);
     }
 
     public void openExtras(Player player) {

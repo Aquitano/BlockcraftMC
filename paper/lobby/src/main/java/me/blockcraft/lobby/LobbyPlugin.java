@@ -2,6 +2,7 @@ package me.blockcraft.lobby;
 
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.achievement.Achievements;
 import me.blockcraft.api.command.CommandRegistry;
 import me.blockcraft.api.config.Locations;
 import me.blockcraft.api.game.ThrowFight;
@@ -85,6 +86,7 @@ import me.blockcraft.lobby.listener.ShopNpcListener;
 import me.blockcraft.lobby.listener.WorldDownloaderListener;
 import me.blockcraft.lobby.menu.Menus;
 import me.blockcraft.lobby.menu.NavigatorTeleports;
+import me.blockcraft.lobby.menu.SecretsSection;
 import me.blockcraft.lobby.npc.GameNpcs;
 import me.blockcraft.lobby.npc.Holograms;
 import me.blockcraft.lobby.npc.Leaderboards;
@@ -110,6 +112,7 @@ import java.util.stream.Stream;
 public final class LobbyPlugin extends JavaPlugin {
 
     private Profiles profiles;
+    private Achievements achievements;
     private CosmeticPreviews previews;
     private ShopNpc shopNpc;
     private FriendsChannel friends;
@@ -185,7 +188,9 @@ public final class LobbyPlugin extends JavaPlugin {
         register(cookies);
         var menus = new Menus(this, messages, config, locations, api.unlocks(), api.settings(), api.messages(),
                 api.servers(), api.server(), new PremiumRank(this, luckPerms), pets, api.groups(), friends, previews,
-                new NavigatorTeleports(), loreNotes, cookies);
+                new NavigatorTeleports(), cookies);
+        achievements = api.achievements();
+        achievements.section(new SecretsSection(messages, loreNotes, config.secretRiddlesAfter()));
         shopNpc = new ShopNpc(this, locations, messages, quirks::owns);
         shopNpc.start(config.shopNpcRespawnSeconds());
         var leaderboards = new Leaderboards(this, api.database(), messages, api.messages(), config.leaderboards());
@@ -333,6 +338,9 @@ public final class LobbyPlugin extends JavaPlugin {
             profiles.clearRecentRound();
             profiles.clearAdvent();
             profiles.clearShop();
+        }
+        if (achievements != null) {
+            achievements.clearSection();
         }
         if (friends != null) {
             friends.close();

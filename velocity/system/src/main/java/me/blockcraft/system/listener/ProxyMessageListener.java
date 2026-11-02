@@ -97,7 +97,7 @@ public final class ProxyMessageListener {
             }
             case ProxyMessage.Announcement announcement -> {
                 var line = GsonComponentSerializer.gson().deserialize(announcement.noticeJson());
-                proxy.getAllPlayers().forEach(online -> online.sendMessage(line));
+                proxy.getAllPlayers().stream().filter(lobby::isOnLobby).forEach(online -> online.sendMessage(line));
             }
             case ProxyMessage.Rematch rematch -> proxy.getPlayer(rematch.opponent())
                     .ifPresent(opponent -> lobby.rematch(player, opponent));

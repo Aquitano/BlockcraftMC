@@ -85,7 +85,7 @@ public final class LoreNotes implements Listener, AutoCloseable {
         }));
     }
 
-    /** The note as the secrets menu shows it: its title on the item it lies as once found, a question mark before. */
+    /** The note as the achievements menu shows it: its title on the item it lies as once found, a question mark before. */
     public ItemStack icon(String note, boolean found) {
         return found
                 ? Items.of(config.notes().getOrDefault(note, Material.PAPER)).name(messages.get("lore." + note + ".title"))

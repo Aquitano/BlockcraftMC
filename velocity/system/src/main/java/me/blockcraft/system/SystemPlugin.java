@@ -386,7 +386,7 @@ public final class SystemPlugin {
                 .delay(config.calendarPollSeconds(), TimeUnit.SECONDS)
                 .repeat(config.calendarPollSeconds(), TimeUnit.SECONDS)
                 .schedule();
-        proxy.getScheduler().buildTask(this, new AutoBroadcast(proxy, messages))
+        proxy.getScheduler().buildTask(this, new AutoBroadcast(proxy, lobby, messages))
                 .repeat(config.autoBroadcastMinutes(), TimeUnit.MINUTES)
                 .schedule();
         DailySchedule.at(config.joinMe().resetHour(), config.calendar().zone(), proxy.getScheduler(), this, joinMe::resetDailyUses);
