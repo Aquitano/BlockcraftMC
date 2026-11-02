@@ -14,8 +14,14 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
+import org.bukkit.event.inventory.ClickType;
+import org.bukkit.event.inventory.InventoryAction;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.InventoryView;
+import org.bukkit.inventory.PlayerInventory;
 import org.junit.Test;
 
 import java.lang.reflect.Proxy;
@@ -160,6 +166,39 @@ public class WorldProtectionTest {
         var naming = new PlayerInteractEntityEvent(player, sheep);
         protection.onInteractEntity(naming);
         assertFalse(naming.isCancelled());
+    }
+
+    @Test
+    public void staffMayEditAnInspectedInventoryWhileTheirOwnStaysLocked() {
+        var world = world();
+        var id = UUID.randomUUID();
+        var viewer = (Player) Proxy.newProxyInstance(Player.class.getClassLoader(), new Class<?>[]{Player.class},
+                (proxy, method, args) -> switch (method.getName()) {
+                    case "getUniqueId" -> id;
+                    case "getWorld" -> world;
+                    case "hasPermission" -> true;
+                    case "equals" -> proxy == args[0];
+                    default -> throw new AssertionError(method);
+                });
+        var target = player(world);
+        var protection = WorldProtection.in(world, new BuildMode());
+        for (var holder : new Player[]{target, viewer}) {
+            var inventory = (PlayerInventory) Proxy.newProxyInstance(PlayerInventory.class.getClassLoader(),
+                    new Class<?>[]{PlayerInventory.class}, (proxy, method, args) -> switch (method.getName()) {
+                        case "getHolder" -> holder;
+                        default -> throw new AssertionError(method);
+                    });
+            var view = (InventoryView) Proxy.newProxyInstance(InventoryView.class.getClassLoader(),
+                    new Class<?>[]{InventoryView.class}, (proxy, method, args) -> switch (method.getName()) {
+                        case "getPlayer" -> viewer;
+                        case "getTopInventory", "getInventory" -> inventory;
+                        case "convertSlot" -> args[0];
+                        default -> throw new AssertionError(method);
+                    });
+            var click = new InventoryClickEvent(view, InventoryType.SlotType.CONTAINER, 0, ClickType.LEFT, InventoryAction.PICKUP_ALL);
+            protection.onInventoryClick(click);
+            assertEquals(holder == viewer, click.isCancelled());
+        }
     }
 
     private static boolean denied(PlayerInteractEvent click) {

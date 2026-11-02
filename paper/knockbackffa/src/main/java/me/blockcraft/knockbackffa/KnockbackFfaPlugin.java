@@ -4,6 +4,7 @@ import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.command.CommandRegistry;
 import me.blockcraft.api.game.ArenaProtection;
+import me.blockcraft.api.world.WorldProtection;
 import me.blockcraft.api.game.GameConfig;
 import me.blockcraft.api.game.ServerRestart;
 import me.blockcraft.api.game.StatsCommand;
@@ -25,8 +26,10 @@ public final class KnockbackFfaPlugin extends JavaPlugin {
         var messages = Messages.load(getDataPath(), () -> getResource("messages.yml"), api.tags());
         var stats = new StatsRepository(api.database(), "knockbackffa_stats");
         stats.createTable();
-        game = new FfaGame(this, FfaConfig.from(getConfig()), messages, new FfaArena(), stats);
+        var arena = new FfaArena();
+        game = new FfaGame(this, FfaConfig.from(getConfig()), messages, arena, stats);
         getServer().getPluginManager().registerEvents(new ArenaProtection(() -> false), this);
+        getServer().getPluginManager().registerEvents(WorldProtection.in(arena.world(), api.buildMode()).withHeldItems().withDamage(), this);
         getServer().getPluginManager().registerEvents(game, this);
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             var commands = new CommandRegistry(event.registrar(), messages);

@@ -16,8 +16,6 @@ import me.blockcraft.api.game.Stat;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.item.HotbarItem;
 import me.blockcraft.api.item.Items;
-import me.blockcraft.api.menu.Menu;
-import me.blockcraft.api.player.InventoryInspection;
 import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.spectate.SpectateRequestEvent;
@@ -41,24 +39,16 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.entity.EntityPickupItemEvent;
-import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryDragEvent;
-import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerFishEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
-import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
@@ -512,64 +502,6 @@ final class FfaGame implements Listener, AutoCloseable {
     public void onProjectile(ProjectileHitEvent event) {
         if (event.getEntity() instanceof AbstractArrow arrow) {
             Tasks.later(plugin, 1L, arrow::remove);
-        }
-    }
-
-    @EventHandler
-    public void onFood(FoodLevelChangeEvent event) {
-        event.setCancelled(true);
-    }
-
-    @EventHandler
-    public void onBreak(BlockBreakEvent event) {
-        if (!BlockcraftApi.get().buildMode().isEnabled(event.getPlayer())) {
-            event.setCancelled(true);
-        }
-    }
-
-    @EventHandler
-    public void onPlace(BlockPlaceEvent event) {
-        if (!BlockcraftApi.get().buildMode().isEnabled(event.getPlayer())) {
-            event.setCancelled(true);
-        }
-    }
-
-    @EventHandler
-    public void onDrop(PlayerDropItemEvent event) {
-        if (!BlockcraftApi.get().buildMode().isEnabled(event.getPlayer())) {
-            event.setCancelled(true);
-        }
-    }
-
-    @EventHandler
-    public void onPickup(EntityPickupItemEvent event) {
-        if (event.getEntity() instanceof Player player && !BlockcraftApi.get().buildMode().isEnabled(player)) {
-            event.setCancelled(true);
-        }
-    }
-
-    @EventHandler
-    public void onSwap(PlayerSwapHandItemsEvent event) {
-        if (!BlockcraftApi.get().buildMode().isEnabled(event.getPlayer())) {
-            event.setCancelled(true);
-        }
-    }
-
-    @EventHandler
-    public void onClick(InventoryClickEvent event) {
-        if (event.getWhoClicked() instanceof Player player && !BlockcraftApi.get().buildMode().isEnabled(player)
-                && !(event.getView().getTopInventory().getHolder(false) instanceof Menu)
-                && !InventoryInspection.permitted(player, event.getView().getTopInventory())) {
-            event.setCancelled(true);
-        }
-    }
-
-    @EventHandler
-    public void onDrag(InventoryDragEvent event) {
-        if (event.getWhoClicked() instanceof Player player && !BlockcraftApi.get().buildMode().isEnabled(player)
-                && !(event.getView().getTopInventory().getHolder(false) instanceof Menu)
-                && !InventoryInspection.permitted(player, event.getView().getTopInventory())) {
-            event.setCancelled(true);
         }
     }
 

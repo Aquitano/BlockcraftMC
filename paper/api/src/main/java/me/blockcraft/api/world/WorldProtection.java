@@ -62,7 +62,7 @@ import java.util.function.Supplier;
  * answer must not ignore cancelled clicks. No projectile, mob or fire changes a block, no block breaks off what held
  * it up, nothing is set alight, grown, primed or hatched, and no mob or arrow presses a plate or button. Nobody and
  * nothing is hurt, hungry or given experience, and nothing explodes. Held items do nothing unless the world is
- * {@link #withHeldItems}. The void and /kill still kill, so whoever no {@code rescue} spawn catches does not fall
+ * {@link #withHeldItems}, and who is hurt is the game's to decide in a world {@link #withDamage}. The void and /kill still kill, so whoever no {@code rescue} spawn catches does not fall
  * forever.
  */
 public final class WorldProtection implements Listener {
@@ -77,34 +77,36 @@ public final class WorldProtection implements Listener {
     private final Predicate<Block> usable;
     private final Supplier<Optional<Location>> rescue;
     private final boolean heldItems;
+    private final boolean damage;
 
     private WorldProtection(BooleanSupplier active, Optional<World> world, BuildMode buildMode, Predicate<Block> usable,
-                            Supplier<Optional<Location>> rescue, boolean heldItems) {
+                            Supplier<Optional<Location>> rescue, boolean heldItems, boolean damage) {
         this.active = active;
         this.world = world;
         this.buildMode = buildMode;
         this.usable = usable;
         this.rescue = rescue;
         this.heldItems = heldItems;
+        this.damage = damage;
     }
 
     /** Every world while {@code active} holds, such as a game's lobby phase. */
     public static WorldProtection during(BooleanSupplier active, BuildMode buildMode) {
-        return new WorldProtection(active, Optional.empty(), buildMode, block -> false, Optional::empty, false);
+        return new WorldProtection(active, Optional.empty(), buildMode, block -> false, Optional::empty, false, false);
     }
 
     public static WorldProtection in(World world, BuildMode buildMode) {
-        return new WorldProtection(() -> true, Optional.of(world), buildMode, block -> false, Optional::empty, false);
+        return new WorldProtection(() -> true, Optional.of(world), buildMode, block -> false, Optional::empty, false, false);
     }
 
     /** The blocks that still answer a right click, such as the doors of a map people explore. */
     public WorldProtection usable(Predicate<Block> usable) {
-        return new WorldProtection(active, world, buildMode, usable, rescue, heldItems);
+        return new WorldProtection(active, world, buildMode, usable, rescue, heldItems, damage);
     }
 
     /** Where a player who falls below the map is put back. */
     public WorldProtection rescue(Supplier<Optional<Location>> spawn) {
-        return new WorldProtection(active, world, buildMode, usable, spawn, heldItems);
+        return new WorldProtection(active, world, buildMode, usable, spawn, heldItems, damage);
     }
 
     /**
@@ -113,7 +115,12 @@ public final class WorldProtection implements Listener {
      * item there would stop every rod or toy aimed at the ground; what an item does to a block is refused on its own.
      */
     public WorldProtection withHeldItems() {
-        return new WorldProtection(active, world, buildMode, usable, rescue, true);
+        return new WorldProtection(active, world, buildMode, usable, rescue, true, damage);
+    }
+
+    /** Damage stays with the game, for a world players fight in but must leave as built. */
+    public WorldProtection withDamage() {
+        return new WorldProtection(active, world, buildMode, usable, rescue, heldItems, true);
     }
 
     /** Doors, trapdoors and fence gates. */
@@ -284,7 +291,7 @@ public final class WorldProtection implements Listener {
     public void onDamage(EntityDamageEvent event) {
         var victim = event.getEntity();
         boolean decoration = victim instanceof Hanging || victim instanceof ArmorStand;
-        if (FATAL.contains(event.getCause()) || (decoration && byBuilder(event.getDamageSource().getCausingEntity()))
+        if (damage || FATAL.contains(event.getCause()) || (decoration && byBuilder(event.getDamageSource().getCausingEntity()))
                 || !protects(victim.getWorld())) {
             return;
         }
