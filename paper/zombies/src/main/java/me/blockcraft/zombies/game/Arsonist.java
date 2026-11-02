@@ -131,7 +131,7 @@ final class Arsonist implements Ability {
     public void tick(int tick) {
         flying.values().removeIf(thrown -> !thrown.bottle().isValid());
         fires.removeIf(fire -> tick >= fire.until());
-        for (var fire : fires) {
+        for (var fire : List.copyOf(fires)) {
             burn(fire, tick);
             if ((fire.until() - tick) % config.pulseTicks() == 0) {
                 scorch(fire);
