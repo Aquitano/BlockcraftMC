@@ -2,8 +2,6 @@ package me.blockcraft.core.listener;
 
 import io.papermc.paper.event.player.AsyncChatEvent;
 import me.blockcraft.api.proxy.ProxyMessaging;
-import me.blockcraft.api.sound.Sounds;
-import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.chat.ChatFilter;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.moderation.AdLogRepository;
@@ -44,18 +42,14 @@ public final class ChatFilterListener implements Listener {
         var player = event.getPlayer();
         String text = PlainTextComponentSerializer.plainText().serialize(event.message());
         if (!player.hasPermission(ChatPermissions.WORDS_BYPASS) && filter.hasBlockedWord(text)) {
-            event.setCancelled(true);
-            player.sendMessage(messages.get("chat.word-filtered"));
-            Tasks.sync(plugin, () -> Sounds.MENU_DENY.play(player));
+            ChatRefusal.refuse(plugin, event, messages.get("chat.word-filtered"));
             notifyStaff(player, text);
             return;
         }
         if (!player.hasPermission(ChatPermissions.ADS_BYPASS) && filter.isAdvertisement(text)) {
-            event.setCancelled(true);
+            ChatRefusal.refuse(plugin, event, messages.getLines("chat.ad-filtered"));
             notifyStaff(player, text);
             adLog.add(player.getUniqueId(), serverName, text);
-            messages.getLines("chat.ad-filtered").forEach(player::sendMessage);
-            Tasks.sync(plugin, () -> Sounds.MENU_DENY.play(player));
         }
     }
 

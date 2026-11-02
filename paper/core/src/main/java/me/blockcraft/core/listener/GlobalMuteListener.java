@@ -1,8 +1,6 @@
 package me.blockcraft.core.listener;
 
 import io.papermc.paper.event.player.AsyncChatEvent;
-import me.blockcraft.api.sound.Sounds;
-import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -28,9 +26,7 @@ public final class GlobalMuteListener implements Listener {
             return;
         }
         if (network.globalMute()) {
-            event.setCancelled(true);
-            event.getPlayer().sendMessage(messages.get("globalmute.blocked"));
-            Tasks.sync(plugin, () -> Sounds.MENU_DENY.play(event.getPlayer()));
+            ChatRefusal.refuse(plugin, event, messages.get("globalmute.blocked"));
         }
     }
 }

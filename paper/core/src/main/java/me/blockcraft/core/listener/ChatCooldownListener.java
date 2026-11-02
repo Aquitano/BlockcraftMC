@@ -1,8 +1,6 @@
 package me.blockcraft.core.listener;
 
 import io.papermc.paper.event.player.AsyncChatEvent;
-import me.blockcraft.api.sound.Sounds;
-import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import org.bukkit.event.EventHandler;
@@ -49,11 +47,9 @@ public final class ChatCooldownListener implements Listener {
         var last = lastMessage.put(player.getUniqueId(), now);
         if (last != null && Duration.between(last, now).compareTo(window) < 0) {
             lastMessage.put(player.getUniqueId(), last);
-            event.setCancelled(true);
-            player.sendMessage(slowed
+            ChatRefusal.refuse(plugin, event, slowed
                     ? messages.get("chat.slow", Formatter.number("seconds", slowMode.toSeconds()))
                     : messages.get("chat.spam"));
-            Tasks.sync(plugin, () -> Sounds.MENU_DENY.play(player));
         }
     }
 

@@ -1,8 +1,6 @@
 package me.blockcraft.core.listener;
 
 import io.papermc.paper.event.player.AsyncChatEvent;
-import me.blockcraft.api.sound.Sounds;
-import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.db.DatabaseException;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.common.moderation.DurationText;
@@ -36,18 +34,13 @@ public final class MuteListener implements Listener {
     @EventHandler(ignoreCancelled = true)
     public void onChat(AsyncChatEvent event) {
         try {
-            punishments.activeMute(event.getPlayer().getUniqueId()).ifPresent(mute -> {
-                event.setCancelled(true);
-                messages.getLines("mute.blocked",
-                        Placeholder.unparsed("reason", mute.reason()),
-                        Placeholder.component("remaining", remaining(mute))).forEach(event.getPlayer()::sendMessage);
-                Tasks.sync(plugin, () -> Sounds.MENU_DENY.play(event.getPlayer()));
-            });
+            punishments.activeMute(event.getPlayer().getUniqueId()).ifPresent(mute -> ChatRefusal.refuse(plugin, event,
+                    messages.getLines("mute.blocked",
+                            Placeholder.unparsed("reason", mute.reason()),
+                            Placeholder.component("remaining", remaining(mute)))));
         } catch (DatabaseException e) {
             plugin.getSLF4JLogger().error("Could not check {} for a mute, holding the message back", event.getPlayer().getName(), e);
-            event.setCancelled(true);
-            event.getPlayer().sendMessage(messages.get("mute.check-failed"));
-            Tasks.sync(plugin, () -> Sounds.MENU_DENY.play(event.getPlayer()));
+            ChatRefusal.refuse(plugin, event, messages.get("mute.check-failed"));
         }
     }
 
