@@ -5,6 +5,20 @@
     "index": 0,
     "cases": [
       {
+        "when": "blockcraft:sternenfront/helmet_hegemonie",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/sternenfront/helmet_hegemonie"
+        }
+      },
+      {
+        "when": "blockcraft:sternenfront/helmet_kolonien",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/sternenfront/helmet_kolonien"
+        }
+      },
+      {
         "when": "blockcraft:zombies/arsonist_mask",
         "model": {
           "type": "minecraft:model",

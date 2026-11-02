@@ -119,6 +119,7 @@ navigator:
   knockbackffa: "<knockbackffa><bold>Knockback FFA"
   zombies: "<zombies><bold>Zombies"
   cores: "<cores><bold>Cores"
+  sternenfront: "<sternenfront><bold>Sternenfront"
   endergames: "<endergames><bold>EnderGames"
   ttt: "<ttt><bold>TTT"
   ttt2: "<ttt><bold>TTT 2"
@@ -164,6 +165,10 @@ navigator:
       - "<muted>Rot gegen Blau, zwei Cores pro Team."
       - "<muted>Abbauen, craften, verzaubern, angreifen."
       - "<dark>Wie früher. Nur ohne Lag, hoffentlich."
+    sternenfront:
+      - "<muted>Kolonien gegen Hegemonie um drei Posten."
+      - "<muted>Blaster, Klassen und eine Klinge für den Mutigsten."
+      - "<dark>Sand in jeder Ritze. Wirklich in jeder."
     endergames:
       - "<muted>Survival Games in einer zufälligen Welt."
       - "<muted>Kits mit Fähigkeiten, wandernde Enderkisten."

@@ -53,6 +53,7 @@ services:
   replay: *paper
   quicksg: *paper
   cores: *paper
+  sternenfront: *paper
   skywars: *paper
   knockbackffa: *paper
 

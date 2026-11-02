@@ -22,6 +22,7 @@ palette:
   knockbackffa: "<aqua>"
   zombies: "<dark_green>"
   cores: "<yellow>"
+  sternenfront: "<#e8a33d>"
   endergames: "<dark_purple>"
   ttt: "<red>"
   skywars: "<blue>"
@@ -43,6 +44,8 @@ games:
     name: "<zombies>Zombies"
   cores:
     name: "<cores>Cores"
+  sternenfront:
+    name: "<sternenfront>Sternenfront"
   endergames:
     name: "<endergames>EnderGames"
   ttt:
@@ -409,6 +412,7 @@ profile:
     knockbackffa: "<arrow><primary>Knockback FFA"
     zombies: "<arrow><primary>Zombies"
     cores: "<arrow><primary>Cores"
+    sternenfront: "<arrow><primary>Sternenfront"
     endergames: "<arrow><primary>EnderGames"
     ttt: "<arrow><primary>TTT"
     skywars: "<arrow><primary>SkyWars"

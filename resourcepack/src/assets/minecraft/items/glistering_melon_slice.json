@@ -12,6 +12,13 @@
         }
       },
       {
+        "when": "blockcraft:sternenfront/med_station",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/sternenfront/med_station"
+        }
+      },
+      {
         "when": "blockcraft:ttt/medipack",
         "model": {
           "type": "minecraft:model",

@@ -22,6 +22,7 @@ include(
     "paper:replay",
     "paper:skywars",
     "paper:statussigns",
+    "paper:sternenfront",
     "paper:ttt",
     "paper:zombies",
     "velocity:system",

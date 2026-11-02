@@ -7,7 +7,7 @@
 
 # The game groups that run on demand, each named like its compose service: the proxy wakes them and the waker may
 # start and stop nothing else. ON_DEMAND_GROUPS in .env replaces the list.
-x-on-demand-groups: &on-demand-groups ${ON_DEMAND_GROUPS:-bedwars,mlgrush,duell,zombies,endergames,ttt,ttt2,skywars,cores,quicksg,emeraldrush,archive,knockbackffa}
+x-on-demand-groups: &on-demand-groups ${ON_DEMAND_GROUPS:-bedwars,mlgrush,duell,zombies,endergames,ttt,ttt2,skywars,cores,sternenfront,quicksg,emeraldrush,archive,knockbackffa}
 
 x-luckperms: &luckperms
   LUCKPERMS_STORAGE_METHOD: mariadb
@@ -226,6 +226,22 @@ services:
       - cores:/data
       - replays:/replays
 
+  sternenfront:
+    <<: *paper
+    hostname: sternenfront
+    environment:
+      <<: *paper-env
+      BLOCKCRAFT_SERVER_GROUP: sternenfront
+      BLOCKCRAFT_WAITING_TEMPLATE: /waiting-lobby
+      BLOCKCRAFT_WORLD_TEMPLATE: ""
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/sternenfront,/blockcraft/viaversion,/blockcraft/grimac,/blockcraft/nexo
+    volumes:
+      - ./build/docker/paper:/blockcraft:ro
+      - ./worlds/waiting-lobby:/waiting-lobby
+      - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
+      - sternenfront:/data
+      - replays:/replays
+
   endergames:
     <<: *paper
     hostname: endergames
@@ -386,6 +402,7 @@ volumes:
   mlgrush:
   zombies:
   cores:
+  sternenfront:
   endergames:
   ttt:
   ttt2:

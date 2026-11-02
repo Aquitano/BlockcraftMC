@@ -16,6 +16,7 @@ public enum LobbyLocation {
     KNOCKBACKFFA("knockbackffa"),
     ZOMBIES("zombies"),
     CORES("cores"),
+    STERNENFRONT("sternenfront"),
     ENDERGAMES("endergames"),
     TTT("ttt"),
     TTT2("ttt2"),
@@ -46,6 +47,7 @@ public enum LobbyLocation {
             case KNOCKBACKFFA -> MenuIcon.MLGRUSH;
             case ZOMBIES -> MenuIcon.ZOMBIES;
             case CORES -> MenuIcon.CORES;
+            case STERNENFRONT -> MenuIcon.STERNENFRONT;
             case ENDERGAMES -> MenuIcon.ENDERGAMES;
             case TTT, TTT2 -> MenuIcon.TTT;
             case SKYWARS -> MenuIcon.SKYWARS;

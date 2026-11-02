@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Map;
 
-/** Game cards with separate controls for Knockback FFA, the archive, JumpAndRun and, for testers, TTT 2. */
+/** Game cards with separate controls for Knockback FFA, Sternenfront, the archive, JumpAndRun and testers' TTT 2. */
 final class NavigatorMenu extends Menu {
 
     private static final Map<Integer, LobbyLocation> GAMES = Map.of(
@@ -27,7 +27,8 @@ final class NavigatorMenu extends Menu {
     private static final int JUMP_SLOT = 40;
     private static final int ARCHIVE_SLOT = 31;
     private static final int FFA_SLOT = 22;
-    private static final int TTT2_SLOT = 13;
+    private static final int STERNENFRONT_SLOT = 13;
+    private static final int TTT2_SLOT = 49;
 
     private final Menus menus;
     private final boolean preview;
@@ -45,6 +46,7 @@ final class NavigatorMenu extends Menu {
         set(JUMP_SLOT, place(MenuIcon.JUMP, "jump", "navigator.lore"));
         set(ARCHIVE_SLOT, game(LobbyLocation.ARCHIVE));
         set(FFA_SLOT, game(LobbyLocation.KNOCKBACKFFA));
+        set(STERNENFRONT_SLOT, game(LobbyLocation.STERNENFRONT));
         if (preview) {
             set(TTT2_SLOT, game(LobbyLocation.TTT2));
         }
@@ -90,6 +92,7 @@ final class NavigatorMenu extends Menu {
         var game = switch (slot) {
             case ARCHIVE_SLOT -> LobbyLocation.ARCHIVE;
             case FFA_SLOT -> LobbyLocation.KNOCKBACKFFA;
+            case STERNENFRONT_SLOT -> LobbyLocation.STERNENFRONT;
             case TTT2_SLOT -> preview ? LobbyLocation.TTT2 : null;
             default -> GAMES.get(slot);
         };

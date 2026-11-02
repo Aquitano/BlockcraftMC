@@ -465,6 +465,9 @@ public final class PackArt {
     static final Map<Character, Integer> PET = Map.of('H', 0xFFFFF0AE, 'G', 0xFFEAC05B, 'g', 0xFFB67C38, 'd', 0xFF795033, 'W', 0xFFF2FAFC, 'P', 0xFFF0ACD1);
     static final Map<Character, Integer> PODIUM = Map.of('Y', 0xFFFFF0AE, 'G', 0xFFEAC05B, 'g', 0xFFB67C38, 'H', 0xFFF2FAFC, 'W', 0xFFCCDCE5, 'w', 0xFF8CA3B4, 'E', 0xFFE7B378, 'B', 0xFFBB8958, 'b', 0xFF936344);
     static final Map<Character, Integer> ENCHANT = Map.of('H', 0xFFFFD5EC, 'L', 0xFFF0ACD1, 'M', 0xFFCC6DAA, 'D', 0xFF894777, 'W', 0xFFF0E5D2, 'w', 0xFFC5B49D, 'C', 0xFF80D9DB, 'c', 0xFF42A4B4);
+    static final Map<Character, Integer> PLANET = Map.of('H', 0xFFFFF0AE, 'Y', 0xFFEAC05B, 'y', 0xFFC98A3E, 'd', 0xFF8A5530, 'R', 0xFF80D9DB, 'r', 0xFF42A4B4, 'S', 0xFFFFF0AE, 'W', 0xFFF2FAFC);
+    static final Map<Character, Integer> BLASTER = Map.of('H', 0xFFF2FAFC, 'W', 0xFFB4C3CF, 'w', 0xFF6E7F8E, 'd', 0xFF2E3640, 'G', 0xFFFFC94A, 'g', 0xFFD9822B);
+    static final Map<Character, Integer> POD = Map.of('H', 0xFFF2FAFC, 'W', 0xFFCCDCE5, 'w', 0xFF8CA3B4, 'd', 0xFF52697F, 'R', 0xFFF07A2A, 'Y', 0xFFFFE07A, 'B', 0xFF80D9DB, 'L', 0xFFB4C3CF);
 
     static final Map<String, Icon> ICONS = Map.ofEntries(
             Map.entry("tool_settings", new Icon(new String[] {
@@ -899,6 +902,60 @@ public final class PackArt {
                     "................",
                     "................",
             }, CLIPBOARD)),
+            Map.entry("sternenfront", new Icon(new String[] {
+                    "...o.........o..",
+                    "..oSo.......oSo.",
+                    "...o.......oSWSo",
+                    ".....ooooo..oSo.",
+                    ".ooooHHYYYo..o..",
+                    "oRRRHHYYYYyo....",
+                    "RRRHHYYYYyyyo...",
+                    "oRRHYYYYyyyyo...",
+                    ".oRRYYYyyyyyro..",
+                    "..oYRRyyyyydrro.",
+                    "..oYYyRRrrrrrrro",
+                    "...oyyyyydrrrro.",
+                    "....oyyyddoooo..",
+                    ".....ooooo......",
+                    "................",
+                    "................",
+            }, PLANET)),
+            Map.entry("loadout", new Icon(new String[] {
+                    "................",
+                    "................",
+                    ".......ooo......",
+                    "......oWWWo.....",
+                    ".....oowwwo.....",
+                    ".ooooWWWWWWooo..",
+                    "owwWWddddddHHHoo",
+                    "owwoodGGGGdWWWww",
+                    "owwooddddddWWWoo",
+                    "owwwwoddoggooo..",
+                    ".oooooddoggo....",
+                    "....odddooo.....",
+                    "....oddo........",
+                    ".....oo.........",
+                    "................",
+                    "................",
+            }, BLASTER)),
+            Map.entry("deploy", new Icon(new String[] {
+                    "......oooo......",
+                    "..L..oWWWWo.....",
+                    "..L.oHHWWwwo....",
+                    "..L.oHHBBwwo.L..",
+                    "....oHHBBwwo.L..",
+                    "...oRRRRRRRRoL..",
+                    ".L..oHHWWwwo.L..",
+                    ".L..oHHWWwwo....",
+                    "....oHHWWwwo....",
+                    "...oddddddddo...",
+                    "...oddddddddo...",
+                    "....ooYYYYoo....",
+                    ".....oRYYRo.....",
+                    "......oYYo......",
+                    "......oRRo......",
+                    ".......oo.......",
+            }, POD)),
             Map.entry("cores", new Icon(new String[] {
                     "................",
                     ".......oo.......",

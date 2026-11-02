@@ -12,6 +12,20 @@
         }
       },
       {
+        "when": "blockcraft:icon/loadout",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/loadout"
+        }
+      },
+      {
+        "when": "blockcraft:sternenfront/carbine",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/sternenfront/carbine"
+        }
+      },
+      {
         "when": "blockcraft:zombies/rifle",
         "model": {
           "type": "minecraft:model",

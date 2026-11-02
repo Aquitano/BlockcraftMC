@@ -51,6 +51,7 @@ profile:
     knockbackffa: knockbackffa_stats
     zombies: bc_zombies_stats
     cores: bc_cores_stats
+    sternenfront: bc_sternenfront_stats
     endergames: bc_endergames_stats
     ttt: bc_ttt_stats
     skywars: bc_skywars_stats

@@ -1,0 +1,234 @@
+prefix: "<sternenfront>Sternenfront <dark>» <reset>"
+game-name: "<sternenfront>Sternenfront"
+
+commands:
+  start:
+    description: "Verkürzt den Countdown der Lobby"
+  stats:
+    description: "Zeigt die Stats eines Spielers"
+  top:
+    description: "Zeigt die Top 10 einer Kategorie"
+
+join:
+  introduction: "<prefix><muted>Kolonien gegen Hegemonie: Halte mehr Posten als der Gegner und bring seine Verstärkung auf null."
+
+item:
+  faction: "<arrow><primary>Fraktion wählen"
+  class: "<arrow><primary>Klasse wählen"
+
+faction:
+  title: "<arrow><sternenfront>Sternenfront <dark>· <muted>Fraktion"
+  size: "<bullet><muted><players><dark>/<muted><max> Spieler"
+  member: "<bullet><primary><player>"
+  join: "<click>Beitreten"
+  joined: "<prefix><muted>Du kämpfst nun für <faction><muted>."
+  assigned: "<prefix><muted>Du kämpfst für <faction><muted>."
+  already: "<prefix><error>Du kämpfst bereits für diese Fraktion!"
+  full: "<prefix><error>Diese Fraktion ist bereits voll!"
+  kolonien:
+    name: "Freie Kolonien"
+    helmet: "<white>Pilotenhelm der Kolonien"
+    lore:
+      - "<muted>Bergleute, Schmuggler und Siedler"
+      - "<muted>mit allem, was sich noch reparieren lässt."
+  hegemonie:
+    name: "Hegemonie"
+    helmet: "<white>Helm der Hegemonie"
+    lore:
+      - "<muted>Weiße Rüstung, sauberer Stahl"
+      - "<muted>und eine Ordnung, die keiner bestellt hat."
+
+class:
+  title: "<arrow><sternenfront>Sternenfront <dark>· <muted>Klasse"
+  select: "<click>Auswählen"
+  selected: "<success>✔ Ausgewählt"
+  chosen: "<muted>Nächster Einsatz als <accent><class>"
+  blaster: "<bullet><muted>Blaster <white><blaster> <dark>· <accent><damage> ❤ <muted>pro Schuss"
+  health: "<bullet><muted>Gesundheit <accent><hearts> ❤"
+  ability: "<bullet><muted>Fähigkeit <white><ability>"
+  soldier:
+    name: "<white>Soldat"
+    lore:
+      - "<muted>Solide auf jede Entfernung."
+      - "<muted>Wirft Ionengranaten und kennt keinen Schmerz."
+  heavy:
+    name: "<white>Schwerer"
+    lore:
+      - "<muted>Viel Gesundheit, viele Bolzen."
+      - "<muted>Stellt eine Schildwand auf, die Schüsse schluckt."
+  scout:
+    name: "<white>Späher"
+    lore:
+      - "<muted>Wenig Gesundheit, weite Wege."
+      - "<muted>Ein Kopftreffer reicht, das Sprungmodul hilft beim Rest."
+  medic:
+    name: "<white>Sanitäter"
+    lore:
+      - "<muted>Hält das Team am Leben."
+      - "<muted>Stellt Heilstationen auf und schießt schnell."
+
+blaster:
+  stats:
+    - "<bullet><muted>Schaden <accent><damage> ❤ <muted>pro Schuss"
+    - "<bullet><muted>Reichweite <accent><range> <muted>Blöcke"
+  venting: "<error>Der Blaster kühlt ab …"
+  overheated: "<error>Überhitzt! <muted>Der Blaster kühlt ab."
+  carbine:
+    name: "<white>K-7 Karabiner"
+    lore:
+      - "<muted>Gleichmäßige Bolzen, dauerhaft gehalten."
+  repeater:
+    name: "<white>R-40 Repetierer"
+    lore:
+      - "<muted>Drei Bolzen pro Schuss, breit gestreut."
+  long-rifle:
+    name: "<white>LB-9 Langbüchse"
+    lore:
+      - "<muted>Langsam, schwer und weit."
+      - "<muted>Kopftreffer zählen fast doppelt."
+  pistol:
+    name: "<white>P-2 Pistole"
+    lore:
+      - "<muted>Schnelle, leichte Bolzen."
+
+ability:
+  first-key: "<muted>Taste <accent>F <muted>oder <right>Benutzen"
+  second-key: "<muted>Taste <accent>Q <muted>oder <right>Benutzen"
+  cooldown: "<error><ability> <muted>ist in <accent><seconds> s <muted>bereit."
+  no-room: "<error>Hier ist dafür kein Platz."
+  grenade:
+    name: "<white>Ionengranate"
+    lore:
+      - "<muted>Zündet nach kurzer Zeit"
+      - "<muted>und trifft alle Gegner in Sichtweite."
+  adrenaline:
+    name: "<white>Adrenalin"
+    lore:
+      - "<muted>Kurz schneller und heilend."
+  shield-wall:
+    name: "<white>Schildwand"
+    lore:
+      - "<muted>Eine Wand aus Energie vor dir,"
+      - "<muted>die Bolzen für ein paar Sekunden aufhält."
+  jump-pack:
+    name: "<white>Sprungmodul"
+    lore:
+      - "<muted>Ein Satz nach vorn und oben."
+      - "<muted>Die nächste Landung tut nicht weh."
+  med-station:
+    name: "<white>Heilstation"
+    lore:
+      - "<muted>Heilt Verbündete in der Nähe,"
+      - "<muted>solange sie läuft."
+
+relic:
+  name: "<accent>Ahnenklinge"
+  lore:
+    - "<muted>Wer sie trägt, kämpft für zwei."
+    - "<right>Sprung nach vorn <dark>· <muted>Schleichen lenkt Bolzen ab"
+  title: "<display>AHNENKLINGE"
+  subtitle: "<muted>Die Klinge liegt in der Tempelruine im Norden"
+  appeared: "<prefix><accent>Die Ahnenklinge <muted>ist in der Tempelruine im Norden erschienen!"
+  taken: "<prefix><white><player> <muted>trägt nun die <accent>Ahnenklinge <muted>für <faction><muted>!"
+  slain: "<prefix><white><killer> <muted>hat <white><player> <muted>besiegt und die <accent>Ahnenklinge <muted>zurück in die Ruine geschickt!"
+  lost: "<prefix><muted>Die <accent>Ahnenklinge <muted>kehrt in die Tempelruine zurück."
+
+post:
+  raffinerie: "Raffinerie"
+  wrack: "Wrack"
+  basar: "Basar"
+  held: "<faction>"
+  neutral: "<white>Neutral"
+  contested: "<error>Umkämpft"
+  label: "<tint><bold><letter></bold> <white><post>\n<state>\n<progress>"
+  bar: "<tint><letter> <dark>· <white><post> <dark>· <state>"
+  captured: "<prefix><muted>Posten <accent><letter> <white><post> <muted>gehört nun <faction><muted>!"
+  neutralised: "<prefix><muted>Posten <accent><letter> <white><post> <muted>ist für <faction> <muted>verloren."
+
+headquarters:
+  warning: "<error>Feindliches Hauptquartier! <muted>Raus hier!"
+
+deploy:
+  title: "<arrow><sternenfront>Sternenfront <dark>· <muted>Einsatz"
+  item: "<arrow><primary>Einsatz planen"
+  waiting: "<muted>Einsatz möglich in <accent><seconds> s"
+  ready: "<success>Wähle deinen Einsatzort <dark>· <muted>sonst Hauptquartier in <accent><seconds> s"
+  lost: "<prefix><error>Dein Einsatzort ist verloren, du startest im Hauptquartier."
+  status-waiting: "<muted>Einsatz in <accent><seconds> s"
+  status-ready: "<success>Bereit zum Einsatz"
+  status-lore:
+    - "<muted>Oben die Klasse, unten der Einsatzort."
+    - "<muted>Posten deiner Fraktion stehen offen,"
+    - "<muted>solange kein Gegner darin steht."
+  headquarters: "<white>Hauptquartier"
+  post: "<white>Posten <accent><letter> <white><post>"
+  choose: "<click>Hier einsetzen"
+  chosen: "<success>✔ Gewählt"
+  post-neutral: "<muted>Noch niemand hält diesen Posten."
+  post-enemy: "<error>Der Gegner hält diesen Posten."
+  post-contested: "<error>Hier wird gerade gekämpft."
+
+death:
+  blaster:
+    - "<prefix><white><player> <muted>wurde von <white><killer> <muted>mit <weapon> <muted>getroffen."
+    - "<prefix><white><killer> <muted>hat <white><player> <muted>mit <weapon> <muted>erwischt."
+
+lobby:
+  no-opponent: "<prefix><error>Beide Fraktionen brauchen mindestens einen Spieler."
+
+round:
+  faction: "<arrow><faction><dark>: <accent><players>"
+  start:
+    - "<prefix><muted>Los geht's! <right>Schießen <dark>· <accent>F <muted>und <accent>Q <muted>für Fähigkeiten."
+    - "<prefix><muted>Mit <accent>@ <muted>vor der Nachricht schreibst du allen."
+  winner: "<prefix><primary><faction> <primary>gewinnt mit <accent><tickets> <primary>Verstärkung!"
+  draw: "<prefix><muted>Die Zeit ist um. Beide Fraktionen haben gleich viel Verstärkung."
+
+timer:
+  round: "<sternenfront>Verbleibende Zeit <dark>● <white><time>"
+
+chat:
+  global: "<accent><bold>[GLOBAL]</bold>"
+
+stats:
+  header: "<muted>Stats von <accent><player>"
+  lines:
+    - "<arrow><primary>Siege<dark>: <muted><wins>"
+    - "<arrow><primary>Niederlagen<dark>: <muted><losses>"
+    - "<arrow><primary>Tode<dark>: <muted><deaths>"
+    - "<arrow><primary>Kills<dark>: <muted><kills>"
+    - "<arrow><primary>Punkte<dark>: <muted><points>"
+top:
+  separator: "<muted><strikethrough>---------------------------------"
+  first: "<accent><bold>#1 <reset><primary><name><muted> ( <white><value><muted> )"
+  entry: "<reset>#<rank> <primary><name> <muted>( <white><value><muted> )"
+menu:
+  stats:
+    title: "<arrow><sternenfront>Sternenfront <dark>· <muted>Stats"
+    player: "<accent><player>"
+    player-lore:
+      - "<arrow><primary>Siege<dark>: <muted><wins>"
+      - "<arrow><primary>Niederlagen<dark>: <muted><losses>"
+      - "<arrow><primary>Tode<dark>: <muted><deaths>"
+      - "<arrow><primary>Kills<dark>: <muted><kills>"
+      - "<arrow><primary>Punkte<dark>: <muted><points>"
+    global: "<arrow><primary>Globale Stats"
+  global-stats:
+    title: "<arrow><sternenfront>Sternenfront <dark>· <muted>Globale Stats"
+    wins: "<arrow><primary>Siege"
+    deaths: "<arrow><primary>Tode"
+    kills: "<arrow><primary>Kills"
+    losses: "<arrow><primary>Niederlagen"
+    points: "<arrow><primary>Punkte"
+
+scoreboard:
+  title: "<sternenfront><bold>Sternenfront"
+  faction: "<muted><icon:mode> FRAKTION"
+  no-faction: "<muted>Keine Fraktion"
+  class: "<muted><icon:kit> KLASSE"
+  tickets: "<muted><icon:players> VERSTÄRKUNG"
+  tickets-line: "<faction> <dark>· <white><tickets>"
+  posts: "<muted><icon:map> POSTEN"
+  post: "<tint><bold><letter></bold> <white><post>"
+  post-contested: "<tint><bold><letter></bold> <white><post> <error>⚔"
+  kills: "<muted><icon:kills> KILLS"

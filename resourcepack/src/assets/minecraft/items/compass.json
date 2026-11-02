@@ -19,6 +19,13 @@
         }
       },
       {
+        "when": "blockcraft:icon/deploy",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/deploy"
+        }
+      },
+      {
         "when": "blockcraft:icon/spectate_players",
         "model": {
           "type": "minecraft:model",

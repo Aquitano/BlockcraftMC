@@ -5,6 +5,7 @@ Paper and Velocity plugins for the BlockcraftMC minigame network, originally wri
 
 See [Easter eggs and lobby activities](EASTER_EGGS.md) for rewards, calendar events, map setup, and gameplay checks.
 See [Zombies setup](paper/zombies/README.md) to run the solo and cooperative survival mode.
+See [Sternenfront](paper/sternenfront/README.md) for the sci-fi team shooter, its classes, posts and map.
 See [BlockcraftReplay](paper/replay/README.md) for match recording, playback controls, and recording limits.
 See [EnderGames](paper/endergames/README.md), [TTT](paper/ttt/README.md) and [SkyWars](paper/skywars/README.md) for those modes, after GommeHD's.
 
@@ -23,6 +24,7 @@ paper/knockbackffa        Continuous knockback arena, instant respawns and a sha
 paper/quicksg            QuickSG survival games
 paper/zombies            Solo or co-op Zombies survival
 paper/cores              Cores: red against blue, two beacons each, after GommeHD's mode
+paper/sternenfront       Sternenfront: two factions, blasters and command posts on a desert world
 paper/endergames         EnderGames: kit survival games in a fresh random world, after GommeHD's mode
 paper/ttt                TTT: Traitors, Detectives and Innocents on ClayMC's maps or a town built in code, after GommeHD's mode;
                          TTT 2 (group ttt2) adds chores and sabotage; while it is tested, only players with

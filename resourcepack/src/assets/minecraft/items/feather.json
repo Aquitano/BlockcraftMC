@@ -10,6 +10,13 @@
           "type": "minecraft:model",
           "model": "blockcraft:item/skywars"
         }
+      },
+      {
+        "when": "blockcraft:sternenfront/jump_pack",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/sternenfront/jump_pack"
+        }
       }
     ],
     "fallback": {
