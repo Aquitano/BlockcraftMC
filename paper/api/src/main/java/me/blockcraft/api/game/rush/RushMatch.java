@@ -1,9 +1,7 @@
 package me.blockcraft.api.game.rush;
 
 import java.util.List;
-import java.util.HashSet;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 
 public final class RushMatch {
@@ -15,7 +13,6 @@ public final class RushMatch {
     private List<UUID> players = List.of();
     private State state = State.WAITING;
     private UUID winner;
-    private final Set<UUID> rematchRequests = new HashSet<>();
 
     public RushMatch(int target) {
         if (target < 1) {
@@ -54,23 +51,8 @@ public final class RushMatch {
         }
     }
 
-    public boolean leave(UUID player) {
-        int slot = slot(player);
-        if (slot < 0 || (state != State.ACTIVE && state != State.RESETTING)) {
-            return false;
-        }
-        winner = players.get(1 - slot);
-        state = State.FINISHED;
-        return true;
-    }
-
     public int slot(UUID player) {
         return players.indexOf(player);
-    }
-
-    public boolean requestRematch(UUID player) {
-        return state == State.FINISHED && slot(player) >= 0 && rematchRequests.add(player)
-                && rematchRequests.size() == players.size();
     }
 
     public int score(int slot) {

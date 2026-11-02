@@ -1,6 +1,7 @@
 package me.blockcraft.api.settings;
 
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.player.PlayerCache;
 import me.blockcraft.api.proxy.ProxyMessaging;
 import me.blockcraft.api.task.JoinRetry;
 import me.blockcraft.api.task.SerialTasks;
@@ -24,6 +25,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 /**
  * {@link PlayerSettingRepository} cached per online player, so games can read a choice on the main thread
@@ -36,7 +38,7 @@ public final class PlayerSettings implements Listener {
     private final Plugin plugin;
     private final PlayerSettingRepository repository;
     private final Messages messages;
-    private final SettingsCache cache = new SettingsCache();
+    private final PlayerCache<PlayerSetting, Optional<String>> cache = new PlayerCache<>(Optional.empty());
 
     private final SerialTasks<UUID> writes;
     private final Map<UUID, Map<PlayerSetting, Object>> revisions = new HashMap<>();
@@ -153,7 +155,8 @@ public final class PlayerSettings implements Listener {
             if (!player.isOnline() || revisions.get(uuid) != session) {
                 return;
             }
-            cache.load(uuid, loaded);
+            cache.load(uuid, loaded.entrySet().stream()
+                    .collect(Collectors.toMap(Map.Entry::getKey, entry -> Optional.of(entry.getValue()))));
             Bukkit.getPluginManager().callEvent(new PlayerSettingsLoadedEvent(player));
         }, () -> {
             if (player.isOnline() && revisions.get(uuid) == session

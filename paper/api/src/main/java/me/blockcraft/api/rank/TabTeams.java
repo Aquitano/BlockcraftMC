@@ -6,6 +6,7 @@ import me.blockcraft.api.nick.NickChangeEvent;
 import me.blockcraft.api.scoreboard.Boards;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.api.vanish.VanishChangeEvent;
+import me.blockcraft.api.vanish.VanishedPlayers;
 import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -25,12 +26,10 @@ import org.bukkit.scoreboard.Scoreboard;
 
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -59,18 +58,19 @@ public final class TabTeams implements Listener {
     private final Messages messages;
     private final NickRanks nickRanks;
     private final Afk afk;
+    private final VanishedPlayers vanished;
     private final Map<UUID, Entry> entries = new LinkedHashMap<>();
-    private final Set<UUID> vanished = new HashSet<>();
     private final Map<UUID, NamedTextColor> colors = new HashMap<>();
 
     private record Entry(String team, RankPrefix prefix, Component suffix, Optional<NamedTextColor> color, String name) {
     }
 
-    public TabTeams(Plugin plugin, LuckPerms luckPerms, Messages messages, NickRanks nickRanks, Afk afk) {
+    public TabTeams(Plugin plugin, LuckPerms luckPerms, Messages messages, NickRanks nickRanks, Afk afk, VanishedPlayers vanished) {
         this.luckPerms = luckPerms;
         this.messages = messages;
         this.nickRanks = nickRanks;
         this.afk = afk;
+        this.vanished = vanished;
         luckPerms.getEventBus().subscribe(plugin, UserDataRecalculateEvent.class, event -> {
             if (plugin.isEnabled()) {
                 Tasks.sync(plugin, () -> refresh(event.getUser().getUniqueId()));
@@ -90,11 +90,6 @@ public final class TabTeams implements Listener {
 
     @EventHandler
     public void onVanishChange(VanishChangeEvent event) {
-        if (event.isVanished()) {
-            vanished.add(event.getPlayer().getUniqueId());
-        } else {
-            vanished.remove(event.getPlayer().getUniqueId());
-        }
         update(event.getPlayer());
     }
 
@@ -111,7 +106,6 @@ public final class TabTeams implements Listener {
 
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
-        vanished.remove(event.getPlayer().getUniqueId());
         colors.remove(event.getPlayer().getUniqueId());
         remove(event.getPlayer());
     }
@@ -170,7 +164,7 @@ public final class TabTeams implements Listener {
             var plain = messages.get("tab.default-prefix");
             return new RankPrefix(plain, plain);
         });
-        boolean isVanished = vanished.contains(player.getUniqueId());
+        boolean isVanished = vanished.isVanished(player);
         boolean isAfk = !isVanished && afk.isAfk(player);
         Component suffix = isVanished ? messages.get("tab.vanished-suffix")
                 : isAfk ? messages.get("tab.afk-suffix") : Component.empty();

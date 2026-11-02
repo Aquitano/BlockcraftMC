@@ -162,7 +162,7 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         var nickStats = new NickStats(nickRanks, NickStats.Ranges.from(YamlFile.section(config, "nick-stats")));
         var audit = new StaffAudit(this, new StaffActionRepository(database), realNames, self.name(),
                 StaffAudit.Notices.from(YamlFile.section(config, "audit")), messages);
-        var tabTeams = new TabTeams(this, LuckPermsProvider.get(), messages, nickRanks, afk);
+        var tabTeams = new TabTeams(this, LuckPermsProvider.get(), messages, nickRanks, afk, vanished);
         var calendarSection = YamlFile.section(config, "calendar");
         var calendar = NetworkCalendar.fromYaml(calendarSection);
         var forcedOccasions = new ForcedOccasions(new SettingsRepository(database), calendar);
