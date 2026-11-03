@@ -152,6 +152,11 @@ public final class RoundSummary {
         score(player).eliminated = true;
     }
 
+    /** Back in the round after an elimination, so the loss it booked no longer stands. */
+    void revive(Player player) {
+        score(player).eliminated = false;
+    }
+
     /** A player who stepped out and never came back: a death and a loss, as a quit. */
     void forfeit(UUID player) {
         var score = scores.get(player);

@@ -235,6 +235,20 @@ public final class Round implements Listener {
         summary.eliminate(player);
     }
 
+    /**
+     * An eliminated player plays again, as when a game revives them: everyone sees them and they count among the
+     * players. The death they died still counts. False if the round is not running or they were not out of it.
+     */
+    public boolean revive(Player player) {
+        if (phase != GamePhase.INGAME || player.isDead() || !spectators.isSpectator(player)) {
+            return false;
+        }
+        spectators.release(player);
+        players.add(player.getUniqueId());
+        summary.revive(player);
+        return true;
+    }
+
     /** Puts a spectator into the state they watch in; see {@link Spectators#watch}. */
     public void watch(Player player) {
         spectators.watch(player);
