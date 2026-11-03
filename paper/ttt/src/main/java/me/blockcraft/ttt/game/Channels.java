@@ -19,12 +19,14 @@ import java.util.function.Supplier;
 /**
  * Work a player does by staying near a spot for a few seconds: a chore, a repair, a revive. Walking off, being hit or
  * dying breaks it off; the action bar shows how far it is. A player does one thing at a time. Reach counts from the
- * eyes, as a click does, so a station overhead such as a hanging bell stays within it.
+ * eyes, as a click does, so a station overhead such as a hanging bell stays within it, and to the spot's block
+ * rather than its centre, since a click reaches the nearest face.
  */
 public final class Channels {
 
     private static final long STEP = 2L;
     private static final int CELLS = 10;
+    private static final double CENTER_TO_CORNER = Math.sqrt(3) / 2;
 
     private static final class Channel {
         private final Location anchor;
@@ -71,7 +73,7 @@ public final class Channels {
     public void interrupt(Player player) {
         var channel = channels.remove(player.getUniqueId());
         if (channel != null) {
-            player.sendMessage(messages.get("channel.interrupted", Placeholder.component("work", channel.label)));
+            BlockcraftApi.get().notifications().feedback(player, messages.get("channel.interrupted", Placeholder.component("work", channel.label)));
             Sounds.MENU_DENY.play(player);
         }
     }
@@ -93,8 +95,8 @@ public final class Channels {
                 return true;
             }
             if (!player.getWorld().equals(channel.anchor.getWorld())
-                    || player.getEyeLocation().distanceSquared(channel.anchor) > reach * reach) {
-                player.sendMessage(messages.get("channel.left", Placeholder.component("work", channel.label)));
+                    || player.getEyeLocation().distance(channel.anchor) > reach + CENTER_TO_CORNER) {
+                BlockcraftApi.get().notifications().feedback(player, messages.get("channel.left", Placeholder.component("work", channel.label)));
                 Sounds.MENU_DENY.play(player);
                 return true;
             }

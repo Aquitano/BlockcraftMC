@@ -28,10 +28,13 @@ roles:
     traitor: "<muted>Töte alle Innocents und Detectives."
     detective: "<muted>Finde die Traitor. Alle vertrauen dir."
     innocent: "<muted>Überlebe und finde die Traitor."
-  partners: "<prefix><muted>Deine Traitor-Partner<dark>: <error><players>"
+  goal-tasks:
+    traitor: "<muted>Töte alle Innocents. Sabotage findest du im Shop."
+    detective: "<muted>Finde die Traitor. Deine Aufgaben zeigt das <accent><bold>!"
+    innocent: "<muted>Überlebe. Deine Aufgaben zeigt das <accent><bold>!"
+  partners: "<prefix><muted>Deine Traitor-Partner<dark>: <error><players> <dark>· <muted>Schreiben mit <accent>/tc"
   alone: "<prefix><muted>Du bist der einzige Traitor. Viel Glück."
   detectives: "<prefix><muted>Detective<dark>: <accent><players>"
-  traitors: "<prefix><muted>Die Rollen sind verteilt. Wie viele Traitor unter euch sind, weiß niemand. Mit <accent>/tc <muted>schreiben Traitor einander."
 
 item:
   shop: "<arrow><role>-Shop"
@@ -46,8 +49,8 @@ vote:
     - "<prefix><muted>Gespielt wird <accent><map><muted>."
 
 round:
-  preparation: "<prefix><muted>Durchsucht die Kisten! In <accent><seconds> Sekunden <muted>werden die Rollen verteilt."
-  preparation-tasks: "<prefix><muted>Seht euch um. In <accent><seconds> Sekunden <muted>werden Rollen und Aufgaben verteilt."
+  preparation: "<prefix><muted>Durchsucht die Kisten, danach werden die Rollen verteilt."
+  preparation-tasks: "<prefix><muted>Durchsucht die Kisten, danach werden Rollen und Aufgaben verteilt."
   winner:
     traitors: "<prefix><error>Die Traitor haben gewonnen!"
     innocents: "<prefix><success>Die Innocents haben gewonnen!"
@@ -248,6 +251,7 @@ ender-chest:
   taken: "<prefix><muted>Du hast das <accent>Eisenschwert <muted>aus der Enderkiste genommen."
 
 tester:
+  label: "<ttt>Traitor-Tester"
   not-ready: "<prefix><error>Der Tester funktioniert erst, wenn die Rollen verteilt sind."
   cooldown: "<prefix><error>Der Tester ist noch <seconds> Sekunden beschäftigt."
   entered: "<prefix><accent><player> <muted>hat den Traitor-Tester betreten."
@@ -261,8 +265,8 @@ traitor-door:
 
 channel:
   progress: "<work> <success><done><dark><rest>"
-  interrupted: "<prefix><error>Unterbrochen<dark>: <muted><work>"
-  left: "<prefix><error>Du bist zu weit weg<dark>: <muted><work>"
+  interrupted: "<error>Unterbrochen<dark>: <muted><work>"
+  left: "<error>Zu weit weg<dark>: <muted><work>"
 
 corpse:
   unknown: "<muted>Unbekannte Leiche"
@@ -315,10 +319,11 @@ scoreboard:
   map-vote: "Abstimmung läuft"
   role: "<muted><icon:mode> ROLLE"
   no-role: "<muted>Wird verteilt"
-  points: "<muted><icon:kit> PUNKTE"
+  role-points: "<role> <dark>· <accent><points> <muted>Punkte"
   partners: "<muted><icon:opponent> TRAITOR"
-  partner-alive: "<success>✔ <white><player>"
-  partner-dead: "<dark>✘ <dark><player>"
+  partner-alive: "<success><player>"
+  partner-dead: "<dark><strikethrough><player></strikethrough>"
+  partner-separator: "<dark>, "
   partner-none: "<muted>Du bist allein"
   karma: "<muted><icon:profile> KARMA"
   winner:
@@ -381,29 +386,52 @@ tasks:
       where: "Schmiede"
       cargo: "Hufeisen"
   bar: "<success>Aufgaben der Innocents <dark>● <white><percent>%"
-  chest-shut: "<prefix><muted>Die Kisten bleiben zu. Beute gibt es für erledigte Aufgaben."
-  not-yet: "<prefix><muted>Die Aufgaben werden mit den Rollen verteilt."
-  not-yours: "<prefix><muted><chore> <dark>· <muted>Das steht nicht auf deiner Liste."
-  already-done: "<prefix><muted><chore> <dark>· <muted>Das hast du schon erledigt."
-  generator: "<prefix><muted>Der Generator läuft. Hier gibt es nur bei einem Stromausfall etwas zu tun."
-  cargo-taken: "<prefix><muted>Aufgenommen. <accent><chore>"
-  cargo-carrying: "<prefix><muted>Du trägst das schon. <accent><chore>"
-  cargo-missing: "<prefix><error>Dir fehlt die Ladung. Hol sie erst<dark>: <muted><where>"
-  done: "<prefix><success>Erledigt<dark>: <muted><chore>"
-  done-pretend: "<prefix><muted>Zum Schein erledigt<dark>: <muted><chore>"
+  marker:
+    chore: "<accent><bold>!"
+    deliver: "<success><bold>?"
+    repair: "<error><bold>!"
+  not-yet: "<muted>Die Aufgaben kommen mit den Rollen."
+  not-yours: "<muted>Nicht deine Aufgabe."
+  already-done: "<muted>Schon erledigt."
+  generator: "<muted>Der Generator läuft."
+  cargo-taken: "<muted>Aufgenommen. Bring es zum <success><bold>?"
+  cargo-carrying: "<muted>Du trägst das schon."
+  cargo-missing: "<error>Hol erst die Ladung<dark>: <muted><where>"
+  done: "<success>Erledigt<dark>: <muted><chore>"
   sidebar:
     done: "<success>✔ <dark><chore>"
-    open: "<white><chore> <dark>· <muted><where>"
-  puzzle:
-    title: "<arrow><ttt>TTT <dark>· <muted><chore>"
-    tile: "<accent><number>"
+    open: "<white><chore>"
+  game-title: "<arrow><ttt>TTT <dark>· <muted><chore>"
+  games:
+    organ:
+      key: "<muted>Taste"
+      listen: "<arrow><primary>Runde <accent><round><dark>/<muted><rounds> <dark>· <muted>Hör zu"
+      repeat: "<arrow><primary>Runde <accent><round><dark>/<muted><rounds> <dark>· <success>Du bist dran"
+    potion:
+      step: "<muted>Schritt <primary><step>"
+      done: "<success>✔ <ingredient>"
+    chronicle:
+      book: "<primary>Band <accent><volume>"
+      placed: "<success>Am rechten Platz"
+    ledger:
+      hint: "<primary>Streiche die falschen Summen"
+      entry: "<muted><first> <op> <second> <dark>= <accent><result>"
+      struck: "<error><st><first> <op> <second> = <result>"
+    millwork:
+      notch: "<success>Kerbe"
+      marker: "<accent>Zahnrad"
+      gear: "<success>Zahnrad sitzt"
+      gap: "<error>Zahnrad fehlt"
+    forge:
+      bellows: "<click>Blasebalg"
+      heat: "<accent>Hitze"
+      band: "<success>Richtige Hitze"
+      progress: "<muted>Glut"
   sabotage:
-    resting: "<prefix><error>Die nächste Sabotage geht erst in <seconds> Sekunden."
+    resting: "<error>Wieder bereit in <seconds> Sekunden"
     resting-lore: "<bullet><error>Wieder bereit in <seconds> Sekunden"
     ready: "<click>Sabotieren"
-    done: "<prefix><muted>Sabotage läuft."
-    locked: "<prefix><error>Die Tür ist verriegelt."
-    tester-down: "<prefix><error>Der Tester ist kaputt. Repariere ihn an seinem Knopf."
+    locked: "<error>Die Tür ist verriegelt."
     kinds:
       blackout:
         name: "<error>Stromausfall"
@@ -422,13 +450,19 @@ tasks:
           - "<bullet><muted>Der Tester testet niemanden,"
           - "<muted>bis ihn jemand repariert."
     started:
-      blackout: "<prefix><error>Stromausfall! <muted>Repariert den Generator."
-      doors: "<prefix><error>Alle Türen sind verriegelt!"
-      tester: "<prefix><error>Der Tester ist ausgefallen! <muted>Repariert ihn an seinem Knopf."
+      blackout:
+        title: "<error>Stromausfall"
+        hint: "<muted>Repariert den Generator am <error><bold>!"
+      doors:
+        title: "<error>Türen verriegelt"
+        hint: "<muted>Sie gehen gleich wieder auf."
+      tester:
+        title: "<error>Tester gestört"
+        hint: "<muted>Repariert ihn am <error><bold>!"
     ended:
-      blackout: "<prefix><success>Der Strom ist wieder da."
-      doors: "<prefix><success>Die Türen sind wieder offen."
-      tester: "<prefix><success>Der Tester funktioniert wieder."
+      blackout: "<success>Der Strom ist wieder da."
+      doors: "<success>Die Türen sind wieder offen."
+      tester: "<success>Der Tester funktioniert wieder."
     mending:
       blackout: "<accent>Generator reparieren"
       tester: "<accent>Tester reparieren"

@@ -1,5 +1,6 @@
 package me.blockcraft.ttt.task;
 
+import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.game.BlockChanges;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.common.message.Messages;
@@ -7,6 +8,7 @@ import me.blockcraft.ttt.arena.TaskLayout;
 import me.blockcraft.ttt.config.TttConfig;
 import me.blockcraft.ttt.game.Channels;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
+import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -86,7 +88,8 @@ public final class Sabotage {
 
     public void trigger(Player saboteur, Kind kind) {
         if (secondsUntilReady() > 0) {
-            saboteur.sendMessage(messages.get("tasks.sabotage.resting", Formatter.number("seconds", secondsUntilReady())));
+            BlockcraftApi.get().notifications().feedback(saboteur,
+                    messages.get("tasks.sabotage.resting", Formatter.number("seconds", secondsUntilReady())));
             Sounds.MENU_DENY.play(saboteur);
             return;
         }
@@ -109,9 +112,10 @@ public final class Sabotage {
             }
             case TESTER -> left = config.testerSeconds();
         }
-        Bukkit.broadcast(messages.get("tasks.sabotage.started." + kind.key()));
+        var title = Title.title(messages.get("tasks.sabotage.started." + kind.key() + ".title"),
+                messages.get("tasks.sabotage.started." + kind.key() + ".hint"));
+        Bukkit.getOnlinePlayers().forEach(player -> BlockcraftApi.get().notifications().important(player, title));
         Sounds.NOTIFY.playToAll();
-        saboteur.sendMessage(messages.get("tasks.sabotage.done"));
     }
 
     public boolean locked(Block block) {
@@ -120,6 +124,15 @@ public final class Sabotage {
 
     public boolean testerDown() {
         return active.filter(kind -> kind == Kind.TESTER).isPresent();
+    }
+
+    /** Where the running sabotage is mended, if it can be. */
+    Optional<Block> repairSpot() {
+        return active.flatMap(kind -> switch (kind) {
+            case BLACKOUT -> Optional.of(layout.generator());
+            case TESTER -> Optional.of(testerButton);
+            case DOORS -> Optional.empty();
+        });
     }
 
     /** A click on the generator in a blackout, or on the broken tester's button, starts mending it. */
@@ -164,7 +177,8 @@ public final class Sabotage {
         restore();
         active = Optional.empty();
         resting = config.cooldownSeconds();
-        Bukkit.broadcast(messages.get("tasks.sabotage.ended." + kind.key()));
+        var ended = messages.get("tasks.sabotage.ended." + kind.key());
+        Bukkit.getOnlinePlayers().forEach(player -> BlockcraftApi.get().notifications().reward(player, ended));
     }
 
     private void restore() {

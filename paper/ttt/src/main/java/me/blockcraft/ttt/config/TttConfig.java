@@ -5,14 +5,12 @@ import me.blockcraft.api.game.LootTable;
 import me.blockcraft.ttt.game.Karma;
 import me.blockcraft.ttt.game.Roles;
 import me.blockcraft.ttt.shop.ShopItem;
-import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 /** TTT's own keys of its config.yml; the lobby's are {@link me.blockcraft.api.game.GameConfig}'s. */
 public record TttConfig(int capacity, int roundMinimum, int fullSeconds, int preparationSeconds, int roundSeconds,
@@ -62,7 +60,7 @@ public record TttConfig(int capacity, int roundMinimum, int fullSeconds, int pre
     }
 
     /** TTT 2's chores and sabotage, as config.yml describes them. */
-    public record Tasks(int perPlayer, int holdSeconds, double reach, List<Material> startItems, LootTable loot,
+    public record Tasks(int perPlayer, int holdSeconds, double reach, int spread, LootTable loot,
                         Sabotage sabotage) {
     }
 
@@ -130,12 +128,10 @@ public record TttConfig(int capacity, int roundMinimum, int fullSeconds, int pre
     }
 
     private static Tasks tasks(ConfigurationSection config) {
-        var startItems = config.getStringList("tasks.start-items").stream()
-                .map(Material::matchMaterial).filter(Objects::nonNull).toList();
         return new Tasks(Math.max(1, config.getInt("tasks.per-player", 4)),
                 Math.max(1, config.getInt("tasks.hold-seconds", 6)),
                 Math.max(1, config.getDouble("tasks.reach", 4.5)),
-                startItems,
+                Math.max(0, config.getInt("tasks.spread", 24)),
                 loot(config.getConfigurationSection("tasks")),
                 new Sabotage(Math.max(1, config.getInt("tasks.sabotage.cooldown-seconds", 90)),
                         Math.max(1, config.getInt("tasks.sabotage.blackout-seconds", 40)),

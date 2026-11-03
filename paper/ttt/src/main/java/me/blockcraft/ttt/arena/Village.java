@@ -388,7 +388,7 @@ final class Village {
         site.fill(-25, UPPER, 8, -25, UPPER + 4, 8, Material.BRICKS);
         site.fire(-25, UPPER + 5, 8);
         var forge = site.unlit(-24, GROUND + 1, 8, Material.BLAST_FURNACE, BlockFace.EAST);
-        site.chore(new Chore.Hold("forge", forge, true));
+        site.chore(new Chore.Puzzle("forge", forge, true));
         anvil = site.set(-21, GROUND + 1, 9, Site.directional(Material.ANVIL, BlockFace.NORTH));
         site.set(-23, GROUND + 1, 11, Material.WATER_CAULDRON.createBlockData(data -> ((Levelled) data).setLevel(3)));
         site.set(-19, GROUND + 1, 12, Material.GRINDSTONE.createBlockData(data -> {

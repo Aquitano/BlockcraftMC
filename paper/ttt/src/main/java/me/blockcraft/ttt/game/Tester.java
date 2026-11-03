@@ -13,7 +13,9 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.BlockData;
+import org.bukkit.entity.Display;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.TextDisplay;
 import org.bukkit.plugin.Plugin;
 
 import java.time.Duration;
@@ -30,9 +32,12 @@ import java.util.function.Supplier;
  * the lamps turn red if a traitor stands in the room, lime otherwise. Everyone hears who went in, and the tester
  * rests a while after every run. Lamps and doorway go back to what the map had there, so a map's own lamps may be
  * any block. Where the map has a traitor trap, its floor drops away once per round, for a moment, under whoever
- * stands in the room.
+ * stands in the room. A label over the doorway shows everyone where it is, through the town's walls.
  */
 public final class Tester {
+
+    private static final double LABEL_LIFT = 1.4;
+    private static final float LABEL_VIEW_RANGE = 1f;
 
     private final Plugin plugin;
     private final TesterRoom room;
@@ -42,6 +47,7 @@ public final class Tester {
     private final Predicate<Player> showsAsTraitor;
     private final Map<Block, BlockData> atRest = new HashMap<>();
     private final Map<Block, BlockData> floor = new HashMap<>();
+    private Optional<TextDisplay> label = Optional.empty();
     private long readyAt;
     private boolean running;
     private Optional<UUID> trapper = Optional.empty();
@@ -58,6 +64,29 @@ public final class Tester {
         room.lamps().forEach(block -> atRest.put(block, block.getBlockData()));
         room.entrance().forEach(block -> atRest.put(block, block.getBlockData()));
         room.trap().ifPresent(trap -> trap.floor().forEach(block -> floor.put(block, block.getBlockData())));
+    }
+
+    /** Puts the label over the doorway for the round. */
+    public void showLabel() {
+        label.ifPresent(TextDisplay::remove);
+        label = Optional.of(label(room, messages));
+    }
+
+    private static TextDisplay label(TesterRoom room, Messages messages) {
+        var doorway = room.entrance().isEmpty() ? List.of(room.button()) : room.entrance();
+        var at = doorway.getFirst().getLocation().zero();
+        doorway.forEach(block -> at.add(block.getX() + 0.5, 0, block.getZ() + 0.5));
+        at.multiply(1.0 / doorway.size());
+        at.setY(doorway.stream().mapToInt(Block::getY).max().orElseThrow() + LABEL_LIFT);
+        return at.getWorld().spawn(at, TextDisplay.class, entity -> {
+            entity.setPersistent(false);
+            entity.text(messages.get("tester.label"));
+            entity.setBillboard(Display.Billboard.CENTER);
+            entity.setSeeThrough(true);
+            entity.setShadowed(true);
+            entity.setBrightness(new Display.Brightness(15, 15));
+            entity.setViewRange(LABEL_VIEW_RANGE);
+        });
     }
 
     public boolean isButton(Block block) {
@@ -97,6 +126,8 @@ public final class Tester {
         reset();
         closeTrap();
         trapper = Optional.empty();
+        label.ifPresent(TextDisplay::remove);
+        label = Optional.empty();
     }
 
     public void press(Player presser) {

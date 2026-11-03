@@ -33,6 +33,7 @@ import me.blockcraft.ttt.shop.ShopMenu;
 import me.blockcraft.ttt.task.Sabotage;
 import me.blockcraft.ttt.task.TaskRound;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
@@ -270,6 +271,7 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
         var built = vote.decide();
         town = Optional.of(built);
         tester = Optional.of(new Tester(plugin, built.tester(), config.tester(), messages, round::players, equipment::showsAsTraitor));
+        tester.get().showLabel();
         tasks = built.tasks().filter(layout -> mode == TttMode.TASKS).map(layout -> new TaskRound(plugin, config.tasks(),
                 messages, layout, built.tester().button(), channels, this::roleOf, round::players, this::choresChanged));
         round.enter(GamePhase.INGAME);
@@ -279,12 +281,10 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
             PlayerReset.reset(player, GameMode.SURVIVAL);
             config.combat().apply(player);
             player.teleport(built.spawn(index++));
-            tasks.ifPresent(running -> running.equip(player));
         }
         round.spectators().forEach(spectator -> spectator.teleport(built.spectatorSpawn()));
         RoundStart.go(round.players());
-        Bukkit.broadcast(messages.get(tasks.isPresent() ? "round.preparation-tasks" : "round.preparation",
-                Formatter.number("seconds", config.preparationSeconds())));
+        Bukkit.broadcast(messages.get(tasks.isPresent() ? "round.preparation-tasks" : "round.preparation"));
         secondsLeft = config.preparationSeconds();
         round.clock(new TimerBar(messages, "timer.preparation", config.preparationSeconds()), remaining -> {
             secondsLeft = remaining;
@@ -309,10 +309,9 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
         for (var player : players) {
             var role = roles.get(player.getUniqueId());
             var name = Placeholder.component("role", role.displayName(messages));
-            BlockcraftApi.get().notifications().important(player,
-                    Title.title(messages.get("roles.title", name), messages.get("roles.goal." + role.key()), ROLE_TITLE));
+            var goal = messages.get((tasks.isPresent() ? "roles.goal-tasks." : "roles.goal.") + role.key());
+            BlockcraftApi.get().notifications().important(player, Title.title(messages.get("roles.title", name), goal, ROLE_TITLE));
             player.sendMessage(messages.get("roles.assigned", name));
-            player.sendMessage(messages.get("roles.goal." + role.key()));
             if (role == Role.DETECTIVE) {
                 BlockcraftApi.get().tabTeams().color(player, NamedTextColor.BLUE);
             }
@@ -329,7 +328,6 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
         if (!detectives.isEmpty()) {
             Bukkit.broadcast(messages.get("roles.detectives", names(detectives)));
         }
-        Bukkit.broadcast(messages.get("roles.traitors"));
         Sounds.PVP_ENABLED.playToAll();
         updateTraitorChat();
         equipment.start();
@@ -407,10 +405,6 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
         if (block.getType() != Material.CHEST) {
             return false;
         }
-        if (tasks.isPresent()) {
-            player.sendMessage(messages.get("tasks.chest-shut"));
-            return true;
-        }
         BlockChanges.set(block, Material.AIR);
         ChestLoot.pick(config.chests(), ThreadLocalRandom.current()).map(ChestLoot::item).ifPresent(item -> give(player, item));
         Sounds.MENU_OPEN.play(player);
@@ -437,11 +431,6 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
     public void pressTester(Player player) {
         if (!rolesDrawn()) {
             player.sendMessage(messages.get("tester.not-ready"));
-            return;
-        }
-        if (tasks.filter(TaskRound::testerDown).isPresent()) {
-            player.sendMessage(messages.get("tasks.sabotage.tester-down"));
-            Sounds.MENU_DENY.play(player);
             return;
         }
         if (tester.isPresent() && equipment.jammed(tester.get().buttonLocation())) {
@@ -540,7 +529,6 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
             patient.teleport(remains.location());
             patient.setHealth(settings.health());
             giveShop(patient, remains.role());
-            tasks.ifPresent(running -> running.equip(patient));
             patient.getWorld().playSound(remains.location(), Sound.ITEM_TOTEM_USE, 0.8f, 1.2f);
             Bukkit.broadcast(messages.get("shop.defibrillator.revived", Placeholder.unparsed("player", patient.getName()),
                     Placeholder.unparsed("medic", medic.getName())));
@@ -609,9 +597,12 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
     }
 
     /** A chore was done: the sidebars show it, and the innocents may have finished. */
+    /** Only a chore done can win the round by chores; a death that drops someone's open chores never does. */
     private void choresChanged() {
         refreshAll();
-        checkWinner();
+        if (rolesDrawn() && tasks.filter(TaskRound::complete).isPresent()) {
+            endRound(Optional.of(Faction.INNOCENTS));
+        }
     }
 
     /** Until their corpse is identified, the dead count as playing, so that the sidebar does not give their death away. */
@@ -686,8 +677,7 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
             return;
         }
         var alive = round.players().stream().map(player -> roles.get(player.getUniqueId())).filter(Objects::nonNull).toList();
-        Faction.winner(alive).or(() -> tasks.filter(TaskRound::complete).map(done -> Faction.INNOCENTS))
-                .ifPresent(faction -> endRound(Optional.of(faction)));
+        Faction.winner(alive).ifPresent(faction -> endRound(Optional.of(faction)));
     }
 
     private void endRound(Optional<Faction> won) {
@@ -756,14 +746,14 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
             case INGAME -> {
                 var sections = new ArrayList<GameSidebar.Section>();
                 var role = roleOf(player);
-                sections.add(new GameSidebar.Section(messages.get("scoreboard.role", icons), GameSidebar.value(role
-                        .map(each -> each.displayName(messages)).orElseGet(() -> messages.get("scoreboard.no-role")))));
-                if (role.filter(Role::hasShop).isPresent() && round.isPlaying(player)) {
-                    sections.add(new GameSidebar.Section(messages.get("scoreboard.points", icons),
-                            GameSidebar.value(Component.text(points(player)))));
-                }
+                var roleName = role.map(each -> each.displayName(messages)).orElseGet(() -> messages.get("scoreboard.no-role"));
+                var roleLine = role.filter(Role::hasShop).isPresent() && round.isPlaying(player)
+                        ? messages.get("scoreboard.role-points", Placeholder.component("role", roleName),
+                                Formatter.number("points", points(player)))
+                        : roleName;
+                sections.add(new GameSidebar.Section(messages.get("scoreboard.role", icons), GameSidebar.value(roleLine)));
                 if (role.filter(each -> each == Role.TRAITOR).isPresent()) {
-                    sections.add(new GameSidebar.Section(messages.get("scoreboard.partners", icons), partners(player)));
+                    sections.add(new GameSidebar.Section(messages.get("scoreboard.partners", icons), List.of(partners(player))));
                 }
                 tasks.map(running -> running.duties(player)).filter(duties -> !duties.isEmpty() && round.isPlaying(player))
                         .ifPresent(duties -> sections.add(new GameSidebar.Section(messages.get("scoreboard.chores", icons), duties)));
@@ -775,7 +765,8 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
     }
 
     /** The other traitors, dead or alive, which only a traitor sees. */
-    private List<Component> partners(Player viewer) {
+    /** All partners on one line, so that a big round's sidebar still fits the client's fifteen rows. */
+    private Component partners(Player viewer) {
         var lines = new ArrayList<Component>();
         roles.forEach((id, role) -> {
             if (role != Role.TRAITOR || id.equals(viewer.getUniqueId())) {
@@ -785,7 +776,8 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
             var name = Placeholder.unparsed("player", names.getOrDefault(id, "?"));
             lines.add(messages.get(partner != null && round.isPlaying(partner) ? "scoreboard.partner-alive" : "scoreboard.partner-dead", name));
         });
-        return lines.isEmpty() ? List.of(messages.get("scoreboard.partner-none")) : lines;
+        return lines.isEmpty() ? messages.get("scoreboard.partner-none")
+                : Component.join(JoinConfiguration.separator(messages.get("scoreboard.partner-separator")), lines);
     }
 
     private static TagResolver names(List<Player> players) {
@@ -802,6 +794,7 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
         channels.clear();
         crimeScenes.stop();
         tasks.ifPresent(TaskRound::stop);
+        tester.ifPresent(Tester::stop);
         corpses.clear();
         round.stop();
     }

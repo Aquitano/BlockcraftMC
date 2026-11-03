@@ -68,11 +68,12 @@ Its floor is the trap's, over a pit of lava that shows through a grate in the Ra
 button hides behind the kegs. About 30 chests hide in the houses, cellars, lofts, the tunnels, the crypt, the bell
 tower and the mausoleum; the ender chest stands in a niche in the crypt's north wall.
 
-For TTT 2, Schattenbach has 16 chores, named in `tasks.chores` in messages.yml. Six are held at a station: ringing
-the bell in the belfry, the vigil at the brazier in the crypt, baking at the bakery's oven, firing the smithy's forge
-(those four show everyone nearby), drawing water at the well square and turning hay in the barn loft. Five are
-puzzles: tuning the organ, sorting the library's chronicle, checking the ledger in the council chamber, mixing a
-remedy at the apothecary's brewing stand (which shows) and setting the mill's millstone. Five are errands across the
+For TTT 2, Schattenbach has 16 chores, named in `tasks.chores` in messages.yml. Five are held at a station: ringing
+the bell in the belfry, the vigil at the brazier in the crypt, baking at the bakery's oven (those three show everyone
+nearby), drawing water at the well square and turning hay in the barn loft. Six are played, each its own game in
+`task/game`: repeating the organ's tune, sorting the library's chronicle by swapping volumes, striking the wrong sums
+in the council chamber's ledger, brewing a remedy at the apothecary's stand by its recipe (which shows), timing the
+mill's millstone gears, and keeping the smithy's forge at heat with the bellows (which shows). Five are errands across the
 map: grain from the barn to the mill's sack floor, a charter from the town hall to the abbot's lectern, herbs from the
 herb garden to the inn's soup kettle, stone from the quarry's stonecutter to the cloister's broken wall, and
 horseshoes from the smithy's anvil to the stable gate in the barn. A sabotage locks every wooden door, a blackout
@@ -156,15 +157,21 @@ A server whose `BLOCKCRAFT_TTT_MODE` is `tasks` plays TTT 2. The compose service
 two modes fill their own rounds; both share the stats, karma and the lobby. TTT 2 plays only maps whose `Town` has
 a `TaskLayout`, which today is the map `TownBuilder` builds. The settings are under `tasks` in config.yml.
 
-- The chests stay shut. Everyone starts with `tasks.start-items` and gets `tasks.per-player` chores when the roles
-  are drawn, listed on the sidebar with where they are. A traitor's list looks the same, and doing them shows nothing.
+- The chests are looted as in TTT. Everyone gets `tasks.per-player` chores when the roles are drawn, at least
+  `tasks.spread` blocks apart where the map allows, listed on the sidebar. The traitors get none; they have the
+  sabotage.
+- Each player sees a `!` over every spot their chores send them to next, through walls and only for them, with
+  sparks around the block once they are close; for a load they carry, a `?` marks its destination instead. While a
+  sabotage can be mended, a red `!` marks the generator or the tester's button for every living innocent and detective.
+  A mark grows with the distance, so it reads about as large across the town as next door. A label over the tester's
+  doorway shows everyone, in either mode, where the tester is. What a click on a
+  chore answers goes to the action bar, a sabotage starts as a title, and the chat keeps what concerns everyone.
 - A chore starts with a right-click on its station. A hold chore takes `tasks.hold-seconds` with the player's eyes within
   `tasks.reach` blocks; a hit or walking off breaks it off. A fetch chore hands over a load at its station that must be
-  right-clicked onto its destination. A puzzle chore opens nine jumbled tiles to click from one to nine.
-- Each real chore pays one pick from `tasks.loot`. A visible chore also shows at its station, a bell rings or a fire
-  lights, which only an innocent's chore does.
+  right-clicked onto its destination. A played chore opens its game, and closing it early leaves the chore open.
+- Each chore pays one pick from `tasks.loot`. A visible chore also shows at its station: a bell rings or a fire lights.
 - A boss bar shows how far the innocents are. A dead innocent's open chores drop out, so the bar can still fill.
-  When every living innocent has done theirs, the innocents win.
+  When a chore done leaves no living innocent with an open one, the innocents win; a death alone never wins by chores.
 - Traitors sabotage from a row in their shop, free, one at a time and `tasks.sabotage.cooldown-seconds` apart: a
   blackout puts out the map's lights and darkens everyone else until someone mends the generator
   (`repair-seconds` beside it) or `blackout-seconds` pass; locked doors shut every door of the map for
@@ -189,4 +196,4 @@ picks the map): the vote, roles and titles, a chest and the ender chest, the tes
 traitor and with a spoofer, the traitor trap, a traitor door, a corpse identified and scanned, every shop item (the
 mask, lighter, defibrillator and crime camera on corpses, the bomb defused and set off, the jammer next to a radar and
 the tester), a team kill's karma, and both endings. TTT 2 needs the same on the `ttt2` server, plus each chore kind, a
-traitor's fake chore, the win by chores and each sabotage with its repair.
+each of the six chore games, the win by chores and each sabotage with its repair.
