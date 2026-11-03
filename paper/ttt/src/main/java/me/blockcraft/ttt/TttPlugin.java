@@ -19,6 +19,7 @@ import me.blockcraft.ttt.arena.TownBuilder;
 import me.blockcraft.ttt.arena.TownMaps;
 import me.blockcraft.ttt.command.TraitorChatCommand;
 import me.blockcraft.ttt.config.TttConfig;
+import me.blockcraft.ttt.config.TttMode;
 import me.blockcraft.ttt.game.KarmaRepository;
 import me.blockcraft.ttt.game.TttGame;
 import me.blockcraft.ttt.listener.ArenaListener;
@@ -52,6 +53,7 @@ public final class TttPlugin extends JavaPlugin {
         getConfig().options().copyDefaults(true);
         var gameConfig = GameConfig.from(getConfig());
         var config = TttConfig.from(getConfig());
+        var mode = TttMode.fromEnvironment();
         var api = BlockcraftApi.get();
         var services = GameServices.load(this, gameConfig, "bc_ttt_stats");
         var messages = services.messages();
@@ -62,8 +64,8 @@ public final class TttPlugin extends JavaPlugin {
         var locations = Locations.load(api.map().file(this, "locations.yml"));
         Supplier<Location> lobbySpawn = () -> api.waitingLobby().map(WaitingLobby::spawn)
                 .or(() -> locations.get(LOBBY)).orElseGet(lobby::getSpawnLocation);
-        var vote = new MapVote(messages, choices(config), getSLF4JLogger());
-        game = new TttGame(this, gameConfig, config, messages, vote, lobbySpawn, services.stats(), services.menus(), karma);
+        var vote = new MapVote(messages, choices(config, mode), getSLF4JLogger());
+        game = new TttGame(this, gameConfig, config, mode, messages, vote, lobbySpawn, services.stats(), services.menus(), karma);
         api.presence().maxPlayers(config.capacity());
 
         services.listen(
@@ -99,9 +101,10 @@ public final class TttPlugin extends JavaPlugin {
     /**
      * Eichenhain and every imported map of the pool. Eichenhain is built now, because building it takes seconds that
      * a round start must not stall for; the imported maps are only copied into place, and loading one takes a
-     * fraction of that. A map whose copy fails stays out of the vote.
+     * fraction of that. A map whose copy fails stays out of the vote. TTT 2 plays only Eichenhain, the one map with
+     * chores.
      */
-    private List<MapVote.Choice> choices(TttConfig config) {
+    private List<MapVote.Choice> choices(TttConfig config, TttMode mode) {
         var choices = new ArrayList<MapVote.Choice>();
         var eichenhainKey = new NamespacedKey(NAMESPACE, "eichenhain");
         Worlds.discard(eichenhainKey);
@@ -109,6 +112,9 @@ public final class TttPlugin extends JavaPlugin {
         playable(eichenhainWorld, config);
         var eichenhain = TownBuilder.build(eichenhainWorld);
         choices.add(new MapVote.Choice(eichenhainKey.getKey(), eichenhain.name(), List.of(), Material.OAK_SAPLING, () -> eichenhain));
+        if (mode == TttMode.TASKS) {
+            return choices;
+        }
         var pool = new TownMaps(BlockcraftApi.get().map().file(this, "maps"), getSLF4JLogger());
         var arenas = new TemplateDimensions(NAMESPACE, world -> {
             Worlds.settle(world);

@@ -48,6 +48,14 @@ rewards:
 # per-second health points within radius blocks for seconds; a medipack heals medipack health points at once
 # (20 is full health). Creeper arrows come creeper-arrows at a time; landmines, fake chests and creeper arrows
 # explode with explosion-power (a creeper is 3) and break no blocks.
+# A mask wears a corpse's face for mask-seconds. A time bomb goes off after seconds with power unless someone cuts the
+# right one of its wires. The silenced pistol fires shots for damage each up to range blocks; the taser holds whoever
+# it hits for seconds, charges times. A bear trap holds its victim for seconds and hurts them by damage. A jammer
+# silences radars, motion sensors, mine detectors, crime cameras and the tester within radius of its holder for
+# seconds. A motion sensor notes everyone within radius. A defibrillator brings back an innocent who died at most
+# window-seconds ago, after hold-seconds beside the corpse, with health. The vest takes vest of every hit's damage.
+# The mine detector shows traps within mine-detector-radius; the crime camera replays crime-camera-seconds before a
+# death and a third of that after it.
 shop:
   start-points: 2
   radar-seconds: 60
@@ -58,6 +66,33 @@ shop:
     seconds: 60
     radius: 3.0
     per-second: 1.0
+  mask-seconds: 60
+  time-bomb:
+    seconds: 45
+    power: 5.0
+    wires: 4
+  silenced-pistol:
+    shots: 3
+    damage: 8.0
+    range: 40
+  taser:
+    charges: 2
+    seconds: 4
+    range: 12
+  bear-trap:
+    seconds: 3
+    damage: 4.0
+  jammer:
+    seconds: 30
+    radius: 20.0
+  motion-sensor-radius: 4.0
+  defibrillator:
+    window-seconds: 30
+    hold-seconds: 3
+    health: 10.0
+  vest: 0.3
+  mine-detector-radius: 10.0
+  crime-camera-seconds: 6
   prices:
     medipack: 1
     radar: 1
@@ -65,9 +100,23 @@ shop:
     landmine: 2
     spoofer: 3
     fake-chest: 2
+    knife: 2
+    mask: 2
+    lighter: 1
+    time-bomb: 3
+    silenced-pistol: 2
+    bear-trap: 1
+    poison: 1
+    jammer: 2
     heal-station: 1
     dna-scanner: 1
     golden-sword: 3
+    motion-sensor: 1
+    taser: 2
+    defibrillator: 2
+    vest: 1
+    mine-detector: 1
+    crime-camera: 2
 
 # The tester shows its result delay-seconds after the button, for show-seconds, and rests cooldown-seconds after
 # every press. On a map with a traitor trap, its floor stays open for trap-seconds.
@@ -95,3 +144,32 @@ chests:
     - {item: LEATHER_CHESTPLATE, amount: 1, weight: 6}
     - {item: CHAINMAIL_HELMET, amount: 1, weight: 4}
     - {item: GOLDEN_APPLE, amount: 1, weight: 2}
+
+# TTT 2, the mode a server plays when BLOCKCRAFT_TTT_MODE is tasks, on maps that have chores. Everyone gets
+# per-player chores when the roles are drawn; the traitors' are fake. Chests stay shut: every player starts with
+# start-items, and each real chore done pays one pick from loot. When every living innocent's chores are done, the
+# innocents win. A hold chore takes hold-seconds within reach blocks of its station.
+# Traitors sabotage from their shop, one at a time and cooldown-seconds apart: a blackout darkens everyone else for
+# blackout-seconds unless mended at the generator, doors shut every door for doors-seconds, and tester puts the tester
+# out for tester-seconds unless mended at its button. Mending takes repair-seconds.
+tasks:
+  per-player: 4
+  hold-seconds: 6
+  reach: 3.0
+  start-items:
+    - WOODEN_SWORD
+  loot:
+    - {item: STONE_SWORD, amount: 1, weight: 26}
+    - {item: BOW, amount: 1, weight: 14}
+    - {item: ARROW, amount: 10, weight: 18}
+    - {item: LEATHER_CHESTPLATE, amount: 1, weight: 12}
+    - {item: CHAINMAIL_HELMET, amount: 1, weight: 10}
+    - {item: CHAINMAIL_LEGGINGS, amount: 1, weight: 6}
+    - {item: GOLDEN_APPLE, amount: 1, weight: 8}
+    - {item: IRON_SWORD, amount: 1, weight: 6}
+  sabotage:
+    cooldown-seconds: 90
+    blackout-seconds: 40
+    doors-seconds: 15
+    tester-seconds: 60
+    repair-seconds: 5

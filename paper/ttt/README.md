@@ -1,6 +1,7 @@
 # TTT
 
-`paper/ttt` plays GommeHD's TTT (Trouble in Terrorist Town) in the `ttt` group: up to `players.max` (12) players on
+`paper/ttt` plays GommeHD's TTT (Trouble in Terrorist Town) in the `ttt` group, and TTT 2, the same game with chores
+and sabotage, in the `ttt2` group (see "TTT 2" below): up to `players.max` (12) players on
 one map, a few of them traitors. The rules follow GommeHD's mode and Garry's Mod's original, checked against two
 open Minecraft clones ([MTTT](https://github.com/phiph-s/MTTT), Apache 2.0, and
 [caseif/TTT](https://github.com/caseif/TTT), MIT); no code was taken from either.
@@ -26,6 +27,9 @@ the first player to right-click it identifies it for everyone, which reveals the
 a click also tells who the killer was. Dead players watch; their chat reaches only other spectators. The sidebar counts them among the living until their corpse is identified.
 
 A traitor's chat message that starts with `#` reaches only the living traitors; `/tc <Nachricht>` writes one.
+
+A map may have **traitor doors**: iron doors into passages that open for a living traitor's right-click for three
+seconds and stay shut for everyone else.
 
 ## The maps
 
@@ -97,11 +101,50 @@ a point for every innocent or detective they kill, a detective for every traitor
 | Traitor | Landmine | a pressure plate that explodes under anyone but a traitor |
 | Traitor | Tester-Spoofer | the next test shows its traitor as innocent |
 | Traitor | Fake-Kiste | a chest that explodes when anyone but a traitor opens it |
+| Traitor | Messer | a stab in the back kills at once and uses it up; from the front it is shears |
+| Traitor | Maske | on a corpse: wear its skin and name for `shop.mask-seconds`; the figure is left faceless and unidentified |
+| Traitor | Feuerzeug | on a corpse: burns it, so nobody identifies or scans it, and the sidebar keeps counting the dead among the living |
+| Traitor | Zeitbombe | set on the floor, ticks down `shop.time-bomb.seconds` with a timer above it and explodes with its `power`; anyone can cut one of its `wires`, and only the right one, which the owner is told, defuses it |
+| Traitor | Schalldämpfer-Pistole | hitscan, `shop.silenced-pistol.shots` shots of `damage` up to `range` blocks, almost silent |
+| Traitor | Bärenfalle | set on the floor; whoever but a traitor walks in is held for `shop.bear-trap.seconds` and hurt by `damage`, loudly |
+| Traitor | Gift | on a heal station: from then on it hurts instead of healing, and looks the same |
+| Traitor | Störsender | for `shop.jammer.seconds`, radars, motion sensors, mine detectors, crime cameras and the tester within `radius` of the holder show only static |
 | Detective | Heilstation | a block that heals everyone within `shop.heal-station.radius` for `shop.heal-station.seconds` |
 | Detective | DNA-Scanner | names the killer of a corpse it touches |
 | Detective | Goldenes Schwert | one blow kills a traitor; striking anyone else kills the wielder; used up either way |
+| Detective | Bewegungsmelder | set on the floor; notes everyone within `shop.motion-sensor-radius`, and a right-click shows who passed and how long ago |
+| Detective | Taser | hitscan, `shop.taser.charges` shots up to `range` blocks; whoever it hits cannot move, strike or shoot for `seconds` |
+| Detective | Defibrillator | at the corpse of an innocent or detective dead at most `shop.defibrillator.window-seconds`: after `hold-seconds` beside it they live again with `health` |
+| Detective | Schutzweste | every hit deals `shop.vest` less, for the rest of the round |
+| Detective | Minensucher | held, marks landmines, fake chests, bear traps and bombs within `shop.mine-detector-radius` with particles only the holder sees |
+| Detective | Tatortkamera | at a corpse, replays `shop.crime-camera-seconds` before the death and a third of that after it with faceless figures only the holder sees, the dead one glowing |
 
-Explosions use `shop.explosion-power`, break no blocks and count as the owner's kill, even once the owner is dead.
+The time bomb, bear trap and motion sensor lie on an item display with the pack's model, and the bomb and sensor
+answer clicks through an interaction hitbox. The lighter and the mask work on a corpse without identifying it; the
+other goods identify it first. A mask, vest, stun, radar or jammer ends when its holder dies or leaves.
+
+Explosions use `shop.explosion-power` (the time bomb its own), break no blocks and count as the owner's kill, even once
+the owner is dead; so do the bear trap's and a poisoned heal station's hurt.
+
+## TTT 2
+
+A server whose `BLOCKCRAFT_TTT_MODE` is `tasks` plays TTT 2. The compose service `ttt2` does, in its own group, so the
+two modes fill their own rounds; both share the stats, karma and the lobby. TTT 2 plays only maps whose `Town` has
+a `TaskLayout`, which today is the map `TownBuilder` builds. The settings are under `tasks` in config.yml.
+
+- The chests stay shut. Everyone starts with `tasks.start-items` and gets `tasks.per-player` chores when the roles
+  are drawn, listed on the sidebar with where they are. A traitor's list looks the same, and doing them shows nothing.
+- A chore starts with a right-click on its station. A hold chore takes `tasks.hold-seconds` within `tasks.reach`
+  blocks; a hit or walking off breaks it off. A fetch chore hands over a load at its station that must be
+  right-clicked onto its destination. A puzzle chore opens nine jumbled tiles to click from one to nine.
+- Each real chore pays one pick from `tasks.loot`. A visible chore also shows at its station, a bell rings or a fire
+  lights, which only an innocent's chore does.
+- A boss bar shows how far the innocents are. A dead innocent's open chores drop out, so the bar can still fill.
+  When every living innocent has done theirs, the innocents win.
+- Traitors sabotage from a row in their shop, free, one at a time and `tasks.sabotage.cooldown-seconds` apart: a
+  blackout puts out the map's lights and darkens everyone else until someone mends the generator
+  (`repair-seconds` beside it) or `blackout-seconds` pass; locked doors shut every door of the map for
+  `doors-seconds`; a broken tester tests nobody until it is mended at its button or `tester-seconds` pass.
 
 ## Karma, health, rewards
 
@@ -117,6 +160,9 @@ Stats go to `bc_ttt_stats`.
 ## Testing
 
 `./gradlew :paper:ttt:build` runs the unit tests (role counts, the win check, shop points, karma, reading a
-`map.yml`). A round needs a client smoke test with at least three accounts (`/start` shortens the lobby, `/forcemap`
+`map.yml`, TTT 2's chore progress). A round needs a client smoke test with at least three accounts (`/start` shortens the lobby, `/forcemap`
 picks the map): the vote, roles and titles, a chest and the ender chest, the tester on every map with and without a
-traitor and with a spoofer, the traitor trap, a corpse identified and scanned, every shop item, a team kill's karma, and both endings.
+traitor and with a spoofer, the traitor trap, a traitor door, a corpse identified and scanned, every shop item (the
+mask, lighter, defibrillator and crime camera on corpses, the bomb defused and set off, the jammer next to a radar and
+the tester), a team kill's karma, and both endings. TTT 2 needs the same on the `ttt2` server, plus each chore kind, a
+traitor's fake chore, the win by chores and each sabotage with its repair.

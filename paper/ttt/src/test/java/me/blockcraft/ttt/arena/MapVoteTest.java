@@ -15,6 +15,7 @@ import java.lang.reflect.Proxy;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
@@ -43,7 +44,7 @@ public class MapVoteTest {
             serverField.set(null, server);
             var messages = Messages.load(temporary.newFolder().toPath(), () -> new ByteArrayInputStream(
                     "vote:\n  result: '<map>'\n".getBytes(StandardCharsets.UTF_8)));
-            var fallback = new Town("Fallback", null, List.of(), null, null);
+            var fallback = new Town("Fallback", null, List.of(), null, null, List.of(), Optional.empty());
             var vote = new MapVote(messages, List.of(
                     new MapVote.Choice("fallback", "Fallback", List.of(), Material.OAK_SAPLING, () -> fallback),
                     new MapVote.Choice("broken", "Broken", List.of(), Material.PAPER, () -> {

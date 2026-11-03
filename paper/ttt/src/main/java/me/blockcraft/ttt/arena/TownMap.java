@@ -93,7 +93,8 @@ public record TownMap(String key, String name, List<String> builders, Material i
         var room = new TesterRoom(tester.zone(), tester.button().in(world), tester.entrance().blocks(world),
                 tester.lamps().stream().map(lamp -> lamp.in(world)).toList(),
                 tester.trap().map(trap -> new TesterRoom.Trap(trap.button().in(world), trap.floor().blocks(world))));
-        return new Town(name, world, spawns.stream().map(point -> point.in(world)).toList(), room, spectator.in(world));
+        return new Town(name, world, spawns.stream().map(point -> point.in(world)).toList(), room, spectator.in(world),
+                List.of(), Optional.empty());
     }
 
     private static Map<String, Object> section(ConfigurationSection parent, String path) {

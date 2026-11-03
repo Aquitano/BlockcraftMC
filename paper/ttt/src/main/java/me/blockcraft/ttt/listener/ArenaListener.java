@@ -7,6 +7,7 @@ import me.blockcraft.ttt.game.Role;
 import me.blockcraft.ttt.game.RoundItem;
 import me.blockcraft.ttt.game.TttGame;
 import me.blockcraft.ttt.shop.ShopItem;
+import me.blockcraft.ttt.task.TaskItem;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.damage.DamageSource;
@@ -19,6 +20,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockExplodeEvent;
+import org.bukkit.event.block.BlockIgniteEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
@@ -30,15 +32,18 @@ import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.EquipmentSlot;
 
+import java.util.Optional;
+
 /**
  * The round's rules for the town: nothing is built or broken but what the shop sells, explosions leave the houses
  * standing, nobody is hurt or hungry before the roles are drawn, and blows land as hard as the attacker's karma
- * allows. The map's chests and ender chests, the tester's and the traitor trap's buttons and the corpses answer a
- * click.
+ * allows. The map's chests and ender chests, the tester's and the traitor trap's buttons, the traitor doors, TTT 2's
+ * chores, the corpses and whatever the shop's goods left in the world answer a click.
  */
 public final class ArenaListener implements Listener {
 
@@ -59,6 +64,13 @@ public final class ArenaListener implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void onBreak(BlockBreakEvent event) {
+        if (inRound()) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onIgnite(BlockIgniteEvent event) {
         if (inRound()) {
             event.setCancelled(true);
         }
@@ -97,14 +109,16 @@ public final class ArenaListener implements Listener {
         if (HotbarItem.of(hand, RoundItem.class).isPresent()) {
             event.setCancelled(true);
             game.openShop(player);
-        } else if (hand != null && game.rolesDrawn() && game.equipment().heal(player, hand)) {
+        } else if (hand != null && game.rolesDrawn()
+                && game.equipment().use(player, hand, Optional.ofNullable(block), event.getBlockFace())) {
             event.setCancelled(true);
         }
     }
 
     /** True if the click was the town's to answer. */
     private boolean clickBlock(Player player, Block block) {
-        if (game.equipment().openFake(player, block) || game.openChest(player, block)) {
+        if (game.equipment().openFake(player, block) || game.openChest(player, block)
+                || game.openTraitorDoor(player, block) || game.clickChore(player, block)) {
             return true;
         }
         if (block.getType() == Material.ENDER_CHEST) {
@@ -119,23 +133,41 @@ public final class ArenaListener implements Listener {
         return false;
     }
 
+    /** A corpse, or something the shop's goods left in the world: a time bomb, a motion sensor. */
     @EventHandler(ignoreCancelled = true)
-    public void onCorpse(PlayerInteractEntityEvent event) {
+    public void onEntityClick(PlayerInteractEntityEvent event) {
         var player = event.getPlayer();
-        if (event.getHand() != EquipmentSlot.HAND || !game.corpses().isCorpse(event.getRightClicked())) {
+        var clicked = event.getRightClicked();
+        if (event.getHand() != EquipmentSlot.HAND) {
             return;
         }
-        event.setCancelled(true);
-        if (inRound() && game.isPlaying(player)) {
-            game.inspect(player, event.getRightClicked(), player.getInventory().getItemInMainHand());
+        if (game.corpses().isCorpse(clicked)) {
+            event.setCancelled(true);
+            if (inRound() && game.isPlaying(player)) {
+                game.inspect(player, clicked, player.getInventory().getItemInMainHand());
+            }
+        } else if (inRound() && game.isPlaying(player) && game.equipment().clickGadget(player, clicked)) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onMove(PlayerMoveEvent event) {
+        if (event.hasChangedBlock() && inRound() && game.rolesDrawn() && game.isPlaying(event.getPlayer())) {
+            game.equipment().moved(event.getPlayer(), event.getTo().getBlock());
         }
     }
 
     @EventHandler(ignoreCancelled = true)
     public void onDamage(EntityDamageEvent event) {
-        if (event.getEntity() instanceof Player && inRound() && !game.rolesDrawn()) {
-            event.setCancelled(true);
+        if (!(event.getEntity() instanceof Player player) || !inRound()) {
+            return;
         }
+        if (!game.rolesDrawn()) {
+            event.setCancelled(true);
+            return;
+        }
+        game.channels().interrupt(player);
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
@@ -149,10 +181,15 @@ public final class ArenaListener implements Listener {
             case Projectile projectile when projectile.getShooter() instanceof Player shooter -> shooter;
             default -> null;
         };
+        event.setDamage(event.getDamage() * game.equipment().damageTaken(victim));
         if (attacker == null || attacker.equals(victim) || !game.isPlaying(attacker)) {
             return;
         }
-        if (damager == attacker && goldenSword(event, attacker, victim)) {
+        if (game.equipment().stunned(attacker)) {
+            event.setCancelled(true);
+            return;
+        }
+        if (damager == attacker && (goldenSword(event, attacker, victim) || backstab(event, attacker, victim))) {
             return;
         }
         event.setDamage(event.getDamage() * game.damageFactor(attacker));
@@ -176,9 +213,24 @@ public final class ArenaListener implements Listener {
         return true;
     }
 
+    private boolean backstab(EntityDamageByEntityEvent event, Player attacker, Player victim) {
+        if (!game.equipment().backstab(attacker, victim)) {
+            return false;
+        }
+        event.setDamage(LETHAL);
+        return true;
+    }
+
     @EventHandler(ignoreCancelled = true)
     public void onShoot(EntityShootBowEvent event) {
-        if (event.getEntity() instanceof Player shooter && event.getConsumable() != null) {
+        if (!(event.getEntity() instanceof Player shooter)) {
+            return;
+        }
+        if (game.equipment().stunned(shooter)) {
+            event.setCancelled(true);
+            return;
+        }
+        if (event.getConsumable() != null) {
             game.equipment().shoot(shooter, event.getConsumable(), event.getProjectile());
         }
     }
@@ -208,7 +260,8 @@ public final class ArenaListener implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void onDrop(PlayerDropItemEvent event) {
-        if (HotbarItem.of(event.getItemDrop().getItemStack(), RoundItem.class).isPresent()) {
+        var stack = event.getItemDrop().getItemStack();
+        if (HotbarItem.of(stack, RoundItem.class).isPresent() || HotbarItem.of(stack, TaskItem.class).isPresent()) {
             event.setCancelled(true);
         }
     }

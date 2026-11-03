@@ -47,9 +47,11 @@ vote:
 
 round:
   preparation: "<prefix><muted>Durchsucht die Kisten! In <accent><seconds> Sekunden <muted>werden die Rollen verteilt."
+  preparation-tasks: "<prefix><muted>Seht euch um. In <accent><seconds> Sekunden <muted>werden Rollen und Aufgaben verteilt."
   winner:
     traitors: "<prefix><error>Die Traitor haben gewonnen!"
     innocents: "<prefix><success>Die Innocents haben gewonnen!"
+    chores: "<prefix><success>Alle Aufgaben sind erledigt. Die Innocents haben gewonnen!"
   draw: "<prefix><muted>Die Runde ist ohne Sieger zu Ende."
   traitors: "<prefix><muted>Die Traitor waren<dark>: <error><players>"
 
@@ -69,11 +71,63 @@ shop:
   too-expensive: "<prefix><error>Dir fehlen noch <points> Punkte."
   bought: "<prefix><muted>Gekauft<dark>: <accent><item>"
   earned: "<prefix><muted>Du hast jetzt <accent><points> Punkte<muted>."
-  spoofer-ready: "<prefix><error>Dein Tester-Spoofer ist schon bereit."
+  owned: "<prefix><error>Das hast du schon."
+  no-room: "<prefix><error>Dafür ist hier kein Platz. Stell es auf freien Boden."
   fake-chest-own: "<prefix><muted>Das ist eine Falle für die anderen."
   radar-expired: "<prefix><muted>Dein Radar ist erloschen."
   radar-distance: "<muted>Radar<dark>: <accent><distance> Blöcke"
   golden-sword-wrong: "<prefix><error>Das war kein Traitor. Das goldene Schwert richtet sich gegen dich."
+  mask:
+    worn: "<prefix><muted>Du trägst jetzt ein fremdes Gesicht. Es hält nicht lange."
+    fallen: "<prefix><muted>Die Maske ist abgefallen. Du bist wieder du selbst."
+    no-face: "<prefix><error>Dieser Leiche kannst du kein Gesicht mehr nehmen."
+  lighter:
+    burned: "<prefix><muted>Die Leiche ist verbrannt. Niemand wird je wissen, wer das war."
+  time-bomb:
+    title: "<arrow><ttt>TTT <dark>· <muted>Zeitbombe"
+    timer: "<error><bold><seconds>"
+    armed: "<prefix><muted>Die Bombe tickt, <accent><seconds> Sekunden<muted>. Der richtige Draht ist <accent><wire><muted>."
+    wire: "<arrow><muted>Draht<dark>: <accent><wire>"
+    cut: "<click>Durchschneiden"
+    defused: "<prefix><success>Entschärft. Das war knapp."
+    wrong: "<prefix><error>Falscher Draht!"
+    wires:
+      red: "rot"
+      blue: "blau"
+      yellow: "gelb"
+      green: "grün"
+      white: "weiß"
+      black: "schwarz"
+      purple: "lila"
+  bear-trap:
+    set: "<prefix><muted>Die Bärenfalle liegt bereit."
+    caught: "<prefix><error>Du bist in eine Bärenfalle getreten!"
+  poison:
+    done: "<prefix><muted>Die Heilstation ist vergiftet. Sie sieht aus wie vorher."
+    nothing: "<prefix><error>Träufle das Gift auf eine Heilstation, die noch sauber ist."
+  jammer:
+    started: "<prefix><muted>Der Störsender läuft <accent><seconds> Sekunden<muted>. Um dich herum funkt nichts mehr."
+    stopped: "<prefix><muted>Dein Störsender ist aus."
+    static: "<muted>Rauschen<dark>: <error>gestört"
+    blocked: "<prefix><error>Hier stört etwas. Das Gerät zeigt nur Rauschen."
+  taser:
+    hit: "<prefix><muted>Du hast <accent><player> <muted>getasert."
+    hit-you: "<prefix><error><player> hat dich getasert! <muted>Du kannst dich kurz nicht wehren."
+  motion-sensor:
+    title: "<arrow><ttt>TTT <dark>· <muted>Bewegungsmelder"
+    set: "<prefix><muted>Der Bewegungsmelder merkt sich ab jetzt, wer vorbeikommt."
+    entry: "<white><player> <dark>· <muted>vor <minutes>:<seconds>"
+    nobody: "<muted>Hier ist noch niemand vorbeigekommen."
+  mine-detector:
+    found: "<muted>Minensucher<dark>: <accent><traps> <muted>in der Nähe"
+  defibrillator:
+    work: "<success>Wiederbelebung"
+    traitor: "<prefix><error>Bei dieser Leiche schlägt der Defibrillator nicht an."
+    too-late: "<prefix><error>Zu spät. Diese Leiche liegt schon zu lange hier."
+    failed: "<prefix><error>Die Wiederbelebung hat nicht geklappt."
+    revived: "<prefix><accent><medic> <muted>hat <white><player> <muted>wiederbelebt!"
+  crime-camera:
+    nothing: "<prefix><error>Für diesen Tod hat die Kamera nichts aufgezeichnet."
   items:
     medipack:
       name: "<success>Medipack"
@@ -117,6 +171,76 @@ shop:
       lore:
         - "<bullet><muted>Tötet einen Traitor mit einem Schlag."
         - "<bullet><error>Triffst du jemand anderen, stirbst du."
+    knife:
+      name: "<error>Messer"
+      lore:
+        - "<bullet><muted>Ein Stich in den Rücken tötet sofort."
+        - "<bullet><muted>Von vorn kaum der Rede wert."
+    mask:
+      name: "<accent>Maske"
+      lore:
+        - "<bullet><muted>Nimm einer Leiche das Gesicht und"
+        - "<muted>trag eine Weile ihren Namen."
+    lighter:
+      name: "<error>Feuerzeug"
+      lore:
+        - "<bullet><muted>Verbrennt eine Leiche, bevor"
+        - "<muted>jemand weiß, wer sie war."
+    time-bomb:
+      name: "<error>Zeitbombe"
+      lore:
+        - "<bullet><muted>Tickt hörbar und geht hoch, wenn"
+        - "<muted>niemand den richtigen Draht schneidet."
+    silenced-pistol:
+      name: "<error>Schalldämpfer-Pistole"
+      lore:
+        - "<bullet><muted>Ein paar Schüsse, die kaum"
+        - "<muted>jemand hört."
+    bear-trap:
+      name: "<error>Bärenfalle"
+      lore:
+        - "<bullet><muted>Hält fest, wer hineintritt, und"
+        - "<muted>schnappt laut zu. Traitor gehen drüber."
+    poison:
+      name: "<error>Gift"
+      lore:
+        - "<bullet><muted>Auf eine Heilstation geträufelt,"
+        - "<muted>heilt sie nicht mehr, sie schadet."
+    jammer:
+      name: "<accent>Störsender"
+      lore:
+        - "<bullet><muted>Legt um dich herum Radar, Melder,"
+        - "<muted>Minensucher, Kamera und Tester lahm."
+    motion-sensor:
+      name: "<accent>Bewegungsmelder"
+      lore:
+        - "<bullet><muted>Merkt sich, wer vorbeigeht."
+        - "<bullet><muted>Ein Klick darauf zeigt die Liste."
+    taser:
+      name: "<accent>Taser"
+      lore:
+        - "<bullet><muted>Hält einen Verdächtigen kurz fest."
+        - "<muted>Er kann nicht zuschlagen oder schießen."
+    defibrillator:
+      name: "<success>Defibrillator"
+      lore:
+        - "<bullet><muted>Holt einen Innocent zurück, der"
+        - "<muted>gerade erst gestorben ist."
+    vest:
+      name: "<primary>Schutzweste"
+      lore:
+        - "<bullet><muted>Du nimmst bis zum Ende der Runde"
+        - "<muted>weniger Schaden."
+    mine-detector:
+      name: "<accent>Minensucher"
+      lore:
+        - "<bullet><muted>In der Hand zeigt er dir Minen,"
+        - "<muted>Fallen und Bomben in der Nähe."
+    crime-camera:
+      name: "<accent>Tatortkamera"
+      lore:
+        - "<bullet><muted>Zeigt an einer Leiche die letzten"
+        - "<muted>Sekunden vor dem Tod. Ohne Gesichter."
 
 ender-chest:
   locked: "<prefix><error>Die Enderkiste öffnet sich erst, wenn die Rollen verteilt sind."
@@ -131,6 +255,14 @@ tester:
     traitors-only: "<prefix><error>Nur Traitor können diesen Knopf benutzen."
     used: "<prefix><error>Die Traitor-Falle wurde in dieser Runde schon benutzt."
     sprung: "<prefix><muted>Die Traitor-Falle ist offen."
+
+traitor-door:
+  locked: "<prefix><error>Diese Tür rührt sich nicht."
+
+channel:
+  progress: "<work> <success><done><dark><rest>"
+  interrupted: "<prefix><error>Unterbrochen<dark>: <muted><work>"
+  left: "<prefix><error>Du bist zu weit weg<dark>: <muted><work>"
 
 corpse:
   unknown: "<muted>Unbekannte Leiche"
@@ -178,6 +310,8 @@ menu:
 
 scoreboard:
   title: "<ttt><bold>TTT"
+  title-tasks: "<ttt><bold>TTT 2"
+  chores: "<muted><icon:map> AUFGABEN"
   map-vote: "Abstimmung läuft"
   role: "<muted><icon:mode> ROLLE"
   no-role: "<muted>Wird verteilt"
@@ -190,3 +324,56 @@ scoreboard:
   winner:
     traitors: "<error>Traitor"
     innocents: "<success>Innocents"
+
+tasks:
+  bar: "<success>Aufgaben der Innocents <dark>● <white><percent>%"
+  chest-shut: "<prefix><muted>Die Kisten bleiben zu. Beute gibt es für erledigte Aufgaben."
+  not-yet: "<prefix><muted>Die Aufgaben werden mit den Rollen verteilt."
+  not-yours: "<prefix><muted><chore> <dark>· <muted>Das steht nicht auf deiner Liste."
+  generator: "<prefix><muted>Der Generator läuft. Hier gibt es nur bei einem Stromausfall etwas zu tun."
+  cargo-taken: "<prefix><muted>Aufgenommen. <accent><chore>"
+  cargo-carrying: "<prefix><muted>Du trägst das schon. <accent><chore>"
+  cargo-missing: "<prefix><error>Dir fehlt die Ladung. Hol sie erst<dark>: <muted><where>"
+  done: "<prefix><success>Erledigt<dark>: <muted><chore>"
+  done-pretend: "<prefix><muted>Zum Schein erledigt<dark>: <muted><chore>"
+  sidebar:
+    done: "<success>✔ <dark><chore>"
+    open: "<white><chore> <dark>· <muted><where>"
+  puzzle:
+    title: "<arrow><ttt>TTT <dark>· <muted><chore>"
+    tile: "<accent><number>"
+  sabotage:
+    resting: "<prefix><error>Die nächste Sabotage geht erst in <seconds> Sekunden."
+    resting-lore: "<bullet><error>Wieder bereit in <seconds> Sekunden"
+    ready: "<click>Sabotieren"
+    done: "<prefix><muted>Sabotage läuft."
+    locked: "<prefix><error>Die Tür ist verriegelt."
+    tester-down: "<prefix><error>Der Tester ist kaputt. Repariere ihn an seinem Knopf."
+    kinds:
+      blackout:
+        name: "<error>Stromausfall"
+        lore:
+          - "<bullet><muted>Alle Lichter gehen aus, alle außer"
+          - "<muted>euch tappen im Dunkeln."
+          - "<bullet><muted>Wird am Generator repariert."
+      doors:
+        name: "<error>Türen verriegeln"
+        lore:
+          - "<bullet><muted>Jede Tür fällt zu und bleibt"
+          - "<muted>kurz verschlossen."
+      tester:
+        name: "<error>Tester stören"
+        lore:
+          - "<bullet><muted>Der Tester testet niemanden,"
+          - "<muted>bis ihn jemand repariert."
+    started:
+      blackout: "<prefix><error>Stromausfall! <muted>Repariert den Generator."
+      doors: "<prefix><error>Alle Türen sind verriegelt!"
+      tester: "<prefix><error>Der Tester ist ausgefallen! <muted>Repariert ihn an seinem Knopf."
+    ended:
+      blackout: "<prefix><success>Der Strom ist wieder da."
+      doors: "<prefix><success>Die Türen sind wieder offen."
+      tester: "<prefix><success>Der Tester funktioniert wieder."
+    mending:
+      blackout: "<accent>Generator reparieren"
+      tester: "<accent>Tester reparieren"

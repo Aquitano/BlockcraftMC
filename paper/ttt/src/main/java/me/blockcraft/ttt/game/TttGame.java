@@ -26,9 +26,12 @@ import me.blockcraft.common.message.Messages;
 import me.blockcraft.ttt.arena.MapVote;
 import me.blockcraft.ttt.arena.Town;
 import me.blockcraft.ttt.config.TttConfig;
+import me.blockcraft.ttt.config.TttMode;
 import me.blockcraft.ttt.shop.Equipment;
 import me.blockcraft.ttt.shop.ShopItem;
 import me.blockcraft.ttt.shop.ShopMenu;
+import me.blockcraft.ttt.task.Sabotage;
+import me.blockcraft.ttt.task.TaskRound;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -39,7 +42,10 @@ import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
+import org.bukkit.block.data.Openable;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.PlayerDeathEvent;
@@ -69,16 +75,19 @@ import java.util.OptionalInt;
  * innocents. The traitors win when nobody else is left; everyone else wins when the traitors are dead or the time runs
  * out. Nobody hears who killed whom: the dead lie where they fell until someone identifies them, the tester tells a
  * traitor from an innocent, and traitors and detectives spend their kills in a shop. Killing your own side costs
- * karma, and with it the strength of your blows.
+ * karma, and with it the strength of your blows. In TTT 2 the chests stay shut: everyone gets chores with their
+ * role, which pay loot and can win the round for the innocents, and the traitors sabotage the town.
  */
 public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
 
     private enum Stage { PREPARATION, PLAYING }
 
+    private static final long TRAITOR_DOOR_TICKS = 60L;
     private static final Title.Times ROLE_TITLE = Title.Times.times(Duration.ofMillis(250), Duration.ofSeconds(3), Duration.ofMillis(750));
 
     private final Plugin plugin;
     private final TttConfig config;
+    private final TttMode mode;
     private final Messages messages;
     private final MapVote vote;
     private final Supplier<Location> lobbySpawn;
@@ -91,6 +100,8 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
     private final GameSidebar sidebar;
     private final Corpses corpses;
     private final Equipment equipment;
+    private final Channels channels;
+    private final CrimeScenes crimeScenes;
     private final Map<UUID, Role> roles = new HashMap<>();
     private final Map<UUID, Integer> karma = new HashMap<>();
     private final Map<UUID, Integer> points = new HashMap<>();
@@ -101,16 +112,18 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
     private final Map<UUID, String> names = new HashMap<>();
     private Optional<Town> town = Optional.empty();
     private Optional<Tester> tester = Optional.empty();
+    private Optional<TaskRound> tasks = Optional.empty();
     private Stage stage = Stage.PREPARATION;
     private Optional<Faction> winner = Optional.empty();
     private boolean enderChestOpened;
     private int secondsLeft;
     private volatile Set<UUID> traitorChat = Set.of();
 
-    public TttGame(Plugin plugin, GameConfig gameConfig, TttConfig config, Messages messages, MapVote vote,
+    public TttGame(Plugin plugin, GameConfig gameConfig, TttConfig config, TttMode mode, Messages messages, MapVote vote,
                    Supplier<Location> lobbySpawn, StatsRepository stats, StatsMenus statsMenus, KarmaRepository karmaRepository) {
         this.plugin = plugin;
         this.config = config;
+        this.mode = mode;
         this.messages = messages;
         this.vote = vote;
         this.lobbySpawn = lobbySpawn;
@@ -123,9 +136,11 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
         this.hotbar = new LobbyHotbar(plugin, List.of(new LobbyHotbar.Choice(MenuIcon.VOTE, messages.get("item.vote"),
                 () -> phase() == GamePhase.LOBBY, this::openVote)), statsMenus, countdown);
         round.countWith(this::headcount);
-        this.sidebar = new GameSidebar(messages.get("scoreboard.title"), round);
+        this.sidebar = new GameSidebar(messages.get(mode == TttMode.TASKS ? "scoreboard.title-tasks" : "scoreboard.title"), round);
         this.corpses = new Corpses(messages);
         this.equipment = new Equipment(plugin, config.shop(), messages, this::roleOf, round::players);
+        this.channels = new Channels(plugin, messages, round::players, config.tasks().reach());
+        this.crimeScenes = new CrimeScenes(plugin, round::players, config.shop().crimeCameraSeconds());
         this.secondsLeft = config.roundSeconds();
         this.entrance = new LobbyEntrance(round, countdown, hotbar, () -> Optional.of(lobbySpawn.get()),
                 () -> Optional.of(phase() == GamePhase.INGAME ? spectatorSpawn() : lobbySpawn.get()),
@@ -146,6 +161,10 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
 
     public Equipment equipment() {
         return equipment;
+    }
+
+    public Channels channels() {
+        return channels;
     }
 
     public boolean isTesterButton(Block block) {
@@ -189,6 +208,7 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
     @Override
     public void join(Player player) {
         entrance.admit(player);
+        tasks.ifPresent(running -> running.show(player));
         refreshAll();
     }
 
@@ -205,6 +225,7 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
 
     @Override
     public void quit(Player player) {
+        equipment.forget(player);
         boolean wasPlaying = round.leave(player);
         BlockcraftApi.get().tabTeams().clearColor(player);
         if (phase() == GamePhase.LOBBY) {
@@ -213,6 +234,7 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
         }
         if (phase() == GamePhase.INGAME && wasPlaying) {
             updateTraitorChat();
+            tasks.ifPresent(TaskRound::update);
             checkWinner();
         }
         refreshAll();
@@ -245,6 +267,8 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
         var built = vote.decide();
         town = Optional.of(built);
         tester = Optional.of(new Tester(plugin, built.tester(), config.tester(), messages, round::players, equipment::showsAsTraitor));
+        tasks = built.tasks().filter(layout -> mode == TttMode.TASKS).map(layout -> new TaskRound(plugin, config.tasks(),
+                messages, layout, built.tester().button(), channels, this::roleOf, round::players, this::choresChanged));
         round.enter(GamePhase.INGAME);
         stage = Stage.PREPARATION;
         int index = 0;
@@ -252,10 +276,12 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
             PlayerReset.reset(player, GameMode.SURVIVAL);
             config.combat().apply(player);
             player.teleport(built.spawn(index++));
+            tasks.ifPresent(running -> running.equip(player));
         }
         round.spectators().forEach(spectator -> spectator.teleport(built.spectatorSpawn()));
         RoundStart.go(round.players());
-        Bukkit.broadcast(messages.get("round.preparation", Formatter.number("seconds", config.preparationSeconds())));
+        Bukkit.broadcast(messages.get(tasks.isPresent() ? "round.preparation-tasks" : "round.preparation",
+                Formatter.number("seconds", config.preparationSeconds())));
         secondsLeft = config.preparationSeconds();
         round.clock(new TimerBar(messages, "timer.preparation", config.preparationSeconds()), remaining -> {
             secondsLeft = remaining;
@@ -289,12 +315,7 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
             }
             if (role.hasShop()) {
                 points.put(player.getUniqueId(), config.shop().startPoints());
-                var looted = player.getInventory().getItem(RoundItem.SLOT);
-                player.getInventory().setItem(RoundItem.SLOT, RoundItem.SHOP.build(
-                        MenuIcon.TTT_SHOP.item().name(messages.get("item.shop", name))));
-                if (looted != null && !looted.isEmpty()) {
-                    give(player, looted);
-                }
+                giveShop(player, role);
             }
         }
         var traitors = traitors();
@@ -309,6 +330,8 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
         Sounds.PVP_ENABLED.playToAll();
         updateTraitorChat();
         equipment.start();
+        crimeScenes.start();
+        tasks.ifPresent(running -> running.assign(Map.copyOf(roles)));
         secondsLeft = config.roundSeconds();
         round.clock(new TimerBar(messages, "timer.round", config.roundSeconds()), remaining -> {
             secondsLeft = remaining;
@@ -330,10 +353,12 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
             return;
         }
         var death = summary.resolveDeath(event);
+        equipment.forget(victim);
+        crimeScenes.died(victim);
         var trapper = tester.flatMap(trap -> trap.trapper(victim.getLocation(), event.getDamageSource().getDamageType().getKey().getKey()))
                 .map(Bukkit::getPlayer);
         Optional<Player> killer = ownFault.remove(victim.getUniqueId()) ? Optional.empty()
-                : equipment.ownerOf(event.getDamageSource().getDirectEntity()).or(death::killer).or(() -> trapper)
+                : equipment.culprit(victim, event.getDamageSource()).or(death::killer).or(() -> trapper)
                         .filter(other -> !other.equals(victim));
         var victimRole = roleOf(victim);
         killer.ifPresent(other -> victimRole.ifPresent(role -> credit(other, victim, role)));
@@ -342,6 +367,7 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
         victimRole.ifPresent(role -> corpses.spawn(victim, role, killer));
         round.respawn(victim, 1L);
         updateTraitorChat();
+        tasks.ifPresent(TaskRound::update);
         refreshAll();
         checkWinner();
     }
@@ -378,6 +404,10 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
         if (block.getType() != Material.CHEST) {
             return false;
         }
+        if (tasks.isPresent()) {
+            player.sendMessage(messages.get("tasks.chest-shut"));
+            return true;
+        }
         BlockChanges.set(block, Material.AIR);
         ChestLoot.pick(config.chests(), ThreadLocalRandom.current()).map(ChestLoot::item).ifPresent(item -> give(player, item));
         Sounds.MENU_OPEN.play(player);
@@ -406,6 +436,16 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
             player.sendMessage(messages.get("tester.not-ready"));
             return;
         }
+        if (tasks.filter(TaskRound::testerDown).isPresent()) {
+            player.sendMessage(messages.get("tasks.sabotage.tester-down"));
+            Sounds.MENU_DENY.play(player);
+            return;
+        }
+        if (tester.isPresent() && equipment.jammed(tester.get().buttonLocation())) {
+            player.sendMessage(messages.get("shop.jammer.blocked"));
+            Sounds.MENU_DENY.play(player);
+            return;
+        }
         tester.ifPresent(each -> each.press(player));
     }
 
@@ -431,9 +471,142 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
         ownFault.add(player.getUniqueId());
     }
 
+    /**
+     * A click on a corpse. The lighter and the mask work on it without identifying it, since a traitor uses them;
+     * anything else identifies it first, and the DNA scanner, the defibrillator and the crime camera then do their part.
+     */
     public void inspect(Player finder, Entity corpse, ItemStack hand) {
-        corpses.inspect(finder, corpse, HotbarItem.of(hand, ShopItem.class).filter(item -> item == ShopItem.DNA_SCANNER).isPresent())
+        var tool = HotbarItem.of(hand, ShopItem.class).filter(ignored -> rolesDrawn());
+        if (tool.filter(item -> item == ShopItem.LIGHTER).isPresent()) {
+            if (corpses.burn(corpse)) {
+                hand.subtract();
+                finder.sendMessage(messages.get("shop.lighter.burned"));
+                refreshAll();
+            }
+            return;
+        }
+        if (tool.filter(item -> item == ShopItem.MASK).isPresent()) {
+            corpses.takeFace(corpse).ifPresentOrElse(remains -> {
+                hand.subtract();
+                equipment.wearMask(finder, remains.name(), remains.profile());
+            }, () -> finder.sendMessage(messages.get("shop.mask.no-face")));
+            return;
+        }
+        corpses.inspect(finder, corpse, tool.filter(item -> item == ShopItem.DNA_SCANNER).isPresent())
                 .ifPresent(dead -> refreshAll());
+        var remains = corpses.remains(corpse);
+        if (remains.isEmpty()) {
+            return;
+        }
+        if (tool.filter(item -> item == ShopItem.DEFIBRILLATOR).isPresent()) {
+            defibrillate(finder, corpse, remains.get());
+        } else if (tool.filter(item -> item == ShopItem.CRIME_CAMERA).isPresent()) {
+            if (equipment.jammed(finder.getLocation())) {
+                finder.sendMessage(messages.get("shop.jammer.blocked"));
+            } else if (!crimeScenes.play(finder, remains.get().player())) {
+                finder.sendMessage(messages.get("shop.crime-camera.nothing"));
+            }
+        }
+    }
+
+    /** An innocent who died moments ago lives again after the detective stays at the corpse for a few seconds. */
+    private void defibrillate(Player medic, Entity corpse, Corpses.Remains remains) {
+        var settings = config.shop().defibrillator();
+        if (remains.role() == Role.TRAITOR) {
+            medic.sendMessage(messages.get("shop.defibrillator.traitor"));
+            return;
+        }
+        if (Bukkit.getCurrentTick() - remains.diedAt() > settings.windowSeconds() * 20) {
+            medic.sendMessage(messages.get("shop.defibrillator.too-late"));
+            return;
+        }
+        if (channels.busy(medic)) {
+            return;
+        }
+        channels.start(medic, remains.location(), settings.holdSeconds(), messages.get("shop.defibrillator.work"), () -> {
+            var patient = Bukkit.getPlayer(remains.player());
+            if (!corpses.isCorpse(corpse) || patient == null || !removeOne(medic, ShopItem.DEFIBRILLATOR) || !round.revive(patient)) {
+                medic.sendMessage(messages.get("shop.defibrillator.failed"));
+                return;
+            }
+            corpses.remove(corpse);
+            PlayerReset.reset(patient, GameMode.SURVIVAL);
+            config.combat().apply(patient);
+            patient.teleport(remains.location());
+            patient.setHealth(settings.health());
+            giveShop(patient, remains.role());
+            tasks.ifPresent(running -> running.equip(patient));
+            patient.getWorld().playSound(remains.location(), Sound.ITEM_TOTEM_USE, 0.8f, 1.2f);
+            Bukkit.broadcast(messages.get("shop.defibrillator.revived", Placeholder.unparsed("player", patient.getName()),
+                    Placeholder.unparsed("medic", medic.getName())));
+            updateTraitorChat();
+            tasks.ifPresent(TaskRound::update);
+            refreshAll();
+        });
+    }
+
+    /** The iron doors to the traitors' passages open for a living traitor, for a moment. */
+    public boolean openTraitorDoor(Player player, Block block) {
+        var door = town.flatMap(each -> each.traitorDoors().stream()
+                .filter(lower -> lower.equals(block) || lower.getRelative(BlockFace.UP).equals(block)).findFirst());
+        if (door.isEmpty()) {
+            return false;
+        }
+        if (!rolesDrawn() || roleOf(player).filter(role -> role == Role.TRAITOR).isEmpty()) {
+            player.sendMessage(messages.get("traitor-door.locked"));
+            Sounds.MENU_DENY.play(player);
+            return true;
+        }
+        var halves = List.of(door.get(), door.get().getRelative(BlockFace.UP));
+        setOpen(halves, true);
+        player.getWorld().playSound(door.get().getLocation(), Sound.BLOCK_IRON_DOOR_OPEN, 1f, 1f);
+        Tasks.later(plugin, TRAITOR_DOOR_TICKS, () -> {
+            setOpen(halves, false);
+            door.get().getWorld().playSound(door.get().getLocation(), Sound.BLOCK_IRON_DOOR_CLOSE, 1f, 1f);
+        });
+        return true;
+    }
+
+    /** True if the click on {@code block} was TTT 2's: a chore, the sabotage, a locked door. */
+    public boolean clickChore(Player player, Block block) {
+        return tasks.filter(running -> running.click(player, block)).isPresent();
+    }
+
+    private static void setOpen(List<Block> halves, boolean open) {
+        for (var half : halves) {
+            if (half.getBlockData() instanceof Openable door) {
+                door.setOpen(open);
+                BlockChanges.set(half, door);
+            }
+        }
+    }
+
+    private void giveShop(Player player, Role role) {
+        if (!role.hasShop()) {
+            return;
+        }
+        var looted = player.getInventory().getItem(RoundItem.SLOT);
+        player.getInventory().setItem(RoundItem.SLOT, RoundItem.SHOP.build(
+                MenuIcon.TTT_SHOP.item().name(messages.get("item.shop", Placeholder.component("role", role.displayName(messages))))));
+        if (looted != null && !looted.isEmpty()) {
+            give(player, looted);
+        }
+    }
+
+    private static boolean removeOne(Player player, ShopItem good) {
+        for (var stack : player.getInventory().getContents()) {
+            if (stack != null && HotbarItem.of(stack, ShopItem.class).filter(item -> item == good).isPresent()) {
+                stack.subtract();
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** A chore was done: the sidebars show it, and the innocents may have finished. */
+    private void choresChanged() {
+        refreshAll();
+        checkWinner();
     }
 
     /** Until their corpse is identified, the dead count as playing, so that the sidebar does not give their death away. */
@@ -452,7 +625,8 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
             return;
         }
         var title = messages.get("shop.title", Placeholder.component("role", role.get().displayName(messages)));
-        new ShopMenu(messages, equipment, this, title, ShopItem.soldTo(role.get()), player)
+        var sabotage = tasks.filter(running -> role.get() == Role.TRAITOR).map(TaskRound::sabotage);
+        new ShopMenu(messages, equipment, this, title, ShopItem.soldTo(role.get()), sabotage, player)
                 .open(player, () -> rolesDrawn() && round.isPlaying(player));
     }
 
@@ -472,8 +646,8 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
         if (!rolesDrawn() || !round.isPlaying(player) || role.isEmpty() || !ShopItem.soldTo(role.get()).contains(item)) {
             return;
         }
-        if (item == ShopItem.SPOOFER && equipment.hasSpoofer(player)) {
-            player.sendMessage(messages.get("shop.spoofer-ready"));
+        if (equipment.owns(player, item)) {
+            player.sendMessage(messages.get("shop.owned"));
             Sounds.MENU_DENY.play(player);
             return;
         }
@@ -491,6 +665,13 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
         refreshAll();
     }
 
+    @Override
+    public void sabotage(Player player, Sabotage.Kind kind) {
+        if (rolesDrawn() && round.isPlaying(player) && roleOf(player).filter(role -> role == Role.TRAITOR).isPresent()) {
+            tasks.ifPresent(running -> running.sabotage().trigger(player, kind));
+        }
+    }
+
     private void updateTraitorChat() {
         traitorChat = traitors().stream().map(Player::getUniqueId).collect(Collectors.toUnmodifiableSet());
     }
@@ -500,7 +681,8 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
             return;
         }
         var alive = round.players().stream().map(player -> roles.get(player.getUniqueId())).filter(Objects::nonNull).toList();
-        Faction.winner(alive).ifPresent(faction -> endRound(Optional.of(faction)));
+        Faction.winner(alive).or(() -> tasks.filter(TaskRound::complete).map(done -> Faction.INNOCENTS))
+                .ifPresent(faction -> endRound(Optional.of(faction)));
     }
 
     private void endRound(Optional<Faction> won) {
@@ -508,9 +690,13 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
             return;
         }
         winner = won;
+        boolean choresDone = tasks.filter(TaskRound::complete).isPresent();
         traitorChat = Set.of();
         equipment.stop();
+        channels.clear();
+        crimeScenes.stop();
         tester.ifPresent(Tester::stop);
+        tasks.ifPresent(TaskRound::stop);
         won.ifPresent(faction -> roles.forEach((id, role) -> {
             var player = Bukkit.getPlayer(id);
             if (role.faction() == faction && player != null) {
@@ -522,7 +708,8 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
         roles.keySet().stream().filter(karmaLoaded::contains).forEach(id -> settled.put(id, karma(id)));
         Tasks.async(plugin, () -> karmaRepository.save(settled));
         Bukkit.broadcast(Component.empty());
-        Bukkit.broadcast(won.map(faction -> messages.get("round.winner." + faction.key()))
+        Bukkit.broadcast(won.map(faction -> messages.get(choresDone && faction == Faction.INNOCENTS
+                        ? "round.winner.chores" : "round.winner." + faction.key()))
                 .orElseGet(() -> messages.get("round.draw")));
         var traitorNames = roles.entrySet().stream().filter(entry -> entry.getValue() == Role.TRAITOR)
                 .map(entry -> names.get(entry.getKey())).filter(Objects::nonNull).toList();
@@ -573,6 +760,8 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
                 if (role.filter(each -> each == Role.TRAITOR).isPresent()) {
                     sections.add(new GameSidebar.Section(messages.get("scoreboard.partners", icons), partners(player)));
                 }
+                tasks.map(running -> running.duties(player)).filter(duties -> !duties.isEmpty() && round.isPlaying(player))
+                        .ifPresent(duties -> sections.add(new GameSidebar.Section(messages.get("scoreboard.chores", icons), duties)));
                 sections.add(karmaSection);
                 sidebar.round(player, config.capacity(), secondsLeft, mapName, sections);
             }
@@ -605,6 +794,9 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
     public void stop() {
         countdown.cancel();
         equipment.stop();
+        channels.clear();
+        crimeScenes.stop();
+        tasks.ifPresent(TaskRound::stop);
         corpses.clear();
         round.stop();
     }

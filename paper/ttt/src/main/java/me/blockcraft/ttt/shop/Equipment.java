@@ -1,22 +1,21 @@
 package me.blockcraft.ttt.shop;
 
-import me.blockcraft.api.BlockcraftApi;
-import me.blockcraft.api.game.BlockChanges;
+import com.destroystokyo.paper.profile.PlayerProfile;
 import me.blockcraft.api.item.HotbarItem;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.ttt.config.TttConfig;
 import me.blockcraft.ttt.game.Role;
-import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
-import org.bukkit.Particle;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
+import org.bukkit.damage.DamageSource;
 import org.bukkit.entity.Creeper;
-import org.bukkit.entity.TNTPrimed;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
@@ -25,11 +24,8 @@ import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
 
-import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -37,15 +33,17 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
- * What the shop's goods do once bought: the radar points at the nearest target for a while, mines and fake chests
- * blow up under anyone but a traitor, a heal station heals whoever stands near it, creeper arrows leave a lit creeper
- * where they land, and a spoofer gets its traitor through the next test. Explosions break no blocks and count as the
- * owner's kill.
+ * What the shop's goods do once bought. Each kind of good lives with its kin: {@link Traps} for what lies in wait,
+ * {@link Guns} for what shoots, {@link Signals} for what finds people or hides them, {@link HealStations} and
+ * {@link Masks}. This class hands each click, step and hit to the good it concerns; what the goods do to a corpse
+ * is the round's, which knows the dead.
  */
 public final class Equipment {
 
-    private static final long TICK = 20L;
+    private static final long SECOND = 20L;
+    private static final long HALF_SECOND = 10L;
     private static final int CREEPER_FUSE_TICKS = 25;
+    private static final double BACKSTAB_DOT = -0.2;
     private static final NamespacedKey CREEPER_ARROW = new NamespacedKey("blockcraft", "ttt_creeper_arrow");
 
     private final Plugin plugin;
@@ -53,14 +51,17 @@ public final class Equipment {
     private final Messages messages;
     private final Function<Player, Optional<Role>> roles;
     private final Supplier<List<Player>> alive;
-    private final Map<UUID, Integer> radars = new HashMap<>();
-    private final Map<Block, UUID> mines = new HashMap<>();
-    private final Map<Block, UUID> fakeChests = new HashMap<>();
-    private final Map<Block, Integer> healStations = new HashMap<>();
-    /** Creepers and primed explosives by the player they belong to, who gets the kills they make. */
-    private final Map<UUID, UUID> explosives = new HashMap<>();
+    private final Culprits culprits = new Culprits();
+    private final Gadgets gadgets = new Gadgets();
+    private final Traps traps;
+    private final Guns guns;
+    private final Signals signals;
+    private final HealStations healStations;
+    private final Masks masks;
     private final Set<UUID> spoofers = new HashSet<>();
+    private final Set<UUID> vests = new HashSet<>();
     private BukkitTask ticker;
+    private BukkitTask watcher;
 
     public Equipment(Plugin plugin, TttConfig.Shop config, Messages messages, Function<Player, Optional<Role>> roles,
                      Supplier<List<Player>> alive) {
@@ -69,17 +70,32 @@ public final class Equipment {
         this.messages = messages;
         this.roles = roles;
         this.alive = alive;
+        this.traps = new Traps(config, messages, culprits, gadgets, this::isTraitor, item -> item(item, 1));
+        this.guns = new Guns(config, messages, alive);
+        this.signals = new Signals(config, messages, gadgets, this::isTraitor, alive, traps::hidden, item -> item(item, 1));
+        this.healStations = new HealStations(config.healStation(), messages, culprits, alive);
+        this.masks = new Masks(plugin, messages);
     }
 
     public void start() {
-        ticker = plugin.getServer().getScheduler().runTaskTimer(plugin, this::tick, TICK, TICK);
+        ticker = plugin.getServer().getScheduler().runTaskTimer(plugin, this::tick, SECOND, SECOND);
+        watcher = plugin.getServer().getScheduler().runTaskTimer(plugin, signals::watch, HALF_SECOND, HALF_SECOND);
     }
 
     public void stop() {
         if (ticker != null) {
             ticker.cancel();
+            watcher.cancel();
         }
-        radars.clear();
+        masks.restoreAll();
+        gadgets.clear();
+        traps.clear();
+        guns.clear();
+        signals.clear();
+        healStations.clear();
+        culprits.clear();
+        spoofers.clear();
+        vests.clear();
     }
 
     public ItemStack item(ShopItem item, int amount) {
@@ -93,8 +109,9 @@ public final class Equipment {
     public void deliver(Player buyer, ShopItem item) {
         switch (item) {
             case SPOOFER -> spoofers.add(buyer.getUniqueId());
+            case VEST -> vests.add(buyer.getUniqueId());
             case RADAR -> {
-                radars.put(buyer.getUniqueId(), config.radarSeconds());
+                signals.radar(buyer);
                 give(buyer, item(item, 1));
             }
             case CREEPER_ARROWS -> {
@@ -103,75 +120,138 @@ public final class Equipment {
                 }
                 give(buyer, item(item, config.creeperArrows()));
             }
+            case SILENCED_PISTOL -> give(buyer, item(item, config.pistol().shots()));
+            case TASER -> give(buyer, item(item, config.taser().charges()));
             default -> give(buyer, item(item, 1));
         }
     }
 
-    public boolean hasSpoofer(Player player) {
-        return spoofers.contains(player.getUniqueId());
+    /** Goods that are a state rather than an item, and of which a player has at most one. */
+    public boolean owns(Player player, ShopItem item) {
+        return switch (item) {
+            case SPOOFER -> spoofers.contains(player.getUniqueId());
+            case VEST -> vests.contains(player.getUniqueId());
+            default -> false;
+        };
     }
 
     /** Whether {@code player} shows as a traitor in a test; a spoofer hides them once and is used up. */
     public boolean showsAsTraitor(Player player) {
-        return roles.apply(player).filter(role -> role == Role.TRAITOR).isPresent() && !spoofers.remove(player.getUniqueId());
+        return isTraitor(player) && !spoofers.remove(player.getUniqueId());
     }
 
-    public boolean heal(Player player, ItemStack hand) {
-        if (HotbarItem.of(hand, ShopItem.class).filter(item -> item == ShopItem.MEDIPACK).isEmpty()) {
+    /**
+     * A right-click with a good in hand, on {@code clicked} from {@code face} or into the air. True when the good took
+     * the click; goods placed as blocks leave it to {@link #place}, and goods for corpses only keep it from the world.
+     */
+    public boolean use(Player player, ItemStack hand, Optional<Block> clicked, BlockFace face) {
+        var good = HotbarItem.of(hand, ShopItem.class);
+        if (good.isEmpty()) {
             return false;
         }
-        double max = player.getAttribute(Attribute.MAX_HEALTH).getValue();
-        if (player.getHealth() >= max) {
-            return true;
-        }
-        player.setHealth(Math.min(max, player.getHealth() + config.medipack()));
-        hand.subtract();
-        Sounds.HEAL.play(player);
-        return true;
-    }
-
-    /** Lets a bought landmine, fake chest or heal station be placed; nothing else goes into the town. */
-    public boolean place(Player player, ItemStack hand, Block block) {
-        var item = HotbarItem.of(hand, ShopItem.class);
-        if (item.isEmpty()) {
-            return false;
-        }
-        var owner = player.getUniqueId();
-        switch (item.get()) {
-            case LANDMINE -> mines.put(block, owner);
-            case FAKE_CHEST -> fakeChests.put(block, owner);
-            case HEAL_STATION -> healStations.put(block, config.healSeconds());
-            default -> {
+        switch (good.get()) {
+            case MEDIPACK -> heal(player, hand);
+            case SILENCED_PISTOL, TASER -> guns.fire(player, good.get(), hand);
+            case JAMMER -> {
+                signals.jam(player);
+                hand.subtract();
+            }
+            case BEAR_TRAP, TIME_BOMB, MOTION_SENSOR -> {
+                if (clicked.isPresent() && face == BlockFace.UP && setDown(player, good.get(), clicked.get().getRelative(face))) {
+                    hand.subtract();
+                }
+            }
+            case POISON -> {
+                if (clicked.isPresent() && healStations.poison(player, clicked.get())) {
+                    hand.subtract();
+                }
+            }
+            case LANDMINE, FAKE_CHEST, HEAL_STATION, CREEPER_ARROWS -> {
                 return false;
+            }
+            default -> {
             }
         }
         return true;
     }
 
-    public void step(Player player, Block block) {
-        var owner = mines.get(block);
-        if (owner == null || isTraitor(player)) {
-            return;
-        }
-        mines.remove(block);
-        BlockChanges.set(block, Material.AIR);
-        explode(block.getLocation().add(0.5, 0.2, 0.5), owner);
-    }
-
-    /** True if {@code block} is a fake chest, which then blows up under anyone but a traitor. */
-    public boolean openFake(Player player, Block block) {
-        var owner = fakeChests.get(block);
-        if (owner == null) {
+    /** Lets a bought landmine, fake chest or heal station be placed; nothing else goes into the town. */
+    public boolean place(Player player, ItemStack hand, Block block) {
+        var good = HotbarItem.of(hand, ShopItem.class);
+        if (good.isEmpty()) {
             return false;
         }
-        if (isTraitor(player)) {
-            player.sendMessage(messages.get("shop.fake-chest-own"));
+        if (good.get() == ShopItem.HEAL_STATION) {
+            healStations.place(block);
             return true;
         }
-        fakeChests.remove(block);
-        BlockChanges.set(block, Material.AIR);
-        explode(block.getLocation().add(0.5, 0.5, 0.5), owner);
+        return traps.place(player, good.get(), block);
+    }
+
+    public void step(Player player, Block block) {
+        traps.step(player, block);
+    }
+
+    public boolean openFake(Player player, Block block) {
+        return traps.openFake(player, block);
+    }
+
+    public void moved(Player player, Block to) {
+        traps.moved(player, to);
+    }
+
+    /** A click on something a good left in the world: a time bomb's wires, a motion sensor's log. */
+    public boolean clickGadget(Player player, Entity clicked) {
+        return traps.defuse(player, clicked, () -> alive.get().contains(player)) || signals.read(player, clicked);
+    }
+
+    /** The knife kills with one stab in the back and is used up doing it. */
+    public boolean backstab(Player attacker, Player victim) {
+        var hand = attacker.getInventory().getItemInMainHand();
+        if (HotbarItem.of(hand, ShopItem.class).filter(item -> item == ShopItem.KNIFE).isEmpty()) {
+            return false;
+        }
+        var facing = victim.getLocation().getDirection().setY(0);
+        var towardAttacker = attacker.getLocation().toVector().subtract(victim.getLocation().toVector()).setY(0);
+        if (facing.lengthSquared() == 0 || towardAttacker.lengthSquared() == 0
+                || facing.normalize().dot(towardAttacker.normalize()) > BACKSTAB_DOT) {
+            return false;
+        }
+        attacker.getInventory().setItemInMainHand(null);
         return true;
+    }
+
+    /** What share of a hit's damage reaches {@code victim}; a vest takes the rest. */
+    public double damageTaken(Player victim) {
+        return vests.contains(victim.getUniqueId()) ? 1 - config.vest() : 1;
+    }
+
+    public boolean stunned(Player player) {
+        return guns.stunned(player);
+    }
+
+    public boolean jammed(Location location) {
+        return signals.jammed(location);
+    }
+
+    /** Puts the mask on: {@code wearer} looks and is named like the dead for a while. */
+    public void wearMask(Player wearer, String name, PlayerProfile face) {
+        masks.wear(wearer, name, face, config.maskSeconds());
+        wearer.sendMessage(messages.get("shop.mask.worn"));
+    }
+
+    /** The player who owns the good that dealt {@code source}, even if they are dead now. */
+    public Optional<Player> culprit(Player victim, DamageSource source) {
+        return culprits.of(victim, source).map(Bukkit::getPlayer);
+    }
+
+    /** A player out of the round loses what they were: a mask, a vest, a stun, a running radar or jammer. */
+    public void forget(Player player) {
+        masks.restore(player);
+        vests.remove(player.getUniqueId());
+        spoofers.remove(player.getUniqueId());
+        guns.forget(player);
+        signals.forget(player);
     }
 
     public void shoot(Player shooter, ItemStack consumed, Entity projectile) {
@@ -192,85 +272,31 @@ public final class Equipment {
             spawned.setPersistent(false);
         });
         creeper.ignite();
-        explosives.put(creeper.getUniqueId(), UUID.fromString(owner));
+        culprits.own(creeper, UUID.fromString(owner));
     }
 
-    /** The player a creeper arrow or explosive belonged to, for the kill it made. */
-    public Optional<Player> ownerOf(Entity cause) {
-        return Optional.ofNullable(cause).map(entity -> explosives.get(entity.getUniqueId()))
-                .map(plugin.getServer()::getPlayer);
+    private boolean setDown(Player player, ShopItem good, Block space) {
+        return good == ShopItem.MOTION_SENSOR ? signals.placeSensor(player, space) : traps.set(player, good, space);
+    }
+
+    private void heal(Player player, ItemStack hand) {
+        double max = player.getAttribute(Attribute.MAX_HEALTH).getValue();
+        if (player.getHealth() >= max) {
+            return;
+        }
+        player.setHealth(Math.min(max, player.getHealth() + config.medipack()));
+        hand.subtract();
+        Sounds.HEAL.play(player);
     }
 
     private void tick() {
-        radars.entrySet().removeIf(entry -> {
-            var player = plugin.getServer().getPlayer(entry.getKey());
-            if (player == null || !alive.get().contains(player)) {
-                return true;
-            }
-            int left = entry.getValue() - 1;
-            entry.setValue(left);
-            if (left <= 0) {
-                player.getInventory().all(Material.COMPASS).forEach((slot, stack) -> {
-                    if (HotbarItem.of(stack, ShopItem.class).isPresent()) {
-                        player.getInventory().clear(slot);
-                    }
-                });
-                player.sendMessage(messages.get("shop.radar-expired"));
-                return true;
-            }
-            point(player);
-            return false;
-        });
-        healStations.entrySet().removeIf(entry -> {
-            var block = entry.getKey();
-            int left = entry.getValue() - 1;
-            entry.setValue(left);
-            var center = block.getLocation().add(0.5, 1.0, 0.5);
-            double radius = config.healRadius() * config.healRadius();
-            for (var player : alive.get()) {
-                if (player.getWorld().equals(center.getWorld()) && player.getLocation().distanceSquared(center) <= radius) {
-                    double max = player.getAttribute(Attribute.MAX_HEALTH).getValue();
-                    player.setHealth(Math.min(max, player.getHealth() + config.healPerSecond()));
-                }
-            }
-            center.getWorld().spawnParticle(Particle.HEART, center, 2, 0.6, 0.3, 0.6);
-            if (left <= 0) {
-                BlockChanges.set(block, Material.AIR);
-                return true;
-            }
-            return false;
-        });
-    }
-
-    private void point(Player player) {
-        boolean traitor = isTraitor(player);
-        var origin = player.getLocation();
-        alive.get().stream()
-                .filter(other -> !other.equals(player) && other.getWorld().equals(origin.getWorld()))
-                .filter(other -> !traitor || !isTraitor(other))
-                .min(Comparator.comparingDouble(other -> other.getLocation().distanceSquared(origin)))
-                .ifPresent(target -> {
-                    player.setCompassTarget(target.getLocation());
-                    BlockcraftApi.get().notifications().status(player, messages.get("shop.radar-distance",
-                            Formatter.number("distance", (int) origin.distance(target.getLocation()))));
-                });
+        traps.tick();
+        signals.tick();
+        healStations.tick();
     }
 
     private boolean isTraitor(Player player) {
         return roles.apply(player).filter(role -> role == Role.TRAITOR).isPresent();
-    }
-
-    /**
-     * Through primed TNT rather than with the owner as the source: a dead owner is a spectator, whose damage
-     * SpectatorGuard cancels, and the mine must still go off.
-     */
-    private void explode(Location location, UUID owner) {
-        var tnt = location.getWorld().spawn(location, TNTPrimed.class, primed -> {
-            primed.setFuseTicks(0);
-            primed.setYield(config.explosionPower());
-            primed.setSource(plugin.getServer().getPlayer(owner));
-        });
-        explosives.put(tnt.getUniqueId(), owner);
     }
 
     private static void give(Player player, ItemStack item) {

@@ -128,7 +128,8 @@ public final class TownBuilder {
         connect();
         world.getWorldBorder().setCenter(0.5, 0.5);
         world.getWorldBorder().setSize(BORDER_SIZE);
-        return new Town(NAME, world, spawns(), tester, new Location(world, 0.5, GROUND + 18, 12.5, 180, 45));
+        return new Town(NAME, world, spawns(), tester, new Location(world, 0.5, GROUND + 18, 12.5, 180, 45),
+                List.of(), Optional.empty());
     }
 
     /**

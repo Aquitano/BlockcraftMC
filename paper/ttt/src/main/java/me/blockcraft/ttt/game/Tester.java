@@ -64,6 +64,10 @@ public final class Tester {
         return block.equals(room.button());
     }
 
+    public Location buttonLocation() {
+        return room.button().getLocation().add(0.5, 0.5, 0.5);
+    }
+
     public boolean isTrapButton(Block block) {
         return room.trap().filter(trap -> trap.button().equals(block)).isPresent();
     }
