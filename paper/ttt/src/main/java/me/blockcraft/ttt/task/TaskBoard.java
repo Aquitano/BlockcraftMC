@@ -38,27 +38,56 @@ public final class TaskBoard {
         }
     }
 
+    private static final int SPREAD_ATTEMPTS = 12;
+
     private final Map<UUID, List<Duty>> duties = new HashMap<>();
 
     /**
-     * Gives each worker {@code perPlayer} different chores, or all of them if the map has fewer, none of them
-     * {@code close} to another while the map has enough that are not.
+     * Gives each worker {@code perPlayer} different chores, or all of them if the map has fewer, with as few of them
+     * {@code close} to another as a few random tries find. One greedy pass alone can open with a chore close to all
+     * the others and miss a spread that exists.
      */
     public void assign(Collection<UUID> workers, List<Chore> chores, int perPlayer, BiPredicate<Chore, Chore> close,
                        RandomGenerator random) {
         for (var worker : workers) {
-            var shuffled = new ArrayList<>(chores);
-            Collections.shuffle(shuffled, random);
-            var picked = new ArrayList<Chore>();
-            for (var chore : shuffled) {
-                if (picked.size() < perPlayer && picked.stream().noneMatch(other -> close.test(chore, other))) {
-                    picked.add(chore);
+            List<Chore> best = List.of();
+            long bestClose = Long.MAX_VALUE;
+            for (int attempt = 0; attempt < SPREAD_ATTEMPTS && bestClose > 0; attempt++) {
+                var picked = pick(chores, perPlayer, close, random);
+                long closePairs = closePairs(picked, close);
+                if (closePairs < bestClose) {
+                    best = picked;
+                    bestClose = closePairs;
                 }
             }
-            shuffled.stream().filter(chore -> !picked.contains(chore)).limit(Math.max(0, perPlayer - picked.size()))
-                    .forEach(picked::add);
-            duties.put(worker, picked.stream().map(Duty::new).toList());
+            duties.put(worker, best.stream().map(Duty::new).toList());
         }
+    }
+
+    private static List<Chore> pick(List<Chore> chores, int perPlayer, BiPredicate<Chore, Chore> close, RandomGenerator random) {
+        var shuffled = new ArrayList<>(chores);
+        Collections.shuffle(shuffled, random);
+        var picked = new ArrayList<Chore>();
+        for (var chore : shuffled) {
+            if (picked.size() < perPlayer && picked.stream().noneMatch(other -> close.test(chore, other))) {
+                picked.add(chore);
+            }
+        }
+        shuffled.stream().filter(chore -> !picked.contains(chore)).limit(Math.max(0, perPlayer - picked.size()))
+                .forEach(picked::add);
+        return picked;
+    }
+
+    private static long closePairs(List<Chore> picked, BiPredicate<Chore, Chore> close) {
+        long pairs = 0;
+        for (int one = 0; one < picked.size(); one++) {
+            for (int other = one + 1; other < picked.size(); other++) {
+                if (close.test(picked.get(one), picked.get(other))) {
+                    pairs++;
+                }
+            }
+        }
+        return pairs;
     }
 
     public boolean assigned() {

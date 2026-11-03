@@ -272,8 +272,11 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
         town = Optional.of(built);
         tester = Optional.of(new Tester(plugin, built.tester(), config.tester(), messages, round::players, equipment::showsAsTraitor));
         tester.get().showLabel();
+        var traitorSpots = new ArrayList<>(built.traitorDoors());
+        built.tester().trap().ifPresent(trap -> traitorSpots.add(trap.button()));
         tasks = built.tasks().filter(layout -> mode == TttMode.TASKS).map(layout -> new TaskRound(plugin, config.tasks(),
-                messages, layout, built.tester().button(), channels, this::roleOf, round::players, this::choresChanged));
+                messages, layout, built.tester().button(), List.copyOf(traitorSpots), channels, this::roleOf, round::players,
+                this::choresChanged));
         round.enter(GamePhase.INGAME);
         stage = Stage.PREPARATION;
         int index = 0;
@@ -370,7 +373,7 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
         updateTraitorChat();
         tasks.ifPresent(TaskRound::update);
         refreshAll();
-        checkWinner();
+        Tasks.later(plugin, 1L, this::checkWinner);
     }
 
     private void credit(Player killer, Player victim, Role victimRole) {
@@ -391,7 +394,7 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
         int earned = killerRole.get().shopPointsFor(victimRole);
         if (earned > 0 && points.containsKey(id)) {
             points.merge(id, earned, Integer::sum);
-            killer.sendMessage(messages.get("shop.earned", Formatter.number("points", points.get(id))));
+            BlockcraftApi.get().notifications().reward(killer, messages.get("shop.earned", Formatter.number("points", points.get(id))));
         }
     }
 
@@ -413,24 +416,24 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
 
     public void openEnderChest(Player player) {
         if (!rolesDrawn()) {
-            player.sendMessage(messages.get("ender-chest.locked"));
+            tell(player, messages.get("ender-chest.locked"));
             Sounds.MENU_DENY.play(player);
             return;
         }
         if (enderChestOpened) {
-            player.sendMessage(messages.get("ender-chest.empty"));
+            tell(player, messages.get("ender-chest.empty"));
             Sounds.MENU_DENY.play(player);
             return;
         }
         enderChestOpened = true;
         give(player, ItemStack.of(Material.IRON_SWORD));
-        player.sendMessage(messages.get("ender-chest.taken"));
+        tell(player, messages.get("ender-chest.taken"));
         Sounds.PURCHASE.play(player);
     }
 
     public void pressTester(Player player) {
         if (!rolesDrawn()) {
-            player.sendMessage(messages.get("tester.not-ready"));
+            tell(player, messages.get("tester.not-ready"));
             return;
         }
         if (tester.isPresent() && equipment.jammed(tester.get().buttonLocation())) {
@@ -444,18 +447,18 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
     /** The traitor trap opens for living traitors only, once per round; whoever falls is the presser's kill. */
     public void pressTrap(Player player) {
         if (!rolesDrawn() || !round.isPlaying(player) || roleOf(player).filter(role -> role == Role.TRAITOR).isEmpty()) {
-            player.sendMessage(messages.get("tester.trap.traitors-only"));
+            tell(player, messages.get("tester.trap.traitors-only"));
             Sounds.MENU_DENY.play(player);
             return;
         }
         var trap = tester.orElseThrow();
         if (trap.trapUsed()) {
-            player.sendMessage(messages.get("tester.trap.used"));
+            tell(player, messages.get("tester.trap.used"));
             Sounds.MENU_DENY.play(player);
             return;
         }
         trap.springTrap(player.getUniqueId());
-        player.sendMessage(messages.get("tester.trap.sprung"));
+        tell(player, messages.get("tester.trap.sprung"));
     }
 
     /** The golden sword's wielder struck an innocent and dies of it; nobody earns that kill. */
@@ -546,7 +549,7 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
             return false;
         }
         if (!rolesDrawn() || roleOf(player).filter(role -> role == Role.TRAITOR).isEmpty()) {
-            player.sendMessage(messages.get("traitor-door.locked"));
+            tell(player, messages.get("traitor-door.locked"));
             Sounds.MENU_DENY.play(player);
             return true;
         }
@@ -643,20 +646,20 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
             return;
         }
         if (equipment.owns(player, item)) {
-            player.sendMessage(messages.get("shop.owned"));
+            tell(player, messages.get("shop.owned"));
             Sounds.MENU_DENY.play(player);
             return;
         }
         int price = price(item);
         int balance = points(player);
         if (balance < price) {
-            player.sendMessage(messages.get("shop.too-expensive", Formatter.number("points", price - balance)));
+            tell(player, messages.get("shop.too-expensive", Formatter.number("points", price - balance)));
             Sounds.MENU_DENY.play(player);
             return;
         }
         points.put(player.getUniqueId(), balance - price);
         equipment.deliver(player, item);
-        player.sendMessage(messages.get("shop.bought", Placeholder.component("item", messages.get("shop.items." + item.key() + ".name"))));
+        tell(player, messages.get("shop.bought", Placeholder.component("item", messages.get("shop.items." + item.key() + ".name"))));
         Sounds.PURCHASE.play(player);
         refreshAll();
     }
@@ -672,11 +675,19 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
         traitorChat = traitors().stream().map(Player::getUniqueId).collect(Collectors.toUnmodifiableSet());
     }
 
+    /**
+     * A death asks a tick later, so that everyone one blast kills is dead before the winner is read; when that leaves
+     * nobody alive, the round is a draw.
+     */
     private void checkWinner() {
         if (!rolesDrawn()) {
             return;
         }
         var alive = round.players().stream().map(player -> roles.get(player.getUniqueId())).filter(Objects::nonNull).toList();
+        if (alive.isEmpty()) {
+            endRound(Optional.empty());
+            return;
+        }
         Faction.winner(alive).ifPresent(faction -> endRound(Optional.of(faction)));
     }
 
@@ -782,6 +793,10 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
 
     private static TagResolver names(List<Player> players) {
         return Placeholder.unparsed("players", String.join(", ", players.stream().map(Player::getName).toList()));
+    }
+
+    private static void tell(Player player, Component message) {
+        BlockcraftApi.get().notifications().feedback(player, message);
     }
 
     private static void give(Player player, ItemStack item) {

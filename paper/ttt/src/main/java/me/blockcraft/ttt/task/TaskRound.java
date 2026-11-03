@@ -64,11 +64,13 @@ public final class TaskRound {
     private final Component choreMark;
     private final Component deliverMark;
     private final Component repairMark;
+    private final Component traitorMark;
+    private final List<Block> traitorSpots;
     private BukkitTask ticker;
 
     public TaskRound(Plugin plugin, TttConfig.Tasks config, Messages messages, TaskLayout layout, Block testerButton,
-                     Channels channels, Function<Player, Optional<Role>> roles, Supplier<List<Player>> alive,
-                     Runnable changed) {
+                     List<Block> traitorSpots, Channels channels, Function<Player, Optional<Role>> roles,
+                     Supplier<List<Player>> alive, Runnable changed) {
         this.plugin = plugin;
         this.config = config;
         this.messages = messages;
@@ -84,6 +86,8 @@ public final class TaskRound {
         this.choreMark = messages.get("tasks.marker.chore");
         this.deliverMark = messages.get("tasks.marker.deliver");
         this.repairMark = messages.get("tasks.marker.repair");
+        this.traitorMark = messages.get("tasks.marker.traitor");
+        this.traitorSpots = traitorSpots;
     }
 
     public void assign(Map<UUID, Role> roles) {
@@ -257,14 +261,20 @@ public final class TaskRound {
 
     /**
      * Marks where {@code player} goes next: each open chore's station, or for cargo they carry, where it goes, and
-     * where the running sabotage is mended. The traitors have no chores and know their own sabotage.
+     * where the running sabotage is mended. A traitor has no chores and knows their own sabotage; they see their
+     * passages' doors and the tester's trap button instead.
      */
     private void mark(Player player) {
-        if (!board.assigned() || !alive.get().contains(player) || traitor.test(player)) {
+        if (!board.assigned() || !alive.get().contains(player)) {
             markers.hide(player.getUniqueId());
             return;
         }
         var spots = new HashMap<Block, Component>();
+        if (traitor.test(player)) {
+            traitorSpots.forEach(spot -> spots.put(spot, traitorMark));
+            markers.show(player, spots);
+            return;
+        }
         board.of(player.getUniqueId()).stream().filter(duty -> !duty.done()).map(TaskBoard.Duty::chore)
                 .forEach(chore -> {
                     if (chore instanceof Chore.Fetch fetch && carrying(player, fetch)) {

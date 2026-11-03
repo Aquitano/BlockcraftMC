@@ -164,7 +164,8 @@ a `TaskLayout`, which today is the map `TownBuilder` builds. The settings are un
   sparks around the block once they are close; for a load they carry, a `?` marks its destination instead. While a
   sabotage can be mended, a red `!` marks the generator or the tester's button for every living innocent and detective.
   A mark grows with the distance, so it reads about as large across the town as next door. A label over the tester's
-  doorway shows everyone, in either mode, where the tester is. What a click on a
+  doorway shows everyone, in either mode, where the tester is. A traitor sees a `☠` over each door to the passages and
+  over the tester's trap button instead. What a click on a
   chore answers goes to the action bar, a sabotage starts as a title, and the chat keeps what concerns everyone.
 - A chore starts with a right-click on its station. A hold chore takes `tasks.hold-seconds` with the player's eyes within
   `tasks.reach` blocks; a hit or walking off breaks it off. A fetch chore hands over a load at its station that must be

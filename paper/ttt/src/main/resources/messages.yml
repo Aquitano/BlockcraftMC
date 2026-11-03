@@ -71,10 +71,10 @@ shop:
   buy: "<click>Kaufen"
   missing: "<bullet><error>Dir fehlen <points> Punkte"
   balance: "<arrow><primary>Deine Punkte<dark>: <accent><points>"
-  too-expensive: "<prefix><error>Dir fehlen noch <points> Punkte."
-  bought: "<prefix><muted>Gekauft<dark>: <accent><item>"
-  earned: "<prefix><muted>Du hast jetzt <accent><points> Punkte<muted>."
-  owned: "<prefix><error>Das hast du schon."
+  too-expensive: "<error>Dir fehlen noch <points> Punkte."
+  bought: "<muted>Gekauft<dark>: <accent><item>"
+  earned: "<muted>Du hast jetzt <accent><points> Punkte<muted>."
+  owned: "<error>Das hast du schon."
   no-room: "<prefix><error>Dafür ist hier kein Platz. Stell es auf freien Boden."
   fake-chest-own: "<prefix><muted>Das ist eine Falle für die anderen."
   radar-expired: "<prefix><muted>Dein Radar ist erloschen."
@@ -246,22 +246,23 @@ shop:
         - "<muted>Sekunden vor dem Tod. Ohne Gesichter."
 
 ender-chest:
-  locked: "<prefix><error>Die Enderkiste öffnet sich erst, wenn die Rollen verteilt sind."
-  empty: "<prefix><error>Die Enderkiste ist leer."
-  taken: "<prefix><muted>Du hast das <accent>Eisenschwert <muted>aus der Enderkiste genommen."
+  locked: "<error>Die Enderkiste öffnet sich erst, wenn die Rollen verteilt sind."
+  empty: "<error>Die Enderkiste ist leer."
+  taken: "<muted>Du hast das <accent>Eisenschwert <muted>aus der Enderkiste genommen."
 
 tester:
   label: "<ttt>Traitor-Tester"
-  not-ready: "<prefix><error>Der Tester funktioniert erst, wenn die Rollen verteilt sind."
-  cooldown: "<prefix><error>Der Tester ist noch <seconds> Sekunden beschäftigt."
+  not-ready: "<error>Der Tester funktioniert erst, wenn die Rollen verteilt sind."
+  cooldown: "<error>Der Tester ist noch <seconds> Sekunden beschäftigt."
+  outside: "<muted>Stell dich in den Tester."
   entered: "<prefix><accent><player> <muted>hat den Traitor-Tester betreten."
   trap:
-    traitors-only: "<prefix><error>Nur Traitor können diesen Knopf benutzen."
-    used: "<prefix><error>Die Traitor-Falle wurde in dieser Runde schon benutzt."
-    sprung: "<prefix><muted>Die Traitor-Falle ist offen."
+    traitors-only: "<error>Nur Traitor können diesen Knopf benutzen."
+    used: "<error>Die Traitor-Falle wurde in dieser Runde schon benutzt."
+    sprung: "<muted>Die Traitor-Falle ist offen."
 
 traitor-door:
-  locked: "<prefix><error>Diese Tür rührt sich nicht."
+  locked: "<error>Diese Tür rührt sich nicht."
 
 channel:
   progress: "<work> <success><done><dark><rest>"
@@ -390,6 +391,7 @@ tasks:
     chore: "<accent><bold>!"
     deliver: "<success><bold>?"
     repair: "<error><bold>!"
+    traitor: "<error>☠"
   not-yet: "<muted>Die Aufgaben kommen mit den Rollen."
   not-yours: "<muted>Nicht deine Aufgabe."
   already-done: "<muted>Schon erledigt."

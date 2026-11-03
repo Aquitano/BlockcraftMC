@@ -1,5 +1,6 @@
 package me.blockcraft.ttt.game;
 
+import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.game.BlockChanges;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Tasks;
@@ -132,12 +133,13 @@ public final class Tester {
 
     public void press(Player presser) {
         if (!room.zone().contains(presser.getLocation())) {
+            BlockcraftApi.get().notifications().feedback(presser, messages.get("tester.outside"));
             return;
         }
         long now = System.nanoTime();
         if (running || now - readyAt < 0) {
             long seconds = Math.max(1, Duration.ofNanos(readyAt - now).toSeconds());
-            presser.sendMessage(messages.get("tester.cooldown", Formatter.number("seconds", seconds)));
+            BlockcraftApi.get().notifications().feedback(presser, messages.get("tester.cooldown", Formatter.number("seconds", seconds)));
             Sounds.MENU_DENY.play(presser);
             return;
         }

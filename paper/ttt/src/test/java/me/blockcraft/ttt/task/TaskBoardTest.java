@@ -51,4 +51,16 @@ public class TaskBoardTest {
             assertTrue(keys.contains("ledger"));
         }
     }
+
+    @Test
+    public void aSpreadIsFoundEvenWhenTheFirstPickIsCloseToBoth() {
+        BiPredicate<Chore, Chore> ledgerIsCloseToBoth = (one, other) ->
+                Set.of(one.key(), other.key()).contains("ledger");
+        for (int seed = 0; seed < 20; seed++) {
+            var board = new TaskBoard();
+            board.assign(List.of(innocent), CHORES, 2, ledgerIsCloseToBoth, new Random(seed));
+            var keys = board.of(innocent).stream().map(duty -> duty.chore().key()).toList();
+            assertEquals(Set.of("well", "bell"), Set.copyOf(keys));
+        }
+    }
 }
