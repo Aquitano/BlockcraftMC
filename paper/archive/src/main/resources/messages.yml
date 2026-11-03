@@ -16,7 +16,7 @@ hall:
 hotbar:
   guide: "<arrow><archive>Ausstellungen"
   guide-lore:
-    - "<bullet><muted>Alte Maps, Checkpoints und Notizen"
+    - "<bullet><muted>Server, alte Maps und Besuchstipps"
   note: "<arrow><archive>Notiz"
   note-lore:
     - "<click>Notiz hinterlassen"
@@ -30,18 +30,27 @@ menu:
   entrance: "<arrow><primary>Zur Eingangshalle"
   entrance-lore:
     - "<bullet><muted>Zurück an den Anfang"
+  collection:
+    title: "<arrow><archive><origin>"
+  suggestions:
+    title: "<arrow><archive>Zeitkapsel <dark>· <muted>Besuchstipps"
+    name: "<arrow><archive>Besuchstipps"
+    lore:
+      - "<bullet><muted>Ein Einstieg in jede Sammlung"
+      - "<left>Maps und Checkpoints ansehen"
+    featured: "<bullet><accent>Besuchstipp"
   section:
     fallback-category: "Sonstiges"
-    name: "<arrow><archive><category>"
-    name-year: "<arrow><archive><category> <dark>· <muted><year>"
+    name: "<arrow><archive><origin> <dark>· <muted><category>"
     origin: "<bullet><muted><origin>"
     one-exhibit: "<bullet><muted>Eine Ausstellung"
     exhibits: "<bullet><accent><count> <muted>Ausstellungen"
     open: "<left>Ansehen"
   exhibit:
-    title: "<arrow><archive><exhibit> <dark>· <muted><origin>"
+    title: "<arrow><archive><origin> <dark>· <muted><exhibit>"
     name: "<arrow><primary><exhibit>"
-    year: "<bullet><muted><origin>, <accent><year>"
+    origin: "<bullet><muted><origin>"
+    year: "<bullet><accent><year>"
     one-checkpoint: "<bullet><muted>Ein Checkpoint"
     checkpoints: "<bullet><accent><count> <muted>Checkpoints"
     open: "<right>Checkpoints und Notizen"

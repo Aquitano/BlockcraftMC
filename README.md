@@ -457,10 +457,16 @@ template.
 `paper/archive` runs the `archive` group, the Zeitkapsel: old maps of earlier servers to walk and fly through, with no
 game. Everyone arrives in a small entrance hall that `EntranceHall` builds into an empty world at every start, in
 adventure mode with flight; nobody is hurt or hungry, and nothing is built or dropped outside `/build`. The pocket
-watch in the first hotbar slot opens the guide, grouped by server, year and category. Sections sort oldest year
-first, then by category, with undated exhibits last. A single section opens its exhibit list directly. Left-click
-an exhibit to travel to its arrival; right-click to open its checkpoints and notes. The sections screen also leads
-back to the entrance hall, and the hotbar's last slot back to the lobby.
+watch in the first hotbar slot opens the server collections. Collections with at most nine maps or just one category
+open their maps directly; larger collections offer categories first. Maps sort oldest year first, with undated maps
+last. Menu titles retain the server name, and Back returns to the list that opened the screen. Left-click an exhibit
+to travel to its arrival; right-click to open its checkpoints and notes. The guide also offers Besuchstipps, a short
+list of suggested maps with the same travel and checkpoint controls. The collections screen leads back to the
+entrance hall, and the hotbar's last slot back to the lobby.
+
+`guide.collection-order` in the archive's `config.yml` orders collections by their exact `origin`; other origins
+follow alphabetically. `guide.suggested-visits` lists exhibit keys in display order. Missing exhibits are omitted,
+and suggested maps carry a Besuchstipp label in every map list.
 
 Exhibits live in their own template folder beside the archive's map bundle, one directory per exhibit under
 `worlds/archive-exhibits/<key>/` with its `exhibit.yml` and `world/` ([layout](worlds/README.md#zeitkapsel-exhibits)),

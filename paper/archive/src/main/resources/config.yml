@@ -10,3 +10,13 @@ exhibits:
 # The most characters a staff note may hold.
 notes:
   max-length: 256
+
+guide:
+  collection-order:
+    - Blockcraft 2015–16
+    - ClayMC
+    - AQ Survival
+  suggested-visits:
+    - lobbyh
+    - claymc_lobby_2020
+    - aq_survival
