@@ -440,8 +440,8 @@ cookies:
   title: "<arrow><primary>CookieClicker-Upgrades"
   block-label:
     - "<accent>CookieClicker"
-    - "<muted>Linksklick: Kekse backen"
-    - "<muted>Rechtsklick: Upgrades"
+    - "<left>Kekse backen"
+    - "<right>Upgrades"
   status: "<accent><cookies> Kekse <dark>| <muted><amount> pro Klick <dark>| <muted>Rechtsklick: Upgrades"
   balance: "<accent><cookies> Kekse"
   balance-lore:
