@@ -1,28 +1,22 @@
 package me.blockcraft.lobby.cookies;
 
-import io.papermc.paper.event.player.PrePlayerAttackEntityEvent;
 import me.blockcraft.api.config.Locations;
 import me.blockcraft.api.display.Cards;
 import me.blockcraft.common.message.Messages;
-import me.blockcraft.lobby.ChunkTickets;
+import me.blockcraft.lobby.SpotEntities;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Interaction;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
-import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public final class CookieBlock implements Listener, AutoCloseable {
 
@@ -31,23 +25,20 @@ public final class CookieBlock implements Listener, AutoCloseable {
     private final Locations<String> spots;
     private final CookieClicker cookies;
     private final Messages messages;
-    private final ChunkTickets.Owner held;
-    private final List<Entity> spawned = new ArrayList<>();
+    private final SpotEntities.Group<String> stand;
     private Block counter;
-    private Interaction box;
 
-    public CookieBlock(Locations<String> spots, CookieClicker cookies, Messages messages, ChunkTickets chunks) {
+    public CookieBlock(Locations<String> spots, CookieClicker cookies, Messages messages, SpotEntities entities) {
         this.spots = spots;
         this.cookies = cookies;
         this.messages = messages;
-        held = chunks.owner();
+        stand = entities.group((player, spot) -> cookies.open(player), (player, spot) -> cookies.hit(player));
         refresh();
     }
 
     public void refresh() {
         close();
         spots.get(SPOT).ifPresent(spot -> {
-            held.add(spot.getChunk());
             counter = spot.getBlock();
             var top = spot.toBlockLocation().add(0.5, 0, 0.5);
             top.setY(counter.getBoundingBox().getMaxY());
@@ -58,19 +49,17 @@ public final class CookieBlock implements Listener, AutoCloseable {
                 cookie.setViewRange(0.5f);
                 cookie.setPersistent(false);
             });
-            spawned.add(display);
-            box = top.getWorld().spawn(top, Interaction.class, target -> {
+            var box = top.getWorld().spawn(top, Interaction.class, target -> {
                 target.setInteractionWidth(1);
                 target.setInteractionHeight(1);
                 target.setResponsive(true);
                 target.setPersistent(false);
             });
-            spawned.add(box);
             var label = Cards.line(top.clone().add(0, 1.35, 0),
                     Component.join(JoinConfiguration.newlines(), messages.getLines("cookies.block-label")));
             label.setViewRange(0.15f);
             label.setPersistent(false);
-            spawned.add(label);
+            stand.add(SPOT, spot, display, box, label);
         });
     }
 
@@ -91,30 +80,9 @@ public final class CookieBlock implements Listener, AutoCloseable {
         }
     }
 
-    @EventHandler
-    public void onCookieClick(PlayerInteractEntityEvent event) {
-        if (box != null && box.equals(event.getRightClicked())) {
-            event.setCancelled(true);
-            if (event.getHand() == EquipmentSlot.HAND) {
-                cookies.open(event.getPlayer());
-            }
-        }
-    }
-
-    @EventHandler
-    public void onCookieHit(PrePlayerAttackEntityEvent event) {
-        if (box != null && box.equals(event.getAttacked())) {
-            event.setCancelled(true);
-            cookies.hit(event.getPlayer());
-        }
-    }
-
     @Override
     public void close() {
-        spawned.forEach(Entity::remove);
-        spawned.clear();
+        stand.close();
         counter = null;
-        box = null;
-        held.clear();
     }
 }

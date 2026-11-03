@@ -9,6 +9,7 @@ import me.blockcraft.api.task.PlayerTasks;
 import me.blockcraft.common.db.Database;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.lobby.ChunkTickets;
+import me.blockcraft.lobby.SpotEntities;
 import org.bukkit.Bukkit;
 import org.bukkit.Server;
 import org.bukkit.block.Block;
@@ -70,7 +71,7 @@ public class CookieBlockTest {
             var rules = new CookieProgress.Rules(1000, Long.MAX_VALUE, 600, 5, List.of());
             try (var cookies = new CookieClicker(fixture.plugin, db, messages, rules);
                  var block = new CookieBlock(Locations.load(folder.newFolder().toPath().resolve("activities.yml")),
-                         cookies, messages, new ChunkTickets(fixture.plugin))) {
+                         cookies, messages, new SpotEntities(new ChunkTickets(fixture.plugin)))) {
                 var counterField = CookieBlock.class.getDeclaredField("counter");
                 counterField.setAccessible(true);
                 counterField.set(block, fixture.counter);

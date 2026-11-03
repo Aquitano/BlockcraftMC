@@ -178,7 +178,7 @@ public final class LobbyPlugin extends JavaPlugin {
         var cookies = new CookieClicker(this, api.database(), messages,
                 CookieProgress.Rules.fromYaml(YamlFile.section(yaml, "cookies")));
         closables.add(cookies);
-        var cookieBlock = new CookieBlock(activityLocations, cookies, messages, chunks);
+        var cookieBlock = new CookieBlock(activityLocations, cookies, messages, spotEntities);
         closables.add(cookieBlock);
         register(cookies, cookieBlock);
         var menus = new Menus(this, messages, config, locations, api.unlocks(), api.settings(), api.messages(),
