@@ -69,7 +69,7 @@ final class MusicBox implements Listener {
             melody |= note.instrument() == CantinaTune.Instrument.BIT;
             for (var listener : speaker.getWorld().getPlayers()) {
                 if (listener.getLocation().distanceSquared(speaker) <= HEARD * HEARD) {
-                    listener.playSound(speaker, sound, SoundCategory.RECORDS, note.volume(), note.pitch());
+                    listener.playSound(speaker, sound, SoundCategory.MUSIC, note.volume(), note.pitch());
                 }
             }
         }

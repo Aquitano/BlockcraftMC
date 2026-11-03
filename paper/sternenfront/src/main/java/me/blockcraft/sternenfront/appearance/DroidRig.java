@@ -140,6 +140,10 @@ final class DroidRig implements AutoCloseable {
     }
 
     void tick() {
+        tick(0);
+    }
+
+    void tick(double recoil) {
         var at = actor.getLocation();
         double moved = Math.hypot(at.getX() - previous.getX(), at.getZ() - previous.getZ());
         stride += Math.min(moved, 0.5) * 7;
@@ -160,7 +164,7 @@ final class DroidRig implements AutoCloseable {
         float shoulder = droid ? 0.23f : 0.35f;
         pose(leftArm, at, yaw, facing, shoulder, 1.36f - drop, 0, pitch - 1.05f, 1);
         pose(rightArm, at, yaw, facing, -shoulder, 1.36f - drop, 0, pitch - 1.1f, 1);
-        pose(weapon, at, yaw, facing, -shoulder + 0.03f, 1.27f - drop, 0.53f, pitch, 0.65f);
+        pose(weapon, at, yaw, facing, -shoulder + 0.03f, 1.27f - drop, 0.53f - (float) recoil * .06f, pitch, 0.65f);
         var equipment = actor.getEquipment();
         var current = equipment == null ? ItemStack.empty() : equipment.getItemInMainHand();
         if (!current.equals(held)) {

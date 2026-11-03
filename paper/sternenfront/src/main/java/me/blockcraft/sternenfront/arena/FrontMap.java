@@ -33,7 +33,7 @@ public record FrontMap(String name, World world, BoundingBox playArea, Map<Facti
      * A command post. {@code key} names it in messages.yml; its zone reaches {@code radius} blocks round
      * {@code center}, from {@link #BELOW} blocks below it to {@link #ABOVE} above. Its owner deploys at
      * {@code spawns}. {@code indicators} are the dyed blocks (concrete, wool, carpet, terracotta, stained glass) that
-     * the round recolours to show the owner, among them the glass over the post's beacon, which tints its beam.
+     * the round recolours to show the owner.
      * {@code label} is where the post's name floats.
      */
     public record PostSite(String key, Location center, double radius, List<Location> spawns, List<Block> indicators,

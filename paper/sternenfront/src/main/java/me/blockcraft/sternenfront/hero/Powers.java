@@ -49,7 +49,6 @@ public final class Powers {
     private static final int JETPACK_SOUND_TICKS = 8;
     private static final long FALL_SAFE_TICKS = 100;
     private static final double GRAPPLE_LIFT = 0.35;
-    private static final double GRAPPLE_STEP = 0.75;
     private static final double BEACON_LIFT = 0.15;
     private static final double BEACON_THROW = 1.0;
     private static final long BEACON_LANDS_LATEST = 40;
@@ -120,10 +119,7 @@ public final class Powers {
         var eye = player.getEyeLocation();
         var facing = eye.getDirection();
         double halfAngle = Math.toRadians(push.angle() / 2);
-        for (double along = 1; along <= push.range(); along += 1) {
-            var point = eye.clone().add(facing.clone().multiply(along));
-            player.getWorld().spawnParticle(Particle.GUST, point, 1, along * 0.08, along * 0.08, along * 0.08, 0);
-        }
+        game.effects().push(eye, facing, push.range(), push.angle());
         SoundCue.FORCE_PUSH.play(eye, 1.5f);
         for (var target : game.targets()) {
             if (!target.getWorld().equals(player.getWorld())) {
@@ -200,9 +196,7 @@ public final class Powers {
         var anchor = hit.getHitPosition();
         var line = anchor.clone().subtract(eye.toVector());
         double distance = line.length();
-        for (double along = 0; along < distance; along += GRAPPLE_STEP) {
-            player.getWorld().spawnParticle(Particle.CRIT, eye.clone().add(line.clone().normalize().multiply(along)), 1, 0, 0, 0, 0);
-        }
+        game.effects().grapple(player, anchor.toLocation(player.getWorld()));
         var pull = anchor.clone().subtract(player.getLocation().toVector()).normalize()
                 .multiply(Math.min(grapple.speed(), 0.4 + distance * 0.12));
         player.setVelocity(pull.setY(Math.max(pull.getY(), 0) + GRAPPLE_LIFT));
@@ -229,6 +223,7 @@ public final class Powers {
 
     private boolean rally(Player player, Faction faction) {
         var rally = config.rally();
+        game.effects().rally(player.getLocation(), faction, rally.radius());
         int ticks = rally.seconds() * 20;
         for (var ally : game.combatants()) {
             if (ally.getWorld().equals(player.getWorld())
@@ -236,7 +231,8 @@ public final class Powers {
                     && game.onField(ally) && game.factionOf(ally).filter(faction::equals).isPresent()) {
                 ally.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, ticks, 0, false, false, true));
                 ally.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, ticks, 0, false, false, true));
-                ally.getWorld().spawnParticle(Particle.TOTEM_OF_UNDYING, ally.getLocation().add(0, 1, 0), 12, 0.3, 0.6, 0.3, 0.2);
+                ally.getWorld().spawnParticle(Particle.DUST, ally.getLocation().add(0, 1, 0), 8, .3, .5, .3, 0,
+                        new Particle.DustOptions(faction.bolt(), .7f));
             }
         }
         SoundCue.RALLY.play(player.getLocation(), 2f);
@@ -307,8 +303,9 @@ public final class Powers {
             double distance = toward.length();
             if (distance == 0 || inSight(position, toward.multiply(1 / distance), distance)) {
                 flight.struck().add(target.getUniqueId());
-                game.strike(thrower, target, config.saberThrow().damage(), DamageType.TRIDENT);
-                SoundCue.SABER_CLASH.play(next, 0.6f);
+                if (game.strike(thrower, target, config.saberThrow().damage(), DamageType.TRIDENT)) {
+                    SoundCue.SABER_HIT.play(next, 0.8f);
+                }
             }
         }
         if (wall != null && returning) {

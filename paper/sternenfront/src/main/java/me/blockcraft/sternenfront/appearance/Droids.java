@@ -76,7 +76,7 @@ public final class Droids implements Listener, AutoCloseable {
                 targets.put(created.targetId(), created);
                 return created;
             });
-            rig.tick();
+            rig.tick(game.effects().recoil(actor));
         }
         for (var id : new HashSet<>(rigs.keySet())) {
             if (!present.contains(id)) {

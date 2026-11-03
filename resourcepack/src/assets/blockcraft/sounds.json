@@ -31,32 +31,44 @@
   },
   "sternenfront.blaster.carbine": {
     "sounds": [
-      "blockcraft:sternenfront/blaster_carbine"
+      {
+        "name": "blockcraft:sternenfront/blaster_carbine"
+      }
     ]
   },
   "sternenfront.blaster.repeater": {
     "sounds": [
-      "blockcraft:sternenfront/blaster_repeater"
+      {
+        "name": "blockcraft:sternenfront/blaster_repeater"
+      }
     ]
   },
   "sternenfront.blaster.long_rifle": {
     "sounds": [
-      "blockcraft:sternenfront/blaster_long_rifle"
+      {
+        "name": "blockcraft:sternenfront/blaster_long_rifle"
+      }
     ]
   },
   "sternenfront.blaster.pistol": {
     "sounds": [
-      "blockcraft:sternenfront/blaster_pistol"
+      {
+        "name": "blockcraft:sternenfront/blaster_pistol"
+      }
     ]
   },
   "sternenfront.blaster.twin_pistol": {
     "sounds": [
-      "blockcraft:sternenfront/blaster_twin_pistol"
+      {
+        "name": "blockcraft:sternenfront/blaster_twin_pistol"
+      }
     ]
   },
   "sternenfront.blaster.heavy_rifle": {
     "sounds": [
-      "blockcraft:sternenfront/blaster_heavy_rifle"
+      {
+        "name": "blockcraft:sternenfront/blaster_heavy_rifle"
+      }
     ]
   },
   "sternenfront.bolt.impact": {
@@ -197,6 +209,53 @@
   "sternenfront.sand_beast.roar": {
     "sounds": [
       "blockcraft:sternenfront/sand_beast_roar"
+    ]
+  },
+  "sternenfront.saber.hit": {
+    "sounds": [
+      "blockcraft:sternenfront/saber_hit_1",
+      "blockcraft:sternenfront/saber_hit_2",
+      "blockcraft:sternenfront/saber_hit_3"
+    ]
+  },
+  "sternenfront.music.opening": {
+    "sounds": [
+      {
+        "name": "blockcraft:sternenfront/music_opening",
+        "stream": true
+      }
+    ]
+  },
+  "sternenfront.music.battle": {
+    "sounds": [
+      {
+        "name": "blockcraft:sternenfront/music_battle",
+        "stream": true
+      }
+    ]
+  },
+  "sternenfront.music.pressure": {
+    "sounds": [
+      {
+        "name": "blockcraft:sternenfront/music_pressure",
+        "stream": true
+      }
+    ]
+  },
+  "sternenfront.music.victory": {
+    "sounds": [
+      {
+        "name": "blockcraft:sternenfront/music_victory",
+        "stream": true
+      }
+    ]
+  },
+  "sternenfront.music.defeat": {
+    "sounds": [
+      {
+        "name": "blockcraft:sternenfront/music_defeat",
+        "stream": true
+      }
     ]
   }
 }

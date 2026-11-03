@@ -74,6 +74,9 @@ public final class PackOverrides {
                 }
                 var override = vanilla.deepCopy();
                 override.add("model", select(item.getValue(), vanilla.get("model").getAsJsonObject()));
+                if (item.getValue().values().stream().anyMatch(drawn -> drawn.model().endsWith("_firing"))) {
+                    override.addProperty("hand_animation_on_swap", false);
+                }
                 Files.writeString(directory.resolve(item.getKey() + ".json"), gson.toJson(override) + "\n");
             }
         }

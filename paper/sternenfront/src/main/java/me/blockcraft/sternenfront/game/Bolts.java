@@ -148,6 +148,7 @@ public final class Bolts {
             var at = bolt.position.clone().add(bolt.direction.clone().multiply(travelled));
             sparks(at, bolt.shot.faction());
             if (wall != null) {
+                game.gadgets().impact(wall.getHitBlock(), at, bolt.direction);
                 SoundCue.BOLT_IMPACT.play(at, IMPACT_VOLUME);
             }
             return false;

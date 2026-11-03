@@ -26,6 +26,13 @@
         }
       },
       {
+        "when": "blockcraft:sternenfront/carbine_firing",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/sternenfront/carbine_firing"
+        }
+      },
+      {
         "when": "blockcraft:zombies/rifle",
         "model": {
           "type": "minecraft:model",
@@ -37,5 +44,6 @@
       "type": "minecraft:model",
       "model": "minecraft:item/iron_hoe"
     }
-  }
+  },
+  "hand_animation_on_swap": false
 }

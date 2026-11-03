@@ -23,6 +23,7 @@ public enum SoundCue {
     SABER_RETRACT("saber.retract", Sound.BLOCK_BEACON_DEACTIVATE, 2.0f),
     SABER_HUM("saber.hum", Sound.BLOCK_BEACON_AMBIENT, 1.5f),
     SABER_SWING("saber.swing", Sound.ENTITY_PLAYER_ATTACK_SWEEP, 1.4f),
+    SABER_HIT("saber.hit", Sound.BLOCK_FIRE_EXTINGUISH, 1.3f),
     SABER_CLASH("saber.clash", Sound.BLOCK_ANVIL_LAND, 2.0f),
     SABER_DEFLECT("saber.deflect", Sound.ITEM_SHIELD_BLOCK, 1.5f),
     SABER_THROW("saber.throw", Sound.ITEM_TRIDENT_THROW, 1.2f),

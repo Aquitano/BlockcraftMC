@@ -12,6 +12,13 @@
         }
       },
       {
+        "when": "blockcraft:sternenfront/long_rifle_firing",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/sternenfront/long_rifle_firing"
+        }
+      },
+      {
         "when": "blockcraft:zombies/sniper",
         "model": {
           "type": "minecraft:model",
@@ -23,5 +30,6 @@
       "type": "minecraft:model",
       "model": "minecraft:item/diamond_hoe"
     }
-  }
+  },
+  "hand_animation_on_swap": false
 }

@@ -1,0 +1,111 @@
+{
+  "sources": {
+    "legionnaire.mp3": {
+      "author": "Scott Buckley",
+      "license": "CC-BY-4.0",
+      "source": "https://www.scottbuckley.com.au/library/legionnaire/",
+      "sha256": "49230c850b0d3a278aee2871ca684cf4bc87bf4dd1ecc8f453f425bff2dce27c"
+    },
+    "juggernaut.mp3": {
+      "author": "Scott Buckley",
+      "license": "CC-BY-4.0",
+      "source": "https://www.scottbuckley.com.au/library/juggernaut/",
+      "sha256": "50be286d170f5a08791f1540b110fbbb4c0aa26e841084fceff0c908379e76f6"
+    },
+    "enhanced3.mp3": {
+      "author": "MikeE63",
+      "license": "CC0-1.0",
+      "source": "https://freesound.org/people/MikeE63/sounds/466865/",
+      "sha256": "2cbb51d281e5de62b6097624b4ed68c789069786a8de5d577f04eaf72266acc1"
+    },
+    "enhanced2.mp3": {
+      "author": "MikeE63",
+      "license": "CC0-1.0",
+      "source": "https://freesound.org/people/MikeE63/sounds/466866/",
+      "download": "https://cdn.freesound.org/previews/466/466866_8430571-hq.mp3",
+      "sha256": "79af59e7a8c7ab746989564892e0a44d7b691d2c01b3c07b1c3349d9b5c55d9f"
+    },
+    "single5.mp3": {
+      "author": "MikeE63",
+      "license": "CC0-1.0",
+      "source": "https://freesound.org/people/MikeE63/sounds/466867/",
+      "download": "https://cdn.freesound.org/previews/466/466867_8430571-hq.mp3",
+      "sha256": "d61980c9fe16fc757369e4f2ea111877cfd65cf9c8c518ff5536670f2a7c9ef1"
+    },
+    "single4.mp3": {
+      "author": "MikeE63",
+      "license": "CC0-1.0",
+      "source": "https://freesound.org/people/MikeE63/sounds/466868/",
+      "download": "https://cdn.freesound.org/previews/466/466868_8430571-hq.mp3",
+      "sha256": "47a0cc749286cc0c781bc3c34f69421e93b6a1c0dbdab5e50399a175bcfad9ff"
+    }
+  },
+  "events": {
+    "blaster.carbine": {
+      "source": "enhanced3.mp3",
+      "pitch": 1,
+      "seconds": 1.25,
+      "gain_db": -4
+    },
+    "blaster.repeater": {
+      "source": "single5.mp3",
+      "pitch": 1.06,
+      "seconds": 1,
+      "gain_db": -4
+    },
+    "blaster.long_rifle": {
+      "source": "enhanced2.mp3",
+      "pitch": 0.88,
+      "seconds": 1.4,
+      "gain_db": -4
+    },
+    "blaster.pistol": {
+      "source": "single4.mp3",
+      "pitch": 1.12,
+      "seconds": 1,
+      "gain_db": -4
+    },
+    "blaster.twin_pistol": {
+      "source": "single4.mp3",
+      "pitch": 1.04,
+      "seconds": 1,
+      "gain_db": -4
+    },
+    "blaster.heavy_rifle": {
+      "source": "enhanced2.mp3",
+      "pitch": 0.95,
+      "seconds": 1.25,
+      "gain_db": -4
+    },
+    "music.opening": {
+      "source": "legionnaire.mp3",
+      "start": 20,
+      "seconds": 24,
+      "gain_db": -6
+    },
+    "music.battle": {
+      "source": "legionnaire.mp3",
+      "start": 20,
+      "seconds": 92,
+      "gain_db": -6
+    },
+    "music.pressure": {
+      "source": "juggernaut.mp3",
+      "start": 111,
+      "seconds": 75,
+      "gain_db": -6
+    },
+    "music.victory": {
+      "source": "legionnaire.mp3",
+      "start": 38,
+      "seconds": 12,
+      "gain_db": -6
+    },
+    "music.defeat": {
+      "source": "juggernaut.mp3",
+      "start": 172,
+      "seconds": 12,
+      "gain_db": -6
+    }
+  }
+}

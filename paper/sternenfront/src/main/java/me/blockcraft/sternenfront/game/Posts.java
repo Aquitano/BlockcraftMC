@@ -3,6 +3,7 @@ package me.blockcraft.sternenfront.game;
 import me.blockcraft.api.world.BlocksChangedEvent;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.sternenfront.arena.FrontMap.PostSite;
+import me.blockcraft.sternenfront.appearance.PostHologram;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -18,6 +19,7 @@ import org.bukkit.entity.Display;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
+import org.bukkit.plugin.Plugin;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,7 +37,7 @@ import java.util.stream.IntStream;
 
 /**
  * The map's command posts while a round runs: each second the players in a post's zone move its capture, its
- * coloured blocks and beacon beam follow its owner, a label floats over it, and whoever stands in it sees its
+ * coloured blocks and hologram follow its owner, a label floats over it, and whoever stands in it sees its
  * progress as a boss bar.
  */
 public final class Posts {
@@ -64,6 +66,7 @@ public final class Posts {
         private final BossBar bar = BossBar.bossBar(Component.empty(), 0, BossBar.Color.WHITE, BossBar.Overlay.NOTCHED_10);
         private final Set<UUID> viewers = new HashSet<>();
         private TextDisplay label;
+        private PostHologram hologram;
         private Presence presence = new Presence(0, 0);
         private final PostThreat threat = new PostThreat();
 
@@ -130,6 +133,22 @@ public final class Posts {
                 display.setBrightness(LIT);
             });
             draw(post, posts.indexOf(post));
+        }
+    }
+
+    public void holograms(Plugin plugin) {
+        if (plugin.getConfig().getBoolean("presentation.holographic-posts", true)) {
+            posts.forEach(post -> post.hologram = new PostHologram(plugin, post.site.center()));
+        }
+    }
+
+    public void tick(long tick) {
+        for (var post : posts) {
+            if (post.hologram != null) {
+                post.hologram.tick(tick, post.logic.owner(), post.logic.leaning(),
+                        post.logic.leaning().map(post.logic::share).orElse(0.0),
+                        CommandPost.contested(post.presence.kolonien(), post.presence.hegemonie()));
+            }
         }
     }
 
@@ -226,6 +245,10 @@ public final class Posts {
             post.viewers.clear();
             if (post.label != null) {
                 post.label.remove();
+            }
+            if (post.hologram != null) {
+                post.hologram.close();
+                post.hologram = null;
             }
         }
     }

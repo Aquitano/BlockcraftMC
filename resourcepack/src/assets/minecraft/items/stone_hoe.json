@@ -12,6 +12,13 @@
         }
       },
       {
+        "when": "blockcraft:sternenfront/pistol_firing",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/sternenfront/pistol_firing"
+        }
+      },
+      {
         "when": "blockcraft:zombies/shotgun",
         "model": {
           "type": "minecraft:model",
@@ -23,5 +30,6 @@
       "type": "minecraft:model",
       "model": "minecraft:item/stone_hoe"
     }
-  }
+  },
+  "hand_animation_on_swap": false
 }

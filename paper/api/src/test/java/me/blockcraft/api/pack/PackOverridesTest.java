@@ -39,6 +39,9 @@ public class PackOverridesTest {
                 cases.put(match.get("when").getAsString(), new PackOverrides.Case(drawn.get("model").getAsString(), tintedByItem(drawn)));
             }
             assertEquals(file.toString(), item.getValue(), cases);
+            if (cases.values().stream().anyMatch(drawn -> drawn.model().endsWith("_firing"))) {
+                assertTrue(file + " must not lower the weapon for each firing pose", !read(file).get("hand_animation_on_swap").getAsBoolean());
+            }
         }
     }
 

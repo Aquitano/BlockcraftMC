@@ -132,6 +132,10 @@ public final class Combat {
     }
 
     public Guard.Result block(Player player, Vector incoming, double damage) {
+        return block(player, incoming, damage, SoundCue.SABER_DEFLECT);
+    }
+
+    private Guard.Result block(Player player, Vector incoming, double damage, SoundCue contact) {
         var state = state(player);
         if (!holdsBlade(player) || player.getEyeLocation().getDirection().dot(incoming.clone().multiply(-1)) < 0.2) {
             return Guard.Result.NONE;
@@ -142,7 +146,7 @@ public final class Combat {
             player.playSound(player.getLocation(), Sound.ITEM_SHIELD_BREAK, 0.8f, 1);
             BlockcraftApi.get().notifications().feedback(player, game.messages().get("combat.guard-broken"));
         } else if (result != Guard.Result.NONE) {
-            game.deflected(player, player.getEyeLocation());
+            game.deflected(player, player.getEyeLocation(), contact);
         }
         return result;
     }
@@ -176,15 +180,16 @@ public final class Combat {
         for (var target : targets) {
             double amount = damage;
             if (target instanceof Player defender) {
-                var result = block(defender, target.getLocation().toVector().subtract(player.getLocation().toVector()).normalize(), damage);
+                var result = block(defender, target.getLocation().toVector().subtract(player.getLocation().toVector()).normalize(),
+                        damage, SoundCue.SABER_CLASH);
                 amount *= switch (result) {
                     case PARRY -> 0;
                     case BLOCK -> game.heroes().config().saber().blockedShare();
                     case NONE, BROKEN -> 1;
                 };
             }
-            if (amount > 0) {
-                game.strike(player, target, amount, DamageType.MAGIC);
+            if (amount > 0 && game.strike(player, target, amount, DamageType.MAGIC)) {
+                SoundCue.SABER_HIT.play(target.getLocation().add(0, target.getHeight() * 0.6, 0), 0.8f);
             }
         }
         for (int step = -2; step <= 2; step++) {

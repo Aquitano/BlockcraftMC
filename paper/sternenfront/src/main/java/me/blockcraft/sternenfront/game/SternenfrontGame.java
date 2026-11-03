@@ -33,6 +33,7 @@ import me.blockcraft.sternenfront.bot.BotConfig;
 import me.blockcraft.sternenfront.bot.BotDifficulty;
 import me.blockcraft.sternenfront.bot.Bots;
 import me.blockcraft.sternenfront.combat.Combat;
+import me.blockcraft.sternenfront.combat.BattleEffects;
 import me.blockcraft.sternenfront.combat.CombatConfig;
 import me.blockcraft.sternenfront.vehicle.Speeders;
 import me.blockcraft.sternenfront.vehicle.SpeederConfig;
@@ -127,6 +128,8 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     private final GameSidebar sidebar;
     private final Posts posts;
     private final Bolts bolts;
+    private final BattleEffects effects;
+    private final BattleMusic music;
     private final Bots bots;
     private final BotConfig botConfig;
     private final Ballot<BotDifficulty> botDifficultyVotes = new Ballot<>();
@@ -183,6 +186,8 @@ public final class SternenfrontGame implements RoundConnections.Seating {
                 OptionalInt.of(config.fullSeconds()), player -> { });
         this.posts = new Posts(messages, map.posts(), config.captureSeconds());
         this.bolts = new Bolts(this);
+        this.effects = new BattleEffects(this);
+        this.music = new BattleMusic(this);
         this.bots = new Bots(this, botConfig);
         this.gadgets = new Gadgets(this);
         this.heroes = new Heroes(this, plugin, messages, loadouts, heroConfig);
@@ -231,6 +236,14 @@ public final class SternenfrontGame implements RoundConnections.Seating {
 
     public Bots bots() {
         return bots;
+    }
+
+    public BattleEffects effects() {
+        return effects;
+    }
+
+    public Gadgets gadgets() {
+        return gadgets;
     }
 
     public Battlefield battlefield() {
@@ -391,6 +404,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
 
     @Override
     public void quit(Player player) {
+        music.forget(player);
         botDifficultyVotes.withdraw(player.getUniqueId());
         combat.forget(player);
         support.forget(player);
@@ -546,6 +560,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         reinforcements = new Reinforcements(config.tickets());
         relic = new Relic(this, map.relic(), config.relic().firstSeconds() * TICKS_PER_SECOND);
         posts.show();
+        posts.holograms(plugin);
         var difficulties = List.of(BotDifficulty.values());
         boolean voted = difficulties.stream().anyMatch(difficulty -> botDifficultyVotes.votes(Optional.of(difficulty)) > 0);
         var difficulty = voted ? botDifficultyVotes.winner(difficulties, ThreadLocalRandom.current()).orElse(botConfig.difficulty())
@@ -572,6 +587,9 @@ public final class SternenfrontGame implements RoundConnections.Seating {
             Bukkit.broadcast(messages.get("round.faction", factionName(faction), Placeholder.unparsed("players", String.join(", ", names))));
         }
         messages.getLines("round.start").forEach(Bukkit::broadcast);
+        if (plugin.getConfig().getBoolean("music.enabled", true)) {
+            round.players().forEach(player -> player.sendMessage(messages.get("round.music-credit")));
+        }
         secondsLeft = config.roundSeconds();
         round.clock(new TimerBar(messages, "timer.round", config.roundSeconds()), remaining -> {
             secondsLeft = remaining;
@@ -584,6 +602,9 @@ public final class SternenfrontGame implements RoundConnections.Seating {
 
     private void tickRound() {
         tick++;
+        effects.tick(tick);
+        posts.tick(tick);
+        music.tick(tick, secondsLeft, Math.min(reinforcements.left(Faction.KOLONIEN), reinforcements.left(Faction.HEGEMONIE)));
         bots.tick(tick);
         bolts.tick();
         gadgets.tick(tick);
@@ -707,6 +728,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     }
 
     public void fireBot(Mob shooter, Faction faction, Blaster blaster, Vector aim, double damageScale, boolean headshots) {
+        effects.fire(shooter, faction, blaster, aim, bots.heat(shooter));
         var stats = config.stats(blaster);
         bolts.fire(shooter, faction, blaster, new Blaster.Stats(stats.damage() * damageScale, headshots ? stats.headshot() : 1, stats.heat(),
                 stats.cooldownTicks(), stats.bolts(), stats.burstTicks(), stats.spread(), stats.speed(), stats.range()), aim);
@@ -753,6 +775,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     }
 
     private void shoot(Player player, Faction faction, Blaster blaster) {
+        effects.fire(player, faction, blaster, player.getEyeLocation().getDirection(), fighter(player).heat().level());
         var stats = config.stats(blaster);
         bolts.fire(player, faction, blaster, stats);
         SoundCue.shot(blaster).play(player.getEyeLocation(), SHOT_VOLUME);
@@ -896,12 +919,14 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     }
 
     /** Hurts the victim in {@code by}'s name, so the kill is theirs, and shows them the hit. */
-    public void strike(LivingEntity by, LivingEntity victim, double damage, DamageType type) {
+    public boolean strike(LivingEntity by, LivingEntity victim, double damage, DamageType type) {
         if (isProtected(victim)) {
-            return;
+            return false;
         }
+        double before = victim.getHealth() + victim.getAbsorptionAmount();
         lastBolt.remove(victim.getUniqueId());
         hurt(by, victim, damage, DamageSource.builder(type), false);
+        return victim.getHealth() + victim.getAbsorptionAmount() < before;
     }
 
     public void blast(Player thrower, LivingEntity victim, double damage, Location at) {
@@ -961,7 +986,11 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     }
 
     public void deflected(Player champion, Location at) {
-        SoundCue.SABER_DEFLECT.play(at, 1f);
+        deflected(champion, at, SoundCue.SABER_DEFLECT);
+    }
+
+    public void deflected(Player champion, Location at, SoundCue contact) {
+        contact.play(at, 1f);
         champion.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, at, 10, 0.2, 0.2, 0.2, 0.2);
     }
 
@@ -1294,6 +1323,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         }
         winner = won;
         cleanUp();
+        music.finish(won);
         won.ifPresent(faction -> roster.entrySet().stream().filter(entry -> entry.getValue() == faction)
                 .map(entry -> Bukkit.getPlayer(entry.getKey())).filter(Objects::nonNull).forEach(summary::awardWin));
         Bukkit.broadcast(Component.empty());
@@ -1326,6 +1356,8 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         }
         bursts.clear();
         bolts.clear();
+        effects.clear();
+        music.clear();
         bots.clear();
         combat.clear();
         speeders.clear();

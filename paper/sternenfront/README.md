@@ -4,7 +4,7 @@ A team shooter in an original space-opera setting: two factions fight over comma
 blasters, grenades, jump packs, shield walls, heroes with lightsabers and one relic blade that turns its carrier into
 the round's champion. It is a game in the genre of large sci-fi objective shooters, not a copy of one: the factions,
 the map, the weapons, the heroes and the relic are our own. The heroes borrow the genre's words (Lichtschwert, Jedi,
-Sith, die Macht), but no characters, hilt designs or music; every name lives in `messages.yml`.
+Sith, die Macht), but no characters or hilt designs; every name lives in `messages.yml`.
 
 ## The round
 
@@ -22,7 +22,12 @@ within contested zones. Shooting requires line of sight and a reaction delay; ai
 Riflemen push towards enemy posts, heavy infantry prefer defending owned posts, and medics follow wounded allies
 and heal within four blocks. Each role uses its class's health and weapon. Bots retain a visible target until
 another enemy is substantially closer, so nearby enemies trading places do not repeatedly reset the reaction delay.
-Their displayed head, body and gun follow the same stored aim that their shots use, independently of navigation.
+Their displayed head and gun follow the same stored aim that their shots use, independently of navigation.
+The torso and legs turn gradually under `appearance.body-turn-degrees`; the shoulders stay attached while the gun
+tracks the firing direction. Non-combat aim turns each tick under `bots.idle-turn-degrees`, with separate speed
+thresholds for starting and stopping a walking turn. Combat tracking still uses the selected difficulty.
+Unchanged display poses do not restart interpolation. Bots step over rises up to `bots.step-height` (one block by
+default) using native collision handling.
 New targets must be in `bots.vision-angle`; a target lost behind cover is remembered at its last seen position for
 `bots.memory-ticks`. Taking enemy damage alerts a bot without restarting its reaction delay on every hit.
 Each post has two authored approach routes per faction, cover, a nearby peek position and a fallback point.
@@ -33,6 +38,8 @@ These tactics apply on every difficulty. Heavy bots fire the repeater's complete
 volley, with heat charged once per trigger pull.
 They share the round's projectile bolts, heat, protection, reinforcements and respawn delay. Friends joining
 a running match take human seats and excess bots disappear. Bots have no heroes.
+Medics retain their selected wounded patient, hold within three blocks when they have line of sight, and resume
+objectives once that patient is healed, gone or out of range. A blocked sightline makes them approach the patient.
 
 The lobby's **Klasse & Bot-Stärke** item opens the class menu. Its **Bot-Stärke** button opens a vote for
 **Leicht**, **Normal** or **Veteran**. The most votes choose the round's difficulty; ties are random. Without votes,
@@ -49,6 +56,15 @@ Bot count, sight range, rewards and medic settings remain under `bots`.
 Bot kills give `bots.kill-points` battle points (25), with no kill coins, persistent kill stats or streak credit.
 Existing capture and win rewards still apply in bot rounds. Set `bots.enabled: false` for human-only rounds, which
 require at least two humans. Bots do not add entries to the network's player list.
+
+Operators and players with `blockcraft.sternenfront.debug` can use `/sfdebug` to enable NPC inspection.
+Right click a bot to save the preceding five seconds and following ten seconds to
+`plugins/Sternenfront/debug/npc-*.json`. History begins when inspection is enabled. `/sfdebug capture` records the
+bot under the crosshair; `/sfdebug off` restores normal right-click controls while pending captures finish.
+The report contains native movement and jump flags, aim, navigation decisions, path nodes, terrain, nearby actors,
+server timing, pack status, and each rendered part's transform and interpolation settings. A disappearing bot
+produces a partial report. History and capture lengths are configured under `debug`; sampling stops when neither
+an inspector nor a pending capture remains. File encoding and writes run off the game thread.
 
 The map has three **command posts** (A, B, C) between the two headquarters. Standing in a post's zone moves its
 capture progress towards the faction with more players there, faster the bigger the lead (up to three times).
@@ -156,6 +172,29 @@ cannot take the relic.
 Every sound of the round plays the pack's `blockcraft:sternenfront.<name>` to players wearing the pack and a vanilla
 stand-in to everyone else (`SoundCue`).
 
+Lightsaber sounds use downloaded CC0 recordings for ignition, retraction, hum, swings, impacts, clashes,
+deflection and throwing. [Sources and offline regeneration](../../resourcepack/SABER_SOURCES.md) are kept with the pack.
+
+Blasters use MikeE63's CC0 recordings. Scott Buckley's *Legionnaire (Original)* and *Juggernaut* provide opening,
+battle, pressure and result cues under CC BY 4.0. The pack includes the credits, and the round links the composer.
+[Recording sources and regeneration](../../resourcepack/BATTLE_AUDIO.md) include the edits and checksums.
+
+The soundtrack and cantina use Minecraft's **Music** category. Each player's normal Music slider controls them,
+including muting them at zero, while weapon effects remain in the Players category. There is no second music toggle.
+`music.enabled`, `music.volume` and `music.pressure-tickets` control the server mix. Respawning does not restart music;
+cues have quiet gaps, pressure replaces the current cue, and shutdown stops the round's music.
+
+### Combat presentation
+
+Firing briefly moves the weapon model, flashes at the barrel and releases smoke at high heat. The actor's view and
+shot direction do not change. Force Push emits an expanding cone ripple, Rally a faction-coloured ground pulse, and
+grapples draw a short-lived tether. Shield panes retain their collision and gain a projected grid and impact ripples.
+`presentation.effects` controls these effects. Particles and models use ordinary depth rendering.
+
+Command posts have low projector bases with floating original faction emblems and twelve rotating capture segments.
+A contested post pulses. Their floor boundaries and capture rules stay the same. `presentation.holographic-posts`
+controls the models; clients without the pack retain the physical base, coloured boundary, label and capture bar.
+
 ### The relic blade
 
 `relic.first-seconds` into the round, the **Ahnenklinge** appears in the temple ruin on the northern cliff, an equal
@@ -220,7 +259,8 @@ armoured skeleton. `:resourcepack:generateDroids` also regenerates these models 
 
 Each faction has one unarmed, single-seat speeder on a marked pad at its headquarters. Right click boards your
 faction's empty speeder. W/S accelerate, brake and reverse; A/D steer; Shift dismounts. Weapons and abilities are
-disabled while riding. The vehicle takes enemy damage and respawns after destruction; an abandoned vehicle returns
+disabled while riding. It climbs steps up to one block high when the vehicle and rider have enough clearance.
+The vehicle takes enemy damage and respawns after destruction; an abandoned vehicle returns
 to its pad after the idle timeout. Dismounting grants a short fall-damage grace period. `speeders` holds its health,
 speed, acceleration, turn rate and timers. A client without the pack sees a minecart item with its nameplate.
 

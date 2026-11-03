@@ -112,6 +112,11 @@ public final class Bots implements Listener {
         return soldier == null ? Optional.empty() : Optional.of(soldier.aim.clone());
     }
 
+    public double heat(Entity entity) {
+        var soldier = bodies.get(entity.getUniqueId());
+        return soldier == null ? 0 : soldier.heat.level();
+    }
+
     public Optional<BotSnapshot> snapshot(Entity entity) {
         var soldier = bodies.get(entity.getUniqueId());
         if (soldier == null) {

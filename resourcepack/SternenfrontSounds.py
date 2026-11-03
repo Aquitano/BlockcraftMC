@@ -2,9 +2,9 @@
 # requires-python = ">=3.11"
 # dependencies = ["numpy>=2", "scipy>=1.13"]
 # ///
-"""Synthesizes Sternenfront's sounds into sounds/sternenfront and their sternenfront.* entries in sounds.json.
+"""Builds Sternenfront's effects and imported recordings into sounds/sternenfront.
 
-Run with `uv run SternenfrontSounds.py`. The files are mono, because the client only places mono sounds in the world.
+Run with `uv run SternenfrontSounds.py`. World effects are mono; streamed music is stereo.
 """
 import json
 import subprocess
@@ -12,6 +12,9 @@ import tempfile
 import wave
 import zlib
 from pathlib import Path
+
+from SaberRecordings import generate as recorded_sabers
+from BattleRecordings import generate as recorded_battle
 
 import numpy as np
 from scipy import signal
@@ -88,17 +91,6 @@ def swept(x, centre, q=2.0, low=False):
     return np.array(out)
 
 
-def periodic(x, low=None, high=None):
-    """Filters in the frequency domain, which keeps a loop seamless where a running filter would leave a seam."""
-    frequencies = np.fft.rfftfreq(len(x), 1 / RATE)
-    response = np.ones_like(frequencies)
-    if high:
-        response /= 1 + (frequencies / high) ** 4
-    if low:
-        response /= 1 + (low / np.maximum(frequencies, 1e-9)) ** 4
-    return np.fft.irfft(np.fft.rfft(x) * response, len(x))
-
-
 def unit(x):
     return x / np.max(np.abs(x))
 
@@ -136,96 +128,10 @@ def bell(frequency, seconds, rate):
         loudness * sine(held(frequency * ratio, seconds)) * np.exp(-t * rate * ratio ** 0.5) for ratio, loudness in tones)
 
 
-def blaster(rng, start, end, seconds, drive=1.5, crack=0.3, tail=0.25):
-    """A bolt leaving the barrel: a fast falling chirp, driven into a buzz, with a crack of noise on the shot."""
-    f = glide(start, end, seconds, 0.5)
-    body = np.tanh(drive * (sine(f) + 0.5 * sine(f * 2.02) + 0.25 * sine(f * 3.03))) * decay(seconds, 5 / seconds, 0.003)
-    burst = unit(filtered(noise(rng, 0.04), "bandpass", [1800, 7000])) * decay(0.04, 90, 0.001)
-    return echo(layer(body, crack * burst), 0.045, tail)
-
-
-def heavy_rifle(rng):
-    return layer(blaster(rng, 1100, 70, 0.38, drive=3, crack=0.6, tail=0.3), 0.8 * thump(140, 45, 0.25, 14))
-
-
-def long_rifle(rng):
-    return layer(blaster(rng, 3400, 220, 0.42, drive=1.2, crack=0.5, tail=0.4), 0.4 * thump(120, 50, 0.2, 18))
-
-
-def twin_pistol(rng):
-    return layer(blaster(rng, 2700, 700, 0.12, drive=1.8), (0.05, 0.85 * blaster(rng, 2400, 620, 0.12, drive=1.8)))
-
-
 def bolt_impact(rng):
     sizzle = unit(filtered(noise(rng, 0.3), "bandpass", [2500, 8000])) * decay(0.3, 14, 0.001)
     splash = unit(filtered(noise(rng, 0.08), "bandpass", [200, 1200])) * decay(0.08, 50, 0.001)
     return layer(0.6 * sizzle, splash, 0.7 * thump(300, 80, 0.08, 40))
-
-
-def blade(frequency):
-    """A blade's buzz: a detuned sawtooth pair over a sub octave."""
-    return saw(frequency, 12) + 0.8 * saw(frequency * 1.012, 12) + 0.3 * sine(frequency * 0.5)
-
-
-def saber_hum(rng):
-    seconds = 2.0
-    t = time(seconds)
-    voice = saw(held(90, seconds), 12) + 0.8 * saw(held(91, seconds), 12) + 0.3 * sine(held(45, seconds))
-    flutter = 1 + 0.12 * np.sin(2 * np.pi * 1.5 * t) + 0.05 * np.sin(2 * np.pi * 7 * t)
-    buzz = unit(periodic(noise(rng, seconds), 150, 900))
-    return unit(periodic(voice, high=1400)) * flutter + 0.12 * buzz
-
-
-def saber_ignite(rng):
-    seconds = 0.7
-    x = progress(seconds)
-    voice = unit(filtered(blade(90 * (0.3 + 0.7 * (1 - np.exp(-x * 6)))), "lowpass", 1600)) * np.minimum(x * 6, 1)
-    snap = unit(filtered(noise(rng, 0.18), "bandpass", [900, 5000])) * decay(0.18, 22, 0.001)
-    rise = unit(swept(noise(rng, seconds), 300 + 2600 * np.sin(np.pi * x), 2.5)) * np.sin(np.pi * x) ** 2
-    return layer(0.8 * voice, 0.6 * snap, 0.4 * rise)
-
-
-def saber_retract(rng):
-    seconds = 0.55
-    x = progress(seconds)
-    voice = unit(filtered(blade(90 * (1 - 0.72 * x ** 0.8)), "lowpass", 1600)) * (1 - x) ** 1.5
-    fall = unit(swept(noise(rng, seconds), 2600 - 2300 * x, 2.5)) * np.sin(np.pi * x) ** 2
-    return layer(0.8 * voice, 0.35 * fall, (seconds - 0.03, 0.3 * thump(220, 120, 0.03, 120)))
-
-
-def saber_swing(rng, seconds, base, depth):
-    arc = np.sin(np.pi * progress(seconds)) ** 2
-    voice = unit(filtered(blade(base * (1 + depth * arc)), "lowpass", 1600)) * (0.35 + 0.65 * arc)
-    whoosh = unit(swept(noise(rng, seconds), 350 + 2000 * arc, 1.5)) * arc
-    return 0.8 * voice + 0.45 * whoosh
-
-
-def saber_clash(rng):
-    seconds = 0.6
-    t = time(seconds)
-    sparks = unit(filtered(crackle(rng, seconds, 0.03), "highpass", 1500)) * np.exp(-t * 4)
-    burst = unit(filtered(noise(rng, seconds), "bandpass", [600, 6000])) * decay(seconds, 14, 0.001)
-    ring = unit(sum(sine(held(f, seconds)) * np.exp(-t * rate) for f, rate in ((612, 9), (1371, 12), (2189, 15), (3017, 20))))
-    flare = unit(filtered(blade(glide(160, 90, seconds)), "lowpass", 2000)) * decay(seconds, 7, 0.001)
-    return 0.6 * sparks + 0.7 * burst + 0.4 * ring + 0.6 * flare
-
-
-def saber_deflect(rng):
-    seconds = 0.32
-    t = time(seconds)
-    zing = sine(glide(3200, 1100, seconds, 0.7) * (1 + 0.03 * np.sin(2 * np.pi * 38 * t))) * decay(seconds, 9)
-    spark = unit(filtered(noise(rng, 0.06), "highpass", 2500)) * decay(0.06, 70, 0.0005)
-    flare = unit(filtered(blade(glide(150, 95, 0.2)), "lowpass", 1800)) * decay(0.2, 18)
-    return layer(0.6 * zing, 0.5 * spark, 0.5 * flare)
-
-
-def saber_throw(rng):
-    seconds = 1.0
-    t = time(seconds)
-    spin = 0.5 + 0.5 * np.sin(2 * np.pi * 9 * t)
-    voice = unit(filtered(blade(95 * (1 + 0.06 * np.sin(2 * np.pi * 9 * t + 1))), "lowpass", 1700)) * (0.35 + 0.65 * spin)
-    whoosh = unit(swept(noise(rng, seconds), 600 + 1400 * spin, 2.0)) * spin
-    return (0.8 * voice + 0.35 * whoosh) * swell(seconds, 0.08, 0.3)
 
 
 def force_push(rng):
@@ -368,21 +274,7 @@ def sand_beast_roar(rng):
 
 
 SOUNDS = {
-    "blaster.carbine": (0.85, lambda rng: blaster(rng, 2300, 260, 0.24)),
-    "blaster.repeater": (0.85, lambda rng: blaster(rng, 1500, 180, 0.15, drive=2.5, crack=0.45)),
-    "blaster.long_rifle": (0.9, long_rifle),
-    "blaster.pistol": (0.8, lambda rng: blaster(rng, 2900, 600, 0.13, drive=1.8)),
-    "blaster.twin_pistol": (0.8, twin_pistol),
-    "blaster.heavy_rifle": (0.9, heavy_rifle),
     "bolt.impact": (0.7, bolt_impact),
-    "saber.ignite": (0.75, saber_ignite),
-    "saber.retract": (0.7, saber_retract),
-    "saber.hum": (0.45, saber_hum),
-    "saber.swing": (0.7, lambda rng: [saber_swing(rng, 0.38, 92, 0.5), saber_swing(rng, 0.45, 86, 0.65),
-                                      saber_swing(rng, 0.32, 98, 0.4)]),
-    "saber.clash": (0.9, saber_clash),
-    "saber.deflect": (0.75, saber_deflect),
-    "saber.throw": (0.7, saber_throw),
     "force.push": (0.85, force_push),
     "force.grip": (0.75, force_grip),
     "grenade.beep": (0.5, lambda rng: beep(1750, 1750, 0.09)),
@@ -406,15 +298,13 @@ SOUNDS = {
     "sand_beast.rumble": (0.85, sand_beast_rumble),
     "sand_beast.roar": (0.85, sand_beast_roar),
 }
-LOOPS = {"saber.hum"}
 
 
-def master(x, peak, loop):
+def master(x, peak):
     x = unit(x) * peak
-    if not loop:
-        edge = samples(0.004)
-        x[:edge] *= np.linspace(0, 1, edge)
-        x[-edge:] *= np.linspace(1, 0, edge)
+    edge = samples(0.004)
+    x[:edge] *= np.linspace(0, 1, edge)
+    x[-edge:] *= np.linspace(1, 0, edge)
     return x
 
 
@@ -450,7 +340,9 @@ with tempfile.TemporaryDirectory() as directory:
         variants = made if isinstance(made, list) else [made]
         names = [event.replace(".", "_") + (f"_{index}" if len(variants) > 1 else "") for index in range(1, len(variants) + 1)]
         for name, variant in zip(names, variants):
-            encode(master(variant, peak, event in LOOPS), OUT / f"{name}.ogg", directory)
+            encode(master(variant, peak), OUT / f"{name}.ogg", directory)
         events[NAMESPACE + event] = {"sounds": [f"blockcraft:sternenfront/{name}" for name in names]}
+events.update(recorded_sabers(ROOT))
+events.update(recorded_battle(ROOT))
 register(events)
 print(f"Wrote {sum(len(entry['sounds']) for entry in events.values())} sounds for {len(events)} events to {OUT}")

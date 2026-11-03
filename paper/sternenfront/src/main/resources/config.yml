@@ -30,6 +30,13 @@ appearance:
   body-turn-degrees: 12
   droids: true
   infantry: true
+music:
+  enabled: true
+  volume: 0.35
+  pressure-tickets: 35
+presentation:
+  effects: true
+  holographic-posts: true
 combat:
   precision-hitscan: true
   damage-indicator-ticks: 30

@@ -235,6 +235,7 @@ lobby:
   no-opponent: "<prefix><error>Beide Fraktionen brauchen mindestens einen Spieler."
 
 round:
+  music-credit: "<muted>Musik: <click:open_url:'https://www.scottbuckley.com.au/library/'><primary>Scott Buckley</primary></click> <muted>· Legionnaire (Original) und Juggernaut · CC BY 4.0. Die Lautstärke regelt „Musik“ in den Minecraft-Audiooptionen."
   faction: "<arrow><faction><dark>: <accent><players>"
   start:
     - "<prefix><muted>Los geht's! <right>Schießen <dark>· <accent>F <muted>und <accent>Q <muted>für Fähigkeiten."

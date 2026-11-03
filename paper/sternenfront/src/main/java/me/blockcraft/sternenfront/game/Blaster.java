@@ -35,4 +35,15 @@ public enum Blaster implements HotbarItem {
     public PackModel model() {
         return model;
     }
+
+    public PackModel firingModel() {
+        return switch (this) {
+            case CARBINE -> PackModel.STERNENFRONT_CARBINE_FIRING;
+            case REPEATER -> PackModel.STERNENFRONT_REPEATER_FIRING;
+            case LONG_RIFLE -> PackModel.STERNENFRONT_LONG_RIFLE_FIRING;
+            case PISTOL -> PackModel.STERNENFRONT_PISTOL_FIRING;
+            case TWIN_PISTOL -> PackModel.STERNENFRONT_TWIN_PISTOL_FIRING;
+            case HEAVY_RIFLE -> PackModel.STERNENFRONT_HEAVY_RIFLE_FIRING;
+        };
+    }
 }

@@ -2,6 +2,7 @@ package me.blockcraft.sternenfront.game;
 
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.world.BlocksChangedEvent;
+import me.blockcraft.sternenfront.appearance.Hologram;
 import org.bukkit.Bukkit;
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
@@ -44,7 +45,7 @@ public final class Gadgets {
 
     private record Grenade(Player thrower, Faction faction, Item item, long thrownAt, long explodesAt) { }
 
-    private record Wall(Material material, List<Block> blocks, long fallsAt) { }
+    private record Wall(Material material, List<Block> blocks, long fallsAt, Faction faction, Vector normal, Hologram hologram) { }
 
     private record Station(UUID owner, Faction faction, ItemDisplay display, long endsAt) { }
 
@@ -139,7 +140,16 @@ public final class Gadgets {
         if (placed.isEmpty()) {
             return false;
         }
-        walls.add(new Wall(material, List.copyOf(placed), tick + (long) shield.seconds() * TICKS_PER_SECOND));
+        Hologram hologram = null;
+        if (game.plugin().getConfig().getBoolean("presentation.effects", true)) {
+            hologram = new Hologram(game.plugin(), center.getLocation());
+            for (var block : placed) {
+                hologram.part("grid_" + faction.key(), block.getLocation().add(.5, .5, .5).setDirection(ahead));
+            }
+            hologram.refresh();
+        }
+        walls.add(new Wall(material, List.copyOf(placed), tick + (long) shield.seconds() * TICKS_PER_SECOND,
+                faction, ahead, hologram));
         Bukkit.getPluginManager().callEvent(new BlocksChangedEvent(List.copyOf(placed)));
         SoundCue.SHIELD_UP.play(center.getLocation(), 1f);
         return true;
@@ -174,6 +184,9 @@ public final class Gadgets {
         grenades.removeIf(grenade -> fuse(grenade, tick));
         walls.removeIf(wall -> {
             if (tick < wall.fallsAt()) {
+                if (wall.hologram() != null && tick % 10 == 0) {
+                    wall.hologram().refresh();
+                }
                 return false;
             }
             fall(wall);
@@ -245,7 +258,20 @@ public final class Gadgets {
         return distance == 0 || from.getWorld().rayTraceBlocks(from, between.normalize(), distance, FluidCollisionMode.NEVER, true) == null;
     }
 
+    public void impact(Block block, Location at, Vector incoming) {
+        walls.stream().filter(wall -> wall.blocks().contains(block) && block.getType() == wall.material()).findFirst().ifPresent(wall -> {
+            var normal = wall.normal().clone();
+            if (normal.dot(incoming) > 0) {
+                normal.multiply(-1);
+            }
+            game.effects().impact(at, normal, wall.faction().bolt());
+        });
+    }
+
     private static void fall(Wall wall) {
+        if (wall.hologram() != null) {
+            wall.hologram().close();
+        }
         var fallen = wall.blocks().stream().filter(block -> block.getType() == wall.material()).toList();
         fallen.forEach(block -> block.setType(Material.AIR, false));
         if (!fallen.isEmpty()) {

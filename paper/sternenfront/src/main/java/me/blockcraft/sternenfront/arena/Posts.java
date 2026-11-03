@@ -9,8 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * A command post's marks: a beacon on its iron base with white glass on top, whose beam the round tints with the
- * owner's colour, and a ring of white concrete in the ground along the edge of its zone.
+ * A command post's physical projector base and its capture boundary. The round projects its faction above it.
  */
 final class Posts {
 
@@ -27,9 +26,7 @@ final class Posts {
     PostSite post(String key, int x, int z, double radius, List<Location> spawns) {
         var indicators = new ArrayList<Block>();
         canvas.fill(x - 1, FLOOR, z - 1, x + 1, FLOOR, z + 1, Material.IRON_BLOCK);
-        canvas.set(x, FLOOR + 1, z, Material.BEACON);
-        canvas.set(x, FLOOR + 2, z, Material.WHITE_STAINED_GLASS);
-        indicators.add(canvas.world().getBlockAt(x, FLOOR + 2, z));
+        canvas.set(x, FLOOR + 1, z, Material.DAYLIGHT_DETECTOR);
         for (int dx = -2; dx <= 2; dx++) {
             for (int dz = -2; dz <= 2; dz++) {
                 if (Math.max(Math.abs(dx), Math.abs(dz)) == 2) {
