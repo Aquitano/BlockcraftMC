@@ -37,7 +37,9 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.block.data.Openable;
 import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.InventoryHolder;
 
 import java.util.Optional;
@@ -48,7 +50,7 @@ import java.util.Set;
  * standing, nobody is hurt or hungry before the roles are drawn, and blows land as hard as the attacker's karma
  * allows. The town's barrels, workbenches and flower pots answer nothing; its chests and ender chests, the tester's
  * and the traitor trap's buttons, the traitor doors, TTT 2's chores, the corpses and whatever the shop's goods left in
- * the world answer a click. A good in hand never keeps a door from opening.
+ * the world answer a click. A good in hand never keeps a door, trapdoor or gate from opening, and opens nothing else.
  */
 public final class ArenaListener implements Listener {
 
@@ -109,23 +111,31 @@ public final class ArenaListener implements Listener {
         if (event.getHand() != EquipmentSlot.HAND || !event.getAction().isRightClick()) {
             return;
         }
+        var hand = event.getItem();
         if (block != null && event.getAction() == Action.RIGHT_CLICK_BLOCK) {
             if (clickBlock(player, block)) {
                 event.setCancelled(true);
                 return;
             }
-            if (scenery(block)) {
+            if (scenery(block) && !placingAgainst(player, hand)) {
                 event.setUseInteractedBlock(Event.Result.DENY);
             }
         }
-        var hand = event.getItem();
         if (HotbarItem.of(hand, RoundItem.class).isPresent()) {
             event.setCancelled(true);
             game.openShop(player);
         } else if (hand != null && game.rolesDrawn()
                 && game.equipment().use(player, hand, Optional.ofNullable(block), event.getBlockFace())) {
             event.setUseItemInHand(Event.Result.DENY);
+            if (block != null && !(block.getBlockData() instanceof Openable)) {
+                event.setUseInteractedBlock(Event.Result.DENY);
+            }
         }
+    }
+
+    /** Sneaking with a block in hand places it beside the clicked block, which then must not swallow the click. */
+    private static boolean placingAgainst(Player player, ItemStack hand) {
+        return player.isSneaking() && hand != null && hand.getType().isBlock();
     }
 
     /** True if the click was the town's to answer. */
