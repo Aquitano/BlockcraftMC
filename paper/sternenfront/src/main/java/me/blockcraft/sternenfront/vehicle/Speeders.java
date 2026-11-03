@@ -8,7 +8,6 @@ import me.blockcraft.sternenfront.game.SternenfrontGame;
 import me.blockcraft.sternenfront.hero.Hero;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import org.bukkit.FluidCollisionMode;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -147,6 +146,7 @@ public final class Speeders implements Listener {
             pig.setAgeLock(true);
             pig.setSaddle(true);
             pig.setCollidable(true);
+            pig.getAttribute(Attribute.STEP_HEIGHT).setBaseValue(SpeederMotion.STEP_HEIGHT);
             pig.getAttribute(Attribute.MAX_HEALTH).setBaseValue(config.health());
             pig.setHealth(config.health());
         });
@@ -177,9 +177,9 @@ public final class Speeders implements Listener {
         float yaw = each.body.getYaw() + (float) (((input.isLeft() ? -1 : 0) + (input.isRight() ? 1 : 0)) * config.turnDegrees());
         each.body.setRotation(yaw, 0);
         var velocity = each.body.getLocation().getDirection().setY(0).normalize().multiply(each.speed);
-        var eye = each.body.getLocation().add(0, 0.7, 0);
-        if (Math.abs(each.speed) > 0.02 && eye.getWorld().rayTraceBlocks(eye, velocity.clone().normalize(),
-                Math.abs(each.speed) + 0.6, FluidCollisionMode.NEVER, true) != null) {
+        var occupied = each.body.getBoundingBox().union(rider.getBoundingBox());
+        if (Math.abs(each.speed) > 0.02 && SpeederMotion.blocked(occupied, velocity, each.body.isOnGround(),
+                each.body::wouldCollideUsing)) {
             each.speed = 0;
             velocity.zero();
         }
