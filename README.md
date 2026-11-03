@@ -24,7 +24,8 @@ paper/quicksg            QuickSG survival games
 paper/zombies            Solo or co-op Zombies survival
 paper/cores              Cores: red against blue, two beacons each, after GommeHD's mode
 paper/endergames         EnderGames: kit survival games in a fresh random world, after GommeHD's mode
-paper/ttt                TTT: Traitors, Detectives and Innocents on ClayMC's maps or a town built in code, after GommeHD's mode
+paper/ttt                TTT: Traitors, Detectives and Innocents on ClayMC's maps or a town built in code, after GommeHD's mode;
+                         TTT 2 (group ttt2) adds chores and sabotage
 paper/skywars            SkyWars: everyone on their own island over the void, after GommeHD's mode
 paper/archive            Archive: the Zeitkapsel, old maps of earlier servers to walk through (see "Zeitkapsel")
 paper/reports            ReportsMenu: staff GUI over the reports table
@@ -1075,7 +1076,7 @@ docker compose up -d
 The lobby furniture needs the licensed Nexo jar, which stays outside git: put its path in `BLOCKCRAFT_NEXO_JAR` (or pass
 `-PnexoJar=...`) before every `stagePlugins`, or the servers start without furniture ([Nexo setup](nexo/README.md)).
 To update, pull, run `./gradlew stagePlugins` and restart the servers (`docker compose restart velocity lobby
-bedwars mlgrush duell zombies endergames ttt emeraldrush archive quicksg cores skywars knockbackffa`, plus `waker` when
+bedwars mlgrush duell zombies endergames ttt ttt2 emeraldrush archive quicksg cores skywars knockbackffa`, plus `waker` when
 on-demand runs; see "Game servers on demand"). A plugin's `config.yml` and `messages.yml` in its data folder hold only
 local changes, so new and changed defaults arrive with the jar; a renamed key needs its local override renamed by
 hand. A changed `luckperms/ranks.json` reaches the network only through `lp import ranks` and

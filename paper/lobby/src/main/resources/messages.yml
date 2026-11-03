@@ -121,6 +121,7 @@ navigator:
   cores: "<cores><bold>Cores"
   endergames: "<endergames><bold>EnderGames"
   ttt: "<ttt><bold>TTT"
+  ttt2: "<ttt><bold>TTT 2"
   skywars: "<skywars><bold>SkyWars"
   archive: "<archive><bold>Zeitkapsel"
   shop: "<accent>Lobby-Shop"
@@ -171,6 +172,10 @@ navigator:
       - "<muted>Innocents, Detectives und Traitors."
       - "<muted>Finde die Verräter, bevor sie dich finden."
       - "<dark>Vertrau niemandem. Auch nicht dem Tester."
+    ttt2:
+      - "<muted>TTT mit Aufgaben quer durchs Dorf."
+      - "<muted>Erledigte Aufgaben bringen Beute, die Traitor sabotieren."
+      - "<dark>Wer allein Wasser holt, lebt gefährlich."
     skywars:
       - "<muted>Jeder auf seiner Insel, darunter das Nichts."
       - "<muted>Kisten plündern, Brücken bauen, runterschubsen."

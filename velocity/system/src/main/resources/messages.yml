@@ -651,6 +651,7 @@ play:
     cores: "<cores>Cores"
     endergames: "<endergames>EnderGames"
     ttt: "<ttt>TTT"
+    ttt2: "<ttt>TTT 2"
     skywars: "<skywars>SkyWars"
     archive: "<archive>Zeitkapsel"
 msg:
@@ -762,6 +763,7 @@ joinme:
     cores: "<arrow><accent><player><muted> spielt <cores>Cores<muted>!"
     endergames: "<arrow><accent><player><muted> spielt <endergames>EnderGames<muted>!"
     ttt: "<arrow><accent><player><muted> spielt <ttt>TTT<muted>!"
+    ttt2: "<arrow><accent><player><muted> spielt <ttt>TTT 2<muted>!"
     skywars: "<arrow><accent><player><muted> spielt <skywars>SkyWars<muted>!"
 
 support:

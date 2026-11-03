@@ -47,6 +47,8 @@ games:
     name: "<endergames>EnderGames"
   ttt:
     name: "<ttt>TTT"
+  ttt2:
+    name: "<ttt>TTT 2"
   skywars:
     name: "<skywars>SkyWars"
   archive:

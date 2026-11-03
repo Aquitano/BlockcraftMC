@@ -47,6 +47,7 @@ services:
   zombies: *paper
   endergames: *paper
   ttt: *paper
+  ttt2: *paper
   emeraldrush: *paper
   archive: *paper
   replay: *paper

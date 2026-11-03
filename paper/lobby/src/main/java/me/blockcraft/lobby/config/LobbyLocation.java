@@ -18,6 +18,7 @@ public enum LobbyLocation {
     CORES("cores"),
     ENDERGAMES("endergames"),
     TTT("ttt"),
+    TTT2("ttt2"),
     SKYWARS("skywars"),
     ARCHIVE("archive"),
     SHOP("shop"),
@@ -46,7 +47,7 @@ public enum LobbyLocation {
             case ZOMBIES -> MenuIcon.ZOMBIES;
             case CORES -> MenuIcon.CORES;
             case ENDERGAMES -> MenuIcon.ENDERGAMES;
-            case TTT -> MenuIcon.TTT;
+            case TTT, TTT2 -> MenuIcon.TTT;
             case SKYWARS -> MenuIcon.SKYWARS;
             case ARCHIVE -> MenuIcon.ARCHIVE;
             case SPAWN, JUMP, SHOP, PREMIUM, SHOP_NPC -> null;

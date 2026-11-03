@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Map;
 
-/** Game cards with separate controls for the archive and JumpAndRun. */
+/** Game cards with separate controls for TTT 2, Knockback FFA, the archive and JumpAndRun. */
 final class NavigatorMenu extends Menu {
 
     private static final Map<Integer, LobbyLocation> GAMES = Map.of(
@@ -27,6 +27,7 @@ final class NavigatorMenu extends Menu {
     private static final int JUMP_SLOT = 40;
     private static final int ARCHIVE_SLOT = 31;
     private static final int FFA_SLOT = 22;
+    private static final int TTT2_SLOT = 13;
 
     private final Menus menus;
 
@@ -42,6 +43,7 @@ final class NavigatorMenu extends Menu {
         set(JUMP_SLOT, place(MenuIcon.JUMP, "jump", "navigator.lore"));
         set(ARCHIVE_SLOT, game(LobbyLocation.ARCHIVE));
         set(FFA_SLOT, game(LobbyLocation.KNOCKBACKFFA));
+        set(TTT2_SLOT, game(LobbyLocation.TTT2));
     }
 
     @Override
@@ -84,6 +86,7 @@ final class NavigatorMenu extends Menu {
         var game = switch (slot) {
             case ARCHIVE_SLOT -> LobbyLocation.ARCHIVE;
             case FFA_SLOT -> LobbyLocation.KNOCKBACKFFA;
+            case TTT2_SLOT -> LobbyLocation.TTT2;
             default -> GAMES.get(slot);
         };
         if (game != null) {

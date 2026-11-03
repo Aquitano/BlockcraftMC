@@ -85,6 +85,7 @@ navigator:
     cores: cores
     endergames: endergames
     ttt: ttt
+    ttt2: ttt2
     skywars: skywars
     archive: archive
   stale-seconds: 20
