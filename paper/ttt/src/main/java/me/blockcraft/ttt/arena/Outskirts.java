@@ -110,7 +110,7 @@ final class Outskirts {
         site.set(36, GROUND + 1, -35, Material.SPRUCE_FENCE);
         site.set(37, GROUND + 2, -35, Material.HAY_BLOCK);
         site.set(38, GROUND + 2, -35, Material.HAY_BLOCK);
-        site.chandelier(34, GROUND + 5, -35, 2);
+        site.chandelier(34, GROUND + 5, -35);
 
         site.fill(29, loft + 1, -43, 33, loft + 2, -41, Material.HAY_BLOCK);
         site.fill(29, loft + 3, -43, 31, loft + 3, -42, Material.HAY_BLOCK);

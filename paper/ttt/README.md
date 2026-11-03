@@ -61,8 +61,9 @@ barn, the fields and the pigsty lie under the terrace in the north-east.
 Underneath, the town hall, the inn and the cobbler's house have cellars, a dry well in the cloister drops into the
 crypt, and a miners' tunnel runs from the cobbler's cellar under the brook to the quarry floor. Two passages open only
 for living traitors, behind iron doors at both ends: one from the mausoleum to the crypt, one from the inn's cellar to
-the mill's gear room. Anyone can find their hatches, at the bottom of the open grave and among the crates in the lane
-beside the mill, but not get past the iron doors. The tester stands in the town hall behind the hall's north wall.
+the mill's gear room. Anyone can find their hatches, at the bottom of the open grave (which has a ladder back up) and
+among the crates in the lane beside the mill, and walk the passages, but only a traitor opens their iron doors.
+Barriers fill the strip between the hedge and the world border, so nobody drops out of the village. The tester stands in the town hall behind the hall's north wall.
 Its floor is the trap's, over a pit of lava that shows through a grate in the Ratskeller below, where the trap's
 button hides behind the kegs. About 30 chests hide in the houses, cellars, lofts, the tunnels, the crypt, the bell
 tower and the mausoleum; the ender chest stands in a niche in the crypt's north wall.

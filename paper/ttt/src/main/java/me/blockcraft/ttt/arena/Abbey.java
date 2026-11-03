@@ -198,8 +198,8 @@ final class Abbey {
         site.torch(-18, FLOOR + 3, -33, BlockFace.EAST);
         site.torch(-12, FLOOR + 3, -41, BlockFace.WEST);
         site.torch(-12, FLOOR + 3, -33, BlockFace.WEST);
-        site.chandelier(-15, FLOOR + 7, -39, 3);
-        site.chandelier(-15, FLOOR + 7, -33, 3);
+        site.chandelier(-15, FLOOR + 7, -39);
+        site.chandelier(-15, FLOOR + 7, -33);
 
         for (int z : new int[]{-38, -36, -34, -32}) {
             for (int x : new int[]{-20, -19, -18, -17, -13, -12}) {
@@ -327,7 +327,7 @@ final class Abbey {
     /**
      * The traitors' passage from the mausoleum to the crypt: a ladder down the mausoleum's shaft, a low tunnel west
      * of the church and an iron door into the crypt at each end. Halfway, a ladder climbs to a hatch at the bottom
-     * of the open grave, which anyone may find.
+     * of the open grave, which anyone may find; a ladder in the grave climbs back out.
      */
     private void passage() {
         site.rough(-41, CRYPT, -43, -23, CRYPT + 4, -37, Material.COBBLESTONE);
@@ -345,6 +345,12 @@ final class Abbey {
         site.hatch(-32, FLOOR - 3, -37, BlockFace.NORTH, Material.SPRUCE_TRAPDOOR);
         site.set(-32, FLOOR - 3, -36, Material.COARSE_DIRT);
         site.air(-32, FLOOR - 2, -37, -32, FLOOR, -36);
+        for (int y = FLOOR - 2; y <= FLOOR; y++) {
+            if (!site.block(-32, y, -35).isSolid()) {
+                site.set(-32, y, -35, Material.COARSE_DIRT);
+            }
+        }
+        site.ladder(-32, FLOOR - 2, FLOOR, -36, BlockFace.NORTH);
     }
 
     /** A stone mausoleum in the graveyard's north-west corner; its iron door opens on the shaft down to the passage. */

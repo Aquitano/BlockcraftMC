@@ -27,6 +27,9 @@ final class Terrain {
 
     private static final int CLEARED = 56;
     private static final int BEDROCK = 53;
+    /** The last block row the world border of 96 round 0.5 still lets anyone stand in. */
+    private static final int OUTERMOST = EDGE + 2;
+    private static final int SEALED_TO = GROUND + 48;
     private static final List<Material> FLOWERS = List.of(Material.DANDELION, Material.POPPY, Material.AZURE_BLUET,
             Material.OXEYE_DAISY, Material.CORNFLOWER, Material.RED_TULIP, Material.WHITE_TULIP, Material.ALLIUM);
 
@@ -157,9 +160,13 @@ final class Terrain {
             int south = BROOK_SOUTH + (site.random.nextInt(4) == 0 ? 1 : 0);
             for (int z = north - 1; z <= south + 1; z++) {
                 if (z < north || z > south) {
-                    site.set(x, GROUND, z, site.random.nextInt(3) == 0 ? Material.MUD : site.random.nextBoolean() ? Material.GRAVEL : Material.GRASS_BLOCK);
+                    var bank = site.random.nextInt(3) == 0 ? Material.MUD : site.random.nextBoolean() ? Material.GRAVEL : Material.GRASS_BLOCK;
+                    site.set(x, GROUND, z, bank);
                     if (site.random.nextInt(4) == 0) {
-                        site.fill(x, GROUND + 1, z, x, GROUND + 1 + site.random.nextInt(2), z, Material.SUGAR_CANE);
+                        int height = site.random.nextInt(2);
+                        if (bank != Material.GRAVEL) {
+                            site.fill(x, GROUND + 1, z, x, GROUND + 1 + height, z, Material.SUGAR_CANE);
+                        }
                     }
                     continue;
                 }
@@ -312,6 +319,26 @@ final class Terrain {
                     }
                 } else if (!site.block(x, top, z).isLiquid()) {
                     site.fill(x, top + 1, z, x, top + 2, z, Site.leaves(Material.OAK_LEAVES));
+                }
+            }
+        }
+    }
+
+    /**
+     * Fills the strip between the hedge and the world border with barriers up past every roof, so nobody who climbs
+     * the hedge, the quarry hill or the gate tower can drop out of the playing field. Only free space is filled.
+     */
+    void seal() {
+        for (int x = -OUTERMOST; x <= OUTERMOST; x++) {
+            for (int z = -OUTERMOST; z <= OUTERMOST; z++) {
+                if (Math.abs(x) <= EDGE && Math.abs(z) <= EDGE) {
+                    continue;
+                }
+                for (int y = BEDROCK + 1; y <= SEALED_TO; y++) {
+                    var block = site.block(x, y, z);
+                    if (block.isPassable() && !block.isLiquid()) {
+                        site.set(x, y, z, Material.BARRIER);
+                    }
                 }
             }
         }

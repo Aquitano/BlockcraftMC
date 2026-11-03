@@ -46,6 +46,7 @@ public final class TownBuilder {
         outskirts.build();
         terrain.forest();
         terrain.decorate();
+        terrain.seal();
         site.connect();
 
         site.chore(new Chore.Fetch("grain", outskirts.grainSacks(), mill.grainBin(), Material.WHEAT, false));

@@ -710,7 +710,7 @@ final class Village {
         site.set(16, attic, -6, Material.HAY_BLOCK);
         site.set(17, attic, -8, Site.directional(Material.BARREL, BlockFace.UP));
         site.set(18, attic, -7, Material.COBWEB);
-        site.lantern(21, attic + 2, -7, true);
+        site.chandelier(21, attic + 2, -7);
     }
 
     private void innCellar() {
@@ -834,7 +834,9 @@ final class Village {
             for (int dz = -1; dz <= 1; dz++) {
                 if (dx != 0 || dz != 0) {
                     site.set(cx + dx, GROUND, cz + dz, Material.STONE_BRICKS);
-                    site.wall(cx + dx, GROUND + 1, cz + dz, Material.MOSSY_COBBLESTONE_WALL);
+                    if (dx != 0 || dz != 1) {
+                        site.wall(cx + dx, GROUND + 1, cz + dz, Material.MOSSY_COBBLESTONE_WALL);
+                    }
                 }
             }
         }

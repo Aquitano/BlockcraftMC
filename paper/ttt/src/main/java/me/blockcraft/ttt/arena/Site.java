@@ -38,6 +38,7 @@ final class Site {
 
     /** The village's grass; floors of ground-level buildings lie here and players stand one above. */
     static final int GROUND = 64;
+    private static final int LONGEST_CHAIN = 16;
     /** The abbey's terrace, four blocks above the village. */
     static final int TERRACE = 68;
     /** The floor of every cellar; cellars are four blocks tall under a ceiling at {@code GROUND - 1}. */
@@ -181,9 +182,14 @@ final class Site {
         lights.add(set(x, y, z, Material.LANTERN.createBlockData(data -> ((Lantern) data).setHanging(hanging))));
     }
 
-    /** A lantern on a chain of {@code length} blocks below the block at {@code y + length + 1}. */
-    void chandelier(int x, int y, int z, int length) {
-        fill(x, y + 1, z, x, y + length, z, Material.IRON_CHAIN);
+    /**
+     * A lantern on a chain that runs up to the first block above it, at most {@link #LONGEST_CHAIN} blocks, so it
+     * never hangs from the air. The ceiling must stand before.
+     */
+    void chandelier(int x, int y, int z) {
+        for (int up = y + 1; up <= y + LONGEST_CHAIN && block(x, up, z).isEmpty(); up++) {
+            set(x, up, z, Material.IRON_CHAIN);
+        }
         lantern(x, y, z, true);
     }
 
