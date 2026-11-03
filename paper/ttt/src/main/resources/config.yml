@@ -148,14 +148,15 @@ chests:
 # TTT 2, the mode a server plays when BLOCKCRAFT_TTT_MODE is tasks, on maps that have chores. Everyone gets
 # per-player chores when the roles are drawn; the traitors' are fake. Chests stay shut: every player starts with
 # start-items, and each real chore done pays one pick from loot. When every living innocent's chores are done, the
-# innocents win. A hold chore takes hold-seconds within reach blocks of its station.
+# innocents win. A hold chore takes hold-seconds with the player's eyes within reach blocks of its station, as far
+# as a click reaches.
 # Traitors sabotage from their shop, one at a time and cooldown-seconds apart: a blackout darkens everyone else for
 # blackout-seconds unless mended at the generator, doors shut every door for doors-seconds, and tester puts the tester
 # out for tester-seconds unless mended at its button. Mending takes repair-seconds.
 tasks:
   per-player: 4
   hold-seconds: 6
-  reach: 3.0
+  reach: 4.5
   start-items:
     - WOODEN_SWORD
   loot:

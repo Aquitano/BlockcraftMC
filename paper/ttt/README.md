@@ -157,8 +157,8 @@ a `TaskLayout`, which today is the map `TownBuilder` builds. The settings are un
 
 - The chests stay shut. Everyone starts with `tasks.start-items` and gets `tasks.per-player` chores when the roles
   are drawn, listed on the sidebar with where they are. A traitor's list looks the same, and doing them shows nothing.
-- A chore starts with a right-click on its station. A hold chore takes `tasks.hold-seconds` within `tasks.reach`
-  blocks; a hit or walking off breaks it off. A fetch chore hands over a load at its station that must be
+- A chore starts with a right-click on its station. A hold chore takes `tasks.hold-seconds` with the player's eyes within
+  `tasks.reach` blocks; a hit or walking off breaks it off. A fetch chore hands over a load at its station that must be
   right-clicked onto its destination. A puzzle chore opens nine jumbled tiles to click from one to nine.
 - Each real chore pays one pick from `tasks.loot`. A visible chore also shows at its station, a bell rings or a fire
   lights, which only an innocent's chore does.

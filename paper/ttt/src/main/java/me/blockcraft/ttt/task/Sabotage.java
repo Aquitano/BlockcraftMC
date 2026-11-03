@@ -9,7 +9,6 @@ import me.blockcraft.ttt.game.Channels;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.BlockData;
@@ -111,7 +110,7 @@ public final class Sabotage {
             case TESTER -> left = config.testerSeconds();
         }
         Bukkit.broadcast(messages.get("tasks.sabotage.started." + kind.key()));
-        Bukkit.getOnlinePlayers().forEach(player -> player.playSound(player.getLocation(), Sound.BLOCK_BEACON_DEACTIVATE, 0.8f, 0.6f));
+        Sounds.NOTIFY.playToAll();
         saboteur.sendMessage(messages.get("tasks.sabotage.done"));
     }
 

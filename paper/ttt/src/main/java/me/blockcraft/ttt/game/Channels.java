@@ -18,7 +18,8 @@ import java.util.function.Supplier;
 
 /**
  * Work a player does by staying near a spot for a few seconds: a chore, a repair, a revive. Walking off, being hit or
- * dying breaks it off; the action bar shows how far it is. A player does one thing at a time.
+ * dying breaks it off; the action bar shows how far it is. A player does one thing at a time. Reach counts from the
+ * eyes, as a click does, so a station overhead such as a hanging bell stays within it.
  */
 public final class Channels {
 
@@ -92,7 +93,7 @@ public final class Channels {
                 return true;
             }
             if (!player.getWorld().equals(channel.anchor.getWorld())
-                    || player.getLocation().distanceSquared(channel.anchor) > reach * reach) {
+                    || player.getEyeLocation().distanceSquared(channel.anchor) > reach * reach) {
                 player.sendMessage(messages.get("channel.left", Placeholder.component("work", channel.label)));
                 Sounds.MENU_DENY.play(player);
                 return true;

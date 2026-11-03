@@ -384,6 +384,7 @@ tasks:
   chest-shut: "<prefix><muted>Die Kisten bleiben zu. Beute gibt es für erledigte Aufgaben."
   not-yet: "<prefix><muted>Die Aufgaben werden mit den Rollen verteilt."
   not-yours: "<prefix><muted><chore> <dark>· <muted>Das steht nicht auf deiner Liste."
+  already-done: "<prefix><muted><chore> <dark>· <muted>Das hast du schon erledigt."
   generator: "<prefix><muted>Der Generator läuft. Hier gibt es nur bei einem Stromausfall etwas zu tun."
   cargo-taken: "<prefix><muted>Aufgenommen. <accent><chore>"
   cargo-carrying: "<prefix><muted>Du trägst das schon. <accent><chore>"

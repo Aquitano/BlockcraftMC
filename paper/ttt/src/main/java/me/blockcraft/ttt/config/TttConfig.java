@@ -134,7 +134,7 @@ public record TttConfig(int capacity, int roundMinimum, int fullSeconds, int pre
                 .map(Material::matchMaterial).filter(Objects::nonNull).toList();
         return new Tasks(Math.max(1, config.getInt("tasks.per-player", 4)),
                 Math.max(1, config.getInt("tasks.hold-seconds", 6)),
-                Math.max(1, config.getDouble("tasks.reach", 3.0)),
+                Math.max(1, config.getDouble("tasks.reach", 4.5)),
                 startItems,
                 loot(config.getConfigurationSection("tasks")),
                 new Sabotage(Math.max(1, config.getInt("tasks.sabotage.cooldown-seconds", 90)),

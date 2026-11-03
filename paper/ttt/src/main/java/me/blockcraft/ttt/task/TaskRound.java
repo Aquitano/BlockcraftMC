@@ -123,7 +123,8 @@ public final class TaskRound {
                 || chore instanceof Chore.Fetch fetch && fetch.destination().equals(block));
         if (duty.isEmpty()) {
             var chore = station.or(() -> destination).orElseThrow();
-            player.sendMessage(messages.get("tasks.not-yours", names(chore)));
+            boolean done = board.of(id).stream().anyMatch(each -> each.done() && each.chore().equals(chore));
+            player.sendMessage(messages.get(done ? "tasks.already-done" : "tasks.not-yours", names(chore)));
             return true;
         }
         var chore = duty.get().chore();
