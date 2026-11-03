@@ -288,7 +288,7 @@ archive-exhibits/neue_lobby/
 ```yaml
 name: Neue Lobby
 origin: Vanade                # the old server
-year: 2018                    # optional; sections sort oldest first, undated last
+year: 2018                    # optional; maps sort oldest first, undated last
 category: Lobbys              # optional; defaults to Sonstiges in the guide
 description: Die Lobby, mit der Vanade öffnete.
 icon: grass_block             # the item the guide shows; paper when unknown
@@ -320,10 +320,13 @@ To add an exhibit after importing an old map:
    in `exhibit.yml` at once. Everything beyond the build stays void.
 4. Commit the template; its region files go through git-lfs.
 
-The guide groups exhibits into sections by origin, year and category, ordered by year and then category. Missing
-categories use the fallback from `messages.yml` (Sonstiges by default). With one section, the watch opens its exhibit
-list directly. Left-click an exhibit to travel to its arrival, or right-click for checkpoints and notes. Setup edits
-preserve its category.
+The guide groups exhibits into server collections by `origin`. Collections with at most nine maps or just one
+category open their maps directly. Larger collections offer categories first, ordered alphabetically. Years stay
+on the map cards and sort maps oldest first, with undated maps last. Missing categories use the fallback from
+`messages.yml` (Sonstiges by default). Menu titles retain the server name. Left-click an exhibit to travel to its
+arrival, or right-click for checkpoints and notes. Back returns to the list that opened the screen. Setup edits
+preserve its category. The archive's `guide.suggested-visits` configuration selects exhibit keys for Besuchstipps;
+these maps are also marked in their own collections.
 
 The catalogue reuses parsed configurations while their file metadata stays unchanged. A lookup reads only the
 requested exhibit's metadata. New imports and setup edits appear on the next lookup without a restart.

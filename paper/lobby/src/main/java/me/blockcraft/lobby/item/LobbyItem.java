@@ -9,7 +9,7 @@ import java.util.Optional;
 public enum LobbyItem implements HotbarItem {
     NAVIGATOR(0),
     PLAYER_HIDER(1),
-    FRIENDS(2),
+    FRIENDS(7),
     GADGET(5),
     PROFILE(8),
     POND_ROD(3),

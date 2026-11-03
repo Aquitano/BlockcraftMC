@@ -15,6 +15,7 @@ import org.bukkit.inventory.ItemStack;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * One exhibit: where a visitor arrives, its checkpoints, the notes it brings along and those staff left in it. A click
@@ -35,13 +36,15 @@ final class ExhibitMenu extends ListMenu<ExhibitMenu.Stop> {
 
     private final ArchiveMenus menus;
     private final Exhibit exhibit;
+    private final Consumer<Player> back;
 
-    ExhibitMenu(ArchiveMenus menus, Exhibit exhibit, List<Note> notes, boolean mayDelete) {
+    ExhibitMenu(ArchiveMenus menus, Exhibit exhibit, List<Note> notes, boolean mayDelete, Consumer<Player> back) {
         super(rowsFor(1 + exhibit.checkpoints().size() + exhibit.notes().size() + notes.size()), menus.messages().get("menu.exhibit.title",
                 Placeholder.unparsed("exhibit", exhibit.name()), Placeholder.unparsed("origin", exhibit.origin())));
         this.menus = menus;
         this.exhibit = exhibit;
-        backButton(player -> menus.openSection(player, exhibit));
+        this.back = back;
+        backButton(back);
         var stops = new ArrayList<Stop>();
         stops.add(new Stop.Arrival());
         exhibit.checkpoints().forEach(checkpoint -> stops.add(new Stop.Spot(checkpoint)));
@@ -77,7 +80,8 @@ final class ExhibitMenu extends ListMenu<ExhibitMenu.Stop> {
             case Stop.Spot(Checkpoint checkpoint) -> menus.toCheckpoint(player, exhibit, checkpoint);
             case Stop.Written(Note note, boolean deletable) -> {
                 if (event.isRightClick() && deletable) {
-                    menus.confirmDelete(player, exhibit, note, noteIcon(note, false, false));
+                    menus.confirmDelete(player, note, noteIcon(note, false, false),
+                            returned -> menus.openExhibit(returned, exhibit.key(), back));
                 } else {
                     menus.toNote(player, exhibit, note);
                 }

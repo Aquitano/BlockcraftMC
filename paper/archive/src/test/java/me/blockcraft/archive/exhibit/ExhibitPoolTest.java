@@ -105,7 +105,7 @@ public class ExhibitPoolTest {
     }
 
     @Test
-    public void sectionsGroupByOriginYearAndCategoryWithUndatedLast() {
+    public void sectionsGroupByOriginAndCategoryWithYearsOnTheMaps() {
         var sections = Section.of(List.of(
                 categorized("spaet", "Blockcraft", OptionalInt.of(2020), "BedWars"),
                 minimal("ohne", "Blockcraft", OptionalInt.empty()),
@@ -114,11 +114,9 @@ public class ExhibitPoolTest {
                 categorized("lobby", "Blockcraft", OptionalInt.of(2016), "Lobbys"),
                 categorized("alt", "Vanade", OptionalInt.of(2016), "BedWars")), "Sonstiges");
 
-        assertEquals(List.of("Blockcraft/2016/BedWars", "Vanade/2016/BedWars", "Blockcraft/2016/Lobbys",
-                        "Blockcraft/2020/BedWars", "Blockcraft/?/Sonstiges"),
-                sections.stream().map(section -> section.origin() + "/"
-                        + (section.year().isPresent() ? section.year().getAsInt() : "?") + "/" + section.category()).toList());
-        assertEquals(List.of("a", "b"), sections.getFirst().exhibits().stream().map(Exhibit::key).toList());
+        assertEquals(List.of("Blockcraft/BedWars", "Vanade/BedWars", "Blockcraft/Lobbys", "Blockcraft/Sonstiges"),
+                sections.stream().map(section -> section.origin() + "/" + section.category()).toList());
+        assertEquals(List.of("a", "b", "spaet"), sections.getFirst().exhibits().stream().map(Exhibit::key).toList());
     }
 
     @Test

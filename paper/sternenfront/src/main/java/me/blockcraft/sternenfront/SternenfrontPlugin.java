@@ -1,6 +1,7 @@
 package me.blockcraft.sternenfront;
 
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.config.BundledDefaults;
 import me.blockcraft.api.game.ArenaProtection;
 import me.blockcraft.api.game.GameConfig;
 import me.blockcraft.api.game.GamePhase;
@@ -40,7 +41,7 @@ public final class SternenfrontPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        saveDefaultConfig();
+        BundledDefaults.apply(this);
         var gameConfig = GameConfig.from(getConfig(), getConfig().getBoolean("bots.enabled", true) ? 1 : 2);
         var config = SternenfrontConfig.from(getConfig());
         var api = BlockcraftApi.get();

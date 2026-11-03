@@ -3,6 +3,7 @@ package me.blockcraft.archive.menu;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.menu.ListMenu;
 import me.blockcraft.archive.exhibit.Section;
+import me.blockcraft.archive.exhibit.ExhibitCollection;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -12,18 +13,16 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
-import java.util.List;
 
 final class SectionMenu extends ListMenu<Section> {
 
     private final ArchiveMenus menus;
 
-    SectionMenu(ArchiveMenus menus, List<Section> sections) {
-        super(rowsFor(sections.size()), menus.messages().get("menu.sections.title"));
+    SectionMenu(ArchiveMenus menus, ExhibitCollection collection) {
+        super(rowsFor(menus.sections(collection).size()), menus.collectionName(collection.origin()));
         this.menus = menus;
-        set(lastRowSlot(), menus.entranceButton());
-        closeButton();
-        show(sections);
+        backButton(menus::openSections);
+        show(menus.sections(collection));
     }
 
     @Override
@@ -45,13 +44,6 @@ final class SectionMenu extends ListMenu<Section> {
 
     @Override
     protected void onSelect(Player player, Section section, InventoryClickEvent event) {
-        new ExhibitListMenu(menus, section, false).open(player);
-    }
-
-    @Override
-    protected void onButton(Player player, int slot, InventoryClickEvent event) {
-        if (slot == lastRowSlot()) {
-            menus.toEntrance(player);
-        }
+        menus.openSection(player, section);
     }
 }
