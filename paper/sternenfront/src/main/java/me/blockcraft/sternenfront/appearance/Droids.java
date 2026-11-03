@@ -8,6 +8,7 @@ import me.blockcraft.sternenfront.game.SternenfrontGame;
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -24,6 +25,7 @@ import org.bukkit.scheduler.BukkitTask;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 public final class Droids implements Listener, AutoCloseable {
@@ -35,18 +37,29 @@ public final class Droids implements Listener, AutoCloseable {
     private final BukkitTask task;
     private final boolean droids;
     private final boolean infantry;
+    private final float turnDegrees;
 
     private Droids(Plugin plugin, SternenfrontGame game, boolean droids, boolean infantry) {
         this.plugin = plugin;
         this.game = game;
         this.droids = droids;
         this.infantry = infantry;
+        turnDegrees = (float) Math.clamp(game.plugin().getConfig().getDouble("appearance.body-turn-degrees", 12), 1, 45);
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
         task = plugin.getServer().getScheduler().runTaskTimer(plugin, this::tick, 1L, 1L);
     }
 
     public static Droids start(Plugin plugin, SternenfrontGame game, boolean droids, boolean infantry) {
         return new Droids(plugin, game, droids, infantry);
+    }
+
+    public Optional<LivingEntity> actor(Entity clicked) {
+        return rigs.values().stream().filter(rig -> rig.actor().equals(clicked) || rig.owns(clicked))
+                .map(DroidRig::actor).findFirst();
+    }
+
+    public Optional<RigSnapshot> snapshot(Entity actor) {
+        return Optional.ofNullable(rigs.get(actor.getUniqueId())).map(DroidRig::snapshot);
     }
 
     private void tick() {
@@ -59,7 +72,7 @@ public final class Droids implements Listener, AutoCloseable {
             present.add(id);
             var rig = rigs.computeIfAbsent(id, ignored -> {
                 var created = new DroidRig(plugin, actor, game.factionOf(actor).filter(Faction.HEGEMONIE::equals).isPresent(),
-                        () -> game.bots().aim(actor).orElseGet(() -> actor.getEyeLocation().getDirection()));
+                        () -> game.bots().aim(actor).orElseGet(() -> actor.getEyeLocation().getDirection()), turnDegrees);
                 targets.put(created.targetId(), created);
                 return created;
             });

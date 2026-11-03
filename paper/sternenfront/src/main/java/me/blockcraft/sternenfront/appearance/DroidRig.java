@@ -2,6 +2,7 @@ package me.blockcraft.sternenfront.appearance;
 
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.item.Items;
+import me.blockcraft.sternenfront.bot.BotSnapshot.Point;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -18,11 +19,14 @@ import org.bukkit.entity.TextDisplay;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.util.Vector;
+import org.bukkit.util.Transformation;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
+import java.util.Map;
 import java.util.UUID;
 import java.util.function.Supplier;
 
@@ -32,6 +36,7 @@ final class DroidRig implements AutoCloseable {
     private final LivingEntity actor;
     private final List<Entity> entities = new ArrayList<>();
     private final Set<UUID> viewers = new HashSet<>();
+    private final Map<ItemDisplay, Transformation> poses = new HashMap<>();
     private final ItemDisplay torso;
     private final ItemDisplay head;
     private final ItemDisplay leftArm;
@@ -46,13 +51,17 @@ final class DroidRig implements AutoCloseable {
     private double stride;
     private final boolean droid;
     private final Supplier<Vector> aim;
+    private final float turnDegrees;
+    private float bodyYaw;
 
-    DroidRig(Plugin plugin, LivingEntity actor, boolean droid, Supplier<Vector> aim) {
+    DroidRig(Plugin plugin, LivingEntity actor, boolean droid, Supplier<Vector> aim, float turnDegrees) {
         this.plugin = plugin;
         this.actor = actor;
         this.droid = droid;
         this.aim = aim;
+        this.turnDegrees = turnDegrees;
         previous = actor.getLocation();
+        bodyYaw = (float) Math.toRadians(-previous.clone().setDirection(aim.get()).getYaw());
         torso = part("torso");
         head = part("head");
         leftArm = part("arm");
@@ -77,6 +86,30 @@ final class DroidRig implements AutoCloseable {
 
     UUID targetId() {
         return target.getUniqueId();
+    }
+
+    boolean owns(Entity entity) {
+        return entities.contains(entity);
+    }
+
+    RigSnapshot snapshot() {
+        var parts = new ArrayList<RigSnapshot.Part>();
+        var names = List.of("torso", "head", "left-arm", "right-arm", "left-leg", "right-leg", "weapon");
+        var displays = List.of(torso, head, leftArm, rightArm, leftLeg, rightLeg, weapon);
+        for (int index = 0; index < displays.size(); index++) {
+            var display = displays.get(index);
+            var at = display.getLocation();
+            var transform = display.getTransformation();
+            var translation = transform.getTranslation();
+            var left = transform.getLeftRotation();
+            var right = transform.getRightRotation();
+            var scale = transform.getScale();
+            parts.add(new RigSnapshot.Part(names.get(index), display.getUniqueId(), Point.of(at), at.getYaw(), at.getPitch(),
+                    List.of(translation.x, translation.y, translation.z), List.of(left.x, left.y, left.z, left.w),
+                    List.of(right.x, right.y, right.z, right.w), List.of(scale.x, scale.y, scale.z),
+                    display.getTeleportDuration(), display.getInterpolationDuration(), display.getInterpolationDelay()));
+        }
+        return new RigSnapshot(droid ? "droid" : "infantry", Point.of(previous), stride, List.copyOf(viewers), List.copyOf(parts));
     }
 
     boolean shownTo(Player player) {
@@ -115,7 +148,8 @@ final class DroidRig implements AutoCloseable {
         float drop = crouching ? 0.28f : 0;
         var looking = at.clone().setDirection(aim.get());
         float facing = (float) Math.toRadians(-looking.getYaw());
-        float yaw = actor instanceof Player ? (float) Math.toRadians(-actor.getBodyYaw()) : facing;
+        bodyYaw = actor instanceof Player ? (float) Math.toRadians(-actor.getBodyYaw()) : RigPose.turn(bodyYaw, facing, turnDegrees);
+        float yaw = bodyYaw;
         float pitch = (float) Math.toRadians(Math.clamp(looking.getPitch(), -65, 65));
         at.setYaw(0);
         at.setPitch(0);
@@ -124,9 +158,9 @@ final class DroidRig implements AutoCloseable {
         pose(leftLeg, at, yaw, -0.13f, 0.95f - drop / 2, 0, step, 1);
         pose(rightLeg, at, yaw, 0.13f, 0.95f - drop / 2, 0, -step, 1);
         float shoulder = droid ? 0.23f : 0.35f;
-        pose(leftArm, at, facing, shoulder, 1.36f - drop, 0, pitch - 1.05f, 1);
-        pose(rightArm, at, facing, -shoulder, 1.36f - drop, 0, pitch - 1.1f, 1);
-        pose(weapon, at, facing, -shoulder + 0.03f, 1.27f - drop, 0.53f, pitch, 0.65f);
+        pose(leftArm, at, yaw, facing, shoulder, 1.36f - drop, 0, pitch - 1.05f, 1);
+        pose(rightArm, at, yaw, facing, -shoulder, 1.36f - drop, 0, pitch - 1.1f, 1);
+        pose(weapon, at, yaw, facing, -shoulder + 0.03f, 1.27f - drop, 0.53f, pitch, 0.65f);
         var equipment = actor.getEquipment();
         var current = equipment == null ? ItemStack.empty() : equipment.getItemInMainHand();
         if (!current.equals(held)) {
@@ -135,16 +169,30 @@ final class DroidRig implements AutoCloseable {
         }
         target.setInteractionWidth((float) actor.getWidth());
         target.setInteractionHeight((float) actor.getHeight());
-        target.teleport(at);
-        name.teleport(at.clone().add(0, actor.getHeight() + 0.3, 0));
+        place(target, at);
+        place(name, at.clone().add(0, actor.getHeight() + 0.3, 0));
         previous = at;
         plugin.getServer().getOnlinePlayers().forEach(this::refresh);
     }
 
-    private static void pose(ItemDisplay display, Location at, float yaw, float x, float y, float z, float pitch, float scale) {
-        display.teleport(at);
-        display.setInterpolationDelay(0);
-        display.setTransformation(RigPose.at(yaw, x, y, z, pitch, scale));
+    private void pose(ItemDisplay display, Location at, float yaw, float x, float y, float z, float pitch, float scale) {
+        pose(display, at, yaw, yaw, x, y, z, pitch, scale);
+    }
+
+    private void pose(ItemDisplay display, Location at, float anchorYaw, float yaw, float x, float y, float z, float pitch, float scale) {
+        place(display, at);
+        var pose = RigPose.at(anchorYaw, yaw, x, y, z, pitch, scale);
+        if (!pose.equals(poses.get(display))) {
+            display.setInterpolationDelay(0);
+            display.setTransformation(pose);
+            poses.put(display, pose);
+        }
+    }
+
+    private static void place(Entity entity, Location at) {
+        if (!entity.getLocation().equals(at)) {
+            entity.teleport(at);
+        }
     }
 
     void refresh(Player player) {

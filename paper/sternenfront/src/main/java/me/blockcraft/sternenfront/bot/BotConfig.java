@@ -6,6 +6,7 @@ import java.util.EnumMap;
 import java.util.Map;
 
 public record BotConfig(boolean enabled, int perTeam, double range, double visionAngle, int memoryTicks,
+                        double idleTurnDegrees, double stepHeight,
                         int killPoints, int healTicks, double healAmount,
                         BotDifficulty difficulty, Map<BotDifficulty, Tuning> profiles) {
 
@@ -36,6 +37,8 @@ public record BotConfig(boolean enabled, int perTeam, double range, double visio
                 Math.clamp(config.getDouble("bots.sight-range", 32), 4, 64),
                 Math.clamp(config.getDouble("bots.vision-angle", 120), 30, 180),
                 Math.clamp(config.getInt("bots.memory-ticks", 40), 0, 200),
+                Math.clamp(config.getDouble("bots.idle-turn-degrees", 12), 1, 45),
+                Math.clamp(config.getDouble("bots.step-height", 1), 0.6, 1),
                 Math.max(0, config.getInt("bots.kill-points", 25)),
                 Math.max(1, config.getInt("bots.medic.heal-ticks", 60)),
                 Math.max(0, config.getDouble("bots.medic.heal-amount", 3)),

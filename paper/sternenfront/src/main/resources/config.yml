@@ -7,6 +7,10 @@ teams:
 # countdown.restart seconds after the round.
 players:
   min: 1
+debug:
+  history-ticks: 100
+  capture-ticks: 200
+  cooldown-ticks: 200
 bots:
   enabled: true
   fill-per-team: 4
@@ -19,8 +23,11 @@ bots:
   sight-range: 32
   vision-angle: 120
   memory-ticks: 40
+  idle-turn-degrees: 12
+  step-height: 1
   kill-points: 25
 appearance:
+  body-turn-degrees: 12
   droids: true
   infantry: true
 combat:

@@ -5,8 +5,17 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 
 public class BotAimTest {
+
+    @Test
+    public void walkingStateDoesNotFlipAtTheOldSingleSpeedThreshold() {
+        assertTrue(BotAim.moving(false, new Vector(0, 0, 0.07)));
+        assertTrue(BotAim.moving(true, new Vector(0, 0, 0.04)));
+        assertFalse(BotAim.moving(false, new Vector(0, 0, 0.04)));
+        assertFalse(BotAim.moving(true, new Vector(0, 0, 0.01)));
+    }
 
     @Test
     public void turnsGraduallyEvenWhenTheEnemyMovesDirectlyBehind() {

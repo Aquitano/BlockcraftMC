@@ -6,6 +6,7 @@ import me.blockcraft.api.item.HotbarItem;
 import me.blockcraft.api.world.BuildMode;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.sternenfront.combat.Combat;
+import me.blockcraft.sternenfront.debug.BotDebug;
 import me.blockcraft.sternenfront.game.Ability;
 import me.blockcraft.sternenfront.game.Blaster;
 import me.blockcraft.sternenfront.game.SternenfrontGame;
@@ -33,16 +34,18 @@ public final class CombatListener implements Listener {
 
     private final SternenfrontGame game;
     private final BuildMode buildMode;
+    private final BotDebug botDebug;
 
-    public CombatListener(SternenfrontGame game, BuildMode buildMode) {
+    public CombatListener(SternenfrontGame game, BuildMode buildMode, BotDebug botDebug) {
         this.game = game;
         this.buildMode = buildMode;
+        this.botDebug = botDebug;
     }
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onInteract(PlayerInteractEvent event) {
         var player = event.getPlayer();
-        if (!fighting(player)) {
+        if (!fighting(player) || botDebug.enabled(player)) {
             return;
         }
         event.setUseInteractedBlock(Event.Result.DENY);
@@ -91,7 +94,7 @@ public final class CombatListener implements Listener {
     @EventHandler(priority = EventPriority.HIGH)
     public void onInteractEntity(PlayerInteractEntityEvent event) {
         var player = event.getPlayer();
-        if (!fighting(player)) {
+        if (!fighting(player) || botDebug.enabled(player)) {
             return;
         }
         event.setCancelled(true);

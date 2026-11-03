@@ -6,6 +6,11 @@ public final class BotAim {
 
     private BotAim() { }
 
+    public static boolean moving(boolean wasMoving, Vector velocity) {
+        return velocity.getX() * velocity.getX() + velocity.getZ() * velocity.getZ()
+                > (wasMoving ? 0.015 * 0.015 : 0.06 * 0.06);
+    }
+
     public static Vector turn(Vector current, Vector wanted, double degrees) {
         var from = current.clone().normalize();
         var to = wanted.clone().normalize();

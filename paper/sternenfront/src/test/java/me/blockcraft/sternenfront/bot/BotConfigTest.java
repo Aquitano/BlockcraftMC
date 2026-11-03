@@ -29,6 +29,8 @@ public class BotConfigTest {
         assertEquals(1, veteran.damageScale(), 0.001);
         assertTrue(veteran.headshots());
         assertFalse(normal.headshots());
+        assertEquals(12, config.idleTurnDegrees(), 0.001);
+        assertEquals(1, config.stepHeight(), 0.001);
     }
 
     @Test
@@ -36,10 +38,12 @@ public class BotConfigTest {
         var source = new org.bukkit.configuration.MemoryConfiguration();
         source.set("bots.profiles.veteran.damage-scale", 0.8);
         source.set("bots.difficulty", "veteran");
+        source.set("bots.step-height", 2);
         var config = BotConfig.from(source, 6);
         assertEquals(BotDifficulty.VETERAN, config.difficulty());
         assertEquals(0.8, config.profiles().get(BotDifficulty.VETERAN).damageScale(), 0.001);
         assertEquals(0.6, config.profiles().get(BotDifficulty.EASY).damageScale(), 0.001);
+        assertEquals(1, config.stepHeight(), 0.001);
     }
 
     @Test

@@ -2,12 +2,23 @@ prefix: "<sternenfront>Sternenfront <dark>» <reset>"
 game-name: "<sternenfront>Sternenfront"
 
 commands:
+  sfdebug:
+    description: "Zeichnet Bewegung, Blickrichtung und Darstellung eines Bots zur Diagnose auf"
   start:
     description: "Verkürzt den Countdown der Lobby"
   stats:
     description: "Zeigt die Stats eines Spielers"
   top:
     description: "Zeigt die Top 10 einer Kategorie"
+
+debug:
+  enabled: "<prefix><muted>Botdiagnose aktiv. <right>Bot anklicken, um die letzten <history>s und die nächsten <seconds>s aufzuzeichnen. <accent>/sfdebug off <muted>beendet den Modus."
+  disabled: "<prefix><muted>Botdiagnose deaktiviert. Laufende Aufnahmen werden noch gespeichert."
+  no-bot: "<prefix><muted>Visiere einen Bot in Sichtweite an. <right>Diagnose aufnehmen"
+  busy: "<prefix><muted>Eine Aufnahme läuft noch oder die Aufnahme ist noch nicht wieder bereit."
+  started: "<prefix><muted>Bot <accent><number> <muted>wird für <accent><seconds>s <muted>aufgezeichnet. Spiele weiter, bis der Fehler auftritt."
+  saved: "<prefix><success>Botdiagnose gespeichert: <white><file>"
+  failed: "<prefix><error>Botdiagnose konnte nicht gespeichert werden: <white><file>"
 
 join:
   introduction: "<prefix><muted>Kolonien gegen Hegemonie: Halte mehr Posten als der Gegner und bring seine Verstärkung auf null."

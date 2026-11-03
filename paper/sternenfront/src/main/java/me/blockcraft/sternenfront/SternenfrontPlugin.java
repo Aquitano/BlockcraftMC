@@ -17,6 +17,7 @@ import me.blockcraft.sternenfront.appearance.Droids;
 import me.blockcraft.sternenfront.config.FeelConfig;
 import me.blockcraft.sternenfront.config.SternenfrontConfig;
 import me.blockcraft.sternenfront.game.SternenfrontGame;
+import me.blockcraft.sternenfront.debug.BotDebug;
 import me.blockcraft.sternenfront.hero.HeroConfig;
 import me.blockcraft.sternenfront.listener.ArenaListener;
 import me.blockcraft.sternenfront.listener.ChatListener;
@@ -38,6 +39,7 @@ public final class SternenfrontPlugin extends JavaPlugin {
 
     private SternenfrontGame game;
     private Droids droids;
+    private BotDebug botDebug;
 
     @Override
     public void onEnable() {
@@ -64,6 +66,7 @@ public final class SternenfrontPlugin extends JavaPlugin {
             droids = Droids.start(this, game, getConfig().getBoolean("appearance.droids", true), getConfig().getBoolean("appearance.infantry", true));
         }
         Secrets.start(this, game, messages);
+        botDebug = new BotDebug(game, droids);
 
         services.listen(
                 game.hotbar(),
@@ -72,10 +75,13 @@ public final class SternenfrontPlugin extends JavaPlugin {
                         .rescue(() -> Optional.of(lobby)),
                 new ArenaProtection(() -> false),
                 new ArenaListener(game, api.buildMode()),
-                new CombatListener(game, api.buildMode()),
+                new CombatListener(game, api.buildMode(), botDebug),
                 new ChatListener(game, messages));
 
-        services.commands(commands -> commands.register(StartCommand.of(game.countdown()).build()));
+        services.commands(commands -> {
+            commands.register(StartCommand.of(game.countdown()).build());
+            commands.register(botDebug.command());
+        });
 
         Bukkit.getOnlinePlayers().forEach(game::join);
     }
@@ -90,6 +96,9 @@ public final class SternenfrontPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (botDebug != null) {
+            botDebug.close();
+        }
         if (droids != null) {
             droids.close();
         }

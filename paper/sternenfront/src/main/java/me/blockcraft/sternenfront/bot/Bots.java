@@ -69,6 +69,13 @@ public final class Bots implements Listener {
         private Location lastSeen;
         private long seenUntil;
         private int waypoint;
+        private Vector idleAim;
+        private boolean moving;
+        private UUID patient;
+        private String activity = "deploy";
+        private String navigationResult = "not-requested";
+        private Location destination;
+        private long navigatedAt;
 
         private Soldier(int number, Faction faction) {
             this.number = number;
@@ -103,6 +110,39 @@ public final class Bots implements Listener {
     public Optional<Vector> aim(Entity entity) {
         var soldier = bodies.get(entity.getUniqueId());
         return soldier == null ? Optional.empty() : Optional.of(soldier.aim.clone());
+    }
+
+    public Optional<BotSnapshot> snapshot(Entity entity) {
+        var soldier = bodies.get(entity.getUniqueId());
+        if (soldier == null) {
+            return Optional.empty();
+        }
+        var body = soldier.body;
+        var at = body.getLocation();
+        var box = body.getBoundingBox();
+        var target = soldier.target == null ? null : Bukkit.getEntity(soldier.target);
+        var patient = soldier.patient == null ? null : Bukkit.getEntity(soldier.patient);
+        var path = body.getPathfinder().getCurrentPath();
+        var motion = new BotSnapshot.Motion(BotSnapshot.Point.of(at), BotSnapshot.Point.of(body.getVelocity()),
+                List.of(box.getMinX(), box.getMinY(), box.getMinZ(), box.getMaxX(), box.getMaxY(), box.getMaxZ()),
+                at.getYaw(), at.getPitch(), body.getBodyYaw(), body.isOnGround(), body.isJumping(), body.isInWater(),
+                body.getFallDistance(), body.getHealth());
+        var decision = new BotSnapshot.Decision(soldier.activity, soldier.navigationResult, soldier.navigatedAt,
+                BotSnapshot.Point.of(soldier.destination), soldier.objective,
+                soldier.objective < 0 ? "" : game.map().posts().get(soldier.objective).key(), soldier.waypoint,
+                soldier.stuckTicks, BotSnapshot.Point.of(soldier.progress), soldier.target,
+                target == null ? null : BotSnapshot.Point.of(target.getLocation()),
+                target != null && target.isValid() && target.getWorld().equals(body.getWorld()) && body.hasLineOfSight(target),
+                BotSnapshot.Point.of(soldier.aim), BotSnapshot.Point.of(soldier.lastSeen), soldier.chooseAt,
+                soldier.reactAt, soldier.seenUntil, soldier.pauseUntil, soldier.volley.active(),
+                BotSnapshot.Point.of(soldier.idleAim), soldier.patient,
+                patient == null ? null : BotSnapshot.Point.of(patient.getLocation()),
+                patient instanceof LivingEntity living ? living.getHealth() : -1);
+        return Optional.of(new BotSnapshot(body.getUniqueId(), soldier.number, soldier.faction, soldier.role, motion,
+                decision, new BotSnapshot.Path(body.getPathfinder().hasPath(), path != null && path.canReachFinalPoint(),
+                path == null ? -1 : path.getNextPointIndex(), path == null ? List.of()
+                : path.getPoints().stream().map(BotSnapshot.Point::of).toList()), tuning,
+                soldier.heat.level(), soldier.heat.venting(game.tick())));
     }
 
     public boolean enabled() {
@@ -165,6 +205,9 @@ public final class Bots implements Listener {
             if (tick % THINK_TICKS == soldier.number % THINK_TICKS) {
                 think(soldier, tick);
             }
+            if (soldier.idleAim != null) {
+                soldier.aim = BotAim.turn(soldier.aim, soldier.idleAim, config.idleTurnDegrees());
+            }
             fireVolley(soldier, tick);
             soldier.body.lookAt(soldier.body.getEyeLocation().add(soldier.aim.clone().multiply(10)));
         }
@@ -190,6 +233,7 @@ public final class Bots implements Listener {
             skeleton.setHealth(health);
             skeleton.getAttribute(Attribute.FOLLOW_RANGE).setBaseValue(128);
             skeleton.getAttribute(Attribute.MOVEMENT_SPEED).setBaseValue(0.25);
+            skeleton.getAttribute(Attribute.STEP_HEIGHT).setBaseValue(config.stepHeight());
             var equipment = skeleton.getEquipment();
             equipment.setItemInMainHand(game.loadouts().blaster(soldier.role.blaster()));
             equipment.setHelmet((soldier.faction == Faction.KOLONIEN ? PackModel.STERNENFRONT_HELMET_KOLONIEN
@@ -220,6 +264,13 @@ public final class Bots implements Listener {
         soldier.lastSeen = null;
         soldier.seenUntil = 0;
         soldier.waypoint = 0;
+        soldier.idleAim = null;
+        soldier.moving = false;
+        soldier.patient = null;
+        soldier.activity = "deploy";
+        soldier.navigationResult = "not-requested";
+        soldier.destination = null;
+        soldier.navigatedAt = tick;
         bodies.put(mob.getUniqueId(), soldier);
         identities.put(mob.getUniqueId(), soldier.faction);
     }
@@ -246,6 +297,7 @@ public final class Bots implements Listener {
         var chosen = BotTargeting.choose(visible.stream().map(other -> new BotTargeting.Target(other.getUniqueId(),
                 here.distanceSquared(other.getLocation()))).toList(), soldier.target);
         var target = visible.stream().filter(other -> chosen.filter(other.getUniqueId()::equals).isPresent()).findFirst();
+        soldier.idleAim = null;
         if (target.isPresent()) {
             var enemy = target.get();
             if (!enemy.getUniqueId().equals(soldier.target)) {
@@ -267,19 +319,20 @@ public final class Bots implements Listener {
             if (soldier.lastSeen != null && tick <= soldier.seenUntil) {
                 var toward = soldier.lastSeen.clone().add(0, 1, 0).toVector().subtract(mob.getEyeLocation().toVector());
                 if (toward.lengthSquared() > 0.01) {
-                    soldier.aim = BotAim.turn(soldier.aim, toward, tuning.trackingDegrees());
+                    soldier.idleAim = toward;
                 }
             } else {
                 soldier.target = null;
                 soldier.lastSeen = null;
                 var movement = mob.getVelocity().setY(0);
-                if (movement.lengthSquared() > 0.0025) {
-                    soldier.aim = BotAim.turn(soldier.aim, movement, tuning.trackingDegrees());
+                soldier.moving = BotAim.moving(soldier.moving, movement);
+                if (soldier.moving) {
+                    soldier.idleAim = movement;
                 } else if (soldier.objective >= 0) {
                     var ahead = game.map().posts().get(soldier.objective).center().clone().add(0, 1.3, 0)
                             .toVector().subtract(mob.getEyeLocation().toVector());
                     if (ahead.lengthSquared() > 0.01) {
-                        soldier.aim = BotAim.turn(soldier.aim, ahead, tuning.trackingDegrees());
+                        soldier.idleAim = ahead;
                     }
                 }
             }
@@ -330,24 +383,34 @@ public final class Bots implements Listener {
         boolean defending = route != null && soldier.role == CombatClass.HEAVY
                 && game.posts().owner(soldier.objective).filter(soldier.faction::equals).isPresent();
         Location destination = null;
+        String activity = "idle";
+        boolean seekingPatient = false;
         var patient = soldier.role == CombatClass.MEDIC ? patient(soldier) : Optional.<LivingEntity>empty();
         boolean wounded = mob.getHealth() < mob.getAttribute(Attribute.MAX_HEALTH).getValue() * 0.3;
         if (defending && !game.posts().safe(soldier.objective, soldier.faction)) {
+            activity = "contest-owned-post";
             destination = capturing ? here : route.capture();
         } else if (route != null && (soldier.heat.venting(tick) || wounded)
                 && (target.isPresent() || soldier.lastSeen != null && tick <= soldier.seenUntil)) {
+            activity = wounded ? "retreat-wounded" : "cover-venting";
             destination = wounded ? route.retreat() : route.cover();
-        } else if (patient.isPresent() && here.distanceSquared(patient.get().getLocation()) > 9) {
-            destination = patient.get().getLocation();
+        } else if (patient.isPresent()) {
+            seekingPatient = here.distanceSquared(patient.get().getLocation()) > 9 || !mob.hasLineOfSight(patient.get());
+            activity = seekingPatient ? "follow-patient" : "treat-patient";
+            destination = seekingPatient ? patient.get().getLocation() : here;
         } else if (defending) {
+            activity = "defend-peek";
             destination = route.peek();
         } else if (target.isPresent() && here.distanceSquared(target.get().getLocation()) < KEEP_DISTANCE * KEEP_DISTANCE
                 && (!capturing || soldier.heat.venting(tick))) {
+            activity = "keep-distance";
             destination = route == null ? null : route.cover();
         } else if (target.isEmpty() && soldier.lastSeen != null && tick <= soldier.seenUntil
                 && post != null && soldier.lastSeen.distanceSquared(post.center()) < 28 * 28) {
+            activity = "investigate-last-seen";
             destination = soldier.lastSeen;
         } else if (route != null && !capturing && soldier.waypoint < route.approach().size()) {
+            activity = "approach";
             while (soldier.waypoint < route.approach().size()
                     && here.distanceSquared(route.approach().get(soldier.waypoint)) < 9) {
                 soldier.waypoint++;
@@ -358,17 +421,24 @@ public final class Bots implements Listener {
                 destination = route.capture();
             }
         } else if (post != null && !capturing) {
+            activity = "capture";
             destination = route.capture();
         } else if (capturing && target.isPresent()) {
+            activity = "strafe-in-post";
             double angle = tick * 0.025 + soldier.number;
             destination = post.center().clone().add(Math.cos(angle) * post.radius() * 0.45, 0, Math.sin(angle) * post.radius() * 0.45);
         }
+        soldier.activity = activity;
+        soldier.destination = destination == null ? null : destination.clone();
+        soldier.navigatedAt = tick;
         if (destination == null || !game.map().playArea().contains(destination.toVector())) {
+            soldier.navigationResult = "no-destination";
             mob.getPathfinder().stopPathfinding();
             soldier.stuckTicks = 0;
             return;
         }
-        if (here.distanceSquared(destination) <= 2.25) {
+        if (here.distanceSquared(destination) <= 2.25 && !seekingPatient) {
+            soldier.navigationResult = "arrived";
             mob.getPathfinder().stopPathfinding();
             soldier.stuckTicks = 0;
             soldier.progress = here.clone();
@@ -389,7 +459,7 @@ public final class Bots implements Listener {
             soldier.stuckTicks = 0;
             soldier.waypoint = 0;
         }
-        mob.getPathfinder().moveTo(destination, 1.0);
+        soldier.navigationResult = mob.getPathfinder().moveTo(destination, 1.0) ? "accepted" : "unreachable";
     }
 
     private void fire(Soldier soldier, long tick) {
@@ -453,12 +523,16 @@ public final class Bots implements Listener {
 
     private Optional<LivingEntity> patient(Soldier soldier) {
         var here = soldier.body.getLocation();
-        return game.combatants().stream().filter(ally -> !ally.equals(soldier.body)
+        var candidates = game.combatants().stream().filter(ally -> !ally.equals(soldier.body)
                         && game.factionOf(ally).filter(soldier.faction::equals).isPresent())
                 .filter(ally -> !(ally instanceof Player player) || game.heroOf(player).isEmpty())
                 .filter(ally -> ally.getHealth() < ally.getAttribute(Attribute.MAX_HEALTH).getValue())
-                .filter(ally -> here.distanceSquared(ally.getLocation()) <= 18 * 18)
-                .min(Comparator.comparingDouble(ally -> ally.getHealth() / ally.getAttribute(Attribute.MAX_HEALTH).getValue()));
+                .filter(ally -> here.distanceSquared(ally.getLocation()) <= 18 * 18).toList();
+        var selected = candidates.stream().filter(ally -> ally.getUniqueId().equals(soldier.patient)).findFirst()
+                .or(() -> candidates.stream().min(Comparator.comparingDouble(ally ->
+                        ally.getHealth() / ally.getAttribute(Attribute.MAX_HEALTH).getValue())));
+        soldier.patient = selected.map(Entity::getUniqueId).orElse(null);
+        return selected;
     }
 
     private void support(Soldier soldier, long tick) {
