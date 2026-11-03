@@ -1,8 +1,6 @@
 package me.blockcraft.lobby.activity;
 
 import com.destroystokyo.paper.profile.ProfileProperty;
-import io.papermc.paper.datacomponent.DataComponentTypes;
-import io.papermc.paper.datacomponent.item.DyedItemColor;
 import io.papermc.paper.datacomponent.item.ResolvableProfile;
 import io.papermc.paper.event.player.PrePlayerAttackEntityEvent;
 import me.blockcraft.api.config.Locations;
@@ -15,7 +13,6 @@ import me.blockcraft.lobby.config.ScenesConfig;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
 import org.bukkit.Bukkit;
-import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -142,15 +139,11 @@ public final class SeasonalScenes implements Listener, AutoCloseable {
 
     private void spawnWinter() {
         for (var side : List.of("a", "b")) {
-            var color = side.equals("a") ? Color.fromRGB(0xB02E26) : Color.fromRGB(0x3C44AA);
             var figures = new ArrayList<Mannequin>();
             for (int n = 1; n <= config.snowfightFigures(); n++) {
                 spots.get("snowfight-" + side + "-" + n).ifPresent(spot -> {
                     held.add(spot.getChunk());
                     var figure = Figures.spawn(spot, skin(winter.size() / 2), spawned -> {
-                        var cap = ItemStack.of(Material.LEATHER_HELMET);
-                        cap.setData(DataComponentTypes.DYED_COLOR, DyedItemColor.dyedItemColor(color));
-                        spawned.getEquipment().setHelmet(cap);
                         spawned.getEquipment().setItemInMainHand(ItemStack.of(Material.SNOWBALL));
                     });
                     crouch(figure);
