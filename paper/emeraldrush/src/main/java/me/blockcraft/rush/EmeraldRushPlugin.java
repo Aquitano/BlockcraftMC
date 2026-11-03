@@ -1,5 +1,6 @@
 package me.blockcraft.rush;
 
+import me.blockcraft.api.config.BundledDefaults;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.game.ArenaProtection;
 import me.blockcraft.api.game.CompassTracker;
@@ -32,7 +33,7 @@ public final class EmeraldRushPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        getConfig().options().copyDefaults(true);
+        BundledDefaults.apply(this);
         var gameConfig = GameConfig.from(getConfig());
         var config = RushConfig.from(getConfig());
         var api = BlockcraftApi.get();

@@ -2,6 +2,7 @@ package me.blockcraft.zombies;
 
 import com.mojang.brigadier.Command;
 import io.papermc.paper.command.brigadier.Commands;
+import me.blockcraft.api.config.BundledDefaults;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.game.ArenaProtection;
 import me.blockcraft.api.game.GameConfig;
@@ -40,7 +41,7 @@ public final class ZombiesPlugin extends JavaPlugin {
     }
 
     private void enable() {
-        getConfig().options().copyDefaults(true);
+        BundledDefaults.apply(this);
         var api = BlockcraftApi.get();
         var config = ZombiesConfig.from(getConfig());
         var gameConfig = GameConfig.from(getConfig(), 1);

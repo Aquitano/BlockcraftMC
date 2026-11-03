@@ -1,5 +1,6 @@
 package me.blockcraft.endergames;
 
+import me.blockcraft.api.config.BundledDefaults;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.game.CompassTracker;
 import me.blockcraft.api.game.EnchantingLapis;
@@ -30,7 +31,7 @@ public final class EnderGamesPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        getConfig().options().copyDefaults(true);
+        BundledDefaults.apply(this);
         var gameConfig = GameConfig.from(getConfig());
         var config = EnderGamesConfig.from(getConfig());
         var api = BlockcraftApi.get();

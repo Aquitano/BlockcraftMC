@@ -1,6 +1,7 @@
 package me.blockcraft.archive;
 
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
+import me.blockcraft.api.config.BundledDefaults;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.command.CommandRegistry;
 import me.blockcraft.api.world.WorldProtection;
@@ -23,7 +24,7 @@ public final class ArchivePlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        getConfig().options().copyDefaults(true);
+        BundledDefaults.apply(this);
         var config = ArchiveConfig.from(getConfig());
         var api = BlockcraftApi.get();
         var messages = Messages.load(getDataPath(), () -> getResource("messages.yml"), api.tags());

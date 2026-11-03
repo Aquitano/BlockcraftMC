@@ -1,5 +1,6 @@
 package me.blockcraft.bedwars;
 
+import me.blockcraft.api.config.BundledDefaults;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.game.ArenaProtection;
 import me.blockcraft.api.game.ForceMapCommand;
@@ -30,7 +31,7 @@ public final class BedWarsPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        getConfig().options().copyDefaults(true);
+        BundledDefaults.apply(this);
         var gameConfig = GameConfig.from(getConfig());
         var config = BedWarsConfig.from(getConfig());
         var api = BlockcraftApi.get();

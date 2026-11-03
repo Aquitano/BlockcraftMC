@@ -1,5 +1,6 @@
 package me.blockcraft.quicksg;
 
+import me.blockcraft.api.config.BundledDefaults;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.config.Locations;
 import me.blockcraft.api.game.ArenaProtection;
@@ -32,7 +33,7 @@ public final class QuickSGPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        getConfig().options().copyDefaults(true);
+        BundledDefaults.apply(this);
         var gameConfig = GameConfig.from(getConfig());
         var config = QuickSGConfig.from(getConfig());
         var api = BlockcraftApi.get();

@@ -1,5 +1,6 @@
 package me.blockcraft.ttt;
 
+import me.blockcraft.api.config.BundledDefaults;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.world.WaitingLobby;
 import me.blockcraft.api.config.Locations;
@@ -50,7 +51,7 @@ public final class TttPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        getConfig().options().copyDefaults(true);
+        BundledDefaults.apply(this);
         var gameConfig = GameConfig.from(getConfig());
         var config = TttConfig.from(getConfig());
         var mode = TttMode.fromEnvironment();

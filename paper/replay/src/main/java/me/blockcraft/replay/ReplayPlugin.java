@@ -1,6 +1,7 @@
 package me.blockcraft.replay;
 
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
+import me.blockcraft.api.config.BundledDefaults;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.replay.ReplayRecording;
 import me.blockcraft.api.command.CommandRegistry;
@@ -26,7 +27,7 @@ public final class ReplayPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        getConfig().options().copyDefaults(true);
+        BundledDefaults.apply(this);
         var config = ReplayConfig.load(getConfig(), getDataPath());
         var messages = Messages.load(getDataPath(), () -> getResource("messages.yml"), BlockcraftApi.get().tags());
         store = new ReplayStore(config.directory(), config.limits(), config.maxStoredBytes(), config.minFreeBytes());

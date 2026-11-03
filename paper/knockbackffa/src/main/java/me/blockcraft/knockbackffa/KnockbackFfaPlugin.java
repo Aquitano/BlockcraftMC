@@ -1,6 +1,7 @@
 package me.blockcraft.knockbackffa;
 
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
+import me.blockcraft.api.config.BundledDefaults;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.command.CommandRegistry;
 import me.blockcraft.api.game.ArenaProtection;
@@ -21,7 +22,7 @@ public final class KnockbackFfaPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        getConfig().options().copyDefaults(true);
+        BundledDefaults.apply(this);
         var api = BlockcraftApi.get();
         var messages = Messages.load(getDataPath(), () -> getResource("messages.yml"), api.tags());
         var stats = new StatsRepository(api.database(), "knockbackffa_stats");

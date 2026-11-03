@@ -1,5 +1,6 @@
 package me.blockcraft.mlgrush;
 
+import me.blockcraft.api.config.BundledDefaults;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.game.ArenaProtection;
 import me.blockcraft.api.game.GameConfig;
@@ -23,7 +24,7 @@ public final class MlgRushPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        getConfig().options().copyDefaults(true);
+        BundledDefaults.apply(this);
         var config = RushConfig.from(getConfig());
         var gameConfig = GameConfig.from(getConfig());
         var mapsFile = getDataPath().resolve("maps.yml");

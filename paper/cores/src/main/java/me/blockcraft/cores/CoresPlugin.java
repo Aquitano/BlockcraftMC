@@ -1,5 +1,6 @@
 package me.blockcraft.cores;
 
+import me.blockcraft.api.config.BundledDefaults;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.game.ArenaProtection;
 import me.blockcraft.api.game.EnchantingLapis;
@@ -31,7 +32,7 @@ public final class CoresPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        getConfig().options().copyDefaults(true);
+        BundledDefaults.apply(this);
         var gameConfig = GameConfig.from(getConfig());
         var config = CoresConfig.from(getConfig());
         var api = BlockcraftApi.get();
