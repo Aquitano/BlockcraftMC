@@ -97,6 +97,9 @@ icons:
   opponent: "⚔"
   kills: "☠"
   error: "<error>✖"
+  hit: "✕"
+  headshot: "<error>✕"
+  kill: "<error>☠"
 
 tab:
   default-prefix: "<muted>"

@@ -85,6 +85,7 @@ public final class RoundSummary {
     private final SerialTasks<UUID> recapWrites;
     private boolean closed;
     private boolean secretKills;
+    private int coinFactor = 1;
     private boolean resultsShown;
     private boolean returning;
 
@@ -125,6 +126,11 @@ public final class RoundSummary {
         secretKills = true;
     }
 
+    /** Every coin the round pays from now on is paid {@code factor} times over, as on a day that pays double. */
+    public void coinFactor(int factor) {
+        coinFactor = Math.max(1, factor);
+    }
+
     /** The round has started with these players; their rivalries load, and each hears of a nemesis among them. */
     void begin(List<Player> players) {
         tracking.begin(players);
@@ -139,6 +145,10 @@ public final class RoundSummary {
     /** Whoever joins the round as a player; everyone else is a spectator and only sees who won. */
     public void join(Player player) {
         score(player);
+    }
+
+    void entered(Player player) {
+        tracking.join(player);
     }
 
     /** A player who left before the round started takes no part in it. */
@@ -442,9 +452,10 @@ public final class RoundSummary {
     }
 
     private void pay(Player player, int coins) {
-        if (coins > 0) {
-            Coins.award(plugin, player, coins);
-            score(player).coins += coins;
+        int paid = coins * coinFactor;
+        if (paid > 0) {
+            Coins.award(plugin, player, paid);
+            score(player).coins += paid;
         }
     }
 

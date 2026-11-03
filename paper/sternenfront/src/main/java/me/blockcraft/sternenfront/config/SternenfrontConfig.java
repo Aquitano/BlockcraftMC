@@ -89,9 +89,7 @@ public record SternenfrontConfig(int playersPerTeam, int fullSeconds, int roundS
                 Math.max(0, section.getInt("burst-ticks", 0)),
                 Math.max(0, section.getDouble("spread", 0)),
                 Math.max(0.5, section.getDouble("speed", 3.5)),
-                Math.max(1, section.getDouble("range", 80)),
-                section.getString("sound", "entity.firework_rocket.blast"),
-                (float) section.getDouble("pitch", 1.8));
+                Math.max(1, section.getDouble("range", 80)));
     }
 
     public double health(CombatClass combatClass) {

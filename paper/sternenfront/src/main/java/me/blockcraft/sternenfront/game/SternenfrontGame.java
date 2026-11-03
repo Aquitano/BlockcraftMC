@@ -3,6 +3,7 @@ package me.blockcraft.sternenfront.game;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.game.Arena;
 import me.blockcraft.api.game.Defeat;
+import me.blockcraft.api.game.DeathLines;
 import me.blockcraft.api.game.GameConfig;
 import me.blockcraft.api.game.GamePhase;
 import me.blockcraft.api.game.GameSidebar;
@@ -18,13 +19,23 @@ import me.blockcraft.api.game.ShotEvent;
 import me.blockcraft.api.game.StatsMenus;
 import me.blockcraft.api.game.StatsRepository;
 import me.blockcraft.api.game.TimerBar;
+import me.blockcraft.api.item.HotbarItem;
 import me.blockcraft.api.menu.Menu;
 import me.blockcraft.api.pack.MenuIcon;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.sternenfront.arena.FrontMap;
+import me.blockcraft.sternenfront.bot.BotConfig;
+import me.blockcraft.sternenfront.bot.Bots;
+import me.blockcraft.sternenfront.config.FeelConfig;
 import me.blockcraft.sternenfront.config.SternenfrontConfig;
+import me.blockcraft.sternenfront.hero.Hero;
+import me.blockcraft.sternenfront.hero.HeroAbility;
+import me.blockcraft.sternenfront.hero.HeroConfig;
+import me.blockcraft.sternenfront.hero.Heroes;
+import me.blockcraft.sternenfront.hero.KillStreaks;
+import me.blockcraft.sternenfront.hero.Sabers;
 import me.blockcraft.sternenfront.menu.ClassMenu;
 import me.blockcraft.sternenfront.menu.DeployMenu;
 import me.blockcraft.sternenfront.menu.TeamMenu;
@@ -37,16 +48,22 @@ import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
-import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.damage.DamageSource;
 import org.bukkit.damage.DamageType;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Mob;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.inventory.EquipmentSlotGroup;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitTask;
@@ -68,18 +85,23 @@ import java.util.UUID;
 /**
  * One server, one round of Sternenfront: the Kolonien against the Hegemonie for the map's command posts. Players
  * pick a faction and a class in the lobby; in the round every death costs a ticket, the faction holding more posts
- * drains the other, and the dead choose a class and a spawn while they watch from above. The relic blade appears
- * after a while and makes whoever takes it the champion until they fall.
+ * drains the other, and the dead watch their killer, then choose a class, a hero if their battle points pay for
+ * one, and a spawn while they watch from above. The relic blade appears after a while and makes whoever takes it
+ * the champion until they fall.
  */
 public final class SternenfrontGame implements RoundConnections.Seating {
 
     private static final long TICKS_PER_SECOND = 20;
     private static final long RESPAWN_TICKS = 1;
     private static final double DEFLECT_FACING = 0.3;
-    private static final int HIT_NOTE = 12;
-    private static final int HEADSHOT_NOTE = 20;
     private static final int DEPLOY_SLOT = 4;
+    private static final int STRIKE_SLOT = 3;
+    private static final float SHOT_VOLUME = 2f;
+    private static final float MARKER_VOLUME = 0.6f;
+    private static final long KILLER_FOCUS_TICKS = 2;
+    private static final NamespacedKey SCOPE = new NamespacedKey("sternenfront", "scope");
     private static final Title.Times BANNER = Title.Times.times(Duration.ofMillis(250), Duration.ofSeconds(2), Duration.ofMillis(500));
+    private static final Title.Times MARKER = Title.Times.times(Duration.ZERO, Duration.ofMillis(200), Duration.ofMillis(150));
 
     private record Burst(Player shooter, Blaster blaster, long at) { }
 
@@ -98,8 +120,17 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     private final GameSidebar sidebar;
     private final Posts posts;
     private final Bolts bolts;
+    private final Bots bots;
     private final Gadgets gadgets;
+    private final Heroes heroes;
+    private final FeelConfig feel;
+    private final KillStreaks streaks;
     private final Map<UUID, Fighter> fighters = new HashMap<>();
+    /** Whose kill a dead player watches before they choose where to deploy. */
+    private final Map<UUID, UUID> killers = new HashMap<>();
+    /** While the round deals damage itself, which marks its own hits. */
+    private boolean dealing;
+    private UUID selfExplosion;
     /** Who started the round for which faction; a win counts for those of them still on the server. */
     private final Map<UUID, Faction> roster = new HashMap<>();
     private final Map<UUID, Blaster> lastBolt = new HashMap<>();
@@ -113,8 +144,9 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     private boolean dirty;
     private Optional<Faction> winner = Optional.empty();
 
-    public SternenfrontGame(Plugin plugin, GameConfig gameConfig, SternenfrontConfig config, Messages messages,
-                            FrontMap map, Location lobby, StatsRepository stats, StatsMenus statsMenus) {
+    public SternenfrontGame(JavaPlugin plugin, GameConfig gameConfig, SternenfrontConfig config, HeroConfig heroConfig,
+                            FeelConfig feel, Messages messages, FrontMap map, Location lobby, StatsRepository stats,
+                            StatsMenus statsMenus) {
         this.plugin = plugin;
         this.config = config;
         this.messages = messages;
@@ -124,7 +156,8 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         this.loadouts = new Loadouts(messages, config);
         this.summary = new RoundSummary(plugin, messages, new RoundSummary.Rewards(config.rewards().kill(), config.rewards().win()), stats);
         this.round = new Round(plugin, new Arena(messages, Sounds.JOIN), summary, config.capacity(), gameConfig);
-        this.countdown = new LobbyCountdown(plugin, round, gameConfig, this::start);
+        var botConfig = BotConfig.from(plugin.getConfig(), config.playersPerTeam());
+        this.countdown = new LobbyCountdown(plugin, round, gameConfig, botConfig.enabled() ? 1 : 2, remaining -> { }, this::start);
         this.hotbar = new LobbyHotbar(plugin, List.of(
                 new LobbyHotbar.Choice(MenuIcon.TEAM, messages.get("item.faction"),
                         player -> new TeamMenu(messages, teams, config.playersPerTeam(), this::chooseFaction).open(player)),
@@ -137,7 +170,11 @@ public final class SternenfrontGame implements RoundConnections.Seating {
                 OptionalInt.of(config.fullSeconds()), player -> { });
         this.posts = new Posts(messages, map.posts(), config.captureSeconds());
         this.bolts = new Bolts(this);
+        this.bots = new Bots(this, botConfig);
         this.gadgets = new Gadgets(this);
+        this.heroes = new Heroes(this, plugin, messages, loadouts, heroConfig);
+        this.feel = feel;
+        this.streaks = new KillStreaks(feel.orbitalStreak());
         this.reinforcements = new Reinforcements(config.tickets());
         this.relic = new Relic(this, map.relic(), Long.MAX_VALUE);
         round.playArea(map.world(), map.playArea());
@@ -175,12 +212,48 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         return posts;
     }
 
+    public Bots bots() {
+        return bots;
+    }
+
+    public int humans(Faction faction) {
+        return (int) round.players().stream().filter(player -> factionOf(player).filter(faction::equals).isPresent()).count();
+    }
+
+    public List<LivingEntity> combatants() {
+        var field = new ArrayList<LivingEntity>();
+        round.players().stream().filter(this::onField).forEach(field::add);
+        field.addAll(bots.entities());
+        return field;
+    }
+
     public long tick() {
         return tick;
     }
 
+    public Plugin plugin() {
+        return plugin;
+    }
+
+    public Heroes heroes() {
+        return heroes;
+    }
+
+    public Optional<Hero> heroOf(Player player) {
+        return Optional.ofNullable(fighters.get(player.getUniqueId())).flatMap(Fighter::hero);
+    }
+
+    /** Only a fighter who is no hero yet takes the relic. */
+    public boolean mayTakeRelic(Player player) {
+        return onField(player) && heroOf(player).isEmpty();
+    }
+
     public Optional<Faction> factionOf(Player player) {
         return teams.of(player.getUniqueId());
+    }
+
+    public Optional<Faction> factionOf(LivingEntity entity) {
+        return entity instanceof Player player ? factionOf(player) : bots.faction(entity);
     }
 
     public boolean allies(Player one, Player other) {
@@ -201,6 +274,11 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         return phase() == GamePhase.INGAME && round.isPlaying(player) && fighter != null && fighter.onField() && !player.isDead();
     }
 
+    public boolean onField(LivingEntity entity) {
+        return entity instanceof Player player ? onField(player)
+                : phase() == GamePhase.INGAME && entity.isValid() && !entity.isDead() && bots.faction(entity).isPresent();
+    }
+
     public boolean choosing(Player player) {
         var fighter = fighters.get(player.getUniqueId());
         return phase() == GamePhase.INGAME && fighter != null && !fighter.onField();
@@ -211,9 +289,17 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         return onField(target) && factionOf(target).filter(own -> own != faction).isPresent();
     }
 
+    public boolean hittable(Faction faction, LivingEntity target) {
+        return onField(target) && factionOf(target).filter(own -> own != faction).isPresent();
+    }
+
     public boolean isProtected(Player player) {
         var fighter = fighters.get(player.getUniqueId());
         return fighter != null && fighter.isProtected(tick);
+    }
+
+    public boolean isProtected(LivingEntity entity) {
+        return entity instanceof Player player ? isProtected(player) : bots.protectedFromDamage(entity);
     }
 
     public void endProtection(Player player) {
@@ -244,9 +330,20 @@ public final class SternenfrontGame implements RoundConnections.Seating {
                 player.teleport(map.overview());
                 beginChoosing(player);
             }
+        } else if (bots.enabled() && phase() == GamePhase.INGAME && round.joinRunning(player)) {
+            var faction = Arrays.stream(Faction.values()).min(Comparator.comparingInt(teams::size)).orElseThrow();
+            teams.join(player.getUniqueId(), faction);
+            roster.put(player.getUniqueId(), faction);
+            BlockcraftApi.get().tabTeams().color(player, faction.text());
+            PlayerReset.reset(player, GameMode.ADVENTURE);
+            config.combat().apply(player);
+            deploy(player, new Spawn.Headquarters());
+            bots.fill();
         } else {
             entrance.admit(player);
         }
+        heroes.showBars(player);
+        heroes.sabers().refresh(player);
         fighters.forEach((id, fighter) -> {
             var other = Bukkit.getPlayer(id);
             if (other != null && !other.equals(player) && phase() == GamePhase.INGAME && !fighter.onField()) {
@@ -258,7 +355,8 @@ public final class SternenfrontGame implements RoundConnections.Seating {
 
     @Override
     public void quit(Player player) {
-        dropRelic(player, Optional.empty());
+        fallen(player, Optional.empty());
+        unscope(player);
         deployMenus.remove(player.getUniqueId());
         if (round.stepOut(player, this::forfeited)) {
             refreshAll();
@@ -271,7 +369,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         roster.remove(player);
         fighters.remove(player);
         var faction = teams.leave(player);
-        if (faction.isPresent() && teams.members(faction.get()).isEmpty()) {
+        if (!bots.enabled() && faction.isPresent() && teams.members(faction.get()).isEmpty()) {
             endRound(Optional.of(faction.get().enemy()));
         }
         refreshAll();
@@ -281,10 +379,11 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         boolean wasPlaying = round.leave(player);
         teams.leave(player.getUniqueId());
         fighters.remove(player.getUniqueId());
+        heroes.forget(player);
         BlockcraftApi.get().tabTeams().clearColor(player);
         if (phase() == GamePhase.INGAME && wasPlaying) {
             roster.remove(player.getUniqueId());
-            Arrays.stream(Faction.values()).filter(faction -> teams.members(faction).isEmpty()).findFirst()
+            Arrays.stream(Faction.values()).filter(faction -> !bots.enabled() && teams.members(faction).isEmpty()).findFirst()
                     .ifPresent(faction -> endRound(Optional.of(faction.enemy())));
         }
         refreshAll();
@@ -328,7 +427,9 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         if (phase() == GamePhase.ENDING || !round.isPlaying(player)) {
             return;
         }
-        fighter(player).combatClass(combatClass);
+        var fighter = fighter(player);
+        fighter.combatClass(combatClass);
+        fighter.choosing().ifPresent(choosing -> fighter.choosing(Optional.of(choosing.pick(Optional.empty()))));
         Sounds.EQUIP.play(player);
         BlockcraftApi.get().notifications().feedback(player, messages.get("class.chosen", className(combatClass)));
         Optional.ofNullable(deployMenus.get(player.getUniqueId())).ifPresent(DeployMenu::refresh);
@@ -336,6 +437,25 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         if (phase() == GamePhase.LOBBY) {
             refreshAll();
         }
+    }
+
+    /** While choosing, the hero the player deploys as next, if their battle points and their faction's slots allow. */
+    public void chooseHero(Player player, Hero hero) {
+        var fighter = fighters.get(player.getUniqueId());
+        var faction = factionOf(player);
+        if (fighter == null || fighter.choosing().isEmpty() || faction.isEmpty()) {
+            return;
+        }
+        if (!heroes.affordable(player, faction.get(), hero)) {
+            BlockcraftApi.get().notifications().feedback(player, messages.get(heroes.open(faction.get(), hero)
+                    ? "hero.too-few-points" : "hero.taken", Placeholder.component("hero", heroes.name(hero))));
+            Sounds.MENU_DENY.play(player);
+            return;
+        }
+        fighter.choosing(Optional.of(fighter.choosing().get().pick(Optional.of(hero))));
+        Sounds.EQUIP.play(player);
+        BlockcraftApi.get().notifications().feedback(player, messages.get("hero.chosen", Placeholder.component("hero", heroes.name(hero))));
+        Optional.ofNullable(deployMenus.get(player.getUniqueId())).ifPresent(DeployMenu::refresh);
     }
 
     private void start() {
@@ -346,7 +466,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
                 player.sendMessage(messages.get("faction.assigned", factionName(faction)));
             }
         });
-        if (Arrays.stream(Faction.values()).anyMatch(faction -> teams.size(faction) == 0)) {
+        if (!bots.enabled() && Arrays.stream(Faction.values()).anyMatch(faction -> teams.size(faction) == 0)) {
             Bukkit.broadcast(messages.get("lobby.no-opponent"));
             countdown.start();
             return;
@@ -356,6 +476,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         reinforcements = new Reinforcements(config.tickets());
         relic = new Relic(this, map.relic(), config.relic().firstSeconds() * TICKS_PER_SECOND);
         posts.show();
+        bots.fill();
         for (var player : round.players()) {
             var faction = teams.of(player.getUniqueId()).orElseThrow();
             roster.put(player.getUniqueId(), faction);
@@ -382,9 +503,11 @@ public final class SternenfrontGame implements RoundConnections.Seating {
 
     private void tickRound() {
         tick++;
+        bots.tick(tick);
         bolts.tick();
         gadgets.tick(tick);
         relic.tick(tick);
+        heroes.tick(tick);
         fireBursts();
         for (var player : round.players()) {
             var fighter = fighters.get(player.getUniqueId());
@@ -394,6 +517,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
             if (fighter.onField()) {
                 fighter.heat().cool(tick);
                 player.setExp(fighter.heat().level());
+                scope(player, fighter);
             } else {
                 deployWhenDue(player, fighter);
             }
@@ -404,16 +528,15 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     }
 
     private void second() {
-        var field = new LinkedHashMap<Player, Faction>();
-        round.players().stream().filter(this::onField)
-                .forEach(player -> factionOf(player).ifPresent(faction -> field.put(player, faction)));
+        var field = new LinkedHashMap<LivingEntity, Faction>();
+        combatants().forEach(entity -> factionOf(entity).ifPresent(faction -> field.put(entity, faction)));
         posts.second(field).forEach(this::postChanged);
         if ((tick / TICKS_PER_SECOND) % config.bleedSeconds() == 0) {
             reinforcements.bleed(posts.held());
             dirty = true;
         }
         field.forEach(this::guardHeadquarters);
-        field.keySet().forEach(this::regenerate);
+        field.keySet().stream().filter(Player.class::isInstance).map(Player.class::cast).forEach(this::regenerate);
         round.players().forEach(this::showChoosing);
         if (phase() == GamePhase.INGAME && reinforcements.defeated().isPresent()) {
             endRound(reinforcements.defeated().map(Faction::enemy));
@@ -430,11 +553,15 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         switch (event.change()) {
             case CommandPost.Change.Captured captured -> {
                 Bukkit.broadcast(messages.get("post.captured", name, factionName(captured.by())));
-                event.present().forEach(player -> summary.awardCoins(player, config.rewards().capture()));
+                event.present().forEach(player -> {
+                    summary.awardCoins(player, config.rewards().capture());
+                    heroes.earn(player, heroes.config().points().capture());
+                });
                 announce(captured.by(), Sounds.NOTIFY, Sounds.CORE_ALARM);
             }
             case CommandPost.Change.Neutralised neutralised -> {
                 Bukkit.broadcast(messages.get("post.neutralised", name, factionName(neutralised.from())));
+                event.present().forEach(player -> heroes.earn(player, heroes.config().points().neutralise()));
                 announce(neutralised.from().enemy(), Sounds.NOTIFY, Sounds.CORE_ALARM);
             }
         }
@@ -446,10 +573,12 @@ public final class SternenfrontGame implements RoundConnections.Seating {
                 .ifPresent(faction -> (faction == gaining ? forGaining : forLosing).play(player)));
     }
 
-    private void guardHeadquarters(Player player, Faction faction) {
+    private void guardHeadquarters(LivingEntity player, Faction faction) {
         var enemyBase = map.headquarters().get(faction.enemy());
         if (enemyBase != null && enemyBase.zone().contains(player.getLocation().toVector())) {
-            BlockcraftApi.get().notifications().feedback(player, messages.get("headquarters.warning"));
+            if (player instanceof Player human) {
+                BlockcraftApi.get().notifications().feedback(human, messages.get("headquarters.warning"));
+            }
             player.damage(config.headquartersDamage(), DamageSource.builder(DamageType.MAGIC).build());
         }
     }
@@ -461,23 +590,50 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         }
     }
 
-    /** True if the player had health to gain. */
+    /** True if the player had health to gain. Heroes gain none, neither out of combat nor at a med station. */
     public boolean heal(Player player, double amount) {
         var max = player.getAttribute(Attribute.MAX_HEALTH);
-        if (max == null || player.isDead() || player.getHealth() >= max.getValue()) {
+        if (max == null || player.isDead() || player.getHealth() >= max.getValue() || heroOf(player).isPresent()) {
             return false;
         }
         player.setHealth(Math.min(max.getValue(), player.getHealth() + amount));
         return true;
     }
 
+    public boolean heal(LivingEntity entity, double amount) {
+        if (entity instanceof Player player) {
+            return heal(player, amount);
+        }
+        var max = entity.getAttribute(Attribute.MAX_HEALTH);
+        if (!onField(entity) || max == null || entity.getHealth() >= max.getValue()) {
+            return false;
+        }
+        entity.setHealth(Math.min(max.getValue(), entity.getHealth() + amount));
+        return true;
+    }
+
+    public void fireBot(Mob shooter, Faction faction, Vector aim) {
+        bolts.fire(shooter, faction, Blaster.CARBINE, config.stats(Blaster.CARBINE), aim);
+        SoundCue.shot(Blaster.CARBINE).play(shooter.getEyeLocation(), SHOT_VOLUME);
+    }
+
+    public void botDied(Faction faction, Optional<Player> killer, int points) {
+        reinforcements.lose(faction, 1);
+        killer.filter(player -> factionOf(player).filter(own -> own != faction).isPresent()).ifPresent(player -> {
+            heroes.earn(player, points);
+            mark(player, "kill", SoundCue.KILL);
+        });
+        dirty = true;
+    }
+
     public void pullTrigger(Player player) {
         var fighter = fighters.get(player.getUniqueId());
         var faction = factionOf(player);
-        if (!onField(player) || fighter == null || fighter.champion() || faction.isEmpty()) {
+        var held = fighter == null ? Optional.<Blaster>empty() : fighter.blaster();
+        if (!onField(player) || held.isEmpty() || faction.isEmpty()) {
             return;
         }
-        var blaster = fighter.combatClass().blaster();
+        var blaster = held.get();
         var stats = config.stats(blaster);
         switch (fighter.heat().fire(tick, stats.cooldownTicks(), stats.heat())) {
             case TOO_SOON -> {
@@ -502,8 +658,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     private void shoot(Player player, Faction faction, Blaster blaster) {
         var stats = config.stats(blaster);
         bolts.fire(player, faction, blaster, stats);
-        var eye = player.getEyeLocation();
-        player.getWorld().playSound(eye, stats.sound(), 1f, stats.pitch());
+        SoundCue.shot(blaster).play(player.getEyeLocation(), SHOT_VOLUME);
     }
 
     private void fireBursts() {
@@ -512,7 +667,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
                 return false;
             }
             var fighter = fighters.get(burst.shooter().getUniqueId());
-            if (onField(burst.shooter()) && fighter != null && !fighter.champion()) {
+            if (onField(burst.shooter()) && fighter != null && fighter.blaster().filter(burst.blaster()::equals).isPresent()) {
                 factionOf(burst.shooter()).ifPresent(faction -> shoot(burst.shooter(), faction, burst.blaster()));
             }
             return true;
@@ -526,10 +681,17 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         BlockcraftApi.get().notifications().feedback(player, messages.get("blaster.overheated"));
     }
 
-    /** F uses a class's first ability, Q its second. */
+    /** F uses the first ability of a class or a hero, Q the second. */
     public void useAbility(Player player, int index) {
         var fighter = fighters.get(player.getUniqueId());
-        if (fighter == null || !onField(player) || fighter.champion()) {
+        if (fighter == null || !onField(player)) {
+            return;
+        }
+        if (fighter.hero().isPresent()) {
+            var abilities = fighter.hero().get().abilities();
+            if (index < abilities.size()) {
+                useHeroAbility(player, abilities.get(index));
+            }
             return;
         }
         var abilities = fighter.combatClass().abilities();
@@ -538,17 +700,50 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         }
     }
 
+    public void useHeroAbility(Player player, HeroAbility ability) {
+        var hero = heroOf(player);
+        var faction = factionOf(player);
+        if (hero.isEmpty() || faction.isEmpty() || !onField(player) || !hero.get().abilities().contains(ability)) {
+            return;
+        }
+        if (player.hasCooldown(ability.material())) {
+            cooling(player, messages.get("hero.ability." + ability.key() + ".name"), player.getCooldown(ability.material()));
+            return;
+        }
+        if (!heroes.powers().use(player, faction.get(), hero.get(), ability, tick)) {
+            BlockcraftApi.get().notifications().feedback(player, messages.get("hero.no-target"));
+            Sounds.MENU_DENY.play(player);
+            return;
+        }
+        fighter(player).endProtection();
+        player.setCooldown(ability.material(), heroes.config().cooldownTicks(ability));
+    }
+
+    /** The one orbital strike a kill streak earned: thrown like the Commander's, then gone. */
+    public void throwStreakStrike(Player player) {
+        var faction = factionOf(player);
+        if (faction.isEmpty() || !onField(player)) {
+            return;
+        }
+        player.getInventory().setItem(STRIKE_SLOT, null);
+        fighter(player).endProtection();
+        heroes.powers().orbital(player, faction.get(), tick);
+    }
+
+    private void cooling(Player player, Component ability, int ticks) {
+        BlockcraftApi.get().notifications().feedback(player, messages.get("ability.cooldown",
+                Placeholder.component("ability", ability), Formatter.number("seconds", (ticks + TICKS_PER_SECOND - 1) / TICKS_PER_SECOND)));
+    }
+
     public void useAbility(Player player, Ability ability) {
         var fighter = fighters.get(player.getUniqueId());
         var faction = factionOf(player);
-        if (fighter == null || faction.isEmpty() || !onField(player) || fighter.champion()
+        if (fighter == null || faction.isEmpty() || !onField(player) || fighter.hero().isPresent()
                 || !fighter.combatClass().abilities().contains(ability)) {
             return;
         }
         if (player.hasCooldown(ability.material())) {
-            BlockcraftApi.get().notifications().feedback(player, messages.get("ability.cooldown",
-                    Placeholder.component("ability", messages.get("ability." + ability.key() + ".name")),
-                    Formatter.number("seconds", (player.getCooldown(ability.material()) + TICKS_PER_SECOND - 1) / TICKS_PER_SECOND)));
+            cooling(player, messages.get("ability." + ability.key() + ".name"), player.getCooldown(ability.material()));
             return;
         }
         if (!gadgets.use(player, fighter, faction.get(), ability, tick)) {
@@ -562,59 +757,132 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         player.setCooldown(ability.material(), config.cooldownTicks(ability));
     }
 
-    /** The champion's blade leaps forward on a right click. */
+    /** A blade in hand leaps forward on a right click: the relic blade, or a lightsaber. */
     public void leap(Player player) {
         var fighter = fighters.get(player.getUniqueId());
-        if (fighter == null || !fighter.champion() || !onField(player)) {
+        var hero = fighter == null ? Optional.<Hero>empty() : fighter.hero().filter(Hero::bladed);
+        if (hero.isEmpty() || !onField(player)) {
             return;
         }
-        var blade = Material.NETHERITE_SWORD;
+        var blade = player.getInventory().getItemInMainHand().getType();
         if (player.hasCooldown(blade)) {
             return;
         }
-        gadgets.leap(player, fighter, config.relic().leapForward(), config.relic().leapUp(), tick);
-        player.setCooldown(blade, config.relic().leapCooldownSeconds() * (int) TICKS_PER_SECOND);
+        var saber = heroes.config().saber();
+        boolean champion = hero.get() == Hero.CHAMPION;
+        gadgets.leap(player, fighter, champion ? config.relic().leapForward() : saber.leapForward(),
+                champion ? config.relic().leapUp() : saber.leapUp(), tick, SoundCue.FORCE_PUSH);
+        int seconds = champion ? config.relic().leapCooldownSeconds() : saber.leapCooldownSeconds();
+        player.setCooldown(blade, seconds * (int) TICKS_PER_SECOND);
     }
 
-    public void boltHit(Player shooter, Blaster blaster, Player victim, double damage, boolean headshot) {
+    public void boltHit(LivingEntity shooter, Blaster blaster, LivingEntity victim, double damage, boolean headshot) {
         if (isProtected(victim)) {
             victim.getWorld().spawnParticle(Particle.ENCHANTED_HIT, victim.getLocation().add(0, 1, 0), 8, 0.3, 0.5, 0.3, 0.1);
             return;
         }
-        lastBolt.put(victim.getUniqueId(), blaster);
-        var velocity = victim.getVelocity();
-        victim.setNoDamageTicks(0);
-        victim.damage(damage, shooter.isOnline()
-                ? DamageSource.builder(DamageType.ARROW).withCausingEntity(shooter).withDirectEntity(shooter).build()
-                : DamageSource.builder(DamageType.ARROW).build());
-        victim.setVelocity(velocity);
-        if (shooter.isOnline()) {
-            Sounds.NOTE_PLING.note(shooter, headshot ? HEADSHOT_NOTE : HIT_NOTE);
+        if (victim instanceof Player) {
+            lastBolt.put(victim.getUniqueId(), blaster);
         }
+        var velocity = victim.getVelocity();
+        hurt(shooter, victim, damage, DamageSource.builder(DamageType.ARROW), headshot);
+        victim.setVelocity(velocity);
     }
 
-    public void blast(Player thrower, Player victim, double damage, Location at) {
+    /** Hurts the victim in {@code by}'s name, so the kill is theirs, and shows them the hit. */
+    public void strike(LivingEntity by, LivingEntity victim, double damage, DamageType type) {
         if (isProtected(victim)) {
             return;
         }
         lastBolt.remove(victim.getUniqueId());
-        var source = DamageSource.builder(DamageType.PLAYER_EXPLOSION).withDamageLocation(at);
-        if (thrower.isOnline()) {
-            source.withCausingEntity(thrower).withDirectEntity(thrower);
+        hurt(by, victim, damage, DamageSource.builder(type), false);
+    }
+
+    public void blast(Player thrower, LivingEntity victim, double damage, Location at) {
+        if (isProtected(victim)) {
+            return;
+        }
+        lastBolt.remove(victim.getUniqueId());
+        var previous = selfExplosion;
+        if (thrower.equals(victim)) {
+            selfExplosion = victim.getUniqueId();
+        }
+        try {
+            hurt(thrower, victim, damage, DamageSource.builder(DamageType.PLAYER_EXPLOSION).withDamageLocation(at), false);
+        } finally {
+            selfExplosion = previous;
+        }
+    }
+
+    private void hurt(LivingEntity by, LivingEntity victim, double damage, DamageSource.Builder source, boolean headshot) {
+        if (!by.equals(victim) && (by instanceof Player player ? player.isOnline() : bots.faction(by).isPresent())) {
+            source.withCausingEntity(by).withDirectEntity(by);
         }
         victim.setNoDamageTicks(0);
-        victim.damage(damage, source.build());
+        dealing = true;
+        try {
+            victim.damage(damage, source.build());
+        } finally {
+            dealing = false;
+        }
+        if (by instanceof Player player && player.isOnline() && !player.equals(victim) && !victim.isDead()) {
+            mark(player, headshot ? "headshot" : "hit", headshot ? SoundCue.HEADSHOT : SoundCue.HITMARKER);
+        }
+    }
+
+    /** A melee hit that landed, such as a lightsaber's swing, marks like a bolt. */
+    public void landed(Player attacker, LivingEntity victim) {
+        if (!dealing && !victim.isDead() && onField(attacker)) {
+            mark(attacker, "hit", SoundCue.HITMARKER);
+        }
+    }
+
+    /** The hit marker under the crosshair, drawn with the pack's glyph or a plain symbol, and its sound. */
+    private void mark(Player shooter, String kind, SoundCue sound) {
+        var title = Title.title(Component.empty(), messages.get("hit." + kind, GameSidebar.icons(shooter)), MARKER);
+        BlockcraftApi.get().notifications().reward(shooter, title, null);
+        if (sound != null) {
+            sound.playTo(shooter, MARKER_VOLUME);
+        }
+    }
+
+    /** A sneaking saber hero parries another blade: most of the hit is lost in the clash. */
+    public void clash(EntityDamageByEntityEvent event, Player attacker, Player victim) {
+        boolean blade = Sabers.isSaber(attacker.getInventory().getItemInMainHand())
+                || HotbarItem.of(attacker.getInventory().getItemInMainHand(), SternenfrontItem.class).filter(SternenfrontItem.BLADE::equals).isPresent();
+        var towardAttacker = attacker.getLocation().toVector().subtract(victim.getLocation().toVector());
+        boolean facing = towardAttacker.lengthSquared() > 0
+                && victim.getLocation().getDirection().dot(towardAttacker.normalize()) > DEFLECT_FACING;
+        if (dealing || !blade || !victim.isSneaking() || !holdsBlade(victim) || !facing
+                || heroOf(victim).filter(Hero::bladed).isEmpty()) {
+            return;
+        }
+        event.setDamage(event.getDamage() * heroes.config().saber().blockedShare());
+        var at = victim.getEyeLocation().subtract(0, 0.4, 0);
+        victim.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, at, 14, 0.25, 0.25, 0.25, 0.25);
+        SoundCue.SABER_CLASH.play(at, 1.2f);
+    }
+
+    public void swing(Player player) {
+        if (onField(player)) {
+            heroes.sabers().swing(player, tick);
+        }
     }
 
     /** A sneaking champion sends back the bolts that hit them from the front. */
     public boolean deflects(Player victim, Vector boltDirection) {
         var fighter = fighters.get(victim.getUniqueId());
-        return fighter != null && fighter.champion() && victim.isSneaking()
+        return fighter != null && fighter.hero().filter(Hero::bladed).isPresent() && victim.isSneaking() && holdsBlade(victim)
                 && victim.getLocation().getDirection().dot(boltDirection.clone().multiply(-1)) > DEFLECT_FACING;
     }
 
+    private static boolean holdsBlade(Player player) {
+        var held = player.getInventory().getItemInMainHand();
+        return Sabers.isLit(held) || HotbarItem.of(held, SternenfrontItem.class).filter(SternenfrontItem.BLADE::equals).isPresent();
+    }
+
     public void deflected(Player champion, Location at) {
-        champion.getWorld().playSound(at, Sound.ITEM_SHIELD_BLOCK, 1f, 1.5f);
+        SoundCue.SABER_DEFLECT.play(at, 1f);
         champion.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, at, 10, 0.2, 0.2, 0.2, 0.2);
     }
 
@@ -624,30 +892,42 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         Bukkit.broadcast(messages.get("relic.appeared"));
     }
 
+    /** The relic makes its taker a hero of their own: the champion, with the blade, until they fall. */
     public void crown(Player player) {
-        var fighter = fighter(player);
-        fighter.champion(true);
-        loadouts.arm(player);
-        player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, PotionEffect.INFINITE_DURATION, 0, false, false, true));
-        player.setGlowing(true);
-        Bukkit.broadcast(messages.get("relic.taken", Placeholder.unparsed("player", player.getName()),
-                factionOf(player).map(this::factionName).orElse(TagResolver.empty())));
+        var faction = factionOf(player);
+        if (faction.isEmpty() || !heroes.enlist(player, faction.get(), Hero.CHAMPION)) {
+            return;
+        }
+        fighter(player).hero(Optional.of(Hero.CHAMPION));
+        heroes.equip(player, faction.get(), Hero.CHAMPION, tick);
+        Bukkit.broadcast(messages.get("relic.taken", Placeholder.unparsed("player", player.getName()), factionName(faction.get())));
         dirty = true;
     }
 
-    private void dropRelic(Player champion, Optional<Player> killer) {
-        var fighter = fighters.get(champion.getUniqueId());
-        if (fighter == null || !fighter.champion()) {
+    /** A hero fell or left: their slot opens, a champion's relic goes home, and whoever beat them is paid. */
+    private void fallen(Player victim, Optional<Player> killer) {
+        var fighter = fighters.get(victim.getUniqueId());
+        if (fighter == null || fighter.hero().isEmpty()) {
             return;
         }
-        fighter.champion(false);
-        champion.setGlowing(false);
-        relic.lost(tick, config.relic().respawnSeconds() * TICKS_PER_SECOND);
-        killer.ifPresentOrElse(by -> {
-            summary.awardCoins(by, config.rewards().champion());
-            Bukkit.broadcast(messages.get("relic.slain", Placeholder.unparsed("player", champion.getName()),
-                    Placeholder.unparsed("killer", by.getName())));
-        }, () -> Bukkit.broadcast(messages.get("relic.lost", Placeholder.unparsed("player", champion.getName()))));
+        var hero = fighter.hero().get();
+        fighter.hero(Optional.empty());
+        heroes.discharge(victim);
+        victim.setGlowing(false);
+        var name = Placeholder.unparsed("player", victim.getName());
+        if (hero == Hero.CHAMPION) {
+            relic.lost(tick, config.relic().respawnSeconds() * TICKS_PER_SECOND);
+            killer.ifPresentOrElse(by -> {
+                summary.awardCoins(by, config.rewards().champion());
+                Bukkit.broadcast(messages.get("relic.slain", name, Placeholder.unparsed("killer", by.getName())));
+            }, () -> Bukkit.broadcast(messages.get("relic.lost", name)));
+        } else {
+            var heroName = Placeholder.component("hero", heroes.name(hero));
+            killer.ifPresentOrElse(by -> {
+                summary.awardCoins(by, heroes.config().reward());
+                Bukkit.broadcast(messages.get("hero.slain", name, heroName, Placeholder.unparsed("killer", by.getName())));
+            }, () -> Bukkit.broadcast(messages.get("hero.fallen", name, heroName)));
+        }
         dirty = true;
     }
 
@@ -660,7 +940,14 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         if (phase() != GamePhase.INGAME || !round.isPlaying(victim)) {
             return;
         }
-        var death = summary.resolveDeath(event);
+        var resolved = summary.resolveDeath(event);
+        var source = event.getDamageSource().getCausingEntity();
+        var death = victim.getUniqueId().equals(selfExplosion)
+                ? new DeathLines.Death(Optional.empty(), messages.get("death.self-grenade", Placeholder.unparsed("player", victim.getName())))
+                : source != null && bots.faction(source).isPresent()
+                ? new DeathLines.Death(Optional.empty(), messages.get("death.bot", Placeholder.unparsed("player", victim.getName()),
+                        Placeholder.component("killer", source.customName() == null ? Component.text(source.getName()) : source.customName())))
+                : resolved;
         var line = death.killer().filter(killer -> blaster.isPresent()
                         && event.getDamageSource().getDamageType() == DamageType.ARROW)
                 .map(killer -> messages.pick("death.blaster", Placeholder.unparsed("player", victim.getName()),
@@ -668,9 +955,19 @@ public final class SternenfrontGame implements RoundConnections.Seating {
                         Placeholder.component("weapon", messages.get("blaster." + blaster.orElseThrow().key() + ".name"))))
                 .orElse(death.line());
         Bukkit.broadcast(line);
-        death.killer().ifPresent(killer -> summary.awardKill(killer, victim, Defeat.RESPAWN));
+        death.killer().filter(killer -> !killer.equals(victim)).ifPresent(killer -> {
+            summary.awardKill(killer, victim, Defeat.RESPAWN);
+            heroes.earn(killer, heroes.config().points().kill());
+            mark(killer, "kill", SoundCue.KILL);
+            killers.put(victim.getUniqueId(), killer.getUniqueId());
+            if (streaks.kill(killer.getUniqueId())) {
+                earnStrike(killer);
+            }
+        });
+        streaks.death(victim.getUniqueId());
         summary.death(victim);
-        dropRelic(victim, death.killer());
+        unscope(victim);
+        fallen(victim, death.killer());
         factionOf(victim).ifPresent(faction -> reinforcements.lose(faction, 1));
         round.respawn(victim, RESPAWN_TICKS);
         dirty = true;
@@ -684,11 +981,44 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         }
         if (round.isPlaying(player) && factionOf(player).isPresent()) {
             event.setRespawnLocation(map.overview());
-            Tasks.sync(plugin, () -> beginChoosing(player));
+            var killer = Optional.ofNullable(killers.remove(player.getUniqueId())).map(Bukkit::getPlayer)
+                    .filter(this::onField).filter(ignored -> feel.killCamTicks() > 0);
+            Tasks.sync(plugin, () -> killer.ifPresentOrElse(by -> watchKiller(player, by), () -> beginChoosing(player)));
         } else {
             event.setRespawnLocation(map.spectatorSpawn());
             Tasks.sync(plugin, () -> round.watch(player));
         }
+    }
+
+    /**
+     * The kill cam: the dead player first sees the round through their killer's eyes for a moment, already choosing,
+     * so the wait for their next deploy runs meanwhile.
+     */
+    private void watchKiller(Player player, Player killer) {
+        if (!player.isOnline() || phase() != GamePhase.INGAME || !round.isPlaying(player)) {
+            return;
+        }
+        var fighter = fighter(player);
+        fighter.choosing(Optional.of(newChoosing()));
+        PlayerReset.reset(player, GameMode.SPECTATOR);
+        player.teleport(killer.getLocation());
+        BlockcraftApi.get().notifications().status(player, messages.get("killcam.watching", Placeholder.unparsed("killer", killer.getName())));
+        Tasks.later(plugin, KILLER_FOCUS_TICKS, () -> {
+            if (player.getGameMode() == GameMode.SPECTATOR && killer.isValid()) {
+                player.setSpectatorTarget(killer);
+            }
+        });
+        Tasks.later(plugin, feel.killCamTicks(), () -> {
+            if (player.isOnline() && player.getGameMode() == GameMode.SPECTATOR && choosing(player)) {
+                player.setSpectatorTarget(null);
+                beginChoosing(player);
+            }
+        });
+    }
+
+    private Fighter.Choosing newChoosing() {
+        return new Fighter.Choosing(tick + config.respawn().seconds() * TICKS_PER_SECOND,
+                tick + config.respawn().autoSeconds() * TICKS_PER_SECOND, Optional.empty(), Optional.empty());
     }
 
     /** Dead and watching from above, unseen and unhurt, with the deploy menu open. */
@@ -697,7 +1027,9 @@ public final class SternenfrontGame implements RoundConnections.Seating {
             return;
         }
         var fighter = fighter(player);
+        unscope(player);
         PlayerReset.reset(player, GameMode.ADVENTURE);
+        player.teleport(map.overview());
         player.setGlowing(false);
         player.setAllowFlight(true);
         player.setFlying(true);
@@ -705,8 +1037,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         player.setInvulnerable(true);
         player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, PotionEffect.INFINITE_DURATION, 0, false, false, false));
         Bukkit.getOnlinePlayers().stream().filter(other -> !other.equals(player)).forEach(other -> other.hidePlayer(plugin, player));
-        fighter.choosing(Optional.of(new Fighter.Choosing(tick + config.respawn().seconds() * TICKS_PER_SECOND,
-                tick + config.respawn().autoSeconds() * TICKS_PER_SECOND, Optional.empty())));
+        fighter.choosing(Optional.of(fighter.choosing().orElseGet(this::newChoosing)));
         player.getInventory().setItem(DEPLOY_SLOT, loadouts.deployItem());
         player.getInventory().setHeldItemSlot(DEPLOY_SLOT);
         openDeploy(player);
@@ -769,7 +1100,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
 
     private void showChoosing(Player player) {
         var fighter = fighters.get(player.getUniqueId());
-        if (fighter == null || fighter.choosing().isEmpty()) {
+        if (fighter == null || fighter.choosing().isEmpty() || player.getGameMode() == GameMode.SPECTATOR) {
             return;
         }
         var choosing = fighter.choosing().get();
@@ -800,6 +1131,11 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         };
         var spot = farthestFromEnemies(spots, faction.get());
         var fighter = fighter(player);
+        var picked = fighter.choosing().flatMap(Fighter.Choosing::hero);
+        var hero = picked.filter(chosen -> heroes.enlist(player, faction.get(), chosen));
+        if (picked.isPresent() && hero.isEmpty()) {
+            player.sendMessage(messages.get("hero.missed", Placeholder.component("hero", heroes.name(picked.get()))));
+        }
         if (deployMenus.remove(player.getUniqueId()) != null) {
             Menu.close(player);
         }
@@ -807,27 +1143,42 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         PlayerReset.reset(player, GameMode.ADVENTURE);
         config.combat().apply(player);
         player.teleport(spot);
-        fighter.deployed(config.heat(), tick + config.respawn().protectionSeconds() * TICKS_PER_SECOND);
+        fighter.deployed(config.heat(), tick + config.respawn().protectionSeconds() * TICKS_PER_SECOND, hero);
         fighter.hurt(tick);
-        loadouts.equip(player, faction.get(), fighter.combatClass());
+        hero.ifPresentOrElse(chosen -> {
+            heroes.equip(player, faction.get(), chosen, tick);
+            Bukkit.broadcast(messages.get("hero.entered", factionName(faction.get()), Placeholder.component("hero", heroes.name(chosen)),
+                    Placeholder.unparsed("player", player.getName())));
+            Bukkit.getOnlinePlayers().forEach(Sounds.NOTIFY::play);
+        }, () -> loadouts.equip(player, faction.get(), fighter.combatClass()));
         player.getInventory().setHeldItemSlot(0);
         player.setFoodLevel(20);
         player.setSaturation(20);
         Sounds.TELEPORT.play(player);
+        var abilities = hero.map(chosen -> chosen.abilities().stream()
+                .map(ability -> messages.get("hero.ability." + ability.key() + ".name")).toList())
+                .orElseGet(() -> fighter.combatClass().abilities().stream()
+                        .map(ability -> messages.get("ability." + ability.key() + ".name")).toList());
+        player.sendMessage(messages.get("deploy.controls",
+                Placeholder.component("first", abilities.isEmpty() ? messages.get("deploy.no-ability") : abilities.getFirst()),
+                Placeholder.component("second", abilities.size() < 2 ? messages.get("deploy.no-ability") : abilities.get(1))));
+        if (hero.filter(chosen -> chosen.weapon() instanceof Hero.Weapon.Saber).isPresent()) {
+            player.sendMessage(messages.get("deploy.saber-controls"));
+        }
         dirty = true;
     }
 
     /** The spot farthest from the nearest enemy, and among equals the one farthest from anyone, so a crowd spreads. */
     private Location farthestFromEnemies(List<Location> spots, Faction faction) {
-        var field = round.players().stream().filter(this::onField).toList();
+        var field = combatants();
         var enemies = field.stream().filter(other -> factionOf(other).filter(faction.enemy()::equals).isPresent()).toList();
         return spots.stream().max(Comparator.comparingDouble((Location spot) -> nearest(spot, enemies))
                         .thenComparingDouble(spot -> nearest(spot, field)))
                 .orElseThrow().clone();
     }
 
-    private static double nearest(Location spot, List<Player> players) {
-        return players.stream().map(Player::getLocation).filter(at -> at.getWorld().equals(spot.getWorld()))
+    private static double nearest(Location spot, List<LivingEntity> players) {
+        return players.stream().map(LivingEntity::getLocation).filter(at -> at.getWorld().equals(spot.getWorld()))
                 .mapToDouble(at -> at.distanceSquared(spot)).min().orElse(Double.MAX_VALUE);
     }
 
@@ -867,6 +1218,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         Bukkit.broadcast(Component.empty());
         for (var player : Bukkit.getOnlinePlayers()) {
             reveal(player);
+            unscope(player);
             player.setGlowing(false);
             if (!player.isDead()) {
                 PlayerReset.reset(player, GameMode.ADVENTURE);
@@ -874,7 +1226,10 @@ public final class SternenfrontGame implements RoundConnections.Seating {
                 hotbar.giveHub(player);
             }
         }
-        fighters.values().forEach(fighter -> fighter.choosing(Optional.empty()));
+        fighters.values().forEach(fighter -> {
+            fighter.choosing(Optional.empty());
+            fighter.hero(Optional.empty());
+        });
         round.end();
         refreshAll();
     }
@@ -886,9 +1241,13 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         }
         bursts.clear();
         bolts.clear();
+        bots.clear();
         gadgets.clear();
         relic.clear();
         posts.clear();
+        heroes.clear();
+        streaks.clear();
+        killers.clear();
         deployMenus.clear();
     }
 
@@ -923,10 +1282,59 @@ public final class SternenfrontGame implements RoundConnections.Seating {
                 sidebar.round(player, config.capacity(), secondsLeft, mapName, List.of(
                         new GameSidebar.Section(messages.get("scoreboard.tickets", icons), tickets),
                         new GameSidebar.Section(messages.get("scoreboard.posts", icons), postLines),
-                        new GameSidebar.Section(messages.get("scoreboard.kills", icons),
-                                GameSidebar.value(Component.text(summary.kills(player))))));
+                        new GameSidebar.Section(messages.get("scoreboard.kills", icons), List.of(
+                                GameSidebar.value(Component.text(summary.kills(player))), battleLine(player)))));
             }
             case ENDING -> sidebar.end(player, winner.map(this::factionDisplay).stream().toList());
+        }
+    }
+
+    /** The player's battle points towards a hero, or the hero they fight as. */
+    private Component battleLine(Player player) {
+        var hero = heroOf(player);
+        if (hero.isPresent()) {
+            return GameSidebar.value(messages.get("hero.sidebar.hero", Placeholder.component("hero", heroes.name(hero.get()))));
+        }
+        int points = heroes.points(player);
+        int cost = heroes.config().cost();
+        return GameSidebar.value(messages.get(points >= cost ? "hero.sidebar.ready" : "hero.sidebar.points",
+                Formatter.number("points", points), Formatter.number("cost", cost)));
+    }
+
+    /**
+     * A kill streak's reward: one orbital strike, in the hotbar until it is thrown or its bearer falls. The round
+     * summary announces the streak itself.
+     */
+    private void earnStrike(Player killer) {
+        if (!onField(killer)) {
+            return;
+        }
+        killer.getInventory().setItem(STRIKE_SLOT, SternenfrontItem.STRIKE.build(HeroAbility.ORBITAL_STRIKE.model().item()
+                .name(messages.get("streak.item")).lore(messages.getLines("streak.lore")).hideAttributes()));
+        BlockcraftApi.get().notifications().reward(killer, messages.get("streak.earned", Formatter.number("kills", feel.orbitalStreak())));
+    }
+
+    /** Sneaking with the long rifle slows the walk, which the client draws as a zoom; anything else lets go of it. */
+    private void scope(Player player, Fighter fighter) {
+        var speed = player.getAttribute(Attribute.MOVEMENT_SPEED);
+        if (speed == null) {
+            return;
+        }
+        boolean aiming = player.isSneaking() && fighter.blaster().filter(Blaster.LONG_RIFLE::equals).isPresent()
+                && HotbarItem.of(player.getInventory().getItemInMainHand(), Blaster.class).filter(Blaster.LONG_RIFLE::equals).isPresent();
+        boolean scoped = speed.getModifier(SCOPE) != null;
+        if (aiming && !scoped) {
+            speed.addTransientModifier(new AttributeModifier(SCOPE, -feel.scopeSlowdown(),
+                    AttributeModifier.Operation.MULTIPLY_SCALAR_1, EquipmentSlotGroup.ANY));
+        } else if (!aiming && scoped) {
+            speed.removeModifier(SCOPE);
+        }
+    }
+
+    private static void unscope(Player player) {
+        var speed = player.getAttribute(Attribute.MOVEMENT_SPEED);
+        if (speed != null && speed.getModifier(SCOPE) != null) {
+            speed.removeModifier(SCOPE);
         }
     }
 

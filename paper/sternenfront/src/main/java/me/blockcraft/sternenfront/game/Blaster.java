@@ -5,20 +5,21 @@ import me.blockcraft.api.pack.PackModel;
 
 import java.util.Locale;
 
-/** The four blasters, one per class, each a vanilla hoe that the pack draws as its {@link PackModel}. */
+/** The blasters, one per class and one per gun hero, each a vanilla hoe that the pack draws as its {@link PackModel}. */
 public enum Blaster implements HotbarItem {
     CARBINE(PackModel.STERNENFRONT_CARBINE),
     REPEATER(PackModel.STERNENFRONT_REPEATER),
     LONG_RIFLE(PackModel.STERNENFRONT_LONG_RIFLE),
-    PISTOL(PackModel.STERNENFRONT_PISTOL);
+    PISTOL(PackModel.STERNENFRONT_PISTOL),
+    TWIN_PISTOL(PackModel.STERNENFRONT_TWIN_PISTOL),
+    HEAVY_RIFLE(PackModel.STERNENFRONT_HEAVY_RIFLE);
 
     /**
      * {@code bolts} leave the muzzle {@code burstTicks} apart for one pull of the trigger; {@code speed} is in blocks
-     * per tick, {@code spread} the largest sideways deviation per block, {@code sound} a sound key played at
-     * {@code pitch}.
+     * per tick, {@code spread} the largest sideways deviation per block.
      */
     public record Stats(double damage, double headshot, double heat, int cooldownTicks, int bolts, int burstTicks,
-                        double spread, double speed, double range, String sound, float pitch) {
+                        double spread, double speed, double range) {
     }
 
     private final PackModel model;

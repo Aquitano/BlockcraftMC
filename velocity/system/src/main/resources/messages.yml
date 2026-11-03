@@ -153,6 +153,7 @@ motd:
     winter: "<gradient:#e3f2fd:#4fc3f7><bold>Es schneit!</bold></gradient> <muted>Zieh dich warm an."
     halloween: "<gradient:#ff8f00:#7b1fa2><bold>Halloween!</bold></gradient> <muted>Süßes oder Saures?"
     easter: "<gradient:#f8bbd0:#aed581><bold>Frohe Ostern!</bold></gradient> <muted>In der Lobby liegen Eier."
+    may-the-fourth: "<gradient:#ff6a1f:#45d6ff><bold>Möge der Vierte mit dir sein!</bold></gradient> <muted>In Sternenfront gibt es mehr Coins."
     og: "<gradient:#ffd54f:#8d6e63><bold>OG-Modus!</bold></gradient> <muted>BedWars auf den alten Maps."
   welcome-back: "<muted>Willkommen zurück, <accent><player><muted>."
   welcome-back-friend: "<muted>Willkommen zurück, <accent><player><muted>! <success>1 <muted>Freund online."

@@ -21,6 +21,7 @@ import org.bukkit.inventory.ItemStack;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * What a deployed player carries: the class's blaster in the first slot, its abilities next to it, the faction's
@@ -52,8 +53,8 @@ public final class Loadouts {
             inventory.setItem(index + 1, ability(ability, index));
             player.setCooldown(ability.material(), 0);
         }
-        dress(player, faction);
-        setMaxHealth(player, config.health(combatClass));
+        dress(player, faction, Optional.empty());
+        health(player, config.health(combatClass));
     }
 
     /** The champion's hotbar: the blade alone, with the helmet and leather they deployed in. */
@@ -64,7 +65,7 @@ public final class Loadouts {
         }
         inventory.setItem(0, blade());
         inventory.setHeldItemSlot(0);
-        setMaxHealth(champion, config.relic().health());
+        health(champion, config.relic().health());
     }
 
     public ItemStack blaster(Blaster blaster) {
@@ -124,10 +125,11 @@ public final class Loadouts {
         return builder.build();
     }
 
-    private void dress(Player player, Faction faction) {
+    /** The faction's leather, and on the head {@code head} if a hero wears their own, else the faction's helmet. */
+    public void dress(Player player, Faction faction, Optional<PackModel> head) {
         var inventory = player.getInventory();
-        var helmet = faction == Faction.KOLONIEN ? PackModel.STERNENFRONT_HELMET_KOLONIEN : PackModel.STERNENFRONT_HELMET_HEGEMONIE;
-        inventory.setHelmet(helmet.item().name(messages.get("faction." + faction.key() + ".helmet")).build());
+        var helmet = head.orElse(faction == Faction.KOLONIEN ? PackModel.STERNENFRONT_HELMET_KOLONIEN : PackModel.STERNENFRONT_HELMET_HEGEMONIE);
+        inventory.setHelmet(helmet.item().name(messages.get(head.isPresent() ? "hero.head" : "faction." + faction.key() + ".helmet")).build());
         inventory.setChestplate(armour(Material.LEATHER_CHESTPLATE, faction));
         inventory.setLeggings(armour(Material.LEATHER_LEGGINGS, faction));
         inventory.setBoots(armour(Material.LEATHER_BOOTS, faction));
@@ -144,7 +146,7 @@ public final class Loadouts {
         return item;
     }
 
-    private static void setMaxHealth(Player player, double health) {
+    public void health(Player player, double health) {
         var maxHealth = Objects.requireNonNull(player.getAttribute(Attribute.MAX_HEALTH));
         maxHealth.setBaseValue(health);
         player.setHealth(health);

@@ -47,6 +47,9 @@ with tempfile.TemporaryDirectory() as directory:
             "-c:a", "vorbis", "-strict", "experimental", "-ac", "2", "-q:a", "4", "-map_metadata", "-1",
             str(ROOT / f"sounds/ui/{name}.ogg"),
         ], check=True)
-(ROOT / "sounds.json").write_text(json.dumps({
-    f"ui.{name}": {"sounds": [f"blockcraft:ui/{name}"]} for name in SOUNDS
-}, indent=2) + "\n")
+events = {f"ui.{name}": {"sounds": [f"blockcraft:ui/{name}"]} for name in SOUNDS}
+definitions = ROOT / "sounds.json"
+entries = json.loads(definitions.read_text()) if definitions.exists() else {}
+entries = {key: value for key, value in entries.items() if not key.startswith("ui.") or key in events}
+entries.update(events)
+definitions.write_text(json.dumps(entries, indent=2) + "\n")

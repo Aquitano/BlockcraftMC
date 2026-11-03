@@ -31,7 +31,10 @@ public enum Icon {
     MODE('\uE20C'),
     OPPONENT('\uE20D'),
     KILLS('\uE20E'),
-    ERROR('\uE20F', true);
+    ERROR('\uE20F', true),
+    HIT('\uE210'),
+    HEADSHOT('\uE211', true),
+    KILL('\uE212', true);
 
     private final char glyph;
     private final boolean coloured;

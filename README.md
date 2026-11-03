@@ -959,7 +959,7 @@ A joining player stays on the loading screen until the client has loaded, declin
 `resource-pack.wait-seconds` (15): chat lines that reach a client while it reloads its resources stay garbled, and the
 lobby greets every arrival in chat. Only the first offer of a session waits.
 
-To regenerate the textures, UI sounds, and vanilla item overrides, install Python 3 and FFmpeg, then run:
+To regenerate the textures, sounds, and vanilla item overrides, install Python 3, uv, and FFmpeg, then run:
 
 ```sh
 ./gradlew :resourcepack:regenerate -PclientJar=/path/to/minecraft-client.jar
@@ -1008,7 +1008,9 @@ Everything the pack changes has a plain fallback, so a player without it sees va
 - Vanilla inventory labels remain intact. The pack does not override container translations.
 - Short UI sounds live in `assets/blockcraft/sounds/ui`. `FeedbackSound` selects custom sounds when the pack is
   active and vanilla sounds otherwise. `SoundArt.py` generates the Ogg Vorbis files. `FeedbackSoundTest` checks that
-  every custom sound has a definition and an audio asset.
+  every custom sound has a definition and an audio asset. Sternenfront's world sounds (`sternenfront.*`) are
+  synthesized by `SternenfrontSounds.py` into `sounds/sternenfront` as mono files, because the client places only
+  mono sounds in the world; each script replaces only its own entries in `sounds.json`.
 
 - Anything other players can see, such as a held or worn item or a display, keeps its vanilla item and asks for the
   pack's model through custom_model_data: a `MenuIcon` as `blockcraft:icon/<key>`, a 3D model as a `PackModel`
@@ -1018,11 +1020,14 @@ Everything the pack changes has a plain fallback, so a player without it sees va
   viewer (`MenuIcon.style`) is only for menus, which nobody else sees. The regeneration task writes the overrides
   from `MenuIcon` and `PackModel`, copying each item's vanilla definition from the client jar. `PackOverridesTest`
   fails when an override, a case, a model or one of its `blockcraft:` textures is missing, or an override is left over.
+  A tinted `PackModel` (the lightsabers) takes the colour of its `tintindex: 0` faces from the item's first
+  custom_model_data colour, so one model draws every blade colour; the test also fails when such a case lacks its tint.
 
 `PackArt.java` draws the panels, slots, HUD glyphs, and pixel icons. The hand-made 3D models live in
 `assets/blockcraft/models/item/<set>/` (`zombies`, `ttt`, `endergames`, `skywars`, `hats`, `gadgets`, `props`), each
 named by its `PackModel`. They are cuboids textured with vanilla block textures, which keeps the pack small and the
-look vanilla; a model that needs its own texture puts it under `textures/item/<set>/`. Made in Blockbench, a model is
+look vanilla; a model that needs its own texture puts it under `textures/item/<set>/`, or under `textures/block/<set>/`
+when it also draws vanilla block textures, because a model draws from one atlas. Made in Blockbench, a model is
 exported with "Java Block/Item"; its elements must stay between -16 and 32 on every axis, so a larger set piece is
 scaled up by its display rather than in the model, and textures stay at 16 to 64 pixels, because every change makes
 every client download the whole pack again. A held model points along +z and borrows the Zombies guns' display

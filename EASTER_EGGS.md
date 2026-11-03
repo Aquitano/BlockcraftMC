@@ -272,6 +272,7 @@ It is empty by default because no founding date is assumed.
 | New Year | On December 31, a boss bar counts down the last ten seconds. At midnight the lobby's configured firework positions launch fireworks. Joining during January grants that year's tag. |
 | Network birthday | The proxy's MOTD counts the years. Lobby players receive a temporary cake hat for the rest of the day. The lobby's `seasons.birthday` theme scatters cakes, candle cakes and lit candles over the grass, turns torches into coloured candles and plays distant fireworks, on the players' screens only. |
 | OG | No date; staff switch it on with `/event og`. The BedWars map vote offers the old server's maps (`era: og`) instead of the current ones. |
+| 4 May | Every Sternenfront round that starts on the day greets the players, pays `secrets.may-the-fourth.coin-factor` (2) times its coins and opens with fireworks (see Sternenfront). Staff switch it on with `/event may-the-fourth`. |
 
 The calendar's `halloween` and `winter` windows can be moved in both `calendar` sections; a window whose end comes
 before its start runs across New Year.
@@ -283,7 +284,7 @@ in `bc_settings`, so it survives restarts. Every server reads it back every `cal
 lobby redresses itself on its next tick. The staff log records each switch under the issuer. Date-bound details stay
 on the date: the Advent door, the birthday's age and the January tag. While an occasion is active, the second line
 of the server list shows its seasonal line from `motd.season`; the order is the birthday, then New Year's Eve,
-Christmas, Advent, winter, Halloween, Easter and OG.
+Christmas, Advent, winter, Halloween, Easter, 4 May and OG.
 
 The main lobby and shared waiting island use map-owned `seasons.yml` files for physical seasonal changes.
 Winter places real snow layers on exposed solid blocks and leaves within the configured areas. Every open source
@@ -340,6 +341,26 @@ Temporary hats restore the previous helmet when they expire or the player leaves
 wearing a temporary hat keeps that new choice. Earned tags, the snow trail, and the birthday gadget are accessible
 through Extras without Premium. Existing purchased heads keep their original storage keys after their names change.
 
+## Sternenfront
+
+Wrack von Tessar hides its secrets in the map Sternenfront builds at every start, so their spots are fixed in
+`SecretPlaces` (y 64 is the basin floor). Each is one row in `bc_unlocks` under `sternenfront.`; the first find pays
+`secrets.coins` (50) with the unlock, a later find only says the player knows it, and a player hears about each
+secret once per round. Only deployed players find anything. The sounds come from the pack as
+`blockcraft:sternenfront.<name>`; a client without the pack hears a vanilla sound instead.
+
+| Secret | Key | Where and how |
+|---|---|---|
+| Kyber crystals | `kyber.1` to `kyber.5` | Five small glowing crystals that turn, sparkle and hum: (1) at the end of the cruiser's bow corridor, past the second bulkhead where sand fills the nose (4.5 65 -24.5); (2) in a dark slot in the back wall of the temple hall, west of the altar (-4.5 68 -68.5); (3) on the sand drift in the cantina's south-west corner behind the table (-24.5 66 48.5); (4) under the belly of the eastern pressure tank in the Raffinerie (11.5 65 -33.5); (5) on a ledge cut into the north-eastern cliff three blocks above the scree, which only a jump pack reaches (66.5 69 -53.5). Walking into one finds it and hides it for that player for the round. Whoever holds all five also unlocks `sternenfront.saber.white`, the white lightsaber the heroes hand out, and the server hears of it. |
+| Brummi | `brummi` | A small power droid waddles round the south-east market stall of the Basar (2.5 to 8.5, z 47.5 to 53.5), stops at each corner and beeps. Its hitbox is an interaction tagged with `TargetShotEvent.MARK`, so bolts stop at it and nobody walks into it. A hit makes it jump; the `secrets.brummi.hits` (3) hit from one player in a round sends it off squealing at a run, finds them the secret, and keeps it away for `hide-seconds` (30). |
+| Sand beast | `sand_beast` | The flat top of the dune south-east of the Basar (53.5 68 47.5, radius 3.5), marked by a rib breaking its sand. Standing still on it for `rumble-seconds` (4) brings sound, sand and a shaking view; after `still-seconds` (10) the beast's head rises out of the sand in front of the player, bites twice and sinks back, at `scale` (5) times the model's size. Nobody is hurt. The dune then rests `rest-seconds` (60). |
+| Music box | `cantina` | The jukebox between two speakers against the cantina's south wall (-20 65 51). The round answers no block click, so the box listens itself: a right click plays a 24-second swing tune written for it (`CantinaTune`) to everyone within 24 blocks, and the first click finds the secret. |
+| Kessel-Lauf | `kessel` | A slot cut into the southern cliff behind the cantina, entered through a framed doorway at (-24 65 58). Running west from the start deck at its east end: the green start arch, two stepping stones, a yellow checkpoint arch over the pit, a third stone, a gap of seven blocks only a jump pack clears, the shelf with the second checkpoint arch, one more stone and the purple finish arch. The action bar shows the time; falling into the pit, leaving the slot or running past `limit-seconds` (60) ends the run. A finish under `par-seconds` (10) finds the secret. Every player's best time is in `bc_sternenfront_kessel`, and the five fastest stand on the board at the start deck. Barriers roof the slot at y 76, below the cliff tops, so it shows the posts nothing and leads nowhere. |
+
+On 4 May (`/event may-the-fourth`), every round's start greets everyone, multiplies every coin the round pays
+through `RoundSummary.coinFactor`, and fires fireworks: each faction's colour over its headquarters and both over
+every post, high enough to hurt nobody, with their damage cancelled as well.
+
 ## Gameplay verification
 
 The automated build checks message keys and covers calendar dates, Konami input, parkour progression, rematch
@@ -382,6 +403,12 @@ Before deploying, verify these interactions with Minecraft clients on a local te
 - Use local friendship fixtures to check the yearly notice, elapsed days, reconnect deduplication, both
   recipients, nicknames, vanished friends, and midnight.
 - Leave a menu while its database request is pending. Rewards should arrive without reopening the old menu.
+- In a Sternenfront round, with and without the pack, collect the five kyber crystals with one account and check
+  the white blade, the hidden crystals, the coins once and the "known" line in the next round. Shoot Brummi three
+  times, and once each from two accounts, and stand still on the dune until the head breaks out. Click the music box
+  twice. Run the Kessel-Lauf as a scout: fall into the pit, try the long gap without the jump pack, finish slower
+  and faster than par, and check the board after a restart. With `/event may-the-fourth`, start a round and compare its
+  recap coins with a normal round.
 
 The build does not validate client rendering, map geometry, or a live proxy-to-backend connection.
 Use the [performance capture workflow](dev/performance/README.md) to compare server tick time, CPU, GC pauses, and client frame times.

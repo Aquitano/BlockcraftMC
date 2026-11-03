@@ -12,11 +12,12 @@ import java.util.Map;
 /**
  * A built map, as the round needs it: the box players fight in (the world border and the replay's play area), each
  * faction's headquarters, the command posts in letter order (A first), where the relic blade floats, the spot above
- * the map that dead players watch from while they choose where to deploy, and the lobby and spectator spawns.
+ * the map that dead players watch from while they choose where to deploy, the lobby and spectator spawns, and where
+ * the map hides its secrets.
  */
 public record FrontMap(String name, World world, BoundingBox playArea, Map<Faction, Headquarters> headquarters,
                        List<PostSite> posts, Location relic, Location overview, Location lobbySpawn,
-                       Location spectatorSpawn) {
+                       Location spectatorSpawn, SecretSpots secrets) {
 
     /** Where a faction deploys at its base, and the zone around it where enemies are hurt. */
     public record Headquarters(List<Location> spawns, BoundingBox zone) {

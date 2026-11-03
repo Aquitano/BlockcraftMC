@@ -66,13 +66,13 @@ public final class Gadgets {
             case GRENADE -> throwGrenade(player, faction, tick);
             case ADRENALINE -> adrenaline(player);
             case SHIELD_WALL -> raiseWall(player, faction, tick);
-            case JUMP_PACK -> leap(player, fighter, game.config().jumpPack().forward(), game.config().jumpPack().up(), tick);
+            case JUMP_PACK -> leap(player, fighter, game.config().jumpPack().forward(), game.config().jumpPack().up(), tick, SoundCue.JETPACK);
             case MED_STATION -> placeStation(player, faction, tick);
         };
     }
 
-    /** A leap forward and up that spares the next landing, as the jump pack and the champion's blade both give. */
-    public boolean leap(Player player, Fighter fighter, double forward, double up, long tick) {
+    /** A leap forward and up that spares the next landing, as the jump pack and a blade both give. */
+    public boolean leap(Player player, Fighter fighter, double forward, double up, long tick, SoundCue sound) {
         var facing = player.getLocation().getDirection().setY(0);
         if (facing.lengthSquared() > 0) {
             facing.normalize().multiply(forward);
@@ -80,7 +80,7 @@ public final class Gadgets {
         player.setVelocity(facing.setY(up));
         fighter.fallSafeUntil(tick + FALL_SAFE_TICKS);
         trails.add(new Trail(player, tick + TRAIL_TICKS));
-        player.getWorld().playSound(player.getLocation(), Sound.ENTITY_FIREWORK_ROCKET_LAUNCH, 0.8f, 0.7f);
+        sound.play(player.getLocation(), 1f);
         return true;
     }
 
@@ -141,7 +141,7 @@ public final class Gadgets {
         }
         walls.add(new Wall(material, List.copyOf(placed), tick + (long) shield.seconds() * TICKS_PER_SECOND));
         Bukkit.getPluginManager().callEvent(new BlocksChangedEvent(List.copyOf(placed)));
-        center.getWorld().playSound(center.getLocation(), Sound.BLOCK_BEACON_ACTIVATE, 1f, 1.6f);
+        SoundCue.SHIELD_UP.play(center.getLocation(), 1f);
         return true;
     }
 
@@ -204,7 +204,7 @@ public final class Gadgets {
             long since = tick - grenade.thrownAt();
             if (since % BEEP_TICKS == 0) {
                 float rising = 1.0f + (float) since / game.config().grenade().fuseTicks();
-                at.getWorld().playSound(at, Sound.BLOCK_NOTE_BLOCK_PLING, 0.8f, rising);
+                SoundCue.GRENADE_BEEP.play(at, 0.8f, rising);
             }
             return false;
         }
@@ -219,11 +219,15 @@ public final class Gadgets {
         world.spawnParticle(Particle.EXPLOSION, at, 1);
         world.spawnParticle(Particle.ELECTRIC_SPARK, at, 40, 1.2, 0.8, 1.2, 0.2);
         world.spawnParticle(Particle.DUST, at, 30, 1.5, 0.8, 1.5, 0, new Particle.DustOptions(grenade.faction().bolt(), 1.6f));
-        world.playSound(at, Sound.ENTITY_GENERIC_EXPLODE, 1f, 1.3f);
-        for (var target : world.getNearbyPlayers(at, stats.radius())) {
+        SoundCue.GRENADE_EXPLODE.play(at, 2f);
+        for (var target : game.combatants()) {
+            if (!target.getWorld().equals(world)) {
+                continue;
+            }
             var center = target.getLocation().add(0, target.getHeight() / 2, 0);
             double distance = center.distance(at);
-            if (distance > stats.radius() || !game.hittable(grenade.faction(), target) || !inSight(at, center)) {
+            boolean self = target.equals(grenade.thrower()) && game.onField(target);
+            if (distance > stats.radius() || !self && !game.hittable(grenade.faction(), target) || !inSight(at, center)) {
                 continue;
             }
             double share = 1 - (1 - EDGE_SHARE) * distance / stats.radius();
@@ -247,7 +251,7 @@ public final class Gadgets {
         if (!fallen.isEmpty()) {
             Bukkit.getPluginManager().callEvent(new BlocksChangedEvent(fallen));
             var first = fallen.getFirst().getLocation();
-            first.getWorld().playSound(first, Sound.BLOCK_BEACON_DEACTIVATE, 1f, 1.6f);
+            SoundCue.SHIELD_DOWN.play(first, 1f);
         }
     }
 
@@ -269,8 +273,9 @@ public final class Gadgets {
         }
         if (tick % TICKS_PER_SECOND == 0) {
             double radius = game.config().medStation().radius();
-            for (var ally : at.getWorld().getNearbyPlayers(at, radius)) {
-                if (game.onField(ally) && game.factionOf(ally).filter(station.faction()::equals).isPresent()
+            for (var ally : game.combatants()) {
+                if (ally.getWorld().equals(at.getWorld()) && ally.getLocation().distanceSquared(at) <= radius * radius
+                        && game.onField(ally) && game.factionOf(ally).filter(station.faction()::equals).isPresent()
                         && game.heal(ally, game.config().medStation().healPerSecond())) {
                     ally.getWorld().spawnParticle(Particle.HEART, ally.getLocation().add(0, 2.1, 0), 1);
                 }

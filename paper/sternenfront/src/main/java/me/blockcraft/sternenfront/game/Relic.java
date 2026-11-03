@@ -55,7 +55,7 @@ public final class Relic {
             home.getWorld().spawnParticle(Particle.END_ROD, home, 2, 0.3, 0.6, 0.3, 0.01);
         }
         home.getWorld().getNearbyPlayers(home, REACH).stream()
-                .filter(game::onField)
+                .filter(game::mayTakeRelic)
                 .findFirst()
                 .ifPresent(this::take);
     }

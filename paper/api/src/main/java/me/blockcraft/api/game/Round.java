@@ -124,12 +124,25 @@ public final class Round implements Listener {
             arena.arrive(player);
             return false;
         }
+        seat(player);
+        return true;
+    }
+
+    public boolean joinRunning(Player player) {
+        if (phase != GamePhase.INGAME || full() || isPlaying(player) || api.isVanished(player)) {
+            return false;
+        }
+        seat(player);
+        summary.entered(player);
+        return true;
+    }
+
+    private void seat(Player player) {
         players.add(player.getUniqueId());
         // Whoever is online still hides this account if it watched here before and rejoined.
         spectators.release(player);
         summary.join(player);
         arena.welcome(player, players.size(), capacity);
-        return true;
     }
 
     /** Returns whether the player was playing; leaving a running round counts as a death and a loss. */

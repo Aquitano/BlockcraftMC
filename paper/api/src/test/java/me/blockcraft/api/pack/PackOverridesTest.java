@@ -32,13 +32,27 @@ public class PackOverridesTest {
             assertEquals(file.toString(), "minecraft:select", model.get("type").getAsString());
             assertEquals(file.toString(), "minecraft:custom_model_data", model.get("property").getAsString());
             assertTrue(file + " has no vanilla fallback", model.has("fallback"));
-            var cases = new HashMap<String, String>();
+            var cases = new HashMap<String, PackOverrides.Case>();
             for (var entry : model.getAsJsonArray("cases")) {
                 var match = entry.getAsJsonObject();
-                cases.put(match.get("when").getAsString(), match.getAsJsonObject("model").get("model").getAsString());
+                var drawn = match.getAsJsonObject("model");
+                cases.put(match.get("when").getAsString(), new PackOverrides.Case(drawn.get("model").getAsString(), tintedByItem(drawn)));
             }
             assertEquals(file.toString(), item.getValue(), cases);
         }
+    }
+
+    /** A tinted model's colour comes from the item's first custom_model_data colour, not from a dye or a map. */
+    private static boolean tintedByItem(JsonObject model) {
+        if (!model.has("tints")) {
+            return false;
+        }
+        var tints = model.getAsJsonArray("tints");
+        if (tints.isEmpty()) {
+            return false;
+        }
+        var tint = tints.get(0).getAsJsonObject();
+        return tint.get("type").getAsString().equals("minecraft:custom_model_data") && tint.get("index").getAsInt() == 0;
     }
 
     @Test
@@ -52,7 +66,7 @@ public class PackOverridesTest {
     @Test
     public void everyModelShipsWithItsTextures() throws IOException {
         var models = new HashSet<String>();
-        PackOverrides.cases().values().forEach(cases -> models.addAll(cases.values()));
+        PackOverrides.cases().values().forEach(cases -> cases.values().forEach(drawn -> models.add(drawn.model())));
         for (var model : models) {
             assertTrue(model, Files.exists(asset(model, "models", ".json")));
         }

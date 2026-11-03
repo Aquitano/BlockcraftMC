@@ -44,6 +44,8 @@ public class NetworkCalendarTest {
         assertEquals(Set.of(Occasion.WINTER, Occasion.CHRISTMAS), CALENDAR.occasions(LocalDate.of(2026, 12, 26)));
         assertEquals(Set.of(Occasion.WINTER, Occasion.NEW_YEARS_EVE), CALENDAR.occasions(LocalDate.of(2026, 12, 31)));
         assertEquals(Set.of(Occasion.BIRTHDAY), CALENDAR.occasions(LocalDate.of(2026, 6, 3)));
+        assertEquals(Set.of(Occasion.MAY_THE_FOURTH), CALENDAR.occasions(LocalDate.of(2026, 5, 4)));
+        assertEquals(Set.of(), CALENDAR.occasions(LocalDate.of(2026, 5, 5)));
     }
 
     @Test

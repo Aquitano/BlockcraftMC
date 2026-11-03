@@ -26,24 +26,29 @@ import java.util.zip.ZipFile;
 public final class PackOverrides {
 
     static final Path ITEMS = Path.of("assets/minecraft/items");
+    /** What a tinted model's blade shows on an item that names no colour: its texture's own. */
+    static final int UNTINTED = -1;
+
+    /** The model a case draws, and whether the item's first custom_model_data colour tints it. */
+    record Case(String model, boolean tinted) { }
 
     private PackOverrides() {
     }
 
     /** Per vanilla item, the custom_model_data strings the pack answers and the model each draws. */
-    static Map<String, Map<String, String>> cases() {
-        var cases = new TreeMap<String, Map<String, String>>();
+    static Map<String, Map<String, Case>> cases() {
+        var cases = new TreeMap<String, Map<String, Case>>();
         for (var icon : MenuIcon.values()) {
-            add(cases, icon.fallback(), icon.modelData(), "blockcraft:item/" + icon.key());
+            add(cases, icon.fallback(), icon.modelData(), new Case("blockcraft:item/" + icon.key(), false));
         }
         for (var model : PackModel.values()) {
-            add(cases, model.fallback(), model.key(), model.model().asString());
+            add(cases, model.fallback(), model.key(), new Case(model.model().asString(), model.tinted()));
         }
         return cases;
     }
 
-    private static void add(Map<String, Map<String, String>> cases, Material item, String when, String model) {
-        cases.computeIfAbsent(item.getKey().getKey(), ignored -> new LinkedHashMap<>()).put(when, model);
+    private static void add(Map<String, Map<String, Case>> cases, Material item, String when, Case drawn) {
+        cases.computeIfAbsent(item.getKey().getKey(), ignored -> new LinkedHashMap<>()).put(when, drawn);
     }
 
     public static void main(String[] args) throws IOException {
@@ -75,12 +80,21 @@ public final class PackOverrides {
         System.out.println("Wrote " + cases.size() + " overrides to " + directory);
     }
 
-    private static JsonObject select(Map<String, String> cases, JsonObject fallback) {
+    private static JsonObject select(Map<String, Case> cases, JsonObject fallback) {
         var list = new JsonArray();
         cases.entrySet().stream().sorted(Map.Entry.comparingByKey(Comparator.naturalOrder())).forEach(entry -> {
             var model = new JsonObject();
             model.addProperty("type", "minecraft:model");
-            model.addProperty("model", entry.getValue());
+            model.addProperty("model", entry.getValue().model());
+            if (entry.getValue().tinted()) {
+                var tint = new JsonObject();
+                tint.addProperty("type", "minecraft:custom_model_data");
+                tint.addProperty("index", 0);
+                tint.addProperty("default", UNTINTED);
+                var tints = new JsonArray();
+                tints.add(tint);
+                model.add("tints", tints);
+            }
             var match = new JsonObject();
             match.addProperty("when", entry.getKey());
             match.add("model", model);

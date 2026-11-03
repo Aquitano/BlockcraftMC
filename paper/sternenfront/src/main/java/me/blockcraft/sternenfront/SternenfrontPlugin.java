@@ -12,11 +12,15 @@ import me.blockcraft.api.world.WorldProtection;
 import me.blockcraft.api.world.Worlds;
 import me.blockcraft.sternenfront.arena.FrontMap;
 import me.blockcraft.sternenfront.arena.TessarMap;
+import me.blockcraft.sternenfront.appearance.Droids;
+import me.blockcraft.sternenfront.config.FeelConfig;
 import me.blockcraft.sternenfront.config.SternenfrontConfig;
 import me.blockcraft.sternenfront.game.SternenfrontGame;
+import me.blockcraft.sternenfront.hero.HeroConfig;
 import me.blockcraft.sternenfront.listener.ArenaListener;
 import me.blockcraft.sternenfront.listener.ChatListener;
 import me.blockcraft.sternenfront.listener.CombatListener;
+import me.blockcraft.sternenfront.secret.Secrets;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Difficulty;
@@ -32,11 +36,12 @@ public final class SternenfrontPlugin extends JavaPlugin {
     private static final double BORDER_MARGIN = 2;
 
     private SternenfrontGame game;
+    private Droids droids;
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
-        var gameConfig = GameConfig.from(getConfig());
+        var gameConfig = GameConfig.from(getConfig(), getConfig().getBoolean("bots.enabled", true) ? 1 : 2);
         var config = SternenfrontConfig.from(getConfig());
         var api = BlockcraftApi.get();
         var services = GameServices.load(this, gameConfig, "bc_sternenfront_stats");
@@ -50,8 +55,13 @@ public final class SternenfrontPlugin extends JavaPlugin {
         border(map);
         var lobby = api.waitingLobby().map(WaitingLobby::spawn).orElse(map.lobbySpawn());
         lobby.getWorld().setSpawnLocation(lobby);
-        game = new SternenfrontGame(this, gameConfig, config, messages, map, lobby, services.stats(), services.menus());
+        game = new SternenfrontGame(this, gameConfig, config, HeroConfig.from(getConfig()), FeelConfig.from(getConfig()),
+                messages, map, lobby, services.stats(), services.menus());
         api.presence().maxPlayers(config.capacity());
+        if (getConfig().getBoolean("appearance.droids", true)) {
+            droids = Droids.start(this, game);
+        }
+        Secrets.start(this, game, messages);
 
         services.listen(
                 game.hotbar(),
@@ -78,6 +88,9 @@ public final class SternenfrontPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (droids != null) {
+            droids.close();
+        }
         if (game != null) {
             game.stop();
         }

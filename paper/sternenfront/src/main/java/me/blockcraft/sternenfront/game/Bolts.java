@@ -1,11 +1,15 @@
 package me.blockcraft.sternenfront.game;
 
 import me.blockcraft.api.pack.PackModel;
+import org.bukkit.Bukkit;
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.entity.Display;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Interaction;
 import org.bukkit.entity.ItemDisplay;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
@@ -16,7 +20,8 @@ import java.util.concurrent.ThreadLocalRandom;
 /**
  * The bolts in flight. Each moves {@code speed} blocks a tick along a straight line, stops at the first wall or
  * enemy on the way and shows as a glowing model in its faction's colour with a trail of the same colour, which a
- * client without the pack still sees. Teammates, deploying players and spectators are not in the way.
+ * client without the pack still sees. Teammates, deploying players and spectators are not in the way; a marked
+ * target of the map is, and hears of it through a {@link TargetShotEvent}.
  */
 public final class Bolts {
 
@@ -26,19 +31,20 @@ public final class Bolts {
     private static final double VISUAL_LEAD = 0.8;
     private static final double HEAD_BELOW_EYES = 0.25;
     private static final int SPARKS = 6;
+    private static final float IMPACT_VOLUME = 0.6f;
     private static final Display.Brightness LIT = new Display.Brightness(15, 15);
 
     private record Shot(Faction faction, Blaster blaster, double damage, double headshot, double speed) { }
 
     private static final class Bolt {
-        private final Player shooter;
+        private final LivingEntity shooter;
         private final Shot shot;
         private final Vector direction;
         private final ItemDisplay display;
         private Location position;
         private double left;
 
-        private Bolt(Player shooter, Shot shot, Location position, Vector direction, double range, ItemDisplay display) {
+        private Bolt(LivingEntity shooter, Shot shot, Location position, Vector direction, double range, ItemDisplay display) {
             this.shooter = shooter;
             this.shot = shot;
             this.position = position;
@@ -65,10 +71,14 @@ public final class Bolts {
                     random.nextDouble(-stats.spread(), stats.spread()),
                     random.nextDouble(-stats.spread(), stats.spread()))).normalize();
         }
-        launch(shooter, new Shot(faction, blaster, stats.damage(), stats.headshot(), stats.speed()), eye, direction, stats.range());
+        fire(shooter, faction, blaster, stats, direction);
     }
 
-    private void launch(Player shooter, Shot shot, Location from, Vector direction, double range) {
+    public void fire(LivingEntity shooter, Faction faction, Blaster blaster, Blaster.Stats stats, Vector direction) {
+        launch(shooter, new Shot(faction, blaster, stats.damage(), stats.headshot(), stats.speed()), shooter.getEyeLocation(), direction, stats.range());
+    }
+
+    private void launch(LivingEntity shooter, Shot shot, Location from, Vector direction, double range) {
         var shown = from.clone().add(direction.clone().multiply(VISUAL_LEAD)).setDirection(direction);
         var display = from.getWorld().spawn(shown, ItemDisplay.class, spawned -> {
             spawned.setPersistent(false);
@@ -102,17 +112,30 @@ public final class Bolts {
         var wall = world.rayTraceBlocks(bolt.position, bolt.direction, step, FluidCollisionMode.NEVER, true);
         double reach = wall == null ? step : wall.getHitPosition().distance(start);
         var hit = reach <= 0 ? null : world.rayTraceEntities(bolt.position, bolt.direction, reach, HIT_SIZE,
-                entity -> entity instanceof Player target && game.hittable(bolt.shot.faction(), target));
+                entity -> entity instanceof LivingEntity target && game.hittable(bolt.shot.faction(), target) || isTarget(entity));
         double travelled = hit == null ? reach : hit.getHitPosition().distance(start);
         trail(bolt, travelled);
-        if (hit != null && hit.getHitEntity() instanceof Player victim) {
+        if (hit != null && hit.getHitEntity() instanceof LivingEntity victim) {
             var at = hit.getHitPosition().toLocation(world);
             sparks(at, bolt.shot.faction());
             strike(bolt, victim, at);
             return false;
         }
+        if (hit != null && hit.getHitEntity() instanceof Interaction target) {
+            var at = hit.getHitPosition().toLocation(world);
+            sparks(at, bolt.shot.faction());
+            SoundCue.BOLT_IMPACT.play(at, IMPACT_VOLUME);
+            if (bolt.shooter instanceof Player player && player.isOnline()) {
+                Bukkit.getPluginManager().callEvent(new TargetShotEvent(target, player));
+            }
+            return false;
+        }
         if (wall != null || bolt.left - step <= 0) {
-            sparks(bolt.position.clone().add(bolt.direction.clone().multiply(travelled)), bolt.shot.faction());
+            var at = bolt.position.clone().add(bolt.direction.clone().multiply(travelled));
+            sparks(at, bolt.shot.faction());
+            if (wall != null) {
+                SoundCue.BOLT_IMPACT.play(at, IMPACT_VOLUME);
+            }
             return false;
         }
         bolt.position = bolt.position.add(bolt.direction.clone().multiply(step));
@@ -121,15 +144,15 @@ public final class Bolts {
         return true;
     }
 
-    private void strike(Bolt bolt, Player victim, Location at) {
-        if (game.deflects(victim, bolt.direction)) {
-            var back = bolt.shooter.isOnline() && bolt.shooter.getWorld().equals(at.getWorld())
+    private void strike(Bolt bolt, LivingEntity victim, Location at) {
+        if (victim instanceof Player player && game.deflects(player, bolt.direction)) {
+            var back = bolt.shooter.isValid() && bolt.shooter.getWorld().equals(at.getWorld())
                     ? bolt.shooter.getEyeLocation().toVector().subtract(at.toVector()).normalize()
                     : bolt.direction.clone().multiply(-1);
             var faction = game.factionOf(victim).orElse(bolt.shot.faction().enemy());
             var shot = new Shot(faction, bolt.shot.blaster(), bolt.shot.damage(), bolt.shot.headshot(), bolt.shot.speed());
             launch(victim, shot, at.clone().add(back.clone().multiply(VISUAL_LEAD)), back, game.config().stats(shot.blaster()).range());
-            game.deflected(victim, at);
+            game.deflected(player, at);
             return;
         }
         boolean head = at.getY() >= victim.getEyeLocation().getY() - HEAD_BELOW_EYES;
@@ -147,6 +170,10 @@ public final class Bolts {
     private static void sparks(Location at, Faction faction) {
         at.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, at, SPARKS, 0.1, 0.1, 0.1, 0.05);
         at.getWorld().spawnParticle(Particle.DUST, at, SPARKS, 0.15, 0.15, 0.15, 0, new Particle.DustOptions(faction.bolt(), 1.0f));
+    }
+
+    private static boolean isTarget(Entity entity) {
+        return entity instanceof Interaction target && target.getPersistentDataContainer().has(TargetShotEvent.MARK);
     }
 
     private static PackModel model(Faction faction) {

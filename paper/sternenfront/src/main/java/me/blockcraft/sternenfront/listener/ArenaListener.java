@@ -4,6 +4,7 @@ import me.blockcraft.api.game.GamePhase;
 import me.blockcraft.api.menu.Menu;
 import me.blockcraft.api.world.BuildMode;
 import me.blockcraft.sternenfront.game.SternenfrontGame;
+import me.blockcraft.sternenfront.hero.Sabers;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
@@ -61,8 +62,17 @@ public final class ArenaListener implements Listener {
         if (attacker == null || attacker.equals(victim)) {
             return;
         }
+        var held = attacker.getInventory().getItemInMainHand();
+        if ((event.getCause() == EntityDamageEvent.DamageCause.ENTITY_ATTACK
+                || event.getCause() == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK)
+                && Sabers.isSaber(held) && !Sabers.isLit(held)) {
+            event.setCancelled(true);
+            return;
+        }
         if (game.allies(attacker, victim) || game.isProtected(victim) || game.choosing(attacker)) {
             event.setCancelled(true);
+        } else if (event.getDamager().equals(attacker)) {
+            game.clash(event, attacker, victim);
         }
     }
 
@@ -71,6 +81,7 @@ public final class ArenaListener implements Listener {
         if (event.getEntity() instanceof Player victim && event.getDamageSource().getCausingEntity() instanceof Player attacker
                 && !attacker.equals(victim)) {
             game.endProtection(attacker);
+            game.landed(attacker, victim);
         }
     }
 

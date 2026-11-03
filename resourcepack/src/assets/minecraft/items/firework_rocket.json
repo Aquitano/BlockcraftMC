@@ -17,6 +17,13 @@
           "type": "minecraft:model",
           "model": "blockcraft:item/win_effects"
         }
+      },
+      {
+        "when": "blockcraft:sternenfront/jetpack",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/sternenfront/jetpack"
+        }
       }
     ],
     "fallback": {

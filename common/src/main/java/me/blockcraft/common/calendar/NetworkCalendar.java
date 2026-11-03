@@ -22,13 +22,13 @@ import java.util.Set;
 /**
  * The days the network celebrates, counted in its own time zone so midnight falls when it does for its players.
  * Easter moves every year and is computed; Halloween, winter and the network's birthday come from {@code calendar}
- * in the config, and Advent, Christmas and New Year's Eve are what they always are. OG, the rounds on the maps of the
+ * in the config, and Advent, Christmas, New Year's Eve and 4 May, the day of the stars, are what they always are. OG, the rounds on the maps of the
  * old server, has no date. Staff can force a set of occasions network-wide with {@code /event}; while one is forced,
  * it is what today celebrates.
  */
 public final class NetworkCalendar {
 
-    public enum Occasion { EASTER, HALLOWEEN, WINTER, ADVENT, CHRISTMAS, NEW_YEARS_EVE, BIRTHDAY, OG }
+    public enum Occasion { EASTER, HALLOWEEN, WINTER, ADVENT, CHRISTMAS, NEW_YEARS_EVE, BIRTHDAY, OG, MAY_THE_FOURTH }
 
     /** From one day to another, both included; a window whose end comes before its start runs across New Year. */
     public record Window(MonthDay from, MonthDay to) {
@@ -42,6 +42,7 @@ public final class NetworkCalendar {
 
     private static final int LAST_ADVENT_DOOR = 24;
     private static final Window CHRISTMAS = new Window(MonthDay.of(Month.DECEMBER, 24), MonthDay.of(Month.DECEMBER, 26));
+    private static final MonthDay MAY_THE_FOURTH = MonthDay.of(Month.MAY, 4);
 
     private final Clock clock;
     private final int easterDaysBefore;
@@ -130,6 +131,9 @@ public final class NetworkCalendar {
         }
         if (monthDay.equals(MonthDay.of(Month.DECEMBER, 31))) {
             occasions.add(Occasion.NEW_YEARS_EVE);
+        }
+        if (monthDay.equals(MAY_THE_FOURTH)) {
+            occasions.add(Occasion.MAY_THE_FOURTH);
         }
         if (age(day).isPresent()) {
             occasions.add(Occasion.BIRTHDAY);

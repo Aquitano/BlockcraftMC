@@ -90,6 +90,14 @@ blaster:
     name: "<white>P-2 Pistole"
     lore:
       - "<muted>Schnelle, leichte Bolzen."
+  twin-pistol:
+    name: "<white>Zwillingspistolen"
+    lore:
+      - "<muted>Zwei schnelle Bolzen pro Schuss, kaum Streuung."
+  heavy-rifle:
+    name: "<white>S-12 Sturmgewehr"
+    lore:
+      - "<muted>Schwere Bolzen in schneller Folge."
 
 ability:
   first-key: "<muted>Taste <accent>F <muted>oder <right>Benutzen"
@@ -101,6 +109,7 @@ ability:
     lore:
       - "<muted>Zündet nach kurzer Zeit"
       - "<muted>und trifft alle Gegner in Sichtweite."
+      - "<error>Die Explosion verletzt auch dich."
   adrenaline:
     name: "<white>Adrenalin"
     lore:
@@ -145,10 +154,44 @@ post:
   captured: "<prefix><muted>Posten <accent><letter> <white><post> <muted>gehört nun <faction><muted>!"
   neutralised: "<prefix><muted>Posten <accent><letter> <white><post> <muted>ist für <faction> <muted>verloren."
 
+secret:
+  found-title: "<sternenfront>Secret gefunden!"
+  found-subtitle: "<accent>+<coins> Coins"
+  found: "<prefix><success>Secret gefunden: <accent><secret><muted>! <accent>+<coins> Coins"
+  known: "<prefix><muted>Dieses Secret kennst du schon: <accent><secret>"
+  kyber-count: "<prefix><muted>Kyberkristalle: <accent><found><dark>/<white><total>"
+  saber: "<prefix><muted>Alle fünf Kyberkristalle gefunden: Die Klinge von <accent><player> <muted>leuchtet ab jetzt <white>weiß<muted>!"
+  name:
+    kyber-1: "Kyberkristall im Wrack"
+    kyber-2: "Kyberkristall im Tempel"
+    kyber-3: "Kyberkristall in der Cantina"
+    kyber-4: "Kyberkristall in der Raffinerie"
+    kyber-5: "Kyberkristall im Felsband"
+    brummi: "Brummi in Panik"
+    sand-beast: "Das Ding in der Düne"
+    cantina: "Musik in der Cantina"
+    kessel: "Kessel-Lauf"
+  brummi-hit: "<muted>Brummi piept empört."
+  brummi-panic: "<muted>Brummi flieht kreischend!"
+  rumble: "<muted>Der Sand unter dir bebt ..."
+  music-box: "<muted>Der Musikautomat spielt auf."
+  music-box-busy: "<muted>Der Musikautomat spielt schon."
+  kessel-running: "<accent>Kessel-Lauf <dark>· <white><time> s <dark>· <muted>Tor <white><gate><dark>/<white><gates>"
+  kessel-finished: "<prefix><muted>Kessel-Lauf geschafft in <accent><time> s<muted>!"
+  kessel-par: "<prefix><muted>Unter <accent><par> s <muted>wartet mehr auf dich."
+  kessel-failed: "<prefix><error>Kessel-Lauf abgebrochen."
+  kessel-board-title: "<accent><bold>Kessel-Lauf</bold>\n<muted>Schaffst du ihn unter <white><par> s<muted>?"
+  kessel-board-line: "<white><place>. <accent><name> <dark>· <white><time> s"
+  kessel-board-empty: "<muted>Noch keine Zeiten"
+  may-the-fourth: "<prefix><accent>Möge der Vierte mit euch sein! <muted>Heute zahlt jede Runde <accent><factor>-mal <muted>so viele Coins."
+
 headquarters:
   warning: "<error>Feindliches Hauptquartier! <muted>Raus hier!"
 
 deploy:
+  controls: "<prefix><accent>F<muted>: <first> <dark>· <accent>Q<muted>: <second>"
+  no-ability: "<muted>Keine Fähigkeit"
+  saber-controls: "<prefix><right>Machtsprung <dark>· <muted>Schleichen blockt mit gezogener Klinge."
   title: "<arrow><sternenfront>Sternenfront <dark>· <muted>Einsatz"
   item: "<arrow><primary>Einsatz planen"
   waiting: "<muted>Einsatz möglich in <accent><seconds> s"
@@ -157,7 +200,8 @@ deploy:
   status-waiting: "<muted>Einsatz in <accent><seconds> s"
   status-ready: "<success>Bereit zum Einsatz"
   status-lore:
-    - "<muted>Oben die Klasse, unten der Einsatzort."
+    - "<muted>Oben die Klasse, darunter die Helden,"
+    - "<muted>unten der Einsatzort."
     - "<muted>Posten deiner Fraktion stehen offen,"
     - "<muted>solange kein Gegner darin steht."
   headquarters: "<white>Hauptquartier"
@@ -169,6 +213,8 @@ deploy:
   post-contested: "<error>Hier wird gerade gekämpft."
 
 death:
+  self-grenade: "<prefix><white><player> <muted>wurde von der eigenen Granate erwischt."
+  bot: "<prefix><white><player> <muted>wurde von <white><killer> <muted>ausgeschaltet."
   blaster:
     - "<prefix><white><player> <muted>wurde von <white><killer> <muted>mit <weapon> <muted>getroffen."
     - "<prefix><white><killer> <muted>hat <white><player> <muted>mit <weapon> <muted>erwischt."
@@ -232,3 +278,107 @@ scoreboard:
   post: "<tint><bold><letter></bold> <white><post>"
   post-contested: "<tint><bold><letter></bold> <white><post> <error>⚔"
   kills: "<muted><icon:kills> KILLS"
+
+hero:
+  head: "<white>Heldenrüstung"
+  saber-lore:
+    - "<muted>Schlägt mit Abklingzeit, wie ein Schwert."
+    - "<right>Machtsprung nach vorn <dark>· <muted>Schleichen blockt Bolzen und Klingen"
+  jedi:
+    name: "<white>Jedi-Ritter"
+    weapon: "<white>Lichtschwert"
+    lore:
+      - "<muted>Lichtschwert und die Macht."
+      - "<muted>Stößt Gegner mit der Macht zurück und springt weit."
+      - "<muted>Mit Q wirfst du das Lichtschwert."
+      - "<muted>Lenkt im Schleichen Bolzen ab."
+  bounty-hunter:
+    name: "<white>Kopfgeldjäger"
+    lore:
+      - "<muted>Zwei Pistolen, schnelle und genaue Bolzen."
+      - "<muted>Fliegt mit dem Raketenrucksack, zieht sich mit dem Fesselkabel."
+  sith:
+    name: "<white>Sith-Inquisitor"
+    weapon: "<white>Rotes Lichtschwert"
+    lore:
+      - "<muted>Rotes Lichtschwert und die dunkle Seite der Macht."
+      - "<muted>Wirft das Lichtschwert und würgt Gegner aus der Ferne."
+      - "<muted>Lenkt im Schleichen Bolzen ab."
+  commander:
+    name: "<white>Kommandant"
+    lore:
+      - "<muted>Schweres Gewehr mit starken Bolzen."
+      - "<muted>Ruft einen Orbitalschlag und stärkt Verbündete."
+  champion:
+    name: "<accent>Champion der Ahnenklinge"
+  ability:
+    force-push:
+      name: "<white>Machtstoß"
+      lore:
+        - "<muted>Schleudert Gegner vor dir zurück."
+    saber-throw:
+      name: "<white>Lichtschwertwurf"
+      lore:
+        - "<muted>Das Lichtschwert fliegt los, trifft jeden"
+        - "<muted>Gegner auf seinem Weg und kehrt zurück."
+    force-grip:
+      name: "<white>Machtgriff"
+      lore:
+        - "<muted>Hebt den Gegner im Visier an,"
+        - "<muted>bremst ihn und setzt ihm zu."
+    jetpack:
+      name: "<white>Raketenrucksack"
+      lore:
+        - "<muted>Ein paar Sekunden Schub."
+        - "<muted>Springen hält dich oben, vorwärts treibt dich an."
+    grapple:
+      name: "<white>Fesselkabel"
+      lore:
+        - "<muted>Zieht dich zum Block im Visier."
+    orbital-strike:
+      name: "<white>Orbitalschlag"
+      lore:
+        - "<muted>Wirf den Peilsender: ein roter Strahl markiert"
+        - "<muted>die Stelle. Der erste Einschlag trifft sie direkt."
+        - "<muted>Weitere schwere Einschläge treffen die Umgebung."
+    rally:
+      name: "<white>Sammelruf"
+      lore:
+        - "<muted>Verbündete in der Nähe werden"
+        - "<muted>kurz schneller und zäher."
+  bar: "<hero> <dark>· <white><player> <dark>· <accent><hearts> ❤"
+  cost: "<bullet><muted>Kosten <accent><cost> <muted>Kampfpunkte <dark>· <muted>du hast <accent><points>"
+  pick: "<click>Als Held einsetzen"
+  picked: "<success>✔ Nächster Einsatz als Held"
+  card-taken: "<error>Deine Fraktion hat diesen Helden schon im Feld."
+  card-too-few: "<error>Dir fehlen noch Kampfpunkte."
+  chosen: "<muted>Nächster Einsatz als <accent><hero>"
+  taken: "<error>Deine Fraktion hat schon einen Helden im Feld."
+  too-few-points: "<error>Für <hero> <error>fehlen dir noch Kampfpunkte."
+  missed: "<prefix><error>Der Platz für <hero> <error>ist inzwischen vergeben, du kämpfst mit deiner Klasse."
+  no-target: "<error>Kein Ziel in Sicht."
+  entered: "<prefix><faction> <muted>schickt <hero><muted>: <white><player><muted>!"
+  slain: "<prefix><white><killer> <muted>hat <hero> <white><player> <muted>besiegt!"
+  fallen: "<prefix><hero> <white><player> <muted>hat das Feld verlassen."
+  sidebar:
+    points: "<accent><points><muted>/<cost> Kampfpunkte"
+    ready: "<success>Held bereit <dark>· <accent><points> <muted>Punkte"
+    hero: "<muted>Im Feld als <hero>"
+
+hit:
+  hit: "<white><icon:hit>"
+  headshot: "<icon:headshot>"
+  kill: "<icon:kill>"
+
+killcam:
+  watching: "<muted>Besiegt von <white><killer>"
+
+streak:
+  item: "<accent>Orbitalschlag"
+  lore:
+    - "<muted>Belohnung für deine Serie, einmal nutzbar."
+    - "<right>Peilsender werfen"
+  earned: "<success><kills> Kills in Folge! <muted>Ein <accent>Orbitalschlag <muted>liegt in deiner Leiste."
+
+bot:
+  name: "<tint><faction> · Soldat <number></tint>"

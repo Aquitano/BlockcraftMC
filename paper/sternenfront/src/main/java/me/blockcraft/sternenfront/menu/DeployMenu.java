@@ -9,6 +9,7 @@ import me.blockcraft.sternenfront.game.Faction;
 import me.blockcraft.sternenfront.game.Fighter;
 import me.blockcraft.sternenfront.game.SternenfrontGame;
 import me.blockcraft.sternenfront.game.Spawn;
+import me.blockcraft.sternenfront.hero.Hero;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import org.bukkit.Material;
@@ -21,14 +22,15 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * What a dead player chooses while they watch from above: the class they deploy as, in the upper row, and where, in
- * the lower: the headquarters and every post their faction holds without an enemy in it. The menu redraws every
- * second, so a post lost meanwhile locks and the wait counts down.
+ * What a dead player chooses while they watch from above: the class they deploy as, in the upper row, their faction's
+ * heroes below it, and where, in the lower: the headquarters and every post their faction holds without an enemy in
+ * it. The menu redraws every second, so a post lost meanwhile locks and the wait counts down.
  */
 public final class DeployMenu extends Menu {
 
     private static final int ROWS = 5;
     private static final int STATUS_SLOT = 4;
+    private static final List<Integer> HERO_SLOTS = List.of(21, 23);
     private static final int HEADQUARTERS_SLOT = 29;
     private static final int FIRST_POST_SLOT = 31;
     private static final long TICKS_PER_SECOND = 20;
@@ -52,6 +54,7 @@ public final class DeployMenu extends Menu {
         }
         var fighter = game.fighter(viewer);
         var chosen = fighter.choosing().flatMap(Fighter.Choosing::chosen);
+        var picked = fighter.choosing().flatMap(Fighter.Choosing::hero);
         long wait = game.waitTicks(viewer);
         var status = wait > 0
                 ? messages.get("deploy.status-waiting", Formatter.number("seconds", (wait + TICKS_PER_SECOND - 1) / TICKS_PER_SECOND))
@@ -60,9 +63,14 @@ public final class DeployMenu extends Menu {
         var classes = CombatClass.values();
         for (int index = 0; index < classes.length; index++) {
             var combatClass = classes[index];
-            boolean selected = fighter.combatClass() == combatClass;
+            boolean selected = picked.isEmpty() && fighter.combatClass() == combatClass;
             set(ClassMenu.SLOTS.get(index), game.loadouts().card(combatClass, selected,
                     List.of(messages.get(selected ? "class.selected" : "class.select"))));
+        }
+        var heroes = Hero.of(faction.get());
+        for (int index = 0; index < heroes.size() && index < HERO_SLOTS.size(); index++) {
+            var hero = heroes.get(index);
+            set(HERO_SLOTS.get(index), game.heroes().card(viewer, faction.get(), hero, picked.filter(hero::equals).isPresent()));
         }
         set(HEADQUARTERS_SLOT, spawn(faction.get(), new Spawn.Headquarters(), chosen,
                 Material.valueOf(faction.get().blocks().name() + "_BANNER"), messages.get("deploy.headquarters"), List.of()));
@@ -103,6 +111,12 @@ public final class DeployMenu extends Menu {
         int classIndex = ClassMenu.SLOTS.indexOf(slot);
         if (classIndex >= 0) {
             game.chooseClass(player, CombatClass.values()[classIndex]);
+            return;
+        }
+        int heroIndex = HERO_SLOTS.indexOf(slot);
+        var heroes = game.factionOf(player).map(Hero::of).orElse(List.of());
+        if (heroIndex >= 0 && heroIndex < heroes.size()) {
+            game.chooseHero(player, heroes.get(heroIndex));
             return;
         }
         if (slot == HEADQUARTERS_SLOT) {

@@ -70,6 +70,7 @@ public final class PackArt {
                 ICON_SPECTATOR, ICON_TIME, ICON_EMERALD, ICON_WINNER, ICON_MODE, ICON_OPPONENT, ICON_KILLS), font.resolve("icons.png"));
         write(badges(), font.resolve("badges.png"));
         write(glyph(ICON_ERROR, ERROR), font.resolve("error.png"));
+        write(hits(), font.resolve("hits.png"));
         write(display(), font.resolve("display.png"));
         for (var icon : ICONS.entrySet()) {
             write(pixels(icon.getValue().rows(), icon.getValue().palette()), item.resolve(icon.getKey() + ".png"));
@@ -1807,6 +1808,50 @@ public final class PackArt {
             "RRRWWsRR",
             "RRRRRRRR",
             ".ssssss.",
+    };
+
+    /** The hit marker in the text's colour, then the headshot and the kill in their own red. */
+    static BufferedImage hits() {
+        var image = new BufferedImage(24, 8, BufferedImage.TYPE_INT_ARGB);
+        paint(image, ICON_HIT, 0, 0, Map.of('#', WHITE));
+        paint(image, ICON_HEADSHOT, 8, 0, ERROR);
+        paint(image, ICON_KILL, 16, 0, KILL);
+        return image;
+    }
+
+    static final Map<Character, Integer> KILL = Map.of('h', 0xFFF08A8A, 'R', 0xFFE04E4E, 's', 0xFF9E2B2B, 'k', 0xFF2A0E0E);
+
+    static final String[] ICON_HIT = {
+            "#.....#.",
+            ".#...#..",
+            "........",
+            "........",
+            "........",
+            ".#...#..",
+            "#.....#.",
+            "........",
+    };
+
+    static final String[] ICON_HEADSHOT = {
+            "RR...RR.",
+            "RRs.sRR.",
+            ".s...s..",
+            "........",
+            ".s...s..",
+            "RRs.sRR.",
+            "RR...RR.",
+            "........",
+    };
+
+    static final String[] ICON_KILL = {
+            ".hhhhh..",
+            "RRRRRRR.",
+            "RkkRkkR.",
+            "RkkRkkR.",
+            "RRRsRRR.",
+            ".RsRsR..",
+            "..RRR...",
+            "........",
     };
 
     static final String[] ICON_KILLS = {

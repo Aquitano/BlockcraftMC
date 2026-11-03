@@ -1,19 +1,28 @@
 package me.blockcraft.sternenfront.game;
 
+import me.blockcraft.sternenfront.hero.Hero;
+
 import java.util.Optional;
 
 /**
- * A player's state in a running round besides their faction: the class they deploy as next, whether they are on
- * the field or choosing a spawn, their blaster's heat, and the ticks until which they are protected, hurt last and
- * safe from their next fall.
+ * A player's state in a running round besides their faction: the class they deploy as next, the hero they fight
+ * as, whether they are on the field or choosing a spawn, their blaster's heat, and the ticks until which they are
+ * protected, hurt last and safe from their next fall.
  */
 public final class Fighter {
 
-    /** A dead player choosing: from {@code readyTick} on they may deploy, at {@code autoTick} they do. */
-    public record Choosing(long readyTick, long autoTick, Optional<Spawn> chosen) {
+    /**
+     * A dead player choosing: from {@code readyTick} on they may deploy, at {@code autoTick} they do, as {@code hero}
+     * if they picked one and can still pay for it.
+     */
+    public record Choosing(long readyTick, long autoTick, Optional<Spawn> chosen, Optional<Hero> hero) {
 
         public Choosing choose(Spawn spawn) {
-            return new Choosing(readyTick, autoTick, Optional.of(spawn));
+            return new Choosing(readyTick, autoTick, Optional.of(spawn), hero);
+        }
+
+        public Choosing pick(Optional<Hero> hero) {
+            return new Choosing(readyTick, autoTick, chosen, hero);
         }
     }
 
@@ -23,7 +32,7 @@ public final class Fighter {
     private long protectedUntil;
     private long lastHurt;
     private long fallSafeUntil;
-    private boolean champion;
+    private Optional<Hero> hero = Optional.empty();
 
     public Fighter(Heat.Rules heatRules) {
         this.heat = new Heat(heatRules);
@@ -53,12 +62,12 @@ public final class Fighter {
         return heat;
     }
 
-    /** A fresh deploy: a cold gun, protection until {@code protectedUntil}, no champion. */
-    public void deployed(Heat.Rules heatRules, long protectedUntil) {
+    /** A fresh deploy: a cold gun, protection until {@code protectedUntil}, as {@code hero} or as the class. */
+    public void deployed(Heat.Rules heatRules, long protectedUntil, Optional<Hero> hero) {
         this.choosing = Optional.empty();
         this.heat = new Heat(heatRules);
         this.protectedUntil = protectedUntil;
-        this.champion = false;
+        this.hero = hero;
     }
 
     public boolean isProtected(long tick) {
@@ -85,11 +94,17 @@ public final class Fighter {
         fallSafeUntil = tick;
     }
 
-    public boolean champion() {
-        return champion;
+    public Optional<Hero> hero() {
+        return hero;
     }
 
-    public void champion(boolean champion) {
-        this.champion = champion;
+    public void hero(Optional<Hero> hero) {
+        this.hero = hero;
+    }
+
+    /** The blaster in this fighter's hands: the class's, a gun hero's own, or none for a blade. */
+    public Optional<Blaster> blaster() {
+        return hero.map(Hero::weapon).map(weapon -> weapon instanceof Hero.Weapon.Gun gun ? gun.blaster() : null)
+                .or(() -> hero.isPresent() ? Optional.empty() : Optional.of(combatClass.blaster()));
     }
 }

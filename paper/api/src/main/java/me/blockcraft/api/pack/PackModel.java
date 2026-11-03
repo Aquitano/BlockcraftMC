@@ -51,6 +51,26 @@ public enum PackModel {
     // Bolts only fly on item displays; a client without the pack sees an end rod in the faction's glow.
     STERNENFRONT_BOLT_KOLONIEN(Material.END_ROD, "sternenfront/bolt_kolonien"),
     STERNENFRONT_BOLT_HEGEMONIE(Material.END_ROD, "sternenfront/bolt_hegemonie"),
+    STERNENFRONT_LIGHTSABER_JEDI(Material.DIAMOND_SWORD, "sternenfront/lightsaber_jedi", true),
+    STERNENFRONT_LIGHTSABER_JEDI_OFF(Material.DIAMOND_SWORD, "sternenfront/lightsaber_jedi_off"),
+    STERNENFRONT_LIGHTSABER_SITH(Material.NETHERITE_SWORD, "sternenfront/lightsaber_sith", true),
+    STERNENFRONT_LIGHTSABER_SITH_OFF(Material.NETHERITE_SWORD, "sternenfront/lightsaber_sith_off"),
+    STERNENFRONT_HOOD_JEDI(Material.STONE_BUTTON, "sternenfront/hood_jedi"),
+    STERNENFRONT_MASK_SITH(Material.STONE_BUTTON, "sternenfront/mask_sith"),
+    STERNENFRONT_HELMET_BOUNTY_HUNTER(Material.STONE_BUTTON, "sternenfront/helmet_bounty_hunter"),
+    STERNENFRONT_CAP_COMMANDER(Material.STONE_BUTTON, "sternenfront/cap_commander"),
+    STERNENFRONT_TWIN_PISTOL(Material.GOLDEN_HOE, "sternenfront/twin_pistol"),
+    STERNENFRONT_HEAVY_RIFLE(Material.WOODEN_HOE, "sternenfront/heavy_rifle"),
+    STERNENFRONT_FORCE_PUSH(Material.WIND_CHARGE, "sternenfront/force_push"),
+    STERNENFRONT_FORCE_GRIP(Material.ENDER_EYE, "sternenfront/force_grip"),
+    STERNENFRONT_SABER_THROW(Material.BLAZE_ROD, "sternenfront/saber_throw"),
+    STERNENFRONT_JETPACK(Material.FIREWORK_ROCKET, "sternenfront/jetpack"),
+    STERNENFRONT_GRAPPLE(Material.LEAD, "sternenfront/grapple"),
+    STERNENFRONT_RALLY(Material.NAUTILUS_SHELL, "sternenfront/rally"),
+    STERNENFRONT_ORBITAL_BEACON(Material.ECHO_SHARD, "sternenfront/orbital_beacon"),
+    STERNENFRONT_KYBER_CRYSTAL(Material.AMETHYST_SHARD, "sternenfront/kyber_crystal"),
+    STERNENFRONT_BRUMMI(Material.OBSERVER, "sternenfront/brummi"),
+    STERNENFRONT_SAND_BEAST(Material.SKELETON_SKULL, "sternenfront/sand_beast"),
     TTT_RADAR(Material.COMPASS, "ttt/radar"),
     TTT_DNA_SCANNER(Material.BLAZE_ROD, "ttt/dna_scanner"),
     TTT_GOLDEN_SWORD(Material.GOLDEN_SWORD, "ttt/golden_sword"),
@@ -85,14 +105,28 @@ public enum PackModel {
 
     private final Material fallback;
     private final String path;
+    private final boolean tinted;
 
     PackModel(Material fallback, String path) {
+        this(fallback, path, false);
+    }
+
+    /**
+     * A tinted model takes the colour of its tinted elements from the item: the first colour of its
+     * custom_model_data, as a lightsaber's blade does.
+     */
+    PackModel(Material fallback, String path, boolean tinted) {
         this.fallback = fallback;
         this.path = path;
+        this.tinted = tinted;
     }
 
     public Material fallback() {
         return fallback;
+    }
+
+    public boolean tinted() {
+        return tinted;
     }
 
     /** What the item carries as custom_model_data, and the case the pack selects on. */

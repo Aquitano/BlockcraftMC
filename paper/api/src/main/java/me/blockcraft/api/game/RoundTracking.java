@@ -81,6 +81,10 @@ final class RoundTracking implements Listener {
         healthCheck = Bukkit.getScheduler().runTaskTimer(plugin, this::checkHealth, HEALTH_CHECK_TICKS, HEALTH_CHECK_TICKS);
     }
 
+    void join(Player player) {
+        active.add(player.getUniqueId());
+    }
+
     void forget(Player player) {
         active.remove(player.getUniqueId());
         attacks.forget(player.getUniqueId());

@@ -145,6 +145,15 @@
     },
     {
       "type": "bitmap",
+      "file": "blockcraft:font/hits.png",
+      "ascent": 7,
+      "height": 8,
+      "chars": [
+        "\ue210\ue211\ue212"
+      ]
+    },
+    {
+      "type": "bitmap",
       "file": "blockcraft:font/badges.png",
       "ascent": 7,
       "height": 7,

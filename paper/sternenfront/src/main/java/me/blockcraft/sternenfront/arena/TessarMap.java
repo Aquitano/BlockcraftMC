@@ -15,8 +15,8 @@ import java.util.Random;
  * Wrack von Tessar, built into an empty world at every start: a desert basin between canyon walls, the Kolonien
  * camp with its freighter in the west, the Hegemonie landing platform in the east, and between them on the
  * north-south centre line the Raffinerie (A), the crashed cruiser (B) and the Basar (C), with the temple ruin of
- * the relic in the northern cliff behind A. Uses Bukkit only, so a bare Paper server can build it for a look
- * without the network around it. The same seed builds the same map every time.
+ * the relic in the northern cliff behind A, and the secrets {@link SecretPlaces} hides. Uses Bukkit only, so a bare
+ * Paper server can build it for a look without the network around it. The same seed builds the same map every time.
  */
 public final class TessarMap {
 
@@ -56,6 +56,7 @@ public final class TessarMap {
         new Bazaar(canvas, random).build();
         new Bases(canvas, terrain, random).build();
         new Props(canvas, terrain, random).build();
+        var secrets = new SecretPlaces(canvas, terrain).build();
         var posts = new Posts(canvas);
         var postA = posts.post("raffinerie", 0, POST_A, 6.5, List.of(spot(-5, -53, 0), spot(5, -53, 0), spot(-7, -35, 180), spot(7, -35, 180)));
         var postB = posts.post("wrack", 0, 0, 7, List.of(spot(-5, -6, 0), spot(5, 6, 180), spot(-5, 6, 180), spot(5, -6, 0)));
@@ -72,7 +73,7 @@ public final class TessarMap {
         return new FrontMap(NAME, world,
                 new BoundingBox(Terrain.MIN_X, Terrain.BASE, Terrain.MIN_Z, Terrain.MAX_X + 1, FLOOR + 64, Terrain.MAX_Z + 1),
                 headquarters, List.of(postA, postB, postC), temple.relic(world),
-                at(0, FLOOR + 57, 60, 180, 50), lobby, at(0, FLOOR + 30, 30, 180, 35));
+                at(0, FLOOR + 57, 60, 180, 50), lobby, at(0, FLOOR + 30, 30, 180, 35), secrets);
     }
 
     private Headquarters headquarters(int side) {

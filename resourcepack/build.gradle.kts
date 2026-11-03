@@ -12,15 +12,25 @@ val generateSounds = tasks.register<Exec>("generateSounds") {
     commandLine("python3", "SoundArt.py")
 }
 
+val generateSternenfrontSounds = tasks.register<Exec>("generateSternenfrontSounds") {
+    workingDir(layout.projectDirectory)
+    commandLine("uv", "run", "SternenfrontSounds.py")
+}
+
 val generateProps = tasks.register<Exec>("generateProps") {
     workingDir(layout.projectDirectory)
     commandLine("java", "PropArt.java", "src", "../nexo")
 }
 
+val generateDroids = tasks.register<Exec>("generateDroids") {
+    workingDir(layout.projectDirectory)
+    commandLine("java", "DroidArt.java", "src")
+}
+
 tasks.register("regenerate") {
     group = "build"
     description = "Regenerates textures, sounds, furniture, and vanilla item overrides in resourcepack/src."
-    dependsOn(generateTextures, generateSounds, generateProps, ":paper:api:packOverrides")
+    dependsOn(generateTextures, generateSounds, generateSternenfrontSounds, generateProps, generateDroids, ":paper:api:packOverrides")
 }
 
 val pack = tasks.register<Zip>("pack") {

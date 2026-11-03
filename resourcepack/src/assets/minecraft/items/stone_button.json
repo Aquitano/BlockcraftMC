@@ -5,6 +5,20 @@
     "index": 0,
     "cases": [
       {
+        "when": "blockcraft:sternenfront/cap_commander",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/sternenfront/cap_commander"
+        }
+      },
+      {
+        "when": "blockcraft:sternenfront/helmet_bounty_hunter",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/sternenfront/helmet_bounty_hunter"
+        }
+      },
+      {
         "when": "blockcraft:sternenfront/helmet_hegemonie",
         "model": {
           "type": "minecraft:model",
@@ -16,6 +30,20 @@
         "model": {
           "type": "minecraft:model",
           "model": "blockcraft:item/sternenfront/helmet_kolonien"
+        }
+      },
+      {
+        "when": "blockcraft:sternenfront/hood_jedi",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/sternenfront/hood_jedi"
+        }
+      },
+      {
+        "when": "blockcraft:sternenfront/mask_sith",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/sternenfront/mask_sith"
         }
       },
       {

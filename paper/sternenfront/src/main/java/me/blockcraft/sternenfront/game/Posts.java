@@ -15,6 +15,7 @@ import org.bukkit.DyeColor;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Display;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
 
@@ -130,7 +131,7 @@ public final class Posts {
     }
 
     /** One second of the round for every post; {@code fighters} are the players on the field with their faction. */
-    public List<Event> second(Map<Player, Faction> fighters) {
+    public List<Event> second(Map<LivingEntity, Faction> fighters) {
         var events = new ArrayList<Event>();
         for (int index = 0; index < posts.size(); index++) {
             var post = posts.get(index);
@@ -147,11 +148,12 @@ public final class Posts {
                     case CommandPost.Change.Neutralised neutralised -> neutralised.from().enemy();
                 };
                 recolour(post, change instanceof CommandPost.Change.Captured captured ? captured.by().blocks() : Faction.NEUTRAL);
-                events.add(new Event(current, change, by == Faction.KOLONIEN ? kolonien : hegemonie));
+                events.add(new Event(current, change, (by == Faction.KOLONIEN ? kolonien : hegemonie).stream()
+                        .filter(Player.class::isInstance).map(Player.class::cast).toList()));
             });
             draw(post, index);
             var viewing = new HashSet<UUID>();
-            inside.values().forEach(players -> players.forEach(player -> {
+            inside.values().forEach(players -> players.stream().filter(Player.class::isInstance).map(Player.class::cast).forEach(player -> {
                 viewing.add(player.getUniqueId());
                 player.showBossBar(post.bar);
             }));
