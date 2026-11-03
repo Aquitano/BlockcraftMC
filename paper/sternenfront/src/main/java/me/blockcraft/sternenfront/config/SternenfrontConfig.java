@@ -38,15 +38,6 @@ public record SternenfrontConfig(int playersPerTeam, int fullSeconds, int roundS
 
     public record MedStation(int seconds, double radius, double healPerSecond) { }
 
-    public static void copyDefaults(ConfigurationSection config) {
-        // Bukkit getters with an explicit fallback do not consult the default configuration.
-        config.getValues(true).forEach((path, value) -> {
-            if (!(value instanceof ConfigurationSection)) {
-                config.set(path, value);
-            }
-        });
-    }
-
     public static SternenfrontConfig from(ConfigurationSection config) {
         var abilities = section(config, "abilities");
         var grenade = section(abilities, "grenade");
