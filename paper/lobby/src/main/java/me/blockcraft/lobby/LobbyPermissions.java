@@ -9,6 +9,8 @@ public final class LobbyPermissions {
     public static final String CLEAR_CHAT = "blockcraft.lobby.cc";
     public static final String SET_SPAWN = "blockcraft.lobby.setspawn";
     public static final String SET_HOLO = "blockcraft.lobby.setholo";
+    /** Sees games still in testing, such as TTT 2, in the navigator. */
+    public static final String PREVIEW = "blockcraft.lobby.preview";
 
     private LobbyPermissions() {
     }

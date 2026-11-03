@@ -25,7 +25,8 @@ paper/zombies            Solo or co-op Zombies survival
 paper/cores              Cores: red against blue, two beacons each, after GommeHD's mode
 paper/endergames         EnderGames: kit survival games in a fresh random world, after GommeHD's mode
 paper/ttt                TTT: Traitors, Detectives and Innocents on ClayMC's maps or a town built in code, after GommeHD's mode;
-                         TTT 2 (group ttt2) adds chores and sabotage
+                         TTT 2 (group ttt2) adds chores and sabotage; while it is tested, only players with
+                         blockcraft.lobby.preview see it in the navigator
 paper/skywars            SkyWars: everyone on their own island over the void, after GommeHD's mode
 paper/archive            Archive: the Zeitkapsel, old maps of earlier servers to walk through (see "Zeitkapsel")
 paper/reports            ReportsMenu: staff GUI over the reports table

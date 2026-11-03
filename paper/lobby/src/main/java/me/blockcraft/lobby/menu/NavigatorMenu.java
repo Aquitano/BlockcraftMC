@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Map;
 
-/** Game cards with separate controls for TTT 2, Knockback FFA, the archive and JumpAndRun. */
+/** Game cards with separate controls for Knockback FFA, the archive, JumpAndRun and, for testers, TTT 2. */
 final class NavigatorMenu extends Menu {
 
     private static final Map<Integer, LobbyLocation> GAMES = Map.of(
@@ -30,10 +30,12 @@ final class NavigatorMenu extends Menu {
     private static final int TTT2_SLOT = 13;
 
     private final Menus menus;
+    private final boolean preview;
 
-    NavigatorMenu(Menus menus) {
+    NavigatorMenu(Menus menus, boolean preview) {
         super(6, menus.messages().get("navigator.title"));
         this.menus = menus;
+        this.preview = preview;
         closeButton(ToolbarButton.LEFT);
         toolbar(ToolbarButton.MIDDLE, place(MenuIcon.TOOL_SHOP, "shop", "navigator.shop-lore"), menus::openShop);
         toolbar(ToolbarButton.RIGHT, place(MenuIcon.TOOL_HOME, "spawn", "navigator.spawn-lore"),
@@ -43,7 +45,9 @@ final class NavigatorMenu extends Menu {
         set(JUMP_SLOT, place(MenuIcon.JUMP, "jump", "navigator.lore"));
         set(ARCHIVE_SLOT, game(LobbyLocation.ARCHIVE));
         set(FFA_SLOT, game(LobbyLocation.KNOCKBACKFFA));
-        set(TTT2_SLOT, game(LobbyLocation.TTT2));
+        if (preview) {
+            set(TTT2_SLOT, game(LobbyLocation.TTT2));
+        }
     }
 
     @Override
@@ -86,7 +90,7 @@ final class NavigatorMenu extends Menu {
         var game = switch (slot) {
             case ARCHIVE_SLOT -> LobbyLocation.ARCHIVE;
             case FFA_SLOT -> LobbyLocation.KNOCKBACKFFA;
-            case TTT2_SLOT -> LobbyLocation.TTT2;
+            case TTT2_SLOT -> preview ? LobbyLocation.TTT2 : null;
             default -> GAMES.get(slot);
         };
         if (game != null) {

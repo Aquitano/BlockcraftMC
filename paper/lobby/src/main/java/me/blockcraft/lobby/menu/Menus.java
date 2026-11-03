@@ -92,7 +92,7 @@ public record Menus(
     }
 
     public void openNavigator(Player player) {
-        new NavigatorMenu(this).open(player);
+        new NavigatorMenu(this, player.hasPermission(LobbyPermissions.PREVIEW)).open(player);
     }
 
     public void openShop(Player player) {
