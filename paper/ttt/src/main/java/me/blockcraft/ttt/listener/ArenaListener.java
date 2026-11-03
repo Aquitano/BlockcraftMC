@@ -9,11 +9,13 @@ import me.blockcraft.ttt.game.TttGame;
 import me.blockcraft.ttt.shop.ShopItem;
 import me.blockcraft.ttt.task.TaskItem;
 import org.bukkit.Material;
+import org.bukkit.Tag;
 import org.bukkit.block.Block;
 import org.bukkit.damage.DamageSource;
 import org.bukkit.damage.DamageType;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
+import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -36,18 +38,24 @@ import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.InventoryHolder;
 
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * The round's rules for the town: nothing is built or broken but what the shop sells, explosions leave the houses
  * standing, nobody is hurt or hungry before the roles are drawn, and blows land as hard as the attacker's karma
- * allows. The map's chests and ender chests, the tester's and the traitor trap's buttons, the traitor doors, TTT 2's
- * chores, the corpses and whatever the shop's goods left in the world answer a click.
+ * allows. The town's barrels, workbenches and flower pots answer nothing; its chests and ender chests, the tester's
+ * and the traitor trap's buttons, the traitor doors, TTT 2's chores, the corpses and whatever the shop's goods left in
+ * the world answer a click. A good in hand never keeps a door from opening.
  */
 public final class ArenaListener implements Listener {
 
     private static final double LETHAL = 1000.0;
+    private static final Set<Material> WORKSTATIONS = Set.of(Material.CRAFTING_TABLE, Material.LOOM,
+            Material.CARTOGRAPHY_TABLE, Material.SMITHING_TABLE, Material.STONECUTTER, Material.GRINDSTONE,
+            Material.ENCHANTING_TABLE);
 
     private final TttGame game;
     private final Messages messages;
@@ -101,9 +109,14 @@ public final class ArenaListener implements Listener {
         if (event.getHand() != EquipmentSlot.HAND || !event.getAction().isRightClick()) {
             return;
         }
-        if (block != null && event.getAction() == Action.RIGHT_CLICK_BLOCK && clickBlock(player, block)) {
-            event.setCancelled(true);
-            return;
+        if (block != null && event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+            if (clickBlock(player, block)) {
+                event.setCancelled(true);
+                return;
+            }
+            if (scenery(block)) {
+                event.setUseInteractedBlock(Event.Result.DENY);
+            }
         }
         var hand = event.getItem();
         if (HotbarItem.of(hand, RoundItem.class).isPresent()) {
@@ -111,7 +124,7 @@ public final class ArenaListener implements Listener {
             game.openShop(player);
         } else if (hand != null && game.rolesDrawn()
                 && game.equipment().use(player, hand, Optional.ofNullable(block), event.getBlockFace())) {
-            event.setCancelled(true);
+            event.setUseItemInHand(Event.Result.DENY);
         }
     }
 
@@ -131,6 +144,13 @@ public final class ArenaListener implements Listener {
             game.pressTrap(player);
         }
         return false;
+    }
+
+    /** The town's barrels, workbenches and flower pots are scenery: nothing is stored, made or taken there. */
+    private static boolean scenery(Block block) {
+        var type = block.getType();
+        return WORKSTATIONS.contains(type) || Tag.ANVIL.isTagged(type) || Tag.FLOWER_POTS.isTagged(type)
+                || block.getState(false) instanceof InventoryHolder;
     }
 
     /** A corpse, or something the shop's goods left in the world: a time bomb, a motion sensor. */
