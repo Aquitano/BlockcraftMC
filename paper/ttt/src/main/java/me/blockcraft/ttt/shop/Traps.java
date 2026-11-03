@@ -16,8 +16,6 @@ import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -35,8 +33,6 @@ import java.util.function.Predicate;
  * out unless someone cuts the right wire first. Only its owner is told which wire that is.
  */
 final class Traps {
-
-    private static final int HOLD_AMPLIFIER = 6;
 
     private record BearTrap(UUID owner, ItemDisplay display) {
     }
@@ -68,19 +64,21 @@ final class Traps {
     private final Gadgets gadgets;
     private final Predicate<Player> spared;
     private final Function<ShopItem, ItemStack> look;
+    private final Holds holds;
     private final Map<Block, UUID> mines = new HashMap<>();
     private final Map<Block, UUID> fakeChests = new HashMap<>();
     private final Map<Block, BearTrap> bearTraps = new HashMap<>();
     private final Map<UUID, Bomb> bombs = new HashMap<>();
 
     Traps(TttConfig.Shop config, Messages messages, Culprits culprits, Gadgets gadgets, Predicate<Player> spared,
-          Function<ShopItem, ItemStack> look) {
+          Function<ShopItem, ItemStack> look, Holds holds) {
         this.config = config;
         this.messages = messages;
         this.culprits = culprits;
         this.gadgets = gadgets;
         this.spared = spared;
         this.look = look;
+        this.holds = holds;
     }
 
     /** A landmine or fake chest placed as a block. */
@@ -156,8 +154,7 @@ final class Traps {
         bearTraps.remove(to);
         gadgets.remove(trap.display());
         int ticks = config.bearTrap().seconds() * 20;
-        player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, ticks, HOLD_AMPLIFIER, false, false, true));
-        player.addPotionEffect(new PotionEffect(PotionEffectType.MINING_FATIGUE, ticks, 2, false, false, false));
+        holds.hold(player, ticks);
         player.getWorld().playSound(to.getLocation(), Sound.BLOCK_IRON_TRAPDOOR_CLOSE, 1.6f, 0.6f);
         player.getWorld().playSound(to.getLocation(), Sound.BLOCK_ANVIL_LAND, 0.6f, 1.6f);
         player.sendMessage(messages.get("shop.bear-trap.caught"));

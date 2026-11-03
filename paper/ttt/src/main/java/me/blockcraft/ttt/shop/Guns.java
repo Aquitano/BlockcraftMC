@@ -10,8 +10,6 @@ import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
 import java.util.HashMap;
@@ -30,19 +28,20 @@ final class Guns {
 
     private static final int PISTOL_COOLDOWN = 15;
     private static final int TASER_COOLDOWN = 20;
-    private static final int STILL_AMPLIFIER = 6;
     private static final double RAY_SIZE = 0.25;
 
     private final TttConfig.Shop config;
     private final Messages messages;
     private final Supplier<List<Player>> alive;
+    private final Holds holds;
     private final Map<UUID, Integer> readyAt = new HashMap<>();
     private final Map<UUID, Integer> stunnedUntil = new HashMap<>();
 
-    Guns(TttConfig.Shop config, Messages messages, Supplier<List<Player>> alive) {
+    Guns(TttConfig.Shop config, Messages messages, Supplier<List<Player>> alive, Holds holds) {
         this.config = config;
         this.messages = messages;
         this.alive = alive;
+        this.holds = holds;
     }
 
     void fire(Player shooter, ShopItem gun, ItemStack hand) {
@@ -82,7 +81,7 @@ final class Guns {
     private void stun(Player shooter, Player victim) {
         int ticks = config.taser().seconds() * 20;
         stunnedUntil.put(victim.getUniqueId(), Bukkit.getCurrentTick() + ticks);
-        victim.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, ticks, STILL_AMPLIFIER, false, false, true));
+        holds.hold(victim, ticks);
         victim.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, victim.getLocation().add(0, 1, 0), 30, 0.3, 0.6, 0.3, 0.1);
         victim.getWorld().playSound(victim.getLocation(), Sound.ENTITY_BEE_STING, 1f, 0.6f);
         victim.sendMessage(messages.get("shop.taser.hit-you", Placeholder.unparsed("player", shooter.getName())));

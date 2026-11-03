@@ -55,6 +55,7 @@ import org.bukkit.plugin.Plugin;
 
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -110,6 +111,8 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
     private final Set<UUID> ownFault = new HashSet<>();
     /** The name each player had when the roles were drawn, so a traitor who leaves is still named as seen. */
     private final Map<UUID, String> names = new HashMap<>();
+    /** When each open traitor door shuts, so a second traitor's click keeps it open the full time. */
+    private final Map<Block, Integer> doorsClosing = new HashMap<>();
     private Optional<Town> town = Optional.empty();
     private Optional<Tester> tester = Optional.empty();
     private Optional<TaskRound> tasks = Optional.empty();
@@ -525,10 +528,12 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
         }
         channels.start(medic, remains.location(), settings.holdSeconds(), messages.get("shop.defibrillator.work"), () -> {
             var patient = Bukkit.getPlayer(remains.player());
-            if (!corpses.isCorpse(corpse) || patient == null || !removeOne(medic, ShopItem.DEFIBRILLATOR) || !round.revive(patient)) {
+            var defibrillator = held(medic, ShopItem.DEFIBRILLATOR);
+            if (!corpses.isCorpse(corpse) || patient == null || defibrillator.isEmpty() || !round.revive(patient)) {
                 medic.sendMessage(messages.get("shop.defibrillator.failed"));
                 return;
             }
+            defibrillator.get().subtract();
             corpses.remove(corpse);
             PlayerReset.reset(patient, GameMode.SURVIVAL);
             config.combat().apply(patient);
@@ -560,9 +565,13 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
         var halves = List.of(door.get(), door.get().getRelative(BlockFace.UP));
         setOpen(halves, true);
         player.getWorld().playSound(door.get().getLocation(), Sound.BLOCK_IRON_DOOR_OPEN, 1f, 1f);
+        int closeAt = Bukkit.getCurrentTick() + (int) TRAITOR_DOOR_TICKS;
+        doorsClosing.put(door.get(), closeAt);
         Tasks.later(plugin, TRAITOR_DOOR_TICKS, () -> {
-            setOpen(halves, false);
-            door.get().getWorld().playSound(door.get().getLocation(), Sound.BLOCK_IRON_DOOR_CLOSE, 1f, 1f);
+            if (doorsClosing.remove(door.get(), closeAt)) {
+                setOpen(halves, false);
+                door.get().getWorld().playSound(door.get().getLocation(), Sound.BLOCK_IRON_DOOR_CLOSE, 1f, 1f);
+            }
         });
         return true;
     }
@@ -593,14 +602,10 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
         }
     }
 
-    private static boolean removeOne(Player player, ShopItem good) {
-        for (var stack : player.getInventory().getContents()) {
-            if (stack != null && HotbarItem.of(stack, ShopItem.class).filter(item -> item == good).isPresent()) {
-                stack.subtract();
-                return true;
-            }
-        }
-        return false;
+    private static Optional<ItemStack> held(Player player, ShopItem good) {
+        return Arrays.stream(player.getInventory().getContents())
+                .filter(stack -> HotbarItem.of(stack, ShopItem.class).filter(item -> item == good).isPresent())
+                .findFirst();
     }
 
     /** A chore was done: the sidebars show it, and the innocents may have finished. */

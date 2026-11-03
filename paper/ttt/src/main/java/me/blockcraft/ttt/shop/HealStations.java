@@ -62,14 +62,20 @@ final class HealStations {
         return true;
     }
 
+    /** Over a copy, because a poisoned station's kill can end the round and clear the stations mid-tick. */
     void tick() {
-        stations.entrySet().removeIf(entry -> {
-            var block = entry.getKey();
-            var station = entry.getValue();
+        for (var block : List.copyOf(stations.keySet())) {
+            var station = stations.get(block);
+            if (station == null) {
+                continue;
+            }
             station.left--;
             var center = block.getLocation().add(0.5, 1.0, 0.5);
             double radius = config.radius() * config.radius();
             for (var player : alive.get()) {
+                if (!stations.containsKey(block)) {
+                    return;
+                }
                 if (!player.getWorld().equals(center.getWorld()) || player.getLocation().distanceSquared(center) > radius) {
                     continue;
                 }
@@ -79,12 +85,10 @@ final class HealStations {
                 });
             }
             center.getWorld().spawnParticle(Particle.HEART, center, 2, 0.6, 0.3, 0.6);
-            if (station.left <= 0) {
+            if (station.left <= 0 && stations.remove(block) != null) {
                 BlockChanges.set(block, Material.AIR);
-                return true;
             }
-            return false;
-        });
+        }
     }
 
     void clear() {

@@ -53,6 +53,7 @@ public final class Equipment {
     private final Supplier<List<Player>> alive;
     private final Culprits culprits = new Culprits();
     private final Gadgets gadgets = new Gadgets();
+    private final Holds holds;
     private final Traps traps;
     private final Guns guns;
     private final Signals signals;
@@ -70,8 +71,9 @@ public final class Equipment {
         this.messages = messages;
         this.roles = roles;
         this.alive = alive;
-        this.traps = new Traps(config, messages, culprits, gadgets, this::isTraitor, item -> item(item, 1));
-        this.guns = new Guns(config, messages, alive);
+        this.holds = new Holds(plugin);
+        this.traps = new Traps(config, messages, culprits, gadgets, this::isTraitor, item -> item(item, 1), holds);
+        this.guns = new Guns(config, messages, alive, holds);
         this.signals = new Signals(config, messages, gadgets, this::isTraitor, alive, traps::hidden, item -> item(item, 1));
         this.healStations = new HealStations(config.healStation(), messages, culprits, alive);
         this.masks = new Masks(plugin, messages);
@@ -91,6 +93,7 @@ public final class Equipment {
         gadgets.clear();
         traps.clear();
         guns.clear();
+        holds.clear();
         signals.clear();
         healStations.clear();
         culprits.clear();
@@ -251,6 +254,7 @@ public final class Equipment {
         vests.remove(player.getUniqueId());
         spoofers.remove(player.getUniqueId());
         guns.forget(player);
+        holds.release(player);
         signals.forget(player);
     }
 

@@ -12,9 +12,11 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Supplier;
 
@@ -53,6 +55,7 @@ public final class CrimeScenes {
     private final Map<UUID, Scene> scenes = new HashMap<>();
     private final List<BukkitTask> playing = new ArrayList<>();
     private final List<Mannequin> figures = new ArrayList<>();
+    private final Set<UUID> watching = new HashSet<>();
     private BukkitTask recorder;
 
     public CrimeScenes(Plugin plugin, Supplier<List<Player>> alive, int seconds) {
@@ -82,18 +85,24 @@ public final class CrimeScenes {
         scenes.put(victim.getUniqueId(), new Scene(victim.getUniqueId(), cast, frames, framesAfter));
     }
 
-    /** Plays the scene of {@code victim}'s death to {@code viewer}; false if there is none. */
+    /**
+     * Plays the scene of {@code victim}'s death to {@code viewer}, one scene at a time; false if there is none. A
+     * scene still recording the moments after the death plays on as they come in.
+     */
     public boolean play(Player viewer, UUID victim) {
         var scene = scenes.get(victim);
         if (scene == null || scene.frames.isEmpty()) {
             return false;
+        }
+        if (!watching.add(viewer.getUniqueId())) {
+            return true;
         }
         var cast = new HashMap<UUID, Mannequin>();
         for (var id : scene.cast) {
             scene.frames.stream().map(frame -> frame.get(id)).filter(Objects::nonNull).findFirst()
                     .ifPresent(start -> cast.put(id, figure(viewer, start.at(), id.equals(scene.victim))));
         }
-        var frames = List.copyOf(scene.frames);
+        var frames = scene.frames;
         var fallen = Mannequin.validPoses().contains(Pose.SLEEPING) ? Pose.SLEEPING : Pose.SWIMMING;
         playing.add(new BukkitRunnable() {
             private int index;
@@ -106,6 +115,7 @@ public final class CrimeScenes {
                         figure.remove();
                     });
                     playing.removeIf(task -> task.getTaskId() == getTaskId());
+                    watching.remove(viewer.getUniqueId());
                     cancel();
                     return;
                 }
@@ -133,6 +143,7 @@ public final class CrimeScenes {
         playing.clear();
         figures.forEach(Mannequin::remove);
         figures.clear();
+        watching.clear();
         recent.clear();
         scenes.clear();
     }
