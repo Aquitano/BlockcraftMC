@@ -108,6 +108,31 @@ public class PackOverridesTest {
         return PACK.resolve("assets").resolve(parts[0]).resolve(kind).resolve(parts[1] + extension);
     }
 
+    @Test
+    public void sharedBlazeRodModelsKeepTextureCoordinatesInsideTheAtlas() throws IOException {
+        for (var drawn : PackOverrides.cases().get("blaze_rod").values()) {
+            var model = read(asset(drawn.model(), "models", ".json"));
+            for (var element : model.getAsJsonArray("elements")) {
+                var box = element.getAsJsonObject();
+                for (var entry : box.getAsJsonObject("faces").entrySet()) {
+                    var face = entry.getValue().getAsJsonObject();
+                    if (face.has("uv")) {
+                        for (var coordinate : face.getAsJsonArray("uv")) {
+                            assertTrue(drawn.model(), coordinate.getAsDouble() >= 0 && coordinate.getAsDouble() <= 16);
+                        }
+                    } else {
+                        for (var key : new String[] {"from", "to"}) {
+                            for (var coordinate : box.getAsJsonArray(key)) {
+                                assertTrue(drawn.model() + " needs explicit UVs outside 0..16",
+                                        coordinate.getAsDouble() >= 0 && coordinate.getAsDouble() <= 16);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     private static JsonObject read(Path file) throws IOException {
         return JsonParser.parseString(Files.readString(file)).getAsJsonObject();
     }
