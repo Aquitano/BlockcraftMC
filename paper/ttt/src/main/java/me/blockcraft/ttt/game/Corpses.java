@@ -1,5 +1,6 @@
 package me.blockcraft.ttt.game;
 
+import me.blockcraft.api.BlockcraftApi;
 import com.destroystokyo.paper.profile.PlayerProfile;
 import io.papermc.paper.datacomponent.item.ResolvableProfile;
 import me.blockcraft.api.sound.Sounds;
@@ -109,7 +110,7 @@ public final class Corpses {
             Bukkit.broadcast(messages.get("corpse.found", who, Placeholder.unparsed("finder", finder.getName())));
             Bukkit.getOnlinePlayers().forEach(Sounds.NOTIFY::play);
         } else if (!scanner) {
-            finder.sendMessage(messages.get("corpse.known", who));
+            BlockcraftApi.get().notifications().feedback(finder, messages.get("corpse.known", who));
         }
         if (scanner) {
             finder.sendMessage(corpse.killer

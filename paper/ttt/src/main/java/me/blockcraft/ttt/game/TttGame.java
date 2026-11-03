@@ -24,6 +24,7 @@ import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.ttt.arena.MapVote;
+import me.blockcraft.ttt.arena.TesterRoom;
 import me.blockcraft.ttt.arena.Town;
 import me.blockcraft.ttt.config.TttConfig;
 import me.blockcraft.ttt.config.TttMode;
@@ -272,11 +273,10 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
         town = Optional.of(built);
         tester = Optional.of(new Tester(plugin, built.tester(), config.tester(), messages, round::players, equipment::showsAsTraitor));
         tester.get().showLabel();
-        var traitorSpots = new ArrayList<>(built.traitorDoors());
-        built.tester().trap().ifPresent(trap -> traitorSpots.add(trap.button()));
         tasks = built.tasks().filter(layout -> mode == TttMode.TASKS).map(layout -> new TaskRound(plugin, config.tasks(),
-                messages, layout, built.tester().button(), List.copyOf(traitorSpots), channels, this::roleOf, round::players,
-                this::choresChanged));
+                messages, layout, built.tester().button(), built.traitorDoors(),
+                built.tester().trap().map(TesterRoom.Trap::button), () -> tester.filter(Tester::trapUsed).isPresent(),
+                channels, this::roleOf, round::players, this::choresChanged));
         round.enter(GamePhase.INGAME);
         stage = Stage.PREPARATION;
         int index = 0;
@@ -437,7 +437,7 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
             return;
         }
         if (tester.isPresent() && equipment.jammed(tester.get().buttonLocation())) {
-            player.sendMessage(messages.get("shop.jammer.blocked"));
+            BlockcraftApi.get().notifications().feedback(player, messages.get("shop.jammer.blocked"));
             Sounds.MENU_DENY.play(player);
             return;
         }
@@ -475,7 +475,7 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
         if (tool.filter(item -> item == ShopItem.LIGHTER).isPresent()) {
             if (corpses.burn(corpse)) {
                 hand.subtract();
-                finder.sendMessage(messages.get("shop.lighter.burned"));
+                BlockcraftApi.get().notifications().feedback(finder, messages.get("shop.lighter.burned"));
                 refreshAll();
             }
             return;
@@ -484,7 +484,7 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
             corpses.takeFace(corpse).ifPresentOrElse(remains -> {
                 hand.subtract();
                 equipment.wearMask(finder, remains.name(), remains.profile());
-            }, () -> finder.sendMessage(messages.get("shop.mask.no-face")));
+            }, () -> BlockcraftApi.get().notifications().feedback(finder, messages.get("shop.mask.no-face")));
             return;
         }
         corpses.inspect(finder, corpse, tool.filter(item -> item == ShopItem.DNA_SCANNER).isPresent())
@@ -497,9 +497,9 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
             defibrillate(finder, corpse, remains.get());
         } else if (tool.filter(item -> item == ShopItem.CRIME_CAMERA).isPresent()) {
             if (equipment.jammed(finder.getLocation())) {
-                finder.sendMessage(messages.get("shop.jammer.blocked"));
+                BlockcraftApi.get().notifications().feedback(finder, messages.get("shop.jammer.blocked"));
             } else if (!crimeScenes.play(finder, remains.get().player())) {
-                finder.sendMessage(messages.get("shop.crime-camera.nothing"));
+                BlockcraftApi.get().notifications().feedback(finder, messages.get("shop.crime-camera.nothing"));
             }
         }
     }
@@ -508,11 +508,11 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
     private void defibrillate(Player medic, Entity corpse, Corpses.Remains remains) {
         var settings = config.shop().defibrillator();
         if (remains.role() == Role.TRAITOR) {
-            medic.sendMessage(messages.get("shop.defibrillator.traitor"));
+            BlockcraftApi.get().notifications().feedback(medic, messages.get("shop.defibrillator.traitor"));
             return;
         }
         if (Bukkit.getCurrentTick() - remains.diedAt() > settings.windowSeconds() * 20) {
-            medic.sendMessage(messages.get("shop.defibrillator.too-late"));
+            BlockcraftApi.get().notifications().feedback(medic, messages.get("shop.defibrillator.too-late"));
             return;
         }
         if (channels.busy(medic)) {
@@ -522,7 +522,7 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
             var patient = Bukkit.getPlayer(remains.player());
             var defibrillator = held(medic, ShopItem.DEFIBRILLATOR);
             if (!corpses.isCorpse(corpse) || patient == null || defibrillator.isEmpty() || !round.revive(patient)) {
-                medic.sendMessage(messages.get("shop.defibrillator.failed"));
+                BlockcraftApi.get().notifications().feedback(medic, messages.get("shop.defibrillator.failed"));
                 return;
             }
             defibrillator.get().subtract();

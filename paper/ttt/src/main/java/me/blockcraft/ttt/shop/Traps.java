@@ -1,5 +1,6 @@
 package me.blockcraft.ttt.shop;
 
+import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.game.BlockChanges;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.common.message.Messages;
@@ -96,7 +97,7 @@ final class Traps {
     /** A bear trap or time bomb set down into {@code space}; false if there is no room. */
     boolean set(Player owner, ShopItem item, Block space) {
         if (!Gadgets.fits(space) || bearTraps.containsKey(space) || bombs.values().stream().anyMatch(bomb -> bomb.space.equals(space))) {
-            owner.sendMessage(messages.get("shop.no-room"));
+            BlockcraftApi.get().notifications().feedback(owner, messages.get("shop.no-room"));
             Sounds.MENU_DENY.play(owner);
             return false;
         }
@@ -104,7 +105,7 @@ final class Traps {
         var display = gadgets.show(space, yaw, look.apply(item));
         if (item == ShopItem.BEAR_TRAP) {
             bearTraps.put(space, new BearTrap(owner.getUniqueId(), display));
-            owner.sendMessage(messages.get("shop.bear-trap.set"));
+            BlockcraftApi.get().notifications().feedback(owner, messages.get("shop.bear-trap.set"));
             return true;
         }
         var wires = DefuseMenu.Wire.first(config.timeBomb().wires());
@@ -136,7 +137,7 @@ final class Traps {
             return false;
         }
         if (spared.test(player)) {
-            player.sendMessage(messages.get("shop.fake-chest-own"));
+            BlockcraftApi.get().notifications().feedback(player, messages.get("shop.fake-chest-own"));
             return true;
         }
         fakeChests.remove(block);
@@ -157,7 +158,7 @@ final class Traps {
         holds.hold(player, ticks);
         player.getWorld().playSound(to.getLocation(), Sound.BLOCK_IRON_TRAPDOOR_CLOSE, 1.6f, 0.6f);
         player.getWorld().playSound(to.getLocation(), Sound.BLOCK_ANVIL_LAND, 0.6f, 1.6f);
-        player.sendMessage(messages.get("shop.bear-trap.caught"));
+        BlockcraftApi.get().notifications().feedback(player, messages.get("shop.bear-trap.caught"));
         culprits.hurt(player, config.bearTrap().damage(), trap.owner());
     }
 
@@ -180,12 +181,12 @@ final class Traps {
         }
         gadgets.remove(bomb.display, bomb.hitbox, bomb.timer);
         if (wire == bomb.wire) {
-            cutter.sendMessage(messages.get("shop.time-bomb.defused"));
+            BlockcraftApi.get().notifications().feedback(cutter, messages.get("shop.time-bomb.defused"));
             Sounds.NOTE_PLING.play(cutter);
             bomb.space.getWorld().playSound(bomb.space.getLocation(), Sound.ENTITY_SHEEP_SHEAR, 1f, 1f);
             return;
         }
-        cutter.sendMessage(messages.get("shop.time-bomb.wrong"));
+        BlockcraftApi.get().notifications().feedback(cutter, messages.get("shop.time-bomb.wrong"));
         culprits.explode(bomb.space.getLocation().add(0.5, 0.2, 0.5), bomb.owner, config.timeBomb().power());
     }
 

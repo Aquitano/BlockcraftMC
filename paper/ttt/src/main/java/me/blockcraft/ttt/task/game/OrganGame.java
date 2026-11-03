@@ -96,6 +96,7 @@ public final class OrganGame extends ChoreGame {
     }
 
     private void replay() {
+        dim();
         listening = true;
         position = -LEAD_IN_STEPS;
         answered = 0;
@@ -104,8 +105,7 @@ public final class OrganGame extends ChoreGame {
 
     private void step(Player player) {
         if (lit >= 0) {
-            show(lit, false);
-            lit = -1;
+            dim();
             return;
         }
         if (!listening) {
@@ -122,9 +122,17 @@ public final class OrganGame extends ChoreGame {
     }
 
     private void light(Player player, int key) {
+        dim();
         lit = key;
         show(key, true);
         Sounds.NOTE_PLING.note(player, PITCH[key]);
+    }
+
+    private void dim() {
+        if (lit >= 0) {
+            show(lit, false);
+            lit = -1;
+        }
     }
 
     private void show(int key, boolean on) {

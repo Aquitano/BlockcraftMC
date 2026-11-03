@@ -1,5 +1,6 @@
 package me.blockcraft.ttt.shop;
 
+import me.blockcraft.api.BlockcraftApi;
 import com.destroystokyo.paper.profile.PlayerProfile;
 import me.blockcraft.api.item.HotbarItem;
 import me.blockcraft.api.item.Items;
@@ -240,7 +241,7 @@ public final class Equipment {
     /** Puts the mask on: {@code wearer} looks and is named like the dead for a while. */
     public void wearMask(Player wearer, String name, PlayerProfile face) {
         masks.wear(wearer, name, face, config.maskSeconds());
-        wearer.sendMessage(messages.get("shop.mask.worn"));
+        BlockcraftApi.get().notifications().feedback(wearer, messages.get("shop.mask.worn"));
     }
 
     /** The player who owns the good that dealt {@code source}, even if they are dead now. */

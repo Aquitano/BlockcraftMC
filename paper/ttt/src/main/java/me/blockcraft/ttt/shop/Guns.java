@@ -1,5 +1,6 @@
 package me.blockcraft.ttt.shop;
 
+import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.game.ShotEvent;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.ttt.config.TttConfig;
@@ -84,8 +85,8 @@ final class Guns {
         holds.hold(victim, ticks);
         victim.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, victim.getLocation().add(0, 1, 0), 30, 0.3, 0.6, 0.3, 0.1);
         victim.getWorld().playSound(victim.getLocation(), Sound.ENTITY_BEE_STING, 1f, 0.6f);
-        victim.sendMessage(messages.get("shop.taser.hit-you", Placeholder.unparsed("player", shooter.getName())));
-        shooter.sendMessage(messages.get("shop.taser.hit", Placeholder.unparsed("player", victim.getName())));
+        BlockcraftApi.get().notifications().feedback(victim, messages.get("shop.taser.hit-you", Placeholder.unparsed("player", shooter.getName())));
+        BlockcraftApi.get().notifications().feedback(shooter, messages.get("shop.taser.hit", Placeholder.unparsed("player", victim.getName())));
     }
 
     private Optional<Player> target(Player shooter, double range) {

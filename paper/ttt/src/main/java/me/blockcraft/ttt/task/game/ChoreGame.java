@@ -3,6 +3,7 @@ package me.blockcraft.ttt.task.game;
 import me.blockcraft.api.menu.Menu;
 import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.text.Component;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -14,10 +15,13 @@ import org.bukkit.scheduler.BukkitRunnable;
  */
 public abstract class ChoreGame extends Menu {
 
+    private static final int OPENING_TICKS = 5;
+
     protected final Plugin plugin;
     protected final Messages messages;
     private final Runnable solved;
     private boolean over;
+    private int playedAt;
 
     protected ChoreGame(Plugin plugin, int rows, Messages messages, Component title, Runnable solved) {
         super(rows, title);
@@ -29,7 +33,14 @@ public abstract class ChoreGame extends Menu {
 
     /** Opens the game; {@link #started} runs once it shows. */
     public final void play(Player player) {
+        playedAt = Bukkit.getCurrentTick();
         open(player, this::started);
+    }
+
+    /** Whether {@code player} is in this game or it is still opening for them, so that another click must not replace it. */
+    public final boolean busy(Player player) {
+        return !over && (player.getOpenInventory().getTopInventory().getHolder(false) == this
+                || Bukkit.getCurrentTick() - playedAt < OPENING_TICKS);
     }
 
     /** Where a game that moves on its own starts moving, now that {@code player} sees it. */

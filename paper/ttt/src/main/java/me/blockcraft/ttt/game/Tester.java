@@ -18,6 +18,9 @@ import org.bukkit.entity.Display;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.util.Transformation;
+import org.joml.AxisAngle4f;
+import org.joml.Vector3f;
 
 import java.time.Duration;
 import java.util.HashMap;
@@ -38,7 +41,8 @@ import java.util.function.Supplier;
 public final class Tester {
 
     private static final double LABEL_LIFT = 1.4;
-    private static final float LABEL_VIEW_RANGE = 1f;
+    private static final float LABEL_VIEW_RANGE = 4f;
+    private static final float LABEL_SCALE = 2f;
 
     private final Plugin plugin;
     private final TesterRoom room;
@@ -87,6 +91,8 @@ public final class Tester {
             entity.setShadowed(true);
             entity.setBrightness(new Display.Brightness(15, 15));
             entity.setViewRange(LABEL_VIEW_RANGE);
+            entity.setTransformation(new Transformation(new Vector3f(), new AxisAngle4f(), new Vector3f(LABEL_SCALE),
+                    new AxisAngle4f()));
         });
     }
 

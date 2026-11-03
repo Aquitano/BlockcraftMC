@@ -1,5 +1,6 @@
 package me.blockcraft.ttt.shop;
 
+import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.game.BlockChanges;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.ttt.config.TttConfig;
@@ -53,11 +54,11 @@ final class HealStations {
     boolean poison(Player poisoner, Block block) {
         var station = stations.get(block);
         if (station == null || station.poisoner.isPresent()) {
-            poisoner.sendMessage(messages.get("shop.poison.nothing"));
+            BlockcraftApi.get().notifications().feedback(poisoner, messages.get("shop.poison.nothing"));
             return false;
         }
         station.poisoner = Optional.of(poisoner.getUniqueId());
-        poisoner.sendMessage(messages.get("shop.poison.done"));
+        BlockcraftApi.get().notifications().feedback(poisoner, messages.get("shop.poison.done"));
         poisoner.playSound(block.getLocation(), Sound.ITEM_BOTTLE_EMPTY, 0.6f, 0.8f);
         return true;
     }

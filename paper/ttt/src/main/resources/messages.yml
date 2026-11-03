@@ -29,7 +29,7 @@ roles:
     detective: "<muted>Finde die Traitor. Alle vertrauen dir."
     innocent: "<muted>Überlebe und finde die Traitor."
   goal-tasks:
-    traitor: "<muted>Töte alle Innocents. Sabotage findest du im Shop."
+    traitor: "<muted>Töte alle Innocents und Detectives. Sabotage im Shop."
     detective: "<muted>Finde die Traitor. Deine Aufgaben zeigt das <accent><bold>!"
     innocent: "<muted>Überlebe. Deine Aufgaben zeigt das <accent><bold>!"
   partners: "<prefix><muted>Deine Traitor-Partner<dark>: <error><players> <dark>· <muted>Schreiben mit <accent>/tc"
@@ -75,25 +75,25 @@ shop:
   bought: "<muted>Gekauft<dark>: <accent><item>"
   earned: "<muted>Du hast jetzt <accent><points> Punkte<muted>."
   owned: "<error>Das hast du schon."
-  no-room: "<prefix><error>Dafür ist hier kein Platz. Stell es auf freien Boden."
-  fake-chest-own: "<prefix><muted>Das ist eine Falle für die anderen."
-  radar-expired: "<prefix><muted>Dein Radar ist erloschen."
+  no-room: "<error>Dafür ist hier kein Platz. Stell es auf freien Boden."
+  fake-chest-own: "<muted>Das ist eine Falle für die anderen."
+  radar-expired: "<muted>Dein Radar ist erloschen."
   radar-distance: "<muted>Radar<dark>: <accent><distance> Blöcke"
   golden-sword-wrong: "<prefix><error>Das war kein Traitor. Das goldene Schwert richtet sich gegen dich."
   mask:
-    worn: "<prefix><muted>Du trägst jetzt ein fremdes Gesicht. Es hält nicht lange."
-    fallen: "<prefix><muted>Die Maske ist abgefallen. Du bist wieder du selbst."
-    no-face: "<prefix><error>Dieser Leiche kannst du kein Gesicht mehr nehmen."
+    worn: "<muted>Du trägst jetzt ein fremdes Gesicht. Es hält nicht lange."
+    fallen: "<muted>Die Maske ist abgefallen. Du bist wieder du selbst."
+    no-face: "<error>Dieser Leiche kannst du kein Gesicht mehr nehmen."
   lighter:
-    burned: "<prefix><muted>Die Leiche ist verbrannt. Niemand wird je wissen, wer das war."
+    burned: "<muted>Die Leiche ist verbrannt. Niemand wird je wissen, wer das war."
   time-bomb:
     title: "<arrow><ttt>TTT <dark>· <muted>Zeitbombe"
     timer: "<error><bold><seconds>"
     armed: "<prefix><muted>Die Bombe tickt, <accent><seconds> Sekunden<muted>. Der richtige Draht ist <accent><wire><muted>."
     wire: "<arrow><muted>Draht<dark>: <accent><wire>"
     cut: "<click>Durchschneiden"
-    defused: "<prefix><success>Entschärft. Das war knapp."
-    wrong: "<prefix><error>Falscher Draht!"
+    defused: "<success>Entschärft. Das war knapp."
+    wrong: "<error>Falscher Draht!"
     wires:
       red: "rot"
       blue: "blau"
@@ -103,34 +103,34 @@ shop:
       black: "schwarz"
       purple: "lila"
   bear-trap:
-    set: "<prefix><muted>Die Bärenfalle liegt bereit."
-    caught: "<prefix><error>Du bist in eine Bärenfalle getreten!"
+    set: "<muted>Die Bärenfalle liegt bereit."
+    caught: "<error>Du bist in eine Bärenfalle getreten!"
   poison:
-    done: "<prefix><muted>Die Heilstation ist vergiftet. Sie sieht aus wie vorher."
-    nothing: "<prefix><error>Träufle das Gift auf eine Heilstation, die noch sauber ist."
+    done: "<muted>Die Heilstation ist vergiftet. Sie sieht aus wie vorher."
+    nothing: "<error>Träufle das Gift auf eine Heilstation, die noch sauber ist."
   jammer:
-    started: "<prefix><muted>Der Störsender läuft <accent><seconds> Sekunden<muted>. Um dich herum funkt nichts mehr."
-    stopped: "<prefix><muted>Dein Störsender ist aus."
+    started: "<muted>Der Störsender läuft <accent><seconds> Sekunden<muted>. Um dich herum funkt nichts mehr."
+    stopped: "<muted>Dein Störsender ist aus."
     static: "<muted>Rauschen<dark>: <error>gestört"
-    blocked: "<prefix><error>Hier stört etwas. Das Gerät zeigt nur Rauschen."
+    blocked: "<error>Hier stört etwas. Das Gerät zeigt nur Rauschen."
   taser:
-    hit: "<prefix><muted>Du hast <accent><player> <muted>getasert."
-    hit-you: "<prefix><error><player> hat dich getasert! <muted>Du kannst dich kurz nicht wehren."
+    hit: "<muted>Du hast <accent><player> <muted>getasert."
+    hit-you: "<error><player> hat dich getasert! <muted>Du kannst dich kurz nicht wehren."
   motion-sensor:
     title: "<arrow><ttt>TTT <dark>· <muted>Bewegungsmelder"
-    set: "<prefix><muted>Der Bewegungsmelder merkt sich ab jetzt, wer vorbeikommt."
+    set: "<muted>Der Bewegungsmelder merkt sich ab jetzt, wer vorbeikommt."
     entry: "<white><player> <dark>· <muted>vor <minutes>:<seconds>"
     nobody: "<muted>Hier ist noch niemand vorbeigekommen."
   mine-detector:
     found: "<muted>Minensucher<dark>: <accent><traps> <muted>in der Nähe"
   defibrillator:
     work: "<success>Wiederbelebung"
-    traitor: "<prefix><error>Bei dieser Leiche schlägt der Defibrillator nicht an."
-    too-late: "<prefix><error>Zu spät. Diese Leiche liegt schon zu lange hier."
-    failed: "<prefix><error>Die Wiederbelebung hat nicht geklappt."
+    traitor: "<error>Bei dieser Leiche schlägt der Defibrillator nicht an."
+    too-late: "<error>Zu spät. Diese Leiche liegt schon zu lange hier."
+    failed: "<error>Die Wiederbelebung hat nicht geklappt."
     revived: "<prefix><accent><medic> <muted>hat <white><player> <muted>wiederbelebt!"
   crime-camera:
-    nothing: "<prefix><error>Für diesen Tod hat die Kamera nichts aufgezeichnet."
+    nothing: "<error>Für diesen Tod hat die Kamera nichts aufgezeichnet."
   items:
     medipack:
       name: "<success>Medipack"
@@ -273,7 +273,7 @@ corpse:
   unknown: "<muted>Unbekannte Leiche"
   identified: "<white><player> <dark>· <role>"
   found: "<prefix><accent><finder> <muted>hat die Leiche von <white><player> <muted>gefunden<dark>: <role>"
-  known: "<prefix><muted>Das ist <white><player><muted>, <role><muted>."
+  known: "<muted>Das ist <white><player><muted>, <role><muted>."
   killer: "<prefix><muted>Die DNA an <white><player> <muted>gehört <error><killer><muted>."
   no-killer: "<prefix><muted>An <white><player> <muted>findest du keine fremde DNA."
 
@@ -391,7 +391,14 @@ tasks:
     chore: "<accent><bold>!"
     deliver: "<success><bold>?"
     repair: "<error><bold>!"
-    traitor: "<error>☠"
+    door: "<error>☠"
+    trap: "<error><bold>⚠"
+  hint:
+    chore: "<right>Aufgabe starten"
+    deliver: "<right>Ladung abgeben"
+    repair: "<right>Reparieren"
+    door: "<right>Geheimtür öffnen"
+    trap: "<right>Falle im Tester auslösen"
   not-yet: "<muted>Die Aufgaben kommen mit den Rollen."
   not-yours: "<muted>Nicht deine Aufgabe."
   already-done: "<muted>Schon erledigt."
@@ -403,28 +410,34 @@ tasks:
   sidebar:
     done: "<success>✔ <dark><chore>"
     open: "<white><chore>"
-  game-title: "<arrow><ttt>TTT <dark>· <muted><chore>"
+  game-title: "<arrow><ttt>TTT <dark>· <muted><how>"
   games:
     organ:
+      how: "Melodie nachspielen"
       key: "<muted>Taste"
       listen: "<arrow><primary>Runde <accent><round><dark>/<muted><rounds> <dark>· <muted>Hör zu"
       repeat: "<arrow><primary>Runde <accent><round><dark>/<muted><rounds> <dark>· <success>Du bist dran"
     potion:
+      how: "Nach Rezept brauen"
       step: "<muted>Schritt <primary><step>"
       done: "<success>✔ <ingredient>"
     chronicle:
+      how: "Bände sortieren"
       book: "<primary>Band <accent><volume>"
       placed: "<success>Am rechten Platz"
     ledger:
+      how: "Fehler streichen"
       hint: "<primary>Streiche die falschen Summen"
       entry: "<muted><first> <op> <second> <dark>= <accent><result>"
       struck: "<error><st><first> <op> <second> = <result>"
     millwork:
+      how: "Gold auf Grün stoppen"
       notch: "<success>Kerbe"
       marker: "<accent>Zahnrad"
       gear: "<success>Zahnrad sitzt"
       gap: "<error>Zahnrad fehlt"
     forge:
+      how: "Hitze im Grün halten"
       bellows: "<click>Blasebalg"
       heat: "<accent>Hitze"
       band: "<success>Richtige Hitze"
@@ -461,6 +474,7 @@ tasks:
       tester:
         title: "<error>Tester gestört"
         hint: "<muted>Repariert ihn am <error><bold>!"
+    bar: "<sabotage> <dark>● <muted><seconds>s"
     ended:
       blackout: "<success>Der Strom ist wieder da."
       doors: "<success>Die Türen sind wieder offen."

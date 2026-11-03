@@ -11,6 +11,7 @@ import me.blockcraft.ttt.config.TttConfig;
 import me.blockcraft.ttt.game.Channels;
 import me.blockcraft.ttt.game.ChestLoot;
 import me.blockcraft.ttt.game.Role;
+import me.blockcraft.ttt.task.game.ChoreGame;
 import me.blockcraft.ttt.task.game.ChoreGames;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
@@ -28,13 +29,17 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.util.Comparator;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -58,19 +63,30 @@ public final class TaskRound {
     private final Predicate<Player> traitor;
     private final Runnable changed;
     private final TaskBoard board = new TaskBoard();
+    private final Map<UUID, ChoreGame> games = new HashMap<>();
     private final Sabotage sabotage;
     private final BossBar bar;
+    private enum Mark {
+        CHORE, DELIVER, REPAIR, DOOR, TRAP;
+
+        String key() {
+            return name().toLowerCase(Locale.ROOT);
+        }
+    }
+
+    private static final double HINT_REACH = 5.0;
+
     private final ChoreMarkers markers;
-    private final Component choreMark;
-    private final Component deliverMark;
-    private final Component repairMark;
-    private final Component traitorMark;
-    private final List<Block> traitorSpots;
+    private final Map<Mark, Component> marks = new EnumMap<>(Mark.class);
+    private final Map<Mark, Component> hints = new EnumMap<>(Mark.class);
+    private final List<Block> traitorDoors;
+    private final Optional<Block> trapButton;
+    private final BooleanSupplier trapUsed;
     private BukkitTask ticker;
 
     public TaskRound(Plugin plugin, TttConfig.Tasks config, Messages messages, TaskLayout layout, Block testerButton,
-                     List<Block> traitorSpots, Channels channels, Function<Player, Optional<Role>> roles,
-                     Supplier<List<Player>> alive, Runnable changed) {
+                     List<Block> traitorDoors, Optional<Block> trapButton, BooleanSupplier trapUsed, Channels channels,
+                     Function<Player, Optional<Role>> roles, Supplier<List<Player>> alive, Runnable changed) {
         this.plugin = plugin;
         this.config = config;
         this.messages = messages;
@@ -83,11 +99,13 @@ public final class TaskRound {
         this.bar = BossBar.bossBar(messages.get("tasks.bar", Formatter.number("percent", 0)), 0,
                 BossBar.Color.GREEN, BossBar.Overlay.NOTCHED_10);
         this.markers = new ChoreMarkers(plugin);
-        this.choreMark = messages.get("tasks.marker.chore");
-        this.deliverMark = messages.get("tasks.marker.deliver");
-        this.repairMark = messages.get("tasks.marker.repair");
-        this.traitorMark = messages.get("tasks.marker.traitor");
-        this.traitorSpots = traitorSpots;
+        for (var mark : Mark.values()) {
+            marks.put(mark, messages.get("tasks.marker." + mark.key()));
+            hints.put(mark, messages.get("tasks.hint." + mark.key()));
+        }
+        this.traitorDoors = traitorDoors;
+        this.trapButton = trapButton;
+        this.trapUsed = trapUsed;
     }
 
     public void assign(Map<UUID, Role> roles) {
@@ -152,8 +170,16 @@ public final class TaskRound {
                 }
             }
             case Chore.Fetch fetch -> carry(player, fetch, block);
-            case Chore.Puzzle puzzle -> ChoreGames.of(puzzle.key(), plugin, messages, messages.get("tasks.game-title", names(puzzle)),
-                    () -> finish(player, puzzle)).play(player);
+            case Chore.Puzzle puzzle -> {
+                var playing = games.get(id);
+                if (playing == null || !playing.busy(player)) {
+                    var game = ChoreGames.of(puzzle.key(), plugin, messages, messages.get("tasks.game-title",
+                            Placeholder.component("how", messages.get("tasks.games." + puzzle.key() + ".how"))),
+                            () -> finish(player, puzzle));
+                    games.put(id, game);
+                    game.play(player);
+                }
+            }
         }
         return true;
     }
@@ -177,6 +203,7 @@ public final class TaskRound {
     public void show(Player player) {
         if (board.assigned()) {
             player.showBossBar(bar);
+            sabotage.show(player);
             mark(player);
         }
     }
@@ -196,6 +223,7 @@ public final class TaskRound {
         }
         sabotage.stop();
         markers.clear();
+        games.clear();
         Bukkit.getOnlinePlayers().forEach(player -> player.hideBossBar(bar));
         board.clear();
     }
@@ -262,29 +290,43 @@ public final class TaskRound {
     /**
      * Marks where {@code player} goes next: each open chore's station, or for cargo they carry, where it goes, and
      * where the running sabotage is mended. A traitor has no chores and knows their own sabotage; they see their
-     * passages' doors and the tester's trap button instead.
+     * passages' doors and, until it is used, the tester's trap button instead. Next to a mark, the action bar says
+     * what a right-click there does.
      */
     private void mark(Player player) {
         if (!board.assigned() || !alive.get().contains(player)) {
             markers.hide(player.getUniqueId());
             return;
         }
-        var spots = new HashMap<Block, Component>();
+        var spots = new HashMap<Block, Mark>();
         if (traitor.test(player)) {
-            traitorSpots.forEach(spot -> spots.put(spot, traitorMark));
-            markers.show(player, spots);
-            return;
+            traitorDoors.forEach(door -> spots.put(door, Mark.DOOR));
+            trapButton.filter(button -> !trapUsed.getAsBoolean()).ifPresent(button -> spots.put(button, Mark.TRAP));
+        } else {
+            board.of(player.getUniqueId()).stream().filter(duty -> !duty.done()).map(TaskBoard.Duty::chore)
+                    .forEach(chore -> {
+                        if (chore instanceof Chore.Fetch fetch && carrying(player, fetch)) {
+                            spots.put(fetch.destination(), Mark.DELIVER);
+                        } else {
+                            spots.put(chore.station(), Mark.CHORE);
+                        }
+                    });
+            sabotage.repairSpot().ifPresent(spot -> spots.put(spot, Mark.REPAIR));
         }
-        board.of(player.getUniqueId()).stream().filter(duty -> !duty.done()).map(TaskBoard.Duty::chore)
-                .forEach(chore -> {
-                    if (chore instanceof Chore.Fetch fetch && carrying(player, fetch)) {
-                        spots.put(fetch.destination(), deliverMark);
-                    } else {
-                        spots.put(chore.station(), choreMark);
-                    }
-                });
-        sabotage.repairSpot().ifPresent(spot -> spots.put(spot, repairMark));
-        markers.show(player, spots);
+        var shown = new HashMap<Block, Component>();
+        spots.forEach((spot, mark) -> shown.put(spot, marks.get(mark)));
+        markers.show(player, shown);
+        if (!channels.busy(player)) {
+            nearest(player, spots.keySet()).ifPresent(spot ->
+                    BlockcraftApi.get().notifications().status(player, hints.get(spots.get(spot))));
+        }
+    }
+
+    private static Optional<Block> nearest(Player player, Set<Block> spots) {
+        var eyes = player.getEyeLocation();
+        return spots.stream().filter(spot -> spot.getWorld().equals(eyes.getWorld()))
+                .filter(spot -> center(spot).distanceSquared(eyes) <= HINT_REACH * HINT_REACH)
+                .min(Comparator.comparingDouble(spot -> center(spot).distanceSquared(eyes)));
     }
 
     private boolean close(Chore one, Chore other) {

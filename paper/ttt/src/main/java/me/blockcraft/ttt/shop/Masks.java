@@ -46,7 +46,7 @@ final class Masks {
             if (current != null && current.generation() == mine) {
                 var player = Bukkit.getPlayer(id);
                 if (player != null && restore(player)) {
-                    player.sendMessage(messages.get("shop.mask.fallen"));
+                    BlockcraftApi.get().notifications().feedback(player, messages.get("shop.mask.fallen"));
                 }
             }
         });

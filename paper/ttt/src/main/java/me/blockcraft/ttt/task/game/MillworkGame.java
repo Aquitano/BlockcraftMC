@@ -25,6 +25,7 @@ public final class MillworkGame extends ChoreGame {
     private static final int MARKER_ROW = WIDTH;
     private static final int GEAR_FIRST = 21;
     private static final int[] TICKS_PER_STEP = {5, 4, 3};
+    private static final int LATENCY_TICKS = 4;
 
     private final ItemStack off = Items.of(Material.GRAY_STAINED_GLASS_PANE).name(Component.empty()).build();
     private final ItemStack notchItem;
@@ -63,7 +64,7 @@ public final class MillworkGame extends ChoreGame {
         if (slot >= MARKER_ROW + WIDTH || over()) {
             return;
         }
-        if (markerPosition(tick, TICKS_PER_STEP[gears], WIDTH) != notch) {
+        if (!onNotchLately()) {
             gears = 0;
             Sounds.MENU_DENY.play(player);
         } else {
@@ -78,6 +79,16 @@ public final class MillworkGame extends ChoreGame {
         }
         nextRound();
         drawSweep();
+    }
+
+    /** A click the player saw land reaches the server a few ticks later, when the marker may have moved on. */
+    private boolean onNotchLately() {
+        for (int past = Math.max(0, tick - LATENCY_TICKS); past <= tick; past++) {
+            if (markerPosition(past, TICKS_PER_STEP[gears], WIDTH) == notch) {
+                return true;
+            }
+        }
+        return false;
     }
 
     static int markerPosition(int tick, int ticksPerStep, int width) {

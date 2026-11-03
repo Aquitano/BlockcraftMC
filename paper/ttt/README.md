@@ -164,19 +164,21 @@ a `TaskLayout`, which today is the map `TownBuilder` builds. The settings are un
   sparks around the block once they are close; for a load they carry, a `?` marks its destination instead. While a
   sabotage can be mended, a red `!` marks the generator or the tester's button for every living innocent and detective.
   A mark grows with the distance, so it reads about as large across the town as next door. A label over the tester's
-  doorway shows everyone, in either mode, where the tester is. A traitor sees a `☠` over each door to the passages and
-  over the tester's trap button instead. What a click on a
+  doorway shows everyone, in either mode, where the tester is. A traitor sees a `☠` over each door to the passages and a
+  `⚠` over the tester's trap button until it is used. Next to any mark, the action bar says what a right-click does. What a click on a
   chore answers goes to the action bar, a sabotage starts as a title, and the chat keeps what concerns everyone.
 - A chore starts with a right-click on its station. A hold chore takes `tasks.hold-seconds` with the player's eyes within
   `tasks.reach` blocks; a hit or walking off breaks it off. A fetch chore hands over a load at its station that must be
-  right-clicked onto its destination. A played chore opens its game, and closing it early leaves the chore open.
+  right-clicked onto its destination. A played chore opens its game, its title saying what to do, and closing it early
+  leaves the chore open.
 - Each chore pays one pick from `tasks.loot`. A visible chore also shows at its station: a bell rings or a fire lights.
 - A boss bar shows how far the innocents are. A dead innocent's open chores drop out, so the bar can still fill.
   When a chore done leaves no living innocent with an open one, the innocents win; a death alone never wins by chores.
 - Traitors sabotage from a row in their shop, free, one at a time and `tasks.sabotage.cooldown-seconds` apart: a
   blackout puts out the map's lights and darkens everyone else until someone mends the generator
   (`repair-seconds` beside it) or `blackout-seconds` pass; locked doors shut every door of the map for
-  `doors-seconds`; a broken tester tests nobody until it is mended at its button or `tester-seconds` pass.
+  `doors-seconds`; a broken tester tests nobody until it is mended at its button or `tester-seconds` pass. A
+  sabotage starts as a title and runs as a red boss bar until it ends.
 
 ## Karma, health, rewards
 

@@ -78,7 +78,7 @@ final class Signals {
     void jam(Player player) {
         jammers.put(player.getUniqueId(), config.jammer().seconds());
         player.getWorld().playSound(player.getLocation(), Sound.BLOCK_BEACON_ACTIVATE, 0.6f, 0.5f);
-        player.sendMessage(messages.get("shop.jammer.started", Formatter.number("seconds", config.jammer().seconds())));
+        BlockcraftApi.get().notifications().feedback(player, messages.get("shop.jammer.started", Formatter.number("seconds", config.jammer().seconds())));
     }
 
     /** Whether a living jammer's holder stands within its radius of {@code location}. */
@@ -91,14 +91,14 @@ final class Signals {
 
     boolean placeSensor(Player owner, Block space) {
         if (!Gadgets.fits(space)) {
-            owner.sendMessage(messages.get("shop.no-room"));
+            BlockcraftApi.get().notifications().feedback(owner, messages.get("shop.no-room"));
             Sounds.MENU_DENY.play(owner);
             return false;
         }
         gadgets.show(space, owner.getLocation().getYaw(), look.apply(ShopItem.MOTION_SENSOR));
         var hitbox = gadgets.hitbox(space, 0.6f, 0.6f);
         sensors.put(hitbox.getUniqueId(), new Sensor(space));
-        owner.sendMessage(messages.get("shop.motion-sensor.set"));
+        BlockcraftApi.get().notifications().feedback(owner, messages.get("shop.motion-sensor.set"));
         return true;
     }
 
@@ -109,7 +109,7 @@ final class Signals {
             return false;
         }
         if (jammed(sensor.space().getLocation())) {
-            reader.sendMessage(messages.get("shop.jammer.blocked"));
+            BlockcraftApi.get().notifications().feedback(reader, messages.get("shop.jammer.blocked"));
             Sounds.MENU_DENY.play(reader);
             return true;
         }
@@ -155,7 +155,7 @@ final class Signals {
             entry.setValue(entry.getValue() - 1);
             if (holder == null || !living.contains(holder) || entry.getValue() <= 0) {
                 if (holder != null) {
-                    holder.sendMessage(messages.get("shop.jammer.stopped"));
+                    BlockcraftApi.get().notifications().feedback(holder, messages.get("shop.jammer.stopped"));
                 }
                 return true;
             }
@@ -173,7 +173,7 @@ final class Signals {
                         player.getInventory().clear(slot);
                     }
                 });
-                player.sendMessage(messages.get("shop.radar-expired"));
+                BlockcraftApi.get().notifications().feedback(player, messages.get("shop.radar-expired"));
                 return true;
             }
             point(player, living);
