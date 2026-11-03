@@ -12,6 +12,7 @@ import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Snowball;
+import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.ProjectileHitEvent;
@@ -41,6 +42,7 @@ public final class GadgetListener implements Listener {
     @EventHandler
     public void onInteract(PlayerInteractEvent event) {
         if (event.getHand() != EquipmentSlot.HAND || !event.getAction().isRightClick()
+                || event.useItemInHand() == Event.Result.DENY
                 || LobbyItem.of(event.getItem()).filter(LobbyItem.GADGET::equals).isEmpty()) {
             return;
         }

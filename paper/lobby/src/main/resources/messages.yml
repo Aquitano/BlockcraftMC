@@ -1,8 +1,6 @@
 prefix: "<primary><ip> <dark>» <reset>"
 
 commands:
-  cookies:
-    description: "Öffnet den CookieClicker"
   parkour:
     description: "Zurück zum letzten Parcours-Checkpoint; die Zeit läuft weiter"
   daily:
@@ -420,8 +418,6 @@ extras:
   tags-lore: "<bullet><muted>Ein Tag vor deinem Namen, gekauft oder verdient"
   lobbies: "<arrow><primary>Lobby-Wechsel"
   lobbies-lore: "<bullet><muted>Wechsle auf eine andere Lobby!"
-  cookies: "<arrow><accent>CookieClicker"
-  cookies-lore: "<bullet><click>Kekse backen und den Ofen verbessern"
   weapons: "<arrow><primary>Stick-Aussehen"
   weapons-lore: "<bullet><click>Ein Aussehen für BedWars, MLG Rush und Knockback FFA"
 weapons:
@@ -441,10 +437,15 @@ weapons:
     german-flag: "<primary>Deutsche Flagge"
     austrian-flag: "<primary>Österreichische Flagge"
 cookies:
-  title: "<arrow><primary>CookieClicker"
+  title: "<arrow><primary>CookieClicker-Upgrades"
+  block-label:
+    - "<accent>CookieClicker"
+    - "<muted>Linksklick: Kekse backen"
+    - "<muted>Rechtsklick: Upgrades"
+  status: "<accent><cookies> Kekse <dark>| <muted><amount> pro Klick <dark>| <muted>Rechtsklick: Upgrades"
   balance: "<accent><cookies> Kekse"
-  click-lore:
-    - "<click><amount> Kekse backen"
+  balance-lore:
+    - "<muted><amount> Kekse pro Klick am Keks beim Shop."
     - "<muted>Platz für <limit> Kekse."
     - "<dark>Kekse sind eigene Spielpunkte und keine Coins."
   upgrade: "<primary>Ofenstufe <level>"

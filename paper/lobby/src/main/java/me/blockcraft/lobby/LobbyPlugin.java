@@ -31,7 +31,6 @@ import me.blockcraft.lobby.activity.SeasonalScenes;
 import me.blockcraft.lobby.activity.ShootingStars;
 import me.blockcraft.api.season.Snowfall;
 import me.blockcraft.lobby.command.ClearChatCommand;
-import me.blockcraft.lobby.command.CookiesCommand;
 import me.blockcraft.lobby.command.DailyCommand;
 import me.blockcraft.lobby.command.FlightCommand;
 import me.blockcraft.lobby.command.LobbySetCommand;
@@ -58,6 +57,7 @@ import me.blockcraft.lobby.cosmetic.CosmeticPreviews;
 import me.blockcraft.lobby.cosmetic.Pets;
 import me.blockcraft.lobby.cosmetic.Secrets;
 import me.blockcraft.lobby.cosmetic.Trails;
+import me.blockcraft.lobby.cookies.CookieBlock;
 import me.blockcraft.lobby.cookies.CookieClicker;
 import me.blockcraft.lobby.cookies.CookieProgress;
 import me.blockcraft.lobby.daily.DailyCourier;
@@ -178,10 +178,12 @@ public final class LobbyPlugin extends JavaPlugin {
         var cookies = new CookieClicker(this, api.database(), messages,
                 CookieProgress.Rules.fromYaml(YamlFile.section(yaml, "cookies")));
         closables.add(cookies);
-        register(cookies);
+        var cookieBlock = new CookieBlock(activityLocations, cookies, messages, chunks);
+        closables.add(cookieBlock);
+        register(cookies, cookieBlock);
         var menus = new Menus(this, messages, config, locations, api.unlocks(), api.settings(), api.messages(),
                 api.servers(), api.server(), new PremiumRank(this, luckPerms), pets, api.groups(), friends, previews,
-                new NavigatorTeleports(), cookies);
+                new NavigatorTeleports());
         var achievements = api.achievements();
         achievements.section(new SecretsSection(messages, loreNotes, config.secretRiddlesAfter()));
         closables.add(achievements::clearSection);
@@ -224,6 +226,7 @@ public final class LobbyPlugin extends JavaPlugin {
         optionalSpots.addAll(ambience.spots());
         var optionalBlocks = new ArrayList<>(loreNotes.spots());
         optionalBlocks.addAll(NoticeBoards.SPOTS);
+        optionalBlocks.add(CookieBlock.SPOT);
 
         var messenger = getServer().getMessenger();
         messenger.registerIncomingPluginChannel(this, WorldDownloaderListener.INIT_CHANNEL, new WorldDownloaderListener(messages));
@@ -257,7 +260,6 @@ public final class LobbyPlugin extends JavaPlugin {
                     Stream.concat(config.holograms().stream(), leaderboards.names().stream()).toList(),
                     holograms, locations, shopNpc));
             commands.register(ClearChatCommand.create(messages));
-            commands.register(CookiesCommand.create(menus));
             commands.register(ParkourCommand.create(parkour));
             commands.register(DailyCommand.create(daily));
             commands.register(SleighCommand.create(sleigh, messages));
@@ -280,6 +282,7 @@ public final class LobbyPlugin extends JavaPlugin {
                         noticeBoards.refresh();
                         quests.refresh();
                         daily.refresh();
+                        cookieBlock.refresh();
                         scenes.refresh();
                     }));
         });

@@ -8,6 +8,7 @@ import me.blockcraft.lobby.item.LobbyItem;
 import me.blockcraft.lobby.menu.Menus;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -27,7 +28,8 @@ public final class LobbyItemListener implements Listener {
 
     @EventHandler
     public void onInteract(PlayerInteractEvent event) {
-        if (event.getHand() != EquipmentSlot.HAND || !event.getAction().isRightClick()) {
+        if (event.getHand() != EquipmentSlot.HAND || !event.getAction().isRightClick()
+                || event.useItemInHand() == Event.Result.DENY) {
             return;
         }
         Player player = event.getPlayer();

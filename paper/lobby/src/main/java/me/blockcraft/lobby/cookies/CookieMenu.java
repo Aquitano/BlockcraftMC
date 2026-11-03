@@ -8,18 +8,16 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.function.Consumer;
-
 final class CookieMenu extends Menu {
 
     private final CookieClicker cookies;
     private final Player viewer;
 
-    CookieMenu(CookieClicker cookies, Player viewer, Consumer<Player> back) {
+    CookieMenu(CookieClicker cookies, Player viewer) {
         super(3, cookies.messages().get("cookies.title"));
         this.cookies = cookies;
         this.viewer = viewer;
-        backButton(back);
+        closeButton();
         refresh();
     }
 
@@ -27,8 +25,8 @@ final class CookieMenu extends Menu {
         var messages = cookies.messages();
         var progress = cookies.progress(viewer);
         var state = progress.snapshot();
-        set(11, Items.of(Material.COOKIE).name(messages.get("cookies.balance", Formatter.number("cookies", state.cookies())))
-                .lore(messages.getLines("cookies.click-lore", Formatter.number("amount", progress.perClick()),
+        info(11, Items.of(Material.COOKIE).name(messages.get("cookies.balance", Formatter.number("cookies", state.cookies())))
+                .lore(messages.getLines("cookies.balance-lore", Formatter.number("amount", progress.perClick()),
                         Formatter.number("limit", cookies.limit()))).build());
         progress.next().ifPresentOrElse(upgrade -> set(15, Items.of(Material.FURNACE)
                 .name(messages.get("cookies.upgrade", Formatter.number("level", state.level() + 1)))
@@ -44,7 +42,7 @@ final class CookieMenu extends Menu {
 
     @Override
     protected void onClick(Player player, int slot, ItemStack clicked, InventoryClickEvent event) {
-        if ((slot == 11 || slot == 15) && cookies.click(player, slot == 15)) {
+        if (slot == 15 && cookies.click(player, true)) {
             refresh();
         }
     }

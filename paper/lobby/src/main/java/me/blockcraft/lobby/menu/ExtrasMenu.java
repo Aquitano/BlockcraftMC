@@ -12,7 +12,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
-/** Illustrated cosmetic categories, with the lobby selector and cookie game below them. */
+/** Illustrated cosmetic categories, with the lobby selector below them. */
 final class ExtrasMenu extends Menu {
 
     private static final int GADGETS_SLOT = 9;
@@ -23,7 +23,6 @@ final class ExtrasMenu extends Menu {
     private static final int TAGS_SLOT = 33;
     private static final int LOBBIES_SLOT = 45;
     private static final int WEAPONS_SLOT = 49;
-    private static final int COOKIES_SLOT = 51;
 
     private final Menus menus;
 
@@ -46,8 +45,6 @@ final class ExtrasMenu extends Menu {
         tile(TAGS_SLOT, MenuTile.TAGS, MenuTile.Shape.LARGE, MenuIcon.CHAT_TAGS.item().name(messages.get("extras.tags")).lore(messages.get("extras.tags-lore")).build());
         tile(LOBBIES_SLOT, MenuTile.LOBBIES, MenuTile.Shape.WIDE, MenuIcon.LOBBIES.item()
                 .name(messages.get("extras.lobbies")).lore(messages.get("extras.lobbies-lore")).build());
-        set(COOKIES_SLOT, Items.of(Material.COOKIE).name(messages.get("extras.cookies"))
-                .lore(messages.get("extras.cookies-lore")).build());
         set(WEAPONS_SLOT, Items.of(Material.STICK).name(messages.get("extras.weapons"))
                 .lore(messages.get("extras.weapons-lore")).build());
     }
@@ -69,7 +66,6 @@ final class ExtrasMenu extends Menu {
             }
             case TAGS_SLOT -> menus.openChatTags(player);
             case LOBBIES_SLOT -> menus.openLobbies(player);
-            case COOKIES_SLOT -> menus.openCookies(player);
             case WEAPONS_SLOT -> menus.openWeapons(player);
             default -> close(player);
         }

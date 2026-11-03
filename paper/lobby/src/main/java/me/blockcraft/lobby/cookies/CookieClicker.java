@@ -5,6 +5,7 @@ import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.db.Database;
 import me.blockcraft.common.message.Messages;
+import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -14,7 +15,9 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -46,6 +49,7 @@ public final class CookieClicker implements Listener, AutoCloseable {
     private final Messages messages;
     private final CookieProgress.Rules rules;
     private final Map<UUID, Session> sessions = new HashMap<>();
+    private final Set<UUID> loading = new HashSet<>();
     private final ExecutorService saves = Executors.newSingleThreadExecutor(
             Thread.ofPlatform().name("lobby-cookies").daemon(true).factory());
     private BukkitTask checkpoint;
@@ -60,21 +64,42 @@ public final class CookieClicker implements Listener, AutoCloseable {
                 + "cookies BIGINT NOT NULL DEFAULT 0, upgrade_level INT NOT NULL DEFAULT 0, revision BIGINT NOT NULL DEFAULT 0)");
     }
 
-    public void open(Player player, Consumer<Player> back) {
+    void open(Player player) {
+        var currentScreen = BlockcraftApi.get().playerTasks().currentScreen(player);
+        withSession(player, session -> {
+            if (currentScreen.getAsBoolean()) {
+                new CookieMenu(this, player).open(player);
+            }
+        });
+    }
+
+    void hit(Player player) {
+        withSession(player, session -> {
+            click(player, false);
+            player.sendActionBar(messages.get("cookies.status", Formatter.number("cookies", session.progress.snapshot().cookies()),
+                    Formatter.number("amount", session.progress.perClick())));
+        });
+    }
+
+    private void withSession(Player player, Consumer<Session> action) {
         if (closed) {
             return;
         }
         var id = player.getUniqueId();
-        if (sessions.containsKey(id)) {
-            new CookieMenu(this, player, back).open(player);
+        var session = sessions.get(id);
+        if (session != null) {
+            action.accept(session);
             return;
         }
-        BlockcraftApi.get().playerTasks().latest(player, () -> load(id), stored -> {
+        if (!loading.add(id)) {
+            return;
+        }
+        BlockcraftApi.get().playerTasks().write(player, () -> load(id), stored -> {
+            loading.remove(id);
             if (!closed) {
-                sessions.computeIfAbsent(id, ignored -> new Session(rules, stored));
-                new CookieMenu(this, player, back).open(player);
+                action.accept(sessions.computeIfAbsent(id, ignored -> new Session(rules, stored)));
             }
-        });
+        }, failed -> loading.remove(id));
     }
 
     Messages messages() {
@@ -213,6 +238,7 @@ public final class CookieClicker implements Listener, AutoCloseable {
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
         var id = event.getPlayer().getUniqueId();
+        loading.remove(id);
         var session = sessions.get(id);
         if (!closed && session != null) {
             flush(id, session);
@@ -255,5 +281,6 @@ public final class CookieClicker implements Listener, AutoCloseable {
             plugin.getSLF4JLogger().warn("Interrupted while saving cookies during shutdown; some progress may not have been saved");
         }
         sessions.clear();
+        loading.clear();
     }
 }
