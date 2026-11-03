@@ -17,15 +17,14 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.util.Transformation;
-import org.joml.Quaternionf;
-import org.joml.Vector3f;
+import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 final class DroidRig implements AutoCloseable {
 
@@ -45,10 +44,14 @@ final class DroidRig implements AutoCloseable {
     private ItemStack held = ItemStack.empty();
     private Location previous;
     private double stride;
+    private final boolean droid;
+    private final Supplier<Vector> aim;
 
-    DroidRig(Plugin plugin, LivingEntity actor) {
+    DroidRig(Plugin plugin, LivingEntity actor, boolean droid, Supplier<Vector> aim) {
         this.plugin = plugin;
         this.actor = actor;
+        this.droid = droid;
+        this.aim = aim;
         previous = actor.getLocation();
         torso = part("torso");
         head = part("head");
@@ -65,7 +68,7 @@ final class DroidRig implements AutoCloseable {
         name.setShadowed(true);
         name.setSeeThrough(false);
         var label = actor instanceof Player player ? player.displayName() : actor.customName();
-        name.text((label == null ? Component.text(actor.getName()) : label).color(NamedTextColor.AQUA));
+        name.text((label == null ? Component.text(actor.getName()) : label).color(droid ? NamedTextColor.AQUA : NamedTextColor.GOLD));
     }
 
     LivingEntity actor() {
@@ -83,7 +86,8 @@ final class DroidRig implements AutoCloseable {
     private ItemDisplay part(String part) {
         var display = spawn(ItemDisplay.class);
         display.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.NONE);
-        display.setItemStack(Items.of(Material.PAPER).model(Key.key("blockcraft", "sternenfront/droid/" + part)).build());
+        display.setItemStack(Items.of(Material.PAPER).model(Key.key("blockcraft", "sternenfront/"
+                + (droid ? "droid/" : "infantry/") + part)).build());
         return display;
     }
 
@@ -109,18 +113,20 @@ final class DroidRig implements AutoCloseable {
         float step = actor.isOnGround() ? (float) (Math.sin(stride) * Math.min(moved * 3, 0.65)) : 0.2f;
         boolean crouching = actor instanceof Player player && player.isSneaking();
         float drop = crouching ? 0.28f : 0;
-        float yaw = (float) Math.toRadians(-actor.getBodyYaw());
-        float facing = (float) Math.toRadians(-at.getYaw());
-        float pitch = (float) Math.toRadians(Math.clamp(at.getPitch(), -65, 65));
+        var looking = at.clone().setDirection(aim.get());
+        float facing = (float) Math.toRadians(-looking.getYaw());
+        float yaw = actor instanceof Player ? (float) Math.toRadians(-actor.getBodyYaw()) : facing;
+        float pitch = (float) Math.toRadians(Math.clamp(looking.getPitch(), -65, 65));
         at.setYaw(0);
         at.setPitch(0);
         pose(torso, at, yaw, 0, 1 - drop, 0, crouching ? 0.15f : 0, 1);
         pose(head, at, facing, 0, 1.48f - drop, 0, pitch, 1);
         pose(leftLeg, at, yaw, -0.13f, 0.95f - drop / 2, 0, step, 1);
         pose(rightLeg, at, yaw, 0.13f, 0.95f - drop / 2, 0, -step, 1);
-        pose(leftArm, at, facing, -0.23f, 1.36f - drop, 0, pitch - 1.05f, 1);
-        pose(rightArm, at, facing, 0.23f, 1.36f - drop, 0, pitch - 1.1f, 1);
-        pose(weapon, at, facing, 0.2f, 1.08f - drop, 0.36f, pitch, 0.65f);
+        float shoulder = droid ? 0.23f : 0.35f;
+        pose(leftArm, at, facing, shoulder, 1.36f - drop, 0, pitch - 1.05f, 1);
+        pose(rightArm, at, facing, -shoulder, 1.36f - drop, 0, pitch - 1.1f, 1);
+        pose(weapon, at, facing, -shoulder + 0.03f, 1.27f - drop, 0.53f, pitch, 0.65f);
         var equipment = actor.getEquipment();
         var current = equipment == null ? ItemStack.empty() : equipment.getItemInMainHand();
         if (!current.equals(held)) {
@@ -136,12 +142,9 @@ final class DroidRig implements AutoCloseable {
     }
 
     private static void pose(ItemDisplay display, Location at, float yaw, float x, float y, float z, float pitch, float scale) {
-        var rotation = new Quaternionf().rotationY(yaw);
-        var offset = rotation.transform(new Vector3f(x, y, z));
-        rotation.rotateX(pitch);
         display.teleport(at);
         display.setInterpolationDelay(0);
-        display.setTransformation(new Transformation(offset, rotation, new Vector3f(scale), new Quaternionf()));
+        display.setTransformation(RigPose.at(yaw, x, y, z, pitch, scale));
     }
 
     void refresh(Player player) {

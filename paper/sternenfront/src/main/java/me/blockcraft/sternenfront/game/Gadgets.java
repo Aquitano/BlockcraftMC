@@ -220,7 +220,7 @@ public final class Gadgets {
         world.spawnParticle(Particle.ELECTRIC_SPARK, at, 40, 1.2, 0.8, 1.2, 0.2);
         world.spawnParticle(Particle.DUST, at, 30, 1.5, 0.8, 1.5, 0, new Particle.DustOptions(grenade.faction().bolt(), 1.6f));
         SoundCue.GRENADE_EXPLODE.play(at, 2f);
-        for (var target : game.combatants()) {
+        for (var target : game.targets()) {
             if (!target.getWorld().equals(world)) {
                 continue;
             }

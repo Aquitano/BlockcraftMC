@@ -59,8 +59,8 @@ public final class SternenfrontPlugin extends JavaPlugin {
         game = new SternenfrontGame(this, gameConfig, config, HeroConfig.from(getConfig()), FeelConfig.from(getConfig()),
                 messages, map, lobby, services.stats(), services.menus());
         api.presence().maxPlayers(config.capacity());
-        if (getConfig().getBoolean("appearance.droids", true)) {
-            droids = Droids.start(this, game);
+        if (getConfig().getBoolean("appearance.droids", true) || getConfig().getBoolean("appearance.infantry", true)) {
+            droids = Droids.start(this, game, getConfig().getBoolean("appearance.droids", true), getConfig().getBoolean("appearance.infantry", true));
         }
         Secrets.start(this, game, messages);
 

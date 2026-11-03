@@ -88,7 +88,7 @@ public enum Hero {
         return abilities;
     }
 
-    /** A blade in hand: it leaps on a right click and turns bolts back while its bearer sneaks. */
+    /** Includes the relic champion in melee, guard and Force-leap controls. */
     public boolean bladed() {
         return !(weapon instanceof Weapon.Gun);
     }

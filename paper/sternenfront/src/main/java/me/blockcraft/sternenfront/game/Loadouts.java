@@ -7,6 +7,7 @@ import me.blockcraft.api.pack.MenuIcon;
 import me.blockcraft.api.pack.PackModel;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.sternenfront.config.SternenfrontConfig;
+import me.blockcraft.sternenfront.hero.Sabers;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -24,7 +25,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 /**
- * What a deployed player carries: the class's blaster in the first slot, its abilities next to it, the faction's
+ * What a deployed player carries: the class's blaster in the first slot, the faction's
  * helmet and leather in the faction's colour. Armour gives no protection, so a class's health alone decides how many
  * bolts it takes.
  */
@@ -50,7 +51,6 @@ public final class Loadouts {
         inventory.setItem(0, blaster(combatClass.blaster()));
         for (int index = 0; index < combatClass.abilities().size(); index++) {
             var ability = combatClass.abilities().get(index);
-            inventory.setItem(index + 1, ability(ability, index));
             player.setCooldown(ability.material(), 0);
         }
         dress(player, faction, Optional.empty());
@@ -90,6 +90,7 @@ public final class Loadouts {
     public ItemStack blade() {
         var item = PackModel.STERNENFRONT_RELIC_BLADE.item().name(messages.get("relic.name"))
                 .lore(messages.getLines("relic.lore")).hideAttributes().edit(meta -> meta.setUnbreakable(true)).build();
+        Sabers.allowGuard(item);
         item.setData(DataComponentTypes.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.itemAttributes()
                 .addModifier(Attribute.ATTACK_DAMAGE, new AttributeModifier(BLADE_DAMAGE,
                         config.relic().damage() - PLAYER_BASE_DAMAGE, AttributeModifier.Operation.ADD_NUMBER, EquipmentSlotGroup.MAINHAND))

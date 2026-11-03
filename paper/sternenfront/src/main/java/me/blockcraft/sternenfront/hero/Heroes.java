@@ -116,7 +116,6 @@ public final class Heroes {
             var abilities = hero.abilities();
             for (int index = 0; index < abilities.size(); index++) {
                 var ability = abilities.get(index);
-                inventory.setItem(index + 1, abilityItem(ability, index));
                 player.setCooldown(ability.material(), 0);
             }
             loadouts.dress(player, faction, hero.head());

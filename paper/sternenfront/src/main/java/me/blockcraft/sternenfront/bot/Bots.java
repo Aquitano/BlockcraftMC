@@ -4,17 +4,18 @@ import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.ItemAttributeModifiers;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.pack.PackModel;
-import me.blockcraft.sternenfront.game.Blaster;
 import me.blockcraft.sternenfront.game.CombatClass;
 import me.blockcraft.sternenfront.game.Faction;
 import me.blockcraft.sternenfront.game.Heat;
 import me.blockcraft.sternenfront.game.SternenfrontGame;
 import me.blockcraft.sternenfront.hero.Sabers;
+import me.blockcraft.sternenfront.hero.Hero;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Particle;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
@@ -28,6 +29,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -58,10 +60,20 @@ public final class Bots implements Listener {
         private long chooseAt;
         private Location progress;
         private int stuckTicks;
+        private final CombatClass role;
+        private Vector aim;
+        private int burst;
+        private long pauseUntil;
+        private long healAt;
 
         private Soldier(int number, Faction faction) {
             this.number = number;
             this.faction = faction;
+            this.role = switch (number % 4) {
+                case 2 -> CombatClass.HEAVY;
+                case 3 -> CombatClass.MEDIC;
+                default -> CombatClass.SOLDIER;
+            };
         }
     }
 
@@ -71,11 +83,22 @@ public final class Bots implements Listener {
     private final Map<UUID, Soldier> bodies = new HashMap<>();
     private final Map<UUID, Faction> identities = new HashMap<>();
     private int nextNumber;
+    private BotConfig.Tuning tuning;
 
     public Bots(SternenfrontGame game, BotConfig config) {
         this.game = game;
         this.config = config;
+        tuning = config.profiles().get(config.difficulty());
         Bukkit.getPluginManager().registerEvents(this, game.plugin());
+    }
+
+    public void difficulty(BotDifficulty difficulty) {
+        tuning = config.profiles().get(difficulty);
+    }
+
+    public Optional<Vector> aim(Entity entity) {
+        var soldier = bodies.get(entity.getUniqueId());
+        return soldier == null ? Optional.empty() : Optional.of(soldier.aim.clone());
     }
 
     public boolean enabled() {
@@ -138,6 +161,7 @@ public final class Bots implements Listener {
             if (tick % THINK_TICKS == soldier.number % THINK_TICKS) {
                 think(soldier, tick);
             }
+            soldier.body.lookAt(soldier.body.getEyeLocation().add(soldier.aim.clone().multiply(10)));
         }
     }
 
@@ -153,15 +177,16 @@ public final class Bots implements Listener {
             skeleton.customName(game.messages().get("bot.name",
                     Placeholder.styling("tint", soldier.faction.text()),
                     Placeholder.component("faction", game.messages().get("faction." + soldier.faction.key() + ".name")),
+                    Placeholder.component("role", game.messages().get("class." + soldier.role.key() + ".name")),
                     Formatter.number("number", soldier.number)));
             skeleton.setCustomNameVisible(true);
-            double health = game.config().health(CombatClass.SOLDIER);
+            double health = game.config().health(soldier.role);
             skeleton.getAttribute(Attribute.MAX_HEALTH).setBaseValue(health);
             skeleton.setHealth(health);
             skeleton.getAttribute(Attribute.FOLLOW_RANGE).setBaseValue(128);
             skeleton.getAttribute(Attribute.MOVEMENT_SPEED).setBaseValue(0.25);
             var equipment = skeleton.getEquipment();
-            equipment.setItemInMainHand(game.loadouts().blaster(Blaster.CARBINE));
+            equipment.setItemInMainHand(game.loadouts().blaster(soldier.role.blaster()));
             equipment.setHelmet((soldier.faction == Faction.KOLONIEN ? PackModel.STERNENFRONT_HELMET_KOLONIEN
                     : PackModel.STERNENFRONT_HELMET_HEGEMONIE).item().build());
             equipment.setChestplate(armour(Material.LEATHER_CHESTPLATE, soldier.faction));
@@ -182,6 +207,10 @@ public final class Bots implements Listener {
         soldier.chooseAt = tick;
         soldier.progress = at.clone();
         soldier.stuckTicks = 0;
+        soldier.aim = at.getDirection();
+        soldier.burst = 0;
+        soldier.pauseUntil = 0;
+        soldier.healAt = tick;
         bodies.put(mob.getUniqueId(), soldier);
         identities.put(mob.getUniqueId(), soldier.faction);
     }
@@ -198,24 +227,36 @@ public final class Bots implements Listener {
         if (tick >= soldier.chooseAt || soldier.objective < 0) {
             choose(soldier, tick);
         }
-        var target = game.combatants().stream()
+        var visible = game.combatants().stream()
                 .filter(other -> game.hittable(soldier.faction, other))
                 .filter(other -> here.getWorld().equals(other.getWorld()))
                 .filter(other -> here.distanceSquared(other.getLocation()) <= config.range() * config.range())
-                .filter(mob::hasLineOfSight)
-                .min(Comparator.comparingDouble(other -> here.distanceSquared(other.getLocation())));
+                .filter(mob::hasLineOfSight).toList();
+        var chosen = BotTargeting.choose(visible.stream().map(other -> new BotTargeting.Target(other.getUniqueId(),
+                here.distanceSquared(other.getLocation()))).toList(), soldier.target);
+        var target = visible.stream().filter(other -> chosen.filter(other.getUniqueId()::equals).isPresent()).findFirst();
         if (target.isPresent()) {
             var enemy = target.get();
             if (!enemy.getUniqueId().equals(soldier.target)) {
                 soldier.target = enemy.getUniqueId();
-                soldier.reactAt = tick + config.reactionTicks() + ThreadLocalRandom.current().nextInt(config.reactionTicks() + 1);
+                soldier.reactAt = tick + tuning.reactionTicks() + ThreadLocalRandom.current().nextInt(tuning.reactionTicks() + 1);
             }
-            mob.lookAt(enemy);
+            var wanted = enemy.getLocation().add(0, enemy.getHeight() * 0.6, 0).toVector().subtract(mob.getEyeLocation().toVector());
+            if (wanted.lengthSquared() > 0.01) {
+                soldier.aim = BotAim.turn(soldier.aim, wanted, tuning.trackingDegrees());
+            }
             if (tick >= soldier.reactAt) {
-                fire(soldier, enemy, tick);
+                fire(soldier, tick);
             }
         } else {
             soldier.target = null;
+            var movement = mob.getVelocity().setY(0);
+            if (movement.lengthSquared() > 0.0025) {
+                soldier.aim = BotAim.turn(soldier.aim, movement, tuning.trackingDegrees());
+            }
+        }
+        if (soldier.role == CombatClass.MEDIC) {
+            support(soldier, tick);
         }
         if ((tick - soldier.number % THINK_TICKS) % ROUTE_TICKS == 0) {
             navigate(soldier, target, tick);
@@ -231,7 +272,8 @@ public final class Bots implements Listener {
         }
         var choices = game.posts().indices().stream().map(index -> new Objectives.Post(index,
                 game.posts().owner(index).filter(soldier.faction::equals).isPresent(), game.posts().contested(index),
-                here.distance(game.map().posts().get(index).center()),
+                here.distance(game.map().posts().get(index).center()) - (soldier.role == CombatClass.HEAVY
+                        && game.posts().owner(index).filter(soldier.faction::equals).isPresent() ? 100 : 0),
                 (int) soldiers.stream().filter(other -> other != soldier && other.body != null
                         && other.faction == soldier.faction && other.objective == index).count())).toList();
         soldier.objective = Objectives.choose(choices).orElse(-1);
@@ -244,7 +286,11 @@ public final class Bots implements Listener {
         var post = soldier.objective < 0 ? null : game.map().posts().get(soldier.objective);
         boolean capturing = post != null && post.contains(here);
         Location destination = null;
-        if (target.isPresent() && here.distanceSquared(target.get().getLocation()) < KEEP_DISTANCE * KEEP_DISTANCE && !capturing) {
+        var patient = soldier.role == CombatClass.MEDIC ? patient(soldier) : Optional.<LivingEntity>empty();
+        if (patient.isPresent() && here.distanceSquared(patient.get().getLocation()) > 9) {
+            destination = patient.get().getLocation();
+        } else if (target.isPresent() && here.distanceSquared(target.get().getLocation()) < KEEP_DISTANCE * KEEP_DISTANCE
+                && (!capturing || soldier.heat.venting(tick))) {
             var away = here.toVector().subtract(target.get().getLocation().toVector()).setY(0);
             if (away.lengthSquared() > 0.01) {
                 destination = here.clone().add(away.normalize().multiply(4));
@@ -278,27 +324,52 @@ public final class Bots implements Listener {
         mob.getPathfinder().moveTo(destination, 1.0);
     }
 
-    private void fire(Soldier soldier, LivingEntity target, long tick) {
-        var stats = game.config().stats(Blaster.CARBINE);
-        var fired = soldier.heat.fire(tick, Math.max(config.shotTicks(), stats.cooldownTicks()), stats.heat());
+    private void fire(Soldier soldier, long tick) {
+        if (tick < soldier.pauseUntil) {
+            return;
+        }
+        var blaster = soldier.role.blaster();
+        var stats = game.config().stats(blaster);
+        var fired = soldier.heat.fire(tick, Math.max(tuning.shotTicks(), stats.cooldownTicks()), stats.heat());
         if (fired != Heat.Shot.FIRED && fired != Heat.Shot.OVERHEATED) {
             return;
         }
-        var from = soldier.body.getEyeLocation();
-        var aim = target.getLocation().add(0, target.getHeight() * 0.65, 0).toVector().subtract(from.toVector());
-        if (aim.lengthSquared() < 0.01) {
-            return;
-        }
-        aim.normalize();
+        var aim = soldier.aim.clone();
         var random = ThreadLocalRandom.current();
-        double spread = config.spread();
+        double spread = tuning.spread() * (soldier.body.getVelocity().lengthSquared() > 0.005 ? 1.5 : 1);
         if (spread > 0) {
-            aim.add(new org.bukkit.util.Vector(random.nextDouble(-spread, spread), random.nextDouble(-spread, spread),
+            aim.add(new Vector(random.nextDouble(-spread, spread), random.nextDouble(-spread, spread),
                     random.nextDouble(-spread, spread))).normalize();
         }
         soldier.protectedUntil = 0;
-        game.fireBot(soldier.body, soldier.faction, aim);
+        game.fireBot(soldier.body, soldier.faction, blaster, aim, tuning.damageScale(), tuning.headshots());
         soldier.body.swingMainHand();
+        if (tuning.burstShots() > 0 && ++soldier.burst >= tuning.burstShots()) {
+            soldier.burst = 0;
+            soldier.pauseUntil = tick + tuning.burstPauseTicks();
+        }
+    }
+
+    private Optional<LivingEntity> patient(Soldier soldier) {
+        var here = soldier.body.getLocation();
+        return game.combatants().stream().filter(ally -> !ally.equals(soldier.body)
+                        && game.factionOf(ally).filter(soldier.faction::equals).isPresent())
+                .filter(ally -> !(ally instanceof Player player) || game.heroOf(player).isEmpty())
+                .filter(ally -> ally.getHealth() < ally.getAttribute(Attribute.MAX_HEALTH).getValue())
+                .filter(ally -> here.distanceSquared(ally.getLocation()) <= 18 * 18)
+                .min(Comparator.comparingDouble(ally -> ally.getHealth() / ally.getAttribute(Attribute.MAX_HEALTH).getValue()));
+    }
+
+    private void support(Soldier soldier, long tick) {
+        if (tick < soldier.healAt) {
+            return;
+        }
+        patient(soldier).filter(ally -> ally.getLocation().distanceSquared(soldier.body.getLocation()) <= 16)
+                .filter(soldier.body::hasLineOfSight).ifPresent(ally -> {
+                    game.heal(ally, config.healAmount());
+                    ally.getWorld().spawnParticle(Particle.HEART, ally.getLocation().add(0, 1.8, 0), 2, 0.2, 0.1, 0.2, 0);
+                    soldier.healAt = tick + config.healTicks();
+                });
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
@@ -320,6 +391,9 @@ public final class Bots implements Listener {
                 || hit.getCause() == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK)) {
             var held = player.getInventory().getItemInMainHand();
             if (!game.onField(player) || Sabers.isSaber(held) && !Sabers.isLit(held)) {
+                event.setCancelled(true);
+            }
+            if (game.heroOf(player).filter(Hero::bladed).isPresent()) {
                 event.setCancelled(true);
             }
         }

@@ -4,6 +4,8 @@ import io.papermc.paper.event.player.PlayerArmSwingEvent;
 import me.blockcraft.api.game.GamePhase;
 import me.blockcraft.api.item.HotbarItem;
 import me.blockcraft.api.world.BuildMode;
+import me.blockcraft.api.task.Tasks;
+import me.blockcraft.sternenfront.combat.Combat;
 import me.blockcraft.sternenfront.game.Ability;
 import me.blockcraft.sternenfront.game.Blaster;
 import me.blockcraft.sternenfront.game.SternenfrontGame;
@@ -23,8 +25,8 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 
 /**
- * The round's controls: right click fires the blaster, uses an ability, throws a streak's orbital strike or leaps
- * with a blade; F and Q use the first and second ability of the class or the hero. No block answers a click or a step
+ * The round's controls: right click fires the blaster, guards with a blade or throws a streak's orbital strike.
+ * F and Q use the first and second ability of the class or the hero. No block answers a click or a step
  * while the round runs, so a blaster fires at a door as at the sky.
  */
 public final class CombatListener implements Listener {
@@ -52,7 +54,12 @@ public final class CombatListener implements Listener {
         if (event.getHand() != EquipmentSlot.HAND || !event.getAction().isRightClick()) {
             return;
         }
-        use(player, event.getItem());
+        if (Combat.holdsBlade(player)) {
+            event.setUseItemInHand(Event.Result.ALLOW);
+            game.combat().raise(player);
+        } else {
+            use(player, event.getItem());
+        }
     }
 
     private void use(Player player, ItemStack item) {
@@ -65,7 +72,7 @@ public final class CombatListener implements Listener {
         HotbarItem.of(item, SternenfrontItem.class).ifPresent(roundItem -> {
             switch (roundItem) {
                 case DEPLOY -> game.openDeploy(player);
-                case BLADE, SABER -> game.leap(player);
+                case BLADE, SABER -> game.combat().raise(player);
                 case STRIKE -> game.throwStreakStrike(player);
             }
         });
@@ -73,7 +80,7 @@ public final class CombatListener implements Listener {
 
     @EventHandler
     public void onSwing(PlayerArmSwingEvent event) {
-        if (event.getHand() == EquipmentSlot.HAND && fighting(event.getPlayer())) {
+        if (event.getHand() == EquipmentSlot.HAND && fighting(event.getPlayer()) && !event.getPlayer().isHandRaised()) {
             game.swing(event.getPlayer());
         }
     }
@@ -94,7 +101,11 @@ public final class CombatListener implements Listener {
     public void onSwap(PlayerSwapHandItemsEvent event) {
         if (fighting(event.getPlayer())) {
             event.setCancelled(true);
-            game.useAbility(event.getPlayer(), 0);
+            if (event.getPlayer().isSneaking() && game.strikeReady(event.getPlayer())) {
+                game.throwStreakStrike(event.getPlayer());
+            } else {
+                game.useAbility(event.getPlayer(), 0);
+            }
         }
     }
 
@@ -102,7 +113,12 @@ public final class CombatListener implements Listener {
     public void onDrop(PlayerDropItemEvent event) {
         if (fighting(event.getPlayer())) {
             event.setCancelled(true);
-            game.useAbility(event.getPlayer(), 1);
+            // A cancelled drop restores the weapon after this event, before the ability reads its slot.
+            Tasks.sync(game.plugin(), () -> {
+                if (event.getPlayer().isOnline() && fighting(event.getPlayer())) {
+                    game.useAbility(event.getPlayer(), 1);
+                }
+            });
         }
     }
 

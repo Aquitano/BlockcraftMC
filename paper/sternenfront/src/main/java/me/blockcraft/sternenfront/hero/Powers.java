@@ -120,7 +120,7 @@ public final class Powers {
             player.getWorld().spawnParticle(Particle.GUST, point, 1, along * 0.08, along * 0.08, along * 0.08, 0);
         }
         SoundCue.FORCE_PUSH.play(eye, 1.5f);
-        for (var target : game.combatants()) {
+        for (var target : game.targets()) {
             if (!target.getWorld().equals(player.getWorld())) {
                 continue;
             }
@@ -247,7 +247,11 @@ public final class Powers {
                 flights.add(next);
             }
         }
-        grips.removeIf(grip -> hold(grip, tick));
+        for (var grip : List.copyOf(grips)) {
+            if (grips.contains(grip) && hold(grip, tick)) {
+                grips.remove(grip);
+            }
+        }
         jetpacks.entrySet().removeIf(entry -> thrust(entry.getKey(), entry.getValue(), tick));
         strikes.removeIf(strike -> rain(strike, tick));
     }
@@ -288,7 +292,7 @@ public final class Powers {
         var next = position.clone().add(heading.clone().multiply(travelled));
         next.setYaw(flight.display().getLocation().getYaw() + SPIN_DEGREES);
         flight.display().teleport(next);
-        for (var target : game.combatants()) {
+        for (var target : game.targets()) {
             if (!target.getWorld().equals(position.getWorld()) || !game.hittable(flight.faction(), target)
                     || flight.struck().contains(target.getUniqueId())
                     || !SaberSweep.hits(position.toVector(), next.toVector(), target.getBoundingBox(), SABER_REACH)) {
@@ -403,7 +407,7 @@ public final class Powers {
         at.getWorld().spawnParticle(Particle.EXPLOSION, at, 3, 0.8, 0.5, 0.8, 0);
         at.getWorld().spawnParticle(Particle.FLAME, at, 20, 1, 0.5, 1, 0.05);
         SoundCue.ORBITAL_IMPACT.play(at, 2.5f);
-        for (var target : game.combatants()) {
+        for (var target : game.targets()) {
             if (!target.getWorld().equals(at.getWorld())) {
                 continue;
             }

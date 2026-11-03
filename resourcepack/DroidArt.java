@@ -62,6 +62,47 @@ public final class DroidArt {
         return new Box(x1, y1, z1, x2, y2, z2, texture);
     }
 
+    private static final String INFANTRY_TEXTURES = """
+            {"skin":"minecraft:block/terracotta","uniform":"minecraft:block/brown_concrete",
+             "vest":"minecraft:block/orange_terracotta","helmet":"minecraft:block/sandstone_top",
+             "dark":"minecraft:block/black_concrete","metal":"minecraft:block/iron_block",
+             "particle":"minecraft:block/orange_terracotta"}
+            """.strip();
+
+    private static final Map<String, List<Box>> INFANTRY = Map.of(
+            "torso", List.of(box(-.25, 0, -.13, .25, .4, .13, "uniform"),
+                    box(-.26, .08, .13, .26, .37, .17, "vest"),
+                    box(-.255, -.04, -.135, .255, .03, .17, "dark"),
+                    box(-.08, -.025, .171, .08, .02, .19, "metal"),
+                    box(-.2, .11, .17, -.04, .24, .2, "helmet"),
+                    box(.04, .11, .17, .2, .24, .2, "helmet")),
+            "head", List.of(box(-.2, -.02, -.2, .2, .36, .2, "skin"),
+                    box(-.22, .23, -.22, .22, .42, .22, "helmet"),
+                    box(-.23, .19, -.22, -.195, .33, .2, "helmet"),
+                    box(.195, .19, -.22, .23, .33, .2, "helmet"),
+                    box(-.21, .17, .201, .21, .26, .23, "dark"),
+                    box(-.04, .06, .2, .04, .17, .25, "skin"),
+                    box(-.1, .015, .201, .1, .045, .21, "uniform")),
+            "arm", List.of(box(-.12, -.27, -.12, .12, .025, .12, "uniform"),
+                    box(-.125, -.12, -.125, .125, .01, .125, "vest"),
+                    box(-.105, -.48, -.105, .105, -.27, .105, "uniform"),
+                    box(-.11, -.59, -.11, .11, -.48, .11, "dark")),
+            "leg", List.of(box(-.12, -.68, -.12, .12, 0, .12, "uniform"),
+                    box(-.125, -.5, .12, .125, -.35, .15, "vest"),
+                    box(-.125, -.95, -.125, .125, -.68, .18, "dark")));
+
+    private static final List<Box> SPEEDER = List.of(
+            box(-.32, .23, -.65, .32, .43, .65, "metal"),
+            box(-.23, .42, -.55, .23, .54, .07, "dark"),
+            box(-.32, .3, .4, .32, .58, .68, "shell"),
+            box(-.035, .46, .55, .035, .52, 1.45, "metal"),
+            box(-.48, .3, 1.0, .48, .39, 1.45, "shell"),
+            box(-.35, .59, .35, .35, .64, .43, "dark"),
+            box(-.43, .2, -.8, -.24, .4, -.35, "joint"),
+            box(.24, .2, -.8, .43, .4, -.35, "joint"),
+            box(-.4, .24, -.83, -.27, .36, -.8, "stripe"),
+            box(.27, .24, -.83, .4, .36, -.8, "stripe"));
+
     private static String point(double x, double y, double z) {
         return "[" + pixel(x) + "," + pixel(y) + "," + pixel(z) + "]";
     }
@@ -72,15 +113,22 @@ public final class DroidArt {
 
     public static void main(String[] args) throws IOException {
         var root = Path.of(args.length == 0 ? "src" : args[0]).resolve("assets/blockcraft");
-        for (var entry : PARTS.entrySet()) {
-            var part = entry.getKey();
-            var model = root.resolve("models/item/sternenfront/droid/" + part + ".json");
-            var definition = root.resolve("items/sternenfront/droid/" + part + ".json");
-            Files.createDirectories(model.getParent());
-            Files.createDirectories(definition.getParent());
-            var elements = entry.getValue().stream().map(Box::json).collect(Collectors.joining(",\n    "));
-            Files.writeString(model, "{\n  \"textures\":" + TEXTURES + ",\n  \"elements\":[\n    " + elements + "\n  ]\n}\n");
-            Files.writeString(definition, "{\"model\":{\"type\":\"minecraft:model\",\"model\":\"blockcraft:item/sternenfront/droid/" + part + "\"}}\n");
+        for (var family : Map.of("droid", PARTS, "infantry", INFANTRY).entrySet()) {
+            for (var entry : family.getValue().entrySet()) {
+                write(root, "sternenfront/" + family.getKey() + "/" + entry.getKey(), entry.getValue(),
+                        family.getKey().equals("droid") ? TEXTURES : INFANTRY_TEXTURES);
+            }
         }
+        write(root, "sternenfront/speeder", SPEEDER, TEXTURES);
+    }
+
+    private static void write(Path root, String path, List<Box> boxes, String textures) throws IOException {
+        var model = root.resolve("models/item/" + path + ".json");
+        var definition = root.resolve("items/" + path + ".json");
+        Files.createDirectories(model.getParent());
+        Files.createDirectories(definition.getParent());
+        var elements = boxes.stream().map(Box::json).collect(Collectors.joining(",\n    "));
+        Files.writeString(model, "{\n  \"textures\":" + textures + ",\n  \"elements\":[\n    " + elements + "\n  ]\n}\n");
+        Files.writeString(definition, "{\"model\":{\"type\":\"minecraft:model\",\"model\":\"blockcraft:item/" + path + "\"}}\n");
     }
 }

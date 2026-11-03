@@ -1,6 +1,7 @@
 package me.blockcraft.sternenfront.game;
 
 import me.blockcraft.api.pack.PackModel;
+import me.blockcraft.sternenfront.combat.Guard;
 import org.bukkit.Bukkit;
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
@@ -19,7 +20,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * The bolts in flight. Each moves {@code speed} blocks a tick along a straight line, stops at the first wall or
- * enemy on the way and shows as a glowing model in its faction's colour with a trail of the same colour, which a
+ * enemy on the way and shows as a bright model in its faction's colour with a trail of the same colour, which a
  * client without the pack still sees. Teammates, deploying players and spectators are not in the way; a marked
  * target of the map is, and hears of it through a {@link TargetShotEvent}.
  */
@@ -71,7 +72,12 @@ public final class Bolts {
                     random.nextDouble(-stats.spread(), stats.spread()),
                     random.nextDouble(-stats.spread(), stats.spread()))).normalize();
         }
-        fire(shooter, faction, blaster, stats, direction);
+        if (blaster == Blaster.LONG_RIFLE && game.combat().config().precisionHitscan()) {
+            launch(shooter, new Shot(faction, blaster, stats.damage(), stats.headshot(), stats.range()),
+                    shooter.getEyeLocation(), direction, stats.range(), true);
+        } else {
+            fire(shooter, faction, blaster, stats, direction);
+        }
     }
 
     public void fire(LivingEntity shooter, Faction faction, Blaster blaster, Blaster.Stats stats, Vector direction) {
@@ -79,17 +85,25 @@ public final class Bolts {
     }
 
     private void launch(LivingEntity shooter, Shot shot, Location from, Vector direction, double range) {
+        launch(shooter, shot, from, direction, range, false);
+    }
+
+    private void launch(LivingEntity shooter, Shot shot, Location from, Vector direction, double range, boolean instant) {
         var shown = from.clone().add(direction.clone().multiply(VISUAL_LEAD)).setDirection(direction);
         var display = from.getWorld().spawn(shown, ItemDisplay.class, spawned -> {
             spawned.setPersistent(false);
             spawned.setItemStack(model(shot.faction()).item().build());
             spawned.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.NONE);
             spawned.setBrightness(LIT);
-            spawned.setGlowing(true);
-            spawned.setGlowColorOverride(shot.faction().bolt());
             spawned.setTeleportDuration(1);
         });
-        flying.add(new Bolt(shooter, shot, from.clone(), direction.clone(), range, display));
+        var bolt = new Bolt(shooter, shot, from.clone(), direction.clone(), range, display);
+        if (instant) {
+            step(bolt);
+            display.remove();
+        } else {
+            flying.add(bolt);
+        }
     }
 
     public void tick() {
@@ -145,7 +159,12 @@ public final class Bolts {
     }
 
     private void strike(Bolt bolt, LivingEntity victim, Location at) {
-        if (victim instanceof Player player && game.deflects(player, bolt.direction)) {
+        var guard = victim instanceof Player player ? game.combat().block(player, bolt.direction, bolt.shot.damage())
+                : Guard.Result.NONE;
+        if (guard == Guard.Result.BLOCK) {
+            return;
+        }
+        if (victim instanceof Player player && guard == Guard.Result.PARRY) {
             var back = bolt.shooter.isValid() && bolt.shooter.getWorld().equals(at.getWorld())
                     ? bolt.shooter.getEyeLocation().toVector().subtract(at.toVector()).normalize()
                     : bolt.direction.clone().multiply(-1);

@@ -14,7 +14,7 @@ join:
 
 item:
   faction: "<arrow><primary>Fraktion wählen"
-  class: "<arrow><primary>Klasse wählen"
+  class: "<arrow><primary>Klasse & Bot-Stärke"
 
 faction:
   title: "<arrow><sternenfront>Sternenfront <dark>· <muted>Fraktion"
@@ -134,7 +134,7 @@ relic:
   name: "<accent>Ahnenklinge"
   lore:
     - "<muted>Wer sie trägt, kämpft für zwei."
-    - "<right>Sprung nach vorn <dark>· <muted>Schleichen lenkt Bolzen ab"
+    - "<right>Halten zum Blocken <dark>· <muted>F oder zweimal springen für den Machtsprung"
   title: "<display>AHNENKLINGE"
   subtitle: "<muted>Die Klinge liegt in der Tempelruine im Norden"
   appeared: "<prefix><accent>Die Ahnenklinge <muted>ist in der Tempelruine im Norden erschienen!"
@@ -191,7 +191,7 @@ headquarters:
 deploy:
   controls: "<prefix><accent>F<muted>: <first> <dark>· <accent>Q<muted>: <second>"
   no-ability: "<muted>Keine Fähigkeit"
-  saber-controls: "<prefix><right>Machtsprung <dark>· <muted>Schleichen blockt mit gezogener Klinge."
+  saber-controls: "<prefix><right>Halten zum Blocken <dark>· <muted>Zweimal springen für den Machtsprung."
   title: "<arrow><sternenfront>Sternenfront <dark>· <muted>Einsatz"
   item: "<arrow><primary>Einsatz planen"
   waiting: "<muted>Einsatz möglich in <accent><seconds> s"
@@ -283,7 +283,7 @@ hero:
   head: "<white>Heldenrüstung"
   saber-lore:
     - "<muted>Schlägt mit Abklingzeit, wie ein Schwert."
-    - "<right>Machtsprung nach vorn <dark>· <muted>Schleichen blockt Bolzen und Klingen"
+    - "<right>Halten zum Blocken <dark>· <muted>Zweimal springen für den Machtsprung"
   jedi:
     name: "<white>Jedi-Ritter"
     weapon: "<white>Lichtschwert"
@@ -291,7 +291,7 @@ hero:
       - "<muted>Lichtschwert und die Macht."
       - "<muted>Stößt Gegner mit der Macht zurück und springt weit."
       - "<muted>Mit Q wirfst du das Lichtschwert."
-      - "<muted>Lenkt im Schleichen Bolzen ab."
+      - "<right>Halten zum Blocken; gutes Timing lenkt Bolzen zurück."
   bounty-hunter:
     name: "<white>Kopfgeldjäger"
     lore:
@@ -303,7 +303,7 @@ hero:
     lore:
       - "<muted>Rotes Lichtschwert und die dunkle Seite der Macht."
       - "<muted>Wirft das Lichtschwert und würgt Gegner aus der Ferne."
-      - "<muted>Lenkt im Schleichen Bolzen ab."
+      - "<right>Halten zum Blocken; gutes Timing lenkt Bolzen zurück."
   commander:
     name: "<white>Kommandant"
     lore:
@@ -378,7 +378,57 @@ streak:
   lore:
     - "<muted>Belohnung für deine Serie, einmal nutzbar."
     - "<right>Peilsender werfen"
-  earned: "<success><kills> Kills in Folge! <muted>Ein <accent>Orbitalschlag <muted>liegt in deiner Leiste."
+  earned: "<success><kills> Kills in Folge! <muted>Mit <accent>Shift+F <muted>rufst du deinen <accent>Orbitalschlag<muted>."
 
 bot:
-  name: "<tint><faction> · Soldat <number></tint>"
+  name: "<tint><faction> · <role> <number></tint>"
+  difficulty:
+    open: "<arrow><primary>Bot-Stärke"
+    open-lore:
+      - "<muted>Stimme für die Bot-Stärke dieser Runde."
+      - "<click>Leicht, Normal oder Veteran wählen"
+    title: "<arrow><sternenfront>Sternenfront <dark>· <muted>Bot-Stärke"
+    selected: "<prefix><muted>Bot-Stärke dieser Runde: <difficulty><muted>."
+    easy:
+      name: "<success>Leicht"
+      lore:
+        - "<muted>Langsame Reaktion, kurze Salven und mehr Fehlschüsse."
+        - "<muted>Weniger Schaden; zum Ausprobieren und Üben."
+    normal:
+      name: "<accent>Normal"
+      lore:
+        - "<muted>Schnellere Reaktion und gezielte Salven."
+        - "<muted>Gefährliche Gegner, mit kurzen Feuerpausen."
+    veteran:
+      name: "<error>Veteran"
+      lore:
+        - "<muted>Schnelle Zielerfassung, Dauerfeuer und volle Trefferstärke."
+        - "<muted>Sehr genaue Schüsse; Kopftreffer zählen extra."
+
+combat:
+  hud: "<success><health_icon> <health> <hp> <dark>│ <accent><meter_icon> <meter> <state> <dark>│ <first> <dark>│ <second>"
+  ability: "<accent><key> <name> <status>"
+  ready: "<success>✓"
+  cooldown: "<muted><seconds>s"
+  none: "<dark>—"
+  champion-leap: "<accent>F <white>Machtsprung"
+  leap-cooldown: "<dark> │ <muted>Sprung <seconds>s"
+  strike-ready: "<dark> │ <accent>Shift+F <white>Orbitalschlag"
+  guard: "<muted>Deckung"
+  guarding: "<success>BLOCKEN"
+  broken: "<error>GEBROCHEN"
+  guard-broken: "<error>Deckung gebrochen! <muted>Lass sie sich kurz erholen."
+  heat: "<muted>Hitze"
+  venting: "<error>KÜHLEN"
+  bar: "<percent>%"
+  icons:
+    health: "LP"
+    heat: "Hitze"
+    guard: "Deckung"
+    f: "F"
+    q: "Q"
+
+speeder:
+  name: "<faction> <dark>· <white>Speeder <dark>· <right>Einsteigen"
+  controls: "<prefix><muted>Speeder: <accent>W/S <muted>Gas/Bremse, <accent>A/D <muted>lenken, <accent>Shift <muted>absteigen. Waffen sind während der Fahrt gesperrt."
+  driving: "<accent>Speeder <dark>│ <white><health> LP <dark>│ <white><speed> m/s <dark>│ <muted>W/S · A/D · Shift"

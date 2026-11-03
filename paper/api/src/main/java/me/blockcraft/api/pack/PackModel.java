@@ -37,6 +37,7 @@ public enum PackModel {
     ZOMBIES_MOLOTOV(Material.HONEY_BOTTLE, "zombies/molotov"),
     TTT_MEDIPACK(Material.GLISTERING_MELON_SLICE, "ttt/medipack"),
     STERNENFRONT_CARBINE(Material.IRON_HOE, "sternenfront/carbine"),
+    STERNENFRONT_SPEEDER(Material.MINECART, "sternenfront/speeder"),
     STERNENFRONT_REPEATER(Material.NETHERITE_HOE, "sternenfront/repeater"),
     STERNENFRONT_LONG_RIFLE(Material.DIAMOND_HOE, "sternenfront/long_rifle"),
     STERNENFRONT_PISTOL(Material.STONE_HOE, "sternenfront/pistol"),

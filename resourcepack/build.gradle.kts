@@ -27,10 +27,15 @@ val generateDroids = tasks.register<Exec>("generateDroids") {
     commandLine("java", "DroidArt.java", "src")
 }
 
+val generateCombat = tasks.register<Exec>("generateCombat") {
+    workingDir(layout.projectDirectory)
+    commandLine("java", "CombatArt.java", "src")
+}
+
 tasks.register("regenerate") {
     group = "build"
     description = "Regenerates textures, sounds, furniture, and vanilla item overrides in resourcepack/src."
-    dependsOn(generateTextures, generateSounds, generateSternenfrontSounds, generateProps, generateDroids, ":paper:api:packOverrides")
+    dependsOn(generateTextures, generateSounds, generateSternenfrontSounds, generateProps, generateDroids, generateCombat, ":paper:api:packOverrides")
 }
 
 val pack = tasks.register<Zip>("pack") {

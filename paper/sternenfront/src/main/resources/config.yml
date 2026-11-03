@@ -10,13 +10,35 @@ players:
 bots:
   enabled: true
   fill-per-team: 4
-  reaction-ticks: 10
-  shot-ticks: 8
-  aim-spread: 0.065
+  difficulty: normal
+  profiles:
+    easy: {reaction-ticks: 18, shot-ticks: 12, aim-spread: 0.11, burst-shots: 3, burst-pause-ticks: 30, tracking-degrees: 12, damage-scale: 0.6, headshots: false}
+    normal: {reaction-ticks: 12, shot-ticks: 8, aim-spread: 0.045, burst-shots: 5, burst-pause-ticks: 12, tracking-degrees: 45, damage-scale: 0.9, headshots: false}
+    veteran: {reaction-ticks: 10, shot-ticks: 8, aim-spread: 0.02, burst-shots: 0, burst-pause-ticks: 0, tracking-degrees: 180, damage-scale: 1, headshots: true}
+  medic: {heal-ticks: 60, heal-amount: 3}
   sight-range: 32
   kill-points: 25
 appearance:
   droids: true
+  infantry: true
+combat:
+  precision-hitscan: true
+  guard:
+    capacity: 100
+    recovery-per-tick: 1
+    recovery-delay-ticks: 20
+    break-ticks: 30
+    parry-ticks: 5
+    cost-per-damage: 2
+  melee: {range: 3.5, angle: 85, swing-ticks: 12, targets: 2}
+speeders:
+  enabled: true
+  health: 60
+  respawn-seconds: 45
+  speed: 0.65
+  acceleration: 0.035
+  turn-degrees: 4
+  idle-return-seconds: 45
 countdown:
   lobby: 60
   start: 10

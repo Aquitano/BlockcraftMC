@@ -33,16 +33,20 @@ public final class Droids implements Listener, AutoCloseable {
     private final Map<UUID, DroidRig> rigs = new HashMap<>();
     private final Map<UUID, DroidRig> targets = new HashMap<>();
     private final BukkitTask task;
+    private final boolean droids;
+    private final boolean infantry;
 
-    private Droids(Plugin plugin, SternenfrontGame game) {
+    private Droids(Plugin plugin, SternenfrontGame game, boolean droids, boolean infantry) {
         this.plugin = plugin;
         this.game = game;
+        this.droids = droids;
+        this.infantry = infantry;
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
         task = plugin.getServer().getScheduler().runTaskTimer(plugin, this::tick, 1L, 1L);
     }
 
-    public static Droids start(Plugin plugin, SternenfrontGame game) {
-        return new Droids(plugin, game);
+    public static Droids start(Plugin plugin, SternenfrontGame game, boolean droids, boolean infantry) {
+        return new Droids(plugin, game, droids, infantry);
     }
 
     private void tick() {
@@ -54,7 +58,8 @@ public final class Droids implements Listener, AutoCloseable {
             var id = actor.getUniqueId();
             present.add(id);
             var rig = rigs.computeIfAbsent(id, ignored -> {
-                var created = new DroidRig(plugin, actor);
+                var created = new DroidRig(plugin, actor, game.factionOf(actor).filter(Faction.HEGEMONIE::equals).isPresent(),
+                        () -> game.bots().aim(actor).orElseGet(() -> actor.getEyeLocation().getDirection()));
                 targets.put(created.targetId(), created);
                 return created;
             });
@@ -69,7 +74,8 @@ public final class Droids implements Listener, AutoCloseable {
 
     private boolean eligible(LivingEntity actor) {
         return actor.isValid() && game.onField(actor) && actor.getWorld().equals(game.map().world())
-                && game.factionOf(actor).filter(Faction.HEGEMONIE::equals).isPresent()
+                && (droids && game.factionOf(actor).filter(Faction.HEGEMONIE::equals).isPresent()
+                || infantry && !(actor instanceof Player) && game.factionOf(actor).filter(Faction.KOLONIEN::equals).isPresent())
                 && (!(actor instanceof Player player) || game.heroOf(player).isEmpty()
                 && !BlockcraftApi.get().buildMode().isEnabled(player));
     }

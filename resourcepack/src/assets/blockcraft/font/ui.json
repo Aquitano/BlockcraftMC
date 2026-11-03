@@ -160,6 +160,20 @@
       "chars": [
         "\ue300\ue301\ue302\ue303\ue304\ue305\ue306\ue307"
       ]
+    },
+    {
+      "type": "bitmap",
+      "file": "blockcraft:font/combat_icons.png",
+      "ascent": 9,
+      "height": 12,
+      "chars": ["\ue220\ue221\ue222\ue223\ue224"]
+    },
+    {
+      "type": "bitmap",
+      "file": "blockcraft:font/combat_bars.png",
+      "ascent": 9,
+      "height": 12,
+      "chars": ["\ue240\ue241\ue242\ue243\ue244\ue245\ue246\ue247\ue248\ue249\ue24a"]
     }
   ]
 }

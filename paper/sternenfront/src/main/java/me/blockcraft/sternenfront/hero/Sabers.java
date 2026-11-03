@@ -2,6 +2,8 @@ package me.blockcraft.sternenfront.hero;
 
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.CustomModelData;
+import io.papermc.paper.datacomponent.item.Consumable;
+import io.papermc.paper.datacomponent.item.consumable.ItemUseAnimation;
 import io.papermc.paper.datacomponent.item.ItemAttributeModifiers;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.item.HotbarItem;
@@ -89,7 +91,14 @@ public final class Sabers {
                         AttributeModifier.Operation.ADD_NUMBER, EquipmentSlotGroup.MAINHAND))
                 .build());
         item.editMeta(meta -> meta.getPersistentDataContainer().set(LIT, PersistentDataType.BOOLEAN, lit));
+        allowGuard(item);
         return SternenfrontItem.SABER.tag(item);
+    }
+
+    public static void allowGuard(ItemStack item) {
+        item.setData(DataComponentTypes.CONSUMABLE, Consumable.consumable()
+                .consumeSeconds(3600).animation(ItemUseAnimation.BLOCK)
+                .hasConsumeParticles(false).build());
     }
 
     /** The pack draws a tinted model's blade in the first colour of its custom_model_data. */
