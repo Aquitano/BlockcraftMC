@@ -99,19 +99,19 @@ public final class TttPlugin extends JavaPlugin {
     }
 
     /**
-     * Eichenhain and every imported map of the pool. Eichenhain is built now, because building it takes seconds that
-     * a round start must not stall for; the imported maps are only copied into place, and loading one takes a
-     * fraction of that. A map whose copy fails stays out of the vote. TTT 2 plays only Eichenhain, the one map with
+     * Schattenbach and every imported map of the pool. Schattenbach is built now, because building it takes seconds
+     * that a round start must not stall for; the imported maps are only copied into place, and loading one takes a
+     * fraction of that. A map whose copy fails stays out of the vote. TTT 2 plays only Schattenbach, the one map with
      * chores.
      */
     private List<MapVote.Choice> choices(TttConfig config, TttMode mode) {
         var choices = new ArrayList<MapVote.Choice>();
-        var eichenhainKey = new NamespacedKey(NAMESPACE, "eichenhain");
-        Worlds.discard(eichenhainKey);
-        var eichenhainWorld = Worlds.createArena(eichenhainKey);
-        playable(eichenhainWorld, config);
-        var eichenhain = TownBuilder.build(eichenhainWorld);
-        choices.add(new MapVote.Choice(eichenhainKey.getKey(), eichenhain.name(), List.of(), Material.OAK_SAPLING, () -> eichenhain));
+        var builtKey = new NamespacedKey(NAMESPACE, TownBuilder.KEY);
+        Worlds.discard(builtKey);
+        var builtWorld = Worlds.createArena(builtKey);
+        playable(builtWorld, config);
+        var built = TownBuilder.build(builtWorld);
+        choices.add(new MapVote.Choice(TownBuilder.KEY, built.name(), List.of(), Material.BELL, () -> built));
         if (mode == TttMode.TASKS) {
             return choices;
         }

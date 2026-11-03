@@ -43,24 +43,47 @@ the map's own blocks. Everyone is told who pressed it; the tester then rests `te
 The imported maps also have ClayMC's **traitor trap**: a pit with lava under the tester's floor and a hidden button
 elsewhere. Only a living traitor can press it, once per round. The floor drops away for `tester.trap-seconds` (3),
 then closes over the pit. Lava and fire deaths inside the pit count as the presser's kills unless combat credits
-another player. Escaping the pit leaves no trap attribution. Eichenhain's tester has no trap.
+another player. Escaping the pit leaves no trap attribution.
 
-**Eichenhain** is a village `TownBuilder` puts into an empty world at every start; the decoration draws from a fixed
-seed, so it looks the same every time. Two streets cross at a plaza with a fountain, where the round starts, and
-benches. Around it stand eight furnished houses with gable roofs (two with an upper floor and a ladder), an inn with
-a bar below and rooms above, an open smithy, a barn with a loft and a paddock, and a market with a well. The two
-western houses have cellars, joined by a tunnel under the street. A pond with a jetty and a footbridge lies in the
-north-east, fenced vegetable gardens behind the houses, a graveyard with an open grave beside the chapel, and a
-forest between the village and the hedge, inside the world border. About 30 chests hide in the houses, cellars,
-lofts, the tunnel, on the jetty and in the open grave; the ender chest stands in the chapel at the south end, the
-tester at the north end.
+**Schattenbach** is an abbey village `TownBuilder` puts into an empty world at every start (vote and `/forcemap`
+key `schattenbach`); the decoration draws from a fixed seed, so it looks the same every time. The round starts round
+the fountain on the market. The abbey stands on a terrace in the north-west, reached by the stairs above the market,
+narrow stairs in the west and stairs down to the farm in the east: a church with pews, an organ gallery and a bell
+tower whose belfry overlooks the map, the crypt below it, a cloister whose roof can be walked from the library, the
+east range with refectory, library and abbot's room, the graveyard with a mausoleum, and the herb garden. Around the
+market stand the town hall, the inn "Zum Goldenen Krug" with guest rooms and an attic, the bakery, the smithy, the
+apothecary, the cobbler's house, the weaver's house, the well square and the old gate tower; the town hall's balcony
+bridges the lane onto the smithy's flat roof. A brook crosses the south under a stone bridge, a footbridge and a ford
+of stepping stones, past the water mill, whose wheel a flume feeds from the mill pond. Beyond the brook lie the quarry
+pit with its crane, the orchard with a wayside chapel, the charcoal burner's clearing and a hunting stand; the red
+barn, the fields and the pigsty lie under the terrace in the north-east.
+
+Underneath, the town hall, the inn and the cobbler's house have cellars, a dry well in the cloister drops into the
+crypt, and a miners' tunnel runs from the cobbler's cellar under the brook to the quarry floor. Two passages open only
+for living traitors, behind iron doors at both ends: one from the mausoleum to the crypt, one from the inn's cellar to
+the mill's gear room. Anyone can find their hatches, at the bottom of the open grave and among the crates in the lane
+beside the mill, but not get past the iron doors. The tester stands in the town hall behind the hall's north wall.
+Its floor is the trap's, over a pit of lava that shows through a grate in the Ratskeller below, where the trap's
+button hides behind the kegs. About 30 chests hide in the houses, cellars, lofts, the tunnels, the crypt, the bell
+tower and the mausoleum; the ender chest stands in a niche in the crypt's north wall.
+
+For TTT 2, Schattenbach has 16 chores, named in `tasks.chores` in messages.yml. Six are held at a station: ringing
+the bell in the belfry, the vigil at the brazier in the crypt, baking at the bakery's oven, firing the smithy's forge
+(those four show everyone nearby), drawing water at the well square and turning hay in the barn loft. Five are
+puzzles: tuning the organ, sorting the library's chronicle, checking the ledger in the council chamber, mixing a
+remedy at the apothecary's brewing stand (which shows) and setting the mill's millstone. Five are errands across the
+map: grain from the barn to the mill's sack floor, a charter from the town hall to the abbot's lectern, herbs from the
+herb garden to the inn's soup kettle, stone from the quarry's stonecutter to the cloister's broken wall, and
+horseshoes from the smithy's anvil to the stable gate in the barn. A sabotage locks every wooden door, a blackout
+puts out the lanterns, torches, candles, fires and lamps, and the generator that mends it stands in the mill's gear
+room.
 
 **Vineyard**, **Minecraft** and **Raid** are imported maps from ClayMC (see [the import](../../worlds/README.md#ttt)).
 They live in the TTT map bundle, `worlds/ttt/blockcraft/TTT/maps/<key>/`, each as a `map.yml` and the dimension
 folder of its world, `world/`. At startup, the server copies every imported map into place and adds it to the vote;
 a round loads only the chosen one. A map whose `map.yml` lacks something a round needs is skipped and named in the
 log. Invalid world borders are rejected before voting. If the chosen world fails to load at round start, the
-round uses Eichenhain and announces it.
+round uses Schattenbach and announces it.
 
 Each `map.yml` uses this format:
 

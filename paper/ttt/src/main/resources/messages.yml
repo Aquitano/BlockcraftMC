@@ -326,6 +326,60 @@ scoreboard:
     innocents: "<success>Innocents"
 
 tasks:
+  chores:
+    bell:
+      name: "Glocke läuten"
+      where: "Glockenturm"
+    vigil:
+      name: "Totenwache halten"
+      where: "Krypta"
+    oven:
+      name: "Brot backen"
+      where: "Bäckerei"
+    forge:
+      name: "Esse anfeuern"
+      where: "Schmiede"
+    well:
+      name: "Wasser schöpfen"
+      where: "Dorfbrunnen"
+    hay:
+      name: "Heu wenden"
+      where: "Heuboden"
+    organ:
+      name: "Orgel stimmen"
+      where: "Orgelempore"
+    chronicle:
+      name: "Chronik ordnen"
+      where: "Bibliothek"
+    ledger:
+      name: "Rechnungsbuch prüfen"
+      where: "Ratssaal"
+    potion:
+      name: "Heiltrank mischen"
+      where: "Apotheke"
+    millwork:
+      name: "Mahlwerk einstellen"
+      where: "Mühle"
+    grain:
+      name: "Korn zur Mühle bringen"
+      where: "Scheune"
+      cargo: "Kornsack"
+    letter:
+      name: "Urkunde zum Abt bringen"
+      where: "Rathaus"
+      cargo: "Urkunde"
+    herbs:
+      name: "Kräuter in die Gasthausküche bringen"
+      where: "Kräutergarten"
+      cargo: "Kräuterbündel"
+    stone:
+      name: "Bruchstein zur Klostermauer bringen"
+      where: "Steinbruch"
+      cargo: "Bruchstein"
+    horseshoe:
+      name: "Hufeisen in den Stall bringen"
+      where: "Schmiede"
+      cargo: "Hufeisen"
   bar: "<success>Aufgaben der Innocents <dark>● <white><percent>%"
   chest-shut: "<prefix><muted>Die Kisten bleiben zu. Beute gibt es für erledigte Aufgaben."
   not-yet: "<prefix><muted>Die Aufgaben werden mit den Rollen verteilt."
