@@ -17,6 +17,13 @@
           "type": "minecraft:model",
           "model": "blockcraft:item/tool_home"
         }
+      },
+      {
+        "when": "blockcraft:ttt/crime_camera",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/ttt/crime_camera"
+        }
       }
     ],
     "fallback": {

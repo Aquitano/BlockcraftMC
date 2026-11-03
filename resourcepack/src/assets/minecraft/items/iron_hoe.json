@@ -5,6 +5,13 @@
     "index": 0,
     "cases": [
       {
+        "when": "blockcraft:ttt/silenced_pistol",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/ttt/silenced_pistol"
+        }
+      },
+      {
         "when": "blockcraft:zombies/rifle",
         "model": {
           "type": "minecraft:model",
