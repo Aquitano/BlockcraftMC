@@ -42,6 +42,7 @@ public final class SternenfrontPlugin extends JavaPlugin {
     @Override
     public void onEnable() {
         BundledDefaults.apply(this);
+        SternenfrontConfig.copyDefaults(getConfig());
         var gameConfig = GameConfig.from(getConfig(), getConfig().getBoolean("bots.enabled", true) ? 1 : 2);
         var config = SternenfrontConfig.from(getConfig());
         var api = BlockcraftApi.get();

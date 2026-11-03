@@ -5,7 +5,8 @@ import org.bukkit.configuration.ConfigurationSection;
 import java.util.EnumMap;
 import java.util.Map;
 
-public record BotConfig(boolean enabled, int perTeam, double range, int killPoints, int healTicks, double healAmount,
+public record BotConfig(boolean enabled, int perTeam, double range, double visionAngle, int memoryTicks,
+                        int killPoints, int healTicks, double healAmount,
                         BotDifficulty difficulty, Map<BotDifficulty, Tuning> profiles) {
 
     public record Tuning(int reactionTicks, int shotTicks, double spread, int burstShots, int burstPauseTicks,
@@ -33,6 +34,8 @@ public record BotConfig(boolean enabled, int perTeam, double range, int killPoin
         return new BotConfig(config.getBoolean("bots.enabled", true),
                 Math.clamp(config.getInt("bots.fill-per-team", 4), 1, capacity),
                 Math.clamp(config.getDouble("bots.sight-range", 32), 4, 64),
+                Math.clamp(config.getDouble("bots.vision-angle", 120), 30, 180),
+                Math.clamp(config.getInt("bots.memory-ticks", 40), 0, 200),
                 Math.max(0, config.getInt("bots.kill-points", 25)),
                 Math.max(1, config.getInt("bots.medic.heal-ticks", 60)),
                 Math.max(0, config.getDouble("bots.medic.heal-amount", 3)),

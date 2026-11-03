@@ -92,8 +92,13 @@ public final class ArenaListener implements Listener {
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
     public void onHurt(EntityDamageEvent event) {
-        if (event.getEntity() instanceof Player victim && inRound()) {
+        if (!inRound() || event.getFinalDamage() <= 0) {
+            return;
+        }
+        game.support().damaged(event);
+        if (event.getEntity() instanceof Player victim) {
             game.hurt(victim);
+            game.combat().damaged(victim, event.getDamageSource().getSourceLocation());
         }
     }
 

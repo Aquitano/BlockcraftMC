@@ -273,10 +273,12 @@ public final class Gadgets {
         }
         if (tick % TICKS_PER_SECOND == 0) {
             double radius = game.config().medStation().radius();
+            var owner = Bukkit.getPlayer(station.owner());
             for (var ally : game.combatants()) {
                 if (ally.getWorld().equals(at.getWorld()) && ally.getLocation().distanceSquared(at) <= radius * radius
                         && game.onField(ally) && game.factionOf(ally).filter(station.faction()::equals).isPresent()
-                        && game.heal(ally, game.config().medStation().healPerSecond())) {
+                        && (owner == null ? game.heal(ally, game.config().medStation().healPerSecond())
+                        : game.heal(owner, ally, game.config().medStation().healPerSecond()))) {
                     ally.getWorld().spawnParticle(Particle.HEART, ally.getLocation().add(0, 2.1, 0), 1);
                 }
             }

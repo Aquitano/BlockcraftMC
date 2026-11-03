@@ -26,8 +26,8 @@ import org.bukkit.inventory.ItemStack;
 
 /**
  * The round's controls: right click fires the blaster, guards with a blade or throws a streak's orbital strike.
- * F and Q use the first and second ability of the class or the hero. No block answers a click or a step
- * while the round runs, so a blaster fires at a door as at the sky.
+ * F and Q use the first and second ability of the class or the hero. Only authored battlefield controls answer
+ * block clicks during a round.
  */
 public final class CombatListener implements Listener {
 
@@ -52,6 +52,9 @@ public final class CombatListener implements Listener {
         }
         event.setUseItemInHand(Event.Result.DENY);
         if (event.getHand() != EquipmentSlot.HAND || !event.getAction().isRightClick()) {
+            return;
+        }
+        if (event.getClickedBlock() != null && game.battlefield().use(player, event.getClickedBlock())) {
             return;
         }
         if (Combat.holdsBlade(player)) {

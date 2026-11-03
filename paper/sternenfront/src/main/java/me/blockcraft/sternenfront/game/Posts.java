@@ -49,6 +49,8 @@ public final class Posts {
 
     /** What changed at a post this second, with the players of the faction that did it who stood in the zone. */
     public record Event(int index, CommandPost.Change change, List<Player> present) { }
+    public record Alert(int index, Faction defender) { }
+    public record Update(List<Event> changes, List<Alert> alerts) { }
 
     private static final int BAR_SEGMENTS = 10;
     private static final Color CARD = Color.fromARGB(96, 0, 0, 0);
@@ -63,6 +65,7 @@ public final class Posts {
         private final Set<UUID> viewers = new HashSet<>();
         private TextDisplay label;
         private Presence presence = new Presence(0, 0);
+        private final PostThreat threat = new PostThreat();
 
         private Post(PostSite site, int captureSeconds) {
             this.site = site;
@@ -131,8 +134,9 @@ public final class Posts {
     }
 
     /** One second of the round for every post; {@code fighters} are the players on the field with their faction. */
-    public List<Event> second(Map<LivingEntity, Faction> fighters) {
+    public Update second(Map<LivingEntity, Faction> fighters, long tick, int alertCooldownTicks) {
         var events = new ArrayList<Event>();
+        var alerts = new ArrayList<Alert>();
         for (int index = 0; index < posts.size(); index++) {
             var post = posts.get(index);
             var inside = fighters.entrySet().stream().filter(entry -> post.site.contains(entry.getKey().getLocation()))
@@ -142,6 +146,8 @@ public final class Posts {
             var hegemonie = inside.getOrDefault(Faction.HEGEMONIE, List.of());
             post.presence = new Presence(kolonien.size(), hegemonie.size());
             int current = index;
+            var threatened = post.logic.owner().filter(owner -> post.presence.of(owner.enemy()) > 0);
+            post.threat.update(threatened, tick, alertCooldownTicks).ifPresent(owner -> alerts.add(new Alert(current, owner)));
             post.logic.update(kolonien.size(), hegemonie.size(), 1).ifPresent(change -> {
                 var by = switch (change) {
                     case CommandPost.Change.Captured captured -> captured.by();
@@ -162,7 +168,7 @@ public final class Posts {
             post.viewers.clear();
             post.viewers.addAll(viewing);
         }
-        return events;
+        return new Update(List.copyOf(events), List.copyOf(alerts));
     }
 
     private void draw(Post post, int index) {

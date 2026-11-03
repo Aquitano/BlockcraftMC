@@ -132,6 +132,8 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     private final Ballot<BotDifficulty> botDifficultyVotes = new Ballot<>();
     private final Combat combat;
     private final Speeders speeders;
+    private final Battlefield battlefield;
+    private final SupportRewards support;
     private final Gadgets gadgets;
     private final Heroes heroes;
     private final FeelConfig feel;
@@ -187,6 +189,8 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         this.feel = feel;
         this.combat = new Combat(this, CombatConfig.from(plugin.getConfig()));
         this.speeders = new Speeders(this, SpeederConfig.from(plugin.getConfig()));
+        this.battlefield = new Battlefield(this);
+        this.support = new SupportRewards(this);
         this.streaks = new KillStreaks(feel.orbitalStreak());
         this.reinforcements = new Reinforcements(config.tickets());
         this.relic = new Relic(this, map.relic(), Long.MAX_VALUE);
@@ -227,6 +231,19 @@ public final class SternenfrontGame implements RoundConnections.Seating {
 
     public Bots bots() {
         return bots;
+    }
+
+    public Battlefield battlefield() {
+        return battlefield;
+    }
+
+    public SupportRewards support() {
+        return support;
+    }
+
+    public void supportPoints(Player player, int points) {
+        heroes.earn(player, points);
+        dirty = true;
     }
 
     public int humans(Faction faction) {
@@ -376,6 +393,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     public void quit(Player player) {
         botDifficultyVotes.withdraw(player.getUniqueId());
         combat.forget(player);
+        support.forget(player);
         strikesReady.remove(player.getUniqueId());
         player.leaveVehicle();
         fallen(player, Optional.empty());
@@ -539,6 +557,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         }
         bots.fill();
         speeders.start();
+        battlefield.start();
         for (var player : round.players()) {
             var faction = teams.of(player.getUniqueId()).orElseThrow();
             roster.put(player.getUniqueId(), faction);
@@ -571,6 +590,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         relic.tick(tick);
         heroes.tick(tick);
         speeders.tick(tick);
+        battlefield.tick(tick);
         fireBursts();
         for (var player : round.players()) {
             var fighter = fighters.get(player.getUniqueId());
@@ -594,7 +614,14 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     private void second() {
         var field = new LinkedHashMap<LivingEntity, Faction>();
         combatants().forEach(entity -> factionOf(entity).ifPresent(faction -> field.put(entity, faction)));
-        posts.second(field).forEach(this::postChanged);
+        int alertCooldown = Math.clamp(plugin.getConfig().getInt("posts.radio-cooldown-seconds", 15), 1, 120) * 20;
+        var update = posts.second(field, tick, alertCooldown);
+        update.changes().forEach(this::postChanged);
+        update.alerts().forEach(alert -> round.players().stream()
+                .filter(player -> factionOf(player).filter(alert.defender()::equals).isPresent()).forEach(player -> {
+                    player.sendMessage(messages.get("post.under-attack", posts.name(alert.index())));
+                    Sounds.CORE_ALARM.play(player);
+                }));
         if ((tick / TICKS_PER_SECOND) % config.bleedSeconds() == 0) {
             reinforcements.bleed(posts.held());
             dirty = true;
@@ -656,23 +683,26 @@ public final class SternenfrontGame implements RoundConnections.Seating {
 
     /** True if the player had health to gain. Heroes gain none, neither out of combat nor at a med station. */
     public boolean heal(Player player, double amount) {
-        var max = player.getAttribute(Attribute.MAX_HEALTH);
-        if (max == null || player.isDead() || player.getHealth() >= max.getValue() || heroOf(player).isPresent()) {
-            return false;
-        }
-        player.setHealth(Math.min(max.getValue(), player.getHealth() + amount));
-        return true;
+        return heal((LivingEntity) player, amount);
     }
 
     public boolean heal(LivingEntity entity, double amount) {
-        if (entity instanceof Player player) {
-            return heal(player, amount);
-        }
+        return heal(entity, amount, Optional.empty());
+    }
+
+    public boolean heal(Player healer, LivingEntity entity, double amount) {
+        return heal(entity, amount, Optional.of(healer));
+    }
+
+    private boolean heal(LivingEntity entity, double amount, Optional<Player> healer) {
         var max = entity.getAttribute(Attribute.MAX_HEALTH);
-        if (!onField(entity) || max == null || entity.getHealth() >= max.getValue()) {
+        if (!onField(entity) || max == null || amount <= 0 || entity.getHealth() >= max.getValue()
+                || entity instanceof Player player && heroOf(player).isPresent()) {
             return false;
         }
-        entity.setHealth(Math.min(max.getValue(), entity.getHealth() + amount));
+        double before = entity.getHealth();
+        entity.setHealth(Math.min(max.getValue(), before + amount));
+        support.healed(entity, healer, entity.getHealth() - before);
         return true;
     }
 
@@ -683,9 +713,10 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         SoundCue.shot(blaster).play(shooter.getEyeLocation(), SHOT_VOLUME);
     }
 
-    public void botDied(Faction faction, Optional<Player> killer, int points) {
+    public void botDied(LivingEntity victim, Faction faction, Optional<Player> killer, int points) {
+        support.killed(victim, killer, points);
         reinforcements.lose(faction, 1);
-        killer.filter(player -> factionOf(player).filter(own -> own != faction).isPresent()).ifPresent(player -> {
+        killer.filter(this::onField).filter(player -> factionOf(player).filter(own -> own != faction).isPresent()).ifPresent(player -> {
             heroes.earn(player, points);
             mark(player, "kill", SoundCue.KILL);
         });
@@ -1006,6 +1037,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
                         Placeholder.component("weapon", messages.get("blaster." + blaster.orElseThrow().key() + ".name"))))
                 .orElse(death.line());
         Bukkit.broadcast(line);
+        support.killed(victim, death.killer().filter(killer -> !killer.equals(victim)), heroes.config().points().kill());
         death.killer().filter(killer -> !killer.equals(victim)).ifPresent(killer -> {
             summary.awardKill(killer, victim, Defeat.RESPAWN);
             heroes.earn(killer, heroes.config().points().kill());
@@ -1297,6 +1329,8 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         bots.clear();
         combat.clear();
         speeders.clear();
+        battlefield.clear();
+        support.clear();
         gadgets.clear();
         relic.clear();
         posts.clear();

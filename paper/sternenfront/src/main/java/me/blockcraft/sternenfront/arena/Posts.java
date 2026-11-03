@@ -17,9 +17,11 @@ final class Posts {
     private static final int FLOOR = TessarMap.FLOOR;
 
     private final Canvas canvas;
+    private final Terrain terrain;
 
-    Posts(Canvas canvas) {
+    Posts(Canvas canvas, Terrain terrain) {
         this.canvas = canvas;
+        this.terrain = terrain;
     }
 
     PostSite post(String key, int x, int z, double radius, List<Location> spawns) {
@@ -59,6 +61,6 @@ final class Posts {
         }
         var world = canvas.world();
         return new PostSite(key, new Location(world, x + 0.5, FLOOR + 1, z + 0.5), radius, spawns, List.copyOf(indicators),
-                new Location(world, x + 0.5, FLOOR + 6, z + 0.5));
+                new Location(world, x + 0.5, FLOOR + 6, z + 0.5), TacticalRoutes.build(canvas, terrain, key, z));
     }
 }

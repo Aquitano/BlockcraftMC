@@ -17,11 +17,17 @@ import java.util.Map;
  */
 public record FrontMap(String name, World world, BoundingBox playArea, Map<Faction, Headquarters> headquarters,
                        List<PostSite> posts, Location relic, Location overview, Location lobbySpawn,
-                       Location spectatorSpawn, SecretSpots secrets) {
+                       Location spectatorSpawn, SecretSpots secrets, List<ControlSite> controls) {
 
     /** Where a faction deploys at its base, and the zone around it where enemies are hurt. */
     public record Headquarters(List<Location> spawns, BoundingBox zone) {
     }
+
+    public record Route(List<Location> approach, Location cover, Location peek, Location retreat, Location capture) { }
+
+    public enum Control { VENT, BULKHEAD, SHUTTERS }
+
+    public record ControlSite(Control control, List<Block> switches, List<Block> panels, Location center) { }
 
     /**
      * A command post. {@code key} names it in messages.yml; its zone reaches {@code radius} blocks round
@@ -31,7 +37,7 @@ public record FrontMap(String name, World world, BoundingBox playArea, Map<Facti
      * {@code label} is where the post's name floats.
      */
     public record PostSite(String key, Location center, double radius, List<Location> spawns, List<Block> indicators,
-                           Location label) {
+                           Location label, Map<Faction, List<Route>> routes) {
 
         public static final double BELOW = 2;
         public static final double ABOVE = 5;

@@ -4,7 +4,7 @@ import org.bukkit.configuration.ConfigurationSection;
 
 public record CombatConfig(double guardCapacity, double guardRecovery, int recoveryDelay, int breakTicks,
                            int parryTicks, double guardCost, double meleeRange, double meleeAngle,
-                           int swingTicks, int targets, boolean precisionHitscan) {
+                           int swingTicks, int targets, boolean precisionHitscan, int damageIndicatorTicks) {
 
     public static CombatConfig from(ConfigurationSection config) {
         return new CombatConfig(Math.max(1, config.getDouble("combat.guard.capacity", 100)),
@@ -17,6 +17,7 @@ public record CombatConfig(double guardCapacity, double guardRecovery, int recov
                 Math.clamp(config.getDouble("combat.melee.angle", 85), 1, 180),
                 Math.max(1, config.getInt("combat.melee.swing-ticks", 12)),
                 Math.clamp(config.getInt("combat.melee.targets", 2), 1, 4),
-                config.getBoolean("combat.precision-hitscan", true));
+                config.getBoolean("combat.precision-hitscan", true),
+                Math.clamp(config.getInt("combat.damage-indicator-ticks", 30), 0, 100));
     }
 }

@@ -23,6 +23,14 @@ Riflemen push towards enemy posts, heavy infantry prefer defending owned posts, 
 and heal within four blocks. Each role uses its class's health and weapon. Bots retain a visible target until
 another enemy is substantially closer, so nearby enemies trading places do not repeatedly reset the reaction delay.
 Their displayed head, body and gun follow the same stored aim that their shots use, independently of navigation.
+New targets must be in `bots.vision-angle`; a target lost behind cover is remembered at its last seen position for
+`bots.memory-ticks`. Taking enemy damage alerts a bot without restarting its reaction delay on every hit.
+Each post has two authored approach routes per faction, cover, a nearby peek position and a fallback point.
+Bots use these routes, retreat while venting or badly wounded, and investigate a remembered position without
+firing through cover. A new objective uses the nearest forward waypoint. Holding a defensive or retreat position
+does not trigger stuck recovery. Heavy defenders enter their post's capture zone when an enemy threatens it.
+These tactics apply on every difficulty. Heavy bots fire the repeater's complete three-bolt
+volley, with heat charged once per trigger pull.
 They share the round's projectile bolts, heat, protection, reinforcements and respawn delay. Friends joining
 a running match take human seats and excess bots disappear. Bots have no heroes.
 
@@ -102,6 +110,14 @@ spends the points at the next deploy. A faction fields `heroes.per-faction` hero
 have their own health and do not heal, neither out of combat nor at a med station. Everyone sees a boss bar with
 each hero's name and health; the round announces a hero entering and falling, and killing one pays `rewards.hero`.
 
+Recent damage assists grant `heroes.points.assist` points, and kills inside a friendly post grant
+`heroes.points.defence` additional points. Both scale down with the bot kill reward. A damaging contribution must
+be at least two health and within `assist-window-seconds`; the killer receives no assist reward.
+Med stations grant `healing-per-health` points for health actually restored to another ally after enemy damage.
+Self-damage, environmental damage, overhealing and automatic regeneration grant none. All healing consumes the
+same wound budget. `healing-window-seconds` expires old wounds, and `healing-limit-per-life` caps the reward per
+patient life. These are round battle points, with no additional persistent coins or kill stats.
+
 | Hero | Faction | Weapon | F | Q | Health |
 | --- | --- | --- | --- | --- | --- |
 | Jedi-Ritter | Kolonien | blue Lichtschwert | Machtstoß: a cone push | Lichtschwertwurf | 60 |
@@ -117,6 +133,9 @@ guard. A second jump triggers the forward leap (Machtsprung); the relic champion
 frontal bolts and reduces another blade's damage to `blocked-share` of its normal damage. A parry in the first `combat.guard.parry-ticks`
 reflects a bolt towards its shooter or stops a melee hit completely. Hits consume guard strength; an exhausted
 guard breaks briefly and recovers after release. The HUD distinguishes guarding, recovery and a broken guard.
+After damage, a brief red arrow indicates the source relative to the player's current view. Its duration is
+`combat.damage-indicator-ticks`. Orbital strikes fix all impact positions when the beacon lands, draw the damage
+radius of each planned blast and show the countdown. The warning displays respect walls.
 The blade takes its colour from the item (the pack's model is tinted
 by the first `custom_model_data` colour): blue for the Jedi, red for the Sith, white for whoever owns the unlock
 `sternenfront.saber.white`. Without the pack the saber is a diamond or netherite sword and plays the same.
@@ -159,6 +178,22 @@ A desert basin between canyon walls, about 180 by 130 blocks inside a world bord
 - **Temple ruin (north edge):** where the relic appears, carved into the cliff.
 
 The posts lie on the north-south centre line, so every post is as far from one base as from the other.
+
+## Battlefield controls
+
+Right click the labelled buttons with your weapon in hand. Either faction can use them. A control click does not
+fire the weapon. Controls cannot be used while riding, and each has its own cooldown in `battlefield`.
+
+- The refinery's vent warns for one second, then releases damaging steam for six seconds. Its grate marks the
+  shortcut it denies. The steam affects both factions, including the player who activated it.
+- The wreck's stern bulkhead closes for eight seconds, temporarily blocking its corridor. The hull's flank
+  breaches remain open.
+- The bazaar's shutters close the centre of its northern gate for eight seconds. The side passages remain open.
+
+Doors refuse to close when a fighter or vehicle occupies their panels. They reopen automatically and restore
+their original blocks when the round ends. A radio message warns the owning team when an enemy enters a post;
+`posts.radio-cooldown-seconds` limits repeated alerts. An attack that starts during the cooldown still triggers
+an alert when it expires if the enemy remains in the zone.
 
 ## Models
 

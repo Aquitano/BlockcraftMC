@@ -57,15 +57,16 @@ public final class TessarMap {
         new Bases(canvas, terrain, random).build();
         new Props(canvas, terrain, random).build();
         var secrets = new SecretPlaces(canvas, terrain).build();
-        var posts = new Posts(canvas);
-        var postA = posts.post("raffinerie", 0, POST_A, 6.5, List.of(spot(-5, -53, 0), spot(5, -53, 0), spot(-7, -35, 180), spot(7, -35, 180)));
-        var postB = posts.post("wrack", 0, 0, 7, List.of(spot(-5, -6, 0), spot(5, 6, 180), spot(-5, 6, 180), spot(5, -6, 0)));
-        var postC = posts.post("basar", 0, POST_C, 6.5, List.of(spot(-10, 43, 270), spot(10, 43, 90), spot(-4, 54, 180), spot(4, 54, 180)));
         terrain.plant();
         terrain.settle();
         terrain.rim();
         canvas.join();
         terrain.desert();
+        var posts = new Posts(canvas, terrain);
+        var postA = posts.post("raffinerie", 0, POST_A, 6.5, List.of(spot(-5, -53, 0), spot(5, -53, 0), spot(-7, -35, 180), spot(7, -35, 180)));
+        var postB = posts.post("wrack", 0, 0, 7, List.of(spot(-5, -6, 0), spot(5, 6, 180), spot(-5, 6, 180), spot(5, -6, 0)));
+        var postC = posts.post("basar", 0, POST_C, 6.5, List.of(spot(-10, 43, 270), spot(10, 43, 90), spot(-4, 54, 180), spot(4, 54, 180)));
+        var controls = TessarControls.build(canvas);
         var headquarters = Map.of(
                 Faction.KOLONIEN, headquarters(-1),
                 Faction.HEGEMONIE, headquarters(1));
@@ -73,7 +74,7 @@ public final class TessarMap {
         return new FrontMap(NAME, world,
                 new BoundingBox(Terrain.MIN_X, Terrain.BASE, Terrain.MIN_Z, Terrain.MAX_X + 1, FLOOR + 64, Terrain.MAX_Z + 1),
                 headquarters, List.of(postA, postB, postC), temple.relic(world),
-                at(0, FLOOR + 57, 60, 180, 50), lobby, at(0, FLOOR + 30, 30, 180, 35), secrets);
+                at(0, FLOOR + 57, 60, 180, 50), lobby, at(0, FLOOR + 30, 30, 180, 35), secrets, controls);
     }
 
     private Headquarters headquarters(int side) {

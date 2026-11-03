@@ -153,6 +153,7 @@ post:
   bar: "<tint><letter> <dark>· <white><post> <dark>· <state>"
   captured: "<prefix><muted>Posten <accent><letter> <white><post> <muted>gehört nun <faction><muted>!"
   neutralised: "<prefix><muted>Posten <accent><letter> <white><post> <muted>ist für <faction> <muted>verloren."
+  under-attack: "<prefix><error>Funk: <white><letter> <post> <error>wird angegriffen!"
 
 secret:
   found-title: "<sternenfront>Secret gefunden!"
@@ -421,6 +422,12 @@ combat:
   heat: "<muted>Hitze"
   venting: "<error>KÜHLEN"
   bar: "<percent>%"
+  incoming:
+    front: "<error><bold>▲</bold> <dark>│ "
+    back: "<error><bold>▼</bold> <dark>│ "
+    left: "<error><bold>◀</bold> <dark>│ "
+    right: "<error><bold>▶</bold> <dark>│ "
+  orbital-warning: "<tint><faction></tint>\n<error>Orbitalschlag in <seconds>s\n<muted>Markierte Flächen verlassen"
   icons:
     health: "LP"
     heat: "Hitze"
@@ -432,3 +439,24 @@ speeder:
   name: "<faction> <dark>· <white>Speeder <dark>· <right>Einsteigen"
   controls: "<prefix><muted>Speeder: <accent>W/S <muted>Gas/Bremse, <accent>A/D <muted>lenken, <accent>Shift <muted>absteigen. Waffen sind während der Fahrt gesperrt."
   driving: "<accent>Speeder <dark>│ <white><health> LP <dark>│ <white><speed> m/s <dark>│ <muted>W/S · A/D · Shift"
+
+support:
+  assist: "<prefix><success>+<points> Gefechtspunkte <muted>für eine Abschusshilfe."
+  defence: "<prefix><success>+<points> Gefechtspunkte <muted>für die Verteidigung eines Postens."
+
+battlefield:
+  label: "<name>\n<state>"
+  activated: "<prefix><name> <muted>aktiviert."
+  cooldown: "<prefix><muted>Die Anlage ist in <accent><seconds>s <muted>wieder bereit."
+  blocked: "<prefix><error>Der Durchgang ist belegt. Er bleibt offen."
+  vent:
+    name: "<accent>Dampfventil <dark>· <right>Betätigen"
+  bulkhead:
+    name: "<accent>Wrackschott <dark>· <right>Schließen"
+  shutters:
+    name: "<accent>Marktrollläden <dark>· <right>Absenken"
+  state:
+    ready: "<success>Bereit"
+    warning: "<error>Dampf in <seconds>s! Abstand halten"
+    active: "<error>Aktiv <dark>· <white><seconds>s"
+    cooldown: "<muted>Abkühlzeit <seconds>s"

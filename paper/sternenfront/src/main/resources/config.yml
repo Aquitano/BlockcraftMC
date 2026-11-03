@@ -17,12 +17,15 @@ bots:
     veteran: {reaction-ticks: 10, shot-ticks: 8, aim-spread: 0.02, burst-shots: 0, burst-pause-ticks: 0, tracking-degrees: 180, damage-scale: 1, headshots: true}
   medic: {heal-ticks: 60, heal-amount: 3}
   sight-range: 32
+  vision-angle: 120
+  memory-ticks: 40
   kill-points: 25
 appearance:
   droids: true
   infantry: true
 combat:
   precision-hitscan: true
+  damage-indicator-ticks: 30
   guard:
     capacity: 100
     recovery-per-tick: 1
@@ -39,6 +42,10 @@ speeders:
   acceleration: 0.035
   turn-degrees: 4
   idle-return-seconds: 45
+battlefield:
+  vent: {warning-seconds: 1, seconds: 6, cooldown-seconds: 20, damage: 2}
+  bulkhead: {seconds: 8, cooldown-seconds: 20}
+  shutters: {seconds: 8, cooldown-seconds: 20}
 countdown:
   lobby: 60
   start: 10
@@ -68,6 +75,7 @@ tickets:
 # One player alone takes a neutral post in capture-seconds; a lead of two or three is two or three times as fast.
 posts:
   capture-seconds: 12
+  radio-cooldown-seconds: 15
 
 # Tessar's secrets (EASTER_EGGS.md, "Sternenfront"). The first find of each pays coins. Brummi panics at the hits-th
 # hit from one player in a round and stays away for hide-seconds. The sand beast rumbles under a player who stood
@@ -154,7 +162,16 @@ relic:
 heroes:
   cost: 600
   per-faction: 1
-  points: {kill: 100, capture: 100, neutralise: 50}
+  points:
+    kill: 100
+    capture: 100
+    neutralise: 50
+    assist: 40
+    defence: 25
+    healing-per-health: 2
+    healing-limit-per-life: 40
+    assist-window-seconds: 10
+    healing-window-seconds: 20
   health:
     jedi: 60
     bounty-hunter: 50

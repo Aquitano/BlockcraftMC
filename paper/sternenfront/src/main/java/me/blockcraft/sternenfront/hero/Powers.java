@@ -14,6 +14,9 @@ import org.bukkit.entity.Item;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.TextDisplay;
+import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
@@ -74,6 +77,8 @@ public final class Powers {
         private final long thrownAt;
         private Location marked;
         private long markedAt;
+        private List<Location> impacts = List.of();
+        private TextDisplay warning;
 
         private Strike(Player thrower, Faction faction, Item beacon, long thrownAt) {
             this.thrower = thrower;
@@ -373,6 +378,15 @@ public final class Powers {
             if (beacon.isOnGround() || tick - strike.thrownAt >= BEACON_LANDS_LATEST) {
                 strike.marked = beacon.getLocation();
                 strike.markedAt = tick;
+                strike.impacts = BlastPattern.plan(orbital.blasts(), orbital.radius(), ThreadLocalRandom.current()).stream()
+                        .map(impact -> strike.marked.clone().add(impact.x(), 0.5, impact.z())).toList();
+                strike.warning = strike.marked.getWorld().spawn(strike.marked.clone().add(0, 3, 0), TextDisplay.class, label -> {
+                    label.setPersistent(false);
+                    label.setBillboard(Display.Billboard.CENTER);
+                    label.setSeeThrough(false);
+                    label.setBrightness(LIT);
+                    label.setShadowed(true);
+                });
                 SoundCue.ORBITAL_INCOMING.play(strike.marked, 3f);
             }
             return false;
@@ -380,6 +394,20 @@ public final class Powers {
         var at = strike.marked;
         long since = tick - strike.markedAt;
         if (since < orbital.delayTicks()) {
+            strike.warning.text(game.messages().get("combat.orbital-warning",
+                    Placeholder.styling("tint", strike.faction.text()),
+                    Placeholder.component("faction", game.messages().get("faction." + strike.faction.key() + ".name")),
+                    Formatter.number("seconds", (orbital.delayTicks() - since + 19) / 20)));
+            if (since % 5 == 0) {
+                var dust = new Particle.DustOptions(BEAM_COLOUR, 1.1f);
+                for (var impact : strike.impacts) {
+                    for (int step = 0; step < 24; step++) {
+                        double angle = step * Math.PI * 2 / 24;
+                        var point = impact.clone().add(Math.cos(angle) * BLAST_RADIUS, -0.35, Math.sin(angle) * BLAST_RADIUS);
+                        at.getWorld().spawnParticle(Particle.DUST, point, 1, 0, 0, 0, 0, dust);
+                    }
+                }
+            }
             if (since % 2 == 0) {
                 var dust = new Particle.DustOptions(BEAM_COLOUR, 1.4f);
                 for (int height = 0; height < BEAM_HEIGHT; height++) {
@@ -389,8 +417,9 @@ public final class Powers {
             return false;
         }
         long blast = since - orbital.delayTicks();
+        strike.warning.remove();
         if (blast % BLAST_GAP_TICKS == 0 && blast / BLAST_GAP_TICKS < orbital.blasts()) {
-            blast(strike, at, blast == 0);
+            blast(strike, strike.impacts.get((int) (blast / BLAST_GAP_TICKS)));
         }
         if (blast / BLAST_GAP_TICKS >= orbital.blasts() - 1) {
             strike.beacon.remove();
@@ -399,11 +428,7 @@ public final class Powers {
         return false;
     }
 
-    private void blast(Strike strike, Location center, boolean first) {
-        var random = ThreadLocalRandom.current();
-        double radius = config.orbital().radius();
-        var at = center.clone().add(first ? 0 : random.nextDouble(-radius, radius), 0.5,
-                first ? 0 : random.nextDouble(-radius, radius));
+    private void blast(Strike strike, Location at) {
         at.getWorld().spawnParticle(Particle.EXPLOSION, at, 3, 0.8, 0.5, 0.8, 0);
         at.getWorld().spawnParticle(Particle.FLAME, at, 20, 1, 0.5, 1, 0.05);
         SoundCue.ORBITAL_IMPACT.play(at, 2.5f);
@@ -451,7 +476,12 @@ public final class Powers {
         grips.forEach(grip -> grip.victim().removePotionEffect(PotionEffectType.LEVITATION));
         grips.clear();
         jetpacks.clear();
-        strikes.forEach(strike -> strike.beacon.remove());
+        strikes.forEach(strike -> {
+            strike.beacon.remove();
+            if (strike.warning != null) {
+                strike.warning.remove();
+            }
+        });
         strikes.clear();
     }
 }
