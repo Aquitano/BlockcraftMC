@@ -27,14 +27,12 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Difficulty;
 import org.bukkit.GameRules;
-import org.bukkit.NamespacedKey;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Optional;
 
 public final class SternenfrontPlugin extends JavaPlugin {
 
-    private static final NamespacedKey WORLD = new NamespacedKey("sternenfront", "tessar");
     private static final double BORDER_MARGIN = 2;
 
     private SternenfrontGame game;
@@ -49,12 +47,13 @@ public final class SternenfrontPlugin extends JavaPlugin {
         var api = BlockcraftApi.get();
         var services = GameServices.load(this, gameConfig, "bc_sternenfront_stats");
         var messages = services.messages();
-        Worlds.discard(WORLD);
-        var world = Worlds.createArena(WORLD);
+        var world = Bukkit.getWorlds().getFirst();
+        Worlds.settle(world);
         // Hurt players heal through the round's own regeneration and the medics, not through hunger.
         world.setDifficulty(Difficulty.NORMAL);
         world.setGameRule(GameRules.NATURAL_HEALTH_REGENERATION, false);
-        var map = TessarMap.build(world);
+        var map = TessarMap.load(world, api.map().file(this, TessarMap.FILE));
+        keepLoaded(map);
         border(map);
         var lobby = api.waitingLobby().map(WaitingLobby::spawn).orElse(map.lobbySpawn());
         lobby.getWorld().setSpawnLocation(lobby);
@@ -83,6 +82,16 @@ public final class SternenfrontPlugin extends JavaPlugin {
         });
 
         Bukkit.getOnlinePlayers().forEach(game::join);
+    }
+
+    /** The whole basin stays in memory: bots walk it and posts recolour it wherever the players are. */
+    private void keepLoaded(FrontMap map) {
+        var area = map.playArea();
+        for (int x = (int) area.getMinX() >> 4; x <= (int) area.getMaxX() >> 4; x++) {
+            for (int z = (int) area.getMinZ() >> 4; z <= (int) area.getMaxZ() >> 4; z++) {
+                map.world().addPluginChunkTicket(x, z, this);
+            }
+        }
     }
 
     /** A square border round the map's play area; the map's own cliffs are the real edge. */

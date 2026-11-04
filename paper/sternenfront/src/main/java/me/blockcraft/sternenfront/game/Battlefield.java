@@ -51,6 +51,7 @@ public final class Battlefield {
 
     public void start() {
         for (var site : game.map().controls()) {
+            openLeftovers(site);
             var state = new State(site);
             for (var button : site.switches()) {
                 state.labels.add(button.getWorld().spawn(button.getLocation().add(0.5, 1, 0.5), TextDisplay.class, label -> {
@@ -63,6 +64,16 @@ public final class Battlefield {
             }
             states.add(state);
             draw(state, game.tick());
+        }
+    }
+
+    /** A map saved while a door stood closed would otherwise hold that door as its open state for good. */
+    private static void openLeftovers(FrontMap.ControlSite site) {
+        var closed = closedMaterial(site.control());
+        var shut = site.panels().stream().filter(block -> block.getType() == closed).toList();
+        shut.forEach(block -> block.setType(Material.AIR, false));
+        if (!shut.isEmpty()) {
+            Bukkit.getPluginManager().callEvent(new BlocksChangedEvent(shut));
         }
     }
 
@@ -114,7 +125,7 @@ public final class Battlefield {
         int cooldown = Math.max(1, config.getInt(path + "cooldown-seconds", 20)) * 20;
         state.cycle.trigger(game.tick(), warning, duration, cooldown);
         if (state.site.control() != FrontMap.Control.VENT) {
-            state.originals.keySet().forEach(block -> block.setType(closedMaterial(state), false));
+            state.originals.keySet().forEach(block -> block.setType(closedMaterial(state.site.control()), false));
             changed(state);
             state.closed = true;
         }
@@ -184,8 +195,8 @@ public final class Battlefield {
         return state.site.control().name().toLowerCase(Locale.ROOT);
     }
 
-    private static Material closedMaterial(State state) {
-        return state.site.control() == FrontMap.Control.BULKHEAD ? Material.IRON_BLOCK : Material.SPRUCE_PLANKS;
+    private static Material closedMaterial(FrontMap.Control control) {
+        return control == FrontMap.Control.BULKHEAD ? Material.IRON_BLOCK : Material.SPRUCE_PLANKS;
     }
 
     private static void changed(State state) {
@@ -196,7 +207,7 @@ public final class Battlefield {
 
     private static void open(State state) {
         state.originals.forEach((block, original) -> {
-            if (block.getType() == closedMaterial(state)) {
+            if (block.getType() == closedMaterial(state.site.control())) {
                 block.setBlockData(original, false);
             }
         });
