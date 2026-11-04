@@ -239,7 +239,8 @@ abilities:
   siege-mode: {cooldown-seconds: 30, seconds: 6, cooldown-ticks: 4, bolts: 2, heat-scale: 0.5}
 
 # The relic blade appears first-seconds into the round and again respawn-seconds after its champion falls. The
-# champion has health, the blade hits for damage, and right click leaps forward and up every leap-cooldown-seconds.
+# champion has health, the blade hits for damage, and a second jump in the air or F leaps forward and up every
+# leap-cooldown-seconds, with the blade in hand. Right click raises the guard.
 relic:
   first-seconds: 120
   respawn-seconds: 60
@@ -270,9 +271,9 @@ heroes:
     bounty-hunter: 50
     sith: 60
     commander: 50
-  # A saber hits for damage with the sword's cooldown and ignites ignite-ticks after it is drawn. A sneaking saber
-  # hero takes blocked-share of a blade's hit. Colours are RGB hex; white is for whoever found every kyber crystal,
-  # relic is the marks of the relic blade.
+  # A saber hits for damage with the sword's cooldown and ignites ignite-ticks after it is drawn. A saber hero whose
+  # guard is up (hand raised by holding right click) takes blocked-share of a blade's hit. Colours are RGB hex; white
+  # is for whoever found every kyber crystal, relic is the marks of the relic blade.
   saber:
     damage: 8
     blocked-share: 0.3

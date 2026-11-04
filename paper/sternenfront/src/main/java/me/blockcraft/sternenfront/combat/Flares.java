@@ -2,11 +2,9 @@ package me.blockcraft.sternenfront.combat;
 
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.CustomModelData;
-import me.blockcraft.api.item.Items;
-import net.kyori.adventure.key.Key;
+import me.blockcraft.sternenfront.appearance.Displays;
 import org.bukkit.Color;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.ItemDisplay;
@@ -29,7 +27,6 @@ public final class Flares {
     /** The most ticks the client interpolates one teleport over. */
     private static final int LONGEST_GLIDE = 59;
     private static final float GONE = 0.001f;
-    private static final Display.Brightness FULL_BRIGHT = new Display.Brightness(15, 15);
     /** Flat fx models lie in their XY plane; the item renderer's half turn keeps them there. */
     private static final Vector3f FLAT_MODEL_NORMAL = new Vector3f(0, 0, 1);
     private static final Quaternionf UNTURNED = new Quaternionf();
@@ -100,25 +97,21 @@ public final class Flares {
         live = new LiveCap<>(limit);
     }
 
-    public static ItemStack model(String name) {
-        return Items.of(Material.PAPER).model(Key.key("blockcraft", name)).build();
-    }
-
     /** One still frame, as long as the cap has room. */
     public void flash(String model, Location at, float scale, int ticks) {
         if (live.hasRoom()) {
-            show(at, new Plan(model(model), UNTURNED, new Vector3f(scale), new Vector3f(scale), new Vector(), ticks, 0,
+            show(at, new Plan(Displays.model(model), UNTURNED, new Vector3f(scale), new Vector3f(scale), new Vector(), ticks, 0,
                     Display.Billboard.CENTER, true, null));
         }
     }
 
     public void burst(String model, Location at, float from, float to, int ticks) {
-        show(at, new Plan(model(model), UNTURNED, new Vector3f(from), new Vector3f(to), new Vector(), ticks, 0,
+        show(at, new Plan(Displays.model(model), UNTURNED, new Vector3f(from), new Vector3f(to), new Vector(), ticks, 0,
                 Display.Billboard.CENTER, true, null));
     }
 
     public void puff(String model, Location at, float from, float to, double rise, int ticks, int fadeTicks) {
-        show(at, new Plan(model(model), UNTURNED, new Vector3f(from), new Vector3f(to), new Vector(0, rise, 0), ticks, fadeTicks,
+        show(at, new Plan(Displays.model(model), UNTURNED, new Vector3f(from), new Vector3f(to), new Vector(0, rise, 0), ticks, fadeTicks,
                 Display.Billboard.CENTER, true, null));
     }
 
@@ -149,7 +142,7 @@ public final class Flares {
 
     /** {@link #mark} at a turn of the caller's, as {@link #lying} gives. */
     public void mark(String model, Location at, Quaternionf turn, float scale, int ticks, int fadeTicks, Block anchor) {
-        show(at, new Plan(model(model), turn, new Vector3f(scale), new Vector3f(scale), new Vector(), ticks, fadeTicks,
+        show(at, new Plan(Displays.model(model), turn, new Vector3f(scale), new Vector3f(scale), new Vector(), ticks, fadeTicks,
                 Display.Billboard.FIXED, false, anchor));
     }
 
@@ -160,7 +153,7 @@ public final class Flares {
     }
 
     private static ItemStack tinted(String model, Color tint) {
-        var look = model(model);
+        var look = Displays.model(model);
         look.setData(DataComponentTypes.CUSTOM_MODEL_DATA, CustomModelData.customModelData().addColor(tint).build());
         return look;
     }
@@ -188,15 +181,12 @@ public final class Flares {
 
     private void show(Location at, Plan plan) {
         var spot = plan.turn() == UNTURNED ? at.clone() : at.clone().setRotation(0, 0);
-        var display = at.getWorld().spawn(spot, ItemDisplay.class, spawned -> {
-            spawned.setPersistent(false);
-            spawned.setItemStack(plan.look());
-            spawned.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.NONE);
+        var display = Displays.item(spot, plan.look(), spawned -> {
             spawned.setBillboard(plan.billboard());
             spawned.setTransformation(plan.at(plan.from()));
             spawned.setTeleportDuration(Math.min(LONGEST_GLIDE, plan.ticks()));
             if (plan.lit()) {
-                spawned.setBrightness(FULL_BRIGHT);
+                spawned.setBrightness(Displays.LIT);
             }
         });
         live.admit(new Flare(display, plan)).ifPresent(oldest -> oldest.display.remove());

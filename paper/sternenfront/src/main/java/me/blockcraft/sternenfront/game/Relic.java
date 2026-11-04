@@ -1,9 +1,9 @@
 package me.blockcraft.sternenfront.game;
 
+import me.blockcraft.sternenfront.appearance.Displays;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
-import org.bukkit.entity.Display;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Transformation;
@@ -23,7 +23,6 @@ public final class Relic {
     private static final float TURN_DEGREES = 6;
     private static final double BOB = 0.15;
     private static final double BOB_SPEED = 0.1;
-    private static final Display.Brightness LIT = new Display.Brightness(15, 15);
     /** The blade's model points along +z; turned to point up, it stands on the altar, its middle 0.6 above it. */
     private static final Transformation UPRIGHT = new Transformation(new Vector3f(0, -0.6f, 0), new AxisAngle4f(),
             new Vector3f(0.7f), new AxisAngle4f((float) -Math.PI / 2, 1, 0, 0));
@@ -61,12 +60,9 @@ public final class Relic {
     }
 
     private void appear() {
-        shown = Optional.of(home.getWorld().spawn(home, ItemDisplay.class, display -> {
-            display.setPersistent(false);
-            display.setItemStack(game.loadouts().blade());
-            display.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.NONE);
+        shown = Optional.of(Displays.item(home, game.loadouts().blade(), display -> {
             display.setTransformation(UPRIGHT);
-            display.setBrightness(LIT);
+            display.setBrightness(Displays.LIT);
             display.setGlowing(true);
             display.setTeleportDuration(1);
         }));

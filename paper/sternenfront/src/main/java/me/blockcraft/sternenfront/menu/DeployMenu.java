@@ -68,7 +68,7 @@ public final class DeployMenu extends Menu {
         var fighter = game.fighter(viewer);
         var chosen = fighter.choosing().flatMap(Fighter.Choosing::chosen);
         var picked = fighter.choosing().flatMap(Fighter.Choosing::hero);
-        long wait = game.waitTicks(viewer);
+        long wait = game.deployment().waitTicks(viewer);
         var line = wait > 0
                 ? messages.get("deploy.status-waiting", Formatter.number("seconds", (wait + TICKS_PER_SECOND - 1) / TICKS_PER_SECOND))
                 : messages.get("deploy.status-ready");
@@ -107,7 +107,7 @@ public final class DeployMenu extends Menu {
     private ItemStack spawn(Faction faction, Spawn spawn, Optional<Spawn> chosen, Material icon, Component name,
                             List<Component> unavailable) {
         var messages = game.messages();
-        boolean available = game.available(faction, spawn);
+        boolean available = game.deployment().available(faction, spawn);
         boolean selected = chosen.filter(spawn::equals).isPresent();
         var lore = new ArrayList<Component>();
         if (!available) {
@@ -144,11 +144,11 @@ public final class DeployMenu extends Menu {
             return;
         }
         if (slot == firstPostSlot() - 1) {
-            game.choose(player, new Spawn.Headquarters());
+            game.deployment().choose(player, new Spawn.Headquarters());
         } else if (slot >= firstPostSlot() && slot < DROPSHIP_SLOT) {
-            game.choose(player, new Spawn.Post(slot - firstPostSlot()));
+            game.deployment().choose(player, new Spawn.Post(slot - firstPostSlot()));
         } else if (slot == DROPSHIP_SLOT) {
-            game.choose(player, new Spawn.Dropship());
+            game.deployment().choose(player, new Spawn.Dropship());
         }
     }
 }

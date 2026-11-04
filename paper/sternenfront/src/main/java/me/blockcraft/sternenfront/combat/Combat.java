@@ -1,6 +1,7 @@
 package me.blockcraft.sternenfront.combat;
 
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.sternenfront.game.LineOfSight;
 import me.blockcraft.sternenfront.game.SoundCue;
 import me.blockcraft.sternenfront.game.SternenfrontGame;
 import me.blockcraft.sternenfront.game.SternenfrontItem;
@@ -214,9 +215,7 @@ public final class Combat {
     private static boolean visible(Player player, LivingEntity target) {
         var eye = player.getEyeLocation();
         var toward = CombatArc.nearest(eye.toVector(), target.getBoundingBox()).subtract(eye.toVector());
-        double distance = toward.length();
-        return distance < 0.01 || eye.getWorld().rayTraceBlocks(eye, toward.multiply(1 / distance), distance,
-                FluidCollisionMode.NEVER, true) == null;
+        return toward.length() < 0.01 || LineOfSight.clear(eye, toward);
     }
 
     public void forget(Player player) {

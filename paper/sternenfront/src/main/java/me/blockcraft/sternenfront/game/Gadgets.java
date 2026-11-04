@@ -2,33 +2,29 @@ package me.blockcraft.sternenfront.game;
 
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.world.BlocksChangedEvent;
+import me.blockcraft.sternenfront.appearance.Displays;
 import me.blockcraft.sternenfront.appearance.Hologram;
 import me.blockcraft.sternenfront.config.SternenfrontConfig;
 import org.bukkit.Bukkit;
-import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
-import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.MultipleFacing;
-import org.bukkit.entity.Display;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.EquipmentSlotGroup;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -40,7 +36,6 @@ public final class Gadgets {
 
     private static final int BEEP_TICKS = 10;
     private static final double GRENADE_LIFT = 0.15;
-    private static final double EDGE_SHARE = 1.0 / 3;
     private static final double PUSH = 0.5;
     private static final double PUSH_UP = 0.3;
     private static final int TRAIL_TICKS = 15;
@@ -49,7 +44,6 @@ public final class Gadgets {
     private static final int STATION_PULSE_TICKS = 18;
     private static final double GROUND_PROBE = 0.05;
     private static final int TICKS_PER_SECOND = 20;
-    private static final Display.Brightness LIT = new Display.Brightness(15, 15);
     private static final NamespacedKey SIEGE_SPEED = new NamespacedKey("sternenfront", "siege_speed");
     private static final NamespacedKey SIEGE_JUMP = new NamespacedKey("sternenfront", "siege_jump");
     private static final double SIEGE_RING_RADIUS = 1.2;
@@ -134,18 +128,13 @@ public final class Gadgets {
         return true;
     }
 
-    public boolean isGrenade(Item item) {
-        return grenades.stream().anyMatch(grenade -> grenade.item().equals(item));
-    }
-
     /** Anchors the unit: it cannot walk or jump until the time is up, and its gun fires as {@code siege-mode} says. */
     public boolean siege(LivingEntity unit, Faction faction, long tick) {
         if (!grounded(unit) || sieging(unit)) {
             return false;
         }
         int ticks = game.config().siegeMode().seconds() * TICKS_PER_SECOND;
-        root(unit, Attribute.MOVEMENT_SPEED, SIEGE_SPEED);
-        root(unit, Attribute.JUMP_STRENGTH, SIEGE_JUMP);
+        root(unit);
         sieges.add(new Siege(unit, faction, tick + ticks));
         SoundCue.SIEGE_LOCK.play(unit.getLocation(), 1f);
         return true;
@@ -167,21 +156,14 @@ public final class Gadgets {
     }
 
     /** Modifiers rather than a slowness effect, which a force grip on the same unit would add to and take away. */
-    private static void root(LivingEntity unit, Attribute attribute, NamespacedKey key) {
-        Objects.requireNonNull(unit.getAttribute(attribute)).addTransientModifier(new AttributeModifier(key, -1,
-                AttributeModifier.Operation.MULTIPLY_SCALAR_1, EquipmentSlotGroup.ANY));
+    private static void root(LivingEntity unit) {
+        AttributeScale.apply(unit, Attribute.MOVEMENT_SPEED, SIEGE_SPEED, -1);
+        AttributeScale.apply(unit, Attribute.JUMP_STRENGTH, SIEGE_JUMP, -1);
     }
 
     private static void lift(LivingEntity unit) {
-        unroot(unit, Attribute.MOVEMENT_SPEED, SIEGE_SPEED);
-        unroot(unit, Attribute.JUMP_STRENGTH, SIEGE_JUMP);
-    }
-
-    private static void unroot(LivingEntity unit, Attribute attribute, NamespacedKey key) {
-        var instance = Objects.requireNonNull(unit.getAttribute(attribute));
-        if (instance.getModifier(key) != null) {
-            instance.removeModifier(key);
-        }
+        AttributeScale.remove(unit, Attribute.MOVEMENT_SPEED, SIEGE_SPEED);
+        AttributeScale.remove(unit, Attribute.JUMP_STRENGTH, SIEGE_JUMP);
     }
 
     private static boolean grounded(LivingEntity unit) {
@@ -251,12 +233,7 @@ public final class Gadgets {
         });
         var at = player.getLocation().getBlock().getLocation().add(0.5, STATION_HEIGHT, 0.5);
         at.setYaw(player.getLocation().getYaw() + 180);
-        var display = player.getWorld().spawn(at, ItemDisplay.class, spawned -> {
-            spawned.setPersistent(false);
-            spawned.setItemStack(Ability.MED_STATION.model().item().build());
-            spawned.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.NONE);
-            spawned.setBrightness(LIT);
-        });
+        var display = Displays.item(at, Ability.MED_STATION.model().item().build(), spawned -> spawned.setBrightness(Displays.LIT));
         stations.add(new Station(player.getUniqueId(), faction, display,
                 tick + (long) game.config().medStation().seconds() * TICKS_PER_SECOND));
         player.getWorld().playSound(at, Sound.BLOCK_BEACON_POWER_SELECT, 1f, 1.4f);
@@ -309,33 +286,15 @@ public final class Gadgets {
     }
 
     private void explode(Grenade grenade, Location at) {
-        var world = at.getWorld();
         var stats = grenade.stats();
         game.effects().explosion(at, grenade.faction(), stats.radius());
         SoundCue.GRENADE_EXPLODE.play(at, 2f, grenade.kind() == Ability.MINING_CHARGE ? CHARGE_BLAST_SHIFT : 1f);
-        for (var target : game.targets()) {
-            if (!target.getWorld().equals(world)) {
-                continue;
-            }
-            var center = target.getLocation().add(0, target.getHeight() / 2, 0);
-            double distance = center.distance(at);
-            boolean self = target.equals(grenade.thrower()) && game.onField(target);
-            if (distance > stats.radius() || !self && !game.hittable(grenade.faction(), target) || !inSight(at, center)) {
-                continue;
-            }
-            double share = 1 - (1 - EDGE_SHARE) * distance / stats.radius();
-            game.blast(grenade.thrower(), target, stats.damage() * share * grenade.damageScale(), at);
-            var away = center.toVector().subtract(at.toVector());
-            if (away.lengthSquared() > 0) {
-                target.setVelocity(target.getVelocity().add(away.normalize().multiply(PUSH).setY(PUSH_UP)));
-            }
-        }
-    }
-
-    private static boolean inSight(Location from, Location to) {
-        var between = to.toVector().subtract(from.toVector());
-        double distance = between.length();
-        return distance == 0 || from.getWorld().rayTraceBlocks(from, between.normalize(), distance, FluidCollisionMode.NEVER, true) == null;
+        game.blastAround(at, new Blast(grenade.thrower(), grenade.faction(), stats.radius(), stats.damage() * grenade.damageScale(), true),
+                (target, away) -> {
+                    if (away.lengthSquared() > 0) {
+                        target.setVelocity(target.getVelocity().add(away.normalize().multiply(PUSH).setY(PUSH_UP)));
+                    }
+                });
     }
 
     /** Whether the struck block belongs to a shield wall, which then shows the ripple. */

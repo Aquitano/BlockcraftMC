@@ -172,26 +172,14 @@ public final class Loadouts {
     /** Transient, so a player who quits mid-round takes neither their class's size nor its pace along in their saved data. */
     public static void fit(LivingEntity body, double speed, double scale) {
         natural(body);
-        multiply(body, Attribute.MOVEMENT_SPEED, CLASS_SPEED, speed);
-        multiply(body, Attribute.SCALE, CLASS_SCALE, scale);
+        AttributeScale.apply(body, Attribute.MOVEMENT_SPEED, CLASS_SPEED, speed - 1);
+        AttributeScale.apply(body, Attribute.SCALE, CLASS_SCALE, scale - 1);
     }
 
     /** Whatever {@link #fit} did, undone: the size and pace a hero, a champion and anyone between rounds has. */
     public static void natural(LivingEntity body) {
-        drop(body, Attribute.MOVEMENT_SPEED, CLASS_SPEED);
-        drop(body, Attribute.SCALE, CLASS_SCALE);
-    }
-
-    private static void multiply(LivingEntity body, Attribute attribute, NamespacedKey key, double factor) {
-        Objects.requireNonNull(body.getAttribute(attribute)).addTransientModifier(new AttributeModifier(key, factor - 1,
-                AttributeModifier.Operation.MULTIPLY_SCALAR_1, EquipmentSlotGroup.ANY));
-    }
-
-    private static void drop(LivingEntity body, Attribute attribute, NamespacedKey key) {
-        var instance = Objects.requireNonNull(body.getAttribute(attribute));
-        if (instance.getModifier(key) != null) {
-            instance.removeModifier(key);
-        }
+        AttributeScale.remove(body, Attribute.MOVEMENT_SPEED, CLASS_SPEED);
+        AttributeScale.remove(body, Attribute.SCALE, CLASS_SCALE);
     }
 
     public void health(Player player, double health) {

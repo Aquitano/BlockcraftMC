@@ -4,7 +4,7 @@ import java.awt.image.BufferedImage;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-public final class CombatArt {
+public final class HudArt {
 
     public static void main(String[] args) throws Exception {
         var root = Path.of(args.length == 0 ? "src" : args[0]).resolve("assets/blockcraft/textures/font");

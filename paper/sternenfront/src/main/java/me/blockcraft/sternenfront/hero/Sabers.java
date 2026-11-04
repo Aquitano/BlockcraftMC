@@ -126,6 +126,7 @@ public final class Sabers {
     public void unlit(Player player, Hero hero) {
         ignitions.remove(player.getUniqueId());
         player.getInventory().setItem(SABER_SLOT, item(player, hero, false));
+        SoundCue.SABER_RETRACT.play(player.getLocation(), 1f);
     }
 
     public void relight(Player player, Hero hero) {

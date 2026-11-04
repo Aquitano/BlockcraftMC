@@ -23,7 +23,7 @@ public class RigBodyTest {
                 assertEquals(faction.key() + "_" + role.key(), body.family());
                 for (var part : List.of("torso", "head", "arm", "leg", body.leftArm())) {
                     var definition = MODELS.resolve(body.family()).resolve(part + ".json");
-                    assertTrue(definition + " is missing; run ./gradlew :resourcepack:generateDroids", Files.exists(definition));
+                    assertTrue(definition + " is missing; run ./gradlew :resourcepack:generateSternenfrontArt", Files.exists(definition));
                 }
             }
         }

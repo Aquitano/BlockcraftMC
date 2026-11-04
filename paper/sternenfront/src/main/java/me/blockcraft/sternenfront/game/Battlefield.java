@@ -1,11 +1,11 @@
 package me.blockcraft.sternenfront.game;
 
 import me.blockcraft.api.world.BlocksChangedEvent;
+import me.blockcraft.sternenfront.appearance.Displays;
 import me.blockcraft.sternenfront.arena.FrontMap;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
-import org.bukkit.FluidCollisionMode;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.Material;
@@ -58,7 +58,7 @@ public final class Battlefield {
                     label.setPersistent(false);
                     label.setBillboard(Display.Billboard.CENTER);
                     label.setSeeThrough(false);
-                    label.setBrightness(new Display.Brightness(15, 15));
+                    label.setBrightness(Displays.LIT);
                     label.setShadowed(true);
                 }));
             }
@@ -89,8 +89,7 @@ public final class Battlefield {
         }
         var eye = player.getEyeLocation();
         var toward = button.getLocation().add(0.5, 0.5, 0.5).toVector().subtract(eye.toVector());
-        if (toward.lengthSquared() > 0.001 && eye.getWorld().rayTraceBlocks(eye, toward.clone().normalize(), toward.length(),
-                FluidCollisionMode.NEVER, true) != null) {
+        if (toward.lengthSquared() > 0.001 && !LineOfSight.clear(eye, toward)) {
             return true;
         }
         var activation = activate(state);

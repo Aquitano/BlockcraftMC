@@ -3,7 +3,9 @@ package me.blockcraft.sternenfront.vehicle;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.world.BlocksChangedEvent;
+import me.blockcraft.sternenfront.appearance.Displays;
 import me.blockcraft.sternenfront.combat.Melee;
+import me.blockcraft.sternenfront.game.Blast;
 import me.blockcraft.sternenfront.game.Faction;
 import me.blockcraft.sternenfront.game.SoundCue;
 import me.blockcraft.sternenfront.game.SternenfrontGame;
@@ -12,7 +14,6 @@ import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
-import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
@@ -54,7 +55,6 @@ public final class Speeders implements Listener {
     private static final int STEP_LOOKAHEAD_TICKS = 3;
     private static final int BOARDING_GRACE_TICKS = 10;
     private static final double RAM_REACH = 0.4;
-    private static final double EXPLOSION_EDGE_SHARE = 0.3;
     private static final double EXPLOSION_PUSH = 0.8;
 
     private static final class Craft {
@@ -190,10 +190,7 @@ public final class Speeders implements Listener {
         });
         Bukkit.getMobGoals().removeAllGoals(each.body);
         each.previous = each.body.getLocation().toVector();
-        each.model = each.home.getWorld().spawn(each.home, ItemDisplay.class, display -> {
-            display.setPersistent(false);
-            display.setItemStack(modelItem(each.faction, false));
-            display.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.NONE);
+        each.model = Displays.item(each.home, modelItem(each.faction, false), display -> {
             display.setTeleportDuration(config.presentation().teleportTicks());
             display.customName(game.messages().get("speeder.name", Placeholder.component("faction",
                     game.messages().get("faction." + each.faction.key() + ".name"))));
@@ -420,23 +417,11 @@ public final class Speeders implements Listener {
             return;
         }
         var explosion = config.explosion();
-        for (var target : game.targets()) {
-            if (!target.getWorld().equals(at.getWorld()) || !game.hittable(faction, target)) {
-                continue;
+        game.blastAround(at, new Blast(rider, faction, explosion.radius(), explosion.damage(), false), (target, away) -> {
+            if (away.lengthSquared() > 0 && !target.isDead()) {
+                target.setVelocity(target.getVelocity().add(away.normalize().multiply(EXPLOSION_PUSH)));
             }
-            var center = target.getLocation().add(0, target.getHeight() / 2, 0);
-            var between = center.toVector().subtract(at.toVector());
-            double distance = between.length();
-            if (distance > explosion.radius() || distance > 0 && at.getWorld().rayTraceBlocks(at, between.clone().normalize(),
-                    distance, FluidCollisionMode.NEVER, true) != null) {
-                continue;
-            }
-            double share = 1 - (1 - EXPLOSION_EDGE_SHARE) * distance / explosion.radius();
-            game.blast(rider, target, explosion.damage() * share, at);
-            if (distance > 0 && !target.isDead()) {
-                target.setVelocity(target.getVelocity().add(between.normalize().multiply(EXPLOSION_PUSH)));
-            }
-        }
+        });
     }
 
     private void destroy(Craft each, long tick) {

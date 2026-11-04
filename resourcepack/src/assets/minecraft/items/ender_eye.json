@@ -24,13 +24,6 @@
           "type": "minecraft:model",
           "model": "blockcraft:item/ttt/crime_camera"
         }
-      },
-      {
-        "when": "blockcraft:sternenfront/force_grip",
-        "model": {
-          "type": "minecraft:model",
-          "model": "blockcraft:item/sternenfront/force_grip"
-        }
       }
     ],
     "fallback": {

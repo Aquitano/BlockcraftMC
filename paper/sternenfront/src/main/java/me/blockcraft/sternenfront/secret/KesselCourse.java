@@ -3,6 +3,7 @@ package me.blockcraft.sternenfront.secret;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.sternenfront.appearance.Displays;
 import me.blockcraft.sternenfront.arena.SecretSpots;
 import me.blockcraft.sternenfront.game.SternenfrontGame;
 import net.kyori.adventure.text.Component;
@@ -65,7 +66,7 @@ final class KesselCourse implements Listener {
         this.board = at.getWorld().spawn(at, TextDisplay.class, display -> {
             display.setPersistent(false);
             display.setBillboard(Display.Billboard.VERTICAL);
-            display.setBrightness(new Display.Brightness(15, 15));
+            display.setBrightness(Displays.LIT);
             display.setLineWidth(220);
         });
         draw();

@@ -3,6 +3,7 @@ package me.blockcraft.sternenfront.secret;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.pack.PackModel;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.sternenfront.appearance.Displays;
 import me.blockcraft.sternenfront.arena.SecretSpots;
 import me.blockcraft.sternenfront.game.SoundCue;
 import me.blockcraft.sternenfront.game.SternenfrontGame;
@@ -126,12 +127,8 @@ final class SandBeast {
         at.setY(dune.top().getY() + 1);
         at.setDirection(player.getLocation().toVector().subtract(at.toVector()).setY(0));
         at.setPitch(0);
-        head = Optional.of(at.getWorld().spawn(at, ItemDisplay.class, shown -> {
-            shown.setPersistent(false);
-            shown.setItemStack(PackModel.STERNENFRONT_SAND_BEAST.item().build());
-            shown.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.NONE);
-            shown.setTransformation(pose(BURIED, 0));
-        }));
+        head = Optional.of(Displays.item(at, PackModel.STERNENFRONT_SAND_BEAST.item().build(),
+                shown -> shown.setTransformation(pose(BURIED, 0))));
         SoundCue.SAND_BEAST_ROAR.play(at, 3f);
         burst(at, 60);
         player.setVelocity(player.getVelocity().setY(0.45));

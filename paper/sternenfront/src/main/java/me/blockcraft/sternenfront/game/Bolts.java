@@ -1,12 +1,12 @@
 package me.blockcraft.sternenfront.game;
 
 import me.blockcraft.api.pack.PackModel;
+import me.blockcraft.sternenfront.appearance.Displays;
 import me.blockcraft.sternenfront.combat.Guard;
 import org.bukkit.Bukkit;
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
 import org.bukkit.Particle;
-import org.bukkit.entity.Display;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Interaction;
 import org.bukkit.entity.ItemDisplay;
@@ -35,7 +35,6 @@ public final class Bolts {
     private static final float MODEL_LENGTH = 1.22f;
     private static final double HEAD_BELOW_EYES = 0.25;
     private static final float IMPACT_VOLUME = 0.6f;
-    private static final Display.Brightness LIT = new Display.Brightness(15, 15);
 
     private record Shot(Faction faction, Blaster blaster, double damage, double headshot, double speed) { }
 
@@ -104,11 +103,8 @@ public final class Bolts {
         }
         var look = game.effects().config().bolt();
         var shown = from.clone().add(direction.clone().multiply(VISUAL_LEAD)).setDirection(direction);
-        var display = from.getWorld().spawn(shown, ItemDisplay.class, spawned -> {
-            spawned.setPersistent(false);
-            spawned.setItemStack(model(shot.faction()).item().build());
-            spawned.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.NONE);
-            spawned.setBrightness(LIT);
+        var display = Displays.item(shown, model(shot.faction()).item().build(), spawned -> {
+            spawned.setBrightness(Displays.LIT);
             spawned.setTeleportDuration(1);
             spawned.setTransformation(new Transformation(new Vector3f(), new Quaternionf(),
                     new Vector3f(look.width(), look.width(), look.length()), new Quaternionf().rotationY((float) Math.PI)));

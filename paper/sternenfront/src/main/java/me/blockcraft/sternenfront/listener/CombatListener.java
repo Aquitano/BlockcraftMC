@@ -7,11 +7,9 @@ import me.blockcraft.api.world.BuildMode;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.sternenfront.combat.Combat;
 import me.blockcraft.sternenfront.debug.BotDebug;
-import me.blockcraft.sternenfront.game.Ability;
 import me.blockcraft.sternenfront.game.Blaster;
 import me.blockcraft.sternenfront.game.SternenfrontGame;
 import me.blockcraft.sternenfront.game.SternenfrontItem;
-import me.blockcraft.sternenfront.hero.HeroAbility;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
@@ -73,13 +71,10 @@ public final class CombatListener implements Listener {
             game.pullTrigger(player);
             return;
         }
-        HotbarItem.of(item, Ability.class).ifPresent(ability -> game.useAbility(player, ability));
-        HotbarItem.of(item, HeroAbility.class).ifPresent(ability -> game.useHeroAbility(player, ability));
         HotbarItem.of(item, SternenfrontItem.class).ifPresent(roundItem -> {
             switch (roundItem) {
-                case DEPLOY -> game.openDeploy(player);
+                case DEPLOY -> game.deployment().openDeploy(player);
                 case BLADE, SABER -> game.combat().raise(player);
-                case STRIKE -> game.throwStreakStrike(player);
             }
         });
     }

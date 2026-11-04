@@ -5,6 +5,7 @@ import me.blockcraft.api.game.GamePhase;
 import me.blockcraft.api.game.RoundPhaseChangeEvent;
 import me.blockcraft.api.pack.PackModel;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.sternenfront.appearance.Displays;
 import me.blockcraft.sternenfront.game.SoundCue;
 import me.blockcraft.sternenfront.game.TargetShotEvent;
 import org.bukkit.Location;
@@ -150,12 +151,8 @@ final class Brummi implements Listener {
         along = 0;
         fleeUntil = 0;
         var at = position();
-        display = Optional.of(at.getWorld().spawn(at.clone().add(0, HEIGHT, 0), ItemDisplay.class, shown -> {
-            shown.setPersistent(false);
-            shown.setItemStack(PackModel.STERNENFRONT_BRUMMI.item().build());
-            shown.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.NONE);
-            shown.setTeleportDuration(STEP_TICKS);
-        }));
+        display = Optional.of(Displays.item(at.clone().add(0, HEIGHT, 0), PackModel.STERNENFRONT_BRUMMI.item().build(),
+                shown -> shown.setTeleportDuration(STEP_TICKS)));
         hitbox = Optional.of(at.getWorld().spawn(at, Interaction.class, box -> {
             box.setPersistent(false);
             box.setInteractionWidth(0.8f);

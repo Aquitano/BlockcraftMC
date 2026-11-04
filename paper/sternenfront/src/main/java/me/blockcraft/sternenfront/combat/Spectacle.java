@@ -1,5 +1,6 @@
 package me.blockcraft.sternenfront.combat;
 
+import me.blockcraft.sternenfront.appearance.Displays;
 import me.blockcraft.sternenfront.game.Faction;
 import me.blockcraft.sternenfront.game.SoundCue;
 import me.blockcraft.sternenfront.game.SternenfrontGame;
@@ -9,7 +10,6 @@ import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.SoundCategory;
-import org.bukkit.entity.Display;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -40,7 +40,6 @@ public final class Spectacle {
     private static final Color SAND_NEAR = Color.fromRGB(0xE2C48D);
     private static final Color SAND_FAR = Color.fromRGB(0x7A5C34);
     private static final ItemStack SAND = new ItemStack(Material.SAND);
-    private static final Display.Brightness FULL_BRIGHT = new Display.Brightness(15, 15);
 
     private static final class Ship {
         private final ItemDisplay display;
@@ -85,15 +84,12 @@ public final class Spectacle {
         }
         start.setPitch(DESCENT_PITCH);
         ground.setPitch(0);
-        var look = Flares.model("sternenfront/dropship/" + trailing.key());
-        var display = start.getWorld().spawn(start, ItemDisplay.class, spawned -> {
-            spawned.setPersistent(false);
-            spawned.setItemStack(look);
-            spawned.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.NONE);
+        var look = Displays.model("sternenfront/dropship/" + trailing.key());
+        var display = Displays.item(start, look, spawned -> {
             // Minecraft's item-display renderer adds a half turn after this transformation.
             spawned.setTransformation(new Transformation(new Vector3f(), new Quaternionf(), new Vector3f(assault.scale()),
                     new Quaternionf().rotationY((float) Math.PI)));
-            spawned.setBrightness(FULL_BRIGHT);
+            spawned.setBrightness(Displays.LIT);
             spawned.setTeleportDuration(WAYPOINT_TICKS);
             spawned.setViewRange(VIEW_RANGE);
             spawned.setShadowRadius(assault.scale() * 0.7f);

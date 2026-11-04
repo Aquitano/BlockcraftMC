@@ -1,6 +1,10 @@
 package me.blockcraft.sternenfront.hero;
 
+import me.blockcraft.api.pack.PackModel;
+import me.blockcraft.sternenfront.appearance.Displays;
+import me.blockcraft.sternenfront.game.Blast;
 import me.blockcraft.sternenfront.game.Faction;
+import me.blockcraft.sternenfront.game.LineOfSight;
 import me.blockcraft.sternenfront.game.SoundCue;
 import me.blockcraft.sternenfront.game.SternenfrontGame;
 import org.bukkit.Bukkit;
@@ -37,7 +41,6 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 public final class Powers {
 
-    private static final Display.Brightness LIT = new Display.Brightness(15, 15);
     private static final double SABER_REACH = 0.6;
     private static final double CATCH_DISTANCE = 1.5;
     private static final float SPIN_DEGREES = 45;
@@ -54,7 +57,6 @@ public final class Powers {
     private static final long BEACON_LANDS_LATEST = 40;
     private static final int BLAST_GAP_TICKS = 3;
     private static final double BLAST_RADIUS = 3.5;
-    private static final double BLAST_EDGE_SHARE = 1.0 / 3;
     private static final int BEAM_HEIGHT = 30;
     private static final Color BEAM_COLOUR = Color.fromRGB(0xFF2020);
 
@@ -127,7 +129,7 @@ public final class Powers {
             var toward = target.getLocation().add(0, target.getHeight() / 2, 0).toVector().subtract(eye.toVector());
             double distance = toward.length();
             if (distance == 0 || distance > push.range() || facing.angle(toward) > halfAngle
-                    || !game.hittable(faction, target) || !inSight(eye, toward.clone().normalize(), distance)) {
+                    || !game.hittable(faction, target) || !LineOfSight.clear(eye, toward)) {
                 continue;
             }
             game.strike(player, target, push.damage(), DamageType.MAGIC);
@@ -144,11 +146,8 @@ public final class Powers {
         var heading = eye.getDirection();
         var start = eye.clone();
         var blade = sabers.item(player, hero, true);
-        var display = player.getWorld().spawn(start, ItemDisplay.class, spawned -> {
-            spawned.setPersistent(false);
-            spawned.setItemStack(blade);
-            spawned.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.NONE);
-            spawned.setBrightness(LIT);
+        var display = Displays.item(start, blade, spawned -> {
+            spawned.setBrightness(Displays.LIT);
             spawned.setTeleportDuration(1);
         });
         sabers.unlit(player, hero);
@@ -207,7 +206,7 @@ public final class Powers {
     /** Throws the orbital beacon; where it lands, a beam marks the spot, and the barrage follows. */
     public boolean orbital(Player player, Faction faction, long tick) {
         var eye = player.getEyeLocation();
-        var stack = HeroAbility.ORBITAL_STRIKE.model().item().build();
+        var stack = PackModel.STERNENFRONT_ORBITAL_BEACON.item().build();
         stack.editMeta(meta -> meta.setMaxStackSize(1));
         var beacon = player.getWorld().dropItem(eye, stack, dropped -> {
             dropped.setPersistent(false);
@@ -300,8 +299,7 @@ public final class Powers {
                 continue;
             }
             var toward = target.getLocation().add(0, target.getHeight() / 2, 0).toVector().subtract(position.toVector());
-            double distance = toward.length();
-            if (distance == 0 || inSight(position, toward.multiply(1 / distance), distance)) {
+            if (LineOfSight.clear(position, toward)) {
                 flight.struck().add(target.getUniqueId());
                 if (game.strike(thrower, target, config.saberThrow().damage(), DamageType.TRIDENT)) {
                     SoundCue.SABER_HIT.play(next, 0.8f);
@@ -382,7 +380,7 @@ public final class Powers {
                     label.setPersistent(false);
                     label.setBillboard(Display.Billboard.CENTER);
                     label.setSeeThrough(false);
-                    label.setBrightness(LIT);
+                    label.setBrightness(Displays.LIT);
                     label.setShadowed(true);
                 });
                 SoundCue.ORBITAL_INCOMING.play(strike.marked, 3f);
@@ -430,23 +428,7 @@ public final class Powers {
         game.effects().explosion(at, strike.faction, BLAST_RADIUS);
         at.getWorld().spawnParticle(Particle.FLAME, at, 20, 1, 0.5, 1, 0.05, null, true);
         SoundCue.ORBITAL_IMPACT.play(at, 2.5f);
-        for (var target : game.targets()) {
-            if (!target.getWorld().equals(at.getWorld())) {
-                continue;
-            }
-            var middle = target.getLocation().add(0, target.getHeight() / 2, 0);
-            double distance = middle.distance(at);
-            if (distance > BLAST_RADIUS || !game.hittable(strike.faction, target)
-                    || distance > 0 && !inSight(at, middle.toVector().subtract(at.toVector()).normalize(), distance)) {
-                continue;
-            }
-            double share = 1 - (1 - BLAST_EDGE_SHARE) * distance / BLAST_RADIUS;
-            game.blast(strike.thrower, target, config.orbital().damage() * share, at);
-        }
-    }
-
-    private static boolean inSight(Location from, Vector direction, double distance) {
-        return distance == 0 || from.getWorld().rayTraceBlocks(from, direction, distance, FluidCollisionMode.NEVER, true) == null;
+        game.blastAround(at, new Blast(strike.thrower, strike.faction, BLAST_RADIUS, config.orbital().damage(), false), (target, away) -> { });
     }
 
     /** The hero fell or left: their saber stops in the air, their jetpack and grip end. Strikes already thrown land. */

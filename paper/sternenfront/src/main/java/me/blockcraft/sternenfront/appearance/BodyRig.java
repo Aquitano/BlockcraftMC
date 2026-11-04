@@ -1,12 +1,9 @@
 package me.blockcraft.sternenfront.appearance;
 
-import me.blockcraft.api.item.Items;
 import me.blockcraft.sternenfront.bot.BotSnapshot.Point;
-import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Interaction;
@@ -29,7 +26,7 @@ import java.util.UUID;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-final class DroidRig implements AutoCloseable {
+final class BodyRig implements AutoCloseable {
 
     private static final float SEATED_LEG = -1.35f;
     private static final float SEATED_DROP = 0.2f;
@@ -57,7 +54,7 @@ final class DroidRig implements AutoCloseable {
     private final float turnDegrees;
     private float bodyYaw;
 
-    DroidRig(Plugin plugin, LivingEntity actor, RigBody body, Predicate<Player> fighting, Supplier<Vector> aim, float turnDegrees) {
+    BodyRig(Plugin plugin, LivingEntity actor, RigBody body, Predicate<Player> fighting, Supplier<Vector> aim, float turnDegrees) {
         this.fighting = fighting;
         this.plugin = plugin;
         this.actor = actor;
@@ -123,8 +120,7 @@ final class DroidRig implements AutoCloseable {
     private ItemDisplay part(String part) {
         var display = spawn(ItemDisplay.class);
         display.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.NONE);
-        display.setItemStack(Items.of(Material.PAPER).model(Key.key("blockcraft", "sternenfront/body/"
-                + body.family() + "/" + part)).build());
+        display.setItemStack(Displays.model("sternenfront/body/" + body.family() + "/" + part));
         return display;
     }
 

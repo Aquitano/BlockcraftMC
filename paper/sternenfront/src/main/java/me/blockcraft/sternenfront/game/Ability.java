@@ -1,13 +1,12 @@
 package me.blockcraft.sternenfront.game;
 
-import me.blockcraft.api.item.HotbarItem;
 import me.blockcraft.api.pack.PackModel;
 import org.bukkit.Material;
 
 import java.util.Locale;
 
-/** What a class carries besides its blaster; each sits in the hotbar and shows its cooldown on the item. */
-public enum Ability implements HotbarItem {
+/** What a class carries besides its blaster, used with F and Q; {@link #material} is its cooldown's key. */
+public enum Ability {
     GRENADE(PackModel.STERNENFRONT_GRENADE),
     ADRENALINE(PackModel.STERNENFRONT_ADRENALINE),
     SHIELD_WALL(PackModel.STERNENFRONT_SHIELD_EMITTER),

@@ -146,8 +146,6 @@ blaster:
     name: "<white>Speeder-Bordkanone"
 
 ability:
-  first-key: "<muted>Taste <accent>F <muted>oder <right>Benutzen"
-  second-key: "<muted>Taste <accent>Q <muted>oder <right>Benutzen"
   cooldown: "<error><ability> <muted>ist in <accent><seconds> s <muted>bereit."
   no-room: "<error>Hier ist dafür kein Platz."
   kolonien:
@@ -415,38 +413,18 @@ hero:
   ability:
     force-push:
       name: "<white>Machtstoß"
-      lore:
-        - "<muted>Schleudert Gegner vor dir zurück."
     saber-throw:
       name: "<white>Lichtschwertwurf"
-      lore:
-        - "<muted>Das Lichtschwert fliegt los, trifft jeden"
-        - "<muted>Gegner auf seinem Weg und kehrt zurück."
     force-grip:
       name: "<white>Machtgriff"
-      lore:
-        - "<muted>Hebt den Gegner im Visier an,"
-        - "<muted>bremst ihn und setzt ihm zu."
     jetpack:
       name: "<white>Raketenrucksack"
-      lore:
-        - "<muted>Ein paar Sekunden Schub."
-        - "<muted>Springen hält dich oben, vorwärts treibt dich an."
     grapple:
       name: "<white>Fesselkabel"
-      lore:
-        - "<muted>Zieht dich zum Block im Visier."
     orbital-strike:
       name: "<white>Orbitalschlag"
-      lore:
-        - "<muted>Wirf den Peilsender: ein roter Strahl markiert"
-        - "<muted>die Stelle. Der erste Einschlag trifft sie direkt."
-        - "<muted>Weitere schwere Einschläge treffen die Umgebung."
     rally:
       name: "<white>Sammelruf"
-      lore:
-        - "<muted>Verbündete in der Nähe werden"
-        - "<muted>kurz schneller und zäher."
   bar: "<hero> <dark>· <white><player> <dark>· <accent><hearts> ❤"
   cost: "<bullet><muted>Kosten <accent><cost> <muted>Kampfpunkte <dark>· <muted>du hast <accent><points>"
   pick: "<click>Als Held einsetzen"
@@ -475,10 +453,6 @@ killcam:
   watching: "<muted>Besiegt von <white><killer>"
 
 streak:
-  item: "<accent>Orbitalschlag"
-  lore:
-    - "<muted>Belohnung für deine Serie, einmal nutzbar."
-    - "<right>Peilsender werfen"
   earned: "<success><kills> Kills in Folge! <muted>Mit <accent>Shift+F <muted>rufst du deinen <accent>Orbitalschlag<muted>."
 
 bot:

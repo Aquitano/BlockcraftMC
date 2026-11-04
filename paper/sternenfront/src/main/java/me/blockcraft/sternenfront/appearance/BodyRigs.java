@@ -4,8 +4,8 @@ import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.game.GamePhase;
 import me.blockcraft.api.game.RoundPhaseChangeEvent;
 import me.blockcraft.sternenfront.game.Faction;
+import me.blockcraft.sternenfront.game.LineOfSight;
 import me.blockcraft.sternenfront.game.SternenfrontGame;
-import org.bukkit.FluidCollisionMode;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Entity;
@@ -27,18 +27,18 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-public final class Droids implements Listener, AutoCloseable {
+public final class BodyRigs implements Listener, AutoCloseable {
 
     private final Plugin plugin;
     private final SternenfrontGame game;
-    private final Map<UUID, DroidRig> rigs = new HashMap<>();
-    private final Map<UUID, DroidRig> targets = new HashMap<>();
+    private final Map<UUID, BodyRig> rigs = new HashMap<>();
+    private final Map<UUID, BodyRig> targets = new HashMap<>();
     private final BukkitTask task;
     private final boolean droids;
     private final boolean infantry;
     private final float turnDegrees;
 
-    private Droids(Plugin plugin, SternenfrontGame game, boolean droids, boolean infantry) {
+    private BodyRigs(Plugin plugin, SternenfrontGame game, boolean droids, boolean infantry) {
         this.plugin = plugin;
         this.game = game;
         this.droids = droids;
@@ -48,17 +48,17 @@ public final class Droids implements Listener, AutoCloseable {
         task = plugin.getServer().getScheduler().runTaskTimer(plugin, this::tick, 1L, 1L);
     }
 
-    public static Droids start(Plugin plugin, SternenfrontGame game, boolean droids, boolean infantry) {
-        return new Droids(plugin, game, droids, infantry);
+    public static BodyRigs start(Plugin plugin, SternenfrontGame game, boolean droids, boolean infantry) {
+        return new BodyRigs(plugin, game, droids, infantry);
     }
 
     public Optional<LivingEntity> actor(Entity clicked) {
         return rigs.values().stream().filter(rig -> rig.actor().equals(clicked) || rig.owns(clicked))
-                .map(DroidRig::actor).findFirst();
+                .map(BodyRig::actor).findFirst();
     }
 
     public Optional<RigSnapshot> snapshot(Entity actor) {
-        return Optional.ofNullable(rigs.get(actor.getUniqueId())).map(DroidRig::snapshot);
+        return Optional.ofNullable(rigs.get(actor.getUniqueId())).map(BodyRig::snapshot);
     }
 
     private void tick() {
@@ -70,7 +70,7 @@ public final class Droids implements Listener, AutoCloseable {
             var id = actor.getUniqueId();
             present.add(id);
             var rig = rigs.computeIfAbsent(id, ignored -> {
-                var created = new DroidRig(plugin, actor, RigBody.of(game.factionOf(actor).orElseThrow(), game.combatClassOf(actor)), game::isPlaying,
+                var created = new BodyRig(plugin, actor, RigBody.of(game.factionOf(actor).orElseThrow(), game.combatClassOf(actor)), game::isPlaying,
                         () -> game.bots().aim(actor).orElseGet(() -> actor.getEyeLocation().getDirection()), turnDegrees);
                 targets.put(created.targetId(), created);
                 return created;
@@ -115,14 +115,8 @@ public final class Droids implements Listener, AutoCloseable {
         if (attribute == null) {
             return false;
         }
-        var direction = eye.getDirection();
-        var hit = target.getBoundingBox().rayTrace(eye.toVector(), direction, attribute.getValue());
-        if (hit == null) {
-            return false;
-        }
-        double distance = hit.getHitPosition().distance(eye.toVector());
-        return distance == 0 || eye.getWorld().rayTraceBlocks(eye, direction, distance,
-                FluidCollisionMode.NEVER, true) == null;
+        var hit = target.getBoundingBox().rayTrace(eye.toVector(), eye.getDirection(), attribute.getValue());
+        return hit != null && LineOfSight.clear(eye, hit.getHitPosition().subtract(eye.toVector()));
     }
 
     @EventHandler
@@ -158,7 +152,7 @@ public final class Droids implements Listener, AutoCloseable {
     }
 
     private void clear() {
-        rigs.values().forEach(DroidRig::close);
+        rigs.values().forEach(BodyRig::close);
         rigs.clear();
         targets.clear();
     }

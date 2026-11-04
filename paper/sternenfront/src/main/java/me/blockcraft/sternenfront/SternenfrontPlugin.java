@@ -13,7 +13,7 @@ import me.blockcraft.api.world.WorldProtection;
 import me.blockcraft.api.world.Worlds;
 import me.blockcraft.sternenfront.arena.FrontMap;
 import me.blockcraft.sternenfront.arena.TessarMap;
-import me.blockcraft.sternenfront.appearance.Droids;
+import me.blockcraft.sternenfront.appearance.BodyRigs;
 import me.blockcraft.sternenfront.config.FeelConfig;
 import me.blockcraft.sternenfront.config.SternenfrontConfig;
 import me.blockcraft.sternenfront.game.SternenfrontGame;
@@ -36,7 +36,7 @@ public final class SternenfrontPlugin extends JavaPlugin {
     private static final double BORDER_MARGIN = 2;
 
     private SternenfrontGame game;
-    private Droids droids;
+    private BodyRigs bodyRigs;
     private BotDebug botDebug;
 
     @Override
@@ -61,10 +61,10 @@ public final class SternenfrontPlugin extends JavaPlugin {
                 messages, map, lobby, services.stats(), services.menus());
         api.presence().maxPlayers(config.capacity());
         if (getConfig().getBoolean("appearance.droids", true) || getConfig().getBoolean("appearance.infantry", true)) {
-            droids = Droids.start(this, game, getConfig().getBoolean("appearance.droids", true), getConfig().getBoolean("appearance.infantry", true));
+            bodyRigs = BodyRigs.start(this, game, getConfig().getBoolean("appearance.droids", true), getConfig().getBoolean("appearance.infantry", true));
         }
         Secrets.start(this, game, messages);
-        botDebug = new BotDebug(game, droids);
+        botDebug = new BotDebug(game, bodyRigs);
 
         services.listen(
                 game.hotbar(),
@@ -107,8 +107,8 @@ public final class SternenfrontPlugin extends JavaPlugin {
         if (botDebug != null) {
             botDebug.close();
         }
-        if (droids != null) {
-            droids.close();
+        if (bodyRigs != null) {
+            bodyRigs.close();
         }
         if (game != null) {
             game.stop();

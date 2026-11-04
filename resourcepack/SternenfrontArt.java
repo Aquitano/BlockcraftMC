@@ -22,7 +22,7 @@ import javax.imageio.ImageIO;
  * byte-identical PNGs. Model space: +z is the front, +x the body's left, 1.0 is one block, and (0, 0, 0) sits on the
  * display entity's position. Vanilla limits elements to +-1.5 blocks from there.
  */
-public final class DroidArt {
+public final class SternenfrontArt {
 
     private enum Face {
         NORTH, SOUTH, EAST, WEST, UP, DOWN;
@@ -1181,14 +1181,14 @@ public final class DroidArt {
     private static final double SLASH_HEIGHT = .22;
 
     private static Family effects() {
-        var ring = new Sprite("ring", true, true, DroidArt::ring);
-        var scorch = new Sprite("scorch", false, false, DroidArt::scorchMark);
+        var ring = new Sprite("ring", true, true, SternenfrontArt::ring);
+        var scorch = new Sprite("scorch", false, false, SternenfrontArt::scorchMark);
         var kolonien = new Sprite("flash_kolonien", true, false, star(0xFF8A2E, 0xFF5A10));
         var hegemonie = new Sprite("flash_hegemonie", true, false, star(0x7CE4FF, 0x25B8EE));
-        var puff = new Sprite("smoke", false, false, DroidArt::smoke);
-        var melted = new Sprite("slash_edge", false, false, DroidArt::slashEdge);
-        var glowing = new Sprite("slash_glow", true, true, DroidArt::slashGlow);
-        var core = new Sprite("slash_core", true, false, DroidArt::slashCore);
+        var puff = new Sprite("smoke", false, false, SternenfrontArt::smoke);
+        var melted = new Sprite("slash_edge", false, false, SternenfrontArt::slashEdge);
+        var glowing = new Sprite("slash_glow", true, true, SternenfrontArt::slashGlow);
+        var core = new Sprite("slash_core", true, false, SternenfrontArt::slashCore);
         return new Family("fx", 96, true, List.of(
                 new Model("sternenfront/fx/saber_slash", new Shape().add(
                         box(0, 0, 0, 1, SLASH_HEIGHT, 0, melted).only(Face.NORTH, Face.SOUTH),

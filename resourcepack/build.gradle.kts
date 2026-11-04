@@ -22,14 +22,14 @@ val generateProps = tasks.register<Exec>("generateProps") {
     commandLine("java", "PropArt.java", "src", "../nexo")
 }
 
-val generateDroids = tasks.register<Exec>("generateDroids") {
+val generateSternenfrontArt = tasks.register<Exec>("generateSternenfrontArt") {
     workingDir(layout.projectDirectory)
-    commandLine("java", "DroidArt.java", "src")
+    commandLine("java", "SternenfrontArt.java", "src")
 }
 
-val generateCombat = tasks.register<Exec>("generateCombat") {
+val generateHud = tasks.register<Exec>("generateHud") {
     workingDir(layout.projectDirectory)
-    commandLine("java", "CombatArt.java", "src")
+    commandLine("java", "HudArt.java", "src")
 }
 
 val generateBattle = tasks.register<Exec>("generateBattle") {
@@ -40,7 +40,7 @@ val generateBattle = tasks.register<Exec>("generateBattle") {
 tasks.register("regenerate") {
     group = "build"
     description = "Regenerates textures, sounds, furniture, and vanilla item overrides in resourcepack/src."
-    dependsOn(generateTextures, generateSounds, generateSternenfrontSounds, generateProps, generateDroids, generateCombat, generateBattle, ":paper:api:packOverrides")
+    dependsOn(generateTextures, generateSounds, generateSternenfrontSounds, generateProps, generateSternenfrontArt, generateHud, generateBattle, ":paper:api:packOverrides")
 }
 
 // Players get credits for what the pack contains; the map provenance and open questions stay in the repository.

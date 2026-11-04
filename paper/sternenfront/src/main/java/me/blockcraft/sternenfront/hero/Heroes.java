@@ -141,14 +141,6 @@ public final class Heroes {
         Bukkit.getOnlinePlayers().forEach(viewer -> viewer.showBossBar(bar));
     }
 
-    public ItemStack abilityItem(HeroAbility ability, int index) {
-        var lore = new ArrayList<>(messages.getLines("hero.ability." + ability.key() + ".lore"));
-        lore.add(Component.empty());
-        lore.add(messages.get(index == 0 ? "ability.first-key" : "ability.second-key"));
-        return ability.build(ability.model().item().name(messages.get("hero.ability." + ability.key() + ".name"))
-                .lore(lore).hideAttributes());
-    }
-
     /** The hero as the deploy menu offers it: their weapon, what they do, and whether the viewer can be them now. */
     public ItemStack card(Player viewer, Faction faction, Hero hero, boolean picked) {
         var lore = new ArrayList<>(messages.getLines("hero." + hero.key() + ".lore"));

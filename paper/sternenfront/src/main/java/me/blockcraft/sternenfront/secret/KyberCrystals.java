@@ -1,13 +1,13 @@
 package me.blockcraft.sternenfront.secret;
 
 import me.blockcraft.api.pack.PackModel;
+import me.blockcraft.sternenfront.appearance.Displays;
 import me.blockcraft.sternenfront.game.SternenfrontGame;
 import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.SoundCategory;
-import org.bukkit.entity.Display;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
@@ -44,11 +44,8 @@ final class KyberCrystals {
         for (int i = 0; i < spots.size() && i < Secret.CRYSTALS.size(); i++) {
             var at = spots.get(i);
             at.getChunk().addPluginChunkTicket(plugin);
-            crystals.add(new Crystal(Secret.CRYSTALS.get(i), at, at.getWorld().spawn(at, ItemDisplay.class, display -> {
-                display.setPersistent(false);
-                display.setItemStack(PackModel.STERNENFRONT_KYBER_CRYSTAL.item().build());
-                display.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.NONE);
-                display.setBrightness(new Display.Brightness(15, 15));
+            crystals.add(new Crystal(Secret.CRYSTALS.get(i), at, Displays.item(at, PackModel.STERNENFRONT_KYBER_CRYSTAL.item().build(), display -> {
+                display.setBrightness(Displays.LIT);
                 display.setTransformation(turned(0));
             })));
         }

@@ -7,7 +7,7 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import me.blockcraft.api.task.Tasks;
-import me.blockcraft.sternenfront.appearance.Droids;
+import me.blockcraft.sternenfront.appearance.BodyRigs;
 import me.blockcraft.sternenfront.appearance.RigSnapshot;
 import me.blockcraft.sternenfront.bot.BotSnapshot;
 import me.blockcraft.sternenfront.bot.BotSnapshot.Point;
@@ -58,7 +58,7 @@ public final class BotDebug implements Listener, AutoCloseable {
     private static final Gson JSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
     private static final double REACH = 6;
     private final SternenfrontGame game;
-    private final Optional<Droids> droids;
+    private final Optional<BodyRigs> rigs;
     private final Set<UUID> observers = new HashSet<>();
     private final Map<UUID, BotTrace<Frame>> traces = new HashMap<>();
     private final Map<UUID, Request> requests = new HashMap<>();
@@ -68,9 +68,9 @@ public final class BotDebug implements Listener, AutoCloseable {
     private final int cooldownTicks;
     private final BukkitTask task;
 
-    public BotDebug(SternenfrontGame game, Droids droids) {
+    public BotDebug(SternenfrontGame game, BodyRigs rigs) {
         this.game = game;
-        this.droids = Optional.ofNullable(droids);
+        this.rigs = Optional.ofNullable(rigs);
         var config = game.plugin().getConfig();
         historyTicks = Math.clamp(config.getInt("debug.history-ticks", 100), 20, 200);
         captureTicks = Math.clamp(config.getInt("debug.capture-ticks", 200), 20, 600);
@@ -139,7 +139,7 @@ public final class BotDebug implements Listener, AutoCloseable {
         if (clicked instanceof LivingEntity living && game.bots().aim(living).isPresent()) {
             return Optional.of(living);
         }
-        return droids.flatMap(appearance -> appearance.actor(clicked)).filter(body -> game.bots().aim(body).isPresent());
+        return rigs.flatMap(appearance -> appearance.actor(clicked)).filter(body -> game.bots().aim(body).isPresent());
     }
 
     private Optional<LivingEntity> pointedAt(Player player) {
@@ -207,7 +207,7 @@ public final class BotDebug implements Listener, AutoCloseable {
 
     private Frame frame(LivingEntity body) {
         return new Frame(Bukkit.getCurrentTick(), game.tick(), System.nanoTime(), Bukkit.getAverageTickTime(),
-                game.bots().snapshot(body).orElseThrow(), droids.flatMap(appearance -> appearance.snapshot(body)).orElse(null),
+                game.bots().snapshot(body).orElseThrow(), rigs.flatMap(appearance -> appearance.snapshot(body)).orElse(null),
                 blocks(body), body.getWorld().getNearbyLivingEntities(body.getLocation(), 3).stream()
                 .filter(entity -> !entity.equals(body)).limit(12).map(entity -> new Nearby(entity.getUniqueId(),
                         entity.getType().name(), Point.of(entity.getLocation()), Point.of(entity.getVelocity()), entity.isCollidable())).toList());

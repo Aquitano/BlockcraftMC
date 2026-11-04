@@ -1,8 +1,8 @@
 # The whole dev network: MariaDB, the Velocity proxy and one Paper server per game mode. Plugin jars, LuckPerms and
 # ViaVersion included, come from `./gradlew stagePlugins`; each Paper service lists the plugin directories it runs in
 # COPY_PLUGINS_SRC, ViaVersion's so clients newer than the server join (README, "Client versions"), and GrimAC's
-# (README, "Anticheat"). The servers find each other through the database (README, "Run locally"). Each
-# server's map comes from worlds/<group> (README, "Maps"): the world is copied fresh from there at every start and
+# (README, "Anticheat"). The servers find each other through the database (README, "Server discovery and groups").
+# Each server's map comes from worlds/<group> (README, "Maps"): the world is copied fresh from there at every start and
 # /map save writes it back.
 
 # The game groups that run on demand, each named like its compose service: the proxy wakes them and the waker may

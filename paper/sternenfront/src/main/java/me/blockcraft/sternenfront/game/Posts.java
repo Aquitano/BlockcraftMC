@@ -3,6 +3,7 @@ package me.blockcraft.sternenfront.game;
 import me.blockcraft.api.world.BlocksChangedEvent;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.sternenfront.arena.FrontMap.PostSite;
+import me.blockcraft.sternenfront.appearance.Displays;
 import me.blockcraft.sternenfront.appearance.PostHologram;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
@@ -57,7 +58,6 @@ public final class Posts {
 
     private static final int BAR_SEGMENTS = 10;
     private static final Color CARD = Color.fromARGB(96, 0, 0, 0);
-    private static final Display.Brightness LIT = new Display.Brightness(15, 15);
     private static final List<DyeColor> LONGEST_FIRST = Arrays.stream(DyeColor.values())
             .sorted(Comparator.comparingInt((DyeColor dye) -> dye.name().length()).reversed()).toList();
 
@@ -138,7 +138,7 @@ public final class Posts {
                 display.setDefaultBackground(false);
                 display.setBackgroundColor(CARD);
                 display.setShadowed(true);
-                display.setBrightness(LIT);
+                display.setBrightness(Displays.LIT);
             });
             draw(post, posts.indexOf(post));
         }

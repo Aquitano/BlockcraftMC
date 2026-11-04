@@ -1,11 +1,7 @@
 package me.blockcraft.sternenfront.appearance;
 
-import me.blockcraft.api.item.Items;
-import net.kyori.adventure.key.Key;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.entity.Display;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.inventory.ItemStack;
@@ -30,16 +26,13 @@ public final class Hologram implements AutoCloseable {
     }
 
     public static ItemStack model(String name) {
-        return Items.of(Material.PAPER).model(Key.key("blockcraft", "battle/" + name)).build();
+        return Displays.model("battle/" + name);
     }
 
     public ItemDisplay part(String model, Location at) {
-        var display = at.getWorld().spawn(at, ItemDisplay.class, spawned -> {
-            spawned.setPersistent(false);
+        var display = Displays.item(at, model(model), spawned -> {
             spawned.setVisibleByDefault(false);
-            spawned.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.NONE);
-            spawned.setItemStack(model(model));
-            spawned.setBrightness(new Display.Brightness(15, 15));
+            spawned.setBrightness(Displays.LIT);
             spawned.setInterpolationDuration(4);
             spawned.setDisplayWidth(4);
             spawned.setDisplayHeight(4);
