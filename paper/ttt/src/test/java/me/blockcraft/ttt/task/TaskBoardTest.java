@@ -25,13 +25,42 @@ public class TaskBoardTest {
 
 
     @Test
-    public void aDeadInnocentsOpenChoresDropOutButTheirDoneOnesCount() {
+    public void oneSurvivorCanFinishTheFixedTeamTotal() {
         board.assign(List.of(innocent, detective), CHORES, 2, ANYWHERE, new Random(2));
-        board.finish(board.of(innocent).getFirst());
-        assertEquals(0.25f, board.progress(List.of(innocent, detective)), 0f);
-        board.of(detective).forEach(board::finish);
-        assertFalse(board.complete(List.of(innocent, detective)));
-        assertTrue(board.complete(List.of(detective)));
+        board.of(detective).forEach(duty -> assertTrue(board.finish(detective, duty.chore())));
+        assertEquals(0.5f, board.progress(), 0f);
+        assertFalse(board.complete());
+
+        board.of(innocent).forEach(duty -> assertTrue(board.finish(detective, duty.chore())));
+        assertEquals(1f, board.progress(), 0f);
+        assertTrue(board.complete());
+        assertEquals(4, board.contribution(detective));
+    }
+
+    @Test
+    public void sharedWorkIsAvailableBeforeAnyoneDiesAndCreditsEachCompletionOnce() {
+        board.assign(List.of(innocent, detective), CHORES, 1, ANYWHERE, new Random(2));
+        var chore = board.of(innocent).getFirst().chore();
+        int remaining = board.remaining(chore);
+        assertTrue(board.available(detective).contains(chore));
+        assertTrue(board.finish(detective, chore));
+        assertEquals(remaining - 1, board.remaining(chore));
+        assertEquals(0.5f, board.progress(), 0f);
+
+        board.available(detective).forEach(each -> assertTrue(board.finish(detective, each)));
+        assertFalse(board.finish(innocent, chore));
+        assertEquals(2, board.contribution(detective));
+        assertTrue(board.complete());
+    }
+
+    @Test
+    public void traitorsCannotCompleteTasksAndAnEmptyBoardCannotWin() {
+        assertFalse(board.complete());
+        board.assign(List.of(innocent), CHORES, 1, ANYWHERE, new Random(2));
+        var traitor = UUID.randomUUID();
+        assertTrue(board.available(traitor).isEmpty());
+        assertFalse(board.finish(traitor, board.of(innocent).getFirst().chore()));
+        assertEquals(0f, board.progress(), 0f);
     }
 
     @Test

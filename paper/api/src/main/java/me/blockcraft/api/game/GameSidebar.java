@@ -11,6 +11,7 @@ import org.bukkit.entity.Player;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BooleanSupplier;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -41,7 +42,7 @@ public final class GameSidebar {
     private static final int MAX_ROWS = 15;
 
     private final Sidebar sidebar;
-    private final Supplier<Headcount> headcount;
+    private final Function<Player, Headcount> headcount;
     private final BooleanSupplier clockOnSidebar;
 
     public GameSidebar(Component title, Round round) {
@@ -50,6 +51,10 @@ public final class GameSidebar {
 
     /** For a game that counts its players itself, such as one whose deaths are secret or one without a {@link Round}. */
     public GameSidebar(Component title, Supplier<Headcount> headcount, BooleanSupplier clockOnSidebar) {
+        this(title, viewer -> headcount.get(), clockOnSidebar);
+    }
+
+    public GameSidebar(Component title, Function<Player, Headcount> headcount, BooleanSupplier clockOnSidebar) {
         this.sidebar = new Sidebar(title);
         this.headcount = headcount;
         this.clockOnSidebar = clockOnSidebar;
@@ -67,7 +72,7 @@ public final class GameSidebar {
 
     public void lobby(Player viewer, int max, Component map, List<Section> game) {
         var frame = new ArrayList<Section>();
-        frame.add(players(viewer, max, headcount.get()));
+        frame.add(players(viewer, max, headcount.apply(viewer)));
         frame.add(new Section(heading(viewer, "sidebar.map"), value(map)));
         show(viewer, frame, game);
     }
@@ -75,7 +80,7 @@ public final class GameSidebar {
     public void round(Player viewer, int max, int secondsLeft, Component map, List<Section> game) {
         var frame = new ArrayList<Section>();
         var messages = BlockcraftApi.get().messages();
-        var count = headcount.get();
+        var count = headcount.apply(viewer);
         var players = new ArrayList<>(players(viewer, max, count).values());
         if (count.spectators() > 0) {
             players.add(messages.get("sidebar.spectators-value", Formatter.number("spectators", count.spectators())));

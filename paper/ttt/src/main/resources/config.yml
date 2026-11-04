@@ -150,8 +150,9 @@ chests:
 
 # TTT 2, the mode a server plays when BLOCKCRAFT_TTT_MODE is tasks, on maps that have chores. The innocents get
 # per-player chores when the roles are drawn; the traitors get none. The chests are looted as in TTT, and each
-# chore done also pays one pick from loot. When every living innocent's chores are done, the innocents win. A
-# player's chores lie at least spread blocks apart where the map allows, so the work sends them across the town. A
+# chore done also pays one pick from loot. All assigned chores form a fixed team target, including after a death or
+# disconnect. Any innocent can complete outstanding work. Completing the target wins the round. A player's suggested
+# chores lie at least spread blocks apart where the map allows, so the work sends them across the town. A
 # hold chore takes hold-seconds with the player's eyes within reach blocks of its station, as far as a click reaches.
 # Traitors sabotage from their shop, one at a time and cooldown-seconds apart: a blackout darkens everyone else for
 # blackout-seconds unless mended at the generator, doors shut every door for doors-seconds, and tester puts the tester
