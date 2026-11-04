@@ -188,7 +188,7 @@ public final class Deployment {
 
     void deploy(Player player, Spawn wanted) {
         var faction = game.factionOf(player);
-        if (faction.isEmpty() || !player.isOnline() || player.isDead()) {
+        if (game.intro().running() || faction.isEmpty() || !player.isOnline() || player.isDead()) {
             return;
         }
         var messages = game.messages();

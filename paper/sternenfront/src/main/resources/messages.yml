@@ -527,3 +527,13 @@ battlefield:
     warning: "<error>Dampf in <seconds>s! Abstand halten"
     active: "<error>Aktiv <dark>· <white><seconds>s"
     cooldown: "<muted>Abkühlzeit <seconds>s"
+
+intro:
+  title: '<gold><bold><map></bold></gold>'
+  subtitle: '<faction> <gray>· Erobere die Kommandoposten</gray>'
+  controls: '<gray>Schleichen: Intro überspringen · Einsatz in <white><seconds></white> s</gray>'
+  waiting: '<gray>Warte auf den gemeinsamen Einsatzbeginn · <white><seconds></white> s</gray>'
+  rejoining: '<gray>Das Intro läuft noch. Dein Einsatz beginnt mit den anderen Spielern.</gray>'
+  lobby-only: '<red>Die Intro-Vorschau ist nur in der Lobby ohne laufende Szene verfügbar.</red>'
+  pack-required: '<red>Das Ressourcenpaket muss für die Intro-Vorschau vollständig geladen sein.</red>'
+  invalid: '<red>Die Intro-Kamerafahrt ist ungültig. Prüfe die Serverkonsole.</red>'

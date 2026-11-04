@@ -5,6 +5,8 @@ import me.blockcraft.api.afk.Afk;
 import me.blockcraft.api.audit.StaffAudit;
 import me.blockcraft.api.cosmetic.Effects;
 import me.blockcraft.api.cosmetic.WeaponStyles;
+import me.blockcraft.api.dialogue.Dialogues;
+import me.blockcraft.api.presentation.VisualEffects;
 import me.blockcraft.api.elo.Elo;
 import me.blockcraft.api.game.RoundConfig;
 import me.blockcraft.api.game.Streaks;
@@ -115,7 +117,9 @@ public record BlockcraftApi(
         StaffAudit audit,
         TabTeams tabTeams,
         NetworkCalendar calendar,
-        RoundConfig roundConfig) {
+        RoundConfig roundConfig,
+        Dialogues dialogues,
+        VisualEffects visuals) {
 
     private static BlockcraftApi instance;
 

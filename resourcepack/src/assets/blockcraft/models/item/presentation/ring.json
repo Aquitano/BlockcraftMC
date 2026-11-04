@@ -1,0 +1,4 @@
+{"textures":{"surface":"blockcraft:presentation/ring","particle":"blockcraft:presentation/ring"},
+"elements":[{"from":[0,8,0],"to":[16,8,16],"shade":false,
+"faces":{"up":{"texture":"#surface","tintindex":0},"down":{"texture":"#surface","tintindex":0}}}
+]}

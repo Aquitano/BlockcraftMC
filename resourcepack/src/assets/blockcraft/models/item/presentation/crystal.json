@@ -1,0 +1,7 @@
+{"textures":{"surface":"blockcraft:presentation/crystal","particle":"blockcraft:presentation/crystal"},
+"elements":[{"from":[4,4,4],"to":[12,12,12],"shade":false,
+"rotation":{"origin":[8,8,8],"axis":"z","angle":45},
+"faces":{"up":{"texture":"#surface","tintindex":0},"down":{"texture":"#surface","tintindex":0},
+"north":{"texture":"#surface","tintindex":0},"south":{"texture":"#surface","tintindex":0},
+"east":{"texture":"#surface","tintindex":0},"west":{"texture":"#surface","tintindex":0}}}
+]}

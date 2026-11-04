@@ -230,6 +230,57 @@ Bodies, speeders, dropships and the effect models come from `resourcepack/Sterne
 (`Items.of(Material.PAPER).model(Key.key("blockcraft", ...))`) without a `PackModel`, so a model renamed there needs its
 call site changed too. `:resourcepack:generateHud` regenerates the HUD icons and bars.
 
+## Match intro
+
+`intro` in `config.yml` controls the camera sequence before combat starts. The default lasts 180 ticks.
+The round clock, bots, vehicles, objectives, and deployments start after the shared intro deadline.
+Sneaking skips to the last shot but keeps the player waiting until that deadline.
+
+`intro.shots` contains ordered keyframes. `at` is a fraction of the total duration, starting at `0` and ending at `1`.
+`anchor` and `look-at` accept `overview`, `headquarters` for the viewer's faction, and zero-based `post:N`.
+`offset` contains three world-space block coordinates relative to the anchor. `cut: true` holds the preceding
+shot until the keyframe, then changes the camera immediately. Other segments use smooth interpolation.
+
+`/sfintro` plays a personal preview in the lobby. It requires `blockcraft.sternenfront.presentation` and an applied
+resource pack. Sneak or use `/sfintro stop` to end the preview. It restores the original position, game mode,
+flight settings, invulnerability, collision setting, fall distance, and prior spectator target.
+An external teleport cancels the scene without moving the player back to its starting position.
+
+The shared `Scenes` API reports an `End` reason to its completion callback after restoring the player.
+`SkipMode.COMPLETE` stops immediately and does not run remaining timeline cues. Story callers must apply their final
+quest state in that callback for both `COMPLETED` and `SKIPPED`. Cancellation and disconnect require separate handling.
+`SkipMode.HOLD`, used by the match intro, keeps cue timing and the shared deadline while showing the final camera pose.
+
+## Infantry animation clips
+
+The final intro shot shows an infantry actor using `animations/briefing.animation.json` from the plugin jar.
+An operator override with the same relative path in the plugin data folder replaces it after restart.
+The animation name is `animation.infantry.briefing`.
+
+`BedrockAnimations` reads the numeric subset of Blockbench's Bedrock animation export. It supports positive
+`animation_length`, boolean `loop`, and named bone `position`, `rotation`, and `scale` channels. A channel is a
+constant three-number array or timestamped arrays. Timestamped objects can contain `post` and `lerp_mode: linear`.
+Molang, curved interpolation, separate `pre` values, event tracks, and animation controllers are rejected.
+
+The infantry actor binds `head`, `torso`, `left_arm`, `right_arm`, `left_leg`, and `right_leg` to existing item-display
+parts. Position values are local offsets in sixteenths of a block. Rotation values are local XYZ degrees.
+Scale values multiply each part. This actor uses independent joints with fixed attachment points and no parent-bone
+inheritance. Model geometry and pivot placement remain in the existing Sternenfront model generator.
+Unknown bone names reject the actor action. The importer does not load `.bbmodel` geometry or arbitrary Bedrock rigs.
+
+## Check the intro in a client
+
+1. Join the dev Sternenfront server with the current resource pack and the presentation permission.
+2. Run `/sfintro`. Check the map flyover, faction-specific headquarters shot, letterboxing, fades, and the infantry salute.
+3. Repeat the preview and sneak midway. Check the original position, game mode, flight, and camera are restored.
+4. Repeat the preview and teleport to another world. Check the scene stops and the teleport destination is preserved.
+5. Start a match with two clients. Skip on one client and watch the full intro on the other. Neither client can deploy early.
+6. Check both clients deploy together and the full configured round time remains. Bots and objectives begin at that point.
+7. Disconnect during the intro and reconnect. Check the player can deploy when the shared intro ends.
+
+The automated tests cover camera interpolation, cut timing, and numeric animation sampling and validation.
+They do not verify camera smoothness, shader appearance, model pivots, or client input behavior.
+
 ## Later
 
 Later changes: a second map, coin-unlocked class variants

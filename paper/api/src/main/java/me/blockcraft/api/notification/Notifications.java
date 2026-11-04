@@ -19,6 +19,7 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Predicate;
 
 import static me.blockcraft.api.notification.NoticeQueue.Priority;
 
@@ -60,6 +61,7 @@ public final class Notifications implements Listener {
     private final Timing timing;
     private final Map<UUID, State> players = new HashMap<>();
     private BukkitTask task;
+    private Predicate<Player> suspended = ignored -> false;
 
     public Notifications(Plugin plugin, Messages messages, ResourcePacks resourcePacks, Timing timing) {
         this.plugin = plugin;
@@ -67,6 +69,10 @@ public final class Notifications implements Listener {
         this.resourcePacks = resourcePacks;
         this.timing = timing;
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
+    }
+
+    public void suspendWhile(Predicate<Player> predicate) {
+        suspended = predicate;
     }
 
     public void status(Player player, Component message) {
@@ -163,8 +169,13 @@ public final class Notifications implements Listener {
                     rewardSound(player, Sounds.LEVEL_UP);
                 }
             }
-            showTitle(player, state, now);
-            showBar(player, state, now);
+            if (suspended.test(player)) {
+                state.shownBar = null;
+                state.shownTitle = null;
+            } else {
+                showTitle(player, state, now);
+                showBar(player, state, now);
+            }
             var sound = state.sounds.take(now);
             if (sound != null) {
                 sound.play(player);

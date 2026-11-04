@@ -230,3 +230,55 @@ curiosities:
   half-heart-seconds: 10
   rod-hits: 10
   emeralds-mined: 100
+
+dialogue:
+  characters-per-tick: 2
+  timeout-seconds: 180
+  demo:
+    first: arrival
+    lines:
+      arrival:
+        speaker: dialogue.demo.pilot
+        text: dialogue.demo.arrival
+        portrait: PILOT
+        next: briefing
+      briefing:
+        speaker: dialogue.demo.droid
+        text: dialogue.demo.briefing
+        portrait: DROID
+        choices:
+          - text: dialogue.demo.choice-scout
+            next: scout
+          - text: dialogue.demo.choice-assault
+            next: assault
+          - text: dialogue.demo.choice-details
+            next: details
+      details:
+        speaker: dialogue.demo.droid
+        text: dialogue.demo.details
+        portrait: DROID_ALERT
+        next: briefing
+      scout:
+        speaker: dialogue.demo.pilot
+        text: dialogue.demo.scout
+        portrait: PILOT_HAPPY
+        next: extraction
+      assault:
+        speaker: dialogue.demo.pilot
+        text: dialogue.demo.assault
+        portrait: PILOT_WORRIED
+        next: extraction
+      extraction:
+        speaker: dialogue.demo.droid
+        text: dialogue.demo.extraction
+        portrait: DROID
+
+presentation:
+  effects:
+    duration-ticks: 200
+    distance: 4.0
+    radius: 0.8
+    bob-height: 0.15
+    spin-degrees: 2.0
+    fade-ticks: 20
+    text-spacing: 0.35

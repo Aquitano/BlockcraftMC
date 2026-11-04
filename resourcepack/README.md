@@ -2,6 +2,9 @@
 
 How the proxy serves the pack is in the [root README](../README.md#resource-pack). This file is for changing what it draws.
 
+The [presentation test guide](../paper/api/PRESENTATION.md) covers dialogue portraits, animated materials and text,
+screen effects, and the Sternenfront intro.
+
 ## Constraints from the client
 
 - **Plain fallback.** Shared code draws a vanilla version for a client without the pack, because a client can be in the
@@ -38,3 +41,25 @@ exported with "Java Block/Item".
   one model draws every blade colour.
 - Item icons use a native 16-pixel grid, transparent margins and upper-left lighting. HUD symbols use seven pixels of ink
   in each eight-pixel tile to align with the text baseline.
+
+## Presentation assets
+
+`DialogueArt.java` generates the original portraits, panel, fonts, and matching Java glyph metrics.
+`PresentationArt.java` generates three effect models and the named post-processing chains. Run
+`:resourcepack:generateDialogue` and `:resourcepack:generatePresentation` to regenerate only those assets.
+
+The item and text shader overrides preserve Minecraft 26.3's ordinary rendering branches. Exact color markers opt
+into effects. Item markers use RGB `(233, mode, 197)`, where modes 1, 2, and 3 select hologram, plasma, and pulse.
+Each affected model face needs `tintindex: 0`, and each element needs `shade: false` to preserve the marker bytes.
+`VisualEffects.model` supplies that color through the first custom-model-data color. These models are viewer-only.
+
+Text markers use RGB `(231, mode, 197)`. `TextMotion` selects float, shake, brightness pulse, rainbow, or shine.
+Marked text shadows are suppressed. Ordinary text must avoid these reserved colors and their darkened shadow colors.
+
+`ScreenEffects` uses Paper 26.3's named post-effects API. Cinematic fades have 33 levels, with optional letterbox bars.
+Atmospheric presets change screen color and distortion. They do not add world lighting, weather simulation, or video
+playback. Cleanup removes only Blockcraft's presentation post-effects and preserves other namespaces.
+
+`verify_shaders.py --client <26.3-client.jar> --glslang <validator>` compiles the core variants and post-effect pairs.
+It needs Python 3 and glslangValidator. It does not download dependencies or change the pack. A new Minecraft version
+needs validation against that version's vanilla shaders and a real client rendering check.

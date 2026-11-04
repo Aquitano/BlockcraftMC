@@ -68,6 +68,8 @@ game-status:
   offline: "<muted>Gerade offline"
 
 commands:
+  presentation:
+    description: "Testet Dialoge, Hologramme, Textanimationen und Bildschirmeffekte"
   coins:
     description: "Zeigt deine Coins, mit /coins top die zehn reichsten Spieler"
   level:
@@ -806,3 +808,51 @@ forcemap:
 setup:
   help: "<prefix><muted>/setup <white><places>"
   set: "<prefix><muted>Gesetzt: <white><place><muted>. Dauerhaft wird es mit <white>/map save<muted>."
+
+dialogue:
+  controls: 'Schleichen: weiter | Handwechsel: Ende'
+  controls-choices: 'Scrollen: Wahl | Schleichen: OK | Handwechsel: Ende'
+  page: '<current>/<total>'
+  pack-required: '<prefix><red>Die Präsentation startet, sobald das Ressourcenpaket vollständig geladen ist. Versuche es dann erneut.'
+  invalid: '<prefix><red>Dieser Dialog ist nicht korrekt eingerichtet.'
+  cancelled: '<prefix><gray>Dialog beendet.'
+  completed: '<prefix><green>Dialog abgeschlossen. Endpunkt: <white><ending>'
+  demo:
+    pilot: 'MARA | PILOTIN'
+    droid: 'K-7 | AUFKLÄRUNG'
+    arrival: 'Willkommen auf der Aster. Unser Außenposten sendet seit einer Stunde nicht mehr. Ich bringe dich zur Landezone. Du entscheidest, wie wir vorgehen.'
+    briefing: 'Zwei Zugänge erkannt. Der Wartungstunnel ist unbewacht. Am Haupttor stehen schwere Geschütze. Welchen Weg wählen wir?'
+    choice-scout: 'Leise durch den Wartungstunnel.'
+    choice-assault: 'Wir nehmen das Haupttor.'
+    choice-details: 'Zeig mir zuerst die Sensordaten.'
+    details: 'Die Sensoren melden Bewegung im Reaktorkern. Der Tunnel führt hinter die Generatoren. Am Tor gibt es Deckung, aber das Geschütz erfasst das ganze Vorfeld. Keine Sorge: Diese Demo verändert weder deine Ausrüstung noch deinen Fortschritt. Mit dem Mausrad wählst du eine Antwort. Durch Schleichen bestätigst du sie. Noch einmal schleichen zeigt zuerst den vollständigen Text.'
+    scout: 'Gute Wahl. Ich halte das Schiff unterhalb der Felswand. Sobald du den Sender erreichst, holen wir die anderen nach.'
+    assault: 'Das wird laut. Bleib in Deckung, bis K-7 die Geschütze markiert. Ich halte den Rückweg frei.'
+    extraction: 'Plan gespeichert, nur für diese Vorführung. Die echte Mission kann an diesem Endpunkt eine Szene starten, ein Ziel setzen oder eine Entscheidung für deine Gruppe übernehmen.'
+
+presentation:
+  effects:
+    pack-required: '<prefix><red>Für die Effekte muss das Ressourcenpaket vollständig geladen sein.</red>'
+    text:
+      float: 'SCHWEBEN | Einsatz bereit'
+      shake: 'ERSCHÜTTERUNG | Treffer am Schild'
+      pulse: 'PULS | Reaktorkern aktiv'
+      rainbow: 'FARBWECHSEL | Seltene Entdeckung'
+      shine: 'GLANZ | Auftrag abgeschlossen'
+
+  help: '<prefix><gray>/presentation <white>dialogue | hologram | plasma | pulse | text | cinematic | holoscreen | storm | portal | focus | stop<gray>. Dialogsteuerung: <white>advance | next | previous<gray>.'
+  busy: '<prefix><yellow>Beende zuerst den laufenden Dialog, Effekt oder die Kameraszene.'
+  pack-required: '<prefix><red>Das Ressourcenpaket muss vollständig geladen sein. Versuche es danach erneut.'
+  stopped: '<prefix><gray>Präsentation beendet.'
+  inactive: '<prefix><gray>Es läuft gerade kein Dialog.'
+  started: '<prefix><gray>Vorschau: <white><effect><gray>. Mit <white>/presentation stop<gray> beenden.'
+  labels:
+    hologram: 'Hologramm'
+    holoscreen: 'Holografische Sicht'
+    plasma: 'Plasma'
+    pulse: 'Energieimpuls'
+    text: 'Animierter Text'
+    cinematic: 'Filmblenden'
+    storm: 'Sturm'
+    portal: 'Portal'
+    focus: 'Fokus'

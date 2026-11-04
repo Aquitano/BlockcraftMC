@@ -26,6 +26,7 @@ import me.blockcraft.api.item.Items;
 import me.blockcraft.api.menu.Menu;
 import me.blockcraft.api.pack.MenuIcon;
 import me.blockcraft.api.sound.Sounds;
+import me.blockcraft.api.scene.Scenes;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.sternenfront.arena.FrontMap;
@@ -133,6 +134,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     private final Speeders speeders;
     private final SpawnSpots spawnSpots;
     private final Deployment deployment;
+    private final BattleIntro intro;
     private final Battlefield battlefield;
     private final SupportRewards support;
     private final Gadgets gadgets;
@@ -204,6 +206,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         this.acts = new RoundActs(config.acts(), config.tickets());
         this.relic = new Relic(this, map.relic(), Long.MAX_VALUE);
         round.playArea(map.world(), map.playArea());
+        intro = new BattleIntro(this);
     }
 
     public GamePhase phase() {
@@ -256,6 +259,10 @@ public final class SternenfrontGame implements RoundConnections.Seating {
 
     public Battlefield battlefield() {
         return battlefield;
+    }
+
+    public BattleIntro intro() {
+        return intro;
     }
 
     public Deployment deployment() {
@@ -349,7 +356,8 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     /** In the running round, alive and deployed, as opposed to choosing a spawn or watching. */
     public boolean onField(Player player) {
         var fighter = fighters.get(player.getUniqueId());
-        return phase() == GamePhase.INGAME && round.isPlaying(player) && fighter != null && fighter.onField() && !player.isDead();
+        return !intro.running() && !Scenes.isViewing(player) && phase() == GamePhase.INGAME
+                && round.isPlaying(player) && fighter != null && fighter.onField() && !player.isDead();
     }
 
     public boolean onField(LivingEntity entity) {
@@ -359,7 +367,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
 
     public boolean choosing(Player player) {
         var fighter = fighters.get(player.getUniqueId());
-        return phase() == GamePhase.INGAME && fighter != null && !fighter.onField();
+        return !intro.running() && !Scenes.isViewing(player) && phase() == GamePhase.INGAME && fighter != null && !fighter.onField();
     }
 
     /** Whether a bolt or blast of {@code faction} can hit the player. */
@@ -400,6 +408,19 @@ public final class SternenfrontGame implements RoundConnections.Seating {
 
     @Override
     public void join(Player player) {
+        if (intro.running()) {
+            if (round.rejoin(player)) {
+                PlayerReset.reset(player, GameMode.ADVENTURE);
+                player.setGameMode(GameMode.SPECTATOR);
+                player.setInvulnerable(true);
+                player.teleport(map.overview());
+                player.sendMessage(messages.get("intro.rejoining"));
+            } else {
+                entrance.admit(player);
+            }
+            refreshAll();
+            return;
+        }
         if (round.rejoin(player)) {
             teams.of(player.getUniqueId()).ifPresent(faction -> BlockcraftApi.get().tabTeams().color(player, faction.text()));
             if (player.isDead()) {
@@ -433,6 +454,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
 
     @Override
     public void quit(Player player) {
+        intro.cancel(player);
         music.forget(player);
         botDifficultyVotes.withdraw(player.getUniqueId());
         combat.forget(player);
@@ -585,7 +607,26 @@ public final class SternenfrontGame implements RoundConnections.Seating {
             countdown.start();
             return;
         }
+        for (var player : round.players()) {
+            BlockcraftApi.get().dialogues().stop(player);
+            BlockcraftApi.get().visuals().stop(player);
+            intro.cancel(player);
+        }
         round.enter(GamePhase.INGAME);
+        secondsLeft = config.roundSeconds();
+        for (var player : round.players()) {
+            roster.put(player.getUniqueId(), teams.of(player.getUniqueId()).orElseThrow());
+            PlayerReset.reset(player, GameMode.ADVENTURE);
+            player.setGameMode(GameMode.SPECTATOR);
+            player.setInvulnerable(true);
+            player.teleport(map.overview());
+        }
+        refreshAll();
+        intro.start(round.players(), this::beginBattle);
+    }
+
+    private void beginBattle() {
+        if (phase() != GamePhase.INGAME) return;
         tick = 0;
         fieldKills.clear();
         reinforcements = new Reinforcements(config.tickets());
@@ -1277,6 +1318,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     }
 
     private void cleanUp() {
+        intro.clear();
         if (loop != null) {
             loop.cancel();
             loop = null;
@@ -1303,6 +1345,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     public void stop() {
         countdown.cancel();
         cleanUp();
+        intro.close();
         round.stop();
     }
 

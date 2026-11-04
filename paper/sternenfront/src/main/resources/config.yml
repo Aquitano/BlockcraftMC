@@ -307,3 +307,26 @@ streaks:
 # Sneaking with the long rifle slows the walk by this share, which clients with FOV effects on show as a zoom.
 scope:
   slowdown: 0.9
+
+intro:
+  enabled: true
+  duration-ticks: 180
+  fade-ticks: 15
+  shots:
+    - at: 0.0
+      anchor: overview
+      offset: [0, 0, 0]
+      look-at: 'post:1'
+    - at: 0.40
+      anchor: 'post:1'
+      offset: [12, 10, 14]
+      look-at: 'post:1'
+    - at: 0.75
+      anchor: headquarters
+      offset: [4, 2, 5]
+      look-at: headquarters
+      cut: true
+    - at: 1.0
+      anchor: headquarters
+      offset: [2, 1.7, 3]
+      look-at: headquarters

@@ -1,0 +1,6 @@
+{"textures":{"surface":"blockcraft:presentation/flare","particle":"blockcraft:presentation/flare"},
+"elements":[{"from":[0,0,8],"to":[16,16,8],"shade":false,
+"faces":{"north":{"texture":"#surface","tintindex":0},"south":{"texture":"#surface","tintindex":0}}},
+{"from":[8,0,0],"to":[8,16,16],"shade":false,
+"faces":{"east":{"texture":"#surface","tintindex":0},"west":{"texture":"#surface","tintindex":0}}}
+]}

@@ -2,6 +2,7 @@ package me.blockcraft.sternenfront.combat;
 
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.pack.UiFont;
+import me.blockcraft.api.scene.Scenes;
 import me.blockcraft.sternenfront.game.SternenfrontGame;
 import me.blockcraft.sternenfront.hero.Hero;
 import net.kyori.adventure.text.Component;
@@ -19,6 +20,8 @@ public final class CombatHud {
     }
 
     public void show(Player player, Guard guard) {
+        var api = BlockcraftApi.get();
+        if (api.dialogues().active(player) || api.visuals().active(player) || Scenes.isViewing(player)) return;
         var fighter = game.fighter(player);
         boolean blade = fighter.hero().filter(Hero::bladed).isPresent();
         double health = player.getHealth() / player.getAttribute(Attribute.MAX_HEALTH).getValue();

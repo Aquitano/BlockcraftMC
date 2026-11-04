@@ -79,6 +79,7 @@ public final class SternenfrontPlugin extends JavaPlugin {
         services.commands(commands -> {
             commands.register(StartCommand.of(game.countdown()).build());
             commands.register(botDebug.command());
+            commands.register(game.intro().command());
         });
 
         Bukkit.getOnlinePlayers().forEach(game::join);
