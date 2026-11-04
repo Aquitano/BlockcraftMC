@@ -2,6 +2,7 @@ package me.blockcraft.api.scene;
 
 import com.destroystokyo.paper.event.player.PlayerStopSpectatingEntityEvent;
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.presentation.PresentationScope;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.entity.ItemDisplay;
@@ -11,6 +12,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerInputEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -51,6 +53,24 @@ public final class Scenes implements Listener, AutoCloseable {
     }
 
     public boolean play(Player player, SceneTimeline timeline, Consumer<End> completion) {
+        return play(player, timeline, new PresentationScope(plugin), completion);
+    }
+
+    public boolean play(Player player, SceneTimeline timeline, PresentationScope resources, Consumer<End> completion) {
+        boolean started = false;
+        try {
+            started = start(player, timeline, resources, completion);
+            return started;
+        } catch (RuntimeException failure) {
+            plugin.getSLF4JLogger().warn("Could not prepare scene", failure);
+            return false;
+        } finally {
+            if (!started) resources.close();
+        }
+    }
+
+    private boolean start(Player player, SceneTimeline timeline, PresentationScope resources, Consumer<End> completion) {
+        if (resources.closed()) return false;
         if (closed || isViewing(player) || player.isDead() || !player.isOnline() || player.isInsideVehicle()) return false;
         var api = BlockcraftApi.get();
         if (api.dialogues().active(player) || api.visuals().active(player)) {
@@ -67,7 +87,7 @@ public final class Scenes implements Listener, AutoCloseable {
             plugin.getSLF4JLogger().warn("Could not create scene camera", failure);
             return false;
         }
-        var session = new Session(player, timeline, completion, saved, camera);
+        var session = new Session(player, timeline, completion, saved, camera, resources, new PresentationScope(plugin));
         sessions.put(player.getUniqueId(), session);
         VIEWING.add(player.getUniqueId());
         try {
@@ -115,6 +135,7 @@ public final class Scenes implements Listener, AutoCloseable {
         if (session == null || session.skipped) return;
         session.skipped = true;
         if (session.timeline.skipMode() == SceneTimeline.SkipMode.COMPLETE) finish(session, End.SKIPPED, true);
+        else session.resources.close();
     }
 
     private void tick() {
@@ -122,7 +143,7 @@ public final class Scenes implements Listener, AutoCloseable {
             try {
                 if (!session.player.isOnline()) {
                     finish(session, End.DISCONNECTED, true);
-                } else if (session.player.getGameMode() != GameMode.SPECTATOR || !session.camera.isValid()) {
+                } else if (session.player.isDead() || session.player.getGameMode() != GameMode.SPECTATOR || !session.camera.isValid()) {
                     finish(session, End.CANCELLED, true);
                 } else {
                     session.tick++;
@@ -145,7 +166,7 @@ public final class Scenes implements Listener, AutoCloseable {
         session.camera.setTeleportDuration(cut ? 0 : 1);
         session.camera.teleport(timeline.camera().sample(shownTick).in(timeline.world()));
         if (session.player.getSpectatorTarget() != session.camera) session.player.setSpectatorTarget(session.camera);
-        while (session.nextCue < timeline.cues().size() && timeline.cues().get(session.nextCue).tick() <= session.tick) {
+        while (!session.skipped && session.nextCue < timeline.cues().size() && timeline.cues().get(session.nextCue).tick() <= session.tick) {
             timeline.cues().get(session.nextCue++).action().run();
         }
         timeline.frame().show(session.player, session.tick, timeline.camera().duration(), session.skipped);
@@ -161,7 +182,8 @@ public final class Scenes implements Listener, AutoCloseable {
         } catch (RuntimeException failure) {
             plugin.getSLF4JLogger().warn("Could not restore scene participant", failure);
         } finally {
-            session.camera.remove();
+            session.cameraResources.close();
+            session.resources.close();
             changing = previousChanging;
         }
         try {
@@ -196,6 +218,12 @@ public final class Scenes implements Listener, AutoCloseable {
         if (changing) return;
         var session = sessions.get(event.getPlayer().getUniqueId());
         if (session != null) finish(session, End.TELEPORTED, false);
+    }
+
+    @EventHandler
+    public void onDeath(PlayerDeathEvent event) {
+        var session = sessions.get(event.getPlayer().getUniqueId());
+        if (session != null) finish(session, End.CANCELLED, false);
     }
 
     @EventHandler
@@ -245,16 +273,22 @@ public final class Scenes implements Listener, AutoCloseable {
         final Consumer<End> completion;
         final Saved saved;
         final ItemDisplay camera;
+        final PresentationScope resources;
+        final PresentationScope cameraResources;
         int tick;
         int nextCue;
         boolean skipped;
 
-        Session(Player player, SceneTimeline timeline, Consumer<End> completion, Saved saved, ItemDisplay camera) {
+        Session(Player player, SceneTimeline timeline, Consumer<End> completion, Saved saved, ItemDisplay camera,
+                PresentationScope resources, PresentationScope cameraResources) {
             this.player = player;
             this.timeline = timeline;
             this.completion = completion;
             this.saved = saved;
             this.camera = camera;
+            this.resources = resources;
+            this.cameraResources = cameraResources;
+            cameraResources.own(camera::remove);
         }
     }
 }

@@ -8,6 +8,7 @@ import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.animation.AnimationClip;
 import me.blockcraft.api.animation.BedrockAnimations;
 import me.blockcraft.api.game.GamePhase;
+import me.blockcraft.api.presentation.PresentationScope;
 import me.blockcraft.api.presentation.ScreenEffects;
 import me.blockcraft.api.scene.CameraPath;
 import me.blockcraft.api.scene.SceneTimeline;
@@ -27,19 +28,12 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
 
 public final class BattleIntro implements AutoCloseable {
     private final SternenfrontGame game;
     private final Scenes scenes;
-    private final Map<UUID, CinematicActor> actors = new HashMap<>();
-    private final Set<UUID> focused = new HashSet<>();
     private final Optional<AnimationClip> clip;
     private BukkitTask deadline;
     private boolean running;
@@ -64,8 +58,6 @@ public final class BattleIntro implements AutoCloseable {
         deadline = game.plugin().getServer().getScheduler().runTaskLater(game.plugin(), () -> {
             deadline = null;
             for (var player : game.plugin().getServer().getOnlinePlayers()) scenes.stop(player);
-            actors.values().forEach(CinematicActor::close);
-            actors.clear();
             running = false;
             ready.run();
         }, duration + 1L);
@@ -102,20 +94,32 @@ public final class BattleIntro implements AutoCloseable {
         var config = game.plugin().getConfig();
         var focus = new FocusWindow(config.getBoolean("intro.focus.enabled"),
                 config.getDouble("intro.focus.from"), config.getDouble("intro.focus.until"));
+        var participant = new Participant(new PresentationScope(game.plugin()));
         var timeline = new SceneTimeline(game.map().world(), path.get(), List.of(), skipMode,
                 (viewer, tick, total, skipped) -> {
-                    var actor = actors.get(viewer.getUniqueId());
-                    if (actor != null) actor.tick(tick);
+                    if (skipped) {
+                        if (tick % 10 == 0) viewer.sendActionBar(game.messages().get("intro.waiting",
+                                Formatter.number("seconds", Math.max(0, (total - tick + 19) / 20))));
+                        return;
+                    }
+                    if (!participant.initialized) {
+                        participant.initialized = true;
+                        participant.resources.own(viewer::clearTitle);
+                        participant.resources.own(() -> viewer.sendActionBar(Component.empty()));
+                    }
+                    if (participant.actor != null) participant.actor.tick(tick);
                     int fadeTicks = Math.clamp(game.plugin().getConfig().getInt("intro.fade-ticks"), 1, total / 2);
                     double fade = Math.max(1.0 - (double) tick / fadeTicks, 1.0 - (double) (total - tick) / fadeTicks);
-                    ScreenEffects.frame(viewer, Math.clamp(fade, 0, 1), true);
+                    ScreenEffects.frame(participant.resources, viewer, Math.clamp(fade, 0, 1), true);
                     if (focus.active(tick, total, skipped)) {
-                        if (focused.add(viewer.getUniqueId())) ScreenEffects.atmosphere(viewer, ScreenEffects.Atmosphere.FOCUS);
-                    } else if (focused.remove(viewer.getUniqueId())) {
+                        if (!participant.focused) ScreenEffects.atmosphere(participant.resources, viewer, ScreenEffects.Atmosphere.FOCUS);
+                        participant.focused = true;
+                    } else if (participant.focused) {
                         ScreenEffects.clearAtmosphere(viewer);
+                        participant.focused = false;
                     }
                     if (tick % 10 == 0) {
-                        viewer.sendActionBar(game.messages().get(skipped ? "intro.waiting" : "intro.controls",
+                        viewer.sendActionBar(game.messages().get("intro.controls",
                                 Formatter.number("seconds", Math.max(0, (total - tick + 19) / 20))));
                     }
                     if (tick == fadeTicks) {
@@ -124,20 +128,26 @@ public final class BattleIntro implements AutoCloseable {
                                 Title.Times.times(Duration.ofMillis(250), Duration.ofMillis(1800), Duration.ofMillis(500))));
                     }
                 });
-        boolean played = scenes.play(player, timeline, ignored -> {
-            var actor = actors.remove(player.getUniqueId());
-            if (actor != null) actor.close();
-            focused.remove(player.getUniqueId());
-            ScreenEffects.clear(player);
-            player.clearTitle();
-            player.sendActionBar(Component.empty());
-        });
+        boolean played = scenes.play(player, timeline, participant.resources,
+                ignored -> player.sendActionBar(Component.empty()));
         if (played && clip.isPresent()) {
             try {
-                actors.put(player.getUniqueId(), new CinematicActor(game.plugin(), player, actorAt, faction, clip.get()));
+                participant.actor = new CinematicActor(game.plugin(), player, actorAt, faction, clip.get());
+                participant.resources.own(participant.actor::close);
             } catch (IllegalArgumentException badClip) {
                 game.plugin().getSLF4JLogger().warn("Intro actor could not use animation", badClip);
             }
+        }
+    }
+
+    private static final class Participant {
+        final PresentationScope resources;
+        CinematicActor actor;
+        boolean initialized;
+        boolean focused;
+
+        Participant(PresentationScope resources) {
+            this.resources = resources;
         }
     }
 
@@ -223,8 +233,6 @@ public final class BattleIntro implements AutoCloseable {
         }
         running = false;
         for (var player : game.plugin().getServer().getOnlinePlayers()) scenes.stop(player);
-        actors.values().forEach(CinematicActor::close);
-        actors.clear();
     }
 
     @Override

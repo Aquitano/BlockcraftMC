@@ -226,6 +226,8 @@ relic:
   lost: "<prefix><muted>Die <accent>Ahnenklinge <muted>kehrt in die Tempelruine zurück."
 
 post:
+  capture-title: "<accent>POSTEN <letter> <white><post>"
+  capture-subtitle: "<faction> <muted>hat den Posten gesichert."
   raffinerie: "Raffinerie"
   wrack: "Wrack"
   basar: "Basar"
@@ -284,6 +286,9 @@ headquarters:
   warning: "<error>Feindliches Hauptquartier! <muted>Raus hier!"
 
 deploy:
+  location: "<location>"
+  radio: "<muted>Funk: Einsatz bestätigt. Sichere die Kommandoposten."
+  landing: "<white>Landezone"
   controls: "<prefix><accent>F<muted>: <first> <dark>· <accent>Q<muted>: <second>"
   no-ability: "<muted>Keine Fähigkeit"
   saber-controls: "<prefix><left>Schwingt durch alle Gegner vor dir <dark>· <right>Halten zum Blocken <dark>· <muted>Zweimal springen für den Machtsprung."

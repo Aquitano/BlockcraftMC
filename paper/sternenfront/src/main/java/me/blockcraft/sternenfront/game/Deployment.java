@@ -32,15 +32,17 @@ public final class Deployment {
     private final SternenfrontGame game;
     private final SpawnSpots spawnSpots;
     private final FeelConfig feel;
+    private final BattlePresentation presentation;
     private final Runnable sidebarChanged;
     private final Map<UUID, DeployMenu> deployMenus = new HashMap<>();
     /** Whose kill a dead player watches before they choose where to deploy. */
     private final Map<UUID, UUID> killers = new HashMap<>();
 
-    Deployment(SternenfrontGame game, SpawnSpots spawnSpots, FeelConfig feel, Runnable sidebarChanged) {
+    Deployment(SternenfrontGame game, SpawnSpots spawnSpots, FeelConfig feel, BattlePresentation presentation, Runnable sidebarChanged) {
         this.game = game;
         this.spawnSpots = spawnSpots;
         this.feel = feel;
+        this.presentation = presentation;
         this.sidebarChanged = sidebarChanged;
     }
 
@@ -187,8 +189,16 @@ public final class Deployment {
     }
 
     void deploy(Player player, Spawn wanted) {
+        if (game.intro().running() || game.phase() != GamePhase.INGAME || !game.isPlaying(player)
+                || !player.isOnline() || player.isDead()) return;
+        if (deployMenus.remove(player.getUniqueId()) != null) Menu.close(player);
+        presentation.deploy(player, () -> deployNow(player, wanted));
+    }
+
+    private void deployNow(Player player, Spawn wanted) {
         var faction = game.factionOf(player);
-        if (game.intro().running() || faction.isEmpty() || !player.isOnline() || player.isDead()) {
+        if (game.intro().running() || faction.isEmpty() || !player.isOnline() || player.isDead()
+                || game.phase() != GamePhase.INGAME || !game.isPlaying(player)) {
             return;
         }
         var messages = game.messages();
@@ -241,6 +251,7 @@ public final class Deployment {
         if (hero.filter(chosen -> chosen.weapon() instanceof Hero.Weapon.Saber).isPresent()) {
             player.sendMessage(messages.get("deploy.saber-controls"));
         }
+        presentation.deployed(player, spawn);
         sidebarChanged.run();
     }
 

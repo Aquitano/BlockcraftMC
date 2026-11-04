@@ -21,7 +21,7 @@ public record ZombiesConfig(int maxPlayers, int startingGold, int intermissionSe
                             int noteCoins, int healthRegenTicks, double extraHealth, double headshotMultiplier, double knifeDamage, int damageImmunityTicks,
                             double burnDamage, int burnTicks,
                             Waves waves, Map<Weapon, Gun> guns, Map<Perk, Integer> perks, Map<EnemyKind, Enemy> enemies, Exploder exploder,
-                            Events events, Abilities abilities, Mystery mystery, Armory armory) {
+                            Events events, Abilities abilities, Mystery mystery, Armory armory, Presentation presentation) {
 
     /** The last {@code stragglers} enemies of a wave move at least at {@code stragglerSpeed}. */
     public record Waves(int total, int baseEnemies, int enemiesPerWave, double extraPlayer, double healthPerExtraPlayer,
@@ -162,6 +162,9 @@ public record ZombiesConfig(int maxPlayers, int startingGold, int intermissionSe
     /** An armory's guns turn once every {@code spinTicks} in a ring of {@code radius} blocks, {@code height} blocks above it. */
     public record Armory(double height, double radius, float scale, int spinTicks) { }
 
+    public record Presentation(boolean enabled, int outageAccentTicks, int ambientTicks, float ambientVolume,
+                               int recoveryTicks, int ringPoints, double reviveRadius) { }
+
     public static ZombiesConfig from(ConfigurationSection yaml) {
         var waves = new Waves(positive(yaml, "waves.total"), positive(yaml, "waves.base-enemies"),
                 positive(yaml, "waves.enemies-per-wave"), Math.max(0, yaml.getDouble("waves.extra-player")),
@@ -223,7 +226,14 @@ public record ZombiesConfig(int maxPlayers, int startingGold, int intermissionSe
                         positive(yaml, "mystery.roll-seconds") * 20, positive(yaml, "mystery.take-seconds") * 20,
                         positive(yaml, "mystery.sink-ticks"), (float) Math.clamp(yaml.getDouble("mystery.scale"), 0.2, 2)),
                 new Armory(Math.clamp(yaml.getDouble("armory.height"), 0, 4), Math.clamp(yaml.getDouble("armory.radius"), 0, 2),
-                        (float) Math.clamp(yaml.getDouble("armory.scale"), 0.2, 2), positive(yaml, "armory.spin-seconds") * 20));
+                        (float) Math.clamp(yaml.getDouble("armory.scale"), 0.2, 2), positive(yaml, "armory.spin-seconds") * 20),
+                new Presentation(yaml.getBoolean("presentation.enabled"),
+                        Math.clamp(yaml.getInt("presentation.outage-accent-ticks"), 0, 60),
+                        Math.clamp(yaml.getInt("presentation.outage-ambient-ticks"), 20, 200),
+                        (float) Math.clamp(yaml.getDouble("presentation.outage-ambient-volume"), 0, 1),
+                        Math.clamp(yaml.getInt("presentation.recovery-ticks"), 0, 60),
+                        Math.clamp(yaml.getInt("presentation.ring-points"), 8, 32),
+                        Math.clamp(yaml.getDouble("presentation.revive-radius"), 0.3, 1.5)));
     }
 
     private static Abilities abilities(ConfigurationSection yaml) {

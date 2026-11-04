@@ -274,6 +274,31 @@ dialogue:
         portrait: DROID
 
 presentation:
+  discovery:
+    distance: 4.0
+    max-distance: 16.0
+    highlight-ticks: 40
+    highlight-radius: 0.4
+    demo:
+      first: found
+      lines:
+        found:
+          speaker: presentation.discovery.guide
+          text: presentation.discovery.found
+          portrait: DROID
+          choices:
+            - text: presentation.discovery.inspect
+              next: inspect
+            - text: presentation.discovery.leave
+              next: leave
+        inspect:
+          speaker: presentation.discovery.guide
+          text: presentation.discovery.inspected
+          portrait: DROID_ALERT
+        leave:
+          speaker: presentation.discovery.guide
+          text: presentation.discovery.left
+          portrait: DROID
   gameplay:
     enabled: true
     intensity: 0.5

@@ -1,15 +1,22 @@
 package me.blockcraft.api.scene;
 
+import me.blockcraft.api.presentation.PresentationScope;
 import org.bukkit.GameMode;
+import org.bukkit.Server;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.PluginManager;
+import org.bukkit.scheduler.BukkitScheduler;
+import org.bukkit.scheduler.BukkitTask;
 import org.junit.Test;
 
 import java.lang.reflect.Proxy;
 import java.util.HashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 import static org.junit.Assert.assertEquals;
@@ -82,6 +89,35 @@ public class ScenesTest {
         assertTrue(state.detached);
         assertNull(state.target);
         assertFalse(state.teleported);
+    }
+
+    @Test
+    public void refusedSceneStillReleasesTransferredResources() {
+        var task = (BukkitTask) Proxy.newProxyInstance(BukkitTask.class.getClassLoader(), new Class<?>[]{BukkitTask.class},
+                (proxy, method, args) -> null);
+        var scheduler = (BukkitScheduler) Proxy.newProxyInstance(BukkitScheduler.class.getClassLoader(), new Class<?>[]{BukkitScheduler.class},
+                (proxy, method, args) -> task);
+        var manager = (PluginManager) Proxy.newProxyInstance(PluginManager.class.getClassLoader(), new Class<?>[]{PluginManager.class},
+                (proxy, method, args) -> null);
+        var server = (Server) Proxy.newProxyInstance(Server.class.getClassLoader(), new Class<?>[]{Server.class},
+                (proxy, method, args) -> switch (method.getName()) {
+                    case "getScheduler" -> scheduler;
+                    case "getPluginManager" -> manager;
+                    default -> throw new AssertionError(method.getName());
+                });
+        var plugin = (Plugin) Proxy.newProxyInstance(Plugin.class.getClassLoader(), new Class<?>[]{Plugin.class},
+                (proxy, method, args) -> {
+                    if (method.getName().equals("getServer")) return server;
+                    throw new AssertionError(method.getName());
+                });
+        var resources = new PresentationScope(plugin);
+        var released = new AtomicBoolean();
+        resources.own(() -> released.set(true));
+        var scenes = new Scenes(plugin);
+        scenes.close();
+        assertFalse(scenes.play(null, null, resources, ignored -> { throw new AssertionError("Scene never started"); }));
+        assertTrue(resources.closed());
+        assertTrue(released.get());
     }
 
     private static final class PlayerState {

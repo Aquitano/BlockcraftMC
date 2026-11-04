@@ -135,6 +135,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     private final SpawnSpots spawnSpots;
     private final Deployment deployment;
     private final BattleIntro intro;
+    private final BattlePresentation presentation;
     private final Battlefield battlefield;
     private final SupportRewards support;
     private final Gadgets gadgets;
@@ -198,7 +199,8 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         this.combat = new Combat(this, CombatConfig.from(plugin.getConfig()));
         this.speeders = new Speeders(this, SpeederConfig.from(plugin.getConfig()));
         this.spawnSpots = new SpawnSpots(this);
-        this.deployment = new Deployment(this, spawnSpots, feel, () -> dirty = true);
+        this.presentation = new BattlePresentation(this);
+        this.deployment = new Deployment(this, spawnSpots, feel, presentation, () -> dirty = true);
         this.battlefield = new Battlefield(this);
         this.support = new SupportRewards(this);
         this.streaks = new KillStreaks(feel.orbitalStreak());
@@ -455,6 +457,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     @Override
     public void quit(Player player) {
         BlockcraftApi.get().visuals().clearAccent(player);
+        presentation.cancel(player);
         intro.cancel(player);
         music.forget(player);
         botDifficultyVotes.withdraw(player.getUniqueId());
@@ -485,6 +488,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
 
     private void leave(Player player) {
         BlockcraftApi.get().visuals().clearAccent(player);
+        presentation.cancel(player);
         boolean wasPlaying = round.leave(player);
         teams.leave(player.getUniqueId());
         fighters.remove(player.getUniqueId());
@@ -792,6 +796,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         var name = posts.name(event.index());
         switch (event.change()) {
             case CommandPost.Change.Captured captured -> {
+                presentation.captured(event.index(), captured.by());
                 Bukkit.broadcast(messages.get("post.captured", name, factionName(captured.by())));
                 event.present().forEach(player -> {
                     summary.awardCoins(player, config.rewards().capture());
@@ -1217,6 +1222,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     public void death(PlayerDeathEvent event) {
         var victim = event.getPlayer();
         BlockcraftApi.get().visuals().clearAccent(victim);
+        presentation.cancel(victim);
         combat.forget(victim);
         strikesReady.remove(victim.getUniqueId());
         victim.leaveVehicle();
@@ -1344,6 +1350,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         streaks.clear();
         strikesReady.clear();
         deployment.clear();
+        presentation.close();
     }
 
     public void stop() {

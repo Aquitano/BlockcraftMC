@@ -1,7 +1,6 @@
 # Test the presentation prototypes
 
-Use a Java 26.3 client on the dev network with the matching Blockcraft pack and updated plugins. These changes have
-not been deployed. Grant `blockcraft.presentation` to the tester, or use an operator account. The Sternenfront camera
+Use a Java 26.3 client on the dev network with the matching Blockcraft pack and updated plugins. Grant `blockcraft.presentation` to the tester, or use an operator account. The Sternenfront camera
 demo also needs `blockcraft.sternenfront.presentation`.
 
 ## Check the resource pack
@@ -86,6 +85,76 @@ Gameplay effects do not take ownership of the HUD or block movement and input. A
    terrain. Camera offsets are relative to the map's overview, headquarters, and control posts.
 
 See the [Sternenfront intro reference](../sternenfront/README.md#match-intro) for animation limits and camera configuration.
+
+## Test event presentations
+
+### Battlefront deployment and captures
+
+1. Start a match. Deployment fades to black, waits two ticks at full black, teleports, then fades back in.
+   A location title and radio subtitle identify the spawn. There is no additional camera move.
+2. Die and choose a controlled post. If that post becomes unavailable during the fade, deployment must fall back to
+   headquarters and show the headquarters location.
+3. Disconnect or end the round during the fade. The pending deployment must be cancelled.
+4. Capture a neutral or enemy post. A ring expands around it in the capturing faction's color. An objective banner
+   fades in and out. Existing capture rewards, sounds, and block recoloring still apply.
+5. Run `/sfintro`, then skip. The actor, screen effects, and title must disappear. During a real match, the camera
+   remains until the shared deadline, with only the waiting message remaining.
+
+Sternenfront `presentation.deployment` controls fade duration and the briefing banner. Set `fade-ticks: 0` for
+immediate deployment. `presentation.capture` controls the ring duration, radius, and particle count; `ticks: 0`
+disables capture presentation. Without the pack, deployment is immediate and the native notifications remain readable.
+
+### Zombies outage and revive
+
+1. Buy power and wait for an outage. Check the brief cool screen accent, low ambient sound, and generator smoke
+   alongside the existing sparks and switched-off lights. The existing darkness mechanic remains unchanged.
+2. Repair the generator by sneaking near it. The outage audio must stop. Repeat with a wave ending, a player being
+   downed, and a player leaving the server.
+3. With two players, let one become downed. Sneak nearby to revive them. A gray ring fills green with progress.
+   Release sneak and verify that the progress resets. Finish the revive and check the expanding recovery ring.
+4. End the round during an outage or recovery. No audio or screen effects should carry into the lobby.
+
+For a deterministic dev test, use temporary Zombies operator overrides: `events.chance: 1`, `events.from-wave: 1`,
+`events.power_outage.weight: 1`, and the other event weights set to zero. Buy power before the next wave. Restore
+these overrides after testing. Zombies `presentation` controls effect durations, audio volume, and ring density.
+
+### Story discovery demo
+
+1. In a clear, flat area, run `/presentation discovery`. A private villager guide looks toward a floating artifact.
+   The artifact is highlighted while a portrait dialogue presents two choices. Your camera remains under your control.
+2. Use sneak to reveal or advance text and scroll to choose whether to inspect the artifact. Complete both branches
+   on separate runs. This demo saves no progress and grants no rewards.
+3. Swap hands or use `/presentation stop`. The guide, artifact, highlights, and dialogue must disappear together.
+   Repeat by taking damage, walking more than 16 blocks from the artifact, changing worlds, and disconnecting.
+4. Watch with a second client. That player must not see the guide, artifact, or highlight particles.
+
+The guide uses a vanilla villager as a placeholder; the portrait and artifact use existing Blockcraft assets.
+Configure the branches under API `presentation.discovery.demo`, with text under `presentation.discovery` in
+`messages.yml`. Distances and highlight timing are also configurable.
+
+## Reuse presentation ownership
+
+Create a `PresentationScope(plugin)` for one presentation. Register cleanup with `scope.own(entity::remove)`,
+`scope.own(task::cancel)`, or another cleanup action. Closing a scope releases resources once, in reverse order,
+even if one cleanup fails. Registering a resource after closure releases it immediately. Use these APIs on the
+server thread.
+
+`Scenes.play(player, timeline, scope, completion)` and
+`Dialogues.start(player, dialogue, messages, scope, completion)` take ownership of the supplied scope, including
+when startup fails. Closing a dialogue scope ends that dialogue. Scene scopes own the visual resources; Scenes
+owns the camera separately so a match-intro skip can remove visuals while retaining the camera until the deadline.
+After a HOLD skip, frame callbacks must respect `skipped` and avoid creating new visual resources.
+
+Use `ScreenEffects.frame(scope, player, fade, letterbox)`,
+`ScreenEffects.atmosphere(scope, player, atmosphere)`, and
+`BlockcraftApi.get().visuals().accent(scope, player, atmosphere, ticks)` for owned screen effects.
+An older scope cannot remove a newer owner's effect when it closes. These handles control cleanup, not priority;
+callers must still avoid starting a presentation while a higher-priority one is active.
+
+`BlockcraftApi.get().discoveries().start(player, actor, target, dialogue, messages, scope, completion)` combines an
+actor looking at a target, a private highlight, and dialogue. Supply a private actor for player-specific stories.
+The service restores the actor's orientation on exit. Register temporary actors and props with the scope if they
+should also be removed. Use the completion callback to hand the selected endpoint back to your game or story system.
 
 ## Build and validate locally
 

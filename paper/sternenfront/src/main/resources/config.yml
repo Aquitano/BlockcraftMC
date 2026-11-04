@@ -48,6 +48,8 @@ presentation:
   gameplay:
     siege-mode-ticks: 20
     force-push-ticks: 12
+  deployment: {fade-ticks: 6, briefing: true, banner-ticks: 25}
+  capture: {ticks: 24, radius: 6, points: 40}
   holographic-posts: true
   live-effects: 64
   scorch: {marks: 32, every: 3, ticks: 300, fade-ticks: 40, scale: 0.7}

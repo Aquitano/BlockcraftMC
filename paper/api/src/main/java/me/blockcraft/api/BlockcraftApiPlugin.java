@@ -18,6 +18,7 @@ import me.blockcraft.api.cosmetic.WeaponStyles;
 import me.blockcraft.api.dialog.ServerMenu;
 import me.blockcraft.api.dialogue.Dialogues;
 import me.blockcraft.api.presentation.VisualEffects;
+import me.blockcraft.api.presentation.Discoveries;
 import me.blockcraft.api.presentation.ScreenEffects;
 import me.blockcraft.api.scene.Scenes;
 import me.blockcraft.api.elo.Elo;
@@ -98,6 +99,7 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
     private Notifications notifications;
     private Dialogues dialogues;
     private VisualEffects visuals;
+    private Discoveries discoveries;
     private Database database;
     private ServerHeartbeat heartbeat;
     private ServerGroups groups;
@@ -134,6 +136,8 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
                 Notifications.Timing.from(YamlFile.section(config, "notifications")));
         dialogues = new Dialogues(this, messages, resourcePack, YamlFile.section(config, "dialogue"));
         visuals = new VisualEffects(this, resourcePack, messages, YamlFile.section(config, "presentation"));
+        discoveries = new Discoveries(this, dialogues, resourcePack, messages,
+                YamlFile.section(YamlFile.section(config, "presentation"), "discovery"));
         dialogues.unavailableWhen(player -> Scenes.isViewing(player) || visuals.active(player));
         visuals.unavailableWhen(dialogues::active);
         int levelUpTicks = Math.clamp(number(YamlFile.section(YamlFile.section(config, "presentation"), "gameplay"),
@@ -194,7 +198,7 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
                 settings, resourcePack, profiles, new Effects(settings), weapons, messages,
                 servers, self, groups, text(config, "lobby-group", "lobby"), presence, resources.tags(), resources.addresses(), xp, map,
                 waiting, buildMode, flight, realNames, nickRanks, nickStats, achievements, elo, afk, ignores, vanished, audit, tabTeams,
-                calendar, RoundConfig.from(config), dialogues, visuals);
+                calendar, RoundConfig.from(config), dialogues, visuals, discoveries);
         BlockcraftApi.install(api);
         if (api.isLobby()) {
             var world = getServer().getWorlds().getFirst();
@@ -237,7 +241,7 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
             commands.register(BuildCommand.create(buildMode, audit, messages));
             commands.register(MapCommand.create(this, map, waiting, messages));
             commands.register(AfkCommand.create(afk));
-            commands.register(PresentationCommand.create(dialogues, visuals, messages));
+            commands.register(PresentationCommand.create(dialogues, visuals, discoveries, messages));
         });
 
         int heartbeatSeconds = number(config, "heartbeat-seconds", 5);

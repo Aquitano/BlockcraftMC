@@ -8,6 +8,7 @@ import org.junit.Test;
 import javax.imageio.ImageIO;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -50,14 +51,18 @@ public class DialogueAssetsTest {
     public void bundledDemoReferencesOnlyExistingGermanMessagesAndValidBranches() throws Exception {
         var config = YamlFile.loadWithDefaults(Path.of("/nonexistent-dialogue-config"),
                 () -> getClass().getResourceAsStream("/config.yml"));
-        var dialogue = Dialogue.load(YamlFile.section(YamlFile.section(config, "dialogue"), "demo"));
-        assertTrue(dialogue.problems().toString(), dialogue.valid());
+        var demos = List.of(YamlFile.section(YamlFile.section(config, "dialogue"), "demo"),
+                YamlFile.section(YamlFile.section(YamlFile.section(config, "presentation"), "discovery"), "demo"));
         var messages = Messages.load(Path.of("/nonexistent-dialogue-messages"),
                 () -> getClass().getResourceAsStream("/messages.yml"));
-        for (var line : dialogue.dialogue().lines().values()) {
-            assertTrue(messages.has(line.speaker()));
-            assertTrue(messages.has(line.text()));
-            for (var choice : line.choices()) assertTrue(messages.has(choice.text()));
+        for (var demo : demos) {
+            var dialogue = Dialogue.load(demo);
+            assertTrue(dialogue.problems().toString(), dialogue.valid());
+            for (var line : dialogue.dialogue().lines().values()) {
+                assertTrue(messages.has(line.speaker()));
+                assertTrue(messages.has(line.text()));
+                for (var choice : line.choices()) assertTrue(messages.has(choice.text()));
+            }
         }
     }
 }

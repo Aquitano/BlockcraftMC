@@ -831,6 +831,15 @@ dialogue:
     extraction: 'Plan gespeichert, nur für diese Vorführung. Die echte Mission kann an diesem Endpunkt eine Szene starten, ein Ziel setzen oder eine Entscheidung für deine Gruppe übernehmen.'
 
 presentation:
+  discovery:
+    guide: 'ARCHIVAR | AUFKLÄRUNG'
+    started: '<prefix><gray>Entdeckung gestartet. Schleichen: weiter, Mausrad: Antwort, Handwechsel: beenden.'
+    completed: '<prefix><green>Entdeckung abgeschlossen. Diese Vorführung speichert keinen Fortschritt.'
+    found: 'Dort schwebt der Signalkern. Siehst du das Leuchten? Er hat auf deine Anwesenheit reagiert. Sollen wir seine Aufzeichnung untersuchen?'
+    inspect: 'Die Aufzeichnung untersuchen.'
+    leave: 'Den Kern vorerst in Ruhe lassen.'
+    inspected: 'Eine verschlüsselte Nachricht aus dem Außenposten. In einer Mission könnte deine Wahl jetzt ein neues Ziel freischalten oder eine Szene starten.'
+    left: 'Verstanden. Wir lassen den Kern unberührt. Auch diese Entscheidung kann eine Geschichte verändern.'
   effects:
     pack-required: '<prefix><red>Für die Effekte muss das Ressourcenpaket vollständig geladen sein.</red>'
     text:
@@ -840,7 +849,7 @@ presentation:
       rainbow: 'FARBWECHSEL | Seltene Entdeckung'
       shine: 'GLANZ | Auftrag abgeschlossen'
 
-  help: '<prefix><gray>/presentation <white>dialogue | hologram | plasma | pulse | text | cinematic | holoscreen | storm | portal | focus | stop<gray>. Dialogsteuerung: <white>advance | next | previous<gray>.'
+  help: '<prefix><gray>/presentation <white>dialogue | discovery | hologram | plasma | pulse | text | cinematic | holoscreen | storm | portal | focus | stop<gray>. Dialogsteuerung: <white>advance | next | previous<gray>.'
   busy: '<prefix><yellow>Beende zuerst den laufenden Dialog, Effekt oder die Kameraszene.'
   pack-required: '<prefix><red>Das Ressourcenpaket muss vollständig geladen sein. Versuche es danach erneut.'
   stopped: '<prefix><gray>Präsentation beendet.'

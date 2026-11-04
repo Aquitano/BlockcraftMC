@@ -7,6 +7,7 @@ import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import me.blockcraft.api.dialogue.Dialogues;
 import me.blockcraft.api.presentation.VisualEffects;
+import me.blockcraft.api.presentation.Discoveries;
 import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.entity.Player;
@@ -17,7 +18,7 @@ import java.util.function.Consumer;
 public final class PresentationCommand {
     private PresentationCommand() {}
 
-    public static LiteralCommandNode<CommandSourceStack> create(Dialogues dialogues, VisualEffects visuals, Messages messages) {
+    public static LiteralCommandNode<CommandSourceStack> create(Dialogues dialogues, VisualEffects visuals, Discoveries discoveries, Messages messages) {
         var command = Commands.literal("presentation")
                 .requires(source -> source.getSender() instanceof Player player && player.hasPermission("blockcraft.presentation"))
                 .executes(context -> {
@@ -25,6 +26,7 @@ public final class PresentationCommand {
                     return Command.SINGLE_SUCCESS;
                 })
                 .then(action("dialogue", dialogues::startDemo))
+                .then(action("discovery", discoveries::startDemo))
                 .then(action("advance", player -> {
                     if (dialogues.active(player)) dialogues.advance(player);
                     else player.sendMessage(messages.get("presentation.inactive"));

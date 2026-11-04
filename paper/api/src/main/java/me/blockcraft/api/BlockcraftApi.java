@@ -7,6 +7,7 @@ import me.blockcraft.api.cosmetic.Effects;
 import me.blockcraft.api.cosmetic.WeaponStyles;
 import me.blockcraft.api.dialogue.Dialogues;
 import me.blockcraft.api.presentation.VisualEffects;
+import me.blockcraft.api.presentation.Discoveries;
 import me.blockcraft.api.elo.Elo;
 import me.blockcraft.api.game.RoundConfig;
 import me.blockcraft.api.game.Streaks;
@@ -119,7 +120,8 @@ public record BlockcraftApi(
         NetworkCalendar calendar,
         RoundConfig roundConfig,
         Dialogues dialogues,
-        VisualEffects visuals) {
+        VisualEffects visuals,
+        Discoveries discoveries) {
 
     private static BlockcraftApi instance;
 

@@ -54,6 +54,14 @@ revive:
   hold-seconds: 4
   radius: 2.5
   protection-seconds: 4
+presentation:
+  enabled: true
+  outage-accent-ticks: 12
+  outage-ambient-ticks: 60
+  outage-ambient-volume: 0.35
+  recovery-ticks: 20
+  ring-points: 24
+  revive-radius: 0.85
 barricades:
   repair-ticks: 25
   break-ticks: 30

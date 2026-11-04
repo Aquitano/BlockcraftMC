@@ -21,6 +21,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.server.PluginDisableEvent;
 import org.bukkit.inventory.ItemStack;
@@ -111,6 +112,15 @@ public final class VisualEffects implements Listener, AutoCloseable {
         return true;
     }
 
+    public boolean accent(PresentationScope owner, Player player, ScreenEffects.Atmosphere atmosphere, int durationTicks) {
+        if (owner.closed() || !accent(player, atmosphere, durationTicks)) return false;
+        var accent = accents.get(player.getUniqueId());
+        owner.own(() -> {
+            if (accents.remove(player.getUniqueId(), accent)) ScreenEffects.clearAccent(player);
+        });
+        return true;
+    }
+
     public void clearAccent(Player player) {
         if (accents.remove(player.getUniqueId()) != null) ScreenEffects.clearAccent(player);
     }
@@ -140,7 +150,7 @@ public final class VisualEffects implements Listener, AutoCloseable {
             return false;
         }
         clearAccent(player);
-        var session = new Session(player, style, origin.clone(), Math.clamp(durationTicks, 40, 1200));
+        var session = new Session(player, style, origin.clone(), Math.clamp(durationTicks, 40, 1200), new PresentationScope(plugin));
         sessions.put(player.getUniqueId(), session);
         try {
             switch (style) {
@@ -171,6 +181,7 @@ public final class VisualEffects implements Listener, AutoCloseable {
                 display.setItemStack(model("presentation/" + model, effect));
             });
             session.entities.add(entity);
+            session.scope.own(entity::remove);
             session.player.showEntity(plugin, entity);
         }
     }
@@ -188,6 +199,7 @@ public final class VisualEffects implements Listener, AutoCloseable {
                 display.text(motion.apply(messages.get("presentation.effects.text." + motion.name().toLowerCase(Locale.ROOT))));
             });
             session.entities.add(entity);
+            session.scope.own(entity::remove);
             session.player.showEntity(plugin, entity);
         }
     }
@@ -221,7 +233,7 @@ public final class VisualEffects implements Listener, AutoCloseable {
             }
         }
         for (var session : List.copyOf(sessions.values())) {
-            if (!session.player.isOnline() || !session.player.getWorld().equals(session.origin.getWorld())
+            if (!session.player.isOnline() || session.player.isDead() || !session.player.getWorld().equals(session.origin.getWorld())
                     || !packs.applied(session.player) || ++session.tick >= session.duration) {
                 stop(session.player);
                 continue;
@@ -254,12 +266,12 @@ public final class VisualEffects implements Listener, AutoCloseable {
                 int fadeTicks = Math.min(settings.fadeTicks(), session.duration / 2);
                 double fade = Math.max(1.0 - (double) session.tick / fadeTicks,
                         1.0 - (double) (session.duration - session.tick) / fadeTicks);
-                ScreenEffects.frame(session.player, Math.clamp(fade, 0, 1), true);
+                ScreenEffects.frame(session.scope, session.player, Math.clamp(fade, 0, 1), true);
             }
-            case HOLOSCREEN -> ScreenEffects.atmosphere(session.player, ScreenEffects.Atmosphere.HOLOGRAM);
-            case STORM -> ScreenEffects.atmosphere(session.player, ScreenEffects.Atmosphere.STORM);
-            case PORTAL -> ScreenEffects.atmosphere(session.player, ScreenEffects.Atmosphere.PORTAL);
-            case FOCUS -> ScreenEffects.atmosphere(session.player, ScreenEffects.Atmosphere.FOCUS);
+            case HOLOSCREEN -> ScreenEffects.atmosphere(session.scope, session.player, ScreenEffects.Atmosphere.HOLOGRAM);
+            case STORM -> ScreenEffects.atmosphere(session.scope, session.player, ScreenEffects.Atmosphere.STORM);
+            case PORTAL -> ScreenEffects.atmosphere(session.scope, session.player, ScreenEffects.Atmosphere.PORTAL);
+            case FOCUS -> ScreenEffects.atmosphere(session.scope, session.player, ScreenEffects.Atmosphere.FOCUS);
         }
     }
 
@@ -267,10 +279,7 @@ public final class VisualEffects implements Listener, AutoCloseable {
         clearAccent(player);
         var session = sessions.remove(player.getUniqueId());
         if (session == null) return;
-        session.entities.forEach(Entity::remove);
-        if (session.style == Style.CINEMATIC || session.style == Style.HOLOSCREEN || session.style == Style.STORM || session.style == Style.PORTAL || session.style == Style.FOCUS) {
-            ScreenEffects.clear(player);
-        }
+        session.scope.close();
     }
 
     @EventHandler
@@ -278,6 +287,9 @@ public final class VisualEffects implements Listener, AutoCloseable {
         stop(event.getPlayer());
         cooldowns.remove(event.getPlayer().getUniqueId());
     }
+
+    @EventHandler
+    public void onDeath(PlayerDeathEvent event) { stop(event.getPlayer()); }
 
     @EventHandler
     public void onWorldChange(PlayerChangedWorldEvent event) { stop(event.getPlayer()); }
@@ -319,11 +331,13 @@ public final class VisualEffects implements Listener, AutoCloseable {
         final Location origin;
         final int duration;
         final List<Entity> entities = new ArrayList<>();
+        final PresentationScope scope;
         int tick;
 
-        Session(Player player, Style style, Location origin, int duration) {
+        Session(Player player, Style style, Location origin, int duration, PresentationScope scope) {
             this.player = player;
             this.style = style;
+            this.scope = scope;
             this.origin = origin;
             this.duration = duration;
         }

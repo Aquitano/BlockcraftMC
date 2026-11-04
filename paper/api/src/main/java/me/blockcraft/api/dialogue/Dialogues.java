@@ -1,6 +1,7 @@
 package me.blockcraft.api.dialogue;
 
 import me.blockcraft.api.pack.ResourcePacks;
+import me.blockcraft.api.presentation.PresentationScope;
 import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -14,6 +15,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
@@ -28,7 +30,7 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 public final class Dialogues implements Listener, AutoCloseable {
-    private record Viewing(DialogueSession session, Messages text, Consumer<String> completed, long expires) {}
+    private record Viewing(DialogueSession session, Messages text, Consumer<String> completed, long expires, PresentationScope scope) {}
 
     private final Plugin plugin;
     private final Messages messages;
@@ -75,7 +77,26 @@ public final class Dialogues implements Listener, AutoCloseable {
     }
 
     public boolean start(Player player, Dialogue dialogue, Messages text, Consumer<String> completed) {
-        if (!player.isOnline()) return false;
+        return start(player, dialogue, text, new PresentationScope(plugin), completed);
+    }
+
+    public boolean start(Player player, Dialogue dialogue, Messages text, PresentationScope scope, Consumer<String> completed) {
+        boolean started = false;
+        try {
+            started = begin(player, dialogue, text, scope, completed);
+            return started;
+        } catch (RuntimeException failure) {
+            plugin.getSLF4JLogger().warn("Could not start dialogue", failure);
+            return false;
+        } finally {
+            if (!started) scope.close();
+        }
+    }
+
+    private boolean begin(Player player, Dialogue dialogue, Messages text, PresentationScope scope, Consumer<String> completed) {
+        if (scope.closed() || !player.isOnline() || player.isDead()) {
+            return false;
+        }
         if (unavailable.test(player)) {
             player.sendMessage(messages.get("presentation.busy"));
             return false;
@@ -98,26 +119,39 @@ public final class Dialogues implements Listener, AutoCloseable {
             return false;
         }
         stop(player);
+        if (scope.closed()) return false;
         player.closeInventory();
         var session = new DialogueSession(dialogue, key -> DialogueView.plain(text, key));
-        viewers.put(player.getUniqueId(), new Viewing(session, text, completed, now() + timeoutTicks));
+        viewers.put(player.getUniqueId(), new Viewing(session, text, completed, now() + timeoutTicks, scope));
+        scope.own(() -> {
+            var current = viewers.get(player.getUniqueId());
+            if (current != null && current.scope() == scope) stop(player);
+        });
         player.sendActionBar(DialogueView.draw(session, text, messages));
         if (task == null) task = Bukkit.getScheduler().runTaskTimer(plugin, this::tick, 1, 1);
         return true;
     }
 
     public void stop(Player player) {
-        if (viewers.remove(player.getUniqueId()) != null) player.sendActionBar(Component.empty());
+        var viewing = viewers.remove(player.getUniqueId());
+        if (viewing == null) return;
+        try {
+            player.sendActionBar(Component.empty());
+        } finally {
+            viewing.scope().close();
+        }
     }
 
     private void tick() {
         for (UUID id : java.util.List.copyOf(viewers.keySet())) {
             var player = Bukkit.getPlayer(id);
             if (player == null) {
-                viewers.remove(id);
+                var removed = viewers.remove(id);
+                if (removed != null) removed.scope().close();
                 continue;
             }
             var viewing = viewers.get(id);
+            if (viewing == null) continue;
             if (now() >= viewing.expires() || !packs.applied(player) || player.isDead()) {
                 stop(player);
                 player.sendMessage(messages.get("dialogue.cancelled"));
@@ -182,6 +216,11 @@ public final class Dialogues implements Listener, AutoCloseable {
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onEntityInteract(PlayerInteractEntityEvent event) {
+        if (active(event.getPlayer())) event.setCancelled(true);
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onAttack(EntityDamageByEntityEvent event) {
         if (event.getDamager() instanceof Player player && active(player)) event.setCancelled(true);
     }
@@ -200,7 +239,7 @@ public final class Dialogues implements Listener, AutoCloseable {
     public void onWorld(PlayerChangedWorldEvent event) { stop(event.getPlayer()); }
 
     @EventHandler
-    public void onQuit(PlayerQuitEvent event) { viewers.remove(event.getPlayer().getUniqueId()); }
+    public void onQuit(PlayerQuitEvent event) { stop(event.getPlayer()); }
 
     @Override
     public void close() {
@@ -210,6 +249,7 @@ public final class Dialogues implements Listener, AutoCloseable {
             var player = Bukkit.getPlayer(id);
             if (player != null) stop(player);
         }
+        for (var viewing : java.util.List.copyOf(viewers.values())) viewing.scope().close();
         viewers.clear();
     }
 

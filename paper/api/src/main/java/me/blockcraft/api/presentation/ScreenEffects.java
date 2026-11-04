@@ -5,6 +5,9 @@ import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.Locale;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 public final class ScreenEffects {
 
@@ -16,17 +19,37 @@ public final class ScreenEffects {
         }
     }
 
+    private enum Channel {
+        FRAME("presentation/cinematic/"), ATMOSPHERE("presentation/atmosphere/");
+
+        final String prefix;
+        final Map<UUID, PresentationScope> owners = new HashMap<>();
+
+        Channel(String prefix) { this.prefix = prefix; }
+    }
+
     private ScreenEffects() { }
 
     public static void frame(Player player, double fade, boolean letterbox) {
-        replace(player, "presentation/cinematic/", frameKey(fade, letterbox));
+        Channel.FRAME.owners.remove(player.getUniqueId());
+        replace(player, Channel.FRAME.prefix, frameKey(fade, letterbox));
+    }
+
+    public static void frame(PresentationScope owner, Player player, double fade, boolean letterbox) {
+        ownedReplace(owner, player, Channel.FRAME, frameKey(fade, letterbox));
+    }
+
+    public static void atmosphere(PresentationScope owner, Player player, Atmosphere atmosphere) {
+        ownedReplace(owner, player, Channel.ATMOSPHERE, Key.key("blockcraft", "presentation/atmosphere/" + atmosphere.key()));
     }
 
     public static void atmosphere(Player player, Atmosphere atmosphere) {
+        Channel.ATMOSPHERE.owners.remove(player.getUniqueId());
         replace(player, "presentation/atmosphere/", Key.key("blockcraft", "presentation/atmosphere/" + atmosphere.key()));
     }
 
     public static void clear(Player player) {
+        for (var channel : Channel.values()) channel.owners.remove(player.getUniqueId());
         replace(player, "presentation/", null);
     }
 
@@ -39,7 +62,19 @@ public final class ScreenEffects {
     }
 
     public static void clearAtmosphere(Player player) {
+        Channel.ATMOSPHERE.owners.remove(player.getUniqueId());
         replace(player, "presentation/atmosphere/", null);
+    }
+
+    private static void ownedReplace(PresentationScope owner, Player player, Channel channel, Key wanted) {
+        if (owner.closed()) return;
+        var id = player.getUniqueId();
+        if (channel.owners.put(id, owner) != owner) {
+            owner.own(() -> {
+                if (channel.owners.remove(id, owner)) replace(player, channel.prefix, null);
+            });
+        }
+        replace(player, channel.prefix, wanted);
     }
 
     static Key accentKey(Atmosphere atmosphere, double intensity) {
