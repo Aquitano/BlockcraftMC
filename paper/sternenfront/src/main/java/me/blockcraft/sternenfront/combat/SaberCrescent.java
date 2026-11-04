@@ -9,8 +9,10 @@ import java.util.List;
 
 final class SaberCrescent {
 
-    private static final double MODEL_ANGLE = Math.toRadians(30);
+    private static final double MAX_ANGLE = Math.toRadians(36);
     private static final double REACH_TOLERANCE = 0.12;
+    private static final double MODEL_HALF_WIDTH = 0.3;
+    private static final double MODEL_RISE = 0.1;
 
     record Sample(Vector direction, double reach) { }
 
@@ -21,8 +23,13 @@ final class SaberCrescent {
         }
 
         Vector3f scale() {
-            double width = Math.tan(first.angle(last) / 2) / Math.tan(MODEL_ANGLE / 2);
-            return new Vector3f((float) (reach * width), (float) reach, (float) reach);
+            double half = first.angle(last) / 2;
+            return new Vector3f((float) (reach * Math.sin(half) / MODEL_HALF_WIDTH),
+                    (float) (reach * (1 - Math.cos(half)) / MODEL_RISE), 1);
+        }
+
+        Vector offset() {
+            return first.clone().add(last).normalize().multiply(reach - scale().y);
         }
     }
 
@@ -40,7 +47,7 @@ final class SaberCrescent {
                 var next = samples.get(end + 1);
                 double nextNear = Math.min(near, next.reach());
                 double nextFar = Math.max(far, next.reach());
-                if (first.direction().angle(next.direction()) > MODEL_ANGLE || nextFar - nextNear > REACH_TOLERANCE) {
+                if (first.direction().angle(next.direction()) > MAX_ANGLE || nextFar - nextNear > REACH_TOLERANCE) {
                     break;
                 }
                 near = nextNear;

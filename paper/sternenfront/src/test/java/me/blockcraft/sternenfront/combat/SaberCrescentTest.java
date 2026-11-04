@@ -1,16 +1,29 @@
 package me.blockcraft.sternenfront.combat;
 
+import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.util.Vector;
 import org.joml.Vector3f;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class SaberCrescentTest {
+
+    @Test
+    public void eachUnobstructedFrameIsOneContinuousLine() {
+        var sweep = new SaberSweep(new Location(null, 0, 0, 0), Color.BLUE, 10, 3.5, 120, 4, 0, false);
+        for (int tick = 0; tick < 4; tick++) {
+            var samples = new ArrayList<SaberCrescent.Sample>();
+            sweep.trailStart().ifPresent(ray -> samples.add(new SaberCrescent.Sample(ray, 3.5)));
+            sweep.advance(tick).forEach(ray -> samples.add(new SaberCrescent.Sample(ray, 3.5)));
+            assertEquals(1, SaberCrescent.segments(samples).size());
+        }
+    }
 
     @Test
     public void modelPointsAlongTheSweepAndStaysInsideItsReachAtEveryPitch() {
@@ -24,16 +37,22 @@ public class SaberCrescentTest {
                 var samples = rays.stream().map(ray -> new SaberCrescent.Sample(ray, 3.5)).toList();
                 for (var segment : SaberCrescent.segments(samples)) {
                     var middle = segment.first().clone().add(segment.last()).normalize().toVector3f();
-                    var tip = segment.turn(normal).transform(new Vector3f(0, 1, 0).mul(segment.scale()));
+                    var tip = segment.turn(normal).transform(new Vector3f(0, 1, 0).mul(segment.scale()))
+                            .add(segment.offset().toVector3f());
                     assertEquals(3.5, tip.length(), 1e-5);
                     assertEquals(1, tip.normalize().dot(middle), 1e-5);
                     for (int sign : new int[] {-1, 1}) {
-                        var edge = new Vector3f((float) (sign * Math.sin(Math.toRadians(15))),
-                                (float) Math.cos(Math.toRadians(15)), 0).mul(segment.scale());
-                        segment.turn(normal).transform(edge);
-                        assertTrue(edge.length() <= 3.50001);
+                        var edge = new Vector3f(sign * 0.3f, 0.9f, 0).mul(segment.scale());
+                        segment.turn(normal).transform(edge).add(segment.offset().toVector3f());
+                        assertEquals(segment.reach(), edge.length(), 1e-5);
                         assertEquals(segment.first().angle(segment.last()) / 2, edge.angle(middle), 1e-4);
                         assertEquals(0, edge.dot(normal.toVector3f()), 1e-5);
+                    }
+                    for (int point = -16; point <= 16; point++) {
+                        float across = point * 0.3f / 16;
+                        var at = new Vector3f(across, 1 - 0.1f * across * across / 0.09f, 0).mul(segment.scale());
+                        segment.turn(normal).transform(at).add(segment.offset().toVector3f());
+                        assertTrue(at.length() <= 3.50001);
                     }
                 }
             }
