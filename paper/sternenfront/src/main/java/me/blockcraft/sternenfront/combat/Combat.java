@@ -18,6 +18,7 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.util.Vector;
 
 import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.Locale;
 import java.util.Optional;
@@ -188,6 +189,7 @@ public final class Combat {
             state.sweep = null;
             return;
         }
+        var trailStart = slash.trailStart();
         var rays = slash.advance(game.tick());
         if (rays.isEmpty()) {
             return;
@@ -195,10 +197,16 @@ public final class Combat {
         var faction = game.factionOf(player).orElseThrow();
         var targets = game.targets().stream().filter(target -> game.hittable(faction, target))
                 .filter(target -> !game.isProtected(target) && target.getWorld().equals(origin.getWorld())).toList();
+        var trail = new ArrayList<SaberCrescent.Sample>();
+        trailStart.ifPresent(direction -> {
+            var wall = origin.getWorld().rayTraceBlocks(origin, direction, config.meleeRange(), FluidCollisionMode.NEVER, true);
+            double reach = wall == null ? config.meleeRange() : Math.max(0, wall.getHitPosition().distance(origin.toVector()) - 0.04);
+            trail.add(new SaberCrescent.Sample(direction, reach));
+        });
         for (var direction : rays) {
             var wall = origin.getWorld().rayTraceBlocks(origin, direction, config.meleeRange(), FluidCollisionMode.NEVER, true);
             double reach = wall == null ? config.meleeRange() : Math.max(0, wall.getHitPosition().distance(origin.toVector()) - 0.04);
-            game.effects().saberSweep(origin, direction, reach, slash.colour());
+            trail.add(new SaberCrescent.Sample(direction, reach));
             for (var target : targets) {
                 if (CombatArc.hits(origin.toVector(), direction, target.getBoundingBox(), reach) && slash.contact(target.getUniqueId())) {
                     strike(player, target, slash.damage());
@@ -208,6 +216,7 @@ public final class Combat {
                 game.effects().saberStrike(player, wall, sweep(origin), slash.colour());
             }
         }
+        game.effects().saberSweep(origin, trail, slash.colour());
         if (slash.finished()) {
             state.sweep = null;
         }

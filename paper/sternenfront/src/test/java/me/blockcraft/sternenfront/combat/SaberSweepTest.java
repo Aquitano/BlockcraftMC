@@ -42,6 +42,17 @@ public class SaberSweepTest {
     }
 
     @Test
+    public void trailConnectsFramesWithoutAddingAnotherDamageRay() {
+        var sweep = new SaberSweep(new Location(null, 0, 1.3, 0), Color.BLUE, 10, 3.5, 120, 4, 20, false);
+        assertTrue(sweep.trailStart().isEmpty());
+        var first = sweep.advance(20);
+        assertEquals(first.getLast(), sweep.trailStart().orElseThrow());
+        var second = sweep.advance(21);
+        assertFalse(second.contains(first.getLast()));
+        assertEquals(second.getLast(), sweep.trailStart().orElseThrow());
+    }
+
+    @Test
     public void sweepCannotOutlastTheSwingCooldown() {
         var config = new MemoryConfiguration();
         config.set("combat.melee.swing-ticks", 2);

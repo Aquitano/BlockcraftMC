@@ -90,8 +90,9 @@ Each faction has a saber hero and a gun hero: Jedi-Ritter and Kopfgeldjäger for
 Kommandant for the Hegemonie. Heroes have their own health and do not heal, and everyone sees a boss bar with each
 hero's name and health. A saber hero holds right click to guard, parries by timing it and leaps with a second jump.
 
-Left click sweeps a saber-colored arc through every enemy ahead, including when aimed at air. The same rays draw
-the slash and detect hits, stopping at solid blocks. Each enemy can take damage or block only once per swing.
+Left click sweeps a saber-colored crescent through every enemy ahead, including when aimed at air. The resource-pack
+model has a white edge and a tinted trail. Wall-clipped hit rays position its segments, each lasting
+`presentation.saber-trail-ticks` under the shared effect cap. Each enemy can take damage or block only once per swing.
 `combat.melee` sets the reach, arc angle, cooldown and animation duration. Defaults are 3.5 blocks, 120 degrees,
 12 ticks between swings and a four-tick sweep. Successive swings alternate direction. Switching weapons or guarding
 cancels the remaining sweep. The relic blade uses the same attack.

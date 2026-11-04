@@ -1222,12 +1222,43 @@ public final class SternenfrontArt {
                 box(0, 0, 0, .08, .08, .08, core));
     }
 
+    private static Drawing crescent(boolean core) {
+        return (width, height, random) -> {
+            var pixels = new int[width * height];
+            for (int y = 0; y < height; y++) {
+                for (int x = 0; x < width; x++) {
+                    double across = (x + .5) * .52 / width - .26;
+                    double forward = 1 - (y + .5) * .2 / height;
+                    double radius = Math.hypot(across, forward);
+                    double angle = Math.abs(Math.atan2(across, forward));
+                    double taper = Math.max(0, 1 - Math.pow(angle / Math.toRadians(15), 4));
+                    double thickness = (core ? .035 : .18) * taper;
+                    if (radius <= 1 && radius > 1 - thickness) {
+                        double edge = (1 - radius) / thickness;
+                        int alpha = core ? 255 : (int) (220 * Math.pow(1 - edge, .7));
+                        pixels[y * width + x] = argb(alpha, 0xFFFFFF);
+                    }
+                }
+            }
+            return pixels;
+        };
+    }
+
+    private static Family saberSweep() {
+        var glow = new Sprite("crescent_glow", true, true, crescent(false));
+        var core = new Sprite("crescent_core", true, false, crescent(true));
+        return new Family("saber_sweep", 256, true, List.of(
+                new Model("sternenfront/fx/saber_crescent", new Shape().add(
+                        box(0, .9, 0, .52, .2, 0, glow).only(Face.NORTH, Face.SOUTH),
+                        box(0, .9, 0, .52, .2, .004, core).only(Face.NORTH, Face.SOUTH)))));
+    }
+
     private static List<Family> families() {
         return List.of(hegemonieSoldier(), hegemonieHeavy(), hegemonieScout(), hegemonieMedic(),
                 kolonienSoldier(), kolonienHeavy(), kolonienScout(), kolonienMedic(),
                 speeders("kolonien", kolonienSpeeder(false), kolonienSpeeder(true)),
                 speeders("hegemonie", hegemonieSpeeder(false), hegemonieSpeeder(true)),
-                hegemonieDropship(), kolonienDropship(), effects());
+                hegemonieDropship(), kolonienDropship(), effects(), saberSweep());
     }
 
     private record Tile(String key, Surface surface, Face face, int width, int height) { }

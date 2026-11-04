@@ -6,6 +6,7 @@ import org.bukkit.util.Vector;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -40,6 +41,10 @@ final class SaberSweep {
 
     double damage() {
         return damage;
+    }
+
+    Optional<Vector> trailStart() {
+        return emitted == 0 ? Optional.empty() : Optional.of(rays.get(emitted - 1).clone());
     }
 
     List<Vector> advance(long tick) {
