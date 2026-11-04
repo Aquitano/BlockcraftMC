@@ -43,8 +43,19 @@ tasks.register("regenerate") {
     dependsOn(generateTextures, generateSounds, generateSternenfrontSounds, generateProps, generateDroids, generateCombat, generateBattle, ":paper:api:packOverrides")
 }
 
+// Players get credits for what the pack contains; the map provenance and open questions stay in the repository.
+val packCredits = setOf("Music", "Sound effects", "Models and textures")
+
 val pack = tasks.register<Zip>("pack") {
     from("src")
+    from("../CREDITS.md") {
+        into("credits")
+        var shipped = true
+        filter { line ->
+            if (line.startsWith("## ")) shipped = line.removePrefix("## ") in packCredits
+            line.takeIf { shipped }
+        }
+    }
     archiveFileName = "blockcraft.zip"
     destinationDirectory = layout.buildDirectory
     isPreserveFileTimestamps = false

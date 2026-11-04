@@ -1,19 +1,10 @@
 # Battle audio
 
-Blaster recordings by MikeE63 are CC0 1.0:
-https://freesound.org/people/MikeE63/packs/26412/
-
-Music by Scott Buckley is CC BY 4.0, with attribution:
-
-- 'Legionnaire (Original)' by Scott Buckley, https://www.scottbuckley.com.au/library/legionnaire/
-- 'Juggernaut' by Scott Buckley, https://www.scottbuckley.com.au/library/juggernaut/
-- License: https://creativecommons.org/licenses/by/4.0/
+Attribution and licences are in [CREDITS.md](../CREDITS.md), which also ships inside the pack as `credits/CREDITS.md`.
 
 The original source downloads and their SHA-256 checksums are in `audio/battlefront/sources.json`.
 Blasters are shortened, pitch-adjusted by weapon, reduced by 4 dB, faded and converted to mono Vorbis.
 Music is excerpted, reduced by 6 dB, faded and converted to stereo Vorbis. Its events set `stream: true`.
-`src/credits/sternenfront-audio.txt` ships the attribution and modification notices inside the pack.
-The round also displays the composer credit.
 
 `uv run --no-project BattleRecordings.py` regenerates these eleven events from checked-in sources with FFmpeg.
 `uv run SternenfrontSounds.py` regenerates all Sternenfront effects, including the imported recordings.

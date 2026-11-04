@@ -1,8 +1,6 @@
 # Lightsaber recordings
 
-The saber effects use audio from [Star Wars by joe93barlow on Freesound](https://freesound.org/people/joe93barlow/packs/5968/),
-published under [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/).
-These are community recordings, not an official Lucasfilm sound library.
+Attribution and licences are in [CREDITS.md](../CREDITS.md), which also ships inside the pack as `credits/CREDITS.md`.
 
 The downloaded high-quality MP3 previews are kept in `audio/sternenfront`. `sources.json` records each source page,
 download URL, SHA-256 checksum, and its assigned sound events. The conversion changes channel count and volume,
