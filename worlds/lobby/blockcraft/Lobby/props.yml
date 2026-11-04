@@ -38,6 +38,30 @@ flower-barrel:
   z: 1597.5
   yaw: 0.0
   pitch: 0.0
+beehive:
+  ==: org.bukkit.Location
+  world: world
+  x: -952.25
+  y: 24.0
+  z: 1597.5
+  yaw: 0.0
+  pitch: 0.0
+woodpile:
+  ==: org.bukkit.Location
+  world: world
+  x: -934.5
+  y: 23.0
+  z: 1624.5
+  yaw: 0.0
+  pitch: 0.0
+waterwheel:
+  ==: org.bukkit.Location
+  world: world
+  x: -926.5
+  y: 26.125
+  z: 1562.5
+  yaw: 0.0
+  pitch: 0.0
 windmill:
   ==: org.bukkit.Location
   world: world

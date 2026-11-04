@@ -47,6 +47,7 @@ import me.blockcraft.api.world.WorldTemplate;
 import me.blockcraft.api.world.WaitingLobby;
 import me.blockcraft.api.world.WorldProtection;
 import me.blockcraft.api.scenery.NexoScenery;
+import me.blockcraft.api.scenery.AmbientCreatures;
 import me.blockcraft.api.season.SeasonalBlocks;
 import me.blockcraft.api.xp.Levels;
 import me.blockcraft.api.xp.Xp;
@@ -246,6 +247,10 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
     }
 
     private void startScenery(org.bukkit.World world, NetworkCalendar calendar, String group, Path directory) {
+        var creatures = directory.resolve("creatures.yml");
+        if (Files.isRegularFile(creatures)) {
+            startScenery(creatures, () -> new AmbientCreatures(this, world, creatures));
+        }
         var furniture = directory.resolve("furniture.yml");
         if (Files.isRegularFile(furniture)) {
             if (getServer().getPluginManager().isPluginEnabled("Nexo")) {
