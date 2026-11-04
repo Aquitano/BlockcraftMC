@@ -286,7 +286,7 @@ headquarters:
 deploy:
   controls: "<prefix><accent>F<muted>: <first> <dark>· <accent>Q<muted>: <second>"
   no-ability: "<muted>Keine Fähigkeit"
-  saber-controls: "<prefix><right>Halten zum Blocken <dark>· <muted>Zweimal springen für den Machtsprung."
+  saber-controls: "<prefix><left>Schwingt durch alle Gegner vor dir <dark>· <right>Halten zum Blocken <dark>· <muted>Zweimal springen für den Machtsprung."
   title: "<arrow><sternenfront>Sternenfront <dark>· <muted>Einsatz"
   item: "<arrow><primary>Einsatz planen"
   waiting: "<muted>Einsatz möglich in <accent><seconds> s"
@@ -381,7 +381,7 @@ scoreboard:
 hero:
   head: "<white>Heldenrüstung"
   saber-lore:
-    - "<muted>Schlägt mit Abklingzeit, wie ein Schwert."
+    - "<left>Trifft alle Gegner im Schwung vor dir."
     - "<right>Halten zum Blocken <dark>· <muted>Zweimal springen für den Machtsprung"
   jedi:
     name: "<white>Jedi-Ritter"

@@ -1,7 +1,6 @@
 package me.blockcraft.sternenfront.combat;
 
 import me.blockcraft.api.BlockcraftApi;
-import me.blockcraft.sternenfront.game.LineOfSight;
 import me.blockcraft.sternenfront.game.SoundCue;
 import me.blockcraft.sternenfront.game.SternenfrontGame;
 import me.blockcraft.sternenfront.game.SternenfrontItem;
@@ -10,7 +9,6 @@ import me.blockcraft.sternenfront.hero.Hero;
 import me.blockcraft.sternenfront.hero.Sabers;
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
-import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.damage.DamageType;
 import org.bukkit.entity.LivingEntity;
@@ -19,7 +17,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.util.Vector;
 
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Locale;
@@ -31,6 +28,8 @@ public final class Combat {
     private static final class State {
         private final Guard guard;
         private long nextSwing;
+        private SaberSweep sweep;
+        private boolean reverseSwing;
         private long raiseUntil;
         private long leapUntil;
         private boolean jumping;
@@ -97,6 +96,7 @@ public final class Combat {
         if (game.onField(player) && holdsBlade(player) && !player.isInsideVehicle()
                 && game.heroOf(player).filter(Hero::bladed).isPresent()) {
             var state = state(player);
+            state.sweep = null;
             state.raiseUntil = game.tick() + 3;
             state.guard.tick(game.tick(), true);
             player.startUsingItem(EquipmentSlot.HAND);
@@ -105,6 +105,7 @@ public final class Combat {
 
     public void tick(Player player) {
         var state = state(player);
+        advanceSweep(player, state);
         if (player.isInsideVehicle()) {
             state.guard.tick(game.tick(), false);
             return;
@@ -167,42 +168,64 @@ public final class Combat {
         state.guard.tick(game.tick(), false);
         game.endProtection(player);
         SoundCue.SABER_SWING.play(player.getLocation(), 0.8f);
-        var eye = player.getEyeLocation();
-        var direction = eye.getDirection();
+        var hero = game.heroOf(player).orElseThrow();
+        double damage = hero == Hero.CHAMPION
+                ? game.config().relic().damage() : game.heroes().config().saber().damage();
+        state.sweep = new SaberSweep(player.getEyeLocation().subtract(0, 0.3, 0), game.heroes().sabers().colour(player, hero),
+                damage, config.meleeRange(), config.meleeAngle(), config.sweepTicks(), game.tick(), state.reverseSwing);
+        state.reverseSwing = !state.reverseSwing;
+        advanceSweep(player, state);
+    }
+
+    private void advanceSweep(Player player, State state) {
+        var slash = state.sweep;
+        if (slash == null) {
+            return;
+        }
+        var origin = slash.origin();
+        if (!game.onField(player) || !holdsBlade(player) || player.isInsideVehicle()
+                || !player.getWorld().equals(origin.getWorld()) || game.heroOf(player).filter(Hero::bladed).isEmpty()) {
+            state.sweep = null;
+            return;
+        }
+        var rays = slash.advance(game.tick());
+        if (rays.isEmpty()) {
+            return;
+        }
         var faction = game.factionOf(player).orElseThrow();
         var targets = game.targets().stream().filter(target -> game.hittable(faction, target))
-                .filter(target -> target.getWorld().equals(player.getWorld()))
-                .filter(target -> CombatArc.hits(eye.toVector(), direction, target.getBoundingBox(), config.meleeRange(), config.meleeAngle()))
-                .filter(target -> visible(player, target))
-                .sorted(Comparator.comparingDouble(target -> target.getLocation().distanceSquared(eye)))
-                .limit(config.targets()).toList();
-        double damage = game.heroOf(player).filter(Hero.CHAMPION::equals).isPresent()
-                ? game.config().relic().damage() : game.heroes().config().saber().damage();
-        for (var target : targets) {
-            double amount = damage;
-            if (target instanceof Player defender) {
-                var result = block(defender, target.getLocation().toVector().subtract(player.getLocation().toVector()).normalize(),
-                        damage, SoundCue.SABER_CLASH);
-                amount *= switch (result) {
-                    case PARRY -> 0;
-                    case BLOCK -> game.heroes().config().saber().blockedShare();
-                    case NONE, BROKEN -> 1;
-                };
+                .filter(target -> !game.isProtected(target) && target.getWorld().equals(origin.getWorld())).toList();
+        for (var direction : rays) {
+            var wall = origin.getWorld().rayTraceBlocks(origin, direction, config.meleeRange(), FluidCollisionMode.NEVER, true);
+            double reach = wall == null ? config.meleeRange() : Math.max(0, wall.getHitPosition().distance(origin.toVector()) - 0.04);
+            game.effects().saberSweep(origin, direction, reach, slash.colour());
+            for (var target : targets) {
+                if (CombatArc.hits(origin.toVector(), direction, target.getBoundingBox(), reach) && slash.contact(target.getUniqueId())) {
+                    strike(player, target, slash.damage());
+                }
             }
-            if (amount > 0 && game.strike(player, target, amount, DamageType.MAGIC)) {
-                SoundCue.SABER_HIT.play(target.getLocation().add(0, target.getHeight() * 0.6, 0), 0.8f);
-            }
-        }
-        for (int step = -2; step <= 2; step++) {
-            var point = direction.clone().rotateAroundY(Math.toRadians(step * config.meleeAngle() / 5)).multiply(config.meleeRange() * 0.65);
-            player.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, eye.clone().add(point), 1, 0, 0.1, 0, 0);
-        }
-        if (targets.isEmpty()) {
-            var wall = eye.getWorld().rayTraceBlocks(eye, direction, config.meleeRange(), FluidCollisionMode.NEVER, true);
             if (wall != null) {
-                game.effects().saberStrike(player, wall, sweep(eye),
-                        game.heroes().sabers().colour(player, game.heroOf(player).orElseThrow()));
+                game.effects().saberStrike(player, wall, sweep(origin), slash.colour());
             }
+        }
+        if (slash.finished()) {
+            state.sweep = null;
+        }
+    }
+
+    private void strike(Player player, LivingEntity target, double damage) {
+        double amount = damage;
+        if (target instanceof Player defender) {
+            var result = block(defender, target.getLocation().toVector().subtract(player.getLocation().toVector()).normalize(),
+                    damage, SoundCue.SABER_CLASH);
+            amount *= switch (result) {
+                case PARRY -> 0;
+                case BLOCK -> game.heroes().config().saber().blockedShare();
+                case NONE, BROKEN -> 1;
+            };
+        }
+        if (amount > 0 && game.strike(player, target, amount, DamageType.MAGIC)) {
+            SoundCue.SABER_HIT.play(target.getLocation().add(0, target.getHeight() * 0.6, 0), 0.8f);
         }
     }
 
@@ -210,12 +233,6 @@ public final class Combat {
     private static Vector sweep(Location eye) {
         double yaw = Math.toRadians(eye.getYaw());
         return new Vector(Math.cos(yaw), 0, Math.sin(yaw));
-    }
-
-    private static boolean visible(Player player, LivingEntity target) {
-        var eye = player.getEyeLocation();
-        var toward = CombatArc.nearest(eye.toVector(), target.getBoundingBox()).subtract(eye.toVector());
-        return toward.length() < 0.01 || LineOfSight.clear(eye, toward);
     }
 
     public void forget(Player player) {

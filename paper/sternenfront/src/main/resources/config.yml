@@ -66,7 +66,7 @@ combat:
     break-ticks: 30
     parry-ticks: 5
     cost-per-damage: 2
-  melee: {range: 3.5, angle: 85, swing-ticks: 12, targets: 2}
+  melee: {range: 3.5, angle: 120, swing-ticks: 12, sweep-ticks: 4}
 speeders:
   enabled: true
   health: 60

@@ -307,6 +307,19 @@ public final class BattleEffects {
         }
     }
 
+    public void saberSweep(Location origin, Vector direction, double reach, Color colour) {
+        var glow = new Particle.DustTransition(Color.WHITE, colour, 0.8f);
+        var trail = new Particle.DustOptions(colour, 0.65f);
+        for (double radius = Math.max(0.4, reach - 0.65); radius <= reach; radius += 0.2) {
+            var at = origin.clone().add(direction.clone().multiply(radius));
+            origin.getWorld().spawnParticle(Particle.DUST, at, 1, 0, 0, 0, 0, trail, true);
+        }
+        if (reach > 0.4) {
+            var tip = origin.clone().add(direction.clone().multiply(reach));
+            origin.getWorld().spawnParticle(Particle.DUST_COLOR_TRANSITION, tip, 1, 0, 0, 0, 0, glow, true);
+        }
+    }
+
     /** The trail of a thrown saber along the piece of flight it just covered, in the blade's colour. */
     public void saberTrail(Location from, Location to, Color colour) {
         var line = to.toVector().subtract(from.toVector());
