@@ -312,8 +312,9 @@ streaks:
 
 # Sneaking with the long rifle slows the walk by this share, which clients with FOV effects on show as a zoom.
 scope:
-  targets: {enabled: true, range: 160, angle: 40}
   slowdown: 0.9
+
+outlines: {enabled: true, range: 160}
 
 combat-feedback:
   marker-ticks: 6

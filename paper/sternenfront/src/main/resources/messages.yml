@@ -456,7 +456,7 @@ hit:
   kill: "<icon:kill>"
 
 feedback:
-  kill: "<error>Abschuss</error> <white><target> <success>+<points> KP"
+  kill: "<error>Abschuss <white><target> <success>+<points> KP"
   multikill: "<error><kills> Abschüsse <success>+<points> KP"
   assist: "<aqua>Abschusshilfe <success>+<points> KP"
   defence: "<aqua>Posten verteidigt <success>+<points> KP"

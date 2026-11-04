@@ -14,7 +14,7 @@ import me.blockcraft.api.world.Worlds;
 import me.blockcraft.sternenfront.arena.FrontMap;
 import me.blockcraft.sternenfront.arena.TessarMap;
 import me.blockcraft.sternenfront.appearance.BodyRigs;
-import me.blockcraft.sternenfront.appearance.ScopeTargets;
+import me.blockcraft.sternenfront.appearance.TargetOutlines;
 import me.blockcraft.sternenfront.config.FeelConfig;
 import me.blockcraft.sternenfront.config.SternenfrontConfig;
 import me.blockcraft.sternenfront.game.SternenfrontGame;
@@ -38,7 +38,7 @@ public final class SternenfrontPlugin extends JavaPlugin {
 
     private SternenfrontGame game;
     private BodyRigs bodyRigs;
-    private ScopeTargets scopeTargets;
+    private TargetOutlines targetOutlines;
     private BotDebug botDebug;
 
     @Override
@@ -66,8 +66,8 @@ public final class SternenfrontPlugin extends JavaPlugin {
             bodyRigs = BodyRigs.start(this, game, getConfig().getBoolean("appearance.droids", true), getConfig().getBoolean("appearance.infantry", true));
         }
         Secrets.start(this, game, messages);
-        if (getConfig().getBoolean("scope.targets.enabled", true)) {
-            scopeTargets = new ScopeTargets(this, game, Optional.ofNullable(bodyRigs));
+        if (getConfig().getBoolean("outlines.enabled", true)) {
+            targetOutlines = new TargetOutlines(this, game, Optional.ofNullable(bodyRigs));
         }
         botDebug = new BotDebug(game, bodyRigs);
 
@@ -110,8 +110,8 @@ public final class SternenfrontPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        if (scopeTargets != null) {
-            scopeTargets.close();
+        if (targetOutlines != null) {
+            targetOutlines.close();
         }
         if (botDebug != null) {
             botDebug.close();

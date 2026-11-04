@@ -72,9 +72,11 @@ heat vents before it fires again. F uses the first ability and Q the second, wit
 Langbüchse is hitscan (`combat.precision-hitscan`); every other player blaster and every bot weapon fires bolts that
 can be dodged at range. Grenades and mining charges hurt their thrower as well as enemies; teammates remain safe.
 
-While scoped, visible enemies have red outlines and allies have cyan outlines. This applies to players and bots,
-including their custom body parts. Outlines are private to the viewer and disappear when the target leaves the
-`scope.targets` cone or range, moves fully behind cover, or the viewer stops aiming.
+During combat, enemies have red outlines and allies have cyan outlines with every weapon, without aiming or
+sneaking. This applies to players and bots, including their custom body parts. Outlines are private to the viewer.
+`outlines.enabled` and `outlines.range` control them. Cover checks require clear rays to the target's center and
+bounding-box corners. Partly covered targets lose their outline too, because Minecraft's glow would otherwise
+reveal hidden body parts. This is conservative visibility sampling, not pixel-level depth clipping.
 
 Hits, headshots, and kills have distinct sounds and immediate action-bar markers. Kill and assist popups show the
 target or contribution, the points earned, and current progress toward a hero. Nearby gains combine into one popup.

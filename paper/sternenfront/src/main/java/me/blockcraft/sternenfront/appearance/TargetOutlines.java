@@ -17,7 +17,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
-import org.bukkit.util.Vector;
 
 import java.util.HashMap;
 import java.util.List;
@@ -26,7 +25,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @SuppressWarnings("deprecation")
-public final class ScopeTargets implements Listener, AutoCloseable {
+public final class TargetOutlines implements Listener, AutoCloseable {
 
     private final SternenfrontGame game;
     private final Optional<BodyRigs> bodies;
@@ -34,33 +33,26 @@ public final class ScopeTargets implements Listener, AutoCloseable {
     private final Map<UUID, Map<Entity, ChatColor>> shown = new HashMap<>();
     private final BukkitTask task;
     private final double range;
-    private final double cosine;
 
-    public ScopeTargets(Plugin plugin, SternenfrontGame game, Optional<BodyRigs> bodies) {
+    public TargetOutlines(Plugin plugin, SternenfrontGame game, Optional<BodyRigs> bodies) {
         this.game = game;
         this.bodies = bodies;
-        range = Math.clamp(plugin.getConfig().getDouble("scope.targets.range", 160), 1, 256);
-        cosine = Math.cos(Math.toRadians(Math.clamp(plugin.getConfig().getDouble("scope.targets.angle", 40), 1, 120) / 2));
+        range = Math.clamp(plugin.getConfig().getDouble("outlines.range", 160), 1, 256);
         glowing = new GlowingEntities(plugin);
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
         task = plugin.getServer().getScheduler().runTaskTimer(plugin, this::tick, 1, 1);
-    }
-
-    static boolean inView(Vector facing, Vector offset, double range, double cosine) {
-        double distance = offset.length();
-        return distance > 0 && distance <= range && facing.dot(offset) / distance >= cosine;
     }
 
     private void tick() {
         var actors = game.combatants();
         for (var viewer : game.plugin().getServer().getOnlinePlayers()) {
             var wanted = new HashMap<Entity, ChatColor>();
-            if (game.scoped(viewer)) {
+            if (game.onField(viewer)) {
                 var eye = viewer.getEyeLocation();
                 var faction = game.factionOf(viewer);
                 for (var actor : actors) {
                     if (!actor.equals(viewer) && actor.isValid() && actor.getWorld().equals(eye.getWorld())
-                            && (!(actor instanceof Player player) || !BlockcraftApi.get().isVanished(player)) && visible(eye, actor, range, cosine)) {
+                            && (!(actor instanceof Player player) || !BlockcraftApi.get().isVanished(player)) && visible(eye, actor, range)) {
                         var colour = game.factionOf(actor).equals(faction) ? ChatColor.AQUA : ChatColor.RED;
                         var parts = bodies.map(rigs -> rigs.outlineParts(actor, viewer))
                                 .orElseGet(() -> viewer.canSee(actor) ? List.of(actor) : List.of());
@@ -72,11 +64,22 @@ public final class ScopeTargets implements Listener, AutoCloseable {
         }
     }
 
-    static boolean visible(Location eye, LivingEntity actor, double range, double cosine) {
-        var centre = actor.getBoundingBox().getCenter().subtract(eye.toVector());
-        var head = actor.getEyeLocation().toVector().subtract(eye.toVector());
-        return inView(eye.getDirection(), centre, range, cosine) && LineOfSight.clear(eye, centre)
-                || inView(eye.getDirection(), head, range, cosine) && LineOfSight.clear(eye, head);
+    static boolean visible(Location eye, LivingEntity actor, double range) {
+        var box = actor.getBoundingBox();
+        var origin = eye.toVector();
+        var centre = box.getCenter().subtract(origin);
+        if (centre.lengthSquared() > range * range || !LineOfSight.clear(eye, centre)) return false;
+        double insetX = Math.min(0.01, box.getWidthX() / 4);
+        double insetY = Math.min(0.05, box.getHeight() / 4);
+        double insetZ = Math.min(0.01, box.getWidthZ() / 4);
+        for (double x : new double[]{box.getMinX() + insetX, box.getMaxX() - insetX}) {
+            for (double y : new double[]{box.getMinY() + insetY, box.getMaxY() - insetY}) {
+                for (double z : new double[]{box.getMinZ() + insetZ, box.getMaxZ() - insetZ}) {
+                    if (!LineOfSight.clear(eye, new org.bukkit.util.Vector(x, y, z).subtract(origin))) return false;
+                }
+            }
+        }
+        return true;
     }
 
     private void update(Player viewer, Map<Entity, ChatColor> wanted) {
@@ -99,7 +102,7 @@ public final class ScopeTargets implements Listener, AutoCloseable {
                 shown.put(viewer.getUniqueId(), wanted);
             }
         } catch (ReflectiveOperationException e) {
-            game.plugin().getSLF4JLogger().error("Could not update scoped target outlines", e);
+            game.plugin().getSLF4JLogger().error("Could not update target outlines", e);
         }
     }
 
