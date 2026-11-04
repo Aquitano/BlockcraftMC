@@ -57,26 +57,59 @@ class:
   blaster: "<bullet><muted>Blaster <white><blaster> <dark>· <accent><damage> ❤ <muted>pro Schuss"
   health: "<bullet><muted>Gesundheit <accent><hearts> ❤"
   ability: "<bullet><muted>Fähigkeit <white><ability>"
-  soldier:
-    name: "<white>Soldat"
-    lore:
-      - "<muted>Solide auf jede Entfernung."
-      - "<muted>Wirft Ionengranaten und kennt keinen Schmerz."
-  heavy:
-    name: "<white>Schwerer"
-    lore:
-      - "<muted>Viel Gesundheit, viele Bolzen."
-      - "<muted>Stellt eine Schildwand auf, die Schüsse schluckt."
-  scout:
-    name: "<white>Späher"
-    lore:
-      - "<muted>Wenig Gesundheit, weite Wege."
-      - "<muted>Ein Kopftreffer reicht, das Sprungmodul hilft beim Rest."
-  medic:
-    name: "<white>Sanitäter"
-    lore:
-      - "<muted>Hält das Team am Leben."
-      - "<muted>Stellt Heilstationen auf und schießt schnell."
+  speed: "<bullet><muted>Tempo <accent><percent> %"
+  size: "<bullet><muted>Größe <accent><percent> %"
+  stats: "<white>Werte"
+  first-key: "<muted>Fähigkeit auf Taste <accent>F"
+  second-key: "<muted>Fähigkeit auf Taste <accent>Q"
+  faction: "<faction>"
+  faction-chosen:
+    - "<muted>Deine Fraktion. So kämpfen ihre Einheiten."
+  faction-likely:
+    - "<muted>Du hast noch keine Fraktion gewählt."
+    - "<muted>Gerade kämst du auf diese Seite. So kämpft sie."
+  kolonien:
+    soldier:
+      name: "<white>Milizionär"
+      lore:
+        - "<muted>Solide auf jede Entfernung."
+        - "<muted>Wirft Schürfgranaten und beißt die Zähne zusammen."
+    heavy:
+      name: "<white>Minenarbeiter"
+      lore:
+        - "<muted>Viel Gesundheit, viele Bolzen."
+        - "<muted>Schützt sich mit dem Bauschild und sprengt Posten frei."
+    scout:
+      name: "<white>Spurenleser"
+      lore:
+        - "<muted>Wenig Gesundheit, weite Wege."
+        - "<muted>Ein Kopftreffer reicht, das Sprungmodul hilft beim Rest."
+    medic:
+      name: "<white>Feldsanitäter"
+      lore:
+        - "<muted>Hält die Kolonisten am Leben."
+        - "<muted>Stellt Heilstationen auf und schießt schnell."
+  hegemonie:
+    soldier:
+      name: "<white>Linieneinheit L-4"
+      lore:
+        - "<muted>Das Standardmodell der Linie."
+        - "<muted>Wirft Ionengranaten und fährt die Überlastung hoch."
+    heavy:
+      name: "<white>Brecher-Einheit X-9"
+      lore:
+        - "<muted>Schwer gepanzert und langsam im Gang."
+        - "<muted>Verankert sich im Belagerungsmodus hinter der Schildwand."
+    scout:
+      name: "<white>Jäger-Einheit J-3"
+      lore:
+        - "<muted>Leichtes Gestell, scharfe Optik."
+        - "<muted>Ein Kopftreffer reicht, die Schubdüsen helfen beim Rest."
+    medic:
+      name: "<white>Wartungseinheit W-2"
+      lore:
+        - "<muted>Repariert die Linie mitten im Gefecht."
+        - "<muted>Baut Reparaturfelder auf und schießt schnell."
 
 blaster:
   stats:
@@ -109,37 +142,78 @@ blaster:
     name: "<white>S-12 Sturmgewehr"
     lore:
       - "<muted>Schwere Bolzen in schneller Folge."
+  speeder-cannon:
+    name: "<white>Speeder-Bordkanone"
 
 ability:
   first-key: "<muted>Taste <accent>F <muted>oder <right>Benutzen"
   second-key: "<muted>Taste <accent>Q <muted>oder <right>Benutzen"
   cooldown: "<error><ability> <muted>ist in <accent><seconds> s <muted>bereit."
   no-room: "<error>Hier ist dafür kein Platz."
-  grenade:
-    name: "<white>Ionengranate"
-    lore:
-      - "<muted>Zündet nach kurzer Zeit"
-      - "<muted>und trifft alle Gegner in Sichtweite."
-      - "<error>Die Explosion verletzt auch dich."
-  adrenaline:
-    name: "<white>Adrenalin"
-    lore:
-      - "<muted>Kurz schneller und heilend."
-  shield-wall:
-    name: "<white>Schildwand"
-    lore:
-      - "<muted>Eine Wand aus Energie vor dir,"
-      - "<muted>die Bolzen für ein paar Sekunden aufhält."
-  jump-pack:
-    name: "<white>Sprungmodul"
-    lore:
-      - "<muted>Ein Satz nach vorn und oben."
-      - "<muted>Die nächste Landung tut nicht weh."
-  med-station:
-    name: "<white>Heilstation"
-    lore:
-      - "<muted>Heilt Verbündete in der Nähe,"
-      - "<muted>solange sie läuft."
+  kolonien:
+    grenade:
+      name: "<white>Schürfgranate"
+      lore:
+        - "<muted>Zündet nach kurzer Zeit"
+        - "<muted>und trifft alle Gegner in Sichtweite."
+        - "<error>Die Explosion verletzt auch dich."
+    adrenaline:
+      name: "<white>Adrenalin"
+      lore:
+        - "<muted>Kurz schneller und heilend."
+    shield-wall:
+      name: "<white>Bauschild"
+      lore:
+        - "<muted>Eine Wand aus Energie vor dir,"
+        - "<muted>die Bolzen für ein paar Sekunden aufhält."
+    mining-charge:
+      name: "<white>Sprengladung"
+      lore:
+        - "<muted>Eine Ladung aus dem Stollen mit langer Lunte."
+        - "<muted>Reißt mehr mit als eine Granate."
+        - "<error>Die Explosion verletzt auch dich."
+    jump-pack:
+      name: "<white>Sprungmodul"
+      lore:
+        - "<muted>Ein Satz nach vorn und oben."
+        - "<muted>Die nächste Landung tut nicht weh."
+    med-station:
+      name: "<white>Heilstation"
+      lore:
+        - "<muted>Heilt Verbündete in der Nähe,"
+        - "<muted>solange sie läuft."
+  hegemonie:
+    grenade:
+      name: "<white>Ionengranate"
+      lore:
+        - "<muted>Zündet nach kurzer Zeit"
+        - "<muted>und trifft alle Gegner in Sichtweite."
+        - "<error>Die Explosion verletzt auch dich."
+    adrenaline:
+      name: "<white>Überlastung"
+      lore:
+        - "<muted>Die Servos laufen kurz über Limit:"
+        - "<muted>schneller, und die Selbstreparatur springt an."
+    shield-wall:
+      name: "<white>Schildwand"
+      lore:
+        - "<muted>Eine Wand aus Energie vor dir,"
+        - "<muted>die Bolzen für ein paar Sekunden aufhält."
+    siege-mode:
+      name: "<white>Belagerungsmodus"
+      lore:
+        - "<muted>Die Einheit verankert sich im Boden und steht still."
+        - "<muted>Der Repetierer feuert schneller und halb so heiß."
+    jump-pack:
+      name: "<white>Schubdüsen"
+      lore:
+        - "<muted>Ein Stoß nach vorn und oben."
+        - "<muted>Die nächste Landung tut nicht weh."
+    med-station:
+      name: "<white>Reparaturfeld"
+      lore:
+        - "<muted>Setzt Verbündete in der Nähe instand,"
+        - "<muted>solange es steht."
 
 relic:
   name: "<accent>Ahnenklinge"
@@ -165,6 +239,17 @@ post:
   captured: "<prefix><muted>Posten <accent><letter> <white><post> <muted>gehört nun <faction><muted>!"
   neutralised: "<prefix><muted>Posten <accent><letter> <white><post> <muted>ist für <faction> <muted>verloren."
   under-attack: "<prefix><error>Funk: <white><letter> <post> <error>wird angegriffen!"
+  bar-priority: "<tint><letter> <dark>· <white><post> <dark>· <state> <dark>· <accent>★ Schwerpunkt"
+
+act:
+  assault:
+    title: "<display>LANDUNGSANGRIFF"
+    subtitle: "<muted>Schwerpunkt <accent><letter> <white><post> <muted>zählt <accent><weight>-fach"
+    chat: "<prefix><muted>Schwerpunkt ist Posten <accent><letter> <white><post><muted>: Er zählt beim Verstärkungsverlust <accent><weight>-fach<muted>. <faction> <muted>kann nun per Landungsschiff direkt davor einsetzen."
+  last-stand:
+    title: "<display>LETZTES GEFECHT"
+    subtitle: "<muted>Sandsturm <dark>· <muted>Jeder Posten zählt <accent><weight>-fach"
+    chat: "<prefix><muted>Ein Sandsturm nimmt den Bots die Sicht, jeder Posten zählt beim Verstärkungsverlust <accent><weight>-fach<muted>. <faction> <muted>landet per Landungsschiff, zahlt <accent><cost> Kampfpunkte <muted>für einen Helden und darf einen mehr aufstellen."
 
 secret:
   found-title: "<sternenfront>Secret gefunden!"
@@ -223,6 +308,8 @@ deploy:
   post-neutral: "<muted>Noch niemand hält diesen Posten."
   post-enemy: "<error>Der Gegner hält diesen Posten."
   post-contested: "<error>Hier wird gerade gekämpft."
+  dropship: "<white>Landungsschiff <dark>· <accent><letter> <white><post>"
+  dropship-locked: "<error>Nur für die zurückliegende Fraktion."
 
 death:
   self-grenade: "<prefix><white><player> <muted>wurde von der eigenen Granate erwischt."
@@ -290,6 +377,7 @@ scoreboard:
   posts: "<muted><icon:map> POSTEN"
   post: "<tint><bold><letter></bold> <white><post>"
   post-contested: "<tint><bold><letter></bold> <white><post> <error>⚔"
+  post-priority: "<line> <accent>★"
   kills: "<muted><icon:kills> KILLS"
 
 hero:
@@ -433,24 +521,17 @@ combat:
   guard-broken: "<error>Deckung gebrochen! <muted>Lass sie sich kurz erholen."
   heat: "<muted>Hitze"
   venting: "<error>KÜHLEN"
-  bar: "<percent>%"
   incoming:
     front: "<error><bold>▲</bold> <dark>│ "
     back: "<error><bold>▼</bold> <dark>│ "
     left: "<error><bold>◀</bold> <dark>│ "
     right: "<error><bold>▶</bold> <dark>│ "
   orbital-warning: "<tint><faction></tint>\n<error>Orbitalschlag in <seconds>s\n<muted>Markierte Flächen verlassen"
-  icons:
-    health: "LP"
-    heat: "Hitze"
-    guard: "Deckung"
-    f: "F"
-    q: "Q"
 
 speeder:
   name: "<faction> <dark>· <white>Speeder <dark>· <right>Einsteigen"
-  controls: "<prefix><muted>Speeder: <accent>W/S <muted>Gas/Bremse, <accent>A/D <muted>lenken, <accent>Shift <muted>absteigen. Waffen sind während der Fahrt gesperrt."
-  driving: "<accent>Speeder <dark>│ <white><health> LP <dark>│ <white><speed> m/s <dark>│ <muted>W/S · A/D · Shift"
+  controls: "<prefix><muted>Speeder: <accent>W <muted>Gas, <accent>S <muted>Bremse und rückwärts, <accent>A/D <muted>lenken, <accent>Sprint <muted>Boost, <accent>Klick <muted>Bordkanone, <accent>Shift <muted>absteigen. Hohes Tempo rammt Gegner."
+  driving: "<accent>Speeder <dark>│ <white><health> LP <dark>│ <white><speed> m/s <dark>│ <muted>Boost <white><boost>%"
 
 support:
   assist: "<prefix><success>+<points> Gefechtspunkte <muted>für eine Abschusshilfe."

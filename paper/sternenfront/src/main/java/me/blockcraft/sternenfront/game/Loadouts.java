@@ -4,6 +4,7 @@ import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.ItemAttributeModifiers;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.pack.MenuIcon;
+import me.blockcraft.api.pack.MenuState;
 import me.blockcraft.api.pack.PackModel;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.sternenfront.config.SternenfrontConfig;
@@ -15,6 +16,7 @@ import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlotGroup;
 import org.bukkit.inventory.ItemStack;
@@ -33,6 +35,8 @@ public final class Loadouts {
 
     private static final NamespacedKey BLADE_DAMAGE = new NamespacedKey("sternenfront", "blade_damage");
     private static final NamespacedKey BLADE_SPEED = new NamespacedKey("sternenfront", "blade_speed");
+    private static final NamespacedKey CLASS_SPEED = new NamespacedKey("sternenfront", "class_speed");
+    private static final NamespacedKey CLASS_SCALE = new NamespacedKey("sternenfront", "class_scale");
     private static final double PLAYER_BASE_DAMAGE = 1;
     private static final double SWORD_SPEED = -2.4;
     private static final double TO_HEARTS = 2;
@@ -49,12 +53,11 @@ public final class Loadouts {
         var inventory = player.getInventory();
         inventory.clear();
         inventory.setItem(0, blaster(combatClass.blaster()));
-        for (int index = 0; index < combatClass.abilities().size(); index++) {
-            var ability = combatClass.abilities().get(index);
-            player.setCooldown(ability.material(), 0);
-        }
+        combatClass.abilities(faction).forEach(ability -> player.setCooldown(ability.material(), 0));
         dress(player, faction, Optional.empty());
-        health(player, config.health(combatClass));
+        var body = config.stats(faction, combatClass);
+        fit(player, body.speed(), body.scale());
+        health(player, body.health());
     }
 
     /** The champion's hotbar: the blade alone, with the helmet and leather they deployed in. */
@@ -79,12 +82,13 @@ public final class Loadouts {
                 .hideAttributes().edit(meta -> meta.setUnbreakable(true)));
     }
 
-    public ItemStack ability(Ability ability, int index) {
-        var lore = new ArrayList<>(messages.getLines("ability." + ability.key() + ".lore"));
+    /** An ability as the class menu's read-out shows it, with the key it sits on. */
+    public ItemStack abilityCard(Faction faction, Ability ability, int index) {
+        var lore = new ArrayList<>(messages.getLines(ability.messageKey(faction) + ".lore"));
         lore.add(Component.empty());
-        lore.add(messages.get(index == 0 ? "ability.first-key" : "ability.second-key"));
-        return ability.build(ability.model().item().name(messages.get("ability." + ability.key() + ".name")).lore(lore)
-                .hideAttributes());
+        lore.add(messages.get(index == 0 ? "class.first-key" : "class.second-key"));
+        return ability.model().item().name(messages.get(ability.messageKey(faction) + ".name")).lore(lore)
+                .hideAttributes().build();
     }
 
     public ItemStack blade() {
@@ -106,24 +110,42 @@ public final class Loadouts {
     }
 
     /** A class as the menus show it: its blaster, named after the class, with what it carries. */
-    public ItemStack card(CombatClass combatClass, boolean selected, List<Component> hint) {
-        var stats = config.stats(combatClass.blaster());
-        var lore = new ArrayList<>(messages.getLines("class." + combatClass.key() + ".lore"));
+    public ItemStack card(Faction faction, CombatClass combatClass, boolean selected, List<Component> hint) {
+        var lore = new ArrayList<>(messages.getLines(combatClass.messageKey(faction) + ".lore"));
         lore.add(Component.empty());
-        lore.add(messages.get("class.blaster",
-                Placeholder.component("blaster", messages.get("blaster." + combatClass.blaster().key() + ".name")),
-                Formatter.number("damage", stats.damage() * stats.bolts() / TO_HEARTS)));
-        lore.add(messages.get("class.health", Formatter.number("hearts", config.health(combatClass) / TO_HEARTS)));
-        combatClass.abilities().forEach(ability -> lore.add(messages.get("class.ability",
-                Placeholder.component("ability", messages.get("ability." + ability.key() + ".name")))));
+        lore.addAll(statLines(faction, combatClass));
+        combatClass.abilities(faction).forEach(ability -> lore.add(messages.get("class.ability",
+                Placeholder.component("ability", messages.get(ability.messageKey(faction) + ".name")))));
         lore.add(Component.empty());
         lore.addAll(hint);
-        var builder = combatClass.blaster().model().item().name(messages.get("class." + combatClass.key() + ".name"))
+        var builder = combatClass.blaster().model().item().name(messages.get(combatClass.messageKey(faction) + ".name"))
                 .lore(lore).hideAttributes();
         if (selected) {
-            builder.glow();
+            builder.glow().state(MenuState.ACTIVE);
         }
         return builder.build();
+    }
+
+    /** The class's numbers as the class menu's read-out shows them. */
+    public ItemStack statsCard(Faction faction, CombatClass combatClass) {
+        return MenuIcon.GLOBAL_STATS.item().name(messages.get("class.stats")).lore(statLines(faction, combatClass)).build();
+    }
+
+    private List<Component> statLines(Faction faction, CombatClass combatClass) {
+        var stats = config.stats(combatClass.blaster());
+        var body = config.stats(faction, combatClass);
+        var lines = new ArrayList<Component>();
+        lines.add(messages.get("class.blaster",
+                Placeholder.component("blaster", messages.get("blaster." + combatClass.blaster().key() + ".name")),
+                Formatter.number("damage", stats.damage() * stats.bolts() / TO_HEARTS)));
+        lines.add(messages.get("class.health", Formatter.number("hearts", body.health() / TO_HEARTS)));
+        if (body.speed() != 1) {
+            lines.add(messages.get("class.speed", Formatter.number("percent", Math.round(body.speed() * 100))));
+        }
+        if (body.scale() != 1) {
+            lines.add(messages.get("class.size", Formatter.number("percent", Math.round(body.scale() * 100))));
+        }
+        return lines;
     }
 
     /** The faction's leather, and on the head {@code head} if a hero wears their own, else the faction's helmet. */
@@ -145,6 +167,31 @@ public final class Loadouts {
         var item = Items.of(material).color(faction.armour()).hideAttributes().edit(meta -> meta.setUnbreakable(true)).build();
         item.setData(DataComponentTypes.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.itemAttributes().build());
         return item;
+    }
+
+    /** Transient, so a player who quits mid-round takes neither their class's size nor its pace along in their saved data. */
+    public static void fit(LivingEntity body, double speed, double scale) {
+        natural(body);
+        multiply(body, Attribute.MOVEMENT_SPEED, CLASS_SPEED, speed);
+        multiply(body, Attribute.SCALE, CLASS_SCALE, scale);
+    }
+
+    /** Whatever {@link #fit} did, undone: the size and pace a hero, a champion and anyone between rounds has. */
+    public static void natural(LivingEntity body) {
+        drop(body, Attribute.MOVEMENT_SPEED, CLASS_SPEED);
+        drop(body, Attribute.SCALE, CLASS_SCALE);
+    }
+
+    private static void multiply(LivingEntity body, Attribute attribute, NamespacedKey key, double factor) {
+        Objects.requireNonNull(body.getAttribute(attribute)).addTransientModifier(new AttributeModifier(key, factor - 1,
+                AttributeModifier.Operation.MULTIPLY_SCALAR_1, EquipmentSlotGroup.ANY));
+    }
+
+    private static void drop(LivingEntity body, Attribute attribute, NamespacedKey key) {
+        var instance = Objects.requireNonNull(body.getAttribute(attribute));
+        if (instance.getModifier(key) != null) {
+            instance.removeModifier(key);
+        }
     }
 
     public void health(Player player, double health) {

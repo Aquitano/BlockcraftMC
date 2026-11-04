@@ -4,6 +4,7 @@ import me.blockcraft.api.BlockcraftApi;
 import org.bukkit.Bukkit;
 import org.bukkit.SoundCategory;
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -29,6 +30,8 @@ public final class BattleMusic {
 
     private final SternenfrontGame game;
     private final Map<UUID, Playing> listeners = new HashMap<>();
+    private final Map<UUID, Cue> finale = new HashMap<>();
+    private BukkitTask finaleRetry;
     private final boolean enabled;
     private final float volume;
 
@@ -38,17 +41,18 @@ public final class BattleMusic {
         volume = (float) Math.clamp(game.plugin().getConfig().getDouble("music.volume", 0.35), 0, 1);
     }
 
-    static Cue cue(long tick, int secondsLeft, int lowestTickets, int pressureTickets) {
-        return lowestTickets <= pressureTickets || secondsLeft <= 90 ? Cue.PRESSURE : tick < 24 * 20 ? Cue.OPENING : Cue.BATTLE;
+    static Cue cue(long tick, int secondsLeft, int lowestTickets, int pressureTickets, boolean lastStand) {
+        return lastStand || lowestTickets <= pressureTickets || secondsLeft <= 90 ? Cue.PRESSURE : tick < 24 * 20 ? Cue.OPENING : Cue.BATTLE;
     }
 
-    void tick(long tick, int secondsLeft, int lowestTickets) {
+    void tick(long tick, int secondsLeft, int lowestTickets, boolean lastStand) {
         if (tick % 20 != 0 || !enabled || volume == 0) {
             return;
         }
         int threshold = Math.max(1, game.plugin().getConfig().getInt("music.pressure-tickets", 35));
-        var wanted = cue(tick, secondsLeft, lowestTickets, threshold);
+        var wanted = cue(tick, secondsLeft, lowestTickets, threshold, lastStand);
         for (var player : Bukkit.getOnlinePlayers()) {
+            // A cue sent while the client is still loading the pack is lost, and the next one is a whole cue away.
             if (!player.getWorld().equals(game.map().world()) || !BlockcraftApi.get().resourcePack().applied(player)) {
                 forget(player);
                 continue;
@@ -66,13 +70,35 @@ public final class BattleMusic {
         clear();
         if (enabled && volume > 0) {
             for (var player : Bukkit.getOnlinePlayers()) {
-                if (player.getWorld().equals(game.map().world()) && BlockcraftApi.get().resourcePack().applied(player)) {
-                    var cue = winner.filter(faction -> game.factionOf(player).filter(faction::equals).isPresent())
-                            .map(ignored -> Cue.VICTORY).orElse(Cue.DEFEAT);
-                    play(player, cue);
-                    listeners.put(player.getUniqueId(), new Playing(cue, Long.MAX_VALUE));
+                if (player.getWorld().equals(game.map().world())) {
+                    finale.put(player.getUniqueId(), winner.filter(faction -> game.factionOf(player).filter(faction::equals).isPresent())
+                            .map(ignored -> Cue.VICTORY).orElse(Cue.DEFEAT));
                 }
             }
+            playFinale();
+            if (!finale.isEmpty()) {
+                finaleRetry = Bukkit.getScheduler().runTaskTimer(game.plugin(), this::playFinale, 20L, 20L);
+            }
+        }
+    }
+
+    /** A client still loading the pack would lose the cue, and nothing later replaces it, so it waits for the pack. */
+    private void playFinale() {
+        finale.entrySet().removeIf(entry -> {
+            var player = Bukkit.getPlayer(entry.getKey());
+            if (player == null) {
+                return true;
+            }
+            if (!BlockcraftApi.get().resourcePack().applied(player)) {
+                return false;
+            }
+            play(player, entry.getValue());
+            listeners.put(player.getUniqueId(), new Playing(entry.getValue(), Long.MAX_VALUE));
+            return true;
+        });
+        if (finale.isEmpty() && finaleRetry != null) {
+            finaleRetry.cancel();
+            finaleRetry = null;
         }
     }
 
@@ -92,5 +118,10 @@ public final class BattleMusic {
     void clear() {
         Bukkit.getOnlinePlayers().forEach(this::forget);
         listeners.clear();
+        finale.clear();
+        if (finaleRetry != null) {
+            finaleRetry.cancel();
+            finaleRetry = null;
+        }
     }
 }

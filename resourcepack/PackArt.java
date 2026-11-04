@@ -1865,9 +1865,13 @@ public final class PackArt {
             "........",
     };
     static final class TileArt {
-        record Card(String key, String icon, int accent, Scene scene) { }
+        record Card(String key, String icon, int accent, Scene scene) {
+            static Card portrait(String key, int accent) {
+                return new Card(key, null, accent, Scene.PORTRAIT);
+            }
+        }
         record State(String key, int colour, String[] pixels) { }
-        enum Scene { FOREST, MINE, ARENA, ISLAND, CITY, END, CRYPT, STUDIO, TREASURE }
+        enum Scene { FOREST, MINE, ARENA, ISLAND, CITY, END, CRYPT, STUDIO, TREASURE, PORTRAIT }
 
         static final List<State> STATES = List.of(
                 new State("available", 0xFF8AD9A7, new String[] {"....#", "...##", "#.#..", ".#...", "....."}),
@@ -1877,6 +1881,10 @@ public final class PackArt {
                 new State("pending", 0xFFE8C582, new String[] {"#####", ".#.#.", "..#..", ".#.#.", "#####"}),
                 new State("offline", 0xFF9CA6B8, new String[] {".###.", "#...#", "#...#", "#...#", ".###."}));
 
+        static final int HEADING = 0xFF9CA6B8;
+        static final int TROUGH = 0xFF12141A;
+        static final int KOLONIEN = 0xFFE89A5A;
+        static final int HEGEMONIE = 0xFF6FCDEF;
         static final List<Card> CARDS = List.of(
                 new Card("quicksg", "quicksg", 0xFF69B982, Scene.FOREST),
                 new Card("emeraldrush", "emeraldrush", 0xFF5ED7AE, Scene.MINE),
@@ -1901,7 +1909,15 @@ public final class PackArt {
                 new Card("gadgets", "gadgets", 0xFF8CCCD0, Scene.STUDIO),
                 new Card("trails", "trails", 0xFFCCAFE8, Scene.END),
                 new Card("tags", "chat_tags", 0xFF9AB8F0, Scene.STUDIO),
-                new Card("lobbies", "lobbies", 0xFF9AB8F0, Scene.CITY));
+                new Card("lobbies", "lobbies", 0xFF9AB8F0, Scene.CITY),
+                Card.portrait("sternenfront_kolonien_soldier", KOLONIEN),
+                Card.portrait("sternenfront_kolonien_heavy", KOLONIEN),
+                Card.portrait("sternenfront_kolonien_scout", KOLONIEN),
+                Card.portrait("sternenfront_kolonien_medic", KOLONIEN),
+                Card.portrait("sternenfront_hegemonie_soldier", HEGEMONIE),
+                Card.portrait("sternenfront_hegemonie_heavy", HEGEMONIE),
+                Card.portrait("sternenfront_hegemonie_scout", HEGEMONIE),
+                Card.portrait("sternenfront_hegemonie_medic", HEGEMONIE));
 
         static final String LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789ÄÖÜ-.:!?…/+&";
         static final Map<Character, String> LETTER_PIXELS = Map.ofEntries(
@@ -1962,7 +1978,7 @@ public final class PackArt {
                 for (boolean large : new boolean[] {false, true}) {
                     String shape = large ? "large" : "wide";
                     String file = "tiles/" + card.key() + "_" + shape + ".png";
-                    PackArt.write(card(card, large), textures.resolve(file));
+                    PackArt.write(card(card, large, root.toAbsolutePath().resolveSibling("art")), textures.resolve(file));
                     for (int row = 0; row < (large ? 5 : 6); row++) {
                         providers.add(bitmap(file, 13 - 18 * (row + 1), large ? 34 : 16,
                                 String.valueOf((char) ((large ? 0xE600 : 0xE400) + index * 8 + row))));
@@ -1985,6 +2001,85 @@ public final class PackArt {
                 PackArt.fill(panel, 7, 35, 162, (rows - 1) * 18, PackArt.BODY);
                 PackArt.write(panel, textures.resolve("cards_" + rows + ".png"));
             }
+            PackArt.write(classOverlay(false), textures.resolve("overlay_sternenfront_class.png"));
+            PackArt.write(classOverlay(true), textures.resolve("overlay_sternenfront_class_with_bots.png"));
+            PackArt.write(deployOverlay(), textures.resolve("overlay_sternenfront_deploy.png"));
+        }
+
+        static int rowY(int row) {
+            return 18 + 18 * row;
+        }
+
+        static int columnX(int column) {
+            return 8 + 18 * column;
+        }
+
+        /** The client measures a glyph's advance from its ink, and UiFont moves back by the panel's full width. */
+        static BufferedImage overlay(boolean rightButton) {
+            var image = new BufferedImage(PackArt.PANEL_WIDTH, 222, BufferedImage.TYPE_INT_ARGB);
+            image.setRGB(PackArt.PANEL_WIDTH - 1, 0, 0x01000000);
+            if (!rightButton) {
+                PackArt.fill(image, columnX(6), rowY(0), 52, 16, PackArt.BODY);
+            }
+            return image;
+        }
+
+        /** Rows the player only reads: role heading, gear heading under a divider, then a dark trough of sunk frames. */
+        static BufferedImage classOverlay(boolean bots) {
+            var image = overlay(bots);
+            heading(image, "ROLLE", rowY(1) + 9);
+            PackArt.fill(image, 7, rowY(4), 162, 1, PackArt.BORDER);
+            PackArt.fill(image, 7, rowY(4) + 1, 162, 1, PackArt.EDGE);
+            heading(image, "AUSRÜSTUNG", rowY(4) + 8);
+            PackArt.fill(image, 7, rowY(5) - 2, 162, 20, TROUGH);
+            PackArt.fill(image, 7, rowY(5) - 2, 162, 1, PackArt.BORDER);
+            for (int column : new int[] {1, 3, 5, 7}) {
+                PackArt.slot(image, columnX(column) - 1, rowY(5) - 1);
+            }
+            keyCap(image, 'F', columnX(3) - 10, rowY(5) + 4);
+            keyCap(image, 'Q', columnX(5) - 10, rowY(5) + 4);
+            return image;
+        }
+
+        /** Hero and spawn rows, labelled on the left; their items answer clicks, so their frames stand out like tiles. */
+        static BufferedImage deployOverlay() {
+            var image = overlay(false);
+            heading(image, "ROLLE", rowY(1) + 9);
+            PackArt.fill(image, 7, rowY(4) - 2, 162, 1, PackArt.EDGE);
+            rowLabel(image, "HELD", rowY(4) + 6);
+            rowLabel(image, "EINSATZORT", rowY(5) + 6);
+            for (int column : new int[] {4, 5}) {
+                raisedFrame(image, columnX(column) - 1, rowY(4) - 1);
+            }
+            for (int column = 4; column < 9; column++) {
+                raisedFrame(image, columnX(column) - 1, rowY(5) - 1);
+            }
+            return image;
+        }
+
+        static void heading(BufferedImage image, String text, int y) {
+            rowLabel(image, text, y);
+            int end = columnX(0) + text.length() * 4 + 2;
+            PackArt.fill(image, end, y + 2, 168 - end, 1, PackArt.EDGE);
+        }
+
+        static void rowLabel(BufferedImage image, String text, int y) {
+            for (int index = 0; index < text.length(); index++) {
+                letter(image, text.charAt(index), columnX(0) + index * 4, y, HEADING);
+            }
+        }
+
+        static void raisedFrame(BufferedImage image, int x, int y) {
+            PackArt.fill(image, x, y, 18, 18, PackArt.BORDER);
+            PackArt.fill(image, x + 1, y + 1, 16, 16, 0xFF252E40);
+            PackArt.fill(image, x + 1, y + 1, 16, 1, 0xFF46536E);
+            PackArt.fill(image, x + 1, y + 16, 16, 1, 0xFF1A2130);
+        }
+
+        static void keyCap(BufferedImage image, char key, int x, int y) {
+            PackArt.fill(image, x, y, 7, 8, PackArt.EDGE);
+            PackArt.fill(image, x + 1, y + 1, 5, 6, PackArt.BODY);
+            letter(image, key, x + 2, y + 1, PackArt.WHITE);
         }
 
         static String bitmap(String file, int ascent, int height, String chars) {
@@ -1997,24 +2092,28 @@ public final class PackArt {
         static BufferedImage letters() {
             var sheet = new BufferedImage(LETTERS.length() * 3, 7, BufferedImage.TYPE_INT_ARGB);
             for (int index = 0; index < LETTERS.length(); index++) {
-                char letter = LETTERS.charAt(index);
-                String pixels = LETTER_PIXELS.get(PackArt.UMLAUTS.getOrDefault(letter, letter));
-                for (int y = 0; y < 5; y++) {
-                    for (int x = 0; x < 3; x++) {
-                        if (pixels.charAt(y * 3 + x) == '1') {
-                            sheet.setRGB(index * 3 + x, y + 2, PackArt.WHITE);
-                        }
-                    }
-                }
-                if (PackArt.UMLAUTS.containsKey(letter)) {
-                    sheet.setRGB(index * 3, 0, PackArt.WHITE);
-                    sheet.setRGB(index * 3 + 2, 0, PackArt.WHITE);
-                }
+                letter(sheet, LETTERS.charAt(index), index * 3, 2, PackArt.WHITE);
             }
             return sheet;
         }
 
-        static BufferedImage card(Card card, boolean large) {
+        /** The five rows of a letter from {@code top}; an umlaut's dots sit two rows above them. */
+        static void letter(BufferedImage image, char letter, int left, int top, int colour) {
+            String pixels = LETTER_PIXELS.get(PackArt.UMLAUTS.getOrDefault(letter, letter));
+            for (int y = 0; y < 5; y++) {
+                for (int x = 0; x < 3; x++) {
+                    if (pixels.charAt(y * 3 + x) == '1') {
+                        image.setRGB(left + x, top + y, colour);
+                    }
+                }
+            }
+            if (PackArt.UMLAUTS.containsKey(letter)) {
+                image.setRGB(left, top - 2, colour);
+                image.setRGB(left + 2, top - 2, colour);
+            }
+        }
+
+        static BufferedImage card(Card card, boolean large, Path art) throws IOException {
             int width = large ? 52 : 70;
             int height = large ? 34 : 16;
             var image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
@@ -2022,11 +2121,20 @@ public final class PackArt {
             PackArt.fill(image, 1, 1, width - 2, height - 2, 0xFF252E40);
             int artWidth = large ? width - 2 : 23;
             int artHeight = large ? 22 : height - 2;
-            scene(image, 1, 1, artWidth, artHeight, card);
+            if (card.scene() == Scene.PORTRAIT) {
+                var portrait = ImageIO.read(art.resolve("sternenfront/" + card.key().substring("sternenfront_".length())
+                        + (large ? "_large.png" : "_wide.png")).toFile());
+                image.createGraphics().drawImage(portrait, 1, 1, null);
+            } else {
+                scene(image, 1, 1, artWidth, artHeight, card);
+            }
             PackArt.fill(image, large ? 1 : 24, large ? 24 : 1, large ? width - 2 : width - 25,
                     large ? 9 : height - 2, 0xFF252E40);
             PackArt.fill(image, 1, height - 2, width - 2, 1, mix(card.accent(), 0xFF252E40, 0.3));
             PackArt.fill(image, 1, 1, large ? width - 2 : 23, 1, mix(card.accent(), 0xFFFFFFFF, 0.7));
+            if (card.icon() == null) {
+                return image;
+            }
             var icon = PackArt.ICONS.get(card.icon());
             var sprite = PackArt.pixels(icon.rows(), icon.palette());
             int iconX = large ? (width - 16) / 2 : 4;

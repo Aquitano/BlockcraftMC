@@ -18,7 +18,6 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.event.player.PlayerResourcePackStatusEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -71,7 +70,7 @@ public final class Droids implements Listener, AutoCloseable {
             var id = actor.getUniqueId();
             present.add(id);
             var rig = rigs.computeIfAbsent(id, ignored -> {
-                var created = new DroidRig(plugin, actor, game.factionOf(actor).filter(Faction.HEGEMONIE::equals).isPresent(),
+                var created = new DroidRig(plugin, actor, RigBody.of(game.factionOf(actor).orElseThrow(), game.combatClassOf(actor)), game::isPlaying,
                         () -> game.bots().aim(actor).orElseGet(() -> actor.getEyeLocation().getDirection()), turnDegrees);
                 targets.put(created.targetId(), created);
                 return created;
@@ -88,7 +87,7 @@ public final class Droids implements Listener, AutoCloseable {
     private boolean eligible(LivingEntity actor) {
         return actor.isValid() && game.onField(actor) && actor.getWorld().equals(game.map().world())
                 && (droids && game.factionOf(actor).filter(Faction.HEGEMONIE::equals).isPresent()
-                || infantry && !(actor instanceof Player) && game.factionOf(actor).filter(Faction.KOLONIEN::equals).isPresent())
+                || infantry && game.factionOf(actor).filter(Faction.KOLONIEN::equals).isPresent())
                 && (!(actor instanceof Player player) || game.heroOf(player).isEmpty()
                 && !BlockcraftApi.get().buildMode().isEnabled(player));
     }
@@ -100,7 +99,7 @@ public final class Droids implements Listener, AutoCloseable {
             return;
         }
         event.setCancelled(true);
-        if (event.getDamager() instanceof Player player && rig.shownTo(player)
+        if (event.getDamager() instanceof Player player && rig.shownTo(player) && !player.isInsideVehicle()
                 && game.onField(player) && eligible(rig.actor()) && canReach(player, rig.actor())) {
             // Interaction attacks arrive before vanilla computes damage or resets the attack cooldown.
             player.attack(rig.actor());
@@ -124,11 +123,6 @@ public final class Droids implements Listener, AutoCloseable {
         double distance = hit.getHitPosition().distance(eye.toVector());
         return distance == 0 || eye.getWorld().rayTraceBlocks(eye, direction, distance,
                 FluidCollisionMode.NEVER, true) == null;
-    }
-
-    @EventHandler
-    public void onPack(PlayerResourcePackStatusEvent event) {
-        rigs.values().forEach(rig -> rig.refresh(event.getPlayer()));
     }
 
     @EventHandler

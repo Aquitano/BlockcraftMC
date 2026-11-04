@@ -2,7 +2,7 @@ package me.blockcraft.sternenfront.game;
 
 import org.junit.Test;
 
-import java.util.Map;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.Assert.assertEquals;
@@ -13,13 +13,28 @@ public class ReinforcementsTest {
     public void theFactionHoldingMorePostsDrainsTheOtherByTheDifference() {
         var tickets = new Reinforcements(50);
 
-        tickets.bleed(Map.of(Faction.KOLONIEN, 3L));
-        tickets.bleed(Map.of(Faction.KOLONIEN, 2L, Faction.HEGEMONIE, 1L));
-        tickets.bleed(Map.of(Faction.KOLONIEN, 1L, Faction.HEGEMONIE, 1L));
+        var kolonien = Optional.of(Faction.KOLONIEN);
+        var hegemonie = Optional.of(Faction.HEGEMONIE);
+        tickets.bleed(List.of(kolonien, kolonien, kolonien), post -> 1);
+        tickets.bleed(List.of(kolonien, kolonien, hegemonie), post -> 1);
+        tickets.bleed(List.of(kolonien, Optional.empty(), hegemonie), post -> 1);
 
         assertEquals(46, tickets.left(Faction.HEGEMONIE));
         assertEquals(50, tickets.left(Faction.KOLONIEN));
         assertEquals(Optional.of(Faction.KOLONIEN), tickets.leader());
+    }
+
+    @Test
+    public void aWeightedPostCountsForMoreAndCanTurnTheBleed() {
+        var tickets = new Reinforcements(50);
+        var owners = List.of(Optional.of(Faction.HEGEMONIE), Optional.of(Faction.KOLONIEN), Optional.of(Faction.HEGEMONIE));
+
+        tickets.bleed(owners, post -> post == 1 ? 3 : 1);
+        assertEquals(49, tickets.left(Faction.HEGEMONIE));
+        assertEquals(50, tickets.left(Faction.KOLONIEN));
+
+        tickets.bleed(owners, post -> 2);
+        assertEquals(48, tickets.left(Faction.KOLONIEN));
     }
 
     @Test

@@ -15,7 +15,7 @@ public record HeroConfig(int cost, int perFaction, Points points, Map<Hero, Doub
 
     public record Points(int kill, int capture, int neutralise) { }
 
-    public record Saber(double damage, double blockedShare, Color jedi, Color sith, Color white, int igniteTicks,
+    public record Saber(double damage, double blockedShare, Color jedi, Color sith, Color white, Color relic, int igniteTicks,
                         int humTicks, int leapCooldownSeconds, double leapForward, double leapUp) { }
 
     public record Push(double range, double angle, double strength, double up, double damage) { }
@@ -62,6 +62,7 @@ public record HeroConfig(int cost, int perFaction, Points points, Map<Hero, Doub
                 Map.copyOf(healthByHero),
                 new Saber(Math.max(0, saber.getDouble("damage", 8)), Math.clamp(saber.getDouble("blocked-share", 0.3), 0, 1),
                         color(colors, "jedi", 0x3D8BFF), color(colors, "sith", 0xFF2A2A), color(colors, "white", 0xF4F8FF),
+                        color(colors, "relic", 0xFFC24A),
                         Math.max(0, saber.getInt("ignite-ticks", 6)), Math.max(10, saber.getInt("hum-ticks", 40)),
                         Math.max(1, saber.getInt("leap-cooldown-seconds", 5)), saber.getDouble("leap-forward", 1.4),
                         saber.getDouble("leap-up", 0.7)),

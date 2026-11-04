@@ -8,6 +8,7 @@ See [Zombies setup](paper/zombies/README.md) to run the solo and cooperative sur
 See [Sternenfront](paper/sternenfront/README.md) for the sci-fi team shooter, its classes, posts and map.
 See [BlockcraftReplay](paper/replay/README.md) for match recording, playback controls, and recording limits.
 See [EnderGames](paper/endergames/README.md), [TTT](paper/ttt/README.md) and [SkyWars](paper/skywars/README.md) for those modes, after GommeHD's.
+See [Credits](CREDITS.md) for the authors and licences of the music, sounds, models, textures, maps, code and plugins.
 
 ## Layout
 
@@ -995,6 +996,11 @@ Everything the pack changes has a plain fallback, so a player without it sees va
   fonts. Label whitespace becomes spaces, and unsupported characters become `?` before the label is shortened.
   `MenuTileAssetsTest` checks the assets; `UiFontTest` verifies that composed card labels restore the text cursor
   using the fonts' actual glyph widths.
+- A menu with a fixed layout can draw section headings and frames over its panel: `UiFont.overlaid` prepends a
+  transparent glyph as large as the 6-row panel to the title, and `PackArt` draws the picture. It has no plain
+  fallback. Sternenfront's class and deploy menus use it, and their role cards show portraits from
+  `resourcepack/art/sternenfront`, rendered once from the class models at both tile sizes; `PackArt` only copies them
+  in, so a changed class model needs a new render.
 - The pack blanks the client's slot hover highlight (`container/slot_highlight_back` and `_front`), because it would
   mark one square of a card or toolbar button. The client has no per-screen switch, so this holds in every
   inventory; the tooltip is what shows the hovered item.

@@ -56,7 +56,6 @@ public final class Powers {
     private static final double BLAST_RADIUS = 3.5;
     private static final double BLAST_EDGE_SHARE = 1.0 / 3;
     private static final int BEAM_HEIGHT = 30;
-    private static final Color GRIP_COLOUR = Color.fromRGB(0x5B1A6E);
     private static final Color BEAM_COLOUR = Color.fromRGB(0xFF2020);
 
     private record Flight(Player thrower, Faction faction, Hero hero, ItemDisplay display, Location position,
@@ -232,7 +231,7 @@ public final class Powers {
                 ally.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, ticks, 0, false, false, true));
                 ally.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, ticks, 0, false, false, true));
                 ally.getWorld().spawnParticle(Particle.DUST, ally.getLocation().add(0, 1, 0), 8, .3, .5, .3, 0,
-                        new Particle.DustOptions(faction.bolt(), .7f));
+                        new Particle.DustOptions(faction.bolt(), 1.2f), true);
             }
         }
         SoundCue.RALLY.play(player.getLocation(), 2f);
@@ -293,6 +292,7 @@ public final class Powers {
         var next = position.clone().add(heading.clone().multiply(travelled));
         next.setYaw(flight.display().getLocation().getYaw() + SPIN_DEGREES);
         flight.display().teleport(next);
+        game.effects().saberTrail(position, next, sabers.colour(thrower, flight.hero()));
         for (var target : game.targets()) {
             if (!target.getWorld().equals(position.getWorld()) || !game.hittable(flight.faction(), target)
                     || flight.struck().contains(target.getUniqueId())
@@ -313,6 +313,9 @@ public final class Powers {
             sabers.relight(thrower, flight.hero());
             return null;
         }
+        if (wall != null) {
+            game.effects().saberStrike(thrower, wall, heading, sabers.colour(thrower, flight.hero()));
+        }
         return flight.move(next, heading, flight.out() + travelled, returning || wall != null);
     }
 
@@ -326,8 +329,7 @@ public final class Powers {
             victim.removePotionEffect(PotionEffectType.SLOWNESS);
             return true;
         }
-        victim.getWorld().spawnParticle(Particle.DUST, victim.getEyeLocation().subtract(0, 0.3, 0), 3, 0.2, 0.1, 0.2, 0,
-                new Particle.DustOptions(GRIP_COLOUR, 1.2f));
+        game.effects().grip(grip.gripper(), victim, tick);
         if ((grip.endsAt() - tick) % GRIP_PULSE_TICKS == 0) {
             game.strike(grip.gripper(), victim, grip.perPulse(), DamageType.MAGIC);
         }
@@ -356,8 +358,7 @@ public final class Powers {
         }
         player.setVelocity(velocity);
         var feet = player.getLocation();
-        player.getWorld().spawnParticle(Particle.FLAME, feet, 3, 0.15, 0, 0.15, 0.01);
-        player.getWorld().spawnParticle(Particle.SMOKE, feet, 2, 0.15, 0, 0.15, 0.01);
+        game.effects().exhaust(player);
         if (tick % JETPACK_SOUND_TICKS == 0) {
             SoundCue.JETPACK.play(feet, 0.6f);
         }
@@ -396,7 +397,7 @@ public final class Powers {
                     Placeholder.component("faction", game.messages().get("faction." + strike.faction.key() + ".name")),
                     Formatter.number("seconds", (orbital.delayTicks() - since + 19) / 20)));
             if (since % 5 == 0) {
-                var dust = new Particle.DustOptions(BEAM_COLOUR, 1.1f);
+                var dust = new Particle.DustOptions(BEAM_COLOUR, 1.4f);
                 for (var impact : strike.impacts) {
                     for (int step = 0; step < 24; step++) {
                         double angle = step * Math.PI * 2 / 24;
@@ -406,9 +407,9 @@ public final class Powers {
                 }
             }
             if (since % 2 == 0) {
-                var dust = new Particle.DustOptions(BEAM_COLOUR, 1.4f);
-                for (int height = 0; height < BEAM_HEIGHT; height++) {
-                    at.getWorld().spawnParticle(Particle.DUST, at.clone().add(0, height, 0), 1, 0.05, 0.3, 0.05, 0, dust);
+                var dust = new Particle.DustOptions(BEAM_COLOUR, 2f);
+                for (int height = 0; height < BEAM_HEIGHT; height += 2) {
+                    at.getWorld().spawnParticle(Particle.DUST, at.clone().add(0, height, 0), 1, 0.05, 0.3, 0.05, 0, dust, true);
                 }
             }
             return false;
@@ -426,8 +427,8 @@ public final class Powers {
     }
 
     private void blast(Strike strike, Location at) {
-        at.getWorld().spawnParticle(Particle.EXPLOSION, at, 3, 0.8, 0.5, 0.8, 0);
-        at.getWorld().spawnParticle(Particle.FLAME, at, 20, 1, 0.5, 1, 0.05);
+        game.effects().explosion(at, strike.faction, BLAST_RADIUS);
+        at.getWorld().spawnParticle(Particle.FLAME, at, 20, 1, 0.5, 1, 0.05, null, true);
         SoundCue.ORBITAL_IMPACT.play(at, 2.5f);
         for (var target : game.targets()) {
             if (!target.getWorld().equals(at.getWorld())) {

@@ -43,6 +43,7 @@ public final class Heroes {
     private final Sabers sabers;
     private final Powers powers;
     private final Map<UUID, BossBar> bars = new HashMap<>();
+    private Optional<Faction> comeback = Optional.empty();
 
     public Heroes(SternenfrontGame game, Plugin plugin, Messages messages, Loadouts loadouts, HeroConfig config) {
         this.game = game;
@@ -83,12 +84,24 @@ public final class Heroes {
     }
 
     public boolean affordable(Player player, Faction faction, Hero hero) {
-        return open(faction, hero) && points(player) >= config.cost();
+        return open(faction, hero) && points(player) >= cost(faction);
+    }
+
+    public int cost(Faction faction) {
+        return comeback.filter(faction::equals)
+                .map(ignored -> (int) Math.round(config.cost() * game.config().acts().comebackHeroShare()))
+                .orElse(config.cost());
+    }
+
+    /** For the rest of the round {@code faction}'s heroes cost less and it may field one more of them. */
+    public void comeback(Faction faction) {
+        comeback = Optional.of(faction);
+        roster.grantSlot(faction);
     }
 
     /** Makes the player the hero, spending their points unless the relic made them champion; false if it cannot be. */
     public boolean enlist(Player player, Faction faction, Hero hero) {
-        if (hero != Hero.CHAMPION && (!affordable(player, faction, hero) || !points.spend(player.getUniqueId(), config.cost()))) {
+        if (hero != Hero.CHAMPION && (!affordable(player, faction, hero) || !points.spend(player.getUniqueId(), cost(faction)))) {
             return false;
         }
         return roster.enlist(player.getUniqueId(), faction, hero);
@@ -140,7 +153,7 @@ public final class Heroes {
     public ItemStack card(Player viewer, Faction faction, Hero hero, boolean picked) {
         var lore = new ArrayList<>(messages.getLines("hero." + hero.key() + ".lore"));
         lore.add(Component.empty());
-        lore.add(messages.get("hero.cost", Formatter.number("cost", config.cost()), Formatter.number("points", points(viewer))));
+        lore.add(messages.get("hero.cost", Formatter.number("cost", cost(faction)), Formatter.number("points", points(viewer))));
         boolean affordable = affordable(viewer, faction, hero);
         lore.add(messages.get(picked ? "hero.picked" : !open(faction, hero) ? "hero.card-taken"
                 : affordable ? "hero.pick" : "hero.card-too-few"));
@@ -220,6 +233,7 @@ public final class Heroes {
         bars.values().forEach(this::hide);
         bars.clear();
         roster.clear();
+        comeback = Optional.empty();
         points.clear();
         sabers.clear();
         powers.clear();

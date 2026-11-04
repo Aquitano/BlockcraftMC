@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -78,6 +79,7 @@ public final class Posts {
 
     private final Messages messages;
     private final List<Post> posts;
+    private OptionalInt priority = OptionalInt.empty();
 
     public Posts(Messages messages, List<PostSite> sites, int captureSeconds) {
         this.messages = messages;
@@ -113,10 +115,16 @@ public final class Posts {
         return post.logic.owner().filter(faction::equals).isPresent() && post.presence.of(faction.enemy()) == 0;
     }
 
-    public Map<Faction, Long> held() {
-        var held = new EnumMap<Faction, Long>(Faction.class);
-        posts.forEach(post -> post.logic.owner().ifPresent(owner -> held.merge(owner, 1L, Long::sum)));
-        return held;
+    public List<Optional<Faction>> owners() {
+        return posts.stream().map(post -> post.logic.owner()).toList();
+    }
+
+    public boolean priority(int index) {
+        return priority.equals(OptionalInt.of(index));
+    }
+
+    public void priority(OptionalInt post) {
+        priority = post;
     }
 
     /** Puts every post into its neutral colours and shows the labels. */
@@ -204,7 +212,7 @@ public final class Posts {
         if (post.label != null && post.label.isValid()) {
             post.label.text(messages.get("post.label", resolvers));
         }
-        post.bar.name(messages.get("post.bar", resolvers)).progress((float) share).color(leaning.map(faction ->
+        post.bar.name(messages.get(priority(index) ? "post.bar-priority" : "post.bar", resolvers)).progress((float) share).color(leaning.map(faction ->
                 faction == Faction.KOLONIEN ? BossBar.Color.YELLOW : BossBar.Color.BLUE).orElse(BossBar.Color.WHITE));
     }
 
@@ -240,6 +248,7 @@ public final class Posts {
     }
 
     public void clear() {
+        priority = OptionalInt.empty();
         for (var post : posts) {
             post.viewers.stream().map(Bukkit::getPlayer).filter(Objects::nonNull).forEach(player -> player.hideBossBar(post.bar));
             post.viewers.clear();

@@ -54,7 +54,7 @@ public final class CombatListener implements Listener {
             return;
         }
         event.setUseItemInHand(Event.Result.DENY);
-        if (event.getHand() != EquipmentSlot.HAND || !event.getAction().isRightClick()) {
+        if (event.getHand() != EquipmentSlot.HAND || !event.getAction().isRightClick() || game.speeders().fire(player)) {
             return;
         }
         if (event.getClickedBlock() != null && game.battlefield().use(player, event.getClickedBlock())) {
@@ -86,7 +86,10 @@ public final class CombatListener implements Listener {
 
     @EventHandler
     public void onSwing(PlayerArmSwingEvent event) {
-        if (event.getHand() == EquipmentSlot.HAND && fighting(event.getPlayer()) && !event.getPlayer().isHandRaised()) {
+        if (event.getHand() != EquipmentSlot.HAND || !fighting(event.getPlayer()) || game.speeders().fire(event.getPlayer())) {
+            return;
+        }
+        if (!event.getPlayer().isHandRaised()) {
             game.swing(event.getPlayer());
         }
     }
@@ -98,7 +101,7 @@ public final class CombatListener implements Listener {
             return;
         }
         event.setCancelled(true);
-        if (event.getHand() == EquipmentSlot.HAND) {
+        if (event.getHand() == EquipmentSlot.HAND && !game.speeders().fire(player)) {
             use(player, player.getInventory().getItemInMainHand());
         }
     }

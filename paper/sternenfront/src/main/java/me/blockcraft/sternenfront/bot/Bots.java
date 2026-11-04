@@ -4,9 +4,11 @@ import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.ItemAttributeModifiers;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.pack.PackModel;
+import me.blockcraft.sternenfront.combat.Melee;
 import me.blockcraft.sternenfront.game.CombatClass;
 import me.blockcraft.sternenfront.game.Faction;
 import me.blockcraft.sternenfront.game.Heat;
+import me.blockcraft.sternenfront.game.Loadouts;
 import me.blockcraft.sternenfront.game.SternenfrontGame;
 import me.blockcraft.sternenfront.hero.Sabers;
 import me.blockcraft.sternenfront.hero.Hero;
@@ -46,6 +48,13 @@ public final class Bots implements Listener {
     private static final int ROUTE_TICKS = 20;
     private static final int OBJECTIVE_TICKS = 60;
     private static final double KEEP_DISTANCE = 8;
+    private static final double PEEK_REACH = 3;
+    private static final double WOUNDED_SHARE = 0.3;
+    /**
+     * A skeleton already stands 1.99 blocks. Any taller and the pathfinder plans three-high paths, so a larger class
+     * stays at that height: about what a player of that class measures, and it still fits the wreck's corridors.
+     */
+    private static final double TALLEST_BODY_SCALE = 1;
 
     private static final class Soldier {
         private final int number;
@@ -76,6 +85,7 @@ public final class Bots implements Listener {
         private String navigationResult = "not-requested";
         private Location destination;
         private long navigatedAt;
+        private long signatureAt;
 
         private Soldier(int number, Faction faction) {
             this.number = number;
@@ -93,6 +103,7 @@ public final class Bots implements Listener {
     private final List<Soldier> soldiers = new ArrayList<>();
     private final Map<UUID, Soldier> bodies = new HashMap<>();
     private final Map<UUID, Faction> identities = new HashMap<>();
+    private double sightShare = 1;
     private int nextNumber;
     private BotConfig.Tuning tuning;
 
@@ -110,6 +121,10 @@ public final class Bots implements Listener {
     public Optional<Vector> aim(Entity entity) {
         var soldier = bodies.get(entity.getUniqueId());
         return soldier == null ? Optional.empty() : Optional.of(soldier.aim.clone());
+    }
+
+    public Optional<CombatClass> role(Entity entity) {
+        return Optional.ofNullable(bodies.get(entity.getUniqueId())).map(soldier -> soldier.role);
     }
 
     public double heat(Entity entity) {
@@ -230,14 +245,15 @@ public final class Bots implements Listener {
             skeleton.customName(game.messages().get("bot.name",
                     Placeholder.styling("tint", soldier.faction.text()),
                     Placeholder.component("faction", game.messages().get("faction." + soldier.faction.key() + ".name")),
-                    Placeholder.component("role", game.messages().get("class." + soldier.role.key() + ".name")),
+                    Placeholder.component("role", game.messages().get(soldier.role.messageKey(soldier.faction) + ".name")),
                     Formatter.number("number", soldier.number)));
             skeleton.setCustomNameVisible(true);
-            double health = game.config().health(soldier.role);
-            skeleton.getAttribute(Attribute.MAX_HEALTH).setBaseValue(health);
-            skeleton.setHealth(health);
+            var stats = game.config().stats(soldier.faction, soldier.role);
+            skeleton.getAttribute(Attribute.MAX_HEALTH).setBaseValue(stats.health());
+            skeleton.setHealth(stats.health());
             skeleton.getAttribute(Attribute.FOLLOW_RANGE).setBaseValue(128);
             skeleton.getAttribute(Attribute.MOVEMENT_SPEED).setBaseValue(0.25);
+            Loadouts.fit(skeleton, stats.speed(), Math.min(stats.scale(), TALLEST_BODY_SCALE));
             skeleton.getAttribute(Attribute.STEP_HEIGHT).setBaseValue(config.stepHeight());
             var equipment = skeleton.getEquipment();
             equipment.setItemInMainHand(game.loadouts().blaster(soldier.role.blaster()));
@@ -276,6 +292,7 @@ public final class Bots implements Listener {
         soldier.navigationResult = "not-requested";
         soldier.destination = null;
         soldier.navigatedAt = tick;
+        soldier.signatureAt = tick;
         bodies.put(mob.getUniqueId(), soldier);
         identities.put(mob.getUniqueId(), soldier.faction);
     }
@@ -292,10 +309,11 @@ public final class Bots implements Listener {
         if (tick >= soldier.chooseAt || soldier.objective < 0) {
             choose(soldier, tick);
         }
+        double sight = config.range() * sightShare;
         var visible = game.combatants().stream()
                 .filter(other -> game.hittable(soldier.faction, other))
                 .filter(other -> here.getWorld().equals(other.getWorld()))
-                .filter(other -> here.distanceSquared(other.getLocation()) <= config.range() * config.range())
+                .filter(other -> here.distanceSquared(other.getLocation()) <= sight * sight)
                 .filter(other -> other.getUniqueId().equals(soldier.target) && tick <= soldier.seenUntil
                         || BotSight.sees(soldier.aim, other.getEyeLocation().toVector().subtract(mob.getEyeLocation().toVector()), config.visionAngle()))
                 .filter(mob::hasLineOfSight).toList();
@@ -345,9 +363,71 @@ public final class Bots implements Listener {
         if (soldier.role == CombatClass.MEDIC) {
             support(soldier, tick);
         }
+        if (soldier.role == CombatClass.HEAVY && tick >= soldier.signatureAt) {
+            signature(soldier, target, tick);
+        }
         if ((tick - soldier.number % THINK_TICKS) % ROUTE_TICKS == 0) {
             navigate(soldier, target, tick);
         }
+    }
+
+    private void signature(Soldier soldier, Optional<LivingEntity> target, long tick) {
+        var ability = soldier.role.abilities(soldier.faction).getLast();
+        boolean used = switch (ability) {
+            case SIEGE_MODE -> siege(soldier, target, tick);
+            case MINING_CHARGE -> throwCharge(soldier, target, tick);
+            default -> false;
+        };
+        if (used) {
+            soldier.signatureAt = tick + game.config().cooldownTicks(ability);
+        }
+    }
+
+    private boolean siege(Soldier soldier, Optional<LivingEntity> target, long tick) {
+        var mob = soldier.body;
+        var here = mob.getLocation();
+        double range = game.config().stats(soldier.role.blaster()).range();
+        boolean inRange = target.filter(enemy -> tick >= soldier.reactAt)
+                .filter(enemy -> here.distanceSquared(enemy.getLocation()) <= range * range).isPresent();
+        if (!HeavyTactics.sieges(holdingPost(soldier, here), inRange, soldier.heat.venting(tick), wounded(mob))
+                || !game.gadgets().siege(mob, soldier.faction, tick)) {
+            return false;
+        }
+        mob.getPathfinder().stopPathfinding();
+        return true;
+    }
+
+    private boolean holdingPost(Soldier soldier, Location here) {
+        if (soldier.objective < 0) {
+            return false;
+        }
+        var post = game.map().posts().get(soldier.objective);
+        var routes = post.routes().get(soldier.faction);
+        return post.contains(here) || game.posts().owner(soldier.objective).filter(soldier.faction::equals).isPresent()
+                && here.distanceSquared(routes.get(Math.floorMod(soldier.number, routes.size())).peek()) <= PEEK_REACH * PEEK_REACH;
+    }
+
+    private boolean throwCharge(Soldier soldier, Optional<LivingEntity> target, long tick) {
+        var mob = soldier.body;
+        var aimedAt = target.filter(enemy -> tick >= soldier.reactAt).map(LivingEntity::getLocation)
+                .or(() -> target.isEmpty() && tick <= soldier.seenUntil ? Optional.ofNullable(soldier.lastSeen) : Optional.empty());
+        if (aimedAt.isEmpty()) {
+            return false;
+        }
+        var at = aimedAt.get();
+        var charge = game.config().miningCharge();
+        boolean inPost = game.map().posts().stream().anyMatch(post -> post.contains(at));
+        if (!HeavyTactics.throwsCharge(inPost, mob.getLocation().distance(at), charge.radius())) {
+            return false;
+        }
+        soldier.protectedUntil = 0;
+        mob.swingMainHand();
+        return game.gadgets().throwCharge(mob, soldier.faction,
+                HeavyTactics.lob(at.toVector().subtract(mob.getEyeLocation().toVector()), charge.throwSpeed()), tuning.damageScale(), tick);
+    }
+
+    private static boolean wounded(Mob mob) {
+        return mob.getHealth() < mob.getAttribute(Attribute.MAX_HEALTH).getValue() * WOUNDED_SHARE;
     }
 
     private void choose(Soldier soldier, long tick) {
@@ -362,7 +442,8 @@ public final class Bots implements Listener {
                 here.distance(game.map().posts().get(index).center()) - (soldier.role == CombatClass.HEAVY
                         && game.posts().owner(index).filter(soldier.faction::equals).isPresent() ? 100 : 0),
                 (int) soldiers.stream().filter(other -> other != soldier && other.body != null
-                        && other.faction == soldier.faction && other.objective == index).count())).toList();
+                        && other.faction == soldier.faction && other.objective == index).count(),
+                game.posts().priority(index) ? game.config().acts().priorityPull() : 0)).toList();
         int next = Objectives.choose(choices).orElse(-1);
         if (next != soldier.objective) {
             soldier.waypoint = 0;
@@ -391,8 +472,11 @@ public final class Bots implements Listener {
         String activity = "idle";
         boolean seekingPatient = false;
         var patient = soldier.role == CombatClass.MEDIC ? patient(soldier) : Optional.<LivingEntity>empty();
-        boolean wounded = mob.getHealth() < mob.getAttribute(Attribute.MAX_HEALTH).getValue() * 0.3;
-        if (defending && !game.posts().safe(soldier.objective, soldier.faction)) {
+        boolean wounded = wounded(mob);
+        if (game.gadgets().sieging(mob)) {
+            activity = "siege";
+            destination = here;
+        } else if (defending && !game.posts().safe(soldier.objective, soldier.faction)) {
             activity = "contest-owned-post";
             destination = capturing ? here : route.capture();
         } else if (route != null && (soldier.heat.venting(tick) || wounded)
@@ -472,8 +556,9 @@ public final class Bots implements Listener {
             return;
         }
         var blaster = soldier.role.blaster();
-        var stats = game.config().stats(blaster);
-        var fired = soldier.heat.fire(tick, Math.max(tuning.shotTicks(), stats.cooldownTicks()), stats.heat());
+        var stats = game.firing(soldier.body, blaster);
+        int pace = tuning.shotTicks() * stats.cooldownTicks() / game.config().stats(blaster).cooldownTicks();
+        var fired = soldier.heat.fire(tick, Math.max(pace, stats.cooldownTicks()), stats.heat());
         if (fired != Heat.Shot.FIRED && fired != Heat.Shot.OVERHEATED) {
             return;
         }
@@ -566,11 +651,9 @@ public final class Bots implements Listener {
                 && game.factionOf(attacker).filter(faction -> faction != soldier.faction).isEmpty()) {
             event.setCancelled(true);
         }
-        if (event instanceof EntityDamageByEntityEvent hit && hit.getDamager() instanceof Player player
-                && (hit.getCause() == EntityDamageEvent.DamageCause.ENTITY_ATTACK
-                || hit.getCause() == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK)) {
+        if (event instanceof EntityDamageByEntityEvent hit && hit.getDamager() instanceof Player player && Melee.swing(hit)) {
             var held = player.getInventory().getItemInMainHand();
-            if (!game.onField(player) || Sabers.isSaber(held) && !Sabers.isLit(held)) {
+            if (!game.onField(player) || player.isInsideVehicle() || Sabers.isSaber(held) && !Sabers.isLit(held)) {
                 event.setCancelled(true);
             }
             if (game.heroOf(player).filter(Hero::bladed).isPresent()) {
@@ -582,9 +665,7 @@ public final class Bots implements Listener {
     @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
     public void onMelee(EntityDamageByEntityEvent event) {
         var soldier = bodies.get(event.getEntity().getUniqueId());
-        if (soldier != null && event.getDamager() instanceof Player player
-                && (event.getCause() == EntityDamageEvent.DamageCause.ENTITY_ATTACK
-                || event.getCause() == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) && game.onField(player)) {
+        if (soldier != null && event.getDamager() instanceof Player player && Melee.swing(event) && game.onField(player)) {
             game.endProtection(player);
             game.landed(player, soldier.body);
         }
@@ -614,7 +695,17 @@ public final class Bots implements Listener {
         }
     }
 
+    /** Every bot weighs its objective afresh, even one still on its way to a post it wanted before. */
+    public void reconsider() {
+        soldiers.forEach(soldier -> soldier.objective = -1);
+    }
+
+    public void sightShare(double share) {
+        sightShare = share;
+    }
+
     public void clear() {
+        sightShare = 1;
         soldiers.forEach(this::remove);
         soldiers.clear();
         bodies.clear();

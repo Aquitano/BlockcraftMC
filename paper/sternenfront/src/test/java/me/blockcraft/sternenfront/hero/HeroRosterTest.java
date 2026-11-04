@@ -33,6 +33,18 @@ public class HeroRosterTest {
     }
 
     @Test
+    public void aGrantedSlotLetsOnlyThatFactionFieldOneMore() {
+        var roster = new HeroRoster(1);
+        roster.enlist(UUID.randomUUID(), Faction.KOLONIEN, Hero.JEDI);
+        roster.enlist(UUID.randomUUID(), Faction.HEGEMONIE, Hero.SITH);
+
+        roster.grantSlot(Faction.KOLONIEN);
+
+        assertTrue(roster.open(Faction.KOLONIEN, Hero.BOUNTY_HUNTER));
+        assertFalse(roster.open(Faction.HEGEMONIE, Hero.COMMANDER));
+    }
+
+    @Test
     public void theSameHeroFightsOnlyOnceEvenWithMoreSlots() {
         var roster = new HeroRoster(2);
         roster.enlist(UUID.randomUUID(), Faction.HEGEMONIE, Hero.SITH);

@@ -12,7 +12,10 @@ import org.bukkit.entity.Interaction;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.util.Transformation;
 import org.bukkit.util.Vector;
+import org.joml.Quaternionf;
+import org.joml.Vector3f;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,18 +23,17 @@ import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * The bolts in flight. Each moves {@code speed} blocks a tick along a straight line, stops at the first wall or
- * enemy on the way and shows as a bright model in its faction's colour with a trail of the same colour, which a
- * client without the pack still sees. Teammates, deploying players and spectators are not in the way; a marked
- * target of the map is, and hears of it through a {@link TargetShotEvent}.
+ * enemy on the way and shows as a bright model in its faction's colour with a trail of the same colour. Teammates,
+ * deploying players and spectators are not in the way; a marked target of the map is, and hears of it through a
+ * {@link TargetShotEvent}.
  */
 public final class Bolts {
 
     private static final double HIT_SIZE = 0.1;
-    private static final double TRAIL_STEP = 0.5;
-    private static final float TRAIL_SIZE = 0.7f;
     private static final double VISUAL_LEAD = 0.8;
+    private static final double TRAIL_CLEAR_OF_EYES = 1.4;
+    private static final float MODEL_LENGTH = 1.22f;
     private static final double HEAD_BELOW_EYES = 0.25;
-    private static final int SPARKS = 6;
     private static final float IMPACT_VOLUME = 0.6f;
     private static final Display.Brightness LIT = new Display.Brightness(15, 15);
 
@@ -44,6 +46,8 @@ public final class Bolts {
         private final ItemDisplay display;
         private Location position;
         private double left;
+        private double nextDot = TRAIL_CLEAR_OF_EYES;
+        private int dots;
 
         private Bolt(LivingEntity shooter, Shot shot, Location position, Vector direction, double range, ItemDisplay display) {
             this.shooter = shooter;
@@ -84,11 +88,21 @@ public final class Bolts {
         launch(shooter, new Shot(faction, blaster, stats.damage(), stats.headshot(), stats.speed()), shooter.getEyeLocation(), direction, stats.range());
     }
 
+    /** One bolt from a muzzle other than the shooter's eyes, as a vehicle's gun has. */
+    public void fire(LivingEntity shooter, Faction faction, Blaster blaster, Blaster.Stats stats, Location muzzle, Vector direction) {
+        launch(shooter, new Shot(faction, blaster, stats.damage(), stats.headshot(), stats.speed()), muzzle, direction, stats.range());
+    }
+
     private void launch(LivingEntity shooter, Shot shot, Location from, Vector direction, double range) {
         launch(shooter, shot, from, direction, range, false);
     }
 
     private void launch(LivingEntity shooter, Shot shot, Location from, Vector direction, double range, boolean instant) {
+        if (instant) {
+            step(new Bolt(shooter, shot, from.clone(), direction.clone(), range, null));
+            return;
+        }
+        var look = game.effects().config().bolt();
         var shown = from.clone().add(direction.clone().multiply(VISUAL_LEAD)).setDirection(direction);
         var display = from.getWorld().spawn(shown, ItemDisplay.class, spawned -> {
             spawned.setPersistent(false);
@@ -96,14 +110,10 @@ public final class Bolts {
             spawned.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.NONE);
             spawned.setBrightness(LIT);
             spawned.setTeleportDuration(1);
+            spawned.setTransformation(new Transformation(new Vector3f(), new Quaternionf(),
+                    new Vector3f(look.width(), look.width(), look.length()), new Quaternionf().rotationY((float) Math.PI)));
         });
-        var bolt = new Bolt(shooter, shot, from.clone(), direction.clone(), range, display);
-        if (instant) {
-            step(bolt);
-            display.remove();
-        } else {
-            flying.add(bolt);
-        }
+        flying.add(new Bolt(shooter, shot, from.clone(), direction.clone(), range, display));
     }
 
     public void tick() {
@@ -131,13 +141,13 @@ public final class Bolts {
         trail(bolt, travelled);
         if (hit != null && hit.getHitEntity() instanceof LivingEntity victim) {
             var at = hit.getHitPosition().toLocation(world);
-            sparks(at, bolt.shot.faction());
+            game.effects().boltHit(at, bolt.shot.faction());
             strike(bolt, victim, at);
             return false;
         }
         if (hit != null && hit.getHitEntity() instanceof Interaction target) {
             var at = hit.getHitPosition().toLocation(world);
-            sparks(at, bolt.shot.faction());
+            game.effects().boltHit(at, bolt.shot.faction());
             SoundCue.BOLT_IMPACT.play(at, IMPACT_VOLUME);
             if (bolt.shooter instanceof Player player && player.isOnline()) {
                 Bukkit.getPluginManager().callEvent(new TargetShotEvent(target, player));
@@ -146,10 +156,14 @@ public final class Bolts {
         }
         if (wall != null || bolt.left - step <= 0) {
             var at = bolt.position.clone().add(bolt.direction.clone().multiply(travelled));
-            sparks(at, bolt.shot.faction());
             if (wall != null) {
-                game.gadgets().impact(wall.getHitBlock(), at, bolt.direction);
+                boolean shield = game.gadgets().impact(wall.getHitBlock(), at, bolt.direction);
+                var face = wall.getHitBlockFace();
+                var normal = face == null ? bolt.direction.clone().multiply(-1) : face.getDirection();
+                game.effects().boltOnWall(at, normal, wall.getHitBlock(), shield, bolt.shot.faction());
                 SoundCue.BOLT_IMPACT.play(at, IMPACT_VOLUME);
+            } else {
+                game.effects().boltFizzle(at);
             }
             return false;
         }
@@ -179,17 +193,25 @@ public final class Bolts {
         game.boltHit(bolt.shooter, bolt.shot.blaster(), victim, bolt.shot.damage() * (head ? bolt.shot.headshot() : 1), head);
     }
 
-    private static void trail(Bolt bolt, double length) {
-        var dust = new Particle.DustOptions(bolt.shot.faction().bolt(), TRAIL_SIZE);
-        for (double along = 0; along < length; along += TRAIL_STEP) {
-            var point = bolt.position.clone().add(bolt.direction.clone().multiply(along));
-            point.getWorld().spawnParticle(Particle.DUST, point, 1, 0, 0, 0, 0, dust);
+    /**
+     * Dots along what the bolt covered this tick, clear of the shooter's eyes where it starts. Only every few dots is
+     * forced, so a far player gets a sparse line and a near one a dense line without the near rate going to everyone.
+     */
+    private void trail(Bolt bolt, double length) {
+        var look = game.effects().config().bolt();
+        boolean hitscan = bolt.display == null;
+        if (hitscan && length > TRAIL_CLEAR_OF_EYES) {
+            var end = bolt.position.clone().add(bolt.direction.clone().multiply(length));
+            game.effects().tracer(bolt.shooter, bolt.direction, model(bolt.shot.faction()).item().build(), MODEL_LENGTH, end);
         }
-    }
-
-    private static void sparks(Location at, Faction faction) {
-        at.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, at, SPARKS, 0.1, 0.1, 0.1, 0.05);
-        at.getWorld().spawnParticle(Particle.DUST, at, SPARKS, 0.15, 0.15, 0.15, 0, new Particle.DustOptions(faction.bolt(), 1.0f));
+        double step = hitscan ? look.trailStep() * 2 : look.trailStep();
+        var dust = new Particle.DustOptions(bolt.shot.faction().bolt(), look.trailSize());
+        double along = bolt.nextDot;
+        for (; along < length; along += step) {
+            var point = bolt.position.clone().add(bolt.direction.clone().multiply(along));
+            point.getWorld().spawnParticle(Particle.DUST, point, 1, 0, 0, 0, 0, dust, bolt.dots++ % look.farEvery() == 0);
+        }
+        bolt.nextDot = along - length;
     }
 
     private static boolean isTarget(Entity entity) {

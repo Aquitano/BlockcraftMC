@@ -273,12 +273,25 @@ def sand_beast_roar(rng):
     return np.tanh(2.2 * unit(unit(throat) + 0.4 * breath)) * swell(seconds, 0.18, 0.7)
 
 
+def siege_lock(rng):
+    """A servo winding down, then the clamps biting into the ground."""
+    servo = 0.5 * unit(filtered(square(glide(340, 120, 0.35), 9), "lowpass", 1400)) * swell(0.35, 0.02, 0.1)
+    return layer(servo, (0.3, explosion(rng, 0.25, 0.5)), (0.34, 0.4 * beep(300, 280, 0.06)))
+
+
+def charge_arm(rng):
+    """Three rising clicks as the detonator takes its fuse."""
+    return layer(beep(900, 900, 0.05), (0.09, beep(1250, 1250, 0.05)), (0.2, beep(1700, 1700, 0.09)))
+
+
 SOUNDS = {
     "bolt.impact": (0.7, bolt_impact),
     "force.push": (0.85, force_push),
     "force.grip": (0.75, force_grip),
     "grenade.beep": (0.5, lambda rng: beep(1750, 1750, 0.09)),
     "grenade.explode": (0.85, lambda rng: explosion(rng, 1.4, 1.0)),
+    "charge.arm": (0.6, charge_arm),
+    "siege.lock": (0.8, siege_lock),
     "shield.up": (0.6, lambda rng: shield(rng, True)),
     "shield.down": (0.6, lambda rng: shield(rng, False)),
     "jetpack": (0.7, jetpack),

@@ -12,7 +12,9 @@ public enum Ability implements HotbarItem {
     ADRENALINE(PackModel.STERNENFRONT_ADRENALINE),
     SHIELD_WALL(PackModel.STERNENFRONT_SHIELD_EMITTER),
     JUMP_PACK(PackModel.STERNENFRONT_JUMP_PACK),
-    MED_STATION(PackModel.STERNENFRONT_MED_STATION);
+    MED_STATION(PackModel.STERNENFRONT_MED_STATION),
+    SIEGE_MODE(PackModel.STERNENFRONT_SIEGE_MODE),
+    MINING_CHARGE(PackModel.STERNENFRONT_MINING_CHARGE);
 
     private final PackModel model;
 
@@ -22,6 +24,11 @@ public enum Ability implements HotbarItem {
 
     public String key() {
         return name().toLowerCase(Locale.ROOT).replace('_', '-');
+    }
+
+    /** Where the faction's own name and lore of this ability live: {@code <key>.name} and {@code <key>.lore}. */
+    public String messageKey(Faction faction) {
+        return "ability." + faction.key() + "." + key();
     }
 
     public PackModel model() {

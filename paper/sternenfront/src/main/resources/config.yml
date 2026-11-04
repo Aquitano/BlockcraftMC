@@ -34,9 +34,28 @@ music:
   enabled: true
   volume: 0.35
   pressure-tickets: 35
+# The look of the round and how much of it clients get. live-effects is the hard cap on short-lived models alive at
+# once; every scorch.every-th wall hit leaves a mark, under their own cap, oldest first. A lit blade that reaches a
+# solid block leaves a saber-mark under that same cap, one per player every cooldown-ticks: its glow thins away over
+# glow-ticks, its scar stays ticks and fades over fade-ticks, tilted up to tilt-degrees off the cut's direction, scale
+# blocks long. A bolt's trail drops a dot
+# every trail-step blocks, and every far-every-th dot reaches players beyond 32 blocks and on reduced particle
+# settings. storm.density is the
+# sand grains per player every interval-ticks, storm.haze the dust specks of each of the storm's two layers every
+# haze-ticks; both grow by gust-boost at the height of a gust.
 presentation:
   effects: true
   holographic-posts: true
+  live-effects: 64
+  scorch: {marks: 32, every: 3, ticks: 300, fade-ticks: 40, scale: 0.7}
+  saber-mark: {cooldown-ticks: 8, glow-ticks: 30, ticks: 300, fade-ticks: 40, scale: 1.5, tilt-degrees: 20}
+  muzzle-flash: {ticks: 2, scale: 0.55, heavy-scale: 0.95}
+  bolt: {width: 2.2, length: 1.6, trail-size: 1.3, trail-step: 0.75, far-every: 3, impact-flash: 0.5}
+  explosion: {smoke-puffs: 3, smoke-ticks: 40, debris: 30}
+  damaged: {below: 0.35, interval-ticks: 12}
+  ambient: {interval-ticks: 10, range: 72}
+  assault: {ticks: 100, distance: 90, height: 45, scale: 7, clearance: 0}
+  storm: {density: 5, haze: 3, interval-ticks: 2, haze-ticks: 6, radius: 14, wind-speed: 0.8, gust-seconds: 7, gust-ticks: 40, gust-boost: 1.2}
 combat:
   precision-hitscan: true
   damage-indicator-ticks: 30
@@ -52,10 +71,39 @@ speeders:
   enabled: true
   health: 60
   respawn-seconds: 45
+  idle-return-seconds: 45
+  # Pads at each headquarters, one to three; each pad holds one single-seat craft.
+  per-faction: 2
+  # Blocks per tick. S brakes at braking down to a stop, then reverses at speed times reverse-share.
   speed: 0.65
   acceleration: 0.035
+  braking: 0.07
+  reverse-share: 0.35
+  # Full turn rate from full-turn-speed upwards, standstill-turn-share of it when stopped.
   turn-degrees: 4
-  idle-return-seconds: 45
+  standstill-turn-share: 0.15
+  full-turn-speed: 0.35
+  # Below this share of its health a craft shows the damaged model and trails smoke.
+  damaged-share: 0.5
+  # Held sprint: burns for ticks, refills in recharge-ticks, and after running dry restarts at restart-share.
+  boost: {speed: 0.95, ticks: 60, recharge-ticks: 200, restart-share: 0.25}
+  # Shares the rider's blaster heat. Muzzle offsets are blocks from the craft's feet along its nose and upwards.
+  cannon: {damage: 4, heat: 7, cooldown-ticks: 4, speed: 4.5, range: 90, muzzle-ahead: 1.6, muzzle-height: 0.6}
+  # Damage scales with speed; craft-damage is paid per target hit, each target once per cooldown.
+  ram: {minimum-speed: 0.4, damage-at-top-speed: 12, craft-damage: 3, knockback: 0.9, cooldown-ticks: 20}
+  explosion: {radius: 5, damage: 16}
+  # Model only: pivot-height is what it banks around, tail where the wake starts behind the craft's centre.
+  presentation:
+    model-height: 0.15
+    pivot-height: 0.4
+    tail: 1.2
+    bank-degrees: 18
+    surge-pitch-degrees: 5
+    climb-pitch-degrees: 14
+    bob-height: 0.04
+    bob-period-ticks: 50
+    smoothing: 0.25
+    teleport-ticks: 1
 battlefield:
   vent: {warning-seconds: 1, seconds: 6, cooldown-seconds: 20, damage: 2}
   bulkhead: {seconds: 8, cooldown-seconds: 20}
@@ -85,6 +133,24 @@ rewards:
 tickets:
   start: 150
   bleed-seconds: 5
+
+# A round runs through three acts, which only move forward. The assault starts when the lower faction's reinforcements
+# fall to assault-share of tickets.start or after assault-seconds; the last stand likewise. In the assault one post
+# counts priority-bleed times when bleeding, draws the bots with priority-pull (blocks of walking they accept for it),
+# and the trailing faction may land dropship-distance blocks beside it, also in the last stand. In the last stand every
+# post counts last-stand-bleed times, the trailing faction's heroes cost comeback-hero-share of heroes.cost, it fields
+# one more of them, and the storm shortens bots.sight-range to storm-sight-share.
+acts:
+  assault-share: 0.65
+  assault-seconds: 360
+  last-stand-share: 0.30
+  last-stand-seconds: 780
+  priority-bleed: 2
+  priority-pull: 60
+  dropship-distance: 22
+  last-stand-bleed: 2
+  comeback-hero-share: 0.5
+  storm-sight-share: 0.6
 
 # One player alone takes a neutral post in capture-seconds; a lead of two or three is two or three times as fast.
 posts:
@@ -130,12 +196,20 @@ heat:
   cool-per-tick: 3
   vent-ticks: 40
 
-# Each class's health; 20 is ten hearts.
+# Each class's body per faction, for players and bots: health (20 is ten hearts), speed times normal movement, scale
+# times normal size. A player is 1.8 blocks tall, so 1.1 still walks the wreck's two-high corridors; a bot's body is
+# 1.99 already and never grows past it, so the pathfinder keeps them too. Heroes and champions keep normal size.
 classes:
-  soldier: {health: 20}
-  heavy: {health: 30}
-  scout: {health: 16}
-  medic: {health: 20}
+  kolonien:
+    soldier: {health: 20, speed: 1, scale: 1}
+    heavy: {health: 30, speed: 1, scale: 1}
+    scout: {health: 16, speed: 1, scale: 1}
+    medic: {health: 20, speed: 1, scale: 1}
+  hegemonie:
+    soldier: {health: 18, speed: 1, scale: 1}
+    heavy: {health: 36, speed: 0.88, scale: 1.1}
+    scout: {health: 16, speed: 1, scale: 1}
+    medic: {health: 18, speed: 1, scale: 1}
 
 # Holding right click pulls the trigger every 4 ticks, so cooldown-ticks below 4 only help fast clickers. A pull fires
 # bolts, burst-ticks apart; heat is per pull. speed is blocks per tick, range in blocks, spread the largest sideways
@@ -149,15 +223,20 @@ blasters:
   twin-pistol: {damage: 3.5, headshot: 1.6, heat: 7, cooldown-ticks: 4, bolts: 2, burst-ticks: 2, spread: 0.008, speed: 4, range: 80}
   heavy-rifle: {damage: 6, headshot: 1.5, heat: 9, cooldown-ticks: 5, bolts: 1, burst-ticks: 0, spread: 0.01, speed: 4, range: 100}
 
-# Each ability's cooldown and what it does. A grenade explodes fuse-ticks after the throw and hurts enemies and its thrower in sight
-# within radius, damage at its centre and a third of it at the edge. The shield wall stands width by height panes,
-# distance blocks ahead, for seconds. The med station heals allies within radius for seconds.
+# Each ability's cooldown and what it does. A grenade or mining charge explodes fuse-ticks after the throw and hurts enemies
+# and its thrower in sight within radius, damage at its centre and a third of it at the edge. The shield wall stands
+# width by height panes, distance blocks ahead, for seconds. The med station heals allies within radius for seconds.
+# Siege mode roots the unit for seconds; its repeater then pulls every cooldown-ticks with bolts bolts and heat-scale of
+# the heat. Two bolts every 4 ticks is a third more bolts than the normal repeater: holding right click pulls no
+# faster than every 4 ticks, and three bolts would double the damage of a heavy that also has the most health.
 abilities:
   grenade: {cooldown-seconds: 15, fuse-ticks: 50, radius: 5, damage: 16, throw-speed: 1.1}
   adrenaline: {cooldown-seconds: 30, seconds: 5}
   shield-wall: {cooldown-seconds: 25, seconds: 8, width: 5, height: 3, distance: 2}
   jump-pack: {cooldown-seconds: 10, forward: 1.3, up: 0.9}
   med-station: {cooldown-seconds: 25, seconds: 10, radius: 4, heal-per-second: 2}
+  mining-charge: {cooldown-seconds: 25, fuse-ticks: 60, radius: 6, damage: 20, throw-speed: 0.9}
+  siege-mode: {cooldown-seconds: 30, seconds: 6, cooldown-ticks: 4, bolts: 2, heat-scale: 0.5}
 
 # The relic blade appears first-seconds into the round and again respawn-seconds after its champion falls. The
 # champion has health, the blade hits for damage, and right click leaps forward and up every leap-cooldown-seconds.
@@ -192,7 +271,8 @@ heroes:
     sith: 60
     commander: 50
   # A saber hits for damage with the sword's cooldown and ignites ignite-ticks after it is drawn. A sneaking saber
-  # hero takes blocked-share of a blade's hit. Colours are RGB hex; white is for whoever found every kyber crystal.
+  # hero takes blocked-share of a blade's hit. Colours are RGB hex; white is for whoever found every kyber crystal,
+  # relic is the marks of the relic blade.
   saber:
     damage: 8
     blocked-share: 0.3
@@ -201,7 +281,7 @@ heroes:
     leap-cooldown-seconds: 5
     leap-forward: 1.4
     leap-up: 0.7
-    colors: {jedi: "3D8BFF", sith: "FF2A2A", white: "F4F8FF"}
+    colors: {jedi: "3D8BFF", sith: "FF2A2A", white: "F4F8FF", relic: "FFC24A"}
   # range in blocks. force-push hits enemies within angle degrees ahead. The thrown saber flies range blocks out at
   # speed blocks per tick and back. force-grip holds for seconds and deals damage over that time. The jetpack thrusts
   # for seconds. The orbital strike falls delay-ticks after the beacon lands, blasts times within radius.

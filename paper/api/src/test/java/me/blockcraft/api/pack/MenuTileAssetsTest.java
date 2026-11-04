@@ -56,8 +56,8 @@ public class MenuTileAssetsTest {
                     assertEquals(shape.width(), image.getWidth());
                     assertEquals(shape.height(), image.getHeight());
                     assertEquals(shape.height(), bitmap.get("height").getAsInt());
-                    if (shape == MenuTile.Shape.LARGE && row == 0) {
-                        var icon = ImageIO.read(PACK.resolve("textures/item/" + tile.icon().key() + ".png").toFile());
+                    if (shape == MenuTile.Shape.LARGE && row == 0 && tile.icon().isPresent()) {
+                        var icon = ImageIO.read(PACK.resolve("textures/item/" + tile.icon().get().key() + ".png").toFile());
                         for (int y = 0; y < 16; y++) {
                             for (int x = 0; x < 16; x++) {
                                 if ((icon.getRGB(x, y) >>> 24) != 0) {

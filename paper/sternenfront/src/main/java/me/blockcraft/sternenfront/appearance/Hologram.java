@@ -1,6 +1,5 @@
 package me.blockcraft.sternenfront.appearance;
 
-import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.item.Items;
 import net.kyori.adventure.key.Key;
 import org.bukkit.Bukkit;
@@ -51,7 +50,7 @@ public final class Hologram implements AutoCloseable {
 
     public void refresh() {
         for (var player : Bukkit.getOnlinePlayers()) {
-            boolean show = player.getWorld().equals(origin.getWorld()) && BlockcraftApi.get().resourcePack().applied(player);
+            boolean show = player.getWorld().equals(origin.getWorld());
             if (show && viewers.add(player.getUniqueId())) {
                 parts.forEach(part -> player.showEntity(plugin, part));
             } else if (!show && viewers.remove(player.getUniqueId())) {

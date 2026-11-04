@@ -17,6 +17,21 @@ public final class UiFont {
 
     public static final Key KEY = Key.key("blockcraft", "ui");
 
+    /** A transparent picture as large as the 6-row panel, which a menu with a fixed layout draws on top of it. */
+    public enum Overlay {
+        STERNENFRONT_CLASS(''), STERNENFRONT_CLASS_WITH_BOTS(''), STERNENFRONT_DEPLOY('');
+
+        private final char glyph;
+
+        Overlay(char glyph) {
+            this.glyph = glyph;
+        }
+
+        char glyph() {
+            return glyph;
+        }
+    }
+
     /** The chest screen is 176 pixels wide and its title starts 8 pixels in; a glyph is followed by one pixel of spacing. */
     private static final int PANEL_WIDTH = 176;
     private static final int TITLE_X = 8;
@@ -40,9 +55,17 @@ public final class UiFont {
     }
 
     public static Component menuTitle(int rows, boolean toolbar, boolean cards, Component title) {
+        return screenWide(cards ? (char) (CARD_PANEL_BASE + rows) : panel(rows, toolbar), title);
+    }
+
+    /** {@code overlay}, then {@code title}; a {@code Menu} draws the panel and its tiles before the title it was given. */
+    public static Component overlaid(Overlay overlay, Component title) {
+        return screenWide(overlay.glyph(), title);
+    }
+
+    private static Component screenWide(char glyph, Component title) {
         return Component.text()
-                .append(Component.text(shift(-TITLE_X) + (cards ? (char) (CARD_PANEL_BASE + rows) : panel(rows, toolbar))
-                        + shift(TITLE_X - PANEL_WIDTH - GLYPH_SPACING))
+                .append(Component.text(shift(-TITLE_X) + glyph + shift(TITLE_X - PANEL_WIDTH - GLYPH_SPACING))
                         .font(KEY)
                         .color(NamedTextColor.WHITE))
                 .append(title)

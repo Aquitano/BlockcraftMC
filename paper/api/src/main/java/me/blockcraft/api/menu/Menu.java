@@ -62,7 +62,7 @@ public abstract class Menu implements InventoryHolder {
             return firstSlot + 1;
         }
 
-        boolean covers(int slot) {
+        public boolean covers(int slot) {
             return slot >= firstSlot && slot < firstSlot + 3;
         }
     }

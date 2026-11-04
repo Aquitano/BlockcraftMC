@@ -369,6 +369,14 @@ tiles:
   trails: "Spuren"
   tags: "Chat-Tags"
   lobbies: "Lobbys"
+  sternenfront_kolonien_soldier: "Milizionär"
+  sternenfront_kolonien_heavy: "Minenarb."
+  sternenfront_kolonien_scout: "Spurenleser"
+  sternenfront_kolonien_medic: "Sanitäter"
+  sternenfront_hegemonie_soldier: "Linie"
+  sternenfront_hegemonie_heavy: "Brecher"
+  sternenfront_hegemonie_scout: "Jäger"
+  sternenfront_hegemonie_medic: "Wartung"
 
 profile:
   advent: "<accent>Dein Adventskalender"

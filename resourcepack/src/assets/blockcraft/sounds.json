@@ -257,5 +257,15 @@
         "stream": true
       }
     ]
+  },
+  "sternenfront.charge.arm": {
+    "sounds": [
+      "blockcraft:sternenfront/charge_arm"
+    ]
+  },
+  "sternenfront.siege.lock": {
+    "sounds": [
+      "blockcraft:sternenfront/siege_lock"
+    ]
   }
 }

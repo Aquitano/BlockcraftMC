@@ -4,7 +4,9 @@ import me.blockcraft.api.game.CombatStyle;
 import me.blockcraft.sternenfront.game.Ability;
 import me.blockcraft.sternenfront.game.Blaster;
 import me.blockcraft.sternenfront.game.CombatClass;
+import me.blockcraft.sternenfront.game.Faction;
 import me.blockcraft.sternenfront.game.Heat;
+import me.blockcraft.sternenfront.game.RoundActs;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.MemoryConfiguration;
 
@@ -16,10 +18,17 @@ import java.util.function.Function;
 /** Sternenfront's own keys of its config.yml; the lobby's are {@link me.blockcraft.api.game.GameConfig}'s. */
 public record SternenfrontConfig(int playersPerTeam, int fullSeconds, int roundSeconds, Rewards rewards, int tickets,
                                  int bleedSeconds, int captureSeconds, Respawn respawn, double headquartersDamage,
-                                 Regen regen, Relic relic, Heat.Rules heat, Map<CombatClass, Double> health,
+                                 Regen regen, Relic relic, Heat.Rules heat, Map<Faction, Map<CombatClass, ClassStats>> classes,
                                  Map<Blaster, Blaster.Stats> blasters, Map<Ability, Integer> cooldownSeconds,
-                                 Grenade grenade, int adrenalineSeconds, Shield shield, JumpPack jumpPack,
-                                 MedStation medStation, CombatStyle combat) {
+                                 Grenade grenade, Grenade miningCharge, SiegeMode siegeMode, int adrenalineSeconds,
+                                 Shield shield, JumpPack jumpPack, MedStation medStation, CombatStyle combat,
+                                 RoundActs.Rules acts) {
+
+    private static final double MIN_SCALE = 0.5;
+    private static final double MAX_SCALE = 2;
+
+    /** A class's body on one faction: its health, {@code speed} times normal movement, {@code scale} times normal size. */
+    public record ClassStats(double health, double speed, double scale) { }
 
     public record Rewards(int kill, int capture, int champion, int win) { }
 
@@ -32,6 +41,15 @@ public record SternenfrontConfig(int playersPerTeam, int fullSeconds, int roundS
 
     public record Grenade(int fuseTicks, double radius, double damage, double throwSpeed) { }
 
+    /** For {@code seconds} the unit stands rooted, and its gun pulls every {@code cooldownTicks} with {@code bolts} bolts and {@code heatScale} of the heat. */
+    public record SiegeMode(int seconds, int cooldownTicks, int bolts, double heatScale) {
+
+        public Blaster.Stats apply(Blaster.Stats stats) {
+            return new Blaster.Stats(stats.damage(), stats.headshot(), stats.heat() * heatScale, cooldownTicks, bolts,
+                    stats.burstTicks(), stats.spread(), stats.speed(), stats.range());
+        }
+    }
+
     public record Shield(int seconds, int width, int height, int distance) { }
 
     public record JumpPack(double forward, double up) { }
@@ -40,11 +58,13 @@ public record SternenfrontConfig(int playersPerTeam, int fullSeconds, int roundS
 
     public static SternenfrontConfig from(ConfigurationSection config) {
         var abilities = section(config, "abilities");
-        var grenade = section(abilities, "grenade");
+        var classes = section(config, "classes");
+        var siege = section(abilities, "siege-mode");
         var shield = section(abilities, "shield-wall");
         var jump = section(abilities, "jump-pack");
         var med = section(abilities, "med-station");
         var relic = section(config, "relic");
+        var acts = section(config, "acts");
         return new SternenfrontConfig(
                 Math.max(1, config.getInt("teams.players-per-team", 6)),
                 Math.max(1, config.getInt("countdown.full", 20)),
@@ -64,19 +84,38 @@ public record SternenfrontConfig(int playersPerTeam, int fullSeconds, int roundS
                         relic.getDouble("leap-up", 0.7)),
                 new Heat.Rules(Math.max(0, config.getInt("heat.cool-delay-ticks", 8)), Math.max(0.1, config.getDouble("heat.cool-per-tick", 3)),
                         Math.max(1, config.getInt("heat.vent-ticks", 40))),
-                byKey(CombatClass.class, combatClass ->
-                        Math.max(1, config.getDouble("classes." + combatClass.key() + ".health", 20))),
+                byKey(Faction.class, faction -> byKey(CombatClass.class, combatClass ->
+                        classStats(section(section(classes, faction.key()), combatClass.key())))),
                 byKey(Blaster.class, blaster -> blaster(section(section(config, "blasters"), blaster.key()))),
                 byKey(Ability.class, ability -> Math.max(1, section(abilities, ability.key()).getInt("cooldown-seconds", 20))),
-                new Grenade(Math.max(1, grenade.getInt("fuse-ticks", 50)), Math.max(1, grenade.getDouble("radius", 5)),
-                        Math.max(0, grenade.getDouble("damage", 16)), grenade.getDouble("throw-speed", 1.1)),
+                grenade(section(abilities, "grenade"), new Grenade(50, 5, 16, 1.1)),
+                grenade(section(abilities, "mining-charge"), new Grenade(60, 6, 20, 0.9)),
+                new SiegeMode(Math.max(1, siege.getInt("seconds", 6)), Math.max(1, siege.getInt("cooldown-ticks", 4)),
+                        Math.max(1, siege.getInt("bolts", 2)), Math.max(0, siege.getDouble("heat-scale", 0.5))),
                 Math.max(1, section(abilities, "adrenaline").getInt("seconds", 5)),
                 new Shield(Math.max(1, shield.getInt("seconds", 8)), Math.max(1, shield.getInt("width", 5)),
                         Math.max(1, shield.getInt("height", 3)), Math.max(1, shield.getInt("distance", 2))),
                 new JumpPack(jump.getDouble("forward", 1.3), jump.getDouble("up", 0.9)),
                 new MedStation(Math.max(1, med.getInt("seconds", 10)), Math.max(1, med.getDouble("radius", 4)),
                         Math.max(0, med.getDouble("heal-per-second", 2))),
-                CombatStyle.from(config));
+                CombatStyle.from(config),
+                new RoundActs.Rules(Math.clamp(acts.getDouble("assault-share", 0.65), 0, 1), Math.max(0, acts.getInt("assault-seconds", 360)),
+                        Math.clamp(acts.getDouble("last-stand-share", 0.30), 0, 1), Math.max(0, acts.getInt("last-stand-seconds", 780)),
+                        Math.max(1, acts.getInt("priority-bleed", 2)), Math.max(1, acts.getInt("last-stand-bleed", 2)),
+                        Math.clamp(acts.getDouble("comeback-hero-share", 0.5), 0, 1), Math.clamp(acts.getDouble("storm-sight-share", 0.6), 0, 1),
+                        Math.max(0, acts.getDouble("priority-pull", 60)), Math.max(1, acts.getInt("dropship-distance", 22))));
+    }
+
+    private static ClassStats classStats(ConfigurationSection section) {
+        return new ClassStats(Math.max(1, section.getDouble("health", 20)), Math.max(0.1, section.getDouble("speed", 1)),
+                Math.clamp(section.getDouble("scale", 1), MIN_SCALE, MAX_SCALE));
+    }
+
+    private static Grenade grenade(ConfigurationSection section, Grenade fallback) {
+        return new Grenade(Math.max(1, section.getInt("fuse-ticks", fallback.fuseTicks())),
+                Math.max(1, section.getDouble("radius", fallback.radius())),
+                Math.max(0, section.getDouble("damage", fallback.damage())),
+                section.getDouble("throw-speed", fallback.throwSpeed()));
     }
 
     private static Blaster.Stats blaster(ConfigurationSection section) {
@@ -92,8 +131,8 @@ public record SternenfrontConfig(int playersPerTeam, int fullSeconds, int roundS
                 Math.max(1, section.getDouble("range", 80)));
     }
 
-    public double health(CombatClass combatClass) {
-        return health.get(combatClass);
+    public ClassStats stats(Faction faction, CombatClass combatClass) {
+        return classes.get(faction).get(combatClass);
     }
 
     public Blaster.Stats stats(Blaster blaster) {

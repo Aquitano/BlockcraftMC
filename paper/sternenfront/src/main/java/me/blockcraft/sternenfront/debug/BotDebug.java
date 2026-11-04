@@ -6,7 +6,6 @@ import com.mojang.brigadier.Command;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
-import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.sternenfront.appearance.Droids;
 import me.blockcraft.sternenfront.appearance.RigSnapshot;
@@ -51,7 +50,7 @@ public final class BotDebug implements Listener, AutoCloseable {
     private record Frame(long serverTick, long gameTick, long nanoTime, double averageTickMillis,
                          BotSnapshot bot, RigSnapshot rig, List<Block> blocks, List<Nearby> nearby) { }
     private record Request(UUID reporter, UUID actor, String file, String started, long markedTick,
-                           Point observer, float yaw, float pitch, boolean packApplied, String world,
+                           Point observer, float yaw, float pitch, String world,
                            String server, String plugin, String java, String config) { }
     private record Report(int format, Request request, String finished, String reason, List<Frame> frames) { }
     private record Written(String file, String error) { }
@@ -175,7 +174,7 @@ public final class BotDebug implements Listener, AutoCloseable {
         var at = player.getLocation();
         String file = "npc-" + Instant.now().toEpochMilli() + "-" + UUID.randomUUID() + ".json";
         requests.put(body.getUniqueId(), new Request(player.getUniqueId(), body.getUniqueId(), file, Instant.now().toString(),
-                tick, Point.of(at), at.getYaw(), at.getPitch(), BlockcraftApi.get().resourcePack().applied(player),
+                tick, Point.of(at), at.getYaw(), at.getPitch(),
                 body.getWorld().getKey().asString(), Bukkit.getVersion(), game.plugin().getPluginMeta().getVersion(),
                 System.getProperty("java.version"), game.plugin().getConfig().saveToString()));
         cooldowns.put(player.getUniqueId(), tick + cooldownTicks);
@@ -231,7 +230,7 @@ public final class BotDebug implements Listener, AutoCloseable {
     }
 
     private void save(Request request, String reason, List<Frame> frames, boolean synchronous) {
-        var report = new Report(1, request, Instant.now().toString(), reason, frames);
+        var report = new Report(2, request, Instant.now().toString(), reason, frames);
         var file = game.plugin().getDataFolder().toPath().resolve("debug").resolve(request.file());
         if (synchronous) {
             completed(request, write(file, report));

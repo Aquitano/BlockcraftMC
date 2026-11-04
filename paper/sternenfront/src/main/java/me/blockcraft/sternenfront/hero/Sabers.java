@@ -107,6 +107,9 @@ public final class Sabers {
     }
 
     public Color colour(Player owner, Hero hero) {
+        if (hero == Hero.CHAMPION) {
+            return config.relic();
+        }
         if (white.contains(owner.getUniqueId())) {
             return config.white();
         }

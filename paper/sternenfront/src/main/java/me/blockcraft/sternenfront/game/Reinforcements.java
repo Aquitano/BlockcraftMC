@@ -2,8 +2,11 @@ package me.blockcraft.sternenfront.game;
 
 import java.util.Arrays;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.IntUnaryOperator;
+import java.util.stream.IntStream;
 
 /**
  * Each faction's reinforcements: every death costs one, and the faction holding more posts drains the other by the
@@ -27,13 +30,18 @@ public final class Reinforcements {
         tickets.computeIfPresent(faction, (ignored, left) -> Math.max(0, left - amount));
     }
 
-    /** {@code held} counts the posts each faction holds; one it lacks holds none. */
-    public void bleed(Map<Faction, Long> held) {
-        long kolonien = held.getOrDefault(Faction.KOLONIEN, 0L);
-        long hegemonie = held.getOrDefault(Faction.HEGEMONIE, 0L);
+    /** {@code owners} holds each post's owner; {@code weight} says what the post at an index counts for. */
+    public void bleed(List<Optional<Faction>> owners, IntUnaryOperator weight) {
+        int kolonien = weighed(owners, weight, Faction.KOLONIEN);
+        int hegemonie = weighed(owners, weight, Faction.HEGEMONIE);
         if (kolonien != hegemonie) {
-            lose(kolonien > hegemonie ? Faction.HEGEMONIE : Faction.KOLONIEN, (int) Math.abs(kolonien - hegemonie));
+            lose(kolonien > hegemonie ? Faction.HEGEMONIE : Faction.KOLONIEN, Math.abs(kolonien - hegemonie));
         }
+    }
+
+    private static int weighed(List<Optional<Faction>> owners, IntUnaryOperator weight, Faction faction) {
+        return IntStream.range(0, owners.size())
+                .filter(index -> owners.get(index).filter(faction::equals).isPresent()).map(weight).sum();
     }
 
     public Optional<Faction> defeated() {

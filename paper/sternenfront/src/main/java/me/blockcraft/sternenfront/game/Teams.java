@@ -97,7 +97,8 @@ public final class Teams {
         return assigned;
     }
 
-    private Faction smallest() {
+    /** The faction {@link #assignRest} would seat the next player on; ties go to the first. */
+    public Faction smallest() {
         return Arrays.stream(Faction.values()).min(Comparator.comparingInt(this::size)).orElseThrow();
     }
 }

@@ -3,6 +3,7 @@ package me.blockcraft.sternenfront.listener;
 import me.blockcraft.api.game.GamePhase;
 import me.blockcraft.api.menu.Menu;
 import me.blockcraft.api.world.BuildMode;
+import me.blockcraft.sternenfront.combat.Melee;
 import me.blockcraft.sternenfront.game.SternenfrontGame;
 import me.blockcraft.sternenfront.hero.Sabers;
 import me.blockcraft.sternenfront.hero.Hero;
@@ -64,19 +65,13 @@ public final class ArenaListener implements Listener {
             return;
         }
         var held = attacker.getInventory().getItemInMainHand();
-        if ((event.getCause() == EntityDamageEvent.DamageCause.ENTITY_ATTACK
-                || event.getCause() == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK)
-                && game.heroOf(attacker).filter(Hero::bladed).isPresent()) {
+        boolean swing = Melee.swing(event);
+        if (swing && (attacker.isInsideVehicle() || game.choosing(attacker)
+                || game.heroOf(attacker).filter(Hero::bladed).isPresent() || Sabers.isSaber(held) && !Sabers.isLit(held))) {
             event.setCancelled(true);
             return;
         }
-        if ((event.getCause() == EntityDamageEvent.DamageCause.ENTITY_ATTACK
-                || event.getCause() == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK)
-                && Sabers.isSaber(held) && !Sabers.isLit(held)) {
-            event.setCancelled(true);
-            return;
-        }
-        if (game.allies(attacker, victim) || game.isProtected(victim) || game.choosing(attacker)) {
+        if (game.allies(attacker, victim) || game.isProtected(victim)) {
             event.setCancelled(true);
         }
     }

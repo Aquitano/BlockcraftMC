@@ -35,6 +35,7 @@ import me.blockcraft.sternenfront.bot.Bots;
 import me.blockcraft.sternenfront.combat.Combat;
 import me.blockcraft.sternenfront.combat.BattleEffects;
 import me.blockcraft.sternenfront.combat.CombatConfig;
+import me.blockcraft.sternenfront.combat.Spectacle;
 import me.blockcraft.sternenfront.vehicle.Speeders;
 import me.blockcraft.sternenfront.vehicle.SpeederConfig;
 import me.blockcraft.sternenfront.config.FeelConfig;
@@ -56,6 +57,7 @@ import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
@@ -97,7 +99,7 @@ import java.util.concurrent.ThreadLocalRandom;
  * pick a faction and a class in the lobby; in the round every death costs a ticket, the faction holding more posts
  * drains the other, and the dead watch their killer, then choose a class, a hero if their battle points pay for
  * one, and a spawn while they watch from above. The relic blade appears after a while and makes whoever takes it
- * the champion until they fall.
+ * the champion until they fall. Falling tickets and passing time carry the round through its three acts.
  */
 public final class SternenfrontGame implements RoundConnections.Seating {
 
@@ -107,6 +109,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     private static final float SHOT_VOLUME = 2f;
     private static final float MARKER_VOLUME = 0.6f;
     private static final long KILLER_FOCUS_TICKS = 2;
+    private static final int DROPSHIP_SPREAD = 2;
     private static final NamespacedKey SCOPE = new NamespacedKey("sternenfront", "scope");
     private static final Title.Times BANNER = Title.Times.times(Duration.ofMillis(250), Duration.ofSeconds(2), Duration.ofMillis(500));
     private static final Title.Times MARKER = Title.Times.times(Duration.ZERO, Duration.ofMillis(200), Duration.ofMillis(150));
@@ -129,6 +132,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     private final Posts posts;
     private final Bolts bolts;
     private final BattleEffects effects;
+    private final Spectacle spectacle;
     private final BattleMusic music;
     private final Bots bots;
     private final BotConfig botConfig;
@@ -154,6 +158,11 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     private final Set<UUID> strikesReady = new HashSet<>();
     private final List<Burst> bursts = new ArrayList<>();
     private Reinforcements reinforcements;
+    private RoundActs acts;
+    /** From the assault on, who trails and which post they land next to. */
+    private Optional<PriorityPost> front = Optional.empty();
+    /** What the sidebar counts: bot kills too, which the round summary's stats and coins leave out on purpose. */
+    private final Map<UUID, Integer> fieldKills = new HashMap<>();
     private Relic relic;
     private BukkitTask loop;
     private long tick;
@@ -187,6 +196,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         this.posts = new Posts(messages, map.posts(), config.captureSeconds());
         this.bolts = new Bolts(this);
         this.effects = new BattleEffects(this);
+        this.spectacle = new Spectacle(this);
         this.music = new BattleMusic(this);
         this.bots = new Bots(this, botConfig);
         this.gadgets = new Gadgets(this);
@@ -198,6 +208,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         this.support = new SupportRewards(this);
         this.streaks = new KillStreaks(feel.orbitalStreak());
         this.reinforcements = new Reinforcements(config.tickets());
+        this.acts = new RoundActs(config.acts(), config.tickets());
         this.relic = new Relic(this, map.relic(), Long.MAX_VALUE);
         round.playArea(map.world(), map.playArea());
     }
@@ -246,8 +257,16 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         return gadgets;
     }
 
+    public Optional<PriorityPost> front() {
+        return front;
+    }
+
     public Battlefield battlefield() {
         return battlefield;
+    }
+
+    public Speeders speeders() {
+        return speeders;
     }
 
     public SupportRewards support() {
@@ -305,6 +324,11 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         return entity instanceof Player player ? factionOf(player) : bots.faction(entity).or(() -> speeders.faction(entity));
     }
 
+    /** The player's faction, or before they picked one, the one that would seat them now. */
+    public Faction factionOrSmallest(Player player) {
+        return factionOf(player).orElseGet(teams::smallest);
+    }
+
     public boolean allies(Player one, Player other) {
         return teams.allies(one.getUniqueId(), other.getUniqueId());
     }
@@ -315,6 +339,10 @@ public final class SternenfrontGame implements RoundConnections.Seating {
 
     public Fighter fighter(Player player) {
         return fighters.computeIfAbsent(player.getUniqueId(), ignored -> new Fighter(config.heat()));
+    }
+
+    public CombatClass combatClassOf(LivingEntity actor) {
+        return actor instanceof Player player ? fighter(player).combatClass() : bots.role(actor).orElse(CombatClass.SOLDIER);
     }
 
     /** In the running round, alive and deployed, as opposed to choosing a spawn or watching. */
@@ -409,6 +437,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         combat.forget(player);
         support.forget(player);
         strikesReady.remove(player.getUniqueId());
+        gadgets.release(player);
         player.leaveVehicle();
         fallen(player, Optional.empty());
         unscope(player);
@@ -478,7 +507,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     }
 
     private void openClassMenu(Player player) {
-        new ClassMenu(messages, loadouts, fighter(player).combatClass(), this::chooseClass,
+        new ClassMenu(messages, loadouts, factionOrSmallest(player), factionOf(player).isPresent(), () -> fighter(player).combatClass(), this::chooseClass,
                 bots.enabled() ? Optional.of(this::openBotDifficulty) : Optional.empty()).open(player);
     }
 
@@ -515,7 +544,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         fighter.combatClass(combatClass);
         fighter.choosing().ifPresent(choosing -> fighter.choosing(Optional.of(choosing.pick(Optional.empty()))));
         Sounds.EQUIP.play(player);
-        BlockcraftApi.get().notifications().feedback(player, messages.get("class.chosen", className(combatClass)));
+        BlockcraftApi.get().notifications().feedback(player, messages.get("class.chosen", className(factionOrSmallest(player), combatClass)));
         Optional.ofNullable(deployMenus.get(player.getUniqueId())).ifPresent(DeployMenu::refresh);
         dirty = true;
         if (phase() == GamePhase.LOBBY) {
@@ -557,7 +586,10 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         }
         round.enter(GamePhase.INGAME);
         tick = 0;
+        fieldKills.clear();
         reinforcements = new Reinforcements(config.tickets());
+        acts = new RoundActs(config.acts(), config.tickets());
+        front = Optional.empty();
         relic = new Relic(this, map.relic(), config.relic().firstSeconds() * TICKS_PER_SECOND);
         posts.show();
         posts.holograms(plugin);
@@ -603,8 +635,9 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     private void tickRound() {
         tick++;
         effects.tick(tick);
+        spectacle.tick(tick);
         posts.tick(tick);
-        music.tick(tick, secondsLeft, Math.min(reinforcements.left(Faction.KOLONIEN), reinforcements.left(Faction.HEGEMONIE)));
+        playMusic();
         bots.tick(tick);
         bolts.tick();
         gadgets.tick(tick);
@@ -632,6 +665,14 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         }
     }
 
+    private void playMusic() {
+        music.tick(tick, secondsLeft, lowestTickets(), acts.act() == RoundActs.Act.LAST_STAND);
+    }
+
+    private int lowestTickets() {
+        return Math.min(reinforcements.left(Faction.KOLONIEN), reinforcements.left(Faction.HEGEMONIE));
+    }
+
     private void second() {
         var field = new LinkedHashMap<LivingEntity, Faction>();
         combatants().forEach(entity -> factionOf(entity).ifPresent(faction -> field.put(entity, faction)));
@@ -644,7 +685,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
                     Sounds.CORE_ALARM.play(player);
                 }));
         if ((tick / TICKS_PER_SECOND) % config.bleedSeconds() == 0) {
-            reinforcements.bleed(posts.held());
+            reinforcements.bleed(posts.owners(), post -> acts.bleedWeight(posts.priority(post)));
             dirty = true;
         }
         field.forEach(this::guardHeadquarters);
@@ -654,10 +695,53 @@ public final class SternenfrontGame implements RoundConnections.Seating {
             endRound(reinforcements.defeated().map(Faction::enemy));
             return;
         }
+        acts.second(lowestTickets(), tick / TICKS_PER_SECOND).ifPresent(this::actBegins);
         if (dirty) {
             dirty = false;
             refreshAll();
         }
+    }
+
+    private void actBegins(RoundActs.Act act) {
+        switch (act) {
+            case SKIRMISH -> { }
+            case ASSAULT -> assaultBegins();
+            case LAST_STAND -> lastStandBegins();
+        }
+        dirty = true;
+    }
+
+    private void assaultBegins() {
+        var picked = PriorityPost.pick(reinforcements, posts.owners());
+        front = Optional.of(picked);
+        posts.priority(OptionalInt.of(picked.post()));
+        bots.reconsider();
+        spectacle.assaultBegins(picked.trailing(), dropshipSpot(picked, 0, 0));
+        announceAct("assault", posts.name(picked.post()), factionName(picked.trailing()),
+                Formatter.number("weight", config.acts().priorityBleed()));
+    }
+
+    /** The last stand aims its comeback at whoever trails now, which need not be who trailed when the assault began. */
+    private void lastStandBegins() {
+        var trailing = PriorityPost.trailing(reinforcements, posts.owners());
+        boolean turned = front.filter(assault -> assault.trailing() != trailing).isPresent();
+        front = front.map(assault -> new PriorityPost(trailing, assault.post()));
+        if (turned) {
+            front.ifPresent(assault -> spectacle.assaultBegins(trailing, dropshipSpot(assault, 0, 0)));
+        }
+        posts.priority(OptionalInt.empty());
+        heroes.comeback(trailing);
+        bots.sightShare(config.acts().stormSightShare());
+        playMusic();
+        spectacle.lastStandBegins();
+        announceAct("last-stand", factionName(trailing), Formatter.number("weight", config.acts().lastStandBleed()),
+                Formatter.number("cost", heroes.cost(trailing)));
+    }
+
+    private void announceAct(String act, TagResolver... details) {
+        var title = Title.title(messages.get("act." + act + ".title"), messages.get("act." + act + ".subtitle", details), BANNER);
+        Bukkit.getOnlinePlayers().forEach(player -> BlockcraftApi.get().notifications().important(player, title));
+        Bukkit.broadcast(messages.get("act." + act + ".chat", details));
     }
 
     private void postChanged(Posts.Event event) {
@@ -740,6 +824,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         reinforcements.lose(faction, 1);
         killer.filter(this::onField).filter(player -> factionOf(player).filter(own -> own != faction).isPresent()).ifPresent(player -> {
             heroes.earn(player, points);
+            fieldKills.merge(player.getUniqueId(), 1, Integer::sum);
             mark(player, "kill", SoundCue.KILL);
         });
         dirty = true;
@@ -753,17 +838,9 @@ public final class SternenfrontGame implements RoundConnections.Seating {
             return;
         }
         var blaster = held.get();
-        var stats = config.stats(blaster);
-        switch (fighter.heat().fire(tick, stats.cooldownTicks(), stats.heat())) {
-            case TOO_SOON -> {
-                return;
-            }
-            case VENTING -> {
-                BlockcraftApi.get().notifications().feedback(player, messages.get("blaster.venting"));
-                return;
-            }
-            case OVERHEATED -> overheated(player);
-            case FIRED -> { }
+        var stats = firing(player, blaster);
+        if (!heatAllows(player, fighter, stats)) {
+            return;
         }
         fighter.endProtection();
         Bukkit.getPluginManager().callEvent(new ShotEvent(player));
@@ -772,6 +849,41 @@ public final class SternenfrontGame implements RoundConnections.Seating {
             bursts.add(new Burst(player, blaster, tick + (long) bolt * stats.burstTicks()));
         }
         player.setExp(fighter.heat().level());
+    }
+
+    /** The blaster as it fires in {@code shooter}'s hands now, which siege mode changes. */
+    public Blaster.Stats firing(LivingEntity shooter, Blaster blaster) {
+        var stats = config.stats(blaster);
+        return gadgets.sieging(shooter) ? config.siegeMode().apply(stats) : stats;
+    }
+
+    /** A vehicle's forward gun shares the rider's heat and experience bar, so boarding cannot skip a vent. */
+    public boolean fireCannon(Player rider, Faction faction, Blaster.Stats stats, Location muzzle, Vector nose) {
+        var fighter = fighters.get(rider.getUniqueId());
+        if (fighter == null || !onField(rider) || !heatAllows(rider, fighter, stats)) {
+            return false;
+        }
+        fighter.endProtection();
+        Bukkit.getPluginManager().callEvent(new ShotEvent(rider));
+        bolts.fire(rider, faction, Blaster.SPEEDER_CANNON, stats, muzzle, nose);
+        SoundCue.shot(Blaster.SPEEDER_CANNON).play(muzzle, SHOT_VOLUME);
+        rider.setExp(fighter.heat().level());
+        return true;
+    }
+
+    private boolean heatAllows(Player player, Fighter fighter, Blaster.Stats stats) {
+        return switch (fighter.heat().fire(tick, stats.cooldownTicks(), stats.heat())) {
+            case TOO_SOON -> false;
+            case VENTING -> {
+                BlockcraftApi.get().notifications().feedback(player, messages.get("blaster.venting"));
+                yield false;
+            }
+            case OVERHEATED -> {
+                overheated(player);
+                yield true;
+            }
+            case FIRED -> true;
+        };
     }
 
     private void shoot(Player player, Faction faction, Blaster blaster) {
@@ -818,7 +930,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
             }
             return;
         }
-        var abilities = fighter.combatClass().abilities();
+        var abilities = factionOf(player).map(fighter.combatClass()::abilities).orElse(List.of());
         if (index < abilities.size()) {
             useAbility(player, abilities.get(index));
         }
@@ -869,11 +981,11 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         var fighter = fighters.get(player.getUniqueId());
         var faction = factionOf(player);
         if (fighter == null || faction.isEmpty() || !onField(player) || player.isInsideVehicle() || fighter.hero().isPresent()
-                || !fighter.combatClass().abilities().contains(ability)) {
+                || !fighter.combatClass().abilities(faction.get()).contains(ability)) {
             return;
         }
         if (player.hasCooldown(ability.material())) {
-            cooling(player, messages.get("ability." + ability.key() + ".name"), player.getCooldown(ability.material()));
+            cooling(player, messages.get(ability.messageKey(faction.get()) + ".name"), player.getCooldown(ability.material()));
             return;
         }
         if (!gadgets.use(player, fighter, faction.get(), ability, tick)) {
@@ -881,7 +993,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
             Sounds.MENU_DENY.play(player);
             return;
         }
-        if (ability == Ability.GRENADE) {
+        if (ability == Ability.GRENADE || ability == Ability.MINING_CHARGE) {
             fighter.endProtection();
         }
         player.setCooldown(ability.material(), config.cooldownTicks(ability));
@@ -929,7 +1041,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         return victim.getHealth() + victim.getAbsorptionAmount() < before;
     }
 
-    public void blast(Player thrower, LivingEntity victim, double damage, Location at) {
+    public void blast(LivingEntity thrower, LivingEntity victim, double damage, Location at) {
         if (isProtected(victim)) {
             return;
         }
@@ -968,7 +1080,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         }
     }
 
-    /** The hit marker under the crosshair, drawn with the pack's glyph or a plain symbol, and its sound. */
+    /** The hit marker under the crosshair and its sound. */
     private void mark(Player shooter, String kind, SoundCue sound) {
         var title = Title.title(Component.empty(), messages.get("hit." + kind, GameSidebar.icons(shooter)), MARKER);
         BlockcraftApi.get().notifications().reward(shooter, title, null);
@@ -1006,6 +1118,8 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         if (faction.isEmpty() || !heroes.enlist(player, faction.get(), Hero.CHAMPION)) {
             return;
         }
+        gadgets.release(player);
+        Loadouts.natural(player);
         fighter(player).hero(Optional.of(Hero.CHAMPION));
         heroes.equip(player, faction.get(), Hero.CHAMPION, tick);
         Bukkit.broadcast(messages.get("relic.taken", Placeholder.unparsed("player", player.getName()), factionName(faction.get())));
@@ -1069,6 +1183,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         support.killed(victim, death.killer().filter(killer -> !killer.equals(victim)), heroes.config().points().kill());
         death.killer().filter(killer -> !killer.equals(victim)).ifPresent(killer -> {
             summary.awardKill(killer, victim, Defeat.RESPAWN);
+            fieldKills.merge(killer.getUniqueId(), 1, Integer::sum);
             heroes.earn(killer, heroes.config().points().kill());
             mark(killer, "kill", SoundCue.KILL);
             killers.put(victim.getUniqueId(), killer.getUniqueId());
@@ -1190,6 +1305,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         return switch (spawn) {
             case Spawn.Headquarters ignored -> true;
             case Spawn.Post post -> post.index() < posts.size() && posts.safe(post.index(), faction);
+            case Spawn.Dropship ignored -> front.filter(assault -> assault.trailing() == faction).isPresent();
         };
     }
 
@@ -1239,11 +1355,11 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         if (!spawn.equals(wanted)) {
             player.sendMessage(messages.get("deploy.lost"));
         }
-        var spots = switch (spawn) {
-            case Spawn.Headquarters ignored -> map.headquarters().get(faction.get()).spawns();
-            case Spawn.Post post -> map.posts().get(post.index()).spawns();
+        var spot = switch (spawn) {
+            case Spawn.Headquarters ignored -> farthestFromEnemies(map.headquarters().get(faction.get()).spawns(), faction.get());
+            case Spawn.Post post -> farthestFromEnemies(map.posts().get(post.index()).spawns(), faction.get());
+            case Spawn.Dropship ignored -> leastCrowded(dropshipSpots(front.orElseThrow()));
         };
-        var spot = farthestFromEnemies(spots, faction.get());
         var fighter = fighter(player);
         var picked = fighter.choosing().flatMap(Fighter.Choosing::hero);
         var hero = picked.filter(chosen -> heroes.enlist(player, faction.get(), chosen));
@@ -1271,8 +1387,8 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         Sounds.TELEPORT.play(player);
         var abilities = hero.map(chosen -> chosen.abilities().stream()
                 .map(ability -> messages.get("hero.ability." + ability.key() + ".name")).toList())
-                .orElseGet(() -> fighter.combatClass().abilities().stream()
-                        .map(ability -> messages.get("ability." + ability.key() + ".name")).toList());
+                .orElseGet(() -> fighter.combatClass().abilities(faction.get()).stream()
+                        .map(ability -> messages.get(ability.messageKey(faction.get()) + ".name")).toList());
         player.sendMessage(messages.get("deploy.controls",
                 Placeholder.component("first", abilities.isEmpty() ? messages.get("deploy.no-ability") : abilities.getFirst()),
                 Placeholder.component("second", abilities.size() < 2 ? messages.get("deploy.no-ability") : abilities.get(1))));
@@ -1291,13 +1407,52 @@ public final class SternenfrontGame implements RoundConnections.Seating {
                 .orElseThrow().clone();
     }
 
+    /** The spots lie so close together that the one farthest from an enemy stays the same, which would stack a crowd. */
+    private Location leastCrowded(List<Location> spots) {
+        var field = combatants();
+        return spots.stream().max(Comparator.comparingDouble(spot -> nearest(spot, field))).orElseThrow().clone();
+    }
+
+    private List<Location> dropshipSpots(PriorityPost assault) {
+        var spots = new ArrayList<Location>();
+        for (int across = -DROPSHIP_SPREAD; across <= DROPSHIP_SPREAD; across += DROPSHIP_SPREAD) {
+            for (int along = -DROPSHIP_SPREAD; along <= DROPSHIP_SPREAD; along += DROPSHIP_SPREAD) {
+                spots.add(dropshipSpot(assault, across, along));
+            }
+        }
+        return spots;
+    }
+
+    /** On the ground on the trailing faction's side of the post, looking at it. */
+    private Location dropshipSpot(PriorityPost assault, int across, int along) {
+        var post = map.posts().get(assault.post()).center();
+        int distance = config.acts().dropshipDistance();
+        int x = post.getBlockX() + (assault.trailing() == Faction.KOLONIEN ? -distance : distance) + across;
+        int z = post.getBlockZ() + along;
+        var spot = new Location(map.world(), x + 0.5, standingHeight(x, z, post.getY()), z + 0.5);
+        return spot.setDirection(post.toVector().subtract(spot.toVector()).setY(0));
+    }
+
+    /** Above the highest solid block; barriers only fence the map's cliffs and hidden places in. */
+    private int standingHeight(int x, int z, double fallback) {
+        for (int y = (int) map.playArea().getMaxY() - 1; y >= map.playArea().getMinY(); y--) {
+            var type = map.world().getBlockAt(x, y, z).getType();
+            if (type.isSolid() && type != Material.BARRIER) {
+                return y + 1;
+            }
+        }
+        return (int) fallback;
+    }
+
     private static double nearest(Location spot, List<LivingEntity> players) {
         return players.stream().map(LivingEntity::getLocation).filter(at -> at.getWorld().equals(spot.getWorld()))
                 .mapToDouble(at -> at.distanceSquared(spot)).min().orElse(Double.MAX_VALUE);
     }
 
-    /** Back to normal: seen by everyone, hurtable, on foot. */
+    /** Back to normal: seen by everyone, hurtable, on foot, at their own size and pace. */
     private void reveal(Player player) {
+        gadgets.release(player);
+        Loadouts.natural(player);
         player.setInvulnerable(false);
         player.removePotionEffect(PotionEffectType.INVISIBILITY);
         player.setFlying(false);
@@ -1357,6 +1512,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         bursts.clear();
         bolts.clear();
         effects.clear();
+        spectacle.clear();
         music.clear();
         bots.clear();
         combat.clear();
@@ -1392,23 +1548,26 @@ public final class SternenfrontGame implements RoundConnections.Seating {
                     new GameSidebar.Section(messages.get("scoreboard.faction", icons), GameSidebar.value(factionOf(player)
                             .map(this::factionDisplay).orElseGet(() -> messages.get("scoreboard.no-faction")))),
                     new GameSidebar.Section(messages.get("scoreboard.class", icons),
-                            GameSidebar.value(messages.get("class." + Optional.ofNullable(fighters.get(player.getUniqueId()))
-                                    .map(Fighter::combatClass).orElse(CombatClass.SOLDIER).key() + ".name")))));
+                            GameSidebar.value(messages.get(Optional.ofNullable(fighters.get(player.getUniqueId()))
+                                    .map(Fighter::combatClass).orElse(CombatClass.SOLDIER).messageKey(factionOrSmallest(player)) + ".name")))));
             case INGAME -> {
                 var tickets = Arrays.stream(Faction.values()).map(faction -> messages.get("scoreboard.tickets-line",
                         factionName(faction), Formatter.number("tickets", reinforcements.left(faction)))).toList();
-                var postLines = posts.indices().stream().map(index -> messages.get(posts.contested(index)
-                                ? "scoreboard.post-contested" : "scoreboard.post", posts.name(index),
-                        Placeholder.styling("tint", posts.owner(index).map(Faction::text)
-                                .orElse(NamedTextColor.WHITE)))).toList();
+                var postLines = posts.indices().stream().map(this::postLine).toList();
                 sidebar.round(player, config.capacity(), secondsLeft, mapName, List.of(
                         new GameSidebar.Section(messages.get("scoreboard.tickets", icons), tickets),
                         new GameSidebar.Section(messages.get("scoreboard.posts", icons), postLines),
                         new GameSidebar.Section(messages.get("scoreboard.kills", icons), List.of(
-                                GameSidebar.value(Component.text(summary.kills(player))), battleLine(player)))));
+                                GameSidebar.value(Component.text(fieldKills.getOrDefault(player.getUniqueId(), 0))), battleLine(player)))));
             }
             case ENDING -> sidebar.end(player, winner.map(this::factionDisplay).stream().toList());
         }
+    }
+
+    private Component postLine(int index) {
+        var line = messages.get(posts.contested(index) ? "scoreboard.post-contested" : "scoreboard.post", posts.name(index),
+                Placeholder.styling("tint", posts.owner(index).map(Faction::text).orElse(NamedTextColor.WHITE)));
+        return posts.priority(index) ? messages.get("scoreboard.post-priority", Placeholder.component("line", line)) : line;
     }
 
     /** The player's battle points towards a hero, or the hero they fight as. */
@@ -1418,7 +1577,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
             return GameSidebar.value(messages.get("hero.sidebar.hero", Placeholder.component("hero", heroes.name(hero.get()))));
         }
         int points = heroes.points(player);
-        int cost = heroes.config().cost();
+        int cost = factionOf(player).map(heroes::cost).orElse(heroes.config().cost());
         return GameSidebar.value(messages.get(points >= cost ? "hero.sidebar.ready" : "hero.sidebar.points",
                 Formatter.number("points", points), Formatter.number("cost", cost)));
     }
@@ -1467,7 +1626,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         return Placeholder.component("faction", factionDisplay(faction));
     }
 
-    private TagResolver className(CombatClass combatClass) {
-        return Placeholder.component("class", messages.get("class." + combatClass.key() + ".name"));
+    private TagResolver className(Faction faction, CombatClass combatClass) {
+        return Placeholder.component("class", messages.get(combatClass.messageKey(faction) + ".name"));
     }
 }

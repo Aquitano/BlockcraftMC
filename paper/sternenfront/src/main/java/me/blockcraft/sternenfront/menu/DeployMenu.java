@@ -4,6 +4,8 @@ import me.blockcraft.api.item.Items;
 import me.blockcraft.api.menu.Menu;
 import me.blockcraft.api.pack.MenuIcon;
 import me.blockcraft.api.pack.MenuState;
+import me.blockcraft.api.pack.MenuTile;
+import me.blockcraft.api.pack.UiFont;
 import me.blockcraft.sternenfront.game.CombatClass;
 import me.blockcraft.sternenfront.game.Faction;
 import me.blockcraft.sternenfront.game.Fighter;
@@ -22,28 +24,39 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * What a dead player chooses while they watch from above: the class they deploy as, in the upper row, their faction's
- * heroes below it, and where, in the lower: the headquarters and every post their faction holds without an enemy in
- * it. The menu redraws every second, so a post lost meanwhile locks and the wait counts down.
+ * What a dead player chooses while they watch from above: the role they deploy as, on the same cards as the class menu,
+ * their faction's heroes below them, and where in the last row: the headquarters, every post their faction holds
+ * without an enemy in it and, from the assault on, the trailing faction's landing. The status sits in the toolbar. The
+ * menu redraws every second, so a post lost meanwhile locks and the wait counts down.
  */
 public final class DeployMenu extends Menu {
 
-    private static final int ROWS = 5;
-    private static final int STATUS_SLOT = 4;
-    private static final List<Integer> HERO_SLOTS = List.of(21, 23);
-    private static final int HEADQUARTERS_SLOT = 29;
-    private static final int FIRST_POST_SLOT = 31;
+    private static final int ROWS = 6;
+    private static final List<Integer> HERO_SLOTS = List.of(40, 41);
+    private static final int DROPSHIP_SLOT = 53;
     private static final long TICKS_PER_SECOND = 20;
 
     private final SternenfrontGame game;
     private final Player viewer;
+    private ItemStack status;
 
     public DeployMenu(SternenfrontGame game, Player viewer) {
-        super(ROWS, game.messages().get("deploy.title"));
+        super(ROWS, UiFont.overlaid(UiFont.Overlay.STERNENFRONT_DEPLOY, game.messages().get("deploy.title")));
         this.game = game;
         this.viewer = viewer;
-        closeButton();
+        closeButton(ToolbarButton.LEFT);
+        game.factionOf(viewer).ifPresent(faction -> {
+            var classes = CombatClass.values();
+            for (int index = 0; index < classes.length; index++) {
+                tile(ClassMenu.SLOTS.get(index), ClassMenu.tileOf(faction, classes[index]), MenuTile.Shape.WIDE, null);
+            }
+        });
         refresh();
+    }
+
+    /** The posts end next to the landing's slot and the headquarters stands before them, however many the map has. */
+    private int firstPostSlot() {
+        return DROPSHIP_SLOT - game.posts().size();
     }
 
     public void refresh() {
@@ -56,15 +69,19 @@ public final class DeployMenu extends Menu {
         var chosen = fighter.choosing().flatMap(Fighter.Choosing::chosen);
         var picked = fighter.choosing().flatMap(Fighter.Choosing::hero);
         long wait = game.waitTicks(viewer);
-        var status = wait > 0
+        var line = wait > 0
                 ? messages.get("deploy.status-waiting", Formatter.number("seconds", (wait + TICKS_PER_SECOND - 1) / TICKS_PER_SECOND))
                 : messages.get("deploy.status-ready");
-        info(STATUS_SLOT, MenuIcon.DEPLOY.item().name(status).lore(messages.getLines("deploy.status-lore")).build());
+        var shown = MenuIcon.DEPLOY.item().name(line).lore(messages.getLines("deploy.status-lore")).build();
+        if (!shown.equals(status)) {
+            status = shown;
+            toolbar(ToolbarButton.MIDDLE, shown, ignored -> { });
+        }
         var classes = CombatClass.values();
         for (int index = 0; index < classes.length; index++) {
             var combatClass = classes[index];
             boolean selected = picked.isEmpty() && fighter.combatClass() == combatClass;
-            set(ClassMenu.SLOTS.get(index), game.loadouts().card(combatClass, selected,
+            set(ClassMenu.SLOTS.get(index), game.loadouts().card(faction.get(), combatClass, selected,
                     List.of(messages.get(selected ? "class.selected" : "class.select"))));
         }
         var heroes = Hero.of(faction.get());
@@ -72,7 +89,7 @@ public final class DeployMenu extends Menu {
             var hero = heroes.get(index);
             set(HERO_SLOTS.get(index), game.heroes().card(viewer, faction.get(), hero, picked.filter(hero::equals).isPresent()));
         }
-        set(HEADQUARTERS_SLOT, spawn(faction.get(), new Spawn.Headquarters(), chosen,
+        set(firstPostSlot() - 1, spawn(faction.get(), new Spawn.Headquarters(), chosen,
                 Material.valueOf(faction.get().blocks().name() + "_BANNER"), messages.get("deploy.headquarters"), List.of()));
         var posts = game.posts();
         for (int index = 0; index < posts.size(); index++) {
@@ -80,12 +97,14 @@ public final class DeployMenu extends Menu {
             var banner = Material.valueOf(owner.map(Faction::blocks).orElse(Faction.NEUTRAL).name() + "_BANNER");
             var why = owner.isEmpty() ? "deploy.post-neutral"
                     : owner.get() != faction.get() ? "deploy.post-enemy" : "deploy.post-contested";
-            set(FIRST_POST_SLOT + index, spawn(faction.get(), new Spawn.Post(index), chosen, banner,
+            set(firstPostSlot() + index, spawn(faction.get(), new Spawn.Post(index), chosen, banner,
                     messages.get("deploy.post", posts.name(index)), List.of(messages.get(why))));
         }
+        game.front().ifPresent(front -> set(DROPSHIP_SLOT, spawn(faction.get(), new Spawn.Dropship(), chosen, Material.FIREWORK_ROCKET,
+                messages.get("deploy.dropship", posts.name(front.post())), List.of(messages.get("deploy.dropship-locked")))));
     }
 
-    private ItemStack spawn(Faction faction, Spawn spawn, Optional<Spawn> chosen, Material banner, Component name,
+    private ItemStack spawn(Faction faction, Spawn spawn, Optional<Spawn> chosen, Material icon, Component name,
                             List<Component> unavailable) {
         var messages = game.messages();
         boolean available = game.available(faction, spawn);
@@ -98,12 +117,17 @@ public final class DeployMenu extends Menu {
         } else {
             lore.add(messages.get("deploy.choose"));
         }
-        var item = Items.of(banner).name(name).lore(lore).hideAttributes()
+        var item = Items.of(icon).name(name).lore(lore).hideAttributes()
                 .state(available ? (selected ? MenuState.ACTIVE : MenuState.AVAILABLE) : MenuState.LOCKED);
         if (selected) {
             item.glow();
         }
         return item.build();
+    }
+
+    @Override
+    protected boolean isEnabled(Player player, int slot, InventoryClickEvent event) {
+        return !ToolbarButton.MIDDLE.covers(slot);
     }
 
     @Override
@@ -119,10 +143,12 @@ public final class DeployMenu extends Menu {
             game.chooseHero(player, heroes.get(heroIndex));
             return;
         }
-        if (slot == HEADQUARTERS_SLOT) {
+        if (slot == firstPostSlot() - 1) {
             game.choose(player, new Spawn.Headquarters());
-        } else if (slot >= FIRST_POST_SLOT && slot < FIRST_POST_SLOT + game.posts().size()) {
-            game.choose(player, new Spawn.Post(slot - FIRST_POST_SLOT));
+        } else if (slot >= firstPostSlot() && slot < DROPSHIP_SLOT) {
+            game.choose(player, new Spawn.Post(slot - firstPostSlot()));
+        } else if (slot == DROPSHIP_SLOT) {
+            game.choose(player, new Spawn.Dropship());
         }
     }
 }

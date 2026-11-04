@@ -63,7 +63,7 @@ public final class Combat {
     }
 
     public void damaged(Player player, Location source) {
-        if (source != null && source.getWorld().equals(player.getWorld())) {
+        if (source != null && player.getWorld().equals(source.getWorld())) {
             var state = state(player);
             state.hurtFrom = source.clone();
             state.hurtUntil = game.tick() + config.damageIndicatorTicks();
@@ -196,6 +196,19 @@ public final class Combat {
             var point = direction.clone().rotateAroundY(Math.toRadians(step * config.meleeAngle() / 5)).multiply(config.meleeRange() * 0.65);
             player.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, eye.clone().add(point), 1, 0, 0.1, 0, 0);
         }
+        if (targets.isEmpty()) {
+            var wall = eye.getWorld().rayTraceBlocks(eye, direction, config.meleeRange(), FluidCollisionMode.NEVER, true);
+            if (wall != null) {
+                game.effects().saberStrike(player, wall, sweep(eye),
+                        game.heroes().sabers().colour(player, game.heroOf(player).orElseThrow()));
+            }
+        }
+    }
+
+    /** A swing crosses the view from side to side, whichever way the player looks up or down. */
+    private static Vector sweep(Location eye) {
+        double yaw = Math.toRadians(eye.getYaw());
+        return new Vector(Math.cos(yaw), 0, Math.sin(yaw));
     }
 
     private static boolean visible(Player player, LivingEntity target) {

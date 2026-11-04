@@ -47,6 +47,14 @@ public class UiFontTest {
         }
     }
 
+    @Test
+    public void overlaysKeepTheCursorInPlace() throws IOException {
+        var fonts = Map.of(UiFont.KEY, fontAdvances("ui"));
+        for (var overlay : UiFont.Overlay.values()) {
+            assertEquals(overlay.name(), 0, width(UiFont.overlaid(overlay, Component.empty()), null, fonts));
+        }
+    }
+
     private static int width(Component component, Key inherited, Map<Key, Map<Integer, Integer>> fonts) {
         Key font = component.font() == null ? inherited : component.font();
         int width = 0;

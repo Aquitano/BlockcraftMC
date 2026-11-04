@@ -1,6 +1,7 @@
 package me.blockcraft.api.pack;
 
 import java.util.Locale;
+import java.util.Optional;
 import java.util.stream.IntStream;
 
 public enum MenuTile {
@@ -27,7 +28,15 @@ public enum MenuTile {
     GADGETS(MenuIcon.GADGETS),
     TRAILS(MenuIcon.TRAILS),
     TAGS(MenuIcon.CHAT_TAGS),
-    LOBBIES(MenuIcon.LOBBIES);
+    LOBBIES(MenuIcon.LOBBIES),
+    STERNENFRONT_KOLONIEN_SOLDIER,
+    STERNENFRONT_KOLONIEN_HEAVY,
+    STERNENFRONT_KOLONIEN_SCOUT,
+    STERNENFRONT_KOLONIEN_MEDIC,
+    STERNENFRONT_HEGEMONIE_SOLDIER,
+    STERNENFRONT_HEGEMONIE_HEAVY,
+    STERNENFRONT_HEGEMONIE_SCOUT,
+    STERNENFRONT_HEGEMONIE_MEDIC;
 
     public enum Shape {
         WIDE(4, 1, 0xE400), LARGE(3, 2, 0xE600);
@@ -85,13 +94,18 @@ public enum MenuTile {
         }
     }
 
-    private final MenuIcon icon;
+    private final Optional<MenuIcon> icon;
 
-    MenuTile(MenuIcon icon) {
-        this.icon = icon;
+    /** A portrait fills the whole picture, so no icon sits on it. */
+    MenuTile() {
+        this.icon = Optional.empty();
     }
 
-    public MenuIcon icon() {
+    MenuTile(MenuIcon icon) {
+        this.icon = Optional.of(icon);
+    }
+
+    public Optional<MenuIcon> icon() {
         return icon;
     }
 
