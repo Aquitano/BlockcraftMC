@@ -1,0 +1,35 @@
+{
+  "model": {
+    "type": "minecraft:select",
+    "property": "minecraft:custom_model_data",
+    "index": 0,
+    "cases": [
+      {
+        "when": "blockcraft:sternenfront/twin_pistol",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/sternenfront/twin_pistol"
+        }
+      },
+      {
+        "when": "blockcraft:sternenfront/twin_pistol_firing",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/sternenfront/twin_pistol_firing"
+        }
+      },
+      {
+        "when": "blockcraft:zombies/flamethrower",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/zombies/flamethrower"
+        }
+      }
+    ],
+    "fallback": {
+      "type": "minecraft:model",
+      "model": "minecraft:item/golden_hoe"
+    }
+  },
+  "hand_animation_on_swap": false
+}

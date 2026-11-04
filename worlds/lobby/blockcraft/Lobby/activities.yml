@@ -1,0 +1,536 @@
+cookie-clicker:
+  ==: org.bukkit.Location
+  world: world
+  x: -950.0
+  y: 24.0
+  z: 1585.0
+  yaw: 90.0
+  pitch: 0.0
+parkour-start:
+  ==: org.bukkit.Location
+  world: world
+  x: -666.5
+  y: 8.0
+  z: 1601.5
+  yaw: 0.0
+  pitch: 0.0
+parkour-finish:
+  ==: org.bukkit.Location
+  world: world
+  x: -716.5
+  y: 50.0
+  z: 1632.5
+  yaw: 0.0
+  pitch: 0.0
+parkour-finish-sign:
+  ==: org.bukkit.Location
+  world: world
+  x: -716.0
+  y: 50.0
+  z: 1632.0
+  yaw: 0.0
+  pitch: 0.0
+parkour-top:
+  ==: org.bukkit.Location
+  world: world
+  x: -716.5
+  y: 52.2
+  z: 1630.5
+  yaw: 0.0
+  pitch: 0.0
+prisoner:
+  ==: org.bukkit.Location
+  world: world
+  x: -923.5
+  y: 24.0
+  z: 1559.5
+  yaw: 29.7
+  pitch: 0.0
+egg-1:
+  ==: org.bukkit.Location
+  world: world
+  x: -913.5
+  y: 54.0
+  z: 1572.5
+  yaw: 0.0
+  pitch: 0.0
+egg-2:
+  ==: org.bukkit.Location
+  world: world
+  x: -921.5
+  y: 24.0
+  z: 1562.5
+  yaw: 0.0
+  pitch: 0.0
+egg-3:
+  ==: org.bukkit.Location
+  world: world
+  x: -886.5
+  y: 46.0
+  z: 1587.5
+  yaw: 0.0
+  pitch: 0.0
+egg-4:
+  ==: org.bukkit.Location
+  world: world
+  x: -917.5
+  y: 45.0
+  z: 1639.5
+  yaw: 0.0
+  pitch: 0.0
+egg-5:
+  ==: org.bukkit.Location
+  world: world
+  x: -984.5
+  y: 54.0
+  z: 1636.5
+  yaw: 0.0
+  pitch: 0.0
+egg-6:
+  ==: org.bukkit.Location
+  world: world
+  x: -885.5
+  y: 78.0
+  z: 1626.5
+  yaw: 0.0
+  pitch: 0.0
+egg-7:
+  ==: org.bukkit.Location
+  world: world
+  x: -904.5
+  y: 34.0
+  z: 1642.5
+  yaw: 0.0
+  pitch: 0.0
+egg-8:
+  ==: org.bukkit.Location
+  world: world
+  x: -959.5
+  y: 41.0
+  z: 1566.5
+  yaw: 0.0
+  pitch: 0.0
+egg-9:
+  ==: org.bukkit.Location
+  world: world
+  x: -886.5
+  y: 65.0
+  z: 1555.5
+  yaw: 0.0
+  pitch: 0.0
+egg-10:
+  ==: org.bukkit.Location
+  world: world
+  x: -904.5
+  y: 57.0
+  z: 1598.5
+  yaw: 0.0
+  pitch: 0.0
+egg-11:
+  ==: org.bukkit.Location
+  world: world
+  x: -929.5
+  y: 30.0
+  z: 1628.5
+  yaw: 0.0
+  pitch: 0.0
+egg-12:
+  ==: org.bukkit.Location
+  world: world
+  x: -939.5
+  y: 30.0
+  z: 1657.5
+  yaw: 0.0
+  pitch: 0.0
+egg-13:
+  ==: org.bukkit.Location
+  world: world
+  x: -936.5
+  y: 47.0
+  z: 1674.5
+  yaw: 0.0
+  pitch: 0.0
+egg-14:
+  ==: org.bukkit.Location
+  world: world
+  x: -882.5
+  y: 46.0
+  z: 1662.5
+  yaw: 0.0
+  pitch: 0.0
+egg-15:
+  ==: org.bukkit.Location
+  world: world
+  x: -680.5
+  y: 4.0
+  z: 1617.5
+  yaw: 0.0
+  pitch: 0.0
+egg-16:
+  ==: org.bukkit.Location
+  world: world
+  x: -952.5
+  y: 43.0
+  z: 1575.5
+  yaw: 0.0
+  pitch: 0.0
+egg-17:
+  ==: org.bukkit.Location
+  world: world
+  x: -925.5
+  y: 32.0
+  z: 1565.5
+  yaw: 0.0
+  pitch: 0.0
+egg-18:
+  ==: org.bukkit.Location
+  world: world
+  x: -911.5
+  y: 41.0
+  z: 1618.5
+  yaw: 0.0
+  pitch: 0.0
+egg-19:
+  ==: org.bukkit.Location
+  world: world
+  x: -947.5
+  y: 30.0
+  z: 1628.5
+  yaw: 0.0
+  pitch: 0.0
+egg-20:
+  ==: org.bukkit.Location
+  world: world
+  x: -967.5
+  y: 27.0
+  z: 1631.5
+  yaw: 0.0
+  pitch: 0.0
+secret-prinzessin:
+  ==: org.bukkit.Location
+  world: world
+  x: -914.5
+  y: 54.0
+  z: 1574.5
+  yaw: 0.0
+  pitch: 0.0
+secret-kerker:
+  ==: org.bukkit.Location
+  world: world
+  x: -924.5
+  y: 24.0
+  z: 1561.5
+  yaw: 0.0
+  pitch: 0.0
+secret-quelle:
+  ==: org.bukkit.Location
+  world: world
+  x: -887.5
+  y: 46.0
+  z: 1585.5
+  yaw: 0.0
+  pitch: 0.0
+secret-rumhaengen:
+  ==: org.bukkit.Location
+  world: world
+  x: -917.5
+  y: 42.0
+  z: 1637.5
+  yaw: 0.0
+  pitch: 0.0
+secret-beta:
+  ==: org.bukkit.Location
+  world: world
+  x: -887.5
+  y: 75.0
+  z: 1618.5
+  yaw: 0.0
+  pitch: 0.0
+cake:
+  ==: org.bukkit.Location
+  world: world
+  x: -904.0
+  y: 34.0
+  z: 1640.0
+  yaw: 0.0
+  pitch: 0.0
+eye-1:
+  ==: org.bukkit.Location
+  world: world
+  x: -651.0
+  y: 4.0
+  z: 1619.0
+  yaw: 0.0
+  pitch: 0.0
+eye-2:
+  ==: org.bukkit.Location
+  world: world
+  x: -938.0
+  y: 29.0
+  z: 1605.0
+  yaw: 0.0
+  pitch: 0.0
+eye-3:
+  ==: org.bukkit.Location
+  world: world
+  x: -946.0
+  y: 34.0
+  z: 1629.0
+  yaw: 0.0
+  pitch: 0.0
+eye-frame:
+  ==: org.bukkit.Location
+  world: world
+  x: -987.0
+  y: 54.0
+  z: 1637.0
+  yaw: 0.0
+  pitch: 0.0
+eye-arrival:
+  ==: org.bukkit.Location
+  world: world
+  x: -887.5
+  y: 75.0
+  z: 1618.5
+  yaw: 180.0
+  pitch: 0.0
+npc-qsg:
+  ==: org.bukkit.Location
+  world: world
+  x: -952.5
+  y: 26.0
+  z: 1684.5
+  yaw: 180.0
+  pitch: 0.0
+npc-endergames:
+  ==: org.bukkit.Location
+  world: world
+  x: -967.5
+  y: 26.0
+  z: 1683.5
+  yaw: 180.0
+  pitch: 0.0
+npc-rush:
+  ==: org.bukkit.Location
+  world: world
+  x: -887.5
+  y: 29.5
+  z: 1616.5
+  yaw: 90.0
+  pitch: 0.0
+npc-bedwars:
+  ==: org.bukkit.Location
+  world: world
+  x: -891.5
+  y: 30.0
+  z: 1583.5
+  yaw: 90.0
+  pitch: 0.0
+npc-mlgrush:
+  ==: org.bukkit.Location
+  world: world
+  x: -896.5
+  y: 30.0
+  z: 1578.5
+  yaw: 0.0
+  pitch: 0.0
+npc-duell:
+  ==: org.bukkit.Location
+  world: world
+  x: -927.5
+  y: 31.0
+  z: 1562.5
+  yaw: 90.0
+  pitch: 0.0
+npc-zombies:
+  ==: org.bukkit.Location
+  world: world
+  x: -954.5
+  y: 21.0
+  z: 1547.5
+  pitch: 0.0
+  yaw: 135.0
+npc-ttt:
+  ==: org.bukkit.Location
+  world: world
+  x: -989.5
+  y: 30.0
+  z: 1576.5
+  pitch: 0.0
+  yaw: 90.0
+npc-cores:
+  ==: org.bukkit.Location
+  world: world
+  x: -941.5
+  y: 21.0
+  z: 1549.5
+  pitch: 0.0
+  yaw: 225.0
+npc-skywars:
+  ==: org.bukkit.Location
+  world: world
+  x: -989.5
+  y: 26.0
+  z: 1595.5
+  pitch: 0.0
+  yaw: 45.0
+npc-knockbackffa:
+  ==: org.bukkit.Location
+  world: world
+  x: -883.5
+  y: 36.0
+  z: 1635.5
+  pitch: 0.0
+  yaw: 180.0
+npc-archive:
+  ==: org.bukkit.Location
+  world: world
+  x: -960.5
+  y: 25.0
+  z: 1698.5
+  yaw: 180.0
+  pitch: 0.0
+snowfight-a-1:
+  ==: org.bukkit.Location
+  world: world
+  x: -942.5
+  y: 24.0
+  z: 1614.5
+  yaw: 270.0
+  pitch: 0.0
+snowfight-a-2:
+  ==: org.bukkit.Location
+  world: world
+  x: -941.5
+  y: 24.0
+  z: 1615.5
+  yaw: 270.0
+  pitch: 0.0
+snowfight-a-3:
+  ==: org.bukkit.Location
+  world: world
+  x: -942.5
+  y: 24.0
+  z: 1616.5
+  yaw: 270.0
+  pitch: 0.0
+snowfight-b-1:
+  ==: org.bukkit.Location
+  world: world
+  x: -933.5
+  y: 24.0
+  z: 1614.5
+  yaw: 90.0
+  pitch: 0.0
+snowfight-b-2:
+  ==: org.bukkit.Location
+  world: world
+  x: -934.5
+  y: 24.0
+  z: 1615.5
+  yaw: 90.0
+  pitch: 0.0
+snowfight-b-3:
+  ==: org.bukkit.Location
+  world: world
+  x: -933.5
+  y: 24.0
+  z: 1616.5
+  yaw: 90.0
+  pitch: 0.0
+halloween-witch:
+  ==: org.bukkit.Location
+  world: world
+  x: -980.5
+  y: 31.0
+  z: 1571.5
+  yaw: 0.0
+  pitch: 0.0
+halloween-bats:
+  ==: org.bukkit.Location
+  world: world
+  x: -911.5
+  y: 44.0
+  z: 1637.5
+  yaw: 0.0
+  pitch: 0.0
+halloween-ghost-1:
+  ==: org.bukkit.Location
+  world: world
+  x: -957.5
+  y: 26.5
+  z: 1603.5
+  yaw: 0.0
+  pitch: 0.0
+halloween-ghost-2:
+  ==: org.bukkit.Location
+  world: world
+  x: -945.5
+  y: 27.0
+  z: 1601.5
+  yaw: 0.0
+  pitch: 0.0
+halloween-ghost-3:
+  ==: org.bukkit.Location
+  world: world
+  x: -938.5
+  y: 26.5
+  z: 1609.5
+  yaw: 0.0
+  pitch: 0.0
+halloween-ghost-4:
+  ==: org.bukkit.Location
+  world: world
+  x: -946.5
+  y: 27.0
+  z: 1622.5
+  yaw: 0.0
+  pitch: 0.0
+halloween-ghost-5:
+  ==: org.bukkit.Location
+  world: world
+  x: -958.5
+  y: 26.5
+  z: 1618.5
+  yaw: 0.0
+  pitch: 0.0
+ambient-fireflies-1:
+  ==: org.bukkit.Location
+  world: world
+  x: -889.5
+  y: 31.5
+  z: 1636.5
+  yaw: 0.0
+  pitch: 0.0
+ambient-fireflies-2:
+  ==: org.bukkit.Location
+  world: world
+  x: -962.5
+  y: 28.5
+  z: 1640.5
+  yaw: 0.0
+  pitch: 0.0
+ambient-fireflies-3:
+  ==: org.bukkit.Location
+  world: world
+  x: -948.5
+  y: 25.0
+  z: 1612.5
+  yaw: 0.0
+  pitch: 0.0
+ambient-mist-1:
+  ==: org.bukkit.Location
+  world: world
+  x: -883.5
+  y: 43.0
+  z: 1553.5
+  yaw: 0.0
+  pitch: 0.0
+ambient-motes-1:
+  ==: org.bukkit.Location
+  world: world
+  x: -911.5
+  y: 28.0
+  z: 1640.5
+  yaw: 0.0
+  pitch: 0.0

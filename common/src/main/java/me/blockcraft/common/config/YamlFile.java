@@ -1,0 +1,113 @@
+package me.blockcraft.common.config;
+
+import org.slf4j.LoggerFactory;
+import org.yaml.snakeyaml.Yaml;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.function.Supplier;
+
+public final class YamlFile {
+
+    private YamlFile() {
+    }
+
+    /**
+     * The bundled default with {@code target}'s keys on top, if the file exists. The file holds only what an operator
+     * changed and is never written here, so every other key follows the bundled default of the running version.
+     * Sections merge key by key; lists and scalars in the file win as a whole.
+     */
+    public static Map<String, Object> loadWithDefaults(Path target, Supplier<InputStream> bundledDefault) {
+        try {
+            Map<String, Object> defaults;
+            try (InputStream in = bundledDefault.get()) {
+                defaults = load(in);
+            }
+            if (Files.notExists(target)) {
+                return defaults;
+            }
+            Map<String, Object> overrides;
+            try (InputStream in = Files.newInputStream(target)) {
+                overrides = load(in);
+            }
+            var unknown = unknownKeys(defaults, overrides);
+            if (!unknown.isEmpty()) {
+                LoggerFactory.getLogger(YamlFile.class).warn(
+                        "{} sets keys this version does not know, so they do nothing; renamed or removed? {}", target, unknown);
+            }
+            return merge(defaults, overrides);
+        } catch (IOException e) {
+            throw new UncheckedIOException("Could not load " + target, e);
+        }
+    }
+
+    /**
+     * The dotted keys of {@code overrides} that {@code defaults} lacks, each down to its first missing level. An entry
+     * an operator added to an open catalog shows up too, which is why this only warns.
+     */
+    public static List<String> unknownKeys(Map<?, ?> defaults, Map<?, ?> overrides) {
+        var unknown = new ArrayList<String>();
+        collectUnknown(unknown, "", defaults, overrides);
+        return unknown;
+    }
+
+    private static void collectUnknown(List<String> unknown, String prefix, Map<?, ?> defaults, Map<?, ?> overrides) {
+        overrides.forEach((key, value) -> {
+            String path = prefix + key;
+            if (!defaults.containsKey(key)) {
+                unknown.add(path);
+            } else if (defaults.get(key) instanceof Map<?, ?> nested && value instanceof Map<?, ?> override) {
+                collectUnknown(unknown, path + ".", nested, override);
+            }
+        });
+    }
+
+    /** Nested sections may be keyed by numbers (the /strafe catalogue), so keys stay untyped here. */
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> merge(Map<?, ?> defaults, Map<?, ?> overrides) {
+        var merged = new LinkedHashMap<Object, Object>(defaults);
+        overrides.forEach((key, value) -> merged.merge(key, value, (fallback, override) ->
+                fallback instanceof Map<?, ?> nested && override instanceof Map<?, ?> replacement
+                        ? merge(nested, replacement)
+                        : override));
+        return (Map<String, Object>) (Map<?, ?>) merged;
+    }
+
+    public static Map<String, Object> load(InputStream in) {
+        Map<String, Object> loaded = new Yaml().load(in);
+        return loaded == null ? new LinkedHashMap<>() : loaded;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static Map<String, Object> section(Map<String, Object> root, String key) {
+        return root.get(key) instanceof Map<?, ?> map ? (Map<String, Object>) map : new LinkedHashMap<>();
+    }
+
+    /** Flattens nested maps into dotted keys: {a: {b: 1}} becomes {"a.b": "1"}; lists join with newlines. */
+    public static Map<String, String> flatten(Map<String, Object> root) {
+        var flat = new LinkedHashMap<String, String>();
+        flattenInto(flat, "", root);
+        return flat;
+    }
+
+    private static void flattenInto(Map<String, String> target, String prefix, Map<?, ?> source) {
+        source.forEach((key, value) -> {
+            String path = prefix.isEmpty() ? String.valueOf(key) : prefix + "." + key;
+            if (value instanceof Map<?, ?> nested) {
+                flattenInto(target, path, nested);
+            } else if (value instanceof List<?> lines) {
+                target.put(path, lines.stream().map(String::valueOf).collect(Collectors.joining("\n")));
+            } else if (value != null) {
+                target.put(path, String.valueOf(value));
+            }
+        });
+    }
+}

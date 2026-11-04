@@ -1,0 +1,12 @@
+name: Lobby3
+origin: Blockcraft 2015–16
+category: Lobbys
+description: Ein früherer Lobbyentwurf von Blockcraft mit einem runden Mittelplatz
+  und vier Wegen zu den Spielbereichen.
+icon: compass
+arrival:
+  x: 30.5
+  y: 29.0
+  z: 0.5
+  yaw: 180.0
+  pitch: 0.0

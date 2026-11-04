@@ -1,0 +1,261 @@
+{
+  "textures": {
+    "body": "minecraft:block/polished_deepslate",
+    "screen": "minecraft:block/lime_stained_glass",
+    "antenna": "minecraft:block/iron_block",
+    "tip": "minecraft:block/redstone_block",
+    "particle": "minecraft:block/polished_deepslate"
+  },
+  "gui_light": "front",
+  "display": {
+    "firstperson_righthand": {
+      "rotation": [
+        0,
+        180,
+        0
+      ],
+      "translation": [
+        1,
+        1.5,
+        0
+      ],
+      "scale": [
+        0.55,
+        0.55,
+        0.55
+      ]
+    },
+    "firstperson_lefthand": {
+      "rotation": [
+        0,
+        180,
+        0
+      ],
+      "translation": [
+        1,
+        1.5,
+        0
+      ],
+      "scale": [
+        0.55,
+        0.55,
+        0.55
+      ]
+    },
+    "thirdperson_righthand": {
+      "rotation": [
+        -85,
+        0,
+        0
+      ],
+      "translation": [
+        0,
+        2,
+        1
+      ],
+      "scale": [
+        0.6,
+        0.6,
+        0.6
+      ]
+    },
+    "thirdperson_lefthand": {
+      "rotation": [
+        -85,
+        0,
+        0
+      ],
+      "translation": [
+        0,
+        2,
+        1
+      ],
+      "scale": [
+        0.6,
+        0.6,
+        0.6
+      ]
+    },
+    "gui": {
+      "rotation": [
+        25,
+        140,
+        0
+      ],
+      "translation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.65,
+        0.65,
+        0.65
+      ]
+    },
+    "ground": {
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "translation": [
+        0,
+        3,
+        0
+      ],
+      "scale": [
+        0.4,
+        0.4,
+        0.4
+      ]
+    },
+    "fixed": {
+      "rotation": [
+        0,
+        90,
+        0
+      ],
+      "translation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.8,
+        0.8,
+        0.8
+      ]
+    }
+  },
+  "elements": [
+    {
+      "from": [
+        4,
+        5,
+        4
+      ],
+      "to": [
+        12,
+        11,
+        12
+      ],
+      "faces": {
+        "north": {
+          "texture": "#body"
+        },
+        "south": {
+          "texture": "#body"
+        },
+        "east": {
+          "texture": "#body"
+        },
+        "west": {
+          "texture": "#body"
+        },
+        "up": {
+          "texture": "#body"
+        },
+        "down": {
+          "texture": "#body"
+        }
+      }
+    },
+    {
+      "from": [
+        5,
+        11,
+        5
+      ],
+      "to": [
+        11,
+        11.5,
+        11
+      ],
+      "faces": {
+        "north": {
+          "texture": "#screen"
+        },
+        "south": {
+          "texture": "#screen"
+        },
+        "east": {
+          "texture": "#screen"
+        },
+        "west": {
+          "texture": "#screen"
+        },
+        "up": {
+          "texture": "#screen"
+        },
+        "down": {
+          "texture": "#screen"
+        }
+      }
+    },
+    {
+      "from": [
+        10,
+        11,
+        10
+      ],
+      "to": [
+        11,
+        16,
+        11
+      ],
+      "faces": {
+        "north": {
+          "texture": "#antenna"
+        },
+        "south": {
+          "texture": "#antenna"
+        },
+        "east": {
+          "texture": "#antenna"
+        },
+        "west": {
+          "texture": "#antenna"
+        },
+        "up": {
+          "texture": "#antenna"
+        },
+        "down": {
+          "texture": "#antenna"
+        }
+      }
+    },
+    {
+      "from": [
+        9.75,
+        16,
+        9.75
+      ],
+      "to": [
+        11.25,
+        17.5,
+        11.25
+      ],
+      "faces": {
+        "north": {
+          "texture": "#tip"
+        },
+        "south": {
+          "texture": "#tip"
+        },
+        "east": {
+          "texture": "#tip"
+        },
+        "west": {
+          "texture": "#tip"
+        },
+        "up": {
+          "texture": "#tip"
+        },
+        "down": {
+          "texture": "#tip"
+        }
+      }
+    }
+  ]
+}

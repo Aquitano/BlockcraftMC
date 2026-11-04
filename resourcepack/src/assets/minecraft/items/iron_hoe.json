@@ -1,0 +1,49 @@
+{
+  "model": {
+    "type": "minecraft:select",
+    "property": "minecraft:custom_model_data",
+    "index": 0,
+    "cases": [
+      {
+        "when": "blockcraft:ttt/silenced_pistol",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/ttt/silenced_pistol"
+        }
+      },
+      {
+        "when": "blockcraft:icon/loadout",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/loadout"
+        }
+      },
+      {
+        "when": "blockcraft:sternenfront/carbine",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/sternenfront/carbine"
+        }
+      },
+      {
+        "when": "blockcraft:sternenfront/carbine_firing",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/sternenfront/carbine_firing"
+        }
+      },
+      {
+        "when": "blockcraft:zombies/rifle",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/zombies/rifle"
+        }
+      }
+    ],
+    "fallback": {
+      "type": "minecraft:model",
+      "model": "minecraft:item/iron_hoe"
+    }
+  },
+  "hand_animation_on_swap": false
+}

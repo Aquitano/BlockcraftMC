@@ -1,0 +1,6 @@
+{
+  "textures":{"rig":"blockcraft:block/sternenfront/rig/fx","particle":"blockcraft:block/sternenfront/rig/fx"},
+  "elements":[
+    {"from":[0.0,6.24,8.0],"to":[16.0,9.76,8.0],"faces":{"north":{"uv":[12.28125,3.1875,15.28125,3.84375],"texture":"#rig"},"south":{"uv":[12.28125,3.1875,15.28125,3.84375],"texture":"#rig"}}}
+  ]
+}

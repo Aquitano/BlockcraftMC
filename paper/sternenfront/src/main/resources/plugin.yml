@@ -1,0 +1,6 @@
+name: Sternenfront
+version: '${version}'
+main: me.blockcraft.sternenfront.SternenfrontPlugin
+api-version: '${minecraft}'
+author: Aquitano
+depend: [BlockcraftAPI]

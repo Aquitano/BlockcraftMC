@@ -1,0 +1,48 @@
+{
+  "model": {
+    "type": "minecraft:select",
+    "property": "minecraft:custom_model_data",
+    "index": 0,
+    "cases": [
+      {
+        "when": "blockcraft:icon/zombies",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/zombies"
+        }
+      }
+    ],
+    "fallback": {
+      "type": "minecraft:special",
+      "base": "minecraft:item/template_skull",
+      "model": {
+        "type": "minecraft:head",
+        "kind": "zombie"
+      },
+      "transformation": {
+        "left_rotation": [
+          1.0,
+          0.0,
+          0.0,
+          -0.0
+        ],
+        "right_rotation": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "translation": [
+          0.5,
+          0.0,
+          0.5
+        ]
+      }
+    }
+  }
+}

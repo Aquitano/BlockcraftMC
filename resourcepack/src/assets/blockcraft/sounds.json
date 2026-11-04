@@ -1,0 +1,271 @@
+{
+  "ui.click": {
+    "sounds": [
+      "blockcraft:ui/click"
+    ]
+  },
+  "ui.open": {
+    "sounds": [
+      "blockcraft:ui/open"
+    ]
+  },
+  "ui.equip": {
+    "sounds": [
+      "blockcraft:ui/equip"
+    ]
+  },
+  "ui.purchase": {
+    "sounds": [
+      "blockcraft:ui/purchase"
+    ]
+  },
+  "ui.notify": {
+    "sounds": [
+      "blockcraft:ui/notify"
+    ]
+  },
+  "ui.win": {
+    "sounds": [
+      "blockcraft:ui/win"
+    ]
+  },
+  "sternenfront.blaster.carbine": {
+    "sounds": [
+      {
+        "name": "blockcraft:sternenfront/blaster_carbine"
+      }
+    ]
+  },
+  "sternenfront.blaster.repeater": {
+    "sounds": [
+      {
+        "name": "blockcraft:sternenfront/blaster_repeater"
+      }
+    ]
+  },
+  "sternenfront.blaster.long_rifle": {
+    "sounds": [
+      {
+        "name": "blockcraft:sternenfront/blaster_long_rifle"
+      }
+    ]
+  },
+  "sternenfront.blaster.pistol": {
+    "sounds": [
+      {
+        "name": "blockcraft:sternenfront/blaster_pistol"
+      }
+    ]
+  },
+  "sternenfront.blaster.twin_pistol": {
+    "sounds": [
+      {
+        "name": "blockcraft:sternenfront/blaster_twin_pistol"
+      }
+    ]
+  },
+  "sternenfront.blaster.heavy_rifle": {
+    "sounds": [
+      {
+        "name": "blockcraft:sternenfront/blaster_heavy_rifle"
+      }
+    ]
+  },
+  "sternenfront.bolt.impact": {
+    "sounds": [
+      "blockcraft:sternenfront/bolt_impact"
+    ]
+  },
+  "sternenfront.saber.ignite": {
+    "sounds": [
+      "blockcraft:sternenfront/saber_ignite"
+    ]
+  },
+  "sternenfront.saber.retract": {
+    "sounds": [
+      "blockcraft:sternenfront/saber_retract"
+    ]
+  },
+  "sternenfront.saber.hum": {
+    "sounds": [
+      "blockcraft:sternenfront/saber_hum"
+    ]
+  },
+  "sternenfront.saber.swing": {
+    "sounds": [
+      "blockcraft:sternenfront/saber_swing_1",
+      "blockcraft:sternenfront/saber_swing_2",
+      "blockcraft:sternenfront/saber_swing_3"
+    ]
+  },
+  "sternenfront.saber.clash": {
+    "sounds": [
+      "blockcraft:sternenfront/saber_clash"
+    ]
+  },
+  "sternenfront.saber.deflect": {
+    "sounds": [
+      "blockcraft:sternenfront/saber_deflect"
+    ]
+  },
+  "sternenfront.saber.throw": {
+    "sounds": [
+      "blockcraft:sternenfront/saber_throw"
+    ]
+  },
+  "sternenfront.force.push": {
+    "sounds": [
+      "blockcraft:sternenfront/force_push"
+    ]
+  },
+  "sternenfront.force.grip": {
+    "sounds": [
+      "blockcraft:sternenfront/force_grip"
+    ]
+  },
+  "sternenfront.grenade.beep": {
+    "sounds": [
+      "blockcraft:sternenfront/grenade_beep"
+    ]
+  },
+  "sternenfront.grenade.explode": {
+    "sounds": [
+      "blockcraft:sternenfront/grenade_explode"
+    ]
+  },
+  "sternenfront.shield.up": {
+    "sounds": [
+      "blockcraft:sternenfront/shield_up"
+    ]
+  },
+  "sternenfront.shield.down": {
+    "sounds": [
+      "blockcraft:sternenfront/shield_down"
+    ]
+  },
+  "sternenfront.jetpack": {
+    "sounds": [
+      "blockcraft:sternenfront/jetpack"
+    ]
+  },
+  "sternenfront.grapple": {
+    "sounds": [
+      "blockcraft:sternenfront/grapple"
+    ]
+  },
+  "sternenfront.rally": {
+    "sounds": [
+      "blockcraft:sternenfront/rally"
+    ]
+  },
+  "sternenfront.orbital.incoming": {
+    "sounds": [
+      "blockcraft:sternenfront/orbital_incoming"
+    ]
+  },
+  "sternenfront.orbital.impact": {
+    "sounds": [
+      "blockcraft:sternenfront/orbital_impact"
+    ]
+  },
+  "sternenfront.hitmarker": {
+    "sounds": [
+      "blockcraft:sternenfront/hitmarker"
+    ]
+  },
+  "sternenfront.headshot": {
+    "sounds": [
+      "blockcraft:sternenfront/headshot"
+    ]
+  },
+  "sternenfront.kill": {
+    "sounds": [
+      "blockcraft:sternenfront/kill"
+    ]
+  },
+  "sternenfront.kyber.found": {
+    "sounds": [
+      "blockcraft:sternenfront/kyber_found"
+    ]
+  },
+  "sternenfront.brummi.beep": {
+    "sounds": [
+      "blockcraft:sternenfront/brummi_beep_1",
+      "blockcraft:sternenfront/brummi_beep_2",
+      "blockcraft:sternenfront/brummi_beep_3",
+      "blockcraft:sternenfront/brummi_beep_4"
+    ]
+  },
+  "sternenfront.brummi.scared": {
+    "sounds": [
+      "blockcraft:sternenfront/brummi_scared"
+    ]
+  },
+  "sternenfront.sand_beast.rumble": {
+    "sounds": [
+      "blockcraft:sternenfront/sand_beast_rumble"
+    ]
+  },
+  "sternenfront.sand_beast.roar": {
+    "sounds": [
+      "blockcraft:sternenfront/sand_beast_roar"
+    ]
+  },
+  "sternenfront.saber.hit": {
+    "sounds": [
+      "blockcraft:sternenfront/saber_hit_1",
+      "blockcraft:sternenfront/saber_hit_2",
+      "blockcraft:sternenfront/saber_hit_3"
+    ]
+  },
+  "sternenfront.music.opening": {
+    "sounds": [
+      {
+        "name": "blockcraft:sternenfront/music_opening",
+        "stream": true
+      }
+    ]
+  },
+  "sternenfront.music.battle": {
+    "sounds": [
+      {
+        "name": "blockcraft:sternenfront/music_battle",
+        "stream": true
+      }
+    ]
+  },
+  "sternenfront.music.pressure": {
+    "sounds": [
+      {
+        "name": "blockcraft:sternenfront/music_pressure",
+        "stream": true
+      }
+    ]
+  },
+  "sternenfront.music.victory": {
+    "sounds": [
+      {
+        "name": "blockcraft:sternenfront/music_victory",
+        "stream": true
+      }
+    ]
+  },
+  "sternenfront.music.defeat": {
+    "sounds": [
+      {
+        "name": "blockcraft:sternenfront/music_defeat",
+        "stream": true
+      }
+    ]
+  },
+  "sternenfront.charge.arm": {
+    "sounds": [
+      "blockcraft:sternenfront/charge_arm"
+    ]
+  },
+  "sternenfront.siege.lock": {
+    "sounds": [
+      "blockcraft:sternenfront/siege_lock"
+    ]
+  }
+}

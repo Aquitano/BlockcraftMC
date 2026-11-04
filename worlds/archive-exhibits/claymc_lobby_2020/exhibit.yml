@@ -1,0 +1,25 @@
+name: Lobby 7.0
+origin: ClayMC
+year: 2020
+category: Lobbys
+description: Die Lobby aus der Sicherung ClayMC 7.0 bis 7.1, Stand April 2020. Rund um den Spawn liegen die Spielmodi, der Teamraum, der ClayShop, eine Eisdiele, MC ClayMC und versteckte Secrets.
+icon: dark_oak_sapling
+arrival: {x: 0.5, y: 65.0, z: 0.5, yaw: 0.0}
+checkpoints:
+  - name: Teamraum
+    description: Das Team vom 8. April 2020 als Figuren, hinter dir die Schilder des Bauteams.
+    at: {x: -33.5, y: 49.0, z: -9.5, yaw: 90.0, pitch: -5.0}
+  - name: TTT und ClayLine
+    at: {x: 56.5, y: 63.0, z: 71.5, yaw: 0.0, pitch: -20.0}
+  - name: SkyWars und BedWars
+    at: {x: -101.5, y: 58.0, z: 70.5, yaw: 90.0, pitch: -20.0}
+  - name: ClayJump
+    at: {x: 7.5, y: 57.0, z: 147.5, yaw: 0.0, pitch: -25.0}
+  - name: ClayShop
+    at: {x: 21.5, y: 63.0, z: 0.5, yaw: -90.0}
+  - name: Event-Bühne
+    at: {x: -31.5, y: 62.0, z: 23.5, yaw: 90.0}
+  - name: Eisdiele
+    at: {x: 115.5, y: 60.0, z: 26.5, yaw: 180.0, pitch: -12.0}
+  - name: MC ClayMC
+    at: {x: 98.5, y: 65.0, z: 158.5, yaw: 0.0, pitch: -30.0}

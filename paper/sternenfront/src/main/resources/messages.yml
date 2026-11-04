@@ -1,0 +1,529 @@
+prefix: "<sternenfront>Sternenfront <dark>» <reset>"
+game-name: "<sternenfront>Sternenfront"
+
+commands:
+  sfdebug:
+    description: "Zeichnet Bewegung, Blickrichtung und Darstellung eines Bots zur Diagnose auf"
+  start:
+    description: "Verkürzt den Countdown der Lobby"
+  stats:
+    description: "Zeigt die Stats eines Spielers"
+  top:
+    description: "Zeigt die Top 10 einer Kategorie"
+
+debug:
+  enabled: "<prefix><muted>Botdiagnose aktiv. <right>Bot anklicken, um die letzten <history>s und die nächsten <seconds>s aufzuzeichnen. <accent>/sfdebug off <muted>beendet den Modus."
+  disabled: "<prefix><muted>Botdiagnose deaktiviert. Laufende Aufnahmen werden noch gespeichert."
+  no-bot: "<prefix><muted>Visiere einen Bot in Sichtweite an. <right>Diagnose aufnehmen"
+  busy: "<prefix><muted>Eine Aufnahme läuft noch oder die Aufnahme ist noch nicht wieder bereit."
+  started: "<prefix><muted>Bot <accent><number> <muted>wird für <accent><seconds>s <muted>aufgezeichnet. Spiele weiter, bis der Fehler auftritt."
+  saved: "<prefix><success>Botdiagnose gespeichert: <white><file>"
+  failed: "<prefix><error>Botdiagnose konnte nicht gespeichert werden: <white><file>"
+
+join:
+  introduction: "<prefix><muted>Kolonien gegen Hegemonie: Halte mehr Posten als der Gegner und bring seine Verstärkung auf null."
+
+item:
+  faction: "<arrow><primary>Fraktion wählen"
+  class: "<arrow><primary>Klasse & Bot-Stärke"
+
+faction:
+  title: "<arrow><sternenfront>Sternenfront <dark>· <muted>Fraktion"
+  size: "<bullet><muted><players><dark>/<muted><max> Spieler"
+  member: "<bullet><primary><player>"
+  join: "<click>Beitreten"
+  joined: "<prefix><muted>Du kämpfst nun für <faction><muted>."
+  assigned: "<prefix><muted>Du kämpfst für <faction><muted>."
+  already: "<prefix><error>Du kämpfst bereits für diese Fraktion!"
+  full: "<prefix><error>Diese Fraktion ist bereits voll!"
+  kolonien:
+    name: "Freie Kolonien"
+    helmet: "<white>Pilotenhelm der Kolonien"
+    lore:
+      - "<muted>Bergleute, Schmuggler und Siedler"
+      - "<muted>mit allem, was sich noch reparieren lässt."
+  hegemonie:
+    name: "Hegemonie"
+    helmet: "<white>Helm der Hegemonie"
+    lore:
+      - "<muted>Weiße Rüstung, sauberer Stahl"
+      - "<muted>und eine Ordnung, die keiner bestellt hat."
+
+class:
+  title: "<arrow><sternenfront>Sternenfront <dark>· <muted>Klasse"
+  select: "<click>Auswählen"
+  selected: "<success>✔ Ausgewählt"
+  chosen: "<muted>Nächster Einsatz als <accent><class>"
+  blaster: "<bullet><muted>Blaster <white><blaster> <dark>· <accent><damage> ❤ <muted>pro Schuss"
+  health: "<bullet><muted>Gesundheit <accent><hearts> ❤"
+  ability: "<bullet><muted>Fähigkeit <white><ability>"
+  speed: "<bullet><muted>Tempo <accent><percent> %"
+  size: "<bullet><muted>Größe <accent><percent> %"
+  stats: "<white>Werte"
+  first-key: "<muted>Fähigkeit auf Taste <accent>F"
+  second-key: "<muted>Fähigkeit auf Taste <accent>Q"
+  faction: "<faction>"
+  faction-chosen:
+    - "<muted>Deine Fraktion. So kämpfen ihre Einheiten."
+  faction-likely:
+    - "<muted>Du hast noch keine Fraktion gewählt."
+    - "<muted>Gerade kämst du auf diese Seite. So kämpft sie."
+  kolonien:
+    soldier:
+      name: "<white>Milizionär"
+      lore:
+        - "<muted>Solide auf jede Entfernung."
+        - "<muted>Wirft Schürfgranaten und beißt die Zähne zusammen."
+    heavy:
+      name: "<white>Minenarbeiter"
+      lore:
+        - "<muted>Viel Gesundheit, viele Bolzen."
+        - "<muted>Schützt sich mit dem Bauschild und sprengt Posten frei."
+    scout:
+      name: "<white>Spurenleser"
+      lore:
+        - "<muted>Wenig Gesundheit, weite Wege."
+        - "<muted>Ein Kopftreffer reicht, das Sprungmodul hilft beim Rest."
+    medic:
+      name: "<white>Feldsanitäter"
+      lore:
+        - "<muted>Hält die Kolonisten am Leben."
+        - "<muted>Stellt Heilstationen auf und schießt schnell."
+  hegemonie:
+    soldier:
+      name: "<white>Linieneinheit L-4"
+      lore:
+        - "<muted>Das Standardmodell der Linie."
+        - "<muted>Wirft Ionengranaten und fährt die Überlastung hoch."
+    heavy:
+      name: "<white>Brecher-Einheit X-9"
+      lore:
+        - "<muted>Schwer gepanzert und langsam im Gang."
+        - "<muted>Verankert sich im Belagerungsmodus hinter der Schildwand."
+    scout:
+      name: "<white>Jäger-Einheit J-3"
+      lore:
+        - "<muted>Leichtes Gestell, scharfe Optik."
+        - "<muted>Ein Kopftreffer reicht, die Schubdüsen helfen beim Rest."
+    medic:
+      name: "<white>Wartungseinheit W-2"
+      lore:
+        - "<muted>Repariert die Linie mitten im Gefecht."
+        - "<muted>Baut Reparaturfelder auf und schießt schnell."
+
+blaster:
+  stats:
+    - "<bullet><muted>Schaden <accent><damage> ❤ <muted>pro Schuss"
+    - "<bullet><muted>Reichweite <accent><range> <muted>Blöcke"
+  venting: "<error>Der Blaster kühlt ab …"
+  overheated: "<error>Überhitzt! <muted>Der Blaster kühlt ab."
+  carbine:
+    name: "<white>K-7 Karabiner"
+    lore:
+      - "<muted>Gleichmäßige Bolzen, dauerhaft gehalten."
+  repeater:
+    name: "<white>R-40 Repetierer"
+    lore:
+      - "<muted>Drei Bolzen pro Schuss, breit gestreut."
+  long-rifle:
+    name: "<white>LB-9 Langbüchse"
+    lore:
+      - "<muted>Langsam, schwer und weit."
+      - "<muted>Kopftreffer zählen fast doppelt."
+  pistol:
+    name: "<white>P-2 Pistole"
+    lore:
+      - "<muted>Schnelle, leichte Bolzen."
+  twin-pistol:
+    name: "<white>Zwillingspistolen"
+    lore:
+      - "<muted>Zwei schnelle Bolzen pro Schuss, kaum Streuung."
+  heavy-rifle:
+    name: "<white>S-12 Sturmgewehr"
+    lore:
+      - "<muted>Schwere Bolzen in schneller Folge."
+  speeder-cannon:
+    name: "<white>Speeder-Bordkanone"
+
+ability:
+  cooldown: "<error><ability> <muted>ist in <accent><seconds> s <muted>bereit."
+  no-room: "<error>Hier ist dafür kein Platz."
+  kolonien:
+    grenade:
+      name: "<white>Schürfgranate"
+      lore:
+        - "<muted>Zündet nach kurzer Zeit"
+        - "<muted>und trifft alle Gegner in Sichtweite."
+        - "<error>Die Explosion verletzt auch dich."
+    adrenaline:
+      name: "<white>Adrenalin"
+      lore:
+        - "<muted>Kurz schneller und heilend."
+    shield-wall:
+      name: "<white>Bauschild"
+      lore:
+        - "<muted>Eine Wand aus Energie vor dir,"
+        - "<muted>die Bolzen für ein paar Sekunden aufhält."
+    mining-charge:
+      name: "<white>Sprengladung"
+      lore:
+        - "<muted>Eine Ladung aus dem Stollen mit langer Lunte."
+        - "<muted>Reißt mehr mit als eine Granate."
+        - "<error>Die Explosion verletzt auch dich."
+    jump-pack:
+      name: "<white>Sprungmodul"
+      lore:
+        - "<muted>Ein Satz nach vorn und oben."
+        - "<muted>Die nächste Landung tut nicht weh."
+    med-station:
+      name: "<white>Heilstation"
+      lore:
+        - "<muted>Heilt Verbündete in der Nähe,"
+        - "<muted>solange sie läuft."
+  hegemonie:
+    grenade:
+      name: "<white>Ionengranate"
+      lore:
+        - "<muted>Zündet nach kurzer Zeit"
+        - "<muted>und trifft alle Gegner in Sichtweite."
+        - "<error>Die Explosion verletzt auch dich."
+    adrenaline:
+      name: "<white>Überlastung"
+      lore:
+        - "<muted>Die Servos laufen kurz über Limit:"
+        - "<muted>schneller, und die Selbstreparatur springt an."
+    shield-wall:
+      name: "<white>Schildwand"
+      lore:
+        - "<muted>Eine Wand aus Energie vor dir,"
+        - "<muted>die Bolzen für ein paar Sekunden aufhält."
+    siege-mode:
+      name: "<white>Belagerungsmodus"
+      lore:
+        - "<muted>Die Einheit verankert sich im Boden und steht still."
+        - "<muted>Der Repetierer feuert schneller und halb so heiß."
+    jump-pack:
+      name: "<white>Schubdüsen"
+      lore:
+        - "<muted>Ein Stoß nach vorn und oben."
+        - "<muted>Die nächste Landung tut nicht weh."
+    med-station:
+      name: "<white>Reparaturfeld"
+      lore:
+        - "<muted>Setzt Verbündete in der Nähe instand,"
+        - "<muted>solange es steht."
+
+relic:
+  name: "<accent>Ahnenklinge"
+  lore:
+    - "<muted>Wer sie trägt, kämpft für zwei."
+    - "<right>Halten zum Blocken <dark>· <muted>F oder zweimal springen für den Machtsprung"
+  title: "<display>AHNENKLINGE"
+  subtitle: "<muted>Die Klinge liegt in der Tempelruine im Norden"
+  appeared: "<prefix><accent>Die Ahnenklinge <muted>ist in der Tempelruine im Norden erschienen!"
+  taken: "<prefix><white><player> <muted>trägt nun die <accent>Ahnenklinge <muted>für <faction><muted>!"
+  slain: "<prefix><white><killer> <muted>hat <white><player> <muted>besiegt und die <accent>Ahnenklinge <muted>zurück in die Ruine geschickt!"
+  lost: "<prefix><muted>Die <accent>Ahnenklinge <muted>kehrt in die Tempelruine zurück."
+
+post:
+  raffinerie: "Raffinerie"
+  wrack: "Wrack"
+  basar: "Basar"
+  held: "<faction>"
+  neutral: "<white>Neutral"
+  contested: "<error>Umkämpft"
+  label: "<tint><bold><letter></bold> <white><post>\n<state>\n<progress>"
+  bar: "<tint><letter> <dark>· <white><post> <dark>· <state>"
+  captured: "<prefix><muted>Posten <accent><letter> <white><post> <muted>gehört nun <faction><muted>!"
+  neutralised: "<prefix><muted>Posten <accent><letter> <white><post> <muted>ist für <faction> <muted>verloren."
+  under-attack: "<prefix><error>Funk: <white><letter> <post> <error>wird angegriffen!"
+  bar-priority: "<tint><letter> <dark>· <white><post> <dark>· <state> <dark>· <accent>★ Schwerpunkt"
+
+act:
+  assault:
+    title: "<display>LANDUNGSANGRIFF"
+    subtitle: "<muted>Schwerpunkt <accent><letter> <white><post> <muted>zählt <accent><weight>-fach"
+    chat: "<prefix><muted>Schwerpunkt ist Posten <accent><letter> <white><post><muted>: Er zählt beim Verstärkungsverlust <accent><weight>-fach<muted>. <faction> <muted>kann nun per Landungsschiff direkt davor einsetzen."
+  last-stand:
+    title: "<display>LETZTES GEFECHT"
+    subtitle: "<muted>Sandsturm <dark>· <muted>Jeder Posten zählt <accent><weight>-fach"
+    chat: "<prefix><muted>Ein Sandsturm nimmt den Bots die Sicht, jeder Posten zählt beim Verstärkungsverlust <accent><weight>-fach<muted>. <faction> <muted>landet per Landungsschiff, zahlt <accent><cost> Kampfpunkte <muted>für einen Helden und darf einen mehr aufstellen."
+
+secret:
+  found-title: "<sternenfront>Secret gefunden!"
+  found-subtitle: "<accent>+<coins> Coins"
+  found: "<prefix><success>Secret gefunden: <accent><secret><muted>! <accent>+<coins> Coins"
+  known: "<prefix><muted>Dieses Secret kennst du schon: <accent><secret>"
+  kyber-count: "<prefix><muted>Kyberkristalle: <accent><found><dark>/<white><total>"
+  saber: "<prefix><muted>Alle fünf Kyberkristalle gefunden: Die Klinge von <accent><player> <muted>leuchtet ab jetzt <white>weiß<muted>!"
+  name:
+    kyber-1: "Kyberkristall im Wrack"
+    kyber-2: "Kyberkristall im Tempel"
+    kyber-3: "Kyberkristall in der Cantina"
+    kyber-4: "Kyberkristall in der Raffinerie"
+    kyber-5: "Kyberkristall im Felsband"
+    brummi: "Brummi in Panik"
+    sand-beast: "Das Ding in der Düne"
+    cantina: "Musik in der Cantina"
+    kessel: "Kessel-Lauf"
+  brummi-hit: "<muted>Brummi piept empört."
+  brummi-panic: "<muted>Brummi flieht kreischend!"
+  rumble: "<muted>Der Sand unter dir bebt ..."
+  music-box: "<muted>Der Musikautomat spielt auf."
+  music-box-busy: "<muted>Der Musikautomat spielt schon."
+  kessel-running: "<accent>Kessel-Lauf <dark>· <white><time> s <dark>· <muted>Tor <white><gate><dark>/<white><gates>"
+  kessel-finished: "<prefix><muted>Kessel-Lauf geschafft in <accent><time> s<muted>!"
+  kessel-par: "<prefix><muted>Unter <accent><par> s <muted>wartet mehr auf dich."
+  kessel-failed: "<prefix><error>Kessel-Lauf abgebrochen."
+  kessel-board-title: "<accent><bold>Kessel-Lauf</bold>\n<muted>Schaffst du ihn unter <white><par> s<muted>?"
+  kessel-board-line: "<white><place>. <accent><name> <dark>· <white><time> s"
+  kessel-board-empty: "<muted>Noch keine Zeiten"
+  may-the-fourth: "<prefix><accent>Möge der Vierte mit euch sein! <muted>Heute zahlt jede Runde <accent><factor>-mal <muted>so viele Coins."
+
+headquarters:
+  warning: "<error>Feindliches Hauptquartier! <muted>Raus hier!"
+
+deploy:
+  controls: "<prefix><accent>F<muted>: <first> <dark>· <accent>Q<muted>: <second>"
+  no-ability: "<muted>Keine Fähigkeit"
+  saber-controls: "<prefix><right>Halten zum Blocken <dark>· <muted>Zweimal springen für den Machtsprung."
+  title: "<arrow><sternenfront>Sternenfront <dark>· <muted>Einsatz"
+  item: "<arrow><primary>Einsatz planen"
+  waiting: "<muted>Einsatz möglich in <accent><seconds> s"
+  ready: "<success>Wähle deinen Einsatzort <dark>· <muted>sonst Hauptquartier in <accent><seconds> s"
+  lost: "<prefix><error>Dein Einsatzort ist verloren, du startest im Hauptquartier."
+  status-waiting: "<muted>Einsatz in <accent><seconds> s"
+  status-ready: "<success>Bereit zum Einsatz"
+  status-lore:
+    - "<muted>Oben die Klasse, darunter die Helden,"
+    - "<muted>unten der Einsatzort."
+    - "<muted>Posten deiner Fraktion stehen offen,"
+    - "<muted>solange kein Gegner darin steht."
+  headquarters: "<white>Hauptquartier"
+  post: "<white>Posten <accent><letter> <white><post>"
+  choose: "<click>Hier einsetzen"
+  chosen: "<success>✔ Gewählt"
+  post-neutral: "<muted>Noch niemand hält diesen Posten."
+  post-enemy: "<error>Der Gegner hält diesen Posten."
+  post-contested: "<error>Hier wird gerade gekämpft."
+  dropship: "<white>Landungsschiff <dark>· <accent><letter> <white><post>"
+  dropship-locked: "<error>Nur für die zurückliegende Fraktion."
+
+death:
+  self-grenade: "<prefix><white><player> <muted>wurde von der eigenen Granate erwischt."
+  bot: "<prefix><white><player> <muted>wurde von <white><killer> <muted>ausgeschaltet."
+  blaster:
+    - "<prefix><white><player> <muted>wurde von <white><killer> <muted>mit <weapon> <muted>getroffen."
+    - "<prefix><white><killer> <muted>hat <white><player> <muted>mit <weapon> <muted>erwischt."
+
+lobby:
+  no-opponent: "<prefix><error>Beide Fraktionen brauchen mindestens einen Spieler."
+
+round:
+  music-credit: "<muted>Musik: <click:open_url:'https://www.scottbuckley.com.au/library/'><primary>Scott Buckley</primary></click> <muted>· Legionnaire (Original) und Juggernaut · CC BY 4.0. Die Lautstärke regelt „Musik“ in den Minecraft-Audiooptionen."
+  faction: "<arrow><faction><dark>: <accent><players>"
+  start:
+    - "<prefix><muted>Los geht's! <right>Schießen <dark>· <accent>F <muted>und <accent>Q <muted>für Fähigkeiten."
+    - "<prefix><muted>Mit <accent>@ <muted>vor der Nachricht schreibst du allen."
+  winner: "<prefix><primary><faction> <primary>gewinnt mit <accent><tickets> <primary>Verstärkung!"
+  draw: "<prefix><muted>Die Zeit ist um. Beide Fraktionen haben gleich viel Verstärkung."
+
+timer:
+  round: "<sternenfront>Verbleibende Zeit <dark>● <white><time>"
+
+chat:
+  global: "<accent><bold>[GLOBAL]</bold>"
+
+stats:
+  header: "<muted>Stats von <accent><player>"
+  lines:
+    - "<arrow><primary>Siege<dark>: <muted><wins>"
+    - "<arrow><primary>Niederlagen<dark>: <muted><losses>"
+    - "<arrow><primary>Tode<dark>: <muted><deaths>"
+    - "<arrow><primary>Kills<dark>: <muted><kills>"
+    - "<arrow><primary>Punkte<dark>: <muted><points>"
+top:
+  separator: "<muted><strikethrough>---------------------------------"
+  first: "<accent><bold>#1 <reset><primary><name><muted> ( <white><value><muted> )"
+  entry: "<reset>#<rank> <primary><name> <muted>( <white><value><muted> )"
+menu:
+  stats:
+    title: "<arrow><sternenfront>Sternenfront <dark>· <muted>Stats"
+    player: "<accent><player>"
+    player-lore:
+      - "<arrow><primary>Siege<dark>: <muted><wins>"
+      - "<arrow><primary>Niederlagen<dark>: <muted><losses>"
+      - "<arrow><primary>Tode<dark>: <muted><deaths>"
+      - "<arrow><primary>Kills<dark>: <muted><kills>"
+      - "<arrow><primary>Punkte<dark>: <muted><points>"
+    global: "<arrow><primary>Globale Stats"
+  global-stats:
+    title: "<arrow><sternenfront>Sternenfront <dark>· <muted>Globale Stats"
+    wins: "<arrow><primary>Siege"
+    deaths: "<arrow><primary>Tode"
+    kills: "<arrow><primary>Kills"
+    losses: "<arrow><primary>Niederlagen"
+    points: "<arrow><primary>Punkte"
+
+scoreboard:
+  title: "<sternenfront><bold>Sternenfront"
+  faction: "<muted><icon:mode> FRAKTION"
+  no-faction: "<muted>Keine Fraktion"
+  class: "<muted><icon:kit> KLASSE"
+  tickets: "<muted><icon:players> VERSTÄRKUNG"
+  tickets-line: "<faction> <dark>· <white><tickets>"
+  posts: "<muted><icon:map> POSTEN"
+  post: "<tint><bold><letter></bold> <white><post>"
+  post-contested: "<tint><bold><letter></bold> <white><post> <error>⚔"
+  post-priority: "<line> <accent>★"
+  kills: "<muted><icon:kills> KILLS"
+
+hero:
+  head: "<white>Heldenrüstung"
+  saber-lore:
+    - "<muted>Schlägt mit Abklingzeit, wie ein Schwert."
+    - "<right>Halten zum Blocken <dark>· <muted>Zweimal springen für den Machtsprung"
+  jedi:
+    name: "<white>Jedi-Ritter"
+    weapon: "<white>Lichtschwert"
+    lore:
+      - "<muted>Lichtschwert und die Macht."
+      - "<muted>Stößt Gegner mit der Macht zurück und springt weit."
+      - "<muted>Mit Q wirfst du das Lichtschwert."
+      - "<right>Halten zum Blocken; gutes Timing lenkt Bolzen zurück."
+  bounty-hunter:
+    name: "<white>Kopfgeldjäger"
+    lore:
+      - "<muted>Zwei Pistolen, schnelle und genaue Bolzen."
+      - "<muted>Fliegt mit dem Raketenrucksack, zieht sich mit dem Fesselkabel."
+  sith:
+    name: "<white>Sith-Inquisitor"
+    weapon: "<white>Rotes Lichtschwert"
+    lore:
+      - "<muted>Rotes Lichtschwert und die dunkle Seite der Macht."
+      - "<muted>Wirft das Lichtschwert und würgt Gegner aus der Ferne."
+      - "<right>Halten zum Blocken; gutes Timing lenkt Bolzen zurück."
+  commander:
+    name: "<white>Kommandant"
+    lore:
+      - "<muted>Schweres Gewehr mit starken Bolzen."
+      - "<muted>Ruft einen Orbitalschlag und stärkt Verbündete."
+  champion:
+    name: "<accent>Champion der Ahnenklinge"
+  ability:
+    force-push:
+      name: "<white>Machtstoß"
+    saber-throw:
+      name: "<white>Lichtschwertwurf"
+    force-grip:
+      name: "<white>Machtgriff"
+    jetpack:
+      name: "<white>Raketenrucksack"
+    grapple:
+      name: "<white>Fesselkabel"
+    orbital-strike:
+      name: "<white>Orbitalschlag"
+    rally:
+      name: "<white>Sammelruf"
+  bar: "<hero> <dark>· <white><player> <dark>· <accent><hearts> ❤"
+  cost: "<bullet><muted>Kosten <accent><cost> <muted>Kampfpunkte <dark>· <muted>du hast <accent><points>"
+  pick: "<click>Als Held einsetzen"
+  picked: "<success>✔ Nächster Einsatz als Held"
+  card-taken: "<error>Deine Fraktion hat diesen Helden schon im Feld."
+  card-too-few: "<error>Dir fehlen noch Kampfpunkte."
+  chosen: "<muted>Nächster Einsatz als <accent><hero>"
+  taken: "<error>Deine Fraktion hat schon einen Helden im Feld."
+  too-few-points: "<error>Für <hero> <error>fehlen dir noch Kampfpunkte."
+  missed: "<prefix><error>Der Platz für <hero> <error>ist inzwischen vergeben, du kämpfst mit deiner Klasse."
+  no-target: "<error>Kein Ziel in Sicht."
+  entered: "<prefix><faction> <muted>schickt <hero><muted>: <white><player><muted>!"
+  slain: "<prefix><white><killer> <muted>hat <hero> <white><player> <muted>besiegt!"
+  fallen: "<prefix><hero> <white><player> <muted>hat das Feld verlassen."
+  sidebar:
+    points: "<accent><points><muted>/<cost> Kampfpunkte"
+    ready: "<success>Held bereit <dark>· <accent><points> <muted>Punkte"
+    hero: "<muted>Im Feld als <hero>"
+
+hit:
+  hit: "<white><icon:hit>"
+  headshot: "<icon:headshot>"
+  kill: "<icon:kill>"
+
+killcam:
+  watching: "<muted>Besiegt von <white><killer>"
+
+streak:
+  earned: "<success><kills> Kills in Folge! <muted>Mit <accent>Shift+F <muted>rufst du deinen <accent>Orbitalschlag<muted>."
+
+bot:
+  name: "<tint><faction> · <role> <number></tint>"
+  difficulty:
+    open: "<arrow><primary>Bot-Stärke"
+    open-lore:
+      - "<muted>Stimme für die Bot-Stärke dieser Runde."
+      - "<click>Leicht, Normal oder Veteran wählen"
+    title: "<arrow><sternenfront>Sternenfront <dark>· <muted>Bot-Stärke"
+    selected: "<prefix><muted>Bot-Stärke dieser Runde: <difficulty><muted>."
+    easy:
+      name: "<success>Leicht"
+      lore:
+        - "<muted>Langsame Reaktion, kurze Salven und mehr Fehlschüsse."
+        - "<muted>Weniger Schaden; zum Ausprobieren und Üben."
+    normal:
+      name: "<accent>Normal"
+      lore:
+        - "<muted>Schnellere Reaktion und gezielte Salven."
+        - "<muted>Gefährliche Gegner, mit kurzen Feuerpausen."
+    veteran:
+      name: "<error>Veteran"
+      lore:
+        - "<muted>Schnelle Zielerfassung, Dauerfeuer und volle Trefferstärke."
+        - "<muted>Sehr genaue Schüsse; Kopftreffer zählen extra."
+
+combat:
+  hud: "<success><health_icon> <health> <hp> <dark>│ <accent><meter_icon> <meter> <state> <dark>│ <first> <dark>│ <second>"
+  ability: "<accent><key> <name> <status>"
+  ready: "<success>✓"
+  cooldown: "<muted><seconds>s"
+  none: "<dark>—"
+  champion-leap: "<accent>F <white>Machtsprung"
+  leap-cooldown: "<dark> │ <muted>Sprung <seconds>s"
+  strike-ready: "<dark> │ <accent>Shift+F <white>Orbitalschlag"
+  guard: "<muted>Deckung"
+  guarding: "<success>BLOCKEN"
+  broken: "<error>GEBROCHEN"
+  guard-broken: "<error>Deckung gebrochen! <muted>Lass sie sich kurz erholen."
+  heat: "<muted>Hitze"
+  venting: "<error>KÜHLEN"
+  incoming:
+    front: "<error><bold>▲</bold> <dark>│ "
+    back: "<error><bold>▼</bold> <dark>│ "
+    left: "<error><bold>◀</bold> <dark>│ "
+    right: "<error><bold>▶</bold> <dark>│ "
+  orbital-warning: "<tint><faction></tint>\n<error>Orbitalschlag in <seconds>s\n<muted>Markierte Flächen verlassen"
+
+speeder:
+  name: "<faction> <dark>· <white>Speeder <dark>· <right>Einsteigen"
+  controls: "<prefix><muted>Speeder: <accent>W <muted>Gas, <accent>S <muted>Bremse und rückwärts, <accent>A/D <muted>lenken, <accent>Sprint <muted>Boost, <accent>Klick <muted>Bordkanone, <accent>Shift <muted>absteigen. Hohes Tempo rammt Gegner."
+  driving: "<accent>Speeder <dark>│ <white><health> LP <dark>│ <white><speed> m/s <dark>│ <muted>Boost <white><boost>%"
+
+support:
+  assist: "<prefix><success>+<points> Gefechtspunkte <muted>für eine Abschusshilfe."
+  defence: "<prefix><success>+<points> Gefechtspunkte <muted>für die Verteidigung eines Postens."
+
+battlefield:
+  label: "<name>\n<state>"
+  activated: "<prefix><name> <muted>aktiviert."
+  cooldown: "<prefix><muted>Die Anlage ist in <accent><seconds>s <muted>wieder bereit."
+  blocked: "<prefix><error>Der Durchgang ist belegt. Er bleibt offen."
+  vent:
+    name: "<accent>Dampfventil <dark>· <right>Betätigen"
+  bulkhead:
+    name: "<accent>Wrackschott <dark>· <right>Schließen"
+  shutters:
+    name: "<accent>Marktrollläden <dark>· <right>Absenken"
+  state:
+    ready: "<success>Bereit"
+    warning: "<error>Dampf in <seconds>s! Abstand halten"
+    active: "<error>Aktiv <dark>· <white><seconds>s"
+    cooldown: "<muted>Abkühlzeit <seconds>s"

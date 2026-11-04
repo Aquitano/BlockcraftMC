@@ -1,0 +1,411 @@
+package me.blockcraft.mlgrush.game;
+
+import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.world.WaitingLobby;
+import me.blockcraft.api.game.Arena;
+import me.blockcraft.api.game.GameConfig;
+import me.blockcraft.api.game.GamePhase;
+import me.blockcraft.api.game.GameSidebar;
+import me.blockcraft.api.game.LobbyCountdown;
+import me.blockcraft.api.game.LobbyHotbar;
+import me.blockcraft.api.game.PlayerReset;
+import me.blockcraft.api.game.Round;
+import me.blockcraft.api.game.RoundSummary;
+import me.blockcraft.api.game.StatsMenus;
+import me.blockcraft.api.game.StatsRepository;
+import me.blockcraft.api.pack.MenuIcon;
+import me.blockcraft.api.sound.Sounds;
+import me.blockcraft.api.task.Tasks;
+import me.blockcraft.api.task.SerialTasks;
+import me.blockcraft.common.message.Messages;
+import me.blockcraft.api.game.rush.RushArena;
+import me.blockcraft.api.game.rush.RushKit;
+import me.blockcraft.api.game.rush.RushLayoutMenu;
+import me.blockcraft.api.game.rush.RushSession;
+import me.blockcraft.api.game.rush.RushConfig;
+import me.blockcraft.api.game.rush.MapPool;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
+import org.bukkit.Location;
+import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
+import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.util.Vector;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
+
+public final class StandaloneRushGame {
+
+    private static final int MAX_PARTICIPANTS = 2;
+
+    private final Plugin plugin;
+    private final RushConfig config;
+    private final GameConfig gameConfig;
+    private final MapPool maps;
+    private final StatsRepository stats;
+    private final Messages messages;
+    private final RushArena arena;
+    private RushSession session;
+    private List<UUID> participants = List.of();
+    private Optional<String> winnerName = Optional.empty();
+    private final Set<UUID> rematches = new HashSet<>();
+    private Object identity = new Object();
+    private final int[] previousScores = new int[2];
+    private final RushKit kit;
+    private RoundSummary summary;
+    private final SerialTasks<UUID> recapWrites;
+    private final Round round;
+    private final LobbyCountdown countdown;
+    private final LobbyHotbar hotbar;
+    private final GameSidebar sidebar;
+    private final BukkitTask voidRecovery;
+    private BukkitTask resetTask;
+
+    public StandaloneRushGame(Plugin plugin, GameConfig gameConfig, RushConfig config, Messages messages,
+                    RushArena arena, MapPool maps, StatsRepository stats, StatsMenus statsMenus) {
+        this.plugin = plugin;
+        this.config = config;
+        this.gameConfig = gameConfig;
+        this.maps = maps;
+        this.stats = stats;
+        this.messages = messages;
+        this.arena = arena;
+        kit = new RushKit(config.kit(), messages);
+        recapWrites = new SerialTasks<>(plugin);
+        summary = new RoundSummary(plugin, messages, new RoundSummary.Rewards(0, config.winCoins()), stats, recapWrites);
+        round = new Round(plugin, new Arena(messages, Sounds.DUELL_JOIN), summary, MAX_PARTICIPANTS, gameConfig);
+        countdown = new LobbyCountdown(plugin, round, gameConfig, this::start);
+        hotbar = new LobbyHotbar(plugin, List.of(
+                new LobbyHotbar.Choice(MenuIcon.MLGRUSH, messages.get("item.layout"),
+                        player -> new RushLayoutMenu(kit, messages, "layout.", player).open(player)),
+                new LobbyHotbar.Choice(MenuIcon.DUELL, messages.get("item.rematch"), () -> round.phase() == GamePhase.ENDING,
+                        player -> requestRematch(player, identity))), statsMenus, countdown);
+        sidebar = new GameSidebar(messages.get("scoreboard.title"), GameSidebar.Headcount.of(round), () -> false);
+        voidRecovery = Bukkit.getScheduler().runTaskTimer(plugin, this::recoverWaitingPlayers, 1L, 1L);
+    }
+
+    public LobbyCountdown countdown() {
+        return countdown;
+    }
+
+    public LobbyHotbar hotbar() {
+        return hotbar;
+    }
+
+    public Optional<Location> lobbySpawn() {
+        return BlockcraftApi.get().waitingLobby().map(WaitingLobby::spawn);
+    }
+
+    private Location waitingSpawn(int slot) {
+        return lobbySpawn().orElseGet(() -> arena.spawn(slot));
+    }
+
+    private Location spectatorSpawn() {
+        return isIngame() ? arena.spectatorSpawn() : lobbySpawn().orElseGet(arena::spectatorSpawn);
+    }
+
+    public boolean isIngame() {
+        return round.phase() == GamePhase.INGAME;
+    }
+
+    public int slot(Player player) {
+        return round.phase() == GamePhase.LOBBY ? round.players().indexOf(player) : participants.indexOf(player.getUniqueId());
+    }
+
+    public void join(Player player) {
+        if (round.join(player)) {
+            PlayerReset.reset(player, GameMode.ADVENTURE);
+            teleport(player, round.players().indexOf(player));
+            hotbar.give(player);
+            countdown.start();
+        } else {
+            player.teleport(spectatorSpawn());
+            player.sendMessage(messages.get("join.spectator"));
+        }
+        player.sendMessage(messages.get("round.map", Placeholder.unparsed("map", arena.name())));
+        refreshPresence();
+        refresh();
+    }
+
+
+    public void vanished(Player player) {
+        if (round.phase() != GamePhase.LOBBY && round.isPlaying(player)) {
+            quit(player);
+            round.watch(player);
+        }
+    }
+
+    public void quit(Player player) {
+        boolean participant = round.leave(player);
+        if (round.phase() == GamePhase.LOBBY) {
+            updateLobby();
+        } else if (participant && round.phase() == GamePhase.INGAME) {
+            Bukkit.broadcast(messages.get("round.forfeit", Placeholder.unparsed("player", player.getName())));
+            finish(round.players().stream().map(Player::getUniqueId).findFirst());
+        } else if (participant && round.phase() == GamePhase.ENDING) {
+            returnToLobbyLater();
+        }
+        Tasks.sync(plugin, this::refreshPresence);
+        refresh();
+    }
+
+    public void refreshPresence() {
+        BlockcraftApi.get().presence().maxPlayers(advertisedCapacity(Bukkit.getOnlinePlayers().size(), round.playerCount()));
+    }
+
+    static int advertisedCapacity(int connected, int participants) {
+        return MAX_PARTICIPANTS + connected - participants;
+    }
+
+    public void updateLobby() {
+        if (round.phase() == GamePhase.LOBBY && round.playerCount() < MAX_PARTICIPANTS) {
+            boolean running = countdown.isRunning();
+            countdown.cancel();
+            if (running) {
+                Bukkit.broadcast(messages.get("round.cancelled"));
+            }
+            var players = round.players();
+            for (int slot = 0; slot < players.size(); slot++) {
+                teleport(players.get(slot), slot);
+            }
+            seatWaitingPlayers();
+            countdown.start();
+        }
+        refresh();
+    }
+
+    private void start() {
+        var players = round.players();
+        if (round.phase() != GamePhase.LOBBY || players.size() != MAX_PARTICIPANTS
+                || players.stream().anyMatch(BlockcraftApi.get()::isVanished)) {
+            return;
+        }
+        countdown.cancel();
+        participants = players.stream().map(Player::getUniqueId).toList();
+        winnerName = Optional.empty();
+        round.enter(GamePhase.INGAME);
+        var started = identity;
+        session = new RushSession(plugin, config, arena, kit, participants, new RushSession.Events() {
+            @Override
+            public void fell(Player player) {
+                if (identity == started) {
+                    summary.death(player);
+                }
+            }
+
+            @Override
+            public void scoreChanged() {
+                if (identity == started) {
+                    int scorer = score(0) > previousScores[0] ? 0 : 1;
+                    previousScores[0] = score(0);
+                    previousScores[1] = score(1);
+                    Bukkit.broadcast(messages.get("round.point", Formatter.number("red_score", score(0)),
+                            Formatter.number("blue_score", score(1)), Placeholder.unparsed("player", players.get(scorer).getName())));
+                    refresh();
+                }
+            }
+
+            @Override
+            public void won(UUID player) {
+                if (identity == started) {
+                    finish(Optional.of(player));
+                }
+            }
+        });
+        session.activate();
+        round.spectators().forEach(player -> player.teleport(spectatorSpawn()));
+        Bukkit.broadcast(messages.get("round.start", Formatter.number("target", config.scoreTarget()),
+                Placeholder.unparsed("map", arena.name())));
+        refresh();
+    }
+
+    private int score(int slot) {
+        return session == null || participants.size() <= slot ? 0 : session.score(participants.get(slot));
+    }
+
+    private void recoverWaitingPlayers() {
+        if (!isIngame()) {
+            for (var player : round.players()) {
+                var spawn = waitingSpawn(Math.max(0, slot(player)));
+                recoverVoid(player, spawn, Math.min(config.arena().voidY(), spawn.getBlockY() - 16));
+            }
+        }
+        for (var player : round.spectators()) {
+            var spawn = spectatorSpawn();
+            recoverVoid(player, spawn, Math.min(config.arena().voidY(), spawn.getBlockY() - 16));
+        }
+    }
+
+    static void recoverVoid(Player player, Location spawn, int voidY) {
+        var location = player.getLocation();
+        if (player.isDead() || !Objects.equals(location.getWorld(), spawn.getWorld()) || location.getY() > voidY) {
+            return;
+        }
+        teleport(player, spawn);
+    }
+
+    private void teleport(Player player, int slot) {
+        teleport(player, waitingSpawn(slot));
+    }
+
+    private static void teleport(Player player, Location spawn) {
+        player.teleport(spawn);
+        player.setVelocity(new Vector());
+        player.setFallDistance(0);
+    }
+
+    private void finish(Optional<UUID> winner) {
+        if (round.phase() != GamePhase.INGAME) {
+            return;
+        }
+        cancelReset();
+        winner.map(Bukkit::getPlayer).ifPresent(summary::awardWin);
+        winnerName = winner.map(Bukkit::getPlayer).map(Player::getName);
+        if (session != null) {
+            session.close();
+        }
+        round.players().forEach(player -> {
+            summary.note(player, messages.get("round.result", Formatter.number("score", score(slot(player))),
+                    Formatter.number("target", config.scoreTarget())));
+        });
+        var completed = identity;
+        round.endInPlace(player -> requestRematch(player, completed));
+        round.players().forEach(player -> {
+            PlayerReset.reset(player, GameMode.ADVENTURE);
+            teleport(player, slot(player));
+            hotbar.give(player);
+        });
+        round.spectators().forEach(player -> player.teleport(spectatorSpawn()));
+        if (round.playerCount() < MAX_PARTICIPANTS) {
+            returnToLobbyLater();
+        }
+        refresh();
+    }
+
+    private void requestRematch(Player player, Object completed) {
+        if (completed != identity || round.phase() != GamePhase.ENDING || !round.isPlaying(player)
+                || round.playerCount() != MAX_PARTICIPANTS
+                || round.players().stream().anyMatch(BlockcraftApi.get()::isVanished)) {
+            player.sendMessage(messages.get("rematch.unavailable"));
+            Sounds.MENU_DENY.play(player);
+            return;
+        }
+        if (!rematches.add(player.getUniqueId()) || rematches.size() != MAX_PARTICIPANTS) {
+            player.sendMessage(messages.get("rematch.waiting"));
+            round.players().stream().filter(opponent -> !opponent.equals(player)).forEach(opponent -> {
+                opponent.sendMessage(messages.get("rematch.request", Placeholder.unparsed("player", player.getName())));
+                Sounds.NOTIFY.play(opponent);
+            });
+            return;
+        }
+        Tasks.sync(plugin, () -> {
+            if (identity == completed && round.phase() == GamePhase.ENDING && round.playerCount() == MAX_PARTICIPANTS
+                    && round.players().stream().noneMatch(BlockcraftApi.get()::isVanished)) {
+                reopen(true);
+            }
+        });
+    }
+
+    private void returnToLobbyLater() {
+        cancelReset();
+        resetTask = Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            resetTask = null;
+            if (round.phase() == GamePhase.ENDING && round.playerCount() < MAX_PARTICIPANTS) {
+                reopen(false);
+            }
+        }, gameConfig.startSeconds() * 20L);
+    }
+
+    private void reopen(boolean rematch) {
+        cancelReset();
+        arena.selectMap(maps.choose(ThreadLocalRandom.current()));
+        identity = new Object();
+        Arrays.fill(previousScores, 0);
+        rematches.clear();
+        session = null;
+        participants = List.of();
+        summary = new RoundSummary(plugin, messages, new RoundSummary.Rewards(0, config.winCoins()), stats, recapWrites);
+        round.reopen(summary);
+        var players = round.players();
+        for (int slot = 0; slot < players.size(); slot++) {
+            var player = players.get(slot);
+            PlayerReset.reset(player, GameMode.ADVENTURE);
+            teleport(player, slot);
+            hotbar.give(player);
+        }
+        round.spectators().forEach(player -> player.teleport(spectatorSpawn()));
+        if (rematch) {
+            Bukkit.broadcast(messages.get("rematch.starting", Formatter.number("seconds", gameConfig.startSeconds()),
+                    Placeholder.unparsed("map", arena.name())));
+            countdown.shorten(gameConfig.startSeconds());
+        } else {
+            seatWaitingPlayers();
+            countdown.start();
+        }
+        refreshPresence();
+        refresh();
+    }
+
+    private void seatWaitingPlayers() {
+        round.spectators().stream().filter(player -> !BlockcraftApi.get().isVanished(player))
+                .limit(Math.max(0, MAX_PARTICIPANTS - round.playerCount())).forEach(player -> {
+                    player.sendMessage(messages.get("join.next-match"));
+                    join(player);
+                });
+    }
+
+    public void refresh() {
+        var map = Component.text(arena.name());
+        var winners = winnerName.stream().<Component>map(Component::text).toList();
+        for (var viewer : Bukkit.getOnlinePlayers()) {
+            var icons = GameSidebar.icons(viewer);
+            var target = new GameSidebar.Section(messages.get("scoreboard.target", icons),
+                    GameSidebar.value(messages.get("scoreboard.target-value", Formatter.number("target", config.scoreTarget()))));
+            switch (round.phase()) {
+                case LOBBY -> sidebar.lobby(viewer, MAX_PARTICIPANTS, map, List.of(target));
+                case INGAME -> sidebar.round(viewer, MAX_PARTICIPANTS, 0, map,
+                        List.of(new GameSidebar.Section(messages.get("scoreboard.score", icons), scores()), target));
+                case ENDING -> sidebar.end(viewer, winners);
+            }
+        }
+    }
+
+    private List<Component> scores() {
+        var lines = new ArrayList<Component>();
+        for (int slot = 0; slot < MAX_PARTICIPANTS; slot++) {
+            var name = participants.size() > slot
+                    ? Optional.ofNullable(Bukkit.getPlayer(participants.get(slot))).map(Player::getName).orElse("-") : "-";
+            lines.add(messages.get(slot == 0 ? "scoreboard.red" : "scoreboard.blue",
+                    Placeholder.unparsed("player", name), Formatter.number("score", score(slot))));
+        }
+        return lines;
+    }
+
+    private void cancelReset() {
+        if (resetTask != null) {
+            resetTask.cancel();
+            resetTask = null;
+        }
+    }
+
+    public void shutdown() {
+        voidRecovery.cancel();
+        countdown.cancel();
+        cancelReset();
+        if (session != null) {
+            session.close();
+        }
+        round.stop();
+    }
+}
