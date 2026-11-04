@@ -28,7 +28,7 @@ def generate(root):
         name = event.replace(".", "_")
         source = manifest["sources"][settings["source"]]
         subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(SOURCES / settings["source"]), "-ac", "2" if music else "1",
-                        "-ar", "44100", "-af", ",".join(filters), "-c:a", "libvorbis", "-q:a", "4",
+                        "-ar", "44100", "-af", ",".join(filters), "-c:a", "libvorbis", "-q:a", "1" if music else "4",
                         "-map_metadata", "-1", "-metadata", f"artist={source['author']}",
                         "-metadata", f"comment={source['license']}; {source['source']}; edited excerpt with fades",
                         "-fflags", "+bitexact", "-flags:a", "+bitexact", str(output / f"{name}.ogg")], check=True)
