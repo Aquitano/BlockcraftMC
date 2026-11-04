@@ -35,6 +35,7 @@ void main() {
     } else if (mode == 4) {
         color.rgb = mix(color.rgb, color.rgb * vec3(1.25, 0.65, 1.45), edge * 0.6);
     }
+    if (mode != 0) color = mix(texture(InSampler, texCoord), color, clamp(Parameters.w, 0.0, 1.0));
     float bars = Parameters.y * (1.0 - step(0.115, texCoord.y) * step(texCoord.y, 0.885));
     color.rgb *= 1.0 - max(clamp(Parameters.x, 0.0, 1.0), bars);
     fragColor = color;

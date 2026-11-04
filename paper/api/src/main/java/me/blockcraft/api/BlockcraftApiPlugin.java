@@ -18,6 +18,7 @@ import me.blockcraft.api.cosmetic.WeaponStyles;
 import me.blockcraft.api.dialog.ServerMenu;
 import me.blockcraft.api.dialogue.Dialogues;
 import me.blockcraft.api.presentation.VisualEffects;
+import me.blockcraft.api.presentation.ScreenEffects;
 import me.blockcraft.api.scene.Scenes;
 import me.blockcraft.api.elo.Elo;
 import me.blockcraft.api.elo.SkillGroup;
@@ -135,6 +136,11 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         visuals = new VisualEffects(this, resourcePack, messages, YamlFile.section(config, "presentation"));
         dialogues.unavailableWhen(player -> Scenes.isViewing(player) || visuals.active(player));
         visuals.unavailableWhen(dialogues::active);
+        int levelUpTicks = Math.clamp(number(YamlFile.section(YamlFile.section(config, "presentation"), "gameplay"),
+                "level-up-ticks", 24), 0, 200);
+        notifications.levelUpEffect(player -> {
+            if (levelUpTicks > 0) visuals.accent(player, ScreenEffects.Atmosphere.FOCUS, levelUpTicks);
+        });
         notifications.suspendWhile(player -> dialogues.active(player) || visuals.active(player) || Scenes.isViewing(player));
         var settingRepository = new PlayerSettingRepository(database);
         var settings = new PlayerSettings(this, settingRepository, messages);

@@ -30,6 +30,23 @@ public final class ScreenEffects {
         replace(player, "presentation/", null);
     }
 
+    public static void accent(Player player, Atmosphere atmosphere, double intensity) {
+        replace(player, "presentation/accent/", accentKey(atmosphere, intensity));
+    }
+
+    public static void clearAccent(Player player) {
+        replace(player, "presentation/accent/", null);
+    }
+
+    public static void clearAtmosphere(Player player) {
+        replace(player, "presentation/atmosphere/", null);
+    }
+
+    static Key accentKey(Atmosphere atmosphere, double intensity) {
+        int step = (int) Math.round((Double.isFinite(intensity) ? Math.clamp(intensity, 0, 1) : 0) * 8);
+        return step == 0 ? null : Key.key("blockcraft", "presentation/accent/" + atmosphere.key() + "/" + step);
+    }
+
     static Key frameKey(double fade, boolean letterbox) {
         int step = (int) Math.round((Double.isFinite(fade) ? Math.clamp(fade, 0, 1) : 0) * 32);
         return step == 0 && !letterbox ? null

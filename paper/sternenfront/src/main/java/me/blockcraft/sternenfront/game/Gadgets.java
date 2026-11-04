@@ -1,5 +1,7 @@
 package me.blockcraft.sternenfront.game;
 
+import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.presentation.ScreenEffects;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.world.BlocksChangedEvent;
 import me.blockcraft.sternenfront.appearance.Displays;
@@ -137,6 +139,10 @@ public final class Gadgets {
         root(unit);
         sieges.add(new Siege(unit, faction, tick + ticks));
         SoundCue.SIEGE_LOCK.play(unit.getLocation(), 1f);
+        if (unit instanceof Player player && game.plugin().getConfig().getBoolean("presentation.effects", true)) {
+            int effectTicks = Math.clamp(game.plugin().getConfig().getInt("presentation.gameplay.siege-mode-ticks", 20), 0, 200);
+            if (effectTicks > 0) BlockcraftApi.get().visuals().accent(player, ScreenEffects.Atmosphere.HOLOGRAM, effectTicks);
+        }
         return true;
     }
 

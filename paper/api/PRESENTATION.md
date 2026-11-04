@@ -58,10 +58,25 @@ shaders from the pack.
 During a demo, try to start a dialogue or `/sfintro`. The second presentation must be refused. Change worlds or
 disconnect during a screen effect. Rejoin and confirm that the effect and its entities are gone.
 
+## Check gameplay effects
+
+1. Level up in any game. A focus effect fades in and out over 24 ticks. The level-up notification and HUD remain visible.
+2. In Sternenfront, activate Siege Mode as a player. A holographic screen effect lasts 20 ticks after a successful activation.
+3. Use Force Push. The caster receives a focus effect lasting 12 ticks. Other players' screens remain unchanged.
+4. Trigger another event within two seconds. Effects must not stack or continually restart.
+5. Die, leave the round, or change worlds during an effect. The effect must clear before the next life or lobby.
+
+API `presentation.gameplay` configures the enable switch, peak intensity, fade duration, cooldown, and level-up duration.
+The default intensity is 0.5. Sternenfront's `presentation.gameplay` configures Siege Mode and Force Push durations.
+A duration of zero disables that event. Sternenfront's existing `presentation.effects` switch also disables its two hooks.
+Gameplay effects do not take ownership of the HUD or block movement and input. A dialogue, demo, or cinematic takes precedence.
+
 ## Play the Sternenfront intro
 
 1. In the Sternenfront lobby, run `/sfintro`. Watch the map overview and headquarters shots. The infantry actor
    performs a salute and head movement from `animations/briefing.animation.json`.
+   The final headquarters shot gains focus from 75% to 95% of the sequence. Check that no translucent armor stand
+   appears at the camera. The camera uses an empty item display, with no item or shadow to render.
 2. Sneak to skip the demo. Repeat with `/sfintro stop`. Check that your position, game mode, flight, and vulnerability
    return to their previous values.
 3. Start a real match with two testers. Let one watch the intro and let the other sneak immediately.

@@ -3,6 +3,7 @@ package me.blockcraft.api.notification;
 import me.blockcraft.api.pack.DisplayFont;
 import me.blockcraft.api.pack.ResourcePacks;
 import me.blockcraft.api.sound.Sounds;
+import me.blockcraft.api.xp.LevelUpEvent;
 import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
@@ -20,6 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Predicate;
+import java.util.function.Consumer;
 
 import static me.blockcraft.api.notification.NoticeQueue.Priority;
 
@@ -62,6 +64,7 @@ public final class Notifications implements Listener {
     private final Map<UUID, State> players = new HashMap<>();
     private BukkitTask task;
     private Predicate<Player> suspended = ignored -> false;
+    private Consumer<Player> levelUpEffect = ignored -> {};
 
     public Notifications(Plugin plugin, Messages messages, ResourcePacks resourcePacks, Timing timing) {
         this.plugin = plugin;
@@ -73,6 +76,15 @@ public final class Notifications implements Listener {
 
     public void suspendWhile(Predicate<Player> predicate) {
         suspended = predicate;
+    }
+
+    public void levelUpEffect(Consumer<Player> effect) {
+        levelUpEffect = effect;
+    }
+
+    @EventHandler
+    public void onLevelUp(LevelUpEvent event) {
+        levelUpEffect.accept(event.getPlayer());
     }
 
     public void status(Player player, Component message) {

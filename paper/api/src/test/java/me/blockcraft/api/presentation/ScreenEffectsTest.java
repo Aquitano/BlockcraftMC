@@ -41,6 +41,12 @@ public class ScreenEffectsTest {
         ScreenEffects.frame(player, 0.5, true);
         assertEquals(List.of(Key.key("other", "weather"), Key.key("blockcraft", "presentation/atmosphere/storm"),
                 Key.key("blockcraft", "presentation/cinematic/letterbox/16")), values);
+        ScreenEffects.accent(player, ScreenEffects.Atmosphere.FOCUS, 0.5);
+        ScreenEffects.clearAccent(player);
+        assertEquals(List.of(Key.key("other", "weather"), Key.key("blockcraft", "presentation/atmosphere/storm"),
+                Key.key("blockcraft", "presentation/cinematic/letterbox/16")), values);
+        ScreenEffects.clearAtmosphere(player);
+        assertEquals(List.of(Key.key("other", "weather"), Key.key("blockcraft", "presentation/cinematic/letterbox/16")), values);
         ScreenEffects.clear(player);
         assertEquals(List.of(Key.key("other", "weather")), values);
     }

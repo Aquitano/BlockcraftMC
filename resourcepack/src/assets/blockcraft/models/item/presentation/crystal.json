@@ -1,4 +1,4 @@
-{"textures":{"surface":"blockcraft:presentation/crystal","particle":"blockcraft:presentation/crystal"},
+{"textures":{"surface":"blockcraft:item/presentation/crystal","particle":"blockcraft:item/presentation/crystal"},
 "elements":[{"from":[4,4,4],"to":[12,12,12],"shade":false,
 "rotation":{"origin":[8,8,8],"axis":"z","angle":45},
 "faces":{"up":{"texture":"#surface","tintindex":0},"down":{"texture":"#surface","tintindex":0},

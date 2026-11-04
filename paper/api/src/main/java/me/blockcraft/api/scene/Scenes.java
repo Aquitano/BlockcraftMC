@@ -4,7 +4,7 @@ import com.destroystokyo.paper.event.player.PlayerStopSpectatingEntityEvent;
 import me.blockcraft.api.BlockcraftApi;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
-import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -57,11 +57,12 @@ public final class Scenes implements Listener, AutoCloseable {
             player.sendMessage(api.messages().get("presentation.busy"));
             return false;
         }
+        api.visuals().clearAccent(player);
         var saved = Saved.capture(player);
         var at = timeline.camera().sample(0).in(timeline.world());
-        ArmorStand camera;
+        ItemDisplay camera;
         try {
-            camera = timeline.world().spawn(at, ArmorStand.class);
+            camera = spawnCamera(at);
         } catch (RuntimeException failure) {
             plugin.getSLF4JLogger().warn("Could not create scene camera", failure);
             return false;
@@ -71,12 +72,6 @@ public final class Scenes implements Listener, AutoCloseable {
         VIEWING.add(player.getUniqueId());
         try {
             changing = true;
-            camera.setVisible(false);
-            camera.setMarker(true);
-            camera.setGravity(false);
-            camera.setInvulnerable(true);
-            camera.setPersistent(false);
-            camera.setVisibleByDefault(false);
             player.closeInventory();
             player.setGameMode(GameMode.SPECTATOR);
             player.setInvulnerable(true);
@@ -95,6 +90,19 @@ public final class Scenes implements Listener, AutoCloseable {
         } finally {
             changing = false;
         }
+    }
+
+    static ItemDisplay spawnCamera(Location at) {
+        return at.getWorld().spawn(at, ItemDisplay.class, camera -> {
+            camera.setItemStack(null);
+            camera.setGravity(false);
+            camera.setInvulnerable(true);
+            camera.setPersistent(false);
+            camera.setVisibleByDefault(false);
+            camera.setShadowRadius(0);
+            camera.setShadowStrength(0);
+            camera.setTeleportDuration(1);
+        });
     }
 
     public void stop(Player player) {
@@ -133,6 +141,8 @@ public final class Scenes implements Listener, AutoCloseable {
     private void render(Session session) {
         var timeline = session.timeline;
         int shownTick = session.skipped ? timeline.camera().duration() : session.tick;
+        boolean cut = timeline.camera().frames().stream().anyMatch(frame -> frame.tick() == shownTick && frame.cut());
+        session.camera.setTeleportDuration(cut ? 0 : 1);
         session.camera.teleport(timeline.camera().sample(shownTick).in(timeline.world()));
         if (session.player.getSpectatorTarget() != session.camera) session.player.setSpectatorTarget(session.camera);
         while (session.nextCue < timeline.cues().size() && timeline.cues().get(session.nextCue).tick() <= session.tick) {
@@ -208,7 +218,7 @@ public final class Scenes implements Listener, AutoCloseable {
         HandlerList.unregisterAll(this);
     }
 
-    private record Saved(Location location, GameMode mode, boolean allowFlight, boolean flying,
+    record Saved(Location location, GameMode mode, boolean allowFlight, boolean flying,
                          boolean invulnerable, boolean collidable, float fallDistance, Entity target) {
         static Saved capture(Player player) {
             return new Saved(player.getLocation(), player.getGameMode(), player.getAllowFlight(), player.isFlying(),
@@ -234,12 +244,12 @@ public final class Scenes implements Listener, AutoCloseable {
         final SceneTimeline timeline;
         final Consumer<End> completion;
         final Saved saved;
-        final ArmorStand camera;
+        final ItemDisplay camera;
         int tick;
         int nextCue;
         boolean skipped;
 
-        Session(Player player, SceneTimeline timeline, Consumer<End> completion, Saved saved, ArmorStand camera) {
+        Session(Player player, SceneTimeline timeline, Consumer<End> completion, Saved saved, ItemDisplay camera) {
             this.player = player;
             this.timeline = timeline;
             this.completion = completion;

@@ -454,6 +454,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
 
     @Override
     public void quit(Player player) {
+        BlockcraftApi.get().visuals().clearAccent(player);
         intro.cancel(player);
         music.forget(player);
         botDifficultyVotes.withdraw(player.getUniqueId());
@@ -483,6 +484,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     }
 
     private void leave(Player player) {
+        BlockcraftApi.get().visuals().clearAccent(player);
         boolean wasPlaying = round.leave(player);
         teams.leave(player.getUniqueId());
         fighters.remove(player.getUniqueId());
@@ -1214,6 +1216,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
 
     public void death(PlayerDeathEvent event) {
         var victim = event.getPlayer();
+        BlockcraftApi.get().visuals().clearAccent(victim);
         combat.forget(victim);
         strikesReady.remove(victim.getUniqueId());
         victim.leaveVehicle();
@@ -1318,6 +1321,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     }
 
     private void cleanUp() {
+        Bukkit.getOnlinePlayers().forEach(BlockcraftApi.get().visuals()::clearAccent);
         intro.clear();
         if (loop != null) {
             loop.cancel();

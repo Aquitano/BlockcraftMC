@@ -11,6 +11,7 @@ import net.kyori.adventure.key.Key;
 import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.ItemDisplay;
@@ -66,8 +67,15 @@ public final class VisualEffects implements Listener, AutoCloseable {
     private final ResourcePacks packs;
     private final Messages messages;
     private final Settings settings;
+    private final boolean gameplayEnabled;
+    private final double gameplayIntensity;
+    private final int gameplayFadeTicks;
+    private final int gameplayCooldownTicks;
     private final Map<UUID, Session> sessions = new HashMap<>();
+    private final Map<UUID, Accent> accents = new HashMap<>();
+    private final Map<UUID, Long> cooldowns = new HashMap<>();
     private final BukkitTask task;
+    private long tick;
     private boolean closed;
     private Predicate<Player> unavailable = ignored -> false;
 
@@ -76,6 +84,11 @@ public final class VisualEffects implements Listener, AutoCloseable {
         this.packs = packs;
         this.messages = messages;
         settings = Settings.from(presentation);
+        var gameplay = YamlFile.section(presentation, "gameplay");
+        gameplayEnabled = !Boolean.FALSE.equals(gameplay.get("enabled"));
+        gameplayIntensity = Settings.bounded(gameplay, "intensity", 0.5, 0, 1);
+        gameplayFadeTicks = (int) Settings.bounded(gameplay, "fade-ticks", 6, 1, 40);
+        gameplayCooldownTicks = (int) Settings.bounded(gameplay, "cooldown-ticks", 40, 0, 1200);
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
         task = plugin.getServer().getScheduler().runTaskTimer(plugin, this::tick, 1, 1);
     }
@@ -86,6 +99,26 @@ public final class VisualEffects implements Listener, AutoCloseable {
 
     public boolean active(Player player) {
         return sessions.containsKey(player.getUniqueId());
+    }
+
+    public boolean accent(Player player, ScreenEffects.Atmosphere atmosphere, int durationTicks) {
+        if (closed || !gameplayEnabled || gameplayIntensity == 0 || durationTicks <= 0 || !player.isOnline()
+                || player.isDead() || !packs.applied(player) || active(player) || Scenes.isViewing(player)
+                || unavailable.test(player) || accents.containsKey(player.getUniqueId())
+                || cooldowns.getOrDefault(player.getUniqueId(), 0L) > tick) return false;
+        accents.put(player.getUniqueId(), new Accent(player, player.getWorld(), atmosphere, Math.min(durationTicks, 200)));
+        cooldowns.put(player.getUniqueId(), tick + gameplayCooldownTicks);
+        return true;
+    }
+
+    public void clearAccent(Player player) {
+        if (accents.remove(player.getUniqueId()) != null) ScreenEffects.clearAccent(player);
+    }
+
+    static double accentIntensity(int age, int duration, int fadeTicks, double peak) {
+        int fade = Math.min(fadeTicks, Math.max(1, duration / 2));
+        double envelope = Math.clamp(Math.min((double) age / fade, (double) (duration - age) / fade), 0, 1);
+        return peak * envelope * envelope * (3 - 2 * envelope);
     }
 
     public boolean demo(Player player, Style style) {
@@ -106,6 +139,7 @@ public final class VisualEffects implements Listener, AutoCloseable {
             player.sendMessage(messages.get("presentation.effects.pack-required"));
             return false;
         }
+        clearAccent(player);
         var session = new Session(player, style, origin.clone(), Math.clamp(durationTicks, 40, 1200));
         sessions.put(player.getUniqueId(), session);
         try {
@@ -168,6 +202,24 @@ public final class VisualEffects implements Listener, AutoCloseable {
     }
 
     private void tick() {
+        tick++;
+        cooldowns.values().removeIf(until -> until <= tick);
+        for (var accent : List.copyOf(accents.values())) {
+            var player = accent.player;
+            if (!player.isOnline() || player.isDead() || !player.getWorld().equals(accent.world)
+                    || !packs.applied(player) || active(player) || Scenes.isViewing(player) || unavailable.test(player)
+                    || ++accent.age >= accent.duration) {
+                clearAccent(player);
+                continue;
+            }
+            try {
+                ScreenEffects.accent(player, accent.atmosphere,
+                        accentIntensity(accent.age, accent.duration, gameplayFadeTicks, gameplayIntensity));
+            } catch (RuntimeException failure) {
+                plugin.getSLF4JLogger().warn("Gameplay screen effect failed", failure);
+                clearAccent(player);
+            }
+        }
         for (var session : List.copyOf(sessions.values())) {
             if (!session.player.isOnline() || !session.player.getWorld().equals(session.origin.getWorld())
                     || !packs.applied(session.player) || ++session.tick >= session.duration) {
@@ -212,6 +264,7 @@ public final class VisualEffects implements Listener, AutoCloseable {
     }
 
     public void stop(Player player) {
+        clearAccent(player);
         var session = sessions.remove(player.getUniqueId());
         if (session == null) return;
         session.entities.forEach(Entity::remove);
@@ -221,7 +274,10 @@ public final class VisualEffects implements Listener, AutoCloseable {
     }
 
     @EventHandler
-    public void onQuit(PlayerQuitEvent event) { stop(event.getPlayer()); }
+    public void onQuit(PlayerQuitEvent event) {
+        stop(event.getPlayer());
+        cooldowns.remove(event.getPlayer().getUniqueId());
+    }
 
     @EventHandler
     public void onWorldChange(PlayerChangedWorldEvent event) { stop(event.getPlayer()); }
@@ -236,8 +292,25 @@ public final class VisualEffects implements Listener, AutoCloseable {
         if (closed) return;
         closed = true;
         task.cancel();
+        for (var accent : List.copyOf(accents.values())) clearAccent(accent.player);
+        cooldowns.clear();
         for (var session : List.copyOf(sessions.values())) stop(session.player);
         HandlerList.unregisterAll(this);
+    }
+
+    private static final class Accent {
+        final Player player;
+        final World world;
+        final ScreenEffects.Atmosphere atmosphere;
+        final int duration;
+        int age;
+
+        Accent(Player player, World world, ScreenEffects.Atmosphere atmosphere, int duration) {
+            this.player = player;
+            this.world = world;
+            this.atmosphere = atmosphere;
+            this.duration = duration;
+        }
     }
 
     private static final class Session {

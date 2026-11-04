@@ -45,6 +45,9 @@ music:
 # haze-ticks; both grow by gust-boost at the height of a gust.
 presentation:
   effects: true
+  gameplay:
+    siege-mode-ticks: 20
+    force-push-ticks: 12
   holographic-posts: true
   live-effects: 64
   scorch: {marks: 32, every: 3, ticks: 300, fade-ticks: 40, scale: 0.7}
@@ -312,6 +315,10 @@ intro:
   enabled: true
   duration-ticks: 180
   fade-ticks: 15
+  focus:
+    enabled: true
+    from: 0.75
+    until: 0.95
   shots:
     - at: 0.0
       anchor: overview

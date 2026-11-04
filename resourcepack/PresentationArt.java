@@ -34,16 +34,21 @@ public final class PresentationArt {
                         """;
             };
             write(root, "models/item/presentation/" + shape + ".json", """
-                    {"textures":{"surface":"blockcraft:presentation/%s","particle":"blockcraft:presentation/%s"},
+                    {"textures":{"surface":"blockcraft:item/presentation/%s","particle":"blockcraft:item/presentation/%s"},
                     "elements":[%s]}
                     """.formatted(shape, shape, elements));
         }
         for (int step = 0; step <= 32; step++) {
-            post(root, "cinematic/fade/" + step, step / 32.0, 0, 0);
-            post(root, "cinematic/letterbox/" + step, step / 32.0, 1, 0);
+            post(root, "cinematic/fade/" + step, step / 32.0, 0, 0, 1);
+            post(root, "cinematic/letterbox/" + step, step / 32.0, 1, 0, 1);
         }
         String[] atmospheres = {"hologram", "storm", "focus", "portal"};
-        for (int i = 0; i < atmospheres.length; i++) post(root, "atmosphere/" + atmospheres[i], 0, 0, i + 1);
+        for (int i = 0; i < atmospheres.length; i++) {
+            post(root, "atmosphere/" + atmospheres[i], 0, 0, i + 1, 1);
+            for (int step = 1; step <= 8; step++) {
+                post(root, "accent/" + atmospheres[i] + "/" + step, 0, 0, i + 1, step / 8.0);
+            }
+        }
     }
 
     private static void texture(Path root, String shape) throws Exception {
@@ -60,12 +65,12 @@ public final class PresentationArt {
                 image.setRGB(x, y, ((int) Math.round(alpha * 255) << 24) | (value << 16) | (value << 8) | value);
             }
         }
-        var path = root.resolve("textures/presentation/" + shape + ".png");
+        var path = root.resolve("textures/item/presentation/" + shape + ".png");
         Files.createDirectories(path.getParent());
         ImageIO.write(image, "PNG", path.toFile());
     }
 
-    private static void post(Path root, String name, double fade, int letterbox, int mode) throws Exception {
+    private static void post(Path root, String name, double fade, int letterbox, int mode, double intensity) throws Exception {
         write(root, "post_effect/presentation/" + name + ".json", """
                 {
                   "targets":{"swap":{}},
@@ -75,7 +80,7 @@ public final class PresentationArt {
                       "fragment_shader":"blockcraft:post/presentation",
                       "inputs":[{"sampler_name":"In","target":"minecraft:main"}],
                       "output":"swap",
-                      "uniforms":{"PresentationConfig":[{"name":"Parameters","type":"vec4","value":[%s,%d,%d,1]}]}
+                      "uniforms":{"PresentationConfig":[{"name":"Parameters","type":"vec4","value":[%s,%d,%d,%s]}]}
                     },
                     {
                       "vertex_shader":"minecraft:core/screenquad",
@@ -86,7 +91,8 @@ public final class PresentationArt {
                     }
                   ]
                 }
-                """.formatted(String.format(Locale.ROOT, "%.5f", fade), letterbox, mode));
+                """.formatted(String.format(Locale.ROOT, "%.5f", fade), letterbox, mode,
+                        intensity == 1 ? "1" : String.format(Locale.ROOT, "%.3f", intensity)));
     }
 
     private static void write(Path root, String name, String contents) throws Exception {

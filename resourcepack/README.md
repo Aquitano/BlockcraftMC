@@ -52,6 +52,7 @@ The item and text shader overrides preserve Minecraft 26.3's ordinary rendering 
 into effects. Item markers use RGB `(233, mode, 197)`, where modes 1, 2, and 3 select hologram, plasma, and pulse.
 Each affected model face needs `tintindex: 0`, and each element needs `shade: false` to preserve the marker bytes.
 `VisualEffects.model` supplies that color through the first custom-model-data color. These models are viewer-only.
+Their textures live under `textures/item/presentation`, which Minecraft 26.3 includes in its item atlas.
 
 Text markers use RGB `(231, mode, 197)`. `TextMotion` selects float, shake, brightness pulse, rainbow, or shine.
 Marked text shadows are suppressed. Ordinary text must avoid these reserved colors and their darkened shadow colors.
@@ -59,6 +60,8 @@ Marked text shadows are suppressed. Ordinary text must avoid these reserved colo
 `ScreenEffects` uses Paper 26.3's named post-effects API. Cinematic fades have 33 levels, with optional letterbox bars.
 Atmospheric presets change screen color and distortion. They do not add world lighting, weather simulation, or video
 playback. Cleanup removes only Blockcraft's presentation post-effects and preserves other namespaces.
+Gameplay accents use eight intensity levels under `presentation/accent`. `VisualEffects.accent` controls their
+duration, fade, and cooldown without suspending normal HUD updates. It clears them when a cinematic or dialogue starts.
 
 `verify_shaders.py --client <26.3-client.jar> --glslang <validator>` compiles the core variants and post-effect pairs.
 It needs Python 3 and glslangValidator. It does not download dependencies or change the pack. A new Minecraft version

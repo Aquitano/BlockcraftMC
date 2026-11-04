@@ -28,15 +28,18 @@ import java.nio.file.Files;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 public final class BattleIntro implements AutoCloseable {
     private final SternenfrontGame game;
     private final Scenes scenes;
     private final Map<UUID, CinematicActor> actors = new HashMap<>();
+    private final Set<UUID> focused = new HashSet<>();
     private final Optional<AnimationClip> clip;
     private BukkitTask deadline;
     private boolean running;
@@ -96,6 +99,9 @@ public final class BattleIntro implements AutoCloseable {
             player.sendMessage(game.messages().get("intro.invalid"));
             return;
         }
+        var config = game.plugin().getConfig();
+        var focus = new FocusWindow(config.getBoolean("intro.focus.enabled"),
+                config.getDouble("intro.focus.from"), config.getDouble("intro.focus.until"));
         var timeline = new SceneTimeline(game.map().world(), path.get(), List.of(), skipMode,
                 (viewer, tick, total, skipped) -> {
                     var actor = actors.get(viewer.getUniqueId());
@@ -103,6 +109,11 @@ public final class BattleIntro implements AutoCloseable {
                     int fadeTicks = Math.clamp(game.plugin().getConfig().getInt("intro.fade-ticks"), 1, total / 2);
                     double fade = Math.max(1.0 - (double) tick / fadeTicks, 1.0 - (double) (total - tick) / fadeTicks);
                     ScreenEffects.frame(viewer, Math.clamp(fade, 0, 1), true);
+                    if (focus.active(tick, total, skipped)) {
+                        if (focused.add(viewer.getUniqueId())) ScreenEffects.atmosphere(viewer, ScreenEffects.Atmosphere.FOCUS);
+                    } else if (focused.remove(viewer.getUniqueId())) {
+                        ScreenEffects.clearAtmosphere(viewer);
+                    }
                     if (tick % 10 == 0) {
                         viewer.sendActionBar(game.messages().get(skipped ? "intro.waiting" : "intro.controls",
                                 Formatter.number("seconds", Math.max(0, (total - tick + 19) / 20))));
@@ -116,6 +127,7 @@ public final class BattleIntro implements AutoCloseable {
         boolean played = scenes.play(player, timeline, ignored -> {
             var actor = actors.remove(player.getUniqueId());
             if (actor != null) actor.close();
+            focused.remove(player.getUniqueId());
             ScreenEffects.clear(player);
             player.clearTitle();
             player.sendActionBar(Component.empty());
@@ -126,6 +138,15 @@ public final class BattleIntro implements AutoCloseable {
             } catch (IllegalArgumentException badClip) {
                 game.plugin().getSLF4JLogger().warn("Intro actor could not use animation", badClip);
             }
+        }
+    }
+
+    record FocusWindow(boolean enabled, double from, double until) {
+        boolean active(int tick, int duration, boolean skipped) {
+            if (!enabled || skipped || duration <= 0 || !Double.isFinite(from) || !Double.isFinite(until)
+                    || from < 0 || until > 1 || from >= until) return false;
+            double progress = (double) tick / duration;
+            return progress >= from && progress < until;
         }
     }
 
