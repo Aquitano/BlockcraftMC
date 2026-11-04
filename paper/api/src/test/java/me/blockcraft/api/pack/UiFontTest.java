@@ -1,6 +1,5 @@
 package me.blockcraft.api.pack;
 
-import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
@@ -15,7 +14,6 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
