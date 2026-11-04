@@ -25,7 +25,8 @@ paper/knockbackffa        Continuous knockback arena, instant respawns and a sha
 paper/quicksg            QuickSG survival games
 paper/zombies            Solo or co-op Zombies survival
 paper/cores              Cores: red against blue, two beacons each, after GommeHD's mode
-paper/sternenfront       Sternenfront: two factions, blasters and command posts on a desert world
+paper/sternenfront       Sternenfront: two factions, blasters and command posts on a desert world; while it is tested,
+                         only players with blockcraft.lobby.preview see it in the navigator
 paper/endergames         EnderGames: kit survival games in a fresh random world, after GommeHD's mode
 paper/ttt                TTT: Traitors, Detectives and Innocents on ClayMC's maps or a town built in code, after GommeHD's mode;
                          TTT 2 (group ttt2) adds chores and sabotage; while it is tested, only players with
@@ -59,7 +60,7 @@ carries the name colour, so it ends in a colour code. Each group's `badge` meta 
 | Group      | Prefix             | Grants                                                                            |
 |------------|--------------------|-----------------------------------------------------------------------------------|
 | `default`  | `&7SPIELER &8● &7` | party invite and kick, `/msg` and `/r`, `/friend`, `/seen`, `/playtime`, `/discord` |
-| `premium`  | `&6PREMIUM &8● &6` | default plus premium lobby area, double jump, join when full, `/joinme`, chat colours, own `/ptime` kept across servers |
+| `premium`  | `&6PREMIUM &8● &6` | default plus premium lobby area, the navigator's games under test, double jump, join when full, `/joinme`, chat colours, own `/ptime` kept across servers |
 | `youtuber` | `&5YT &8● &5`      | premium plus `/joinme` without delay, `/bc`, `/nick`                              |
 | `supporter`| `&eSUP &8● &e`     | premium plus team chat, reports and support requests, mute, warn, kick, check and history, clear chat, chatting during a global mute, seeing through vanish and nicks |
 | `moderator`| `&cMOD &8● &c`     | supporter plus ban, strikes, warn lists, alts, `/goto`, global mute and slow chat, freeze, vanish, staff mode, invsee (read only), teleport |

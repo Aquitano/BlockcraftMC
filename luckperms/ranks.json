@@ -28,6 +28,7 @@
         {"type": "meta", "key": "meta.badge.\ue301", "value": true},
         {"type": "permission", "key": "blockcraft.lobby.premium", "value": true},
         {"type": "permission", "key": "blockcraft.lobby.doublejump", "value": true},
+        {"type": "permission", "key": "blockcraft.lobby.preview", "value": true},
         {"type": "permission", "key": "blockcraft.system.fulljoin", "value": true},
         {"type": "permission", "key": "blockcraft.system.joinme", "value": true},
         {"type": "permission", "key": "blockcraft.chat.color", "value": true},

@@ -74,7 +74,7 @@ an inspector nor a pending capture remains. File encoding and writes run off the
 The map has three **command posts** (A, B, C) between the two headquarters. Standing in a post's zone moves its
 capture progress towards the faction with more players there, faster the bigger the lead (up to three times).
 An enemy post is first neutralised, then taken. Nobody present lets an unfinished capture drift back. A post's
-beacon beam and the coloured blocks around it show its owner from anywhere on the map; standing in the zone shows
+coloured blocks show its owner from anywhere on the map; standing in the zone shows
 the progress as a boss bar. Every capture pays coins.
 
 Each faction starts with `tickets.start` **reinforcements**. Every death costs one. The faction holding more posts
@@ -361,6 +361,9 @@ ramp, noise, bevel, panel lines, and wear on the scrappy materials. The painter 
 the same source gives byte-identical PNGs. A box may turn by 22.5 or 45 degrees around one axis, and glowing materials
 write `light_emission`.
 
+Hiding a player's real body for the rig also takes them out of that viewer's tab list while they are deployed. This is
+accepted for now.
+
 Every fighter on the field is rigged for the other fighters: `appearance.droids` for the Hegemonie,
 `appearance.infantry` for the Kolonien, humans and bots alike. `appearance/RigBody` holds one body per faction and
 class: its model family (`sternenfront/body/<faction>_<role>/<part>`, part `torso`, `head`, `arm` or `leg`), joint
@@ -424,7 +427,9 @@ sand kicked up from the ground block scale with speed.
 docker compose up -d mariadb velocity lobby sternenfront
 ```
 
-Join through Velocity and run `/play sternenfront`. With bots enabled, one player starts the countdown;
+Join through Velocity and run `/play sternenfront`. While the mode is tested, the lobby's navigator shows it only to
+players with `blockcraft.lobby.preview` (premium and every team rank); `/play` still works for everyone.
+With bots enabled, one player starts the countdown;
 `/start` shortens it. The jar supplies defaults. Existing config files should contain only operator overrides;
 old full copies can pin obsolete bot damage and timings until those values are removed or updated.
 
