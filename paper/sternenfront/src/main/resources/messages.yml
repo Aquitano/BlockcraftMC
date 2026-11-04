@@ -447,12 +447,24 @@ hero:
   sidebar:
     points: "<accent><points><muted>/<cost> Kampfpunkte"
     ready: "<success>Held bereit <dark>· <accent><points> <muted>Punkte"
+    waiting: "<accent><points><muted>/<cost> <dark>· <muted>Heldenplätze belegt"
     hero: "<muted>Im Feld als <hero>"
 
 hit:
   hit: "<white><icon:hit>"
   headshot: "<icon:headshot>"
   kill: "<icon:kill>"
+
+feedback:
+  kill: "<error>Abschuss</error> <white><target> <success>+<points> KP"
+  multikill: "<error><kills> Abschüsse <success>+<points> KP"
+  assist: "<aqua>Abschusshilfe <success>+<points> KP"
+  defence: "<aqua>Posten verteidigt <success>+<points> KP"
+  healing: "<success>Verbündete geheilt +<points> KP"
+  capture: "<aqua>Posten erobert <success>+<points> KP"
+  neutralise: "<aqua>Posten neutralisiert <success>+<points> KP"
+  progress: " <dark>│ <accent><points><muted>/<cost> KP"
+  hero-ready: "<success><bold>HELD BEREIT</bold>"
 
 killcam:
   watching: "<muted>Besiegt von <white><killer>"
@@ -499,7 +511,8 @@ combat:
   broken: "<error>GEBROCHEN"
   guard-broken: "<error>Deckung gebrochen! <muted>Lass sie sich kurz erholen."
   heat: "<muted>Hitze"
-  venting: "<error>KÜHLEN"
+  hot: "<error><bold>! HEISS</bold>"
+  venting: "<error><bold>! KÜHLEN</bold> <seconds>s"
   incoming:
     front: "<error><bold>▲</bold> <dark>│ "
     back: "<error><bold>▼</bold> <dark>│ "

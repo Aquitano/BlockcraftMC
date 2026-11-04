@@ -37,6 +37,7 @@ public enum SoundCue {
     ORBITAL_IMPACT("orbital.impact"),
     HITMARKER("hitmarker"),
     HEADSHOT("headshot"),
+    COOLED("cooled"),
     KYBER_FOUND("kyber.found"),
     BRUMMI_BEEP("brummi.beep"),
     BRUMMI_SCARED("brummi.scared"),

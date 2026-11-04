@@ -72,6 +72,18 @@ heat vents before it fires again. F uses the first ability and Q the second, wit
 Langbüchse is hitscan (`combat.precision-hitscan`); every other player blaster and every bot weapon fires bolts that
 can be dodged at range. Grenades and mining charges hurt their thrower as well as enemies; teammates remain safe.
 
+While scoped, visible enemies have red outlines and allies have cyan outlines. This applies to players and bots,
+including their custom body parts. Outlines are private to the viewer and disappear when the target leaves the
+`scope.targets` cone or range, moves fully behind cover, or the viewer stops aiming.
+
+Hits, headshots, and kills have distinct sounds and immediate action-bar markers. Kill and assist popups show the
+target or contribution, the points earned, and current progress toward a hero. Nearby gains combine into one popup.
+Objective titles remain visible. The sidebar distinguishes an available hero from enough points with every slot occupied.
+
+The heat meter turns red and shows `! HEISS` at `heat.warning-level`, or when the next shot would overheat the weapon.
+Venting shows `! KÜHLEN` with its remaining seconds, followed by a ready sound. `combat-feedback` tunes marker and
+popup durations and the hit, headshot, and kill volumes.
+
 The heavies' signature abilities are a trade rather than a win. The Sprengladung's long fuse makes it strong against
 whoever holds a spot and easy to walk away from. Belagerungsmodus roots its unit, which is what a Sprengladung is made
 for.
@@ -165,8 +177,8 @@ bot produces a partial report. `BotDebug` defines what a report holds.
   stays usable. The combat hitbox stays the underlying fighter's size, even on the Brecher.
 - **Tab list.** Hiding a player's real body for the rig also takes them out of that viewer's tab list while they are
   deployed. This is accepted for now.
-- **Hit marker.** The marker under the crosshair is a subtitle queued through `Notifications` at reward priority, so an
-  important title still wins.
+- **Hit marker.** Combat feedback uses an immediate action-bar message, independently of objective titles. The regular
+  HUD returns after the marker or reward popup expires.
 - **Effects.** `presentation.effects` turns off everything but bolt trails, thrusters and plain explosions. Scorch marks
   and blade cuts are display models and change no blocks. `Spectacle` runs the dropship and the sandstorm. The storm is
   particles sent to each player, with none under a roof and no shader, so nothing outlasts the round.

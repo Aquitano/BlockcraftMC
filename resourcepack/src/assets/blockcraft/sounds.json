@@ -267,5 +267,10 @@
     "sounds": [
       "blockcraft:sternenfront/siege_lock"
     ]
+  },
+  "sternenfront.cooled": {
+    "sounds": [
+      "blockcraft:sternenfront/cooled"
+    ]
   }
 }

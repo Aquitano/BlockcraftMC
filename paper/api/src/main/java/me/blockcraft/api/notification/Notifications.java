@@ -51,6 +51,8 @@ public final class Notifications implements Listener {
         NoticeQueue.Notice<TitleNotice> shownTitle;
         final RewardSounds sounds;
         long barSent;
+        Component instantBar;
+        long instantUntil;
 
         State(Timing timing) {
             sounds = new RewardSounds(timing.soundWindow(), timing.soundGap(), timing.soundLifetime());
@@ -93,6 +95,16 @@ public final class Notifications implements Listener {
 
     public void feedback(Player player, Component message) {
         bar(player, message, Priority.FEEDBACK, timing.feedback());
+    }
+
+    public void feedbackNow(Player player, Component message, long ticks) {
+        if (player.isOnline() && !suspended.test(player)) {
+            var state = state(player);
+            state.instantBar = message;
+            state.instantUntil = now() + Math.max(1, ticks);
+            state.shownBar = null;
+            player.sendActionBar(message);
+        }
     }
 
     public void reward(Player player, Component message) {
@@ -192,7 +204,7 @@ public final class Notifications implements Listener {
             if (sound != null) {
                 sound.play(player);
             }
-            if (state.bar.isEmpty() && state.titles.isEmpty() && state.xp.isEmpty() && state.sounds.isIdle(now)) {
+            if (state.instantBar == null && state.bar.isEmpty() && state.titles.isEmpty() && state.xp.isEmpty() && state.sounds.isIdle(now)) {
                 entries.remove();
             }
         }
@@ -203,6 +215,13 @@ public final class Notifications implements Listener {
     }
 
     private void showBar(Player player, State state, long now) {
+        if (state.instantBar != null) {
+            if (now < state.instantUntil) {
+                return;
+            }
+            state.instantBar = null;
+            player.sendActionBar(Component.empty());
+        }
         var selected = state.bar.next(now).orElse(null);
         if (selected == null) {
             if (state.shownBar != null) {
