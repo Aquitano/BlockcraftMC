@@ -1,7 +1,14 @@
-# Run Zombies locally
+# Zombies
 
-Zombies supports one to four players and ships an original starter arena called Außenposten.
-It uses BlockcraftAPI for its lobby, countdowns, sidebar, setup commands, stats, rewards, and match recap.
+Zombies is wave survival for one to four players on an original starter arena called Außenposten. Players earn gold in
+the match, buy doors, power, perks and guns, and hold out until the final wave. Bleeding out removes perks, retains
+weapons, and returns the player at the next intermission. In solo play, Quick Revive is consumed to survive one lethal
+hit. Losing the last fighter or exceeding a wave's time limit ends the match.
+
+`/zombies` opens the player guide. Right-click fires, left-click reloads, and the third slot holds the knife. Sneak near
+a broken window to repair it or near a downed teammate to revive them.
+
+## Run it
 
 From the repository root, build the plugins and start the local services:
 
@@ -10,9 +17,8 @@ From the repository root, build the plugins and start the local services:
 docker compose up -d mariadb velocity lobby zombies
 ```
 
-Join through Velocity and run `/play zombies`. One player starts the 20-second lobby countdown.
-Staff can shorten it with `/start`. A player who joins after the match starts watches that match.
-The resource pack adds weapon models, enemy headgear, and a navigator icon. Controls, names, and menus also work without the pack.
+Join through Velocity and run `/play zombies`. One player starts the lobby countdown, and staff can shorten it with
+`/start`. A player who joins after the match starts watches that match.
 
 For the host run task, start the local database first, then run:
 
@@ -22,35 +28,32 @@ docker compose up -d mariadb velocity
 ```
 
 Both commands announce the `zombies` server group.
-The production overlay enables Zombies by default.
 
 ## Configure the map
 
 The saved [Außenposten template](../../worlds/zombies) includes the arena and its map-owned `blockcraft/Zombies/arena.yml`.
 Both local launch options restore that template before starting the game.
 For a new world without an arena definition, the plugin copies the bundled [arena definition](src/main/resources/arena.yml).
-Its generator uses an empty 127 by 127 region above Y=95 and refuses to replace existing blocks.
+Its generator (`StarterArena`) uses an empty 127 by 127 region above Y=95 and refuses to replace existing blocks.
 A fixed seed makes every generated copy identical.
-The courtyard has a watchtower, a radio shelter, a collapsed shelter, a campfire, and the two supply kiosks.
-Each wing is furnished for its job: depot racks and a forklift, a workshop jeep on a lift, the generator, and the clinic ward.
-The yards between the wings hold a motor pool, a tank farm, a graveyard, and a helipad. A forest surrounds the fence.
 Change `origin` before generation if that region is occupied. Set `starter.build: false` for a hand-built arena.
 
-Each wing also sells one perk at a `PERKS` station with a `perk`; a `PERKS` station without one sells them all. A
-station added to the file after the map was saved gets its block from the starter at the next start.
-Edit `rooms`, `windows`, `stations`, and `notes` in the map-owned file to change the layout.
-Window entries must lie in their named room. Station and note locations must also lie in their named room.
-The `yard` room starts unlocked. Each other room has a gold price and a door box.
-Door and window block data define the blocks the plugin resets at startup and shutdown.
-All eight windows have enclosed spawn rooms. Mobs approach the boards inside those rooms, break them, and walk through the opening.
-Iron bars sit above the opening. Players cannot enter spawn rooms, even when the adjacent wings are open.
-The courtyard windows lead into locked storerooms. Each outer window has a barred gate in the perimeter fence.
+Edit `rooms`, `windows`, `stations`, and `notes` in the map-owned file to change the layout:
 
-Every waxed copper bulb inside a room is a power light. The plugin switches them off at startup.
-When the power is bought, they light up in order of distance from the power station.
-Each note is a lectern. Its text lives in `messages.yml` under `note.<id>`.
-The first read of a note unlocks `zombies.note.<id>` and pays `rewards.note` network coins.
-Keep at least one window in `yard`, so the first wave can spawn before players buy a door.
+- Window, station and note locations must lie in their named room.
+- The `yard` room starts unlocked. Each other room has a gold price and a door box.
+- Keep at least one window in `yard`, so the first wave can spawn before players buy a door.
+- Door and window block data define the blocks the plugin resets at startup and shutdown.
+- A `PERKS` station with a `perk` sells that one; without one it sells them all. A station added to the file after the
+  map was saved gets its block from the starter at the next start.
+- All eight windows have enclosed spawn rooms, with iron bars above the opening. Mobs approach the boards inside those
+  rooms, break them, and walk through the opening. Players cannot enter spawn rooms, even when the adjacent wings are
+  open. The courtyard windows lead into locked storerooms, and each outer window has a barred gate in the perimeter
+  fence.
+- Every waxed copper bulb inside a room is a power light. The plugin switches them off at startup, and they light up in
+  order of distance from the power station when the power is bought.
+- Each note is a lectern with its text in `messages.yml` under `note.<id>`. The first read unlocks `zombies.note.<id>`
+  and pays `rewards.note` network coins.
 
 Use `/setup lobby`, `/setup spawn`, and `/setup spectator` while standing at each desired position.
 Run `/setup check` to check the layout and spawn, then `/map save` to publish the map template.
@@ -58,27 +61,11 @@ A map save writes the intact doors and barricades, even during a match. It resto
 
 ## Tune the match
 
-Edit [config.yml](src/main/resources/config.yml) in the plugin's data directory and restart the game server.
-`waves` controls the final wave, squad scaling, spawn pacing, health growth, and boss interval. Every player beyond
-the first adds enemies, enemy health and spawn pace from the first wave on (`extra-player`, `health-per-extra-player`,
-`spawn-ticks-per-extra-player`), and more health again in the late waves.
-After `waves.late.from`, health and spawn pace grow faster, and health grows faster still for each extra player.
-`waves.hounds` sets the hellhound waves: from `first`, every `every`th wave that is no boss wave sends only hellhounds.
-In every other wave, each enemy kind joins at its `first-wave` with `weight` and moves evenly to `late-weight` by the final wave.
-The last `waves.stragglers` enemies of a wave speed up to `waves.straggler-speed`, and a wave with nobody left alive spawns at once.
-The squad size is sampled at the start of each wave. Temporary deaths do not reduce the squad size.
-`events` sets the wave events: from `from-wave`, each wave that is neither a boss nor a hound wave gets one event with `chance`, picked by each event's `weight`.
-The blood moon covers a whole wave. The power outage, the bounty and the toxic fog strike mid-wave.
-`weapons`, `enemies`, `perks`, `prices`, and `gold` hold combat and economy values.
-`mystery` times the mystery box: how high and fast the gun rises, how long it changes, and how long the buyer has to take it before it sinks back.
-`armory` places the ring of guns that turns above each armory.
-`abilities` tunes what the special kinds do: crawler packs, the shield's front angle, the breeder's brood, frost, Molotovs, the electric zap's jumps, and how wide a fighter's gaze freezes a shadow walker. An enemy's `scale` sizes its body and hitbox.
-`rewards` pays network coins through the shared round summary. Gold stays in the match.
+The bundled [config.yml](src/main/resources/config.yml) holds the waves, events, weapons, enemies, perks, prices and
+gold. To change a value, put only that key into the server's `plugins/Zombies/config.yml` and restart the game server.
 
-Open `/zombies` for the player guide. Right-click fires, left-click reloads, and the third slot holds the knife.
-Sneak near a broken window to repair it or near a downed teammate to revive them.
-Bleeding out removes perks, retains weapons, and returns the player at the next intermission.
-In solo play, Quick Revive is consumed to survive one lethal hit. Losing the last fighter or exceeding a wave's time limit ends the match.
+The squad size is sampled at the start of each wave, and temporary deaths do not reduce it. `rewards` pays network coins
+through the shared round summary, while gold stays in the match.
 
 ## Validate changes
 
@@ -89,7 +76,9 @@ In solo play, Quick Revive is consumed to survive one lethal hit. Losing the las
 
 For MariaDB integration tests, set `BLOCKCRAFT_TEST_DB_PORT` and `BLOCKCRAFT_TEST_DB_PASSWORD` for an isolated test database.
 In a Minecraft client, check a solo start, gun controls, a room purchase, power and upgrades, and a cooperative revive.
-Check the weapon models and the enemies' headgear with the resource pack both enabled and declined.
+Check the weapon models and the enemies' headgear with the resource pack both applied and absent. The proxy's
+`resource-pack.required` kicks whoever declines the pack, so turn it off in BlockcraftSystem's config for the run
+without it.
 The [arena playtest checklist](TESTING.md) covers every station, barricade, and player state.
 
 To inspect a saved arena in the local 3D viewer, use the [map inspector](../../dev/map-inspector/README.md):

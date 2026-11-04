@@ -82,10 +82,9 @@ The input must contain one frame stream from one process. Use a consistent resol
 simulation distance, FPS cap, VSync setting, resource pack, mods, and shaders. Keep the game focused during capture.
 Run the same route after chunks have loaded. Record cold chunk loading separately.
 
-The summary reports frame-time p50/p95/p99, average FPS, and 1% low FPS. Here, 1% low means 1000 divided by the mean
-duration of the slowest 1% of frames, rounded up to at least one frame. Different tools can use other definitions.
+The summary's 1% low means 1000 divided by the mean duration of the slowest 1% of frames, rounded up to at least one
+frame. Different tools can use other definitions, so compare it only with this summary.
 Presentation intervals measure the application's frame cadence, not how long every frame remained on the display.
-Blank, zero, non-finite, or negative intervals fail validation; inspect such rows before using the capture.
 Do not substitute sampled FPS readings or CPU work duration for intervals between frames.
 
 ## Compare the same workload
@@ -109,12 +108,3 @@ review. Bot connections can exercise networking and server ticks, but cannot est
 For database work, run `EXPLAIN` and `ANALYZE` against representative disposable data. Compare rows examined, selected
 indexes, sort work, and query duration. The greeting and parkour indexes have a measured query-plan improvement;
 that does not establish an overall server or client speedup.
-
-## Verify map setup
-
-Run `/lobbyset check` after placing the [lobby activity locations](../../EASTER_EGGS.md#configure-the-lobby-map).
-It works from the console too. It checks missing positions, pressure plates, duplicate course stations, course worlds,
-the navigator's jump destination, and distinct Easter hiding places. It does not prove that jumps are reachable or
-that the pond is fishable. Complete the course and fish with a client, then use `/map save` to retain the setup.
-
-The network birthday still requires the actual opening date in both calendar configs. An empty date leaves it disabled.

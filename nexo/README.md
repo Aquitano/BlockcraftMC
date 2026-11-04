@@ -41,8 +41,9 @@ placements:
 first matching occasion, otherwise `item` remains. Occasions follow `/event` and the network calendar.
 
 The stall and tree use real barrier hitboxes. Their placements also specify `fallback-block` and
-`fallback-height` so clients without the pack see solid vanilla scenery at those hitboxes. Other models use
-their vanilla item material as a fallback. Both bench variants have seats.
+`fallback-height` so a client without the pack sees solid vanilla scenery at those hitboxes. Other models use
+their vanilla item material as a fallback. A client gets there only if its download failed or the proxy's
+`resource-pack.required` is off, because that setting kicks whoever declines. Both bench variants have seats.
 Nexo's model remains tracked while its rendering is hidden for players without the pack, so the seats still work.
 The definitions set `properties.cullable: false` because Nexo's culling would otherwise reset that visibility.
 
@@ -66,5 +67,5 @@ Season changes, shutdown, and map publication restore them. Startup recovers int
 by a builder is preserved when it no longer matches the seasonal replacement. Save aborts if restoration fails.
 
 On a local test network, `/event winter advent` enables snow, ice, and Christmas decorations. `/event none`
-restores the ordinary map, and `/event auto` returns to the calendar. The shared resource pack is optional;
-physical blocks remain the same for every player.
+restores the ordinary map, and `/event auto` returns to the calendar. Physical blocks do not depend on the resource
+pack, so they are the same for every player.
