@@ -6,9 +6,11 @@ import me.blockcraft.api.item.Items;
 import me.blockcraft.api.pack.MenuIcon;
 import me.blockcraft.api.proxy.ProxyMessaging;
 import net.kyori.adventure.text.Component;
+import org.bukkit.entity.Interaction;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.plugin.Plugin;
@@ -98,17 +100,34 @@ public final class LobbyHotbar implements Listener {
         var player = event.getPlayer();
         HotbarItem.of(event.getItem(), LobbyItem.class).ifPresent(item -> {
             event.setCancelled(true);
-            switch (item) {
-                case CHOICE, SECOND_CHOICE -> open(player, choices.get(item.ordinal()));
-                case STATS -> stats.open(player);
-                case START -> {
-                    if (player.hasPermission(GamePermissions.START)) {
-                        countdown.forceStart(player);
-                    }
-                }
-                case HUB -> ProxyMessaging.hub(plugin, player);
-            }
+            use(player, item);
         });
+    }
+
+    /** A client aiming at furniture's hitbox reports only that hitbox and never the item, so it needs its own route. */
+    @EventHandler
+    public void onInteractEntity(PlayerInteractEntityEvent event) {
+        if (event.getHand() != EquipmentSlot.HAND || !(event.getRightClicked() instanceof Interaction)) {
+            return;
+        }
+        var player = event.getPlayer();
+        HotbarItem.of(player.getInventory().getItemInMainHand(), LobbyItem.class).ifPresent(item -> {
+            event.setCancelled(true);
+            use(player, item);
+        });
+    }
+
+    private void use(Player player, LobbyItem item) {
+        switch (item) {
+            case CHOICE, SECOND_CHOICE -> open(player, choices.get(item.ordinal()));
+            case STATS -> stats.open(player);
+            case START -> {
+                if (player.hasPermission(GamePermissions.START)) {
+                    countdown.forceStart(player);
+                }
+            }
+            case HUB -> ProxyMessaging.hub(plugin, player);
+        }
     }
 
     private static void open(Player player, Choice choice) {
