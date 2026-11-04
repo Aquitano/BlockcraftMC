@@ -1,0 +1,11 @@
+name: Kit1v1 / Game1v1
+origin: GommeHD.net
+category: Lobbys
+description: Die gemeinsame Hauptlobby von Kit1v1 und Game1v1 mit ihren Figuren und
+  Ausstellungsstücken.
+icon: iron_sword
+arrival:
+  x: 15.5
+  y: 4.0
+  z: -2.5
+  yaw: 0.0

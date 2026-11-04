@@ -102,7 +102,8 @@ Afterwards:
   the target, for example `./gradlew :paper:runServer -Pgame=<group>`.
 - Check signs, heads, chests, item frames, and water that the report lists under scheduled updates.
   Paper's conversion also removes blocks that cannot stand where they are, such as an unsupported torch, and their
-  drops do not enter the map.
+  drops do not enter the map. [The GommeHD import](#gommehdnet-star-wars-hypixel-and-twerion) lists what else a legacy
+  conversion lost.
 - Old plugin data is not imported. Place spawns and locations again with the game's `/setup`, name the map in
   `blockcraft/map.yml`, and publish it with `/map save`. A BedWars pool map needs its `map.yml` before it can be
   voted. Use `/setup map <key> edit` to load the imported world and create an empty `map.yml`. Then use `spawn`,
@@ -364,6 +365,72 @@ the built chunks of its round island (`-160,-96,159,207`). All armor stands and 
 are gone. Its arrival is the old world spawn. Five secret signs, numbered 1 to 4 and 6, are left for visitors to
 find. A Paper run checked the exhibit's discovery, its loading, the support and headroom at the arrival and every
 checkpoint, and void beyond the build.
+
+### GommeHD.net, Star Wars, Hypixel, and Twerion
+
+Nine exhibits were imported on 2026-11-03 with Paper 26.3 build 235.
+[CREDITS.md](../CREDITS.md#gommehdnet-star-wars-hypixel-and-twerion) names each source archive and its source and kept
+chunk counts. The archives lie in `Downloads/blockcraft/`, except the two world downloads,
+`.minecraft/saves/hypixel zombies-2026-10-24_(2).zip` and `.minecraft/saves/twerion lobby-2026-10-22_(2).zip`. The
+source ZIPs remain unchanged.
+
+`run/capsule-20261103`, ignored by Git, is the import workspace, including the ZIP hashes, chunk audits, and smoke
+results. The complete pre-cleanup Star Wars world is retained under
+`run/capsule-20261103/before-cleanup`, with SHA-256 inventories.
+
+**What was cut.** Empty chunks are omitted everywhere. The cleanup also removes 321 plain flat-ground chunks from Star
+Wars and 1,089 from Gommunity. Star Wars and Gommunity keep a chunk
+of plain ground beside their non-flat content. The other earlier exhibits already contain no empty
+or plain-flat chunks. New chunks beyond each exhibit generate as void. Player data, unused dimensions, and loose item
+drops are excluded.
+
+**Dates.** The dates in the Hypixel and Twerion descriptions are download dates. The construction years are unknown, so
+none of these nine exhibits sets `year`. Gommunity's saved level name mentions 2017, while the supplied archive names it
+Normal 2020. Its display name follows the archive.
+
+**Conversion.**
+
+- GommeHD.net and the five additional GommeHD archives use the pre-1.9 numeric block format.
+- Star Wars mixes that format with 1.14.4 chunks. Its working copy received deterministic UUIDs for 18 old entities
+  without them and the default priority for 73 old scheduled block updates. All seven villagers survive.
+- The Hypixel and Twerion downloads already use 26.3. Their original generator metadata is at the level root, so the
+  working copies also placed it under the overworld dimension for Paper.
+
+**What legacy conversion lost and was restored.** The import restores `Silent` on 144 armor stands in the five
+additional GommeHD maps after legacy conversion omitted it. Paper's upgrade removed 20 blank wall signs and twelve wall
+banners in the waiting lobbies because their old attachments use air, plants, or beds. Those decorations are restored in
+the finished chunks using matching surviving decorations with identical source text or banner patterns. Only those 32
+block positions and their block entities differ from the finished terrain, and no supporting blocks were added.
+
+**Map pictures.** A dimension cannot hold pictures, so they live in the archive level, in
+`archive/data/minecraft/maps`. Restore this level data with the archive template when starting the backend; adding only
+the exhibit folders does not install the pictures into an already running level. All 77 picture files retain their
+source bytes, and their frame references were remapped to free IDs:
+
+| IDs | Holds |
+| --- | --- |
+| up to 194 | referenced by older exhibits, with no picture file in the level |
+| 195 to 714 | reserved for an exhibit kept outside this repository |
+| 715 | Star Wars' unused picture, which none of its retained items references |
+| 716 to 791 | the 2020 GommeHD lobby's 76 pictures, with 72 frame references |
+| 11060 to 11063 | four frames of the 2020 GommeHD lobby, whose picture files are absent from the ZIP |
+
+Those four frames remain without pictures. The otherwise unused source pictures 12 through 15 contain no colored
+pixels. The saved allocator reserves all of these IDs, so the next allocated map is 11064 and cannot populate a missing
+frame with unrelated artwork.
+
+**Checks.** Independent checks read all 14,135 source chunks after conversion. Every chunk is `minecraft:full` at
+DataVersion 5023, has valid block and biome palettes, and has no pending neighbour upgrades. Every retained terrain
+chunk matches the finished copy apart from the 32 restored decorations. The checks also compare source block-entity
+positions and types. Legacy flower pots, note blocks, and beds now store their data as block states and were checked
+there. Armor stands, item frames, and paintings were compared per map, including poses, equipment, names, frame
+contents, leather colors, and custom-head textures; the audits are in the workspace. Legacy hanging-entity coordinates and directions are checked through their attachment positions and
+equivalent modern directions rather than by comparing the changed storage formats.
+
+A throwaway Paper server loaded all nine through `ExhibitPool` and `TemplateDimensions`. It checked support and headroom
+at all arrivals and checkpoints, void outside the templates, the 32 restored decorations, picture loading, and
+allocation of map ID 11064 without occupying the older map IDs. Client appearance, lighting, and normal ticking still
+need a visit. Scheduled block and fluid updates remain.
 
 ## TTT
 

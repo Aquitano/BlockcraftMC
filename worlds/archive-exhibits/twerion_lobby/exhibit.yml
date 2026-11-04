@@ -1,0 +1,11 @@
+name: Serverlobby
+origin: Twerion
+category: Lobbys
+description: Die am 22.10.2026 heruntergeladene Twerion-Lobby mit ihren Figuren, Schildern
+  und Dekorationen.
+icon: nether_star
+arrival:
+  x: 149.5
+  y: 190.0
+  z: 301.5
+  yaw: -110.81181

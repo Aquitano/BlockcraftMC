@@ -1,0 +1,10 @@
+name: SkyWars-Wartelobby
+origin: GommeHD.net
+category: Wartelobbys
+description: Die gesicherte SkyWars-Wartelobby mit ihren Schildern, Bannern und Figuren.
+icon: ender_eye
+arrival:
+  x: 44.5
+  y: 101.0
+  z: 2.5
+  yaw: 0.0
