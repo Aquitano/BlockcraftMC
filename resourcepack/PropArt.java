@@ -213,6 +213,23 @@ public final class PropArt {
         }
         box(b, 13, 2, 2, 14, 23, 3, "timber"); box(b, 11, 0, 1, 16, 5, 2, "iron");
         add(result, "skate_rack", "Schlittschuhe und Schneeschaufel", b);
+
+        b = new ArrayList<>();
+        box(b, 1, 0, 2, 15, 7, 13, "timber");
+        box(b, 1, 7, 2, 15, 9, 13, "dark_timber");
+        for (int x : new int[]{3, 11}) {
+            box(b, x, 0, 1.8, x + 1, 9.2, 13.2, "iron");
+        }
+        box(b, 7, 5, 1.5, 9, 8, 2.2, "brass");
+        box(b, 3, 9, 5, 13, 13, 11, "green");
+        box(b, 4, 9, 4.8, 5, 13.2, 11.2, "canvas");
+        box(b, 11, 9, 4.8, 12, 13.2, 11.2, "canvas");
+        box(b, 2, 9, 2, 8, 14, 5, "canvas");
+        box(b, 2, 13, 1.8, 8, 14, 5.2, "dark_timber");
+        box(b, 3, 14, 3, 4, 16, 4, "dark_timber");
+        box(b, 6, 14, 3, 7, 16, 4, "dark_timber");
+        box(b, 3, 15, 3, 7, 16, 4, "dark_timber");
+        add(result, "luggage", "Reisegepäck", b);
         return List.copyOf(result);
     }
 
@@ -293,7 +310,7 @@ public final class PropArt {
             case "merchant_stall" -> "BARREL";
             case "timber_bench", "winter_bench" -> "OAK_STAIRS";
             case "departure_clock" -> "CLOCK";
-            case "presents" -> "CHEST";
+            case "presents", "luggage" -> "CHEST";
             case "cocoa_tray" -> "COOKIE";
             case "spring_basket" -> "FLOWER_POT";
             case "harvest_basket" -> "CARVED_PUMPKIN";
