@@ -111,16 +111,20 @@ public final class BattleEffects {
             var flash = config.muzzleFlash();
             boolean heavy = blaster.precision() || blaster.profile() == Blaster.REPEATER;
             // The barrel sits under a block from the eyes, where even a small flash covers the shooter's aim.
-            flares.flash(flash(faction), muzzle, heavy ? flash.heavyScale() : flash.scale(), flash.ticks()).ifPresent(shown -> {
-                if (actor instanceof Player shooter) {
-                    shooter.hideEntity(game.plugin(), shown);
-                }
-            });
+            flashSparing(actor, faction, muzzle, heavy ? flash.heavyScale() : flash.scale(), flash.ticks());
             forOthers(actor, muzzle, Particle.ELECTRIC_SPARK, 0.04, 0.03);
             if (heat > HOT_BARREL) {
                 forOthers(actor, muzzle, Particle.WHITE_SMOKE, 0.03, 0.01);
             }
         }
+    }
+
+    private void flashSparing(LivingEntity owner, Faction faction, Location at, float scale, int ticks) {
+        flares.flash(flash(faction), at, scale, ticks).ifPresent(shown -> {
+            if (owner instanceof Player player) {
+                player.hideEntity(game.plugin(), shown);
+            }
+        });
     }
 
     /** A particle this close to its owner's camera fills their view whatever its size, so only they do not get it. */
@@ -199,8 +203,21 @@ public final class BattleEffects {
         }
     }
 
-    /** A bolt met a fighter: a flash and sparks a player can read from across the map. */
-    public void boltHit(Location at, Faction faction) {
+    /** A bolt met a fighter: a flash and sparks others can read from across the map, kept off the camera of a player it hit. */
+    public void boltHit(Location at, Faction faction, LivingEntity victim) {
+        if (!(victim instanceof Player player)) {
+            burst(at, faction);
+            return;
+        }
+        sparingOwner(player, at, Particle.ELECTRIC_SPARK, null);
+        sparingOwner(player, at, Particle.DUST, new Particle.DustOptions(faction.bolt(), 1f));
+        if (enabled) {
+            flashSparing(player, faction, at, config.bolt().impactFlash(), FLASH_TICKS);
+        }
+    }
+
+    /** A bolt met something a map made shootable, such as a secret. */
+    public void boltOnTarget(Location at, Faction faction) {
         burst(at, faction);
     }
 

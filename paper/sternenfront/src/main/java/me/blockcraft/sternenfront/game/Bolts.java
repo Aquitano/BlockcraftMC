@@ -144,13 +144,13 @@ public final class Bolts {
         trail(bolt, travelled);
         if (hit != null && hit.getHitEntity() instanceof LivingEntity victim) {
             var at = hit.getHitPosition().toLocation(world);
-            game.effects().boltHit(at, bolt.shot.faction());
+            game.effects().boltHit(at, bolt.shot.faction(), victim);
             strike(bolt, victim, at, travelled);
             return false;
         }
         if (hit != null && hit.getHitEntity() instanceof Interaction target) {
             var at = hit.getHitPosition().toLocation(world);
-            game.effects().boltHit(at, bolt.shot.faction());
+            game.effects().boltOnTarget(at, bolt.shot.faction());
             SoundCue.BOLT_IMPACT.play(at, IMPACT_VOLUME);
             if (bolt.shooter instanceof Player player && player.isOnline()) {
                 Bukkit.getPluginManager().callEvent(new TargetShotEvent(target, player));
