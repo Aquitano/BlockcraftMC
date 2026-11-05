@@ -15,6 +15,7 @@ ARENA = ROOT / "worlds/sternenfront/blockcraft/Sternenfront/arena.yml"
 PORT = int(os.environ.get("VERIFY_PORT", "25599"))
 STACK = ("mariadb", "velocity", "sternenfront", "client")
 PLAYER = "Verify"
+HQ_X = 60
 HERO_NAMES = {"jedi": "Obi-Wan", "commander": "Captain Rex", "sith": "Count Dooku", "bounty-hunter": "Jango"}
 DEFAULT_WINDOW = (960, 540, 2)
 COMMON_SCALES = [(960, 540, 2), (1366, 768, 3), (1920, 1080, 4)]
@@ -206,7 +207,8 @@ def as_trooper(client):
 
 
 def enemies(client, radius=64):
-    return [each for each in client("entities", radius=radius)["entities"] if each["glowing"]]
+    """Outlined enemies out on the map: anything at a headquarters is inside a zone that hurts a visitor."""
+    return [each for each in client("entities", radius=radius)["entities"] if each["glowing"] and abs(each["x"]) < HQ_X]
 
 
 def stand_near_enemy(client, reach=4):
