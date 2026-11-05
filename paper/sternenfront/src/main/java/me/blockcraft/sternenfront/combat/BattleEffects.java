@@ -54,6 +54,8 @@ public final class BattleEffects {
     private static final float SIZZLE_VOLUME = 0.35f;
     private static final int GROUND_PROBE = 4;
     private static final int FLASH_TICKS = 2;
+    private static final double PARTICLE_RANGE_SQUARED = 32 * 32;
+    private static final double CLEAR_OF_EYES_SQUARED = 2.5 * 2.5;
     private static final int TRACER_TICKS = 3;
     private static final int PUSH_TICKS = 8;
     private static final int RALLY_TICKS = 12;
@@ -114,11 +116,21 @@ public final class BattleEffects {
                     shooter.hideEntity(game.plugin(), shown);
                 }
             });
-            muzzle.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, muzzle, 2, 0.04, 0.04, 0.04, 0.03);
+            forOthers(actor, muzzle, Particle.ELECTRIC_SPARK, 0.04, 0.03);
             if (heat > HOT_BARREL) {
-                muzzle.getWorld().spawnParticle(Particle.WHITE_SMOKE, muzzle, 2, 0.03, 0.03, 0.03, 0.01);
+                forOthers(actor, muzzle, Particle.WHITE_SMOKE, 0.03, 0.01);
             }
         }
+    }
+
+    /** A particle this close to a player's camera fills their view, whatever its size. */
+    private static boolean atTheirEyes(Location at, Location eye) {
+        return at.getWorld().equals(eye.getWorld()) && at.distanceSquared(eye) < CLEAR_OF_EYES_SQUARED;
+    }
+
+    private static void forOthers(LivingEntity actor, Location at, Particle particle, double spread, double speed) {
+        at.getWorld().getPlayers().stream().filter(viewer -> !viewer.equals(actor) && viewer.getLocation().distanceSquared(at) < PARTICLE_RANGE_SQUARED)
+                .forEach(viewer -> viewer.spawnParticle(particle, at, 2, spread, spread, spread, speed));
     }
 
     /** Where the barrel ends for someone aiming along {@code direction}: ahead of the eyes, right and a little low, short of a wall. */
@@ -337,21 +349,24 @@ public final class BattleEffects {
     }
 
     /** The trail of a thrown saber along the piece of flight it just covered, in the blade's colour. */
-    public void saberTrail(Location from, Location to, Color colour) {
+    public void saberTrail(Location from, Location to, Color colour, Location throwerEye) {
         var line = to.toVector().subtract(from.toVector());
         double length = line.length();
         if (length == 0) {
             return;
         }
         var direction = line.multiply(1 / length);
-        var dust = new Particle.DustOptions(colour, 1.6f);
+        var dust = new Particle.DustOptions(colour, 0.8f);
         for (double along = 0; along < length; along += 0.4) {
-            from.getWorld().spawnParticle(Particle.DUST, from.clone().add(direction.clone().multiply(along)), 1, 0, 0, 0, 0, dust, true);
+            var at = from.clone().add(direction.clone().multiply(along));
+            if (!atTheirEyes(at, throwerEye)) {
+                from.getWorld().spawnParticle(Particle.DUST, at, 1, 0, 0, 0, 0, dust, true);
+            }
         }
         to.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, to, 2, 0.1, 0.1, 0.1, 0.03, null, true);
     }
 
-    public void rocketTrail(Location from, Location to) {
+    public void rocketTrail(Location from, Location to, Location shooterEye) {
         var line = to.toVector().subtract(from.toVector());
         double distance = line.length();
         if (distance == 0) {
@@ -360,8 +375,10 @@ public final class BattleEffects {
         var direction = line.multiply(1 / distance);
         for (double along = 0; along < distance; along += 0.35) {
             var at = from.clone().add(direction.clone().multiply(along));
-            at.getWorld().spawnParticle(Particle.FLAME, at, 1, .025, .025, .025, 0, null, true);
-            at.getWorld().spawnParticle(Particle.SMOKE, at, 1, .04, .04, .04, .01);
+            if (!atTheirEyes(at, shooterEye)) {
+                at.getWorld().spawnParticle(Particle.FLAME, at, 1, .025, .025, .025, 0, null, true);
+                at.getWorld().spawnParticle(Particle.SMOKE, at, 1, .04, .04, .04, .01);
+            }
         }
     }
 
@@ -371,13 +388,15 @@ public final class BattleEffects {
         int steps = Math.max(1, (int) Math.ceil(line.length() / 0.3));
         var random = ThreadLocalRandom.current();
         for (int strand = 0; strand < (enabled ? 3 : 1); strand++) {
-            var dust = new Particle.DustOptions(strand == 0 ? LIGHTNING_CORE : LIGHTNING_COLOUR, strand == 0 ? 1 : 1.4f);
+            var dust = new Particle.DustOptions(strand == 0 ? LIGHTNING_CORE : LIGHTNING_COLOUR, strand == 0 ? 0.6f : 0.8f);
             for (int step = 0; step <= steps; step++) {
                 double share = (double) step / steps;
                 double jitter = Math.sin(Math.PI * share) * 0.18;
                 var at = from.clone().add(line.clone().multiply(share))
                         .add(random.nextDouble(-1, 1) * jitter, random.nextDouble(-1, 1) * jitter, random.nextDouble(-1, 1) * jitter);
-                from.getWorld().spawnParticle(Particle.DUST, at, 1, 0, 0, 0, 0, dust, true);
+                if (!atTheirEyes(at, eye)) {
+                    from.getWorld().spawnParticle(Particle.DUST, at, 1, 0, 0, 0, 0, dust, true);
+                }
             }
         }
         to.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, to, 5, .12, .2, .12, .02, null, true);
