@@ -151,17 +151,25 @@ public final class Spectacle {
         }
     }
 
-    /** Far out over the sea, for its flash and thunder, and more often once the last stand has darkened the sky. */
+    /**
+     * Some way off a random fighter, for its flash and thunder, and more often once the last stand has darkened the sky.
+     * A client only hears of a bolt within spigot.yml's tracking range for other entities, 64 blocks by default, so the map's
+     * centre would leave most fighters out.
+     */
     private void lightning(long tick) {
         var settings = config.lightning();
         var random = ThreadLocalRandom.current();
         int seconds = random.nextInt(settings.minSeconds(), Math.max(settings.minSeconds(), settings.maxSeconds()) + 1);
-        nextLightning = tick + (game.map().world().isThundering() ? seconds * 10L : seconds * 20L);
         var world = game.map().world();
-        var centre = game.map().playArea().getCenter();
+        nextLightning = tick + (world.isThundering() ? seconds * 10L : seconds * 20L);
+        var fighters = world.getPlayers().stream().filter(game::onField).toList();
+        if (fighters.isEmpty()) {
+            return;
+        }
+        var near = fighters.get(random.nextInt(fighters.size())).getLocation();
         double heading = random.nextDouble(Math.PI * 2);
-        int x = (int) (centre.getX() + Math.cos(heading) * settings.distance());
-        int z = (int) (centre.getZ() + Math.sin(heading) * settings.distance());
+        int x = (int) (near.getX() + Math.cos(heading) * settings.distance());
+        int z = (int) (near.getZ() + Math.sin(heading) * settings.distance());
         if (world.isChunkLoaded(x >> 4, z >> 4)) {
             world.strikeLightningEffect(new Location(world, x, world.getHighestBlockYAt(x, z) + 1, z));
         }

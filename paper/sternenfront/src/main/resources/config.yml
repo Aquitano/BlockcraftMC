@@ -64,8 +64,8 @@ presentation:
   ambient: {interval-ticks: 10, range: 72}
   assault: {ticks: 100, distance: 90, height: 45, scale: 7, clearance: 0}
   storm: {density: 5, haze: 3, interval-ticks: 2, haze-ticks: 6, radius: 14, wind-speed: 0.8, gust-seconds: 7, gust-ticks: 40, gust-boost: 1.2}
-  # On a map with rain, a strike far out at sea every so often; a last stand halves the wait.
-  lightning: {min-seconds: 20, max-seconds: 55, distance: 120}
+  # On a map with rain, a harmless strike this many blocks from a random fighter every so often; a last stand halves the wait.
+  lightning: {min-seconds: 20, max-seconds: 55, distance: 50}
 combat:
   precision-hitscan: true
   damage-indicator-ticks: 30

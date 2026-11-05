@@ -42,7 +42,7 @@ public final class ArenaListener implements Listener {
         this.buildMode = buildMode;
     }
 
-    /** The storm's own strikes would hurt whoever stands under one; the round draws its lightning far out at sea. */
+    /** The storm's own strikes would hurt whoever stands under one; the round draws its own, which hurt nobody. */
     @EventHandler(ignoreCancelled = true)
     public void onLightning(LightningStrikeEvent event) {
         if (event.getCause() == LightningStrikeEvent.Cause.WEATHER) {
