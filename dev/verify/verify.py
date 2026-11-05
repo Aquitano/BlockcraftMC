@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Drives a real Minecraft client on an isolated network; see dev/verify/README.md."""
 import argparse
+import functools
 import json
 import os
 import shutil
@@ -11,9 +12,10 @@ import time
 import zipfile
 from pathlib import Path
 
+import yaml
+
 ROOT = Path(__file__).resolve().parents[2]
 SHOTS = ROOT / "dev/verify/client-mod/run/screenshots"
-ARENA = ROOT / "worlds/sternenfront/blockcraft/Sternenfront/arena.yml"
 PORT = int(os.environ.get("VERIFY_PORT", "25599"))
 STACK = ("mariadb", "velocity", "sternenfront", "client")
 PLAYER = "Verify"
@@ -71,7 +73,7 @@ class Run:
         self.name = f"{time.strftime('%H%M%S')}-{scenario}"
         self.folder = SHOTS / self.name
         self.frames = 0
-        self.report = {"scenario": scenario, "folder": str(self.folder)}
+        self.report = {"scenario": scenario, "map": Path(running_template()).name, "folder": str(self.folder)}
 
     def shot(self, client, label=None):
         label = label or f"{self.frames:03d}"
@@ -178,13 +180,28 @@ def set_window(client, width, height, scale):
     return client("status")
 
 
+@functools.cache
+def running_template():
+    """The template the game server started with, so that scenarios use the map it is playing."""
+    return compose("exec", "-T", "sternenfront", "printenv", "BLOCKCRAFT_WORLD_TEMPLATE", capture=True).stdout.strip()
+
+
+def keep_running_map():
+    """Recreating the game server without this would put it back on the default map."""
+    if "VERIFY_MAP" not in os.environ and compose("ps", "-q", "--status", "running", "sternenfront", capture=True).stdout.strip():
+        os.environ["VERIFY_MAP"] = Path(running_template()).name
+
+
+@functools.cache
+def arena():
+    return yaml.safe_load((ROOT / running_template().lstrip("/") / "blockcraft/Sternenfront/arena.yml").read_text())
+
+
 def arena_positions():
     """Open-ground spots the map's author set: the named views, each headquarters and the first spawn of each post."""
-    lines = ARENA.read_text().splitlines()
-    spots = {key: line.split(":", 1)[1].strip() for line in lines for key in ("overview", "spectator") if line.startswith(key + ":")}
-    found = [index for index, line in enumerate(lines) if line.strip() == "spawns:"]
-    for number, index in enumerate(found):
-        spots[("republic_hq", "separatist_hq")[number] if number < 2 else f"post_{number - 1}"] = lines[index + 1].strip(" -")
+    spots = {key: arena()[key] for key in ("overview", "spectator") if key in arena()}
+    spots.update({f"{faction}_hq": headquarters["spawns"][0] for faction, headquarters in arena()["headquarters"].items()})
+    spots.update({f"post_{post['key']}": post["spawns"][0] for post in arena()["posts"]})
     return spots
 
 
@@ -210,22 +227,33 @@ def as_trooper(client):
 
 
 def enemies(client, radius=64):
-    """Feet of outlined bot bodies out on the map: the relic glows too, and anything at a headquarters is inside a zone that hurts a visitor."""
-    return [{**each, "y": each["y"] - MODEL_ABOVE_FEET} for each in client("entities", radius=radius)["entities"]
-            if each["glowing"] and each.get("model", "").endswith("_outlined_torso") and abs(each["x"]) < HQ_X]
+    """Feet of outlined bot bodies out on the map, those in sight first: the relic glows too, and anything at a headquarters is inside a zone that hurts a visitor."""
+    found = [{**each, "y": each["y"] - MODEL_ABOVE_FEET} for each in client("entities", radius=radius)["entities"]
+             if each["glowing"] and each.get("model", "").endswith("_outlined_torso") and abs(each["x"]) < HQ_X]
+    return sorted(found, key=lambda each: not each["in_sight"])
 
 
 def stand_near_enemy(client, reach=4):
-    """Goes to open ground beside the nearest outlined enemy, where the bots can see and shoot back."""
+    """Goes to open ground beside the nearest outlined enemy, on a side with a clear shot if one has it, where the bots can see and shoot back."""
     if not enemies(client):
         client.until("an enemy near a post", lambda: to_enemy(client), 90, 2)
     target = enemies(client)[0]
+    open_ground = None
     for dx, dz in ((reach, 0), (-reach, 0), (0, reach), (0, -reach)):
-        rcon(f"tp {PLAYER} {target['x'] + dx} {target['y']} {target['z'] + dz}")
+        spot = f"{target['x'] + dx} {target['y']} {target['z'] + dz}"
+        rcon(f"tp {PLAYER} {spot}")
         settle(client, 4)
-        if not client("status")["in_wall"]:
+        if client("status")["in_wall"]:
+            continue
+        open_ground = open_ground or spot
+        seen = enemies(client)
+        if seen and seen[0]["in_sight"]:
             return target
-    raise RuntimeError("Every spot beside the enemy is inside a wall")
+    if open_ground is None:
+        raise RuntimeError("Every spot beside the enemy is inside a wall")
+    rcon(f"tp {PLAYER} {open_ground}")
+    settle(client, 4)
+    return target
 
 
 def summarize(events, gui_width):
@@ -389,8 +417,7 @@ def hero(client, run, hero_name="jedi"):
 
 def relic(client, run):
     """Waits for the relic, which the verify config brings early, walks onto it and uses the champion's abilities."""
-    lines = ARENA.read_text().splitlines()
-    spot = next(line.split(":", 1)[1].strip() for line in lines if line.startswith("relic:"))
+    spot = arena()["relic"]
     client.until("the relic to appear", lambda: any("Dunkelschwert" in event["value"] for event in client("events", since=0)["events"]), 120, 2)
     rcon(f"tp {PLAYER} {spot}")
     client.until("the blade in hand", lambda: "Dunkelschwert" in client("status")["hotbar"][0].get("name", ""), 20, 0.5)
@@ -546,8 +573,10 @@ def main():
     args = parser.parse_args()
 
     if args.action == "up":
+        keep_running_map()
         compose("up", "-d", "--build", *STACK)
     elif args.action == "restart":
+        keep_running_map()
         compose("up", "-d", "--force-recreate", "--no-deps", *args.services)
     elif args.action == "down":
         compose("down", *(["-v"] if args.v else []))

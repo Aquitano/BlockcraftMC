@@ -170,6 +170,7 @@ final class Commands {
             case "connect" -> done(connect(minecraft, body.get("host").getAsString()));
             case "disconnect" -> {
                 minecraft.disconnectWithProgressScreen();
+                minecraft.setScreen(new TitleScreen());
                 yield done(new JsonObject());
             }
             case "gui_scale" -> {
@@ -514,6 +515,7 @@ final class Commands {
                     entry.addProperty("y", round(entity.getY()));
                     entry.addProperty("z", round(entity.getZ()));
                     entry.addProperty("glowing", entity.isCurrentlyGlowing());
+                    entry.addProperty("in_sight", player.hasLineOfSight(entity));
                     if (entity instanceof LivingEntity living) {
                         entry.addProperty("health", round(living.getHealth()));
                     }

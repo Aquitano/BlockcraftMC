@@ -57,11 +57,11 @@ services:
     environment:
       BLOCKCRAFT_SERVER_GROUP: mapbuilder
       BLOCKCRAFT_WAITING_TEMPLATE: ""
-      BLOCKCRAFT_WORLD_TEMPLATE: /worlds/sturmwerft
+      # No template: a rebuild starts from the flat sea, so what the generator no longer places is gone.
+      BLOCKCRAFT_WORLD_TEMPLATE: ""
       COPY_PLUGINS_SRC: /blockcraft/api
       GENERATOR_SETTINGS: '{"layers":[{"block":"minecraft:bedrock","height":1},{"block":"minecraft:deepslate","height":109},{"block":"minecraft:water","height":11}],"biome":"minecraft:ocean"}'
     volumes:
-      - ./worlds/sturmwerft:/worlds/sturmwerft
       - mapbuilder:/data
 
   client:

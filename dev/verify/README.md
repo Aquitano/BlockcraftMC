@@ -40,8 +40,9 @@ first and open a full frame only where it shows something.
 ## Maps
 
 `dev/verify/verify.py map` runs `dev/mapgen/sturmwerft.py`: it writes the map's blocks as Minecraft functions and its
-`arena.yml`, builds them on a bare server over an endless flat sea and saves the result to `worlds/sturmwerft`. To play a map on
-this network, start it with `VERIFY_MAP=sturmwerft`, then use the scenarios, `tour` above all.
+`arena.yml`, builds them from an endless flat sea on a bare server and saves the result to `worlds/sturmwerft`. The generator
+stops if the arena would place a fighter inside a block. To play a map on this network, start it with `VERIFY_MAP=sturmwerft`,
+then use the scenarios, `tour` above all. Scenarios and `restart` follow the map the server is running, and each report names it.
 
 ## Single commands
 
