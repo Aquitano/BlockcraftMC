@@ -15,6 +15,12 @@ final class DeploymentTransition implements AutoCloseable {
         this.frame = frame;
     }
 
+    static DeploymentTransition arrival(int fadeTicks, Runnable teleport, DoubleConsumer frame) {
+        var transition = new DeploymentTransition(fadeTicks, teleport, frame);
+        transition.tick = fadeTicks + 2;
+        return transition;
+    }
+
     boolean tick() {
         if (finished) return true;
         int teleportTick = fadeTicks + 2;

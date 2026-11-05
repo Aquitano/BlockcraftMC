@@ -15,6 +15,7 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.DoubleConsumer;
 
 final class BattlePresentation implements AutoCloseable {
     private final SternenfrontGame game;
@@ -25,7 +26,15 @@ final class BattlePresentation implements AutoCloseable {
         this.game = game;
     }
 
+    void arrive(Player player, Runnable deploy) {
+        transition(player, deploy, true);
+    }
+
     void deploy(Player player, Runnable deploy) {
+        transition(player, deploy, false);
+    }
+
+    private void transition(Player player, Runnable deploy, boolean arrival) {
         if (deployments.containsKey(player.getUniqueId())) return;
         int fadeTicks = Math.clamp(game.plugin().getConfig().getInt("presentation.deployment.fade-ticks"), 0, 40);
         if (fadeTicks == 0 || !game.plugin().getConfig().getBoolean("presentation.effects")
@@ -37,8 +46,20 @@ final class BattlePresentation implements AutoCloseable {
         deployments.put(player.getUniqueId(), scope);
         scope.own(() -> deployments.remove(player.getUniqueId(), scope));
         var world = player.getWorld();
-        var transition = new DeploymentTransition(fadeTicks, deploy, fade -> ScreenEffects.frame(scope, player, fade, false));
+        DoubleConsumer frame = fade -> ScreenEffects.frame(scope, player, fade, false);
+        var transition = arrival ? DeploymentTransition.arrival(fadeTicks, deploy, frame)
+                : new DeploymentTransition(fadeTicks, deploy, frame);
         scope.own(transition::close);
+        try {
+            if (transition.tick() || scope.closed()) {
+                scope.close();
+                return;
+            }
+        } catch (RuntimeException failure) {
+            scope.close();
+            game.plugin().getSLF4JLogger().warn("Could not start deployment transition", failure);
+            return;
+        }
         var task = new BukkitRunnable() {
             @Override
             public void run() {
@@ -55,7 +76,7 @@ final class BattlePresentation implements AutoCloseable {
                     game.plugin().getSLF4JLogger().warn("Deployment transition failed", failure);
                 }
             }
-        }.runTaskTimer(game.plugin(), 0, 1);
+        }.runTaskTimer(game.plugin(), 1, 1);
         scope.own(task::cancel);
     }
 

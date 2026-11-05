@@ -463,6 +463,9 @@ feedback:
   healing: "<success>Verbündete geheilt +<points> KP"
   capture: "<aqua>Posten erobert <success>+<points> KP"
   neutralise: "<aqua>Posten neutralisiert <success>+<points> KP"
+  compact: "<success>+<points> KP"
+  compact-multikill: "<error><kills>× <success>+<points> KP"
+  separator: "<dark> │ "
   progress: " <dark>│ <accent><points><muted>/<cost> KP"
   hero-ready: "<success><bold>HELD BEREIT</bold>"
 

@@ -29,7 +29,9 @@ import java.nio.file.Files;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 
 public final class BattleIntro implements AutoCloseable {
     private final SternenfrontGame game;
@@ -60,7 +62,7 @@ public final class BattleIntro implements AutoCloseable {
             for (var player : game.plugin().getServer().getOnlinePlayers()) scenes.stop(player);
             running = false;
             ready.run();
-        }, duration + 1L);
+        }, duration);
         for (var player : players) {
             try {
                 play(player, duration, SceneTimeline.SkipMode.HOLD);
@@ -85,17 +87,18 @@ public final class BattleIntro implements AutoCloseable {
             return;
         }
         var faction = game.factionOrSmallest(player);
-        var actorAt = game.map().headquarters().get(faction).spawns().getFirst().clone();
         var path = path(faction, duration);
         if (path.isEmpty()) {
             player.sendMessage(game.messages().get("intro.invalid"));
             return;
         }
+        var route = path.get();
+        var actorAt = route.actorAt(game.map().headquarters().get(faction).spawns().getFirst());
         var config = game.plugin().getConfig();
         var focus = new FocusWindow(config.getBoolean("intro.focus.enabled"),
                 config.getDouble("intro.focus.from"), config.getDouble("intro.focus.until"));
         var participant = new Participant(new PresentationScope(game.plugin()));
-        var timeline = new SceneTimeline(game.map().world(), path.get(), List.of(), skipMode,
+        var timeline = new SceneTimeline(game.map().world(), route.camera(), List.of(), skipMode,
                 (viewer, tick, total, skipped) -> {
                     if (skipped) {
                         if (tick % 10 == 0) viewer.sendActionBar(game.messages().get("intro.waiting",
@@ -107,7 +110,7 @@ public final class BattleIntro implements AutoCloseable {
                         participant.resources.own(viewer::clearTitle);
                         participant.resources.own(() -> viewer.sendActionBar(Component.empty()));
                     }
-                    if (participant.actor != null) participant.actor.tick(tick);
+                    if (participant.actor != null) participant.actor.tick(route.briefingTick(tick));
                     int fadeTicks = Math.clamp(game.plugin().getConfig().getInt("intro.fade-ticks"), 1, total / 2);
                     double fade = Math.max(1.0 - (double) tick / fadeTicks, 1.0 - (double) (total - tick) / fadeTicks);
                     ScreenEffects.frame(participant.resources, viewer, Math.clamp(fade, 0, 1), true);
@@ -160,25 +163,46 @@ public final class BattleIntro implements AutoCloseable {
         }
     }
 
-    private Optional<CameraPath> path(Faction faction, int duration) {
+    record IntroPath(CameraPath camera, int briefingStart) {
+        int briefingTick(int tick) {
+            return Math.max(0, tick - briefingStart);
+        }
+
+        Location actorAt(Location spawn) {
+            var at = spawn.clone();
+            var view = camera.sample(briefingStart);
+            at.setDirection(view.in(spawn.getWorld()).toVector().subtract(spawn.toVector()));
+            at.setPitch(0);
+            return at;
+        }
+    }
+
+    private Optional<IntroPath> path(Faction faction, int duration) {
         try {
-            var frames = new ArrayList<CameraPath.Keyframe>();
-            for (var shot : game.plugin().getConfig().getMapList("intro.shots")) {
-                int tick = (int) Math.round(((Number) shot.get("at")).doubleValue() * duration);
-                var at = anchor(String.valueOf(shot.get("anchor")), faction);
-                var offset = (List<?>) shot.get("offset");
-                at.add(((Number) offset.get(0)).doubleValue(), ((Number) offset.get(1)).doubleValue(), ((Number) offset.get(2)).doubleValue());
-                var target = anchor(String.valueOf(shot.get("look-at")), faction).add(0, 1.4, 0);
-                at.setDirection(target.toVector().subtract(at.toVector()));
-                frames.add(new CameraPath.Keyframe(tick, CameraPath.Pose.of(at), Boolean.TRUE.equals(shot.get("cut"))));
-            }
-            var path = new CameraPath(frames);
-            if (path.duration() != duration) throw new IllegalArgumentException("Intro must end at fraction 1");
-            return Optional.of(path);
+            return Optional.of(path(game.plugin().getConfig().getMapList("intro.shots"), duration, name -> anchor(name, faction)));
         } catch (RuntimeException invalid) {
             game.plugin().getSLF4JLogger().warn("Invalid intro camera path", invalid);
             return Optional.empty();
         }
+    }
+
+    static IntroPath path(List<Map<?, ?>> shots, int duration, Function<String, Location> anchor) {
+        var frames = new ArrayList<CameraPath.Keyframe>();
+        int briefingStart = -1;
+        for (var shot : shots) {
+            int tick = (int) Math.round(((Number) shot.get("at")).doubleValue() * duration);
+            var name = String.valueOf(shot.get("anchor"));
+            var at = anchor.apply(name).clone();
+            var offset = (List<?>) shot.get("offset");
+            at.add(((Number) offset.get(0)).doubleValue(), ((Number) offset.get(1)).doubleValue(), ((Number) offset.get(2)).doubleValue());
+            var target = anchor.apply(String.valueOf(shot.get("look-at"))).clone().add(0, 1.4, 0);
+            at.setDirection(target.toVector().subtract(at.toVector()));
+            frames.add(new CameraPath.Keyframe(tick, CameraPath.Pose.of(at), Boolean.TRUE.equals(shot.get("cut"))));
+            if (briefingStart < 0 && name.equals("headquarters")) briefingStart = tick;
+        }
+        var path = new CameraPath(frames);
+        if (path.duration() != duration) throw new IllegalArgumentException("Intro must end at fraction 1");
+        return new IntroPath(path, Math.max(0, briefingStart));
     }
 
     private Location anchor(String name, Faction faction) {

@@ -188,11 +188,20 @@ public final class Deployment {
         return Math.max(0, (ticks + TICKS_PER_SECOND - 1) / TICKS_PER_SECOND);
     }
 
+    void arrive(Player player, Spawn wanted) {
+        deploy(player, wanted, true);
+    }
+
     void deploy(Player player, Spawn wanted) {
+        deploy(player, wanted, false);
+    }
+
+    private void deploy(Player player, Spawn wanted, boolean arrival) {
         if (game.intro().running() || game.phase() != GamePhase.INGAME || !game.isPlaying(player)
                 || !player.isOnline() || player.isDead()) return;
         if (deployMenus.remove(player.getUniqueId()) != null) Menu.close(player);
-        presentation.deploy(player, () -> deployNow(player, wanted));
+        if (arrival) presentation.arrive(player, () -> deployNow(player, wanted));
+        else presentation.deploy(player, () -> deployNow(player, wanted));
     }
 
     private void deployNow(Player player, Spawn wanted) {

@@ -338,6 +338,10 @@ intro:
       anchor: 'post:1'
       offset: [12, 10, 14]
       look-at: 'post:1'
+    - at: 0.72
+      anchor: 'post:1'
+      offset: [8, 8, 10]
+      look-at: 'post:1'
     - at: 0.75
       anchor: headquarters
       offset: [4, 2, 5]

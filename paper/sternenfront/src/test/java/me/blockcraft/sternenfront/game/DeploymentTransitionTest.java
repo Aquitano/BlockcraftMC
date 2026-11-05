@@ -10,6 +10,19 @@ import static org.junit.Assert.assertTrue;
 
 public class DeploymentTransitionTest {
     @Test
+    public void initialArrivalDeploysWhileBlackWithoutWaitingThroughAnotherFadeOut() {
+        var frames = new ArrayList<Double>();
+        var teleports = new AtomicInteger();
+        var transition = DeploymentTransition.arrival(6, teleports::incrementAndGet, frames::add);
+        transition.tick();
+        assertEquals(1, teleports.get());
+        assertEquals(1.0, frames.getFirst(), 0);
+        for (int tick = 0; tick < 8; tick++) transition.tick();
+        assertEquals(1, teleports.get());
+        assertEquals(0.0, frames.getLast(), 0);
+    }
+
+    @Test
     public void teleportOccursOnceAfterTwoFullyDarkFramesAndThenFadesBackIn() {
         var frames = new ArrayList<Double>();
         var teleports = new AtomicInteger();

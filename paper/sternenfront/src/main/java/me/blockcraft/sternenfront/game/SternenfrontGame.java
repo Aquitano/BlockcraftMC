@@ -443,9 +443,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
             teams.join(player.getUniqueId(), faction);
             roster.put(player.getUniqueId(), faction);
             BlockcraftApi.get().tabTeams().color(player, faction.text());
-            PlayerReset.reset(player, GameMode.ADVENTURE);
-            config.combat().apply(player);
-            deployment.deploy(player, new Spawn.Headquarters());
+            deployment.arrive(player, new Spawn.Headquarters());
             bots.fill();
         } else {
             entrance.admit(player);
@@ -665,9 +663,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         for (var player : round.players()) {
             var faction = teams.of(player.getUniqueId()).orElseThrow();
             roster.put(player.getUniqueId(), faction);
-            PlayerReset.reset(player, GameMode.ADVENTURE);
-            config.combat().apply(player);
-            deployment.deploy(player, new Spawn.Headquarters());
+            deployment.arrive(player, new Spawn.Headquarters());
         }
         round.spectators().forEach(spectator -> spectator.teleport(map.spectatorSpawn()));
         RoundStart.go(round.players());

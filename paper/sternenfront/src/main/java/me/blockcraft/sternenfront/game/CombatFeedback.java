@@ -42,6 +42,7 @@ public final class CombatFeedback {
         boolean ready;
         long readyUntil;
         boolean venting;
+        Component hud = Component.empty();
 
         boolean hit(Marker next, long tick, int ticks) {
             if (tick >= markerUntil || next.ordinal() >= marker.ordinal()) {
@@ -71,6 +72,16 @@ public final class CombatFeedback {
                 this.target = target;
             }
             rewardUntil = tick + ticks;
+        }
+
+        Component compose(Component nextHud, Component feedback, Component fallback, Component separator) {
+            if (!nextHud.equals(Component.empty())) {
+                hud = nextHud;
+            }
+            if (feedback.equals(Component.empty())) {
+                return hud;
+            }
+            return hud.equals(Component.empty()) ? feedback.append(fallback) : hud.append(separator).append(feedback);
         }
     }
 
@@ -143,27 +154,41 @@ public final class CombatFeedback {
             player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, SoundCategory.PLAYERS, 0.7f, 1.4f);
         }
         state.ready = ready;
+        boolean detailed = hud.equals(Component.empty()) && state.hud.equals(Component.empty());
         var line = Component.empty();
         if (tick < state.markerUntil) {
             line = line.append(game.messages().get("hit." + state.marker.name().toLowerCase(Locale.ROOT), GameSidebar.icons(player)));
         }
         if (tick < state.rewardUntil) {
             var key = state.kills > 1 ? "feedback.multikill" : "feedback." + state.reward.name().toLowerCase(Locale.ROOT);
-            line = line.append(Component.space()).append(game.messages().get(key,
+            if (!detailed) {
+                key = state.kills > 1 ? "feedback.compact-multikill" : "feedback.compact";
+            }
+            if (!line.equals(Component.empty())) {
+                line = line.append(Component.space());
+            }
+            line = line.append(game.messages().get(key,
                     Placeholder.component("target", state.target), Formatter.number("points", state.points), Formatter.number("kills", state.kills)));
         }
         if (tick < state.readyUntil && ready) {
-            line = line.append(Component.space()).append(game.messages().get("feedback.hero-ready"));
+            if (!line.equals(Component.empty())) {
+                line = line.append(Component.space());
+            }
+            line = line.append(game.messages().get("feedback.hero-ready"));
         }
-        if (!line.equals(Component.empty())) {
+        var fallback = Component.empty();
+        if (detailed && !line.equals(Component.empty())) {
             if (venting || hot(player)) {
-                line = line.append(Component.space()).append(game.messages().get(venting ? "combat.venting" : "combat.hot",
+                fallback = fallback.append(Component.space()).append(game.messages().get(venting ? "combat.venting" : "combat.hot",
                         Formatter.number("seconds", (heat.ventTicks(tick) + 19) / 20)));
             }
-            line = line.append(game.messages().get("feedback.progress", Formatter.number("points", points), Formatter.number("cost", cost)));
-            api.notifications().feedbackNow(player, line, 5);
-        } else if (!hud.equals(Component.empty())) {
-            api.notifications().status(player, hud);
+            fallback = fallback.append(game.messages().get("feedback.progress", Formatter.number("points", points), Formatter.number("cost", cost)));
+        }
+        var combined = state.compose(hud, line, fallback, game.messages().get("feedback.separator"));
+        if (!line.equals(Component.empty())) {
+            api.notifications().feedbackNow(player, combined, 5);
+        } else if (!combined.equals(Component.empty())) {
+            api.notifications().status(player, combined);
         }
     }
 

@@ -14,6 +14,35 @@ import static org.junit.Assert.*;
 public class CombatFeedbackTest {
 
     @Test
+    public void feedbackAndImmediateHitsRetainTheLatestHealthGuardDamageAndCooldowns() {
+        var state = new CombatFeedback.State();
+        var hud = Component.text("42 LP | Deckung | Schaden links | F 8s | Q 2s");
+        var updated = Component.text("39 LP | Deckung | Schaden hinten | F 7s | Q 1s");
+        var feedback = Component.text("+25 KP");
+        var fallback = Component.text(" Hitze 100/600 KP");
+        var separator = Component.text(" | ");
+
+        assertEquals("42 LP | Deckung | Schaden links | F 8s | Q 2s | +25 KP",
+                plain(state.compose(hud, feedback, fallback, separator)));
+        assertEquals("42 LP | Deckung | Schaden links | F 8s | Q 2s | +25 KP",
+                plain(state.compose(Component.empty(), feedback, fallback, separator)));
+        state.compose(updated, feedback, fallback, separator);
+        assertEquals(plain(updated), plain(state.compose(Component.empty(), Component.empty(), fallback, separator)));
+    }
+
+    @Test
+    public void startupFeedbackUsesHeatAndProgressOnlyUntilTheFirstHudArrives() {
+        var state = new CombatFeedback.State();
+        var feedback = Component.text("Abschuss Droide +25 KP");
+        var fallback = Component.text(" HEISS 100/600 KP");
+        var separator = Component.text(" | ");
+        assertEquals("Abschuss Droide +25 KP HEISS 100/600 KP",
+                plain(state.compose(Component.empty(), feedback, fallback, separator)));
+        assertEquals("40 LP | HEISS | +25 KP",
+                plain(state.compose(Component.text("40 LP | HEISS"), Component.text("+25 KP"), fallback, separator)));
+    }
+
+    @Test
     public void killNotificationResolvesPaletteTagsWithoutDisplayingMarkup() {
         var messages = Messages.load(Path.of("/nonexistent-combat-feedback-test"),
                 () -> getClass().getResourceAsStream("/messages.yml"),
@@ -52,5 +81,9 @@ public class CombatFeedbackTest {
         assertEquals(CombatFeedback.Reward.ASSIST, state.reward);
         assertEquals(40, state.points);
         assertEquals(0, state.kills);
+    }
+
+    private static String plain(Component component) {
+        return PlainTextComponentSerializer.plainText().serialize(component);
     }
 }
