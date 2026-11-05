@@ -4,7 +4,7 @@ import org.bukkit.configuration.ConfigurationSection;
 
 public record CombatConfig(double guardCapacity, double guardRecovery, int recoveryDelay, int breakTicks,
                            int parryTicks, double guardCost, double meleeRange, double meleeAngle,
-                           int swingTicks, int targets, boolean precisionHitscan, int damageIndicatorTicks) {
+                           int swingTicks, int sweepTicks, boolean precisionHitscan, int damageIndicatorTicks) {
 
     public static CombatConfig from(ConfigurationSection config) {
         return new CombatConfig(Math.max(1, config.getDouble("combat.guard.capacity", 100)),
@@ -14,9 +14,10 @@ public record CombatConfig(double guardCapacity, double guardRecovery, int recov
                 Math.max(0, config.getInt("combat.guard.parry-ticks", 5)),
                 Math.max(0.1, config.getDouble("combat.guard.cost-per-damage", 2)),
                 Math.clamp(config.getDouble("combat.melee.range", 3.5), 1, 5),
-                Math.clamp(config.getDouble("combat.melee.angle", 85), 1, 180),
+                Math.clamp(config.getDouble("combat.melee.angle", 120), 1, 180),
                 Math.max(1, config.getInt("combat.melee.swing-ticks", 12)),
-                Math.clamp(config.getInt("combat.melee.targets", 2), 1, 4),
+                Math.clamp(config.getInt("combat.melee.sweep-ticks", 4), 1,
+                        Math.clamp(config.getInt("combat.melee.swing-ticks", 12), 1, 10)),
                 config.getBoolean("combat.precision-hitscan", true),
                 Math.clamp(config.getInt("combat.damage-indicator-ticks", 30), 0, 100));
     }

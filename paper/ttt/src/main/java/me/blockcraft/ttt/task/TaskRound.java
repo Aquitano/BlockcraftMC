@@ -11,6 +11,7 @@ import me.blockcraft.ttt.config.TttConfig;
 import me.blockcraft.ttt.game.Channels;
 import me.blockcraft.ttt.game.ChestLoot;
 import me.blockcraft.ttt.game.Role;
+import me.blockcraft.ttt.game.RoundItem;
 import me.blockcraft.ttt.task.game.ChoreGame;
 import me.blockcraft.ttt.task.game.ChoreGames;
 import net.kyori.adventure.bossbar.BossBar;
@@ -19,16 +20,21 @@ import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
+import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.block.Bell;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.Lightable;
+import org.bukkit.block.data.type.Door;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -45,10 +51,8 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 /**
- * TTT 2's part of a round: the chores everyone gets with their role, marked in the world for each player alone, the
- * bar of how far the innocents are, and the traitors' sabotage. Every real chore done pays one pick of loot, a visible
- * one shows itself at its station, and when the living innocents have done all of theirs, {@code changed} finds them
- * the winners. A click on a chore answers on the action bar; the chat stays for what concerns everyone.
+ * The team's fixed task pool, personal routes and selected objectives. Every completion pays loot and advances the
+ * team target. Sabotage temporarily takes over the task bar and navigation.
  */
 public final class TaskRound {
 
@@ -64,6 +68,7 @@ public final class TaskRound {
     private final Runnable changed;
     private final TaskBoard board = new TaskBoard();
     private final Map<UUID, ChoreGame> games = new HashMap<>();
+    private final Map<UUID, Chore> selected = new HashMap<>();
     private final Sabotage sabotage;
     private final BossBar bar;
     private enum Mark {
@@ -75,6 +80,9 @@ public final class TaskRound {
     }
 
     private static final double HINT_REACH = 5.0;
+
+    private record Objective(Block block, Mark mark, Component name, Component place) {
+    }
 
     private final ChoreMarkers markers;
     private final Map<Mark, Component> marks = new EnumMap<>(Mark.class);
@@ -95,9 +103,9 @@ public final class TaskRound {
         this.alive = alive;
         this.changed = changed;
         this.traitor = player -> roles.apply(player).filter(role -> role == Role.TRAITOR).isPresent();
-        this.sabotage = new Sabotage(config.sabotage(), messages, layout, testerButton, channels, traitor, alive);
         this.bar = BossBar.bossBar(messages.get("tasks.bar", Formatter.number("percent", 0)), 0,
                 BossBar.Color.GREEN, BossBar.Overlay.NOTCHED_10);
+        this.sabotage = new Sabotage(config.sabotage(), messages, layout, testerButton, channels, traitor, alive, bar, this::update);
         this.markers = new ChoreMarkers(plugin);
         for (var mark : Mark.values()) {
             marks.put(mark, messages.get("tasks.marker." + mark.key()));
@@ -112,6 +120,7 @@ public final class TaskRound {
         var workers = roles.entrySet().stream().filter(entry -> entry.getValue() != Role.TRAITOR)
                 .map(Map.Entry::getKey).toList();
         board.assign(workers, layout.chores(), config.perPlayer(), this::close, ThreadLocalRandom.current());
+        alive.get().forEach(this::giveTasks);
         Bukkit.getOnlinePlayers().forEach(player -> player.showBossBar(bar));
         ticker = plugin.getServer().getScheduler().runTaskTimer(plugin, () -> {
             sabotage.tick();
@@ -162,6 +171,7 @@ public final class TaskRound {
             return true;
         }
         var chore = duty.get().chore();
+        selected.put(id, chore);
         switch (chore) {
             case Chore.Hold hold -> {
                 if (!channels.busy(player)) {
@@ -189,30 +199,94 @@ public final class TaskRound {
     }
 
     public boolean complete() {
-        return board.complete(living());
+        return board.complete();
     }
 
-    /** The player's chores for their sidebar, done ones ticked. */
     public List<Component> duties(Player player) {
-        return board.of(player.getUniqueId()).stream()
-                .map(duty -> messages.get(duty.done() ? "tasks.sidebar.done" : "tasks.sidebar.open", names(duty.chore())))
-                .toList();
+        if (!board.assigned()) {
+            return List.of();
+        }
+        if (traitor.test(player)) {
+            int seconds = sabotage.secondsUntilReady();
+            var lines = new ArrayList<>(List.of(messages.get("tasks.sidebar.traitor"), messages.get(seconds == 0
+                    ? "tasks.sidebar.sabotage-ready" : "tasks.sidebar.sabotage-wait", Formatter.number("seconds", seconds))));
+            focus(player).ifPresent(objective -> {
+                lines.add(objective.name());
+                lines.add(navigation(player, objective));
+            });
+            return lines;
+        }
+        var lines = new ArrayList<Component>();
+        lines.add(messages.get("tasks.sidebar.progress", Formatter.number("done", board.contribution(player.getUniqueId()))));
+        focus(player).ifPresent(objective -> {
+            lines.add(objective.name());
+            lines.add(navigation(player, objective));
+        });
+        return lines;
+    }
+
+    public void giveTasks(Player player) {
+        if (!board.assigned()) {
+            return;
+        }
+        var looted = player.getInventory().getItem(RoundItem.TASKS_SLOT);
+        player.getInventory().setItem(RoundItem.TASKS_SLOT, RoundItem.TASKS.build(Items.of(Material.WRITABLE_BOOK)
+                .name(messages.get("item.tasks")).lore(messages.get("tasks.menu.hint"))));
+        if (looted != null && !looted.isEmpty()) {
+            player.getInventory().addItem(looted).values().forEach(left -> player.getWorld().dropItem(player.getLocation(), left));
+        }
+    }
+
+    public void openTasks(Player player) {
+        if (!board.assigned() || !alive.get().contains(player)) {
+            return;
+        }
+        var mine = board.of(player.getUniqueId()).stream().map(TaskBoard.Duty::chore).toList();
+        var choices = layout.chores().stream().map(chore -> {
+            var objective = objective(player, chore);
+            int remaining = board.remaining(chore);
+            var lore = new ArrayList<Component>();
+            lore.add(navigation(player, objective));
+            if (mine.contains(chore)) {
+                lore.add(messages.get("tasks.menu.recommended"));
+            }
+            lore.add(messages.get(remaining == 0 ? "tasks.already-done" : "tasks.menu.select"));
+            var material = chore instanceof Chore.Fetch fetch ? fetch.cargo() : chore.station().getType();
+            var icon = Items.of(material.isItem() ? material : Material.PAPER)
+                    .name(messages.get("tasks.chores." + chore.key() + ".name")).lore(lore);
+            if (chore.equals(selected.get(player.getUniqueId()))) {
+                icon.glow();
+            }
+            return new TaskMenu.Choice(chore, icon.build());
+        }).toList();
+        new TaskMenu(messages.get("tasks.menu.title"), choices, chore -> {
+            if (!alive.get().contains(player) || board.remaining(chore) == 0) {
+                tell(player, messages.get("tasks.already-done"));
+                return;
+            }
+            selected.put(player.getUniqueId(), chore);
+            mark(player);
+        }).open(player, () -> board.assigned() && alive.get().contains(player));
     }
 
     /** Shows the bar to someone who came to watch after the chores were handed out. */
     public void show(Player player) {
         if (board.assigned()) {
             player.showBossBar(bar);
-            sabotage.show(player);
             mark(player);
         }
     }
 
-    /** The bar and the marks follow a death too, since a dead innocent's open chores drop out. */
     public void update() {
-        float progress = board.progress(living());
-        bar.progress(progress);
-        bar.name(messages.get("tasks.bar", Formatter.number("percent", Math.round(progress * 100))));
+        if (sabotage.active().isEmpty()) {
+            bar.color(BossBar.Color.GREEN).overlay(BossBar.Overlay.NOTCHED_10).progress(board.progress());
+            bar.name(messages.get("tasks.bar", Formatter.number("percent", Math.round(board.progress() * 100))));
+        }
+        for (var chore : layout.chores()) {
+            if (chore instanceof Chore.Fetch fetch && board.remaining(chore) == 0) {
+                alive.get().forEach(player -> removeCargo(player, fetch));
+            }
+        }
         markers.keepOnly(Set.copyOf(living()));
         Bukkit.getOnlinePlayers().forEach(this::mark);
     }
@@ -224,6 +298,7 @@ public final class TaskRound {
         sabotage.stop();
         markers.clear();
         games.clear();
+        selected.clear();
         Bukkit.getOnlinePlayers().forEach(player -> player.hideBossBar(bar));
         board.clear();
     }
@@ -236,11 +311,7 @@ public final class TaskRound {
                 Sounds.MENU_DENY.play(player);
                 return;
             }
-            player.getInventory().all(fetch.cargo()).forEach((slot, stack) -> {
-                if (TaskItem.chore(stack).filter(fetch.key()::equals).isPresent()) {
-                    player.getInventory().clear(slot);
-                }
-            });
+            removeCargo(player, fetch);
             finish(player, fetch);
             return;
         }
@@ -254,15 +325,19 @@ public final class TaskRound {
         player.getInventory().addItem(cargo).values().forEach(left -> player.getWorld().dropItem(player.getLocation(), left));
         tell(player, messages.get("tasks.cargo-taken", names(fetch)));
         Sounds.EQUIP.play(player);
+        selected.put(player.getUniqueId(), fetch);
         mark(player);
     }
 
     private void finish(Player player, Chore chore) {
-        var duty = board.open(player.getUniqueId(), chore::equals);
-        if (duty.isEmpty() || !alive.get().contains(player)) {
+        if (!alive.get().contains(player)) {
             return;
         }
-        board.finish(duty.get());
+        if (!board.finish(player.getUniqueId(), chore)) {
+            tell(player, messages.get("tasks.already-done"));
+            return;
+        }
+        selected.remove(player.getUniqueId(), chore);
         Sounds.ACHIEVEMENT.play(player);
         var loot = ChestLoot.pick(config.loot(), ThreadLocalRandom.current()).map(ChestLoot::item);
         loot.ifPresent(item -> player.getInventory().addItem(item).values()
@@ -287,12 +362,6 @@ public final class TaskRound {
         station.getWorld().playSound(center, Sound.BLOCK_NOTE_BLOCK_CHIME, 1.2f, 1.4f);
     }
 
-    /**
-     * Marks where {@code player} goes next: each open chore's station, or for cargo they carry, where it goes, and
-     * where the running sabotage is mended. A traitor has no chores and knows their own sabotage; they see their
-     * passages' doors and, until it is used, the tester's trap button instead. Next to a mark, the action bar says
-     * what a right-click there does.
-     */
     private void mark(Player player) {
         if (!board.assigned() || !alive.get().contains(player)) {
             markers.hide(player.getUniqueId());
@@ -304,29 +373,82 @@ public final class TaskRound {
             trapButton.filter(button -> !trapUsed.getAsBoolean()).ifPresent(button -> spots.put(button, Mark.TRAP));
         } else {
             board.of(player.getUniqueId()).stream().filter(duty -> !duty.done()).map(TaskBoard.Duty::chore)
-                    .forEach(chore -> {
-                        if (chore instanceof Chore.Fetch fetch && carrying(player, fetch)) {
-                            spots.put(fetch.destination(), Mark.DELIVER);
-                        } else {
-                            spots.put(chore.station(), Mark.CHORE);
-                        }
-                    });
-            sabotage.repairSpot().ifPresent(spot -> spots.put(spot, Mark.REPAIR));
+                    .map(chore -> objective(player, chore)).forEach(objective -> spots.put(objective.block(), objective.mark()));
         }
-        var shown = new HashMap<Block, Component>();
-        spots.forEach((spot, mark) -> shown.put(spot, marks.get(mark)));
+        var focus = focus(player);
+        focus.ifPresent(objective -> spots.put(objective.block(), objective.mark()));
+        var shown = new HashMap<Block, ChoreMarkers.Marker>();
+        spots.forEach((spot, mark) -> shown.put(spot, new ChoreMarkers.Marker(marks.get(mark), false)));
+        focus.ifPresent(objective -> shown.put(objective.block(), new ChoreMarkers.Marker(messages.get("tasks.focus",
+                Placeholder.component("name", objective.name()), Placeholder.component("navigation", navigation(player, objective))), true)));
         markers.show(player, shown);
         if (!channels.busy(player)) {
-            nearest(player, spots.keySet()).ifPresent(spot ->
-                    BlockcraftApi.get().notifications().status(player, hints.get(spots.get(spot))));
+            var hit = player.rayTraceBlocks(HINT_REACH, FluidCollisionMode.NEVER);
+            if (hit == null || hit.getHitBlock() == null) {
+                return;
+            }
+            var block = hit.getHitBlock();
+            if (!spots.containsKey(block) && block.getBlockData() instanceof Door) {
+                block = block.getRelative(BlockFace.DOWN);
+            }
+            var hint = spots.get(block);
+            if (hint == null && !traitor.test(player)) {
+                var target = block;
+                hint = board.available(player.getUniqueId()).stream().map(chore -> objective(player, chore))
+                        .filter(objective -> objective.block().equals(target)).map(Objective::mark).findFirst().orElse(null);
+            }
+            if (hint != null && !(traitor.test(player) && (hint == Mark.CHORE || hint == Mark.DELIVER))) {
+                BlockcraftApi.get().notifications().status(player, hints.get(hint));
+            }
         }
     }
 
-    private static Optional<Block> nearest(Player player, Set<Block> spots) {
-        var eyes = player.getEyeLocation();
-        return spots.stream().filter(spot -> spot.getWorld().equals(eyes.getWorld()))
-                .filter(spot -> center(spot).distanceSquared(eyes) <= HINT_REACH * HINT_REACH)
-                .min(Comparator.comparingDouble(spot -> center(spot).distanceSquared(eyes)));
+    private Optional<Objective> focus(Player player) {
+        var id = player.getUniqueId();
+        if (!board.assigned() || !alive.get().contains(player)) {
+            return Optional.empty();
+        }
+        if (traitor.test(player)) {
+            return Optional.ofNullable(selected.get(id)).filter(chore -> board.remaining(chore) > 0)
+                    .map(chore -> objective(player, chore));
+        }
+        var repair = sabotage.repairSpot();
+        if (repair.isPresent()) {
+            var kind = sabotage.active().orElseThrow();
+            return Optional.of(new Objective(repair.get(), Mark.REPAIR, messages.get("tasks.sabotage.mending." + kind.key()),
+                    messages.get("tasks.sabotage.where." + kind.key())));
+        }
+        var chore = selected.get(id);
+        if (chore == null || board.remaining(chore) == 0) {
+            var own = board.of(id).stream().filter(duty -> !duty.done()).map(TaskBoard.Duty::chore).toList();
+            var next = board.available(id).stream().min(Comparator
+                    .comparing((Chore each) -> !(each instanceof Chore.Fetch fetch && carrying(player, fetch)))
+                    .thenComparing(each -> !own.contains(each))
+                    .thenComparingDouble(each -> center(objective(player, each).block()).distanceSquared(player.getLocation())));
+            if (next.isEmpty()) {
+                selected.remove(id);
+                return Optional.empty();
+            }
+            chore = next.get();
+            selected.put(id, chore);
+        }
+        return Optional.of(objective(player, chore));
+    }
+
+    private Objective objective(Player player, Chore chore) {
+        var key = "tasks.chores." + chore.key();
+        if (chore instanceof Chore.Fetch fetch && carrying(player, fetch)) {
+            return new Objective(fetch.destination(), Mark.DELIVER, messages.get(key + ".name"), messages.get(key + ".destination"));
+        }
+        return new Objective(chore.station(), Mark.CHORE, messages.get(key + ".name"), messages.get(key + ".where"));
+    }
+
+    private Component navigation(Player player, Objective objective) {
+        var target = center(objective.block());
+        double height = target.getY() - player.getLocation().getY();
+        var vertical = messages.get("tasks.navigation." + (height > 3 ? "above" : height < -3 ? "below" : "level"));
+        return messages.get("tasks.navigation.location", Placeholder.component("where", objective.place()),
+                Formatter.number("distance", Math.round(target.distance(player.getLocation()))), Placeholder.component("vertical", vertical));
     }
 
     private boolean close(Chore one, Chore other) {
@@ -340,13 +462,23 @@ public final class TaskRound {
                 .anyMatch(stack -> TaskItem.chore(stack).filter(fetch.key()::equals).isPresent());
     }
 
+    private static void removeCargo(Player player, Chore.Fetch fetch) {
+        player.getInventory().all(fetch.cargo()).forEach((slot, stack) -> {
+            if (TaskItem.chore(stack).filter(fetch.key()::equals).isPresent()) {
+                player.getInventory().clear(slot);
+            }
+        });
+    }
+
     private static void tell(Player player, Component message) {
         BlockcraftApi.get().notifications().feedback(player, message);
     }
 
     private TagResolver names(Chore chore) {
         return TagResolver.resolver(Placeholder.component("chore", messages.get("tasks.chores." + chore.key() + ".name")),
-                Placeholder.component("where", messages.get("tasks.chores." + chore.key() + ".where")));
+                Placeholder.component("where", messages.get("tasks.chores." + chore.key() + ".where")),
+                Placeholder.component("destination", chore instanceof Chore.Fetch
+                        ? messages.get("tasks.chores." + chore.key() + ".destination") : Component.empty()));
     }
 
     private List<UUID> living() {

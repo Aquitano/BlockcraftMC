@@ -2,9 +2,10 @@ package me.blockcraft.ttt.game;
 
 import me.blockcraft.api.item.HotbarItem;
 
-/** The hotbar item a traitor or detective opens their shop with. */
+/** The round's shop and task navigation. */
 public enum RoundItem implements HotbarItem {
-    SHOP;
+    SHOP, TASKS;
 
     public static final int SLOT = 8;
+    public static final int TASKS_SLOT = 7;
 }

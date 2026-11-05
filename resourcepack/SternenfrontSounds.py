@@ -6,6 +6,7 @@
 
 Run with `uv run SternenfrontSounds.py`. World effects are mono; streamed music is stereo.
 """
+import argparse
 import json
 import subprocess
 import tempfile
@@ -15,6 +16,7 @@ from pathlib import Path
 
 from SaberRecordings import generate as recorded_sabers
 from BattleRecordings import generate as recorded_battle
+from IntroBriefings import generate as intro_briefings
 
 import numpy as np
 from scipy import signal
@@ -211,17 +213,22 @@ def orbital_impact(rng):
 
 
 def hitmarker(rng):
-    tick = sine(held(2600, 0.05)) * decay(0.05, 110, 0.0005)
-    click = unit(filtered(noise(rng, 0.01), "highpass", 4000)) * decay(0.01, 500, 0.0002)
-    return layer(tick, 0.4 * click)
+    tick = sine(glide(1900, 1100, 0.06)) * decay(0.06, 85, 0.0005)
+    click = unit(filtered(noise(rng, 0.018), "highpass", 3200)) * decay(0.018, 260, 0.0002)
+    return layer(tick, 0.35 * click, 0.3 * thump(240, 130, 0.06, 55))
 
 
 def headshot(rng):
-    return layer(hitmarker(rng), (0.02, 0.7 * bell(1500, 0.35, 10)))
+    return layer(0.7 * hitmarker(rng), 0.9 * bell(1800, 0.18, 25), (0.025, 0.35 * bell(2700, 0.12, 35)))
 
 
 def kill(rng):
-    return layer(0.8 * thump(190, 85, 0.12, 28), (0.03, 0.55 * bell(1050, 0.25, 12)), (0.11, 0.6 * bell(1400, 0.35, 9)))
+    return layer(0.8 * thump(190, 85, 0.1, 30), (0.015, 0.65 * bell(880, 0.18, 22)),
+                 (0.075, 0.8 * bell(1320, 0.22, 18)))
+
+
+def cooled(rng):
+    return layer(0.5 * bell(660, 0.13, 25), (0.045, 0.65 * bell(990, 0.16, 22)))
 
 
 def kyber_found(rng):
@@ -284,7 +291,25 @@ def charge_arm(rng):
     return layer(beep(900, 900, 0.05), (0.09, beep(1250, 1250, 0.05)), (0.2, beep(1700, 1700, 0.09)))
 
 
+def radio_click(rng, opening):
+    seconds = 0.21 if opening else 0.16
+    static = unit(filtered(noise(rng, seconds), "bandpass", [650, 5200])) * decay(seconds, 28, 0.001)
+    tone = beep(1050 if opening else 760, 1080 if opening else 650, 0.065)
+    return layer(0.5 * static, (0.025, 0.5 * tone), (0.095, 0.16 * hitmarker(rng)))
+
+
+def intro_transition(rng):
+    seconds = 0.48
+    air = unit(swept(noise(rng, seconds), glide(650, 2400, seconds), 0.8))
+    return layer(0.5 * air * swell(seconds, 0.16, 0.28),
+                 (0.12, 0.4 * thump(105, 55, 0.24, 14)),
+                 (0.17, 0.25 * bell(660, 0.3, 12)))
+
+
 SOUNDS = {
+    "intro.radio_open": (0.4, lambda rng: radio_click(rng, True)),
+    "intro.radio_close": (0.35, lambda rng: radio_click(rng, False)),
+    "intro.transition": (0.45, intro_transition),
     "bolt.impact": (0.7, bolt_impact),
     "force.push": (0.85, force_push),
     "force.grip": (0.75, force_grip),
@@ -302,6 +327,7 @@ SOUNDS = {
     "hitmarker": (0.5, hitmarker),
     "headshot": (0.6, headshot),
     "kill": (0.65, kill),
+    "cooled": (0.5, cooled),
     "kyber.found": (0.7, kyber_found),
     "brummi.beep": (0.55, lambda rng: [honk(0.38), layer(honk(0.2, 98), (0.24, 0.6 * beep(880, 900, 0.07)),
                                                         (0.34, 0.6 * beep(660, 640, 0.09))),
@@ -334,28 +360,37 @@ def encode(x, target, directory):
     ], check=True)
 
 
-def register(events):
-    """Replaces this script's entries in sounds.json and keeps every other one where it stands."""
+def register(events, replace=True):
+    """Updates generated events; full regeneration also removes stale events."""
     path = ROOT / "sounds.json"
     entries = json.loads(path.read_text()) if path.exists() else {}
-    entries = {key: value for key, value in entries.items() if not key.startswith(NAMESPACE) or key in events}
+    if replace:
+        entries = {key: value for key, value in entries.items() if not key.startswith(NAMESPACE) or key in events}
     entries.update(events)
     path.write_bytes((json.dumps(entries, indent=2) + "\n").encode())
 
 
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("--only", nargs="+", choices=sorted(SOUNDS))
+args = parser.parse_args()
 OUT.mkdir(parents=True, exist_ok=True)
-for stale in OUT.glob("*.ogg"):
-    stale.unlink()
+if not args.only:
+    for stale in OUT.glob("*.ogg"):
+        stale.unlink()
 events = {}
 with tempfile.TemporaryDirectory() as directory:
     for event, (peak, make) in SOUNDS.items():
+        if args.only and event not in args.only:
+            continue
         made = make(np.random.default_rng(zlib.crc32(event.encode())))
         variants = made if isinstance(made, list) else [made]
         names = [event.replace(".", "_") + (f"_{index}" if len(variants) > 1 else "") for index in range(1, len(variants) + 1)]
         for name, variant in zip(names, variants):
             encode(master(variant, peak), OUT / f"{name}.ogg", directory)
         events[NAMESPACE + event] = {"sounds": [f"blockcraft:sternenfront/{name}" for name in names]}
-events.update(recorded_sabers(ROOT))
-events.update(recorded_battle(ROOT))
-register(events)
+if not args.only:
+    events.update(recorded_sabers(ROOT))
+    events.update(recorded_battle(ROOT))
+    events.update(intro_briefings(ROOT))
+register(events, replace=not args.only)
 print(f"Wrote {sum(len(entry['sounds']) for entry in events.values())} sounds for {len(events)} events to {OUT}")

@@ -52,6 +52,14 @@ public final class Heat {
         return tick < ventedUntil;
     }
 
+    public int ventTicks(long tick) {
+        return (int) Math.max(0, ventedUntil - tick);
+    }
+
+    public boolean warning(double threshold, double nextShotHeat) {
+        return heat / FULL >= threshold || heat + nextShotHeat >= FULL;
+    }
+
     /** 0 to 1, as the experience bar shows it. */
     public float level() {
         return (float) (heat / FULL);

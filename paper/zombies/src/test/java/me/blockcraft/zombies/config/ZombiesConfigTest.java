@@ -67,6 +67,27 @@ public class ZombiesConfigTest {
     }
 
     @Test
+    public void disablingPresentationLeavesOutageAndReviveRulesUnchanged() {
+        var yaml = bundled();
+        var original = ZombiesConfig.from(yaml);
+        assertTrue(original.presentation().enabled());
+        yaml.set("presentation.enabled", false);
+        yaml.set("presentation.outage-accent-ticks", -1);
+        yaml.set("presentation.recovery-ticks", 0);
+        yaml.set("presentation.ring-points", 10000);
+        yaml.set("presentation.outage-ambient-ticks", 0);
+        var disabled = ZombiesConfig.from(yaml);
+        assertFalse(disabled.presentation().enabled());
+        assertEquals(0, disabled.presentation().outageAccentTicks());
+        assertEquals(0, disabled.presentation().recoveryTicks());
+        assertEquals(32, disabled.presentation().ringPoints());
+        assertEquals(20, disabled.presentation().ambientTicks());
+        assertEquals(original.events().powerOutage(), disabled.events().powerOutage());
+        assertEquals(original.reviveTicks(), disabled.reviveTicks());
+        assertEquals(original.protectionTicks(), disabled.protectionTicks());
+    }
+
+    @Test
     public void bundledSpecialsJoinTheMixOneAtATimeFromWaveSix() {
         var config = ZombiesConfig.from(bundled());
         var specials = List.of(EnemyKind.CRAWLER, EnemyKind.SHIELD_BEARER, EnemyKind.FROST, EnemyKind.ARSONIST,

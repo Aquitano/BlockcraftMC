@@ -86,6 +86,7 @@ public final class ZombiesGame implements RoundConnections.Seating {
     private final Weapons weapons;
     private final Enemies enemies;
     private final ArenaEffects effects;
+    private final ZombiesPresentation presentation;
     private final Notes notes;
     private final WaveEvents events;
     private final MysteryBox mysteryBox;
@@ -131,6 +132,7 @@ public final class ZombiesGame implements RoundConnections.Seating {
         this.weapons = new Weapons(this);
         this.enemies = new Enemies(this);
         this.effects = new ArenaEffects(plugin, arena);
+        this.presentation = new ZombiesPresentation(this, plugin, config.presentation());
         this.notes = new Notes(messages, arena, config.noteCoins());
         this.events = new WaveEvents(this, effects, config.events());
         this.mysteryBox = new MysteryBox(this);
@@ -151,6 +153,7 @@ public final class ZombiesGame implements RoundConnections.Seating {
     public Weapons weapons() { return weapons; }
     public Enemies enemies() { return enemies; }
     public Notes notes() { return notes; }
+    ZombiesPresentation presentation() { return presentation; }
     public MysteryBox mysteryBox() { return mysteryBox; }
     public Survivor survivor(Player player) { return survivors.get(player.getUniqueId()); }
     public boolean isLobby() { return phase == Phase.LOBBY; }
@@ -191,6 +194,7 @@ public final class ZombiesGame implements RoundConnections.Seating {
 
     @Override
     public void quit(Player player) {
+        presentation.forget(player);
         boolean participated = survivors.remove(player.getUniqueId()) != null;
         notes.forget(player);
         removeCorpse(player.getUniqueId());
@@ -293,6 +297,7 @@ public final class ZombiesGame implements RoundConnections.Seating {
         tick++;
         if (phase != Phase.ENDING) {
             effects.tick(tick, !inWave());
+            presentation.tick(tick);
         }
         if (!running()) {
             return;
@@ -367,8 +372,10 @@ public final class ZombiesGame implements RoundConnections.Seating {
             protectedUntil.put(player.getUniqueId(), tick + config.protectionTicks());
             player.sendMessage(messages.get("revive.solo"));
             Sounds.HEAL.play(player);
+            presentation.recovered(player);
             return;
         }
+        presentation.forget(player);
         survivor.down(tick, config.bleedTicks());
         Menu.close(player);
         player.closeDialog();
@@ -421,6 +428,7 @@ public final class ZombiesGame implements RoundConnections.Seating {
             var resolvers = TagResolver.resolver(Placeholder.unparsed("player", player.getName()),
                     Formatter.number("seconds", Math.max(0, survivor.bleedAt() - tick) / 20),
                     Formatter.number("progress", (int) (100.0 * survivor.reviveProgress() / config.reviveTicks())));
+            presentation.progress(location, (double) survivor.reviveProgress() / config.reviveTicks());
             var corpse = corpses.get(player.getUniqueId());
             if (corpse != null) {
                 corpse.text(messages.get("revive.marker", resolvers));
@@ -441,6 +449,7 @@ public final class ZombiesGame implements RoundConnections.Seating {
         protectedUntil.put(player.getUniqueId(), tick + config.protectionTicks());
         weapons.render(player);
         Sounds.HEAL.play(player);
+        if (!respawn) presentation.recovered(player);
     }
 
     /** A player's own client decides its pose, so a ceiling only it sees makes it crawl; the fixed pose shows everyone else the same. */
@@ -725,6 +734,7 @@ public final class ZombiesGame implements RoundConnections.Seating {
         }
         phase = Phase.ENDING;
         events.end();
+        presentation.clear();
         if (!won) {
             summary.defeatedBy(net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer.plainText()
                     .serialize(messages.get("game.enemy-name")));
@@ -767,6 +777,7 @@ public final class ZombiesGame implements RoundConnections.Seating {
         lobbyCountdown.cancel();
         round.stop();
         events.end();
+        presentation.clear();
         enemies.clear();
         mysteryBox.clear();
         racks.clear();

@@ -34,6 +34,7 @@ public final class BattleEffects {
     private static final String RING = "sternenfront/fx/ring";
     private static final String SCORCH = "sternenfront/fx/scorch";
     private static final String SABER_SLASH = "sternenfront/fx/saber_slash";
+    private static final String SABER_CRESCENT = "sternenfront/fx/saber_crescent";
     private static final String SABER_SCAR = "sternenfront/fx/saber_slash_cold";
     private static final String SMOKE_PUFF = "sternenfront/fx/smoke_puff";
     private static final Color PUSH_COLOUR = Color.fromRGB(0xB8E5FF);
@@ -306,6 +307,27 @@ public final class BattleEffects {
         for (var nozzle : List.of(back.clone().add(side), back.clone().subtract(side))) {
             nozzle.getWorld().spawnParticle(Particle.FLAME, nozzle, 0, 0, -0.35, 0, 1, null, true);
             nozzle.getWorld().spawnParticle(Particle.SMOKE, nozzle.subtract(0, 0.5, 0), 0, 0, -0.2, 0, 1, null, true);
+        }
+    }
+
+    void saberSweep(Location origin, List<SaberCrescent.Sample> samples, Color colour) {
+        var glow = new Particle.DustTransition(Color.WHITE, colour, 0.8f);
+        var trail = new Particle.DustOptions(colour, 0.65f);
+        for (var sample : samples) {
+            for (double radius = Math.max(0.4, sample.reach() - 0.65); radius <= sample.reach(); radius += 0.2) {
+                var at = origin.clone().add(sample.direction().clone().multiply(radius));
+                origin.getWorld().spawnParticle(Particle.DUST, at, 1, 0, 0, 0, 0, trail, true);
+            }
+            if (sample.reach() > 0.4) {
+                var tip = origin.clone().add(sample.direction().clone().multiply(sample.reach()));
+                origin.getWorld().spawnParticle(Particle.DUST_COLOR_TRANSITION, tip, 1, 0, 0, 0, 0, glow, true);
+            }
+        }
+        double yaw = Math.toRadians(origin.getYaw());
+        var normal = new Vector(Math.cos(yaw), 0, Math.sin(yaw)).crossProduct(origin.getDirection()).normalize();
+        for (var segment : SaberCrescent.segments(samples)) {
+            flares.crescent(SABER_CRESCENT, origin.clone().add(segment.offset()), segment.turn(normal), segment.scale(), colour,
+                    config.saberTrailTicks());
         }
     }
 

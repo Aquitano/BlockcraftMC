@@ -247,6 +247,8 @@ relic:
   lost: "<prefix><muted>Das <accent>Dunkelschwert <muted>kehrt in die Tempelruine zurück."
 
 post:
+  capture-title: "<accent>POSTEN <letter> <white><post>"
+  capture-subtitle: "<faction> <muted>hat den Posten gesichert."
   raffinerie: "Raffinerie"
   wrack: "Wrack"
   basar: "Basar"
@@ -305,9 +307,12 @@ headquarters:
   warning: "<error>Feindliches Hauptquartier! <muted>Raus hier!"
 
 deploy:
+  location: "<location>"
+  radio: "<muted>Funk: Einsatz bestätigt. Sichere die Kommandoposten."
+  landing: "<white>Landezone"
   controls: "<prefix><accent>F<muted>: <first> <dark>· <accent>Q<muted>: <second>"
   no-ability: "<muted>Keine Fähigkeit"
-  saber-controls: "<prefix><right>Halten zum Blocken <dark>· <muted>Zweimal springen für den Machtsprung."
+  saber-controls: "<prefix><left>Schwingt durch alle Gegner vor dir <dark>· <right>Halten zum Blocken <dark>· <muted>Zweimal springen für den Machtsprung."
   title: "<arrow><sternenfront>Clone Wars <dark>· <muted>Einsatz"
   item: "<arrow><primary>Einsatz planen"
   waiting: "<muted>Einsatz möglich in <accent><seconds> s"
@@ -403,7 +408,7 @@ scoreboard:
 hero:
   head: "<white>Heldenrüstung"
   saber-lore:
-    - "<muted>Schlägt mit Abklingzeit, wie ein Schwert."
+    - "<left>Trifft alle Gegner im Schwung vor dir."
     - "<right>Halten zum Blocken <dark>· <muted>Zweimal springen für den Machtsprung"
   jedi:
     name: "<white>Obi-Wan Kenobi"
@@ -470,12 +475,28 @@ hero:
   sidebar:
     points: "<accent><points><muted>/<cost> Kampfpunkte"
     ready: "<success>Held bereit <dark>· <accent><points> <muted>Punkte"
+    waiting: "<accent><points><muted>/<cost> <dark>· <muted>Heldenplätze belegt"
     hero: "<muted>Im Feld als <hero>"
 
 hit:
   hit: "<white><icon:hit>"
   headshot: "<icon:headshot>"
   kill: "<icon:kill>"
+
+feedback:
+  kill: "<error>Abschuss <white><target> <success>+<points> KP"
+  multikill: "<error><kills> Abschüsse <success>+<points> KP"
+  assist: "<aqua>Abschusshilfe <success>+<points> KP"
+  defence: "<aqua>Posten verteidigt <success>+<points> KP"
+  healing: "<success>Verbündete geheilt +<points> KP"
+  capture: "<aqua>Posten erobert <success>+<points> KP"
+  neutralise: "<aqua>Posten neutralisiert <success>+<points> KP"
+  compact: "<success>+<points> KP"
+  compact-kill: "<error><kills> Abschuss <success>+<points> KP"
+  compact-multikill: "<error><kills> Abschüsse <success>+<points> KP"
+  separator: "<dark> │ "
+  progress: " <dark>│ <accent><points><muted>/<cost> KP"
+  hero-ready: "<success><bold>HELD BEREIT</bold>"
 
 killcam:
   watching: "<muted>Besiegt von <white><killer>"
@@ -522,7 +543,8 @@ combat:
   broken: "<error>GEBROCHEN"
   guard-broken: "<error>Deckung gebrochen! <muted>Lass sie sich kurz erholen."
   heat: "<muted>Hitze"
-  venting: "<error>KÜHLEN"
+  hot: "<error><bold>! HEISS</bold>"
+  venting: "<error><bold>! KÜHLEN</bold> <seconds>s"
   incoming:
     front: "<error><bold>▲</bold> <dark>│ "
     back: "<error><bold>▼</bold> <dark>│ "
@@ -555,3 +577,18 @@ battlefield:
     warning: "<error>Dampf in <seconds>s! Abstand halten"
     active: "<error>Aktiv <dark>· <white><seconds>s"
     cooldown: "<muted>Abkühlzeit <seconds>s"
+
+intro:
+  title: '<gold><bold><map></bold></gold>'
+  subtitle: '<faction> <gray>· Erobere die Kommandoposten</gray>'
+  briefing:
+    kolonien: 'Freie Kolonien. Sichert die Kommandoposten. Haltet zusammen.'
+    hegemonie: 'Einheiten der Hegemonie. Besetzt die Kommandoposten. Haltet die Stellung.'
+  audio:
+    transcript: '<aqua>Funk <dark>» <white><briefing>'
+  controls: '<gray>Schleichen: Intro überspringen · Einsatz in <white><seconds></white> s</gray>'
+  waiting: '<gray>Warte auf den gemeinsamen Einsatzbeginn · <white><seconds></white> s</gray>'
+  rejoining: '<gray>Das Intro läuft noch. Dein Einsatz beginnt mit den anderen Spielern.</gray>'
+  lobby-only: '<red>Die Intro-Vorschau ist nur in der Lobby ohne laufende Szene verfügbar.</red>'
+  pack-required: '<red>Das Ressourcenpaket muss für die Intro-Vorschau vollständig geladen sein.</red>'
+  invalid: '<red>Die Intro-Kamerafahrt ist ungültig. Prüfe die Serverkonsole.</red>'

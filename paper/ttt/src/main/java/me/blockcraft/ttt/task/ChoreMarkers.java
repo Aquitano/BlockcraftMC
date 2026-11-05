@@ -20,11 +20,13 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * Where each player's work waits, shown to that player alone: a mark floating over every spot they have to go to
- * next, seen through walls and lit in a blackout, with sparks around the block itself once they are close. A mark
- * grows with the distance, so it reads about as large across the town as it does next door.
+ * Private markers remain visible through walls. The selected objective has a label; secondary markers use smaller
+ * symbols. Both scale with distance, and nearby stations have particles.
  */
 final class ChoreMarkers {
+
+    record Marker(Component text, boolean focused) {
+    }
 
     private static final double LIFT = 1.4;
     private static final float NEAR_SCALE = 2.5f;
@@ -43,7 +45,7 @@ final class ChoreMarkers {
         this.plugin = plugin;
     }
 
-    void show(Player player, Map<Block, Component> spots) {
+    void show(Player player, Map<Block, Marker> spots) {
         var mine = shown.computeIfAbsent(player.getUniqueId(), id -> new HashMap<>());
         mine.entrySet().removeIf(entry -> {
             if (spots.containsKey(entry.getKey()) && entry.getValue().isValid()) {
@@ -58,10 +60,10 @@ final class ChoreMarkers {
                 mine.put(spot, spawn(player, spot, mark));
                 return;
             }
-            if (!display.text().equals(mark)) {
-                display.text(mark);
+            if (!display.text().equals(mark.text())) {
+                display.text(mark.text());
             }
-            resize(player, display);
+            resize(player, display, mark.focused());
         });
     }
 
@@ -97,8 +99,8 @@ final class ChoreMarkers {
         shown.clear();
     }
 
-    private static void resize(Player viewer, TextDisplay display) {
-        float wanted = scale(viewer, display.getLocation());
+    private static void resize(Player viewer, TextDisplay display, boolean focused) {
+        float wanted = scale(viewer, display.getLocation(), focused);
         float now = display.getTransformation().getScale().x();
         if (Math.abs(wanted - now) > now * RESCALE_FROM) {
             display.setInterpolationDelay(0);
@@ -107,21 +109,21 @@ final class ChoreMarkers {
         }
     }
 
-    private static float scale(Player viewer, Location at) {
+    private static float scale(Player viewer, Location at, boolean focused) {
         double distance = at.getWorld().equals(viewer.getWorld()) ? at.distance(viewer.getEyeLocation()) : 0;
-        return Math.clamp((float) distance * SCALE_PER_BLOCK, NEAR_SCALE, FAR_SCALE);
+        return Math.clamp((float) distance * SCALE_PER_BLOCK, NEAR_SCALE, FAR_SCALE) * (focused ? 0.25f : 0.4f);
     }
 
     private static Transformation scaled(float scale) {
         return new Transformation(new Vector3f(), new AxisAngle4f(), new Vector3f(scale), new AxisAngle4f());
     }
 
-    private TextDisplay spawn(Player viewer, Block spot, Component mark) {
+    private TextDisplay spawn(Player viewer, Block spot, Marker mark) {
         Location at = spot.getLocation().add(0.5, LIFT, 0.5);
         var display = spot.getWorld().spawn(at, TextDisplay.class, entity -> {
             entity.setVisibleByDefault(false);
             entity.setPersistent(false);
-            entity.text(mark);
+            entity.text(mark.text());
             entity.setBillboard(Display.Billboard.CENTER);
             entity.setSeeThrough(true);
             entity.setDefaultBackground(false);
@@ -129,7 +131,7 @@ final class ChoreMarkers {
             entity.setShadowed(true);
             entity.setBrightness(FULL_BRIGHT);
             entity.setViewRange(VIEW_RANGE);
-            entity.setTransformation(scaled(scale(viewer, at)));
+            entity.setTransformation(scaled(scale(viewer, at, mark.focused())));
         });
         viewer.showEntity(plugin, display);
         return display;

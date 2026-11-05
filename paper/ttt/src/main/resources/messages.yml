@@ -30,14 +30,15 @@ roles:
     innocent: "<muted>Überlebe und finde die Traitor."
   goal-tasks:
     traitor: "<muted>Töte alle Innocents und Detectives. Sabotage im Shop."
-    detective: "<muted>Finde die Traitor. Deine Aufgaben zeigt das <accent><bold>!"
-    innocent: "<muted>Überlebe. Deine Aufgaben zeigt das <accent><bold>!"
+    detective: "<muted>Finde die Traitor. Alle Teamaufgaben erledigt heißt Sieg."
+    innocent: "<muted>Erledigt alle Teamaufgaben, um zu gewinnen. Ziele im Buch."
   partners: "<prefix><muted>Deine Traitor-Partner<dark>: <error><players> <dark>· <muted>Schreiben mit <accent>/tc"
   alone: "<prefix><muted>Du bist der einzige Traitor. Viel Glück."
   detectives: "<prefix><muted>Detective<dark>: <accent><players>"
 
 item:
   shop: "<arrow><role>-Shop"
+  tasks: "<arrow><primary>Aufgaben und Wegweiser"
   vote: "<arrow><primary>Abstimmung"
 
 vote:
@@ -85,7 +86,7 @@ shop:
     fallen: "<muted>Die Maske ist abgefallen. Du bist wieder du selbst."
     no-face: "<error>Dieser Leiche kannst du kein Gesicht mehr nehmen."
   lighter:
-    burned: "<muted>Die Leiche ist verbrannt. Niemand wird je wissen, wer das war."
+    burned: "<muted>Die Leiche ist verbrannt. Ihre Spuren sind vernichtet."
   time-bomb:
     title: "<arrow><ttt>TTT <dark>· <muted>Zeitbombe"
     timer: "<error><bold><seconds>"
@@ -167,8 +168,8 @@ shop:
     dna-scanner:
       name: "<accent>DNA-Scanner"
       lore:
-        - "<bullet><muted>Zeigt an einer Leiche, wer"
-        - "<muted>der Mörder war."
+        - "<bullet><muted>Prüft eine Leiche auf fremde DNA"
+        - "<muted>und schätzt, wie lange sie dort liegt."
     golden-sword:
       name: "<primary>Goldenes Schwert"
       lore:
@@ -271,11 +272,10 @@ channel:
 
 corpse:
   unknown: "<muted>Unbekannte Leiche"
-  identified: "<white><player> <dark>· <role>"
-  found: "<prefix><accent><finder> <muted>hat die Leiche von <white><player> <muted>gefunden<dark>: <role>"
-  known: "<muted>Das ist <white><player><muted>, <role><muted>."
-  killer: "<prefix><muted>Die DNA an <white><player> <muted>gehört <error><killer><muted>."
+  known: "<prefix><muted>Das ist <white><player><muted>, <role><muted>."
+  foreign-dna: "<prefix><muted>An <white><player> <muted>findest du fremde DNA. Sie lässt sich keiner Person zuordnen."
   no-killer: "<prefix><muted>An <white><player> <muted>findest du keine fremde DNA."
+  age: "<prefix><muted>Der Tod liegt ungefähr <accent><min> bis <max> Sekunden <muted>zurück."
 
 chat:
   traitor: "<error><bold>[TRAITOR]</bold>"
@@ -316,7 +316,7 @@ menu:
 scoreboard:
   title: "<ttt><bold>TTT"
   title-tasks: "<ttt><bold>TTT 2"
-  chores: "<muted><icon:map> AUFGABEN"
+  chores: "<muted><icon:map> NÄCHSTES ZIEL"
   map-vote: "Abstimmung läuft"
   role: "<muted><icon:mode> ROLLE"
   no-role: "<muted>Wird verteilt"
@@ -369,24 +369,40 @@ tasks:
     grain:
       name: "Korn zur Mühle bringen"
       where: "Scheune"
+      destination: "Mühle"
       cargo: "Kornsack"
     letter:
       name: "Urkunde zum Abt bringen"
       where: "Rathaus"
+      destination: "Abtszimmer"
       cargo: "Urkunde"
     herbs:
       name: "Kräuter in die Gasthausküche bringen"
       where: "Kräutergarten"
+      destination: "Gasthausküche"
       cargo: "Kräuterbündel"
     stone:
       name: "Bruchstein zur Klostermauer bringen"
       where: "Steinbruch"
+      destination: "Klostermauer"
       cargo: "Bruchstein"
     horseshoe:
       name: "Hufeisen in den Stall bringen"
       where: "Schmiede"
+      destination: "Stall"
       cargo: "Hufeisen"
   bar: "<success>Aufgaben der Innocents <dark>● <white><percent>%"
+  focus: "<accent><name><newline><navigation>"
+  navigation:
+    location: "<muted><where> <dark>· <white><distance> Blöcke<vertical>"
+    above: "<dark> · <accent>oben"
+    below: "<dark> · <accent>unten"
+    level: ""
+  menu:
+    title: "<arrow><ttt>TTT 2 <dark>· <muted>Teamaufgaben"
+    hint: "<muted>Sieh die Teamaufgaben an und wähle dein nächstes Ziel."
+    recommended: "<muted>Teil deiner vorgeschlagenen Route"
+    select: "<click>Als nächstes Ziel wählen"
   marker:
     chore: "<accent><bold>!"
     deliver: "<success><bold>?"
@@ -400,16 +416,18 @@ tasks:
     door: "<right>Geheimtür öffnen"
     trap: "<right>Falle im Tester auslösen"
   not-yet: "<muted>Die Aufgaben kommen mit den Rollen."
-  not-yours: "<muted>Nicht deine Aufgabe."
+  not-yours: "<muted>Hier gibt es keine offene Aufgabe für dich."
   already-done: "<muted>Schon erledigt."
   generator: "<muted>Der Generator läuft."
-  cargo-taken: "<muted>Aufgenommen. Bring es zum <success><bold>?"
+  cargo-taken: "<muted>Aufgenommen. Bring die Ladung zum <accent><destination><muted>."
   cargo-carrying: "<muted>Du trägst das schon."
   cargo-missing: "<error>Hol erst die Ladung<dark>: <muted><where>"
   done: "<success>Erledigt<dark>: <muted><chore>"
   sidebar:
-    done: "<success>✔ <dark><chore>"
-    open: "<white><chore>"
+    progress: "<muted>Dein Beitrag<dark>: <success><done> Aufgaben"
+    traitor: "<error>Innocents ausschalten"
+    sabotage-ready: "<muted>Sabotage<dark>: <success>bereit"
+    sabotage-wait: "<muted>Sabotage<dark>: <accent><seconds>s"
   game-title: "<arrow><ttt>TTT <dark>· <muted><how>"
   games:
     organ:
@@ -482,3 +500,6 @@ tasks:
     mending:
       blackout: "<accent>Generator reparieren"
       tester: "<accent>Tester reparieren"
+    where:
+      blackout: "Mühle"
+      tester: "Rathaus"

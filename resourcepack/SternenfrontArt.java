@@ -1158,13 +1158,50 @@ public final class SternenfrontArt {
         return new Family("wrist_rocket", 96, false, List.of(new Model("sternenfront/fx/wrist_rocket", rocket)));
     }
 
+    private static Drawing crescentGlow() {
+        return (width, height, random) -> {
+            var pixels = new int[width * height];
+            for (int y = 0; y < height; y++) {
+                for (int x = 0; x < width; x++) {
+                    double across = (x + .5) * .6 / width - .3;
+                    double forward = 1 - (y + .5) * .2 / height;
+                    double edge = (1 - .1 * Math.pow(across / .3, 2) - forward) / .07;
+                    if (edge >= 0 && edge < 1) {
+                        int alpha = (int) (180 * Math.pow(1 - edge, .7));
+                        pixels[y * width + x] = argb(alpha, 0xFFFFFF);
+                    }
+                }
+            }
+            return pixels;
+        };
+    }
+
+    private static Family saberSweep() {
+        var glow = new Sprite("crescent_glow", true, true, crescentGlow());
+        var core = new Sprite("crescent_core", true, false, (width, height, random) -> {
+            var pixels = new int[width * height];
+            Arrays.fill(pixels, 0xFFFFFFFF);
+            return pixels;
+        });
+        var line = new Shape().add(box(0, .9, 0, .6, .2, 0, glow).only(Face.NORTH, Face.SOUTH));
+        for (int step = 0; step < 32; step++) {
+            double from = -.3 + step * .6 / 32;
+            double to = -.3 + (step + 1) * .6 / 32;
+            double edge = Math.max(Math.abs(from), Math.abs(to)) / .3;
+            double top = 1 - .1 * edge * edge;
+            line.add(box((from + to) / 2, top - .015, 0, to - from, .03, .035, core));
+        }
+        return new Family("saber_sweep", 256, true, List.of(
+                new Model("sternenfront/fx/saber_crescent", line)));
+    }
+
     private static List<Family> families() {
         return List.of(battleDroid("soldier"), superBattleDroid(), battleDroid("scout"), battleDroid("medic"),
                 cloneTrooper("kolonien_soldier", CloneRole.SOLDIER), cloneTrooper("kolonien_heavy", CloneRole.HEAVY),
                 cloneTrooper("kolonien_scout", CloneRole.SCOUT), cloneTrooper("kolonien_medic", CloneRole.MEDIC),
                 cloneTrooper("hero_commander", CloneRole.REX), forceHero(false), forceHero(true), jangoFett(),
                 speeders("kolonien", barcSpeeder(false), barcSpeeder(true)),
-                speeders("hegemonie", stap(false), stap(true)), republicGunship(), separatistTransport(), wristRocket(), effects());
+                speeders("hegemonie", stap(false), stap(true)), republicGunship(), separatistTransport(), wristRocket(), effects(), saberSweep());
     }
 
     private record Point(double x, double y, double z) {

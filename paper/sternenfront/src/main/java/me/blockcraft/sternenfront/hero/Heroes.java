@@ -18,6 +18,7 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -82,6 +83,10 @@ public final class Heroes {
         return roster.open(faction, hero);
     }
 
+    public boolean available(Faction faction) {
+        return Arrays.stream(Hero.values()).anyMatch(hero -> open(faction, hero));
+    }
+
     public boolean affordable(Player player, Faction faction, Hero hero) {
         return open(faction, hero) && points(player) >= cost(faction);
     }
@@ -110,7 +115,6 @@ public final class Heroes {
         if (hero == Hero.CHAMPION) {
             loadouts.arm(player);
             player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, PotionEffect.INFINITE_DURATION, 0, false, false, true));
-            player.setGlowing(true);
         } else {
             var inventory = player.getInventory();
             inventory.clear();

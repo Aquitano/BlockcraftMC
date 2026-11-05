@@ -22,9 +22,11 @@ Every number named below as a key is in [config.yml](src/main/resources/config.y
 
 Nobody hears who killed whom: the round keeps its kills secret (`RoundSummary.keepKillsSecret`), so no streak is
 announced, no kill effect plays, the victim's title names nobody and nobody pays respects with an F. The dead lie where
-they fell as a figure in their skin, named "Unbekannte Leiche"; the first player to right-click it identifies it for
-everyone, which reveals the role. Holding the DNA scanner, a click also tells who the killer was. Dead players watch;
-their chat reaches only other spectators. The sidebar counts them among the living until their corpse is identified.
+they fell as a figure in their skin, named "Unbekannte Leiche".
+Right-clicking a corpse privately reveals its name and role to the finder. Its public label stays unknown, and each
+player's sidebar counts the victim among the living until that player inspects the body. The DNA scanner reports
+whether foreign DNA is present and estimates time since death in 15-second intervals. It never names the killer.
+Dead players watch; their chat reaches only other spectators.
 
 A traitor's chat message that starts with `#` reaches only the living traitors; `/tc <Nachricht>` writes one.
 
@@ -83,7 +85,7 @@ who can buy what, `shop.items` in `messages.yml` says what each good does for th
 `config.yml` gives its numbers.
 
 Rules that cross items: the lighter and the mask work on a corpse without identifying it, and the other goods identify
-it first. A mask, vest, stun, radar or jammer ends when its holder dies or leaves. Explosions break no blocks and count
+it privately first. A mask, vest, stun, radar or jammer ends when its holder dies or leaves. Explosions break no blocks and count
 as the owner's kill, even once the owner is dead; so do the bear trap's and a poisoned heal station's hurt.
 
 ## TTT 2
@@ -92,24 +94,26 @@ A server whose `BLOCKCRAFT_TTT_MODE` is `tasks` plays TTT 2. The compose service
 two modes fill their own rounds; both share the stats, karma and the lobby. TTT 2 plays only maps whose `Town` has
 a `TaskLayout`, which today is the map `TownBuilder` builds. The settings are under `tasks` in config.yml.
 
-- The chests are looted as in TTT. Everyone but the traitors gets chores when the roles are drawn, listed on the
-  sidebar. The traitors have the sabotage.
+- Each innocent and detective receives a suggested route of chores. Those assignments form a fixed team pool that
+  any living innocent or detective can finish. Deaths, disconnects, and revivals leave the target and progress unchanged.
+- The navigation book in hotbar slot eight selects a task. Traitors can find stations but cannot complete tasks.
+  After a completion, innocents receive another target, with carried deliveries and their own route taking priority.
+- The selected target has a private label with its destination, distance, and relative height. Other unfinished tasks
+  on the route have smaller symbols. A repairable sabotage temporarily selects its station, then restores the task.
+  Traitors also see their passage doors and the tester's trap button until it is used.
 - Schattenbach has 16 chores of three kinds: held at a station, played as a game (`task/game`), and errands that carry a
-  load across the map. `tasks.chores` in `messages.yml` names them. A hit or walking off breaks a held chore off, and
-  closing a game early leaves the chore open. Each chore pays one pick from `tasks.loot`.
-- `ChoreMarkers` draws a `!` over the next spot of each player's chores, through walls and only for them, and a `?` over
-  a load's destination. A mark grows with the distance, so it reads about as large across the town as next door. While a
-  sabotage can be mended, a red `!` marks the generator or the tester's button for every living innocent and detective.
-- A boss bar shows how far the innocents are. A dead innocent's open chores drop out, so the bar can still fill.
-  When a chore done leaves no living innocent with an open one, the innocents win; a death alone never wins by chores.
+  load across the map. A hit or walking off breaks a held chore off. Closing a game early leaves the chore open.
+  Each successful completion earns credit and one pick from `tasks.loot` once. Finishing the pool wins the round.
+- The sidebar shows the selected objective and personal contribution. Karma stays on the lobby sidebar.
+  Task progress and active sabotage share one boss bar.
 - Traitors sabotage from a row in their shop, free, one at a time: a blackout puts out the map's lights and darkens
   everyone else until someone mends the generator in the mill's gear room, locked doors shut every door of the map, and
   a broken tester tests nobody until it is mended at its button.
 
 ## Karma, health, rewards
 
-Karma lives in `bc_ttt_karma` and stats in `bc_ttt_stats`. Every blow scales with the attacker's karma, and the sidebar
-shows it. There is no hunger, and without `natural-regeneration` only medipacks, heal stations and a traitor's kills
+Karma lives in `bc_ttt_karma` and stats in `bc_ttt_stats`. Every blow scales with the attacker's karma, which the lobby
+sidebar shows. There is no hunger, and without `natural-regeneration` only medipacks, heal stations and a traitor's kills
 heal. Combat is 1.8-style (`pvp.legacy-combat`). A team kill pays nothing.
 
 ## Testing

@@ -3,7 +3,7 @@ package me.blockcraft.sternenfront.combat;
 import org.bukkit.configuration.ConfigurationSection;
 
 /** Everything {@code presentation} tunes: the look of the round's effects and how much of them clients get. */
-public record PresentationConfig(boolean effects, int liveEffects, Scorch scorch, SaberMark saberMark, MuzzleFlash muzzleFlash, Bolt bolt,
+public record PresentationConfig(boolean effects, int liveEffects, Scorch scorch, SaberMark saberMark, int saberTrailTicks, MuzzleFlash muzzleFlash, Bolt bolt,
                                  Explosion explosion, Damaged damaged, Ambient ambient, Assault assault, Storm storm) {
 
     public record Scorch(int marks, int every, int ticks, int fadeTicks, float scale) { }
@@ -40,6 +40,7 @@ public record PresentationConfig(boolean effects, int liveEffects, Scorch scorch
                         Math.max(0, config.getInt("presentation.saber-mark.fade-ticks")),
                         (float) config.getDouble("presentation.saber-mark.scale"),
                         Math.max(0, config.getDouble("presentation.saber-mark.tilt-degrees"))),
+                Math.clamp(config.getInt("presentation.saber-trail-ticks", 3), 1, 6),
                 new MuzzleFlash(Math.max(1, config.getInt("presentation.muzzle-flash.ticks")),
                         (float) config.getDouble("presentation.muzzle-flash.scale"),
                         (float) config.getDouble("presentation.muzzle-flash.heavy-scale")),

@@ -33,6 +33,31 @@ Launched rockets and orbital strikes continue after their owner falls. Lightning
 Both powers use the existing damage path for spawn protection and kill credit. Rockets also use `blastAround` for
 cover, teammate safety, and self-damage. Lightning uses the saber guard without reflecting the attack.
 
+## Combat feedback
+
+During combat, enemies have red outlines and allies have cyan outlines with every weapon, without aiming or
+sneaking. This applies to players and bots, including their custom body parts. Outlines are private to the viewer.
+`outlines.enabled` and `outlines.range` control them. The applied resource pack clips outline pixels against the
+world depth buffer, so walls hide the covered parts while exposed parts stay outlined. Selection uses no server-side
+block rays. Outlines stay disabled until the pack has loaded.
+
+Hits, headshots, and kills have distinct sounds and immediate markers below the crosshair. A kill replaces a weaker
+marker even within the same tick. Kill and assist popups show the reward, recent kill count, and battle-point progress
+beside the health, guard, damage-direction, and ability-cooldown HUD. Nearby gains combine into one segment.
+Objective titles remain visible while the marker temporarily uses their subtitle, then restores it without restarting
+the title. The sidebar distinguishes an available hero from enough points with every slot occupied.
+
+The heat meter turns red and shows `! HEISS` at `heat.warning-level`, or when the next shot would overheat the weapon.
+Venting shows `! KÜHLEN` with its remaining seconds, followed by a ready sound. `combat-feedback` tunes marker and
+popup durations and the hit, headshot, and kill volumes.
+
+Left click sweeps a saber-colored slash through every enemy ahead, including when aimed at air. Colored particles
+follow a continuous white line with a solid core visible from the side. Wall-clipped hit rays position its segments,
+each lasting `presentation.saber-trail-ticks` under the shared effect cap. Each enemy can take damage or block only once per swing.
+`combat.melee` sets the reach, arc angle, cooldown and animation duration. Defaults are 3.5 blocks, 120 degrees,
+12 ticks between swings and a four-tick sweep. Successive swings alternate direction. Switching weapons or guarding
+cancels the remaining sweep. The relic blade uses the same attack.
+
 ## Generated assets
 
 Edit `resourcepack/SternenfrontArt.java` for bodies, hero bodies, helmets, blasters, sabers, vehicles, and effect
@@ -53,3 +78,75 @@ call sites. The large block-built ships belong to the saved world, while assault
 
 Sound provenance and regeneration instructions live in [SABER_SOURCES.md](../../resourcepack/SABER_SOURCES.md) and
 [BATTLE_AUDIO.md](../../resourcepack/BATTLE_AUDIO.md). The pack includes the [credits](../../CREDITS.md).
+
+## Match intro
+
+`intro` in `config.yml` controls the camera sequence before combat starts. The default lasts 180 ticks.
+The round clock, bots, vehicles, objectives, and deployments start after the shared intro deadline.
+Sneaking skips to the last shot but keeps the player waiting until that deadline.
+
+`intro.shots` contains ordered keyframes. `at` is a fraction of the total duration, starting at `0` and ending at `1`.
+`anchor` and `look-at` accept `overview`, `headquarters` for the viewer's faction, and zero-based `post:N`.
+`offset` contains three world-space block coordinates relative to the anchor. `cut: true` holds the preceding
+shot until the keyframe, then changes the camera immediately. Other segments use smooth interpolation. The default
+post shot has a moving endpoint before the headquarters cut. The actor faces that shot's camera and starts its clip
+when the first headquarters keyframe is reached. Explicit operator overrides of `intro.shots` retain their own path.
+
+`intro.audio` controls the faction radio briefing, captions, and shot cues. Speech uses the client's Voice slider;
+radio clicks and transitions use Ambient. Sounds follow the spectator camera and stop with the scene, including a skip.
+The briefing starts three ticks after the opening fade. `briefing-ticks` reserves 80 ticks for speech before the closing
+radio click. An intro too short for that window omits the briefing. Transitions follow the first intermediate camera
+keyframe and the headquarters shot, outside the fades. Voice and effects volumes can be set independently.
+
+The German transcripts are `intro.briefing` in `messages.yml`. Changing the words requires regenerating the speech with
+`resourcepack/IntroBriefings.py --model /path/to/de_DE-thorsten-high.onnx`, using that script's Python dependencies.
+The checked-in WAV sources allow offline OGG regeneration with `python3 resourcepack/IntroBriefings.py` and FFmpeg.
+The engine and voice model remain build tools. [CREDITS.md](../../CREDITS.md#sound-effects) records the voice source.
+
+`/sfintro` plays a personal preview in the lobby. It requires `blockcraft.sternenfront.presentation` and an applied
+resource pack. Sneak or use `/sfintro stop` to end the preview. It restores the original position, game mode,
+flight settings, invulnerability, collision setting, fall distance, and prior spectator target.
+An external teleport cancels the scene without moving the player back to its starting position.
+
+The shared `Scenes` API reports an `End` reason to its completion callback after restoring the player.
+`SkipMode.COMPLETE` stops immediately and does not run remaining timeline cues. Story callers must apply their final
+quest state in that callback for both `COMPLETED` and `SKIPPED`. Cancellation and disconnect require separate handling.
+`SkipMode.HOLD`, used by the match intro, keeps cue timing and the shared deadline while showing the final camera pose.
+
+## Infantry animation clips
+
+The final intro shot shows an infantry actor using `animations/briefing.animation.json` from the plugin jar.
+An operator override with the same relative path in the plugin data folder replaces it after restart.
+The animation name is `animation.infantry.briefing`.
+The bundled clip samples eased arm and head movement at 20 Hz. The salute rises over 0.55 seconds, holds until
+1 second, and returns to rest by 1.5 seconds before the default shot fades. Its four-second loop has matching endpoints.
+
+`BedrockAnimations` reads the numeric subset of Blockbench's Bedrock animation export. It supports positive
+`animation_length`, boolean `loop`, and named bone `position`, `rotation`, and `scale` channels. A channel is a
+constant three-number array or timestamped arrays. Timestamped objects can contain `post` and `lerp_mode: linear`.
+Molang, curved interpolation, separate `pre` values, event tracks, and animation controllers are rejected.
+
+The infantry actor binds `head`, `torso`, `left_arm`, `right_arm`, `left_leg`, and `right_leg` to existing item-display
+parts. Position values are local offsets in sixteenths of a block. Rotation values are local XYZ degrees.
+Scale values multiply each part. This actor uses independent joints with fixed attachment points and no parent-bone
+inheritance. Model geometry and pivot placement remain in the existing Sternenfront model generator.
+Unknown bone names reject the actor action. The importer does not load `.bbmodel` geometry or arbitrary Bedrock rigs.
+
+## Check the intro in a client
+
+1. Join the dev Sternenfront server with the current resource pack and the presentation permission.
+2. Run `/sfintro`. Check the map flyover, faction-specific headquarters shot, letterboxing, fades, and the infantry salute.
+   Hear the opening radio click, the faction's German briefing, the closing click, and cues at the post and headquarters
+   shots. Check the chat transcript and repeat for the other faction. Voice and Ambient sliders control separate sounds.
+   The salute and head movements must ease into their holds and return without snapping.
+3. Repeat the preview and sneak while the voice plays. The audio stops immediately. Check the original position, game
+   mode, flight, and camera are restored. Repeat with `/sfintro stop`.
+4. Repeat the preview and teleport to another world. Check the scene stops and the teleport destination is preserved.
+5. Start a match with two clients. Skip on one client and watch the full intro on the other. Neither client can deploy early.
+6. Check both clients deploy together while the final frame is black, then fade into the headquarters spawn.
+   There must be no second fade-out, overview flash, or fall before deployment. The full configured round time remains.
+   Bots and objectives begin at that point.
+7. Disconnect during the intro and reconnect. Check the player can deploy when the shared intro ends.
+
+The automated tests cover camera interpolation, cut timing, audio scheduling and cleanup, and numeric animation sampling
+and validation. They do not verify camera smoothness, audio playback, shader appearance, model pivots, or client input.

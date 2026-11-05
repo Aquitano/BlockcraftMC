@@ -265,3 +265,19 @@ blockcraft_skate_rack:
       hitbox:
         interaction: 0,0,0 1,1.4375
 
+blockcraft_luggage:
+  itemname: '<white>Reisegepäck'
+  material: CHEST
+  Components:
+    item_model: blockcraft:props/luggage
+  Pack:
+    model: blockcraft:item/props/luggage
+  Mechanics:
+    furniture:
+      properties:
+        display_transform: NONE
+        cullable: false
+      restricted_rotation: VERY_STRICT
+      hitbox:
+        interaction: 0,0,0 1,1
+

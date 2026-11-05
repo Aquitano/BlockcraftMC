@@ -131,6 +131,10 @@ final class BodyRig implements AutoCloseable {
         return viewers.contains(player.getUniqueId());
     }
 
+    List<Entity> outlineParts() {
+        return List.of(torso, head, leftArm, rightArm, leftLeg, rightLeg, weapon);
+    }
+
     private ItemDisplay part(String part) {
         var display = spawn(ItemDisplay.class);
         display.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.NONE);

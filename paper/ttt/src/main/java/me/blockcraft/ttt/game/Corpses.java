@@ -1,10 +1,10 @@
 package me.blockcraft.ttt.game;
 
-import me.blockcraft.api.BlockcraftApi;
 import com.destroystokyo.paper.profile.PlayerProfile;
 import io.papermc.paper.datacomponent.item.ResolvableProfile;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.common.message.Messages;
+import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
@@ -26,9 +26,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * The dead stay where they fell, as a figure wearing their skin. Whoever finds one identifies it for everyone,
- * which reveals the role; the DNA scanner also tells its holder who the killer was. A traitor may burn a corpse, so
- * that nobody ever identifies it, or take its face for a mask, which leaves the figure faceless.
+ * The dead stay where they fell, as a figure wearing their skin. Each finder learns the victim's role privately.
+ * The DNA scanner reports foreign DNA and approximate time since death. A traitor may burn a corpse to prevent
+ * further inspection, or take its face for a mask, which leaves the figure faceless.
  */
 public final class Corpses {
 
@@ -38,18 +38,19 @@ public final class Corpses {
 
     private static final class Corpse {
         private final Remains remains;
-        private final Optional<String> killer;
-        private boolean identified;
+        private final boolean foreignDna;
+        private final Set<UUID> identifiedBy = new HashSet<>();
 
-        private Corpse(Remains remains, Optional<String> killer) {
+        private Corpse(Remains remains, boolean foreignDna) {
             this.remains = remains;
-            this.killer = killer;
+            this.foreignDna = foreignDna;
+            identifiedBy.add(remains.player());
         }
     }
 
     private final Messages messages;
     private final Map<UUID, Corpse> corpses = new HashMap<>();
-    private final Set<UUID> burned = new HashSet<>();
+    private final Map<UUID, Set<UUID>> burned = new HashMap<>();
 
     public Corpses(Messages messages) {
         this.messages = messages;
@@ -60,7 +61,7 @@ public final class Corpses {
         location.setPitch(0);
         var remains = new Remains(victim.getUniqueId(), victim.getName(), role, victim.getPlayerProfile(), location.clone(),
                 Bukkit.getCurrentTick());
-        var corpse = new Corpse(remains, killer.filter(other -> !other.equals(victim)).map(Player::getName));
+        var corpse = new Corpse(remains, killer.filter(other -> !other.equals(victim)).isPresent());
         var pose = Mannequin.validPoses().contains(Pose.SLEEPING) ? Pose.SLEEPING : Pose.SWIMMING;
         var figure = location.getWorld().spawn(location, Mannequin.class, mannequin -> {
             mannequin.setProfile(ResolvableProfile.resolvableProfile(victim.getPlayerProfile()));
@@ -86,37 +87,34 @@ public final class Corpses {
         return Optional.ofNullable(corpses.get(entity.getUniqueId())).map(corpse -> corpse.remains);
     }
 
-    /** The dead nobody has identified yet, whom everyone else still counts among the living; burned ones stay so. */
-    public Set<UUID> unidentified() {
-        return Stream.concat(burned.stream(), corpses.values().stream().filter(corpse -> !corpse.identified)
+    public Set<UUID> deadPlayers() {
+        return Stream.concat(burned.keySet().stream(), corpses.values().stream()
                 .map(corpse -> corpse.remains.player())).collect(Collectors.toSet());
     }
 
-    /**
-     * Identifies the corpse on first touch, and returns whose it was then; with the DNA scanner in hand, the finder
-     * also learns the killer.
-     */
+    public Set<UUID> unidentified(UUID viewer) {
+        return Stream.concat(burned.entrySet().stream().filter(entry -> !entry.getValue().contains(viewer)).map(Map.Entry::getKey),
+                corpses.values().stream().filter(corpse -> !corpse.identifiedBy.contains(viewer))
+                        .map(corpse -> corpse.remains.player())).collect(Collectors.toSet());
+    }
+
     public Optional<UUID> inspect(Player finder, Entity entity, boolean scanner) {
         var corpse = corpses.get(entity.getUniqueId());
         if (corpse == null) {
             return Optional.empty();
         }
-        boolean firstFind = !corpse.identified;
+        boolean firstFind = corpse.identifiedBy.add(finder.getUniqueId());
         var who = TagResolver.resolver(Placeholder.unparsed("player", corpse.remains.name()),
                 Placeholder.component("role", corpse.remains.role().displayName(messages)));
-        if (firstFind) {
-            corpse.identified = true;
-            entity.customName(messages.get("corpse.identified", who));
-            Bukkit.broadcast(messages.get("corpse.found", who, Placeholder.unparsed("finder", finder.getName())));
-            Bukkit.getOnlinePlayers().forEach(Sounds.NOTIFY::play);
-        } else if (!scanner) {
-            BlockcraftApi.get().notifications().feedback(finder, messages.get("corpse.known", who));
-        }
+        finder.sendMessage(messages.get("corpse.known", who));
         if (scanner) {
-            finder.sendMessage(corpse.killer
-                    .map(killer -> messages.get("corpse.killer", who, Placeholder.unparsed("killer", killer)))
-                    .orElseGet(() -> messages.get("corpse.no-killer", who)));
+            finder.sendMessage(messages.get(corpse.foreignDna ? "corpse.foreign-dna" : "corpse.no-killer", who));
+            int seconds = Math.max(0, Bukkit.getCurrentTick() - corpse.remains.diedAt()) / 20;
+            finder.sendMessage(messages.get("corpse.age", Formatter.number("min", seconds / 15 * 15),
+                    Formatter.number("max", seconds / 15 * 15 + 15)));
             Sounds.NOTE_PLING.play(finder);
+        } else if (firstFind) {
+            Sounds.NOTIFY.play(finder);
         }
         return firstFind ? Optional.of(corpse.remains.player()) : Optional.empty();
     }
@@ -127,9 +125,7 @@ public final class Corpses {
         if (corpse == null) {
             return false;
         }
-        if (!corpse.identified) {
-            burned.add(corpse.remains.player());
-        }
+        burned.put(corpse.remains.player(), Set.copyOf(corpse.identifiedBy));
         var at = entity.getLocation();
         at.getWorld().spawnParticle(Particle.FLAME, at, 40, 0.5, 0.2, 0.5, 0.02);
         at.getWorld().spawnParticle(Particle.LARGE_SMOKE, at, 20, 0.4, 0.3, 0.4, 0.01);

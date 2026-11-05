@@ -135,6 +135,13 @@ public final class Flares {
         return live.hasRoom();
     }
 
+    void crescent(String model, Location at, Quaternionf turn, Vector3f scale, Color tint, int ticks) {
+        if (live.hasRoom()) {
+            show(at, new Plan(tinted(model, tint), turn, scale, scale, new Vector(), ticks, 0,
+                    Display.Billboard.FIXED, true, null));
+        }
+    }
+
     /** A decal lit by its surroundings, lying on a face, gone with {@code anchor} and shrinking away at the end. */
     public void mark(String model, Location at, Vector normal, float scale, int ticks, int fadeTicks, Block anchor) {
         mark(model, at, facing(normal).rotateZ((float) ThreadLocalRandom.current().nextDouble(Math.PI * 2)), scale, ticks, fadeTicks, anchor);

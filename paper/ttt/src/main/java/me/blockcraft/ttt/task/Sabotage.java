@@ -8,7 +8,6 @@ import me.blockcraft.ttt.arena.TaskLayout;
 import me.blockcraft.ttt.config.TttConfig;
 import me.blockcraft.ttt.game.Channels;
 import net.kyori.adventure.bossbar.BossBar;
-import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.title.Title;
@@ -69,14 +68,15 @@ public final class Sabotage {
     private final Supplier<List<Player>> alive;
     private final Map<Block, BlockData> darkened = new HashMap<>();
     private final Set<Block> locked = new HashSet<>();
-    private final BossBar bar = BossBar.bossBar(Component.empty(), 1f, BossBar.Color.RED, BossBar.Overlay.PROGRESS);
+    private final BossBar bar;
+    private final Runnable changed;
     private Optional<Kind> active = Optional.empty();
     private int length;
     private int left;
     private int resting;
 
     Sabotage(TttConfig.Sabotage config, Messages messages, TaskLayout layout, Block testerButton, Channels channels,
-             Predicate<Player> traitor, Supplier<List<Player>> alive) {
+             Predicate<Player> traitor, Supplier<List<Player>> alive, BossBar bar, Runnable changed) {
         this.config = config;
         this.messages = messages;
         this.layout = layout;
@@ -84,6 +84,12 @@ public final class Sabotage {
         this.channels = channels;
         this.traitor = traitor;
         this.alive = alive;
+        this.bar = bar;
+        this.changed = changed;
+    }
+
+    Optional<Kind> active() {
+        return active;
     }
 
     /** Seconds until the next sabotage, counting the one still running. */
@@ -124,6 +130,7 @@ public final class Sabotage {
                 messages.get("tasks.sabotage.started." + kind.key() + ".hint"));
         Bukkit.getOnlinePlayers().forEach(player -> BlockcraftApi.get().notifications().important(player, title));
         Sounds.NOTIFY.playToAll();
+        changed.run();
     }
 
     public boolean locked(Block block) {
@@ -183,15 +190,9 @@ public final class Sabotage {
         Bukkit.getOnlinePlayers().forEach(player -> player.hideBossBar(bar));
     }
 
-    /** Shows the running sabotage's bar to someone who came to watch while it runs. */
-    void show(Player player) {
-        if (active.isPresent()) {
-            player.showBossBar(bar);
-        }
-    }
-
     private void showBar() {
         var kind = active.orElseThrow();
+        bar.color(BossBar.Color.RED).overlay(BossBar.Overlay.PROGRESS);
         bar.name(messages.get("tasks.sabotage.bar", Placeholder.component("sabotage",
                 messages.get("tasks.sabotage.started." + kind.key() + ".title")), Formatter.number("seconds", left)));
         bar.progress(Math.clamp(left / (float) Math.max(1, length), 0f, 1f));
@@ -201,10 +202,10 @@ public final class Sabotage {
         var kind = active.orElseThrow();
         restore();
         active = Optional.empty();
-        Bukkit.getOnlinePlayers().forEach(player -> player.hideBossBar(bar));
         resting = config.cooldownSeconds();
         var ended = messages.get("tasks.sabotage.ended." + kind.key());
         Bukkit.getOnlinePlayers().forEach(player -> BlockcraftApi.get().notifications().reward(player, ended));
+        changed.run();
     }
 
     private void restore() {

@@ -1,6 +1,5 @@
 package me.blockcraft.sternenfront.hero;
 
-import me.blockcraft.sternenfront.combat.CombatArc;
 import me.blockcraft.sternenfront.combat.Guard;
 import me.blockcraft.sternenfront.game.Faction;
 import me.blockcraft.sternenfront.game.LineOfSight;
@@ -10,6 +9,8 @@ import org.bukkit.FluidCollisionMode;
 import org.bukkit.World;
 import org.bukkit.damage.DamageType;
 import org.bukkit.entity.Player;
+import org.bukkit.util.BoundingBox;
+import org.bukkit.util.Vector;
 
 import java.util.Comparator;
 import java.util.HashMap;
@@ -62,8 +63,8 @@ final class ForceLightning {
         var targets = game.targets().stream()
                 .filter(target -> target.getWorld().equals(cast.world()) && game.hittable(cast.faction(), target)
                         && !game.isProtected(target))
-                .filter(target -> CombatArc.hits(eye.toVector(), facing, target.getBoundingBox(), rules.range(), rules.angle()))
-                .filter(target -> LineOfSight.clear(eye, CombatArc.nearest(eye.toVector(), target.getBoundingBox()).subtract(eye.toVector())))
+                .filter(target -> inCone(eye.toVector(), facing, target.getBoundingBox()))
+                .filter(target -> LineOfSight.clear(eye, nearest(eye.toVector(), target.getBoundingBox()).subtract(eye.toVector())))
                 .sorted(Comparator.comparingDouble(target -> target.getLocation().distanceSquared(eye)))
                 .limit(rules.targets()).toList();
         for (var target : targets) {
@@ -90,6 +91,18 @@ final class ForceLightning {
         }
         SoundCue.FORCE_LIGHTNING.play(eye, 0.7f);
         return false;
+    }
+
+    private boolean inCone(Vector eye, Vector facing, BoundingBox target) {
+        var toward = nearest(eye, target).subtract(eye);
+        return toward.lengthSquared() <= rules.range() * rules.range() && (toward.lengthSquared() < 0.001
+                || facing.dot(toward.normalize()) >= Math.cos(Math.toRadians(rules.angle() / 2)));
+    }
+
+    private static Vector nearest(Vector eye, BoundingBox target) {
+        return new Vector(Math.clamp(eye.getX(), target.getMinX(), target.getMaxX()),
+                Math.clamp(eye.getY(), target.getMinY(), target.getMaxY()),
+                Math.clamp(eye.getZ(), target.getMinZ(), target.getMaxZ()));
     }
 
     void forget(Player player) {

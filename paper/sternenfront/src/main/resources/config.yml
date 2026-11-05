@@ -45,10 +45,16 @@ music:
 # haze-ticks; both grow by gust-boost at the height of a gust.
 presentation:
   effects: true
+  gameplay:
+    siege-mode-ticks: 20
+    force-push-ticks: 12
+  deployment: {fade-ticks: 6, briefing: true, banner-ticks: 25}
+  capture: {ticks: 24, radius: 6, points: 40}
   holographic-posts: true
   live-effects: 64
   scorch: {marks: 32, every: 3, ticks: 300, fade-ticks: 40, scale: 0.7}
   saber-mark: {cooldown-ticks: 8, glow-ticks: 30, ticks: 300, fade-ticks: 40, scale: 1.5, tilt-degrees: 20}
+  saber-trail-ticks: 3
   muzzle-flash: {ticks: 2, scale: 0.55, heavy-scale: 0.95}
   bolt: {width: 2.2, length: 1.6, trail-size: 1.3, trail-step: 0.75, far-every: 3, impact-flash: 0.5}
   explosion: {smoke-puffs: 3, smoke-ticks: 40, debris: 30}
@@ -66,7 +72,7 @@ combat:
     break-ticks: 30
     parry-ticks: 5
     cost-per-damage: 2
-  melee: {range: 3.5, angle: 85, swing-ticks: 12, targets: 2}
+  melee: {range: 3.5, angle: 120, swing-ticks: 12, sweep-ticks: 4}
 speeders:
   enabled: true
   health: 60
@@ -192,6 +198,7 @@ pvp:
 # Every pull of the trigger adds the blaster's heat; full is 100. After cool-delay-ticks without a shot the gun loses
 # cool-per-tick a tick. A gun at full heat vents for vent-ticks before it fires again.
 heat:
+  warning-level: 0.8
   cool-delay-ticks: 8
   cool-per-tick: 3
   vent-ticks: 40
@@ -316,3 +323,47 @@ streaks:
 # Sneaking with the long rifle slows the walk by this share, which clients with FOV effects on show as a zoom.
 scope:
   slowdown: 0.9
+
+outlines: {enabled: true, range: 160}
+
+combat-feedback:
+  marker-ticks: 6
+  reward-ticks: 30
+  sound: {hit: 0.65, headshot: 0.8, kill: 0.9}
+
+intro:
+  enabled: true
+  duration-ticks: 180
+  fade-ticks: 15
+  audio:
+    enabled: true
+    voice-volume: 0.8
+    effects-volume: 0.35
+    captions: true
+    briefing-ticks: 80
+  focus:
+    enabled: true
+    from: 0.75
+    until: 0.95
+  shots:
+    - at: 0.0
+      anchor: overview
+      offset: [0, 0, 0]
+      look-at: 'post:1'
+    - at: 0.40
+      anchor: 'post:1'
+      offset: [12, 10, 14]
+      look-at: 'post:1'
+    - at: 0.72
+      anchor: 'post:1'
+      offset: [8, 8, 10]
+      look-at: 'post:1'
+    - at: 0.75
+      anchor: headquarters
+      offset: [4, 2, 5]
+      look-at: headquarters
+      cut: true
+    - at: 1.0
+      anchor: headquarters
+      offset: [2, 1.7, 3]
+      look-at: headquarters

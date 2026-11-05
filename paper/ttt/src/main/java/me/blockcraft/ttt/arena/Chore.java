@@ -5,7 +5,8 @@ import org.bukkit.block.Block;
 
 /**
  * A task of TTT 2 at one spot of the map, started with a right-click on its {@code station}. Its name, where it is
- * and what it carries are {@code tasks.chores.<key>.name}, {@code .where} and {@code .cargo} in messages.yml. A
+ * and what it carries are {@code tasks.chores.<key>.name}, {@code .where}, {@code .destination} and {@code .cargo}
+ * in messages.yml. A
  * {@code visible} chore shows everyone near the station that it was done, which only an innocent's real chore does.
  */
 public sealed interface Chore {

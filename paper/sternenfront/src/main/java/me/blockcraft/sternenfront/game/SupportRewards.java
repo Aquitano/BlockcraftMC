@@ -1,6 +1,6 @@
 package me.blockcraft.sternenfront.game;
 
-import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -44,7 +44,7 @@ public final class SupportRewards {
                 .map(Player::getUniqueId);
         int points = ledger.heal(patient.getUniqueId(), credited, restored, game.tick());
         if (points > 0) {
-            healer.ifPresent(player -> game.supportPoints(player, points));
+            healer.ifPresent(player -> game.awardPoints(player, points, CombatFeedback.Reward.HEALING, Component.empty()));
         }
     }
 
@@ -54,7 +54,7 @@ public final class SupportRewards {
         assists.forEach((id, points) -> {
             var player = Bukkit.getPlayer(id);
             if (player != null && eligible(player)) {
-                award(player, points, "assist");
+                award(player, points, CombatFeedback.Reward.ASSIST);
             }
         });
         killer.filter(this::eligible).filter(game::onField).ifPresent(player -> game.factionOf(player).ifPresent(faction -> {
@@ -63,7 +63,7 @@ public final class SupportRewards {
             if (defending) {
                 int points = (int) Math.min(defencePoints, (long) defencePoints * killPoints
                         / Math.max(1, game.heroes().config().points().kill()));
-                award(player, points, "defence");
+                award(player, points, CombatFeedback.Reward.DEFENCE);
             }
         }));
     }
@@ -72,10 +72,9 @@ public final class SupportRewards {
         return player.isOnline() && game.isPlaying(player) && game.factionOf(player).isPresent();
     }
 
-    private void award(Player player, int points, String reason) {
+    private void award(Player player, int points, CombatFeedback.Reward reason) {
         if (points > 0) {
-            game.supportPoints(player, points);
-            player.sendMessage(game.messages().get("support." + reason, Formatter.number("points", points)));
+            game.awardPoints(player, points, reason, Component.empty());
         }
     }
 

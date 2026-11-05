@@ -172,7 +172,7 @@ public final class SystemConfig {
         this.resourcePack = new ResourcePack(string(resourcePack, "file"),
                 packUrl == null || packUrl.isBlank() ? string(resourcePack, "url") : packUrl,
                 number(resourcePack, "port", 0), Boolean.TRUE.equals(resourcePack.get("required")),
-                Math.max(0, number(resourcePack, "wait-seconds", 15)));
+                Math.max(1, number(resourcePack, "wait-seconds", 120)));
         this.maxWarns = number(root, "max-warns", 8);
         this.maxStrikes = number(root, "max-strikes", 5);
         this.autoBroadcastMinutes = number(root, "auto-broadcast-minutes", 5);

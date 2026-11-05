@@ -2,9 +2,11 @@ package me.blockcraft.sternenfront.combat;
 
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.pack.UiFont;
+import me.blockcraft.api.scene.Scenes;
 import me.blockcraft.sternenfront.game.SternenfrontGame;
 import me.blockcraft.sternenfront.hero.Hero;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.attribute.Attribute;
@@ -19,17 +21,23 @@ public final class CombatHud {
     }
 
     public void show(Player player, Guard guard) {
+        var api = BlockcraftApi.get();
+        if (api.dialogues().active(player) || api.visuals().active(player) || Scenes.isViewing(player)) return;
         var fighter = game.fighter(player);
         boolean blade = fighter.hero().filter(Hero::bladed).isPresent();
+        boolean venting = fighter.heat().venting(game.tick());
+        boolean hot = !blade && game.feedback().hot(player);
         double health = player.getHealth() / player.getAttribute(Attribute.MAX_HEALTH).getValue();
         var meter = game.messages().get(blade ? guard.broken(game.tick()) ? "combat.broken" : guard.raised()
-                        ? "combat.guarding" : "combat.guard" : fighter.heat().venting(game.tick()) ? "combat.venting" : "combat.heat");
+                        ? "combat.guarding" : "combat.guard" : venting ? "combat.venting" : hot ? "combat.hot" : "combat.heat",
+                Formatter.number("seconds", (fighter.heat().ventTicks(game.tick()) + 19) / 20));
         var line = game.messages().get("combat.hud",
                 Placeholder.component("health_icon", icon(0)),
                 Placeholder.component("health", bar(health)),
                 Formatter.number("hp", Math.ceil(player.getHealth())),
                 Placeholder.component("meter_icon", icon(blade ? 2 : 1)),
-                Placeholder.component("meter", bar(blade ? guard.level() : fighter.heat().level())),
+                Placeholder.component("meter", bar(blade ? guard.level() : fighter.heat().level())
+                        .color(hot || venting ? NamedTextColor.RED : NamedTextColor.GOLD)),
                 Placeholder.component("state", meter),
                 Placeholder.component("first", ability(player, 0)),
                 Placeholder.component("second", ability(player, 1)));
@@ -44,7 +52,7 @@ public final class CombatHud {
         if (incoming.isPresent()) {
             line = game.messages().get("combat.incoming." + incoming.get()).append(line);
         }
-        BlockcraftApi.get().notifications().status(player, line);
+        game.feedback().show(player, line);
     }
 
     private Component ability(Player player, int index) {

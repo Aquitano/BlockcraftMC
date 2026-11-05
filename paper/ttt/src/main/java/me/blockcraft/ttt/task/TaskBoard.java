@@ -14,11 +14,6 @@ import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 import java.util.random.RandomGenerator;
 
-/**
- * Who has which chores and which of them are done; the traitors have none. The innocents are finished when every
- * living innocent has done theirs; a dead innocent's open chores drop out, and what anyone did before dying still
- * counts.
- */
 public final class TaskBoard {
 
     public static final class Duty {
@@ -41,6 +36,7 @@ public final class TaskBoard {
     private static final int SPREAD_ATTEMPTS = 12;
 
     private final Map<UUID, List<Duty>> duties = new HashMap<>();
+    private final Map<UUID, Integer> contributions = new HashMap<>();
 
     /**
      * Gives each worker {@code perPlayer} different chores, or all of them if the map has fewer, with as few of them
@@ -98,35 +94,61 @@ public final class TaskBoard {
         return duties.getOrDefault(player, List.of());
     }
 
+    public List<Chore> available(UUID player) {
+        if (!duties.containsKey(player)) {
+            return List.of();
+        }
+        return duties.values().stream().flatMap(List::stream).filter(duty -> !duty.done)
+                .map(Duty::chore).distinct().toList();
+    }
+
     public Optional<Duty> open(UUID player, Predicate<Chore> which) {
-        return of(player).stream().filter(duty -> !duty.done && which.test(duty.chore)).findFirst();
+        if (!duties.containsKey(player)) {
+            return Optional.empty();
+        }
+        Predicate<Duty> matches = duty -> !duty.done && which.test(duty.chore);
+        return of(player).stream().filter(matches).findFirst()
+                .or(() -> duties.values().stream().flatMap(List::stream).filter(matches).findFirst());
     }
 
-    public void finish(Duty duty) {
-        duty.done = true;
+    public boolean finish(UUID player, Chore chore) {
+        var duty = open(player, chore::equals);
+        if (duty.isEmpty()) {
+            return false;
+        }
+        duty.get().done = true;
+        contributions.merge(player, 1, Integer::sum);
+        return true;
     }
 
-    public boolean complete(Collection<UUID> living) {
-        return done() > 0 && open(living) == 0;
+    public int contribution(UUID player) {
+        return contributions.getOrDefault(player, 0);
     }
 
-    /** How far the innocents are, from 0 to 1. */
-    public float progress(Collection<UUID> living) {
-        int done = done();
-        int total = done + open(living);
-        return total == 0 ? 0 : (float) done / total;
+    public int remaining(Chore chore) {
+        return (int) duties.values().stream().flatMap(List::stream)
+                .filter(duty -> !duty.done && duty.chore.equals(chore)).count();
     }
 
-    public void clear() {
-        duties.clear();
+    public boolean complete() {
+        return assigned() && total() > 0 && done() == total();
+    }
+
+    public float progress() {
+        int total = total();
+        return total == 0 ? 0 : (float) done() / total;
     }
 
     private int done() {
         return (int) duties.values().stream().flatMap(List::stream).filter(duty -> duty.done).count();
     }
 
-    private int open(Collection<UUID> living) {
-        return (int) duties.entrySet().stream().filter(entry -> living.contains(entry.getKey()))
-                .flatMap(entry -> entry.getValue().stream()).filter(duty -> !duty.done).count();
+    private int total() {
+        return duties.values().stream().mapToInt(List::size).sum();
+    }
+
+    public void clear() {
+        duties.clear();
+        contributions.clear();
     }
 }

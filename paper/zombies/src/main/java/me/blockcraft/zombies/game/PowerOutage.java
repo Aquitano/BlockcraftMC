@@ -44,6 +44,7 @@ final class PowerOutage implements WaveEvent {
     public void start() {
         game.powerLabel(true);
         effects.powerOff(generator);
+        game.presentation().outage(generator);
         game.announce("event.power_outage", Sounds.CORE_ALARM, Formatter.number("seconds", config.fixTicks() / 20));
         game.fighters().forEach(fighter -> fighter.addPotionEffect(new PotionEffect(PotionEffectType.DARKNESS, config.darknessTicks(), 0)));
     }
@@ -89,6 +90,7 @@ final class PowerOutage implements WaveEvent {
 
     @Override
     public void end() {
+        game.presentation().restorePower();
         game.powerLabel(false);
         if (!game.inWave()) {
             return;

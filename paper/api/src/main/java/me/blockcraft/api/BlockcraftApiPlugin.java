@@ -11,10 +11,16 @@ import me.blockcraft.api.command.CoinsCommand;
 import me.blockcraft.api.command.CommandRegistry;
 import me.blockcraft.api.command.LevelCommand;
 import me.blockcraft.api.command.MapCommand;
+import me.blockcraft.api.command.PresentationCommand;
 import me.blockcraft.api.config.ConfigOverrides;
 import me.blockcraft.api.cosmetic.Effects;
 import me.blockcraft.api.cosmetic.WeaponStyles;
 import me.blockcraft.api.dialog.ServerMenu;
+import me.blockcraft.api.dialogue.Dialogues;
+import me.blockcraft.api.presentation.VisualEffects;
+import me.blockcraft.api.presentation.Discoveries;
+import me.blockcraft.api.presentation.ScreenEffects;
+import me.blockcraft.api.scene.Scenes;
 import me.blockcraft.api.elo.Elo;
 import me.blockcraft.api.elo.SkillGroup;
 import me.blockcraft.api.game.LegacyDamage;
@@ -47,6 +53,7 @@ import me.blockcraft.api.world.WorldTemplate;
 import me.blockcraft.api.world.WaitingLobby;
 import me.blockcraft.api.world.WorldProtection;
 import me.blockcraft.api.scenery.NexoScenery;
+import me.blockcraft.api.scenery.AmbientCreatures;
 import me.blockcraft.api.season.SeasonalBlocks;
 import me.blockcraft.api.xp.Levels;
 import me.blockcraft.api.xp.Xp;
@@ -90,6 +97,9 @@ import java.util.function.Supplier;
 public final class BlockcraftApiPlugin extends JavaPlugin {
 
     private Notifications notifications;
+    private Dialogues dialogues;
+    private VisualEffects visuals;
+    private Discoveries discoveries;
     private Database database;
     private ServerHeartbeat heartbeat;
     private ServerGroups groups;
@@ -124,6 +134,18 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
         var resourcePack = new ResourcePacks(messages);
         notifications = new Notifications(this, messages, resourcePack,
                 Notifications.Timing.from(YamlFile.section(config, "notifications")));
+        dialogues = new Dialogues(this, messages, resourcePack, YamlFile.section(config, "dialogue"));
+        visuals = new VisualEffects(this, resourcePack, messages, YamlFile.section(config, "presentation"));
+        discoveries = new Discoveries(this, dialogues, resourcePack, messages,
+                YamlFile.section(YamlFile.section(config, "presentation"), "discovery"));
+        dialogues.unavailableWhen(player -> Scenes.isViewing(player) || visuals.active(player));
+        visuals.unavailableWhen(dialogues::active);
+        int levelUpTicks = Math.clamp(number(YamlFile.section(YamlFile.section(config, "presentation"), "gameplay"),
+                "level-up-ticks", 24), 0, 200);
+        notifications.levelUpEffect(player -> {
+            if (levelUpTicks > 0) visuals.accent(player, ScreenEffects.Atmosphere.FOCUS, levelUpTicks);
+        });
+        notifications.suspendWhile(player -> dialogues.active(player) || visuals.active(player) || Scenes.isViewing(player));
         var settingRepository = new PlayerSettingRepository(database);
         var settings = new PlayerSettings(this, settingRepository, messages);
         var weapons = new WeaponStyles(settings);
@@ -176,7 +198,7 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
                 settings, resourcePack, profiles, new Effects(settings), weapons, messages,
                 servers, self, groups, text(config, "lobby-group", "lobby"), presence, resources.tags(), resources.addresses(), xp, map,
                 waiting, buildMode, flight, realNames, nickRanks, nickStats, achievements, elo, afk, ignores, vanished, audit, tabTeams,
-                calendar, RoundConfig.from(config));
+                calendar, RoundConfig.from(config), dialogues, visuals, discoveries);
         BlockcraftApi.install(api);
         if (api.isLobby()) {
             var world = getServer().getWorlds().getFirst();
@@ -219,6 +241,7 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
             commands.register(BuildCommand.create(buildMode, audit, messages));
             commands.register(MapCommand.create(this, map, waiting, messages));
             commands.register(AfkCommand.create(afk));
+            commands.register(PresentationCommand.create(dialogues, visuals, discoveries, messages));
         });
 
         int heartbeatSeconds = number(config, "heartbeat-seconds", 5);
@@ -246,6 +269,10 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
     }
 
     private void startScenery(org.bukkit.World world, NetworkCalendar calendar, String group, Path directory) {
+        var creatures = directory.resolve("creatures.yml");
+        if (Files.isRegularFile(creatures)) {
+            startScenery(creatures, () -> new AmbientCreatures(this, world, creatures));
+        }
         var furniture = directory.resolve("furniture.yml");
         if (Files.isRegularFile(furniture)) {
             if (getServer().getPluginManager().isPluginEnabled("Nexo")) {
@@ -314,6 +341,8 @@ public final class BlockcraftApiPlugin extends JavaPlugin {
             }
         }
         scenery.clear();
+        if (dialogues != null) dialogues.close();
+        if (visuals != null) visuals.close();
         if (notifications != null) {
             notifications.close();
         }

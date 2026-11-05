@@ -41,6 +41,10 @@ blocked-replies:
 kicked-to-lobby: "<prefix><muted>Deine <error>Verbindung <muted>zum Server <error><server><muted> wurde getrennt. Grund: <error><reason>"
 resource-pack:
   prompt: "<primary><ip> <muted>braucht unser Texturenpaket für <white>eigene Menüs und Symbole<muted>."
+  unavailable: "<error>Unser Texturenpaket ist gerade nicht verfügbar.<newline><muted>Bitte versuche es später erneut."
+  declined: "<error>Blockcraft benötigt das Texturenpaket.<newline><muted>Aktiviere Server-Ressourcenpakete für Blockcraft und verbinde dich erneut."
+  failed: "<error>Das Texturenpaket konnte nicht geladen werden.<newline><muted>Prüfe deine Verbindung und verbinde dich erneut."
+  timeout: "<error>Das Laden des Texturenpakets hat zu lange gedauert.<newline><muted>Prüfe deine Verbindung und verbinde dich erneut."
 help:
   - "<bullet><primary>INFORMATIONEN ZUM SERVER <dark>●"
   - ""

@@ -25,6 +25,7 @@ import org.bukkit.scheduler.BukkitTask;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -60,6 +61,11 @@ public final class BodyRigs implements Listener, AutoCloseable {
 
     public Optional<RigSnapshot> snapshot(Entity actor) {
         return Optional.ofNullable(rigs.get(actor.getUniqueId())).map(BodyRig::snapshot);
+    }
+
+    public List<Entity> outlineParts(LivingEntity actor, Player viewer) {
+        var rig = rigs.get(actor.getUniqueId());
+        return rig != null && rig.shownTo(viewer) ? rig.outlineParts() : viewer.canSee(actor) ? List.of(actor) : List.of();
     }
 
     private void tick() {

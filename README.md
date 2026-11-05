@@ -479,10 +479,12 @@ The pack is required. A client whose server list entry turns packs off would dec
 while a required one is prompted for and declining it kicks. A proxy whose `config.yml` still says `required: false`
 needs the edit by hand.
 
-A joining player stays on the loading screen until the client has loaded, declined or failed the pack, at most
-`resource-pack.wait-seconds`. Chat lines that reach a client while it reloads its resources stay garbled, and the lobby
-greets every arrival in chat. Only the proxy hears the client's answer, so it tells each backend on arrival over the
-`Pack` subchannel.
+A joining player stays on the loading screen until the client reports that the required pack was successfully applied.
+Downloading alone does not release the player. Declining, failing, discarding, or exceeding `resource-pack.wait-seconds`
+disconnects the client with reconnect instructions. The bundled deadline is 120 seconds; existing operator overrides
+still apply. A missing required ZIP or a failed HTTP listener also blocks entry. With `required: false`, failures and
+timeouts allow entry, and only the session's first offer waits. Only the proxy hears the client's answer, so it tells
+each backend on arrival over the `Pack` subchannel.
 
 To regenerate the assets after changing the art generators, adding an icon or model, or updating Minecraft, install
 Python 3, uv and FFmpeg and run the command below. Normal builds package the checked-in assets. Use a client jar matching

@@ -21,6 +21,7 @@ import me.blockcraft.api.game.LobbyEntrance;
 import me.blockcraft.api.item.HotbarItem;
 import me.blockcraft.api.pack.MenuIcon;
 import me.blockcraft.api.sound.Sounds;
+import me.blockcraft.api.task.Countdown;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.ttt.arena.MapVote;
@@ -69,6 +70,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.IntConsumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.OptionalInt;
@@ -79,8 +81,8 @@ import java.util.OptionalInt;
  * innocents. The traitors win when nobody else is left; everyone else wins when the traitors are dead or the time runs
  * out. Nobody hears who killed whom: the dead lie where they fell until someone identifies them, the tester tells a
  * traitor from an innocent, and traitors and detectives spend their kills in a shop. Killing your own side costs
- * karma, and with it the strength of your blows. In TTT 2 the chests stay shut: everyone gets chores with their
- * role, which pay loot and can win the round for the innocents, and the traitors sabotage the town.
+ * karma, and with it the strength of your blows. In TTT 2 the innocents share a fixed pool of chores, which pay loot
+ * and can win the round, and the traitors sabotage the town.
  */
 public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
 
@@ -142,7 +144,8 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
         this.hotbar = new LobbyHotbar(plugin, List.of(new LobbyHotbar.Choice(MenuIcon.VOTE, messages.get("item.vote"),
                 () -> phase() == GamePhase.LOBBY, this::openVote)), statsMenus, countdown);
         round.countWith(this::headcount);
-        this.sidebar = new GameSidebar(messages.get(mode == TttMode.TASKS ? "scoreboard.title-tasks" : "scoreboard.title"), round);
+        this.sidebar = new GameSidebar(messages.get(mode == TttMode.TASKS ? "scoreboard.title-tasks" : "scoreboard.title"),
+                viewer -> headcount(viewer), () -> mode == TttMode.TASKS || round.clockOnSidebar());
         this.corpses = new Corpses(messages);
         this.equipment = new Equipment(plugin, config.shop(), messages, this::roleOf, round::players);
         this.channels = new Channels(plugin, messages, round::players, config.tasks().reach());
@@ -289,13 +292,7 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
         round.spectators().forEach(spectator -> spectator.teleport(built.spectatorSpawn()));
         RoundStart.go(round.players());
         Bukkit.broadcast(messages.get(tasks.isPresent() ? "round.preparation-tasks" : "round.preparation"));
-        secondsLeft = config.preparationSeconds();
-        round.clock(new TimerBar(messages, "timer.preparation", config.preparationSeconds()), remaining -> {
-            secondsLeft = remaining;
-            if (round.clockOnSidebar()) {
-                refreshAll();
-            }
-        }, this::drawRoles);
+        clock("timer.preparation", config.preparationSeconds(), this::drawRoles);
         refreshAll();
     }
 
@@ -337,16 +334,27 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
         equipment.start();
         crimeScenes.start();
         tasks.ifPresent(running -> running.assign(Map.copyOf(roles)));
-        secondsLeft = config.roundSeconds();
-        round.clock(new TimerBar(messages, "timer.round", config.roundSeconds()), remaining -> {
-            secondsLeft = remaining;
-            round.announceEnd(remaining);
-            if (round.clockOnSidebar()) {
-                refreshAll();
-            }
-        }, () -> endRound(Optional.of(Faction.INNOCENTS)));
+        clock("timer.round", config.roundSeconds(), () -> endRound(Optional.of(Faction.INNOCENTS)));
         refreshAll();
         checkWinner();
+    }
+
+    private void clock(String key, int seconds, Runnable onEnd) {
+        secondsLeft = seconds;
+        IntConsumer tick = remaining -> {
+            secondsLeft = remaining;
+            if (stage == Stage.PLAYING) {
+                round.announceEnd(remaining);
+            }
+            if (mode == TttMode.TASKS || round.clockOnSidebar()) {
+                refreshAll();
+            }
+        };
+        if (mode == TttMode.TASKS) {
+            round.timer(Countdown.start(plugin, seconds, tick, onEnd));
+        } else {
+            round.clock(new TimerBar(messages, key, seconds), tick, onEnd);
+        }
     }
 
     public void death(PlayerDeathEvent event) {
@@ -537,9 +545,12 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
             patient.teleport(remains.location());
             patient.setHealth(settings.health());
             giveShop(patient, remains.role());
+            tasks.ifPresent(running -> running.giveTasks(patient));
             patient.getWorld().playSound(remains.location(), Sound.ITEM_TOTEM_USE, 0.8f, 1.2f);
-            Bukkit.broadcast(messages.get("shop.defibrillator.revived", Placeholder.unparsed("player", patient.getName()),
-                    Placeholder.unparsed("medic", medic.getName())));
+            var revived = messages.get("shop.defibrillator.revived", Placeholder.unparsed("player", patient.getName()),
+                    Placeholder.unparsed("medic", medic.getName()));
+            medic.sendMessage(revived);
+            patient.sendMessage(revived);
             updateTraitorChat();
             tasks.ifPresent(TaskRound::update);
             refreshAll();
@@ -604,8 +615,6 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
                 .findFirst();
     }
 
-    /** A chore was done: the sidebars show it, and the innocents may have finished. */
-    /** Only a chore done can win the round by chores; a death that drops someone's open chores never does. */
     private void choresChanged() {
         refreshAll();
         if (rolesDrawn() && tasks.filter(TaskRound::complete).isPresent()) {
@@ -613,14 +622,26 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
         }
     }
 
-    /** Until their corpse is identified, the dead count as playing, so that the sidebar does not give their death away. */
     private GameSidebar.Headcount headcount() {
+        return headcount(corpses.deadPlayers());
+    }
+
+    private GameSidebar.Headcount headcount(Player viewer) {
+        return headcount(corpses.unidentified(viewer.getUniqueId()));
+    }
+
+    private GameSidebar.Headcount headcount(Set<UUID> unidentified) {
         if (phase() != GamePhase.INGAME) {
             return new GameSidebar.Headcount(round.playerCount(), round.spectatorCount());
         }
-        var unidentified = corpses.unidentified();
         int hidden = (int) round.spectators().stream().filter(player -> unidentified.contains(player.getUniqueId())).count();
         return new GameSidebar.Headcount(round.playerCount() + hidden, Math.max(0, round.spectatorCount() - hidden));
+    }
+
+    public void openTasks(Player player) {
+        if (rolesDrawn() && round.isPlaying(player)) {
+            tasks.ifPresent(running -> running.openTasks(player));
+        }
     }
 
     public void openShop(Player player) {
@@ -773,7 +794,9 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
                 }
                 tasks.map(running -> running.duties(player)).filter(duties -> !duties.isEmpty() && round.isPlaying(player))
                         .ifPresent(duties -> sections.add(new GameSidebar.Section(messages.get("scoreboard.chores", icons), duties)));
-                sections.add(karmaSection);
+                if (mode != TttMode.TASKS) {
+                    sections.add(karmaSection);
+                }
                 sidebar.round(player, config.capacity(), secondsLeft, mapName, sections);
             }
             case ENDING -> sidebar.end(player, winner.map(faction -> messages.get("scoreboard.winner." + faction.key())).stream().toList());

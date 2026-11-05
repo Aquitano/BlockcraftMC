@@ -4,6 +4,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class HeatTest {
 
@@ -44,5 +45,19 @@ public class HeatTest {
         assertEquals(0.5f, heat.level(), 1e-6);
         heat.cool(10);
         assertEquals(0.45f, heat.level(), 1e-6);
+    }
+
+    @Test
+    public void warningCatchesARifleThatWouldOverheatBeforeReachingTheThreshold() {
+        var heat = new Heat(RULES);
+        heat.fire(0, 1, 34);
+        assertFalse(heat.warning(0.8, 34));
+        heat.fire(1, 1, 34);
+        assertTrue(heat.warning(0.8, 34));
+        assertFalse(heat.warning(0.8, 8));
+        heat.fire(2, 1, 34);
+        assertEquals(40, heat.ventTicks(2));
+        assertEquals(20, heat.ventTicks(22));
+        assertEquals(0, heat.ventTicks(42));
     }
 }

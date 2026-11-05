@@ -1,0 +1,28 @@
+{
+  "voice": {
+    "name": "de_DE-thorsten-high",
+    "author": "Thorsten Müller (Thorsten-Voice), Piper model by rhasspy",
+    "dataset_license": "CC0-1.0",
+    "dataset_source": "https://github.com/thorstenMueller/Thorsten-Voice",
+    "model_card": "https://huggingface.co/rhasspy/piper-voices/blob/main/de/de_DE/thorsten/high/MODEL_CARD",
+    "model_url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/de/de_DE/thorsten/high/de_DE-thorsten-high.onnx",
+    "engine": "piper-tts 1.4.2",
+    "length_scale": 0.95,
+    "noise_scale": 0.4,
+    "noise_w_scale": 0.6,
+    "model_sha256": "9df1c43c61149ef9b39e618e2b861fbe41e1fcea9390b2dac62e8761573ea4f1",
+    "config_sha256": "6de734444e4c3f9e33b7ebe2746dbc19b71e85f613e79c65acf623200b99a76a"
+  },
+  "briefings": {
+    "kolonien": {
+      "message": "intro.briefing.kolonien",
+      "sha256": "a3c8bef3a06544dd9969c4bea05a4e7ad262d2bc50a195e66af73d2944c966a3",
+      "text_sha256": "e7d0309bb72b080a8ad313f1e3b6875dd6f8dce4cfa1ade18b22a9d3665d9c8c"
+    },
+    "hegemonie": {
+      "message": "intro.briefing.hegemonie",
+      "sha256": "7add581752095fc97d9929b71cb52e2d7bf91d3856654d129e81650d011931b1",
+      "text_sha256": "13faf8640e338fb27229e89127baadb990b845ba747455202fd2b7936ed3036a"
+    }
+  }
+}

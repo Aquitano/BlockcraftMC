@@ -121,9 +121,13 @@ public final class ArenaListener implements Listener {
                 event.setUseInteractedBlock(Event.Result.DENY);
             }
         }
-        if (HotbarItem.of(hand, RoundItem.class).isPresent()) {
+        var navigation = HotbarItem.of(hand, RoundItem.class);
+        if (navigation.isPresent()) {
             event.setCancelled(true);
-            game.openShop(player);
+            switch (navigation.get()) {
+                case SHOP -> game.openShop(player);
+                case TASKS -> game.openTasks(player);
+            }
         } else if (hand != null && game.rolesDrawn()
                 && game.equipment().use(player, hand, Optional.ofNullable(block), event.getBlockFace())) {
             event.setUseItemInHand(Event.Result.DENY);

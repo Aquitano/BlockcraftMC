@@ -15,6 +15,7 @@ luckperms = "5.5"
 viaversion = "5.12.1"
 grimac = "2.3.75-1299a2a"
 nexo = "1.28.0"
+glowingentities = "2.0.2"
 
 [libraries]
 junit = { module = "junit:junit", version = "4.13.2" }
@@ -28,6 +29,7 @@ snakeyaml = { module = "org.yaml:snakeyaml", version.ref = "snakeyaml" }
 slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
 luckperms-api = { module = "net.luckperms:api", version.ref = "luckperms" }
 nexo = { module = "com.nexomc:nexo", version.ref = "nexo" }
+glowingentities = { module = "fr.skytasul:glowingentities", version.ref = "glowingentities" }
 
 # Gradle plugins consumed by buildSrc convention plugins
 run-task = { module = "xyz.jpenilla:run-task", version.ref = "run-task" }

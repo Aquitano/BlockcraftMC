@@ -26,6 +26,7 @@ import me.blockcraft.api.item.Items;
 import me.blockcraft.api.menu.Menu;
 import me.blockcraft.api.pack.MenuIcon;
 import me.blockcraft.api.sound.Sounds;
+import me.blockcraft.api.scene.Scenes;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.sternenfront.arena.FrontMap;
@@ -101,10 +102,8 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     private static final long TICKS_PER_SECOND = 20;
     private static final long RESPAWN_TICKS = 1;
     private static final float SHOT_VOLUME = 2f;
-    private static final float MARKER_VOLUME = 0.6f;
     private static final NamespacedKey SCOPE = new NamespacedKey("sternenfront", "scope");
     private static final Title.Times BANNER = Title.Times.times(Duration.ofMillis(250), Duration.ofSeconds(2), Duration.ofMillis(500));
-    private static final Title.Times MARKER = Title.Times.times(Duration.ZERO, Duration.ofMillis(200), Duration.ofMillis(150));
 
     private record Burst(Player shooter, Blaster blaster, long at) { }
 
@@ -130,9 +129,12 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     private final BotConfig botConfig;
     private final Ballot<BotDifficulty> botDifficultyVotes = new Ballot<>();
     private final Combat combat;
+    private final CombatFeedback feedback;
     private final Speeders speeders;
     private final SpawnSpots spawnSpots;
     private final Deployment deployment;
+    private final BattleIntro intro;
+    private final BattlePresentation presentation;
     private final Battlefield battlefield;
     private final SupportRewards support;
     private final Gadgets gadgets;
@@ -193,10 +195,12 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         this.gadgets = new Gadgets(this);
         this.heroes = new Heroes(this, plugin, messages, loadouts, heroConfig);
         this.feel = feel;
+        this.feedback = new CombatFeedback(this);
         this.combat = new Combat(this, CombatConfig.from(plugin.getConfig()));
         this.speeders = new Speeders(this, SpeederConfig.from(plugin.getConfig()));
         this.spawnSpots = new SpawnSpots(this);
-        this.deployment = new Deployment(this, spawnSpots, feel, () -> dirty = true);
+        this.presentation = new BattlePresentation(this);
+        this.deployment = new Deployment(this, spawnSpots, feel, presentation, () -> dirty = true);
         this.battlefield = new Battlefield(this);
         this.support = new SupportRewards(this);
         this.streaks = new KillStreaks(feel.orbitalStreak());
@@ -204,6 +208,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         this.acts = new RoundActs(config.acts(), config.tickets());
         this.relic = new Relic(this, map.relic(), Long.MAX_VALUE);
         round.playArea(map.world(), map.playArea());
+        intro = new BattleIntro(this);
     }
 
     public GamePhase phase() {
@@ -258,6 +263,10 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         return battlefield;
     }
 
+    public BattleIntro intro() {
+        return intro;
+    }
+
     public Deployment deployment() {
         return deployment;
     }
@@ -270,9 +279,16 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         return support;
     }
 
-    public void supportPoints(Player player, int points) {
-        heroes.earn(player, points);
-        dirty = true;
+    public CombatFeedback feedback() {
+        return feedback;
+    }
+
+    public void awardPoints(Player player, int points, CombatFeedback.Reward reward, Component target) {
+        if (points > 0) {
+            heroes.earn(player, points);
+            feedback.earned(player, points, reward, target);
+            dirty = true;
+        }
     }
 
     public int humans(Faction faction) {
@@ -349,7 +365,8 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     /** In the running round, alive and deployed, as opposed to choosing a spawn or watching. */
     public boolean onField(Player player) {
         var fighter = fighters.get(player.getUniqueId());
-        return phase() == GamePhase.INGAME && round.isPlaying(player) && fighter != null && fighter.onField() && !player.isDead();
+        return !intro.running() && !Scenes.isViewing(player) && phase() == GamePhase.INGAME
+                && round.isPlaying(player) && fighter != null && fighter.onField() && !player.isDead();
     }
 
     public boolean onField(LivingEntity entity) {
@@ -359,7 +376,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
 
     public boolean choosing(Player player) {
         var fighter = fighters.get(player.getUniqueId());
-        return phase() == GamePhase.INGAME && fighter != null && !fighter.onField();
+        return !intro.running() && !Scenes.isViewing(player) && phase() == GamePhase.INGAME && fighter != null && !fighter.onField();
     }
 
     /** Whether a bolt or blast of {@code faction} can hit the player. */
@@ -400,6 +417,19 @@ public final class SternenfrontGame implements RoundConnections.Seating {
 
     @Override
     public void join(Player player) {
+        if (intro.running()) {
+            if (round.rejoin(player)) {
+                PlayerReset.reset(player, GameMode.ADVENTURE);
+                player.setGameMode(GameMode.SPECTATOR);
+                player.setInvulnerable(true);
+                player.teleport(map.overview());
+                player.sendMessage(messages.get("intro.rejoining"));
+            } else {
+                entrance.admit(player);
+            }
+            refreshAll();
+            return;
+        }
         if (round.rejoin(player)) {
             teams.of(player.getUniqueId()).ifPresent(faction -> BlockcraftApi.get().tabTeams().color(player, faction.text()));
             if (player.isDead()) {
@@ -413,9 +443,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
             teams.join(player.getUniqueId(), faction);
             roster.put(player.getUniqueId(), faction);
             BlockcraftApi.get().tabTeams().color(player, faction.text());
-            PlayerReset.reset(player, GameMode.ADVENTURE);
-            config.combat().apply(player);
-            deployment.deploy(player, new Spawn.Headquarters());
+            deployment.arrive(player, new Spawn.Headquarters());
             bots.fill();
         } else {
             entrance.admit(player);
@@ -433,6 +461,9 @@ public final class SternenfrontGame implements RoundConnections.Seating {
 
     @Override
     public void quit(Player player) {
+        BlockcraftApi.get().visuals().clearAccent(player);
+        presentation.cancel(player);
+        intro.cancel(player);
         music.forget(player);
         botDifficultyVotes.withdraw(player.getUniqueId());
         standDown(player);
@@ -446,6 +477,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
 
     private void standDown(Player player) {
         combat.forget(player);
+        feedback.forget(player);
         support.forget(player);
         strikesReady.remove(player.getUniqueId());
         gadgets.release(player);
@@ -465,6 +497,9 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     }
 
     private void leave(Player player) {
+        BlockcraftApi.get().visuals().clearAccent(player);
+        presentation.cancel(player);
+        feedback.forget(player);
         boolean wasPlaying = round.leave(player);
         teams.leave(player.getUniqueId());
         fighters.remove(player.getUniqueId());
@@ -590,7 +625,26 @@ public final class SternenfrontGame implements RoundConnections.Seating {
             countdown.start();
             return;
         }
+        for (var player : round.players()) {
+            BlockcraftApi.get().dialogues().stop(player);
+            BlockcraftApi.get().visuals().stop(player);
+            intro.cancel(player);
+        }
         round.enter(GamePhase.INGAME);
+        secondsLeft = config.roundSeconds();
+        for (var player : round.players()) {
+            roster.put(player.getUniqueId(), teams.of(player.getUniqueId()).orElseThrow());
+            PlayerReset.reset(player, GameMode.ADVENTURE);
+            player.setGameMode(GameMode.SPECTATOR);
+            player.setInvulnerable(true);
+            player.teleport(map.overview());
+        }
+        refreshAll();
+        intro.start(round.players(), this::beginBattle);
+    }
+
+    private void beginBattle() {
+        if (phase() != GamePhase.INGAME) return;
         tick = 0;
         fieldKills.clear();
         reinforcements = new Reinforcements(config.tickets());
@@ -614,9 +668,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         for (var player : round.players()) {
             var faction = teams.of(player.getUniqueId()).orElseThrow();
             roster.put(player.getUniqueId(), faction);
-            PlayerReset.reset(player, GameMode.ADVENTURE);
-            config.combat().apply(player);
-            deployment.deploy(player, new Spawn.Headquarters());
+            deployment.arrive(player, new Spawn.Headquarters());
         }
         round.spectators().forEach(spectator -> spectator.teleport(map.spectatorSpawn()));
         RoundStart.go(round.players());
@@ -754,16 +806,18 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         var name = posts.name(event.index());
         switch (event.change()) {
             case CommandPost.Change.Captured captured -> {
+                presentation.captured(event.index(), captured.by());
                 Bukkit.broadcast(messages.get("post.captured", name, factionName(captured.by())));
                 event.present().forEach(player -> {
                     summary.awardCoins(player, config.rewards().capture());
-                    heroes.earn(player, heroes.config().points().capture());
+                    awardPoints(player, heroes.config().points().capture(), CombatFeedback.Reward.CAPTURE, Component.empty());
                 });
                 announce(captured.by(), Sounds.NOTIFY, Sounds.CORE_ALARM);
             }
             case CommandPost.Change.Neutralised neutralised -> {
                 Bukkit.broadcast(messages.get("post.neutralised", name, factionName(neutralised.from())));
-                event.present().forEach(player -> heroes.earn(player, heroes.config().points().neutralise()));
+                event.present().forEach(player -> awardPoints(player, heroes.config().points().neutralise(),
+                        CombatFeedback.Reward.NEUTRALISE, Component.empty()));
                 announce(neutralised.from().enemy(), Sounds.NOTIFY, Sounds.CORE_ALARM);
             }
         }
@@ -829,9 +883,10 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         support.killed(victim, killer, points);
         reinforcements.lose(faction, 1);
         killer.filter(this::isPlaying).filter(player -> factionOf(player).filter(own -> own != faction).isPresent()).ifPresent(player -> {
-            heroes.earn(player, points);
+            awardPoints(player, points, CombatFeedback.Reward.KILL,
+                    victim.customName() == null ? Component.text(victim.getName()) : victim.customName());
             fieldKills.merge(player.getUniqueId(), 1, Integer::sum);
-            mark(player, "kill", SoundCue.KILL);
+            feedback.hit(player, CombatFeedback.Marker.KILL);
         });
         dirty = true;
     }
@@ -880,10 +935,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     private boolean heatAllows(Player player, Fighter fighter, Blaster.Stats stats) {
         return switch (fighter.heat().fire(tick, stats.cooldownTicks(), stats.heat())) {
             case TOO_SOON -> false;
-            case VENTING -> {
-                BlockcraftApi.get().notifications().feedback(player, messages.get("blaster.venting"));
-                yield false;
-            }
+            case VENTING -> false;
             case OVERHEATED -> {
                 overheated(player);
                 yield true;
@@ -917,7 +969,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         var eye = player.getEyeLocation();
         player.getWorld().playSound(eye, Sound.BLOCK_FIRE_EXTINGUISH, 0.7f, 1.6f);
         player.getWorld().spawnParticle(Particle.SMOKE, eye.add(eye.getDirection().multiply(0.6)), 8, 0.1, 0.1, 0.1, 0.02);
-        BlockcraftApi.get().notifications().feedback(player, messages.get("blaster.overheated"));
+        BlockcraftApi.get().notifications().feedbackNow(player, messages.get("blaster.overheated"), 10);
     }
 
     /** F uses the first ability of a class or a hero, Q the second. */
@@ -1093,23 +1145,14 @@ public final class SternenfrontGame implements RoundConnections.Seating {
             dealing = false;
         }
         if (by instanceof Player player && player.isOnline() && !player.equals(victim) && !victim.isDead()) {
-            mark(player, headshot ? "headshot" : "hit", headshot ? SoundCue.HEADSHOT : SoundCue.HITMARKER);
+            feedback.hit(player, headshot ? CombatFeedback.Marker.HEADSHOT : CombatFeedback.Marker.HIT);
         }
     }
 
     /** A melee hit that landed, such as a lightsaber's swing, marks like a bolt. */
     public void landed(Player attacker, LivingEntity victim) {
         if (!dealing && !victim.isDead() && onField(attacker)) {
-            mark(attacker, "hit", SoundCue.HITMARKER);
-        }
-    }
-
-    /** The hit marker under the crosshair and its sound. */
-    private void mark(Player shooter, String kind, SoundCue sound) {
-        var title = Title.title(Component.empty(), messages.get("hit." + kind, GameSidebar.icons(shooter)), MARKER);
-        BlockcraftApi.get().notifications().reward(shooter, title, null);
-        if (sound != null) {
-            sound.playTo(shooter, MARKER_VOLUME);
+            feedback.hit(attacker, CombatFeedback.Marker.HIT);
         }
     }
 
@@ -1179,7 +1222,10 @@ public final class SternenfrontGame implements RoundConnections.Seating {
 
     public void death(PlayerDeathEvent event) {
         var victim = event.getPlayer();
+        BlockcraftApi.get().visuals().clearAccent(victim);
+        presentation.cancel(victim);
         combat.forget(victim);
+        feedback.forget(victim);
         strikesReady.remove(victim.getUniqueId());
         victim.leaveVehicle();
         event.deathMessage(null);
@@ -1208,8 +1254,8 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         death.killer().filter(killer -> !killer.equals(victim)).ifPresent(killer -> {
             summary.awardKill(killer, victim, Defeat.RESPAWN);
             fieldKills.merge(killer.getUniqueId(), 1, Integer::sum);
-            heroes.earn(killer, heroes.config().points().kill());
-            mark(killer, "kill", SoundCue.KILL);
+            awardPoints(killer, heroes.config().points().kill(), CombatFeedback.Reward.KILL, victim.displayName());
+            feedback.hit(killer, CombatFeedback.Marker.KILL);
             deployment.killedBy(victim, killer);
             if (streaks.kill(killer.getUniqueId())) {
                 earnStrike(killer);
@@ -1283,6 +1329,8 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     }
 
     private void cleanUp() {
+        Bukkit.getOnlinePlayers().forEach(BlockcraftApi.get().visuals()::clearAccent);
+        intro.clear();
         if (loop != null) {
             loop.cancel();
             loop = null;
@@ -1294,6 +1342,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         music.clear();
         bots.clear();
         combat.clear();
+        feedback.clear();
         speeders.clear();
         battlefield.clear();
         support.clear();
@@ -1304,11 +1353,13 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         streaks.clear();
         strikesReady.clear();
         deployment.clear();
+        presentation.close();
     }
 
     public void stop() {
         countdown.cancel();
         cleanUp();
+        intro.close();
         round.stop();
     }
 
@@ -1355,7 +1406,8 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         }
         int points = heroes.points(player);
         int cost = factionOf(player).map(heroes::cost).orElse(heroes.config().cost());
-        return GameSidebar.value(messages.get(points >= cost ? "hero.sidebar.ready" : "hero.sidebar.points",
+        boolean available = factionOf(player).filter(heroes::available).isPresent();
+        return GameSidebar.value(messages.get(points >= cost ? available ? "hero.sidebar.ready" : "hero.sidebar.waiting" : "hero.sidebar.points",
                 Formatter.number("points", points), Formatter.number("cost", cost)));
     }
 
@@ -1377,8 +1429,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         if (speed == null) {
             return;
         }
-        boolean aiming = player.isSneaking() && factionOf(player).flatMap(fighter::blaster).filter(Blaster::precision).isPresent()
-                && HotbarItem.of(player.getInventory().getItemInMainHand(), Blaster.class).filter(Blaster::precision).isPresent();
+        boolean aiming = scoped(player);
         boolean scoped = speed.getModifier(SCOPE) != null;
         if (aiming && !scoped) {
             AttributeScale.apply(player, Attribute.MOVEMENT_SPEED, SCOPE, -feel.scopeSlowdown());
@@ -1391,6 +1442,13 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         if (player.getAttribute(Attribute.MOVEMENT_SPEED) != null) {
             AttributeScale.remove(player, Attribute.MOVEMENT_SPEED, SCOPE);
         }
+    }
+
+    public boolean scoped(Player player) {
+        var fighter = fighters.get(player.getUniqueId());
+        return onField(player) && !player.isInsideVehicle() && fighter != null && player.isSneaking()
+                && factionOf(player).flatMap(fighter::blaster).filter(Blaster::precision).isPresent()
+                && HotbarItem.of(player.getInventory().getItemInMainHand(), Blaster.class).filter(Blaster::precision).isPresent();
     }
 
     private Component factionDisplay(Faction faction) {
