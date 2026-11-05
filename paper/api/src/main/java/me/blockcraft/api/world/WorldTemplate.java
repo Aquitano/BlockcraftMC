@@ -13,15 +13,15 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.random.RandomGenerator;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.Arrays;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Predicate;
+import java.util.random.RandomGenerator;
 import java.util.stream.Stream;
 
 /**
@@ -70,18 +70,15 @@ public final class WorldTemplate {
     public static Optional<WorldTemplate> configured(Map<String, Object> config) {
         String env = System.getenv(ENV);
         String path = env != null && !env.isBlank() ? env : String.valueOf(YamlFile.section(config, "world").getOrDefault("template", ""));
-        if (path.isBlank()) {
-            return Optional.empty();
-        }
         if (picked == null) {
-            picked = pick(path, ThreadLocalRandom.current());
+            pick(path, ThreadLocalRandom.current()).ifPresent(choice -> picked = choice);
         }
-        return Optional.of(at(Path.of(picked)));
+        return Optional.ofNullable(picked).map(choice -> at(Path.of(choice)));
     }
 
-    static String pick(String paths, RandomGenerator random) {
+    static Optional<String> pick(String paths, RandomGenerator random) {
         var choices = Arrays.stream(paths.split(",")).map(String::strip).filter(choice -> !choice.isEmpty()).toList();
-        return choices.get(random.nextInt(choices.size()));
+        return choices.isEmpty() ? Optional.empty() : Optional.of(choices.get(random.nextInt(choices.size())));
     }
 
     public Path directory() {
