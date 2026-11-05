@@ -3,9 +3,11 @@ package me.blockcraft.sternenfront.game;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.game.GameSidebar;
 import me.blockcraft.api.scene.Scenes;
+import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import org.bukkit.Bukkit;
 import org.bukkit.Sound;
 import org.bukkit.SoundCategory;
 import org.bukkit.entity.Player;
@@ -13,6 +15,7 @@ import org.bukkit.entity.Player;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 public final class CombatFeedback {
@@ -32,6 +35,8 @@ public final class CombatFeedback {
     static final class State {
         Marker marker;
         long markerUntil;
+        long shownMarkerUntil;
+        Marker shownMarker;
         long soundedAt = Long.MIN_VALUE;
         Marker sounded;
         Reward reward;
@@ -57,6 +62,13 @@ public final class CombatFeedback {
             return play;
         }
 
+        Optional<Marker> takeMarker(long tick) {
+            if (tick >= markerUntil || marker == shownMarker && markerUntil == shownMarkerUntil) return Optional.empty();
+            shownMarker = marker;
+            shownMarkerUntil = markerUntil;
+            return Optional.of(marker);
+        }
+
         void earned(Reward next, Component target, int amount, long tick, int ticks) {
             if (tick >= rewardUntil) {
                 points = 0;
@@ -72,6 +84,13 @@ public final class CombatFeedback {
                 this.target = target;
             }
             rewardUntil = tick + ticks;
+        }
+
+        Component reward(Messages messages, boolean detailed) {
+            var key = kills > 1 ? "feedback.multikill" : "feedback." + reward.name().toLowerCase(Locale.ROOT);
+            if (!detailed && reward == Reward.KILL) key = kills > 1 ? "feedback.compact-multikill" : "feedback.compact-kill";
+            return messages.get(key, Placeholder.component("target", target),
+                    Formatter.number("points", points), Formatter.number("kills", kills));
         }
 
         Component compose(Component nextHud, Component feedback, Component fallback, Component separator) {
@@ -155,20 +174,14 @@ public final class CombatFeedback {
         }
         state.ready = ready;
         boolean detailed = hud.equals(Component.empty()) && state.hud.equals(Component.empty());
-        var line = Component.empty();
-        if (tick < state.markerUntil) {
-            line = line.append(game.messages().get("hit." + state.marker.name().toLowerCase(Locale.ROOT), GameSidebar.icons(player)));
-        }
+        Component line = Component.empty();
+        state.takeMarker(tick).ifPresent(marker -> {
+            api.notifications().markerNow(player,
+                    game.messages().get("hit." + marker.name().toLowerCase(Locale.ROOT), GameSidebar.icons(player)),
+                    state.markerUntil - tick);
+        });
         if (tick < state.rewardUntil) {
-            var key = state.kills > 1 ? "feedback.multikill" : "feedback." + state.reward.name().toLowerCase(Locale.ROOT);
-            if (!detailed) {
-                key = state.kills > 1 ? "feedback.compact-multikill" : "feedback.compact";
-            }
-            if (!line.equals(Component.empty())) {
-                line = line.append(Component.space());
-            }
-            line = line.append(game.messages().get(key,
-                    Placeholder.component("target", state.target), Formatter.number("points", state.points), Formatter.number("kills", state.kills)));
+            line = state.reward(game.messages(), detailed);
         }
         if (tick < state.readyUntil && ready) {
             if (!line.equals(Component.empty())) {
@@ -177,12 +190,12 @@ public final class CombatFeedback {
             line = line.append(game.messages().get("feedback.hero-ready"));
         }
         var fallback = Component.empty();
-        if (detailed && !line.equals(Component.empty())) {
-            if (venting || hot(player)) {
+        if (!line.equals(Component.empty())) {
+            line = line.append(game.messages().get("feedback.progress", Formatter.number("points", points), Formatter.number("cost", cost)));
+            if (detailed && (venting || hot(player))) {
                 fallback = fallback.append(Component.space()).append(game.messages().get(venting ? "combat.venting" : "combat.hot",
                         Formatter.number("seconds", (heat.ventTicks(tick) + 19) / 20)));
             }
-            fallback = fallback.append(game.messages().get("feedback.progress", Formatter.number("points", points), Formatter.number("cost", cost)));
         }
         var combined = state.compose(hud, line, fallback, game.messages().get("feedback.separator"));
         if (!line.equals(Component.empty())) {
@@ -193,10 +206,14 @@ public final class CombatFeedback {
     }
 
     public void forget(Player player) {
-        states.remove(player.getUniqueId());
+        if (states.remove(player.getUniqueId()) != null) BlockcraftApi.get().notifications().clearMarker(player);
     }
 
     public void clear() {
+        for (var id : states.keySet()) {
+            var player = Bukkit.getPlayer(id);
+            if (player != null) BlockcraftApi.get().notifications().clearMarker(player);
+        }
         states.clear();
     }
 }

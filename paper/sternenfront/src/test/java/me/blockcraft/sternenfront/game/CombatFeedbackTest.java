@@ -14,6 +14,18 @@ import static org.junit.Assert.*;
 public class CombatFeedbackTest {
 
     @Test
+    public void lowerBarKeepsTheKillLabelAndCountAlongsideTheCombatHud() {
+        var messages = Messages.load(Path.of("/nonexistent-combat-feedback-test"),
+                () -> getClass().getResourceAsStream("/messages.yml"),
+                Placeholder.parsed("error", "<red>"), Placeholder.parsed("success", "<green>"));
+        var state = new CombatFeedback.State();
+        state.earned(CombatFeedback.Reward.KILL, Component.text("Droide"), 25, 0, 30);
+        assertEquals("1 Abschuss +25 KP", plain(state.reward(messages, false)));
+        state.earned(CombatFeedback.Reward.KILL, Component.text("Droide"), 25, 1, 30);
+        assertEquals("2 Abschüsse +50 KP", plain(state.reward(messages, false)));
+    }
+
+    @Test
     public void feedbackAndImmediateHitsRetainTheLatestHealthGuardDamageAndCooldowns() {
         var state = new CombatFeedback.State();
         var hud = Component.text("42 LP | Deckung | Schaden links | F 8s | Q 2s");
@@ -56,13 +68,19 @@ public class CombatFeedbackTest {
     public void killAndHeadshotFeedbackSurviveWeakerHitsAndBurstSoundsDoNotStack() {
         var state = new CombatFeedback.State();
         assertTrue(state.hit(CombatFeedback.Marker.HEADSHOT, 0, 6));
+        assertEquals(CombatFeedback.Marker.HEADSHOT, state.takeMarker(0).orElseThrow());
         assertFalse(state.hit(CombatFeedback.Marker.HIT, 0, 6));
+        assertTrue(state.takeMarker(0).isEmpty());
         assertEquals(CombatFeedback.Marker.HEADSHOT, state.marker);
         assertTrue(state.hit(CombatFeedback.Marker.KILL, 0, 6));
+        assertEquals(CombatFeedback.Marker.KILL, state.takeMarker(0).orElseThrow());
         state.hit(CombatFeedback.Marker.HIT, 1, 6);
         assertEquals(CombatFeedback.Marker.KILL, state.marker);
+        assertTrue(state.takeMarker(1).isEmpty());
         state.hit(CombatFeedback.Marker.HIT, 6, 6);
         assertEquals(CombatFeedback.Marker.HIT, state.marker);
+        assertEquals(CombatFeedback.Marker.HIT, state.takeMarker(6).orElseThrow());
+        assertTrue(state.takeMarker(12).isEmpty());
     }
 
     @Test

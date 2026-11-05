@@ -8,6 +8,7 @@ import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.title.Title;
+import net.kyori.adventure.title.TitlePart;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -42,6 +43,7 @@ public final class Notifications implements Listener {
     }
 
     private record TitleNotice(Title title, Sounds sound) {}
+    private record Marker(Component text, long until) {}
 
     private static final class State {
         final NoticeQueue<Component> bar = new NoticeQueue<>();
@@ -49,6 +51,8 @@ public final class Notifications implements Listener {
         final RewardBatch xp = new RewardBatch();
         NoticeQueue.Notice<Component> shownBar;
         NoticeQueue.Notice<TitleNotice> shownTitle;
+        Marker marker;
+        Marker shownMarker;
         final RewardSounds sounds;
         long barSent;
         Component instantBar;
@@ -105,6 +109,22 @@ public final class Notifications implements Listener {
             state.shownBar = null;
             player.sendActionBar(message);
         }
+    }
+
+    public void markerNow(Player player, Component marker, long ticks) {
+        if (!player.isOnline() || suspended.test(player)) return;
+        var state = state(player);
+        long now = now();
+        state.marker = new Marker(marker, now + Math.clamp(ticks, 1, 1200));
+        showTitle(player, state, now);
+    }
+
+    public void clearMarker(Player player) {
+        var state = players.get(player.getUniqueId());
+        if (state == null || state.marker == null) return;
+        state.marker = null;
+        if (player.isOnline() && !suspended.test(player)) showTitle(player, state, now());
+        else state.shownMarker = null;
     }
 
     public void reward(Player player, Component message) {
@@ -196,6 +216,8 @@ public final class Notifications implements Listener {
             if (suspended.test(player)) {
                 state.shownBar = null;
                 state.shownTitle = null;
+                state.marker = null;
+                state.shownMarker = null;
             } else {
                 showTitle(player, state, now);
                 showBar(player, state, now);
@@ -204,7 +226,8 @@ public final class Notifications implements Listener {
             if (sound != null) {
                 sound.play(player);
             }
-            if (state.instantBar == null && state.bar.isEmpty() && state.titles.isEmpty() && state.xp.isEmpty() && state.sounds.isIdle(now)) {
+            if (state.instantBar == null && state.marker == null && state.bar.isEmpty() && state.titles.isEmpty()
+                    && state.xp.isEmpty() && state.sounds.isIdle(now)) {
                 entries.remove();
             }
         }
@@ -236,8 +259,11 @@ public final class Notifications implements Listener {
 
     private void showTitle(Player player, State state, long now) {
         var selected = state.titles.next(now).orElse(null);
+        if (state.marker != null && now >= state.marker.until()) state.marker = null;
+        var marker = state.marker;
         if (selected != null && selected != state.shownTitle) {
-            player.showTitle(drawnFor(player, selected.value.title()));
+            var title = drawnFor(player, selected.value.title());
+            player.showTitle(marker == null ? title : Title.title(title.title(), marker.text(), title.times()));
             if (selected.priority == Priority.IMPORTANT) {
                 state.sounds.blockUntil(selected.until);
                 if (selected.value.sound() != null) {
@@ -246,8 +272,19 @@ public final class Notifications implements Listener {
             } else if (selected.value.sound() != null) {
                 rewardSound(player, selected.value.sound());
             }
+        } else if (marker != state.shownMarker || marker != null && selected != state.shownTitle) {
+            if (selected != null) {
+                player.sendTitlePart(TitlePart.SUBTITLE, marker == null
+                        ? drawnFor(player, selected.value.title()).subtitle() : marker.text());
+            } else if (marker != null) {
+                player.showTitle(Title.title(Component.empty(), marker.text(), Title.Times.times(Duration.ZERO,
+                        Duration.ofMillis((marker.until() - now) * 50), Duration.ZERO)));
+            } else if (state.shownMarker != null) {
+                player.clearTitle();
+            }
         }
         state.shownTitle = selected;
+        state.shownMarker = marker;
     }
 
     private static long now() {

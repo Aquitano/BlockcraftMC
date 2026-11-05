@@ -113,8 +113,11 @@ disables capture presentation. Without the pack, deployment is immediate and the
    trapdoor, a thin column, stairs, and a target partly visible around a corner. Check the custom heavy arms and weapon,
    not just the invisible actor's collision box.
 3. Repeat as the relic champion. Its outline follows the same depth checks instead of enabling global glow.
-4. Take damage and earn repeated kills or assists. Health, guard, damage direction, and cooldowns must remain visible
-   beside compact feedback. Check a narrow window and larger GUI scales for clipping.
+4. Hit an enemy, land a headshot, and kill them. Check the distinct center-screen hit and skull markers and their sounds.
+   Kill another enemy quickly. The lower bar must show `1 Abschuss` or `2 Abschüsse`, earned points, and hero progress.
+   Health, guard, damage direction, and cooldowns remain visible beside that feedback. Check a narrow window and larger
+   GUI scales for clipping. Repeat with a bot and another player.
+   Capture a post while hitting an enemy. The capture title must remain, and its subtitle must return after the marker.
 5. Check another game's ordinary glowing item or enemy. Its normal outline color and blur must remain unchanged.
    Test vanilla rendering first; optional client shader packs can replace the pack's outline shaders.
 

@@ -78,10 +78,11 @@ sneaking. This applies to players and bots, including their custom body parts. O
 world depth buffer, so walls hide the covered parts while exposed parts stay outlined. Selection uses no server-side
 block rays. Outlines stay disabled until the pack has loaded.
 
-Hits, headshots, and kills have distinct sounds and immediate action-bar markers. Kill and assist popups show the
-points earned in a compact segment beside the health, guard, damage-direction, and ability-cooldown HUD.
-Nearby gains combine into one segment. Before the first HUD frame, feedback includes the target and hero progress.
-Objective titles remain visible. The sidebar distinguishes an available hero from enough points with every slot occupied.
+Hits, headshots, and kills have distinct sounds and immediate markers below the crosshair. A kill replaces a weaker
+marker even within the same tick. Kill and assist popups show the reward, recent kill count, and battle-point progress
+beside the health, guard, damage-direction, and ability-cooldown HUD. Nearby gains combine into one segment.
+Objective titles remain visible while the marker temporarily uses their subtitle, then restores it without restarting
+the title. The sidebar distinguishes an available hero from enough points with every slot occupied.
 
 The heat meter turns red and shows `! HEISS` at `heat.warning-level`, or when the next shot would overheat the weapon.
 Venting shows `! KÜHLEN` with its remaining seconds, followed by a ready sound. `combat-feedback` tunes marker and
@@ -180,8 +181,8 @@ bot produces a partial report. `BotDebug` defines what a report holds.
   stays usable. The combat hitbox stays the underlying fighter's size, even on the Brecher.
 - **Tab list.** Hiding a player's real body for the rig also takes them out of that viewer's tab list while they are
   deployed. This is accepted for now.
-- **Hit marker.** Combat feedback uses an immediate action-bar message beside the current HUD, independently of
-  objective titles. Expiring feedback leaves the HUD visible.
+- **Hit marker.** Combat feedback draws an immediate subtitle marker below the crosshair. Expiry restores an active
+  announcement's subtitle. The lower bar retains the combat HUD and reward details.
 - **Effects.** `presentation.effects` turns off everything but bolt trails, thrusters and plain explosions. Scorch marks
   and blade cuts are display models and change no blocks. `Spectacle` runs the dropship and the sandstorm. The storm is
   particles sent to each player, with none under a roof and no shader, so nothing outlasts the round.
