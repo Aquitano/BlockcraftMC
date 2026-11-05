@@ -90,7 +90,8 @@ class Run:
             if len(frames) > 1:
                 columns = min(4, len(frames))
                 sheet = self.folder / "contact.jpg"
-                subprocess.run(["ffmpeg", "-v", "error", "-y", "-pattern_type", "glob", "-i", str(self.folder / "*.png"), "-vf",
+                # Frames of several window sizes: rebuilding the filter at each new size would throw away the tiles so far.
+                subprocess.run(["ffmpeg", "-v", "error", "-y", "-reinit_filter", "0", "-pattern_type", "glob", "-i", str(self.folder / "*.png"), "-vf",
                                 f"scale=480:-2,tile={columns}x{(len(frames) + columns - 1) // columns}", "-frames:v", "1", str(sheet)], check=True)
                 self.report["contact_sheet"] = str(sheet)
         else:
@@ -506,6 +507,8 @@ def replay(client, run, round_seconds=75):
     finally:
         del os.environ["VERIFY_OVERRIDES"]
         compose("--profile", "replay", "stop", "replay")
+        # Later scenarios need a full-length round, and this container would otherwise keep the short one.
+        compose("up", "-d", "--force-recreate", "--no-deps", "sternenfront")
 
 
 def bodies_shown(client):
@@ -593,10 +596,17 @@ def build_map(name="sturmwerft"):
     time.sleep(10)
     compose("--profile", "mapgen", "stop", "mapbuilder")
     template = ROOT / "worlds" / name
-    for old in template.iterdir():
-        shutil.rmtree(old) if old.is_dir() else old.unlink()
+    staging, previous = template.with_name(f".{name}.new"), template.with_name(f".{name}.old")
+    for leftover in (staging, previous):
+        shutil.rmtree(leftover, ignore_errors=True)
+    staging.mkdir()
     for part in ("level.dat", "data", "dimensions", "blockcraft"):
-        compose("cp", f"mapbuilder:/data/world/{part}", str(template / part))
+        compose("cp", f"mapbuilder:/data/world/{part}", str(staging / part))
+    if not (staging / "blockcraft/Sternenfront/arena.yml").is_file():
+        raise RuntimeError(f"The export in {staging} is incomplete; {template} is untouched")
+    template.rename(previous)
+    staging.rename(template)
+    shutil.rmtree(previous)
 
 
 def wait_for_server(service="sternenfront", seconds=240):
