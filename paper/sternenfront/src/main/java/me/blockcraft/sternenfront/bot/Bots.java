@@ -545,10 +545,10 @@ public final class Bots implements Listener {
             return;
         }
         boolean usingCover = protectedPosition.filter(destination::equals).isPresent();
-        double arrivalDistance = usingCover ? 0.36 : 2.25;
-        boolean protectedArrival = !usingCover || soldier.peeking
-                || threat.filter(enemy -> BotCover.shields(here, mob.getEyeHeight(), enemy)).isPresent();
-        if (here.distanceSquared(destination) <= arrivalDistance && protectedArrival && !seekingPatient) {
+        boolean arrived = usingCover
+                ? BotCover.arrived(here, mob.getEyeLocation(), destination, threat.orElseThrow(), soldier.peeking)
+                : here.distanceSquared(destination) <= 2.25;
+        if (arrived && !seekingPatient) {
             soldier.navigationResult = "arrived";
             mob.getPathfinder().stopPathfinding();
             soldier.stuckTicks = 0;
@@ -610,8 +610,7 @@ public final class Bots implements Listener {
             soldier.coverPhaseUntil = 0;
         }
         var destination = soldier.peeking ? soldier.peek : soldier.cover;
-        boolean arrived = here.distanceSquared(destination) <= 0.36 && (soldier.peeking
-                ? !BotCover.blocked(mob.getEyeLocation(), threat) : BotCover.shields(here, mob.getEyeHeight(), threat));
+        boolean arrived = BotCover.arrived(here, mob.getEyeLocation(), destination, threat, soldier.peeking);
         if (arrived) {
             if (soldier.coverPhaseUntil == 0) {
                 soldier.coverPhaseUntil = tick + (soldier.peeking ? settings.peekTicks() : settings.holdTicks());

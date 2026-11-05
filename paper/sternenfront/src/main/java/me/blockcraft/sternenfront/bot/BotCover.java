@@ -14,6 +14,11 @@ final class BotCover {
 
     private BotCover() { }
 
+    static boolean arrived(Location feet, Location eye, Location destination, Location threat, boolean peeking) {
+        return feet.distanceSquared(destination) <= 0.36 && (peeking
+                ? !blocked(eye, threat) : shields(feet, eye.getY() - feet.getY(), threat));
+    }
+
     static boolean shields(Location feet, double eyeHeight, Location threat) {
         return blocked(threat, feet.clone().add(0, eyeHeight, 0))
                 && blocked(threat, feet.clone().add(0, 0.9, 0));

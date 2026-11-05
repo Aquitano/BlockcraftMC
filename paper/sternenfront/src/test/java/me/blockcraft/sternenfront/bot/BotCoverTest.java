@@ -23,6 +23,20 @@ public class BotCoverTest {
     }
 
     @Test
+    public void peekArrivalKeepsMovingUntilTheActualEyeClearsTheCorner() {
+        var world = wall(new BoundingBox(0, 0, -1, 1, 2.5, 1));
+        var threat = new Location(world, -5, 1.6, 0);
+        var destination = new Location(world, 2, 0, 1.5);
+        var feet = destination.clone().subtract(0, 0, 0.55);
+        assertTrue(feet.distanceSquared(destination) < 0.36);
+        assertFalse(BotCover.blocked(destination.clone().add(0, 1.7, 0), threat));
+        assertTrue(BotCover.blocked(feet.clone().add(0, 1.7, 0), threat));
+        assertFalse(BotCover.arrived(feet, feet.clone().add(0, 1.7, 0), destination, threat, true));
+        assertTrue(BotCover.arrived(destination, destination.clone().add(0, 1.7, 0), destination, threat, true));
+        assertFalse(BotCover.arrived(destination, destination.clone().add(0, 1.7, 0), destination, threat, false));
+    }
+
+    @Test
     public void lowBarricadeIsNotCoverForAStandingSoldier() {
         var world = wall(new BoundingBox(0, 0, -1, 1, 1.3, 1));
         var threat = new Location(world, -5, 1.6, 0);
