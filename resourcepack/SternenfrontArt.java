@@ -52,7 +52,7 @@ public final class SternenfrontArt {
 
     private enum Grain { SMOOTH, BRUSHED, WEAVE, BLOTCH, GRIT, HAZARD, GLASS, GLOW, FURNACE }
 
-    private enum Wear { NONE, SCUFF, CHIP, RUST, PATCHED, SCORCH }
+    private enum Wear { NONE, SCUFF, CHIP, RUST, PATCHED, SCORCH, SERVICED }
 
     private record Sprite(String id, boolean glow, boolean tinted, Drawing drawing) implements Surface {
         @Override
@@ -80,6 +80,10 @@ public final class SternenfrontArt {
         Paint burnt() {
             var dark = Arrays.stream(ramp).map(colour -> mix(colour, 0x17120F, glow() ? .35 : .22)).toArray();
             return new Paint(id + "_burnt", dark, base, grain, panel, glow() ? Wear.NONE : Wear.SCORCH);
+        }
+
+        Paint serviced() {
+            return glow() || grain == Grain.GLASS ? this : new Paint(id + "_serviced", ramp, base, grain, panel, Wear.SERVICED);
         }
 
         @Override
@@ -196,6 +200,36 @@ public final class SternenfrontArt {
                 case RUST -> rust(colours, width, height, seed, random);
                 case PATCHED -> patch(colours, width, height, seed, random);
                 case SCORCH -> scorch(colours, width, height, seed, random);
+                case SERVICED -> serviced(colours, width, height, seed, random);
+            }
+        }
+
+        private void serviced(int[] colours, int width, int height, long seed, Random random) {
+            for (int y = 0; y < height; y++) {
+                for (int x = 0; x < width; x++) {
+                    int edge = Math.min(Math.min(x, width - 1 - x), Math.min(y, height - 1 - y));
+                    if (edge < 2 && cell(x / 3, y / 2, seed) < .24) {
+                        colours[y * width + x] = BARE_METAL[(int) (cell(x, y, seed + 1) * BARE_METAL.length)];
+                    }
+                }
+            }
+            for (int mark = 0; mark < width * height / 450 + 1; mark++) {
+                int left = random.nextInt(width);
+                int top = random.nextInt(height);
+                int length = 3 + random.nextInt(8);
+                for (int step = 0; step < length && left + step < width; step++) {
+                    int y = Math.min(height - 1, top + step / 4);
+                    colours[y * width + left + step] = BARE_METAL[0];
+                }
+            }
+            if (width < 10 || height < 10) return;
+            int seam = width / 3;
+            for (int y = height / 2; y < height; y++) {
+                double stain = (double) (height - y) / height;
+                for (int x = Math.max(0, seam - 2); x <= seam + 1; x++) {
+                    int index = y * width + x;
+                    colours[index] = mix(colours[index], 0x241F1A, stain * .8);
+                }
             }
         }
 
@@ -443,6 +477,11 @@ public final class SternenfrontArt {
                 result.add(burn ? each.surfaced(((Paint) each.surface).burnt()) : each);
             }
             return result;
+        }
+
+        Shape serviced() {
+            return new Shape().add(boxes.stream().map(each -> each.surface instanceof Paint paint
+                    ? each.surfaced(paint.serviced()) : each).toList());
         }
 
         Shape shifted(double x, double y, double z) {
@@ -745,7 +784,10 @@ public final class SternenfrontArt {
                 .both(box(.36, .435, -.65, .1, .025, .75, MAROON))
                 .add(drumZ(.36, .28, -1.12, .19, .03, CYAN))
                 .add(drumZ(-.36, .28, -1.12, .19, .03, CYAN))
-                .both(box(.26, .18, -.06, .16, .04, .32, STEEL));
+                .both(box(.26, .18, -.06, .16, .04, .32, STEEL))
+                .add(box(.235, .32, -.08, .025, .12, .26, TRIM))
+                .add(box(-.365, .44, -.65, .12, .025, .21, STEEL))
+                .serviced();
         return damaged ? shape.burnt(.6) : shape;
     }
 
@@ -759,7 +801,10 @@ public final class SternenfrontArt {
                 .both(box(.32, .35, .25, .3, .21, .65, DROID))
                 .both(box(.32, .35, -.085, .19, .12, .02, RED))
                 .add(box(0, .04, -.15, .72, .055, .32, STEEL))
-                .add(box(0, .04, .1, .12, .08, .34, FRAME));
+                .add(box(0, .04, .1, .12, .08, .34, FRAME))
+                .add(box(.485, .35, .25, .025, .13, .24, STEEL))
+                .add(box(-.1, .47, .32, .025, .2, .13, TRIM))
+                .serviced();
         return damaged ? shape.burnt(.6) : shape;
     }
 
@@ -787,7 +832,9 @@ public final class SternenfrontArt {
                 .add(box(0, .55, -1.1, .5, .37, .2, MAROON))
                 .add(box(0, 1.03, -1.04, .05, .5, .4, CERAMIC))
                 .both(box(.28, .15, .55, .05, .26, .05, STEEL))
-                .both(box(.28, .03, .55, .2, .05, .25, STEEL));
+                .both(box(.28, .03, .55, .2, .05, .25, STEEL))
+                .add(box(.355, .48, -.64, .025, .16, .24, TRIM))
+                .serviced();
         return new Family("dropship_kolonien", 72, false, List.of(new Model("sternenfront/dropship/kolonien", hull)));
     }
 
@@ -803,7 +850,9 @@ public final class SternenfrontArt {
                 .both(box(.76, .28, -.15, .56, .14, 1.3, FRAME))
                 .add(box(0, .3, .45, .36, .1, .55, FRAME))
                 .both(box(.6, .12, -.6, .08, .24, .08, STEEL))
-                .both(box(.6, .02, -.6, .25, .04, .3, STEEL));
+                .both(box(.6, .02, -.6, .25, .04, .3, STEEL))
+                .add(box(-1.225, .32, -.42, .025, .22, .34, STEEL))
+                .serviced();
         return new Family("dropship_hegemonie", 72, false, List.of(new Model("sternenfront/dropship/hegemonie", hull)));
     }
 
