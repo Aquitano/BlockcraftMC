@@ -1,5 +1,5 @@
-prefix: "<sternenfront>Sternenfront <dark>» <reset>"
-game-name: "<sternenfront>Sternenfront"
+prefix: "<sternenfront>Clone Wars <dark>» <reset>"
+game-name: "<sternenfront>Clone Wars"
 
 commands:
   sfdebug:
@@ -21,14 +21,14 @@ debug:
   failed: "<prefix><error>Botdiagnose konnte nicht gespeichert werden: <white><file>"
 
 join:
-  introduction: "<prefix><muted>Kolonien gegen Hegemonie: Halte mehr Posten als der Gegner und bring seine Verstärkung auf null."
+  introduction: "<prefix><muted>Republik gegen Separatisten: Halte mehr Posten als der Gegner und bring seine Verstärkung auf null."
 
 item:
   faction: "<arrow><primary>Fraktion wählen"
   class: "<arrow><primary>Klasse & Bot-Stärke"
 
 faction:
-  title: "<arrow><sternenfront>Sternenfront <dark>· <muted>Fraktion"
+  title: "<arrow><sternenfront>Clone Wars <dark>· <muted>Fraktion"
   size: "<bullet><muted><players><dark>/<muted><max> Spieler"
   member: "<bullet><primary><player>"
   join: "<click>Beitreten"
@@ -37,20 +37,20 @@ faction:
   already: "<prefix><error>Du kämpfst bereits für diese Fraktion!"
   full: "<prefix><error>Diese Fraktion ist bereits voll!"
   kolonien:
-    name: "Freie Kolonien"
-    helmet: "<white>Pilotenhelm der Kolonien"
+    name: "Galaktische Republik"
+    helmet: "<white>Phase-II-Klonhelm"
     lore:
-      - "<muted>Bergleute, Schmuggler und Siedler"
-      - "<muted>mit allem, was sich noch reparieren lässt."
+      - "<muted>Klonsoldaten und Jedi verteidigen"
+      - "<muted>die Galaktische Republik."
   hegemonie:
-    name: "Hegemonie"
-    helmet: "<white>Helm der Hegemonie"
+    name: "Separatisten"
+    helmet: "<white>B1-Droidenkopf"
     lore:
-      - "<muted>Weiße Rüstung, sauberer Stahl"
-      - "<muted>und eine Ordnung, die keiner bestellt hat."
+      - "<muted>Die Droidenarmee der Konföderation"
+      - "<muted>unabhängiger Systeme rückt vor."
 
 class:
-  title: "<arrow><sternenfront>Sternenfront <dark>· <muted>Klasse"
+  title: "<arrow><sternenfront>Clone Wars <dark>· <muted>Klasse"
   select: "<click>Auswählen"
   selected: "<success>✔ Ausgewählt"
   chosen: "<muted>Nächster Einsatz als <accent><class>"
@@ -70,43 +70,43 @@ class:
     - "<muted>Gerade kämst du auf diese Seite. So kämpft sie."
   kolonien:
     soldier:
-      name: "<white>Milizionär"
+      name: "<white>Klonsoldat"
       lore:
         - "<muted>Solide auf jede Entfernung."
-        - "<muted>Wirft Schürfgranaten und beißt die Zähne zusammen."
+        - "<muted>Wirft Thermaldetonatoren und beißt die Zähne zusammen."
     heavy:
-      name: "<white>Minenarbeiter"
+      name: "<white>Schwerer Klonsoldat"
       lore:
         - "<muted>Viel Gesundheit, viele Bolzen."
-        - "<muted>Schützt sich mit dem Bauschild und sprengt Posten frei."
+        - "<muted>Schützt sich mit dem Energieschild und sprengt Posten frei."
     scout:
-      name: "<white>Spurenleser"
+      name: "<white>Klonaufklärer"
       lore:
         - "<muted>Wenig Gesundheit, weite Wege."
         - "<muted>Ein Kopftreffer reicht, das Sprungmodul hilft beim Rest."
     medic:
-      name: "<white>Feldsanitäter"
+      name: "<white>Klonsanitäter"
       lore:
-        - "<muted>Hält die Kolonisten am Leben."
+        - "<muted>Hält die Klonsoldaten am Leben."
         - "<muted>Stellt Heilstationen auf und schießt schnell."
   hegemonie:
     soldier:
-      name: "<white>Linieneinheit L-4"
+      name: "<white>B1-Kampfdroide"
       lore:
         - "<muted>Das Standardmodell der Linie."
         - "<muted>Wirft Ionengranaten und fährt die Überlastung hoch."
     heavy:
-      name: "<white>Brecher-Einheit X-9"
+      name: "<white>B2-Superkampfdroide"
       lore:
         - "<muted>Schwer gepanzert und langsam im Gang."
         - "<muted>Verankert sich im Belagerungsmodus hinter der Schildwand."
     scout:
-      name: "<white>Jäger-Einheit J-3"
+      name: "<white>B1-Scharfschütze"
       lore:
-        - "<muted>Leichtes Gestell, scharfe Optik."
+        - "<muted>Dunkle Markierungen und ein E-5s."
         - "<muted>Ein Kopftreffer reicht, die Schubdüsen helfen beim Rest."
     medic:
-      name: "<white>Wartungseinheit W-2"
+      name: "<white>B1-Technikdroide"
       lore:
         - "<muted>Repariert die Linie mitten im Gefecht."
         - "<muted>Baut Reparaturfelder auf und schießt schnell."
@@ -118,30 +118,51 @@ blaster:
   venting: "<error>Der Blaster kühlt ab …"
   overheated: "<error>Überhitzt! <muted>Der Blaster kühlt ab."
   carbine:
-    name: "<white>K-7 Karabiner"
+    name: "<white>DC-15S-Blasterkarabiner"
     lore:
       - "<muted>Gleichmäßige Bolzen, dauerhaft gehalten."
   repeater:
-    name: "<white>R-40 Repetierer"
+    name: "<white>Z-6-Rotationsblaster"
     lore:
       - "<muted>Drei Bolzen pro Schuss, breit gestreut."
   long-rifle:
-    name: "<white>LB-9 Langbüchse"
+    name: "<white>DC-15x-Scharfschützengewehr"
     lore:
       - "<muted>Langsam, schwer und weit."
       - "<muted>Kopftreffer zählen fast doppelt."
   pistol:
-    name: "<white>P-2 Pistole"
+    name: "<white>DC-17-Blasterpistole"
     lore:
       - "<muted>Schnelle, leichte Bolzen."
   twin-pistol:
-    name: "<white>Zwillingspistolen"
+    name: "<white>Zwei DC-17-Blasterpistolen"
     lore:
       - "<muted>Zwei schnelle Bolzen pro Schuss, kaum Streuung."
   heavy-rifle:
-    name: "<white>S-12 Sturmgewehr"
+    name: "<white>DC-15A-Blastergewehr"
     lore:
       - "<muted>Schwere Bolzen in schneller Folge."
+  e5:
+    name: "<white>E-5-Blastergewehr"
+    lore:
+      - "<muted>Standardblaster der B1-Kampfdroiden."
+  wrist-blaster:
+    name: "<white>B2-Handgelenkblaster"
+    lore:
+      - "<muted>Drei Bolzen aus dem Arm des Superkampfdroiden."
+  e5s:
+    name: "<white>E-5s-Scharfschützengewehr"
+    lore:
+      - "<muted>Präzise Schüsse auf große Entfernung."
+      - "<muted>Schleichen verengt das Sichtfeld."
+  se14:
+    name: "<white>SE-14-Blasterpistole"
+    lore:
+      - "<muted>Leichte Seitenwaffe der Droidenarmee."
+  westar-pistols:
+    name: "<white>Zwei WESTAR-34-Blasterpistolen"
+    lore:
+      - "<muted>Jango Fetts silberne Blasterpistolen."
   speeder-cannon:
     name: "<white>Speeder-Bordkanone"
 
@@ -150,7 +171,7 @@ ability:
   no-room: "<error>Hier ist dafür kein Platz."
   kolonien:
     grenade:
-      name: "<white>Schürfgranate"
+      name: "<white>Thermaldetonator"
       lore:
         - "<muted>Zündet nach kurzer Zeit"
         - "<muted>und trifft alle Gegner in Sichtweite."
@@ -160,14 +181,14 @@ ability:
       lore:
         - "<muted>Kurz schneller und heilend."
     shield-wall:
-      name: "<white>Bauschild"
+      name: "<white>Energieschild"
       lore:
         - "<muted>Eine Wand aus Energie vor dir,"
         - "<muted>die Bolzen für ein paar Sekunden aufhält."
     mining-charge:
       name: "<white>Sprengladung"
       lore:
-        - "<muted>Eine Ladung aus dem Stollen mit langer Lunte."
+        - "<muted>Eine Sprengladung mit langer Zündverzögerung."
         - "<muted>Reißt mehr mit als eine Granate."
         - "<error>Die Explosion verletzt auch dich."
     jump-pack:
@@ -214,16 +235,16 @@ ability:
         - "<muted>solange es steht."
 
 relic:
-  name: "<accent>Ahnenklinge"
+  name: "<white>Dunkelschwert"
   lore:
-    - "<muted>Wer sie trägt, kämpft für zwei."
+    - "<muted>Mandalores schwarze Lichtschwertklinge."
     - "<right>Halten zum Blocken <dark>· <muted>F oder zweimal springen für den Machtsprung"
-  title: "<display>AHNENKLINGE"
+  title: "<display>DUNKELSCHWERT"
   subtitle: "<muted>Die Klinge liegt in der Tempelruine im Norden"
-  appeared: "<prefix><accent>Die Ahnenklinge <muted>ist in der Tempelruine im Norden erschienen!"
-  taken: "<prefix><white><player> <muted>trägt nun die <accent>Ahnenklinge <muted>für <faction><muted>!"
-  slain: "<prefix><white><killer> <muted>hat <white><player> <muted>besiegt und die <accent>Ahnenklinge <muted>zurück in die Ruine geschickt!"
-  lost: "<prefix><muted>Die <accent>Ahnenklinge <muted>kehrt in die Tempelruine zurück."
+  appeared: "<prefix><accent>Das Dunkelschwert <muted>ist in der Tempelruine im Norden erschienen!"
+  taken: "<prefix><white><player> <muted>trägt nun das <accent>Dunkelschwert <muted>für <faction><muted>!"
+  slain: "<prefix><white><killer> <muted>hat <white><player> <muted>besiegt und das <accent>Dunkelschwert <muted>zurück in die Ruine geschickt!"
+  lost: "<prefix><muted>Das <accent>Dunkelschwert <muted>kehrt in die Tempelruine zurück."
 
 post:
   raffinerie: "Raffinerie"
@@ -287,7 +308,7 @@ deploy:
   controls: "<prefix><accent>F<muted>: <first> <dark>· <accent>Q<muted>: <second>"
   no-ability: "<muted>Keine Fähigkeit"
   saber-controls: "<prefix><right>Halten zum Blocken <dark>· <muted>Zweimal springen für den Machtsprung."
-  title: "<arrow><sternenfront>Sternenfront <dark>· <muted>Einsatz"
+  title: "<arrow><sternenfront>Clone Wars <dark>· <muted>Einsatz"
   item: "<arrow><primary>Einsatz planen"
   waiting: "<muted>Einsatz möglich in <accent><seconds> s"
   ready: "<success>Wähle deinen Einsatzort <dark>· <muted>sonst Hauptquartier in <accent><seconds> s"
@@ -323,6 +344,7 @@ round:
   music-credit: "<muted>Musik: <click:open_url:'https://www.scottbuckley.com.au/library/'><primary>Scott Buckley</primary></click> <muted>· Legionnaire (Original) und Juggernaut · CC BY 4.0. Die Lautstärke regelt „Musik“ in den Minecraft-Audiooptionen."
   faction: "<arrow><faction><dark>: <accent><players>"
   start:
+    - "<prefix><muted>Clone Wars: Republik gegen Separatisten!"
     - "<prefix><muted>Los geht's! <right>Schießen <dark>· <accent>F <muted>und <accent>Q <muted>für Fähigkeiten."
     - "<prefix><muted>Mit <accent>@ <muted>vor der Nachricht schreibst du allen."
   winner: "<prefix><primary><faction> <primary>gewinnt mit <accent><tickets> <primary>Verstärkung!"
@@ -348,7 +370,7 @@ top:
   entry: "<reset>#<rank> <primary><name> <muted>( <white><value><muted> )"
 menu:
   stats:
-    title: "<arrow><sternenfront>Sternenfront <dark>· <muted>Stats"
+    title: "<arrow><sternenfront>Clone Wars <dark>· <muted>Stats"
     player: "<accent><player>"
     player-lore:
       - "<arrow><primary>Siege<dark>: <muted><wins>"
@@ -358,7 +380,7 @@ menu:
       - "<arrow><primary>Punkte<dark>: <muted><points>"
     global: "<arrow><primary>Globale Stats"
   global-stats:
-    title: "<arrow><sternenfront>Sternenfront <dark>· <muted>Globale Stats"
+    title: "<arrow><sternenfront>Clone Wars <dark>· <muted>Globale Stats"
     wins: "<arrow><primary>Siege"
     deaths: "<arrow><primary>Tode"
     kills: "<arrow><primary>Kills"
@@ -366,7 +388,7 @@ menu:
     points: "<arrow><primary>Punkte"
 
 scoreboard:
-  title: "<sternenfront><bold>Sternenfront"
+  title: "<sternenfront><bold>Clone Wars"
   faction: "<muted><icon:mode> FRAKTION"
   no-faction: "<muted>Keine Fraktion"
   class: "<muted><icon:kit> KLASSE"
@@ -384,32 +406,34 @@ hero:
     - "<muted>Schlägt mit Abklingzeit, wie ein Schwert."
     - "<right>Halten zum Blocken <dark>· <muted>Zweimal springen für den Machtsprung"
   jedi:
-    name: "<white>Jedi-Ritter"
-    weapon: "<white>Lichtschwert"
+    name: "<white>Obi-Wan Kenobi"
+    weapon: "<white>Obi-Wans Lichtschwert"
     lore:
       - "<muted>Lichtschwert und die Macht."
       - "<muted>Stößt Gegner mit der Macht zurück und springt weit."
       - "<muted>Mit Q wirfst du das Lichtschwert."
       - "<right>Halten zum Blocken; gutes Timing lenkt Bolzen zurück."
   bounty-hunter:
-    name: "<white>Kopfgeldjäger"
+    name: "<white>Jango Fett"
     lore:
       - "<muted>Zwei Pistolen, schnelle und genaue Bolzen."
-      - "<muted>Fliegt mit dem Raketenrucksack, zieht sich mit dem Fesselkabel."
+      - "<muted>F startet den Raketenrucksack, Q feuert eine Handgelenkrakete."
+      - "<error>Die Raketenexplosion verletzt auch dich."
   sith:
-    name: "<white>Sith-Inquisitor"
-    weapon: "<white>Rotes Lichtschwert"
+    name: "<white>Count Dooku"
+    weapon: "<white>Dookus Lichtschwert"
     lore:
       - "<muted>Rotes Lichtschwert und die dunkle Seite der Macht."
-      - "<muted>Wirft das Lichtschwert und würgt Gegner aus der Ferne."
+      - "<muted>F wirft das Lichtschwert, Q entfesselt Machtblitze."
+      - "<muted>Ziele auf Gegner in der Nähe; Deckung und Lichtschwerter halten die Blitze auf."
       - "<right>Halten zum Blocken; gutes Timing lenkt Bolzen zurück."
   commander:
-    name: "<white>Kommandant"
+    name: "<white>Captain Rex"
     lore:
-      - "<muted>Schweres Gewehr mit starken Bolzen."
+      - "<muted>Zwei DC-17-Pistolen und die Rüstung der 501."
       - "<muted>Ruft einen Orbitalschlag und stärkt Verbündete."
   champion:
-    name: "<accent>Champion der Ahnenklinge"
+    name: "<white>Träger des Dunkelschwerts"
   ability:
     force-push:
       name: "<white>Machtstoß"
@@ -417,6 +441,10 @@ hero:
       name: "<white>Lichtschwertwurf"
     force-grip:
       name: "<white>Machtgriff"
+    force-lightning:
+      name: "<white>Machtblitze"
+    wrist-rocket:
+      name: "<white>Handgelenkrakete"
     jetpack:
       name: "<white>Raketenrucksack"
     grapple:
@@ -462,7 +490,7 @@ bot:
     open-lore:
       - "<muted>Stimme für die Bot-Stärke dieser Runde."
       - "<click>Leicht, Normal oder Veteran wählen"
-    title: "<arrow><sternenfront>Sternenfront <dark>· <muted>Bot-Stärke"
+    title: "<arrow><sternenfront>Clone Wars <dark>· <muted>Bot-Stärke"
     selected: "<prefix><muted>Bot-Stärke dieser Runde: <difficulty><muted>."
     easy:
       name: "<success>Leicht"

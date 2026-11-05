@@ -6,6 +6,7 @@ import me.blockcraft.api.game.RoundPhaseChangeEvent;
 import me.blockcraft.sternenfront.game.Faction;
 import me.blockcraft.sternenfront.game.LineOfSight;
 import me.blockcraft.sternenfront.game.SternenfrontGame;
+import me.blockcraft.sternenfront.hero.Hero;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Entity;
@@ -69,8 +70,14 @@ public final class BodyRigs implements Listener, AutoCloseable {
             }
             var id = actor.getUniqueId();
             present.add(id);
+            var hero = actor instanceof Player player ? game.heroOf(player) : Optional.<Hero>empty();
+            var body = RigBody.of(game.factionOf(actor).orElseThrow(), game.combatClassOf(actor), hero);
+            var existing = rigs.get(id);
+            if (existing != null && existing.body() != body) {
+                remove(id);
+            }
             var rig = rigs.computeIfAbsent(id, ignored -> {
-                var created = new BodyRig(plugin, actor, RigBody.of(game.factionOf(actor).orElseThrow(), game.combatClassOf(actor)), game::isPlaying,
+                var created = new BodyRig(plugin, actor, body, game::isPlaying,
                         () -> game.bots().aim(actor).orElseGet(() -> actor.getEyeLocation().getDirection()), turnDegrees);
                 targets.put(created.targetId(), created);
                 return created;
@@ -88,8 +95,7 @@ public final class BodyRigs implements Listener, AutoCloseable {
         return actor.isValid() && game.onField(actor) && actor.getWorld().equals(game.map().world())
                 && (droids && game.factionOf(actor).filter(Faction.HEGEMONIE::equals).isPresent()
                 || infantry && game.factionOf(actor).filter(Faction.KOLONIEN::equals).isPresent())
-                && (!(actor instanceof Player player) || game.heroOf(player).isEmpty()
-                && !BlockcraftApi.get().buildMode().isEnabled(player));
+                && (!(actor instanceof Player player) || !BlockcraftApi.get().buildMode().isEnabled(player));
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)

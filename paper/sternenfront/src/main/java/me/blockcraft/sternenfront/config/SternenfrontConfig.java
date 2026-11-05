@@ -86,7 +86,7 @@ public record SternenfrontConfig(int playersPerTeam, int fullSeconds, int roundS
                         Math.max(1, config.getInt("heat.vent-ticks", 40))),
                 byKey(Faction.class, faction -> byKey(CombatClass.class, combatClass ->
                         classStats(section(section(classes, faction.key()), combatClass.key())))),
-                byKey(Blaster.class, blaster -> blaster(section(section(config, "blasters"), blaster.key()))),
+                blasters(section(config, "blasters")),
                 byKey(Ability.class, ability -> Math.max(1, section(abilities, ability.key()).getInt("cooldown-seconds", 20))),
                 grenade(section(abilities, "grenade"), new Grenade(50, 5, 16, 1.1)),
                 grenade(section(abilities, "mining-charge"), new Grenade(60, 6, 20, 0.9)),
@@ -118,17 +118,25 @@ public record SternenfrontConfig(int playersPerTeam, int fullSeconds, int roundS
                 section.getDouble("throw-speed", fallback.throwSpeed()));
     }
 
-    private static Blaster.Stats blaster(ConfigurationSection section) {
+    private static Map<Blaster, Blaster.Stats> blasters(ConfigurationSection section) {
+        var fallback = new Blaster.Stats(4, 1.5, 10, 4, 1, 0, 0, 3.5, 80);
+        return byKey(Blaster.class, weapon -> {
+            var profile = blaster(section(section, weapon.profile().key()), fallback);
+            return blaster(section(section, weapon.key()), profile);
+        });
+    }
+
+    private static Blaster.Stats blaster(ConfigurationSection section, Blaster.Stats fallback) {
         return new Blaster.Stats(
-                Math.max(0, section.getDouble("damage", 4)),
-                Math.max(1, section.getDouble("headshot", 1.5)),
-                Math.max(0, section.getDouble("heat", 10)),
-                Math.max(1, section.getInt("cooldown-ticks", 4)),
-                Math.max(1, section.getInt("bolts", 1)),
-                Math.max(0, section.getInt("burst-ticks", 0)),
-                Math.max(0, section.getDouble("spread", 0)),
-                Math.max(0.5, section.getDouble("speed", 3.5)),
-                Math.max(1, section.getDouble("range", 80)));
+                Math.max(0, section.getDouble("damage", fallback.damage())),
+                Math.max(1, section.getDouble("headshot", fallback.headshot())),
+                Math.max(0, section.getDouble("heat", fallback.heat())),
+                Math.max(1, section.getInt("cooldown-ticks", fallback.cooldownTicks())),
+                Math.max(1, section.getInt("bolts", fallback.bolts())),
+                Math.max(0, section.getInt("burst-ticks", fallback.burstTicks())),
+                Math.max(0, section.getDouble("spread", fallback.spread())),
+                Math.max(0.5, section.getDouble("speed", fallback.speed())),
+                Math.max(1, section.getDouble("range", fallback.range())));
     }
 
     public ClassStats stats(Faction faction, CombatClass combatClass) {

@@ -75,7 +75,7 @@ public final class Bolts {
                     random.nextDouble(-stats.spread(), stats.spread()),
                     random.nextDouble(-stats.spread(), stats.spread()))).normalize();
         }
-        if (blaster == Blaster.LONG_RIFLE && game.combat().config().precisionHitscan()) {
+        if (blaster.precision() && game.combat().config().precisionHitscan()) {
             launch(shooter, new Shot(faction, blaster, stats.damage(), stats.headshot(), stats.range()),
                     shooter.getEyeLocation(), direction, stats.range(), true);
         } else {

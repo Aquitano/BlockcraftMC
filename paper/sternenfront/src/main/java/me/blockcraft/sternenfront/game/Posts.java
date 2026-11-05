@@ -213,7 +213,7 @@ public final class Posts {
             post.label.text(messages.get("post.label", resolvers));
         }
         post.bar.name(messages.get(priority(index) ? "post.bar-priority" : "post.bar", resolvers)).progress((float) share).color(leaning.map(faction ->
-                faction == Faction.KOLONIEN ? BossBar.Color.YELLOW : BossBar.Color.BLUE).orElse(BossBar.Color.WHITE));
+                faction == Faction.KOLONIEN ? BossBar.Color.BLUE : BossBar.Color.RED).orElse(BossBar.Color.WHITE));
     }
 
     private static Component bar(Optional<Faction> leaning, double share) {

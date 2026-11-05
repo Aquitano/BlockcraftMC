@@ -16,11 +16,11 @@ import java.util.Optional;
 public enum Hero {
     JEDI(Faction.KOLONIEN, new Weapon.Saber(PackModel.STERNENFRONT_LIGHTSABER_JEDI, PackModel.STERNENFRONT_LIGHTSABER_JEDI_OFF),
             Optional.of(PackModel.STERNENFRONT_HOOD_JEDI), List.of(HeroAbility.FORCE_PUSH, HeroAbility.SABER_THROW)),
-    BOUNTY_HUNTER(Faction.KOLONIEN, new Weapon.Gun(Blaster.TWIN_PISTOL),
-            Optional.of(PackModel.STERNENFRONT_HELMET_BOUNTY_HUNTER), List.of(HeroAbility.JETPACK, HeroAbility.GRAPPLE)),
+    BOUNTY_HUNTER(Faction.HEGEMONIE, new Weapon.Gun(Blaster.WESTAR_PISTOLS),
+            Optional.of(PackModel.STERNENFRONT_HELMET_BOUNTY_HUNTER), List.of(HeroAbility.JETPACK, HeroAbility.WRIST_ROCKET)),
     SITH(Faction.HEGEMONIE, new Weapon.Saber(PackModel.STERNENFRONT_LIGHTSABER_SITH, PackModel.STERNENFRONT_LIGHTSABER_SITH_OFF),
-            Optional.of(PackModel.STERNENFRONT_MASK_SITH), List.of(HeroAbility.SABER_THROW, HeroAbility.FORCE_GRIP)),
-    COMMANDER(Faction.HEGEMONIE, new Weapon.Gun(Blaster.HEAVY_RIFLE),
+            Optional.of(PackModel.STERNENFRONT_MASK_SITH), List.of(HeroAbility.SABER_THROW, HeroAbility.FORCE_LIGHTNING)),
+    COMMANDER(Faction.KOLONIEN, new Weapon.Gun(Blaster.TWIN_PISTOL),
             Optional.of(PackModel.STERNENFRONT_CAP_COMMANDER), List.of(HeroAbility.ORBITAL_STRIKE, HeroAbility.RALLY)),
     CHAMPION(null, new Weapon.RelicBlade(), Optional.empty(), List.of());
 

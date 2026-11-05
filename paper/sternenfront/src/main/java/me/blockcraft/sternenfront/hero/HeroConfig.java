@@ -11,7 +11,8 @@ import java.util.Map;
 /** The {@code heroes} section of Sternenfront's config.yml, and what killing a hero pays ({@code rewards.hero}). */
 public record HeroConfig(int cost, int perFaction, Points points, Map<Hero, Double> health, Saber saber,
                          Map<HeroAbility, Integer> cooldownSeconds, Push push, Throw saberThrow, Grip grip,
-                         Jetpack jetpack, Grapple grapple, Orbital orbital, Rally rally, int reward) {
+                         Jetpack jetpack, Grapple grapple, Orbital orbital, Rally rally, Rocket rocket,
+                         Lightning lightning, int reward) {
 
     public record Points(int kill, int capture, int neutralise) { }
 
@@ -32,6 +33,15 @@ public record HeroConfig(int cost, int perFaction, Points points, Map<Hero, Doub
 
     public record Rally(double radius, int seconds) { }
 
+    public record Rocket(double range, double speed, double radius, double damage) { }
+
+    public record Lightning(double range, double angle, int ticks, int pulseTicks, int targets, double damage) {
+
+        public double damagePerPulse() {
+            return damage / (1 + (ticks - 1) / pulseTicks);
+        }
+    }
+
     private static final int TICKS_PER_SECOND = 20;
 
     public static HeroConfig from(ConfigurationSection root) {
@@ -48,6 +58,9 @@ public record HeroConfig(int cost, int perFaction, Points points, Map<Hero, Doub
         var grapple = section(abilities, "grapple");
         var orbital = section(abilities, "orbital-strike");
         var rally = section(abilities, "rally");
+        var rocket = section(abilities, "wrist-rocket");
+        var lightning = section(abilities, "force-lightning");
+        int lightningTicks = Math.max(1, lightning.getInt("ticks", 30));
         var healthByHero = new EnumMap<Hero, Double>(Hero.class);
         Arrays.stream(Hero.values()).filter(hero -> hero != Hero.CHAMPION)
                 .forEach(hero -> healthByHero.put(hero, Math.max(1, health.getDouble(hero.key(), 50))));
@@ -62,7 +75,7 @@ public record HeroConfig(int cost, int perFaction, Points points, Map<Hero, Doub
                 Map.copyOf(healthByHero),
                 new Saber(Math.max(0, saber.getDouble("damage", 8)), Math.clamp(saber.getDouble("blocked-share", 0.3), 0, 1),
                         color(colors, "jedi", 0x3D8BFF), color(colors, "sith", 0xFF2A2A), color(colors, "white", 0xF4F8FF),
-                        color(colors, "relic", 0xFFC24A),
+                        color(colors, "relic", 0xF4F8FF),
                         Math.max(0, saber.getInt("ignite-ticks", 6)), Math.max(10, saber.getInt("hum-ticks", 40)),
                         Math.max(1, saber.getInt("leap-cooldown-seconds", 5)), saber.getDouble("leap-forward", 1.4),
                         saber.getDouble("leap-up", 0.7)),
@@ -78,6 +91,11 @@ public record HeroConfig(int cost, int perFaction, Points points, Map<Hero, Doub
                 new Orbital(Math.max(1, orbital.getInt("delay-ticks", 60)), Math.max(1, orbital.getDouble("radius", 5)),
                         Math.max(1, orbital.getInt("blasts", 6)), Math.max(0, orbital.getDouble("damage", 24))),
                 new Rally(Math.max(1, rally.getDouble("radius", 12)), Math.max(1, rally.getInt("seconds", 6))),
+                new Rocket(Math.max(1, rocket.getDouble("range", 64)), Math.max(0.1, rocket.getDouble("speed", 1.6)),
+                        Math.max(0.1, rocket.getDouble("radius", 3.5)), Math.max(0, rocket.getDouble("damage", 18))),
+                new Lightning(Math.max(1, lightning.getDouble("range", 10)), Math.clamp(lightning.getDouble("angle", 50), 1, 180),
+                        lightningTicks, Math.clamp(lightning.getInt("pulse-ticks", 5), 1, lightningTicks),
+                        Math.max(1, lightning.getInt("targets", 3)), Math.max(0, lightning.getDouble("damage", 12))),
                 Math.max(0, root.getInt("rewards.hero", 15)));
     }
 

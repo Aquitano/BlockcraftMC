@@ -103,8 +103,8 @@ public final class Fighter {
     }
 
     /** The blaster in this fighter's hands: the class's, a gun hero's own, or none for a blade. */
-    public Optional<Blaster> blaster() {
+    public Optional<Blaster> blaster(Faction faction) {
         return hero.map(Hero::weapon).map(weapon -> weapon instanceof Hero.Weapon.Gun gun ? gun.blaster() : null)
-                .or(() -> hero.isPresent() ? Optional.empty() : Optional.of(combatClass.blaster()));
+                .or(() -> hero.isPresent() ? Optional.empty() : Optional.of(combatClass.blaster(faction)));
     }
 }

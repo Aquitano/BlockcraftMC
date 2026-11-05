@@ -39,6 +39,8 @@ public final class BattleEffects {
     private static final Color PUSH_COLOUR = Color.fromRGB(0xB8E5FF);
     private static final Color TETHER_COLOUR = Color.fromRGB(0xD0E2EE);
     private static final Color GRIP_COLOUR = Color.fromRGB(0xC050FF);
+    private static final Color LIGHTNING_COLOUR = Color.fromRGB(0xA8B4FF);
+    private static final Color LIGHTNING_CORE = Color.fromRGB(0xEAF4FF);
     private static final Vector UP = new Vector(0, 1, 0);
     private static final Vector STILL = new Vector();
     private static final int VENT_INTERVAL = 3;
@@ -104,7 +106,7 @@ public final class BattleEffects {
         var muzzle = muzzle(actor, direction);
         if (muzzle.getBlock().isPassable()) {
             var flash = config.muzzleFlash();
-            boolean heavy = blaster == Blaster.LONG_RIFLE || blaster == Blaster.REPEATER;
+            boolean heavy = blaster.precision() || blaster.profile() == Blaster.REPEATER;
             flares.flash(flash(faction), muzzle, heavy ? flash.heavyScale() : flash.scale(), flash.ticks());
             muzzle.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, muzzle, 2, 0.04, 0.04, 0.04, 0.03);
             if (heat > HOT_BARREL) {
@@ -320,6 +322,38 @@ public final class BattleEffects {
             from.getWorld().spawnParticle(Particle.DUST, from.clone().add(direction.clone().multiply(along)), 1, 0, 0, 0, 0, dust, true);
         }
         to.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, to, 2, 0.1, 0.1, 0.1, 0.03, null, true);
+    }
+
+    public void rocketTrail(Location from, Location to) {
+        var line = to.toVector().subtract(from.toVector());
+        double distance = line.length();
+        if (distance == 0) {
+            return;
+        }
+        var direction = line.multiply(1 / distance);
+        for (double along = 0; along < distance; along += 0.35) {
+            var at = from.clone().add(direction.clone().multiply(along));
+            at.getWorld().spawnParticle(Particle.FLAME, at, 1, .025, .025, .025, 0, null, true);
+            at.getWorld().spawnParticle(Particle.SMOKE, at, 1, .04, .04, .04, .01);
+        }
+    }
+
+    public void lightning(Location eye, Location to) {
+        var from = eye.clone().subtract(0, 0.2, 0);
+        var line = to.toVector().subtract(from.toVector());
+        int steps = Math.max(1, (int) Math.ceil(line.length() / 0.3));
+        var random = ThreadLocalRandom.current();
+        for (int strand = 0; strand < (enabled ? 3 : 1); strand++) {
+            var dust = new Particle.DustOptions(strand == 0 ? LIGHTNING_CORE : LIGHTNING_COLOUR, strand == 0 ? 1 : 1.4f);
+            for (int step = 0; step <= steps; step++) {
+                double share = (double) step / steps;
+                double jitter = Math.sin(Math.PI * share) * 0.18;
+                var at = from.clone().add(line.clone().multiply(share))
+                        .add(random.nextDouble(-1, 1) * jitter, random.nextDouble(-1, 1) * jitter, random.nextDouble(-1, 1) * jitter);
+                from.getWorld().spawnParticle(Particle.DUST, at, 1, 0, 0, 0, 0, dust, true);
+            }
+        }
+        to.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, to, 5, .12, .2, .12, .02, null, true);
     }
 
     /** One tick of a force grip: a turning ring round the victim's chest and, every other tick, the line from the gripper. */

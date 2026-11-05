@@ -52,7 +52,7 @@ public final class Loadouts {
     public void equip(Player player, Faction faction, CombatClass combatClass) {
         var inventory = player.getInventory();
         inventory.clear();
-        inventory.setItem(0, blaster(combatClass.blaster()));
+        inventory.setItem(0, blaster(combatClass.blaster(faction)));
         combatClass.abilities(faction).forEach(ability -> player.setCooldown(ability.material(), 0));
         dress(player, faction, Optional.empty());
         var body = config.stats(faction, combatClass);
@@ -118,7 +118,7 @@ public final class Loadouts {
                 Placeholder.component("ability", messages.get(ability.messageKey(faction) + ".name")))));
         lore.add(Component.empty());
         lore.addAll(hint);
-        var builder = combatClass.blaster().model().item().name(messages.get(combatClass.messageKey(faction) + ".name"))
+        var builder = combatClass.blaster(faction).model().item().name(messages.get(combatClass.messageKey(faction) + ".name"))
                 .lore(lore).hideAttributes();
         if (selected) {
             builder.glow().state(MenuState.ACTIVE);
@@ -132,11 +132,11 @@ public final class Loadouts {
     }
 
     private List<Component> statLines(Faction faction, CombatClass combatClass) {
-        var stats = config.stats(combatClass.blaster());
+        var stats = config.stats(combatClass.blaster(faction));
         var body = config.stats(faction, combatClass);
         var lines = new ArrayList<Component>();
         lines.add(messages.get("class.blaster",
-                Placeholder.component("blaster", messages.get("blaster." + combatClass.blaster().key() + ".name")),
+                Placeholder.component("blaster", messages.get("blaster." + combatClass.blaster(faction).key() + ".name")),
                 Formatter.number("damage", stats.damage() * stats.bolts() / TO_HEARTS)));
         lines.add(messages.get("class.health", Formatter.number("hearts", body.health() / TO_HEARTS)));
         if (body.speed() != 1) {

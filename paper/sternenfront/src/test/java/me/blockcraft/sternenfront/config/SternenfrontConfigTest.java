@@ -24,6 +24,21 @@ public class SternenfrontConfigTest {
     }
 
     @Test
+    public void factionWeaponsInheritTheirProfileAndKeepPartialOverrides() {
+        var config = YamlConfiguration.loadConfiguration(Path.of("src/main/resources/config.yml").toFile());
+        config.set("blasters.repeater.damage", 3);
+        config.set("blasters.wrist-blaster.heat", 12);
+        var parsed = SternenfrontConfig.from(config);
+        var wrist = parsed.stats(Blaster.WRIST_BLASTER);
+        assertEquals(3, wrist.damage(), 0.001);
+        assertEquals(12, wrist.heat(), 0.001);
+        assertEquals(parsed.stats(Blaster.REPEATER).bolts(), wrist.bolts());
+        assertEquals(parsed.stats(Blaster.REPEATER).burstTicks(), wrist.burstTicks());
+        assertEquals(parsed.stats(Blaster.LONG_RIFLE), parsed.stats(Blaster.E5S));
+        assertEquals(parsed.stats(Blaster.TWIN_PISTOL), parsed.stats(Blaster.WESTAR_PISTOLS));
+    }
+
+    @Test
     public void readsEachFactionsClassBodies() {
         var config = SternenfrontConfig.from(YamlConfiguration.loadConfiguration(Path.of("src/main/resources/config.yml").toFile()));
         assertEquals(new SternenfrontConfig.ClassStats(36, 0.88, 1.1), config.stats(Faction.HEGEMONIE, CombatClass.HEAVY));

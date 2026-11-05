@@ -34,11 +34,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
-/**
- * What the heroes' abilities leave in the world while they last: a thrown lightsaber on its way out and back, a grip
- * holding its victim up, a jetpack's thrust, and an orbital strike from the thrown beacon to the last blast. Pushes,
- * grapples and rallies happen at once. Everything ends with its hero, and all of it with the round.
- */
+/** Rockets and orbital strikes keep their damage credit after the hero falls; channels end with their hero. */
 public final class Powers {
 
     private static final double SABER_REACH = 0.6;
@@ -91,6 +87,8 @@ public final class Powers {
     private final SternenfrontGame game;
     private final HeroConfig config;
     private final Sabers sabers;
+    private final WristRockets rockets;
+    private final ForceLightning lightning;
     private final List<Flight> flights = new ArrayList<>();
     private final List<Grip> grips = new ArrayList<>();
     private final Map<UUID, Long> jetpacks = new HashMap<>();
@@ -100,6 +98,8 @@ public final class Powers {
         this.game = game;
         this.config = config;
         this.sabers = sabers;
+        rockets = new WristRockets(game, config.rocket());
+        lightning = new ForceLightning(game, config.lightning());
     }
 
     /** Whether the ability took effect; one that found nothing to act on, such as a grip on nobody, costs no cooldown. */
@@ -108,7 +108,9 @@ public final class Powers {
             case FORCE_PUSH -> push(player, faction);
             case SABER_THROW -> throwSaber(player, faction, hero, tick);
             case FORCE_GRIP -> grip(player, faction, tick);
+            case FORCE_LIGHTNING -> lightning.use(player, faction, tick);
             case JETPACK -> jetpack(player, tick);
+            case WRIST_ROCKET -> rockets.fire(player, faction);
             case GRAPPLE -> grapple(player, tick);
             case ORBITAL_STRIKE -> orbital(player, faction, tick);
             case RALLY -> rally(player, faction);
@@ -238,6 +240,8 @@ public final class Powers {
     }
 
     public void tick(long tick) {
+        rockets.tick();
+        lightning.tick(tick);
         var airborne = List.copyOf(flights);
         flights.clear();
         for (var flight : airborne) {
@@ -431,8 +435,9 @@ public final class Powers {
         game.blastAround(at, new Blast(strike.thrower, strike.faction, BLAST_RADIUS, config.orbital().damage(), false), (target, away) -> { });
     }
 
-    /** The hero fell or left: their saber stops in the air, their jetpack and grip end. Strikes already thrown land. */
+    /** The hero fell or left. Channels end; rockets and strikes already launched finish their flight. */
     public void forget(Player player) {
+        lightning.forget(player);
         jetpacks.remove(player.getUniqueId());
         grips.removeIf(grip -> {
             boolean theirs = grip.gripper().equals(player) || grip.victim().equals(player);
@@ -451,6 +456,8 @@ public final class Powers {
     }
 
     public void clear() {
+        rockets.clear();
+        lightning.clear();
         flights.forEach(flight -> flight.display().remove());
         flights.clear();
         grips.forEach(grip -> grip.victim().removePotionEffect(PotionEffectType.LEVITATION));

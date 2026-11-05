@@ -1,6 +1,7 @@
 package me.blockcraft.sternenfront.appearance;
 
 import me.blockcraft.sternenfront.bot.BotSnapshot.Point;
+import me.blockcraft.sternenfront.game.Faction;
 import net.kyori.adventure.text.Component;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -22,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -43,9 +45,11 @@ final class BodyRig implements AutoCloseable {
     private final ItemDisplay leftLeg;
     private final ItemDisplay rightLeg;
     private final ItemDisplay weapon;
+    private final Optional<ItemDisplay> offhand;
     private final Interaction target;
     private final TextDisplay name;
     private ItemStack held = ItemStack.empty();
+    private ItemStack heldOffhand = ItemStack.empty();
     private Location previous;
     private double stride;
     private final RigBody body;
@@ -71,6 +75,8 @@ final class BodyRig implements AutoCloseable {
         rightLeg = part("leg");
         weapon = spawn(ItemDisplay.class);
         weapon.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.NONE);
+        offhand = body.dualWield() ? Optional.of(spawn(ItemDisplay.class)) : Optional.empty();
+        offhand.ifPresent(display -> display.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.NONE));
         target = spawn(Interaction.class);
         target.setResponsive(false);
         name = spawn(TextDisplay.class);
@@ -85,6 +91,10 @@ final class BodyRig implements AutoCloseable {
         return actor;
     }
 
+    RigBody body() {
+        return body;
+    }
+
     UUID targetId() {
         return target.getUniqueId();
     }
@@ -95,8 +105,12 @@ final class BodyRig implements AutoCloseable {
 
     RigSnapshot snapshot() {
         var parts = new ArrayList<RigSnapshot.Part>();
-        var names = List.of("torso", "head", "left-arm", "right-arm", "left-leg", "right-leg", "weapon");
-        var displays = List.of(torso, head, leftArm, rightArm, leftLeg, rightLeg, weapon);
+        var names = new ArrayList<>(List.of("torso", "head", "left-arm", "right-arm", "left-leg", "right-leg", "weapon"));
+        var displays = new ArrayList<>(List.of(torso, head, leftArm, rightArm, leftLeg, rightLeg, weapon));
+        offhand.ifPresent(display -> {
+            names.add("offhand");
+            displays.add(display);
+        });
         for (int index = 0; index < displays.size(); index++) {
             var display = displays.get(index);
             var at = display.getLocation();
@@ -147,8 +161,8 @@ final class BodyRig implements AutoCloseable {
         var at = actor.getLocation();
         double moved = Math.hypot(at.getX() - previous.getX(), at.getZ() - previous.getZ());
         stride += Math.min(moved, 0.5) * 7;
-        boolean seated = actor.isInsideVehicle();
-        float step = actor.isOnGround() ? (float) (Math.sin(stride) * Math.min(moved * 3, 0.65)) : 0.2f;
+        boolean seated = actor.isInsideVehicle() && body.faction() == Faction.KOLONIEN;
+        float step = actor.isInsideVehicle() ? 0 : actor.isOnGround() ? (float) (Math.sin(stride) * Math.min(moved * 3, 0.65)) : 0.2f;
         float leftStride = seated ? SEATED_LEG : step;
         float rightStride = seated ? SEATED_LEG : -step;
         boolean crouching = actor instanceof Player player && player.isSneaking();
@@ -173,12 +187,21 @@ final class BodyRig implements AutoCloseable {
         pose(rightArm, at, yaw, facing, -shoulderX, shoulderY, shoulderZ, 0, pitch + body.armLift(), scale);
         pose(weapon, at, yaw, facing, joints.weaponX() * scale, joints.weaponY() * scale - drop, 0,
                 joints.weaponZ() * scale - (float) recoil * .06f, pitch, 0.65f);
+        offhand.ifPresent(display -> pose(display, at, yaw, facing, -joints.weaponX() * scale, joints.weaponY() * scale - drop, 0,
+                joints.weaponZ() * scale - (float) recoil * .06f, pitch, 0.65f));
         var equipment = actor.getEquipment();
         var current = equipment == null || !body.showsWeapon() ? ItemStack.empty() : equipment.getItemInMainHand();
         if (!current.equals(held)) {
             held = current.clone();
             weapon.setItemStack(held);
         }
+        offhand.ifPresent(display -> {
+            var currentOffhand = equipment == null ? ItemStack.empty() : equipment.getItemInOffHand();
+            if (!currentOffhand.equals(heldOffhand)) {
+                heldOffhand = currentOffhand.clone();
+                display.setItemStack(heldOffhand);
+            }
+        });
         target.setInteractionWidth((float) actor.getWidth());
         target.setInteractionHeight((float) actor.getHeight());
         place(target, at);

@@ -256,7 +256,7 @@ public final class Bots implements Listener {
             Loadouts.fit(skeleton, stats.speed(), Math.min(stats.scale(), TALLEST_BODY_SCALE));
             skeleton.getAttribute(Attribute.STEP_HEIGHT).setBaseValue(config.stepHeight());
             var equipment = skeleton.getEquipment();
-            equipment.setItemInMainHand(game.loadouts().blaster(soldier.role.blaster()));
+            equipment.setItemInMainHand(game.loadouts().blaster(soldier.role.blaster(soldier.faction)));
             equipment.setHelmet((soldier.faction == Faction.KOLONIEN ? PackModel.STERNENFRONT_HELMET_KOLONIEN
                     : PackModel.STERNENFRONT_HELMET_HEGEMONIE).item().build());
             equipment.setChestplate(armour(Material.LEATHER_CHESTPLATE, soldier.faction));
@@ -386,7 +386,7 @@ public final class Bots implements Listener {
     private boolean siege(Soldier soldier, Optional<LivingEntity> target, long tick) {
         var mob = soldier.body;
         var here = mob.getLocation();
-        double range = game.config().stats(soldier.role.blaster()).range();
+        double range = game.config().stats(soldier.role.blaster(soldier.faction)).range();
         boolean inRange = target.filter(enemy -> tick >= soldier.reactAt)
                 .filter(enemy -> here.distanceSquared(enemy.getLocation()) <= range * range).isPresent();
         if (!HeavyTactics.sieges(holdingPost(soldier, here), inRange, soldier.heat.venting(tick), wounded(mob))
@@ -555,7 +555,7 @@ public final class Bots implements Listener {
         if (tick < soldier.pauseUntil || soldier.volley.active()) {
             return;
         }
-        var blaster = soldier.role.blaster();
+        var blaster = soldier.role.blaster(soldier.faction);
         var stats = game.firing(soldier.body, blaster);
         int pace = tuning.shotTicks() * stats.cooldownTicks() / game.config().stats(blaster).cooldownTicks();
         var fired = soldier.heat.fire(tick, Math.max(pace, stats.cooldownTicks()), stats.heat());
@@ -581,7 +581,7 @@ public final class Bots implements Listener {
             return;
         }
         while (soldier.volley.next(tick)) {
-            var blaster = soldier.role.blaster();
+            var blaster = soldier.role.blaster(soldier.faction);
             var aim = soldier.aim.clone();
             var random = ThreadLocalRandom.current();
             double spread = Math.max(tuning.spread(), game.config().stats(blaster).spread())

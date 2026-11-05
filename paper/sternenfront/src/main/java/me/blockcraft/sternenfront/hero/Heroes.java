@@ -2,7 +2,6 @@ package me.blockcraft.sternenfront.hero;
 
 import me.blockcraft.api.pack.MenuState;
 import me.blockcraft.common.message.Messages;
-import me.blockcraft.sternenfront.game.Blaster;
 import me.blockcraft.sternenfront.game.Faction;
 import me.blockcraft.sternenfront.game.Loadouts;
 import me.blockcraft.sternenfront.game.SternenfrontGame;
@@ -120,7 +119,7 @@ public final class Heroes {
                 case Hero.Weapon.Gun gun -> {
                     var blaster = loadouts.blaster(gun.blaster());
                     inventory.setItem(0, blaster);
-                    if (gun.blaster() == Blaster.TWIN_PISTOL) {
+                    if (gun.blaster().dual()) {
                         inventory.setItemInOffHand(blaster.clone());
                     }
                 }
@@ -212,9 +211,9 @@ public final class Heroes {
 
     private static BossBar.Color colour(Hero hero, Faction faction) {
         if (hero == Hero.CHAMPION) {
-            return BossBar.Color.PURPLE;
+            return BossBar.Color.WHITE;
         }
-        return faction == Faction.KOLONIEN ? BossBar.Color.YELLOW : BossBar.Color.BLUE;
+        return faction == Faction.KOLONIEN ? BossBar.Color.BLUE : BossBar.Color.RED;
     }
 
     private void hide(BossBar bar) {

@@ -834,7 +834,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     public void pullTrigger(Player player) {
         var fighter = fighters.get(player.getUniqueId());
         var faction = factionOf(player);
-        var held = fighter == null ? Optional.<Blaster>empty() : fighter.blaster();
+        var held = fighter == null ? Optional.<Blaster>empty() : faction.flatMap(fighter::blaster);
         if (!onField(player) || held.isEmpty() || faction.isEmpty() || player.isInsideVehicle()) {
             return;
         }
@@ -900,8 +900,9 @@ public final class SternenfrontGame implements RoundConnections.Seating {
                 return false;
             }
             var fighter = fighters.get(burst.shooter().getUniqueId());
-            if (onField(burst.shooter()) && fighter != null && fighter.blaster().filter(burst.blaster()::equals).isPresent()) {
-                factionOf(burst.shooter()).ifPresent(faction -> shoot(burst.shooter(), faction, burst.blaster()));
+            if (onField(burst.shooter()) && fighter != null) {
+                factionOf(burst.shooter()).filter(faction -> fighter.blaster(faction).filter(burst.blaster()::equals).isPresent())
+                        .ifPresent(faction -> shoot(burst.shooter(), faction, burst.blaster()));
             }
             return true;
         });
@@ -1371,8 +1372,8 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         if (speed == null) {
             return;
         }
-        boolean aiming = player.isSneaking() && fighter.blaster().filter(Blaster.LONG_RIFLE::equals).isPresent()
-                && HotbarItem.of(player.getInventory().getItemInMainHand(), Blaster.class).filter(Blaster.LONG_RIFLE::equals).isPresent();
+        boolean aiming = player.isSneaking() && factionOf(player).flatMap(fighter::blaster).filter(Blaster::precision).isPresent()
+                && HotbarItem.of(player.getInventory().getItemInMainHand(), Blaster.class).filter(Blaster::precision).isPresent();
         boolean scoped = speed.getModifier(SCOPE) != null;
         if (aiming && !scoped) {
             AttributeScale.apply(player, Attribute.MOVEMENT_SPEED, SCOPE, -feel.scopeSlowdown());
