@@ -368,7 +368,7 @@ services:
       BLOCKCRAFT_SERVER_GROUP: replay
       # Viewers wait in the default world while a recording loads; nothing hostile may spawn there.
       DIFFICULTY: peaceful
-      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/viaversion,/blockcraft/grimac
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/bettermodel,/blockcraft/viaversion,/blockcraft/grimac
     volumes:
       - ./build/docker/paper:/blockcraft:ro
       - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro

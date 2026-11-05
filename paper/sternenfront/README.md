@@ -34,7 +34,8 @@ other deployed bodies as rigs; the owner keeps their normal first-person and F5 
 entities of rigged bodies so the kill camera remains usable, and the plain model of animated bots. Hiding a player's body
 also removes them from that viewer's tab list.
 
-BetterModel draws animated bots as packets, which a replay cannot record, so they play back as their equipped skeletons.
+A recording holds the bare fighters. `RecordedModel` marks a bot with its model, so a replay server with BetterModel draws
+and animates it again; without the plugin it plays back as an equipped skeleton. Players play back as mannequins.
 
 Scope zoom uses movement slowdown. Clients with FOV effects disabled see the slowdown without a narrower view.
 Music and cantina audio use the Music category. Combat effects use the Players category.

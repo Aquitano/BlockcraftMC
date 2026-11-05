@@ -11,11 +11,11 @@ recording:
   max-duration-minutes: 30
   max-participants: 32
   max-entities: 64
-  max-chunks: 128
+  max-chunks: 160
   capture-radius: 1
   chunks-per-tick: 1
   max-block-changes-per-tick: 2048
-  queue-capacity: 32
+  queue-capacity: 64
   max-events: 100000
   max-archive-mib: 64
   max-decoded-mib: 128

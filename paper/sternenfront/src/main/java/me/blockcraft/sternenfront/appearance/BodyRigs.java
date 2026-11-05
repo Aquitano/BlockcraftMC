@@ -3,6 +3,7 @@ package me.blockcraft.sternenfront.appearance;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.game.GamePhase;
 import me.blockcraft.api.game.RoundPhaseChangeEvent;
+import me.blockcraft.sternenfront.game.CombatClass;
 import me.blockcraft.sternenfront.game.Faction;
 import me.blockcraft.sternenfront.game.LineOfSight;
 import me.blockcraft.sternenfront.game.SternenfrontGame;
@@ -74,6 +75,10 @@ public final class BodyRigs implements Listener, AutoCloseable {
 
     public Optional<RigSnapshot> snapshot(Entity actor) {
         return Optional.ofNullable(rigs.get(actor.getUniqueId())).map(BodyRig::snapshot);
+    }
+
+    public static String family(Faction faction, CombatClass role) {
+        return RigBody.of(faction, role).family();
     }
 
     public List<Entity> outlineParts(LivingEntity actor, Player viewer) {
