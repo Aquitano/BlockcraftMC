@@ -38,6 +38,7 @@ public final class SternenfrontPlugin extends JavaPlugin {
     private BodyRigs bodyRigs;
     private TargetOutlines targetOutlines;
     private BotDebug botDebug;
+    private Secrets secrets;
 
     @Override
     public void onEnable() {
@@ -68,7 +69,7 @@ public final class SternenfrontPlugin extends JavaPlugin {
         if (getConfig().getBoolean("appearance.droids", true) || getConfig().getBoolean("appearance.infantry", true)) {
             bodyRigs = BodyRigs.start(this, game, getConfig().getBoolean("appearance.droids", true), getConfig().getBoolean("appearance.infantry", true));
         }
-        Secrets.start(this, game, messages);
+        secrets = Secrets.start(this, game, messages);
         if (getConfig().getBoolean("outlines.enabled", true)) {
             targetOutlines = new TargetOutlines(this, game, Optional.ofNullable(bodyRigs));
         }
@@ -81,7 +82,7 @@ public final class SternenfrontPlugin extends JavaPlugin {
                         .rescue(() -> Optional.of(lobby)),
                 new ArenaProtection(() -> false),
                 new ArenaListener(game, api.buildMode()),
-                new CombatListener(game, api.buildMode(), botDebug),
+                new CombatListener(game, api.buildMode(), botDebug, secrets),
                 new ChatListener(game, messages));
 
         services.commands(commands -> {
@@ -113,6 +114,9 @@ public final class SternenfrontPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (secrets != null) {
+            secrets.close();
+        }
         if (targetOutlines != null) {
             targetOutlines.close();
         }

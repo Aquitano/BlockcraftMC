@@ -169,4 +169,10 @@ final class SandBeast {
         at.getWorld().spawnParticle(Particle.BLOCK, at, count, 1.5, 0.6, 1.5, 0.1, Material.SAND.createBlockData());
         at.getWorld().spawnParticle(Particle.CLOUD, at, count / 4, 1.2, 0.4, 1.2, 0.02);
     }
+
+    void close() {
+        standing.clear();
+        head.ifPresent(ItemDisplay::remove);
+        head = Optional.empty();
+    }
 }

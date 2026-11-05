@@ -13,7 +13,8 @@ enum Secret {
     BRUMMI("brummi", "brummi"),
     SAND_BEAST("sand_beast", "sand-beast"),
     CANTINA("cantina", "cantina"),
-    KESSEL("kessel", "kessel");
+    KESSEL("kessel", "kessel"),
+    RECEIVER("receiver", "receiver");
 
     static final String PREFIX = "sternenfront.";
     static final String KYBER = PREFIX + "kyber.";

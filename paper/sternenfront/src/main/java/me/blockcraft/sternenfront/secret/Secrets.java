@@ -1,53 +1,110 @@
 package me.blockcraft.sternenfront.secret;
 
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.game.GamePhase;
+import me.blockcraft.api.game.RoundPhaseChangeEvent;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.sternenfront.game.SternenfrontGame;
 import org.bukkit.Bukkit;
+import org.bukkit.block.Block;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.HandlerList;
+import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitTask;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.function.LongConsumer;
 
-/**
- * Tessar's secrets on a running Sternenfront server (EASTER_EGGS.md, "Sternenfront"): the kyber crystals, the droid
- * Brummi, the sand beast, the cantina's music box, the Kessel-Lauf and 4 May. They only watch the round through the
- * game's public state and Bukkit's events and change nothing in it, apart from 4 May's coin factor.
- */
-public final class Secrets {
+public final class Secrets implements Listener, AutoCloseable {
 
-    private Secrets() {
+    private final JavaPlugin plugin;
+    private final List<LongConsumer> ticks = new ArrayList<>();
+    private final List<Runnable> cleanup = new ArrayList<>();
+    private final List<Listener> listeners = new ArrayList<>();
+    private final List<MusicBox> music = new ArrayList<>();
+    private Optional<BukkitTask> task = Optional.empty();
+
+    private Secrets(JavaPlugin plugin) {
+        this.plugin = plugin;
     }
 
-    public static void start(JavaPlugin plugin, SternenfrontGame game, Messages messages) {
+    public static Secrets start(JavaPlugin plugin, SternenfrontGame game, Messages messages) {
+        var secrets = new Secrets(plugin);
         var config = SecretsConfig.from(plugin.getConfig());
-        var events = Bukkit.getPluginManager();
-        events.registerEvents(new MayTheFourth(plugin, messages, game.map(), config.mayTheFourthFactor()), plugin);
-        if (game.map().secrets().isEmpty()) {
-            return;
-        }
-        var spots = game.map().secrets().get();
-        var discoveries = new Discoveries(messages, config.coins());
-        var crystals = new KyberCrystals(plugin, game, spots.crystals(), discoveries);
-        var brummi = spots.droidPath().isEmpty() ? Optional.<Brummi>empty()
-                : Optional.of(new Brummi(plugin, messages, discoveries, spots.droidPath(), config.brummiHits(), config.brummiHideSeconds()));
-        var beast = spots.dune().map(dune -> new SandBeast(game, messages, discoveries, dune, config));
-        var musicBox = spots.musicBox().map(at -> new MusicBox(game, messages, discoveries, at.getBlock()));
-        var kessel = spots.course().map(course -> {
-            var times = new KesselTimes(BlockcraftApi.get().database());
-            times.createTable();
-            return new KesselCourse(plugin, game, messages, discoveries, times, course, config);
+        secrets.listen(secrets);
+        var holiday = new MayTheFourth(plugin, messages, game.map(), config.mayTheFourthFactor());
+        secrets.listen(holiday);
+        secrets.cleanup.add(holiday::close);
+        game.map().secrets().ifPresent(spots -> {
+            var discoveries = new Discoveries(messages, config.coins());
+            secrets.listen(discoveries);
+            if (!spots.crystals().isEmpty()) {
+                var crystals = new KyberCrystals(plugin, game, spots.crystals(), discoveries);
+                secrets.ticks.add(crystals::tick);
+                secrets.cleanup.add(crystals::close);
+            }
+            if (!spots.droidPath().isEmpty()) {
+                var brummi = new Brummi(plugin, messages, discoveries, spots.droidPath(), config.brummiHits(), config.brummiHideSeconds());
+                secrets.listen(brummi);
+                secrets.ticks.add(brummi::tick);
+                secrets.cleanup.add(brummi::close);
+            }
+            spots.dune().ifPresent(dune -> {
+                var beast = new SandBeast(game, messages, discoveries, dune, config);
+                secrets.ticks.add(beast::tick);
+                secrets.cleanup.add(beast::close);
+            });
+            spots.musicBox().ifPresent(at -> secrets.music.add(new MusicBox(game::onField, messages, discoveries::find, at, Secret.CANTINA)));
+            spots.receiver().ifPresent(at -> secrets.music.add(new MusicBox(game::onField, messages, discoveries::find, at, Secret.RECEIVER)));
+            secrets.music.forEach(box -> {
+                secrets.ticks.add(box::tick);
+                secrets.cleanup.add(box::stop);
+            });
+            spots.course().ifPresent(course -> {
+                var times = new KesselTimes(BlockcraftApi.get().database());
+                times.createTable();
+                var kessel = new KesselCourse(plugin, game, messages, discoveries, times, course, config);
+                secrets.listen(kessel);
+                secrets.ticks.add(kessel::tick);
+                secrets.cleanup.add(kessel::close);
+            });
         });
-        events.registerEvents(discoveries, plugin);
-        brummi.ifPresent(listener -> events.registerEvents(listener, plugin));
-        musicBox.ifPresent(listener -> events.registerEvents(listener, plugin));
-        kessel.ifPresent(listener -> events.registerEvents(listener, plugin));
-        Bukkit.getScheduler().runTaskTimer(plugin, () -> {
-            long tick = Bukkit.getCurrentTick();
-            crystals.tick(tick);
-            brummi.ifPresent(secret -> secret.tick(tick));
-            beast.ifPresent(secret -> secret.tick(tick));
-            musicBox.ifPresent(secret -> secret.tick(tick));
-            kessel.ifPresent(secret -> secret.tick(tick));
-        }, 1, 1);
+        if (!secrets.ticks.isEmpty()) {
+            secrets.task = Optional.of(Bukkit.getScheduler().runTaskTimer(plugin,
+                    () -> secrets.ticks.forEach(tick -> tick.accept(Bukkit.getCurrentTick())), 1, 1));
+        }
+        return secrets;
+    }
+
+    private void listen(Listener listener) {
+        listeners.add(listener);
+        Bukkit.getPluginManager().registerEvents(listener, plugin);
+    }
+
+    public boolean use(Player player, Block block) {
+        return music.stream().anyMatch(box -> box.use(player, block, Bukkit.getCurrentTick()));
+    }
+
+    @EventHandler
+    public void onPhase(RoundPhaseChangeEvent event) {
+        if (event.phase() == GamePhase.ENDING) {
+            close();
+        }
+    }
+
+    @Override
+    public void close() {
+        task.ifPresent(BukkitTask::cancel);
+        task = Optional.empty();
+        cleanup.forEach(Runnable::run);
+        cleanup.clear();
+        ticks.clear();
+        music.clear();
+        listeners.forEach(HandlerList::unregisterAll);
+        listeners.clear();
     }
 }

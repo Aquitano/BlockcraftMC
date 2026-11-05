@@ -18,6 +18,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,6 +41,8 @@ final class MayTheFourth implements Listener {
     private final FrontMap map;
     private final int factor;
     private final NamespacedKey firework;
+    private final List<BukkitTask> launches = new ArrayList<>();
+    private final List<Firework> rockets = new ArrayList<>();
 
     MayTheFourth(Plugin plugin, Messages messages, FrontMap map, int factor) {
         this.plugin = plugin;
@@ -59,7 +62,7 @@ final class MayTheFourth implements Listener {
         var bursts = bursts();
         for (int i = 0; i < bursts.size(); i++) {
             var burst = bursts.get(i);
-            Bukkit.getScheduler().runTaskLater(plugin, () -> launch(burst), i * GAP_TICKS);
+            launches.add(Bukkit.getScheduler().runTaskLater(plugin, () -> launch(burst), i * GAP_TICKS));
         }
     }
 
@@ -75,7 +78,7 @@ final class MayTheFourth implements Listener {
     }
 
     private void launch(Burst burst) {
-        burst.at().getWorld().spawn(burst.at(), Firework.class, rocket -> {
+        rockets.add(burst.at().getWorld().spawn(burst.at(), Firework.class, rocket -> {
             var meta = rocket.getFireworkMeta();
             meta.addEffect(FireworkEffect.builder().with(FireworkEffect.Type.BALL_LARGE)
                     .withColor(burst.colours().stream().map(Faction::bolt).toList())
@@ -84,7 +87,7 @@ final class MayTheFourth implements Listener {
             rocket.setFireworkMeta(meta);
             rocket.setTicksToDetonate(12);
             rocket.getPersistentDataContainer().set(firework, PersistentDataType.BOOLEAN, true);
-        });
+        }));
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -92,5 +95,12 @@ final class MayTheFourth implements Listener {
         if (event.getDamager() instanceof Firework rocket && rocket.getPersistentDataContainer().has(firework)) {
             event.setCancelled(true);
         }
+    }
+
+    void close() {
+        launches.forEach(BukkitTask::cancel);
+        launches.clear();
+        rockets.forEach(Firework::remove);
+        rockets.clear();
     }
 }

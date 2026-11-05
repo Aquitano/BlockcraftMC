@@ -49,6 +49,7 @@ final class KesselCourse implements Listener {
     private final Map<UUID, KesselRun> runs = new HashMap<>();
     private final Map<UUID, Vector> last = new HashMap<>();
     private final TextDisplay board;
+    private boolean closed;
     private BestTimes best = new BestTimes(List.of(), BOARD_SIZE);
 
     KesselCourse(Plugin plugin, SternenfrontGame game, Messages messages, Discoveries discoveries, KesselTimes times,
@@ -132,6 +133,9 @@ final class KesselCourse implements Listener {
     }
 
     private void draw() {
+        if (closed) {
+            return;
+        }
         var lines = new ArrayList<Component>();
         lines.add(messages.get("secret.kessel-board-title", Placeholder.unparsed("par", seconds(parTicks))));
         if (best.entries().isEmpty()) {
@@ -153,5 +157,13 @@ final class KesselCourse implements Listener {
     public void onQuit(PlayerQuitEvent event) {
         runs.remove(event.getPlayer().getUniqueId());
         last.remove(event.getPlayer().getUniqueId());
+    }
+
+    void close() {
+        closed = true;
+        runs.clear();
+        last.clear();
+        board.remove();
+        course.board().getChunk().removePluginChunkTicket(plugin);
     }
 }

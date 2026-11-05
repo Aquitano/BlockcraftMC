@@ -206,4 +206,13 @@ final class Brummi implements Listener {
             hits.clear();
         }
     }
+
+    void close() {
+        display.ifPresent(ItemDisplay::remove);
+        hitbox.ifPresent(Interaction::remove);
+        display = Optional.empty();
+        hitbox = Optional.empty();
+        hits.clear();
+        path.forEach(point -> point.getChunk().removePluginChunkTicket(plugin));
+    }
 }

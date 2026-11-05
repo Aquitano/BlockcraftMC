@@ -1,59 +1,55 @@
 package me.blockcraft.sternenfront.secret;
 
-import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.common.message.Messages;
-import me.blockcraft.sternenfront.game.SternenfrontGame;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.SoundCategory;
 import org.bukkit.block.Block;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
-import org.bukkit.event.Listener;
-import org.bukkit.event.block.Action;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.entity.Player;
 
-/**
- * The cantina's music box. The round answers no click on a block, so the box listens for the click itself: a deployed
- * player who right-clicks it starts the cantina tune for everyone near, and the first time finds the secret.
- */
-final class MusicBox implements Listener {
+import java.util.function.BiConsumer;
+import java.util.function.Predicate;
+
+final class MusicBox {
 
     private static final double HEARD = 24;
     private static final int UNSTARTED = -1;
 
-    private final SternenfrontGame game;
+    private final Predicate<Player> deployed;
     private final Messages messages;
-    private final Discoveries discoveries;
-    private final Block box;
+    private final BiConsumer<Player, Secret> discover;
+    private final Location block;
     private final Location speaker;
+    private final Secret secret;
     private long startedAt = UNSTARTED;
     private int next;
 
-    MusicBox(SternenfrontGame game, Messages messages, Discoveries discoveries, Block box) {
-        this.game = game;
+    MusicBox(Predicate<Player> deployed, Messages messages, BiConsumer<Player, Secret> discover, Location block, Secret secret) {
+        this.deployed = deployed;
         this.messages = messages;
-        this.discoveries = discoveries;
-        this.box = box;
-        this.speaker = box.getLocation().add(0.5, 0.8, 0.5);
+        this.discover = discover;
+        this.block = block;
+        this.speaker = block.clone().add(0.5, 0.8, 0.5);
+        this.secret = secret;
     }
 
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void onClick(PlayerInteractEvent event) {
-        if (event.getAction() != Action.RIGHT_CLICK_BLOCK || event.getHand() != EquipmentSlot.HAND
-                || !box.equals(event.getClickedBlock()) || !game.onField(event.getPlayer())) {
-            return;
+    boolean use(Player player, Block clicked, long tick) {
+        if (!block.equals(clicked.getLocation())) {
+            return false;
         }
-        var player = event.getPlayer();
+        if (!deployed.test(player) || player.isInsideVehicle()) {
+            return true;
+        }
+        var key = secret == Secret.RECEIVER ? "receiver" : "music-box";
         if (startedAt != UNSTARTED) {
-            BlockcraftApi.get().notifications().feedback(player, messages.get("secret.music-box-busy"));
-            return;
+            player.sendActionBar(messages.get("secret." + key + "-busy"));
+            return true;
         }
-        startedAt = player.getServer().getCurrentTick();
+        startedAt = tick;
         next = 0;
-        BlockcraftApi.get().notifications().feedback(player, messages.get("secret.music-box"));
-        discoveries.find(player, Secret.CANTINA);
+        player.sendActionBar(messages.get("secret." + key));
+        discover.accept(player, secret);
+        return true;
     }
 
     void tick(long tick) {
@@ -65,11 +61,10 @@ final class MusicBox implements Listener {
         boolean melody = false;
         while (next < notes.size() && notes.get(next).tick() <= played) {
             var note = notes.get(next++);
-            var sound = note.instrument().sound();
             melody |= note.instrument() == CantinaTune.Instrument.BIT;
             for (var listener : speaker.getWorld().getPlayers()) {
                 if (listener.getLocation().distanceSquared(speaker) <= HEARD * HEARD) {
-                    listener.playSound(speaker, sound, SoundCategory.MUSIC, note.volume(), note.pitch());
+                    listener.playSound(speaker, note.instrument().sound(), SoundCategory.MUSIC, note.volume(), note.pitch());
                 }
             }
         }
@@ -77,7 +72,12 @@ final class MusicBox implements Listener {
             speaker.getWorld().spawnParticle(Particle.NOTE, speaker.clone().add(0, 0.6, 0), 1, 0.3, 0.2, 0.3, 1);
         }
         if (next >= notes.size()) {
-            startedAt = UNSTARTED;
+            stop();
         }
+    }
+
+    void stop() {
+        startedAt = UNSTARTED;
+        next = 0;
     }
 }

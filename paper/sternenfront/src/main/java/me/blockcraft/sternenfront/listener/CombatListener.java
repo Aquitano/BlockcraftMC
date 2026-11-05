@@ -10,6 +10,7 @@ import me.blockcraft.sternenfront.debug.BotDebug;
 import me.blockcraft.sternenfront.game.Blaster;
 import me.blockcraft.sternenfront.game.SternenfrontGame;
 import me.blockcraft.sternenfront.game.SternenfrontItem;
+import me.blockcraft.sternenfront.secret.Secrets;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
@@ -33,11 +34,13 @@ public final class CombatListener implements Listener {
     private final SternenfrontGame game;
     private final BuildMode buildMode;
     private final BotDebug botDebug;
+    private final Secrets secrets;
 
-    public CombatListener(SternenfrontGame game, BuildMode buildMode, BotDebug botDebug) {
+    public CombatListener(SternenfrontGame game, BuildMode buildMode, BotDebug botDebug, Secrets secrets) {
         this.game = game;
         this.buildMode = buildMode;
         this.botDebug = botDebug;
+        this.secrets = secrets;
     }
 
     @EventHandler(priority = EventPriority.HIGH)
@@ -52,7 +55,13 @@ public final class CombatListener implements Listener {
             return;
         }
         event.setUseItemInHand(Event.Result.DENY);
-        if (event.getHand() != EquipmentSlot.HAND || !event.getAction().isRightClick() || game.speeders().fire(player)) {
+        if (event.getHand() != EquipmentSlot.HAND || !event.getAction().isRightClick()) {
+            return;
+        }
+        if (event.getClickedBlock() != null && secrets.use(player, event.getClickedBlock())) {
+            return;
+        }
+        if (game.speeders().fire(player)) {
             return;
         }
         if (event.getClickedBlock() != null && game.battlefield().use(player, event.getClickedBlock())) {

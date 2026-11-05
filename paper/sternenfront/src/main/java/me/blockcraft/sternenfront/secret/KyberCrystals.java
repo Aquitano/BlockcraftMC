@@ -89,4 +89,12 @@ final class KyberCrystals {
             }
         }
     }
+
+    void close() {
+        crystals.forEach(crystal -> {
+            crystal.display().remove();
+            crystal.at().getChunk().removePluginChunkTicket(plugin);
+        });
+        crystals.clear();
+    }
 }
