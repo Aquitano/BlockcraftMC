@@ -23,6 +23,7 @@ public class IntroAudioTest {
     @Test
     public void factionRadioFollowsTheCameraAndStopsWithItsScene() throws Exception {
         var config = config();
+        config.set("intro.audio.briefing", true);
         var route = route(config, 180);
         for (var faction : Faction.values()) {
             var played = new ArrayList<Played>();
@@ -78,6 +79,16 @@ public class IntroAudioTest {
         }
         config.set("intro.audio.enabled", false);
         assertTrue(audio.cues(Faction.KOLONIEN, route(config, 180), config, () -> fail()).isEmpty());
+    }
+
+    @Test
+    public void bundledIntroKeepsTheShotCuesButSpeaksNoBriefing() throws Exception {
+        var config = config();
+        var player = fake(Player.class, (proxy, method, args) -> {
+            throw new AssertionError(method.getName());
+        });
+        var cues = new IntroAudio(player, scope()).cues(Faction.KOLONIEN, route(config, 180), config, () -> fail());
+        assertEquals(List.of(72, 135), cues.stream().map(cue -> cue.tick()).toList());
     }
 
     private static BattleIntro.IntroPath route(YamlConfiguration config, int duration) {

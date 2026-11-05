@@ -44,7 +44,7 @@ final class IntroAudio {
         int speechStart = fade + 3;
         int speechEnd = speechStart + Math.max(1, config.getInt("intro.audio.briefing-ticks"));
         var cues = new ArrayList<SceneTimeline.Cue>();
-        if (speechEnd + 4 <= duration - fade) {
+        if (config.getBoolean("intro.audio.briefing") && speechEnd + 4 <= duration - fade) {
             cues.add(cue(fade, Sound.RADIO_OPEN, effectsVolume));
             cues.add(new SceneTimeline.Cue(speechStart, () -> {
                 if (scope.closed()) return;

@@ -337,6 +337,8 @@ intro:
   fade-ticks: 15
   audio:
     enabled: true
+    # The spoken radio briefing with its clicks and chat transcript. Off while its lines still name the old factions.
+    briefing: false
     voice-volume: 0.8
     effects-volume: 0.35
     captions: true

@@ -92,7 +92,8 @@ shot until the keyframe, then changes the camera immediately. Other segments use
 post shot has a moving endpoint before the headquarters cut. The actor faces that shot's camera and starts its clip
 when the first headquarters keyframe is reached. Explicit operator overrides of `intro.shots` retain their own path.
 
-`intro.audio` controls the faction radio briefing, captions, and shot cues. Speech uses the client's Voice slider;
+`intro.audio` controls the faction radio briefing, captions, and shot cues. `intro.audio.briefing` is off by default,
+which leaves only the shot cues. Speech uses the client's Voice slider;
 radio clicks and transitions use Ambient. Sounds follow the spectator camera and stop with the scene, including a skip.
 The briefing starts three ticks after the opening fade. `briefing-ticks` reserves 80 ticks for speech before the closing
 radio click. An intro too short for that window omits the briefing. Transitions follow the first intermediate camera
@@ -136,7 +137,7 @@ Unknown bone names reject the actor action. The importer does not load `.bbmodel
 
 1. Join the dev Sternenfront server with the current resource pack and the presentation permission.
 2. Run `/sfintro`. Check the map flyover, faction-specific headquarters shot, letterboxing, fades, and the infantry salute.
-   Hear the opening radio click, the faction's German briefing, the closing click, and cues at the post and headquarters
+   With `intro.audio.briefing` on, hear the opening radio click, the faction's German briefing and the closing click. Hear cues at the post and headquarters
    shots. Check the chat transcript and repeat for the other faction. Voice and Ambient sliders control separate sounds.
    The salute and head movements must ease into their holds and return without snapping.
 3. Repeat the preview and sneak while the voice plays. The audio stops immediately. Check the original position, game
