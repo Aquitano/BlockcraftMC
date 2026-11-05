@@ -21,6 +21,7 @@ public class HeroConfigTest {
         var messages = YamlConfiguration.loadConfiguration(Path.of("src/main/resources/messages.yml").toFile());
         assertEquals(List.of(HeroAbility.JETPACK, HeroAbility.WRIST_ROCKET), Hero.BOUNTY_HUNTER.abilities());
         assertEquals(List.of(HeroAbility.SABER_THROW, HeroAbility.FORCE_LIGHTNING), Hero.SITH.abilities());
+        assertEquals(List.of(HeroAbility.FORCE_GRIP, HeroAbility.GRAPPLE), Hero.CHAMPION.abilities());
         assertEquals(320, config.cooldownTicks(HeroAbility.WRIST_ROCKET));
         assertEquals(280, config.cooldownTicks(HeroAbility.FORCE_LIGHTNING));
         assertEquals(new HeroConfig.Rocket(64, 1.6, 3.5, 18), config.rocket());

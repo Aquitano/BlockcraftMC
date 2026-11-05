@@ -57,9 +57,6 @@ public final class CombatHud {
 
     private Component ability(Player player, int index) {
         var fighter = game.fighter(player);
-        if (fighter.hero().filter(Hero.CHAMPION::equals).isPresent()) {
-            return index == 0 ? game.messages().get("combat.champion-leap") : game.messages().get("combat.none");
-        }
         var hero = fighter.hero();
         var faction = game.factionOf(player);
         var classAbility = faction.flatMap(side -> fighter.combatClass().abilities(side).stream().skip(index).findFirst());

@@ -171,7 +171,7 @@ public final class Powers {
         var wall = player.getWorld().rayTraceBlocks(eye, facing, grip.range(), FluidCollisionMode.NEVER, true);
         double reach = wall == null ? grip.range() : wall.getHitPosition().distance(eye.toVector());
         var hit = player.getWorld().rayTraceEntities(eye, facing, reach, 0.6,
-                entity -> entity instanceof LivingEntity target && game.hittable(faction, target));
+                entity -> entity instanceof LivingEntity target && game.hittable(faction, target) && !game.isProtected(target));
         if (hit == null || !(hit.getHitEntity() instanceof LivingEntity victim)) {
             return false;
         }
@@ -327,14 +327,18 @@ public final class Powers {
         return flight.move(next, heading, flight.out() + travelled, returning || wall != null);
     }
 
+    private static void letGo(LivingEntity victim) {
+        victim.removePotionEffect(PotionEffectType.LEVITATION);
+        victim.removePotionEffect(PotionEffectType.SLOWNESS);
+    }
+
     /** True once the grip let go. */
     private boolean hold(Grip grip, long tick) {
         var victim = grip.victim();
         boolean holding = tick < grip.endsAt() && game.onField(grip.gripper()) && victim.isValid()
                 && game.factionOf(grip.gripper()).filter(faction -> game.hittable(faction, victim)).isPresent();
         if (!holding) {
-            victim.removePotionEffect(PotionEffectType.LEVITATION);
-            victim.removePotionEffect(PotionEffectType.SLOWNESS);
+            letGo(victim);
             return true;
         }
         game.effects().grip(grip.gripper(), victim, tick);
@@ -448,7 +452,7 @@ public final class Powers {
         grips.removeIf(grip -> {
             boolean theirs = grip.gripper().equals(player) || grip.victim().equals(player);
             if (theirs) {
-                grip.victim().removePotionEffect(PotionEffectType.LEVITATION);
+                letGo(grip.victim());
             }
             return theirs;
         });
@@ -466,7 +470,7 @@ public final class Powers {
         lightning.clear();
         flights.forEach(flight -> flight.display().remove());
         flights.clear();
-        grips.forEach(grip -> grip.victim().removePotionEffect(PotionEffectType.LEVITATION));
+        grips.forEach(grip -> letGo(grip.victim()));
         grips.clear();
         jetpacks.clear();
         strikes.forEach(strike -> {

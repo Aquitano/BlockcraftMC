@@ -238,7 +238,8 @@ relic:
   name: "<white>Dunkelschwert"
   lore:
     - "<muted>Mandalores schwarze Lichtschwertklinge."
-    - "<right>Halten zum Blocken <dark>· <muted>F oder zweimal springen für den Machtsprung"
+    - "<right>Halten zum Blocken <dark>· <muted>Zweimal springen für den Machtsprung"
+    - "<muted>F packt einen Gegner mit dem Machtgriff, Q zieht dich mit dem Fesselkabel."
   title: "<display>DUNKELSCHWERT"
   subtitle: "<muted>Die Klinge liegt in der Tempelruine im Norden"
   appeared: "<prefix><accent>Das Dunkelschwert <muted>ist in der Tempelruine im Norden erschienen!"
@@ -535,7 +536,6 @@ combat:
   ready: "<success>✓"
   cooldown: "<muted><seconds>s"
   none: "<dark>—"
-  champion-leap: "<accent>F <white>Machtsprung"
   leap-cooldown: "<dark> │ <muted>Sprung <seconds>s"
   strike-ready: "<dark> │ <accent>Shift+F <white>Orbitalschlag"
   guard: "<muted>Deckung"

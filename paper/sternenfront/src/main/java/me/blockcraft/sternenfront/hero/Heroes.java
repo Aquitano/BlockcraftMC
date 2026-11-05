@@ -112,6 +112,7 @@ public final class Heroes {
     }
 
     public void equip(Player player, Faction faction, Hero hero, long tick) {
+        hero.abilities().forEach(ability -> player.setCooldown(ability.material(), 0));
         if (hero == Hero.CHAMPION) {
             loadouts.arm(player);
             player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, PotionEffect.INFINITE_DURATION, 0, false, false, true));
@@ -128,11 +129,6 @@ public final class Heroes {
                     }
                 }
                 case Hero.Weapon.RelicBlade ignored -> { }
-            }
-            var abilities = hero.abilities();
-            for (int index = 0; index < abilities.size(); index++) {
-                var ability = abilities.get(index);
-                player.setCooldown(ability.material(), 0);
             }
             loadouts.dress(player, faction, hero.head());
             loadouts.health(player, config.health(hero));

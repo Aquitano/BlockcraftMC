@@ -22,7 +22,7 @@ public enum Hero {
             Optional.of(PackModel.STERNENFRONT_MASK_SITH), List.of(HeroAbility.SABER_THROW, HeroAbility.FORCE_LIGHTNING)),
     COMMANDER(Faction.KOLONIEN, new Weapon.Gun(Blaster.TWIN_PISTOL),
             Optional.of(PackModel.STERNENFRONT_CAP_COMMANDER), List.of(HeroAbility.ORBITAL_STRIKE, HeroAbility.RALLY)),
-    CHAMPION(null, new Weapon.RelicBlade(), Optional.empty(), List.of());
+    CHAMPION(null, new Weapon.RelicBlade(), Optional.empty(), List.of(HeroAbility.FORCE_GRIP, HeroAbility.GRAPPLE));
 
     /** What a hero fights with: a lightsaber, lit or not, a blaster of its own, or the relic blade. */
     public sealed interface Weapon {
