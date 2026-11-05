@@ -47,10 +47,21 @@ public final class ArenaFile {
         }
         var posts = yaml.getMapList("posts").stream().map(post -> post(world, post)).toList();
         var controls = yaml.getMapList("controls").stream().map(control -> control(world, control)).toList();
-        return new FrontMap(yaml.getString("name"), world, box(yaml.getDoubleList("play-area")), Map.copyOf(headquarters), posts,
+        var playArea = box(yaml.getDoubleList("play-area"));
+        double minimumBorder = Math.max(playArea.getWidthX(), playArea.getWidthZ()) + 2;
+        return new FrontMap(yaml.getString("name"), world, playArea, Map.copyOf(headquarters), posts,
                 spot(world, yaml.getString("relic")), spot(world, yaml.getString("overview")), spot(world, yaml.getString("lobby")),
                 spot(world, yaml.getString("spectator")), Optional.ofNullable(yaml.getConfigurationSection("secrets")).map(secrets -> secrets(world, secrets)),
-                controls, "rain".equals(yaml.getString("weather")), yaml.contains("time") ? OptionalLong.of(yaml.getLong("time")) : OptionalLong.empty());
+                controls, "rain".equals(yaml.getString("weather")), yaml.contains("time") ? OptionalLong.of(yaml.getLong("time")) : OptionalLong.empty(),
+                environment(world, yaml.getConfigurationSection("environment")),
+                Math.max(minimumBorder, yaml.getDouble("world-border-size", minimumBorder)));
+    }
+
+    private static YardEnvironment environment(World world, ConfigurationSection environment) {
+        if (environment == null) return YardEnvironment.EMPTY;
+        return new YardEnvironment(spots(world, environment.getStringList("steam")), spots(world, environment.getStringList("sparks")),
+                Optional.ofNullable(environment.getConfigurationSection("crane"))
+                        .map(crane -> new YardEnvironment.Crane(spot(world, crane.getString("from")), spot(world, crane.getString("to")))));
     }
 
     private static SecretSpots secrets(World world, ConfigurationSection secrets) {

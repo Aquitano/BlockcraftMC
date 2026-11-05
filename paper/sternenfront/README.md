@@ -10,6 +10,14 @@ Wrack von Tessar is built by hand. Sturmwerft, an offshore shipyard in a storm, 
 set `weather: rain` and a fixed `time`. On such a map `presentation.lightning` draws harmless strikes near a random fighter, and
 real ones are cancelled. Keep its `distance` under spigot.yml's tracking range for other entities, or clients never see them.
 
+Sturmwerft uses pale domes above a cold ocean, cyan-lit bridges, and a warship assembly dock. Deck scuffs follow the
+routes between headquarters and command posts. Maintenance carts, opened machinery, pipes, and replacement panels sit
+beside those routes. `environment.steam` and `environment.sparks` in its generated arena metadata locate the ambient
+effects. `environment.crane.from` and `to` define the overhead trolley's rail. Its suspended load uses six non-colliding
+block displays and is removed at round end. `presentation.shipyard` controls particle counts, range, sound volume, and
+crane timing. These effects start with combat and stay off on maps without the corresponding metadata.
+Its `world-border-size` includes the offshore scenery while `play-area` keeps the combat and replay bounds.
+
 ## Compatibility
 
 `kolonien` identifies the Republic and `hegemonie` the Separatists in arena metadata, configuration, and player

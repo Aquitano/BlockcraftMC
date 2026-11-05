@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generates Sturmwerft, an offshore shipyard in a storm at the end of the day: its blocks as Minecraft functions and its arena.yml.
+"""Generates Sturmwerft, a stormbound ocean shipyard with elevated domes and spacecraft assembly docks.
 
 Run through `dev/verify/verify.py map`, which starts a bare server over an endless flat sea, runs the functions and saves the
 result to worlds/sturmwerft. Everything stands on one deck at y 64, with the headquarters and posts where Sternenfront's
@@ -10,7 +10,7 @@ import json
 import math
 import random
 import sys
-from collections import defaultdict
+from collections import defaultdict, deque
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -22,18 +22,16 @@ ROADS = (-32, 32)
 BRIDGES = (-25, 0, 25)
 POSTS = {"trockendock": -44, "kranbruecke": 0, "turbinenhalle": 44}
 DECK_BLOCK = "smooth_stone"
-PLATE = "polished_andesite"
-STRIPE = "yellow_concrete"
+PLATE = "light_gray_concrete"
+STRIPE = "cyan_concrete"
 STEEL = "iron_block"
-RUST = "waxed_oxidized_copper"
-FRAME = "waxed_copper_block"
+RUST = "waxed_weathered_copper"
+FRAME = "white_concrete"
 DARK = "polished_deepslate"
-LIGHT = "ochre_froglight"
+LIGHT = "sea_lantern"
 COLD_LIGHT = "sea_lantern"
-HULL = "gray_terracotta"
-ANTIFOULING = "red_terracotta"
-STAINS = ("gray_concrete", "andesite", "tuff", "cyan_terracotta", "brown_terracotta", "waxed_weathered_copper")
-CONTAINERS = ("orange", "blue", "cyan", "red", "yellow", "green", "gray")
+HULL = "light_gray_concrete"
+STAINS = ("andesite", "light_gray_concrete", "gray_concrete", "cyan_terracotta")
 RAIL = "iron_bars"
 MOST_PER_FILL = 32768
 
@@ -41,6 +39,8 @@ MOST_PER_FILL = 32768
 def runs(values):
     """Consecutive stretches of whole numbers, so that a round shape takes a fill per row instead of one per block."""
     values = sorted(values)
+    if not values:
+        return
     start = previous = values[0]
     for value in values[1:]:
         if value != previous + 1:
@@ -48,11 +48,6 @@ def runs(values):
             start = value
         previous = value
     yield start, previous
-
-
-def disc(radius, hole=0.0):
-    return [(a, b) for a in range(-radius, radius + 1) for b in range(-radius, radius + 1)
-            if hole <= math.hypot(a, b) <= radius + 0.3]
 
 
 def spot(x, z, y=SKY):
@@ -100,11 +95,56 @@ class Builder:
             else:
                 self.box(x1, y, at, x2, y, stop, block)
 
-    def wear(self, x1, z1, x2, z2, patches, rng):
-        for _ in range(patches):
-            width, depth = rng.randint(0, 3), rng.randint(0, 3)
-            x, z = rng.randint(x1, x2 - width), rng.randint(z1, z2 - depth)
-            self.box(x, DECK, z, x + width, DECK, z + depth, rng.choice(STAINS))
+    def ellipse(self, cx, cz, rx, rz, y1, y2, block, hollow=False):
+        for dz in range(-rz, rz + 1):
+            half = round(rx * math.sqrt(max(0, 1 - (dz / (rz + 0.3)) ** 2)))
+            if hollow and abs(dz) < rz:
+                for side in (-1, 1):
+                    self.box(cx + side * half, y1, cz + dz, cx + side * half, y2, cz + dz, block)
+            else:
+                self.box(cx - half, y1, cz + dz, cx + half, y2, cz + dz, block)
+
+    def dome(self, cx, cz, rx, rz, base, height):
+        for dy in range(height + 1):
+            scale = math.sqrt(max(0, 1 - (dy / (height + 0.4)) ** 2))
+            self.ellipse(cx, cz, max(1, round(rx * scale)), max(1, round(rz * scale)), base + dy, base + dy, FRAME)
+
+    def rounded_deck(self, x1, z1, x2, z2, radius=5):
+        for z in range(z1, z2 + 1):
+            dz = max(z1 + radius - z, z - (z2 - radius), 0)
+            inset = radius - round(math.sqrt(max(0, radius * radius - dz * dz)))
+            self.deck(x1 + inset, z, x2 - inset, z)
+
+    def wear(self, paths, rng):
+        floor = layer(self.fills, DECK) - layer(self.fills, SKY)
+        painted = {}
+        for x1, z1, x2, z2 in paths:
+            distance = max(abs(x2 - x1), abs(z2 - z1))
+            drift = 0
+            for step in range(distance + 1):
+                x = round(x1 + (x2 - x1) * step / max(1, distance))
+                z = round(z1 + (z2 - z1) * step / max(1, distance))
+                drift = max(-2, min(2, drift + rng.choice((-1, 0, 0, 1))))
+                for side in range(-2, 3):
+                    dx, dz = (0, drift + side) if abs(x2 - x1) > abs(z2 - z1) else (drift + side, 0)
+                    cell = x + dx, z + dz
+                    if cell in floor and rng.random() < (0.7 if side == 0 else 0.32):
+                        painted[cell] = rng.choices(STAINS, (6, 7, 2, 1))[0]
+        for (x, z), block in sorted(painted.items()):
+            self.box(x, DECK, z, x, DECK, z, block)
+
+    def service_unit(self, x, z, facing):
+        self.box(x - 1, SKY, z - 1, x + 1, SKY + 1, z + 1, "gray_concrete")
+        self.box(x - 1, SKY + 2, z - 1, x + 1, SKY + 2, z + 1, "smooth_quartz_slab[type=bottom]")
+        self.box(x + facing, SKY + 1, z, x + facing, SKY + 1, z, "cyan_stained_glass")
+        self.box(x, SKY, z - 2, x, SKY, z - 2, "waxed_oxidized_copper")
+        self.box(x, SKY + 1, z - 2, x, SKY + 1, z - 2, "lightning_rod[facing=up]")
+
+    def maintenance_droid(self, x, z):
+        self.box(x - 1, SKY, z, x + 1, SKY, z, "polished_blackstone_slab[type=bottom]")
+        self.box(x, SKY, z, x, SKY + 1, z, "smooth_quartz")
+        self.box(x, SKY + 2, z, x, SKY + 2, z, "cyan_stained_glass")
+        self.box(x - 1, SKY + 1, z, x - 1, SKY + 1, z, "end_rod[facing=west]")
 
     def warning_light(self, x, y, z):
         self.box(x, y, z, x, y, z, "redstone_block")
@@ -127,37 +167,37 @@ class Builder:
 
 def headquarters(b, sign):
     near, far = 63 * sign, 97 * sign
-    b.deck(near, -30, far, 31)
+    b.rounded_deck(min(near, far), -30, max(near, far), 31, 4)
+    for z in BRIDGES:
+        b.deck(near, z - 3, 69 * sign, z + 3)
     b.legs(min(near, far), -30, max(near, far), 31)
-    outer = 86 * sign
-    b.box(outer, SKY, -30, far, SKY + 8, 31, DARK)
-    b.box(outer, SKY + 1, -22, outer, SKY + 5, 23, "air")
-    b.box(outer - sign * 12, SKY + 8, -30, far, SKY + 9, 31, FRAME)
-    for z in range(-28, 30, 14):
-        b.box(outer - sign * 12, SKY, z, outer - sign * 12, SKY + 8, z, RUST)
-    b.rail(near, -30, far, -30)
-    b.rail(near, 31, far, 31)
+    cx = 83 * sign
+    b.ellipse(cx, 0, 14, 27, SKY, SKY + 8, FRAME, hollow=True)
+    b.ellipse(cx, 0, 14, 27, SKY + 5, SKY + 6, "cyan_stained_glass", hollow=True)
+    b.dome(cx, 0, 15, 28, SKY + 9, 9)
+    b.box(67 * sign, SKY, -21, 85 * sign, SKY + 7, 21, "air")
+    for z in (-22, 22):
+        b.box(69 * sign, SKY, z, 72 * sign, SKY + 7, z, FRAME)
+        b.box(70 * sign, SKY + 2, z - 1, 70 * sign, SKY + 6, z + 1, COLD_LIGHT)
+    colour = "red" if sign > 0 else "light_blue"
+    b.box(69 * sign, SKY + 8, -21, 72 * sign, SKY + 8, 21, "smooth_quartz")
+    b.box(69 * sign, SKY + 8, -7, 69 * sign, SKY + 8, 7, f"{colour}_concrete")
+    b.ellipse(cx, 0, 7, 8, SKY + 18, SKY + 21, "smooth_quartz")
+    b.ellipse(cx, 0, 7, 8, SKY + 19, SKY + 20, "cyan_stained_glass", hollow=True)
+    b.dome(cx, 0, 8, 9, SKY + 22, 5)
+    b.box(cx, SKY + 27, 0, cx, SKY + 38, 0, "end_rod")
+    for z in (-24, 24):
+        b.service_unit(75 * sign, z, -sign)
+    b.maintenance_droid(74 * sign, -17)
+    b.crate(88 * sign, 15, 3, 5, 2, "gray")
+    for z in (-29, 30):
+        b.rail(68 * sign, z, 92 * sign, z)
     edges = sorted(z for bridge in BRIDGES for z in (bridge - 3, bridge + 3))
-    previous = -30
+    previous = -27
     for index in range(0, len(edges), 2):
         b.rail(near, previous, near, edges[index])
         previous = edges[index + 1]
-    b.rail(near, previous, near, 31)
-    for z in (-14, 14):
-        b.box(70 * sign, DECK, z - 8, 70 * sign, DECK, z + 8, LIGHT)
-    colour = "red" if sign > 0 else "light_blue"
-    b.box(outer, SKY + 6, -30, outer, SKY + 7, 31, f"{colour}_concrete")
-    b.stripes(outer, -22, outer, 23, SKY + 5)
-    tower = 92 * sign
-    b.box(tower - 4, SKY + 10, -7, tower + 4, SKY + 22, 7, DARK)
-    b.box(tower - 4, SKY + 18, -7, tower + 4, SKY + 19, 7, "gray_stained_glass")
-    b.box(tower - 3, SKY + 18, -6, tower + 3, SKY + 19, 6, LIGHT)
-    b.box(tower - 5, SKY + 20, -8, tower + 5, SKY + 20, 8, f"{colour}_concrete")
-    b.box(tower - 4, SKY + 23, -7, tower + 4, SKY + 23, 7, FRAME)
-    b.box(tower, SKY + 24, 0, tower, SKY + 33, 0, RAIL)
-    b.warning_light(tower, SKY + 34, 0)
-    b.crate(min(68 * sign, 73 * sign), -27, 6, 3, 2, "red" if sign > 0 else "light_blue")
-    b.crate(min(68 * sign, 73 * sign), 25, 6, 3, 2, "red" if sign > 0 else "light_blue")
+    b.rail(near, previous, near, 28)
 
 
 def bridges(b):
@@ -166,14 +206,15 @@ def bridges(b):
         for z in BRIDGES:
             near, far = (road + 4 * sign), 62 * sign
             b.deck(near, z - 2, far, z + 2, PLATE)
-            b.box(near, DECK, z, far, DECK, z, STRIPE)
+            b.box(near, DECK, z - 2, far, DECK, z - 2, STRIPE)
+            b.box(near, DECK, z + 2, far, DECK, z + 2, STRIPE)
             b.rail(near, z - 3, far, z - 3)
             b.rail(near, z + 3, far, z + 3)
             for x in range(min(near, far), max(near, far), 10):
                 b.box(x, SEA - 4, z - 1, x + 1, DECK - 3, z, RUST)
             b.stripes(near, z - 2, near, z + 2)
             b.stripes(far, z - 2, far, z + 2)
-            for x in range(40, 61, 10):
+            for x in (42, 58):
                 gate = x * sign
                 b.box(gate, SKY, z - 3, gate, SKY + 6, z - 3, FRAME)
                 b.box(gate, SKY, z + 3, gate, SKY + 6, z + 3, FRAME)
@@ -208,17 +249,16 @@ def roads(b):
 
 
 def post_deck(b, z):
-    b.deck(-28, z - 14, 28, z + 14)
+    b.rounded_deck(-28, z - 14, 28, z + 14)
     b.legs(-28, z - 14, 28, z + 14)
-    for x1, x2 in ((-28, -4), (4, 28)):
+    for x1, x2 in ((-23, -4), (4, 23)):
         b.rail(x1, z - 14, x2, z - 14)
         b.rail(x1, z + 14, x2, z + 14)
         b.stripes(x1, z - 13, x2, z - 13)
         b.stripes(x1, z + 13, x2, z + 13)
-    b.wear(-27, z - 12, 27, z + 12, 26, random.Random(z))
     for sign in (-1, 1):
         for edge in (z - 13, z + 13):
-            b.mast(27 * sign, edge, 14, -sign)
+            b.mast(23 * sign, edge, 8, -sign)
 
 
 def causeways(b):
@@ -246,236 +286,174 @@ def relic_dais(b):
 
 
 def trockendock(b, z):
-    """Open air and long sightlines: a half-built hull's ribs, with cover near the post and a clear walk around it."""
-    for rib_z in (z - 13, z + 13):
-        for x in (-16, 16):
-            b.box(x, SKY, rib_z, x, SKY + 12, rib_z, FRAME)
-        b.box(-16, SKY + 13, rib_z, 16, SKY + 13, rib_z, FRAME)
-        for x, y in ((-14, 12), (-11, 13), (11, 13), (14, 12)):
-            b.box(x, SKY + y, rib_z, x, SKY + y, rib_z, RUST)
-    b.crate(-14, z - 7, 5, 3, 2, "orange")
-    b.crate(9, z + 4, 5, 3, 2, "orange")
-    b.crate(9, z - 8, 3, 3, 3, "gray")
-    b.crate(-12, z + 5, 3, 3, 3, "gray")
-    b.wall(-5, z - 11, 5, z - 11, 2)
-    b.wall(-5, z + 11, 5, z + 11, 2)
-    b.box(-13, SKY, z - 1, -11, SKY + 1, z + 1, STEEL)
-    b.box(11, SKY, z - 1, 13, SKY + 1, z + 1, STEEL)
-    for x in (-16, 16):
-        b.box(x, SKY + 8, z - 12, x, SKY + 12, z + 12, HULL)
-        b.box(x, SKY + 7, z - 12, x, SKY + 7, z + 12, ANTIFOULING)
-        b.box(x, SKY + 10, z - 4, x, SKY + 11, z + 3, "waxed_weathered_copper")
+    for rib_z in (z - 12, z + 12):
+        for x in range(-14, 15):
+            height = round(8 + 6 * math.sqrt(max(0, 1 - (x / 14) ** 2)))
+            b.box(x, SKY + height, rib_z, x, SKY + height + 1, rib_z, FRAME)
+        for x in (-14, 14):
+            b.box(x, SKY, rib_z, x, SKY + 8, rib_z, FRAME)
+        b.box(-8, SKY + 13, rib_z, 8, SKY + 13, rib_z, COLD_LIGHT)
+    for x, dz in ((-11, -6), (11, 6), (-11, 6), (11, -6)):
+        b.service_unit(x, z + dz, -1 if x < 0 else 1)
+    b.wall(-4, z - 12, 4, z - 12, 2, "smooth_quartz")
+    b.wall(-4, z + 12, 4, z + 12, 2, "smooth_quartz")
+    for x in (-14, 14):
+        b.box(x, SKY + 9, z - 11, x, SKY + 10, z + 11, "gray_concrete")
+        b.box(x, SKY + 10, z - 2, x, SKY + 11, z + 2, "cyan_stained_glass")
+    for x in (-7, 7):
+        b.box(x, SKY, z - 10, x + 1, SKY + 1, z - 9, "waxed_exposed_copper")
 
 
 def kranbruecke(b, z):
-    """The middle ground: a gantry crane overhead and a broken line of cover across the deck."""
-    for x in (-15, 15):
+    for x in (-14, 14):
         for leg_z in (z - 11, z + 11):
-            b.box(x, SKY, leg_z, x + 1, SKY + 15, leg_z + 1, RUST)
-        b.box(x, SKY + 16, z - 11, x + 1, SKY + 17, z + 12, FRAME)
+            b.box(x, SKY, leg_z, x + 1, SKY + 15, leg_z + 1, FRAME)
+            b.box(x, SKY + 3, leg_z, x + 1, SKY + 7, leg_z, "cyan_concrete")
+        b.box(x, SKY + 16, z - 11, x + 1, SKY + 17, z + 12, "smooth_quartz")
     for beam in (z - 3, z + 3):
-        b.box(-15, SKY + 18, beam, 16, SKY + 19, beam + 1, FRAME)
-    b.box(-1, SKY + 12, z - 1, 2, SKY + 17, z + 2, "iron_chain")
-    b.box(-3, SKY + 8, z - 3, 4, SKY + 11, z + 4, "yellow_concrete")
-    b.box(-3, SKY + 8, z - 3, 4, SKY + 8, z + 4, "black_concrete")
-    for x, depth in ((-12, 3), (9, 3)):
-        b.crate(x, z - 11, 4, depth, 2, "blue")
-        b.crate(x, z + 9, 4, depth, 2, "blue")
-    b.wall(-11, z - 2, -9, z + 2, 2, STEEL)
-    b.wall(9, z - 2, 11, z + 2, 2, STEEL)
-    for x in (-15, 15):
-        for step in range(1, 6):
-            b.box(x, SKY + 10 + step, z - 11 + step, x, SKY + 10 + step, z - 11 + step, FRAME)
-            b.box(x, SKY + 10 + step, z + 12 - step, x, SKY + 10 + step, z + 12 - step, FRAME)
-    for beam in (z - 3, z + 3):
-        b.stripes(-15, beam, 16, beam, SKY + 20)
-        b.box(-15, SKY + 21, beam, 16, SKY + 21, beam, RAIL)
-    b.box(-13, SKY + 14, z + 4, -9, SKY + 17, z + 8, "yellow_concrete")
-    b.box(-13, SKY + 15, z + 4, -9, SKY + 16, z + 8, "gray_stained_glass")
-    b.box(-12, SKY + 15, z + 5, -10, SKY + 16, z + 7, LIGHT)
-    b.warning_light(-15, SKY + 18, z + 12)
-    b.warning_light(16, SKY + 18, z - 11)
+        b.box(-14, SKY + 20, beam, 15, SKY + 21, beam + 1, FRAME)
+        b.box(-13, SKY + 19, beam, 14, SKY + 19, beam, DARK)
+        b.box(-13, SKY + 22, beam, 14, SKY + 22, beam, "cyan_concrete")
+    b.box(-13, SKY + 20, z, 14, SKY + 20, z, DARK)
+    for x in (-13, 14):
+        b.box(x, SKY + 20, z - 3, x, SKY + 20, z + 3, DARK)
+    for x, dz in ((-11, -6), (11, 6), (-11, 6), (11, -6)):
+        b.service_unit(x, z + dz, -1 if x < 0 else 1)
+    b.box(-13, SKY + 13, z + 7, -9, SKY + 16, z + 10, "smooth_quartz")
+    b.box(-13, SKY + 14, z + 7, -9, SKY + 15, z + 10, "cyan_stained_glass")
+    b.box(-12, SKY + 14, z + 8, -10, SKY + 14, z + 9, COLD_LIGHT)
+    b.warning_light(-14, SKY + 18, z + 12)
+    b.warning_light(15, SKY + 18, z - 11)
 
 
 def turbinenhalle(b, z):
-    """Close quarters: a roofed hall with wide doors on every side, so the post is fought over indoors."""
-    west, east, north, south = -14, 14, z - 9, z + 9
-    b.box(west, SKY, north, east, SKY + 7, south, DARK)
-    b.box(west + 1, SKY, north + 1, east - 1, SKY + 6, south - 1, "air")
-    b.box(west, SKY + 7, north, east, SKY + 7, south, FRAME)
-    for x in (west, east):
-        b.box(x, SKY, z - 3, x, SKY + 3, z + 3, "air")
-    for door_z in (north, south):
-        b.box(-3, SKY, door_z, 3, SKY + 3, door_z, "air")
-        b.box(-13, SKY + 3, door_z, -6, SKY + 4, door_z, "gray_stained_glass")
-        b.box(6, SKY + 3, door_z, 13, SKY + 4, door_z, "gray_stained_glass")
-    for x in (-9, 9):
-        b.box(x - 1, SKY, z - 6, x + 1, SKY + 2, z - 4, RUST)
-        b.box(x - 1, SKY, z + 4, x + 1, SKY + 2, z + 6, RUST)
-    for x in range(-11, 12, 6):
-        for lamp in (z - 4, z + 4):
-            b.box(x, SKY + 6, lamp, x, SKY + 6, lamp, COLD_LIGHT)
-    for door_z in (north, south):
-        b.stripes(-14, door_z, 14, door_z, SKY + 5)
-    for x in (-12, -4, 4, 12):
-        b.box(x - 2, SKY + 8, north + 1, x + 2, SKY + 8, south - 1, DARK)
-        b.box(x, SKY + 9, north + 1, x, SKY + 9, south - 1, "gray_stained_glass")
-    for x, offset in ((-10, -5), (10, 5)):
-        b.box(x - 1, SKY + 9, z + offset - 1, x + 1, SKY + 17, z + offset + 1, RUST)
-        b.box(x - 1, SKY + 18, z + offset - 1, x + 1, SKY + 18, z + offset + 1, LIGHT)
-    b.crate(-25, z - 12, 4, 3, 2, "gray")
-    b.crate(21, z + 9, 4, 3, 2, "gray")
+    b.ellipse(0, z, 14, 9, SKY, SKY + 7, "smooth_quartz", hollow=True)
+    b.ellipse(0, z, 14, 9, SKY + 4, SKY + 5, "cyan_stained_glass", hollow=True)
+    b.dome(0, z, 14, 10, SKY + 8, 7)
+    b.box(-15, SKY, z - 3, 15, SKY + 4, z + 3, "air")
+    b.box(-6, SKY, z - 10, 6, SKY + 4, z + 10, "air")
+    for x, dz in ((-11, -6), (11, 6), (-11, 6), (11, -6)):
+        b.service_unit(x, z + dz, -1 if x < 0 else 1)
+    for x in (-7, 7):
+        for dz in (-3, 3):
+            b.box(x, SKY + 7, z + dz, x, SKY + 7, z + dz, COLD_LIGHT)
+    b.ellipse(0, z, 3, 3, SKY + 15, SKY + 18, "smooth_quartz")
+    b.box(0, SKY + 19, z, 0, SKY + 27, z, "end_rod")
 
 
-def ship(b, rng):
-    """A freighter under construction north of the yard, its midships still bare frames around working lights."""
-    z0, stern, bow, top = -102, -80, 80, SEA + 30
-    profile = defaultdict(list)
+def ship(b):
+    z0, stern, bow = -110, -77, 81
     for x in range(stern, bow + 1):
-        half = max(1, 17 - max(0, x - 44) * 16 // 36 - max(0, stern + 5 - x))
-        keel = SEA - 3 + max(0, x - 60) // 2
-        profile[half, keel].append(x)
-    framed = range(-24, 29)
-    for (half, keel), xs in profile.items():
-        for x1, x2 in runs([x for x in xs if x not in framed]):
-            b.box(x1, keel, z0 - half, x2, SEA + 6, z0 + half, ANTIFOULING)
-            b.box(x1, SEA + 7, z0 - half, x2, top - 1, z0 + half, HULL)
-            b.box(x1, top, z0 - half, x2, top, z0 + half, "gray_concrete")
-    b.box(framed[0], SEA - 3, z0 - 17, framed[-1], SEA + 4, z0 + 17, DARK)
-    for x in range(framed[0], framed[-1] + 1, 5):
-        for side in (-17, 17):
-            b.box(x, SEA + 5, z0 + side, x, top, z0 + side, FRAME)
-        b.box(x, top, z0 - 17, x, top, z0 + 17, FRAME)
-        b.box(x, SEA + 5, z0, x, SEA + 5, z0, LIGHT)
-        b.box(x, SEA + 17, z0 + 16, x, SEA + 17, z0 + 16, LIGHT)
-    for y in (SEA + 12, SEA + 20):
-        for side in (-17, 17):
-            b.box(framed[0], y, z0 + side, framed[-1], y, z0 + side, RUST)
-    for _ in range(30):
-        x = rng.choice([value for value in range(stern + 6, 60) if value not in framed])
-        y = rng.randint(SEA + 8, top - 8)
-        b.box(x, y, z0 + 17, x + rng.randint(0, 3), y + rng.randint(2, 7), z0 + 17, rng.choice(STAINS))
-    for x in range(stern + 8, 44, 8):
-        if x not in framed:
-            b.box(x, top + 1, z0 + 17, x, top + 1, z0 + 17, LIGHT)
-    b.box(-76, top + 1, z0 - 13, -52, top + 16, z0 + 13, "light_gray_terracotta")
-    for y in (top + 4, top + 8, top + 12):
-        for x in range(-75, -52, 2):
-            b.box(x, y, z0 + 13, x, y, z0 + 13, LIGHT)
-    b.box(-68, top + 17, z0 - 3, -62, top + 30, z0 + 3, "black_concrete")
-    b.box(-68, top + 24, z0 - 3, -62, top + 26, z0 + 3, "red_concrete")
-    b.warning_light(-65, top + 31, z0)
+        half = max(1, round(29 * (bow - x) / (bow - stern)))
+        depth = max(2, round(8 * (bow - x) / (bow - stern)))
+        if -20 <= x <= 22:
+            if x % 5 == 0:
+                b.box(x, 78 - depth, z0 - half, x, 79, z0 - half, FRAME)
+                b.box(x, 78 - depth, z0 + half, x, 79, z0 + half, FRAME)
+                b.box(x, 79, z0 - half, x, 79, z0 + half, FRAME)
+            b.box(x, 78 - depth, z0 - half, x, 78 - depth, z0 + half, DARK)
+            b.box(x, 76, z0 - 2, x, 78, z0 + 2, "cyan_concrete")
+        else:
+            b.box(x, 78 - depth, z0 - half, x, 78, z0 + half, HULL)
+            b.box(x, 79, z0 - half, x, 80, z0 + half, "smooth_stone")
+            if half > 4:
+                b.box(x, 81, z0 - half + 4, x, 82, z0 + half - 4, HULL)
+            if x % 11 < 2:
+                b.box(x, 79, z0 - half, x, 79, z0 - half, "cyan_concrete")
+                b.box(x, 79, z0 + half, x, 79, z0 + half, "cyan_concrete")
+    b.box(-65, 83, z0 - 13, -32, 87, z0 + 13, HULL)
+    b.box(-59, 88, z0 - 9, -39, 91, z0 + 9, "smooth_quartz")
+    b.box(-56, 92, z0 - 5, -48, 98, z0 + 5, HULL)
+    b.box(-61, 99, z0 - 16, -44, 101, z0 + 16, "smooth_quartz")
+    b.box(-61, 100, z0 + 16, -44, 100, z0 + 16, "cyan_stained_glass")
+    for z in (z0 - 18, z0, z0 + 18):
+        b.box(stern - 5, 71, z - 4, stern - 1, 80, z + 4, DARK)
+        b.box(stern - 6, 73, z - 3, stern - 6, 78, z + 3, "cyan_concrete")
+        b.box(stern - 7, 74, z - 2, stern - 7, 77, z + 2, COLD_LIGHT)
+    for x in (-62, -28, 28, 57):
+        b.box(x - 2, SEA - 4, z0 - 22, x + 2, 66, z0 + 22, FRAME)
+        b.box(x - 3, 67, z0 - 22, x + 3, 69, z0 + 22, DARK)
+    b.box(-82, 62, -79, 82, 64, -74, FRAME)
+    b.box(-82, 65, -79, 82, 65, -79, RAIL)
+    b.box(-82, 65, -74, 82, 65, -74, RAIL)
+    for x in (-61, -18, 34, 67):
+        b.box(x, 65, -77, x + 3, 67, -75, "gray_concrete")
+        b.box(x, 68, -77, x + 3, 68, -75, "waxed_weathered_copper")
 
 
 def goliath(b, x):
-    """A portal crane straddling the ship, the tallest thing in sight."""
-    z0, top = -102, 122
-    for z in (-130, -76):
-        b.box(x, SEA - 4, z, x + 3, top, z + 3, "yellow_concrete")
-        for y in range(SEA, SEA + 24, 6):
-            b.box(x, y, z, x + 3, y + 2, z + 3, "black_concrete")
-    b.box(x - 1, top + 1, -132, x + 4, top + 6, -73, "yellow_concrete")
-    b.box(x - 1, top + 1, -132, x + 4, top + 1, -73, "black_concrete")
-    b.box(x - 2, top - 3, z0 - 5, x + 5, top, z0 + 5, DARK)
-    b.box(x + 1, SEA + 40, z0 - 1, x + 2, top - 4, z0 + 1, "iron_chain")
-    b.box(x - 4, SEA + 34, z0 - 3, x + 7, SEA + 39, z0 + 3, "orange_concrete")
-    for z in (-132, -73):
-        b.warning_light(x + 1, top + 7, z)
+    top = 116
+    for z in (-145, -76):
+        b.box(x, SEA - 4, z, x + 3, top, z + 3, FRAME)
+        b.box(x, 72, z, x + 3, 80, z + 3, "cyan_concrete")
+        b.box(x, 95, z, x, 108, z, COLD_LIGHT)
+    b.box(x - 1, top + 1, -147, x + 4, top + 5, -73, "smooth_quartz")
+    b.box(x - 1, top + 1, -147, x + 4, top + 1, -73, DARK)
+    b.box(x - 2, top - 3, -115, x + 5, top, -105, DARK)
+    b.box(x + 1, 99, -111, x + 2, top - 4, -109, "iron_chain")
+    b.box(x - 4, 94, -113, x + 7, 98, -107, "gray_concrete")
+    for z in (-147, -73):
+        b.warning_light(x + 1, top + 6, z)
 
 
-def tidal_wheel(b, cx, z, radius):
-    """A wheel in the sea that feeds the power station, half under water."""
-    cy = SEA + 8
-    rows = defaultdict(list)
-    for dx, dy in disc(radius, radius - 2.0):
-        rows[dy].append(dx)
-    for dy, xs in rows.items():
-        for x1, x2 in runs(xs):
-            b.box(cx + x1, cy + dy, z, cx + x2, cy + dy, z + 2, RUST)
-    for angle in range(0, 360, 45):
-        for r in range(3, radius - 1):
-            x = cx + round(r * math.cos(math.radians(angle)))
-            y = cy + round(r * math.sin(math.radians(angle)))
-            b.box(x, y, z + 1, x, y, z + 1, FRAME)
-    b.box(cx - 2, cy - 2, z - 1, cx + 2, cy + 2, z + 3, DARK)
-    b.box(cx, cy, z - 2, cx, cy, z + 4, LIGHT)
+def ocean_tower(b, x, z, radius, floor, height):
+    b.ellipse(x, z, 4, 4, SEA - 5, floor - 5, "smooth_quartz")
+    for dy in range(4):
+        b.ellipse(x, z, radius - 6 + dy * 2, radius - 6 + dy * 2, floor - 4 + dy, floor - 4 + dy, FRAME)
+    b.ellipse(x, z, radius + 2, radius + 2, floor, floor + 1, "smooth_quartz")
+    b.ellipse(x, z, radius, radius, floor + 2, floor + height, FRAME)
+    b.ellipse(x, z, radius, radius, floor + 3, floor + 5, "cyan_stained_glass", hollow=True)
+    b.ellipse(x, z, radius - 1, radius - 1, floor + 4, floor + 4, COLD_LIGHT, hollow=True)
+    b.dome(x, z, radius + 1, radius + 1, floor + height + 1, max(4, radius // 2))
+    top = floor + height + max(4, radius // 2) + 2
+    b.ellipse(x, z, 3, 3, top, top + 3, FRAME)
+    b.box(x, top + 4, z, x, top + 17, z, "end_rod")
+
+
+def skyline(b):
+    for x, z, radius, floor, height in ((0, 110, 25, 79, 12), (-66, 103, 18, 72, 9),
+                                       (68, 109, 20, 77, 10), (-137, 42, 20, 80, 10),
+                                       (139, -20, 18, 88, 9), (-141, -46, 15, 93, 8),
+                                       (142, 115, 15, 101, 8), (-104, 148, 17, 95, 10)):
+        ocean_tower(b, x, z, radius, floor, height)
+    for x1, x2, z, y in ((-67, -24, 106, 80), (24, 68, 110, 80)):
+        b.box(x1, y, z - 2, x2, y + 1, z + 2, FRAME)
+        b.box(x1, y + 2, z - 3, x2, y + 2, z - 3, RAIL)
+        b.box(x1, y + 2, z + 3, x2, y + 2, z + 3, RAIL)
+        b.box(x1, y, z, x2, y, z, COLD_LIGHT)
+
+
+def shuttle(b, x, z, sign):
+    b.ellipse(x, z, 18, 22, 63, 65, "smooth_quartz")
+    b.ellipse(x, z, 4, 4, SEA - 5, 62, FRAME)
+    b.ellipse(x, z, 16, 20, 66, 66, "cyan_concrete", hollow=True)
+    for dz in (-5, 5):
+        b.box(x - 7, 67, z + dz, x + 7, 67, z + dz, DARK)
+    for dx in range(-10, 11):
+        half = max(1, 4 - max(0, dx * sign - 4) // 2)
+        b.box(x + dx, 69, z - half, x + dx, 73, z + half, "smooth_quartz")
+    b.box(x + sign * 7, 72, z - 2, x + sign * 10, 73, z + 2, "black_stained_glass")
+    b.box(x - 5, 71, z - 11, x + 1, 72, z + 11, "light_gray_concrete")
+    b.box(x - sign * 6, 74, z, x - sign * 3, 82, z, "smooth_quartz")
     for side in (-1, 1):
-        b.box(cx + side * (radius + 2), SEA - 4, z - 3, cx + side * (radius + 5), cy + radius + 2, z + 5, DARK)
-    b.box(cx - radius - 5, cy + radius + 3, z - 3, cx + radius + 5, cy + radius + 4, z + 5, FRAME)
-    b.warning_light(cx, cy + radius + 5, z + 1)
-
-
-def smokestack(b, x, z, radius, height):
-    base = SEA + 18
-    rows = defaultdict(list)
-    for dx, dz in disc(radius):
-        rows[dz].append(dx)
-
-    def band(y1, y2, block):
-        for dz, xs in rows.items():
-            for x1, x2 in runs(xs):
-                b.box(x + x1, y1, z + dz, x + x2, y2, z + dz, block)
-
-    band(base, base + height, DARK)
-    for index in range(3):
-        top = base + height - 2 - index * 8
-        band(top - 3, top, "white_terracotta" if index % 2 else ANTIFOULING)
-    band(base + height + 1, base + height + 1, LIGHT)
-    b.warning_light(x, base + height + 2, z)
-
-
-def power_station(b):
-    b.box(-44, SEA - 2, 92, 44, SEA + 18, 122, DARK)
-    b.box(-45, SEA + 19, 91, 45, SEA + 19, 123, FRAME)
-    for y in (SEA + 6, SEA + 12):
-        for x in range(-42, 43, 3):
-            b.box(x, y, 92, x + 1, y + 1, 92, LIGHT)
-    smokestack(b, -22, 104, 6, 46)
-    smokestack(b, 0, 112, 7, 58)
-    smokestack(b, 22, 104, 6, 46)
-    tidal_wheel(b, -72, 95, 22)
-    tidal_wheel(b, 72, 95, 22)
-
-
-def barge(b, x, z, rng):
-    b.box(x - 11, SEA - 1, z - 22, x + 11, SEA + 2, z + 22, DARK)
-    for column in (-9, -3, 3):
-        for row in range(-20, 14, 7):
-            for tier in range(rng.randint(1, 3)):
-                y = SEA + 3 + tier * 3
-                b.box(x + column, y, z + row, x + column + 4, y + 2, z + row + 5, f"{rng.choice(CONTAINERS)}_concrete")
-    b.warning_light(x, SEA + 3, z + 21)
-
-
-def breakwaters(b):
-    """Harbour walls with a light every so often, so the storm's dark has an edge."""
-    for x in (-132, 132):
-        b.box(x - 3, SEA - 4, -156, x + 3, SEA + 4, 156, "tuff")
-        for z in range(-150, 151, 30):
-            b.box(x, SEA + 5, z, x, SEA + 10, z, DARK)
-            b.box(x, SEA + 11, z, x, SEA + 11, z, LIGHT)
-    for z in (-156, 156):
-        for x1, x2 in ((-132, -28), (28, 132)):
-            b.box(x1, SEA - 4, z - 3, x2, SEA + 4, z + 3, "tuff")
-            for x in range(x1 + 12, x2, 30):
-                b.box(x, SEA + 5, z, x, SEA + 10, z, DARK)
-                b.box(x, SEA + 11, z, x, SEA + 11, z, LIGHT)
+        b.box(x - sign * 7, 70, z + side * 9, x + sign * 3, 73, z + side * 9, DARK)
+        b.box(x - sign * 8, 71, z + side * 9, x - sign * 8, 72, z + side * 9, COLD_LIGHT)
+    for dz in (-16, 16):
+        b.box(x - 11, 67, z + dz, x - 8, 69, z + dz + 2, "gray_concrete")
+        b.box(x - 10, 70, z + dz, x - 9, 70, z + dz + 2, "waxed_weathered_copper")
 
 
 def scenery(b):
-    """Outside the play area and never reached, so the horizon holds a working yard instead of open water."""
-    rng = random.Random(7)
-    ship(b, rng)
-    goliath(b, -36)
-    goliath(b, 40)
-    power_station(b)
-    barge(b, -116, -58, rng)
-    barge(b, 116, 58, rng)
-    breakwaters(b)
-    for x, z, height in ((-150, -90, 60), (150, 95, 74), (150, -130, 50), (-150, 120, 66)):
-        b.box(x - 7, SEA, z - 7, x + 7, SEA + 8, z + 7, DARK)
-        b.box(x - 2, SEA + 9, z - 2, x + 2, SEA + height, z + 2, RUST)
-        b.box(x - 3, SEA + height, z - 3, x + 3, SEA + height + 1, z + 3, LIGHT)
+    ship(b)
+    goliath(b, -31)
+    goliath(b, 35)
+    skyline(b)
+    shuttle(b, -118, -84, 1)
+    shuttle(b, 118, 60, -1)
+    for x, z in ((-165, -120), (165, -140), (-164, 130), (160, 155)):
+        b.ellipse(x, z, 5, 5, SEA - 3, SEA + 1, DARK)
+        b.box(x, SEA + 2, z, x, SEA + 15, z, "smooth_quartz")
+        b.box(x, SEA + 16, z, x, SEA + 17, z, COLD_LIGHT)
 
 
 def forceload_areas(fills):
@@ -498,16 +476,16 @@ def ring(z, radius=7.0):
     return cells
 
 
-def route(faction, z, lane, inward):
+def route(faction, z, lane):
     sign = -1 if faction == "kolonien" else 1
     bridge = min(BRIDGES, key=lambda each: abs(each - z))
     road = 32 * sign
     points = [spot(50 * sign, bridge), spot(road, bridge)]
     if bridge != z:
         points.append(spot(road, z + lane))
-    points.append(spot(inward * sign, z + lane))
-    return dict(approach=points, cover=spot((inward + 5) * sign, z + lane), peek=points[-1],
-                retreat=spot(road, z + lane), capture=spot(4 * sign, z + lane // 2))
+    points.append(spot(14 * sign, z + lane))
+    return dict(approach=points, cover=points[-1], peek=spot(14 * sign, z + lane // 2),
+                retreat=spot(15 * sign, z + lane), capture=spot(4 * sign, z + lane // 2))
 
 
 def arena():
@@ -517,16 +495,21 @@ def arena():
         posts.append(dict(key=key, center=spot(0, z), radius=6.5, label=spot(0, z, SKY + (5 if key != "turbinenhalle" else 4)),
                           spawns=[spot(-5, z - 10), spot(5, z - 10), f"{spot(-5, z + 10)} 180 0", f"{spot(5, z + 10)} 180 0"],
                           indicators=[f"{x} {DECK} {cz}" for x, cz in cells],
-                          routes={faction: [route(faction, z, lane, inward) for lane, inward in ((-6, 15), (6, 15))]
+                          routes={faction: [route(faction, z, lane) for lane in (-6, 6)]
                                   for faction in ("kolonien", "hegemonie")}))
     spawns = [-5.5, -1.5, 2.5, 6.5]
-    return {"name": "Sturmwerft", "weather": "rain", "time": 12000,
+    return {"name": "Sturmwerft", "weather": "rain", "time": 13000,
             "play-area": [-97.0, SEA - 6.0, -70.0, 97.0, 128.0, 71.0],
+            "world-border-size": 384.0,
             "relic": f"0.5 {SKY + 5}.2 -65.5", "overview": "0.5 112 62.5 180 40", "lobby": "0.5 90 0.5", "spectator": "24.5 92 30.5 145 35",
             "headquarters": {
                 "kolonien": dict(spawns=[f"-81.5 65 {z} 270 0" for z in spawns], zone=[-97.0, 60.0, -30.0, -63.0, 104.0, 31.0]),
                 "hegemonie": dict(spawns=[f"82.5 65 {z} 90 0" for z in spawns], zone=[63.0, 60.0, -30.0, 97.0, 104.0, 31.0])},
-            "posts": posts, "controls": []}
+            "posts": posts, "controls": [],
+            "environment": {
+                "steam": [spot(x, z - 8, SKY + 2) for z in POSTS.values() for x in (-11, 11)],
+                "sparks": [spot(x, z - 6, SKY + 1.5) for z in POSTS.values() for x in (-9, 13)],
+                "crane": {"from": "-10.5 84 0.5", "to": "10.5 84 0.5"}}}
 
 
 def solid_at(fills, x, y, z):
@@ -536,18 +519,106 @@ def solid_at(fills, x, y, z):
     return False
 
 
+def layer(fills, y):
+    cells = set()
+    for x1, y1, z1, x2, y2, z2, block in fills:
+        if y1 <= y <= y2:
+            changed = {(x, z) for x in range(x1, x2 + 1) for z in range(z1, z2 + 1)}
+            if block == "air":
+                cells.difference_update(changed)
+            else:
+                cells.update(changed)
+    return cells
+
+
+def reachable(cells, start):
+    reached = {start} if start in cells else set()
+    pending = deque(reached)
+    while pending:
+        x, z = pending.popleft()
+        for cell in ((x - 1, z), (x + 1, z), (x, z - 1), (x, z + 1)):
+            if cell in cells and cell not in reached:
+                reached.add(cell)
+                pending.append(cell)
+    return reached
+
+
+def validate(fills, plan):
+    blocked = blocked_spots(fills, plan)
+    if blocked:
+        sys.exit(f"Unsupported or obstructed fighter positions: {blocked}")
+    floor = layer(fills, DECK)
+    walkable = floor - layer(fills, SKY) - layer(fills, SKY + 1)
+    connected = reachable(walkable, (-82, -6))
+    for post in plan["posts"]:
+        positions = [post["center"], *post["spawns"]]
+        for routes in post["routes"].values():
+            for route in routes:
+                positions.extend([*route["approach"], route["cover"], route["peek"], route["retreat"], route["capture"]])
+        for position in positions:
+            x, _, z = (math.floor(float(part)) for part in position.split()[:3])
+            if (x, z) not in connected:
+                sys.exit(f"Unreachable fighter position: {position}")
+    for headquarters in plan["headquarters"].values():
+        for position in headquarters["spawns"]:
+            x, _, z = (math.floor(float(part)) for part in position.split()[:3])
+            if (x, z) not in connected:
+                sys.exit(f"Unreachable headquarters spawn: {position}")
+    driveable = {cell for cell in walkable if all((cell[0] + dx, cell[1] + dz) in walkable
+                 for dx in (-1, 0, 1) for dz in (-1, 0, 1))}
+    for sign in (-1, 1):
+        driven = reachable(driveable, (82 * sign, 10))
+        for z in (10, 16, 22):
+            if (82 * sign, z) not in driven:
+                sys.exit(f"Vehicle headquarters pad obstructed: {(82 * sign, z)}")
+        for x in (-22, 22):
+            for z in POSTS.values():
+                if (x, z) not in driven:
+                    sys.exit(f"Vehicle cannot reach landing ground {(x, z)} from headquarters {sign}")
+    for x in (-22, 22):
+        for z in POSTS.values():
+            if any((x + dx, z + dz) not in floor for dx in range(-3, 4) for dz in range(-3, 4)):
+                sys.exit(f"Incomplete landing ground: {(x, z)}")
+            for x1, y1, z1, x2, y2, z2, block in fills:
+                if y2 < SKY or block == "air":
+                    continue
+                dx = max(x1 - (x + 0.5), (x + 0.5) - (x2 + 1), 0)
+                dz = max(z1 - (z + 0.5), (z + 0.5) - (z2 + 1), 0)
+                if dx * dx + dz * dz < 6.5 ** 2:
+                    for bx in range(max(x1, x - 7), min(x2, x + 7) + 1):
+                        for bz in range(max(z1, z - 7), min(z2, z + 7) + 1):
+                            dx = max(bx - x - 0.5, x - bx - 0.5, 0)
+                            dz = max(bz - z - 0.5, z - bz - 0.5, 0)
+                            if dx * dx + dz * dz < 6.5 ** 2:
+                                for y in range(max(SKY, y1), y2 + 1):
+                                    if solid_at(fills, bx, y, bz):
+                                        sys.exit(f"Landing clearance blocked at {(bx, y, bz)} near {(x, z)}")
+    for kind in ("steam", "sparks"):
+        for position in plan["environment"][kind]:
+            x, y, z = (math.floor(float(part)) for part in position.split()[:3])
+            if solid_at(fills, x, y, z):
+                sys.exit(f"Buried {kind} emitter: {position}")
+    endpoints = [[float(part) for part in plan["environment"]["crane"][key].split()] for key in ("from", "to")]
+    for x in range(math.floor(min(point[0] for point in endpoints) - 1.2), math.ceil(max(point[0] for point in endpoints) + 1.2)):
+        for z in range(math.floor(min(point[2] for point in endpoints) - 0.8), math.ceil(max(point[2] for point in endpoints) + 0.8)):
+            for y in range(math.floor(min(point[1] for point in endpoints) - 9.62), math.ceil(max(point[1] for point in endpoints) + 0.65)):
+                if solid_at(fills, x, y, z):
+                    sys.exit(f"Crane swept volume blocked: {(x, y, z)}")
+    print(f"Validated {len(connected)} connected walkable cells, both vehicle approaches and six clear landing cylinders")
+
+
 def blocked_spots(fills, plan):
-    """Every place the arena puts a fighter that a wall would catch them in, at the feet or the head."""
+    """Fighter positions need a supporting block and room for the feet and head."""
     spots = [*(each for hq in plan["headquarters"].values() for each in hq["spawns"])]
     for post in plan["posts"]:
         spots.extend(post["spawns"])
         for routes in post["routes"].values():
             for each in routes:
-                spots.extend([*each["approach"], each["cover"], each["retreat"], each["capture"]])
+                spots.extend([*each["approach"], each["cover"], each["peek"], each["retreat"], each["capture"]])
     blocked = []
     for each in dict.fromkeys(spots):
         x, y, z = (math.floor(float(part)) for part in each.split()[:3])
-        if solid_at(fills, x, y, z) or solid_at(fills, x, y + 1, z):
+        if not solid_at(fills, x, y - 1, z) or solid_at(fills, x, y, z) or solid_at(fills, x, y + 1, z):
             blocked.append(each)
     return blocked
 
@@ -590,6 +661,11 @@ def main():
     trockendock(b, POSTS["trockendock"])
     kranbruecke(b, POSTS["kranbruecke"])
     turbinenhalle(b, POSTS["turbinenhalle"])
+    paths = [(road, -60, road, 60) for road in ROADS]
+    paths.extend((sign * 32, z, sign * 83, z) for sign in (-1, 1) for z in BRIDGES)
+    paths.extend((-27, z + lane, 27, z + lane) for z in POSTS.values() for lane in (-6, 0, 6))
+    paths.extend((0, -57, 0, 57) for _ in range(2))
+    b.wear(paths, random.Random(731))
     for z in POSTS.values():
         for x, cz in ring(z):
             b.box(x, DECK, cz, x, DECK, cz, "white_concrete")
@@ -602,11 +678,9 @@ def main():
             b.box(x, DECK, z, x, DECK, z, LIGHT)
     deck_commands = b.commands
     plan = arena()
-    blocked = blocked_spots(b.fills, plan)
-    if blocked:
-        sys.exit(f"Inside a block: {blocked}")
     far = Builder()
     scenery(far)
+    validate(b.fills + far.fills, plan)
     functions = OUT / "datapack/data/sturmwerft/function"
     functions.mkdir(parents=True, exist_ok=True)
     (OUT / "datapack/pack.mcmeta").write_text(json.dumps({"pack": {"pack_format": 121, "min_format": 121, "max_format": 121, "description": "Sturmwerft"}}))

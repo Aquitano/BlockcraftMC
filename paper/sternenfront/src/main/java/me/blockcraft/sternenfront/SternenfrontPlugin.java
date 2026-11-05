@@ -34,8 +34,6 @@ import java.util.Optional;
 
 public final class SternenfrontPlugin extends JavaPlugin {
 
-    private static final double BORDER_MARGIN = 2;
-
     private SternenfrontGame game;
     private BodyRigs bodyRigs;
     private TargetOutlines targetOutlines;
@@ -105,12 +103,12 @@ public final class SternenfrontPlugin extends JavaPlugin {
         }
     }
 
-    /** A square border round the map's play area; the map's own cliffs are the real edge. */
+    /** The border can include distant scenery; the map's own cliffs are the playable edge. */
     private static void border(FrontMap map) {
         var area = map.playArea();
         var border = map.world().getWorldBorder();
         border.setCenter(area.getCenterX(), area.getCenterZ());
-        border.setSize(Math.max(area.getWidthX(), area.getWidthZ()) + BORDER_MARGIN);
+        border.setSize(map.worldBorderSize());
     }
 
     @Override
