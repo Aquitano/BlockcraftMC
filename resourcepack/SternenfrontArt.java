@@ -394,6 +394,11 @@ public final class SternenfrontArt {
             return new Box(x1 + x, y1 + y, z1 + z, x2 + x, y2 + y, z2 + z, surface, moved, faces);
         }
 
+        Box scaled(double scale) {
+            var resized = spin == null ? null : new Spin(spin.axis, spin.angle, spin.x * scale, spin.y * scale, spin.z * scale);
+            return new Box(x1 * scale, y1 * scale, z1 * scale, x2 * scale, y2 * scale, z2 * scale, surface, resized, faces);
+        }
+
         double edge(Face face, boolean horizontal) {
             return switch (face) {
                 case NORTH, SOUTH -> horizontal ? x2 - x1 : y2 - y1;
@@ -439,6 +444,14 @@ public final class SternenfrontArt {
             }
             return result;
         }
+
+        Shape shifted(double x, double y, double z) {
+            return new Shape().add(boxes.stream().map(each -> each.shifted(x, y, z)).toList());
+        }
+
+        Shape scaled(double scale) {
+            return new Shape().add(boxes.stream().map(each -> each.scaled(scale)).toList());
+        }
     }
 
     /** Eight-sided column along z; four long boxes whose union is a regular octagon in cross-section. */
@@ -459,7 +472,11 @@ public final class SternenfrontArt {
                 box(x, y, z, across, height - .012, flat, surface).spinY(-45));
     }
 
-    private record Model(String path, Shape shape) { }
+    private record Model(String path, Shape shape, String display) {
+        Model(String path, Shape shape) {
+            this(path, shape, "");
+        }
+    }
 
     private record Family(String name, int density, boolean translucent, List<Model> models) { }
 
@@ -476,553 +493,461 @@ public final class SternenfrontArt {
         return new Model("sternenfront/body/" + name + "/" + part, shape);
     }
 
-    private static Family hegemonieSoldier() {
+    private enum CloneRole { SOLDIER, HEAVY, SCOUT, MEDIC, REX }
+
+    private static final Paint BLUE = paint("republic_blue", 2, Grain.SMOOTH, 0, Wear.CHIP,
+            0x142A56, 0x204476, 0x326CB0, 0x498CD0, 0x73B0E7);
+    private static final Paint RED = paint("separatist_red", 2, Grain.GLOW, 0, Wear.NONE,
+            0x681919, 0xAC2424, 0xFF3434, 0xFF7777, 0xFFE3E3);
+    private static final Paint DROID = paint("droid_tan", 2, Grain.SMOOTH, 0, Wear.SCUFF,
+            0x70614A, 0x9C8968, 0xBEAC87, 0xD7C8A7, 0xE9DFC5);
+    private static final Paint MAROON = paint("republic_maroon", 2, Grain.SMOOTH, 0, Wear.CHIP,
+            0x391723, 0x612537, 0x8B3B4B, 0xAE5360, 0xC97A83);
+    private static final Paint HAIR = paint("auburn", 2, Grain.SMOOTH, 0, Wear.NONE,
+            0x3E2417, 0x61402B, 0x855B3A, 0xA4774C, 0xBE9263);
+    private static final Paint GREY_HAIR = paint("grey_hair", 2, Grain.SMOOTH, 0, Wear.NONE,
+            0x777875, 0x9B9D99, 0xC0C2BC, 0xDCDED8, 0xF4F4EC);
+    private static final Sprite SABER = new Sprite("saber", true, true, (width, height, random) -> {
+        var pixels = new int[width * height];
+        Arrays.fill(pixels, 0xFFFFFF);
+        return pixels;
+    });
+
+    private static Family battleDroid(String role) {
+        Paint marking = switch (role) {
+            case "scout" -> FRAME;
+            case "medic" -> BLUE;
+            default -> DROID;
+        };
         var torso = new Shape()
-                .add(box(0, .02, 0, .2, .1, .13, STEEL))
-                .both(box(.07, -.02, .07, .05, .08, .015, CERAMIC))
-                .add(box(0, .19, -.015, .06, .26, .06, FRAME))
-                .add(box(0, .19, .03, .17, .03, .1, TRIM))
-                .add(box(0, .25, .025, .22, .03, .12, TRIM))
-                .add(box(0, .31, .015, .27, .035, .14, TRIM))
-                .add(box(0, .39, .012, .28, .15, .16, CERAMIC))
-                .both(box(.105, .34, .1, .1, .1, .03, CERAMIC).spinX(-22.5))
-                .add(box(0, .39, .095, .04, .13, .012, CYAN))
-                .add(box(0, .485, 0, .46, .05, .09, STEEL))
-                .add(box(0, .58, 0, .035, .15, .035, FRAME))
-                .add(box(0, .36, -.098, .12, .17, .05, STEEL))
-                .add(box(0, .36, -.126, .07, .1, .008, CYAN));
+                .add(box(0, .02, 0, .2, .1, .13, DROID))
+                .add(box(0, .19, 0, .055, .26, .055, FRAME))
+                .add(box(0, .34, 0, .24, .24, .14, DROID))
+                .add(box(0, .36, .077, .16, .14, .018, marking))
+                .add(box(0, .49, 0, .45, .045, .085, DROID))
+                .add(box(0, .56, 0, .035, .11, .035, STEEL))
+                .add(box(0, .32, -.13, .17, .28, .12, DROID))
+                .add(box(.06, .66, -.16, .018, .43, .018, FRAME));
         var head = new Shape()
-                .add(box(0, .0, 0, .075, .04, .075, FRAME))
-                .add(box(0, .075, .01, .34, .085, .105, CERAMIC))
-                .add(box(0, .075, .066, .3, .026, .012, CYAN))
-                .both(box(.18, .075, .01, .035, .105, .125, FRAME))
-                .add(box(0, .13, -.025, .022, .05, .1, CERAMIC))
-                .add(box(0, .07, -.06, .13, .065, .04, STEEL));
+                .add(box(0, .005, 0, .055, .07, .055, FRAME))
+                .add(box(0, .095, .06, .13, .14, .23, DROID))
+                .add(box(0, .065, .2, .105, .09, .14, DROID))
+                .add(box(0, .045, .283, .075, .055, .035, DROID))
+                .both(box(.067, .115, .145, .012, .024, .035, LENS))
+                .add(box(0, .174, .03, .09, .025, .15, marking));
         var arm = new Shape()
-                .add(box(0, 0, 0, .085, .085, .085, FRAME))
-                .add(box(0, .03, 0, .115, .05, .115, CERAMIC))
-                .add(box(0, -.16, 0, .04, .25, .04, STEEL))
-                .add(box(0, -.13, .027, .055, .13, .012, CERAMIC))
-                .add(box(0, -.3, 0, .065, .06, .065, FRAME))
-                .add(box(0, -.44, 0, .036, .22, .036, STEEL))
-                .add(box(0, -.43, 0, .07, .14, .07, CERAMIC))
-                .add(box(0, -.565, 0, .06, .05, .06, FRAME))
-                .both(box(.022, -.615, 0, .016, .055, .03, STEEL));
+                .add(box(0, 0, 0, .085, .085, .085, STEEL))
+                .add(box(0, -.16, 0, .045, .25, .045, DROID))
+                .add(box(0, -.3, 0, .07, .06, .07, FRAME))
+                .add(box(0, -.44, 0, .05, .24, .05, DROID))
+                .add(box(0, -.58, 0, .065, .05, .065, STEEL))
+                .both(box(.023, -.62, .005, .015, .06, .04, DROID));
         var leg = new Shape()
-                .add(box(0, -.01, 0, .09, .09, .09, FRAME))
-                .add(box(0, -.22, 0, .045, .36, .045, STEEL))
-                .add(box(0, -.2, .028, .09, .22, .02, CERAMIC))
-                .add(box(0, -.44, 0, .085, .085, .085, FRAME))
-                .add(box(0, -.44, .047, .05, .05, .012, CYAN))
-                .add(box(0, -.66, 0, .04, .38, .04, STEEL))
-                .add(box(0, -.65, .024, .08, .27, .02, CERAMIC))
-                .add(box(0, -.88, 0, .065, .05, .065, FRAME))
-                .add(box(0, -.935, .055, .1, .05, .24, CERAMIC))
-                .both(box(.035, -.95, .205, .03, .02, .07, STEEL));
-        return body("hegemonie_soldier", torso, head, arm, leg);
+                .add(box(0, -.015, 0, .09, .09, .09, STEEL))
+                .add(box(0, -.23, 0, .055, .37, .055, DROID))
+                .add(box(0, -.44, 0, .085, .065, .085, FRAME))
+                .add(box(0, -.65, 0, .05, .36, .05, DROID))
+                .add(box(0, -.88, .015, .065, .1, .07, STEEL))
+                .add(box(0, -.935, .07, .1, .05, .24, DROID));
+        if (role.equals("medic")) {
+            torso.add(box(0, .32, -.205, .12, .16, .03, BLUE));
+        }
+        return body("hegemonie_" + role, torso, head, arm, leg);
     }
 
-    private static Family hegemonieHeavy() {
+    private static Family superBattleDroid() {
         var torso = new Shape()
-                .add(box(0, .03, 0, .6, .13, .24, FRAME))
-                .add(box(0, .17, 0, .4, .2, .28, STEEL))
-                .add(box(0, .32, 0, .34, .14, .28, FRAME))
-                .add(box(0, .47, .03, .68, .36, .42, CERAMIC))
-                .both(box(.26, .41, .24, .2, .26, .06, CERAMIC).spinY(22.5))
-                .add(box(0, .4, .262, .3, .22, .05, TRIM))
-                .add(box(0, .47, .29, .22, .03, .01, CYAN))
-                .add(box(0, .4, .29, .22, .03, .01, CYAN))
-                .add(box(0, .33, .29, .22, .03, .01, CYAN))
-                .add(box(0, .69, -.02, .8, .1, .34, STEEL))
-                .add(box(0, .51, -.25, .48, .32, .14, STEEL))
-                .both(box(.14, .51, -.325, .1, .22, .012, CYAN))
-                .both(box(.24, .22, -.14, .05, .36, .05, TRIM).spinX(22.5));
+                .add(box(0, .03, 0, .52, .13, .25, FRAME))
+                .add(box(0, .21, 0, .38, .3, .28, STEEL))
+                .add(box(0, .49, .02, .71, .4, .4, STEEL))
+                .both(box(.27, .46, .22, .21, .3, .06, TRIM).spinY(22.5))
+                .add(box(0, .4, .24, .36, .18, .05, FRAME))
+                .add(box(0, .68, -.015, .8, .1, .34, STEEL))
+                .add(box(0, .53, -.24, .5, .32, .12, FRAME));
         var head = new Shape()
-                .add(box(0, .02, -.04, .17, .1, .18, FRAME))
-                .add(box(0, .1, .02, .3, .15, .24, CERAMIC))
-                .add(box(0, .19, .0, .2, .04, .18, TRIM))
-                .add(box(0, .105, .145, .24, .04, .012, CYAN))
-                .both(box(.16, .09, .03, .03, .15, .17, TRIM))
-                .add(box(0, .02, .12, .19, .05, .06, STEEL));
+                .add(box(0, .04, -.06, .21, .16, .18, FRAME))
+                .add(box(0, .08, .045, .19, .07, .04, STEEL))
+                .add(box(-.055, .08, .071, .032, .026, .014, RED));
         var arm = new Shape()
-                .add(box(0, .08, 0, .38, .28, .38, CERAMIC))
-                .add(box(0, .235, 0, .28, .05, .28, CERAMIC))
-                .add(box(0, .195, .165, .3, .03, .14, TRIM).spinX(45))
-                .add(box(0, .195, -.165, .3, .03, .14, TRIM).spinX(-45))
-                .add(box(0, -.08, 0, .32, .07, .32, STEEL))
-                .add(box(0, -.22, 0, .16, .22, .16, FRAME))
-                .both(box(.1, -.22, 0, .03, .24, .06, TRIM))
-                .add(box(0, -.44, 0, .27, .26, .27, CERAMIC))
-                .add(box(0, -.44, .14, .19, .09, .012, CYAN))
-                .add(box(0, -.44, -.14, .19, .09, .012, TRIM))
-                .add(box(0, -.59, 0, .23, .05, .23, FRAME))
-                .both(box(.06, -.72, 0, .065, .22, .065, STEEL))
-                .add(box(0, -.68, 0, .05, .13, .17, FRAME))
-                .both(box(.06, -.84, 0, .085, .035, .085, FRAME))
-                .both(box(.06, -.86, 0, .035, .008, .035, CYAN));
+                .add(box(0, .035, 0, .34, .25, .34, STEEL))
+                .add(box(0, -.2, 0, .16, .24, .16, FRAME))
+                .add(box(0, -.43, 0, .26, .3, .26, STEEL))
+                .add(box(0, -.62, 0, .22, .08, .22, TRIM))
+                .both(box(.055, -.73, .045, .07, .19, .09, FRAME))
+                .both(box(.055, -.83, .045, .045, .015, .045, RED));
         var leg = new Shape()
-                .add(box(0, -.02, 0, .2, .17, .2, FRAME))
-                .add(box(0, -.17, .07, .15, .32, .16, STEEL).spinX(-22.5))
-                .add(box(0, -.16, .155, .2, .22, .04, CERAMIC).spinX(-22.5))
-                .add(box(0, -.33, .125, .19, .13, .19, FRAME))
-                .add(box(0, -.33, .224, .1, .05, .012, CYAN))
-                .add(box(0, -.51, .06, .13, .28, .14, STEEL).spinX(22.5))
-                .add(box(0, -.5, .135, .2, .26, .04, CERAMIC).spinX(22.5))
-                .both(box(.085, -.38, -.1, .028, .56, .028, TRIM))
-                .add(box(0, -.68, -.01, .19, .08, .2, FRAME))
-                .add(box(0, -.745, .05, .34, .07, .44, CERAMIC))
-                .both(box(.11, -.76, .3, .09, .04, .11, STEEL))
-                .add(box(0, -.76, -.2, .1, .04, .09, STEEL));
+                .add(box(0, -.06, 0, .2, .17, .2, FRAME))
+                .add(box(0, -.21, .035, .2, .27, .2, STEEL))
+                .add(box(0, -.37, .035, .19, .09, .19, FRAME))
+                .add(box(0, -.54, 0, .18, .28, .19, STEEL))
+                .add(box(0, -.74, .065, .28, .1, .4, STEEL));
         return body("hegemonie_heavy", torso, head, arm, leg);
     }
 
-    private static Family hegemonieScout() {
-        var torso = new Shape()
-                .add(box(0, .02, 0, .18, .09, .12, STEEL))
-                .add(box(0, .17, 0, .055, .22, .055, FRAME))
-                .add(box(0, .34, 0, .24, .2, .15, CERAMIC))
-                .both(box(.08, .34, .085, .08, .14, .02, TRIM))
-                .add(box(0, .34, .096, .025, .15, .01, CYAN))
-                .add(box(0, .47, 0, .32, .045, .09, STEEL))
-                .add(box(0, .34, -.1, .13, .16, .05, STEEL))
-                .add(box(0, .52, 0, .03, .1, .03, FRAME))
-                .add(box(.04, .72, -.13, .024, .62, .024, STEEL))
-                .add(box(-.04, .62, -.13, .024, .42, .024, STEEL))
-                .add(box(0, .54, -.13, .024, .3, .024, STEEL))
-                .add(box(.04, .84, -.13, .1, .02, .02, TRIM))
-                .add(box(.04, .94, -.13, .07, .02, .02, TRIM))
-                .add(box(-.04, .72, -.13, .08, .02, .02, TRIM))
-                .add(box(.04, 1.035, -.13, .03, .03, .03, CYAN))
-                .add(box(-.04, .835, -.13, .03, .03, .03, CYAN));
+    private static Shape cloneHelmet(CloneRole role) {
+        Paint stripe = role == CloneRole.MEDIC ? MAROON : BLUE;
         var head = new Shape()
-                .add(box(0, .03, -.01, .05, .05, .05, FRAME))
-                .add(box(0, .09, .05, .14, .09, .2, CERAMIC))
-                .add(box(0, .075, .17, .09, .06, .1, TRIM).spinX(22.5))
-                .add(box(0, .085, .226, .06, .022, .012, CYAN))
-                .both(box(.08, .12, -.01, .014, .1, .2, CERAMIC).spinX(-22.5))
-                .add(box(0, .15, -.01, .03, .05, .17, STEEL));
-        var arm = new Shape()
-                .add(box(0, 0, 0, .07, .07, .07, FRAME))
-                .add(box(0, -.15, 0, .032, .23, .032, STEEL))
-                .add(box(0, -.13, .021, .045, .12, .01, CERAMIC))
-                .add(box(0, -.28, 0, .055, .05, .055, FRAME))
-                .add(box(0, -.42, 0, .03, .23, .03, STEEL))
-                .add(box(0, -.42, 0, .052, .12, .052, CERAMIC))
-                .add(box(0, -.55, 0, .05, .04, .05, FRAME))
-                .both(box(.018, -.595, 0, .012, .05, .025, STEEL));
-        var leg = new Shape()
-                .add(box(0, 0, 0, .08, .08, .08, FRAME))
-                .add(box(0, -.17, .1, .05, .36, .05, STEEL).spinX(-45))
-                .add(box(0, -.15, .12, .07, .24, .02, CERAMIC).spinX(-45))
-                .add(box(0, -.31, .225, .075, .075, .075, FRAME))
-                .add(box(0, -.47, .13, .04, .38, .04, STEEL).spinX(22.5))
-                .add(box(0, -.48, .14, .06, .22, .02, CERAMIC).spinX(22.5))
-                .add(box(0, -.63, .05, .06, .06, .06, FRAME))
-                .add(box(0, -.73, .06, .032, .22, .032, STEEL).spinX(-22.5))
-                .add(box(0, -.83, .09, .05, .04, .05, FRAME))
-                .add(box(0, -.84, .15, .03, .03, .14, CERAMIC))
-                .both(box(.04, -.84, .13, .025, .03, .11, CERAMIC).spinY(22.5))
-                .add(box(0, -.84, .02, .025, .03, .1, STEEL));
-        return body("hegemonie_scout", torso, head, arm, leg);
-    }
-
-    private static Family hegemonieMedic() {
-        var torso = new Shape()
-                .add(box(0, .03, 0, .2, .11, .14, STEEL))
-                .add(box(0, .17, 0, .1, .2, .08, FRAME))
-                .add(box(0, .36, 0, .28, .2, .17, CERAMIC))
-                .add(box(0, .3, .02, .22, .08, .17, CERAMIC))
-                .add(box(0, .38, .09, .13, .1, .012, TRIM))
-                .add(box(0, .38, .098, .09, .025, .006, CYAN))
-                .add(box(0, .47, 0, .36, .04, .1, STEEL))
-                .add(box(0, .55, 0, .04, .1, .04, FRAME))
-                .add(box(0, .36, -.1, .18, .14, .04, STEEL))
-                .add(box(.17, .56, -.34, .26, .06, .26, CERAMIC))
-                .add(box(.17, .56, -.34, .2, .065, .2, CERAMIC).spinY(45))
-                .add(box(.17, .52, -.34, .16, .02, .16, CYAN))
-                .add(box(.17, .615, -.34, .1, .05, .1, STEEL))
-                .add(box(.17, .49, -.34, .04, .04, .04, FRAME))
-                .add(box(.17, .67, -.34, .018, .07, .018, STEEL))
-                .add(box(.17, .71, -.34, .03, .018, .03, CYAN));
-        var head = new Shape()
-                .add(box(0, .01, 0, .07, .05, .07, FRAME))
-                .add(box(0, .11, 0, .2, .15, .2, CERAMIC))
-                .add(box(0, .2, 0, .13, .04, .13, CERAMIC))
-                .add(box(0, .115, .104, .15, .05, .012, LENS))
-                .add(box(0, .115, .112, .05, .025, .006, CYAN))
-                .both(box(.11, .115, 0, .03, .08, .08, TRIM));
-        var arm = new Shape()
-                .add(box(0, 0, 0, .08, .08, .08, FRAME))
-                .add(box(0, .025, 0, .1, .045, .1, CERAMIC))
-                .add(box(0, -.15, 0, .05, .24, .05, CERAMIC))
-                .add(box(0, -.29, 0, .06, .05, .06, FRAME))
-                .add(box(0, -.43, 0, .055, .22, .055, CERAMIC))
-                .add(box(0, -.43, .03, .03, .1, .01, CYAN))
-                .add(box(0, -.56, 0, .06, .05, .06, FRAME))
-                .both(box(.022, -.61, 0, .016, .05, .03, STEEL));
-        var toolArm = new Shape()
-                .add(box(0, 0, 0, .08, .08, .08, FRAME))
-                .add(box(0, .025, 0, .1, .045, .1, CERAMIC))
-                .add(box(0, -.15, 0, .05, .24, .05, CERAMIC))
-                .add(box(0, -.29, 0, .06, .05, .06, FRAME))
-                .add(box(0, -.4, 0, .09, .17, .09, STEEL))
-                .add(box(0, -.4, .048, .05, .08, .01, CYAN))
-                .add(box(0, -.5, 0, .12, .03, .12, FRAME))
-                .add(box(0, -.63, 0, .024, .25, .024, TRIM))
-                .add(box(0, -.76, 0, .014, .03, .014, CYAN))
-                .both(box(.07, -.59, 0, .018, .15, .03, STEEL).spinZ(-22.5))
-                .add(box(0, -.57, .07, .03, .12, .018, STEEL).spinX(22.5))
-                .add(box(0, -.57, -.07, .03, .12, .018, STEEL).spinX(-22.5));
-        var leg = new Shape()
-                .add(box(0, -.01, 0, .085, .085, .085, FRAME))
-                .add(box(0, -.22, 0, .08, .34, .08, CERAMIC))
-                .add(box(0, -.44, 0, .085, .08, .085, FRAME))
-                .add(box(0, -.66, 0, .07, .36, .07, CERAMIC))
-                .add(box(0, -.56, .037, .03, .1, .01, CYAN))
-                .add(box(0, -.88, 0, .06, .05, .06, FRAME))
-                .add(box(0, -.93, .04, .11, .05, .22, TRIM));
-        return body("hegemonie_medic", torso, head, arm, leg, toolArm);
-    }
-
-    private static Family kolonienSoldier() {
-        var torso = new Shape()
-                .add(box(0, .05, 0, .42, .13, .23, DRAB))
-                .add(box(0, .0, 0, .44, .045, .25, LEATHER))
-                .add(box(0, 0, .13, .08, .05, .015, SCRAP))
-                .add(box(0, .28, 0, .46, .36, .24, KHAKI))
-                .add(box(0, .28, .125, .36, .24, .02, LEATHER))
-                .both(box(.1, .24, .14, .12, .11, .025, KHAKI))
-                .add(box(0, .28, .0, .47, .03, .25, LEATHER).spinZ(45))
-                .add(box(0, .47, 0, .3, .05, .22, KHAKI))
-                .add(box(0, .28, -.135, .34, .3, .04, LEATHER))
-                .add(box(0, .52, 0, .14, .06, .14, ORANGE))
-                .add(box(.04, .46, .09, .08, .1, .02, ORANGE));
-        var head = new Shape()
-                .add(box(0, .02, 0, .1, .08, .1, SKIN))
-                .add(box(0, .15, 0, .22, .22, .22, SKIN))
-                .both(box(.05, .175, .113, .04, .024, .006, FRAME))
-                .add(box(0, .205, .112, .16, .018, .006, LEATHER))
-                .add(box(0, .135, .116, .03, .04, .012, SKIN))
-                .add(box(0, .09, .113, .07, .012, .006, LEATHER))
-                .add(box(0, .3, -.01, .27, .14, .27, TANK))
-                .add(box(0, .39, -.01, .2, .05, .2, TANK))
-                .add(box(0, .232, -.005, .295, .022, .3, TANK))
-                .both(box(.128, .15, -.03, .03, .13, .16, TANK))
-                .both(box(.12, .07, .02, .012, .1, .03, LEATHER))
-                .add(box(0, .3, .142, .15, .05, .02, LEATHER))
-                .both(box(.042, .3, .152, .055, .045, .012, GOGGLE))
-                .add(box(.1, .37, -.02, .02, .06, .1, ORANGE));
-        var arm = new Shape()
-                .add(box(0, -.02, 0, .13, .13, .13, KHAKI))
-                .add(box(0, -.17, 0, .115, .22, .115, KHAKI))
-                .add(box(0, -.16, 0, .125, .05, .125, ORANGE))
-                .add(box(0, -.38, 0, .1, .22, .1, KHAKI))
-                .add(box(0, -.48, 0, .11, .05, .11, LEATHER))
-                .add(box(0, -.56, 0, .09, .1, .09, LEATHER));
-        var leg = new Shape()
-                .add(box(0, -.21, 0, .17, .42, .18, DRAB))
-                .add(box(.0, -.3, .094, .12, .1, .012, KHAKI))
-                .add(box(0, -.56, 0, .15, .28, .16, DRAB))
-                .add(box(0, -.74, 0, .16, .12, .17, LEATHER))
-                .add(box(0, -.87, .015, .165, .15, .2, LEATHER))
-                .add(box(0, -.925, .035, .17, .05, .26, RUBBER));
-        return body("kolonien_soldier", torso, head, arm, leg);
-    }
-
-    private static Family kolonienHeavy() {
-        var torso = new Shape()
-                .add(box(0, .05, 0, .5, .17, .3, OILED))
-                .add(box(0, .3, 0, .52, .4, .3, DRAB))
-                .add(box(0, .34, .165, .56, .36, .05, ORANGE))
-                .add(box(0, .14, .165, .46, .08, .05, HAZARD))
-                .add(box(0, .49, .165, .34, .04, .055, SCRAP))
-                .both(box(.3, .34, 0, .05, .5, .36, SCRAP))
-                .add(box(0, .55, 0, .7, .08, .3, SCRAP))
-                .add(box(0, .16, -.18, .4, .05, .08, SCRAP))
-                .add(box(0, .36, -.18, .44, .4, .07, OILED))
-                .add(drumY(.13, .55, -.3, .23, .78, CANISTER))
-                .add(drumY(-.13, .55, -.3, .23, .78, CANISTER))
-                .both(box(.13, .955, -.3, .1, .05, .1, SCRAP))
-                .both(box(.13, .985, -.3, .05, .03, .05, ORANGE))
-                .both(box(.13, .36, -.3, .245, .04, .245, ORANGE).spinY(45))
-                .both(box(.13, .74, -.3, .245, .04, .245, ORANGE).spinY(45))
-                .add(box(.0, .62, -.1, .05, .2, .05, SCRAP));
-        var head = new Shape()
-                .add(box(0, .02, 0, .13, .08, .13, SKIN))
-                .add(box(0, .14, 0, .23, .2, .23, SKIN))
-                .add(box(0, .15, .118, .17, .05, .012, LENS))
-                .add(box(0, .07, .118, .15, .05, .02, RUBBER))
-                .add(box(0, .28, -.005, .28, .1, .28, ORANGE))
-                .add(box(0, .24, .03, .33, .02, .35, ORANGE))
-                .add(box(0, .28, .15, .07, .05, .03, SCRAP))
-                .add(box(0, .28, .167, .05, .035, .006, EMBER));
-        var arm = new Shape()
-                .add(box(0, .0, 0, .2, .2, .2, SCRAP))
-                .add(box(0, .1, 0, .26, .06, .26, ORANGE))
-                .add(box(0, -.2, 0, .13, .24, .13, DRAB))
-                .both(box(.085, -.2, 0, .025, .28, .06, SCRAP))
-                .add(box(0, -.36, 0, .17, .08, .17, OILED))
-                .add(box(0, -.46, 0, .15, .18, .15, SCRAP))
-                .add(box(0, -.46, .08, .1, .1, .012, ORANGE))
-                .add(box(0, -.58, 0, .15, .12, .15, LEATHER));
-        var leg = new Shape()
-                .add(box(0, -.1, 0, .2, .26, .2, DRAB))
-                .both(box(.115, -.2, 0, .03, .42, .07, SCRAP))
-                .add(box(0, -.33, .08, .15, .13, .07, OILED))
-                .add(box(0, -.45, 0, .18, .2, .19, DRAB))
-                .add(box(0, -.68, .01, .25, .28, .26, ORANGE))
-                .add(box(0, -.56, .01, .27, .04, .28, SCRAP))
-                .add(box(0, -.84, .06, .28, .08, .38, RUBBER))
-                .add(box(0, -.86, .06, .3, .04, .42, SCRAP));
-        return body("kolonien_heavy", torso, head, arm, leg);
-    }
-
-    private static Family kolonienScout() {
-        var torso = new Shape()
-                .add(box(0, .1, 0, .3, .2, .19, DRAB))
-                .add(box(0, .3, 0, .34, .26, .2, DRAB))
-                .add(box(0, .1, 0, .46, .34, .32, SAND))
-                .add(box(0, .33, .135, .44, .4, .03, SAND).spinX(-22.5))
-                .add(box(0, .33, -.135, .44, .4, .03, SAND).spinX(22.5))
-                .both(box(.19, .33, 0, .03, .4, .34, SAND).spinZ(22.5))
-                .add(box(0, .03, .25, .64, .36, .03, SAND).spinX(-22.5))
-                .add(box(0, .03, -.25, .64, .36, .03, SAND).spinX(22.5))
-                .both(box(.26, .03, 0, .03, .36, .62, SAND).spinZ(22.5))
-                .add(box(0, -.146, .325, .64, .02, .032, KHAKI).spinX(-22.5))
-                .add(box(0, -.146, -.325, .64, .02, .032, KHAKI).spinX(22.5))
-                .both(box(.335, -.146, 0, .032, .02, .62, KHAKI).spinZ(22.5))
-                .both(box(.08, -.175, .35, .03, .045, .025, KHAKI), box(.22, -.175, .35, .03, .045, .025, KHAKI))
-                .both(box(.08, -.175, -.35, .03, .045, .025, KHAKI), box(.22, -.175, -.35, .03, .045, .025, KHAKI))
-                .add(box(0, .46, 0, .26, .1, .24, WRAP))
-                .add(box(.0, .14, .32, .14, .08, .012, ORANGE).spinX(-22.5))
-                .add(box(.0, .28, -.2, .07, .3, .02, WRAP).spinX(22.5));
-        var head = new Shape()
-                .add(box(0, .02, 0, .12, .07, .12, WRAP))
-                .add(box(0, .15, 0, .22, .22, .22, WRAP))
-                .add(box(0, .27, -.015, .25, .06, .24, SAND))
-                .add(box(0, .325, -.04, .16, .06, .17, SAND))
-                .both(box(.118, .17, -.03, .02, .22, .19, SAND))
-                .add(box(0, .17, .113, .2, .05, .008, LEATHER))
-                .both(box(.052, .17, .121, .06, .055, .012, GOGGLE))
-                .add(box(0, .17, .118, .03, .02, .012, SCRAP))
-                .add(box(0, .07, .05, .26, .06, .22, WRAP))
-                .add(box(.0, .15, -.13, .07, .22, .02, WRAP));
-        var arm = new Shape()
-                .add(box(0, -.04, 0, .1, .1, .1, SAND))
-                .add(box(0, -.2, 0, .09, .24, .09, DRAB))
-                .add(box(0, -.4, 0, .085, .2, .085, DRAB))
-                .add(box(0, -.34, 0, .092, .025, .092, WRAP))
-                .add(box(0, -.43, 0, .092, .025, .092, WRAP))
-                .add(box(0, -.54, 0, .08, .09, .08, LEATHER));
-        var leg = new Shape()
-                .add(box(0, -.21, 0, .13, .42, .14, DRAB))
-                .add(box(0, -.56, 0, .115, .28, .125, DRAB))
-                .add(box(0, -.48, 0, .122, .03, .132, KHAKI))
-                .add(box(0, -.56, 0, .122, .03, .132, KHAKI))
-                .add(box(0, -.64, 0, .122, .03, .132, KHAKI))
-                .add(box(0, -.76, 0, .12, .1, .13, LEATHER))
-                .add(box(0, -.88, .015, .125, .13, .17, LEATHER))
-                .add(box(0, -.93, .03, .13, .04, .22, RUBBER))
-                .add(box(.07, -.2, .0, .02, .1, .1, LEATHER));
-        return body("kolonien_scout", torso, head, arm, leg);
-    }
-
-    private static Family kolonienMedic() {
-        var torso = new Shape()
-                .add(box(0, .05, 0, .4, .13, .22, DRAB))
-                .add(box(0, .0, 0, .42, .045, .24, LEATHER))
-                .add(box(0, .28, 0, .42, .36, .22, WRAP))
-                .add(box(0, .34, .118, .1, .24, .018, ORANGE).spinZ(45))
-                .add(box(0, .47, 0, .28, .05, .2, WRAP))
-                .add(box(0, .34, -.25, .46, .54, .26, LEATHER))
-                .add(box(0, .44, -.25, .47, .05, .27, ORANGE))
-                .add(box(0, .2, -.385, .36, .16, .02, KHAKI))
-                .add(box(0, .34, -.39, .2, .05, .012, ORANGE))
-                .add(box(0, .69, -.25, .54, .17, .17, KHAKI))
-                .both(box(.27, .69, -.25, .012, .13, .13, ORANGE))
-                .both(box(.29, .24, -.22, .1, .28, .18, KHAKI))
-                .both(box(.14, .28, .125, .09, .1, .03, LEATHER))
-                .add(box(-.27, -.01, .02, .11, .15, .17, LEATHER))
-                .add(box(-.33, -.01, .02, .012, .07, .1, ORANGE));
-        var head = new Shape()
-                .add(box(0, .02, 0, .1, .08, .1, SKIN))
-                .add(box(0, .15, 0, .22, .22, .22, SKIN))
-                .both(box(.05, .175, .113, .04, .024, .006, FRAME))
-                .add(box(0, .09, .114, .2, .09, .012, WRAP))
-                .add(box(0, .27, -.005, .25, .07, .25, DRAB))
-                .add(box(0, .25, .15, .22, .022, .1, DRAB))
-                .add(box(0, .3, .0, .2, .04, .2, DRAB))
-                .add(box(.0, .275, .129, .1, .03, .006, ORANGE));
-        var arm = new Shape()
-                .add(box(0, -.02, 0, .125, .125, .125, WRAP))
-                .add(box(0, -.17, 0, .11, .22, .11, WRAP))
-                .add(box(0, -.15, 0, .12, .07, .12, ORANGE))
-                .add(box(0, -.38, 0, .095, .22, .095, WRAP))
-                .add(box(0, -.46, 0, .105, .07, .105, LEATHER))
-                .add(box(0, -.56, 0, .09, .1, .09, RUBBER));
-        var leg = new Shape()
-                .add(box(0, -.21, 0, .165, .42, .175, DRAB))
-                .both(box(.087, -.26, .0, .03, .12, .11, LEATHER))
-                .add(box(0, -.56, 0, .14, .28, .155, DRAB))
-                .add(box(0, -.74, 0, .15, .12, .165, LEATHER))
-                .add(box(0, -.87, .015, .155, .15, .19, LEATHER))
-                .add(box(0, -.925, .035, .16, .05, .25, RUBBER));
-        return body("kolonien_medic", torso, head, arm, leg);
-    }
-
-    private static Shape kolonienSpeeder(boolean damaged) {
-        var shape = new Shape()
-                .add(box(0, .28, -.05, .72, .15, 1.95, SCRAP))
-                .add(box(0, .17, -.05, .5, .08, 1.7, RUSTED))
-                .add(box(0, .3, 1.0, .58, .12, .3, RUSTED))
-                .add(box(0, .28, 1.24, .4, .09, .26, ORANGE))
-                .add(box(0, .25, 1.4, .24, .06, .14, HAZARD))
-                .add(box(0, .37, 1.02, .5, .04, .5, ORANGE).spinX(22.5))
-                .add(box(0, .48, -.12, .36, .1, .52, LEATHER))
-                .add(box(0, .57, -.42, .34, .24, .1, LEATHER))
-                .add(box(0, .4, .34, .42, .12, .3, OILED))
-                .add(box(0, .52, .52, .42, .03, .22, ORANGE).spinX(45))
-                .add(box(0, .62, .5, .04, .2, .04, SCRAP))
-                .add(box(0, .71, .5, .46, .035, .035, OILED))
-                .both(box(.23, .71, .5, .05, .05, .05, RUBBER))
-                .add(drumZ(0, .62, -.92, .86, 1.0, SCRAP))
-                .add(drumZ(0, .62, -.56, .94, .1, RUSTED))
-                .add(drumZ(0, .62, -.92, .94, .08, OILED))
-                .add(drumZ(0, .62, -1.26, .94, .1, RUSTED))
-                .add(drumZ(0, .62, -.42, .66, .03, FRAME))
-                .add(drumZ(0, .62, -1.38, .72, .16, OILED))
-                .add(drumZ(0, .62, -1.462, .46, .012, FURNACE))
-                .add(drumZ(0, .62, -1.47, .22, .012, FURNACE_CORE))
-                .add(box(0, .62, -.4, .13, .13, .03, SCRAP))
-                .add(box(0, .62, -.402, .6, .04, .015, SCRAP))
-                .add(box(0, .62, -.402, .6, .04, .014, SCRAP).spinZ(45))
-                .add(box(0, .62, -.402, .6, .04, .013, SCRAP).spinZ(-45))
-                .add(box(0, .62, -.402, .04, .6, .012, SCRAP))
-                .both(box(.52, .28, -.3, .34, .08, .5, SCRAP))
-                .both(box(.64, .28, .1, .2, .18, 1.25, ORANGE))
-                .both(box(.64, .28, .74, .14, .12, .12, RUSTED))
-                .both(box(.64, .28, -.53, .12, .1, .04, EMBER))
-                .both(box(.64, .18, .1, .24, .04, 1.1, OILED))
-                .both(box(.5, .82, -.92, .08, .08, .7, SCRAP))
-                .both(box(.3, .96, -.92, .07, .07, .5, OILED));
-        if (!damaged) {
-            return shape;
+                .add(box(0, .015, 0, .14, .06, .14, FRAME))
+                .add(box(0, .18, 0, .28, .27, .27, CERAMIC))
+                .add(box(0, .325, -.015, .23, .06, .22, CERAMIC))
+                .add(box(0, .37, -.015, .05, .05, .24, stripe))
+                .add(box(0, .235, .142, .25, .035, .02, LENS))
+                .add(box(0, .177, .145, .04, .1, .025, LENS))
+                .both(box(.09, .125, .14, .09, .09, .035, CERAMIC).spinZ(22.5))
+                .both(box(.1, .085, .16, .045, .045, .04, FRAME))
+                .add(box(0, .067, .125, .12, .025, .055, TRIM))
+                .both(box(.145, .16, -.005, .035, .13, .16, CERAMIC))
+                .both(box(.151, .12, .03, .027, .04, .075, FRAME))
+                .add(box(0, .285, .142, .045, .065, .012, stripe));
+        if (role == CloneRole.REX || role == CloneRole.SCOUT) {
+            head.add(box(-.18, .3, -.01, .015, .26, .015, FRAME))
+                    .add(box(-.15, .435, .02, .09, .035, .09, STEEL));
         }
-        var torn = shape.burnt(.55);
-        return torn.add(
-                box(.42, .22, .6, .36, .025, .5, RUSTED.burnt()).spinX(-22.5),
-                box(-.42, .42, -.2, .3, .025, .36, ORANGE.burnt()).spinZ(45),
-                box(0, .6, -.5, .5, .4, .02, FRAME),
-                box(.3, 1.02, -.8, .22, .02, .3, SCRAP.burnt()).spinZ(22.5),
-                box(-.2, .34, 1.1, .2, .025, .34, ORANGE.burnt()).spinY(22.5));
+        if (role == CloneRole.REX) {
+            head.both(box(.075, .292, .15, .045, .035, .012, FRAME).spinZ(45))
+                    .both(box(.05, .32, .15, .02, .035, .012, FRAME));
+        }
+        return head;
     }
 
-    private static Shape hegemonieSpeeder(boolean damaged) {
-        var shape = new Shape()
-                .add(box(0, .3, -.1, .66, .14, 1.9, CERAMIC))
-                .add(box(0, .205, -.1, .46, .05, 1.8, STEEL))
-                .add(box(0, .19, .3, .3, .012, .9, CYAN))
-                .add(box(0, .3, 1.0, .42, .1, .5, CERAMIC))
-                .add(box(0, .28, 1.3, .22, .06, .3, CERAMIC))
-                .add(box(0, .275, 1.44, .1, .04, .1, TRIM))
-                .add(box(0, .38, .95, .34, .03, .56, CERAMIC).spinX(22.5))
-                .add(box(0, .4, .98, .03, .012, .5, CYAN).spinX(22.5))
-                .both(box(.46, .285, -.15, .24, .055, 1.25, CERAMIC).spinY(-22.5))
-                .both(box(.48, .315, -.15, .03, .012, 1.15, CYAN).spinY(-22.5))
-                .both(box(.335, .3, -.3, .012, .03, 1.2, CYAN))
-                .add(box(0, .46, -.2, .32, .1, .5, FRAME))
-                .add(box(0, .57, -.48, .3, .24, .08, TRIM))
-                .both(box(.25, .46, -.15, .14, .18, .7, CERAMIC))
-                .add(box(0, .44, .28, .46, .14, .3, CERAMIC))
-                .add(box(0, .57, .39, .36, .18, .025, LENS).spinX(-45))
-                .add(box(0, .47, -.82, .56, .22, .6, CERAMIC))
-                .add(box(0, .59, -.85, .3, .02, .5, TRIM))
-                .add(drumZ(.24, .33, -1.15, .3, .6, STEEL))
-                .add(drumZ(-.24, .33, -1.15, .3, .6, STEEL))
-                .both(box(.24, .33, -1.455, .2, .2, .012, CYAN))
-                .both(box(.24, .33, -.88, .34, .08, .02, CYAN))
-                .both(box(.37, .62, -.95, .03, .34, .62, CERAMIC).spinZ(-22.5).about(.28, .45, -.95))
-                .both(box(.37, .86, -1.08, .03, .18, .46, CERAMIC).spinZ(-22.5).about(.28, .45, -.95))
-                .both(box(.37, 1.0, -1.18, .03, .12, .3, TRIM).spinZ(-22.5).about(.28, .45, -.95))
-                .both(box(.37, .62, -.635, .012, .32, .012, CYAN).spinZ(-22.5).about(.28, .45, -.95));
-        if (!damaged) {
-            return shape;
+    private static Family cloneTrooper(String name, CloneRole role) {
+        Paint stripe = role == CloneRole.MEDIC ? MAROON : BLUE;
+        var torso = new Shape()
+                .add(box(0, .05, 0, .4, .13, .23, FRAME))
+                .add(box(0, .25, 0, .42, .34, .23, FRAME))
+                .add(box(0, .36, .045, .46, .2, .2, CERAMIC))
+                .add(box(0, .19, .12, .35, .09, .035, CERAMIC))
+                .add(box(0, .08, .12, .34, .07, .035, CERAMIC))
+                .add(box(0, -.005, 0, .44, .06, .26, CERAMIC))
+                .both(box(.14, -.015, .15, .075, .09, .06, CERAMIC))
+                .add(box(0, .36, .151, .055, .2, .016, stripe))
+                .add(box(0, .36, -.14, .34, .21, .04, CERAMIC))
+                .add(box(0, .51, 0, .14, .065, .14, FRAME));
+        var arm = new Shape()
+                .add(box(0, -.025, 0, .18, .16, .19, CERAMIC))
+                .add(box(0, -.025, .1, .09, .15, .015, stripe))
+                .add(box(0, -.19, 0, .13, .21, .14, CERAMIC))
+                .add(box(0, -.325, 0, .1, .055, .1, FRAME))
+                .add(box(0, -.44, 0, .125, .19, .14, CERAMIC))
+                .add(box(0, -.565, 0, .1, .09, .1, FRAME));
+        var leg = new Shape()
+                .add(box(0, -.21, 0, .18, .37, .2, CERAMIC))
+                .add(box(0, -.43, .045, .145, .095, .18, CERAMIC))
+                .add(box(0, -.5, 0, .1, .07, .1, FRAME))
+                .add(box(0, -.66, 0, .155, .25, .17, CERAMIC))
+                .add(box(0, -.87, .04, .165, .13, .23, CERAMIC))
+                .add(box(0, -.945, .035, .17, .03, .25, FRAME));
+        if (role == CloneRole.HEAVY || role == CloneRole.REX) {
+            torso.both(box(.22, -.14, 0, .025, .28, .29, FRAME))
+                    .add(box(0, .23, -.25, .35, .38, .2, STEEL))
+                    .both(box(.2, .46, 0, .16, .055, .28, stripe));
         }
-        var torn = shape.burnt(.6);
-        return torn.add(
-                box(.3, .44, -.3, .34, .02, .5, CERAMIC.burnt()).spinZ(-22.5),
-                box(-.4, .2, .6, .3, .02, .5, STEEL.burnt()).spinX(22.5),
-                box(0, .36, .7, .2, .1, .3, FRAME),
-                box(-.55, .46, -.7, .22, .02, .3, CERAMIC.burnt()).spinZ(45));
+        if (role == CloneRole.SCOUT) {
+            torso.add(box(0, .29, -.22, .27, .34, .16, FRAME));
+        }
+        if (role == CloneRole.MEDIC) {
+            torso.add(box(0, .29, -.25, .35, .4, .22, CERAMIC))
+                    .add(box(0, .3, -.37, .18, .055, .025, MAROON))
+                    .add(box(0, .3, -.37, .055, .18, .026, MAROON));
+        }
+        return body(name, torso, cloneHelmet(role), arm, leg);
+    }
+
+    private static Shape humanHead(boolean dooku) {
+        Paint hair = dooku ? GREY_HAIR : HAIR;
+        return new Shape()
+                .add(box(0, .025, 0, .12, .08, .12, SKIN))
+                .add(box(0, .17, 0, .22, .23, .22, SKIN))
+                .add(box(0, .3, -.015, .24, .05, .23, hair))
+                .add(box(0, .21, -.11, .23, .18, .04, hair))
+                .both(box(.116, .21, -.035, .025, .15, .15, hair))
+                .both(box(.05, .21, .114, .035, .018, .012, LENS))
+                .both(box(.052, .239, .114, .05, .014, .012, hair))
+                .add(box(0, .16, .12, .035, .04, .03, SKIN))
+                .add(box(0, .095, .115, .17, .075, .028, hair))
+                .add(box(0, .123, .133, .065, .015, .008, SKIN));
+    }
+
+    private static Family forceHero(boolean dooku) {
+        Paint cloth = dooku ? FRAME : WRAP;
+        var torso = new Shape()
+                .add(box(0, .27, 0, .43, .39, .24, cloth))
+                .add(box(0, .025, 0, .44, .06, .26, LEATHER))
+                .add(box(0, .025, .14, .07, .045, .025, STEEL))
+                .both(box(.095, .3, .13, .09, .32, .02, dooku ? FRAME : SAND).spinZ(22.5))
+                .add(box(0, .51, 0, .14, .07, .14, SKIN));
+        var arm = new Shape()
+                .add(box(0, -.15, 0, .16, .32, .16, cloth))
+                .add(box(0, -.42, 0, .14, .2, .14, dooku ? FRAME : CERAMIC))
+                .add(box(0, -.56, 0, .1, .1, .1, SKIN));
+        var leg = new Shape()
+                .add(box(0, -.25, 0, .18, .48, .18, dooku ? FRAME : SAND))
+                .add(box(0, -.69, 0, .17, .37, .18, LEATHER))
+                .add(box(0, -.91, .035, .18, .08, .26, LEATHER));
+        if (dooku) {
+            torso.add(box(0, -.06, -.19, .58, 1.05, .045, LEATHER))
+                    .both(box(.22, .42, -.1, .16, .17, .2, LEATHER))
+                    .add(box(0, .43, .14, .3, .02, .02, STEEL));
+        } else {
+            torso.both(box(.2, -.17, 0, .025, .32, .28, WRAP));
+        }
+        return body(dooku ? "hero_sith" : "hero_jedi", torso, humanHead(dooku), arm, leg);
+    }
+
+    private static Shape mandoHelmet() {
+        return new Shape()
+                .add(box(0, .19, 0, .28, .29, .27, TRIM))
+                .add(box(0, .35, 0, .23, .045, .22, STEEL))
+                .add(box(0, .245, .145, .26, .025, .02, LENS))
+                .add(box(0, .16, .145, .045, .15, .02, LENS))
+                .both(box(.09, .15, .145, .09, .15, .025, BLUE))
+                .both(box(.15, .2, 0, .025, .18, .15, BLUE))
+                .add(box(-.175, .34, -.01, .015, .25, .015, FRAME))
+                .add(box(-.15, .475, .02, .08, .035, .09, STEEL));
+    }
+
+    private static Family jangoFett() {
+        var torso = new Shape()
+                .add(box(0, .27, 0, .43, .39, .24, BLUE))
+                .both(box(.11, .36, .145, .18, .18, .05, TRIM))
+                .add(box(0, .17, .145, .25, .1, .04, TRIM))
+                .add(box(0, .015, 0, .45, .07, .27, LEATHER))
+                .both(box(.17, .015, .16, .07, .1, .07, LEATHER))
+                .add(box(0, .29, -.24, .25, .35, .2, BLUE))
+                .both(box(.19, .29, -.24, .12, .4, .15, STEEL))
+                .add(box(0, .56, -.24, .06, .2, .07, STEEL));
+        var arm = new Shape()
+                .add(box(0, -.03, 0, .19, .15, .2, TRIM))
+                .add(box(0, -.2, 0, .13, .22, .14, BLUE))
+                .add(box(0, -.43, 0, .15, .2, .16, TRIM))
+                .add(box(0, -.56, 0, .1, .09, .1, LEATHER));
+        var leg = new Shape()
+                .add(box(0, -.22, 0, .18, .4, .18, BLUE))
+                .add(box(0, -.22, .105, .15, .27, .04, TRIM))
+                .add(box(0, -.46, .07, .15, .09, .1, TRIM))
+                .add(box(0, -.66, 0, .15, .26, .17, BLUE))
+                .add(box(0, -.66, .1, .13, .24, .035, TRIM))
+                .add(box(0, -.9, .03, .17, .13, .25, FRAME));
+        return body("hero_bounty_hunter", torso, mandoHelmet(), arm, leg);
+    }
+
+    private static Shape barcSpeeder(boolean damaged) {
+        var shape = new Shape()
+                .add(box(0, .31, -.1, .46, .18, 1.25, CERAMIC))
+                .add(box(0, .32, .86, .19, .1, 1.1, CERAMIC))
+                .add(box(0, .38, .86, .08, .025, 1.1, MAROON))
+                .both(box(.22, .31, 1.2, .06, .06, .45, FRAME))
+                .add(box(0, .46, -.18, .32, .1, .55, FRAME))
+                .add(box(0, .55, -.47, .32, .2, .08, FRAME))
+                .add(box(0, .49, .3, .04, .28, .04, STEEL))
+                .add(box(0, .62, .3, .48, .035, .04, FRAME))
+                .both(box(.36, .28, -.65, .24, .28, .88, CERAMIC))
+                .both(box(.36, .435, -.65, .1, .025, .75, MAROON))
+                .add(drumZ(.36, .28, -1.12, .19, .03, CYAN))
+                .add(drumZ(-.36, .28, -1.12, .19, .03, CYAN))
+                .both(box(.26, .18, -.06, .16, .04, .32, STEEL));
+        return damaged ? shape.burnt(.6) : shape;
+    }
+
+    private static Shape stap(boolean damaged) {
+        var shape = new Shape()
+                .add(box(0, .45, .32, .18, .84, .22, DROID))
+                .add(box(0, .25, .45, .16, .18, .35, DROID))
+                .add(box(0, .85, .3, .34, .12, .3, DROID))
+                .both(box(.11, .86, .6, .045, .045, .4, FRAME))
+                .add(box(0, .9, .1, .5, .04, .04, FRAME))
+                .both(box(.32, .35, .25, .3, .21, .65, DROID))
+                .both(box(.32, .35, -.085, .19, .12, .02, RED))
+                .add(box(0, .04, -.15, .72, .055, .32, STEEL))
+                .add(box(0, .04, .1, .12, .08, .34, FRAME));
+        return damaged ? shape.burnt(.6) : shape;
     }
 
     private static Family speeders(String faction, Shape intact, Shape damaged) {
-        return new Family("speeder_" + faction, 32, false, List.of(
+        return new Family("speeder_" + faction, 48, false, List.of(
                 new Model("sternenfront/speeder/" + faction, intact),
                 new Model("sternenfront/speeder/" + faction + "_damaged", damaged)));
     }
 
-    private static Family hegemonieDropship() {
+    private static Family republicGunship() {
         var hull = new Shape()
-                .add(box(0, .62, -.1, .9, .34, 2.1, CERAMIC))
-                .add(box(0, .44, -.1, .7, .1, 1.9, STEEL))
-                .add(box(0, .6, 1.04, .62, .24, .3, CERAMIC))
-                .add(box(0, .57, 1.26, .36, .15, .24, CERAMIC))
-                .add(box(0, .72, .95, .5, .16, .5, CERAMIC).spinX(22.5))
-                .add(box(0, .78, .92, .34, .1, .03, LENS).spinX(-45).shifted(0, .02, .2))
-                .add(box(0, .87, -.3, .36, .18, 1.5, CERAMIC))
-                .add(box(0, .97, -.3, .05, .04, 1.3, CYAN))
-                .add(box(0, 1.19, -1.1, .05, .5, .6, CERAMIC))
-                .add(box(0, 1.3, -1.25, .06, .3, .2, TRIM))
-                .both(box(.72, .6, -.5, .7, .06, 1.3, CERAMIC).spinY(-22.5))
-                .both(box(1.0, .6, -.72, .24, .07, .5, TRIM).spinY(-22.5))
-                .both(box(.76, .635, -.46, .03, .012, 1.1, CYAN).spinY(-22.5))
-                .both(box(.56, .52, -.75, .34, .26, .7, STEEL))
-                .both(box(.56, .52, -1.11, .24, .18, .012, CYAN))
-                .both(box(.56, .385, -.75, .24, .012, .4, CYAN))
-                .both(box(.46, .6, .3, .02, .22, .6, FRAME))
-                .both(box(.461, .6, .3, .012, .03, .5, CYAN))
-                .both(box(.33, .22, .55, .06, .4, .06, FRAME))
-                .both(box(.33, .03, .55, .2, .06, .26, STEEL))
-                .both(box(.4, .22, -.75, .07, .4, .07, FRAME))
-                .both(box(.4, .03, -.75, .22, .06, .3, STEEL))
-                .add(box(0, .4, 0, .6, .02, .5, FRAME));
+                .add(box(0, .55, -.1, .68, .49, 1.9, CERAMIC))
+                .add(box(0, .29, -.1, .64, .05, 1.8, STEEL))
+                .both(box(.36, .55, -.06, .025, .34, .9, FRAME))
+                .add(box(0, .64, .92, .45, .3, .45, CERAMIC))
+                .add(box(0, .82, .75, .3, .16, .37, LENS).spinX(22.5))
+                .add(box(0, .92, .38, .3, .16, .32, LENS).spinX(22.5))
+                .both(box(.43, .54, .75, .12, .12, .12, FRAME))
+                .both(box(.43, .54, .96, .04, .04, .34, STEEL))
+                .both(box(.79, .83, -.45, .98, .07, .9, CERAMIC).spinZ(22.5))
+                .both(box(.84, .87, -.45, .25, .02, .65, MAROON).spinZ(22.5))
+                .both(box(.3, .99, -.46, .2, .22, 1.35, STEEL))
+                .both(box(.3, .99, -1.145, .14, .14, .02, CYAN))
+                .both(box(.72, .66, -.05, .18, .18, .18, LENS))
+                .add(box(0, .55, -1.1, .5, .37, .2, MAROON))
+                .add(box(0, 1.03, -1.04, .05, .5, .4, CERAMIC))
+                .both(box(.28, .15, .55, .05, .26, .05, STEEL))
+                .both(box(.28, .03, .55, .2, .05, .25, STEEL));
+        return new Family("dropship_kolonien", 72, false, List.of(new Model("sternenfront/dropship/kolonien", hull)));
+    }
+
+    private static Family separatistTransport() {
+        var hull = new Shape()
+                .add(box(0, .5, -.15, .66, .33, 1.8, DROID))
+                .add(box(0, .64, .6, .45, .45, .5, DROID))
+                .add(box(0, .87, .61, .29, .04, .36, FRAME))
+                .both(box(.76, .46, -.15, .86, .22, 1.7, DROID))
+                .both(box(.76, .59, -.15, .6, .025, 1.3, MAROON))
+                .both(box(1.16, .28, -.15, .12, .37, 1.65, DROID))
+                .both(box(.76, .44, -1.02, .56, .14, .025, RED))
+                .both(box(.76, .28, -.15, .56, .14, 1.3, FRAME))
+                .add(box(0, .3, .45, .36, .1, .55, FRAME))
+                .both(box(.6, .12, -.6, .08, .24, .08, STEEL))
+                .both(box(.6, .02, -.6, .25, .04, .3, STEEL));
         return new Family("dropship_hegemonie", 72, false, List.of(new Model("sternenfront/dropship/hegemonie", hull)));
     }
 
-    private static Family kolonienDropship() {
-        var hull = new Shape()
-                .add(box(0, .55, -.15, 1.05, .5, 1.9, SCRAP))
-                .add(box(0, .28, -.15, .85, .08, 1.7, RUSTED))
-                .add(box(0, .86, -.3, .8, .14, 1.3, RUSTED))
-                .add(box(0, .56, .95, .9, .44, .3, ORANGE))
-                .add(box(0, .5, 1.14, .7, .3, .1, HAZARD))
-                .add(box(0, .75, 1.0, .72, .24, .3, RUSTED))
-                .add(box(0, .78, 1.15, .52, .13, .03, GOGGLE))
-                .add(box(0, .6, 1.25, .36, .22, .2, ORANGE))
-                .both(box(.56, .55, .3, .05, .44, .9, ORANGE))
-                .both(box(.585, .55, -.4, .02, .34, .3, FRAME))
-                .both(box(.585, .75, -.4, .02, .03, .34, HAZARD))
-                .add(drumZ(.74, .58, -.7, .44, 1.2, SCRAP))
-                .add(drumZ(-.74, .58, -.7, .44, 1.2, SCRAP))
-                .add(drumZ(.74, .58, -.3, .5, .05, OILED))
-                .add(drumZ(-.74, .58, -.3, .5, .05, OILED))
-                .add(drumZ(.74, .58, -1.0, .5, .05, OILED))
-                .add(drumZ(-.74, .58, -1.0, .5, .05, OILED))
-                .add(drumZ(.74, .58, -1.31, .34, .012, FURNACE))
-                .add(drumZ(-.74, .58, -1.31, .34, .012, FURNACE))
-                .add(drumZ(.74, .58, -1.32, .16, .012, FURNACE_CORE))
-                .add(drumZ(-.74, .58, -1.32, .16, .012, FURNACE_CORE))
-                .both(box(.74, .34, -.7, .26, .012, .5, FURNACE))
-                .add(box(0, .24, .55, .3, .012, .4, FURNACE))
-                .add(box(0, 1.03, -.5, .5, .2, .7, OILED))
-                .both(box(.3, 1.2, -.5, .05, .22, .05, SCRAP))
-                .both(box(.45, .22, .55, .08, .44, .08, SCRAP))
-                .both(box(.45, .03, .55, .26, .06, .32, RUSTED))
-                .both(box(.56, .22, -.8, .1, .44, .1, SCRAP))
-                .both(box(.56, .03, -.8, .3, .06, .36, RUSTED))
-                .both(box(.53, .36, .2, .03, .2, .06, OILED).spinZ(22.5));
-        return new Family("dropship_kolonien", 72, false, List.of(new Model("sternenfront/dropship/kolonien", hull)));
+    private static final String GUN_DISPLAY = """
+            ,"gui_light":"front","display":{
+              "firstperson_righthand":{"rotation":[0,180,0],"translation":[1,1.5,0],"scale":[0.55,0.55,0.55]},
+              "firstperson_lefthand":{"rotation":[0,180,0],"translation":[1,1.5,0],"scale":[0.55,0.55,0.55]},
+              "thirdperson_righthand":{"rotation":[-85,0,0],"translation":[0,2,1],"scale":[0.6,0.6,0.6]},
+              "thirdperson_lefthand":{"rotation":[-85,0,0],"translation":[0,2,1],"scale":[0.6,0.6,0.6]},
+              "gui":{"rotation":[25,140,0],"scale":[0.55,0.55,0.55]},
+              "ground":{"translation":[0,3,0],"scale":[0.4,0.4,0.4]},
+              "fixed":{"rotation":[0,90,0],"translation":[-0.9,1.5,0],"scale":[0.55,0.55,0.55]}}
+            """;
+    private static final String SABER_DISPLAY = """
+            ,"display":{
+              "firstperson_righthand":{"rotation":[0,0,15],"translation":[0,0,0],"scale":[0.7,0.7,0.7]},
+              "firstperson_lefthand":{"rotation":[0,0,-15],"translation":[0,0,0],"scale":[0.7,0.7,0.7]},
+              "thirdperson_righthand":{"rotation":[0,0,0],"translation":[0,2,0],"scale":[0.8,0.8,0.8]},
+              "thirdperson_lefthand":{"rotation":[0,0,0],"translation":[0,2,0],"scale":[0.8,0.8,0.8]},
+              "gui":{"rotation":[0,0,-35],"translation":[-3,-3,0],"scale":[0.6,0.6,0.6]},
+              "ground":{"translation":[0,2,0],"scale":[0.4,0.4,0.4]},
+              "fixed":{"scale":[0.6,0.6,0.6]}}
+            """;
+    private static final String HELMET_DISPLAY = """
+            ,"display":{
+              "head":{"rotation":[0,180,0],"translation":[0,0,0],"scale":[1,1,1]},
+              "gui":{"rotation":[20,150,0],"scale":[0.7,0.7,0.7]},
+              "ground":{"translation":[0,3,0],"scale":[0.4,0.4,0.4]}}
+            """;
+
+    private static Family equipment(String name, Shape shape, String display) {
+        return new Family("equipment_" + name, 64, false, List.of(new Model("sternenfront/" + name, shape, display)));
+    }
+
+    private static Shape rifle(boolean separatist, boolean sniper) {
+        var shape = new Shape()
+                .add(box(0, .03, -.15, .16, .17, .57, FRAME))
+                .add(box(0, .13, -.15, .11, .04, .48, STEEL))
+                .add(box(0, -.15, -.28, .09, .23, .13, FRAME).spinX(22.5))
+                .add(box(0, .015, -.58, .13, .2, .31, FRAME))
+                .add(box(0, -.07, -.53, .16, .07, .27, STEEL))
+                .add(drumZ(0, .03, sniper ? .65 : .46, .075, sniper ? 1.25 : .86, STEEL))
+                .add(drumZ(0, .03, sniper ? 1.27 : .9, .13, .12, FRAME))
+                .add(box(0, .16, .32, .035, .12, .035, FRAME));
+        if (separatist) {
+            shape.add(box(0, -.17, .06, .08, .27, .12, STEEL).spinX(-22.5))
+                    .add(box(.087, .04, -.1, .012, .09, .2, TRIM));
+        } else {
+            shape.add(box(0, -.005, .16, .19, .19, .33, FRAME))
+                    .both(box(.1, .03, .16, .02, .035, .25, STEEL));
+        }
+        if (sniper) {
+            shape.add(drumZ(0, .25, -.12, .115, .36, FRAME))
+                    .add(box(0, .17, -.12, .045, .11, .05, STEEL))
+                    .add(box(0, .25, .066, .075, .075, .012, LENS));
+        }
+        return shape;
+    }
+
+    private static Shape rotaryBlaster() {
+        var shape = new Shape()
+                .add(drumZ(0, .02, -.23, .28, .46, FRAME))
+                .add(drumZ(0, .02, .15, .3, .08, STEEL))
+                .add(drumZ(0, .02, 1.02, .3, .07, STEEL))
+                .add(box(0, -.2, -.27, .11, .25, .13, FRAME))
+                .add(box(0, .27, -.13, .31, .06, .06, FRAME))
+                .both(box(.13, .18, -.13, .05, .2, .06, STEEL));
+        for (int index = 0; index < 6; index++) {
+            double angle = Math.PI * index / 3;
+            shape.add(drumZ(Math.cos(angle) * .1, .02 + Math.sin(angle) * .1, .6, .055, .92, FRAME));
+        }
+        return shape;
+    }
+
+    private static Shape pistol(boolean westar, boolean se14) {
+        Paint metal = westar ? TRIM : FRAME;
+        var shape = new Shape()
+                .add(box(0, .015, -.14, .12, .14, .32, metal))
+                .add(box(0, -.15, -.23, .085, .23, .1, westar ? LEATHER : FRAME).spinX(22.5))
+                .add(drumZ(0, .025, .18, westar ? .09 : .075, .36, metal))
+                .add(drumZ(0, .025, .37, .11, .04, STEEL))
+                .add(box(0, .11, -.12, .025, .05, .035, FRAME))
+                .add(box(0, .09, .29, .025, .05, .035, FRAME));
+        if (se14) {
+            shape.add(drumZ(0, .025, .12, .15, .13, STEEL))
+                    .add(box(0, .15, -.02, .075, .06, .22, FRAME));
+        }
+        return shape;
+    }
+
+    private static Family lightsaber(boolean dooku, boolean lit) {
+        var hilt = new Shape()
+                .add(drumY(0, -.08, 0, .07, .25, STEEL))
+                .add(drumY(0, -.22, 0, .09, .04, FRAME))
+                .add(drumY(0, .075, 0, .065, .07, FRAME))
+                .add(drumY(0, .135, 0, .11, .045, STEEL))
+                .add(box(.045, .025, 0, .025, .055, .025, dooku ? RED : BLUE));
+        if (dooku) {
+            hilt.add(box(.035, -.17, 0, .065, .15, .065, STEEL).spinZ(22.5))
+                    .add(box(.07, -.24, 0, .055, .055, .065, FRAME));
+        } else {
+            hilt.add(drumY(0, -.08, 0, .08, .11, FRAME))
+                    .both(box(.035, -.08, 0, .012, .1, .04, STEEL));
+        }
+        if (lit) {
+            hilt.add(box(0, .81, 0, .035, 1.29, .035, SABER))
+                    .add(box(0, 1.46, 0, .025, .025, .025, SABER));
+        }
+        return equipment("lightsaber_" + (dooku ? "sith" : "jedi") + (lit ? "" : "_off"), hilt, SABER_DISPLAY);
+    }
+
+    private static Family darksaber() {
+        var shape = new Shape()
+                .add(box(0, -.07, 0, .08, .28, .06, FRAME))
+                .add(box(0, .1, 0, .13, .045, .08, STEEL))
+                .add(box(0, .72, 0, .13, 1.2, .025, CERAMIC))
+                .add(box(0, .72, .016, .1, 1.18, .012, FRAME))
+                .add(box(0, .72, -.016, .1, 1.18, .012, FRAME))
+                .add(box(-.016, 1.34, 0, .09, .09, .025, CERAMIC).spinZ(-45))
+                .add(box(-.016, 1.34, .016, .065, .065, .012, FRAME).spinZ(-45));
+        return equipment("relic_blade", shape, SABER_DISPLAY);
+    }
+
+    private static List<Family> equipment() {
+        var wrist = new Shape().add(box(0, -.04, -.12, .28, .25, .45, STEEL))
+                .both(box(.065, .015, .23, .07, .07, .3, FRAME));
+        return List.of(equipment("carbine", rifle(false, false), GUN_DISPLAY),
+                equipment("heavy_rifle", rifle(false, false).add(drumZ(0, .03, 1.06, .075, .25, STEEL)), GUN_DISPLAY),
+                equipment("repeater", rotaryBlaster(), GUN_DISPLAY),
+                equipment("long_rifle", rifle(false, true), GUN_DISPLAY),
+                equipment("pistol", pistol(false, false), GUN_DISPLAY),
+                equipment("twin_pistol", pistol(false, false), GUN_DISPLAY),
+                equipment("e5", rifle(true, false), GUN_DISPLAY),
+                equipment("e5s", rifle(true, true), GUN_DISPLAY),
+                equipment("wrist_blaster", wrist, GUN_DISPLAY),
+                equipment("se14", pistol(false, true), GUN_DISPLAY),
+                equipment("westar_pistols", pistol(true, false), GUN_DISPLAY),
+                lightsaber(false, false), lightsaber(false, true), lightsaber(true, false), lightsaber(true, true), darksaber(),
+                equipment("helmet_kolonien", cloneHelmet(CloneRole.SOLDIER).shifted(0, -.19, 0).scaled(1.8), HELMET_DISPLAY),
+                equipment("helmet_hegemonie", battleDroid("soldier").models.get(1).shape.shifted(0, -.08, 0).scaled(1.8), HELMET_DISPLAY),
+                equipment("cap_commander", cloneHelmet(CloneRole.REX).shifted(0, -.19, 0).scaled(1.8), HELMET_DISPLAY),
+                equipment("helmet_bounty_hunter", mandoHelmet().shifted(0, -.19, 0).scaled(1.8), HELMET_DISPLAY),
+                equipment("hood_jedi", humanHead(false).shifted(0, -.17, 0).scaled(2.1), HELMET_DISPLAY),
+                equipment("mask_sith", humanHead(true).shifted(0, -.17, 0).scaled(2.1), HELMET_DISPLAY));
     }
 
     private static int argb(int alpha, int colour) {
@@ -1183,8 +1108,8 @@ public final class SternenfrontArt {
     private static Family effects() {
         var ring = new Sprite("ring", true, true, SternenfrontArt::ring);
         var scorch = new Sprite("scorch", false, false, SternenfrontArt::scorchMark);
-        var kolonien = new Sprite("flash_kolonien", true, false, star(0xFF8A2E, 0xFF5A10));
-        var hegemonie = new Sprite("flash_hegemonie", true, false, star(0x7CE4FF, 0x25B8EE));
+        var kolonien = new Sprite("flash_kolonien", true, false, star(0x82B5FF, 0x3D8BFF));
+        var hegemonie = new Sprite("flash_hegemonie", true, false, star(0xFF9999, 0xFF3434));
         var puff = new Sprite("smoke", false, false, SternenfrontArt::smoke);
         var melted = new Sprite("slash_edge", false, false, SternenfrontArt::slashEdge);
         var glowing = new Sprite("slash_glow", true, true, SternenfrontArt::slashGlow);
@@ -1197,8 +1122,8 @@ public final class SternenfrontArt {
                 new Model("sternenfront/fx/saber_slash_cold", new Shape().add(box(0, 0, 0, 1, SLASH_HEIGHT, 0, melted).only(Face.NORTH, Face.SOUTH))),
                 new Model("sternenfront/fx/ring", new Shape().add(box(0, 0, 0, 1, 1, 0, ring).only(Face.NORTH, Face.SOUTH))),
                 new Model("sternenfront/fx/scorch", new Shape().add(box(0, 0, 0, 1, 1, 0, scorch).only(Face.NORTH, Face.SOUTH))),
-                new Model("sternenfront/fx/flash_kolonien", flash(kolonien, EMBER)),
-                new Model("sternenfront/fx/flash_hegemonie", flash(hegemonie, CYAN)),
+                new Model("sternenfront/fx/flash_kolonien", flash(kolonien, CYAN)),
+                new Model("sternenfront/fx/flash_hegemonie", flash(hegemonie, RED)),
                 new Model("sternenfront/fx/smoke_puff", new Shape()
                         .add(puff(0, 0, 0, 1, puff))
                         .add(puff(.2, .14, .12, .6, puff))
@@ -1222,12 +1147,137 @@ public final class SternenfrontArt {
                 box(0, 0, 0, .08, .08, .08, core));
     }
 
+    private static Family wristRocket() {
+        var rocket = new Shape()
+                .add(drumZ(0, 0, 0, .11, .42, STEEL))
+                .add(drumZ(0, 0, .24, .075, .08, TRIM))
+                .add(drumZ(0, 0, -.22, .07, .025, FURNACE))
+                .both(box(.075, 0, -.13, .06, .025, .13, FRAME))
+                .add(box(0, .075, -.13, .025, .06, .13, FRAME),
+                        box(0, -.075, -.13, .025, .06, .13, FRAME));
+        return new Family("wrist_rocket", 96, false, List.of(new Model("sternenfront/fx/wrist_rocket", rocket)));
+    }
+
     private static List<Family> families() {
-        return List.of(hegemonieSoldier(), hegemonieHeavy(), hegemonieScout(), hegemonieMedic(),
-                kolonienSoldier(), kolonienHeavy(), kolonienScout(), kolonienMedic(),
-                speeders("kolonien", kolonienSpeeder(false), kolonienSpeeder(true)),
-                speeders("hegemonie", hegemonieSpeeder(false), hegemonieSpeeder(true)),
-                hegemonieDropship(), kolonienDropship(), effects());
+        return List.of(battleDroid("soldier"), superBattleDroid(), battleDroid("scout"), battleDroid("medic"),
+                cloneTrooper("kolonien_soldier", CloneRole.SOLDIER), cloneTrooper("kolonien_heavy", CloneRole.HEAVY),
+                cloneTrooper("kolonien_scout", CloneRole.SCOUT), cloneTrooper("kolonien_medic", CloneRole.MEDIC),
+                cloneTrooper("hero_commander", CloneRole.REX), forceHero(false), forceHero(true), jangoFett(),
+                speeders("kolonien", barcSpeeder(false), barcSpeeder(true)),
+                speeders("hegemonie", stap(false), stap(true)), republicGunship(), separatistTransport(), wristRocket(), effects());
+    }
+
+    private record Point(double x, double y, double z) {
+        Point rotate(Spin spin) {
+            if (spin == null) {
+                return this;
+            }
+            double angle = Math.toRadians(spin.angle);
+            double c = Math.cos(angle);
+            double s = Math.sin(angle);
+            double dx = x - spin.x;
+            double dy = y - spin.y;
+            double dz = z - spin.z;
+            return switch (spin.axis) {
+                case 'x' -> new Point(x, spin.y + dy * c - dz * s, spin.z + dy * s + dz * c);
+                case 'y' -> new Point(spin.x + dx * c + dz * s, y, spin.z - dx * s + dz * c);
+                case 'z' -> new Point(spin.x + dx * c - dy * s, spin.y + dx * s + dy * c, z);
+                default -> throw new IllegalArgumentException("Unknown rotation axis: " + spin.axis);
+            };
+        }
+
+        Point camera() {
+            double across = x * .866 + z * .5;
+            double depth = -x * .5 + z * .866;
+            return new Point(across, (y - 1.49) * .985 - depth * .174, depth * .985 + y * .174);
+        }
+    }
+
+    private record PortraitFace(List<Point> points, int colour, double depth) { }
+
+    private static List<Point> corners(Box box, Face face) {
+        double x = box.x1;
+        double y = box.y1;
+        double z = box.z1;
+        double X = box.x2;
+        double Y = box.y2;
+        double Z = box.z2;
+        return switch (face) {
+            case SOUTH -> List.of(new Point(x, y, Z), new Point(X, y, Z), new Point(X, Y, Z), new Point(x, Y, Z));
+            case NORTH -> List.of(new Point(X, y, z), new Point(x, y, z), new Point(x, Y, z), new Point(X, Y, z));
+            case EAST -> List.of(new Point(X, y, Z), new Point(X, y, z), new Point(X, Y, z), new Point(X, Y, Z));
+            case WEST -> List.of(new Point(x, y, z), new Point(x, y, Z), new Point(x, Y, Z), new Point(x, Y, z));
+            case UP -> List.of(new Point(x, Y, Z), new Point(X, Y, Z), new Point(X, Y, z), new Point(x, Y, z));
+            case DOWN -> List.of(new Point(x, y, z), new Point(X, y, z), new Point(X, y, Z), new Point(x, y, Z));
+        };
+    }
+
+    private static BufferedImage portrait(Family family, int width, int height) {
+        boolean heavy = family.name.equals("hegemonie_heavy");
+        boolean droid = family.name.startsWith("hegemonie");
+        double scale = heavy ? 1.25 : 1;
+        var boxes = new ArrayList<Box>();
+        for (var model : family.models) {
+            String part = model.path.substring(model.path.lastIndexOf('/') + 1);
+            var shape = model.shape;
+            switch (part) {
+                case "torso" -> boxes.addAll(shape.shifted(0, heavy ? .8 : .97, 0).scaled(scale).boxes);
+                case "head" -> boxes.addAll(shape.shifted(0, heavy ? 1.32 : droid ? 1.64 : 1.5, heavy ? .3 : 0).scaled(scale).boxes);
+                case "arm" -> {
+                    boxes.addAll(shape.shifted(heavy ? .47 : droid ? .25 : .3, heavy ? 1.46 : droid ? 1.47 : 1.4, heavy ? .14 : 0).scaled(scale).boxes);
+                    boxes.addAll(shape.shifted(heavy ? -.47 : droid ? -.25 : -.3, heavy ? 1.46 : droid ? 1.47 : 1.4, heavy ? .14 : 0).scaled(scale).boxes);
+                }
+                default -> { }
+            }
+        }
+        var faces = new ArrayList<PortraitFace>();
+        for (var box : boxes) {
+            for (var face : box.faces) {
+                var points = corners(box, face).stream().map(point -> point.rotate(box.spin).camera()).toList();
+                int colour = box.surface.draw(face, 1, 1, new Random(0))[0];
+                double light = switch (face) {
+                    case UP -> 1.08;
+                    case SOUTH -> 1;
+                    case WEST -> .84;
+                    case EAST -> .67;
+                    default -> .55;
+                };
+                int red = Math.clamp((int) (((colour >> 16) & 255) * light), 0, 255);
+                int green = Math.clamp((int) (((colour >> 8) & 255) * light), 0, 255);
+                int blue = Math.clamp((int) ((colour & 255) * light), 0, 255);
+                faces.add(new PortraitFace(points, 0xFF000000 | red << 16 | green << 8 | blue,
+                        points.stream().mapToDouble(Point::z).average().orElseThrow()));
+            }
+        }
+        faces.sort(Comparator.comparingDouble(PortraitFace::depth));
+        int supersampling = 6;
+        var large = new BufferedImage(width * supersampling, height * supersampling, BufferedImage.TYPE_INT_ARGB);
+        var graphics = large.createGraphics();
+        graphics.setPaint(new java.awt.GradientPaint(0, 0, new java.awt.Color(0x29364B), 0, large.getHeight(), new java.awt.Color(0x101925)));
+        graphics.fillRect(0, 0, large.getWidth(), large.getHeight());
+        double zoom = large.getHeight() / .92;
+        for (var face : faces) {
+            var polygon = new java.awt.Polygon();
+            for (var point : face.points) {
+                polygon.addPoint((int) Math.round(large.getWidth() / 2.0 + point.x * zoom),
+                        (int) Math.round(large.getHeight() / 2.0 - point.y * zoom));
+            }
+            graphics.setColor(new java.awt.Color(face.colour, true));
+            graphics.fillPolygon(polygon);
+        }
+        graphics.dispose();
+        var image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        var output = image.createGraphics();
+        output.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION, java.awt.RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+        output.drawImage(large, 0, 0, width, height, null);
+        output.dispose();
+        return image;
+    }
+
+    private static void portraits(Path directory, Family family) throws IOException {
+        Files.createDirectories(directory);
+        ImageIO.write(portrait(family, 50, 22), "png", directory.resolve(family.name + "_large.png").toFile());
+        ImageIO.write(portrait(family, 23, 14), "png", directory.resolve(family.name + "_wide.png").toFile());
     }
 
     private record Tile(String key, Surface surface, Face face, int width, int height) { }
@@ -1331,7 +1381,7 @@ public final class SternenfrontArt {
         Files.createDirectories(json.getParent());
         Files.createDirectories(definition.getParent());
         Files.writeString(json, "{\n  \"textures\":{\"rig\":\"" + texture + "\",\"particle\":\"" + texture + "\"},\n  \"elements\":[\n    "
-                + elements + "\n  ]\n}\n");
+                + elements + "\n  ]" + model.display + "\n}\n");
         boolean tinted = model.shape.boxes.stream().anyMatch(each -> each.surface.tinted());
         Files.writeString(definition, "{\"model\":{\"type\":\"minecraft:model\",\"model\":\"blockcraft:item/" + model.path + "\""
                 + (tinted ? ",\"tints\":[{\"type\":\"minecraft:custom_model_data\",\"index\":0,\"default\":-1}]" : "") + "}}\n");
@@ -1379,6 +1429,12 @@ public final class SternenfrontArt {
     public static void main(String[] args) throws IOException {
         var root = Path.of(args.length == 0 ? "src" : args[0]).resolve("assets/blockcraft");
         for (var family : families()) {
+            write(root, family);
+            if (family.name.startsWith("kolonien_") || family.name.startsWith("hegemonie_")) {
+                portraits(Path.of(args.length == 0 ? "src" : args[0]).resolveSibling("art/sternenfront"), family);
+            }
+        }
+        for (var family : equipment()) {
             write(root, family);
         }
     }

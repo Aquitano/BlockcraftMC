@@ -3,6 +3,7 @@ plugins {
 }
 
 val generateTextures = tasks.register<Exec>("generateTextures") {
+    dependsOn("generateSternenfrontArt")
     workingDir(layout.projectDirectory)
     commandLine("java", "PackArt.java", "src")
 }
@@ -33,8 +34,9 @@ val generateHud = tasks.register<Exec>("generateHud") {
 }
 
 val generateBattle = tasks.register<Exec>("generateBattle") {
+    dependsOn(generateSternenfrontArt)
     workingDir(layout.projectDirectory)
-    commandLine("uv", "run", "--no-project", "BattleArt.py")
+    commandLine("python3", "BattleArt.py")
 }
 
 tasks.register("regenerate") {

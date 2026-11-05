@@ -16,10 +16,12 @@ How the proxy serves the pack is in the [root README](../README.md#resource-pack
   without the pack. At title scale about thirteen letters fit a 1366x768 screen.
 - **Sounds.** World sounds must be mono, because the client places only mono sounds in the world. Each script replaces
   only its own entries in `sounds.json`.
-- **Portraits.** The Sternenfront role cards come from `resourcepack/art/sternenfront`, rendered once from the class
-  models. `PackArt` only copies them in, so a changed class model needs a new render.
+- **Portraits.** `SternenfrontArt.java` renders the role cards into `resourcepack/art/sternenfront` from the class
+  models. `generateTextures` runs that generator before `PackArt` copies them into the menu tiles.
 
 ## Making a model
+
+Sternenfront equipment and body models come from `SternenfrontArt.java`. Edit the generator for those assets.
 
 The hand-made 3D models live in `assets/blockcraft/models/item/<set>/`, each named by its `PackModel`. They are cuboids
 textured with vanilla block textures, which keeps the pack small and the look vanilla. Made in Blockbench, a model is

@@ -1,4 +1,4 @@
-"""Builds original command-post projectors, faction holograms and shield grids."""
+"""Builds command-post projectors, Republic and Separatist holograms, shield grids and firing poses."""
 import json
 import math
 import struct
@@ -33,7 +33,7 @@ def model(name, elements, textures):
 
 
 def generate():
-    palette = {"neutral": (176, 198, 214), "kolonien": (255, 151, 49), "hegemonie": (69, 214, 255)}
+    palette = {"neutral": (176, 198, 214), "kolonien": (61, 139, 255), "hegemonie": (255, 52, 52)}
     for faction, color in palette.items():
         for kind in ("emblem", "grid", "glow"):
             pixels = []
@@ -46,10 +46,12 @@ def generate():
                     elif kind == "glow":
                         ink = True
                     elif faction == "kolonien":
-                        ink = 11 < radius < 13 or abs(dx) < 2 and abs(dy) < 10 or abs(dy + abs(dx) * .55 - 3) < 1.5 and abs(dx) < 10
+                        angle = math.atan2(dy, dx)
+                        ink = 11 < radius < 13 or radius < 3 or 4 < radius < 11 and abs(math.sin(angle * 4)) < .35
                     elif faction == "hegemonie":
                         angle = math.atan2(dy, dx)
-                        ink = 11 < radius < 13 or radius < 4 or 5 < radius < 10 and abs(math.sin(angle * 3)) < .27
+                        edge = 11 / math.cos((angle + math.pi / 6) % (math.pi / 3) - math.pi / 6)
+                        ink = abs(radius - edge) < 1.2 or radius < 3 or 4 < radius < 9 and abs(math.sin(angle * 3)) < .3
                     else:
                         ink = 11 < radius < 13 or abs(abs(dx) + abs(dy) - 7) < 1.5
                     pixels.append((*color, 255 if ink else 0))
@@ -70,7 +72,7 @@ def generate():
         parts.append(box([-.1, 2.5, z], [.2, 4, z + 1], "metal"))
         parts.append(box([15.8, 2.5, z], [16.1, 4, z + 1], "metal"))
     model("projector", parts, textures)
-    for weapon in ("carbine", "repeater", "long_rifle", "pistol", "twin_pistol", "heavy_rifle"):
+    for weapon in ("carbine", "repeater", "long_rifle", "pistol", "twin_pistol", "heavy_rifle", "e5", "e5s", "wrist_blaster", "se14", "westar_pistols"):
         original = json.loads((ROOT / f"models/item/sternenfront/{weapon}.json").read_text())
         display = {}
         for hand in ("firstperson_righthand", "firstperson_lefthand"):
@@ -81,7 +83,7 @@ def generate():
             display[hand] = pose
         write(ROOT / f"models/item/sternenfront/{weapon}_firing.json",
               {"parent": f"blockcraft:item/sternenfront/{weapon}", "display": display})
-    print("Generated battle projectors, original faction emblems, shield grids and firing poses")
+    print("Generated battle projectors, Clone Wars faction emblems, shield grids and firing poses")
 
 
 if __name__ == "__main__":

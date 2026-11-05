@@ -1,0 +1,16 @@
+{
+  "textures":{"rig":"blockcraft:block/sternenfront/rig/equipment_wrist_blaster","particle":"blockcraft:block/sternenfront/rig/equipment_wrist_blaster"},
+  "elements":[
+    {"from":[5.76,5.36,2.48],"to":[10.24,9.36,9.68],"faces":{"north":{"uv":[8.75,8.75,13.25,12.75],"texture":"#rig"},"south":{"uv":[8.75,8.75,13.25,12.75],"texture":"#rig"},"east":{"uv":[0.5,8.75,7.75,12.75],"texture":"#rig"},"west":{"uv":[0.5,8.75,7.75,12.75],"texture":"#rig"},"up":{"uv":[6.0,0.5,10.5,7.75],"texture":"#rig"},"down":{"uv":[0.5,0.5,5.0,7.75],"texture":"#rig"}}},
+    {"from":[8.48,7.68,9.28],"to":[9.6,8.8,14.08],"faces":{"north":{"uv":[6.25,13.75,7.25,14.75],"texture":"#rig"},"south":{"uv":[6.25,13.75,7.25,14.75],"texture":"#rig"},"east":{"uv":[0.5,13.75,5.25,14.75],"texture":"#rig"},"west":{"uv":[0.5,13.75,5.25,14.75],"texture":"#rig"},"up":{"uv":[13.5,0.5,14.5,5.25],"texture":"#rig"},"down":{"uv":[11.5,0.5,12.5,5.25],"texture":"#rig"}}},
+    {"from":[6.4,7.68,9.28],"to":[7.52,8.8,14.08],"faces":{"north":{"uv":[6.25,13.75,7.25,14.75],"texture":"#rig"},"south":{"uv":[6.25,13.75,7.25,14.75],"texture":"#rig"},"east":{"uv":[0.5,13.75,5.25,14.75],"texture":"#rig"},"west":{"uv":[0.5,13.75,5.25,14.75],"texture":"#rig"},"up":{"uv":[13.5,0.5,14.5,5.25],"texture":"#rig"},"down":{"uv":[11.5,0.5,12.5,5.25],"texture":"#rig"}}}
+  ],"gui_light":"front","display":{
+  "firstperson_righthand":{"rotation":[0,180,0],"translation":[1,1.5,0],"scale":[0.55,0.55,0.55]},
+  "firstperson_lefthand":{"rotation":[0,180,0],"translation":[1,1.5,0],"scale":[0.55,0.55,0.55]},
+  "thirdperson_righthand":{"rotation":[-85,0,0],"translation":[0,2,1],"scale":[0.6,0.6,0.6]},
+  "thirdperson_lefthand":{"rotation":[-85,0,0],"translation":[0,2,1],"scale":[0.6,0.6,0.6]},
+  "gui":{"rotation":[25,140,0],"scale":[0.55,0.55,0.55]},
+  "ground":{"translation":[0,3,0],"scale":[0.4,0.4,0.4]},
+  "fixed":{"rotation":[0,90,0],"translation":[-0.9,1.5,0],"scale":[0.55,0.55,0.55]}}
+
+}

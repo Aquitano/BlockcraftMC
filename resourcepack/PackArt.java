@@ -1883,8 +1883,8 @@ public final class PackArt {
 
         static final int HEADING = 0xFF9CA6B8;
         static final int TROUGH = 0xFF12141A;
-        static final int KOLONIEN = 0xFFE89A5A;
-        static final int HEGEMONIE = 0xFF6FCDEF;
+        static final int KOLONIEN = 0xFF3D8BFF;
+        static final int HEGEMONIE = 0xFFFF3434;
         static final List<Card> CARDS = List.of(
                 new Card("quicksg", "quicksg", 0xFF69B982, Scene.FOREST),
                 new Card("emeraldrush", "emeraldrush", 0xFF5ED7AE, Scene.MINE),

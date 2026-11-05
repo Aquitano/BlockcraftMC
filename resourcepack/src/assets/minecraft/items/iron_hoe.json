@@ -5,13 +5,6 @@
     "index": 0,
     "cases": [
       {
-        "when": "blockcraft:ttt/silenced_pistol",
-        "model": {
-          "type": "minecraft:model",
-          "model": "blockcraft:item/ttt/silenced_pistol"
-        }
-      },
-      {
         "when": "blockcraft:icon/loadout",
         "model": {
           "type": "minecraft:model",
@@ -30,6 +23,27 @@
         "model": {
           "type": "minecraft:model",
           "model": "blockcraft:item/sternenfront/carbine_firing"
+        }
+      },
+      {
+        "when": "blockcraft:sternenfront/e5",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/sternenfront/e5"
+        }
+      },
+      {
+        "when": "blockcraft:sternenfront/e5_firing",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/sternenfront/e5_firing"
+        }
+      },
+      {
+        "when": "blockcraft:ttt/silenced_pistol",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/ttt/silenced_pistol"
         }
       },
       {
