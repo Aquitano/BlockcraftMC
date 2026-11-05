@@ -823,7 +823,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     public void botDied(LivingEntity victim, Faction faction, Optional<Player> killer, int points) {
         support.killed(victim, killer, points);
         reinforcements.lose(faction, 1);
-        killer.filter(this::onField).filter(player -> factionOf(player).filter(own -> own != faction).isPresent()).ifPresent(player -> {
+        killer.filter(this::isPlaying).filter(player -> factionOf(player).filter(own -> own != faction).isPresent()).ifPresent(player -> {
             heroes.earn(player, points);
             fieldKills.merge(player.getUniqueId(), 1, Integer::sum);
             mark(player, "kill", SoundCue.KILL);
