@@ -18,6 +18,8 @@ public final class Secrets {
 
     public static void start(JavaPlugin plugin, SternenfrontGame game, Messages messages) {
         var config = SecretsConfig.from(plugin.getConfig());
+        var events = Bukkit.getPluginManager();
+        events.registerEvents(new MayTheFourth(plugin, messages, game.map(), config.mayTheFourthFactor()), plugin);
         if (game.map().secrets().isEmpty()) {
             return;
         }
@@ -30,12 +32,10 @@ public final class Secrets {
         var beast = new SandBeast(game, messages, discoveries, spots.dune(), config);
         var musicBox = new MusicBox(game, messages, discoveries, spots.musicBox());
         var kessel = new KesselCourse(plugin, game, messages, discoveries, times, spots.course(), config);
-        var events = Bukkit.getPluginManager();
         events.registerEvents(discoveries, plugin);
         events.registerEvents(brummi, plugin);
         events.registerEvents(musicBox, plugin);
         events.registerEvents(kessel, plugin);
-        events.registerEvents(new MayTheFourth(plugin, messages, game.map(), config.mayTheFourthFactor()), plugin);
         Bukkit.getScheduler().runTaskTimer(plugin, () -> {
             long tick = Bukkit.getCurrentTick();
             crystals.tick(tick);

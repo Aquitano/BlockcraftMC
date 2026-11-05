@@ -31,7 +31,10 @@ A map's template is restored before each server start. Positions and bot routes 
 
 Body rigs are cosmetic. Combat uses the underlying fighter's hitbox, including the larger-looking B2. Fighters see
 other deployed bodies as rigs; the owner keeps their normal first-person and F5 body. Spectators see the original
-entities so the kill camera remains usable. Hiding a player's body also removes them from that viewer's tab list.
+entities of rigged bodies so the kill camera remains usable, and the plain model of animated bots. Hiding a player's body
+also removes them from that viewer's tab list.
+
+BetterModel draws animated bots as packets, which a replay cannot record, so they play back as their equipped skeletons.
 
 Scope zoom uses movement slowdown. Clients with FOV effects disabled see the slowdown without a narrower view.
 Music and cantina audio use the Music category. Combat effects use the Players category.

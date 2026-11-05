@@ -240,10 +240,10 @@ relic:
     - "<muted>Mandalores schwarze Lichtschwertklinge."
     - "<right>Halten zum Blocken <dark>· <muted>Zweimal springen für den Machtsprung"
     - "<muted>F packt einen Gegner mit dem Machtgriff, Q zieht dich mit dem Fesselkabel."
-  appeared: "<accent>Dunkelschwert <muted>in der Tempelruine"
+  appeared: "<accent>Dunkelschwert <muted>auf dem Schlachtfeld"
   taken: "<prefix><white><player> <muted>trägt nun das <accent>Dunkelschwert <muted>für <faction><muted>!"
   slain: "<prefix><white><killer> <muted>hat <white><player> <muted>besiegt und das <accent>Dunkelschwert <muted>zurück in die Ruine geschickt!"
-  lost: "<prefix><muted>Das <accent>Dunkelschwert <muted>kehrt in die Tempelruine zurück."
+  lost: "<prefix><muted>Das <accent>Dunkelschwert <muted>kehrt an seinen Platz zurück."
 
 post:
   capture-banner: "<accent>Posten <letter> <muted>gesichert"

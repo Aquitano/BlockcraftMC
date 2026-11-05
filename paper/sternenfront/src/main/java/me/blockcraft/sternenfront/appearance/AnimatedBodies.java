@@ -33,7 +33,13 @@ final class AnimatedBodies implements AutoCloseable {
     private final BiPredicate<Player, LivingEntity> outlined;
     private final Map<UUID, Trackers> bodies = new HashMap<>();
 
-    private record Trackers(Shown plain, Shown outlined) { }
+    private record Trackers(LivingEntity actor, Shown plain, Shown outlined) {
+
+        void close() {
+            plain.tracker().close();
+            outlined.tracker().close();
+        }
+    }
 
     private record Shown(EntityTracker tracker) {
 
@@ -76,20 +82,25 @@ final class AnimatedBodies implements AutoCloseable {
             tracker.update(TrackerUpdateAction.glow(true));
             tracker.update(TrackerUpdateAction.glowColor(ENEMY_OUTLINE));
         });
-        return new Trackers(new Shown(plain), new Shown(glowing));
+        return new Trackers(actor, new Shown(plain), new Shown(glowing));
     }
 
-    /** A dead body keeps its trackers until BetterModel has played the death animation and closed them. */
+    /** A dead body keeps its trackers until BetterModel has played the death animation and closed them; nothing closes those of a bot removed alive. */
     void forgetAbsent(Set<UUID> present) {
-        bodies.keySet().retainAll(present);
+        bodies.entrySet().removeIf(entry -> {
+            if (present.contains(entry.getKey())) {
+                return false;
+            }
+            if (entry.getValue().actor().getHealth() > 0) {
+                entry.getValue().close();
+            }
+            return true;
+        });
     }
 
     @Override
     public void close() {
-        bodies.values().forEach(trackers -> {
-            trackers.plain().tracker().close();
-            trackers.outlined().tracker().close();
-        });
+        bodies.values().forEach(Trackers::close);
         bodies.clear();
     }
 }
