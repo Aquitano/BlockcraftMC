@@ -17,7 +17,8 @@ ARENA = ROOT / "worlds/sternenfront/blockcraft/Sternenfront/arena.yml"
 PORT = int(os.environ.get("VERIFY_PORT", "25599"))
 STACK = ("mariadb", "velocity", "sternenfront", "client")
 PLAYER = "Verify"
-HQ_X = 60
+HQ_X = 55
+MODEL_ABOVE_FEET = 2
 HERO_NAMES = {"jedi": "Obi-Wan", "commander": "Captain Rex", "sith": "Count Dooku", "bounty-hunter": "Jango"}
 DEFAULT_WINDOW = (960, 540, 2)
 COMMON_SCALES = [(960, 540, 2), (1366, 768, 3), (1920, 1080, 4)]
@@ -209,13 +210,15 @@ def as_trooper(client):
 
 
 def enemies(client, radius=64):
-    """Outlined enemies out on the map: anything at a headquarters is inside a zone that hurts a visitor."""
-    return [each for each in client("entities", radius=radius)["entities"] if each["glowing"] and abs(each["x"]) < HQ_X]
+    """Feet of outlined bot bodies out on the map: the relic glows too, and anything at a headquarters is inside a zone that hurts a visitor."""
+    return [{**each, "y": each["y"] - MODEL_ABOVE_FEET} for each in client("entities", radius=radius)["entities"]
+            if each["glowing"] and each.get("model", "").endswith("_outlined_torso") and abs(each["x"]) < HQ_X]
 
 
 def stand_near_enemy(client, reach=4):
     """Goes to open ground beside the nearest outlined enemy, where the bots can see and shoot back."""
-    client.until("an enemy near a post", lambda: to_enemy(client), 90, 2)
+    if not enemies(client):
+        client.until("an enemy near a post", lambda: to_enemy(client), 90, 2)
     target = enemies(client)[0]
     for dx, dz in ((reach, 0), (-reach, 0), (0, reach), (0, -reach)):
         rcon(f"tp {PLAYER} {target['x'] + dx} {target['y']} {target['z'] + dz}")
@@ -271,7 +274,7 @@ def back_on_field(client):
 
 
 def fight(client, run, seconds=20, frames=8):
-    """Stands beside an outlined enemy and shoots whatever is nearest, recording what the player saw, heard and read."""
+    """Keeps beside the nearest outlined enemy, since outlines show through walls, and shoots it, recording what the player saw, heard and read."""
     as_trooper(client)
     stand_near_enemy(client)
     client("hotbar", slot=0)
@@ -288,8 +291,10 @@ def fight(client, run, seconds=20, frames=8):
         if time.monotonic() >= next_shot:
             run.shot(client)
             next_shot += gap
+            stand_near_enemy(client)
         time.sleep(0.3)
     run.report.update(summarize(client("events", since=start)["events"], client("hud")["gui_width"]))
+    run.report["hits"] = run.report["sounds"].get("blockcraft:sternenfront.hitmarker", 0)
 
 
 def fire(client, run):
