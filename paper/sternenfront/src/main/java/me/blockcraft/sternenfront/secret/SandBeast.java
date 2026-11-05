@@ -79,7 +79,7 @@ final class SandBeast {
             }
             var at = player.getLocation();
             var still = standing.get(player.getUniqueId());
-            if (still == null || still.at().distanceSquared(at) > MOVED * MOVED) {
+            if (still == null || tick < quietUntil || still.at().distanceSquared(at) > MOVED * MOVED) {
                 standing.put(player.getUniqueId(), new Still(at, tick));
                 continue;
             }
