@@ -4,6 +4,7 @@ import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.ItemAttributeModifiers;
 import me.blockcraft.api.replay.RecordedModel;
 import me.blockcraft.sternenfront.appearance.BodyRigs;
+import me.blockcraft.sternenfront.arena.FrontMap;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.pack.PackModel;
 import me.blockcraft.sternenfront.combat.Melee;
@@ -20,6 +21,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
+import org.bukkit.SoundCategory;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
@@ -49,7 +51,6 @@ public final class Bots implements Listener {
     private static final int THINK_TICKS = 4;
     private static final int ROUTE_TICKS = 20;
     private static final int OBJECTIVE_TICKS = 60;
-    private static final double KEEP_DISTANCE = 8;
     private static final double PEEK_REACH = 3;
     private static final double WOUNDED_SHARE = 0.3;
     /**
@@ -88,6 +89,11 @@ public final class Bots implements Listener {
         private Location destination;
         private long navigatedAt;
         private long signatureAt;
+        private Location cover;
+        private Location peek;
+        private long coverPhaseUntil;
+        private boolean peeking;
+        private long voiceAt;
 
         private Soldier(int number, Faction faction) {
             this.number = number;
@@ -108,6 +114,7 @@ public final class Bots implements Listener {
     private double sightShare = 1;
     private int nextNumber;
     private BotConfig.Tuning tuning;
+    private long voiceAt;
 
     public Bots(SternenfrontGame game, BotConfig config) {
         this.game = game;
@@ -296,6 +303,11 @@ public final class Bots implements Listener {
         soldier.destination = null;
         soldier.navigatedAt = tick;
         soldier.signatureAt = tick;
+        soldier.cover = null;
+        soldier.peek = null;
+        soldier.coverPhaseUntil = 0;
+        soldier.peeking = false;
+        soldier.voiceAt = tick;
         bodies.put(mob.getUniqueId(), soldier);
         identities.put(mob.getUniqueId(), soldier.faction);
     }
@@ -330,6 +342,7 @@ public final class Bots implements Listener {
                 soldier.volley.clear();
                 soldier.target = enemy.getUniqueId();
                 soldier.reactAt = tick + tuning.reactionTicks() + ThreadLocalRandom.current().nextInt(tuning.reactionTicks() + 1);
+                call(soldier, "contact", tick);
             }
             soldier.lastSeen = enemy.getLocation();
             soldier.seenUntil = tick + config.memoryTicks();
@@ -342,7 +355,7 @@ public final class Bots implements Listener {
             }
         } else {
             soldier.volley.clear();
-            if (soldier.lastSeen != null && tick <= soldier.seenUntil) {
+            if (remembering(soldier, tick)) {
                 var toward = soldier.lastSeen.clone().add(0, 1, 0).toVector().subtract(mob.getEyeLocation().toVector());
                 if (toward.lengthSquared() > 0.01) {
                     soldier.idleAim = toward;
@@ -476,16 +489,22 @@ public final class Bots implements Listener {
         boolean seekingPatient = false;
         var patient = soldier.role == CombatClass.MEDIC ? patient(soldier) : Optional.<LivingEntity>empty();
         boolean wounded = wounded(mob);
+        var threat = target.map(LivingEntity::getEyeLocation)
+                .or(() -> remembering(soldier, tick) ? Optional.of(soldier.lastSeen.clone().add(0, 1.6, 0)) : Optional.empty());
+        var protectedPosition = threat.flatMap(enemy -> cover(soldier, enemy, tick));
+        if (threat.isEmpty()) {
+            soldier.cover = null;
+            soldier.peek = null;
+        }
         if (game.gadgets().sieging(mob)) {
             activity = "siege";
             destination = here;
         } else if (defending && !game.posts().safe(soldier.objective, soldier.faction)) {
             activity = "contest-owned-post";
             destination = capturing ? here : route.capture();
-        } else if (route != null && (soldier.heat.venting(tick) || wounded)
-                && (target.isPresent() || soldier.lastSeen != null && tick <= soldier.seenUntil)) {
-            activity = wounded ? "retreat-wounded" : "cover-venting";
-            destination = wounded ? route.retreat() : route.cover();
+        } else if (protectedPosition.isPresent() && (wounded || soldier.heat.venting(tick) || patient.isEmpty())) {
+            activity = soldier.peeking ? "peek-from-cover" : wounded ? "retreat-wounded" : "hold-cover";
+            destination = protectedPosition.get();
         } else if (patient.isPresent()) {
             seekingPatient = here.distanceSquared(patient.get().getLocation()) > 9 || !mob.hasLineOfSight(patient.get());
             activity = seekingPatient ? "follow-patient" : "treat-patient";
@@ -493,11 +512,7 @@ public final class Bots implements Listener {
         } else if (defending) {
             activity = "defend-peek";
             destination = route.peek();
-        } else if (target.isPresent() && here.distanceSquared(target.get().getLocation()) < KEEP_DISTANCE * KEEP_DISTANCE
-                && (!capturing || soldier.heat.venting(tick))) {
-            activity = "keep-distance";
-            destination = route == null ? null : route.cover();
-        } else if (target.isEmpty() && soldier.lastSeen != null && tick <= soldier.seenUntil
+        } else if (target.isEmpty() && remembering(soldier, tick)
                 && post != null && soldier.lastSeen.distanceSquared(post.center()) < 28 * 28) {
             activity = "investigate-last-seen";
             destination = soldier.lastSeen;
@@ -529,7 +544,11 @@ public final class Bots implements Listener {
             soldier.stuckTicks = 0;
             return;
         }
-        if (here.distanceSquared(destination) <= 2.25 && !seekingPatient) {
+        boolean usingCover = protectedPosition.filter(destination::equals).isPresent();
+        double arrivalDistance = usingCover ? 0.36 : 2.25;
+        boolean protectedArrival = !usingCover || soldier.peeking
+                || threat.filter(enemy -> BotCover.shields(here, mob.getEyeHeight(), enemy)).isPresent();
+        if (here.distanceSquared(destination) <= arrivalDistance && protectedArrival && !seekingPatient) {
             soldier.navigationResult = "arrived";
             mob.getPathfinder().stopPathfinding();
             soldier.stuckTicks = 0;
@@ -550,8 +569,89 @@ public final class Bots implements Listener {
             }
             soldier.stuckTicks = 0;
             soldier.waypoint = 0;
+            soldier.cover = null;
+            soldier.peek = null;
         }
         soldier.navigationResult = mob.getPathfinder().moveTo(destination, 1.0) ? "accepted" : "unreachable";
+    }
+
+    private boolean remembering(Soldier soldier, long tick) {
+        long allowance = soldier.cover == null ? 0 : config.cover().holdTicks() + config.cover().peekTicks() + ROUTE_TICKS;
+        return soldier.lastSeen != null && tick <= soldier.seenUntil + allowance;
+    }
+
+    private Optional<Location> cover(Soldier soldier, Location threat, long tick) {
+        var mob = soldier.body;
+        var here = mob.getLocation();
+        var settings = config.cover();
+        if (soldier.cover == null || !BotCover.shields(soldier.cover, mob.getEyeHeight(), threat)) {
+            var preferred = new ArrayList<Location>();
+            if (soldier.objective >= 0) {
+                for (var route : game.map().posts().get(soldier.objective).routes().get(soldier.faction)) {
+                    preferred.add(route.cover());
+                    preferred.add(route.retreat());
+                }
+            }
+            soldier.cover = BotCover.find(mob, here, preferred, settings.searchRadius(), at ->
+                    game.map().playArea().contains(at.toVector()) && BotCover.shields(at, mob.getEyeHeight(), threat)
+                            && soldiers.stream().noneMatch(other -> other != soldier && other.body != null
+                            && other.cover != null && other.cover.distanceSquared(at) < 2.25)).orElse(null);
+            soldier.peek = null;
+            soldier.peeking = false;
+            soldier.coverPhaseUntil = 0;
+            if (soldier.cover == null) {
+                return Optional.empty();
+            }
+            call(soldier, "cover", tick);
+        }
+        if (soldier.heat.venting(tick) || wounded(mob)
+                || soldier.peeking && BotCover.blocked(soldier.peek.clone().add(0, mob.getEyeHeight(), 0), threat)) {
+            soldier.peeking = false;
+            soldier.coverPhaseUntil = 0;
+        }
+        var destination = soldier.peeking ? soldier.peek : soldier.cover;
+        boolean arrived = here.distanceSquared(destination) <= 0.36 && (soldier.peeking
+                ? !BotCover.blocked(mob.getEyeLocation(), threat) : BotCover.shields(here, mob.getEyeHeight(), threat));
+        if (arrived) {
+            if (soldier.coverPhaseUntil == 0) {
+                soldier.coverPhaseUntil = tick + (soldier.peeking ? settings.peekTicks() : settings.holdTicks());
+            } else if (tick >= soldier.coverPhaseUntil) {
+                if (soldier.peeking) {
+                    soldier.peeking = false;
+                } else {
+                    var preferred = soldier.objective < 0 ? List.<Location>of()
+                            : game.map().posts().get(soldier.objective).routes().get(soldier.faction).stream()
+                            .map(FrontMap.Route::peek).toList();
+                    soldier.peek = BotCover.find(mob, soldier.cover, preferred, Math.min(4, settings.searchRadius()), at ->
+                            game.map().playArea().contains(at.toVector()) && at.distanceSquared(soldier.cover) >= 1
+                                    && !BotCover.blocked(at.clone().add(0, mob.getEyeHeight(), 0), threat)).orElse(null);
+                    soldier.peeking = soldier.peek != null;
+                    if (soldier.peeking) {
+                        call(soldier, "advance", tick);
+                    }
+                }
+                soldier.coverPhaseUntil = 0;
+            }
+        }
+        return Optional.of(soldier.peeking ? soldier.peek : soldier.cover);
+    }
+
+    private void call(Soldier soldier, String cue, long tick) {
+        var voice = config.voice();
+        if (!voice.enabled() || voice.volume() <= 0 || tick < voiceAt || tick < soldier.voiceAt) {
+            return;
+        }
+        var at = soldier.body.getEyeLocation();
+        var listeners = game.combatants().stream().filter(Player.class::isInstance).map(Player.class::cast)
+                .filter(player -> player.getWorld().equals(at.getWorld()) && player.getLocation().distanceSquared(at) <= voice.range() * voice.range())
+                .toList();
+        if (listeners.isEmpty()) {
+            return;
+        }
+        String sound = "blockcraft:sternenfront.bot." + soldier.faction.key() + "." + cue;
+        listeners.forEach(player -> player.playSound(at, sound, SoundCategory.VOICE, voice.volume(), 1));
+        voiceAt = tick + voice.globalCooldownTicks();
+        soldier.voiceAt = tick + voice.soldierCooldownTicks();
     }
 
     private void fire(Soldier soldier, long tick) {
@@ -641,6 +741,7 @@ public final class Bots implements Listener {
                     game.heal(ally, config.healAmount());
                     ally.getWorld().spawnParticle(Particle.HEART, ally.getLocation().add(0, 1.8, 0), 2, 0.2, 0.1, 0.2, 0);
                     soldier.healAt = tick + config.healTicks();
+                    call(soldier, "heal", tick);
                 });
     }
 
@@ -712,6 +813,14 @@ public final class Bots implements Listener {
     }
 
     public void clear() {
+        for (var player : Bukkit.getOnlinePlayers()) {
+            for (var faction : Faction.values()) {
+                for (var cue : List.of("contact", "cover", "advance", "heal")) {
+                    player.stopSound("blockcraft:sternenfront.bot." + faction.key() + "." + cue, SoundCategory.VOICE);
+                }
+            }
+        }
+        voiceAt = 0;
         sightShare = 1;
         soldiers.forEach(this::remove);
         soldiers.clear();

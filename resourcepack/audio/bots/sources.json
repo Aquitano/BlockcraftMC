@@ -1,0 +1,38 @@
+{
+  "voice": {
+    "name": "de_DE-thorsten-high",
+    "author": "Thorsten Müller (Thorsten-Voice), Piper model by rhasspy",
+    "dataset_license": "CC0-1.0",
+    "dataset_source": "https://github.com/thorstenMueller/Thorsten-Voice",
+    "model_card": "https://huggingface.co/rhasspy/piper-voices/blob/main/de/de_DE/thorsten/high/MODEL_CARD",
+    "model_url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/de/de_DE/thorsten/high/de_DE-thorsten-high.onnx",
+    "engine": "piper-tts 1.4.2",
+    "length_scale": 0.95,
+    "noise_scale": 0.4,
+    "noise_w_scale": 0.6,
+    "model_sha256": "9df1c43c61149ef9b39e618e2b861fbe41e1fcea9390b2dac62e8761573ea4f1",
+    "config_sha256": "6de734444e4c3f9e33b7ebe2746dbc19b71e85f613e79c65acf623200b99a76a"
+  },
+  "calls": {
+    "contact": {
+      "message": "bot.voice.contact",
+      "sha256": "ff2a85594aad9543cea37b7fe6b5b19d3fcd752f0d12de3b52b3546fb939ddba",
+      "text_sha256": "8eeeac2bd05a9d43b80febaa7e927f200f1973ca46b3880e2ce618b8e3a3887c"
+    },
+    "cover": {
+      "message": "bot.voice.cover",
+      "sha256": "c75e9129ae66649b26b51ed56388a0ecaaa9e628c73cb4a9c72e68b07fb80dab",
+      "text_sha256": "607c65c29e6448ef1e3a955a449541829c03c9b0bfbcc74f54a83c57f742be84"
+    },
+    "advance": {
+      "message": "bot.voice.advance",
+      "sha256": "19097e83bd2f19b4f69bae29ad3e21965905aa94146aab15858b723379b699fa",
+      "text_sha256": "bd6f68c30aed47aef197c4ec0d050be3e94a87070c72badfccfd3f63ac625c45"
+    },
+    "heal": {
+      "message": "bot.voice.heal",
+      "sha256": "280f4edb4d6759490d883c006676bcb72939710d8f509f9e9d50a3160354bced",
+      "text_sha256": "b4fcc402817d8bb3d3d6440aabe4c19ccbd2a2739c9fdd55141b2304b47ef33e"
+    }
+  }
+}

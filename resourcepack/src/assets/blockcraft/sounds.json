@@ -312,5 +312,69 @@
     "sounds": [
       "blockcraft:sternenfront/wrist_rocket_impact"
     ]
+  },
+  "sternenfront.bot.kolonien.contact": {
+    "sounds": [
+      {
+        "name": "blockcraft:sternenfront/bot_kolonien_contact",
+        "attenuation_distance": 24
+      }
+    ]
+  },
+  "sternenfront.bot.hegemonie.contact": {
+    "sounds": [
+      {
+        "name": "blockcraft:sternenfront/bot_hegemonie_contact",
+        "attenuation_distance": 24
+      }
+    ]
+  },
+  "sternenfront.bot.kolonien.cover": {
+    "sounds": [
+      {
+        "name": "blockcraft:sternenfront/bot_kolonien_cover",
+        "attenuation_distance": 24
+      }
+    ]
+  },
+  "sternenfront.bot.hegemonie.cover": {
+    "sounds": [
+      {
+        "name": "blockcraft:sternenfront/bot_hegemonie_cover",
+        "attenuation_distance": 24
+      }
+    ]
+  },
+  "sternenfront.bot.kolonien.advance": {
+    "sounds": [
+      {
+        "name": "blockcraft:sternenfront/bot_kolonien_advance",
+        "attenuation_distance": 24
+      }
+    ]
+  },
+  "sternenfront.bot.hegemonie.advance": {
+    "sounds": [
+      {
+        "name": "blockcraft:sternenfront/bot_hegemonie_advance",
+        "attenuation_distance": 24
+      }
+    ]
+  },
+  "sternenfront.bot.kolonien.heal": {
+    "sounds": [
+      {
+        "name": "blockcraft:sternenfront/bot_kolonien_heal",
+        "attenuation_distance": 24
+      }
+    ]
+  },
+  "sternenfront.bot.hegemonie.heal": {
+    "sounds": [
+      {
+        "name": "blockcraft:sternenfront/bot_hegemonie_heal",
+        "attenuation_distance": 24
+      }
+    ]
   }
 }

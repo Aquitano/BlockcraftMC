@@ -8,7 +8,11 @@ import java.util.Map;
 public record BotConfig(boolean enabled, int perTeam, double range, double visionAngle, int memoryTicks,
                         double idleTurnDegrees, double stepHeight,
                         int killPoints, int healTicks, double healAmount,
-                        BotDifficulty difficulty, Map<BotDifficulty, Tuning> profiles) {
+                        Cover cover, Voice voice, BotDifficulty difficulty, Map<BotDifficulty, Tuning> profiles) {
+
+    public record Cover(double searchRadius, int holdTicks, int peekTicks) { }
+
+    public record Voice(boolean enabled, double range, float volume, int soldierCooldownTicks, int globalCooldownTicks) { }
 
     public record Tuning(int reactionTicks, int shotTicks, double spread, int burstShots, int burstPauseTicks,
                          double trackingDegrees, double damageScale, boolean headshots) { }
@@ -42,6 +46,14 @@ public record BotConfig(boolean enabled, int perTeam, double range, double visio
                 Math.max(0, config.getInt("bots.kill-points", 25)),
                 Math.max(1, config.getInt("bots.medic.heal-ticks", 60)),
                 Math.max(0, config.getDouble("bots.medic.heal-amount", 3)),
+                new Cover(Math.clamp(config.getDouble("bots.cover.search-radius", 10), 3, 16),
+                        Math.clamp(config.getInt("bots.cover.hold-ticks", 40), 20, 200),
+                        Math.clamp(config.getInt("bots.cover.peek-ticks", 40), 20, 100)),
+                new Voice(config.getBoolean("bots.voice.enabled", true),
+                        Math.clamp(config.getDouble("bots.voice.range", 18), 4, 32),
+                        (float) Math.clamp(config.getDouble("bots.voice.volume", 0.65), 0, 1),
+                        Math.max(100, config.getInt("bots.voice.soldier-cooldown-ticks", 360)),
+                        Math.max(60, config.getInt("bots.voice.global-cooldown-ticks", 100))),
                 BotDifficulty.named(config.getString("bots.difficulty", "normal")).orElse(BotDifficulty.NORMAL),
                 Map.copyOf(profiles));
     }

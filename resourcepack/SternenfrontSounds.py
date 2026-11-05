@@ -17,6 +17,7 @@ from pathlib import Path
 from SaberRecordings import generate as recorded_sabers
 from BattleRecordings import generate as recorded_battle
 from IntroBriefings import generate as intro_briefings
+from BotVoices import generate as bot_voices
 
 import numpy as np
 from scipy import signal
@@ -417,5 +418,6 @@ if not args.only:
     events.update(recorded_sabers(ROOT))
     events.update(recorded_battle(ROOT))
     events.update(intro_briefings(ROOT))
+    events.update(bot_voices(ROOT))
 register(events, replace=not args.only)
 print(f"Wrote {sum(len(entry['sounds']) for entry in events.values())} sounds for {len(events)} events to {OUT}")

@@ -523,6 +523,11 @@ streak:
 
 bot:
   name: "<tint><role> <number></tint>"
+  voice:
+    contact: "Feind voraus!"
+    cover: "Ich gehe in Deckung!"
+    advance: "Ich rücke vor!"
+    heal: "Ich versorge dich!"
   difficulty:
     open: "<arrow><primary>Bot-Stärke"
     open-lore:
