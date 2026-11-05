@@ -1,5 +1,6 @@
 package me.blockcraft.sternenfront.arena;
 
+import org.bukkit.Location;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.junit.Rule;
 import org.junit.Test;
@@ -8,6 +9,7 @@ import org.junit.rules.TemporaryFolder;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class ArenaFileTest {
@@ -55,6 +57,7 @@ public class ArenaFileTest {
         var map = ArenaFile.load(null, file.toPath());
         assertEquals(384, map.worldBorderSize(), 0.001);
         assertEquals(194, map.playArea().getWidthX(), 0.001);
+        assertEquals(40, map.deathY(), 0.001);
 
         yaml.set("world-border-size", 100);
         yaml.save(file);
@@ -143,5 +146,28 @@ public class ArenaFileTest {
         var file = temporary.newFile();
         yaml.save(file);
         return ArenaFile.load(null, file.toPath()).secrets().orElseThrow();
+    }
+
+    @Test
+    public void battlefieldUsesTheDeathPlaneAndHorizontalPlayAreaBelowScenicAndFlightBounds() throws Exception {
+        var yaml = new YamlConfiguration();
+        yaml.createSection("headquarters");
+        yaml.set("play-area", List.of(-100.0, 50.0, -150.0, 100.0, 144.0, 145.0));
+        yaml.set("world-border-size", 384);
+        yaml.set("death-y", 60.0);
+        for (var position : List.of("relic", "overview", "lobby", "spectator")) yaml.set(position, "0.5 65 0.5");
+        var file = temporary.newFile("battlefield.yml");
+        yaml.save(file);
+        var map = ArenaFile.load(null, file.toPath());
+        assertEquals(60, map.deathY(), 0.001);
+        assertFalse(map.outsideBattlefield(new Location(null, 97.5, 65, 0)));
+        assertFalse(map.outsideBattlefield(new Location(null, 0, 200, 0)));
+        assertFalse(map.outsideBattlefield(new Location(null, -100, 60, -150)));
+        assertTrue(map.outsideBattlefield(new Location(null, 0, 59.9, 0)));
+        assertTrue(map.outsideBattlefield(new Location(null, 0, 46, 0)));
+        assertTrue(map.outsideBattlefield(new Location(null, 100, 65, 0)));
+        assertTrue(map.outsideBattlefield(new Location(null, -100.1, 65, 0)));
+        assertTrue(map.outsideBattlefield(new Location(null, 0, 65, 145)));
+        assertTrue(map.outsideBattlefield(new Location(null, 0, 65, -150.1)));
     }
 }

@@ -54,7 +54,8 @@ public final class ArenaFile {
                 spot(world, yaml.getString("spectator")), Optional.ofNullable(yaml.getConfigurationSection("secrets")).map(secrets -> secrets(world, secrets)),
                 controls, "rain".equals(yaml.getString("weather")), yaml.contains("time") ? OptionalLong.of(yaml.getLong("time")) : OptionalLong.empty(),
                 environment(world, yaml.getConfigurationSection("environment")),
-                Math.max(minimumBorder, yaml.getDouble("world-border-size", minimumBorder)));
+                Math.max(minimumBorder, yaml.getDouble("world-border-size", minimumBorder)),
+                yaml.getDouble("death-y", playArea.getMinY() - 10));
     }
 
     private static YardEnvironment environment(World world, ConfigurationSection environment) {

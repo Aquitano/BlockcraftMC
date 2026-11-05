@@ -31,6 +31,7 @@ public class BotConfigTest {
         assertFalse(normal.headshots());
         assertEquals(12, config.idleTurnDegrees(), 0.001);
         assertEquals(1, config.stepHeight(), 0.001);
+        assertEquals(40, config.boundaryGraceTicks());
     }
 
     @Test

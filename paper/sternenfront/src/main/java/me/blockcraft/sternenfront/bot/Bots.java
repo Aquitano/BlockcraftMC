@@ -94,6 +94,7 @@ public final class Bots implements Listener {
         private long coverPhaseUntil;
         private boolean peeking;
         private long voiceAt;
+        private final BotRecovery recovery = new BotRecovery();
 
         private Soldier(int number, Faction faction) {
             this.number = number;
@@ -227,7 +228,8 @@ public final class Bots implements Listener {
                 continue;
             }
             soldier.heat.cool(tick);
-            if (soldier.body.getLocation().getY() < game.map().playArea().getMinY() - 5) {
+            if (soldier.recovery.expired(game.map().outsideBattlefield(soldier.body.getLocation()), tick,
+                    config.boundaryGraceTicks())) {
                 soldier.body.setHealth(0);
                 continue;
             }
@@ -283,6 +285,7 @@ public final class Bots implements Listener {
         soldier.heat = new Heat(game.config().heat());
         soldier.protectedUntil = tick + game.config().respawn().protectionSeconds() * 20L;
         soldier.target = null;
+        soldier.reactAt = 0;
         soldier.objective = -1;
         soldier.chooseAt = tick;
         soldier.progress = at.clone();
@@ -308,6 +311,7 @@ public final class Bots implements Listener {
         soldier.coverPhaseUntil = 0;
         soldier.peeking = false;
         soldier.voiceAt = tick;
+        soldier.recovery.clear();
         bodies.put(mob.getUniqueId(), soldier);
         identities.put(mob.getUniqueId(), soldier.faction);
     }
@@ -787,6 +791,7 @@ public final class Bots implements Listener {
         event.getDrops().clear();
         event.setDroppedExp(0);
         soldier.body = null;
+        soldier.recovery.clear();
         soldier.deployAt = game.tick() + game.config().respawn().seconds() * 20L;
         var killer = event.getDamageSource().getCausingEntity() instanceof Player player
                 ? Optional.of(player) : Optional.<Player>empty();

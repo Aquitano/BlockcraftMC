@@ -25,6 +25,7 @@ bots:
   memory-ticks: 40
   idle-turn-degrees: 12
   step-height: 1
+  boundary-grace-ticks: 40
   kill-points: 25
   cover: {search-radius: 10, hold-ticks: 40, peek-ticks: 40}
   voice: {enabled: true, range: 18, volume: 0.65, soldier-cooldown-ticks: 360, global-cooldown-ticks: 100}

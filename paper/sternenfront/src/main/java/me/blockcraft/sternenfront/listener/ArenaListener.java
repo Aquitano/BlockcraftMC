@@ -32,8 +32,6 @@ import org.bukkit.event.player.PlayerRespawnEvent;
  */
 public final class ArenaListener implements Listener {
 
-    private static final double BELOW_MAP = 10;
-
     private final SternenfrontGame game;
     private final BuildMode buildMode;
 
@@ -161,10 +159,11 @@ public final class ArenaListener implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
     public void onMove(PlayerMoveEvent event) {
-        if (inRound() && event.getTo().getY() < game.map().playArea().getMinY() - BELOW_MAP) {
-            game.fell(event.getPlayer());
+        var player = event.getPlayer();
+        if (game.onField(player) && !buildMode.isEnabled(player) && game.map().outsideBattlefield(event.getTo())) {
+            game.fell(player);
         }
     }
 
