@@ -1,7 +1,7 @@
 package me.blockcraft.sternenfront.game;
 
 import me.blockcraft.sternenfront.game.RoundTally.Deed;
-import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.plugin.Plugin;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -19,10 +19,18 @@ final class Orders {
 
     record Order(Deed deed, int count) {
 
-        /** {@code "headshot:3"}, as config.yml writes them. */
-        static Order parse(String text) {
+        /** {@code "headshot:3"}, as config.yml writes them; empty for anything else, and for completing an order, which no order can ask for. */
+        static Optional<Order> parse(String text) {
             var parts = text.split(":");
-            return new Order(Deed.valueOf(parts[0].strip().toUpperCase(Locale.ROOT)), Math.max(1, Integer.parseInt(parts[1].strip())));
+            if (parts.length != 2) {
+                return Optional.empty();
+            }
+            try {
+                var deed = Deed.valueOf(parts[0].strip().toUpperCase(Locale.ROOT));
+                return deed == Deed.ORDER ? Optional.empty() : Optional.of(new Order(deed, Math.max(1, Integer.parseInt(parts[1].strip()))));
+            } catch (IllegalArgumentException invalid) {
+                return Optional.empty();
+            }
         }
     }
 
@@ -57,9 +65,13 @@ final class Orders {
         this.random = random;
     }
 
-    static Orders from(ConfigurationSection config, RandomGenerator random) {
-        return new Orders(config.getStringList("orders.list").stream().map(Order::parse).toList(),
-                Math.max(0, config.getInt("orders.points", 150)), Math.max(0, config.getInt("orders.coins", 3)), random);
+    static Orders from(Plugin plugin, RandomGenerator random) {
+        var config = plugin.getConfig();
+        var pool = new ArrayList<Order>();
+        for (var entry : config.getStringList("orders.list")) {
+            Order.parse(entry).ifPresentOrElse(pool::add, () -> plugin.getSLF4JLogger().warn("Ignoring the order {} in config.yml", entry));
+        }
+        return new Orders(pool, Math.max(0, config.getInt("orders.points", 150)), Math.max(0, config.getInt("orders.coins", 3)), random);
     }
 
     int points() {

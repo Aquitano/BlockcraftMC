@@ -49,6 +49,22 @@ public class RoundTallyTest {
     }
 
     @Test
+    public void onlyTheDeedsAFighterCanDoMakeOrders() {
+        assertEquals(new Orders.Order(Deed.HEADSHOT, 2), Orders.Order.parse(" headshot : 2 ").orElseThrow());
+        assertTrue(Orders.Order.parse("kill").isEmpty());
+        assertTrue(Orders.Order.parse("kill:many").isEmpty());
+        assertTrue(Orders.Order.parse("nap:3").isEmpty());
+        assertTrue(Orders.Order.parse("order:1").isEmpty());
+    }
+
+    @Test
+    public void aBonusFollowsWhatTheKillPaysUpToItself() {
+        assertEquals(6, RoundTally.bonus(25, 25, 100));
+        assertEquals(25, RoundTally.bonus(25, 100, 100));
+        assertEquals(25, RoundTally.bonus(25, 25, 0));
+    }
+
+    @Test
     public void aRankIsTheHighestReached() {
         var ranks = List.of(0L, 100L, 300L);
         assertEquals(0, Career.rankOf(99, ranks));

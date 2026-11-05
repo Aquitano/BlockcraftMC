@@ -215,7 +215,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         this.battlefield = new Battlefield(this);
         this.support = new SupportRewards(this);
         this.streaks = new KillStreaks(feel.orbitalStreak(), feel.botsPerStreakKill());
-        this.orders = Orders.from(plugin.getConfig(), ThreadLocalRandom.current());
+        this.orders = Orders.from(plugin, ThreadLocalRandom.current());
         this.career = new Career(plugin, messages, BlockcraftApi.get().database(), plugin.getConfig().getLongList("career.ranks"));
         Tasks.async(plugin, career::createTable);
         this.reinforcements = new Reinforcements(config.tickets());
@@ -297,20 +297,21 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         return feedback;
     }
 
+    /** A deed counts for orders and awards even when config.yml pays nothing for it. */
     public void awardPoints(Player player, int points, CombatFeedback.Reward reward) {
         if (points > 0) {
             heroes.earn(player, points);
             feedback.earned(player, points, reward);
             tally.earned(player.getUniqueId(), points);
-            switch (reward) {
-                case KILL -> did(player, RoundTally.Deed.KILL);
-                case HEADSHOT -> did(player, RoundTally.Deed.HEADSHOT);
-                case ASSIST -> did(player, RoundTally.Deed.ASSIST);
-                case DEFENCE -> did(player, RoundTally.Deed.DEFENCE);
-                case CAPTURE -> did(player, RoundTally.Deed.CAPTURE);
-                default -> { }
-            }
             dirty = true;
+        }
+        switch (reward) {
+            case KILL -> did(player, RoundTally.Deed.KILL);
+            case HEADSHOT -> did(player, RoundTally.Deed.HEADSHOT);
+            case ASSIST -> did(player, RoundTally.Deed.ASSIST);
+            case DEFENCE -> did(player, RoundTally.Deed.DEFENCE);
+            case CAPTURE -> did(player, RoundTally.Deed.CAPTURE);
+            default -> { }
         }
     }
 
@@ -326,16 +327,15 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         objective.order(player);
     }
 
-    /** What the killer's kill adds to itself, in proportion to what the kill pays: a bot's kill pays less than a player's. */
     private void killBonuses(Player killer, int killPoints, boolean headshot) {
         var points = heroes.config().points();
         int chain = feedback.chained(killer);
         if (headshot) {
-            awardPoints(killer, (int) ((long) points.headshot() * killPoints / Math.max(1, points.kill())), CombatFeedback.Reward.HEADSHOT);
+            awardPoints(killer, RoundTally.bonus(points.headshot(), killPoints, points.kill()), CombatFeedback.Reward.HEADSHOT);
         }
         if (chain > 1) {
             int extra = points.multikill() * Math.min(chain - 1, MOST_CHAINED_BONUSES);
-            awardPoints(killer, (int) ((long) extra * killPoints / Math.max(1, points.kill())), CombatFeedback.Reward.CHAIN);
+            awardPoints(killer, RoundTally.bonus(extra, killPoints, points.kill()), CombatFeedback.Reward.CHAIN);
         }
     }
 
@@ -931,6 +931,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         bolts.fire(shooter, faction, blaster, new Blaster.Stats(stats.damage() * damageScale, headshots ? stats.headshot() : 1, stats.heat(),
                 stats.cooldownTicks(), stats.bolts(), stats.burstTicks(), stats.spread(), stats.speed(), stats.range()), aim);
         SoundCue.shot(blaster).play(shooter.getEyeLocation(), SHOT_VOLUME);
+        Bukkit.getPluginManager().callEvent(new ShotEvent(shooter));
     }
 
     public void botDied(LivingEntity victim, Faction faction, Optional<Player> killer, int points) {
@@ -942,7 +943,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
             fieldKills.merge(player.getUniqueId(), 1, Integer::sum);
             feedback.hit(player, CombatFeedback.Marker.KILL);
             killBonuses(player, points, dealingHeadshot);
-            if (streaks.botKill(player.getUniqueId())) {
+            if (onField(player) && streaks.botKill(player.getUniqueId())) {
                 earnStrike(player);
             }
         });
@@ -1323,7 +1324,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
             feedback.hit(killer, CombatFeedback.Marker.KILL);
             killBonuses(killer, heroes.config().points().kill(), dealingHeadshot);
             deployment.killedBy(victim, killer);
-            if (streaks.kill(killer.getUniqueId())) {
+            if (onField(killer) && streaks.kill(killer.getUniqueId())) {
                 earnStrike(killer);
             }
         });

@@ -15,6 +15,7 @@ import org.bukkit.plugin.Plugin;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 /** A fighter's rank across rounds, from every battle point they have ever earned, and their best round. */
@@ -70,25 +71,21 @@ final class Career {
         }, () -> { });
     }
 
-    /** Banks the round for everyone still here and tells them what it came to. */
+    /** Banks the round for everyone who fought in it and tells those still here what it came to. */
     void close(Map<UUID, RoundTally.Line> lines) {
         lines.forEach((id, line) -> {
-            var player = Bukkit.getPlayer(id);
-            if (player != null && line.points() > 0) {
-                var name = player.getName();
+            var name = Bukkit.getOfflinePlayer(id).getName();
+            if (name != null && line.points() > 0) {
                 Tasks.async(plugin, () -> {
                     var before = read(id);
                     add(id, name, line.points());
                     return before;
-                }, before -> report(player, line, before), () -> { });
+                }, before -> Optional.ofNullable(Bukkit.getPlayer(id)).ifPresent(player -> report(player, line, before)), () -> { });
             }
         });
     }
 
     private void report(Player player, RoundTally.Line line, Standing before) {
-        if (!player.isOnline()) {
-            return;
-        }
         player.sendMessage(messages.get("career.battle", Formatter.number("points", line.points()),
                 Formatter.number("kills", line.count(Deed.KILL)), Formatter.number("headshots", line.count(Deed.HEADSHOT)),
                 Formatter.number("captures", line.count(Deed.CAPTURE)), Formatter.number("orders", line.count(Deed.ORDER))));

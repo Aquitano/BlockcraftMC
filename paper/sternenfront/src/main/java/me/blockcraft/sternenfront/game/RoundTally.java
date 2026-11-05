@@ -53,6 +53,11 @@ final class RoundTally {
         return lines;
     }
 
+    /** A bonus in proportion to what a kill pays against a player's kill, and never more than the bonus: a bot's kill pays less. */
+    static int bonus(int bonus, int killPoints, int playerKillPoints) {
+        return (int) Math.min(bonus, (long) bonus * killPoints / Math.max(1, playerKillPoints));
+    }
+
     /** Nothing to compare with one fighter, whose recap already holds their numbers. */
     List<Award> awards() {
         if (lines.size() < FIGHTERS_FOR_AWARDS) {

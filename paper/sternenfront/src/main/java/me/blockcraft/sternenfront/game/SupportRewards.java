@@ -72,9 +72,7 @@ public final class SupportRewards {
     }
 
     private void award(Player player, int points, CombatFeedback.Reward reason) {
-        if (points > 0) {
-            game.awardPoints(player, points, reason);
-        }
+        game.awardPoints(player, points, reason);
     }
 
     public void removed(LivingEntity victim) {
