@@ -145,6 +145,7 @@ public final class CombatFeedback {
     private final Map<UUID, State> states = new HashMap<>();
     private final int markerTicks;
     private final int rewardTicks;
+    private final int heroReadyTicks;
     private final double hotAt;
     private final float hitVolume;
     private final float headshotVolume;
@@ -156,6 +157,7 @@ public final class CombatFeedback {
         var config = game.plugin().getConfig();
         markerTicks = Math.clamp(config.getInt("combat-feedback.marker-ticks", 6), 1, 20);
         rewardTicks = Math.clamp(config.getInt("combat-feedback.reward-ticks", 30), 1, 100);
+        heroReadyTicks = Math.clamp(config.getInt("combat-feedback.hero-ready-ticks", 60), 1, 200);
         hotAt = Math.clamp(config.getDouble("heat.warning-level", 0.8), 0.1, 0.99);
         hitVolume = (float) Math.clamp(config.getDouble("combat-feedback.sound.hit", 0.65), 0, 1);
         headshotVolume = (float) Math.clamp(config.getDouble("combat-feedback.sound.headshot", 0.8), 0, 1);
@@ -218,16 +220,14 @@ public final class CombatFeedback {
         boolean ready = points >= cost && game.heroOf(player).isEmpty()
                 && game.factionOf(player).filter(game.heroes()::available).isPresent();
         if (ready && !state.ready) {
-            state.readyUntil = tick + rewardTicks;
+            state.readyUntil = tick + heroReadyTicks;
             player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, SoundCategory.PLAYERS, 0.7f, 1.4f);
         }
         state.ready = ready;
         drawCrosshair(player, state, tick);
         var line = tick < state.rewardUntil ? state.reward(game.messages())
-                : ready ? game.messages().get("feedback.hero-ready")
-                : game.heroOf(player).isPresent() ? Component.empty()
-                : game.messages().get("feedback.progress", Formatter.number("kills", game.kills(player)),
-                Formatter.number("points", points), Formatter.number("cost", cost));
+                : ready && tick < state.readyUntil ? game.messages().get("feedback.hero-ready")
+                : Component.empty();
         ScreenEffects.hurt(player, hurtIntensity(player, game.combat().hurtTicks(player)));
         var combined = state.compose(hud, line);
         if (tick < state.rewardUntil) {

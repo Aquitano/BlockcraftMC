@@ -56,8 +56,8 @@ block rays. Outlines stay disabled until the pack has loaded.
 Hits, headshots, and kills have distinct sounds and immediate marks around the crosshair. A kill replaces a weaker
 marker even within the same tick. A red arc around the crosshair points at whoever last hurt the player, for
 `combat.damage-indicator-ticks`, and follows as they turn. Both share the title's subtitle, centred with `UiFont`.
-Kill and assist popups briefly replace the kill count and battle-point progress, beside the heat, guard and
-ability-cooldown HUD. Nearby gains combine into one segment. The HUD names no abilities, so the line stays short enough
+Kill and assist popups appear briefly beside the heat, guard and ability-cooldown HUD.
+Hero availability appears only for `combat-feedback.hero-ready-ticks`; idle kill counts and point progress stay hidden. Nearby gains combine into one segment. The HUD names no abilities, so the line stays short enough
 for GUI scale 3 on a 1366x768 screen; the deploy chat line names them. `ObjectiveHud` shows reinforcements, a tile per
 post and the time left in a boss bar's text line, and the pack draws that colour and overlay of bar as nothing. The screen's
 edges redden with a hit and while health is low. `combat.handling` tunes spread and damage falloff.
@@ -82,10 +82,11 @@ higher chime, and a killing headshot adds `heroes.points.headshot`. Both scale w
 players. A bot kill counts towards stats, pays `rewards.bot-kill` and fills the orbital strike's streak at `streaks.bots-per-kill`.
 A kill by something still flying after its owner fell pays as usual but does not count towards the next life's streak.
 
-`orders` gives each fighter one goal at a time, shown under the objective line, which pays points and coins when completed. Battle
+`orders` gives each fighter one goal at a time, shown under the objective line, which pays points and coins when completed. Its muted HUD line shows the goal and progress; completion announces the reward. Battle
 points also feed the round's awards, which need two fighters and pay `rewards.award`, and a rank that lasts across rounds:
 `bc_sternenfront_career` keeps every player's total and best round, `career.ranks` sets the thresholds and `career.rank.<index>`
-in `messages.yml` names them.
+in `messages.yml` names them. The round recap opens as a dialog after `combat-feedback.recap-delay-ticks`,
+with the shared results and rewards plus battle points, captured posts and completed orders.
 
 ## Animated bodies
 

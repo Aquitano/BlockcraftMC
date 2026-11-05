@@ -320,7 +320,9 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         tally.did(id, deed);
         orders.did(id, deed).ifPresent(completed -> {
             tally.did(id, RoundTally.Deed.ORDER);
-            summary.awardCoins(player, orders.coins());
+            int coins = summary.awardCoins(player, orders.coins());
+            player.sendMessage(messages.get("orders.completed", Formatter.number("points", orders.points()),
+                    Formatter.number("coins", coins)));
             player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 0.6f, 1.2f);
             awardPoints(player, orders.points(), CombatFeedback.Reward.ORDER);
         });
@@ -1399,7 +1401,16 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         var awards = tally.awards();
         awards.forEach(award -> Optional.ofNullable(Bukkit.getPlayer(award.winner()))
                 .ifPresent(player -> summary.awardCoins(player, config.rewards().award())));
+        tally.lines().forEach((id, line) -> Optional.ofNullable(Bukkit.getPlayer(id)).ifPresent(player ->
+                summary.note(player, messages.get("recap.battle", Formatter.number("points", line.points()),
+                        Formatter.number("captures", line.count(RoundTally.Deed.CAPTURE)),
+                        Formatter.number("orders", line.count(RoundTally.Deed.ORDER))))));
         round.end();
+        Tasks.later(plugin, Math.max(0, plugin.getConfig().getInt("combat-feedback.recap-delay-ticks", 60)), () -> {
+            if (phase() == GamePhase.ENDING) {
+                Bukkit.getOnlinePlayers().forEach(player -> summary.showDetails(player, messages.get("recap.title")));
+            }
+        });
         announce(awards);
         career.close(tally.lines());
         refreshAll();

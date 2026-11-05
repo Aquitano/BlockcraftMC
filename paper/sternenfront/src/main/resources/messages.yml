@@ -73,43 +73,43 @@ class:
       name: "<white>Klonsoldat"
       lore:
         - "<muted>Solide auf jede Entfernung."
-        - "<muted>Wirft Thermaldetonatoren und beißt die Zähne zusammen."
+        - "<muted>Detonator und Adrenalinschub."
     heavy:
       name: "<white>Schwerer Klonsoldat"
       lore:
         - "<muted>Viel Gesundheit, viele Bolzen."
-        - "<muted>Schützt sich mit dem Energieschild und sprengt Posten frei."
+        - "<muted>Energieschild und Sprengladung."
     scout:
       name: "<white>Klonaufklärer"
       lore:
         - "<muted>Wenig Gesundheit, weite Wege."
-        - "<muted>Ein Kopftreffer reicht, das Sprungmodul hilft beim Rest."
+        - "<muted>Kopftreffer und Sprungmodul."
     medic:
       name: "<white>Klonsanitäter"
       lore:
         - "<muted>Hält die Klonsoldaten am Leben."
-        - "<muted>Stellt Heilstationen auf und schießt schnell."
+        - "<muted>Heilstation und Schnellfeuer."
   hegemonie:
     soldier:
       name: "<white>B1-Kampfdroide"
       lore:
         - "<muted>Das Standardmodell der Linie."
-        - "<muted>Wirft Ionengranaten und fährt die Überlastung hoch."
+        - "<muted>Ionengranate und Überlastung."
     heavy:
       name: "<white>B2-Superkampfdroide"
       lore:
         - "<muted>Schwer gepanzert und langsam im Gang."
-        - "<muted>Verankert sich im Belagerungsmodus hinter der Schildwand."
+        - "<muted>Belagerungsmodus und Schildwand."
     scout:
       name: "<white>B1-Scharfschütze"
       lore:
         - "<muted>Dunkle Markierungen und ein E-5s."
-        - "<muted>Ein Kopftreffer reicht, die Schubdüsen helfen beim Rest."
+        - "<muted>Kopftreffer und Schubdüsen."
     medic:
       name: "<white>B1-Technikdroide"
       lore:
         - "<muted>Repariert die Linie mitten im Gefecht."
-        - "<muted>Baut Reparaturfelder auf und schießt schnell."
+        - "<muted>Reparaturfeld und Schnellfeuer."
 
 blaster:
   stats:
@@ -459,6 +459,10 @@ hero:
   slain: "<prefix><white><killer> <muted>hat <hero> <white><player> <muted>besiegt!"
   fallen: "<prefix><hero> <white><player> <muted>hat das Feld verlassen."
 
+recap:
+  title: "<sternenfront>Schlachtrückblick"
+  battle: "<muted>Kampfpunkte <white><points> <dark>· <muted>Posten <white><captures> <dark>· <muted>Aufträge <white><orders>"
+
 feedback:
   kill: "<error>Abschuss <success>+<points> KP"
   multikill: "<error><kills>x <success>+<points> KP"
@@ -473,7 +477,8 @@ feedback:
   progress: "<muted><kills> K <dark>· <muted><points>/<cost> KP"
 
 orders:
-  hud: "<muted>Auftrag <dark>│ <white><what> <muted><done>/<count> <dark>· <success>+<points> KP"
+  hud: "<muted><what> <dark><done>/<count>"
+  completed: "<success>Auftrag erfüllt <dark>· <accent>+<points> KP <dark>· <accent>+<coins> Münzen"
   deed:
     kill: "Abschüsse"
     headshot: "Kopfschüsse"

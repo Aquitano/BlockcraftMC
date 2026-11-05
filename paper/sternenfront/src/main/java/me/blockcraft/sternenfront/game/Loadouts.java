@@ -112,7 +112,7 @@ public final class Loadouts {
         return SternenfrontItem.DEPLOY.build(MenuIcon.DEPLOY.item().name(messages.get("deploy.item")));
     }
 
-    /** A class as the menus show it: its blaster, named after the class, with what it carries. */
+    /** Deployment has no separate equipment row, so its cards include the class's numbers. */
     public ItemStack card(Faction faction, CombatClass combatClass, boolean selected, List<Component> hint) {
         var lore = new ArrayList<>(messages.getLines(combatClass.messageKey(faction) + ".lore"));
         lore.add(Component.empty());
@@ -121,6 +121,17 @@ public final class Loadouts {
                 Placeholder.component("ability", messages.get(ability.messageKey(faction) + ".name")))));
         lore.add(Component.empty());
         lore.addAll(hint);
+        return classCard(faction, combatClass, selected, lore);
+    }
+
+    public ItemStack roleCard(Faction faction, CombatClass combatClass, boolean selected, List<Component> hint) {
+        var lore = new ArrayList<>(messages.getLines(combatClass.messageKey(faction) + ".lore"));
+        lore.add(Component.empty());
+        lore.addAll(hint);
+        return classCard(faction, combatClass, selected, lore);
+    }
+
+    private ItemStack classCard(Faction faction, CombatClass combatClass, boolean selected, List<Component> lore) {
         var builder = combatClass.blaster(faction).model().item().name(messages.get(combatClass.messageKey(faction) + ".name"))
                 .lore(lore).hideAttributes();
         if (selected) {

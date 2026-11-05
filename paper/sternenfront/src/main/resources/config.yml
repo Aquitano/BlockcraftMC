@@ -354,6 +354,8 @@ outlines: {enabled: true, range: 64, allies: false}
 combat-feedback:
   marker-ticks: 6
   reward-ticks: 30
+  hero-ready-ticks: 60
+  recap-delay-ticks: 60
   multikill-seconds: 4
   sound: {hit: 0.65, headshot: 0.8, kill: 0.9}
 
