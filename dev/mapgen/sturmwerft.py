@@ -2,9 +2,8 @@
 """Generates Sturmwerft, a stormbound ocean shipyard with elevated domes and spacecraft assembly docks.
 
 Run through `dev/verify/verify.py map`, which starts a bare server over an endless flat sea, runs the functions and saves the
-result to worlds/sturmwerft. Everything stands on one deck at y 64, with the headquarters and posts where Sternenfront's
-rules expect them: the posts on the north-south centre line with landing grounds at x -22 and 22, and the headquarters at
-x -82 and 82.
+result to worlds/sturmwerft. The combat deck stands at y 64, the occupied southern domes at y 80 and the northern ship
+at y 82. The headquarters, posts and six open landing grounds retain their original positions.
 """
 import json
 import math
@@ -115,8 +114,8 @@ class Builder:
             inset = radius - round(math.sqrt(max(0, radius * radius - dz * dz)))
             self.deck(x1 + inset, z, x2 - inset, z)
 
-    def wear(self, paths, rng):
-        floor = layer(self.fills, DECK) - layer(self.fills, SKY)
+    def wear(self, paths, rng, y=DECK):
+        floor = layer(self.fills, y) - layer(self.fills, y + 1)
         painted = {}
         for x1, z1, x2, z2 in paths:
             distance = max(abs(x2 - x1), abs(z2 - z1))
@@ -131,20 +130,22 @@ class Builder:
                     if cell in floor and rng.random() < (0.7 if side == 0 else 0.32):
                         painted[cell] = rng.choices(STAINS, (6, 7, 2, 1))[0]
         for (x, z), block in sorted(painted.items()):
-            self.box(x, DECK, z, x, DECK, z, block)
+            self.box(x, y, z, x, y, z, block)
 
-    def service_unit(self, x, z, facing):
-        self.box(x - 1, SKY, z - 1, x + 1, SKY + 1, z + 1, "gray_concrete")
-        self.box(x - 1, SKY + 2, z - 1, x + 1, SKY + 2, z + 1, "smooth_quartz_slab[type=bottom]")
-        self.box(x + facing, SKY + 1, z, x + facing, SKY + 1, z, "cyan_stained_glass")
-        self.box(x, SKY, z - 2, x, SKY, z - 2, "waxed_oxidized_copper")
-        self.box(x, SKY + 1, z - 2, x, SKY + 1, z - 2, "lightning_rod[facing=up]")
+    def service_unit(self, x, z, facing, floor=DECK):
+        y = floor + 1
+        self.box(x - 1, y, z - 1, x + 1, y + 1, z + 1, "gray_concrete")
+        self.box(x - 1, y + 2, z - 1, x + 1, y + 2, z + 1, "smooth_quartz_slab[type=bottom]")
+        self.box(x + facing, y + 1, z, x + facing, y + 1, z, "cyan_stained_glass")
+        self.box(x, y, z - 2, x, y, z - 2, "waxed_oxidized_copper")
+        self.box(x, y + 1, z - 2, x, y + 1, z - 2, "lightning_rod[facing=up]")
 
-    def maintenance_droid(self, x, z):
-        self.box(x - 1, SKY, z, x + 1, SKY, z, "polished_blackstone_slab[type=bottom]")
-        self.box(x, SKY, z, x, SKY + 1, z, "smooth_quartz")
-        self.box(x, SKY + 2, z, x, SKY + 2, z, "cyan_stained_glass")
-        self.box(x - 1, SKY + 1, z, x - 1, SKY + 1, z, "end_rod[facing=west]")
+    def maintenance_droid(self, x, z, floor=DECK):
+        y = floor + 1
+        self.box(x - 1, y, z, x + 1, y, z, "polished_blackstone_slab[type=bottom]")
+        self.box(x, y, z, x, y + 1, z, "smooth_quartz")
+        self.box(x, y + 2, z, x, y + 2, z, "cyan_stained_glass")
+        self.box(x - 1, y + 1, z, x - 1, y + 1, z, "end_rod[facing=west]")
 
     def warning_light(self, x, y, z):
         self.box(x, y, z, x, y, z, "redstone_block")
@@ -157,9 +158,9 @@ class Builder:
         self.box(x + facing_x, SKY + height, z, x + facing_x * 2, SKY + height, z, LIGHT)
         self.warning_light(x, SKY + height + 2, z)
 
-    def crate(self, x, z, width, depth, height, colour):
-        self.box(x, SKY, z, x + width - 1, SKY + height - 1, z + depth - 1, f"{colour}_concrete")
-        self.box(x, SKY + height - 1, z, x + width - 1, SKY + height - 1, z + depth - 1, f"{colour}_terracotta")
+    def crate(self, x, z, width, depth, height, colour, floor=DECK):
+        self.box(x, floor + 1, z, x + width - 1, floor + height, z + depth - 1, f"{colour}_concrete")
+        self.box(x, floor + height, z, x + width - 1, floor + height, z + depth - 1, f"{colour}_terracotta")
 
     def wall(self, x1, z1, x2, z2, height=2, block=DARK):
         self.box(x1, SKY, z1, x2, SKY + height - 1, z2, block)
@@ -396,14 +397,15 @@ def goliath(b, x):
         b.warning_light(x + 1, top + 6, z)
 
 
-def ocean_tower(b, x, z, radius, floor, height):
+def ocean_tower(b, x, z, radius, floor, height, occupied=False):
     b.ellipse(x, z, 4, 4, SEA - 5, floor - 5, "smooth_quartz")
     for dy in range(4):
         b.ellipse(x, z, radius - 6 + dy * 2, radius - 6 + dy * 2, floor - 4 + dy, floor - 4 + dy, FRAME)
-    b.ellipse(x, z, radius + 2, radius + 2, floor, floor + 1, "smooth_quartz")
-    b.ellipse(x, z, radius, radius, floor + 2, floor + height, FRAME)
+    b.ellipse(x, z, radius + 2, radius + 2, floor, floor if occupied else floor + 1, "smooth_quartz")
+    b.ellipse(x, z, radius, radius, floor + (1 if occupied else 2), floor + height, FRAME, hollow=occupied)
     b.ellipse(x, z, radius, radius, floor + 3, floor + 5, "cyan_stained_glass", hollow=True)
-    b.ellipse(x, z, radius - 1, radius - 1, floor + 4, floor + 4, COLD_LIGHT, hollow=True)
+    light_y = floor + (9 if occupied else 4)
+    b.ellipse(x, z, radius - 1, radius - 1, light_y, light_y, COLD_LIGHT, hollow=True)
     b.dome(x, z, radius + 1, radius + 1, floor + height + 1, max(4, radius // 2))
     top = floor + height + max(4, radius // 2) + 2
     b.ellipse(x, z, 3, 3, top, top + 3, FRAME)
@@ -411,16 +413,11 @@ def ocean_tower(b, x, z, radius, floor, height):
 
 
 def skyline(b):
-    for x, z, radius, floor, height in ((0, 110, 25, 79, 12), (-66, 103, 18, 72, 9),
-                                       (68, 109, 20, 77, 10), (-137, 42, 20, 80, 10),
+    for x, z, radius, floor, height in ((0, 110, 25, 80, 10), (-66, 103, 18, 80, 10),
+                                       (68, 109, 20, 80, 10), (-137, 42, 20, 80, 10),
                                        (139, -20, 18, 88, 9), (-141, -46, 15, 93, 8),
                                        (142, 115, 15, 101, 8), (-104, 148, 17, 95, 10)):
-        ocean_tower(b, x, z, radius, floor, height)
-    for x1, x2, z, y in ((-67, -24, 106, 80), (24, 68, 110, 80)):
-        b.box(x1, y, z - 2, x2, y + 1, z + 2, FRAME)
-        b.box(x1, y + 2, z - 3, x2, y + 2, z - 3, RAIL)
-        b.box(x1, y + 2, z + 3, x2, y + 2, z + 3, RAIL)
-        b.box(x1, y, z, x2, y, z, COLD_LIGHT)
+        ocean_tower(b, x, z, radius, floor, height, occupied=(x, z) in {(-66, 103), (0, 110), (68, 109)})
 
 
 def shuttle(b, x, z, sign):
@@ -456,6 +453,213 @@ def scenery(b):
         b.box(x, SEA + 16, z, x, SEA + 17, z, COLD_LIGHT)
 
 
+def upper_deck(b, x1, z1, x2, z2, floor):
+    b.box(x1, floor - 2, z1, x2, floor - 1, z2, FRAME)
+    b.box(x1, floor, z1, x2, floor, z2, PLATE)
+
+
+def stairway(b, x, z, floor, rise, direction):
+    facing = "south" if direction > 0 else "north"
+    for step in range(rise):
+        y, at = floor + step, z + direction * step
+        b.box(x - 2, y + 1, at, x + 2, y + 4, at, "air")
+        b.box(x - 2, floor - 2, at, x + 2, y - 1, at, FRAME)
+        b.box(x - 2, y, at, x + 2, y, at, f"smooth_quartz_stairs[facing={facing},half=bottom,shape=straight]")
+        for edge in (x - 3, x + 3):
+            b.box(edge, y - 1, at, edge, y, at, DARK)
+            b.box(edge, y + 1, at, edge, y + 1, at, RAIL)
+    for at, y in ((z - direction, floor - 1), (z + direction * rise, floor + rise - 1)):
+        upper_deck(b, x - 2, at, x + 2, at, y)
+        b.box(x - 2, y + 1, at, x + 2, y + 4, at, "air")
+
+
+def ship_room(b, x1, z1, x2, z2):
+    upper_deck(b, x1, z1, x2, z2, 82)
+    b.box(x1, 83, z1, x2, 90, z2, FRAME)
+    b.box(x1, 85, z1, x2, 87, z2, "cyan_stained_glass")
+    b.box(x1 + 1, 83, z1 + 1, x2 - 1, 89, z2 - 1, "air")
+    for x in range(x1 + 4, x2 - 2, 8):
+        b.box(x, 89, z1 + 2, x, 89, z2 - 2, DARK)
+        b.box(x, 89, z1 + 3, x, 89, z1 + 5, COLD_LIGHT)
+        b.box(x, 89, z2 - 5, x, 89, z2 - 3, COLD_LIGHT)
+
+
+def northern_dock(b):
+    for x in ROADS:
+        b.deck(x - 4, -78, x + 4, -61, PLATE)
+        b.box(x - 2, 65, -79, x + 2, 68, -61, "air")
+    for x1, z1, x2, z2 in ((-72, -130, -27, -92), (-33, -124, 25, -96), (20, -124, 66, -96)):
+        upper_deck(b, x1, z1, x2, z2, 82)
+        b.box(x1, 83, z1, x2, 88, z2, "air")
+    ship_room(b, -64, -124, -32, -96)
+    ship_room(b, 20, -120, 62, -100)
+    ship_room(b, -33, -114, 21, -106)
+    for x1, x2, z1, z2 in ((-62, 60, -113, -107), (-35, -29, -108, -92),
+                            (29, 35, -108, -96), (-14, -10, -122, -96), (10, 14, -122, -96),
+                            (-12, 12, -122, -118)):
+        upper_deck(b, x1, z1, x2, z2, 82)
+        b.box(x1, 83, z1, x2, 87, z2, "air")
+    for x in (-12, 12):
+        b.deck(x - 2, -79, x + 2, -58, PLATE)
+        b.box(x - 2, 65, -79, x + 2, 68, -58, "air")
+    for x in (-72, 66):
+        b.box(x, 83, -124, x, 83, -97, RAIL)
+    b.box(-71, 83, -130, -28, 83, -130, RAIL)
+    b.box(-71, 83, -92, -36, 83, -92, RAIL)
+    b.box(20, 83, -124, 65, 83, -124, RAIL)
+    b.box(39, 83, -96, 65, 83, -96, RAIL)
+    for x in (-69, 64):
+        b.warning_light(x, 84, -122)
+    for x, z in ((-57, -117), (-43, -117), (-54, -102), (29, -116), (48, -115), (47, -104)):
+        b.service_unit(x, z, 1 if x < 0 else -1, 82)
+    for x, z, width, depth, height in ((-49, -120, 3, 3, 4), (-61, -104, 3, 2, 1),
+                                      (35, -104, 5, 2, 1), (54, -116, 3, 4, 4), (22, -104, 3, 2, 2)):
+        b.crate(x, z, width, depth, height, "gray", 82)
+    for x in (-59, -45):
+        b.box(x, 83, -123, x + 1, 88, -122, DARK)
+        b.box(x, 83, -97, x + 1, 88, -98, DARK)
+    for x, z in ((-51, -105), (-43, -120)):
+        b.box(x, 83, z, x + 3, 88, z + 2, DARK)
+        b.box(x, 84, z, x + 3, 86, z, "waxed_weathered_copper")
+        b.box(x + 1, 85, z, x + 2, 87, z, "cyan_stained_glass")
+        b.box(x + 1, 88, z, x + 2, 88, z + 2, COLD_LIGHT)
+    for x in (38, 43):
+        b.box(x, 83, -118, x, 88, -115, FRAME)
+        b.stripes(x, -118, x, -115, 83)
+    b.box(38, 89, -118, 43, 89, -115, DARK)
+    b.crate(40, -117, 2, 2, 2, "light_gray", 82)
+    b.box(0, 83, -117, 0, 86, -104, DARK)
+    b.box(0, 83, -112, 0, 86, -108, "air")
+    b.box(0, 87, -117, 0, 87, -104, FRAME)
+    for x in (-4, 4):
+        b.box(x, 83, -115, x, 85, -115, "smooth_quartz")
+        b.box(x, 84, -114, x, 84, -114, "polished_blackstone_button[face=wall,facing=south]")
+        b.warning_light(x, 88, -115)
+    b.stripes(-2, -112, -2, -108, 82)
+    b.stripes(2, -112, 2, -108, 82)
+    b.maintenance_droid(-67, -112, 82)
+    b.wear([(-62, -110, 60, -110), (-12, -120, 12, -120), (-32, -98, -32, -110),
+            (32, -98, 32, -110)], random.Random(732), 82)
+    for x in (*ROADS, -12, 12):
+        stairway(b, x, -80, 65, 18, -1)
+
+
+def southern_halls(b):
+    for x in (*ROADS, 0):
+        b.deck(x - 2, 58, x + 2, 63, PLATE)
+        b.box(x - 2, 65, 58, x + 2, 68, 63, "air")
+        stairway(b, x, 64, 65, 16, 1)
+        upper_deck(b, x - 3, 80, x + 3, 110, 80)
+        for edge in (x - 3, x + 3):
+            b.box(edge, 81, 80, edge, 81, 104, RAIL)
+    upper_deck(b, -66, 107, 68, 113, 80)
+    b.box(-66, 81, 107, 68, 85, 113, "air")
+    for x1, x2 in ((-47, -26), (26, 47)):
+        for z in (106, 114):
+            b.box(x1, 81, z, x2, 81, z, RAIL)
+            b.box(x1, 80, z, x2, 80, z, FRAME)
+        for x in range(x1 + 3, x2, 9):
+            b.box(x, 80, 110, x + 1, 80, 110, COLD_LIGHT)
+    for sign in (-1, 1):
+        upper_deck(b, min(30 * sign, 64 * sign), 81, max(30 * sign, 64 * sign), 87, 80)
+        upper_deck(b, 62 * sign - 2, 84, 62 * sign + 2, 98, 80)
+        b.box(62 * sign - 2, 81, 84, 62 * sign + 2, 88, 98, "air")
+        b.box(32 * sign - 4, 81, 82, 32 * sign + 4, 84, 86, "air")
+        for z in (80, 88):
+            b.box(min(37 * sign, 58 * sign), 81, z, max(37 * sign, 58 * sign), 81, z, RAIL)
+    b.box(-2, 81, 80, 2, 88, 108, "air")
+    b.box(-66, 81, 96, -66, 87, 107, DARK)
+    b.box(-76, 81, 102, -67, 87, 102, FRAME)
+    b.box(-70, 81, 102, -68, 84, 102, "air")
+    for x, z in ((-77, 96), (-72, 91), (-57, 96), (-57, 115)):
+        b.service_unit(x, z, 1, 80)
+    b.crate(-79, 108, 4, 3, 2, "gray", 80)
+    b.crate(-61, 118, 3, 2, 1, "light_gray", 80)
+    b.box(-69, 80, 102, -63, 80, 105, "waxed_oxidized_copper")
+    for x in (-71, -60):
+        b.box(x, 81, 99, x, 83, 99, "smooth_quartz")
+        b.box(x, 82, 100, x, 82, 100, "lever[face=wall,facing=south]")
+    for x, z, dx, dz in ((-15, 100, 1, 7), (13, 114, 1, 7), (-10, 125, 6, 1), (6, 94, 7, 1)):
+        b.box(x, 81, z, x + dx, 83, z + dz, "smooth_quartz")
+        b.box(x, 84, z, x + dx, 84, z + dz, "cyan_stained_glass")
+    for x, z in ((-19, 113), (18, 104), (-6, 129), (8, 91)):
+        b.service_unit(x, z, -1 if x > 0 else 1, 80)
+    b.ellipse(0, 116, 4, 3, 81, 81, DARK)
+    b.box(-3, 82, 115, 3, 82, 117, "cyan_stained_glass")
+    b.box(-1, 83, 116, 1, 83, 116, COLD_LIGHT)
+    for x, z, width, depth, height in ((55, 98, 4, 5, 4), (65, 95, 5, 3, 2),
+                                      (74, 101, 5, 5, 4), (55, 117, 6, 3, 3),
+                                      (67, 115, 4, 6, 4), (78, 113, 3, 4, 1)):
+        b.crate(x, z, width, depth, height, "gray" if height > 2 else "light_gray", 80)
+        b.stripes(x, z - 1, x + width - 1, z - 1, 80)
+    b.maintenance_droid(72, 124, 80)
+    b.wear([(-65, 110, 67, 110), (0, 87, 0, 127), (-77, 106, -55, 106),
+            (61, 96, 61, 122), (72, 97, 72, 122)], random.Random(733), 80)
+
+
+def side_routes(b):
+    b.deck(8, -30, 16, -14, PLATE)
+    b.box(8, 65, -30, 16, 68, -14, "air")
+    for x in (8, 16):
+        b.box(x, 65, -29, x, 69, -15, FRAME)
+        b.box(x, 67, -28, x, 68, -16, "cyan_stained_glass")
+    b.box(8, 70, -29, 16, 70, -15, FRAME)
+    b.box(10, 69, -23, 14, 69, -23, COLD_LIGHT)
+    b.box(14, 65, -28, 15, 69, -26, DARK)
+    b.box(10, 65, -21, 12, 65, -21, "smooth_quartz")
+    b.deck(-16, 14, -8, 30, PLATE)
+    b.box(-16, 65, 14, -8, 68, 30, "air")
+    for x in (-16, -8):
+        b.rail(x, 15, x, 29)
+    b.box(-16, 65, 20, -14, 69, 22, DARK)
+    b.box(-11, 65, 25, -9, 65, 25, "smooth_quartz")
+    b.box(-15, 70, 21, -15, 70, 21, "waxed_weathered_copper")
+
+
+def inspection_course(b):
+    upper_deck(b, -28, -136, 23, -126, 77)
+    b.box(-28, 78, -136, 23, 91, -126, "air")
+    for x in (-28, 23):
+        b.box(x, 78, -136, x, 82, -126, FRAME)
+    for z in (-136, -126):
+        b.box(-28, 78, z, 23, 82, z, FRAME)
+        b.box(-28, 83, z, 23, 83, z, RAIL)
+    upper_deck(b, -27, -128, -22, -118, 82)
+    upper_deck(b, 18, -134, 22, -118, 82)
+    b.box(-27, 83, -128, -22, 87, -118, "air")
+    b.box(18, 83, -134, 22, 87, -118, "air")
+    upper_deck(b, -27, -134, -21, -129, 82)
+    for index, x in enumerate(range(-18, 18, 5)):
+        y = 82 + (index % 3 == 1)
+        b.box(x, 78, -133, x + 2, y - 1, -130, DARK)
+        b.box(x, y, -133, x + 2, y, -130, "smooth_quartz")
+        b.box(x + 1, y, -131, x + 1, y, -131, "yellow_concrete")
+    for x in (-18, 15):
+        stairway(b, x, -129, 78, 5, 1)
+    for x in (-27, 22):
+        b.box(x, 83, -135, x, 103, -135, FRAME)
+        b.warning_light(x, 104, -135)
+    b.box(-27, 103, -135, 22, 104, -129, FRAME)
+    b.box(-27, 103, -133, 22, 103, -131, DARK)
+    b.box(-5, 95, -132, -4, 102, -132, "iron_chain")
+    b.box(-7, 93, -134, -2, 94, -130, "gray_concrete")
+    b.box(-24, 83, -127, -24, 84, -127, "chiseled_quartz_block")
+    b.box(-24, 85, -127, -24, 85, -127, "cyan_stained_glass")
+    ship_room(b, -62, -130, -53, -121)
+    b.box(-60, 83, -123, -55, 87, -121, "air")
+    b.box(-59, 83, -128, -57, 83, -128, "waxed_weathered_copper")
+    b.box(-58, 84, -128, -58, 84, -128, "note_block")
+    b.box(-57, 84, -128, -57, 87, -128, "lightning_rod[facing=up]")
+    b.box(-60, 84, -128, -60, 85, -128, "cyan_stained_glass")
+
+
+def expansion(b):
+    northern_dock(b)
+    southern_halls(b)
+    side_routes(b)
+    inspection_course(b)
+
+
 def forceload_areas(fills):
     """A row of chunks at a time: the command refuses more than 256 chunks, and a fill only reaches loaded ones."""
     rows = defaultdict(set)
@@ -488,6 +692,37 @@ def route(faction, z, lane):
                 retreat=spot(15 * sign, z + lane), capture=spot(4 * sign, z + lane // 2))
 
 
+def expansion_route(faction, z):
+    sign = -1 if faction == "kolonien" else 1
+    if z < 0:
+        points = [spot(50 * sign, -25), spot(32 * sign, -25), spot(32 * sign, -76),
+                  spot(32 * sign, -79), spot(32 * sign, -98, 83), spot(32 * sign, -110, 83),
+                  spot(12 * sign, -110, 83), spot(12 * sign, -98, 83), spot(12 * sign, -79),
+                  spot(12 * sign, -60)]
+    else:
+        points = [spot(50 * sign, 25), spot(32 * sign, 25), spot(32 * sign, 63),
+                  spot(32 * sign, 80, 81), spot(32 * sign, 84, 81), spot(62 * sign, 84, 81),
+                  spot(62 * sign, 100, 81), spot(62 * sign, 110, 81), spot(32 * sign, 110, 81), spot(0, 110, 81),
+                  spot(0, 83, 81), spot(0, 80, 81), spot(0, 63), spot(0, 58)]
+    result = route(faction, z, -6 if z < 0 else 6)
+    result["approach"] = points + [result["cover"]]
+    return result
+
+
+def side_route(faction):
+    if faction == "kolonien":
+        points = [spot(-50, 25), spot(-32, 25), spot(-32, 33), spot(-12, 33), spot(-12, 29),
+                  spot(-12, 16), spot(-10, 14), spot(-10, 10)]
+        lane = 6
+    else:
+        points = [spot(50, -25), spot(32, -25), spot(32, -33), spot(12, -33), spot(12, -29),
+                  spot(12, -24), spot(13, -23), spot(13, -19), spot(12, -15)]
+        lane = -6
+    result = route(faction, 0, lane)
+    result["approach"] = points + [result["cover"]]
+    return result
+
+
 def arena():
     posts = []
     for key, z in POSTS.items():
@@ -495,28 +730,44 @@ def arena():
         posts.append(dict(key=key, center=spot(0, z), radius=6.5, label=spot(0, z, SKY + (5 if key != "turbinenhalle" else 4)),
                           spawns=[spot(-5, z - 10), spot(5, z - 10), f"{spot(-5, z + 10)} 180 0", f"{spot(5, z + 10)} 180 0"],
                           indicators=[f"{x} {DECK} {cz}" for x, cz in cells],
-                          routes={faction: [route(faction, z, lane) for lane in (-6, 6)]
+                          routes={faction: [route(faction, z, lane) for lane in (-6, 6)] +
+                                  [expansion_route(faction, z) if z else side_route(faction)]
                                   for faction in ("kolonien", "hegemonie")}))
     spawns = [-5.5, -1.5, 2.5, 6.5]
     return {"name": "Sturmwerft", "weather": "rain", "time": 13000,
-            "play-area": [-97.0, SEA - 6.0, -70.0, 97.0, 128.0, 71.0],
-            "world-border-size": 384.0,
+            "play-area": [-100.0, 50.0, -150.0, 100.0, 144.0, 145.0],
+            "world-border-size": 384.0, "death-y": 60.0,
             "relic": f"0.5 {SKY + 5}.2 -65.5", "overview": "0.5 112 62.5 180 40", "lobby": "0.5 90 0.5", "spectator": "24.5 92 30.5 145 35",
             "headquarters": {
                 "kolonien": dict(spawns=[f"-81.5 65 {z} 270 0" for z in spawns], zone=[-97.0, 60.0, -30.0, -63.0, 104.0, 31.0]),
                 "hegemonie": dict(spawns=[f"82.5 65 {z} 90 0" for z in spawns], zone=[63.0, 60.0, -30.0, 97.0, 104.0, 31.0])},
-            "posts": posts, "controls": [],
+            "posts": posts,
+            "controls": [dict(control="bulkhead", switches=["-4 84 -114", "4 84 -114"],
+                              panels=[f"0 {y} {z}" for y in range(83, 87) for z in range(-112, -107)],
+                              center="0.5 83 -109.5"),
+                         dict(control="vent", switches=["-71 82 100", "-60 82 100"], panels=[], center="-65.5 81 103.5")],
+            "secrets": {"receiver": "-58 84 -128", "inspection-course": {
+                "lane": [-27.0, 77.0, -134.0, 23.0, 91.0, -129.0], "pit-y": 80.0,
+                "gates": [-21.0, -16.0, -11.0, -6.0, -1.0, 4.0, 9.0, 14.0, 19.0], "board": "-24 84 -127"}},
             "environment": {
                 "steam": [spot(x, z - 8, SKY + 2) for z in POSTS.values() for x in (-11, 11)],
                 "sparks": [spot(x, z - 6, SKY + 1.5) for z in POSTS.values() for x in (-9, 13)],
                 "crane": {"from": "-10.5 84 0.5", "to": "10.5 84 0.5"}}}
 
 
-def solid_at(fills, x, y, z):
+def block_at(fills, x, y, z):
     for x1, y1, z1, x2, y2, z2, block in reversed(fills):
         if x1 <= x <= x2 and y1 <= y <= y2 and z1 <= z <= z2:
-            return block != "air"
-    return False
+            return block
+    return "air"
+
+
+def solid_block(block):
+    return block.split("[")[0] not in ("air", "polished_blackstone_button", "lever")
+
+
+def solid_at(fills, x, y, z):
+    return solid_block(block_at(fills, x, y, z))
 
 
 def layer(fills, y):
@@ -524,7 +775,7 @@ def layer(fills, y):
     for x1, y1, z1, x2, y2, z2, block in fills:
         if y1 <= y <= y2:
             changed = {(x, z) for x in range(x1, x2 + 1) for z in range(z1, z2 + 1)}
-            if block == "air":
+            if not solid_block(block):
                 cells.difference_update(changed)
             else:
                 cells.update(changed)
@@ -543,27 +794,183 @@ def reachable(cells, start):
     return reached
 
 
+def standing_positions(levels, area, death_y):
+    x1, y1, z1, x2, y2, z2 = area
+    return {(x, y, z) for y in range(math.ceil(max(death_y, y1)), math.floor(y2) + 1)
+            for x, z in levels[y - 1] - levels[y] - levels[y + 1]
+            if x1 <= x + 0.5 <= x2 and z1 <= z + 0.5 <= z2}
+
+
+def walk_reachable(cells, start, levels, stairs=None):
+    reached = {start} if start in cells else set()
+    pending = deque(reached)
+    while pending:
+        x, y, z = pending.popleft()
+        for nx, nz in ((x - 1, z), (x + 1, z), (x, z - 1), (x, z + 1)):
+            for ny in (y, y + 1, y - 1):
+                cell = nx, ny, nz
+                if cell not in cells or cell in reached:
+                    continue
+                if ny != y and stairs is not None and (x, y, z) not in stairs and cell not in stairs:
+                    continue
+                if (ny > y and (x, z) in levels[y + 2]) or (ny < y and (nx, nz) in levels[y + 1]):
+                    continue
+                reached.add(cell)
+                pending.append(cell)
+    return reached
+
+
+def fighter_positions(plan):
+    positions = [each for headquarters in plan["headquarters"].values() for each in headquarters["spawns"]]
+    for post in plan["posts"]:
+        positions.extend([post["center"], *post["spawns"]])
+        for faction in ("kolonien", "hegemonie"):
+            if not post["routes"].get(faction):
+                sys.exit(f"Missing {faction} routes for {post['key']}")
+            for route in post["routes"][faction]:
+                positions.extend([*route["approach"], route["cover"], route["peek"], route["retreat"], route["capture"]])
+                x, _, z = map(float, route["capture"].split()[:3])
+                cx, _, cz = map(float, post["center"].split())
+                if (x - cx) ** 2 + (z - cz) ** 2 > post["radius"] ** 2:
+                    sys.exit(f"Capture outside {post['key']}: {route['capture']}")
+    return positions
+
+
+def require_reachable(positions, connected, area):
+    for position in positions:
+        values = [float(part) for part in position.split()[:3]]
+        if any(not area[i] <= values[i] <= area[i + 3] for i in range(3)):
+            sys.exit(f"Fighter position outside play area: {position}")
+        if tuple(map(math.floor, values)) not in connected:
+            sys.exit(f"Unreachable fighter position: {position}")
+
+
+def clear_ray(levels, start, end, ignore_target=False):
+    samples = max(1, math.ceil(math.dist(start, end) * 10))
+    target = tuple(map(math.floor, end))
+    for step in range(samples + 1):
+        x, y, z = (math.floor(a + (b - a) * step / samples) for a, b in zip(start, end))
+        if (x, z) in levels[y] and not (ignore_target and (x, y, z) == target):
+            return False
+    return True
+
+
+def validate_expansion(fills, plan, levels, cells, connected, stairs):
+    rooms = [spot(-60, -120, 83), spot(-35, -99, 83), spot(24, -117, 83), spot(58, -103, 83),
+             spot(-69, 96, 81), spot(-61, 114, 81), spot(0, 100, 81), spot(0, 128, 81),
+             spot(61, 100, 81), spot(73, 122, 81), spot(-58, -126, 83),
+             spot(-24, -131, 83), spot(21, -132, 83), spot(-20, -132, 78)]
+    require_reachable(rooms, connected, plan["play-area"])
+    walking = walk_reachable(cells, (-82, 65, -6), levels, stairs)
+    require_reachable([*fighter_positions(plan), *rooms], walking, plan["play-area"])
+    for x, z, floor, rise, direction in [(x, -80, 65, 18, -1) for x in (*ROADS, -12, 12)] + [
+            (x, 64, 65, 16, 1) for x in (*ROADS, 0)]:
+        for step in range(rise):
+            at, y = z + direction * step, floor + step
+            for dx in range(-2, 3):
+                if "stairs[" not in block_at(fills, x + dx, y, at):
+                    sys.exit(f"Missing stair: {(x + dx, y, at)}")
+                if any(solid_at(fills, x + dx, y + dy, at) for dy in (1, 2, 3)):
+                    sys.exit(f"Low stair headroom: {(x + dx, y, at)}")
+    shut = {y: set(row) for y, row in levels.items()}
+    panels = set()
+    for control in plan["controls"]:
+        for panel in control["panels"]:
+            x, y, z = map(int, panel.split())
+            if block_at(fills, x, y, z) != "air":
+                sys.exit(f"Control panel must start as air: {panel}")
+            panels.add((x, y, z))
+            shut[y].add((x, z))
+    safe = standing_positions(shut, plan["play-area"], plan["death-y"])
+    vent = next(control for control in plan["controls"] if control["control"] == "vent")
+    vx, vy, vz = map(float, vent["center"].split())
+    hazard = {cell for cell in safe if abs(cell[0] + 0.5 - vx) <= 3 and abs(cell[2] + 0.5 - vz) <= 2
+              and vy - 1 <= cell[1] <= vy + 3}
+    safe -= hazard
+    closed_connected = walk_reachable(safe, (-82, 65, -6), shut, stairs)
+    require_reachable([*fighter_positions(plan), *rooms], closed_connected, plan["play-area"])
+    bypass = {cell for cell in safe if -16 <= cell[0] <= 16 and -123 <= cell[2] <= -104 and cell[1] == 83}
+    if (8, 83, -110) not in walk_reachable(bypass, (-8, 83, -110), shut):
+        sys.exit("Bulkhead has no permanent northern bypass")
+    workshop = {cell for cell in safe if -82 <= cell[0] <= -50 and 88 <= cell[2] <= 119 and cell[1] == 81}
+    if (-59, 81, 103) not in walk_reachable(workshop, (-73, 81, 103), shut):
+        sys.exit("Workshop vent has no southern bypass")
+    for position in fighter_positions(plan):
+        x, y, z = (math.floor(float(part)) for part in position.split()[:3])
+        if (x, y, z) in hazard or (x, y, z) in panels or (x, y + 1, z) in panels:
+            sys.exit(f"Fighter position overlaps control hazard: {position}")
+    switches = []
+    for control in plan["controls"]:
+        for switch in control["switches"]:
+            x, y, z = map(int, switch.split())
+            block = block_at(fills, x, y, z)
+            if not ("facing=south" in block and ("button[" in block or "lever[" in block)
+                    and solid_at(fills, x, y, z - 1)):
+                sys.exit(f"Unsupported control switch: {switch}")
+            if abs(x + 0.5 - vx) <= 3 and abs(z + 0.5 - vz) <= 2 and vy - 1 <= y <= vy + 3:
+                sys.exit(f"Control switch overlaps vent hazard: {switch}")
+            switches.append(switch)
+    secrets = plan["secrets"]
+    for position in [*switches, secrets["receiver"], secrets["inspection-course"]["board"]]:
+        x, y, z = map(int, position.split())
+        if block_at(fills, x, y, z) == "air":
+            sys.exit(f"Missing interaction block: {position}")
+        if position not in switches and not solid_at(fills, x, y - 1, z):
+            sys.exit(f"Unsupported interaction block: {position}")
+        target = x + 0.5, y + 0.5, z + 0.5
+        usable = False
+        for dx in range(-2, 3):
+            for dz in range(1, 4):
+                stance = x + dx, y - 1, z + dz
+                if stance not in closed_connected:
+                    continue
+                eye = stance[0] + 0.5, stance[1] + 1.62, stance[2] + 0.5
+                distance = math.dist(eye, target)
+                if distance <= 5 and clear_ray(shut, eye, target, ignore_target=True):
+                    usable = True
+        if not usable:
+            sys.exit(f"Interaction cannot be reached and seen: {position}")
+    course = plan["secrets"]["inspection-course"]
+    if course["gates"] != sorted(set(course["gates"])):
+        sys.exit("Inspection gates must run west to east")
+    for gate in course["gates"]:
+        if not any((math.floor(gate), y, -132) in cells for y in (83, 84)):
+            sys.exit(f"Inspection gate has no fixed landing: {gate}")
+    lane = course["lane"]
+    landings = [(x, y) for x in range(math.ceil(lane[0]), math.floor(lane[3]))
+                for y in (83, 84) if (x, y, -132) in cells]
+    for (x1, y1), (x2, y2) in zip(landings, landings[1:]):
+        if x2 - x1 > 3 or abs(y2 - y1) > 1:
+            sys.exit(f"Inspection jump too long or high: {(x1, y1)} to {(x2, y2)}")
+    for post in plan["posts"]:
+        target = [float(part) for part in post["center"].split()]
+        target[1] += 1.62
+        for routes in post["routes"].values():
+            for route in routes:
+                eyes = [[float(part) for part in route[key].split()] for key in ("cover", "peek")]
+                for eye in eyes:
+                    eye[1] += 1.62
+                if clear_ray(levels, eyes[0], target) or not clear_ray(levels, eyes[1], target):
+                    sys.exit(f"Cover or peek has no useful geometry at {post['key']}: {route['cover']}")
+    if len(walking) < 17000:
+        sys.exit(f"Expansion too small: {len(walking)} standing positions reachable without jumping")
+    print(f"Validated {len(walking)} standing positions reachable without jumping on props")
+
+
 def validate(fills, plan):
     blocked = blocked_spots(fills, plan)
     if blocked:
         sys.exit(f"Unsupported or obstructed fighter positions: {blocked}")
     floor = layer(fills, DECK)
     walkable = floor - layer(fills, SKY) - layer(fills, SKY + 1)
-    connected = reachable(walkable, (-82, -6))
-    for post in plan["posts"]:
-        positions = [post["center"], *post["spawns"]]
-        for routes in post["routes"].values():
-            for route in routes:
-                positions.extend([*route["approach"], route["cover"], route["peek"], route["retreat"], route["capture"]])
-        for position in positions:
-            x, _, z = (math.floor(float(part)) for part in position.split()[:3])
-            if (x, z) not in connected:
-                sys.exit(f"Unreachable fighter position: {position}")
-    for headquarters in plan["headquarters"].values():
-        for position in headquarters["spawns"]:
-            x, _, z = (math.floor(float(part)) for part in position.split()[:3])
-            if (x, z) not in connected:
-                sys.exit(f"Unreachable headquarters spawn: {position}")
+    levels = {y: layer(fills, y) for y in range(math.floor(plan["play-area"][1]) - 1, math.floor(plan["play-area"][4]) + 3)}
+    cells = standing_positions(levels, plan["play-area"], plan["death-y"])
+    stairs = {(x, y1 + 1, z) for x1, y1, z1, x2, _, z2, block in fills if "_stairs[" in block
+              for x in range(x1, x2 + 1) for z in range(z1, z2 + 1)
+              if "_stairs[" in block_at(fills, x, y1, z)}
+    connected = walk_reachable(cells, (-82, 65, -6), levels)
+    require_reachable(fighter_positions(plan), connected, plan["play-area"])
+    validate_expansion(fills, plan, levels, cells, connected, stairs)
     driveable = {cell for cell in walkable if all((cell[0] + dx, cell[1] + dz) in walkable
                  for dx in (-1, 0, 1) for dz in (-1, 0, 1))}
     for sign in (-1, 1):
@@ -604,7 +1011,8 @@ def validate(fills, plan):
             for y in range(math.floor(min(point[1] for point in endpoints) - 9.62), math.ceil(max(point[1] for point in endpoints) + 0.65)):
                 if solid_at(fills, x, y, z):
                     sys.exit(f"Crane swept volume blocked: {(x, y, z)}")
-    print(f"Validated {len(connected)} connected walkable cells, both vehicle approaches and six clear landing cylinders")
+    print(f"Validated {len(connected)} connected standing positions, occupied rooms, stairs and control bypasses")
+    print("Validated both vehicle approaches, six clear landing cylinders, crane sweep and emitters")
 
 
 def blocked_spots(fills, plan):
@@ -648,7 +1056,7 @@ def to_yaml(value, indent=0):
     return lines
 
 
-def main():
+def build():
     b = Builder()
     for sign in (-1, 1):
         headquarters(b, sign)
@@ -676,10 +1084,16 @@ def main():
                 b.stripes(edge, z - 3, edge, z + 3)
             b.box(x - 3, DECK, z - 3, x + 3, DECK, z + 3, STEEL)
             b.box(x, DECK, z, x, DECK, z, LIGHT)
-    deck_commands = b.commands
-    plan = arena()
     far = Builder()
     scenery(far)
+    expansion(far)
+    return b, far
+
+
+def main():
+    b, far = build()
+    deck_commands = b.commands
+    plan = arena()
     validate(b.fills + far.fills, plan)
     functions = OUT / "datapack/data/sturmwerft/function"
     functions.mkdir(parents=True, exist_ok=True)
