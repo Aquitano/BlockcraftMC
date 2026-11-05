@@ -60,4 +60,88 @@ public class ArenaFileTest {
         yaml.save(file);
         assertEquals(196, ArenaFile.load(null, file.toPath()).worldBorderSize(), 0.001);
     }
+
+    @Test
+    public void receiverDoesNotRequireAnyTessarSecrets() throws Exception {
+        var yaml = secretMap();
+        yaml.set("secrets.receiver", "12 74 -8");
+        var spots = loadSecrets(yaml);
+        assertEquals(12, spots.receiver().orElseThrow().getX(), 0);
+        assertEquals(74, spots.receiver().orElseThrow().getY(), 0);
+        assertTrue(spots.musicBox().isEmpty());
+        assertTrue(spots.dune().isEmpty());
+        assertTrue(spots.course().isEmpty());
+        assertTrue(spots.inspectionCourse().isEmpty());
+        assertTrue(spots.crystals().isEmpty());
+        assertTrue(spots.droidPath().isEmpty());
+    }
+
+    @Test
+    public void inspectionCoursePreservesOrderedEastwardGatesWithoutOtherSecrets() throws Exception {
+        var yaml = secretMap();
+        yaml.set("secrets.inspection-course.lane", List.of(-20, 65, -5, 25, 85, 5));
+        yaml.set("secrets.inspection-course.pit-y", 68);
+        yaml.set("secrets.inspection-course.gates", List.of(-18, -3, 10, 23));
+        yaml.set("secrets.inspection-course.board", "-19 73 1");
+        var spots = loadSecrets(yaml);
+        var course = spots.inspectionCourse().orElseThrow();
+        assertEquals(List.of(-18.0, -3.0, 10.0, 23.0), course.gates());
+        assertEquals(68, course.pitY(), 0);
+        assertEquals(45, course.lane().getWidthX(), 0);
+        assertEquals(-19, course.board().getX(), 0);
+        assertTrue(spots.receiver().isEmpty());
+        assertTrue(spots.course().isEmpty());
+        assertTrue(spots.dune().isEmpty());
+    }
+
+    @Test
+    public void tessarCoordinatesRemainIndependent() throws Exception {
+        var yaml = secretMap();
+        yaml.set("secrets.crystals", List.of("1 2 3"));
+        yaml.set("secrets.droid-path", List.of("4 5 6", "7 8 9"));
+        yaml.set("secrets.music-box", "-36 65 53");
+        yaml.set("secrets.dune.top", "20 66 30");
+        yaml.set("secrets.dune.radius", 4);
+        yaml.set("secrets.course.lane", List.of(-62, 60, 55, -24, 76, 62));
+        yaml.set("secrets.course.pit-y", 63);
+        yaml.set("secrets.course.gates", List.of(-25.5, -34.5, -54.5, -60.5));
+        yaml.set("secrets.course.board", "-24 67 58");
+        var spots = loadSecrets(yaml);
+        assertEquals(1, spots.crystals().getFirst().getX(), 0);
+        assertEquals(2, spots.droidPath().size());
+        assertEquals(-36, spots.musicBox().orElseThrow().getX(), 0);
+        assertEquals(4, spots.dune().orElseThrow().radius(), 0);
+        assertEquals(-60.5, spots.course().orElseThrow().gates().getLast(), 0);
+        assertTrue(spots.receiver().isEmpty());
+        assertTrue(spots.inspectionCourse().isEmpty());
+    }
+
+    @Test
+    public void absentOrEmptySecretsNeedNoCoordinates() throws Exception {
+        var yaml = secretMap();
+        var file = temporary.newFile("absent.yml");
+        yaml.save(file);
+        assertTrue(ArenaFile.load(null, file.toPath()).secrets().isEmpty());
+        yaml.createSection("secrets");
+        var spots = loadSecrets(yaml);
+        assertTrue(spots.receiver().isEmpty());
+        assertTrue(spots.inspectionCourse().isEmpty());
+        assertTrue(spots.dune().isEmpty());
+        assertTrue(spots.musicBox().isEmpty());
+        assertTrue(spots.course().isEmpty());
+    }
+
+    private YamlConfiguration secretMap() {
+        var yaml = new YamlConfiguration();
+        yaml.createSection("headquarters");
+        yaml.set("play-area", List.of(-97, 50, -70, 97, 128, 71));
+        for (var position : List.of("relic", "overview", "lobby", "spectator")) yaml.set(position, "0.5 65 0.5");
+        return yaml;
+    }
+
+    private SecretSpots loadSecrets(YamlConfiguration yaml) throws Exception {
+        var file = temporary.newFile();
+        yaml.save(file);
+        return ArenaFile.load(null, file.toPath()).secrets().orElseThrow();
+    }
 }

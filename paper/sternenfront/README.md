@@ -18,6 +18,12 @@ block displays and is removed at round end. `presentation.shipyard` controls par
 crane timing. These effects start with combat and stay off on maps without the corresponding metadata.
 Its `world-border-size` includes the offshore scenery while `play-area` keeps the combat and replay bounds.
 
+Each entry under `secrets` is optional. Tessar keeps `crystals`, `droid-path`, `dune`, `music-box`, and `course`.
+A shipyard can supply only `receiver: "x y z"` or `inspection-course`. The latter has `lane` as
+`[minX, minY, minZ, maxX, maxY, maxZ]`, `pit-y` as a number, `gates` as ordered X planes from start to finish,
+and `board: "x y z"`. Gates can run west to east or east to west. The inspection course uses fixed physical platforms;
+the moving crane's displays provide no collision.
+
 ## Compatibility
 
 `kolonien` identifies the Republic and `hegemonie` the Separatists in arena metadata, configuration, and player

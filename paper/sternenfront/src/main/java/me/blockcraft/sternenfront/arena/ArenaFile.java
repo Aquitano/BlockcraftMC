@@ -66,10 +66,17 @@ public final class ArenaFile {
 
     private static SecretSpots secrets(World world, ConfigurationSection secrets) {
         return new SecretSpots(spots(world, secrets.getStringList("crystals")), spots(world, secrets.getStringList("droid-path")),
-                new SecretSpots.Dune(spot(world, secrets.getString("dune.top")), secrets.getDouble("dune.radius")),
-                block(world, secrets.getString("music-box")),
-                new SecretSpots.Course(box(secrets.getDoubleList("course.lane")), secrets.getDouble("course.pit-y"),
-                        secrets.getDoubleList("course.gates"), spot(world, secrets.getString("course.board"))));
+                Optional.ofNullable(secrets.getConfigurationSection("dune"))
+                        .map(dune -> new SecretSpots.Dune(spot(world, dune.getString("top")), dune.getDouble("radius"))),
+                Optional.ofNullable(secrets.getString("music-box")).map(at -> spot(world, at)),
+                Optional.ofNullable(secrets.getConfigurationSection("course")).map(course -> course(world, course)),
+                Optional.ofNullable(secrets.getString("receiver")).map(at -> spot(world, at)),
+                Optional.ofNullable(secrets.getConfigurationSection("inspection-course")).map(course -> course(world, course)));
+    }
+
+    private static SecretSpots.Course course(World world, ConfigurationSection course) {
+        return new SecretSpots.Course(box(course.getDoubleList("lane")), course.getDouble("pit-y"),
+                course.getDoubleList("gates"), spot(world, course.getString("board")));
     }
 
     private static PostSite post(World world, Map<?, ?> post) {
