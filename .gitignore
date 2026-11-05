@@ -74,6 +74,7 @@ run/
 
 .env
 .cloudflare/
+/local-notes/
 worlds/*/.staging/
 worlds/*/.replaced/
 worlds/**/.publish-ready
