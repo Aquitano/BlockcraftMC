@@ -7,6 +7,7 @@ import me.blockcraft.sternenfront.appearance.Displays;
 import me.blockcraft.sternenfront.combat.Melee;
 import me.blockcraft.sternenfront.game.Blast;
 import me.blockcraft.sternenfront.game.Faction;
+import me.blockcraft.sternenfront.game.LineOfSight;
 import me.blockcraft.sternenfront.game.SoundCue;
 import me.blockcraft.sternenfront.game.SternenfrontGame;
 import me.blockcraft.sternenfront.hero.Hero;
@@ -333,7 +334,9 @@ public final class Speeders implements Listener {
             var cannon = config.cannon();
             var at = each.body.getLocation();
             var nose = at.getDirection().setY(0).normalize();
-            var muzzle = at.clone().add(nose.clone().multiply(cannon.muzzleAhead())).add(0, cannon.muzzleHeight(), 0);
+            var mount = at.clone().add(0, cannon.muzzleHeight(), 0);
+            var ahead = nose.clone().multiply(cannon.muzzleAhead());
+            var muzzle = LineOfSight.clear(mount, ahead) ? mount.clone().add(ahead) : mount;
             if (game.fireCannon(player, each.faction, cannon.stats(), muzzle, nose)) {
                 SpeederEffects.flash(muzzle, each.faction);
             }
