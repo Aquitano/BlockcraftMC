@@ -12,6 +12,9 @@ import java.util.function.Predicate;
 
 final class BotCover {
 
+    // Paper can complete a skeleton's final path node 0.45 blocks away on each horizontal axis.
+    private static final double PEEK_CLEARANCE = 0.5;
+
     private BotCover() { }
 
     static boolean arrived(Location feet, Location eye, Location destination, Location threat, boolean peeking) {
@@ -22,6 +25,17 @@ final class BotCover {
     static boolean shields(Location feet, double eyeHeight, Location threat) {
         return blocked(threat, feet.clone().add(0, eyeHeight, 0))
                 && blocked(threat, feet.clone().add(0, 0.9, 0));
+    }
+
+    static boolean clearPeek(Location feet, double eyeHeight, Location threat) {
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                if (blocked(feet.clone().add(dx * PEEK_CLEARANCE, eyeHeight, dz * PEEK_CLEARANCE), threat)) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     static boolean blocked(Location from, Location to) {

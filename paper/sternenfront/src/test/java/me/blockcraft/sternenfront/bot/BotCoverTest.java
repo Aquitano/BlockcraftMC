@@ -37,6 +37,19 @@ public class BotCoverTest {
     }
 
     @Test
+    public void peekSelectionClearsTheWallBeforePaperCompletesTheFinalPathNode() {
+        var world = wall(new BoundingBox(0, 0, -1, 1, 2.5, 1));
+        var threat = new Location(world, -5, 1.6, 0);
+        var close = new Location(world, 1.5, 0, 1.5);
+        assertFalse(BotCover.blocked(close.clone().add(0, 1.7, 0), threat));
+        assertTrue(BotCover.blocked(close.clone().add(0.44, 1.7, -0.44), threat));
+        assertFalse(BotCover.clearPeek(close, 1.7, threat));
+        var clear = new Location(world, 1.5, 0, 2.5);
+        assertTrue(BotCover.clearPeek(clear, 1.7, threat));
+        assertFalse(BotCover.blocked(clear.clone().add(0.44, 1.7, -0.44), threat));
+    }
+
+    @Test
     public void lowBarricadeIsNotCoverForAStandingSoldier() {
         var world = wall(new BoundingBox(0, 0, -1, 1, 1.3, 1));
         var threat = new Location(world, -5, 1.6, 0);

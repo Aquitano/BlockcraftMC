@@ -638,7 +638,7 @@ public final class Bots implements Listener {
             call(soldier, "cover", tick);
         }
         if (soldier.heat.venting(tick) || wounded(mob)
-                || soldier.peeking && BotCover.blocked(soldier.peek.clone().add(0, mob.getEyeHeight(), 0), threat)) {
+                || soldier.peeking && !BotCover.clearPeek(soldier.peek, mob.getEyeHeight(), threat)) {
             soldier.peeking = false;
             soldier.coverPhaseUntil = 0;
         }
@@ -656,7 +656,7 @@ public final class Bots implements Listener {
                             .map(FrontMap.Route::peek).toList();
                     soldier.peek = BotCover.find(mob, soldier.cover, preferred, Math.min(4, settings.searchRadius()), at ->
                             game.map().playArea().contains(at.toVector()) && at.distanceSquared(soldier.cover) >= 1
-                                    && !BotCover.blocked(at.clone().add(0, mob.getEyeHeight(), 0), threat)).orElse(null);
+                                    && BotCover.clearPeek(at, mob.getEyeHeight(), threat)).orElse(null);
                     soldier.peeking = soldier.peek != null;
                     if (soldier.peeking) {
                         call(soldier, "advance", tick);
