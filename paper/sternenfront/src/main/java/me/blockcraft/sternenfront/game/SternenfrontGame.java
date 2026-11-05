@@ -329,7 +329,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
 
     private void killBonuses(Player killer, int killPoints, boolean headshot) {
         var points = heroes.config().points();
-        int chain = feedback.chained(killer);
+        int chain = onField(killer) ? feedback.chained(killer) : 1;
         if (headshot) {
             awardPoints(killer, RoundTally.bonus(points.headshot(), killPoints, points.kill()), CombatFeedback.Reward.HEADSHOT);
         }

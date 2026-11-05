@@ -177,7 +177,8 @@ public final class Bolts {
     }
 
     private void strike(Bolt bolt, LivingEntity victim, Location at, double travelled) {
-        var guard = victim instanceof Player player ? game.combat().block(player, bolt.direction, bolt.shot.damage())
+        double damage = handling.damage(bolt.shot.damage(), bolt.range - bolt.left + travelled, bolt.range);
+        var guard = victim instanceof Player player ? game.combat().block(player, bolt.direction, damage)
                 : Guard.Result.NONE;
         if (guard == Guard.Result.BLOCK) {
             return;
@@ -193,7 +194,6 @@ public final class Bolts {
             return;
         }
         boolean head = game.speeders().faction(victim).isEmpty() && at.getY() >= victim.getEyeLocation().getY() - HEAD_BELOW_EYES;
-        double damage = handling.damage(bolt.shot.damage(), bolt.range - bolt.left + travelled, bolt.range);
         game.boltHit(bolt.shooter, bolt.shot.blaster(), victim, damage * (head ? bolt.shot.headshot() : 1),
                 head && bolt.shot.headshot() > 1);
     }
