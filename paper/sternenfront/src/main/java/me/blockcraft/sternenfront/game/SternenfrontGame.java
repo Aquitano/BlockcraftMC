@@ -435,6 +435,16 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     public void quit(Player player) {
         music.forget(player);
         botDifficultyVotes.withdraw(player.getUniqueId());
+        standDown(player);
+        deployment.forgetMenu(player);
+        if (round.stepOut(player, this::forfeited)) {
+            refreshAll();
+            return;
+        }
+        leave(player);
+    }
+
+    private void standDown(Player player) {
         combat.forget(player);
         support.forget(player);
         strikesReady.remove(player.getUniqueId());
@@ -442,12 +452,6 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         player.leaveVehicle();
         fallen(player, Optional.empty());
         unscope(player);
-        deployment.forgetMenu(player);
-        if (round.stepOut(player, this::forfeited)) {
-            refreshAll();
-            return;
-        }
-        leave(player);
     }
 
     private void forfeited(UUID player) {
@@ -477,6 +481,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     @Override
     public void vanished(Player player) {
         if (phase() == GamePhase.INGAME && round.isPlaying(player)) {
+            standDown(player);
             deployment.reveal(player);
             leave(player);
             round.watch(player);
