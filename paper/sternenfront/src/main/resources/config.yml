@@ -325,6 +325,12 @@ intro:
   enabled: true
   duration-ticks: 180
   fade-ticks: 15
+  audio:
+    enabled: true
+    voice-volume: 0.8
+    effects-volume: 0.35
+    captions: true
+    briefing-ticks: 80
   focus:
     enabled: true
     from: 0.75

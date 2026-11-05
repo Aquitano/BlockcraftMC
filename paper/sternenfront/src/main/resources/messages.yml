@@ -552,6 +552,11 @@ battlefield:
 intro:
   title: '<gold><bold><map></bold></gold>'
   subtitle: '<faction> <gray>· Erobere die Kommandoposten</gray>'
+  briefing:
+    kolonien: 'Freie Kolonien. Sichert die Kommandoposten. Haltet zusammen.'
+    hegemonie: 'Einheiten der Hegemonie. Besetzt die Kommandoposten. Haltet die Stellung.'
+  audio:
+    transcript: '<aqua>Funk <dark>» <white><briefing>'
   controls: '<gray>Schleichen: Intro überspringen · Einsatz in <white><seconds></white> s</gray>'
   waiting: '<gray>Warte auf den gemeinsamen Einsatzbeginn · <white><seconds></white> s</gray>'
   rejoining: '<gray>Das Intro läuft noch. Dein Einsatz beginnt mit den anderen Spielern.</gray>'

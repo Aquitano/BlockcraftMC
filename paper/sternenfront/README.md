@@ -258,6 +258,17 @@ shot until the keyframe, then changes the camera immediately. Other segments use
 post shot has a moving endpoint before the headquarters cut. The actor faces that shot's camera and starts its clip
 when the first headquarters keyframe is reached. Explicit operator overrides of `intro.shots` retain their own path.
 
+`intro.audio` controls the faction radio briefing, captions, and shot cues. Speech uses the client's Voice slider;
+radio clicks and transitions use Ambient. Sounds follow the spectator camera and stop with the scene, including a skip.
+The briefing starts three ticks after the opening fade. `briefing-ticks` reserves 80 ticks for speech before the closing
+radio click. An intro too short for that window omits the briefing. Transitions follow the first intermediate camera
+keyframe and the headquarters shot, outside the fades. Voice and effects volumes can be set independently.
+
+The German transcripts are `intro.briefing` in `messages.yml`. Changing the words requires regenerating the speech with
+`resourcepack/IntroBriefings.py --model /path/to/de_DE-thorsten-high.onnx`, using that script's Python dependencies.
+The checked-in WAV sources allow offline OGG regeneration with `python3 resourcepack/IntroBriefings.py` and FFmpeg.
+The engine and voice model remain build tools. [CREDITS.md](../../CREDITS.md#sound-effects) records the voice source.
+
 `/sfintro` plays a personal preview in the lobby. It requires `blockcraft.sternenfront.presentation` and an applied
 resource pack. Sneak or use `/sfintro stop` to end the preview. It restores the original position, game mode,
 flight settings, invulnerability, collision setting, fall distance, and prior spectator target.
@@ -273,6 +284,8 @@ quest state in that callback for both `COMPLETED` and `SKIPPED`. Cancellation an
 The final intro shot shows an infantry actor using `animations/briefing.animation.json` from the plugin jar.
 An operator override with the same relative path in the plugin data folder replaces it after restart.
 The animation name is `animation.infantry.briefing`.
+The bundled clip samples eased arm and head movement at 20 Hz. The salute rises over 0.55 seconds, holds until
+1 second, and returns to rest by 1.5 seconds before the default shot fades. Its four-second loop has matching endpoints.
 
 `BedrockAnimations` reads the numeric subset of Blockbench's Bedrock animation export. It supports positive
 `animation_length`, boolean `loop`, and named bone `position`, `rotation`, and `scale` channels. A channel is a
@@ -289,7 +302,11 @@ Unknown bone names reject the actor action. The importer does not load `.bbmodel
 
 1. Join the dev Sternenfront server with the current resource pack and the presentation permission.
 2. Run `/sfintro`. Check the map flyover, faction-specific headquarters shot, letterboxing, fades, and the infantry salute.
-3. Repeat the preview and sneak midway. Check the original position, game mode, flight, and camera are restored.
+   Hear the opening radio click, the faction's German briefing, the closing click, and cues at the post and headquarters
+   shots. Check the chat transcript and repeat for the other faction. Voice and Ambient sliders control separate sounds.
+   The salute and head movements must ease into their holds and return without snapping.
+3. Repeat the preview and sneak while the voice plays. The audio stops immediately. Check the original position, game
+   mode, flight, and camera are restored. Repeat with `/sfintro stop`.
 4. Repeat the preview and teleport to another world. Check the scene stops and the teleport destination is preserved.
 5. Start a match with two clients. Skip on one client and watch the full intro on the other. Neither client can deploy early.
 6. Check both clients deploy together while the final frame is black, then fade into the headquarters spawn.
@@ -297,8 +314,8 @@ Unknown bone names reject the actor action. The importer does not load `.bbmodel
    Bots and objectives begin at that point.
 7. Disconnect during the intro and reconnect. Check the player can deploy when the shared intro ends.
 
-The automated tests cover camera interpolation, cut timing, and numeric animation sampling and validation.
-They do not verify camera smoothness, shader appearance, model pivots, or client input behavior.
+The automated tests cover camera interpolation, cut timing, audio scheduling and cleanup, and numeric animation sampling
+and validation. They do not verify camera smoothness, audio playback, shader appearance, model pivots, or client input.
 
 ## Later
 

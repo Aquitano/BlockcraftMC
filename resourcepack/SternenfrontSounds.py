@@ -16,6 +16,7 @@ from pathlib import Path
 
 from SaberRecordings import generate as recorded_sabers
 from BattleRecordings import generate as recorded_battle
+from IntroBriefings import generate as intro_briefings
 
 import numpy as np
 from scipy import signal
@@ -290,7 +291,25 @@ def charge_arm(rng):
     return layer(beep(900, 900, 0.05), (0.09, beep(1250, 1250, 0.05)), (0.2, beep(1700, 1700, 0.09)))
 
 
+def radio_click(rng, opening):
+    seconds = 0.21 if opening else 0.16
+    static = unit(filtered(noise(rng, seconds), "bandpass", [650, 5200])) * decay(seconds, 28, 0.001)
+    tone = beep(1050 if opening else 760, 1080 if opening else 650, 0.065)
+    return layer(0.5 * static, (0.025, 0.5 * tone), (0.095, 0.16 * hitmarker(rng)))
+
+
+def intro_transition(rng):
+    seconds = 0.48
+    air = unit(swept(noise(rng, seconds), glide(650, 2400, seconds), 0.8))
+    return layer(0.5 * air * swell(seconds, 0.16, 0.28),
+                 (0.12, 0.4 * thump(105, 55, 0.24, 14)),
+                 (0.17, 0.25 * bell(660, 0.3, 12)))
+
+
 SOUNDS = {
+    "intro.radio_open": (0.4, lambda rng: radio_click(rng, True)),
+    "intro.radio_close": (0.35, lambda rng: radio_click(rng, False)),
+    "intro.transition": (0.45, intro_transition),
     "bolt.impact": (0.7, bolt_impact),
     "force.push": (0.85, force_push),
     "force.grip": (0.75, force_grip),
@@ -372,5 +391,6 @@ with tempfile.TemporaryDirectory() as directory:
 if not args.only:
     events.update(recorded_sabers(ROOT))
     events.update(recorded_battle(ROOT))
+    events.update(intro_briefings(ROOT))
 register(events, replace=not args.only)
 print(f"Wrote {sum(len(entry['sounds']) for entry in events.values())} sounds for {len(events)} events to {OUT}")

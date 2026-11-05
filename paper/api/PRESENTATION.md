@@ -73,11 +73,12 @@ Gameplay effects do not take ownership of the HUD or block movement and input. A
 ## Play the Sternenfront intro
 
 1. In the Sternenfront lobby, run `/sfintro`. Watch the map overview and headquarters shots. The infantry actor
-   performs a salute and head movement from `animations/briefing.animation.json`.
+   performs an eased salute and head movement from `animations/briefing.animation.json`.
+   Hear the faction's German radio briefing and the cues at the post and headquarters shots. Check the chat transcript.
    The final headquarters shot gains focus from 75% to 95% of the sequence. Check that no translucent armor stand
    appears at the camera. The camera uses an empty item display, with no item or shadow to render.
-2. Sneak to skip the demo. Repeat with `/sfintro stop`. Check that your position, game mode, flight, and vulnerability
-   return to their previous values.
+2. Sneak while the radio plays to skip the demo. Repeat with `/sfintro stop`. All intro sounds must stop immediately.
+   Check that your position, game mode, flight, and vulnerability return to their previous values.
 3. Start a real match with two testers. Let one watch the intro and let the other sneak immediately.
    Both must deploy at the same time. The round timer and bots must start after the shared intro deadline.
 4. Disconnect one tester during the intro and rejoin before it ends. The player must wait with the match, then deploy.

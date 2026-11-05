@@ -272,5 +272,30 @@
     "sounds": [
       "blockcraft:sternenfront/cooled"
     ]
+  },
+  "sternenfront.intro.briefing.kolonien": {
+    "sounds": [
+      "blockcraft:sternenfront/intro_briefing_kolonien"
+    ]
+  },
+  "sternenfront.intro.briefing.hegemonie": {
+    "sounds": [
+      "blockcraft:sternenfront/intro_briefing_hegemonie"
+    ]
+  },
+  "sternenfront.intro.radio_open": {
+    "sounds": [
+      "blockcraft:sternenfront/intro_radio_open"
+    ]
+  },
+  "sternenfront.intro.radio_close": {
+    "sounds": [
+      "blockcraft:sternenfront/intro_radio_close"
+    ]
+  },
+  "sternenfront.intro.transition": {
+    "sounds": [
+      "blockcraft:sternenfront/intro_transition"
+    ]
   }
 }

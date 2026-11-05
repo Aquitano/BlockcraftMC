@@ -98,7 +98,10 @@ public final class BattleIntro implements AutoCloseable {
         var focus = new FocusWindow(config.getBoolean("intro.focus.enabled"),
                 config.getDouble("intro.focus.from"), config.getDouble("intro.focus.until"));
         var participant = new Participant(new PresentationScope(game.plugin()));
-        var timeline = new SceneTimeline(game.map().world(), route.camera(), List.of(), skipMode,
+        var audio = new IntroAudio(player, participant.resources).cues(faction, route, config,
+                () -> player.sendMessage(game.messages().get("intro.audio.transcript",
+                        Placeholder.component("briefing", game.messages().get("intro.briefing." + faction.key())))));
+        var timeline = new SceneTimeline(game.map().world(), route.camera(), audio, skipMode,
                 (viewer, tick, total, skipped) -> {
                     if (skipped) {
                         if (tick % 10 == 0) viewer.sendActionBar(game.messages().get("intro.waiting",
