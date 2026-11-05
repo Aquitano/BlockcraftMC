@@ -1,6 +1,7 @@
 package me.blockcraft.sternenfront.secret;
 
 import me.blockcraft.common.message.Messages;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.SoundCategory;
@@ -18,16 +19,19 @@ final class MusicBox {
     private final Predicate<Player> deployed;
     private final Messages messages;
     private final BiConsumer<Player, Secret> discover;
+    private final BiConsumer<Player, Component> feedback;
     private final Location block;
     private final Location speaker;
     private final Secret secret;
     private long startedAt = UNSTARTED;
     private int next;
 
-    MusicBox(Predicate<Player> deployed, Messages messages, BiConsumer<Player, Secret> discover, Location block, Secret secret) {
+    MusicBox(Predicate<Player> deployed, Messages messages, BiConsumer<Player, Secret> discover,
+             BiConsumer<Player, Component> feedback, Location block, Secret secret) {
         this.deployed = deployed;
         this.messages = messages;
         this.discover = discover;
+        this.feedback = feedback;
         this.block = block;
         this.speaker = block.clone().add(0.5, 0.8, 0.5);
         this.secret = secret;
@@ -42,12 +46,16 @@ final class MusicBox {
         }
         var key = secret == Secret.RECEIVER ? "receiver" : "music-box";
         if (startedAt != UNSTARTED) {
-            player.sendActionBar(messages.get("secret." + key + "-busy"));
+            feedback.accept(player, messages.get("secret." + key + "-busy"));
             return true;
         }
         startedAt = tick;
         next = 0;
-        player.sendActionBar(messages.get("secret." + key));
+        if (secret == Secret.RECEIVER) {
+            player.sendMessage(messages.get("secret." + key));
+        } else {
+            feedback.accept(player, messages.get("secret." + key));
+        }
         discover.accept(player, secret);
         return true;
     }

@@ -292,7 +292,7 @@ secret:
   rumble: "<muted>Der Sand unter dir bebt ..."
   music-box: "<muted>Der Musikautomat spielt auf."
   music-box-busy: "<muted>Der Musikautomat spielt schon."
-  receiver: "<muted>Verlassener Kanal: <accent>Werftkontrolle an Cantina. Feierabendfrequenz empfangen!"
+  receiver: "<prefix><muted>Werftkontrolle: <accent>Feierabendkanal zur Cantina steht!"
   receiver-busy: "<muted>Der Empfänger überträgt bereits."
   kessel-running: "<accent>Kessel-Lauf <dark>· <white><time> s <dark>· <muted>Tor <white><gate><dark>/<white><gates>"
   kessel-finished: "<prefix><muted>Kessel-Lauf geschafft in <accent><time> s<muted>!"

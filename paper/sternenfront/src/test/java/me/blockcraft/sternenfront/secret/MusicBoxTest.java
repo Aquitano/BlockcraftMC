@@ -1,6 +1,8 @@
 package me.blockcraft.sternenfront.secret;
 
 import me.blockcraft.common.message.Messages;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -30,9 +32,9 @@ public class MusicBoxTest {
     public void authoredClicksAreConsumedForUndeployedPlayersAndRidersWithoutDiscoveries() {
         var found = new ArrayList<Secret>();
         var rider = player(true);
-        var box = new MusicBox(ignored -> true, messages, (player, secret) -> found.add(secret), at, Secret.RECEIVER);
+        var box = new MusicBox(ignored -> true, messages, (player, secret) -> found.add(secret), Player::sendActionBar, at, Secret.RECEIVER);
         assertTrue(box.use(rider, receiver, 0));
-        box = new MusicBox(ignored -> false, messages, (player, secret) -> found.add(secret), at, Secret.RECEIVER);
+        box = new MusicBox(ignored -> false, messages, (player, secret) -> found.add(secret), Player::sendActionBar, at, Secret.RECEIVER);
         assertTrue(box.use(player(false), receiver, 0));
         assertTrue(found.isEmpty());
         var elsewhere = fake(Block.class, (proxy, method, args) -> at.clone().add(1, 0, 0));
@@ -54,7 +56,7 @@ public class MusicBoxTest {
         var speaker = new Location(world, 12, 74, -8);
         var clicked = fake(Block.class, (proxy, method, args) -> speaker);
         var found = new ArrayList<Secret>();
-        var box = new MusicBox(ignored -> true, messages, (player, secret) -> found.add(secret), speaker, Secret.RECEIVER);
+        var box = new MusicBox(ignored -> true, messages, (player, secret) -> found.add(secret), Player::sendActionBar, speaker, Secret.RECEIVER);
         assertTrue(box.use(player(false), clicked, 100));
         box.tick(100);
         int firstNotes = visits.get();
@@ -72,16 +74,37 @@ public class MusicBoxTest {
     @Test
     public void legacyCantinaUsesTheSameConsumedPlaybackPathAndKeepsItsIdentity() {
         var found = new ArrayList<Secret>();
-        var box = new MusicBox(ignored -> true, messages, (player, secret) -> found.add(secret), at, Secret.CANTINA);
+        var box = new MusicBox(ignored -> true, messages, (player, secret) -> found.add(secret), Player::sendActionBar, at, Secret.CANTINA);
         assertTrue(box.use(player(false), receiver, 0));
         assertTrue(box.use(player(false), receiver, 1));
         assertEquals(List.of(Secret.CANTINA), found);
     }
 
+    @Test
+    public void receiverTransmissionStaysInChatAndBusyClicksUseSharedFeedback() {
+        var chat = new ArrayList<Component>();
+        var feedback = new ArrayList<Component>();
+        var player = fake(Player.class, (proxy, method, args) -> {
+            if (method.getName().equals("isInsideVehicle")) return false;
+            if (method.getName().equals("sendMessage")) {
+                chat.add((Component) args[0]);
+                return null;
+            }
+            throw new AssertionError(method.getName());
+        });
+        var box = new MusicBox(ignored -> true, messages, (finder, secret) -> {},
+                (listener, message) -> feedback.add(message), at, Secret.RECEIVER);
+        box.use(player, receiver, 0);
+        box.use(player, receiver, 1);
+        assertEquals(1, chat.size());
+        assertTrue(PlainTextComponentSerializer.plainText().serialize(chat.getFirst()).contains("Werftkontrolle"));
+        assertEquals(List.of(messages.get("secret.receiver-busy")), feedback);
+    }
+
     private static Player player(boolean riding) {
         return fake(Player.class, (proxy, method, args) -> {
             if (method.getName().equals("isInsideVehicle")) return riding;
-            if (method.getName().equals("sendActionBar")) return null;
+            if (method.getName().equals("sendActionBar") || method.getName().equals("sendMessage")) return null;
             throw new AssertionError(method.getName());
         });
     }

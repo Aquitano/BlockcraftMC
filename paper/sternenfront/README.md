@@ -25,7 +25,8 @@ and `board: "x y z"`. Gates can run west to east or east to west. The inspection
 the moving crane's displays provide no collision.
 
 The receiver consumes right clicks before weapons, plays the original cantina tune and grants `sternenfront.receiver`
-once through `Discoveries` and `UnlockRewards`. Only deployed players on foot can activate it.
+once through `Discoveries` and `UnlockRewards`. Its German transmission appears in chat so the combat HUD cannot replace it.
+Only deployed players on foot can activate it.
 The inspection course reuses `KesselRun` and grants `sternenfront.inspection` on the first valid completion.
 `secrets.inspection-course.par-seconds` sets its timing goal; `limit-seconds` ends an attempt.
 Its board shows the five fastest times in the current round and never reads or writes `bc_sternenfront_kessel`.

@@ -41,6 +41,7 @@ public final class Secrets implements Listener, AutoCloseable {
         secrets.cleanup.add(holiday::close);
         game.map().secrets().ifPresent(spots -> {
             var discoveries = new Discoveries(messages, config.coins());
+            var feedback = BlockcraftApi.get().notifications();
             secrets.listen(discoveries);
             if (!spots.crystals().isEmpty()) {
                 var crystals = new KyberCrystals(plugin, game, spots.crystals(), discoveries);
@@ -58,8 +59,8 @@ public final class Secrets implements Listener, AutoCloseable {
                 secrets.ticks.add(beast::tick);
                 secrets.cleanup.add(beast::close);
             });
-            spots.musicBox().ifPresent(at -> secrets.music.add(new MusicBox(game::onField, messages, discoveries::find, at, Secret.CANTINA)));
-            spots.receiver().ifPresent(at -> secrets.music.add(new MusicBox(game::onField, messages, discoveries::find, at, Secret.RECEIVER)));
+            spots.musicBox().ifPresent(at -> secrets.music.add(new MusicBox(game::onField, messages, discoveries::find, feedback::feedback, at, Secret.CANTINA)));
+            spots.receiver().ifPresent(at -> secrets.music.add(new MusicBox(game::onField, messages, discoveries::find, feedback::feedback, at, Secret.RECEIVER)));
             secrets.music.forEach(box -> {
                 secrets.ticks.add(box::tick);
                 secrets.cleanup.add(box::stop);

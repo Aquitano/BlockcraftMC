@@ -8,7 +8,7 @@ import java.util.Optional;
 
 /**
  * Where the map hides its secrets: the five kyber crystals in finding order, the loop the droid Brummi waddles round,
- * the dune that wakes the sand beast, the cantina's music box and the Kessel-Lauf.
+ * the dune that wakes the sand beast, the cantina's music box, the shipyard receiver and the two courses.
  */
 public record SecretSpots(List<Location> crystals, List<Location> droidPath, Optional<Dune> dune,
                           Optional<Location> musicBox, Optional<Course> course, Optional<Location> receiver,
