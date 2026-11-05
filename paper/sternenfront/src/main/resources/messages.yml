@@ -532,24 +532,19 @@ bot:
 
 combat:
   hud: "<success><health_icon> <health> <hp> <dark>│ <accent><meter_icon> <meter> <state> <dark>│ <first> <dark>│ <second>"
-  ability: "<accent><key> <name> <status>"
+  ability: "<accent><key> <status>"
   ready: "<success>✓"
   cooldown: "<muted><seconds>s"
   none: "<dark>—"
   leap-cooldown: "<dark> │ <muted>Sprung <seconds>s"
   strike-ready: "<dark> │ <accent>Shift+F <white>Orbitalschlag"
-  guard: "<muted>Deckung"
+  guard: ""
   guarding: "<success>BLOCKEN"
   broken: "<error>GEBROCHEN"
   guard-broken: "<error>Deckung gebrochen! <muted>Lass sie sich kurz erholen."
-  heat: "<muted>Hitze"
+  heat: ""
   hot: "<error><bold>! HEISS</bold>"
   venting: "<error><bold>! KÜHLEN</bold> <seconds>s"
-  incoming:
-    front: "<error><bold>▲</bold> <dark>│ "
-    back: "<error><bold>▼</bold> <dark>│ "
-    left: "<error><bold>◀</bold> <dark>│ "
-    right: "<error><bold>▶</bold> <dark>│ "
   orbital-warning: "<tint><faction></tint>\n<error>Orbitalschlag in <seconds>s\n<muted>Markierte Flächen verlassen"
 
 speeder:

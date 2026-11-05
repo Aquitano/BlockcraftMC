@@ -2,8 +2,10 @@ package me.blockcraft.sternenfront.game;
 
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.game.GameSidebar;
+import me.blockcraft.api.pack.UiFont;
 import me.blockcraft.api.scene.Scenes;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.sternenfront.combat.DamageDirection;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -47,6 +49,8 @@ public final class CombatFeedback {
         boolean ready;
         long readyUntil;
         boolean venting;
+        boolean drawnMarked;
+        Optional<DamageDirection> drawnHurt = Optional.empty();
         Component hud = Component.empty();
 
         boolean hit(Marker next, long tick, int ticks) {
@@ -67,6 +71,14 @@ public final class CombatFeedback {
             shownMarker = marker;
             shownMarkerUntil = markerUntil;
             return Optional.of(marker);
+        }
+
+        boolean crosshairChanged(long tick, Optional<DamageDirection> hurt) {
+            boolean marked = tick < markerUntil;
+            boolean changed = takeMarker(tick).isPresent() || marked != drawnMarked || !hurt.equals(drawnHurt);
+            drawnMarked = marked;
+            drawnHurt = hurt;
+            return changed;
         }
 
         void earned(Reward next, Component target, int amount, long tick, int ticks) {
@@ -103,6 +115,8 @@ public final class CombatFeedback {
             return hud.equals(Component.empty()) ? feedback.append(fallback) : hud.append(separator).append(feedback);
         }
     }
+
+    private static final char FIRST_DAMAGE_ARC = '\uE228';
 
     private final SternenfrontGame game;
     private final Map<UUID, State> states = new HashMap<>();
@@ -175,11 +189,7 @@ public final class CombatFeedback {
         state.ready = ready;
         boolean detailed = hud.equals(Component.empty()) && state.hud.equals(Component.empty());
         Component line = Component.empty();
-        state.takeMarker(tick).ifPresent(marker -> {
-            api.notifications().markerNow(player,
-                    game.messages().get("hit." + marker.name().toLowerCase(Locale.ROOT), GameSidebar.icons(player)),
-                    state.markerUntil - tick);
-        });
+        drawCrosshair(player, state, tick);
         if (tick < state.rewardUntil) {
             line = state.reward(game.messages(), detailed);
         }
@@ -203,6 +213,22 @@ public final class CombatFeedback {
         } else if (!combined.equals(Component.empty())) {
             api.notifications().status(player, combined);
         }
+    }
+
+    private void drawCrosshair(Player player, State state, long tick) {
+        var hurt = game.combat().damageDirection(player);
+        if (!state.crosshairChanged(tick, hurt)) {
+            return;
+        }
+        var notifications = BlockcraftApi.get().notifications();
+        if (!state.drawnMarked && hurt.isEmpty()) {
+            notifications.clearMarker(player);
+            return;
+        }
+        var arc = hurt.map(direction -> UiFont.centredBehind((char) (FIRST_DAMAGE_ARC + direction.ordinal()))).orElse(Component.empty());
+        var marker = state.drawnMarked
+                ? game.messages().get("hit." + state.marker.name().toLowerCase(Locale.ROOT), GameSidebar.icons(player)) : Component.empty();
+        notifications.markerNow(player, arc.append(marker), Math.max(state.markerUntil - tick, game.combat().hurtTicks(player)));
     }
 
     public void forget(Player player) {

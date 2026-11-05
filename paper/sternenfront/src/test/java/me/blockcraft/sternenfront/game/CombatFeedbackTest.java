@@ -1,12 +1,15 @@
 package me.blockcraft.sternenfront.game;
 
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.sternenfront.combat.DamageDirection;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 
 import java.nio.file.Path;
+import java.util.Optional;
+
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -62,6 +65,21 @@ public class CombatFeedbackTest {
         var notification = messages.get("feedback.kill", Placeholder.component("target", Component.text("Droide")),
                 Formatter.number("points", 25));
         assertEquals("Abschuss Droide +25 KP", PlainTextComponentSerializer.plainText().serialize(notification));
+    }
+
+    @Test
+    public void crosshairRedrawsWhenTheMarkerOrTheDamageDirectionChanges() {
+        var state = new CombatFeedback.State();
+        var left = Optional.of(DamageDirection.LEFT);
+        assertTrue(state.crosshairChanged(0, left));
+        assertFalse(state.crosshairChanged(1, left));
+        state.hit(CombatFeedback.Marker.HIT, 2, 6);
+        assertTrue(state.crosshairChanged(2, left));
+        assertFalse(state.crosshairChanged(3, left));
+        assertTrue(state.crosshairChanged(8, left));
+        assertTrue(state.crosshairChanged(9, Optional.of(DamageDirection.BACK)));
+        assertTrue(state.crosshairChanged(10, Optional.empty()));
+        assertFalse(state.crosshairChanged(11, Optional.empty()));
     }
 
     @Test

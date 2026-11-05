@@ -1,5 +1,7 @@
 import javax.imageio.ImageIO;
+import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.geom.Arc2D;
 import java.awt.image.BufferedImage;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -41,5 +43,19 @@ public final class HudArt {
         }
         g.dispose();
         ImageIO.write(bars, "PNG", root.resolve("combat_bars.png").toFile());
+        var arcs = new BufferedImage(128, 32, BufferedImage.TYPE_INT_ARGB);
+        g = arcs.createGraphics();
+        int[] centres = {90, 270, 180, 0};
+        for (int cell = 0; cell < centres.length; cell++) {
+            var arc = new Arc2D.Double(cell * 32 + 2, 2, 28, 28, centres[cell] - 32, 64, Arc2D.OPEN);
+            g.setColor(new Color(0xB0200000, true));
+            g.setStroke(new BasicStroke(4));
+            g.draw(arc);
+            g.setColor(new Color(0xFFFF4A4A, true));
+            g.setStroke(new BasicStroke(2));
+            g.draw(arc);
+        }
+        g.dispose();
+        ImageIO.write(arcs, "PNG", root.resolve("damage_arcs.png").toFile());
     }
 }

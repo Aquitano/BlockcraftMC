@@ -173,6 +173,15 @@
     },
     {
       "type": "bitmap",
+      "file": "blockcraft:font/damage_arcs.png",
+      "ascent": 28,
+      "height": 32,
+      "chars": [
+        "\ue228\ue229\ue22a\ue22b"
+      ]
+    },
+    {
+      "type": "bitmap",
       "file": "blockcraft:font/combat_bars.png",
       "ascent": 9,
       "height": 12,

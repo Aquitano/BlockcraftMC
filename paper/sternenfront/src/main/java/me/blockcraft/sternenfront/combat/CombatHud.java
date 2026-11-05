@@ -48,10 +48,6 @@ public final class CombatHud {
         if (game.strikeReady(player)) {
             line = line.append(game.messages().get("combat.strike-ready"));
         }
-        var incoming = game.combat().damageDirection(player);
-        if (incoming.isPresent()) {
-            line = game.messages().get("combat.incoming." + incoming.get()).append(line);
-        }
         game.feedback().show(player, line);
     }
 

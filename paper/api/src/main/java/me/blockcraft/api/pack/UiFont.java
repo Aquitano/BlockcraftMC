@@ -104,6 +104,11 @@ public final class UiFont {
     }
 
     /** An icon in the colour of the text around it. */
+    /** A 32-pixel picture centred on whatever text follows it, which it leaves where it was. */
+    public static Component centredBehind(char glyph) {
+        return Component.text(shift(-16) + glyph + shift(-17)).font(KEY);
+    }
+
     public static Component glyph(char glyph) {
         return Component.text(glyph).font(KEY);
     }

@@ -7,6 +7,7 @@ import me.blockcraft.sternenfront.game.SternenfrontItem;
 import me.blockcraft.api.item.HotbarItem;
 import me.blockcraft.sternenfront.hero.Hero;
 import me.blockcraft.sternenfront.hero.Sabers;
+import net.kyori.adventure.text.Component;
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
 import org.bukkit.Sound;
@@ -20,7 +21,6 @@ import org.bukkit.util.Vector;
 import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.Map;
-import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -68,16 +68,20 @@ public final class Combat {
             var state = state(player);
             state.hurtFrom = source.clone();
             state.hurtUntil = game.tick() + config.damageIndicatorTicks();
+            game.feedback().show(player, Component.empty());
         }
     }
 
-    public Optional<String> damageDirection(Player player) {
+    public int hurtTicks(Player player) {
+        return (int) Math.max(0, state(player).hurtUntil - game.tick());
+    }
+
+    public Optional<DamageDirection> damageDirection(Player player) {
         var state = state(player);
         if (state.hurtFrom == null || game.tick() >= state.hurtUntil || !state.hurtFrom.getWorld().equals(player.getWorld())) {
             return Optional.empty();
         }
-        return DamageDirection.from(player.getEyeLocation().getDirection(), state.hurtFrom.toVector().subtract(player.getLocation().toVector()))
-                .map(direction -> direction.name().toLowerCase(Locale.ROOT));
+        return DamageDirection.from(player.getEyeLocation().getDirection(), state.hurtFrom.toVector().subtract(player.getLocation().toVector()));
     }
 
     public int leapCooldown(Player player) {
