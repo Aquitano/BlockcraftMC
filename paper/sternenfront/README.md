@@ -63,6 +63,17 @@ each lasting `presentation.saber-trail-ticks` under the shared effect cap. Each 
 12 ticks between swings and a four-tick sweep. Successive swings alternate direction. Switching weapons or guarding
 cancels the remaining sweep. The relic blade uses the same attack.
 
+## Animated bodies
+
+The BetterModel plugin draws and animates bot bodies listed in `appearance.animated-bodies`; players keep `BodyRig`, and a
+server without the plugin uses `BodyRig` for everyone. `resourcepack/RigModels.py` turns the generated body and weapon models
+into `resourcepack/bettermodel/*.bbmodel` with idle, walk, shoot and death keyframes. Its joints must match `RigBody`.
+
+BetterModel builds the pack from those files on the game server, and that output is committed in
+`resourcepack/src/assets/bettermodel`. After changing a body, run `SternenfrontArt.java` and `RigModels.py`, stage, restart the
+verify network's game server, then `dev/verify/verify.py models`. A tracker has one glow for all viewers, so each body is two
+trackers on a plain and an outlined copy of its model, each shown only to the right viewers.
+
 ## Generated assets
 
 Edit `resourcepack/SternenfrontArt.java` for bodies, hero bodies, helmets, blasters, sabers, vehicles, and effect

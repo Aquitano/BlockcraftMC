@@ -39,6 +39,7 @@ public final class BodyRigs implements Listener, AutoCloseable {
     private final boolean droids;
     private final boolean infantry;
     private final float turnDegrees;
+    private final Optional<AnimatedBodies> animated;
 
     private BodyRigs(Plugin plugin, SternenfrontGame game, boolean droids, boolean infantry) {
         this.plugin = plugin;
@@ -46,6 +47,11 @@ public final class BodyRigs implements Listener, AutoCloseable {
         this.droids = droids;
         this.infantry = infantry;
         turnDegrees = (float) Math.clamp(game.plugin().getConfig().getDouble("appearance.body-turn-degrees", 12), 1, 45);
+        var animatedBodies = game.plugin().getConfig().getStringList("appearance.animated-bodies");
+        // Without the plugin every body stays a BodyRig, so a server that lacks it still plays the round.
+        animated = animatedBodies.isEmpty() || !plugin.getServer().getPluginManager().isPluginEnabled("BetterModel") ? Optional.empty()
+                : Optional.of(new AnimatedBodies(animatedBodies, (viewer, actor) -> game.factionOf(viewer).isPresent()
+                && !game.factionOf(viewer).equals(game.factionOf(actor))));
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
         task = plugin.getServer().getScheduler().runTaskTimer(plugin, this::tick, 1L, 1L);
     }
@@ -78,6 +84,10 @@ public final class BodyRigs implements Listener, AutoCloseable {
             present.add(id);
             var hero = actor instanceof Player player ? game.heroOf(player) : Optional.<Hero>empty();
             var body = RigBody.of(game.factionOf(actor).orElseThrow(), game.combatClassOf(actor), hero);
+            if (animated.filter(bodies -> !(actor instanceof Player) && bodies.draws(body)).isPresent()) {
+                animated.get().keep(actor, body, game.effects().recoil(actor));
+                continue;
+            }
             var existing = rigs.get(id);
             if (existing != null && existing.body() != body) {
                 remove(id);
@@ -90,6 +100,7 @@ public final class BodyRigs implements Listener, AutoCloseable {
             });
             rig.tick(game.effects().recoil(actor));
         }
+        animated.ifPresent(bodies -> bodies.forgetAbsent(present));
         for (var id : new HashSet<>(rigs.keySet())) {
             if (!present.contains(id)) {
                 remove(id);
@@ -164,6 +175,7 @@ public final class BodyRigs implements Listener, AutoCloseable {
     }
 
     private void clear() {
+        animated.ifPresent(AnimatedBodies::close);
         rigs.values().forEach(BodyRig::close);
         rigs.clear();
         targets.clear();

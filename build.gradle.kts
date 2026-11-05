@@ -68,6 +68,10 @@ val downloadGrimAC = downloadPlugin(
     "GrimAC",
     "https://cdn.modrinth.com/data/LJNGWSvH/versions/QNc4r5Qj/grimac-bukkit-${libs.versions.grimac.get()}.jar",
 )
+val downloadBetterModel = downloadPlugin(
+    "BetterModel",
+    "https://github.com/toxicity188/BetterModel/releases/download/${libs.versions.bettermodel.get()}/bettermodel-${libs.versions.bettermodel.get()}-paper.jar",
+)
 val downloadLuckPermsPaper = downloadPlugin(
     "LuckPermsPaper",
     "https://download.luckperms.net/1669/bukkit/loader/LuckPerms-Bukkit-5.5.82.jar",
@@ -123,6 +127,18 @@ tasks.register<Sync>("stagePlugins") {
     }
     from("grim/punishments.yml") {
         into("paper/grimac/GrimAC")
+    }
+    from(downloadBetterModel) {
+        into("paper/bettermodel")
+        rename { "BetterModel.jar" }
+    }
+    from("resourcepack/bettermodel") {
+        include("config.yml")
+        into("paper/bettermodel/BetterModel")
+    }
+    from("resourcepack/bettermodel") {
+        include("*.bbmodel")
+        into("paper/bettermodel/BetterModel/models")
     }
     from(downloadLuckPermsPaper) {
         into("paper/luckperms")

@@ -4,3 +4,4 @@ main: me.blockcraft.sternenfront.SternenfrontPlugin
 api-version: '${minecraft}'
 author: Aquitano
 depend: [BlockcraftAPI]
+softdepend: [BetterModel]

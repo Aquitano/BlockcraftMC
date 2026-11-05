@@ -30,6 +30,8 @@ appearance:
   body-turn-degrees: 12
   droids: true
   infantry: true
+  # Bot bodies the BetterModel plugin draws and animates, by family. Without the plugin they stay plain rigs.
+  animated-bodies: [hegemonie_soldier, hegemonie_heavy, hegemonie_scout, hegemonie_medic, kolonien_soldier, kolonien_heavy, kolonien_scout, kolonien_medic]
 music:
   enabled: true
   volume: 0.35

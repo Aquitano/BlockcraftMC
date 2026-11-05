@@ -3,6 +3,7 @@
 import argparse
 import json
 import os
+import shutil
 import socket
 import subprocess
 import sys
@@ -425,20 +426,18 @@ def run_scenario(name, faction=None, **options):
 
 
 def merge_models():
-    """Adds the pack BetterModel built on the game server to the staged pack, which `stagePlugins` otherwise replaces."""
+    """Copies the pack BetterModel built on the game server into resourcepack/src, so the next stage serves it."""
     built = ROOT / "build/verify-bettermodel.zip"
     built.parent.mkdir(exist_ok=True)
     compose("cp", "sternenfront:/data/plugins/BetterModel/build.zip", str(built))
-    staged = ROOT / "build/docker/velocity/blockcraft-system/blockcraft.zip"
-    merged = staged.with_suffix(".new")
-    with zipfile.ZipFile(staged) as base, zipfile.ZipFile(built) as models, zipfile.ZipFile(merged, "w", zipfile.ZIP_DEFLATED) as out:
-        for name in base.namelist():
-            if not name.startswith("assets/bettermodel/"):
-                out.writestr(name, base.read(name))
+    target = ROOT / "resourcepack/src/assets/bettermodel"
+    shutil.rmtree(target, ignore_errors=True)
+    with zipfile.ZipFile(built) as models:
         for name in models.namelist():
-            if name.startswith("assets/"):
-                out.writestr(name, models.read(name))
-    merged.replace(staged)
+            if name.startswith("assets/bettermodel/") and not name.endswith("/"):
+                path = ROOT / "resourcepack/src" / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(models.read(name))
 
 
 def field(text):
@@ -463,7 +462,7 @@ def main():
     command = commands.add_parser("rcon")
     command.add_argument("text")
     commands.add_parser("join")
-    commands.add_parser("models", help="add the pack BetterModel built to the staged pack; `restart velocity` serves it")
+    commands.add_parser("models", help="copy the pack BetterModel built into resourcepack/src; stage and `restart velocity` to serve it")
     round_ = commands.add_parser("round", help="start a round and deploy")
     round_.add_argument("--watch-intro", action="store_true")
     scenario = commands.add_parser("scenario")
