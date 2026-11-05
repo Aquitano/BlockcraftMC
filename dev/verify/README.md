@@ -44,6 +44,11 @@ first and open a full frame only where it shows something.
 stops if the arena would place a fighter inside a block. To play a map on this network, start it with `VERIFY_MAP=sturmwerft`,
 then use the scenarios, `tour` above all. Scenarios and `restart` follow the map the server is running, and each report names it.
 
+## Replays
+
+`dev/verify/verify.py scenario replay` restarts the server with a 75-second round, plays it, starts the replay server, watches the
+recording there and reports how many animated bodies it drew.
+
 ## Single commands
 
 `dev/verify/verify.py c <command> key=value ...` sends one command. They live in `client-mod/.../Commands.java`.

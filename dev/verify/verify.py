@@ -3,6 +3,7 @@
 import argparse
 import functools
 import json
+import math
 import os
 import shutil
 import socket
@@ -105,6 +106,8 @@ def wait_for_client(seconds=600):
             client("status")
             return client
         except (OSError, ValueError):
+            if not compose("ps", "-q", "--status", "running", "--status", "restarting", "client", capture=True).stdout.strip():
+                raise RuntimeError("The client stopped, perhaps on a failed build:\n" + compose("logs", "--no-log-prefix", "--tail", "15", "client", capture=True).stdout)
             time.sleep(2)
     raise TimeoutError("The client never opened its control port")
 
@@ -431,7 +434,89 @@ def relic(client, run):
 
 
 # Each scenario with the state it needs: "field" means deployed in a running round.
-SCENARIOS = {"scales": (scales, "field"), "fight": (fight, "field"), "fire": (fire, "field"), "menus": (menus, "field"),
+def replay(client, run, round_seconds=75):
+    """Fights through a short round, watches its recording on a replay server and photographs the bots' bodies there."""
+    keep_running_map()
+    os.environ["VERIFY_OVERRIDES"] = "short-round-overrides.yml"
+    newest = "SELECT replay_uuid FROM bc_replays ORDER BY started_at DESC LIMIT 1"
+    try:
+        compose("up", "-d", "--force-recreate", "--no-deps", "sternenfront")
+        compose("--profile", "replay", "up", "-d", "--force-recreate", "--no-deps", "replay")
+        wait_for_server()
+        wait_for_server("replay")
+        client = wait_for_client()
+        # Read only now: stopping the old server published whatever it was recording.
+        known = database(newest)
+        into_round(client)
+        client("hotbar", slot=0)
+        deadline = time.monotonic() + round_seconds + 60
+        recording = known
+        while recording == known and time.monotonic() < deadline:
+            if on_field(client("status")) and enemies(client):
+                stand_near_enemy(client)
+                client("hold", key="use", ticks=30)
+                seen = enemies(client)
+                if seen:
+                    client("look_at", x=seen[0]["x"], y=seen[0]["y"] + 1.1, z=seen[0]["z"])
+            time.sleep(1)
+            recording = database(newest)
+        if recording == known:
+            raise TimeoutError("The round left no recording")
+        run.report["recording"] = recording
+        run.report["ended"] = database(f"SELECT CONCAT(end_reason, ' after ', duration_ticks, ' ticks') FROM bc_replays WHERE replay_uuid = '{recording}'")
+        client.until("the world after the round", lambda: client("status")["in_world"], 120, 2)
+        registered = lambda: "Registered replay" in compose("logs", "--since", "3m", "--no-log-prefix", "velocity", capture=True).stdout
+        client.until("the proxy to know the replay server", registered, 60, 2)
+        client("command", text=f"replay play {recording}")
+        arrived = lambda: f"{PLAYER} -> replay has connected" in compose("logs", "--since", "3m", "--no-log-prefix", "velocity", capture=True).stdout
+        client.until("the replay server", arrived, 90, 3)
+        for attempt in range(40):
+            if bodies_shown(client):
+                break
+            if attempt % 10 == 0:
+                run.shot(client)
+            time.sleep(3)
+        else:
+            raise TimeoutError("The playback drew no bodies")
+        client("command", text="replay speed 0.5")
+        most, deadline = 0, time.monotonic() + 120
+        while run.frames < 8 and time.monotonic() < deadline:
+            torsos = [each for each in client("entities", radius=250)["entities"] if each.get("model", "").endswith("_torso")]
+            most = max(most, len(torsos))
+            if not torsos:
+                time.sleep(1)
+                continue
+            target = min(torsos, key=lambda each: each["distance"])
+            client("look_at", x=target["x"], y=target["y"] - 1, z=target["z"])
+            if target["distance"] <= 14:
+                run.shot(client)
+                time.sleep(0.7)
+                continue
+            # Flying forward keeps its height, so the viewer has to sink towards the body as well.
+            status = client("status")
+            if status["y"] > target["y"] + 1:
+                client("hold", key="sneak", ticks=20)
+            if math.hypot(status["x"] - target["x"], status["z"] - target["z"]) > 8:
+                client("hold", key="forward", ticks=20)
+            time.sleep(1)
+        run.report["bodies"] = most
+        run.report["recap"] = [event["value"] for event in client("events", since=0)["events"] if event["kind"] == "chat"
+                               and any(word in event["value"] for word in ("Schlacht", "Rang", "Befördert", "Rekord", "Auszeichnung"))]
+        client("command", text="replay stop")
+    finally:
+        del os.environ["VERIFY_OVERRIDES"]
+        compose("--profile", "replay", "stop", "replay")
+
+
+def bodies_shown(client):
+    return sum(each.get("model", "").endswith("_torso") for each in client("entities", radius=250)["entities"])
+
+
+def database(query):
+    return compose("exec", "-T", "mariadb", "mariadb", "-ublockcraft", "-pblockcraft", "blockcraft", "-Nse", query, capture=True).stdout.strip()
+
+
+SCENARIOS = {"replay": (replay, "joined"), "scales": (scales, "field"), "fight": (fight, "field"), "fire": (fire, "field"), "menus": (menus, "field"),
              "tour": (tour, "field"), "bodies": (bodies, "field"), "hero": (hero, "field"), "relic": (relic, "field")}
 
 
@@ -498,9 +583,11 @@ def build_map(name="sturmwerft"):
         if area:
             say(f"forceload add {area}")
     time.sleep(30)
-    say(f"function {name}:build")
-    say(f"function {name}:scenery")
-    time.sleep(8)
+    # Twice, because a fill silently skips a chunk that was still loading the first time.
+    for _ in range(2):
+        say(f"function {name}:build")
+        say(f"function {name}:scenery")
+        time.sleep(8)
     say("forceload remove all")
     say("save-all flush")
     time.sleep(10)
@@ -579,7 +666,7 @@ def main():
         keep_running_map()
         compose("up", "-d", "--force-recreate", "--no-deps", *args.services)
     elif args.action == "down":
-        compose("down", *(["-v"] if args.v else []))
+        compose("--profile", "replay", "--profile", "mapgen", "down", *(["-v"] if args.v else []))
     elif args.action == "logs":
         compose("logs", "--no-log-prefix", "--tail", args.tail, args.service)
     elif args.action == "rcon":

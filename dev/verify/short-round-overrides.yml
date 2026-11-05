@@ -1,0 +1,5 @@
+# For the replay scenario: a round short enough that its recording can be watched in the same run.
+heroes:
+  cost: 0
+countdown:
+  round: 75

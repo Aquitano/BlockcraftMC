@@ -42,8 +42,18 @@ services:
       BLOCKCRAFT_SERVER_GROUP: lobby
       BLOCKCRAFT_WORLD_TEMPLATE: /worlds/${VERIFY_MAP:-sternenfront}
     volumes:
-      - ./dev/verify/sternenfront-overrides.yml:/data/plugins/Sternenfront/config.yml:ro
+      - ./dev/verify/${VERIFY_OVERRIDES:-sternenfront-overrides.yml}:/data/plugins/Sternenfront/config.yml:ro
       - ./worlds/sturmwerft:/worlds/sturmwerft
+
+  # Only for the replay scenario: it plays recordings, as the network's replay server does.
+  replay:
+    extends: {file: docker-compose.yml, service: replay}
+    profiles: [replay]
+    <<: *low-priority
+    restart: "no"
+    cpus: 1
+    mem_limit: 2000m
+    memswap_limit: 2000m
 
   # A bare server over an endless flat sea, only for `verify.py map`: it runs a generated map's functions and saves them.
   mapbuilder:
@@ -60,7 +70,7 @@ services:
       # No template: a rebuild starts from the flat sea, so what the generator no longer places is gone.
       BLOCKCRAFT_WORLD_TEMPLATE: ""
       COPY_PLUGINS_SRC: /blockcraft/api
-      GENERATOR_SETTINGS: '{"layers":[{"block":"minecraft:bedrock","height":1},{"block":"minecraft:deepslate","height":109},{"block":"minecraft:water","height":11}],"biome":"minecraft:ocean"}'
+      GENERATOR_SETTINGS: '{"layers":[{"block":"minecraft:bedrock","height":1},{"block":"minecraft:deepslate","height":109},{"block":"minecraft:water","height":11}],"biome":"minecraft:swamp"}'
     volumes:
       - mapbuilder:/data
 
@@ -111,5 +121,6 @@ volumes:
   mariadb:
   velocity:
   sternenfront:
+  replay:
   replays:
   gradle:

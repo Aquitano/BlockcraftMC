@@ -170,7 +170,7 @@ final class Commands {
             case "connect" -> done(connect(minecraft, body.get("host").getAsString()));
             case "disconnect" -> {
                 minecraft.disconnectWithProgressScreen();
-                minecraft.setScreen(new TitleScreen());
+                minecraft.gui.setScreen(new TitleScreen());
                 yield done(new JsonObject());
             }
             case "gui_scale" -> {
@@ -503,6 +503,10 @@ final class Commands {
         double radius = body.has("radius") ? body.get("radius").getAsDouble() : 32;
         var value = new JsonObject();
         var list = new JsonArray();
+        if (minecraft.level == null) {
+            value.add("entities", list);
+            return value;
+        }
         var counts = new HashMap<String, Integer>();
         var player = minecraft.player;
         stream(minecraft).filter(entity -> entity != player && player.distanceTo(entity) <= radius)
