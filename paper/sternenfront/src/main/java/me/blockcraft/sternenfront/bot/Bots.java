@@ -491,6 +491,7 @@ public final class Bots implements Listener {
 
     private int enterRoute(Soldier soldier, FrontMap.PostSite post, FrontMap.Route route) {
         var mob = soldier.body;
+        mob.getPathfinder().stopPathfinding();
         return BotNavigation.enter(mob.getLocation().toVector(), post.center().toVector(),
                 route.approach().stream().map(Location::toVector).toList(), point -> {
                     var path = mob.getPathfinder().findPath(point.toLocation(mob.getWorld()));
@@ -766,6 +767,7 @@ public final class Bots implements Listener {
                 return true;
             }
             var ally = candidates.stream().filter(candidate -> candidate.getUniqueId().equals(id)).findFirst().orElseThrow();
+            soldier.body.getPathfinder().stopPathfinding();
             var path = soldier.body.getPathfinder().findPath(ally.getLocation());
             return path != null && path.canReachFinalPoint();
         });

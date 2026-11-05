@@ -47,6 +47,7 @@ final class BotCover {
 
     static Optional<Location> find(Mob mob, Location around, List<Location> preferred, double radius,
                                    Predicate<Location> suitable) {
+        mob.getPathfinder().stopPathfinding();
         var candidates = new ArrayList<>(preferred);
         candidates.add(around);
         for (double distance = 2; distance <= radius; distance += 2) {
