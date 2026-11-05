@@ -15,23 +15,31 @@ public class BotNavigationTest {
     public void startsAtHeadquartersButSkipsRearWaypointsWhenArrivingFromAnotherPost() {
         var objective = new Vector(0, 0, 0);
         var approach = List.of(new Vector(44, 0, 12), new Vector(32, 0, 12), new Vector(20, 0, 4));
-        assertEquals(0, BotNavigation.enter(new Vector(82, 0, 0), objective, approach));
-        assertEquals(2, BotNavigation.enter(new Vector(0, 0, 30), objective, approach));
-        assertEquals(3, BotNavigation.enter(new Vector(3, 0, 2), objective, approach));
+        assertEquals(0, BotNavigation.enter(new Vector(82, 0, 0), objective, approach, point -> true));
+        assertEquals(2, BotNavigation.enter(new Vector(0, 0, 30), objective, approach, point -> true));
+        assertEquals(3, BotNavigation.enter(new Vector(3, 0, 2), objective, approach, point -> true));
     }
 
     @Test
     public void preservesOutwardDetoursAndStairsToRoomsAboveTheBot() {
         assertEquals(0, BotNavigation.enter(new Vector(5, 65, 0), new Vector(0, 65, 0),
-                List.of(new Vector(8, 65, 0), new Vector(8, 65, 8), new Vector(0, 65, 8))));
+                List.of(new Vector(8, 65, 0), new Vector(8, 65, 8), new Vector(0, 65, 8)), point -> true));
         assertEquals(0, BotNavigation.enter(new Vector(0, 65, 0), new Vector(0, 75, 0),
-                List.of(new Vector(0, 65, 4), new Vector(8, 65, 4), new Vector(8, 75, 4), new Vector(0, 75, 4))));
+                List.of(new Vector(0, 65, 4), new Vector(8, 65, 4), new Vector(8, 75, 4), new Vector(0, 75, 4)), point -> true));
     }
 
     @Test
     public void joinsAnAuthoredSegmentAheadWithoutWalkingBackToItsNearestWaypoint() {
         assertEquals(1, BotNavigation.enter(new Vector(41, 65, 12), new Vector(0, 65, 0),
-                List.of(new Vector(44, 65, 12), new Vector(32, 65, 12), new Vector(20, 65, 4))));
+                List.of(new Vector(44, 65, 12), new Vector(32, 65, 12), new Vector(20, 65, 4)), point -> true));
+    }
+
+    @Test
+    public void keepsTheStairEntranceWhenAnUpperOrBlockedSegmentIsCloser() {
+        assertEquals(0, BotNavigation.enter(new Vector(0, 65, 0), new Vector(20, 69, 0),
+                List.of(new Vector(5, 65, 0), new Vector(5, 69, 0), new Vector(-5, 69, 0)), point -> true));
+        assertEquals(0, BotNavigation.enter(new Vector(41, 65, 12), new Vector(0, 65, 0),
+                List.of(new Vector(44, 65, 12), new Vector(32, 65, 12), new Vector(20, 65, 4)), point -> false));
     }
 
     @Test

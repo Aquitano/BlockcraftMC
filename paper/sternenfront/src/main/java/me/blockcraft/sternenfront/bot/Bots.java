@@ -483,11 +483,19 @@ public final class Bots implements Listener {
                 var routes = post.routes().get(soldier.faction);
                 soldier.navigation.start(soldier.number, routes.size());
                 var route = routes.get(soldier.navigation.route());
-                soldier.waypoint = BotNavigation.enter(soldier.body.getLocation().toVector(), post.center().toVector(),
-                        route.approach().stream().map(Location::toVector).toList());
+                soldier.waypoint = enterRoute(soldier, post, route);
             }
         }
         soldier.objective = next;
+    }
+
+    private int enterRoute(Soldier soldier, FrontMap.PostSite post, FrontMap.Route route) {
+        var mob = soldier.body;
+        return BotNavigation.enter(mob.getLocation().toVector(), post.center().toVector(),
+                route.approach().stream().map(Location::toVector).toList(), point -> {
+                    var path = mob.getPathfinder().findPath(point.toLocation(mob.getWorld()));
+                    return path != null && path.canReachFinalPoint();
+                });
     }
 
     private void navigate(Soldier soldier, Optional<LivingEntity> target, long tick) {
@@ -581,8 +589,7 @@ public final class Bots implements Listener {
                     || activity.equals("defend-peek") || activity.equals("contest-owned-post");
             if (followingRoute && soldier.navigation.retry(post.routes().get(soldier.faction).size())) {
                 var alternate = post.routes().get(soldier.faction).get(soldier.navigation.route());
-                soldier.waypoint = BotNavigation.enter(here.toVector(), post.center().toVector(),
-                        alternate.approach().stream().map(Location::toVector).toList());
+                soldier.waypoint = enterRoute(soldier, post, alternate);
                 soldier.navigationResult = "retry-route";
             } else {
                 objective(soldier, game.posts().size() > 1 ? (soldier.objective + 1) % game.posts().size() : -1);
