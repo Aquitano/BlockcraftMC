@@ -1224,6 +1224,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     public void death(PlayerDeathEvent event) {
         var victim = event.getPlayer();
         BlockcraftApi.get().visuals().clearAccent(victim);
+        feedback.offField(victim);
         presentation.cancel(victim);
         combat.forget(victim);
         feedback.forget(victim);

@@ -12,7 +12,7 @@ import java.util.UUID;
 public final class ScreenEffects {
 
     public enum Atmosphere {
-        HOLOGRAM, STORM, FOCUS, PORTAL, HURT;
+        HOLOGRAM, STORM, FOCUS, PORTAL;
 
         public String key() {
             return name().toLowerCase(Locale.ROOT);
@@ -59,6 +59,12 @@ public final class ScreenEffects {
 
     public static void clearAccent(Player player) {
         replace(player, "presentation/accent/", null);
+    }
+
+    /** Reddened screen edges on a channel of their own, so that a hit and an ability's accent do not erase each other. */
+    public static void hurt(Player player, double intensity) {
+        int step = (int) Math.round((Double.isFinite(intensity) ? Math.clamp(intensity, 0, 1) : 0) * 8);
+        replace(player, "presentation/hurt/", step == 0 ? null : Key.key("blockcraft", "presentation/hurt/" + step));
     }
 
     public static void clearAtmosphere(Player player) {

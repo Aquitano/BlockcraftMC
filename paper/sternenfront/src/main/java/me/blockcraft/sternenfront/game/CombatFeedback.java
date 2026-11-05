@@ -196,7 +196,7 @@ public final class CombatFeedback {
                 : game.heroOf(player).isPresent() ? Component.empty()
                 : game.messages().get("feedback.progress", Formatter.number("kills", game.kills(player)),
                 Formatter.number("points", points), Formatter.number("cost", cost));
-        ScreenEffects.accent(player, ScreenEffects.Atmosphere.HURT, hurtIntensity(player, game.combat().hurtTicks(player)));
+        ScreenEffects.hurt(player, hurtIntensity(player, game.combat().hurtTicks(player)));
         var combined = state.compose(hud, line);
         if (tick < state.rewardUntil) {
             api.notifications().feedbackNow(player, combined, 5);
@@ -230,13 +230,22 @@ public final class CombatFeedback {
     }
 
     public void forget(Player player) {
+        ScreenEffects.hurt(player, 0);
         if (states.remove(player.getUniqueId()) != null) BlockcraftApi.get().notifications().clearMarker(player);
+    }
+
+    /** Off the field the HUD stops updating, so the redness would stay until the next deployment. */
+    public void offField(Player player) {
+        ScreenEffects.hurt(player, 0);
     }
 
     public void clear() {
         for (var id : states.keySet()) {
             var player = Bukkit.getPlayer(id);
-            if (player != null) BlockcraftApi.get().notifications().clearMarker(player);
+            if (player != null) {
+                ScreenEffects.hurt(player, 0);
+                BlockcraftApi.get().notifications().clearMarker(player);
+            }
         }
         states.clear();
     }

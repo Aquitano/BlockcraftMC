@@ -65,4 +65,5 @@ first and open a full frame only where it shows something.
 The software renderer runs at a few frames per second, so a capture samples an animation rather than showing every frame.
 The default 960x540 at GUI scale 2 has the same layout as 1080p at scale 4 and draws faster. Audio has no output device, so
 `events` says which sounds played, not how they sound. A round's state varies, so compare what a report says rather than
-pixels between runs.
+pixels between runs. The software renderer's memory grows until the container's ceiling stops the client, after roughly 15 to
+25 minutes. Docker restarts it and `join` reconnects.

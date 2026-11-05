@@ -7,6 +7,7 @@ import socket
 import subprocess
 import sys
 import time
+import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -423,6 +424,23 @@ def run_scenario(name, faction=None, **options):
     return 1 if failure else 0
 
 
+def merge_models():
+    """Adds the pack BetterModel built on the game server to the staged pack, which `stagePlugins` otherwise replaces."""
+    built = ROOT / "build/verify-bettermodel.zip"
+    built.parent.mkdir(exist_ok=True)
+    compose("cp", "sternenfront:/data/plugins/BetterModel/build.zip", str(built))
+    staged = ROOT / "build/docker/velocity/blockcraft-system/blockcraft.zip"
+    merged = staged.with_suffix(".new")
+    with zipfile.ZipFile(staged) as base, zipfile.ZipFile(built) as models, zipfile.ZipFile(merged, "w", zipfile.ZIP_DEFLATED) as out:
+        for name in base.namelist():
+            if not name.startswith("assets/bettermodel/"):
+                out.writestr(name, base.read(name))
+        for name in models.namelist():
+            if name.startswith("assets/"):
+                out.writestr(name, models.read(name))
+    merged.replace(staged)
+
+
 def field(text):
     key, _, value = text.partition("=")
     try:
@@ -445,6 +463,7 @@ def main():
     command = commands.add_parser("rcon")
     command.add_argument("text")
     commands.add_parser("join")
+    commands.add_parser("models", help="add the pack BetterModel built to the staged pack; `restart velocity` serves it")
     round_ = commands.add_parser("round", help="start a round and deploy")
     round_.add_argument("--watch-intro", action="store_true")
     scenario = commands.add_parser("scenario")
@@ -467,6 +486,8 @@ def main():
         compose("logs", "--no-log-prefix", "--tail", args.tail, args.service)
     elif args.action == "rcon":
         print(rcon(args.text))
+    elif args.action == "models":
+        merge_models()
     elif args.action == "join":
         print(json.dumps(join(wait_for_client()), indent=1, ensure_ascii=False))
     elif args.action == "round":
