@@ -23,6 +23,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -40,6 +41,7 @@ public final class BodyRigs implements Listener, AutoCloseable {
     private final boolean droids;
     private final boolean infantry;
     private final float turnDegrees;
+    private final Map<CombatClass, RigMotion> motions = new EnumMap<>(CombatClass.class);
     private final Optional<AnimatedBodies> animated;
 
     private BodyRigs(Plugin plugin, SternenfrontGame game, boolean droids, boolean infantry) {
@@ -48,6 +50,9 @@ public final class BodyRigs implements Listener, AutoCloseable {
         this.droids = droids;
         this.infantry = infantry;
         turnDegrees = (float) Math.clamp(game.plugin().getConfig().getDouble("appearance.body-turn-degrees", 12), 1, 45);
+        for (var role : CombatClass.values()) {
+            motions.put(role, RigMotion.from(game.plugin().getConfig(), role));
+        }
         var animatedBodies = game.plugin().getConfig().getStringList("appearance.animated-bodies");
         // Without the plugin every body stays a BodyRig, so a server that lacks it still plays the round.
         animated = animatedBodies.isEmpty() || !plugin.getServer().getPluginManager().isPluginEnabled("BetterModel") ? Optional.empty()
@@ -106,7 +111,8 @@ public final class BodyRigs implements Listener, AutoCloseable {
             }
             var rig = rigs.computeIfAbsent(id, ignored -> {
                 var created = new BodyRig(plugin, actor, body, game::isPlaying,
-                        () -> game.bots().aim(actor).orElseGet(() -> actor.getEyeLocation().getDirection()), turnDegrees);
+                        () -> game.bots().aim(actor).orElseGet(() -> actor.getEyeLocation().getDirection()), turnDegrees,
+                        hero.isPresent() ? Optional.empty() : Optional.of(motions.get(game.combatClassOf(actor))));
                 targets.put(created.targetId(), created);
                 return created;
             });

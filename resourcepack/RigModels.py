@@ -10,6 +10,7 @@ import json
 import math
 import struct
 import uuid
+import yaml
 from pathlib import Path
 
 HERE = Path(__file__).parent
@@ -17,6 +18,18 @@ ASSETS = HERE / "src/assets/blockcraft"
 OUT = HERE / "bettermodel"
 NAMESPACE = uuid.UUID("9b1f6f4e-0d3a-4c55-9a55-6f6f7a1c2b10")
 WEAPON_SCALE = 0.65
+MOTION = yaml.safe_load((HERE.parent / "paper/sternenfront/src/main/resources/config.yml").read_text())["appearance"]["motion"]
+MOTION_BOUNDS = {
+    "stride-blocks": (0.5, 4), "cycle-ticks": (8, 40), "leg-degrees": (0, 50),
+    "bob-height": (0, 0.1), "lean-degrees": (0, 20), "sway-degrees": (0, 12),
+    "recoil-degrees": (0, 25), "recoil-blocks": (0, 0.15), "recoil-ticks": (2, 12),
+}
+
+
+def motion(family):
+    profile = MOTION[family.rsplit("_", 1)[1]]
+    return {key: min(hi, max(lo, float(profile[key]))) if math.isfinite(float(profile[key])) else lo
+            for key, (lo, hi) in MOTION_BOUNDS.items()}
 
 # Copied from RigBody: arm lift in radians, and scale and torso lean where a body has them.
 BODIES = {
@@ -115,6 +128,12 @@ def still(x=0, y=0, z=0):
 
 
 def animations(family, grip_degrees):
+    profile = motion(family)
+    cycle = int(profile["cycle-ticks"]) / 20
+    leg, bob = profile["leg-degrees"], profile["bob-height"] * 16
+    lean, sway = profile["lean-degrees"], profile["sway-degrees"]
+    kick, back = profile["recoil-degrees"], profile["recoil-blocks"] * 16
+    recovery = int(profile["recoil-ticks"]) / 20
     grip = {"rotation": still(x=grip_degrees)}
     across = grip_degrees + 8
     support = {"rotation": still(x=across, y=22)}
@@ -124,18 +143,21 @@ def animations(family, grip_degrees):
             "hi_right_arm": {"rotation": {0: (grip_degrees, 0, 0), 1.2: (grip_degrees + 2, 0, 0), 2.4: (grip_degrees, 0, 0)}},
             "h_left_arm": support,
         }),
-        animation(family, "walk", "loop", 0.8, {
-            "left_leg": {"rotation": {0: (32, 0, 0), 0.4: (-32, 0, 0), 0.8: (32, 0, 0)}},
-            "right_leg": {"rotation": {0: (-32, 0, 0), 0.4: (32, 0, 0), 0.8: (-32, 0, 0)}},
-            "torso": {"position": {0: (0, 0, 0), 0.2: (0, 0.5, 0), 0.4: (0, 0, 0), 0.6: (0, 0.5, 0), 0.8: (0, 0, 0)},
-                      "rotation": {0: (4, 3, 0), 0.4: (4, -3, 0), 0.8: (4, 3, 0)}},
+        animation(family, "walk", "loop", cycle, {
+            "left_leg": {"rotation": {0: (leg, 0, 0), cycle / 2: (-leg, 0, 0), cycle: (leg, 0, 0)}},
+            "right_leg": {"rotation": {0: (-leg, 0, 0), cycle / 2: (leg, 0, 0), cycle: (-leg, 0, 0)}},
+            "torso": {"position": {0: (0, 0, 0), cycle / 4: (0, bob, 0), cycle / 2: (0, 0, 0),
+                                   cycle * 3 / 4: (0, bob, 0), cycle: (0, 0, 0)},
+                      "rotation": {0: (lean, sway, 0), cycle / 2: (lean, -sway, 0), cycle: (lean, sway, 0)}},
             "hi_right_arm": grip,
             "h_left_arm": support,
         }),
-        animation(family, "shoot", "once", 0.2, {
-            "hi_right_arm": {"rotation": {0: (grip_degrees, 0, 0), 0.05: (grip_degrees - 9, 0, 0), 0.2: (grip_degrees, 0, 0)}},
-            "h_left_arm": {"rotation": {0: (across, 22, 0), 0.05: (across - 9, 22, 0), 0.2: (across, 22, 0)}},
-            "torso": {"rotation": {0: (0, 0, 0), 0.05: (-3, 0, 0), 0.2: (0, 0, 0)}},
+        animation(family, "shoot", "once", recovery, {
+            "hi_right_arm": {"rotation": {0: (grip_degrees, 0, 0), 0.05: (grip_degrees - kick, 0, 0), recovery: (grip_degrees, 0, 0)},
+                             "position": {0: (0, 0, 0), 0.05: (0, 0, -back), recovery: (0, 0, 0)}},
+            "h_left_arm": {"rotation": {0: (across, 22, 0), 0.05: (across - kick, 22, 0), recovery: (across, 22, 0)},
+                           "position": {0: (0, 0, 0), 0.05: (0, 0, -back), recovery: (0, 0, 0)}},
+            "torso": {"rotation": {0: (0, 0, 0), 0.05: (-kick / 3, 0, 0), recovery: (0, 0, 0)}},
         }),
         animation(family, "death", "once", 0.9, {
             "root": {"rotation": {0: (0, 0, 0), 0.25: (-18, 0, 4), 0.7: (-86, 0, 8), 0.9: (-84, 0, 8)},

@@ -64,14 +64,17 @@ final class BodyRig implements AutoCloseable {
     private final Supplier<Vector> aim;
     private final float turnDegrees;
     private float bodyYaw;
+    private final Optional<RigMotion> motion;
+    private int recoilLeft;
 
-    BodyRig(Plugin plugin, LivingEntity actor, RigBody body, Predicate<Player> fighting, Supplier<Vector> aim, float turnDegrees) {
+    BodyRig(Plugin plugin, LivingEntity actor, RigBody body, Predicate<Player> fighting, Supplier<Vector> aim, float turnDegrees, Optional<RigMotion> motion) {
         this.fighting = fighting;
         this.plugin = plugin;
         this.actor = actor;
         this.body = body;
         this.aim = aim;
         this.turnDegrees = turnDegrees;
+        this.motion = motion;
         previous = actor.getLocation();
         bodyYaw = (float) Math.toRadians(-previous.clone().setDirection(aim.get()).getYaw());
         torso = part("torso");
@@ -174,9 +177,17 @@ final class BodyRig implements AutoCloseable {
     void tick(double recoil) {
         var at = actor.getLocation();
         double moved = Math.hypot(at.getX() - previous.getX(), at.getZ() - previous.getZ());
-        stride += Math.min(moved, 0.5) * 7;
+        stride += motion.map(profile -> profile.advance(moved)).orElseGet(() -> Math.min(moved, 0.5) * 7);
+        var movement = motion.map(profile -> profile.pose(stride,
+                actor.isOnGround() && !actor.isInsideVehicle() ? moved : 0))
+                .orElseGet(() -> new RigMotion.Pose((float) (Math.sin(stride) * Math.min(moved * 3, 0.65)), 0, 0, 0));
+        if (recoil >= 1) recoilLeft = motion.map(RigMotion::recoilTicks).orElse(0);
+        double kick = motion.map(profile -> (double) recoilLeft / profile.recoilTicks()).orElse(recoil);
+        float recoilPitch = (float) -Math.toRadians(motion.map(RigMotion::recoilDegrees).orElse(0.0) * kick);
+        float recoilDistance = (float) (motion.map(RigMotion::recoilBlocks).orElse(0.06) * kick);
+        recoilLeft = Math.max(0, recoilLeft - 1);
         boolean seated = actor.isInsideVehicle() && body.faction() == Faction.KOLONIEN;
-        float step = actor.isInsideVehicle() ? 0 : actor.isOnGround() ? (float) (Math.sin(stride) * Math.min(moved * 3, 0.65)) : 0.2f;
+        float step = actor.isInsideVehicle() ? 0 : actor.isOnGround() ? movement.step() : 0.2f;
         float leftStride = seated ? SEATED_LEG : step;
         float rightStride = seated ? SEATED_LEG : -step;
         boolean crouching = actor instanceof Player player && player.isSneaking();
@@ -190,19 +201,20 @@ final class BodyRig implements AutoCloseable {
         at.setPitch(0);
         var joints = body.joints();
         float scale = body.scale();
-        pose(torso, at, yaw, yaw, 0, joints.torsoY() * scale - drop, 0, 0, joints.torsoLean() + (crouching ? 0.15f : 0), scale);
+        pose(torso, at, yaw, yaw + movement.sway(), 0, joints.torsoY() * scale - drop + movement.bob(), 0, 0,
+                joints.torsoLean() + movement.lean() + recoilPitch / 3 + (crouching ? 0.15f : 0), scale);
         pose(head, at, yaw, facing, 0, joints.headY() * scale - drop, joints.headZ() * scale, 0, pitch, scale);
         pose(leftLeg, at, yaw, yaw, -joints.hipX() * scale, joints.hipY() * scale - (seated ? drop : drop / 2), 0, 0, leftStride, scale);
         pose(rightLeg, at, yaw, yaw, joints.hipX() * scale, joints.hipY() * scale - (seated ? drop : drop / 2), 0, 0, rightStride, scale);
         float shoulderX = joints.shoulderX() * scale;
         float shoulderY = joints.shoulderY() * scale - drop;
         float shoulderZ = joints.shoulderZ() * scale;
-        pose(leftArm, at, yaw, facing - body.gripTurn(), shoulderX, shoulderY, shoulderZ, 0, pitch + body.armLift() + 0.05f, scale);
-        pose(rightArm, at, yaw, facing, -shoulderX, shoulderY, shoulderZ, 0, pitch + body.armLift(), scale);
+        pose(leftArm, at, yaw, facing - body.gripTurn(), shoulderX, shoulderY, shoulderZ, 0, pitch + body.armLift() + 0.05f + recoilPitch, scale);
+        pose(rightArm, at, yaw, facing, -shoulderX, shoulderY, shoulderZ, 0, pitch + body.armLift() + recoilPitch, scale);
         pose(weapon, at, yaw, facing, joints.weaponX() * scale, joints.weaponY() * scale - drop, 0,
-                joints.weaponZ() * scale - (float) recoil * .06f, pitch, 0.65f);
+                joints.weaponZ() * scale - recoilDistance, pitch + recoilPitch, 0.65f);
         offhand.ifPresent(display -> pose(display, at, yaw, facing, -joints.weaponX() * scale, joints.weaponY() * scale - drop, 0,
-                joints.weaponZ() * scale - (float) recoil * .06f, pitch, 0.65f));
+                joints.weaponZ() * scale - recoilDistance, pitch + recoilPitch, 0.65f));
         var equipment = actor.getEquipment();
         var current = equipment == null || !body.showsWeapon() ? ItemStack.empty() : equipment.getItemInMainHand();
         if (!current.equals(held)) {

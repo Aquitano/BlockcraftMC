@@ -94,6 +94,13 @@ The BetterModel plugin draws and animates bot bodies listed in `appearance.anima
 server without the plugin uses `BodyRig` for everyone. `resourcepack/RigModels.py` turns the generated body and weapon models
 into `resourcepack/bettermodel/*.bbmodel` with idle, walk, shoot and death keyframes. Its joints must match `RigBody`.
 
+`appearance.motion` defines soldier, heavy, scout and medic walk and recoil profiles. `RigModels.py` reads the
+bundled profiles for BetterModel clips; `BodyRig` reads them for fallback displays. Heavy units use shorter, slower steps,
+scouts lean forward with a faster cycle, and medics use a brisk gait with mild recoil. Heroes keep their existing movement.
+The fallback advances its cycle by distance, capped at the configured cadence, and settles at rest. Runtime overrides affect
+fallback displays; changes to BetterModel profiles require regenerating the clips with `python3 resourcepack/RigModels.py`
+(requires PyYAML). Animation-only changes leave the geometry intact and need no BetterModel resource-pack export.
+
 BetterModel builds the pack from those files on the game server, and that output is committed in
 `resourcepack/src/assets/bettermodel`. After changing a body, run `SternenfrontArt.java`, then `dev/verify/verify.py models`,
 which needs the verify network running. A tracker has one glow for all viewers, so each body is two trackers on a plain and

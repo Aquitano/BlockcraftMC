@@ -28,6 +28,11 @@ bots:
   kill-points: 25
 appearance:
   body-turn-degrees: 12
+  motion:
+    soldier: {stride-blocks: 1.8, cycle-ticks: 16, leg-degrees: 32, bob-height: 0.03, lean-degrees: 4, sway-degrees: 3, recoil-degrees: 9, recoil-blocks: 0.06, recoil-ticks: 4}
+    heavy: {stride-blocks: 1.3, cycle-ticks: 22, leg-degrees: 22, bob-height: 0.015, lean-degrees: 2, sway-degrees: 5, recoil-degrees: 5, recoil-blocks: 0.035, recoil-ticks: 6}
+    scout: {stride-blocks: 2.2, cycle-ticks: 12, leg-degrees: 38, bob-height: 0.04, lean-degrees: 11, sway-degrees: 2, recoil-degrees: 14, recoil-blocks: 0.09, recoil-ticks: 7}
+    medic: {stride-blocks: 1.7, cycle-ticks: 14, leg-degrees: 28, bob-height: 0.025, lean-degrees: 6, sway-degrees: 4, recoil-degrees: 4, recoil-blocks: 0.025, recoil-ticks: 3}
   droids: true
   infantry: true
   # Bot bodies the BetterModel plugin draws and animates, by family. Without the plugin they stay plain rigs.
