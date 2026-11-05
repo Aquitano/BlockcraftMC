@@ -1303,8 +1303,13 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         winner = won;
         cleanUp();
         music.finish(won);
-        won.ifPresent(faction -> roster.entrySet().stream().filter(entry -> entry.getValue() == faction)
-                .map(entry -> Bukkit.getPlayer(entry.getKey())).filter(Objects::nonNull).forEach(summary::awardWin));
+        won.ifPresent(faction -> {
+            roster.entrySet().stream().filter(entry -> entry.getValue() == faction)
+                    .map(entry -> Bukkit.getPlayer(entry.getKey())).filter(Objects::nonNull).forEach(summary::awardWin);
+            if (summary.winnerNames().isEmpty()) {
+                summary.defeatedBy(PlainTextComponentSerializer.plainText().serialize(factionDisplay(faction)));
+            }
+        });
         Bukkit.broadcast(Component.empty());
         Bukkit.broadcast(won.map(faction -> messages.get("round.winner", factionName(faction),
                         Formatter.number("tickets", reinforcements.left(faction))))
