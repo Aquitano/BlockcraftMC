@@ -297,5 +297,20 @@
     "sounds": [
       "blockcraft:sternenfront/intro_transition"
     ]
+  },
+  "sternenfront.force.lightning": {
+    "sounds": [
+      "blockcraft:sternenfront/force_lightning"
+    ]
+  },
+  "sternenfront.wrist_rocket.launch": {
+    "sounds": [
+      "blockcraft:sternenfront/wrist_rocket_launch"
+    ]
+  },
+  "sternenfront.wrist_rocket.impact": {
+    "sounds": [
+      "blockcraft:sternenfront/wrist_rocket_impact"
+    ]
   }
 }
