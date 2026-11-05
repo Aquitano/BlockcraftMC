@@ -1,6 +1,5 @@
 package me.blockcraft.sternenfront.game;
 
-import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -44,7 +43,7 @@ public final class SupportRewards {
                 .map(Player::getUniqueId);
         int points = ledger.heal(patient.getUniqueId(), credited, restored, game.tick());
         if (points > 0) {
-            healer.ifPresent(player -> game.awardPoints(player, points, CombatFeedback.Reward.HEALING, Component.empty()));
+            healer.ifPresent(player -> game.awardPoints(player, points, CombatFeedback.Reward.HEALING));
         }
     }
 
@@ -74,7 +73,7 @@ public final class SupportRewards {
 
     private void award(Player player, int points, CombatFeedback.Reward reason) {
         if (points > 0) {
-            game.awardPoints(player, points, reason, Component.empty());
+            game.awardPoints(player, points, reason);
         }
     }
 

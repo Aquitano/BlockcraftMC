@@ -4,6 +4,7 @@ import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import org.bukkit.map.MinecraftFont;
 
 import java.util.Locale;
 
@@ -36,6 +37,7 @@ public final class UiFont {
     private static final int PANEL_WIDTH = 176;
     private static final int TITLE_X = 8;
     private static final int GLYPH_SPACING = 1;
+    private static final int UNKNOWN_ADVANCE = 6;
     private static final int MAX_ROWS = 6;
     private static final String LABEL_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789ÄÖÜ-.:!?…/+& ";
 
@@ -104,6 +106,29 @@ public final class UiFont {
     }
 
     /** An icon in the colour of the text around it. */
+    /** {@code text} then empty space up to {@code width}, so what follows stays put however long {@code text} is. */
+    public static Component before(Component text, int width) {
+        return Component.empty().append(text).append(gap(width - textWidth(text)));
+    }
+
+    /** Empty space up to {@code width}, then {@code text}, so what is before it stays put however long {@code text} is. */
+    public static Component after(Component text, int width) {
+        return Component.empty().append(gap(width - textWidth(text))).append(text);
+    }
+
+    private static Component gap(int pixels) {
+        return Component.text(shift(Math.max(0, pixels))).font(KEY);
+    }
+
+    private static int textWidth(Component text) {
+        return PlainTextComponentSerializer.plainText().serialize(text).codePoints().map(UiFont::advance).sum();
+    }
+
+    private static int advance(int character) {
+        var text = Character.toString(character);
+        return MinecraftFont.Font.isValid(text) ? MinecraftFont.Font.getWidth(text) + 1 : UNKNOWN_ADVANCE;
+    }
+
     /** A 32-pixel picture centred on whatever text follows it, which it leaves where it was. */
     public static Component centredBehind(char glyph) {
         return Component.text(shift(-16) + glyph + shift(-17)).font(KEY);

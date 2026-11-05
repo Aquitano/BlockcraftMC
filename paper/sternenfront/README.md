@@ -35,9 +35,9 @@ cover, teammate safety, and self-damage. Lightning uses the saber guard without 
 
 ## Combat feedback
 
-During combat, enemies have red outlines and allies have cyan outlines with every weapon, without aiming or
-sneaking. This applies to players and bots, including their custom body parts. Outlines are private to the viewer.
-`outlines.enabled` and `outlines.range` control them. The applied resource pack clips outline pixels against the
+During combat, enemies have red outlines with every weapon, without aiming or sneaking. This applies to players and
+bots, including their custom body parts. Outlines are private to the viewer. `outlines.enabled`, `outlines.range` and
+`outlines.allies`, which adds cyan outlines for allies, control them. The applied resource pack clips outline pixels against the
 world depth buffer, so walls hide the covered parts while exposed parts stay outlined. Selection uses no server-side
 block rays. Outlines stay disabled until the pack has loaded.
 

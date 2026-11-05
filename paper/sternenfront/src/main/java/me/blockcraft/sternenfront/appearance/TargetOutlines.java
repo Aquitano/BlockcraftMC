@@ -32,11 +32,13 @@ public final class TargetOutlines implements Listener, AutoCloseable {
     private final Map<UUID, Map<Entity, ChatColor>> shown = new HashMap<>();
     private final BukkitTask task;
     private final double range;
+    private final boolean allies;
 
     public TargetOutlines(Plugin plugin, SternenfrontGame game, Optional<BodyRigs> bodies) {
         this.game = game;
         this.bodies = bodies;
-        range = Math.clamp(plugin.getConfig().getDouble("outlines.range", 160), 1, 256);
+        range = Math.clamp(plugin.getConfig().getDouble("outlines.range", 64), 1, 256);
+        allies = plugin.getConfig().getBoolean("outlines.allies", false);
         glowing = new GlowingEntities(plugin);
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
         task = plugin.getServer().getScheduler().runTaskTimer(plugin, this::tick, 1, 1);
@@ -52,7 +54,11 @@ public final class TargetOutlines implements Listener, AutoCloseable {
                 for (var actor : actors) {
                     if (!actor.equals(viewer) && actor.isValid() && actor.getWorld().equals(eye.getWorld())
                             && (!(actor instanceof Player player) || !BlockcraftApi.get().isVanished(player)) && inRange(eye, actor, range)) {
-                        var colour = game.factionOf(actor).equals(faction) ? ChatColor.DARK_AQUA : ChatColor.DARK_RED;
+                        boolean ally = game.factionOf(actor).equals(faction);
+                        if (ally && !allies) {
+                            continue;
+                        }
+                        var colour = ally ? ChatColor.DARK_AQUA : ChatColor.DARK_RED;
                         var parts = bodies.map(rigs -> rigs.outlineParts(actor, viewer))
                                 .orElseGet(() -> viewer.canSee(actor) ? List.of(actor) : List.of());
                         parts.forEach(part -> wanted.put(part, colour));

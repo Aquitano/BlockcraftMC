@@ -20,6 +20,9 @@ public final class CombatHud {
         this.game = game;
     }
 
+    /** Wide enough for the longest state, so the line does not slide when one appears. */
+    private static final int STATE_WIDTH = 74;
+
     public void show(Player player, Guard guard) {
         var api = BlockcraftApi.get();
         if (api.dialogues().active(player) || api.visuals().active(player) || Scenes.isViewing(player)) return;
@@ -27,18 +30,14 @@ public final class CombatHud {
         boolean blade = fighter.hero().filter(Hero::bladed).isPresent();
         boolean venting = fighter.heat().venting(game.tick());
         boolean hot = !blade && game.feedback().hot(player);
-        double health = player.getHealth() / player.getAttribute(Attribute.MAX_HEALTH).getValue();
         var meter = game.messages().get(blade ? guard.broken(game.tick()) ? "combat.broken" : guard.raised()
                         ? "combat.guarding" : "combat.guard" : venting ? "combat.venting" : hot ? "combat.hot" : "combat.heat",
                 Formatter.number("seconds", (fighter.heat().ventTicks(game.tick()) + 19) / 20));
         var line = game.messages().get("combat.hud",
-                Placeholder.component("health_icon", icon(0)),
-                Placeholder.component("health", bar(health)),
-                Formatter.number("hp", Math.ceil(player.getHealth())),
                 Placeholder.component("meter_icon", icon(blade ? 2 : 1)),
                 Placeholder.component("meter", bar(blade ? guard.level() : fighter.heat().level())
                         .color(hot || venting ? NamedTextColor.RED : NamedTextColor.GOLD)),
-                Placeholder.component("state", meter),
+                Placeholder.component("state", UiFont.before(meter, STATE_WIDTH)),
                 Placeholder.component("first", ability(player, 0)),
                 Placeholder.component("second", ability(player, 1)));
         if (blade && game.combat().leapCooldown(player) > 0) {

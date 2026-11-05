@@ -22,39 +22,23 @@ public class CombatFeedbackTest {
                 () -> getClass().getResourceAsStream("/messages.yml"),
                 Placeholder.parsed("error", "<red>"), Placeholder.parsed("success", "<green>"));
         var state = new CombatFeedback.State();
-        state.earned(CombatFeedback.Reward.KILL, Component.text("Droide"), 25, 0, 30);
-        assertEquals("1 Abschuss +25 KP", plain(state.reward(messages, false)));
-        state.earned(CombatFeedback.Reward.KILL, Component.text("Droide"), 25, 1, 30);
-        assertEquals("2 Abschüsse +50 KP", plain(state.reward(messages, false)));
+        state.earned(CombatFeedback.Reward.KILL, 25, 0, 30);
+        assertEquals("Abschuss +25 KP", plain(state.reward(messages)));
+        state.earned(CombatFeedback.Reward.KILL, 25, 1, 30);
+        assertEquals("2x +50 KP", plain(state.reward(messages)));
     }
 
     @Test
-    public void feedbackAndImmediateHitsRetainTheLatestHealthGuardDamageAndCooldowns() {
+    public void feedbackKeepsTheLatestHudAndLeavesItInPlace() {
         var state = new CombatFeedback.State();
-        var hud = Component.text("42 LP | Deckung | Schaden links | F 8s | Q 2s");
-        var updated = Component.text("39 LP | Deckung | Schaden hinten | F 7s | Q 1s");
+        var hud = Component.text("Deckung | F 8s | Q 2s");
+        var updated = Component.text("Deckung | F 7s | Q 1s");
         var feedback = Component.text("+25 KP");
-        var fallback = Component.text(" Hitze 100/600 KP");
-        var separator = Component.text(" | ");
 
-        assertEquals("42 LP | Deckung | Schaden links | F 8s | Q 2s | +25 KP",
-                plain(state.compose(hud, feedback, fallback, separator)));
-        assertEquals("42 LP | Deckung | Schaden links | F 8s | Q 2s | +25 KP",
-                plain(state.compose(Component.empty(), feedback, fallback, separator)));
-        state.compose(updated, feedback, fallback, separator);
-        assertEquals(plain(updated), plain(state.compose(Component.empty(), Component.empty(), fallback, separator)));
-    }
-
-    @Test
-    public void startupFeedbackUsesHeatAndProgressOnlyUntilTheFirstHudArrives() {
-        var state = new CombatFeedback.State();
-        var feedback = Component.text("Abschuss Droide +25 KP");
-        var fallback = Component.text(" HEISS 100/600 KP");
-        var separator = Component.text(" | ");
-        assertEquals("Abschuss Droide +25 KP HEISS 100/600 KP",
-                plain(state.compose(Component.empty(), feedback, fallback, separator)));
-        assertEquals("40 LP | HEISS | +25 KP",
-                plain(state.compose(Component.text("40 LP | HEISS"), Component.text("+25 KP"), fallback, separator)));
+        assertTrue(plain(state.compose(hud, feedback)).endsWith("+25 KP Deckung | F 8s | Q 2s"));
+        assertTrue(plain(state.compose(Component.empty(), feedback)).endsWith("+25 KP Deckung | F 8s | Q 2s"));
+        state.compose(updated, feedback);
+        assertTrue(plain(state.compose(Component.empty(), Component.empty())).endsWith(" Deckung | F 7s | Q 1s"));
     }
 
     @Test
@@ -62,9 +46,8 @@ public class CombatFeedbackTest {
         var messages = Messages.load(Path.of("/nonexistent-combat-feedback-test"),
                 () -> getClass().getResourceAsStream("/messages.yml"),
                 Placeholder.parsed("error", "<red>"), Placeholder.parsed("success", "<green>"));
-        var notification = messages.get("feedback.kill", Placeholder.component("target", Component.text("Droide")),
-                Formatter.number("points", 25));
-        assertEquals("Abschuss Droide +25 KP", PlainTextComponentSerializer.plainText().serialize(notification));
+        var notification = messages.get("feedback.kill", Formatter.number("points", 25));
+        assertEquals("Abschuss +25 KP", PlainTextComponentSerializer.plainText().serialize(notification));
     }
 
     @Test
@@ -104,16 +87,14 @@ public class CombatFeedbackTest {
     @Test
     public void nearbyPointGainsCombineWithoutReplacingAKillWithASupportLabel() {
         var state = new CombatFeedback.State();
-        var target = Component.text("Droid");
-        state.earned(CombatFeedback.Reward.KILL, target, 100, 0, 30);
-        state.earned(CombatFeedback.Reward.DEFENCE, Component.empty(), 25, 1, 30);
+        state.earned(CombatFeedback.Reward.KILL, 100, 0, 30);
+        state.earned(CombatFeedback.Reward.DEFENCE, 25, 1, 30);
         assertEquals(125, state.points);
         assertEquals(CombatFeedback.Reward.KILL, state.reward);
-        assertEquals(target, state.target);
-        state.earned(CombatFeedback.Reward.KILL, target, 25, 2, 30);
+        state.earned(CombatFeedback.Reward.KILL, 25, 2, 30);
         assertEquals(2, state.kills);
         assertEquals(150, state.points);
-        state.earned(CombatFeedback.Reward.ASSIST, Component.empty(), 40, 32, 30);
+        state.earned(CombatFeedback.Reward.ASSIST, 40, 32, 30);
         assertEquals(CombatFeedback.Reward.ASSIST, state.reward);
         assertEquals(40, state.points);
         assertEquals(0, state.kills);

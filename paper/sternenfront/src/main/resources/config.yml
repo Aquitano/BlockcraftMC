@@ -324,7 +324,7 @@ streaks:
 scope:
   slowdown: 0.9
 
-outlines: {enabled: true, range: 160}
+outlines: {enabled: true, range: 64, allies: false}
 
 combat-feedback:
   marker-ticks: 6

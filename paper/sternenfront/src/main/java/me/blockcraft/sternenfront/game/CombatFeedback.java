@@ -42,7 +42,6 @@ public final class CombatFeedback {
         long soundedAt = Long.MIN_VALUE;
         Marker sounded;
         Reward reward;
-        Component target = Component.empty();
         int points;
         int kills;
         long rewardUntil;
@@ -81,7 +80,7 @@ public final class CombatFeedback {
             return changed;
         }
 
-        void earned(Reward next, Component target, int amount, long tick, int ticks) {
+        void earned(Reward next, int amount, long tick, int ticks) {
             if (tick >= rewardUntil) {
                 points = 0;
                 kills = 0;
@@ -93,30 +92,26 @@ public final class CombatFeedback {
             }
             if (reward != Reward.KILL || next == Reward.KILL) {
                 reward = next;
-                this.target = target;
             }
             rewardUntil = tick + ticks;
         }
 
-        Component reward(Messages messages, boolean detailed) {
+        Component reward(Messages messages) {
             var key = kills > 1 ? "feedback.multikill" : "feedback." + reward.name().toLowerCase(Locale.ROOT);
-            if (!detailed && reward == Reward.KILL) key = kills > 1 ? "feedback.compact-multikill" : "feedback.compact-kill";
-            return messages.get(key, Placeholder.component("target", target),
-                    Formatter.number("points", points), Formatter.number("kills", kills));
+            return messages.get(key, Formatter.number("points", points), Formatter.number("kills", kills));
         }
 
-        Component compose(Component nextHud, Component feedback, Component fallback, Component separator) {
+        Component compose(Component nextHud, Component feedback) {
             if (!nextHud.equals(Component.empty())) {
                 hud = nextHud;
             }
-            if (feedback.equals(Component.empty())) {
-                return hud;
-            }
-            return hud.equals(Component.empty()) ? feedback.append(fallback) : hud.append(separator).append(feedback);
+            return UiFont.after(feedback, REWARD_WIDTH).append(Component.space()).append(hud);
         }
     }
 
     private static final char FIRST_DAMAGE_ARC = '\uE228';
+    /** Wide enough for the longest popup, so the line does not slide when one appears. */
+    private static final int REWARD_WIDTH = 96;
 
     private final SternenfrontGame game;
     private final Map<UUID, State> states = new HashMap<>();
@@ -158,9 +153,9 @@ public final class CombatFeedback {
         show(player, Component.empty());
     }
 
-    public void earned(Player player, int points, Reward reward, Component target) {
+    public void earned(Player player, int points, Reward reward) {
         if (points > 0) {
-            state(player).earned(reward, target, points, game.tick(), rewardTicks);
+            state(player).earned(reward, points, game.tick(), rewardTicks);
             show(player, Component.empty());
         }
     }
@@ -187,30 +182,13 @@ public final class CombatFeedback {
             player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, SoundCategory.PLAYERS, 0.7f, 1.4f);
         }
         state.ready = ready;
-        boolean detailed = hud.equals(Component.empty()) && state.hud.equals(Component.empty());
-        Component line = Component.empty();
         drawCrosshair(player, state, tick);
-        if (tick < state.rewardUntil) {
-            line = state.reward(game.messages(), detailed);
-        }
-        if (tick < state.readyUntil && ready) {
-            if (!line.equals(Component.empty())) {
-                line = line.append(Component.space());
-            }
-            line = line.append(game.messages().get("feedback.hero-ready"));
-        }
-        var fallback = Component.empty();
-        if (!line.equals(Component.empty())) {
-            line = line.append(game.messages().get("feedback.progress", Formatter.number("points", points), Formatter.number("cost", cost)));
-            if (detailed && (venting || hot(player))) {
-                fallback = fallback.append(Component.space()).append(game.messages().get(venting ? "combat.venting" : "combat.hot",
-                        Formatter.number("seconds", (heat.ventTicks(tick) + 19) / 20)));
-            }
-        }
-        var combined = state.compose(hud, line, fallback, game.messages().get("feedback.separator"));
+        var line = tick < state.readyUntil && ready ? game.messages().get("feedback.hero-ready")
+                : tick < state.rewardUntil ? state.reward(game.messages()) : Component.empty();
+        var combined = state.compose(hud, line);
         if (!line.equals(Component.empty())) {
             api.notifications().feedbackNow(player, combined, 5);
-        } else if (!combined.equals(Component.empty())) {
+        } else {
             api.notifications().status(player, combined);
         }
     }

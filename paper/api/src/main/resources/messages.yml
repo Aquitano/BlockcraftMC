@@ -45,7 +45,7 @@ games:
   cores:
     name: "<cores>Cores"
   sternenfront:
-    name: "<sternenfront>Sternenfront"
+    name: "<sternenfront>Clone Wars"
   endergames:
     name: "<endergames>EnderGames"
   ttt:
@@ -371,14 +371,14 @@ tiles:
   trails: "Spuren"
   tags: "Chat-Tags"
   lobbies: "Lobbys"
-  sternenfront_kolonien_soldier: "Milizionär"
-  sternenfront_kolonien_heavy: "Minenarb."
-  sternenfront_kolonien_scout: "Spurenleser"
+  sternenfront_kolonien_soldier: "Klonsoldat"
+  sternenfront_kolonien_heavy: "Schwer"
+  sternenfront_kolonien_scout: "Aufklärer"
   sternenfront_kolonien_medic: "Sanitäter"
-  sternenfront_hegemonie_soldier: "Linie"
-  sternenfront_hegemonie_heavy: "Brecher"
-  sternenfront_hegemonie_scout: "Jäger"
-  sternenfront_hegemonie_medic: "Wartung"
+  sternenfront_hegemonie_soldier: "B1-Droide"
+  sternenfront_hegemonie_heavy: "B2-Droide"
+  sternenfront_hegemonie_scout: "Schütze"
+  sternenfront_hegemonie_medic: "Technik"
 
 profile:
   advent: "<accent>Dein Adventskalender"
@@ -425,7 +425,7 @@ profile:
     knockbackffa: "<arrow><primary>Knockback FFA"
     zombies: "<arrow><primary>Zombies"
     cores: "<arrow><primary>Cores"
-    sternenfront: "<arrow><primary>Sternenfront"
+    sternenfront: "<arrow><primary>Clone Wars"
     endergames: "<arrow><primary>EnderGames"
     ttt: "<arrow><primary>TTT"
     skywars: "<arrow><primary>SkyWars"

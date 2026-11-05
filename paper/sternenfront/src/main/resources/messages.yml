@@ -240,16 +240,13 @@ relic:
     - "<muted>Mandalores schwarze Lichtschwertklinge."
     - "<right>Halten zum Blocken <dark>· <muted>Zweimal springen für den Machtsprung"
     - "<muted>F packt einen Gegner mit dem Machtgriff, Q zieht dich mit dem Fesselkabel."
-  title: "<display>DUNKELSCHWERT"
-  subtitle: "<muted>Die Klinge liegt in der Tempelruine im Norden"
-  appeared: "<prefix><accent>Das Dunkelschwert <muted>ist in der Tempelruine im Norden erschienen!"
+  appeared: "<accent>Dunkelschwert <muted>in der Tempelruine"
   taken: "<prefix><white><player> <muted>trägt nun das <accent>Dunkelschwert <muted>für <faction><muted>!"
   slain: "<prefix><white><killer> <muted>hat <white><player> <muted>besiegt und das <accent>Dunkelschwert <muted>zurück in die Ruine geschickt!"
   lost: "<prefix><muted>Das <accent>Dunkelschwert <muted>kehrt in die Tempelruine zurück."
 
 post:
-  capture-title: "<accent>POSTEN <letter> <white><post>"
-  capture-subtitle: "<faction> <muted>hat den Posten gesichert."
+  capture-banner: "<accent>Posten <letter> <muted>gesichert"
   raffinerie: "Raffinerie"
   wrack: "Wrack"
   basar: "Basar"
@@ -258,20 +255,15 @@ post:
   contested: "<error>Umkämpft"
   label: "<tint><bold><letter></bold> <white><post>\n<state>\n<progress>"
   bar: "<tint><letter> <dark>· <white><post> <dark>· <state>"
-  captured: "<prefix><muted>Posten <accent><letter> <white><post> <muted>gehört nun <faction><muted>!"
-  neutralised: "<prefix><muted>Posten <accent><letter> <white><post> <muted>ist für <faction> <muted>verloren."
-  under-attack: "<prefix><error>Funk: <white><letter> <post> <error>wird angegriffen!"
   bar-priority: "<tint><letter> <dark>· <white><post> <dark>· <state> <dark>· <accent>★ Schwerpunkt"
 
 act:
   assault:
-    title: "<display>LANDUNGSANGRIFF"
-    subtitle: "<muted>Schwerpunkt <accent><letter> <white><post> <muted>zählt <accent><weight>-fach"
-    chat: "<prefix><muted>Schwerpunkt ist Posten <accent><letter> <white><post><muted>: Er zählt beim Verstärkungsverlust <accent><weight>-fach<muted>. <faction> <muted>kann nun per Landungsschiff direkt davor einsetzen."
+    banner: "<accent>LANDUNG <dark>· <muted>Schwerpunkt <accent><letter> <muted>zählt <accent><weight>-fach"
+    chat: "<prefix><faction> <muted>kann nun per Landungsschiff einsetzen."
   last-stand:
-    title: "<display>LETZTES GEFECHT"
-    subtitle: "<muted>Sandsturm <dark>· <muted>Jeder Posten zählt <accent><weight>-fach"
-    chat: "<prefix><muted>Ein Sandsturm nimmt den Bots die Sicht, jeder Posten zählt beim Verstärkungsverlust <accent><weight>-fach<muted>. <faction> <muted>landet per Landungsschiff, zahlt <accent><cost> Kampfpunkte <muted>für einen Helden und darf einen mehr aufstellen."
+    banner: "<accent>ENDKAMPF <dark>· <muted>Jeder Posten zählt <accent><weight>-fach"
+    chat: "<prefix><muted>Helden kosten <faction> <muted>nur noch <accent><cost> KP."
 
 secret:
   found-title: "<sternenfront>Secret gefunden!"
@@ -309,7 +301,6 @@ headquarters:
 
 deploy:
   location: "<location>"
-  radio: "<muted>Funk: Einsatz bestätigt. Sichere die Kommandoposten."
   landing: "<white>Landezone"
   controls: "<prefix><accent>F<muted>: <first> <dark>· <accent>Q<muted>: <second>"
   no-ability: "<muted>Keine Fähigkeit"
@@ -347,13 +338,11 @@ lobby:
   no-opponent: "<prefix><error>Beide Fraktionen brauchen mindestens einen Spieler."
 
 round:
-  music-credit: "<muted>Musik: <click:open_url:'https://www.scottbuckley.com.au/library/'><primary>Scott Buckley</primary></click> <muted>· Legionnaire (Original) und Juggernaut · CC BY 4.0. Die Lautstärke regelt „Musik“ in den Minecraft-Audiooptionen."
+  music-credit: "<muted>Musik: <click:open_url:'https://www.scottbuckley.com.au/library/'><primary>Scott Buckley</click> <muted>· Legionnaire und Juggernaut · CC BY 4.0"
   faction: "<arrow><faction><dark>: <accent><players>"
   start:
-    - "<prefix><muted>Clone Wars: Republik gegen Separatisten!"
     - "<prefix><muted>Los geht's! <right>Schießen <dark>· <accent>F <muted>und <accent>Q <muted>für Fähigkeiten."
-    - "<prefix><muted>Mit <accent>@ <muted>vor der Nachricht schreibst du allen."
-  winner: "<prefix><primary><faction> <primary>gewinnt mit <accent><tickets> <primary>Verstärkung!"
+  winner: "<prefix><primary>Sieg für <faction> <primary>mit <accent><tickets> <primary>Verstärkung!"
   draw: "<prefix><muted>Die Zeit ist um. Beide Fraktionen haben gleich viel Verstärkung."
 
 timer:
@@ -477,7 +466,7 @@ hero:
     points: "<accent><points><muted>/<cost> Kampfpunkte"
     ready: "<success>Held bereit <dark>· <accent><points> <muted>Punkte"
     waiting: "<accent><points><muted>/<cost> <dark>· <muted>Heldenplätze belegt"
-    hero: "<muted>Im Feld als <hero>"
+    hero: "<hero>"
 
 hit:
   hit: "<white><icon:hit>"
@@ -485,19 +474,14 @@ hit:
   kill: "<icon:kill>"
 
 feedback:
-  kill: "<error>Abschuss <white><target> <success>+<points> KP"
-  multikill: "<error><kills> Abschüsse <success>+<points> KP"
-  assist: "<aqua>Abschusshilfe <success>+<points> KP"
-  defence: "<aqua>Posten verteidigt <success>+<points> KP"
-  healing: "<success>Verbündete geheilt +<points> KP"
-  capture: "<aqua>Posten erobert <success>+<points> KP"
-  neutralise: "<aqua>Posten neutralisiert <success>+<points> KP"
-  compact: "<success>+<points> KP"
-  compact-kill: "<error><kills> Abschuss <success>+<points> KP"
-  compact-multikill: "<error><kills> Abschüsse <success>+<points> KP"
-  separator: "<dark> │ "
-  progress: " <dark>│ <accent><points><muted>/<cost> KP"
-  hero-ready: "<success><bold>HELD BEREIT</bold>"
+  kill: "<error>Abschuss <success>+<points> KP"
+  multikill: "<error><kills>x <success>+<points> KP"
+  assist: "<aqua>Hilfe <success>+<points> KP"
+  defence: "<aqua>Verteidigt <success>+<points> KP"
+  healing: "<success>Geheilt +<points> KP"
+  capture: "<aqua>Erobert <success>+<points> KP"
+  neutralise: "<aqua>Befreit <success>+<points> KP"
+  hero-ready: "<success>HELD BEREIT"
 
 killcam:
   watching: "<muted>Besiegt von <white><killer>"
@@ -506,7 +490,7 @@ streak:
   earned: "<success><kills> Kills in Folge! <muted>Mit <accent>Shift+F <muted>rufst du deinen <accent>Orbitalschlag<muted>."
 
 bot:
-  name: "<tint><faction> · <role> <number></tint>"
+  name: "<tint><role> <number></tint>"
   difficulty:
     open: "<arrow><primary>Bot-Stärke"
     open-lore:
@@ -531,7 +515,7 @@ bot:
         - "<muted>Sehr genaue Schüsse; Kopftreffer zählen extra."
 
 combat:
-  hud: "<success><health_icon> <health> <hp> <dark>│ <accent><meter_icon> <meter> <state> <dark>│ <first> <dark>│ <second>"
+  hud: "<accent><meter_icon> <meter> <state><dark>│ <first> <dark>│ <second>"
   ability: "<accent><key> <status>"
   ready: "<success>✓"
   cooldown: "<muted><seconds>s"
@@ -543,8 +527,8 @@ combat:
   broken: "<error>GEBROCHEN"
   guard-broken: "<error>Deckung gebrochen! <muted>Lass sie sich kurz erholen."
   heat: ""
-  hot: "<error><bold>! HEISS</bold>"
-  venting: "<error><bold>! KÜHLEN</bold> <seconds>s"
+  hot: "<error>! HEISS"
+  venting: "<error>! KÜHLEN <seconds>s"
   orbital-warning: "<tint><faction></tint>\n<error>Orbitalschlag in <seconds>s\n<muted>Markierte Flächen verlassen"
 
 speeder:

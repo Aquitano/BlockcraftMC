@@ -3,6 +3,7 @@ package me.blockcraft.sternenfront.appearance;
 import me.blockcraft.sternenfront.bot.BotSnapshot.Point;
 import me.blockcraft.sternenfront.game.Faction;
 import net.kyori.adventure.text.Component;
+import org.bukkit.Color;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.entity.Display;
@@ -14,8 +15,11 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.util.Vector;
 import org.bukkit.util.Transformation;
+import org.bukkit.util.Vector;
+
+import org.joml.Quaternionf;
+import org.joml.Vector3f;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -42,6 +46,9 @@ final class BodyRig implements AutoCloseable {
     private final ItemDisplay head;
     private final ItemDisplay leftArm;
     private final ItemDisplay rightArm;
+    private static final float NAME_SCALE = 0.6f;
+    private static final float NAME_VIEW_RANGE = 0.4f;
+
     private final ItemDisplay leftLeg;
     private final ItemDisplay rightLeg;
     private final ItemDisplay weapon;
@@ -83,6 +90,9 @@ final class BodyRig implements AutoCloseable {
         name.setBillboard(Display.Billboard.CENTER);
         name.setShadowed(true);
         name.setSeeThrough(false);
+        name.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
+        name.setViewRange(NAME_VIEW_RANGE);
+        name.setTransformation(new Transformation(new Vector3f(), new Quaternionf(), new Vector3f(NAME_SCALE), new Quaternionf()));
         var label = actor instanceof Player player ? player.displayName() : actor.customName();
         name.text((label == null ? Component.text(actor.getName()) : label).color(body.faction().text()));
     }

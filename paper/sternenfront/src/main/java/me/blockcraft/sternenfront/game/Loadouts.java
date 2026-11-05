@@ -33,6 +33,9 @@ import java.util.Optional;
  */
 public final class Loadouts {
 
+    /** Heroes have far more health than a row of hearts, and more rows would cover the action bar. */
+    private static final double HEARTS_SHOWN = 20;
+
     private static final NamespacedKey BLADE_DAMAGE = new NamespacedKey("sternenfront", "blade_damage");
     private static final NamespacedKey BLADE_SPEED = new NamespacedKey("sternenfront", "blade_speed");
     private static final NamespacedKey CLASS_SPEED = new NamespacedKey("sternenfront", "class_speed");
@@ -186,5 +189,6 @@ public final class Loadouts {
         var maxHealth = Objects.requireNonNull(player.getAttribute(Attribute.MAX_HEALTH));
         maxHealth.setBaseValue(health);
         player.setHealth(health);
+        player.setHealthScale(HEARTS_SHOWN);
     }
 }

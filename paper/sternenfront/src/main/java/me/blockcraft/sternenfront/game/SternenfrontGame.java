@@ -53,6 +53,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
@@ -283,10 +284,10 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         return feedback;
     }
 
-    public void awardPoints(Player player, int points, CombatFeedback.Reward reward, Component target) {
+    public void awardPoints(Player player, int points, CombatFeedback.Reward reward) {
         if (points > 0) {
             heroes.earn(player, points);
-            feedback.earned(player, points, reward, target);
+            feedback.earned(player, points, reward);
             dirty = true;
         }
     }
@@ -658,7 +659,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         var difficulty = voted ? botDifficultyVotes.winner(difficulties, ThreadLocalRandom.current()).orElse(botConfig.difficulty())
                 : botConfig.difficulty();
         bots.difficulty(difficulty);
-        if (bots.enabled()) {
+        if (bots.enabled() && voted) {
             Bukkit.broadcast(messages.get("bot.difficulty.selected", Placeholder.component("difficulty",
                     messages.get("bot.difficulty." + difficulty.key() + ".name"))));
         }
@@ -674,7 +675,9 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         RoundStart.go(round.players());
         for (var faction : Faction.values()) {
             var names = teams.members(faction).stream().map(Bukkit::getPlayer).filter(Objects::nonNull).map(Player::getName).toList();
-            Bukkit.broadcast(messages.get("round.faction", factionName(faction), Placeholder.unparsed("players", String.join(", ", names))));
+            if (names.size() > 1) {
+                Bukkit.broadcast(messages.get("round.faction", factionName(faction), Placeholder.unparsed("players", String.join(", ", names))));
+            }
         }
         messages.getLines("round.start").forEach(Bukkit::broadcast);
         if (plugin.getConfig().getBoolean("music.enabled", true)) {
@@ -738,10 +741,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         var update = posts.second(field, tick, alertCooldown);
         update.changes().forEach(this::postChanged);
         update.alerts().forEach(alert -> round.players().stream()
-                .filter(player -> factionOf(player).filter(alert.defender()::equals).isPresent()).forEach(player -> {
-                    player.sendMessage(messages.get("post.under-attack", posts.name(alert.index())));
-                    Sounds.CORE_ALARM.play(player);
-                }));
+                .filter(player -> factionOf(player).filter(alert.defender()::equals).isPresent()).forEach(Sounds.CORE_ALARM::play));
         if ((tick / TICKS_PER_SECOND) % config.bleedSeconds() == 0) {
             reinforcements.bleed(posts.owners(), post -> acts.bleedWeight(posts.priority(post)));
             dirty = true;
@@ -797,36 +797,31 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     }
 
     private void announceAct(String act, TagResolver... details) {
-        var title = Title.title(messages.get("act." + act + ".title"), messages.get("act." + act + ".subtitle", details), BANNER);
-        Bukkit.getOnlinePlayers().forEach(player -> BlockcraftApi.get().notifications().important(player, title));
+        banner(messages.get("act." + act + ".banner", details));
         Bukkit.broadcast(messages.get("act." + act + ".chat", details));
     }
 
     private void postChanged(Posts.Event event) {
-        var name = posts.name(event.index());
         switch (event.change()) {
             case CommandPost.Change.Captured captured -> {
-                presentation.captured(event.index(), captured.by());
-                Bukkit.broadcast(messages.get("post.captured", name, factionName(captured.by())));
+                presentation.captured(event.index(), captured.by(), event.present());
                 event.present().forEach(player -> {
                     summary.awardCoins(player, config.rewards().capture());
-                    awardPoints(player, heroes.config().points().capture(), CombatFeedback.Reward.CAPTURE, Component.empty());
+                    awardPoints(player, heroes.config().points().capture(), CombatFeedback.Reward.CAPTURE);
                 });
-                announce(captured.by(), Sounds.NOTIFY, Sounds.CORE_ALARM);
+                announce(captured.by());
             }
             case CommandPost.Change.Neutralised neutralised -> {
-                Bukkit.broadcast(messages.get("post.neutralised", name, factionName(neutralised.from())));
                 event.present().forEach(player -> awardPoints(player, heroes.config().points().neutralise(),
-                        CombatFeedback.Reward.NEUTRALISE, Component.empty()));
-                announce(neutralised.from().enemy(), Sounds.NOTIFY, Sounds.CORE_ALARM);
+                        CombatFeedback.Reward.NEUTRALISE));
+                announce(neutralised.from().enemy());
             }
         }
         dirty = true;
     }
 
-    private void announce(Faction gaining, Sounds forGaining, Sounds forLosing) {
-        round.players().forEach(player -> factionOf(player)
-                .ifPresent(faction -> (faction == gaining ? forGaining : forLosing).play(player)));
+    private void announce(Faction gaining) {
+        round.players().stream().filter(player -> factionOf(player).filter(gaining::equals).isPresent()).forEach(Sounds.NOTIFY::play);
     }
 
     private void guardHeadquarters(LivingEntity player, Faction faction) {
@@ -883,8 +878,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         support.killed(victim, killer, points);
         reinforcements.lose(faction, 1);
         killer.filter(this::isPlaying).filter(player -> factionOf(player).filter(own -> own != faction).isPresent()).ifPresent(player -> {
-            awardPoints(player, points, CombatFeedback.Reward.KILL,
-                    victim.customName() == null ? Component.text(victim.getName()) : victim.customName());
+            awardPoints(player, points, CombatFeedback.Reward.KILL);
             fieldKills.merge(player.getUniqueId(), 1, Integer::sum);
             feedback.hit(player, CombatFeedback.Marker.KILL);
         });
@@ -1170,9 +1164,13 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     }
 
     public void relicAppeared() {
-        var title = Title.title(messages.get("relic.title"), messages.get("relic.subtitle"), BANNER);
+        banner(messages.get("relic.appeared"));
+    }
+
+    /** A small line under the crosshair: a full title covers the fight it interrupts. */
+    private void banner(Component line) {
+        var title = Title.title(Component.empty(), line, BANNER);
         Bukkit.getOnlinePlayers().forEach(player -> BlockcraftApi.get().notifications().important(player, title));
-        Bukkit.broadcast(messages.get("relic.appeared"));
     }
 
     /** The relic makes its taker a hero of their own: the champion, with the blade, until they fall. */
@@ -1254,7 +1252,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         death.killer().filter(killer -> !killer.equals(victim)).ifPresent(killer -> {
             summary.awardKill(killer, victim, Defeat.RESPAWN);
             fieldKills.merge(killer.getUniqueId(), 1, Integer::sum);
-            awardPoints(killer, heroes.config().points().kill(), CombatFeedback.Reward.KILL, victim.displayName());
+            awardPoints(killer, heroes.config().points().kill(), CombatFeedback.Reward.KILL);
             feedback.hit(killer, CombatFeedback.Marker.KILL);
             deployment.killedBy(victim, killer);
             if (streaks.kill(killer.getUniqueId())) {

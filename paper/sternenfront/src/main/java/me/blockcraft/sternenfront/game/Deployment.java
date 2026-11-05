@@ -9,6 +9,7 @@ import me.blockcraft.api.task.Tasks;
 import me.blockcraft.sternenfront.config.FeelConfig;
 import me.blockcraft.sternenfront.hero.Hero;
 import me.blockcraft.sternenfront.menu.DeployMenu;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
@@ -18,6 +19,7 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -37,6 +39,7 @@ public final class Deployment {
     private final Map<UUID, DeployMenu> deployMenus = new HashMap<>();
     /** Whose kill a dead player watches before they choose where to deploy. */
     private final Map<UUID, UUID> killers = new HashMap<>();
+    private final Map<UUID, List<Component>> controlsTold = new HashMap<>();
 
     Deployment(SternenfrontGame game, SpawnSpots spawnSpots, FeelConfig feel, BattlePresentation presentation, Runnable sidebarChanged) {
         this.game = game;
@@ -254,9 +257,11 @@ public final class Deployment {
                 .map(ability -> messages.get("hero.ability." + ability.key() + ".name")).toList())
                 .orElseGet(() -> fighter.combatClass().abilities(faction.get()).stream()
                         .map(ability -> messages.get(ability.messageKey(faction.get()) + ".name")).toList());
-        player.sendMessage(messages.get("deploy.controls",
-                Placeholder.component("first", abilities.isEmpty() ? messages.get("deploy.no-ability") : abilities.getFirst()),
-                Placeholder.component("second", abilities.size() < 2 ? messages.get("deploy.no-ability") : abilities.get(1))));
+        if (!abilities.equals(controlsTold.put(player.getUniqueId(), abilities))) {
+            player.sendMessage(messages.get("deploy.controls",
+                    Placeholder.component("first", abilities.isEmpty() ? messages.get("deploy.no-ability") : abilities.getFirst()),
+                    Placeholder.component("second", abilities.size() < 2 ? messages.get("deploy.no-ability") : abilities.get(1))));
+        }
         if (hero.filter(chosen -> chosen.weapon() instanceof Hero.Weapon.Saber).isPresent()) {
             player.sendMessage(messages.get("deploy.saber-controls"));
         }
