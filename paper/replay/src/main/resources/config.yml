@@ -15,7 +15,7 @@ recording:
   capture-radius: 1
   chunks-per-tick: 1
   max-block-changes-per-tick: 2048
-  queue-capacity: 64
+  queue-capacity: 200
   max-events: 100000
   max-archive-mib: 64
   max-decoded-mib: 128

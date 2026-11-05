@@ -2,6 +2,7 @@ package me.blockcraft.replay.playback;
 
 import kr.toxicity.model.api.BetterModel;
 import kr.toxicity.model.api.animation.AnimationModifier;
+import kr.toxicity.model.api.bukkit.entity.BaseBukkitEntity;
 import kr.toxicity.model.api.bukkit.platform.BukkitAdapter;
 import kr.toxicity.model.api.tracker.EntityTracker;
 import me.blockcraft.api.replay.RecordedModel;
@@ -39,6 +40,11 @@ final class BetterModelBodies implements BodyModels {
                 }
             }
         }
+    }
+
+    @Override
+    public void clean(Entity entity) {
+        entity.getPersistentDataContainer().remove(BaseBukkitEntity.TRACKING_ID);
     }
 
     @Override

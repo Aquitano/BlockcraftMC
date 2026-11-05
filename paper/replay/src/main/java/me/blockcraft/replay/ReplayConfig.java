@@ -24,7 +24,7 @@ record ReplayConfig(String playbackGroup, Path directory, int historyLimit, long
                 number(config, "recording.capture-radius", 0, 2),
                 number(config, "recording.chunks-per-tick", 1, 2),
                 number(config, "recording.max-block-changes-per-tick", 1, 4096),
-                number(config, "recording.queue-capacity", 2, 64),
+                number(config, "recording.queue-capacity", 2, 256),
                 number(config, "recording.max-events", 100, 200000),
                 number(config, "recording.max-archive-mib", 1, 128) * MIB,
                 number(config, "recording.max-decoded-mib", 1, 256) * MIB,

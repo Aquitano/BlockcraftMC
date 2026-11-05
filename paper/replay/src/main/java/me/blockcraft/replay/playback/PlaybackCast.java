@@ -236,6 +236,7 @@ final class PlaybackCast {
             var entity = Bukkit.getEntityFactory().createEntitySnapshot(appearance).createEntity(location.getWorld());
             entity.eject();
             freeze(entity);
+            models.clean(entity);
             if (entity.spawnAt(location)) {
                 models.draw(entity);
                 return Optional.of(entity);

@@ -12,6 +12,9 @@ interface BodyModels {
         return Bukkit.getPluginManager().isPluginEnabled("BetterModel") ? new BetterModelBodies() : NONE;
     }
 
+    /** Before the mob spawns: what it recorded of the game's models must not come back with it. */
+    default void clean(Entity entity) { }
+
     default void draw(Entity entity) { }
 
     default void moved(Entity entity, boolean moved) { }
