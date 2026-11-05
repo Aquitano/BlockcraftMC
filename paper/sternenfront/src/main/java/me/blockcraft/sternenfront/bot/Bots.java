@@ -81,6 +81,7 @@ public final class Bots implements Listener {
         private Location lastSeen;
         private long seenUntil;
         private int waypoint;
+        private final BotNavigation navigation = new BotNavigation();
         private Vector idleAim;
         private boolean moving;
         private final BotPatients patients = new BotPatients();
@@ -424,7 +425,7 @@ public final class Bots implements Listener {
         var post = game.map().posts().get(soldier.objective);
         var routes = post.routes().get(soldier.faction);
         return post.contains(here) || game.posts().owner(soldier.objective).filter(soldier.faction::equals).isPresent()
-                && here.distanceSquared(routes.get(Math.floorMod(soldier.number, routes.size())).peek()) <= PEEK_REACH * PEEK_REACH;
+                && here.distanceSquared(routes.get(soldier.navigation.route()).peek()) <= PEEK_REACH * PEEK_REACH;
     }
 
     private boolean throwCharge(Soldier soldier, Optional<LivingEntity> target, long tick) {
@@ -465,18 +466,23 @@ public final class Bots implements Listener {
                         && other.faction == soldier.faction && other.objective == index).count(),
                 game.posts().priority(index) ? game.config().acts().priorityPull() : 0)).toList();
         int next = Objectives.choose(choices).orElse(-1);
+        objective(soldier, next);
+        soldier.chooseAt = tick + OBJECTIVE_TICKS + soldier.number % 20;
+    }
+
+    private void objective(Soldier soldier, int next) {
         if (next != soldier.objective) {
             soldier.waypoint = 0;
             if (next >= 0) {
                 var post = game.map().posts().get(next);
                 var routes = post.routes().get(soldier.faction);
-                var route = routes.get(Math.floorMod(soldier.number, routes.size()));
-                soldier.waypoint = BotNavigation.enter(here.toVector(), post.center().toVector(),
+                soldier.navigation.start(soldier.number, routes.size());
+                var route = routes.get(soldier.navigation.route());
+                soldier.waypoint = BotNavigation.enter(soldier.body.getLocation().toVector(), post.center().toVector(),
                         route.approach().stream().map(Location::toVector).toList());
             }
         }
         soldier.objective = next;
-        soldier.chooseAt = tick + OBJECTIVE_TICKS + soldier.number % 20;
     }
 
     private void navigate(Soldier soldier, Optional<LivingEntity> target, long tick) {
@@ -485,7 +491,7 @@ public final class Bots implements Listener {
         var post = soldier.objective < 0 ? null : game.map().posts().get(soldier.objective);
         boolean capturing = post != null && post.contains(here);
         var route = post == null ? null : post.routes().get(soldier.faction)
-                .get(Math.floorMod(soldier.number, post.routes().get(soldier.faction).size()));
+                .get(soldier.navigation.route());
         boolean defending = route != null && soldier.role == CombatClass.HEAVY
                 && game.posts().owner(soldier.objective).filter(soldier.faction::equals).isPresent();
         Location destination = null;
@@ -566,15 +572,26 @@ public final class Bots implements Listener {
             soldier.progress = here.clone();
         }
         if (soldier.stuckTicks >= 100) {
-            soldier.chooseAt = tick;
-            if (game.posts().size() > 1) {
-                soldier.objective = (soldier.objective + 1) % game.posts().size();
+            boolean followingRoute = activity.equals("approach") || activity.equals("capture")
+                    || activity.equals("defend-peek") || activity.equals("contest-owned-post");
+            if (followingRoute && soldier.navigation.retry(post.routes().get(soldier.faction).size())) {
+                var alternate = post.routes().get(soldier.faction).get(soldier.navigation.route());
+                soldier.waypoint = BotNavigation.enter(here.toVector(), post.center().toVector(),
+                        alternate.approach().stream().map(Location::toVector).toList());
+                soldier.navigationResult = "retry-route";
+            } else {
+                objective(soldier, game.posts().size() > 1 ? (soldier.objective + 1) % game.posts().size() : -1);
                 soldier.chooseAt = tick + OBJECTIVE_TICKS;
+                soldier.navigationResult = "abandon-route";
             }
             soldier.stuckTicks = 0;
-            soldier.waypoint = 0;
+            soldier.progress = here.clone();
             soldier.cover = null;
             soldier.peek = null;
+            soldier.peeking = false;
+            soldier.coverPhaseUntil = 0;
+            mob.getPathfinder().stopPathfinding();
+            return;
         }
         soldier.navigationResult = mob.getPathfinder().moveTo(destination, 1.0) ? "accepted" : "unreachable";
     }
