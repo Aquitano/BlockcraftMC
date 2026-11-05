@@ -63,6 +63,7 @@ public final class Spectacle {
     private final PresentationConfig config;
     private Ship ship;
     private Storm storm;
+    private long nextLightning;
 
     public Spectacle(SternenfrontGame game) {
         this.game = game;
@@ -144,6 +145,25 @@ public final class Spectacle {
         }
         if (storm != null) {
             blow(storm, tick);
+        }
+        if (game.map().rain() && config.effects() && tick >= nextLightning) {
+            lightning(tick);
+        }
+    }
+
+    /** Far out over the sea, for its flash and thunder, and more often once the last stand has darkened the sky. */
+    private void lightning(long tick) {
+        var settings = config.lightning();
+        var random = ThreadLocalRandom.current();
+        int seconds = random.nextInt(settings.minSeconds(), Math.max(settings.minSeconds(), settings.maxSeconds()) + 1);
+        nextLightning = tick + (game.map().world().isThundering() ? seconds * 10L : seconds * 20L);
+        var world = game.map().world();
+        var centre = game.map().playArea().getCenter();
+        double heading = random.nextDouble(Math.PI * 2);
+        int x = (int) (centre.getX() + Math.cos(heading) * settings.distance());
+        int z = (int) (centre.getZ() + Math.sin(heading) * settings.distance());
+        if (world.isChunkLoaded(x >> 4, z >> 4)) {
+            world.strikeLightningEffect(new Location(world, x, world.getHighestBlockYAt(x, z) + 1, z));
         }
     }
 

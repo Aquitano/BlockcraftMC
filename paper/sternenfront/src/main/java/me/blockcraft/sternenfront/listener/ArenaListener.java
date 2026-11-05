@@ -17,6 +17,7 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.weather.LightningStrikeEvent;
 import org.bukkit.event.hanging.HangingBreakEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
@@ -39,6 +40,14 @@ public final class ArenaListener implements Listener {
     public ArenaListener(SternenfrontGame game, BuildMode buildMode) {
         this.game = game;
         this.buildMode = buildMode;
+    }
+
+    /** The storm's own strikes would hurt whoever stands under one; the round draws its lightning far out at sea. */
+    @EventHandler(ignoreCancelled = true)
+    public void onLightning(LightningStrikeEvent event) {
+        if (event.getCause() == LightningStrikeEvent.Cause.WEATHER) {
+            event.setCancelled(true);
+        }
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
