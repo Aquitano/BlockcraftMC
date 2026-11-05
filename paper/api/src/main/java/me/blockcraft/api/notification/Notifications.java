@@ -263,7 +263,7 @@ public final class Notifications implements Listener {
         var marker = state.marker;
         if (selected != null && selected != state.shownTitle) {
             var title = drawnFor(player, selected.value.title());
-            player.showTitle(marker == null ? title : Title.title(title.title(), subtitle(title, marker), title.times()));
+            player.showTitle(marker == null ? title : Title.title(title.title(), subtitle(title, marker.text()), title.times()));
             if (selected.priority == Priority.IMPORTANT) {
                 state.sounds.blockUntil(selected.until);
                 if (selected.value.sound() != null) {
@@ -275,7 +275,7 @@ public final class Notifications implements Listener {
         } else if (marker != state.shownMarker || marker != null && selected != state.shownTitle) {
             if (selected != null) {
                 var title = drawnFor(player, selected.value.title());
-                player.sendTitlePart(TitlePart.SUBTITLE, marker == null ? title.subtitle() : subtitle(title, marker));
+                player.sendTitlePart(TitlePart.SUBTITLE, marker == null ? title.subtitle() : subtitle(title, marker.text()));
             } else if (marker != null) {
                 player.showTitle(Title.title(Component.empty(), marker.text(), Title.Times.times(Duration.ZERO,
                         Duration.ofMillis((marker.until() - now) * 50), Duration.ZERO)));
@@ -287,9 +287,10 @@ public final class Notifications implements Listener {
         state.shownMarker = marker;
     }
 
-    /** A marker replaces a title's subtitle for a moment, but joins a one-line notice, which would otherwise be gone. */
-    private static Component subtitle(Title title, Marker marker) {
-        return title.title().equals(Component.empty()) ? marker.text().append(title.subtitle()) : marker.text();
+    /** A marker replaces a title's subtitle for a moment, but joins a one-line notice, which must not inherit the marker's font. */
+    static Component subtitle(Title title, Component marker) {
+        return title.title().equals(Component.empty()) && !title.subtitle().equals(Component.empty())
+                ? Component.empty().append(marker).append(title.subtitle()) : marker;
     }
 
     private static long now() {
