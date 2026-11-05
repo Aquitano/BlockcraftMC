@@ -92,18 +92,23 @@ final class WristRockets {
             if (hit.getHitBlockFace() != null) {
                 next.add(hit.getHitBlockFace().getDirection().multiply(WALL_CLEARANCE));
             }
-            game.effects().explosion(next, rocket.faction, rules.radius());
-            SoundCue.WRIST_ROCKET_IMPACT.play(next, 2f);
-            game.blastAround(next, new Blast(rocket.owner, rocket.faction, rules.radius(), rules.damage(), true), (target, away) -> { });
+            detonate(rocket, next);
             return false;
         }
         rocket.left -= distance;
         if (rocket.left <= 0) {
+            detonate(rocket, next);
             return false;
         }
         rocket.position = next;
         rocket.display.teleport(next.clone().setDirection(rocket.direction));
         return true;
+    }
+
+    private void detonate(Rocket rocket, Location at) {
+        game.effects().explosion(at, rocket.faction, rules.radius());
+        SoundCue.WRIST_ROCKET_IMPACT.play(at, 2f);
+        game.blastAround(at, new Blast(rocket.owner, rocket.faction, rules.radius(), rules.damage(), true), (target, away) -> { });
     }
 
     void clear() {
