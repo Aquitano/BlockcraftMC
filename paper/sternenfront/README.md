@@ -74,12 +74,13 @@ can be dodged at range. Grenades and mining charges hurt their thrower as well a
 
 During combat, enemies have red outlines and allies have cyan outlines with every weapon, without aiming or
 sneaking. This applies to players and bots, including their custom body parts. Outlines are private to the viewer.
-`outlines.enabled` and `outlines.range` control them. Cover checks require clear rays to the target's center and
-bounding-box corners. Partly covered targets lose their outline too, because Minecraft's glow would otherwise
-reveal hidden body parts. This is conservative visibility sampling, not pixel-level depth clipping.
+`outlines.enabled` and `outlines.range` control them. The applied resource pack clips outline pixels against the
+world depth buffer, so walls hide the covered parts while exposed parts stay outlined. Selection uses no server-side
+block rays. Outlines stay disabled until the pack has loaded.
 
 Hits, headshots, and kills have distinct sounds and immediate action-bar markers. Kill and assist popups show the
-target or contribution, the points earned, and current progress toward a hero. Nearby gains combine into one popup.
+points earned in a compact segment beside the health, guard, damage-direction, and ability-cooldown HUD.
+Nearby gains combine into one segment. Before the first HUD frame, feedback includes the target and hero progress.
 Objective titles remain visible. The sidebar distinguishes an available hero from enough points with every slot occupied.
 
 The heat meter turns red and shows `! HEISS` at `heat.warning-level`, or when the next shot would overheat the weapon.
@@ -179,8 +180,8 @@ bot produces a partial report. `BotDebug` defines what a report holds.
   stays usable. The combat hitbox stays the underlying fighter's size, even on the Brecher.
 - **Tab list.** Hiding a player's real body for the rig also takes them out of that viewer's tab list while they are
   deployed. This is accepted for now.
-- **Hit marker.** Combat feedback uses an immediate action-bar message, independently of objective titles. The regular
-  HUD returns after the marker or reward popup expires.
+- **Hit marker.** Combat feedback uses an immediate action-bar message beside the current HUD, independently of
+  objective titles. Expiring feedback leaves the HUD visible.
 - **Effects.** `presentation.effects` turns off everything but bolt trails, thrusters and plain explosions. Scorch marks
   and blade cuts are display models and change no blocks. `Spectacle` runs the dropship and the sandstorm. The storm is
   particles sent to each player, with none under a roof and no shader, so nothing outlasts the round.
@@ -253,7 +254,9 @@ Sneaking skips to the last shot but keeps the player waiting until that deadline
 `intro.shots` contains ordered keyframes. `at` is a fraction of the total duration, starting at `0` and ending at `1`.
 `anchor` and `look-at` accept `overview`, `headquarters` for the viewer's faction, and zero-based `post:N`.
 `offset` contains three world-space block coordinates relative to the anchor. `cut: true` holds the preceding
-shot until the keyframe, then changes the camera immediately. Other segments use smooth interpolation.
+shot until the keyframe, then changes the camera immediately. Other segments use smooth interpolation. The default
+post shot has a moving endpoint before the headquarters cut. The actor faces that shot's camera and starts its clip
+when the first headquarters keyframe is reached. Explicit operator overrides of `intro.shots` retain their own path.
 
 `/sfintro` plays a personal preview in the lobby. It requires `blockcraft.sternenfront.presentation` and an applied
 resource pack. Sneak or use `/sfintro stop` to end the preview. It restores the original position, game mode,
@@ -289,7 +292,9 @@ Unknown bone names reject the actor action. The importer does not load `.bbmodel
 3. Repeat the preview and sneak midway. Check the original position, game mode, flight, and camera are restored.
 4. Repeat the preview and teleport to another world. Check the scene stops and the teleport destination is preserved.
 5. Start a match with two clients. Skip on one client and watch the full intro on the other. Neither client can deploy early.
-6. Check both clients deploy together and the full configured round time remains. Bots and objectives begin at that point.
+6. Check both clients deploy together while the final frame is black, then fade into the headquarters spawn.
+   There must be no second fade-out, overview flash, or fall before deployment. The full configured round time remains.
+   Bots and objectives begin at that point.
 7. Disconnect during the intro and reconnect. Check the player can deploy when the shared intro ends.
 
 The automated tests cover camera interpolation, cut timing, and numeric animation sampling and validation.

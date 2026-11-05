@@ -9,6 +9,7 @@ from zipfile import ZipFile
 
 
 def variants():
+    yield "minecraft:core/rendertype_outline", "minecraft:core/rendertype_outline", {}
     phases = [{}]
     for count in (4, 8, 16):
         for flags in ("OIT_ALPHA_ONLY OIT_DEPTH_BOUNDS", "OIT_ALPHA_ONLY OIT_TRANSMITTANCE",
@@ -52,7 +53,7 @@ def main():
 
     cases = list(variants())
     post_pairs = set()
-    for chain in (source / "assets/blockcraft/post_effect").rglob("*.json"):
+    for chain in (source / "assets").glob("*/post_effect/**/*.json"):
         for stage in json.loads(chain.read_text())["passes"]:
             post_pairs.add((stage["vertex_shader"], stage["fragment_shader"]))
     cases.extend((vertex, fragment, {}) for vertex, fragment in sorted(post_pairs))

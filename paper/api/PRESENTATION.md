@@ -90,10 +90,11 @@ See the [Sternenfront intro reference](../sternenfront/README.md#match-intro) fo
 
 ### Battlefront deployment and captures
 
-1. Start a match. Deployment fades to black, waits two ticks at full black, teleports, then fades back in.
+1. Start a match. The intro ends in black and teleports directly into deployment before fading in. The overview must
+   not flash or leave the player falling. Join a running match and check the same immediate arrival behavior.
    A location title and radio subtitle identify the spawn. There is no additional camera move.
-2. Die and choose a controlled post. If that post becomes unavailable during the fade, deployment must fall back to
-   headquarters and show the headquarters location.
+2. Die and choose a controlled post. Respawn fades out, waits two ticks at full black, teleports, then fades in.
+   If the post becomes unavailable during the fade, deployment must fall back to headquarters and show that location.
 3. Disconnect or end the round during the fade. The pending deployment must be cancelled.
 4. Capture a neutral or enemy post. A ring expands around it in the capturing faction's color. An objective banner
    fades in and out. Existing capture rewards, sounds, and block recoloring still apply.
@@ -103,6 +104,18 @@ See the [Sternenfront intro reference](../sternenfront/README.md#match-intro) fo
 Sternenfront `presentation.deployment` controls fade duration and the briefing banner. Set `fade-ticks: 0` for
 immediate deployment. `presentation.capture` controls the ring duration, radius, and particle count; `ticks: 0`
 disables capture presentation. Without the pack, deployment is immediate and the native notifications remain readable.
+
+### Battlefront outlines and combat HUD
+
+1. With the matching pack applied, check ally and enemy outlines with each weapon without aiming or sneaking.
+2. Put a solid wall between the viewer and another player. No covered outline should remain. Repeat with a closed
+   trapdoor, a thin column, stairs, and a target partly visible around a corner. Check the custom heavy arms and weapon,
+   not just the invisible actor's collision box.
+3. Repeat as the relic champion. Its outline follows the same depth checks instead of enabling global glow.
+4. Take damage and earn repeated kills or assists. Health, guard, damage direction, and cooldowns must remain visible
+   beside compact feedback. Check a narrow window and larger GUI scales for clipping.
+5. Check another game's ordinary glowing item or enemy. Its normal outline color and blur must remain unchanged.
+   Test vanilla rendering first; optional client shader packs can replace the pack's outline shaders.
 
 ### Zombies outage and revive
 

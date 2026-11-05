@@ -4,7 +4,6 @@ import fr.skytasul.glowingentities.GlowingEntities;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.game.GamePhase;
 import me.blockcraft.api.game.RoundPhaseChangeEvent;
-import me.blockcraft.sternenfront.game.LineOfSight;
 import me.blockcraft.sternenfront.game.SternenfrontGame;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -47,13 +46,13 @@ public final class TargetOutlines implements Listener, AutoCloseable {
         var actors = game.combatants();
         for (var viewer : game.plugin().getServer().getOnlinePlayers()) {
             var wanted = new HashMap<Entity, ChatColor>();
-            if (game.onField(viewer)) {
+            if (game.onField(viewer) && BlockcraftApi.get().resourcePack().applied(viewer)) {
                 var eye = viewer.getEyeLocation();
                 var faction = game.factionOf(viewer);
                 for (var actor : actors) {
                     if (!actor.equals(viewer) && actor.isValid() && actor.getWorld().equals(eye.getWorld())
-                            && (!(actor instanceof Player player) || !BlockcraftApi.get().isVanished(player)) && visible(eye, actor, range)) {
-                        var colour = game.factionOf(actor).equals(faction) ? ChatColor.AQUA : ChatColor.RED;
+                            && (!(actor instanceof Player player) || !BlockcraftApi.get().isVanished(player)) && inRange(eye, actor, range)) {
+                        var colour = game.factionOf(actor).equals(faction) ? ChatColor.DARK_AQUA : ChatColor.DARK_RED;
                         var parts = bodies.map(rigs -> rigs.outlineParts(actor, viewer))
                                 .orElseGet(() -> viewer.canSee(actor) ? List.of(actor) : List.of());
                         parts.forEach(part -> wanted.put(part, colour));
@@ -64,22 +63,8 @@ public final class TargetOutlines implements Listener, AutoCloseable {
         }
     }
 
-    static boolean visible(Location eye, LivingEntity actor, double range) {
-        var box = actor.getBoundingBox();
-        var origin = eye.toVector();
-        var centre = box.getCenter().subtract(origin);
-        if (centre.lengthSquared() > range * range || !LineOfSight.clear(eye, centre)) return false;
-        double insetX = Math.min(0.01, box.getWidthX() / 4);
-        double insetY = Math.min(0.05, box.getHeight() / 4);
-        double insetZ = Math.min(0.01, box.getWidthZ() / 4);
-        for (double x : new double[]{box.getMinX() + insetX, box.getMaxX() - insetX}) {
-            for (double y : new double[]{box.getMinY() + insetY, box.getMaxY() - insetY}) {
-                for (double z : new double[]{box.getMinZ() + insetZ, box.getMaxZ() - insetZ}) {
-                    if (!LineOfSight.clear(eye, new org.bukkit.util.Vector(x, y, z).subtract(origin))) return false;
-                }
-            }
-        }
-        return true;
+    static boolean inRange(Location eye, LivingEntity actor, double range) {
+        return actor.getBoundingBox().getCenter().subtract(eye.toVector()).lengthSquared() <= range * range;
     }
 
     private void update(Player viewer, Map<Entity, ChatColor> wanted) {

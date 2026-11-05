@@ -57,6 +57,14 @@ Their textures live under `textures/item/presentation`, which Minecraft 26.3 inc
 Text markers use RGB `(231, mode, 197)`. `TextMotion` selects float, shake, brightness pulse, rainbow, or shine.
 Marked text shadows are suppressed. Ordinary text must avoid these reserved colors and their darkened shadow colors.
 
+Sternenfront target outlines reserve scoreboard colors `DARK_AQUA` and `DARK_RED`. Its server sends those colors only
+to combat viewers with the pack applied. The outline shader stores logarithmic reversed-Z depth in the RGB bytes and
+uses alpha bytes 1 and 2 to identify the factions. The post-effect compares each silhouette pixel with the main scene's
+depth, including the neighboring pixel receiving the outline. Covered pixels stay clear, and other glow colors retain
+Minecraft's original outline and blur. Do not use the reserved colors for ordinary glowing entities.
+The native outline buffer has no depth attachment. Exactly overlapping outlined front surfaces can suppress an
+edge when a later surface overwrites its depth. The comparison stays conservative rather than exposing covered pixels.
+
 `ScreenEffects` uses Paper 26.3's named post-effects API. Cinematic fades have 33 levels, with optional letterbox bars.
 Atmospheric presets change screen color and distortion. They do not add world lighting, weather simulation, or video
 playback. Cleanup removes only Blockcraft's presentation post-effects and preserves other namespaces.
@@ -66,3 +74,8 @@ duration, fade, and cooldown without suspending normal HUD updates. It clears th
 `verify_shaders.py --client <26.3-client.jar> --glslang <validator>` compiles the core variants and post-effect pairs.
 It needs Python 3 and glslangValidator. It does not download dependencies or change the pack. A new Minecraft version
 needs validation against that version's vanilla shaders and a real client rendering check.
+
+`verify_target_outlines.py --client <26.3-client.jar>` renders the actual outline shaders with ModernGL, EGL, and
+OpenGL 4.5. It checks full and partial cover, thin cover at up to 256 blocks, edge clipping, a rotated cube, and preservation
+of ordinary vanilla glow. The fixture uses Minecraft's reversed-Z range from zero to one. Software Mesa can run it on a
+machine without a display. These fixtures do not replace a check with the player's client or shader mod.

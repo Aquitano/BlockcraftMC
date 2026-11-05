@@ -116,7 +116,6 @@ public final class Heroes {
         if (hero == Hero.CHAMPION) {
             loadouts.arm(player);
             player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, PotionEffect.INFINITE_DURATION, 0, false, false, true));
-            player.setGlowing(true);
         } else {
             var inventory = player.getInventory();
             inventory.clear();
