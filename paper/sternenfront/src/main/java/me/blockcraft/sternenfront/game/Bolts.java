@@ -185,8 +185,9 @@ public final class Bolts {
             game.deflected(player, at);
             return;
         }
-        boolean head = at.getY() >= victim.getEyeLocation().getY() - HEAD_BELOW_EYES;
-        game.boltHit(bolt.shooter, bolt.shot.blaster(), victim, bolt.shot.damage() * (head ? bolt.shot.headshot() : 1), head);
+        boolean head = game.speeders().faction(victim).isEmpty() && at.getY() >= victim.getEyeLocation().getY() - HEAD_BELOW_EYES;
+        game.boltHit(bolt.shooter, bolt.shot.blaster(), victim, bolt.shot.damage() * (head ? bolt.shot.headshot() : 1),
+                head && bolt.shot.headshot() > 1);
     }
 
     /**
