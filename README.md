@@ -28,7 +28,7 @@ Start with [Build](#build), [Run locally](#run-locally) or [Deploy](#deploy). Ot
 | [`paper/mlgrush`](paper/mlgrush/README.md) | MLG Rush: two players, knockback sticks, beds, first to five |
 | `paper/quicksg` | QuickSG survival games |
 | [`paper/skywars`](paper/skywars/README.md) | SkyWars: everyone on their own island over the void, after GommeHD's mode |
-| [`paper/sternenfront`](paper/sternenfront/README.md) | Sternenfront: sci-fi team shooter; in the navigator only with `blockcraft.lobby.preview` while it is tested |
+| [`paper/sternenfront`](paper/sternenfront/README.md) | Clone Wars: Republic versus Separatists conquest; in the navigator only with `blockcraft.lobby.preview` while it is tested |
 | [`paper/ttt`](paper/ttt/README.md) | TTT, and TTT 2 (group `ttt2`) with chores and sabotage; in the navigator only with `blockcraft.lobby.preview` while it is tested |
 | [`paper/zombies`](paper/zombies/README.md) | Solo or co-op Zombies survival |
 | `velocity/system` | BlockcraftSystem: reports, moderation, parties, friends, routing and staff tools |
