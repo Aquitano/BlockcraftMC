@@ -602,6 +602,10 @@ public final class Bots implements Listener {
                 && event.getDamageSource().getCausingEntity() instanceof LivingEntity attacker
                 && game.hittable(soldier.faction, attacker) && attacker.getWorld().equals(soldier.body.getWorld())) {
             if (!attacker.getUniqueId().equals(soldier.target)) {
+                // Each switch restarts the reaction time, so two attackers could keep a bot from ever firing.
+                if (soldier.target != null && game.tick() <= soldier.seenUntil) {
+                    return;
+                }
                 soldier.volley.clear();
                 soldier.target = attacker.getUniqueId();
                 soldier.reactAt = game.tick() + tuning.reactionTicks();
