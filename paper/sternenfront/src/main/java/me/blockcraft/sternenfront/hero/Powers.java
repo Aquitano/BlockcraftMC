@@ -131,7 +131,7 @@ public final class Powers {
             var toward = target.getLocation().add(0, target.getHeight() / 2, 0).toVector().subtract(eye.toVector());
             double distance = toward.length();
             if (distance == 0 || distance > push.range() || facing.angle(toward) > halfAngle
-                    || !game.hittable(faction, target) || !LineOfSight.clear(eye, toward)) {
+                    || !game.hittable(faction, target) || game.isProtected(target) || !LineOfSight.clear(eye, toward)) {
                 continue;
             }
             game.strike(player, target, push.damage(), DamageType.MAGIC);

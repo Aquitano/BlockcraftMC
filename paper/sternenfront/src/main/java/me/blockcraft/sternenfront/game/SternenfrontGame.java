@@ -1068,7 +1068,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
             var away = target.getLocation().add(0, target.getHeight() / 2, 0).toVector().subtract(at.toVector());
             double distance = away.length();
             boolean own = blast.hurtsOwner() && target.equals(blast.by()) && onField(target);
-            if (distance > blast.radius() || !own && !hittable(blast.faction(), target) || !LineOfSight.clear(at, away)) {
+            if (distance > blast.radius() || isProtected(target) || !own && !hittable(blast.faction(), target) || !LineOfSight.clear(at, away)) {
                 continue;
             }
             blast(blast.by(), target, blast.damageAt(distance), at);
