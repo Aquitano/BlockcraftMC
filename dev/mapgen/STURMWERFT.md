@@ -49,10 +49,10 @@ inspection-course:
   lane: [-27.0, 77.0, -134.0, 23.0, 91.0, -129.0]
   pit-y: 80.0
   gates: [-21.0, -16.0, -11.0, -6.0, -1.0, 4.0, 9.0, 14.0, 19.0]
-  board: "-24 84 -127"
+  board: "-23.5 87 -126.5"
 ```
 
-The board stands beside the western approach. From the ship's northern bypass, take the western spur to
+The board floats above its plinth beside the western approach. From the ship's northern bypass, take the western spur to
 `-23.5 83 -131.5`. Face east along z=-131.5 and cross the fixed quartz platforms in order. The gaps are two blocks wide.
 The platforms change height by at most one block. The finish joins the eastern return deck near `21.5 83 -131.5`.
 The pit has floor 77. Its two stairs at x=-18 and x=15 rise south from z=-129 to z=-125 and return to the ship at z=-124.
@@ -62,7 +62,7 @@ The course is separate from normal combat circulation and the bulkhead bypass.
 
 The generator checks standing positions at all playable heights, one-block movement clearance, ordinary floor and stair
 access to rooms and fighter positions, stair width and headroom, and both control bypasses while the hazards are active.
-It also checks interaction reach and support, capture positions, cover and peek rays, fixed course landings, landing
+It also checks interaction reach and support, board visibility, capture positions, cover and peek rays, fixed course landings, landing
 cylinders to the sky, headquarters vehicle approaches, environment emitters and the moving crane's swept volume.
 
 Collision checks conservatively treat partial solid blocks as full blocks. Buttons and levers are passable.

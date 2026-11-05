@@ -748,7 +748,7 @@ def arena():
                          dict(control="vent", switches=["-71 82 100", "-60 82 100"], panels=[], center="-65.5 81 103.5")],
             "secrets": {"receiver": "-58 84 -128", "inspection-course": {
                 "lane": [-27.0, 77.0, -134.0, 23.0, 91.0, -129.0], "pit-y": 80.0,
-                "gates": [-21.0, -16.0, -11.0, -6.0, -1.0, 4.0, 9.0, 14.0, 19.0], "board": "-24 84 -127"}},
+                "gates": [-21.0, -16.0, -11.0, -6.0, -1.0, 4.0, 9.0, 14.0, 19.0], "board": "-23.5 87 -126.5"}},
             "environment": {
                 "steam": [spot(x, z - 8, SKY + 2) for z in POSTS.values() for x in (-11, 11)],
                 "sparks": [spot(x, z - 6, SKY + 1.5) for z in POSTS.values() for x in (-9, 13)],
@@ -911,7 +911,7 @@ def validate_expansion(fills, plan, levels, cells, connected, stairs):
                 sys.exit(f"Control switch overlaps vent hazard: {switch}")
             switches.append(switch)
     secrets = plan["secrets"]
-    for position in [*switches, secrets["receiver"], secrets["inspection-course"]["board"]]:
+    for position in [*switches, secrets["receiver"]]:
         x, y, z = map(int, position.split())
         if block_at(fills, x, y, z) == "air":
             sys.exit(f"Missing interaction block: {position}")
@@ -931,6 +931,24 @@ def validate_expansion(fills, plan, levels, cells, connected, stairs):
         if not usable:
             sys.exit(f"Interaction cannot be reached and seen: {position}")
     course = plan["secrets"]["inspection-course"]
+    board = tuple(map(float, course["board"].split()))
+    bx, by, bz = map(math.floor, board)
+    text = [(board[0] + dx, board[1] + dy, board[2]) for dx in (-2.75, 0, 2.75) for dy in (0, 1.5, 3)]
+    if any(solid_at(fills, *map(math.floor, point)) for point in text):
+        sys.exit("Inspection board intersects a solid block")
+    if not any(solid_at(fills, bx, by - dy, bz) for dy in range(1, 4)):
+        sys.exit("Inspection board has no nearby support")
+    readable = False
+    for x in range(bx - 2, bx + 3):
+        for z in range(bz + 2, bz + 7):
+            for y in range(by - 6, by):
+                if (x, y, z) not in closed_connected:
+                    continue
+                eye = x + 0.5, y + 1.62, z + 0.5
+                if math.dist(eye, board) <= 8 and all(clear_ray(shut, eye, point) for point in text):
+                    readable = True
+    if not readable:
+        sys.exit("Inspection board cannot be read from its southern approach")
     if course["gates"] != sorted(set(course["gates"])):
         sys.exit("Inspection gates must run west to east")
     for gate in course["gates"]:
