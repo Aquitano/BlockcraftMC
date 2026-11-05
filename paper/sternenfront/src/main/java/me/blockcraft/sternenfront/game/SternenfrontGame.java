@@ -61,6 +61,7 @@ import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
+import org.bukkit.SoundCategory;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.damage.DamageSource;
 import org.bukkit.damage.DamageType;
@@ -83,6 +84,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -99,6 +101,8 @@ import java.util.function.BiConsumer;
  * the champion until they fall. Falling tickets and passing time carry the round through its three acts.
  */
 public final class SternenfrontGame implements RoundConnections.Seating {
+
+    private static final int MOST_CHAINED_BONUSES = 3;
 
     private static final long TICKS_PER_SECOND = 20;
     private static final long RESPAWN_TICKS = 1;
@@ -143,9 +147,13 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     private final Heroes heroes;
     private final FeelConfig feel;
     private final KillStreaks streaks;
+    private final RoundTally tally = new RoundTally();
+    private final Orders orders;
+    private final Career career;
     private final Map<UUID, Fighter> fighters = new HashMap<>();
     /** While the round deals damage itself, which marks its own hits. */
     private boolean dealing;
+    private boolean dealingHeadshot;
     private UUID selfExplosion;
     /** Who started the round for which faction; a win counts for those of them still on the server. */
     private final Map<UUID, Faction> roster = new HashMap<>();
@@ -206,7 +214,10 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         this.deployment = new Deployment(this, spawnSpots, feel, presentation, () -> dirty = true);
         this.battlefield = new Battlefield(this);
         this.support = new SupportRewards(this);
-        this.streaks = new KillStreaks(feel.orbitalStreak());
+        this.streaks = new KillStreaks(feel.orbitalStreak(), feel.botsPerStreakKill());
+        this.orders = Orders.from(plugin.getConfig(), ThreadLocalRandom.current());
+        this.career = new Career(plugin, messages, BlockcraftApi.get().database(), plugin.getConfig().getLongList("career.ranks"));
+        Tasks.async(plugin, career::createTable);
         this.reinforcements = new Reinforcements(config.tickets());
         this.acts = new RoundActs(config.acts(), config.tickets());
         this.relic = new Relic(this, map.relic(), Long.MAX_VALUE);
@@ -290,8 +301,52 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         if (points > 0) {
             heroes.earn(player, points);
             feedback.earned(player, points, reward);
+            tally.earned(player.getUniqueId(), points);
+            switch (reward) {
+                case KILL -> did(player, RoundTally.Deed.KILL);
+                case HEADSHOT -> did(player, RoundTally.Deed.HEADSHOT);
+                case ASSIST -> did(player, RoundTally.Deed.ASSIST);
+                case DEFENCE -> did(player, RoundTally.Deed.DEFENCE);
+                case CAPTURE -> did(player, RoundTally.Deed.CAPTURE);
+                default -> { }
+            }
             dirty = true;
         }
+    }
+
+    private void did(Player player, RoundTally.Deed deed) {
+        var id = player.getUniqueId();
+        tally.did(id, deed);
+        orders.did(id, deed).ifPresent(completed -> {
+            tally.did(id, RoundTally.Deed.ORDER);
+            summary.awardCoins(player, orders.coins());
+            player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 0.6f, 1.2f);
+            awardPoints(player, orders.points(), CombatFeedback.Reward.ORDER);
+        });
+        objective.order(player);
+    }
+
+    /** What the killer's kill adds to itself, in proportion to what the kill pays: a bot's kill pays less than a player's. */
+    private void killBonuses(Player killer, int killPoints, boolean headshot) {
+        var points = heroes.config().points();
+        int chain = feedback.chained(killer);
+        if (headshot) {
+            awardPoints(killer, (int) ((long) points.headshot() * killPoints / Math.max(1, points.kill())), CombatFeedback.Reward.HEADSHOT);
+        }
+        if (chain > 1) {
+            int extra = points.multikill() * Math.min(chain - 1, MOST_CHAINED_BONUSES);
+            awardPoints(killer, (int) ((long) extra * killPoints / Math.max(1, points.kill())), CombatFeedback.Reward.CHAIN);
+        }
+    }
+
+    Optional<Component> orderLine(Player player) {
+        if (!isPlaying(player)) {
+            return Optional.empty();
+        }
+        return orders.of(player.getUniqueId()).map(current -> messages.get("orders.hud",
+                Placeholder.component("what", messages.get("orders.deed." + current.order().deed().name().toLowerCase(Locale.ROOT))),
+                Formatter.number("done", current.done()), Formatter.number("count", current.order().count()),
+                Formatter.number("points", orders.points())));
     }
 
     public int humans(Faction faction) {
@@ -420,6 +475,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
 
     @Override
     public void join(Player player) {
+        career.greet(player);
         if (intro.running()) {
             if (round.rejoin(player)) {
                 PlayerReset.reset(player, GameMode.ADVENTURE);
@@ -881,9 +937,14 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         support.killed(victim, killer, points);
         reinforcements.lose(faction, 1);
         killer.filter(this::isPlaying).filter(player -> factionOf(player).filter(own -> own != faction).isPresent()).ifPresent(player -> {
+            summary.awardMobKill(player, config.rewards().botKill());
             awardPoints(player, points, CombatFeedback.Reward.KILL);
             fieldKills.merge(player.getUniqueId(), 1, Integer::sum);
             feedback.hit(player, CombatFeedback.Marker.KILL);
+            killBonuses(player, points, dealingHeadshot);
+            if (streaks.botKill(player.getUniqueId())) {
+                earnStrike(player);
+            }
         });
         dirty = true;
     }
@@ -1132,10 +1193,12 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         }
         victim.setNoDamageTicks(0);
         dealing = true;
+        dealingHeadshot = headshot;
         try {
             victim.damage(damage, source.build());
         } finally {
             dealing = false;
+            dealingHeadshot = false;
         }
         if (by instanceof Player player && player.isOnline() && !player.equals(victim) && !victim.isDead()) {
             feedback.hit(player, headshot ? CombatFeedback.Marker.HEADSHOT : CombatFeedback.Marker.HIT);
@@ -1258,6 +1321,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
             fieldKills.merge(killer.getUniqueId(), 1, Integer::sum);
             awardPoints(killer, heroes.config().points().kill(), CombatFeedback.Reward.KILL);
             feedback.hit(killer, CombatFeedback.Marker.KILL);
+            killBonuses(killer, heroes.config().points().kill(), dealingHeadshot);
             deployment.killedBy(victim, killer);
             if (streaks.kill(killer.getUniqueId())) {
                 earnStrike(killer);
@@ -1331,8 +1395,23 @@ public final class SternenfrontGame implements RoundConnections.Seating {
             fighter.choosing(Optional.empty());
             fighter.hero(Optional.empty());
         });
+        var awards = tally.awards();
+        awards.forEach(award -> Optional.ofNullable(Bukkit.getPlayer(award.winner()))
+                .ifPresent(player -> summary.awardCoins(player, config.rewards().award())));
         round.end();
+        announce(awards);
+        career.close(tally.lines());
         refreshAll();
+    }
+
+    private void announce(List<RoundTally.Award> awards) {
+        if (!awards.isEmpty()) {
+            Bukkit.broadcast(messages.get("awards.title"));
+        }
+        for (var award : awards) {
+            Optional.ofNullable(Bukkit.getPlayer(award.winner())).ifPresent(player -> Bukkit.broadcast(messages.get("awards." + award.key(),
+                    Placeholder.unparsed("player", player.getName()), Formatter.number("value", award.value()))));
+        }
     }
 
     private void cleanUp() {

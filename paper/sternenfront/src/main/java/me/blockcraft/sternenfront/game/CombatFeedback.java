@@ -33,7 +33,7 @@ public final class CombatFeedback {
         }
     }
 
-    public enum Reward { KILL, ASSIST, DEFENCE, HEALING, CAPTURE, NEUTRALISE }
+    public enum Reward { KILL, ASSIST, DEFENCE, HEALING, CAPTURE, NEUTRALISE, HEADSHOT, CHAIN, ORDER }
 
     static final class State {
         Marker marker;
@@ -45,6 +45,10 @@ public final class CombatFeedback {
         Reward reward;
         int points;
         int kills;
+        boolean headshot;
+        int chain;
+        long chainUntil;
+        int shownChain;
         long rewardUntil;
         boolean ready;
         long readyUntil;
@@ -87,21 +91,37 @@ public final class CombatFeedback {
             if (tick >= rewardUntil) {
                 points = 0;
                 kills = 0;
+                headshot = false;
+                shownChain = 0;
                 reward = next;
             }
             points += amount;
-            if (next == Reward.KILL) {
-                kills++;
+            switch (next) {
+                case KILL -> kills++;
+                case HEADSHOT -> headshot = true;
+                default -> { }
             }
-            if (reward != Reward.KILL || next == Reward.KILL) {
+            if (next == Reward.ORDER || reward != Reward.ORDER && (reward != Reward.KILL || next == Reward.KILL)) {
                 reward = next;
             }
             rewardUntil = tick + ticks;
         }
 
+        /** How many kills in a row this one makes, each within {@code window} ticks of the one before. */
+        int chained(long tick, int window) {
+            chain = tick < chainUntil ? chain + 1 : 1;
+            chainUntil = tick + window;
+            shownChain = chain;
+            return chain;
+        }
+
         Component reward(Messages messages) {
-            var key = kills > 1 ? "feedback.multikill" : "feedback." + reward.name().toLowerCase(Locale.ROOT);
-            return messages.get(key, Formatter.number("points", points), Formatter.number("kills", kills));
+            int inARow = Math.max(kills, shownChain);
+            var key = reward == Reward.ORDER ? "feedback.order"
+                    : inARow > 1 ? "feedback.multikill"
+                    : headshot ? "feedback.headshot"
+                    : "feedback." + reward.name().toLowerCase(Locale.ROOT);
+            return messages.get(key, Formatter.number("points", points), Formatter.number("kills", inARow));
         }
 
         Component compose(Component nextHud, Component feedback) {
@@ -129,6 +149,7 @@ public final class CombatFeedback {
     private final float hitVolume;
     private final float headshotVolume;
     private final float killVolume;
+    private final int multikillTicks;
 
     public CombatFeedback(SternenfrontGame game) {
         this.game = game;
@@ -139,6 +160,7 @@ public final class CombatFeedback {
         hitVolume = (float) Math.clamp(config.getDouble("combat-feedback.sound.hit", 0.65), 0, 1);
         headshotVolume = (float) Math.clamp(config.getDouble("combat-feedback.sound.headshot", 0.8), 0, 1);
         killVolume = (float) Math.clamp(config.getDouble("combat-feedback.sound.kill", 0.9), 0, 1);
+        multikillTicks = Math.clamp(config.getInt("combat-feedback.multikill-seconds", 4), 1, 30) * 20;
     }
 
     private State state(Player player) {
@@ -159,6 +181,16 @@ public final class CombatFeedback {
             });
         }
         show(player, Component.empty());
+    }
+
+    /** Counts a kill towards a chain of them, with a chime that climbs as it goes on. */
+    public int chained(Player player) {
+        int chain = state(player).chained(game.tick(), multikillTicks);
+        if (chain > 1) {
+            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, SoundCategory.PLAYERS, 0.8f,
+                    (float) Math.min(2, 0.9 + (chain - 2) * 0.2));
+        }
+        return chain;
     }
 
     public void earned(Player player, int points, Reward reward) {

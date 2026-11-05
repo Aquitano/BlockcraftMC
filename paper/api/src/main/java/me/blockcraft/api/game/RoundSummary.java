@@ -221,8 +221,12 @@ public final class RoundSummary {
 
     /** Cooperative mob kills count toward stats without player rivalries or PvP kill XP. */
     public void awardMobKill(Player player) {
+        awardMobKill(player, rewards.kill());
+    }
+
+    public void awardMobKill(Player player, int coins) {
         score(player).kills++;
-        pay(player, rewards.kill());
+        pay(player, coins);
     }
 
     public boolean undamaged(Player player) {

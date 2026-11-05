@@ -11,7 +11,7 @@ public class KillStreaksTest {
 
     @Test
     public void theRewardComesOncePerLifeAtExactlyTheStreak() {
-        var streaks = new KillStreaks(3);
+        var streaks = new KillStreaks(3, 1);
         var player = UUID.randomUUID();
 
         assertFalse(streaks.kill(player));
@@ -23,5 +23,17 @@ public class KillStreaksTest {
         streaks.kill(player);
         streaks.kill(player);
         assertTrue(streaks.kill(player));
+    }
+
+    @Test
+    public void botsFillTheStreakMoreSlowlyAndKeepItsOneReward() {
+        var streaks = new KillStreaks(2, 3);
+        var player = UUID.randomUUID();
+
+        assertFalse(streaks.botKill(player));
+        assertFalse(streaks.botKill(player));
+        assertFalse(streaks.kill(player));
+        assertTrue(streaks.botKill(player));
+        assertFalse(streaks.kill(player));
     }
 }

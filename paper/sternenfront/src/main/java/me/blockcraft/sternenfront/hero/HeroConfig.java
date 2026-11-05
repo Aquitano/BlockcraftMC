@@ -14,7 +14,7 @@ public record HeroConfig(int cost, int perFaction, Points points, Map<Hero, Doub
                          Jetpack jetpack, Grapple grapple, Orbital orbital, Rally rally, Rocket rocket,
                          Lightning lightning, int reward) {
 
-    public record Points(int kill, int capture, int neutralise) { }
+    public record Points(int kill, int capture, int neutralise, int headshot, int multikill) { }
 
     public record Saber(double damage, double blockedShare, Color jedi, Color sith, Color white, Color relic, int igniteTicks,
                         int humTicks, int leapCooldownSeconds, double leapForward, double leapUp) { }
@@ -71,7 +71,8 @@ public record HeroConfig(int cost, int perFaction, Points points, Map<Hero, Doub
                 Math.max(0, config.getInt("cost", 600)),
                 Math.max(1, config.getInt("per-faction", 1)),
                 new Points(Math.max(0, points.getInt("kill", 100)), Math.max(0, points.getInt("capture", 100)),
-                        Math.max(0, points.getInt("neutralise", 50))),
+                        Math.max(0, points.getInt("neutralise", 50)), Math.max(0, points.getInt("headshot", 25)),
+                        Math.max(0, points.getInt("multikill", 25))),
                 Map.copyOf(healthByHero),
                 new Saber(Math.max(0, saber.getDouble("damage", 8)), Math.clamp(saber.getDouble("blocked-share", 0.3), 0, 1),
                         color(colors, "jedi", 0x3D8BFF), color(colors, "sith", 0xFF2A2A), color(colors, "white", 0xF4F8FF),

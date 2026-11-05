@@ -462,6 +462,8 @@ hero:
 feedback:
   kill: "<error>Abschuss <success>+<points> KP"
   multikill: "<error><kills>x <success>+<points> KP"
+  headshot: "<error>Kopfschuss <success>+<points> KP"
+  order: "<accent>Auftrag <success>+<points> KP"
   assist: "<aqua>Hilfe <success>+<points> KP"
   defence: "<aqua>Verteidigt <success>+<points> KP"
   healing: "<success>Geheilt +<points> KP"
@@ -469,6 +471,40 @@ feedback:
   neutralise: "<aqua>Befreit <success>+<points> KP"
   hero-ready: "<success>Held bereit"
   progress: "<muted><kills> K <dark>· <muted><points>/<cost> KP"
+
+orders:
+  hud: "<muted>Auftrag <dark>│ <white><what> <muted><done>/<count> <dark>· <success>+<points> KP"
+  deed:
+    kill: "Abschüsse"
+    headshot: "Kopfschüsse"
+    assist: "Kampfhilfen"
+    defence: "Posten verteidigen"
+    capture: "Posten erobern"
+
+awards:
+  title: "<prefix><accent>Auszeichnungen dieser Schlacht"
+  mvp: "  <accent>Beste Leistung <dark>· <white><player> <muted>mit <value> KP"
+  sharpshooter: "  <accent>Scharfschütze <dark>· <white><player> <muted>mit <value> Kopfschüssen"
+  conqueror: "  <accent>Eroberer <dark>· <white><player> <muted>mit <value> Posten"
+  comrade: "  <accent>Kamerad <dark>· <white><player> <muted>mit <value> Kampfhilfen"
+
+career:
+  battle: "<prefix><muted>Deine Schlacht: <white><points> KP <dark>· <muted>Abschüsse <white><kills> <dark>· <muted>Kopfschüsse <white><headshots> <dark>· <muted>Posten <white><captures> <dark>· <muted>Aufträge <white><orders>"
+  record: "<prefix><accent>Neuer Rekord! <muted>Dein bisher bester Wert war <white><best> KP<muted>."
+  promoted: "<prefix><accent>Befördert! <muted>Du bist jetzt <white><rank><muted>."
+  standing: "<prefix><muted>Dein Rang: <accent><rank> <dark>· <white><points>/<next> KP"
+  top: "<prefix><muted>Dein Rang: <accent><rank> <dark>· <white><points> KP"
+  rank:
+    "0": "Rekrut"
+    "1": "Gefreiter"
+    "2": "Korporal"
+    "3": "Unteroffizier"
+    "4": "Feldwebel"
+    "5": "Leutnant"
+    "6": "Hauptmann"
+    "7": "Major"
+    "8": "Oberst"
+    "9": "General"
 
 hud:
   objective: "<own> <dark>‹ <posts><dark>› <enemy> <dark>│ <white><time>"

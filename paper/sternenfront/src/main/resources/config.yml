@@ -132,11 +132,13 @@ global-stats-head: Kevos
 # How long a running round keeps the place of a player who dropped out; 0 turns it off.
 rejoin-seconds: 120
 
-# What a kill, a captured post (to every capturer in the zone), a killed champion and a win pay in coins.
+# What a kill, a bot, a captured post (to every capturer in the zone), a killed champion, an award and a win pay in coins.
 rewards:
   kill: 5
+  bot-kill: 1
   capture: 4
   champion: 10
+  award: 10
   hero: 15
   win: 25
 
@@ -277,6 +279,9 @@ heroes:
   per-faction: 1
   points:
     kill: 100
+    # Added to a kill, in proportion to what it pays: a headshot, and each kill after the first in a row (up to three).
+    headshot: 25
+    multikill: 25
     capture: 100
     neutralise: 50
     assist: 40
@@ -322,9 +327,21 @@ heroes:
 killcam:
   ticks: 50
 
-# Kills in one life that earn a one-use orbital strike.
+# Kills in one life that earn a one-use orbital strike, and how many bots count as one kill.
 streaks:
   orbital-strike: 5
+  bots-per-kill: 3
+
+# One goal at a time for each fighter, in a shuffled order, as deed:count. Deeds are kill, headshot, assist, defence and
+# capture. Each pays points and coins.
+orders:
+  points: 150
+  coins: 3
+  list: ["kill:5", "headshot:2", "capture:1", "assist:3", "defence:2", "kill:10"]
+
+# The battle points ever earned that each rank needs, lowest first; career.rank.<index> in messages.yml names them.
+career:
+  ranks: [0, 1500, 4000, 8000, 15000, 25000, 40000, 60000, 90000, 130000]
 
 # Sneaking with the long rifle slows the walk by this share, which clients with FOV effects on show as a zoom.
 scope:
@@ -335,6 +352,7 @@ outlines: {enabled: true, range: 64, allies: false}
 combat-feedback:
   marker-ticks: 6
   reward-ticks: 30
+  multikill-seconds: 4
   sound: {hit: 0.65, headshot: 0.8, kill: 0.9}
 
 intro:

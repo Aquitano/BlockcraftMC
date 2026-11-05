@@ -74,6 +74,17 @@ each lasting `presentation.saber-trail-ticks` under the shared effect cap. Each 
 12 ticks between swings and a four-tick sweep. Successive swings alternate direction. Switching weapons or guarding
 cancels the remaining sweep. The relic blade uses the same attack.
 
+## What keeps a player going
+
+Within a life, kills chain: each one within `combat-feedback.multikill-seconds` of the last adds `heroes.points.multikill` and a
+higher chime, and a killing headshot adds `heroes.points.headshot`. Both scale with what the kill pays, so bots pay less than
+players. A bot kill counts towards stats, pays `rewards.bot-kill` and fills the orbital strike's streak at `streaks.bots-per-kill`.
+
+`orders` gives each fighter one goal at a time, shown under the objective line, which pays points and coins when completed. Battle
+points also feed the round's awards, which need two fighters and pay `rewards.award`, and a rank that lasts across rounds:
+`bc_sternenfront_career` keeps every player's total and best round, `career.ranks` sets the thresholds and `career.rank.<index>`
+in `messages.yml` names them.
+
 ## Animated bodies
 
 The BetterModel plugin draws and animates bot bodies listed in `appearance.animated-bodies`; players keep `BodyRig`, and a

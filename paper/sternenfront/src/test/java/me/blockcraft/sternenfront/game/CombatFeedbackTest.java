@@ -101,6 +101,14 @@ public class CombatFeedbackTest {
         assertEquals(0, state.kills);
     }
 
+    @Test
+    public void killsChainWithinTheWindowAndStartOverAfterIt() {
+        var state = new CombatFeedback.State();
+        assertEquals(1, state.chained(0, 80));
+        assertEquals(2, state.chained(79, 80));
+        assertEquals(1, state.chained(159, 80));
+    }
+
     private static String plain(Component component) {
         return PlainTextComponentSerializer.plainText().serialize(component);
     }

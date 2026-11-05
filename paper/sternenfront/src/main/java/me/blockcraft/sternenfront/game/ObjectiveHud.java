@@ -8,9 +8,12 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * The round at the top of the screen: each player's own reinforcements on the left, a tile per command post in its
@@ -24,6 +27,7 @@ final class ObjectiveHud {
     private final SternenfrontGame game;
     private final Messages messages;
     private final Map<Faction, BossBar> bars = new EnumMap<>(Faction.class);
+    private final Map<UUID, BossBar> orderBars = new HashMap<>();
 
     ObjectiveHud(SternenfrontGame game) {
         this.game = game;
@@ -52,7 +56,23 @@ final class ObjectiveHud {
                     viewer.hideBossBar(bar);
                 }
             });
+            order(viewer);
         }
+    }
+
+    /** A second line under the first, added after it, with the fighter's current order. */
+    void order(Player viewer) {
+        game.orderLine(viewer).ifPresentOrElse(line -> {
+            var bar = orderBars.computeIfAbsent(viewer.getUniqueId(),
+                    ignored -> BossBar.bossBar(Component.empty(), 0, BossBar.Color.PINK, BossBar.Overlay.NOTCHED_20));
+            bar.name(line);
+            viewer.showBossBar(bar);
+        }, () -> {
+            var bar = orderBars.remove(viewer.getUniqueId());
+            if (bar != null) {
+                viewer.hideBossBar(bar);
+            }
+        });
     }
 
     private Component tile(Posts posts, int index, long second) {
@@ -65,6 +85,8 @@ final class ObjectiveHud {
     void clear() {
         for (var viewer : Bukkit.getOnlinePlayers()) {
             bars.values().forEach(viewer::hideBossBar);
+            orderBars.values().forEach(viewer::hideBossBar);
         }
+        orderBars.clear();
     }
 }

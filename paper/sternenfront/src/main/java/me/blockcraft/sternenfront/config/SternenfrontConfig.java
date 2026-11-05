@@ -30,7 +30,7 @@ public record SternenfrontConfig(int playersPerTeam, int fullSeconds, int roundS
     /** A class's body on one faction: its health, {@code speed} times normal movement, {@code scale} times normal size. */
     public record ClassStats(double health, double speed, double scale) { }
 
-    public record Rewards(int kill, int capture, int champion, int win) { }
+    public record Rewards(int kill, int botKill, int capture, int champion, int award, int win) { }
 
     public record Respawn(int seconds, int autoSeconds, int protectionSeconds) { }
 
@@ -69,8 +69,9 @@ public record SternenfrontConfig(int playersPerTeam, int fullSeconds, int roundS
                 Math.max(1, config.getInt("teams.players-per-team", 6)),
                 Math.max(1, config.getInt("countdown.full", 20)),
                 Math.max(60, config.getInt("countdown.round", 1200)),
-                new Rewards(Math.max(0, config.getInt("rewards.kill", 5)), Math.max(0, config.getInt("rewards.capture", 4)),
-                        Math.max(0, config.getInt("rewards.champion", 10)), Math.max(0, config.getInt("rewards.win", 25))),
+                new Rewards(Math.max(0, config.getInt("rewards.kill", 5)), Math.max(0, config.getInt("rewards.bot-kill", 1)),
+                        Math.max(0, config.getInt("rewards.capture", 4)), Math.max(0, config.getInt("rewards.champion", 10)),
+                        Math.max(0, config.getInt("rewards.award", 10)), Math.max(0, config.getInt("rewards.win", 25))),
                 Math.max(1, config.getInt("tickets.start", 150)),
                 Math.max(1, config.getInt("tickets.bleed-seconds", 5)),
                 Math.max(1, config.getInt("posts.capture-seconds", 12)),
