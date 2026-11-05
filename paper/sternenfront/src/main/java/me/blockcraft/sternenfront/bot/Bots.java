@@ -100,12 +100,17 @@ public final class Bots implements Listener {
         private Soldier(int number, Faction faction) {
             this.number = number;
             this.faction = faction;
-            this.role = switch (number % 4) {
-                case 2 -> CombatClass.HEAVY;
-                case 3 -> CombatClass.MEDIC;
-                default -> CombatClass.SOLDIER;
-            };
+            this.role = infantryClass(number);
         }
+    }
+
+    static CombatClass infantryClass(int number) {
+        return switch (number % 4) {
+            case 0 -> CombatClass.SCOUT;
+            case 2 -> CombatClass.HEAVY;
+            case 3 -> CombatClass.MEDIC;
+            default -> CombatClass.SOLDIER;
+        };
     }
 
     private final SternenfrontGame game;
