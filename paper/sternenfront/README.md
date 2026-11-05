@@ -24,6 +24,14 @@ A shipyard can supply only `receiver: "x y z"` or `inspection-course`. The latte
 and `board: "x y z"`. Gates can run west to east or east to west. The inspection course uses fixed physical platforms;
 the moving crane's displays provide no collision.
 
+The receiver consumes right clicks before weapons, plays the original cantina tune and grants `sternenfront.receiver`
+once through `Discoveries` and `UnlockRewards`. Only deployed players on foot can activate it.
+The inspection course reuses `KesselRun` and grants `sternenfront.inspection` on the first valid completion.
+`secrets.inspection-course.par-seconds` sets its timing goal; `limit-seconds` ends an attempt.
+Its board shows the five fastest times in the current round and never reads or writes `bc_sternenfront_kessel`.
+Mounting, teleporting, death, leaving the lane or falling below `pit-y` interrupts an attempt.
+Round end and plugin disable remove secret displays and stop playback and tasks.
+
 ## Compatibility
 
 `kolonien` identifies the Republic and `hegemonie` the Separatists in arena metadata, configuration, and player

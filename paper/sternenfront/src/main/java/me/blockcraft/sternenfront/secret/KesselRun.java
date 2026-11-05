@@ -33,7 +33,7 @@ final class KesselRun {
     /** The runner moved from {@code fromX} to {@code toX} at {@code tick}, ending on the course or not. */
     Step move(double fromX, double toX, boolean onCourse, long tick) {
         if (!onCourse) {
-            return stop();
+            return interrupt();
         }
         if (crosses(gates.getFirst(), fromX, toX)) {
             next = 1;
@@ -44,7 +44,7 @@ final class KesselRun {
             return Step.NONE;
         }
         if (tick - startTick > limitTicks) {
-            return stop();
+            return interrupt();
         }
         if (!crosses(gates.get(next), fromX, toX)) {
             return Step.NONE;
@@ -58,7 +58,7 @@ final class KesselRun {
         return Step.FINISHED;
     }
 
-    private Step stop() {
+    Step interrupt() {
         boolean running = running();
         next = IDLE;
         return running ? Step.FAILED : Step.NONE;

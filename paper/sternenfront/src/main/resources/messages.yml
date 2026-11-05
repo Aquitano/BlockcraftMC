@@ -286,6 +286,7 @@ secret:
     cantina: "Musik in der Cantina"
     kessel: "Kessel-Lauf"
     receiver: "Die vergessene Werftfrequenz"
+    inspection: "Kraninspektion bestanden"
   brummi-hit: "<muted>Brummi piept empört."
   brummi-panic: "<muted>Brummi flieht kreischend!"
   rumble: "<muted>Der Sand unter dir bebt ..."
@@ -300,6 +301,13 @@ secret:
   kessel-board-title: "<accent><bold>Kessel-Lauf</bold>\n<muted>Schaffst du ihn unter <white><par> s<muted>?"
   kessel-board-line: "<white><place>. <accent><name> <dark>· <white><time> s"
   kessel-board-empty: "<muted>Noch keine Zeiten"
+  inspection-running: "<accent>Kraninspektion <dark>· <white><time> s <dark>· <muted>Tor <white><gate><dark>/<white><gates>"
+  inspection-finished: "<prefix><muted>Inspektion bestanden in <accent><time> s<muted>!"
+  inspection-par: "<prefix><muted>Dein nächstes Ziel: unter <accent><par> s<muted>."
+  inspection-failed: "<prefix><error>Inspektion abgebrochen. Starte am ersten Tor neu."
+  inspection-board-title: "<accent><bold>Kraninspektion</bold>\n<muted>Über die Plattformen von Tor zu Tor.\n<muted>Nur zu Fuß, ohne Teleport. Ziel: <white><par> s<muted>, Zeitlimit: <white><limit> s\n<muted>Bestzeiten dieser Runde"
+  inspection-board-line: "<white><place>. <accent><name> <dark>· <white><time> s"
+  inspection-board-empty: "<muted>Noch keine Inspektion bestanden"
   may-the-fourth: "<prefix><accent>Möge der Vierte mit euch sein! <muted>Heute zahlt jede Runde <accent><factor>-mal <muted>so viele Coins."
 
 headquarters:

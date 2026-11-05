@@ -14,7 +14,8 @@ enum Secret {
     SAND_BEAST("sand_beast", "sand-beast"),
     CANTINA("cantina", "cantina"),
     KESSEL("kessel", "kessel"),
-    RECEIVER("receiver", "receiver");
+    RECEIVER("receiver", "receiver"),
+    INSPECTION("inspection", "inspection");
 
     static final String PREFIX = "sternenfront.";
     static final String KYBER = PREFIX + "kyber.";

@@ -4,7 +4,8 @@ import org.bukkit.configuration.ConfigurationSection;
 
 /** The {@code secrets} section of Sternenfront's config.yml. */
 record SecretsConfig(int coins, int brummiHits, int brummiHideSeconds, int stillSeconds, int rumbleSeconds,
-                     int restSeconds, float beastScale, int parSeconds, int limitSeconds, int mayTheFourthFactor) {
+                     int restSeconds, float beastScale, int parSeconds, int limitSeconds,
+                     int inspectionParSeconds, int inspectionLimitSeconds, int mayTheFourthFactor) {
 
     static SecretsConfig from(ConfigurationSection config) {
         return new SecretsConfig(
@@ -17,6 +18,8 @@ record SecretsConfig(int coins, int brummiHits, int brummiHideSeconds, int still
                 (float) Math.max(1, config.getDouble("secrets.sand-beast.scale", 5)),
                 Math.max(1, config.getInt("secrets.kessel.par-seconds", 10)),
                 Math.max(10, config.getInt("secrets.kessel.limit-seconds", 60)),
+                Math.max(1, config.getInt("secrets.inspection-course.par-seconds", 25)),
+                Math.max(10, config.getInt("secrets.inspection-course.limit-seconds", 90)),
                 Math.max(1, config.getInt("secrets.may-the-fourth.coin-factor", 2)));
     }
 }

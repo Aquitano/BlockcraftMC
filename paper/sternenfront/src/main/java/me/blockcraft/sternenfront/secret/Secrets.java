@@ -67,10 +67,18 @@ public final class Secrets implements Listener, AutoCloseable {
             spots.course().ifPresent(course -> {
                 var times = new KesselTimes(BlockcraftApi.get().database());
                 times.createTable();
-                var kessel = new KesselCourse(plugin, game, messages, discoveries, times, course, config);
+                var kessel = new KesselCourse(plugin, game, messages, discoveries, Optional.of(times),
+                        Secret.KESSEL, course, config.parSeconds(), config.limitSeconds());
                 secrets.listen(kessel);
                 secrets.ticks.add(kessel::tick);
                 secrets.cleanup.add(kessel::close);
+            });
+            spots.inspectionCourse().ifPresent(course -> {
+                var inspection = new KesselCourse(plugin, game, messages, discoveries, Optional.empty(),
+                        Secret.INSPECTION, course, config.inspectionParSeconds(), config.inspectionLimitSeconds());
+                secrets.listen(inspection);
+                secrets.ticks.add(inspection::tick);
+                secrets.cleanup.add(inspection::close);
             });
         });
         if (!secrets.ticks.isEmpty()) {

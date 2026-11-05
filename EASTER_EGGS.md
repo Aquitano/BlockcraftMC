@@ -359,6 +359,7 @@ Legacy Tessar ambience remains visible during the lobby. The sounds come from th
 | Music box | `cantina` | The jukebox between two speakers against the cantina's south wall (-36 65 53). Its authored click is consumed before weapon handling. A right click on foot plays a 24-second swing tune written for it (`CantinaTune`) to everyone within 24 blocks, and the first click finds the secret. |
 | Kessel-Lauf | `kessel` | A slot cut into the southern cliff behind the cantina, entered through a framed doorway at (-24 65 58). Running west from the start deck at its east end: the green start arch, two stepping stones, a yellow checkpoint arch over the pit, a third stone, a gap of seven blocks only a jump pack clears, the shelf with the second checkpoint arch, one more stone and the purple finish arch. The action bar shows the time; falling into the pit, leaving the slot or running past `limit-seconds` (60) ends the run. A finish under `par-seconds` (10) finds the secret. Every player's best time is in `bc_sternenfront_kessel`, and the five fastest stand on the board at the start deck. Barriers roof the slot at y 76, below the cliff tops, so it shows the posts nothing and leads nowhere. |
 | Shipyard receiver | `receiver` | `secrets.receiver` locates a hidden authored block. A deployed player on foot right-clicks it to receive a German transmission and play the original `CantinaTune` within 24 blocks. The receiver has shared playback state, so repeated or simultaneous clicks cannot stack the tune or fire the held weapon. Its first discovery pays the configured secret reward independently of `cantina`. |
+| Crane inspection | `inspection` | `secrets.inspection-course` supplies a lane, pit height, ordered X gates and board location. Deployed players on foot cross every gate on fixed platforms. Teleports, mounts, death, departure, leaving the lane, falling below `pit-y` or exceeding `secrets.inspection-course.limit-seconds` (90) end the attempt. The first valid finish pays once; `par-seconds` (25) is a timing goal. The five fastest times are round-local and never enter `bc_sternenfront_kessel`. The moving crane is noncolliding decoration. |
 
 On 4 May (`/event may-the-fourth`), every round's start greets everyone, multiplies every coin the round pays
 through `RoundSummary.coinFactor`, and fires fireworks: each faction's colour over its headquarters and both over
@@ -412,6 +413,12 @@ Before deploying, verify these interactions with Minecraft clients on a local te
   twice. Run the Kessel-Lauf as a scout: fall into the pit, try the long gap without the jump pack, finish slower
   and faster than par, and check the board after a restart. With `/event may-the-fourth`, start a round and compare its
   recap coins with a normal round.
+- On Sturmwerft, right-click the receiver while holding a blaster, then click again from two accounts during playback.
+  Check the transmission, audible tune, lack of weapon fire, one playback and one reward per account across rounds.
+  Run the inspection course through every gate, repeat faster and slower, then try a vehicle and teleport during an attempt.
+  Check failure after a fall, death or departure, and check that only a fresh start works afterward.
+  Finish above and below par, verify that the second finish pays nothing, and confirm that the board resets with the round.
+  End a round during playback and a run. Check that the audio, displays and attempts stop, including after plugin disable.
 
 The build does not validate client rendering, map geometry, or a live proxy-to-backend connection.
 Use the [performance capture workflow](dev/performance/README.md) to compare server tick time, CPU, GC pauses, and client frame times.

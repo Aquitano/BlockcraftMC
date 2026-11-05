@@ -195,12 +195,13 @@ posts:
 # hit from one player in a round and stays away for hide-seconds. The sand beast rumbles under a player who stood
 # still on its dune for rumble-seconds and breaks out after still-seconds, at scale times the model's size; then the
 # dune rests for rest-seconds. A Kessel-Lauf under par-seconds finds its secret; a run ends after limit-seconds. On
-# 4 May every round pays coin-factor times its coins.
+# 4 May every round pays coin-factor times its coins. The inspection course rewards any valid completion; its par is a goal.
 secrets:
   coins: 50
   brummi: {hits: 3, hide-seconds: 30}
   sand-beast: {still-seconds: 10, rumble-seconds: 4, rest-seconds: 60, scale: 5}
   kessel: {par-seconds: 10, limit-seconds: 60}
+  inspection-course: {par-seconds: 25, limit-seconds: 90}
   may-the-fourth: {coin-factor: 2}
 
 # A dead player chooses a class and a spawn for seconds, and deploys at the headquarters after auto-seconds if they
