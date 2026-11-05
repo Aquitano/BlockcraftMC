@@ -83,7 +83,7 @@ public final class Bots implements Listener {
         private int waypoint;
         private Vector idleAim;
         private boolean moving;
-        private UUID patient;
+        private final BotPatients patients = new BotPatients();
         private String activity = "deploy";
         private String navigationResult = "not-requested";
         private Location destination;
@@ -151,7 +151,7 @@ public final class Bots implements Listener {
         var at = body.getLocation();
         var box = body.getBoundingBox();
         var target = soldier.target == null ? null : Bukkit.getEntity(soldier.target);
-        var patient = soldier.patient == null ? null : Bukkit.getEntity(soldier.patient);
+        var patient = soldier.patients.selected() == null ? null : Bukkit.getEntity(soldier.patients.selected());
         var path = body.getPathfinder().getCurrentPath();
         var motion = new BotSnapshot.Motion(BotSnapshot.Point.of(at), BotSnapshot.Point.of(body.getVelocity()),
                 List.of(box.getMinX(), box.getMinY(), box.getMinZ(), box.getMaxX(), box.getMaxY(), box.getMaxZ()),
@@ -165,7 +165,7 @@ public final class Bots implements Listener {
                 target != null && target.isValid() && target.getWorld().equals(body.getWorld()) && body.hasLineOfSight(target),
                 BotSnapshot.Point.of(soldier.aim), BotSnapshot.Point.of(soldier.lastSeen), soldier.chooseAt,
                 soldier.reactAt, soldier.seenUntil, soldier.pauseUntil, soldier.volley.active(),
-                BotSnapshot.Point.of(soldier.idleAim), soldier.patient,
+                BotSnapshot.Point.of(soldier.idleAim), soldier.patients.selected(),
                 patient == null ? null : BotSnapshot.Point.of(patient.getLocation()),
                 patient instanceof LivingEntity living ? living.getHealth() : -1);
         return Optional.of(new BotSnapshot(body.getUniqueId(), soldier.number, soldier.faction, soldier.role, motion,
@@ -300,7 +300,7 @@ public final class Bots implements Listener {
         soldier.waypoint = 0;
         soldier.idleAim = null;
         soldier.moving = false;
-        soldier.patient = null;
+        soldier.patients.clear();
         soldier.activity = "deploy";
         soldier.navigationResult = "not-requested";
         soldier.destination = null;
@@ -491,7 +491,7 @@ public final class Bots implements Listener {
         Location destination = null;
         String activity = "idle";
         boolean seekingPatient = false;
-        var patient = soldier.role == CombatClass.MEDIC ? patient(soldier) : Optional.<LivingEntity>empty();
+        var patient = soldier.role == CombatClass.MEDIC ? patient(soldier, tick, true) : Optional.<LivingEntity>empty();
         boolean wounded = wounded(mob);
         var threat = target.map(LivingEntity::getEyeLocation)
                 .or(() -> remembering(soldier, tick) ? Optional.of(soldier.lastSeen.clone().add(0, 1.6, 0)) : Optional.empty());
@@ -721,25 +721,33 @@ public final class Bots implements Listener {
         }
     }
 
-    private Optional<LivingEntity> patient(Soldier soldier) {
+    private Optional<LivingEntity> patient(Soldier soldier, long tick, boolean checkPath) {
         var here = soldier.body.getLocation();
         var candidates = game.combatants().stream().filter(ally -> !ally.equals(soldier.body)
                         && game.factionOf(ally).filter(soldier.faction::equals).isPresent())
                 .filter(ally -> !(ally instanceof Player player) || game.heroOf(player).isEmpty())
+                .filter(ally -> here.getWorld().equals(ally.getWorld()))
                 .filter(ally -> ally.getHealth() < ally.getAttribute(Attribute.MAX_HEALTH).getValue())
                 .filter(ally -> here.distanceSquared(ally.getLocation()) <= 18 * 18).toList();
-        var selected = candidates.stream().filter(ally -> ally.getUniqueId().equals(soldier.patient)).findFirst()
-                .or(() -> candidates.stream().min(Comparator.comparingDouble(ally ->
-                        ally.getHealth() / ally.getAttribute(Attribute.MAX_HEALTH).getValue())));
-        soldier.patient = selected.map(Entity::getUniqueId).orElse(null);
-        return selected;
+        var patients = candidates.stream().map(ally -> new BotPatients.Patient(ally.getUniqueId(),
+                ally.getHealth() / ally.getAttribute(Attribute.MAX_HEALTH).getValue(),
+                here.distanceSquared(ally.getLocation()) <= 16 && soldier.body.hasLineOfSight(ally))).toList();
+        var selected = soldier.patients.choose(patients, tick, config.medic(), id -> {
+            if (!checkPath) {
+                return true;
+            }
+            var ally = candidates.stream().filter(candidate -> candidate.getUniqueId().equals(id)).findFirst().orElseThrow();
+            var path = soldier.body.getPathfinder().findPath(ally.getLocation());
+            return path != null && path.canReachFinalPoint();
+        });
+        return candidates.stream().filter(ally -> selected.filter(ally.getUniqueId()::equals).isPresent()).findFirst();
     }
 
     private void support(Soldier soldier, long tick) {
         if (tick < soldier.healAt) {
             return;
         }
-        patient(soldier).filter(ally -> ally.getLocation().distanceSquared(soldier.body.getLocation()) <= 16)
+        patient(soldier, tick, false).filter(ally -> ally.getLocation().distanceSquared(soldier.body.getLocation()) <= 16)
                 .filter(soldier.body::hasLineOfSight).ifPresent(ally -> {
                     game.heal(ally, config.healAmount());
                     ally.getWorld().spawnParticle(Particle.HEART, ally.getLocation().add(0, 1.8, 0), 2, 0.2, 0.1, 0.2, 0);
@@ -792,6 +800,7 @@ public final class Bots implements Listener {
         event.setDroppedExp(0);
         soldier.body = null;
         soldier.recovery.clear();
+        soldier.patients.clear();
         soldier.deployAt = game.tick() + game.config().respawn().seconds() * 20L;
         var killer = event.getDamageSource().getCausingEntity() instanceof Player player
                 ? Optional.of(player) : Optional.<Player>empty();
