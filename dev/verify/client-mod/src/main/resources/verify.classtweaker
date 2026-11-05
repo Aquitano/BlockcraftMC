@@ -1,0 +1,13 @@
+accessWidener v2 official
+accessible field net/minecraft/client/gui/Hud overlayMessageString Lnet/minecraft/network/chat/Component;
+accessible field net/minecraft/client/gui/Hud title Lnet/minecraft/network/chat/Component;
+accessible field net/minecraft/client/gui/Hud subtitle Lnet/minecraft/network/chat/Component;
+accessible field net/minecraft/client/gui/components/BossHealthOverlay events Ljava/util/Map;
+accessible field net/minecraft/client/gui/components/ChatComponent allMessages Ljava/util/List;
+accessible field com/mojang/blaze3d/platform/Window focused Z
+mutable field com/mojang/blaze3d/platform/Window focused Z
+accessible field net/minecraft/client/KeyMapping isDown Z
+accessible field net/minecraft/client/KeyMapping clickCount I
+accessible field net/minecraft/client/MouseHandler mouseGrabbed Z
+accessible field net/minecraft/client/gui/Hud overlayMessageTime I
+accessible field net/minecraft/client/gui/Hud titleTime I

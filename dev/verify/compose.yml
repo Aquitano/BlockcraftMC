@@ -1,0 +1,93 @@
+# An isolated network for dev/verify/verify.py: its own project, volumes and bridge, with nothing published beyond
+# loopback. Each service extends docker-compose.yml so it runs what production runs. The host may also run the live
+# servers, so every service has a hard CPU and memory ceiling, no extra swap, and low priority below that ceiling.
+x-low-priority: &low-priority
+  cpu_shares: 128
+
+services:
+  replay-storage:
+    extends: {file: docker-compose.yml, service: replay-storage}
+
+  mariadb:
+    extends: {file: docker-compose.yml, service: mariadb}
+    <<: *low-priority
+    restart: "no"
+    ports: !reset []
+    cpus: 0.5
+    mem_limit: 700m
+    memswap_limit: 700m
+
+  velocity:
+    extends: {file: docker-compose.yml, service: velocity}
+    <<: *low-priority
+    restart: "no"
+    ports: !reset []
+    cpus: 0.5
+    mem_limit: 900m
+    memswap_limit: 900m
+    environment:
+      BLOCKCRAFT_ON_DEMAND_GROUPS: ""
+      BLOCKCRAFT_RESOURCE_PACK_URL: http://velocity:8080/blockcraft.zip
+    volumes:
+      - ./dev/verify/velocity.toml:/config/velocity.toml:ro
+
+  sternenfront:
+    extends: {file: docker-compose.yml, service: sternenfront}
+    <<: *low-priority
+    cpus: ${VERIFY_SERVER_CPUS:-1.5}
+    mem_limit: 2500m
+    memswap_limit: 2500m
+    environment:
+      # With no lobby running, this server takes the proxy's first-join route.
+      BLOCKCRAFT_SERVER_GROUP: lobby
+    volumes:
+      - ./dev/verify/sternenfront-overrides.yml:/data/plugins/Sternenfront/config.yml:ro
+
+  client:
+    build:
+      context: ./dev/verify
+      dockerfile: client.Dockerfile
+    image: bcverify-client
+    user: "1000:1000"
+    <<: *low-priority
+    # The memory ceiling can end a long session; `join` reconnects whichever client comes back.
+    restart: on-failure:3
+    cpus: ${VERIFY_CLIENT_CPUS:-2.5}
+    mem_limit: 4500m
+    memswap_limit: 4500m
+    depends_on: [velocity]
+    ports:
+      - "127.0.0.1:${VERIFY_PORT:-25599}:25599"
+    working_dir: /repo/dev/verify/client-mod
+    environment:
+      HOME: /tmp/home
+      GRADLE_USER_HOME: /gradle
+      ALSOFT_DRIVERS: "null"
+      LIBGL_ALWAYS_SOFTWARE: "1"
+      SDL_VIDEODRIVER: x11
+      VERIFY_BUILD_DIR: /gradle/verify-build
+      VERIFY_CLIENT_HEAP: 1536M
+      GRADLE_OPTS: -Xmx512m -Dorg.gradle.jvmargs=-Xmx512m
+    init: true
+    command:
+      - xvfb-run
+      - -a
+      - -s
+      - -screen 0 2560x1440x24 +extension GLX -nolisten tcp
+      - /repo/gradlew
+      - --no-daemon
+      - --console=plain
+      - --project-cache-dir=/gradle/verify-project-cache
+      - runClient
+    volumes:
+      - .:/repo
+      - gradle:/gradle
+    tmpfs:
+      - /tmp/home:uid=1000,gid=1000
+
+volumes:
+  mariadb:
+  velocity:
+  sternenfront:
+  replays:
+  gradle:

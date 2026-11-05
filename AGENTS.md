@@ -6,7 +6,7 @@ Paper 26.3 / Velocity 4 plugins. This file holds only what the code does not say
 
 - Gradle needs Java 25 (`mise.toml`), and a shell's `JAVA_HOME` may point at an older one.
 - `./gradlew build` must pass warning-free. `BLOCKCRAFT_TEST_DB_PORT` adds the MariaDB integration tests that CI runs.
-- Tests cannot see gameplay. A gameplay change needs a client on the dev network; without one, say what stayed unseen.
+- Tests cannot see gameplay. `dev/verify` drives a real client for that (its README has the commands); say what stayed unseen.
 
 ## Rules the code cannot enforce
 

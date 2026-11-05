@@ -1,0 +1,480 @@
+#!/usr/bin/env python3
+"""Drives a real Minecraft client on an isolated network; see dev/verify/README.md."""
+import argparse
+import json
+import os
+import socket
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+SHOTS = ROOT / "dev/verify/client-mod/run/screenshots"
+ARENA = ROOT / "worlds/sternenfront/blockcraft/Sternenfront/arena.yml"
+PORT = int(os.environ.get("VERIFY_PORT", "25599"))
+STACK = ("mariadb", "velocity", "sternenfront", "client")
+PLAYER = "Verify"
+HERO_NAMES = {"jedi": "Obi-Wan", "commander": "Captain Rex", "sith": "Count Dooku", "bounty-hunter": "Jango"}
+DEFAULT_WINDOW = (960, 540, 2)
+COMMON_SCALES = [(960, 540, 2), (1366, 768, 3), (1920, 1080, 4)]
+ALL_SCALES = COMMON_SCALES + [(1366, 768, 2), (1920, 1080, 2), (1920, 1080, 3), (2560, 1440, 3), (2560, 1440, 4), (2560, 1440, 6)]
+
+
+def compose(*args, capture=False, timeout=None):
+    env = {key: value for key, value in os.environ.items() if key != "COMPOSE_FILE"}
+    command = ["docker", "compose", "-p", "bcverify", "--project-directory", str(ROOT), "-f", "dev/verify/compose.yml", *args]
+    return subprocess.run(command, cwd=ROOT, env=env, check=True, text=True, capture_output=capture, timeout=timeout)
+
+
+def rcon(command, service="sternenfront"):
+    try:
+        return compose("exec", "-T", service, "rcon-cli", command, capture=True, timeout=30).stdout.strip()
+    except subprocess.CalledProcessError as failure:
+        raise RuntimeError(f"rcon on {service} failed for {command!r}: {failure.stderr.strip()}") from failure
+
+
+class Client:
+    def __init__(self, timeout=150):
+        self.socket = socket.create_connection(("127.0.0.1", PORT), timeout=timeout)
+        self.reader = self.socket.makefile("r", encoding="utf-8")
+
+    def __call__(self, cmd, **fields):
+        self.socket.sendall((json.dumps({"cmd": cmd, **fields}) + "\n").encode())
+        line = self.reader.readline()
+        if not line:
+            raise ConnectionError("The client closed the control connection")
+        reply = json.loads(line)
+        if not reply.pop("ok"):
+            raise RuntimeError(f"{cmd}: {reply.get('error')}")
+        return reply
+
+    def until(self, what, condition, seconds=60, every=0.5):
+        deadline = time.monotonic() + seconds
+        while time.monotonic() < deadline:
+            value = condition()
+            if value:
+                return value
+            time.sleep(every)
+        raise TimeoutError(f"Waited {seconds}s for {what}")
+
+
+class Run:
+    """One scenario's folder: its report, its frames and a contact sheet, so a look at the result costs one image."""
+
+    def __init__(self, scenario):
+        self.scenario = scenario
+        self.name = f"{time.strftime('%H%M%S')}-{scenario}"
+        self.folder = SHOTS / self.name
+        self.frames = 0
+        self.report = {"scenario": scenario, "folder": str(self.folder)}
+
+    def shot(self, client, label=None):
+        label = label or f"{self.frames:03d}"
+        self.frames += 1
+        client("screenshot", name=f"{self.name}/{label}")
+        return str(self.folder / f"{label}.png")
+
+    def finish(self, failure=None):
+        if failure is not None:
+            self.report["failed"] = f"{type(failure).__name__}: {failure}"
+        if self.folder.is_dir():
+            frames = sorted(self.folder.glob("*.png"))
+            if len(frames) > 1:
+                columns = min(4, len(frames))
+                sheet = self.folder / "contact.jpg"
+                subprocess.run(["ffmpeg", "-v", "error", "-y", "-pattern_type", "glob", "-i", str(self.folder / "*.png"), "-vf",
+                                f"scale=480:-2,tile={columns}x{(len(frames) + columns - 1) // columns}", "-frames:v", "1", str(sheet)], check=True)
+                self.report["contact_sheet"] = str(sheet)
+        else:
+            self.folder.mkdir(parents=True)
+        (self.folder / "report.json").write_text(json.dumps(self.report, indent=1, ensure_ascii=False))
+
+
+def wait_for_client(seconds=600):
+    deadline = time.monotonic() + seconds
+    while time.monotonic() < deadline:
+        try:
+            client = Client()
+            client("status")
+            return client
+        except (OSError, ValueError):
+            time.sleep(2)
+    raise TimeoutError("The client never opened its control port")
+
+
+def join(client, host="velocity:25565"):
+    def connected():
+        status = client("status")
+        if status["screen"] in ("TitleScreen", "DisconnectedScreen"):
+            client("connect", host=host)
+        return status["in_world"]
+
+    client.until("the world", connected, 300, 3)
+    client.until("the welcome screen or the game", lambda: client("status")["screen"] in ("", "MultiButtonDialogScreen"), 240)
+    if client("status")["screen"]:
+        client("press", label="Los geht")
+        client.until("the welcome screen to close", lambda: not client("status")["screen"], 30)
+    rcon(f"op {PLAYER}")
+    rcon("gamerule sendCommandFeedback false")
+    return client("status")
+
+
+def on_field(status):
+    return status["in_world"] and status["gamemode"] == "adventure" and status["y"] < 100 and not status["screen"] \
+        and status["hotbar"][0]["item"] != "air" and status["hotbar"][8]["item"] != "ender_eye"
+
+
+def choose_faction(client, faction):
+    """Picks a side from the waiting lobby's hotbar item, which is only there before a round starts."""
+    hotbar = client("status")["hotbar"]
+    slot = next((index for index, item in enumerate(hotbar) if "Fraktion" in item.get("name", "")), None)
+    if slot is None:
+        raise RuntimeError(f"No faction item, so no waiting lobby: `restart` first. Hotbar: {[item.get('name') for item in hotbar]}")
+    client("hotbar", slot=slot)
+    # Aiming at the scenery in front of the lobby's spawn, the item's click never opens the menu.
+    client("look", yaw=client("status")["yaw"], pitch=-60)
+    settle(client, 3)
+    client("tap", key="use")
+    client.until("the faction menu", lambda: client("status")["screen"] == "ContainerScreen", 20, 0.3)
+    choice = next(item for item in client("screen")["slots"] if faction in item.get("name", ""))
+    client("click", slot=choice["slot"])
+    settle(client, 4)
+    client("close")
+
+
+def into_round(client, skip_intro=True, faction=None):
+    """From wherever the client is onto the field, with the round's own commands and keys."""
+    if not client("status")["in_world"]:
+        join(client)
+    if faction:
+        choose_faction(client, faction)
+    if on_field(client("status")):
+        return client("status")
+    if client("status")["screen"]:
+        client("close")
+    client("command", text="start")
+    client.until("the intro or the field", lambda: client("status")["gamemode"] == "spectator" or on_field(client("status")), 60)
+    if skip_intro and client("status")["gamemode"] == "spectator":
+        client("hold", key="sneak", ticks=10)
+    client.until("the field", lambda: on_field(client("status")), 90)
+    return client("status")
+
+
+def settle(client, ticks=30):
+    """Lets the client draw and react: its own clock, since a software renderer may run far below real time."""
+    start = client("status")["tick"]
+    client.until("the client to tick", lambda: client("status")["tick"] >= start + ticks, 120, 0.2)
+
+
+def set_window(client, width, height, scale):
+    client("window", width=width, height=height)
+    client("gui_scale", value=scale)
+    settle(client, 8)
+    return client("status")
+
+
+def arena_positions():
+    """Open-ground spots the map's author set: the named views, each headquarters and the first spawn of each post."""
+    lines = ARENA.read_text().splitlines()
+    spots = {key: line.split(":", 1)[1].strip() for line in lines for key in ("overview", "spectator") if line.startswith(key + ":")}
+    found = [index for index, line in enumerate(lines) if line.strip() == "spawns:"]
+    for number, index in enumerate(found):
+        spots[("republic_hq", "separatist_hq")[number] if number < 2 else f"post_{number - 1}"] = lines[index + 1].strip(" -")
+    return spots
+
+
+def post_spots():
+    return [spot for key, spot in arena_positions().items() if key.startswith("post_")]
+
+
+def to_enemy(client):
+    """Goes from post to post until an enemy is outlined; False if none is near any of them."""
+    for spot in post_spots():
+        rcon(f"tp {PLAYER} {spot}")
+        settle(client, 8)
+        if enemies(client):
+            return True
+    return False
+
+
+def as_trooper(client):
+    """Back to a class weapon if the last scenario left the player a hero or the champion."""
+    if not client("status")["hotbar"][0]["item"].endswith("_hoe"):
+        rcon(f"kill {PLAYER}")
+        client.until("the next deployment", lambda: on_field(client("status")) and client("status")["hotbar"][0]["item"].endswith("_hoe"), 60, 1)
+
+
+def enemies(client, radius=64):
+    return [each for each in client("entities", radius=radius)["entities"] if each["glowing"]]
+
+
+def stand_near_enemy(client, reach=4):
+    """Goes to open ground beside the nearest outlined enemy, where the bots can see and shoot back."""
+    client.until("an enemy near a post", lambda: to_enemy(client), 90, 2)
+    target = enemies(client)[0]
+    for dx, dz in ((reach, 0), (-reach, 0), (0, reach), (0, -reach)):
+        rcon(f"tp {PLAYER} {target['x'] + dx} {target['y']} {target['z'] + dz}")
+        settle(client, 4)
+        if not client("status")["in_wall"]:
+            return target
+    raise RuntimeError("Every spot beside the enemy is inside a wall")
+
+
+def summarize(events, gui_width):
+    """What a timeline amounts to: what a player heard and read, without reading every entry."""
+    sounds, health, subtitles, titles = {}, [], set(), set()
+    widths, chat, overflows = [], [], set()
+    for event in events:
+        kind, value = event["kind"], event["value"]
+        if event.get("width", 0) > gui_width:
+            overflows.add(f"{kind} {event['width']}px of {gui_width}: {value}")
+        if kind == "sound":
+            sounds[value] = sounds.get(value, 0) + 1
+        elif kind == "health":
+            health.append(float(value))
+        elif kind == "actionbar" and value:
+            widths.append(event["width"])
+        elif kind == "subtitle" and value:
+            subtitles.add(value.encode("unicode_escape").decode())
+        elif kind == "title" and value:
+            titles.add(value)
+        elif kind == "chat":
+            chat.append(value)
+    return {"sounds": sounds, "lowest_health": min(health, default=None), "actionbar_widths": [min(widths, default=0), max(widths, default=0)],
+            "subtitles": sorted(subtitles), "titles": sorted(titles), "chat_lines": chat, "OVERFLOWS": sorted(overflows)}
+
+
+def scales(client, run, full=False):
+    """Windows and GUI scales that players use: what would not fit, as widths the client's own font measured."""
+    rows = []
+    for width, height, scale in ALL_SCALES if full else COMMON_SCALES:
+        status = set_window(client, width, height, scale)
+        hud = client("hud")
+        rows.append({"window": status["window"], "scale": status["gui_scale"], "gui": status["gui_size"],
+                     "actionbar": hud["actionbar"]["width"], "actionbar_overflows": hud["actionbar"]["overflows"],
+                     "subtitle_overflows": hud["subtitle"]["overflows"], "bossbars": len(hud["bossbars"]),
+                     "sidebar_share_of_width": hud["sidebar"]["share_of_width"]})
+        run.shot(client, f"{width}x{height}_{scale}")
+    set_window(client, *DEFAULT_WINDOW)
+    run.report["scales"] = rows
+
+
+def back_on_field(client):
+    """Out of a deploy menu after a death: the round deploys anyone who does not choose within its time limit."""
+    client.until("the next deployment", lambda: on_field(client("status")), 60, 1)
+    stand_near_enemy(client)
+
+
+def fight(client, run, seconds=20, frames=8):
+    """Stands beside an outlined enemy and shoots whatever is nearest, recording what the player saw, heard and read."""
+    as_trooper(client)
+    stand_near_enemy(client)
+    client("hotbar", slot=0)
+    start = client("status")["tick"]
+    gap, next_shot = seconds / max(frames, 1), time.monotonic()
+    deadline = time.monotonic() + seconds
+    while time.monotonic() < deadline:
+        if not on_field(client("status")):
+            back_on_field(client)
+        client("hold", key="use", ticks=30)
+        seen = enemies(client)
+        if seen:
+            client("look_at", x=seen[0]["x"], y=seen[0]["y"] + 1.1, z=seen[0]["z"])
+        if time.monotonic() >= next_shot:
+            run.shot(client)
+            next_shot += gap
+        time.sleep(0.3)
+    run.report.update(summarize(client("events", since=start)["events"], client("hud")["gui_width"]))
+
+
+def fire(client, run):
+    """Holds the trigger at a wall and photographs the shooter's view, which nothing should cover."""
+    as_trooper(client)
+    client("hotbar", slot=0)
+    start = client("status")["tick"]
+    client("hold", key="use", ticks=30)
+    run.report["frames"] = client("capture", name=f"{run.name}/fire", frames=6, every=5)["files"]
+    run.report.update(summarize(client("events", since=start)["events"], client("hud")["gui_width"]))
+
+
+def menus(client, run):
+    """Dies to reach the deploy menu, and photographs it at each scale with the cursor out of the way."""
+    rcon(f"kill {PLAYER}")
+    client.until("the deploy menu", lambda: client("status")["screen"] == "ContainerScreen", 40, 0.3)
+    run.report["title"] = client("screen")["title"]
+    for width, height, scale in COMMON_SCALES:
+        set_window(client, width, height, scale)
+        client("mouse", x=2, y=2)
+        settle(client, 4)
+        run.shot(client, f"{width}x{height}_{scale}")
+    set_window(client, *DEFAULT_WINDOW)
+    client("close")
+
+
+def tour(client, run):
+    """Flies a spectator over the spots the map's author set."""
+    client("option", render_distance=12)
+    rcon(f"gamemode spectator {PLAYER}")
+    try:
+        for key, spot in arena_positions().items():
+            rcon(f"tp {PLAYER} {spot}")
+            settle(client, 40)
+            run.shot(client, key)
+    finally:
+        rcon(f"gamemode adventure {PLAYER}")
+        client("option", render_distance=6)
+
+
+def bodies(client, run):
+    """Follows the nearest enemy from close by, so the rig's walking and firing poses can be looked at."""
+    target = stand_near_enemy(client, reach=3)
+    client("look_at", x=target["x"], y=target["y"] + 1.1, z=target["z"])
+    run.report["frames"] = client("capture", name=f"{run.name}/body", frames=8, every=4)["files"]
+
+
+def use_ability(client, run, key, label):
+    """Presses an ability's key at the nearest enemy and photographs what happened, on the HUD and in the world."""
+    seen = enemies(client)
+    if seen:
+        client("look_at", x=seen[0]["x"], y=seen[0]["y"] + 1.1, z=seen[0]["z"])
+    client("tap", key=key)
+    settle(client, 4)
+    run.shot(client, f"{label}_1")
+    settle(client, 12)
+    run.shot(client, f"{label}_2")
+
+
+def hero(client, run, hero_name="jedi"):
+    """Deploys as a hero, which the verify config makes free, and uses both abilities beside an enemy."""
+    rcon(f"kill {PLAYER}")
+    client.until("the deploy menu", lambda: client("status")["screen"] == "ContainerScreen", 40, 0.3)
+    wanted = HERO_NAMES[hero_name]
+    slots = client("screen")["slots"]
+    choice = next((slot for slot in slots if slot.get("name", "").startswith(wanted)), None)
+    if choice is None:
+        raise RuntimeError(f"{wanted} is not on this side's menu, so pick the side with --faction from the waiting lobby")
+    client("click", slot=choice["slot"])
+    run.report["hero_card"] = choice.get("lore")
+    settle(client, 6)
+    home = next(slot for slot in client("screen")["slots"] if slot.get("name", "").startswith("Hauptquartier"))
+    client("click", slot=home["slot"])
+    client.until("the hero on the field", lambda: client("status")["gamemode"] == "adventure" and not client("status")["screen"]
+                 and client("status")["y"] < 100, 60, 0.5)
+    settle(client, 10)
+    status = client("status")
+    run.report["held"] = status["hotbar"][0].get("name")
+    run.report["offhand"] = status["offhand"].get("name")
+    run.report["max_health"] = status["max_health"]
+    client.until("an enemy near a post", lambda: to_enemy(client), 60, 2)
+    start = client("status")["tick"]
+    run.shot(client, "stands")
+    use_ability(client, run, "swap", "first")
+    use_ability(client, run, "drop", "second")
+    client("hold", key="use", ticks=20)
+    settle(client, 20)
+    run.shot(client, "weapon")
+    run.report["hud"] = client("hud")["actionbar"]["text"].encode("unicode_escape").decode()
+    run.report.update(summarize(client("events", since=start)["events"], client("hud")["gui_width"]))
+
+
+def relic(client, run):
+    """Waits for the relic, which the verify config brings early, walks onto it and uses the champion's abilities."""
+    lines = ARENA.read_text().splitlines()
+    spot = next(line.split(":", 1)[1].strip() for line in lines if line.startswith("relic:"))
+    client.until("the relic to appear", lambda: any("Dunkelschwert" in event["value"] for event in client("events", since=0)["events"]), 120, 2)
+    rcon(f"tp {PLAYER} {spot}")
+    client.until("the blade in hand", lambda: "Dunkelschwert" in client("status")["hotbar"][0].get("name", ""), 20, 0.5)
+    start = client("status")["tick"]
+    run.report["held"] = client("status")["hotbar"][0].get("name")
+    client.until("an enemy near a post", lambda: to_enemy(client), 60, 2)
+    use_ability(client, run, "swap", "grip")
+    use_ability(client, run, "drop", "grapple")
+    run.report["hud"] = client("hud")["actionbar"]["text"].encode("unicode_escape").decode()
+    run.report.update(summarize(client("events", since=start)["events"], client("hud")["gui_width"]))
+
+
+# Each scenario with the state it needs: "field" means deployed in a running round.
+SCENARIOS = {"scales": (scales, "field"), "fight": (fight, "field"), "fire": (fire, "field"), "menus": (menus, "field"),
+             "tour": (tour, "field"), "bodies": (bodies, "field"), "hero": (hero, "field"), "relic": (relic, "field")}
+
+
+def run_scenario(name, faction=None, **options):
+    run = Run(name)
+    client = wait_for_client()
+    scenario, needs = SCENARIOS[name]
+    failure = None
+    try:
+        if needs == "field":
+            into_round(client, faction=faction)
+        scenario(client, run, **options)
+    except Exception as error:
+        failure = error
+    finally:
+        for key in ("use", "sneak", "attack", "forward"):
+            try:
+                client("release", key=key)
+            except (OSError, RuntimeError, ValueError):
+                break
+    run.finish(failure)
+    print(json.dumps({key: value for key, value in run.report.items() if key != "frames"}, indent=1, ensure_ascii=False))
+    return 1 if failure else 0
+
+
+def field(text):
+    key, _, value = text.partition("=")
+    try:
+        return key, json.loads(value)
+    except json.JSONDecodeError:
+        return key, value
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    commands = parser.add_subparsers(dest="action", required=True)
+    commands.add_parser("up")
+    restart = commands.add_parser("restart", help="restart services, by default the game server, picking up staged jars")
+    restart.add_argument("services", nargs="*", default=["sternenfront"])
+    down = commands.add_parser("down")
+    down.add_argument("-v", action="store_true", help="also delete the database and the client's download cache")
+    logs = commands.add_parser("logs")
+    logs.add_argument("service")
+    logs.add_argument("--tail", default="60")
+    command = commands.add_parser("rcon")
+    command.add_argument("text")
+    commands.add_parser("join")
+    round_ = commands.add_parser("round", help="start a round and deploy")
+    round_.add_argument("--watch-intro", action="store_true")
+    scenario = commands.add_parser("scenario")
+    scenario.add_argument("name", choices=sorted(SCENARIOS))
+    scenario.add_argument("--full", action="store_true", help="scales: every combination instead of the common ones")
+    scenario.add_argument("--hero", choices=sorted(HERO_NAMES), help="hero: which one, of the side being played")
+    scenario.add_argument("--faction", help="pick this side first, from the waiting lobby: Republik or Separatisten")
+    call = commands.add_parser("c", help="one client command, as: c hold key=use ticks=20")
+    call.add_argument("cmd")
+    call.add_argument("fields", nargs="*")
+    args = parser.parse_args()
+
+    if args.action == "up":
+        compose("up", "-d", "--build", *STACK)
+    elif args.action == "restart":
+        compose("up", "-d", "--force-recreate", "--no-deps", *args.services)
+    elif args.action == "down":
+        compose("down", *(["-v"] if args.v else []))
+    elif args.action == "logs":
+        compose("logs", "--no-log-prefix", "--tail", args.tail, args.service)
+    elif args.action == "rcon":
+        print(rcon(args.text))
+    elif args.action == "join":
+        print(json.dumps(join(wait_for_client()), indent=1, ensure_ascii=False))
+    elif args.action == "round":
+        print(json.dumps(into_round(wait_for_client(), not args.watch_intro), indent=1, ensure_ascii=False))
+    elif args.action == "scenario":
+        return run_scenario(args.name, **({"full": True} if args.full else {}), **({"hero_name": args.hero} if args.hero else {}), faction=args.faction)
+    elif args.action == "c":
+        print(json.dumps(Client()(args.cmd, **dict(map(field, args.fields))), indent=1, ensure_ascii=False))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
