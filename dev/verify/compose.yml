@@ -40,8 +40,29 @@ services:
     environment:
       # With no lobby running, this server takes the proxy's first-join route.
       BLOCKCRAFT_SERVER_GROUP: lobby
+      BLOCKCRAFT_WORLD_TEMPLATE: /worlds/${VERIFY_MAP:-sternenfront}
     volumes:
       - ./dev/verify/sternenfront-overrides.yml:/data/plugins/Sternenfront/config.yml:ro
+      - ./worlds/sturmwerft:/worlds/sturmwerft
+
+  # A bare server over an endless flat sea, only for `verify.py map`: it runs a generated map's functions and saves them.
+  mapbuilder:
+    extends: {file: docker-compose.yml, service: sternenfront}
+    profiles: [mapgen]
+    <<: *low-priority
+    restart: "no"
+    cpus: 2
+    mem_limit: 3000m
+    memswap_limit: 3000m
+    environment:
+      BLOCKCRAFT_SERVER_GROUP: mapbuilder
+      BLOCKCRAFT_WAITING_TEMPLATE: ""
+      BLOCKCRAFT_WORLD_TEMPLATE: /worlds/sturmwerft
+      COPY_PLUGINS_SRC: /blockcraft/api
+      GENERATOR_SETTINGS: '{"layers":[{"block":"minecraft:bedrock","height":1},{"block":"minecraft:deepslate","height":109},{"block":"minecraft:water","height":11}],"biome":"minecraft:ocean"}'
+    volumes:
+      - ./worlds/sturmwerft:/worlds/sturmwerft
+      - mapbuilder:/data
 
   client:
     build:
@@ -86,6 +107,7 @@ services:
       - /tmp/home:uid=1000,gid=1000
 
 volumes:
+  mapbuilder:
   mariadb:
   velocity:
   sternenfront:

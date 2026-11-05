@@ -18,7 +18,10 @@ public final class Secrets {
 
     public static void start(JavaPlugin plugin, SternenfrontGame game, Messages messages) {
         var config = SecretsConfig.from(plugin.getConfig());
-        var spots = game.map().secrets();
+        if (game.map().secrets().isEmpty()) {
+            return;
+        }
+        var spots = game.map().secrets().get();
         var discoveries = new Discoveries(messages, config.coins());
         var times = new KesselTimes(BlockcraftApi.get().database());
         times.createTable();

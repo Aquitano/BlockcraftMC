@@ -124,6 +124,11 @@ public final class Spectacle {
     }
 
     public void lastStandBegins() {
+        if (game.map().rain()) {
+            game.map().world().setThundering(true);
+            game.map().world().setThunderDuration(Integer.MAX_VALUE);
+            return;
+        }
         if (!config.effects() || storm != null) {
             return;
         }

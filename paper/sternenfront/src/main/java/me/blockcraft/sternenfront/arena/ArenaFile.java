@@ -9,6 +9,7 @@ import me.blockcraft.sternenfront.game.Faction;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.util.BoundingBox;
 
@@ -19,23 +20,23 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
+import java.util.OptionalLong;
 
 /**
- * Wrack von Tessar, as the world template {@code worlds/sternenfront} holds it: a desert basin between canyon walls,
- * the Kolonien camp under its hauler in the west, the Hegemonie deck in the east, and between them on the north-south
- * centre line the Raffinerie (A), the broken cruiser (B) and the Basar (C), with the temple ruin of the relic in the
- * northern cliff. The blocks are saved in the template; this reads every position from its {@code arena.yml}, which
- * travels with them. Positions are {@code x y z} strings with an optional yaw and pitch, boxes are min and max corners.
+ * A map's blocks are saved in its world template, and this reads every position from the {@code arena.yml} that travels
+ * with them. Positions are {@code x y z} strings with an optional yaw and pitch, boxes are min and max corners. A map may
+ * leave out {@code secrets}, and may set {@code weather: rain} and a fixed {@code time} of day.
  */
-public final class TessarMap {
+public final class ArenaFile {
 
     public static final String FILE = "arena.yml";
 
-    private TessarMap() { }
+    private ArenaFile() { }
 
     public static FrontMap load(World world, Path file) {
         if (Files.notExists(file)) {
-            throw new IllegalStateException("The map has no " + file + "; set BLOCKCRAFT_WORLD_TEMPLATE to worlds/sternenfront");
+            throw new IllegalStateException("The map has no " + file + "; set BLOCKCRAFT_WORLD_TEMPLATE to a map's template");
         }
         var yaml = YamlConfiguration.loadConfiguration(file.toFile());
         var headquarters = new EnumMap<Faction, Headquarters>(Faction.class);
@@ -46,15 +47,18 @@ public final class TessarMap {
         }
         var posts = yaml.getMapList("posts").stream().map(post -> post(world, post)).toList();
         var controls = yaml.getMapList("controls").stream().map(control -> control(world, control)).toList();
-        var secrets = yaml.getConfigurationSection("secrets");
-        var spots = new SecretSpots(spots(world, secrets.getStringList("crystals")), spots(world, secrets.getStringList("droid-path")),
+        return new FrontMap(yaml.getString("name"), world, box(yaml.getDoubleList("play-area")), Map.copyOf(headquarters), posts,
+                spot(world, yaml.getString("relic")), spot(world, yaml.getString("overview")), spot(world, yaml.getString("lobby")),
+                spot(world, yaml.getString("spectator")), Optional.ofNullable(yaml.getConfigurationSection("secrets")).map(secrets -> secrets(world, secrets)),
+                controls, "rain".equals(yaml.getString("weather")), yaml.contains("time") ? OptionalLong.of(yaml.getLong("time")) : OptionalLong.empty());
+    }
+
+    private static SecretSpots secrets(World world, ConfigurationSection secrets) {
+        return new SecretSpots(spots(world, secrets.getStringList("crystals")), spots(world, secrets.getStringList("droid-path")),
                 new SecretSpots.Dune(spot(world, secrets.getString("dune.top")), secrets.getDouble("dune.radius")),
                 block(world, secrets.getString("music-box")),
                 new SecretSpots.Course(box(secrets.getDoubleList("course.lane")), secrets.getDouble("course.pit-y"),
                         secrets.getDoubleList("course.gates"), spot(world, secrets.getString("course.board"))));
-        return new FrontMap(yaml.getString("name"), world, box(yaml.getDoubleList("play-area")), Map.copyOf(headquarters), posts,
-                spot(world, yaml.getString("relic")), spot(world, yaml.getString("overview")), spot(world, yaml.getString("lobby")),
-                spot(world, yaml.getString("spectator")), spots, controls);
     }
 
     private static PostSite post(World world, Map<?, ?> post) {

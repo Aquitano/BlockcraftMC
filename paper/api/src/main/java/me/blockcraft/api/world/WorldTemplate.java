@@ -16,6 +16,9 @@ import java.time.Duration;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.random.RandomGenerator;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -47,6 +50,8 @@ public final class WorldTemplate {
     private static final String DIMENSIONS = "dimensions";
     private static final String VANILLA_DIMENSIONS = "minecraft";
 
+    private static String picked;
+
     private final Path directory;
 
     private WorldTemplate(Path directory) {
@@ -57,11 +62,26 @@ public final class WorldTemplate {
         return new WorldTemplate(directory.toAbsolutePath().normalize());
     }
 
-    /** {@code BLOCKCRAFT_WORLD_TEMPLATE}, else {@code world.template} of the config; empty when neither names a directory. */
+    /**
+     * {@code BLOCKCRAFT_WORLD_TEMPLATE}, else {@code world.template} of the config; empty when neither names a directory.
+     * Several comma-separated directories rotate maps: one is picked at random and kept for as long as this server runs,
+     * so a game server that restarts after each round plays another map next time.
+     */
     public static Optional<WorldTemplate> configured(Map<String, Object> config) {
         String env = System.getenv(ENV);
         String path = env != null && !env.isBlank() ? env : String.valueOf(YamlFile.section(config, "world").getOrDefault("template", ""));
-        return path.isBlank() ? Optional.empty() : Optional.of(at(Path.of(path)));
+        if (path.isBlank()) {
+            return Optional.empty();
+        }
+        if (picked == null) {
+            picked = pick(path, ThreadLocalRandom.current());
+        }
+        return Optional.of(at(Path.of(picked)));
+    }
+
+    static String pick(String paths, RandomGenerator random) {
+        var choices = Arrays.stream(paths.split(",")).map(String::strip).filter(choice -> !choice.isEmpty()).toList();
+        return choices.get(random.nextInt(choices.size()));
     }
 
     public Path directory() {

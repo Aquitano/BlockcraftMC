@@ -12,7 +12,7 @@ import me.blockcraft.api.world.WaitingLobby;
 import me.blockcraft.api.world.WorldProtection;
 import me.blockcraft.api.world.Worlds;
 import me.blockcraft.sternenfront.arena.FrontMap;
-import me.blockcraft.sternenfront.arena.TessarMap;
+import me.blockcraft.sternenfront.arena.ArenaFile;
 import me.blockcraft.sternenfront.appearance.BodyRigs;
 import me.blockcraft.sternenfront.appearance.TargetOutlines;
 import me.blockcraft.sternenfront.config.FeelConfig;
@@ -54,7 +54,12 @@ public final class SternenfrontPlugin extends JavaPlugin {
         // Hurt players heal through the round's own regeneration and the medics, not through hunger.
         world.setDifficulty(Difficulty.NORMAL);
         world.setGameRule(GameRules.NATURAL_HEALTH_REGENERATION, false);
-        var map = TessarMap.load(world, api.map().file(this, TessarMap.FILE));
+        var map = ArenaFile.load(world, api.map().file(this, ArenaFile.FILE));
+        if (map.rain()) {
+            world.setStorm(true);
+            world.setWeatherDuration(Integer.MAX_VALUE);
+        }
+        map.time().ifPresent(ticks -> Worlds.setTime(world, ticks));
         keepLoaded(map);
         border(map);
         var lobby = api.waitingLobby().map(WaitingLobby::spawn).orElse(map.lobbySpawn());
