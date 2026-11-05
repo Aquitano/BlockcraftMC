@@ -37,6 +37,12 @@ first and open a full frame only where it shows something.
 
 `sternenfront-overrides.yml` makes heroes free and brings the relic early on this network only.
 
+## Maps
+
+`dev/verify/verify.py map` runs `dev/mapgen/sturmwerft.py`: it writes the map's blocks as Minecraft functions and its
+`arena.yml`, builds them on a bare server over an endless flat sea and saves the result to `worlds/sturmwerft`. To play a map on
+this network, start it with `VERIFY_MAP=sturmwerft`, then use the scenarios, `tour` above all.
+
 ## Single commands
 
 `dev/verify/verify.py c <command> key=value ...` sends one command. They live in `client-mod/.../Commands.java`.

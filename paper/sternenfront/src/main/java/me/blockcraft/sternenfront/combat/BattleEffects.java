@@ -211,13 +211,13 @@ public final class BattleEffects {
     public void boltOnWall(Location at, Vector normal, Block block, boolean shield, Faction faction) {
         var clear = at.clone().add(normal.clone().multiply(OFF_THE_WALL));
         if (block.getType().name().matches(".*(IRON|COPPER|CHAIN|ANVIL|LANTERN|CAULDRON|HOPPER).*")) {
-            at.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, clear, 8, 0.05, 0.05, 0.05, 0.2, null, true);
+            at.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, clear, 3, 0.05, 0.05, 0.05, 0.12, null, true);
         }
         burst(clear, faction);
         if (shield || !enabled) {
             return;
         }
-        at.getWorld().spawnParticle(Particle.BLOCK, clear, 5, 0.05, 0.05, 0.05, 0.1, block.getBlockData());
+        at.getWorld().spawnParticle(Particle.BLOCK, clear, 2, 0.05, 0.05, 0.05, 0.1, block.getBlockData());
         var scorch = config.scorch();
         if (block.getType().isOccluding() && wallHits++ % scorch.every() == 0) {
             scorches.mark(SCORCH, at.clone().add(normal.clone().multiply(SCORCH_LIFT)), normal, scorch.scale(),
@@ -473,8 +473,8 @@ public final class BattleEffects {
 
     private void vent(LivingEntity actor) {
         var at = muzzle(actor, actor.getEyeLocation().getDirection());
-        at.getWorld().spawnParticle(Particle.CLOUD, at, 2, 0.06, 0.06, 0.06, 0.03, null, true);
-        at.getWorld().spawnParticle(Particle.WHITE_SMOKE, at, 2, 0.05, 0.05, 0.05, 0.02, null, true);
+        forOthers(actor, at, Particle.CLOUD, 0.06, 0.03);
+        forOthers(actor, at, Particle.WHITE_SMOKE, 0.05, 0.02);
     }
 
     private boolean badlyHurt(LivingEntity actor) {
@@ -484,8 +484,8 @@ public final class BattleEffects {
 
     private static void smoulder(LivingEntity actor) {
         var chest = actor.getEyeLocation().subtract(0, 0.5, 0);
-        actor.getWorld().spawnParticle(Particle.SMOKE, chest, 3, 0.15, 0.2, 0.15, 0.01);
-        actor.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, chest, 3, 0.2, 0.3, 0.2, 0.05);
+        forOthers(actor, chest, Particle.SMOKE, 0.2, 0.01);
+        forOthers(actor, chest, Particle.ELECTRIC_SPARK, 0.25, 0.05);
     }
 
     private static String flash(Faction faction) {

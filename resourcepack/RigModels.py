@@ -2,7 +2,8 @@
 
 Geometry and textures still come from SternenfrontArt.java, so a body changes in one place: run that first, then this.
 The joints match RigBody. Animations are written here as keyframes: BetterModel plays idle, walk and death by itself, and
-the plugin asks for shoot. Forward is +z and a body's right side is -x, as in the item models.
+the plugin asks for shoot. Forward is +z and a body's right side is -x, as in the item models. BetterModel turns bones tagged
+h_ with where the entity looks, and hi_ with their children too, which is how the arms and the gun follow a bot's aim.
 """
 import base64
 import json
@@ -120,27 +121,27 @@ def animations(family, grip_degrees):
     return [
         animation(family, "idle", "loop", 2.4, {
             "torso": {"position": {0: (0, 0, 0), 1.2: (0, -0.2, 0), 2.4: (0, 0, 0)}},
-            "right_arm": {"rotation": {0: (grip_degrees, 0, 0), 1.2: (grip_degrees + 2, 0, 0), 2.4: (grip_degrees, 0, 0)}},
-            "left_arm": support,
+            "hi_right_arm": {"rotation": {0: (grip_degrees, 0, 0), 1.2: (grip_degrees + 2, 0, 0), 2.4: (grip_degrees, 0, 0)}},
+            "h_left_arm": support,
         }),
         animation(family, "walk", "loop", 0.8, {
             "left_leg": {"rotation": {0: (32, 0, 0), 0.4: (-32, 0, 0), 0.8: (32, 0, 0)}},
             "right_leg": {"rotation": {0: (-32, 0, 0), 0.4: (32, 0, 0), 0.8: (-32, 0, 0)}},
             "torso": {"position": {0: (0, 0, 0), 0.2: (0, 0.5, 0), 0.4: (0, 0, 0), 0.6: (0, 0.5, 0), 0.8: (0, 0, 0)},
                       "rotation": {0: (4, 3, 0), 0.4: (4, -3, 0), 0.8: (4, 3, 0)}},
-            "right_arm": grip,
-            "left_arm": support,
+            "hi_right_arm": grip,
+            "h_left_arm": support,
         }),
         animation(family, "shoot", "once", 0.2, {
-            "right_arm": {"rotation": {0: (grip_degrees, 0, 0), 0.05: (grip_degrees - 9, 0, 0), 0.2: (grip_degrees, 0, 0)}},
-            "left_arm": {"rotation": {0: (across, 22, 0), 0.05: (across - 9, 22, 0), 0.2: (across, 22, 0)}},
+            "hi_right_arm": {"rotation": {0: (grip_degrees, 0, 0), 0.05: (grip_degrees - 9, 0, 0), 0.2: (grip_degrees, 0, 0)}},
+            "h_left_arm": {"rotation": {0: (across, 22, 0), 0.05: (across - 9, 22, 0), 0.2: (across, 22, 0)}},
             "torso": {"rotation": {0: (0, 0, 0), 0.05: (-3, 0, 0), 0.2: (0, 0, 0)}},
         }),
         animation(family, "death", "once", 0.9, {
             "root": {"rotation": {0: (0, 0, 0), 0.25: (-18, 0, 4), 0.7: (-86, 0, 8), 0.9: (-84, 0, 8)},
                      "position": {0: (0, 0, 0), 0.7: (0, -3, -4), 0.9: (0, -3, -4)}},
-            "right_arm": {"rotation": {0: (grip_degrees, 0, 0), 0.5: (-20, 0, -25)}},
-            "left_arm": {"rotation": {0: (across, 22, 0), 0.5: (-30, 0, 30)}},
+            "hi_right_arm": {"rotation": {0: (grip_degrees, 0, 0), 0.5: (-20, 0, -25)}},
+            "h_left_arm": {"rotation": {0: (across, 22, 0), 0.5: (-30, 0, 30)}},
             "right_leg": {"rotation": {0: (0, 0, 0), 0.6: (22, 0, 0)}},
             "left_leg": {"rotation": {0: (0, 0, 0), 0.6: (-12, 0, 0)}},
         }),
@@ -159,15 +160,15 @@ def build(family, blaster, joints):
     model.bone("torso", "root", torso_at)
     model.bones["torso"]["rotation"] = [math.degrees(joints.get("lean", 0)), 0, 0]
     model.bone("h_head", "root", head_at)
-    model.bone("left_arm", "root", shoulder)
-    model.bone("right_arm", "root", (-shoulder[0], shoulder[1], shoulder[2]))
+    model.bone("h_left_arm", "root", shoulder)
+    model.bone("hi_right_arm", "root", (-shoulder[0], shoulder[1], shoulder[2]))
     model.bone("left_leg", "root", hip)
     model.bone("right_leg", "root", (-hip[0], hip[1], 0))
     parts = f"sternenfront/body/{family}"
     model.add("torso", f"{parts}/torso", torso_at, scale)
     model.add("h_head", f"{parts}/head", head_at, scale)
-    model.add("left_arm", f"{parts}/arm", shoulder, scale)
-    model.add("right_arm", f"{parts}/arm", (-shoulder[0], shoulder[1], shoulder[2]), scale)
+    model.add("h_left_arm", f"{parts}/arm", shoulder, scale)
+    model.add("hi_right_arm", f"{parts}/arm", (-shoulder[0], shoulder[1], shoulder[2]), scale)
     model.add("left_leg", f"{parts}/leg", hip, scale)
     model.add("right_leg", f"{parts}/leg", (-hip[0], hip[1], 0), scale)
     if blaster:
@@ -177,7 +178,7 @@ def build(family, blaster, joints):
         forward, up = joints["weaponZ"] * scale - shoulder[2], joints["weaponY"] * scale - shoulder[1]
         grip = (joints["weaponX"] * scale, shoulder[1] + up * math.cos(turn) - forward * math.sin(turn),
                 shoulder[2] + up * math.sin(turn) + forward * math.cos(turn))
-        model.bone("weapon", "right_arm", grip)
+        model.bone("weapon", "hi_right_arm", grip)
         model.bones["weapon"]["rotation"] = [-grip_degrees, 0, 0]
         model.add("weapon", f"sternenfront/{blaster}", grip, WEAPON_SCALE)
     textures = []

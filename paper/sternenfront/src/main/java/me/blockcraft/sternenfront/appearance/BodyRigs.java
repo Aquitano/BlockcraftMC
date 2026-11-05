@@ -50,14 +50,21 @@ public final class BodyRigs implements Listener, AutoCloseable {
         var animatedBodies = game.plugin().getConfig().getStringList("appearance.animated-bodies");
         // Without the plugin every body stays a BodyRig, so a server that lacks it still plays the round.
         animated = animatedBodies.isEmpty() || !plugin.getServer().getPluginManager().isPluginEnabled("BetterModel") ? Optional.empty()
-                : Optional.of(new AnimatedBodies(animatedBodies, (viewer, actor) -> game.factionOf(viewer).isPresent()
-                && !game.factionOf(viewer).equals(game.factionOf(actor))));
+                : Optional.of(new AnimatedBodies(animatedBodies, this::outlined));
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
         task = plugin.getServer().getScheduler().runTaskTimer(plugin, this::tick, 1L, 1L);
     }
 
     public static BodyRigs start(Plugin plugin, SternenfrontGame game, boolean droids, boolean infantry) {
         return new BodyRigs(plugin, game, droids, infantry);
+    }
+
+    private boolean outlined(Player viewer, LivingEntity actor) {
+        var config = plugin.getConfig();
+        return config.getBoolean("outlines.enabled", true) && game.onField(viewer) && BlockcraftApi.get().resourcePack().applied(viewer)
+                && game.factionOf(viewer).isPresent() && !game.factionOf(viewer).equals(game.factionOf(actor))
+                && actor.getWorld().equals(viewer.getWorld())
+                && TargetOutlines.inRange(viewer.getEyeLocation(), actor, config.getDouble("outlines.range", 64));
     }
 
     public Optional<LivingEntity> actor(Entity clicked) {
@@ -85,7 +92,7 @@ public final class BodyRigs implements Listener, AutoCloseable {
             var hero = actor instanceof Player player ? game.heroOf(player) : Optional.<Hero>empty();
             var body = RigBody.of(game.factionOf(actor).orElseThrow(), game.combatClassOf(actor), hero);
             if (animated.filter(bodies -> !(actor instanceof Player) && bodies.draws(body)).isPresent()) {
-                animated.get().keep(actor, body, game.effects().recoil(actor));
+                animated.get().keep(actor, body, game.effects().recoil(actor), plugin.getServer().getOnlinePlayers());
                 continue;
             }
             var existing = rigs.get(id);

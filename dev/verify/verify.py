@@ -119,7 +119,7 @@ def join(client, host="velocity:25565"):
         client("press", label="Los geht")
         client.until("the welcome screen to close", lambda: not client("status")["screen"], 30)
     rcon(f"op {PLAYER}")
-    rcon("gamerule sendCommandFeedback false")
+    rcon("gamerule send_command_feedback false")
     return client("status")
 
 
@@ -440,6 +440,70 @@ def merge_models():
                 path.write_bytes(models.read(name))
 
 
+def build_map(name="sturmwerft"):
+    """Runs a generated map's functions on a bare server over a flat sea and saves the result to its world template."""
+    subprocess.run([sys.executable, "-I", str(ROOT / f"dev/mapgen/{name}.py")], check=True)
+    built = ROOT / "build/mapgen" / name
+    (ROOT / "worlds" / name).mkdir(parents=True, exist_ok=True)
+    compose("--profile", "mapgen", "rm", "-sf", "mapbuilder")
+    subprocess.run(["docker", "volume", "rm", "-f", "bcverify_mapbuilder"], check=True, capture_output=True)
+    compose("--profile", "mapgen", "up", "-d", "--no-deps", "mapbuilder")
+    deadline = time.monotonic() + 240
+    while "Done (" not in compose("logs", "--no-log-prefix", "--tail", "40", "mapbuilder", capture=True).stdout:
+        if time.monotonic() > deadline:
+            raise TimeoutError("The map builder never finished starting")
+        time.sleep(3)
+    say = lambda command: print(rcon(command, "mapbuilder")[:140])
+    compose("cp", str(built / "datapack"), f"mapbuilder:/data/world/datapacks/{name}")
+    compose("exec", "-T", "mapbuilder", "mkdir", "-p", "/data/world/blockcraft/Sternenfront")
+    compose("cp", str(built / "arena.yml"), "mapbuilder:/data/world/blockcraft/Sternenfront/arena.yml")
+    compose("cp", str(built / "map.yml"), "mapbuilder:/data/world/blockcraft/map.yml")
+    say("reload")
+    time.sleep(8)
+    say(f"datapack enable \"file/{name}\"")
+    time.sleep(8)
+    for area in (built / "forceload.txt").read_text().split("\n"):
+        if area:
+            say(f"forceload add {area}")
+    time.sleep(30)
+    say(f"function {name}:build")
+    say(f"function {name}:scenery")
+    time.sleep(8)
+    say("forceload remove all")
+    say("save-all flush")
+    time.sleep(10)
+    compose("--profile", "mapgen", "stop", "mapbuilder")
+    template = ROOT / "worlds" / name
+    for old in template.iterdir():
+        shutil.rmtree(old) if old.is_dir() else old.unlink()
+    for part in ("level.dat", "data", "dimensions", "blockcraft"):
+        compose("cp", f"mapbuilder:/data/world/{part}", str(template / part))
+
+
+def wait_for_server(service="sternenfront", seconds=240):
+    deadline = time.monotonic() + seconds
+    while "Done (" not in compose("logs", "--no-log-prefix", "--since", "5m", "--tail", "60", service, capture=True).stdout:
+        if time.monotonic() > deadline:
+            raise TimeoutError(f"{service} never finished starting")
+        time.sleep(3)
+
+
+def stage():
+    subprocess.run(["./gradlew", "stagePlugins", "--console=plain", "-q"], cwd=ROOT, check=True)
+
+
+def refresh_models():
+    """After changing a body: the game server builds the new pack, which goes into resourcepack/src and out to the client."""
+    subprocess.run([sys.executable, "-I", str(ROOT / "resourcepack/RigModels.py")], check=True)
+    stage()
+    compose("up", "-d", "--force-recreate", "--no-deps", "sternenfront")
+    time.sleep(20)
+    wait_for_server()
+    merge_models()
+    stage()
+    compose("up", "-d", "--force-recreate", "--no-deps", "velocity")
+
+
 def field(text):
     key, _, value = text.partition("=")
     try:
@@ -462,7 +526,8 @@ def main():
     command = commands.add_parser("rcon")
     command.add_argument("text")
     commands.add_parser("join")
-    commands.add_parser("models", help="copy the pack BetterModel built into resourcepack/src; stage and `restart velocity` to serve it")
+    commands.add_parser("map", help="generate Sturmwerft and save it to worlds/sturmwerft")
+    commands.add_parser("models", help="after changing a body: regenerate its models and pack, and serve them")
     round_ = commands.add_parser("round", help="start a round and deploy")
     round_.add_argument("--watch-intro", action="store_true")
     scenario = commands.add_parser("scenario")
@@ -485,8 +550,10 @@ def main():
         compose("logs", "--no-log-prefix", "--tail", args.tail, args.service)
     elif args.action == "rcon":
         print(rcon(args.text))
+    elif args.action == "map":
+        build_map()
     elif args.action == "models":
-        merge_models()
+        refresh_models()
     elif args.action == "join":
         print(json.dumps(join(wait_for_client()), indent=1, ensure_ascii=False))
     elif args.action == "round":
