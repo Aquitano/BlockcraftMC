@@ -301,7 +301,7 @@ public final class Powers {
         var next = position.clone().add(heading.clone().multiply(travelled));
         next.setYaw(flight.display().getLocation().getYaw() + SPIN_DEGREES);
         flight.display().teleport(next);
-        game.effects().saberTrail(position, next, sabers.colour(thrower, flight.hero()), thrower.getEyeLocation());
+        game.effects().saberTrail(position, next, sabers.colour(thrower, flight.hero()), thrower);
         for (var target : game.targets()) {
             if (!target.getWorld().equals(position.getWorld()) || !game.hittable(flight.faction(), target)
                     || flight.struck().contains(target.getUniqueId())

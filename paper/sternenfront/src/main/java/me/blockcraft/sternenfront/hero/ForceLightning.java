@@ -75,7 +75,7 @@ final class ForceLightning {
                 continue;
             }
             var at = target.getLocation().add(0, target.getHeight() * 0.6, 0);
-            game.effects().lightning(eye, at);
+            game.effects().lightning(player, eye, at);
             var incoming = at.toVector().subtract(eye.toVector());
             incoming = incoming.lengthSquared() < 0.001 ? facing.clone() : incoming.normalize();
             var guard = target instanceof Player defender ? game.combat().block(defender, incoming, cast.burst().damage())
@@ -87,7 +87,7 @@ final class ForceLightning {
         if (targets.isEmpty()) {
             var wall = cast.world().rayTraceBlocks(eye, facing, rules.range(), FluidCollisionMode.NEVER, true);
             var end = wall == null ? eye.clone().add(facing.multiply(rules.range())) : wall.getHitPosition().toLocation(cast.world());
-            game.effects().lightning(eye, end);
+            game.effects().lightning(player, eye, end);
         }
         SoundCue.FORCE_LIGHTNING.play(eye, 0.7f);
         return false;

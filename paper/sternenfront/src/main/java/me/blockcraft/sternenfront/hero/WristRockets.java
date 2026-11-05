@@ -87,7 +87,7 @@ final class WristRockets {
                 entity -> entity instanceof LivingEntity target && game.hittable(rocket.faction, target));
         var next = hit == null ? rocket.position.clone().add(rocket.direction.clone().multiply(distance))
                 : hit.getHitPosition().toLocation(world);
-        game.effects().rocketTrail(rocket.position, next, rocket.owner.getEyeLocation());
+        game.effects().rocketTrail(rocket.position, next, rocket.owner);
         if (hit != null) {
             if (hit.getHitBlockFace() != null) {
                 next.add(hit.getHitBlockFace().getDirection().multiply(WALL_CLEARANCE));

@@ -123,9 +123,15 @@ public final class BattleEffects {
         }
     }
 
-    /** A particle this close to a player's camera fills their view, whatever its size. */
-    private static boolean atTheirEyes(Location at, Location eye) {
-        return at.getWorld().equals(eye.getWorld()) && at.distanceSquared(eye) < CLEAR_OF_EYES_SQUARED;
+    /** A particle this close to its owner's camera fills their view whatever its size, so only they do not get it. */
+    private static <T> void sparingOwner(Player owner, Location at, Particle particle, T data) {
+        var eye = owner.getEyeLocation();
+        if (!at.getWorld().equals(eye.getWorld()) || at.distanceSquared(eye) >= CLEAR_OF_EYES_SQUARED) {
+            at.getWorld().spawnParticle(particle, at, 1, 0, 0, 0, 0, data, true);
+            return;
+        }
+        at.getWorld().getPlayers().stream().filter(viewer -> !viewer.equals(owner) && viewer.getLocation().distanceSquared(at) < PARTICLE_RANGE_SQUARED)
+                .forEach(viewer -> viewer.spawnParticle(particle, at, 1, 0, 0, 0, 0, data));
     }
 
     private static void forOthers(LivingEntity actor, Location at, Particle particle, double spread, double speed) {
@@ -204,6 +210,9 @@ public final class BattleEffects {
      */
     public void boltOnWall(Location at, Vector normal, Block block, boolean shield, Faction faction) {
         var clear = at.clone().add(normal.clone().multiply(OFF_THE_WALL));
+        if (block.getType().name().matches(".*(IRON|COPPER|CHAIN|ANVIL|LANTERN|CAULDRON|HOPPER).*")) {
+            at.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, clear, 8, 0.05, 0.05, 0.05, 0.2, null, true);
+        }
         burst(clear, faction);
         if (shield || !enabled) {
             return;
@@ -349,7 +358,7 @@ public final class BattleEffects {
     }
 
     /** The trail of a thrown saber along the piece of flight it just covered, in the blade's colour. */
-    public void saberTrail(Location from, Location to, Color colour, Location throwerEye) {
+    public void saberTrail(Location from, Location to, Color colour, Player thrower) {
         var line = to.toVector().subtract(from.toVector());
         double length = line.length();
         if (length == 0) {
@@ -358,15 +367,12 @@ public final class BattleEffects {
         var direction = line.multiply(1 / length);
         var dust = new Particle.DustOptions(colour, 0.8f);
         for (double along = 0; along < length; along += 0.4) {
-            var at = from.clone().add(direction.clone().multiply(along));
-            if (!atTheirEyes(at, throwerEye)) {
-                from.getWorld().spawnParticle(Particle.DUST, at, 1, 0, 0, 0, 0, dust, true);
-            }
+            sparingOwner(thrower, from.clone().add(direction.clone().multiply(along)), Particle.DUST, dust);
         }
         to.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, to, 2, 0.1, 0.1, 0.1, 0.03, null, true);
     }
 
-    public void rocketTrail(Location from, Location to, Location shooterEye) {
+    public void rocketTrail(Location from, Location to, Player shooter) {
         var line = to.toVector().subtract(from.toVector());
         double distance = line.length();
         if (distance == 0) {
@@ -375,14 +381,12 @@ public final class BattleEffects {
         var direction = line.multiply(1 / distance);
         for (double along = 0; along < distance; along += 0.35) {
             var at = from.clone().add(direction.clone().multiply(along));
-            if (!atTheirEyes(at, shooterEye)) {
-                at.getWorld().spawnParticle(Particle.FLAME, at, 1, .025, .025, .025, 0, null, true);
-                at.getWorld().spawnParticle(Particle.SMOKE, at, 1, .04, .04, .04, .01);
-            }
+            sparingOwner(shooter, at, Particle.FLAME, null);
+            sparingOwner(shooter, at, Particle.SMOKE, null);
         }
     }
 
-    public void lightning(Location eye, Location to) {
+    public void lightning(Player caster, Location eye, Location to) {
         var from = eye.clone().subtract(0, 0.2, 0);
         var line = to.toVector().subtract(from.toVector());
         int steps = Math.max(1, (int) Math.ceil(line.length() / 0.3));
@@ -394,9 +398,7 @@ public final class BattleEffects {
                 double jitter = Math.sin(Math.PI * share) * 0.18;
                 var at = from.clone().add(line.clone().multiply(share))
                         .add(random.nextDouble(-1, 1) * jitter, random.nextDouble(-1, 1) * jitter, random.nextDouble(-1, 1) * jitter);
-                if (!atTheirEyes(at, eye)) {
-                    from.getWorld().spawnParticle(Particle.DUST, at, 1, 0, 0, 0, 0, dust, true);
-                }
+                sparingOwner(caster, at, Particle.DUST, dust);
             }
         }
         to.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, to, 5, .12, .2, .12, .02, null, true);
