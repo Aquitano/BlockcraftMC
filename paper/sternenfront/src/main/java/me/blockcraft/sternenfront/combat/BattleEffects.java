@@ -108,7 +108,12 @@ public final class BattleEffects {
         if (muzzle.getBlock().isPassable()) {
             var flash = config.muzzleFlash();
             boolean heavy = blaster.precision() || blaster.profile() == Blaster.REPEATER;
-            flares.flash(flash(faction), muzzle, heavy ? flash.heavyScale() : flash.scale(), flash.ticks());
+            // The barrel sits under a block from the eyes, where even a small flash covers the shooter's aim.
+            flares.flash(flash(faction), muzzle, heavy ? flash.heavyScale() : flash.scale(), flash.ticks()).ifPresent(shown -> {
+                if (actor instanceof Player shooter) {
+                    shooter.hideEntity(game.plugin(), shown);
+                }
+            });
             muzzle.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, muzzle, 2, 0.04, 0.04, 0.04, 0.03);
             if (heat > HOT_BARREL) {
                 muzzle.getWorld().spawnParticle(Particle.WHITE_SMOKE, muzzle, 2, 0.03, 0.03, 0.03, 0.01);
@@ -243,8 +248,8 @@ public final class BattleEffects {
 
     private void burst(Location at, Faction faction) {
         var world = at.getWorld();
-        world.spawnParticle(Particle.ELECTRIC_SPARK, at, 10, 0.1, 0.1, 0.1, 0.12, null, true);
-        world.spawnParticle(Particle.DUST, at, 6, 0.12, 0.12, 0.12, 0, new Particle.DustOptions(faction.bolt(), 1.4f), true);
+        world.spawnParticle(Particle.ELECTRIC_SPARK, at, 4, 0.08, 0.08, 0.08, 0.1, null, true);
+        world.spawnParticle(Particle.DUST, at, 2, 0.08, 0.08, 0.08, 0, new Particle.DustOptions(faction.bolt(), 1f), true);
         if (enabled) {
             flares.flash(flash(faction), at, config.bolt().impactFlash(), FLASH_TICKS);
         }

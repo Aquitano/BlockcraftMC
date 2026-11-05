@@ -55,9 +55,9 @@ presentation:
   scorch: {marks: 32, every: 3, ticks: 300, fade-ticks: 40, scale: 0.7}
   saber-mark: {cooldown-ticks: 8, glow-ticks: 30, ticks: 300, fade-ticks: 40, scale: 1.5, tilt-degrees: 20}
   saber-trail-ticks: 3
-  muzzle-flash: {ticks: 2, scale: 0.55, heavy-scale: 0.95}
-  bolt: {width: 2.2, length: 1.6, trail-size: 1.3, trail-step: 0.75, far-every: 3, impact-flash: 0.5}
-  explosion: {smoke-puffs: 3, smoke-ticks: 40, debris: 30}
+  muzzle-flash: {ticks: 2, scale: 0.3, heavy-scale: 0.5}
+  bolt: {width: 1.4, length: 1.6, trail-size: 0.8, trail-step: 1.2, far-every: 3, impact-flash: 0.25}
+  explosion: {smoke-puffs: 3, smoke-ticks: 40, debris: 12}
   damaged: {below: 0.35, interval-ticks: 12}
   ambient: {interval-ticks: 10, range: 72}
   assault: {ticks: 100, distance: 90, height: 45, scale: 7, clearance: 0}

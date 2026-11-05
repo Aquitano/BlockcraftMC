@@ -14,6 +14,7 @@ import org.bukkit.util.Vector;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
+import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -98,11 +99,9 @@ public final class Flares {
     }
 
     /** One still frame, as long as the cap has room. */
-    public void flash(String model, Location at, float scale, int ticks) {
-        if (live.hasRoom()) {
-            show(at, new Plan(Displays.model(model), UNTURNED, new Vector3f(scale), new Vector3f(scale), new Vector(), ticks, 0,
-                    Display.Billboard.CENTER, true, null));
-        }
+    public Optional<ItemDisplay> flash(String model, Location at, float scale, int ticks) {
+        return live.hasRoom() ? Optional.of(show(at, new Plan(Displays.model(model), UNTURNED, new Vector3f(scale), new Vector3f(scale), new Vector(), ticks, 0,
+                Display.Billboard.CENTER, true, null))) : Optional.empty();
     }
 
     public void burst(String model, Location at, float from, float to, int ticks) {
@@ -186,7 +185,7 @@ public final class Flares {
                 new Vector3f((float) normal.getX(), (float) normal.getY(), (float) normal.getZ()).normalize());
     }
 
-    private void show(Location at, Plan plan) {
+    private ItemDisplay show(Location at, Plan plan) {
         var spot = plan.turn() == UNTURNED ? at.clone() : at.clone().setRotation(0, 0);
         var display = Displays.item(spot, plan.look(), spawned -> {
             spawned.setBillboard(plan.billboard());
@@ -197,6 +196,7 @@ public final class Flares {
             }
         });
         live.admit(new Flare(display, plan)).ifPresent(oldest -> oldest.display.remove());
+        return display;
     }
 
     public void tick() {

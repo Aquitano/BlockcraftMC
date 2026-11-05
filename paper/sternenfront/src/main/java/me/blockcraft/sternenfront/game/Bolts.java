@@ -30,7 +30,7 @@ import java.util.concurrent.ThreadLocalRandom;
 public final class Bolts {
 
     private static final double HIT_SIZE = 0.1;
-    private static final double VISUAL_LEAD = 0.8;
+    private static final double VISUAL_LEAD = 1.6;
     private static final double TRAIL_CLEAR_OF_EYES = 1.4;
     private static final float MODEL_LENGTH = 1.22f;
     private static final double HEAD_BELOW_EYES = 0.25;
