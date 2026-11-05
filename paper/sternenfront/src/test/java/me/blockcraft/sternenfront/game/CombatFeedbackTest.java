@@ -51,18 +51,19 @@ public class CombatFeedbackTest {
     }
 
     @Test
-    public void crosshairRedrawsWhenTheMarkerOrTheDamageDirectionChanges() {
+    public void crosshairRedrawsWhenTheMarkerOrTheDamageChanges() {
         var state = new CombatFeedback.State();
         var left = Optional.of(DamageDirection.LEFT);
-        assertTrue(state.crosshairChanged(0, left));
-        assertFalse(state.crosshairChanged(1, left));
-        state.hit(CombatFeedback.Marker.HIT, 2, 6);
-        assertTrue(state.crosshairChanged(2, left));
-        assertFalse(state.crosshairChanged(3, left));
-        assertTrue(state.crosshairChanged(8, left));
-        assertTrue(state.crosshairChanged(9, Optional.of(DamageDirection.BACK)));
-        assertTrue(state.crosshairChanged(10, Optional.empty()));
-        assertFalse(state.crosshairChanged(11, Optional.empty()));
+        assertTrue(state.crosshairChanged(0, left, 30));
+        assertFalse(state.crosshairChanged(1, left, 30));
+        assertTrue("a new hit from the same side extends the arc", state.crosshairChanged(2, left, 32));
+        state.hit(CombatFeedback.Marker.HIT, 3, 6);
+        assertTrue(state.crosshairChanged(3, left, 32));
+        assertFalse(state.crosshairChanged(4, left, 32));
+        assertTrue(state.crosshairChanged(9, left, 32));
+        assertTrue(state.crosshairChanged(10, Optional.of(DamageDirection.BACK), 32));
+        assertTrue(state.crosshairChanged(11, Optional.empty(), 0));
+        assertFalse(state.crosshairChanged(12, Optional.empty(), 0));
     }
 
     @Test

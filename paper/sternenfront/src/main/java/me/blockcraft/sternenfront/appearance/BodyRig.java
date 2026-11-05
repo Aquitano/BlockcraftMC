@@ -253,7 +253,8 @@ final class BodyRig implements AutoCloseable {
     }
 
     void forget(Player player) {
-        if (viewers.remove(player.getUniqueId())) {
+        // Bukkit refuses both calls while the plugin shuts down, and the entities go with it anyway.
+        if (viewers.remove(player.getUniqueId()) && plugin.isEnabled()) {
             entities.forEach(entity -> player.hideEntity(plugin, entity));
             player.showEntity(plugin, actor);
         }

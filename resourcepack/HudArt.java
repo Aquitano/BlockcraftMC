@@ -1,12 +1,62 @@
 import javax.imageio.ImageIO;
+import java.awt.AlphaComposite;
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.geom.Arc2D;
 import java.awt.image.BufferedImage;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
 public final class HudArt {
+
+    private static final int PIP = 13;
+
+    /** Corners around the crosshair for a hit, a headshot and a kill, each stronger and in the colour of its news. */
+    private static BufferedImage crosshairMarks() {
+        var image = new BufferedImage(96, 32, BufferedImage.TYPE_INT_ARGB);
+        var g = image.createGraphics();
+        var colours = new Color[] {Color.WHITE, new Color(0xFFFFB02E), new Color(0xFFFF3B3B)};
+        int[] inner = {4, 4, 3};
+        int[] outer = {8, 9, 10};
+        for (int mark = 0; mark < colours.length; mark++) {
+            int middle = mark * 32 + 16;
+            for (int xSign = -1; xSign <= 1; xSign += 2) {
+                for (int ySign = -1; ySign <= 1; ySign += 2) {
+                    g.setColor(new Color(0x90000000, true));
+                    g.setStroke(new BasicStroke(mark == 2 ? 3 : 2));
+                    g.drawLine(middle + xSign * inner[mark], 16 + ySign * inner[mark], middle + xSign * outer[mark], 16 + ySign * outer[mark]);
+                    g.setColor(colours[mark]);
+                    g.setStroke(new BasicStroke(1));
+                    g.drawLine(middle + xSign * inner[mark], 16 + ySign * inner[mark], middle + xSign * outer[mark], 16 + ySign * outer[mark]);
+                }
+            }
+        }
+        g.dispose();
+        return image;
+    }
+
+    /** Each post's letter on a filled tile and on a hollow one, in white so a text colour tints them. */
+    private static BufferedImage objectivePips() {
+        var image = new BufferedImage(PIP * 10, PIP, BufferedImage.TYPE_INT_ARGB);
+        var g = image.createGraphics();
+        g.setFont(new Font(Font.MONOSPACED, Font.BOLD, 11));
+        for (int post = 0; post < 5; post++) {
+            var letter = String.valueOf((char) ('A' + post));
+            int filled = post * 2 * PIP;
+            int hollow = filled + PIP;
+            g.setComposite(AlphaComposite.SrcOver);
+            g.setColor(Color.WHITE);
+            g.fillRoundRect(filled, 0, PIP - 1, PIP - 1, 4, 4);
+            g.drawRoundRect(hollow, 0, PIP - 2, PIP - 2, 4, 4);
+            g.setComposite(AlphaComposite.Clear);
+            g.drawString(letter, filled + 3, 10);
+            g.setComposite(AlphaComposite.SrcOver);
+            g.drawString(letter, hollow + 3, 10);
+        }
+        g.dispose();
+        return image;
+    }
 
     public static void main(String[] args) throws Exception {
         var root = Path.of(args.length == 0 ? "src" : args[0]).resolve("assets/blockcraft/textures/font");
@@ -57,5 +107,13 @@ public final class HudArt {
         }
         g.dispose();
         ImageIO.write(arcs, "PNG", root.resolve("damage_arcs.png").toFile());
+        ImageIO.write(objectivePips(), "PNG", root.resolve("objective_pips.png").toFile());
+        ImageIO.write(crosshairMarks(), "PNG", root.resolve("crosshair_marks.png").toFile());
+        var hidden = new BufferedImage(182, 5, BufferedImage.TYPE_INT_ARGB);
+        var sprites = root.getParent().getParent().getParent().resolve("minecraft/textures/gui/sprites/boss_bar");
+        Files.createDirectories(sprites);
+        for (var sprite : new String[] {"pink_background", "pink_progress", "notched_20_background", "notched_20_progress"}) {
+            ImageIO.write(hidden, "PNG", sprites.resolve(sprite + ".png").toFile());
+        }
     }
 }

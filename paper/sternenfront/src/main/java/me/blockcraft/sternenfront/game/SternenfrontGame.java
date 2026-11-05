@@ -136,6 +136,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     private final Deployment deployment;
     private final BattleIntro intro;
     private final BattlePresentation presentation;
+    private final ObjectiveHud objective;
     private final Battlefield battlefield;
     private final SupportRewards support;
     private final Gadgets gadgets;
@@ -201,6 +202,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         this.speeders = new Speeders(this, SpeederConfig.from(plugin.getConfig()));
         this.spawnSpots = new SpawnSpots(this);
         this.presentation = new BattlePresentation(this);
+        this.objective = new ObjectiveHud(this);
         this.deployment = new Deployment(this, spawnSpots, feel, presentation, () -> dirty = true);
         this.battlefield = new Battlefield(this);
         this.support = new SupportRewards(this);
@@ -754,6 +756,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
             return;
         }
         acts.second(lowestTickets(), tick / TICKS_PER_SECOND).ifPresent(this::actBegins);
+        objective.update(reinforcements, secondsLeft, tick / TICKS_PER_SECOND);
         if (dirty) {
             dirty = false;
             refreshAll();
@@ -1346,6 +1349,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         bots.clear();
         combat.clear();
         feedback.clear();
+        objective.clear();
         speeders.clear();
         battlefield.clear();
         support.clear();
@@ -1381,37 +1385,13 @@ public final class SternenfrontGame implements RoundConnections.Seating {
                     new GameSidebar.Section(messages.get("scoreboard.class", icons),
                             GameSidebar.value(messages.get(Optional.ofNullable(fighters.get(player.getUniqueId()))
                                     .map(Fighter::combatClass).orElse(CombatClass.SOLDIER).messageKey(factionOrSmallest(player)) + ".name")))));
-            case INGAME -> {
-                var tickets = Arrays.stream(Faction.values()).map(faction -> messages.get("scoreboard.tickets-line",
-                        factionName(faction), Formatter.number("tickets", reinforcements.left(faction)))).toList();
-                var postLines = posts.indices().stream().map(this::postLine).toList();
-                sidebar.round(player, config.capacity(), secondsLeft, mapName, List.of(
-                        new GameSidebar.Section(messages.get("scoreboard.tickets", icons), tickets),
-                        new GameSidebar.Section(messages.get("scoreboard.posts", icons), postLines),
-                        new GameSidebar.Section(messages.get("scoreboard.kills", icons), List.of(
-                                GameSidebar.value(Component.text(fieldKills.getOrDefault(player.getUniqueId(), 0))), battleLine(player)))));
-            }
+            case INGAME -> sidebar.hide(player);
             case ENDING -> sidebar.end(player, winner.map(this::factionDisplay).stream().toList());
         }
     }
 
-    private Component postLine(int index) {
-        var line = messages.get(posts.contested(index) ? "scoreboard.post-contested" : "scoreboard.post", posts.name(index),
-                Placeholder.styling("tint", posts.owner(index).map(Faction::text).orElse(NamedTextColor.WHITE)));
-        return posts.priority(index) ? messages.get("scoreboard.post-priority", Placeholder.component("line", line)) : line;
-    }
-
-    /** The player's battle points towards a hero, or the hero they fight as. */
-    private Component battleLine(Player player) {
-        var hero = heroOf(player);
-        if (hero.isPresent()) {
-            return GameSidebar.value(messages.get("hero.sidebar.hero", Placeholder.component("hero", heroes.name(hero.get()))));
-        }
-        int points = heroes.points(player);
-        int cost = factionOf(player).map(heroes::cost).orElse(heroes.config().cost());
-        boolean available = factionOf(player).filter(heroes::available).isPresent();
-        return GameSidebar.value(messages.get(points >= cost ? available ? "hero.sidebar.ready" : "hero.sidebar.waiting" : "hero.sidebar.points",
-                Formatter.number("points", points), Formatter.number("cost", cost)));
+    public int kills(Player player) {
+        return fieldKills.getOrDefault(player.getUniqueId(), 0);
     }
 
     /**

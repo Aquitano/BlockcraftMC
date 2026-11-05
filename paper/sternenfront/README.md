@@ -41,12 +41,14 @@ bots, including their custom body parts. Outlines are private to the viewer. `ou
 world depth buffer, so walls hide the covered parts while exposed parts stay outlined. Selection uses no server-side
 block rays. Outlines stay disabled until the pack has loaded.
 
-Hits, headshots, and kills have distinct sounds and immediate markers below the crosshair. A kill replaces a weaker
+Hits, headshots, and kills have distinct sounds and immediate marks around the crosshair. A kill replaces a weaker
 marker even within the same tick. A red arc around the crosshair points at whoever last hurt the player, for
 `combat.damage-indicator-ticks`, and follows as they turn. Both share the title's subtitle, centred with `UiFont`.
 Kill and assist popups show the reward, recent kill count, and battle-point progress beside the health, guard, and
 ability-cooldown HUD. Nearby gains combine into one segment. The HUD names no abilities, so the line stays short enough
-for GUI scale 3 on a 1366x768 screen; the deploy chat line names them.
+for GUI scale 3 on a 1366x768 screen; the deploy chat line names them. `ObjectiveHud` shows reinforcements, a tile per
+post and the time left in a boss bar's text line, and the pack draws that colour and overlay of bar as nothing. The screen's
+edges redden with a hit and while health is low. `combat.handling` tunes spread and damage falloff.
 Objective titles remain visible while the marker temporarily uses their subtitle, then restores it without restarting
 the title. The sidebar distinguishes an available hero from enough points with every slot occupied.
 

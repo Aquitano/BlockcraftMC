@@ -387,13 +387,6 @@ scoreboard:
   faction: "<muted><icon:mode> FRAKTION"
   no-faction: "<muted>Keine Fraktion"
   class: "<muted><icon:kit> KLASSE"
-  tickets: "<muted><icon:players> VERSTÄRKUNG"
-  tickets-line: "<faction> <dark>· <white><tickets>"
-  posts: "<muted><icon:map> POSTEN"
-  post: "<tint><bold><letter></bold> <white><post>"
-  post-contested: "<tint><bold><letter></bold> <white><post> <error>⚔"
-  post-priority: "<line> <accent>★"
-  kills: "<muted><icon:kills> KILLS"
 
 hero:
   head: "<white>Heldenrüstung"
@@ -462,16 +455,6 @@ hero:
   entered: "<prefix><faction> <muted>schickt <hero><muted>: <white><player><muted>!"
   slain: "<prefix><white><killer> <muted>hat <hero> <white><player> <muted>besiegt!"
   fallen: "<prefix><hero> <white><player> <muted>hat das Feld verlassen."
-  sidebar:
-    points: "<accent><points><muted>/<cost> Kampfpunkte"
-    ready: "<success>Held bereit <dark>· <accent><points> <muted>Punkte"
-    waiting: "<accent><points><muted>/<cost> <dark>· <muted>Heldenplätze belegt"
-    hero: "<hero>"
-
-hit:
-  hit: "<white><icon:hit>"
-  headshot: "<icon:headshot>"
-  kill: "<icon:kill>"
 
 feedback:
   kill: "<error>Abschuss <success>+<points> KP"
@@ -481,7 +464,12 @@ feedback:
   healing: "<success>Geheilt +<points> KP"
   capture: "<aqua>Erobert <success>+<points> KP"
   neutralise: "<aqua>Befreit <success>+<points> KP"
-  hero-ready: "<success>HELD BEREIT"
+  hero-ready: "<success>Held bereit"
+  progress: "<muted><kills> K <dark>· <muted><points>/<cost> KP"
+
+hud:
+  objective: "<own> <dark>‹ <posts><dark>› <enemy> <dark>│ <white><time>"
+  priority: "<accent>★"
 
 killcam:
   watching: "<muted>Besiegt von <white><killer>"

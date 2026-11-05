@@ -1,8 +1,8 @@
 package me.blockcraft.sternenfront.game;
 
 import me.blockcraft.api.BlockcraftApi;
-import me.blockcraft.api.game.GameSidebar;
 import me.blockcraft.api.pack.UiFont;
+import me.blockcraft.api.presentation.ScreenEffects;
 import me.blockcraft.api.scene.Scenes;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.sternenfront.combat.DamageDirection;
@@ -12,6 +12,7 @@ import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
 import org.bukkit.SoundCategory;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
 
 import java.util.HashMap;
@@ -50,6 +51,7 @@ public final class CombatFeedback {
         boolean venting;
         boolean drawnMarked;
         Optional<DamageDirection> drawnHurt = Optional.empty();
+        long drawnHurtUntil;
         Component hud = Component.empty();
 
         boolean hit(Marker next, long tick, int ticks) {
@@ -72,11 +74,12 @@ public final class CombatFeedback {
             return Optional.of(marker);
         }
 
-        boolean crosshairChanged(long tick, Optional<DamageDirection> hurt) {
+        boolean crosshairChanged(long tick, Optional<DamageDirection> hurt, long hurtUntil) {
             boolean marked = tick < markerUntil;
-            boolean changed = takeMarker(tick).isPresent() || marked != drawnMarked || !hurt.equals(drawnHurt);
+            boolean changed = takeMarker(tick).isPresent() || marked != drawnMarked || !hurt.equals(drawnHurt) || hurtUntil != drawnHurtUntil;
             drawnMarked = marked;
             drawnHurt = hurt;
+            drawnHurtUntil = hurtUntil;
             return changed;
         }
 
@@ -110,8 +113,13 @@ public final class CombatFeedback {
     }
 
     private static final char FIRST_DAMAGE_ARC = '\uE228';
+    private static final char FIRST_CROSSHAIR_MARK = '\uE23A';
     /** Wide enough for the longest popup, so the line does not slide when one appears. */
-    private static final int REWARD_WIDTH = 96;
+    private static final int REWARD_WIDTH = 104;
+    private static final double LOW_HEALTH = 0.4;
+    private static final double LOW_HEALTH_REDNESS = 0.8;
+    private static final double HIT_FLASH_TICKS = 10;
+    private static final double HIT_REDNESS = 0.7;
 
     private final SternenfrontGame game;
     private final Map<UUID, State> states = new HashMap<>();
@@ -183,19 +191,32 @@ public final class CombatFeedback {
         }
         state.ready = ready;
         drawCrosshair(player, state, tick);
-        var line = tick < state.readyUntil && ready ? game.messages().get("feedback.hero-ready")
-                : tick < state.rewardUntil ? state.reward(game.messages()) : Component.empty();
+        var line = tick < state.rewardUntil ? state.reward(game.messages())
+                : ready ? game.messages().get("feedback.hero-ready")
+                : game.heroOf(player).isPresent() ? Component.empty()
+                : game.messages().get("feedback.progress", Formatter.number("kills", game.kills(player)),
+                Formatter.number("points", points), Formatter.number("cost", cost));
+        ScreenEffects.accent(player, ScreenEffects.Atmosphere.HURT, hurtIntensity(player, game.combat().hurtTicks(player)));
         var combined = state.compose(hud, line);
-        if (!line.equals(Component.empty())) {
+        if (tick < state.rewardUntil) {
             api.notifications().feedbackNow(player, combined, 5);
         } else {
             api.notifications().status(player, combined);
         }
     }
 
+    /** The edges of the screen redden with a hit and stay red while health is low. */
+    private double hurtIntensity(Player player, int hurtTicksLeft) {
+        double share = player.getHealth() / player.getAttribute(Attribute.MAX_HEALTH).getValue();
+        double low = share < LOW_HEALTH ? (LOW_HEALTH - share) / LOW_HEALTH * LOW_HEALTH_REDNESS : 0;
+        double sinceHit = game.combat().config().damageIndicatorTicks() - hurtTicksLeft;
+        double hit = hurtTicksLeft > 0 ? Math.max(0, 1 - sinceHit / HIT_FLASH_TICKS) * HIT_REDNESS : 0;
+        return Math.max(low, hit);
+    }
+
     private void drawCrosshair(Player player, State state, long tick) {
         var hurt = game.combat().damageDirection(player);
-        if (!state.crosshairChanged(tick, hurt)) {
+        if (!state.crosshairChanged(tick, hurt, hurt.isPresent() ? tick + game.combat().hurtTicks(player) : 0)) {
             return;
         }
         var notifications = BlockcraftApi.get().notifications();
@@ -204,8 +225,7 @@ public final class CombatFeedback {
             return;
         }
         var arc = hurt.map(direction -> UiFont.centredBehind((char) (FIRST_DAMAGE_ARC + direction.ordinal()))).orElse(Component.empty());
-        var marker = state.drawnMarked
-                ? game.messages().get("hit." + state.marker.name().toLowerCase(Locale.ROOT), GameSidebar.icons(player)) : Component.empty();
+        var marker = state.drawnMarked ? UiFont.centredBehind((char) (FIRST_CROSSHAIR_MARK + state.marker.ordinal())) : Component.empty();
         notifications.markerNow(player, arc.append(marker), Math.max(state.markerUntil - tick, game.combat().hurtTicks(player)));
     }
 

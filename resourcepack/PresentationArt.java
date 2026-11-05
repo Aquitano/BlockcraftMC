@@ -42,7 +42,7 @@ public final class PresentationArt {
             post(root, "cinematic/fade/" + step, step / 32.0, 0, 0, 1);
             post(root, "cinematic/letterbox/" + step, step / 32.0, 1, 0, 1);
         }
-        String[] atmospheres = {"hologram", "storm", "focus", "portal"};
+        String[] atmospheres = {"hologram", "storm", "focus", "portal", "hurt"};
         for (int i = 0; i < atmospheres.length; i++) {
             post(root, "atmosphere/" + atmospheres[i], 0, 0, i + 1, 1);
             for (int step = 1; step <= 8; step++) {

@@ -12,7 +12,7 @@ import java.util.UUID;
 public final class ScreenEffects {
 
     public enum Atmosphere {
-        HOLOGRAM, STORM, FOCUS, PORTAL;
+        HOLOGRAM, STORM, FOCUS, PORTAL, HURT;
 
         public String key() {
             return name().toLowerCase(Locale.ROOT);
