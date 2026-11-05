@@ -20,6 +20,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Function;
 
 public final class CombatFeedback {
 
@@ -124,11 +125,11 @@ public final class CombatFeedback {
             return messages.get(key, Formatter.number("points", points), Formatter.number("kills", inARow));
         }
 
-        Component compose(Component nextHud, Component feedback) {
+        Component compose(Component nextHud, Component feedback, Optional<Component> course) {
             if (!nextHud.equals(Component.empty())) {
                 hud = nextHud;
             }
-            return UiFont.after(feedback, REWARD_WIDTH).append(Component.space()).append(hud);
+            return UiFont.after(feedback, REWARD_WIDTH).append(Component.space()).append(course.orElse(hud));
         }
     }
 
@@ -151,6 +152,7 @@ public final class CombatFeedback {
     private final float headshotVolume;
     private final float killVolume;
     private final int multikillTicks;
+    private Function<Player, Optional<Component>> courseStatus = player -> Optional.empty();
 
     public CombatFeedback(SternenfrontGame game) {
         this.game = game;
@@ -167,6 +169,10 @@ public final class CombatFeedback {
 
     private State state(Player player) {
         return states.computeIfAbsent(player.getUniqueId(), ignored -> new State());
+    }
+
+    public void courseStatus(Function<Player, Optional<Component>> status) {
+        courseStatus = status;
     }
 
     public boolean hot(Player player) {
@@ -229,7 +235,7 @@ public final class CombatFeedback {
                 : ready && tick < state.readyUntil ? game.messages().get("feedback.hero-ready")
                 : Component.empty();
         ScreenEffects.hurt(player, hurtIntensity(player, game.combat().hurtTicks(player)));
-        var combined = state.compose(hud, line);
+        var combined = state.compose(hud, line, courseStatus.apply(player));
         if (tick < state.rewardUntil) {
             api.notifications().feedbackNow(player, combined, 5);
         } else {

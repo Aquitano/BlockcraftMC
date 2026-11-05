@@ -35,10 +35,24 @@ public class CombatFeedbackTest {
         var updated = Component.text("Deckung | F 7s | Q 1s");
         var feedback = Component.text("+25 KP");
 
-        assertTrue(plain(state.compose(hud, feedback)).endsWith("+25 KP Deckung | F 8s | Q 2s"));
-        assertTrue(plain(state.compose(Component.empty(), feedback)).endsWith("+25 KP Deckung | F 8s | Q 2s"));
-        state.compose(updated, feedback);
-        assertTrue(plain(state.compose(Component.empty(), Component.empty())).endsWith(" Deckung | F 7s | Q 1s"));
+        assertTrue(plain(state.compose(hud, feedback, Optional.empty())).endsWith("+25 KP Deckung | F 8s | Q 2s"));
+        assertTrue(plain(state.compose(Component.empty(), feedback, Optional.empty())).endsWith("+25 KP Deckung | F 8s | Q 2s"));
+        state.compose(updated, feedback, Optional.empty());
+        assertTrue(plain(state.compose(Component.empty(), Component.empty(), Optional.empty())).endsWith(" Deckung | F 7s | Q 1s"));
+    }
+
+    @Test
+    public void activeCourseKeepsItsTimerThroughCombatUpdatesAndReturnsToTheLatestHud() {
+        var state = new CombatFeedback.State();
+        var timer = Optional.<Component>of(Component.text("Kraninspektion 2,00 s · Tor 2/4"));
+        var hud = Component.text("Deckung | F 8s | Q 2s");
+        var updated = Component.text("Deckung | F 7s | Q 1s");
+        var reward = Component.text("+25 KP");
+
+        assertTrue(plain(state.compose(hud, Component.empty(), timer)).endsWith(" Kraninspektion 2,00 s · Tor 2/4"));
+        assertTrue(plain(state.compose(Component.empty(), reward, timer)).endsWith("+25 KP Kraninspektion 2,00 s · Tor 2/4"));
+        assertTrue(plain(state.compose(updated, Component.empty(), timer)).endsWith(" Kraninspektion 2,00 s · Tor 2/4"));
+        assertTrue(plain(state.compose(Component.empty(), Component.empty(), Optional.empty())).endsWith(" Deckung | F 7s | Q 1s"));
     }
 
     @Test

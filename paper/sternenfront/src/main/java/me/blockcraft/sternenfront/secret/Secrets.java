@@ -5,6 +5,7 @@ import me.blockcraft.api.game.GamePhase;
 import me.blockcraft.api.game.RoundPhaseChangeEvent;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.sternenfront.game.SternenfrontGame;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -26,6 +27,7 @@ public final class Secrets implements Listener, AutoCloseable {
     private final List<Runnable> cleanup = new ArrayList<>();
     private final List<Listener> listeners = new ArrayList<>();
     private final List<MusicBox> music = new ArrayList<>();
+    private final List<KesselCourse> courses = new ArrayList<>();
     private Optional<BukkitTask> task = Optional.empty();
 
     private Secrets(JavaPlugin plugin) {
@@ -71,6 +73,7 @@ public final class Secrets implements Listener, AutoCloseable {
                 var kessel = new KesselCourse(plugin, game, messages, discoveries, Optional.of(times),
                         Secret.KESSEL, course, config.parSeconds(), config.limitSeconds());
                 secrets.listen(kessel);
+                secrets.courses.add(kessel);
                 secrets.ticks.add(kessel::tick);
                 secrets.cleanup.add(kessel::close);
             });
@@ -78,6 +81,7 @@ public final class Secrets implements Listener, AutoCloseable {
                 var inspection = new KesselCourse(plugin, game, messages, discoveries, Optional.empty(),
                         Secret.INSPECTION, course, config.inspectionParSeconds(), config.inspectionLimitSeconds());
                 secrets.listen(inspection);
+                secrets.courses.add(inspection);
                 secrets.ticks.add(inspection::tick);
                 secrets.cleanup.add(inspection::close);
             });
@@ -86,6 +90,7 @@ public final class Secrets implements Listener, AutoCloseable {
             secrets.task = Optional.of(Bukkit.getScheduler().runTaskTimer(plugin,
                     () -> secrets.ticks.forEach(tick -> tick.accept(Bukkit.getCurrentTick())), 1, 1));
         }
+        game.feedback().courseStatus(secrets::courseStatus);
         return secrets;
     }
 
@@ -96,6 +101,11 @@ public final class Secrets implements Listener, AutoCloseable {
 
     public boolean use(Player player, Block block) {
         return music.stream().anyMatch(box -> box.use(player, block, Bukkit.getCurrentTick()));
+    }
+
+    private Optional<Component> courseStatus(Player player) {
+        return courses.stream().map(course -> course.status(player, Bukkit.getCurrentTick()))
+                .flatMap(Optional::stream).findFirst();
     }
 
     @EventHandler
@@ -113,6 +123,7 @@ public final class Secrets implements Listener, AutoCloseable {
         cleanup.clear();
         ticks.clear();
         music.clear();
+        courses.clear();
         listeners.forEach(HandlerList::unregisterAll);
         listeners.clear();
     }

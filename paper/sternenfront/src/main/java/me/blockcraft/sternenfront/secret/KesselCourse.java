@@ -96,14 +96,14 @@ final class KesselCourse implements Listener {
                 attempt = new CourseAttempt(course, limitTicks);
                 runs.put(uuid, attempt);
             }
-            step(player, attempt.run(), attempt.move(at, eligible, tick), tick);
+            step(player, attempt.run(), attempt.move(at, eligible, tick));
             if (!eligible) {
                 runs.remove(uuid);
             }
         }
     }
 
-    private void step(Player player, KesselRun run, KesselRun.Step step, long tick) {
+    private void step(Player player, KesselRun run, KesselRun.Step step) {
         switch (step) {
             case STARTED, CHECKPOINT -> player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, SoundCategory.PLAYERS, 0.8f,
                     step == KesselRun.Step.STARTED ? 1f : 1.4f);
@@ -111,11 +111,13 @@ final class KesselCourse implements Listener {
             case FINISHED -> finish(player, run.result());
             case NONE -> { }
         }
-        if (run.running() && tick % 2 == 0) {
-            BlockcraftApi.get().notifications().status(player, messages.get(messagePrefix + "running",
-                    Placeholder.unparsed("time", seconds(run.elapsed(tick))), Formatter.number("gate", run.passed()),
-                    Formatter.number("gates", run.gates())));
-        }
+    }
+
+    Optional<Component> status(Player player, long tick) {
+        return Optional.ofNullable(runs.get(player.getUniqueId())).map(CourseAttempt::run).filter(KesselRun::running)
+                .map(run -> messages.get(messagePrefix + "running",
+                        Placeholder.unparsed("time", seconds(run.elapsed(tick))), Formatter.number("gate", run.passed()),
+                        Formatter.number("gates", run.gates())));
     }
 
     private void finish(Player player, long ticks) {
