@@ -7,6 +7,7 @@ rules expect them: the posts on the north-south centre line with landing grounds
 x -82 and 82.
 """
 import json
+import math
 import sys
 from pathlib import Path
 
@@ -30,14 +31,21 @@ RAIL = "iron_bars"
 MOST_PER_FILL = 32768
 
 
+def spot(x, z, y=SKY):
+    """The middle of a block. A hand-written "-5.5" is the block after -5, on the far side of whatever stands at -5."""
+    return f"{x + 0.5} {y} {z + 0.5}"
+
+
 class Builder:
     def __init__(self):
         self.commands = []
+        self.fills = []
 
     def box(self, x1, y1, z1, x2, y2, z2, block):
         x1, x2, y1, y2, z1, z2 = min(x1, x2), max(x1, x2), min(y1, y2), max(y1, y2), min(z1, z2), max(z1, z2)
         if (x2 - x1 + 1) * (y2 - y1 + 1) * (z2 - z1 + 1) <= MOST_PER_FILL:
             self.commands.append(f"fill {x1} {y1} {z1} {x2} {y2} {z2} {block}")
+            self.fills.append((x1, y1, z1, x2, y2, z2, block))
             return
         for x in range(x1, x2 + 1, 32):
             for y in range(y1, y2 + 1, 32):
@@ -239,22 +247,22 @@ def route(faction, z, lane, inward):
     sign = -1 if faction == "kolonien" else 1
     bridge = min(BRIDGES, key=lambda each: abs(each - z))
     road = 32 * sign
-    points = [f"{50 * sign}.5 65 {bridge}.5", f"{road}.5 65 {bridge}.5"]
+    points = [spot(50 * sign, bridge), spot(road, bridge)]
     if bridge != z:
-        points.append(f"{road}.5 65 {z + lane}.5")
-    points.append(f"{inward * sign}.5 65 {z + lane}.5")
-    return dict(approach=points, cover=f"{(inward + 5) * sign}.5 65 {z + lane}.5", peek=points[-1],
-                retreat=f"{road}.5 65 {z + lane}.5", capture=f"{4 * sign}.5 65 {z + lane // 2}.5")
+        points.append(spot(road, z + lane))
+    points.append(spot(inward * sign, z + lane))
+    return dict(approach=points, cover=spot((inward + 5) * sign, z + lane), peek=points[-1],
+                retreat=spot(road, z + lane), capture=spot(4 * sign, z + lane // 2))
 
 
 def arena():
     posts = []
     for key, z in POSTS.items():
         cells = ring(z)
-        posts.append(dict(key=key, center=f"0.5 65 {z}.5", radius=6.5, label=f"0.5 {SKY + (5 if key != 'turbinenhalle' else 4)} {z}.5",
-                          spawns=[f"-4.5 65 {z - 10}.5", f"5.5 65 {z - 10}.5", f"-4.5 65 {z + 10}.5 180 0", f"5.5 65 {z + 10}.5 180 0"],
+        posts.append(dict(key=key, center=spot(0, z), radius=6.5, label=spot(0, z, SKY + (5 if key != "turbinenhalle" else 4)),
+                          spawns=[spot(-5, z - 10), spot(5, z - 10), f"{spot(-5, z + 10)} 180 0", f"{spot(5, z + 10)} 180 0"],
                           indicators=[f"{x} {DECK} {cz}" for x, cz in cells],
-                          routes={faction: [route(faction, z, lane, inward) for lane, inward in ((-6, 12), (6, 10))]
+                          routes={faction: [route(faction, z, lane, inward) for lane, inward in ((-6, 15), (6, 15))]
                                   for faction in ("kolonien", "hegemonie")}))
     spawns = [-5.5, -1.5, 2.5, 6.5]
     return {"name": "Sturmwerft", "weather": "rain", "time": 7000,
@@ -264,6 +272,29 @@ def arena():
                 "kolonien": dict(spawns=[f"-81.5 65 {z} 270 0" for z in spawns], zone=[-97.0, 60.0, -30.0, -63.0, 104.0, 31.0]),
                 "hegemonie": dict(spawns=[f"82.5 65 {z} 90 0" for z in spawns], zone=[63.0, 60.0, -30.0, 97.0, 104.0, 31.0])},
             "posts": posts, "controls": []}
+
+
+def solid_at(fills, x, y, z):
+    for x1, y1, z1, x2, y2, z2, block in reversed(fills):
+        if x1 <= x <= x2 and y1 <= y <= y2 and z1 <= z <= z2:
+            return block != "air"
+    return False
+
+
+def blocked_spots(fills, plan):
+    """Every place the arena puts a fighter that a wall would catch them in, at the feet or the head."""
+    spots = [*(each for hq in plan["headquarters"].values() for each in hq["spawns"])]
+    for post in plan["posts"]:
+        spots.extend(post["spawns"])
+        for routes in post["routes"].values():
+            for each in routes:
+                spots.extend([*each["approach"], each["cover"], each["retreat"], each["capture"]])
+    blocked = []
+    for each in dict.fromkeys(spots):
+        x, y, z = (math.floor(float(part)) for part in each.split()[:3])
+        if solid_at(fills, x, y, z) or solid_at(fills, x, y + 1, z):
+            blocked.append(each)
+    return blocked
 
 
 def yaml_scalar(value):
@@ -311,6 +342,10 @@ def main():
             b.box(x - 3, DECK, z - 3, x + 3, DECK, z + 3, STEEL)
             b.box(x, DECK, z, x, DECK, z, LIGHT)
     deck_commands = b.commands
+    plan = arena()
+    blocked = blocked_spots(b.fills, plan)
+    if blocked:
+        sys.exit(f"Inside a block: {blocked}")
     far = Builder()
     scenery(far)
     functions = OUT / "datapack/data/sturmwerft/function"
@@ -318,7 +353,7 @@ def main():
     (OUT / "datapack/pack.mcmeta").write_text(json.dumps({"pack": {"pack_format": 121, "min_format": 121, "max_format": 121, "description": "Sturmwerft"}}))
     (functions / "build.mcfunction").write_text("\n".join(deck_commands) + "\n")
     (functions / "scenery.mcfunction").write_text("\n".join(far.commands) + "\n")
-    (OUT / "arena.yml").write_text("# Generated by dev/mapgen/sturmwerft.py; change that and rebuild the map.\n" + "\n".join(to_yaml(arena())) + "\n")
+    (OUT / "arena.yml").write_text("# Generated by dev/mapgen/sturmwerft.py; change that and rebuild the map.\n" + "\n".join(to_yaml(plan)) + "\n")
     (OUT / "map.yml").write_text('name: Sturmwerft\nbuilders: [BlockcraftMC]\n')
     (OUT / "forceload.txt").write_text("-110 -80 110 80\n-190 -140 -110 -60\n110 60 190 150\n80 -170 160 -90\n-170 80 -90 160\n-130 -160 -10 -100\n10 110 130 170\n")
     print(f"{len(deck_commands)} deck commands, {len(far.commands)} scenery commands, {OUT}")
