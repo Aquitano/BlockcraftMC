@@ -1187,7 +1187,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         var resolved = summary.resolveDeath(event);
         var source = event.getDamageSource().getCausingEntity();
         var death = victim.getUniqueId().equals(selfExplosion)
-                ? new DeathLines.Death(Optional.empty(), messages.get("death.self-grenade", Placeholder.unparsed("player", victim.getName())))
+                ? new DeathLines.Death(Optional.empty(), messages.get("death.self-explosion", Placeholder.unparsed("player", victim.getName())))
                 : source != null && bots.faction(source).isPresent()
                 ? new DeathLines.Death(Optional.empty(), messages.get("death.bot", Placeholder.unparsed("player", victim.getName()),
                         Placeholder.component("killer", source.customName() == null ? Component.text(source.getName()) : source.customName())))

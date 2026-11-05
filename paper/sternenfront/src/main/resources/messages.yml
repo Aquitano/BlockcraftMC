@@ -331,7 +331,7 @@ deploy:
   dropship-locked: "<error>Nur für die zurückliegende Fraktion."
 
 death:
-  self-grenade: "<prefix><white><player> <muted>wurde von der eigenen Granate erwischt."
+  self-explosion: "<prefix><white><player> <muted>wurde von der eigenen Explosion erwischt."
   bot: "<prefix><white><player> <muted>wurde von <white><killer> <muted>ausgeschaltet."
   blaster:
     - "<prefix><white><player> <muted>wurde von <white><killer> <muted>mit <weapon> <muted>getroffen."
