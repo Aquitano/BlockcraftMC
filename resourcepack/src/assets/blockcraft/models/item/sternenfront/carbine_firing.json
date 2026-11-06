@@ -3,7 +3,7 @@
   "display": {
     "firstperson_righthand": {
       "rotation": [
-        -6.0,
+        2.0,
         176.0,
         0.0
       ],
@@ -20,7 +20,7 @@
     },
     "firstperson_lefthand": {
       "rotation": [
-        -6.0,
+        2.0,
         176.0,
         0.0
       ],

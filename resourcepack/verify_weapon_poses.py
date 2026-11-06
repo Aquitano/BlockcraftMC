@@ -1,5 +1,6 @@
 """Checks generated gun poses and their vanilla item routes after generateBattle."""
 import json
+import math
 import re
 import unittest
 from pathlib import Path
@@ -11,6 +12,17 @@ HANDS = ("firstperson_righthand", "firstperson_lefthand")
 
 def read_model(path):
     return json.loads((PACK / "blockcraft/models/item" / f"{path}.json").read_text())
+
+
+def barrel_elevation(pose, left=False):
+    pitch, yaw, _ = map(math.radians, pose["rotation"])
+    if left:
+        yaw = -yaw
+    # ItemTransform rotates XYZ; the authored barrel points along +Z, so roll does not affect its axis.
+    x = math.sin(yaw)
+    y = -math.sin(pitch) * math.cos(yaw)
+    z = math.cos(pitch) * math.cos(yaw)
+    return math.degrees(math.atan2(y, math.hypot(x, z)))
 
 
 class WeaponPoses(unittest.TestCase):
@@ -42,8 +54,15 @@ class WeaponPoses(unittest.TestCase):
 
         families = ("carbine", "heavy_rifle", "long_rifle", "pistol", "twin_pistol", "repeater", "wrist_blaster")
         self.assertEqual(len({json.dumps(pose(name)) for name in families}), len(families))
-        pistol_kick = abs(pose("pistol", True)["rotation"][0] - pose("pistol")["rotation"][0])
-        rotary_kick = abs(pose("repeater", True)["rotation"][0] - pose("repeater")["rotation"][0])
+        for name in families:
+            for hand in HANDS:
+                with self.subTest(weapon=name, hand=hand):
+                    rest = read_model("sternenfront/" + name)["display"][hand]
+                    firing = read_model("sternenfront/" + name + "_firing")["display"][hand]
+                    self.assertGreater(barrel_elevation(firing, hand == HANDS[1]),
+                                       barrel_elevation(rest, hand == HANDS[1]))
+        pistol_kick = barrel_elevation(pose("pistol", True)) - barrel_elevation(pose("pistol"))
+        rotary_kick = barrel_elevation(pose("repeater", True)) - barrel_elevation(pose("repeater"))
         self.assertGreater(pistol_kick, rotary_kick)
         self.assertLess(pose("repeater")["translation"][1], pose("carbine")["translation"][1])
         self.assertGreater(pose("repeater")["scale"][0], pose("carbine")["scale"][0])
