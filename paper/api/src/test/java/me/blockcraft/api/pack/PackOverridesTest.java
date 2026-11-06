@@ -4,11 +4,13 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.junit.Test;
 
+import javax.imageio.ImageIO;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
@@ -188,13 +190,57 @@ public class PackOverridesTest {
             }
             assertEquals(prop.path(), 8, bottom, .0001);
         }
-        assertEquals(6, count);
+        assertEquals(9, count);
+    }
+
+    @Test
+    public void medicalCapsulesKeepClearWindowsInSingleFacesWithBinaryAlpha() throws IOException {
+        for (var id : List.of("clone_tank", "embryo_rack", "gene_archive")) {
+            var atlas = ImageIO.read(PACK.resolve("assets/blockcraft/textures/item/sternenfront/yard/" + id + ".png").toFile());
+            assertEquals(id, 64, atlas.getWidth());
+            assertEquals(id, 64, atlas.getHeight());
+            for (int y = 0; y < 64; y++) for (int x = 0; x < 64; x++) {
+                int alpha = atlas.getRGB(x, y) >>> 24;
+                assertTrue(id, alpha == 0 || alpha == 255);
+            }
+            var model = read(PACK.resolve("assets/blockcraft/models/item/sternenfront/yard/" + id + ".json"));
+            int windows = 0;
+            for (var element : model.getAsJsonArray("elements")) {
+                var faces = element.getAsJsonObject().getAsJsonObject("faces");
+                for (var entry : faces.entrySet()) {
+                    var uv = entry.getValue().getAsJsonObject().getAsJsonArray("uv");
+                    int clear = 0, opaque = 0;
+                    for (int y = (int) (uv.get(1).getAsDouble() * 4); y < uv.get(3).getAsDouble() * 4; y++) {
+                        for (int x = (int) (uv.get(0).getAsDouble() * 4); x < uv.get(2).getAsDouble() * 4; x++) {
+                            if (atlas.getRGB(x, y) >>> 24 == 0) clear++;
+                            else opaque++;
+                        }
+                    }
+                    if (clear == 0) continue;
+                    if (entry.getKey().equals("up") || entry.getKey().equals("down")) {
+                        assertTrue(id, opaque > clear);
+                        continue;
+                    }
+                    windows++;
+                    assertEquals(id, 1, faces.size());
+                    assertTrue(id, clear > opaque);
+                    assertTrue(id, opaque > 0);
+                }
+            }
+            assertEquals(id, id.equals("clone_tank") ? 5 : id.equals("embryo_rack") ? 9 : 0, windows);
+        }
     }
 
     private static void assertYardBounds(String path, double[] point) {
-        assertTrue(path, point[0] >= -8 && point[0] <= 24);
-        assertTrue(path, point[1] >= 8 && point[1] <= 32);
-        assertTrue(path, point[2] >= -8 && point[2] <= 24);
+        double[] bounds = switch (path) {
+            case "sternenfront/yard/clone_tank" -> new double[]{0, 8, 0, 16, 32, 16};
+            case "sternenfront/yard/embryo_rack" -> new double[]{-4, 8, 1.6, 20, 22.4, 14.4};
+            case "sternenfront/yard/gene_archive" -> new double[]{2.4, 8, 2.4, 13.6, 21, 13.6};
+            default -> new double[]{-8, 8, -8, 24, 32, 24};
+        };
+        for (int axis = 0; axis < 3; axis++) {
+            assertTrue(path, point[axis] >= bounds[axis] - .0001 && point[axis] <= bounds[axis + 3] + .0001);
+        }
     }
 
     private static JsonObject read(Path file) throws IOException {

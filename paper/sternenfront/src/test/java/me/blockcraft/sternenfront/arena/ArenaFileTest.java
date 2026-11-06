@@ -90,6 +90,24 @@ public class ArenaFileTest {
     }
 
     @Test
+    public void clinicalPropsResolveTheirKindsAtTheDeskScales() throws Exception {
+        var yaml = secretMap();
+        yaml.set("environment.props", List.of(
+                Map.of("kind", "clone_tank", "at", "7.4 82 95 0", "scale", 1.5),
+                Map.of("kind", "gene_archive", "at", "9 82 95 0", "scale", .8),
+                Map.of("kind", "embryo_rack", "at", "12.5 82 95 0", "scale", 1)));
+        var file = temporary.newFile();
+        yaml.save(file);
+        var props = ArenaFile.load(null, file.toPath()).environment().props();
+        assertEquals(List.of(PackModel.STERNENFRONT_YARD_CLONE_TANK, PackModel.STERNENFRONT_YARD_GENE_ARCHIVE,
+                PackModel.STERNENFRONT_YARD_EMBRYO_RACK), props.stream().map(YardEnvironment.Prop::model).toList());
+        assertEquals(1.5, props.getFirst().scale(), .0001);
+        assertEquals(.8, props.get(1).scale(), .0001);
+        assertEquals(1, props.getLast().scale(), .0001);
+        assertEquals(new Location(null, 7.4, 82, 95, 0, 0), props.getFirst().at());
+    }
+
+    @Test
     public void yardPropsRejectUnknownModelsAndInvalidScales() throws Exception {
         var yaml = secretMap();
         var file = temporary.newFile();

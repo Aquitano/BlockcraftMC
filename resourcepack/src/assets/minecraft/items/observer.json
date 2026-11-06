@@ -24,6 +24,27 @@
           "type": "minecraft:model",
           "model": "blockcraft:item/sternenfront/yard/repair_droid"
         }
+      },
+      {
+        "when": "blockcraft:sternenfront/yard/clone_tank",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/sternenfront/yard/clone_tank"
+        }
+      },
+      {
+        "when": "blockcraft:sternenfront/yard/embryo_rack",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/sternenfront/yard/embryo_rack"
+        }
+      },
+      {
+        "when": "blockcraft:sternenfront/yard/gene_archive",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/sternenfront/yard/gene_archive"
+        }
       }
     ],
     "fallback": {

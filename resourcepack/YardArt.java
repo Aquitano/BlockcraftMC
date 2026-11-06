@@ -34,7 +34,12 @@ public final class YardArt {
         SCREEN(0, 16, 24, 16), KEYS(24, 16, 16, 8), VENT(40, 16, 16, 16), AMBER(56, 16, 8, 8),
         TEAL(56, 24, 8, 8), ACCESS(0, 32, 24, 16), RIB(24, 32, 16, 16), HAZARD(40, 32, 16, 8),
         STRAP(56, 32, 8, 16), STENCIL(0, 48, 16, 16), BOLT(16, 48, 8, 8), LENS(24, 48, 8, 8),
-        GRILLE(32, 48, 16, 16), ENGINE(48, 48, 16, 16);
+        GRILLE(32, 48, 16, 16), ENGINE(48, 48, 16, 16),
+        CLEAN(0, 0, 16, 16), ICE(16, 0, 16, 16), SKIN(32, 0, 8, 8), HAIR(40, 0, 8, 8),
+        MEDICAL(48, 0, 16, 16), FACE(32, 8, 8, 8), WINDOW(0, 16, 16, 32),
+        SIDE_WINDOW(16, 16, 8, 32), BACK_GLASS(24, 16, 16, 16), INVENTORY(40, 16, 16, 16),
+        CLINICAL_STEEL(56, 40, 8, 8), STATUS(56, 16, 8, 8), SAMPLE(56, 24, 8, 16),
+        BASE(0, 48, 16, 16), SEAL(16, 48, 8, 8), CAP_IVORY(24, 32, 32, 32);
 
         final int x, y, width, height;
 
@@ -53,11 +58,17 @@ public final class YardArt {
         }
     }
 
-    private record Element(String name, Point from, Point to, Surface material, Surface front, Surface top, Turn turn) {
-        Element front(Surface surface) { return new Element(name, from, to, material, surface, top, turn); }
-        Element top(Surface surface) { return new Element(name, from, to, material, front, surface, turn); }
+    private record Element(String name, Point from, Point to, Surface material, Surface front, Surface top, Turn turn, List<String> sides) {
+        Element(String name, Point from, Point to, Surface material, Surface front, Surface top, Turn turn) {
+            this(name, from, to, material, front, top, turn, List.of("south", "north", "east", "west", "up", "down"));
+        }
+        Element front(Surface surface) { return new Element(name, from, to, material, surface, top, turn, sides); }
+        Element top(Surface surface) { return new Element(name, from, to, material, front, surface, turn, sides); }
         Element turn(double x, double y, double z, String axis, double angle) {
-            return new Element(name, from, to, material, front, top, new Turn(new Point(x, y, z), axis, angle));
+            return new Element(name, from, to, material, front, top, new Turn(new Point(x, y, z), axis, angle), sides);
+        }
+        Element sides(String... directions) {
+            return new Element(name, from, to, material, front, top, turn, List.of(directions));
         }
     }
 
@@ -74,11 +85,11 @@ public final class YardArt {
         Path textures = root.resolve("textures/item/sternenfront/yard");
         Files.createDirectories(models);
         Files.createDirectories(textures);
-        var props = List.of(console(), powerCoupler(), engineCradle(), cargoStack(), repairDroid(), wallPanel());
+        var props = List.of(console(), powerCoupler(), engineCradle(), cargoStack(), repairDroid(), wallPanel(), cloneTank(), embryoRack(), geneArchive());
         var atlases = new ArrayList<BufferedImage>();
         for (var prop : props) {
             validate(prop);
-            var atlas = texture(prop.id);
+            var atlas = clinical(prop.id) ? clinicalTexture(prop.id) : texture(prop.id);
             atlases.add(atlas);
             Files.writeString(models.resolve(prop.id + ".json"), model(prop));
             ImageIO.write(atlas, "PNG", textures.resolve(prop.id + ".png").toFile());
@@ -272,6 +283,188 @@ public final class YardArt {
         return new Prop("wall_panel", "Wall service panel", List.copyOf(b));
     }
 
+    private static boolean clinical(String id) {
+        return List.of("clone_tank", "embryo_rack", "gene_archive").contains(id);
+    }
+
+    private static void disk(List<Element> b, String name, double cx, double cz, double radius,
+                             double bottom, double top, Surface surface) {
+        double core = radius / Math.sqrt(2), half = radius * (Math.sqrt(2) - 1), thickness = radius - core;
+        b.add(part(name + " caps", cx - radius, bottom, cz - radius, cx + radius, top, cz + radius, Surface.CAP_IVORY).sides("up", "down"));
+        for (int sign : new int[]{-1, 1}) {
+            double edge = sign * (radius - thickness / 2);
+            b.add(part(name + " end", cx - half, bottom, cz + edge - thickness / 2,
+                    cx + half, top, cz + edge + thickness / 2, surface).sides(sign < 0 ? "north" : "south"));
+            b.add(part(name + " side", cx + edge - thickness / 2, bottom, cz - half,
+                    cx + edge + thickness / 2, top, cz + half, surface).sides(sign < 0 ? "west" : "east"));
+            for (int side : new int[]{-1, 1}) {
+                double x = cx + side * (radius - thickness / 2) / Math.sqrt(2);
+                double z = cz + sign * (radius - thickness / 2) / Math.sqrt(2);
+                b.add(part(name + " bevel", x - half, bottom, z - thickness / 2,
+                        x + half, top, z + thickness / 2, surface).turn(x, bottom, z, "y", side * sign * 45).sides(sign < 0 ? "north" : "south"));
+            }
+        }
+    }
+
+    private static Prop cloneTank() {
+        var b = new ArrayList<Element>();
+        disk(b, "weighted capsule foot", 8, 8, 7.8, 8, 8.7, Surface.BASE);
+        disk(b, "lower ivory collar", 8, 8, 7.8, 8.7, 10.1, Surface.CLEAN);
+        disk(b, "upper ivory collar", 8, 8, 7.8, 30.2, 31.5, Surface.CLEAN);
+        disk(b, "sealed capsule crown", 8, 8, 7.3, 31.5, 32, Surface.CLINICAL_STEEL);
+        for (double x : new double[]{2.6, 12.6}) {
+            b.add(part("narrow rear support", x, 10.1, 2.4, x + .8, 30.2, 3.3, Surface.CLINICAL_STEEL));
+        }
+        b.add(part("ice blue rear surface", 3.4, 10.1, 2.5, 12.6, 30.2, 2.65, Surface.BACK_GLASS));
+        b.add(part("suspension neck", 7.45, 25.3, 7, 8.55, 26.2, 8.4, Surface.SKIN));
+        b.add(part("unarmored medical tunic", 5.65, 19.1, 6.5, 10.35, 25.5, 9.25, Surface.MEDICAL));
+        b.add(part("soft medical shorts", 5.8, 17.4, 6.6, 10.2, 19.1, 9.2, Surface.MEDICAL));
+        b.add(part("adult head", 6.35, 26, 6.4, 9.65, 29.3, 9.6, Surface.SKIN).front(Surface.FACE));
+        b.add(part("cropped dark hair", 6.3, 29.05, 6.35, 9.7, 29.7, 9.65, Surface.HAIR));
+        b.add(part("cropped hair back", 6.3, 27.8, 6.2, 9.7, 29.05, 6.55, Surface.HAIR));
+        for (int side : new int[]{-1, 1}) {
+            double shoulder = 8 + side * 3.1;
+            b.add(part("short medical sleeve", shoulder - .8, 23.1, 6.9, shoulder + .8, 25.1, 8.9, Surface.MEDICAL)
+                    .turn(shoulder, 24.8, 7.9, "z", side * 22.5));
+            b.add(part("relaxed bare arm", shoulder - .65, 19.7, 7, shoulder + .65, 23.5, 8.8, Surface.SKIN)
+                    .turn(shoulder, 23.5, 7.9, "z", side * 22.5));
+            double wrist = shoulder + side * 1.3;
+            b.add(part("suspended hand", wrist - .6, 18.5, 7.1, wrist + .6, 20, 8.9, Surface.SKIN));
+            double leg = 8 + side * 1.3;
+            b.add(part("bare relaxed leg", leg - .85, 11.5, 7, leg + .85, 17.5, 8.8, Surface.SKIN));
+            b.add(part("bare foot", leg - .85, 10.5, 7, leg + .85, 11.7, 9.7, Surface.SKIN));
+        }
+        b.add(part("clear front window", 5.0177, 10.1, 15.18, 10.9823, 30.2, 15.22, Surface.WINDOW).sides("south"));
+        for (int side : new int[]{-1, 1}) {
+            double x = 8 + side * 5.09117;
+            b.add(part("clear faceted window", x - 2.9, 10.1, 13.07117, x + 2.9, 30.2, 13.09117, Surface.SIDE_WINDOW)
+                    .turn(x, 10.1, 13.09117, "y", side * 45).sides("south"));
+            b.add(part("clear side window", 8 + side * 7.2 - .01, 10.1, 5.0177,
+                    8 + side * 7.2 + .01, 30.2, 10.9823, Surface.SIDE_WINDOW).sides(side < 0 ? "west" : "east"));
+        }
+        b.add(part("capsule identification inset", 5, 9.1, 15.8, 10.5, 9.8, 15.9, Surface.INVENTORY).sides("south"));
+        b.add(part("capsule amber status", 11.2, 9.2, 15.8, 11.8, 9.7, 15.9, Surface.STATUS).sides("south"));
+        return new Prop("clone_tank", "Clone in medical capsule", List.copyOf(b));
+    }
+
+    private static Prop embryoRack() {
+        var b = new ArrayList<Element>();
+        b.add(part("shared ivory lower rail", -4, 8, 1.6, 20, 9.5, 14.35, Surface.CLEAN));
+        b.add(part("shared ivory upper rail", -4, 21, 1.6, 20, 22.4, 14.35, Surface.CLEAN));
+        b.add(part("rear rack connection", -3.5, 9.5, 2, 19.5, 21, 2.7, Surface.CLINICAL_STEEL));
+        for (double x : new double[]{0, 8, 16}) {
+            disk(b, "white vessel bottom collar", x, 8, 3.5, 9.5, 10.5, Surface.CLEAN);
+            disk(b, "white vessel top collar", x, 8, 3.5, 20, 21, Surface.CLEAN);
+            b.add(part("pale incubation interior", x - 2.8, 10.5, 5, x + 2.8, 20, 5.1, Surface.BACK_GLASS));
+            b.add(part("curled embryo head", x - 1.5, 15.8, 7, x + 1.2, 18.5, 9.3, Surface.SKIN)
+                    .turn(x, 16.8, 8, "z", -22.5));
+            b.add(part("curled embryo torso", x - .8, 13.3, 7.3, x + 1.2, 16.2, 9, Surface.SKIN)
+                    .turn(x, 15.2, 8, "z", -22.5));
+            b.add(part("tucked embryo knees", x - 1.5, 12.7, 8.1, x + .6, 14.4, 9.9, Surface.SKIN));
+            b.add(part("tucked embryo forearm", x - 1.3, 14.4, 9.1, x + .1, 15.2, 9.7, Surface.SKIN));
+            b.add(part("clear individual vessel", x - 2.8, 10.5, 11.45, x + 2.8, 20, 11.47, Surface.WINDOW).sides("south"));
+            for (int side : new int[]{-1, 1}) {
+                b.add(part("vessel side reflection", x + side * 3.15 - .01, 10.5, 6,
+                        x + side * 3.15 + .01, 20, 10, Surface.SIDE_WINDOW).sides(side < 0 ? "west" : "east"));
+            }
+        }
+        b.add(part("rack inventory strip", 5, 8.3, 14.35, 11, 9.2, 14.4, Surface.INVENTORY).sides("south"));
+        return new Prop("embryo_rack", "Three incubation vessels", List.copyOf(b));
+    }
+
+    private static Prop geneArchive() {
+        var b = new ArrayList<Element>();
+        disk(b, "faceted weighted pedestal", 8, 8, 5.5, 8, 9, Surface.BASE);
+        disk(b, "ivory pedestal step", 8, 8, 5.2, 9, 10.4, Surface.CLEAN);
+        b.removeIf(e -> e.name.equals("ivory pedestal step end") && e.from.z > 8);
+        for (double y : new double[]{9, 10.15}) {
+            b.add(part("inventory bezel rim", 5.8461, y, 13, 10.1539, y + .25, 13.2, Surface.CLEAN));
+        }
+        b.add(part("inventory bezel left", 5.8461, 9.25, 13, 6.1, 10.15, 13.2, Surface.CLEAN));
+        b.add(part("inventory bezel right", 9.95, 9.25, 13, 10.1539, 10.15, 13.2, Surface.CLEAN));
+        disk(b, "sample tray", 8, 8, 4.5, 10.4, 11.3, Surface.CLINICAL_STEEL);
+        b.add(part("short archive spindle", 7.2, 11.3, 7.2, 8.8, 19.7, 8.8, Surface.CLINICAL_STEEL));
+        disk(b, "spindle top", 8, 8, 1.8, 19.7, 21, Surface.CLEAN);
+        for (var p : List.of(new Point(5.2, 0, 9.5), new Point(10.8, 0, 9.5), new Point(8, 0, 4.8))) {
+            b.add(part("ivory cartridge socket", p.x - 1.2, 11.3, p.z - 1.2, p.x + 1.2, 12.4, p.z + 1.2, Surface.CLEAN));
+            b.add(part("capped sample cartridge", p.x - .85, 12.4, p.z - .85, p.x + .85, 18.8, p.z + .85, Surface.ICE));
+            b.add(part("sample within cartridge", p.x - .35, 13, p.z + .86, p.x + .35, 17.8, p.z + .88, Surface.SAMPLE).sides("south"));
+            b.add(part("white sample cap", p.x - 1.1, 18.8, p.z - 1.1, p.x + 1.1, 19.7, p.z + 1.1, Surface.CLEAN));
+            b.add(part("sample cap seal", p.x - 1.12, 18.5, p.z - 1.12, p.x + 1.12, 18.8, p.z + 1.12, Surface.SEAL));
+        }
+        b.add(part("recessed inventory panel", 6.1, 9.25, 13, 9.95, 10.15, 13.02, Surface.INVENTORY).sides("south"));
+        b.add(part("single amber inventory status", 9.5, 9.35, 13.02, 9.9, 9.8, 13.04, Surface.STATUS).sides("south"));
+        return new Prop("gene_archive", "Gene sample archive", List.copyOf(b));
+    }
+
+    private static BufferedImage clinicalTexture(String id) {
+        var image = new BufferedImage(64, 64, BufferedImage.TYPE_INT_ARGB);
+        for (var s : Surface.values()) {
+            if (s.ordinal() < Surface.CLEAN.ordinal()) continue;
+            int color = switch (s) {
+                case CLEAN -> IVORY;
+                case ICE -> 0xBCDCE8;
+                case SKIN, FACE -> 0xCDAA90;
+                case HAIR -> 0x302C2A;
+                case MEDICAL -> 0xE2E7DE;
+                case BACK_GLASS -> 0x8DB6CB;
+                case CLINICAL_STEEL -> BLUE;
+                case STATUS -> AMBER;
+                case SAMPLE -> 0x84B9C8;
+                case BASE -> BLUE;
+                default -> DARK;
+            };
+            if (s == Surface.WINDOW || s == Surface.SIDE_WINDOW || s == Surface.CAP_IVORY) continue;
+            rect(image, s.x, s.y, s.width, s.height, color);
+            rect(image, s.x, s.y, s.width, 1, shade(color, 1, 12));
+        }
+        var cap = Surface.CAP_IVORY;
+        for (int y = 0; y < cap.height; y++) for (int x = 0; x < cap.width; x++) {
+            if (Math.min(x, cap.width - 1 - x) + Math.min(y, cap.height - 1 - y) < cap.width / 2.0 * (2 - Math.sqrt(2))) continue;
+            image.setRGB(cap.x + x, cap.y + y, 0xFF000000 | IVORY);
+        }
+        rect(image, 33, 10, 2, 1, 0x534840);
+        rect(image, 37, 10, 2, 1, 0x534840);
+        rect(image, 34, 11, 1, 1, 0x3B4142);
+        rect(image, 37, 11, 1, 1, 0x3B4142);
+        rect(image, 35, 12, 1, 2, 0xB78F78);
+        rect(image, 35, 14, 2, 1, 0x9F7767);
+        rect(image, 49, 4, 2, 10, 0xD4DDD7);
+        rect(image, 59, 4, 2, 10, 0xD4DDD7);
+        rect(image, 49, 13, 12, 1, 0xC1D0CD);
+        rect(image, 24, 16, 2, 16, 0xA4C7D7);
+        rect(image, 38, 16, 2, 16, 0x789EAF);
+        rect(image, 2, 19, 1, 10, 0xD9F1F5);
+        rect(image, 3, 18, 1, 5, 0xD9F1F5);
+        rect(image, 13, 36, 1, 9, 0xB9DFEC);
+        rect(image, 18, 20, 1, 14, 0xC4E6F1);
+        rect(image, 20, 38, 1, 7, 0xAACFDF);
+        for (var p : List.of(new Point(11, 21, 0), new Point(12, 30, 0), new Point(5, 39, 0))) {
+            int x = (int) p.x, y = (int) p.y;
+            rect(image, x, y, 2, 1, 0xD0EAF2);
+            rect(image, x, y + 1, 1, 1, 0xB5DBE9);
+        }
+        rect(image, 41, 17, 14, 14, DARK);
+        for (int y : new int[]{19, 23, 27}) {
+            rect(image, 43, y, 8, 1, 0xA8C6C9);
+            rect(image, 52, y, 1, 1, TEAL);
+        }
+        rect(image, 58, 28, 1, 9, 0xD4E7DE);
+        for (int y = 29; y < 37; y += 3) rect(image, 59, y, 3, 1, 0x6B969D);
+        int samples = switch (id) {
+            case "clone_tank" -> 1;
+            case "embryo_rack" -> 3;
+            case "gene_archive" -> 4;
+            default -> throw new IllegalArgumentException(id);
+        };
+        for (int sample = 0; sample < samples; sample++) {
+            rect(image, 43 + sample * 2, 29, 1, 1, TEAL);
+        }
+        rect(image, 3, 60, 3, 1, 0x526D79);
+        rect(image, 9, 62, 2, 1, 0x8297A0);
+        return image;
+    }
+
     private static List<Face> faces(Element e) {
         var a = e.from;
         var b = e.to;
@@ -285,6 +478,7 @@ public final class YardArt {
                 List.of(new Point(a.x, b.y, a.z), new Point(b.x, b.y, a.z), new Point(b.x, b.y, b.z), new Point(a.x, b.y, b.z)),
                 List.of(new Point(a.x, a.y, b.z), new Point(b.x, a.y, b.z), new Point(b.x, a.y, a.z), new Point(a.x, a.y, a.z)));
         for (int i = 0; i < 6; i++) {
+            if (!e.sides.contains(directions.get(i))) continue;
             var surface = i == 0 ? e.front : i == 4 ? e.top : e.material;
             double width = i == 2 || i == 3 ? b.z - a.z : b.x - a.x;
             double height = i >= 4 ? b.z - a.z : b.y - a.y;
@@ -307,7 +501,14 @@ public final class YardArt {
     }
 
     private static void checkBounds(String id, Point p) {
-        if (p.x < -8 || p.x > 24 || p.y < 8 || p.y > 32 || p.z < -8 || p.z > 24) {
+        double[] bounds = switch (id) {
+            case "clone_tank" -> new double[]{0, 8, 0, 16, 32, 16};
+            case "embryo_rack" -> new double[]{-4, 8, 1.6, 20, 22.4, 14.4};
+            case "gene_archive" -> new double[]{2.4, 8, 2.4, 13.6, 21, 13.6};
+            default -> new double[]{-8, 8, -8, 24, 32, 24};
+        };
+        if (p.x < bounds[0] - .0001 || p.x > bounds[3] + .0001 || p.y < bounds[1] - .0001 || p.y > bounds[4] + .0001
+                || p.z < bounds[2] - .0001 || p.z > bounds[5] + .0001) {
             throw new IllegalArgumentException(id + ": outside yard contract " + p);
         }
     }
@@ -342,6 +543,7 @@ public final class YardArt {
         var image = new BufferedImage(64, 64, BufferedImage.TYPE_INT_ARGB);
         rect(image, 0, 0, 64, 64, DARK);
         for (var s : Surface.values()) {
+            if (s.ordinal() > Surface.ENGINE.ordinal()) break;
             int color = switch (s) {
                 case ENAMEL, STENCIL, ACCESS -> IVORY;
                 case STEEL, RIB, BOLT -> BLUE;
@@ -450,7 +652,7 @@ public final class YardArt {
 
     private static BufferedImage preview(List<Prop> props, List<BufferedImage> atlases) {
         int width = 480, height = 440;
-        var image = new BufferedImage(width * 3, height * 2, BufferedImage.TYPE_INT_RGB);
+        var image = new BufferedImage(width * 3, height * ((props.size() + 2) / 3), BufferedImage.TYPE_INT_RGB);
         double[] depths = new double[image.getWidth() * image.getHeight()];
         Arrays.fill(depths, Double.NEGATIVE_INFINITY);
         var g = image.createGraphics();
@@ -506,11 +708,13 @@ public final class YardArt {
             double depth = wa * a.depth + wb * b.depth + wc * c.depth;
             int pixel = y * image.getWidth() + x;
             if (depth <= depths[pixel]) continue;
-            depths[pixel] = depth;
             double u = second ? wb : wb + wc, v = second ? wb + wc : wc;
             int tx = Math.clamp((int) ((uv[0] + u * (uv[2] - uv[0])) * 4), 0, 63);
             int ty = Math.clamp((int) ((uv[1] + v * (uv[3] - uv[1])) * 4), 0, 63);
-            image.setRGB(x, y, shade(atlas.getRGB(tx, ty), light, 0));
+            int color = atlas.getRGB(tx, ty);
+            if ((color >>> 24) == 0) continue;
+            depths[pixel] = depth;
+            image.setRGB(x, y, shade(color, light, 0));
         }
     }
 }

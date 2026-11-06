@@ -46,20 +46,47 @@ exported with "Java Block/Item".
 
 ## Sturmwerft shipyard props
 
-`YardArt.java` authors six original props with separate 64-pixel atlases in
+`YardArt.java` authors nine original props with separate 64-pixel atlases in
 `models/item/sternenfront/yard/` and `textures/item/sternenfront/yard/`. The props use ivory enamel, blue-gray steel,
 charcoal recesses, teal instruments, amber indicators and weathered copper. They reference no vanilla textures.
 `:resourcepack:generateYardArt` regenerates only these assets and `resourcepack/build/yard/contact-sheet.png`.
 The contact sheet uses the generated geometry and face UVs with ordinary directional shading.
 
-The `PackModel` paths are `sternenfront/yard/console`, `power_coupler`, `engine_cradle`, `cargo_stack`, `repair_droid`
-and `wall_panel`, all under `sternenfront/yard/`. They use `ItemDisplayTransform.NONE`, with no model display transforms.
+The `PackModel` paths are `sternenfront/yard/console`, `power_coupler`, `engine_cradle`, `cargo_stack`, `repair_droid`,
+`wall_panel`, `clone_tank`, `embryo_rack` and `gene_archive`, all under `sternenfront/yard/`.
+They use `ItemDisplayTransform.NONE`, with no model display transforms.
 The model's ground origin is `(8,8,8)`, and its authored front points along +Z. The runtime cancels the client's extra
 half-turn, as it does for dropships. Do not add another corrective model rotation.
 
 All element corners, including rotated corners, fit `x,z = -8..24` and `y = 8..32`. At scale 1, the item-centred
 geometry therefore fits within two blocks horizontally and rises at most 1.5 blocks above the display position.
 `YardArt` checks these bounds and its explicit UVs before writing each model. The props use ordinary world lighting.
+
+The three cloning props use clean ivory collars, ice-blue interiors and warm skin tones. Their 64-pixel atlases use
+only alpha 0 and 255. The capsule windows contain narrow opaque reflections and bubble marks, with the remaining
+pixels fully clear. Each window is a single face.
+The faceted collars use cutout caps and separate side faces to avoid overlapping cap faces.
+The six shipyard atlases use their original opaque texture writer.
+
+| Kind | Actual rotated bounds in model units | Intended scale | Visible size in blocks |
+| --- | --- | --- | --- |
+| `clone_tank` | `(0.2, 8, 0.2)` to `(15.8, 32, 15.9)` | 1.5 | 1.4625 × 2.25 × 1.471875 |
+| `embryo_rack` | `(-4, 8, 1.6)` to `(20, 22.4, 14.4)` | 1 | 1.5 × 0.9 × 0.8 |
+| `gene_archive` | `(2.5, 8, 2.5)` to `(13.5, 21, 13.5)` | 0.8 | 0.55 × 0.65 × 0.55 |
+
+Bounds are rounded to four decimals. `YardArt` checks both the authoring boxes and rotated faces against each
+cloning prop's tighter bounds. The adult clone spans model `y = 10.5..29.7`, or 1.8 blocks at scale 1.5.
+The gene archive has three capped cartridges and an inventory panel inset behind its ivory bezel.
+
+The visual references are Lucasfilm's [Kamino](https://www.starwars.com/databank/kamino),
+[Tipoca City](https://www.starwars.com/databank/tipoca-city),
+[medical capsules](https://www.starwars.com/databank/medical-capsules),
+[Kamino history gallery](https://www.starwars.com/kamino-history-gallery) and
+[ARC Troopers gallery](https://www.starwars.com/series/clone-wars/arc-troopers-episode-gallery).
+The upright adult-filled capsule adapts those references for this desk. It is not an exact screen replica.
+All geometry and pixels are authored locally. No source images are bundled.
+Client verification must check the clone's face, window cutouts, lighting and clearance on the desk.
+The software contact sheet does not reproduce Minecraft's item renderer.
 
 ## Presentation assets
 
