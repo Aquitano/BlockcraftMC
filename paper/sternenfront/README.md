@@ -84,9 +84,9 @@ cover, teammate safety, and self-damage. Lightning uses the saber guard without 
 
 ## Redeployment
 
-The middle toolbar button confirms a quick deployment with the selected class or hero. It queues the deployment during
-the five-second wait. Without confirmation, the fifteen-second timer deploys the existing free class without buying a hero.
-Selecting a different hero requires another confirmation, including when a spawn was already queued.
+The middle toolbar button confirms a quick deployment with the selected class, hero, or reinforcement. It queues the deployment during
+the five-second wait. Without confirmation, the fifteen-second timer deploys the existing free class without spending battle points.
+Selecting a different paid unit requires another confirmation, including when a spawn was already queued.
 
 The suggestion keeps an explicitly chosen spawn if it is still safe. Otherwise it remembers the last confirmed safe post
 or HQ, then prefers a safe owned post closer to an objective. HQ is the fallback. The actual deployment rechecks ownership
@@ -97,7 +97,7 @@ The right toolbar button opens a tactical schematic with north up and east right
 HQ positions into inventory slots, preserving scale and separating overlapping markers. Colours show ownership.
 Banners allow deployment, glass panes mark locked posts, and solid blocks mark contested or attacked posts.
 Hovering shows the post name, recommendation, selection and why deployment is locked. The landing button names its target
-post. The same button returns to the class cards. Slot 38 beside the hero cards is reserved for the intermediate paid unit.
+post. The same button returns to the class cards. The faction's reinforcement card sits beside its hero cards.
 
 After spawning, the order bar shows the nearest objective's letter, horizontal distance and direction relative to the
 player's view. When all posts are safe, it points to the post nearest the enemy HQ for defence. It also updates the compass
@@ -202,10 +202,10 @@ shot until the keyframe, then changes the camera immediately. Other segments use
 post shot has a moving endpoint before the headquarters cut. The actor faces that shot's camera and starts its clip
 when the first headquarters keyframe is reached. Explicit operator overrides of `intro.shots` retain their own path.
 
-`intro.audio` controls the faction radio briefing, captions, and shot cues. `intro.audio.briefing` is off by default,
-which leaves only the shot cues. Speech uses the client's Voice slider;
+`intro.audio` controls the faction radio briefing, captions, and shot cues. `intro.audio.briefing` is on by default.
+Disabling it leaves only the shot cues. Speech uses the client's Voice slider;
 radio clicks and transitions use Ambient. Sounds follow the spectator camera and stop with the scene, including a skip.
-The briefing starts three ticks after the opening fade. `briefing-ticks` reserves 80 ticks for speech before the closing
+The briefing starts three ticks after the opening fade. `briefing-ticks` reserves 48 ticks by default for speech before the closing
 radio click. An intro too short for that window omits the briefing. Transitions follow the first intermediate camera
 keyframe and the headquarters shot, outside the fades. Voice and effects volumes can be set independently.
 
