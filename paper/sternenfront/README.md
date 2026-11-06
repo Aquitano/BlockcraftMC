@@ -39,6 +39,20 @@ Round end and plugin disable remove secret displays and stop playback and tasks.
 settings. The hero keys `jedi`, `commander`, `sith`, and `bounty-hunter` identify Obi-Wan, Rex, Dooku, and Jango.
 Changing display names does not rename those persisted keys.
 
+## Reinforcement units
+
+The deploy menu offers one reinforcement per faction, bought with the same battle points as heroes for one life.
+The Republic's ARC trooper costs 250 points, has 32 health, and carries a cooler-firing support repeater with shield wall and adrenaline.
+The Separatists' BX commando droid costs 300 points, has 26 health and 112% movement speed, and carries a short-range carbine with jump pack and grenade.
+Each faction can field two reinforcements alongside its named hero slots. `reinforcement-units` configures each unit's cost, limit, health, and speed.
+`blasters.arc-repeater` and `blasters.commando-carbine` configure their weapons. The abilities use the existing `abilities` settings.
+
+Selection reserves nothing. Choosing a spawn confirms the purchase; changing the paid role requires confirmation again.
+Automatic deployment without confirmation uses the free class. Deployment checks the balance and capacity again, and a failed deployment restores the points and slot.
+If the unit is unavailable, the player deploys as their free class. Death, disconnect, and round end release the unit.
+Taking the relic also releases the unit and replaces its loadout with the champion's. Reinforcements receive normal healing and normal kill rewards.
+They have no permanent unlock or database record. Their body rigs and helmets come from `resourcepack/SternenfrontArt.java`.
+
 ## Arena template
 
 A map's template is restored before each server start. Positions and bot routes come from

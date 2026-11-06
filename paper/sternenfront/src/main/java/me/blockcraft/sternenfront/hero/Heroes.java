@@ -38,18 +38,19 @@ public final class Heroes {
     private final Messages messages;
     private final Loadouts loadouts;
     private final HeroConfig config;
-    private final BattlePoints points = new BattlePoints();
+    private final BattlePoints points;
     private final HeroRoster roster;
     private final Sabers sabers;
     private final Powers powers;
     private final Map<UUID, BossBar> bars = new HashMap<>();
     private Optional<Faction> comeback = Optional.empty();
 
-    public Heroes(SternenfrontGame game, Plugin plugin, Messages messages, Loadouts loadouts, HeroConfig config) {
+    public Heroes(SternenfrontGame game, Plugin plugin, Messages messages, Loadouts loadouts, HeroConfig config, BattlePoints points) {
         this.game = game;
         this.messages = messages;
         this.loadouts = loadouts;
         this.config = config;
+        this.points = points;
         this.roster = new HeroRoster(config.perFaction());
         this.sabers = new Sabers(plugin, messages, config.saber());
         this.powers = new Powers(game, config, sabers);

@@ -269,6 +269,8 @@ classes:
 blasters:
   carbine: {damage: 4, headshot: 1.5, heat: 8, cooldown-ticks: 4, bolts: 1, burst-ticks: 0, spread: 0.012, speed: 3.5, range: 90}
   repeater: {damage: 2.5, headshot: 1.25, heat: 14, cooldown-ticks: 8, bolts: 3, burst-ticks: 2, spread: 0.05, speed: 3.5, range: 60}
+  arc-repeater: {damage: 2.5, headshot: 1.25, heat: 8, cooldown-ticks: 8, bolts: 3, burst-ticks: 2, spread: 0.025, speed: 3.5, range: 75}
+  commando-carbine: {damage: 5, headshot: 1.25, heat: 12, cooldown-ticks: 4, bolts: 1, burst-ticks: 0, spread: 0.035, speed: 3.5, range: 28}
   long-rifle: {damage: 11, headshot: 1.85, heat: 34, cooldown-ticks: 24, bolts: 1, burst-ticks: 0, spread: 0, speed: 5, range: 160}
   pistol: {damage: 3.5, headshot: 1.5, heat: 10, cooldown-ticks: 4, bolts: 1, burst-ticks: 0, spread: 0.015, speed: 3.5, range: 70}
   twin-pistol: {damage: 3.5, headshot: 1.6, heat: 7, cooldown-ticks: 4, bolts: 2, burst-ticks: 2, spread: 0.008, speed: 4, range: 80}
@@ -279,6 +281,11 @@ blasters:
   se14: {}
   westar-pistols: {}
   heavy-rifle: {damage: 6, headshot: 1.5, heat: 9, cooldown-ticks: 5, bolts: 1, burst-ticks: 0, spread: 0.01, speed: 4, range: 100}
+
+# These slots are independent of named heroes. A purchase lasts one life; limit: 0 disables a unit.
+reinforcement-units:
+  arc-trooper: {cost: 250, limit: 2, health: 32, speed: 1}
+  commando-droid: {cost: 300, limit: 2, health: 26, speed: 1.12}
 
 # Each ability's cooldown and what it does. A grenade or mining charge explodes fuse-ticks after the throw and hurts enemies
 # and its thrower in sight within radius, damage at its centre and a third of it at the edge. The shield wall stands

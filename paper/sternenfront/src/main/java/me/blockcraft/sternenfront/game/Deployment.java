@@ -8,6 +8,8 @@ import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.sternenfront.config.FeelConfig;
 import me.blockcraft.sternenfront.hero.Hero;
+import me.blockcraft.sternenfront.reinforcement.Reinforcement;
+import me.blockcraft.sternenfront.reinforcement.ReinforcementRoster;
 import me.blockcraft.sternenfront.menu.DeployMenu;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
@@ -278,8 +280,6 @@ public final class Deployment {
             return;
         }
         var messages = game.messages();
-        var config = game.config();
-        var heroes = game.heroes();
         var map = game.map();
         game.combat().forget(player);
         player.leaveVehicle();
@@ -292,11 +292,43 @@ public final class Deployment {
             case Spawn.Post post -> spawnSpots.farthestFromEnemies(map.posts().get(post.index()).spawns(), faction.get());
             case Spawn.Dropship ignored -> spawnSpots.leastCrowded(spawnSpots.dropshipSpots(game.front().orElseThrow()));
         };
+        var picked = game.fighter(player).choosing().flatMap(Fighter.Choosing::paidReinforcement);
+        if (picked.isPresent()) {
+            var unit = picked.get();
+            var result = game.reinforcementUnits().roster().deploy(player.getUniqueId(), faction.get(), unit,
+                    () -> enter(player, faction.get(), spot, spawn, picked));
+            if (result == ReinforcementRoster.Deployment.DEPLOYED) {
+                player.sendMessage(messages.get("reinforcement.entered", Placeholder.component("unit", game.reinforcementUnits().name(unit))));
+                return;
+            }
+            if (result == ReinforcementRoster.Deployment.FAILED) {
+                deploymentFailed(player);
+                return;
+            }
+            player.sendMessage(messages.get("reinforcement.missed", Placeholder.component("unit", game.reinforcementUnits().name(unit))));
+        }
+        if (!enter(player, faction.get(), spot, spawn, Optional.empty())) {
+            deploymentFailed(player);
+        }
+    }
+
+    private void deploymentFailed(Player player) {
+        player.sendMessage(game.messages().get("reinforcement.deployment-failed"));
+        openDeploy(player);
+    }
+
+    private boolean enter(Player player, Faction faction, Location spot, Spawn spawn, Optional<Reinforcement> unit) {
+        if (!player.teleport(spot) || game.phase() != GamePhase.INGAME || !game.isPlaying(player) || !player.isOnline()) {
+            return false;
+        }
+        var messages = game.messages();
+        var config = game.config();
+        var heroes = game.heroes();
         var fighter = game.fighter(player);
         var picked = fighter.choosing().flatMap(Fighter.Choosing::paidHero);
         fighter.choosing().filter(Fighter.Choosing::confirmed).flatMap(Fighter.Choosing::chosen)
                 .ifPresent(chosen -> remembered.put(player.getUniqueId(), chosen));
-        var hero = picked.filter(chosen -> heroes.enlist(player, faction.get(), chosen));
+        var hero = picked.filter(chosen -> heroes.enlist(player, faction, chosen));
         if (picked.isPresent() && hero.isEmpty()) {
             player.sendMessage(messages.get("hero.missed", Placeholder.component("hero", heroes.name(picked.get()))));
         }
@@ -306,15 +338,16 @@ public final class Deployment {
         reveal(player);
         PlayerReset.reset(player, GameMode.ADVENTURE);
         config.combat().apply(player);
-        player.teleport(spot);
         fighter.deployed(config.heat(), game.tick() + config.respawn().protectionSeconds() * TICKS_PER_SECOND, hero);
+        fighter.reinforcement(unit);
         fighter.hurt(game.tick());
         hero.ifPresentOrElse(chosen -> {
-            heroes.equip(player, faction.get(), chosen, game.tick());
-            Bukkit.broadcast(messages.get("hero.entered", game.factionName(faction.get()), Placeholder.component("hero", heroes.name(chosen)),
+            heroes.equip(player, faction, chosen, game.tick());
+            Bukkit.broadcast(messages.get("hero.entered", game.factionName(faction), Placeholder.component("hero", heroes.name(chosen)),
                     Placeholder.unparsed("player", player.getName())));
             Bukkit.getOnlinePlayers().forEach(Sounds.NOTIFY::play);
-        }, () -> game.loadouts().equip(player, faction.get(), fighter.combatClass()));
+        }, () -> unit.ifPresentOrElse(chosen -> game.reinforcementUnits().equip(player, chosen),
+                () -> game.loadouts().equip(player, faction, fighter.combatClass())));
         player.getInventory().setHeldItemSlot(0);
         player.setFoodLevel(20);
         player.setSaturation(20);
@@ -325,6 +358,7 @@ public final class Deployment {
         }
         presentation.deployed(player, spawn);
         sidebarChanged.run();
+        return true;
     }
 
     public void controlsChanged(Player player) {
@@ -332,7 +366,7 @@ public final class Deployment {
         var faction = game.factionOf(player);
         if (faction.isEmpty()) return;
         var keys = fighter.hero().map(chosen -> chosen.abilities().stream().map(ability -> "hero.ability." + ability.key()).toList())
-                .orElseGet(() -> fighter.combatClass().abilities(faction.get()).stream().map(ability -> ability.messageKey(faction.get())).toList());
+                .orElseGet(() -> fighter.abilities(faction.get()).stream().map(ability -> ability.messageKey(faction.get())).toList());
         if (keys.equals(controlsTold.get(player.getUniqueId()))) return;
         controlsTold.put(player.getUniqueId(), keys);
         hintStarted.put(player.getUniqueId(), game.tick());

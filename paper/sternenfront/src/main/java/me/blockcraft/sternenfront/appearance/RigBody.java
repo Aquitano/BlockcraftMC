@@ -3,6 +3,7 @@ package me.blockcraft.sternenfront.appearance;
 import me.blockcraft.sternenfront.game.CombatClass;
 import me.blockcraft.sternenfront.game.Faction;
 import me.blockcraft.sternenfront.hero.Hero;
+import me.blockcraft.sternenfront.reinforcement.Reinforcement;
 
 import java.util.Locale;
 import java.util.Optional;
@@ -18,6 +19,8 @@ enum RigBody {
     KOLONIEN_HEAVY(Faction.KOLONIEN, new Joints(.3f, 1.4f, 0, .105f, .95f, .97f, 0, 1.5f, 0, -.26f, 1.27f, .53f), 1, -1.1f, .55f, true, "arm"),
     KOLONIEN_SCOUT(Faction.KOLONIEN, new Joints(.24f, 1.38f, 0, .085f, .95f, .97f, 0, 1.51f, 0, -.2f, 1.25f, .55f), 1, -1.15f, .5f, true, "arm"),
     KOLONIEN_MEDIC(Faction.KOLONIEN, new Joints(.28f, 1.4f, 0, .1f, .95f, .97f, 0, 1.5f, 0, -.24f, 1.27f, .53f), 1, -1.15f, 0, true, "arm"),
+    REINFORCEMENT_ARC_TROOPER(Faction.KOLONIEN, new Joints(.3f, 1.4f, 0, .105f, .95f, .97f, 0, 1.5f, 0, -.26f, 1.27f, .53f), 1, -1.1f, .55f, true, "arm"),
+    REINFORCEMENT_COMMANDO_DROID(Faction.HEGEMONIE, new Joints(.25f, 1.44f, 0, .09f, .96f, .98f, 0, 1.55f, 0, -.22f, 1.3f, .53f), 1, -1.1f, .45f, true, "arm"),
     HERO_JEDI(Faction.KOLONIEN, new Joints(.28f, 1.4f, 0, .1f, .95f, .97f, 0, 1.5f, 0, -.25f, 1.12f, .35f), -.5f),
     HERO_COMMANDER(Faction.KOLONIEN, new Joints(.3f, 1.4f, 0, .105f, .95f, .97f, 0, 1.5f, 0, -.26f, 1.27f, .53f), -1.1f),
     HERO_SITH(Faction.HEGEMONIE, new Joints(.28f, 1.4f, 0, .1f, .95f, .97f, 0, 1.5f, 0, -.25f, 1.12f, .35f), -.5f),
@@ -56,6 +59,13 @@ enum RigBody {
     static RigBody of(Faction faction, CombatClass role, Optional<Hero> hero) {
         return hero.filter(chosen -> chosen != Hero.CHAMPION).map(chosen -> valueOf("HERO_" + chosen.name()))
                 .orElseGet(() -> of(faction, hero.isPresent() ? CombatClass.SOLDIER : role));
+    }
+
+    static RigBody of(Reinforcement unit) {
+        return switch (unit) {
+            case ARC_TROOPER -> REINFORCEMENT_ARC_TROOPER;
+            case COMMANDO_DROID -> REINFORCEMENT_COMMANDO_DROID;
+        };
     }
 
     String family() {

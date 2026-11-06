@@ -152,6 +152,7 @@ public final class Gadgets {
 
     /** Ends a siege early, for a unit that dies, leaves or becomes a hero. */
     public void release(LivingEntity unit) {
+        trails.removeIf(trail -> trail.player().equals(unit));
         sieges.removeIf(siege -> {
             boolean own = siege.unit().equals(unit);
             if (own) {

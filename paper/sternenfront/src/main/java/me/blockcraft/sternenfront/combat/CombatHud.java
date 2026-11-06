@@ -55,7 +55,7 @@ public final class CombatHud {
         var fighter = game.fighter(player);
         var hero = fighter.hero();
         var faction = game.factionOf(player);
-        var classAbility = faction.flatMap(side -> fighter.combatClass().abilities(side).stream().skip(index).findFirst());
+        var classAbility = faction.flatMap(side -> fighter.abilities(side).stream().skip(index).findFirst());
         var key = hero.isPresent() ? hero.get().abilities().stream().skip(index).findFirst().map(ability -> "hero.ability." + ability.key())
                 : classAbility.flatMap(ability -> faction.map(ability::messageKey));
         if (key.isEmpty()) {
