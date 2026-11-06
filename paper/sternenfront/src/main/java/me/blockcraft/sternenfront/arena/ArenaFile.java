@@ -1,5 +1,6 @@
 package me.blockcraft.sternenfront.arena;
 
+import me.blockcraft.api.pack.PackModel;
 import me.blockcraft.sternenfront.arena.FrontMap.Control;
 import me.blockcraft.sternenfront.arena.FrontMap.ControlSite;
 import me.blockcraft.sternenfront.arena.FrontMap.Headquarters;
@@ -62,7 +63,25 @@ public final class ArenaFile {
         if (environment == null) return YardEnvironment.EMPTY;
         return new YardEnvironment(spots(world, environment.getStringList("steam")), spots(world, environment.getStringList("sparks")),
                 Optional.ofNullable(environment.getConfigurationSection("crane"))
-                        .map(crane -> new YardEnvironment.Crane(spot(world, crane.getString("from")), spot(world, crane.getString("to")))));
+                        .map(crane -> new YardEnvironment.Crane(spot(world, crane.getString("from")), spot(world, crane.getString("to")))),
+                environment.getMapList("props").stream().map(prop -> prop(world, prop)).toList());
+    }
+
+    private static YardEnvironment.Prop prop(World world, Map<?, ?> prop) {
+        var model = PackModel.byPath("sternenfront/yard/" + prop.get("kind"))
+                .orElseThrow(() -> new IllegalArgumentException("Unknown shipyard prop: " + prop.get("kind")));
+        Object rawScale = prop.containsKey("scale") ? prop.get("scale") : 1;
+        if (!(rawScale instanceof Number number)) {
+            throw new IllegalArgumentException("Shipyard prop scale must be a number: " + rawScale);
+        }
+        float scale = number.floatValue();
+        var at = spot(world, prop.get("at"));
+        if (!Float.isFinite(scale) || scale < 0.5f || scale > 1.5f
+                || !Double.isFinite(at.getX()) || !Double.isFinite(at.getY()) || !Double.isFinite(at.getZ())
+                || !Float.isFinite(at.getYaw()) || !Float.isFinite(at.getPitch())) {
+            throw new IllegalArgumentException("Invalid shipyard prop placement: " + prop);
+        }
+        return new YardEnvironment.Prop(model, at, scale);
     }
 
     private static SecretSpots secrets(World world, ConfigurationSection secrets) {
@@ -106,8 +125,10 @@ public final class ArenaFile {
     private static Location spot(World world, Object spot) {
         var parts = String.valueOf(spot).split(" ");
         var at = new Location(world, Double.parseDouble(parts[0]), Double.parseDouble(parts[1]), Double.parseDouble(parts[2]));
-        if (parts.length == 5) {
+        if (parts.length >= 4) {
             at.setYaw(Float.parseFloat(parts[3]));
+        }
+        if (parts.length == 5) {
             at.setPitch(Float.parseFloat(parts[4]));
         }
         return at;

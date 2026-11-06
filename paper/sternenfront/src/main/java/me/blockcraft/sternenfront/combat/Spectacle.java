@@ -62,6 +62,7 @@ public final class Spectacle {
     private final SternenfrontGame game;
     private final PresentationConfig config;
     private final ShipyardEffects shipyard;
+    private final YardProps props;
     private Ship ship;
     private Storm storm;
     private long nextLightning;
@@ -70,6 +71,7 @@ public final class Spectacle {
         this.game = game;
         config = PresentationConfig.from(game.plugin().getConfig());
         shipyard = new ShipyardEffects(game);
+        props = new YardProps(game);
     }
 
     public void assaultBegins(Faction trailing, Location landing) {
@@ -142,6 +144,7 @@ public final class Spectacle {
     }
 
     public void tick(long tick) {
+        props.tick(tick);
         shipyard.tick(tick);
         if (ship != null) {
             fly(ship);
@@ -319,6 +322,7 @@ public final class Spectacle {
     }
 
     public void clear() {
+        props.clear();
         shipyard.clear();
         endShip();
         if (storm != null) {

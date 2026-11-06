@@ -73,6 +73,7 @@ presentation:
   shipyard:
     enabled: true
     range: 40
+    props-range: 96
     steam-interval-ticks: 12
     spark-interval-ticks: 30
     steam-particles: 5

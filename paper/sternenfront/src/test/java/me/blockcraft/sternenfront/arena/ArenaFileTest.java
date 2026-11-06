@@ -1,5 +1,6 @@
 package me.blockcraft.sternenfront.arena;
 
+import me.blockcraft.api.pack.PackModel;
 import org.bukkit.Location;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.junit.Rule;
@@ -7,9 +8,11 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 public class ArenaFileTest {
@@ -62,6 +65,42 @@ public class ArenaFileTest {
         yaml.set("world-border-size", 100);
         yaml.save(file);
         assertEquals(196, ArenaFile.load(null, file.toPath()).worldBorderSize(), 0.001);
+    }
+
+    @Test
+    public void yardPropsPreserveTheirModelGroundPositionYawAndScale() throws Exception {
+        var yaml = secretMap();
+        yaml.set("environment.props", List.of(
+                Map.of("kind", "console", "at", "-50.5 83 -104.5 90", "scale", 1.25),
+                Map.of("kind", "repair_droid", "at", "1.5 82 116.5 -90 0")));
+        var file = temporary.newFile();
+        yaml.save(file);
+        var environment = ArenaFile.load(null, file.toPath()).environment();
+        assertTrue(environment.crane().isEmpty());
+        assertTrue(environment.steam().isEmpty());
+        assertEquals(2, environment.props().size());
+        var console = environment.props().getFirst();
+        assertEquals(PackModel.STERNENFRONT_YARD_CONSOLE, console.model());
+        assertEquals(new Location(null, -50.5, 83, -104.5, 90, 0), console.at());
+        assertEquals(1.25, console.scale(), 0);
+        var droid = environment.props().getLast();
+        assertEquals(PackModel.STERNENFRONT_YARD_REPAIR_DROID, droid.model());
+        assertEquals(-90, droid.at().getYaw(), 0);
+        assertEquals(1, droid.scale(), 0);
+    }
+
+    @Test
+    public void yardPropsRejectUnknownModelsAndInvalidScales() throws Exception {
+        var yaml = secretMap();
+        var file = temporary.newFile();
+        yaml.set("environment.props", List.of(Map.of("kind", "missing", "at", "0 83 0")));
+        yaml.save(file);
+        assertThrows(IllegalArgumentException.class, () -> ArenaFile.load(null, file.toPath()));
+        for (var scale : List.of(0, 2, Double.NaN, "large")) {
+            yaml.set("environment.props", List.of(Map.of("kind", "console", "at", "0 83 0", "scale", scale)));
+            yaml.save(file);
+            assertThrows(IllegalArgumentException.class, () -> ArenaFile.load(null, file.toPath()));
+        }
     }
 
     @Test
