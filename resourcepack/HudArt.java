@@ -122,8 +122,11 @@ public final class HudArt {
     private static void postMarkers(Path assets) throws Exception {
         var models = assets.resolve("models/item/sternenfront");
         var items = assets.resolve("items/sternenfront");
+        var textures = assets.resolve("textures/item/sternenfront");
         Files.createDirectories(models);
         Files.createDirectories(items);
+        Files.createDirectories(textures);
+        ImageIO.write(objectivePips(), "PNG", textures.resolve("objective_pips.png").toFile());
         for (int post = 0; post < 5; post++) {
             for (int variant = 0; variant < 2; variant++) {
                 String name = "post_" + (char) ('a' + post) + (variant == 0 ? "_filled" : "_hollow");
@@ -131,7 +134,7 @@ public final class HudArt {
                 Files.writeString(models.resolve(name + ".json"), String.format(Locale.ROOT, """
                         {
                           "gui_light": "front",
-                          "textures": {"marker": "blockcraft:font/objective_pips"},
+                          "textures": {"marker": "blockcraft:item/sternenfront/objective_pips"},
                           "elements": [{"from": [1, 1, 8], "to": [15, 15, 8], "shade": false,
                             "faces": {"south": {"uv": [%.1f, 0, %.1f, 16], "texture": "#marker", "tintindex": 0}}}]
                         }
