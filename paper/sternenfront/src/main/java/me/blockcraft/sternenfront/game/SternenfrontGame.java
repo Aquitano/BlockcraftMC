@@ -130,6 +130,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     private final BattleEffects effects;
     private final Spectacle spectacle;
     private final BattleMusic music;
+    private final BattleRadio radio;
     private final Bots bots;
     private final BotConfig botConfig;
     private final Ballot<BotDifficulty> botDifficultyVotes = new Ballot<>();
@@ -201,6 +202,11 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         this.effects = new BattleEffects(this);
         this.spectacle = new Spectacle(this);
         this.music = new BattleMusic(this);
+        this.radio = new BattleRadio(plugin, plugin.getConfig(), (player, call) -> {
+            var transcript = Placeholder.component("speech", messages.get(call.message()));
+            player.sendMessage(call.post() < 0 ? messages.get("radio.transcript", transcript)
+                    : messages.get("radio.transcript-post", transcript, posts.name(call.post())));
+        });
         this.bots = new Bots(this, botConfig);
         this.gadgets = new Gadgets(this);
         this.heroes = new Heroes(this, plugin, messages, loadouts, heroConfig);
@@ -259,6 +265,10 @@ public final class SternenfrontGame implements RoundConnections.Seating {
 
     public Bots bots() {
         return bots;
+    }
+
+    public BattleRadio radio() {
+        return radio;
     }
 
     public BattleEffects effects() {
@@ -526,6 +536,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         presentation.cancel(player);
         intro.cancel(player);
         music.forget(player);
+        radio.forget(player);
         botDifficultyVotes.withdraw(player.getUniqueId());
         standDown(player);
         deployment.forgetMenu(player);
@@ -759,6 +770,11 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         spectacle.tick(tick);
         posts.tick(tick);
         playMusic();
+        radio.tick(tick, round.players().stream()
+                .filter(player -> player.isOnline() && player.getWorld().equals(map.world()) && !intro.running()
+                        && !Scenes.isViewing(player) && !BlockcraftApi.get().dialogues().active(player)
+                        && BlockcraftApi.get().resourcePack().applied(player))
+                .flatMap(player -> factionOf(player).stream().map(faction -> new BattleRadio.Listener(player, faction))).toList());
         bots.tick(tick);
         bolts.tick();
         gadgets.tick(tick);
@@ -834,6 +850,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         var picked = PriorityPost.pick(reinforcements, posts.owners());
         front = Optional.of(picked);
         posts.priority(OptionalInt.of(picked.post()));
+        radio.act(BattleRadio.Event.ASSAULT, picked.post());
         bots.reconsider();
         spectacle.assaultBegins(picked.trailing(), spawnSpots.dropshipSpot(picked, 0, 0));
         announceAct("assault", posts.name(picked.post()), factionName(picked.trailing()),
@@ -849,6 +866,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
             front.ifPresent(assault -> spectacle.assaultBegins(trailing, spawnSpots.dropshipSpot(assault, 0, 0)));
         }
         posts.priority(OptionalInt.empty());
+        radio.act(BattleRadio.Event.LAST_STAND, -1);
         heroes.comeback(trailing);
         bots.sightShare(config.acts().stormSightShare());
         playMusic();
@@ -866,6 +884,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         switch (event.change()) {
             case CommandPost.Change.Captured captured -> {
                 presentation.captured(event.index(), captured.by(), event.present());
+                radio.post(BattleRadio.Event.CAPTURED, captured.by(), event.index(), tick);
                 event.present().forEach(player -> {
                     summary.awardCoins(player, config.rewards().capture());
                     awardPoints(player, heroes.config().points().capture(), CombatFeedback.Reward.CAPTURE);
@@ -873,6 +892,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
                 announce(captured.by());
             }
             case CommandPost.Change.Neutralised neutralised -> {
+                radio.post(BattleRadio.Event.LOST, neutralised.from(), event.index(), tick);
                 event.present().forEach(player -> awardPoints(player, heroes.config().points().neutralise(),
                         CombatFeedback.Reward.NEUTRALISE));
                 announce(neutralised.from().enemy());
@@ -1438,6 +1458,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         effects.clear();
         spectacle.clear();
         music.clear();
+        radio.close();
         bots.clear();
         combat.clear();
         feedback.clear();

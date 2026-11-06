@@ -193,6 +193,18 @@ posts:
   capture-seconds: 12
   radio-cooldown-seconds: 15
 
+# Act calls wait for infantry speech to finish. Post calls during speech or cooldown are discarded.
+# Timing floors cover the checked-in recordings: 80 ticks for radio, 50 for infantry.
+radio:
+  enabled: true
+  speech: true
+  captions: true
+  volume: 0.8
+  call-ticks: 80
+  infantry-ticks: 50
+  post-cooldown-ticks: 400
+  events: {assault: true, last-stand: true, captured: true, lost: true}
+
 # Tessar's secrets (EASTER_EGGS.md, "Sternenfront"). The first find of each pays coins. Brummi panics at the hits-th
 # hit from one player in a round and stays away for hide-seconds. The sand beast rumbles under a player who stood
 # still on its dune for rumble-seconds and breaks out after still-seconds, at scale times the model's size; then the
@@ -387,12 +399,11 @@ intro:
   fade-ticks: 15
   audio:
     enabled: true
-    # The spoken radio briefing with its clicks and chat transcript. Off while its lines still name the old factions.
-    briefing: false
+    briefing: true
     voice-volume: 0.8
     effects-volume: 0.35
     captions: true
-    briefing-ticks: 80
+    briefing-ticks: 48
   focus:
     enabled: true
     from: 0.75
