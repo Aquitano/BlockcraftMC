@@ -43,6 +43,33 @@ ochre froglights provide world light. The generator does not add fullbright disp
 Floor wear follows paired wheel tracks with short connected repair patches. Drainage covers and transverse seams
 break up the southern skybridge, and the ship passage has long edge seams. Floor treatments retain their original height.
 
+## Equipment props
+
+`environment.props` contains 39 placements from `yard_props()`. Each entry has a snake-case `kind`, an `at` string
+containing `x y z yaw`, and a `scale` between 0.5 and 1.5. The default scale is 1.0.
+The y coordinate is the visible base, including half-block slab tops. Yaw 0 faces south along +Z, yaw 90 faces west,
+yaw 180 faces north, and yaw 270 faces east.
+
+| Area | Count | Equipment groups |
+| --- | --- | --- |
+| Engine room | 8 | Couplers and cabinet panel at the copper work shelves, engine on the low service bench, three terminals, spare cargo |
+| Assembly | 7 | Engine cradle at `41 85 -116`, terminals, coupler, staged cargo, repair droid |
+| Workshop | 6 | Repair station at `-77 84 109.5`, warm-lit terminals, coupler, cabinet panel, spare cargo |
+| Control hall | 11 | Four perimeter desks, two consoles at the central table, cabinet panels, service terminals |
+| Freight hall | 7 | Six cargo groups on the existing crates, with fronts toward the working aisles, and one cabinet panel |
+
+Models use `sternenfront/yard/<kind>` with `ItemDisplayTransform.NONE` and no model display transforms.
+Their ground origin is model coordinate `(8,8,8)`. All elements fit the shared 2 by 1.5 by 2 block envelope at scale 1.0.
+`YARD_PROP_BOUNDS` records their exported bounds after element rotations, relative to that origin.
+These values match the yard asset generator's `bounds.json` from commit `903db8ef`.
+The cargo model has depth -0.6875..0.125 before yaw. The wall panel has depth -0.09375..0.075.
+Panel placements account for this depth so their backs meet solid cabinet faces.
+
+All standing equipment rests on solid work surfaces. Panels have solid backing across their width and height.
+The generator rejects model intersections, overlapping props, unsupported bases, and bounds that enter a player's body
+at any standing position reachable by ordinary floors and stairs. It then treats the rotated bounds as solid blocks
+for the existing circulation, interaction, board, cover, landing, and crane checks. These barriers exist only in validation.
+
 ## Controls
 
 | Control | Switch blocks | Affected blocks or volume | Permanent alternate passage |
@@ -86,6 +113,7 @@ At least 23,000 standing positions must be reachable by ordinary floors and stai
 It also checks interaction reach and support, board visibility, capture positions, cover and peek rays, fixed course landings, landing
 cylinders to the sky, headquarters vehicle approaches, environment emitters and the moving crane's swept volume.
 
-Collision checks conservatively treat partial solid blocks as full blocks. Buttons and levers are passable.
-The generator does not simulate player movement, jumping timing, bot navigation, rendered models or round events.
+Circulation checks conservatively treat partial solid blocks as full blocks. Buttons and levers are passable.
+The generator does not simulate player movement, jumping timing, bot navigation, rendered textures or round events.
+The prop checks use exported bounding boxes and conservative block volumes rather than rendering the model meshes.
 World regeneration and a real client check are still required after the runtime changes are integrated.

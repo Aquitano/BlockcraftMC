@@ -32,6 +32,14 @@ COLD_LIGHT = "sea_lantern"
 HULL = "light_gray_concrete"
 RAIL = "iron_bars"
 MOST_PER_FILL = 32768
+YARD_PROP_BOUNDS = {
+    "console": (-0.6875, 0, -0.4375, 0.6875, 1.3897287161694392, 0.6203725392145505),
+    "power_coupler": (-0.5, 0, -0.4375, 0.5, 1.375, 0.75),
+    "engine_cradle": (-0.7625, 0, -0.875, 0.7125, 1.375, 0.875),
+    "cargo_stack": (-0.8125, 0, -0.6875, 0.8125, 1.39375, 0.125),
+    "repair_droid": (-0.6875, 0, -0.3125, 0.58125, 1.41875, 0.625),
+    "wall_panel": (-0.6875, 0, -0.09375, 0.6875, 1.375, 0.075),
+}
 
 
 def runs(values):
@@ -876,6 +884,54 @@ def side_route(faction):
     return result
 
 
+def yard_props():
+    return [dict(kind=kind, at=f"{x} {y} {z} {yaw}", scale=scale) for kind, x, y, z, yaw, scale in (
+        ("power_coupler", -49, 84, -101, 0, 0.8),
+        ("wall_panel", -50.5, 84, -101.953125, 0, 0.5),
+        ("power_coupler", -41.5, 84, -121, 180, 0.75),
+        ("console", -57, 85.5, -117, 0, 0.6),
+        ("console", -43, 85.5, -116.5, 0, 0.6),
+        ("console", -54, 85.5, -102, 180, 0.6),
+        ("cargo_stack", -47.5, 87, -118.5, 0, 0.75),
+        ("engine_cradle", -59.5, 84, -103, 0, 0.9),
+
+        ("engine_cradle", 41, 85, -116, 0, 0.9),
+        ("console", 29, 85.5, -116, 0, 0.6),
+        ("console", 48, 85.5, -115, 0, 0.5),
+        ("power_coupler", 47, 85.5, -104, 180, 0.6),
+        ("cargo_stack", 55.5, 87, -114, 0, 1.0),
+        ("cargo_stack", 37, 84, -103, 180, 0.75),
+        ("repair_droid", 23.5, 85, -103, 180, 0.5),
+
+        ("repair_droid", -77, 84, 109.5, 0, 0.65),
+        ("console", -78.3, 84, 109.5, 0, 0.5),
+        ("console", -72, 83.5, 91, 0, 0.6),
+        ("power_coupler", -77, 83.5, 96, 270, 0.65),
+        ("wall_panel", -54.925, 81.5, 115, 270, 0.8),
+        ("cargo_stack", -59.5, 82, 119, 180, 0.65),
+
+        ("console", -14, 85, 103.5, 270, 0.65),
+        ("console", 14, 85, 117.5, 90, 0.65),
+        ("console", -6.5, 85, 126, 180, 0.65),
+        ("console", 10.5, 85, 95, 0, 0.65),
+        ("wall_panel", -16.925, 81.5, 113, 270, 0.8),
+        ("console", 18, 83.5, 104, 90, 0.6),
+        ("wall_panel", -7.075, 81.5, 129, 90, 0.8),
+        ("console", 8, 83.5, 91, 0, 0.5),
+        ("console", -1.8, 83, 116.5, 0, 0.6),
+        ("console", 1.8, 83, 116.5, 180, 0.6),
+        ("wall_panel", 0, 81, 120.0609375, 0, 0.65),
+
+        ("cargo_stack", 57, 85, 100.5, 270, 1.0),
+        ("cargo_stack", 67.5, 83, 96.5, 0, 0.75),
+        ("cargo_stack", 76.5, 85, 103.5, 90, 1.0),
+        ("cargo_stack", 58, 84, 118.5, 180, 0.9),
+        ("cargo_stack", 69, 85, 118, 90, 0.9),
+        ("cargo_stack", 79.5, 82, 115, 90, 0.65),
+        ("wall_panel", 67.5, 81.25, 98.0703125, 0, 0.75),
+    )]
+
+
 def arena():
     posts = []
     for key, z in POSTS.items():
@@ -903,6 +959,7 @@ def arena():
                 "lane": [-27.0, 77.0, -134.0, 23.0, 91.0, -129.0], "pit-y": 80.0,
                 "gates": [-21.0, -16.0, -11.0, -6.0, -1.0, 4.0, 9.0, 14.0, 19.0], "board": "-23.5 87 -126.5"}},
             "environment": {
+                "props": yard_props(),
                 "steam": [spot(x, z - 8, SKY + 2) for z in POSTS.values() for x in (-11, 11)],
                 "sparks": [spot(x, z - 6, SKY + 1.5) for z in POSTS.values() for x in (-9, 13)],
                 "crane": {"from": "-10.5 84 0.5", "to": "10.5 84 0.5"}}}
@@ -1006,6 +1063,76 @@ def clear_ray(levels, start, end, ignore_target=False):
         if (x, z) in levels[y] and not (ignore_target and (x, y, z) == target):
             return False
     return True
+
+
+def prop_bounds(prop):
+    x, y, z, yaw = map(float, prop["at"].split())
+    scale = prop.get("scale", 1.0)
+    x1, y1, z1, x2, y2, z2 = YARD_PROP_BOUNDS[prop["kind"]]
+    cosine, sine = math.cos(math.radians(yaw)), math.sin(math.radians(yaw))
+    corners = [(x + (dx * cosine - dz * sine) * scale, z + (dx * sine + dz * cosine) * scale)
+               for dx in (x1, x2) for dz in (z1, z2)]
+    return tuple(round(value, 9) for value in (min(point[0] for point in corners), y + y1 * scale,
+                 min(point[1] for point in corners), max(point[0] for point in corners), y + y2 * scale,
+                 max(point[1] for point in corners)))
+
+
+def volume_cells(bounds):
+    spans = [range(math.floor(low + 1e-7), math.ceil(high - 1e-7)) for low, high in zip(bounds[:3], bounds[3:])]
+    return ((x, y, z) for x in spans[0] for y in spans[1] for z in spans[2])
+
+
+def block_top(block, y):
+    return y + (0.5 if block.split("[")[0].endswith("_slab") and "type=bottom" in block else 1)
+
+
+def validate_props(fills, plan, walking):
+    occupied = []
+    visuals = Builder()
+    for prop in plan["environment"].get("props", []):
+        if prop["kind"] not in YARD_PROP_BOUNDS or not 0.5 <= prop.get("scale", 1.0) <= 1.5:
+            sys.exit(f"Invalid yard prop: {prop}")
+        bounds = prop_bounds(prop)
+        x1, y1, z1, x2, y2, z2 = bounds
+        area = plan["play-area"]
+        if any(bounds[index] < area[index] or bounds[index + 3] > area[index + 3] for index in range(3)):
+            sys.exit(f"Yard prop outside play area: {prop}")
+        for x, y, z in volume_cells((x1 - 0.8, y1 - 1.8, z1 - 0.8, x2 - 0.2, y2, z2 - 0.2)):
+            body = x + 0.2, y, z + 0.2, x + 0.8, y + 1.8, z + 0.8
+            if (x, y, z) in walking and all(bounds[index] < body[index + 3] - 1e-7 and
+                    bounds[index + 3] > body[index] + 1e-7 for index in range(3)):
+                sys.exit(f"Yard prop obscures an ordinary standing position at {(x, y, z)}: {prop}")
+        for previous in occupied:
+            if all(bounds[index] < previous[index + 3] - 1e-7 and bounds[index + 3] > previous[index] + 1e-7
+                   for index in range(3)):
+                sys.exit(f"Yard props overlap: {prop}")
+        occupied.append(bounds)
+        for x, y, z in volume_cells(bounds):
+            block = block_at(fills, x, y, z)
+            bottom = y + (0.5 if block.split("[")[0].endswith("_slab") and "type=top" in block else 0)
+            if solid_block(block) and bottom < y2 - 1e-7 and block_top(block, y) > y1 + 1e-7:
+                sys.exit(f"Yard prop intersects {block} at {(x, y, z)}: {prop}")
+        if prop["kind"] == "wall_panel":
+            yaw = float(prop["at"].split()[3]) % 360
+            if yaw not in (0, 90, 180, 270):
+                sys.exit(f"Wall panel needs a cardinal backing face: {prop}")
+            for x, y, z in volume_cells(bounds):
+                sx = max(x1 + 1e-5, min(x + 0.5, x2 - 1e-5))
+                sy = max(y1 + 1e-5, min(y + 0.5, y2 - 1e-5))
+                sz = max(z1 + 1e-5, min(z + 0.5, z2 - 1e-5))
+                backing = {0: (sx, sy, z1 - 0.001), 90: (x2 + 0.001, sy, sz),
+                           180: (sx, sy, z2 + 0.001), 270: (x1 - 0.001, sy, sz)}[yaw]
+                if not solid_at(fills, *map(math.floor, backing)):
+                    sys.exit(f"Wall panel has no solid backing: {prop}")
+        else:
+            for x, y, z in volume_cells((x1, y1 - 0.01, z1, x2, y1, z2)):
+                block = block_at(fills, x, y, z)
+                if not solid_block(block) or not math.isclose(block_top(block, y), y1, abs_tol=1e-7):
+                    sys.exit(f"Yard prop needs a supported work surface at {(x, y, z)}: {prop}")
+        visuals.box(math.floor(x1 + 1e-7), math.floor(y1 + 1e-7), math.floor(z1 + 1e-7),
+                    math.ceil(x2 - 1e-7) - 1, math.ceil(y2 - 1e-7) - 1, math.ceil(z2 - 1e-7) - 1, "barrier")
+    print(f"Validated {len(occupied)} scaled yard props, backing and work surfaces")
+    return visuals.fills
 
 
 def validate_expansion(fills, plan, levels, cells, connected, stairs):
@@ -1129,16 +1256,22 @@ def validate_expansion(fills, plan, levels, cells, connected, stairs):
 
 
 def validate(fills, plan):
-    blocked = blocked_spots(fills, plan)
-    if blocked:
-        sys.exit(f"Unsupported or obstructed fighter positions: {blocked}")
-    floor = layer(fills, DECK)
-    walkable = floor - layer(fills, SKY) - layer(fills, SKY + 1)
     levels = {y: layer(fills, y) for y in range(math.floor(plan["play-area"][1]) - 1, math.floor(plan["play-area"][4]) + 3)}
     cells = standing_positions(levels, plan["play-area"], plan["death-y"])
     stairs = {(x, y1 + 1, z) for x1, y1, z1, x2, _, z2, block in fills if "_stairs[" in block
               for x in range(x1, x2 + 1) for z in range(z1, z2 + 1)
               if "_stairs[" in block_at(fills, x, y1, z)}
+    visuals = validate_props(fills, plan, walk_reachable(cells, (-82, 65, -6), levels, stairs))
+    fills = fills + visuals
+    for x1, y1, z1, x2, y2, z2, _ in visuals:
+        for y in range(y1, y2 + 1):
+            levels[y].update((x, z) for x in range(x1, x2 + 1) for z in range(z1, z2 + 1))
+    blocked = blocked_spots(fills, plan)
+    if blocked:
+        sys.exit(f"Unsupported or obstructed fighter positions: {blocked}")
+    floor = levels[DECK]
+    walkable = floor - levels[SKY] - levels[SKY + 1]
+    cells = standing_positions(levels, plan["play-area"], plan["death-y"])
     connected = walk_reachable(cells, (-82, 65, -6), levels)
     require_reachable(fighter_positions(plan), connected, plan["play-area"])
     validate_expansion(fills, plan, levels, cells, connected, stairs)
