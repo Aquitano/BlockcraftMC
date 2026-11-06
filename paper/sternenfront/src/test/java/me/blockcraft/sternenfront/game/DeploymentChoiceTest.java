@@ -10,6 +10,19 @@ import static org.junit.Assert.*;
 public class DeploymentChoiceTest {
 
     @Test
+    public void failedDeploymentRequiresConfirmationAndRearmsAutomaticDeployment() {
+        var choosing = new Fighter.Choosing(100, 300, Optional.empty(), Optional.of(Hero.JEDI))
+                .choose(new Spawn.Post(1));
+        var retry = choosing.retry(650);
+        assertFalse(retry.manualReady(350));
+        assertTrue(retry.paidHero().isEmpty());
+        assertEquals(650, retry.autoTick());
+        assertEquals(choosing.chosen(), retry.chosen());
+        assertEquals(choosing.hero(), retry.hero());
+        assertTrue(retry.choose(new Spawn.Headquarters()).manualReady(350));
+    }
+
+    @Test
     public void selectingAHeroDoesNotAuthorizeAutomaticPayment() {
         var choosing = new Fighter.Choosing(100, 300, Optional.empty(), Optional.empty()).pick(Optional.of(Hero.JEDI));
         assertTrue(choosing.paidHero().isEmpty());

@@ -61,11 +61,12 @@ public final class ReinforcementUnits {
         lore.add(messages.get("reinforcement.cost", Formatter.number("cost", stats.cost()),
                 Formatter.number("points", points.of(viewer.getUniqueId()))));
         boolean affordable = roster.affordable(viewer.getUniqueId(), faction, unit);
-        lore.add(messages.get(picked ? "reinforcement.picked" : !roster.open(faction, unit) ? "reinforcement.taken"
-                : affordable ? "reinforcement.pick" : "reinforcement.too-few-points"));
+        lore.add(messages.get(!roster.open(faction, unit) ? "reinforcement.taken" : !affordable ? "reinforcement.too-few-points"
+                : picked ? "reinforcement.picked" : "reinforcement.pick"));
+        if (picked && !affordable) lore.add(messages.get("reinforcement.fallback"));
         var card = unit.blaster().model().item().name(name(unit)).lore(lore).hideAttributes()
-                .state(picked ? MenuState.ACTIVE : affordable ? MenuState.AVAILABLE : MenuState.LOCKED);
-        if (picked) {
+                .state(!affordable ? MenuState.LOCKED : picked ? MenuState.ACTIVE : MenuState.AVAILABLE);
+        if (picked && affordable) {
             card.glow();
         }
         return card.build();

@@ -7,6 +7,7 @@ import org.bukkit.entity.LivingEntity;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 
 /** Where a deploying fighter lands within a spawn, and where the dropship sets down beside the priority post. */
 final class SpawnSpots {
@@ -17,6 +18,11 @@ final class SpawnSpots {
 
     SpawnSpots(SternenfrontGame game) {
         this.game = game;
+    }
+
+    static boolean hasClearSpawn(List<Location> spots, List<Location> enemies, double clearance) {
+        return spots.stream().anyMatch(spot -> enemies.stream().filter(enemy -> Objects.equals(enemy.getWorld(), spot.getWorld()))
+                .noneMatch(enemy -> enemy.distanceSquared(spot) < clearance * clearance));
     }
 
     /** The spot farthest from the nearest enemy, and among equals the one farthest from anyone, so a crowd spreads. */

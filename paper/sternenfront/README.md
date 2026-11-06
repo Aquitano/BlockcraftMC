@@ -87,15 +87,19 @@ cover, teammate safety, and self-damage. Lightning uses the saber guard without 
 The middle toolbar button confirms a quick deployment with the selected class, hero, or reinforcement. It queues the deployment during
 the five-second wait. Without confirmation, the fifteen-second timer deploys the existing free class without spending battle points.
 Selecting a different paid unit requires another confirmation, including when a spawn was already queued.
+The spawn card distinguishes a pending choice from a confirmed deployment. A failed teleport clears confirmation and
+restarts the automatic countdown, leaving the menu open for another choice.
 
 The suggestion keeps an explicitly chosen spawn if it is still safe. Otherwise it remembers the last confirmed safe post
 or HQ, then prefers a safe owned post closer to an objective. HQ is the fallback. The actual deployment rechecks ownership
 and live enemy presence after the fade; a lost or threatened post is replaced by another safe recommendation.
+A post also needs a spawn at least `respawn.enemy-clearance` blocks from every enemy, by default 12 blocks.
 The dropship remains an explicit choice and is never recommended automatically.
 
 The right toolbar button opens a tactical schematic with north up and east right. It projects the current map's post and
 HQ positions into inventory slots, preserving scale and separating overlapping markers. Colours show ownership.
-Banners allow deployment, glass panes mark locked posts, and solid blocks mark contested or attacked posts.
+Posts A–E use the same letter badges as the combat HUD. Filled badges allow deployment, outlines mark locked posts,
+and blinking badges mark contested or attacked posts. A confirmed available spawn glows.
 Hovering shows the post name, recommendation, selection and why deployment is locked. The landing button names its target
 post. The same button returns to the class cards. The faction's reinforcement card sits beside its hero cards.
 
@@ -121,6 +125,7 @@ Nearby gains combine into one segment.
 F and Q show distinct three-letter ability labels. The meter states use the space left after those labels so the HUD keeps
 its previous width budget for GUI scale 3 on a 1366x768 screen. `K` means cooling. A loadout change explains each binding
 on the existing order bar for `respawn.ability-hint-seconds`, and the deploy chat line gives the full names.
+Death or disconnect restarts an unfinished hint sequence on the next deployment. Completed hints stay hidden until the abilities change.
 `ObjectiveHud` shows reinforcements, a tile per post and the time left in a boss bar's text line, and the pack draws that colour and overlay of bar as nothing. The screen's
 edges redden with a hit and while health is low. `combat.handling` tunes spread and damage falloff.
 Objective titles remain visible while the marker temporarily uses their subtitle, then restores it without restarting

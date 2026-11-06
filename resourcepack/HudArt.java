@@ -7,6 +7,7 @@ import java.awt.geom.Arc2D;
 import java.awt.image.BufferedImage;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Locale;
 
 public final class HudArt {
 
@@ -108,12 +109,40 @@ public final class HudArt {
         g.dispose();
         ImageIO.write(arcs, "PNG", root.resolve("damage_arcs.png").toFile());
         ImageIO.write(objectivePips(), "PNG", root.resolve("objective_pips.png").toFile());
+        postMarkers(root.getParent().getParent());
         ImageIO.write(crosshairMarks(), "PNG", root.resolve("crosshair_marks.png").toFile());
         var hidden = new BufferedImage(182, 5, BufferedImage.TYPE_INT_ARGB);
         var sprites = root.getParent().getParent().getParent().resolve("minecraft/textures/gui/sprites/boss_bar");
         Files.createDirectories(sprites);
         for (var sprite : new String[] {"pink_background", "pink_progress", "notched_20_background", "notched_20_progress"}) {
             ImageIO.write(hidden, "PNG", sprites.resolve(sprite + ".png").toFile());
+        }
+    }
+
+    private static void postMarkers(Path assets) throws Exception {
+        var models = assets.resolve("models/item/sternenfront");
+        var items = assets.resolve("items/sternenfront");
+        Files.createDirectories(models);
+        Files.createDirectories(items);
+        for (int post = 0; post < 5; post++) {
+            for (int variant = 0; variant < 2; variant++) {
+                String name = "post_" + (char) ('a' + post) + (variant == 0 ? "_filled" : "_hollow");
+                double left = (post * 2 + variant) * 1.6;
+                Files.writeString(models.resolve(name + ".json"), String.format(Locale.ROOT, """
+                        {
+                          "gui_light": "front",
+                          "textures": {"marker": "blockcraft:font/objective_pips"},
+                          "elements": [{"from": [1, 1, 8], "to": [15, 15, 8], "shade": false,
+                            "faces": {"south": {"uv": [%.1f, 0, %.1f, 16], "texture": "#marker", "tintindex": 0}}}]
+                        }
+                        """, left, left + 1.6));
+                Files.writeString(items.resolve(name + ".json"), """
+                        {
+                          "model": {"type": "minecraft:model", "model": "blockcraft:item/sternenfront/%s",
+                            "tints": [{"type": "minecraft:custom_model_data", "index": 0, "default": 16777215}]}
+                        }
+                        """.formatted(name));
+            }
         }
     }
 }

@@ -2043,12 +2043,12 @@ public final class PackArt {
 
         /** Hero and spawn rows, labelled on the left; their items answer clicks, so their frames stand out like tiles. */
         static BufferedImage deployOverlay() {
-            var image = overlay(false);
+            var image = overlay(true);
             heading(image, "ROLLE", rowY(1) + 9);
             PackArt.fill(image, 7, rowY(4) - 2, 162, 1, PackArt.EDGE);
-            rowLabel(image, "HELD", rowY(4) + 6);
+            rowLabel(image, "ELITE", rowY(4) + 6);
             rowLabel(image, "EINSATZORT", rowY(5) + 6);
-            for (int column : new int[] {4, 5}) {
+            for (int column : new int[] {2, 4, 5}) {
                 raisedFrame(image, columnX(column) - 1, rowY(4) - 1);
             }
             for (int column = 4; column < 9; column++) {

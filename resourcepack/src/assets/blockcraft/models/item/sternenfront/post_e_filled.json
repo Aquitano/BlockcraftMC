@@ -1,0 +1,6 @@
+{
+  "gui_light": "front",
+  "textures": {"marker": "blockcraft:font/objective_pips"},
+  "elements": [{"from": [1, 1, 8], "to": [15, 15, 8], "shade": false,
+    "faces": {"south": {"uv": [12.8, 0, 14.4, 16], "texture": "#marker", "tintindex": 0}}}]
+}

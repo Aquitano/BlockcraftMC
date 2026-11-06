@@ -44,6 +44,10 @@ public final class Fighter {
             return new Choosing(readyTick, autoTick, Optional.of(spawn), hero, reinforcement, true);
         }
 
+        public Choosing retry(long autoTick) {
+            return new Choosing(readyTick, Math.max(readyTick, autoTick), chosen, hero, reinforcement, false);
+        }
+
         public Choosing pick(Optional<Hero> hero) {
             return new Choosing(readyTick, autoTick, chosen, hero, Optional.empty(),
                     confirmed && reinforcement.isEmpty() && this.hero.equals(hero));

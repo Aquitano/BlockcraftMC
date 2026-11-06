@@ -1331,6 +1331,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
 
     /** A hero fell or left: their slot opens, a champion's relic goes home, and whoever beat them is paid. */
     private void fallen(Player victim, Optional<Player> killer) {
+        deployment.interruptHints(victim);
         releaseReinforcement(victim);
         var fighter = fighters.get(victim.getUniqueId());
         if (fighter == null || fighter.hero().isEmpty()) {

@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.UUID;
 
 /** The way back onto the field: the kill cam, the wait above the map with the deploy menu open, and the deployment. */
@@ -42,9 +43,8 @@ public final class Deployment {
     private final Map<UUID, DeployMenu> deployMenus = new HashMap<>();
     /** Whose kill a dead player watches before they choose where to deploy. */
     private final Map<UUID, UUID> killers = new HashMap<>();
-    private final Map<UUID, List<String>> controlsTold = new HashMap<>();
+    private final Map<UUID, AbilityHints> abilityHints = new HashMap<>();
     private final Map<UUID, Spawn> remembered = new HashMap<>();
-    private final Map<UUID, Long> hintStarted = new HashMap<>();
 
     Deployment(SternenfrontGame game, SpawnSpots spawnSpots, FeelConfig feel, BattlePresentation presentation, Runnable sidebarChanged) {
         this.game = game;
@@ -158,10 +158,17 @@ public final class Deployment {
             case Spawn.Headquarters ignored -> true;
             case Spawn.Post post -> post.index() >= 0 && post.index() < game.posts().size()
                     && game.posts().owner(post.index()).filter(faction::equals).isPresent()
-                    && game.combatants().stream().filter(other -> game.factionOf(other).filter(faction.enemy()::equals).isPresent())
-                    .noneMatch(other -> game.map().posts().get(post.index()).contains(other.getLocation()));
+                    && safePost(faction, post.index());
             case Spawn.Dropship ignored -> game.front().filter(assault -> assault.trailing() == faction).isPresent();
         };
+    }
+
+    private boolean safePost(Faction faction, int index) {
+        var site = game.map().posts().get(index);
+        var enemies = game.combatants().stream().filter(other -> game.factionOf(other).filter(faction.enemy()::equals).isPresent())
+                .map(org.bukkit.entity.LivingEntity::getLocation).toList();
+        double clearance = Math.clamp(game.plugin().getConfig().getDouble("respawn.enemy-clearance"), 0, 64);
+        return enemies.stream().noneMatch(site::contains) && SpawnSpots.hasClearSpawn(site.spawns(), enemies, clearance);
     }
 
     /** Ticks until the player may deploy, 0 once they may. */
@@ -205,14 +212,15 @@ public final class Deployment {
     Optional<Component> guidance(Player player) {
         var faction = game.factionOf(player);
         if (!game.onField(player) || faction.isEmpty()) return Optional.empty();
-        var started = hintStarted.get(player.getUniqueId());
         int hintTicks = Math.clamp(game.plugin().getConfig().getInt("respawn.ability-hint-seconds"), 0, 30) * 20;
-        var abilities = controlsTold.getOrDefault(player.getUniqueId(), List.of());
-        if (started != null && hintTicks > 0 && game.tick() - started < (long) hintTicks * abilities.size()) {
-            int index = (int) ((game.tick() - started) / hintTicks);
+        var hints = abilityHints.get(player.getUniqueId());
+        var hint = hints == null ? OptionalInt.empty() : hints.index(game.tick(), hintTicks);
+        if (hint.isPresent()) {
+            int index = hint.getAsInt();
+            var key = hints.keys().get(index);
             return Optional.of(game.messages().get("deploy.ability-hint", Placeholder.unparsed("key", index == 0 ? "F" : "Q"),
                     Placeholder.component("ability", game.messages().get("combat.hints."
-                            + abilities.get(index).substring(abilities.get(index).lastIndexOf('.') + 1)))));
+                            + key.substring(key.lastIndexOf('.') + 1)))));
         }
         var origin = player.getLocation();
         return BattleNavigation.target(navigationPosts(faction.get()), point(origin), headquarters(faction.get().enemy())).map(target -> {
@@ -313,8 +321,13 @@ public final class Deployment {
     }
 
     private void deploymentFailed(Player player) {
+        if (!player.isOnline() || game.phase() != GamePhase.INGAME || !game.isPlaying(player)) return;
+        var fighter = game.fighter(player);
+        fighter.choosing(Optional.of(fighter.choosing().orElseGet(this::newChoosing)
+                .retry(game.tick() + game.config().respawn().autoSeconds() * TICKS_PER_SECOND)));
         player.sendMessage(game.messages().get("reinforcement.deployment-failed"));
         openDeploy(player);
+        showChoosing(player);
     }
 
     private boolean enter(Player player, Faction faction, Location spot, Spawn spawn, Optional<Reinforcement> unit) {
@@ -368,9 +381,7 @@ public final class Deployment {
         if (faction.isEmpty()) return;
         var keys = fighter.hero().map(chosen -> chosen.abilities().stream().map(ability -> "hero.ability." + ability.key()).toList())
                 .orElseGet(() -> fighter.abilities(faction.get()).stream().map(ability -> ability.messageKey(faction.get())).toList());
-        if (keys.equals(controlsTold.get(player.getUniqueId()))) return;
-        controlsTold.put(player.getUniqueId(), keys);
-        hintStarted.put(player.getUniqueId(), game.tick());
+        if (!abilityHints.computeIfAbsent(player.getUniqueId(), ignored -> new AbilityHints()).start(keys, game.tick())) return;
         var messages = game.messages();
         var abilities = keys.stream().map(key -> messages.get(key + ".name")).toList();
         player.sendMessage(messages.get("deploy.controls",
@@ -394,11 +405,14 @@ public final class Deployment {
         deployMenus.remove(player.getUniqueId());
     }
 
+    void interruptHints(Player player) {
+        Optional.ofNullable(abilityHints.get(player.getUniqueId())).ifPresent(AbilityHints::interrupt);
+    }
+
     void clear() {
         killers.clear();
         deployMenus.clear();
         remembered.clear();
-        controlsTold.clear();
-        hintStarted.clear();
+        abilityHints.clear();
     }
 }

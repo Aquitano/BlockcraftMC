@@ -1,5 +1,7 @@
 package me.blockcraft.sternenfront.menu;
 
+import io.papermc.paper.datacomponent.DataComponentTypes;
+import io.papermc.paper.datacomponent.item.CustomModelData;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.menu.Menu;
 import me.blockcraft.api.pack.MenuIcon;
@@ -15,8 +17,10 @@ import me.blockcraft.sternenfront.game.Spawn;
 import me.blockcraft.sternenfront.hero.Hero;
 import me.blockcraft.sternenfront.reinforcement.Reinforcement;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import org.bukkit.Material;
+import org.bukkit.Color;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
@@ -126,6 +130,7 @@ public final class DeployMenu extends Menu {
         var messages = game.messages();
         boolean available = game.deployment().available(faction, spawn);
         boolean selected = chosen.filter(spawn::equals).isPresent();
+        boolean confirmed = selected && game.fighter(viewer).choosing().filter(Fighter.Choosing::confirmed).isPresent();
         var lore = new ArrayList<Component>();
         if (spawn instanceof Spawn.Post post) {
             lore.add(messages.get(game.posts().owner(post.index()).isEmpty() ? "deploy.post-neutral"
@@ -137,13 +142,13 @@ public final class DeployMenu extends Menu {
         if (!available) {
             lore.addAll(unavailable);
         } else if (selected) {
-            lore.add(messages.get("deploy.chosen"));
+            lore.add(messages.get(confirmed ? "deploy.chosen" : "deploy.pending"));
         } else {
             lore.add(messages.get("deploy.choose"));
         }
         var item = Items.of(icon).name(name).lore(lore).hideAttributes()
-                .state(available ? (selected ? MenuState.ACTIVE : MenuState.AVAILABLE) : MenuState.LOCKED);
-        if (selected || recommended) {
+                .state(!available ? MenuState.LOCKED : confirmed ? MenuState.ACTIVE : selected ? MenuState.PENDING : MenuState.AVAILABLE);
+        if (confirmed && available) {
             item.glow();
         }
         return item.build();
@@ -175,7 +180,15 @@ public final class DeployMenu extends Menu {
                     || owner.filter(faction::equals).isPresent() && !available);
             var shape = contested ? "_CONCRETE" : available ? "_BANNER" : "_STAINED_GLASS_PANE";
             var banner = Material.valueOf(owner.map(Faction::blocks).orElse(Faction.NEUTRAL).name() + shape);
-            set(slot, spawn(faction, spawn, chosen, banner, spawnName(spawn), List.of(game.messages().get("deploy.map-locked"))));
+            var marker = spawn(faction, spawn, chosen, banner, spawnName(spawn), List.of(game.messages().get("deploy.map-locked")));
+            if (spawn instanceof Spawn.Post post && post.index() < 5) {
+                boolean filled = contested ? game.tick() / TICKS_PER_SECOND % 2 == 0 : available;
+                Items.of(marker).model(Key.key("blockcraft", "sternenfront/post_" + (char) ('a' + post.index())
+                        + (filled ? "_filled" : "_hollow")));
+                marker.setData(DataComponentTypes.CUSTOM_MODEL_DATA, CustomModelData.customModelData()
+                        .addColor(owner.map(side -> Color.fromRGB(side.text().value())).orElse(Color.WHITE)).build());
+            }
+            set(slot, marker);
         });
         info(49, Items.of(Material.COMPASS).name(game.messages().get("deploy.map-orientation"))
                 .lore(game.messages().getLines("deploy.map-lore")).build());
