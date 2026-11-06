@@ -560,9 +560,18 @@ environment:
     - kind: "console"
       at: "-6.5 82 126 180"
       scale: 0.8
+    - kind: "clone_tank"
+      at: "7.4 82 95 0"
+      scale: 1.5
+    - kind: "gene_archive"
+      at: "9 82 95 0"
+      scale: 0.8
     - kind: "console"
       at: "10.5 82 95 0"
       scale: 0.8
+    - kind: "embryo_rack"
+      at: "12.5 82 95 0"
+      scale: 1.0
     - kind: "wall_panel"
       at: "-16.925 81.5 113 270"
       scale: 0.8
