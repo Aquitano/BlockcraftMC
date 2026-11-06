@@ -473,7 +473,7 @@
     },
     {
       "name": "bare relaxed leg",
-      "from": [5.85, 11.5, 7],
+      "from": [5.85, 11.7, 7],
       "to": [7.55, 17.5, 8.8],
       "faces": {
         "south": {"uv": [8, 0, 10, 2], "texture": "#atlas"},
@@ -540,7 +540,7 @@
     },
     {
       "name": "bare relaxed leg",
-      "from": [8.45, 11.5, 7],
+      "from": [8.45, 11.7, 7],
       "to": [10.15, 17.5, 8.8],
       "faces": {
         "south": {"uv": [8, 0, 10, 2], "texture": "#atlas"},

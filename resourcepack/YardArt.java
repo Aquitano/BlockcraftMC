@@ -331,7 +331,7 @@ public final class YardArt {
             double wrist = shoulder + side * 1.3;
             b.add(part("suspended hand", wrist - .6, 18.5, 7.1, wrist + .6, 20, 8.9, Surface.SKIN));
             double leg = 8 + side * 1.3;
-            b.add(part("bare relaxed leg", leg - .85, 11.5, 7, leg + .85, 17.5, 8.8, Surface.SKIN));
+            b.add(part("bare relaxed leg", leg - .85, 11.7, 7, leg + .85, 17.5, 8.8, Surface.SKIN));
             b.add(part("bare foot", leg - .85, 10.5, 7, leg + .85, 11.7, 9.7, Surface.SKIN));
         }
         b.add(part("clear front window", 5.0177, 10.1, 15.18, 10.9823, 30.2, 15.22, Surface.WINDOW).sides("south"));
@@ -377,9 +377,8 @@ public final class YardArt {
         disk(b, "faceted weighted pedestal", 8, 8, 5.5, 8, 9, Surface.BASE);
         disk(b, "ivory pedestal step", 8, 8, 5.2, 9, 10.4, Surface.CLEAN);
         b.removeIf(e -> e.name.equals("ivory pedestal step end") && e.from.z > 8);
-        for (double y : new double[]{9, 10.15}) {
-            b.add(part("inventory bezel rim", 5.8461, y, 13, 10.1539, y + .25, 13.2, Surface.CLEAN));
-        }
+        b.add(part("inventory lower bezel rim", 5.8461, 9, 13, 10.1539, 9.25, 13.2, Surface.CLEAN));
+        b.add(part("inventory upper bezel rim", 5.8461, 10.15, 13, 10.1539, 10.5, 13.2, Surface.CLEAN));
         b.add(part("inventory bezel left", 5.8461, 9.25, 13, 6.1, 10.15, 13.2, Surface.CLEAN));
         b.add(part("inventory bezel right", 9.95, 9.25, 13, 10.1539, 10.15, 13.2, Surface.CLEAN));
         disk(b, "sample tray", 8, 8, 4.5, 10.4, 11.3, Surface.CLINICAL_STEEL);

@@ -152,7 +152,7 @@
       }
     },
     {
-      "name": "inventory bezel rim",
+      "name": "inventory lower bezel rim",
       "from": [5.8461, 9, 13],
       "to": [10.1539, 9.25, 13.2],
       "faces": {
@@ -165,9 +165,9 @@
       }
     },
     {
-      "name": "inventory bezel rim",
+      "name": "inventory upper bezel rim",
       "from": [5.8461, 10.15, 13],
-      "to": [10.1539, 10.4, 13.2],
+      "to": [10.1539, 10.5, 13.2],
       "faces": {
         "south": {"uv": [0, 0, 4, 4], "texture": "#atlas"},
         "north": {"uv": [0, 0, 4, 4], "texture": "#atlas"},
