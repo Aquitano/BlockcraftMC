@@ -13,16 +13,28 @@ public final class Fighter {
 
     /**
      * A dead player choosing: from {@code readyTick} on they may deploy, at {@code autoTick} they do, as {@code hero}
-     * if they picked one and can still pay for it.
+     * if they confirmed the deployment and can still pay for it.
      */
-    public record Choosing(long readyTick, long autoTick, Optional<Spawn> chosen, Optional<Hero> hero) {
+    public record Choosing(long readyTick, long autoTick, Optional<Spawn> chosen, Optional<Hero> hero, boolean confirmed) {
+
+        public Choosing(long readyTick, long autoTick, Optional<Spawn> chosen, Optional<Hero> hero) {
+            this(readyTick, Math.max(readyTick, autoTick), chosen, hero, false);
+        }
+
+        public boolean manualReady(long tick) {
+            return tick >= readyTick && chosen.isPresent() && confirmed;
+        }
+
+        public Optional<Hero> paidHero() {
+            return hero.filter(ignored -> confirmed);
+        }
 
         public Choosing choose(Spawn spawn) {
-            return new Choosing(readyTick, autoTick, Optional.of(spawn), hero);
+            return new Choosing(readyTick, autoTick, Optional.of(spawn), hero, true);
         }
 
         public Choosing pick(Optional<Hero> hero) {
-            return new Choosing(readyTick, autoTick, chosen, hero);
+            return new Choosing(readyTick, autoTick, chosen, hero, confirmed && this.hero.equals(hero));
         }
     }
 

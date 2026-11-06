@@ -6,6 +6,7 @@ import me.blockcraft.api.pack.MenuIcon;
 import me.blockcraft.api.pack.MenuState;
 import me.blockcraft.api.pack.MenuTile;
 import me.blockcraft.api.pack.UiFont;
+import me.blockcraft.sternenfront.game.BattleNavigation;
 import me.blockcraft.sternenfront.game.CombatClass;
 import me.blockcraft.sternenfront.game.Faction;
 import me.blockcraft.sternenfront.game.Fighter;
@@ -21,17 +22,14 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
-/**
- * What a dead player chooses while they watch from above: the role they deploy as, on the same cards as the class menu,
- * their faction's heroes below them, and where in the last row: the headquarters, every post their faction holds
- * without an enemy in it and, from the assault on, the trailing faction's landing. The status sits in the toolbar. The
- * menu redraws every second, so a post lost meanwhile locks and the wait counts down.
- */
 public final class DeployMenu extends Menu {
 
     private static final int ROWS = 6;
+    // The paid reinforcement card belongs beside the heroes, away from the tactical map controls.
+    static final int REINFORCEMENT_SLOT = 38;
     private static final List<Integer> HERO_SLOTS = List.of(40, 41);
     private static final int DROPSHIP_SLOT = 53;
     private static final long TICKS_PER_SECOND = 20;
@@ -39,13 +37,20 @@ public final class DeployMenu extends Menu {
     private final SternenfrontGame game;
     private final Player viewer;
     private ItemStack status;
+    private final boolean tactical;
+    private Map<Spawn, Integer> mapSlots = Map.of();
 
-    public DeployMenu(SternenfrontGame game, Player viewer) {
-        super(ROWS, UiFont.overlaid(UiFont.Overlay.STERNENFRONT_DEPLOY, game.messages().get("deploy.title")));
+    public DeployMenu(SternenfrontGame game, Player viewer, boolean tactical) {
+        super(ROWS, tactical ? game.messages().get("deploy.map-title")
+                : UiFont.overlaid(UiFont.Overlay.STERNENFRONT_DEPLOY, game.messages().get("deploy.title")));
         this.game = game;
         this.viewer = viewer;
+        this.tactical = tactical;
         closeButton(ToolbarButton.LEFT);
-        game.factionOf(viewer).ifPresent(faction -> {
+        toolbar(ToolbarButton.RIGHT, Items.of(tactical ? Material.CHEST : Material.MAP)
+                .name(game.messages().get(tactical ? "deploy.loadout" : "deploy.map-open"))
+                .lore(game.messages().getLines("deploy.map-lore")).build(), player -> game.deployment().openDeploy(player, !tactical));
+        if (!tactical) game.factionOf(viewer).ifPresent(faction -> {
             var classes = CombatClass.values();
             for (int index = 0; index < classes.length; index++) {
                 tile(ClassMenu.SLOTS.get(index), ClassMenu.tileOf(faction, classes[index]), MenuTile.Shape.WIDE, null);
@@ -72,10 +77,18 @@ public final class DeployMenu extends Menu {
         var line = wait > 0
                 ? messages.get("deploy.status-waiting", Formatter.number("seconds", (wait + TICKS_PER_SECOND - 1) / TICKS_PER_SECOND))
                 : messages.get("deploy.status-ready");
-        var shown = MenuIcon.DEPLOY.item().name(line).lore(messages.getLines("deploy.status-lore")).build();
+        var target = game.deployment().suggested(viewer);
+        var role = picked.map(game.heroes()::name).orElseGet(() -> messages.get(fighter.combatClass().messageKey(faction.get()) + ".name"));
+        var shown = MenuIcon.DEPLOY.item().name(line).lore(List.of(role, spawnName(target),
+                messages.get(picked.isPresent() ? "deploy.confirm-paid" : "deploy.quick-lore"),
+                messages.get("deploy.auto-free"))).build();
         if (!shown.equals(status)) {
             status = shown;
-            toolbar(ToolbarButton.MIDDLE, shown, ignored -> { });
+            toolbar(ToolbarButton.MIDDLE, shown, game.deployment()::quickDeploy);
+        }
+        if (tactical) {
+            refreshMap(faction.get(), chosen);
+            return;
         }
         var classes = CombatClass.values();
         for (int index = 0; index < classes.length; index++) {
@@ -100,8 +113,8 @@ public final class DeployMenu extends Menu {
             set(firstPostSlot() + index, spawn(faction.get(), new Spawn.Post(index), chosen, banner,
                     messages.get("deploy.post", posts.name(index)), List.of(messages.get(why))));
         }
-        game.front().ifPresent(front -> set(DROPSHIP_SLOT, spawn(faction.get(), new Spawn.Dropship(), chosen, Material.FIREWORK_ROCKET,
-                messages.get("deploy.dropship", posts.name(front.post())), List.of(messages.get("deploy.dropship-locked")))));
+        set(DROPSHIP_SLOT, game.front().map(front -> spawn(faction.get(), new Spawn.Dropship(), chosen, Material.FIREWORK_ROCKET,
+                messages.get("deploy.dropship", posts.name(front.post())), List.of(messages.get("deploy.dropship-locked")))).orElse(null));
     }
 
     private ItemStack spawn(Faction faction, Spawn spawn, Optional<Spawn> chosen, Material icon, Component name,
@@ -110,6 +123,13 @@ public final class DeployMenu extends Menu {
         boolean available = game.deployment().available(faction, spawn);
         boolean selected = chosen.filter(spawn::equals).isPresent();
         var lore = new ArrayList<Component>();
+        if (spawn instanceof Spawn.Post post) {
+            lore.add(messages.get(game.posts().owner(post.index()).isEmpty() ? "deploy.post-neutral"
+                    : game.posts().owner(post.index()).filter(faction::equals).isPresent() ? "deploy.post-own" : "deploy.post-enemy"));
+            if (game.posts().contested(post.index())) lore.add(messages.get("deploy.post-contested"));
+        }
+        boolean recommended = spawn.equals(game.deployment().recommended(viewer));
+        if (recommended) lore.add(messages.get("deploy.recommended"));
         if (!available) {
             lore.addAll(unavailable);
         } else if (selected) {
@@ -119,19 +139,55 @@ public final class DeployMenu extends Menu {
         }
         var item = Items.of(icon).name(name).lore(lore).hideAttributes()
                 .state(available ? (selected ? MenuState.ACTIVE : MenuState.AVAILABLE) : MenuState.LOCKED);
-        if (selected) {
+        if (selected || recommended) {
             item.glow();
         }
         return item.build();
     }
 
-    @Override
-    protected boolean isEnabled(Player player, int slot, InventoryClickEvent event) {
-        return !ToolbarButton.MIDDLE.covers(slot);
+    private Component spawnName(Spawn spawn) {
+        return switch (spawn) {
+            case Spawn.Headquarters ignored -> game.messages().get("deploy.headquarters");
+            case Spawn.Post post -> game.messages().get("deploy.post", game.posts().name(post.index()));
+            case Spawn.Dropship ignored -> game.messages().get("deploy.landing");
+        };
+    }
+
+    private void refreshMap(Faction faction, Optional<Spawn> chosen) {
+        if (mapSlots.isEmpty()) {
+            var markers = new ArrayList<TacticalLayout.Marker>();
+            var headquarters = game.map().headquarters().get(faction).zone().getCenter();
+            markers.add(new TacticalLayout.Marker(new Spawn.Headquarters(), new BattleNavigation.Point(headquarters.getX(), headquarters.getZ())));
+            for (int index : game.posts().indices()) {
+                var center = game.map().posts().get(index).center();
+                markers.add(new TacticalLayout.Marker(new Spawn.Post(index), new BattleNavigation.Point(center.getX(), center.getZ())));
+            }
+            mapSlots = TacticalLayout.project(markers);
+        }
+        mapSlots.forEach((spawn, slot) -> {
+            var owner = spawn instanceof Spawn.Post post ? game.posts().owner(post.index()) : Optional.of(faction);
+            boolean available = game.deployment().available(faction, spawn);
+            boolean contested = spawn instanceof Spawn.Post post && (game.posts().contested(post.index())
+                    || owner.filter(faction::equals).isPresent() && !available);
+            var shape = contested ? "_CONCRETE" : available ? "_BANNER" : "_STAINED_GLASS_PANE";
+            var banner = Material.valueOf(owner.map(Faction::blocks).orElse(Faction.NEUTRAL).name() + shape);
+            set(slot, spawn(faction, spawn, chosen, banner, spawnName(spawn), List.of(game.messages().get("deploy.map-locked"))));
+        });
+        info(49, Items.of(Material.COMPASS).name(game.messages().get("deploy.map-orientation"))
+                .lore(game.messages().getLines("deploy.map-lore")).build());
+        set(DROPSHIP_SLOT, game.front().map(front -> spawn(faction, new Spawn.Dropship(), chosen, Material.FIREWORK_ROCKET,
+                game.messages().get("deploy.dropship", game.posts().name(front.post())),
+                List.of(game.messages().get("deploy.dropship-locked")))).orElse(null));
     }
 
     @Override
     protected void onClick(Player player, int slot, ItemStack clicked, InventoryClickEvent event) {
+        if (tactical) {
+            mapSlots.entrySet().stream().filter(entry -> entry.getValue() == slot).findFirst()
+                    .ifPresent(entry -> game.deployment().choose(player, entry.getKey()));
+            if (slot == DROPSHIP_SLOT) game.deployment().choose(player, new Spawn.Dropship());
+            return;
+        }
         int classIndex = ClassMenu.SLOTS.indexOf(slot);
         if (classIndex >= 0) {
             game.chooseClass(player, CombatClass.values()[classIndex]);
