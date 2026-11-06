@@ -328,8 +328,7 @@ public final class Deployment {
         fighter.choosing(Optional.of(fighter.choosing().orElseGet(this::newChoosing)
                 .retry(game.tick() + game.config().respawn().autoSeconds() * TICKS_PER_SECOND)));
         player.sendMessage(game.messages().get("reinforcement.deployment-failed"));
-        openDeploy(player);
-        showChoosing(player);
+        beginChoosing(player);
     }
 
     private boolean enter(Player player, Faction faction, Location spot, Spawn spawn, Optional<Reinforcement> unit) {

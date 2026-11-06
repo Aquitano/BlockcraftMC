@@ -474,7 +474,6 @@ reinforcement:
   picked: "<success>Vorgemerkt. Nur ein bestätigter Einsatz kostet Punkte."
   taken: "<error>Alle Plätze für diese Elite-Einheit sind belegt."
   too-few-points: "<error>Für diese Elite-Einheit fehlen dir Kampfpunkte."
-  fallback: "<muted>Vorgemerkt, aber nicht verfügbar. Du startest mit deiner kostenlosen Klasse."
   chosen: "<success><unit> <muted>vorgemerkt. Wähle einen Einsatzort zum Bestätigen."
   entered: "<success>Du kämpfst als <unit><success>, bis du fällst."
   missed: "<accent><unit> <muted>ist nicht mehr verfügbar. Du startest kostenlos mit deiner Klasse."
