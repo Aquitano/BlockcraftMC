@@ -25,7 +25,8 @@ public final class BattleNavigation {
 
     public static Spawn recommend(List<Post> posts, Point headquarters, Point enemyHeadquarters, Optional<Spawn> remembered,
                                   Predicate<Spawn> available) {
-        return remembered.filter(spawn -> !(spawn instanceof Spawn.Dropship)).filter(available).orElseGet(() -> {
+        return remembered.filter(Spawn.Post.class::isInstance).filter(ignored -> posts.stream().noneMatch(Post::priority))
+                .filter(available).orElseGet(() -> {
             var target = target(posts, headquarters, enemyHeadquarters).map(Post::center).orElse(enemyHeadquarters);
             return posts.stream().filter(Post::safe)
                     .filter(post -> post.center().distanceSquared(target) < headquarters.distanceSquared(target))

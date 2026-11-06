@@ -146,12 +146,8 @@ public final class Loadouts {
     }
 
     private List<Component> statLines(Faction faction, CombatClass combatClass) {
-        var stats = config.stats(combatClass.blaster(faction));
         var body = config.stats(faction, combatClass);
-        var lines = new ArrayList<Component>();
-        lines.add(messages.get("class.blaster",
-                Placeholder.component("blaster", messages.get("blaster." + combatClass.blaster(faction).key() + ".name")),
-                Formatter.number("damage", stats.damage() * stats.bolts() / TO_HEARTS)));
+        var lines = new ArrayList<>(blasterStats(combatClass.blaster(faction)));
         lines.add(messages.get("class.health", Formatter.number("hearts", body.health() / TO_HEARTS)));
         if (body.speed() != 1) {
             lines.add(messages.get("class.speed", Formatter.number("percent", Math.round(body.speed() * 100))));

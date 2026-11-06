@@ -19,6 +19,7 @@ import me.blockcraft.sternenfront.reinforcement.Reinforcement;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Material;
 import org.bukkit.Color;
 import org.bukkit.entity.Player;
@@ -79,12 +80,15 @@ public final class DeployMenu extends Menu {
         var picked = fighter.choosing().flatMap(Fighter.Choosing::hero);
         var pickedUnit = fighter.choosing().flatMap(Fighter.Choosing::reinforcement);
         boolean confirmed = fighter.choosing().filter(Fighter.Choosing::confirmed).isPresent();
-        boolean paid = picked.isPresent() || pickedUnit.isPresent();
+        boolean paid = picked.filter(hero -> game.heroes().affordable(viewer, faction.get(), hero)).isPresent()
+                || pickedUnit.filter(unit -> game.reinforcementUnits().roster().affordable(viewer.getUniqueId(), faction.get(), unit)).isPresent();
+        boolean unavailable = !paid && (picked.isPresent() || pickedUnit.isPresent());
         long wait = game.deployment().waitTicks(viewer);
         var line = confirmed
                 ? messages.get("deploy.status-queued", Formatter.number("seconds", (wait + TICKS_PER_SECOND - 1) / TICKS_PER_SECOND)) : wait > 0
                 ? messages.get("deploy.status-waiting", Formatter.number("seconds", (wait + TICKS_PER_SECOND - 1) / TICKS_PER_SECOND))
-                : messages.get("deploy.status-ready");
+                : messages.get("deploy.status-ready", Formatter.number("seconds",
+                        (game.deployment().autoTicks(viewer) + TICKS_PER_SECOND - 1) / TICKS_PER_SECOND));
         var target = game.deployment().suggested(viewer);
         var role = picked.map(game.heroes()::name).or(() -> pickedUnit.map(game.reinforcementUnits()::name))
                 .orElseGet(() -> messages.get(fighter.combatClass().messageKey(faction.get()) + ".name"));
@@ -94,10 +98,12 @@ public final class DeployMenu extends Menu {
                     .orElseGet(() -> pickedUnit.map(game.reinforcementUnits()::cost).orElse(0));
             summary.add(messages.get("deploy.cost", Formatter.number("cost", cost)));
         }
-        summary.add(messages.get(confirmed ? "deploy.queued" : paid ? "deploy.confirm-paid" : "deploy.quick-lore"));
+        if (unavailable) summary.add(messages.get("deploy.paid-unavailable"));
+        if (confirmed || !unavailable) summary.add(messages.get(confirmed ? "deploy.queued" : paid ? "deploy.confirm-paid" : "deploy.quick-lore"));
         if (!confirmed) summary.add(messages.get("deploy.auto-free"));
-        else if (paid) summary.add(messages.get("deploy.paid-fallback"));
-        var shown = MenuIcon.DEPLOY.item().name(line).lore(summary).build();
+        if (unavailable || confirmed && paid) summary.add(messages.get("deploy.paid-fallback"));
+        var shown = MenuIcon.DEPLOY.item().name(messages.get("deploy.status-target", Placeholder.component("status", line),
+                Placeholder.component("target", targetName(target)))).lore(summary).build();
         if (!shown.equals(status)) {
             status = shown;
             toolbar(ToolbarButton.MIDDLE, shown, game.deployment()::quickDeploy);
@@ -161,7 +167,26 @@ public final class DeployMenu extends Menu {
         if (confirmed && available) {
             item.glow();
         }
-        return item.build();
+        var marker = item.build();
+        if (spawn instanceof Spawn.Post post && post.index() < 5) {
+            var owner = game.posts().owner(post.index());
+            boolean contested = game.posts().contested(post.index()) || owner.filter(faction::equals).isPresent() && !available;
+            boolean filled = contested ? game.tick() / TICKS_PER_SECOND % 2 == 0 : available;
+            Items.of(marker).model(Key.key("blockcraft", "sternenfront/post_" + (char) ('a' + post.index())
+                    + (filled ? "_filled" : "_hollow")));
+            marker.setData(DataComponentTypes.CUSTOM_MODEL_DATA, CustomModelData.customModelData()
+                    .addColor(owner.map(side -> Color.fromRGB(side.text().value())).orElse(Color.WHITE)).build());
+        }
+        return marker;
+    }
+
+    private Component targetName(Spawn spawn) {
+        return switch (spawn) {
+            case Spawn.Headquarters ignored -> game.messages().get("deploy.target-headquarters");
+            case Spawn.Post post -> game.messages().get("deploy.target-post", game.posts().name(post.index()));
+            case Spawn.Dropship ignored -> game.front().map(front -> game.messages().get("deploy.target-dropship", game.posts().name(front.post())))
+                    .orElseGet(() -> game.messages().get("deploy.landing"));
+        };
     }
 
     private Component spawnName(Spawn spawn) {
@@ -192,13 +217,6 @@ public final class DeployMenu extends Menu {
             var shape = contested ? "_CONCRETE" : available ? "_BANNER" : "_STAINED_GLASS_PANE";
             var banner = Material.valueOf(owner.map(Faction::blocks).orElse(Faction.NEUTRAL).name() + shape);
             var marker = spawn(faction, spawn, chosen, banner, spawnName(spawn), List.of(game.messages().get("deploy.map-locked")));
-            if (spawn instanceof Spawn.Post post && post.index() < 5) {
-                boolean filled = contested ? game.tick() / TICKS_PER_SECOND % 2 == 0 : available;
-                Items.of(marker).model(Key.key("blockcraft", "sternenfront/post_" + (char) ('a' + post.index())
-                        + (filled ? "_filled" : "_hollow")));
-                marker.setData(DataComponentTypes.CUSTOM_MODEL_DATA, CustomModelData.customModelData()
-                        .addColor(owner.map(side -> Color.fromRGB(side.text().value())).orElse(Color.WHITE)).build());
-            }
             set(slot, marker);
         });
         info(49, Items.of(Material.COMPASS).name(game.messages().get("deploy.map-orientation"))

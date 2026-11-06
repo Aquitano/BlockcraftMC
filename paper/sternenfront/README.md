@@ -90,24 +90,27 @@ Selecting a different paid unit requires another confirmation, including when a 
 The spawn card distinguishes a pending choice from a confirmed deployment. A failed teleport clears confirmation and
 restarts the automatic countdown, leaving the menu open for another choice.
 
-The suggestion keeps an explicitly chosen spawn if it is still safe. Otherwise it uses the last safe post or HQ selected
-by clicking its spawn card, then prefers a safe owned post closer to an objective. Quick deployment does not save its
-suggestion as a preference, so an early HQ fallback does not prevent later forward deployments. The actual deployment rechecks ownership
+The suggestion keeps an explicitly chosen spawn for the current deployment if it is still safe. Outside an assault,
+it remembers a safe post selected by clicking its spawn card. HQ is never a lasting preference, and the assault priority
+takes precedence over remembered posts. Otherwise it prefers a safe owned post closer to the objective, with HQ as the fallback.
+Quick deployment does not save its suggestion as a preference. The actual deployment rechecks ownership
 and live enemy presence after the fade; a lost or threatened post is replaced by another safe recommendation.
 A post also needs a spawn at least `respawn.enemy-clearance` blocks from every enemy, by default 12 blocks.
 The dropship remains an explicit choice and is never recommended automatically.
 
 The right toolbar button opens a tactical schematic with north up and east right. It projects the current map's post and
 HQ positions into inventory slots, preserving scale and separating overlapping markers. Colours show ownership.
-Posts A–E use the same letter badges as the combat HUD. Filled badges allow deployment, outlines mark locked posts,
+Posts A–E use the same letter badges as the combat HUD in both deployment views. Filled badges allow deployment, outlines mark locked posts,
 and blinking badges mark contested or attacked posts. A confirmed available spawn glows.
-Hovering shows the post name, recommendation, selection and why deployment is locked. The landing button names its target
+The confirmation button names its target and shows the wait or automatic deployment countdown. Hovering shows the post
+name, recommendation, selection and why deployment is locked. The landing button names its target
 post. The same button returns to the class cards. The faction's reinforcement card sits beside its hero cards.
 
 After spawning, the order bar shows the assault's priority post, or the nearest objective outside the assault, with its
 letter, horizontal distance and direction relative to the player's view. When all posts are safe, it points to the post
 nearest the enemy HQ for defence. The bearing updates every `respawn.navigation-update-ticks`, by default five ticks.
-It does not route around walls. Ability hints temporarily replace the bearing; the current order remains
+Inside the target's capture area, it says that the post is here instead of showing a direction. It does not route around walls.
+Ability hints temporarily replace the bearing; the current order remains
 visible alongside both.
 
 ## Combat feedback

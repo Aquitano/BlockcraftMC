@@ -22,7 +22,7 @@ public class BattleNavigationTest {
     public void remembersASafeChoiceThenRecommendsTheForwardPostAndAlwaysHasHeadquarters() {
         var safe = Set.<Spawn>of(new Spawn.Headquarters(), new Spawn.Post(0), new Spawn.Post(1), new Spawn.Dropship());
         assertEquals(new Spawn.Post(0), BattleNavigation.recommend(POSTS, HQ, ENEMY_HQ, Optional.of(new Spawn.Post(0)), safe::contains));
-        assertEquals(new Spawn.Headquarters(), BattleNavigation.recommend(POSTS, HQ, ENEMY_HQ, Optional.of(new Spawn.Headquarters()), safe::contains));
+        assertEquals(new Spawn.Post(1), BattleNavigation.recommend(POSTS, HQ, ENEMY_HQ, Optional.of(new Spawn.Headquarters()), safe::contains));
         assertEquals(new Spawn.Post(1), BattleNavigation.recommend(POSTS, HQ, ENEMY_HQ, Optional.of(new Spawn.Post(2)), safe::contains));
         assertEquals(new Spawn.Post(1), BattleNavigation.recommend(POSTS, HQ, ENEMY_HQ, Optional.of(new Spawn.Dropship()), safe::contains));
         var unsafe = List.of(new Post(0, new Point(20, 0), false, true, false));
@@ -55,8 +55,9 @@ public class BattleNavigationTest {
     @Test
     public void assaultPriorityWinsOverNearbyObjectivesIncludingWhenItNeedsDefending() {
         var priority = new Post(3, ENEMY_HQ, true, false, true);
-        var posts = List.of(POSTS.getLast(), priority);
+        var posts = List.of(POSTS.getFirst(), POSTS.getLast(), priority);
         assertEquals(priority, BattleNavigation.target(posts, HQ, ENEMY_HQ).orElseThrow());
         assertEquals(new Spawn.Post(3), BattleNavigation.recommend(posts, HQ, ENEMY_HQ, Optional.empty(), ignored -> true));
+        assertEquals(new Spawn.Post(3), BattleNavigation.recommend(posts, HQ, ENEMY_HQ, Optional.of(new Spawn.Post(0)), ignored -> true));
     }
 }

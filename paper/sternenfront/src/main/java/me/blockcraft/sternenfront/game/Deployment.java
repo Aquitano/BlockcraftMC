@@ -182,6 +182,11 @@ public final class Deployment {
                 .map(choosing -> Math.max(0, choosing.readyTick() - game.tick())).orElse(0L);
     }
 
+    public long autoTicks(Player player) {
+        return game.fighterIfAny(player).flatMap(Fighter::choosing)
+                .map(choosing -> Math.max(0, choosing.autoTick() - game.tick())).orElse(0L);
+    }
+
     public Spawn recommended(Player player) {
         var faction = game.factionOf(player).orElseThrow();
         return BattleNavigation.recommend(navigationPosts(faction), headquarters(faction), headquarters(faction.enemy()),
@@ -228,11 +233,15 @@ public final class Deployment {
                             + key.substring(key.lastIndexOf('.') + 1)))));
         }
         var origin = player.getLocation();
-        return BattleNavigation.target(navigationPosts(faction.get()), point(origin), headquarters(faction.get().enemy())).map(target ->
-                game.messages().get(target.objective() ? "deploy.navigate" : "deploy.defend", game.posts().name(target.index()),
+        return BattleNavigation.target(navigationPosts(faction.get()), point(origin), headquarters(faction.get().enemy())).map(target -> {
+            if (game.map().posts().get(target.index()).contains(origin)) {
+                return game.messages().get(target.objective() ? "deploy.navigate-here" : "deploy.defend-here", game.posts().name(target.index()));
+            }
+            return game.messages().get(target.objective() ? "deploy.navigate" : "deploy.defend", game.posts().name(target.index()),
                     Formatter.number("distance", Math.round(Math.sqrt(point(origin).distanceSquared(target.center())))),
                     Placeholder.component("direction", game.messages().get("deploy.direction."
-                            + BattleNavigation.direction(point(origin), origin.getYaw(), target.center())))));
+                            + BattleNavigation.direction(point(origin), origin.getYaw(), target.center()))));
+        });
     }
 
     void deployWhenDue(Player player, Fighter fighter) {
@@ -252,7 +261,8 @@ public final class Deployment {
         }
         var choosing = fighter.get().choosing().get();
         long waiting = choosing.readyTick() - game.tick();
-        var status = waiting > 0
+        var status = choosing.confirmed()
+                ? game.messages().get("deploy.status-queued", Formatter.number("seconds", seconds(waiting))) : waiting > 0
                 ? game.messages().get("deploy.waiting", Formatter.number("seconds", seconds(waiting)))
                 : game.messages().get("deploy.ready", Formatter.number("seconds", seconds(choosing.autoTick() - game.tick())));
         BlockcraftApi.get().notifications().status(player, status);

@@ -2046,7 +2046,7 @@ public final class PackArt {
             var image = overlay(true);
             heading(image, "ROLLE", rowY(1) + 9);
             PackArt.fill(image, 7, rowY(4) - 2, 162, 1, PackArt.EDGE);
-            rowLabel(image, "ELITE", rowY(4) + 6);
+            rowLabel(image, "SPEZIAL", rowY(4) + 6);
             rowLabel(image, "EINSATZORT", rowY(5) + 6);
             for (int column : new int[] {2, 4, 5}) {
                 raisedFrame(image, columnX(column) - 1, rowY(4) - 1);
