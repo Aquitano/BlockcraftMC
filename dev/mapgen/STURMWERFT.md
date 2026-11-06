@@ -47,7 +47,7 @@ Pilasters above the skybridge openings start at y=86, leaving the centerline cle
 
 ## Equipment props
 
-`environment.props` contains 39 placements from `yard_props()`. Each entry has a snake-case `kind`, an `at` string
+`environment.props` contains 42 placements from `yard_props()`. Each entry has a snake-case `kind`, an `at` string
 containing `x y z yaw`, and a `scale` between 0.5 and 1.5. The default scale is 1.0.
 The y coordinate is the visible base, including half-block slab tops. Yaw 0 faces south along +Z, yaw 90 faces west,
 yaw 180 faces north, and yaw 270 faces east.
@@ -57,7 +57,7 @@ yaw 180 faces north, and yaw 270 faces east.
 | Engine room | 8 | Couplers and cabinet panel at the copper work shelves, engine on the low service bench, three terminals, spare cargo |
 | Assembly | 7 | Engine cradle at `41 85 -116`, terminals, coupler, staged cargo, repair droid |
 | Workshop | 6 | Repair station at `-77 82 109.5`, warm-lit terminals, coupler, cabinet panel, spare cargo |
-| Control hall | 11 | Four perimeter desks, two consoles at the central table, cabinet panels, service terminals |
+| Control hall | 14 | Four perimeter desks, cloning equipment at the north desk, two consoles at the central table, cabinet panels, service terminals |
 | Freight hall | 7 | Six cargo groups on four lit pallets, with fronts toward the working aisles, and one container panel |
 
 Northern console work surfaces end at y=84. Southern perimeter consoles and the repair station stand at y=82.
@@ -66,10 +66,28 @@ retains its raised surface at y=83. Cargo stacks use scale 0.9 or 1.0 in the fre
 
 Models use `sternenfront/yard/<kind>` with `ItemDisplayTransform.NONE` and no model display transforms.
 Their ground origin is model coordinate `(8,8,8)`. All elements fit the shared 2 by 1.5 by 2 block envelope at scale 1.0.
-`YARD_PROP_BOUNDS` records their exported bounds after element rotations, relative to that origin.
-These values match the yard asset generator's `bounds.json` from commit `903db8ef`.
+`YARD_PROP_BOUNDS` records bounds relative to that origin, including element rotations.
+The six original equipment kinds match the yard asset generator's `bounds.json` from commit `903db8ef`.
+The three cloning models use the conservative authored limits below. Their exported meshes may be smaller.
 The cargo model has depth -0.6875..0.125 before yaw. The wall panel has depth -0.09375..0.075.
 Panel placements account for this depth so their backs meet solid cabinet faces.
+
+### North control-hall cloning desk
+
+The Kamino-inspired desk pairs an upright adult clone tank with three incubation vessels in one rack and a stepped DNA sample pedestal.
+The upright adult tank is an original adaptation, not an exact screen replica. The existing console remains the terminal.
+The composition occupies the existing bench at x=6..13, z=94..95, with its top at y=82.
+All four fronts face south along +Z. Sea lanterns replace quartz bench blocks at `8 81 95` and `12 81 95` below the models.
+These task lights use world lighting without a display brightness override.
+
+| Kind | `at` | Scale | Maximum authored bounds in model units | Relative bounds at scale 1 |
+| --- | --- | --- | --- | --- |
+| `clone_tank` | `7.4 82 95 0` | 1.5 | `[0,8,0]..[16,32,16]` | `[-0.5,0,-0.5]..[0.5,1.5,0.5]` |
+| `gene_archive` | `9 82 95 0` | 0.8 | `[2.4,8,2.4]..[13.6,21,13.6]` | `[-0.35,0,-0.35]..[0.35,0.8125,0.35]` |
+| `console` | `10.5 82 95 0` | 0.8 | Existing exported bounds | `YARD_PROP_BOUNDS["console"]` |
+| `embryo_rack` | `12.5 82 95 0` | 1.0 | `[-4,8,1.6]..[20,22.4,14.4]` | `[-0.75,0,-0.4]..[0.75,0.9,0.4]` |
+
+### Prop validation
 
 All standing equipment rests on solid work surfaces. Panels have solid backing across their width and height.
 The generator rejects model intersections, overlapping props, unsupported bases, and bounds that enter a player's body
