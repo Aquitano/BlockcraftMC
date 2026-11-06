@@ -12,10 +12,24 @@
         }
       },
       {
+        "when": "blockcraft:sternenfront/helmet_arc",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/sternenfront/helmet_arc"
+        }
+      },
+      {
         "when": "blockcraft:sternenfront/helmet_bounty_hunter",
         "model": {
           "type": "minecraft:model",
           "model": "blockcraft:item/sternenfront/helmet_bounty_hunter"
+        }
+      },
+      {
+        "when": "blockcraft:sternenfront/helmet_commando",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/sternenfront/helmet_commando"
         }
       },
       {

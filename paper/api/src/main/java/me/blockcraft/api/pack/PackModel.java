@@ -60,6 +60,8 @@ public enum PackModel {
     STERNENFRONT_HOOD_JEDI(Material.STONE_BUTTON, "sternenfront/hood_jedi"),
     STERNENFRONT_MASK_SITH(Material.STONE_BUTTON, "sternenfront/mask_sith"),
     STERNENFRONT_HELMET_BOUNTY_HUNTER(Material.STONE_BUTTON, "sternenfront/helmet_bounty_hunter"),
+    STERNENFRONT_HELMET_ARC(Material.STONE_BUTTON, "sternenfront/helmet_arc"),
+    STERNENFRONT_HELMET_COMMANDO(Material.STONE_BUTTON, "sternenfront/helmet_commando"),
     STERNENFRONT_CAP_COMMANDER(Material.STONE_BUTTON, "sternenfront/cap_commander"),
     STERNENFRONT_TWIN_PISTOL(Material.GOLDEN_HOE, "sternenfront/twin_pistol"),
     STERNENFRONT_HEAVY_RIFLE(Material.WOODEN_HOE, "sternenfront/heavy_rifle"),

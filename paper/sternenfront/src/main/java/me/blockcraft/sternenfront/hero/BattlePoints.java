@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-/** Each player's battle points: kills and captures earn them, fighting as a hero spends them. */
+/** Each player's battle points: kills and captures earn them; heroes and reinforcements spend them. */
 public final class BattlePoints {
 
     private final Map<UUID, Integer> points = new HashMap<>();

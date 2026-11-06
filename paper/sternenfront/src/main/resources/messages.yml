@@ -163,6 +163,16 @@ blaster:
     name: "<white>Zwei WESTAR-34-Blasterpistolen"
     lore:
       - "<muted>Jango Fetts silberne Blasterpistolen."
+  arc-repeater:
+    name: "<white>ARC-Unterstützungsblaster"
+    lore:
+      - "<muted>Dreiersalven mit geringer Hitzeentwicklung."
+      - "<muted>Hält Gegner auf mittlere Distanz unter Beschuss."
+  commando-carbine:
+    name: "<white>BX-Sturmkarabiner"
+    lore:
+      - "<muted>Starke Treffer auf kurze Distanz."
+      - "<muted>Hohe Hitze und geringe Reichweite."
   speeder-cannon:
     name: "<white>Speeder-Bordkanone"
 
@@ -401,6 +411,29 @@ scoreboard:
   faction: "<muted><icon:mode> FRAKTION"
   no-faction: "<muted>Keine Fraktion"
   class: "<muted><icon:kit> KLASSE"
+
+reinforcement:
+  arc-trooper:
+    name: "<aqua>ARC-Truppler"
+    lore:
+      - "<muted>Republikanische Verstärkung für die Feuerlinie."
+      - "<muted>Kühle Dreiersalven, Schildwall und Adrenalin."
+  commando-droid:
+    name: "<red>BX-Kommandodroide"
+    lore:
+      - "<muted>Mobile Verstärkung der Separatisten."
+      - "<muted>Nahkampfkarabiner, Sprungmodul und Granate."
+      - "<muted>Umgeht Deckung und greift über die Flanke an."
+  cost: "<muted>Kosten: <accent><cost> <muted>Kampfpunkte · Guthaben: <accent><points>"
+  slots: "<muted>Aktiv: <accent><active>/<limit> <muted>· eigene Verstärkungsplätze"
+  pick: "<success>Klicken zum Vormerken, dann einen Einsatzort bestätigen."
+  picked: "<success>Vorgemerkt. Nur ein bestätigter Einsatz kostet Punkte."
+  taken: "<error>Alle Plätze für diese Verstärkung sind belegt."
+  too-few-points: "<error>Für diese Verstärkung fehlen dir Kampfpunkte."
+  chosen: "<success><unit> <muted>vorgemerkt. Wähle einen Einsatzort zum Bestätigen."
+  entered: "<success>Du kämpfst als <unit><success>, bis du fällst."
+  missed: "<accent><unit> <muted>ist nicht mehr verfügbar. Du startest kostenlos mit deiner Klasse."
+  deployment-failed: "<error>Der Einsatz ist fehlgeschlagen. Es wurden keine Kampfpunkte abgezogen."
 
 hero:
   head: "<white>Heldenrüstung"

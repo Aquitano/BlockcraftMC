@@ -8,6 +8,7 @@ import me.blockcraft.sternenfront.game.Faction;
 import me.blockcraft.sternenfront.game.LineOfSight;
 import me.blockcraft.sternenfront.game.SternenfrontGame;
 import me.blockcraft.sternenfront.hero.Hero;
+import me.blockcraft.sternenfront.reinforcement.Reinforcement;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Entity;
@@ -100,7 +101,8 @@ public final class BodyRigs implements Listener, AutoCloseable {
             var id = actor.getUniqueId();
             present.add(id);
             var hero = actor instanceof Player player ? game.heroOf(player) : Optional.<Hero>empty();
-            var body = RigBody.of(game.factionOf(actor).orElseThrow(), game.combatClassOf(actor), hero);
+            var unit = actor instanceof Player player ? game.reinforcementOf(player) : Optional.<Reinforcement>empty();
+            var body = unit.map(RigBody::of).orElseGet(() -> RigBody.of(game.factionOf(actor).orElseThrow(), game.combatClassOf(actor), hero));
             if (animated.filter(bodies -> !(actor instanceof Player) && bodies.draws(body)).isPresent()) {
                 animated.get().keep(actor, body, game.effects().recoil(actor), plugin.getServer().getOnlinePlayers());
                 continue;
@@ -112,7 +114,7 @@ public final class BodyRigs implements Listener, AutoCloseable {
             var rig = rigs.computeIfAbsent(id, ignored -> {
                 var created = new BodyRig(plugin, actor, body, game::isPlaying,
                         () -> game.bots().aim(actor).orElseGet(() -> actor.getEyeLocation().getDirection()), turnDegrees,
-                        hero.isPresent() ? Optional.empty() : Optional.of(motions.get(game.combatClassOf(actor))));
+                        hero.isPresent() || unit.isPresent() ? Optional.empty() : Optional.of(motions.get(game.combatClassOf(actor))));
                 targets.put(created.targetId(), created);
                 return created;
             });

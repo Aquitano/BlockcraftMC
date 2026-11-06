@@ -12,6 +12,7 @@ import me.blockcraft.sternenfront.game.Fighter;
 import me.blockcraft.sternenfront.game.SternenfrontGame;
 import me.blockcraft.sternenfront.game.Spawn;
 import me.blockcraft.sternenfront.hero.Hero;
+import me.blockcraft.sternenfront.reinforcement.Reinforcement;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import org.bukkit.Material;
@@ -33,6 +34,7 @@ public final class DeployMenu extends Menu {
 
     private static final int ROWS = 6;
     private static final List<Integer> HERO_SLOTS = List.of(40, 41);
+    private static final int REINFORCEMENT_SLOT = 38;
     private static final int DROPSHIP_SLOT = 53;
     private static final long TICKS_PER_SECOND = 20;
 
@@ -68,6 +70,7 @@ public final class DeployMenu extends Menu {
         var fighter = game.fighter(viewer);
         var chosen = fighter.choosing().flatMap(Fighter.Choosing::chosen);
         var picked = fighter.choosing().flatMap(Fighter.Choosing::hero);
+        var pickedUnit = fighter.choosing().flatMap(Fighter.Choosing::reinforcement);
         long wait = game.deployment().waitTicks(viewer);
         var line = wait > 0
                 ? messages.get("deploy.status-waiting", Formatter.number("seconds", (wait + TICKS_PER_SECOND - 1) / TICKS_PER_SECOND))
@@ -80,10 +83,12 @@ public final class DeployMenu extends Menu {
         var classes = CombatClass.values();
         for (int index = 0; index < classes.length; index++) {
             var combatClass = classes[index];
-            boolean selected = picked.isEmpty() && fighter.combatClass() == combatClass;
+            boolean selected = picked.isEmpty() && pickedUnit.isEmpty() && fighter.combatClass() == combatClass;
             set(ClassMenu.SLOTS.get(index), game.loadouts().card(faction.get(), combatClass, selected,
                     List.of(messages.get(selected ? "class.selected" : "class.select"))));
         }
+        var unit = Reinforcement.of(faction.get());
+        set(REINFORCEMENT_SLOT, game.reinforcementUnits().card(viewer, faction.get(), unit, pickedUnit.filter(unit::equals).isPresent()));
         var heroes = Hero.of(faction.get());
         for (int index = 0; index < heroes.size() && index < HERO_SLOTS.size(); index++) {
             var hero = heroes.get(index);
@@ -135,6 +140,10 @@ public final class DeployMenu extends Menu {
         int classIndex = ClassMenu.SLOTS.indexOf(slot);
         if (classIndex >= 0) {
             game.chooseClass(player, CombatClass.values()[classIndex]);
+            return;
+        }
+        if (slot == REINFORCEMENT_SLOT) {
+            game.factionOf(player).ifPresent(faction -> game.chooseReinforcement(player, Reinforcement.of(faction)));
             return;
         }
         int heroIndex = HERO_SLOTS.indexOf(slot);

@@ -3,6 +3,7 @@ package me.blockcraft.sternenfront.appearance;
 import me.blockcraft.sternenfront.game.CombatClass;
 import me.blockcraft.sternenfront.game.Faction;
 import me.blockcraft.sternenfront.hero.Hero;
+import me.blockcraft.sternenfront.reinforcement.Reinforcement;
 import org.junit.Test;
 
 import java.nio.file.Files;
@@ -42,6 +43,19 @@ public class RigBodyTest {
             assertEquals(hero.weapon() instanceof Hero.Weapon.Gun, body.dualWield());
             for (var part : List.of("torso", "head", "arm", "leg")) {
                 assertTrue(body.family() + "/" + part, Files.exists(MODELS.resolve(body.family()).resolve(part + ".json")));
+            }
+        }
+    }
+
+    @Test
+    public void reinforcementsHaveTheirOwnFactionBodiesAndGeneratedParts() {
+        for (var unit : Reinforcement.values()) {
+            var body = RigBody.of(unit);
+            assertEquals(unit.faction(), body.faction());
+            assertEquals("reinforcement_" + unit.key().replace('-', '_'), body.family());
+            assertTrue(body.showsWeapon());
+            for (var part : List.of("torso", "head", "arm", "leg")) {
+                assertTrue(Files.exists(MODELS.resolve(body.family()).resolve(part + ".json")));
             }
         }
     }

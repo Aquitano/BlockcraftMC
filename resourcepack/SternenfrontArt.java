@@ -532,7 +532,7 @@ public final class SternenfrontArt {
         return new Model("sternenfront/body/" + name + "/" + part, shape);
     }
 
-    private enum CloneRole { SOLDIER, HEAVY, SCOUT, MEDIC, REX }
+    private enum CloneRole { SOLDIER, HEAVY, SCOUT, MEDIC, REX, ARC }
 
     private static final Paint BLUE = paint("republic_blue", 2, Grain.SMOOTH, 0, Wear.CHIP,
             0x142A56, 0x204476, 0x326CB0, 0x498CD0, 0x73B0E7);
@@ -638,7 +638,7 @@ public final class SternenfrontArt {
                 .both(box(.145, .16, -.005, .035, .13, .16, CERAMIC))
                 .both(box(.151, .12, .03, .027, .04, .075, FRAME))
                 .add(box(0, .285, .142, .045, .065, .012, stripe));
-        if (role == CloneRole.REX || role == CloneRole.SCOUT) {
+        if (role == CloneRole.REX || role == CloneRole.ARC || role == CloneRole.SCOUT) {
             head.add(box(-.18, .3, -.01, .015, .26, .015, FRAME))
                     .add(box(-.15, .435, .02, .09, .035, .09, STEEL));
         }
@@ -676,10 +676,16 @@ public final class SternenfrontArt {
                 .add(box(0, -.66, 0, .155, .25, .17, CERAMIC))
                 .add(box(0, -.87, .04, .165, .13, .23, CERAMIC))
                 .add(box(0, -.945, .035, .17, .03, .25, FRAME));
-        if (role == CloneRole.HEAVY || role == CloneRole.REX) {
+        if (role == CloneRole.HEAVY || role == CloneRole.REX || role == CloneRole.ARC) {
             torso.both(box(.22, -.14, 0, .025, .28, .29, FRAME))
                     .add(box(0, .23, -.25, .35, .38, .2, STEEL))
                     .both(box(.2, .46, 0, .16, .055, .28, stripe));
+        }
+        if (role == CloneRole.ARC) {
+            torso.add(box(0, .45, .04, .47, .045, .3, BLUE))
+                    .both(box(.13, .28, .18, .09, .16, .055, FRAME))
+                    .add(box(0, .2, -.37, .22, .16, .035, BLUE));
+            arm.add(box(0, -.44, .08, .08, .12, .025, BLUE));
         }
         if (role == CloneRole.SCOUT) {
             torso.add(box(0, .29, -.22, .27, .34, .16, FRAME));
@@ -690,6 +696,36 @@ public final class SternenfrontArt {
                     .add(box(0, .3, -.37, .055, .18, .026, MAROON));
         }
         return body(name, torso, cloneHelmet(role), arm, leg);
+    }
+
+    private static Family commandoDroid() {
+        var torso = new Shape()
+                .add(box(0, .04, 0, .24, .12, .16, STEEL))
+                .add(box(0, .2, 0, .12, .22, .1, FRAME))
+                .add(box(0, .36, 0, .37, .22, .21, STEEL))
+                .add(box(0, .38, .115, .23, .08, .025, FRAME))
+                .add(box(0, .45, .13, .06, .025, .015, RED))
+                .add(box(0, .51, 0, .09, .12, .08, FRAME));
+        var head = new Shape()
+                .add(box(0, .02, 0, .08, .08, .08, FRAME))
+                .add(box(0, .16, .015, .23, .23, .23, STEEL))
+                .add(box(0, .26, -.005, .18, .06, .18, FRAME))
+                .add(box(0, .17, .138, .19, .045, .025, RED))
+                .add(box(0, .075, .14, .14, .07, .08, STEEL))
+                .add(box(0, .07, .183, .075, .025, .012, FRAME));
+        var arm = new Shape()
+                .add(box(0, -.025, 0, .15, .14, .16, STEEL))
+                .add(box(0, -.19, 0, .09, .22, .09, FRAME))
+                .add(box(0, -.32, 0, .11, .08, .11, STEEL))
+                .add(box(0, -.46, 0, .11, .2, .12, STEEL))
+                .add(box(0, -.59, .015, .08, .09, .1, FRAME));
+        var leg = new Shape()
+                .add(box(0, -.19, 0, .13, .35, .13, STEEL))
+                .add(box(0, -.4, .015, .14, .08, .15, FRAME))
+                .add(box(0, -.63, 0, .095, .38, .11, STEEL))
+                .add(box(0, -.85, 0, .09, .09, .1, FRAME))
+                .add(box(0, -.93, .065, .14, .07, .25, STEEL));
+        return body("reinforcement_commando_droid", torso, head, arm, leg);
     }
 
     private static Shape humanHead(boolean dooku) {
@@ -993,6 +1029,8 @@ public final class SternenfrontArt {
                 lightsaber(false, false), lightsaber(false, true), lightsaber(true, false), lightsaber(true, true), darksaber(),
                 equipment("helmet_kolonien", cloneHelmet(CloneRole.SOLDIER).shifted(0, -.19, 0).scaled(1.8), HELMET_DISPLAY),
                 equipment("helmet_hegemonie", battleDroid("soldier").models.get(1).shape.shifted(0, -.08, 0).scaled(1.8), HELMET_DISPLAY),
+                equipment("helmet_arc", cloneHelmet(CloneRole.ARC).shifted(0, -.19, 0).scaled(1.8), HELMET_DISPLAY),
+                equipment("helmet_commando", commandoDroid().models.get(1).shape.shifted(0, -.15, 0).scaled(1.8), HELMET_DISPLAY),
                 equipment("cap_commander", cloneHelmet(CloneRole.REX).shifted(0, -.19, 0).scaled(1.8), HELMET_DISPLAY),
                 equipment("helmet_bounty_hunter", mandoHelmet().shifted(0, -.19, 0).scaled(1.8), HELMET_DISPLAY),
                 equipment("hood_jedi", humanHead(false).shifted(0, -.17, 0).scaled(2.1), HELMET_DISPLAY),
@@ -1248,6 +1286,7 @@ public final class SternenfrontArt {
         return List.of(battleDroid("soldier"), superBattleDroid(), battleDroid("scout"), battleDroid("medic"),
                 cloneTrooper("kolonien_soldier", CloneRole.SOLDIER), cloneTrooper("kolonien_heavy", CloneRole.HEAVY),
                 cloneTrooper("kolonien_scout", CloneRole.SCOUT), cloneTrooper("kolonien_medic", CloneRole.MEDIC),
+                cloneTrooper("reinforcement_arc_trooper", CloneRole.ARC), commandoDroid(),
                 cloneTrooper("hero_commander", CloneRole.REX), forceHero(false), forceHero(true), jangoFett(),
                 speeders("kolonien", barcSpeeder(false), barcSpeeder(true)),
                 speeders("hegemonie", stap(false), stap(true)), republicGunship(), separatistTransport(), wristRocket(), effects(), saberSweep());
