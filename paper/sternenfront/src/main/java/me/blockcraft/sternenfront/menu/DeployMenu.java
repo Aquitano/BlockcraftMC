@@ -78,16 +78,26 @@ public final class DeployMenu extends Menu {
         var chosen = fighter.choosing().flatMap(Fighter.Choosing::chosen);
         var picked = fighter.choosing().flatMap(Fighter.Choosing::hero);
         var pickedUnit = fighter.choosing().flatMap(Fighter.Choosing::reinforcement);
+        boolean confirmed = fighter.choosing().filter(Fighter.Choosing::confirmed).isPresent();
+        boolean paid = picked.isPresent() || pickedUnit.isPresent();
         long wait = game.deployment().waitTicks(viewer);
-        var line = wait > 0
+        var line = confirmed
+                ? messages.get("deploy.status-queued", Formatter.number("seconds", (wait + TICKS_PER_SECOND - 1) / TICKS_PER_SECOND)) : wait > 0
                 ? messages.get("deploy.status-waiting", Formatter.number("seconds", (wait + TICKS_PER_SECOND - 1) / TICKS_PER_SECOND))
                 : messages.get("deploy.status-ready");
         var target = game.deployment().suggested(viewer);
         var role = picked.map(game.heroes()::name).or(() -> pickedUnit.map(game.reinforcementUnits()::name))
                 .orElseGet(() -> messages.get(fighter.combatClass().messageKey(faction.get()) + ".name"));
-        var shown = MenuIcon.DEPLOY.item().name(line).lore(List.of(role, spawnName(target),
-                messages.get(picked.isPresent() || pickedUnit.isPresent() ? "deploy.confirm-paid" : "deploy.quick-lore"),
-                messages.get("deploy.auto-free"))).build();
+        var summary = new ArrayList<>(List.of(role, spawnName(target)));
+        if (paid) {
+            int cost = picked.map(ignored -> game.heroes().cost(faction.get()))
+                    .orElseGet(() -> pickedUnit.map(game.reinforcementUnits()::cost).orElse(0));
+            summary.add(messages.get("deploy.cost", Formatter.number("cost", cost)));
+        }
+        summary.add(messages.get(confirmed ? "deploy.queued" : paid ? "deploy.confirm-paid" : "deploy.quick-lore"));
+        if (!confirmed) summary.add(messages.get("deploy.auto-free"));
+        else if (paid) summary.add(messages.get("deploy.paid-fallback"));
+        var shown = MenuIcon.DEPLOY.item().name(line).lore(summary).build();
         if (!shown.equals(status)) {
             status = shown;
             toolbar(ToolbarButton.MIDDLE, shown, game.deployment()::quickDeploy);
@@ -104,11 +114,11 @@ public final class DeployMenu extends Menu {
                     List.of(messages.get(selected ? "class.selected" : "class.select"))));
         }
         var unit = Reinforcement.of(faction.get());
-        set(REINFORCEMENT_SLOT, game.reinforcementUnits().card(viewer, faction.get(), unit, pickedUnit.filter(unit::equals).isPresent()));
+        set(REINFORCEMENT_SLOT, game.reinforcementUnits().card(viewer, faction.get(), unit, pickedUnit.filter(unit::equals).isPresent(), confirmed));
         var heroes = Hero.of(faction.get());
         for (int index = 0; index < heroes.size() && index < HERO_SLOTS.size(); index++) {
             var hero = heroes.get(index);
-            set(HERO_SLOTS.get(index), game.heroes().card(viewer, faction.get(), hero, picked.filter(hero::equals).isPresent()));
+            set(HERO_SLOTS.get(index), game.heroes().card(viewer, faction.get(), hero, picked.filter(hero::equals).isPresent(), confirmed));
         }
         set(firstPostSlot() - 1, spawn(faction.get(), new Spawn.Headquarters(), chosen,
                 Material.valueOf(faction.get().blocks().name() + "_BANNER"), messages.get("deploy.headquarters"), List.of()));
@@ -158,7 +168,8 @@ public final class DeployMenu extends Menu {
         return switch (spawn) {
             case Spawn.Headquarters ignored -> game.messages().get("deploy.headquarters");
             case Spawn.Post post -> game.messages().get("deploy.post", game.posts().name(post.index()));
-            case Spawn.Dropship ignored -> game.messages().get("deploy.landing");
+            case Spawn.Dropship ignored -> game.front().map(front -> game.messages().get("deploy.dropship", game.posts().name(front.post())))
+                    .orElseGet(() -> game.messages().get("deploy.landing"));
         };
     }
 

@@ -38,6 +38,10 @@ public final class ReinforcementUnits {
         return messages.get("reinforcement." + unit.key() + ".name");
     }
 
+    public int cost(Reinforcement unit) {
+        return config.stats(unit).cost();
+    }
+
     public void equip(Player player, Reinforcement unit) {
         player.getInventory().clear();
         player.getInventory().setItem(0, loadouts.blaster(unit.blaster()));
@@ -49,7 +53,7 @@ public final class ReinforcementUnits {
         unit.abilities().forEach(ability -> player.setCooldown(ability.material(), 0));
     }
 
-    public ItemStack card(Player viewer, Faction faction, Reinforcement unit, boolean picked) {
+    public ItemStack card(Player viewer, Faction faction, Reinforcement unit, boolean picked, boolean confirmed) {
         var stats = config.stats(unit);
         var lore = new ArrayList<>(messages.getLines("reinforcement." + unit.key() + ".lore"));
         lore.add(Component.empty());
@@ -62,7 +66,7 @@ public final class ReinforcementUnits {
                 Formatter.number("points", points.of(viewer.getUniqueId()))));
         boolean affordable = roster.affordable(viewer.getUniqueId(), faction, unit);
         lore.add(messages.get(!roster.open(faction, unit) ? "reinforcement.taken" : !affordable ? "reinforcement.too-few-points"
-                : picked ? "reinforcement.picked" : "reinforcement.pick"));
+                : picked ? confirmed ? "deploy.queued" : "reinforcement.picked" : "reinforcement.pick"));
         if (picked && !affordable) lore.add(messages.get("reinforcement.fallback"));
         var card = unit.blaster().model().item().name(name(unit)).lore(lore).hideAttributes()
                 .state(!affordable ? MenuState.LOCKED : picked ? MenuState.ACTIVE : MenuState.AVAILABLE);

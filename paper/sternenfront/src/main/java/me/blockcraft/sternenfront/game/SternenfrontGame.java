@@ -1309,10 +1309,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         Loadouts.natural(player);
         fighter(player).hero(Optional.of(Hero.CHAMPION));
         heroes.equip(player, faction.get(), Hero.CHAMPION, tick);
-        var abilities = Hero.CHAMPION.abilities();
-        player.sendMessage(messages.get("deploy.controls",
-                Placeholder.component("first", messages.get("hero.ability." + abilities.getFirst().key() + ".name")),
-                Placeholder.component("second", messages.get("hero.ability." + abilities.get(1).key() + ".name"))));
+        deployment.controlsChanged(player);
         Bukkit.broadcast(messages.get("relic.taken", Placeholder.unparsed("player", player.getName()), factionName(faction.get())));
         dirty = true;
     }

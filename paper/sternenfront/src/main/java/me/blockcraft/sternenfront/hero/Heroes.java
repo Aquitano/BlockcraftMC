@@ -142,17 +142,18 @@ public final class Heroes {
     }
 
     /** The hero as the deploy menu offers it: their weapon, what they do, and whether the viewer can be them now. */
-    public ItemStack card(Player viewer, Faction faction, Hero hero, boolean picked) {
+    public ItemStack card(Player viewer, Faction faction, Hero hero, boolean picked, boolean confirmed) {
         var lore = new ArrayList<>(messages.getLines("hero." + hero.key() + ".lore"));
         lore.add(Component.empty());
         lore.add(messages.get("hero.cost", Formatter.number("cost", cost(faction)), Formatter.number("points", points(viewer))));
         boolean affordable = affordable(viewer, faction, hero);
-        lore.add(messages.get(picked ? "hero.picked" : !open(faction, hero) ? "hero.card-taken"
-                : affordable ? "hero.pick" : "hero.card-too-few"));
+        lore.add(messages.get(!open(faction, hero) ? "hero.card-taken" : !affordable ? "hero.card-too-few"
+                : picked ? confirmed ? "deploy.queued" : "hero.picked" : "hero.pick"));
+        if (picked && !affordable) lore.add(messages.get("deploy.paid-fallback"));
         var model = hero.weapon().model();
         var card = model.item().name(name(hero)).lore(lore).hideAttributes()
-                .state(picked ? MenuState.ACTIVE : affordable ? MenuState.AVAILABLE : MenuState.LOCKED);
-        if (picked) {
+                .state(!affordable ? MenuState.LOCKED : picked ? MenuState.ACTIVE : MenuState.AVAILABLE);
+        if (picked && affordable) {
             card.glow();
         }
         var item = card.build();

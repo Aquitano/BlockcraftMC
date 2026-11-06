@@ -53,8 +53,9 @@ or run `uv run --no-project resourcepack/RadioCalls.py --model /path/to/de_DE-th
 The scripts require the adjacent model JSON and never download a model. Piper and the model do not ship in the pack.
 Changing a line requires regenerating its source manifest and checking the configured speech window.
 
-`uv run --no-project BattleArt.py` regenerates the projector, original faction emblems, shield grids and firing poses.
-The six firing variants are registered in `PackModel`, so the normal `:paper:api:packOverrides` generator preserves them.
+From the repository root, `./gradlew :resourcepack:generateBattle` regenerates the projector, original faction emblems,
+shield grids and firing poses. It generates the base models and firing manifest before running `BattleArt.py`.
+The eleven firing variants are registered in `PackModel`, so the normal `:paper:api:packOverrides` generator preserves them.
 The generator disables the [client's hand-swap animation](https://www.minecraft.net/en-us/article/minecraft-java-edition-1-21-4)
 on the six blaster carrier materials, so each shot does not lower and raise the weapon. Minecraft applies this flag
 to the whole item definition, so vanilla hoes and other pack models on those materials also swap without that animation.
