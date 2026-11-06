@@ -153,6 +153,10 @@ class Builder:
         self.box(x, y, z - 2, x, y, z - 2, "waxed_oxidized_copper")
         self.box(x, y + 1, z - 2, x, y + 1, z - 2, "lightning_rod[facing=up]")
 
+    def workbench(self, x, z, floor):
+        self.box(x - 1, floor + 1, z - 1, x + 1, floor + 1, z + 1, "smooth_quartz")
+        self.box(x, floor + 1, z, x, floor + 1, z, COLD_LIGHT)
+
     def maintenance_droid(self, x, z, floor=DECK):
         y = floor + 1
         self.box(x - 1, y, z, x + 1, y, z, "polished_blackstone_slab[type=bottom]")
@@ -537,9 +541,9 @@ def northern_dock(b):
     for x in (-69, 64):
         b.warning_light(x, 84, -122)
     for x, z in ((-57, -117), (-43, -117), (-54, -102), (29, -116), (48, -115), (47, -104)):
-        b.service_unit(x, z, 1 if x < 0 else -1, 82)
-    for x, z, width, depth, height in ((-49, -120, 3, 3, 4), (-61, -104, 3, 2, 1),
-                                      (35, -104, 5, 2, 1), (54, -116, 3, 4, 4), (22, -104, 3, 2, 2)):
+        b.workbench(x, z, 82)
+    for x, z, width, depth, height in ((-49, -120, 3, 3, 1), (-61, -104, 3, 2, 1),
+                                      (35, -104, 5, 2, 1), (54, -116, 3, 4, 1), (22, -104, 3, 2, 2)):
         b.crate(x, z, width, depth, height, "gray", 82)
     for x in (-59, -45):
         b.box(x, 83, -123, x + 1, 88, -122, DARK)
@@ -597,24 +601,27 @@ def southern_halls(b):
     b.box(-66, 81, 96, -66, 87, 107, DARK)
     b.box(-76, 81, 102, -67, 87, 102, FRAME)
     b.box(-70, 81, 102, -68, 84, 102, "air")
-    for x, z in ((-77, 96), (-72, 91), (-57, 96), (-57, 115)):
+    for x, z in ((-77, 96), (-72, 91)):
+        b.workbench(x, z, 80)
+    for x, z in ((-57, 96), (-57, 115)):
         b.service_unit(x, z, 1, 80)
-    b.crate(-79, 108, 4, 3, 2, "gray", 80)
+    b.crate(-79, 108, 4, 3, 1, "gray", 80)
     b.crate(-61, 118, 3, 2, 1, "light_gray", 80)
     b.box(-69, 80, 102, -63, 80, 105, "waxed_oxidized_copper")
     for x in (-71, -60):
         b.box(x, 81, 99, x, 83, 99, "smooth_quartz")
         b.box(x, 82, 100, x, 82, 100, "lever[face=wall,facing=south]")
     for x, z, dx, dz in ((-15, 100, 1, 7), (13, 114, 1, 7), (-10, 125, 6, 1), (6, 94, 7, 1)):
-        b.box(x, 81, z, x + dx, 83, z + dz, "smooth_quartz")
-        b.box(x, 84, z, x + dx, 84, z + dz, "cyan_stained_glass")
-    for x, z in ((-19, 113), (18, 104), (-6, 129), (8, 91)):
+        b.box(x, 81, z, x + dx, 81, z + dz, "smooth_quartz")
+    for x, z in ((18, 104), (8, 91)):
+        b.workbench(x, z, 80)
+    for x, z in ((-19, 113), (-6, 129)):
         b.service_unit(x, z, -1 if x > 0 else 1, 80)
     b.ellipse(0, 116, 4, 3, 81, 81, DARK)
     b.box(-3, 82, 115, 3, 82, 117, "cyan_stained_glass")
     b.box(-1, 83, 116, 1, 83, 116, COLD_LIGHT)
-    for x, z, width, depth, height in ((55, 98, 4, 5, 4), (65, 95, 5, 3, 2),
-                                      (74, 101, 5, 5, 4), (55, 117, 6, 3, 3),
+    for x, z, width, depth, height in ((55, 98, 4, 5, 1), (65, 95, 5, 3, 1),
+                                      (74, 101, 5, 5, 4), (55, 117, 6, 3, 1),
                                       (67, 115, 4, 6, 4), (78, 113, 3, 4, 1)):
         b.crate(x, z, width, depth, height, "gray" if height > 2 else "light_gray", 80)
         b.stripes(x, z - 1, x + width - 1, z - 1, 80)
@@ -732,6 +739,9 @@ def northern_details(b):
         b.box(x - 4, 89, z, x + 4, 89, z, DARK)
         b.box(x - 3, 88, z, x + 3, 88, z, "cyan_concrete")
         b.box(x - 2, 82, z - 2, x + 2, 82, z - 2, "polished_andesite")
+    for x, z in ((-48, -119), (55, -114)):
+        b.box(x, 86, z, x, 86, z, "ochre_froglight[axis=y]")
+        b.box(x, 87, z, x, 89, z, "iron_chain")
     for x in (-62, -28, 28, 57):
         b.box(x - 4, 67, -132, x + 4, 68, -88, "waxed_oxidized_cut_copper")
         for z in (-128, -92):
@@ -750,8 +760,9 @@ def southern_details(b):
             half = round(radius * math.sqrt(1 - (dz / (radius + 0.3)) ** 2))
             for sign in (-1, 1):
                 x = cx + sign * half
-                b.box(x, 81, cz + dz, x, 88, cz + dz, "quartz_pillar[axis=y]")
-                b.box(x, 82, cz + dz, x, 82, cz + dz, "waxed_oxidized_cut_copper")
+                bottom = 86 if 107 <= cz + dz <= 113 else 81
+                b.box(x, bottom, cz + dz, x, 88, cz + dz, "quartz_pillar[axis=y]")
+                b.box(x, bottom + 1, cz + dz, x, bottom + 1, cz + dz, "waxed_oxidized_cut_copper")
     for x, z, accent in ((-62, 92, "waxed_exposed_cut_copper"), (0, 85, "cyan_concrete"),
                           (62, 92, "yellow_terracotta")):
         for edge in (x - 3, x + 3):
@@ -768,11 +779,11 @@ def southern_details(b):
     for x in (-76, -64, -56):
         b.box(x, 89, 98, x, 90, 98, "iron_chain")
         b.box(x, 87, 98, x + 1, 87, 98, "ochre_froglight[axis=x]")
-    b.box(-79, 83, 108, -76, 83, 110, "waxed_weathered_cut_copper")
-    b.box(-79, 84, 108, -79, 86, 108, "iron_bars")
-    b.box(-76, 84, 108, -76, 86, 108, "iron_bars")
-    b.box(-79, 87, 108, -76, 87, 108, DARK)
-    b.box(-78, 86, 108, -77, 86, 108, "ochre_froglight[axis=x]")
+    b.box(-79, 81, 108, -76, 81, 110, "waxed_weathered_cut_copper")
+    b.box(-79, 82, 108, -79, 84, 108, "iron_bars")
+    b.box(-76, 82, 108, -76, 84, 108, "iron_bars")
+    b.box(-79, 85, 108, -76, 85, 108, DARK)
+    b.box(-78, 84, 108, -77, 84, 108, "ochre_froglight[axis=x]")
     b.ellipse(0, 110, 9, 9, 90, 90, "smooth_quartz_slab[type=top]", hollow=True)
     for x, z in ((-9, 110), (9, 110), (0, 101), (0, 119)):
         b.box(x, 89, z, x, 89, z, COLD_LIGHT)
@@ -794,9 +805,12 @@ def southern_details(b):
     b.box(70, 87, 122, 74, 87, 122, "waxed_weathered_cut_copper")
     for x in (58, 75):
         b.box(x, 87, 121, x + 1, 87, 121, "ochre_froglight[axis=x]")
-    for x, z, width in ((55, 98, 4), (74, 101, 5), (67, 115, 4)):
+    for x, z, width in ((74, 101, 5), (67, 115, 4)):
         b.box(x + 1, 82, z, x + width - 2, 82, z, "yellow_terracotta")
         b.box(x + 1, 83, z, x + width - 2, 83, z, "iron_block")
+    for x, z in ((57, 100), (67, 96), (58, 118), (79, 115)):
+        b.box(x, 84, z, x, 84, z, "ochre_froglight[axis=y]")
+        b.box(x, 85, z, x, 90, z, "iron_chain")
     for x, z, top in ((-72, 103, 100), (-69, 105, 102), (-65, 102, 101)):
         b.box(x - 1, 98, z - 1, x + 1, 98, z + 1, DARK)
         b.box(x, 99, z, x, top, z, "waxed_weathered_cut_copper")
@@ -889,46 +903,46 @@ def yard_props():
         ("power_coupler", -49, 84, -101, 0, 0.8),
         ("wall_panel", -50.5, 84, -101.953125, 0, 0.5),
         ("power_coupler", -41.5, 84, -121, 180, 0.75),
-        ("console", -57, 85.5, -117, 0, 0.6),
-        ("console", -43, 85.5, -116.5, 0, 0.6),
-        ("console", -54, 85.5, -102, 180, 0.6),
-        ("cargo_stack", -47.5, 87, -118.5, 0, 0.75),
+        ("console", -57, 84, -117, 0, 0.8),
+        ("console", -43, 84, -116.5, 0, 0.8),
+        ("console", -54, 84, -102, 180, 0.8),
+        ("cargo_stack", -47.5, 84, -118.5, 0, 1.0),
         ("engine_cradle", -59.5, 84, -103, 0, 0.9),
 
         ("engine_cradle", 41, 85, -116, 0, 0.9),
-        ("console", 29, 85.5, -116, 0, 0.6),
-        ("console", 48, 85.5, -115, 0, 0.5),
-        ("power_coupler", 47, 85.5, -104, 180, 0.6),
-        ("cargo_stack", 55.5, 87, -114, 0, 1.0),
+        ("console", 29, 84, -116, 0, 0.8),
+        ("console", 48, 84, -115, 0, 0.8),
+        ("power_coupler", 47, 84, -104, 180, 0.8),
+        ("cargo_stack", 55.5, 84, -114, 0, 1.0),
         ("cargo_stack", 37, 84, -103, 180, 0.75),
         ("repair_droid", 23.5, 85, -103, 180, 0.5),
 
-        ("repair_droid", -77, 84, 109.5, 0, 0.65),
-        ("console", -78.3, 84, 109.5, 0, 0.5),
-        ("console", -72, 83.5, 91, 0, 0.6),
-        ("power_coupler", -77, 83.5, 96, 270, 0.65),
+        ("repair_droid", -77, 82, 109.5, 0, 0.65),
+        ("console", -78.3, 82, 109.5, 0, 0.5),
+        ("console", -72, 82, 91, 0, 0.8),
+        ("power_coupler", -77, 82, 96, 270, 0.8),
         ("wall_panel", -54.925, 81.5, 115, 270, 0.8),
         ("cargo_stack", -59.5, 82, 119, 180, 0.65),
 
-        ("console", -14, 85, 103.5, 270, 0.65),
-        ("console", 14, 85, 117.5, 90, 0.65),
-        ("console", -6.5, 85, 126, 180, 0.65),
-        ("console", 10.5, 85, 95, 0, 0.65),
+        ("console", -14, 82, 103.5, 270, 0.8),
+        ("console", 14, 82, 117.5, 90, 0.8),
+        ("console", -6.5, 82, 126, 180, 0.8),
+        ("console", 10.5, 82, 95, 0, 0.8),
         ("wall_panel", -16.925, 81.5, 113, 270, 0.8),
-        ("console", 18, 83.5, 104, 90, 0.6),
+        ("console", 18, 82, 104, 90, 0.8),
         ("wall_panel", -7.075, 81.5, 129, 90, 0.8),
-        ("console", 8, 83.5, 91, 0, 0.5),
+        ("console", 8, 82, 91, 0, 0.8),
         ("console", -1.8, 83, 116.5, 0, 0.6),
         ("console", 1.8, 83, 116.5, 180, 0.6),
         ("wall_panel", 0, 81, 120.0609375, 0, 0.65),
 
-        ("cargo_stack", 57, 85, 100.5, 270, 1.0),
-        ("cargo_stack", 67.5, 83, 96.5, 0, 0.75),
-        ("cargo_stack", 76.5, 85, 103.5, 90, 1.0),
-        ("cargo_stack", 58, 84, 118.5, 180, 0.9),
-        ("cargo_stack", 69, 85, 118, 90, 0.9),
-        ("cargo_stack", 79.5, 82, 115, 90, 0.65),
-        ("wall_panel", 67.5, 81.25, 98.0703125, 0, 0.75),
+        ("cargo_stack", 57, 82, 100.5, 270, 1.0),
+        ("cargo_stack", 66.25, 82, 96.5, 0, 0.9),
+        ("cargo_stack", 68.5, 82, 96.5, 0, 0.9),
+        ("cargo_stack", 56.5, 82, 118.5, 180, 0.9),
+        ("cargo_stack", 59.5, 82, 118.5, 180, 0.9),
+        ("cargo_stack", 79.5, 82, 115, 90, 0.9),
+        ("wall_panel", 76.5, 81.5, 106.0703125, 0, 0.75),
     )]
 
 
@@ -1143,6 +1157,9 @@ def validate_expansion(fills, plan, levels, cells, connected, stairs):
     require_reachable(rooms, connected, plan["play-area"])
     walking = walk_reachable(cells, (-82, 65, -6), levels, stairs)
     require_reachable([*fighter_positions(plan), *rooms], walking, plan["play-area"])
+    for x in range(-66, 69):
+        if (x, 81, 110) not in walking:
+            sys.exit(f"Skybridge centerline is obstructed at {(x, 81, 110)}")
     for x, z, floor, rise, direction in [(x, -80, 65, 18, -1) for x in (*ROADS, -12, 12)] + [
             (x, 64, 65, 16, 1) for x in (*ROADS, 0)]:
         for step in range(rise):

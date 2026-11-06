@@ -32,6 +32,7 @@ and local task lights. Both northern entrances have quartz frames, cyan lintels,
 The western dome has a copper service run, warm work lights, and a repair bench in its existing western cargo pocket.
 The control hall has a shallow ceiling ring, four radial supports, and a glass-topped central table under a task light.
 The freight hall has an overhead handling rail and cargo with metal bindings and ochre markings.
+Its small cargo stacks sit on four low pallets under task lights. Two tall freight containers retain cover between aisles.
 The workshop roof carries an exhaust cluster, the control roof a forked antenna, and the freight roof two service housings.
 Support collars and buttresses sit below the occupied floors.
 
@@ -42,6 +43,7 @@ ochre froglights provide world light. The generator does not add fullbright disp
 
 Floor wear follows paired wheel tracks with short connected repair patches. Drainage covers and transverse seams
 break up the southern skybridge, and the ship passage has long edge seams. Floor treatments retain their original height.
+Pilasters above the skybridge openings start at y=86, leaving the centerline clear at walking height.
 
 ## Equipment props
 
@@ -54,9 +56,13 @@ yaw 180 faces north, and yaw 270 faces east.
 | --- | --- | --- |
 | Engine room | 8 | Couplers and cabinet panel at the copper work shelves, engine on the low service bench, three terminals, spare cargo |
 | Assembly | 7 | Engine cradle at `41 85 -116`, terminals, coupler, staged cargo, repair droid |
-| Workshop | 6 | Repair station at `-77 84 109.5`, warm-lit terminals, coupler, cabinet panel, spare cargo |
+| Workshop | 6 | Repair station at `-77 82 109.5`, warm-lit terminals, coupler, cabinet panel, spare cargo |
 | Control hall | 11 | Four perimeter desks, two consoles at the central table, cabinet panels, service terminals |
-| Freight hall | 7 | Six cargo groups on the existing crates, with fronts toward the working aisles, and one cabinet panel |
+| Freight hall | 7 | Six cargo groups on four lit pallets, with fronts toward the working aisles, and one container panel |
+
+Northern console work surfaces end at y=84. Southern perimeter consoles and the repair station stand at y=82.
+These one-block-high supports leave the equipment visible from the adjacent walking floor. The central control table
+retains its raised surface at y=83. Cargo stacks use scale 0.9 or 1.0 in the freight hall and remain within their pallet footprints.
 
 Models use `sternenfront/yard/<kind>` with `ItemDisplayTransform.NONE` and no model display transforms.
 Their ground origin is model coordinate `(8,8,8)`. All elements fit the shared 2 by 1.5 by 2 block envelope at scale 1.0.
