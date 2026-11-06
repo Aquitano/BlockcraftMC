@@ -21,6 +21,7 @@ def message(messages, key):
 
 def generate(sources, group, root, budget, infantry=False):
     manifest = json.loads((sources / "sources.json").read_text())
+    radio = json.loads((Path(__file__).parent / "audio/radio-filter.json").read_text())
     messages = yaml.safe_load(MESSAGES.read_text())
     output = root / "sounds/sternenfront"
     output.mkdir(parents=True, exist_ok=True)
@@ -36,13 +37,17 @@ def generate(sources, group, root, budget, infantry=False):
             duration = speech.getnframes() / speech.getframerate()
         if duration > budget or math.ceil(duration * 20) != source["duration_ticks"]:
             raise ValueError(f"Speech exceeds its timing budget or manifest duration: {path}")
-        filters = ["highpass=f=300", "lowpass=f=3800"]
+        filters = []
         if source["faction"] == "hegemonie":
             filters.extend(["asetrate=24475", "aresample=22050", "tremolo=f=70:d=0.35"])
-        filters.extend(["acompressor=threshold=0.12:ratio=2.2:attack=4:release=60:makeup=1",
-                        f"loudnorm=I={'-20' if infantry else '-18'}:TP=-3:LRA=7", "afade=t=in:d=0.012"])
+        filters.extend(radio["voice"])
+        filters.extend([f"loudnorm=I={'-20' if infantry else '-18'}:TP=-4:LRA=7", "aresample=22050"])
+        playback_duration = duration * 22050 / 24475 if source["faction"] == "hegemonie" else duration
+        graph = (f"[0:a]{','.join(filters)}[voice];{','.join(radio['static'])}[static];"
+                 "[voice][static]amix=inputs=2:duration=first:normalize=0,"
+                 f"afade=t=in:d=0.012,afade=t=out:st={max(0, playback_duration - 0.02):.6f}:d=0.02[out]")
         sound = source["sound"]
-        subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(path), "-af", ",".join(filters),
+        subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(path), "-filter_complex", graph, "-map", "[out]",
                         "-ar", "22050", "-ac", "1", "-c:a", "libvorbis", "-q:a", "3",
                         "-map_metadata", "-1", "-metadata", "artist=BlockcraftMC; Thorsten-Voice (synthetic voice)",
                         "-metadata", "comment=Original German text; CC0 Thorsten voice; faction radio delivery",

@@ -36,7 +36,10 @@ Leaving the audience stops that player's owned Voice sounds. Ending the round al
 
 `audio/intro/sources.json`, `audio/bots/sources.json`, and `audio/radio/sources.json` record the local Thorsten-Voice
 synthesis settings, recording durations, source hashes, and message hashes. Each faction has its own WAVs and text.
-Republic delivery uses radio filtering; Separatist delivery uses steadier synthesis, pitch shift, and tremolo.
+Both factions use a 450 to 3000 Hz voice band, compression, soft distortion, and a quiet, fluttering static bed.
+`audio/radio-filter.json` holds the shared filter settings. The static uses a fixed seed for reproducible output
+and ends with the voice, so it does not extend a call's speech window. Separatist delivery also retains its
+steadier synthesis, pitch shift, and tremolo. Infantry calls remain quieter than briefings and objective radio.
 These synthetic lines are original project text. They do not use film or game performers' recordings.
 
 From the repository root, these commands regenerate only the 26 speech OGG files and their sound events:
