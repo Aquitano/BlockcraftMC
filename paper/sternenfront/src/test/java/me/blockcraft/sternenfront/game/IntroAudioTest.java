@@ -23,7 +23,6 @@ public class IntroAudioTest {
     @Test
     public void factionRadioFollowsTheCameraAndStopsWithItsScene() throws Exception {
         var config = config();
-        config.set("intro.audio.briefing", true);
         var route = route(config, 180);
         for (var faction : Faction.values()) {
             var played = new ArrayList<Played>();
@@ -46,7 +45,7 @@ public class IntroAudioTest {
             var scope = scope();
             var captions = new AtomicInteger();
             var cues = new IntroAudio(player, scope).cues(faction, route, config, captions::incrementAndGet);
-            assertEquals(List.of(15, 18, 72, 98, 135), cues.stream().map(cue -> cue.tick()).toList());
+            assertEquals(List.of(15, 18, 66, 72, 135), cues.stream().map(cue -> cue.tick()).toList());
             cues.forEach(cue -> cue.action().run());
             assertEquals(1, captions.get());
             assertEquals(5, played.size());
@@ -82,13 +81,25 @@ public class IntroAudioTest {
     }
 
     @Test
-    public void bundledIntroKeepsTheShotCuesButSpeaksNoBriefing() throws Exception {
+    public void disablingBriefingKeepsOnlyTheShotCues() throws Exception {
         var config = config();
+        config.set("intro.audio.briefing", false);
         var player = fake(Player.class, (proxy, method, args) -> {
             throw new AssertionError(method.getName());
         });
         var cues = new IntroAudio(player, scope()).cues(Faction.KOLONIEN, route(config, 180), config, () -> fail());
         assertEquals(List.of(72, 135), cues.stream().map(cue -> cue.tick()).toList());
+    }
+
+    @Test
+    public void shortenedSpeechSettingCannotCloseTheRadioBeforeTheRecordingEnds() throws Exception {
+        var config = config();
+        config.set("intro.audio.briefing-ticks", 1);
+        var player = fake(Player.class, (proxy, method, args) -> {
+            throw new AssertionError(method.getName());
+        });
+        var cues = new IntroAudio(player, scope()).cues(Faction.KOLONIEN, route(config, 180), config, () -> fail());
+        assertEquals(List.of(15, 18, 66, 72, 135), cues.stream().map(cue -> cue.tick()).toList());
     }
 
     private static BattleIntro.IntroPath route(YamlConfiguration config, int duration) {

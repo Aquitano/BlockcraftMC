@@ -7,22 +7,39 @@
     "model_card": "https://huggingface.co/rhasspy/piper-voices/blob/main/de/de_DE/thorsten/high/MODEL_CARD",
     "model_url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/de/de_DE/thorsten/high/de_DE-thorsten-high.onnx",
     "engine": "piper-tts 1.4.2",
-    "length_scale": 0.95,
-    "noise_scale": 0.4,
-    "noise_w_scale": 0.6,
     "model_sha256": "9df1c43c61149ef9b39e618e2b861fbe41e1fcea9390b2dac62e8761573ea4f1",
-    "config_sha256": "6de734444e4c3f9e33b7ebe2746dbc19b71e85f613e79c65acf623200b99a76a"
+    "config_sha256": "6de734444e4c3f9e33b7ebe2746dbc19b71e85f613e79c65acf623200b99a76a",
+    "delivery": {
+      "kolonien": {
+        "length_scale": 0.9,
+        "noise_scale": 0.4,
+        "noise_w_scale": 0.6
+      },
+      "hegemonie": {
+        "length_scale": 0.96,
+        "noise_scale": 0.2,
+        "noise_w_scale": 0.4
+      }
+    }
   },
   "briefings": {
     "kolonien": {
       "message": "intro.briefing.kolonien",
-      "sha256": "a3c8bef3a06544dd9969c4bea05a4e7ad262d2bc50a195e66af73d2944c966a3",
-      "text_sha256": "e7d0309bb72b080a8ad313f1e3b6875dd6f8dce4cfa1ade18b22a9d3665d9c8c"
+      "faction": "kolonien",
+      "sound": "intro_briefing_kolonien",
+      "event": "sternenfront.intro.briefing.kolonien",
+      "duration_ticks": 46,
+      "sha256": "b91802d5ee756c7c41410b35517fbd97bf9d0d5b166d32c4ec0d2d8acf585245",
+      "text_sha256": "6006e22c612d4bc6792332276fc6d43f723bd61c08eb9f9bf1541345006b5635"
     },
     "hegemonie": {
       "message": "intro.briefing.hegemonie",
-      "sha256": "7add581752095fc97d9929b71cb52e2d7bf91d3856654d129e81650d011931b1",
-      "text_sha256": "13faf8640e338fb27229e89127baadb990b845ba747455202fd2b7936ed3036a"
+      "faction": "hegemonie",
+      "sound": "intro_briefing_hegemonie",
+      "event": "sternenfront.intro.briefing.hegemonie",
+      "duration_ticks": 45,
+      "sha256": "8c3665bf531aebe5c147122e8a98c16c083e0a19da750ff2453638fef5ab009c",
+      "text_sha256": "e3f8fd3351b3e54107c65fde18896c29726870091f23ad74949b47cf96f0366d"
     }
   }
 }

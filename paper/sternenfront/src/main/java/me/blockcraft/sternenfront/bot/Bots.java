@@ -671,7 +671,7 @@ public final class Bots implements Listener {
 
     private void call(Soldier soldier, String cue, long tick) {
         var voice = config.voice();
-        if (!voice.enabled() || voice.volume() <= 0 || tick < voiceAt || tick < soldier.voiceAt) {
+        if (!voice.enabled() || voice.volume() <= 0 || tick < voiceAt || tick < soldier.voiceAt || !game.radio().infantryReady(tick)) {
             return;
         }
         var at = soldier.body.getEyeLocation();
@@ -683,6 +683,7 @@ public final class Bots implements Listener {
         }
         String sound = "blockcraft:sternenfront.bot." + soldier.faction.key() + "." + cue;
         listeners.forEach(player -> player.playSound(at, sound, SoundCategory.VOICE, voice.volume(), 1));
+        game.radio().infantrySpoke(tick);
         voiceAt = tick + voice.globalCooldownTicks();
         soldier.voiceAt = tick + voice.soldierCooldownTicks();
     }

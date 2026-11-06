@@ -268,6 +268,20 @@ act:
     banner: "<accent>ENDKAMPF <dark>· <muted>Jeder Posten zählt <accent><weight>-fach"
     chat: "<prefix><muted>Helden kosten <faction> <muted>nur noch <accent><cost> KP."
 
+radio:
+  transcript: '<aqua>Funk <dark>» <white><speech>'
+  transcript-post: '<aqua>Funk <dark>» <accent><letter> <post> <dark>· <white><speech>'
+  kolonien:
+    assault: 'Klone, Schwerpunkt sichern! Haltet den Posten!'
+    last-stand: 'Brüder, haltet die Posten! Jede Stellung zählt!'
+    captured: 'Posten gesichert! Brüder, haltet die Stellung!'
+    lost: 'Posten verloren! Brüder, holt ihn zurück!'
+  hegemonie:
+    assault: 'Prioritätsziel markiert. Kommandoposten besetzen.'
+    last-stand: 'Letzte Phase. Alle Kommandoposten halten.'
+    captured: 'Posten besetzt. Verteidigung aktivieren.'
+    lost: 'Posten verloren. Rückeroberung einleiten.'
+
 secret:
   found-title: "<sternenfront>Secret gefunden!"
   found-subtitle: "<accent>+<coins> Coins"
@@ -535,10 +549,24 @@ streak:
 bot:
   name: "<tint><role> <number></tint>"
   voice:
-    contact: "Feind voraus!"
-    cover: "Ich gehe in Deckung!"
-    advance: "Ich rücke vor!"
-    heal: "Ich versorge dich!"
+    kolonien:
+      contact: "Brüder, Feindkontakt!"
+      contact-2: "Droiden voraus!"
+      cover: "Brüder, in Deckung!"
+      cover-2: "Runter! Ich decke euch!"
+      advance: "Für die Republik! Vorwärts!"
+      advance-2: "Brüder, vorrücken!"
+      heal: "Sanitäter ist da!"
+      heal-2: "Halt still, Bruder!"
+    hegemonie:
+      contact: "Klontruppen erfasst."
+      contact-2: "Ziel erkannt. Roger, roger."
+      cover: "Deckungsprotokoll aktiv."
+      cover-2: "Beschuss. Deckung suchen."
+      advance: "Vorrücken. Roger, roger."
+      advance-2: "Angriffsbefehl bestätigt."
+      heal: "Reparatur wird gestartet."
+      heal-2: "Einheit wird repariert."
   difficulty:
     open: "<arrow><primary>Bot-Stärke"
     open-lore:
@@ -609,8 +637,8 @@ intro:
   title: '<gold><bold><map></bold></gold>'
   subtitle: '<faction> <gray>· Erobere die Kommandoposten</gray>'
   briefing:
-    kolonien: 'Freie Kolonien. Sichert die Kommandoposten. Haltet zusammen.'
-    hegemonie: 'Einheiten der Hegemonie. Besetzt die Kommandoposten. Haltet die Stellung.'
+    kolonien: 'Für die Republik! Sichert die Kommandoposten.'
+    hegemonie: 'Separatisten. Kommandoposten besetzen.'
   audio:
     transcript: '<aqua>Funk <dark>» <white><briefing>'
   controls: '<gray>Schleichen: Intro überspringen · Einsatz in <white><seconds></white> s</gray>'

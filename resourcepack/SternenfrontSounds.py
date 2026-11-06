@@ -1,6 +1,6 @@
 # /// script
 # requires-python = ">=3.11"
-# dependencies = ["numpy>=2", "scipy>=1.13"]
+# dependencies = ["numpy>=2", "scipy>=1.13", "pyyaml>=6"]
 # ///
 """Builds Sternenfront's effects and imported recordings into sounds/sternenfront.
 
@@ -18,6 +18,7 @@ from SaberRecordings import generate as recorded_sabers
 from BattleRecordings import generate as recorded_battle
 from IntroBriefings import generate as intro_briefings
 from BotVoices import generate as bot_voices
+from RadioCalls import generate as radio_calls
 
 import numpy as np
 from scipy import signal
@@ -419,5 +420,6 @@ if not args.only:
     events.update(recorded_battle(ROOT))
     events.update(intro_briefings(ROOT))
     events.update(bot_voices(ROOT))
+    events.update(radio_calls(ROOT))
 register(events, replace=not args.only)
 print(f"Wrote {sum(len(entry['sounds']) for entry in events.values())} sounds for {len(events)} events to {OUT}")
