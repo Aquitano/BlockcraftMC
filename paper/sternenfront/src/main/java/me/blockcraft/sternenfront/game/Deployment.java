@@ -362,6 +362,7 @@ public final class Deployment {
     }
 
     public void controlsChanged(Player player) {
+        if (!game.onField(player)) return;
         var fighter = game.fighter(player);
         var faction = game.factionOf(player);
         if (faction.isEmpty()) return;
