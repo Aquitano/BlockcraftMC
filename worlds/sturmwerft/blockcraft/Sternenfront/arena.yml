@@ -487,6 +487,124 @@ secrets:
       - 19.0
     board: "-23.5 87 -126.5"
 environment:
+  props:
+    - kind: "power_coupler"
+      at: "-49 84 -101 0"
+      scale: 0.8
+    - kind: "wall_panel"
+      at: "-50.5 84 -101.953125 0"
+      scale: 0.5
+    - kind: "power_coupler"
+      at: "-41.5 84 -121 180"
+      scale: 0.75
+    - kind: "console"
+      at: "-57 85.5 -117 0"
+      scale: 0.6
+    - kind: "console"
+      at: "-43 85.5 -116.5 0"
+      scale: 0.6
+    - kind: "console"
+      at: "-54 85.5 -102 180"
+      scale: 0.6
+    - kind: "cargo_stack"
+      at: "-47.5 87 -118.5 0"
+      scale: 0.75
+    - kind: "engine_cradle"
+      at: "-59.5 84 -103 0"
+      scale: 0.9
+    - kind: "engine_cradle"
+      at: "41 85 -116 0"
+      scale: 0.9
+    - kind: "console"
+      at: "29 85.5 -116 0"
+      scale: 0.6
+    - kind: "console"
+      at: "48 85.5 -115 0"
+      scale: 0.5
+    - kind: "power_coupler"
+      at: "47 85.5 -104 180"
+      scale: 0.6
+    - kind: "cargo_stack"
+      at: "55.5 87 -114 0"
+      scale: 1.0
+    - kind: "cargo_stack"
+      at: "37 84 -103 180"
+      scale: 0.75
+    - kind: "repair_droid"
+      at: "23.5 85 -103 180"
+      scale: 0.5
+    - kind: "repair_droid"
+      at: "-77 84 109.5 0"
+      scale: 0.65
+    - kind: "console"
+      at: "-78.3 84 109.5 0"
+      scale: 0.5
+    - kind: "console"
+      at: "-72 83.5 91 0"
+      scale: 0.6
+    - kind: "power_coupler"
+      at: "-77 83.5 96 270"
+      scale: 0.65
+    - kind: "wall_panel"
+      at: "-54.925 81.5 115 270"
+      scale: 0.8
+    - kind: "cargo_stack"
+      at: "-59.5 82 119 180"
+      scale: 0.65
+    - kind: "console"
+      at: "-14 85 103.5 270"
+      scale: 0.65
+    - kind: "console"
+      at: "14 85 117.5 90"
+      scale: 0.65
+    - kind: "console"
+      at: "-6.5 85 126 180"
+      scale: 0.65
+    - kind: "console"
+      at: "10.5 85 95 0"
+      scale: 0.65
+    - kind: "wall_panel"
+      at: "-16.925 81.5 113 270"
+      scale: 0.8
+    - kind: "console"
+      at: "18 83.5 104 90"
+      scale: 0.6
+    - kind: "wall_panel"
+      at: "-7.075 81.5 129 90"
+      scale: 0.8
+    - kind: "console"
+      at: "8 83.5 91 0"
+      scale: 0.5
+    - kind: "console"
+      at: "-1.8 83 116.5 0"
+      scale: 0.6
+    - kind: "console"
+      at: "1.8 83 116.5 180"
+      scale: 0.6
+    - kind: "wall_panel"
+      at: "0 81 120.0609375 0"
+      scale: 0.65
+    - kind: "cargo_stack"
+      at: "57 85 100.5 270"
+      scale: 1.0
+    - kind: "cargo_stack"
+      at: "67.5 83 96.5 0"
+      scale: 0.75
+    - kind: "cargo_stack"
+      at: "76.5 85 103.5 90"
+      scale: 1.0
+    - kind: "cargo_stack"
+      at: "58 84 118.5 180"
+      scale: 0.9
+    - kind: "cargo_stack"
+      at: "69 85 118 90"
+      scale: 0.9
+    - kind: "cargo_stack"
+      at: "79.5 82 115 90"
+      scale: 0.65
+    - kind: "wall_panel"
+      at: "67.5 81.25 98.0703125 0"
+      scale: 0.75
   steam:
     - "-10.5 67 -51.5"
     - "11.5 67 -51.5"
