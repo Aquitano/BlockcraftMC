@@ -28,9 +28,9 @@
       "faction": "kolonien",
       "sound": "radio_kolonien_assault",
       "event": "sternenfront.radio.kolonien.assault",
-      "duration_ticks": 56,
-      "sha256": "54c8ef7e912da020e5ef40a6ae457989908817f0a40f5acf1e6928f89c107b75",
-      "text_sha256": "be7322cac9993359934dc6bec369863ddd70646f75646463b3a3a6b3ae31625a"
+      "duration_ticks": 45,
+      "sha256": "49e5929ac8d5302a00f75d2d5f0dbe24e59ebc86213a16e25eb3695f2f0a3686",
+      "text_sha256": "32eced1dfd40ccec59fea73dc15d9a139db23f8b840263ab34b2f3988bc2d862"
     },
     "kolonien_last_stand": {
       "message": "radio.kolonien.last-stand",

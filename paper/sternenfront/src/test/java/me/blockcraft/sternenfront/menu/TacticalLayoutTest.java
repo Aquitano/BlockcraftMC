@@ -13,6 +13,14 @@ import static org.junit.Assert.*;
 public class TacticalLayoutTest {
 
     @Test
+    public void equallySpacedPostsKeepTheirMiddlePostCentred() {
+        var points = IntStream.range(0, 3).mapToObj(index -> new TacticalLayout.Marker(new Spawn.Post(index), new Point(0, index * 50))).toList();
+        var slots = TacticalLayout.project(points);
+        assertEquals(slots.get(new Spawn.Post(1)) - slots.get(new Spawn.Post(0)),
+                slots.get(new Spawn.Post(2)) - slots.get(new Spawn.Post(1)));
+    }
+
+    @Test
     public void preservesNorthSouthAndEastWestAcrossMapOffsetsAndScale() {
         var points = List.of(new TacticalLayout.Marker(new Spawn.Headquarters(), new Point(-100, 0)),
                 new TacticalLayout.Marker(new Spawn.Post(0), new Point(0, -50)),

@@ -162,6 +162,14 @@ public final class Loadouts {
         return lines;
     }
 
+    public List<Component> blasterStats(Blaster blaster) {
+        var stats = config.stats(blaster);
+        return List.of(messages.get("class.blaster",
+                        Placeholder.component("blaster", messages.get("blaster." + blaster.key() + ".name")),
+                        Formatter.number("damage", stats.damage() * stats.bolts() / TO_HEARTS)),
+                messages.get("class.range", Formatter.number("range", Math.round(stats.range()))));
+    }
+
     /** The faction's leather, and on the head {@code head} if a hero wears their own, else the faction's helmet. */
     public void dress(Player player, Faction faction, Optional<PackModel> head) {
         var inventory = player.getInventory();

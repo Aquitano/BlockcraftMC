@@ -53,7 +53,7 @@ public final class DeployMenu extends Menu {
         closeButton(ToolbarButton.LEFT);
         toolbar(ToolbarButton.RIGHT, Items.of(tactical ? Material.CHEST : Material.MAP)
                 .name(game.messages().get(tactical ? "deploy.loadout" : "deploy.map-open"))
-                .lore(game.messages().getLines("deploy.map-lore")).build(), player -> game.deployment().openDeploy(player, !tactical));
+                .lore(game.messages().getLines(tactical ? "deploy.loadout-lore" : "deploy.map-lore")).build(), player -> game.deployment().openDeploy(player, !tactical));
         if (!tactical) game.factionOf(viewer).ifPresent(faction -> {
             var classes = CombatClass.values();
             for (int index = 0; index < classes.length; index++) {
@@ -150,7 +150,7 @@ public final class DeployMenu extends Menu {
         boolean recommended = spawn.equals(game.deployment().recommended(viewer));
         if (recommended) lore.add(messages.get("deploy.recommended"));
         if (!available) {
-            lore.addAll(unavailable);
+            unavailable.stream().filter(line -> !lore.contains(line)).forEach(lore::add);
         } else if (selected) {
             lore.add(messages.get(confirmed ? "deploy.chosen" : "deploy.pending"));
         } else {

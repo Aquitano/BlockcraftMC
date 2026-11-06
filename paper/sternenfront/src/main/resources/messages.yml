@@ -55,6 +55,7 @@ class:
   selected: "<success>✔ Ausgewählt"
   chosen: "<muted>Nächster Einsatz als <accent><class>"
   blaster: "<bullet><muted>Blaster <white><blaster> <dark>· <accent><damage> ❤ <muted>pro Schuss"
+  range: "<bullet><muted>Reichweite <accent><range> m"
   health: "<bullet><muted>Gesundheit <accent><hearts> ❤"
   ability: "<bullet><muted>Fähigkeit <white><ability>"
   speed: "<bullet><muted>Tempo <accent><percent> %"
@@ -282,7 +283,7 @@ radio:
   transcript: '<aqua>Funk <dark>» <white><speech>'
   transcript-post: '<aqua>Funk <dark>» <accent><letter> <post> <dark>· <white><speech>'
   kolonien:
-    assault: 'Klone, Schwerpunkt sichern! Haltet den Posten!'
+    assault: 'Schwerpunkt markiert! Alle Mann zum Posten!'
     last-stand: 'Brüder, haltet die Posten! Jede Stellung zählt!'
     captured: 'Posten gesichert! Brüder, haltet die Stellung!'
     lost: 'Posten verloren! Brüder, holt ihn zurück!'
@@ -339,7 +340,7 @@ headquarters:
 
 deploy:
   location: "<location>"
-  landing: "<white>Landezone"
+  landing: "<white>Landungsschiff"
   controls: "<prefix><accent>F<muted>: <first> <dark>· <accent>Q<muted>: <second>"
   no-ability: "<muted>Keine Fähigkeit"
   saber-controls: "<prefix><left>Schwingt durch alle Gegner vor dir <dark>· <right>Halten zum Blocken <dark>· <muted>Zweimal springen für den Machtsprung."
@@ -361,7 +362,10 @@ deploy:
   post-own: "<success>Deine Fraktion hält diesen Posten."
   map-title: "<arrow><sternenfront>Taktikkarte"
   map-open: "<primary>Taktikkarte öffnen"
-  loadout: "<primary>Klassen, Verstärkungen und Helden"
+  loadout: "<primary>Klassen, Elite-Einheiten und Helden"
+  loadout-lore:
+    - "<muted>Wähle deine Klasse, Elite-Einheit oder deinen Helden."
+    - "<muted>Bestätige danach deinen Einsatzort."
   map-orientation: "<white>Norden oben <dark>· <white>Osten rechts"
   map-lore:
     - "<muted>Posten liegen wie auf dem Schlachtfeld."
@@ -456,20 +460,20 @@ reinforcement:
   arc-trooper:
     name: "<aqua>ARC-Truppler"
     lore:
-      - "<muted>Republikanische Verstärkung für die Feuerlinie."
-      - "<muted>Kühle Dreiersalven, Schildwall und Adrenalin."
+      - "<muted>Republikanische Elite-Einheit für die Feuerlinie."
+      - "<muted>Kühle Dreiersalven, Energieschild und Adrenalin."
   commando-droid:
     name: "<red>BX-Kommandodroide"
     lore:
-      - "<muted>Mobile Verstärkung der Separatisten."
-      - "<muted>Nahkampfkarabiner, Sprungmodul und Granate."
+      - "<muted>Mobile Elite-Einheit der Separatisten."
+      - "<muted>Nahkampfkarabiner, Schubdüsen und Ionengranate."
       - "<muted>Umgeht Deckung und greift über die Flanke an."
   cost: "<muted>Kosten: <accent><cost> <muted>Kampfpunkte · Guthaben: <accent><points>"
-  slots: "<muted>Aktiv: <accent><active>/<limit> <muted>· eigene Verstärkungsplätze"
+  slots: "<muted>Aktiv: <accent><active>/<limit> <muted>· eigene Elite-Plätze"
   pick: "<click>Vormerken, dann einen Einsatzort bestätigen"
   picked: "<success>Vorgemerkt. Nur ein bestätigter Einsatz kostet Punkte."
-  taken: "<error>Alle Plätze für diese Verstärkung sind belegt."
-  too-few-points: "<error>Für diese Verstärkung fehlen dir Kampfpunkte."
+  taken: "<error>Alle Plätze für diese Elite-Einheit sind belegt."
+  too-few-points: "<error>Für diese Elite-Einheit fehlen dir Kampfpunkte."
   fallback: "<muted>Vorgemerkt, aber nicht verfügbar. Du startest mit deiner kostenlosen Klasse."
   chosen: "<success><unit> <muted>vorgemerkt. Wähle einen Einsatzort zum Bestätigen."
   entered: "<success>Du kämpfst als <unit><success>, bis du fällst."
@@ -531,7 +535,7 @@ hero:
       name: "<white>Sammelruf"
   bar: "<hero> <dark>· <white><player> <dark>· <accent><hearts> ❤"
   cost: "<bullet><muted>Kosten <accent><cost> <muted>Kampfpunkte <dark>· <muted>du hast <accent><points>"
-  pick: "<click>Als Held einsetzen"
+  pick: "<click>Held vormerken, dann Einsatz bestätigen"
   picked: "<success>✔ Gewählt: Einsatz noch bestätigen"
   card-taken: "<error>Deine Fraktion hat diesen Helden schon im Feld."
   card-too-few: "<error>Dir fehlen noch Kampfpunkte."
@@ -559,6 +563,7 @@ feedback:
   capture: "<aqua>Erobert <success>+<points> KP"
   neutralise: "<aqua>Befreit <success>+<points> KP"
   hero-ready: "<success>Held bereit"
+  elite-ready: "<success>Elite bereit"
   progress: "<muted><kills> K <dark>· <muted><points>/<cost> KP"
 
 orders:
@@ -674,7 +679,7 @@ combat:
     adrenaline: "ADR: Schneller laufen und heilen"
     shield-wall: "SCH: Schild gegen Bolzen aufstellen"
     jump-pack: "SPR: Nach vorn und oben springen"
-    med-station: "MED: Heilfeld für Verbündete aufstellen"
+    med-station: "MED: Verbündete in einem Feld regenerieren"
     siege-mode: "BEL: Stillstehen, schneller feuern"
     mining-charge: "LAD: Verzögerte Sprengladung werfen"
     force-push: "STO: Gegner mit Macht wegstoßen"
@@ -699,7 +704,7 @@ combat:
   guard-broken: "<error>Deckung gebrochen! <muted>Lass sie sich kurz erholen."
   heat: ""
   hot: "<error>HEISS"
-  venting: "<error>K <seconds>s"
+  venting: "<error>Kühlt"
   orbital-warning: "<tint><faction></tint>\n<error>Orbitalschlag in <seconds>s\n<muted>Markierte Flächen verlassen"
 
 speeder:

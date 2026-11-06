@@ -43,7 +43,7 @@ public class BattleRadioTest {
     }
 
     @Test
-    public void postReportsDuringSpeechOrCooldownAreDroppedAndAnActReplacesPendingPostReports() {
+    public void postReportsDuringFactionCooldownAreDroppedAndAnActReplacesPendingPostReports() {
         var fixture = new Fixture();
         var listeners = List.of(fixture.listener(Faction.KOLONIEN));
         fixture.radio.post(BattleRadio.Event.CAPTURED, Faction.KOLONIEN, 0, 0);
@@ -60,6 +60,34 @@ public class BattleRadioTest {
         fixture.radio.post(BattleRadio.Event.LOST, Faction.KOLONIEN, 1, 802);
         fixture.radio.tick(803, listeners);
         assertEquals(BattleRadio.Event.LOST, fixture.captions.getLast().event());
+    }
+
+    @Test
+    public void capturingFactionHearsItsReportAfterTheOtherFactionsLoss() {
+        var fixture = new Fixture();
+        var listeners = List.of(fixture.listener(Faction.KOLONIEN), fixture.listener(Faction.HEGEMONIE));
+        fixture.radio.post(BattleRadio.Event.LOST, Faction.HEGEMONIE, 0, 0);
+        fixture.radio.tick(1, listeners);
+        fixture.radio.post(BattleRadio.Event.CAPTURED, Faction.KOLONIEN, 0, 80);
+        fixture.radio.tick(81, listeners);
+        assertEquals(List.of(BattleRadio.Event.LOST, BattleRadio.Event.CAPTURED),
+                fixture.captions.stream().map(BattleRadio.Call::event).toList());
+        assertEquals(List.of(Faction.HEGEMONIE, Faction.KOLONIEN), fixture.captions.stream().map(BattleRadio.Call::faction).toList());
+    }
+
+    @Test
+    public void latestPostReportWaitsForInfantryAndCaptionsDoNotNeedThePack() {
+        var fixture = new Fixture();
+        var listener = fixture.listener(Faction.KOLONIEN);
+        var listeners = List.of(new BattleRadio.Listener(listener.player(), listener.faction(), false));
+        fixture.radio.infantrySpoke(0);
+        fixture.radio.post(BattleRadio.Event.CAPTURED, Faction.KOLONIEN, 0, 10);
+        fixture.radio.post(BattleRadio.Event.LOST, Faction.KOLONIEN, 1, 20);
+        fixture.radio.tick(49, listeners);
+        assertTrue(fixture.captions.isEmpty());
+        fixture.radio.tick(50, listeners);
+        assertTrue(fixture.played.isEmpty());
+        assertEquals(List.of(new BattleRadio.Call(BattleRadio.Event.LOST, Faction.KOLONIEN, 1)), fixture.captions);
     }
 
     @Test
@@ -153,7 +181,7 @@ public class BattleRadioTest {
                 }
                 default -> throw new AssertionError(method.getName());
             });
-            return new BattleRadio.Listener(player, faction);
+            return new BattleRadio.Listener(player, faction, true);
         }
     }
 

@@ -13,12 +13,13 @@ public final class BattleNavigation {
         }
     }
 
-    public record Post(int index, Point center, boolean safe, boolean objective) { }
+    public record Post(int index, Point center, boolean safe, boolean objective, boolean priority) { }
 
     private BattleNavigation() { }
 
     public static Optional<Post> target(List<Post> posts, Point origin, Point enemyHeadquarters) {
-        return posts.stream().filter(Post::objective).min(Comparator.comparingDouble(post -> origin.distanceSquared(post.center())))
+        return posts.stream().filter(Post::priority).findFirst()
+                .or(() -> posts.stream().filter(Post::objective).min(Comparator.comparingDouble(post -> origin.distanceSquared(post.center()))))
                 .or(() -> posts.stream().min(Comparator.comparingDouble(post -> enemyHeadquarters.distanceSquared(post.center()))));
     }
 

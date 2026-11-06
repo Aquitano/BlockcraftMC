@@ -25,12 +25,13 @@ The intro briefings name the Republic and Separatists and are enabled by default
 Captions use the recorded line from `intro.briefing`, and the scene scope stops audio on skip, disconnect, or cleanup.
 An existing operator override of `intro.audio.briefing: false` still disables the briefing.
 
-Objective radio announces the assault's priority post and the last stand. Post capture and loss reports have a shared
-20-second cooldown and are dropped during speech or that cooldown. Act instructions replace pending post reports and
-wait for any current infantry or radio line to finish. New infantry calls wait until radio speech ends.
+Objective radio announces the assault's priority post and the last stand. Post capture and loss reports have a
+20-second cooldown per faction. Reports during that cooldown are dropped; otherwise the latest report waits for current
+speech to finish. Act instructions replace pending post reports. New infantry calls wait until radio speech ends.
 `radio` in `config.yml` controls the events, speech, captions, volume, and timing. The timing floors cover the recordings.
 Captions identify the post by letter and name, followed by the recorded German line from `radio` in `messages.yml`.
-Only players in the round with the pack applied receive objective calls. Scenes and dialogues exclude their viewers.
+Players in the round receive captions even before the pack loads; speech requires the applied pack.
+Scenes and dialogues exclude their viewers.
 Leaving the audience stops that player's owned Voice sounds. Ending the round also clears pending calls.
 
 `audio/intro/sources.json`, `audio/bots/sources.json`, and `audio/radio/sources.json` record the local Thorsten-Voice

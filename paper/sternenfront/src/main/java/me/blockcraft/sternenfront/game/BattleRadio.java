@@ -38,7 +38,7 @@ public final class BattleRadio implements AutoCloseable {
         }
     }
 
-    record Listener(Player player, Faction faction) { }
+    record Listener(Player player, Faction faction, boolean speech) { }
 
     private final Plugin plugin;
     private final ConfigurationSection config;
@@ -46,7 +46,7 @@ public final class BattleRadio implements AutoCloseable {
     private final Map<Faction, Call> pending = new EnumMap<>(Faction.class);
     private final Map<UUID, PresentationScope> playing = new HashMap<>();
     private long speechUntil;
-    private long postAt;
+    private final Map<Faction, Long> postAt = new EnumMap<>(Faction.class);
 
     BattleRadio(Plugin plugin, ConfigurationSection config, BiConsumer<Player, Call> caption) {
         this.plugin = plugin;
@@ -61,9 +61,9 @@ public final class BattleRadio implements AutoCloseable {
     }
 
     void post(Event event, Faction faction, int post, long tick) {
-        if (!enabled(event) || tick < postAt || tick < speechUntil
+        if (!enabled(event) || tick < postAt.getOrDefault(faction, 0L)
                 || pending.values().stream().anyMatch(call -> call.event().act())) return;
-        pending.putIfAbsent(faction, new Call(event, faction, post));
+        pending.put(faction, new Call(event, faction, post));
     }
 
     private boolean enabled(Event event) {
@@ -89,20 +89,21 @@ public final class BattleRadio implements AutoCloseable {
         for (var listener : listeners) {
             var call = pending.get(listener.faction());
             if (call == null || !enabled(call.event())) continue;
+            if (!config.getBoolean("radio.captions") && (!listener.speech() || !config.getBoolean("radio.speech") || volume() <= 0)) continue;
             var player = listener.player();
-            if (config.getBoolean("radio.speech") && volume() > 0) {
+            if (listener.speech() && config.getBoolean("radio.speech") && volume() > 0) {
                 var scope = new PresentationScope(plugin);
                 playing.put(player.getUniqueId(), scope);
                 scope.own(() -> player.stopSound(call.sound(), SoundCategory.VOICE));
                 player.playSound(player, call.sound(), SoundCategory.VOICE, volume(), 1);
             }
             if (config.getBoolean("radio.captions")) caption.accept(player, call);
+            postAt.put(listener.faction(), tick + Math.clamp(config.getInt("radio.post-cooldown-ticks"), 80, 2400));
             delivered = true;
         }
         pending.clear();
         if (delivered) {
             speechUntil = tick + Math.clamp(config.getInt("radio.call-ticks"), 80, 200);
-            postAt = tick + Math.clamp(config.getInt("radio.post-cooldown-ticks"), 80, 2400);
         }
     }
 
@@ -126,6 +127,6 @@ public final class BattleRadio implements AutoCloseable {
         playing.clear();
         pending.clear();
         speechUntil = 0;
-        postAt = 0;
+        postAt.clear();
     }
 }

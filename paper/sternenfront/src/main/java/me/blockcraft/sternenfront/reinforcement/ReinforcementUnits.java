@@ -57,6 +57,7 @@ public final class ReinforcementUnits {
         var stats = config.stats(unit);
         var lore = new ArrayList<>(messages.getLines("reinforcement." + unit.key() + ".lore"));
         lore.add(Component.empty());
+        lore.addAll(loadouts.blasterStats(unit.blaster()));
         lore.add(messages.get("class.health", Formatter.number("hearts", stats.health() / 2)));
         lore.add(messages.get("class.speed", Formatter.number("percent", Math.round(stats.speed() * 100))));
         unit.abilities().forEach(ability -> lore.add(messages.get("class.ability",

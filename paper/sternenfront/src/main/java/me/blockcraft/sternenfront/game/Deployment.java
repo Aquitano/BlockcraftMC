@@ -134,6 +134,10 @@ public final class Deployment {
 
     /** A spawn chosen in the deploy menu: taken at once when the wait is over, else as soon as it is. */
     public void choose(Player player, Spawn spawn) {
+        choose(player, spawn, true);
+    }
+
+    private void choose(Player player, Spawn spawn, boolean remember) {
         var fighter = game.fighterIfAny(player);
         var faction = game.factionOf(player);
         if (fighter.isEmpty() || fighter.get().choosing().isEmpty() || faction.isEmpty()) {
@@ -143,6 +147,7 @@ public final class Deployment {
             Sounds.MENU_DENY.play(player);
             return;
         }
+        if (remember) remembered.put(player.getUniqueId(), spawn);
         var choosing = fighter.get().choosing().get().choose(spawn);
         fighter.get().choosing(Optional.of(choosing));
         if (game.tick() >= choosing.readyTick()) {
@@ -190,13 +195,13 @@ public final class Deployment {
     }
 
     public void quickDeploy(Player player) {
-        if (game.choosing(player)) choose(player, suggested(player));
+        if (game.choosing(player)) choose(player, suggested(player), false);
     }
 
     private List<BattleNavigation.Post> navigationPosts(Faction faction) {
         return game.posts().indices().stream().map(index -> {
             boolean safe = available(faction, new Spawn.Post(index));
-            return new BattleNavigation.Post(index, point(game.map().posts().get(index).center()), safe, !safe);
+            return new BattleNavigation.Post(index, point(game.map().posts().get(index).center()), safe, !safe, game.posts().priority(index));
         }).toList();
     }
 
@@ -223,14 +228,11 @@ public final class Deployment {
                             + key.substring(key.lastIndexOf('.') + 1)))));
         }
         var origin = player.getLocation();
-        return BattleNavigation.target(navigationPosts(faction.get()), point(origin), headquarters(faction.get().enemy())).map(target -> {
-            var center = game.map().posts().get(target.index()).center();
-            player.setCompassTarget(center);
-            return game.messages().get(target.objective() ? "deploy.navigate" : "deploy.defend", game.posts().name(target.index()),
+        return BattleNavigation.target(navigationPosts(faction.get()), point(origin), headquarters(faction.get().enemy())).map(target ->
+                game.messages().get(target.objective() ? "deploy.navigate" : "deploy.defend", game.posts().name(target.index()),
                     Formatter.number("distance", Math.round(Math.sqrt(point(origin).distanceSquared(target.center())))),
                     Placeholder.component("direction", game.messages().get("deploy.direction."
-                            + BattleNavigation.direction(point(origin), origin.getYaw(), target.center()))));
-        });
+                            + BattleNavigation.direction(point(origin), origin.getYaw(), target.center())))));
     }
 
     void deployWhenDue(Player player, Fighter fighter) {
@@ -339,8 +341,6 @@ public final class Deployment {
         var heroes = game.heroes();
         var fighter = game.fighter(player);
         var picked = fighter.choosing().flatMap(Fighter.Choosing::paidHero);
-        fighter.choosing().filter(Fighter.Choosing::confirmed).flatMap(Fighter.Choosing::chosen)
-                .ifPresent(chosen -> remembered.put(player.getUniqueId(), chosen));
         var hero = picked.filter(chosen -> heroes.enlist(player, faction, chosen));
         if (picked.isPresent() && hero.isEmpty()) {
             player.sendMessage(messages.get("hero.missed", Placeholder.component("hero", heroes.name(picked.get()))));

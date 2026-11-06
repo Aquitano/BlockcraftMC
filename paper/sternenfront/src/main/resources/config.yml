@@ -193,7 +193,7 @@ posts:
   capture-seconds: 12
   radio-cooldown-seconds: 15
 
-# Act calls wait for infantry speech to finish. Post calls during speech or cooldown are discarded.
+# Radio calls wait for speech to finish. Each faction keeps its latest post call; calls during its cooldown are discarded.
 # Timing floors cover the checked-in recordings: 80 ticks for radio, 50 for infantry.
 radio:
   enabled: true
@@ -226,6 +226,7 @@ respawn:
   protection-seconds: 3
   ability-hint-seconds: 3
   enemy-clearance: 12
+  navigation-update-ticks: 5
 
 # What an enemy inside a faction's headquarters takes every second.
 headquarters:
@@ -397,6 +398,7 @@ combat-feedback:
   marker-ticks: 6
   reward-ticks: 30
   hero-ready-ticks: 60
+  elite-ready-ticks: 60
   recap-delay-ticks: 60
   multikill-seconds: 4
   sound: {hit: 0.65, headshot: 0.8, kill: 0.9}

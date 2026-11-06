@@ -6,6 +6,7 @@ import me.blockcraft.api.presentation.ScreenEffects;
 import me.blockcraft.api.scene.Scenes;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.sternenfront.combat.DamageDirection;
+import me.blockcraft.sternenfront.reinforcement.Reinforcement;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -53,11 +54,20 @@ public final class CombatFeedback {
         long rewardUntil;
         boolean ready;
         long readyUntil;
+        boolean eliteReady;
+        long eliteReadyUntil;
         boolean venting;
         boolean drawnMarked;
         Optional<DamageDirection> drawnHurt = Optional.empty();
         long drawnHurtUntil;
         Component hud = Component.empty();
+
+        boolean eliteAvailable(boolean available, long tick, int duration) {
+            boolean announce = available && !eliteReady;
+            if (announce) eliteReadyUntil = tick + duration;
+            eliteReady = available;
+            return announce;
+        }
 
         boolean hit(Marker next, long tick, int ticks) {
             if (tick >= markerUntil || next.ordinal() >= marker.ordinal()) {
@@ -147,6 +157,7 @@ public final class CombatFeedback {
     private final int markerTicks;
     private final int rewardTicks;
     private final int heroReadyTicks;
+    private final int eliteReadyTicks;
     private final double hotAt;
     private final float hitVolume;
     private final float headshotVolume;
@@ -160,6 +171,7 @@ public final class CombatFeedback {
         markerTicks = Math.clamp(config.getInt("combat-feedback.marker-ticks", 6), 1, 20);
         rewardTicks = Math.clamp(config.getInt("combat-feedback.reward-ticks", 30), 1, 100);
         heroReadyTicks = Math.clamp(config.getInt("combat-feedback.hero-ready-ticks", 60), 1, 200);
+        eliteReadyTicks = Math.clamp(config.getInt("combat-feedback.elite-ready-ticks"), 1, 200);
         hotAt = Math.clamp(config.getDouble("heat.warning-level", 0.8), 0.1, 0.99);
         hitVolume = (float) Math.clamp(config.getDouble("combat-feedback.sound.hit", 0.65), 0, 1);
         headshotVolume = (float) Math.clamp(config.getDouble("combat-feedback.sound.headshot", 0.8), 0, 1);
@@ -225,14 +237,21 @@ public final class CombatFeedback {
         int cost = game.factionOf(player).map(game.heroes()::cost).orElse(game.heroes().config().cost());
         boolean ready = points >= cost && game.heroOf(player).isEmpty()
                 && game.factionOf(player).filter(game.heroes()::available).isPresent();
+        boolean eliteReady = game.heroOf(player).isEmpty() && game.reinforcementOf(player).isEmpty()
+                && game.factionOf(player).filter(faction -> game.reinforcementUnits().roster()
+                .affordable(player.getUniqueId(), faction, Reinforcement.of(faction))).isPresent();
+        boolean eliteAnnounced = state.eliteAvailable(eliteReady, tick, eliteReadyTicks);
         if (ready && !state.ready) {
             state.readyUntil = tick + heroReadyTicks;
+        }
+        if (ready && !state.ready || eliteAnnounced) {
             player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, SoundCategory.PLAYERS, 0.7f, 1.4f);
         }
         state.ready = ready;
         drawCrosshair(player, state, tick);
         var line = tick < state.rewardUntil ? state.reward(game.messages())
                 : ready && tick < state.readyUntil ? game.messages().get("feedback.hero-ready")
+                : eliteReady && tick < state.eliteReadyUntil ? game.messages().get("feedback.elite-ready")
                 : Component.empty();
         ScreenEffects.hurt(player, hurtIntensity(player, game.combat().hurtTicks(player)));
         var combined = state.compose(hud, line, courseStatus.apply(player));

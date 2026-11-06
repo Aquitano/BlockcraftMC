@@ -114,7 +114,9 @@ public final class BodyRigs implements Listener, AutoCloseable {
             var rig = rigs.computeIfAbsent(id, ignored -> {
                 var created = new BodyRig(plugin, actor, body, game::isPlaying,
                         () -> game.bots().aim(actor).orElseGet(() -> actor.getEyeLocation().getDirection()), turnDegrees,
-                        hero.isPresent() || unit.isPresent() ? Optional.empty() : Optional.of(motions.get(game.combatClassOf(actor))));
+                        hero.isPresent() ? Optional.empty() : Optional.of(motions.get(unit
+                                .map(chosen -> chosen == Reinforcement.ARC_TROOPER ? CombatClass.HEAVY : CombatClass.SCOUT)
+                                .orElseGet(() -> game.combatClassOf(actor)))));
                 targets.put(created.targetId(), created);
                 return created;
             });

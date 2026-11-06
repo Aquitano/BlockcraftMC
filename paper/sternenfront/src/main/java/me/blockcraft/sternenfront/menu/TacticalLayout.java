@@ -14,7 +14,7 @@ final class TacticalLayout {
     record Marker(Spawn spawn, Point point) { }
 
     private static final int COLUMNS = 9;
-    private static final int ROWS = 4;
+    private static final int ROWS = 3;
 
     private TacticalLayout() { }
 

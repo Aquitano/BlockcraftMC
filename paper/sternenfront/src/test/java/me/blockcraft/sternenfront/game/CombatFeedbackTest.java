@@ -17,6 +17,18 @@ import static org.junit.Assert.*;
 public class CombatFeedbackTest {
 
     @Test
+    public void eliteAvailabilityPingsOnceAndExpiresWithoutExtendingOnEachHudUpdate() {
+        var state = new CombatFeedback.State();
+        assertFalse(state.eliteAvailable(false, 0, 60));
+        assertTrue(state.eliteAvailable(true, 10, 60));
+        assertFalse(state.eliteAvailable(true, 20, 60));
+        assertEquals(70, state.eliteReadyUntil);
+        assertFalse(state.eliteAvailable(false, 100, 60));
+        assertTrue(state.eliteAvailable(true, 200, 60));
+        assertEquals(260, state.eliteReadyUntil);
+    }
+
+    @Test
     public void lowerBarKeepsTheKillLabelAndCountAlongsideTheCombatHud() {
         var messages = Messages.load(Path.of("/nonexistent-combat-feedback-test"),
                 () -> getClass().getResourceAsStream("/messages.yml"),

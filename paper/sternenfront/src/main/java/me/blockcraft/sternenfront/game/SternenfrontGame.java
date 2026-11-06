@@ -808,9 +808,9 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         playMusic();
         radio.tick(tick, round.players().stream()
                 .filter(player -> player.isOnline() && player.getWorld().equals(map.world()) && !intro.running()
-                        && !Scenes.isViewing(player) && !BlockcraftApi.get().dialogues().active(player)
-                        && BlockcraftApi.get().resourcePack().applied(player))
-                .flatMap(player -> factionOf(player).stream().map(faction -> new BattleRadio.Listener(player, faction))).toList());
+                        && !Scenes.isViewing(player) && !BlockcraftApi.get().dialogues().active(player))
+                .flatMap(player -> factionOf(player).stream().map(faction -> new BattleRadio.Listener(player, faction,
+                        BlockcraftApi.get().resourcePack().applied(player)))).toList());
         bots.tick(tick);
         bolts.tick();
         gadgets.tick(tick);
@@ -833,8 +833,11 @@ public final class SternenfrontGame implements RoundConnections.Seating {
                 deployment.deployWhenDue(player, fighter);
             }
         }
+        int navigationTicks = Math.clamp(plugin.getConfig().getInt("respawn.navigation-update-ticks"), 1, 20);
         if (tick % TICKS_PER_SECOND == 0) {
             second();
+        } else if (tick % navigationTicks == 0) {
+            round.players().stream().filter(this::onField).forEach(objective::order);
         }
     }
 

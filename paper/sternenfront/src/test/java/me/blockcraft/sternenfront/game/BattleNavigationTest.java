@@ -15,8 +15,8 @@ public class BattleNavigationTest {
 
     private static final Point HQ = new Point(0, 0);
     private static final Point ENEMY_HQ = new Point(100, 0);
-    private static final List<Post> POSTS = List.of(new Post(0, new Point(20, 0), true, false),
-            new Post(1, new Point(60, 0), true, false), new Post(2, new Point(80, 0), false, true));
+    private static final List<Post> POSTS = List.of(new Post(0, new Point(20, 0), true, false, false),
+            new Post(1, new Point(60, 0), true, false, false), new Post(2, new Point(80, 0), false, true, false));
 
     @Test
     public void remembersASafeChoiceThenRecommendsTheForwardPostAndAlwaysHasHeadquarters() {
@@ -25,8 +25,9 @@ public class BattleNavigationTest {
         assertEquals(new Spawn.Headquarters(), BattleNavigation.recommend(POSTS, HQ, ENEMY_HQ, Optional.of(new Spawn.Headquarters()), safe::contains));
         assertEquals(new Spawn.Post(1), BattleNavigation.recommend(POSTS, HQ, ENEMY_HQ, Optional.of(new Spawn.Post(2)), safe::contains));
         assertEquals(new Spawn.Post(1), BattleNavigation.recommend(POSTS, HQ, ENEMY_HQ, Optional.of(new Spawn.Dropship()), safe::contains));
-        var unsafe = List.of(new Post(0, new Point(20, 0), false, true));
+        var unsafe = List.of(new Post(0, new Point(20, 0), false, true, false));
         assertEquals(new Spawn.Headquarters(), BattleNavigation.recommend(unsafe, HQ, ENEMY_HQ, Optional.empty(), safe::contains));
+        assertEquals(new Spawn.Post(1), BattleNavigation.recommend(POSTS, HQ, ENEMY_HQ, Optional.empty(), safe::contains));
     }
 
     @Test
@@ -49,5 +50,13 @@ public class BattleNavigationTest {
         assertEquals("left", BattleNavigation.direction(HQ, 0, ENEMY_HQ));
         assertEquals("right", BattleNavigation.direction(HQ, 180, ENEMY_HQ));
         assertEquals("ahead", BattleNavigation.direction(HQ, 270, ENEMY_HQ));
+    }
+
+    @Test
+    public void assaultPriorityWinsOverNearbyObjectivesIncludingWhenItNeedsDefending() {
+        var priority = new Post(3, ENEMY_HQ, true, false, true);
+        var posts = List.of(POSTS.getLast(), priority);
+        assertEquals(priority, BattleNavigation.target(posts, HQ, ENEMY_HQ).orElseThrow());
+        assertEquals(new Spawn.Post(3), BattleNavigation.recommend(posts, HQ, ENEMY_HQ, Optional.empty(), ignored -> true));
     }
 }
