@@ -30,7 +30,6 @@ DARK = "polished_deepslate"
 LIGHT = "sea_lantern"
 COLD_LIGHT = "sea_lantern"
 HULL = "light_gray_concrete"
-STAINS = ("andesite", "light_gray_concrete", "gray_concrete", "cyan_terracotta")
 RAIL = "iron_bars"
 MOST_PER_FILL = 32768
 
@@ -119,16 +118,22 @@ class Builder:
         painted = {}
         for x1, z1, x2, z2 in paths:
             distance = max(abs(x2 - x1), abs(z2 - z1))
-            drift = 0
+            along_x = abs(x2 - x1) > abs(z2 - z1)
+            repair = rng.randrange(3, max(4, distance - 3))
             for step in range(distance + 1):
                 x = round(x1 + (x2 - x1) * step / max(1, distance))
                 z = round(z1 + (z2 - z1) * step / max(1, distance))
-                drift = max(-2, min(2, drift + rng.choice((-1, 0, 0, 1))))
-                for side in range(-2, 3):
-                    dx, dz = (0, drift + side) if abs(x2 - x1) > abs(z2 - z1) else (drift + side, 0)
+                for side in (-1, 1):
+                    dx, dz = (0, side) if along_x else (side, 0)
                     cell = x + dx, z + dz
-                    if cell in floor and rng.random() < (0.7 if side == 0 else 0.32):
-                        painted[cell] = rng.choices(STAINS, (6, 7, 2, 1))[0]
+                    if cell in floor and step % 13 not in (0, 1, 2):
+                        painted[cell] = "andesite" if step % 13 < 8 else "light_gray_concrete"
+                if repair <= step < repair + 3:
+                    for side in range(-2, 3):
+                        dx, dz = (0, side) if along_x else (side, 0)
+                        cell = x + dx, z + dz
+                        if cell in floor:
+                            painted[cell] = "polished_andesite" if side in (-2, 2) else "smooth_stone"
         for (x, z), block in sorted(painted.items()):
             self.box(x, y, z, x, y, z, block)
 
@@ -161,6 +166,11 @@ class Builder:
     def crate(self, x, z, width, depth, height, colour, floor=DECK):
         self.box(x, floor + 1, z, x + width - 1, floor + height, z + depth - 1, f"{colour}_concrete")
         self.box(x, floor + height, z, x + width - 1, floor + height, z + depth - 1, f"{colour}_terracotta")
+        for edge in (x, x + width - 1):
+            self.box(edge, floor + 1, z, edge, floor + height, z + depth - 1, DARK)
+        if width > 2:
+            self.box(x + 1, floor + 1, z, x + width - 2, floor + 1, z, "waxed_weathered_cut_copper")
+            self.box(x + 1, floor + height, z, x + width - 2, floor + height, z, "iron_block")
 
     def wall(self, x1, z1, x2, z2, height=2, block=DARK):
         self.box(x1, SKY, z1, x2, SKY + height - 1, z2, block)
@@ -405,7 +415,13 @@ def ocean_tower(b, x, z, radius, floor, height, occupied=False):
     b.ellipse(x, z, radius, radius, floor + (1 if occupied else 2), floor + height, FRAME, hollow=occupied)
     b.ellipse(x, z, radius, radius, floor + 3, floor + 5, "cyan_stained_glass", hollow=True)
     light_y = floor + (9 if occupied else 4)
-    b.ellipse(x, z, radius - 1, radius - 1, light_y, light_y, COLD_LIGHT, hollow=True)
+    b.ellipse(x, z, radius - 1, radius - 1, light_y, light_y, DARK if occupied else COLD_LIGHT, hollow=True)
+    if occupied:
+        for dz in range(-radius + 4, radius - 3, 7):
+            half = round((radius - 1) * math.sqrt(1 - (dz / (radius - 0.7)) ** 2))
+            for sign in (-1, 1):
+                b.box(x + sign * half, light_y, z + dz, x + sign * half, light_y, z + dz + 1,
+                      "shroomlight" if x < 0 else COLD_LIGHT)
     b.dome(x, z, radius + 1, radius + 1, floor + height + 1, max(4, radius // 2))
     top = floor + height + max(4, radius // 2) + 2
     b.ellipse(x, z, 3, 3, top, top + 3, FRAME)
@@ -468,6 +484,8 @@ def stairway(b, x, z, floor, rise, direction):
         for edge in (x - 3, x + 3):
             b.box(edge, y - 1, at, edge, y, at, DARK)
             b.box(edge, y + 1, at, edge, y + 1, at, RAIL)
+            if floor == 65 and direction > 0 and step % 4 == 1:
+                b.box(edge, y, at, edge, y, at, COLD_LIGHT)
     for at, y in ((z - direction, floor - 1), (z + direction * rise, floor + rise - 1)):
         upper_deck(b, x - 2, at, x + 2, at, y)
         b.box(x - 2, y + 1, at, x + 2, y + 4, at, "air")
@@ -653,11 +671,146 @@ def inspection_course(b):
     b.box(-60, 84, -128, -60, 85, -128, "cyan_stained_glass")
 
 
+def northern_details(b):
+    b.box(-62, 82, -113, 60, 82, -113, "polished_andesite")
+    b.box(-62, 82, -107, 60, 82, -107, "polished_andesite")
+    for z in (-121, -99):
+        b.box(-62, 81, z, -34, 81, z, "waxed_oxidized_cut_copper")
+        b.box(-62, 82, z, -34, 82, z, "iron_trapdoor[half=top,open=false,powered=false]")
+        for x in (-60, -46, -36):
+            b.box(x, 81, z, x, 81, z, COLD_LIGHT)
+    for x in (-59, -45):
+        for z in (-123, -98):
+            b.box(x, 84, z, x + 1, 87, z, "chiseled_deepslate")
+            b.box(x, 85, z, x + 1, 85, z, "waxed_weathered_cut_copper")
+    for x in range(-61, -34, 4):
+        b.box(x, 88, -123, x, 88, -115, "polished_deepslate_slab[type=top]")
+        b.box(x, 88, -105, x, 88, -97, "polished_deepslate_slab[type=top]")
+    for x, z in ((-51, -105), (-43, -120)):
+        b.box(x, 83, z, x + 3, 83, z + 2, "polished_blackstone")
+        for rib in (x, x + 3):
+            b.box(rib, 84, z, rib, 87, z, "waxed_exposed_cut_copper")
+        b.box(x + 1, 84, z, x + 2, 84, z, "copper_grate")
+        b.box(x + 1, 85, z, x + 2, 86, z, "waxed_oxidized_copper")
+        b.box(x + 1, 87, z, x + 2, 87, z, "copper_grate")
+        b.box(x + 1, 88, z, x + 2, 88, z, "shroomlight")
+    b.box(-51, 87, -102, -48, 87, -102, "waxed_weathered_cut_copper")
+    b.box(-50, 86, -102, -49, 86, -102, "ochre_froglight[axis=x]")
+    for x, z in ((-51, -102), (-43, -122)):
+        b.box(x, 83, z, x + 3, 83, z + 1, "waxed_weathered_cut_copper")
+    b.box(-62, 87, -101, -54, 87, -101, "waxed_oxidized_cut_copper")
+    for x in (-61, -57):
+        b.box(x, 88, -101, x, 89, -101, "iron_chain")
+    b.box(-61, 86, -103, -59, 86, -103, COLD_LIGHT)
+    b.box(-60, 87, -103, -60, 89, -103, "iron_chain")
+    for x in (38, 43):
+        b.box(x, 84, -118, x, 88, -118, "chiseled_quartz_block")
+        b.box(x, 88, -116, x, 88, -115, "waxed_weathered_cut_copper")
+    b.box(38, 89, -118, 43, 89, -115, "polished_deepslate")
+    b.box(39, 88, -116, 42, 88, -116, "iron_bars")
+    for x in (39, 42):
+        b.box(x, 87, -117, x, 87, -117, COLD_LIGHT)
+    for x in (26, 50, 58):
+        b.box(x, 88, -119, x + 1, 88, -101, "polished_deepslate_slab[type=top]")
+        b.box(x, 88, -117, x + 1, 88, -117, COLD_LIGHT)
+        b.box(x, 88, -103, x + 1, 88, -103, COLD_LIGHT)
+        for z in (-118, -102):
+            b.box(x, 89, z, x, 89, z, "iron_chain")
+    b.box(23, 87, -119, 59, 87, -119, "waxed_oxidized_cut_copper")
+    for x, z in ((-32, -96), (32, -100)):
+        for edge in (x - 4, x + 4):
+            b.box(edge, 83, z, edge, 88, z, "chiseled_quartz_block")
+            b.box(edge, 84, z + 1, edge, 86, z + 1, COLD_LIGHT)
+        b.box(x - 4, 89, z, x + 4, 89, z, DARK)
+        b.box(x - 3, 88, z, x + 3, 88, z, "cyan_concrete")
+        b.box(x - 2, 82, z - 2, x + 2, 82, z - 2, "polished_andesite")
+    for x in (-62, -28, 28, 57):
+        b.box(x - 4, 67, -132, x + 4, 68, -88, "waxed_oxidized_cut_copper")
+        for z in (-128, -92):
+            b.box(x - 3, 69, z, x + 3, 72, z, "chiseled_quartz_block")
+
+
+def southern_details(b):
+    for cx, cz, radius in ((-66, 103, 18), (0, 110, 25), (68, 109, 20)):
+        b.ellipse(cx, cz, 6, 6, 70, 71, "waxed_oxidized_cut_copper", hollow=True)
+        b.ellipse(cx, cz, 7, 7, 75, 76, DARK, hollow=True)
+        for sign in (-1, 1):
+            for step in range(4):
+                b.box(cx + sign * (5 + step), 72 + step, cz - 1,
+                      cx + sign * (6 + step), 73 + step, cz + 1, FRAME)
+        for dz in (-10, 0, 10):
+            half = round(radius * math.sqrt(1 - (dz / (radius + 0.3)) ** 2))
+            for sign in (-1, 1):
+                x = cx + sign * half
+                b.box(x, 81, cz + dz, x, 88, cz + dz, "quartz_pillar[axis=y]")
+                b.box(x, 82, cz + dz, x, 82, cz + dz, "waxed_oxidized_cut_copper")
+    for x, z, accent in ((-62, 92, "waxed_exposed_cut_copper"), (0, 85, "cyan_concrete"),
+                          (62, 92, "yellow_terracotta")):
+        for edge in (x - 3, x + 3):
+            b.box(edge, 81, z, edge, 86, z, "chiseled_quartz_block")
+            b.box(edge, 82, z - 1, edge, 85, z - 1, COLD_LIGHT)
+        b.box(x - 3, 87, z, x + 3, 87, z, DARK)
+        b.box(x - 2, 86, z, x + 2, 86, z, accent)
+        b.box(x - 2, 80, z - 1, x + 2, 80, z - 1, "polished_andesite")
+    b.box(-46, 79, 109, 46, 79, 109, DARK)
+    b.box(-46, 80, 109, 46, 80, 109, "iron_trapdoor[half=top,open=false,powered=false]")
+    for x in (-40, -30, -20, 20, 30, 40):
+        b.box(x, 80, 107, x, 80, 113, "polished_andesite")
+    b.box(-78, 88, 98, -56, 88, 98, "waxed_weathered_cut_copper")
+    for x in (-76, -64, -56):
+        b.box(x, 89, 98, x, 90, 98, "iron_chain")
+        b.box(x, 87, 98, x + 1, 87, 98, "ochre_froglight[axis=x]")
+    b.box(-79, 83, 108, -76, 83, 110, "waxed_weathered_cut_copper")
+    b.box(-79, 84, 108, -79, 86, 108, "iron_bars")
+    b.box(-76, 84, 108, -76, 86, 108, "iron_bars")
+    b.box(-79, 87, 108, -76, 87, 108, DARK)
+    b.box(-78, 86, 108, -77, 86, 108, "ochre_froglight[axis=x]")
+    b.ellipse(0, 110, 9, 9, 90, 90, "smooth_quartz_slab[type=top]", hollow=True)
+    for x, z in ((-9, 110), (9, 110), (0, 101), (0, 119)):
+        b.box(x, 89, z, x, 89, z, COLD_LIGHT)
+    b.box(-21, 90, 110, 21, 90, 110, "quartz_pillar[axis=x]")
+    b.box(0, 90, 90, 0, 90, 130, "quartz_pillar[axis=z]")
+    b.box(-3, 82, 115, 3, 82, 117, "smooth_quartz")
+    b.box(-2, 82, 115, 2, 82, 117, "cyan_stained_glass")
+    b.box(-1, 81, 116, 1, 81, 116, COLD_LIGHT)
+    b.box(-1, 83, 116, 1, 83, 116, "air")
+    b.box(-3, 88, 116, 3, 88, 116, DARK)
+    for x in (-3, 3):
+        b.box(x, 89, 116, x, 90, 116, "iron_chain")
+        b.box(x, 87, 116, x, 87, 116, COLD_LIGHT)
+    for x in (57, 76):
+        b.box(x, 88, 97, x, 88, 123, "polished_deepslate_slab[type=top]")
+        for z in (99, 119):
+            b.box(x, 89, z, x, 90, z, "iron_chain")
+    b.box(57, 88, 122, 76, 88, 122, DARK)
+    b.box(70, 87, 122, 74, 87, 122, "waxed_weathered_cut_copper")
+    for x in (58, 75):
+        b.box(x, 87, 121, x + 1, 87, 121, "ochre_froglight[axis=x]")
+    for x, z, width in ((55, 98, 4), (74, 101, 5), (67, 115, 4)):
+        b.box(x + 1, 82, z, x + width - 2, 82, z, "yellow_terracotta")
+        b.box(x + 1, 83, z, x + width - 2, 83, z, "iron_block")
+    for x, z, top in ((-72, 103, 100), (-69, 105, 102), (-65, 102, 101)):
+        b.box(x - 1, 98, z - 1, x + 1, 98, z + 1, DARK)
+        b.box(x, 99, z, x, top, z, "waxed_weathered_cut_copper")
+        b.box(x - 1, top + 1, z - 1, x + 1, top + 1, z + 1, "smooth_quartz_slab[type=bottom]")
+    b.box(-5, 106, 110, 5, 106, 110, DARK)
+    for x in (-5, 5):
+        b.box(x, 107, 110, x, 109, 110, FRAME)
+        b.box(x, 110, 110, x, 110, 110, COLD_LIGHT)
+    b.box(-4, 109, 110, 4, 109, 110, "iron_bars")
+    for x, z in ((61, 109), (73, 114)):
+        b.box(x - 2, 101, z - 2, x + 2, 102, z + 2, "smooth_quartz")
+        b.box(x - 1, 102, z - 2, x + 1, 102, z - 2, "waxed_oxidized_cut_copper")
+        b.box(x - 2, 103, z - 2, x + 2, 103, z + 2, "smooth_quartz_slab[type=bottom]")
+
+
 def expansion(b):
     northern_dock(b)
     southern_halls(b)
     side_routes(b)
     inspection_course(b)
+    northern_details(b)
+    southern_details(b)
 
 
 def forceload_areas(fills):
@@ -970,9 +1123,9 @@ def validate_expansion(fills, plan, levels, cells, connected, stairs):
                     eye[1] += 1.62
                 if clear_ray(levels, eyes[0], target) or not clear_ray(levels, eyes[1], target):
                     sys.exit(f"Cover or peek has no useful geometry at {post['key']}: {route['cover']}")
-    if len(walking) < 17000:
+    if len(walking) < 23000:
         sys.exit(f"Expansion too small: {len(walking)} standing positions reachable without jumping")
-    print(f"Validated {len(walking)} standing positions reachable without jumping on props")
+    print(f"Validated {len(walking)} standing positions reachable by floor and stairs")
 
 
 def validate(fills, plan):

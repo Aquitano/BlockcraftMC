@@ -23,6 +23,26 @@ The eastern glass gallery joins the northern and middle posts. The western open 
 southern posts. Each has machinery, lower cover and openings through the adjoining rails. The middle post has faction
 routes through these passages. All posts retain both direct approaches.
 
+## Architecture and lighting
+
+The engine room has covered copper service trenches at z=-121 and z=-99, ribbed machinery bays, and copper work shelves
+at the existing tall cabinets. The assembly room keeps its central component cradle and adds suspended support rails
+and local task lights. Both northern entrances have quartz frames, cyan lintels, and lit outer jambs.
+
+The western dome has a copper service run, warm work lights, and a repair bench in its existing western cargo pocket.
+The control hall has a shallow ceiling ring, four radial supports, and a glass-topped central table under a task light.
+The freight hall has an overhead handling rail and cargo with metal bindings and ochre markings.
+The workshop roof carries an exhaust cluster, the control roof a forked antenna, and the freight roof two service housings.
+Support collars and buttresses sit below the occupied floors.
+
+The southern stairs have lights in both side supports every four steps. The five stair columns remain clear.
+All three northern dome entrances have illuminated jambs outside their five-wide passages.
+Occupied domes use spaced perimeter lights rather than continuous lantern rings. Sea lanterns, shroomlights, and
+ochre froglights provide world light. The generator does not add fullbright displays or invisible light blocks.
+
+Floor wear follows paired wheel tracks with short connected repair patches. Drainage covers and transverse seams
+break up the southern skybridge, and the ship passage has long edge seams. Floor treatments retain their original height.
+
 ## Controls
 
 | Control | Switch blocks | Affected blocks or volume | Permanent alternate passage |
@@ -62,6 +82,7 @@ The course is separate from normal combat circulation and the bulkhead bypass.
 
 The generator checks standing positions at all playable heights, one-block movement clearance, ordinary floor and stair
 access to rooms and fighter positions, stair width and headroom, and both control bypasses while the hazards are active.
+At least 23,000 standing positions must be reachable by ordinary floors and stairs.
 It also checks interaction reach and support, board visibility, capture positions, cover and peek rays, fixed course landings, landing
 cylinders to the sky, headquarters vehicle approaches, environment emitters and the moving crane's swept volume.
 
