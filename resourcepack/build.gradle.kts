@@ -44,6 +44,16 @@ val generateBattle = tasks.register<Exec>("generateBattle") {
     commandLine("python3", "BattleArt.py")
 }
 
+val verifyWeaponPoses = tasks.register<Exec>("verifyWeaponPoses") {
+    mustRunAfter(generateBattle)
+    workingDir(layout.projectDirectory)
+    commandLine("python3", "verify_weapon_poses.py")
+}
+
+tasks.check {
+    dependsOn(verifyWeaponPoses)
+}
+
 val generateDialogue = tasks.register<Exec>("generateDialogue") {
     workingDir(layout.projectDirectory)
     commandLine("java", "DialogueArt.java", "src", "../paper/api/src/main/resources/dialogue-glyphs.properties")

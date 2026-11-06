@@ -100,17 +100,10 @@ def generate():
                   box([6, 3, 1.5], [9, 3.6, 1.7], "body"),
                   box([10.5, 2, 13.9], [12, 4, 14.3], "body")])
     model("projector", parts, textures)
-    for weapon in ("carbine", "repeater", "long_rifle", "pistol", "twin_pistol", "heavy_rifle", "e5", "e5s", "wrist_blaster", "se14", "westar_pistols"):
-        original = json.loads((ROOT / f"models/item/sternenfront/{weapon}.json").read_text())
-        display = {}
-        for hand in ("firstperson_righthand", "firstperson_lefthand"):
-            pose = original["display"][hand]
-            pose["translation"][1] -= .35
-            pose["translation"][2] += 1.1
-            pose["rotation"][0] -= 3
-            display[hand] = pose
-        write(ROOT / f"models/item/sternenfront/{weapon}_firing.json",
-              {"parent": f"blockcraft:item/sternenfront/{weapon}", "display": display})
+    poses = json.loads((Path(__file__).parent / "build/sternenfront/firing-poses.json").read_text())
+    for model_path, display in poses.items():
+        write(ROOT / f"models/item/{model_path}_firing.json",
+              {"parent": f"blockcraft:item/{model_path}", "display": display})
     print("Generated battle projectors, Clone Wars faction emblems, shield grids and firing poses")
 
 

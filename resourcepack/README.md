@@ -44,6 +44,28 @@ exported with "Java Block/Item".
 - Item icons use a native 16-pixel grid, transparent margins and upper-left lighting. HUD symbols use seven pixels of ink
   in each eight-pixel tile to align with the text baseline.
 
+## Sternenfront first-person weapons
+
+`SternenfrontArt.java` assigns seven `GunPose` families in the equipment list. The same definition supplies resting
+transforms and a firing kick for both hands. Vanilla mirrors the left hand's X translation, yaw and roll, so the authored
+hand transforms are identical. Third-person, GUI, ground and fixed transforms retain their existing values.
+
+Run `:resourcepack:generateBattle` to regenerate the equipment and firing models. Java writes the firing transforms to
+`build/sternenfront/firing-poses.json`; `BattleArt.py` consumes that manifest and inherits each gun's geometry and other
+transforms. Running `BattleArt.py` directly requires a fresh Java generation first.
+`:resourcepack:verifyWeaponPoses`, also part of `check`, checks all eleven registered guns, vanilla item routes,
+texture paths, both hands, firing inheritance, family framing, recoil differences and wrist bounds.
+
+Pistols rise sharply when firing. Twin pistols sit farther outward with an inward cant. Carbines have a compact shoulder
+pose; long rifles sit farther forward. The Z-6 sits lower with a larger scale and a small firing displacement.
+The B2 wrist blaster includes a metal forearm, rear cuff and fist below its paired barrels. This is ordinary held-item
+geometry and remains visible in inventory and third-person views. It does not replace a player's arm or body.
+Twin-pistol models still represent one gun per equipped hand; the pose does not create a second hand or alternate shots.
+
+The firing state is a discrete model swap, with no interpolation, barrel animation or change to shot mechanics.
+Client checks must cover both dominant-hand settings, offhand pairs, firing and resting at normal and wide FOV,
+and the wrist cuff's overlap with the vanilla hand. Automated model checks cannot establish screen clearance or clipping.
+
 ## Sturmwerft shipyard props
 
 `YardArt.java` authors nine original props with separate 64-pixel atlases in

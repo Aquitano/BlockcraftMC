@@ -511,7 +511,11 @@ public final class SternenfrontArt {
                 box(x, y, z, across, height - .012, flat, surface).spinY(-45));
     }
 
-    private record Model(String path, Shape shape, String display) {
+    private record Model(String path, Shape shape, String display, GunPose gunPose) {
+        Model(String path, Shape shape, String display) {
+            this(path, shape, display, null);
+        }
+
         Model(String path, Shape shape) {
             this(path, shape, "");
         }
@@ -858,14 +862,53 @@ public final class SternenfrontArt {
 
     private static final String GUN_DISPLAY = """
             ,"gui_light":"front","display":{
-              "firstperson_righthand":{"rotation":[0,180,0],"translation":[1,1.5,0],"scale":[0.55,0.55,0.55]},
-              "firstperson_lefthand":{"rotation":[0,180,0],"translation":[1,1.5,0],"scale":[0.55,0.55,0.55]},
+              %s,
               "thirdperson_righthand":{"rotation":[-85,0,0],"translation":[0,2,1],"scale":[0.6,0.6,0.6]},
               "thirdperson_lefthand":{"rotation":[-85,0,0],"translation":[0,2,1],"scale":[0.6,0.6,0.6]},
               "gui":{"rotation":[25,140,0],"scale":[0.55,0.55,0.55]},
               "ground":{"translation":[0,3,0],"scale":[0.4,0.4,0.4]},
               "fixed":{"rotation":[0,90,0],"translation":[-0.9,1.5,0],"scale":[0.55,0.55,0.55]}}
             """;
+    private enum GunPose {
+        CARBINE(-2, -4, 0, .7, 1.25, -.4, .55, -4, .15, .85),
+        HEAVY_RIFLE(-1, -3, 0, .4, .8, -.8, .57, -5, .1, 1.05),
+        LONG_RIFLE(0, -2, 0, .2, 1.4, -1.8, .52, -2, .05, 1.3),
+        PISTOL(-4, -6, -5, 1.5, 1.8, .3, .65, -13, .55, .7),
+        TWIN_PISTOL(-3, -8, -12, 2.5, 1.35, .1, .62, -10, .4, .65),
+        ROTARY(3, -7, 3, -.4, -.7, -1.2, .66, -1, -.1, .35),
+        WRIST(0, -3, 0, .8, .2, -.3, .7, -1.5, .05, .3);
+
+        private final double pitch, yaw, roll, x, y, z, scale, kick, rise, back;
+
+        GunPose(double pitch, double yaw, double roll, double x, double y, double z,
+                double scale, double kick, double rise, double back) {
+            this.pitch = pitch;
+            this.yaw = yaw;
+            this.roll = roll;
+            this.x = x;
+            this.y = y;
+            this.z = z;
+            this.scale = scale;
+            this.kick = kick;
+            this.rise = rise;
+            this.back = back;
+        }
+
+        String hands(boolean firing) {
+            // Vanilla mirrors X translation, yaw and roll for the left hand during rendering.
+            String pose = String.format(Locale.ROOT,
+                    "{\"rotation\":[%s,%s,%s],\"translation\":[%s,%s,%s],\"scale\":[%s,%s,%s]}",
+                    pitch + (firing ? kick : 0), 180 + yaw, roll, x,
+                    y + (firing ? rise : 0), z + (firing ? back : 0), scale, scale, scale);
+            return "\"firstperson_righthand\":" + pose + ",\"firstperson_lefthand\":" + pose;
+        }
+    }
+
+    private static Family gun(String name, Shape shape, GunPose pose) {
+        return new Family("equipment_" + name, 64, false, List.of(
+                new Model("sternenfront/" + name, shape, GUN_DISPLAY.formatted(pose.hands(false)), pose)));
+    }
+
     private static final String SABER_DISPLAY = """
             ,"display":{
               "firstperson_righthand":{"rotation":[0,0,15],"translation":[0,0,0],"scale":[0.7,0.7,0.7]},
@@ -978,18 +1021,21 @@ public final class SternenfrontArt {
 
     private static List<Family> equipment() {
         var wrist = new Shape().add(box(0, -.04, -.12, .28, .25, .45, STEEL))
-                .both(box(.065, .015, .23, .07, .07, .3, FRAME));
-        return List.of(equipment("carbine", rifle(false, false), GUN_DISPLAY),
-                equipment("heavy_rifle", rifle(false, false).add(drumZ(0, .03, 1.06, .075, .25, STEEL)), GUN_DISPLAY),
-                equipment("repeater", rotaryBlaster(), GUN_DISPLAY),
-                equipment("long_rifle", rifle(false, true), GUN_DISPLAY),
-                equipment("pistol", pistol(false, false), GUN_DISPLAY),
-                equipment("twin_pistol", pistol(false, false), GUN_DISPLAY),
-                equipment("e5", rifle(true, false), GUN_DISPLAY),
-                equipment("e5s", rifle(true, true), GUN_DISPLAY),
-                equipment("wrist_blaster", wrist, GUN_DISPLAY),
-                equipment("se14", pistol(false, true), GUN_DISPLAY),
-                equipment("westar_pistols", pistol(true, false), GUN_DISPLAY),
+                .both(box(.065, .015, .23, .07, .07, .3, FRAME))
+                .add(box(0, -.09, -.55, .24, .23, .42, DROID))
+                .add(box(0, -.09, -.79, .29, .28, .08, FRAME))
+                .add(box(0, -.18, .08, .23, .16, .22, DROID));
+        return List.of(gun("carbine", rifle(false, false), GunPose.CARBINE),
+                gun("heavy_rifle", rifle(false, false).add(drumZ(0, .03, 1.06, .075, .25, STEEL)), GunPose.HEAVY_RIFLE),
+                gun("repeater", rotaryBlaster(), GunPose.ROTARY),
+                gun("long_rifle", rifle(false, true), GunPose.LONG_RIFLE),
+                gun("pistol", pistol(false, false), GunPose.PISTOL),
+                gun("twin_pistol", pistol(false, false), GunPose.TWIN_PISTOL),
+                gun("e5", rifle(true, false), GunPose.CARBINE),
+                gun("e5s", rifle(true, true), GunPose.LONG_RIFLE),
+                gun("wrist_blaster", wrist, GunPose.WRIST),
+                gun("se14", pistol(false, true), GunPose.PISTOL),
+                gun("westar_pistols", pistol(true, false), GunPose.TWIN_PISTOL),
                 lightsaber(false, false), lightsaber(false, true), lightsaber(true, false), lightsaber(true, true), darksaber(),
                 equipment("helmet_kolonien", cloneHelmet(CloneRole.SOLDIER).shifted(0, -.19, 0).scaled(1.8), HELMET_DISPLAY),
                 equipment("helmet_hegemonie", battleDroid("soldier").models.get(1).shape.shifted(0, -.08, 0).scaled(1.8), HELMET_DISPLAY),
@@ -1520,8 +1566,16 @@ public final class SternenfrontArt {
                 portraits(Path.of(args.length == 0 ? "src" : args[0]).resolveSibling("art/sternenfront"), family);
             }
         }
-        for (var family : equipment()) {
+        var equipment = equipment();
+        for (var family : equipment) {
             write(root, family);
         }
+        var firing = equipment.stream().flatMap(family -> family.models.stream())
+                .filter(model -> model.gunPose != null)
+                .map(model -> "\"" + model.path + "\": {" + model.gunPose.hands(true) + "}")
+                .collect(Collectors.joining(",\n"));
+        var manifest = Path.of("build/sternenfront/firing-poses.json");
+        Files.createDirectories(manifest.getParent());
+        Files.writeString(manifest, "{\n" + firing + "\n}\n");
     }
 }
