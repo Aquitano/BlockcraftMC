@@ -95,7 +95,7 @@ public final class Battlefield {
         var activation = activate(state);
         if (activation == Activation.COOLDOWN) {
             player.sendMessage(game.messages().get("battlefield.cooldown", Formatter.number("seconds",
-                    (state.cycle.remaining(game.tick()) + 19) / 20)));
+                    (state.cycle.ticksUntilReady(game.tick()) + 19) / 20)));
             return true;
         }
         if (activation == Activation.BLOCKED) {

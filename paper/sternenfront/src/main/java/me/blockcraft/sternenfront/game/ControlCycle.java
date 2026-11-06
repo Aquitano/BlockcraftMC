@@ -26,4 +26,8 @@ final class ControlCycle {
     long remaining(long tick) {
         return Math.max(0, (phase(tick) == Phase.WARNING ? startsAt : phase(tick) == Phase.ACTIVE ? endsAt : readyAt) - tick);
     }
+
+    long ticksUntilReady(long tick) {
+        return Math.max(0, readyAt - tick);
+    }
 }
