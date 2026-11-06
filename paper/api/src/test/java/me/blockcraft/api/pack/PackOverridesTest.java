@@ -12,6 +12,8 @@ import java.util.HashSet;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -134,6 +136,65 @@ public class PackOverridesTest {
                 }
             }
         }
+    }
+
+    @Test
+    public void yardPropsKeepGroundOriginBoundsAndResolvedFaceUvs() throws IOException {
+        int count = 0;
+        for (var prop : PackModel.values()) {
+            if (!prop.path().startsWith("sternenfront/yard/")) continue;
+            count++;
+            var model = read(asset(prop.model().asString(), "models", ".json"));
+            assertFalse(prop.path(), model.has("parent"));
+            assertFalse(prop.path(), model.has("display"));
+            var textures = model.getAsJsonObject("textures");
+            double bottom = Double.POSITIVE_INFINITY;
+            for (var element : model.getAsJsonArray("elements")) {
+                var box = element.getAsJsonObject();
+                var from = box.getAsJsonArray("from");
+                var to = box.getAsJsonArray("to");
+                for (int axis = 0; axis < 3; axis++) assertTrue(prop.path(), from.get(axis).getAsDouble() < to.get(axis).getAsDouble());
+                for (int corner = 0; corner < 8; corner++) {
+                    var point = new double[3];
+                    for (int axis = 0; axis < 3; axis++) point[axis] = ((corner & (1 << axis)) == 0 ? from : to).get(axis).getAsDouble();
+                    assertYardBounds(prop.path(), point);
+                    if (box.has("rotation")) {
+                        var rotation = box.getAsJsonObject("rotation");
+                        assertFalse(prop.path(), rotation.get("rescale").getAsBoolean());
+                        int axis = "xyz".indexOf(rotation.get("axis").getAsString());
+                        assertTrue(prop.path(), axis >= 0);
+                        int a = (axis + 1) % 3, b = (axis + 2) % 3;
+                        var origin = rotation.getAsJsonArray("origin");
+                        double radians = Math.toRadians(rotation.get("angle").getAsDouble());
+                        double x = point[a] - origin.get(a).getAsDouble(), y = point[b] - origin.get(b).getAsDouble();
+                        point[a] = origin.get(a).getAsDouble() + x * Math.cos(radians) - y * Math.sin(radians);
+                        point[b] = origin.get(b).getAsDouble() + x * Math.sin(radians) + y * Math.cos(radians);
+                    }
+                    assertYardBounds(prop.path(), point);
+                    bottom = Math.min(bottom, point[1]);
+                }
+                assertFalse(prop.path(), box.has("light_emission"));
+                for (var face : box.getAsJsonObject("faces").entrySet()) {
+                    var drawn = face.getValue().getAsJsonObject();
+                    var reference = drawn.get("texture").getAsString();
+                    assertTrue(prop.path(), reference.startsWith("#"));
+                    assertNotNull(prop.path(), textures.get(reference.substring(1)));
+                    var uv = drawn.getAsJsonArray("uv");
+                    assertEquals(prop.path(), 4, uv.size());
+                    for (var coordinate : uv) assertTrue(prop.path(), coordinate.getAsDouble() >= 0 && coordinate.getAsDouble() <= 16);
+                    assertTrue(prop.path(), uv.get(0).getAsDouble() < uv.get(2).getAsDouble());
+                    assertTrue(prop.path(), uv.get(1).getAsDouble() < uv.get(3).getAsDouble());
+                }
+            }
+            assertEquals(prop.path(), 8, bottom, .0001);
+        }
+        assertEquals(6, count);
+    }
+
+    private static void assertYardBounds(String path, double[] point) {
+        assertTrue(path, point[0] >= -8 && point[0] <= 24);
+        assertTrue(path, point[1] >= 8 && point[1] <= 32);
+        assertTrue(path, point[2] >= -8 && point[2] <= 24);
     }
 
     private static JsonObject read(Path file) throws IOException {

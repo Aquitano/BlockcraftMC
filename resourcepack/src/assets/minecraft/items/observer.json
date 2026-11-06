@@ -10,6 +10,20 @@
           "type": "minecraft:model",
           "model": "blockcraft:item/sternenfront/brummi"
         }
+      },
+      {
+        "when": "blockcraft:sternenfront/yard/engine_cradle",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/sternenfront/yard/engine_cradle"
+        }
+      },
+      {
+        "when": "blockcraft:sternenfront/yard/repair_droid",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/sternenfront/yard/repair_droid"
+        }
       }
     ],
     "fallback": {

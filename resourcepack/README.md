@@ -44,6 +44,23 @@ exported with "Java Block/Item".
 - Item icons use a native 16-pixel grid, transparent margins and upper-left lighting. HUD symbols use seven pixels of ink
   in each eight-pixel tile to align with the text baseline.
 
+## Sturmwerft shipyard props
+
+`YardArt.java` authors six original props with separate 64-pixel atlases in
+`models/item/sternenfront/yard/` and `textures/item/sternenfront/yard/`. The props use ivory enamel, blue-gray steel,
+charcoal recesses, teal instruments, amber indicators and weathered copper. They reference no vanilla textures.
+`:resourcepack:generateYardArt` regenerates only these assets and `resourcepack/build/yard/contact-sheet.png`.
+The contact sheet uses the generated geometry and face UVs with ordinary directional shading.
+
+The `PackModel` paths are `sternenfront/yard/console`, `power_coupler`, `engine_cradle`, `cargo_stack`, `repair_droid`
+and `wall_panel`, all under `sternenfront/yard/`. They use `ItemDisplayTransform.NONE`, with no model display transforms.
+The model's ground origin is `(8,8,8)`, and its authored front points along +Z. The runtime cancels the client's extra
+half-turn, as it does for dropships. Do not add another corrective model rotation.
+
+All element corners, including rotated corners, fit `x,z = -8..24` and `y = 8..32`. At scale 1, the item-centred
+geometry therefore fits within two blocks horizontally and rises at most 1.5 blocks above the display position.
+`YardArt` checks these bounds and its explicit UVs before writing each model. The props use ordinary world lighting.
+
 ## Presentation assets
 
 `DialogueArt.java` generates the original portraits, panel, fonts, and matching Java glyph metrics.
