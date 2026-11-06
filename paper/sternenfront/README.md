@@ -68,6 +68,28 @@ Launched rockets and orbital strikes continue after their owner falls. Lightning
 Both powers use the existing damage path for spawn protection and kill credit. Rockets also use `blastAround` for
 cover, teammate safety, and self-damage. Lightning uses the saber guard without reflecting the attack.
 
+## Redeployment
+
+The middle toolbar button confirms a quick deployment with the selected class or hero. It queues the deployment during
+the five-second wait. Without confirmation, the fifteen-second timer deploys the existing free class without buying a hero.
+Selecting a different hero requires another confirmation, including when a spawn was already queued.
+
+The suggestion keeps an explicitly chosen spawn if it is still safe. Otherwise it remembers the last confirmed safe post
+or HQ, then prefers a safe owned post closer to an objective. HQ is the fallback. The actual deployment rechecks ownership
+and live enemy presence after the fade; a lost or threatened post is replaced by another safe recommendation.
+The dropship remains an explicit choice and is never recommended automatically.
+
+The right toolbar button opens a tactical schematic with north up and east right. It projects the current map's post and
+HQ positions into inventory slots, preserving scale and separating overlapping markers. Colours show ownership.
+Banners allow deployment, glass panes mark locked posts, and solid blocks mark contested or attacked posts.
+Hovering shows the post name, recommendation, selection and why deployment is locked. The landing button names its target
+post. The same button returns to the class cards. Slot 38 beside the hero cards is reserved for the intermediate paid unit.
+
+After spawning, the order bar shows the nearest objective's letter, horizontal distance and direction relative to the
+player's view. When all posts are safe, it points to the post nearest the enemy HQ for defence. It also updates the compass
+target. This is a bearing, not a route around walls. Ability hints temporarily replace the bearing; the current order remains
+visible alongside both.
+
 ## Combat feedback
 
 During combat, enemies have red outlines with every weapon, without aiming or sneaking. This applies to players and
@@ -80,15 +102,18 @@ Hits, headshots, and kills have distinct sounds and immediate marks around the c
 marker even within the same tick. A red arc around the crosshair points at whoever last hurt the player, for
 `combat.damage-indicator-ticks`, and follows as they turn. Both share the title's subtitle, centred with `UiFont`.
 Kill and assist popups appear briefly beside the heat, guard and ability-cooldown HUD.
-Hero availability appears only for `combat-feedback.hero-ready-ticks`; idle kill counts and point progress stay hidden. Nearby gains combine into one segment. The HUD names no abilities, so the line stays short enough
-for GUI scale 3 on a 1366x768 screen; the deploy chat line names them. `ObjectiveHud` shows reinforcements, a tile per
-post and the time left in a boss bar's text line, and the pack draws that colour and overlay of bar as nothing. The screen's
+Hero availability appears only for `combat-feedback.hero-ready-ticks`; idle kill counts and point progress stay hidden.
+Nearby gains combine into one segment.
+F and Q show distinct three-letter ability labels. The meter states use the space left after those labels so the HUD keeps
+its previous width budget for GUI scale 3 on a 1366x768 screen. `K` means cooling. A loadout change explains each binding
+on the existing order bar for `respawn.ability-hint-seconds`, and the deploy chat line gives the full names.
+`ObjectiveHud` shows reinforcements, a tile per post and the time left in a boss bar's text line, and the pack draws that colour and overlay of bar as nothing. The screen's
 edges redden with a hit and while health is low. `combat.handling` tunes spread and damage falloff.
 Objective titles remain visible while the marker temporarily uses their subtitle, then restores it without restarting
 the title. The sidebar stays hidden during a fight.
 
-The heat meter turns red and shows `! HEISS` at `heat.warning-level`, or when the next shot would overheat the weapon.
-Venting shows `! KÜHLEN` with its remaining seconds, followed by a ready sound. `combat-feedback` tunes marker and
+The heat meter turns red and shows `HEISS` at `heat.warning-level`, or when the next shot would overheat the weapon.
+Venting shows `K` with its remaining seconds, followed by a ready sound. `combat-feedback` tunes marker and
 popup durations and the hit, headshot, and kill volumes.
 
 Left click sweeps a saber-colored slash through every enemy ahead, including when aimed at air. Colored particles

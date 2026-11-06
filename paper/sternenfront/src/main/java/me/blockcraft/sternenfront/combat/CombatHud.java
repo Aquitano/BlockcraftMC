@@ -21,11 +21,12 @@ public final class CombatHud {
     }
 
     /** Wide enough for the longest state, so the line does not slide when one appears. */
-    private static final int STATE_WIDTH = 74;
+    static final int STATE_WIDTH = 30;
 
     public void show(Player player, Guard guard) {
         var api = BlockcraftApi.get();
         if (api.dialogues().active(player) || api.visuals().active(player) || Scenes.isViewing(player)) return;
+        game.deployment().controlsChanged(player);
         var fighter = game.fighter(player);
         boolean blade = fighter.hero().filter(Hero::bladed).isPresent();
         boolean venting = fighter.heat().venting(game.tick());
@@ -65,7 +66,7 @@ public final class CombatHud {
         var status = cooldown == 0 ? game.messages().get("combat.ready")
                 : game.messages().get("combat.cooldown", Formatter.number("seconds", (cooldown + 19) / 20));
         return game.messages().get("combat.ability", Placeholder.component("key", icon(index + 3)),
-                Placeholder.component("name", game.messages().get(key.get() + ".name")), Placeholder.component("status", status));
+                Placeholder.component("label", game.messages().get("combat.labels." + key.get().substring(key.get().lastIndexOf('.') + 1))), Placeholder.component("status", status));
     }
 
     private static Component icon(int index) {

@@ -62,7 +62,10 @@ final class ObjectiveHud {
 
     /** A second line under the first, added after it, with the fighter's current order. */
     void order(Player viewer) {
-        game.orderLine(viewer).ifPresentOrElse(line -> {
+        var order = game.orderLine(viewer);
+        game.deployment().guidance(viewer).map(navigation -> order
+                .map(task -> navigation.append(messages.get("hud.separator")).append(task)).orElse(navigation))
+                .or(() -> order).ifPresentOrElse(line -> {
             var bar = orderBars.computeIfAbsent(viewer.getUniqueId(),
                     ignored -> BossBar.bossBar(Component.empty(), 0, BossBar.Color.PINK, BossBar.Overlay.NOTCHED_20));
             bar.name(line);

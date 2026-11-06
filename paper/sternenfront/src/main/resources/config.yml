@@ -206,12 +206,13 @@ secrets:
   inspection-course: {par-seconds: 25, limit-seconds: 90}
   may-the-fourth: {coin-factor: 2}
 
-# A dead player chooses a class and a spawn for seconds, and deploys at the headquarters after auto-seconds if they
-# choose nothing. A deployed player cannot be hurt for protection-seconds or until they fire.
+# A dead player may confirm deployment after seconds. Auto-deployment uses a safe recommendation and the free class.
+# A deployed player cannot be hurt for protection-seconds or until they fire.
 respawn:
   seconds: 5
   auto-seconds: 15
   protection-seconds: 3
+  ability-hint-seconds: 3
 
 # What an enemy inside a faction's headquarters takes every second.
 headquarters:
