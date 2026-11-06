@@ -613,6 +613,8 @@ def southern_halls(b):
         b.box(x, 82, 100, x, 82, 100, "lever[face=wall,facing=south]")
     for x, z, dx, dz in ((-15, 100, 1, 7), (13, 114, 1, 7), (-10, 125, 6, 1), (6, 94, 7, 1)):
         b.box(x, 81, z, x + dx, 81, z + dz, "smooth_quartz")
+    for x, z in ((-15, 103), (13, 117)):
+        b.box(x, 81, z, x + 1, 81, z, COLD_LIGHT)
     for x, z in ((18, 104), (8, 91)):
         b.workbench(x, z, 80)
     for x, z in ((-19, 113), (-6, 129)):
@@ -808,6 +810,7 @@ def southern_details(b):
     for x, z, width in ((74, 101, 5), (67, 115, 4)):
         b.box(x + 1, 82, z, x + width - 2, 82, z, "yellow_terracotta")
         b.box(x + 1, 83, z, x + width - 2, 83, z, "iron_block")
+    b.box(76, 83, 105, 76, 83, 105, "ochre_froglight[axis=z]")
     for x, z in ((57, 100), (67, 96), (58, 118), (79, 115)):
         b.box(x, 84, z, x, 84, z, "ochre_froglight[axis=y]")
         b.box(x, 85, z, x, 90, z, "iron_chain")
