@@ -1,5 +1,6 @@
 package me.blockcraft.api.game.rush;
 
+import me.blockcraft.api.game.BlockChanges;
 import me.blockcraft.api.game.HarmlessHit;
 import org.bukkit.Material;
 import org.bukkit.block.data.type.Bed;
@@ -58,7 +59,7 @@ public final class RushRules implements Listener {
         if (owner >= 0) {
             game.bed(player, owner);
         } else if (arena.remove(event.getBlock())) {
-            event.getBlock().setType(Material.AIR, false);
+            BlockChanges.set(event.getBlock(), Material.AIR);
         }
     }
 

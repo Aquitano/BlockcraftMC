@@ -1,5 +1,6 @@
 package me.blockcraft.api.game.rush;
 
+import me.blockcraft.api.game.BlockChanges;
 import me.blockcraft.api.game.rush.MapPool.ArenaMap;
 import me.blockcraft.api.world.Worlds;
 import org.bukkit.Location;
@@ -9,7 +10,9 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.type.Bed;
+import org.bukkit.util.BoundingBox;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -97,8 +100,23 @@ public final class RushArena {
                 layout.dimensions().floorY() + 6, 0.5);
     }
 
+    public World world() {
+        return world;
+    }
+
+    public BoundingBox bounds() {
+        var floorY = layout.dimensions().floorY();
+        return new BoundingBox(layout.minX(), floorY, -layout.radiusZ(),
+                layout.maxX() + 1, floorY + layout.dimensions().buildHeight() + 1, layout.radiusZ() + 1);
+    }
+
     public void reset() {
-        layout.reset(placed, (position, material) -> block(position).setType(material, false));
+        var changed = new ArrayList<Block>();
+        layout.reset(placed, (position, material) -> {
+            var block = block(position);
+            block.setType(material, false);
+            changed.add(block);
+        });
         for (int slot = 0; slot < 2; slot++) {
             for (boolean head : new boolean[] { false, true }) {
                 var bed = (Bed) (slot == 0 ? Material.RED_BED : Material.BLUE_BED).createBlockData();
@@ -107,6 +125,7 @@ public final class RushArena {
                 block(layout.bed(slot, head)).setBlockData(bed, false);
             }
         }
+        BlockChanges.announce(changed);
     }
 
     private Block block(ArenaLayout.Position position) {

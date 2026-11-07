@@ -194,6 +194,7 @@ public final class StandaloneRushGame {
         countdown.cancel();
         participants = players.stream().map(Player::getUniqueId).toList();
         winnerName = Optional.empty();
+        round.playArea(arena.world(), arena.bounds());
         round.enter(GamePhase.INGAME);
         var started = identity;
         session = new RushSession(plugin, config, arena, kit, participants, new RushSession.Events() {
