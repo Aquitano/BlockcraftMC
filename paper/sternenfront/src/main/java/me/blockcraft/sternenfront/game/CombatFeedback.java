@@ -156,8 +156,11 @@ public final class CombatFeedback {
     private static final char FIRST_CROSSHAIR_MARK = '\uE23A';
     private static final char FIRST_SPREAD_TICKS = '\uE250';
     private static final int SPREAD_REFRESH_TICKS = 20;
-    /** Longer than the refresh, and short enough that the ticks do not linger into a cinematic, which stops the refresh. */
-    private static final int SPREAD_HOLD_TICKS = 30;
+    /**
+     * The client counts the title down in its own ticks, so twice the refresh keeps the ticks up while the server runs at
+     * half speed; any longer and they would linger into a cinematic, which stops the refresh.
+     */
+    private static final int SPREAD_HOLD_TICKS = 40;
     /** Wide enough for the longest popup, so the line does not slide when one appears. */
     private static final int REWARD_WIDTH = 104;
     private static final double LOW_HEALTH = 0.4;
