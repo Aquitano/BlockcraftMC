@@ -93,6 +93,7 @@ public final class Bots implements Listener {
         private Fireteam team;
         private int guarding = -1;
         private long soloUntil;
+        private Location fallBackTo;
         private int bound = -1;
         private boolean boundDone;
         private Location boundFrom;
@@ -360,6 +361,7 @@ public final class Bots implements Listener {
         soldier.objective = -1;
         soldier.guarding = -1;
         soldier.soloUntil = 0;
+        soldier.fallBackTo = null;
         soldier.bound = -1;
         soldier.boundDone = false;
         soldier.boundFrom = null;
@@ -645,13 +647,18 @@ public final class Bots implements Listener {
         if (squad.stream().noneMatch(soldier -> soldier.number == team.flanker)) {
             team.flanker = -1;
         }
-        contact(team, squad.stream().filter(soldier -> soldier.body.getLocation().distance(at) < settings.catchUpDistance()).toList(), tick);
-        if (team.threat != null && odds(team.faction, at).outnumbered()) {
-            if (tick >= team.fallBackUntil) {
-                call(leader, "cover", tick);
-            }
+        var near = squad.stream().filter(soldier -> soldier.body.getLocation().distance(at) < settings.catchUpDistance()).toList();
+        contact(team, near, tick);
+        boolean alone = near.size() == 1 && everyone.stream().filter(soldier -> soldier.guarding < 0).count() > 1;
+        boolean rallying = team.rally.update(alone, team.threat != null, team.assaulting, tick, settings.rallyTicks());
+        boolean outnumbered = team.threat != null && odds(team.faction, at).outnumbered();
+        if ((outnumbered || rallying && !team.rallying) && tick >= team.fallBackUntil) {
+            call(leader, "cover", tick);
+        }
+        if (outnumbered) {
             team.fallBackUntil = tick + settings.fallBackTicks();
         }
+        team.rallying = rallying;
         boolean behind = !team.assaulting && team.threat == null && post != null && squad.stream().filter(soldier -> soldier != leader)
                 .anyMatch(soldier -> place(leader, soldier, post) == Fireteam.Place.STRAGGLING);
         if (!behind) {
@@ -845,10 +852,12 @@ public final class Bots implements Listener {
         var threat = target.map(LivingEntity::getEyeLocation)
                 .or(() -> remembering(soldier, tick) ? Optional.of(soldier.lastSeen.clone().add(0, 1.6, 0)) : Optional.empty())
                 .or(() -> underFire ? Optional.of(team.threat.clone().add(0, 1.6, 0)) : Optional.empty());
-        boolean teamFallsBack = team != null && post != null && tick < team.fallBackUntil && withTeam && !flanking;
+        boolean teamFallsBack = team != null && post != null && (tick < team.fallBackUntil || team.rallying) && withTeam && !flanking;
         var fallBack = defending && odds(soldier.faction, post.center()).outnumbered() ? Optional.of(route.retreat())
                 : teamFallsBack ? threat.or(() -> Optional.ofNullable(team.threat)).flatMap(enemy -> retreat(soldier, here, post, enemy))
+                        .or(() -> Optional.ofNullable(soldier.fallBackTo))
                 : Optional.<Location>empty();
+        soldier.fallBackTo = fallBack.orElse(null);
         boolean exposed = advancing || team != null && team.assaulting;
         var protectedPosition = threat.filter(enemy -> fallBack.isEmpty() && (!exposed || wounded || soldier.heat.venting(tick)))
                 .flatMap(enemy -> cover(soldier, enemy, tick));

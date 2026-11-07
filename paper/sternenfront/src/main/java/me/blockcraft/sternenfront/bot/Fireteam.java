@@ -29,6 +29,8 @@ final class Fireteam {
     long alarmUntil;
     int flanker = -1;
     long fallBackUntil;
+    final Rally rally = new Rally();
+    boolean rallying;
     final Bounding bounding = new Bounding();
     /** Where the leader walked, newest first, a step apart. */
     final Deque<Location> trail = new ArrayDeque<>();
