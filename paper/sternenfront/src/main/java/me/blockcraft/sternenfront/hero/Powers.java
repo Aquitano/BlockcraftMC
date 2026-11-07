@@ -49,7 +49,7 @@ public final class Powers {
     private static final double CATCH_DISTANCE = 1.5;
     private static final float SPIN_DEGREES = 45;
     /** How far up the model, from the hilt's origin, the middle of pommel to tip lies; the flat spin turns about it. */
-    private static final float SPIN_CENTRE = 0.63f;
+    private static final float SPIN_CENTRE = 0.61f;
     /** Lays the blade flat with its middle on the display, so the display's yaw spins it like a disc. */
     private static final Transformation FLAT = new Transformation(new Vector3f(0, 0, -SPIN_CENTRE), new Quaternionf(),
             new Vector3f(1), new Quaternionf().rotationX((float) Math.PI / 2));

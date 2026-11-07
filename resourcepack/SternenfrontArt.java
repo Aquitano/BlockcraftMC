@@ -1062,19 +1062,42 @@ public final class SternenfrontArt {
         return new Family("equipment_" + name, 64, false, models);
     }
 
+    /** Each hilt reads by its outline: emitter, grip and pommel differ in width along the hilt, and Dooku's bends. */
     private static Shape hilt(boolean dooku) {
+        return dooku ? sithHilt() : jediHilt();
+    }
+
+    /** A flared, pronged emitter over a narrow neck, a ribbed grip with a stud, and a stepped pommel. */
+    private static Shape jediHilt() {
         var hilt = new Shape()
-                .add(drumY(0, -.08, 0, .07, .25, STEEL))
-                .add(drumY(0, -.22, 0, .09, .04, FRAME))
-                .add(drumY(0, .075, 0, .065, .07, FRAME))
-                .add(drumY(0, .135, 0, .11, .045, STEEL))
-                .add(box(.045, .025, 0, .025, .055, .025, dooku ? RED : BLUE));
-        if (dooku) {
-            hilt.add(box(.035, -.17, 0, .065, .15, .065, STEEL).spinZ(22.5))
-                    .add(box(.07, -.24, 0, .055, .055, .065, FRAME));
-        } else {
-            hilt.add(drumY(0, -.08, 0, .08, .11, FRAME))
-                    .both(box(.035, -.08, 0, .012, .1, .04, STEEL));
+                .add(drumY(0, -.27, 0, .07, .03, FRAME))
+                .add(drumY(0, -.23, 0, .095, .05, STEEL))
+                .add(drumY(0, -.105, 0, .07, .2, STEEL))
+                .add(drumY(0, .03, 0, .06, .07, FRAME))
+                .add(drumY(0, .095, 0, .1, .06, STEEL))
+                .add(drumY(0, .14, 0, .12, .03, STEEL))
+                .both(box(.05, .175, 0, .016, .04, .02, FRAME))
+                .add(box(.036, -.025, 0, .012, .05, .03, TRIM))
+                .add(box(.044, -.025, 0, .012, .022, .018, BLUE));
+        for (int ring = 0; ring < 4; ring++) {
+            hilt.add(drumY(0, -.18 + ring * .037, 0, .082, .014, FRAME));
+        }
+        return hilt;
+    }
+
+    /** A plain emitter ring, a banded grip with a guard plate, then the bent neck down to a heavy pommel. */
+    private static Shape sithHilt() {
+        var hilt = new Shape()
+                .add(drumY(0, .13, 0, .1, .05, FRAME))
+                .add(drumY(0, .098, 0, .11, .014, STEEL))
+                .add(drumY(0, .025, 0, .068, .14, STEEL))
+                .add(box(0, -.05, 0, .085, .02, .075, FRAME))
+                .add(box(.03, -.125, 0, .066, .14, .066, STEEL).spinZ(22.5))
+                .add(box(.062, -.205, 0, .08, .06, .08, FRAME).spinZ(22.5))
+                .add(box(.072, -.24, 0, .06, .02, .06, STEEL).spinZ(22.5))
+                .add(box(.038, .06, 0, .014, .028, .02, RED));
+        for (int band = 0; band < 3; band++) {
+            hilt.add(drumY(0, -.02 + band * .035, 0, .078, .012, FRAME));
         }
         return hilt;
     }
