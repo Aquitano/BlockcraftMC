@@ -29,6 +29,7 @@ public enum SoundCue {
     SABER_WHIRL("saber.whirl"),
     SABER_GUARD("saber.guard"),
     FORCE_PUSH("force.push"),
+    FORCE_PUSH_CHARGE("force.push_charge"),
     FORCE_GRIP("force.grip"),
     FORCE_LIGHTNING("force.lightning"),
     WRIST_ROCKET_LAUNCH("wrist_rocket.launch"),

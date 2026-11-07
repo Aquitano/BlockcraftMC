@@ -29,6 +29,15 @@ public class HeroStancesTest {
     }
 
     @Test
+    public void aPushDrawsTheOffHandBackBeforeThrowingItForward() {
+        var windUp = HeroStances.of(Optional.of(Stance.Still.WIND_UP), -.5f);
+        var cast = HeroStances.of(Optional.of(Stance.Still.CAST), -.5f);
+        assertTrue(windUp.leftLift() > 0);
+        assertTrue(cast.leftLift() < -1.5f);
+        assertEquals(-.5f, windUp.rightLift(), 0);
+    }
+
+    @Test
     public void aFighterWithoutAStanceKeepsItsBodysPose() {
         var rest = HeroStances.of(Optional.empty(), -1.1f);
         assertEquals(new HeroStances.Limbs(-1.1f, 0, -1.1f, 0, 0, 0, 0, 0, 0, 1), rest);

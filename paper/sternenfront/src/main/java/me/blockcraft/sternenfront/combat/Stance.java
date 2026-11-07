@@ -8,6 +8,8 @@ public sealed interface Stance {
         READY,
         /** Both hands on the hilt, the blade across the chest. */
         GUARD,
+        /** The off hand drawn back before a Force push. */
+        WIND_UP,
         /** The off hand thrown forward for a Force power. */
         CAST
     }

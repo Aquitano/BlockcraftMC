@@ -31,6 +31,7 @@ final class HeroStances {
             case Stance.Still still -> switch (still) {
                 case READY -> new Limbs(rest, 0, rest, 0, READY_TILT, 0, 0, 0, 0, EASE);
                 case GUARD -> new Limbs(-1.4f, .5f, -1.3f, -.6f, .1f, .25f, -.8f, .17f, .12f, EASE);
+                case WIND_UP -> new Limbs(rest, 0, .6f, .35f, READY_TILT, 0, 0, 0, 0, EASE);
                 case CAST -> new Limbs(rest, 0, -1.55f, -.1f, READY_TILT, 0, 0, 0, 0, CAST_EASE);
             };
             case Stance.Swing swing -> {

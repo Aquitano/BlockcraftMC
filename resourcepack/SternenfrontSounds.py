@@ -161,6 +161,14 @@ def saber_guard(rng):
     return layer(0.8 * rise * decay(seconds, 9, 0.02), 0.25 * brush)
 
 
+def force_push_charge(rng):
+    seconds = 0.3
+    gather = progress(seconds) ** 1.6
+    air = unit(swept(noise(rng, seconds), 250 + 2200 * gather, 0.9, low=True)) * gather
+    drone = sine(glide(38, 72, seconds)) * swell(seconds, 0.12, 0.03)
+    return 0.75 * air + 0.45 * drone
+
+
 def force_grip(rng):
     seconds = 1.2
     t = time(seconds)
@@ -371,6 +379,7 @@ SOUNDS = {
     "saber.whirl": (0.6, saber_whirl),
     "saber.guard": (0.55, saber_guard),
     "force.push": (0.85, force_push),
+    "force.push_charge": (0.7, force_push_charge),
     "force.grip": (0.75, force_grip),
     "force.lightning": (0.7, force_lightning),
     "wrist_rocket.launch": (0.75, wrist_rocket_launch),

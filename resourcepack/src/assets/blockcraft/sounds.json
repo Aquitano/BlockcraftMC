@@ -490,5 +490,10 @@
     "sounds": [
       "blockcraft:sternenfront/saber_guard"
     ]
+  },
+  "sternenfront.force.push_charge": {
+    "sounds": [
+      "blockcraft:sternenfront/force_push_charge"
+    ]
   }
 }

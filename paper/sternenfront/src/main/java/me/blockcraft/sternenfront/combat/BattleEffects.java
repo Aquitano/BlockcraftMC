@@ -53,6 +53,9 @@ public final class BattleEffects {
     private static final double FORK_MIN = 0.5;
     private static final double FORK_MAX = 1;
     private static final int HAND_SPARKS = 2;
+    private static final int WIND_UP_GUSTS = 2;
+    private static final double WIND_UP_REACH = 0.8;
+    private static final double WIND_UP_SPEED = 0.12;
     private static final Color LIGHTNING_COLOUR = Color.fromRGB(0xA8B4FF);
     private static final Color LIGHTNING_CORE = Color.fromRGB(0xEAF4FF);
     private static final Vector UP = new Vector(0, 1, 0);
@@ -214,6 +217,21 @@ public final class BattleEffects {
         flares.ring(RING, origin.clone().add(normal.clone().multiply(0.6)), normal, normal.clone().multiply(reach),
                 diameter, PUSH_TICKS, PUSH_COLOUR);
         origin.getWorld().spawnParticle(Particle.SMALL_GUST, origin.clone().add(normal.clone().multiply(2)), 3, 0.4, 0.4, 0.4, 0, null, true);
+    }
+
+    /** Air gathering into the palm drawn back for a push. */
+    public void windUp(Player hero, Location palm) {
+        if (!enabled) {
+            return;
+        }
+        var random = ThreadLocalRandom.current();
+        for (int gust = 0; gust < WIND_UP_GUSTS; gust++) {
+            var inward = new Vector(random.nextGaussian(), random.nextGaussian(), random.nextGaussian()).normalize();
+            var from = palm.clone().add(inward.clone().multiply(WIND_UP_REACH));
+            hero.getWorld().getPlayers().stream().filter(viewer -> !viewer.equals(hero) && viewer.getLocation().distanceSquared(palm) < PARTICLE_RANGE_SQUARED)
+                    .forEach(viewer -> viewer.spawnParticle(Particle.CLOUD, from, 0, -inward.getX(), -inward.getY(), -inward.getZ(), WIND_UP_SPEED));
+        }
+        sparingOwner(hero, palm, Particle.DUST, new Particle.DustOptions(PUSH_COLOUR, 0.8f));
     }
 
     public void rally(Location origin, Faction faction, double radius) {

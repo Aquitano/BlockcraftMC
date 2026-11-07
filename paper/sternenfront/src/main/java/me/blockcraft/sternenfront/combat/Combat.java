@@ -158,8 +158,7 @@ public final class Combat {
         if (state.sweep != null) {
             return Optional.of(state.sweep.stance(game.tick()));
         }
-        return Optional.of(state.guarding ? Stance.Still.GUARD
-                : game.heroes().powers().casting(player) ? Stance.Still.CAST : Stance.Still.READY);
+        return Optional.of(state.guarding ? Stance.Still.GUARD : game.heroes().powers().gesture(player).orElse(Stance.Still.READY));
     }
 
     public Guard.Result block(Player player, Vector incoming, double damage) {
