@@ -60,7 +60,7 @@ public final class BedWarsPlugin extends JavaPlugin {
         services.commands(commands -> {
             commands.register(StartCommand.of(game.lobbyCountdown()).build());
             commands.register(ForceMapCommand.create(messages, game::playableMaps, game::mapForceable, game::forceMap));
-            commands.register(BedWarsSetup.create(pool, arenas, layout, config.teams(), messages));
+            commands.register(BedWarsSetup.create(pool, arenas, layout, config.teams(), messages, game::playsOn));
         });
 
         game.open();

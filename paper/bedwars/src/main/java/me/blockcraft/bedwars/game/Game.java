@@ -253,6 +253,11 @@ public final class Game implements RoundConnections.Seating {
         return placed;
     }
 
+    /** Whether a round was started on the map {@code key}; its world keeps what players built until the restart. */
+    public boolean playsOn(String key) {
+        return match != null && match.map().key().equals(key);
+    }
+
     public Optional<Border> border() {
         return Optional.ofNullable(match).map(Match::border);
     }
@@ -594,10 +599,10 @@ public final class Game implements RoundConnections.Seating {
         scoreboard.refreshAll();
     }
 
-    /** Close enough to a standing bed that a cobweb there stays and costs no wait. */
-    public boolean guardsBed(Location location, double maxDistanceSquared) {
-        return teams.all().stream().flatMap(team -> team.bed().stream())
-                .anyMatch(bed -> bed.isStanding() && bed.distanceSquared(location) < maxDistanceSquared);
+    /** Close enough to the placer's own standing bed that a cobweb there stays and costs no wait. */
+    public boolean guardsBed(Player placer, Location location, double maxDistanceSquared) {
+        return teams.of(placer).flatMap(Team::bed)
+                .filter(bed -> bed.isStanding() && bed.distanceSquared(location) < maxDistanceSquared).isPresent();
     }
 
     /** The spawn block of a team that can still respawn, or the block right above it. */
@@ -635,7 +640,14 @@ public final class Game implements RoundConnections.Seating {
         }
         winner = won;
         won.ifPresent(team -> roster.entrySet().stream().filter(entry -> entry.getValue() == team)
-                .map(entry -> Bukkit.getPlayer(entry.getKey())).filter(Objects::nonNull).forEach(summary::awardWin));
+                .map(Map.Entry::getKey).forEach(id -> {
+                    var online = Bukkit.getPlayer(id);
+                    if (online != null) {
+                        summary.awardWin(online);
+                    } else {
+                        summary.awardWin(id);
+                    }
+                }));
         match.stop();
         specials.clear();
         chests.clear();

@@ -27,7 +27,8 @@ its pool. A map is in the vote once nothing is missing for the teams `config.yml
 
 Opening a map for editing keeps its loaded dimension out of votes and forced choices. Save the changes you want to keep,
 then restart the backend to use that map in rounds. Editing a chosen map before the round starts cancels that start
-instead of replacing files beneath the loaded world.
+instead of replacing files beneath the loaded world. The map a round was started on can be neither opened nor saved until
+the restart, since its world holds the players' blocks.
 
 ## Which maps are in the vote
 

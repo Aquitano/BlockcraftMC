@@ -19,8 +19,8 @@ import java.util.function.Function;
 
 /**
  * Home by rocket: under open sky the player counts down a few seconds without moving off their block, then shoots
- * up and lands on the team's spawn once they are high enough. Leaving the block, losing the item or a roof above
- * cancels it.
+ * up and lands on the team's spawn once they are high enough, or when the flight runs out. Leaving the block, losing
+ * the item or a roof above cancels the countdown.
  */
 final class Teleporter {
 
@@ -113,8 +113,12 @@ final class Teleporter {
         int launchHeight = player.getLocation().getBlockY();
         long[] ticks = {0};
         var task = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
-            if (!player.isOnline() || ++ticks[0] > MAX_FLIGHT_TICKS) {
+            if (!player.isOnline()) {
                 forget(player);
+                return;
+            }
+            if (++ticks[0] > MAX_FLIGHT_TICKS) {
+                land(player);
                 return;
             }
             player.setVelocity(LAUNCH);

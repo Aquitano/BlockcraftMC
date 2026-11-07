@@ -33,6 +33,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.BiFunction;
+import java.util.function.Predicate;
 
 /**
  * BedWars' /setup: places what a BedWars map needs. The lobby's spots are stored in its {@code lobby.yml} and
@@ -51,18 +52,22 @@ public final class BedWarsSetup {
     private final LobbyLayout layout;
     private final List<TeamColor> teams;
     private final Messages messages;
+    private final Predicate<String> live;
 
-    private BedWarsSetup(MapPool pool, TemplateDimensions arenas, LobbyLayout layout, List<TeamColor> teams, Messages messages) {
+    private BedWarsSetup(MapPool pool, TemplateDimensions arenas, LobbyLayout layout, List<TeamColor> teams, Messages messages,
+                         Predicate<String> live) {
         this.pool = pool;
         this.arenas = arenas;
         this.layout = layout;
         this.teams = teams;
         this.messages = messages;
+        this.live = live;
     }
 
+    /** {@code live} names the map a round was started on, whose world holds players' blocks and is not edited. */
     public static LiteralCommandNode<CommandSourceStack> create(MapPool pool, TemplateDimensions arenas, LobbyLayout layout,
-                                                                List<TeamColor> teams, Messages messages) {
-        return new BedWarsSetup(pool, arenas, layout, teams, messages).tree();
+                                                                List<TeamColor> teams, Messages messages, Predicate<String> live) {
+        return new BedWarsSetup(pool, arenas, layout, teams, messages, live).tree();
     }
 
     private LiteralCommandNode<CommandSourceStack> tree() {
@@ -150,6 +155,10 @@ public final class BedWarsSetup {
             player.sendMessage(messages.get("setup.invalid-key"));
             return Command.SINGLE_SUCCESS;
         }
+        if (live.test(key)) {
+            player.sendMessage(messages.get("setup.live", Placeholder.unparsed("map", key)));
+            return Command.SINGLE_SUCCESS;
+        }
         var map = pool.map(key).orElseGet(() -> {
             var created = ArenaMap.empty(key);
             pool.save(created);
@@ -165,6 +174,10 @@ public final class BedWarsSetup {
     }
 
     private int save(Player player, String key) {
+        if (live.test(key)) {
+            player.sendMessage(messages.get("setup.live", Placeholder.unparsed("map", key)));
+            return Command.SINGLE_SUCCESS;
+        }
         var world = arenas.loaded(key);
         if (world.isEmpty()) {
             player.sendMessage(messages.get("setup.not-loaded"));

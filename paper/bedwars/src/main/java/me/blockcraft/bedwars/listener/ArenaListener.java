@@ -23,6 +23,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
@@ -74,10 +75,10 @@ public final class ArenaListener implements Listener {
     @EventHandler(ignoreCancelled = true)
     public void onWeb(BlockPlaceEvent event) {
         var block = event.getBlockPlaced();
-        if (!inRound() || block.getType() != Material.COBWEB || game.guardsBed(block.getLocation(), BED_GUARD_SQUARED)) {
+        var player = event.getPlayer();
+        if (!inRound() || block.getType() != Material.COBWEB || game.guardsBed(player, block.getLocation(), BED_GUARD_SQUARED)) {
             return;
         }
-        var player = event.getPlayer();
         long now = System.currentTimeMillis();
         long last = lastWeb.getOrDefault(player.getUniqueId(), 0L);
         if (now - last < config.webCooldownSeconds() * 1000L) {
@@ -132,13 +133,23 @@ public final class ArenaListener implements Listener {
         }
     }
 
-    /** A block players placed drops as the shop's item again, so that it stacks with what they bought. */
+    /**
+     * A block players placed drops as the shop's item again, so that it stacks with what they bought; one that drops
+     * something else, as glowstone drops dust, drops the bought block instead.
+     */
     @EventHandler(ignoreCancelled = true)
     public void onDrop(BlockDropItemEvent event) {
         if (!inRound()) {
             return;
         }
-        for (var item : event.getItems()) {
+        var broken = event.getBlockState().getType();
+        var items = event.getItems();
+        if (!items.isEmpty() && items.stream().noneMatch(item -> item.getItemStack().getType() == broken)
+                && game.shop().catalog().plainBlock(broken).isPresent()) {
+            items.subList(1, items.size()).clear();
+            items.getFirst().setItemStack(ItemStack.of(broken));
+        }
+        for (var item : items) {
             var stack = item.getItemStack();
             game.shop().catalog().plainBlock(stack.getType())
                     .ifPresent(offer -> item.setItemStack(game.shop().item(event.getPlayer(), offer).asQuantity(stack.getAmount())));
