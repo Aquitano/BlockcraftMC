@@ -41,8 +41,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
-import java.util.EnumMap;
 import java.util.Comparator;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -681,8 +681,7 @@ public final class Bots implements Listener {
     private Fireteam.Place place(Soldier leader, Soldier member, FrontMap.PostSite post) {
         var settings = config.squad();
         return Fireteam.place(leader.body.getLocation().toVector(), member.body.getLocation().toVector(), post.center().toVector(),
-                settings.spacing(),
-                settings.regroupDistance(), settings.catchUpDistance());
+                settings.spacing(), settings.regroupDistance(), settings.catchUpDistance());
     }
 
     /** {@code squad} holds only the members near the leader; anyone further is still on the way and fights alone. */
@@ -848,7 +847,8 @@ public final class Bots implements Listener {
                 .or(() -> underFire ? Optional.of(team.threat.clone().add(0, 1.6, 0)) : Optional.empty());
         boolean teamFallsBack = team != null && post != null && tick < team.fallBackUntil && withTeam && !flanking;
         var fallBack = defending && odds(soldier.faction, post.center()).outnumbered() ? Optional.of(route.retreat())
-                : teamFallsBack ? threat.flatMap(enemy -> retreat(soldier, here, post, enemy)) : Optional.<Location>empty();
+                : teamFallsBack ? threat.or(() -> Optional.ofNullable(team.threat)).flatMap(enemy -> retreat(soldier, here, post, enemy))
+                : Optional.<Location>empty();
         boolean exposed = advancing || team != null && team.assaulting;
         var protectedPosition = threat.filter(enemy -> fallBack.isEmpty() && (!exposed || wounded || soldier.heat.venting(tick)))
                 .flatMap(enemy -> cover(soldier, enemy, tick));
