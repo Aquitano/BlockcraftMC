@@ -2,6 +2,7 @@ package me.blockcraft.sternenfront.bot;
 
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.ItemAttributeModifiers;
+import me.blockcraft.api.game.ShotEvent;
 import me.blockcraft.api.replay.RecordedModel;
 import me.blockcraft.sternenfront.appearance.BodyRigs;
 import me.blockcraft.sternenfront.arena.FrontMap;
@@ -118,6 +119,8 @@ public final class Bots implements Listener {
         private long coverPhaseUntil;
         private boolean peeking;
         private long voiceAt;
+        private Location heard;
+        private long heardUntil;
         private final BotRecovery recovery = new BotRecovery();
 
         private Soldier(int number, Faction faction, CombatClass role) {
@@ -380,6 +383,8 @@ public final class Bots implements Listener {
         soldier.coverPhaseUntil = 0;
         soldier.peeking = false;
         soldier.voiceAt = tick;
+        soldier.heard = null;
+        soldier.heardUntil = 0;
         soldier.recovery.clear();
         bodies.put(mob.getUniqueId(), soldier);
         identities.put(mob.getUniqueId(), soldier.faction);
@@ -449,8 +454,10 @@ public final class Bots implements Listener {
                 var movement = mob.getVelocity().setY(0);
                 soldier.moving = BotAim.moving(soldier.moving, movement);
                 var team = soldier.team;
-                if (team != null && team.threat != null && soldier.guarding < 0) {
-                    var toward = team.threat.clone().add(0, 1, 0).toVector().subtract(mob.getEyeLocation().toVector());
+                var alert = team != null && team.threat != null && soldier.guarding < 0 ? team.threat
+                        : tick < soldier.heardUntil ? soldier.heard : null;
+                if (alert != null) {
+                    var toward = alert.clone().add(0, 1, 0).toVector().subtract(mob.getEyeLocation().toVector());
                     if (toward.lengthSquared() > 0.01) {
                         soldier.idleAim = toward;
                     }
@@ -645,7 +652,8 @@ public final class Bots implements Listener {
     /** {@code squad} holds only the members near the leader; anyone further is still on the way and fights alone. */
     private void contact(Fireteam team, List<Soldier> squad, long tick) {
         team.threat = squad.stream().filter(soldier -> remembering(soldier, tick))
-                .max(Comparator.comparingLong(soldier -> soldier.seenUntil)).map(soldier -> soldier.lastSeen.clone()).orElse(null);
+                .max(Comparator.comparingLong(soldier -> soldier.seenUntil)).map(soldier -> soldier.lastSeen.clone())
+                .orElse(tick < team.alarmUntil ? team.alarm : null);
         if (team.threat == null) {
             team.contactSince = -1;
         } else if (team.contactSince < 0) {
@@ -1190,6 +1198,42 @@ public final class Bots implements Listener {
         var killer = event.getDamageSource().getCausingEntity() instanceof Player player
                 ? Optional.of(player) : Optional.<Player>empty();
         game.botDied(event.getEntity(), soldier.faction, killer, config.killPoints());
+        if (soldier.team != null && soldier.guarding < 0 && event.getDamageSource().getCausingEntity() instanceof LivingEntity enemy
+                && game.hittable(soldier.faction, enemy)) {
+            alarm(soldier.team, event.getEntity().getLocation(), enemy.getLocation());
+        }
+    }
+
+    /** Teammates close enough to have seen it turn on where the killer stood, and the nearest of them calls it. */
+    private void alarm(Fireteam team, Location fallen, Location killer) {
+        long tick = game.tick();
+        double reach = config.squad().catchUpDistance();
+        members(team).stream().filter(Bots::deployed).filter(other -> other.guarding < 0)
+                .filter(other -> other.body.getWorld().equals(fallen.getWorld()) && other.body.getLocation().distanceSquared(fallen) <= reach * reach)
+                .min(Comparator.comparingDouble(other -> other.body.getLocation().distanceSquared(fallen)))
+                .ifPresent(nearest -> {
+                    team.alarm = killer.clone();
+                    team.alarmUntil = tick + config.alarmTicks();
+                    call(nearest, "contact", tick);
+                });
+    }
+
+    @EventHandler
+    public void onShot(ShotEvent event) {
+        var shooter = event.shooter();
+        var faction = game.factionOf(shooter);
+        if (faction.isEmpty()) {
+            return;
+        }
+        var at = shooter.getLocation();
+        double range = config.hearingRange();
+        long tick = game.tick();
+        soldiers.stream().filter(Bots::deployed).filter(soldier -> soldier.faction != faction.get())
+                .filter(soldier -> soldier.body.getWorld().equals(at.getWorld()) && soldier.body.getLocation().distanceSquared(at) <= range * range)
+                .forEach(soldier -> {
+                    soldier.heard = at;
+                    soldier.heardUntil = tick + config.alarmTicks();
+                });
     }
 
     private void remove(Soldier soldier) {

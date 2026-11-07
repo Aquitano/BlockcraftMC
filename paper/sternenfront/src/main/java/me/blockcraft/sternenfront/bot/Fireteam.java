@@ -24,6 +24,9 @@ final class Fireteam {
     /** Where the team last knew an enemy to be while any member still remembers one. */
     Location threat;
     long contactSince = -1;
+    /** Where a member's killer stood, which the team treats as contact until {@code alarmUntil}. */
+    Location alarm;
+    long alarmUntil;
     int flanker = -1;
     long fallBackUntil;
     final Bounding bounding = new Bounding();

@@ -24,6 +24,10 @@ bots:
   sight-range: 32
   vision-angle: 120
   memory-ticks: 40
+  # A bot turns toward enemy gunfire within hearing-range blocks, and a fireteam that loses a member treats where the
+  # killer stood as contact, for alarm-ticks each.
+  hearing-range: 24
+  alarm-ticks: 100
   idle-turn-degrees: 12
   step-height: 1
   boundary-grace-ticks: 40
