@@ -8,6 +8,7 @@ import me.blockcraft.api.ranked.RankedMatchEvent;
 import me.blockcraft.api.vanish.VanishChangeEvent;
 import me.blockcraft.duell.game.Duel;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -72,7 +73,7 @@ public final class ConnectionListener implements Listener {
         duel.refreshScoreboards();
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onVanishChange(VanishChangeEvent event) {
         duel.vanishChanged(event.getPlayer(), event.isVanished());
     }

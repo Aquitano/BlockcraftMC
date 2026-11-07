@@ -371,6 +371,9 @@ public final class Duel {
         if (isLobby()) {
             if (vanished) {
                 votes.withdraw(player.getUniqueId());
+                if (isParticipant(player)) {
+                    participants().map(Player::getUniqueId).forEach(votes::withdraw);
+                }
             }
             Tasks.sync(plugin, this::updateLobby);
         }
@@ -387,6 +390,9 @@ public final class Duel {
     public void quit(Player player) {
         boolean left = round.leave(player);
         votes.withdraw(player.getUniqueId());
+        if (left && isLobby()) {
+            participants().map(Player::getUniqueId).forEach(votes::withdraw);
+        }
         rankedOpponents.remove(player.getUniqueId());
         if (left && isIngame() && series != null) {
             closeGame();
