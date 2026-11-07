@@ -16,6 +16,7 @@ import me.blockcraft.sternenfront.game.Faction;
 import me.blockcraft.sternenfront.game.Heat;
 import me.blockcraft.sternenfront.game.Loadouts;
 import me.blockcraft.sternenfront.game.SternenfrontGame;
+import me.blockcraft.sternenfront.game.WeaponHandling;
 import me.blockcraft.sternenfront.hero.Sabers;
 import me.blockcraft.sternenfront.hero.Hero;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
@@ -160,6 +161,7 @@ public final class Bots implements Listener {
 
     private final SternenfrontGame game;
     private final BotConfig config;
+    private final WeaponHandling handling;
     private final List<Soldier> soldiers = new ArrayList<>();
     private final Map<UUID, Soldier> bodies = new HashMap<>();
     private final Map<UUID, Faction> identities = new HashMap<>();
@@ -173,6 +175,7 @@ public final class Bots implements Listener {
     public Bots(SternenfrontGame game, BotConfig config) {
         this.game = game;
         this.config = config;
+        handling = WeaponHandling.from(game.plugin().getConfig().getConfigurationSection("combat.handling"));
         tuning = config.profiles().get(config.difficulty());
         Bukkit.getPluginManager().registerEvents(this, game.plugin());
     }
@@ -1271,8 +1274,8 @@ public final class Bots implements Listener {
             var blaster = soldier.role.blaster(soldier.faction);
             var aim = soldier.aim.clone();
             var random = ThreadLocalRandom.current();
-            double spread = Math.max(tuning.spread(), game.config().stats(blaster).spread())
-                    * (soldier.body.getVelocity().lengthSquared() > 0.005 ? 1.5 : 1)
+            double spread = handling.spread(Math.max(tuning.spread(), game.config().stats(blaster).spread()),
+                    BotAim.moving(false, soldier.body.getVelocity()), false, soldier.heat.level())
                     * (sighted ? BotAim.settle(tick - soldier.acquiredAt, tuning.settleTicks(), tuning.settleSpread()) : SUPPRESSING_SPREAD);
             if (spread > 0) {
                 aim.add(new Vector(random.nextDouble(-spread, spread), random.nextDouble(-spread, spread),
