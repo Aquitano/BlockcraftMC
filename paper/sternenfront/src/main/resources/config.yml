@@ -125,7 +125,7 @@ combat:
   melee: {range: 3.5, angle: 120, swing-ticks: 12, sweep-ticks: 4}
   # Spread multiplies while moving and crouched, and grows by hot times the barrel's heat. Damage holds to falloff-from
   # of a weapon's range, then thins to falloff-minimum of itself at the end of it.
-  handling: {moving: 1.7, crouched: 0.6, hot: 1, falloff-from: 0.5, falloff-minimum: 0.6}
+  handling: {moving: 1.4, crouched: 0.6, hot: 0.5, falloff-from: 0.5, falloff-minimum: 0.6}
 speeders:
   enabled: true
   health: 60
