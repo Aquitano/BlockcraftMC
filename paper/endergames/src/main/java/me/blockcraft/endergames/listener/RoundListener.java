@@ -80,6 +80,9 @@ public final class RoundListener implements Listener {
             return;
         }
         var player = event.getPlayer();
+        if (game.frozen() && game.isPlaying(player)) {
+            return;
+        }
         var block = event.getClickedBlock();
         if (event.getAction() == Action.RIGHT_CLICK_BLOCK && block != null && block.getType() == Material.ENDER_CHEST
                 && game.world().contains(block.getWorld())) {

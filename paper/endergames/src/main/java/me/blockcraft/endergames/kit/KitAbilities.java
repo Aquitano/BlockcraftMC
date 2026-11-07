@@ -16,6 +16,7 @@ import org.bukkit.damage.DamageType;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.AbstractArrow;
 import org.bukkit.entity.Animals;
+import org.bukkit.entity.Fish;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
@@ -231,7 +232,7 @@ public final class KitAbilities implements Listener {
                 killer.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, numbers.berserkerSeconds() * TICKS, amplifier));
             }
             case JAEGER -> {
-                if (dead instanceof Animals) {
+                if (dead instanceof Animals || dead instanceof Fish) {
                     event.getDrops().replaceAll(drop -> drop.withType(Cooking.cooked(drop.getType())));
                 }
             }
