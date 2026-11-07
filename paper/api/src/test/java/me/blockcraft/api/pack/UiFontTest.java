@@ -53,6 +53,28 @@ public class UiFontTest {
         }
     }
 
+    /** The client centres a subtitle by its measured width, so marks laid over the crosshair must take no room at all. */
+    @Test
+    public void crosshairMarksLeaveTheCursorWhereTheyFoundIt() throws IOException {
+        var fonts = Map.of(UiFont.KEY, fontAdvances("ui"));
+        for (int first : new int[] {0xE228, 0xE23A, 0xE250}) {
+            for (char glyph = (char) first; fonts.get(UiFont.KEY).containsKey((int) glyph); glyph++) {
+                assertEquals(Integer.toHexString(glyph), 0, width(UiFont.centredBehind(glyph), null, fonts));
+            }
+        }
+    }
+
+    @Test
+    public void aMarkBesideALineStartsAtTheLinesMiddleAndTakesNoRoom() throws IOException {
+        var fonts = Map.of(UiFont.KEY, fontAdvances("ui"));
+        var line = Component.text("Posten A gesichert");
+        var joined = UiFont.centredOn(line, UiFont.centredBehind('\uE250'));
+        var parts = joined.children();
+        assertEquals(96 / 2, width(parts.getFirst(), null, fonts));
+        assertEquals(0, width(Component.empty().append(parts.get(0)).append(parts.get(1)).append(parts.get(2)), null, fonts));
+        assertEquals(line, parts.getLast());
+    }
+
     private static int width(Component component, Key inherited, Map<Key, Map<Integer, Integer>> fonts) {
         Key font = component.font() == null ? inherited : component.font();
         int width = 0;

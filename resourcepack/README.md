@@ -17,6 +17,10 @@ screen effects, and the Sternenfront intro.
   item. `item_model` set for one viewer is only for menus, which nobody else sees.
 - **Title lettering.** `<display>` is only for titles, because `Notifications` turns it into bold text for a client
   without the pack. At title scale about thirteen letters fit a 1366x768 screen.
+- **Crosshair marks.** The client centres a subtitle by the advances it measures from each glyph's last inked column, and
+  draws a font pixel there two GUI pixels wide. `HudArt` therefore draws the marks, arcs and spread ticks at twice the
+  resolution, centred between the middle texels, with a nearly clear texel in each cell's last column; `UiFontTest`
+  checks that each still takes no room.
 - **Sounds.** World sounds must be mono, because the client places only mono sounds in the world. Each script replaces
   only its own entries in `sounds.json`.
 - **Portraits.** `SternenfrontArt.java` renders the role cards into `resourcepack/art/sternenfront` from the class

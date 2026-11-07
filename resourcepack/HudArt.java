@@ -3,7 +3,9 @@ import java.awt.AlphaComposite;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
+import java.awt.RenderingHints;
 import java.awt.geom.Arc2D;
+import java.awt.geom.Path2D;
 import java.awt.image.BufferedImage;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -34,12 +36,45 @@ public final class HudArt {
             }
             if (mark == 1) {
                 g.setColor(new Color(0x90000000, true));
-                g.fillPolygon(new int[] {middle, middle + 3, middle, middle - 3}, new int[] {0, 3, 6, 3}, 4);
+                g.fill(diamond(middle + 0.5, 3, 3));
                 g.setColor(colours[mark]);
-                g.fillPolygon(new int[] {middle, middle + 2, middle, middle - 2}, new int[] {1, 3, 5, 3}, 4);
+                g.fill(diamond(middle + 0.5, 3, 2));
             }
         }
         g.dispose();
+        return image;
+    }
+
+    private static Path2D diamond(double x, double y, double radius) {
+        var path = new Path2D.Double();
+        path.moveTo(x, y - radius);
+        path.lineTo(x + radius, y);
+        path.lineTo(x, y + radius);
+        path.lineTo(x - radius, y);
+        path.closePath();
+        return path;
+    }
+
+    /**
+     * The 32-pixel {@code art}, whose cells are centred on their middle pixel or, if not {@code aroundAPixel}, between the
+     * middle four, redrawn at twice the resolution for a font height of 32 and centred between the middle texels.
+     * The subtitle draws a font pixel two GUI pixels wide, so only half-pixel texels can centre the art on the title's
+     * origin, the point the vanilla crosshair's middle pixel touches whatever the GUI size. The client measures a glyph's
+     * advance up to its last inked column; a nearly clear texel in the last one makes every cell advance 33, which
+     * {@code UiFont.centredBehind} expects, and the text shader discards it.
+     */
+    private static BufferedImage onTheCrosshair(BufferedImage art, boolean aroundAPixel) {
+        var image = new BufferedImage(art.getWidth() * 2, art.getHeight() * 2, BufferedImage.TYPE_INT_ARGB);
+        int offset = aroundAPixel ? -1 : 0;
+        var g = image.createGraphics();
+        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+        g.drawImage(art, offset, offset, image.getWidth(), image.getHeight(), null);
+        g.dispose();
+        for (int x = 63; x < image.getWidth(); x += 64) {
+            if ((image.getRGB(x, 63) >>> 24) == 0) {
+                image.setRGB(x, 63, 0x01000000);
+            }
+        }
         return image;
     }
 
@@ -141,11 +176,11 @@ public final class HudArt {
             g.draw(arc);
         }
         g.dispose();
-        ImageIO.write(arcs, "PNG", root.resolve("damage_arcs.png").toFile());
+        ImageIO.write(onTheCrosshair(arcs, false), "PNG", root.resolve("damage_arcs.png").toFile());
         ImageIO.write(objectivePips(), "PNG", root.resolve("objective_pips.png").toFile());
         postMarkers(root.getParent().getParent());
-        ImageIO.write(crosshairMarks(), "PNG", root.resolve("crosshair_marks.png").toFile());
-        ImageIO.write(spreadTicks(), "PNG", root.resolve("spread_ticks.png").toFile());
+        ImageIO.write(onTheCrosshair(crosshairMarks(), true), "PNG", root.resolve("crosshair_marks.png").toFile());
+        ImageIO.write(onTheCrosshair(spreadTicks(), true), "PNG", root.resolve("spread_ticks.png").toFile());
         var hidden = new BufferedImage(182, 5, BufferedImage.TYPE_INT_ARGB);
         var sprites = root.getParent().getParent().getParent().resolve("minecraft/textures/gui/sprites/boss_bar");
         Files.createDirectories(sprites);
