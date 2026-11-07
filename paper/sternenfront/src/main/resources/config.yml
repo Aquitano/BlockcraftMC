@@ -432,7 +432,7 @@ combat-feedback:
   hero-ready-ticks: 60
   elite-ready-ticks: 60
   multikill-seconds: 4
-  sound: {hit: 1.0, headshot: 1.0, kill: 0.9}
+  sound: {hit: 1.0, headshot: 1.0, kill: 1.0}
 
 intro:
   enabled: true
