@@ -33,6 +33,20 @@
         }
       },
       {
+        "when": "blockcraft:sternenfront/pistol_lowered",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/sternenfront/pistol_lowered",
+          "tints": [
+            {
+              "type": "minecraft:custom_model_data",
+              "index": 0,
+              "default": -1
+            }
+          ]
+        }
+      },
+      {
         "when": "blockcraft:sternenfront/se14",
         "model": {
           "type": "minecraft:model",
@@ -51,6 +65,20 @@
         "model": {
           "type": "minecraft:model",
           "model": "blockcraft:item/sternenfront/se14_firing",
+          "tints": [
+            {
+              "type": "minecraft:custom_model_data",
+              "index": 0,
+              "default": -1
+            }
+          ]
+        }
+      },
+      {
+        "when": "blockcraft:sternenfront/se14_lowered",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/sternenfront/se14_lowered",
           "tints": [
             {
               "type": "minecraft:custom_model_data",

@@ -40,6 +40,20 @@
         }
       },
       {
+        "when": "blockcraft:sternenfront/carbine_lowered",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/sternenfront/carbine_lowered",
+          "tints": [
+            {
+              "type": "minecraft:custom_model_data",
+              "index": 0,
+              "default": -1
+            }
+          ]
+        }
+      },
+      {
         "when": "blockcraft:sternenfront/e5",
         "model": {
           "type": "minecraft:model",
@@ -58,6 +72,20 @@
         "model": {
           "type": "minecraft:model",
           "model": "blockcraft:item/sternenfront/e5_firing",
+          "tints": [
+            {
+              "type": "minecraft:custom_model_data",
+              "index": 0,
+              "default": -1
+            }
+          ]
+        }
+      },
+      {
+        "when": "blockcraft:sternenfront/e5_lowered",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/sternenfront/e5_lowered",
           "tints": [
             {
               "type": "minecraft:custom_model_data",

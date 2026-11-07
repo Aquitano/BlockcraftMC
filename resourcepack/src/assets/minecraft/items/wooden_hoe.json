@@ -33,6 +33,20 @@
         }
       },
       {
+        "when": "blockcraft:sternenfront/heavy_rifle_lowered",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/sternenfront/heavy_rifle_lowered",
+          "tints": [
+            {
+              "type": "minecraft:custom_model_data",
+              "index": 0,
+              "default": -1
+            }
+          ]
+        }
+      },
+      {
         "when": "blockcraft:zombies/pistol",
         "model": {
           "type": "minecraft:model",

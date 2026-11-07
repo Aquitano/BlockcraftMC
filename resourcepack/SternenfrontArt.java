@@ -931,6 +931,9 @@ public final class SternenfrontArt {
               "ground":{"translation":[0,3,0],"scale":[0.4,0.4,0.4]},
               "fixed":{"rotation":[0,90,0],"translation":[-0.9,1.5,0],"scale":[0.55,0.55,0.55]}}
             """;
+    /** How the hands hold a gun: at rest, kicked back by a shot, or lowered across the body in a sprint. */
+    private enum Hold { REST, FIRING, LOWERED }
+
     private enum GunPose {
         CARBINE(-2, -4, 0, .7, 1.25, -.4, .55, 4, .15, .85),
         HEAVY_RIFLE(-1, -3, 0, .4, .8, -.8, .57, 5, .1, 1.05),
@@ -939,6 +942,9 @@ public final class SternenfrontArt {
         TWIN_PISTOL(-3, -8, -12, 2.5, 1.35, .1, .62, 10, .4, .65),
         ROTARY(3, -7, 3, -.4, -.7, -1.2, .66, 5, .3, 1),
         WRIST(0, -3, 0, .8, .2, -.3, .7, 1.5, .05, .3);
+
+        private static final double LOWER_PITCH = 30, LOWER_YAW = 22, LOWER_ROLL = 12, LOWER_INWARD = .5, LOWER_DROP = 2.2,
+                LOWER_BACK = .8;
 
         private final double pitch, yaw, roll, x, y, z, scale, kick, rise, back;
 
@@ -956,19 +962,23 @@ public final class SternenfrontArt {
             this.back = back;
         }
 
-        String hands(boolean firing) {
+        String hands(Hold hold) {
+            boolean firing = hold == Hold.FIRING;
+            boolean lowered = hold == Hold.LOWERED;
             // Vanilla mirrors X translation, yaw and roll for the left hand during rendering.
             String pose = String.format(Locale.ROOT,
                     "{\"rotation\":[%s,%s,%s],\"translation\":[%s,%s,%s],\"scale\":[%s,%s,%s]}",
-                    pitch + (firing ? kick : 0), 180 + yaw, roll, x,
-                    y + (firing ? rise : 0), z + (firing ? back : 0), scale, scale, scale);
+                    pitch + (firing ? kick : lowered ? -LOWER_PITCH : 0), 180 + yaw - (lowered ? LOWER_YAW : 0),
+                    roll + (lowered ? LOWER_ROLL : 0), x - (lowered ? LOWER_INWARD : 0),
+                    y + (firing ? rise : lowered ? -LOWER_DROP : 0), z + (firing ? back : lowered ? LOWER_BACK : 0),
+                    scale, scale, scale);
             return "\"firstperson_righthand\":" + pose + ",\"firstperson_lefthand\":" + pose;
         }
     }
 
     private static Family gun(String name, Shape shape, GunPose pose) {
         return new Family("equipment_" + name, 64, false, List.of(
-                new Model("sternenfront/" + name, shape, GUN_DISPLAY.formatted(pose.hands(false)), pose)));
+                new Model("sternenfront/" + name, shape, GUN_DISPLAY.formatted(pose.hands(Hold.REST)), pose)));
     }
 
     private static final String SABER_DISPLAY = """
@@ -1732,12 +1742,13 @@ public final class SternenfrontArt {
         for (var family : equipment) {
             write(root, family);
         }
-        var firing = equipment.stream().flatMap(family -> family.models.stream())
+        var holds = equipment.stream().flatMap(family -> family.models.stream())
                 .filter(model -> model.gunPose != null)
-                .map(model -> "\"" + model.path + "\": {" + model.gunPose.hands(true) + "}")
+                .map(model -> "\"" + model.path + "\": {\"firing\": {" + model.gunPose.hands(Hold.FIRING)
+                        + "}, \"lowered\": {" + model.gunPose.hands(Hold.LOWERED) + "}}")
                 .collect(Collectors.joining(",\n"));
-        var manifest = Path.of("build/sternenfront/firing-poses.json");
+        var manifest = Path.of("build/sternenfront/gun-poses.json");
         Files.createDirectories(manifest.getParent());
-        Files.writeString(manifest, "{\n" + firing + "\n}\n");
+        Files.writeString(manifest, "{\n" + holds + "\n}\n");
     }
 }

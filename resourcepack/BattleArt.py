@@ -1,4 +1,4 @@
-"""Builds command-post projectors, Republic and Separatist holograms, shield grids and firing poses."""
+"""Builds command-post projectors, Republic and Separatist holograms, shield grids and the guns' firing and lowered poses."""
 import json
 import math
 import struct
@@ -100,11 +100,12 @@ def generate():
                   box([6, 3, 1.5], [9, 3.6, 1.7], "body"),
                   box([10.5, 2, 13.9], [12, 4, 14.3], "body")])
     model("projector", parts, textures)
-    poses = json.loads((Path(__file__).parent / "build/sternenfront/firing-poses.json").read_text())
-    for model_path, display in poses.items():
-        write(ROOT / f"models/item/{model_path}_firing.json",
-              {"parent": f"blockcraft:item/{model_path}", "display": display})
-    print("Generated battle projectors, Clone Wars faction emblems, shield grids and firing poses")
+    poses = json.loads((Path(__file__).parent / "build/sternenfront/gun-poses.json").read_text())
+    for model_path, holds in poses.items():
+        for hold, display in holds.items():
+            write(ROOT / f"models/item/{model_path}_{hold}.json",
+                  {"parent": f"blockcraft:item/{model_path}", "display": display})
+    print("Generated battle projectors, Clone Wars faction emblems, shield grids, firing and lowered poses")
 
 
 if __name__ == "__main__":
