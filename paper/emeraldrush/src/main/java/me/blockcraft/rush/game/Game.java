@@ -63,6 +63,7 @@ public final class Game implements RoundConnections.Seating {
     private static final int SECONDS_PER_MINUTE = 60;
     private static final long RESPAWN_DELAY_TICKS = 1L;
     private static final int RESPAWN_BOOST_TICKS = 120;
+    private static final int SKIP_TO_SECONDS = 10;
 
     private final Plugin plugin;
     private final RushConfig config;
@@ -224,13 +225,13 @@ public final class Game implements RoundConnections.Seating {
 
     public void skipSearch() {
         if (phase == GamePhase.SEARCH) {
-            clock.remaining(10);
+            clock.remaining(Math.min(clock.remaining(), SKIP_TO_SECONDS));
         }
     }
 
     public void skipShopping() {
         if (phase == GamePhase.SHOPPING) {
-            clock.remaining(10);
+            clock.remaining(Math.min(clock.remaining(), SKIP_TO_SECONDS));
         }
     }
 
