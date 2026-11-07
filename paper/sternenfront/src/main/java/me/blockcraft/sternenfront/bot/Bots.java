@@ -57,6 +57,8 @@ public final class Bots implements Listener {
     private static final double TRAIL_STEP = 1.5;
     private static final double ASSAULT_REACH = 4;
     private static final double SUPPRESSING_SPREAD = 2.5;
+    private static final double[] SECTORS = {0, 50, -50, 150};
+    private static final int GUARD_SHIFT_TICKS = 300;
     private static final double PEEK_REACH = 3;
     private static final double WOUNDED_SHARE = 0.3;
     /**
@@ -82,6 +84,10 @@ public final class Bots implements Listener {
         private boolean boundDone;
         private Location boundFrom;
         private Location suppress;
+        private long acquiredAt;
+        private double glanceYaw;
+        private long glanceAt;
+        private long shiftAt;
         private Location progress;
         private int stuckTicks;
         private final CombatClass role;
@@ -346,6 +352,9 @@ public final class Bots implements Listener {
         soldier.boundDone = false;
         soldier.boundFrom = null;
         soldier.suppress = null;
+        soldier.acquiredAt = tick;
+        soldier.glanceAt = tick;
+        soldier.shiftAt = tick + GUARD_SHIFT_TICKS;
         soldier.progress = at.clone();
         soldier.stuckTicks = 0;
         soldier.aim = at.getDirection();
@@ -401,6 +410,7 @@ public final class Bots implements Listener {
                 soldier.volley.clear();
                 soldier.target = enemy.getUniqueId();
                 soldier.reactAt = tick + tuning.reactionTicks() + ThreadLocalRandom.current().nextInt(tuning.reactionTicks() + 1);
+                soldier.acquiredAt = tick;
                 call(soldier, "contact", tick);
             }
             soldier.lastSeen = enemy.getLocation();
@@ -436,13 +446,22 @@ public final class Bots implements Listener {
                 soldier.lastSeen = null;
                 var movement = mob.getVelocity().setY(0);
                 soldier.moving = BotAim.moving(soldier.moving, movement);
-                if (soldier.moving) {
-                    soldier.idleAim = movement;
-                } else if (soldier.objective >= 0) {
-                    var ahead = game.map().posts().get(soldier.objective).center().clone().add(0, 1.3, 0)
-                            .toVector().subtract(mob.getEyeLocation().toVector());
-                    if (ahead.lengthSquared() > 0.01) {
-                        soldier.idleAim = ahead;
+                var team = soldier.team;
+                if (team != null && team.threat != null && soldier.guarding < 0) {
+                    var toward = team.threat.clone().add(0, 1, 0).toVector().subtract(mob.getEyeLocation().toVector());
+                    if (toward.lengthSquared() > 0.01) {
+                        soldier.idleAim = toward;
+                    }
+                } else {
+                    glance(soldier, tick);
+                    if (soldier.moving) {
+                        soldier.idleAim = movement.rotateAroundY(Math.toRadians(soldier.glanceYaw / 2));
+                    } else if (soldier.objective >= 0) {
+                        var ahead = game.map().posts().get(soldier.objective).center().clone().add(0, 1.3, 0)
+                                .toVector().subtract(mob.getEyeLocation().toVector()).setY(0);
+                        if (ahead.lengthSquared() > 0.01) {
+                            soldier.idleAim = ahead.rotateAroundY(Math.toRadians(soldier.glanceYaw));
+                        }
                     }
                 }
             }
@@ -456,6 +475,18 @@ public final class Bots implements Listener {
         if ((tick - soldier.number % THINK_TICKS) % ROUTE_TICKS == 0) {
             navigate(soldier, target, tick);
         }
+    }
+
+    /** Each member watches its own side of the team, the last one behind it; a guard looks all round. */
+    private static void glance(Soldier soldier, long tick) {
+        if (tick < soldier.glanceAt) {
+            return;
+        }
+        var random = ThreadLocalRandom.current();
+        int slot = soldier.guarding >= 0 || soldier.team == null ? random.nextInt(SECTORS.length)
+                : soldier.team.members.indexOf(soldier.number) % SECTORS.length;
+        soldier.glanceYaw = SECTORS[slot] + random.nextDouble(-35, 35);
+        soldier.glanceAt = tick + 30 + random.nextInt(50);
     }
 
     /** Where an overwatching bot fires to keep the enemy's heads down while the other element bounds, if it can. */
@@ -747,6 +778,12 @@ public final class Bots implements Listener {
             destination = seekingPatient ? patient.get().getLocation() : here;
         } else if (defending) {
             activity = "defend-peek";
+            if (tick >= soldier.shiftAt) {
+                var routes = post.routes().get(soldier.faction);
+                soldier.navigation.start(soldier.navigation.route() + 1, routes.size());
+                route = routes.get(soldier.navigation.route());
+                soldier.shiftAt = tick + GUARD_SHIFT_TICKS + ThreadLocalRandom.current().nextInt(GUARD_SHIFT_TICKS);
+            }
             destination = route.peek();
         } else if (team != null && team.assaulting && post != null) {
             activity = target.isPresent() ? "strafe-in-post" : "assault";
@@ -974,7 +1011,8 @@ public final class Bots implements Listener {
             var aim = soldier.aim.clone();
             var random = ThreadLocalRandom.current();
             double spread = Math.max(tuning.spread(), game.config().stats(blaster).spread())
-                    * (soldier.body.getVelocity().lengthSquared() > 0.005 ? 1.5 : 1) * (sighted ? 1 : SUPPRESSING_SPREAD);
+                    * (soldier.body.getVelocity().lengthSquared() > 0.005 ? 1.5 : 1)
+                    * (sighted ? BotAim.settle(tick - soldier.acquiredAt, tuning.settleTicks(), tuning.settleSpread()) : SUPPRESSING_SPREAD);
             if (spread > 0) {
                 aim.add(new Vector(random.nextDouble(-spread, spread), random.nextDouble(-spread, spread),
                         random.nextDouble(-spread, spread))).normalize();
@@ -998,6 +1036,7 @@ public final class Bots implements Listener {
                 soldier.volley.clear();
                 soldier.target = attacker.getUniqueId();
                 soldier.reactAt = game.tick() + tuning.reactionTicks();
+                soldier.acquiredAt = game.tick();
             }
             soldier.lastSeen = attacker.getLocation();
             soldier.seenUntil = game.tick() + config.memoryTicks();

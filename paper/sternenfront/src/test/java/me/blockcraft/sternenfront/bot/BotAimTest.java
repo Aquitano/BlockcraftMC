@@ -18,6 +18,14 @@ public class BotAimTest {
     }
 
     @Test
+    public void aimScattersMoreJustAfterPickingATargetAndSettles() {
+        assertEquals(2.5, BotAim.settle(0, 30, 2.5), 0.001);
+        assertEquals(1.75, BotAim.settle(15, 30, 2.5), 0.001);
+        assertEquals(1, BotAim.settle(45, 30, 2.5), 0.001);
+        assertEquals(1, BotAim.settle(0, 0, 2.5), 0.001);
+    }
+
+    @Test
     public void turnsGraduallyEvenWhenTheEnemyMovesDirectlyBehind() {
         var start = new Vector(0, 0, 1);
         var turned = BotAim.turn(start, new Vector(0, 0, -1), 12);

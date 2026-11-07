@@ -22,15 +22,15 @@ public record BotConfig(boolean enabled, int perTeam, double range, double visio
     public record Voice(boolean enabled, double range, float volume, int soldierCooldownTicks, int globalCooldownTicks) { }
 
     public record Tuning(int reactionTicks, int shotTicks, double spread, int burstShots, int burstPauseTicks,
-                         double trackingDegrees, double damageScale, boolean headshots) { }
+                         double trackingDegrees, double damageScale, boolean headshots, int settleTicks, double settleSpread) { }
 
     public static BotConfig from(ConfigurationSection config, int capacity) {
         var profiles = new EnumMap<BotDifficulty, Tuning>(BotDifficulty.class);
         for (var difficulty : BotDifficulty.values()) {
             var fallback = switch (difficulty) {
-                case EASY -> new Tuning(18, 12, 0.11, 3, 30, 12, 0.6, false);
-                case NORMAL -> new Tuning(12, 8, 0.045, 5, 12, 45, 0.9, false);
-                case VETERAN -> new Tuning(10, 8, 0.02, 0, 0, 180, 1, true);
+                case EASY -> new Tuning(18, 12, 0.11, 3, 30, 12, 0.6, false, 40, 3);
+                case NORMAL -> new Tuning(12, 8, 0.045, 5, 12, 45, 0.9, false, 30, 2.5);
+                case VETERAN -> new Tuning(10, 8, 0.02, 0, 0, 180, 1, true, 16, 1.6);
             };
             String key = "bots.profiles." + difficulty.key() + ".";
             profiles.put(difficulty, new Tuning(
@@ -41,7 +41,9 @@ public record BotConfig(boolean enabled, int perTeam, double range, double visio
                     Math.max(0, config.getInt(key + "burst-pause-ticks", fallback.burstPauseTicks())),
                     Math.clamp(config.getDouble(key + "tracking-degrees", fallback.trackingDegrees()), 1, 180),
                     Math.clamp(config.getDouble(key + "damage-scale", fallback.damageScale()), 0.05, 1),
-                    config.getBoolean(key + "headshots", fallback.headshots())));
+                    config.getBoolean(key + "headshots", fallback.headshots()),
+                    Math.clamp(config.getInt(key + "aim-settle-ticks", fallback.settleTicks()), 0, 200),
+                    Math.clamp(config.getDouble(key + "aim-settle-spread", fallback.settleSpread()), 1, 5)));
         }
         return new BotConfig(config.getBoolean("bots.enabled", true),
                 Math.clamp(config.getInt("bots.fill-per-team", 4), 1, capacity),

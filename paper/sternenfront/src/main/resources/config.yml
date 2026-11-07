@@ -15,10 +15,11 @@ bots:
   enabled: true
   fill-per-team: 4
   difficulty: normal
+  # A bot's aim scatters aim-settle-spread times aim-spread on a fresh target and settles over aim-settle-ticks.
   profiles:
-    easy: {reaction-ticks: 18, shot-ticks: 12, aim-spread: 0.11, burst-shots: 3, burst-pause-ticks: 30, tracking-degrees: 12, damage-scale: 0.6, headshots: false}
-    normal: {reaction-ticks: 12, shot-ticks: 8, aim-spread: 0.06, burst-shots: 5, burst-pause-ticks: 12, tracking-degrees: 45, damage-scale: 0.7, headshots: false}
-    veteran: {reaction-ticks: 10, shot-ticks: 8, aim-spread: 0.02, burst-shots: 0, burst-pause-ticks: 0, tracking-degrees: 180, damage-scale: 1, headshots: true}
+    easy: {reaction-ticks: 18, shot-ticks: 12, aim-spread: 0.11, burst-shots: 3, burst-pause-ticks: 30, tracking-degrees: 12, damage-scale: 0.6, headshots: false, aim-settle-ticks: 40, aim-settle-spread: 3}
+    normal: {reaction-ticks: 12, shot-ticks: 8, aim-spread: 0.06, burst-shots: 5, burst-pause-ticks: 12, tracking-degrees: 45, damage-scale: 0.7, headshots: false, aim-settle-ticks: 30, aim-settle-spread: 2.5}
+    veteran: {reaction-ticks: 10, shot-ticks: 8, aim-spread: 0.02, burst-shots: 0, burst-pause-ticks: 0, tracking-degrees: 180, damage-scale: 1, headshots: true, aim-settle-ticks: 16, aim-settle-spread: 1.6}
   medic: {heal-ticks: 60, heal-amount: 3, pursuit-ticks: 80, retry-ticks: 100}
   sight-range: 32
   vision-angle: 120

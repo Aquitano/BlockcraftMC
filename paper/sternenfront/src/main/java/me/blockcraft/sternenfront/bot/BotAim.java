@@ -11,6 +11,11 @@ public final class BotAim {
                 > (wasMoving ? 0.015 * 0.015 : 0.06 * 0.06);
     }
 
+    /** How many times its settled spread a bot's aim scatters {@code since} ticks after it picked its target. */
+    static double settle(long since, int ticks, double start) {
+        return since >= ticks ? 1 : start - (start - 1) * since / ticks;
+    }
+
     public static Vector turn(Vector current, Vector wanted, double degrees) {
         var from = current.clone().normalize();
         var to = wanted.clone().normalize();
