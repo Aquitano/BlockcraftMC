@@ -72,6 +72,7 @@ public final class Bots implements Listener {
     private static final double PEEK_REACH = 3;
     private static final double WOUNDED_SHARE = 0.3;
     private static final int PRESS_TICKS = 100;
+    private static final double EYE_HEIGHT = 1.6;
     private static final Set<String> STANDING_ALLOWED = Set.of("defend-peek", "fall-back", "siege", "treat-patient");
     private static final Set<String> HOLDING_GROUND = Set.of("overwatch", "assault", "strafe-in-post", "defend-peek",
             "contest-owned-post", "hold-for-team");
@@ -878,8 +879,8 @@ public final class Bots implements Listener {
         var patient = soldier.role == CombatClass.MEDIC ? patient(soldier, tick, true) : Optional.<LivingEntity>empty();
         boolean wounded = wounded(mob);
         var threat = target.map(LivingEntity::getEyeLocation)
-                .or(() -> remembering(soldier, tick) ? Optional.of(soldier.lastSeen.clone().add(0, 1.6, 0)) : Optional.empty())
-                .or(() -> underFire ? Optional.of(team.threat.clone().add(0, 1.6, 0)) : Optional.empty());
+                .or(() -> remembering(soldier, tick) ? Optional.of(soldier.lastSeen.clone().add(0, EYE_HEIGHT, 0)) : Optional.empty())
+                .or(() -> underFire ? Optional.of(team.threat.clone().add(0, EYE_HEIGHT, 0)) : Optional.empty());
         boolean teamFallsBack = team != null && post != null && team.fallingBack && withTeam && !flanking;
         var fallBack = teamFallsBack ? threat.or(() -> Optional.ofNullable(team.threat)).flatMap(enemy -> retreat(soldier, here, post, enemy))
                         .or(() -> Optional.ofNullable(soldier.fallBackTo))
@@ -990,15 +991,17 @@ public final class Bots implements Listener {
             destination = route.capture();
         }
         long still = soldier.stillness.update(here.toVector(), tick);
-        var enemy = wounded || STANDING_ALLOWED.contains(activity) || still < settings.standTicks() && tick >= soldier.pressUntil
-                ? Optional.<LivingEntity>empty() : nearestEnemy(soldier.faction, here);
-        if (enemy.isPresent()) {
+        double sight = config.range() * sightShare;
+        var known = wounded || STANDING_ALLOWED.contains(activity) || still < settings.standTicks() && tick >= soldier.pressUntil
+                ? Optional.<Location>empty()
+                : threat.filter(at -> at.getWorld().equals(here.getWorld()) && at.distanceSquared(here) <= sight * sight);
+        if (known.isPresent()) {
             if (tick >= soldier.pressUntil) {
                 soldier.pressUntil = tick + PRESS_TICKS;
                 call(soldier, "advance", tick);
             }
             activity = "press";
-            destination = enemy.get().getLocation();
+            destination = known.get().clone().subtract(0, EYE_HEIGHT, 0);
             speed = settings.sprintSpeed();
         } else {
             soldier.pressUntil = 0;
@@ -1071,13 +1074,6 @@ public final class Bots implements Listener {
     }
 
     /** The nearest enemy within sight range, whether or not the bot can see it. */
-    private Optional<LivingEntity> nearestEnemy(Faction faction, Location here) {
-        double sight = config.range() * sightShare;
-        return game.combatants().stream().filter(other -> game.hittable(faction, other))
-                .filter(other -> other.getWorld().equals(here.getWorld()) && other.getLocation().distanceSquared(here) <= sight * sight)
-                .min(Comparator.comparingDouble(other -> other.getLocation().distanceSquared(here)));
-    }
-
     /** A follower's place a little to one side of the leader's steps, where it has ground and a clear line to them. */
     private Location stagger(Location slot, Location leader, int side) {
         var ahead = leader.toVector().subtract(slot.toVector()).setY(0);

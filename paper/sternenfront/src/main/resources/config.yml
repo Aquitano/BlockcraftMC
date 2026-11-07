@@ -50,8 +50,8 @@ bots:
   # fall-back-ticks at most; odds still bad then, or bad again within fall-back-ticks of pushing, make it pick another
   # objective. A team cut down to its leader in a fight falls back once the same way to wait for the others. A guard
   # whose post is that outnumbered rejoins its team. A bot that stands within 1.5 blocks of one spot for stand-ticks
-  # with an enemy within sight-range runs at the nearest enemy, unless it is wounded, treating a patient, falling back,
-  # in siege mode, or a guard at its post's lookout.
+  # while it knows where an enemy is within sight-range (seen, remembered, or its team's contact under fire) runs there,
+  # unless it is wounded, treating a patient, falling back, in siege mode, or a guard at its post's lookout.
   squad: {fireteam-size: 3, switch-margin: 25, spacing: 3, stagger: 2, regroup-distance: 12, catch-up-distance: 32, walk-speed: 0.9,
           sprint-speed: 1.25, bound-distance: 8, bound-ticks: 80, flank-after-ticks: 160, follow-range: 12,
           reinforce-pull: 80, fall-back-range: 16, fall-back-ticks: 160, stand-ticks: 200}
