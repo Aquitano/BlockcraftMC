@@ -1,6 +1,6 @@
 {
   "textures":{"rig":"blockcraft:block/sternenfront/rig/kolonien_scout","particle":"blockcraft:block/sternenfront/rig/kolonien_scout"},
   "elements":[
-    {"from":[6.696,-2.08,6.576],"to":[9.304,-0.96,9.424],"faces":{"north":{"uv":[10.9375,10.0,11.5625,10.25],"texture":"#rig","tintindex":0},"south":{"uv":[10.9375,10.0,11.5625,10.25],"texture":"#rig","tintindex":0},"east":{"uv":[10.0,10.0,10.6875,10.25],"texture":"#rig","tintindex":0},"west":{"uv":[10.0,10.0,10.6875,10.25],"texture":"#rig","tintindex":0},"up":{"uv":[6.9375,7.5625,7.5625,8.25],"texture":"#rig","tintindex":0},"down":{"uv":[6.0625,7.5625,6.6875,8.25],"texture":"#rig","tintindex":0}}}
+    {"from":[6.696,-2.08,6.576],"to":[9.304,-0.96,9.424],"faces":{"north":{"uv":[0.125,10.6875,0.75,10.9375],"texture":"#rig","tintindex":0},"south":{"uv":[0.125,10.6875,0.75,10.9375],"texture":"#rig","tintindex":0},"east":{"uv":[14.4375,10.125,15.125,10.375],"texture":"#rig","tintindex":0},"west":{"uv":[14.4375,10.125,15.125,10.375],"texture":"#rig","tintindex":0},"up":{"uv":[10.5625,7.5625,11.1875,8.25],"texture":"#rig","tintindex":0},"down":{"uv":[9.6875,7.5625,10.3125,8.25],"texture":"#rig","tintindex":0}}}
   ]
 }

@@ -372,6 +372,8 @@ public final class SternenfrontArt {
             0x6F7A84, 0x9AA5AE, 0xC3CBD1, 0xE3E7EA, 0xF6F8F9);
     private static final Paint SUIT = paint("bodysuit", 2, Grain.WEAVE, 0, Wear.NONE,
             0x0B0C0E, 0x131518, 0x1B1E22, 0x262A30, 0x333840);
+    private static final Paint THRUSTER = paint("thruster", 3, Grain.GLOW, 0, Wear.NONE,
+            0x0A1F80, 0x1033D0, 0x3366FF, 0x80A8FF, 0xD8E4FF);
     private static final Paint KAMA = paint("kama", 2, Grain.WEAVE, 0, Wear.NONE,
             0x15161A, 0x1F2126, 0x2B2E35, 0x3A3E46, 0x4A4F58);
     private static final Paint VISOR = paint("visor", 0, Grain.GLASS, 0, Wear.NONE,
@@ -847,7 +849,7 @@ public final class SternenfrontArt {
             torso.add(box(0, .32, -.18, .26, .24, .05, ARMOUR));
         }
         if (role == CloneRole.SCOUT) {
-            torso.add(box(0, .29, -.22, .27, .34, .16, FRAME));
+            torso.add(jumpPack());
         }
         if (role == CloneRole.MEDIC) {
             torso.add(box(0, .29, -.25, .35, .4, .22, ARMOUR))
@@ -855,6 +857,23 @@ public final class SternenfrontArt {
                     .add(box(0, .3, -.37, .055, .18, .026, MAROON));
         }
         return body(name, REPUBLIC_UNIT, torso, cloneHelmet(role), arm, leg, rightLeg, pauldron);
+    }
+
+    /** Two fuel tanks either side of a cell, strapped over the chest, with a blue thruster ring under each nozzle. */
+    private static List<Box> jumpPack() {
+        var pack = new Shape()
+                .both(box(.1, .4, .149, .04, .12, .006, SUIT))
+                .add(box(0, .33, -.175, .26, .2, .03, FRAME))
+                .add(box(0, .3, -.215, .1, .24, .08, ARMOUR));
+        for (double x : new double[] {.09, -.09}) {
+            pack.add(drumY(x, .28, -.235, .1, .34, TRIM))
+                    .add(drumY(x, .37, -.235, .104, .035, MARKING))
+                    .add(drumY(x, .465, -.235, .07, .03, FRAME))
+                    .add(drumY(x, .09, -.235, .085, .05, STEEL))
+                    .add(drumY(x, .055, -.235, .08, .02, THRUSTER))
+                    .add(box(x, .043, -.235, .04, .006, .04, THRUSTER));
+        }
+        return pack.boxes;
     }
 
     /**
