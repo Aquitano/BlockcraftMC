@@ -345,8 +345,8 @@
     },
     {
       "name": "downward hose",
-      "from": [0.5, 9.3, 17],
-      "to": [2.5, 12.5, 19],
+      "from": [0.6, 9.3, 17],
+      "to": [2.4, 12.5, 19],
       "faces": {
         "south": {"uv": [6, 8, 10, 12], "texture": "#atlas"},
         "north": {"uv": [6, 8, 10, 12], "texture": "#atlas"},
@@ -397,8 +397,8 @@
     },
     {
       "name": "downward hose",
-      "from": [13.5, 9.3, 17],
-      "to": [15.5, 12.5, 19],
+      "from": [13.6, 9.3, 17],
+      "to": [15.4, 12.5, 19],
       "faces": {
         "south": {"uv": [6, 8, 10, 12], "texture": "#atlas"},
         "north": {"uv": [6, 8, 10, 12], "texture": "#atlas"},

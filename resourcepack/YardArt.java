@@ -150,7 +150,7 @@ public final class YardArt {
         for (int x : new int[]{0, 13}) {
             b.add(part("hose port", x, 11, 11, x + 3, 14, 14.5, Surface.COPPER).front(Surface.BOLT));
             b.add(part("hose elbow", x + .5, 11.3, 14.5, x + 2.5, 13.3, 18, Surface.RECESS));
-            b.add(part("downward hose", x + .5, 9.3, 17, x + 2.5, 12.5, 19, Surface.RIB));
+            b.add(part("downward hose", x + .6, 9.3, 17, x + 2.4, 12.5, 19, Surface.RIB));
             b.add(part("hose shoe", x, 8, 16, x + 3, 9.5, 20, Surface.STEEL));
         }
         return new Prop("power_coupler", "Ribbed power coupler", List.copyOf(b));
@@ -166,7 +166,7 @@ public final class YardArt {
             b.add(part("collar side", x - .8, 21 - half, z1, x + .8, 21 + half, z2, material));
             for (int rise : new int[]{-1, 1}) {
                 double cx = 8 + sign * diagonal, cy = 21 + rise * diagonal;
-                b.add(part("collar bevel", cx - half, cy - .8, z1, cx + half, cy + .8, z2, material)
+                b.add(part("collar bevel", cx - half, cy - .8, z1 + .05, cx + half, cy + .8, z2 - .05, material)
                         .turn(cx, cy, (z1 + z2) / 2, "z", -sign * rise * 45));
             }
         }
@@ -186,8 +186,8 @@ public final class YardArt {
             }
         }
         for (int z : new int[]{-3, 16}) {
-            b.add(part("cradle bridge", -1, 10, z, 8, 12, z + 2, Surface.STEEL));
-            b.add(part("cradle bridge", 8, 10, z, 17, 12, z + 2, Surface.STEEL));
+            b.add(part("cradle bridge", -1, 10.5, z, 8, 12, z + 2, Surface.STEEL));
+            b.add(part("cradle bridge", 8, 10.5, z, 17, 12, z + 2, Surface.STEEL));
         }
         b.add(part("engine barrel", 3, 16, -3, 13, 26, 9, Surface.STEEL).front(Surface.ENGINE));
         b.add(part("engine barrel", 3, 16, 9, 13, 26, 18, Surface.STEEL).front(Surface.ENGINE));
@@ -209,11 +209,13 @@ public final class YardArt {
     private static void crate(List<Element> b, double x, double y, double z, double width, double height, double depth) {
         b.add(part("enamel cargo shell", x, y, z, x + width, y + height - 1.5, z + depth, Surface.ENAMEL).front(Surface.STENCIL));
         b.add(part("cargo lid", x - .3, y + height - 1.5, z - .3, x + width + .3, y + height, z + depth + .3, Surface.STEEL));
+        // The straps stand proud of the lid's .3 overhang; flush faces would z-fight with it.
+        double strap = .5;
         for (double dx : new double[]{2, width - 3}) {
-            b.add(part("front cargo strap", x + dx, y, z + depth, x + dx + 1, y + height, z + depth + .3, Surface.STRAP));
+            b.add(part("front cargo strap", x + dx, y, z + depth, x + dx + 1, y + height + .3, z + depth + strap, Surface.STRAP));
             b.add(part("lid cargo strap", x + dx, y + height, z, x + dx + 1, y + height + .3, z + depth, Surface.STRAP));
-            b.add(part("rear cargo strap", x + dx, y, z - .3, x + dx + 1, y + height, z, Surface.STRAP));
-            b.add(part("strap buckle", x + dx - .4, y + 2, z + depth + .3, x + dx + 1.4, y + 4, z + depth + .7, Surface.COPPER).front(Surface.BOLT));
+            b.add(part("rear cargo strap", x + dx, y, z - strap, x + dx + 1, y + height + .3, z, Surface.STRAP));
+            b.add(part("strap buckle", x + dx - .4, y + 2, z + depth + strap, x + dx + 1.4, y + 4, z + depth + strap + .4, Surface.COPPER).front(Surface.BOLT));
         }
         b.add(part("recessed latch", x + width / 2 - 1.5, y + height - 3, z + depth, x + width / 2 + 1.5, y + height - 1, z + depth + .5, Surface.RECESS));
         b.add(part("latch handle", x + width / 2 - 1, y + height - 2.5, z + depth + .5, x + width / 2 + 1, y + height - 1.7, z + depth + .8, Surface.STEEL));
@@ -226,8 +228,8 @@ public final class YardArt {
         crate(b, -4, 10.5, -2, 12, 11, 11);
         crate(b, 10, 10.5, -2, 10, 9, 11);
         crate(b, -2, 22, -1, 12, 8, 9);
-        b.add(part("inventory plate", 12, 13, 9.1, 18, 16, 9.3, Surface.ACCESS));
-        b.add(part("sealed shipment witness", 11, 17, 9.1, 13, 18, 9.5, Surface.AMBER));
+        b.add(part("inventory plate", 13, 13, 9.1, 17, 16, 9.3, Surface.ACCESS));
+        b.add(part("sealed shipment witness", 11, 17, 9.1, 13.4, 18, 9.7, Surface.AMBER));
         return new Prop("cargo_stack", "Strapped cargo stack", List.copyOf(b));
     }
 
@@ -235,13 +237,13 @@ public final class YardArt {
         var b = new ArrayList<Element>();
         for (int x : new int[]{1, 11}) {
             b.add(part("splayed service foot", x, 8, 4, x + 4, 10, 14, Surface.STEEL));
-            b.add(part("foot toe enamel", x, 9, 10, x + 4, 10.5, 14, Surface.ENAMEL));
+            b.add(part("foot toe enamel", x - .1, 9, 10, x + 4.1, 10.5, 14.1, Surface.ENAMEL));
             b.add(part("ankle strut", x + 1, 10, 6, x + 3, 15, 9, Surface.STEEL));
-            b.add(part("ankle gaiter", x + .5, 11, 6, x + 3.5, 13, 10, Surface.RIB));
+            b.add(part("ankle gaiter", x + .5, 11, 5.5, x + 3.5, 13, 10, Surface.RIB));
         }
         b.add(part("lower body", 3, 14, 3, 13, 17, 12, Surface.STEEL));
         b.add(part("ivory service body", 2, 17, 3, 14, 23, 12, Surface.ENAMEL).front(Surface.ACCESS));
-        b.add(part("side battery", 13.5, 17, 4, 15, 22, 10, Surface.COPPER));
+        b.add(part("side battery", 13.5, 17.5, 4, 15, 22, 10, Surface.COPPER));
         b.add(part("body chest seam", 3, 20, 12, 13, 20.6, 12.3, Surface.STEEL));
         b.add(part("neck swivel", 6, 23, 6, 10, 24.5, 9, Surface.RECESS));
         b.add(part("optical head lower", 1.5, 24.5, 4, 14.5, 27.5, 11, Surface.STEEL));
@@ -252,7 +254,7 @@ public final class YardArt {
         b.add(part("head ridge", 6, 30, 5, 10, 30.7, 9, Surface.STEEL));
         b.add(part("tool shoulder", -1, 19, 6, 2, 22, 10, Surface.STEEL).front(Surface.BOLT));
         b.add(part("upper tool arm", -1.5, 16, 7, .5, 20, 9, Surface.ENAMEL).turn(-.5, 20, 8, "z", -22.5));
-        b.add(part("elbow bearing", -3, 15, 7, 0, 17.5, 10, Surface.COPPER).front(Surface.BOLT));
+        b.add(part("elbow bearing", -3, 15, 6.8, 0, 17.5, 10, Surface.COPPER).front(Surface.BOLT));
         b.add(part("forward tool arm", -2.5, 15.5, 9.5, -.5, 17.2, 14, Surface.STEEL));
         b.add(part("tool chuck", -3, 15, 13.5, 0, 17.7, 15.5, Surface.RECESS));
         for (double x : new double[]{-3, -.7}) b.add(part("tool gripper", x, 15.5, 15.5, x + .7, 17, 18, Surface.STEEL));
@@ -279,7 +281,7 @@ public final class YardArt {
         b.add(part("plate pull recess", 10, 14, 8.6, 14, 16, 8.7, Surface.RECESS));
         b.add(part("plate pull handle", 10.5, 14.8, 8.7, 13.5, 15.4, 9.2, Surface.STEEL));
         b.add(part("amber interlock", 2, 17, 8.6, 3.5, 18.2, 8.9, Surface.AMBER));
-        b.add(part("copper drain", 4, 8, 7.5, 6, 10.5, 9, Surface.COPPER));
+        b.add(part("copper drain", 4, 8, 7.5, 6, 10.5, 9.3, Surface.COPPER));
         return new Prop("wall_panel", "Wall service panel", List.copyOf(b));
     }
 
