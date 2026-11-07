@@ -146,6 +146,10 @@ final class BodyRig implements AutoCloseable {
         return new RigSnapshot(body.family(), Point.of(previous), stride, List.copyOf(viewers), List.copyOf(parts));
     }
 
+    ItemDisplay torso() {
+        return torso;
+    }
+
     boolean shownTo(Player player) {
         return viewers.contains(player.getUniqueId());
     }

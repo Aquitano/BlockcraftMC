@@ -89,6 +89,11 @@ public final class BodyRigs implements Listener, AutoCloseable {
         return Optional.ofNullable(rigs.get(actor.getUniqueId())).map(BodyRig::snapshot);
     }
 
+    public Entity drawnAs(Player viewer, Entity actor) {
+        var rig = rigs.get(actor.getUniqueId());
+        return rig != null && rig.shownTo(viewer) ? rig.torso() : actor;
+    }
+
     public static String family(Faction faction, CombatClass role) {
         return RigBody.of(faction, role).family();
     }

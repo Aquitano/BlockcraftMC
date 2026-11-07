@@ -13,7 +13,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
@@ -45,14 +44,14 @@ public final class Heroes {
     private final Map<UUID, BossBar> bars = new HashMap<>();
     private Optional<Faction> comeback = Optional.empty();
 
-    public Heroes(SternenfrontGame game, Plugin plugin, Messages messages, Loadouts loadouts, HeroConfig config, BattlePoints points) {
+    public Heroes(SternenfrontGame game, Messages messages, Loadouts loadouts, HeroConfig config, BattlePoints points) {
         this.game = game;
         this.messages = messages;
         this.loadouts = loadouts;
         this.config = config;
         this.points = points;
         this.roster = new HeroRoster(config.perFaction());
-        this.sabers = new Sabers(plugin, messages, config.saber(), game::effects);
+        this.sabers = new Sabers(game, config.saber());
         this.powers = new Powers(game, config, sabers);
     }
 

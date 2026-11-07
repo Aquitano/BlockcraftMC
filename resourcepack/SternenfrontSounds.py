@@ -145,6 +145,22 @@ def force_push(rng):
     return 0.8 * air + 0.6 * sine(glide(70, 35, seconds)) * decay(seconds, 4, 0.03)
 
 
+def saber_whirl(rng):
+    seconds = 0.3
+    pass_by = np.sin(np.pi * progress(seconds))
+    tone = saw(glide(92, 118, seconds, 0.6)) + saw(glide(95, 121, seconds, 0.6))
+    hum = unit(swept(tone, 300 + 900 * pass_by ** 2, 1.4, low=True))
+    air = unit(swept(noise(rng, seconds), 700 + 2600 * pass_by ** 3, 1.1))
+    return (0.8 * hum + 0.35 * air) * pass_by
+
+
+def saber_guard(rng):
+    seconds = 0.24
+    rise = unit(filtered(saw(glide(85, 150, seconds, 0.5)) + saw(glide(87, 153, seconds, 0.5)), "lowpass", 950))
+    brush = unit(filtered(noise(rng, 0.06), "bandpass", [1800, 6000])) * decay(0.06, 60, 0.002)
+    return layer(0.8 * rise * decay(seconds, 9, 0.02), 0.25 * brush)
+
+
 def force_grip(rng):
     seconds = 1.2
     t = time(seconds)
@@ -352,6 +368,8 @@ SOUNDS = {
     "intro.radio_close": (0.35, lambda rng: radio_click(rng, False)),
     "intro.transition": (0.45, intro_transition),
     "bolt.impact": (0.7, bolt_impact),
+    "saber.whirl": (0.6, saber_whirl),
+    "saber.guard": (0.55, saber_guard),
     "force.push": (0.85, force_push),
     "force.grip": (0.75, force_grip),
     "force.lightning": (0.7, force_lightning),

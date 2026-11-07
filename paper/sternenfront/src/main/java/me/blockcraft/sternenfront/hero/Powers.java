@@ -43,6 +43,8 @@ public final class Powers {
     private static final double CATCH_DISTANCE = 1.5;
     private static final float SPIN_DEGREES = 45;
     private static final long THROW_TIMEOUT = 100;
+    private static final int WHIRL_TICKS = 5;
+    private static final float WHIRL_VOLUME = 0.7f;
     private static final int GRIP_PULSE_TICKS = 10;
     private static final double JETPACK_SINK = -0.12;
     private static final double JETPACK_PUSH = 0.04;
@@ -159,7 +161,7 @@ public final class Powers {
             spawned.setTeleportDuration(1);
         });
         sabers.unlit(player, hero);
-        SoundCue.SABER_THROW.play(eye, 1.2f);
+        SoundCue.SABER_THROW.playOn(display, 1.2f, 1f);
         flights.add(new Flight(player, faction, hero, display, start, heading, 0, false, new HashSet<>(), tick));
         return true;
     }
@@ -301,6 +303,9 @@ public final class Powers {
         var next = position.clone().add(heading.clone().multiply(travelled));
         next.setYaw(flight.display().getLocation().getYaw() + SPIN_DEGREES);
         flight.display().teleport(next);
+        if ((tick - flight.thrownAt()) % WHIRL_TICKS == 0) {
+            SoundCue.SABER_WHIRL.playOn(flight.display(), WHIRL_VOLUME, 1f);
+        }
         game.effects().saberTrail(position, next, sabers.colour(thrower, flight.hero()), thrower);
         for (var target : game.targets()) {
             if (!target.getWorld().equals(position.getWorld()) || !game.hittable(flight.faction(), target)

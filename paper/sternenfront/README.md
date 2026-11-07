@@ -199,6 +199,9 @@ each lasting `presentation.saber-trail-ticks` under the shared effect cap. Each 
 `combat.melee` sets the reach, arc angle, cooldown and animation duration. Defaults are 3.5 blocks, 120 degrees,
 12 ticks between swings and a four-tick sweep. Successive swings alternate direction. Switching weapons or guarding
 cancels the remaining sweep. The relic blade uses the same attack.
+A saber's hum, ignition, retraction and swings and the raised guard play on the hero, so they follow them as they move.
+A viewer who sees the hero's body rig hears them on its torso, because a client drops a sound on an entity it does not
+draw. The thrown saber whirls every five ticks as it flies.
 
 ## What keeps a player going
 

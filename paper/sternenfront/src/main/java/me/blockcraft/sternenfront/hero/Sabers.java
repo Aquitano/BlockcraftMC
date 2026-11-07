@@ -9,9 +9,8 @@ import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.item.HotbarItem;
 import me.blockcraft.api.pack.PackModel;
 import me.blockcraft.api.task.Tasks;
-import me.blockcraft.common.message.Messages;
-import me.blockcraft.sternenfront.combat.BattleEffects;
 import me.blockcraft.sternenfront.game.SoundCue;
+import me.blockcraft.sternenfront.game.SternenfrontGame;
 import me.blockcraft.sternenfront.game.SternenfrontItem;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
@@ -21,7 +20,6 @@ import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlotGroup;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.HashMap;
@@ -29,11 +27,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Supplier;
 
 /**
  * The lightsabers: a hilt that ignites a moment after it is drawn, a blade in the hero's colour (white for whoever
- * found every kyber crystal), the hum it makes while it is held, and the swing it makes when it strikes.
+ * found every kyber crystal), and the hum that follows it while it is held.
  */
 public final class Sabers {
 
@@ -47,13 +44,10 @@ public final class Sabers {
     private static final int SABER_SLOT = 0;
     private static final float HUM_VOLUME = 0.5f;
 
-    private final Plugin plugin;
-    private final Messages messages;
+    private final SternenfrontGame game;
     private final HeroConfig.Saber config;
-    private final Supplier<BattleEffects> effects;
     private final Set<UUID> white = ConcurrentHashMap.newKeySet();
     private final Map<UUID, Ignition> ignitions = new HashMap<>();
-    private final Map<UUID, Long> swings = new HashMap<>();
 
     /** The blade shows its first length at {@code from} and one more each tick until it is whole. */
     record Ignition(Hero hero, long from) {
@@ -67,17 +61,15 @@ public final class Sabers {
         }
     }
 
-    public Sabers(Plugin plugin, Messages messages, HeroConfig.Saber config, Supplier<BattleEffects> effects) {
-        this.plugin = plugin;
-        this.messages = messages;
+    public Sabers(SternenfrontGame game, HeroConfig.Saber config) {
+        this.game = game;
         this.config = config;
-        this.effects = effects;
     }
 
     /** Reads whether the player found every kyber crystal, off the main thread; the next blade they draw shows it. */
     public void refresh(Player player) {
         var id = player.getUniqueId();
-        Tasks.async(plugin, () -> BlockcraftApi.get().unlocks().owns(id, WHITE_UNLOCK),
+        Tasks.async(game.plugin(), () -> BlockcraftApi.get().unlocks().owns(id, WHITE_UNLOCK),
                 owns -> {
                     if (owns) {
                         white.add(id);
@@ -104,8 +96,8 @@ public final class Sabers {
         var stages = saber(hero).stages();
         var model = stages.get(stage);
         boolean lit = stage == stages.size() - 1;
-        var item = model.item().name(messages.get("hero." + hero.key() + ".weapon"))
-                .lore(messages.getLines("hero.saber-lore")).hideAttributes().edit(meta -> meta.setUnbreakable(true)).build();
+        var item = model.item().name(game.messages().get("hero." + hero.key() + ".weapon"))
+                .lore(game.messages().getLines("hero.saber-lore")).hideAttributes().edit(meta -> meta.setUnbreakable(true)).build();
         if (model.tinted()) {
             tint(item, model, colour(owner, hero));
         }
@@ -151,12 +143,12 @@ public final class Sabers {
     public void unlit(Player player, Hero hero) {
         ignitions.remove(player.getUniqueId());
         player.getInventory().setItem(SABER_SLOT, item(player, hero, false));
-        SoundCue.SABER_RETRACT.play(player.getLocation(), 1f);
+        SoundCue.SABER_RETRACT.playOn(player, 1f, 1f, game::drawnAs);
     }
 
     public void relight(Player player, Hero hero) {
         player.getInventory().setItem(SABER_SLOT, item(player, hero, true));
-        SoundCue.SABER_IGNITE.play(player.getLocation(), 1f);
+        SoundCue.SABER_IGNITE.playOn(player, 1f, 1f, game::drawnAs);
     }
 
     /** Grows each igniting blade by a stage and hums for every saber hero who holds a lit blade. */
@@ -173,8 +165,8 @@ public final class Sabers {
             int last = saber(ignition.hero()).stages().size() - 1;
             int stage = Math.min(ignition.stage(tick), last);
             if (stage == 1) {
-                SoundCue.SABER_IGNITE.play(player.getLocation(), 1f);
-                effects.get().ignite(player, colour(player, ignition.hero()));
+                SoundCue.SABER_IGNITE.playOn(player, 1f, 1f, game::drawnAs);
+                game.effects().ignite(player, colour(player, ignition.hero()));
             }
             player.getInventory().setItem(SABER_SLOT, item(player, ignition.hero(), stage));
             return stage == last;
@@ -183,7 +175,7 @@ public final class Sabers {
             return;
         }
         sabers.keySet().stream().filter(player -> isLit(player.getInventory().getItemInMainHand()))
-                .forEach(player -> SoundCue.SABER_HUM.play(player.getLocation(), HUM_VOLUME));
+                .forEach(player -> SoundCue.SABER_HUM.playOn(player, HUM_VOLUME, 1f, game::drawnAs));
     }
 
     public static boolean isSaber(ItemStack item) {
@@ -194,21 +186,11 @@ public final class Sabers {
         return isSaber(item) && Boolean.TRUE.equals(item.getPersistentDataContainer().get(LIT, PersistentDataType.BOOLEAN));
     }
 
-    public void swing(Player player, long tick) {
-        if (!isLit(player.getInventory().getItemInMainHand()) || tick < swings.getOrDefault(player.getUniqueId(), 0L)) {
-            return;
-        }
-        swings.put(player.getUniqueId(), tick + 4);
-        SoundCue.SABER_SWING.play(player.getLocation(), 0.8f);
-    }
-
     public void forget(Player player) {
         ignitions.remove(player.getUniqueId());
-        swings.remove(player.getUniqueId());
     }
 
     public void clear() {
         ignitions.clear();
-        swings.clear();
     }
 }
