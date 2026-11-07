@@ -3,6 +3,7 @@ package me.blockcraft.zombies.game;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.zombies.arena.ArenaMap;
 import me.blockcraft.zombies.config.ZombiesConfig;
+import me.blockcraft.zombies.menu.ReplaceWeaponDialog;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
@@ -103,13 +104,35 @@ public final class MysteryBox {
             game.feedback(player, "mystery.busy");
         } else if (age < config.rollTicks()) {
             game.feedback(player, "mystery.spinning");
+        } else if (!game.survivor(player).weapons().containsKey(roll.weapon) && game.weapons().full(player)) {
+            new ReplaceWeaponDialog(game, player, roll.weapon, replaced -> take(player, roll, replaced), () -> { })
+                    .open(player, () -> rolls.get(station) == roll && game.canUse(player, station));
         } else {
-            rolls.remove(station);
-            roll.remove();
-            game.weapons().give(player, roll.weapon);
-            Sounds.EQUIP.play(player);
+            take(player, roll, roll.weapon);
         }
         return true;
+    }
+
+    /** A gun the buyer bought elsewhere during the roll is refilled rather than replaced, keeping its upgrade. */
+    private void take(Player player, Roll roll, Weapon replaced) {
+        if (rolls.get(roll.station) != roll || game.tickNumber() - roll.started >= roll.sinkAt()
+                || !game.canUse(player, roll.station)) {
+            return;
+        }
+        var owned = game.survivor(player).weapons();
+        if (!owned.containsKey(roll.weapon) && game.weapons().full(player) && !owned.containsKey(replaced)) {
+            return;
+        }
+        rolls.remove(roll.station);
+        roll.remove();
+        var ammo = owned.get(roll.weapon);
+        if (ammo != null) {
+            ammo.refill();
+            game.weapons().render(player);
+        } else {
+            game.weapons().give(player, roll.weapon, replaced);
+        }
+        Sounds.EQUIP.play(player);
     }
 
     /** The station whose rolling gun or click box this is. */

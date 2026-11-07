@@ -15,11 +15,11 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 
 /** A buyer with two guns picks which of them the new one takes the place of; cancelling buys nothing. */
-final class ReplaceWeaponDialog {
+public final class ReplaceWeaponDialog {
 
     private final Dialog dialog;
 
-    ReplaceWeaponDialog(ZombiesGame game, Player player, Weapon bought, Consumer<Weapon> onChoice, Runnable onCancel) {
+    public ReplaceWeaponDialog(ZombiesGame game, Player player, Weapon bought, Consumer<Weapon> onChoice, Runnable onCancel) {
         var messages = game.messages();
         var name = Placeholder.component("weapon", messages.get("weapon." + bought.key()));
         List<ActionButton> buttons = game.survivor(player).weapons().keySet().stream()
@@ -30,7 +30,7 @@ final class ReplaceWeaponDialog {
                 List.of(), Dialogs.actions(buttons, Dialogs.button(BlockcraftApi.get().messages().get("menu.cancel"), ignored -> onCancel.run())));
     }
 
-    void open(Player player, BooleanSupplier eligible) {
+    public void open(Player player, BooleanSupplier eligible) {
         Dialogs.show(player, dialog, eligible);
     }
 }
