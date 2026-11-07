@@ -71,6 +71,8 @@ public final class Bots implements Listener {
     private static final int GUARD_SHIFT_TICKS = 300;
     private static final double PEEK_REACH = 3;
     private static final double WOUNDED_SHARE = 0.3;
+    private static final int PRESS_TICKS = 100;
+    private static final Set<String> STANDING_ALLOWED = Set.of("defend-peek", "fall-back", "siege", "treat-patient");
     private static final Set<String> HOLDING_GROUND = Set.of("overwatch", "assault", "strafe-in-post", "defend-peek",
             "contest-owned-post", "hold-for-team");
     /**
@@ -132,6 +134,8 @@ public final class Bots implements Listener {
         private Location heard;
         private long heardUntil;
         private final BotRecovery recovery = new BotRecovery();
+        private final Stillness stillness = new Stillness();
+        private long pressUntil;
 
         private Soldier(int number, Faction faction, CombatClass role) {
             this.number = number;
@@ -402,6 +406,8 @@ public final class Bots implements Listener {
         soldier.heard = null;
         soldier.heardUntil = 0;
         soldier.recovery.clear();
+        soldier.stillness.clear();
+        soldier.pressUntil = 0;
         bodies.put(mob.getUniqueId(), soldier);
         identities.put(mob.getUniqueId(), soldier.faction);
     }
@@ -983,6 +989,20 @@ public final class Bots implements Listener {
             activity = "capture";
             destination = route.capture();
         }
+        long still = soldier.stillness.update(here.toVector(), tick);
+        var enemy = wounded || STANDING_ALLOWED.contains(activity) || still < settings.standTicks() && tick >= soldier.pressUntil
+                ? Optional.<LivingEntity>empty() : nearestEnemy(soldier.faction, here);
+        if (enemy.isPresent()) {
+            if (tick >= soldier.pressUntil) {
+                soldier.pressUntil = tick + PRESS_TICKS;
+                call(soldier, "advance", tick);
+            }
+            activity = "press";
+            destination = enemy.get().getLocation();
+            speed = settings.sprintSpeed();
+        } else {
+            soldier.pressUntil = 0;
+        }
         soldier.activity = activity;
         soldier.destination = destination == null ? null : destination.clone();
         soldier.navigatedAt = tick;
@@ -1011,7 +1031,8 @@ public final class Bots implements Listener {
             soldier.progress = here.clone();
         }
         if (soldier.stuckTicks >= 100 && (activity.equals("assault") || activity.equals("strafe-in-post")
-                || activity.equals("to-medic") || activity.equals("push") || activity.equals("lookout"))) {
+                || activity.equals("to-medic") || activity.equals("push") || activity.equals("lookout")
+                || activity.equals("press"))) {
             soldier.stuckTicks = 0;
             soldier.progress = here.clone();
         }
@@ -1047,6 +1068,14 @@ public final class Bots implements Listener {
         }
         double pace = speed * (1 + (soldier.number * 7 % 9 - 4) * 0.015);
         soldier.navigationResult = mob.getPathfinder().moveTo(destination, pace) ? "accepted" : "unreachable";
+    }
+
+    /** The nearest enemy within sight range, whether or not the bot can see it. */
+    private Optional<LivingEntity> nearestEnemy(Faction faction, Location here) {
+        double sight = config.range() * sightShare;
+        return game.combatants().stream().filter(other -> game.hittable(faction, other))
+                .filter(other -> other.getWorld().equals(here.getWorld()) && other.getLocation().distanceSquared(here) <= sight * sight)
+                .min(Comparator.comparingDouble(other -> other.getLocation().distanceSquared(here)));
     }
 
     /** A follower's place a little to one side of the leader's steps, where it has ground and a clear line to them. */

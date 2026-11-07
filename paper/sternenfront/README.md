@@ -82,6 +82,8 @@ route's retreat points. It pushes again as soon as it is back there and no longe
 `fall-back-ticks` at most. Odds still bad by then, or bad again within `fall-back-ticks` of pushing, make it give the post
 up for another objective. A leader left alone in a fight falls back once the same way to wait for its teammates. A guard
 whose post is that outnumbered rejoins its team, and a guard that stays takes cover first when it is wounded or venting.
+A bot that stands within 1.5 blocks of one spot for `stand-ticks` with an enemy within sight range runs at the nearest
+enemy for five seconds, unless it is wounded, treating a patient, falling back, in siege mode or a guard at its lookout.
 When a member falls, its teammates take the killer's position as contact for
 `alarm-ticks`; a bot with nothing in sight turns toward enemy fire within `hearing-range`. Soldiers and heavies throw their
 explosives at enemies dug into a post or hidden behind cover, and a heavy holding open ground under fire raises its shield
