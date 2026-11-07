@@ -421,12 +421,12 @@ scope:
 outlines: {enabled: true, range: 64, allies: false}
 
 combat-feedback:
-  marker-ticks: 6
+  marker-ticks: 8
   reward-ticks: 30
   hero-ready-ticks: 60
   elite-ready-ticks: 60
   multikill-seconds: 4
-  sound: {hit: 0.65, headshot: 0.8, kill: 0.9}
+  sound: {hit: 1.0, headshot: 1.0, kill: 0.9}
 
 intro:
   enabled: true
