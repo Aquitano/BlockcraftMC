@@ -77,10 +77,11 @@ falls back from the enemy, else stands still. A wounded leader hands the lead to
 combat by the same `regen` rule as players, and medics heal bots as they heal players.
 
 A team whose leader has twice as many enemies as friends within `fall-back-range`, and at least two, runs back to its
-route's retreat points and holds there for `fall-back-ticks`, then pushes again. A leader left alone in a fight falls back
-the same way and waits up to `rally-ticks` for its teammates to come up from their respawn. A guard falls back the same
-way while its post is that outnumbered, which also brings its team back, and a guard that stays takes cover first when
-it is wounded or venting. When a member falls, its teammates take the killer's position as contact for
+route's retreat points. It pushes again as soon as it is back there and no longer outnumbered, and waits there
+`fall-back-ticks` at most. Odds still bad by then, or bad again within `fall-back-ticks` of pushing, make it give the post
+up for another objective. A leader left alone in a fight falls back once the same way to wait for its teammates. A guard
+whose post is that outnumbered rejoins its team, and a guard that stays takes cover first when it is wounded or venting.
+When a member falls, its teammates take the killer's position as contact for
 `alarm-ticks`; a bot with nothing in sight turns toward enemy fire within `hearing-range`. Soldiers and heavies throw their
 explosives at enemies dug into a post or hidden behind cover, and a heavy holding open ground under fire raises its shield
 wall. A bot's aim scatters on a fresh target and settles over `aim-settle-ticks`, and each member watches its own sector.

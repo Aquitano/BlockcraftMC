@@ -19,7 +19,7 @@ public record BotConfig(boolean enabled, int perTeam, double range, double visio
     public record Squad(int fireteamSize, double switchMargin, double spacing, double stagger, double regroupDistance,
                         double catchUpDistance, double walkSpeed, double sprintSpeed, double boundDistance,
                         int boundTicks, int flankAfterTicks, double followRange, double reinforcePull,
-                        double fallBackRange, int fallBackTicks, int rallyTicks) { }
+                        double fallBackRange, int fallBackTicks) { }
 
     public record Voice(boolean enabled, double range, float volume, int soldierCooldownTicks, int globalCooldownTicks) { }
 
@@ -84,8 +84,7 @@ public record BotConfig(boolean enabled, int perTeam, double range, double visio
                         Math.clamp(config.getDouble("bots.squad.follow-range", 12), 0, 48),
                         Math.clamp(config.getDouble("bots.squad.reinforce-pull", 80), 0, 200),
                         Math.clamp(config.getDouble("bots.squad.fall-back-range", 16), 4, 32),
-                        Math.clamp(config.getInt("bots.squad.fall-back-ticks", 160), 40, 600),
-                        Math.clamp(config.getInt("bots.squad.rally-ticks", 400), 0, 2400)),
+                        Math.clamp(config.getInt("bots.squad.fall-back-ticks", 160), 40, 600)),
                 BotDifficulty.named(config.getString("bots.difficulty", "normal")).orElse(BotDifficulty.NORMAL),
                 Map.copyOf(profiles));
     }
