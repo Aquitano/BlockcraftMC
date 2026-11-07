@@ -550,11 +550,27 @@ public final class SternenfrontArt {
             0x3E2417, 0x61402B, 0x855B3A, 0xA4774C, 0xBE9263);
     private static final Paint GREY_HAIR = paint("grey_hair", 2, Grain.SMOOTH, 0, Wear.NONE,
             0x777875, 0x9B9D99, 0xC0C2BC, 0xDCDED8, 0xF4F4EC);
-    private static final Sprite SABER = new Sprite("saber", true, true, (width, height, random) -> {
+    private static final Sprite SABER = new Sprite("saber", true, false, (width, height, random) -> {
         var pixels = new int[width * height];
         Arrays.fill(pixels, 0xFFFFFF);
         return pixels;
     });
+    private static final Sprite SABER_HALO = new Sprite("saber_halo", true, true, falloff(150));
+    private static final Sprite SABER_GLOW = new Sprite("saber_glow", true, true, falloff(40));
+
+    /** White whose alpha peaks at {@code peak} down a face's centre line and fades to nothing at its edges. */
+    private static Drawing falloff(int peak) {
+        return (width, height, random) -> {
+            var pixels = new int[width * height];
+            for (int x = 0; x < width; x++) {
+                int alpha = (int) Math.round(peak * Math.pow(1 - Math.abs(2 * (x + .5) / width - 1), 1.5));
+                for (int y = 0; y < height; y++) {
+                    pixels[y * width + x] = argb(alpha, 0xFFFFFF);
+                }
+            }
+            return pixels;
+        };
+    }
 
     private static Family battleDroid(String role) {
         Paint marking = switch (role) {
@@ -1037,10 +1053,30 @@ public final class SternenfrontArt {
                     .both(box(.035, -.08, 0, .012, .1, .04, STEEL));
         }
         if (lit) {
-            hilt.add(box(0, .81, 0, .035, 1.29, .035, SABER))
-                    .add(box(0, 1.46, 0, .025, .025, .025, SABER));
+            hilt.add(blade());
         }
         return equipment("lightsaber_" + (dooku ? "sith" : "jedi") + (lit ? "" : "_off"), hilt, SABER_DISPLAY);
+    }
+
+    private static final double EMITTER = .16;
+    private static final double BLADE = 1.27;
+    private static final Face[] SHELL = {Face.NORTH, Face.SOUTH, Face.EAST, Face.WEST, Face.UP};
+
+    /**
+     * An opaque white core inside two tinted shells, each wider and fainter than the last and capped one step
+     * narrower past the tip, so the colour reads as a glow round a rounded end.
+     */
+    private static List<Box> blade() {
+        double tip = EMITTER + BLADE;
+        return List.of(column(.03, EMITTER, tip, SABER),
+                column(.09, EMITTER, tip + .03, SABER_HALO).only(SHELL),
+                column(.06, tip + .03, tip + .05, SABER_HALO).only(SHELL),
+                column(.15, EMITTER, tip + .04, SABER_GLOW).only(SHELL),
+                column(.1, tip + .04, tip + .07, SABER_GLOW).only(SHELL));
+    }
+
+    private static Box column(double across, double from, double to, Surface surface) {
+        return box(0, (from + to) / 2, 0, across, to - from, across, surface);
     }
 
     private static Family darksaber() {
@@ -1518,11 +1554,13 @@ public final class SternenfrontArt {
         for (var tile : ordered) {
             var random = new Random(fnv(family.name + "/" + tile.key));
             var colours = tile.surface.draw(tile.face, tile.width, tile.height, random);
+            // Paints and the saber core draw no alpha; a sprite that does keeps it, so a blade's glow stays translucent.
+            boolean alpha = family.translucent || Arrays.stream(colours).anyMatch(colour -> colour >>> 24 != 0);
             var at = placed.get(tile.key);
             for (int y = -GUTTER; y < tile.height + GUTTER; y++) {
                 for (int x = -GUTTER; x < tile.width + GUTTER; x++) {
                     int colour = colours[Math.clamp(y, 0, tile.height - 1) * tile.width + Math.clamp(x, 0, tile.width - 1)];
-                    atlas.setRGB(at.x + x, at.y + y, family.translucent ? colour : 0xFF000000 | colour);
+                    atlas.setRGB(at.x + x, at.y + y, alpha ? colour : 0xFF000000 | colour);
                 }
             }
         }

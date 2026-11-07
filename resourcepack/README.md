@@ -45,6 +45,9 @@ exported with "Java Block/Item".
   draws a worn skull as a skull whatever its model.
 - A tinted `PackModel` takes the colour of its `tintindex: 0` faces from the item's first custom_model_data colour, so
   one model draws every blade colour.
+- The client sorts each face by the alpha of its own texture region: a face with partial alpha draws in the sorted
+  translucent pass and the rest of the model stays solid. A lightsaber's white core is opaque and its two tinted
+  shells fade across each face, which is as close to a glow as an item model gets without additive blending.
 - Item icons use a native 16-pixel grid, transparent margins and upper-left lighting. HUD symbols use seven pixels of ink
   in each eight-pixel tile to align with the text baseline.
 
