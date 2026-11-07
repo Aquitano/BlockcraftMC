@@ -34,4 +34,14 @@ public class BotAimTest {
         assertTrue(turned.getZ() > 0);
         assertEquals(new Vector(0, 0, 1), BotAim.turn(new Vector(0.01, 0, 1), start, 12));
     }
+
+    @Test
+    public void firesOnlyAheadAndTurnsRoundForATargetBehind() {
+        var behind = new Vector(0, 0, -1);
+        assertTrue(BotAim.covers(0, new Vector(0.5, 0.2, 1), 60));
+        assertFalse(BotAim.covers(0, behind, 60));
+        assertTrue(BotAim.covers(170, new Vector(0.1, 0, -1), 60));
+        assertEquals(20, Math.abs(BotAim.turnYaw(0, behind, 20)), 0.001);
+        assertEquals(180, Math.abs(BotAim.turnYaw(170, behind, 20)), 0.001);
+    }
 }

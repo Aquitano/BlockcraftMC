@@ -16,6 +16,29 @@ public final class BotAim {
         return since >= ticks ? 1 : start - (start - 1) * since / ticks;
     }
 
+    /** Whether {@code aim} lies within {@code degrees} either side of where a body with {@code bodyYaw} faces. */
+    static boolean covers(float bodyYaw, Vector aim, double degrees) {
+        if (aim.getX() * aim.getX() + aim.getZ() * aim.getZ() < 1.0E-4) {
+            return true;
+        }
+        return Math.abs(wrap(yaw(aim) - bodyYaw)) <= degrees;
+    }
+
+    /** A body's yaw turned toward {@code aim} by at most {@code degrees}. */
+    static float turnYaw(float bodyYaw, Vector aim, float degrees) {
+        float difference = wrap(yaw(aim) - bodyYaw);
+        return wrap(bodyYaw + Math.clamp(difference, -degrees, degrees));
+    }
+
+    private static float yaw(Vector direction) {
+        return (float) Math.toDegrees(Math.atan2(-direction.getX(), direction.getZ()));
+    }
+
+    private static float wrap(float degrees) {
+        float wrapped = degrees % 360;
+        return wrapped >= 180 ? wrapped - 360 : wrapped < -180 ? wrapped + 360 : wrapped;
+    }
+
     public static Vector turn(Vector current, Vector wanted, double degrees) {
         var from = current.clone().normalize();
         var to = wanted.clone().normalize();

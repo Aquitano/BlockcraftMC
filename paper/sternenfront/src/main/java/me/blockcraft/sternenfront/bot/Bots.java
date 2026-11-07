@@ -74,6 +74,11 @@ public final class Bots implements Listener {
     private static final int PRESS_TICKS = 100;
     private static final double EYE_HEIGHT = 1.6;
     private static final int PUSH_RETRY_TICKS = 200;
+    /** Inside the head and arm reach BetterModel gives a body, about 75 degrees either side, with room to spare. */
+    private static final double FIRE_ARC_DEGREES = 60;
+    private static final float TURN_TO_FIRE_DEGREES = 20;
+    private static final Set<String> KEEP_RUNNING = Set.of("fall-back", "to-medic", "recover", "retreat-wounded", "bound",
+            "catch-up", "flank");
     private static final Set<String> STANDING_ALLOWED = Set.of("defend-peek", "fall-back", "siege", "treat-patient");
     private static final Set<String> HOLDING_GROUND = Set.of("overwatch", "assault", "strafe-in-post", "defend-peek",
             "contest-owned-post", "hold-for-team");
@@ -1232,6 +1237,21 @@ public final class Bots implements Listener {
         }
     }
 
+    /**
+     * A bot can only fire where its arms reach, so a target behind it means stopping and turning round first; one that
+     * is running for cover, its medic or its next bound keeps running instead.
+     */
+    private static void turnToFire(Soldier soldier) {
+        if (KEEP_RUNNING.contains(soldier.activity)) {
+            return;
+        }
+        var body = soldier.body;
+        body.getPathfinder().stopPathfinding();
+        float yaw = BotAim.turnYaw(body.getBodyYaw(), soldier.aim, TURN_TO_FIRE_DEGREES);
+        body.setBodyYaw(yaw);
+        body.setRotation(yaw, body.getPitch());
+    }
+
     private void fireVolley(Soldier soldier, long tick) {
         if (!soldier.volley.active()) {
             return;
@@ -1241,6 +1261,10 @@ public final class Bots implements Listener {
                 && soldier.body.hasLineOfSight(enemy);
         if (!sighted && soldier.suppress == null) {
             soldier.volley.clear();
+            return;
+        }
+        if (!BotAim.covers(soldier.body.getBodyYaw(), soldier.aim, FIRE_ARC_DEGREES)) {
+            turnToFire(soldier);
             return;
         }
         while (soldier.volley.next(tick)) {
