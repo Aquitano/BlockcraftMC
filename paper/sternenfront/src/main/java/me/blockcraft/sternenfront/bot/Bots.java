@@ -67,6 +67,8 @@ public final class Bots implements Listener {
      * stays at that height: about what a player of that class measures, and it still fits the wreck's corridors.
      */
     private static final double TALLEST_BODY_SCALE = 1;
+    private static final List<CombatClass> ROTATION = List.of(CombatClass.SOLDIER, CombatClass.HEAVY, CombatClass.MEDIC,
+            CombatClass.SCOUT);
 
     private static final class Soldier {
         private final int number;
@@ -116,20 +118,16 @@ public final class Bots implements Listener {
         private long voiceAt;
         private final BotRecovery recovery = new BotRecovery();
 
-        private Soldier(int number, Faction faction) {
+        private Soldier(int number, Faction faction, CombatClass role) {
             this.number = number;
             this.faction = faction;
-            this.role = infantryClass(number);
+            this.role = role;
         }
     }
 
-    static CombatClass infantryClass(int number) {
-        return switch (number % 4) {
-            case 0 -> CombatClass.SCOUT;
-            case 2 -> CombatClass.HEAVY;
-            case 3 -> CombatClass.MEDIC;
-            default -> CombatClass.SOLDIER;
-        };
+    /** The class a faction lacks most, so each side fields the same mix whatever the other side's count. */
+    static CombatClass infantryClass(List<CombatClass> fielded) {
+        return ROTATION.stream().min(Comparator.comparingLong(role -> fielded.stream().filter(role::equals).count())).orElseThrow();
     }
 
     private final SternenfrontGame game;
@@ -232,7 +230,8 @@ public final class Bots implements Listener {
                 changed = true;
             }
             for (int index = factionSoldiers.size(); index < needed; index++) {
-                soldiers.add(new Soldier(++nextNumber, faction));
+                var fielded = soldiers.stream().filter(soldier -> soldier.faction == faction).map(soldier -> soldier.role).toList();
+                soldiers.add(new Soldier(++nextNumber, faction, infantryClass(fielded)));
                 changed = true;
             }
         }

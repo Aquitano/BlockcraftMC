@@ -3,19 +3,25 @@ package me.blockcraft.sternenfront.bot;
 import me.blockcraft.sternenfront.game.CombatClass;
 import org.junit.Test;
 
-import java.util.EnumSet;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
 public class BotClassesTest {
 
     @Test
-    public void eachFourSeatTeamDeploysEveryInfantryClass() {
-        for (int first : new int[]{1, 5}) {
-            var roles = IntStream.range(first, first + 4).mapToObj(Bots::infantryClass).collect(Collectors.toSet());
-            assertEquals(EnumSet.allOf(CombatClass.class), roles);
+    public void eachSideDealsTheClassesInTheSameOrderWhateverItsSize() {
+        var fielded = new ArrayList<CombatClass>();
+        for (int seat = 0; seat < 6; seat++) {
+            fielded.add(Bots.infantryClass(fielded));
         }
+        assertEquals(List.of(CombatClass.SOLDIER, CombatClass.HEAVY, CombatClass.MEDIC, CombatClass.SCOUT,
+                CombatClass.SOLDIER, CombatClass.HEAVY), fielded);
+    }
+
+    @Test
+    public void aSeatFreedByALeavingBotGoesToTheMissingClass() {
+        assertEquals(CombatClass.HEAVY, Bots.infantryClass(List.of(CombatClass.SOLDIER, CombatClass.MEDIC, CombatClass.SCOUT)));
     }
 }
