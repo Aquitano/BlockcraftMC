@@ -25,7 +25,10 @@ import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.util.Transformation;
 import org.bukkit.util.Vector;
+import org.joml.Quaternionf;
+import org.joml.Vector3f;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -42,6 +45,11 @@ public final class Powers {
     private static final double SABER_REACH = 0.6;
     private static final double CATCH_DISTANCE = 1.5;
     private static final float SPIN_DEGREES = 45;
+    /** How far up the model, from the hilt's origin, the middle of pommel to tip lies; the flat spin turns about it. */
+    private static final float SPIN_CENTRE = 0.63f;
+    /** Lays the blade flat with its middle on the display, so the display's yaw spins it like a disc. */
+    private static final Transformation FLAT = new Transformation(new Vector3f(0, 0, -SPIN_CENTRE), new Quaternionf(),
+            new Vector3f(1), new Quaternionf().rotationX((float) Math.PI / 2));
     private static final long THROW_TIMEOUT = 100;
     private static final int WHIRL_TICKS = 5;
     private static final float WHIRL_VOLUME = 0.7f;
@@ -155,10 +163,12 @@ public final class Powers {
         var eye = player.getEyeLocation();
         var heading = eye.getDirection();
         var start = eye.clone();
+        start.setPitch(0);
         var blade = sabers.item(player, hero, true);
         var display = Displays.item(start, blade, spawned -> {
             spawned.setBrightness(Displays.LIT);
             spawned.setTeleportDuration(1);
+            spawned.setTransformation(FLAT);
         });
         sabers.unlit(player, hero);
         SoundCue.SABER_THROW.playOn(display, 1.2f, 1f);
