@@ -598,7 +598,10 @@ public final class Bots implements Listener {
         team.assaulting = post != null && Math.hypot(at.getX() - post.center().getX(), at.getZ() - post.center().getZ())
                 <= post.radius() + ASSAULT_REACH;
         var settings = config.squad();
-        contact(team, squad, tick);
+        if (squad.stream().noneMatch(soldier -> soldier.number == team.flanker)) {
+            team.flanker = -1;
+        }
+        contact(team, squad.stream().filter(soldier -> soldier.body.getLocation().distance(at) < settings.catchUpDistance()).toList(), tick);
         boolean behind = !team.assaulting && team.threat == null && squad.stream().filter(soldier -> soldier != leader).map(soldier -> soldier.body.getLocation())
                 .filter(where -> where.getWorld().equals(at.getWorld())).mapToDouble(at::distance)
                 .anyMatch(distance -> distance > settings.regroupDistance() && distance < settings.catchUpDistance());
@@ -610,6 +613,7 @@ public final class Bots implements Listener {
         team.regrouping = behind && tick - team.waitingSince < REGROUP_TICKS;
     }
 
+    /** {@code squad} holds only the members near the leader; anyone further is still on the way and fights alone. */
     private void contact(Fireteam team, List<Soldier> squad, long tick) {
         team.threat = squad.stream().filter(soldier -> remembering(soldier, tick))
                 .max(Comparator.comparingLong(soldier -> soldier.seenUntil)).map(soldier -> soldier.lastSeen.clone()).orElse(null);
@@ -617,9 +621,6 @@ public final class Bots implements Listener {
             team.contactSince = -1;
         } else if (team.contactSince < 0) {
             team.contactSince = tick;
-        }
-        if (squad.stream().noneMatch(soldier -> soldier.number == team.flanker)) {
-            team.flanker = -1;
         }
         if (team.threat == null || team.assaulting || team.objective < 0) {
             team.bounding.reset();
@@ -629,7 +630,7 @@ public final class Bots implements Listener {
         var settings = config.squad();
         var routes = game.map().posts().get(team.objective).routes().get(team.faction).size();
         if (team.flanker < 0 && squad.size() >= 3 && routes > 1 && tick - team.contactSince >= settings.flankAfterTicks()) {
-            squad.stream().skip(1).filter(soldier -> soldier.role == CombatClass.SCOUT).findFirst()
+            squad.stream().filter(soldier -> soldier.number != team.leader).filter(soldier -> soldier.role == CombatClass.SCOUT).findFirst()
                     .or(() -> Optional.of(squad.getLast())).filter(soldier -> soldier.number != team.leader).ifPresent(flanker -> {
                         team.flanker = flanker.number;
                         flanker.objective = -1;
@@ -741,10 +742,11 @@ public final class Bots implements Listener {
         var team = defending ? null : soldier.team;
         var leader = team == null ? Optional.<Soldier>empty() : leader(team);
         var settings = config.squad();
-        boolean following = leader.filter(other -> other != soldier).isPresent()
-                && tick >= soldier.soloUntil && leader.get().body.getLocation().distance(here) < settings.catchUpDistance();
+        boolean withTeam = leader.map(other -> other == soldier || other.body.getLocation().distance(here) < settings.catchUpDistance())
+                .orElse(true);
+        boolean following = withTeam && leader.filter(other -> other != soldier).isPresent() && tick >= soldier.soloUntil;
         boolean flanking = team != null && team.flanker == soldier.number;
-        boolean underFire = team != null && team.threat != null && !team.assaulting;
+        boolean underFire = withTeam && team != null && team.threat != null && !team.assaulting;
         boolean bounding = underFire && !flanking && team.element(soldier.number) == team.bounding.moving();
         if (bounding && soldier.bound != team.bounding.bound()) {
             soldier.bound = team.bounding.bound();
