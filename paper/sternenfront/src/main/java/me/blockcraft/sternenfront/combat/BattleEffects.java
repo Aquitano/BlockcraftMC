@@ -3,6 +3,7 @@ package me.blockcraft.sternenfront.combat;
 import me.blockcraft.api.item.HotbarItem;
 import me.blockcraft.sternenfront.game.Blaster;
 import me.blockcraft.sternenfront.game.Faction;
+import me.blockcraft.sternenfront.game.HeatGlow;
 import me.blockcraft.sternenfront.game.SoundCue;
 import me.blockcraft.sternenfront.game.SternenfrontGame;
 import org.bukkit.Color;
@@ -45,6 +46,7 @@ public final class BattleEffects {
     private static final Vector UP = new Vector(0, 1, 0);
     private static final Vector STILL = new Vector();
     private static final int VENT_INTERVAL = 3;
+    private static final int FIRING_TICKS = 3;
     private static final double VENTING_HEAT = 0.85;
     private static final double HOT_BARREL = 0.65;
     private static final double OFF_THE_WALL = 0.12;
@@ -73,6 +75,7 @@ public final class BattleEffects {
     private final Flares flares;
     private final Flares scorches;
     private final Ambience ambience;
+    private final HeatGlow.Steps glow;
     private final Map<UUID, Shot> shots = new HashMap<>();
     private final List<Tether> tethers = new ArrayList<>();
     private final Map<UUID, Long> nextSaberMark = new HashMap<>();
@@ -86,6 +89,7 @@ public final class BattleEffects {
         flares = new Flares(config.liveEffects());
         scorches = new Flares(config.scorch().marks());
         ambience = new Ambience(game.map(), config.ambient());
+        glow = HeatGlow.Steps.from(game.plugin().getConfig().getConfigurationSection("heat"));
     }
 
     public PresentationConfig config() {
@@ -101,11 +105,7 @@ public final class BattleEffects {
             return;
         }
         shots.put(actor.getUniqueId(), new Shot(actor, blaster, game.tick()));
-        var held = actor.getEquipment().getItemInMainHand();
-        if (HotbarItem.of(held, Blaster.class).filter(blaster::equals).isPresent()) {
-            blaster.firingModel().mark(held);
-            actor.getEquipment().setItemInMainHand(held);
-        }
+        showBlasters(actor, game.tick());
         var muzzle = muzzle(actor, direction);
         if (muzzle.getBlock().isPassable()) {
             var flash = config.muzzleFlash();
@@ -446,12 +446,13 @@ public final class BattleEffects {
         flares.tick();
         scorches.tick();
         shots.values().removeIf(shot -> {
-            if (!shot.actor().isValid() || tick - shot.tick() >= 3) {
+            if (!shot.actor().isValid() || tick - shot.tick() >= FIRING_TICKS) {
                 restore(shot);
                 return true;
             }
             return false;
         });
+        game.combatants().forEach(actor -> showBlasters(actor, tick));
         tethers.removeIf(tether -> !game.onField(tether.player()) || tick >= tether.until()
                 || !tether.player().getWorld().equals(tether.anchor().getWorld())
                 || tether.player().getEyeLocation().distanceSquared(tether.anchor()) < 2);
@@ -529,32 +530,38 @@ public final class BattleEffects {
         return spot;
     }
 
-    private static void restore(Shot shot) {
-        if (shot.actor().isValid()) {
-            if (shot.actor() instanceof Player player) {
-                var inventory = player.getInventory();
-                for (int slot = 0; slot < inventory.getSize(); slot++) {
-                    var item = inventory.getItem(slot);
-                    if (restore(item, shot.blaster())) {
-                        inventory.setItem(slot, item);
-                    }
-                }
-            } else {
-                var held = shot.actor().getEquipment().getItemInMainHand();
-                if (restore(held, shot.blaster())) {
-                    shot.actor().getEquipment().setItemInMainHand(held);
-                }
-            }
+    /** The blasters in {@code actor}'s hands, in the pose of their last shot and glowing with their heat. */
+    private void showBlasters(LivingEntity actor, long tick) {
+        var equipment = actor.getEquipment();
+        if (equipment == null) {
+            return;
+        }
+        var shot = shots.get(actor.getUniqueId());
+        var pose = shot != null && tick - shot.tick() < FIRING_TICKS ? Blaster.Pose.FIRING : Blaster.Pose.READY;
+        var heat = actor instanceof Player player
+                ? HeatGlow.of(glow, game.fighter(player).heat().level(), game.fighter(player).heat().venting(tick), tick)
+                : HeatGlow.of(glow, game.bots().heat(actor), game.bots().venting(actor, tick), tick);
+        var main = equipment.getItemInMainHand();
+        if (HotbarItem.of(main, Blaster.class).filter(blaster -> blaster.show(main, pose, heat)).isPresent()) {
+            equipment.setItemInMainHand(main);
+        }
+        var off = equipment.getItemInOffHand();
+        if (HotbarItem.of(off, Blaster.class).filter(blaster -> blaster.show(off, pose, heat)).isPresent()) {
+            equipment.setItemInOffHand(off);
         }
     }
 
-    private static boolean restore(ItemStack item, Blaster blaster) {
-        if (HotbarItem.of(item, Blaster.class).filter(blaster::equals).isPresent()
-                && item.getItemMeta().getCustomModelDataComponent().getStrings().contains(blaster.firingModel().key())) {
-            blaster.model().mark(item);
-            return true;
+    /** A shooter may have put the gun away mid-shot; the hands show their blasters again the same tick. */
+    private static void restore(Shot shot) {
+        if (shot.actor() instanceof Player player && player.isValid()) {
+            var inventory = player.getInventory();
+            for (int slot = 0; slot < inventory.getSize(); slot++) {
+                var item = inventory.getItem(slot);
+                if (HotbarItem.of(item, Blaster.class).filter(blaster -> blaster.show(item, Blaster.Pose.READY, HeatGlow.COLD)).isPresent()) {
+                    inventory.setItem(slot, item);
+                }
+            }
         }
-        return false;
     }
 
     public void clear() {

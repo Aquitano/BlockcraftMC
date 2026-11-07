@@ -200,6 +200,11 @@ public final class Bots implements Listener {
         return soldier == null ? 0 : soldier.heat.level();
     }
 
+    public boolean venting(Entity entity, long tick) {
+        var soldier = bodies.get(entity.getUniqueId());
+        return soldier != null && soldier.heat.venting(tick);
+    }
+
     public Optional<BotSnapshot> snapshot(Entity entity) {
         var soldier = bodies.get(entity.getUniqueId());
         if (soldier == null) {

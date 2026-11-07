@@ -187,6 +187,12 @@ A title's subtitle stays readable under the marks, which `UiFont.centredOn` keep
 The heat meter turns red and shows `HEISS` at `heat.warning-level`, or when the next shot would overheat the weapon.
 Venting shows `Kühlt` until the weapon is ready, followed by a ready sound. `combat-feedback` tunes marker and
 popup durations and the hit, headshot, and kill volumes.
+The vents on every blaster show its heat to its holder and everyone else: grey when cold, orange from `heat.glow.warm`,
+bright from `heat.warning-level`, and pulsing while venting. The colour is the held item's first custom_model_data
+colour, set with the firing pose's model string, so the item changes only when the step or the pose does. The client
+does not lower the gun for these changes, because the hoe keeps its item type and its override sets
+`hand_animation_on_swap` to false. Animated bot bodies leave the vents out, because their rig has no item to tint them;
+the display bodies show them.
 
 A player's bolts and long-rifle shots meet fighters, speeders and heads where that player's screen showed them, which is
 their ping plus the client's smoothing of other entities behind the server. Each tick records every target's hitbox for that.

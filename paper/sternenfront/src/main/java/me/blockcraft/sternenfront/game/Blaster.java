@@ -1,8 +1,12 @@
 package me.blockcraft.sternenfront.game;
 
+import io.papermc.paper.datacomponent.DataComponentTypes;
+import io.papermc.paper.datacomponent.item.CustomModelData;
 import me.blockcraft.api.item.HotbarItem;
 import me.blockcraft.api.pack.PackModel;
+import org.bukkit.inventory.ItemStack;
 
+import java.util.List;
 import java.util.Locale;
 
 /**
@@ -33,6 +37,9 @@ public enum Blaster implements HotbarItem {
     public record Stats(double damage, double headshot, double heat, int cooldownTicks, int bolts, int burstTicks,
                         double spread, double speed, double range) {
     }
+
+    /** How a held blaster is drawn: ready, or kicked back by a shot. */
+    public enum Pose { READY, FIRING }
 
     private final PackModel model;
 
@@ -67,7 +74,25 @@ public enum Blaster implements HotbarItem {
         return profile() == TWIN_PISTOL;
     }
 
-    public PackModel firingModel() {
+    public PackModel model(Pose pose) {
+        return switch (pose) {
+            case READY -> model;
+            case FIRING -> firingModel();
+        };
+    }
+
+    /** Draws {@code item} in {@code pose} with its vents in {@code glow}; false when it already looked so. */
+    public boolean show(ItemStack item, Pose pose, HeatGlow glow) {
+        var key = model(pose).key();
+        var current = item.getData(DataComponentTypes.CUSTOM_MODEL_DATA);
+        if (current != null && current.strings().equals(List.of(key)) && current.colors().equals(List.of(glow.colour()))) {
+            return false;
+        }
+        item.setData(DataComponentTypes.CUSTOM_MODEL_DATA, CustomModelData.customModelData().addString(key).addColor(glow.colour()).build());
+        return true;
+    }
+
+    private PackModel firingModel() {
         return switch (this) {
             case CARBINE -> PackModel.STERNENFRONT_CARBINE_FIRING;
             case REPEATER, ARC_REPEATER -> PackModel.STERNENFRONT_REPEATER_FIRING;

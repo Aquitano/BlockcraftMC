@@ -7,9 +7,11 @@ import static org.junit.Assert.assertEquals;
 public class BlasterPresentationTest {
 
     @Test
-    public void firingPosesKeepEachWeaponsVanillaFallback() {
+    public void everyPoseKeepsTheWeaponsVanillaFallback() {
         for (var blaster : Blaster.values()) {
-            assertEquals(blaster.model().fallback(), blaster.firingModel().fallback());
+            for (var pose : Blaster.Pose.values()) {
+                assertEquals(blaster.model().fallback(), blaster.model(pose).fallback());
+            }
         }
     }
 }
