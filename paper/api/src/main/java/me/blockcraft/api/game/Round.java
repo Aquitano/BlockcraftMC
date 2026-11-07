@@ -392,7 +392,8 @@ public final class Round implements Listener {
     public void handOutTrackers(int minutes, ItemStack tracker) {
         arena.announceTrackers(minutes);
         for (var player : players()) {
-            player.getInventory().addItem(tracker.clone());
+            player.getInventory().addItem(tracker.clone()).values()
+                    .forEach(rest -> player.getWorld().dropItem(player.getLocation(), rest));
             Sounds.NOTIFY.play(player);
         }
     }
