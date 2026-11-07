@@ -8,28 +8,56 @@
         "when": "blockcraft:sternenfront/e5s",
         "model": {
           "type": "minecraft:model",
-          "model": "blockcraft:item/sternenfront/e5s"
+          "model": "blockcraft:item/sternenfront/e5s",
+          "tints": [
+            {
+              "type": "minecraft:custom_model_data",
+              "index": 0,
+              "default": -1
+            }
+          ]
         }
       },
       {
         "when": "blockcraft:sternenfront/e5s_firing",
         "model": {
           "type": "minecraft:model",
-          "model": "blockcraft:item/sternenfront/e5s_firing"
+          "model": "blockcraft:item/sternenfront/e5s_firing",
+          "tints": [
+            {
+              "type": "minecraft:custom_model_data",
+              "index": 0,
+              "default": -1
+            }
+          ]
         }
       },
       {
         "when": "blockcraft:sternenfront/long_rifle",
         "model": {
           "type": "minecraft:model",
-          "model": "blockcraft:item/sternenfront/long_rifle"
+          "model": "blockcraft:item/sternenfront/long_rifle",
+          "tints": [
+            {
+              "type": "minecraft:custom_model_data",
+              "index": 0,
+              "default": -1
+            }
+          ]
         }
       },
       {
         "when": "blockcraft:sternenfront/long_rifle_firing",
         "model": {
           "type": "minecraft:model",
-          "model": "blockcraft:item/sternenfront/long_rifle_firing"
+          "model": "blockcraft:item/sternenfront/long_rifle_firing",
+          "tints": [
+            {
+              "type": "minecraft:custom_model_data",
+              "index": 0,
+              "default": -1
+            }
+          ]
         }
       },
       {

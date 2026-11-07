@@ -86,6 +86,9 @@ class Model:
         textures = model["textures"]
         place = lambda c: turned(*(at[i] * 16 + (c[i] - 8) * scale for i in range(3)))
         for index, element in enumerate(model["elements"]):
+            # A gun's heat vents take their colour from the held item, which a rig has not, so they would glow white.
+            if bone == "weapon" and any("tintindex" in face for face in element["faces"].values()):
+                continue
             faces = {}
             for side, face in element["faces"].items():
                 reference = textures[face["texture"].lstrip("#")]

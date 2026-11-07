@@ -502,6 +502,14 @@ public final class SternenfrontArt {
                 box(x, y, z, across, flat, length - .012, surface).spinZ(-45));
     }
 
+    /** Two glowing bands {@code gap} apart around a barrel {@code across} wide, joined by a strip along its top. */
+    private static List<Box> vents(double x, double y, double z, double across, double gap) {
+        var vents = new ArrayList<>(drumZ(x, y, z - gap / 2, across, .025, HEAT));
+        vents.addAll(drumZ(x, y, z + gap / 2, across, .025, HEAT));
+        vents.add(box(x, y + across / 2 - .004, z, .024, .014, gap, HEAT));
+        return vents;
+    }
+
     /** Eight-sided column along x. */
     private static List<Box> drumX(double x, double y, double z, double across, double length, Surface surface) {
         double flat = across * .4142;
@@ -562,6 +570,15 @@ public final class SternenfrontArt {
     private static final Sprite SABER = new Sprite("saber", true, true, (width, height, random) -> {
         var pixels = new int[width * height];
         Arrays.fill(pixels, 0xFFFFFF);
+        return pixels;
+    });
+
+    /** Slats in white, so the item's first custom_model_data colour shows the gun's heat on them. */
+    private static final Sprite HEAT = new Sprite("heat", true, true, (width, height, random) -> {
+        var pixels = new int[width * height];
+        for (int index = 0; index < pixels.length; index++) {
+            pixels[index] = index % width % 2 == 0 ? 0xFFFFFF : 0xB4B4B4;
+        }
         return pixels;
     });
 
@@ -990,6 +1007,7 @@ public final class SternenfrontArt {
                 .add(box(.25, .02, -.03, .025, .095, .11, FRAME))
                 .add(box(.165, .065, -.03, .1, .015, .03, TRIM))
                 .add(drumZ(0, .03, .19, .14, .14, FRAME))
+                .add(vents(0, .03, .19, .156, .08))
                 .add(drumZ(0, .03, .33, .115, .14, STEEL))
                 .add(drumZ(0, .03, .45, .09, .1, FRAME))
                 .add(box(0, .03, .54, .045, .045, .08, OILED))
@@ -1010,6 +1028,7 @@ public final class SternenfrontArt {
                 .add(box(0, -.12, -.02, .1, .14, .1, STEEL).spinX(-22.5))
                 .add(box(.105, .03, -.08, .05, .07, .12, STEEL))
                 .add(drumZ(0, .03, .23, .13, .16, FRAME))
+                .add(vents(0, .03, .23, .146, .09))
                 .add(drumZ(0, .03, .6, .085, .58, STEEL))
                 .add(drumZ(0, .03, .93, .065, .1, FRAME))
                 .add(box(0, -.08, .45, .06, .14, .07, RUBBER).spinX(-22.5))
@@ -1035,6 +1054,7 @@ public final class SternenfrontArt {
                 .add(box(0, -.1, -.18, .03, .02, .12, FRAME))
                 .add(box(0, -.1, -.02, .08, .12, .1, STEEL))
                 .add(drumZ(0, .03, .15, .1, .14, FRAME))
+                .add(vents(0, .03, .15, .116, .08))
                 .add(drumZ(0, .03, .66, .055, .9, STEEL))
                 .add(box(0, .03, 1.15, .085, .06, .09, FRAME))
                 .add(box(0, .03, 1.15, .06, .06, .09, FRAME).spinZ(45))
@@ -1064,7 +1084,8 @@ public final class SternenfrontArt {
                 .add(box(0, -.13, .06, .07, .2, .08, STEEL).spinX(-22.5))
                 .add(box(0, -.08, sniper ? -.5 : -.45, .05, .07, sniper ? .52 : .42, FRAME))
                 .add(box(0, -.1, sniper ? -.77 : -.68, .07, .17, .045, FRAME).spinX(22.5))
-                .add(box(0, .04, (.12 + muzzle) / 2, .045, .045, muzzle - .12, STEEL));
+                .add(box(0, .04, (.12 + muzzle) / 2, .045, .045, muzzle - .12, STEEL))
+                .add(vents(0, .04, .155, .06, .04));
         int rings = sniper ? 7 : 5;
         for (int ring = 0; ring < rings; ring++) {
             var collar = box(0, .04, .2 + ring * (muzzle - .35) / (rings - 1), .085, .085, .035, FRAME);
@@ -1087,6 +1108,7 @@ public final class SternenfrontArt {
                 .add(drumZ(0, .02, -.25, .28, .5, FRAME))
                 .add(drumZ(0, .02, .03, .3, .06, STEEL))
                 .add(drumZ(0, .02, .5, .31, .05, FRAME))
+                .add(vents(0, .02, -.15, .296, .2))
                 .add(drumZ(0, .02, .98, .32, .08, STEEL))
                 .add(drumZ(0, .02, .925, .325, .03, HAZARD))
                 .add(box(0, -.2, -.28, .11, .25, .13, RUBBER).spinX(22.5))
@@ -1109,6 +1131,7 @@ public final class SternenfrontArt {
                 .add(box(0, -.15, -.23, .085, .23, .1, westar ? LEATHER : FRAME).spinX(22.5))
                 .add(drumZ(0, .025, .18, westar ? .09 : .075, .36, metal))
                 .add(drumZ(0, .025, .37, .11, .04, STEEL))
+                .add(vents(0, .025, .27, .106, .06))
                 .add(box(0, .11, -.12, .025, .05, .035, FRAME))
                 .add(box(0, .09, .29, .025, .05, .035, FRAME));
         if (se14) {
@@ -1154,6 +1177,8 @@ public final class SternenfrontArt {
     private static List<Family> equipment() {
         var wrist = new Shape().add(box(0, -.04, -.12, .28, .25, .45, STEEL))
                 .both(box(.065, .015, .23, .07, .07, .3, FRAME))
+                .add(vents(.065, .015, .3, .1, .06))
+                .add(vents(-.065, .015, .3, .1, .06))
                 .add(box(0, -.09, -.55, .24, .23, .42, DROID))
                 .add(box(0, -.09, -.79, .29, .28, .08, FRAME))
                 .add(box(0, -.18, .08, .23, .16, .22, DROID));

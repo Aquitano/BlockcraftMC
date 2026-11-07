@@ -8,28 +8,56 @@
         "when": "blockcraft:sternenfront/twin_pistol",
         "model": {
           "type": "minecraft:model",
-          "model": "blockcraft:item/sternenfront/twin_pistol"
+          "model": "blockcraft:item/sternenfront/twin_pistol",
+          "tints": [
+            {
+              "type": "minecraft:custom_model_data",
+              "index": 0,
+              "default": -1
+            }
+          ]
         }
       },
       {
         "when": "blockcraft:sternenfront/twin_pistol_firing",
         "model": {
           "type": "minecraft:model",
-          "model": "blockcraft:item/sternenfront/twin_pistol_firing"
+          "model": "blockcraft:item/sternenfront/twin_pistol_firing",
+          "tints": [
+            {
+              "type": "minecraft:custom_model_data",
+              "index": 0,
+              "default": -1
+            }
+          ]
         }
       },
       {
         "when": "blockcraft:sternenfront/westar_pistols",
         "model": {
           "type": "minecraft:model",
-          "model": "blockcraft:item/sternenfront/westar_pistols"
+          "model": "blockcraft:item/sternenfront/westar_pistols",
+          "tints": [
+            {
+              "type": "minecraft:custom_model_data",
+              "index": 0,
+              "default": -1
+            }
+          ]
         }
       },
       {
         "when": "blockcraft:sternenfront/westar_pistols_firing",
         "model": {
           "type": "minecraft:model",
-          "model": "blockcraft:item/sternenfront/westar_pistols_firing"
+          "model": "blockcraft:item/sternenfront/westar_pistols_firing",
+          "tints": [
+            {
+              "type": "minecraft:custom_model_data",
+              "index": 0,
+              "default": -1
+            }
+          ]
         }
       },
       {

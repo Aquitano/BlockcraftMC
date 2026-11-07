@@ -1,1 +1,1 @@
-{"model":{"type":"minecraft:model","model":"blockcraft:item/sternenfront/e5"}}
+{"model":{"type":"minecraft:model","model":"blockcraft:item/sternenfront/e5","tints":[{"type":"minecraft:custom_model_data","index":0,"default":-1}]}}

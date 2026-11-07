@@ -8,14 +8,28 @@
         "when": "blockcraft:sternenfront/heavy_rifle",
         "model": {
           "type": "minecraft:model",
-          "model": "blockcraft:item/sternenfront/heavy_rifle"
+          "model": "blockcraft:item/sternenfront/heavy_rifle",
+          "tints": [
+            {
+              "type": "minecraft:custom_model_data",
+              "index": 0,
+              "default": -1
+            }
+          ]
         }
       },
       {
         "when": "blockcraft:sternenfront/heavy_rifle_firing",
         "model": {
           "type": "minecraft:model",
-          "model": "blockcraft:item/sternenfront/heavy_rifle_firing"
+          "model": "blockcraft:item/sternenfront/heavy_rifle_firing",
+          "tints": [
+            {
+              "type": "minecraft:custom_model_data",
+              "index": 0,
+              "default": -1
+            }
+          ]
         }
       },
       {
