@@ -71,7 +71,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -287,7 +286,7 @@ public final class Game implements RoundConnections.Seating {
     }
 
 
-    /** Back within the time the round kept their place: at the team's spawn, as after a death. */
+    /** Back within the time the round kept their place: at the team's spawn, as after a respawn. */
     private void rejoined(Player player) {
         teams.restore(player);
         if (player.isDead()) {
@@ -301,13 +300,23 @@ public final class Game implements RoundConnections.Seating {
         hideBriefly(player);
     }
 
-    /** A player whose team can still respawn keeps their place for a while; anyone else is out at once. */
+    /**
+     * A quit during play is a death, so that leaving does not escape a lost fight. A player whose team can still
+     * respawn then keeps their place for a while; anyone else is out at once.
+     */
     @Override
     public void quit(Player player) {
+        boolean fighting = phase() == GamePhase.INGAME && round.isPlaying(player);
+        if (fighting && !player.isDead()) {
+            player.setHealth(0.0);
+        }
         if (phase() == GamePhase.INGAME && teams.of(player).filter(Team::hasBed).isPresent()
                 && round.stepOut(player, this::forfeited)) {
             scoreboard.refreshAll();
             return;
+        }
+        if (fighting) {
+            roster.remove(player.getUniqueId());
         }
         leave(player);
     }
