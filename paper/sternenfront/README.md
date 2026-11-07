@@ -184,6 +184,11 @@ The heat meter turns red and shows `HEISS` at `heat.warning-level`, or when the 
 Venting shows `Kühlt` until the weapon is ready, followed by a ready sound. `combat-feedback` tunes marker and
 popup durations and the hit, headshot, and kill volumes.
 
+A player's bolts and long-rifle shots meet fighters, speeders and heads where that player's screen showed them, which is
+their ping plus the client's smoothing of other entities behind the server. Each tick records every target's hitbox for that.
+Walls, shields, guard and parry stay in the present, and bots' shots see only the present. `combat.lag-compensation` turns
+it off or caps how far back it reaches.
+
 Left click sweeps a saber-colored slash through every enemy ahead, including when aimed at air. Colored particles
 follow a continuous white line with a solid core visible from the side. Wall-clipped hit rays position its segments,
 each lasting `presentation.saber-trail-ticks` under the shared effect cap. Each enemy can take damage or block only once per swing.

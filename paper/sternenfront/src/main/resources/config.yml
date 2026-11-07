@@ -128,6 +128,11 @@ combat:
   # Spread multiplies while moving and crouched, and grows by hot times the barrel's heat. Damage holds to falloff-from
   # of a weapon's range, then thins to falloff-minimum of itself at the end of it.
   handling: {moving: 1.4, crouched: 0.6, hot: 0.5, falloff-from: 0.5, falloff-minimum: 0.6}
+  # A player's bolts and long-rifle shots meet enemies where that player's screen showed them: their ping plus
+  # interpolation-ms, the client's smoothing of other fighters, in the past, but never more than max-ms. A high-ping shooter
+  # can then hit an enemy who has just stepped behind cover on their own screen; max-ms bounds how far behind that can be.
+  # Walls, shields, guard and parry are judged in the present, and bots' shots entirely so.
+  lag-compensation: {enabled: true, max-ms: 200, interpolation-ms: 100}
 speeders:
   enabled: true
   health: 60

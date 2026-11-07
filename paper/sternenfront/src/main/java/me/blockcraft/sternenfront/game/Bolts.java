@@ -19,13 +19,16 @@ import org.joml.Vector3f;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Predicate;
 
 /**
  * The bolts in flight. Each moves {@code speed} blocks a tick along a straight line, stops at the first wall or
  * enemy on the way and shows as a bright model in its faction's colour with a trail of the same colour. Teammates,
  * deploying players and spectators are not in the way; a marked target of the map is, and hears of it through a
- * {@link TargetShotEvent}.
+ * {@link TargetShotEvent}. A player's bolt meets the fighters where that player saw them, as {@link LagCompensation}
+ * rewinds.
  */
 public final class Bolts {
 
@@ -37,7 +40,8 @@ public final class Bolts {
     private static final double HEAD_BELOW_EYES = 0.25;
     private static final float IMPACT_VOLUME = 0.6f;
 
-    private record Shot(Faction faction, Blaster blaster, double damage, double headshot, double speed) { }
+    /** {@code rewind} is how many ticks behind the server the shooter saw the other fighters. */
+    private record Shot(Faction faction, Blaster blaster, double damage, double headshot, double speed, double rewind) { }
 
     private static final class Bolt {
         private final LivingEntity shooter;
@@ -49,8 +53,10 @@ public final class Bolts {
         private double left;
         private double nextDot = TRAIL_CLEAR_OF_EYES;
         private int dots;
+        private double seen;
 
-        private Bolt(LivingEntity shooter, Shot shot, Location position, Vector direction, double range, ItemDisplay display) {
+        private Bolt(LivingEntity shooter, Shot shot, Location position, Vector direction, double range, ItemDisplay display,
+                     double seen) {
             this.shooter = shooter;
             this.shot = shot;
             this.position = position;
@@ -58,16 +64,19 @@ public final class Bolts {
             this.range = range;
             this.left = range;
             this.display = display;
+            this.seen = seen;
         }
     }
 
     private final SternenfrontGame game;
     private final WeaponHandling handling;
+    private final LagCompensation lag;
     private final List<Bolt> flying = new ArrayList<>();
 
     public Bolts(SternenfrontGame game) {
         this.game = game;
         handling = WeaponHandling.from(game.plugin().getConfig().getConfigurationSection("combat.handling"));
+        lag = new LagCompensation(LagCompensation.Settings.from(game.plugin().getConfig().getConfigurationSection("combat.lag-compensation")));
     }
 
     /** One bolt from the shooter's eyes, off their aim by up to the blaster's spread. */
@@ -83,7 +92,7 @@ public final class Bolts {
                     random.nextDouble(-spread, spread))).normalize();
         }
         if (blaster.precision() && game.combat().config().precisionHitscan()) {
-            launch(shooter, new Shot(faction, blaster, stats.damage(), stats.headshot(), stats.range()),
+            launch(shooter, new Shot(faction, blaster, stats.damage(), stats.headshot(), stats.range(), lag.rewind(shooter)),
                     shooter.getEyeLocation(), direction, stats.range(), true);
         } else {
             fire(shooter, faction, blaster, stats, direction);
@@ -91,21 +100,28 @@ public final class Bolts {
     }
 
     public void fire(LivingEntity shooter, Faction faction, Blaster blaster, Blaster.Stats stats, Vector direction) {
-        launch(shooter, new Shot(faction, blaster, stats.damage(), stats.headshot(), stats.speed()), shooter.getEyeLocation(), direction, stats.range());
+        launch(shooter, new Shot(faction, blaster, stats.damage(), stats.headshot(), stats.speed(), lag.rewind(shooter)),
+                shooter.getEyeLocation(), direction, stats.range());
     }
 
     /** One bolt from a muzzle other than the shooter's eyes, as a vehicle's gun has. */
     public void fire(LivingEntity shooter, Faction faction, Blaster blaster, Blaster.Stats stats, Location muzzle, Vector direction) {
-        launch(shooter, new Shot(faction, blaster, stats.damage(), stats.headshot(), stats.speed()), muzzle, direction, stats.range());
+        launch(shooter, new Shot(faction, blaster, stats.damage(), stats.headshot(), stats.speed(), lag.rewind(shooter)), muzzle,
+                direction, stats.range());
     }
 
     private void launch(LivingEntity shooter, Shot shot, Location from, Vector direction, double range) {
         launch(shooter, shot, from, direction, range, false);
     }
 
+    /**
+     * A shot comes between ticks or after this tick's bolts moved, when the fighters already stand about where the coming
+     * tick records them, so that tick is the present its rewind counts back from.
+     */
     private void launch(LivingEntity shooter, Shot shot, Location from, Vector direction, double range, boolean instant) {
+        double seen = game.tick() + 1 - shot.rewind();
         if (instant) {
-            step(new Bolt(shooter, shot, from.clone(), direction.clone(), range, null));
+            step(new Bolt(shooter, shot, from.clone(), direction.clone(), range, null, seen));
             return;
         }
         var look = game.effects().config().bolt();
@@ -116,10 +132,11 @@ public final class Bolts {
             spawned.setTransformation(new Transformation(new Vector3f(), new Quaternionf(),
                     new Vector3f(look.width(), look.width(), look.length()), new Quaternionf().rotationY((float) Math.PI)));
         });
-        flying.add(new Bolt(shooter, shot, from.clone(), direction.clone(), range, display));
+        flying.add(new Bolt(shooter, shot, from.clone(), direction.clone(), range, display, seen));
     }
 
     public void tick() {
+        lag.record(game.tick(), game.targets());
         var bolts = List.copyOf(flying);
         flying.clear();
         for (var bolt : bolts) {
@@ -138,18 +155,20 @@ public final class Bolts {
         var start = bolt.position.toVector();
         var wall = world.rayTraceBlocks(bolt.position, bolt.direction, step, FluidCollisionMode.NEVER, true);
         double reach = wall == null ? step : wall.getHitPosition().distance(start);
-        var hit = reach <= 0 ? null : world.rayTraceEntities(bolt.position, bolt.direction, reach, HIT_SIZE,
-                entity -> entity instanceof LivingEntity target && game.hittable(bolt.shot.faction(), target) || isTarget(entity));
-        double travelled = hit == null ? reach : hit.getHitPosition().distance(start);
+        var mark = reach <= 0 ? null : world.rayTraceEntities(bolt.position, bolt.direction, reach, HIT_SIZE, Bolts::isTarget);
+        var fighter = reach <= 0 ? Optional.<LagCompensation.Hit>empty() : fighterHit(bolt, start, reach)
+                .filter(hit -> mark == null || hit.at().distanceSquared(start) < mark.getHitPosition().distanceSquared(start));
+        double travelled = fighter.map(hit -> hit.at().distance(start))
+                .orElse(mark == null ? reach : mark.getHitPosition().distance(start));
         trail(bolt, travelled);
-        if (hit != null && hit.getHitEntity() instanceof LivingEntity victim) {
-            var at = hit.getHitPosition().toLocation(world);
-            game.effects().boltHit(at, bolt.shot.faction(), victim);
-            strike(bolt, victim, at, travelled);
+        if (fighter.isPresent()) {
+            var at = fighter.get().at().toLocation(world);
+            game.effects().boltHit(at, bolt.shot.faction(), fighter.get().victim());
+            strike(bolt, fighter.get(), at, travelled);
             return false;
         }
-        if (hit != null && hit.getHitEntity() instanceof Interaction target) {
-            var at = hit.getHitPosition().toLocation(world);
+        if (mark != null && mark.getHitEntity() instanceof Interaction target) {
+            var at = mark.getHitPosition().toLocation(world);
             game.effects().boltOnTarget(at, bolt.shot.faction());
             SoundCue.BOLT_IMPACT.play(at, IMPACT_VOLUME);
             if (bolt.shooter instanceof Player player && player.isOnline()) {
@@ -172,11 +191,26 @@ public final class Bolts {
         }
         bolt.position = bolt.position.add(bolt.direction.clone().multiply(step));
         bolt.left -= step;
+        bolt.seen++;
         bolt.display.teleport(bolt.position.clone().setDirection(bolt.direction));
         return true;
     }
 
-    private void strike(Bolt bolt, LivingEntity victim, Location at, double travelled) {
+    /** Players' shots meet the fighters where the shooter saw them; terrain and map targets stand still and stay live. */
+    private Optional<LagCompensation.Hit> fighterHit(Bolt bolt, Vector start, double reach) {
+        Predicate<LivingEntity> hittable = target -> game.hittable(bolt.shot.faction(), target);
+        if (bolt.shot.rewind() > 0) {
+            return lag.trace(start, bolt.direction, reach, HIT_SIZE, bolt.seen, hittable);
+        }
+        var hit = bolt.position.getWorld().rayTraceEntities(bolt.position, bolt.direction, reach, HIT_SIZE,
+                entity -> entity instanceof LivingEntity target && hittable.test(target));
+        return hit != null && hit.getHitEntity() instanceof LivingEntity victim
+                ? Optional.of(new LagCompensation.Hit(victim, hit.getHitPosition(), victim.getEyeLocation().getY()))
+                : Optional.empty();
+    }
+
+    private void strike(Bolt bolt, LagCompensation.Hit hit, Location at, double travelled) {
+        var victim = hit.victim();
         double damage = handling.damage(bolt.shot.damage(), bolt.range - bolt.left + travelled, bolt.range);
         var guard = victim instanceof Player player ? game.combat().block(player, bolt.direction, damage)
                 : Guard.Result.NONE;
@@ -188,12 +222,12 @@ public final class Bolts {
                     ? bolt.shooter.getEyeLocation().toVector().subtract(at.toVector()).normalize()
                     : bolt.direction.clone().multiply(-1);
             var faction = game.factionOf(victim).orElse(bolt.shot.faction().enemy());
-            var shot = new Shot(faction, bolt.shot.blaster(), bolt.shot.damage(), bolt.shot.headshot(), bolt.shot.speed());
+            var shot = new Shot(faction, bolt.shot.blaster(), bolt.shot.damage(), bolt.shot.headshot(), bolt.shot.speed(), 0);
             launch(victim, shot, at.clone().add(back.clone().multiply(PARRY_CLEARANCE)), back, game.config().stats(shot.blaster()).range());
             game.deflected(player, at);
             return;
         }
-        boolean head = game.speeders().faction(victim).isEmpty() && at.getY() >= victim.getEyeLocation().getY() - HEAD_BELOW_EYES;
+        boolean head = game.speeders().faction(victim).isEmpty() && at.getY() >= hit.eyeY() - HEAD_BELOW_EYES;
         SoundCue.BOLT_IMPACT.play(at, IMPACT_VOLUME);
         game.boltHit(bolt.shooter, bolt.shot.blaster(), victim, damage * (head ? bolt.shot.headshot() : 1),
                 head && bolt.shot.headshot() > 1);
@@ -231,5 +265,6 @@ public final class Bolts {
     public void clear() {
         flying.forEach(bolt -> bolt.display.remove());
         flying.clear();
+        lag.clear();
     }
 }
