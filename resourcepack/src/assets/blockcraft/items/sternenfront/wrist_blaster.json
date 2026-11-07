@@ -1,1 +1,1 @@
-{"model":{"type":"minecraft:model","model":"blockcraft:item/sternenfront/wrist_blaster"}}
+{"model":{"type":"minecraft:model","model":"blockcraft:item/sternenfront/wrist_blaster","tints":[{"type":"minecraft:custom_model_data","index":0,"default":-1}]}}

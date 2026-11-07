@@ -133,6 +133,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     private final LobbyEntrance entrance;
     private final GameSidebar sidebar;
     private final Posts posts;
+    private final WeaponHandling handling;
     private final Bolts bolts;
     private final BattleEffects effects;
     private final Spectacle spectacle;
@@ -206,6 +207,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
                 () -> Optional.of(phase() == GamePhase.INGAME ? map.spectatorSpawn() : lobby),
                 OptionalInt.of(config.fullSeconds()), player -> { });
         this.posts = new Posts(messages, map.posts(), config.captureSeconds());
+        this.handling = WeaponHandling.from(plugin.getConfig().getConfigurationSection("combat.handling"));
         this.bolts = new Bolts(this);
         this.effects = new BattleEffects(this);
         this.spectacle = new Spectacle(this);
@@ -830,6 +832,9 @@ public final class SternenfrontGame implements RoundConnections.Seating {
                 continue;
             }
             if (fighter.onField()) {
+                if (player.isSprinting()) {
+                    fighter.sprinted(tick);
+                }
                 fighter.heat().cool(tick);
                 player.setExp(fighter.heat().level());
                 scope(player, fighter);
@@ -1025,6 +1030,9 @@ public final class SternenfrontGame implements RoundConnections.Seating {
             return;
         }
         var blaster = held.get();
+        if (lowered(player)) {
+            return;
+        }
         var stats = firing(player, blaster);
         if (!heatAllows(player, fighter, stats)) {
             return;
@@ -1036,6 +1044,17 @@ public final class SternenfrontGame implements RoundConnections.Seating {
             bursts.add(new Burst(player, blaster, tick + (long) bolt * stats.burstTicks()));
         }
         player.setExp(fighter.heat().level());
+    }
+
+    /** Whether {@code player}'s gun is down from a sprint, which it holds until its blaster's recovery has passed. */
+    public boolean lowered(Player player) {
+        var fighter = fighters.get(player.getUniqueId());
+        return fighter != null && (player.isSprinting() || factionOf(player).flatMap(fighter::blaster)
+                .filter(blaster -> handling.lowered(blaster, fighter.sprintedAt(), tick)).isPresent());
+    }
+
+    public WeaponHandling handling() {
+        return handling;
     }
 
     /** The blaster as it fires in {@code shooter}'s hands now, which siege mode changes. */
@@ -1061,7 +1080,14 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     private boolean heatAllows(Player player, Fighter fighter, Blaster.Stats stats) {
         return switch (fighter.heat().fire(tick, stats.cooldownTicks(), stats.heat())) {
             case TOO_SOON -> false;
-            case VENTING -> false;
+            case VENTING -> {
+                switch (fighter.heat().pull(tick)) {
+                    case HIT -> vented(player);
+                    case MISS -> ventMissed(player);
+                    case NONE -> { }
+                }
+                yield false;
+            }
             case OVERHEATED -> {
                 overheated(player);
                 yield true;
@@ -1100,6 +1126,23 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         player.getWorld().playSound(eye, Sound.BLOCK_FIRE_EXTINGUISH, 0.7f, 1.6f);
         player.getWorld().spawnParticle(Particle.SMOKE, eye.add(eye.getDirection().multiply(0.6)), 8, 0.1, 0.1, 0.1, 0.02);
         BlockcraftApi.get().notifications().feedbackNow(player, messages.get("blaster.overheated"), 10);
+    }
+
+    private void vented(Player player) {
+        var eye = player.getEyeLocation();
+        var muzzle = eye.clone().add(eye.getDirection().multiply(0.6));
+        player.getWorld().playSound(eye, Sound.BLOCK_IRON_TRAPDOOR_CLOSE, 0.8f, 1.7f);
+        player.getWorld().playSound(eye, Sound.BLOCK_FIRE_EXTINGUISH, 0.6f, 1.3f);
+        player.getWorld().spawnParticle(Particle.CLOUD, muzzle, 6, 0.08, 0.08, 0.08, 0.03);
+        player.getWorld().spawnParticle(Particle.WHITE_SMOKE, muzzle, 8, 0.1, 0.1, 0.1, 0.02);
+        player.setExp(0);
+        BlockcraftApi.get().notifications().feedbackNow(player, messages.get("blaster.vent-hit"), 10);
+    }
+
+    private void ventMissed(Player player) {
+        player.playSound(player.getEyeLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, SoundCategory.PLAYERS, 0.9f, 0.5f);
+        player.playSound(player.getEyeLocation(), Sound.BLOCK_LAVA_EXTINGUISH, SoundCategory.PLAYERS, 0.4f, 1.4f);
+        BlockcraftApi.get().notifications().feedbackNow(player, messages.get("blaster.vent-miss"), 10);
     }
 
     /** F uses the first ability of a class or a hero, Q the second. */
@@ -1169,8 +1212,9 @@ public final class SternenfrontGame implements RoundConnections.Seating {
                 || !fighter.abilities(faction.get()).contains(ability)) {
             return;
         }
-        if (player.hasCooldown(ability.material())) {
-            cooling(player, messages.get(ability.messageKey(faction.get()) + ".name"), player.getCooldown(ability.material()));
+        var charges = charges(fighter, ability);
+        if (charges.stored(tick) == 0) {
+            cooling(player, messages.get(ability.messageKey(faction.get()) + ".name"), charges.ticksToNext(tick));
             return;
         }
         if (!gadgets.use(player, fighter, faction.get(), ability, tick)) {
@@ -1181,7 +1225,12 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         if (ability == Ability.GRENADE || ability == Ability.MINING_CHARGE) {
             fighter.endProtection();
         }
-        player.setCooldown(ability.material(), config.cooldownTicks(ability));
+        charges.use(tick);
+        player.setCooldown(ability.material(), charges.stored(tick) == 0 ? charges.ticksToNext(tick) : 0);
+    }
+
+    public Charges charges(Fighter fighter, Ability ability) {
+        return fighter.charges(ability, config.charges(ability), config.cooldownTicks(ability));
     }
 
     /** The second jump, or the champion's F ability, leaps with the blade. */

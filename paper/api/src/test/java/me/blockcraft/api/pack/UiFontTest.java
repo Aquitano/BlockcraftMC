@@ -65,6 +65,15 @@ public class UiFontTest {
     }
 
     @Test
+    public void ventWindowGlyphsLaidOverTheMeterTakeNoRoom() throws IOException {
+        var fonts = Map.of(UiFont.KEY, fontAdvances("ui"));
+        int meter = fonts.get(UiFont.KEY).get(0xE240);
+        for (char glyph = '\uE260'; glyph <= '\uE264'; glyph++) {
+            assertEquals(Integer.toHexString(glyph), 0, width(UiFont.over(glyph, meter), null, fonts));
+        }
+    }
+
+    @Test
     public void aMarkBesideALineStartsAtTheLinesMiddleAndTakesNoRoom() throws IOException {
         var fonts = Map.of(UiFont.KEY, fontAdvances("ui"));
         var line = Component.text("Posten A gesichert");

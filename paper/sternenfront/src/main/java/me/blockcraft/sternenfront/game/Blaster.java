@@ -1,8 +1,12 @@
 package me.blockcraft.sternenfront.game;
 
+import io.papermc.paper.datacomponent.DataComponentTypes;
+import io.papermc.paper.datacomponent.item.CustomModelData;
 import me.blockcraft.api.item.HotbarItem;
 import me.blockcraft.api.pack.PackModel;
+import org.bukkit.inventory.ItemStack;
 
+import java.util.List;
 import java.util.Locale;
 
 /**
@@ -33,6 +37,9 @@ public enum Blaster implements HotbarItem {
     public record Stats(double damage, double headshot, double heat, int cooldownTicks, int bolts, int burstTicks,
                         double spread, double speed, double range) {
     }
+
+    /** How a held blaster is drawn: ready, kicked back by a shot, or lowered in a sprint. */
+    public enum Pose { READY, FIRING, LOWERED }
 
     private final PackModel model;
 
@@ -67,7 +74,42 @@ public enum Blaster implements HotbarItem {
         return profile() == TWIN_PISTOL;
     }
 
-    public PackModel firingModel() {
+    public PackModel model(Pose pose) {
+        return switch (pose) {
+            case READY -> model;
+            case FIRING -> firingModel();
+            case LOWERED -> loweredModel();
+        };
+    }
+
+    /** Draws {@code item} in {@code pose} with its vents in {@code glow}; false when it already looked so. */
+    public boolean show(ItemStack item, Pose pose, HeatGlow glow) {
+        var key = model(pose).key();
+        var current = item.getData(DataComponentTypes.CUSTOM_MODEL_DATA);
+        if (current != null && current.strings().equals(List.of(key)) && current.colors().equals(List.of(glow.colour()))) {
+            return false;
+        }
+        item.setData(DataComponentTypes.CUSTOM_MODEL_DATA, CustomModelData.customModelData().addString(key).addColor(glow.colour()).build());
+        return true;
+    }
+
+    private PackModel loweredModel() {
+        return switch (this) {
+            case CARBINE -> PackModel.STERNENFRONT_CARBINE_LOWERED;
+            case REPEATER, ARC_REPEATER -> PackModel.STERNENFRONT_REPEATER_LOWERED;
+            case LONG_RIFLE -> PackModel.STERNENFRONT_LONG_RIFLE_LOWERED;
+            case PISTOL -> PackModel.STERNENFRONT_PISTOL_LOWERED;
+            case TWIN_PISTOL -> PackModel.STERNENFRONT_TWIN_PISTOL_LOWERED;
+            case HEAVY_RIFLE, SPEEDER_CANNON -> PackModel.STERNENFRONT_HEAVY_RIFLE_LOWERED;
+            case E5, COMMANDO_CARBINE -> PackModel.STERNENFRONT_E5_LOWERED;
+            case WRIST_BLASTER -> PackModel.STERNENFRONT_WRIST_BLASTER_LOWERED;
+            case E5S -> PackModel.STERNENFRONT_E5S_LOWERED;
+            case SE14 -> PackModel.STERNENFRONT_SE14_LOWERED;
+            case WESTAR_PISTOLS -> PackModel.STERNENFRONT_WESTAR_PISTOLS_LOWERED;
+        };
+    }
+
+    private PackModel firingModel() {
         return switch (this) {
             case CARBINE -> PackModel.STERNENFRONT_CARBINE_FIRING;
             case REPEATER, ARC_REPEATER -> PackModel.STERNENFRONT_REPEATER_FIRING;

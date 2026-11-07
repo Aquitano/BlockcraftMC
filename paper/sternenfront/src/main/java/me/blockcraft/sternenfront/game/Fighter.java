@@ -3,7 +3,9 @@ package me.blockcraft.sternenfront.game;
 import me.blockcraft.sternenfront.hero.Hero;
 import me.blockcraft.sternenfront.reinforcement.Reinforcement;
 
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -12,6 +14,8 @@ import java.util.Optional;
  * protected, hurt last and safe from their next fall.
  */
 public final class Fighter {
+
+    private static final long LONG_AGO = Long.MIN_VALUE / 2;
 
     /**
      * A dead player choosing: from {@code readyTick} on they may deploy, at {@code autoTick} they do. A hero or
@@ -65,6 +69,8 @@ public final class Fighter {
     private long protectedUntil;
     private long lastHurt;
     private long fallSafeUntil;
+    private long sprintedAt = LONG_AGO;
+    private final Map<Ability, Charges> charges = new EnumMap<>(Ability.class);
     private Optional<Hero> hero = Optional.empty();
     private Optional<Reinforcement> reinforcement = Optional.empty();
 
@@ -101,8 +107,23 @@ public final class Fighter {
         this.choosing = Optional.empty();
         this.heat = new Heat(heatRules);
         this.protectedUntil = protectedUntil;
+        this.sprintedAt = LONG_AGO;
+        this.charges.clear();
         this.hero = hero;
         this.reinforcement = Optional.empty();
+    }
+
+    /** The uses of a class ability left in this life, full on each deployment. */
+    public Charges charges(Ability ability, int capacity, int rechargeTicks) {
+        return charges.computeIfAbsent(ability, ignored -> new Charges(capacity, rechargeTicks));
+    }
+
+    public void sprinted(long tick) {
+        sprintedAt = tick;
+    }
+
+    public long sprintedAt() {
+        return sprintedAt;
     }
 
     public boolean isProtected(long tick) {

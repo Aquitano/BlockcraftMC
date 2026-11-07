@@ -106,6 +106,26 @@ public final class HudArt {
         return image;
     }
 
+    /**
+     * For each cell of the heat meter's lower half, where a vent window lies, a bracket above and below it, in white so a
+     * text colour tints it. Adjacent
+     * cells' brackets join into one window. A nearly clear texel in the last column gives each glyph the meter's advance,
+     * so one laid over the meter takes no room.
+     */
+    private static BufferedImage ventWindow() {
+        var image = new BufferedImage(210, 12, BufferedImage.TYPE_INT_ARGB);
+        for (int cell = 0; cell < 5; cell++) {
+            int x = cell * 42;
+            for (int column = 1; column <= 5; column++) {
+                for (int row : new int[] {0, 1, 10, 11}) {
+                    image.setRGB(x + cell * 4 + column, row, 0xFFFFFFFF);
+                }
+            }
+            image.setRGB(x + 40, 11, 0x01000000);
+        }
+        return image;
+    }
+
     /** Each post's letter on a filled tile and on a hollow one, in white so a text colour tints them. */
     private static BufferedImage objectivePips() {
         var image = new BufferedImage(PIP * 10, PIP, BufferedImage.TYPE_INT_ARGB);
@@ -163,6 +183,7 @@ public final class HudArt {
         }
         g.dispose();
         ImageIO.write(bars, "PNG", root.resolve("combat_bars.png").toFile());
+        ImageIO.write(ventWindow(), "PNG", root.resolve("combat_vent.png").toFile());
         var arcs = new BufferedImage(128, 32, BufferedImage.TYPE_INT_ARGB);
         g = arcs.createGraphics();
         int[] centres = {90, 270, 180, 0};

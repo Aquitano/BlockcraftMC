@@ -134,9 +134,24 @@ combat:
     parry-ticks: 5
     cost-per-damage: 2
   melee: {range: 3.5, angle: 120, swing-ticks: 12, sweep-ticks: 4}
-  # Spread multiplies while moving and crouched, and grows by hot times the barrel's heat. Damage holds to falloff-from
-  # of a weapon's range, then thins to falloff-minimum of itself at the end of it.
-  handling: {moving: 1.4, crouched: 0.6, hot: 0.5, falloff-from: 0.5, falloff-minimum: 0.6}
+  # Spread multiplies while moving, crouched and off the ground, and grows by hot times the barrel's heat. A sprint lowers
+  # the gun, which cannot fire until sprint-recovery-ticks after the sprint ends. Damage holds to falloff-from of a
+  # weapon's range, then thins to falloff-minimum of itself at the end of it. blasters overrides the factors per blaster;
+  # a Separatist blaster or hero gun without its own takes its Republic profile's.
+  handling:
+    moving: 1.4
+    crouched: 0.6
+    airborne: 1.8
+    hot: 0.5
+    sprint-recovery-ticks: 5
+    falloff-from: 0.5
+    falloff-minimum: 0.6
+    blasters:
+      pistol: {moving: 1.25, sprint-recovery-ticks: 3}
+      twin-pistol: {moving: 1.25, sprint-recovery-ticks: 3}
+      heavy-rifle: {sprint-recovery-ticks: 6}
+      long-rifle: {sprint-recovery-ticks: 8}
+      repeater: {moving: 1.7, crouched: 0.5, airborne: 2.2, sprint-recovery-ticks: 10}
   # A player's bolts and long-rifle shots meet enemies where that player's screen showed them: their ping plus
   # interpolation-ms, the client's smoothing of other fighters, in the past, but never more than max-ms. A high-ping shooter
   # can then hit an enemy who has just stepped behind cover on their own screen; max-ms bounds how far behind that can be.
@@ -284,12 +299,18 @@ pvp:
   legacy-combat: false
 
 # Every pull of the trigger adds the blaster's heat; full is 100. After cool-delay-ticks without a shot the gun loses
-# cool-per-tick a tick. A gun at full heat vents for vent-ticks before it fires again.
+# cool-per-tick a tick. A gun at full heat vents for vent-ticks before it fires again. The vents on the gun glow warm
+# from glow.warm of full heat and hot from warning-level, and pulse every glow.pulse-ticks while venting.
+# A vent marks window-share of the heat meter, somewhere in its lower half. The first fresh pull of the trigger while the
+# cooling heat is inside it ends the vent; one outside it adds miss-penalty-share of vent-ticks to the vent. Bots never try.
 heat:
   warning-level: 0.8
   cool-delay-ticks: 8
   cool-per-tick: 3
   vent-ticks: 40
+  window-share: 0.2
+  miss-penalty-share: 0.25
+  glow: {warm: 0.45, pulse-ticks: 4}
 
 # Each class's body per faction, for players and bots: health (20 is ten hearts), speed times normal movement, scale
 # times normal size. A player is 1.8 blocks tall, so 1.1 still walks the wreck's two-high corridors; a bot's body is
@@ -332,13 +353,14 @@ reinforcement-units:
   commando-droid: {cost: 300, limit: 2, health: 26, speed: 1.12}
 
 # Each ability's cooldown and what it does. A grenade or mining charge explodes fuse-ticks after the throw and hurts enemies
-# and its thrower in sight within radius, damage at its centre and a third of it at the edge. The shield wall stands
+# and its thrower in sight within radius, damage at its centre and a third of it at the edge. A player holds charges
+# throws of it, full on each deployment, and each comes back cooldown-seconds after the one before; bots keep a plain cooldown. The shield wall stands
 # width by height panes, distance blocks ahead, for seconds. The med station heals allies within radius for seconds.
 # Siege mode roots the unit for seconds; its repeater then pulls every cooldown-ticks with bolts bolts and heat-scale of
 # the heat. Two bolts every 4 ticks is a third more bolts than the normal repeater: holding right click pulls no
 # faster than every 4 ticks, and three bolts would double the damage of a heavy that also has the most health.
 abilities:
-  grenade: {cooldown-seconds: 15, fuse-ticks: 50, radius: 5, damage: 16, throw-speed: 1.1}
+  grenade: {cooldown-seconds: 15, charges: 2, fuse-ticks: 50, radius: 5, damage: 16, throw-speed: 1.1}
   adrenaline: {cooldown-seconds: 30, seconds: 5}
   shield-wall: {cooldown-seconds: 25, seconds: 8, width: 5, height: 3, distance: 2}
   jump-pack: {cooldown-seconds: 10, forward: 1.3, up: 0.9}
@@ -445,7 +467,7 @@ combat-feedback:
   sound: {hit: 1.0, headshot: 1.0, kill: 1.0}
   # Ticks around the crosshair open one of four steps each time the held blaster's spread passes one of these multiples
   # of its own base spread. Standing still and cold is 1 and crouching 0.6, so both show the tightest step;
-  # combat.handling sets how far walking and heat open it.
+  # combat.handling sets how far walking, jumping and heat open it.
   spread-steps: [1.0, 1.25, 1.55, 1.85]
 
 intro:

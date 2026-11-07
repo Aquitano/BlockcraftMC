@@ -39,7 +39,8 @@ public record SternenfrontConfig(int playersPerTeam, int fullSeconds, int roundS
     public record Relic(int firstSeconds, int respawnSeconds, double health, double damage, int leapCooldownSeconds,
                         double leapForward, double leapUp) { }
 
-    public record Grenade(int fuseTicks, double radius, double damage, double throwSpeed) { }
+    /** {@code charges} throws are held at once, each refilled the ability's cooldown after the one before. */
+    public record Grenade(int fuseTicks, double radius, double damage, double throwSpeed, int charges) { }
 
     /** For {@code seconds} the unit stands rooted, and its gun pulls every {@code cooldownTicks} with {@code bolts} bolts and {@code heatScale} of the heat. */
     public record SiegeMode(int seconds, int cooldownTicks, int bolts, double heatScale) {
@@ -84,13 +85,14 @@ public record SternenfrontConfig(int playersPerTeam, int fullSeconds, int roundS
                         Math.max(1, relic.getInt("leap-cooldown-seconds", 6)), relic.getDouble("leap-forward", 1.5),
                         relic.getDouble("leap-up", 0.7)),
                 new Heat.Rules(Math.max(0, config.getInt("heat.cool-delay-ticks", 8)), Math.max(0.1, config.getDouble("heat.cool-per-tick", 3)),
-                        Math.max(1, config.getInt("heat.vent-ticks", 40))),
+                        Math.max(1, config.getInt("heat.vent-ticks", 40)), Math.clamp(config.getDouble("heat.window-share"), 0, 0.5),
+                        Math.max(0, config.getDouble("heat.miss-penalty-share"))),
                 byKey(Faction.class, faction -> byKey(CombatClass.class, combatClass ->
                         classStats(section(section(classes, faction.key()), combatClass.key())))),
                 blasters(section(config, "blasters")),
                 byKey(Ability.class, ability -> Math.max(1, section(abilities, ability.key()).getInt("cooldown-seconds", 20))),
-                grenade(section(abilities, "grenade"), new Grenade(50, 5, 16, 1.1)),
-                grenade(section(abilities, "mining-charge"), new Grenade(60, 6, 20, 0.9)),
+                grenade(section(abilities, "grenade"), new Grenade(50, 5, 16, 1.1, 1)),
+                grenade(section(abilities, "mining-charge"), new Grenade(60, 6, 20, 0.9, 1)),
                 new SiegeMode(Math.max(1, siege.getInt("seconds", 6)), Math.max(1, siege.getInt("cooldown-ticks", 4)),
                         Math.max(1, siege.getInt("bolts", 2)), Math.max(0, siege.getDouble("heat-scale", 0.5))),
                 Math.max(1, section(abilities, "adrenaline").getInt("seconds", 5)),
@@ -116,7 +118,7 @@ public record SternenfrontConfig(int playersPerTeam, int fullSeconds, int roundS
         return new Grenade(Math.max(1, section.getInt("fuse-ticks", fallback.fuseTicks())),
                 Math.max(1, section.getDouble("radius", fallback.radius())),
                 Math.max(0, section.getDouble("damage", fallback.damage())),
-                section.getDouble("throw-speed", fallback.throwSpeed()));
+                section.getDouble("throw-speed", fallback.throwSpeed()), Math.max(1, section.getInt("charges", fallback.charges())));
     }
 
     private static Map<Blaster, Blaster.Stats> blasters(ConfigurationSection section) {
@@ -150,6 +152,15 @@ public record SternenfrontConfig(int playersPerTeam, int fullSeconds, int roundS
 
     public int cooldownTicks(Ability ability) {
         return cooldownSeconds.get(ability) * 20;
+    }
+
+    /** How many uses of {@code ability} a fighter holds at once. */
+    public int charges(Ability ability) {
+        return switch (ability) {
+            case GRENADE -> grenade.charges();
+            case MINING_CHARGE -> miningCharge.charges();
+            default -> 1;
+        };
     }
 
     public int capacity() {

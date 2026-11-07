@@ -140,6 +140,11 @@ public final class UiFont {
         return Component.empty().append(gap(half)).append(marker).append(Component.text(shift(-half)).font(KEY)).append(line);
     }
 
+    /** {@code glyph} drawn over the {@code advance} pixels just written, which it must share to take no room. */
+    public static Component over(char glyph, int advance) {
+        return Component.text(shift(-advance) + glyph).font(KEY);
+    }
+
     public static Component glyph(char glyph) {
         return Component.text(glyph).font(KEY);
     }

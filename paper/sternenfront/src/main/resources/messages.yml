@@ -117,7 +117,9 @@ blaster:
     - "<bullet><muted>Schaden <accent><damage> ❤ <muted>pro Schuss"
     - "<bullet><muted>Reichweite <accent><range> <muted>Blöcke"
   venting: "<error>Der Blaster kühlt ab …"
-  overheated: "<error>Überhitzt! <muted>Der Blaster kühlt ab."
+  overheated: "<error>Überhitzt! <muted>Abzug im markierten Feld kühlt sofort."
+  vent-hit: "<success>Notkühlung! <muted>Der Blaster ist bereit."
+  vent-miss: "<error>Daneben! <muted>Die Kühlung dauert länger."
   carbine:
     name: "<white>DC-15S-Blasterkarabiner"
     lore:
@@ -683,6 +685,7 @@ combat:
   ability: "<accent><key> <muted><label> <status>"
   ready: "<success>✓"
   cooldown: "<muted><seconds>s"
+  charges: "<white><stored><dark>/<muted><capacity>"
   none: "<dark>—"
   leap-cooldown: "<dark> │ <muted>Sprung <seconds>s"
   strike-ready: "<dark> │ <accent>Shift+F <white>Orbitalschlag"

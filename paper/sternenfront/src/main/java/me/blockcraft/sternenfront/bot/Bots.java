@@ -177,7 +177,7 @@ public final class Bots implements Listener {
     public Bots(SternenfrontGame game, BotConfig config) {
         this.game = game;
         this.config = config;
-        handling = WeaponHandling.from(game.plugin().getConfig().getConfigurationSection("combat.handling"));
+        handling = game.handling();
         tuning = config.profiles().get(config.difficulty());
         Bukkit.getPluginManager().registerEvents(this, game.plugin());
     }
@@ -210,6 +210,11 @@ public final class Bots implements Listener {
     public double heat(Entity entity) {
         var soldier = bodies.get(entity.getUniqueId());
         return soldier == null ? 0 : soldier.heat.level();
+    }
+
+    public boolean venting(Entity entity, long tick) {
+        var soldier = bodies.get(entity.getUniqueId());
+        return soldier != null && soldier.heat.venting(tick);
     }
 
     public Optional<BotSnapshot> snapshot(Entity entity) {
@@ -1286,7 +1291,8 @@ public final class Bots implements Listener {
             var aim = soldier.aim.clone();
             var random = ThreadLocalRandom.current();
             double settled = Math.max(tuning.spread(), game.config().stats(blaster).spread());
-            double spread = handling.spread(settled, BotAim.moving(false, soldier.body.getVelocity()), false, soldier.heat.level())
+            double spread = handling.spread(blaster, settled, new WeaponHandling.Stance(BotAim.moving(false, soldier.body.getVelocity()), false, false),
+                    soldier.heat.level())
                     * (sighted ? BotAim.settle(tick - soldier.acquiredAt, tuning.settleTicks(), tuning.settleSpread()) : SUPPRESSING_SPREAD);
             if (sighted) {
                 aim.add(BotAim.misaim(soldier.aim, soldier.misaimAngle, settled * tuning.settleSpread(),

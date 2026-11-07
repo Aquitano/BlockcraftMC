@@ -173,6 +173,9 @@ a multiple of that blaster's base in `combat-feedback.spread-steps`, so every bl
 cool and opens fully hot on the move. A scoped or spreadless long rifle shows none, and the vanilla crosshair stays inside
 the ticks. All three share the title's subtitle, centred with `UiFont`.
 Kill and assist popups appear briefly beside the heat, guard and ability-cooldown HUD.
+A grenade holds `abilities.grenade.charges` throws, full on each deployment, and they come back one at a time, each
+`cooldown-seconds` after the one before. The HUD shows the throws left as `1/2` and the seconds to the next only when none is
+left, which is also the only time the vanilla cooldown runs on its material. Bots keep a plain cooldown.
 Hero and elite availability appear only for `combat-feedback.hero-ready-ticks` and `combat-feedback.elite-ready-ticks`;
 idle kill counts and point progress stay hidden.
 Nearby gains combine into one segment.
@@ -182,11 +185,24 @@ on the existing order bar for `respawn.ability-hint-seconds`, and the deploy cha
 Death or disconnect restarts an unfinished hint sequence on the next deployment. Completed hints stay hidden until the abilities change.
 `ObjectiveHud` shows reinforcements, a tile per post and the time left in a boss bar's text line, and the pack draws that colour and overlay of bar as nothing. The screen's
 edges redden with a hit and while health is low. `combat.handling` tunes spread and damage falloff.
+Spread opens on the move and more in the air, and `combat.handling.blasters` sets those factors per blaster, so pistols
+stay steadier walking and the repeater wants a crouch. A sprint shows the lowered pose of the held blaster, which cannot
+fire until its `sprint-recovery-ticks` after the sprint ends. The crosshair ticks use the same factors as the shot.
 A title's subtitle stays readable under the marks, which `UiFont.centredOn` keeps on the crosshair however long the line is. The sidebar stays hidden during a fight.
 
 The heat meter turns red and shows `HEISS` at `heat.warning-level`, or when the next shot would overheat the weapon.
-Venting shows `Kühlt` until the weapon is ready, followed by a ready sound. `combat-feedback` tunes marker and
+Venting shows `Kühlt` until the weapon is ready, followed by a ready sound. A vent also brackets `heat.window-share` of the
+meter in cyan, somewhere in its lower half, and the meter then lights every cell the cooling heat has not left. The first
+fresh pull of the trigger while the last lit cell is inside the bracket ends the vent with a click and steam; one outside
+it adds `heat.miss-penalty-share` of the vent and closes the window. A trigger held since the overheating shot counts for
+neither, and bots never try. `combat-feedback` tunes marker and
 popup durations and the hit, headshot, and kill volumes.
+The vents on every blaster show its heat to its holder and everyone else: grey when cold, orange from `heat.glow.warm`,
+bright from `heat.warning-level`, and pulsing while venting. The colour is the held item's first custom_model_data
+colour, set with the firing pose's model string, so the item changes only when the step or the pose does. The client
+does not lower the gun for these changes, because the hoe keeps its item type and its override sets
+`hand_animation_on_swap` to false. Animated bot bodies leave the vents out, because their rig has no item to tint them;
+the display bodies show them.
 
 A player's bolts and long-rifle shots meet fighters, speeders and heads where that player's screen showed them, which is
 their ping plus the client's smoothing of other entities behind the server. Each tick records every target's hitbox for that.
