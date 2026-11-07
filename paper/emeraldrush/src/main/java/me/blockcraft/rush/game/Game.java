@@ -350,12 +350,10 @@ public final class Game implements RoundConnections.Seating {
         lives.put(victim.getUniqueId(), remaining);
         if (remaining == 0) {
             round.eliminate(victim);
+            Tasks.later(plugin, 1L, () -> checkWinner(false));
         }
         round.respawn(victim, RESPAWN_DELAY_TICKS);
         scoreboard.refreshAll();
-        if (remaining == 0) {
-            checkWinner(false);
-        }
     }
 
     public void respawn(PlayerRespawnEvent event) {
@@ -395,10 +393,17 @@ public final class Game implements RoundConnections.Seating {
         return Arrays.stream(stacks).map(stack -> stack == null ? null : stack.clone()).toArray(ItemStack[]::new);
     }
 
-    /** A win handed over by a leaving opponent earns no moments, so two accounts cannot farm them. */
+    /**
+     * A win handed over by a leaving opponent earns no moments, so two accounts cannot farm them. A death asks a tick
+     * later, so that everyone dying in the same tick is out first, and before the respawn, so that the dead respawn into
+     * the ended round; when nobody is left, the round is a draw.
+     */
     private void checkWinner(boolean opponentLeft) {
         if (phase == GamePhase.LOBBY || phase == GamePhase.ENDING || round.playerCount() > 1) {
             return;
+        }
+        if (round.playerCount() == 0) {
+            broadcast("deathmatch.draw");
         }
         alivePlayers().forEach(winner -> {
             summary.awardWin(winner);

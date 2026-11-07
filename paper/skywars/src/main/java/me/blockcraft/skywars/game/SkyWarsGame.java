@@ -24,6 +24,7 @@ import me.blockcraft.api.game.TimerBar;
 import me.blockcraft.api.game.LobbyEntrance;
 import me.blockcraft.api.pack.MenuIcon;
 import me.blockcraft.api.sound.Sounds;
+import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.skywars.config.SkyWarsConfig;
 import me.blockcraft.skywars.kit.Kit;
@@ -274,9 +275,9 @@ public final class SkyWarsGame implements RoundConnections.Seating {
         death.killer().ifPresent(killer -> summary.awardKill(killer, victim, Defeat.OUT));
         summary.death(victim);
         round.eliminate(victim);
+        Tasks.later(plugin, 1L, () -> checkWinner(false));
         round.respawn(victim, 1L);
         refreshAll();
-        checkWinner(false);
     }
 
     public void respawn(PlayerRespawnEvent event) {
@@ -288,6 +289,10 @@ public final class SkyWarsGame implements RoundConnections.Seating {
         return new VoidLine(round, config.arena()::voidHeight, () -> arena.map(SkyArena::spectatorSpawn));
     }
 
+    /**
+     * A death asks a tick later, so that everyone dying in the same tick is out first, and before the respawn, so that
+     * the dead respawn into the ended round; when nobody is left, the round is a draw.
+     */
     private void checkWinner(boolean opponentLeft) {
         if (!isIngame() || round.playerCount() > 1) {
             return;
@@ -297,7 +302,7 @@ public final class SkyWarsGame implements RoundConnections.Seating {
         winners.stream().findFirst().ifPresentOrElse(
                 winner -> Bukkit.broadcast(messages.get(opponentLeft ? "round.winner-left" : "round.winner",
                         Placeholder.component("player", winner.displayName()))),
-                () -> Bukkit.broadcast(messages.get("round.draw")));
+                () -> Bukkit.broadcast(messages.get("round.no-survivor")));
         endRound();
     }
 

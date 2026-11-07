@@ -21,6 +21,7 @@ round:
   winner: "<prefix><primary><player> <primary>hat SkyWars gewonnen!"
   winner-left: "<prefix><primary><player> <primary>ist als Letzter übrig und gewinnt!"
   draw: "<prefix><error>Die Zeit ist um. Unentschieden!"
+  no-survivor: "<prefix><error>Niemand hat überlebt. Unentschieden!"
 
 refill:
   soon: "<prefix><muted>Die Kisten füllen sich in <accent><seconds><muted> Sekunden neu."

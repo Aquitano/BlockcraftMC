@@ -25,6 +25,7 @@ import me.blockcraft.api.pack.MenuIcon;
 import me.blockcraft.api.world.MapBundle;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Countdown;
+import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.quicksg.config.LocationKey;
 import me.blockcraft.quicksg.config.QuickSGConfig;
@@ -184,9 +185,9 @@ public final class Game implements RoundConnections.Seating {
         }, () -> summary.awardCoins(victim, config.rewards().death()));
         summary.death(victim);
         round.eliminate(victim);
+        Tasks.later(plugin, 1L, () -> checkWinner(false));
         round.respawn(victim, RESPAWN_DELAY_TICKS);
         refreshAll();
-        checkWinner(false);
     }
 
     public void respawn(PlayerRespawnEvent event) {
@@ -288,10 +289,17 @@ public final class Game implements RoundConnections.Seating {
         });
     }
 
-    /** A win handed over by a leaving opponent earns no moments, so two accounts cannot farm them. */
+    /**
+     * A win handed over by a leaving opponent earns no moments, so two accounts cannot farm them. A death asks a tick
+     * later, so that everyone dying in the same tick is out first, and before the respawn, so that the dead respawn into
+     * the ended round; when nobody is left, the round is a draw.
+     */
     private void checkWinner(boolean opponentLeft) {
         if (!isIngame() || round.playerCount() > 1) {
             return;
+        }
+        if (round.playerCount() == 0) {
+            Bukkit.broadcast(messages.get("game.draw"));
         }
         for (var winner : alivePlayers()) {
             summary.awardWin(winner);
