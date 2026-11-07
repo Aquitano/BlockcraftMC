@@ -666,7 +666,7 @@ public final class Bots implements Listener {
         }
         team.rallying = rallying;
         boolean behind = !team.assaulting && team.threat == null && post != null && squad.stream().filter(soldier -> soldier != leader)
-                .anyMatch(soldier -> place(leader, soldier, post) == Fireteam.Place.STRAGGLING);
+                .filter(soldier -> !wounded(soldier.body)).anyMatch(soldier -> place(leader, soldier, post) == Fireteam.Place.STRAGGLING);
         if (!behind) {
             team.waitingSince = -1;
         } else if (team.waitingSince < 0) {
@@ -732,17 +732,18 @@ public final class Bots implements Listener {
         team.bounding.update(present, arrived, tick, settings.boundTicks());
     }
 
-    /** The team keeps its leader while it lives; a new one is whoever is nearest the objective, so nobody turns back. */
     private Soldier lead(Fireteam team, List<Soldier> squad) {
-        var kept = squad.stream().filter(soldier -> soldier.number == team.leader).findFirst();
-        if (kept.isPresent()) {
-            return kept.get();
+        var objective = team.objective < 0 ? null : game.map().posts().get(team.objective).center();
+        int number = Fireteams.leader(squad.stream().map(soldier -> new Fireteams.Candidate(soldier.number, wounded(soldier.body),
+                objective == null ? 0 : soldier.body.getLocation().distanceSquared(objective))).toList(), team.leader);
+        if (number != team.leader) {
+            team.leader = number;
+            team.trail.clear();
+            if (team.flanker == number) {
+                team.flanker = -1;
+            }
         }
-        var leader = team.objective < 0 ? squad.getFirst() : squad.stream().min(Comparator.comparingDouble((Soldier soldier) ->
-                soldier.body.getLocation().distanceSquared(game.map().posts().get(team.objective).center()))).orElseThrow();
-        team.leader = leader.number;
-        team.trail.clear();
-        return leader;
+        return squad.stream().filter(soldier -> soldier.number == number).findFirst().orElseThrow();
     }
 
     private void mark(Fireteam team) {
@@ -871,6 +872,10 @@ public final class Bots implements Listener {
             soldier.cover = null;
             soldier.peek = null;
         }
+        var medic = !wounded || team == null ? Optional.<Soldier>empty() : members(team).stream().filter(Bots::deployed)
+                .filter(other -> other != soldier && other.role == CombatClass.MEDIC && other.guarding < 0)
+                .filter(other -> other.body.getWorld().equals(mob.getWorld())
+                        && other.body.getLocation().distance(here) < settings.catchUpDistance()).findFirst();
         if (game.gadgets().sieging(mob)) {
             activity = "siege";
             destination = here;
@@ -888,6 +893,17 @@ public final class Bots implements Listener {
             activity = soldier.peeking ? "peek-from-cover" : wounded ? "retreat-wounded" : "hold-cover";
             destination = protectedPosition.get();
             speed = settings.sprintSpeed();
+        } else if (wounded && team != null) {
+            soldier.boundDone = true;
+            speed = settings.sprintSpeed();
+            if (medic.isPresent()) {
+                activity = "to-medic";
+                var at = medic.get().body.getLocation();
+                destination = at.distance(here) > PEEK_REACH ? at : here;
+            } else {
+                activity = "recover";
+                destination = post == null ? here : threat.flatMap(enemy -> retreat(soldier, here, post, enemy)).orElse(here);
+            }
         } else if (patient.isPresent()) {
             seekingPatient = here.distanceSquared(patient.get().getLocation()) > 9 || !mob.hasLineOfSight(patient.get());
             activity = seekingPatient ? "follow-patient" : "treat-patient";
@@ -969,7 +985,8 @@ public final class Bots implements Listener {
             soldier.stuckTicks = 0;
             soldier.progress = here.clone();
         }
-        if (soldier.stuckTicks >= 100 && (activity.equals("assault") || activity.equals("strafe-in-post"))) {
+        if (soldier.stuckTicks >= 100 && (activity.equals("assault") || activity.equals("strafe-in-post")
+                || activity.equals("to-medic"))) {
             soldier.stuckTicks = 0;
             soldier.progress = here.clone();
         }

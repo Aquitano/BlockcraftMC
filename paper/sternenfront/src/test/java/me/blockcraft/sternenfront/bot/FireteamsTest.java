@@ -32,6 +32,17 @@ public class FireteamsTest {
     }
 
     @Test
+    public void aWoundedLeaderHandsTheLeadToTheFitMemberNearestTheObjective() {
+        var leader = new Fireteams.Candidate(1, false, 30);
+        var nearest = new Fireteams.Candidate(2, false, 10);
+        var farther = new Fireteams.Candidate(3, false, 20);
+        assertEquals(1, Fireteams.leader(List.of(leader, nearest, farther), 1));
+        assertEquals(2, Fireteams.leader(List.of(leader, farther, nearest), -1));
+        assertEquals(2, Fireteams.leader(List.of(new Fireteams.Candidate(1, true, 30), farther, nearest), 1));
+        assertEquals(1, Fireteams.leader(List.of(new Fireteams.Candidate(1, true, 30), new Fireteams.Candidate(2, true, 10)), 1));
+    }
+
+    @Test
     public void aBotGivesWayOnlyWhenOutnumberedTwoToOne() {
         assertEquals(true, new Fireteams.Odds(1, 2).outnumbered());
         assertEquals(false, new Fireteams.Odds(1, 1).outnumbered());

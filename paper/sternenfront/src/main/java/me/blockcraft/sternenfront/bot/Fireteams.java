@@ -13,6 +13,9 @@ final class Fireteams {
 
     record Member(int number, CombatClass role) { }
 
+    /** A member who could lead, with the ground it has {@code left} to the objective. */
+    record Candidate(int number, boolean wounded, double left) { }
+
     /** Who stands near a bot, counting itself among its {@code friends}. */
     record Odds(int friends, int enemies) {
 
@@ -45,6 +48,17 @@ final class Fireteams {
             teams.get(index % count).add(dealt.get(index).number());
         }
         return teams.stream().map(List::copyOf).toList();
+    }
+
+    /**
+     * The team keeps its leader while it is fit; a new one is the fit member with least ground left, so nobody turns
+     * back. A wounded leader hands over, as it leaves the push to heal, unless nobody fit is left to take over.
+     */
+    static int leader(List<Candidate> squad, int current) {
+        var fit = squad.stream().filter(candidate -> !candidate.wounded()).toList();
+        var eligible = fit.isEmpty() ? squad : fit;
+        return eligible.stream().filter(candidate -> candidate.number() == current).findFirst()
+                .or(() -> eligible.stream().min(Comparator.comparingDouble(Candidate::left))).orElseThrow().number();
     }
 
     /**
