@@ -50,7 +50,7 @@ public final class Bots implements Listener {
 
     private static final int THINK_TICKS = 4;
     private static final int ROUTE_TICKS = 20;
-    private static final int OBJECTIVE_TICKS = 60;
+    private static final int AVOID_TICKS = 600;
     private static final double PEEK_REACH = 3;
     private static final double WOUNDED_SHARE = 0.3;
     /**
@@ -69,7 +69,8 @@ public final class Bots implements Listener {
         private UUID target;
         private long reactAt;
         private int objective = -1;
-        private long chooseAt;
+        private Fireteam team;
+        private int guarding = -1;
         private Location progress;
         private int stuckTicks;
         private final CombatClass role;
@@ -118,6 +119,7 @@ public final class Bots implements Listener {
     private final List<Soldier> soldiers = new ArrayList<>();
     private final Map<UUID, Soldier> bodies = new HashMap<>();
     private final Map<UUID, Faction> identities = new HashMap<>();
+    private final List<Fireteam> teams = new ArrayList<>();
     private double sightShare = 1;
     private int nextNumber;
     private BotConfig.Tuning tuning;
@@ -169,7 +171,8 @@ public final class Bots implements Listener {
                 soldier.stuckTicks, BotSnapshot.Point.of(soldier.progress), soldier.target,
                 target == null ? null : BotSnapshot.Point.of(target.getLocation()),
                 target != null && target.isValid() && target.getWorld().equals(body.getWorld()) && body.hasLineOfSight(target),
-                BotSnapshot.Point.of(soldier.aim), BotSnapshot.Point.of(soldier.lastSeen), soldier.chooseAt,
+                BotSnapshot.Point.of(soldier.aim), BotSnapshot.Point.of(soldier.lastSeen),
+                soldier.team == null ? -1 : soldier.team.id, soldier.guarding,
                 soldier.reactAt, soldier.seenUntil, soldier.pauseUntil, soldier.volley.active(),
                 BotSnapshot.Point.of(soldier.idleAim), soldier.patients.selected(),
                 patient == null ? null : BotSnapshot.Point.of(patient.getLocation()),
@@ -199,6 +202,7 @@ public final class Bots implements Listener {
     }
 
     public void fill() {
+        boolean changed = false;
         for (var faction : Faction.values()) {
             int needed = config.needed(game.humans(faction));
             var factionSoldiers = soldiers.stream().filter(soldier -> soldier.faction == faction)
@@ -207,11 +211,37 @@ public final class Bots implements Listener {
                 var soldier = factionSoldiers.get(index);
                 remove(soldier);
                 soldiers.remove(soldier);
+                changed = true;
             }
             for (int index = factionSoldiers.size(); index < needed; index++) {
                 soldiers.add(new Soldier(++nextNumber, faction));
+                changed = true;
             }
         }
+        if (changed) {
+            regroup();
+        }
+    }
+
+    private void regroup() {
+        teams.clear();
+        for (var faction : Faction.values()) {
+            var members = soldiers.stream().filter(soldier -> soldier.faction == faction)
+                    .map(soldier -> new Fireteams.Member(soldier.number, soldier.role)).toList();
+            for (var numbers : Fireteams.assign(members, config.squad().fireteamSize())) {
+                var team = new Fireteam(teams.size(), faction, numbers);
+                teams.add(team);
+                members(team).forEach(soldier -> soldier.team = team);
+            }
+        }
+    }
+
+    private List<Soldier> members(Fireteam team) {
+        return team.members.stream().flatMap(number -> soldiers.stream().filter(soldier -> soldier.number == number)).toList();
+    }
+
+    private static boolean deployed(Soldier soldier) {
+        return soldier.body != null && soldier.body.isValid() && !soldier.body.isDead();
     }
 
     public void tick(long tick) {
@@ -220,6 +250,9 @@ public final class Bots implements Listener {
         }
         if (tick % 20 == 1) {
             fill();
+        }
+        if (tick % ROUTE_TICKS == 0) {
+            teams.forEach(team -> command(team, tick));
         }
         for (var soldier : List.copyOf(soldiers)) {
             if (soldier.body == null) {
@@ -293,7 +326,7 @@ public final class Bots implements Listener {
         soldier.target = null;
         soldier.reactAt = 0;
         soldier.objective = -1;
-        soldier.chooseAt = tick;
+        soldier.guarding = -1;
         soldier.progress = at.clone();
         soldier.stuckTicks = 0;
         soldier.aim = at.getDirection();
@@ -331,9 +364,6 @@ public final class Bots implements Listener {
     private void think(Soldier soldier, long tick) {
         var mob = soldier.body;
         var here = mob.getLocation();
-        if (tick >= soldier.chooseAt || soldier.objective < 0) {
-            choose(soldier, tick);
-        }
         double sight = config.range() * sightShare;
         var visible = game.combatants().stream()
                 .filter(other -> game.hittable(soldier.faction, other))
@@ -456,34 +486,61 @@ public final class Bots implements Listener {
         return mob.getHealth() < mob.getAttribute(Attribute.MAX_HEALTH).getValue() * WOUNDED_SHARE;
     }
 
-    private void choose(Soldier soldier, long tick) {
-        var here = soldier.body.getLocation();
-        if (soldier.objective >= 0
-                && game.posts().owner(soldier.objective).filter(soldier.faction::equals).isEmpty()) {
-            soldier.chooseAt = tick + OBJECTIVE_TICKS;
+    private void command(Fireteam team, long tick) {
+        var everyone = members(team);
+        for (var soldier : everyone) {
+            if (soldier.guarding >= 0 && game.posts().owner(soldier.guarding).filter(team.faction::equals).isEmpty()) {
+                soldier.guarding = -1;
+            }
+        }
+        var squad = everyone.stream().filter(Bots::deployed).filter(soldier -> soldier.guarding < 0).toList();
+        if (squad.isEmpty()) {
             return;
         }
-        var choices = game.posts().indices().stream().map(index -> new Objectives.Post(index,
-                game.posts().owner(index).filter(soldier.faction::equals).isPresent(), game.posts().contested(index),
-                here.distance(game.map().posts().get(index).center()) - (soldier.role == CombatClass.HEAVY
-                        && game.posts().owner(index).filter(soldier.faction::equals).isPresent() ? 100 : 0),
-                (int) soldiers.stream().filter(other -> other != soldier && other.body != null
-                        && other.faction == soldier.faction && other.objective == index).count(),
-                game.posts().priority(index) ? game.config().acts().priorityPull() : 0)).toList();
-        int next = Objectives.choose(choices).orElse(-1);
-        objective(soldier, next);
-        soldier.chooseAt = tick + OBJECTIVE_TICKS + soldier.number % 20;
+        int previous = team.objective;
+        int next = objectiveFor(team, squad.getFirst().body.getLocation(), tick);
+        if (next != previous) {
+            if (previous >= 0 && game.posts().owner(previous).filter(team.faction::equals).isPresent()
+                    && soldiers.stream().noneMatch(soldier -> soldier.faction == team.faction && soldier.guarding == previous && deployed(soldier))) {
+                Fireteams.guard(squad.stream().map(soldier -> new Fireteams.Member(soldier.number, soldier.role)).toList())
+                        .ifPresent(number -> squad.stream().filter(soldier -> soldier.number == number)
+                                .forEach(soldier -> soldier.guarding = previous));
+            }
+            team.objective = next;
+            team.route = ThreadLocalRandom.current().nextInt(64);
+        }
+        for (var soldier : squad) {
+            objective(soldier, soldier.guarding < 0 ? team.objective : soldier.guarding, team.route);
+        }
     }
 
-    private void objective(Soldier soldier, int next) {
+    private int objectiveFor(Fireteam team, Location from, long tick) {
+        var enemy = game.map().headquarters().get(team.faction.enemy()).zone().getCenter();
+        var choices = game.posts().indices().stream().filter(index -> !team.avoiding(index, tick)).map(index -> {
+            var center = game.map().posts().get(index).center();
+            return new Objectives.Post(index, hold(index, team.faction), from.distance(center),
+                    Math.hypot(center.getX() - enemy.getX(), center.getZ() - enemy.getZ()),
+                    (int) teams.stream().filter(other -> other != team && other.faction == team.faction && other.objective == index).count(),
+                    game.posts().priority(index) ? game.config().acts().priorityPull() : 0);
+        }).toList();
+        return Objectives.choose(choices, team.objective, config.squad().switchMargin()).orElse(-1);
+    }
+
+    private Objectives.Hold hold(int post, Faction faction) {
+        if (game.posts().owner(post).filter(faction::equals).isEmpty()) {
+            return Objectives.Hold.OPEN;
+        }
+        return game.posts().safe(post, faction) ? Objectives.Hold.HELD : Objectives.Hold.THREATENED;
+    }
+
+    private void objective(Soldier soldier, int next, int route) {
         if (next != soldier.objective) {
             soldier.waypoint = 0;
             if (next >= 0) {
                 var post = game.map().posts().get(next);
                 var routes = post.routes().get(soldier.faction);
-                soldier.navigation.start(soldier.number, routes.size());
-                var route = routes.get(soldier.navigation.route());
-                soldier.waypoint = enterRoute(soldier, post, route);
+                soldier.navigation.start(route, routes.size());
+                soldier.waypoint = enterRoute(soldier, post, routes.get(soldier.navigation.route()));
             }
         }
         soldier.objective = next;
@@ -506,8 +563,7 @@ public final class Bots implements Listener {
         boolean capturing = post != null && post.contains(here);
         var route = post == null ? null : post.routes().get(soldier.faction)
                 .get(soldier.navigation.route());
-        boolean defending = route != null && soldier.role == CombatClass.HEAVY
-                && game.posts().owner(soldier.objective).filter(soldier.faction::equals).isPresent();
+        boolean defending = route != null && soldier.guarding >= 0;
         Location destination = null;
         String activity = "idle";
         boolean seekingPatient = false;
@@ -593,8 +649,7 @@ public final class Bots implements Listener {
                 soldier.waypoint = enterRoute(soldier, post, alternate);
                 soldier.navigationResult = "retry-route";
             } else {
-                objective(soldier, game.posts().size() > 1 ? (soldier.objective + 1) % game.posts().size() : -1);
-                soldier.chooseAt = tick + OBJECTIVE_TICKS;
+                abandon(soldier, tick);
                 soldier.navigationResult = "abandon-route";
             }
             soldier.stuckTicks = 0;
@@ -607,6 +662,17 @@ public final class Bots implements Listener {
             return;
         }
         soldier.navigationResult = mob.getPathfinder().moveTo(destination, 1.0) ? "accepted" : "unreachable";
+    }
+
+    private void abandon(Soldier soldier, long tick) {
+        var team = soldier.team;
+        if (soldier.guarding >= 0) {
+            soldier.guarding = -1;
+        } else if (team != null && members(team).stream().filter(Bots::deployed).filter(other -> other.guarding < 0)
+                .findFirst().filter(soldier::equals).isPresent()) {
+            team.avoid(soldier.objective, tick + AVOID_TICKS);
+        }
+        soldier.objective = -1;
     }
 
     private boolean remembering(Soldier soldier, long tick) {
@@ -848,9 +914,9 @@ public final class Bots implements Listener {
         }
     }
 
-    /** Every bot weighs its objective afresh, even one still on its way to a post it wanted before. */
+    /** Every fireteam weighs its objective afresh, even one still on its way to a post it wanted before. */
     public void reconsider() {
-        soldiers.forEach(soldier -> soldier.objective = -1);
+        teams.forEach(team -> team.objective = -1);
     }
 
     public void sightShare(double share) {
@@ -869,6 +935,7 @@ public final class Bots implements Listener {
         sightShare = 1;
         soldiers.forEach(this::remove);
         soldiers.clear();
+        teams.clear();
         bodies.clear();
         identities.clear();
     }

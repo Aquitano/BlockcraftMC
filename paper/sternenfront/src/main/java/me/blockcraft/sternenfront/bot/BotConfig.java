@@ -8,11 +8,14 @@ import java.util.Map;
 public record BotConfig(boolean enabled, int perTeam, double range, double visionAngle, int memoryTicks,
                         double idleTurnDegrees, double stepHeight, int boundaryGraceTicks,
                         int killPoints, int healTicks, double healAmount,
-                        Medic medic, Cover cover, Voice voice, BotDifficulty difficulty, Map<BotDifficulty, Tuning> profiles) {
+                        Medic medic, Cover cover, Voice voice, Squad squad, BotDifficulty difficulty,
+                        Map<BotDifficulty, Tuning> profiles) {
 
     public record Medic(int pursuitTicks, int retryTicks) { }
 
     public record Cover(double searchRadius, int holdTicks, int peekTicks) { }
+
+    public record Squad(int fireteamSize, double switchMargin) { }
 
     public record Voice(boolean enabled, double range, float volume, int soldierCooldownTicks, int globalCooldownTicks) { }
 
@@ -59,6 +62,8 @@ public record BotConfig(boolean enabled, int perTeam, double range, double visio
                         (float) Math.clamp(config.getDouble("bots.voice.volume", 0.65), 0, 1),
                         Math.max(100, config.getInt("bots.voice.soldier-cooldown-ticks", 360)),
                         Math.max(60, config.getInt("bots.voice.global-cooldown-ticks", 100))),
+                new Squad(Math.clamp(config.getInt("bots.squad.fireteam-size", 4), 2, 4),
+                        Math.clamp(config.getDouble("bots.squad.switch-margin", 25), 0, 100)),
                 BotDifficulty.named(config.getString("bots.difficulty", "normal")).orElse(BotDifficulty.NORMAL),
                 Map.copyOf(profiles));
     }
