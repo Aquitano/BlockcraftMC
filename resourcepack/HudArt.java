@@ -37,6 +37,34 @@ public final class HudArt {
         return image;
     }
 
+    /**
+     * Ticks above, below and beside the crosshair, one set per spread size, each further out. They stand on the axes so
+     * the diagonal hit marks drawn over them stay readable, and the tightest clears the vanilla crosshair's arms.
+     */
+    private static BufferedImage spreadTicks() {
+        int[] inner = {5, 7, 9, 11, 13};
+        var image = new BufferedImage(32 * inner.length, 32, BufferedImage.TYPE_INT_ARGB);
+        var g = image.createGraphics();
+        for (int size = 0; size < inner.length; size++) {
+            int middle = size * 32 + 16;
+            int near = inner[size];
+            int[][] ticks = {
+                    {middle, 16 - near - 1, 1, 2}, {middle, 16 + near, 1, 2},
+                    {middle - near - 1, 16, 2, 1}, {middle + near, 16, 2, 1}};
+            for (var tick : ticks) {
+                boolean upright = tick[2] == 1;
+                g.setColor(new Color(0x90000000, true));
+                g.fillRect(tick[0] - (upright ? 1 : 0), tick[1] - (upright ? 0 : 1), tick[2] + (upright ? 2 : 0), tick[3] + (upright ? 0 : 2));
+                g.setComposite(AlphaComposite.Src);
+                g.setColor(new Color(0xE0FFFFFF, true));
+                g.fillRect(tick[0], tick[1], tick[2], tick[3]);
+                g.setComposite(AlphaComposite.SrcOver);
+            }
+        }
+        g.dispose();
+        return image;
+    }
+
     /** Each post's letter on a filled tile and on a hollow one, in white so a text colour tints them. */
     private static BufferedImage objectivePips() {
         var image = new BufferedImage(PIP * 10, PIP, BufferedImage.TYPE_INT_ARGB);
@@ -111,6 +139,7 @@ public final class HudArt {
         ImageIO.write(objectivePips(), "PNG", root.resolve("objective_pips.png").toFile());
         postMarkers(root.getParent().getParent());
         ImageIO.write(crosshairMarks(), "PNG", root.resolve("crosshair_marks.png").toFile());
+        ImageIO.write(spreadTicks(), "PNG", root.resolve("spread_ticks.png").toFile());
         var hidden = new BufferedImage(182, 5, BufferedImage.TYPE_INT_ARGB);
         var sprites = root.getParent().getParent().getParent().resolve("minecraft/textures/gui/sprites/boss_bar");
         Files.createDirectories(sprites);
