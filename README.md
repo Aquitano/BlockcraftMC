@@ -19,18 +19,7 @@ Start with [Build](#build), [Run locally](#run-locally) or [Deploy](#deploy). Ot
 | `paper/statussigns` | StatusSigns: clickable server-status signs |
 | [`paper/replay`](paper/replay/README.md) | BlockcraftReplay: bounded match recording and isolated playback |
 | [`paper/archive`](paper/archive/README.md) | Zeitkapsel: old maps of earlier servers to walk through |
-| [`paper/bedwars`](paper/bedwars/README.md) | BedWars, a port of rewi-bw |
-| [`paper/cores`](paper/cores/README.md) | Cores: red against blue, two beacons each, after GommeHD's mode |
-| [`paper/duell`](paper/duell/README.md) | Duell: single games, three-mode tours, ranked queue and direct challenges |
-| `paper/emeraldrush` | EmeraldRush minigame |
-| [`paper/endergames`](paper/endergames/README.md) | EnderGames: kit survival games in a fresh random world, after GommeHD's mode |
-| [`paper/knockbackffa`](paper/knockbackffa/README.md) | Knockback FFA: continuous arena, instant respawns and a shared rotating kit |
-| [`paper/mlgrush`](paper/mlgrush/README.md) | MLG Rush: two players, knockback sticks, beds, first to five |
-| `paper/quicksg` | QuickSG survival games |
-| [`paper/skywars`](paper/skywars/README.md) | SkyWars: everyone on their own island over the void, after GommeHD's mode |
-| [`paper/sternenfront`](paper/sternenfront/README.md) | Sternenfront: sci-fi team shooter; in the navigator only with `blockcraft.lobby.preview` while it is tested |
-| [`paper/ttt`](paper/ttt/README.md) | TTT, and TTT 2 (group `ttt2`) with chores and sabotage; in the navigator only with `blockcraft.lobby.preview` while it is tested |
-| [`paper/zombies`](paper/zombies/README.md) | Solo or co-op Zombies survival |
+| `paper/<game>` | One plugin per game; see [Games](#games) |
 | `velocity/system` | BlockcraftSystem: reports, moderation, parties, friends, routing and staff tools |
 | `resourcepack/` | The client-side look; see [Resource pack](#resource-pack) |
 | `waker/` | Starts and stops game servers for the proxy; see [Game servers on demand](#game-servers-on-demand) |
@@ -39,6 +28,24 @@ Start with [Build](#build), [Run locally](#run-locally) or [Deploy](#deploy). Ot
 | `dev/`, `prod/` | Config templates for the local dev network and the public host |
 | `docker-compose.yml` | The local dev network: MariaDB, Velocity and one Paper server per game mode |
 | `docker-compose.prod.yml` | The same network on a public host, layered over the first; see [Deploy](#deploy) |
+
+## Games
+
+| Path | Generation | What it is |
+| --- | --- | --- |
+| `paper/quicksg` | Classic | QuickSG survival games |
+| `paper/emeraldrush` | Classic | EmeraldRush minigame |
+| [`paper/duell`](paper/duell/README.md) | Classic | Duell: single games, three-mode tours, ranked queue and direct challenges |
+| [`paper/bedwars`](paper/bedwars/README.md) | Classic | BedWars, a port of rewi-bw |
+| [`paper/cores`](paper/cores/README.md) | Classic | Cores: red against blue, two beacons each, after GommeHD's mode |
+| [`paper/endergames`](paper/endergames/README.md) | Classic | EnderGames: kit survival games in a fresh random world, after GommeHD's mode |
+| [`paper/knockbackffa`](paper/knockbackffa/README.md) | Classic | Knockback FFA: continuous arena, instant respawns and a shared rotating kit |
+| [`paper/mlgrush`](paper/mlgrush/README.md) | Classic | MLG Rush: two players, knockback sticks, beds, first to five |
+| [`paper/skywars`](paper/skywars/README.md) | Classic | SkyWars: everyone on their own island over the void, after GommeHD's mode |
+| [`paper/ttt`](paper/ttt/README.md) | Classic | TTT, after GommeHD's mode |
+| [`paper/sternenfront`](paper/sternenfront/README.md) | Next-Gen | Sternenfront: sci-fi team shooter; in the navigator only with `blockcraft.lobby.preview` while it is tested |
+| [`paper/ttt`](paper/ttt/README.md) | Next-Gen | TTT 2 (group `ttt2`): TTT with chores and sabotage; in the navigator only with `blockcraft.lobby.preview` while it is tested |
+| [`paper/zombies`](paper/zombies/README.md) | Next-Gen | Solo or co-op Zombies survival |
 
 ## Build
 

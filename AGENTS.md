@@ -11,6 +11,7 @@ Paper 26.3 / Velocity 4 plugins. This file holds only what the code does not say
 ## Rules the code cannot enforce
 
 - Before writing a lobby, round, menu or protected world, look in `paper/api`, which already has them.
+- A Classic ([README](README.md#games)) keeps its rules. A new idea for one becomes a new group, as TTT 2 does for TTT.
 - Player text goes in `messages.yml` (German) and tunables in `config.yml`. A data folder holds only operator overrides, and
   `BundledDefaults.apply(this)` runs before `getConfig()` because Bukkit's `getInt(path, fallback)` ignores bundled defaults.
 - `SharedSchema` is append-only. New tables are `bc_*`; legacy table and column names stay.
