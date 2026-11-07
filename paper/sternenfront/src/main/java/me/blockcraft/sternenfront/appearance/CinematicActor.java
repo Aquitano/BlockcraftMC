@@ -30,8 +30,8 @@ public final class CinematicActor implements AutoCloseable {
             bones.put("head", part(plugin, viewer, at, body, "head", 0, joints.headY()));
             bones.put("left_arm", part(plugin, viewer, at, body, "arm", joints.shoulderX(), joints.shoulderY()));
             bones.put("right_arm", part(plugin, viewer, at, body, "arm", -joints.shoulderX(), joints.shoulderY()));
-            bones.put("left_leg", part(plugin, viewer, at, body, "leg", -joints.hipX(), joints.hipY()));
-            bones.put("right_leg", part(plugin, viewer, at, body, "leg", joints.hipX(), joints.hipY()));
+            bones.put("left_leg", part(plugin, viewer, at, body, "leg", joints.hipX(), joints.hipY()));
+            bones.put("right_leg", part(plugin, viewer, at, body, "leg_right", -joints.hipX(), joints.hipY()));
             actions = new ActorActions(bones);
             if (!actions.play(clip, 0)) {
                 close();

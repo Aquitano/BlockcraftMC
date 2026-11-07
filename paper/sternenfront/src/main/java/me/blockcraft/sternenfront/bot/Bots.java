@@ -195,6 +195,18 @@ public final class Bots implements Listener {
         return Optional.ofNullable(bodies.get(entity.getUniqueId())).map(soldier -> soldier.role);
     }
 
+    /** Which of its faction's fireteams a bot fights in, counted from 0, and whether it leads that team. */
+    public record Squad(int fireteam, boolean leads) { }
+
+    public Optional<Squad> squad(Entity entity) {
+        var soldier = bodies.get(entity.getUniqueId());
+        if (soldier == null || soldier.team == null) {
+            return Optional.empty();
+        }
+        var own = teams.stream().filter(team -> team.faction == soldier.faction).toList();
+        return Optional.of(new Squad(own.indexOf(soldier.team), soldier.team.leader == soldier.number));
+    }
+
     public double heat(Entity entity) {
         var soldier = bodies.get(entity.getUniqueId());
         return soldier == null ? 0 : soldier.heat.level();

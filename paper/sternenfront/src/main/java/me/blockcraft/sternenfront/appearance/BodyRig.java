@@ -31,7 +31,6 @@ import java.util.Set;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
@@ -40,7 +39,7 @@ final class BodyRig implements AutoCloseable {
     private static final float SEATED_LEG = -1.35f;
     private static final float SEATED_DROP = 0.2f;
     /** As long as vanilla's hurt flash and BetterModel's damage tint. */
-    private static final int HURT_TICKS = 10;
+    static final int HURT_TICKS = 10;
 
     private final Plugin plugin;
     private final LivingEntity actor;
@@ -72,8 +71,10 @@ final class BodyRig implements AutoCloseable {
     private final Optional<RigMotion> motion;
     private int recoilLeft;
     private int hurtLeft;
+    private Markings markings;
 
-    BodyRig(Plugin plugin, LivingEntity actor, RigBody body, Predicate<Player> fighting, Supplier<Vector> aim, float turnDegrees, Optional<RigMotion> motion) {
+    BodyRig(Plugin plugin, LivingEntity actor, RigBody body, Predicate<Player> fighting, Supplier<Vector> aim, float turnDegrees,
+            Optional<RigMotion> motion, Markings markings) {
         this.fighting = fighting;
         this.plugin = plugin;
         this.actor = actor;
@@ -81,6 +82,7 @@ final class BodyRig implements AutoCloseable {
         this.aim = aim;
         this.turnDegrees = turnDegrees;
         this.motion = motion;
+        this.markings = markings;
         previous = actor.getLocation();
         bodyYaw = (float) Math.toRadians(-previous.clone().setDirection(aim.get()).getYaw());
         torso = part("torso");
@@ -88,7 +90,8 @@ final class BodyRig implements AutoCloseable {
         leftArm = part(body.leftArm());
         rightArm = part("arm");
         leftLeg = part("leg");
-        rightLeg = part("leg");
+        rightLeg = part("leg_right");
+        paint(Color.WHITE, Color.fromRGB(markings.colour()));
         weapon = spawn(ItemDisplay.class);
         weapon.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.NONE);
         offhand = body.dualWield() ? Optional.of(spawn(ItemDisplay.class)) : Optional.empty();
@@ -156,16 +159,26 @@ final class BodyRig implements AutoCloseable {
 
     void hurt(Color tint) {
         if (hurtLeft == 0) {
-            var colour = CustomModelData.customModelData().addColor(tint).build();
-            tintBody(look -> look.setData(DataComponentTypes.CUSTOM_MODEL_DATA, colour));
+            paint(tint, tint);
         }
         hurtLeft = HURT_TICKS;
     }
 
-    private void tintBody(Consumer<ItemStack> tint) {
+    /** New markings wait for the hurt flash to end, which paints them anyway. */
+    void mark(Markings next) {
+        if (!next.equals(markings)) {
+            markings = next;
+            if (hurtLeft == 0) {
+                paint(Color.WHITE, Color.fromRGB(markings.colour()));
+            }
+        }
+    }
+
+    private void paint(Color plates, Color marks) {
+        var data = CustomModelData.customModelData().addColor(plates).addColor(marks).addFlag(markings.leader()).build();
         for (var part : List.of(torso, head, leftArm, rightArm, leftLeg, rightLeg)) {
             var look = part.getItemStack();
-            tint.accept(look);
+            look.setData(DataComponentTypes.CUSTOM_MODEL_DATA, data);
             part.setItemStack(look);
         }
     }
@@ -209,7 +222,7 @@ final class BodyRig implements AutoCloseable {
         float recoilDistance = (float) (motion.map(RigMotion::recoilBlocks).orElse(0.06) * kick);
         recoilLeft = Math.max(0, recoilLeft - 1);
         if (hurtLeft > 0 && --hurtLeft == 0) {
-            tintBody(look -> look.resetData(DataComponentTypes.CUSTOM_MODEL_DATA));
+            paint(Color.WHITE, Color.fromRGB(markings.colour()));
         }
         boolean seated = actor.isInsideVehicle() && body.faction() == Faction.KOLONIEN;
         float step = actor.isInsideVehicle() ? 0 : actor.isOnGround() ? movement.step() : 0.2f;
@@ -229,8 +242,8 @@ final class BodyRig implements AutoCloseable {
         pose(torso, at, yaw, yaw + movement.sway(), 0, joints.torsoY() * scale - drop + movement.bob(), 0, 0,
                 joints.torsoLean() + movement.lean() + recoilPitch / 3 + (crouching ? 0.15f : 0), scale);
         pose(head, at, yaw, facing, 0, joints.headY() * scale - drop, joints.headZ() * scale, 0, pitch, scale);
-        pose(leftLeg, at, yaw, yaw, -joints.hipX() * scale, joints.hipY() * scale - (seated ? drop : drop / 2), 0, 0, leftStride, scale);
-        pose(rightLeg, at, yaw, yaw, joints.hipX() * scale, joints.hipY() * scale - (seated ? drop : drop / 2), 0, 0, rightStride, scale);
+        pose(leftLeg, at, yaw, yaw, joints.hipX() * scale, joints.hipY() * scale - (seated ? drop : drop / 2), 0, 0, leftStride, scale);
+        pose(rightLeg, at, yaw, yaw, -joints.hipX() * scale, joints.hipY() * scale - (seated ? drop : drop / 2), 0, 0, rightStride, scale);
         float shoulderX = joints.shoulderX() * scale;
         float shoulderY = joints.shoulderY() * scale - drop;
         float shoulderZ = joints.shoulderZ() * scale;
