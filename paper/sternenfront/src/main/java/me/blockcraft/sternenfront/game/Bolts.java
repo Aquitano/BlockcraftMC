@@ -74,9 +74,7 @@ public final class Bolts {
     public void fire(Player shooter, Faction faction, Blaster blaster, Blaster.Stats stats) {
         var eye = shooter.getEyeLocation();
         var direction = eye.getDirection();
-        var input = shooter.getCurrentInput();
-        double spread = handling.spread(stats.spread(), input.isForward() || input.isBackward() || input.isLeft() || input.isRight(),
-                shooter.isSneaking(), game.fighter(shooter).heat().level());
+        double spread = handling.spread(stats.spread(), shooter, game.fighter(shooter).heat().level());
         if (spread > 0) {
             var random = ThreadLocalRandom.current();
             direction.add(new Vector(random.nextDouble(-spread, spread), random.nextDouble(-spread, spread),
