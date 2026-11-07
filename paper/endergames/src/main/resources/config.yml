@@ -39,8 +39,9 @@ world:
 
 # Everyone starts together on an island of end stone floating 40 blocks over the centre, round chests of starter
 # loot, and jumps down into the world from there; nobody takes damage before the protection time is over. Each of
-# the chests rolls between min-items and max-items of loot. When the protection time ends the island crumbles, and
-# whoever is still on it floats down slowly.
+# the chests rolls between min-items and max-items of loot. In front of each player stands an ender chest with
+# ender-chests' loot that vanishes once emptied. When the protection time ends the island crumbles, and whoever is
+# still on it floats down slowly.
 start-island:
   chests: 6
   min-items: 2
@@ -61,6 +62,24 @@ start-island:
     - {item: COBBLESTONE, amount: 16, weight: 5}
     - {item: BOW, weight: 2}
     - {item: ARROW, amount: 6, weight: 3}
+  ender-chests:
+    min-items: 2
+    max-items: 3
+    loot:
+      - {item: STONE_SWORD, weight: 6}
+      - {item: IRON_SWORD, weight: 2}
+      - {item: IRON_HELMET, weight: 3}
+      - {item: CHAINMAIL_CHESTPLATE, weight: 3}
+      - {item: CHAINMAIL_LEGGINGS, weight: 3}
+      - {item: IRON_BOOTS, weight: 3}
+      - {item: BOW, weight: 3}
+      - {item: ARROW, amount: 6, weight: 6}
+      - {item: COOKED_BEEF, amount: 3, weight: 8}
+      - {item: GOLDEN_APPLE, weight: 1}
+      - {item: ENDER_PEARL, weight: 2}
+      - {item: IRON_INGOT, amount: 2, weight: 5}
+      - {item: EXPERIENCE_BOTTLE, amount: 4, weight: 4}
+      - {item: POTION, weight: 2}
 
 # Ender chests wander the map: per-player of them for every player in the round (at least min, at most max). One
 # stays relocate-seconds, or after-open-seconds once somebody opened it, then appears elsewhere with fresh loot.

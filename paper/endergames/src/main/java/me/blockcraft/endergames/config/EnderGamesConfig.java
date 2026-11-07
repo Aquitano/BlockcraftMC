@@ -21,7 +21,7 @@ public record EnderGamesConfig(int maxPlayers, Countdowns countdowns, WorldSetti
     public record WorldSettings(int radius, List<MapSeed> seeds, int shrinkAfter, int finalRadius) {
     }
 
-    public record StartIslandSettings(int chests, LootTable loot) {
+    public record StartIslandSettings(int chests, LootTable loot, LootTable enderChestLoot) {
     }
 
     public record EnderChestSettings(double perPlayer, int min, int max, int relocateSeconds, int afterOpenSeconds,
@@ -68,7 +68,8 @@ public record EnderGamesConfig(int maxPlayers, Countdowns countdowns, WorldSetti
                         seeds(world),
                         Math.max(1, world.getInt("shrink-after", 1200)),
                         Math.max(5, world.getInt("final-radius", 25))),
-                new StartIslandSettings(Math.clamp(startIsland.getInt("chests", 6), 1, 8), LootTable.fromYaml(startIsland, 2, 4)),
+                new StartIslandSettings(Math.clamp(startIsland.getInt("chests", 6), 1, 8), LootTable.fromYaml(startIsland, 2, 4),
+                        LootTable.fromYaml(section(startIsland, "ender-chests"), 2, 3)),
                 new EnderChestSettings(
                         Math.max(0, chests.getDouble("per-player", 0.5)),
                         Math.max(0, chests.getInt("min", 4)),

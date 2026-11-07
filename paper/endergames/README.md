@@ -18,9 +18,10 @@ phantoms, patrols and traders do not spawn, other mobs do, and portals lead nowh
 
 Everyone starts together on the start island, an island of end stone floating over the highest ground at the centre.
 They stand on a ring for `countdown.freeze` seconds with chests of starter loot, then grab what they can and jump down
-into the world. Nobody is hurt for `countdown.protection` seconds, so the jump is safe. When it ends the island crumbles
-with whatever is left in its chests, and whoever is still on it floats down with Slow Falling. Then the fight runs for
-`countdown.round`; the last player alive wins, otherwise it is a draw. Every player gets a compass
+into the world. In front of each player stands an ender chest with better loot (`start-island.ender-chests`), which
+vanishes once someone empties it. Nobody is hurt for `countdown.protection` seconds, so the jump is safe. When it ends
+the island crumbles with whatever is left in its chests, and whoever is still on it floats down with Slow Falling. Then
+the fight runs for `countdown.round`; the last player alive wins, otherwise it is a draw. Every player gets a compass
 `countdown.tracker-after` seconds into the fight. `world.shrink-after` seconds into the fight the border starts closing
 to `world.final-radius` by the end of the round.
 
@@ -43,6 +44,6 @@ the numbers, with health in half hearts.
 `./gradlew :paper:endergames:build` runs the unit tests (swap pairs, reach).
 `./gradlew stagePlugins`, then restart the `endergames` service and `/play endergames`. Things to check in a client:
 the world finishes loading before the first countdown runs out on its 1.5 GB; everyone starts on the start island, its
-chests open, the jump down does no harm and the island crumbles at the end of the protection with Slow Falling for
-whoever stayed; ender chests appear, open, move after being opened and are visible from afar; swaps teleport both
+chests and its ender chest per player open only after the freeze, an emptied ender chest vanishes, the jump down does
+no harm and the island crumbles at the end of the protection with Slow Falling for whoever stayed; ender chests appear, open, move after being opened and are visible from afar; swaps teleport both
 players; each kit's ability; the border shrink; the win and the recap.

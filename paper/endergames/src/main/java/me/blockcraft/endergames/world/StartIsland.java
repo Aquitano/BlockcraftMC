@@ -10,6 +10,7 @@ import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.Directional;
 
 import java.util.ArrayList;
@@ -19,9 +20,9 @@ import java.util.Random;
 /**
  * The island everyone starts on, an island of end stone floating {@link #HEIGHT_ABOVE_GROUND} blocks over the
  * highest ground below it at the round's centre. Players stand on a ring round a small obsidian pillar with the
- * start chests between them and it, and jump down into the world from there. When the protection time ends the
- * island crumbles, so nobody holds out up here for the rest of the round. Its outline draws from a fixed seed, so it
- * is the same island in every round.
+ * start chests between them and it and an ender chest in front of each, and jump down into the world from there.
+ * When the protection time ends the island crumbles, so nobody holds out up here for the rest of the round. Its
+ * outline draws from a fixed seed, so it is the same island in every round.
  */
 public final class StartIsland {
 
@@ -31,6 +32,7 @@ public final class StartIsland {
     private static final int DEPTH = 8;
     private static final double SPAWN_RADIUS = 7.0;
     private static final double CHEST_RADIUS = 3.0;
+    private static final double ENDER_CHEST_RADIUS = 5.0;
     private static final int PILLAR = 3;
     private static final int SPECTATOR_HEIGHT = 15;
     private static final int TOP_MARGIN = 24;
@@ -42,6 +44,7 @@ public final class StartIsland {
     private final int top;
     private final List<Block> blocks = new ArrayList<>();
     private final List<Block> chests = new ArrayList<>();
+    private final List<Block> enderChests = new ArrayList<>();
 
     private StartIsland(World world, int centerX, int centerZ, int top) {
         this.world = world;
@@ -105,14 +108,40 @@ public final class StartIsland {
         for (var point : Ring.points(count, CHEST_RADIUS, 180.0 / count)) {
             int dx = (int) Math.round(point.x());
             int dz = (int) Math.round(point.z());
-            var facing = Math.abs(dx) >= Math.abs(dz)
-                    ? (dx >= 0 ? BlockFace.EAST : BlockFace.WEST)
-                    : (dz >= 0 ? BlockFace.SOUTH : BlockFace.NORTH);
             var block = world.getBlockAt(centerX + dx, top + 1, centerZ + dz);
-            block.setBlockData(Material.CHEST.createBlockData(data -> ((Directional) data).setFacing(facing)), false);
+            block.setBlockData(facingOut(Material.CHEST, dx, dz), false);
             blocks.add(block);
             chests.add(block);
         }
+    }
+
+    /** One ender chest for each of {@code count} players, between their spawn and the pillar, its front towards them. */
+    public void placeEnderChests(int count) {
+        for (var point : Ring.points(count, ENDER_CHEST_RADIUS, 0)) {
+            int dx = (int) Math.round(point.x());
+            int dz = (int) Math.round(point.z());
+            var block = world.getBlockAt(centerX + dx, top + 1, centerZ + dz);
+            BlockChanges.set(block, facingOut(Material.ENDER_CHEST, dx, dz));
+            blocks.add(block);
+            enderChests.add(block);
+        }
+    }
+
+    public void removeEnderChest(Block block) {
+        if (!enderChests.remove(block)) {
+            return;
+        }
+        blocks.remove(block);
+        var location = block.getLocation().add(0.5, 0.5, 0.5);
+        world.spawnParticle(Particle.REVERSE_PORTAL, location, 40, 0.3, 0.3, 0.3, 0.05);
+        BlockChanges.set(block, Material.AIR);
+    }
+
+    private static BlockData facingOut(Material type, int dx, int dz) {
+        var facing = Math.abs(dx) >= Math.abs(dz)
+                ? (dx >= 0 ? BlockFace.EAST : BlockFace.WEST)
+                : (dz >= 0 ? BlockFace.SOUTH : BlockFace.NORTH);
+        return type.createBlockData(data -> ((Directional) data).setFacing(facing));
     }
 
     private void place(int dx, int y, int dz, Material material) {
@@ -137,6 +166,10 @@ public final class StartIsland {
         return List.copyOf(chests);
     }
 
+    public List<Block> enderChests() {
+        return List.copyOf(enderChests);
+    }
+
     /** Above the island, where spectators float and the dead come back to watch. */
     public Location spectatorSpawn() {
         return new Location(world, centerX + 0.5, top + SPECTATOR_HEIGHT, centerZ + 0.5);
@@ -152,7 +185,7 @@ public final class StartIsland {
         return covers(location.getBlockX(), location.getBlockZ()) && location.getY() >= top - DEPTH - 2;
     }
 
-    /** Takes the whole island away, chests and their loot included, with a crumble of dust. */
+    /** Takes the whole island away, chests, ender chests and their loot included, with a crumble of dust. */
     public void crumble() {
         var center = new Location(world, centerX + 0.5, top, centerZ + 0.5);
         world.spawnParticle(Particle.BLOCK, center, 300, RADIUS / 2.0, 2, RADIUS / 2.0, Material.END_STONE.createBlockData());
@@ -160,5 +193,6 @@ public final class StartIsland {
         BlockChanges.set(blocks, Material.AIR);
         blocks.clear();
         chests.clear();
+        enderChests.clear();
     }
 }

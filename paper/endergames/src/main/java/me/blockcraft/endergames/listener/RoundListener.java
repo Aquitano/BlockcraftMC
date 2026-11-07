@@ -116,6 +116,7 @@ public final class RoundListener implements Listener {
     public void onLootClose(InventoryCloseEvent event) {
         if (event.getInventory().getHolder(false) instanceof LootChest && event.getPlayer() instanceof Player player) {
             Sounds.MENU_CLICK.play(player);
+            game.lootClosed(player, event.getInventory());
         }
     }
 

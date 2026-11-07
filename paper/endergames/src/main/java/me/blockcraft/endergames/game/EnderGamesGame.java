@@ -40,6 +40,7 @@ import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
@@ -85,6 +86,7 @@ public final class EnderGamesGame implements KitPlayers, RoundConnections.Seatin
     private final KitAbilities abilities;
     private final EnderChests enderChests;
     private final LootChests startLoot;
+    private final LootChests islandEnderLoot;
     private final PlayerSwaps swaps;
     private final KitSelection<Kit> kits;
     private final int startSeconds;
@@ -115,6 +117,7 @@ public final class EnderGamesGame implements KitPlayers, RoundConnections.Seatin
         this.abilities = new KitAbilities(this, config.abilities(), messages);
         this.enderChests = new EnderChests(world, config.enderChests(), this::loot);
         this.startLoot = new LootChests(config.startIsland().loot(), this::loot);
+        this.islandEnderLoot = new LootChests(config.startIsland().enderChestLoot(), this::loot);
         this.swaps = new PlayerSwaps(config.swap());
         this.entrance = new LobbyEntrance(round, countdown, hotbar, () -> Optional.of(lobbySpawn),
                 () -> Optional.of(isIngame() ? world.spectatorSpawn() : lobbySpawn),
@@ -228,7 +231,9 @@ public final class EnderGamesGame implements KitPlayers, RoundConnections.Seatin
         }
         round.enter(GamePhase.INGAME);
         var players = round.players();
-        var spawns = world.startIsland().orElseThrow().spawns(players.size());
+        var island = world.startIsland().orElseThrow();
+        var spawns = island.spawns(players.size());
+        island.placeEnderChests(players.size());
         for (int i = 0; i < players.size(); i++) {
             var player = players.get(i);
             PlayerReset.reset(player, GameMode.SURVIVAL);
@@ -284,6 +289,7 @@ public final class EnderGamesGame implements KitPlayers, RoundConnections.Seatin
                 }));
         world.crumbleStartIsland();
         startLoot.clear();
+        islandEnderLoot.clear();
         Bukkit.broadcast(messages.get("start-island.crumbled"));
     }
 
@@ -348,11 +354,32 @@ public final class EnderGamesGame implements KitPlayers, RoundConnections.Seatin
         if (!isIngame() || !round.isPlaying(player)) {
             return Optional.empty();
         }
+        if (isIslandEnderChest(block)) {
+            return Optional.of(islandEnderLoot.open(block.getLocation()));
+        }
         return enderChests.open(block);
     }
 
     public boolean isEnderChest(Block block) {
-        return isIngame() && enderChests.isRoamer(block);
+        return isIngame() && (enderChests.isRoamer(block) || isIslandEnderChest(block));
+    }
+
+    private boolean isIslandEnderChest(Block block) {
+        return world.startIsland().filter(island -> island.enderChests().contains(block)).isPresent();
+    }
+
+    /** An ender chest on the start island goes once {@code closer} leaves its loot empty. */
+    public void lootClosed(Player closer, Inventory loot) {
+        if (!loot.isEmpty()) {
+            return;
+        }
+        world.startIsland().ifPresent(island -> island.enderChests().stream()
+                .filter(block -> !islandEnderLoot.isFresh(block.getLocation()) && islandEnderLoot.open(block.getLocation()) == loot)
+                .findFirst()
+                .ifPresent(block -> {
+                    island.removeEnderChest(block);
+                    loot.getViewers().stream().filter(viewer -> viewer != closer).toList().forEach(HumanEntity::closeInventory);
+                }));
     }
 
     public void death(PlayerDeathEvent event) {
