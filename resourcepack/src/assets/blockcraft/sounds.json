@@ -468,5 +468,17 @@
         "name": "blockcraft:sternenfront/radio_hegemonie_lost"
       }
     ]
+  },
+  "sternenfront.hurt.hegemonie": {
+    "sounds": [
+      "blockcraft:sternenfront/hurt_hegemonie_1",
+      "blockcraft:sternenfront/hurt_hegemonie_2"
+    ]
+  },
+  "sternenfront.hurt.kolonien": {
+    "sounds": [
+      "blockcraft:sternenfront/hurt_kolonien_1",
+      "blockcraft:sternenfront/hurt_kolonien_2"
+    ]
   }
 }

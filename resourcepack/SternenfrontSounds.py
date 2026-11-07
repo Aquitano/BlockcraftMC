@@ -251,6 +251,23 @@ def kill(rng):
                  (0.075, 0.8 * bell(1320, 0.22, 18)))
 
 
+def droid_hurt(rng, shift):
+    t = time(0.2)
+    clank = unit(sum(sine(held(f * shift, 0.2)) * np.exp(-t * rate) for f, rate in ((640, 30), (1470, 38), (2350, 50), (3720, 70))))
+    rattle = unit(filtered(noise(rng, 0.04), "bandpass", [1800, 6000])) * decay(0.04, 90, 0.0005)
+    servo = unit(filtered(square(glide(1100 * shift, 520 * shift, 0.16)), "bandpass", [400, 3000])) * swell(0.16, 0.01, 0.1)
+    return layer(0.8 * clank, 0.5 * rattle, (0.02, 0.35 * servo))
+
+
+def grunt(rng, start, end):
+    seconds = 0.18
+    t = time(seconds)
+    voice = saw(glide(start, end, seconds, 0.6), 40) + 0.08 * noise(rng, seconds)
+    vowel = (swept(voice, glide(720, 480, seconds), 5) + 0.6 * swept(voice, glide(1200, 1000, seconds), 6)
+             + 0.25 * swept(voice, held(2500, seconds), 8))
+    return unit(filtered(vowel, "bandpass", [200, 3400])) * np.minimum(t / 0.012, 1) * np.exp(-t * 13)
+
+
 def cooled(rng):
     return layer(0.5 * bell(660, 0.13, 25), (0.045, 0.65 * bell(990, 0.16, 22)))
 
@@ -354,6 +371,8 @@ SOUNDS = {
     "hitmarker": (0.5, hitmarker),
     "headshot": (0.6, headshot),
     "kill": (0.65, kill),
+    "hurt.hegemonie": (0.6, lambda rng: [droid_hurt(rng, 1.0), droid_hurt(rng, 0.86)]),
+    "hurt.kolonien": (0.6, lambda rng: [grunt(rng, 150, 105), grunt(rng, 128, 92)]),
     "cooled": (0.5, cooled),
     "kyber.found": (0.7, kyber_found),
     "brummi.beep": (0.55, lambda rng: [honk(0.38), layer(honk(0.2, 98), (0.24, 0.6 * beep(880, 900, 0.07)),
