@@ -52,7 +52,7 @@ public final class Heroes {
         this.config = config;
         this.points = points;
         this.roster = new HeroRoster(config.perFaction());
-        this.sabers = new Sabers(plugin, messages, config.saber());
+        this.sabers = new Sabers(plugin, messages, config.saber(), game::effects);
         this.powers = new Powers(game, config, sabers);
     }
 

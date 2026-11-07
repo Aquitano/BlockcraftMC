@@ -19,6 +19,48 @@
         }
       },
       {
+        "when": "blockcraft:sternenfront/lightsaber_jedi_25",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/sternenfront/lightsaber_jedi_25",
+          "tints": [
+            {
+              "type": "minecraft:custom_model_data",
+              "index": 0,
+              "default": -1
+            }
+          ]
+        }
+      },
+      {
+        "when": "blockcraft:sternenfront/lightsaber_jedi_50",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/sternenfront/lightsaber_jedi_50",
+          "tints": [
+            {
+              "type": "minecraft:custom_model_data",
+              "index": 0,
+              "default": -1
+            }
+          ]
+        }
+      },
+      {
+        "when": "blockcraft:sternenfront/lightsaber_jedi_75",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/sternenfront/lightsaber_jedi_75",
+          "tints": [
+            {
+              "type": "minecraft:custom_model_data",
+              "index": 0,
+              "default": -1
+            }
+          ]
+        }
+      },
+      {
         "when": "blockcraft:sternenfront/lightsaber_jedi_off",
         "model": {
           "type": "minecraft:model",
@@ -30,5 +72,6 @@
       "type": "minecraft:model",
       "model": "minecraft:item/diamond_sword"
     }
-  }
+  },
+  "hand_animation_on_swap": false
 }

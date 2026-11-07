@@ -74,13 +74,18 @@ public final class PackOverrides {
                 }
                 var override = vanilla.deepCopy();
                 override.add("model", select(item.getValue(), vanilla.get("model").getAsJsonObject()));
-                if (item.getValue().values().stream().anyMatch(drawn -> drawn.model().endsWith("_firing"))) {
+                if (swapsInPlace(item.getValue())) {
                     override.addProperty("hand_animation_on_swap", false);
                 }
                 Files.writeString(directory.resolve(item.getKey() + ".json"), gson.toJson(override) + "\n");
             }
         }
         System.out.println("Wrote " + cases.size() + " overrides to " + directory);
+    }
+
+    /** A firing pose or a lightsaber's growing blade swaps the held item each tick, which must not lower the hand. */
+    static boolean swapsInPlace(Map<String, Case> cases) {
+        return cases.values().stream().anyMatch(drawn -> drawn.model().endsWith("_firing") || drawn.model().contains("/lightsaber_"));
     }
 
     private static JsonObject select(Map<String, Case> cases, JsonObject fallback) {

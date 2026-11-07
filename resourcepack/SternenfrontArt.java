@@ -1038,7 +1038,19 @@ public final class SternenfrontArt {
         return shape;
     }
 
-    private static Family lightsaber(boolean dooku, boolean lit) {
+    /** The hilt alone, the blade a quarter, half and three quarters out while it ignites, and the whole blade. */
+    private static Family lightsaber(boolean dooku) {
+        String name = "lightsaber_" + (dooku ? "sith" : "jedi");
+        var hilt = hilt(dooku);
+        var models = new ArrayList<>(List.of(new Model("sternenfront/" + name + "_off", hilt, SABER_DISPLAY)));
+        for (int quarter = 1; quarter < 4; quarter++) {
+            models.add(new Model("sternenfront/" + name + "_" + quarter * 25, new Shape().add(hilt.boxes).add(blade(quarter / 4.0)), SABER_DISPLAY));
+        }
+        models.add(new Model("sternenfront/" + name, new Shape().add(hilt.boxes).add(blade(1)), SABER_DISPLAY));
+        return new Family("equipment_" + name, 64, false, models);
+    }
+
+    private static Shape hilt(boolean dooku) {
         var hilt = new Shape()
                 .add(drumY(0, -.08, 0, .07, .25, STEEL))
                 .add(drumY(0, -.22, 0, .09, .04, FRAME))
@@ -1052,10 +1064,7 @@ public final class SternenfrontArt {
             hilt.add(drumY(0, -.08, 0, .08, .11, FRAME))
                     .both(box(.035, -.08, 0, .012, .1, .04, STEEL));
         }
-        if (lit) {
-            hilt.add(blade());
-        }
-        return equipment("lightsaber_" + (dooku ? "sith" : "jedi") + (lit ? "" : "_off"), hilt, SABER_DISPLAY);
+        return hilt;
     }
 
     private static final double EMITTER = .16;
@@ -1066,8 +1075,8 @@ public final class SternenfrontArt {
      * An opaque white core inside two tinted shells, each wider and fainter than the last and capped one step
      * narrower past the tip, so the colour reads as a glow round a rounded end.
      */
-    private static List<Box> blade() {
-        double tip = EMITTER + BLADE;
+    private static List<Box> blade(double share) {
+        double tip = EMITTER + BLADE * share;
         return List.of(column(.03, EMITTER, tip, SABER),
                 column(.09, EMITTER, tip + .03, SABER_HALO).only(SHELL),
                 column(.06, tip + .03, tip + .05, SABER_HALO).only(SHELL),
@@ -1108,7 +1117,7 @@ public final class SternenfrontArt {
                 gun("wrist_blaster", wrist, GunPose.WRIST),
                 gun("se14", pistol(false, true), GunPose.PISTOL),
                 gun("westar_pistols", pistol(true, false), GunPose.TWIN_PISTOL),
-                lightsaber(false, false), lightsaber(false, true), lightsaber(true, false), lightsaber(true, true), darksaber(),
+                lightsaber(false), lightsaber(true), darksaber(),
                 equipment("helmet_kolonien", cloneHelmet(CloneRole.SOLDIER).shifted(0, -.19, 0).scaled(1.8), HELMET_DISPLAY),
                 equipment("helmet_hegemonie", battleDroid("soldier").models.get(1).shape.shifted(0, -.08, 0).scaled(1.8), HELMET_DISPLAY),
                 equipment("helmet_arc", cloneHelmet(CloneRole.ARC).shifted(0, -.19, 0).scaled(1.8), HELMET_DISPLAY),

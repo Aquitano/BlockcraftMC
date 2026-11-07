@@ -10,6 +10,7 @@ import me.blockcraft.api.item.HotbarItem;
 import me.blockcraft.api.pack.PackModel;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.sternenfront.combat.BattleEffects;
 import me.blockcraft.sternenfront.game.SoundCue;
 import me.blockcraft.sternenfront.game.SternenfrontItem;
 import org.bukkit.Bukkit;
@@ -28,6 +29,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 
 /**
  * The lightsabers: a hilt that ignites a moment after it is drawn, a blade in the hero's colour (white for whoever
@@ -48,16 +50,28 @@ public final class Sabers {
     private final Plugin plugin;
     private final Messages messages;
     private final HeroConfig.Saber config;
+    private final Supplier<BattleEffects> effects;
     private final Set<UUID> white = ConcurrentHashMap.newKeySet();
     private final Map<UUID, Ignition> ignitions = new HashMap<>();
     private final Map<UUID, Long> swings = new HashMap<>();
 
-    private record Ignition(Hero hero, long at) { }
+    /** The blade shows its first length at {@code from} and one more each tick until it is whole. */
+    record Ignition(Hero hero, long from) {
 
-    public Sabers(Plugin plugin, Messages messages, HeroConfig.Saber config) {
+        static Ignition drawn(Hero hero, long tick, int igniteTicks, int stages) {
+            return new Ignition(hero, tick + Math.max(0, igniteTicks - (stages - 2)));
+        }
+
+        int stage(long tick) {
+            return (int) (tick - from) + 1;
+        }
+    }
+
+    public Sabers(Plugin plugin, Messages messages, HeroConfig.Saber config, Supplier<BattleEffects> effects) {
         this.plugin = plugin;
         this.messages = messages;
         this.config = config;
+        this.effects = effects;
     }
 
     /** Reads whether the player found every kyber crystal, off the main thread; the next blade they draw shows it. */
@@ -73,15 +87,26 @@ public final class Sabers {
                 });
     }
 
-    /** The hero's saber, its blade lit in their colour or still in the hilt. */
-    public ItemStack item(Player owner, Hero hero, boolean lit) {
+    private static Hero.Weapon.Saber saber(Hero hero) {
         if (!(hero.weapon() instanceof Hero.Weapon.Saber saber)) {
             throw new IllegalArgumentException(hero + " carries no lightsaber");
         }
-        var model = lit ? saber.lit() : saber.off();
+        return saber;
+    }
+
+    /** The hero's saber, its blade lit in their colour or still in the hilt. */
+    public ItemStack item(Player owner, Hero hero, boolean lit) {
+        return item(owner, hero, lit ? saber(hero).stages().size() - 1 : 0);
+    }
+
+    /** The saber at {@code stage} of its ignition; only the last, the whole blade, cuts. */
+    private ItemStack item(Player owner, Hero hero, int stage) {
+        var stages = saber(hero).stages();
+        var model = stages.get(stage);
+        boolean lit = stage == stages.size() - 1;
         var item = model.item().name(messages.get("hero." + hero.key() + ".weapon"))
                 .lore(messages.getLines("hero.saber-lore")).hideAttributes().edit(meta -> meta.setUnbreakable(true)).build();
-        if (lit) {
+        if (model.tinted()) {
             tint(item, model, colour(owner, hero));
         }
         item.setData(DataComponentTypes.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.itemAttributes()
@@ -116,10 +141,10 @@ public final class Sabers {
         return hero == Hero.SITH ? config.sith() : config.jedi();
     }
 
-    /** Hands the hilt over; it ignites {@code igniteTicks} later. */
+    /** Hands the hilt over; the blade grows over the last ticks before it is whole {@code igniteTicks} later. */
     public void draw(Player player, Hero hero, long tick) {
         player.getInventory().setItem(SABER_SLOT, item(player, hero, false));
-        ignitions.put(player.getUniqueId(), new Ignition(hero, tick + config.igniteTicks()));
+        ignitions.put(player.getUniqueId(), Ignition.drawn(hero, tick, config.igniteTicks(), saber(hero).stages().size()));
     }
 
     /** Puts the hilt back into the hand without a blade, as while the saber flies. */
@@ -134,17 +159,25 @@ public final class Sabers {
         SoundCue.SABER_IGNITE.play(player.getLocation(), 1f);
     }
 
-    /** Ignites what is due and hums for every saber hero who holds a lit blade. */
+    /** Grows each igniting blade by a stage and hums for every saber hero who holds a lit blade. */
     public void tick(long tick, Map<Player, Hero> sabers) {
         ignitions.entrySet().removeIf(entry -> {
-            if (tick < entry.getValue().at()) {
+            var ignition = entry.getValue();
+            if (tick < ignition.from()) {
                 return false;
             }
             var player = Bukkit.getPlayer(entry.getKey());
-            if (player != null && sabers.get(player) == entry.getValue().hero() && isSaber(player.getInventory().getItem(SABER_SLOT))) {
-                relight(player, entry.getValue().hero());
+            if (player == null || sabers.get(player) != ignition.hero() || !isSaber(player.getInventory().getItem(SABER_SLOT))) {
+                return true;
             }
-            return true;
+            int last = saber(ignition.hero()).stages().size() - 1;
+            int stage = Math.min(ignition.stage(tick), last);
+            if (stage == 1) {
+                SoundCue.SABER_IGNITE.play(player.getLocation(), 1f);
+                effects.get().ignite(player, colour(player, ignition.hero()));
+            }
+            player.getInventory().setItem(SABER_SLOT, item(player, ignition.hero(), stage));
+            return stage == last;
         });
         if (tick % config.humTicks() != 0) {
             return;

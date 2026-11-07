@@ -14,11 +14,15 @@ import java.util.Optional;
  * with battle points in the deploy menu; the champion is whoever carries the relic blade and is never bought.
  */
 public enum Hero {
-    JEDI(Faction.KOLONIEN, new Weapon.Saber(PackModel.STERNENFRONT_LIGHTSABER_JEDI, PackModel.STERNENFRONT_LIGHTSABER_JEDI_OFF),
+    JEDI(Faction.KOLONIEN, new Weapon.Saber(List.of(PackModel.STERNENFRONT_LIGHTSABER_JEDI_OFF,
+            PackModel.STERNENFRONT_LIGHTSABER_JEDI_25, PackModel.STERNENFRONT_LIGHTSABER_JEDI_50,
+            PackModel.STERNENFRONT_LIGHTSABER_JEDI_75, PackModel.STERNENFRONT_LIGHTSABER_JEDI)),
             Optional.of(PackModel.STERNENFRONT_HOOD_JEDI), List.of(HeroAbility.FORCE_PUSH, HeroAbility.SABER_THROW)),
     BOUNTY_HUNTER(Faction.HEGEMONIE, new Weapon.Gun(Blaster.WESTAR_PISTOLS),
             Optional.of(PackModel.STERNENFRONT_HELMET_BOUNTY_HUNTER), List.of(HeroAbility.JETPACK, HeroAbility.WRIST_ROCKET)),
-    SITH(Faction.HEGEMONIE, new Weapon.Saber(PackModel.STERNENFRONT_LIGHTSABER_SITH, PackModel.STERNENFRONT_LIGHTSABER_SITH_OFF),
+    SITH(Faction.HEGEMONIE, new Weapon.Saber(List.of(PackModel.STERNENFRONT_LIGHTSABER_SITH_OFF,
+            PackModel.STERNENFRONT_LIGHTSABER_SITH_25, PackModel.STERNENFRONT_LIGHTSABER_SITH_50,
+            PackModel.STERNENFRONT_LIGHTSABER_SITH_75, PackModel.STERNENFRONT_LIGHTSABER_SITH)),
             Optional.of(PackModel.STERNENFRONT_MASK_SITH), List.of(HeroAbility.SABER_THROW, HeroAbility.FORCE_LIGHTNING)),
     COMMANDER(Faction.KOLONIEN, new Weapon.Gun(Blaster.TWIN_PISTOL),
             Optional.of(PackModel.STERNENFRONT_CAP_COMMANDER), List.of(HeroAbility.ORBITAL_STRIKE, HeroAbility.RALLY)),
@@ -29,11 +33,16 @@ public enum Hero {
 
         PackModel model();
 
-        record Saber(PackModel lit, PackModel off) implements Weapon {
+        /** From the bare hilt to the whole blade, through the lengths it shows while it ignites. */
+        record Saber(List<PackModel> stages) implements Weapon {
+
+            public Saber {
+                stages = List.copyOf(stages);
+            }
 
             @Override
             public PackModel model() {
-                return lit;
+                return stages.getLast();
             }
         }
 

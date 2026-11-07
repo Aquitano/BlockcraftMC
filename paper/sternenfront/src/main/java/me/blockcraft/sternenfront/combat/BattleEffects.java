@@ -40,6 +40,10 @@ public final class BattleEffects {
     private static final Color PUSH_COLOUR = Color.fromRGB(0xB8E5FF);
     private static final Color TETHER_COLOUR = Color.fromRGB(0xD0E2EE);
     private static final Color GRIP_COLOUR = Color.fromRGB(0xC050FF);
+    private static final double HAND_SIDE = .35;
+    private static final double HAND_DROP = .35;
+    private static final double HAND_REACH = .4;
+    private static final int IGNITION_SPARKS = 6;
     private static final Color LIGHTNING_COLOUR = Color.fromRGB(0xA8B4FF);
     private static final Color LIGHTNING_CORE = Color.fromRGB(0xEAF4FF);
     private static final Vector UP = new Vector(0, 1, 0);
@@ -155,6 +159,34 @@ public final class BattleEffects {
         var wall = eye.getWorld().rayTraceBlocks(eye, offset.clone().normalize(), distance, FluidCollisionMode.NEVER, true);
         return wall == null ? eye.clone().add(offset)
                 : wall.getHitPosition().subtract(offset.normalize().multiply(.04)).toLocation(eye.getWorld());
+    }
+
+    /** About where a fighter's hand is: ahead of the eyes, low and to one side, whichever way they look. */
+    public static Location hand(LivingEntity actor, boolean left) {
+        var eye = actor.getEyeLocation();
+        var facing = eye.getDirection();
+        var side = facing.clone().setY(0).crossProduct(new Vector(0, 1, 0));
+        if (side.lengthSquared() > .001) {
+            side.normalize().multiply(left ? -HAND_SIDE : HAND_SIDE);
+        }
+        return eye.add(side).add(0, -HAND_DROP, 0).add(facing.multiply(HAND_REACH));
+    }
+
+    /** Sparks at the emitter and a puff of the blade's colour where it grows out of the hilt. */
+    public void ignite(Player hero, Color colour) {
+        if (!enabled) {
+            return;
+        }
+        var hand = hand(hero, false);
+        var random = ThreadLocalRandom.current();
+        for (int spark = 0; spark < IGNITION_SPARKS; spark++) {
+            sparingOwner(hero, hand.clone().add(random.nextDouble(-.06, .06), random.nextDouble(0, .12), random.nextDouble(-.06, .06)),
+                    Particle.ELECTRIC_SPARK, null);
+        }
+        var dust = new Particle.DustOptions(colour, 0.7f);
+        for (double along = .2; along < 1.1; along += .3) {
+            sparingOwner(hero, hand.clone().add(0, along, 0), Particle.DUST, dust);
+        }
     }
 
     public double recoil(LivingEntity actor) {
