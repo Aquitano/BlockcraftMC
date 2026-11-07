@@ -138,6 +138,7 @@ public final class Bots implements Listener {
     private final List<Fireteam> teams = new ArrayList<>();
     private double sightShare = 1;
     private int nextNumber;
+    private int nextTeam;
     private BotConfig.Tuning tuning;
     private long voiceAt;
 
@@ -218,8 +219,8 @@ public final class Bots implements Listener {
     }
 
     public void fill() {
-        boolean changed = false;
         for (var faction : Faction.values()) {
+            boolean changed = false;
             int needed = config.needed(game.humans(faction));
             var factionSoldiers = soldiers.stream().filter(soldier -> soldier.faction == faction)
                     .sorted(Comparator.comparing((Soldier soldier) -> soldier.body != null).reversed()).toList();
@@ -234,22 +235,21 @@ public final class Bots implements Listener {
                 soldiers.add(new Soldier(++nextNumber, faction, infantryClass(fielded)));
                 changed = true;
             }
-        }
-        if (changed) {
-            regroup();
+            if (changed) {
+                regroup(faction);
+            }
         }
     }
 
-    private void regroup() {
-        teams.clear();
-        for (var faction : Faction.values()) {
-            var members = soldiers.stream().filter(soldier -> soldier.faction == faction)
-                    .map(soldier -> new Fireteams.Member(soldier.number, soldier.role)).toList();
-            for (var numbers : Fireteams.assign(members, config.squad().fireteamSize())) {
-                var team = new Fireteam(teams.size(), faction, numbers);
-                teams.add(team);
-                members(team).forEach(soldier -> soldier.team = team);
-            }
+    /** Only the faction whose bots changed starts its fireteams afresh; the other keeps its leaders and objectives. */
+    private void regroup(Faction faction) {
+        teams.removeIf(team -> team.faction == faction);
+        var members = soldiers.stream().filter(soldier -> soldier.faction == faction)
+                .map(soldier -> new Fireteams.Member(soldier.number, soldier.role)).toList();
+        for (var numbers : Fireteams.assign(members, config.squad().fireteamSize())) {
+            var team = new Fireteam(nextTeam++, faction, numbers);
+            teams.add(team);
+            members(team).forEach(soldier -> soldier.team = team);
         }
     }
 
