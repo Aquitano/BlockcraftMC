@@ -13,7 +13,7 @@ public final class HudArt {
 
     private static final int PIP = 13;
 
-    /** Corners around the crosshair for a hit, a headshot and a kill, each stronger and in the colour of its news. */
+    /** Corners around the crosshair for a hit, a headshot and a kill, each stronger and in the colour of its news; a headshot adds a diamond above. */
     private static BufferedImage crosshairMarks() {
         var image = new BufferedImage(96, 32, BufferedImage.TYPE_INT_ARGB);
         var g = image.createGraphics();
@@ -31,6 +31,12 @@ public final class HudArt {
                     g.setStroke(new BasicStroke(1));
                     g.drawLine(middle + xSign * inner[mark], 16 + ySign * inner[mark], middle + xSign * outer[mark], 16 + ySign * outer[mark]);
                 }
+            }
+            if (mark == 1) {
+                g.setColor(new Color(0x90000000, true));
+                g.fillPolygon(new int[] {middle, middle + 3, middle, middle - 3}, new int[] {0, 3, 6, 3}, 4);
+                g.setColor(colours[mark]);
+                g.fillPolygon(new int[] {middle, middle + 2, middle, middle - 2}, new int[] {1, 3, 5, 3}, 4);
             }
         }
         g.dispose();
