@@ -19,6 +19,14 @@ public class BotTacticsTest {
     }
 
     @Test
+    public void aGuardContestsItsPostUnlessHurtOrVentingWithCoverAtHand() {
+        assertTrue(BotTactics.contests(true, false, false));
+        assertTrue(BotTactics.contests(false, true, true));
+        assertFalse(BotTactics.contests(true, true, false));
+        assertFalse(BotTactics.contests(true, false, true));
+    }
+
+    @Test
     public void throwsOnlyAtAnEnemyDugInOutsideItsOwnBlast() {
         assertTrue(BotTactics.throwsAt(true, 12, 6));
         assertFalse(BotTactics.throwsAt(false, 12, 6));

@@ -19,6 +19,11 @@ final class BotTactics {
         return holdingPost && enemyInRange && !venting && !wounded;
     }
 
+    /** A guard stands on its attacked post's point unless it is wounded or venting and has cover to wait behind. */
+    static boolean contests(boolean covered, boolean wounded, boolean venting) {
+        return !covered || !wounded && !venting;
+    }
+
     /**
      * At an enemy dug in, in a post or out of sight behind cover, far enough off that the blast spares the thrower,
      * since it would hurt them too.

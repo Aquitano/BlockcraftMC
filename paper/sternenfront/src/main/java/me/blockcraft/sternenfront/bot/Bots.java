@@ -886,7 +886,8 @@ public final class Bots implements Listener {
             if (defending && !destination.equals(soldier.destination)) {
                 call(soldier, "cover", tick);
             }
-        } else if (defending && !game.posts().safe(soldier.objective, soldier.faction)) {
+        } else if (defending && !game.posts().safe(soldier.objective, soldier.faction)
+                && BotTactics.contests(protectedPosition.isPresent(), wounded, soldier.heat.venting(tick))) {
             activity = "contest-owned-post";
             destination = capturing ? here : route.capture();
         } else if (protectedPosition.isPresent() && (wounded || soldier.heat.venting(tick) || patient.isEmpty())) {
