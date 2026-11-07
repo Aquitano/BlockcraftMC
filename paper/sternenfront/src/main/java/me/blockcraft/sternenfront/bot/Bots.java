@@ -54,6 +54,7 @@ public final class Bots implements Listener {
     private static final int AVOID_TICKS = 600;
     private static final int REGROUP_TICKS = 100;
     private static final double REGROUP_PACE = 0.5;
+    private static final double RETREAT_SLACK = 2;
     private static final int SOLO_TICKS = 200;
     private static final int TRAIL_STEPS = 24;
     private static final double TRAIL_STEP = 1.5;
@@ -602,6 +603,12 @@ public final class Bots implements Listener {
             team.flanker = -1;
         }
         contact(team, squad.stream().filter(soldier -> soldier.body.getLocation().distance(at) < settings.catchUpDistance()).toList(), tick);
+        if (team.threat != null && odds(team.faction, at).outnumbered()) {
+            if (tick >= team.fallBackUntil) {
+                call(leader, "cover", tick);
+            }
+            team.fallBackUntil = tick + settings.fallBackTicks();
+        }
         boolean behind = !team.assaulting && team.threat == null && post != null && squad.stream().filter(soldier -> soldier != leader)
                 .anyMatch(soldier -> place(leader, soldier, post) == Fireteam.Place.STRAGGLING);
         if (!behind) {
@@ -610,6 +617,22 @@ public final class Bots implements Listener {
             team.waitingSince = tick;
         }
         team.regrouping = behind && tick - team.waitingSince < REGROUP_TICKS;
+    }
+
+    private Fireteams.Odds odds(Faction faction, Location around) {
+        double range = config.squad().fallBackRange();
+        var near = game.combatants().stream().filter(other -> other.getWorld().equals(around.getWorld())
+                && other.getLocation().distanceSquared(around) <= range * range).toList();
+        return new Fireteams.Odds((int) near.stream().filter(other -> game.factionOf(other).filter(faction::equals).isPresent()).count(),
+                (int) near.stream().filter(other -> game.hittable(faction, other)).count());
+    }
+
+    /** The post's nearest retreat point that brings the bot no nearer the enemy, so it never runs into them. */
+    private Optional<Location> retreat(Soldier soldier, Location here, FrontMap.PostSite post, Location threat) {
+        double exposure = here.distance(threat) - RETREAT_SLACK;
+        return post.routes().get(soldier.faction).stream().map(FrontMap.Route::retreat)
+                .filter(point -> point.distance(threat) >= exposure)
+                .min(Comparator.comparingDouble(here::distanceSquared));
     }
 
     private Fireteam.Place place(Soldier leader, Soldier member, FrontMap.PostSite post) {
@@ -704,7 +727,7 @@ public final class Bots implements Listener {
                     (int) teams.stream().filter(other -> other != team && other.faction == team.faction && other.objective == index).count(),
                     game.posts().priority(index) ? game.config().acts().priorityPull() : 0);
         }).toList();
-        return Objectives.choose(choices, team.objective, config.squad().switchMargin()).orElse(-1);
+        return Objectives.choose(choices, team.objective, config.squad().switchMargin(), config.squad().reinforcePull()).orElse(-1);
     }
 
     private Objectives.Hold hold(int post, Faction faction) {
@@ -779,8 +802,11 @@ public final class Bots implements Listener {
         var threat = target.map(LivingEntity::getEyeLocation)
                 .or(() -> remembering(soldier, tick) ? Optional.of(soldier.lastSeen.clone().add(0, 1.6, 0)) : Optional.empty())
                 .or(() -> underFire ? Optional.of(team.threat.clone().add(0, 1.6, 0)) : Optional.empty());
+        boolean teamFallsBack = team != null && post != null && tick < team.fallBackUntil && withTeam && !flanking;
+        var fallBack = defending && odds(soldier.faction, post.center()).outnumbered() ? Optional.of(route.retreat())
+                : teamFallsBack ? threat.flatMap(enemy -> retreat(soldier, here, post, enemy)) : Optional.<Location>empty();
         boolean exposed = advancing || team != null && team.assaulting;
-        var protectedPosition = threat.filter(enemy -> !exposed || wounded || soldier.heat.venting(tick))
+        var protectedPosition = threat.filter(enemy -> fallBack.isEmpty() && (!exposed || wounded || soldier.heat.venting(tick)))
                 .flatMap(enemy -> cover(soldier, enemy, tick));
         if (threat.isEmpty()) {
             soldier.cover = null;
@@ -789,6 +815,13 @@ public final class Bots implements Listener {
         if (game.gadgets().sieging(mob)) {
             activity = "siege";
             destination = here;
+        } else if (fallBack.isPresent()) {
+            activity = "fall-back";
+            destination = fallBack.get();
+            speed = settings.sprintSpeed();
+            if (defending && !destination.equals(soldier.destination)) {
+                call(soldier, "cover", tick);
+            }
         } else if (defending && !game.posts().safe(soldier.objective, soldier.faction)) {
             activity = "contest-owned-post";
             destination = capturing ? here : route.capture();

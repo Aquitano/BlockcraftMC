@@ -30,4 +30,12 @@ public class FireteamsTest {
         assertEquals(OptionalInt.empty(), Fireteams.guard(List.of(team.get(0), new Member(5, CombatClass.MEDIC), team.get(3)), 1));
         assertEquals(OptionalInt.empty(), Fireteams.guard(team.subList(0, 2), 1));
     }
+
+    @Test
+    public void aBotGivesWayOnlyWhenOutnumberedTwoToOne() {
+        assertEquals(true, new Fireteams.Odds(1, 2).outnumbered());
+        assertEquals(false, new Fireteams.Odds(1, 1).outnumbered());
+        assertEquals(false, new Fireteams.Odds(2, 3).outnumbered());
+        assertEquals(true, new Fireteams.Odds(2, 4).outnumbered());
+    }
 }

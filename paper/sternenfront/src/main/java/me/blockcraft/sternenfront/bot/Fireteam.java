@@ -25,6 +25,7 @@ final class Fireteam {
     Location threat;
     long contactSince = -1;
     int flanker = -1;
+    long fallBackUntil;
     final Bounding bounding = new Bounding();
     /** Where the leader walked, newest first, a step apart. */
     final Deque<Location> trail = new ArrayDeque<>();

@@ -38,9 +38,13 @@ bots:
   # pairs: one runs bound-distance blocks along the route, or for bound-ticks at most, while the other covers it and
   # fires at where the enemy was last seen, then they swap. A team held up for flank-after-ticks sends one member
   # round by another route. A team whose leader is within follow-range blocks of a player of its faction takes that
-  # player's order from the order bar as its objective.
+  # player's order from the order bar as its objective. A held post with enemies in it counts reinforce-pull blocks
+  # nearer. A team whose leader has twice as many enemies as friends within fall-back-range blocks, and at least two,
+  # runs back to its route's retreat points and holds there for fall-back-ticks. A guard does the same while its post
+  # is that outnumbered.
   squad: {fireteam-size: 4, switch-margin: 25, spacing: 3, regroup-distance: 12, catch-up-distance: 32, walk-speed: 0.9,
-          sprint-speed: 1.25, bound-distance: 8, bound-ticks: 80, flank-after-ticks: 160, follow-range: 12}
+          sprint-speed: 1.25, bound-distance: 8, bound-ticks: 80, flank-after-ticks: 160, follow-range: 12,
+          reinforce-pull: 80, fall-back-range: 16, fall-back-ticks: 160}
 appearance:
   body-turn-degrees: 12
   motion:

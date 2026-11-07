@@ -13,6 +13,15 @@ final class Fireteams {
 
     record Member(int number, CombatClass role) { }
 
+    /** Who stands near a bot, counting itself among its {@code friends}. */
+    record Odds(int friends, int enemies) {
+
+        /** Two to one or worse: a lone guard gives way to a pair, a full team to nobody it cannot match. */
+        boolean outnumbered() {
+            return enemies >= Math.max(2, friends * 2);
+        }
+    }
+
     private static final List<CombatClass> LEADS_FIRST = List.of(CombatClass.SOLDIER, CombatClass.SCOUT,
             CombatClass.HEAVY, CombatClass.MEDIC);
     private static final List<CombatClass> GUARDS_FIRST = List.of(CombatClass.HEAVY, CombatClass.SOLDIER, CombatClass.SCOUT);

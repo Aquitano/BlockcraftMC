@@ -12,26 +12,27 @@ final class Objectives {
     record Post(int index, Hold hold, double distance, double fromEnemy, int assigned, double pull) { }
 
     private static final double SPREAD = 35;
-    private static final double REINFORCE = 40;
 
     private Objectives() { }
 
     /**
      * A post the team can still fight for, keeping {@code current} unless another is more than {@code margin} blocks
-     * cheaper. Once every post is held, the team holds the one the enemy reaches first.
+     * cheaper. A post of its own under attack counts {@code reinforce} blocks nearer, so a team comes back to the
+     * neighbouring post but not across the map. Once every post is held, the team holds the one the enemy reaches first.
      */
-    static OptionalInt choose(List<Post> posts, int current, double margin) {
+    static OptionalInt choose(List<Post> posts, int current, double margin, double reinforce) {
         var contestable = posts.stream().filter(post -> post.hold() != Hold.HELD).toList();
         if (contestable.isEmpty()) {
             return posts.stream().min(Comparator.comparingDouble((Post post) -> post.fromEnemy() + post.assigned() * SPREAD
                     - post.pull()).thenComparingInt(Post::index)).map(post -> OptionalInt.of(post.index())).orElseGet(OptionalInt::empty);
         }
-        var best = contestable.stream().min(Comparator.comparingDouble(Objectives::cost).thenComparingInt(Post::index)).orElseThrow();
+        Comparator<Post> cost = Comparator.comparingDouble(post -> cost(post, reinforce));
+        var best = contestable.stream().min(cost.thenComparingInt(Post::index)).orElseThrow();
         return OptionalInt.of(contestable.stream().filter(post -> post.index() == current)
-                .filter(post -> cost(post) <= cost(best) + margin).findFirst().orElse(best).index());
+                .filter(post -> cost(post, reinforce) <= cost(best, reinforce) + margin).findFirst().orElse(best).index());
     }
 
-    private static double cost(Post post) {
-        return post.distance() + post.assigned() * SPREAD - post.pull() - (post.hold() == Hold.THREATENED ? REINFORCE : 0);
+    private static double cost(Post post, double reinforce) {
+        return post.distance() + post.assigned() * SPREAD - post.pull() - (post.hold() == Hold.THREATENED ? reinforce : 0);
     }
 }
