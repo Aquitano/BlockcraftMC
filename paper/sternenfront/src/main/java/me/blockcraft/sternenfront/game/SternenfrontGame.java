@@ -864,8 +864,8 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         field.forEach(this::guardHeadquarters);
         field.keySet().stream().filter(Player.class::isInstance).map(Player.class::cast).forEach(this::regenerate);
         round.players().forEach(deployment::showChoosing);
-        if (phase() == GamePhase.INGAME && reinforcements.defeated().isPresent()) {
-            endRound(reinforcements.defeated().map(Faction::enemy));
+        if (phase() == GamePhase.INGAME && reinforcements.exhausted()) {
+            endRound(reinforcements.leader());
             return;
         }
         acts.second(lowestTickets(), tick / TICKS_PER_SECOND).ifPresent(this::actBegins);

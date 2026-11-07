@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class ReinforcementsTest {
 
@@ -42,11 +44,23 @@ public class ReinforcementsTest {
         var tickets = new Reinforcements(2);
 
         tickets.lose(Faction.HEGEMONIE, 1);
-        assertEquals(Optional.empty(), tickets.defeated());
+        assertFalse(tickets.exhausted());
         tickets.lose(Faction.HEGEMONIE, 5);
 
         assertEquals(0, tickets.left(Faction.HEGEMONIE));
-        assertEquals(Optional.of(Faction.HEGEMONIE), tickets.defeated());
+        assertTrue(tickets.exhausted());
+        assertEquals(Optional.of(Faction.KOLONIEN), tickets.leader());
+    }
+
+    @Test
+    public void bothFactionsAtZeroIsADraw() {
+        var tickets = new Reinforcements(1);
+
+        tickets.lose(Faction.KOLONIEN, 1);
+        tickets.lose(Faction.HEGEMONIE, 1);
+
+        assertTrue(tickets.exhausted());
+        assertEquals(Optional.empty(), tickets.leader());
     }
 
     @Test
