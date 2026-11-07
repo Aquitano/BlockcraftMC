@@ -208,6 +208,12 @@ public final class Deployment {
         if (game.choosing(player)) choose(player, suggested(player), false);
     }
 
+    /** The post the order bar sends the player to. */
+    public OptionalInt order(Player player) {
+        return game.factionOf(player).flatMap(faction -> BattleNavigation.target(navigationPosts(faction), point(player.getLocation()),
+                headquarters(faction.enemy()))).map(target -> OptionalInt.of(target.index())).orElseGet(OptionalInt::empty);
+    }
+
     private List<BattleNavigation.Post> navigationPosts(Faction faction) {
         return game.posts().indices().stream().map(index -> {
             boolean safe = available(faction, new Spawn.Post(index));

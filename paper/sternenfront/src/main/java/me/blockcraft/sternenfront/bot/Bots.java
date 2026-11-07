@@ -43,6 +43,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -576,8 +577,11 @@ public final class Bots implements Listener {
         var leader = lead(team, squad);
         var at = leader.body.getLocation();
         int previous = team.objective;
-        int next = objectiveFor(team, at, tick);
+        int next = followed(team, at, tick).orElseGet(() -> objectiveFor(team, at, tick));
         if (next != previous) {
+            if (previous >= 0) {
+                call(leader, "advance", tick);
+            }
             if (previous >= 0 && game.posts().owner(previous).filter(team.faction::equals).isPresent()
                     && soldiers.stream().noneMatch(soldier -> soldier.faction == team.faction && soldier.guarding == previous && deployed(soldier))) {
                 Fireteams.guard(squad.stream().map(soldier -> new Fireteams.Member(soldier.number, soldier.role)).toList())
@@ -671,6 +675,17 @@ public final class Bots implements Listener {
     private Optional<Soldier> leader(Fireteam team) {
         return members(team).stream().filter(soldier -> soldier.number == team.leader).filter(Bots::deployed)
                 .filter(soldier -> soldier.guarding < 0).findFirst();
+    }
+
+    /** The order of the nearest player of the team's faction within reach of its leader, which the team takes as its own. */
+    private Optional<Integer> followed(Fireteam team, Location leader, long tick) {
+        double range = config.squad().followRange();
+        return game.combatants().stream().filter(Player.class::isInstance).map(Player.class::cast).filter(game::onField)
+                .filter(player -> game.factionOf(player).filter(team.faction::equals).isPresent())
+                .filter(player -> player.getWorld().equals(leader.getWorld()) && player.getLocation().distanceSquared(leader) <= range * range)
+                .min(Comparator.comparingDouble(player -> player.getLocation().distanceSquared(leader)))
+                .map(game.deployment()::order).filter(OptionalInt::isPresent).map(OptionalInt::getAsInt)
+                .filter(post -> !team.avoiding(post, tick));
     }
 
     private int objectiveFor(Fireteam team, Location from, long tick) {
