@@ -463,10 +463,7 @@ public final class Bots implements Listener {
         if (target.isPresent()) {
             var enemy = target.get();
             if (!enemy.getUniqueId().equals(soldier.target)) {
-                soldier.volley.clear();
-                soldier.target = enemy.getUniqueId();
-                soldier.reactAt = tick + tuning.reactionTicks() + ThreadLocalRandom.current().nextInt(tuning.reactionTicks() + 1);
-                soldier.acquiredAt = tick;
+                pick(soldier, enemy.getUniqueId(), tick);
                 call(soldier, "contact", tick);
             }
             soldier.lastSeen = enemy.getLocation();
@@ -1301,14 +1298,18 @@ public final class Bots implements Listener {
                 if (soldier.target != null && game.tick() <= soldier.seenUntil) {
                     return;
                 }
-                soldier.volley.clear();
-                soldier.target = attacker.getUniqueId();
-                soldier.reactAt = game.tick() + tuning.reactionTicks();
-                soldier.acquiredAt = game.tick();
+                pick(soldier, attacker.getUniqueId(), game.tick());
             }
             soldier.lastSeen = attacker.getLocation();
             soldier.seenUntil = game.tick() + config.memoryTicks();
         }
+    }
+
+    private void pick(Soldier soldier, UUID target, long tick) {
+        soldier.volley.clear();
+        soldier.target = target;
+        soldier.reactAt = tick + tuning.reactionTicks() + ThreadLocalRandom.current().nextInt(tuning.reactionTicks() + 1);
+        soldier.acquiredAt = tick;
     }
 
     private Optional<LivingEntity> patient(Soldier soldier, long tick, boolean checkPath) {
