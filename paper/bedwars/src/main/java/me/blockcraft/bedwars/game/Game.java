@@ -515,7 +515,7 @@ public final class Game implements RoundConnections.Seating {
         if (phase() != GamePhase.INGAME || !round.isPlaying(victim)) {
             return;
         }
-        boolean out = teams.of(victim).map(team -> !team.hasBed()).orElse(true);
+        boolean out = lostBed(victim);
         var death = summary.resolveDeath(event);
         Bukkit.broadcast(death.line());
         death.killer().ifPresent(killer -> {
@@ -524,18 +524,31 @@ public final class Game implements RoundConnections.Seating {
         });
         summary.death(victim);
         if (out) {
-            round.eliminate(victim);
-            teams.leave(victim).ifPresent(this::announceOut);
-            if (!checkWinner()) {
-                announceRemaining();
-            }
+            knockOut(victim);
         }
         round.respawn(victim, RESPAWN_TICKS);
         scoreboard.refreshAll();
     }
 
+    private boolean lostBed(Player player) {
+        return teams.of(player).map(team -> !team.hasBed()).orElse(true);
+    }
+
+    private void knockOut(Player player) {
+        round.eliminate(player);
+        teams.leave(player).ifPresent(this::announceOut);
+        if (!checkWinner()) {
+            announceRemaining();
+        }
+    }
+
+    /** A bed broken between the death and the respawn still puts the player out. */
     public void respawn(PlayerRespawnEvent event) {
         var player = event.getPlayer();
+        if (phase() == GamePhase.INGAME && round.isPlaying(player) && lostBed(player)) {
+            knockOut(player);
+            scoreboard.refreshAll();
+        }
         if (phase() != GamePhase.INGAME) {
             lobbySpawn().ifPresent(event::setRespawnLocation);
             return;
