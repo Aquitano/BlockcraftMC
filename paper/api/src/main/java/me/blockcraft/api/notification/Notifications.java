@@ -9,7 +9,6 @@ import me.blockcraft.common.message.Messages;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.title.Title;
-import net.kyori.adventure.title.TitlePart;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -276,7 +275,8 @@ public final class Notifications implements Listener {
         } else if (marker != state.shownMarker || marker != null && selected != state.shownTitle) {
             if (selected != null) {
                 var title = drawnFor(player, selected.value.title());
-                player.sendTitlePart(TitlePart.SUBTITLE, marker == null ? title.subtitle() : subtitle(title, marker.text()));
+                player.showTitle(Title.title(title.title(), marker == null ? title.subtitle() : subtitle(title, marker.text()),
+                        remaining(title.times(), selected.until - now)));
             } else if (marker != null) {
                 player.showTitle(Title.title(Component.empty(), marker.text(), Title.Times.times(Duration.ZERO,
                         Duration.ofMillis((marker.until() - now) * 50), Duration.ZERO)));
@@ -286,6 +286,15 @@ public final class Notifications implements Listener {
         }
         state.shownTitle = selected;
         state.shownMarker = marker;
+    }
+
+    /**
+     * The client draws a subtitle only while its own count of the title runs, which ends early when the server falls behind
+     * or something else clears the title, so a changed subtitle is sent with the title and the time the server gives it.
+     */
+    static Title.Times remaining(Title.Times times, long ticksLeft) {
+        long fadeOut = Math.min(times.fadeOut().toMillis() / 50, ticksLeft);
+        return Title.Times.times(Duration.ZERO, Duration.ofMillis((ticksLeft - fadeOut) * 50), Duration.ofMillis(fadeOut * 50));
     }
 
     /** A marker joins a title's subtitle, which must not inherit the marker's font, and stays on the crosshair above it. */

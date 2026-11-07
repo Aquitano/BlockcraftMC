@@ -3,7 +3,6 @@ package me.blockcraft.api.notification;
 import me.blockcraft.api.pack.ResourcePacks;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
-import net.kyori.adventure.title.TitlePart;
 import org.bukkit.Bukkit;
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
@@ -29,23 +28,17 @@ import static org.junit.Assert.assertTrue;
 public class NotificationsTest {
 
     @Test
-    public void hitAndKillMarkersAppearImmediatelyAndRestoreAnObjectiveSubtitleWithoutRestartingItsTitle() throws Exception {
+    public void hitAndKillMarkersAppearImmediatelyAndRestoreAnObjectiveSubtitleForTheTimeItHasLeft() throws Exception {
         var tick = new AtomicInteger();
         var frame = new AtomicReference<Runnable>();
         var current = new AtomicReference<Title>();
-        var titles = new AtomicInteger();
         var bars = new ArrayList<Component>();
         var id = UUID.randomUUID();
         var player = fake(Player.class, (proxy, method, args) -> switch (method.getName()) {
             case "getUniqueId" -> id;
             case "isOnline" -> true;
             case "sendActionBar" -> { bars.add((Component) args[0]); yield null; }
-            case "showTitle" -> { current.set((Title) args[0]); titles.incrementAndGet(); yield null; }
-            case "sendTitlePart" -> {
-                assertEquals(TitlePart.SUBTITLE, args[0]);
-                current.set(Title.title(current.get().title(), (Component) args[1], current.get().times()));
-                yield null;
-            }
+            case "showTitle" -> { current.set((Title) args[0]); yield null; }
             case "clearTitle" -> { current.set(null); yield null; }
             default -> throw new AssertionError(method.getName());
         });
@@ -79,7 +72,7 @@ public class NotificationsTest {
             notices.markerNow(player, hit, 6);
             assertEquals(objective.title(), current.get().title());
             assertEquals(Notifications.subtitle(objective, hit), current.get().subtitle());
-            assertEquals(1, titles.get());
+            assertEquals(objective.times(), current.get().times());
             assertEquals(hud, bars.getLast());
             tick.set(2);
             var kill = Component.text("SKULL");
@@ -91,7 +84,7 @@ public class NotificationsTest {
             tick.set(8);
             frame.get().run();
             assertEquals(objective.subtitle(), current.get().subtitle());
-            assertEquals(1, titles.get());
+            assertEquals(Title.Times.times(Duration.ZERO, Duration.ofMillis(32 * 50), Duration.ZERO), current.get().times());
             tick.set(38);
             notices.markerNow(player, hit, 6);
             tick.set(40);
@@ -177,6 +170,13 @@ public class NotificationsTest {
 
     private static <T> T fake(Class<T> type, InvocationHandler handler) {
         return type.cast(Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[]{type}, handler));
+    }
+
+    @Test
+    public void aResentTitleKeepsWhatIsLeftOfItsStayAndFadeWithoutFadingInAgain() {
+        var go = Title.Times.times(Duration.ZERO, Duration.ofMillis(700), Duration.ofMillis(300));
+        assertEquals(Title.Times.times(Duration.ZERO, Duration.ofMillis(200), Duration.ofMillis(300)), Notifications.remaining(go, 10));
+        assertEquals(Title.Times.times(Duration.ZERO, Duration.ZERO, Duration.ofMillis(150)), Notifications.remaining(go, 3));
     }
 
     @Test
