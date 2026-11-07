@@ -7,6 +7,9 @@ import java.util.function.Predicate;
 
 final class BotNavigation {
 
+    /** A path probe further than this ends partway, as the pathfinder runs out of nodes, and proves nothing. */
+    private static final double PROBE_RANGE = 24;
+
     private int route;
     private int attempts;
 
@@ -50,7 +53,8 @@ final class BotNavigation {
             if (index == approach.size() && distance > 9) {
                 continue;
             }
-            if (fraction > 0 && distance < nearest && reachable.test(to)) {
+            if (fraction > 0 && distance < nearest
+                    && (here.distanceSquared(to) > PROBE_RANGE * PROBE_RANGE || reachable.test(to))) {
                 chosen = index;
                 nearest = distance;
             }

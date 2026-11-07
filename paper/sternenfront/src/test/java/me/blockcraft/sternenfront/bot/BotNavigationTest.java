@@ -43,6 +43,12 @@ public class BotNavigationTest {
     }
 
     @Test
+    public void arrivingFromAFarPostSkipsTheRearWaypointsWithoutAPathProbe() {
+        var approach = List.of(new Vector(44.5, 65, 34.5), new Vector(30.5, 65, 34.5), new Vector(9.5, 65, 40.5));
+        assertEquals(2, BotNavigation.enter(new Vector(0.5, 65, -43.5), new Vector(0.5, 65, 44.5), approach, point -> false));
+    }
+
+    @Test
     public void triesOneAlternateAuthoredRouteBeforeAbandoningAndResetsForANewObjective() {
         var navigation = new BotNavigation();
         navigation.start(5, 3);
