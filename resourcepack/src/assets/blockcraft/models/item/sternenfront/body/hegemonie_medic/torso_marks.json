@@ -1,0 +1,6 @@
+{
+  "textures":{"rig":"blockcraft:block/sternenfront/rig/hegemonie_medic","particle":"blockcraft:block/sternenfront/rig/hegemonie_medic"},
+  "elements":[
+    {"from":[6.352,8.32,6.912],"to":[9.648,8.8,9.088],"faces":{"north":{"uv":[3.25,13.125,4.875,13.375],"texture":"#rig","tintindex":0},"south":{"uv":[3.25,13.125,4.875,13.375],"texture":"#rig","tintindex":0},"east":{"uv":[7.125,13.125,8.25,13.375],"texture":"#rig","tintindex":0},"west":{"uv":[7.125,13.125,8.25,13.375],"texture":"#rig","tintindex":0},"up":{"uv":[2.375,6.625,4.0,7.75],"texture":"#rig","tintindex":0},"down":{"uv":[0.25,6.625,1.875,7.75],"texture":"#rig","tintindex":0}}}
+  ]
+}

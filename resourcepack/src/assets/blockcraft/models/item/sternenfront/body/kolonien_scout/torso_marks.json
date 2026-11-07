@@ -1,0 +1,6 @@
+{
+  "textures":{"rig":"blockcraft:block/sternenfront/rig/kolonien_scout","particle":"blockcraft:block/sternenfront/rig/kolonien_scout"},
+  "elements":[
+    {"from":[4.416,7.408,5.856],"to":[11.584,8.432,10.144],"faces":{"north":{"uv":[0.5,7.1875,2.3125,7.4375],"texture":"#rig","tintindex":0},"south":{"uv":[0.5,7.1875,2.3125,7.4375],"texture":"#rig","tintindex":0},"east":{"uv":[7.5,7.1875,8.5625,7.4375],"texture":"#rig","tintindex":0},"west":{"uv":[7.5,7.1875,8.5625,7.4375],"texture":"#rig","tintindex":0},"up":{"uv":[9.5625,0.125,11.375,1.1875],"texture":"#rig","tintindex":0},"down":{"uv":[7.5,0.125,9.3125,1.1875],"texture":"#rig","tintindex":0}}}
+  ]
+}

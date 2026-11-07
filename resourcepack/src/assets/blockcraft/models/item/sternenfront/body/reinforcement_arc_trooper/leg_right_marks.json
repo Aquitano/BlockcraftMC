@@ -1,0 +1,6 @@
+{
+  "textures":{"rig":"blockcraft:block/sternenfront/rig/reinforcement_arc_trooper","particle":"blockcraft:block/sternenfront/rig/reinforcement_arc_trooper"},
+  "elements":[
+    {"from":[6.696,-2.08,6.576],"to":[9.304,-0.96,9.424],"faces":{"north":{"uv":[13.0625,8.375,13.6875,8.625],"texture":"#rig","tintindex":0},"south":{"uv":[13.0625,8.375,13.6875,8.625],"texture":"#rig","tintindex":0},"east":{"uv":[12.125,8.375,12.8125,8.625],"texture":"#rig","tintindex":0},"west":{"uv":[12.125,8.375,12.8125,8.625],"texture":"#rig","tintindex":0},"up":{"uv":[0.125,6.6875,0.75,7.375],"texture":"#rig","tintindex":0},"down":{"uv":[14.9375,5.625,15.5625,6.3125],"texture":"#rig","tintindex":0}}}
+  ]
+}

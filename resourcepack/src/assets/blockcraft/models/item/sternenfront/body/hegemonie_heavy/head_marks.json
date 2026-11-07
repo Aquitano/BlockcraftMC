@@ -1,0 +1,6 @@
+{
+  "textures":{"rig":"blockcraft:block/sternenfront/rig/hegemonie_heavy","particle":"blockcraft:block/sternenfront/rig/hegemonie_heavy"},
+  "elements":[
+    {"from":[7.6,9.904,5.56],"to":[8.4,10.064,8.52],"faces":{"north":{"uv":[4.875,10.0,5.0625,10.0625],"texture":"#rig","tintindex":0},"south":{"uv":[4.875,10.0,5.0625,10.0625],"texture":"#rig","tintindex":0},"east":{"uv":[3.875,10.0,4.625,10.0625],"texture":"#rig","tintindex":0},"west":{"uv":[3.875,10.0,4.625,10.0625],"texture":"#rig","tintindex":0},"up":{"uv":[4.125,7.75,4.3125,8.5],"texture":"#rig","tintindex":0},"down":{"uv":[3.6875,7.75,3.875,8.5],"texture":"#rig","tintindex":0}}}
+  ]
+}

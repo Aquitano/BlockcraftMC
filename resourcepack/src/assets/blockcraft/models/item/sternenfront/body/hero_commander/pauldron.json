@@ -1,0 +1,8 @@
+{
+  "textures":{"rig":"blockcraft:block/sternenfront/rig/hero_commander","particle":"blockcraft:block/sternenfront/rig/hero_commander"},
+  "elements":[
+    {"from":[6.36,8.88,6.28],"to":[9.64,9.36,9.72],"faces":{"north":{"uv":[10.9375,8.4375,11.75,8.5625],"texture":"#rig","tintindex":0},"south":{"uv":[10.9375,8.4375,11.75,8.5625],"texture":"#rig","tintindex":0},"east":{"uv":[9.8125,8.4375,10.6875,8.5625],"texture":"#rig","tintindex":0},"west":{"uv":[9.8125,8.4375,10.6875,8.5625],"texture":"#rig","tintindex":0},"up":{"uv":[14.0625,3.1875,14.875,4.0625],"texture":"#rig","tintindex":0},"down":{"uv":[13.0,3.1875,13.8125,4.0625],"texture":"#rig","tintindex":0}}},
+    {"from":[9.44,7.12,6.28],"to":[9.76,9.04,9.72],"faces":{"north":{"uv":[10.8125,6.5,10.875,7.0],"texture":"#rig","tintindex":0},"south":{"uv":[10.8125,6.5,10.875,7.0],"texture":"#rig","tintindex":0},"east":{"uv":[7.5,6.5,8.375,7.0],"texture":"#rig","tintindex":0},"west":{"uv":[7.5,6.5,8.375,7.0],"texture":"#rig","tintindex":0},"up":{"uv":[15.4375,3.1875,15.5,4.0625],"texture":"#rig","tintindex":0},"down":{"uv":[15.125,3.1875,15.1875,4.0625],"texture":"#rig","tintindex":0}}},
+    {"from":[6.24,7.12,6.28],"to":[6.56,9.04,9.72],"faces":{"north":{"uv":[10.8125,6.5,10.875,7.0],"texture":"#rig","tintindex":0},"south":{"uv":[10.8125,6.5,10.875,7.0],"texture":"#rig","tintindex":0},"east":{"uv":[7.5,6.5,8.375,7.0],"texture":"#rig","tintindex":0},"west":{"uv":[7.5,6.5,8.375,7.0],"texture":"#rig","tintindex":0},"up":{"uv":[15.4375,3.1875,15.5,4.0625],"texture":"#rig","tintindex":0},"down":{"uv":[15.125,3.1875,15.1875,4.0625],"texture":"#rig","tintindex":0}}}
+  ]
+}

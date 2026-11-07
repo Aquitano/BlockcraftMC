@@ -1,0 +1,8 @@
+{
+  "textures":{"rig":"blockcraft:block/sternenfront/rig/reinforcement_arc_trooper","particle":"blockcraft:block/sternenfront/rig/reinforcement_arc_trooper"},
+  "elements":[
+    {"from":[7.48,13.52,5.84],"to":[8.52,14.32,9.68],"faces":{"north":{"uv":[14.3125,8.875,14.5625,9.0625],"texture":"#rig","tintindex":0},"south":{"uv":[14.3125,8.875,14.5625,9.0625],"texture":"#rig","tintindex":0},"east":{"uv":[12.5625,8.875,13.5,9.0625],"texture":"#rig","tintindex":0},"west":{"uv":[12.5625,8.875,13.5,9.0625],"texture":"#rig","tintindex":0},"up":{"uv":[13.8125,3.25,14.0625,4.1875],"texture":"#rig","tintindex":0},"down":{"uv":[13.3125,3.25,13.5625,4.1875],"texture":"#rig","tintindex":0}}},
+    {"from":[7.48,10.4,5.744],"to":[8.52,13.6,5.872],"faces":{"north":{"uv":[6.75,5.625,7.0,6.4375],"texture":"#rig","tintindex":0},"south":{"uv":[6.75,5.625,7.0,6.4375],"texture":"#rig","tintindex":0},"east":{"uv":[7.6875,5.625,7.75,6.4375],"texture":"#rig","tintindex":0},"west":{"uv":[7.6875,5.625,7.75,6.4375],"texture":"#rig","tintindex":0},"up":{"uv":[4.3125,9.8125,4.5625,9.875],"texture":"#rig","tintindex":0},"down":{"uv":[3.8125,9.8125,4.0625,9.875],"texture":"#rig","tintindex":0}}},
+    {"from":[7.64,12.04,10.176],"to":[8.36,13.08,10.368],"faces":{"north":{"uv":[4.625,8.875,4.8125,9.125],"texture":"#rig","tintindex":0},"south":{"uv":[4.625,8.875,4.8125,9.125],"texture":"#rig","tintindex":0},"east":{"uv":[5.4375,8.875,5.5,9.125],"texture":"#rig","tintindex":0},"west":{"uv":[5.4375,8.875,5.5,9.125],"texture":"#rig","tintindex":0},"up":{"uv":[5.25,9.8125,5.4375,9.875],"texture":"#rig","tintindex":0},"down":{"uv":[4.8125,9.8125,5.0,9.875],"texture":"#rig","tintindex":0}}}
+  ]
+}

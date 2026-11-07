@@ -86,6 +86,12 @@ public final class SternenfrontArt {
             return glow() || grain == Grain.GLASS ? this : new Paint(id + "_serviced", ramp, base, grain, panel, Wear.SERVICED);
         }
 
+        /** The paint as a client draws it under a tint of {@code colour}, for models that carry no tint. */
+        Paint times(int colour) {
+            var tinted = Arrays.stream(ramp).map(shade -> multiply(shade, colour)).toArray();
+            return new Paint(id + "_" + Integer.toHexString(colour), tinted, base, grain, panel, wear);
+        }
+
         @Override
         public int[] draw(Face face, int width, int height, Random random) {
             var shades = new int[width * height];
@@ -330,6 +336,13 @@ public final class SternenfrontArt {
         return red << 16 | green << 8 | blue;
     }
 
+    private static int multiply(int colour, int tint) {
+        int red = ((colour >> 16) & 255) * ((tint >> 16) & 255) / 255;
+        int green = ((colour >> 8) & 255) * ((tint >> 8) & 255) / 255;
+        int blue = (colour & 255) * (tint & 255) / 255;
+        return red << 16 | green << 8 | blue;
+    }
+
     private static Paint paint(String id, int base, Grain grain, int panel, Wear wear, int... ramp) {
         return new Paint(id, ramp, base, grain, panel, wear);
     }
@@ -491,6 +504,14 @@ public final class SternenfrontArt {
         Shape scaled(double scale) {
             return new Shape().add(boxes.stream().map(each -> each.scaled(scale)).toList());
         }
+
+        Shape replaced(Surface from, Surface to) {
+            return new Shape().add(boxes.stream().map(each -> each.surface == from ? each.surfaced(to) : each).toList());
+        }
+
+        Shape marked(boolean marking) {
+            return new Shape().add(boxes.stream().filter(each -> (each.surface == MARKING) == marking).toList());
+        }
     }
 
     /** Eight-sided column along z; four long boxes whose union is a regular octagon in cross-section. */
@@ -521,15 +542,54 @@ public final class SternenfrontArt {
         }
     }
 
-    private record Family(String name, int density, boolean translucent, List<Model> models) { }
-
-    private static Family body(String name, Shape torso, Shape head, Shape arm, Shape leg, Shape... toolArm) {
-        var models = new ArrayList<>(List.of(model(name, "torso", torso), model(name, "head", head),
-                model(name, "arm", arm), model(name, "leg", leg)));
-        for (var extra : toolArm) {
-            models.add(model(name, "tool_arm", extra));
+    /** {@code unit} is the marking colour a body part shows when nothing sets one. */
+    private record Family(String name, int density, boolean translucent, List<Model> models, int unit) {
+        Family(String name, int density, boolean translucent, List<Model> models) {
+            this(name, density, translucent, models, -1);
         }
-        return new Family(name, 64, false, models);
+
+        boolean has(String path) {
+            return models.stream().anyMatch(model -> model.path.equals(path));
+        }
+
+        /** A body part with its markings painted in {@code unit}, for models nobody tints. */
+        Shape whole(String part) {
+            var whole = new Shape();
+            models.stream().filter(model -> model.path.endsWith("/" + part) || model.path.endsWith("/" + part + MARKS))
+                    .forEach(model -> whole.add(model.shape.boxes));
+            return whole.replaced(MARKING, MARKING.times(unit));
+        }
+    }
+
+    private static final String MARKS = "_marks";
+    private static final String PAULDRON = "pauldron";
+
+    private static Family body(String name, int unit, Shape torso, Shape head, Shape arm, Shape leg) {
+        return body(name, unit, torso, head, arm, leg, leg, new Shape());
+    }
+
+    /**
+     * Each part's markings become a model of their own, which the item definition tints with the fighter's unit colour
+     * and BetterModel draws as a bone it can tint apart. {@code pauldron} sits on either arm of a fireteam leader.
+     */
+    private static Family body(String name, int unit, Shape torso, Shape head, Shape arm, Shape leg, Shape rightLeg, Shape pauldron) {
+        var models = new ArrayList<Model>();
+        var parts = new LinkedHashMap<String, Shape>();
+        parts.put("torso", torso);
+        parts.put("head", head);
+        parts.put("arm", arm);
+        parts.put("leg", leg);
+        parts.put("leg_right", rightLeg);
+        parts.forEach((part, shape) -> {
+            models.add(model(name, part, shape.marked(false)));
+            if (!shape.marked(true).boxes.isEmpty()) {
+                models.add(model(name, part + MARKS, shape.marked(true)));
+            }
+        });
+        if (!pauldron.boxes.isEmpty()) {
+            models.add(model(name, PAULDRON, pauldron));
+        }
+        return new Family(name, 64, false, models, unit);
     }
 
     private static Model model(String name, String part, Shape shape) {
@@ -546,6 +606,12 @@ public final class SternenfrontArt {
             0x70614A, 0x9C8968, 0xBEAC87, 0xD7C8A7, 0xE9DFC5);
     private static final Paint MAROON = paint("republic_maroon", 2, Grain.SMOOTH, 0, Wear.CHIP,
             0x391723, 0x612537, 0x8B3B4B, 0xAE5360, 0xC97A83);
+    /** Greyscale, so that a unit colour multiplied into it keeps its shading; the item definition supplies the colour. */
+    private static final Paint MARKING = paint("marking", 3, Grain.SMOOTH, 0, Wear.SCUFF,
+            0x8C8C8C, 0xB4B4B4, 0xD6D6D6, 0xF0F0F0, 0xFFFFFF);
+    /** The first fireteam's colours in config.yml's appearance.unit-colours, for displays that set none. */
+    private static final int REPUBLIC_UNIT = 0x30487A;
+    private static final int SEPARATIST_UNIT = 0xE0B818;
     private static final Paint HAIR = paint("auburn", 2, Grain.SMOOTH, 0, Wear.NONE,
             0x3E2417, 0x61402B, 0x855B3A, 0xA4774C, 0xBE9263);
     private static final Paint GREY_HAIR = paint("grey_hair", 2, Grain.SMOOTH, 0, Wear.NONE,
@@ -557,16 +623,17 @@ public final class SternenfrontArt {
     });
 
     private static Family battleDroid(String role) {
-        Paint marking = switch (role) {
+        Paint chest = switch (role) {
             case "scout" -> FRAME;
-            case "medic" -> BLUE;
-            default -> DROID;
+            case "medic" -> DROID;
+            default -> MARKING;
         };
         var torso = new Shape()
                 .add(box(0, .02, 0, .2, .1, .13, DROID))
+                .add(box(0, .035, 0, .206, .03, .136, MARKING))
                 .add(box(0, .19, 0, .055, .26, .055, FRAME))
                 .add(box(0, .34, 0, .24, .24, .14, DROID))
-                .add(box(0, .36, .077, .16, .14, .018, marking))
+                .add(box(0, .36, .077, .16, .14, .018, chest))
                 .add(box(0, .49, 0, .45, .045, .085, DROID))
                 .add(box(0, .56, 0, .035, .11, .035, STEEL))
                 .add(box(0, .32, -.13, .17, .28, .12, DROID))
@@ -577,12 +644,13 @@ public final class SternenfrontArt {
                 .add(box(0, .065, .2, .105, .09, .14, DROID))
                 .add(box(0, .045, .283, .075, .055, .035, DROID))
                 .both(box(.067, .115, .145, .012, .024, .035, LENS))
-                .add(box(0, .174, .03, .09, .025, .15, marking));
+                .add(box(0, .174, .03, .09, .025, .15, MARKING));
         var arm = new Shape()
                 .add(box(0, 0, 0, .085, .085, .085, STEEL))
                 .add(box(0, -.16, 0, .045, .25, .045, DROID))
                 .add(box(0, -.3, 0, .07, .06, .07, FRAME))
                 .add(box(0, -.44, 0, .05, .24, .05, DROID))
+                .add(box(0, -.5, 0, .056, .06, .056, MARKING))
                 .add(box(0, -.58, 0, .065, .05, .065, STEEL))
                 .both(box(.023, -.62, .005, .015, .06, .04, DROID));
         var leg = new Shape()
@@ -590,18 +658,25 @@ public final class SternenfrontArt {
                 .add(box(0, -.23, 0, .055, .37, .055, DROID))
                 .add(box(0, -.44, 0, .085, .065, .085, FRAME))
                 .add(box(0, -.65, 0, .05, .36, .05, DROID))
+                .add(box(0, -.57, 0, .056, .06, .056, MARKING))
                 .add(box(0, -.88, .015, .065, .1, .07, STEEL))
                 .add(box(0, -.935, .07, .1, .05, .24, DROID));
+        var pauldron = new Shape()
+                .add(box(0, .056, 0, .1, .026, .1, MARKING))
+                .both(box(.05, .015, 0, .014, .07, .1, MARKING));
         if (role.equals("medic")) {
-            torso.add(box(0, .32, -.205, .12, .16, .03, BLUE));
+            torso.add(box(0, .32, -.205, .12, .16, .03, CERAMIC))
+                    .add(box(0, .32, -.221, .08, .025, .004, MAROON))
+                    .add(box(0, .32, -.221, .025, .08, .005, MAROON));
         }
-        return body("hegemonie_" + role, torso, head, arm, leg);
+        return body("hegemonie_" + role, SEPARATIST_UNIT, torso, head, arm, leg, leg, pauldron);
     }
 
     private static Family superBattleDroid() {
         var torso = new Shape()
                 .add(box(0, .03, 0, .52, .13, .25, FRAME))
                 .add(box(0, .21, 0, .38, .3, .28, STEEL))
+                .add(box(0, .12, 0, .388, .035, .288, MARKING))
                 .add(box(0, .49, .02, .71, .4, .4, STEEL))
                 .both(box(.27, .46, .22, .21, .3, .06, TRIM).spinY(22.5))
                 .add(box(0, .4, .24, .36, .18, .05, FRAME))
@@ -609,12 +684,15 @@ public final class SternenfrontArt {
                 .add(box(0, .53, -.24, .5, .32, .12, FRAME));
         var head = new Shape()
                 .add(box(0, .04, -.06, .21, .16, .18, FRAME))
+                .add(box(0, .124, -.06, .05, .01, .185, MARKING))
                 .add(box(0, .08, .045, .19, .07, .04, STEEL))
                 .add(box(-.055, .08, .071, .032, .026, .014, RED));
         var arm = new Shape()
                 .add(box(0, .035, 0, .34, .25, .34, STEEL))
+                .add(box(0, .12, 0, .348, .04, .348, MARKING))
                 .add(box(0, -.2, 0, .16, .24, .16, FRAME))
                 .add(box(0, -.43, 0, .26, .3, .26, STEEL))
+                .add(box(0, -.36, 0, .268, .04, .268, MARKING))
                 .add(box(0, -.62, 0, .22, .08, .22, TRIM))
                 .both(box(.055, -.73, .045, .07, .19, .09, FRAME))
                 .both(box(.055, -.83, .045, .045, .015, .045, RED));
@@ -623,17 +701,21 @@ public final class SternenfrontArt {
                 .add(box(0, -.21, .035, .2, .27, .2, STEEL))
                 .add(box(0, -.37, .035, .19, .09, .19, FRAME))
                 .add(box(0, -.54, 0, .18, .28, .19, STEEL))
+                .add(box(0, -.47, 0, .188, .04, .198, MARKING))
                 .add(box(0, -.74, .065, .28, .1, .4, STEEL));
-        return body("hegemonie_heavy", torso, head, arm, leg);
+        var pauldron = new Shape()
+                .add(box(0, .175, 0, .36, .03, .36, MARKING))
+                .both(box(.177, .09, 0, .016, .14, .35, MARKING));
+        return body("hegemonie_heavy", SEPARATIST_UNIT, torso, head, arm, leg, leg, pauldron);
     }
 
     private static Shape cloneHelmet(CloneRole role) {
-        Paint stripe = role == CloneRole.MEDIC ? MAROON : BLUE;
         var head = new Shape()
                 .add(box(0, .015, 0, .14, .06, .14, FRAME))
                 .add(box(0, .18, 0, .28, .27, .27, CERAMIC))
                 .add(box(0, .325, -.015, .23, .06, .22, CERAMIC))
-                .add(box(0, .37, -.015, .05, .05, .24, stripe))
+                .add(box(0, .37, -.015, .065, .05, .24, MARKING))
+                .add(box(0, .25, -.137, .065, .2, .008, MARKING))
                 .add(box(0, .235, .142, .25, .035, .02, LENS))
                 .add(box(0, .177, .145, .04, .1, .025, LENS))
                 .both(box(.09, .125, .14, .09, .09, .035, CERAMIC).spinZ(22.5))
@@ -641,7 +723,7 @@ public final class SternenfrontArt {
                 .add(box(0, .067, .125, .12, .025, .055, TRIM))
                 .both(box(.145, .16, -.005, .035, .13, .16, CERAMIC))
                 .both(box(.151, .12, .03, .027, .04, .075, FRAME))
-                .add(box(0, .285, .142, .045, .065, .012, stripe));
+                .add(box(0, .285, .142, .045, .065, .012, MARKING));
         if (role == CloneRole.REX || role == CloneRole.ARC || role == CloneRole.SCOUT) {
             head.add(box(-.18, .3, -.01, .015, .26, .015, FRAME))
                     .add(box(-.15, .435, .02, .09, .035, .09, STEEL));
@@ -654,7 +736,7 @@ public final class SternenfrontArt {
     }
 
     private static Family cloneTrooper(String name, CloneRole role) {
-        Paint stripe = role == CloneRole.MEDIC ? MAROON : BLUE;
+        boolean officer = role == CloneRole.REX || role == CloneRole.ARC;
         var torso = new Shape()
                 .add(box(0, .05, 0, .4, .13, .23, FRAME))
                 .add(box(0, .25, 0, .42, .34, .23, FRAME))
@@ -662,34 +744,39 @@ public final class SternenfrontArt {
                 .add(box(0, .19, .12, .35, .09, .035, CERAMIC))
                 .add(box(0, .08, .12, .34, .07, .035, CERAMIC))
                 .add(box(0, -.005, 0, .44, .06, .26, CERAMIC))
+                .add(box(0, -.005, 0, .448, .064, .268, MARKING))
                 .both(box(.14, -.015, .15, .075, .09, .06, CERAMIC))
-                .add(box(0, .36, .151, .055, .2, .016, stripe))
                 .add(box(0, .36, -.14, .34, .21, .04, CERAMIC))
                 .add(box(0, .51, 0, .14, .065, .14, FRAME));
         var arm = new Shape()
                 .add(box(0, -.025, 0, .18, .16, .19, CERAMIC))
-                .add(box(0, -.025, .1, .09, .15, .015, stripe))
+                .add(box(0, .0325, 0, .188, .055, .198, MARKING))
                 .add(box(0, -.19, 0, .13, .21, .14, CERAMIC))
                 .add(box(0, -.325, 0, .1, .055, .1, FRAME))
                 .add(box(0, -.44, 0, .125, .19, .14, CERAMIC))
+                .add(box(0, -.47, 0, .133, .06, .148, MARKING))
                 .add(box(0, -.565, 0, .1, .09, .1, FRAME));
         var leg = new Shape()
                 .add(box(0, -.21, 0, .18, .37, .2, CERAMIC))
                 .add(box(0, -.43, .045, .145, .095, .18, CERAMIC))
                 .add(box(0, -.5, 0, .1, .07, .1, FRAME))
                 .add(box(0, -.66, 0, .155, .25, .17, CERAMIC))
+                .add(box(0, -.595, 0, .163, .07, .178, MARKING))
                 .add(box(0, -.87, .04, .165, .13, .23, CERAMIC))
                 .add(box(0, -.945, .035, .17, .03, .25, FRAME));
-        if (role == CloneRole.HEAVY || role == CloneRole.REX || role == CloneRole.ARC) {
+        var pauldron = new Shape()
+                .add(box(0, .07, 0, .205, .03, .215, MARKING))
+                .both(box(.1, .005, 0, .02, .12, .215, MARKING));
+        if (role == CloneRole.HEAVY || officer) {
             torso.both(box(.22, -.14, 0, .025, .28, .29, FRAME))
                     .add(box(0, .23, -.25, .35, .38, .2, STEEL))
-                    .both(box(.2, .46, 0, .16, .055, .28, stripe));
+                    .both(box(.2, .46, 0, .16, .055, .28, officer ? MARKING : CERAMIC));
         }
         if (role == CloneRole.ARC) {
-            torso.add(box(0, .45, .04, .47, .045, .3, BLUE))
+            torso.add(box(0, .45, .04, .47, .045, .3, MARKING))
                     .both(box(.13, .28, .18, .09, .16, .055, FRAME))
-                    .add(box(0, .2, -.37, .22, .16, .035, BLUE));
-            arm.add(box(0, -.44, .08, .08, .12, .025, BLUE));
+                    .add(box(0, .2, -.37, .22, .16, .035, MARKING));
+            arm.add(box(0, -.44, .08, .08, .12, .025, MARKING));
         }
         if (role == CloneRole.SCOUT) {
             torso.add(box(0, .29, -.22, .27, .34, .16, FRAME));
@@ -699,7 +786,7 @@ public final class SternenfrontArt {
                     .add(box(0, .3, -.37, .18, .055, .025, MAROON))
                     .add(box(0, .3, -.37, .055, .18, .026, MAROON));
         }
-        return body(name, torso, cloneHelmet(role), arm, leg);
+        return body(name, REPUBLIC_UNIT, torso, cloneHelmet(role), arm, leg, leg, pauldron);
     }
 
     private static Family commandoDroid() {
@@ -719,6 +806,7 @@ public final class SternenfrontArt {
                 .add(box(0, .07, .183, .075, .025, .012, FRAME));
         var arm = new Shape()
                 .add(box(0, -.025, 0, .15, .14, .16, STEEL))
+                .add(box(0, .052, 0, .158, .028, .168, MARKING))
                 .add(box(0, -.19, 0, .09, .22, .09, FRAME))
                 .add(box(0, -.32, 0, .11, .08, .11, STEEL))
                 .add(box(0, -.46, 0, .11, .2, .12, STEEL))
@@ -729,7 +817,7 @@ public final class SternenfrontArt {
                 .add(box(0, -.63, 0, .095, .38, .11, STEEL))
                 .add(box(0, -.85, 0, .09, .09, .1, FRAME))
                 .add(box(0, -.93, .065, .14, .07, .25, STEEL));
-        return body("reinforcement_commando_droid", torso, head, arm, leg);
+        return body("reinforcement_commando_droid", SEPARATIST_UNIT, torso, head, arm, leg);
     }
 
     private static Shape humanHead(boolean dooku) {
@@ -770,7 +858,7 @@ public final class SternenfrontArt {
         } else {
             torso.both(box(.2, -.17, 0, .025, .32, .28, WRAP));
         }
-        return body(dooku ? "hero_sith" : "hero_jedi", torso, humanHead(dooku), arm, leg);
+        return body(dooku ? "hero_sith" : "hero_jedi", -1, torso, humanHead(dooku), arm, leg);
     }
 
     private static Shape mandoHelmet() {
@@ -807,7 +895,7 @@ public final class SternenfrontArt {
                 .add(box(0, -.66, 0, .15, .26, .17, BLUE))
                 .add(box(0, -.66, .1, .13, .24, .035, TRIM))
                 .add(box(0, -.9, .03, .17, .13, .25, FRAME));
-        return body("hero_bounty_hunter", torso, mandoHelmet(), arm, leg);
+        return body("hero_bounty_hunter", -1, torso, mandoHelmet(), arm, leg);
     }
 
     private static Shape barcSpeeder(boolean damaged) {
@@ -1073,14 +1161,18 @@ public final class SternenfrontArt {
                 gun("se14", pistol(false, true), GunPose.PISTOL),
                 gun("westar_pistols", pistol(true, false), GunPose.TWIN_PISTOL),
                 lightsaber(false, false), lightsaber(false, true), lightsaber(true, false), lightsaber(true, true), darksaber(),
-                equipment("helmet_kolonien", cloneHelmet(CloneRole.SOLDIER).shifted(0, -.19, 0).scaled(1.8), HELMET_DISPLAY),
-                equipment("helmet_hegemonie", battleDroid("soldier").models.get(1).shape.shifted(0, -.08, 0).scaled(1.8), HELMET_DISPLAY),
-                equipment("helmet_arc", cloneHelmet(CloneRole.ARC).shifted(0, -.19, 0).scaled(1.8), HELMET_DISPLAY),
-                equipment("helmet_commando", commandoDroid().models.get(1).shape.shifted(0, -.15, 0).scaled(1.8), HELMET_DISPLAY),
-                equipment("cap_commander", cloneHelmet(CloneRole.REX).shifted(0, -.19, 0).scaled(1.8), HELMET_DISPLAY),
+                equipment("helmet_kolonien", republicHelmet(CloneRole.SOLDIER), HELMET_DISPLAY),
+                equipment("helmet_hegemonie", battleDroid("soldier").whole("head").shifted(0, -.08, 0).scaled(1.8), HELMET_DISPLAY),
+                equipment("helmet_arc", republicHelmet(CloneRole.ARC), HELMET_DISPLAY),
+                equipment("helmet_commando", commandoDroid().whole("head").shifted(0, -.15, 0).scaled(1.8), HELMET_DISPLAY),
+                equipment("cap_commander", republicHelmet(CloneRole.REX), HELMET_DISPLAY),
                 equipment("helmet_bounty_hunter", mandoHelmet().shifted(0, -.19, 0).scaled(1.8), HELMET_DISPLAY),
                 equipment("hood_jedi", humanHead(false).shifted(0, -.17, 0).scaled(2.1), HELMET_DISPLAY),
                 equipment("mask_sith", humanHead(true).shifted(0, -.17, 0).scaled(2.1), HELMET_DISPLAY));
+    }
+
+    private static Shape republicHelmet(CloneRole role) {
+        return cloneHelmet(role).replaced(MARKING, MARKING.times(REPUBLIC_UNIT)).shifted(0, -.19, 0).scaled(1.8);
     }
 
     private static int argb(int alpha, int colour) {
@@ -1389,8 +1481,8 @@ public final class SternenfrontArt {
         double scale = heavy ? 1.25 : 1;
         var boxes = new ArrayList<Box>();
         for (var model : family.models) {
-            String part = model.path.substring(model.path.lastIndexOf('/') + 1);
-            var shape = model.shape;
+            String part = model.path.substring(model.path.lastIndexOf('/') + 1).replace(MARKS, "");
+            var shape = model.shape.replaced(MARKING, MARKING.times(family.unit));
             switch (part) {
                 case "torso" -> boxes.addAll(shape.shifted(0, heavy ? .8 : .97, 0).scaled(scale).boxes);
                 case "head" -> boxes.addAll(shape.shifted(0, heavy ? 1.32 : droid ? 1.64 : 1.5, heavy ? .3 : 0).scaled(scale).boxes);
@@ -1545,7 +1637,7 @@ public final class SternenfrontArt {
     }
 
     private static void writeModel(Path root, Family family, Model model, Map<String, Placed> placed, int size) throws IOException {
-        // A body part's custom_model_data colour turns it red while its fighter is hurt.
+        // A body part's first custom_model_data colour turns it red while its fighter is hurt.
         boolean body = model.path.startsWith("sternenfront/body/");
         var elements = model.shape.boxes.stream().map(each -> element(each, family, placed, size, body)).collect(Collectors.joining(",\n    "));
         var texture = "blockcraft:block/sternenfront/rig/" + family.name;
@@ -1555,9 +1647,28 @@ public final class SternenfrontArt {
         Files.createDirectories(definition.getParent());
         Files.writeString(json, "{\n  \"textures\":{\"rig\":\"" + texture + "\",\"particle\":\"" + texture + "\"},\n  \"elements\":[\n    "
                 + elements + "\n  ]" + model.display + "\n}\n");
+        if (body && (model.path.endsWith(MARKS) || model.path.endsWith("/" + PAULDRON))) {
+            return;
+        }
         boolean tinted = body || model.shape.boxes.stream().anyMatch(each -> each.surface.tinted());
-        Files.writeString(definition, "{\"model\":{\"type\":\"minecraft:model\",\"model\":\"blockcraft:item/" + model.path + "\""
-                + (tinted ? ",\"tints\":[{\"type\":\"minecraft:custom_model_data\",\"index\":0,\"default\":-1}]" : "") + "}}\n");
+        var layers = new ArrayList<>(List.of("{\"type\":\"minecraft:model\",\"model\":\"blockcraft:item/" + model.path + "\""
+                + (tinted ? ",\"tints\":[{\"type\":\"minecraft:custom_model_data\",\"index\":0,\"default\":-1}]" : "") + "}"));
+        if (family.has(model.path + MARKS)) {
+            layers.add(markings(model.path + MARKS, family.unit));
+        }
+        var pauldron = model.path.substring(0, model.path.lastIndexOf('/') + 1) + PAULDRON;
+        if (model.path.endsWith("/arm") && family.has(pauldron)) {
+            layers.add("{\"type\":\"minecraft:condition\",\"property\":\"minecraft:custom_model_data\",\"index\":0,\"on_true\":"
+                    + markings(pauldron, family.unit) + ",\"on_false\":{\"type\":\"minecraft:empty\"}}");
+        }
+        Files.writeString(definition, "{\"model\":" + (layers.size() == 1 ? layers.getFirst()
+                : "{\"type\":\"minecraft:composite\",\"models\":[" + String.join(",", layers) + "]}") + "}\n");
+    }
+
+    /** Markings take the second custom_model_data colour: the first is the hurt flash, which BodyRig sets on both. */
+    private static String markings(String path, int unit) {
+        return "{\"type\":\"minecraft:model\",\"model\":\"blockcraft:item/" + path
+                + "\",\"tints\":[{\"type\":\"minecraft:custom_model_data\",\"index\":1,\"default\":" + unit + "}]}";
     }
 
     private static String element(Box each, Family family, Map<String, Placed> placed, int size, boolean tinted) {
