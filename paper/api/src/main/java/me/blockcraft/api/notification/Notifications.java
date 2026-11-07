@@ -2,6 +2,7 @@ package me.blockcraft.api.notification;
 
 import me.blockcraft.api.pack.DisplayFont;
 import me.blockcraft.api.pack.ResourcePacks;
+import me.blockcraft.api.pack.UiFont;
 import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.xp.LevelUpEvent;
 import me.blockcraft.common.message.Messages;
@@ -287,10 +288,9 @@ public final class Notifications implements Listener {
         state.shownMarker = marker;
     }
 
-    /** A marker replaces a title's subtitle for a moment, but joins a one-line notice, which must not inherit the marker's font. */
+    /** A marker joins a title's subtitle, which must not inherit the marker's font, and stays on the crosshair above it. */
     static Component subtitle(Title title, Component marker) {
-        return title.title().equals(Component.empty()) && !title.subtitle().equals(Component.empty())
-                ? Component.empty().append(marker).append(title.subtitle()) : marker;
+        return title.subtitle().equals(Component.empty()) ? marker : UiFont.centredOn(title.subtitle(), marker);
     }
 
     private static long now() {
