@@ -213,6 +213,13 @@
       "ascent": 9,
       "height": 12,
       "chars": ["\ue240\ue241\ue242\ue243\ue244\ue245\ue246\ue247\ue248\ue249\ue24a"]
+    },
+    {
+      "type": "bitmap",
+      "file": "blockcraft:font/combat_vent.png",
+      "ascent": 9,
+      "height": 12,
+      "chars": ["\ue260\ue261\ue262\ue263\ue264"]
     }
   ]
 }
