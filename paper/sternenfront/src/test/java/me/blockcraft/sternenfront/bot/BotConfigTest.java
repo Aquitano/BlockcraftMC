@@ -51,9 +51,9 @@ public class BotConfigTest {
     public void humansReplaceBotSeatsWithoutExceedingTheTarget() {
         var source = new org.bukkit.configuration.MemoryConfiguration();
         var config = BotConfig.from(source, 6);
-        assertEquals(4, config.needed(0));
-        assertEquals(3, config.needed(1));
-        assertEquals(0, config.needed(4));
+        assertEquals(6, config.needed(0));
+        assertEquals(5, config.needed(1));
+        assertEquals(2, config.needed(4));
         assertEquals(0, config.needed(6));
         source.set("bots.enabled", false);
         assertEquals(0, BotConfig.from(source, 6).needed(0));

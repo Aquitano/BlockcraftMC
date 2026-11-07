@@ -48,7 +48,7 @@ public record BotConfig(boolean enabled, int perTeam, double range, double visio
                     Math.clamp(config.getDouble(key + "aim-settle-spread", fallback.settleSpread()), 1, 5)));
         }
         return new BotConfig(config.getBoolean("bots.enabled", true),
-                Math.clamp(config.getInt("bots.fill-per-team", 4), 1, capacity),
+                Math.clamp(config.getInt("bots.fill-per-team", 6), 1, capacity),
                 Math.clamp(config.getDouble("bots.sight-range", 32), 4, 64),
                 Math.clamp(config.getDouble("bots.vision-angle", 120), 30, 180),
                 Math.clamp(config.getInt("bots.memory-ticks", 40), 0, 200),
@@ -70,7 +70,7 @@ public record BotConfig(boolean enabled, int perTeam, double range, double visio
                         (float) Math.clamp(config.getDouble("bots.voice.volume", 0.65), 0, 1),
                         Math.max(100, config.getInt("bots.voice.soldier-cooldown-ticks", 360)),
                         Math.max(60, config.getInt("bots.voice.global-cooldown-ticks", 100))),
-                new Squad(Math.clamp(config.getInt("bots.squad.fireteam-size", 4), 2, 4),
+                new Squad(Math.clamp(config.getInt("bots.squad.fireteam-size", 3), 2, 4),
                         Math.clamp(config.getDouble("bots.squad.switch-margin", 25), 0, 100),
                         Math.clamp(config.getDouble("bots.squad.spacing", 3), 1.5, 8),
                         Math.clamp(config.getDouble("bots.squad.stagger", 2), 0, 6),

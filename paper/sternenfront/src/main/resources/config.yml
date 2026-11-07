@@ -13,7 +13,8 @@ debug:
   cooldown-ticks: 200
 bots:
   enabled: true
-  fill-per-team: 4
+  # Bots fill each side up to fill-per-team fighters, players included, so a full side of players plays without them.
+  fill-per-team: 6
   difficulty: normal
   # A bot's aim scatters aim-settle-spread times aim-spread on a fresh target and settles over aim-settle-ticks.
   profiles:
@@ -47,7 +48,7 @@ bots:
   # nearer. A team whose leader has twice as many enemies as friends within fall-back-range blocks, and at least two,
   # runs back to its route's retreat points and holds there for fall-back-ticks. A guard does the same while its post
   # is that outnumbered.
-  squad: {fireteam-size: 4, switch-margin: 25, spacing: 3, stagger: 2, regroup-distance: 12, catch-up-distance: 32, walk-speed: 0.9,
+  squad: {fireteam-size: 3, switch-margin: 25, spacing: 3, stagger: 2, regroup-distance: 12, catch-up-distance: 32, walk-speed: 0.9,
           sprint-speed: 1.25, bound-distance: 8, bound-ticks: 80, flank-after-ticks: 160, follow-range: 12,
           reinforce-pull: 80, fall-back-range: 16, fall-back-ticks: 160}
 appearance:
