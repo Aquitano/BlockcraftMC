@@ -43,8 +43,10 @@ public final class ItemListener implements Listener {
         if (event.getAction() == Action.RIGHT_CLICK_BLOCK && block != null && block.getType() == Material.CHEST
                 && !game.isLobby() && !game.isSpectator(player)) {
             event.setCancelled(true);
-            Sounds.MENU_OPEN.play(player);
-            player.openInventory(lootChests.open(block.getLocation()));
+            if (!game.frozen()) {
+                Sounds.MENU_OPEN.play(player);
+                player.openInventory(lootChests.open(block.getLocation()));
+            }
             return;
         }
         var item = event.getItem();
