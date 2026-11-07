@@ -55,17 +55,27 @@ They have no permanent unlock or database record. Their body rigs and helmets co
 
 ## Bots
 
-Bots fight in fireteams of up to `bots.squad.fireteam-size`, led by a soldier where the team has one. A team shares one
-objective: a post it can still take, or a held post with enemies in it, keeping its choice unless another is
-`switch-margin` blocks closer. When it moves on from a post it took, it leaves its heavy, or its last member, as the post's
-only guard; the guard moves between the post's lookouts and rejoins the team when the post falls. Once every post is
-held, teams hold the one nearest the enemy. A team near a player of its faction takes that player's order.
+Bots fill each side to `bots.fill-per-team` fighters, players included, and fight in fireteams of up to
+`bots.squad.fireteam-size`, led by a soldier where the team has one. Each new bot takes the class its side has fewest of.
+A team shares one objective: a post it can still take, or a held post with enemies in it, keeping its choice unless another
+is `switch-margin` blocks closer. A held post under attack counts `reinforce-pull` blocks closer, enough to bring a team
+back from the neighbouring post but not across the map. When a team moves on from a post it took, it leaves its heavy,
+else a soldier or scout other than its leader, as the post's guard; it keeps one guard out at most. The guard moves
+between the post's lookouts and rejoins the team when the post falls. Once every post is held, teams hold the one nearest
+the enemy. A team near a player of its faction takes that player's order.
 
-On the move the others walk in the leader's steps, `spacing` blocks apart, and the leader waits briefly for stragglers.
-Under fire the team bounds by pairs along its authored route: one pair runs `bound-distance` blocks while the other covers
-it from cover and fires at where the enemy was last seen. A team held up for `flank-after-ticks` sends one member round by
-another route. Near the post the whole team spreads into it. Bots take cover only while covering, venting or wounded.
-A bot's aim scatters on a fresh target and settles over `aim-settle-ticks`, and each member watches its own sector.
+On the move the others walk in the leader's steps, `spacing` blocks apart, each `stagger` blocks to alternate sides where the
+ground allows. The leader slows for a member behind it, and a member ahead waits for the column. Under fire the team bounds
+by pairs along its authored route: one pair runs `bound-distance` blocks while the other covers it from cover and fires at
+where the enemy was last seen. A team held up for `flank-after-ticks` sends one member round by another route. Near the
+post the whole team spreads into it. Bots take cover only while covering, venting or wounded.
+
+A team whose leader has twice as many enemies as friends within `fall-back-range`, and at least two, runs back to its
+route's retreat points for `fall-back-ticks`, then pushes again. A guard falls back the same way while its post is that
+outnumbered, which also brings its team back. When a member falls, its teammates take the killer's position as contact for
+`alarm-ticks`; a bot with nothing in sight turns toward enemy fire within `hearing-range`. Soldiers and heavies throw their
+explosives at enemies dug into a post or hidden behind cover, and a heavy holding open ground under fire raises its shield
+wall. A bot's aim scatters on a fresh target and settles over `aim-settle-ticks`, and each member watches its own sector.
 
 ## Arena template
 
