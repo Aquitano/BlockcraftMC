@@ -404,9 +404,10 @@ heroes:
     bounty-hunter: 50
     sith: 60
     commander: 50
-  # A saber hits for damage with the sword's cooldown and ignites ignite-ticks after it is drawn. A saber hero whose
-  # guard is up (hand raised by holding right click) takes blocked-share of a blade's hit. Colours are RGB hex; white
-  # is for whoever found every kyber crystal, relic is the marks of the relic blade.
+  # A saber hits for damage with the sword's cooldown. Its blade grows a quarter per tick and is whole ignite-ticks
+  # after it is drawn. A saber hero whose guard is up (hand raised by holding right click) takes blocked-share of a
+  # blade's hit. Colours are RGB hex; white is for whoever found every kyber crystal, relic is the marks of the relic
+  # blade.
   saber:
     damage: 8
     blocked-share: 0.3
@@ -416,11 +417,12 @@ heroes:
     leap-forward: 1.4
     leap-up: 0.7
     colors: {jedi: "3D8BFF", sith: "FF2A2A", white: "F4F8FF", relic: "F4F8FF"}
-  # range in blocks. force-push hits enemies within angle degrees ahead. The thrown saber flies range blocks out at
+  # range in blocks. force-push hits enemies within angle degrees ahead, wind-up-ticks after the hero draws the off hand
+  # back. The thrown saber flies range blocks out at
   # speed blocks per tick and back. force-grip holds for seconds and deals damage over that time. The jetpack thrusts
   # for seconds. The orbital strike falls delay-ticks after the beacon lands, blasts times within radius.
   abilities:
-    force-push: {cooldown-seconds: 8, range: 7, angle: 70, strength: 1.7, up: 0.5, damage: 2}
+    force-push: {cooldown-seconds: 8, range: 7, angle: 70, strength: 1.7, up: 0.5, damage: 2, wind-up-ticks: 5}
     saber-throw: {cooldown-seconds: 10, range: 14, speed: 1.2, damage: 9}
     force-grip: {cooldown-seconds: 14, range: 14, seconds: 2, damage: 7}
     jetpack: {cooldown-seconds: 12, seconds: 4, thrust: 0.4}

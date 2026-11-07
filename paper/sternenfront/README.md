@@ -215,6 +215,16 @@ each lasting `presentation.saber-trail-ticks` under the shared effect cap. Each 
 `combat.melee` sets the reach, arc angle, cooldown and animation duration. Defaults are 3.5 blocks, 120 degrees,
 12 ticks between swings and a four-tick sweep. Successive swings alternate direction. Switching weapons or guarding
 cancels the remaining sweep. The relic blade uses the same attack.
+A saber's hum, ignition, retraction and swings and the raised guard play on the hero, so they follow them as they move.
+A viewer who sees the hero's body rig hears them on its torso, because a client drops a sound on an entity it does not
+draw. The thrown saber flies flat and spins about its middle like a disc, whirling every five ticks.
+Other fighters see a bladed hero's body rig hold the blade tipped forward, bring both hands in with the blade across the
+chest while guarding, wind up on the side a swing starts from and follow through over the sweep, and thrust the off hand
+forward while a lightning channel or grip lasts. A Force push first draws that hand back for `wind-up-ticks` while air
+gathers at the palm and a rising whoosh plays, then thrusts it forward as the push lands. Force lightning leaves that
+hand as forked bolts redrawn every tick in a new shape every second tick, while its damage still lands on the channel's
+pulses. Display interpolation eases each change over a few ticks. In first person the guard rolls the blade across the
+view through the item's `using_item` model.
 
 ## What keeps a player going
 

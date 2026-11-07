@@ -29,8 +29,16 @@ public final class PackOverrides {
     /** What a tinted model's blade shows on an item that names no colour: its texture's own. */
     static final int UNTINTED = -1;
 
-    /** The model a case draws, and whether the item's first custom_model_data colour tints it. */
-    record Case(String model, boolean tinted) { }
+    /**
+     * The model a case draws, whether the item's first custom_model_data colour tints it, and whether it draws
+     * {@code <model>_guard} instead while the item is in use.
+     */
+    record Case(String model, boolean tinted, boolean guarded) {
+
+        String guard() {
+            return model + "_guard";
+        }
+    }
 
     private PackOverrides() {
     }
@@ -39,10 +47,10 @@ public final class PackOverrides {
     static Map<String, Map<String, Case>> cases() {
         var cases = new TreeMap<String, Map<String, Case>>();
         for (var icon : MenuIcon.values()) {
-            add(cases, icon.fallback(), icon.modelData(), new Case("blockcraft:item/" + icon.key(), false));
+            add(cases, icon.fallback(), icon.modelData(), new Case("blockcraft:item/" + icon.key(), false, false));
         }
         for (var model : PackModel.values()) {
-            add(cases, model.fallback(), model.key(), new Case(model.model().asString(), model.tinted()));
+            add(cases, model.fallback(), model.key(), new Case(model.model().asString(), model.tinted(), model.guarded()));
         }
         return cases;
     }
@@ -74,7 +82,7 @@ public final class PackOverrides {
                 }
                 var override = vanilla.deepCopy();
                 override.add("model", select(item.getValue(), vanilla.get("model").getAsJsonObject()));
-                if (item.getValue().values().stream().anyMatch(drawn -> drawn.model().endsWith("_firing"))) {
+                if (swapsInPlace(item.getValue())) {
                     override.addProperty("hand_animation_on_swap", false);
                 }
                 Files.writeString(directory.resolve(item.getKey() + ".json"), gson.toJson(override) + "\n");
@@ -83,24 +91,43 @@ public final class PackOverrides {
         System.out.println("Wrote " + cases.size() + " overrides to " + directory);
     }
 
+    /** A firing pose or a lightsaber's growing blade swaps the held item each tick, which must not lower the hand. */
+    static boolean swapsInPlace(Map<String, Case> cases) {
+        return cases.values().stream().anyMatch(drawn -> drawn.model().endsWith("_firing") || drawn.model().contains("/lightsaber_"));
+    }
+
+    private static JsonObject model(String path, boolean tinted) {
+        var model = new JsonObject();
+        model.addProperty("type", "minecraft:model");
+        model.addProperty("model", path);
+        if (tinted) {
+            var tint = new JsonObject();
+            tint.addProperty("type", "minecraft:custom_model_data");
+            tint.addProperty("index", 0);
+            tint.addProperty("default", UNTINTED);
+            var tints = new JsonArray();
+            tints.add(tint);
+            model.add("tints", tints);
+        }
+        return model;
+    }
+
+    private static JsonObject guarded(Case drawn) {
+        var condition = new JsonObject();
+        condition.addProperty("type", "minecraft:condition");
+        condition.addProperty("property", "minecraft:using_item");
+        condition.add("on_true", model(drawn.guard(), drawn.tinted()));
+        condition.add("on_false", model(drawn.model(), drawn.tinted()));
+        return condition;
+    }
+
     private static JsonObject select(Map<String, Case> cases, JsonObject fallback) {
         var list = new JsonArray();
         cases.entrySet().stream().sorted(Map.Entry.comparingByKey(Comparator.naturalOrder())).forEach(entry -> {
-            var model = new JsonObject();
-            model.addProperty("type", "minecraft:model");
-            model.addProperty("model", entry.getValue().model());
-            if (entry.getValue().tinted()) {
-                var tint = new JsonObject();
-                tint.addProperty("type", "minecraft:custom_model_data");
-                tint.addProperty("index", 0);
-                tint.addProperty("default", UNTINTED);
-                var tints = new JsonArray();
-                tints.add(tint);
-                model.add("tints", tints);
-            }
+            var drawn = entry.getValue();
             var match = new JsonObject();
             match.addProperty("when", entry.getKey());
-            match.add("model", model);
+            match.add("model", drawn.guarded() ? guarded(drawn) : model(drawn.model(), drawn.tinted()));
             list.add(match);
         });
         var select = new JsonObject();

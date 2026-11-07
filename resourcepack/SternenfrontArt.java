@@ -666,11 +666,27 @@ public final class SternenfrontArt {
             0x3E2417, 0x61402B, 0x855B3A, 0xA4774C, 0xBE9263);
     private static final Paint GREY_HAIR = paint("grey_hair", 2, Grain.SMOOTH, 0, Wear.NONE,
             0x777875, 0x9B9D99, 0xC0C2BC, 0xDCDED8, 0xF4F4EC);
-    private static final Sprite SABER = new Sprite("saber", true, true, (width, height, random) -> {
+    private static final Sprite SABER = new Sprite("saber", true, false, (width, height, random) -> {
         var pixels = new int[width * height];
         Arrays.fill(pixels, 0xFFFFFF);
         return pixels;
     });
+    private static final Sprite SABER_HALO = new Sprite("saber_halo", true, true, falloff(150));
+    private static final Sprite SABER_GLOW = new Sprite("saber_glow", true, true, falloff(40));
+
+    /** White whose alpha peaks at {@code peak} down a face's centre line and fades to nothing at its edges. */
+    private static Drawing falloff(int peak) {
+        return (width, height, random) -> {
+            var pixels = new int[width * height];
+            for (int x = 0; x < width; x++) {
+                int alpha = (int) Math.round(peak * Math.pow(1 - Math.abs(2 * (x + .5) / width - 1), 1.5));
+                for (int y = 0; y < height; y++) {
+                    pixels[y * width + x] = argb(alpha, 0xFFFFFF);
+                }
+            }
+            return pixels;
+        };
+    }
 
     /** Slats in white, so the item's first custom_model_data colour shows the gun's heat on them. */
     private static final Sprite HEAT = new Sprite("heat", true, true, (width, height, random) -> {
@@ -1169,10 +1185,22 @@ public final class SternenfrontArt {
                 new Model("sternenfront/" + name, shape, GUN_DISPLAY.formatted(pose.hands(Hold.REST)), pose)));
     }
 
-    private static final String SABER_DISPLAY = """
-            ,"display":{
-              "firstperson_righthand":{"rotation":[0,0,15],"translation":[0,0,0],"scale":[0.7,0.7,0.7]},
-              "firstperson_lefthand":{"rotation":[0,0,-15],"translation":[0,0,0],"scale":[0.7,0.7,0.7]},
+    /**
+     * Both first-person hands, which vanilla mirrors for the left. It rolls the blade toward the screen's centre,
+     * then tips it away from the camera, and shifts it by {@code x} and {@code y} pixels, a negative x toward the centre.
+     */
+    private static String saberHands(double tilt, double roll, double x, double y) {
+        String hand = String.format(Locale.ROOT, "{\"rotation\":[%s,0,%s],\"translation\":[%s,%s,0],\"scale\":[0.7,0.7,0.7]}",
+                -tilt, roll, x, y);
+        return "\"firstperson_righthand\":" + hand + ",\"firstperson_lefthand\":" + hand;
+    }
+
+    /** The guard crosses the blade over the view; the rest of the saber's display comes from its parent model. */
+    private static final String SABER_GUARD_HANDS = saberHands(12, 40, -2, 1);
+    private static final List<String> GUARDED = List.of("sternenfront/lightsaber_jedi", "sternenfront/lightsaber_sith",
+            "sternenfront/relic_blade");
+    private static final String SABER_DISPLAY = ",\"display\":{\n  " + saberHands(22, 15, 0, 0) + """
+            ,
               "thirdperson_righthand":{"rotation":[0,0,0],"translation":[0,2,0],"scale":[0.8,0.8,0.8]},
               "thirdperson_lefthand":{"rotation":[0,0,0],"translation":[0,2,0],"scale":[0.8,0.8,0.8]},
               "gui":{"rotation":[0,0,-35],"translation":[-3,-3,0],"scale":[0.6,0.6,0.6]},
@@ -1339,25 +1367,77 @@ public final class SternenfrontArt {
         return shape;
     }
 
-    private static Family lightsaber(boolean dooku, boolean lit) {
+    /** The hilt alone, the blade a quarter, half and three quarters out while it ignites, and the whole blade. */
+    private static Family lightsaber(boolean dooku) {
+        String name = "lightsaber_" + (dooku ? "sith" : "jedi");
+        var hilt = hilt(dooku);
+        var models = new ArrayList<>(List.of(new Model("sternenfront/" + name + "_off", hilt, SABER_DISPLAY)));
+        for (int quarter = 1; quarter < 4; quarter++) {
+            models.add(new Model("sternenfront/" + name + "_" + quarter * 25, new Shape().add(hilt.boxes).add(blade(quarter / 4.0)), SABER_DISPLAY));
+        }
+        models.add(new Model("sternenfront/" + name, new Shape().add(hilt.boxes).add(blade(1)), SABER_DISPLAY));
+        return new Family("equipment_" + name, 64, false, models);
+    }
+
+    /** Each hilt reads by its outline: emitter, grip and pommel differ in width along the hilt, and Dooku's bends. */
+    private static Shape hilt(boolean dooku) {
+        return dooku ? sithHilt() : jediHilt();
+    }
+
+    /** A flared, pronged emitter over a narrow neck, a ribbed grip with a stud, and a stepped pommel. */
+    private static Shape jediHilt() {
         var hilt = new Shape()
-                .add(drumY(0, -.08, 0, .07, .25, STEEL))
-                .add(drumY(0, -.22, 0, .09, .04, FRAME))
-                .add(drumY(0, .075, 0, .065, .07, FRAME))
-                .add(drumY(0, .135, 0, .11, .045, STEEL))
-                .add(box(.045, .025, 0, .025, .055, .025, dooku ? RED : BLUE));
-        if (dooku) {
-            hilt.add(box(.035, -.17, 0, .065, .15, .065, STEEL).spinZ(22.5))
-                    .add(box(.07, -.24, 0, .055, .055, .065, FRAME));
-        } else {
-            hilt.add(drumY(0, -.08, 0, .08, .11, FRAME))
-                    .both(box(.035, -.08, 0, .012, .1, .04, STEEL));
+                .add(drumY(0, -.27, 0, .07, .03, FRAME))
+                .add(drumY(0, -.23, 0, .095, .05, STEEL))
+                .add(drumY(0, -.105, 0, .07, .2, STEEL))
+                .add(drumY(0, .03, 0, .06, .07, FRAME))
+                .add(drumY(0, .095, 0, .1, .06, STEEL))
+                .add(drumY(0, .14, 0, .12, .03, STEEL))
+                .both(box(.05, .175, 0, .016, .04, .02, FRAME))
+                .add(box(.036, -.025, 0, .012, .05, .03, TRIM))
+                .add(box(.044, -.025, 0, .012, .022, .018, BLUE));
+        for (int ring = 0; ring < 4; ring++) {
+            hilt.add(drumY(0, -.18 + ring * .037, 0, .082, .014, FRAME));
         }
-        if (lit) {
-            hilt.add(box(0, .81, 0, .035, 1.29, .035, SABER))
-                    .add(box(0, 1.46, 0, .025, .025, .025, SABER));
+        return hilt;
+    }
+
+    /** A plain emitter ring, a banded grip with a guard plate, then the bent neck down to a heavy pommel. */
+    private static Shape sithHilt() {
+        var hilt = new Shape()
+                .add(drumY(0, .13, 0, .1, .05, FRAME))
+                .add(drumY(0, .098, 0, .11, .014, STEEL))
+                .add(drumY(0, .025, 0, .068, .14, STEEL))
+                .add(box(0, -.05, 0, .085, .02, .075, FRAME))
+                .add(box(.03, -.125, 0, .066, .14, .066, STEEL).spinZ(22.5))
+                .add(box(.062, -.205, 0, .08, .06, .08, FRAME).spinZ(22.5))
+                .add(box(.072, -.24, 0, .06, .02, .06, STEEL).spinZ(22.5))
+                .add(box(.038, .06, 0, .014, .028, .02, RED));
+        for (int band = 0; band < 3; band++) {
+            hilt.add(drumY(0, -.02 + band * .035, 0, .078, .012, FRAME));
         }
-        return equipment("lightsaber_" + (dooku ? "sith" : "jedi") + (lit ? "" : "_off"), hilt, SABER_DISPLAY);
+        return hilt;
+    }
+
+    private static final double EMITTER = .16;
+    private static final double BLADE = 1.27;
+    private static final Face[] GLOW_FACES = {Face.NORTH, Face.SOUTH, Face.EAST, Face.WEST, Face.UP};
+
+    /**
+     * An opaque white core inside two tinted shells, each wider and fainter than the last and capped one step
+     * narrower past the tip, so the colour reads as a glow round a rounded end.
+     */
+    private static List<Box> blade(double share) {
+        double tip = EMITTER + BLADE * share;
+        return List.of(column(.03, EMITTER, tip, SABER),
+                column(.09, EMITTER, tip + .03, SABER_HALO).only(GLOW_FACES),
+                column(.06, tip + .03, tip + .05, SABER_HALO).only(GLOW_FACES),
+                column(.15, EMITTER, tip + .04, SABER_GLOW).only(GLOW_FACES),
+                column(.1, tip + .04, tip + .07, SABER_GLOW).only(GLOW_FACES));
+    }
+
+    private static Box column(double across, double from, double to, Surface surface) {
+        return box(0, (from + to) / 2, 0, across, to - from, across, surface);
     }
 
     private static Family darksaber() {
@@ -1391,7 +1471,7 @@ public final class SternenfrontArt {
                 gun("wrist_blaster", wrist, GunPose.WRIST),
                 gun("se14", pistol(false, true), GunPose.PISTOL),
                 gun("westar_pistols", pistol(true, false), GunPose.TWIN_PISTOL),
-                lightsaber(false, false), lightsaber(false, true), lightsaber(true, false), lightsaber(true, true), darksaber(),
+                lightsaber(false), lightsaber(true), darksaber(),
                 equipment("helmet_kolonien", republicHelmet(CloneRole.SOLDIER), HELMET_DISPLAY),
                 equipment("helmet_hegemonie", battleDroid("soldier").whole("head").shifted(0, -.08, 0).scaled(1.8), HELMET_DISPLAY),
                 equipment("helmet_arc", republicHelmet(CloneRole.ARC), HELMET_DISPLAY),
@@ -1841,11 +1921,13 @@ public final class SternenfrontArt {
         for (var tile : ordered) {
             var random = new Random(fnv(family.name + "/" + tile.key));
             var colours = tile.surface.draw(tile.face, tile.width, tile.height, random);
+            // Paints and the saber core draw no alpha; a sprite that does keeps it, so a blade's glow stays translucent.
+            boolean alpha = family.translucent || Arrays.stream(colours).anyMatch(colour -> colour >>> 24 != 0);
             var at = placed.get(tile.key);
             for (int y = -GUTTER; y < tile.height + GUTTER; y++) {
                 for (int x = -GUTTER; x < tile.width + GUTTER; x++) {
                     int colour = colours[Math.clamp(y, 0, tile.height - 1) * tile.width + Math.clamp(x, 0, tile.width - 1)];
-                    atlas.setRGB(at.x + x, at.y + y, family.translucent ? colour : 0xFF000000 | colour);
+                    atlas.setRGB(at.x + x, at.y + y, alpha ? colour : 0xFF000000 | colour);
                 }
             }
         }
@@ -1958,6 +2040,10 @@ public final class SternenfrontArt {
                 .map(model -> "\"" + model.path + "\": {\"firing\": {" + model.gunPose.hands(Hold.FIRING)
                         + "}, \"lowered\": {" + model.gunPose.hands(Hold.LOWERED) + "}}")
                 .collect(Collectors.joining(",\n"));
+        for (var path : GUARDED) {
+            Files.writeString(root.resolve("models/item/" + path + "_guard.json"), "{\n  \"parent\":\"blockcraft:item/" + path
+                    + "\",\n  \"display\":{" + SABER_GUARD_HANDS + "}\n}\n");
+        }
         var manifest = Path.of("build/sternenfront/gun-poses.json");
         Files.createDirectories(manifest.getParent());
         Files.writeString(manifest, "{\n" + holds + "\n}\n");

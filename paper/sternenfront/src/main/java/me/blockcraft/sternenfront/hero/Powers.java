@@ -4,6 +4,8 @@ import me.blockcraft.api.pack.PackModel;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.presentation.ScreenEffects;
 import me.blockcraft.sternenfront.appearance.Displays;
+import me.blockcraft.sternenfront.combat.BattleEffects;
+import me.blockcraft.sternenfront.combat.Stance;
 import me.blockcraft.sternenfront.game.Blast;
 import me.blockcraft.sternenfront.game.Faction;
 import me.blockcraft.sternenfront.game.LineOfSight;
@@ -25,13 +27,17 @@ import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.util.Transformation;
 import org.bukkit.util.Vector;
+import org.joml.Quaternionf;
+import org.joml.Vector3f;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
@@ -42,8 +48,18 @@ public final class Powers {
     private static final double SABER_REACH = 0.6;
     private static final double CATCH_DISTANCE = 1.5;
     private static final float SPIN_DEGREES = 45;
+    /** How far up the model, from the hilt's origin, the middle of pommel to tip lies; the flat spin turns about it. */
+    private static final float SPIN_CENTRE = 0.61f;
+    /** Lays the blade flat with its middle on the display, so the display's yaw spins it like a disc. */
+    private static final Transformation FLAT = new Transformation(new Vector3f(0, 0, -SPIN_CENTRE), new Quaternionf(),
+            new Vector3f(1), new Quaternionf().rotationX((float) Math.PI / 2));
     private static final long THROW_TIMEOUT = 100;
+    private static final int WHIRL_TICKS = 5;
+    private static final float WHIRL_VOLUME = 0.7f;
     private static final int GRIP_PULSE_TICKS = 10;
+    /** How long the off hand stays thrust forward after a push. */
+    private static final int THRUST_TICKS = 6;
+    private static final double WIND_UP_BACK = 0.4;
     private static final double JETPACK_SINK = -0.12;
     private static final double JETPACK_PUSH = 0.04;
     private static final double JETPACK_TOP_SPEED = 0.7;
@@ -67,6 +83,8 @@ public final class Powers {
     }
 
     private record Grip(Player gripper, LivingEntity victim, long endsAt, double perPulse) { }
+
+    private record WindUp(Player hero, Faction faction, long releaseAt) { }
 
     private static final class Strike {
         private final Player thrower;
@@ -93,6 +111,8 @@ public final class Powers {
     private final ForceLightning lightning;
     private final List<Flight> flights = new ArrayList<>();
     private final List<Grip> grips = new ArrayList<>();
+    private final List<WindUp> windUps = new ArrayList<>();
+    private final Map<UUID, Long> thrusts = new HashMap<>();
     private final Map<UUID, Long> jetpacks = new HashMap<>();
     private final List<Strike> strikes = new ArrayList<>();
 
@@ -107,7 +127,7 @@ public final class Powers {
     /** Whether the ability took effect; one that found nothing to act on, such as a grip on nobody, costs no cooldown. */
     public boolean use(Player player, Faction faction, Hero hero, HeroAbility ability, long tick) {
         return switch (ability) {
-            case FORCE_PUSH -> push(player, faction);
+            case FORCE_PUSH -> windUp(player, faction, tick);
             case SABER_THROW -> throwSaber(player, faction, hero, tick);
             case FORCE_GRIP -> grip(player, faction, tick);
             case FORCE_LIGHTNING -> lightning.use(player, faction, tick);
@@ -119,7 +139,47 @@ public final class Powers {
         };
     }
 
-    private boolean push(Player player, Faction faction) {
+    /** Draws the off hand back; the push follows {@code wind-up-ticks} later, so enemies can see it coming. */
+    private boolean windUp(Player player, Faction faction, long tick) {
+        if (windUps.stream().anyMatch(each -> each.hero().equals(player))) {
+            return false;
+        }
+        if (config.push().windUpTicks() == 0) {
+            return push(player, faction, tick);
+        }
+        windUps.add(new WindUp(player, faction, tick + config.push().windUpTicks()));
+        SoundCue.FORCE_PUSH_CHARGE.playOn(player, 1f, 1f, game::drawnAs);
+        return true;
+    }
+
+    /** True once the wind-up released its push or was cut short. */
+    private boolean gather(WindUp windUp, long tick) {
+        var player = windUp.hero();
+        if (!game.onField(player) || player.isInsideVehicle()
+                || game.heroOf(player).filter(hero -> hero.abilities().contains(HeroAbility.FORCE_PUSH)).isEmpty()) {
+            return true;
+        }
+        if (tick < windUp.releaseAt()) {
+            var palm = BattleEffects.hand(player, true).subtract(player.getEyeLocation().getDirection().multiply(WIND_UP_BACK));
+            game.effects().windUp(player, palm);
+            return false;
+        }
+        push(player, windUp.faction(), tick);
+        return true;
+    }
+
+    /** The off hand drawn back for a push, or thrown forward while a power holds or a push lands; empty otherwise. */
+    public Optional<Stance.Still> gesture(Player player) {
+        if (windUps.stream().anyMatch(windUp -> windUp.hero().equals(player))) {
+            return Optional.of(Stance.Still.WIND_UP);
+        }
+        boolean casting = lightning.casting(player) || grips.stream().anyMatch(grip -> grip.gripper().equals(player))
+                || thrusts.getOrDefault(player.getUniqueId(), Long.MIN_VALUE) > game.tick();
+        return casting ? Optional.of(Stance.Still.CAST) : Optional.empty();
+    }
+
+    private boolean push(Player player, Faction faction, long tick) {
+        thrusts.put(player.getUniqueId(), tick + THRUST_TICKS);
         var push = config.push();
         var eye = player.getEyeLocation();
         var facing = eye.getDirection();
@@ -153,13 +213,15 @@ public final class Powers {
         var eye = player.getEyeLocation();
         var heading = eye.getDirection();
         var start = eye.clone();
+        start.setPitch(0);
         var blade = sabers.item(player, hero, true);
         var display = Displays.item(start, blade, spawned -> {
             spawned.setBrightness(Displays.LIT);
             spawned.setTeleportDuration(1);
+            spawned.setTransformation(FLAT);
         });
         sabers.unlit(player, hero);
-        SoundCue.SABER_THROW.play(eye, 1.2f);
+        SoundCue.SABER_THROW.playOn(display, 1.2f, 1f);
         flights.add(new Flight(player, faction, hero, display, start, heading, 0, false, new HashSet<>(), tick));
         return true;
     }
@@ -248,6 +310,8 @@ public final class Powers {
     public void tick(long tick) {
         rockets.tick();
         lightning.tick(tick);
+        windUps.removeIf(windUp -> gather(windUp, tick));
+        thrusts.values().removeIf(until -> until <= tick);
         var airborne = List.copyOf(flights);
         flights.clear();
         for (var flight : airborne) {
@@ -301,6 +365,9 @@ public final class Powers {
         var next = position.clone().add(heading.clone().multiply(travelled));
         next.setYaw(flight.display().getLocation().getYaw() + SPIN_DEGREES);
         flight.display().teleport(next);
+        if ((tick - flight.thrownAt()) % WHIRL_TICKS == 0) {
+            SoundCue.SABER_WHIRL.playOn(flight.display(), WHIRL_VOLUME, 1f);
+        }
         game.effects().saberTrail(position, next, sabers.colour(thrower, flight.hero()), thrower);
         for (var target : game.targets()) {
             if (!target.getWorld().equals(position.getWorld()) || !game.hittable(flight.faction(), target)
@@ -449,6 +516,8 @@ public final class Powers {
     public void forget(Player player) {
         lightning.forget(player);
         jetpacks.remove(player.getUniqueId());
+        windUps.removeIf(windUp -> windUp.hero().equals(player));
+        thrusts.remove(player.getUniqueId());
         grips.removeIf(grip -> {
             boolean theirs = grip.gripper().equals(player) || grip.victim().equals(player);
             if (theirs) {
@@ -468,6 +537,8 @@ public final class Powers {
     public void clear() {
         rockets.clear();
         lightning.clear();
+        windUps.clear();
+        thrusts.clear();
         flights.forEach(flight -> flight.display().remove());
         flights.clear();
         grips.forEach(grip -> letGo(grip.victim()));

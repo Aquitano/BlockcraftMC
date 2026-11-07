@@ -68,6 +68,7 @@ public final class SternenfrontPlugin extends JavaPlugin {
         api.presence().maxPlayers(config.capacity());
         if (getConfig().getBoolean("appearance.droids", true) || getConfig().getBoolean("appearance.infantry", true)) {
             bodyRigs = BodyRigs.start(this, game, getConfig().getBoolean("appearance.droids", true), getConfig().getBoolean("appearance.infantry", true));
+            game.rigs(bodyRigs);
         }
         secrets = Secrets.start(this, game, messages);
         if (getConfig().getBoolean("outlines.enabled", true)) {

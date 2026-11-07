@@ -480,5 +480,20 @@
       "blockcraft:sternenfront/hurt_kolonien_1",
       "blockcraft:sternenfront/hurt_kolonien_2"
     ]
+  },
+  "sternenfront.saber.whirl": {
+    "sounds": [
+      "blockcraft:sternenfront/saber_whirl"
+    ]
+  },
+  "sternenfront.saber.guard": {
+    "sounds": [
+      "blockcraft:sternenfront/saber_guard"
+    ]
+  },
+  "sternenfront.force.push_charge": {
+    "sounds": [
+      "blockcraft:sternenfront/force_push_charge"
+    ]
   }
 }

@@ -92,6 +92,11 @@ public final class BodyRigs implements Listener, AutoCloseable {
         return Optional.ofNullable(rigs.get(actor.getUniqueId())).map(BodyRig::snapshot);
     }
 
+    public Entity drawnAs(Player viewer, Entity actor) {
+        var rig = rigs.get(actor.getUniqueId());
+        return rig != null && rig.shownTo(viewer) ? rig.torso() : actor;
+    }
+
     public static String family(Faction faction, CombatClass role) {
         return RigBody.of(faction, role).family();
     }
@@ -129,7 +134,8 @@ public final class BodyRigs implements Listener, AutoCloseable {
                         () -> game.bots().aim(actor).orElseGet(() -> actor.getEyeLocation().getDirection()), turnDegrees,
                         hero.isPresent() ? Optional.empty() : Optional.of(motions.get(unit
                                 .map(chosen -> chosen == Reinforcement.ARC_TROOPER ? CombatClass.HEAVY : CombatClass.SCOUT)
-                                .orElseGet(() -> game.combatClassOf(actor)))), markings);
+                                .orElseGet(() -> game.combatClassOf(actor)))), markings,
+                        actor instanceof Player player ? () -> game.combat().stance(player) : Optional::empty);
                 targets.put(created.targetId(), created);
                 return created;
             });

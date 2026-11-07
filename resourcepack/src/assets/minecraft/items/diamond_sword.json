@@ -7,8 +7,65 @@
       {
         "when": "blockcraft:sternenfront/lightsaber_jedi",
         "model": {
+          "type": "minecraft:condition",
+          "property": "minecraft:using_item",
+          "on_true": {
+            "type": "minecraft:model",
+            "model": "blockcraft:item/sternenfront/lightsaber_jedi_guard",
+            "tints": [
+              {
+                "type": "minecraft:custom_model_data",
+                "index": 0,
+                "default": -1
+              }
+            ]
+          },
+          "on_false": {
+            "type": "minecraft:model",
+            "model": "blockcraft:item/sternenfront/lightsaber_jedi",
+            "tints": [
+              {
+                "type": "minecraft:custom_model_data",
+                "index": 0,
+                "default": -1
+              }
+            ]
+          }
+        }
+      },
+      {
+        "when": "blockcraft:sternenfront/lightsaber_jedi_25",
+        "model": {
           "type": "minecraft:model",
-          "model": "blockcraft:item/sternenfront/lightsaber_jedi",
+          "model": "blockcraft:item/sternenfront/lightsaber_jedi_25",
+          "tints": [
+            {
+              "type": "minecraft:custom_model_data",
+              "index": 0,
+              "default": -1
+            }
+          ]
+        }
+      },
+      {
+        "when": "blockcraft:sternenfront/lightsaber_jedi_50",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/sternenfront/lightsaber_jedi_50",
+          "tints": [
+            {
+              "type": "minecraft:custom_model_data",
+              "index": 0,
+              "default": -1
+            }
+          ]
+        }
+      },
+      {
+        "when": "blockcraft:sternenfront/lightsaber_jedi_75",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/sternenfront/lightsaber_jedi_75",
           "tints": [
             {
               "type": "minecraft:custom_model_data",
@@ -30,5 +87,6 @@
       "type": "minecraft:model",
       "model": "minecraft:item/diamond_sword"
     }
-  }
+  },
+  "hand_animation_on_swap": false
 }

@@ -3,6 +3,7 @@ package me.blockcraft.sternenfront.appearance;
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.CustomModelData;
 import me.blockcraft.sternenfront.bot.BotSnapshot.Point;
+import me.blockcraft.sternenfront.combat.Stance;
 import me.blockcraft.sternenfront.game.Faction;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Color;
@@ -72,10 +73,15 @@ final class BodyRig implements AutoCloseable {
     private int recoilLeft;
     private int hurtLeft;
     private Markings markings;
+    private final Supplier<Optional<Stance>> stance;
+    private HeroStances.Limbs limbs;
+    private int sinceStance;
 
     BodyRig(Plugin plugin, LivingEntity actor, RigBody body, Predicate<Player> fighting, Supplier<Vector> aim, float turnDegrees,
-            Optional<RigMotion> motion, Markings markings) {
+            Optional<RigMotion> motion, Markings markings,
+            Supplier<Optional<Stance>> stance) {
         this.fighting = fighting;
+        this.stance = stance;
         this.plugin = plugin;
         this.actor = actor;
         this.body = body;
@@ -147,6 +153,10 @@ final class BodyRig implements AutoCloseable {
                     display.getTeleportDuration(), display.getInterpolationDuration(), display.getInterpolationDelay()));
         }
         return new RigSnapshot(body.family(), Point.of(previous), stride, List.copyOf(viewers), List.copyOf(parts));
+    }
+
+    ItemDisplay torso() {
+        return torso;
     }
 
     boolean shownTo(Player player) {
@@ -247,10 +257,17 @@ final class BodyRig implements AutoCloseable {
         float shoulderX = joints.shoulderX() * scale;
         float shoulderY = joints.shoulderY() * scale - drop;
         float shoulderZ = joints.shoulderZ() * scale;
-        pose(leftArm, at, yaw, facing - body.gripTurn(), shoulderX, shoulderY, shoulderZ, 0, pitch + body.armLift() + 0.05f + recoilPitch, scale);
-        pose(rightArm, at, yaw, facing, -shoulderX, shoulderY, shoulderZ, 0, pitch + body.armLift() + recoilPitch, scale);
-        pose(weapon, at, yaw, facing, joints.weaponX() * scale, joints.weaponY() * scale - drop, 0,
-                joints.weaponZ() * scale - recoilDistance, pitch + recoilPitch, 0.65f);
+        var wanted = HeroStances.of(stance.get(), body.armLift());
+        sinceStance = wanted.equals(limbs) ? sinceStance + 1 : 0;
+        limbs = wanted;
+        int ease = Math.max(1, wanted.ease() - sinceStance);
+        pose(leftArm, at, yaw, facing - body.gripTurn() + wanted.leftTurn(), shoulderX, shoulderY, shoulderZ, 0,
+                pitch + wanted.leftLift() + 0.05f + recoilPitch, 0, scale, ease);
+        pose(rightArm, at, yaw, facing + wanted.rightTurn(), -shoulderX, shoulderY, shoulderZ, 0,
+                pitch + wanted.rightLift() + recoilPitch, 0, scale, ease);
+        pose(weapon, at, yaw, facing + wanted.bladeTurn(), joints.weaponX() * scale + wanted.bladeX(),
+                joints.weaponY() * scale - drop + wanted.bladeY(), 0, joints.weaponZ() * scale - recoilDistance,
+                pitch + recoilPitch + wanted.bladeTilt(), wanted.bladeRoll(), 0.65f, ease);
         offhand.ifPresent(display -> pose(display, at, yaw, facing, -joints.weaponX() * scale, joints.weaponY() * scale - drop, 0,
                 joints.weaponZ() * scale - recoilDistance, pitch + recoilPitch, 0.65f));
         var equipment = actor.getEquipment();
@@ -275,10 +292,17 @@ final class BodyRig implements AutoCloseable {
     }
 
     private void pose(ItemDisplay display, Location at, float anchorYaw, float yaw, float x, float y, float bodyZ, float aimZ, float pitch, float scale) {
+        pose(display, at, anchorYaw, yaw, x, y, bodyZ, aimZ, pitch, 0, scale, 1);
+    }
+
+    /** Moves the part into its pose over {@code ticks}, so a stance eases in rather than snapping. */
+    private void pose(ItemDisplay display, Location at, float anchorYaw, float yaw, float x, float y, float bodyZ, float aimZ,
+                      float pitch, float roll, float scale, int ticks) {
         place(display, at);
-        var pose = RigPose.at(anchorYaw, yaw, x, y, bodyZ, aimZ, pitch, scale);
+        var pose = RigPose.at(anchorYaw, yaw, x, y, bodyZ, aimZ, pitch, roll, scale);
         if (!pose.equals(poses.get(display))) {
             display.setInterpolationDelay(0);
+            display.setInterpolationDuration(ticks);
             display.setTransformation(pose);
             poses.put(display, pose);
         }

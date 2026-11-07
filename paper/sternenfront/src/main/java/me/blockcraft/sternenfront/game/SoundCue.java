@@ -2,8 +2,11 @@ package me.blockcraft.sternenfront.game;
 
 import org.bukkit.Location;
 import org.bukkit.SoundCategory;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+
+import java.util.function.BiFunction;
 
 /** Sternenfront's sounds, the round's and its secrets', each the pack's {@code blockcraft:sternenfront.<key>}. */
 public enum SoundCue {
@@ -23,7 +26,10 @@ public enum SoundCue {
     SABER_CLASH("saber.clash"),
     SABER_DEFLECT("saber.deflect"),
     SABER_THROW("saber.throw"),
+    SABER_WHIRL("saber.whirl"),
+    SABER_GUARD("saber.guard"),
     FORCE_PUSH("force.push"),
+    FORCE_PUSH_CHARGE("force.push_charge"),
     FORCE_GRIP("force.grip"),
     FORCE_LIGHTNING("force.lightning"),
     WRIST_ROCKET_LAUNCH("wrist_rocket.launch"),
@@ -71,6 +77,25 @@ public enum SoundCue {
         for (var listener : at.getWorld().getPlayers()) {
             if (listener.getLocation().distanceSquared(at) <= reach * reach) {
                 listener.playSound(at, key, SoundCategory.PLAYERS, volume, shift);
+            }
+        }
+    }
+
+    /** As {@link #play(Location, float, float)}, but the sound rides on {@code source}, which every client draws as itself. */
+    public void playOn(Entity source, float volume, float shift) {
+        playOn(source, volume, shift, (listener, entity) -> entity);
+    }
+
+    /**
+     * As {@link #play(Location, float, float)}, but each listener hears it on what their client draws of
+     * {@code source}, so it follows as that moves. A client drops a sound on an entity it does not draw.
+     */
+    public void playOn(Entity source, float volume, float shift, BiFunction<Player, Entity, Entity> drawnAs) {
+        var at = source.getLocation();
+        double reach = BLOCKS_PER_VOLUME * Math.max(1, volume);
+        for (var listener : at.getWorld().getPlayers()) {
+            if (listener.getLocation().distanceSquared(at) <= reach * reach) {
+                listener.playSound(drawnAs.apply(listener, source), key, SoundCategory.PLAYERS, volume, shift);
             }
         }
     }

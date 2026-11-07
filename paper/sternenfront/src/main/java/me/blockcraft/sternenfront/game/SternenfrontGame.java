@@ -29,6 +29,7 @@ import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.scene.Scenes;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.sternenfront.appearance.BodyRigs;
 import me.blockcraft.sternenfront.arena.FrontMap;
 import me.blockcraft.sternenfront.bot.BotConfig;
 import me.blockcraft.sternenfront.bot.BotDifficulty;
@@ -69,6 +70,7 @@ import org.bukkit.SoundCategory;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.damage.DamageSource;
 import org.bukkit.damage.DamageType;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Mob;
@@ -154,6 +156,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     private final SupportRewards support;
     private final Gadgets gadgets;
     private final Heroes heroes;
+    private Optional<BodyRigs> rigs = Optional.empty();
     private final ReinforcementUnits reinforcementUnits;
     private final FeelConfig feel;
     private final KillStreaks streaks;
@@ -220,7 +223,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         this.bots = new Bots(this, botConfig);
         this.gadgets = new Gadgets(this);
         var battlePoints = new BattlePoints();
-        this.heroes = new Heroes(this, plugin, messages, loadouts, heroConfig, battlePoints);
+        this.heroes = new Heroes(this, messages, loadouts, heroConfig, battlePoints);
         this.reinforcementUnits = new ReinforcementUnits(ReinforcementConfig.from(plugin.getConfig()), battlePoints, messages, loadouts);
         this.feel = feel;
         this.feedback = new CombatFeedback(this);
@@ -285,6 +288,16 @@ public final class SternenfrontGame implements RoundConnections.Seating {
 
     public BattleEffects effects() {
         return effects;
+    }
+
+    /** The plugin hands the body rigs over once they run; until then every client draws fighters as themselves. */
+    public void rigs(BodyRigs bodies) {
+        rigs = Optional.of(bodies);
+    }
+
+    /** What the viewer's client draws of {@code entity}: a part of its body rig while it shows them one, else the entity. */
+    public Entity drawnAs(Player viewer, Entity entity) {
+        return rigs.map(bodies -> bodies.drawnAs(viewer, entity)).orElse(entity);
     }
 
     public Gadgets gadgets() {

@@ -23,8 +23,13 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
 public final class Combat {
+
+    private static final float GUARD_VOLUME = 0.4f;
+    private static final float SWING_VOLUME = 0.8f;
+    private static final double SWING_PITCH_SPREAD = 0.06;
 
     private static final class State {
         private final Guard guard;
@@ -32,6 +37,7 @@ public final class Combat {
         private SaberSweep sweep;
         private boolean reverseSwing;
         private long raiseUntil;
+        private boolean guarding;
         private long leapUntil;
         private boolean jumping;
         private boolean jumped;
@@ -113,12 +119,17 @@ public final class Combat {
         advanceSweep(player, state);
         if (player.isInsideVehicle()) {
             state.guard.tick(game.tick(), false);
+            state.guarding = false;
             return;
         }
         boolean blade = holdsBlade(player) && game.heroOf(player).filter(Hero::bladed).isPresent() && !player.isInsideVehicle();
         boolean holding = blade && (game.tick() < state.raiseUntil
                 || player.isHandRaised() && player.getHandRaised() == EquipmentSlot.HAND);
         state.guard.tick(game.tick(), holding);
+        if (holding && !state.guarding) {
+            SoundCue.SABER_GUARD.playOn(player, GUARD_VOLUME, 1f, game::drawnAs);
+        }
+        state.guarding = holding;
         boolean jumping = player.getCurrentInput().isJump();
         Entity body = player;
         if (body.isOnGround()) {
@@ -137,6 +148,18 @@ public final class Combat {
         if (game.tick() % 4 == 0 || game.fighter(player).heat().window(game.tick()).isPresent()) {
             hud.show(player, state.guard);
         }
+    }
+
+    /** Empty for anyone but a bladed hero on the field; a swing shows over a guard, and a guard over a cast. */
+    public Optional<Stance> stance(Player player) {
+        if (!game.onField(player) || player.isInsideVehicle() || game.heroOf(player).filter(Hero::bladed).isEmpty()) {
+            return Optional.empty();
+        }
+        var state = state(player);
+        if (state.sweep != null) {
+            return Optional.of(state.sweep.stance(game.tick()));
+        }
+        return Optional.of(state.guarding ? Stance.Still.GUARD : game.heroes().powers().gesture(player).orElse(Stance.Still.READY));
     }
 
     public Guard.Result block(Player player, Vector incoming, double damage) {
@@ -173,7 +196,8 @@ public final class Combat {
         player.clearActiveItem();
         state.guard.tick(game.tick(), false);
         game.endProtection(player);
-        SoundCue.SABER_SWING.play(player.getLocation(), 0.8f);
+        SoundCue.SABER_SWING.playOn(player, SWING_VOLUME,
+                1 + (float) ThreadLocalRandom.current().nextDouble(-SWING_PITCH_SPREAD, SWING_PITCH_SPREAD), game::drawnAs);
         var hero = game.heroOf(player).orElseThrow();
         double damage = hero == Hero.CHAMPION
                 ? game.config().relic().damage() : game.heroes().config().saber().damage();

@@ -59,4 +59,16 @@ public class SaberSweepTest {
         config.set("combat.melee.sweep-ticks", 8);
         assertEquals(2, CombatConfig.from(config).sweepTicks());
     }
+
+    @Test
+    public void theStanceStartsOnTheSideTheFirstRayCuts() {
+        for (boolean reverse : new boolean[] {false, true}) {
+            var origin = new Location(null, 0, 1.3, 0, 0, 0);
+            var sweep = new SaberSweep(origin, Color.BLUE, 10, 3.5, 120, 4, 20, reverse);
+            boolean firstRayLeft = sweep.advance(20).getFirst().getX() > 0;
+            assertEquals(firstRayLeft, sweep.stance(20).fromLeft());
+            assertEquals(0, sweep.stance(20).elapsed());
+            assertEquals(4, sweep.stance(30).elapsed());
+        }
+    }
 }

@@ -10,6 +10,7 @@ import org.bukkit.Color;
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
 import org.bukkit.Particle;
+import org.bukkit.World;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
 import org.bukkit.entity.LivingEntity;
@@ -22,6 +23,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -41,6 +43,20 @@ public final class BattleEffects {
     private static final Color PUSH_COLOUR = Color.fromRGB(0xB8E5FF);
     private static final Color TETHER_COLOUR = Color.fromRGB(0xD0E2EE);
     private static final Color GRIP_COLOUR = Color.fromRGB(0xC050FF);
+    private static final double HAND_SIDE = .35;
+    private static final double HAND_DROP = .35;
+    private static final double HAND_REACH = .4;
+    private static final int IGNITION_SPARKS = 6;
+    private static final int BOLT_LEVELS = 3;
+    private static final double BOLT_ROUGHNESS = 0.1;
+    private static final double BOLT_SPACING = 0.35;
+    private static final int BOLT_FORKS = 2;
+    private static final double FORK_MIN = 0.5;
+    private static final double FORK_MAX = 1;
+    private static final int HAND_SPARKS = 2;
+    private static final int WIND_UP_GUSTS = 2;
+    private static final double WIND_UP_REACH = 0.8;
+    private static final double WIND_UP_SPEED = 0.12;
     private static final Color LIGHTNING_COLOUR = Color.fromRGB(0xA8B4FF);
     private static final Color LIGHTNING_CORE = Color.fromRGB(0xEAF4FF);
     private static final Vector UP = new Vector(0, 1, 0);
@@ -157,6 +173,34 @@ public final class BattleEffects {
                 : wall.getHitPosition().subtract(offset.normalize().multiply(.04)).toLocation(eye.getWorld());
     }
 
+    /** About where a fighter's hand is: ahead of the eyes, low and to one side, whichever way they look. */
+    public static Location hand(LivingEntity actor, boolean left) {
+        var eye = actor.getEyeLocation();
+        var facing = eye.getDirection();
+        var side = facing.clone().setY(0).crossProduct(new Vector(0, 1, 0));
+        if (side.lengthSquared() > .001) {
+            side.normalize().multiply(left ? -HAND_SIDE : HAND_SIDE);
+        }
+        return eye.add(side).add(0, -HAND_DROP, 0).add(facing.multiply(HAND_REACH));
+    }
+
+    /** Sparks at the emitter and a puff of the blade's colour where it grows out of the hilt. */
+    public void ignite(Player hero, Color colour) {
+        if (!enabled) {
+            return;
+        }
+        var hand = hand(hero, false);
+        var random = ThreadLocalRandom.current();
+        for (int spark = 0; spark < IGNITION_SPARKS; spark++) {
+            sparingOwner(hero, hand.clone().add(random.nextDouble(-.06, .06), random.nextDouble(0, .12), random.nextDouble(-.06, .06)),
+                    Particle.ELECTRIC_SPARK, null);
+        }
+        var dust = new Particle.DustOptions(colour, 0.7f);
+        for (double along = .2; along < 1.1; along += .3) {
+            sparingOwner(hero, hand.clone().add(0, along, 0), Particle.DUST, dust);
+        }
+    }
+
     public double recoil(LivingEntity actor) {
         var shot = shots.get(actor.getUniqueId());
         return shot == null ? 0 : Math.clamp(1 - (game.tick() - shot.tick()) / 3.0, 0, 1);
@@ -173,6 +217,21 @@ public final class BattleEffects {
         flares.ring(RING, origin.clone().add(normal.clone().multiply(0.6)), normal, normal.clone().multiply(reach),
                 diameter, PUSH_TICKS, PUSH_COLOUR);
         origin.getWorld().spawnParticle(Particle.SMALL_GUST, origin.clone().add(normal.clone().multiply(2)), 3, 0.4, 0.4, 0.4, 0, null, true);
+    }
+
+    /** Air gathering into the palm drawn back for a push. */
+    public void windUp(Player hero, Location palm) {
+        if (!enabled) {
+            return;
+        }
+        var random = ThreadLocalRandom.current();
+        for (int gust = 0; gust < WIND_UP_GUSTS; gust++) {
+            var inward = new Vector(random.nextGaussian(), random.nextGaussian(), random.nextGaussian()).normalize();
+            var from = palm.clone().add(inward.clone().multiply(WIND_UP_REACH));
+            hero.getWorld().getPlayers().stream().filter(viewer -> !viewer.equals(hero) && viewer.getLocation().distanceSquared(palm) < PARTICLE_RANGE_SQUARED)
+                    .forEach(viewer -> viewer.spawnParticle(Particle.CLOUD, from, 0, -inward.getX(), -inward.getY(), -inward.getZ(), WIND_UP_SPEED));
+        }
+        sparingOwner(hero, palm, Particle.DUST, new Particle.DustOptions(PUSH_COLOUR, 0.8f));
     }
 
     public void rally(Location origin, Faction faction, double radius) {
@@ -403,22 +462,50 @@ public final class BattleEffects {
         }
     }
 
-    public void lightning(Player caster, Location eye, Location to) {
-        var from = eye.clone().subtract(0, 0.2, 0);
-        var line = to.toVector().subtract(from.toVector());
-        int steps = Math.max(1, (int) Math.ceil(line.length() / 0.3));
-        var random = ThreadLocalRandom.current();
-        for (int strand = 0; strand < (enabled ? 3 : 1); strand++) {
-            var dust = new Particle.DustOptions(strand == 0 ? LIGHTNING_CORE : LIGHTNING_COLOUR, strand == 0 ? 0.6f : 0.8f);
-            for (int step = 0; step <= steps; step++) {
-                double share = (double) step / steps;
-                double jitter = Math.sin(Math.PI * share) * 0.18;
-                var at = from.clone().add(line.clone().multiply(share))
-                        .add(random.nextDouble(-1, 1) * jitter, random.nextDouble(-1, 1) * jitter, random.nextDouble(-1, 1) * jitter);
-                sparingOwner(caster, at, Particle.DUST, dust);
+    /** One tick of a bolt from the casting hand: a white zigzag in violet with a fork or two, shaped by {@code seed}. */
+    public void lightning(Player caster, Location from, Location to, long seed) {
+        var random = new Random(seed);
+        var path = LightningPath.arc(from.toVector(), to.toVector(), BOLT_LEVELS, BOLT_ROUGHNESS, random);
+        strand(caster, from.getWorld(), path);
+        if (enabled) {
+            for (var fork : LightningPath.forks(path, 1 + random.nextInt(BOLT_FORKS), FORK_MIN, FORK_MAX, BOLT_ROUGHNESS, random)) {
+                strand(caster, from.getWorld(), fork);
             }
         }
-        to.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, to, 5, .12, .2, .12, .02, null, true);
+        to.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, to, 1, .12, .2, .12, .02, null, true);
+    }
+
+    /** Dust along {@code path}: a white core at every step and, with effects on, violet round every third. */
+    private void strand(Player caster, World world, List<Vector> path) {
+        var core = new Particle.DustOptions(LIGHTNING_CORE, 0.5f);
+        var glow = new Particle.DustOptions(LIGHTNING_COLOUR, 0.9f);
+        double ahead = 0;
+        int placed = 0;
+        for (int index = 0; index + 1 < path.size(); index++) {
+            var start = path.get(index);
+            var line = path.get(index + 1).clone().subtract(start);
+            double length = line.length();
+            for (; ahead < length; ahead += BOLT_SPACING) {
+                var at = start.clone().add(line.clone().multiply(ahead / length)).toLocation(world);
+                sparingOwner(caster, at, Particle.DUST, core);
+                if (enabled && placed++ % 3 == 0) {
+                    sparingOwner(caster, at, Particle.DUST, glow);
+                }
+            }
+            ahead -= length;
+        }
+    }
+
+    /** Sparks crawling over the hand that channels lightning. */
+    public void crackle(Player caster, Location hand) {
+        if (!enabled) {
+            return;
+        }
+        var random = ThreadLocalRandom.current();
+        for (int spark = 0; spark < HAND_SPARKS; spark++) {
+            sparingOwner(caster, hand.clone().add(random.nextDouble(-.12, .12), random.nextDouble(-.12, .12), random.nextDouble(-.12, .12)),
+                    Particle.ELECTRIC_SPARK, null);
+        }
     }
 
     /** One tick of a force grip: a turning ring round the victim's chest and, every other tick, the line from the gripper. */
