@@ -162,9 +162,10 @@ block rays. Outlines stay disabled until the pack has loaded.
 
 Each shot's sound is pitched up to 6% higher or lower at random. A player's shots carry 32 blocks and a bot's 24. The
 shooter hears their own shot at full volume, and it follows them as they move. A bolt that hits a fighter or a wall
-plays an impact sound.
+plays an impact sound. A hit body flashes `appearance.hurt-tint` for ten ticks, and an animated bot body also flinches.
+A hit bot clanks if it is a droid and grunts if it is a clone, at most once per `bots.hurt-sound.cooldown-ticks`.
 
-Hits, headshots, and kills have distinct sounds and immediate marks around the crosshair. A kill replaces a weaker
+Hits, headshots, and kills have distinct sounds and immediate marks around the crosshair; a headshot's has a diamond above it. A kill replaces a weaker
 marker even within the same tick. A red arc around the crosshair points at whoever last hurt the player, for
 `combat.damage-indicator-ticks`, and follows as they turn. Both share the title's subtitle, centred with `UiFont`.
 Kill and assist popups appear briefly beside the heat, guard and ability-cooldown HUD.
@@ -208,7 +209,7 @@ completed orders to the shared results and rewards.
 
 The BetterModel plugin draws and animates bot bodies listed in `appearance.animated-bodies`; players keep `BodyRig`, and a
 server without the plugin uses `BodyRig` for everyone. `resourcepack/RigModels.py` turns the generated body and weapon models
-into `resourcepack/bettermodel/*.bbmodel` with idle, walk, shoot and death keyframes. Its joints must match `RigBody`.
+into `resourcepack/bettermodel/*.bbmodel` with idle, walk, shoot, damage and death keyframes. Its joints must match `RigBody`.
 
 `appearance.motion` defines soldier, heavy, scout and medic walk and recoil profiles. `RigModels.py` reads the
 bundled profiles for BetterModel clips; `BodyRig` reads them for fallback displays. Heavy units use shorter, slower steps,
