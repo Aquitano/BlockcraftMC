@@ -40,6 +40,8 @@ public final class BattleEffects {
     private static final Color PUSH_COLOUR = Color.fromRGB(0xB8E5FF);
     private static final Color TETHER_COLOUR = Color.fromRGB(0xD0E2EE);
     private static final Color GRIP_COLOUR = Color.fromRGB(0xC050FF);
+    private static final Color LIGHTNING_COLOUR = Color.fromRGB(0xA8B4FF);
+    private static final Color LIGHTNING_CORE = Color.fromRGB(0xEAF4FF);
     private static final Vector UP = new Vector(0, 1, 0);
     private static final Vector STILL = new Vector();
     private static final int VENT_INTERVAL = 3;
@@ -52,6 +54,8 @@ public final class BattleEffects {
     private static final float SIZZLE_VOLUME = 0.35f;
     private static final int GROUND_PROBE = 4;
     private static final int FLASH_TICKS = 2;
+    private static final double PARTICLE_RANGE_SQUARED = 32 * 32;
+    private static final double CLEAR_OF_EYES_SQUARED = 2.5 * 2.5;
     private static final int TRACER_TICKS = 3;
     private static final int PUSH_TICKS = 8;
     private static final int RALLY_TICKS = 12;
@@ -105,13 +109,38 @@ public final class BattleEffects {
         var muzzle = muzzle(actor, direction);
         if (muzzle.getBlock().isPassable()) {
             var flash = config.muzzleFlash();
-            boolean heavy = blaster == Blaster.LONG_RIFLE || blaster == Blaster.REPEATER;
-            flares.flash(flash(faction), muzzle, heavy ? flash.heavyScale() : flash.scale(), flash.ticks());
-            muzzle.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, muzzle, 2, 0.04, 0.04, 0.04, 0.03);
+            boolean heavy = blaster.precision() || blaster.profile() == Blaster.REPEATER;
+            // The barrel sits under a block from the eyes, where even a small flash covers the shooter's aim.
+            flashSparing(actor, faction, muzzle, heavy ? flash.heavyScale() : flash.scale(), flash.ticks());
+            forOthers(actor, muzzle, Particle.ELECTRIC_SPARK, 0.04, 0.03);
             if (heat > HOT_BARREL) {
-                muzzle.getWorld().spawnParticle(Particle.WHITE_SMOKE, muzzle, 2, 0.03, 0.03, 0.03, 0.01);
+                forOthers(actor, muzzle, Particle.WHITE_SMOKE, 0.03, 0.01);
             }
         }
+    }
+
+    private void flashSparing(LivingEntity owner, Faction faction, Location at, float scale, int ticks) {
+        flares.flash(flash(faction), at, scale, ticks).ifPresent(shown -> {
+            if (owner instanceof Player player) {
+                player.hideEntity(game.plugin(), shown);
+            }
+        });
+    }
+
+    /** A particle this close to its owner's camera fills their view whatever its size, so only they do not get it. */
+    private static <T> void sparingOwner(Player owner, Location at, Particle particle, T data) {
+        var eye = owner.getEyeLocation();
+        if (!at.getWorld().equals(eye.getWorld()) || at.distanceSquared(eye) >= CLEAR_OF_EYES_SQUARED) {
+            at.getWorld().spawnParticle(particle, at, 1, 0, 0, 0, 0, data, true);
+            return;
+        }
+        at.getWorld().getPlayers().stream().filter(viewer -> !viewer.equals(owner) && viewer.getLocation().distanceSquared(at) < PARTICLE_RANGE_SQUARED)
+                .forEach(viewer -> viewer.spawnParticle(particle, at, 1, 0, 0, 0, 0, data));
+    }
+
+    private static void forOthers(LivingEntity actor, Location at, Particle particle, double spread, double speed) {
+        at.getWorld().getPlayers().stream().filter(viewer -> !viewer.equals(actor) && viewer.getLocation().distanceSquared(at) < PARTICLE_RANGE_SQUARED)
+                .forEach(viewer -> viewer.spawnParticle(particle, at, 2, spread, spread, spread, speed));
     }
 
     /** Where the barrel ends for someone aiming along {@code direction}: ahead of the eyes, right and a little low, short of a wall. */
@@ -174,8 +203,21 @@ public final class BattleEffects {
         }
     }
 
-    /** A bolt met a fighter: a flash and sparks a player can read from across the map. */
-    public void boltHit(Location at, Faction faction) {
+    /** A bolt met a fighter: a flash and sparks others can read from across the map, kept off the camera of a player it hit. */
+    public void boltHit(Location at, Faction faction, LivingEntity victim) {
+        if (!(victim instanceof Player player)) {
+            burst(at, faction);
+            return;
+        }
+        sparingOwner(player, at, Particle.ELECTRIC_SPARK, null);
+        sparingOwner(player, at, Particle.DUST, new Particle.DustOptions(faction.bolt(), 1f));
+        if (enabled) {
+            flashSparing(player, faction, at, config.bolt().impactFlash(), FLASH_TICKS);
+        }
+    }
+
+    /** A bolt met something a map made shootable, such as a secret. */
+    public void boltOnTarget(Location at, Faction faction) {
         burst(at, faction);
     }
 
@@ -185,11 +227,14 @@ public final class BattleEffects {
      */
     public void boltOnWall(Location at, Vector normal, Block block, boolean shield, Faction faction) {
         var clear = at.clone().add(normal.clone().multiply(OFF_THE_WALL));
+        if (block.getType().name().matches(".*(IRON|COPPER|CHAIN|ANVIL|LANTERN|CAULDRON|HOPPER).*")) {
+            at.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, clear, 3, 0.05, 0.05, 0.05, 0.12, null, true);
+        }
         burst(clear, faction);
         if (shield || !enabled) {
             return;
         }
-        at.getWorld().spawnParticle(Particle.BLOCK, clear, 5, 0.05, 0.05, 0.05, 0.1, block.getBlockData());
+        at.getWorld().spawnParticle(Particle.BLOCK, clear, 2, 0.05, 0.05, 0.05, 0.1, block.getBlockData());
         var scorch = config.scorch();
         if (block.getType().isOccluding() && wallHits++ % scorch.every() == 0) {
             scorches.mark(SCORCH, at.clone().add(normal.clone().multiply(SCORCH_LIFT)), normal, scorch.scale(),
@@ -241,8 +286,8 @@ public final class BattleEffects {
 
     private void burst(Location at, Faction faction) {
         var world = at.getWorld();
-        world.spawnParticle(Particle.ELECTRIC_SPARK, at, 10, 0.1, 0.1, 0.1, 0.12, null, true);
-        world.spawnParticle(Particle.DUST, at, 6, 0.12, 0.12, 0.12, 0, new Particle.DustOptions(faction.bolt(), 1.4f), true);
+        world.spawnParticle(Particle.ELECTRIC_SPARK, at, 4, 0.08, 0.08, 0.08, 0.1, null, true);
+        world.spawnParticle(Particle.DUST, at, 2, 0.08, 0.08, 0.08, 0, new Particle.DustOptions(faction.bolt(), 1f), true);
         if (enabled) {
             flares.flash(flash(faction), at, config.bolt().impactFlash(), FLASH_TICKS);
         }
@@ -330,18 +375,50 @@ public final class BattleEffects {
     }
 
     /** The trail of a thrown saber along the piece of flight it just covered, in the blade's colour. */
-    public void saberTrail(Location from, Location to, Color colour) {
+    public void saberTrail(Location from, Location to, Color colour, Player thrower) {
         var line = to.toVector().subtract(from.toVector());
         double length = line.length();
         if (length == 0) {
             return;
         }
         var direction = line.multiply(1 / length);
-        var dust = new Particle.DustOptions(colour, 1.6f);
+        var dust = new Particle.DustOptions(colour, 0.8f);
         for (double along = 0; along < length; along += 0.4) {
-            from.getWorld().spawnParticle(Particle.DUST, from.clone().add(direction.clone().multiply(along)), 1, 0, 0, 0, 0, dust, true);
+            sparingOwner(thrower, from.clone().add(direction.clone().multiply(along)), Particle.DUST, dust);
         }
         to.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, to, 2, 0.1, 0.1, 0.1, 0.03, null, true);
+    }
+
+    public void rocketTrail(Location from, Location to, Player shooter) {
+        var line = to.toVector().subtract(from.toVector());
+        double distance = line.length();
+        if (distance == 0) {
+            return;
+        }
+        var direction = line.multiply(1 / distance);
+        for (double along = 0; along < distance; along += 0.35) {
+            var at = from.clone().add(direction.clone().multiply(along));
+            sparingOwner(shooter, at, Particle.FLAME, null);
+            sparingOwner(shooter, at, Particle.SMOKE, null);
+        }
+    }
+
+    public void lightning(Player caster, Location eye, Location to) {
+        var from = eye.clone().subtract(0, 0.2, 0);
+        var line = to.toVector().subtract(from.toVector());
+        int steps = Math.max(1, (int) Math.ceil(line.length() / 0.3));
+        var random = ThreadLocalRandom.current();
+        for (int strand = 0; strand < (enabled ? 3 : 1); strand++) {
+            var dust = new Particle.DustOptions(strand == 0 ? LIGHTNING_CORE : LIGHTNING_COLOUR, strand == 0 ? 0.6f : 0.8f);
+            for (int step = 0; step <= steps; step++) {
+                double share = (double) step / steps;
+                double jitter = Math.sin(Math.PI * share) * 0.18;
+                var at = from.clone().add(line.clone().multiply(share))
+                        .add(random.nextDouble(-1, 1) * jitter, random.nextDouble(-1, 1) * jitter, random.nextDouble(-1, 1) * jitter);
+                sparingOwner(caster, at, Particle.DUST, dust);
+            }
+        }
+        to.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, to, 5, .12, .2, .12, .02, null, true);
     }
 
     /** One tick of a force grip: a turning ring round the victim's chest and, every other tick, the line from the gripper. */
@@ -413,8 +490,8 @@ public final class BattleEffects {
 
     private void vent(LivingEntity actor) {
         var at = muzzle(actor, actor.getEyeLocation().getDirection());
-        at.getWorld().spawnParticle(Particle.CLOUD, at, 2, 0.06, 0.06, 0.06, 0.03, null, true);
-        at.getWorld().spawnParticle(Particle.WHITE_SMOKE, at, 2, 0.05, 0.05, 0.05, 0.02, null, true);
+        forOthers(actor, at, Particle.CLOUD, 0.06, 0.03);
+        forOthers(actor, at, Particle.WHITE_SMOKE, 0.05, 0.02);
     }
 
     private boolean badlyHurt(LivingEntity actor) {
@@ -424,8 +501,8 @@ public final class BattleEffects {
 
     private static void smoulder(LivingEntity actor) {
         var chest = actor.getEyeLocation().subtract(0, 0.5, 0);
-        actor.getWorld().spawnParticle(Particle.SMOKE, chest, 3, 0.15, 0.2, 0.15, 0.01);
-        actor.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, chest, 3, 0.2, 0.3, 0.2, 0.05);
+        forOthers(actor, chest, Particle.SMOKE, 0.2, 0.01);
+        forOthers(actor, chest, Particle.ELECTRIC_SPARK, 0.25, 0.05);
     }
 
     private static String flash(Faction faction) {

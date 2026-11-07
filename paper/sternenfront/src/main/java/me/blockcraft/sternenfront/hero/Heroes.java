@@ -2,7 +2,6 @@ package me.blockcraft.sternenfront.hero;
 
 import me.blockcraft.api.pack.MenuState;
 import me.blockcraft.common.message.Messages;
-import me.blockcraft.sternenfront.game.Blaster;
 import me.blockcraft.sternenfront.game.Faction;
 import me.blockcraft.sternenfront.game.Loadouts;
 import me.blockcraft.sternenfront.game.SternenfrontGame;
@@ -39,18 +38,19 @@ public final class Heroes {
     private final Messages messages;
     private final Loadouts loadouts;
     private final HeroConfig config;
-    private final BattlePoints points = new BattlePoints();
+    private final BattlePoints points;
     private final HeroRoster roster;
     private final Sabers sabers;
     private final Powers powers;
     private final Map<UUID, BossBar> bars = new HashMap<>();
     private Optional<Faction> comeback = Optional.empty();
 
-    public Heroes(SternenfrontGame game, Plugin plugin, Messages messages, Loadouts loadouts, HeroConfig config) {
+    public Heroes(SternenfrontGame game, Plugin plugin, Messages messages, Loadouts loadouts, HeroConfig config, BattlePoints points) {
         this.game = game;
         this.messages = messages;
         this.loadouts = loadouts;
         this.config = config;
+        this.points = points;
         this.roster = new HeroRoster(config.perFaction());
         this.sabers = new Sabers(plugin, messages, config.saber());
         this.powers = new Powers(game, config, sabers);
@@ -113,6 +113,7 @@ public final class Heroes {
     }
 
     public void equip(Player player, Faction faction, Hero hero, long tick) {
+        hero.abilities().forEach(ability -> player.setCooldown(ability.material(), 0));
         if (hero == Hero.CHAMPION) {
             loadouts.arm(player);
             player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, PotionEffect.INFINITE_DURATION, 0, false, false, true));
@@ -124,16 +125,11 @@ public final class Heroes {
                 case Hero.Weapon.Gun gun -> {
                     var blaster = loadouts.blaster(gun.blaster());
                     inventory.setItem(0, blaster);
-                    if (gun.blaster() == Blaster.TWIN_PISTOL) {
+                    if (gun.blaster().dual()) {
                         inventory.setItemInOffHand(blaster.clone());
                     }
                 }
                 case Hero.Weapon.RelicBlade ignored -> { }
-            }
-            var abilities = hero.abilities();
-            for (int index = 0; index < abilities.size(); index++) {
-                var ability = abilities.get(index);
-                player.setCooldown(ability.material(), 0);
             }
             loadouts.dress(player, faction, hero.head());
             loadouts.health(player, config.health(hero));
@@ -142,21 +138,22 @@ public final class Heroes {
         var bar = BossBar.bossBar(Component.empty(), 1, colour(hero, faction), BossBar.Overlay.NOTCHED_10);
         Optional.ofNullable(bars.put(player.getUniqueId(), bar)).ifPresent(this::hide);
         draw(player, hero, bar);
-        Bukkit.getOnlinePlayers().forEach(viewer -> viewer.showBossBar(bar));
+        Bukkit.getOnlinePlayers().stream().filter(viewer -> showsBar(viewer, hero, faction)).forEach(viewer -> viewer.showBossBar(bar));
     }
 
     /** The hero as the deploy menu offers it: their weapon, what they do, and whether the viewer can be them now. */
-    public ItemStack card(Player viewer, Faction faction, Hero hero, boolean picked) {
+    public ItemStack card(Player viewer, Faction faction, Hero hero, boolean picked, boolean confirmed) {
         var lore = new ArrayList<>(messages.getLines("hero." + hero.key() + ".lore"));
         lore.add(Component.empty());
         lore.add(messages.get("hero.cost", Formatter.number("cost", cost(faction)), Formatter.number("points", points(viewer))));
         boolean affordable = affordable(viewer, faction, hero);
-        lore.add(messages.get(picked ? "hero.picked" : !open(faction, hero) ? "hero.card-taken"
-                : affordable ? "hero.pick" : "hero.card-too-few"));
+        lore.add(messages.get(!open(faction, hero) ? "hero.card-taken" : !affordable ? "hero.card-too-few"
+                : picked ? confirmed ? "deploy.queued" : "hero.picked" : "hero.pick"));
+        if (picked && !affordable) lore.add(messages.get("deploy.paid-fallback"));
         var model = hero.weapon().model();
         var card = model.item().name(name(hero)).lore(lore).hideAttributes()
-                .state(picked ? MenuState.ACTIVE : affordable ? MenuState.AVAILABLE : MenuState.LOCKED);
-        if (picked) {
+                .state(!affordable ? MenuState.LOCKED : picked ? MenuState.ACTIVE : MenuState.AVAILABLE);
+        if (picked && affordable) {
             card.glow();
         }
         var item = card.build();
@@ -178,7 +175,19 @@ public final class Heroes {
     }
 
     public void showBars(Player viewer) {
-        bars.values().forEach(viewer::showBossBar);
+        bars.forEach((id, bar) -> {
+            var hero = roster.of(id);
+            var player = Bukkit.getPlayer(id);
+            var faction = player == null ? Optional.<Faction>empty() : game.factionOf(player);
+            if (hero.isPresent() && faction.isPresent() && showsBar(viewer, hero.get(), faction.get())) {
+                viewer.showBossBar(bar);
+            }
+        });
+    }
+
+    /** A stack of bars covers the view, so each player sees only who is hunting them and the relic's carrier. */
+    private boolean showsBar(Player viewer, Hero hero, Faction faction) {
+        return hero == Hero.CHAMPION || game.factionOf(viewer).filter(faction::equals).isEmpty();
     }
 
     public void tick(long tick) {
@@ -216,9 +225,9 @@ public final class Heroes {
 
     private static BossBar.Color colour(Hero hero, Faction faction) {
         if (hero == Hero.CHAMPION) {
-            return BossBar.Color.PURPLE;
+            return BossBar.Color.WHITE;
         }
-        return faction == Faction.KOLONIEN ? BossBar.Color.YELLOW : BossBar.Color.BLUE;
+        return faction == Faction.KOLONIEN ? BossBar.Color.BLUE : BossBar.Color.RED;
     }
 
     private void hide(BossBar bar) {

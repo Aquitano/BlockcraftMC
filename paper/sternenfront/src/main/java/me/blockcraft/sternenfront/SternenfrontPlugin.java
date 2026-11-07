@@ -12,7 +12,7 @@ import me.blockcraft.api.world.WaitingLobby;
 import me.blockcraft.api.world.WorldProtection;
 import me.blockcraft.api.world.Worlds;
 import me.blockcraft.sternenfront.arena.FrontMap;
-import me.blockcraft.sternenfront.arena.TessarMap;
+import me.blockcraft.sternenfront.arena.ArenaFile;
 import me.blockcraft.sternenfront.appearance.BodyRigs;
 import me.blockcraft.sternenfront.appearance.TargetOutlines;
 import me.blockcraft.sternenfront.config.FeelConfig;
@@ -34,12 +34,11 @@ import java.util.Optional;
 
 public final class SternenfrontPlugin extends JavaPlugin {
 
-    private static final double BORDER_MARGIN = 2;
-
     private SternenfrontGame game;
     private BodyRigs bodyRigs;
     private TargetOutlines targetOutlines;
     private BotDebug botDebug;
+    private Secrets secrets;
 
     @Override
     public void onEnable() {
@@ -54,7 +53,12 @@ public final class SternenfrontPlugin extends JavaPlugin {
         // Hurt players heal through the round's own regeneration and the medics, not through hunger.
         world.setDifficulty(Difficulty.NORMAL);
         world.setGameRule(GameRules.NATURAL_HEALTH_REGENERATION, false);
-        var map = TessarMap.load(world, api.map().file(this, TessarMap.FILE));
+        var map = ArenaFile.load(world, api.map().file(this, ArenaFile.FILE));
+        if (map.rain()) {
+            world.setStorm(true);
+            world.setWeatherDuration(Integer.MAX_VALUE);
+        }
+        map.time().ifPresent(ticks -> Worlds.setTime(world, ticks));
         keepLoaded(map);
         border(map);
         var lobby = api.waitingLobby().map(WaitingLobby::spawn).orElse(map.lobbySpawn());
@@ -65,7 +69,7 @@ public final class SternenfrontPlugin extends JavaPlugin {
         if (getConfig().getBoolean("appearance.droids", true) || getConfig().getBoolean("appearance.infantry", true)) {
             bodyRigs = BodyRigs.start(this, game, getConfig().getBoolean("appearance.droids", true), getConfig().getBoolean("appearance.infantry", true));
         }
-        Secrets.start(this, game, messages);
+        secrets = Secrets.start(this, game, messages);
         if (getConfig().getBoolean("outlines.enabled", true)) {
             targetOutlines = new TargetOutlines(this, game, Optional.ofNullable(bodyRigs));
         }
@@ -78,7 +82,7 @@ public final class SternenfrontPlugin extends JavaPlugin {
                         .rescue(() -> Optional.of(lobby)),
                 new ArenaProtection(() -> false),
                 new ArenaListener(game, api.buildMode()),
-                new CombatListener(game, api.buildMode(), botDebug),
+                new CombatListener(game, api.buildMode(), botDebug, secrets),
                 new ChatListener(game, messages));
 
         services.commands(commands -> {
@@ -100,16 +104,19 @@ public final class SternenfrontPlugin extends JavaPlugin {
         }
     }
 
-    /** A square border round the map's play area; the map's own cliffs are the real edge. */
+    /** The border can include distant scenery; the map's own cliffs are the playable edge. */
     private static void border(FrontMap map) {
         var area = map.playArea();
         var border = map.world().getWorldBorder();
         border.setCenter(area.getCenterX(), area.getCenterZ());
-        border.setSize(Math.max(area.getWidthX(), area.getWidthZ()) + BORDER_MARGIN);
+        border.setSize(map.worldBorderSize());
     }
 
     @Override
     public void onDisable() {
+        if (secrets != null) {
+            secrets.close();
+        }
         if (targetOutlines != null) {
             targetOutlines.close();
         }

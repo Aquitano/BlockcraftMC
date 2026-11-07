@@ -1,6 +1,6 @@
 # /// script
 # requires-python = ">=3.11"
-# dependencies = ["numpy>=2", "scipy>=1.13"]
+# dependencies = ["numpy>=2", "scipy>=1.13", "pyyaml>=6"]
 # ///
 """Builds Sternenfront's effects and imported recordings into sounds/sternenfront.
 
@@ -17,6 +17,8 @@ from pathlib import Path
 from SaberRecordings import generate as recorded_sabers
 from BattleRecordings import generate as recorded_battle
 from IntroBriefings import generate as intro_briefings
+from BotVoices import generate as bot_voices
+from RadioCalls import generate as radio_calls
 
 import numpy as np
 from scipy import signal
@@ -149,6 +151,28 @@ def force_grip(rng):
     drone = unit(filtered(saw(held(55, seconds)) + saw(held(58.5, seconds)), "lowpass", 380))
     creak = unit(filtered(crackle(rng, seconds, 28 / RATE), "bandpass", [180, 320]))
     return (0.7 * drone * (0.75 + 0.25 * np.sin(2 * np.pi * 6 * t)) + 0.6 * creak * progress(seconds)) * swell(seconds, 0.25, 0.35)
+
+
+def force_lightning(rng):
+    seconds = 0.42
+    arcs = unit(filtered(crackle(rng, seconds, 0.05), "highpass", 1800))
+    flicker = (rng.random(samples(seconds)) < 0.002).astype(float)
+    gate = 0.35 + 0.65 * unit(filtered(flicker, "lowpass", 45))
+    buzz = unit(filtered(saw(glide(118, 96, seconds)), "bandpass", [180, 2600]))
+    return (arcs + 0.55 * buzz) * gate * swell(seconds, 0.015, 0.12)
+
+
+def wrist_rocket_launch(rng):
+    seconds = 0.75
+    hiss = unit(swept(noise(rng, seconds), glide(900, 3400, seconds), 0.9))
+    burn = unit(filtered(noise(rng, seconds), "lowpass", 620, 3))
+    return layer((hiss + 0.7 * burn) * swell(seconds, 0.02, 0.45), 0.8 * thump(210, 70, 0.1, 34))
+
+
+def wrist_rocket_impact(rng):
+    seconds = 0.8
+    crack = unit(filtered(noise(rng, seconds), "highpass", 1400)) * decay(seconds, 26)
+    return layer(explosion(rng, seconds, 0.6), 0.6 * crack)
 
 
 def explosion(rng, seconds, weight):
@@ -313,6 +337,9 @@ SOUNDS = {
     "bolt.impact": (0.7, bolt_impact),
     "force.push": (0.85, force_push),
     "force.grip": (0.75, force_grip),
+    "force.lightning": (0.7, force_lightning),
+    "wrist_rocket.launch": (0.75, wrist_rocket_launch),
+    "wrist_rocket.impact": (0.85, wrist_rocket_impact),
     "grenade.beep": (0.5, lambda rng: beep(1750, 1750, 0.09)),
     "grenade.explode": (0.85, lambda rng: explosion(rng, 1.4, 1.0)),
     "charge.arm": (0.6, charge_arm),
@@ -392,5 +419,7 @@ if not args.only:
     events.update(recorded_sabers(ROOT))
     events.update(recorded_battle(ROOT))
     events.update(intro_briefings(ROOT))
+    events.update(bot_voices(ROOT))
+    events.update(radio_calls(ROOT))
 register(events, replace=not args.only)
 print(f"Wrote {sum(len(entry['sounds']) for entry in events.values())} sounds for {len(events)} events to {OUT}")

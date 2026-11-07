@@ -1,6 +1,8 @@
 package me.blockcraft.api.game;
 
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.dialog.Dialogs;
+import io.papermc.paper.registry.data.dialog.body.DialogBody;
 import me.blockcraft.api.achievement.Achievement;
 import me.blockcraft.api.coins.Coins;
 import me.blockcraft.api.proxy.ProxyMessaging;
@@ -223,8 +225,12 @@ public final class RoundSummary {
 
     /** Cooperative mob kills count toward stats without player rivalries or PvP kill XP. */
     public void awardMobKill(Player player) {
+        awardMobKill(player, rewards.kill());
+    }
+
+    public void awardMobKill(Player player, int coins) {
         score(player).kills++;
-        pay(player, rewards.kill());
+        pay(player, coins);
     }
 
     public boolean undamaged(Player player) {
@@ -292,9 +298,9 @@ public final class RoundSummary {
         }
     }
 
-    /** Coins outside a kill or a win, such as a consolation for dying; they show up in the recap all the same. */
-    public void awardCoins(Player player, int coins) {
-        pay(player, coins);
+    /** Returns the paid amount, including the round's multiplier, and records it in the recap. */
+    public int awardCoins(Player player, int coins) {
+        return pay(player, coins);
     }
 
     public void show() {
@@ -337,6 +343,18 @@ public final class RoundSummary {
                     Placeholder.component("details", button("summary.details", player, () -> true, viewer -> details.forEach(viewer::sendMessage)))));
             showResult(player);
         }
+    }
+
+    public void showDetails(Player player, Component title) {
+        if (!resultsShown || closed || !player.isOnline()) return;
+        var names = String.join(", ", winnerNames());
+        var winner = winnerNames().isEmpty() ? messages.get("summary.draw")
+                : messages.get("summary.winner", Placeholder.unparsed("winner", names));
+        var body = details(scores.get(player.getUniqueId()), winner, Optional.empty()).stream()
+                .map(DialogBody::plainMessage).toList();
+        Dialogs.show(player, Dialogs.create(title, body, List.of(),
+                Dialogs.actions(List.of(), Dialogs.button(messages.get("menu.close")))),
+                () -> resultsShown && !closed);
     }
 
     void showResult(Player player) {
@@ -468,12 +486,13 @@ public final class RoundSummary {
                 }, BUTTON));
     }
 
-    private void pay(Player player, int coins) {
+    private int pay(Player player, int coins) {
         int paid = coins * coinFactor;
         if (paid > 0) {
             Coins.award(plugin, player, paid);
             score(player).coins += paid;
         }
+        return Math.max(0, paid);
     }
 
     private Score score(Player player) {

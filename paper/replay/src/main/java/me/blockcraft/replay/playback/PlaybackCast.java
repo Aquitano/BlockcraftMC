@@ -71,6 +71,7 @@ final class PlaybackCast {
     private final Map<UUID, Figure> figures = new HashMap<>();
     private final Map<UUID, Fixture> fixtures = new HashMap<>();
     private final Set<UUID> unplayable = new HashSet<>();
+    private final BodyModels models = BodyModels.ofThisServer();
 
     private static final class Figure {
         private final Entity entity;
@@ -124,6 +125,7 @@ final class PlaybackCast {
         for (var prop : props) {
             place(prop, location -> prop(prop.id(), location)).ifPresent(figure -> {
                 present.add(prop.id());
+                models.moved(figure.entity, figure.shown != null && (figure.shown.x() != prop.x() || figure.shown.z() != prop.z()));
                 figure.shown = prop;
                 if (drifts(figure.entity)) {
                     var velocity = velocity(figure.entity, prop, next.get(prop.id()));
@@ -138,7 +140,7 @@ final class PlaybackCast {
             if (present.contains(entry.getKey())) {
                 return false;
             }
-            entry.getValue().entity.remove();
+            discard(entry.getValue().entity);
             return true;
         });
     }
@@ -151,7 +153,7 @@ final class PlaybackCast {
         var location = new Location(world, body.x(), body.y(), body.z(), body.yaw(), body.pitch());
         var figure = figures.get(body.id());
         if (figure != null && (!figure.entity.isValid() || !figure.entity.getWorld().equals(world))) {
-            figure.entity.remove();
+            discard(figure.entity);
             figures.remove(body.id());
             figure = null;
         }
@@ -234,7 +236,9 @@ final class PlaybackCast {
             var entity = Bukkit.getEntityFactory().createEntitySnapshot(appearance).createEntity(location.getWorld());
             entity.eject();
             freeze(entity);
+            models.clean(entity);
             if (entity.spawnAt(location)) {
+                models.draw(entity);
                 return Optional.of(entity);
             }
         } catch (IllegalArgumentException ignored) {
@@ -377,6 +381,7 @@ final class PlaybackCast {
                 }
                 case DEATH -> {
                     figures.remove(animation.subject());
+                    models.died(entity);
                     if (entity instanceof LivingEntity living) {
                         sound(living, living.getDeathSound());
                         living.setHealth(0);
@@ -387,6 +392,7 @@ final class PlaybackCast {
                 case SHOT -> {
                     if (entity instanceof LivingEntity living) {
                         shot(living);
+                        models.fired(living);
                     }
                 }
                 case EXPLOSION -> {
@@ -422,6 +428,7 @@ final class PlaybackCast {
 
     /** Stops projectiles and TNT where they are, for a picture that stays still. */
     void hold() {
+        models.hold();
         figures.values().stream().filter(figure -> drifts(figure.entity)).forEach(figure -> {
             figure.entity.setVelocity(new Vector());
             figure.velocity = null;
@@ -438,8 +445,13 @@ final class PlaybackCast {
                 .sorted(Comparator.comparing(ReplayHeader.Participant::name, String.CASE_INSENSITIVE_ORDER)).toList();
     }
 
+    private void discard(Entity entity) {
+        models.gone(entity);
+        entity.remove();
+    }
+
     void clear() {
-        figures.values().forEach(figure -> figure.entity.remove());
+        figures.values().forEach(figure -> discard(figure.entity));
         figures.clear();
         fixtures.values().forEach(fixture -> fixture.entity.remove());
         fixtures.clear();

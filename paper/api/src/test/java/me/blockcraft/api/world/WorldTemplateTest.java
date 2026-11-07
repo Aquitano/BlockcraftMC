@@ -9,6 +9,8 @@ import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.Optional;
+import java.util.Random;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 
@@ -20,6 +22,22 @@ public class WorldTemplateTest {
 
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
+
+    @Test
+    public void aSingleDirectoryIsAlwaysPicked() {
+        assertEquals(Optional.of("/worlds/a"), WorldTemplate.pick("/worlds/a", new Random()));
+    }
+
+    @Test
+    public void aListPicksOneOfItsDirectories() {
+        var picked = WorldTemplate.pick("/worlds/a, /worlds/b,", new Random()).orElseThrow();
+        assertTrue(picked, picked.equals("/worlds/a") || picked.equals("/worlds/b"));
+    }
+
+    @Test
+    public void onlySeparatorsPickNothing() {
+        assertEquals(Optional.empty(), WorldTemplate.pick(" , ,", new Random()));
+    }
 
     @Test
     public void publishCopiesTheMapButNotThePlayers() throws IOException {

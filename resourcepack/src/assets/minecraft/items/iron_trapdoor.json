@@ -5,6 +5,13 @@
     "index": 0,
     "cases": [
       {
+        "when": "blockcraft:sternenfront/yard/wall_panel",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/sternenfront/yard/wall_panel"
+        }
+      },
+      {
         "when": "blockcraft:ttt/bear_trap",
         "model": {
           "type": "minecraft:model",

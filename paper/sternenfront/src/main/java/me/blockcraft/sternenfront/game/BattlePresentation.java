@@ -5,6 +5,7 @@ import me.blockcraft.api.game.GamePhase;
 import me.blockcraft.api.presentation.PresentationScope;
 import me.blockcraft.api.presentation.ScreenEffects;
 import me.blockcraft.api.scene.Scenes;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Particle;
@@ -13,6 +14,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 
 import java.time.Duration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.DoubleConsumer;
@@ -88,13 +90,12 @@ final class BattlePresentation implements AutoCloseable {
             case Spawn.Dropship ignored -> game.messages().get("deploy.landing");
         };
         int ticks = Math.clamp(game.plugin().getConfig().getInt("presentation.deployment.banner-ticks"), 1, 100);
-        BlockcraftApi.get().notifications().important(player, Title.title(
+        BlockcraftApi.get().notifications().important(player, Title.title(Component.empty(),
                 game.messages().get("deploy.location", Placeholder.component("location", location)),
-                game.messages().get("deploy.radio"),
                 Title.Times.times(Duration.ofMillis(200), Duration.ofMillis(ticks * 50L), Duration.ofMillis(300))));
     }
 
-    void captured(int index, Faction faction) {
+    void captured(int index, Faction faction, List<Player> present) {
         if (!game.plugin().getConfig().getBoolean("presentation.effects")) return;
         int duration = Math.clamp(game.plugin().getConfig().getInt("presentation.capture.ticks"), 0, 100);
         if (duration == 0) return;
@@ -128,11 +129,9 @@ final class BattlePresentation implements AutoCloseable {
             }
         }.runTaskTimer(game.plugin(), 0, 2);
         scope.own(task::cancel);
-        var title = Title.title(game.messages().get("post.capture-title", game.posts().name(index)),
-                game.messages().get("post.capture-subtitle", game.factionName(faction)),
+        var title = Title.title(Component.empty(), game.messages().get("post.capture-banner", game.posts().name(index)),
                 Title.Times.times(Duration.ofMillis(150), Duration.ofMillis(duration * 50L), Duration.ofMillis(400)));
-        game.plugin().getServer().getOnlinePlayers().stream().filter(game::isPlaying).filter(player -> !busy(player))
-                .forEach(player -> BlockcraftApi.get().notifications().important(player, title));
+        present.stream().filter(player -> !busy(player)).forEach(player -> BlockcraftApi.get().notifications().important(player, title));
     }
 
     private static boolean busy(Player player) {

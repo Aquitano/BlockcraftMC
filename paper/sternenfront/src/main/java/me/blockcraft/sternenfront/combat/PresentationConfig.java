@@ -4,7 +4,8 @@ import org.bukkit.configuration.ConfigurationSection;
 
 /** Everything {@code presentation} tunes: the look of the round's effects and how much of them clients get. */
 public record PresentationConfig(boolean effects, int liveEffects, Scorch scorch, SaberMark saberMark, int saberTrailTicks, MuzzleFlash muzzleFlash, Bolt bolt,
-                                 Explosion explosion, Damaged damaged, Ambient ambient, Assault assault, Storm storm) {
+                                 Explosion explosion, Damaged damaged, Ambient ambient, Assault assault, Storm storm,
+                                 Lightning lightning) {
 
     public record Scorch(int marks, int every, int ticks, int fadeTicks, float scale) { }
 
@@ -24,6 +25,8 @@ public record PresentationConfig(boolean effects, int liveEffects, Scorch scorch
 
     public record Storm(int density, int haze, int intervalTicks, int hazeTicks, double radius, double windSpeed,
                         int gustSeconds, int gustTicks, double gustBoost) { }
+
+    public record Lightning(int minSeconds, int maxSeconds, double distance) { }
 
     public static PresentationConfig from(ConfigurationSection config) {
         return new PresentationConfig(
@@ -70,6 +73,9 @@ public record PresentationConfig(boolean effects, int liveEffects, Scorch scorch
                         config.getDouble("presentation.storm.wind-speed"),
                         Math.max(1, config.getInt("presentation.storm.gust-seconds")),
                         Math.max(1, config.getInt("presentation.storm.gust-ticks")),
-                        Math.max(0, config.getDouble("presentation.storm.gust-boost"))));
+                        Math.max(0, config.getDouble("presentation.storm.gust-boost"))),
+                new Lightning(Math.max(1, config.getInt("presentation.lightning.min-seconds")),
+                        Math.max(1, config.getInt("presentation.lightning.max-seconds")),
+                        Math.max(1, config.getDouble("presentation.lightning.distance"))));
     }
 }

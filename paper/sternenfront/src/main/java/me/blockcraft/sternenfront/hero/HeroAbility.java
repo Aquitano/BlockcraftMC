@@ -9,7 +9,9 @@ public enum HeroAbility {
     FORCE_PUSH(Material.WIND_CHARGE),
     SABER_THROW(Material.BLAZE_ROD),
     FORCE_GRIP(Material.ENDER_EYE),
+    FORCE_LIGHTNING(Material.LIGHTNING_ROD),
     JETPACK(Material.FIREWORK_ROCKET),
+    WRIST_ROCKET(Material.FIRE_CHARGE),
     GRAPPLE(Material.LEAD),
     ORBITAL_STRIKE(Material.ECHO_SHARD),
     RALLY(Material.NAUTILUS_SHELL);

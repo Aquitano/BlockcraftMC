@@ -8,18 +8,24 @@ import me.blockcraft.api.sound.Sounds;
 import me.blockcraft.api.task.Tasks;
 import me.blockcraft.sternenfront.config.FeelConfig;
 import me.blockcraft.sternenfront.hero.Hero;
+import me.blockcraft.sternenfront.reinforcement.Reinforcement;
+import me.blockcraft.sternenfront.reinforcement.ReinforcementRoster;
 import me.blockcraft.sternenfront.menu.DeployMenu;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.UUID;
 
 /** The way back onto the field: the kill cam, the wait above the map with the deploy menu open, and the deployment. */
@@ -37,6 +43,8 @@ public final class Deployment {
     private final Map<UUID, DeployMenu> deployMenus = new HashMap<>();
     /** Whose kill a dead player watches before they choose where to deploy. */
     private final Map<UUID, UUID> killers = new HashMap<>();
+    private final Map<UUID, AbilityHints> abilityHints = new HashMap<>();
+    private final Map<UUID, Spawn> remembered = new HashMap<>();
 
     Deployment(SternenfrontGame game, SpawnSpots spawnSpots, FeelConfig feel, BattlePresentation presentation, Runnable sidebarChanged) {
         this.game = game;
@@ -88,6 +96,11 @@ public final class Deployment {
                 game.tick() + respawn.autoSeconds() * TICKS_PER_SECOND, Optional.empty(), Optional.empty());
     }
 
+    void rejoined(Player player) {
+        game.fighter(player).choosing(Optional.of(newChoosing()));
+        beginChoosing(player);
+    }
+
     /** Dead and watching from above, unseen and unhurt, with the deploy menu open. */
     void beginChoosing(Player player) {
         if (!player.isOnline() || game.phase() != GamePhase.INGAME || !game.isPlaying(player)) {
@@ -112,16 +125,24 @@ public final class Deployment {
     }
 
     public void openDeploy(Player player) {
+        openDeploy(player, false);
+    }
+
+    public void openDeploy(Player player, boolean tactical) {
         if (!game.choosing(player)) {
             return;
         }
-        var menu = new DeployMenu(game, player);
+        var menu = new DeployMenu(game, player, tactical);
         deployMenus.put(player.getUniqueId(), menu);
         menu.open(player);
     }
 
     /** A spawn chosen in the deploy menu: taken at once when the wait is over, else as soon as it is. */
     public void choose(Player player, Spawn spawn) {
+        choose(player, spawn, true);
+    }
+
+    private void choose(Player player, Spawn spawn, boolean remember) {
         var fighter = game.fighterIfAny(player);
         var faction = game.factionOf(player);
         if (fighter.isEmpty() || fighter.get().choosing().isEmpty() || faction.isEmpty()) {
@@ -131,6 +152,7 @@ public final class Deployment {
             Sounds.MENU_DENY.play(player);
             return;
         }
+        if (remember) remembered.put(player.getUniqueId(), spawn);
         var choosing = fighter.get().choosing().get().choose(spawn);
         fighter.get().choosing(Optional.of(choosing));
         if (game.tick() >= choosing.readyTick()) {
@@ -144,9 +166,19 @@ public final class Deployment {
     public boolean available(Faction faction, Spawn spawn) {
         return switch (spawn) {
             case Spawn.Headquarters ignored -> true;
-            case Spawn.Post post -> post.index() < game.posts().size() && game.posts().safe(post.index(), faction);
+            case Spawn.Post post -> post.index() >= 0 && post.index() < game.posts().size()
+                    && game.posts().owner(post.index()).filter(faction::equals).isPresent()
+                    && safePost(faction, post.index());
             case Spawn.Dropship ignored -> game.front().filter(assault -> assault.trailing() == faction).isPresent();
         };
+    }
+
+    private boolean safePost(Faction faction, int index) {
+        var site = game.map().posts().get(index);
+        var enemies = game.combatants().stream().filter(other -> game.factionOf(other).filter(faction.enemy()::equals).isPresent())
+                .map(org.bukkit.entity.LivingEntity::getLocation).toList();
+        double clearance = Math.clamp(game.plugin().getConfig().getDouble("respawn.enemy-clearance"), 0, 64);
+        return enemies.stream().noneMatch(site::contains) && SpawnSpots.hasClearSpawn(site.spawns(), enemies, clearance);
     }
 
     /** Ticks until the player may deploy, 0 once they may. */
@@ -155,13 +187,74 @@ public final class Deployment {
                 .map(choosing -> Math.max(0, choosing.readyTick() - game.tick())).orElse(0L);
     }
 
+    public long autoTicks(Player player) {
+        return game.fighterIfAny(player).flatMap(Fighter::choosing)
+                .map(choosing -> Math.max(0, choosing.autoTick() - game.tick())).orElse(0L);
+    }
+
+    public Spawn recommended(Player player) {
+        var faction = game.factionOf(player).orElseThrow();
+        return BattleNavigation.recommend(navigationPosts(faction), headquarters(faction), headquarters(faction.enemy()),
+                Optional.ofNullable(remembered.get(player.getUniqueId())), spawn -> available(faction, spawn));
+    }
+
+    public Spawn suggested(Player player) {
+        var faction = game.factionOf(player).orElseThrow();
+        return game.fighter(player).choosing().flatMap(Fighter.Choosing::chosen)
+                .filter(spawn -> available(faction, spawn)).orElseGet(() -> recommended(player));
+    }
+
+    public void quickDeploy(Player player) {
+        if (game.choosing(player)) choose(player, suggested(player), false);
+    }
+
+    private List<BattleNavigation.Post> navigationPosts(Faction faction) {
+        return game.posts().indices().stream().map(index -> {
+            boolean safe = available(faction, new Spawn.Post(index));
+            return new BattleNavigation.Post(index, point(game.map().posts().get(index).center()), safe, !safe, game.posts().priority(index));
+        }).toList();
+    }
+
+    private BattleNavigation.Point headquarters(Faction faction) {
+        var center = game.map().headquarters().get(faction).zone().getCenter();
+        return new BattleNavigation.Point(center.getX(), center.getZ());
+    }
+
+    private static BattleNavigation.Point point(Location location) {
+        return new BattleNavigation.Point(location.getX(), location.getZ());
+    }
+
+    Optional<Component> guidance(Player player) {
+        var faction = game.factionOf(player);
+        if (!game.onField(player) || faction.isEmpty()) return Optional.empty();
+        int hintTicks = Math.clamp(game.plugin().getConfig().getInt("respawn.ability-hint-seconds"), 0, 30) * 20;
+        var hints = abilityHints.get(player.getUniqueId());
+        var hint = hints == null ? OptionalInt.empty() : hints.index(game.tick(), hintTicks);
+        if (hint.isPresent()) {
+            int index = hint.getAsInt();
+            var key = hints.keys().get(index);
+            return Optional.of(game.messages().get("deploy.ability-hint", Placeholder.unparsed("key", index == 0 ? "F" : "Q"),
+                    Placeholder.component("ability", game.messages().get("combat.hints."
+                            + key.substring(key.lastIndexOf('.') + 1)))));
+        }
+        var origin = player.getLocation();
+        return BattleNavigation.target(navigationPosts(faction.get()), point(origin), headquarters(faction.get().enemy())).map(target -> {
+            if (game.map().posts().get(target.index()).contains(origin)) {
+                return game.messages().get(target.objective() ? "deploy.navigate-here" : "deploy.defend-here", game.posts().name(target.index()));
+            }
+            return game.messages().get(target.objective() ? "deploy.navigate" : "deploy.defend", game.posts().name(target.index()),
+                    Formatter.number("distance", Math.round(Math.sqrt(point(origin).distanceSquared(target.center())))),
+                    Placeholder.component("direction", game.messages().get("deploy.direction."
+                            + BattleNavigation.direction(point(origin), origin.getYaw(), target.center()))));
+        });
+    }
+
     void deployWhenDue(Player player, Fighter fighter) {
         fighter.choosing().ifPresent(choosing -> {
-            if (game.tick() >= choosing.autoTick()) {
-                deploy(player, choosing.chosen().filter(spawn -> game.factionOf(player).filter(faction -> available(faction, spawn)).isPresent())
-                        .orElse(new Spawn.Headquarters()));
-            } else if (game.tick() >= choosing.readyTick() && choosing.chosen().isPresent()) {
-                deploy(player, choosing.chosen().get());
+            if (choosing.manualReady(game.tick())) {
+                deploy(player, choosing.chosen().orElseThrow());
+            } else if (game.tick() >= choosing.autoTick()) {
+                deploy(player, suggested(player));
             }
         });
     }
@@ -173,7 +266,8 @@ public final class Deployment {
         }
         var choosing = fighter.get().choosing().get();
         long waiting = choosing.readyTick() - game.tick();
-        var status = waiting > 0
+        var status = choosing.confirmed()
+                ? game.messages().get("deploy.status-queued", Formatter.number("seconds", seconds(waiting))) : waiting > 0
                 ? game.messages().get("deploy.waiting", Formatter.number("seconds", seconds(waiting)))
                 : game.messages().get("deploy.ready", Formatter.number("seconds", seconds(choosing.autoTick() - game.tick())));
         BlockcraftApi.get().notifications().status(player, status);
@@ -211,12 +305,10 @@ public final class Deployment {
             return;
         }
         var messages = game.messages();
-        var config = game.config();
-        var heroes = game.heroes();
         var map = game.map();
         game.combat().forget(player);
         player.leaveVehicle();
-        var spawn = available(faction.get(), wanted) ? wanted : new Spawn.Headquarters();
+        var spawn = BattleNavigation.resolve(wanted, candidate -> available(faction.get(), candidate), recommended(player));
         if (!spawn.equals(wanted)) {
             player.sendMessage(messages.get("deploy.lost"));
         }
@@ -225,9 +317,45 @@ public final class Deployment {
             case Spawn.Post post -> spawnSpots.farthestFromEnemies(map.posts().get(post.index()).spawns(), faction.get());
             case Spawn.Dropship ignored -> spawnSpots.leastCrowded(spawnSpots.dropshipSpots(game.front().orElseThrow()));
         };
+        var picked = game.fighter(player).choosing().flatMap(Fighter.Choosing::paidReinforcement);
+        if (picked.isPresent()) {
+            var unit = picked.get();
+            var result = game.reinforcementUnits().roster().deploy(player.getUniqueId(), faction.get(), unit,
+                    () -> enter(player, faction.get(), spot, spawn, picked));
+            if (result == ReinforcementRoster.Deployment.DEPLOYED) {
+                player.sendMessage(messages.get("reinforcement.entered", Placeholder.component("unit", game.reinforcementUnits().name(unit))));
+                return;
+            }
+            if (result == ReinforcementRoster.Deployment.FAILED) {
+                deploymentFailed(player);
+                return;
+            }
+            player.sendMessage(messages.get("reinforcement.missed", Placeholder.component("unit", game.reinforcementUnits().name(unit))));
+        }
+        if (!enter(player, faction.get(), spot, spawn, Optional.empty())) {
+            deploymentFailed(player);
+        }
+    }
+
+    private void deploymentFailed(Player player) {
+        if (!player.isOnline() || game.phase() != GamePhase.INGAME || !game.isPlaying(player)) return;
         var fighter = game.fighter(player);
-        var picked = fighter.choosing().flatMap(Fighter.Choosing::hero);
-        var hero = picked.filter(chosen -> heroes.enlist(player, faction.get(), chosen));
+        fighter.choosing(Optional.of(fighter.choosing().orElseGet(this::newChoosing)
+                .retry(game.tick() + game.config().respawn().autoSeconds() * TICKS_PER_SECOND)));
+        player.sendMessage(game.messages().get("reinforcement.deployment-failed"));
+        beginChoosing(player);
+    }
+
+    private boolean enter(Player player, Faction faction, Location spot, Spawn spawn, Optional<Reinforcement> unit) {
+        if (!player.teleport(spot) || game.phase() != GamePhase.INGAME || !game.isPlaying(player) || !player.isOnline()) {
+            return false;
+        }
+        var messages = game.messages();
+        var config = game.config();
+        var heroes = game.heroes();
+        var fighter = game.fighter(player);
+        var picked = fighter.choosing().flatMap(Fighter.Choosing::paidHero);
+        var hero = picked.filter(chosen -> heroes.enlist(player, faction, chosen));
         if (picked.isPresent() && hero.isEmpty()) {
             player.sendMessage(messages.get("hero.missed", Placeholder.component("hero", heroes.name(picked.get()))));
         }
@@ -237,31 +365,42 @@ public final class Deployment {
         reveal(player);
         PlayerReset.reset(player, GameMode.ADVENTURE);
         config.combat().apply(player);
-        player.teleport(spot);
         fighter.deployed(config.heat(), game.tick() + config.respawn().protectionSeconds() * TICKS_PER_SECOND, hero);
+        fighter.reinforcement(unit);
         fighter.hurt(game.tick());
         hero.ifPresentOrElse(chosen -> {
-            heroes.equip(player, faction.get(), chosen, game.tick());
-            Bukkit.broadcast(messages.get("hero.entered", game.factionName(faction.get()), Placeholder.component("hero", heroes.name(chosen)),
+            heroes.equip(player, faction, chosen, game.tick());
+            Bukkit.broadcast(messages.get("hero.entered", game.factionName(faction), Placeholder.component("hero", heroes.name(chosen)),
                     Placeholder.unparsed("player", player.getName())));
             Bukkit.getOnlinePlayers().forEach(Sounds.NOTIFY::play);
-        }, () -> game.loadouts().equip(player, faction.get(), fighter.combatClass()));
+        }, () -> unit.ifPresentOrElse(chosen -> game.reinforcementUnits().equip(player, chosen),
+                () -> game.loadouts().equip(player, faction, fighter.combatClass())));
         player.getInventory().setHeldItemSlot(0);
         player.setFoodLevel(20);
         player.setSaturation(20);
         Sounds.TELEPORT.play(player);
-        var abilities = hero.map(chosen -> chosen.abilities().stream()
-                .map(ability -> messages.get("hero.ability." + ability.key() + ".name")).toList())
-                .orElseGet(() -> fighter.combatClass().abilities(faction.get()).stream()
-                        .map(ability -> messages.get(ability.messageKey(faction.get()) + ".name")).toList());
-        player.sendMessage(messages.get("deploy.controls",
-                Placeholder.component("first", abilities.isEmpty() ? messages.get("deploy.no-ability") : abilities.getFirst()),
-                Placeholder.component("second", abilities.size() < 2 ? messages.get("deploy.no-ability") : abilities.get(1))));
+        controlsChanged(player);
         if (hero.filter(chosen -> chosen.weapon() instanceof Hero.Weapon.Saber).isPresent()) {
             player.sendMessage(messages.get("deploy.saber-controls"));
         }
         presentation.deployed(player, spawn);
         sidebarChanged.run();
+        return true;
+    }
+
+    public void controlsChanged(Player player) {
+        if (!game.onField(player)) return;
+        var fighter = game.fighter(player);
+        var faction = game.factionOf(player);
+        if (faction.isEmpty()) return;
+        var keys = fighter.hero().map(chosen -> chosen.abilities().stream().map(ability -> "hero.ability." + ability.key()).toList())
+                .orElseGet(() -> fighter.abilities(faction.get()).stream().map(ability -> ability.messageKey(faction.get())).toList());
+        if (!abilityHints.computeIfAbsent(player.getUniqueId(), ignored -> new AbilityHints()).start(keys, game.tick())) return;
+        var messages = game.messages();
+        var abilities = keys.stream().map(key -> messages.get(key + ".name")).toList();
+        player.sendMessage(messages.get("deploy.controls",
+                Placeholder.component("first", abilities.isEmpty() ? messages.get("deploy.no-ability") : abilities.getFirst()),
+                Placeholder.component("second", abilities.size() < 2 ? messages.get("deploy.no-ability") : abilities.get(1))));
     }
 
     /** Back to normal: seen by everyone, hurtable, on foot, at their own size and pace. */
@@ -276,12 +415,19 @@ public final class Deployment {
         Bukkit.getOnlinePlayers().stream().filter(other -> !other.equals(player)).forEach(other -> other.showPlayer(game.plugin(), player));
     }
 
-    void forgetMenu(Player player) {
+    void forget(Player player) {
         deployMenus.remove(player.getUniqueId());
+        killers.remove(player.getUniqueId());
+    }
+
+    void interruptHints(Player player) {
+        Optional.ofNullable(abilityHints.get(player.getUniqueId())).ifPresent(AbilityHints::interrupt);
     }
 
     void clear() {
         killers.clear();
         deployMenus.clear();
+        remembered.clear();
+        abilityHints.clear();
     }
 }

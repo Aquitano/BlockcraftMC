@@ -4,6 +4,7 @@ plugins {
 
 dependencies {
     compileOnly(project(":paper:api"))
+    compileOnly(libs.bettermodel.api)
     implementation(libs.glowingentities)
 }
 

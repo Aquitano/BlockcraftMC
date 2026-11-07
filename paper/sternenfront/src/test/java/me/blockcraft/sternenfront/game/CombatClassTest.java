@@ -26,8 +26,22 @@ public class CombatClassTest {
         for (var faction : Faction.values()) {
             for (var combatClass : CombatClass.values()) {
                 assertHasNameAndLore(messages, combatClass.messageKey(faction));
+                assertHasNameAndLore(messages, "blaster." + combatClass.blaster(faction).key());
                 combatClass.abilities(faction).forEach(ability -> assertHasNameAndLore(messages, ability.messageKey(faction)));
             }
+        }
+    }
+
+    @Test
+    public void eachFactionCarriesItsOwnWeaponsWithTheSameCombatProfiles() {
+        var republic = List.of(Blaster.CARBINE, Blaster.REPEATER, Blaster.LONG_RIFLE, Blaster.PISTOL);
+        var separatists = List.of(Blaster.E5, Blaster.WRIST_BLASTER, Blaster.E5S, Blaster.SE14);
+        var roles = CombatClass.values();
+        for (int index = 0; index < roles.length; index++) {
+            assertEquals(republic.get(index), roles[index].blaster(Faction.KOLONIEN));
+            assertEquals(separatists.get(index), roles[index].blaster(Faction.HEGEMONIE));
+            assertEquals(republic.get(index), separatists.get(index).profile());
+            assertEquals(SoundCue.shot(republic.get(index)), SoundCue.shot(separatists.get(index)));
         }
     }
 

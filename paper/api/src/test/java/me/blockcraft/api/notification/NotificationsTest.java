@@ -177,4 +177,15 @@ public class NotificationsTest {
     private static <T> T fake(Class<T> type, InvocationHandler handler) {
         return type.cast(Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[]{type}, handler));
     }
+
+    @Test
+    public void aNoticeBesideAMarkerKeepsItsOwnFont() {
+        var marker = Component.text("A").font(net.kyori.adventure.key.Key.key("blockcraft:ui"));
+        var notice = Title.title(Component.empty(), Component.text("Captured"));
+
+        var line = Notifications.subtitle(notice, marker);
+
+        assertEquals(null, line.font());
+        assertEquals(java.util.List.of(marker, notice.subtitle()), line.children());
+    }
 }

@@ -1,0 +1,5 @@
+# Operator overrides for the verify network only, so a scenario reaches heroes and the relic without a long wait.
+heroes:
+  cost: 0
+relic:
+  first-seconds: 15

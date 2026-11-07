@@ -17,6 +17,7 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.weather.LightningStrikeEvent;
 import org.bukkit.event.hanging.HangingBreakEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
@@ -31,14 +32,20 @@ import org.bukkit.event.player.PlayerRespawnEvent;
  */
 public final class ArenaListener implements Listener {
 
-    private static final double BELOW_MAP = 10;
-
     private final SternenfrontGame game;
     private final BuildMode buildMode;
 
     public ArenaListener(SternenfrontGame game, BuildMode buildMode) {
         this.game = game;
         this.buildMode = buildMode;
+    }
+
+    /** The storm's own strikes would hurt whoever stands under one; the round draws its own, which hurt nobody. */
+    @EventHandler(ignoreCancelled = true)
+    public void onLightning(LightningStrikeEvent event) {
+        if (event.getCause() == LightningStrikeEvent.Cause.WEATHER) {
+            event.setCancelled(true);
+        }
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
@@ -152,10 +159,14 @@ public final class ArenaListener implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
     public void onMove(PlayerMoveEvent event) {
-        if (inRound() && event.getTo().getY() < game.map().playArea().getMinY() - BELOW_MAP) {
-            game.fell(event.getPlayer());
+        var player = event.getPlayer();
+        var to = event.getTo();
+        boolean lost = game.onField(player) ? game.map().outsideBattlefield(to)
+                : inRound() && to.getWorld().equals(game.map().world()) && to.getY() < game.map().deathY();
+        if (lost && !buildMode.isEnabled(player)) {
+            game.fell(player);
         }
     }
 

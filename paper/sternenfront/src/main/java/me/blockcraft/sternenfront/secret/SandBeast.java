@@ -79,7 +79,7 @@ final class SandBeast {
             }
             var at = player.getLocation();
             var still = standing.get(player.getUniqueId());
-            if (still == null || still.at().distanceSquared(at) > MOVED * MOVED) {
+            if (still == null || tick < quietUntil || still.at().distanceSquared(at) > MOVED * MOVED) {
                 standing.put(player.getUniqueId(), new Still(at, tick));
                 continue;
             }
@@ -168,5 +168,11 @@ final class SandBeast {
     private static void burst(Location at, int count) {
         at.getWorld().spawnParticle(Particle.BLOCK, at, count, 1.5, 0.6, 1.5, 0.1, Material.SAND.createBlockData());
         at.getWorld().spawnParticle(Particle.CLOUD, at, count / 4, 1.2, 0.4, 1.2, 0.02);
+    }
+
+    void close() {
+        standing.clear();
+        head.ifPresent(ItemDisplay::remove);
+        head = Optional.empty();
     }
 }

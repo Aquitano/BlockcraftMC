@@ -94,6 +94,11 @@ public final class GameSidebar {
         show(viewer, rows(withMap, game) <= MAX_ROWS ? withMap : frame, game);
     }
 
+    /** Takes the sidebar off the screen, for a game that shows the round elsewhere. */
+    public void hide(Player viewer) {
+        sidebar.hide(viewer);
+    }
+
     /** No winners is a draw. */
     public void end(Player viewer, List<Component> winners) {
         var values = winners.isEmpty()

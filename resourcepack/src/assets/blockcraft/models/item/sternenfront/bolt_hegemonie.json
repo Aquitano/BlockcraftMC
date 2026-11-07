@@ -1,9 +1,9 @@
 {
   "textures": {
-    "core": "minecraft:block/light_blue_concrete",
-    "halo": "minecraft:block/light_blue_stained_glass",
+    "core": "minecraft:block/red_concrete",
+    "halo": "minecraft:block/red_stained_glass",
     "tip": "minecraft:block/white_concrete",
-    "particle": "minecraft:block/light_blue_concrete"
+    "particle": "minecraft:block/red_concrete"
   },
   "gui_light": "side",
   "display": {

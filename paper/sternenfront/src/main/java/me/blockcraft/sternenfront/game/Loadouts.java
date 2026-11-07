@@ -33,6 +33,9 @@ import java.util.Optional;
  */
 public final class Loadouts {
 
+    /** Heroes have far more health than a row of hearts, and more rows would cover the action bar. */
+    private static final double HEARTS_SHOWN = 20;
+
     private static final NamespacedKey BLADE_DAMAGE = new NamespacedKey("sternenfront", "blade_damage");
     private static final NamespacedKey BLADE_SPEED = new NamespacedKey("sternenfront", "blade_speed");
     private static final NamespacedKey CLASS_SPEED = new NamespacedKey("sternenfront", "class_speed");
@@ -52,7 +55,7 @@ public final class Loadouts {
     public void equip(Player player, Faction faction, CombatClass combatClass) {
         var inventory = player.getInventory();
         inventory.clear();
-        inventory.setItem(0, blaster(combatClass.blaster()));
+        inventory.setItem(0, blaster(combatClass.blaster(faction)));
         combatClass.abilities(faction).forEach(ability -> player.setCooldown(ability.material(), 0));
         dress(player, faction, Optional.empty());
         var body = config.stats(faction, combatClass);
@@ -109,7 +112,7 @@ public final class Loadouts {
         return SternenfrontItem.DEPLOY.build(MenuIcon.DEPLOY.item().name(messages.get("deploy.item")));
     }
 
-    /** A class as the menus show it: its blaster, named after the class, with what it carries. */
+    /** Deployment has no separate equipment row, so its cards include the class's numbers. */
     public ItemStack card(Faction faction, CombatClass combatClass, boolean selected, List<Component> hint) {
         var lore = new ArrayList<>(messages.getLines(combatClass.messageKey(faction) + ".lore"));
         lore.add(Component.empty());
@@ -118,7 +121,18 @@ public final class Loadouts {
                 Placeholder.component("ability", messages.get(ability.messageKey(faction) + ".name")))));
         lore.add(Component.empty());
         lore.addAll(hint);
-        var builder = combatClass.blaster().model().item().name(messages.get(combatClass.messageKey(faction) + ".name"))
+        return classCard(faction, combatClass, selected, lore);
+    }
+
+    public ItemStack roleCard(Faction faction, CombatClass combatClass, boolean selected, List<Component> hint) {
+        var lore = new ArrayList<>(messages.getLines(combatClass.messageKey(faction) + ".lore"));
+        lore.add(Component.empty());
+        lore.addAll(hint);
+        return classCard(faction, combatClass, selected, lore);
+    }
+
+    private ItemStack classCard(Faction faction, CombatClass combatClass, boolean selected, List<Component> lore) {
+        var builder = combatClass.blaster(faction).model().item().name(messages.get(combatClass.messageKey(faction) + ".name"))
                 .lore(lore).hideAttributes();
         if (selected) {
             builder.glow().state(MenuState.ACTIVE);
@@ -132,12 +146,8 @@ public final class Loadouts {
     }
 
     private List<Component> statLines(Faction faction, CombatClass combatClass) {
-        var stats = config.stats(combatClass.blaster());
         var body = config.stats(faction, combatClass);
-        var lines = new ArrayList<Component>();
-        lines.add(messages.get("class.blaster",
-                Placeholder.component("blaster", messages.get("blaster." + combatClass.blaster().key() + ".name")),
-                Formatter.number("damage", stats.damage() * stats.bolts() / TO_HEARTS)));
+        var lines = new ArrayList<>(blasterStats(combatClass.blaster(faction)));
         lines.add(messages.get("class.health", Formatter.number("hearts", body.health() / TO_HEARTS)));
         if (body.speed() != 1) {
             lines.add(messages.get("class.speed", Formatter.number("percent", Math.round(body.speed() * 100))));
@@ -146,6 +156,14 @@ public final class Loadouts {
             lines.add(messages.get("class.size", Formatter.number("percent", Math.round(body.scale() * 100))));
         }
         return lines;
+    }
+
+    public List<Component> blasterStats(Blaster blaster) {
+        var stats = config.stats(blaster);
+        return List.of(messages.get("class.blaster",
+                        Placeholder.component("blaster", messages.get("blaster." + blaster.key() + ".name")),
+                        Formatter.number("damage", stats.damage() * stats.bolts() / TO_HEARTS)),
+                messages.get("class.range", Formatter.number("range", Math.round(stats.range()))));
     }
 
     /** The faction's leather, and on the head {@code head} if a hero wears their own, else the faction's helmet. */
@@ -186,5 +204,6 @@ public final class Loadouts {
         var maxHealth = Objects.requireNonNull(player.getAttribute(Attribute.MAX_HEALTH));
         maxHealth.setBaseValue(health);
         player.setHealth(health);
+        player.setHealthScale(HEARTS_SHOWN);
     }
 }

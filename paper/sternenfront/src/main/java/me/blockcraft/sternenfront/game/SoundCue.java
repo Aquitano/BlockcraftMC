@@ -24,6 +24,9 @@ public enum SoundCue {
     SABER_THROW("saber.throw"),
     FORCE_PUSH("force.push"),
     FORCE_GRIP("force.grip"),
+    FORCE_LIGHTNING("force.lightning"),
+    WRIST_ROCKET_LAUNCH("wrist_rocket.launch"),
+    WRIST_ROCKET_IMPACT("wrist_rocket.impact"),
     GRENADE_BEEP("grenade.beep"),
     GRENADE_EXPLODE("grenade.explode"),
     CHARGE_ARM("charge.arm"),
@@ -54,7 +57,7 @@ public enum SoundCue {
     }
 
     public static SoundCue shot(Blaster blaster) {
-        return valueOf("BLASTER_" + blaster.name());
+        return valueOf("BLASTER_" + blaster.profile().name());
     }
 
     public void play(Location at, float volume) {

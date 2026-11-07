@@ -49,6 +49,9 @@ public final class PresentationArt {
                 post(root, "accent/" + atmospheres[i] + "/" + step, 0, 0, i + 1, step / 8.0);
             }
         }
+        for (int step = 1; step <= 8; step++) {
+            post(root, "hurt/" + step, 0, 0, atmospheres.length + 1, step / 8.0);
+        }
     }
 
     private static void texture(Path root, String shape) throws Exception {

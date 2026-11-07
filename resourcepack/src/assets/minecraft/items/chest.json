@@ -17,6 +17,13 @@
           "type": "minecraft:model",
           "model": "blockcraft:item/staff_invsee"
         }
+      },
+      {
+        "when": "blockcraft:sternenfront/yard/cargo_stack",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/sternenfront/yard/cargo_stack"
+        }
       }
     ],
     "fallback": {

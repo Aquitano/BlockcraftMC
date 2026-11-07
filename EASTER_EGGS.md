@@ -346,7 +346,9 @@ through Extras without Premium. Existing purchased heads keep their original sto
 Wrack von Tessar hides its secrets in the Sternenfront template, so their spots are data in
 `worlds/sternenfront/blockcraft/Sternenfront/arena.yml` (y 64 is the basin floor). Each is one row in `bc_unlocks` under `sternenfront.`; the first find pays
 `secrets.coins` (50) with the unlock, a later find only says the player knows it, and a player hears about each
-secret once per round. Only deployed players find anything. The sounds come from the pack as
+secret once per round. Only deployed players find anything. Each metadata entry is optional.
+Secret tasks, playback, displays and active attempts stop at round end or plugin disable.
+Legacy Tessar ambience remains visible during the lobby. The sounds come from the pack as
 `blockcraft:sternenfront.<name>`; a client without the pack hears a vanilla sound instead.
 
 | Secret | Key | Where and how |
@@ -354,8 +356,10 @@ secret once per round. Only deployed players find anything. The sounds come from
 | Kyber crystals | `kyber.1` to `kyber.5` | Five small glowing crystals that turn, sparkle and hum: (1) at the end of the cruiser's bow corridor, past the second bulkhead where sand fills the nose (4.5 65 -24.5); (2) in a dark slot in the back wall of the temple hall, west of the altar (-4.5 68 -68.5); (3) on the sand drift against the cantina's south-western wall (-40.5 66 50.5); (4) under the belly of the eastern pressure tank in the Raffinerie, at its edge (11.5 65 -33.2); (5) on a ledge cut into the north-eastern cliff three blocks above the scree, which only a jump pack reaches (66.5 69 -53.5). Walking into one finds it and hides it for that player for the round. Whoever holds all five also unlocks `sternenfront.saber.white`, the white lightsaber the heroes hand out, and the server hears of it. |
 | Brummi | `brummi` | A small power droid waddles round the south-east market stall of the Basar (2.5 to 8.5, z 47.5 to 53.5), stops at each corner and beeps. Its hitbox is an interaction tagged with `TargetShotEvent.MARK`, so bolts stop at it and nobody walks into it. A hit makes it jump; the `secrets.brummi.hits` (3) hit from one player in a round sends it off squealing at a run, finds them the secret, and keeps it away for `hide-seconds` (30). |
 | Sand beast | `sand_beast` | The flat top of the dune south-east of the Basar (53.5 68 47.5, radius 3.5), marked by a rib breaking its sand. Standing still on it for `rumble-seconds` (4) brings sound, sand and a shaking view; after `still-seconds` (10) the beast's head rises out of the sand in front of the player, bites twice and sinks back, at `scale` (5) times the model's size. Nobody is hurt. The dune then rests `rest-seconds` (60). |
-| Music box | `cantina` | The jukebox between two speakers against the cantina's south wall (-36 65 53). The round answers no block click, so the box listens itself: a right click plays a 24-second swing tune written for it (`CantinaTune`) to everyone within 24 blocks, and the first click finds the secret. |
+| Music box | `cantina` | The jukebox between two speakers against the cantina's south wall (-36 65 53). Its authored click is consumed before weapon handling. A right click on foot plays a 24-second swing tune written for it (`CantinaTune`) to everyone within 24 blocks, and the first click finds the secret. |
 | Kessel-Lauf | `kessel` | A slot cut into the southern cliff behind the cantina, entered through a framed doorway at (-24 65 58). Running west from the start deck at its east end: the green start arch, two stepping stones, a yellow checkpoint arch over the pit, a third stone, a gap of seven blocks only a jump pack clears, the shelf with the second checkpoint arch, one more stone and the purple finish arch. The action bar shows the time; falling into the pit, leaving the slot or running past `limit-seconds` (60) ends the run. A finish under `par-seconds` (10) finds the secret. Every player's best time is in `bc_sternenfront_kessel`, and the five fastest stand on the board at the start deck. Barriers roof the slot at y 76, below the cliff tops, so it shows the posts nothing and leads nowhere. |
+| Shipyard receiver | `receiver` | `secrets.receiver` locates a hidden authored block. A deployed player on foot right-clicks it to receive a German transmission and play the original `CantinaTune` within 24 blocks. The receiver has shared playback state, so repeated or simultaneous clicks cannot stack the tune or fire the held weapon. Its first discovery pays the configured secret reward independently of `cantina`. |
+| Crane inspection | `inspection` | `secrets.inspection-course` supplies a lane, pit height, ordered X gates and board location. Deployed players on foot cross every gate on fixed platforms. Teleports, mounts, death, departure, leaving the lane, falling below `pit-y` or exceeding `secrets.inspection-course.limit-seconds` (90) end the attempt. The first valid finish pays once; `par-seconds` (25) is a timing goal. The five fastest times are round-local and never enter `bc_sternenfront_kessel`. The moving crane is noncolliding decoration. |
 
 On 4 May (`/event may-the-fourth`), every round's start greets everyone, multiplies every coin the round pays
 through `RoundSummary.coinFactor`, and fires fireworks: each faction's colour over its headquarters and both over
@@ -409,6 +413,12 @@ Before deploying, verify these interactions with Minecraft clients on a local te
   twice. Run the Kessel-Lauf as a scout: fall into the pit, try the long gap without the jump pack, finish slower
   and faster than par, and check the board after a restart. With `/event may-the-fourth`, start a round and compare its
   recap coins with a normal round.
+- On Sturmwerft, right-click the receiver while holding a blaster, then click again from two accounts during playback.
+  Check the transmission, audible tune, lack of weapon fire, one playback and one reward per account across rounds.
+  Run the inspection course through every gate, repeat faster and slower, then try a vehicle and teleport during an attempt.
+  Check failure after a fall, death or departure, and check that only a fresh start works afterward.
+  Finish above and below par, verify that the second finish pays nothing, and confirm that the board resets with the round.
+  End a round during playback and a run. Check that the audio, displays and attempts stop, including after plugin disable.
 
 The build does not validate client rendering, map geometry, or a live proxy-to-backend connection.
 Use the [performance capture workflow](dev/performance/README.md) to compare server tick time, CPU, GC pauses, and client frame times.

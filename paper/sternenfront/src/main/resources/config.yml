@@ -17,19 +17,29 @@ bots:
   difficulty: normal
   profiles:
     easy: {reaction-ticks: 18, shot-ticks: 12, aim-spread: 0.11, burst-shots: 3, burst-pause-ticks: 30, tracking-degrees: 12, damage-scale: 0.6, headshots: false}
-    normal: {reaction-ticks: 12, shot-ticks: 8, aim-spread: 0.045, burst-shots: 5, burst-pause-ticks: 12, tracking-degrees: 45, damage-scale: 0.9, headshots: false}
+    normal: {reaction-ticks: 12, shot-ticks: 8, aim-spread: 0.06, burst-shots: 5, burst-pause-ticks: 12, tracking-degrees: 45, damage-scale: 0.7, headshots: false}
     veteran: {reaction-ticks: 10, shot-ticks: 8, aim-spread: 0.02, burst-shots: 0, burst-pause-ticks: 0, tracking-degrees: 180, damage-scale: 1, headshots: true}
-  medic: {heal-ticks: 60, heal-amount: 3}
+  medic: {heal-ticks: 60, heal-amount: 3, pursuit-ticks: 80, retry-ticks: 100}
   sight-range: 32
   vision-angle: 120
   memory-ticks: 40
   idle-turn-degrees: 12
   step-height: 1
+  boundary-grace-ticks: 40
   kill-points: 25
+  cover: {search-radius: 10, hold-ticks: 40, peek-ticks: 40}
+  voice: {enabled: true, range: 18, volume: 0.65, soldier-cooldown-ticks: 360, global-cooldown-ticks: 100}
 appearance:
   body-turn-degrees: 12
+  motion:
+    soldier: {stride-blocks: 1.8, cycle-ticks: 16, leg-degrees: 32, bob-height: 0.03, lean-degrees: 4, sway-degrees: 3, recoil-degrees: 9, recoil-blocks: 0.06, recoil-ticks: 4}
+    heavy: {stride-blocks: 1.3, cycle-ticks: 22, leg-degrees: 22, bob-height: 0.015, lean-degrees: 2, sway-degrees: 5, recoil-degrees: 5, recoil-blocks: 0.035, recoil-ticks: 6}
+    scout: {stride-blocks: 2.2, cycle-ticks: 12, leg-degrees: 38, bob-height: 0.04, lean-degrees: 11, sway-degrees: 2, recoil-degrees: 14, recoil-blocks: 0.09, recoil-ticks: 7}
+    medic: {stride-blocks: 1.7, cycle-ticks: 14, leg-degrees: 28, bob-height: 0.025, lean-degrees: 6, sway-degrees: 4, recoil-degrees: 4, recoil-blocks: 0.025, recoil-ticks: 3}
   droids: true
   infantry: true
+  # Bot bodies the BetterModel plugin draws and animates, by family. Without the plugin they stay plain rigs.
+  animated-bodies: [hegemonie_soldier, hegemonie_heavy, hegemonie_scout, hegemonie_medic, kolonien_soldier, kolonien_heavy, kolonien_scout, kolonien_medic]
 music:
   enabled: true
   volume: 0.35
@@ -55,13 +65,27 @@ presentation:
   scorch: {marks: 32, every: 3, ticks: 300, fade-ticks: 40, scale: 0.7}
   saber-mark: {cooldown-ticks: 8, glow-ticks: 30, ticks: 300, fade-ticks: 40, scale: 1.5, tilt-degrees: 20}
   saber-trail-ticks: 3
-  muzzle-flash: {ticks: 2, scale: 0.55, heavy-scale: 0.95}
-  bolt: {width: 2.2, length: 1.6, trail-size: 1.3, trail-step: 0.75, far-every: 3, impact-flash: 0.5}
-  explosion: {smoke-puffs: 3, smoke-ticks: 40, debris: 30}
+  muzzle-flash: {ticks: 2, scale: 0.3, heavy-scale: 0.5}
+  bolt: {width: 1.4, length: 1.6, trail-size: 0.8, trail-step: 1.2, far-every: 3, impact-flash: 0.25}
+  explosion: {smoke-puffs: 3, smoke-ticks: 40, debris: 12}
   damaged: {below: 0.35, interval-ticks: 12}
   ambient: {interval-ticks: 10, range: 72}
+  shipyard:
+    enabled: true
+    range: 40
+    props-range: 96
+    steam-interval-ticks: 12
+    spark-interval-ticks: 30
+    steam-particles: 5
+    spark-particles: 7
+    volume: 0.22
+    crane-period-ticks: 600
+    crane-step-ticks: 4
+    crane-cable-length: 4
   assault: {ticks: 100, distance: 90, height: 45, scale: 7, clearance: 0}
   storm: {density: 5, haze: 3, interval-ticks: 2, haze-ticks: 6, radius: 14, wind-speed: 0.8, gust-seconds: 7, gust-ticks: 40, gust-boost: 1.2}
+  # On a map with rain, a harmless strike this many blocks from a random fighter every so often; a last stand halves the wait.
+  lightning: {min-seconds: 20, max-seconds: 55, distance: 50}
 combat:
   precision-hitscan: true
   damage-indicator-ticks: 30
@@ -73,6 +97,9 @@ combat:
     parry-ticks: 5
     cost-per-damage: 2
   melee: {range: 3.5, angle: 120, swing-ticks: 12, sweep-ticks: 4}
+  # Spread multiplies while moving and crouched, and grows by hot times the barrel's heat. Damage holds to falloff-from
+  # of a weapon's range, then thins to falloff-minimum of itself at the end of it.
+  handling: {moving: 1.7, crouched: 0.6, hot: 1, falloff-from: 0.5, falloff-minimum: 0.6}
 speeders:
   enabled: true
   health: 60
@@ -121,16 +148,19 @@ countdown:
   round: 1200
   restart: 30
 idle-restart-minutes: 50
-timer-bar: true
+# ObjectiveHud shows the time left.
+timer-bar: false
 global-stats-head: Kevos
 # How long a running round keeps the place of a player who dropped out; 0 turns it off.
 rejoin-seconds: 120
 
-# What a kill, a captured post (to every capturer in the zone), a killed champion and a win pay in coins.
+# What a kill, a bot, a captured post (to every capturer in the zone), a killed champion, an award and a win pay in coins.
 rewards:
   kill: 5
+  bot-kill: 1
   capture: 4
   champion: 10
+  award: 10
   hero: 15
   win: 25
 
@@ -163,24 +193,40 @@ posts:
   capture-seconds: 12
   radio-cooldown-seconds: 15
 
+# Radio calls wait for speech to finish. Each faction keeps its latest post call; calls during its cooldown are discarded.
+# Timing floors cover the checked-in recordings: 80 ticks for radio, 50 for infantry.
+radio:
+  enabled: true
+  speech: true
+  captions: true
+  volume: 0.8
+  call-ticks: 80
+  infantry-ticks: 50
+  post-cooldown-ticks: 400
+  events: {assault: true, last-stand: true, captured: true, lost: true}
+
 # Tessar's secrets (EASTER_EGGS.md, "Sternenfront"). The first find of each pays coins. Brummi panics at the hits-th
 # hit from one player in a round and stays away for hide-seconds. The sand beast rumbles under a player who stood
 # still on its dune for rumble-seconds and breaks out after still-seconds, at scale times the model's size; then the
 # dune rests for rest-seconds. A Kessel-Lauf under par-seconds finds its secret; a run ends after limit-seconds. On
-# 4 May every round pays coin-factor times its coins.
+# 4 May every round pays coin-factor times its coins. The inspection course rewards any valid completion; its par is a goal.
 secrets:
   coins: 50
   brummi: {hits: 3, hide-seconds: 30}
   sand-beast: {still-seconds: 10, rumble-seconds: 4, rest-seconds: 60, scale: 5}
   kessel: {par-seconds: 10, limit-seconds: 60}
+  inspection-course: {par-seconds: 25, limit-seconds: 90}
   may-the-fourth: {coin-factor: 2}
 
-# A dead player chooses a class and a spawn for seconds, and deploys at the headquarters after auto-seconds if they
-# choose nothing. A deployed player cannot be hurt for protection-seconds or until they fire.
+# A dead player may confirm deployment after seconds. Auto-deployment uses a safe recommendation and the free class.
+# A deployed player cannot be hurt for protection-seconds or until they fire.
 respawn:
   seconds: 5
   auto-seconds: 15
   protection-seconds: 3
+  ability-hint-seconds: 3
+  enemy-clearance: 12
+  navigation-update-ticks: 5
 
 # What an enemy inside a faction's headquarters takes every second.
 headquarters:
@@ -220,15 +266,28 @@ classes:
 
 # Holding right click pulls the trigger every 4 ticks, so cooldown-ticks below 4 only help fast clickers. A pull fires
 # bolts, burst-ticks apart; heat is per pull. speed is blocks per tick, range in blocks, spread the largest sideways
-# deviation per block. A hit above the shoulders multiplies damage by headshot. twin-pistol and heavy-rifle are the
-# gun heroes'.
+# deviation per block. A hit above the shoulders multiplies damage by headshot. Both gun heroes use the
+# twin-pistol profile.
 blasters:
   carbine: {damage: 4, headshot: 1.5, heat: 8, cooldown-ticks: 4, bolts: 1, burst-ticks: 0, spread: 0.012, speed: 3.5, range: 90}
   repeater: {damage: 2.5, headshot: 1.25, heat: 14, cooldown-ticks: 8, bolts: 3, burst-ticks: 2, spread: 0.05, speed: 3.5, range: 60}
+  arc-repeater: {damage: 2.5, headshot: 1.25, heat: 8, cooldown-ticks: 8, bolts: 3, burst-ticks: 2, spread: 0.025, speed: 3.5, range: 75}
+  commando-carbine: {damage: 5, headshot: 1.25, heat: 12, cooldown-ticks: 4, bolts: 1, burst-ticks: 0, spread: 0.035, speed: 3.5, range: 28}
   long-rifle: {damage: 11, headshot: 1.85, heat: 34, cooldown-ticks: 24, bolts: 1, burst-ticks: 0, spread: 0, speed: 5, range: 160}
   pistol: {damage: 3.5, headshot: 1.5, heat: 10, cooldown-ticks: 4, bolts: 1, burst-ticks: 0, spread: 0.015, speed: 3.5, range: 70}
   twin-pistol: {damage: 3.5, headshot: 1.6, heat: 7, cooldown-ticks: 4, bolts: 2, burst-ticks: 2, spread: 0.008, speed: 4, range: 80}
+  # Separatist weapons inherit their matching Republic profile unless overridden here.
+  e5: {}
+  wrist-blaster: {}
+  e5s: {}
+  se14: {}
+  westar-pistols: {}
   heavy-rifle: {damage: 6, headshot: 1.5, heat: 9, cooldown-ticks: 5, bolts: 1, burst-ticks: 0, spread: 0.01, speed: 4, range: 100}
+
+# These slots are independent of named heroes. A purchase lasts one life; limit: 0 disables a unit.
+reinforcement-units:
+  arc-trooper: {cost: 250, limit: 2, health: 32, speed: 1}
+  commando-droid: {cost: 300, limit: 2, health: 26, speed: 1.12}
 
 # Each ability's cooldown and what it does. A grenade or mining charge explodes fuse-ticks after the throw and hurts enemies
 # and its thrower in sight within radius, damage at its centre and a third of it at the edge. The shield wall stands
@@ -265,6 +324,9 @@ heroes:
   per-faction: 1
   points:
     kill: 100
+    # Added to a kill, in proportion to what it pays: a headshot, and each kill after the first in a row (up to three).
+    headshot: 25
+    multikill: 25
     capture: 100
     neutralise: 50
     assist: 40
@@ -289,7 +351,7 @@ heroes:
     leap-cooldown-seconds: 5
     leap-forward: 1.4
     leap-up: 0.7
-    colors: {jedi: "3D8BFF", sith: "FF2A2A", white: "F4F8FF", relic: "FFC24A"}
+    colors: {jedi: "3D8BFF", sith: "FF2A2A", white: "F4F8FF", relic: "F4F8FF"}
   # range in blocks. force-push hits enemies within angle degrees ahead. The thrown saber flies range blocks out at
   # speed blocks per tick and back. force-grip holds for seconds and deals damage over that time. The jetpack thrusts
   # for seconds. The orbital strike falls delay-ticks after the beacon lands, blasts times within radius.
@@ -298,6 +360,10 @@ heroes:
     saber-throw: {cooldown-seconds: 10, range: 14, speed: 1.2, damage: 9}
     force-grip: {cooldown-seconds: 14, range: 14, seconds: 2, damage: 7}
     jetpack: {cooldown-seconds: 12, seconds: 4, thrust: 0.4}
+    # Speed is blocks per tick. A rocket explodes on impact or at the end of its range, hurting enemies and the owner.
+    wrist-rocket: {cooldown-seconds: 16, range: 64, speed: 1.6, radius: 3.5, damage: 18}
+    # Total damage per target over ticks, with one pulse every pulse-ticks. Walls and saber guards stop it.
+    force-lightning: {cooldown-seconds: 14, range: 10, angle: 50, ticks: 30, pulse-ticks: 5, targets: 3, damage: 12}
     grapple: {cooldown-seconds: 8, range: 30, speed: 2.2}
     orbital-strike: {cooldown-seconds: 30, delay-ticks: 60, radius: 5, blasts: 6, damage: 24}
     rally: {cooldown-seconds: 25, radius: 12, seconds: 6}
@@ -306,19 +372,35 @@ heroes:
 killcam:
   ticks: 50
 
-# Kills in one life that earn a one-use orbital strike.
+# Kills in one life that earn a one-use orbital strike, and how many bots count as one kill.
 streaks:
   orbital-strike: 5
+  bots-per-kill: 3
+
+# One goal at a time for each fighter, in a shuffled order, as deed:count. Deeds are kill, headshot, assist, defence and
+# capture. Each pays points and coins.
+orders:
+  points: 150
+  coins: 3
+  list: ["kill:5", "headshot:2", "capture:1", "assist:3", "defence:2", "kill:10"]
+
+# The battle points ever earned that each rank needs, lowest first; career.rank.<index> in messages.yml names them.
+career:
+  ranks: [0, 1500, 4000, 8000, 15000, 25000, 40000, 60000, 90000, 130000]
 
 # Sneaking with the long rifle slows the walk by this share, which clients with FOV effects on show as a zoom.
 scope:
   slowdown: 0.9
 
-outlines: {enabled: true, range: 160}
+outlines: {enabled: true, range: 64, allies: false}
 
 combat-feedback:
   marker-ticks: 6
   reward-ticks: 30
+  hero-ready-ticks: 60
+  elite-ready-ticks: 60
+  recap-delay-ticks: 60
+  multikill-seconds: 4
   sound: {hit: 0.65, headshot: 0.8, kill: 0.9}
 
 intro:
@@ -327,10 +409,11 @@ intro:
   fade-ticks: 15
   audio:
     enabled: true
+    briefing: true
     voice-volume: 0.8
     effects-volume: 0.35
     captions: true
-    briefing-ticks: 80
+    briefing-ticks: 48
   focus:
     enabled: true
     from: 0.75

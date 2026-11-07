@@ -36,8 +36,13 @@ public enum CombatClass {
         return "class." + faction.key() + "." + key();
     }
 
-    public Blaster blaster() {
-        return blaster;
+    public Blaster blaster(Faction faction) {
+        return faction == Faction.KOLONIEN ? blaster : switch (this) {
+            case SOLDIER -> Blaster.E5;
+            case HEAVY -> Blaster.WRIST_BLASTER;
+            case SCOUT -> Blaster.E5S;
+            case MEDIC -> Blaster.SE14;
+        };
     }
 
     public List<Ability> abilities(Faction faction) {

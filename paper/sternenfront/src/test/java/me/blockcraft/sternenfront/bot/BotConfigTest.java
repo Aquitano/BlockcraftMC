@@ -31,6 +31,7 @@ public class BotConfigTest {
         assertFalse(normal.headshots());
         assertEquals(12, config.idleTurnDegrees(), 0.001);
         assertEquals(1, config.stepHeight(), 0.001);
+        assertEquals(40, config.boundaryGraceTicks());
     }
 
     @Test
@@ -56,5 +57,23 @@ public class BotConfigTest {
         assertEquals(0, config.needed(6));
         source.set("bots.enabled", false);
         assertEquals(0, BotConfig.from(source, 6).needed(0));
+    }
+
+    @Test
+    public void coverAndVoiceOverridesKeepSearchAndChatterBounded() {
+        var source = new org.bukkit.configuration.MemoryConfiguration();
+        source.set("bots.cover.search-radius", 100);
+        source.set("bots.cover.peek-ticks", 0);
+        source.set("bots.voice.range", 1000);
+        source.set("bots.voice.volume", 4);
+        source.set("bots.voice.soldier-cooldown-ticks", 0);
+        source.set("bots.voice.global-cooldown-ticks", 0);
+        var config = BotConfig.from(source, 6);
+        assertEquals(16, config.cover().searchRadius(), 0.001);
+        assertEquals(20, config.cover().peekTicks());
+        assertEquals(32, config.voice().range(), 0.001);
+        assertEquals(1, config.voice().volume(), 0.001);
+        assertEquals(100, config.voice().soldierCooldownTicks());
+        assertEquals(60, config.voice().globalCooldownTicks());
     }
 }

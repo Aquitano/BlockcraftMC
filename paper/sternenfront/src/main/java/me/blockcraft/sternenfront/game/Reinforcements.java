@@ -1,6 +1,5 @@
 package me.blockcraft.sternenfront.game;
 
-import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -44,8 +43,9 @@ public final class Reinforcements {
                 .filter(index -> owners.get(index).filter(faction::equals).isPresent()).map(weight).sum();
     }
 
-    public Optional<Faction> defeated() {
-        return Arrays.stream(Faction.values()).filter(faction -> tickets.get(faction) == 0).findFirst();
+    /** Whether a faction is out; {@link #leader} then names the winner, none when both ran out together. */
+    public boolean exhausted() {
+        return tickets.containsValue(0);
     }
 
     /** The faction with more left, none on a tie. */

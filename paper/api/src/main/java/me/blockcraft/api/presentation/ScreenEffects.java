@@ -61,6 +61,12 @@ public final class ScreenEffects {
         replace(player, "presentation/accent/", null);
     }
 
+    /** Reddened screen edges on a channel of their own, so that a hit and an ability's accent do not erase each other. */
+    public static void hurt(Player player, double intensity) {
+        int step = (int) Math.round((Double.isFinite(intensity) ? Math.clamp(intensity, 0, 1) : 0) * 8);
+        replace(player, "presentation/hurt/", step == 0 ? null : Key.key("blockcraft", "presentation/hurt/" + step));
+    }
+
     public static void clearAtmosphere(Player player) {
         Channel.ATMOSPHERE.owners.remove(player.getUniqueId());
         replace(player, "presentation/atmosphere/", null);

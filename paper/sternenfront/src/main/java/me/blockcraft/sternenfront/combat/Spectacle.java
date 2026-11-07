@@ -61,12 +61,17 @@ public final class Spectacle {
 
     private final SternenfrontGame game;
     private final PresentationConfig config;
+    private final ShipyardEffects shipyard;
+    private final YardProps props;
     private Ship ship;
     private Storm storm;
+    private long nextLightning;
 
     public Spectacle(SternenfrontGame game) {
         this.game = game;
         config = PresentationConfig.from(game.plugin().getConfig());
+        shipyard = new ShipyardEffects(game);
+        props = new YardProps(game);
     }
 
     public void assaultBegins(Faction trailing, Location landing) {
@@ -124,6 +129,11 @@ public final class Spectacle {
     }
 
     public void lastStandBegins() {
+        if (game.map().rain()) {
+            game.map().world().setThundering(true);
+            game.map().world().setThunderDuration(Integer.MAX_VALUE);
+            return;
+        }
         if (!config.effects() || storm != null) {
             return;
         }
@@ -134,11 +144,40 @@ public final class Spectacle {
     }
 
     public void tick(long tick) {
+        props.tick(tick);
+        shipyard.tick(tick);
         if (ship != null) {
             fly(ship);
         }
         if (storm != null) {
             blow(storm, tick);
+        }
+        if (game.map().rain() && config.effects() && tick >= nextLightning) {
+            lightning(tick);
+        }
+    }
+
+    /**
+     * Some way off a random fighter, for its flash and thunder, and more often once the last stand has darkened the sky.
+     * A client only hears of a bolt within spigot.yml's tracking range for other entities, 64 blocks by default, so the map's
+     * centre would leave most fighters out.
+     */
+    private void lightning(long tick) {
+        var settings = config.lightning();
+        var random = ThreadLocalRandom.current();
+        int seconds = random.nextInt(settings.minSeconds(), Math.max(settings.minSeconds(), settings.maxSeconds()) + 1);
+        var world = game.map().world();
+        nextLightning = tick + (world.isThundering() ? seconds * 10L : seconds * 20L);
+        var fighters = world.getPlayers().stream().filter(game::onField).toList();
+        if (fighters.isEmpty()) {
+            return;
+        }
+        var near = fighters.get(random.nextInt(fighters.size())).getLocation();
+        double heading = random.nextDouble(Math.PI * 2);
+        int x = (int) (near.getX() + Math.cos(heading) * settings.distance());
+        int z = (int) (near.getZ() + Math.sin(heading) * settings.distance());
+        if (world.isChunkLoaded(x >> 4, z >> 4)) {
+            world.strikeLightningEffect(new Location(world, x, world.getHighestBlockYAt(x, z) + 1, z));
         }
     }
 
@@ -283,6 +322,8 @@ public final class Spectacle {
     }
 
     public void clear() {
+        props.clear();
+        shipyard.clear();
         endShip();
         if (storm != null) {
             game.map().world().getPlayers().forEach(player -> player.stopSound(Sound.ITEM_ELYTRA_FLYING, SoundCategory.WEATHER));

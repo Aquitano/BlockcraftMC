@@ -3,7 +3,7 @@ package me.blockcraft.sternenfront.secret;
 import java.util.Arrays;
 import java.util.List;
 
-/** What a player can find on Tessar, each one row in bc_unlocks. The crystals come in the map's finding order. */
+/** What a player can find in Sternenfront, each one row in bc_unlocks. The crystals come in the map's finding order. */
 enum Secret {
     KYBER_WRECK("kyber.1", "kyber-1"),
     KYBER_TEMPLE("kyber.2", "kyber-2"),
@@ -13,7 +13,9 @@ enum Secret {
     BRUMMI("brummi", "brummi"),
     SAND_BEAST("sand_beast", "sand-beast"),
     CANTINA("cantina", "cantina"),
-    KESSEL("kessel", "kessel");
+    KESSEL("kessel", "kessel"),
+    RECEIVER("receiver", "receiver"),
+    INSPECTION("inspection", "inspection");
 
     static final String PREFIX = "sternenfront.";
     static final String KYBER = PREFIX + "kyber.";

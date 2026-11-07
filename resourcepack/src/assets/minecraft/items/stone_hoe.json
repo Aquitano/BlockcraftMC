@@ -19,6 +19,20 @@
         }
       },
       {
+        "when": "blockcraft:sternenfront/se14",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/sternenfront/se14"
+        }
+      },
+      {
+        "when": "blockcraft:sternenfront/se14_firing",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/sternenfront/se14_firing"
+        }
+      },
+      {
         "when": "blockcraft:zombies/shotgun",
         "model": {
           "type": "minecraft:model",

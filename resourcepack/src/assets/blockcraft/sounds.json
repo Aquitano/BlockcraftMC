@@ -275,12 +275,16 @@
   },
   "sternenfront.intro.briefing.kolonien": {
     "sounds": [
-      "blockcraft:sternenfront/intro_briefing_kolonien"
+      {
+        "name": "blockcraft:sternenfront/intro_briefing_kolonien"
+      }
     ]
   },
   "sternenfront.intro.briefing.hegemonie": {
     "sounds": [
-      "blockcraft:sternenfront/intro_briefing_hegemonie"
+      {
+        "name": "blockcraft:sternenfront/intro_briefing_hegemonie"
+      }
     ]
   },
   "sternenfront.intro.radio_open": {
@@ -296,6 +300,173 @@
   "sternenfront.intro.transition": {
     "sounds": [
       "blockcraft:sternenfront/intro_transition"
+    ]
+  },
+  "sternenfront.force.lightning": {
+    "sounds": [
+      "blockcraft:sternenfront/force_lightning"
+    ]
+  },
+  "sternenfront.wrist_rocket.launch": {
+    "sounds": [
+      "blockcraft:sternenfront/wrist_rocket_launch"
+    ]
+  },
+  "sternenfront.wrist_rocket.impact": {
+    "sounds": [
+      "blockcraft:sternenfront/wrist_rocket_impact"
+    ]
+  },
+  "sternenfront.bot.kolonien.contact": {
+    "sounds": [
+      {
+        "name": "blockcraft:sternenfront/bot_kolonien_contact",
+        "attenuation_distance": 24
+      },
+      {
+        "name": "blockcraft:sternenfront/bot_kolonien_contact_2",
+        "attenuation_distance": 24
+      }
+    ]
+  },
+  "sternenfront.bot.hegemonie.contact": {
+    "sounds": [
+      {
+        "name": "blockcraft:sternenfront/bot_hegemonie_contact",
+        "attenuation_distance": 24
+      },
+      {
+        "name": "blockcraft:sternenfront/bot_hegemonie_contact_2",
+        "attenuation_distance": 24
+      }
+    ]
+  },
+  "sternenfront.bot.kolonien.cover": {
+    "sounds": [
+      {
+        "name": "blockcraft:sternenfront/bot_kolonien_cover",
+        "attenuation_distance": 24
+      },
+      {
+        "name": "blockcraft:sternenfront/bot_kolonien_cover_2",
+        "attenuation_distance": 24
+      }
+    ]
+  },
+  "sternenfront.bot.hegemonie.cover": {
+    "sounds": [
+      {
+        "name": "blockcraft:sternenfront/bot_hegemonie_cover",
+        "attenuation_distance": 24
+      },
+      {
+        "name": "blockcraft:sternenfront/bot_hegemonie_cover_2",
+        "attenuation_distance": 24
+      }
+    ]
+  },
+  "sternenfront.bot.kolonien.advance": {
+    "sounds": [
+      {
+        "name": "blockcraft:sternenfront/bot_kolonien_advance",
+        "attenuation_distance": 24
+      },
+      {
+        "name": "blockcraft:sternenfront/bot_kolonien_advance_2",
+        "attenuation_distance": 24
+      }
+    ]
+  },
+  "sternenfront.bot.hegemonie.advance": {
+    "sounds": [
+      {
+        "name": "blockcraft:sternenfront/bot_hegemonie_advance",
+        "attenuation_distance": 24
+      },
+      {
+        "name": "blockcraft:sternenfront/bot_hegemonie_advance_2",
+        "attenuation_distance": 24
+      }
+    ]
+  },
+  "sternenfront.bot.kolonien.heal": {
+    "sounds": [
+      {
+        "name": "blockcraft:sternenfront/bot_kolonien_heal",
+        "attenuation_distance": 24
+      },
+      {
+        "name": "blockcraft:sternenfront/bot_kolonien_heal_2",
+        "attenuation_distance": 24
+      }
+    ]
+  },
+  "sternenfront.bot.hegemonie.heal": {
+    "sounds": [
+      {
+        "name": "blockcraft:sternenfront/bot_hegemonie_heal",
+        "attenuation_distance": 24
+      },
+      {
+        "name": "blockcraft:sternenfront/bot_hegemonie_heal_2",
+        "attenuation_distance": 24
+      }
+    ]
+  },
+  "sternenfront.radio.kolonien.assault": {
+    "sounds": [
+      {
+        "name": "blockcraft:sternenfront/radio_kolonien_assault"
+      }
+    ]
+  },
+  "sternenfront.radio.kolonien.last-stand": {
+    "sounds": [
+      {
+        "name": "blockcraft:sternenfront/radio_kolonien_last_stand"
+      }
+    ]
+  },
+  "sternenfront.radio.kolonien.captured": {
+    "sounds": [
+      {
+        "name": "blockcraft:sternenfront/radio_kolonien_captured"
+      }
+    ]
+  },
+  "sternenfront.radio.kolonien.lost": {
+    "sounds": [
+      {
+        "name": "blockcraft:sternenfront/radio_kolonien_lost"
+      }
+    ]
+  },
+  "sternenfront.radio.hegemonie.assault": {
+    "sounds": [
+      {
+        "name": "blockcraft:sternenfront/radio_hegemonie_assault"
+      }
+    ]
+  },
+  "sternenfront.radio.hegemonie.last-stand": {
+    "sounds": [
+      {
+        "name": "blockcraft:sternenfront/radio_hegemonie_last_stand"
+      }
+    ]
+  },
+  "sternenfront.radio.hegemonie.captured": {
+    "sounds": [
+      {
+        "name": "blockcraft:sternenfront/radio_hegemonie_captured"
+      }
+    ]
+  },
+  "sternenfront.radio.hegemonie.lost": {
+    "sounds": [
+      {
+        "name": "blockcraft:sternenfront/radio_hegemonie_lost"
+      }
     ]
   }
 }

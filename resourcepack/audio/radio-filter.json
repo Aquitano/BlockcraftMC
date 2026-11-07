@@ -1,0 +1,16 @@
+{
+  "voice": [
+    "highpass=f=450:p=2",
+    "lowpass=f=3000:p=2",
+    "acompressor=threshold=0.08:ratio=4:attack=2:release=40:makeup=2",
+    "asoftclip=type=tanh:threshold=0.18:output=1.2:oversample=2",
+    "acrusher=bits=8:mix=0.12",
+    "lowpass=f=3000:p=2"
+  ],
+  "static": [
+    "anoisesrc=sample_rate=22050:color=white:amplitude=0.035:seed=7351",
+    "highpass=f=600:p=2",
+    "lowpass=f=3200:p=2",
+    "tremolo=f=11:d=0.85"
+  ]
+}

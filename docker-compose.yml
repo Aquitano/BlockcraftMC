@@ -233,13 +233,14 @@ services:
       <<: *paper-env
       BLOCKCRAFT_SERVER_GROUP: sternenfront
       BLOCKCRAFT_WAITING_TEMPLATE: /waiting-lobby
-      BLOCKCRAFT_WORLD_TEMPLATE: /worlds/sternenfront
-      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/sternenfront,/blockcraft/viaversion,/blockcraft/grimac,/blockcraft/nexo
+      BLOCKCRAFT_WORLD_TEMPLATE: /worlds/sternenfront,/worlds/sturmwerft
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/sternenfront,/blockcraft/viaversion,/blockcraft/grimac,/blockcraft/nexo,/blockcraft/bettermodel
     volumes:
       - ./build/docker/paper:/blockcraft:ro
       - ./worlds/waiting-lobby:/waiting-lobby
       - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro
       - ./worlds/sternenfront:/worlds/sternenfront
+      - ./worlds/sturmwerft:/worlds/sturmwerft
       - sternenfront:/data
       - replays:/replays
 
@@ -367,7 +368,7 @@ services:
       BLOCKCRAFT_SERVER_GROUP: replay
       # Viewers wait in the default world while a recording loads; nothing hostile may spawn there.
       DIFFICULTY: peaceful
-      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/viaversion,/blockcraft/grimac
+      COPY_PLUGINS_SRC: /blockcraft/luckperms,/blockcraft/api,/blockcraft/core,/blockcraft/replay,/blockcraft/bettermodel,/blockcraft/viaversion,/blockcraft/grimac
     volumes:
       - ./build/docker/paper:/blockcraft:ro
       - ./dev/paper/config/paper-global.yml:/config/paper-global.yml:ro

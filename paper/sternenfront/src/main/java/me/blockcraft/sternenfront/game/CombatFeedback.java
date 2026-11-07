@@ -1,15 +1,19 @@
 package me.blockcraft.sternenfront.game;
 
 import me.blockcraft.api.BlockcraftApi;
-import me.blockcraft.api.game.GameSidebar;
+import me.blockcraft.api.pack.UiFont;
+import me.blockcraft.api.presentation.ScreenEffects;
 import me.blockcraft.api.scene.Scenes;
 import me.blockcraft.common.message.Messages;
+import me.blockcraft.sternenfront.combat.DamageDirection;
+import me.blockcraft.sternenfront.reinforcement.Reinforcement;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
 import org.bukkit.SoundCategory;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
 
 import java.util.HashMap;
@@ -17,6 +21,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Function;
 
 public final class CombatFeedback {
 
@@ -30,7 +35,7 @@ public final class CombatFeedback {
         }
     }
 
-    public enum Reward { KILL, ASSIST, DEFENCE, HEALING, CAPTURE, NEUTRALISE }
+    public enum Reward { KILL, ASSIST, DEFENCE, HEALING, CAPTURE, NEUTRALISE, HEADSHOT, CHAIN, ORDER }
 
     static final class State {
         Marker marker;
@@ -40,14 +45,29 @@ public final class CombatFeedback {
         long soundedAt = Long.MIN_VALUE;
         Marker sounded;
         Reward reward;
-        Component target = Component.empty();
         int points;
         int kills;
+        boolean headshot;
+        int chain;
+        long chainUntil;
+        int shownChain;
         long rewardUntil;
         boolean ready;
         long readyUntil;
+        boolean eliteReady;
+        long eliteReadyUntil;
         boolean venting;
+        boolean drawnMarked;
+        Optional<DamageDirection> drawnHurt = Optional.empty();
+        long drawnHurtUntil;
         Component hud = Component.empty();
+
+        boolean eliteAvailable(boolean available, long tick, int duration) {
+            boolean announce = available && !eliteReady;
+            if (announce) eliteReadyUntil = tick + duration;
+            eliteReady = available;
+            return announce;
+        }
 
         boolean hit(Marker next, long tick, int ticks) {
             if (tick >= markerUntil || next.ordinal() >= marker.ordinal()) {
@@ -69,68 +89,107 @@ public final class CombatFeedback {
             return Optional.of(marker);
         }
 
-        void earned(Reward next, Component target, int amount, long tick, int ticks) {
+        boolean crosshairChanged(long tick, Optional<DamageDirection> hurt, long hurtUntil) {
+            boolean marked = tick < markerUntil;
+            boolean changed = takeMarker(tick).isPresent() || marked != drawnMarked || !hurt.equals(drawnHurt) || hurtUntil != drawnHurtUntil;
+            drawnMarked = marked;
+            drawnHurt = hurt;
+            drawnHurtUntil = hurtUntil;
+            return changed;
+        }
+
+        void earned(Reward next, int amount, long tick, int ticks) {
             if (tick >= rewardUntil) {
                 points = 0;
                 kills = 0;
+                headshot = false;
+                shownChain = 0;
                 reward = next;
             }
             points += amount;
-            if (next == Reward.KILL) {
-                kills++;
+            switch (next) {
+                case KILL -> kills++;
+                case HEADSHOT -> headshot = true;
+                default -> { }
             }
-            if (reward != Reward.KILL || next == Reward.KILL) {
+            if (next == Reward.ORDER || reward != Reward.ORDER && (reward != Reward.KILL || next == Reward.KILL)) {
                 reward = next;
-                this.target = target;
             }
             rewardUntil = tick + ticks;
         }
 
-        Component reward(Messages messages, boolean detailed) {
-            var key = kills > 1 ? "feedback.multikill" : "feedback." + reward.name().toLowerCase(Locale.ROOT);
-            if (!detailed && reward == Reward.KILL) key = kills > 1 ? "feedback.compact-multikill" : "feedback.compact-kill";
-            return messages.get(key, Placeholder.component("target", target),
-                    Formatter.number("points", points), Formatter.number("kills", kills));
+        /** How many kills in a row this one makes, each within {@code window} ticks of the one before. */
+        int chained(long tick, int window) {
+            chain = tick < chainUntil ? chain + 1 : 1;
+            chainUntil = tick + window;
+            shownChain = chain;
+            return chain;
         }
 
-        Component compose(Component nextHud, Component feedback, Component fallback, Component separator) {
+        Component reward(Messages messages) {
+            int inARow = Math.max(kills, shownChain);
+            var key = reward == Reward.ORDER ? "feedback.order"
+                    : inARow > 1 ? "feedback.multikill"
+                    : headshot ? "feedback.headshot"
+                    : "feedback." + reward.name().toLowerCase(Locale.ROOT);
+            return messages.get(key, Formatter.number("points", points), Formatter.number("kills", inARow));
+        }
+
+        Component compose(Component nextHud, Component feedback, Optional<Component> course) {
             if (!nextHud.equals(Component.empty())) {
                 hud = nextHud;
             }
-            if (feedback.equals(Component.empty())) {
-                return hud;
-            }
-            return hud.equals(Component.empty()) ? feedback.append(fallback) : hud.append(separator).append(feedback);
+            return UiFont.after(feedback, REWARD_WIDTH).append(Component.space()).append(course.orElse(hud));
         }
     }
+
+    private static final char FIRST_DAMAGE_ARC = '\uE228';
+    private static final char FIRST_CROSSHAIR_MARK = '\uE23A';
+    /** Wide enough for the longest popup, so the line does not slide when one appears. */
+    private static final int REWARD_WIDTH = 104;
+    private static final double LOW_HEALTH = 0.4;
+    private static final double LOW_HEALTH_REDNESS = 0.8;
+    private static final double HIT_FLASH_TICKS = 10;
+    private static final double HIT_REDNESS = 0.7;
 
     private final SternenfrontGame game;
     private final Map<UUID, State> states = new HashMap<>();
     private final int markerTicks;
     private final int rewardTicks;
+    private final int heroReadyTicks;
+    private final int eliteReadyTicks;
     private final double hotAt;
     private final float hitVolume;
     private final float headshotVolume;
     private final float killVolume;
+    private final int multikillTicks;
+    private Function<Player, Optional<Component>> courseStatus = player -> Optional.empty();
 
     public CombatFeedback(SternenfrontGame game) {
         this.game = game;
         var config = game.plugin().getConfig();
         markerTicks = Math.clamp(config.getInt("combat-feedback.marker-ticks", 6), 1, 20);
         rewardTicks = Math.clamp(config.getInt("combat-feedback.reward-ticks", 30), 1, 100);
+        heroReadyTicks = Math.clamp(config.getInt("combat-feedback.hero-ready-ticks", 60), 1, 200);
+        eliteReadyTicks = Math.clamp(config.getInt("combat-feedback.elite-ready-ticks"), 1, 200);
         hotAt = Math.clamp(config.getDouble("heat.warning-level", 0.8), 0.1, 0.99);
         hitVolume = (float) Math.clamp(config.getDouble("combat-feedback.sound.hit", 0.65), 0, 1);
         headshotVolume = (float) Math.clamp(config.getDouble("combat-feedback.sound.headshot", 0.8), 0, 1);
         killVolume = (float) Math.clamp(config.getDouble("combat-feedback.sound.kill", 0.9), 0, 1);
+        multikillTicks = Math.clamp(config.getInt("combat-feedback.multikill-seconds", 4), 1, 30) * 20;
     }
 
     private State state(Player player) {
         return states.computeIfAbsent(player.getUniqueId(), ignored -> new State());
     }
 
+    public void courseStatus(Function<Player, Optional<Component>> status) {
+        courseStatus = status;
+    }
+
     public boolean hot(Player player) {
         var fighter = game.fighter(player);
-        return fighter.heat().warning(hotAt, fighter.blaster().map(blaster -> game.firing(player, blaster).heat()).orElse(0.0));
+        return fighter.heat().warning(hotAt, game.factionOf(player).flatMap(fighter::blaster).map(blaster -> game.firing(player, blaster).heat()).orElse(0.0));
     }
 
     public void hit(Player player, Marker marker) {
@@ -144,9 +203,19 @@ public final class CombatFeedback {
         show(player, Component.empty());
     }
 
-    public void earned(Player player, int points, Reward reward, Component target) {
+    /** Counts a kill towards a chain of them, with a chime that climbs as it goes on. */
+    public int chained(Player player) {
+        int chain = state(player).chained(game.tick(), multikillTicks);
+        if (chain > 1) {
+            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, SoundCategory.PLAYERS, 0.8f,
+                    (float) Math.min(2, 0.9 + (chain - 2) * 0.2));
+        }
+        return chain;
+    }
+
+    public void earned(Player player, int points, Reward reward) {
         if (points > 0) {
-            state(player).earned(reward, target, points, game.tick(), rewardTicks);
+            state(player).earned(reward, points, game.tick(), rewardTicks);
             show(player, Component.empty());
         }
     }
@@ -168,51 +237,72 @@ public final class CombatFeedback {
         int cost = game.factionOf(player).map(game.heroes()::cost).orElse(game.heroes().config().cost());
         boolean ready = points >= cost && game.heroOf(player).isEmpty()
                 && game.factionOf(player).filter(game.heroes()::available).isPresent();
+        boolean eliteReady = game.heroOf(player).isEmpty() && game.reinforcementOf(player).isEmpty()
+                && game.factionOf(player).filter(faction -> game.reinforcementUnits().roster()
+                .affordable(player.getUniqueId(), faction, Reinforcement.of(faction))).isPresent();
+        boolean eliteAnnounced = state.eliteAvailable(eliteReady, tick, eliteReadyTicks);
         if (ready && !state.ready) {
-            state.readyUntil = tick + rewardTicks;
+            state.readyUntil = tick + heroReadyTicks;
+        }
+        if (ready && !state.ready || eliteAnnounced) {
             player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, SoundCategory.PLAYERS, 0.7f, 1.4f);
         }
         state.ready = ready;
-        boolean detailed = hud.equals(Component.empty()) && state.hud.equals(Component.empty());
-        Component line = Component.empty();
-        state.takeMarker(tick).ifPresent(marker -> {
-            api.notifications().markerNow(player,
-                    game.messages().get("hit." + marker.name().toLowerCase(Locale.ROOT), GameSidebar.icons(player)),
-                    state.markerUntil - tick);
-        });
+        drawCrosshair(player, state, tick);
+        var line = tick < state.rewardUntil ? state.reward(game.messages())
+                : ready && tick < state.readyUntil ? game.messages().get("feedback.hero-ready")
+                : eliteReady && tick < state.eliteReadyUntil ? game.messages().get("feedback.elite-ready")
+                : Component.empty();
+        ScreenEffects.hurt(player, hurtIntensity(player, game.combat().hurtTicks(player)));
+        var combined = state.compose(hud, line, courseStatus.apply(player));
         if (tick < state.rewardUntil) {
-            line = state.reward(game.messages(), detailed);
-        }
-        if (tick < state.readyUntil && ready) {
-            if (!line.equals(Component.empty())) {
-                line = line.append(Component.space());
-            }
-            line = line.append(game.messages().get("feedback.hero-ready"));
-        }
-        var fallback = Component.empty();
-        if (!line.equals(Component.empty())) {
-            line = line.append(game.messages().get("feedback.progress", Formatter.number("points", points), Formatter.number("cost", cost)));
-            if (detailed && (venting || hot(player))) {
-                fallback = fallback.append(Component.space()).append(game.messages().get(venting ? "combat.venting" : "combat.hot",
-                        Formatter.number("seconds", (heat.ventTicks(tick) + 19) / 20)));
-            }
-        }
-        var combined = state.compose(hud, line, fallback, game.messages().get("feedback.separator"));
-        if (!line.equals(Component.empty())) {
             api.notifications().feedbackNow(player, combined, 5);
-        } else if (!combined.equals(Component.empty())) {
+        } else {
             api.notifications().status(player, combined);
         }
     }
 
+    /** The edges of the screen redden with a hit and stay red while health is low. */
+    private double hurtIntensity(Player player, int hurtTicksLeft) {
+        double share = player.getHealth() / player.getAttribute(Attribute.MAX_HEALTH).getValue();
+        double low = share < LOW_HEALTH ? (LOW_HEALTH - share) / LOW_HEALTH * LOW_HEALTH_REDNESS : 0;
+        double sinceHit = game.combat().config().damageIndicatorTicks() - hurtTicksLeft;
+        double hit = hurtTicksLeft > 0 ? Math.max(0, 1 - sinceHit / HIT_FLASH_TICKS) * HIT_REDNESS : 0;
+        return Math.max(low, hit);
+    }
+
+    private void drawCrosshair(Player player, State state, long tick) {
+        var hurt = game.combat().damageDirection(player);
+        if (!state.crosshairChanged(tick, hurt, hurt.isPresent() ? tick + game.combat().hurtTicks(player) : 0)) {
+            return;
+        }
+        var notifications = BlockcraftApi.get().notifications();
+        if (!state.drawnMarked && hurt.isEmpty()) {
+            notifications.clearMarker(player);
+            return;
+        }
+        var arc = hurt.map(direction -> UiFont.centredBehind((char) (FIRST_DAMAGE_ARC + direction.ordinal()))).orElse(Component.empty());
+        var marker = state.drawnMarked ? UiFont.centredBehind((char) (FIRST_CROSSHAIR_MARK + state.marker.ordinal())) : Component.empty();
+        notifications.markerNow(player, arc.append(marker), Math.max(state.markerUntil - tick, game.combat().hurtTicks(player)));
+    }
+
     public void forget(Player player) {
+        ScreenEffects.hurt(player, 0);
         if (states.remove(player.getUniqueId()) != null) BlockcraftApi.get().notifications().clearMarker(player);
+    }
+
+    /** Off the field the HUD stops updating, so the redness would stay until the next deployment. */
+    public void offField(Player player) {
+        ScreenEffects.hurt(player, 0);
     }
 
     public void clear() {
         for (var id : states.keySet()) {
             var player = Bukkit.getPlayer(id);
-            if (player != null) BlockcraftApi.get().notifications().clearMarker(player);
+            if (player != null) {
+                ScreenEffects.hurt(player, 0);
+                BlockcraftApi.get().notifications().clearMarker(player);
+            }
         }
         states.clear();
     }

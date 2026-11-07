@@ -17,6 +17,13 @@ public enum Blaster implements HotbarItem {
     PISTOL(PackModel.STERNENFRONT_PISTOL),
     TWIN_PISTOL(PackModel.STERNENFRONT_TWIN_PISTOL),
     HEAVY_RIFLE(PackModel.STERNENFRONT_HEAVY_RIFLE),
+    E5(PackModel.STERNENFRONT_E5),
+    WRIST_BLASTER(PackModel.STERNENFRONT_WRIST_BLASTER),
+    E5S(PackModel.STERNENFRONT_E5S),
+    SE14(PackModel.STERNENFRONT_SE14),
+    WESTAR_PISTOLS(PackModel.STERNENFRONT_WESTAR_PISTOLS),
+    ARC_REPEATER(PackModel.STERNENFRONT_REPEATER),
+    COMMANDO_CARBINE(PackModel.STERNENFRONT_E5),
     SPEEDER_CANNON(PackModel.STERNENFRONT_HEAVY_RIFLE);
 
     /**
@@ -41,14 +48,38 @@ public enum Blaster implements HotbarItem {
         return model;
     }
 
+    public Blaster profile() {
+        return switch (this) {
+            case E5, COMMANDO_CARBINE -> CARBINE;
+            case WRIST_BLASTER, ARC_REPEATER -> REPEATER;
+            case E5S -> LONG_RIFLE;
+            case SE14 -> PISTOL;
+            case WESTAR_PISTOLS -> TWIN_PISTOL;
+            default -> this;
+        };
+    }
+
+    public boolean precision() {
+        return profile() == LONG_RIFLE;
+    }
+
+    public boolean dual() {
+        return profile() == TWIN_PISTOL;
+    }
+
     public PackModel firingModel() {
         return switch (this) {
             case CARBINE -> PackModel.STERNENFRONT_CARBINE_FIRING;
-            case REPEATER -> PackModel.STERNENFRONT_REPEATER_FIRING;
+            case REPEATER, ARC_REPEATER -> PackModel.STERNENFRONT_REPEATER_FIRING;
             case LONG_RIFLE -> PackModel.STERNENFRONT_LONG_RIFLE_FIRING;
             case PISTOL -> PackModel.STERNENFRONT_PISTOL_FIRING;
             case TWIN_PISTOL -> PackModel.STERNENFRONT_TWIN_PISTOL_FIRING;
             case HEAVY_RIFLE, SPEEDER_CANNON -> PackModel.STERNENFRONT_HEAVY_RIFLE_FIRING;
+            case E5, COMMANDO_CARBINE -> PackModel.STERNENFRONT_E5_FIRING;
+            case WRIST_BLASTER -> PackModel.STERNENFRONT_WRIST_BLASTER_FIRING;
+            case E5S -> PackModel.STERNENFRONT_E5S_FIRING;
+            case SE14 -> PackModel.STERNENFRONT_SE14_FIRING;
+            case WESTAR_PISTOLS -> PackModel.STERNENFRONT_WESTAR_PISTOLS_FIRING;
         };
     }
 }

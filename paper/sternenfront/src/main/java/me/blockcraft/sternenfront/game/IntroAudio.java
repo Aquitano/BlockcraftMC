@@ -42,9 +42,9 @@ final class IntroAudio {
         float voiceVolume = volume(config.getDouble("intro.audio.voice-volume"));
         float effectsVolume = volume(config.getDouble("intro.audio.effects-volume"));
         int speechStart = fade + 3;
-        int speechEnd = speechStart + Math.max(1, config.getInt("intro.audio.briefing-ticks"));
+        int speechEnd = speechStart + Math.clamp(config.getInt("intro.audio.briefing-ticks"), 48, 200);
         var cues = new ArrayList<SceneTimeline.Cue>();
-        if (speechEnd + 4 <= duration - fade) {
+        if (config.getBoolean("intro.audio.briefing") && speechEnd + 4 <= duration - fade) {
             cues.add(cue(fade, Sound.RADIO_OPEN, effectsVolume));
             cues.add(new SceneTimeline.Cue(speechStart, () -> {
                 if (scope.closed()) return;

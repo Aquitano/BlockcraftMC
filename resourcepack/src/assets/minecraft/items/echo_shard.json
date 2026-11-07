@@ -5,17 +5,17 @@
     "index": 0,
     "cases": [
       {
-        "when": "blockcraft:ttt/mine_detector",
-        "model": {
-          "type": "minecraft:model",
-          "model": "blockcraft:item/ttt/mine_detector"
-        }
-      },
-      {
         "when": "blockcraft:sternenfront/orbital_beacon",
         "model": {
           "type": "minecraft:model",
           "model": "blockcraft:item/sternenfront/orbital_beacon"
+        }
+      },
+      {
+        "when": "blockcraft:ttt/mine_detector",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/ttt/mine_detector"
         }
       }
     ],

@@ -8,16 +8,26 @@ import org.bukkit.util.BoundingBox;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.OptionalLong;
 
 /**
- * A built map, as the round needs it: the box players fight in (the world border and the replay's play area), each
+ * A built map, as the round needs it: the box players fight in (the replay's play area), each
  * faction's headquarters, the command posts in letter order (A first), where the relic blade floats, the spot above
- * the map that dead players watch from while they choose where to deploy, the lobby and spectator spawns, and where
- * the map hides its secrets.
+ * the map that dead players watch from while they choose where to deploy, the lobby and spectator spawns, where the map
+ * hides any secrets, and any rain and fixed time of day.
  */
 public record FrontMap(String name, World world, BoundingBox playArea, Map<Faction, Headquarters> headquarters,
                        List<PostSite> posts, Location relic, Location overview, Location lobbySpawn,
-                       Location spectatorSpawn, SecretSpots secrets, List<ControlSite> controls) {
+                       Location spectatorSpawn, Optional<SecretSpots> secrets, List<ControlSite> controls, boolean rain, OptionalLong time,
+                       YardEnvironment environment, double worldBorderSize, double deathY) {
+
+    public boolean outsideBattlefield(Location location) {
+        return Objects.equals(world, location.getWorld()) && (location.getY() < deathY
+                || location.getX() < playArea.getMinX() || location.getX() >= playArea.getMaxX()
+                || location.getZ() < playArea.getMinZ() || location.getZ() >= playArea.getMaxZ());
+    }
 
     /** Where a faction deploys at its base, and the zone around it where enemies are hurt. */
     public record Headquarters(List<Location> spawns, BoundingBox zone) {

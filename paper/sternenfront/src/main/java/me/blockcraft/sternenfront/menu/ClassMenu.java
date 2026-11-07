@@ -72,10 +72,10 @@ public final class ClassMenu extends Menu {
         var classes = CombatClass.values();
         for (int index = 0; index < classes.length; index++) {
             boolean chosen = classes[index] == current;
-            set(SLOTS.get(index), loadouts.card(faction, classes[index], chosen,
+            set(SLOTS.get(index), loadouts.roleCard(faction, classes[index], chosen,
                     List.of(messages.get(chosen ? "class.selected" : "class.select"))));
         }
-        info(BLASTER_SLOT, loadouts.blaster(current.blaster()));
+        info(BLASTER_SLOT, loadouts.blaster(current.blaster(faction)));
         var abilities = current.abilities(faction);
         for (int key = 0; key < ABILITY_SLOTS.size(); key++) {
             info(ABILITY_SLOTS.get(key), key < abilities.size() ? loadouts.abilityCard(faction, abilities.get(key), key) : null);

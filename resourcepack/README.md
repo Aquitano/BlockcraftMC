@@ -19,10 +19,12 @@ screen effects, and the Sternenfront intro.
   without the pack. At title scale about thirteen letters fit a 1366x768 screen.
 - **Sounds.** World sounds must be mono, because the client places only mono sounds in the world. Each script replaces
   only its own entries in `sounds.json`.
-- **Portraits.** The Sternenfront role cards come from `resourcepack/art/sternenfront`, rendered once from the class
-  models. `PackArt` only copies them in, so a changed class model needs a new render.
+- **Portraits.** `SternenfrontArt.java` renders the role cards into `resourcepack/art/sternenfront` from the class
+  models. `generateTextures` runs that generator before `PackArt` copies them into the menu tiles.
 
 ## Making a model
+
+Sternenfront equipment and body models come from `SternenfrontArt.java`. Edit the generator for those assets.
 
 The hand-made 3D models live in `assets/blockcraft/models/item/<set>/`, each named by its `PackModel`. They are cuboids
 textured with vanilla block textures, which keeps the pack small and the look vanilla. Made in Blockbench, a model is
@@ -41,6 +43,72 @@ exported with "Java Block/Item".
   one model draws every blade colour.
 - Item icons use a native 16-pixel grid, transparent margins and upper-left lighting. HUD symbols use seven pixels of ink
   in each eight-pixel tile to align with the text baseline.
+
+## Sternenfront first-person weapons
+
+`SternenfrontArt.java` assigns seven `GunPose` families in the equipment list. The same definition supplies resting
+transforms and a firing kick for both hands. Vanilla mirrors the left hand's X translation, yaw and roll, so the authored
+hand transforms are identical. Third-person, GUI, ground and fixed transforms retain their existing values.
+
+Run `:resourcepack:generateBattle` to regenerate the equipment and firing models. Java writes the firing transforms to
+`build/sternenfront/firing-poses.json`; `BattleArt.py` consumes that manifest and inherits each gun's geometry and other
+transforms. Running `BattleArt.py` directly requires a fresh Java generation first.
+`:resourcepack:verifyWeaponPoses`, also part of `check`, checks all eleven registered guns, vanilla item routes,
+texture paths, both hands, firing inheritance, family framing, recoil differences and wrist bounds.
+
+Pistols rise sharply when firing. Twin pistols sit farther outward with an inward cant. Carbines have a compact shoulder
+pose; long rifles sit farther forward. The Z-6 sits lower with a larger scale and a small firing displacement.
+The B2 wrist blaster includes a metal forearm, rear cuff and fist below its paired barrels. This is ordinary held-item
+geometry and remains visible in inventory and third-person views. It does not replace a player's arm or body.
+Twin-pistol models still represent one gun per equipped hand; the pose does not create a second hand or alternate shots.
+
+The firing state is a discrete model swap, with no interpolation, barrel animation or change to shot mechanics.
+Client checks must cover both dominant-hand settings, offhand pairs, firing and resting at normal and wide FOV,
+and the wrist cuff's overlap with the vanilla hand. Automated model checks cannot establish screen clearance or clipping.
+
+## Sturmwerft shipyard props
+
+`YardArt.java` authors nine original props with separate 64-pixel atlases in
+`models/item/sternenfront/yard/` and `textures/item/sternenfront/yard/`. The props use ivory enamel, blue-gray steel,
+charcoal recesses, teal instruments, amber indicators and weathered copper. They reference no vanilla textures.
+`:resourcepack:generateYardArt` regenerates only these assets and `resourcepack/build/yard/contact-sheet.png`.
+The contact sheet uses the generated geometry and face UVs with ordinary directional shading.
+
+The `PackModel` paths are `sternenfront/yard/console`, `power_coupler`, `engine_cradle`, `cargo_stack`, `repair_droid`,
+`wall_panel`, `clone_tank`, `embryo_rack` and `gene_archive`, all under `sternenfront/yard/`.
+They use `ItemDisplayTransform.NONE`, with no model display transforms.
+The model's ground origin is `(8,8,8)`, and its authored front points along +Z. The runtime cancels the client's extra
+half-turn, as it does for dropships. Do not add another corrective model rotation.
+
+All element corners, including rotated corners, fit `x,z = -8..24` and `y = 8..32`. At scale 1, the item-centred
+geometry therefore fits within two blocks horizontally and rises at most 1.5 blocks above the display position.
+`YardArt` checks these bounds and its explicit UVs before writing each model. The props use ordinary world lighting.
+
+The three cloning props use clean ivory collars, ice-blue interiors and warm skin tones. Their 64-pixel atlases use
+only alpha 0 and 255. The capsule windows contain narrow opaque reflections and bubble marks, with the remaining
+pixels fully clear. Each window is a single face.
+The faceted collars use cutout caps and separate side faces to avoid overlapping cap faces.
+The six shipyard atlases use their original opaque texture writer.
+
+| Kind | Actual rotated bounds in model units | Intended scale | Visible size in blocks |
+| --- | --- | --- | --- |
+| `clone_tank` | `(0.2, 8, 0.2)` to `(15.8, 32, 15.9)` | 1.5 | 1.4625 × 2.25 × 1.471875 |
+| `embryo_rack` | `(-4, 8, 1.6)` to `(20, 22.4, 14.4)` | 1 | 1.5 × 0.9 × 0.8 |
+| `gene_archive` | `(2.5, 8, 2.5)` to `(13.5, 21, 13.5)` | 0.8 | 0.55 × 0.65 × 0.55 |
+
+Bounds are rounded to four decimals. `YardArt` checks both the authoring boxes and rotated faces against each
+cloning prop's tighter bounds. The adult clone spans model `y = 10.5..29.7`, or 1.8 blocks at scale 1.5.
+The gene archive has three capped cartridges and an inventory panel inset behind its ivory bezel.
+
+The visual references are Lucasfilm's [Kamino](https://www.starwars.com/databank/kamino),
+[Tipoca City](https://www.starwars.com/databank/tipoca-city),
+[medical capsules](https://www.starwars.com/databank/medical-capsules),
+[Kamino history gallery](https://www.starwars.com/kamino-history-gallery) and
+[ARC Troopers gallery](https://www.starwars.com/series/clone-wars/arc-troopers-episode-gallery).
+The upright adult-filled capsule adapts those references for this desk. It is not an exact screen replica.
+All geometry and pixels are authored locally. No source images are bundled.
+Client verification must check the clone's face, window cutouts, lighting and clearance on the desk.
+The software contact sheet does not reproduce Minecraft's item renderer.
 
 ## Presentation assets
 

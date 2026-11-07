@@ -20,25 +20,25 @@ public final class CombatHud {
         this.game = game;
     }
 
+    /** Wide enough for the longest state, so the line does not slide when one appears. */
+    static final int STATE_WIDTH = 30;
+
     public void show(Player player, Guard guard) {
         var api = BlockcraftApi.get();
         if (api.dialogues().active(player) || api.visuals().active(player) || Scenes.isViewing(player)) return;
+        game.deployment().controlsChanged(player);
         var fighter = game.fighter(player);
         boolean blade = fighter.hero().filter(Hero::bladed).isPresent();
         boolean venting = fighter.heat().venting(game.tick());
         boolean hot = !blade && game.feedback().hot(player);
-        double health = player.getHealth() / player.getAttribute(Attribute.MAX_HEALTH).getValue();
         var meter = game.messages().get(blade ? guard.broken(game.tick()) ? "combat.broken" : guard.raised()
                         ? "combat.guarding" : "combat.guard" : venting ? "combat.venting" : hot ? "combat.hot" : "combat.heat",
                 Formatter.number("seconds", (fighter.heat().ventTicks(game.tick()) + 19) / 20));
         var line = game.messages().get("combat.hud",
-                Placeholder.component("health_icon", icon(0)),
-                Placeholder.component("health", bar(health)),
-                Formatter.number("hp", Math.ceil(player.getHealth())),
                 Placeholder.component("meter_icon", icon(blade ? 2 : 1)),
                 Placeholder.component("meter", bar(blade ? guard.level() : fighter.heat().level())
                         .color(hot || venting ? NamedTextColor.RED : NamedTextColor.GOLD)),
-                Placeholder.component("state", meter),
+                Placeholder.component("state", UiFont.before(meter, STATE_WIDTH)),
                 Placeholder.component("first", ability(player, 0)),
                 Placeholder.component("second", ability(player, 1)));
         if (blade && game.combat().leapCooldown(player) > 0) {
@@ -48,21 +48,14 @@ public final class CombatHud {
         if (game.strikeReady(player)) {
             line = line.append(game.messages().get("combat.strike-ready"));
         }
-        var incoming = game.combat().damageDirection(player);
-        if (incoming.isPresent()) {
-            line = game.messages().get("combat.incoming." + incoming.get()).append(line);
-        }
         game.feedback().show(player, line);
     }
 
     private Component ability(Player player, int index) {
         var fighter = game.fighter(player);
-        if (fighter.hero().filter(Hero.CHAMPION::equals).isPresent()) {
-            return index == 0 ? game.messages().get("combat.champion-leap") : game.messages().get("combat.none");
-        }
         var hero = fighter.hero();
         var faction = game.factionOf(player);
-        var classAbility = faction.flatMap(side -> fighter.combatClass().abilities(side).stream().skip(index).findFirst());
+        var classAbility = faction.flatMap(side -> fighter.abilities(side).stream().skip(index).findFirst());
         var key = hero.isPresent() ? hero.get().abilities().stream().skip(index).findFirst().map(ability -> "hero.ability." + ability.key())
                 : classAbility.flatMap(ability -> faction.map(ability::messageKey));
         if (key.isEmpty()) {
@@ -73,7 +66,7 @@ public final class CombatHud {
         var status = cooldown == 0 ? game.messages().get("combat.ready")
                 : game.messages().get("combat.cooldown", Formatter.number("seconds", (cooldown + 19) / 20));
         return game.messages().get("combat.ability", Placeholder.component("key", icon(index + 3)),
-                Placeholder.component("name", game.messages().get(key.get() + ".name")), Placeholder.component("status", status));
+                Placeholder.component("label", game.messages().get("combat.labels." + key.get().substring(key.get().lastIndexOf('.') + 1))), Placeholder.component("status", status));
     }
 
     private static Component icon(int index) {

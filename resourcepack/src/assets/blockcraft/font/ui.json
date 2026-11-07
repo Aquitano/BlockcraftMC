@@ -173,6 +173,33 @@
     },
     {
       "type": "bitmap",
+      "file": "blockcraft:font/objective_pips.png",
+      "ascent": 9,
+      "height": 11,
+      "chars": [
+        "\ue230\ue231\ue232\ue233\ue234\ue235\ue236\ue237\ue238\ue239"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "blockcraft:font/crosshair_marks.png",
+      "ascent": 28,
+      "height": 32,
+      "chars": [
+        "\ue23a\ue23b\ue23c"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "blockcraft:font/damage_arcs.png",
+      "ascent": 28,
+      "height": 32,
+      "chars": [
+        "\ue228\ue229\ue22a\ue22b"
+      ]
+    },
+    {
+      "type": "bitmap",
       "file": "blockcraft:font/combat_bars.png",
       "ascent": 9,
       "height": 12,

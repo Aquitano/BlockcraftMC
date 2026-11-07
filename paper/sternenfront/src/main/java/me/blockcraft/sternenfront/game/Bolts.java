@@ -30,7 +30,8 @@ import java.util.concurrent.ThreadLocalRandom;
 public final class Bolts {
 
     private static final double HIT_SIZE = 0.1;
-    private static final double VISUAL_LEAD = 0.8;
+    private static final double VISUAL_LEAD = 1.6;
+    private static final double PARRY_CLEARANCE = 0.8;
     private static final double TRAIL_CLEAR_OF_EYES = 1.4;
     private static final float MODEL_LENGTH = 1.22f;
     private static final double HEAD_BELOW_EYES = 0.25;
@@ -44,6 +45,7 @@ public final class Bolts {
         private final Vector direction;
         private final ItemDisplay display;
         private Location position;
+        private final double range;
         private double left;
         private double nextDot = TRAIL_CLEAR_OF_EYES;
         private int dots;
@@ -53,29 +55,34 @@ public final class Bolts {
             this.shot = shot;
             this.position = position;
             this.direction = direction;
+            this.range = range;
             this.left = range;
             this.display = display;
         }
     }
 
     private final SternenfrontGame game;
+    private final WeaponHandling handling;
     private final List<Bolt> flying = new ArrayList<>();
 
     public Bolts(SternenfrontGame game) {
         this.game = game;
+        handling = WeaponHandling.from(game.plugin().getConfig().getConfigurationSection("combat.handling"));
     }
 
     /** One bolt from the shooter's eyes, off their aim by up to the blaster's spread. */
     public void fire(Player shooter, Faction faction, Blaster blaster, Blaster.Stats stats) {
         var eye = shooter.getEyeLocation();
         var direction = eye.getDirection();
-        if (stats.spread() > 0) {
+        var input = shooter.getCurrentInput();
+        double spread = handling.spread(stats.spread(), input.isForward() || input.isBackward() || input.isLeft() || input.isRight(),
+                shooter.isSneaking(), game.fighter(shooter).heat().level());
+        if (spread > 0) {
             var random = ThreadLocalRandom.current();
-            direction.add(new Vector(random.nextDouble(-stats.spread(), stats.spread()),
-                    random.nextDouble(-stats.spread(), stats.spread()),
-                    random.nextDouble(-stats.spread(), stats.spread()))).normalize();
+            direction.add(new Vector(random.nextDouble(-spread, spread), random.nextDouble(-spread, spread),
+                    random.nextDouble(-spread, spread))).normalize();
         }
-        if (blaster == Blaster.LONG_RIFLE && game.combat().config().precisionHitscan()) {
+        if (blaster.precision() && game.combat().config().precisionHitscan()) {
             launch(shooter, new Shot(faction, blaster, stats.damage(), stats.headshot(), stats.range()),
                     shooter.getEyeLocation(), direction, stats.range(), true);
         } else {
@@ -137,13 +144,13 @@ public final class Bolts {
         trail(bolt, travelled);
         if (hit != null && hit.getHitEntity() instanceof LivingEntity victim) {
             var at = hit.getHitPosition().toLocation(world);
-            game.effects().boltHit(at, bolt.shot.faction());
-            strike(bolt, victim, at);
+            game.effects().boltHit(at, bolt.shot.faction(), victim);
+            strike(bolt, victim, at, travelled);
             return false;
         }
         if (hit != null && hit.getHitEntity() instanceof Interaction target) {
             var at = hit.getHitPosition().toLocation(world);
-            game.effects().boltHit(at, bolt.shot.faction());
+            game.effects().boltOnTarget(at, bolt.shot.faction());
             SoundCue.BOLT_IMPACT.play(at, IMPACT_VOLUME);
             if (bolt.shooter instanceof Player player && player.isOnline()) {
                 Bukkit.getPluginManager().callEvent(new TargetShotEvent(target, player));
@@ -169,8 +176,9 @@ public final class Bolts {
         return true;
     }
 
-    private void strike(Bolt bolt, LivingEntity victim, Location at) {
-        var guard = victim instanceof Player player ? game.combat().block(player, bolt.direction, bolt.shot.damage())
+    private void strike(Bolt bolt, LivingEntity victim, Location at, double travelled) {
+        double damage = handling.damage(bolt.shot.damage(), bolt.range - bolt.left + travelled, bolt.range);
+        var guard = victim instanceof Player player ? game.combat().block(player, bolt.direction, damage)
                 : Guard.Result.NONE;
         if (guard == Guard.Result.BLOCK) {
             return;
@@ -181,12 +189,13 @@ public final class Bolts {
                     : bolt.direction.clone().multiply(-1);
             var faction = game.factionOf(victim).orElse(bolt.shot.faction().enemy());
             var shot = new Shot(faction, bolt.shot.blaster(), bolt.shot.damage(), bolt.shot.headshot(), bolt.shot.speed());
-            launch(victim, shot, at.clone().add(back.clone().multiply(VISUAL_LEAD)), back, game.config().stats(shot.blaster()).range());
+            launch(victim, shot, at.clone().add(back.clone().multiply(PARRY_CLEARANCE)), back, game.config().stats(shot.blaster()).range());
             game.deflected(player, at);
             return;
         }
-        boolean head = at.getY() >= victim.getEyeLocation().getY() - HEAD_BELOW_EYES;
-        game.boltHit(bolt.shooter, bolt.shot.blaster(), victim, bolt.shot.damage() * (head ? bolt.shot.headshot() : 1), head);
+        boolean head = game.speeders().faction(victim).isEmpty() && at.getY() >= victim.getEyeLocation().getY() - HEAD_BELOW_EYES;
+        game.boltHit(bolt.shooter, bolt.shot.blaster(), victim, damage * (head ? bolt.shot.headshot() : 1),
+                head && bolt.shot.headshot() > 1);
     }
 
     /**

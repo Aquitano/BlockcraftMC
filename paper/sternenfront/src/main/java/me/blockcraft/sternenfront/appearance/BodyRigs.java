@@ -3,9 +3,12 @@ package me.blockcraft.sternenfront.appearance;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.game.GamePhase;
 import me.blockcraft.api.game.RoundPhaseChangeEvent;
+import me.blockcraft.sternenfront.game.CombatClass;
 import me.blockcraft.sternenfront.game.Faction;
 import me.blockcraft.sternenfront.game.LineOfSight;
 import me.blockcraft.sternenfront.game.SternenfrontGame;
+import me.blockcraft.sternenfront.hero.Hero;
+import me.blockcraft.sternenfront.reinforcement.Reinforcement;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Entity;
@@ -21,6 +24,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -38,6 +42,8 @@ public final class BodyRigs implements Listener, AutoCloseable {
     private final boolean droids;
     private final boolean infantry;
     private final float turnDegrees;
+    private final Map<CombatClass, RigMotion> motions = new EnumMap<>(CombatClass.class);
+    private final Optional<AnimatedBodies> animated;
 
     private BodyRigs(Plugin plugin, SternenfrontGame game, boolean droids, boolean infantry) {
         this.plugin = plugin;
@@ -45,12 +51,27 @@ public final class BodyRigs implements Listener, AutoCloseable {
         this.droids = droids;
         this.infantry = infantry;
         turnDegrees = (float) Math.clamp(game.plugin().getConfig().getDouble("appearance.body-turn-degrees", 12), 1, 45);
+        for (var role : CombatClass.values()) {
+            motions.put(role, RigMotion.from(game.plugin().getConfig(), role));
+        }
+        var animatedBodies = game.plugin().getConfig().getStringList("appearance.animated-bodies");
+        // Without the plugin every body stays a BodyRig, so a server that lacks it still plays the round.
+        animated = animatedBodies.isEmpty() || !plugin.getServer().getPluginManager().isPluginEnabled("BetterModel") ? Optional.empty()
+                : Optional.of(new AnimatedBodies(animatedBodies, this::outlined));
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
         task = plugin.getServer().getScheduler().runTaskTimer(plugin, this::tick, 1L, 1L);
     }
 
     public static BodyRigs start(Plugin plugin, SternenfrontGame game, boolean droids, boolean infantry) {
         return new BodyRigs(plugin, game, droids, infantry);
+    }
+
+    private boolean outlined(Player viewer, LivingEntity actor) {
+        var config = plugin.getConfig();
+        return config.getBoolean("outlines.enabled", true) && game.onField(viewer) && BlockcraftApi.get().resourcePack().applied(viewer)
+                && game.factionOf(viewer).isPresent() && !game.factionOf(viewer).equals(game.factionOf(actor))
+                && actor.getWorld().equals(viewer.getWorld())
+                && TargetOutlines.inRange(viewer.getEyeLocation(), actor, config.getDouble("outlines.range", 64));
     }
 
     public Optional<LivingEntity> actor(Entity clicked) {
@@ -60,6 +81,10 @@ public final class BodyRigs implements Listener, AutoCloseable {
 
     public Optional<RigSnapshot> snapshot(Entity actor) {
         return Optional.ofNullable(rigs.get(actor.getUniqueId())).map(BodyRig::snapshot);
+    }
+
+    public static String family(Faction faction, CombatClass role) {
+        return RigBody.of(faction, role).family();
     }
 
     public List<Entity> outlineParts(LivingEntity actor, Player viewer) {
@@ -75,14 +100,29 @@ public final class BodyRigs implements Listener, AutoCloseable {
             }
             var id = actor.getUniqueId();
             present.add(id);
+            var hero = actor instanceof Player player ? game.heroOf(player) : Optional.<Hero>empty();
+            var unit = actor instanceof Player player ? game.reinforcementOf(player) : Optional.<Reinforcement>empty();
+            var body = unit.map(RigBody::of).orElseGet(() -> RigBody.of(game.factionOf(actor).orElseThrow(), game.combatClassOf(actor), hero));
+            if (animated.filter(bodies -> !(actor instanceof Player) && bodies.draws(body)).isPresent()) {
+                animated.get().keep(actor, body, game.effects().recoil(actor), plugin.getServer().getOnlinePlayers());
+                continue;
+            }
+            var existing = rigs.get(id);
+            if (existing != null && existing.body() != body) {
+                remove(id);
+            }
             var rig = rigs.computeIfAbsent(id, ignored -> {
-                var created = new BodyRig(plugin, actor, RigBody.of(game.factionOf(actor).orElseThrow(), game.combatClassOf(actor)), game::isPlaying,
-                        () -> game.bots().aim(actor).orElseGet(() -> actor.getEyeLocation().getDirection()), turnDegrees);
+                var created = new BodyRig(plugin, actor, body, game::isPlaying,
+                        () -> game.bots().aim(actor).orElseGet(() -> actor.getEyeLocation().getDirection()), turnDegrees,
+                        hero.isPresent() ? Optional.empty() : Optional.of(motions.get(unit
+                                .map(chosen -> chosen == Reinforcement.ARC_TROOPER ? CombatClass.HEAVY : CombatClass.SCOUT)
+                                .orElseGet(() -> game.combatClassOf(actor)))));
                 targets.put(created.targetId(), created);
                 return created;
             });
             rig.tick(game.effects().recoil(actor));
         }
+        animated.ifPresent(bodies -> bodies.forgetAbsent(present));
         for (var id : new HashSet<>(rigs.keySet())) {
             if (!present.contains(id)) {
                 remove(id);
@@ -94,8 +134,7 @@ public final class BodyRigs implements Listener, AutoCloseable {
         return actor.isValid() && game.onField(actor) && actor.getWorld().equals(game.map().world())
                 && (droids && game.factionOf(actor).filter(Faction.HEGEMONIE::equals).isPresent()
                 || infantry && game.factionOf(actor).filter(Faction.KOLONIEN::equals).isPresent())
-                && (!(actor instanceof Player player) || game.heroOf(player).isEmpty()
-                && !BlockcraftApi.get().buildMode().isEnabled(player));
+                && (!(actor instanceof Player player) || !BlockcraftApi.get().buildMode().isEnabled(player));
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -158,6 +197,7 @@ public final class BodyRigs implements Listener, AutoCloseable {
     }
 
     private void clear() {
+        animated.ifPresent(AnimatedBodies::close);
         rigs.values().forEach(BodyRig::close);
         rigs.clear();
         targets.clear();

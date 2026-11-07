@@ -1,28 +1,61 @@
 package me.blockcraft.sternenfront.game;
 
 import me.blockcraft.sternenfront.hero.Hero;
+import me.blockcraft.sternenfront.reinforcement.Reinforcement;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
- * A player's state in a running round besides their faction: the class they deploy as next, the hero they fight
+ * A player's state in a running round besides their faction: the class they deploy as next, the hero or reinforcement they fight
  * as, whether they are on the field or choosing a spawn, their blaster's heat, and the ticks until which they are
  * protected, hurt last and safe from their next fall.
  */
 public final class Fighter {
 
     /**
-     * A dead player choosing: from {@code readyTick} on they may deploy, at {@code autoTick} they do, as {@code hero}
-     * if they picked one and can still pay for it.
+     * A dead player choosing: from {@code readyTick} on they may deploy, at {@code autoTick} they do. A hero or
+     * reinforcement is bought only after explicit confirmation and revalidation at deployment.
      */
-    public record Choosing(long readyTick, long autoTick, Optional<Spawn> chosen, Optional<Hero> hero) {
+    public record Choosing(long readyTick, long autoTick, Optional<Spawn> chosen, Optional<Hero> hero,
+                           Optional<Reinforcement> reinforcement, boolean confirmed) {
+
+        public Choosing(long readyTick, long autoTick, Optional<Spawn> chosen, Optional<Hero> hero) {
+            this(readyTick, Math.max(readyTick, autoTick), chosen, hero, Optional.empty(), false);
+        }
+
+        public Choosing(long readyTick, long autoTick, Optional<Spawn> chosen, Optional<Hero> hero, boolean confirmed) {
+            this(readyTick, Math.max(readyTick, autoTick), chosen, hero, Optional.empty(), confirmed);
+        }
+
+        public boolean manualReady(long tick) {
+            return tick >= readyTick && chosen.isPresent() && confirmed;
+        }
+
+        public Optional<Hero> paidHero() {
+            return hero.filter(ignored -> confirmed);
+        }
+
+        public Optional<Reinforcement> paidReinforcement() {
+            return reinforcement.filter(ignored -> confirmed);
+        }
 
         public Choosing choose(Spawn spawn) {
-            return new Choosing(readyTick, autoTick, Optional.of(spawn), hero);
+            return new Choosing(readyTick, autoTick, Optional.of(spawn), hero, reinforcement, true);
+        }
+
+        public Choosing retry(long autoTick) {
+            return new Choosing(readyTick, Math.max(readyTick, autoTick), chosen, hero, reinforcement, false);
         }
 
         public Choosing pick(Optional<Hero> hero) {
-            return new Choosing(readyTick, autoTick, chosen, hero);
+            return new Choosing(readyTick, autoTick, chosen, hero, Optional.empty(),
+                    confirmed && reinforcement.isEmpty() && this.hero.equals(hero));
+        }
+
+        public Choosing pick(Reinforcement unit) {
+            return new Choosing(readyTick, autoTick, chosen, Optional.empty(), Optional.of(unit),
+                    confirmed && hero.isEmpty() && reinforcement.filter(unit::equals).isPresent());
         }
     }
 
@@ -33,6 +66,7 @@ public final class Fighter {
     private long lastHurt;
     private long fallSafeUntil;
     private Optional<Hero> hero = Optional.empty();
+    private Optional<Reinforcement> reinforcement = Optional.empty();
 
     public Fighter(Heat.Rules heatRules) {
         this.heat = new Heat(heatRules);
@@ -68,6 +102,7 @@ public final class Fighter {
         this.heat = new Heat(heatRules);
         this.protectedUntil = protectedUntil;
         this.hero = hero;
+        this.reinforcement = Optional.empty();
     }
 
     public boolean isProtected(long tick) {
@@ -100,11 +135,29 @@ public final class Fighter {
 
     public void hero(Optional<Hero> hero) {
         this.hero = hero;
+        this.reinforcement = Optional.empty();
     }
 
-    /** The blaster in this fighter's hands: the class's, a gun hero's own, or none for a blade. */
-    public Optional<Blaster> blaster() {
-        return hero.map(Hero::weapon).map(weapon -> weapon instanceof Hero.Weapon.Gun gun ? gun.blaster() : null)
-                .or(() -> hero.isPresent() ? Optional.empty() : Optional.of(combatClass.blaster()));
+    public Optional<Reinforcement> reinforcement() {
+        return reinforcement;
+    }
+
+    public void reinforcement(Optional<Reinforcement> reinforcement) {
+        this.reinforcement = reinforcement;
+        if (reinforcement.isPresent()) {
+            hero = Optional.empty();
+        }
+    }
+
+    public List<Ability> abilities(Faction faction) {
+        return hero.isPresent() ? List.of() : reinforcement.map(Reinforcement::abilities).orElseGet(() -> combatClass.abilities(faction));
+    }
+
+    /** The current unit's blaster, or none for a blade. */
+    public Optional<Blaster> blaster(Faction faction) {
+        if (hero.isPresent()) {
+            return hero.map(Hero::weapon).filter(Hero.Weapon.Gun.class::isInstance).map(Hero.Weapon.Gun.class::cast).map(Hero.Weapon.Gun::blaster);
+        }
+        return reinforcement.map(Reinforcement::blaster).or(() -> Optional.of(combatClass.blaster(faction)));
     }
 }

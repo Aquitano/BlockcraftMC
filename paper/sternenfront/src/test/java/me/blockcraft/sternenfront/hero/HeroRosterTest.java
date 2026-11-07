@@ -1,14 +1,25 @@
 package me.blockcraft.sternenfront.hero;
 
 import me.blockcraft.sternenfront.game.Faction;
+import me.blockcraft.sternenfront.game.Blaster;
 import org.junit.Test;
 
 import java.util.UUID;
+import java.util.List;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class HeroRosterTest {
+
+    @Test
+    public void cloneWarsHeroesFightForTheirOwnFaction() {
+        assertEquals(List.of(Hero.JEDI, Hero.COMMANDER), Hero.of(Faction.KOLONIEN));
+        assertEquals(List.of(Hero.BOUNTY_HUNTER, Hero.SITH), Hero.of(Faction.HEGEMONIE));
+        assertEquals(Blaster.TWIN_PISTOL, ((Hero.Weapon.Gun) Hero.COMMANDER.weapon()).blaster());
+        assertEquals(Blaster.WESTAR_PISTOLS, ((Hero.Weapon.Gun) Hero.BOUNTY_HUNTER.weapon()).blaster());
+    }
 
     @Test
     public void aFactionFieldsOnlyItsOwnHeroesUpToItsSlots() {
@@ -16,7 +27,7 @@ public class HeroRosterTest {
 
         assertFalse(roster.open(Faction.KOLONIEN, Hero.SITH));
         assertTrue(roster.enlist(UUID.randomUUID(), Faction.KOLONIEN, Hero.JEDI));
-        assertFalse(roster.open(Faction.KOLONIEN, Hero.BOUNTY_HUNTER));
+        assertFalse(roster.open(Faction.KOLONIEN, Hero.COMMANDER));
         assertTrue(roster.open(Faction.HEGEMONIE, Hero.SITH));
     }
 
@@ -29,7 +40,7 @@ public class HeroRosterTest {
         assertTrue(roster.enlist(UUID.randomUUID(), Faction.KOLONIEN, Hero.CHAMPION));
         roster.discharge(jedi);
 
-        assertTrue(roster.open(Faction.KOLONIEN, Hero.BOUNTY_HUNTER));
+        assertTrue(roster.open(Faction.KOLONIEN, Hero.COMMANDER));
     }
 
     @Test
@@ -40,8 +51,8 @@ public class HeroRosterTest {
 
         roster.grantSlot(Faction.KOLONIEN);
 
-        assertTrue(roster.open(Faction.KOLONIEN, Hero.BOUNTY_HUNTER));
-        assertFalse(roster.open(Faction.HEGEMONIE, Hero.COMMANDER));
+        assertTrue(roster.open(Faction.KOLONIEN, Hero.COMMANDER));
+        assertFalse(roster.open(Faction.HEGEMONIE, Hero.BOUNTY_HUNTER));
     }
 
     @Test
@@ -50,6 +61,6 @@ public class HeroRosterTest {
         roster.enlist(UUID.randomUUID(), Faction.HEGEMONIE, Hero.SITH);
 
         assertFalse(roster.open(Faction.HEGEMONIE, Hero.SITH));
-        assertTrue(roster.open(Faction.HEGEMONIE, Hero.COMMANDER));
+        assertTrue(roster.open(Faction.HEGEMONIE, Hero.BOUNTY_HUNTER));
     }
 }

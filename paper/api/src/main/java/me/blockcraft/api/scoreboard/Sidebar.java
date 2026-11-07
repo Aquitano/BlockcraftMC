@@ -59,6 +59,15 @@ public final class Sidebar {
         written.put(player, shown);
     }
 
+    /** Off the screen until the next {@link #show}. */
+    public void hide(Player player) {
+        var existing = Boards.of(player).getObjective(OBJECTIVE);
+        if (existing != null) {
+            existing.unregister();
+        }
+        written.remove(player);
+    }
+
     public record Row(String entry, Component text, int score) {
     }
 

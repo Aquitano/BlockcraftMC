@@ -17,6 +17,20 @@
           "type": "minecraft:model",
           "model": "blockcraft:item/sternenfront/repeater_firing"
         }
+      },
+      {
+        "when": "blockcraft:sternenfront/wrist_blaster",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/sternenfront/wrist_blaster"
+        }
+      },
+      {
+        "when": "blockcraft:sternenfront/wrist_blaster_firing",
+        "model": {
+          "type": "minecraft:model",
+          "model": "blockcraft:item/sternenfront/wrist_blaster_firing"
+        }
       }
     ],
     "fallback": {
