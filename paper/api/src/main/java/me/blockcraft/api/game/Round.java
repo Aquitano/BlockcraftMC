@@ -80,7 +80,7 @@ public final class Round implements Listener {
         releaseRejoins();
     }
 
-    private record Away(String name, Consumer<UUID> onForfeit) {
+    private record Away(String name, boolean diedOnQuit, Consumer<UUID> onForfeit) {
     }
 
     public Arena arena() {
@@ -145,7 +145,7 @@ public final class Round implements Listener {
         arena.welcome(player, players.size(), capacity);
     }
 
-    /** Returns whether the player was playing; leaving a running round counts as a death and a loss. */
+    /** Returns whether the player was playing; leaving a running round counts as a loss, and as a death unless they left dead. */
     public boolean leave(Player player) {
         var id = player.getUniqueId();
         spectators.forget(id);
@@ -156,7 +156,9 @@ public final class Round implements Listener {
         switch (phase) {
             case LOBBY -> summary.forget(player);
             case INGAME -> {
-                summary.death(player);
+                if (!player.isDead()) {
+                    summary.death(player);
+                }
                 summary.eliminate(player);
             }
             case ENDING -> {
@@ -169,7 +171,7 @@ public final class Round implements Listener {
     /**
      * Keeps a running round's place for {@code rejoin-seconds} when a player drops out: the proxy sends them back
      * here when they reconnect or ask, and {@link #rejoin} seats them again. Staying away runs {@code onForfeit}, and
-     * the quit then counts as a death and a loss. False, and nothing kept, when the game or its config keeps no place.
+     * the quit then counts as a loss, and as a death unless they quit dead. False, and nothing kept, when the game or its config keeps no place.
      */
     public boolean stepOut(Player player, Consumer<UUID> onForfeit) {
         var id = player.getUniqueId();
@@ -178,7 +180,7 @@ public final class Round implements Listener {
             return false;
         }
         spectators.forget(id);
-        var kept = new Away(player.getName(), onForfeit);
+        var kept = new Away(player.getName(), player.isDead(), onForfeit);
         away.put(id, kept);
         var server = api.server().name();
         Tasks.async(plugin, () -> rejoins.hold(id, server, seconds));
@@ -211,7 +213,7 @@ public final class Round implements Listener {
         }
         release(id);
         players.remove(id);
-        summary.forfeit(id);
+        summary.forfeit(id, kept.diedOnQuit());
         arena.gaveUp(kept.name());
         kept.onForfeit().accept(id);
     }

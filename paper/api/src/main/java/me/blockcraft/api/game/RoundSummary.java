@@ -167,11 +167,13 @@ public final class RoundSummary {
         score(player).eliminated = false;
     }
 
-    /** A player who stepped out and never came back: a death and a loss, as a quit. */
-    void forfeit(UUID player) {
+    /** A player who stepped out and never came back: a death and a loss, as a quit, unless they quit dead. */
+    void forfeit(UUID player, boolean diedOnQuit) {
         var score = scores.get(player);
         if (score != null) {
-            score.deaths++;
+            if (!diedOnQuit) {
+                score.deaths++;
+            }
             score.streak = 0;
             score.eliminated = true;
         }
