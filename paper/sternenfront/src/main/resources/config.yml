@@ -70,6 +70,8 @@ appearance:
   infantry: true
   # Bot bodies the BetterModel plugin draws and animates, by family. Without the plugin they stay plain rigs.
   animated-bodies: [hegemonie_soldier, hegemonie_heavy, hegemonie_scout, hegemonie_medic, kolonien_soldier, kolonien_heavy, kolonien_scout, kolonien_medic]
+  # A hit body flashes this colour for half a second, multiplied into its texture.
+  hurt-tint: "FF5050"
 music:
   enabled: true
   volume: 0.35

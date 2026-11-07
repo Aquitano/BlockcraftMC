@@ -31,6 +31,7 @@ final class AnimatedBodies implements AutoCloseable {
 
     private final Set<String> families;
     private final BiPredicate<Player, LivingEntity> outlined;
+    private final int hurtTint;
     private final Map<UUID, Trackers> bodies = new HashMap<>();
 
     private record Trackers(LivingEntity actor, Shown plain, Shown outlined) {
@@ -52,9 +53,10 @@ final class AnimatedBodies implements AutoCloseable {
         }
     }
 
-    AnimatedBodies(Collection<String> families, BiPredicate<Player, LivingEntity> outlined) {
+    AnimatedBodies(Collection<String> families, BiPredicate<Player, LivingEntity> outlined, int hurtTint) {
         this.families = Set.copyOf(families);
         this.outlined = outlined;
+        this.hurtTint = hurtTint;
     }
 
     boolean draws(RigBody body) {
@@ -82,6 +84,8 @@ final class AnimatedBodies implements AutoCloseable {
             tracker.update(TrackerUpdateAction.glow(true));
             tracker.update(TrackerUpdateAction.glowColor(ENEMY_OUTLINE));
         });
+        plain.damageTintValue(hurtTint);
+        glowing.damageTintValue(hurtTint);
         return new Trackers(actor, new Shown(plain), new Shown(glowing));
     }
 

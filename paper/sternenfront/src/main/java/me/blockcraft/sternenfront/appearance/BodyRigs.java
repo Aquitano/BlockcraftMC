@@ -9,6 +9,8 @@ import me.blockcraft.sternenfront.game.LineOfSight;
 import me.blockcraft.sternenfront.game.SternenfrontGame;
 import me.blockcraft.sternenfront.hero.Hero;
 import me.blockcraft.sternenfront.reinforcement.Reinforcement;
+import net.kyori.adventure.text.format.TextColor;
+import org.bukkit.Color;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Entity;
@@ -18,6 +20,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -44,6 +47,7 @@ public final class BodyRigs implements Listener, AutoCloseable {
     private final float turnDegrees;
     private final Map<CombatClass, RigMotion> motions = new EnumMap<>(CombatClass.class);
     private final Optional<AnimatedBodies> animated;
+    private final Color hurtTint;
 
     private BodyRigs(Plugin plugin, SternenfrontGame game, boolean droids, boolean infantry) {
         this.plugin = plugin;
@@ -51,13 +55,15 @@ public final class BodyRigs implements Listener, AutoCloseable {
         this.droids = droids;
         this.infantry = infantry;
         turnDegrees = (float) Math.clamp(game.plugin().getConfig().getDouble("appearance.body-turn-degrees", 12), 1, 45);
+        hurtTint = Color.fromRGB(Optional.ofNullable(TextColor.fromHexString("#" + game.plugin().getConfig().getString("appearance.hurt-tint", "")))
+                .map(TextColor::value).orElse(0xFF5050));
         for (var role : CombatClass.values()) {
             motions.put(role, RigMotion.from(game.plugin().getConfig(), role));
         }
         var animatedBodies = game.plugin().getConfig().getStringList("appearance.animated-bodies");
         // Without the plugin every body stays a BodyRig, so a server that lacks it still plays the round.
         animated = animatedBodies.isEmpty() || !plugin.getServer().getPluginManager().isPluginEnabled("BetterModel") ? Optional.empty()
-                : Optional.of(new AnimatedBodies(animatedBodies, this::outlined));
+                : Optional.of(new AnimatedBodies(animatedBodies, this::outlined, hurtTint.asRGB()));
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
         task = plugin.getServer().getScheduler().runTaskTimer(plugin, this::tick, 1L, 1L);
     }
@@ -148,6 +154,14 @@ public final class BodyRigs implements Listener, AutoCloseable {
                 && game.onField(player) && eligible(rig.actor()) && canReach(player, rig.actor())) {
             // Interaction attacks arrive before vanilla computes damage or resets the attack cooldown.
             player.attack(rig.actor());
+        }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onHurt(EntityDamageEvent event) {
+        var rig = rigs.get(event.getEntity().getUniqueId());
+        if (rig != null && event.getFinalDamage() > 0) {
+            rig.hurt(hurtTint);
         }
     }
 
