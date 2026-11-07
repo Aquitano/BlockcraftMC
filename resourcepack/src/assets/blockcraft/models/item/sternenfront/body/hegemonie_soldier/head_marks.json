@@ -1,0 +1,6 @@
+{
+  "textures":{"rig":"blockcraft:block/sternenfront/rig/hegemonie_soldier","particle":"blockcraft:block/sternenfront/rig/hegemonie_soldier"},
+  "elements":[
+    {"from":[7.28,10.584,7.28],"to":[8.72,10.984,9.68],"faces":{"north":{"uv":[3.0,14.0,3.75,14.25],"texture":"#rig","tintindex":0},"south":{"uv":[3.0,14.0,3.75,14.25],"texture":"#rig","tintindex":0},"east":{"uv":[12.25,13.125,13.5,13.375],"texture":"#rig","tintindex":0},"west":{"uv":[12.25,13.125,13.5,13.375],"texture":"#rig","tintindex":0},"up":{"uv":[5.5,4.25,6.25,5.5],"texture":"#rig","tintindex":0},"down":{"uv":[4.25,4.25,5.0,5.5],"texture":"#rig","tintindex":0}}}
+  ]
+}

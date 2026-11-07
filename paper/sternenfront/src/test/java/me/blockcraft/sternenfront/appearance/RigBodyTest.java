@@ -24,7 +24,7 @@ public class RigBodyTest {
             for (var role : CombatClass.values()) {
                 var body = RigBody.of(faction, role);
                 assertEquals(faction.key() + "_" + role.key(), body.family());
-                for (var part : List.of("torso", "head", "arm", "leg", body.leftArm())) {
+                for (var part : List.of("torso", "head", "arm", "leg", "leg_right", body.leftArm())) {
                     var definition = MODELS.resolve(body.family()).resolve(part + ".json");
                     assertTrue(definition + " is missing; run ./gradlew :resourcepack:generateSternenfrontArt", Files.exists(definition));
                 }

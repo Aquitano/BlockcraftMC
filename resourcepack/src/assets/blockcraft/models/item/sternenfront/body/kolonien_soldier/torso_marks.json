@@ -1,0 +1,6 @@
+{
+  "textures":{"rig":"blockcraft:block/sternenfront/rig/kolonien_soldier","particle":"blockcraft:block/sternenfront/rig/kolonien_soldier"},
+  "elements":[
+    {"from":[4.416,7.408,5.856],"to":[11.584,8.432,10.144],"faces":{"north":{"uv":[3.3125,9.3125,5.125,9.5625],"texture":"#rig","tintindex":0},"south":{"uv":[3.3125,9.3125,5.125,9.5625],"texture":"#rig","tintindex":0},"east":{"uv":[10.3125,9.3125,11.375,9.5625],"texture":"#rig","tintindex":0},"west":{"uv":[10.3125,9.3125,11.375,9.5625],"texture":"#rig","tintindex":0},"up":{"uv":[8.0625,0.125,9.875,1.1875],"texture":"#rig","tintindex":0},"down":{"uv":[6.0,0.125,7.8125,1.1875],"texture":"#rig","tintindex":0}}}
+  ]
+}

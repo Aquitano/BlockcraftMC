@@ -1,1 +1,1 @@
-{"model":{"type":"minecraft:model","model":"blockcraft:item/sternenfront/body/kolonien_medic/leg","tints":[{"type":"minecraft:custom_model_data","index":0,"default":-1}]}}
+{"model":{"type":"minecraft:composite","models":[{"type":"minecraft:model","model":"blockcraft:item/sternenfront/body/kolonien_medic/leg","tints":[{"type":"minecraft:custom_model_data","index":0,"default":-1}]},{"type":"minecraft:model","model":"blockcraft:item/sternenfront/body/kolonien_medic/leg_marks","tints":[{"type":"minecraft:custom_model_data","index":1,"default":3164282}]}]}}

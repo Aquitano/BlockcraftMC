@@ -3,6 +3,7 @@ package me.blockcraft.sternenfront.appearance;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.game.GamePhase;
 import me.blockcraft.api.game.RoundPhaseChangeEvent;
+import me.blockcraft.sternenfront.bot.Bots;
 import me.blockcraft.sternenfront.game.CombatClass;
 import me.blockcraft.sternenfront.game.Faction;
 import me.blockcraft.sternenfront.game.LineOfSight;
@@ -48,6 +49,7 @@ public final class BodyRigs implements Listener, AutoCloseable {
     private final Map<CombatClass, RigMotion> motions = new EnumMap<>(CombatClass.class);
     private final Optional<AnimatedBodies> animated;
     private final Color hurtTint;
+    private final UnitColours units;
 
     private BodyRigs(Plugin plugin, SternenfrontGame game, boolean droids, boolean infantry) {
         this.plugin = plugin;
@@ -57,6 +59,7 @@ public final class BodyRigs implements Listener, AutoCloseable {
         turnDegrees = (float) Math.clamp(game.plugin().getConfig().getDouble("appearance.body-turn-degrees", 12), 1, 45);
         hurtTint = Color.fromRGB(Optional.ofNullable(TextColor.fromHexString("#" + game.plugin().getConfig().getString("appearance.hurt-tint", "")))
                 .map(TextColor::value).orElse(0xFF5050));
+        units = UnitColours.from(game.plugin().getConfig().getConfigurationSection("appearance"));
         for (var role : CombatClass.values()) {
             motions.put(role, RigMotion.from(game.plugin().getConfig(), role));
         }
@@ -108,9 +111,13 @@ public final class BodyRigs implements Listener, AutoCloseable {
             present.add(id);
             var hero = actor instanceof Player player ? game.heroOf(player) : Optional.<Hero>empty();
             var unit = actor instanceof Player player ? game.reinforcementOf(player) : Optional.<Reinforcement>empty();
-            var body = unit.map(RigBody::of).orElseGet(() -> RigBody.of(game.factionOf(actor).orElseThrow(), game.combatClassOf(actor), hero));
+            var faction = game.factionOf(actor).orElseThrow();
+            var body = unit.map(RigBody::of).orElseGet(() -> RigBody.of(faction, game.combatClassOf(actor), hero));
+            var squad = game.bots().squad(actor);
+            var markings = new Markings(units.of(faction, squad.map(Bots.Squad::fireteam).orElse(0)),
+                    squad.filter(Bots.Squad::leads).isPresent());
             if (animated.filter(bodies -> !(actor instanceof Player) && bodies.draws(body)).isPresent()) {
-                animated.get().keep(actor, body, game.effects().recoil(actor), plugin.getServer().getOnlinePlayers());
+                animated.get().keep(actor, body, markings, game.effects().recoil(actor), plugin.getServer().getOnlinePlayers());
                 continue;
             }
             var existing = rigs.get(id);
@@ -122,10 +129,11 @@ public final class BodyRigs implements Listener, AutoCloseable {
                         () -> game.bots().aim(actor).orElseGet(() -> actor.getEyeLocation().getDirection()), turnDegrees,
                         hero.isPresent() ? Optional.empty() : Optional.of(motions.get(unit
                                 .map(chosen -> chosen == Reinforcement.ARC_TROOPER ? CombatClass.HEAVY : CombatClass.SCOUT)
-                                .orElseGet(() -> game.combatClassOf(actor)))));
+                                .orElseGet(() -> game.combatClassOf(actor)))), markings);
                 targets.put(created.targetId(), created);
                 return created;
             });
+            rig.mark(markings);
             rig.tick(game.effects().recoil(actor));
         }
         animated.ifPresent(bodies -> bodies.forgetAbsent(present));
@@ -159,10 +167,14 @@ public final class BodyRigs implements Listener, AutoCloseable {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onHurt(EntityDamageEvent event) {
-        var rig = rigs.get(event.getEntity().getUniqueId());
-        if (rig != null && event.getFinalDamage() > 0) {
+        if (event.getFinalDamage() <= 0 || !(event.getEntity() instanceof LivingEntity actor)) {
+            return;
+        }
+        var rig = rigs.get(actor.getUniqueId());
+        if (rig != null) {
             rig.hurt(hurtTint);
         }
+        animated.ifPresent(bodies -> bodies.hurt(actor));
     }
 
     private static boolean canReach(Player player, LivingEntity target) {

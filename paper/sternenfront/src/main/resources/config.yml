@@ -72,6 +72,11 @@ appearance:
   animated-bodies: [hegemonie_soldier, hegemonie_heavy, hegemonie_scout, hegemonie_medic, kolonien_soldier, kolonien_heavy, kolonien_scout, kolonien_medic]
   # A hit body flashes this colour for half a second, multiplied into its texture.
   hurt-tint: "FF5050"
+  # Marking colours by fireteam, first fireteam first; players wear their side's first. A side with more fireteams
+  # starts over. The pack shows the first colour wherever a display sets none.
+  unit-colours:
+    kolonien: ["30487A", "C07818"]
+    hegemonie: ["E0B818", "7C3420"]
 music:
   enabled: true
   volume: 0.35

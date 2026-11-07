@@ -231,6 +231,15 @@ BetterModel builds the pack from those files on the game server, and that output
 which needs the verify network running. A tracker has one glow for all viewers, so each body is two trackers on a plain and
 an outlined copy of its model, each shown to the right viewers by the same rules as `TargetOutlines`.
 
+## Unit colours
+
+A side's fireteams wear the colours in `appearance.unit-colours` on their armour markings, first fireteam first, and a side
+with more fireteams starts over. Players, heroes and reinforcements wear their side's first colour. A fireteam's leader
+also wears pauldrons in its colour, which pass to whoever takes over the lead. A `BodyRig` puts the colour in a part's
+second custom_model_data colour and the pauldrons behind its first flag; its hurt flash turns both colours red. An animated
+body tints its `_marks` and `_pauldron` bones and toggles the pauldrons. BetterModel's flash restores each bone's tint
+afterwards, so a new colour waits until the flash is over. Wherever nothing sets a colour, the pack shows the first one.
+
 ## Generated assets
 
 Edit `resourcepack/SternenfrontArt.java` for bodies, hero bodies, helmets, blasters, sabers, vehicles, and effect

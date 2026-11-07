@@ -4,8 +4,9 @@ Geometry and textures still come from SternenfrontArt.java, so a body changes in
 The joints match RigBody. Animations are written here as keyframes: BetterModel plays idle, walk, death and damage by itself,
 and the plugin asks for shoot. The joints, item models and keyframes below face +z with the right side at -x, but BetterModel
 takes a model's north, -z, as the entity's front, so every position and rotation is written turned half round. BetterModel
-turns bones tagged h_ with where the entity looks, and hi_ with their children too, which is how the arms and the gun follow
-a bot's aim.
+turns bones tagged h_ with where the entity looks, and hi_ with their children too, which is how the head, the arms, the
+gun and their markings follow a bot's aim. A part's markings and a leader's pauldrons are child bones of their own, so the
+plugin can tint them in the unit colour and show the pauldrons apart from the rest of the body.
 """
 import base64
 import json
@@ -45,6 +46,8 @@ BODIES = {
     "kolonien_medic": ("pistol", dict(shoulderX=.28, shoulderY=1.4, hipX=.1, hipY=.95, torsoY=.97, headY=1.5, weaponX=-.24, weaponY=1.27, weaponZ=.53, lift=-1.15)),
 }
 OUTLINED = "_outlined"
+MARKS = "_marks"
+PAULDRON = "pauldron"
 OPPOSITE = {"north": "south", "south": "north", "east": "west", "west": "east"}
 
 
@@ -151,7 +154,7 @@ def animations(family, grip_degrees):
         animation(family, "idle", "loop", 2.4, {
             "torso": {"position": {0: (0, 0, 0), 1.2: (0, -0.2, 0), 2.4: (0, 0, 0)}},
             "hi_right_arm": {"rotation": {0: (grip_degrees, 0, 0), 1.2: (grip_degrees + 2, 0, 0), 2.4: (grip_degrees, 0, 0)}},
-            "h_left_arm": support,
+            "hi_left_arm": support,
         }),
         animation(family, "walk", "loop", cycle, {
             "left_leg": {"rotation": {0: (leg, 0, 0), cycle / 2: (-leg, 0, 0), cycle: (leg, 0, 0)}},
@@ -160,24 +163,24 @@ def animations(family, grip_degrees):
                                    cycle * 3 / 4: (0, bob, 0), cycle: (0, 0, 0)},
                       "rotation": {0: (lean, sway, 0), cycle / 2: (lean, -sway, 0), cycle: (lean, sway, 0)}},
             "hi_right_arm": grip,
-            "h_left_arm": support,
+            "hi_left_arm": support,
         }),
         animation(family, "shoot", "once", recovery, {
             "hi_right_arm": {"rotation": {0: (grip_degrees, 0, 0), 0.05: (grip_degrees - kick, 0, 0), recovery: (grip_degrees, 0, 0)},
                              "position": {0: (0, 0, 0), 0.05: (0, 0, -back), recovery: (0, 0, 0)}},
-            "h_left_arm": {"rotation": {0: (across, 22, 0), 0.05: (across - kick, 22, 0), recovery: (across, 22, 0)},
+            "hi_left_arm": {"rotation": {0: (across, 22, 0), 0.05: (across - kick, 22, 0), recovery: (across, 22, 0)},
                            "position": {0: (0, 0, 0), 0.05: (0, 0, -back), recovery: (0, 0, 0)}},
             "torso": {"rotation": {0: (0, 0, 0), 0.05: (-kick / 3, 0, 0), recovery: (0, 0, 0)}},
         }),
         animation(family, "damage", "once", 0.3, {
             "root": {"rotation": {0: (0, 0, 0), 0.05: (-6, 0, 2), 0.3: (0, 0, 0)}},
-            "h_head": {"rotation": {0: (0, 0, 0), 0.05: (-10, 0, 0), 0.3: (0, 0, 0)}},
+            "hi_head": {"rotation": {0: (0, 0, 0), 0.05: (-10, 0, 0), 0.3: (0, 0, 0)}},
         }),
         animation(family, "death", "once", 0.9, {
             "root": {"rotation": {0: (0, 0, 0), 0.25: (-18, 0, 4), 0.7: (-86, 0, 8), 0.9: (-84, 0, 8)},
                      "position": {0: (0, 0, 0), 0.7: (0, -3, -4), 0.9: (0, -3, -4)}},
             "hi_right_arm": {"rotation": {0: (grip_degrees, 0, 0), 0.5: (-20, 0, -25)}},
-            "h_left_arm": {"rotation": {0: (across, 22, 0), 0.5: (-30, 0, 30)}},
+            "hi_left_arm": {"rotation": {0: (across, 22, 0), 0.5: (-30, 0, 30)}},
             "right_leg": {"rotation": {0: (0, 0, 0), 0.6: (22, 0, 0)}},
             "left_leg": {"rotation": {0: (0, 0, 0), 0.6: (-12, 0, 0)}},
         }),
@@ -195,18 +198,24 @@ def build(family, blaster, joints):
     model.bone("root", None, (0, 0, 0))
     model.bone("torso", "root", torso_at)
     model.bones["torso"]["rotation"] = [math.degrees(joints.get("lean", 0)), 0, 0]
-    model.bone("h_head", "root", head_at)
-    model.bone("h_left_arm", "root", shoulder)
+    model.bone("hi_head", "root", head_at)
+    model.bone("hi_left_arm", "root", shoulder)
     model.bone("hi_right_arm", "root", (-shoulder[0], shoulder[1], shoulder[2]))
     model.bone("left_leg", "root", hip)
     model.bone("right_leg", "root", (-hip[0], hip[1], 0))
     parts = f"sternenfront/body/{family}"
-    model.add("torso", f"{parts}/torso", torso_at, scale)
-    model.add("h_head", f"{parts}/head", head_at, scale)
-    model.add("h_left_arm", f"{parts}/arm", shoulder, scale)
-    model.add("hi_right_arm", f"{parts}/arm", (-shoulder[0], shoulder[1], shoulder[2]), scale)
-    model.add("left_leg", f"{parts}/leg", hip, scale)
-    model.add("right_leg", f"{parts}/leg", (-hip[0], hip[1], 0), scale)
+    right_shoulder = (-shoulder[0], shoulder[1], shoulder[2])
+    right_hip = (-hip[0], hip[1], 0)
+    for bone, part, at in (("torso", "torso", torso_at), ("hi_head", "head", head_at), ("hi_left_arm", "arm", shoulder),
+                           ("hi_right_arm", "arm", right_shoulder), ("left_leg", "leg", hip), ("right_leg", "leg_right", right_hip)):
+        model.add(bone, f"{parts}/{part}", at, scale)
+        side = bone.removeprefix("hi_")
+        if (ASSETS / "models/item" / f"{parts}/{part}{MARKS}.json").exists():
+            model.bone(f"{side}{MARKS}", bone, at)
+            model.add(f"{side}{MARKS}", f"{parts}/{part}{MARKS}", at, scale)
+        if part == "arm" and (ASSETS / "models/item" / f"{parts}/{PAULDRON}.json").exists():
+            model.bone(f"{side}_{PAULDRON}", bone, at)
+            model.add(f"{side}_{PAULDRON}", f"{parts}/{PAULDRON}", at, scale)
     if blaster:
         # The gun hangs off the arm, which the animations hold out, so its bone turns back by the same angle to lie
         # level with the joints' weapon position when that grip is held.
