@@ -26,12 +26,11 @@ rewards:
   win: 25
 
 # An enemy within alarm-radius blocks of a core sounds its team's alarm, in chat at most every alarm-seconds and as a
-# sound every second while they stay. Within fatigue-radius blocks of an enemy core a player mines with Mining Fatigue
-# of fatigue-level (0 is level I): a beacon then takes 15 seconds instead of 4.5, with any tool or none.
+# sound every second while they stay. A player who can reach an enemy core mines with Mining Fatigue of fatigue-level
+# (0 is level I): a beacon then takes 15 seconds instead of 4.5, with any tool or none.
 cores:
   alarm-radius: 8
   alarm-seconds: 10
-  fatigue-radius: 4
   fatigue-level: 0
 
 # A respawned player cannot be hurt or knocked back by players for protection-seconds, or until they land a hit.

@@ -11,7 +11,7 @@ import java.util.Map;
 
 /** Cores' own keys of its config.yml; the lobby's are {@link me.blockcraft.api.game.GameConfig}'s. */
 public record CoresConfig(int playersPerTeam, int fullSeconds, int roundSeconds, int killCoins, int coreCoins,
-                          int winCoins, int alarmRadius, int alarmSeconds, int fatigueRadius, int fatigueLevel,
+                          int winCoins, int alarmRadius, int alarmSeconds, int fatigueLevel,
                           int protectionSeconds, int bowKillArrows, int voidHeight, int buildHeight,
                           CombatStyle combat, List<ItemStack> kit, LootTable chests) {
 
@@ -26,7 +26,6 @@ public record CoresConfig(int playersPerTeam, int fullSeconds, int roundSeconds,
                 Math.max(0, config.getInt("rewards.win", 25)),
                 Math.max(1, config.getInt("cores.alarm-radius", 8)),
                 Math.max(1, config.getInt("cores.alarm-seconds", 10)),
-                Math.max(1, config.getInt("cores.fatigue-radius", 4)),
                 Math.clamp(config.getInt("cores.fatigue-level", 0), 0, 4),
                 Math.max(0, config.getInt("respawn.protection-seconds", 5)),
                 Math.max(0, config.getInt("bow-kill-arrows", 4)),

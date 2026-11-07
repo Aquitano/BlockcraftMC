@@ -36,6 +36,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Effect;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
 import org.bukkit.entity.AbstractArrow;
 import org.bukkit.entity.Player;
@@ -68,9 +69,13 @@ public final class CoresGame implements RoundConnections.Seating {
 
     private static final long RESPAWN_TICKS = 10L;
     private static final long WATCH_TICKS = 10L;
+    private static final long WATCHES_PER_ALARM = 20L / WATCH_TICKS;
     private static final float RESPAWN_SATURATION = 10.0f;
     private static final Duration ALARM_HOLD = Duration.ofSeconds(2);
     private static final int FATIGUE_TICKS = 30;
+    private static final double DEFAULT_BLOCK_REACH = 4.5;
+    /** The server allows a break one block past the reach, measured to the block's nearest corner rather than its centre. */
+    private static final double REACH_SLACK = 1.0 + Math.sqrt(3) / 2;
     private static final Title.Times CORE_TITLE = Title.Times.times(Duration.ofMillis(250), Duration.ofSeconds(2), Duration.ofMillis(500));
 
     private final Plugin plugin;
@@ -89,6 +94,7 @@ public final class CoresGame implements RoundConnections.Seating {
     private final Map<UUID, Side> roster = new HashMap<>();
     private final SpawnProtection spawnProtection = new SpawnProtection();
     private BukkitTask watch;
+    private long watches;
     private Optional<Side> winner = Optional.empty();
     private int secondsLeft;
 
@@ -292,11 +298,14 @@ public final class CoresGame implements RoundConnections.Seating {
         refreshAll();
     }
 
-    /** Alarms and slow hands: every enemy near a core rings its team's bell and mines it with Mining Fatigue. */
+    /**
+     * Alarms and slow hands: every enemy near a core rings its team's bell, and every one in reach of it mines with
+     * Mining Fatigue.
+     */
     private void watchCores() {
         long now = System.nanoTime();
         double alarm = (double) config.alarmRadius() * config.alarmRadius();
-        double fatigue = (double) config.fatigueRadius() * config.fatigueRadius();
+        boolean ring = ++watches % WATCHES_PER_ALARM == 0;
         boolean changed = false;
         for (var core : map.cores()) {
             if (core.isDestroyed()) {
@@ -308,16 +317,17 @@ public final class CoresGame implements RoundConnections.Seating {
                 if (!enemy.getWorld().equals(center.getWorld()) || enemy.isDead()) {
                     continue;
                 }
-                double distance = enemy.getLocation().distanceSquared(center);
-                if (distance <= fatigue) {
+                double reach = blockReach(enemy);
+                if (enemy.getEyeLocation().distanceSquared(center) <= reach * reach) {
                     enemy.addPotionEffect(new PotionEffect(PotionEffectType.MINING_FATIGUE, FATIGUE_TICKS,
                             config.fatigueLevel(), true, false, true));
                 }
-                if (distance <= alarm && core.sound(now, ALARM_HOLD.toNanos(), Duration.ofSeconds(config.alarmSeconds()).toNanos())) {
+                if (enemy.getLocation().distanceSquared(center) <= alarm
+                        && core.sound(now, ALARM_HOLD.toNanos(), Duration.ofSeconds(config.alarmSeconds()).toNanos())) {
                     members(core.side()).forEach(member -> member.sendMessage(messages.get("core.attacked", coreName(core))));
                 }
             }
-            if (core.isUnderAttack(now)) {
+            if (ring && core.isUnderAttack(now)) {
                 members(core.side()).forEach(Sounds.CORE_ALARM::play);
             }
             changed |= wasAttacked != core.isUnderAttack(now);
@@ -325,6 +335,11 @@ public final class CoresGame implements RoundConnections.Seating {
         if (changed) {
             refreshAll();
         }
+    }
+
+    private static double blockReach(Player player) {
+        var range = player.getAttribute(Attribute.BLOCK_INTERACTION_RANGE);
+        return (range == null ? DEFAULT_BLOCK_REACH : range.getValue()) + REACH_SLACK;
     }
 
     public Optional<Core> coreAt(Block block) {
@@ -370,7 +385,8 @@ public final class CoresGame implements RoundConnections.Seating {
         death.killer().ifPresent(killer -> {
             summary.awardKill(killer, victim, Defeat.RESPAWN);
             if (event.getDamageSource().getDirectEntity() instanceof AbstractArrow && config.bowKillArrows() > 0) {
-                killer.getInventory().addItem(ItemStack.of(Material.ARROW, config.bowKillArrows()));
+                killer.getInventory().addItem(ItemStack.of(Material.ARROW, config.bowKillArrows())).values()
+                        .forEach(rest -> killer.getWorld().dropItem(killer.getLocation(), rest));
             }
         });
         summary.death(victim);
