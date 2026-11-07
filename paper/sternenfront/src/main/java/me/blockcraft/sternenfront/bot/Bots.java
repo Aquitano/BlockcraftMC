@@ -1318,7 +1318,8 @@ public final class Bots implements Listener {
             return;
         }
         soldier.hurtSoundUntil = tick + config.hurtSound().cooldownTicks();
-        soldier.body.getWorld().playSound(soldier.body, "blockcraft:sternenfront.hurt." + soldier.faction.key(), SoundCategory.PLAYERS,
+        // At its position, not on the bot itself: clients drop sounds bound to a silent entity, and bots are silent.
+        soldier.body.getWorld().playSound(soldier.body.getLocation(), "blockcraft:sternenfront.hurt." + soldier.faction.key(), SoundCategory.PLAYERS,
                 config.hurtSound().volume(), (float) ThreadLocalRandom.current().nextDouble(0.94, 1.06));
     }
 
