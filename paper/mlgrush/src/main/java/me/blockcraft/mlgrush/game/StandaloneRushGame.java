@@ -154,7 +154,7 @@ public final class StandaloneRushGame {
             Bukkit.broadcast(messages.get("round.forfeit", Placeholder.unparsed("player", player.getName())));
             finish(round.players().stream().map(Player::getUniqueId).findFirst());
         } else if (participant && round.phase() == GamePhase.ENDING) {
-            returnToLobbyLater();
+            returnToLobbyLater(gameConfig.startSeconds());
         }
         Tasks.sync(plugin, this::refreshPresence);
         refresh();
@@ -288,9 +288,7 @@ public final class StandaloneRushGame {
             hotbar.give(player);
         });
         round.spectators().forEach(player -> player.teleport(spectatorSpawn()));
-        if (round.playerCount() < MAX_PARTICIPANTS) {
-            returnToLobbyLater();
-        }
+        returnToLobbyLater(round.playerCount() < MAX_PARTICIPANTS ? gameConfig.startSeconds() : gameConfig.restartSeconds());
         refresh();
     }
 
@@ -318,14 +316,14 @@ public final class StandaloneRushGame {
         });
     }
 
-    private void returnToLobbyLater() {
+    private void returnToLobbyLater(int seconds) {
         cancelReset();
         resetTask = Bukkit.getScheduler().runTaskLater(plugin, () -> {
             resetTask = null;
-            if (round.phase() == GamePhase.ENDING && round.playerCount() < MAX_PARTICIPANTS) {
+            if (round.phase() == GamePhase.ENDING) {
                 reopen(false);
             }
-        }, gameConfig.startSeconds() * 20L);
+        }, seconds * 20L);
     }
 
     private void reopen(boolean rematch) {
