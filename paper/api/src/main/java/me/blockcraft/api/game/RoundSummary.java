@@ -1,8 +1,6 @@
 package me.blockcraft.api.game;
 
 import me.blockcraft.api.BlockcraftApi;
-import me.blockcraft.api.dialog.Dialogs;
-import io.papermc.paper.registry.data.dialog.body.DialogBody;
 import me.blockcraft.api.achievement.Achievement;
 import me.blockcraft.api.coins.Coins;
 import me.blockcraft.api.proxy.ProxyMessaging;
@@ -343,18 +341,6 @@ public final class RoundSummary {
                     Placeholder.component("details", button("summary.details", player, () -> true, viewer -> details.forEach(viewer::sendMessage)))));
             showResult(player);
         }
-    }
-
-    public void showDetails(Player player, Component title) {
-        if (!resultsShown || closed || !player.isOnline()) return;
-        var names = String.join(", ", winnerNames());
-        var winner = winnerNames().isEmpty() ? messages.get("summary.draw")
-                : messages.get("summary.winner", Placeholder.unparsed("winner", names));
-        var body = details(scores.get(player.getUniqueId()), winner, Optional.empty()).stream()
-                .map(DialogBody::plainMessage).toList();
-        Dialogs.show(player, Dialogs.create(title, body, List.of(),
-                Dialogs.actions(List.of(), Dialogs.button(messages.get("menu.close")))),
-                () -> resultsShown && !closed);
     }
 
     void showResult(Player player) {

@@ -555,7 +555,6 @@ hero:
   fallen: "<prefix><hero> <white><player> <muted>hat das Feld verlassen."
 
 recap:
-  title: "<sternenfront>Schlachtrückblick"
   battle: "<muted>Kampfpunkte <white><points> <dark>· <muted>Posten <white><captures> <dark>· <muted>Aufträge <white><orders>"
 
 feedback:

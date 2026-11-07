@@ -158,8 +158,8 @@ A kill by something still flying after its owner fell pays as usual but does not
 `orders` gives each fighter one goal at a time, shown under the objective line, which pays points and coins when completed. Its muted HUD line shows the goal and progress; completion announces the reward. Battle
 points also feed the round's awards, which need two fighters and pay `rewards.award`, and a rank that lasts across rounds:
 `bc_sternenfront_career` keeps every player's total and best round, `career.ranks` sets the thresholds and `career.rank.<index>`
-in `messages.yml` names them. The round recap opens as a dialog after `combat-feedback.recap-delay-ticks`,
-with the shared results and rewards plus battle points, captured posts and completed orders.
+in `messages.yml` names them. The details button of the round recap in chat adds battle points, captured posts and
+completed orders to the shared results and rewards.
 
 ## Animated bodies
 

@@ -1486,11 +1486,6 @@ public final class SternenfrontGame implements RoundConnections.Seating {
                         Formatter.number("captures", line.count(RoundTally.Deed.CAPTURE)),
                         Formatter.number("orders", line.count(RoundTally.Deed.ORDER))))));
         round.end();
-        Tasks.later(plugin, Math.max(0, plugin.getConfig().getInt("combat-feedback.recap-delay-ticks", 60)), () -> {
-            if (phase() == GamePhase.ENDING) {
-                Bukkit.getOnlinePlayers().forEach(player -> summary.showDetails(player, messages.get("recap.title")));
-            }
-        });
         announce(awards);
         career.close(tally.lines());
         refreshAll();
