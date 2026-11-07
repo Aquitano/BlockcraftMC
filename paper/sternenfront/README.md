@@ -204,8 +204,10 @@ A viewer who sees the hero's body rig hears them on its torso, because a client 
 draw. The thrown saber flies flat and spins about its middle like a disc, whirling every five ticks.
 Other fighters see a bladed hero's body rig hold the blade tipped forward, bring both hands in with the blade across the
 chest while guarding, wind up on the side a swing starts from and follow through over the sweep, and thrust the off hand
-forward while a lightning channel or grip lasts. Display interpolation eases each change over a few ticks. In first person
-the guard rolls the blade across the view through the item's `using_item` model.
+forward while a lightning channel or grip lasts. Force lightning leaves that hand as forked bolts redrawn every tick in
+a new shape every second tick, while its damage still lands on the channel's pulses. Display interpolation eases each
+change over a few ticks. In first person the guard rolls the blade across the view through the item's `using_item`
+model.
 
 ## What keeps a player going
 
