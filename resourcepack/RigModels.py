@@ -2,8 +2,10 @@
 
 Geometry and textures still come from SternenfrontArt.java, so a body changes in one place: run that first, then this.
 The joints match RigBody. Animations are written here as keyframes: BetterModel plays idle, walk and death by itself, and
-the plugin asks for shoot. Forward is +z and a body's right side is -x, as in the item models. BetterModel turns bones tagged
-h_ with where the entity looks, and hi_ with their children too, which is how the arms and the gun follow a bot's aim.
+the plugin asks for shoot. The joints, item models and keyframes below face +z with the right side at -x, but BetterModel
+takes a model's north, -z, as the entity's front, so every position and rotation is written turned half round. BetterModel
+turns bones tagged h_ with where the entity looks, and hi_ with their children too, which is how the arms and the gun follow
+a bot's aim.
 """
 import base64
 import json
@@ -43,10 +45,16 @@ BODIES = {
     "kolonien_medic": ("pistol", dict(shoulderX=.28, shoulderY=1.4, hipX=.1, hipY=.95, torsoY=.97, headY=1.5, weaponX=-.24, weaponY=1.27, weaponZ=.53, lift=-1.15)),
 }
 OUTLINED = "_outlined"
+OPPOSITE = {"north": "south", "south": "north", "east": "west", "west": "east"}
 
 
 def stable(*parts):
     return str(uuid.uuid5(NAMESPACE, "/".join(map(str, parts))))
+
+
+def turned(x, y, z):
+    """A position or Euler rotation turned half round the vertical axis."""
+    return [-x, y, -z]
 
 
 def png_size(path):
@@ -67,7 +75,7 @@ class Model:
         return self.textures[reference]
 
     def bone(self, name, parent, pivot):
-        self.bones[name] = dict(name=name, parent=parent, pivot=[pivot[0] * 16, pivot[1] * 16, pivot[2] * 16], children=[])
+        self.bones[name] = dict(name=name, parent=parent, pivot=turned(pivot[0] * 16, pivot[1] * 16, pivot[2] * 16), children=[])
         if parent:
             self.bones[parent]["children"].append(self.bones[name])
         return name
@@ -76,7 +84,7 @@ class Model:
         """Places an item model's elements so its centre, where the item display's origin sits, is at the joint."""
         model = json.loads((ASSETS / "models/item" / f"{model_path}.json").read_text())
         textures = model["textures"]
-        place = lambda c: [at[i] * 16 + (c[i] - 8) * scale for i in range(3)]
+        place = lambda c: turned(*(at[i] * 16 + (c[i] - 8) * scale for i in range(3)))
         for index, element in enumerate(model["elements"]):
             faces = {}
             for side, face in element["faces"].items():
@@ -84,15 +92,17 @@ class Model:
                 texture = self.texture(reference)
                 sx, sy = texture["width"] / 16, texture["height"] / 16
                 u1, v1, u2, v2 = face["uv"]
-                faces[side] = dict(uv=[u1 * sx, v1 * sy, u2 * sx, v2 * sy], texture=texture["index"], rotation=face.get("rotation", 0))
-            origin, rotation = place(element["from"]), [0, 0, 0]
+                faces[OPPOSITE.get(side, side)] = dict(uv=[u1 * sx, v1 * sy, u2 * sx, v2 * sy], texture=texture["index"],
+                                                       rotation=(face.get("rotation", 0) + (180 if side in ("up", "down") else 0)) % 360)
+            corners = place(element["from"]), place(element["to"])
+            origin, rotation = corners[0], [0, 0, 0]
             spin = element.get("rotation")
             if spin:
                 origin = place(spin["origin"])
                 rotation["xyz".index(spin["axis"])] = spin["angle"]
             cube = dict(name=f"{bone}_{index}", box_uv=False, rescale=False, locked=False, render_order="default",
                         allow_mirror_modeling=True, autouv=0, color=0, type="cube",
-                        **{"from": place(element["from"]), "to": place(element["to"])}, origin=origin, rotation=rotation,
+                        **{"from": list(map(min, *corners)), "to": list(map(max, *corners))}, origin=origin, rotation=turned(*rotation),
                         faces=faces, uuid=stable(self.family, bone, model_path, index))
             self.elements.append(cube)
             self.bones[bone].setdefault("cubes", []).append(cube["uuid"])
@@ -102,16 +112,16 @@ class Model:
                     children=[child for child in bone.get("cubes", [])] + [self.outline(child) for child in bone["children"]])
 
     def groups(self):
-        return [dict(name=bone["name"], origin=bone["pivot"], rotation=bone.get("rotation", [0, 0, 0]), color=0, uuid=stable(self.family, "bone", bone["name"]),
+        return [dict(name=bone["name"], origin=bone["pivot"], rotation=turned(*bone.get("rotation", [0, 0, 0])), color=0, uuid=stable(self.family, "bone", bone["name"]),
                      export=True, mirror_uv=False, isOpen=True, locked=False, visibility=True, autouv=0, selected=False)
                 for bone in self.bones.values()]
 
 
 def keyframes(family, bone, channel, points):
     """{time: (x, y, z)}"""
-    return [dict(channel=channel, data_points=[dict(x=str(round(x, 3)), y=str(round(y, 3)), z=str(round(z, 3)))],
+    return [dict(channel=channel, data_points=[dict(zip("xyz", (str(round(value, 3)) for value in turned(*point))))],
                  uuid=stable(family, bone, channel, time), time=time, color=-1, interpolation="catmullrom")
-            for time, (x, y, z) in points.items()]
+            for time, point in points.items()]
 
 
 def animation(family, name, loop, length, channels):
