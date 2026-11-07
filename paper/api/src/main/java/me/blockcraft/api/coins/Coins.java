@@ -6,6 +6,8 @@ import me.blockcraft.api.task.Tasks;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
+import java.util.UUID;
+
 /** Credits a player off the main thread and acknowledges a successful write. */
 public final class Coins {
 
@@ -24,5 +26,10 @@ public final class Coins {
                 api.notifications().rewardSound(player, Sounds.COINS);
             }
         });
+    }
+
+    public static void award(Plugin plugin, UUID uuid, String name, int amount) {
+        var api = BlockcraftApi.get();
+        Tasks.async(plugin, () -> api.coins().add(uuid, name, amount));
     }
 }

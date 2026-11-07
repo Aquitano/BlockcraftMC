@@ -194,9 +194,9 @@ public final class RoundSummary {
         if (secretKills) {
             return;
         }
+        accusations.killed(victim, killer);
         api.effects().onKill(killer, victim);
         if (api.streaks().announces(score.streak)) {
-        accusations.killed(victim, killer);
             Bukkit.broadcast(messages.get("summary.streak",
                     Placeholder.unparsed("player", killer.getName()), Formatter.number("streak", score.streak)));
             Sounds.STREAK.play(killer);
@@ -274,6 +274,21 @@ public final class RoundSummary {
         pay(winner, rewards.win());
         if (!winner.isDead() && winner.getHealth() <= HALF_A_HEART) {
             moment(winner, Achievement.NETWORK, "haarscharf");
+        }
+    }
+
+    /** A winner who is not online at the end, such as a teammate away in the rejoin window: the win and its pay, no effect. */
+    public void awardWin(UUID winner) {
+        var score = scores.get(winner);
+        if (score == null) {
+            return;
+        }
+        winners.put(winner, score.name);
+        score.xp += api.xp().award(winner, XpReward.WIN);
+        int paid = rewards.win() * coinFactor;
+        if (paid > 0) {
+            Coins.award(plugin, winner, score.name, paid);
+            score.coins += paid;
         }
     }
 

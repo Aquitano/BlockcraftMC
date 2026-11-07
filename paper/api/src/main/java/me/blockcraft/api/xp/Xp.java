@@ -63,6 +63,15 @@ public final class Xp implements Listener {
         return amount;
     }
 
+    /** For a player who is not online, so nothing is cached or shown; their next join loads the new total. */
+    public int award(UUID uuid, XpReward reward) {
+        int amount = rewards.getOrDefault(reward, 0);
+        if (amount > 0) {
+            awards.submit(uuid, () -> repository.add(uuid, amount), total -> { }, () -> { });
+        }
+        return amount;
+    }
+
     public void award(Player player, int amount) {
         if (amount <= 0) {
             return;
