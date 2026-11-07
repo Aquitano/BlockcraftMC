@@ -1,6 +1,6 @@
 {
   "textures":{"rig":"blockcraft:block/sternenfront/rig/kolonien_soldier","particle":"blockcraft:block/sternenfront/rig/kolonien_soldier"},
   "elements":[
-    {"from":[6.696,-2.08,6.576],"to":[9.304,-0.96,9.424],"faces":{"north":{"uv":[6.75,7.0,7.375,7.25],"texture":"#rig","tintindex":0},"south":{"uv":[6.75,7.0,7.375,7.25],"texture":"#rig","tintindex":0},"east":{"uv":[5.8125,7.0,6.5,7.25],"texture":"#rig","tintindex":0},"west":{"uv":[5.8125,7.0,6.5,7.25],"texture":"#rig","tintindex":0},"up":{"uv":[0.125,5.4375,0.75,6.125],"texture":"#rig","tintindex":0},"down":{"uv":[14.9375,4.375,15.5625,5.0625],"texture":"#rig","tintindex":0}}}
+    {"from":[6.696,-2.08,6.576],"to":[9.304,-0.96,9.424],"faces":{"north":{"uv":[3.125,9.9375,3.75,10.1875],"texture":"#rig","tintindex":0},"south":{"uv":[3.125,9.9375,3.75,10.1875],"texture":"#rig","tintindex":0},"east":{"uv":[2.1875,9.9375,2.875,10.1875],"texture":"#rig","tintindex":0},"west":{"uv":[2.1875,9.9375,2.875,10.1875],"texture":"#rig","tintindex":0},"up":{"uv":[4.3125,7.5625,4.9375,8.25],"texture":"#rig","tintindex":0},"down":{"uv":[3.4375,7.5625,4.0625,8.25],"texture":"#rig","tintindex":0}}}
   ]
 }

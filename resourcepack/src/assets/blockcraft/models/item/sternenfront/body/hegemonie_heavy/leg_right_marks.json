@@ -1,6 +1,6 @@
 {
   "textures":{"rig":"blockcraft:block/sternenfront/rig/hegemonie_heavy","particle":"blockcraft:block/sternenfront/rig/hegemonie_heavy"},
   "elements":[
-    {"from":[6.496,0.16,6.416],"to":[9.504,0.8,9.584],"faces":{"north":{"uv":[10.0,9.5,10.75,9.6875],"texture":"#rig","tintindex":0},"south":{"uv":[10.0,9.5,10.75,9.6875],"texture":"#rig","tintindex":0},"east":{"uv":[8.9375,9.5,9.75,9.6875],"texture":"#rig","tintindex":0},"west":{"uv":[8.9375,9.5,9.75,9.6875],"texture":"#rig","tintindex":0},"up":{"uv":[8.5,6.5625,9.25,7.375],"texture":"#rig","tintindex":0},"down":{"uv":[7.5,6.5625,8.25,7.375],"texture":"#rig","tintindex":0}}}
+    {"from":[6.496,0.16,6.416],"to":[9.504,0.8,9.584],"faces":{"north":{"uv":[0.125,10.0625,0.875,10.25],"texture":"#rig","tintindex":0},"south":{"uv":[0.125,10.0625,0.875,10.25],"texture":"#rig","tintindex":0},"east":{"uv":[12.1875,9.5,13.0,9.6875],"texture":"#rig","tintindex":0},"west":{"uv":[12.1875,9.5,13.0,9.6875],"texture":"#rig","tintindex":0},"up":{"uv":[8.5,6.5625,9.25,7.375],"texture":"#rig","tintindex":0},"down":{"uv":[7.5,6.5625,8.25,7.375],"texture":"#rig","tintindex":0}}}
   ]
 }

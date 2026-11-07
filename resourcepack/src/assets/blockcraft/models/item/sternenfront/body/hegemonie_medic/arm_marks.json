@@ -1,6 +1,6 @@
 {
   "textures":{"rig":"blockcraft:block/sternenfront/rig/hegemonie_medic","particle":"blockcraft:block/sternenfront/rig/hegemonie_medic"},
   "elements":[
-    {"from":[7.552,-0.48,7.552],"to":[8.448,0.48,8.448],"faces":{"north":{"uv":[14.5,11.0,15.0,11.5],"texture":"#rig","tintindex":0},"south":{"uv":[14.5,11.0,15.0,11.5],"texture":"#rig","tintindex":0},"east":{"uv":[14.5,11.0,15.0,11.5],"texture":"#rig","tintindex":0},"west":{"uv":[14.5,11.0,15.0,11.5],"texture":"#rig","tintindex":0},"up":{"uv":[0.25,12.125,0.75,12.625],"texture":"#rig","tintindex":0},"down":{"uv":[13.5,11.0,14.0,11.5],"texture":"#rig","tintindex":0}}}
+    {"from":[7.552,-0.48,7.552],"to":[8.448,0.48,8.448],"faces":{"north":{"uv":[6.25,12.125,6.75,12.625],"texture":"#rig","tintindex":0},"south":{"uv":[6.25,12.125,6.75,12.625],"texture":"#rig","tintindex":0},"east":{"uv":[6.25,12.125,6.75,12.625],"texture":"#rig","tintindex":0},"west":{"uv":[6.25,12.125,6.75,12.625],"texture":"#rig","tintindex":0},"up":{"uv":[7.25,12.125,7.75,12.625],"texture":"#rig","tintindex":0},"down":{"uv":[5.25,12.125,5.75,12.625],"texture":"#rig","tintindex":0}}}
   ]
 }
