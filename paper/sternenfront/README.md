@@ -53,6 +53,20 @@ If the unit is unavailable, the player deploys as their free class. Death, disco
 Taking the relic also releases the unit and replaces its loadout with the champion's. Reinforcements receive normal healing and normal kill rewards.
 They have no permanent unlock or database record. Their body rigs and helmets come from `resourcepack/SternenfrontArt.java`.
 
+## Bots
+
+Bots fight in fireteams of up to `bots.squad.fireteam-size`, led by a soldier where the team has one. A team shares one
+objective: a post it can still take, or a held post with enemies in it, keeping its choice unless another is
+`switch-margin` blocks closer. When it moves on from a post it took, it leaves its heavy, or its last member, as the post's
+only guard; the guard moves between the post's lookouts and rejoins the team when the post falls. Once every post is
+held, teams hold the one nearest the enemy. A team near a player of its faction takes that player's order.
+
+On the move the others walk in the leader's steps, `spacing` blocks apart, and the leader waits briefly for stragglers.
+Under fire the team bounds by pairs along its authored route: one pair runs `bound-distance` blocks while the other covers
+it from cover and fires at where the enemy was last seen. A team held up for `flank-after-ticks` sends one member round by
+another route. Near the post the whole team spreads into it. Bots take cover only while covering, venting or wounded.
+A bot's aim scatters on a fresh target and settles over `aim-settle-ticks`, and each member watches its own sector.
+
 ## Arena template
 
 A map's template is restored before each server start. Positions and bot routes come from
