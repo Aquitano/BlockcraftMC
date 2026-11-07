@@ -60,6 +60,12 @@ transforms. Running `BattleArt.py` directly requires a fresh Java generation fir
 `:resourcepack:verifyWeaponPoses`, also part of `check`, checks all eleven registered guns, vanilla item routes,
 texture paths, both hands, firing inheritance, family framing, recoil differences and wrist bounds.
 
+Each long gun has one feature that names it in profile. The carbine is short and boxy with a power cell standing out on
+its left. The DC-15A is long, with a scope and a grip under the barrel. The E-5 is long and thin, with a ribbed barrel and
+a rod stock offset low. The DC-15x has a large scope and a skeleton stock; the E-5s keeps the E-5's ribs, with a slim
+scope along its left side and a forked muzzle. The Z-6 has its barrel cluster, a carry handle and a drum cell.
+The grip of each sits where its pose family expects it, so the same poses frame the new shapes.
+
 Pistols rise sharply when firing. Twin pistols sit farther outward with an inward cant. Carbines have a compact shoulder
 pose; long rifles sit farther forward. The Z-6 sits lower with a larger scale. When firing it tilts up 5 degrees
 and moves 0.3 up and 1.0 back.

@@ -502,6 +502,15 @@ public final class SternenfrontArt {
                 box(x, y, z, across, flat, length - .012, surface).spinZ(-45));
     }
 
+    /** Eight-sided column along x. */
+    private static List<Box> drumX(double x, double y, double z, double across, double length, Surface surface) {
+        double flat = across * .4142;
+        return List.of(box(x, y, z, length, across, flat, surface),
+                box(x, y, z, length - .004, flat, across, surface),
+                box(x, y, z, length - .008, across, flat, surface).spinX(45),
+                box(x, y, z, length - .012, across, flat, surface).spinX(-45));
+    }
+
     /** Eight-sided column along y. */
     private static List<Box> drumY(double x, double y, double z, double across, double height, Surface surface) {
         double flat = across * .4142;
@@ -966,42 +975,129 @@ public final class SternenfrontArt {
         return new Family("equipment_" + name, 64, false, List.of(new Model("sternenfront/" + name, shape, display)));
     }
 
-    private static Shape rifle(boolean separatist, boolean sniper) {
+    /** Short and boxy: a stepped shroud, a power cell standing out on the left and the stock folded over the top. */
+    private static Shape carbine() {
+        return new Shape()
+                .add(box(0, .03, -.13, .18, .2, .5, FRAME))
+                .add(box(0, .05, -.41, .16, .14, .08, FRAME).spinX(22.5))
+                .add(box(0, .145, -.12, .11, .03, .44, STEEL))
+                .add(box(0, .19, -.32, .05, .06, .04, FRAME))
+                .both(box(.06, .175, -.16, .02, .025, .34, STEEL))
+                .add(box(0, .19, .02, .15, .05, .035, OILED))
+                .add(box(0, -.16, -.26, .09, .24, .12, RUBBER).spinX(22.5))
+                .add(box(0, -.1, -.13, .03, .02, .13, FRAME))
+                .add(box(.165, .02, -.03, .15, .075, .09, STEEL))
+                .add(box(.25, .02, -.03, .025, .095, .11, FRAME))
+                .add(box(.165, .065, -.03, .1, .015, .03, TRIM))
+                .add(drumZ(0, .03, .19, .14, .14, FRAME))
+                .add(drumZ(0, .03, .33, .115, .14, STEEL))
+                .add(drumZ(0, .03, .45, .09, .1, FRAME))
+                .add(box(0, .03, .54, .045, .045, .08, OILED))
+                .add(box(0, .12, .44, .025, .06, .025, FRAME));
+    }
+
+    /** The carbine's long brother: a slim shroud, a scope on top, a full stock and a grip under the barrel. */
+    private static Shape heavyRifle() {
+        return new Shape()
+                .add(box(0, .03, -.15, .16, .18, .6, FRAME))
+                .add(box(0, .14, -.15, .1, .04, .52, STEEL))
+                .add(box(0, .02, -.62, .12, .15, .34, FRAME))
+                .add(box(0, -.07, -.56, .1, .07, .22, FRAME).spinX(22.5))
+                .add(box(0, 0, -.81, .135, .22, .05, RUBBER))
+                .add(box(0, .11, -.66, .09, .04, .2, STEEL))
+                .add(box(0, -.16, -.27, .09, .24, .12, RUBBER).spinX(22.5))
+                .add(box(0, -.1, -.14, .03, .02, .13, FRAME))
+                .add(box(0, -.12, -.02, .1, .14, .1, STEEL).spinX(-22.5))
+                .add(box(.105, .03, -.08, .05, .07, .12, STEEL))
+                .add(drumZ(0, .03, .23, .13, .16, FRAME))
+                .add(drumZ(0, .03, .6, .085, .58, STEEL))
+                .add(drumZ(0, .03, .93, .065, .1, FRAME))
+                .add(box(0, -.08, .45, .06, .14, .07, RUBBER).spinX(-22.5))
+                .add(box(0, .11, .85, .025, .06, .025, FRAME))
+                .add(drumZ(0, .26, -.12, .09, .42, FRAME))
+                .add(drumZ(0, .26, .1, .115, .06, FRAME))
+                .add(drumZ(0, .26, -.34, .1, .05, RUBBER))
+                .add(box(0, .26, .133, .09, .09, .008, LENS))
+                .add(box(0, .19, -.22, .04, .09, .04, STEEL))
+                .add(box(0, .19, 0, .04, .09, .04, STEEL));
+    }
+
+    /** The longest gun: a thin barrel, a skeleton stock, a folded bipod and a large scope with a lit dot in its lens. */
+    private static Shape marksmanRifle() {
+        return new Shape()
+                .add(box(0, .03, -.2, .13, .16, .56, FRAME))
+                .add(box(0, .12, -.2, .09, .03, .5, STEEL))
+                .add(box(0, .06, -.72, .07, .06, .48, FRAME))
+                .add(box(0, -.07, -.66, .05, .05, .36, FRAME).spinX(22.5))
+                .add(box(0, -.01, -.96, .08, .25, .05, RUBBER))
+                .add(box(0, .12, -.66, .08, .05, .18, STEEL))
+                .add(box(0, -.16, -.3, .085, .24, .11, RUBBER).spinX(22.5))
+                .add(box(0, -.1, -.18, .03, .02, .12, FRAME))
+                .add(box(0, -.1, -.02, .08, .12, .1, STEEL))
+                .add(drumZ(0, .03, .15, .1, .14, FRAME))
+                .add(drumZ(0, .03, .66, .055, .9, STEEL))
+                .add(box(0, .03, 1.15, .085, .06, .09, FRAME))
+                .add(box(0, .03, 1.15, .06, .06, .09, FRAME).spinZ(45))
+                .both(box(.025, -.02, .55, .012, .012, .42, OILED))
+                .add(drumZ(0, .29, -.18, .12, .5, FRAME))
+                .add(drumZ(0, .29, .12, .16, .1, FRAME))
+                .add(drumZ(0, .29, -.46, .13, .06, RUBBER))
+                .add(box(0, .29, .172, .125, .125, .008, LENS))
+                .add(box(0, .29, .178, .028, .028, .006, CYAN))
+                .add(box(0, .2, -.3, .045, .1, .05, STEEL))
+                .add(box(0, .2, -.04, .045, .1, .05, STEEL))
+                .add(box(0, .375, -.18, .05, .04, .05, STEEL))
+                .add(box(.075, .29, -.18, .04, .05, .05, STEEL));
+    }
+
+    /**
+     * Long and thin against the carbine's short and boxy: a ribbed barrel, a cell angled under it and a rod stock offset
+     * low. The sniper stretches it, with a fork at the muzzle and a slim scope along its left side.
+     */
+    private static Shape droidRifle(boolean sniper) {
+        double muzzle = sniper ? 1.18 : .98;
         var shape = new Shape()
-                .add(box(0, .03, -.15, .16, .17, .57, FRAME))
-                .add(box(0, .13, -.15, .11, .04, .48, STEEL))
-                .add(box(0, -.15, -.28, .09, .23, .13, FRAME).spinX(22.5))
-                .add(box(0, .015, -.58, .13, .2, .31, FRAME))
-                .add(box(0, -.07, -.53, .16, .07, .27, STEEL))
-                .add(drumZ(0, .03, sniper ? .65 : .46, .075, sniper ? 1.25 : .86, STEEL))
-                .add(drumZ(0, .03, sniper ? 1.27 : .9, .13, .12, FRAME))
-                .add(box(0, .16, .32, .035, .12, .035, FRAME));
-        if (separatist) {
-            shape.add(box(0, -.17, .06, .08, .27, .12, STEEL).spinX(-22.5))
-                    .add(box(.087, .04, -.1, .012, .09, .2, TRIM));
-        } else {
-            shape.add(box(0, -.005, .16, .19, .19, .33, FRAME))
-                    .both(box(.1, .03, .16, .02, .035, .25, STEEL));
+                .add(box(0, .03, -.1, .11, .14, .44, OILED))
+                .add(box(0, .11, -.06, .03, .05, .16, FRAME))
+                .add(box(.058, .04, -.1, .006, .04, .3, TRIM))
+                .add(box(0, -.15, -.24, .08, .22, .1, FRAME).spinX(22.5))
+                .add(box(0, -.13, .06, .07, .2, .08, STEEL).spinX(-22.5))
+                .add(box(0, -.08, sniper ? -.5 : -.45, .05, .07, sniper ? .52 : .42, FRAME))
+                .add(box(0, -.1, sniper ? -.77 : -.68, .07, .17, .045, FRAME).spinX(22.5))
+                .add(box(0, .04, (.12 + muzzle) / 2, .045, .045, muzzle - .12, STEEL));
+        int rings = sniper ? 7 : 5;
+        for (int ring = 0; ring < rings; ring++) {
+            var collar = box(0, .04, .2 + ring * (muzzle - .35) / (rings - 1), .085, .085, .035, FRAME);
+            shape.add(ring % 2 == 0 ? collar : collar.spinZ(45));
         }
         if (sniper) {
-            shape.add(drumZ(0, .25, -.12, .115, .36, FRAME))
-                    .add(box(0, .17, -.12, .045, .11, .05, STEEL))
-                    .add(box(0, .25, .066, .075, .075, .012, LENS));
+            shape.both(box(.032, .04, muzzle + .07, .015, .05, .16, FRAME))
+                    .add(drumZ(.085, .1, -.04, .06, .44, FRAME))
+                    .add(box(.085, .1, .185, .03, .03, .008, RED))
+                    .add(box(.052, .075, -.04, .03, .03, .08, STEEL));
+        } else {
+            shape.add(box(0, .04, muzzle + .03, .07, .07, .06, FRAME).spinZ(45));
         }
         return shape;
     }
 
+    /** Six barrels in a cluster between three collars, a hazard band, a carry handle, a drum cell and a front handle. */
     private static Shape rotaryBlaster() {
         var shape = new Shape()
-                .add(drumZ(0, .02, -.23, .28, .46, FRAME))
-                .add(drumZ(0, .02, .15, .3, .08, STEEL))
-                .add(drumZ(0, .02, 1.02, .3, .07, STEEL))
-                .add(box(0, -.2, -.27, .11, .25, .13, FRAME))
-                .add(box(0, .27, -.13, .31, .06, .06, FRAME))
-                .both(box(.13, .18, -.13, .05, .2, .06, STEEL));
+                .add(drumZ(0, .02, -.25, .28, .5, FRAME))
+                .add(drumZ(0, .02, .03, .3, .06, STEEL))
+                .add(drumZ(0, .02, .5, .31, .05, FRAME))
+                .add(drumZ(0, .02, .98, .32, .08, STEEL))
+                .add(drumZ(0, .02, .925, .325, .03, HAZARD))
+                .add(box(0, -.2, -.28, .11, .25, .13, RUBBER).spinX(22.5))
+                .add(drumX(0, -.22, .02, .2, .22, CANISTER))
+                .add(box(0, -.21, .3, .06, .2, .07, RUBBER))
+                .add(box(0, .23, -.18, .05, .14, .05, FRAME))
+                .add(box(0, .23, .22, .05, .14, .05, FRAME))
+                .add(box(0, .32, .02, .05, .04, .46, STEEL));
         for (int index = 0; index < 6; index++) {
             double angle = Math.PI * index / 3;
-            shape.add(drumZ(Math.cos(angle) * .1, .02 + Math.sin(angle) * .1, .6, .055, .92, FRAME));
+            shape.add(drumZ(Math.cos(angle) * .1, .02 + Math.sin(angle) * .1, .52, .055, .9, FRAME));
         }
         return shape;
     }
@@ -1061,14 +1157,14 @@ public final class SternenfrontArt {
                 .add(box(0, -.09, -.55, .24, .23, .42, DROID))
                 .add(box(0, -.09, -.79, .29, .28, .08, FRAME))
                 .add(box(0, -.18, .08, .23, .16, .22, DROID));
-        return List.of(gun("carbine", rifle(false, false), GunPose.CARBINE),
-                gun("heavy_rifle", rifle(false, false).add(drumZ(0, .03, 1.06, .075, .25, STEEL)), GunPose.HEAVY_RIFLE),
+        return List.of(gun("carbine", carbine(), GunPose.CARBINE),
+                gun("heavy_rifle", heavyRifle(), GunPose.HEAVY_RIFLE),
                 gun("repeater", rotaryBlaster(), GunPose.ROTARY),
-                gun("long_rifle", rifle(false, true), GunPose.LONG_RIFLE),
+                gun("long_rifle", marksmanRifle(), GunPose.LONG_RIFLE),
                 gun("pistol", pistol(false, false), GunPose.PISTOL),
                 gun("twin_pistol", pistol(false, false), GunPose.TWIN_PISTOL),
-                gun("e5", rifle(true, false), GunPose.CARBINE),
-                gun("e5s", rifle(true, true), GunPose.LONG_RIFLE),
+                gun("e5", droidRifle(false), GunPose.CARBINE),
+                gun("e5s", droidRifle(true), GunPose.LONG_RIFLE),
                 gun("wrist_blaster", wrist, GunPose.WRIST),
                 gun("se14", pistol(false, true), GunPose.PISTOL),
                 gun("westar_pistols", pistol(true, false), GunPose.TWIN_PISTOL),
