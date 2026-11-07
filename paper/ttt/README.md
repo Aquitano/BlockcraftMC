@@ -14,7 +14,8 @@ Every number named below as a key is in [config.yml](src/main/resources/config.y
    there; a round never starts with fewer than `players.round-minimum`. Meanwhile everyone votes for the map with the hotbar's vote item, or leaves it to
    chance; staff decide it with `/forcemap <map>`.
 2. Preparation: everyone starts at the map's spawns and loots. Nobody can be hurt, and nobody knows a role yet.
-3. The roles are drawn: traitors, from `roles.detective-min-players` on detectives, the rest innocents. Each learns
+3. The roles are drawn: traitors, from `roles.detective-min-players` on detectives, the rest innocents. If fewer than
+   `players.round-minimum` are left by then, the round ends without a winner instead. Each learns
    their role by title. Traitors also learn each other, and everyone learns who the detectives are, whose names turn
    blue. How many traitors there are is never announced.
 4. The innocents and detectives win when no traitor is left or the time runs out; the traitors win when nobody else is

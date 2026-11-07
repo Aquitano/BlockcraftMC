@@ -56,6 +56,7 @@ round:
     traitors: "<prefix><error>Die Traitor haben gewonnen!"
     innocents: "<prefix><success>Die Innocents haben gewonnen!"
     chores: "<prefix><success>Alle Aufgaben sind erledigt. Die Innocents haben gewonnen!"
+  too-few: "<prefix><error>Zu viele Spieler haben die Runde verlassen, bevor die Rollen verteilt wurden."
   draw: "<prefix><muted>Die Runde ist ohne Sieger zu Ende."
   traitors: "<prefix><muted>Die Traitor waren<dark>: <error><players>"
 

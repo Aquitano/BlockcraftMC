@@ -3,6 +3,7 @@ package me.blockcraft.ttt.arena;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.util.BoundingBox;
 
 import java.util.List;
 import java.util.Optional;
@@ -22,5 +23,14 @@ public record Town(String name, World world, List<Location> spawns, TesterRoom t
 
     public Location spawn(int index) {
         return spawns.get(Math.floorMod(index, spawns.size())).clone();
+    }
+
+    /** The column inside the world border, which every map draws round itself. */
+    public BoundingBox bounds() {
+        var border = world.getWorldBorder();
+        var center = border.getCenter();
+        double half = border.getSize() / 2;
+        return new BoundingBox(center.getX() - half, world.getMinHeight(), center.getZ() - half,
+                center.getX() + half, world.getMaxHeight(), center.getZ() + half);
     }
 }

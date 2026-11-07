@@ -114,6 +114,7 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
     private final Set<UUID> teamKillers = new HashSet<>();
     private final Set<UUID> karmaLoaded = new HashSet<>();
     private final Set<UUID> ownFault = new HashSet<>();
+    private final Set<UUID> deserters = new HashSet<>();
     /** The name each player had when the roles were drawn, so a traitor who leaves is still named as seen. */
     private final Map<UUID, String> names = new HashMap<>();
     /** When each open traitor door shuts, so a second traitor's click keeps it open the full time. */
@@ -242,6 +243,7 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
             vote.withdraw(player);
         }
         if (phase() == GamePhase.INGAME && wasPlaying) {
+            deserters.add(player.getUniqueId());
             updateTraitorChat();
             tasks.ifPresent(TaskRound::update);
             checkWinner();
@@ -277,6 +279,7 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
         town = Optional.of(built);
         tester = Optional.of(new Tester(plugin, built.tester(), config.tester(), messages, round::players, equipment::showsAsTraitor));
         tester.get().showLabel();
+        round.playArea(built.world(), built.bounds());
         tasks = built.tasks().filter(layout -> mode == TttMode.TASKS).map(layout -> new TaskRound(plugin, config.tasks(),
                 messages, layout, built.tester().button(), built.traitorDoors(),
                 built.tester().trap().map(TesterRoom.Trap::button), () -> tester.filter(Tester::trapUsed).isPresent(),
@@ -298,7 +301,8 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
 
     private void drawRoles() {
         var players = new ArrayList<>(round.players());
-        if (players.isEmpty()) {
+        if (players.size() < config.roundMinimum()) {
+            Bukkit.broadcast(messages.get("round.too-few"));
             endRound(Optional.empty());
             return;
         }
@@ -634,8 +638,8 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
         if (phase() != GamePhase.INGAME) {
             return new GameSidebar.Headcount(round.playerCount(), round.spectatorCount());
         }
-        int hidden = (int) round.spectators().stream().filter(player -> unidentified.contains(player.getUniqueId())).count();
-        return new GameSidebar.Headcount(round.playerCount() + hidden, Math.max(0, round.spectatorCount() - hidden));
+        int watching = (int) round.spectators().stream().filter(player -> unidentified.contains(player.getUniqueId())).count();
+        return new GameSidebar.Headcount(round.playerCount() + unidentified.size(), Math.max(0, round.spectatorCount() - watching));
     }
 
     public void openTasks(Player player) {
@@ -731,7 +735,7 @@ public final class TttGame implements ShopMenu.Till, RoundConnections.Seating {
         tasks.ifPresent(TaskRound::stop);
         won.ifPresent(faction -> roles.forEach((id, role) -> {
             var player = Bukkit.getPlayer(id);
-            if (role.faction() == faction && player != null) {
+            if (role.faction() == faction && player != null && !deserters.contains(id)) {
                 summary.awardWin(player);
             }
         }));
