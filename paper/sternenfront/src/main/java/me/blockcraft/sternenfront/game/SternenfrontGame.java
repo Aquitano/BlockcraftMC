@@ -1080,7 +1080,14 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     private boolean heatAllows(Player player, Fighter fighter, Blaster.Stats stats) {
         return switch (fighter.heat().fire(tick, stats.cooldownTicks(), stats.heat())) {
             case TOO_SOON -> false;
-            case VENTING -> false;
+            case VENTING -> {
+                switch (fighter.heat().pull(tick)) {
+                    case HIT -> vented(player);
+                    case MISS -> ventMissed(player);
+                    case NONE -> { }
+                }
+                yield false;
+            }
             case OVERHEATED -> {
                 overheated(player);
                 yield true;
@@ -1119,6 +1126,23 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         player.getWorld().playSound(eye, Sound.BLOCK_FIRE_EXTINGUISH, 0.7f, 1.6f);
         player.getWorld().spawnParticle(Particle.SMOKE, eye.add(eye.getDirection().multiply(0.6)), 8, 0.1, 0.1, 0.1, 0.02);
         BlockcraftApi.get().notifications().feedbackNow(player, messages.get("blaster.overheated"), 10);
+    }
+
+    private void vented(Player player) {
+        var eye = player.getEyeLocation();
+        var muzzle = eye.clone().add(eye.getDirection().multiply(0.6));
+        player.getWorld().playSound(eye, Sound.BLOCK_IRON_TRAPDOOR_CLOSE, 0.8f, 1.7f);
+        player.getWorld().playSound(eye, Sound.BLOCK_FIRE_EXTINGUISH, 0.6f, 1.3f);
+        player.getWorld().spawnParticle(Particle.CLOUD, muzzle, 6, 0.08, 0.08, 0.08, 0.03);
+        player.getWorld().spawnParticle(Particle.WHITE_SMOKE, muzzle, 8, 0.1, 0.1, 0.1, 0.02);
+        player.setExp(0);
+        BlockcraftApi.get().notifications().feedbackNow(player, messages.get("blaster.vent-hit"), 10);
+    }
+
+    private void ventMissed(Player player) {
+        player.playSound(player.getEyeLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, SoundCategory.PLAYERS, 0.9f, 0.5f);
+        player.playSound(player.getEyeLocation(), Sound.BLOCK_LAVA_EXTINGUISH, SoundCategory.PLAYERS, 0.4f, 1.4f);
+        BlockcraftApi.get().notifications().feedbackNow(player, messages.get("blaster.vent-miss"), 10);
     }
 
     /** F uses the first ability of a class or a hero, Q the second. */

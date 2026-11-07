@@ -84,7 +84,8 @@ public record SternenfrontConfig(int playersPerTeam, int fullSeconds, int roundS
                         Math.max(1, relic.getInt("leap-cooldown-seconds", 6)), relic.getDouble("leap-forward", 1.5),
                         relic.getDouble("leap-up", 0.7)),
                 new Heat.Rules(Math.max(0, config.getInt("heat.cool-delay-ticks", 8)), Math.max(0.1, config.getDouble("heat.cool-per-tick", 3)),
-                        Math.max(1, config.getInt("heat.vent-ticks", 40))),
+                        Math.max(1, config.getInt("heat.vent-ticks", 40)), Math.clamp(config.getDouble("heat.window-share"), 0, 0.5),
+                        Math.max(0, config.getDouble("heat.miss-penalty-share"))),
                 byKey(Faction.class, faction -> byKey(CombatClass.class, combatClass ->
                         classStats(section(section(classes, faction.key()), combatClass.key())))),
                 blasters(section(config, "blasters")),

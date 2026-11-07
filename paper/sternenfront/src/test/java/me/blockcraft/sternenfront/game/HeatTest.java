@@ -2,13 +2,24 @@ package me.blockcraft.sternenfront.game;
 
 import org.junit.Test;
 
+import java.util.Optional;
+import java.util.random.RandomGenerator;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class HeatTest {
 
-    private static final Heat.Rules RULES = new Heat.Rules(10, 5, 40);
+    private static final Heat.Rules RULES = new Heat.Rules(10, 5, 40, 0.2, 0.25);
+    private static final RandomGenerator LOWEST_WINDOW = () -> 0L;
+
+    private static Heat overheatedAt(long tick) {
+        var heat = new Heat(RULES, LOWEST_WINDOW);
+        heat.fire(tick - 1, 1, 60);
+        assertEquals(Heat.Shot.OVERHEATED, heat.fire(tick, 1, 60));
+        return heat;
+    }
 
     @Test
     public void aGunFiresNoFasterThanItsShotIntervalAndHeatsWithEachShot() {
@@ -59,5 +70,38 @@ public class HeatTest {
         assertEquals(40, heat.ventTicks(2));
         assertEquals(20, heat.ventTicks(22));
         assertEquals(0, heat.ventTicks(42));
+    }
+
+    @Test
+    public void aFreshPullWhileTheMetersEdgeIsInTheWindowEndsTheVent() {
+        var heat = overheatedAt(10);
+        assertEquals(Optional.of(new Heat.Window(0, 2)), heat.window(10));
+
+        assertEquals(2, heat.litCells(45));
+        assertEquals(Heat.Vent.HIT, heat.pull(45));
+        assertFalse(heat.venting(45));
+        assertEquals(0f, heat.level(), 1e-6);
+        assertEquals(Heat.Shot.FIRED, heat.fire(45, 1, 10));
+    }
+
+    @Test
+    public void aMissLengthensTheVentOnceAndUsesUpTheTry() {
+        var heat = overheatedAt(10);
+
+        assertEquals(Heat.Vent.MISS, heat.pull(20));
+        assertEquals(40, heat.ventTicks(20));
+        assertEquals(Optional.empty(), heat.window(20));
+        assertEquals(Heat.Vent.NONE, heat.pull(52));
+        assertTrue(heat.venting(52));
+    }
+
+    @Test
+    public void aTriggerHeldThroughTheOverheatNeitherHitsNorMisses() {
+        var heat = overheatedAt(10);
+        for (long tick = 14; tick <= 46; tick += 4) {
+            assertEquals(Heat.Vent.NONE, heat.pull(tick));
+        }
+        assertTrue(heat.venting(46));
+        assertEquals(Optional.of(new Heat.Window(0, 2)), heat.window(46));
     }
 }

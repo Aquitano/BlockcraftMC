@@ -1,26 +1,51 @@
 package me.blockcraft.sternenfront.game;
 
+import java.util.Optional;
+import java.util.Random;
+import java.util.random.RandomGenerator;
+
 /**
  * A blaster's heat instead of ammunition: every shot heats it, a pause cools it, and a gun that reaches full heat
- * vents for {@link Rules#ventTicks} before it fires again, cooling from full to nothing meanwhile.
+ * vents for {@link Rules#ventTicks} before it fires again, cooling from full to nothing meanwhile. A fresh pull of the
+ * trigger while the cooling heat is inside the vent's window ends the vent at once; one outside it lengthens the vent.
  */
 public final class Heat {
 
     public enum Shot { FIRED, OVERHEATED, TOO_SOON, VENTING }
 
-    public record Rules(int coolDelayTicks, double coolPerTick, int ventTicks) {
+    public enum Vent { HIT, MISS, NONE }
+
+    /** {@code windowShare} of the meter is the vent's window and a miss adds {@code missPenaltyShare} of the vent. */
+    public record Rules(int coolDelayTicks, double coolPerTick, int ventTicks, double windowShare, double missPenaltyShare) {
     }
 
+    /** The meter cells from {@code low} up to, not including, {@code high} whose last lit cell a pull has to catch. */
+    public record Window(int low, int high) {
+    }
+
+    /** The meter shows heat in these cells, and a window covers whole cells so the HUD draws exactly what a pull must hit. */
+    public static final int METER_CELLS = 10;
+    /** A held trigger pulls every 4 ticks, so a pull this long after the last one is a fresh one. */
+    private static final int RELEASED_AFTER_TICKS = 6;
     private static final double FULL = 100;
     private static final long LONG_AGO = Long.MIN_VALUE / 2;
 
     private final Rules rules;
+    private final RandomGenerator random;
     private double heat;
     private long lastShot = LONG_AGO;
+    private long lastPull = LONG_AGO;
     private long ventedUntil = LONG_AGO;
+    private int ventLength = 1;
+    private Optional<Window> window = Optional.empty();
 
     public Heat(Rules rules) {
+        this(rules, new Random());
+    }
+
+    public Heat(Rules rules, RandomGenerator random) {
         this.rules = rules;
+        this.random = random;
     }
 
     /** Whether a shot leaves the gun at {@code tick}; an overheating shot still does. */
@@ -36,13 +61,42 @@ public final class Heat {
         if (heat < FULL) {
             return Shot.FIRED;
         }
-        ventedUntil = tick + Math.max(1, rules.ventTicks());
+        ventLength = Math.max(1, rules.ventTicks());
+        ventedUntil = tick + ventLength;
+        int cells = Math.clamp(Math.round(rules.windowShare() * METER_CELLS), 0, METER_CELLS / 2);
+        int low = cells == 0 ? 0 : random.nextInt(METER_CELLS / 2 - cells + 1);
+        window = cells == 0 ? Optional.empty() : Optional.of(new Window(low, low + cells));
         return Shot.OVERHEATED;
+    }
+
+    /**
+     * A pull of the trigger during a vent. Only the first fresh pull counts: a trigger held since the overheating shot
+     * does not, and after one try the window is gone.
+     */
+    public Vent pull(long tick) {
+        boolean fresh = tick - Math.max(lastPull, lastShot) >= RELEASED_AFTER_TICKS;
+        lastPull = tick;
+        if (!venting(tick) || !fresh || window.isEmpty()) {
+            return Vent.NONE;
+        }
+        var tried = window.get();
+        window = Optional.empty();
+        int lit = litCells(tick);
+        if (lit > tried.low() && lit <= tried.high()) {
+            ventedUntil = tick;
+            heat = 0;
+            return Vent.HIT;
+        }
+        int penalty = (int) Math.round(rules.missPenaltyShare() * rules.ventTicks());
+        ventedUntil += penalty;
+        ventLength += penalty;
+        cool(tick);
+        return Vent.MISS;
     }
 
     public void cool(long tick) {
         if (venting(tick)) {
-            heat = FULL * (ventedUntil - tick) / Math.max(1, rules.ventTicks());
+            heat = FULL * (ventedUntil - tick) / ventLength;
         } else if (tick - lastShot >= rules.coolDelayTicks()) {
             heat = Math.max(0, heat - rules.coolPerTick());
         }
@@ -54,6 +108,16 @@ public final class Heat {
 
     public int ventTicks(long tick) {
         return (int) Math.max(0, ventedUntil - tick);
+    }
+
+    /** The window a pull can still hit during this vent. */
+    public Optional<Window> window(long tick) {
+        return venting(tick) ? window : Optional.empty();
+    }
+
+    /** How many meter cells a vent shows lit: every cell the cooling heat has not yet left. */
+    public int litCells(long tick) {
+        return (int) Math.ceil((double) ventTicks(tick) * METER_CELLS / ventLength);
     }
 
     public boolean warning(double threshold, double nextShotHeat) {

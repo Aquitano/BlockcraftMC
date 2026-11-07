@@ -188,7 +188,11 @@ fire until its `sprint-recovery-ticks` after the sprint ends. The crosshair tick
 A title's subtitle stays readable under the marks, which `UiFont.centredOn` keeps on the crosshair however long the line is. The sidebar stays hidden during a fight.
 
 The heat meter turns red and shows `HEISS` at `heat.warning-level`, or when the next shot would overheat the weapon.
-Venting shows `Kühlt` until the weapon is ready, followed by a ready sound. `combat-feedback` tunes marker and
+Venting shows `Kühlt` until the weapon is ready, followed by a ready sound. A vent also brackets `heat.window-share` of the
+meter in cyan, somewhere in its lower half, and the meter then lights every cell the cooling heat has not left. The first
+fresh pull of the trigger while the last lit cell is inside the bracket ends the vent with a click and steam; one outside
+it adds `heat.miss-penalty-share` of the vent and closes the window. A trigger held since the overheating shot counts for
+neither, and bots never try. `combat-feedback` tunes marker and
 popup durations and the hit, headshot, and kill volumes.
 The vents on every blaster show its heat to its holder and everyone else: grey when cold, orange from `heat.glow.warm`,
 bright from `heat.warning-level`, and pulsing while venting. The colour is the held item's first custom_model_data

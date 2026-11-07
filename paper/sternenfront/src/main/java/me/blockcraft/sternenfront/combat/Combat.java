@@ -133,7 +133,8 @@ public final class Combat {
             state.jumped = true;
         }
         state.jumping = jumping;
-        if (game.tick() % 4 == 0) {
+        // The vent window is timed against the meter, so the meter keeps up with every tick while one is open.
+        if (game.tick() % 4 == 0 || game.fighter(player).heat().window(game.tick()).isPresent()) {
             hud.show(player, state.guard);
         }
     }

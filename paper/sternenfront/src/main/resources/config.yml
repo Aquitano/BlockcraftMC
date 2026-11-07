@@ -296,11 +296,15 @@ pvp:
 # Every pull of the trigger adds the blaster's heat; full is 100. After cool-delay-ticks without a shot the gun loses
 # cool-per-tick a tick. A gun at full heat vents for vent-ticks before it fires again. The vents on the gun glow warm
 # from glow.warm of full heat and hot from warning-level, and pulse every glow.pulse-ticks while venting.
+# A vent marks window-share of the heat meter, somewhere in its lower half. The first fresh pull of the trigger while the
+# cooling heat is inside it ends the vent; one outside it adds miss-penalty-share of vent-ticks to the vent. Bots never try.
 heat:
   warning-level: 0.8
   cool-delay-ticks: 8
   cool-per-tick: 3
   vent-ticks: 40
+  window-share: 0.2
+  miss-penalty-share: 0.25
   glow: {warm: 0.45, pulse-ticks: 4}
 
 # Each class's body per faction, for players and bots: health (20 is ten hearts), speed times normal movement, scale

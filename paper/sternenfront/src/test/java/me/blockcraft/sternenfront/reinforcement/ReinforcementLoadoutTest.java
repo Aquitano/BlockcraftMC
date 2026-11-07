@@ -71,7 +71,7 @@ public class ReinforcementLoadoutTest {
 
     @Test
     public void aUnitKeepsItsOwnWeaponsAndAbilitiesAndRelicOrRespawnRemovesThem() {
-        var heat = new Heat.Rules(8, 3, 40);
+        var heat = new Heat.Rules(8, 3, 40, 0.2, 0.25);
         var fighter = new Fighter(heat);
         fighter.combatClass(CombatClass.MEDIC);
         fighter.reinforcement(Optional.of(COMMANDO_DROID));
