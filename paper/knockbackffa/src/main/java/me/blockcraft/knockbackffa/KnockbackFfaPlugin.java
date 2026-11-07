@@ -39,8 +39,8 @@ public final class KnockbackFfaPlugin extends JavaPlugin {
             commands.register(StatsCommand.create(this, stats, messages));
             commands.register(TopCommand.create(new TopList(this, stats, messages)));
         });
-        Bukkit.getOnlinePlayers().forEach(game::join);
         game.start();
+        Bukkit.getOnlinePlayers().forEach(game::join);
         ServerRestart.whenIdle(this, GameConfig.from(getConfig()));
     }
 
