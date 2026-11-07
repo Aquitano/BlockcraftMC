@@ -1417,6 +1417,12 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         var player = event.getPlayer();
         if (phase() != GamePhase.INGAME) {
             event.setRespawnLocation(lobby);
+            if (phase() == GamePhase.ENDING) {
+                Tasks.sync(plugin, () -> {
+                    PlayerReset.reset(player, GameMode.ADVENTURE);
+                    hotbar.giveHub(player);
+                });
+            }
             return;
         }
         if (round.isPlaying(player) && factionOf(player).isPresent()) {

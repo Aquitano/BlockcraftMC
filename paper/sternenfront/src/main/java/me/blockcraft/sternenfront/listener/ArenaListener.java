@@ -162,7 +162,10 @@ public final class ArenaListener implements Listener {
     @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
     public void onMove(PlayerMoveEvent event) {
         var player = event.getPlayer();
-        if (game.onField(player) && !buildMode.isEnabled(player) && game.map().outsideBattlefield(event.getTo())) {
+        var to = event.getTo();
+        boolean lost = game.onField(player) ? game.map().outsideBattlefield(to)
+                : inRound() && to.getWorld().equals(game.map().world()) && to.getY() < game.map().deathY();
+        if (lost && !buildMode.isEnabled(player)) {
             game.fell(player);
         }
     }
