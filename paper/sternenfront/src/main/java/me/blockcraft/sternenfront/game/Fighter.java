@@ -3,7 +3,9 @@ package me.blockcraft.sternenfront.game;
 import me.blockcraft.sternenfront.hero.Hero;
 import me.blockcraft.sternenfront.reinforcement.Reinforcement;
 
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -68,6 +70,7 @@ public final class Fighter {
     private long lastHurt;
     private long fallSafeUntil;
     private long sprintedAt = LONG_AGO;
+    private final Map<Ability, Charges> charges = new EnumMap<>(Ability.class);
     private Optional<Hero> hero = Optional.empty();
     private Optional<Reinforcement> reinforcement = Optional.empty();
 
@@ -105,8 +108,14 @@ public final class Fighter {
         this.heat = new Heat(heatRules);
         this.protectedUntil = protectedUntil;
         this.sprintedAt = LONG_AGO;
+        this.charges.clear();
         this.hero = hero;
         this.reinforcement = Optional.empty();
+    }
+
+    /** The uses of a class ability left in this life, full on each deployment. */
+    public Charges charges(Ability ability, int capacity, int rechargeTicks) {
+        return charges.computeIfAbsent(ability, ignored -> new Charges(capacity, rechargeTicks));
     }
 
     public void sprinted(long tick) {

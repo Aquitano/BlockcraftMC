@@ -1212,8 +1212,9 @@ public final class SternenfrontGame implements RoundConnections.Seating {
                 || !fighter.abilities(faction.get()).contains(ability)) {
             return;
         }
-        if (player.hasCooldown(ability.material())) {
-            cooling(player, messages.get(ability.messageKey(faction.get()) + ".name"), player.getCooldown(ability.material()));
+        var charges = charges(fighter, ability);
+        if (charges.stored(tick) == 0) {
+            cooling(player, messages.get(ability.messageKey(faction.get()) + ".name"), charges.ticksToNext(tick));
             return;
         }
         if (!gadgets.use(player, fighter, faction.get(), ability, tick)) {
@@ -1224,7 +1225,12 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         if (ability == Ability.GRENADE || ability == Ability.MINING_CHARGE) {
             fighter.endProtection();
         }
-        player.setCooldown(ability.material(), config.cooldownTicks(ability));
+        charges.use(tick);
+        player.setCooldown(ability.material(), charges.stored(tick) == 0 ? charges.ticksToNext(tick) : 0);
+    }
+
+    public Charges charges(Fighter fighter, Ability ability) {
+        return fighter.charges(ability, config.charges(ability), config.cooldownTicks(ability));
     }
 
     /** The second jump, or the champion's F ability, leaps with the blade. */

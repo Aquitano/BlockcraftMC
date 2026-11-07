@@ -348,13 +348,14 @@ reinforcement-units:
   commando-droid: {cost: 300, limit: 2, health: 26, speed: 1.12}
 
 # Each ability's cooldown and what it does. A grenade or mining charge explodes fuse-ticks after the throw and hurts enemies
-# and its thrower in sight within radius, damage at its centre and a third of it at the edge. The shield wall stands
+# and its thrower in sight within radius, damage at its centre and a third of it at the edge. A player holds charges
+# throws of it, full on each deployment, and each comes back cooldown-seconds after the one before; bots keep a plain cooldown. The shield wall stands
 # width by height panes, distance blocks ahead, for seconds. The med station heals allies within radius for seconds.
 # Siege mode roots the unit for seconds; its repeater then pulls every cooldown-ticks with bolts bolts and heat-scale of
 # the heat. Two bolts every 4 ticks is a third more bolts than the normal repeater: holding right click pulls no
 # faster than every 4 ticks, and three bolts would double the damage of a heavy that also has the most health.
 abilities:
-  grenade: {cooldown-seconds: 15, fuse-ticks: 50, radius: 5, damage: 16, throw-speed: 1.1}
+  grenade: {cooldown-seconds: 15, charges: 2, fuse-ticks: 50, radius: 5, damage: 16, throw-speed: 1.1}
   adrenaline: {cooldown-seconds: 30, seconds: 5}
   shield-wall: {cooldown-seconds: 25, seconds: 8, width: 5, height: 3, distance: 2}
   jump-pack: {cooldown-seconds: 10, forward: 1.3, up: 0.9}

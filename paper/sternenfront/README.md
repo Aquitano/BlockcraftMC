@@ -173,6 +173,9 @@ a multiple of that blaster's base in `combat-feedback.spread-steps`, so every bl
 cool and opens fully hot on the move. A scoped or spreadless long rifle shows none, and the vanilla crosshair stays inside
 the ticks. All three share the title's subtitle, centred with `UiFont`.
 Kill and assist popups appear briefly beside the heat, guard and ability-cooldown HUD.
+A grenade holds `abilities.grenade.charges` throws, full on each deployment, and they come back one at a time, each
+`cooldown-seconds` after the one before. The HUD shows the throws left as `1/2` and the seconds to the next only when none is
+left, which is also the only time the vanilla cooldown runs on its material. Bots keep a plain cooldown.
 Hero and elite availability appear only for `combat-feedback.hero-ready-ticks` and `combat-feedback.elite-ready-ticks`;
 idle kill counts and point progress stay hidden.
 Nearby gains combine into one segment.

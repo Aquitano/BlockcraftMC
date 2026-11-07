@@ -685,6 +685,7 @@ combat:
   ability: "<accent><key> <muted><label> <status>"
   ready: "<success>✓"
   cooldown: "<muted><seconds>s"
+  charges: "<white><stored><dark>/<muted><capacity>"
   none: "<dark>—"
   leap-cooldown: "<dark> │ <muted>Sprung <seconds>s"
   strike-ready: "<dark> │ <accent>Shift+F <white>Orbitalschlag"

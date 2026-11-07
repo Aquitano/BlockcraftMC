@@ -3,6 +3,7 @@ package me.blockcraft.sternenfront.combat;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.pack.UiFont;
 import me.blockcraft.api.scene.Scenes;
+import me.blockcraft.sternenfront.game.Charges;
 import me.blockcraft.sternenfront.game.Heat;
 import me.blockcraft.sternenfront.game.SternenfrontGame;
 import me.blockcraft.sternenfront.hero.Hero;
@@ -13,6 +14,7 @@ import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
 
+import java.util.Optional;
 import java.util.stream.IntStream;
 
 public final class CombatHud {
@@ -68,8 +70,13 @@ public final class CombatHud {
             return game.messages().get("combat.none");
         }
         var material = hero.isPresent() ? hero.get().abilities().get(index).material() : classAbility.orElseThrow().material();
+        var charges = hero.isPresent() ? Optional.<Charges>empty() : classAbility.map(ability -> game.charges(fighter, ability))
+                .filter(held -> held.capacity() > 1);
+        int stored = charges.map(held -> held.stored(game.tick())).orElse(0);
         int cooldown = player.getCooldown(material);
-        var status = cooldown == 0 ? game.messages().get("combat.ready")
+        var status = stored > 0 ? game.messages().get("combat.charges", Formatter.number("stored", stored),
+                Formatter.number("capacity", charges.get().capacity()))
+                : cooldown == 0 ? game.messages().get("combat.ready")
                 : game.messages().get("combat.cooldown", Formatter.number("seconds", (cooldown + 19) / 20));
         return game.messages().get("combat.ability", Placeholder.component("key", icon(index + 3)),
                 Placeholder.component("label", game.messages().get(key.get() + ".name")), Placeholder.component("status", status));
