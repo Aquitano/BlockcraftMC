@@ -16,7 +16,7 @@ public record BotConfig(boolean enabled, int perTeam, double range, double visio
 
     public record Cover(double searchRadius, int holdTicks, int peekTicks) { }
 
-    public record Squad(int fireteamSize, double switchMargin, double spacing, double regroupDistance,
+    public record Squad(int fireteamSize, double switchMargin, double spacing, double stagger, double regroupDistance,
                         double catchUpDistance, double walkSpeed, double sprintSpeed, double boundDistance,
                         int boundTicks, int flankAfterTicks, double followRange, double reinforcePull,
                         double fallBackRange, int fallBackTicks) { }
@@ -73,6 +73,7 @@ public record BotConfig(boolean enabled, int perTeam, double range, double visio
                 new Squad(Math.clamp(config.getInt("bots.squad.fireteam-size", 4), 2, 4),
                         Math.clamp(config.getDouble("bots.squad.switch-margin", 25), 0, 100),
                         Math.clamp(config.getDouble("bots.squad.spacing", 3), 1.5, 8),
+                        Math.clamp(config.getDouble("bots.squad.stagger", 2), 0, 6),
                         Math.clamp(config.getDouble("bots.squad.regroup-distance", 12), 4, 32),
                         Math.clamp(config.getDouble("bots.squad.catch-up-distance", 32), 8, 96),
                         Math.clamp(config.getDouble("bots.squad.walk-speed", 0.9), 0.5, 1.5),

@@ -868,7 +868,9 @@ public final class Bots implements Listener {
         } else if (following) {
             activity = "follow";
             var column = members(team).stream().filter(Bots::deployed).filter(other -> other.guarding < 0 && other != leader.get()).toList();
-            destination = Fireteam.behind(leader.get().body.getLocation(), team.trail, settings.spacing() * (column.indexOf(soldier) + 1));
+            int rank = column.indexOf(soldier);
+            var lead = leader.get().body.getLocation();
+            destination = stagger(Fireteam.behind(lead, team.trail, settings.spacing() * (rank + 1)), lead, rank % 2 == 0 ? 1 : -1);
             speed = here.distance(destination) > settings.spacing() * 2 ? settings.sprintSpeed() : settings.walkSpeed();
         } else if (team != null && team.regrouping && route != null && leader.filter(soldier::equals).isPresent()) {
             activity = "regroup";
@@ -947,6 +949,19 @@ public final class Bots implements Listener {
         }
         double pace = speed * (1 + (soldier.number * 7 % 9 - 4) * 0.015);
         soldier.navigationResult = mob.getPathfinder().moveTo(destination, pace) ? "accepted" : "unreachable";
+    }
+
+    /** A follower's place a little to one side of the leader's steps, where it has ground and a clear line to them. */
+    private Location stagger(Location slot, Location leader, int side) {
+        var ahead = leader.toVector().subtract(slot.toVector()).setY(0);
+        double offset = config.squad().stagger();
+        if (offset <= 0 || ahead.lengthSquared() < 0.01) {
+            return slot;
+        }
+        var aside = slot.clone().add(new Vector(-ahead.getZ(), 0, ahead.getX()).normalize().multiply(offset * side));
+        var eye = new Vector(0, 1.5, 0);
+        return game.map().playArea().contains(aside.toVector()) && BotCover.standingSpace(aside)
+                && !BotCover.blocked(slot.clone().add(eye), aside.clone().add(eye)) ? aside : slot;
     }
 
     private static Location along(Soldier soldier, Location here, FrontMap.Route route) {

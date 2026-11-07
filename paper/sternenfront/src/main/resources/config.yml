@@ -36,8 +36,9 @@ bots:
   voice: {enabled: true, range: 18, volume: 0.65, soldier-cooldown-ticks: 360, global-cooldown-ticks: 100}
   # Bots fight in fireteams of up to fireteam-size that share one objective. A team keeps its objective until another
   # post is switch-margin blocks of walking cheaper, and leaves one member to guard each post it takes. On the move
-  # the others walk spacing blocks apart in the leader's steps; the leader waits up to five seconds for anyone between
-  # regroup-distance and catch-up-distance behind, and anyone further runs the route alone. walk-speed and
+  # the others walk spacing blocks apart in the leader's steps, each stepping stagger blocks to alternate sides where the
+  # ground allows. The leader slows for up to five seconds for anyone between regroup-distance and catch-up-distance
+  # behind, anyone further runs the route alone, and anyone ahead waits for the column. walk-speed and
   # sprint-speed scale the pathfinder's pace for travelling and for running under fire. Under fire the team bounds by
   # pairs: one runs bound-distance blocks along the route, or for bound-ticks at most, while the other covers it and
   # fires at where the enemy was last seen, then they swap. A team held up for flank-after-ticks sends one member
@@ -46,7 +47,7 @@ bots:
   # nearer. A team whose leader has twice as many enemies as friends within fall-back-range blocks, and at least two,
   # runs back to its route's retreat points and holds there for fall-back-ticks. A guard does the same while its post
   # is that outnumbered.
-  squad: {fireteam-size: 4, switch-margin: 25, spacing: 3, regroup-distance: 12, catch-up-distance: 32, walk-speed: 0.9,
+  squad: {fireteam-size: 4, switch-margin: 25, spacing: 3, stagger: 2, regroup-distance: 12, catch-up-distance: 32, walk-speed: 0.9,
           sprint-speed: 1.25, bound-distance: 8, bound-ticks: 80, flank-after-ticks: 160, follow-range: 12,
           reinforce-pull: 80, fall-back-range: 16, fall-back-ticks: 160}
 appearance:

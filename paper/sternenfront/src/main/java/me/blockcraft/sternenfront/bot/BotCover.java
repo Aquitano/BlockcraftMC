@@ -82,7 +82,7 @@ final class BotCover {
                 }).findFirst();
     }
 
-    private static boolean standingSpace(Location feet) {
+    static boolean standingSpace(Location feet) {
         return feet.getBlock().isPassable() && feet.clone().add(0, 1, 0).getBlock().isPassable()
                 && feet.clone().subtract(0, 0.1, 0).getBlock().getType().isSolid();
     }
