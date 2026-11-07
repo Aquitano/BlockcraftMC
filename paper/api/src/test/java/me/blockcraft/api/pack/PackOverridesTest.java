@@ -40,7 +40,16 @@ public class PackOverridesTest {
             for (var entry : model.getAsJsonArray("cases")) {
                 var match = entry.getAsJsonObject();
                 var drawn = match.getAsJsonObject("model");
-                cases.put(match.get("when").getAsString(), new PackOverrides.Case(drawn.get("model").getAsString(), tintedByItem(drawn)));
+                boolean guarded = drawn.get("type").getAsString().equals("minecraft:condition");
+                var shown = guarded ? drawn.getAsJsonObject("on_false") : drawn;
+                var found = new PackOverrides.Case(shown.get("model").getAsString(), tintedByItem(shown), guarded);
+                if (guarded) {
+                    assertEquals(file.toString(), "minecraft:using_item", drawn.get("property").getAsString());
+                    var guard = drawn.getAsJsonObject("on_true");
+                    assertEquals(file.toString(), found.guard(), guard.get("model").getAsString());
+                    assertEquals(file.toString(), found.tinted(), tintedByItem(guard));
+                }
+                cases.put(match.get("when").getAsString(), found);
             }
             assertEquals(file.toString(), item.getValue(), cases);
             if (PackOverrides.swapsInPlace(cases)) {
@@ -73,7 +82,12 @@ public class PackOverridesTest {
     @Test
     public void everyModelShipsWithItsTextures() throws IOException {
         var models = new HashSet<String>();
-        PackOverrides.cases().values().forEach(cases -> cases.values().forEach(drawn -> models.add(drawn.model())));
+        PackOverrides.cases().values().forEach(cases -> cases.values().forEach(drawn -> {
+            models.add(drawn.model());
+            if (drawn.guarded()) {
+                models.add(drawn.guard());
+            }
+        }));
         for (var model : models) {
             assertTrue(model, Files.exists(asset(model, "models", ".json")));
         }

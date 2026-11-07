@@ -7,15 +7,30 @@
       {
         "when": "blockcraft:sternenfront/lightsaber_sith",
         "model": {
-          "type": "minecraft:model",
-          "model": "blockcraft:item/sternenfront/lightsaber_sith",
-          "tints": [
-            {
-              "type": "minecraft:custom_model_data",
-              "index": 0,
-              "default": -1
-            }
-          ]
+          "type": "minecraft:condition",
+          "property": "minecraft:using_item",
+          "on_true": {
+            "type": "minecraft:model",
+            "model": "blockcraft:item/sternenfront/lightsaber_sith_guard",
+            "tints": [
+              {
+                "type": "minecraft:custom_model_data",
+                "index": 0,
+                "default": -1
+              }
+            ]
+          },
+          "on_false": {
+            "type": "minecraft:model",
+            "model": "blockcraft:item/sternenfront/lightsaber_sith",
+            "tints": [
+              {
+                "type": "minecraft:custom_model_data",
+                "index": 0,
+                "default": -1
+              }
+            ]
+          }
         }
       },
       {
@@ -70,8 +85,16 @@
       {
         "when": "blockcraft:sternenfront/relic_blade",
         "model": {
-          "type": "minecraft:model",
-          "model": "blockcraft:item/sternenfront/relic_blade"
+          "type": "minecraft:condition",
+          "property": "minecraft:using_item",
+          "on_true": {
+            "type": "minecraft:model",
+            "model": "blockcraft:item/sternenfront/relic_blade_guard"
+          },
+          "on_false": {
+            "type": "minecraft:model",
+            "model": "blockcraft:item/sternenfront/relic_blade"
+          }
         }
       }
     ],

@@ -7,15 +7,30 @@
       {
         "when": "blockcraft:sternenfront/lightsaber_jedi",
         "model": {
-          "type": "minecraft:model",
-          "model": "blockcraft:item/sternenfront/lightsaber_jedi",
-          "tints": [
-            {
-              "type": "minecraft:custom_model_data",
-              "index": 0,
-              "default": -1
-            }
-          ]
+          "type": "minecraft:condition",
+          "property": "minecraft:using_item",
+          "on_true": {
+            "type": "minecraft:model",
+            "model": "blockcraft:item/sternenfront/lightsaber_jedi_guard",
+            "tints": [
+              {
+                "type": "minecraft:custom_model_data",
+                "index": 0,
+                "default": -1
+              }
+            ]
+          },
+          "on_false": {
+            "type": "minecraft:model",
+            "model": "blockcraft:item/sternenfront/lightsaber_jedi",
+            "tints": [
+              {
+                "type": "minecraft:custom_model_data",
+                "index": 0,
+                "default": -1
+              }
+            ]
+          }
         }
       },
       {

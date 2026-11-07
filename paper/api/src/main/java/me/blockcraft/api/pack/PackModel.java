@@ -47,15 +47,15 @@ public enum PackModel {
     STERNENFRONT_MED_STATION(Material.GLISTERING_MELON_SLICE, "sternenfront/med_station"),
     STERNENFRONT_SIEGE_MODE(Material.NETHERITE_SCRAP, "sternenfront/siege_mode"),
     STERNENFRONT_MINING_CHARGE(Material.GUNPOWDER, "sternenfront/mining_charge"),
-    STERNENFRONT_RELIC_BLADE(Material.NETHERITE_SWORD, "sternenfront/relic_blade"),
+    STERNENFRONT_RELIC_BLADE(Material.NETHERITE_SWORD, "sternenfront/relic_blade", false, true),
     STERNENFRONT_HELMET_KOLONIEN(Material.STONE_BUTTON, "sternenfront/helmet_kolonien"),
     STERNENFRONT_HELMET_HEGEMONIE(Material.STONE_BUTTON, "sternenfront/helmet_hegemonie"),
     // Bolts only fly on item displays; a client without the pack sees an end rod in the faction's glow.
     STERNENFRONT_BOLT_KOLONIEN(Material.END_ROD, "sternenfront/bolt_kolonien"),
     STERNENFRONT_BOLT_HEGEMONIE(Material.END_ROD, "sternenfront/bolt_hegemonie"),
-    STERNENFRONT_LIGHTSABER_JEDI(Material.DIAMOND_SWORD, "sternenfront/lightsaber_jedi", true),
+    STERNENFRONT_LIGHTSABER_JEDI(Material.DIAMOND_SWORD, "sternenfront/lightsaber_jedi", true, true),
     STERNENFRONT_LIGHTSABER_JEDI_OFF(Material.DIAMOND_SWORD, "sternenfront/lightsaber_jedi_off"),
-    STERNENFRONT_LIGHTSABER_SITH(Material.NETHERITE_SWORD, "sternenfront/lightsaber_sith", true),
+    STERNENFRONT_LIGHTSABER_SITH(Material.NETHERITE_SWORD, "sternenfront/lightsaber_sith", true, true),
     STERNENFRONT_LIGHTSABER_SITH_OFF(Material.NETHERITE_SWORD, "sternenfront/lightsaber_sith_off"),
     STERNENFRONT_LIGHTSABER_JEDI_25(Material.DIAMOND_SWORD, "sternenfront/lightsaber_jedi_25", true),
     STERNENFRONT_LIGHTSABER_JEDI_50(Material.DIAMOND_SWORD, "sternenfront/lightsaber_jedi_50", true),
@@ -135,6 +135,7 @@ public enum PackModel {
     private final Material fallback;
     private final String path;
     private final boolean tinted;
+    private final boolean guarded;
 
     PackModel(Material fallback, String path) {
         this(fallback, path, false);
@@ -145,9 +146,15 @@ public enum PackModel {
      * custom_model_data, as a lightsaber's blade does.
      */
     PackModel(Material fallback, String path, boolean tinted) {
+        this(fallback, path, tinted, false);
+    }
+
+    /** A guarded model is drawn as {@code <path>_guard} while its holder uses the item, as a blade raised to block. */
+    PackModel(Material fallback, String path, boolean tinted, boolean guarded) {
         this.fallback = fallback;
         this.path = path;
         this.tinted = tinted;
+        this.guarded = guarded;
     }
 
     public Material fallback() {
@@ -156,6 +163,10 @@ public enum PackModel {
 
     public boolean tinted() {
         return tinted;
+    }
+
+    public boolean guarded() {
+        return guarded;
     }
 
     /** What the item carries as custom_model_data, and the case the pack selects on. */

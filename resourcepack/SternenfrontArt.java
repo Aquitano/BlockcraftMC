@@ -961,10 +961,22 @@ public final class SternenfrontArt {
                 new Model("sternenfront/" + name, shape, GUN_DISPLAY.formatted(pose.hands(false)), pose)));
     }
 
-    private static final String SABER_DISPLAY = """
-            ,"display":{
-              "firstperson_righthand":{"rotation":[0,0,15],"translation":[0,0,0],"scale":[0.7,0.7,0.7]},
-              "firstperson_lefthand":{"rotation":[0,0,-15],"translation":[0,0,0],"scale":[0.7,0.7,0.7]},
+    /**
+     * Both first-person hands, which vanilla mirrors for the left. It rolls the blade toward the screen's centre,
+     * then tips it away from the camera, and shifts it by {@code x} and {@code y} pixels, a negative x toward the centre.
+     */
+    private static String saberHands(double tilt, double roll, double x, double y) {
+        String hand = String.format(Locale.ROOT, "{\"rotation\":[%s,0,%s],\"translation\":[%s,%s,0],\"scale\":[0.7,0.7,0.7]}",
+                -tilt, roll, x, y);
+        return "\"firstperson_righthand\":" + hand + ",\"firstperson_lefthand\":" + hand;
+    }
+
+    /** The guard crosses the blade over the view; the rest of the saber's display comes from its parent model. */
+    private static final String SABER_GUARD_HANDS = saberHands(12, 40, -2, 1);
+    private static final List<String> GUARDED = List.of("sternenfront/lightsaber_jedi", "sternenfront/lightsaber_sith",
+            "sternenfront/relic_blade");
+    private static final String SABER_DISPLAY = ",\"display\":{\n  " + saberHands(22, 15, 0, 0) + """
+            ,
               "thirdperson_righthand":{"rotation":[0,0,0],"translation":[0,2,0],"scale":[0.8,0.8,0.8]},
               "thirdperson_lefthand":{"rotation":[0,0,0],"translation":[0,2,0],"scale":[0.8,0.8,0.8]},
               "gui":{"rotation":[0,0,-35],"translation":[-3,-3,0],"scale":[0.6,0.6,0.6]},
@@ -1662,6 +1674,10 @@ public final class SternenfrontArt {
                 .filter(model -> model.gunPose != null)
                 .map(model -> "\"" + model.path + "\": {" + model.gunPose.hands(true) + "}")
                 .collect(Collectors.joining(",\n"));
+        for (var path : GUARDED) {
+            Files.writeString(root.resolve("models/item/" + path + "_guard.json"), "{\n  \"parent\":\"blockcraft:item/" + path
+                    + "\",\n  \"display\":{" + SABER_GUARD_HANDS + "}\n}\n");
+        }
         var manifest = Path.of("build/sternenfront/firing-poses.json");
         Files.createDirectories(manifest.getParent());
         Files.writeString(manifest, "{\n" + firing + "\n}\n");
