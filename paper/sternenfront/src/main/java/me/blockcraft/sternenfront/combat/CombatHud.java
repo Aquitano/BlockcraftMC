@@ -66,7 +66,7 @@ public final class CombatHud {
         var status = cooldown == 0 ? game.messages().get("combat.ready")
                 : game.messages().get("combat.cooldown", Formatter.number("seconds", (cooldown + 19) / 20));
         return game.messages().get("combat.ability", Placeholder.component("key", icon(index + 3)),
-                Placeholder.component("label", game.messages().get("combat.labels." + key.get().substring(key.get().lastIndexOf('.') + 1))), Placeholder.component("status", status));
+                Placeholder.component("label", game.messages().get(key.get() + ".name")), Placeholder.component("status", status));
     }
 
     private static Component icon(int index) {

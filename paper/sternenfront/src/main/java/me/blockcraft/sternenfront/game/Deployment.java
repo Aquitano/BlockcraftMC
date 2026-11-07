@@ -234,6 +234,7 @@ public final class Deployment {
             int index = hint.getAsInt();
             var key = hints.keys().get(index);
             return Optional.of(game.messages().get("deploy.ability-hint", Placeholder.unparsed("key", index == 0 ? "F" : "Q"),
+                    Placeholder.component("name", game.messages().get(key + ".name")),
                     Placeholder.component("ability", game.messages().get("combat.hints."
                             + key.substring(key.lastIndexOf('.') + 1)))));
         }
