@@ -9,6 +9,8 @@ import me.blockcraft.sternenfront.arena.FrontMap;
 import me.blockcraft.api.item.Items;
 import me.blockcraft.api.pack.PackModel;
 import me.blockcraft.sternenfront.combat.Melee;
+import me.blockcraft.sternenfront.config.SternenfrontConfig;
+import me.blockcraft.sternenfront.game.Ability;
 import me.blockcraft.sternenfront.game.CombatClass;
 import me.blockcraft.sternenfront.game.Faction;
 import me.blockcraft.sternenfront.game.Heat;
@@ -39,14 +41,17 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Predicate;
 
 public final class Bots implements Listener {
 
@@ -65,6 +70,8 @@ public final class Bots implements Listener {
     private static final int GUARD_SHIFT_TICKS = 300;
     private static final double PEEK_REACH = 3;
     private static final double WOUNDED_SHARE = 0.3;
+    private static final Set<String> HOLDING_GROUND = Set.of("overwatch", "assault", "strafe-in-post", "defend-peek",
+            "contest-owned-post", "hold-for-team");
     /**
      * A skeleton already stands 1.99 blocks. Any taller and the pathfinder plans three-high paths, so a larger class
      * stays at that height: about what a player of that class measures, and it still fits the wreck's corridors.
@@ -113,7 +120,7 @@ public final class Bots implements Listener {
         private String navigationResult = "not-requested";
         private Location destination;
         private long navigatedAt;
-        private long signatureAt;
+        private final Map<Ability, Long> readyAt = new EnumMap<>(Ability.class);
         private Location cover;
         private Location peek;
         private long coverPhaseUntil;
@@ -377,7 +384,7 @@ public final class Bots implements Listener {
         soldier.navigationResult = "not-requested";
         soldier.destination = null;
         soldier.navigatedAt = tick;
-        soldier.signatureAt = tick;
+        soldier.readyAt.clear();
         soldier.cover = null;
         soldier.peek = null;
         soldier.coverPhaseUntil = 0;
@@ -478,9 +485,7 @@ public final class Bots implements Listener {
         if (soldier.role == CombatClass.MEDIC) {
             support(soldier, tick);
         }
-        if (soldier.role == CombatClass.HEAVY && tick >= soldier.signatureAt) {
-            signature(soldier, target, tick);
-        }
+        useAbility(soldier, target, tick);
         if ((tick - soldier.number % THINK_TICKS) % ROUTE_TICKS == 0) {
             navigate(soldier, target, tick);
         }
@@ -510,16 +515,47 @@ public final class Bots implements Listener {
         return BotCover.suppressible(soldier.body.getEyeLocation(), at) ? Optional.of(at) : Optional.empty();
     }
 
-    private void signature(Soldier soldier, Optional<LivingEntity> target, long tick) {
-        var ability = soldier.role.abilities(soldier.faction).getLast();
-        boolean used = switch (ability) {
-            case SIEGE_MODE -> siege(soldier, target, tick);
-            case MINING_CHARGE -> throwCharge(soldier, target, tick);
-            default -> false;
-        };
-        if (used) {
-            soldier.signatureAt = tick + game.config().cooldownTicks(ability);
+    /** At most one ability a think, the first in the class's own order whose moment has come. */
+    private void useAbility(Soldier soldier, Optional<LivingEntity> target, long tick) {
+        var mob = soldier.body;
+        for (var ability : soldier.role.abilities(soldier.faction)) {
+            if (tick < soldier.readyAt.getOrDefault(ability, 0L)) {
+                continue;
+            }
+            boolean used = switch (ability) {
+                case SIEGE_MODE -> siege(soldier, target, tick);
+                case MINING_CHARGE -> lob(soldier, target, tick, game.config().miningCharge(),
+                        direction -> game.gadgets().throwCharge(mob, soldier.faction, direction, tuning.damageScale(), tick));
+                case GRENADE -> lob(soldier, target, tick, game.config().grenade(),
+                        direction -> game.gadgets().throwGrenade(mob, soldier.faction, direction, tuning.damageScale(), tick));
+                case SHIELD_WALL -> wall(soldier, target, tick);
+                default -> false;
+            };
+            if (used) {
+                soldier.readyAt.put(ability, tick + game.config().cooldownTicks(ability));
+                return;
+            }
         }
+    }
+
+    /** A heavy holding open ground under fire puts up a wall between its team and the enemy. */
+    private boolean wall(Soldier soldier, Optional<LivingEntity> target, long tick) {
+        var mob = soldier.body;
+        var threat = target.map(LivingEntity::getLocation).or(() -> remembering(soldier, tick) ? Optional.of(soldier.lastSeen)
+                : Optional.ofNullable(soldier.team == null ? null : soldier.team.threat));
+        if (threat.isEmpty() || !threat.get().getWorld().equals(mob.getWorld())) {
+            return false;
+        }
+        boolean holdingGround = HOLDING_GROUND.contains(soldier.activity);
+        var toward = threat.get().toVector().subtract(mob.getLocation().toVector()).setY(0);
+        if (!BotTactics.raisesWall(holdingGround, soldier.cover != null, toward.length())
+                || !game.gadgets().raiseWall(mob, soldier.faction, toward, tick)) {
+            return false;
+        }
+        soldier.protectedUntil = 0;
+        mob.swingMainHand();
+        call(soldier, "cover", tick);
+        return true;
     }
 
     private boolean siege(Soldier soldier, Optional<LivingEntity> target, long tick) {
@@ -528,7 +564,7 @@ public final class Bots implements Listener {
         double range = game.config().stats(soldier.role.blaster(soldier.faction)).range();
         boolean inRange = target.filter(enemy -> tick >= soldier.reactAt)
                 .filter(enemy -> here.distanceSquared(enemy.getLocation()) <= range * range).isPresent();
-        if (!HeavyTactics.sieges(holdingPost(soldier, here), inRange, soldier.heat.venting(tick), wounded(mob))
+        if (!BotTactics.sieges(holdingPost(soldier, here), inRange, soldier.heat.venting(tick), wounded(mob))
                 || !game.gadgets().siege(mob, soldier.faction, tick)) {
             return false;
         }
@@ -546,7 +582,9 @@ public final class Bots implements Listener {
                 && here.distanceSquared(routes.get(soldier.navigation.route()).peek()) <= PEEK_REACH * PEEK_REACH;
     }
 
-    private boolean throwCharge(Soldier soldier, Optional<LivingEntity> target, long tick) {
+    /** Lobs an explosive at an enemy dug in where blaster fire cannot reach it, as {@code toss} throws it. */
+    private boolean lob(Soldier soldier, Optional<LivingEntity> target, long tick, SternenfrontConfig.Grenade stats,
+                        Predicate<Vector> toss) {
         var mob = soldier.body;
         var aimedAt = target.filter(enemy -> tick >= soldier.reactAt).map(LivingEntity::getLocation)
                 .or(() -> target.isEmpty() && tick <= soldier.seenUntil ? Optional.ofNullable(soldier.lastSeen) : Optional.empty());
@@ -554,15 +592,13 @@ public final class Bots implements Listener {
             return false;
         }
         var at = aimedAt.get();
-        var charge = game.config().miningCharge();
-        boolean inPost = game.map().posts().stream().anyMatch(post -> post.contains(at));
-        if (!HeavyTactics.throwsCharge(inPost, mob.getLocation().distance(at), charge.radius())) {
+        boolean dugIn = target.isEmpty() || game.map().posts().stream().anyMatch(post -> post.contains(at));
+        if (!BotTactics.throwsAt(dugIn, mob.getLocation().distance(at), stats.radius())) {
             return false;
         }
         soldier.protectedUntil = 0;
         mob.swingMainHand();
-        return game.gadgets().throwCharge(mob, soldier.faction,
-                HeavyTactics.lob(at.toVector().subtract(mob.getEyeLocation().toVector()), charge.throwSpeed()), tuning.damageScale(), tick);
+        return toss.test(BotTactics.lob(at.toVector().subtract(mob.getEyeLocation().toVector()), stats.throwSpeed()));
     }
 
     private static boolean wounded(Mob mob) {

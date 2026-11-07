@@ -87,7 +87,7 @@ public final class Gadgets {
             case MINING_CHARGE -> throwCharge(player, faction, player.getEyeLocation().getDirection(), 1, tick);
             case SIEGE_MODE -> siege(player, faction, tick);
             case ADRENALINE -> adrenaline(player);
-            case SHIELD_WALL -> raiseWall(player, faction, tick);
+            case SHIELD_WALL -> raiseWall(player, faction, player.getLocation().getDirection(), tick);
             case JUMP_PACK -> leap(player, fighter, game.config().jumpPack().forward(), game.config().jumpPack().up(), tick, SoundCue.JETPACK);
             case MED_STATION -> placeStation(player, faction, tick);
         };
@@ -104,6 +104,10 @@ public final class Gadgets {
         trails.add(new Trail(player, tick + TRAIL_TICKS));
         sound.play(player.getLocation(), 1f);
         return true;
+    }
+
+    public boolean throwGrenade(LivingEntity thrower, Faction faction, Vector direction, double damageScale, long tick) {
+        return throwExplosive(thrower, faction, Ability.GRENADE, game.config().grenade(), direction, damageScale, tick);
     }
 
     /** A bot's own throw passes its aim and its difficulty's damage; a player's is thrown where they look, in full. */
@@ -186,13 +190,13 @@ public final class Gadgets {
         return true;
     }
 
-    private boolean raiseWall(Player player, Faction faction, long tick) {
+    /** A bot raises it toward its aim, which its body may not face yet; a player raises it where they look. */
+    public boolean raiseWall(LivingEntity unit, Faction faction, Vector facing, long tick) {
         var shield = game.config().shield();
-        var facing = player.getLocation().getDirection();
         boolean alongX = Math.abs(facing.getX()) > Math.abs(facing.getZ());
         var ahead = alongX ? new Vector(Math.signum(facing.getX()), 0, 0) : new Vector(0, 0, Math.signum(facing.getZ()));
         var across = alongX ? BlockFace.SOUTH : BlockFace.EAST;
-        var center = player.getLocation().getBlock().getRelative(ahead.getBlockX() * shield.distance(), 0, ahead.getBlockZ() * shield.distance());
+        var center = unit.getLocation().getBlock().getRelative(ahead.getBlockX() * shield.distance(), 0, ahead.getBlockZ() * shield.distance());
         var material = Material.valueOf(faction.blocks().name() + "_STAINED_GLASS_PANE");
         var placed = new ArrayList<Block>();
         int half = shield.width() / 2;
