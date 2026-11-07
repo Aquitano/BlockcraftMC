@@ -80,16 +80,28 @@ public class CombatFeedbackTest {
     public void crosshairRedrawsWhenTheMarkerOrTheDamageChanges() {
         var state = new CombatFeedback.State();
         var left = Optional.of(DamageDirection.LEFT);
-        assertTrue(state.crosshairChanged(0, left, 30));
-        assertFalse(state.crosshairChanged(1, left, 30));
-        assertTrue("a new hit from the same side extends the arc", state.crosshairChanged(2, left, 32));
+        assertTrue(state.crosshairChanged(0, left, 30, Optional.empty()));
+        assertFalse(state.crosshairChanged(1, left, 30, Optional.empty()));
+        assertTrue("a new hit from the same side extends the arc", state.crosshairChanged(2, left, 32, Optional.empty()));
         state.hit(CombatFeedback.Marker.HIT, 3, 6);
-        assertTrue(state.crosshairChanged(3, left, 32));
-        assertFalse(state.crosshairChanged(4, left, 32));
-        assertTrue(state.crosshairChanged(9, left, 32));
-        assertTrue(state.crosshairChanged(10, Optional.of(DamageDirection.BACK), 32));
-        assertTrue(state.crosshairChanged(11, Optional.empty(), 0));
-        assertFalse(state.crosshairChanged(12, Optional.empty(), 0));
+        assertTrue(state.crosshairChanged(3, left, 32, Optional.empty()));
+        assertFalse(state.crosshairChanged(4, left, 32, Optional.empty()));
+        assertTrue(state.crosshairChanged(9, left, 32, Optional.empty()));
+        assertTrue(state.crosshairChanged(10, Optional.of(DamageDirection.BACK), 32, Optional.empty()));
+        assertTrue(state.crosshairChanged(11, Optional.empty(), 0, Optional.empty()));
+        assertFalse(state.crosshairChanged(12, Optional.empty(), 0, Optional.empty()));
+    }
+
+    @Test
+    public void crosshairRedrawsWhenTheSpreadChangesSizeAndBeforeItsTitleRunsOut() {
+        var state = new CombatFeedback.State();
+        assertTrue(state.crosshairChanged(0, Optional.empty(), 0, Optional.of(0)));
+        assertFalse(state.crosshairChanged(1, Optional.empty(), 0, Optional.of(0)));
+        assertTrue(state.crosshairChanged(2, Optional.empty(), 0, Optional.of(3)));
+        assertFalse(state.crosshairChanged(21, Optional.empty(), 0, Optional.of(3)));
+        assertTrue(state.crosshairChanged(22, Optional.empty(), 0, Optional.of(3)));
+        assertTrue(state.crosshairChanged(23, Optional.empty(), 0, Optional.empty()));
+        assertFalse(state.crosshairChanged(60, Optional.empty(), 0, Optional.empty()));
     }
 
     @Test

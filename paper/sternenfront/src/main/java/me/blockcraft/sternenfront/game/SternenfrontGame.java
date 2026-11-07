@@ -834,6 +834,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
                 player.setExp(fighter.heat().level());
                 scope(player, fighter);
                 combat.tick(player);
+                feedback.aim(player);
             } else {
                 deployment.deployWhenDue(player, fighter);
             }

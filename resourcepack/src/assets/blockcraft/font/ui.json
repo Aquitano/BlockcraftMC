@@ -191,6 +191,15 @@
     },
     {
       "type": "bitmap",
+      "file": "blockcraft:font/spread_ticks.png",
+      "ascent": 28,
+      "height": 32,
+      "chars": [
+        "\ue250\ue251\ue252\ue253\ue254"
+      ]
+    },
+    {
+      "type": "bitmap",
       "file": "blockcraft:font/damage_arcs.png",
       "ascent": 28,
       "height": 32,

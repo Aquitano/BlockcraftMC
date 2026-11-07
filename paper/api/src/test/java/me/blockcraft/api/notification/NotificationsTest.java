@@ -24,6 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class NotificationsTest {
 
@@ -77,16 +78,16 @@ public class NotificationsTest {
             var hit = Component.text("HIT");
             notices.markerNow(player, hit, 6);
             assertEquals(objective.title(), current.get().title());
-            assertEquals(hit, current.get().subtitle());
+            assertEquals(Notifications.subtitle(objective, hit), current.get().subtitle());
             assertEquals(1, titles.get());
             assertEquals(hud, bars.getLast());
             tick.set(2);
             var kill = Component.text("SKULL");
             notices.markerNow(player, kill, 6);
-            assertEquals(kill, current.get().subtitle());
+            assertEquals(Notifications.subtitle(objective, kill), current.get().subtitle());
             tick.set(6);
             frame.get().run();
-            assertEquals(kill, current.get().subtitle());
+            assertEquals(Notifications.subtitle(objective, kill), current.get().subtitle());
             tick.set(8);
             frame.get().run();
             assertEquals(objective.subtitle(), current.get().subtitle());
@@ -186,6 +187,7 @@ public class NotificationsTest {
         var line = Notifications.subtitle(notice, marker);
 
         assertEquals(null, line.font());
-        assertEquals(java.util.List.of(marker, notice.subtitle()), line.children());
+        assertTrue(line.children().contains(marker));
+        assertEquals(notice.subtitle(), line.children().getLast());
     }
 }

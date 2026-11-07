@@ -1,6 +1,7 @@
 package me.blockcraft.sternenfront.game;
 
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.entity.Player;
 
 /**
  * How a blaster behaves in the hands: aim opens up on the move and with a hot barrel and tightens crouched, and damage
@@ -12,6 +13,11 @@ public record WeaponHandling(double moving, double crouched, double hot, double 
         return new WeaponHandling(Math.max(1, config.getDouble("moving")), Math.clamp(config.getDouble("crouched"), 0, 1),
                 Math.max(0, config.getDouble("hot")), Math.clamp(config.getDouble("falloff-from"), 0, 1),
                 Math.clamp(config.getDouble("falloff-minimum"), 0, 1));
+    }
+
+    public double spread(double base, Player shooter, double heat) {
+        var input = shooter.getCurrentInput();
+        return spread(base, input.isForward() || input.isBackward() || input.isLeft() || input.isRight(), shooter.isSneaking(), heat);
     }
 
     public double spread(double base, boolean isMoving, boolean isCrouched, double heat) {

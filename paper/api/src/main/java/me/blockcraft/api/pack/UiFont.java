@@ -134,6 +134,12 @@ public final class UiFont {
         return Component.text(shift(-16) + glyph + shift(-17)).font(KEY);
     }
 
+    /** {@code marker}, which takes no room, moved to the middle of {@code line} and followed by it, as a centred line is drawn. */
+    public static Component centredOn(Component line, Component marker) {
+        int half = textWidth(line) / 2;
+        return Component.empty().append(gap(half)).append(marker).append(Component.text(shift(-half)).font(KEY)).append(line);
+    }
+
     public static Component glyph(char glyph) {
         return Component.text(glyph).font(KEY);
     }

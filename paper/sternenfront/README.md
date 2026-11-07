@@ -166,7 +166,11 @@ plays an impact sound.
 
 Hits, headshots, and kills have distinct sounds and immediate marks around the crosshair. A kill replaces a weaker
 marker even within the same tick. A red arc around the crosshair points at whoever last hurt the player, for
-`combat.damage-indicator-ticks`, and follows as they turn. Both share the title's subtitle, centred with `UiFont`.
+`combat.damage-indicator-ticks`, and follows as they turn. While a player with the pack holds a blaster that has spread,
+four ticks around the crosshair show it. They open one step each time the spread, worked out as for the next shot, passes
+a multiple of that blaster's base in `combat-feedback.spread-steps`, so every blaster closes standing still, crouched or
+cool and opens fully hot on the move. A scoped or spreadless long rifle shows none, and the vanilla crosshair stays inside
+the ticks. All three share the title's subtitle, centred with `UiFont`.
 Kill and assist popups appear briefly beside the heat, guard and ability-cooldown HUD.
 Hero and elite availability appear only for `combat-feedback.hero-ready-ticks` and `combat-feedback.elite-ready-ticks`;
 idle kill counts and point progress stay hidden.
@@ -177,8 +181,7 @@ on the existing order bar for `respawn.ability-hint-seconds`, and the deploy cha
 Death or disconnect restarts an unfinished hint sequence on the next deployment. Completed hints stay hidden until the abilities change.
 `ObjectiveHud` shows reinforcements, a tile per post and the time left in a boss bar's text line, and the pack draws that colour and overlay of bar as nothing. The screen's
 edges redden with a hit and while health is low. `combat.handling` tunes spread and damage falloff.
-Objective titles remain visible while the marker temporarily uses their subtitle, then restores it without restarting
-the title. The sidebar stays hidden during a fight.
+A title's subtitle stays readable under the marks, which `UiFont.centredOn` keeps on the crosshair however long the line is. The sidebar stays hidden during a fight.
 
 The heat meter turns red and shows `HEISS` at `heat.warning-level`, or when the next shot would overheat the weapon.
 Venting shows `Kühlt` until the weapon is ready, followed by a ready sound. `combat-feedback` tunes marker and

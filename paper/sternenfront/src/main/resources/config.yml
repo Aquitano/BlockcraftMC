@@ -434,6 +434,10 @@ combat-feedback:
   elite-ready-ticks: 60
   multikill-seconds: 4
   sound: {hit: 1.0, headshot: 1.0, kill: 0.9}
+  # Ticks around the crosshair open one of four steps each time the held blaster's spread passes one of these multiples
+  # of its own base spread. Standing still and cold is 1 and crouching 0.6, so both show the tightest step;
+  # combat.handling sets how far walking and heat open it.
+  spread-steps: [1.0, 1.25, 1.55, 1.85]
 
 intro:
   enabled: true

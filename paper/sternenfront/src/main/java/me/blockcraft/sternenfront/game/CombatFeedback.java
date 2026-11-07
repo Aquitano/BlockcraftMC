@@ -1,6 +1,7 @@
 package me.blockcraft.sternenfront.game;
 
 import me.blockcraft.api.BlockcraftApi;
+import me.blockcraft.api.item.HotbarItem;
 import me.blockcraft.api.pack.UiFont;
 import me.blockcraft.api.presentation.ScreenEffects;
 import me.blockcraft.api.scene.Scenes;
@@ -60,6 +61,8 @@ public final class CombatFeedback {
         boolean drawnMarked;
         Optional<DamageDirection> drawnHurt = Optional.empty();
         long drawnHurtUntil;
+        Optional<Integer> drawnSpread = Optional.empty();
+        long spreadRefreshAt;
         Component hud = Component.empty();
 
         boolean eliteAvailable(boolean available, long tick, int duration) {
@@ -89,12 +92,18 @@ public final class CombatFeedback {
             return Optional.of(marker);
         }
 
-        boolean crosshairChanged(long tick, Optional<DamageDirection> hurt, long hurtUntil) {
+        /** A shown spread is sent again before its title runs out, since the title is all that keeps it on screen. */
+        boolean crosshairChanged(long tick, Optional<DamageDirection> hurt, long hurtUntil, Optional<Integer> spread) {
             boolean marked = tick < markerUntil;
-            boolean changed = takeMarker(tick).isPresent() || marked != drawnMarked || !hurt.equals(drawnHurt) || hurtUntil != drawnHurtUntil;
+            boolean changed = takeMarker(tick).isPresent() || marked != drawnMarked || !hurt.equals(drawnHurt) || hurtUntil != drawnHurtUntil
+                    || !spread.equals(drawnSpread) || spread.isPresent() && tick >= spreadRefreshAt;
             drawnMarked = marked;
             drawnHurt = hurt;
             drawnHurtUntil = hurtUntil;
+            drawnSpread = spread;
+            if (changed) {
+                spreadRefreshAt = tick + SPREAD_REFRESH_TICKS;
+            }
             return changed;
         }
 
@@ -145,6 +154,10 @@ public final class CombatFeedback {
 
     private static final char FIRST_DAMAGE_ARC = '\uE228';
     private static final char FIRST_CROSSHAIR_MARK = '\uE23A';
+    private static final char FIRST_SPREAD_TICKS = '\uE250';
+    private static final int SPREAD_REFRESH_TICKS = 20;
+    /** Longer than the refresh, and short enough that the ticks do not linger into a cinematic, which stops the refresh. */
+    private static final int SPREAD_HOLD_TICKS = 30;
     /** Wide enough for the longest popup, so the line does not slide when one appears. */
     private static final int REWARD_WIDTH = 104;
     private static final double LOW_HEALTH = 0.4;
@@ -163,6 +176,8 @@ public final class CombatFeedback {
     private final float headshotVolume;
     private final float killVolume;
     private final int multikillTicks;
+    private final WeaponHandling handling;
+    private final SpreadCrosshair spreadCrosshair;
     private Function<Player, Optional<Component>> courseStatus = player -> Optional.empty();
 
     public CombatFeedback(SternenfrontGame game) {
@@ -177,6 +192,8 @@ public final class CombatFeedback {
         headshotVolume = (float) Math.clamp(config.getDouble("combat-feedback.sound.headshot", 0.8), 0, 1);
         killVolume = (float) Math.clamp(config.getDouble("combat-feedback.sound.kill", 0.9), 0, 1);
         multikillTicks = Math.clamp(config.getInt("combat-feedback.multikill-seconds", 4), 1, 30) * 20;
+        handling = WeaponHandling.from(config.getConfigurationSection("combat.handling"));
+        spreadCrosshair = new SpreadCrosshair(config.getDoubleList("combat-feedback.spread-steps"));
     }
 
     private State state(Player player) {
@@ -220,11 +237,22 @@ public final class CombatFeedback {
         }
     }
 
-    public void show(Player player, Component hud) {
+    public void aim(Player player) {
+        if (!hidden(player)) {
+            drawCrosshair(player, state(player), game.tick());
+        }
+    }
+
+    private boolean hidden(Player player) {
         var api = BlockcraftApi.get();
-        if (!game.onField(player) || api.dialogues().active(player) || api.visuals().active(player) || Scenes.isViewing(player)) {
+        return !game.onField(player) || api.dialogues().active(player) || api.visuals().active(player) || Scenes.isViewing(player);
+    }
+
+    public void show(Player player, Component hud) {
+        if (hidden(player)) {
             return;
         }
+        var api = BlockcraftApi.get();
         var state = state(player);
         long tick = game.tick();
         var heat = game.fighter(player).heat();
@@ -273,17 +301,32 @@ public final class CombatFeedback {
 
     private void drawCrosshair(Player player, State state, long tick) {
         var hurt = game.combat().damageDirection(player);
-        if (!state.crosshairChanged(tick, hurt, hurt.isPresent() ? tick + game.combat().hurtTicks(player) : 0)) {
+        var spread = spreadSize(player);
+        if (!state.crosshairChanged(tick, hurt, hurt.isPresent() ? tick + game.combat().hurtTicks(player) : 0, spread)) {
             return;
         }
         var notifications = BlockcraftApi.get().notifications();
-        if (!state.drawnMarked && hurt.isEmpty()) {
+        if (!state.drawnMarked && hurt.isEmpty() && spread.isEmpty()) {
             notifications.clearMarker(player);
             return;
         }
+        var ticks = spread.map(size -> UiFont.centredBehind((char) (FIRST_SPREAD_TICKS + size))).orElse(Component.empty());
         var arc = hurt.map(direction -> UiFont.centredBehind((char) (FIRST_DAMAGE_ARC + direction.ordinal()))).orElse(Component.empty());
         var marker = state.drawnMarked ? UiFont.centredBehind((char) (FIRST_CROSSHAIR_MARK + state.marker.ordinal())) : Component.empty();
-        notifications.markerNow(player, arc.append(marker), Math.max(state.markerUntil - tick, game.combat().hurtTicks(player)));
+        long held = Math.max(Math.max(state.markerUntil - tick, game.combat().hurtTicks(player)), spread.isPresent() ? SPREAD_HOLD_TICKS : 0);
+        notifications.markerNow(player, ticks.append(arc).append(marker), held);
+    }
+
+    private Optional<Integer> spreadSize(Player player) {
+        if (!BlockcraftApi.get().resourcePack().applied(player) || player.isInsideVehicle() || game.scoped(player)
+                || HotbarItem.of(player.getInventory().getItemInMainHand(), Blaster.class).isEmpty()) {
+            return Optional.empty();
+        }
+        var fighter = game.fighter(player);
+        return game.factionOf(player).flatMap(fighter::blaster).flatMap(blaster -> {
+            double base = game.config().stats(blaster).spread();
+            return spreadCrosshair.size(base, handling.spread(base, player, fighter.heat().level()));
+        });
     }
 
     public void forget(Player player) {
