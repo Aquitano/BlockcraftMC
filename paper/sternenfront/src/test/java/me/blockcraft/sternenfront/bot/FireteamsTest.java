@@ -22,11 +22,12 @@ public class FireteamsTest {
     }
 
     @Test
-    public void aTakenPostKeepsTheHeavyOnlyWhenTheTeamCanSpareIt() {
+    public void aTakenPostKeepsTheHeavyElseARiflemanButNeverTheLeaderOrMedic() {
         var team = List.of(new Member(1, CombatClass.SOLDIER), new Member(4, CombatClass.SCOUT),
                 new Member(2, CombatClass.HEAVY), new Member(3, CombatClass.MEDIC));
-        assertEquals(OptionalInt.of(2), Fireteams.guard(team));
-        assertEquals(OptionalInt.of(3), Fireteams.guard(List.of(team.get(0), team.get(1), team.get(3))));
-        assertEquals(OptionalInt.empty(), Fireteams.guard(team.subList(0, 2)));
+        assertEquals(OptionalInt.of(2), Fireteams.guard(team, 1));
+        assertEquals(OptionalInt.of(4), Fireteams.guard(List.of(team.get(0), team.get(1), team.get(3)), 1));
+        assertEquals(OptionalInt.empty(), Fireteams.guard(List.of(team.get(0), new Member(5, CombatClass.MEDIC), team.get(3)), 1));
+        assertEquals(OptionalInt.empty(), Fireteams.guard(team.subList(0, 2), 1));
     }
 }

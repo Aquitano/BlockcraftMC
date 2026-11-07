@@ -583,8 +583,9 @@ public final class Bots implements Listener {
                 call(leader, "advance", tick);
             }
             if (previous >= 0 && game.posts().owner(previous).filter(team.faction::equals).isPresent()
+                    && everyone.stream().noneMatch(soldier -> soldier.guarding >= 0 && deployed(soldier))
                     && soldiers.stream().noneMatch(soldier -> soldier.faction == team.faction && soldier.guarding == previous && deployed(soldier))) {
-                Fireteams.guard(squad.stream().map(soldier -> new Fireteams.Member(soldier.number, soldier.role)).toList())
+                Fireteams.guard(squad.stream().map(soldier -> new Fireteams.Member(soldier.number, soldier.role)).toList(), leader.number)
                         .ifPresent(number -> squad.stream().filter(soldier -> soldier.number == number)
                                 .forEach(soldier -> soldier.guarding = previous));
             }

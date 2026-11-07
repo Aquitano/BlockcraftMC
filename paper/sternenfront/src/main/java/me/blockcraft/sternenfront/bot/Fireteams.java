@@ -15,6 +15,7 @@ final class Fireteams {
 
     private static final List<CombatClass> LEADS_FIRST = List.of(CombatClass.SOLDIER, CombatClass.SCOUT,
             CombatClass.HEAVY, CombatClass.MEDIC);
+    private static final List<CombatClass> GUARDS_FIRST = List.of(CombatClass.HEAVY, CombatClass.SOLDIER, CombatClass.SCOUT);
     private static final int SMALLEST_TO_SPARE_A_GUARD = 3;
 
     private Fireteams() { }
@@ -37,12 +38,16 @@ final class Fireteams {
         return teams.stream().map(List::copyOf).toList();
     }
 
-    /** Whoever holds a post the team just took while the rest push on: its heavy, else its last member. */
-    static OptionalInt guard(List<Member> alive) {
+    /**
+     * Whoever holds a post the team just took while the rest push on: its heavy, else a rifleman. The leader stays in
+     * front and the medic with the wounded, so a team without anyone else to spare pushes on whole.
+     */
+    static OptionalInt guard(List<Member> alive, int leader) {
         if (alive.size() < SMALLEST_TO_SPARE_A_GUARD) {
             return OptionalInt.empty();
         }
-        return OptionalInt.of(alive.stream().filter(member -> member.role() == CombatClass.HEAVY).findFirst()
-                .orElse(alive.getLast()).number());
+        return alive.stream().filter(member -> member.number() != leader && GUARDS_FIRST.contains(member.role()))
+                .min(Comparator.comparingInt(member -> GUARDS_FIRST.indexOf(member.role())))
+                .map(member -> OptionalInt.of(member.number())).orElseGet(OptionalInt::empty);
     }
 }
