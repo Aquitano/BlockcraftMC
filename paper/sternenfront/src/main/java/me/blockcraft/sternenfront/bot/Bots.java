@@ -906,8 +906,13 @@ public final class Bots implements Listener {
             var column = members(team).stream().filter(Bots::deployed).filter(other -> other.guarding < 0 && other != leader.get()).toList();
             int rank = column.indexOf(soldier);
             var lead = leader.get().body.getLocation();
-            destination = stagger(Fireteam.behind(lead, team.trail, settings.spacing() * (rank + 1)), lead, rank % 2 == 0 ? 1 : -1);
-            speed = here.distance(destination) > settings.spacing() * 2 ? settings.sprintSpeed() : settings.walkSpeed();
+            double gap = settings.spacing() * (rank + 1);
+            var slot = Fireteam.behind(lead, team.trail, gap);
+            // Aiming a step past its place while the leader walks keeps a member from arriving and halting every second.
+            var aimed = BotAim.moving(false, leader.get().body.getVelocity()) ? Fireteam.behind(lead, team.trail, gap - TRAIL_STEP) : slot;
+            destination = stagger(aimed, lead, rank % 2 == 0 ? 1 : -1);
+            speed = Fireteam.followPace(Fireteam.left(here.toVector(), slot.toVector()), settings.spacing(),
+                    settings.walkSpeed(), settings.sprintSpeed());
         } else if (team != null && team.regrouping && route != null && leader.filter(soldier::equals).isPresent()) {
             activity = "regroup";
             destination = along(soldier, here, route);

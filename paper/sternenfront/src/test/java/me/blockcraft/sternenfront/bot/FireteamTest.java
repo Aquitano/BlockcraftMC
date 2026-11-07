@@ -23,4 +23,12 @@ public class FireteamTest {
         assertEquals(Place.AWAY, place(5, 0));
     }
 
+    @Test
+    public void aMemberKeepsTheLeadersPaceInItsPlaceAndRunsOnlyWhenFarBehind() {
+        assertEquals(0.9, Fireteam.followPace(1, 3, 0.9, 1.25), 1e-9);
+        assertEquals(0.9, Fireteam.followPace(3, 3, 0.9, 1.25), 1e-9);
+        assertEquals(1.075, Fireteam.followPace(6, 3, 0.9, 1.25), 1e-9);
+        assertEquals(1.25, Fireteam.followPace(20, 3, 0.9, 1.25), 1e-9);
+    }
+
 }

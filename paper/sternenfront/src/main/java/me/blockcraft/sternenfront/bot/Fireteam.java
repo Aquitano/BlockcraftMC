@@ -59,6 +59,14 @@ final class Fireteam {
         return lag > 0 && gap > near ? Place.STRAGGLING : Place.IN_COLUMN;
     }
 
+    /**
+     * How fast a member walks to its place {@code gap} blocks away: the leader's pace once there, so it neither
+     * overruns the place nor stops and starts, and up to a run when it has fallen a few places behind.
+     */
+    static double followPace(double gap, double spacing, double walk, double sprint) {
+        return Math.clamp(walk + (sprint - walk) * (gap - spacing) / (2 * spacing), walk, sprint);
+    }
+
     static double left(Vector at, Vector objective) {
         return Math.hypot(at.getX() - objective.getX(), at.getZ() - objective.getZ());
     }
