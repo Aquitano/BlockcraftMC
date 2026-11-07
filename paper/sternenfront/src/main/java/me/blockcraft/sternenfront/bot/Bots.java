@@ -51,6 +51,11 @@ public final class Bots implements Listener {
     private static final int THINK_TICKS = 4;
     private static final int ROUTE_TICKS = 20;
     private static final int AVOID_TICKS = 600;
+    private static final int REGROUP_TICKS = 100;
+    private static final int SOLO_TICKS = 200;
+    private static final int TRAIL_STEPS = 24;
+    private static final double TRAIL_STEP = 1.5;
+    private static final double ASSAULT_REACH = 4;
     private static final double PEEK_REACH = 3;
     private static final double WOUNDED_SHARE = 0.3;
     /**
@@ -71,6 +76,7 @@ public final class Bots implements Listener {
         private int objective = -1;
         private Fireteam team;
         private int guarding = -1;
+        private long soloUntil;
         private Location progress;
         private int stuckTicks;
         private final CombatClass role;
@@ -254,6 +260,9 @@ public final class Bots implements Listener {
         if (tick % ROUTE_TICKS == 0) {
             teams.forEach(team -> command(team, tick));
         }
+        if (tick % THINK_TICKS == 0) {
+            teams.forEach(this::mark);
+        }
         for (var soldier : List.copyOf(soldiers)) {
             if (soldier.body == null) {
                 if (tick >= soldier.deployAt) {
@@ -327,6 +336,7 @@ public final class Bots implements Listener {
         soldier.reactAt = 0;
         soldier.objective = -1;
         soldier.guarding = -1;
+        soldier.soloUntil = 0;
         soldier.progress = at.clone();
         soldier.stuckTicks = 0;
         soldier.aim = at.getDirection();
@@ -495,10 +505,14 @@ public final class Bots implements Listener {
         }
         var squad = everyone.stream().filter(Bots::deployed).filter(soldier -> soldier.guarding < 0).toList();
         if (squad.isEmpty()) {
+            team.leader = -1;
+            team.trail.clear();
             return;
         }
+        var leader = lead(team, squad);
+        var at = leader.body.getLocation();
         int previous = team.objective;
-        int next = objectiveFor(team, squad.getFirst().body.getLocation(), tick);
+        int next = objectiveFor(team, at, tick);
         if (next != previous) {
             if (previous >= 0 && game.posts().owner(previous).filter(team.faction::equals).isPresent()
                     && soldiers.stream().noneMatch(soldier -> soldier.faction == team.faction && soldier.guarding == previous && deployed(soldier))) {
@@ -512,6 +526,50 @@ public final class Bots implements Listener {
         for (var soldier : squad) {
             objective(soldier, soldier.guarding < 0 ? team.objective : soldier.guarding, team.route);
         }
+        var post = team.objective < 0 ? null : game.map().posts().get(team.objective);
+        team.assaulting = post != null && Math.hypot(at.getX() - post.center().getX(), at.getZ() - post.center().getZ())
+                <= post.radius() + ASSAULT_REACH;
+        var settings = config.squad();
+        boolean behind = !team.assaulting && squad.stream().filter(soldier -> soldier != leader).map(soldier -> soldier.body.getLocation())
+                .filter(where -> where.getWorld().equals(at.getWorld())).mapToDouble(at::distance)
+                .anyMatch(distance -> distance > settings.regroupDistance() && distance < settings.catchUpDistance());
+        if (!behind) {
+            team.waitingSince = -1;
+        } else if (team.waitingSince < 0) {
+            team.waitingSince = tick;
+        }
+        team.regrouping = behind && tick - team.waitingSince < REGROUP_TICKS;
+    }
+
+    /** The team keeps its leader while it lives; a new one is whoever is nearest the objective, so nobody turns back. */
+    private Soldier lead(Fireteam team, List<Soldier> squad) {
+        var kept = squad.stream().filter(soldier -> soldier.number == team.leader).findFirst();
+        if (kept.isPresent()) {
+            return kept.get();
+        }
+        var leader = team.objective < 0 ? squad.getFirst() : squad.stream().min(Comparator.comparingDouble((Soldier soldier) ->
+                soldier.body.getLocation().distanceSquared(game.map().posts().get(team.objective).center()))).orElseThrow();
+        team.leader = leader.number;
+        team.trail.clear();
+        return leader;
+    }
+
+    private void mark(Fireteam team) {
+        leader(team).ifPresent(leader -> {
+            var at = leader.body.getLocation();
+            var last = team.trail.peekFirst();
+            if (last == null || !last.getWorld().equals(at.getWorld()) || last.distance(at) >= TRAIL_STEP) {
+                team.trail.addFirst(at);
+                while (team.trail.size() > TRAIL_STEPS) {
+                    team.trail.removeLast();
+                }
+            }
+        });
+    }
+
+    private Optional<Soldier> leader(Fireteam team) {
+        return members(team).stream().filter(soldier -> soldier.number == team.leader).filter(Bots::deployed)
+                .filter(soldier -> soldier.guarding < 0).findFirst();
     }
 
     private int objectiveFor(Fireteam team, Location from, long tick) {
@@ -564,6 +622,12 @@ public final class Bots implements Listener {
         var route = post == null ? null : post.routes().get(soldier.faction)
                 .get(soldier.navigation.route());
         boolean defending = route != null && soldier.guarding >= 0;
+        var team = defending ? null : soldier.team;
+        var leader = team == null ? Optional.<Soldier>empty() : leader(team);
+        var settings = config.squad();
+        boolean following = leader.filter(other -> other != soldier).isPresent()
+                && tick >= soldier.soloUntil && leader.get().body.getLocation().distance(here) < settings.catchUpDistance();
+        double speed = settings.walkSpeed();
         Location destination = null;
         String activity = "idle";
         boolean seekingPatient = false;
@@ -585,6 +649,7 @@ public final class Bots implements Listener {
         } else if (protectedPosition.isPresent() && (wounded || soldier.heat.venting(tick) || patient.isEmpty())) {
             activity = soldier.peeking ? "peek-from-cover" : wounded ? "retreat-wounded" : "hold-cover";
             destination = protectedPosition.get();
+            speed = settings.sprintSpeed();
         } else if (patient.isPresent()) {
             seekingPatient = here.distanceSquared(patient.get().getLocation()) > 9 || !mob.hasLineOfSight(patient.get());
             activity = seekingPatient ? "follow-patient" : "treat-patient";
@@ -596,8 +661,25 @@ public final class Bots implements Listener {
                 && post != null && soldier.lastSeen.distanceSquared(post.center()) < 28 * 28) {
             activity = "investigate-last-seen";
             destination = soldier.lastSeen;
+        } else if (team != null && team.assaulting && post != null) {
+            activity = target.isPresent() ? "strafe-in-post" : "assault";
+            var squad = members(team).stream().filter(Bots::deployed).filter(other -> other.guarding < 0).toList();
+            double angle = Math.PI * 2 * squad.indexOf(soldier) / Math.max(1, squad.size()) + team.id
+                    + (target.isPresent() ? tick * 0.025 : 0);
+            destination = post.center().clone().add(Math.cos(angle) * post.radius() * 0.45, 0, Math.sin(angle) * post.radius() * 0.45);
+            speed = capturing ? settings.walkSpeed() : settings.sprintSpeed();
+        } else if (following) {
+            activity = "follow";
+            var column = members(team).stream().filter(Bots::deployed).filter(other -> other.guarding < 0 && other != leader.get()).toList();
+            destination = Fireteam.behind(leader.get().body.getLocation(), team.trail, settings.spacing() * (column.indexOf(soldier) + 1));
+            speed = settings.walkSpeed() * 1.1;
+        } else if (team != null && team.regrouping && leader.filter(soldier::equals).isPresent()) {
+            activity = "regroup";
         } else if (route != null && !capturing && soldier.waypoint < route.approach().size()) {
-            activity = "approach";
+            activity = leader.filter(other -> other != soldier).isPresent() ? "catch-up" : "approach";
+            if (activity.equals("catch-up")) {
+                speed = settings.sprintSpeed();
+            }
             while (soldier.waypoint < route.approach().size()
                     && here.distanceSquared(route.approach().get(soldier.waypoint)) < 9) {
                 soldier.waypoint++;
@@ -610,10 +692,6 @@ public final class Bots implements Listener {
         } else if (post != null && !capturing) {
             activity = "capture";
             destination = route.capture();
-        } else if (capturing && target.isPresent()) {
-            activity = "strafe-in-post";
-            double angle = tick * 0.025 + soldier.number;
-            destination = post.center().clone().add(Math.cos(angle) * post.radius() * 0.45, 0, Math.sin(angle) * post.radius() * 0.45);
         }
         soldier.activity = activity;
         soldier.destination = destination == null ? null : destination.clone();
@@ -641,8 +719,20 @@ public final class Bots implements Listener {
             soldier.stuckTicks = 0;
             soldier.progress = here.clone();
         }
+        if (soldier.stuckTicks >= 100 && (activity.equals("assault") || activity.equals("strafe-in-post"))) {
+            soldier.stuckTicks = 0;
+            soldier.progress = here.clone();
+        }
+        if (soldier.stuckTicks >= 100 && activity.equals("follow")) {
+            soldier.soloUntil = tick + SOLO_TICKS;
+            soldier.stuckTicks = 0;
+            soldier.progress = here.clone();
+            mob.getPathfinder().stopPathfinding();
+            soldier.navigationResult = "leave-column";
+            return;
+        }
         if (soldier.stuckTicks >= 100) {
-            boolean followingRoute = activity.equals("approach") || activity.equals("capture")
+            boolean followingRoute = activity.equals("approach") || activity.equals("capture") || activity.equals("catch-up")
                     || activity.equals("defend-peek") || activity.equals("contest-owned-post");
             if (followingRoute && soldier.navigation.retry(post.routes().get(soldier.faction).size())) {
                 var alternate = post.routes().get(soldier.faction).get(soldier.navigation.route());
@@ -661,7 +751,8 @@ public final class Bots implements Listener {
             mob.getPathfinder().stopPathfinding();
             return;
         }
-        soldier.navigationResult = mob.getPathfinder().moveTo(destination, 1.0) ? "accepted" : "unreachable";
+        double pace = speed * (1 + (soldier.number * 7 % 9 - 4) * 0.015);
+        soldier.navigationResult = mob.getPathfinder().moveTo(destination, pace) ? "accepted" : "unreachable";
     }
 
     private void abandon(Soldier soldier, long tick) {

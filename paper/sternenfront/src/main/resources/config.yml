@@ -30,8 +30,11 @@ bots:
   cover: {search-radius: 10, hold-ticks: 40, peek-ticks: 40}
   voice: {enabled: true, range: 18, volume: 0.65, soldier-cooldown-ticks: 360, global-cooldown-ticks: 100}
   # Bots fight in fireteams of up to fireteam-size that share one objective. A team keeps its objective until another
-  # post is switch-margin blocks of walking cheaper, and leaves one member to guard each post it takes.
-  squad: {fireteam-size: 4, switch-margin: 25}
+  # post is switch-margin blocks of walking cheaper, and leaves one member to guard each post it takes. On the move
+  # the others walk spacing blocks apart in the leader's steps; the leader waits up to five seconds for anyone between
+  # regroup-distance and catch-up-distance behind, and anyone further runs the route alone. walk-speed and
+  # sprint-speed scale the pathfinder's pace for travelling and for running under fire.
+  squad: {fireteam-size: 4, switch-margin: 25, spacing: 3, regroup-distance: 12, catch-up-distance: 32, walk-speed: 0.9, sprint-speed: 1.25}
 appearance:
   body-turn-degrees: 12
   motion:
