@@ -1068,9 +1068,6 @@ public final class Bots implements Listener {
                             game.map().playArea().contains(at.toVector()) && at.distanceSquared(soldier.cover) >= 1
                                     && BotCover.clearPeek(at, mob.getEyeHeight(), threat)).orElse(null);
                     soldier.peeking = soldier.peek != null;
-                    if (soldier.peeking) {
-                        call(soldier, "advance", tick);
-                    }
                 }
                 soldier.coverPhaseUntil = 0;
             }
