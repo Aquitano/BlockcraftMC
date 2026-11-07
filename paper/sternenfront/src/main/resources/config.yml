@@ -255,7 +255,7 @@ respawn:
 headquarters:
   enemy-damage: 4
 
-# A player who took no damage for delay-seconds heals per-second health every second.
+# A player or bot that took no damage for delay-seconds heals per-second health every second.
 regen:
   delay-seconds: 6
   per-second: 1

@@ -109,6 +109,7 @@ public final class Bots implements Listener {
         private int burst;
         private long pauseUntil;
         private long healAt;
+        private long hurtAt;
         private final Volley volley = new Volley();
         private Location lastSeen;
         private long seenUntil;
@@ -305,6 +306,10 @@ public final class Bots implements Listener {
                 soldier.body.setHealth(0);
                 continue;
             }
+            var regen = game.config().regen();
+            if (tick % 20 == 0 && tick - soldier.hurtAt >= regen.delaySeconds() * 20L) {
+                game.heal(soldier.body, regen.perSecond());
+            }
             if (tick % THINK_TICKS == soldier.number % THINK_TICKS) {
                 think(soldier, tick);
             }
@@ -375,6 +380,7 @@ public final class Bots implements Listener {
         soldier.burst = 0;
         soldier.pauseUntil = 0;
         soldier.healAt = tick;
+        soldier.hurtAt = tick;
         soldier.volley.clear();
         soldier.lastSeen = null;
         soldier.seenUntil = 0;
@@ -1157,6 +1163,9 @@ public final class Bots implements Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onHurt(EntityDamageEvent event) {
         var soldier = bodies.get(event.getEntity().getUniqueId());
+        if (soldier != null && event.getFinalDamage() > 0) {
+            soldier.hurtAt = game.tick();
+        }
         if (soldier != null && event.getFinalDamage() > 0
                 && event.getDamageSource().getCausingEntity() instanceof LivingEntity attacker
                 && game.hittable(soldier.faction, attacker) && attacker.getWorld().equals(soldier.body.getWorld())) {
