@@ -20,6 +20,11 @@ final class Fireteam {
     boolean assaulting;
     boolean regrouping;
     long waitingSince = -1;
+    /** Where the team last knew an enemy to be while any member still remembers one. */
+    Location threat;
+    long contactSince = -1;
+    int flanker = -1;
+    final Bounding bounding = new Bounding();
     /** Where the leader walked, newest first, a step apart. */
     final Deque<Location> trail = new ArrayDeque<>();
     private int avoided = -1;
@@ -29,6 +34,10 @@ final class Fireteam {
         this.id = id;
         this.faction = faction;
         this.members = members;
+    }
+
+    int element(int number) {
+        return members.indexOf(number) % 2;
     }
 
     void avoid(int post, long until) {

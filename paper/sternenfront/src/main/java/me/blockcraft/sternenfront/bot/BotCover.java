@@ -14,6 +14,7 @@ final class BotCover {
 
     // Paper can complete a skeleton's final path node 0.45 blocks away on each horizontal axis.
     private static final double PEEK_CLEARANCE = 0.5;
+    private static final double SUPPRESSED_SHARE = 0.6;
 
     private BotCover() { }
 
@@ -36,6 +37,17 @@ final class BotCover {
             }
         }
         return true;
+    }
+
+    /** Whether a bolt toward {@code threat} flies most of the way there, so it hits the enemy's cover rather than ours. */
+    static boolean suppressible(Location eye, Location threat) {
+        var direction = threat.toVector().subtract(eye.toVector());
+        double distance = direction.length();
+        if (distance < 0.01) {
+            return false;
+        }
+        var hit = eye.getWorld().rayTraceBlocks(eye, direction.normalize(), distance, FluidCollisionMode.NEVER, true);
+        return hit == null || hit.getHitPosition().distance(eye.toVector()) >= distance * SUPPRESSED_SHARE;
     }
 
     static boolean blocked(Location from, Location to) {

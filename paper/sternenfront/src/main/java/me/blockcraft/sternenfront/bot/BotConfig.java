@@ -16,7 +16,8 @@ public record BotConfig(boolean enabled, int perTeam, double range, double visio
     public record Cover(double searchRadius, int holdTicks, int peekTicks) { }
 
     public record Squad(int fireteamSize, double switchMargin, double spacing, double regroupDistance,
-                        double catchUpDistance, double walkSpeed, double sprintSpeed) { }
+                        double catchUpDistance, double walkSpeed, double sprintSpeed, double boundDistance,
+                        int boundTicks, int flankAfterTicks) { }
 
     public record Voice(boolean enabled, double range, float volume, int soldierCooldownTicks, int globalCooldownTicks) { }
 
@@ -69,7 +70,10 @@ public record BotConfig(boolean enabled, int perTeam, double range, double visio
                         Math.clamp(config.getDouble("bots.squad.regroup-distance", 12), 4, 32),
                         Math.clamp(config.getDouble("bots.squad.catch-up-distance", 32), 8, 96),
                         Math.clamp(config.getDouble("bots.squad.walk-speed", 0.9), 0.5, 1.5),
-                        Math.clamp(config.getDouble("bots.squad.sprint-speed", 1.25), 0.5, 1.5)),
+                        Math.clamp(config.getDouble("bots.squad.sprint-speed", 1.25), 0.5, 1.5),
+                        Math.clamp(config.getDouble("bots.squad.bound-distance", 8), 3, 24),
+                        Math.clamp(config.getInt("bots.squad.bound-ticks", 80), 20, 200),
+                        Math.clamp(config.getInt("bots.squad.flank-after-ticks", 160), 40, 1200)),
                 BotDifficulty.named(config.getString("bots.difficulty", "normal")).orElse(BotDifficulty.NORMAL),
                 Map.copyOf(profiles));
     }

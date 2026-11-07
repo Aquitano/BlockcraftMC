@@ -56,6 +56,7 @@ public final class Bots implements Listener {
     private static final int TRAIL_STEPS = 24;
     private static final double TRAIL_STEP = 1.5;
     private static final double ASSAULT_REACH = 4;
+    private static final double SUPPRESSING_SPREAD = 2.5;
     private static final double PEEK_REACH = 3;
     private static final double WOUNDED_SHARE = 0.3;
     /**
@@ -77,6 +78,10 @@ public final class Bots implements Listener {
         private Fireteam team;
         private int guarding = -1;
         private long soloUntil;
+        private int bound = -1;
+        private boolean boundDone;
+        private Location boundFrom;
+        private Location suppress;
         private Location progress;
         private int stuckTicks;
         private final CombatClass role;
@@ -337,6 +342,10 @@ public final class Bots implements Listener {
         soldier.objective = -1;
         soldier.guarding = -1;
         soldier.soloUntil = 0;
+        soldier.bound = -1;
+        soldier.boundDone = false;
+        soldier.boundFrom = null;
+        soldier.suppress = null;
         soldier.progress = at.clone();
         soldier.stuckTicks = 0;
         soldier.aim = at.getDirection();
@@ -396,6 +405,7 @@ public final class Bots implements Listener {
             }
             soldier.lastSeen = enemy.getLocation();
             soldier.seenUntil = tick + config.memoryTicks();
+            soldier.suppress = null;
             var wanted = enemy.getLocation().add(0, enemy.getHeight() * 0.6, 0).toVector().subtract(mob.getEyeLocation().toVector());
             if (wanted.lengthSquared() > 0.01) {
                 soldier.aim = BotAim.turn(soldier.aim, wanted, tuning.trackingDegrees());
@@ -404,8 +414,19 @@ public final class Bots implements Listener {
                 fire(soldier, tick);
             }
         } else {
-            soldier.volley.clear();
-            if (remembering(soldier, tick)) {
+            soldier.suppress = suppression(soldier, tick).orElse(null);
+            if (soldier.suppress != null) {
+                var wanted = soldier.suppress.toVector().subtract(mob.getEyeLocation().toVector());
+                if (wanted.lengthSquared() > 0.01) {
+                    soldier.aim = BotAim.turn(soldier.aim, wanted, tuning.trackingDegrees());
+                }
+                fire(soldier, tick);
+            } else {
+                soldier.volley.clear();
+            }
+            if (soldier.suppress != null) {
+                soldier.idleAim = null;
+            } else if (remembering(soldier, tick)) {
                 var toward = soldier.lastSeen.clone().add(0, 1, 0).toVector().subtract(mob.getEyeLocation().toVector());
                 if (toward.lengthSquared() > 0.01) {
                     soldier.idleAim = toward;
@@ -435,6 +456,18 @@ public final class Bots implements Listener {
         if ((tick - soldier.number % THINK_TICKS) % ROUTE_TICKS == 0) {
             navigate(soldier, target, tick);
         }
+    }
+
+    /** Where an overwatching bot fires to keep the enemy's heads down while the other element bounds, if it can. */
+    private Optional<Location> suppression(Soldier soldier, long tick) {
+        var team = soldier.team;
+        if (team == null || team.threat == null || soldier.guarding >= 0 || team.flanker == soldier.number
+                || team.bounding.moving() == Bounding.NONE || team.element(soldier.number) == team.bounding.moving()
+                || tick < soldier.reactAt) {
+            return Optional.empty();
+        }
+        var at = (remembering(soldier, tick) ? soldier.lastSeen : team.threat).clone().add(0, 1.2, 0);
+        return BotCover.suppressible(soldier.body.getEyeLocation(), at) ? Optional.of(at) : Optional.empty();
     }
 
     private void signature(Soldier soldier, Optional<LivingEntity> target, long tick) {
@@ -530,7 +563,8 @@ public final class Bots implements Listener {
         team.assaulting = post != null && Math.hypot(at.getX() - post.center().getX(), at.getZ() - post.center().getZ())
                 <= post.radius() + ASSAULT_REACH;
         var settings = config.squad();
-        boolean behind = !team.assaulting && squad.stream().filter(soldier -> soldier != leader).map(soldier -> soldier.body.getLocation())
+        contact(team, squad, tick);
+        boolean behind = !team.assaulting && team.threat == null && squad.stream().filter(soldier -> soldier != leader).map(soldier -> soldier.body.getLocation())
                 .filter(where -> where.getWorld().equals(at.getWorld())).mapToDouble(at::distance)
                 .anyMatch(distance -> distance > settings.regroupDistance() && distance < settings.catchUpDistance());
         if (!behind) {
@@ -539,6 +573,42 @@ public final class Bots implements Listener {
             team.waitingSince = tick;
         }
         team.regrouping = behind && tick - team.waitingSince < REGROUP_TICKS;
+    }
+
+    private void contact(Fireteam team, List<Soldier> squad, long tick) {
+        team.threat = squad.stream().filter(soldier -> remembering(soldier, tick))
+                .max(Comparator.comparingLong(soldier -> soldier.seenUntil)).map(soldier -> soldier.lastSeen.clone()).orElse(null);
+        if (team.threat == null) {
+            team.contactSince = -1;
+        } else if (team.contactSince < 0) {
+            team.contactSince = tick;
+        }
+        if (squad.stream().noneMatch(soldier -> soldier.number == team.flanker)) {
+            team.flanker = -1;
+        }
+        if (team.threat == null || team.assaulting || team.objective < 0) {
+            team.bounding.reset();
+            team.flanker = -1;
+            return;
+        }
+        var settings = config.squad();
+        var routes = game.map().posts().get(team.objective).routes().get(team.faction).size();
+        if (team.flanker < 0 && squad.size() >= 3 && routes > 1 && tick - team.contactSince >= settings.flankAfterTicks()) {
+            squad.stream().skip(1).filter(soldier -> soldier.role == CombatClass.SCOUT).findFirst()
+                    .or(() -> Optional.of(squad.getLast())).filter(soldier -> soldier.number != team.leader).ifPresent(flanker -> {
+                        team.flanker = flanker.number;
+                        flanker.objective = -1;
+                        objective(flanker, team.objective, team.route + 1);
+                        call(flanker, "advance", tick);
+                    });
+        }
+        var bounders = squad.stream().filter(soldier -> soldier.number != team.flanker).toList();
+        var present = new boolean[2];
+        bounders.forEach(soldier -> present[team.element(soldier.number)] = true);
+        int moving = team.bounding.moving();
+        boolean arrived = bounders.stream().filter(soldier -> team.element(soldier.number) == moving)
+                .allMatch(soldier -> soldier.bound == team.bounding.bound() && soldier.boundDone);
+        team.bounding.update(present, arrived, tick, settings.boundTicks());
     }
 
     /** The team keeps its leader while it lives; a new one is whoever is nearest the objective, so nobody turns back. */
@@ -627,6 +697,24 @@ public final class Bots implements Listener {
         var settings = config.squad();
         boolean following = leader.filter(other -> other != soldier).isPresent()
                 && tick >= soldier.soloUntil && leader.get().body.getLocation().distance(here) < settings.catchUpDistance();
+        boolean flanking = team != null && team.flanker == soldier.number;
+        boolean underFire = team != null && team.threat != null && !team.assaulting;
+        boolean bounding = underFire && !flanking && team.element(soldier.number) == team.bounding.moving();
+        if (bounding && soldier.bound != team.bounding.bound()) {
+            soldier.bound = team.bounding.bound();
+            soldier.boundDone = false;
+            soldier.boundFrom = here.clone();
+            soldier.cover = null;
+            soldier.peek = null;
+            soldier.peeking = false;
+            soldier.coverPhaseUntil = 0;
+            call(soldier, "advance", tick);
+        }
+        if (bounding && !soldier.boundDone && (capturing
+                || Math.hypot(here.getX() - soldier.boundFrom.getX(), here.getZ() - soldier.boundFrom.getZ()) >= settings.boundDistance())) {
+            soldier.boundDone = true;
+        }
+        boolean advancing = flanking || bounding && !soldier.boundDone;
         double speed = settings.walkSpeed();
         Location destination = null;
         String activity = "idle";
@@ -634,8 +722,11 @@ public final class Bots implements Listener {
         var patient = soldier.role == CombatClass.MEDIC ? patient(soldier, tick, true) : Optional.<LivingEntity>empty();
         boolean wounded = wounded(mob);
         var threat = target.map(LivingEntity::getEyeLocation)
-                .or(() -> remembering(soldier, tick) ? Optional.of(soldier.lastSeen.clone().add(0, 1.6, 0)) : Optional.empty());
-        var protectedPosition = threat.flatMap(enemy -> cover(soldier, enemy, tick));
+                .or(() -> remembering(soldier, tick) ? Optional.of(soldier.lastSeen.clone().add(0, 1.6, 0)) : Optional.empty())
+                .or(() -> underFire ? Optional.of(team.threat.clone().add(0, 1.6, 0)) : Optional.empty());
+        boolean exposed = advancing || team != null && team.assaulting;
+        var protectedPosition = threat.filter(enemy -> !exposed || wounded || soldier.heat.venting(tick))
+                .flatMap(enemy -> cover(soldier, enemy, tick));
         if (threat.isEmpty()) {
             soldier.cover = null;
             soldier.peek = null;
@@ -657,10 +748,6 @@ public final class Bots implements Listener {
         } else if (defending) {
             activity = "defend-peek";
             destination = route.peek();
-        } else if (target.isEmpty() && remembering(soldier, tick)
-                && post != null && soldier.lastSeen.distanceSquared(post.center()) < 28 * 28) {
-            activity = "investigate-last-seen";
-            destination = soldier.lastSeen;
         } else if (team != null && team.assaulting && post != null) {
             activity = target.isPresent() ? "strafe-in-post" : "assault";
             var squad = members(team).stream().filter(Bots::deployed).filter(other -> other.guarding < 0).toList();
@@ -668,6 +755,12 @@ public final class Bots implements Listener {
                     + (target.isPresent() ? tick * 0.025 : 0);
             destination = post.center().clone().add(Math.cos(angle) * post.radius() * 0.45, 0, Math.sin(angle) * post.radius() * 0.45);
             speed = capturing ? settings.walkSpeed() : settings.sprintSpeed();
+        } else if (advancing && route != null) {
+            activity = flanking ? "flank" : "bound";
+            destination = along(soldier, here, route);
+            speed = settings.sprintSpeed();
+        } else if (underFire) {
+            activity = "overwatch";
         } else if (following) {
             activity = "follow";
             var column = members(team).stream().filter(Bots::deployed).filter(other -> other.guarding < 0 && other != leader.get()).toList();
@@ -680,15 +773,7 @@ public final class Bots implements Listener {
             if (activity.equals("catch-up")) {
                 speed = settings.sprintSpeed();
             }
-            while (soldier.waypoint < route.approach().size()
-                    && here.distanceSquared(route.approach().get(soldier.waypoint)) < 9) {
-                soldier.waypoint++;
-            }
-            if (soldier.waypoint < route.approach().size()) {
-                destination = route.approach().get(soldier.waypoint);
-            } else {
-                destination = route.capture();
-            }
+            destination = along(soldier, here, route);
         } else if (post != null && !capturing) {
             activity = "capture";
             destination = route.capture();
@@ -732,7 +817,9 @@ public final class Bots implements Listener {
             return;
         }
         if (soldier.stuckTicks >= 100) {
+            soldier.boundDone = true;
             boolean followingRoute = activity.equals("approach") || activity.equals("capture") || activity.equals("catch-up")
+                    || activity.equals("bound") || activity.equals("flank")
                     || activity.equals("defend-peek") || activity.equals("contest-owned-post");
             if (followingRoute && soldier.navigation.retry(post.routes().get(soldier.faction).size())) {
                 var alternate = post.routes().get(soldier.faction).get(soldier.navigation.route());
@@ -753,6 +840,13 @@ public final class Bots implements Listener {
         }
         double pace = speed * (1 + (soldier.number * 7 % 9 - 4) * 0.015);
         soldier.navigationResult = mob.getPathfinder().moveTo(destination, pace) ? "accepted" : "unreachable";
+    }
+
+    private static Location along(Soldier soldier, Location here, FrontMap.Route route) {
+        while (soldier.waypoint < route.approach().size() && here.distanceSquared(route.approach().get(soldier.waypoint)) < 9) {
+            soldier.waypoint++;
+        }
+        return soldier.waypoint < route.approach().size() ? route.approach().get(soldier.waypoint) : route.capture();
     }
 
     private void abandon(Soldier soldier, long tick) {
@@ -869,8 +963,9 @@ public final class Bots implements Listener {
             return;
         }
         var target = soldier.target == null ? null : Bukkit.getEntity(soldier.target);
-        if (!(target instanceof LivingEntity enemy) || !game.hittable(soldier.faction, enemy)
-                || !soldier.body.hasLineOfSight(enemy)) {
+        boolean sighted = target instanceof LivingEntity enemy && game.hittable(soldier.faction, enemy)
+                && soldier.body.hasLineOfSight(enemy);
+        if (!sighted && soldier.suppress == null) {
             soldier.volley.clear();
             return;
         }
@@ -879,7 +974,7 @@ public final class Bots implements Listener {
             var aim = soldier.aim.clone();
             var random = ThreadLocalRandom.current();
             double spread = Math.max(tuning.spread(), game.config().stats(blaster).spread())
-                    * (soldier.body.getVelocity().lengthSquared() > 0.005 ? 1.5 : 1);
+                    * (soldier.body.getVelocity().lengthSquared() > 0.005 ? 1.5 : 1) * (sighted ? 1 : SUPPRESSING_SPREAD);
             if (spread > 0) {
                 aim.add(new Vector(random.nextDouble(-spread, spread), random.nextDouble(-spread, spread),
                         random.nextDouble(-spread, spread))).normalize();
