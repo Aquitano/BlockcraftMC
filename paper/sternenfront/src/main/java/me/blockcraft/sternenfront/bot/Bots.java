@@ -73,6 +73,7 @@ public final class Bots implements Listener {
     private static final double WOUNDED_SHARE = 0.3;
     private static final int PRESS_TICKS = 100;
     private static final double EYE_HEIGHT = 1.6;
+    private static final int PUSH_RETRY_TICKS = 200;
     private static final Set<String> STANDING_ALLOWED = Set.of("defend-peek", "fall-back", "siege", "treat-patient");
     private static final Set<String> HOLDING_GROUND = Set.of("overwatch", "assault", "strafe-in-post", "defend-peek",
             "contest-owned-post", "hold-for-team");
@@ -137,6 +138,8 @@ public final class Bots implements Listener {
         private final BotRecovery recovery = new BotRecovery();
         private final Stillness stillness = new Stillness();
         private long pressUntil;
+        private boolean pressSpent;
+        private long pushBlockedUntil;
 
         private Soldier(int number, Faction faction, CombatClass role) {
             this.number = number;
@@ -269,8 +272,23 @@ public final class Bots implements Listener {
         for (var numbers : Fireteams.assign(members, config.squad().fireteamSize())) {
             var team = new Fireteam(nextTeam++, faction, numbers);
             teams.add(team);
-            members(team).forEach(soldier -> soldier.team = team);
+            // A guard kept from the old teams could leave a new team with nobody free to lead it.
+            members(team).forEach(soldier -> {
+                soldier.team = team;
+                soldier.guarding = -1;
+            });
         }
+    }
+
+    /** How near a team must be to count as at its post; a held post reaches out to its lookouts, where its defenders stand. */
+    private static double reach(FrontMap.PostSite post, boolean holding) {
+        double reach = post.radius() + ASSAULT_REACH;
+        if (!holding) {
+            return reach;
+        }
+        var center = post.center().toVector();
+        return post.routes().values().stream().flatMap(List::stream)
+                .mapToDouble(route -> Fireteam.left(route.peek().toVector(), center) + ASSAULT_REACH).reduce(reach, Math::max);
     }
 
     private List<Soldier> members(Fireteam team) {
@@ -530,7 +548,10 @@ public final class Bots implements Listener {
             return Optional.empty();
         }
         var at = (remembering(soldier, tick) ? soldier.lastSeen : team.threat).clone().add(0, 1.2, 0);
-        return BotCover.suppressible(soldier.body.getEyeLocation(), at) ? Optional.of(at) : Optional.empty();
+        double range = game.config().stats(soldier.role.blaster(soldier.faction)).range();
+        var eye = soldier.body.getEyeLocation();
+        return at.getWorld().equals(eye.getWorld()) && eye.distanceSquared(at) <= range * range && BotCover.suppressible(eye, at)
+                ? Optional.of(at) : Optional.empty();
     }
 
     /** At most one ability a think, the first in the class's own order whose moment has come. */
@@ -658,8 +679,8 @@ public final class Bots implements Listener {
             objective(soldier, soldier.guarding < 0 ? team.objective : soldier.guarding, team.route);
         }
         var post = team.objective < 0 ? null : game.map().posts().get(team.objective);
-        team.assaulting = post != null && Fireteam.left(at.toVector(), post.center().toVector()) <= post.radius() + ASSAULT_REACH;
         team.holding = post != null && game.posts().owner(team.objective).filter(team.faction::equals).isPresent();
+        team.assaulting = post != null && Fireteam.left(at.toVector(), post.center().toVector()) <= reach(post, team.holding);
         var settings = config.squad();
         if (squad.stream().noneMatch(soldier -> soldier.number == team.flanker)) {
             team.flanker = -1;
@@ -888,7 +909,7 @@ public final class Bots implements Listener {
                         .or(() -> Optional.ofNullable(soldier.fallBackTo))
                 : Optional.<Location>empty();
         soldier.fallBackTo = fallBack.orElse(null);
-        boolean pushing = team != null && team.holding && withTeam && route != null
+        boolean pushing = team != null && team.holding && withTeam && route != null && tick >= soldier.pushBlockedUntil
                 && (team.threat != null || !game.posts().safe(soldier.objective, soldier.faction));
         boolean exposed = advancing || pushing || team != null && team.assaulting;
         var protectedPosition = threat.filter(enemy -> fallBack.isEmpty() && (!exposed || wounded || soldier.heat.venting(tick)))
@@ -995,7 +1016,12 @@ public final class Bots implements Listener {
         long still = soldier.stillness.update(here.toVector(), tick);
         double sight = config.range() * sightShare;
         // A press that left the bot where it stood found no way through, so it gives up until the bot moves again.
-        boolean pressing = tick < soldier.pressUntil || still >= settings.standTicks() && still < settings.standTicks() + PRESS_TICKS;
+        if (still < settings.standTicks()) {
+            soldier.pressSpent = false;
+        } else if (soldier.pressUntil > 0 && tick >= soldier.pressUntil) {
+            soldier.pressSpent = true;
+        }
+        boolean pressing = tick < soldier.pressUntil || still >= settings.standTicks() && !soldier.pressSpent;
         var known = wounded || STANDING_ALLOWED.contains(activity) || !pressing
                 ? Optional.<Location>empty()
                 : threat.filter(at -> at.getWorld().equals(here.getWorld()) && at.distanceSquared(here) <= sight * sight);
@@ -1040,6 +1066,9 @@ public final class Bots implements Listener {
         if (soldier.stuckTicks >= 100 && (activity.equals("assault") || activity.equals("strafe-in-post")
                 || activity.equals("to-medic") || activity.equals("push") || activity.equals("lookout")
                 || activity.equals("press"))) {
+            if (activity.equals("push")) {
+                soldier.pushBlockedUntil = tick + PUSH_RETRY_TICKS;
+            }
             soldier.stuckTicks = 0;
             soldier.progress = here.clone();
         }
