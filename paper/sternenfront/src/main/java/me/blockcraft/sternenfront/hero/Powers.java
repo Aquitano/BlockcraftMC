@@ -247,6 +247,11 @@ public final class Powers {
         return true;
     }
 
+    /** Whether the hero holds a Force power with the off hand: a lightning channel or a grip. */
+    public boolean casting(Player player) {
+        return lightning.casting(player) || grips.stream().anyMatch(grip -> grip.gripper().equals(player));
+    }
+
     public void tick(long tick) {
         rockets.tick();
         lightning.tick(tick);

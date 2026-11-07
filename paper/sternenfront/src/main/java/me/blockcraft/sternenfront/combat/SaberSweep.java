@@ -19,6 +19,7 @@ final class SaberSweep {
     private final Set<UUID> hit = new HashSet<>();
     private final long started;
     private final int ticks;
+    private final boolean reverse;
     private int emitted;
 
     SaberSweep(Location origin, Color colour, double damage, double range, double angle, int ticks, long started, boolean reverse) {
@@ -27,6 +28,7 @@ final class SaberSweep {
         this.damage = damage;
         this.ticks = ticks;
         this.started = started;
+        this.reverse = reverse;
         double yaw = Math.toRadians(origin.getYaw());
         rays = CombatArc.rays(origin.getDirection(), new Vector(Math.cos(yaw), 0, Math.sin(yaw)), range, angle, reverse);
     }
@@ -52,6 +54,11 @@ final class SaberSweep {
         var frame = rays.subList(emitted, Math.max(emitted, end));
         emitted = Math.max(emitted, end);
         return frame;
+    }
+
+    /** Where the sweep is for the body: it starts on the hero's right unless reversed. */
+    Stance.Swing stance(long tick) {
+        return new Stance.Swing(reverse, (int) Math.clamp(tick - started, 0, ticks), ticks);
     }
 
     boolean contact(UUID target) {

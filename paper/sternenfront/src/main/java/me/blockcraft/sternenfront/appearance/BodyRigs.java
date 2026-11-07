@@ -127,7 +127,8 @@ public final class BodyRigs implements Listener, AutoCloseable {
                         () -> game.bots().aim(actor).orElseGet(() -> actor.getEyeLocation().getDirection()), turnDegrees,
                         hero.isPresent() ? Optional.empty() : Optional.of(motions.get(unit
                                 .map(chosen -> chosen == Reinforcement.ARC_TROOPER ? CombatClass.HEAVY : CombatClass.SCOUT)
-                                .orElseGet(() -> game.combatClassOf(actor)))));
+                                .orElseGet(() -> game.combatClassOf(actor)))),
+                        actor instanceof Player player ? () -> game.combat().stance(player) : Optional::empty);
                 targets.put(created.targetId(), created);
                 return created;
             });

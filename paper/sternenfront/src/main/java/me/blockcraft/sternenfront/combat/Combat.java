@@ -149,6 +149,19 @@ public final class Combat {
         }
     }
 
+    /** Empty for anyone but a bladed hero on the field; a swing shows over a guard, and a guard over a cast. */
+    public Optional<Stance> stance(Player player) {
+        if (!game.onField(player) || player.isInsideVehicle() || game.heroOf(player).filter(Hero::bladed).isEmpty()) {
+            return Optional.empty();
+        }
+        var state = state(player);
+        if (state.sweep != null) {
+            return Optional.of(state.sweep.stance(game.tick()));
+        }
+        return Optional.of(state.guarding ? Stance.Still.GUARD
+                : game.heroes().powers().casting(player) ? Stance.Still.CAST : Stance.Still.READY);
+    }
+
     public Guard.Result block(Player player, Vector incoming, double damage) {
         return block(player, incoming, damage, SoundCue.SABER_DEFLECT);
     }

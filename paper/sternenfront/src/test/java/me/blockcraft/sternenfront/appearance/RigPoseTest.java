@@ -35,4 +35,12 @@ public class RigPoseTest {
             }
         }
     }
+
+    @Test
+    public void aNegativeRollLeansThePartsTopTowardTheBodysLeft() {
+        var pose = RigPose.at(0, 0, 0, 0, 0, 0, 0, -0.8f, 1);
+        var top = pose.getRightRotation().transform(new Vector3f(0, 1, 0));
+        pose.getLeftRotation().transform(top);
+        assertEquals(Math.sin(0.8), top.x, 0.00001);
+    }
 }

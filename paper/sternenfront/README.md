@@ -202,6 +202,10 @@ cancels the remaining sweep. The relic blade uses the same attack.
 A saber's hum, ignition, retraction and swings and the raised guard play on the hero, so they follow them as they move.
 A viewer who sees the hero's body rig hears them on its torso, because a client drops a sound on an entity it does not
 draw. The thrown saber whirls every five ticks as it flies.
+Other fighters see a bladed hero's body rig hold the blade tipped forward, bring both hands in with the blade across the
+chest while guarding, wind up on the side a swing starts from and follow through over the sweep, and thrust the off hand
+forward while a lightning channel or grip lasts. Display interpolation eases each change over a few ticks. In first person
+the guard rolls the blade across the view through the item's `using_item` model.
 
 ## What keeps a player going
 

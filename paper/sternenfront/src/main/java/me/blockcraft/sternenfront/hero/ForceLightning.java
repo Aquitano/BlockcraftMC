@@ -105,6 +105,10 @@ final class ForceLightning {
                 Math.clamp(eye.getZ(), target.getMinZ(), target.getMaxZ()));
     }
 
+    boolean casting(Player player) {
+        return casts.containsKey(player.getUniqueId());
+    }
+
     void forget(Player player) {
         casts.remove(player.getUniqueId());
     }
