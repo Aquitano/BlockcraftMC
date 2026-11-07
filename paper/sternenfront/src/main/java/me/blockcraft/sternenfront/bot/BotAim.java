@@ -16,6 +16,22 @@ public final class BotAim {
         return since >= ticks ? 1 : start - (start - 1) * since / ticks;
     }
 
+    /**
+     * How far beside {@code aim} a bot's shot goes {@code since} ticks after it picked its target: {@code error} per block
+     * at first, toward {@code angle} round the aim, closing to nothing over {@code ticks}.
+     */
+    static Vector misaim(Vector aim, double angle, double error, long since, int ticks) {
+        double left = ticks <= 0 ? 0 : Math.max(0, 1 - (double) since / ticks);
+        var forward = aim.clone().normalize();
+        var side = forward.clone().crossProduct(new Vector(0, 1, 0));
+        if (side.lengthSquared() < 1.0E-6) {
+            side = new Vector(1, 0, 0);
+        }
+        side.normalize();
+        var up = side.clone().crossProduct(forward);
+        return side.multiply(Math.cos(angle)).add(up.multiply(Math.sin(angle))).multiply(error * left);
+    }
+
     /** Whether {@code aim} lies within {@code degrees} either side of where a body with {@code bodyYaw} faces. */
     static boolean covers(float bodyYaw, Vector aim, double degrees) {
         if (aim.getX() * aim.getX() + aim.getZ() * aim.getZ() < 1.0E-4) {

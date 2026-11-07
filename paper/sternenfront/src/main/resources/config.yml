@@ -17,7 +17,8 @@ bots:
   fill-per-team: 6
   difficulty: normal
   # A bot's aim scatters aim-settle-spread times aim-spread on a fresh target and settles over aim-settle-ticks. Like a
-  # player's, it opens up by combat.handling's moving and hot while the bot walks and its blaster heats.
+  # player's, it opens up by combat.handling's moving and hot while the bot walks and its blaster heats. On top of that
+  # its first shots go to one side, as far off as that fresh scatter, and close in over the same aim-settle-ticks.
   profiles:
     easy: {reaction-ticks: 18, shot-ticks: 12, aim-spread: 0.13, burst-shots: 3, burst-pause-ticks: 30, tracking-degrees: 12, damage-scale: 0.6, headshots: false, aim-settle-ticks: 40, aim-settle-spread: 3}
     normal: {reaction-ticks: 12, shot-ticks: 8, aim-spread: 0.07, burst-shots: 5, burst-pause-ticks: 12, tracking-degrees: 45, damage-scale: 0.7, headshots: false, aim-settle-ticks: 30, aim-settle-spread: 2.5}

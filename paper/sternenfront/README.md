@@ -88,8 +88,9 @@ spotted. A press that leaves the bot where it stood gives up until it moves agai
 When a member falls, its teammates take the killer's position as contact for
 `alarm-ticks`; a bot with nothing in sight turns toward enemy fire within `hearing-range`. Soldiers and heavies throw their
 explosives at enemies dug into a post or hidden behind cover, and a heavy holding open ground under fire raises its shield
-wall. A bot's aim scatters on a fresh target and settles over `aim-settle-ticks`. It opens up while the bot walks and as
-its blaster heats, by the same `combat.handling` rule as a player's, and each member watches its own sector.
+wall. A bot's aim scatters on a fresh target and settles over `aim-settle-ticks`, and its first shots go to one side
+of the target, closing in over the same ticks. It opens up while the bot walks and as its blaster heats, by the same
+`combat.handling` rule as a player's. Each member watches its own sector.
 
 ## Arena template
 

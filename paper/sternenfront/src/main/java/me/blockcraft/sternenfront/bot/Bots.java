@@ -128,6 +128,7 @@ public final class Bots implements Listener {
         private final BotNavigation navigation = new BotNavigation();
         private Vector idleAim;
         private boolean moving;
+        private double misaimAngle;
         private final BotPatients patients = new BotPatients();
         private String activity = "deploy";
         private String navigationResult = "not-requested";
@@ -1271,13 +1272,18 @@ public final class Bots implements Listener {
             var blaster = soldier.role.blaster(soldier.faction);
             var aim = soldier.aim.clone();
             var random = ThreadLocalRandom.current();
-            double spread = handling.spread(Math.max(tuning.spread(), game.config().stats(blaster).spread()),
-                    BotAim.moving(false, soldier.body.getVelocity()), false, soldier.heat.level())
+            double settled = Math.max(tuning.spread(), game.config().stats(blaster).spread());
+            double spread = handling.spread(settled, BotAim.moving(false, soldier.body.getVelocity()), false, soldier.heat.level())
                     * (sighted ? BotAim.settle(tick - soldier.acquiredAt, tuning.settleTicks(), tuning.settleSpread()) : SUPPRESSING_SPREAD);
+            if (sighted) {
+                aim.add(BotAim.misaim(soldier.aim, soldier.misaimAngle, settled * tuning.settleSpread(),
+                        tick - soldier.acquiredAt, tuning.settleTicks()));
+            }
             if (spread > 0) {
                 aim.add(new Vector(random.nextDouble(-spread, spread), random.nextDouble(-spread, spread),
-                        random.nextDouble(-spread, spread))).normalize();
+                        random.nextDouble(-spread, spread)));
             }
+            aim.normalize();
             game.fireBot(soldier.body, soldier.faction, blaster, aim, tuning.damageScale(), tuning.headshots());
             soldier.body.swingMainHand();
         }
@@ -1310,6 +1316,7 @@ public final class Bots implements Listener {
         soldier.target = target;
         soldier.reactAt = tick + tuning.reactionTicks() + ThreadLocalRandom.current().nextInt(tuning.reactionTicks() + 1);
         soldier.acquiredAt = tick;
+        soldier.misaimAngle = ThreadLocalRandom.current().nextDouble(2 * Math.PI);
     }
 
     private Optional<LivingEntity> patient(Soldier soldier, long tick, boolean checkPath) {

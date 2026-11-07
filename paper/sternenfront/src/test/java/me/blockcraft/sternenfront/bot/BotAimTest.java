@@ -26,6 +26,18 @@ public class BotAimTest {
     }
 
     @Test
+    public void firstShotsMissToOneSideUntilTheAimSettles() {
+        var aim = new Vector(0, 0, 1);
+        var first = BotAim.misaim(aim, 0, 0.15, 0, 30);
+        assertEquals(0.15, first.length(), 1e-9);
+        assertEquals(0, first.dot(aim), 1e-9);
+        assertEquals(0.075, BotAim.misaim(aim, 0, 0.15, 15, 30).length(), 1e-9);
+        assertEquals(-1, first.clone().normalize().dot(BotAim.misaim(aim, Math.PI, 0.15, 0, 30).normalize()), 1e-9);
+        assertEquals(0, BotAim.misaim(aim, 0, 0.15, 30, 30).length(), 1e-9);
+        assertEquals(0, BotAim.misaim(new Vector(0, 1, 0), 1, 0.15, 0, 0).length(), 1e-9);
+    }
+
+    @Test
     public void turnsGraduallyEvenWhenTheEnemyMovesDirectlyBehind() {
         var start = new Vector(0, 0, 1);
         var turned = BotAim.turn(start, new Vector(0, 0, -1), 12);
