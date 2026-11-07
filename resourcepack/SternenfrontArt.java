@@ -911,7 +911,7 @@ public final class SternenfrontArt {
         LONG_RIFLE(0, -2, 0, .2, 1.4, -1.8, .52, 2, .05, 1.3),
         PISTOL(-4, -6, -5, 1.5, 1.8, .3, .65, 13, .55, .7),
         TWIN_PISTOL(-3, -8, -12, 2.5, 1.35, .1, .62, 10, .4, .65),
-        ROTARY(3, -7, 3, -.4, -.7, -1.2, .66, 1, -.1, .35),
+        ROTARY(3, -7, 3, -.4, -.7, -1.2, .66, 5, .3, 1),
         WRIST(0, -3, 0, .8, .2, -.3, .7, 1.5, .05, .3);
 
         private final double pitch, yaw, roll, x, y, z, scale, kick, rise, back;

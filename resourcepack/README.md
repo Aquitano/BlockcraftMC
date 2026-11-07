@@ -57,7 +57,8 @@ transforms. Running `BattleArt.py` directly requires a fresh Java generation fir
 texture paths, both hands, firing inheritance, family framing, recoil differences and wrist bounds.
 
 Pistols rise sharply when firing. Twin pistols sit farther outward with an inward cant. Carbines have a compact shoulder
-pose; long rifles sit farther forward. The Z-6 sits lower with a larger scale and a small firing displacement.
+pose; long rifles sit farther forward. The Z-6 sits lower with a larger scale. When firing it tilts up 5 degrees
+and moves 0.3 up and 1.0 back.
 The B2 wrist blaster includes a metal forearm, rear cuff and fist below its paired barrels. This is ordinary held-item
 geometry and remains visible in inventory and third-person views. It does not replace a player's arm or body.
 Twin-pistol models still represent one gun per equipped hand; the pose does not create a second hand or alternate shots.
