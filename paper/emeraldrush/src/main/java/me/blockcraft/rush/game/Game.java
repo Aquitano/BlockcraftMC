@@ -81,6 +81,7 @@ public final class Game implements RoundConnections.Seating {
     private final Map<UUID, Integer> emeralds = new HashMap<>();
     private final Map<UUID, Integer> lives = new HashMap<>();
     private final Map<UUID, Loadout> loadouts = new HashMap<>();
+    private final Set<UUID> awaitingLoadout = new HashSet<>();
     private final SpawnProtection spawnProtection = new SpawnProtection();
     private final Set<UUID> spentEmeralds = new HashSet<>();
     private final Set<UUID> purchased = new HashSet<>();
@@ -216,6 +217,7 @@ public final class Game implements RoundConnections.Seating {
         emeralds.remove(id);
         lives.remove(id);
         loadouts.remove(id);
+        awaitingLoadout.remove(id);
         checkWinner(true);
         scoreboard.refreshAll();
     }
@@ -338,7 +340,9 @@ public final class Game implements RoundConnections.Seating {
         if (phase != GamePhase.DEATHMATCH || !isAlive(victim)) {
             return;
         }
-        saveLoadout(victim);
+        if (!awaitingLoadout.contains(victim.getUniqueId())) {
+            saveLoadout(victim);
+        }
         var death = summary.resolveDeath(event);
         Bukkit.broadcast(death.line());
         int remaining = Math.max(0, lives(victim) - 1);
@@ -372,7 +376,9 @@ public final class Game implements RoundConnections.Seating {
         if (phase == GamePhase.ENDING) {
             return;
         }
+        awaitingLoadout.add(player.getUniqueId());
         Tasks.sync(plugin, () -> {
+            awaitingLoadout.remove(player.getUniqueId());
             config.combat().apply(player);
             player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, RESPAWN_BOOST_TICKS, 1));
             spawnProtection.protect(player, Tick.of(RESPAWN_BOOST_TICKS));
