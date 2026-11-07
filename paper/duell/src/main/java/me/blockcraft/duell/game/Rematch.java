@@ -56,6 +56,10 @@ final class Rematch {
             return Answer.ASKED;
         }
 
+        boolean awaiting(Instant now) {
+            return !settled && asked.keySet().stream().anyMatch(player -> pending(player, now));
+        }
+
         private boolean pending(UUID player, Instant now) {
             var at = asked.get(player);
             return at != null && !now.isAfter(at.plus(window));
@@ -87,6 +91,10 @@ final class Rematch {
 
     String identity() {
         return identity;
+    }
+
+    boolean awaiting() {
+        return requests.awaiting(Instant.now());
     }
 
     void request(Player player, String itemIdentity) {

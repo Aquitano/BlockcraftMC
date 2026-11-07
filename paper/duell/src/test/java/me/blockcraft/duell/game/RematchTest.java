@@ -7,6 +7,8 @@ import java.time.Instant;
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class RematchTest {
 
@@ -30,6 +32,8 @@ public class RematchTest {
 
         requests.ask(KEVOS, LISA, END);
 
+        assertTrue(requests.awaiting(END.plusSeconds(15)));
+        assertFalse(requests.awaiting(END.plusSeconds(16)));
         assertEquals(Rematch.Answer.ASKED, requests.ask(LISA, KEVOS, END.plusSeconds(16)));
         assertEquals(Rematch.Answer.AGREED, requests.ask(KEVOS, LISA, END.plusSeconds(20)));
     }

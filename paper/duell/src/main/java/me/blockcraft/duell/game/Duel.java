@@ -747,6 +747,7 @@ public final class Duel {
             if (players.size() == MAX_PARTICIPANTS) {
                 offered.offer(players.getFirst(), players.getLast());
                 offered.offer(players.getLast(), players.getFirst());
+                closeRematchLater(completed, offered);
             } else {
                 Tasks.sync(plugin, () -> {
                     if (!stopped && series == completed && round.phase() == GamePhase.ENDING) { reopen(false); }
@@ -755,6 +756,19 @@ public final class Duel {
             players.forEach(this::prepareEnding);
             refreshScoreboards();
         }
+    }
+
+    private void closeRematchLater(DuelSeries completed, Rematch offered) {
+        Tasks.later(plugin, config.rematchWindow().toSeconds() * 20L, () -> {
+            if (stopped || series != completed || rematch != offered || round.phase() != GamePhase.ENDING) {
+                return;
+            }
+            if (offered.awaiting()) {
+                closeRematchLater(completed, offered);
+            } else {
+                reopen(false);
+            }
+        });
     }
 
     private boolean validRematch(DuelSeries completed, Player player, Player opponent) {
