@@ -530,14 +530,15 @@ public final class BattleEffects {
         return spot;
     }
 
-    /** The blasters in {@code actor}'s hands, in the pose of their last shot and glowing with their heat. */
+    /** The blasters in {@code actor}'s hands, in the pose of their last shot or sprint and glowing with their heat. */
     private void showBlasters(LivingEntity actor, long tick) {
         var equipment = actor.getEquipment();
         if (equipment == null) {
             return;
         }
         var shot = shots.get(actor.getUniqueId());
-        var pose = shot != null && tick - shot.tick() < FIRING_TICKS ? Blaster.Pose.FIRING : Blaster.Pose.READY;
+        var pose = shot != null && tick - shot.tick() < FIRING_TICKS ? Blaster.Pose.FIRING
+                : actor instanceof Player player && game.lowered(player) ? Blaster.Pose.LOWERED : Blaster.Pose.READY;
         var heat = actor instanceof Player player
                 ? HeatGlow.of(glow, game.fighter(player).heat().level(), game.fighter(player).heat().venting(tick), tick)
                 : HeatGlow.of(glow, game.bots().heat(actor), game.bots().venting(actor, tick), tick);

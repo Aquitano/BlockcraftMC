@@ -195,7 +195,7 @@ public final class CombatFeedback {
         headshotVolume = (float) Math.clamp(config.getDouble("combat-feedback.sound.headshot", 0.8), 0, 1);
         killVolume = (float) Math.clamp(config.getDouble("combat-feedback.sound.kill", 1.0), 0, 1);
         multikillTicks = Math.clamp(config.getInt("combat-feedback.multikill-seconds", 4), 1, 30) * 20;
-        handling = WeaponHandling.from(config.getConfigurationSection("combat.handling"));
+        handling = game.handling();
         spreadCrosshair = new SpreadCrosshair(config.getDoubleList("combat-feedback.spread-steps"));
     }
 
@@ -328,7 +328,7 @@ public final class CombatFeedback {
         var fighter = game.fighter(player);
         return game.factionOf(player).flatMap(fighter::blaster).flatMap(blaster -> {
             double base = game.config().stats(blaster).spread();
-            return spreadCrosshair.size(base, handling.spread(base, player, fighter.heat().level()));
+            return spreadCrosshair.size(base, handling.spread(blaster, base, WeaponHandling.Stance.of(player), fighter.heat().level()));
         });
     }
 

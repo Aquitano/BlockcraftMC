@@ -75,7 +75,7 @@ public final class Bolts {
 
     public Bolts(SternenfrontGame game) {
         this.game = game;
-        handling = WeaponHandling.from(game.plugin().getConfig().getConfigurationSection("combat.handling"));
+        handling = game.handling();
         lag = new LagCompensation(LagCompensation.Settings.from(game.plugin().getConfig().getConfigurationSection("combat.lag-compensation")));
     }
 
@@ -83,7 +83,7 @@ public final class Bolts {
     public void fire(Player shooter, Faction faction, Blaster blaster, Blaster.Stats stats) {
         var eye = shooter.getEyeLocation();
         var direction = eye.getDirection();
-        double spread = handling.spread(stats.spread(), shooter, game.fighter(shooter).heat().level());
+        double spread = handling.spread(blaster, stats.spread(), WeaponHandling.Stance.of(shooter), game.fighter(shooter).heat().level());
         if (spread > 0) {
             var random = ThreadLocalRandom.current();
             direction.add(new Vector(random.nextDouble(-spread, spread), random.nextDouble(-spread, spread),

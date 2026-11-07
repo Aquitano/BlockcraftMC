@@ -16,17 +16,16 @@ public class SpreadCrosshairTest {
     private static final WeaponHandling HANDLING = WeaponHandling.from(CONFIG.getConfigurationSection("combat.handling"));
     private static final SpreadCrosshair CROSSHAIR = new SpreadCrosshair(CONFIG.getDoubleList("combat-feedback.spread-steps"));
 
-    private record Stance(String name, boolean moving, boolean crouched, double heat, int size) { }
+    private record Stance(String name, WeaponHandling.Stance stance, double heat, int size) { }
 
+    private static final WeaponHandling.Stance STILL = new WeaponHandling.Stance(false, false, false);
+    private static final WeaponHandling.Stance CROUCHED = new WeaponHandling.Stance(false, true, false);
     private static final Stance[] STANCES = {
-            new Stance("still and cold", false, false, 0, 0),
-            new Stance("crouched", false, true, 0, 0),
-            new Stance("crouched and hot", false, true, 1, 0),
-            new Stance("still and warm", false, false, 0.4, 1),
-            new Stance("walking and cold", true, false, 0, 2),
-            new Stance("still and hot", false, false, 1, 2),
-            new Stance("walking and warm", true, false, 0.5, 3),
-            new Stance("walking and hot", true, false, 1, 4),
+            new Stance("still and cold", STILL, 0, 0),
+            new Stance("crouched", CROUCHED, 0, 0),
+            new Stance("crouched and hot", CROUCHED, 1, 0),
+            new Stance("walking and hot", new WeaponHandling.Stance(true, false, false), 1, SpreadCrosshair.SIZES - 1),
+            new Stance("jumping and hot", new WeaponHandling.Stance(false, false, true), 1, SpreadCrosshair.SIZES - 1),
     };
 
     @Test
@@ -38,7 +37,7 @@ public class SpreadCrosshairTest {
             }
             double base = config.stats(blaster).spread();
             for (var stance : STANCES) {
-                var size = CROSSHAIR.size(base, HANDLING.spread(base, stance.moving(), stance.crouched(), stance.heat()));
+                var size = CROSSHAIR.size(base, HANDLING.spread(blaster, base, stance.stance(), stance.heat()));
                 assertEquals(blaster + " " + stance.name(), blaster.precision() ? Optional.empty() : Optional.of(stance.size()), size);
             }
         }

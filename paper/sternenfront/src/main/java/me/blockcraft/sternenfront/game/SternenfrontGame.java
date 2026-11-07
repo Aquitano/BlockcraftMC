@@ -133,6 +133,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     private final LobbyEntrance entrance;
     private final GameSidebar sidebar;
     private final Posts posts;
+    private final WeaponHandling handling;
     private final Bolts bolts;
     private final BattleEffects effects;
     private final Spectacle spectacle;
@@ -206,6 +207,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
                 () -> Optional.of(phase() == GamePhase.INGAME ? map.spectatorSpawn() : lobby),
                 OptionalInt.of(config.fullSeconds()), player -> { });
         this.posts = new Posts(messages, map.posts(), config.captureSeconds());
+        this.handling = WeaponHandling.from(plugin.getConfig().getConfigurationSection("combat.handling"));
         this.bolts = new Bolts(this);
         this.effects = new BattleEffects(this);
         this.spectacle = new Spectacle(this);
@@ -830,6 +832,9 @@ public final class SternenfrontGame implements RoundConnections.Seating {
                 continue;
             }
             if (fighter.onField()) {
+                if (player.isSprinting()) {
+                    fighter.sprinted(tick);
+                }
                 fighter.heat().cool(tick);
                 player.setExp(fighter.heat().level());
                 scope(player, fighter);
@@ -1025,6 +1030,9 @@ public final class SternenfrontGame implements RoundConnections.Seating {
             return;
         }
         var blaster = held.get();
+        if (lowered(player)) {
+            return;
+        }
         var stats = firing(player, blaster);
         if (!heatAllows(player, fighter, stats)) {
             return;
@@ -1036,6 +1044,17 @@ public final class SternenfrontGame implements RoundConnections.Seating {
             bursts.add(new Burst(player, blaster, tick + (long) bolt * stats.burstTicks()));
         }
         player.setExp(fighter.heat().level());
+    }
+
+    /** Whether {@code player}'s gun is down from a sprint, which it holds until its blaster's recovery has passed. */
+    public boolean lowered(Player player) {
+        var fighter = fighters.get(player.getUniqueId());
+        return fighter != null && (player.isSprinting() || factionOf(player).flatMap(fighter::blaster)
+                .filter(blaster -> handling.lowered(blaster, fighter.sprintedAt(), tick)).isPresent());
+    }
+
+    public WeaponHandling handling() {
+        return handling;
     }
 
     /** The blaster as it fires in {@code shooter}'s hands now, which siege mode changes. */

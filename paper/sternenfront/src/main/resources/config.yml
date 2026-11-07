@@ -129,9 +129,24 @@ combat:
     parry-ticks: 5
     cost-per-damage: 2
   melee: {range: 3.5, angle: 120, swing-ticks: 12, sweep-ticks: 4}
-  # Spread multiplies while moving and crouched, and grows by hot times the barrel's heat. Damage holds to falloff-from
-  # of a weapon's range, then thins to falloff-minimum of itself at the end of it.
-  handling: {moving: 1.4, crouched: 0.6, hot: 0.5, falloff-from: 0.5, falloff-minimum: 0.6}
+  # Spread multiplies while moving, crouched and off the ground, and grows by hot times the barrel's heat. A sprint lowers
+  # the gun, which cannot fire until sprint-recovery-ticks after the sprint ends. Damage holds to falloff-from of a
+  # weapon's range, then thins to falloff-minimum of itself at the end of it. blasters overrides the factors per blaster;
+  # a Separatist blaster or hero gun without its own takes its Republic profile's.
+  handling:
+    moving: 1.4
+    crouched: 0.6
+    airborne: 1.8
+    hot: 0.5
+    sprint-recovery-ticks: 5
+    falloff-from: 0.5
+    falloff-minimum: 0.6
+    blasters:
+      pistol: {moving: 1.25, sprint-recovery-ticks: 3}
+      twin-pistol: {moving: 1.25, sprint-recovery-ticks: 3}
+      heavy-rifle: {sprint-recovery-ticks: 6}
+      long-rifle: {sprint-recovery-ticks: 8}
+      repeater: {moving: 1.7, crouched: 0.5, airborne: 2.2, sprint-recovery-ticks: 10}
   # A player's bolts and long-rifle shots meet enemies where that player's screen showed them: their ping plus
   # interpolation-ms, the client's smoothing of other fighters, in the past, but never more than max-ms. A high-ping shooter
   # can then hit an enemy who has just stepped behind cover on their own screen; max-ms bounds how far behind that can be.
@@ -442,7 +457,7 @@ combat-feedback:
   sound: {hit: 1.0, headshot: 1.0, kill: 1.0}
   # Ticks around the crosshair open one of four steps each time the held blaster's spread passes one of these multiples
   # of its own base spread. Standing still and cold is 1 and crouching 0.6, so both show the tightest step;
-  # combat.handling sets how far walking and heat open it.
+  # combat.handling sets how far walking, jumping and heat open it.
   spread-steps: [1.0, 1.25, 1.55, 1.85]
 
 intro:

@@ -182,6 +182,9 @@ on the existing order bar for `respawn.ability-hint-seconds`, and the deploy cha
 Death or disconnect restarts an unfinished hint sequence on the next deployment. Completed hints stay hidden until the abilities change.
 `ObjectiveHud` shows reinforcements, a tile per post and the time left in a boss bar's text line, and the pack draws that colour and overlay of bar as nothing. The screen's
 edges redden with a hit and while health is low. `combat.handling` tunes spread and damage falloff.
+Spread opens on the move and more in the air, and `combat.handling.blasters` sets those factors per blaster, so pistols
+stay steadier walking and the repeater wants a crouch. A sprint shows the lowered pose of the held blaster, which cannot
+fire until its `sprint-recovery-ticks` after the sprint ends. The crosshair ticks use the same factors as the shot.
 A title's subtitle stays readable under the marks, which `UiFont.centredOn` keeps on the crosshair however long the line is. The sidebar stays hidden during a fight.
 
 The heat meter turns red and shows `HEISS` at `heat.warning-level`, or when the next shot would overheat the weapon.

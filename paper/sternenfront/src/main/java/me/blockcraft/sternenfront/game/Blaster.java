@@ -38,8 +38,8 @@ public enum Blaster implements HotbarItem {
                         double spread, double speed, double range) {
     }
 
-    /** How a held blaster is drawn: ready, or kicked back by a shot. */
-    public enum Pose { READY, FIRING }
+    /** How a held blaster is drawn: ready, kicked back by a shot, or lowered in a sprint. */
+    public enum Pose { READY, FIRING, LOWERED }
 
     private final PackModel model;
 
@@ -78,6 +78,7 @@ public enum Blaster implements HotbarItem {
         return switch (pose) {
             case READY -> model;
             case FIRING -> firingModel();
+            case LOWERED -> loweredModel();
         };
     }
 
@@ -90,6 +91,22 @@ public enum Blaster implements HotbarItem {
         }
         item.setData(DataComponentTypes.CUSTOM_MODEL_DATA, CustomModelData.customModelData().addString(key).addColor(glow.colour()).build());
         return true;
+    }
+
+    private PackModel loweredModel() {
+        return switch (this) {
+            case CARBINE -> PackModel.STERNENFRONT_CARBINE_LOWERED;
+            case REPEATER, ARC_REPEATER -> PackModel.STERNENFRONT_REPEATER_LOWERED;
+            case LONG_RIFLE -> PackModel.STERNENFRONT_LONG_RIFLE_LOWERED;
+            case PISTOL -> PackModel.STERNENFRONT_PISTOL_LOWERED;
+            case TWIN_PISTOL -> PackModel.STERNENFRONT_TWIN_PISTOL_LOWERED;
+            case HEAVY_RIFLE, SPEEDER_CANNON -> PackModel.STERNENFRONT_HEAVY_RIFLE_LOWERED;
+            case E5, COMMANDO_CARBINE -> PackModel.STERNENFRONT_E5_LOWERED;
+            case WRIST_BLASTER -> PackModel.STERNENFRONT_WRIST_BLASTER_LOWERED;
+            case E5S -> PackModel.STERNENFRONT_E5S_LOWERED;
+            case SE14 -> PackModel.STERNENFRONT_SE14_LOWERED;
+            case WESTAR_PISTOLS -> PackModel.STERNENFRONT_WESTAR_PISTOLS_LOWERED;
+        };
     }
 
     private PackModel firingModel() {

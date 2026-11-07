@@ -13,6 +13,8 @@ import java.util.Optional;
  */
 public final class Fighter {
 
+    private static final long LONG_AGO = Long.MIN_VALUE / 2;
+
     /**
      * A dead player choosing: from {@code readyTick} on they may deploy, at {@code autoTick} they do. A hero or
      * reinforcement is bought only after explicit confirmation and revalidation at deployment.
@@ -65,6 +67,7 @@ public final class Fighter {
     private long protectedUntil;
     private long lastHurt;
     private long fallSafeUntil;
+    private long sprintedAt = LONG_AGO;
     private Optional<Hero> hero = Optional.empty();
     private Optional<Reinforcement> reinforcement = Optional.empty();
 
@@ -101,8 +104,17 @@ public final class Fighter {
         this.choosing = Optional.empty();
         this.heat = new Heat(heatRules);
         this.protectedUntil = protectedUntil;
+        this.sprintedAt = LONG_AGO;
         this.hero = hero;
         this.reinforcement = Optional.empty();
+    }
+
+    public void sprinted(long tick) {
+        sprintedAt = tick;
+    }
+
+    public long sprintedAt() {
+        return sprintedAt;
     }
 
     public boolean isProtected(long tick) {
