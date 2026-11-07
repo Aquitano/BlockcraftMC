@@ -3,6 +3,7 @@ package me.blockcraft.sternenfront.bot;
 import me.blockcraft.sternenfront.game.Faction;
 
 import org.bukkit.Location;
+import org.bukkit.util.Vector;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -34,6 +35,28 @@ final class Fireteam {
         this.id = id;
         this.faction = faction;
         this.members = members;
+    }
+
+    enum Place { IN_COLUMN, AHEAD, STRAGGLING, AWAY }
+
+    /**
+     * Where a member stands against its leader on the way to {@code objective}: a member that has further to go is
+     * behind, however the route bends, and only one in the gap between {@code near} and {@code away} holds the team up.
+     */
+    static Place place(Vector leader, Vector member, Vector objective, double spacing, double near, double away) {
+        double gap = leader.distance(member);
+        double lag = left(member, objective) - left(leader, objective);
+        if (gap >= away) {
+            return Place.AWAY;
+        }
+        if (lag < -spacing) {
+            return Place.AHEAD;
+        }
+        return lag > 0 && gap > near ? Place.STRAGGLING : Place.IN_COLUMN;
+    }
+
+    static double left(Vector at, Vector objective) {
+        return Math.hypot(at.getX() - objective.getX(), at.getZ() - objective.getZ());
     }
 
     int element(int number) {

@@ -53,6 +53,7 @@ public final class Bots implements Listener {
     private static final int ROUTE_TICKS = 20;
     private static final int AVOID_TICKS = 600;
     private static final int REGROUP_TICKS = 100;
+    private static final double REGROUP_PACE = 0.5;
     private static final int SOLO_TICKS = 200;
     private static final int TRAIL_STEPS = 24;
     private static final double TRAIL_STEP = 1.5;
@@ -594,22 +595,27 @@ public final class Bots implements Listener {
             objective(soldier, soldier.guarding < 0 ? team.objective : soldier.guarding, team.route);
         }
         var post = team.objective < 0 ? null : game.map().posts().get(team.objective);
-        team.assaulting = post != null && Math.hypot(at.getX() - post.center().getX(), at.getZ() - post.center().getZ())
-                <= post.radius() + ASSAULT_REACH;
+        team.assaulting = post != null && Fireteam.left(at.toVector(), post.center().toVector()) <= post.radius() + ASSAULT_REACH;
         var settings = config.squad();
         if (squad.stream().noneMatch(soldier -> soldier.number == team.flanker)) {
             team.flanker = -1;
         }
         contact(team, squad.stream().filter(soldier -> soldier.body.getLocation().distance(at) < settings.catchUpDistance()).toList(), tick);
-        boolean behind = !team.assaulting && team.threat == null && squad.stream().filter(soldier -> soldier != leader).map(soldier -> soldier.body.getLocation())
-                .filter(where -> where.getWorld().equals(at.getWorld())).mapToDouble(at::distance)
-                .anyMatch(distance -> distance > settings.regroupDistance() && distance < settings.catchUpDistance());
+        boolean behind = !team.assaulting && team.threat == null && post != null && squad.stream().filter(soldier -> soldier != leader)
+                .anyMatch(soldier -> place(leader, soldier, post) == Fireteam.Place.STRAGGLING);
         if (!behind) {
             team.waitingSince = -1;
         } else if (team.waitingSince < 0) {
             team.waitingSince = tick;
         }
         team.regrouping = behind && tick - team.waitingSince < REGROUP_TICKS;
+    }
+
+    private Fireteam.Place place(Soldier leader, Soldier member, FrontMap.PostSite post) {
+        var settings = config.squad();
+        return Fireteam.place(leader.body.getLocation().toVector(), member.body.getLocation().toVector(), post.center().toVector(),
+                settings.spacing(),
+                settings.regroupDistance(), settings.catchUpDistance());
     }
 
     /** {@code squad} holds only the members near the leader; anyone further is still on the way and fights alone. */
@@ -741,8 +747,9 @@ public final class Bots implements Listener {
         var team = defending ? null : soldier.team;
         var leader = team == null ? Optional.<Soldier>empty() : leader(team);
         var settings = config.squad();
-        boolean withTeam = leader.map(other -> other == soldier || other.body.getLocation().distance(here) < settings.catchUpDistance())
-                .orElse(true);
+        var place = leader.filter(other -> other != soldier && post != null).map(other -> place(other, soldier, post))
+                .orElse(Fireteam.Place.IN_COLUMN);
+        boolean withTeam = place != Fireteam.Place.AWAY;
         boolean following = withTeam && leader.filter(other -> other != soldier).isPresent() && tick >= soldier.soloUntil;
         boolean flanking = team != null && team.flanker == soldier.number;
         boolean underFire = withTeam && team != null && team.threat != null && !team.assaulting;
@@ -814,13 +821,17 @@ public final class Bots implements Listener {
             speed = settings.sprintSpeed();
         } else if (underFire) {
             activity = "overwatch";
+        } else if (place == Fireteam.Place.AHEAD && !flanking) {
+            activity = "hold-for-team";
         } else if (following) {
             activity = "follow";
             var column = members(team).stream().filter(Bots::deployed).filter(other -> other.guarding < 0 && other != leader.get()).toList();
             destination = Fireteam.behind(leader.get().body.getLocation(), team.trail, settings.spacing() * (column.indexOf(soldier) + 1));
-            speed = settings.walkSpeed() * 1.1;
-        } else if (team != null && team.regrouping && leader.filter(soldier::equals).isPresent()) {
+            speed = here.distance(destination) > settings.spacing() * 2 ? settings.sprintSpeed() : settings.walkSpeed();
+        } else if (team != null && team.regrouping && route != null && leader.filter(soldier::equals).isPresent()) {
             activity = "regroup";
+            destination = along(soldier, here, route);
+            speed = settings.walkSpeed() * REGROUP_PACE;
         } else if (route != null && !capturing && soldier.waypoint < route.approach().size()) {
             activity = leader.filter(other -> other != soldier).isPresent() ? "catch-up" : "approach";
             if (activity.equals("catch-up")) {
@@ -844,7 +855,8 @@ public final class Bots implements Listener {
         boolean arrived = usingCover
                 ? BotCover.arrived(here, mob.getEyeLocation(), destination, threat.orElseThrow(), soldier.peeking)
                 : here.distanceSquared(destination) <= 2.25;
-        if (arrived && !seekingPatient) {
+        boolean keepingPace = activity.equals("follow") && BotAim.moving(false, leader.get().body.getVelocity());
+        if (arrived && !seekingPatient && !keepingPace) {
             soldier.navigationResult = "arrived";
             mob.getPathfinder().stopPathfinding();
             soldier.stuckTicks = 0;
