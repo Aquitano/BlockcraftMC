@@ -1,8 +1,8 @@
 """Turns the generated body and blaster models into animated BetterModel files in bettermodel/.
 
 Geometry and textures still come from SternenfrontArt.java, so a body changes in one place: run that first, then this.
-The joints match RigBody. Animations are written here as keyframes: BetterModel plays idle, walk and death by itself, and
-the plugin asks for shoot. The joints, item models and keyframes below face +z with the right side at -x, but BetterModel
+The joints match RigBody. Animations are written here as keyframes: BetterModel plays idle, walk, death and damage by itself,
+and the plugin asks for shoot. The joints, item models and keyframes below face +z with the right side at -x, but BetterModel
 takes a model's north, -z, as the entity's front, so every position and rotation is written turned half round. BetterModel
 turns bones tagged h_ with where the entity looks, and hi_ with their children too, which is how the arms and the gun follow
 a bot's aim.
@@ -168,6 +168,10 @@ def animations(family, grip_degrees):
             "h_left_arm": {"rotation": {0: (across, 22, 0), 0.05: (across - kick, 22, 0), recovery: (across, 22, 0)},
                            "position": {0: (0, 0, 0), 0.05: (0, 0, -back), recovery: (0, 0, 0)}},
             "torso": {"rotation": {0: (0, 0, 0), 0.05: (-kick / 3, 0, 0), recovery: (0, 0, 0)}},
+        }),
+        animation(family, "damage", "once", 0.3, {
+            "root": {"rotation": {0: (0, 0, 0), 0.05: (-6, 0, 2), 0.3: (0, 0, 0)}},
+            "h_head": {"rotation": {0: (0, 0, 0), 0.05: (-10, 0, 0), 0.3: (0, 0, 0)}},
         }),
         animation(family, "death", "once", 0.9, {
             "root": {"rotation": {0: (0, 0, 0), 0.25: (-18, 0, 4), 0.7: (-86, 0, 8), 0.9: (-84, 0, 8)},
