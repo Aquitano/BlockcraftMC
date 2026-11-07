@@ -62,15 +62,16 @@ is `switch-margin` blocks closer. A held post under attack counts `reinforce-pul
 back from the neighbouring post but not across the map. When a team moves on from a post it took, it leaves its heavy,
 else a soldier or scout other than its leader, as the post's guard; it keeps one guard out at most. The guard moves
 between the post's lookouts and rejoins the team when the post falls. Once every post is held, teams hold the one nearest
-the enemy. A team near a player of its faction takes that player's order. A team coming from another post joins the new
-route nearest its inner end rather than walking back to its outer waypoints.
+the enemy. A team at a post its side holds keeps off the capture point, which only a guard holds: it pushes attackers it
+knows of, or enemies standing in the post, and otherwise takes the post's lookouts nearest the enemy, facing them. A team near a player of its faction takes that player's order. A team coming from
+another post joins the new route nearest its inner end rather than walking back to its outer waypoints.
 
 On the move the others walk in the leader's steps, `spacing` blocks apart, each `stagger` blocks to alternate sides where the
 ground allows. A member keeps the leader's pace once in its place and runs only when it falls a few places behind. The
 leader slows for a fit member behind it, and a member ahead waits for the column. Under fire the team bounds
 by pairs along its authored route: one pair runs `bound-distance` blocks while the other covers it from cover and fires at
-where the enemy was last seen. A team held up for `flank-after-ticks` sends one member round by another route. Near the
-post the whole team spreads into it. Bots take cover only while covering, venting or wounded.
+where the enemy was last seen. A team held up for `flank-after-ticks` sends one member round by another route. Near a
+post it is taking the whole team spreads into it. Bots take cover only while covering, venting or wounded.
 
 A bot below 30% health leaves the push until it heals past that: it takes cover, else runs to its fireteam's medic, else
 falls back from the enemy, else stands still. A wounded leader hands the lead to a fit member. Bots regenerate out of

@@ -4,6 +4,8 @@ import me.blockcraft.sternenfront.bot.Fireteam.Place;
 import org.bukkit.util.Vector;
 import org.junit.Test;
 
+import java.util.List;
+
 import static org.junit.Assert.assertEquals;
 
 public class FireteamTest {
@@ -21,6 +23,17 @@ public class FireteamTest {
         assertEquals(Place.STRAGGLING, place(60, 0));
         assertEquals(Place.AHEAD, place(20, 0));
         assertEquals(Place.AWAY, place(5, 0));
+    }
+
+    @Test
+    public void membersHoldingAPostTakeTheLookoutsFacingTheEnemyFirst() {
+        var lookouts = List.of(new Vector(11.5, 65, -42.5), new Vector(-10.5, 65, -42.5), new Vector(8.5, 65, -39.5),
+                new Vector(-7.5, 65, -39.5));
+        var enemy = new Vector(-80, 82, 0);
+        assertEquals(1, Fireteam.lookout(lookouts, enemy, 0));
+        assertEquals(3, Fireteam.lookout(lookouts, enemy, 1));
+        assertEquals(2, Fireteam.lookout(lookouts, enemy, 2));
+        assertEquals(1, Fireteam.lookout(lookouts, enemy, 4));
     }
 
     @Test

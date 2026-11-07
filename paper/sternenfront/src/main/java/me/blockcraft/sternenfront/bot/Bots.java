@@ -482,8 +482,10 @@ public final class Bots implements Listener {
                     if (soldier.moving) {
                         soldier.idleAim = movement.rotateAroundY(Math.toRadians(soldier.glanceYaw / 2));
                     } else if (soldier.objective >= 0) {
-                        var ahead = game.map().posts().get(soldier.objective).center().clone().add(0, 1.3, 0)
-                                .toVector().subtract(mob.getEyeLocation().toVector()).setY(0);
+                        var watched = soldier.activity.equals("lookout")
+                                ? game.map().headquarters().get(soldier.faction.enemy()).zone().getCenter()
+                                : game.map().posts().get(soldier.objective).center().toVector();
+                        var ahead = watched.subtract(mob.getEyeLocation().toVector()).setY(0);
                         if (ahead.lengthSquared() > 0.01) {
                             soldier.idleAim = ahead.rotateAroundY(Math.toRadians(soldier.glanceYaw));
                         }
@@ -650,6 +652,7 @@ public final class Bots implements Listener {
         }
         var post = team.objective < 0 ? null : game.map().posts().get(team.objective);
         team.assaulting = post != null && Fireteam.left(at.toVector(), post.center().toVector()) <= post.radius() + ASSAULT_REACH;
+        team.holding = post != null && game.posts().owner(team.objective).filter(team.faction::equals).isPresent();
         var settings = config.squad();
         if (squad.stream().noneMatch(soldier -> soldier.number == team.flanker)) {
             team.flanker = -1;
@@ -715,7 +718,7 @@ public final class Bots implements Listener {
         } else if (team.contactSince < 0) {
             team.contactSince = tick;
         }
-        if (team.threat == null || team.assaulting || team.objective < 0) {
+        if (team.threat == null || team.assaulting || team.holding || team.objective < 0) {
             team.bounding.reset();
             team.flanker = -1;
             return;
@@ -876,7 +879,9 @@ public final class Bots implements Listener {
                         .or(() -> Optional.ofNullable(soldier.fallBackTo))
                 : Optional.<Location>empty();
         soldier.fallBackTo = fallBack.orElse(null);
-        boolean exposed = advancing || team != null && team.assaulting;
+        boolean pushing = team != null && team.holding && withTeam
+                && (team.threat != null || !game.posts().safe(soldier.objective, soldier.faction));
+        boolean exposed = advancing || pushing || team != null && team.assaulting;
         var protectedPosition = threat.filter(enemy -> fallBack.isEmpty() && (!exposed || wounded || soldier.heat.venting(tick)))
                 .flatMap(enemy -> cover(soldier, enemy, tick));
         if (threat.isEmpty()) {
@@ -926,6 +931,17 @@ public final class Bots implements Listener {
                 soldier.shiftAt = tick + GUARD_SHIFT_TICKS + ThreadLocalRandom.current().nextInt(GUARD_SHIFT_TICKS);
             }
             destination = route.peek();
+        } else if (pushing) {
+            activity = "push";
+            destination = team.threat != null ? team.threat.clone() : route.capture();
+            speed = settings.sprintSpeed();
+        } else if (team != null && team.holding && team.assaulting && post != null) {
+            activity = "lookout";
+            var squad = members(team).stream().filter(Bots::deployed).filter(other -> other.guarding < 0).toList();
+            var lookouts = post.routes().values().stream().flatMap(List::stream).map(FrontMap.Route::peek).toList();
+            var enemy = game.map().headquarters().get(soldier.faction.enemy()).zone().getCenter();
+            destination = lookouts.get(Fireteam.lookout(lookouts.stream().map(Location::toVector).toList(), enemy,
+                    squad.indexOf(soldier)));
         } else if (team != null && team.assaulting && post != null) {
             activity = target.isPresent() ? "strafe-in-post" : "assault";
             var squad = members(team).stream().filter(Bots::deployed).filter(other -> other.guarding < 0).toList();
@@ -995,7 +1011,7 @@ public final class Bots implements Listener {
             soldier.progress = here.clone();
         }
         if (soldier.stuckTicks >= 100 && (activity.equals("assault") || activity.equals("strafe-in-post")
-                || activity.equals("to-medic"))) {
+                || activity.equals("to-medic") || activity.equals("push") || activity.equals("lookout"))) {
             soldier.stuckTicks = 0;
             soldier.progress = here.clone();
         }

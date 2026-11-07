@@ -6,8 +6,10 @@ import org.bukkit.Location;
 import org.bukkit.util.Vector;
 
 import java.util.ArrayDeque;
+import java.util.Comparator;
 import java.util.Deque;
 import java.util.List;
+import java.util.stream.IntStream;
 
 /** What one fireteam goes for together: its members by number, leader first, and the post and route they share. */
 final class Fireteam {
@@ -19,6 +21,8 @@ final class Fireteam {
     int route;
     int leader = -1;
     boolean assaulting;
+    /** Whether its objective is a post its faction already holds, which it defends rather than storms. */
+    boolean holding;
     boolean regrouping;
     long waitingSince = -1;
     /** Where the team last knew an enemy to be while any member still remembers one. */
@@ -66,6 +70,13 @@ final class Fireteam {
      */
     static double followPace(double gap, double spacing, double walk, double sprint) {
         return Math.clamp(walk + (sprint - walk) * (gap - spacing) / (2 * spacing), walk, sprint);
+    }
+
+    /** The lookout for the member of {@code rank}, those nearest the enemy first, so the team faces the attackers. */
+    static int lookout(List<Vector> lookouts, Vector enemy, int rank) {
+        var facing = IntStream.range(0, lookouts.size()).boxed()
+                .sorted(Comparator.comparingDouble(index -> left(lookouts.get(index), enemy))).toList();
+        return facing.get(rank % facing.size());
     }
 
     static double left(Vector at, Vector objective) {
