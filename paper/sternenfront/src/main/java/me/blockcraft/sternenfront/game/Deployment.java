@@ -96,6 +96,11 @@ public final class Deployment {
                 game.tick() + respawn.autoSeconds() * TICKS_PER_SECOND, Optional.empty(), Optional.empty());
     }
 
+    void rejoined(Player player) {
+        game.fighter(player).choosing(Optional.of(newChoosing()));
+        beginChoosing(player);
+    }
+
     /** Dead and watching from above, unseen and unhurt, with the deploy menu open. */
     void beginChoosing(Player player) {
         if (!player.isOnline() || game.phase() != GamePhase.INGAME || !game.isPlaying(player)) {
@@ -410,8 +415,9 @@ public final class Deployment {
         Bukkit.getOnlinePlayers().stream().filter(other -> !other.equals(player)).forEach(other -> other.showPlayer(game.plugin(), player));
     }
 
-    void forgetMenu(Player player) {
+    void forget(Player player) {
         deployMenus.remove(player.getUniqueId());
+        killers.remove(player.getUniqueId());
     }
 
     void interruptHints(Player player) {

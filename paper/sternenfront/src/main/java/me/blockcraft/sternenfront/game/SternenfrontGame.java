@@ -523,7 +523,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
                 round.respawn(player, RESPAWN_TICKS);
             } else {
                 player.teleport(map.overview());
-                deployment.beginChoosing(player);
+                deployment.rejoined(player);
             }
         } else if (bots.enabled() && phase() == GamePhase.INGAME && round.joinRunning(player)) {
             var faction = Arrays.stream(Faction.values()).min(Comparator.comparingInt(teams::size)).orElseThrow();
@@ -548,6 +548,9 @@ public final class SternenfrontGame implements RoundConnections.Seating {
 
     @Override
     public void quit(Player player) {
+        if (onField(player)) {
+            player.setHealth(0);
+        }
         BlockcraftApi.get().visuals().clearAccent(player);
         presentation.cancel(player);
         intro.cancel(player);
@@ -555,7 +558,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         radio.forget(player);
         botDifficultyVotes.withdraw(player.getUniqueId());
         standDown(player);
-        deployment.forgetMenu(player);
+        deployment.forget(player);
         if (round.stepOut(player, this::forfeited)) {
             refreshAll();
             return;
