@@ -158,6 +158,10 @@ bots, including their custom body parts. Outlines are private to the viewer. `ou
 world depth buffer, so walls hide the covered parts while exposed parts stay outlined. Selection uses no server-side
 block rays. Outlines stay disabled until the pack has loaded.
 
+Each shot's sound is pitched up to 6% higher or lower at random. A player's shots carry 32 blocks and a bot's 24. The
+shooter hears their own shot at full volume, and it follows them as they move. A bolt that hits a fighter or a wall
+plays an impact sound.
+
 Hits, headshots, and kills have distinct sounds and immediate marks around the crosshair. A kill replaces a weaker
 marker even within the same tick. A red arc around the crosshair points at whoever last hurt the player, for
 `combat.damage-indicator-ticks`, and follows as they turn. Both share the title's subtitle, centred with `UiFont`.

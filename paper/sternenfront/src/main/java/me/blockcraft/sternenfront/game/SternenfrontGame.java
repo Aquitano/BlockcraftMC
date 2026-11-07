@@ -112,6 +112,8 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     private static final long TICKS_PER_SECOND = 20;
     private static final long RESPAWN_TICKS = 1;
     private static final float SHOT_VOLUME = 2f;
+    private static final float BOT_SHOT_VOLUME = 1.5f;
+    private static final float SHOT_SHIFT = 0.06f;
     private static final NamespacedKey SCOPE = new NamespacedKey("sternenfront", "scope");
     private static final Title.Times BANNER = Title.Times.times(Duration.ofMillis(250), Duration.ofSeconds(2), Duration.ofMillis(500));
 
@@ -994,7 +996,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         var stats = config.stats(blaster);
         bolts.fire(shooter, faction, blaster, new Blaster.Stats(stats.damage() * damageScale, headshots ? stats.headshot() : 1, stats.heat(),
                 stats.cooldownTicks(), stats.bolts(), stats.burstTicks(), stats.spread(), stats.speed(), stats.range()), aim);
-        SoundCue.shot(blaster).play(shooter.getEyeLocation(), SHOT_VOLUME);
+        shotSound(shooter, blaster, BOT_SHOT_VOLUME);
         Bukkit.getPluginManager().callEvent(new ShotEvent(shooter));
     }
 
@@ -1071,7 +1073,11 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         effects.fire(player, faction, blaster, player.getEyeLocation().getDirection(), fighter(player).heat().level());
         var stats = config.stats(blaster);
         bolts.fire(player, faction, blaster, stats);
-        SoundCue.shot(blaster).play(player.getEyeLocation(), SHOT_VOLUME);
+        shotSound(player, blaster, SHOT_VOLUME);
+    }
+
+    private static void shotSound(LivingEntity shooter, Blaster blaster, float volume) {
+        SoundCue.shot(blaster).playFrom(shooter, volume, 1 + (float) ThreadLocalRandom.current().nextDouble(-SHOT_SHIFT, SHOT_SHIFT));
     }
 
     private void fireBursts() {

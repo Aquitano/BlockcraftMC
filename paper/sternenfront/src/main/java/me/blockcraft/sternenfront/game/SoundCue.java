@@ -2,6 +2,7 @@ package me.blockcraft.sternenfront.game;
 
 import org.bukkit.Location;
 import org.bukkit.SoundCategory;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
 /** Sternenfront's sounds, the round's and its secrets', each the pack's {@code blockcraft:sternenfront.<key>}. */
@@ -74,8 +75,25 @@ public enum SoundCue {
         }
     }
 
-    /** Only {@code listener} hears it, as if it came from where they stand. */
+    /** As {@link #play(Location, float, float)} from {@code source}'s eyes, except that a player hears their own at full volume. */
+    public void playFrom(LivingEntity source, float volume, float shift) {
+        var at = source.getEyeLocation();
+        double reach = BLOCKS_PER_VOLUME * Math.max(1, volume);
+        for (var listener : at.getWorld().getPlayers()) {
+            if (listener.equals(source)) {
+                playTo(listener, 1f, shift);
+            } else if (listener.getLocation().distanceSquared(at) <= reach * reach) {
+                listener.playSound(at, key, SoundCategory.PLAYERS, volume, shift);
+            }
+        }
+    }
+
     public void playTo(Player listener, float volume) {
-        listener.playSound(listener.getLocation(), key, SoundCategory.PLAYERS, volume, 1f);
+        playTo(listener, volume, 1f);
+    }
+
+    /** Only {@code listener} hears it, from where they stand, and it follows them as they move. */
+    public void playTo(Player listener, float volume, float shift) {
+        listener.playSound(listener, key, SoundCategory.PLAYERS, volume, shift);
     }
 }
