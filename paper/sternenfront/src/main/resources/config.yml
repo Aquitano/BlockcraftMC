@@ -36,7 +36,7 @@ bots:
   cover: {search-radius: 10, hold-ticks: 30, peek-ticks: 40}
   voice: {enabled: true, range: 18, volume: 0.65, soldier-cooldown-ticks: 360, global-cooldown-ticks: 100}
   # Bots fight in fireteams of up to fireteam-size that share one objective. A team keeps its objective until another
-  # post is switch-margin blocks of walking cheaper, and leaves one member to guard each post it takes. On the move
+  # post is switch-margin blocks of walking cheaper, and leaves one guard at a post it takes while three are left. On the move
   # the others walk spacing blocks apart in the leader's steps, each stepping stagger blocks to alternate sides where the
   # ground allows. The leader slows for up to five seconds for anyone between regroup-distance and catch-up-distance
   # behind, anyone further runs the route alone, and anyone ahead waits for the column. walk-speed and

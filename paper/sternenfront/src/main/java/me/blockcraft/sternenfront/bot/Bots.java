@@ -693,12 +693,14 @@ public final class Bots implements Listener {
         team.regrouping = behind && tick - team.waitingSince < REGROUP_TICKS;
     }
 
+    /** Friends near {@code around} against the enemies there that one of those friends can see. */
     private Fireteams.Odds odds(Faction faction, Location around) {
         double range = config.squad().fallBackRange();
         var near = game.combatants().stream().filter(other -> other.getWorld().equals(around.getWorld())
                 && other.getLocation().distanceSquared(around) <= range * range).toList();
-        return new Fireteams.Odds((int) near.stream().filter(other -> game.factionOf(other).filter(faction::equals).isPresent()).count(),
-                (int) near.stream().filter(other -> game.hittable(faction, other)).count());
+        var friends = near.stream().filter(other -> game.factionOf(other).filter(faction::equals).isPresent()).toList();
+        return new Fireteams.Odds(friends.size(), (int) near.stream().filter(other -> game.hittable(faction, other))
+                .filter(enemy -> friends.stream().anyMatch(friend -> friend.hasLineOfSight(enemy))).count());
     }
 
     /** The post's nearest retreat point that brings the bot no nearer the enemy, so it never runs into them. */
@@ -886,7 +888,7 @@ public final class Bots implements Listener {
                         .or(() -> Optional.ofNullable(soldier.fallBackTo))
                 : Optional.<Location>empty();
         soldier.fallBackTo = fallBack.orElse(null);
-        boolean pushing = team != null && team.holding && withTeam
+        boolean pushing = team != null && team.holding && withTeam && route != null
                 && (team.threat != null || !game.posts().safe(soldier.objective, soldier.faction));
         boolean exposed = advancing || pushing || team != null && team.assaulting;
         var protectedPosition = threat.filter(enemy -> fallBack.isEmpty() && (!exposed || wounded || soldier.heat.venting(tick)))
@@ -992,7 +994,9 @@ public final class Bots implements Listener {
         }
         long still = soldier.stillness.update(here.toVector(), tick);
         double sight = config.range() * sightShare;
-        var known = wounded || STANDING_ALLOWED.contains(activity) || still < settings.standTicks() && tick >= soldier.pressUntil
+        // A press that left the bot where it stood found no way through, so it gives up until the bot moves again.
+        boolean pressing = tick < soldier.pressUntil || still >= settings.standTicks() && still < settings.standTicks() + PRESS_TICKS;
+        var known = wounded || STANDING_ALLOWED.contains(activity) || !pressing
                 ? Optional.<Location>empty()
                 : threat.filter(at -> at.getWorld().equals(here.getWorld()) && at.distanceSquared(here) <= sight * sight);
         if (known.isPresent()) {
@@ -1073,7 +1077,6 @@ public final class Bots implements Listener {
         soldier.navigationResult = mob.getPathfinder().moveTo(destination, pace) ? "accepted" : "unreachable";
     }
 
-    /** The nearest enemy within sight range, whether or not the bot can see it. */
     /** A follower's place a little to one side of the leader's steps, where it has ground and a clear line to them. */
     private Location stagger(Location slot, Location leader, int side) {
         var ahead = leader.toVector().subtract(slot.toVector()).setY(0);
@@ -1235,7 +1238,8 @@ public final class Bots implements Listener {
         }
         if (soldier != null && event.getFinalDamage() > 0
                 && event.getDamageSource().getCausingEntity() instanceof LivingEntity attacker
-                && game.hittable(soldier.faction, attacker) && attacker.getWorld().equals(soldier.body.getWorld())) {
+                && game.hittable(soldier.faction, attacker) && attacker.getWorld().equals(soldier.body.getWorld())
+                && soldier.body.hasLineOfSight(attacker)) {
             if (!attacker.getUniqueId().equals(soldier.target)) {
                 // Each switch restarts the reaction time, so two attackers could keep a bot from ever firing.
                 if (soldier.target != null && game.tick() <= soldier.seenUntil) {

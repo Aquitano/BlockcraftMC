@@ -84,7 +84,7 @@ up for another objective. A leader left alone in a fight falls back once the sam
 whose post is that outnumbered rejoins its team, and a guard that stays takes cover first when it is wounded or venting.
 A bot that stands within 1.5 blocks of one spot for `stand-ticks` while it knows where an enemy is runs there for five
 seconds: an enemy it sees, one it saw recently, or its team's contact under fire, never one hidden behind a wall that nobody
-spotted. Wounded bots, medics treating a patient, bots falling back, heavies in siege mode and guards at a lookout stay put.
+spotted. A press that leaves the bot where it stood gives up until it moves again. Wounded bots, medics treating a patient, bots falling back, heavies in siege mode and guards at a lookout stay put.
 When a member falls, its teammates take the killer's position as contact for
 `alarm-ticks`; a bot with nothing in sight turns toward enemy fire within `hearing-range`. Soldiers and heavies throw their
 explosives at enemies dug into a post or hidden behind cover, and a heavy holding open ground under fire raises its shield
