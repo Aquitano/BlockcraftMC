@@ -1,5 +1,7 @@
 package me.blockcraft.sternenfront.appearance;
 
+import io.papermc.paper.datacomponent.DataComponentTypes;
+import io.papermc.paper.datacomponent.item.CustomModelData;
 import me.blockcraft.sternenfront.bot.BotSnapshot.Point;
 import me.blockcraft.sternenfront.game.Faction;
 import net.kyori.adventure.text.Component;
@@ -29,6 +31,7 @@ import java.util.Set;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
@@ -36,6 +39,8 @@ final class BodyRig implements AutoCloseable {
 
     private static final float SEATED_LEG = -1.35f;
     private static final float SEATED_DROP = 0.2f;
+    /** As long as vanilla's hurt flash and BetterModel's damage tint. */
+    private static final int HURT_TICKS = 10;
 
     private final Plugin plugin;
     private final LivingEntity actor;
@@ -66,6 +71,7 @@ final class BodyRig implements AutoCloseable {
     private float bodyYaw;
     private final Optional<RigMotion> motion;
     private int recoilLeft;
+    private int hurtLeft;
 
     BodyRig(Plugin plugin, LivingEntity actor, RigBody body, Predicate<Player> fighting, Supplier<Vector> aim, float turnDegrees, Optional<RigMotion> motion) {
         this.fighting = fighting;
@@ -148,6 +154,22 @@ final class BodyRig implements AutoCloseable {
         return List.of(torso, head, leftArm, rightArm, leftLeg, rightLeg, weapon);
     }
 
+    void hurt(Color tint) {
+        if (hurtLeft == 0) {
+            var colour = CustomModelData.customModelData().addColor(tint).build();
+            tintBody(look -> look.setData(DataComponentTypes.CUSTOM_MODEL_DATA, colour));
+        }
+        hurtLeft = HURT_TICKS;
+    }
+
+    private void tintBody(Consumer<ItemStack> tint) {
+        for (var part : List.of(torso, head, leftArm, rightArm, leftLeg, rightLeg)) {
+            var look = part.getItemStack();
+            tint.accept(look);
+            part.setItemStack(look);
+        }
+    }
+
     private ItemDisplay part(String part) {
         var display = spawn(ItemDisplay.class);
         display.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.NONE);
@@ -186,6 +208,9 @@ final class BodyRig implements AutoCloseable {
         float recoilPitch = (float) -Math.toRadians(motion.map(RigMotion::recoilDegrees).orElse(0.0) * kick);
         float recoilDistance = (float) (motion.map(RigMotion::recoilBlocks).orElse(0.06) * kick);
         recoilLeft = Math.max(0, recoilLeft - 1);
+        if (hurtLeft > 0 && --hurtLeft == 0) {
+            tintBody(look -> look.resetData(DataComponentTypes.CUSTOM_MODEL_DATA));
+        }
         boolean seated = actor.isInsideVehicle() && body.faction() == Faction.KOLONIEN;
         float step = actor.isInsideVehicle() ? 0 : actor.isOnGround() ? movement.step() : 0.2f;
         float leftStride = seated ? SEATED_LEG : step;

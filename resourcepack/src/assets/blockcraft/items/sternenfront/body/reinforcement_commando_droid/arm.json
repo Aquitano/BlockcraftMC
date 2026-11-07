@@ -1,1 +1,1 @@
-{"model":{"type":"minecraft:model","model":"blockcraft:item/sternenfront/body/reinforcement_commando_droid/arm"}}
+{"model":{"type":"minecraft:model","model":"blockcraft:item/sternenfront/body/reinforcement_commando_droid/arm","tints":[{"type":"minecraft:custom_model_data","index":0,"default":-1}]}}

@@ -121,6 +121,7 @@ public final class Bots implements Listener {
         private long pauseUntil;
         private long healAt;
         private long hurtAt;
+        private long hurtSoundUntil;
         private final Volley volley = new Volley();
         private Location lastSeen;
         private long seenUntil;
@@ -1294,6 +1295,7 @@ public final class Bots implements Listener {
         var soldier = bodies.get(event.getEntity().getUniqueId());
         if (soldier != null && event.getFinalDamage() > 0) {
             soldier.hurtAt = game.tick();
+            sayHurt(soldier, soldier.hurtAt);
         }
         if (soldier != null && event.getFinalDamage() > 0
                 && event.getDamageSource().getCausingEntity() instanceof LivingEntity attacker
@@ -1309,6 +1311,15 @@ public final class Bots implements Listener {
             soldier.lastSeen = attacker.getLocation();
             soldier.seenUntil = game.tick() + config.memoryTicks();
         }
+    }
+
+    private void sayHurt(Soldier soldier, long tick) {
+        if (tick < soldier.hurtSoundUntil) {
+            return;
+        }
+        soldier.hurtSoundUntil = tick + config.hurtSound().cooldownTicks();
+        soldier.body.getWorld().playSound(soldier.body, "blockcraft:sternenfront.hurt." + soldier.faction.key(), SoundCategory.PLAYERS,
+                config.hurtSound().volume(), (float) ThreadLocalRandom.current().nextDouble(0.94, 1.06));
     }
 
     private void pick(Soldier soldier, UUID target, long tick) {

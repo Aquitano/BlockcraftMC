@@ -1545,7 +1545,9 @@ public final class SternenfrontArt {
     }
 
     private static void writeModel(Path root, Family family, Model model, Map<String, Placed> placed, int size) throws IOException {
-        var elements = model.shape.boxes.stream().map(each -> element(each, family, placed, size)).collect(Collectors.joining(",\n    "));
+        // A body part's custom_model_data colour turns it red while its fighter is hurt.
+        boolean body = model.path.startsWith("sternenfront/body/");
+        var elements = model.shape.boxes.stream().map(each -> element(each, family, placed, size, body)).collect(Collectors.joining(",\n    "));
         var texture = "blockcraft:block/sternenfront/rig/" + family.name;
         var json = root.resolve("models/item/" + model.path + ".json");
         var definition = root.resolve("items/" + model.path + ".json");
@@ -1553,18 +1555,18 @@ public final class SternenfrontArt {
         Files.createDirectories(definition.getParent());
         Files.writeString(json, "{\n  \"textures\":{\"rig\":\"" + texture + "\",\"particle\":\"" + texture + "\"},\n  \"elements\":[\n    "
                 + elements + "\n  ]" + model.display + "\n}\n");
-        boolean tinted = model.shape.boxes.stream().anyMatch(each -> each.surface.tinted());
+        boolean tinted = body || model.shape.boxes.stream().anyMatch(each -> each.surface.tinted());
         Files.writeString(definition, "{\"model\":{\"type\":\"minecraft:model\",\"model\":\"blockcraft:item/" + model.path + "\""
                 + (tinted ? ",\"tints\":[{\"type\":\"minecraft:custom_model_data\",\"index\":0,\"default\":-1}]" : "") + "}}\n");
     }
 
-    private static String element(Box each, Family family, Map<String, Placed> placed, int size) {
+    private static String element(Box each, Family family, Map<String, Placed> placed, int size, boolean tinted) {
         var faces = each.faces.stream().sorted().map(face -> {
             var at = placed.get(tileKey(each, face, family.density));
             int width = pixels(each.edge(face, true), family.density);
             int height = pixels(each.edge(face, false), family.density);
             return "\"" + face.key() + "\":{\"uv\":[" + uv(at.x, size) + "," + uv(at.y, size) + "," + uv(at.x + width, size) + ","
-                    + uv(at.y + height, size) + "],\"texture\":\"#rig\"" + (each.surface.tinted() ? ",\"tintindex\":0" : "") + "}";
+                    + uv(at.y + height, size) + "],\"texture\":\"#rig\"" + (tinted || each.surface.tinted() ? ",\"tintindex\":0" : "") + "}";
         }).collect(Collectors.joining(","));
         var parts = new StringBuilder("{\"from\":").append(point(each.x1, each.y1, each.z1))
                 .append(",\"to\":").append(point(each.x2, each.y2, each.z2));

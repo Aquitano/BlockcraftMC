@@ -9,7 +9,7 @@ public record BotConfig(boolean enabled, int perTeam, double range, double visio
                         double hearingRange, int alarmTicks,
                         double idleTurnDegrees, double stepHeight, int boundaryGraceTicks,
                         int killPoints, int healTicks, double healAmount,
-                        Medic medic, Cover cover, Voice voice, Squad squad, BotDifficulty difficulty,
+                        Medic medic, Cover cover, Voice voice, HurtSound hurtSound, Squad squad, BotDifficulty difficulty,
                         Map<BotDifficulty, Tuning> profiles) {
 
     public record Medic(int pursuitTicks, int retryTicks) { }
@@ -22,6 +22,8 @@ public record BotConfig(boolean enabled, int perTeam, double range, double visio
                         double fallBackRange, int fallBackTicks, int standTicks) { }
 
     public record Voice(boolean enabled, double range, float volume, int soldierCooldownTicks, int globalCooldownTicks) { }
+
+    public record HurtSound(float volume, int cooldownTicks) { }
 
     public record Tuning(int reactionTicks, int shotTicks, double spread, int burstShots, int burstPauseTicks,
                          double trackingDegrees, double damageScale, boolean headshots, int settleTicks, double settleSpread) { }
@@ -70,6 +72,8 @@ public record BotConfig(boolean enabled, int perTeam, double range, double visio
                         (float) Math.clamp(config.getDouble("bots.voice.volume", 0.65), 0, 1),
                         Math.max(100, config.getInt("bots.voice.soldier-cooldown-ticks", 360)),
                         Math.max(60, config.getInt("bots.voice.global-cooldown-ticks", 100))),
+                new HurtSound((float) Math.clamp(config.getDouble("bots.hurt-sound.volume", 0.8), 0, 1),
+                        Math.clamp(config.getInt("bots.hurt-sound.cooldown-ticks", 6), 1, 40)),
                 new Squad(Math.clamp(config.getInt("bots.squad.fireteam-size", 3), 2, 4),
                         Math.clamp(config.getDouble("bots.squad.switch-margin", 25), 0, 100),
                         Math.clamp(config.getDouble("bots.squad.spacing", 3), 1.5, 8),

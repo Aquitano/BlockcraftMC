@@ -1,1 +1,1 @@
-{"model":{"type":"minecraft:model","model":"blockcraft:item/sternenfront/body/hegemonie_heavy/arm"}}
+{"model":{"type":"minecraft:model","model":"blockcraft:item/sternenfront/body/hegemonie_heavy/arm","tints":[{"type":"minecraft:custom_model_data","index":0,"default":-1}]}}

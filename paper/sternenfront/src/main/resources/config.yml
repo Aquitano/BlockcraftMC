@@ -37,6 +37,8 @@ bots:
   kill-points: 25
   cover: {search-radius: 10, hold-ticks: 30, peek-ticks: 40}
   voice: {enabled: true, range: 18, volume: 0.65, soldier-cooldown-ticks: 360, global-cooldown-ticks: 100}
+  # A hit bot clanks (droids) or grunts (clones), at most once per cooldown-ticks so a burst sounds once.
+  hurt-sound: {volume: 0.8, cooldown-ticks: 6}
   # Bots fight in fireteams of up to fireteam-size that share one objective. A team keeps its objective until another
   # post is switch-margin blocks of walking cheaper, and leaves one guard at a post it takes while three are left. On the move
   # the others walk spacing blocks apart in the leader's steps, each stepping stagger blocks to alternate sides where the
@@ -68,6 +70,8 @@ appearance:
   infantry: true
   # Bot bodies the BetterModel plugin draws and animates, by family. Without the plugin they stay plain rigs.
   animated-bodies: [hegemonie_soldier, hegemonie_heavy, hegemonie_scout, hegemonie_medic, kolonien_soldier, kolonien_heavy, kolonien_scout, kolonien_medic]
+  # A hit body flashes this colour for half a second, multiplied into its texture.
+  hurt-tint: "FF5050"
 music:
   enabled: true
   volume: 0.35
@@ -433,7 +437,7 @@ combat-feedback:
   hero-ready-ticks: 60
   elite-ready-ticks: 60
   multikill-seconds: 4
-  sound: {hit: 1.0, headshot: 1.0, kill: 0.9}
+  sound: {hit: 1.0, headshot: 1.0, kill: 1.0}
   # Ticks around the crosshair open one of four steps each time the held blaster's spread passes one of these multiples
   # of its own base spread. Standing still and cold is 1 and crouching 0.6, so both show the tightest step;
   # combat.handling sets how far walking and heat open it.
