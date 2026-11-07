@@ -30,7 +30,7 @@ import java.util.concurrent.ThreadLocalRandom;
 public final class Bolts {
 
     private static final double HIT_SIZE = 0.1;
-    private static final double VISUAL_LEAD = 1.6;
+    private static final double VISUAL_LEAD = 1.1;
     private static final double PARRY_CLEARANCE = 0.8;
     private static final double TRAIL_CLEAR_OF_EYES = 1.4;
     private static final float MODEL_LENGTH = 1.22f;
@@ -194,6 +194,7 @@ public final class Bolts {
             return;
         }
         boolean head = game.speeders().faction(victim).isEmpty() && at.getY() >= victim.getEyeLocation().getY() - HEAD_BELOW_EYES;
+        SoundCue.BOLT_IMPACT.play(at, IMPACT_VOLUME);
         game.boltHit(bolt.shooter, bolt.shot.blaster(), victim, damage * (head ? bolt.shot.headshot() : 1),
                 head && bolt.shot.headshot() > 1);
     }

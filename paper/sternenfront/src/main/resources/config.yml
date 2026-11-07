@@ -92,7 +92,7 @@ presentation:
   saber-mark: {cooldown-ticks: 8, glow-ticks: 30, ticks: 300, fade-ticks: 40, scale: 1.5, tilt-degrees: 20}
   saber-trail-ticks: 3
   muzzle-flash: {ticks: 2, scale: 0.3, heavy-scale: 0.5}
-  bolt: {width: 1.4, length: 1.6, trail-size: 0.8, trail-step: 1.2, far-every: 3, impact-flash: 0.25}
+  bolt: {width: 1.8, length: 1.6, trail-size: 1.1, trail-step: 0.9, far-every: 3, impact-flash: 0.4}
   explosion: {smoke-puffs: 3, smoke-ticks: 40, debris: 12}
   damaged: {below: 0.35, interval-ticks: 12}
   ambient: {interval-ticks: 10, range: 72}
