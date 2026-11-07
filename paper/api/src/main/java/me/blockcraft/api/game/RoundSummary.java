@@ -189,12 +189,12 @@ public final class RoundSummary {
         score.bestStreak = Math.max(score.bestStreak, score.streak);
         score.xp += api.xp().award(killer, XpReward.KILL);
         pay(killer, rewards.kill());
-        accusations.killed(victim, killer);
         if (secretKills) {
             return;
         }
         api.effects().onKill(killer, victim);
         if (api.streaks().announces(score.streak)) {
+        accusations.killed(victim, killer);
             Bukkit.broadcast(messages.get("summary.streak",
                     Placeholder.unparsed("player", killer.getName()), Formatter.number("streak", score.streak)));
             Sounds.STREAK.play(killer);
