@@ -149,12 +149,17 @@ final class DeployScreen {
         }
     }
 
+    /** What the line under the map tells the player: how to choose, what a click on a spawn costs, or why one was refused. */
+    record Hint(String text, Tone tone) {
+        enum Tone { HELP, COST, REFUSED }
+    }
+
     record View(Faction faction, Component title, List<String> buttons, Role role, List<ClassCard> classes,
-                List<Special> specials, List<Place> places) {
+                List<Special> specials, List<Place> places, Hint hint) {
 
         /** This view without what the battle flips on its own: which spawns are locked and which one is recommended. */
         View withoutSpawnMarks() {
-            return new View(faction, title, buttons, role, classes, specials, places.stream().map(Place::unmarked).toList());
+            return new View(faction, title, buttons, role, classes, specials, places.stream().map(Place::unmarked).toList(), hint);
         }
     }
 
@@ -202,8 +207,13 @@ final class DeployScreen {
             label(left + TOOLBAR_ADVANCE + 1, y(BUTTONS.get(button)) + 6, name, BUTTON_TEXT.get(button), width - TOOLBAR_ADVANCE - 3);
         }
         label(127, 130, plain("deploy.screen.map"), WHITE, 40);
-        String hint = plain("deploy.screen.hint");
-        label(CHEST_WIDTH / 2 - Math.min(labelWidth(hint), HINT_WIDTH) / 2, 202, hint, MUTED, HINT_WIDTH);
+        var hint = view.hint();
+        int tone = switch (hint.tone()) {
+            case HELP -> MUTED;
+            case COST -> GOLD;
+            case REFUSED -> RED;
+        };
+        label(CHEST_WIDTH / 2 - Math.min(labelWidth(hint.text()), HINT_WIDTH) / 2, 202, hint.text(), tone, HINT_WIDTH);
     }
 
     private void loadout(View view) {

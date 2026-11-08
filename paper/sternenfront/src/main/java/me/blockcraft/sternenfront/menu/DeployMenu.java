@@ -141,9 +141,11 @@ public final class DeployMenu extends Menu {
             set(SPECIALS.get(index + 1), game.heroes().card(viewer, faction, heroes.get(index),
                     view.specials().get(index + 1).selected(), confirmed));
         }
+        var cost = paid.map(special -> messages.get("deploy.spawn-cost", Placeholder.unparsed("unit", special.name()),
+                Formatter.number("cost", special.cost())));
         var places = view.places().stream().collect(Collectors.toMap(DeployScreen.Place::spawn, place -> place));
         mapSlots.forEach((spawn, slot) -> set(slot, Optional.ofNullable(places.get(spawn))
-                .map(place -> marker(faction, place, suggested)).orElse(null)));
+                .map(place -> marker(faction, place, suggested, cost)).orElse(null)));
     }
 
     /**
@@ -205,7 +207,8 @@ public final class DeployMenu extends Menu {
         game.front().ifPresent(front -> places.add(place(side, new Spawn.Dropship(), plain("deploy.screen.dropship",
                 Placeholder.unparsed("letter", Posts.letter(front.post()))), recommended)));
         var buttons = List.of(plain("deploy.screen.close"), plain("deploy.screen.deploy"));
-        return Optional.of(new DeployScreen.View(side, game.messages().get("deploy.title"), buttons, role, cards, specials, places));
+        return Optional.of(new DeployScreen.View(side, game.messages().get("deploy.title"), buttons, role, cards, specials, places,
+                hint(specials)));
     }
 
     private DeployScreen.Place place(Faction side, Spawn spawn, String name, Spawn recommended) {
@@ -216,6 +219,15 @@ public final class DeployMenu extends Menu {
         return new DeployScreen.Place(spawn, name, colour(side, spawn), open, open && spawn.equals(recommended), selection);
     }
 
+    /** Why the last click on a spawn was refused, else what a click on one costs while a paid pick waits, else how to choose. */
+    private DeployScreen.Hint hint(List<DeployScreen.Special> specials) {
+        var paid = specials.stream().filter(special -> special.selected() && special.open()).findFirst();
+        return game.deployment().refusal(viewer)
+                .map(reason -> new DeployScreen.Hint(PlainTextComponentSerializer.plainText().serialize(reason), DeployScreen.Hint.Tone.REFUSED))
+                .or(() -> paid.map(special -> new DeployScreen.Hint(plain("deploy.screen.hint-paid", Placeholder.unparsed("unit", special.name()),
+                        Formatter.number("cost", special.cost())), DeployScreen.Hint.Tone.COST)))
+                .orElseGet(() -> new DeployScreen.Hint(plain("deploy.screen.hint"), DeployScreen.Hint.Tone.HELP));
+    }
 
     /** The colour of a spawn's badge: its owner's, white for a neutral post or the dropship. */
     private int colour(Faction faction, Spawn spawn) {
@@ -333,7 +345,7 @@ public final class DeployMenu extends Menu {
      * land at counts down the seconds to it. Without the pack its block says what the badge says: a banner for a spawn,
      * glass for a locked one, concrete for a contested one.
      */
-    private ItemStack marker(Faction faction, DeployScreen.Place place, Spawn suggested) {
+    private ItemStack marker(Faction faction, DeployScreen.Place place, Spawn suggested, Optional<Component> cost) {
         var messages = game.messages();
         var deployment = game.deployment();
         var spawn = place.spawn();
@@ -352,6 +364,7 @@ public final class DeployMenu extends Menu {
         if (recommended) lore.add(messages.get("deploy.recommended"));
         if (landing) lore.add(messages.get("deploy.countdown", Formatter.number("seconds", countdown)));
         if (available) lore.add(messages.get(!selected ? "deploy.choose" : confirmed ? "deploy.chosen" : "deploy.pending"));
+        if (available) cost.ifPresent(lore::add);
         var block = spawn instanceof Spawn.Dropship ? Material.FIREWORK_ROCKET : Material.valueOf(owner.map(Faction::blocks)
                 .orElse(Faction.NEUTRAL).name() + (embattled ? "_CONCRETE" : available ? "_BANNER" : "_STAINED_GLASS_PANE"));
         var item = Items.of(block).name(spawnName(spawn)).lore(lore).hideAttributes()
@@ -439,6 +452,7 @@ public final class DeployMenu extends Menu {
         if (!game.deployment().deciding(player)) {
             return;
         }
+        game.deployment().clearRefusal(player);
         if (slot == DEPLOY) {
             game.deployment().quickDeploy(player);
             return;

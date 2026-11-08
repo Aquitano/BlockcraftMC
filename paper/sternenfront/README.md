@@ -153,8 +153,12 @@ default two and a half seconds, because an enemy walking along a post's clearanc
 again and again, and a click while it reopens is lost. Its marker shows the change at once. The countdowns and the
 posts' blinking are items and change in place.
 
-From the fade to the deployment on, the menu takes no more choices, so the player lands where and as whom they were
-when it began. A card plays only the sound of its outcome, and a locked spawn only the deny sound.
+The line under the map says how to choose. While a paid reinforcement or hero is selected and affordable, it names the
+pick and its cost, and every open spawn's marker says what a click there costs. A click on a locked spawn plays the deny
+sound and puts the reason in that line in red until the next click: an enemy or neutral post, enemies too close to an
+own post, or the dropship outside the trailing side's assault. The window covers the action bar and the chat, so the
+reason goes on the screen itself. From the fade to the deployment on, the menu takes no more choices, so the player
+lands where and as whom they were when it began. A card plays only the sound of its outcome, and a locked spawn only the deny sound.
 
 The spawns stand on a map in the player's own inventory, which the menu borrows while it is open: north up, east right,
 the current map's posts and headquarters at one scale, overlapping markers moved apart. The dropship has the bottom-right

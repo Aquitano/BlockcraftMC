@@ -23,6 +23,7 @@ import org.bukkit.potion.PotionEffectType;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -48,6 +49,17 @@ public final class Deployment {
     /** The abilities each player was last told about, so the chat explains them again only when they change. */
     private final Map<UUID, List<String>> controls = new HashMap<>();
     private final Map<UUID, Spawn> remembered = new HashMap<>();
+    /** Why the player's last click on a spawn was refused, until their next choice. */
+    private final Map<UUID, Component> refusals = new HashMap<>();
+
+    /** Why a spawn is closed to a side: a post it does not hold or where enemies are near, or the dropship outside its assault. */
+    public enum Lock {
+        ENEMY_POST, NEUTRAL_POST, THREATENED_POST, NO_ASSAULT;
+
+        String messageKey() {
+            return "deploy.refused." + name().toLowerCase(Locale.ROOT).replace('_', '-');
+        }
+    }
 
     Deployment(SternenfrontGame game, SpawnSpots spawnSpots, FeelConfig feel, BattlePresentation presentation, Runnable sidebarChanged) {
         this.game = game;
@@ -121,6 +133,7 @@ public final class Deployment {
         player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, PotionEffect.INFINITE_DURATION, 0, false, false, false));
         Bukkit.getOnlinePlayers().stream().filter(other -> !other.equals(player)).forEach(other -> other.hidePlayer(game.plugin(), player));
         fighter.choosing(Optional.of(fighter.choosing().orElseGet(this::newChoosing)));
+        refusals.remove(player.getUniqueId());
         player.getInventory().setItem(DEPLOY_SLOT, game.loadouts().deployItem());
         player.getInventory().setHeldItemSlot(DEPLOY_SLOT);
         openDeploy(player);
@@ -147,8 +160,11 @@ public final class Deployment {
         if (fighter.isEmpty() || fighter.get().choosing().isEmpty() || faction.isEmpty() || !deciding(player)) {
             return;
         }
-        if (!available(faction.get(), spawn)) {
+        var lock = lock(faction.get(), spawn);
+        if (lock.isPresent()) {
+            refusals.put(player.getUniqueId(), refusal(lock.get(), spawn));
             Sounds.MENU_DENY.play(player);
+            refreshMenu(player);
             return;
         }
         if (remember) remembered.put(player.getUniqueId(), spawn);
@@ -170,13 +186,36 @@ public final class Deployment {
     }
 
     public boolean available(Faction faction, Spawn spawn) {
+        return lock(faction, spawn).isEmpty();
+    }
+
+    public Optional<Lock> lock(Faction faction, Spawn spawn) {
         return switch (spawn) {
-            case Spawn.Headquarters ignored -> true;
-            case Spawn.Post post -> post.index() >= 0 && post.index() < game.posts().size()
-                    && game.posts().owner(post.index()).filter(faction::equals).isPresent()
-                    && safePost(faction, post.index());
-            case Spawn.Dropship ignored -> game.front().filter(assault -> assault.trailing() == faction).isPresent();
+            case Spawn.Headquarters ignored -> Optional.empty();
+            case Spawn.Post post when post.index() < 0 || post.index() >= game.posts().size() -> Optional.of(Lock.NEUTRAL_POST);
+            case Spawn.Post post -> {
+                var owner = game.posts().owner(post.index());
+                yield owner.isEmpty() ? Optional.of(Lock.NEUTRAL_POST) : owner.get() != faction ? Optional.of(Lock.ENEMY_POST)
+                        : safePost(faction, post.index()) ? Optional.empty() : Optional.of(Lock.THREATENED_POST);
+            }
+            case Spawn.Dropship ignored -> game.front().filter(assault -> assault.trailing() == faction).isPresent()
+                    ? Optional.empty() : Optional.of(Lock.NO_ASSAULT);
         };
+    }
+
+    private Component refusal(Lock lock, Spawn spawn) {
+        return spawn instanceof Spawn.Post post && post.index() >= 0 && post.index() < game.posts().size()
+                ? game.messages().get(lock.messageKey(), game.posts().name(post.index()))
+                : game.messages().get(lock.messageKey());
+    }
+
+    /** Why the player's last click on a spawn was refused, which the deploy screen shows until their next click. */
+    public Optional<Component> refusal(Player player) {
+        return Optional.ofNullable(refusals.get(player.getUniqueId()));
+    }
+
+    public void clearRefusal(Player player) {
+        refusals.remove(player.getUniqueId());
     }
 
     private boolean safePost(Faction faction, int index) {
@@ -413,11 +452,13 @@ public final class Deployment {
     void forget(Player player) {
         deployMenus.remove(player.getUniqueId());
         killers.remove(player.getUniqueId());
+        refusals.remove(player.getUniqueId());
     }
 
     void clear() {
         killers.clear();
         deployMenus.clear();
+        refusals.clear();
         remembered.clear();
         controls.clear();
     }

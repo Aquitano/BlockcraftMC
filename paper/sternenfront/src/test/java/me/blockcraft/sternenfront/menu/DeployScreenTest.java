@@ -125,10 +125,10 @@ public class DeployScreenTest {
         var post = places.get(1);
         places.set(1, new DeployScreen.Place(post.spawn(), post.name(), post.colour(), !post.open(), !post.recommended(), post.selection()));
         var flipped = new DeployScreen.View(view.faction(), view.title(), view.buttons(), view.role(), view.classes(), view.specials(),
-                List.copyOf(places));
+                List.copyOf(places), view.hint());
         places.set(1, new DeployScreen.Place(post.spawn(), post.name(), post.colour(), post.open(), post.recommended(), DeployScreen.Selection.PENDING));
         var chosen = new DeployScreen.View(view.faction(), view.title(), view.buttons(), view.role(), view.classes(), view.specials(),
-                places);
+                places, view.hint());
 
         assertEquals(view.withoutSpawnMarks(), flipped.withoutSpawnMarks());
         assertNotEquals(view.withoutSpawnMarks(), chosen.withoutSpawnMarks());
@@ -163,8 +163,9 @@ public class DeployScreenTest {
         if (dropship) {
             spawns.add(new DeployScreen.Place(new Spawn.Dropship(), "Landung bei A", 0xFFFFFF, true, true, DeployScreen.Selection.CONFIRMED));
         }
+        var hint = new DeployScreen.Hint("Ort anklicken: als Obi-Wan für 1250 KP", DeployScreen.Hint.Tone.values()[posts % 3]);
         return new DeployScreen.View(Faction.HEGEMONIE, Component.empty(), List.of("Schließen", "Einsetzen"), role,
-                List.of(card, card, card, card), List.of(special, special, special), spawns);
+                List.of(card, card, card, card), List.of(special, special, special), spawns, hint);
     }
 
     private static String source() {

@@ -381,6 +381,12 @@ deploy:
   headquarters: "<white>Hauptquartier"
   post: "<white>Posten <accent><letter> <white><post>"
   choose: "<click>Hier einsetzen, sobald möglich"
+  spawn-cost: "<muted>Kostet als <white><unit> <accent><cost> <muted>Kampfpunkte"
+  refused:
+    enemy-post: "Posten <letter> gehört dem Gegner"
+    neutral-post: "Posten <letter> hält noch niemand"
+    threatened-post: "Gegner zu nah an Posten <letter>"
+    no-assault: "Landung nur für die zurückliegende Fraktion"
   locked: "<error>✖ Gesperrt"
   chosen: "<success>✔ Dein Einsatzort. Einsatz, sobald möglich."
   pending: "<click>Erneut anklicken, um hier einzusetzen"
@@ -407,6 +413,7 @@ deploy:
     dropship: "Landung bei <letter>"
     legend: "Legende"
     hint: "Ort anklicken: Einsatz dort, sobald möglich"
+    hint-paid: "Ort anklicken: als <unit> für <cost> KP"
     orientation: "Norden oben · Osten rechts"
     kind:
       class: "Klasse"
