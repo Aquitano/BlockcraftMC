@@ -1336,7 +1336,7 @@ public final class Bots implements Listener {
             var aim = soldier.aim.clone();
             var random = ThreadLocalRandom.current();
             double settled = Math.max(tuning.spread(), game.config().stats(blaster).spread());
-            double spread = handling.spread(blaster, settled, new WeaponHandling.Stance(BotAim.moving(false, soldier.body.getVelocity()), false, false),
+            double spread = handling.spread(blaster, settled, new WeaponHandling.Posture(BotAim.moving(false, soldier.body.getVelocity()), false, false),
                     soldier.heat.level())
                     * (sighted ? BotAim.settle(tick - soldier.acquiredAt, tuning.settleTicks(), tuning.settleSpread()) : SUPPRESSING_SPREAD);
             if (sighted) {

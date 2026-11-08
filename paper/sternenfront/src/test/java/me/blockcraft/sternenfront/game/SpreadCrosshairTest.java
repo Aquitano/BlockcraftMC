@@ -16,16 +16,16 @@ public class SpreadCrosshairTest {
     private static final WeaponHandling HANDLING = WeaponHandling.from(CONFIG.getConfigurationSection("combat.handling"));
     private static final SpreadCrosshair CROSSHAIR = new SpreadCrosshair(CONFIG.getDoubleList("combat-feedback.spread-steps"));
 
-    private record Stance(String name, WeaponHandling.Stance stance, double heat, int size) { }
+    private record Case(String name, WeaponHandling.Posture posture, double heat, int size) { }
 
-    private static final WeaponHandling.Stance STILL = new WeaponHandling.Stance(false, false, false);
-    private static final WeaponHandling.Stance CROUCHED = new WeaponHandling.Stance(false, true, false);
-    private static final Stance[] STANCES = {
-            new Stance("still and cold", STILL, 0, 0),
-            new Stance("crouched", CROUCHED, 0, 0),
-            new Stance("crouched and hot", CROUCHED, 1, 0),
-            new Stance("walking and hot", new WeaponHandling.Stance(true, false, false), 1, SpreadCrosshair.SIZES - 1),
-            new Stance("jumping and hot", new WeaponHandling.Stance(false, false, true), 1, SpreadCrosshair.SIZES - 1),
+    private static final WeaponHandling.Posture STILL = new WeaponHandling.Posture(false, false, false);
+    private static final WeaponHandling.Posture CROUCHED = new WeaponHandling.Posture(false, true, false);
+    private static final Case[] CASES = {
+            new Case("still and cold", STILL, 0, 0),
+            new Case("crouched", CROUCHED, 0, 0),
+            new Case("crouched and hot", CROUCHED, 1, 0),
+            new Case("walking and hot", new WeaponHandling.Posture(true, false, false), 1, SpreadCrosshair.SIZES - 1),
+            new Case("jumping and hot", new WeaponHandling.Posture(false, false, true), 1, SpreadCrosshair.SIZES - 1),
     };
 
     @Test
@@ -36,9 +36,9 @@ public class SpreadCrosshairTest {
                 continue;
             }
             double base = config.stats(blaster).spread();
-            for (var stance : STANCES) {
-                var size = CROSSHAIR.size(base, HANDLING.spread(blaster, base, stance.stance(), stance.heat()));
-                assertEquals(blaster + " " + stance.name(), blaster.precision() ? Optional.empty() : Optional.of(stance.size()), size);
+            for (var each : CASES) {
+                var size = CROSSHAIR.size(base, HANDLING.spread(blaster, base, each.posture(), each.heat()));
+                assertEquals(blaster + " " + each.name(), blaster.precision() ? Optional.empty() : Optional.of(each.size()), size);
             }
         }
     }
