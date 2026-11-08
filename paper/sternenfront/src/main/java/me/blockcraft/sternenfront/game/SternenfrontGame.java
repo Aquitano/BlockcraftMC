@@ -116,7 +116,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     private static final float BOT_SHOT_VOLUME = 1.5f;
     private static final float SHOT_SHIFT = 0.06f;
     private static final NamespacedKey SCOPE = new NamespacedKey("sternenfront", "scope");
-    private static final Title.Times BANNER = Title.Times.times(Duration.ofMillis(250), Duration.ofSeconds(2), Duration.ofMillis(500));
+    private static final int BANNER_TICKS = 55;
 
     private record Burst(Player shooter, Blaster blaster, long at) { }
 
@@ -1386,10 +1386,19 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         banner(messages.get("relic.appeared"));
     }
 
-    /** A small line under the crosshair: a full title covers the fight it interrupts. */
     private void banner(Component line) {
-        var title = Title.title(Component.empty(), line, BANNER);
-        Bukkit.getOnlinePlayers().forEach(player -> BlockcraftApi.get().notifications().important(player, title));
+        Bukkit.getOnlinePlayers().forEach(player -> announce(player, line, BANNER_TICKS));
+    }
+
+    /**
+     * A short line centred under the objective at the chat's size, which a title would put across the crosshair. A player
+     * the minimap's line does not reach, such as a spectator, gets it as a subtitle.
+     */
+    public void announce(Player player, Component line, int ticks) {
+        if (!minimap.announce(player, line, ticks)) {
+            BlockcraftApi.get().notifications().important(player, Title.title(Component.empty(), line,
+                    Title.Times.times(Duration.ZERO, Duration.ofMillis(ticks * 50L), Duration.ZERO)));
+        }
     }
 
     /** The relic makes its taker a hero of their own: the champion, with the blade, until they fall. */

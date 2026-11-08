@@ -6,6 +6,7 @@ import me.blockcraft.sternenfront.game.AbilityIcon;
 import me.blockcraft.sternenfront.game.CombatClass;
 import me.blockcraft.sternenfront.game.Faction;
 import me.blockcraft.sternenfront.game.Spawn;
+import me.blockcraft.sternenfront.game.StatIcon;
 import me.blockcraft.sternenfront.hero.Hero;
 import me.blockcraft.sternenfront.reinforcement.Reinforcement;
 import net.kyori.adventure.key.Key;
@@ -16,11 +17,13 @@ import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 
 /**
  * The deploy screen as its chest title draws it: a window wider and taller than the chest from
  * {@code resourcepack/DeployArt.java}, the chosen role's loadout left of the slots, the spawns' names and what the
- * markers mean right of them, and the cards' pictures under the slots that answer clicks. The title is fixed once the
+ * markers mean right of them, the cards' pictures under the slots that answer clicks, and the deploy button under the
+ * map, whose seconds an item in it draws. The title is fixed once the
  * chest is open, so it shows only what changes on the player's own clicks or seldom; the markers show the rest.
  * <p>
  * Every part moves the cursor back by the width it measures for itself, so a part at a wrong x moves nothing else, but
@@ -36,8 +39,8 @@ final class DeployScreen {
     static final int CLASS_CARD_ROWS = 2;
     static final List<Integer> SPECIALS = List.of(45, 48, 51);
     static final int SPECIAL_COLUMNS = 3;
-    /** The toolbar's buttons from these slots, each up to the next or the row's end: close, then deploy. */
-    static final List<Integer> BUTTONS = List.of(0, 4);
+    /** The chest's top-right slot, which answers for the small close mark drawn on the strip above the cards. */
+    static final int CLOSE = 8;
 
     static final Key ART = Key.key("blockcraft", "deploy/art");
     private static final int COLUMNS = 9;
@@ -51,6 +54,18 @@ final class DeployScreen {
     private static final int WINDOW_RIGHT = 300;
     /** Where the header's text starts, right of the window's accent bar. */
     private static final int HEADER_LEFT = -114;
+    /** The deploy button across the hotbar under the map: where its icon and its label draw. */
+    private static final int BUTTON_LEFT = SLOT_LEFT;
+    private static final int BUTTON_WIDTH = COLUMNS * SLOT - 2;
+    private static final int BUTTON_TOP = 197;
+    private static final int BUTTON_TEXT = BUTTON_TOP + 6;
+    /** How far the button's content keeps from its edges. */
+    private static final int BUTTON_PADDING = 3;
+    /** The countdown's field starts at a multiple of this from the button's left: an item's edge or its middle. */
+    static final int FIELD_STEP = SLOT / 2;
+    static final int FIELDS = COLUMNS * 2;
+    /** Two digits wide in the label's capitals, so what follows it sits one space after either. */
+    private static final int FIELD_WIDTH = 2 * 4;
 
     private static final int WINDOW = 0xE000;
     private static final int DOSSIERS = 0xE010;
@@ -63,7 +78,7 @@ final class DeployScreen {
     private static final int ICON_GLYPHS = 0xE100;
     private static final int ABILITY_GLYPHS = 0xE120;
     private static final int BADGE_GLYPHS = 0xE140;
-    private static final int TOOLBAR_GLYPHS = 0xE150;
+    private static final int DEPLOY_GLYPH = 0xE150;
     private static final int PORTRAIT_WELL = 30;
 
     private static final String LABELS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789ÄÖÜ-.:!?…/+&%,()·";
@@ -71,7 +86,7 @@ final class DeployScreen {
     private static final int ICON_ADVANCE = 10;
     private static final int ABILITY_ADVANCE = 17;
     private static final int BADGE_ADVANCE = 13;
-    private static final int TOOLBAR_ADVANCE = 17;
+    private static final int DEPLOY_ADVANCE = 17;
     /** Where the list's rightmost mark stands, and how far apart its marks are. */
     private static final int MARKS_RIGHT = 285;
     private static final int MARK_PITCH = 11;
@@ -87,11 +102,11 @@ final class DeployScreen {
     private static final int ROOMY_PITCH = 20;
     private static final int TIGHT_PITCH = 15;
     private static final int LEGEND_PITCH = 10;
-    /** The legend's marks end here, the countdown's sample number with them, and its lines start a gap further right. */
-    private static final int LEGEND_MARKS_RIGHT = 192;
-    private static final int LEGEND_TEXT = LEGEND_MARKS_RIGHT + 4;
+    /** Where the legend's lines start, a gap right of its marks. */
+    private static final int LEGEND_TEXT = 196;
     /** The widest a line under the map may be: the space between the side panels. */
     private static final int HINT_WIDTH = 176;
+    private static final int HINT_TOP = 218;
 
     private static final int MUTED = 0x9CA6B8;
     private static final int WHITE = 0xFFFFFF;
@@ -100,8 +115,8 @@ final class DeployScreen {
     private static final int RED = 0xFF5B4B;
     private static final int DIM = 0x5D6678;
     private static final int AMBER = 0xFFB830;
-    /** The labels' colour on each toolbar button: white on the red, dark on the yellow. */
-    private static final List<Integer> BUTTON_TEXT = List.of(WHITE, 0x1B1E26);
+    /** The deploy button's dark ink on its yellow, which the countdown's digits share. */
+    private static final int BUTTON_INK = 0x1B1E26;
 
     /** The pack's portraits, in the order of its sheets. */
     enum Portrait {
@@ -122,8 +137,8 @@ final class DeployScreen {
         }
     }
 
-    /** A line of the loadout read-out: what it is and how much, in hearts if {@code hearts}. */
-    record Stat(String label, String value, boolean hearts) { }
+    /** A line of the loadout read-out: what it is and how much, with the stat's symbol if it has one. */
+    record Stat(String label, String value, Optional<StatIcon> icon) { }
 
     /** An ability with the key it sits on. */
     record Ability(String name, String key, AbilityIcon icon) { }
@@ -157,12 +172,18 @@ final class DeployScreen {
         enum Tone { HELP, COST, REFUSED }
     }
 
-    record View(Faction faction, Component title, List<String> buttons, Role role, List<ClassCard> classes,
+    /**
+     * The deploy button's line around its seconds, which an item draws since they change while the title cannot: what a
+     * click does before them and their unit after.
+     */
+    record Button(String before, String after) { }
+
+    record View(Faction faction, Component title, String heading, Button button, Role role, List<ClassCard> classes,
                 List<Special> specials, List<Place> places, Hint hint) {
 
         /** This view without what the battle flips on its own: which spawns are locked and which one is recommended. */
         View withoutSpawnMarks() {
-            return new View(faction, title, buttons, role, classes, specials, places.stream().map(Place::unmarked).toList(), hint);
+            return new View(faction, title, heading, button, role, classes, specials, places.stream().map(Place::unmarked).toList(), hint);
         }
     }
 
@@ -191,8 +212,17 @@ final class DeployScreen {
         return SLOT_TOP + slot / COLUMNS * SLOT;
     }
 
-    static int buttonColumns(int button) {
-        return (button + 1 < BUTTONS.size() ? BUTTONS.get(button + 1) : COLUMNS) - BUTTONS.get(button);
+    /**
+     * Where the countdown's field starts, in {@link #FIELD_STEP}s from the button's left: as near as the steps allow to
+     * where it stands with the whole line centred, and with the line inside the button.
+     */
+    static int countdownField(Button button) {
+        int lead = DEPLOY_ADVANCE + 1 + labelWidth(button.before()) + LABEL_ADVANCE;
+        int width = lead + FIELD_WIDTH + LABEL_ADVANCE + labelWidth(button.after()) - 1;
+        int lowest = Math.ceilDiv(BUTTON_PADDING + lead, FIELD_STEP);
+        int highest = Math.floorDiv(BUTTON_WIDTH - BUTTON_PADDING - width + lead, FIELD_STEP);
+        int centred = Math.round(((BUTTON_WIDTH - width) / 2f + lead) / FIELD_STEP);
+        return Math.clamp(Math.clamp(centred, lowest, Math.max(lowest, highest)), 0, FIELDS - 1);
     }
 
     private void window(View view) {
@@ -201,22 +231,26 @@ final class DeployScreen {
         art(0, (char) (pieces + 1), CHEST_WIDTH + 1);
         art(CHEST_WIDTH, (char) (pieces + 2), WINDOW_RIGHT - CHEST_WIDTH + 1);
         label(HEADER_LEFT, -3, plain("faction." + view.faction().key() + ".name"), view.faction().text().value(), 280);
-        for (int button = 0; button < view.buttons().size() && button < BUTTONS.size(); button++) {
-            String name = view.buttons().get(button);
-            int width = buttonColumns(button) * SLOT - 2;
-            int content = Math.min(TOOLBAR_ADVANCE + 1 + labelWidth(name), width - 2);
-            int left = x(BUTTONS.get(button)) + (width - content) / 2;
-            glyph(left, y(BUTTONS.get(button)), (char) (TOOLBAR_GLYPHS + button), TOOLBAR_ADVANCE, WHITE);
-            label(left + TOOLBAR_ADVANCE + 1, y(BUTTONS.get(button)) + 6, name, BUTTON_TEXT.get(button), width - TOOLBAR_ADVANCE - 3);
-        }
+        label(SLOT_LEFT + 2, 21, view.heading(), MUTED, 120);
+        icon(x(CLOSE) + 6, 19, Icon.CLOSE, RED);
         label(127, 130, plain("deploy.screen.map"), WHITE, 40);
+        button(view.button());
         var hint = view.hint();
         int tone = switch (hint.tone()) {
             case HELP -> MUTED;
             case COST -> GOLD;
             case REFUSED -> RED;
         };
-        label(CHEST_WIDTH / 2 - Math.min(labelWidth(hint.text()), HINT_WIDTH) / 2, 202, hint.text(), tone, HINT_WIDTH);
+        label(CHEST_WIDTH / 2 - Math.min(labelWidth(hint.text()), HINT_WIDTH) / 2, HINT_TOP, hint.text(), tone, HINT_WIDTH);
+    }
+
+    /** The deploy icon and what a click does, the gap the countdown's item fills, then the seconds' unit. */
+    private void button(Button button) {
+        int field = BUTTON_LEFT + countdownField(button) * FIELD_STEP;
+        int before = field - LABEL_ADVANCE - labelWidth(button.before());
+        glyph(before - DEPLOY_ADVANCE - 1, BUTTON_TOP, (char) DEPLOY_GLYPH, DEPLOY_ADVANCE, WHITE);
+        label(before, BUTTON_TEXT, button.before(), BUTTON_INK, BUTTON_WIDTH);
+        label(field + FIELD_WIDTH + LABEL_ADVANCE, BUTTON_TEXT, button.after(), BUTTON_INK, BUTTON_WIDTH);
     }
 
     private void loadout(View view) {
@@ -228,9 +262,9 @@ final class DeployScreen {
             var stat = role.body().get(index);
             label(-48, 32 + index * 16, stat.label(), MUTED, 42);
             text(-48, 39 + index * 16, stat.value(), WHITE);
-            if (stat.hearts()) {
-                icon(-46 + textWidth(stat.value()), 38 + index * 16, Icon.HEART, RED);
-            }
+            int top = 38 + index * 16;
+            int x = -46 + textWidth(stat.value());
+            stat.icon().ifPresent(icon -> glyph(x, top, icon.glyph(), ICON_ADVANCE, icon.colour()));
         }
         text(-117, 99, role.name(), WHITE);
         label(-117, 114, plain("deploy.screen.weapon"), MUTED, 112);
@@ -309,10 +343,6 @@ final class DeployScreen {
             icon(182, 153 + index * LEGEND_PITCH, keys.get(index), colours.get(index));
             label(LEGEND_TEXT, 155 + index * LEGEND_PITCH, plain("deploy.screen.key." + lines.get(index)), WHITE, 100);
         }
-        int countdown = 153 + keys.size() * LEGEND_PITCH;
-        String sample = plain("deploy.screen.key.countdown-sample");
-        text(LEGEND_MARKS_RIGHT - textWidth(sample), countdown + 1, sample, WHITE);
-        label(LEGEND_TEXT, countdown + 2, plain("deploy.screen.key.countdown"), WHITE, 100);
         label(182, 214, plain("deploy.screen.orientation"), DIM, 110);
     }
 
@@ -335,7 +365,7 @@ final class DeployScreen {
 
     /** The pictures of the pack's icon sheet, in the order {@code DeployArt} names them. */
     enum Icon {
-        HEART, RECOMMENDED, PENDING, CONFIRMED, LOCKED, CONTESTED, HEADQUARTERS, DROPSHIP
+        HEART, RECOMMENDED, PENDING, CONFIRMED, LOCKED, CONTESTED, HEADQUARTERS, DROPSHIP, DAMAGE, SPEED, RANGE, CLOSE
     }
 
     private void icon(int x, int top, Icon icon, int colour) {

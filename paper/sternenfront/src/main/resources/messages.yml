@@ -54,11 +54,11 @@ class:
   select: "<click>Auswählen"
   selected: "<success>✔ Ausgewählt"
   chosen: "<muted>Nächster Einsatz als <accent><class>"
-  blaster: "<bullet><muted>Blaster <white><blaster> <dark>· <accent><damage> ❤ <muted>pro Schuss"
-  range: "<bullet><muted>Reichweite <accent><range> m"
-  health: "<bullet><muted>Gesundheit <accent><hearts> ❤"
+  blaster: "<bullet><muted>Blaster <white><blaster> <dark>· <accent><damage> <icon:damage> <muted>pro Schuss"
+  range: "<bullet><muted>Reichweite <accent><range> m <icon:range>"
+  health: "<bullet><muted>Gesundheit <accent><hearts> <icon:health>"
   ability: "<bullet><muted>Fähigkeit <white><ability>"
-  speed: "<bullet><muted>Tempo <accent><percent> %"
+  speed: "<bullet><muted>Tempo <accent><percent> % <icon:speed>"
   size: "<bullet><muted>Größe <accent><percent> %"
   stats: "<white>Werte"
   first-key: "<muted>Fähigkeit auf Taste <accent><key:key.swapOffhand>"
@@ -122,8 +122,8 @@ class:
 
 blaster:
   stats:
-    - "<bullet><muted>Schaden <accent><damage> ❤ <muted>pro Schuss"
-    - "<bullet><muted>Reichweite <accent><range> <muted>Blöcke"
+    - "<bullet><muted>Schaden <accent><damage> <icon:damage> <muted>pro Schuss"
+    - "<bullet><muted>Reichweite <accent><range> <muted>Blöcke <icon:range>"
   venting: "<error>Der Blaster kühlt ab …"
   overheated: "<error>Überhitzt! <muted>Abzug im markierten Feld kühlt sofort."
   vent-hit: "<success>Notkühlung! <muted>Der Blaster ist bereit."
@@ -304,8 +304,7 @@ radio:
     lost: 'Posten verloren. Rückeroberung einleiten.'
 
 secret:
-  found-title: "<sternenfront>Secret gefunden!"
-  found-subtitle: "<accent>+<coins> Coins"
+  found-banner: "<sternenfront>Secret gefunden! <accent>+<coins> Coins"
   found: "<prefix><success>Secret gefunden: <accent><secret><muted>! <accent>+<coins> Coins"
   known: "<prefix><muted>Dieses Secret kennst du schon: <accent><secret>"
   kyber-count: "<prefix><muted>Kyberkristalle: <accent><found><dark>/<white><total>"
@@ -404,8 +403,12 @@ deploy:
     points-value: "<points> KP"
     cost: "Kosten"
     balance: "Deine Kampfpunkte"
-    close: "Schließen"
-    deploy: "Einsetzen"
+    units: "Einheit wählen"
+    button:
+      waiting: "Einsetzen in"
+      ready: "Jetzt einsetzen · auto in"
+      queued: "Einsatz in"
+      seconds: "s"
     free: "Kostenlos"
     map: "Einsatzort"
     places: "Einsatzorte"
@@ -435,8 +438,6 @@ deploy:
       pending: "Erneut anklicken"
       locked: "Gesperrt"
       contested: "Blinkt: umkämpft"
-      countdown: "Sekunden bis zum Einsatz"
-      countdown-sample: "13"
 
 death:
   self-explosion: "<prefix><white><player> <muted>wurde von der eigenen Explosion erwischt."

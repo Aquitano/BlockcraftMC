@@ -4,6 +4,7 @@ import me.blockcraft.api.pack.MenuState;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.sternenfront.game.Faction;
 import me.blockcraft.sternenfront.game.Loadouts;
+import me.blockcraft.sternenfront.game.StatIcon;
 import me.blockcraft.sternenfront.hero.BattlePoints;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
@@ -62,8 +63,8 @@ public final class ReinforcementUnits {
         var lore = new ArrayList<>(messages.getLines("reinforcement." + unit.key() + ".lore"));
         lore.add(Component.empty());
         lore.addAll(loadouts.blasterStats(unit.blaster()));
-        lore.add(messages.get("class.health", Formatter.number("hearts", stats.health() / 2)));
-        lore.add(messages.get("class.speed", Formatter.number("percent", Math.round(stats.speed() * 100))));
+        lore.add(messages.get("class.health", StatIcon.TAG, Formatter.number("hearts", stats.health() / 2)));
+        lore.add(messages.get("class.speed", StatIcon.TAG, Formatter.number("percent", Math.round(stats.speed() * 100))));
         unit.abilities().forEach(ability -> lore.add(messages.get("class.ability",
                 Placeholder.component("ability", messages.get(ability.messageKey(faction) + ".name")))));
         lore.add(messages.get("reinforcement.slots", Formatter.number("active", roster.count(unit)), Formatter.number("limit", stats.limit())));

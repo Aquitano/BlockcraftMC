@@ -35,8 +35,8 @@ public final class DeployArt {
     static final int CLASS_CARD_ROWS = 2;
     static final List<Integer> SPECIALS = List.of(45, 48, 51);
     static final int SPECIAL_COLUMNS = 3;
-    /** The toolbar's buttons from these slots, each up to the next or the row's end: close, then deploy. */
-    static final List<Integer> BUTTONS = List.of(0, 4);
+    /** The chest's top-right slot, which answers for the small close mark drawn on the strip above the cards. */
+    static final int CLOSE = 8;
     static final int MAP_COLUMNS = 9;
     static final int MAP_ROWS = 3;
 
@@ -47,9 +47,20 @@ public final class DeployArt {
     static final int SLOT_TOP = 18;
     /** Where the player's inventory below the six-row chest draws its first item. */
     static final int INVENTORY_TOP = 139;
+    /** Where the hotbar under the map draws its items; the deploy button spans the whole row. */
+    static final int HOTBAR_TOP = INVENTORY_TOP + 3 * 18 + 4;
+    /**
+     * The deploy button's label line, and where on an item of it the countdown's digits draw: a two-digit field that
+     * starts at the item's left edge or half a slot further, its digits at the field's left and right, or one alone in
+     * its middle.
+     */
+    static final int BUTTON_TEXT = HOTBAR_TOP + 6;
+    static final int[] FIELD_LEFTS = {0, 9};
+    static final int[] DIGIT_LEFTS = {0, 4, 2};
+    static final int BUTTON_INK = 0xFF1B1E26;
 
     /** Tops of the server's text lines; Sternenfront's DeployScreen draws on no others. */
-    static final int[] LINES = {-3, 18, 21, 24, 32, 34, 35, 38, 39, 40, 47, 48, 49, 50, 52, 54, 55, 62, 64, 65, 70, 71, 72, 74, 75, 76, 77, 79, 80, 86, 87, 92, 94, 95, 99, 107, 109, 110, 111, 112, 114, 115, 118, 122, 124, 125, 130, 134, 144, 153, 154, 155, 163, 165, 168, 173, 175, 178, 183, 185, 193, 195, 196, 202, 204, 205, 206, 214};
+    static final int[] LINES = {-3, 19, 21, 32, 34, 35, 38, 39, 40, 47, 48, 49, 50, 52, 54, 55, 62, 64, 65, 70, 71, 72, 74, 75, 76, 77, 79, 80, 86, 87, 92, 94, 95, 99, 107, 109, 110, 111, 112, 114, 115, 118, 122, 124, 125, 130, 134, 144, 153, 154, 155, 163, 165, 168, 173, 175, 178, 183, 185, 193, 195, 196, 197, 203, 206, 214, 218};
 
     static final String[] FACTIONS = {"kolonien", "hegemonie"};
     static final int[] ACCENTS = {0xFF3D8BFF, 0xFFE8473F};
@@ -96,8 +107,8 @@ public final class DeployArt {
     static final int ABILITY_SIZE = 16;
     static final int BADGE_SIZE = 13;
     static final int TOOLBAR_SIZE = 16;
-    /** The menu icons the buttons wore as items, now drawn beside their labels: close, then deploy. */
-    static final List<String> TOOLBAR_ICONS = List.of("tool_close", "deploy");
+    /** The menu icon the deploy button wore as an item, now drawn beside its label. */
+    static final List<String> TOOLBAR_ICONS = List.of("deploy");
 
     /** A small picture for the text lines, nine pixels square. */
     record Icon(String name, String... rows) { }
@@ -111,7 +122,11 @@ public final class DeployArt {
             new Icon("locked", "...###...", "..#...#..", "..#...#..", ".#######.", ".#######.", ".###.###.", ".###.###.", ".#######.", "........."),
             new Icon("contested", "#.#.#.#.#", ".........", "#.......#", ".........", "#.......#", ".........", "#.......#", ".........", "#.#.#.#.#"),
             new Icon("headquarters", "#####....", "#####....", "#####....", "#........", "#........", "#........", "#........", "#........", "###......"),
-            new Icon("dropship", "....#....", "...###...", "...###...", "..#####..", "..#####..", "..##.##..", ".##...##.", ".#.###.#.", "...#.#..."));
+            new Icon("dropship", "....#....", "...###...", "...###...", "..#####..", "..#####..", "..##.##..", ".##...##.", ".#.###.#.", "...#.#..."),
+            new Icon("damage", ".........", ".........", "..###....", "#######..", "#########", ".##.#....", ".##......", ".##......", "........."),
+            new Icon("speed", "..####...", "..####...", "..####...", "..####...", "..#####..", "..######.", ".########", ".########", "........."),
+            new Icon("range", "....#....", "..#####..", ".#..#..#.", ".#.....#.", "###.#.###", ".#.....#.", ".#..#..#.", "..#####..", "....#...."),
+            new Icon("close", ".........", ".##...##.", ".###.###.", "..#####..", "...###...", "..#####..", ".###.###.", ".##...##.", "........."));
 
     private DeployArt() {
     }
@@ -179,6 +194,65 @@ public final class DeployArt {
             }
             Files.writeString(fonts.resolve("line_" + top + ".json"), font(providers));
         }
+        // Tooltips set the stat icons in a line of their own text, standing on its baseline like a letter.
+        Files.writeString(fonts.resolve("stats.json"), font(List.of(bitmap("deploy/icons.png", 5, ICON_SIZE, run(ICON_GLYPHS, ICONS.size())))));
+        countdown(root);
+    }
+
+    /**
+     * The deploy button's seconds, which change while the chest's title cannot: an item in one of the button's slots whose
+     * custom_model_data strings name the digit at each place {@link #BUTTON_TEXT} lists, field by field, in the label's
+     * capitals and the button's ink.
+     */
+    static void countdown(Path root) throws IOException {
+        Path textures = root.resolve("assets/blockcraft/textures/item/deploy");
+        Path models = root.resolve("assets/blockcraft/models/item/deploy");
+        Path items = root.resolve("assets/blockcraft/items/deploy");
+        Files.createDirectories(textures);
+        Files.createDirectories(models);
+        Files.createDirectories(items);
+        var labels = labels();
+        var digits = new BufferedImage(32, 8, BufferedImage.TYPE_INT_ARGB);
+        for (int digit = 0; digit < 10; digit++) {
+            int cell = LABELS.indexOf((char) ('0' + digit)) * 3;
+            for (int y = 0; y < 5; y++) {
+                for (int x = 0; x < 3; x++) {
+                    if (labels.getRGB(cell + x, 2 + y) >>> 24 != 0) {
+                        digits.setRGB(digit * 3 + x, y, BUTTON_INK);
+                    }
+                }
+            }
+        }
+        PackArt.write(digits, textures.resolve("countdown_digits.png"));
+        int bottom = 16 - (BUTTON_TEXT - HOTBAR_TOP) - 5;
+        var places = new ArrayList<String>();
+        for (int place = 0; place < FIELD_LEFTS.length * DIGIT_LEFTS.length; place++) {
+            int left = FIELD_LEFTS[place / DIGIT_LEFTS.length] + DIGIT_LEFTS[place % DIGIT_LEFTS.length];
+            var cases = new ArrayList<String>();
+            for (int digit = 0; digit < 10; digit++) {
+                String name = "digit_" + left + "_" + digit;
+                Files.writeString(models.resolve(name + ".json"), String.format(Locale.ROOT, """
+                        {
+                          "gui_light": "front",
+                          "textures": {"digits": "blockcraft:item/deploy/countdown_digits"},
+                          "elements": [{"from": [%d, %d, 8], "to": [%d, %d, 8], "shade": false,
+                            "faces": {"south": {"uv": [%.1f, 0, %.1f, 10], "texture": "#digits"}}}]
+                        }
+                        """, left, bottom, left + 3, bottom + 5, digit * 1.5, digit * 1.5 + 1.5));
+                cases.add("""
+                        {"when": "%d", "model": {"type": "minecraft:model", "model": "blockcraft:item/deploy/%s"}}""".formatted(digit, name));
+            }
+            places.add("""
+                    {"type": "minecraft:select", "property": "minecraft:custom_model_data", "index": %d,
+                          "cases": [%s],
+                          "fallback": {"type": "minecraft:empty"}}""".formatted(place, String.join(", ", cases)));
+        }
+        Files.writeString(items.resolve("countdown.json"), """
+                {
+                  "model": {"type": "minecraft:composite", "models": [
+                    %s]}
+                }
+                """.formatted(String.join(",\n    ", places)));
     }
 
     /** The whole window, faction-coloured, before it is cut into its three glyphs. */
@@ -210,11 +284,9 @@ public final class DeployArt {
         canvas.fill(180, 28, 115, 1, EDGE);
         canvas.fill(181, 139, 113, 1, EDGE);
 
-        for (int button = 0; button < BUTTONS.size(); button++) {
-            int last = button + 1 < BUTTONS.size() ? BUTTONS.get(button + 1) : COLUMNS;
-            PackArt.button(image, slotX(BUTTONS.get(button)) - LEFT, slotY(BUTTONS.get(button)) - TOP,
-                    span(last - BUTTONS.get(button)), PackArt.BUTTONS[button]);
-        }
+        canvas.fill(SLOT_LEFT - 1, 17, span(COLUMNS) + 2, 12, EDGE);
+        canvas.fill(SLOT_LEFT, 18, span(COLUMNS), 10, HEADER);
+        PackArt.button(image, SLOT_LEFT - LEFT, HOTBAR_TOP - TOP, span(COLUMNS), PackArt.BUTTONS[1]);
 
         for (int slot : CLASS_CARDS) {
             card(canvas, slotX(slot), slotY(slot), accent);
@@ -260,7 +332,6 @@ public final class DeployArt {
             canvas.fill(Math.min(corner[0], corner[0] + corner[2] * 5), corner[1], 6, 1, accent);
             canvas.fill(corner[0], Math.min(corner[1], corner[1] + corner[3] * 5), 1, 6, accent);
         }
-        canvas.fill(mapLeft, mapBottom + 4, mapWidth, 1, EDGE);
         return image;
     }
 

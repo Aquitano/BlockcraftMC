@@ -6,10 +6,12 @@ import me.blockcraft.sternenfront.game.AbilityIcon;
 import me.blockcraft.sternenfront.game.CombatClass;
 import me.blockcraft.sternenfront.game.Faction;
 import me.blockcraft.sternenfront.game.Spawn;
+import me.blockcraft.sternenfront.game.StatIcon;
 import me.blockcraft.sternenfront.hero.Hero;
 import me.blockcraft.sternenfront.reinforcement.Reinforcement;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.junit.Test;
 
 import javax.imageio.ImageIO;
@@ -22,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
@@ -76,12 +79,12 @@ public class DeployScreenTest {
         }
     }
 
-    /** The pack's window has its buttons, cards and map where the menu's slots are, and the screen draws over them. */
+    /** The pack's window has its close mark, cards and map where the menu's slots are, and the screen draws over them. */
     @Test
     public void thePacksWindowHasItsButtonsCardsAndMapWhereTheSlotsAre() {
         assertEquals(DeployScreen.CLASS_CARDS.stream().map(String::valueOf).toList(), generator("CLASS_CARDS"));
         assertEquals(DeployScreen.SPECIALS.stream().map(String::valueOf).toList(), generator("SPECIALS"));
-        assertEquals(DeployScreen.BUTTONS.stream().map(String::valueOf).toList(), generator("BUTTONS"));
+        assertEquals(List.of(String.valueOf(DeployScreen.CLOSE)), generator("CLOSE"));
         var sizes = Map.of("CLASS_CARD_COLUMNS", DeployScreen.CLASS_CARD_COLUMNS, "CLASS_CARD_ROWS", DeployScreen.CLASS_CARD_ROWS,
                 "SPECIAL_COLUMNS", DeployScreen.SPECIAL_COLUMNS, "MAP_COLUMNS", TacticalLayout.COLUMNS, "MAP_ROWS", TacticalLayout.ROWS);
         sizes.forEach((name, size) -> assertEquals(name, List.of(String.valueOf(size)), generator(name)));
@@ -97,6 +100,14 @@ public class DeployScreenTest {
         }
 
         assertEquals(Arrays.stream(DeployScreen.Icon.values()).map(icon -> icon.name().toLowerCase(Locale.ROOT)).toList(), icons);
+    }
+
+    /** A tooltip sets a stat's symbol by its glyph, which must be that stat's picture on the sheet. */
+    @Test
+    public void everyStatIconIsItsPictureOnTheSheet() {
+        var pictures = Map.of(StatIcon.HEALTH, DeployScreen.Icon.HEART, StatIcon.DAMAGE, DeployScreen.Icon.DAMAGE,
+                StatIcon.SPEED, DeployScreen.Icon.SPEED, StatIcon.RANGE, DeployScreen.Icon.RANGE);
+        pictures.forEach((stat, picture) -> assertEquals(stat.name(), 0xE100 + picture.ordinal(), stat.glyph()));
     }
 
     @Test
@@ -124,33 +135,44 @@ public class DeployScreenTest {
         var places = new java.util.ArrayList<>(view.places());
         var post = places.get(1);
         places.set(1, new DeployScreen.Place(post.spawn(), post.name(), post.colour(), !post.open(), !post.recommended(), post.selection()));
-        var flipped = new DeployScreen.View(view.faction(), view.title(), view.buttons(), view.role(), view.classes(), view.specials(),
-                List.copyOf(places), view.hint());
+        var flipped = new DeployScreen.View(view.faction(), view.title(), view.heading(), view.button(), view.role(), view.classes(),
+                view.specials(), List.copyOf(places), view.hint());
         places.set(1, new DeployScreen.Place(post.spawn(), post.name(), post.colour(), post.open(), post.recommended(), DeployScreen.Selection.PENDING));
-        var chosen = new DeployScreen.View(view.faction(), view.title(), view.buttons(), view.role(), view.classes(), view.specials(),
-                places, view.hint());
+        var chosen = new DeployScreen.View(view.faction(), view.title(), view.heading(), view.button(), view.role(), view.classes(),
+                view.specials(), places, view.hint());
 
         assertEquals(view.withoutSpawnMarks(), flipped.withoutSpawnMarks());
         assertNotEquals(view.withoutSpawnMarks(), chosen.withoutSpawnMarks());
     }
 
-    /** The headquarters with up to five posts, with and without the dropship, so every line of the list is drawn on. */
+    /**
+     * The headquarters with up to five posts, with and without the dropship, so every line of the list is drawn on, and
+     * each of the deploy button's lines.
+     */
     private List<DeployScreen.View> views() {
         var views = new java.util.ArrayList<DeployScreen.View>();
+        var states = List.of("waiting", "ready", "queued");
         for (int posts = 0; posts <= 5; posts++) {
-            views.add(view(posts, false));
-            views.add(view(posts, true));
+            views.add(view(posts, false, states.get(posts % states.size())));
+            views.add(view(posts, true, states.get((posts + 1) % states.size())));
         }
         return views;
     }
 
     private DeployScreen.View view(int posts, boolean dropship) {
+        return view(posts, dropship, "ready");
+    }
+
+    private DeployScreen.View view(int posts, boolean dropship, String state) {
         var role = new DeployScreen.Role("Klasse", "Klonsoldat", DeployScreen.Portrait.KOLONIEN_SOLDIER,
-                List.of(new DeployScreen.Stat("Gesundheit", "10", true), new DeployScreen.Stat("Tempo", "100 %", false),
-                        new DeployScreen.Stat("Schaden", "2,5", true), new DeployScreen.Stat("Reichweite", "60 m", false)),
+                List.of(new DeployScreen.Stat("Gesundheit", "10", Optional.of(StatIcon.HEALTH)),
+                        new DeployScreen.Stat("Tempo", "100 %", Optional.of(StatIcon.SPEED)),
+                        new DeployScreen.Stat("Schaden", "2,5", Optional.of(StatIcon.DAMAGE)),
+                        new DeployScreen.Stat("Reichweite", "60 m", Optional.of(StatIcon.RANGE))),
                 "Großer DC-15A-Blaster", List.of(new DeployScreen.Ability("Thermaldetonator", "Taste F", AbilityIcon.GRENADE),
                         new DeployScreen.Ability("Adrenalin", "Taste Q", AbilityIcon.ADRENALINE)),
-                List.of(new DeployScreen.Stat("Kosten", "Kostenlos", false), new DeployScreen.Stat("Deine Kampfpunkte", "1340 KP", false)));
+                List.of(new DeployScreen.Stat("Kosten", "Kostenlos", Optional.empty()),
+                        new DeployScreen.Stat("Deine Kampfpunkte", "1340 KP", Optional.empty())));
         var card = new DeployScreen.ClassCard("Soldat", DeployScreen.Portrait.KOLONIEN_SOLDIER, List.of(AbilityIcon.GRENADE, AbilityIcon.RALLY), true);
         var special = new DeployScreen.Special("ARC", DeployScreen.Portrait.ARC_TROOPER, 1250, true, true);
         var spawns = new java.util.ArrayList<>(List.of(new DeployScreen.Place(new Spawn.Headquarters(), "Hauptquartier", 0xFF3434,
@@ -164,8 +186,13 @@ public class DeployScreenTest {
             spawns.add(new DeployScreen.Place(new Spawn.Dropship(), "Landung bei A", 0xFFFFFF, true, true, DeployScreen.Selection.CONFIRMED));
         }
         var hint = new DeployScreen.Hint("Ort anklicken: als Obi-Wan für 1250 KP", DeployScreen.Hint.Tone.values()[posts % 3]);
-        return new DeployScreen.View(Faction.HEGEMONIE, Component.empty(), List.of("Schließen", "Einsetzen"), role,
+        var button = new DeployScreen.Button(plain("deploy.screen.button." + state), plain("deploy.screen.button.seconds"));
+        return new DeployScreen.View(Faction.HEGEMONIE, Component.empty(), plain("deploy.screen.units"), button, role,
                 List.of(card, card, card, card), List.of(special, special, special), spawns, hint);
+    }
+
+    private String plain(String key) {
+        return PlainTextComponentSerializer.plainText().serialize(messages.get(key));
     }
 
     private static String source() {

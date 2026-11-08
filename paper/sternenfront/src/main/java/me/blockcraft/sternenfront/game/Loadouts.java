@@ -78,7 +78,7 @@ public final class Loadouts {
         var stats = config.stats(blaster);
         var lore = new ArrayList<>(messages.getLines("blaster." + blaster.key() + ".lore"));
         lore.add(Component.empty());
-        lore.addAll(messages.getLines("blaster.stats",
+        lore.addAll(messages.getLines("blaster.stats", StatIcon.TAG,
                 Formatter.number("damage", stats.damage() * stats.bolts() / TO_HEARTS),
                 Formatter.number("range", Math.round(stats.range()))));
         return blaster.build(blaster.model().item().name(messages.get("blaster." + blaster.key() + ".name")).lore(lore)
@@ -153,9 +153,9 @@ public final class Loadouts {
     private List<Component> statLines(Faction faction, CombatClass combatClass) {
         var body = config.stats(faction, combatClass);
         var lines = new ArrayList<>(blasterStats(combatClass.blaster(faction)));
-        lines.add(messages.get("class.health", Formatter.number("hearts", body.health() / TO_HEARTS)));
+        lines.add(messages.get("class.health", StatIcon.TAG, Formatter.number("hearts", body.health() / TO_HEARTS)));
         if (body.speed() != 1) {
-            lines.add(messages.get("class.speed", Formatter.number("percent", Math.round(body.speed() * 100))));
+            lines.add(messages.get("class.speed", StatIcon.TAG, Formatter.number("percent", Math.round(body.speed() * 100))));
         }
         if (body.scale() != 1) {
             lines.add(messages.get("class.size", Formatter.number("percent", Math.round(body.scale() * 100))));
@@ -165,10 +165,10 @@ public final class Loadouts {
 
     public List<Component> blasterStats(Blaster blaster) {
         var stats = config.stats(blaster);
-        return List.of(messages.get("class.blaster",
+        return List.of(messages.get("class.blaster", StatIcon.TAG,
                         Placeholder.component("blaster", messages.get("blaster." + blaster.key() + ".name")),
                         Formatter.number("damage", stats.damage() * stats.bolts() / TO_HEARTS)),
-                messages.get("class.range", Formatter.number("range", Math.round(stats.range()))));
+                messages.get("class.range", StatIcon.TAG, Formatter.number("range", Math.round(stats.range()))));
     }
 
     /** The faction's leather, and on the head {@code head} if a hero wears their own, else the faction's helmet. */

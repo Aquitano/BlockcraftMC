@@ -124,12 +124,13 @@ cover, teammate safety, and self-damage. Lightning uses the saber guard without 
 ## Redeployment
 
 Clicking a spawn chooses and confirms it in one step with the selected class, hero or reinforcement: the player deploys
-there at once, or as soon as the five-second wait ends. The yellow `Einsetzen` button does the same for the spawn that
-shows the countdown. Without confirmation, the fifteen-second timer deploys the existing free class there without
+there at once, or as soon as the five-second wait ends. The yellow button under the map does the same for the suggested
+spawn. Without confirmation, the fifteen-second timer deploys the existing free class there without
 spending battle points. Selecting a different paid unit, or going back from one to a class, drops the confirmation,
 including when a spawn was already queued, so the spawn needs another click. A failed teleport also drops it and restarts
-the automatic countdown, leaving the menu open for another choice. The red `Schließen` button closes the menu; the
-countdown goes on, the deploy item opens it again, and the menu stays closed until then.
+the automatic countdown, leaving the menu open for another choice. The small red cross at the right of the strip above
+the cards, `Schließen` on hover, closes the menu; the countdown goes on, the deploy item opens it again, and the menu
+stays closed until then.
 
 The suggestion keeps an explicitly chosen spawn for the current deployment if it is still safe. Outside an assault,
 it remembers a safe post selected by clicking its spawn card. HQ is never a lasting preference, and the assault priority
@@ -142,9 +143,10 @@ The dropship remains an explicit choice and is never recommended automatically.
 The deploy menu is one screen. The pack draws a window wider and taller than the chest around it, from
 `resourcepack/DeployArt.java`, sized for the smallest automatic GUI, 426 by 240 pixels, which Minecraft's default window and
 720p at scale 3 get. Left of the slots it shows the chosen class, reinforcement or hero: portrait, health, pace, damage
-and range, a dash where a hero's blade has none, weapon, both abilities with their keys, the cost and the player's
+and range, each beside its own symbol (a heart, a boot, a blaster and a crosshair, which the cards' tooltips share),
+a dash where a hero's blade has none, weapon, both abilities with their keys, the cost and the player's
 battle points as `Deine Kampfpunkte`. Right of them it lists the spawns with the marks their markers wear and explains
-the markers. In the chest are the two labelled buttons, the four class cards, then the reinforcement and both heroes
+the markers. In the chest are the close cross, the four class cards, then the reinforcement and both heroes
 with their costs, in red and with a padlock while the player cannot pay or no slot is free. The chest's title draws that
 window, so it cannot change while the chest is open. A click on a class, a reinforcement, a hero or a spawn, a change in
 battle points or in what the player can pay for, or the dropship coming or going opens the menu again with a new one at
@@ -171,9 +173,11 @@ Posts A–E use the same letter badges as the combat HUD. Filled badges allow de
 and blinking badges mark contested or attacked posts. Colours show ownership. The pack frames the chosen spawn on its
 slot's border: gold corners while it waits for a confirmation, a green frame and a glow once confirmed. A star marks the
 recommended spawn and a padlock a locked one; the list beside the map repeats the star, the frame and the padlock. The
-spawn the player will land at shows the seconds left as its count, which the legend names: the wait once confirmed,
-otherwise the automatic deployment. The `Einsetzen` button names its target and shows the wait or automatic deployment
-countdown. Hovering shows the post name, recommendation, selection, and for a locked spawn `Gesperrt` with the reason.
+deploy button spans the hotbar under the map and carries the countdown: `Einsetzen in 4 s` during the wait, `Jetzt
+einsetzen · auto in 9 s` once the wait is over, with the seconds to the automatic deployment, and `Einsatz in 4 s` once
+confirmed. Its words change seldom and are part of the title, which reopens when the wait ends; the seconds
+are an item in one of its slots, which picks the slot that centres the line best. Hovering the button names its target.
+Hovering a marker shows the post name, recommendation, selection, and for a locked spawn `Gesperrt` with the reason.
 The dropship names the post it lands beside, and its cell stays empty while there is none.
 
 After spawning, the minimap frames the post to make for in yellow corners: the assault's priority post, or the nearest
@@ -202,6 +206,12 @@ with the pack is in the round, so the bars keep one order and never jump a slot:
 post's capture bar and the heroes' bars. A bar that arrives late, such as the objective line for a player who rejoins,
 puts the ones after it back below it. The map redraws every `minimap.update-ticks` and sends nothing while nothing on it
 moved.
+
+The map's line also carries the round's short announcements as its own centred text, at chat size just under the
+objective, where a subtitle would cross the crosshair: the spawn's name on arrival, a post secured, the relic appearing,
+an act beginning and a secret found. Each stays a few seconds, a new one replaces it, and it hides with the combat HUD.
+A player without the line, such as a spectator, gets the same text as a subtitle. The subtitle itself carries only the
+crosshair's marks.
 
 ## Combat feedback
 
