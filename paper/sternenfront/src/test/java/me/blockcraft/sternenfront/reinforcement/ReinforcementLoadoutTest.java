@@ -94,7 +94,7 @@ public class ReinforcementLoadoutTest {
 
     @Test
     public void choosingAClassOrHeroReplacesTheUnitAndChoosingASpawnKeepsIt() {
-        var choosing = new Fighter.Choosing(10, 30, Optional.empty(), Optional.of(Hero.JEDI)).pick(ARC_TROOPER);
+        var choosing = Fighter.Choosing.begin(10, 30).pick(Optional.of(Hero.JEDI)).pick(ARC_TROOPER);
         assertTrue(choosing.hero().isEmpty());
         assertEquals(Optional.of(ARC_TROOPER), choosing.choose(new Spawn.Headquarters()).reinforcement());
         assertTrue(choosing.pick(Optional.of(Hero.COMMANDER)).reinforcement().isEmpty());
@@ -103,7 +103,7 @@ public class ReinforcementLoadoutTest {
 
     @Test
     public void automaticDeploymentCannotChargeAnUnconfirmedUnitAndChangingRoleRequiresConfirmationAgain() {
-        var choosing = new Fighter.Choosing(10, 30, Optional.empty(), Optional.empty()).pick(ARC_TROOPER);
+        var choosing = Fighter.Choosing.begin(10, 30).pick(ARC_TROOPER);
         assertTrue(choosing.paidReinforcement().isEmpty());
         assertFalse(choosing.manualReady(30));
         var confirmed = choosing.choose(new Spawn.Headquarters());

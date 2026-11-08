@@ -25,12 +25,12 @@ public final class Fighter {
     public record Choosing(long readyTick, long autoTick, Optional<Spawn> chosen, Optional<Hero> hero,
                            Optional<Reinforcement> reinforcement, boolean confirmed) {
 
-        public Choosing(long readyTick, long autoTick, Optional<Spawn> chosen, Optional<Hero> hero) {
-            this(readyTick, Math.max(readyTick, autoTick), chosen, hero, Optional.empty(), false);
+        public Choosing {
+            autoTick = Math.max(readyTick, autoTick);
         }
 
-        public Choosing(long readyTick, long autoTick, Optional<Spawn> chosen, Optional<Hero> hero, boolean confirmed) {
-            this(readyTick, Math.max(readyTick, autoTick), chosen, hero, Optional.empty(), confirmed);
+        public static Choosing begin(long readyTick, long autoTick) {
+            return new Choosing(readyTick, autoTick, Optional.empty(), Optional.empty(), Optional.empty(), false);
         }
 
         public boolean manualReady(long tick) {
@@ -50,7 +50,7 @@ public final class Fighter {
         }
 
         public Choosing retry(long autoTick) {
-            return new Choosing(readyTick, Math.max(readyTick, autoTick), chosen, hero, reinforcement, false);
+            return new Choosing(readyTick, autoTick, chosen, hero, reinforcement, false);
         }
 
         public Choosing pick(Optional<Hero> hero) {

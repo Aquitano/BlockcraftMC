@@ -11,8 +11,7 @@ public class DeploymentChoiceTest {
 
     @Test
     public void failedDeploymentRequiresConfirmationAndRearmsAutomaticDeployment() {
-        var choosing = new Fighter.Choosing(100, 300, Optional.empty(), Optional.of(Hero.JEDI))
-                .choose(new Spawn.Post(1));
+        var choosing = Fighter.Choosing.begin(100, 300).pick(Optional.of(Hero.JEDI)).choose(new Spawn.Post(1));
         var retry = choosing.retry(650);
         assertFalse(retry.manualReady(350));
         assertTrue(retry.paidHero().isEmpty());
@@ -24,7 +23,7 @@ public class DeploymentChoiceTest {
 
     @Test
     public void selectingAHeroDoesNotAuthorizeAutomaticPayment() {
-        var choosing = new Fighter.Choosing(100, 300, Optional.empty(), Optional.empty()).pick(Optional.of(Hero.JEDI));
+        var choosing = Fighter.Choosing.begin(100, 300).pick(Optional.of(Hero.JEDI));
         assertTrue(choosing.paidHero().isEmpty());
         assertFalse(choosing.manualReady(300));
         var confirmed = choosing.choose(new Spawn.Post(1));
@@ -35,7 +34,7 @@ public class DeploymentChoiceTest {
 
     @Test
     public void changingPaidChoiceKeepsTheSpawnButRequiresNewConfirmation() {
-        var choosing = new Fighter.Choosing(100, 300, Optional.empty(), Optional.empty()).choose(new Spawn.Headquarters());
+        var choosing = Fighter.Choosing.begin(100, 300).choose(new Spawn.Headquarters());
         var hero = choosing.pick(Optional.of(Hero.JEDI));
         assertEquals(choosing.chosen(), hero.chosen());
         assertTrue(hero.paidHero().isEmpty());
@@ -51,7 +50,7 @@ public class DeploymentChoiceTest {
         var fighter = new Fighter(new Heat.Rules(5, 1, 20, 0.2, 0.25), ability -> new Charges(1, 1));
         fighter.combatClass(CombatClass.MEDIC);
         fighter.hero(Optional.of(Hero.JEDI));
-        fighter.choosing(Optional.of(new Fighter.Choosing(100, 50, Optional.empty(), Optional.empty())));
+        fighter.choosing(Optional.of(Fighter.Choosing.begin(100, 50)));
         assertEquals(CombatClass.MEDIC, fighter.combatClass());
         assertTrue(fighter.choosing().orElseThrow().paidHero().isEmpty());
         assertEquals(100, fighter.choosing().orElseThrow().autoTick());
