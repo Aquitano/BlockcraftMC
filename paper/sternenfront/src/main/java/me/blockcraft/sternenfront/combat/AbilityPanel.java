@@ -1,5 +1,6 @@
 package me.blockcraft.sternenfront.combat;
 
+import me.blockcraft.api.pack.UiFont;
 import me.blockcraft.sternenfront.game.AbilityIcon;
 import me.blockcraft.sternenfront.game.HudPanel;
 import me.blockcraft.sternenfront.game.HudPanel.Corner;
@@ -20,9 +21,9 @@ final class AbilityPanel {
 
     static final Key FONT = Key.key("blockcraft", "abilities");
 
-    /** What a tile's badge shows. */
+    /** What a tile's badge shows; a double jump shows the space bar twice. */
     enum Binding {
-        F(10), Q(10), SHIFT_F(16), DOUBLE_JUMP(10);
+        F(10), Q(10), SHIFT_F(16), DOUBLE_JUMP(16);
 
         private final int advance;
 
@@ -42,7 +43,7 @@ final class AbilityPanel {
         record Armed() implements State { }
     }
 
-    /** {@code stored} of {@code capacity} uses, shown as pips under the name while the ability holds more than one. */
+    /** {@code stored} of {@code capacity} uses; an ability that holds several counts the stored ones on its tile. */
     record Charges(int stored, int capacity) {
         static final Charges ONE = new Charges(1, 1);
     }
@@ -63,22 +64,29 @@ final class AbilityPanel {
     private static final int DIGIT_PITCH = 7;
     private static final int DIGIT_WIDTH = 8;
     private static final int DIGIT_HEIGHT = 11;
+    /** The seconds centred on the tile, the odd pixel above them. */
+    private static final int DIGIT_TOP = (TILE - DIGIT_HEIGHT + 1) / 2;
     private static final int MAX_SECONDS = 99;
-    private static final int PIP_ADVANCE = 7;
-    private static final int LETTER_ADVANCE = 4;
+    /** The count's digits, each ringed dark, the rims overlapping like the seconds'. */
+    private static final int COUNT_ADVANCE = 6;
+    private static final int COUNT_PITCH = 4;
+    private static final int COUNT_WIDTH = 5;
+    private static final int COUNT_HEIGHT = 7;
+    private static final int MAX_COUNT = 99;
+    /** The name's capitals level with the tile's middle. */
+    private static final int NAME_TOP = 8;
     /** The pack draws these capitals two pixels wider, so their diagonals show. */
     private static final String WIDE_LETTERS = "MNW";
     private static final int WIDE_LETTER_ADVANCE = 6;
     private static final int NAME_GAP = 4;
-    private static final char BACKING = '\uE000';
-    private static final char FRAME = '\uE001';
-    private static final char FIRST_ICON = '\uE010';
-    private static final char FIRST_COOLING_ICON = '\uE030';
-    private static final char FIRST_BADGE = '\uE050';
-    private static final char FIRST_FILL = '\uE060';
-    private static final char FIRST_DIGIT = '\uE080';
-    private static final char PIP_HELD = '\uE090';
-    private static final char PIP_SPENT = '\uE091';
+    static final char BACKING = '\uE000';
+    static final char FRAME = '\uE001';
+    static final char FIRST_ICON = '\uE010';
+    static final char FIRST_COOLING_ICON = '\uE030';
+    static final char FIRST_BADGE = '\uE050';
+    static final char FIRST_FILL = '\uE060';
+    static final char FIRST_DIGIT = '\uE080';
+    static final char FIRST_COUNT = '\uE090';
 
     private AbilityPanel() {
     }
@@ -96,58 +104,66 @@ final class AbilityPanel {
         return glyphs;
     }
 
+    /** The tile from its backing up: a recharging one adds its fill under a grey icon and its seconds over the frame. */
     private static List<Glyph> slot(Slot slot, int top, Tint side) {
-        var glyphs = new ArrayList<Glyph>();
         int left = -TILE;
-        boolean cooling = slot.state() instanceof State.Cooling;
+        var glyphs = new ArrayList<Glyph>();
         glyphs.add(glyph(BACKING, left, top, Tint.WHITE, TILE_ADVANCE));
-        if (slot.state() instanceof State.Cooling(int seconds, double done)) {
-            int level = (int) Math.round(Math.clamp(done, 0, 1) * FILL_LEVELS);
-            if (level > 0) {
-                glyphs.add(glyph((char) (FIRST_FILL + level - 1), left, top, Tint.WHITE, TILE_ADVANCE));
+        switch (slot.state()) {
+            case State.Ready _ -> glyphs.addAll(face(FIRST_ICON, slot, side, left, top));
+            case State.Armed _ -> glyphs.addAll(face(FIRST_ICON, slot, Tint.SQUAD, left, top));
+            case State.Cooling(int seconds, double done) -> {
+                int level = (int) Math.round(Math.clamp(done, 0, 1) * FILL_LEVELS);
+                if (level > 0) {
+                    glyphs.add(glyph((char) (FIRST_FILL + level - 1), left, top, Tint.WHITE, TILE_ADVANCE));
+                }
+                glyphs.addAll(face(FIRST_COOLING_ICON, slot, Tint.DIMMED, left, top));
+                var digits = String.valueOf(Math.clamp(seconds, 1, MAX_SECONDS));
+                int width = DIGIT_WIDTH + (digits.length() - 1) * DIGIT_PITCH;
+                for (int index = 0; index < digits.length(); index++) {
+                    glyphs.add(glyph((char) (FIRST_DIGIT + digits.charAt(index) - '0'), left + (TILE - width) / 2 + index * DIGIT_PITCH,
+                            top + DIGIT_TOP, Tint.WHITE, DIGIT_ADVANCE));
+                }
             }
         }
-        glyphs.add(glyph((char) ((cooling ? FIRST_COOLING_ICON : FIRST_ICON) + slot.icon().ordinal()), left + ICON_INSET,
-                top + ICON_INSET, Tint.WHITE, ICON_ADVANCE));
-        glyphs.add(glyph(FRAME, left, top, switch (slot.state()) {
-            case State.Ready _ -> side;
-            case State.Cooling _ -> Tint.DIMMED;
-            case State.Armed _ -> Tint.SQUAD;
-        }, TILE_ADVANCE));
-        if (slot.state() instanceof State.Cooling(int seconds, double done)) {
-            var digits = String.valueOf(Math.clamp(seconds, 1, MAX_SECONDS));
-            int width = DIGIT_WIDTH + (digits.length() - 1) * DIGIT_PITCH;
-            for (int index = 0; index < digits.length(); index++) {
-                glyphs.add(glyph((char) (FIRST_DIGIT + digits.charAt(index) - '0'), left + (TILE - width) / 2 + index * DIGIT_PITCH,
-                        top + (TILE - DIGIT_HEIGHT) / 2 + 1, Tint.WHITE, DIGIT_ADVANCE));
-            }
-        }
+        glyphs.addAll(count(slot.charges(), top));
         glyphs.add(glyph((char) (FIRST_BADGE + slot.binding().ordinal()), left, top, Tint.WHITE, slot.binding().advance));
         glyphs.addAll(label(slot, top));
         return glyphs;
     }
 
     /**
-     * The name left of the tile, level with its middle, or above the pips when the ability holds several uses. It stays
-     * white while the tile recharges, because grey letters vanish against a bright floor.
+     * The uses stored, in the tile's bottom-right corner inside its frame as the hotbar counts a stack: only while the
+     * ability holds several and has one left, since an empty one shows the seconds to its next.
      */
-    private static List<Glyph> label(Slot slot, int top) {
-        var glyphs = new ArrayList<Glyph>();
-        var name = HudPanel.capitals(slot.name());
-        int right = -TILE - NAME_GAP;
-        var charges = slot.charges();
-        boolean pips = charges.capacity() > 1;
-        int width = name.chars().map(letter -> WIDE_LETTERS.indexOf(letter) >= 0 ? WIDE_LETTER_ADVANCE : LETTER_ADVANCE).sum();
-        if (!name.isEmpty()) {
-            glyphs.add(new Glyph(name, right - width, top + (pips ? 4 : 8), Tint.WHITE, true, width));
+    private static List<Glyph> count(Charges charges, int top) {
+        if (charges.capacity() <= 1 || charges.stored() <= 0) {
+            return List.of();
         }
-        if (pips) {
-            int x = right - charges.capacity() * PIP_ADVANCE + 1;
-            for (int pip = 0; pip < charges.capacity(); pip++) {
-                glyphs.add(glyph(pip < charges.stored() ? PIP_HELD : PIP_SPENT, x + pip * PIP_ADVANCE, top + 14, Tint.WHITE, PIP_ADVANCE));
-            }
+        var digits = String.valueOf(Math.min(charges.stored(), MAX_COUNT));
+        int left = -1 - COUNT_WIDTH - (digits.length() - 1) * COUNT_PITCH;
+        var glyphs = new ArrayList<Glyph>();
+        for (int index = 0; index < digits.length(); index++) {
+            glyphs.add(glyph((char) (FIRST_COUNT + digits.charAt(index) - '0'), left + index * COUNT_PITCH, top + TILE - 1 - COUNT_HEIGHT,
+                    Tint.WHITE, COUNT_ADVANCE));
         }
         return glyphs;
+    }
+
+    /** The ability's icon from the run starting at {@code firstIcon}, framed in {@code frame}. */
+    private static List<Glyph> face(char firstIcon, Slot slot, Tint frame, int left, int top) {
+        return List.of(glyph((char) (firstIcon + slot.icon().ordinal()), left + ICON_INSET, top + ICON_INSET, Tint.WHITE, ICON_ADVANCE),
+                glyph(FRAME, left, top, frame, TILE_ADVANCE));
+    }
+
+    /**
+     * The name left of the tile, level with its middle. It stays white while the tile recharges, because grey letters
+     * vanish against a bright floor.
+     */
+    private static List<Glyph> label(Slot slot, int top) {
+        var name = HudPanel.capitals(slot.name());
+        int width = name.chars().map(letter -> WIDE_LETTERS.indexOf(letter) >= 0 ? WIDE_LETTER_ADVANCE : UiFont.LABEL_ADVANCE).sum();
+        return name.isEmpty() ? List.of() : List.of(new Glyph(name, -TILE - NAME_GAP - width, top + NAME_TOP, Tint.WHITE, true, width));
     }
 
     private static Glyph glyph(char glyph, int x, int y, Tint tint, int advance) {

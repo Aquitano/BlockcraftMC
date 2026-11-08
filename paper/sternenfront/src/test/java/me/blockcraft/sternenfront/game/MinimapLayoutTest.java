@@ -13,6 +13,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -55,6 +56,15 @@ public class MinimapLayoutTest {
     }
 
     @Test
+    public void theSquadListIsHeadedAboveItsMembers() {
+        var glyphs = MinimapLayout.list("Trupp", List.of(new Member("CT-4", Role.MEDIC, Tint.SQUAD, true)));
+        var heading = glyphs.getFirst();
+        assertEquals("TRUPP", heading.text());
+        assertEquals(Tint.DIMMED, heading.tint());
+        assertTrue(glyphs.stream().skip(1).allMatch(glyph -> glyph.y() > heading.y()));
+    }
+
+    @Test
     public void deadOrRedeployingMembersAreDimmed() {
         var line = MinimapLayout.member(1, Role.MEDIC, Tint.SQUAD, "CT-4", false);
         assertTrue(line.stream().allMatch(glyph -> glyph.tint() == Tint.DIMMED));
@@ -73,7 +83,7 @@ public class MinimapLayoutTest {
         for (int post = 0; post < 5; post++) {
             double angle = post * Math.PI * 2 / 5;
             var rim = view.clamped(Math.sin(angle) * 900, -Math.cos(angle) * 900, MinimapLayout.BADGE_REACH);
-            glyphs.add(MinimapLayout.badge(post, post % 2 == 0, rim, Tint.REPUBLIC));
+            glyphs.add(MinimapLayout.badge(new PostBadge(post, post % 2 == 0), rim, Tint.REPUBLIC));
             glyphs.add(MinimapLayout.target(rim));
         }
         for (var mark : Mark.values()) {
@@ -88,7 +98,7 @@ public class MinimapLayoutTest {
             members.add(new Member("Ein_sehr_langer_Name", role, Tint.SQUAD, role.ordinal() % 2 == 0));
         }
         members.add(new Member("ÄÖÜ-.:!?/+& 0123456789", Role.HERO, Tint.WHITE, true));
-        glyphs.addAll(MinimapLayout.list(members));
+        glyphs.addAll(MinimapLayout.list("Trupp", members));
 
         var fonts = Map.of(Key.key("blockcraft", "ui"), PackFonts.advances("ui"), MinimapLayout.FONT, PackFonts.advances("minimap"));
         assertEquals(0, PackFonts.width(MinimapLayout.render(glyphs), fonts));
@@ -104,15 +114,5 @@ public class MinimapLayoutTest {
                 assertTrue(json.toString(), json.get("height").getAsInt() <= 16);
             }
         }
-    }
-
-    @Test
-    public void theNamesReadTheMenuLabelsLettersInTheirOrder() throws IOException {
-        var labels = PackFonts.providers("label_wide_0").get(1).getAsJsonObject();
-        var minimap = PackFonts.providers("minimap");
-        var ours = minimap.asList().stream().map(provider -> provider.getAsJsonObject())
-                .filter(provider -> provider.has("file") && provider.get("file").getAsString().endsWith("minimap_letters.png"))
-                .findFirst().orElseThrow();
-        assertEquals(labels.get("chars"), ours.get("chars"));
     }
 }

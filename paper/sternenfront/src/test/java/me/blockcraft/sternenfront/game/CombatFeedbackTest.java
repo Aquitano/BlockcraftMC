@@ -26,7 +26,7 @@ public class CombatFeedbackTest {
 
     @Test
     public void eliteAvailabilityPingsOnceAndExpiresWithoutExtendingOnEachHudUpdate() {
-        var state = new CombatFeedback.State();
+        var state = new CombatFeedback.PlayerFeedback();
         assertFalse(state.eliteAvailable(false, 0, 60));
         assertTrue(state.eliteAvailable(true, 10, 60));
         assertFalse(state.eliteAvailable(true, 20, 60));
@@ -41,30 +41,30 @@ public class CombatFeedbackTest {
         var messages = Messages.load(Path.of("/nonexistent-combat-feedback-test"),
                 () -> getClass().getResourceAsStream("/messages.yml"),
                 Placeholder.parsed("error", "<red>"), Placeholder.parsed("success", "<green>"));
-        var state = new CombatFeedback.State();
+        var state = new CombatFeedback.PlayerFeedback();
         state.earned(CombatFeedback.Reward.KILL, 25, 0, 30);
         assertEquals("Abschuss +25 KP", plain(state.reward(messages)));
         state.earned(CombatFeedback.Reward.KILL, 25, 1, 30);
         assertEquals("2x +50 KP", plain(state.reward(messages)));
     }
 
-    /** The client starts a line half its width left of the middle, where the shader expects the corner panel. */
+    /** The client starts a line half its width left of the middle, where the shader expects the abilities panel. */
     @Test
-    public void theCornerPanelStartsInTheMiddleOfTheLineHoweverLongTheFeedback() throws IOException {
+    public void theAbilitiesPanelStartsInTheMiddleOfTheLineHoweverLongTheFeedback() throws IOException {
         var meter = Component.text("Deckung");
-        var corner = Component.text("\ue000").font(Key.key("blockcraft", "abilities"));
+        var abilities = Component.text("\ue000").font(Key.key("blockcraft", "abilities"));
         var fonts = new HashMap<Key, Map<Integer, Integer>>();
         fonts.put(UiFont.KEY, PackFonts.advances("ui"));
         var vanilla = new HashMap<Integer, Integer>();
         "+25 KP Deckung Kopfschuss Abschuss Verteidigt".codePoints().forEach(codepoint ->
                 vanilla.put(codepoint, MinecraftFont.Font.getWidth(Character.toString(codepoint)) + 1));
         fonts.put(null, vanilla);
-        var state = new CombatFeedback.State();
-        state.hud = new CombatFeedback.Hud(meter, PackFonts.width(meter, fonts), corner);
+        var state = new CombatFeedback.PlayerFeedback();
+        state.actionBar = new CombatFeedback.ActionBar(meter, PackFonts.width(meter, fonts), abilities);
         for (var feedback : List.of(Component.empty(), Component.text("+25 KP"),
                 Component.text("Kopfschuss Abschuss Verteidigt Abschuss +25 KP"))) {
             var parts = state.compose(feedback, Optional.empty()).children();
-            assertEquals(corner, parts.get(1));
+            assertEquals(abilities, parts.get(1));
             int rest = PackFonts.width(Component.empty().append(parts.get(2)).append(parts.get(3)), fonts) + PackFonts.width(parts.get(0), fonts);
             assertEquals(feedback.toString(), rest / 2, PackFonts.width(parts.get(0), fonts));
             assertTrue(plain(parts.get(3)).contains(plain(feedback) + " Deckung"));
@@ -73,9 +73,9 @@ public class CombatFeedbackTest {
 
     @Test
     public void activeCourseReplacesTheHudWithItsTimer() {
-        var state = new CombatFeedback.State();
+        var state = new CombatFeedback.PlayerFeedback();
         var timer = Optional.<Component>of(Component.text("Kraninspektion 2,00 s · Tor 2/4"));
-        state.hud = new CombatFeedback.Hud(Component.text("Deckung"), 28, Component.text("Tiles"));
+        state.actionBar = new CombatFeedback.ActionBar(Component.text("Deckung"), 28, Component.text("Tiles"));
 
         assertTrue(plain(state.compose(Component.empty(), timer)).endsWith(" Kraninspektion 2,00 s · Tor 2/4"));
         assertTrue(plain(state.compose(Component.text("+25 KP"), timer)).endsWith("+25 KP Kraninspektion 2,00 s · Tor 2/4"));
@@ -94,12 +94,12 @@ public class CombatFeedbackTest {
 
     @Test
     public void crosshairRedrawsWhenTheMarkerOrTheDamageChanges() {
-        var state = new CombatFeedback.State();
+        var state = new CombatFeedback.PlayerFeedback();
         var left = Optional.of(DamageDirection.LEFT);
         assertTrue(state.crosshairChanged(0, left, 30, Optional.empty()));
         assertFalse(state.crosshairChanged(1, left, 30, Optional.empty()));
         assertTrue("a new hit from the same side extends the arc", state.crosshairChanged(2, left, 32, Optional.empty()));
-        state.hit(CombatFeedback.Marker.HIT, 3, 6);
+        state.hit(CombatFeedback.HitMarker.HIT, 3, 6);
         assertTrue(state.crosshairChanged(3, left, 32, Optional.empty()));
         assertFalse(state.crosshairChanged(4, left, 32, Optional.empty()));
         assertTrue(state.crosshairChanged(9, left, 32, Optional.empty()));
@@ -110,7 +110,7 @@ public class CombatFeedbackTest {
 
     @Test
     public void crosshairRedrawsWhenTheSpreadChangesSizeAndBeforeItsTitleRunsOut() {
-        var state = new CombatFeedback.State();
+        var state = new CombatFeedback.PlayerFeedback();
         assertTrue(state.crosshairChanged(0, Optional.empty(), 0, Optional.of(0)));
         assertFalse(state.crosshairChanged(1, Optional.empty(), 0, Optional.of(0)));
         assertTrue(state.crosshairChanged(2, Optional.empty(), 0, Optional.of(3)));
@@ -122,26 +122,26 @@ public class CombatFeedbackTest {
 
     @Test
     public void killAndHeadshotFeedbackSurviveWeakerHitsAndBurstSoundsDoNotStack() {
-        var state = new CombatFeedback.State();
-        assertTrue(state.hit(CombatFeedback.Marker.HEADSHOT, 0, 6));
-        assertEquals(CombatFeedback.Marker.HEADSHOT, state.takeMarker(0).orElseThrow());
-        assertFalse(state.hit(CombatFeedback.Marker.HIT, 0, 6));
+        var state = new CombatFeedback.PlayerFeedback();
+        assertTrue(state.hit(CombatFeedback.HitMarker.HEADSHOT, 0, 6));
+        assertEquals(CombatFeedback.HitMarker.HEADSHOT, state.takeMarker(0).orElseThrow());
+        assertFalse(state.hit(CombatFeedback.HitMarker.HIT, 0, 6));
         assertTrue(state.takeMarker(0).isEmpty());
-        assertEquals(CombatFeedback.Marker.HEADSHOT, state.marker);
-        assertTrue(state.hit(CombatFeedback.Marker.KILL, 0, 6));
-        assertEquals(CombatFeedback.Marker.KILL, state.takeMarker(0).orElseThrow());
-        state.hit(CombatFeedback.Marker.HIT, 1, 6);
-        assertEquals(CombatFeedback.Marker.KILL, state.marker);
+        assertEquals(CombatFeedback.HitMarker.HEADSHOT, state.marker);
+        assertTrue(state.hit(CombatFeedback.HitMarker.KILL, 0, 6));
+        assertEquals(CombatFeedback.HitMarker.KILL, state.takeMarker(0).orElseThrow());
+        state.hit(CombatFeedback.HitMarker.HIT, 1, 6);
+        assertEquals(CombatFeedback.HitMarker.KILL, state.marker);
         assertTrue(state.takeMarker(1).isEmpty());
-        state.hit(CombatFeedback.Marker.HIT, 6, 6);
-        assertEquals(CombatFeedback.Marker.HIT, state.marker);
-        assertEquals(CombatFeedback.Marker.HIT, state.takeMarker(6).orElseThrow());
+        state.hit(CombatFeedback.HitMarker.HIT, 6, 6);
+        assertEquals(CombatFeedback.HitMarker.HIT, state.marker);
+        assertEquals(CombatFeedback.HitMarker.HIT, state.takeMarker(6).orElseThrow());
         assertTrue(state.takeMarker(12).isEmpty());
     }
 
     @Test
     public void nearbyPointGainsCombineWithoutReplacingAKillWithASupportLabel() {
-        var state = new CombatFeedback.State();
+        var state = new CombatFeedback.PlayerFeedback();
         state.earned(CombatFeedback.Reward.KILL, 100, 0, 30);
         state.earned(CombatFeedback.Reward.DEFENCE, 25, 1, 30);
         assertEquals(125, state.points);
@@ -157,7 +157,7 @@ public class CombatFeedbackTest {
 
     @Test
     public void killsChainWithinTheWindowAndStartOverAfterIt() {
-        var state = new CombatFeedback.State();
+        var state = new CombatFeedback.PlayerFeedback();
         assertEquals(1, state.chained(0, 80));
         assertEquals(2, state.chained(79, 80));
         assertEquals(1, state.chained(159, 80));

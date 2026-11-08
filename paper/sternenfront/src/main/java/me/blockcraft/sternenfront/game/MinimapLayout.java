@@ -1,5 +1,6 @@
 package me.blockcraft.sternenfront.game;
 
+import me.blockcraft.api.pack.UiFont;
 import me.blockcraft.sternenfront.game.HudPanel.Corner;
 import me.blockcraft.sternenfront.game.HudPanel.Glyph;
 import me.blockcraft.sternenfront.game.HudPanel.Tint;
@@ -13,7 +14,7 @@ import java.util.stream.IntStream;
 
 /**
  * Where the top-left {@link HudPanel} draws what, in the pixels of the pack's {@code blockcraft:minimap} font: a disc 63
- * pixels across, north up around the player, and the squad's names under it.
+ * pixels across, north up around the player, and the squad under it, headed and named.
  */
 final class MinimapLayout {
 
@@ -32,29 +33,28 @@ final class MinimapLayout {
     private static final int BADGE_HALF = 5;
     private static final int BADGE_ADVANCE = 11;
     private static final int CLASS_ADVANCE = 7;
-    private static final int LETTER_ADVANCE = 4;
-    private static final int HEADINGS = 16;
+    static final int HEADINGS = 16;
     private static final int LIST_TOP = MAP + 3;
     private static final int ROW = 8;
     static final int ROWS = 6;
     private static final int NAME_X = CLASS_ADVANCE;
-    private static final int NAME_LETTERS = (MAP - NAME_X) / LETTER_ADVANCE;
+    private static final int NAME_LETTERS = (MAP - NAME_X) / UiFont.LABEL_ADVANCE;
 
-    private static final char DISC = '\uE000';
-    private static final char BADGE = '\uE010';
-    private static final char ARROW = '\uE020';
-    private static final char TARGET = '\uE034';
+    static final char DISC = '\uE000';
+    static final char BADGE = '\uE010';
+    /** The arrow's sixteen headings, then each {@link Mark}. */
+    static final char ARROW = '\uE020';
+    static final char TARGET = '\uE034';
     private static final int TARGET_HALF = 6;
     private static final int TARGET_ADVANCE = 14;
-    private static final char CLASS_MARK = '\uE040';
+    static final char CLASS_MARK = '\uE040';
 
+    /** What a dot on the map stands for, in the order the pack draws them after the arrow. */
     enum Mark {
-        SQUADMATE('\uE030'), ALLY('\uE031'), ENEMY('\uE032'), HEADQUARTERS('\uE033');
+        SQUADMATE, ALLY, ENEMY, HEADQUARTERS;
 
-        private final char glyph;
-
-        Mark(char glyph) {
-            this.glyph = glyph;
+        char glyph() {
+            return (char) (ARROW + HEADINGS + ordinal());
         }
     }
 
@@ -62,8 +62,8 @@ final class MinimapLayout {
     enum Role {
         SOLDIER, HEAVY, SCOUT, MEDIC, HERO;
 
-        static Role of(CombatClass role) {
-            return switch (role) {
+        static Role of(CombatClass combatClass) {
+            return switch (combatClass) {
                 case SOLDIER -> SOLDIER;
                 case HEAVY -> HEAVY;
                 case SCOUT -> SCOUT;
@@ -102,9 +102,8 @@ final class MinimapLayout {
                 .toList();
     }
 
-    static Glyph badge(int post, boolean hollow, Pixel at, Tint tint) {
-        return new Glyph(String.valueOf((char) (BADGE + post * 2 + (hollow ? 1 : 0))), at.x() - BADGE_HALF, at.y() - BADGE_HALF,
-                tint, true, BADGE_ADVANCE);
+    static Glyph badge(PostBadge badge, Pixel at, Tint tint) {
+        return new Glyph(String.valueOf(badge.glyph(BADGE)), at.x() - BADGE_HALF, at.y() - BADGE_HALF, tint, true, BADGE_ADVANCE);
     }
 
     /** Corners round the badge of the post the player should make for. */
@@ -113,7 +112,7 @@ final class MinimapLayout {
     }
 
     static Glyph mark(Mark mark, Pixel at, Tint tint) {
-        return centred(mark.glyph, at, tint);
+        return centred(mark.glyph(), at, tint);
     }
 
     /** The player's arrow in the middle, turned to the nearest of sixteen headings clockwise from north. */
@@ -136,7 +135,7 @@ final class MinimapLayout {
         var label = label(name);
         var tint = ready ? Tint.WHITE : Tint.DIMMED;
         return List.of(new Glyph(String.valueOf((char) (CLASS_MARK + role.ordinal())), 0, y, ready ? mark : Tint.DIMMED, true, CLASS_ADVANCE),
-                new Glyph(label, NAME_X, y, tint, true, label.length() * LETTER_ADVANCE));
+                new Glyph(label, NAME_X, y, tint, true, label.length() * UiFont.LABEL_ADVANCE));
     }
 
     /** The name in the menu tiles' capitals, cut to the panel's width, with a question mark for any letter they lack. */
@@ -150,12 +149,14 @@ final class MinimapLayout {
         return HudPanel.render(Corner.TOP_LEFT, FONT, glyphs);
     }
 
-    /** Rows in the order the panel stacks them, the viewer's own first. */
-    static List<Glyph> list(List<Member> members) {
+    /** {@code heading} greyed on the first row, then the members in the order the panel stacks them, the viewer's own first. */
+    static List<Glyph> list(String heading, List<Member> members) {
+        var label = label(heading);
         var glyphs = new ArrayList<Glyph>();
+        glyphs.add(new Glyph(label, 0, LIST_TOP, Tint.DIMMED, true, label.length() * UiFont.LABEL_ADVANCE));
         for (int row = 0; row < Math.min(ROWS, members.size()); row++) {
             var member = members.get(row);
-            glyphs.addAll(member(row, member.role(), member.mark(), member.name(), member.ready()));
+            glyphs.addAll(member(row + 1, member.role(), member.mark(), member.name(), member.ready()));
         }
         return glyphs;
     }

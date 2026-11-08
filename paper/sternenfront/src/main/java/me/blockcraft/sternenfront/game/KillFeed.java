@@ -1,5 +1,6 @@
 package me.blockcraft.sternenfront.game;
 
+import me.blockcraft.api.pack.UiFont;
 import me.blockcraft.sternenfront.game.HudPanel.Glyph;
 import me.blockcraft.sternenfront.game.HudPanel.Tint;
 import org.bukkit.configuration.ConfigurationSection;
@@ -24,18 +25,17 @@ final class KillFeed {
     /** A fighter as the feed names it, in their side's colour. */
     record Named(String name, Tint tint) { }
 
-    /** {@code other} is the victim, or for a death the killer; empty for a death nobody else caused. */
-    record Entry(Kind kind, Optional<Named> other, long until) { }
+    /** {@code opponent} is the victim, or for a death the killer; empty for a death nobody else caused. */
+    record Entry(Kind kind, Optional<Named> opponent, long until) { }
 
     static final int ROWS = 4;
     static final int ROW = 9;
-    private static final int FADE_TICKS = 20;
+    private static final int FADE_TICKS = SternenfrontGame.TICKS_PER_SECOND;
     private static final int GAP = 3;
-    private static final int LETTER_ADVANCE = 4;
-    private static final char SKULL = '\uE050';
-    private static final char HOLLOW_SKULL = '\uE051';
+    static final char SKULL = '\uE050';
+    private static final char HOLLOW_SKULL = SKULL + 1;
     /** The skull with the crosshair's headshot diamond at its corner. */
-    private static final char HEADSHOT_SKULL = '\uE052';
+    private static final char HEADSHOT_SKULL = SKULL + 2;
     private static final int SKULL_ADVANCE = 8;
     private static final int HEADSHOT_ADVANCE = 11;
 
@@ -47,12 +47,12 @@ final class KillFeed {
     }
 
     static KillFeed from(ConfigurationSection config) {
-        return new KillFeed(Math.clamp(config.getInt("kill-feed.seconds", 5), 1, 30) * 20);
+        return new KillFeed(Math.clamp(config.getInt("kill-feed.seconds", 5), 1, 30) * SternenfrontGame.TICKS_PER_SECOND);
     }
 
-    void add(UUID player, Kind kind, Optional<Named> other, long tick) {
+    void add(UUID player, Kind kind, Optional<Named> opponent, long tick) {
         var feed = feeds.computeIfAbsent(player, ignored -> new ArrayDeque<>());
-        feed.addFirst(new Entry(kind, other, tick + ticks));
+        feed.addFirst(new Entry(kind, opponent, tick + ticks));
         while (feed.size() > ROWS) {
             feed.removeLast();
         }
@@ -88,8 +88,8 @@ final class KillFeed {
     private static List<Glyph> line(Entry entry, String own, int y, long tick) {
         boolean fading = entry.until() - tick <= FADE_TICKS;
         var self = new Named(own, Tint.WHITE);
-        var left = entry.kind() == Kind.DEATH ? entry.other() : Optional.of(self);
-        var right = entry.kind() == Kind.DEATH ? Optional.of(self) : entry.other();
+        var left = entry.kind() == Kind.DEATH ? entry.opponent() : Optional.of(self);
+        var right = entry.kind() == Kind.DEATH ? Optional.of(self) : entry.opponent();
         var parts = new ArrayList<Glyph>();
         left.ifPresent(named -> parts.add(name(named, y)));
         parts.add(switch (entry.kind()) {
@@ -110,6 +110,6 @@ final class KillFeed {
 
     private static Glyph name(Named named, int y) {
         var label = MinimapLayout.label(named.name());
-        return new Glyph(label, 0, y, named.tint(), true, label.length() * LETTER_ADVANCE);
+        return new Glyph(label, 0, y, named.tint(), true, label.length() * UiFont.LABEL_ADVANCE);
     }
 }

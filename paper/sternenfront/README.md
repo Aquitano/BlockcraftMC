@@ -161,7 +161,9 @@ automatic deployment countdown. Hovering shows the post name, recommendation, se
 `Gesperrt` with the reason. The landing names its target post.
 
 After spawning, the minimap frames the post to make for in yellow corners: the assault's priority post, or the nearest
-objective outside the assault. When all posts are safe, it frames the post nearest the enemy HQ for defence.
+objective outside the assault. When all posts are safe, it frames the post nearest the enemy HQ for defence. The top
+line frames the assault's priority post in the same corners. The first deployment of a round ends its chat lines with
+one that names the yellow corners as the player's target. The star stays the deploy menu's recommended spawn.
 
 ## Minimap
 
@@ -170,9 +172,10 @@ to its rim. It shows the posts with the combat HUD's letter badges and ownership
 arrow at the nearest of sixteen headings, their squad as gold dots and other allies as smaller dots of their side's colour.
 Posts beyond the radius stay on the rim along their bearing. Yellow corners frame the post to make for, as Redeployment describes. Headquarters and fighters beyond it are left out, so
 nothing on the rim hides a post's badge. An enemy shows for `minimap.enemy-ticks` after each shot it fires, and only
-while the player's client draws it, so a vanished player or a hidden body never shows. The list under the map names the
-player and their squad beside class marks, in the menu tiles' capitals, and dims anyone dead or choosing a spawn.
-`minimap.bot` in `messages.yml` names the bots.
+while the player's client draws it, so a vanished player or a hidden body never shows. The list under the map, headed by
+`minimap.squad`, names the player and their squad in the menu tiles' capitals and dims anyone dead or choosing a spawn.
+Each name follows a mark of what the fighter carries: a rifle for a soldier, a shield for a heavy, a crosshair for a scout,
+a cross for a medic and a crown for a hero. `minimap.bot` in `messages.yml` names the bots.
 
 A player's squad is the fireteam that last took their order (see Bots). It stays theirs while no other team takes it,
 and passes to the next team that does once it follows someone else or nobody. Other players with the same squad are listed.
@@ -210,27 +213,30 @@ Bots go by their minimap call signs. A line greys out in its last second and is 
 on the minimap's boss bar line, and stays up while the player is dead so the kill cam shows who it was. Sternenfront's
 own potion effects hide their icons, which would otherwise cover the feed.
 A grenade holds `abilities.grenade.charges` throws, full on each deployment, and they come back one at a time, each
-`cooldown-seconds` after the one before. The HUD shows the throws left as pips and the seconds to the next only when none is
+`cooldown-seconds` after the one before. The HUD counts the throws left and shows the seconds to the next only when none is
 left, which is also the only time the vanilla cooldown runs on its material. Bots keep a plain cooldown.
 Hero and elite availability appear only for `combat-feedback.hero-ready-ticks` and `combat-feedback.elite-ready-ticks`;
 idle kill counts and point progress stay hidden.
 Nearby gains combine into one segment.
 A player with the pack sees their abilities as a column of tiles in the screen's bottom-right corner: F against the
-corner, Q above it, then a bladed hero's leap under a double-jump badge, and a kill streak's strike framed in gold under
+corner, Q above it, then a bladed hero's leap under a badge with the space bar twice, and a kill streak's strike framed in gold under
 Shift+F until it is thrown. A key with nothing bound shows no tile. Each tile carries its key on a badge and the
 ability's full name beside it. A ready tile is bright and framed in the side's colour; a recharging one turns grey
-behind the seconds left and a fill that rises as it recharges. Several uses show as pips under the name. The tiles ride
+behind the seconds left and a fill that rises as it recharges. An ability that holds several uses counts those left in
+its tile's bottom-right corner, as the hotbar counts a stack, and shows no count once it is empty. The tiles ride
 on the action bar: `CombatHud` puts them in the line's middle, which needs the line's width as the client measures it,
 and the pack's text shader moves them into the corner. Feedback that replaces the action bar, such as an ability's
 cooldown notice, hides them until it ends. `Kühlt` means cooling. A loadout change
 explains each binding in chat with its key, full name and what it does.
-`ObjectiveHud` shows reinforcements, a tile per post and the time left in a boss bar's text line, and the pack draws that colour and overlay of bar as nothing. The screen's
+`ObjectiveHud` shows the player's own reinforcements after `Wir`, a badge per post, the enemy's reinforcements and the
+time left in a boss bar's text line, and the pack draws that colour and overlay of bar as nothing. The screen's
 edges redden with a hit and while health is low. `combat.handling` tunes spread and damage falloff.
 Spread opens on the move and more in the air, and `combat.handling.blasters` sets those factors per blaster, so pistols
 stay steadier walking and the repeater wants a crouch. A sprint shows the lowered pose of the held blaster, which cannot
 fire until its `sprint-recovery-ticks` after the sprint ends. The crosshair ticks use the same factors as the shot.
 A title's subtitle stays readable under the marks, which `UiFont.centredOn` keeps on the crosshair however long the line is. The sidebar stays hidden during a fight.
 
+A flame and a muted `Hitze` name the heat meter; a bladed hero's guard meter has a shield and `Deckung` instead.
 The heat meter turns red and shows `HEISS` at `heat.warning-level`, or when the next shot would overheat the weapon.
 Venting shows `Kühlt` until the weapon is ready, followed by a ready sound. A vent also brackets `heat.window-share` of the
 meter in cyan, somewhere in its lower half, and the meter then lights every cell the cooling heat has not left. The first

@@ -37,7 +37,7 @@ public class CombatHudTest {
         });
         Stream.concat(Arrays.stream(Ability.values()).map(Ability::key), Arrays.stream(HeroAbility.values()).map(HeroAbility::key))
                 .forEach(key -> assertNotNull(key, messages.getString("combat.hints." + key)));
-        for (var key : List.of("guarding", "broken", "hot", "venting")) {
+        for (var key : List.of("guard", "guarding", "broken", "heat", "hot", "venting")) {
             var state = messages.getString("combat." + key).replace("<seconds>", "99").replaceAll("<[^>]+>", "");
             assertTrue(state, MinecraftFont.Font.getWidth(state) + 1 <= CombatHud.STATE_WIDTH);
         }

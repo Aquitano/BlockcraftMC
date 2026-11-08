@@ -17,6 +17,10 @@ import java.util.Locale;
 public final class UiFont {
 
     public static final Key KEY = Key.key("blockcraft", "ui");
+    /** The menu tiles' capitals, in the order the pack's label sheet draws them; Sternenfront's HUD fonts share them. */
+    public static final String LABEL_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789ÄÖÜ-.:!?…/+&";
+    /** A label letter's width with its spacing, the same in every font that draws them. */
+    public static final int LABEL_ADVANCE = 4;
 
     /** A transparent picture as large as the 6-row panel, which a menu with a fixed layout draws on top of it. */
     public enum Overlay {
@@ -39,7 +43,6 @@ public final class UiFont {
     private static final int GLYPH_SPACING = 1;
     private static final int UNKNOWN_ADVANCE = 6;
     private static final int MAX_ROWS = 6;
-    private static final String LABEL_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789ÄÖÜ-.:!?…/+& ";
 
     private static final char PANEL_BASE = '\uE100';
     private static final char TOOLBAR_PANEL_BASE = '\uE110';
@@ -84,7 +87,7 @@ public final class UiFont {
             if (Character.isWhitespace(codepoint) || Character.isSpaceChar(codepoint)) {
                 normalized.append(' ');
             } else {
-                normalized.appendCodePoint(LABEL_CHARACTERS.indexOf(codepoint) >= 0 ? codepoint : '?');
+                normalized.appendCodePoint(LABEL_LETTERS.indexOf(codepoint) >= 0 ? codepoint : '?');
             }
         });
         String text = normalized.toString();
@@ -94,7 +97,7 @@ public final class UiFont {
         return Component.text()
                 .append(at(x, Component.text(tile.glyph()).font(Key.key("blockcraft", "tiles")), tile.shape().width() + 1))
                 .append(at(labelX, Component.text(text).font(Key.key("blockcraft",
-                        "label_" + tile.shape().name().toLowerCase(Locale.ROOT) + "_" + tile.slot() / 9)), text.length() * 4))
+                        "label_" + tile.shape().name().toLowerCase(Locale.ROOT) + "_" + tile.slot() / 9)), text.length() * LABEL_ADVANCE))
                 .build();
     }
 
@@ -106,12 +109,12 @@ public final class UiFont {
     }
 
     /** {@code text} then empty space up to {@code width}, so what follows stays put however long {@code text} is. */
-    public static Component before(Component text, int width) {
+    public static Component leftAligned(Component text, int width) {
         return Component.empty().append(text).append(gap(width - width(text)));
     }
 
     /** Empty space up to {@code width}, then {@code text}, so what is before it stays put however long {@code text} is. */
-    public static Component after(Component text, int width) {
+    public static Component rightAligned(Component text, int width) {
         return Component.empty().append(gap(width - width(text))).append(text);
     }
 

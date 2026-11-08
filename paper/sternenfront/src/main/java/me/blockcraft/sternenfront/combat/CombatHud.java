@@ -2,7 +2,6 @@ package me.blockcraft.sternenfront.combat;
 
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.pack.UiFont;
-import me.blockcraft.api.scene.Scenes;
 import me.blockcraft.sternenfront.combat.AbilityPanel.Binding;
 import me.blockcraft.sternenfront.combat.AbilityPanel.Charges;
 import me.blockcraft.sternenfront.combat.AbilityPanel.Slot;
@@ -34,22 +33,21 @@ public final class CombatHud {
     }
 
     /** Wide enough for the longest state, so the line does not slide when one appears. */
-    static final int STATE_WIDTH = 30;
+    static final int STATE_WIDTH = 41;
     /** A meter glyph's width with its spacing, which each vent window glyph laid over it shares. */
     static final int METER_ADVANCE = 42;
     /** The flame's and the shield's width with their spacing. */
     static final int METER_ICON_ADVANCE = 11;
-    private static final int TICKS_PER_SECOND = 20;
     private static final List<Binding> BINDINGS = List.of(Binding.F, Binding.Q);
-
-    /** Whether a dialogue, a screen effect or a scene has the screen, which the HUD then leaves to it. */
-    public static boolean covered(Player player) {
-        var api = BlockcraftApi.get();
-        return api.dialogues().active(player) || api.visuals().active(player) || Scenes.isViewing(player);
-    }
+    private static final char HEAT_ICON = '\uE221';
+    private static final char GUARD_ICON = '\uE222';
+    /** The meter with each number of its cells lit, from none up. */
+    private static final char FIRST_METER = '\uE240';
+    /** A vent window's bracket over each cell of the meter's lower half. */
+    private static final char FIRST_VENT_CELL = '\uE260';
 
     public void show(Player player, Guard guard) {
-        if (covered(player)) return;
+        if (CombatFeedback.covered(player)) return;
         game.deployment().controlsChanged(player);
         var fighter = game.fighter(player);
         boolean blade = fighter.hero().filter(Hero::bladed).isPresent();
@@ -59,13 +57,13 @@ public final class CombatHud {
         var state = game.messages().get(blade ? guard.broken(game.tick()) ? "combat.broken" : guard.raised()
                         ? "combat.guarding" : "combat.guard" : venting ? "combat.venting" : hot ? "combat.hot" : "combat.heat",
                 Formatter.number("seconds", seconds(heat.ventTicks(game.tick()))));
-        var meter = hud(icon(blade ? 2 : 1), (blade ? bar(guard.level()) : venting ? vent(heat) : bar(heat.level()))
-                .color(hot || venting ? NamedTextColor.RED : NamedTextColor.GOLD), UiFont.before(state, STATE_WIDTH));
+        var meter = hud(UiFont.glyph(blade ? GUARD_ICON : HEAT_ICON), (blade ? bar(guard.level()) : venting ? vent(heat) : bar(heat.level()))
+                .color(hot || venting ? NamedTextColor.RED : NamedTextColor.GOLD), UiFont.leftAligned(state, STATE_WIDTH));
         int width = UiFont.width(hud(Component.empty(), Component.empty(), Component.empty()))
                 + METER_ICON_ADVANCE + METER_ADVANCE + Math.max(STATE_WIDTH, UiFont.width(state));
-        var corner = BlockcraftApi.get().resourcePack().applied(player)
+        var abilities = BlockcraftApi.get().resourcePack().applied(player)
                 ? AbilityPanel.render(slots(player, blade), game.factionOf(player).map(Tint::of).orElse(Tint.WHITE)) : Component.empty();
-        game.feedback().show(player, new CombatFeedback.Hud(meter, width, corner));
+        game.feedback().show(player, new CombatFeedback.ActionBar(meter, width, abilities));
     }
 
     private Component hud(Component icon, Component bar, Component state) {
@@ -108,11 +106,7 @@ public final class CombatHud {
     }
 
     private static int seconds(int ticks) {
-        return (ticks + TICKS_PER_SECOND - 1) / TICKS_PER_SECOND;
-    }
-
-    private static Component icon(int index) {
-        return UiFont.glyph((char) ('\uE220' + index));
+        return (ticks + SternenfrontGame.TICKS_PER_SECOND - 1) / SternenfrontGame.TICKS_PER_SECOND;
     }
 
     private static Component bar(double level) {
@@ -120,14 +114,14 @@ public final class CombatHud {
     }
 
     private static Component meter(int cells) {
-        return UiFont.glyph((char) ('\uE240' + Math.clamp(cells, 0, Heat.METER_CELLS)));
+        return UiFont.glyph((char) (FIRST_METER + Math.clamp(cells, 0, Heat.METER_CELLS)));
     }
 
     /** The cooling meter with the vent's window bracketed over it, so a pull is timed against what the player sees. */
     private Component vent(Heat heat) {
         long tick = game.tick();
         var window = heat.window(tick).map(cells -> IntStream.range(cells.low(), cells.high())
-                .mapToObj(cell -> UiFont.over((char) ('\uE260' + cell), METER_ADVANCE))
+                .mapToObj(cell -> UiFont.over((char) (FIRST_VENT_CELL + cell), METER_ADVANCE))
                 .reduce(Component.empty(), Component::append)).orElse(Component.empty());
         return meter(heat.litCells(tick)).append(window.color(NamedTextColor.AQUA));
     }

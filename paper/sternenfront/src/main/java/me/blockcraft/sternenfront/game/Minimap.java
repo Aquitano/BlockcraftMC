@@ -3,7 +3,6 @@ package me.blockcraft.sternenfront.game;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.game.ShotEvent;
 import me.blockcraft.sternenfront.bot.Bots;
-import me.blockcraft.sternenfront.combat.CombatHud;
 import me.blockcraft.sternenfront.game.HudPanel.Corner;
 import me.blockcraft.sternenfront.game.HudPanel.Glyph;
 import me.blockcraft.sternenfront.game.HudPanel.Tint;
@@ -32,19 +31,18 @@ import java.util.Objects;
 import java.util.UUID;
 
 /**
- * The map and the squad in the screen's top-left corner while a player with the pack is deployed, and their
- * {@link KillFeed} in the top-right while it has lines, on a boss bar line of their own that the pack's text shader
- * moves into both corners. It redraws every few ticks and sends nothing while nothing on it moved. An enemy shows only
- * for a while after it fired, and only if the player's client draws it at all.
+ * One boss bar line per player that carries two panels: the minimap with the squad under it, top-left while a player
+ * with the pack is deployed, and their {@link KillFeed}, top-right while it has lines; the pack's text shader moves each
+ * into its corner. It redraws every few ticks and sends nothing while nothing on it moved. An enemy shows only for a
+ * while after it fired, and only if the player's client draws it at all.
  */
 final class Minimap implements Listener {
 
     record Settings(double radius, int updateTicks, int enemyTicks) {
 
         static Settings from(ConfigurationSection config) {
-            return new Settings(Math.clamp(config.getDouble("minimap.radius", 48), 8, 256),
-                    Math.clamp(config.getInt("minimap.update-ticks", 4), 1, 20),
-                    Math.clamp(config.getInt("minimap.enemy-ticks", 60), 0, 600));
+            return new Settings(Math.clamp(config.getDouble("minimap.radius"), 8, 256), Math.clamp(config.getInt("minimap.update-ticks"), 1, 20),
+                    Math.clamp(config.getInt("minimap.enemy-ticks"), 0, 600));
         }
     }
 
@@ -60,10 +58,12 @@ final class Minimap implements Listener {
     private final Map<UUID, Panel> panels = new HashMap<>();
     private final Map<UUID, Long> shots = new HashMap<>();
     private final Map<Integer, String> botNames = new HashMap<>();
+    private final String squadHeading;
 
     Minimap(SternenfrontGame game, Settings settings) {
         this.game = game;
         this.settings = settings;
+        squadHeading = PlainTextComponentSerializer.plainText().serialize(game.messages().get("minimap.squad"));
         Bukkit.getPluginManager().registerEvents(this, game.plugin());
     }
 
@@ -78,7 +78,7 @@ final class Minimap implements Listener {
         }
         var field = game.combatants();
         for (var player : Bukkit.getOnlinePlayers()) {
-            boolean seen = game.isPlaying(player) && BlockcraftApi.get().resourcePack().applied(player) && !CombatHud.covered(player);
+            boolean seen = game.isPlaying(player) && BlockcraftApi.get().resourcePack().applied(player) && !CombatFeedback.covered(player);
             var map = seen && game.onField(player) ? map(player, field, tick) : List.<Glyph>of();
             var feed = seen ? KillFeed.layout(game.killFeed().live(player.getUniqueId(), tick), player.getName(), tick) : List.<Glyph>of();
             if (map.isEmpty() && feed.isEmpty()) {
@@ -110,13 +110,12 @@ final class Minimap implements Listener {
             var centre = headquarters.zone().getCenter();
             view.inside(centre.getX(), centre.getZ()).ifPresent(pixel -> glyphs.add(MinimapLayout.mark(Mark.HEADQUARTERS, pixel, Tint.of(faction))));
         });
-        long second = tick / 20;
         // Posts on one bearing share the rim with nearer ones, and the nearer badge goes on top.
         var farthestFirst = game.posts().indices().stream()
                 .sorted(Comparator.comparingDouble((Integer index) -> -across(game.map().posts().get(index).center(), here))).toList();
         for (int index : farthestFirst) {
             var centre = game.map().posts().get(index).center();
-            glyphs.add(MinimapLayout.badge(index, game.posts().contested(index) && second % 2 == 0,
+            glyphs.add(MinimapLayout.badge(PostBadge.of(game.posts(), index, tick),
                     view.clamped(centre.getX(), centre.getZ(), MinimapLayout.BADGE_REACH),
                     game.posts().owner(index).map(Tint::of).orElse(Tint.WHITE)));
         }
@@ -157,7 +156,7 @@ final class Minimap implements Listener {
         glyphs.addAll(squadDots);
         glyphs.addAll(enemies);
         glyphs.add(MinimapLayout.arrow(here.getYaw()));
-        glyphs.addAll(MinimapLayout.list(members(viewer, side, squadPlayers, squadmates)));
+        glyphs.addAll(MinimapLayout.list(squadHeading, members(viewer, side, squadPlayers, squadmates)));
         return glyphs;
     }
 

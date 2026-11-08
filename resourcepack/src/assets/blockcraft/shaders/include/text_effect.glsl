@@ -1,6 +1,12 @@
 #ifndef BLOCKCRAFT_TEXT_EFFECT_GLSL
 #define BLOCKCRAFT_TEXT_EFFECT_GLSL
 
+// Text coloured (231, effect, 197) takes an effect from 1 to BLOCKCRAFT_TEXT_EFFECTS; hud_panel.glsl lists every colour
+// the text shader reserves.
+const int BLOCKCRAFT_TEXT_EFFECT_RED = 231;
+const int BLOCKCRAFT_TEXT_EFFECT_BLUE = 197;
+const int BLOCKCRAFT_TEXT_EFFECTS = 5;
+
 vec2 blockcraft_text_offset(int effect, float seconds) {
     if (effect == 1) return vec2(0.0, sin(seconds * 3.0) * 1.5);
     if (effect == 2) return vec2(sin(seconds * 51.0), cos(seconds * 43.0)) * 0.7;

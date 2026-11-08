@@ -373,13 +373,17 @@ public final class Deployment {
         if (faction.isEmpty()) return;
         var keys = fighter.hero().map(chosen -> chosen.abilities().stream().map(ability -> "hero.ability." + ability.key()).toList())
                 .orElseGet(() -> fighter.abilities(faction.get()).stream().map(ability -> ability.messageKey(faction.get())).toList());
-        if (keys.equals(controls.put(player.getUniqueId(), keys))) return;
+        var previous = controls.put(player.getUniqueId(), keys);
+        if (keys.equals(previous)) return;
         var messages = game.messages();
         for (int index = 0; index < Math.min(keys.size(), CONTROL_KEYS.size()); index++) {
             var key = keys.get(index);
             player.sendMessage(messages.get("deploy.controls", Placeholder.unparsed("key", CONTROL_KEYS.get(index)),
                     Placeholder.component("name", messages.get(key + ".name")),
                     Placeholder.component("ability", messages.get("combat.hints." + key.substring(key.lastIndexOf('.') + 1)))));
+        }
+        if (previous == null) {
+            player.sendMessage(messages.get("deploy.target"));
         }
     }
 

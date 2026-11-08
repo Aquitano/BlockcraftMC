@@ -26,12 +26,12 @@ import java.util.function.Function;
 
 public final class CombatFeedback {
 
-    public enum Marker {
+    public enum HitMarker {
         HIT(SoundCue.HITMARKER), HEADSHOT(SoundCue.HEADSHOT), KILL(SoundCue.KILL);
 
         final SoundCue sound;
 
-        Marker(SoundCue sound) {
+        HitMarker(SoundCue sound) {
             this.sound = sound;
         }
     }
@@ -39,20 +39,21 @@ public final class CombatFeedback {
     public enum Reward { KILL, ASSIST, DEFENCE, HEALING, CAPTURE, NEUTRALISE, HEADSHOT, CHAIN }
 
     /**
-     * The combat HUD: {@code meter}, {@code width} pixels wide, centred on the action bar, and {@code corner}, a panel
-     * that takes no room and that the pack's shader moves into a corner from the line's middle.
+     * What the combat HUD puts on the action bar: {@code meter}, {@code meterWidth} pixels wide, centred under the
+     * crosshair, and the {@code abilities} panel, which takes no room and which the pack's shader moves into the
+     * bottom-right corner from the line's middle.
      */
-    public record Hud(Component meter, int width, Component corner) {
-        static final Hud NONE = new Hud(Component.empty(), 0, Component.empty());
+    public record ActionBar(Component meter, int meterWidth, Component abilities) {
+        static final ActionBar NONE = new ActionBar(Component.empty(), 0, Component.empty());
     }
 
-    static final class State {
-        Marker marker;
+    static final class PlayerFeedback {
+        HitMarker marker;
         long markerUntil;
         long shownMarkerUntil;
-        Marker shownMarker;
+        HitMarker shownMarker;
         long soundedAt = Long.MIN_VALUE;
-        Marker sounded;
+        HitMarker sounded;
         Reward reward;
         int points;
         int kills;
@@ -71,7 +72,7 @@ public final class CombatFeedback {
         long drawnHurtUntil;
         Optional<Integer> drawnSpread = Optional.empty();
         long spreadRefreshAt;
-        Hud hud = Hud.NONE;
+        ActionBar actionBar = ActionBar.NONE;
 
         boolean eliteAvailable(boolean available, long tick, int duration) {
             boolean announce = available && !eliteReady;
@@ -80,7 +81,7 @@ public final class CombatFeedback {
             return announce;
         }
 
-        boolean hit(Marker next, long tick, int ticks) {
+        boolean hit(HitMarker next, long tick, int ticks) {
             if (tick >= markerUntil || next.ordinal() >= marker.ordinal()) {
                 marker = next;
                 markerUntil = tick + ticks;
@@ -93,7 +94,7 @@ public final class CombatFeedback {
             return play;
         }
 
-        Optional<Marker> takeMarker(long tick) {
+        Optional<HitMarker> takeMarker(long tick) {
             if (tick >= markerUntil || marker == shownMarker && markerUntil == shownMarkerUntil) return Optional.empty();
             shownMarker = marker;
             shownMarkerUntil = markerUntil;
@@ -151,14 +152,15 @@ public final class CombatFeedback {
             return messages.get(key, Formatter.number("points", points), Formatter.number("kills", inARow));
         }
 
-        /** The meter centred under the crosshair, the popup left of it, and the corner panel in the line's middle. */
+        /** The meter centred under the crosshair, the popup left of it, and the abilities panel in the line's middle. */
         Component compose(Component feedback, Optional<Component> course) {
-            var line = UiFont.after(feedback, REWARD_WIDTH).append(Component.space());
+            var line = UiFont.rightAligned(feedback, REWARD_WIDTH).append(Component.space());
             if (course.isPresent()) {
                 return line.append(course.get());
             }
             int side = Math.max(REWARD_WIDTH, UiFont.width(feedback)) + UiFont.width(Component.space());
-            return UiFont.centredOn(line.append(hud.meter()).append(UiFont.space(side)), 2 * side + hud.width(), hud.corner());
+            return UiFont.centredOn(line.append(actionBar.meter()).append(UiFont.space(side)), 2 * side + actionBar.meterWidth(),
+                    actionBar.abilities());
         }
     }
 
@@ -179,7 +181,7 @@ public final class CombatFeedback {
     private static final double HIT_REDNESS = 0.7;
 
     private final SternenfrontGame game;
-    private final Map<UUID, State> states = new HashMap<>();
+    private final Map<UUID, PlayerFeedback> players = new HashMap<>();
     private final int markerTicks;
     private final int rewardTicks;
     private final int heroReadyTicks;
@@ -204,13 +206,13 @@ public final class CombatFeedback {
         hitVolume = (float) Math.clamp(config.getDouble("combat-feedback.sound.hit", 0.65), 0, 1);
         headshotVolume = (float) Math.clamp(config.getDouble("combat-feedback.sound.headshot", 0.8), 0, 1);
         killVolume = (float) Math.clamp(config.getDouble("combat-feedback.sound.kill", 1.0), 0, 1);
-        multikillTicks = Math.clamp(config.getInt("combat-feedback.multikill-seconds", 4), 1, 30) * 20;
+        multikillTicks = Math.clamp(config.getInt("combat-feedback.multikill-seconds", 4), 1, 30) * SternenfrontGame.TICKS_PER_SECOND;
         handling = game.handling();
         spreadCrosshair = new SpreadCrosshair(config.getDoubleList("combat-feedback.spread-steps"));
     }
 
-    private State state(Player player) {
-        return states.computeIfAbsent(player.getUniqueId(), ignored -> new State());
+    private PlayerFeedback state(Player player) {
+        return players.computeIfAbsent(player.getUniqueId(), ignored -> new PlayerFeedback());
     }
 
     public void courseStatus(Function<Player, Optional<Component>> status) {
@@ -222,7 +224,7 @@ public final class CombatFeedback {
         return fighter.heat().warning(hotAt, game.factionOf(player).flatMap(fighter::blaster).map(blaster -> game.firing(player, blaster).heat()).orElse(0.0));
     }
 
-    public void hit(Player player, Marker marker) {
+    public void hit(Player player, HitMarker marker) {
         if (state(player).hit(marker, game.tick(), markerTicks)) {
             marker.sound.playTo(player, switch (marker) {
                 case HIT -> hitVolume;
@@ -256,13 +258,18 @@ public final class CombatFeedback {
         }
     }
 
-    private boolean hidden(Player player) {
+    /** Whether a dialogue, a screen effect or a scene has the screen, which every part of the HUD then leaves to it. */
+    public static boolean covered(Player player) {
         var api = BlockcraftApi.get();
-        return !game.onField(player) || api.dialogues().active(player) || api.visuals().active(player) || Scenes.isViewing(player);
+        return api.dialogues().active(player) || api.visuals().active(player) || Scenes.isViewing(player);
     }
 
-    public void show(Player player, Hud hud) {
-        state(player).hud = hud;
+    private boolean hidden(Player player) {
+        return !game.onField(player) || covered(player);
+    }
+
+    public void show(Player player, ActionBar actionBar) {
+        state(player).actionBar = actionBar;
         refresh(player);
     }
 
@@ -318,7 +325,7 @@ public final class CombatFeedback {
         return Math.max(low, hit);
     }
 
-    private void drawCrosshair(Player player, State state, long tick) {
+    private void drawCrosshair(Player player, PlayerFeedback state, long tick) {
         var hurt = game.combat().damageDirection(player);
         var spread = spreadSize(player);
         if (!state.crosshairChanged(tick, hurt, hurt.isPresent() ? tick + game.combat().hurtTicks(player) : 0, spread)) {
@@ -350,7 +357,7 @@ public final class CombatFeedback {
 
     public void forget(Player player) {
         ScreenEffects.hurt(player, 0);
-        if (states.remove(player.getUniqueId()) != null) BlockcraftApi.get().notifications().clearMarker(player);
+        if (players.remove(player.getUniqueId()) != null) BlockcraftApi.get().notifications().clearMarker(player);
     }
 
     /** Off the field the HUD stops updating, so the redness would stay until the next deployment. */
@@ -359,13 +366,13 @@ public final class CombatFeedback {
     }
 
     public void clear() {
-        for (var id : states.keySet()) {
+        for (var id : players.keySet()) {
             var player = Bukkit.getPlayer(id);
             if (player != null) {
                 ScreenEffects.hurt(player, 0);
                 BlockcraftApi.get().notifications().clearMarker(player);
             }
         }
-        states.clear();
+        players.clear();
     }
 }

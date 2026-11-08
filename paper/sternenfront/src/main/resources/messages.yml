@@ -279,7 +279,7 @@ post:
   contested: "<error>Umkämpft"
   label: "<tint><bold><letter></bold> <white><post>\n<state>\n<progress>"
   bar: "<tint><letter> <dark>· <white><post> <dark>· <state>"
-  bar-priority: "<tint><letter> <dark>· <white><post> <dark>· <state> <dark>· <accent>★ Schwerpunkt"
+  bar-priority: "<tint><letter> <dark>· <white><post> <dark>· <state> <dark>· <accent>Schwerpunkt"
 
 act:
   assault:
@@ -353,6 +353,7 @@ deploy:
   landing: "<white>Landungsschiff"
   controls: "<prefix><accent><key> <dark>· <white><name><muted>: <ability>"
   saber-controls: "<prefix><left>Schwingt durch alle Gegner vor dir <dark>· <right>Halten zum Blocken <dark>· <muted>Zweimal springen für den Machtsprung."
+  target: "<prefix><accent>Gelbe Ecken <muted>um einen Posten auf der Karte und oben zeigen dein Ziel."
   title: "<arrow><sternenfront>Clone Wars <dark>· <muted>Einsatz"
   item: "<arrow><primary>Einsatz planen"
   waiting: "<muted>Einsatz möglich in <accent><seconds> s"
@@ -624,11 +625,11 @@ career:
     "9": "General"
 
 hud:
-  objective: "<own> <dark>‹ <posts><dark>› <enemy> <dark>│ <white><time>"
-  priority: "<accent>★"
+  objective: "<muted>Wir <own> <dark>‹ <posts><dark>› <enemy> <dark>│ <white><time>"
 
-# A bot in the squad list under the minimap, drawn in the menu tiles' capitals.
+# The squad list under the minimap and a bot in it, drawn in the menu tiles' capitals.
 minimap:
+  squad: "Trupp"
   bot:
     kolonien:
       soldier: "CT-<number>"
@@ -710,11 +711,11 @@ combat:
     orbital-strike: "Orbitalschlag anfordern"
     rally: "Verbündete stärken"
   hud: "<accent><meter_icon> <meter> <state>"
-  guard: ""
+  guard: "<muted>Deckung"
   guarding: "<success>BLOCK"
   broken: "<error>BRUCH"
   guard-broken: "<error>Deckung gebrochen! <muted>Lass sie sich kurz erholen."
-  heat: ""
+  heat: "<muted>Hitze"
   hot: "<error>HEISS"
   venting: "<error>Kühlt"
   orbital-warning: "<tint><faction></tint>\n<error>Orbitalschlag in <seconds>s\n<muted>Markierte Flächen verlassen"

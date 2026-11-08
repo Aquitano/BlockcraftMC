@@ -27,6 +27,17 @@ public final class PackFonts {
         return JsonParser.parseString(Files.readString(FONTS.resolve(name + ".json"))).getAsJsonObject().getAsJsonArray("providers");
     }
 
+    /** The first character the font {@code name} draws from the texture {@code file}. */
+    public static char first(String name, String file) throws IOException {
+        for (var provider : providers(name)) {
+            var json = provider.getAsJsonObject();
+            if (json.has("file") && json.get("file").getAsString().equals("blockcraft:font/" + file)) {
+                return json.getAsJsonArray("chars").get(0).getAsString().charAt(0);
+            }
+        }
+        throw new AssertionError(name + " draws nothing from " + file);
+    }
+
     /** Each glyph's advance as the client measures it: up to its last inked column, scaled to its height, plus one. */
     public static Map<Integer, Integer> advances(String name) throws IOException {
         var advances = new HashMap<Integer, Integer>();
