@@ -213,9 +213,10 @@ final class DeployScreen {
 
     /** {@code text} in the menu tiles' capitals, cut short at {@code width}; whatever they cannot spell shows as a question mark. */
     private void label(int x, int top, String text, int colour, int width) {
-        String fitted = text.length() * LABEL_ADVANCE <= width ? text : text.substring(0, Math.max(0, width / LABEL_ADVANCE - 1)) + "…";
+        String capitals = text.toUpperCase(Locale.ROOT);
+        String fitted = labelWidth(capitals) <= width ? capitals : capitals.substring(0, Math.max(0, width / LABEL_ADVANCE - 1)) + "…";
         var spelled = new StringBuilder();
-        fitted.toUpperCase(Locale.ROOT).chars().forEach(character -> spelled.append(character == ' ' ? ' '
+        fitted.chars().forEach(character -> spelled.append(character == ' ' ? ' '
                 : (char) (0xE000 + (LABELS.indexOf(character) >= 0 ? LABELS.indexOf(character) : LABELS.indexOf('?')))));
         at(x, Component.text(spelled.toString()).font(line(top)).color(TextColor.color(colour)), labelWidth(fitted));
     }
@@ -233,8 +234,9 @@ final class DeployScreen {
         return Key.key("blockcraft", "deploy/line_" + top);
     }
 
+    /** In capitals, as a label spells it: an ß takes two letters. */
     static int labelWidth(String text) {
-        return text.length() * LABEL_ADVANCE;
+        return text.toUpperCase(Locale.ROOT).length() * LABEL_ADVANCE;
     }
 
     /** The vanilla font's ASCII and the pack's own umlauts; anything else would draw at a width the server cannot know. */

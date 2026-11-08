@@ -70,7 +70,7 @@ public class DeployScreenTest {
         var role = new DeployScreen.Role("Klasse", "Klonsoldat", DeployScreen.Portrait.KOLONIEN_SOLDIER,
                 List.of(new DeployScreen.Stat("Gesundheit", "10", true), new DeployScreen.Stat("Tempo", "100 %", false),
                         new DeployScreen.Stat("Schaden", "2,5", true), new DeployScreen.Stat("Reichweite", "60 m", false)),
-                "DC-15A-Blastergewehr", List.of(new DeployScreen.Ability("Thermaldetonator", "Taste F", AbilityIcon.GRENADE),
+                "Großer DC-15A-Blaster", List.of(new DeployScreen.Ability("Thermaldetonator", "Taste F", AbilityIcon.GRENADE),
                         new DeployScreen.Ability("Adrenalin", "Taste Q", AbilityIcon.ADRENALINE)),
                 List.of(new DeployScreen.Stat("Kosten", "Kostenlos", false), new DeployScreen.Stat("Guthaben", "340 KP", false)));
         var card = new DeployScreen.ClassCard("Soldat", DeployScreen.Portrait.KOLONIEN_SOLDIER, List.of(AbilityIcon.GRENADE, AbilityIcon.RALLY), true);
