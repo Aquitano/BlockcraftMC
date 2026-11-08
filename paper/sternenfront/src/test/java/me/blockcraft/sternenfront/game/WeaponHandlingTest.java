@@ -10,7 +10,7 @@ import static org.junit.Assert.assertTrue;
 
 public class WeaponHandlingTest {
 
-    private static final WeaponHandling.Stance STILL = new WeaponHandling.Stance(false, false, false);
+    private static final WeaponHandling.Posture STILL = new WeaponHandling.Posture(false, false, false);
 
     private static WeaponHandling handling() throws InvalidConfigurationException {
         var config = new YamlConfiguration();
@@ -32,16 +32,16 @@ public class WeaponHandlingTest {
     public void movingAirborneAndHeatOpenTheAimAndCrouchingTightensIt() throws InvalidConfigurationException {
         var handling = handling();
         assertEquals(0.01, handling.spread(Blaster.CARBINE, 0.01, STILL, 0), 1e-9);
-        assertEquals(0.02, handling.spread(Blaster.CARBINE, 0.01, new WeaponHandling.Stance(true, false, false), 0), 1e-9);
-        assertEquals(0.005, handling.spread(Blaster.CARBINE, 0.01, new WeaponHandling.Stance(false, true, false), 0), 1e-9);
-        assertEquals(0.015, handling.spread(Blaster.CARBINE, 0.01, new WeaponHandling.Stance(false, false, true), 0), 1e-9);
+        assertEquals(0.02, handling.spread(Blaster.CARBINE, 0.01, new WeaponHandling.Posture(true, false, false), 0), 1e-9);
+        assertEquals(0.005, handling.spread(Blaster.CARBINE, 0.01, new WeaponHandling.Posture(false, true, false), 0), 1e-9);
+        assertEquals(0.015, handling.spread(Blaster.CARBINE, 0.01, new WeaponHandling.Posture(false, false, true), 0), 1e-9);
         assertEquals(0.02, handling.spread(Blaster.CARBINE, 0.01, STILL, 1), 1e-9);
     }
 
     @Test
     public void aBlasterOverridesOnlyWhatItNamesAndASeparatistOneTakesItsProfiles() throws InvalidConfigurationException {
         var handling = handling();
-        var moving = new WeaponHandling.Stance(true, true, false);
+        var moving = new WeaponHandling.Posture(true, true, false);
         assertEquals(0.006, handling.spread(Blaster.PISTOL, 0.01, moving, 0), 1e-9);
         assertEquals(0.006, handling.spread(Blaster.SE14, 0.01, moving, 0), 1e-9);
         assertEquals(0.01, handling.spread(Blaster.E5, 0.01, moving, 0), 1e-9);

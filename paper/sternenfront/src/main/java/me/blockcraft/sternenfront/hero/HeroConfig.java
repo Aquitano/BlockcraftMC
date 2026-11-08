@@ -23,7 +23,7 @@ public record HeroConfig(int cost, int perFaction, Points points, Map<Hero, Doub
 
     public record Throw(double range, double speed, double damage) { }
 
-    public record Grip(double range, int seconds, double damage) { }
+    public record Grip(double range, int seconds, double damage, int pulseTicks) { }
 
     public record Jetpack(int seconds, double thrust) { }
 
@@ -87,7 +87,7 @@ public record HeroConfig(int cost, int perFaction, Points points, Map<Hero, Doub
                 new Throw(Math.max(1, saberThrow.getDouble("range", 14)), Math.max(0.2, saberThrow.getDouble("speed", 1.2)),
                         Math.max(0, saberThrow.getDouble("damage", 9))),
                 new Grip(Math.max(1, grip.getDouble("range", 14)), Math.max(1, grip.getInt("seconds", 2)),
-                        Math.max(0, grip.getDouble("damage", 7))),
+                        Math.max(0, grip.getDouble("damage", 7)), Math.max(1, grip.getInt("pulse-ticks", 10))),
                 new Jetpack(Math.max(1, jetpack.getInt("seconds", 4)), Math.max(0, jetpack.getDouble("thrust", 0.4))),
                 new Grapple(Math.max(1, grapple.getDouble("range", 30)), Math.max(0.2, grapple.getDouble("speed", 2.2))),
                 new Orbital(Math.max(1, orbital.getInt("delay-ticks", 60)), Math.max(1, orbital.getDouble("radius", 5)),

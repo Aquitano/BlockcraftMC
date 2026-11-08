@@ -3,6 +3,7 @@ package me.blockcraft.sternenfront.reinforcement;
 import me.blockcraft.sternenfront.config.SternenfrontConfig;
 import me.blockcraft.sternenfront.game.Ability;
 import me.blockcraft.sternenfront.game.Blaster;
+import me.blockcraft.sternenfront.game.Charges;
 import me.blockcraft.sternenfront.game.CombatClass;
 import me.blockcraft.sternenfront.game.Faction;
 import me.blockcraft.sternenfront.game.Fighter;
@@ -50,8 +51,8 @@ public class ReinforcementLoadoutTest {
         assertTrue(units.stats(COMMANDO_DROID).speed() > units.stats(ARC_TROOPER).speed());
         assertEquals(List.of(Ability.SHIELD_WALL, Ability.ADRENALINE), ARC_TROOPER.abilities());
         assertEquals(List.of(Ability.JUMP_PACK, Ability.GRENADE), COMMANDO_DROID.abilities());
-        assertEquals(SoundCue.BLASTER_REPEATER, SoundCue.shot(ARC_TROOPER.blaster()));
-        assertEquals(SoundCue.BLASTER_CARBINE, SoundCue.shot(COMMANDO_DROID.blaster()));
+        assertEquals(SoundCue.BLASTER_REPEATER, ARC_TROOPER.blaster().shotSound());
+        assertEquals(SoundCue.BLASTER_CARBINE, COMMANDO_DROID.blaster().shotSound());
     }
 
     @Test
@@ -72,7 +73,7 @@ public class ReinforcementLoadoutTest {
     @Test
     public void aUnitKeepsItsOwnWeaponsAndAbilitiesAndRelicOrRespawnRemovesThem() {
         var heat = new Heat.Rules(8, 3, 40, 0.2, 0.25);
-        var fighter = new Fighter(heat);
+        var fighter = new Fighter(heat, ability -> new Charges(1, 1));
         fighter.combatClass(CombatClass.MEDIC);
         fighter.reinforcement(Optional.of(COMMANDO_DROID));
         assertFalse(fighter.hero().isPresent());
@@ -93,7 +94,7 @@ public class ReinforcementLoadoutTest {
 
     @Test
     public void choosingAClassOrHeroReplacesTheUnitAndChoosingASpawnKeepsIt() {
-        var choosing = new Fighter.Choosing(10, 30, Optional.empty(), Optional.of(Hero.JEDI)).pick(ARC_TROOPER);
+        var choosing = Fighter.Choosing.begin(10, 30).pick(Optional.of(Hero.JEDI)).pick(ARC_TROOPER);
         assertTrue(choosing.hero().isEmpty());
         assertEquals(Optional.of(ARC_TROOPER), choosing.choose(new Spawn.Headquarters()).reinforcement());
         assertTrue(choosing.pick(Optional.of(Hero.COMMANDER)).reinforcement().isEmpty());
@@ -102,7 +103,7 @@ public class ReinforcementLoadoutTest {
 
     @Test
     public void automaticDeploymentCannotChargeAnUnconfirmedUnitAndChangingRoleRequiresConfirmationAgain() {
-        var choosing = new Fighter.Choosing(10, 30, Optional.empty(), Optional.empty()).pick(ARC_TROOPER);
+        var choosing = Fighter.Choosing.begin(10, 30).pick(ARC_TROOPER);
         assertTrue(choosing.paidReinforcement().isEmpty());
         assertFalse(choosing.manualReady(30));
         var confirmed = choosing.choose(new Spawn.Headquarters());

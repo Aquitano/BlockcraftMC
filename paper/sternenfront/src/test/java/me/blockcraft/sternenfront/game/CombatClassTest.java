@@ -41,7 +41,7 @@ public class CombatClassTest {
             assertEquals(republic.get(index), roles[index].blaster(Faction.KOLONIEN));
             assertEquals(separatists.get(index), roles[index].blaster(Faction.HEGEMONIE));
             assertEquals(republic.get(index), separatists.get(index).profile());
-            assertEquals(SoundCue.shot(republic.get(index)), SoundCue.shot(separatists.get(index)));
+            assertEquals(republic.get(index).shotSound(), separatists.get(index).shotSound());
         }
     }
 

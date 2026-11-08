@@ -92,8 +92,8 @@ public final class Deployment {
 
     private Fighter.Choosing newChoosing() {
         var respawn = game.config().respawn();
-        return new Fighter.Choosing(game.tick() + respawn.seconds() * TICKS_PER_SECOND,
-                game.tick() + respawn.autoSeconds() * TICKS_PER_SECOND, Optional.empty(), Optional.empty());
+        return Fighter.Choosing.begin(game.tick() + respawn.seconds() * TICKS_PER_SECOND,
+                game.tick() + respawn.autoSeconds() * TICKS_PER_SECOND);
     }
 
     void rejoined(Player player) {

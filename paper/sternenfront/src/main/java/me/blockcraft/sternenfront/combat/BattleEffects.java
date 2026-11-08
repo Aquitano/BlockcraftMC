@@ -1,9 +1,7 @@
 package me.blockcraft.sternenfront.combat;
 
-import me.blockcraft.api.item.HotbarItem;
 import me.blockcraft.sternenfront.game.Blaster;
 import me.blockcraft.sternenfront.game.Faction;
-import me.blockcraft.sternenfront.game.HeatGlow;
 import me.blockcraft.sternenfront.game.SoundCue;
 import me.blockcraft.sternenfront.game.SternenfrontGame;
 import org.bukkit.Color;
@@ -62,10 +60,9 @@ public final class BattleEffects {
     private static final Vector UP = new Vector(0, 1, 0);
     private static final Vector STILL = new Vector();
     private static final int VENT_INTERVAL = 3;
-    private static final int FIRING_TICKS = 3;
-    /** A respawn's loadout or a swap between hands changes the items but not their look, so it is redrawn this often. */
-    private static final int REFRESH_TICKS = 20;
+    /** A bot's barrel steams from this heat share on, whether or not its gun is venting. */
     private static final double VENTING_HEAT = 0.85;
+    /** A shot from a barrel above this heat share leaves smoke at the muzzle. */
     private static final double HOT_BARREL = 0.65;
     private static final double OFF_THE_WALL = 0.12;
     private static final double SCORCH_LIFT = 0.03;
@@ -85,7 +82,6 @@ public final class BattleEffects {
     private static final int SHOCKWAVE_TICKS = 8;
     private static final int SMOKE_FADE_TICKS = 15;
 
-    private record Shot(LivingEntity actor, Blaster blaster, long tick) { }
     private record Tether(Player player, Location anchor, long until) { }
 
     private final SternenfrontGame game;
@@ -93,9 +89,7 @@ public final class BattleEffects {
     private final Flares flares;
     private final Flares scorches;
     private final Ambience ambience;
-    private final HeatGlow.Steps glow;
-    private final Map<UUID, Shot> shots = new HashMap<>();
-    private final Map<UUID, Shown> shown = new HashMap<>();
+    private final HeldBlasters blasters;
     private final List<Tether> tethers = new ArrayList<>();
     private final Map<UUID, Long> nextSaberMark = new HashMap<>();
     private final boolean enabled;
@@ -108,7 +102,7 @@ public final class BattleEffects {
         flares = new Flares(config.liveEffects());
         scorches = new Flares(config.scorch().marks());
         ambience = new Ambience(game.map(), config.ambient());
-        glow = HeatGlow.Steps.from(game.plugin().getConfig().getConfigurationSection("heat"));
+        blasters = new HeldBlasters(game);
     }
 
     public PresentationConfig config() {
@@ -119,27 +113,30 @@ public final class BattleEffects {
         return flares;
     }
 
+    public HeldBlasters blasters() {
+        return blasters;
+    }
+
     public void fire(LivingEntity actor, Faction faction, Blaster blaster, Vector direction, double heat) {
         if (!enabled) {
             return;
         }
-        shots.put(actor.getUniqueId(), new Shot(actor, blaster, game.tick()));
-        showBlasters(actor, game.tick());
+        blasters.fired(actor, game.tick());
         var muzzle = muzzle(actor, direction);
         if (muzzle.getBlock().isPassable()) {
             var flash = config.muzzleFlash();
-            boolean heavy = blaster.precision() || blaster.profile() == Blaster.REPEATER;
+            boolean heavy = blaster.isLongRifle() || blaster.profile() == Blaster.REPEATER;
             // The barrel sits under a block from the eyes, where even a small flash covers the shooter's aim.
             flashSparing(actor, faction, muzzle, heavy ? flash.heavyScale() : flash.scale(), flash.ticks());
-            forOthers(actor, muzzle, Particle.ELECTRIC_SPARK, 0.04, 0.03);
+            spawnForOthers(actor, muzzle, Particle.ELECTRIC_SPARK, 0.04, 0.03);
             if (heat > HOT_BARREL) {
-                forOthers(actor, muzzle, Particle.WHITE_SMOKE, 0.03, 0.01);
+                spawnForOthers(actor, muzzle, Particle.WHITE_SMOKE, 0.03, 0.01);
             }
         }
     }
 
     private void flashSparing(LivingEntity owner, Faction faction, Location at, float scale, int ticks) {
-        flares.flash(flash(faction), at, scale, ticks).ifPresent(shown -> {
+        flares.flash(flashModel(faction), at, scale, ticks).ifPresent(shown -> {
             if (owner instanceof Player player) {
                 player.hideEntity(game.plugin(), shown);
             }
@@ -147,7 +144,7 @@ public final class BattleEffects {
     }
 
     /** A particle this close to its owner's camera fills their view whatever its size, so only they do not get it. */
-    private static <T> void sparingOwner(Player owner, Location at, Particle particle, T data) {
+    private static <T> void spawnSparingOwner(Player owner, Location at, Particle particle, T data) {
         var eye = owner.getEyeLocation();
         if (!at.getWorld().equals(eye.getWorld()) || at.distanceSquared(eye) >= CLEAR_OF_EYES_SQUARED) {
             at.getWorld().spawnParticle(particle, at, 1, 0, 0, 0, 0, data, true);
@@ -157,7 +154,7 @@ public final class BattleEffects {
                 .forEach(viewer -> viewer.spawnParticle(particle, at, 1, 0, 0, 0, 0, data));
     }
 
-    private static void forOthers(LivingEntity actor, Location at, Particle particle, double spread, double speed) {
+    private static void spawnForOthers(LivingEntity actor, Location at, Particle particle, double spread, double speed) {
         at.getWorld().getPlayers().stream().filter(viewer -> !viewer.equals(actor) && viewer.getLocation().distanceSquared(at) < PARTICLE_RANGE_SQUARED)
                 .forEach(viewer -> viewer.spawnParticle(particle, at, 2, spread, spread, spread, speed));
     }
@@ -187,6 +184,10 @@ public final class BattleEffects {
         return eye.add(side).add(0, -HAND_DROP, 0).add(facing.multiply(HAND_REACH));
     }
 
+    public static Location chest(LivingEntity actor) {
+        return actor.getLocation().add(0, actor.getHeight() * 0.6, 0);
+    }
+
     /** Sparks at the emitter and a puff of the blade's colour where it grows out of the hilt. */
     public void ignite(Player hero, Color colour) {
         if (!enabled) {
@@ -195,18 +196,13 @@ public final class BattleEffects {
         var hand = hand(hero, false);
         var random = ThreadLocalRandom.current();
         for (int spark = 0; spark < IGNITION_SPARKS; spark++) {
-            sparingOwner(hero, hand.clone().add(random.nextDouble(-.06, .06), random.nextDouble(0, .12), random.nextDouble(-.06, .06)),
+            spawnSparingOwner(hero, hand.clone().add(random.nextDouble(-.06, .06), random.nextDouble(0, .12), random.nextDouble(-.06, .06)),
                     Particle.ELECTRIC_SPARK, null);
         }
         var dust = new Particle.DustOptions(colour, 0.7f);
         for (double along = .2; along < 1.1; along += .3) {
-            sparingOwner(hero, hand.clone().add(0, along, 0), Particle.DUST, dust);
+            spawnSparingOwner(hero, hand.clone().add(0, along, 0), Particle.DUST, dust);
         }
-    }
-
-    public double recoil(LivingEntity actor) {
-        var shot = shots.get(actor.getUniqueId());
-        return shot == null ? 0 : Math.clamp(1 - (game.tick() - shot.tick()) / 3.0, 0, 1);
     }
 
     public void push(Location origin, Vector facing, double range, double angle) {
@@ -234,24 +230,23 @@ public final class BattleEffects {
             hero.getWorld().getPlayers().stream().filter(viewer -> !viewer.equals(hero) && viewer.getLocation().distanceSquared(palm) < PARTICLE_RANGE_SQUARED)
                     .forEach(viewer -> viewer.spawnParticle(Particle.CLOUD, from, 0, -inward.getX(), -inward.getY(), -inward.getZ(), WIND_UP_SPEED));
         }
-        sparingOwner(hero, palm, Particle.DUST, new Particle.DustOptions(PUSH_COLOUR, 0.8f));
+        spawnSparingOwner(hero, palm, Particle.DUST, new Particle.DustOptions(PUSH_COLOUR, 0.8f));
     }
 
     public void rally(Location origin, Faction faction, double radius) {
         if (enabled) {
-            pulse(origin, faction, radius, RALLY_TICKS);
+            groundRing(origin, faction, radius, RALLY_TICKS);
         }
     }
 
     /** A ring on the ground widening to {@code radius}, as a rally call or a med station sends out. */
-    public void pulse(Location origin, Faction faction, double radius, int ticks) {
+    public void groundRing(Location origin, Faction faction, double radius, int ticks) {
         if (enabled) {
             flares.ring(RING, onGround(origin), UP, STILL, (float) (radius * 2), ticks, faction.bolt());
         }
     }
 
-    /** A ripple on a shield wall where a bolt struck it. */
-    public void impact(Location at, Vector normal, Color color) {
+    public void shieldRipple(Location at, Vector normal, Color color) {
         if (enabled && flares.hasRoom()) {
             flares.ring(RING, at.clone().add(normal.clone().multiply(0.06)), normal, STILL, SHIELD_RIPPLE_DIAMETER,
                     SHIELD_RIPPLE_TICKS, color);
@@ -271,8 +266,8 @@ public final class BattleEffects {
             burst(at, faction);
             return;
         }
-        sparingOwner(player, at, Particle.ELECTRIC_SPARK, null);
-        sparingOwner(player, at, Particle.DUST, new Particle.DustOptions(faction.bolt(), 1f));
+        spawnSparingOwner(player, at, Particle.ELECTRIC_SPARK, null);
+        spawnSparingOwner(player, at, Particle.DUST, new Particle.DustOptions(faction.bolt(), 1f));
         if (enabled) {
             flashSparing(player, faction, at, config.bolt().impactFlash(), FLASH_TICKS);
         }
@@ -351,7 +346,7 @@ public final class BattleEffects {
         world.spawnParticle(Particle.ELECTRIC_SPARK, at, 4, 0.08, 0.08, 0.08, 0.1, null, true);
         world.spawnParticle(Particle.DUST, at, 2, 0.08, 0.08, 0.08, 0, new Particle.DustOptions(faction.bolt(), 1f), true);
         if (enabled) {
-            flares.flash(flash(faction), at, config.bolt().impactFlash(), FLASH_TICKS);
+            flares.flash(flashModel(faction), at, config.bolt().impactFlash(), FLASH_TICKS);
         }
     }
 
@@ -371,7 +366,7 @@ public final class BattleEffects {
             return;
         }
         float size = (float) radius;
-        flares.burst(flash(faction), at.clone().add(0, 0.4, 0), size * 0.5f, size * 1.5f, BLAST_FLASH_TICKS);
+        flares.burst(flashModel(faction), at.clone().add(0, 0.4, 0), size * 0.5f, size * 1.5f, BLAST_FLASH_TICKS);
         flares.ring(RING, onGround(at), UP, STILL, size * 2.4f, SHOCKWAVE_TICKS, faction.bolt());
         world.spawnParticle(Particle.FLASH, at, 1, 0, 0, 0, 0, faction.bolt(), true);
         world.spawnParticle(Particle.ELECTRIC_SPARK, at, 30, radius * 0.25, radius * 0.15, radius * 0.25, 0.25, null, true);
@@ -446,7 +441,7 @@ public final class BattleEffects {
         var direction = line.multiply(1 / length);
         var dust = new Particle.DustOptions(colour, 0.8f);
         for (double along = 0; along < length; along += 0.4) {
-            sparingOwner(thrower, from.clone().add(direction.clone().multiply(along)), Particle.DUST, dust);
+            spawnSparingOwner(thrower, from.clone().add(direction.clone().multiply(along)), Particle.DUST, dust);
         }
         to.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, to, 2, 0.1, 0.1, 0.1, 0.03, null, true);
     }
@@ -460,8 +455,8 @@ public final class BattleEffects {
         var direction = line.multiply(1 / distance);
         for (double along = 0; along < distance; along += 0.35) {
             var at = from.clone().add(direction.clone().multiply(along));
-            sparingOwner(shooter, at, Particle.FLAME, null);
-            sparingOwner(shooter, at, Particle.SMOKE, null);
+            spawnSparingOwner(shooter, at, Particle.FLAME, null);
+            spawnSparingOwner(shooter, at, Particle.SMOKE, null);
         }
     }
 
@@ -490,9 +485,9 @@ public final class BattleEffects {
             double length = line.length();
             for (; ahead < length; ahead += BOLT_SPACING) {
                 var at = start.clone().add(line.clone().multiply(ahead / length)).toLocation(world);
-                sparingOwner(caster, at, Particle.DUST, core);
+                spawnSparingOwner(caster, at, Particle.DUST, core);
                 if (enabled && placed++ % 3 == 0) {
-                    sparingOwner(caster, at, Particle.DUST, glow);
+                    spawnSparingOwner(caster, at, Particle.DUST, glow);
                 }
             }
             ahead -= length;
@@ -506,7 +501,7 @@ public final class BattleEffects {
         }
         var random = ThreadLocalRandom.current();
         for (int spark = 0; spark < HAND_SPARKS; spark++) {
-            sparingOwner(caster, hand.clone().add(random.nextDouble(-.12, .12), random.nextDouble(-.12, .12), random.nextDouble(-.12, .12)),
+            spawnSparingOwner(caster, hand.clone().add(random.nextDouble(-.12, .12), random.nextDouble(-.12, .12), random.nextDouble(-.12, .12)),
                     Particle.ELECTRIC_SPARK, null);
         }
     }
@@ -535,14 +530,7 @@ public final class BattleEffects {
     public void tick(long tick) {
         flares.tick();
         scorches.tick();
-        shots.values().removeIf(shot -> {
-            if (!shot.actor().isValid() || tick - shot.tick() >= FIRING_TICKS) {
-                restore(shot);
-                return true;
-            }
-            return false;
-        });
-        game.combatants().forEach(actor -> showBlasters(actor, tick));
+        blasters.tick(tick);
         tethers.removeIf(tether -> !game.onField(tether.player()) || tick >= tether.until()
                 || !tether.player().getWorld().equals(tether.anchor().getWorld())
                 || tether.player().getEyeLocation().distanceSquared(tether.anchor()) < 2);
@@ -581,8 +569,8 @@ public final class BattleEffects {
 
     private void vent(LivingEntity actor) {
         var at = muzzle(actor, actor.getEyeLocation().getDirection());
-        forOthers(actor, at, Particle.CLOUD, 0.06, 0.03);
-        forOthers(actor, at, Particle.WHITE_SMOKE, 0.05, 0.02);
+        spawnForOthers(actor, at, Particle.CLOUD, 0.06, 0.03);
+        spawnForOthers(actor, at, Particle.WHITE_SMOKE, 0.05, 0.02);
     }
 
     private boolean badlyHurt(LivingEntity actor) {
@@ -592,11 +580,11 @@ public final class BattleEffects {
 
     private static void smoulder(LivingEntity actor) {
         var chest = actor.getEyeLocation().subtract(0, 0.5, 0);
-        forOthers(actor, chest, Particle.SMOKE, 0.2, 0.01);
-        forOthers(actor, chest, Particle.ELECTRIC_SPARK, 0.25, 0.05);
+        spawnForOthers(actor, chest, Particle.SMOKE, 0.2, 0.01);
+        spawnForOthers(actor, chest, Particle.ELECTRIC_SPARK, 0.25, 0.05);
     }
 
-    private static String flash(Faction faction) {
+    private static String flashModel(Faction faction) {
         return "sternenfront/fx/flash_" + faction.key();
     }
 
@@ -620,53 +608,8 @@ public final class BattleEffects {
         return spot;
     }
 
-    /** The blasters in {@code actor}'s hands, in the pose of their last shot or sprint and glowing with their heat. */
-    private void showBlasters(LivingEntity actor, long tick) {
-        var equipment = actor.getEquipment();
-        if (equipment == null) {
-            return;
-        }
-        var shot = shots.get(actor.getUniqueId());
-        var pose = shot != null && tick - shot.tick() < FIRING_TICKS ? Blaster.Pose.FIRING
-                : actor instanceof Player player && game.lowered(player) ? Blaster.Pose.LOWERED : Blaster.Pose.READY;
-        var heat = actor instanceof Player player
-                ? HeatGlow.of(glow, game.fighter(player).heat().level(), game.fighter(player).heat().venting(tick), tick)
-                : HeatGlow.of(glow, game.bots().heat(actor), game.bots().venting(actor, tick), tick);
-        var look = new Shown(pose, heat, actor instanceof Player player ? player.getInventory().getHeldItemSlot() : -1);
-        if (look.equals(shown.put(actor.getUniqueId(), look)) && tick % REFRESH_TICKS != 0) {
-            return;
-        }
-        var main = equipment.getItemInMainHand();
-        if (HotbarItem.of(main, Blaster.class).filter(blaster -> blaster.show(main, pose, heat)).isPresent()) {
-            equipment.setItemInMainHand(main);
-        }
-        var off = equipment.getItemInOffHand();
-        if (HotbarItem.of(off, Blaster.class).filter(blaster -> blaster.show(off, pose, heat)).isPresent()) {
-            equipment.setItemInOffHand(off);
-        }
-    }
-
-    /** What {@link #showBlasters} last put in an actor's hands; until it changes the items need no look. */
-    private record Shown(Blaster.Pose pose, HeatGlow heat, int slot) {
-    }
-
-    /** A shooter may have put the gun away mid-shot; the hands show their blasters again the same tick. */
-    private static void restore(Shot shot) {
-        if (shot.actor() instanceof Player player && player.isValid()) {
-            var inventory = player.getInventory();
-            for (int slot = 0; slot < inventory.getSize(); slot++) {
-                var item = inventory.getItem(slot);
-                if (HotbarItem.of(item, Blaster.class).filter(blaster -> blaster.show(item, Blaster.Pose.READY, HeatGlow.COLD)).isPresent()) {
-                    inventory.setItem(slot, item);
-                }
-            }
-        }
-    }
-
     public void clear() {
-        shots.values().forEach(BattleEffects::restore);
-        shots.clear();
-        shown.clear();
+        blasters.clear();
         flares.clear();
         scorches.clear();
         tethers.clear();

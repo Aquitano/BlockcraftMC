@@ -91,7 +91,7 @@ public final class CombatHud {
                     .orElseGet(() -> new Slot(binding, Optional.empty(), new State.Ready()));
         }
         return game.factionOf(player).flatMap(side -> fighter.abilities(side).stream().skip(index).findFirst()).map(ability -> {
-            var charges = game.charges(fighter, ability);
+            var charges = fighter.charges(ability);
             int stored = charges.stored(game.tick());
             var state = charges.capacity() > 1 && stored > 0 ? new State.Charged(stored, charges.capacity())
                     : cooling(player.getCooldown(ability.material()));

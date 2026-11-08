@@ -88,11 +88,11 @@ public final class Sabers {
 
     /** The hero's saber, its blade lit in their colour or still in the hilt. */
     public ItemStack item(Player owner, Hero hero, boolean lit) {
-        return item(owner, hero, lit ? saber(hero).stages().size() - 1 : 0);
+        return itemAtStage(owner, hero, lit ? saber(hero).stages().size() - 1 : 0);
     }
 
     /** The saber at {@code stage} of its ignition; only the last, the whole blade, cuts. */
-    private ItemStack item(Player owner, Hero hero, int stage) {
+    private ItemStack itemAtStage(Player owner, Hero hero, int stage) {
         var stages = saber(hero).stages();
         var model = stages.get(stage);
         boolean lit = stage == stages.size() - 1;
@@ -108,11 +108,11 @@ public final class Sabers {
                         AttributeModifier.Operation.ADD_NUMBER, EquipmentSlotGroup.MAINHAND))
                 .build());
         item.editMeta(meta -> meta.getPersistentDataContainer().set(LIT, PersistentDataType.BOOLEAN, lit));
-        allowGuard(item);
+        makeBlockable(item);
         return SternenfrontItem.SABER.tag(item);
     }
 
-    public static void allowGuard(ItemStack item) {
+    public static void makeBlockable(ItemStack item) {
         item.setData(DataComponentTypes.CONSUMABLE, Consumable.consumable()
                 .consumeSeconds(3600).animation(ItemUseAnimation.BLOCK)
                 .hasConsumeParticles(false).build());
@@ -168,7 +168,7 @@ public final class Sabers {
                 SoundCue.SABER_IGNITE.playOn(player, 1f, 1f, game::drawnAs);
                 game.effects().ignite(player, colour(player, ignition.hero()));
             }
-            player.getInventory().setItem(SABER_SLOT, item(player, ignition.hero(), stage));
+            player.getInventory().setItem(SABER_SLOT, itemAtStage(player, ignition.hero(), stage));
             return stage == last;
         });
         if (tick % config.humTicks() != 0) {

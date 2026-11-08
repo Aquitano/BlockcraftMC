@@ -7,6 +7,7 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 
 /**
  * A player's state in a running round besides their faction: the class they deploy as next, the hero or reinforcement they fight
@@ -24,12 +25,12 @@ public final class Fighter {
     public record Choosing(long readyTick, long autoTick, Optional<Spawn> chosen, Optional<Hero> hero,
                            Optional<Reinforcement> reinforcement, boolean confirmed) {
 
-        public Choosing(long readyTick, long autoTick, Optional<Spawn> chosen, Optional<Hero> hero) {
-            this(readyTick, Math.max(readyTick, autoTick), chosen, hero, Optional.empty(), false);
+        public Choosing {
+            autoTick = Math.max(readyTick, autoTick);
         }
 
-        public Choosing(long readyTick, long autoTick, Optional<Spawn> chosen, Optional<Hero> hero, boolean confirmed) {
-            this(readyTick, Math.max(readyTick, autoTick), chosen, hero, Optional.empty(), confirmed);
+        public static Choosing begin(long readyTick, long autoTick) {
+            return new Choosing(readyTick, autoTick, Optional.empty(), Optional.empty(), Optional.empty(), false);
         }
 
         public boolean manualReady(long tick) {
@@ -49,7 +50,7 @@ public final class Fighter {
         }
 
         public Choosing retry(long autoTick) {
-            return new Choosing(readyTick, Math.max(readyTick, autoTick), chosen, hero, reinforcement, false);
+            return new Choosing(readyTick, autoTick, chosen, hero, reinforcement, false);
         }
 
         public Choosing pick(Optional<Hero> hero) {
@@ -71,11 +72,13 @@ public final class Fighter {
     private long fallSafeUntil;
     private long sprintedAt = LONG_AGO;
     private final Map<Ability, Charges> charges = new EnumMap<>(Ability.class);
+    private final Function<Ability, Charges> freshCharges;
     private Optional<Hero> hero = Optional.empty();
     private Optional<Reinforcement> reinforcement = Optional.empty();
 
-    public Fighter(Heat.Rules heatRules) {
+    public Fighter(Heat.Rules heatRules, Function<Ability, Charges> freshCharges) {
         this.heat = new Heat(heatRules);
+        this.freshCharges = freshCharges;
     }
 
     public CombatClass combatClass() {
@@ -114,8 +117,8 @@ public final class Fighter {
     }
 
     /** The uses of a class ability left in this life, full on each deployment. */
-    public Charges charges(Ability ability, int capacity, int rechargeTicks) {
-        return charges.computeIfAbsent(ability, ignored -> new Charges(capacity, rechargeTicks));
+    public Charges charges(Ability ability) {
+        return charges.computeIfAbsent(ability, freshCharges);
     }
 
     public void sprinted(long tick) {
@@ -146,7 +149,7 @@ public final class Fighter {
         return tick < fallSafeUntil;
     }
 
-    public void fallSafeUntil(long tick) {
+    public void makeFallSafeUntil(long tick) {
         fallSafeUntil = tick;
     }
 

@@ -460,7 +460,8 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     }
 
     public Fighter fighter(Player player) {
-        return fighters.computeIfAbsent(player.getUniqueId(), ignored -> new Fighter(config.heat()));
+        return fighters.computeIfAbsent(player.getUniqueId(), ignored -> new Fighter(config.heat(),
+                ability -> new Charges(config.charges(ability), config.cooldownTicks(ability))));
     }
 
     Optional<Fighter> fighterIfAny(Player player) {
@@ -520,7 +521,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         if (fighter == null || !fighter.fallSafe(tick)) {
             return false;
         }
-        fighter.fallSafeUntil(0);
+        fighter.makeFallSafeUntil(0);
         return true;
     }
 
@@ -855,7 +856,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
                 if (player.isSprinting()) {
                     fighter.sprinted(tick);
                 }
-                fighter.heat().cool(tick);
+                fighter.heat().tick(tick);
                 player.setExp(fighter.heat().level());
                 scope(player, fighter);
                 combat.tick(player);
@@ -1093,7 +1094,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         fighter.endProtection();
         Bukkit.getPluginManager().callEvent(new ShotEvent(rider));
         bolts.fire(rider, faction, Blaster.SPEEDER_CANNON, stats, muzzle, nose);
-        SoundCue.shot(Blaster.SPEEDER_CANNON).play(muzzle, SHOT_VOLUME);
+        Blaster.SPEEDER_CANNON.shotSound().play(muzzle, SHOT_VOLUME);
         rider.setExp(fighter.heat().level());
         return true;
     }
@@ -1103,9 +1104,9 @@ public final class SternenfrontGame implements RoundConnections.Seating {
             case TOO_SOON -> false;
             case VENTING -> {
                 switch (fighter.heat().pull(tick)) {
-                    case HIT -> vented(player);
-                    case MISS -> ventMissed(player);
-                    case NONE -> { }
+                    case CAUGHT -> vented(player);
+                    case MISSED -> ventMissed(player);
+                    case NOT_COUNTED -> { }
                 }
                 yield false;
             }
@@ -1125,7 +1126,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     }
 
     private static void shotSound(LivingEntity shooter, Blaster blaster, float volume) {
-        SoundCue.shot(blaster).playFrom(shooter, volume, 1 + (float) ThreadLocalRandom.current().nextDouble(-SHOT_SHIFT, SHOT_SHIFT));
+        blaster.shotSound().playFrom(shooter, volume, 1 + (float) ThreadLocalRandom.current().nextDouble(-SHOT_SHIFT, SHOT_SHIFT));
     }
 
     private void fireBursts() {
@@ -1233,7 +1234,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
                 || !fighter.abilities(faction.get()).contains(ability)) {
             return;
         }
-        var charges = charges(fighter, ability);
+        var charges = fighter.charges(ability);
         if (charges.stored(tick) == 0) {
             cooling(player, messages.get(ability.messageKey(faction.get()) + ".name"), charges.ticksToNext(tick));
             return;
@@ -1248,10 +1249,6 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         }
         charges.use(tick);
         player.setCooldown(ability.material(), charges.stored(tick) == 0 ? charges.ticksToNext(tick) : 0);
-    }
-
-    public Charges charges(Fighter fighter, Ability ability) {
-        return fighter.charges(ability, config.charges(ability), config.cooldownTicks(ability));
     }
 
     /** The second jump, or the champion's F ability, leaps with the blade. */
@@ -1269,7 +1266,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         gadgets.leap(player, fighter, champion ? config.relic().leapForward() : saber.leapForward(),
                 champion ? config.relic().leapUp() : saber.leapUp(), tick, SoundCue.FORCE_PUSH);
         int seconds = champion ? config.relic().leapCooldownSeconds() : saber.leapCooldownSeconds();
-        combat.leapCooldown(player, seconds * (int) TICKS_PER_SECOND);
+        combat.startLeapCooldown(player, seconds * (int) TICKS_PER_SECOND);
     }
 
     public void boltHit(LivingEntity shooter, Blaster blaster, LivingEntity victim, double damage, boolean headshot) {
@@ -1401,7 +1398,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
         reinforcementUnits.roster().discharge(player.getUniqueId());
         fighterIfAny(player).filter(fighter -> fighter.reinforcement().isPresent()).ifPresent(fighter -> {
             fighter.reinforcement(Optional.empty());
-            fighter.fallSafeUntil(0);
+            fighter.makeFallSafeUntil(0);
             player.removePotionEffect(PotionEffectType.SPEED);
             player.removePotionEffect(PotionEffectType.REGENERATION);
             gadgets.release(player);
@@ -1679,8 +1676,8 @@ public final class SternenfrontGame implements RoundConnections.Seating {
     public boolean scoped(Player player) {
         var fighter = fighters.get(player.getUniqueId());
         return onField(player) && !player.isInsideVehicle() && fighter != null && player.isSneaking()
-                && factionOf(player).flatMap(fighter::blaster).filter(Blaster::precision).isPresent()
-                && HotbarItem.of(player.getInventory().getItemInMainHand(), Blaster.class).filter(Blaster::precision).isPresent();
+                && factionOf(player).flatMap(fighter::blaster).filter(Blaster::isLongRifle).isPresent()
+                && HotbarItem.of(player.getInventory().getItemInMainHand(), Blaster.class).filter(Blaster::isLongRifle).isPresent();
     }
 
     private Component factionDisplay(Faction faction) {

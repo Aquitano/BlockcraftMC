@@ -29,13 +29,13 @@ public record WeaponHandling(Map<Blaster, Factors> blasters, double falloffFrom,
         }
     }
 
-    /** What a shooter is doing as they fire. */
-    public record Stance(boolean moving, boolean crouched, boolean airborne) {
+    public record Posture(boolean moving, boolean crouched, boolean airborne) {
 
-        public static Stance of(Player shooter) {
+        public static Posture of(Player shooter) {
             var input = shooter.getCurrentInput();
+            // Player deprecates isOnGround as client-reported; through Entity it is the same call without the warning.
             Entity body = shooter;
-            return new Stance(input.isForward() || input.isBackward() || input.isLeft() || input.isRight(), shooter.isSneaking(),
+            return new Posture(input.isForward() || input.isBackward() || input.isLeft() || input.isRight(), shooter.isSneaking(),
                     !body.isOnGround() && !shooter.isInsideVehicle());
         }
     }
@@ -53,10 +53,10 @@ public record WeaponHandling(Map<Blaster, Factors> blasters, double falloffFrom,
                 Math.clamp(handling.getDouble("falloff-minimum"), 0, 1));
     }
 
-    public double spread(Blaster blaster, double base, Stance stance, double heat) {
+    public double spread(Blaster blaster, double base, Posture posture, double heat) {
         var factors = blasters.get(blaster);
-        return base * (stance.moving() ? factors.moving() : 1) * (stance.crouched() ? factors.crouched() : 1)
-                * (stance.airborne() ? factors.airborne() : 1) * (1 + Math.clamp(heat, 0, 1) * factors.hot());
+        return base * (posture.moving() ? factors.moving() : 1) * (posture.crouched() ? factors.crouched() : 1)
+                * (posture.airborne() ? factors.airborne() : 1) * (1 + Math.clamp(heat, 0, 1) * factors.hot());
     }
 
     /** Whether a gun whose holder last sprinted at {@code sprintedAt} is still coming up at {@code tick}. */

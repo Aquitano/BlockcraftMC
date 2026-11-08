@@ -11,15 +11,18 @@ import java.util.random.RandomGenerator;
  */
 public final class Heat {
 
-    public enum Shot { FIRED, OVERHEATED, TOO_SOON, VENTING }
+    public enum Trigger { FIRED, OVERHEATED, TOO_SOON, VENTING }
 
-    public enum Vent { HIT, MISS, NONE }
+    public enum VentCatch { CAUGHT, MISSED, NOT_COUNTED }
 
     /** {@code windowShare} of the meter is the vent's window and a miss adds {@code missPenaltyShare} of the vent. */
     public record Rules(int coolDelayTicks, double coolPerTick, int ventTicks, double windowShare, double missPenaltyShare) {
     }
 
-    /** The meter cells from {@code low} up to, not including, {@code high} whose last lit cell a pull has to catch. */
+    /**
+     * The meter cells, as 0-based indices, from {@code low} up to, not including, {@code high}; a pull catches the window
+     * while the last lit cell is one of them.
+     */
     public record Window(int low, int high) {
     }
 
@@ -49,35 +52,35 @@ public final class Heat {
     }
 
     /** Whether a shot leaves the gun at {@code tick}; an overheating shot still does. */
-    public Shot fire(long tick, int minTicksBetween, double heatPerShot) {
+    public Trigger fire(long tick, int minTicksBetween, double heatPerShot) {
         if (venting(tick)) {
-            return Shot.VENTING;
+            return Trigger.VENTING;
         }
         if (tick - lastShot < minTicksBetween) {
-            return Shot.TOO_SOON;
+            return Trigger.TOO_SOON;
         }
         lastShot = tick;
         heat = Math.min(FULL, heat + heatPerShot);
         if (heat < FULL) {
-            return Shot.FIRED;
+            return Trigger.FIRED;
         }
         ventLength = Math.max(1, rules.ventTicks());
         ventedUntil = tick + ventLength;
         int cells = Math.clamp(Math.round(rules.windowShare() * METER_CELLS), 0, METER_CELLS / 2);
         int low = cells == 0 ? 0 : random.nextInt(METER_CELLS / 2 - cells + 1);
         window = cells == 0 ? Optional.empty() : Optional.of(new Window(low, low + cells));
-        return Shot.OVERHEATED;
+        return Trigger.OVERHEATED;
     }
 
     /**
      * A pull of the trigger during a vent. Only the first fresh pull counts: a trigger held since the overheating shot
      * does not, and after one try the window is gone.
      */
-    public Vent pull(long tick) {
+    public VentCatch pull(long tick) {
         boolean fresh = tick - Math.max(lastPull, lastShot) >= RELEASED_AFTER_TICKS;
         lastPull = tick;
         if (!venting(tick) || !fresh || window.isEmpty()) {
-            return Vent.NONE;
+            return VentCatch.NOT_COUNTED;
         }
         var tried = window.get();
         window = Optional.empty();
@@ -85,16 +88,17 @@ public final class Heat {
         if (lit > tried.low() && lit <= tried.high()) {
             ventedUntil = tick;
             heat = 0;
-            return Vent.HIT;
+            return VentCatch.CAUGHT;
         }
         int penalty = (int) Math.round(rules.missPenaltyShare() * rules.ventTicks());
         ventedUntil += penalty;
         ventLength += penalty;
-        cool(tick);
-        return Vent.MISS;
+        tick(tick);
+        return VentCatch.MISSED;
     }
 
-    public void cool(long tick) {
+    /** During a vent the heat follows the vent's progress; otherwise a gun cools once it has paused long enough. */
+    public void tick(long tick) {
         if (venting(tick)) {
             heat = FULL * (ventedUntil - tick) / ventLength;
         } else if (tick - lastShot >= rules.coolDelayTicks()) {

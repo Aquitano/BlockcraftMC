@@ -15,6 +15,7 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 
 import java.util.HashMap;
@@ -29,6 +30,8 @@ public final class Combat {
     private static final float GUARD_VOLUME = 0.4f;
     private static final float SWING_VOLUME = 0.8f;
     private static final double SWING_PITCH_SPREAD = 0.06;
+    private static final int GUARD_AFTER_CLICK_TICKS = 3;
+    private static final int HUD_REFRESH_TICKS = 4;
 
     private static final class State {
         private final Guard guard;
@@ -93,7 +96,7 @@ public final class Combat {
         return (int) Math.max(0, state(player).leapUntil - game.tick());
     }
 
-    public void leapCooldown(Player player, int ticks) {
+    public void startLeapCooldown(Player player, int ticks) {
         state(player).leapUntil = game.tick() + ticks;
     }
 
@@ -102,12 +105,16 @@ public final class Combat {
         return Sabers.isLit(item) || HotbarItem.of(item, SternenfrontItem.class).filter(SternenfrontItem.BLADE::equals).isPresent();
     }
 
+    /** A bladed hero out of any vehicle with the blade in hand, whether or not they are on the field. */
+    private boolean wieldsBlade(Player player) {
+        return holdsBlade(player) && !player.isInsideVehicle() && game.heroOf(player).filter(Hero::bladed).isPresent();
+    }
+
     public void raise(Player player) {
-        if (game.onField(player) && holdsBlade(player) && !player.isInsideVehicle()
-                && game.heroOf(player).filter(Hero::bladed).isPresent()) {
+        if (game.onField(player) && wieldsBlade(player)) {
             var state = state(player);
             state.sweep = null;
-            state.raiseUntil = game.tick() + 3;
+            state.raiseUntil = game.tick() + GUARD_AFTER_CLICK_TICKS;
             state.guard.tick(game.tick(), true);
             player.startUsingItem(EquipmentSlot.HAND);
         }
@@ -121,7 +128,7 @@ public final class Combat {
             state.guarding = false;
             return;
         }
-        boolean blade = holdsBlade(player) && game.heroOf(player).filter(Hero::bladed).isPresent() && !player.isInsideVehicle();
+        boolean blade = wieldsBlade(player);
         boolean holding = blade && (game.tick() < state.raiseUntil
                 || player.isHandRaised() && player.getHandRaised() == EquipmentSlot.HAND);
         state.guard.tick(game.tick(), holding);
@@ -130,6 +137,7 @@ public final class Combat {
         }
         state.guarding = holding;
         boolean jumping = player.getCurrentInput().isJump();
+        // Player deprecates isOnGround as client-reported; through Entity it is the same call without the warning.
         Entity body = player;
         if (body.isOnGround()) {
             state.jumped = false;
@@ -144,7 +152,7 @@ public final class Combat {
         }
         state.jumping = jumping;
         // The vent window is timed against the meter, so the meter keeps up with every tick while one is open.
-        if (game.tick() % 4 == 0 || game.fighter(player).heat().window(game.tick()).isPresent()) {
+        if (game.tick() % HUD_REFRESH_TICKS == 0 || game.fighter(player).heat().window(game.tick()).isPresent()) {
             hud.show(player, state.guard);
         }
     }
@@ -182,8 +190,7 @@ public final class Combat {
     }
 
     public void swing(Player player) {
-        if (!game.onField(player) || !holdsBlade(player) || game.heroOf(player).filter(Hero::bladed).isEmpty()
-                || player.isInsideVehicle()) {
+        if (!game.onField(player) || !wieldsBlade(player)) {
             return;
         }
         var state = state(player);
@@ -212,8 +219,7 @@ public final class Combat {
             return;
         }
         var origin = slash.origin();
-        if (!game.onField(player) || !holdsBlade(player) || player.isInsideVehicle()
-                || !player.getWorld().equals(origin.getWorld()) || game.heroOf(player).filter(Hero::bladed).isEmpty()) {
+        if (!game.onField(player) || !wieldsBlade(player) || !player.getWorld().equals(origin.getWorld())) {
             state.sweep = null;
             return;
         }
@@ -226,17 +232,14 @@ public final class Combat {
         var targets = game.targets().stream().filter(target -> game.hittable(faction, target))
                 .filter(target -> !game.isProtected(target) && target.getWorld().equals(origin.getWorld())).toList();
         var trail = new ArrayList<SaberCrescent.Sample>();
-        trailStart.ifPresent(direction -> {
-            var wall = origin.getWorld().rayTraceBlocks(origin, direction, config.meleeRange(), FluidCollisionMode.NEVER, true);
-            double reach = wall == null ? config.meleeRange() : Math.max(0, wall.getHitPosition().distance(origin.toVector()) - 0.04);
-            trail.add(new SaberCrescent.Sample(direction, reach));
-        });
+        trailStart.ifPresent(direction -> trail.add(bladeSample(origin, direction, wallAhead(origin, direction))));
         for (var direction : rays) {
-            var wall = origin.getWorld().rayTraceBlocks(origin, direction, config.meleeRange(), FluidCollisionMode.NEVER, true);
-            double reach = wall == null ? config.meleeRange() : Math.max(0, wall.getHitPosition().distance(origin.toVector()) - 0.04);
-            trail.add(new SaberCrescent.Sample(direction, reach));
+            var wall = wallAhead(origin, direction);
+            var sample = bladeSample(origin, direction, wall);
+            trail.add(sample);
             for (var target : targets) {
-                if (CombatArc.hits(origin.toVector(), direction, target.getBoundingBox(), reach) && slash.contact(target.getUniqueId())) {
+                if (CombatArc.hits(origin.toVector(), direction, target.getBoundingBox(), sample.reach())
+                        && slash.contact(target.getUniqueId())) {
                     strike(player, target, slash.damage());
                 }
             }
@@ -248,6 +251,15 @@ public final class Combat {
         if (slash.finished()) {
             state.sweep = null;
         }
+    }
+
+    private RayTraceResult wallAhead(Location origin, Vector direction) {
+        return origin.getWorld().rayTraceBlocks(origin, direction, config.meleeRange(), FluidCollisionMode.NEVER, true);
+    }
+
+    private SaberCrescent.Sample bladeSample(Location origin, Vector direction, RayTraceResult wall) {
+        double reach = wall == null ? config.meleeRange() : Math.max(0, wall.getHitPosition().distance(origin.toVector()) - 0.04);
+        return new SaberCrescent.Sample(direction, reach);
     }
 
     private void strike(Player player, LivingEntity target, double damage) {
@@ -262,7 +274,7 @@ public final class Combat {
             };
         }
         if (amount > 0 && game.strike(player, target, amount, DamageType.MAGIC)) {
-            SoundCue.SABER_HIT.play(target.getLocation().add(0, target.getHeight() * 0.6, 0), 0.8f);
+            SoundCue.SABER_HIT.play(BattleEffects.chest(target), 0.8f);
         }
     }
 

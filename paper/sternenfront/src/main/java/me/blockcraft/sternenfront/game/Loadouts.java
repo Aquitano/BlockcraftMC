@@ -97,7 +97,7 @@ public final class Loadouts {
     public ItemStack blade() {
         var item = PackModel.STERNENFRONT_RELIC_BLADE.item().name(messages.get("relic.name"))
                 .lore(messages.getLines("relic.lore")).hideAttributes().edit(meta -> meta.setUnbreakable(true)).build();
-        Sabers.allowGuard(item);
+        Sabers.makeBlockable(item);
         item.setData(DataComponentTypes.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.itemAttributes()
                 .addModifier(Attribute.ATTACK_DAMAGE, new AttributeModifier(BLADE_DAMAGE,
                         config.relic().damage() - PLAYER_BASE_DAMAGE, AttributeModifier.Operation.ADD_NUMBER, EquipmentSlotGroup.MAINHAND))
