@@ -3,8 +3,6 @@ import java.awt.AlphaComposite;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
-import java.awt.GradientPaint;
-import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.Shape;
 import java.awt.geom.Arc2D;
@@ -12,7 +10,6 @@ import java.awt.geom.Area;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Path2D;
 import java.awt.geom.Rectangle2D;
-import java.awt.geom.RoundRectangle2D;
 import java.awt.image.BufferedImage;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -21,7 +18,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
 public final class HudArt {
@@ -743,24 +739,23 @@ public final class HudArt {
             Map.entry('n', 0xFFA8743F), Map.entry('N', 0xFF6A4524));
 
     /**
-     * The ability tiles' font in the screen's bottom-right corner, drawn at twice the resolution of its GUI size so a tile
-     * shows finer detail at GUI scale 2 and up: a dark backing, a frame the shader tints by state, a fill that rises
-     * while an ability recharges, every ability's icon in colour and in grey in the order of Sternenfront's
-     * {@code AbilityIcon}, the keys' badges, the cooldown's digits, the digits that count stored uses and the label
-     * letters of the names.
+     * The ability tiles' font in the screen's bottom-right corner: a dark backing, a frame the shader tints by state, a
+     * fill that rises while an ability recharges and every ability's icon in colour and in grey, one texel per GUI pixel
+     * as Minecraft draws its items, then at twice that resolution the keys' badges, the cooldown's digits, the digits
+     * that count stored uses and the label letters of the names, each of their pixels a square of four texels.
      * Every glyph hangs from the line's top, which the text shader moves into the corner.
      */
     private static void abilities(Path root, Path contactSheet, String letters) throws Exception {
-        var icons = new BufferedImage(2 * ICON * ABILITY_ICONS.size(), 2 * ICON, BufferedImage.TYPE_INT_ARGB);
+        var icons = new BufferedImage(ICON * ABILITY_ICONS.size(), ICON, BufferedImage.TYPE_INT_ARGB);
         var cooling = new BufferedImage(icons.getWidth(), icons.getHeight(), BufferedImage.TYPE_INT_ARGB);
         int left = 0;
         for (var art : ABILITY_ICONS.values()) {
-            var icon = outlined(drawn(2 * ICON, art));
+            var icon = pixels(art, ICON_PALETTE);
             icons.createGraphics().drawImage(icon, left, 0, null);
             cooling.createGraphics().drawImage(greyed(icon), left, 0, null);
-            padAdvance(icons, left + 2 * ICON - 1, 0, 2 * ICON);
-            padAdvance(cooling, left + 2 * ICON - 1, 0, 2 * ICON);
-            left += 2 * ICON;
+            padAdvance(icons, left + ICON - 1, 0, ICON);
+            padAdvance(cooling, left + ICON - 1, 0, ICON);
+            left += ICON;
         }
         ImageIO.write(tileBacking(), "PNG", root.resolve("ability_tile.png").toFile());
         ImageIO.write(tileFrame(), "PNG", root.resolve("ability_frame.png").toFile());
@@ -790,7 +785,7 @@ public final class HudArt {
     }
 
     private static final int TILE = 24;
-    private static final int ICON = 20;
+    private static final int ICON = 16;
     private static final int BADGE = 9;
     private static final int DIGIT = 11;
     /** A count digit's cell: a label digit with a pixel of rim on every side, and a column to spare for its advance. */
@@ -798,74 +793,57 @@ public final class HudArt {
     private static final int COUNT_HEIGHT = 7;
     /** One fill per GUI pixel of the tile's inside, which the frame's pixel borders on every side. */
     private static final int FILL_LEVELS = TILE - 2;
-    private static final Color LIGHT = new Color(0xF2F6FB);
-    private static final Color SHADE = new Color(0xAEB9C9);
-    private static final Color STEEL = new Color(0x68758A);
-    private static final Color DEEP = new Color(0x283041);
-    private static final Color ORANGE = new Color(0xFF9D2E);
-    private static final Color YELLOW = new Color(0xFFE27A);
-    private static final Color RED = new Color(0xFF4B3E);
-    private static final Color GREEN = new Color(0x5FE07F);
-    private static final Color BLUE = new Color(0x3E9BFF);
-    private static final Color VIOLET = new Color(0xB48CFF);
 
-    /** Dark glass with rounded corners, a little lighter at the top. */
+    /** Dark glass with its corners cut, its top row a shade lighter. */
     private static BufferedImage tileBacking() {
-        int size = 2 * TILE;
-        var image = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
-        var g = smooth(image);
-        var shape = new RoundRectangle2D.Double(0, 0, size, size, 8, 8);
-        g.setPaint(new GradientPaint(0, 0, new Color(0x1C2638, false), 0, size, new Color(0x0B1019, false)));
-        g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.86f));
-        g.fill(shape);
-        g.dispose();
-        padAdvance(image, size - 1, 0, size);
+        var image = new BufferedImage(TILE, TILE, BufferedImage.TYPE_INT_ARGB);
+        fill(image, 0, 0, TILE, TILE, 0xDB141B28);
+        fill(image, 1, 1, TILE - 2, 1, 0xDB222D41);
+        cutCorners(image, 0, 0, TILE, TILE);
+        padAdvance(image, TILE - 1, 0, TILE);
         return image;
     }
 
-    /** A ring a GUI pixel wide in white, so the shader's tint colours it, with brighter corners. */
+    /** A ring a GUI pixel wide in white, so the shader's tint colours it, with brighter brackets round its cut corners. */
     private static BufferedImage tileFrame() {
-        int size = 2 * TILE;
-        var image = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
-        var g = smooth(image);
-        var ring = new Area(new RoundRectangle2D.Double(0, 0, size, size, 8, 8));
-        ring.subtract(new Area(new RoundRectangle2D.Double(2, 2, size - 4, size - 4, 5, 5)));
-        g.setColor(new Color(0xFFFFFF));
-        g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.78f));
-        g.fill(ring);
-        g.setComposite(AlphaComposite.SrcOver);
-        for (int corner = 0; corner < 4; corner++) {
-            var bracket = new Area(new Rectangle2D.Double(corner % 2 == 0 ? 0 : size - 9, corner < 2 ? 0 : size - 9, 9, 9));
-            bracket.intersect(ring);
-            g.fill(bracket);
+        var image = new BufferedImage(TILE, TILE, BufferedImage.TYPE_INT_ARGB);
+        for (int edge = 0; edge < TILE; edge++) {
+            int alpha = edge < BRACKET || edge >= TILE - BRACKET ? 0xFF000000 : 0xC7000000;
+            for (int[] at : new int[][] {{edge, 0}, {edge, TILE - 1}, {0, edge}, {TILE - 1, edge}}) {
+                image.setRGB(at[0], at[1], alpha | 0xFFFFFF);
+            }
         }
-        g.dispose();
+        cutCorners(image, 0, 0, TILE, TILE);
         return image;
     }
+
+    private static final int BRACKET = 5;
 
     /** The recharge fill at each height, a pale wash with a bright edge on top, inside the frame. */
     private static BufferedImage tileFills() {
-        int size = 2 * TILE;
-        var image = new BufferedImage(size * FILL_LEVELS, size, BufferedImage.TYPE_INT_ARGB);
-        var g = smooth(image);
+        var image = new BufferedImage(TILE * FILL_LEVELS, TILE, BufferedImage.TYPE_INT_ARGB);
         for (int level = 1; level <= FILL_LEVELS; level++) {
-            int left = (level - 1) * size;
-            int top = size - 2 - 2 * level;
-            var inside = new Area(new RoundRectangle2D.Double(left + 2, 2, size - 4, size - 4, 5, 5));
-            var fill = new Area(new Rectangle2D.Double(left, top, size, size));
-            fill.intersect(inside);
-            g.setColor(new Color(0x7FB6E8));
-            g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.34f));
-            g.fill(fill);
-            var edge = new Area(new Rectangle2D.Double(left, top, size, 1));
-            edge.intersect(inside);
-            g.setColor(new Color(0xCFE8FF));
-            g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.9f));
-            g.fill(edge);
-            padAdvance(image, left + size - 1, 0, size);
+            int left = (level - 1) * TILE;
+            int top = TILE - 1 - level;
+            fill(image, left + 1, top, TILE - 2, level, 0x577FB6E8);
+            fill(image, left + 1, top, TILE - 2, 1, 0xE6CFE8FF);
+            padAdvance(image, left + TILE - 1, 0, TILE);
         }
-        g.dispose();
         return image;
+    }
+
+    private static void fill(BufferedImage image, int left, int top, int width, int height, int argb) {
+        for (int y = top; y < top + height; y++) {
+            for (int x = left; x < left + width; x++) {
+                image.setRGB(x, y, argb);
+            }
+        }
+    }
+
+    private static void cutCorners(BufferedImage image, int left, int top, int width, int height) {
+        for (int[] corner : new int[][] {{left, top}, {left + width - 1, top}, {left, top + height - 1}, {left + width - 1, top + height - 1}}) {
+            image.setRGB(corner[0], corner[1], 0);
+        }
     }
 
     /** The key in a dark badge with a light rim: F, Q, Shift and F, and the space bar twice for a double jump. */
@@ -876,13 +854,9 @@ public final class HudArt {
         for (int badge = 0; badge < BADGES.length; badge++) {
             var symbols = BADGES[badge];
             int width = 2 * (symbols.length == 1 ? BADGE : WIDE_BADGE);
-            var g = smooth(image);
-            g.translate(badge * cell, 0);
-            g.setColor(new Color(0xE6ECF4));
-            g.fill(new RoundRectangle2D.Double(0, 0, width, height, 6, 6));
-            g.setColor(new Color(0x111722));
-            g.fill(new RoundRectangle2D.Double(2, 2, width - 4, height - 4, 4, 4));
-            g.dispose();
+            fill(image, badge * cell + 2, 0, width - 4, height, 0xFFE6ECF4);
+            fill(image, badge * cell, 2, width, height - 4, 0xFFE6ECF4);
+            fill(image, badge * cell + 2, 2, width - 4, height - 4, 0xFF111722);
             int symbolsWidth = symbols.length * 10 + (symbols.length - 1) * 2;
             int x = badge * cell + (width - symbolsWidth) / 2;
             for (var symbol : symbols) {
@@ -1024,52 +998,18 @@ public final class HudArt {
             'W', new String[] {"##......##", "##......##", "##......##", "##......##", "##......##", "##..##..##", "##.####.##",
                     "####..####", "###....###", "##......##"});
 
-    private static Graphics2D smooth(BufferedImage image) {
-        var g = image.createGraphics();
-        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        g.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
-        g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-        return g;
-    }
-
-    private static BufferedImage drawn(int size, Consumer<Graphics2D> art) {
-        var image = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
-        var g = smooth(image);
-        art.accept(g);
-        g.dispose();
-        return image;
-    }
-
-    /** The icon over a dark rim two texels wide, a GUI pixel, round everything at least half covered. */
-    private static BufferedImage outlined(BufferedImage art) {
-        int size = art.getWidth();
-        var image = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
-        for (int y = 0; y < size; y++) {
-            for (int x = 0; x < size; x++) {
-                if (covered(art, x, y)) {
-                    continue;
-                }
-                double nearest = Double.MAX_VALUE;
-                for (int dy = -3; dy <= 3; dy++) {
-                    for (int dx = -3; dx <= 3; dx++) {
-                        if (covered(art, x + dx, y + dy)) {
-                            nearest = Math.min(nearest, Math.hypot(dx, dy));
-                        }
-                    }
-                }
-                if (nearest <= 2.2) {
-                    image.setRGB(x, y, nearest <= 1.6 ? 0xF00B0F17 : 0x900B0F17);
+    /** {@code rows} as an image: '.' is transparent and every other letter a colour of {@code palette}. */
+    private static BufferedImage pixels(String[] rows, Map<Character, Integer> palette) {
+        var image = new BufferedImage(rows[0].length(), rows.length, BufferedImage.TYPE_INT_ARGB);
+        for (int y = 0; y < rows.length; y++) {
+            for (int x = 0; x < rows[y].length(); x++) {
+                char pixel = rows[y].charAt(x);
+                if (pixel != '.') {
+                    image.setRGB(x, y, palette.get(pixel));
                 }
             }
         }
-        var g = image.createGraphics();
-        g.drawImage(art, 0, 0, null);
-        g.dispose();
         return image;
-    }
-
-    private static boolean covered(BufferedImage art, int x, int y) {
-        return x >= 0 && y >= 0 && x < art.getWidth() && y < art.getHeight() && (art.getRGB(x, y) >>> 24) >= 128;
     }
 
     /** The icon in grey and darker, as it shows while it recharges. */
@@ -1086,284 +1026,308 @@ public final class HudArt {
         return image;
     }
 
-    private static void fill(Graphics2D g, Shape shape, Color colour) {
-        g.setPaint(colour);
-        g.fill(shape);
-    }
-
-    /** {@code shape} lit from the upper left: {@code lit} there, {@code shaded} towards the lower right. */
-    private static void lit(Graphics2D g, Shape shape, Color lit, Color shaded) {
-        var bounds = shape.getBounds2D();
-        g.setPaint(new GradientPaint((float) bounds.getMinX(), (float) bounds.getMinY(), lit,
-                (float) bounds.getMaxX(), (float) bounds.getMaxY(), shaded));
-        g.fill(shape);
-    }
-
-    private static void stroke(Graphics2D g, Shape shape, Color colour, double width) {
-        g.setPaint(colour);
-        g.setStroke(new BasicStroke((float) width, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-        g.draw(shape);
-    }
-
-    private static Path2D path(double... points) {
-        var path = new Path2D.Double();
-        path.moveTo(points[0], points[1]);
-        for (int index = 2; index < points.length; index += 2) {
-            path.lineTo(points[index], points[index + 1]);
-        }
-        return path;
-    }
-
-    private static Path2D closed(double... points) {
-        var path = path(points);
-        path.closePath();
-        return path;
-    }
-
-    private static Path2D curve(double fromX, double fromY, double viaX, double viaY, double toX, double toY) {
-        var path = new Path2D.Double();
-        path.moveTo(fromX, fromY);
-        path.quadTo(viaX, viaY, toX, toY);
-        return path;
-    }
-
-    /** A flame pointing down from ({@code x}, {@code top}), orange with a yellow core. */
-    private static void flame(Graphics2D g, double x, double top, double width, double length) {
-        var outer = new Path2D.Double();
-        outer.moveTo(x - width / 2, top);
-        outer.quadTo(x - width / 2, top + length * 0.6, x, top + length);
-        outer.quadTo(x + width / 2, top + length * 0.6, x + width / 2, top);
-        outer.closePath();
-        fill(g, outer, ORANGE);
-        var inner = new Path2D.Double();
-        inner.moveTo(x - width / 4, top);
-        inner.quadTo(x - width / 4, top + length * 0.4, x, top + length * 0.65);
-        inner.quadTo(x + width / 4, top + length * 0.4, x + width / 4, top);
-        inner.closePath();
-        fill(g, inner, YELLOW);
-    }
-
-    /** One icon per ability on a 40-texel grid, a light silhouette with one colour that names it. */
-    private static final Map<String, Consumer<Graphics2D>> ABILITY_ICONS = linked(
-            "grenade", (Consumer<Graphics2D>) g -> {
-                fill(g, new RoundRectangle2D.Double(15, 3, 10, 8, 3, 3), SHADE);
-                fill(g, new Rectangle2D.Double(17, 1, 6, 3), STEEL);
-                var body = new Ellipse2D.Double(5, 9, 30, 30);
-                lit(g, body, LIGHT, SHADE);
-                var band = new Area(new Rectangle2D.Double(4, 21, 32, 7));
-                band.intersect(new Area(body));
-                fill(g, band, STEEL);
-                for (double x : new double[] {10, 18.5, 27}) {
-                    fill(g, new RoundRectangle2D.Double(x, 22.5, 3.5, 4, 1.5, 1.5), ORANGE);
-                }
-                fill(g, new Ellipse2D.Double(11, 13, 7, 5), Color.WHITE);
-            },
-            "adrenaline", (Consumer<Graphics2D>) g -> {
-                g.translate(20, 20);
-                g.rotate(-Math.PI / 4);
-                fill(g, new Rectangle2D.Double(-19, -1, 8, 2), LIGHT);
-                fill(g, closed(-12, -3, -8, -5, -8, 5, -12, 3), SHADE);
-                lit(g, new RoundRectangle2D.Double(-9, -6.5, 18, 13, 4, 4), LIGHT, SHADE);
-                fill(g, new RoundRectangle2D.Double(-6.5, -3.5, 12, 7, 2, 2), GREEN);
-                fill(g, new Rectangle2D.Double(-6.5, -3.5, 12, 2), new Color(0xB9FFC9));
-                fill(g, new RoundRectangle2D.Double(8, -9, 3, 18, 1.5, 1.5), SHADE);
-                fill(g, new Rectangle2D.Double(11, -2, 5, 4), STEEL);
-                fill(g, new RoundRectangle2D.Double(15.5, -6.5, 3.5, 13, 1.5, 1.5), LIGHT);
-            },
-            "shield_wall", (Consumer<Graphics2D>) g -> {
-                var shield = new Path2D.Double();
-                shield.moveTo(9, 5);
-                shield.quadTo(20, 1, 34, 5);
-                shield.lineTo(34, 19);
-                shield.quadTo(33, 31, 21.5, 38);
-                shield.quadTo(10, 31, 9, 19);
-                shield.closePath();
-                g.setPaint(new GradientPaint(0, 3, new Color(0xC2F8FF), 0, 36, new Color(0x2295D6)));
-                g.fill(shield);
-                var lines = new Path2D.Double();
-                for (double y : new double[] {14, 21, 28}) {
-                    lines.moveTo(5, y);
-                    lines.lineTo(38, y);
-                }
-                var scan = new Area(new BasicStroke(1.4f).createStrokedShape(lines));
-                scan.intersect(new Area(shield));
-                fill(g, scan, new Color(0x5BC4F0));
-                var rim = new Path2D.Double();
-                rim.moveTo(12.5, 8);
-                rim.quadTo(21, 5, 30.5, 8);
-                rim.lineTo(30.5, 19);
-                rim.quadTo(30, 28, 21.5, 33.5);
-                stroke(g, rim, new Color(0xF2FDFF), 1.8);
-                stroke(g, path(1, 3, 9.5, 11), new Color(0xFF6A4A), 3.2);
-                stroke(g, path(2, 4, 9.5, 11), new Color(0xFFE2D6), 1.2);
-                fill(g, closed(9, 7, 10.5, 10, 14, 10.5, 10.5, 11.5, 9.5, 15, 8.5, 11.5, 5, 11, 8.5, 10), YELLOW);
-            },
-            "jump_pack", (Consumer<Graphics2D>) g -> {
-                flame(g, 9, 29, 7, 10);
-                flame(g, 15.5, 31, 5, 7);
-                stroke(g, curve(10, 30, 12, 12, 28, 9), LIGHT, 6);
-                fill(g, closed(24, 1, 37, 8.5, 25, 17), LIGHT);
-            },
-            "med_station", (Consumer<Graphics2D>) g -> {
-                for (double radius : new double[] {14, 19}) {
-                    var box = new Rectangle2D.Double(20 - radius, 16 - radius, 2 * radius, 2 * radius);
-                    stroke(g, new Arc2D.Double(box, -35, 70, Arc2D.OPEN), new Color(0x9CF2B0), 2.2);
-                    stroke(g, new Arc2D.Double(box, 145, 70, Arc2D.OPEN), new Color(0x9CF2B0), 2.2);
-                }
-                fill(g, closed(11, 37, 29, 37, 26, 30, 14, 30), STEEL);
-                var cross = new Area(new RoundRectangle2D.Double(15, 4, 10, 25, 3, 3));
-                cross.add(new Area(new RoundRectangle2D.Double(7.5, 11.5, 25, 10, 3, 3)));
-                lit(g, cross, new Color(0xA8FFBA), new Color(0x22B14C));
-                fill(g, new Rectangle2D.Double(17, 6, 2, 8), new Color(0xE6FFEA));
-            },
-            "siege_mode", (Consumer<Graphics2D>) g -> {
-                fill(g, new Rectangle2D.Double(1, 34, 38, 4), STEEL);
-                fill(g, closed(7, 25, 15, 25, 11, 37), SHADE);
-                fill(g, closed(25, 25, 33, 25, 29, 37), SHADE);
-                lit(g, new RoundRectangle2D.Double(5, 21, 30, 6, 2, 2), SHADE, STEEL);
-                lit(g, new RoundRectangle2D.Double(3, 7, 22, 15, 4, 4), LIGHT, SHADE);
-                fill(g, new Rectangle2D.Double(25, 9, 12, 4), SHADE);
-                fill(g, new Rectangle2D.Double(25, 15.5, 12, 4), SHADE);
-                fill(g, new Rectangle2D.Double(7, 11, 10, 3), STEEL);
-                fill(g, new Rectangle2D.Double(36, 8, 3, 12.5), ORANGE);
-            },
-            "mining_charge", (Consumer<Graphics2D>) g -> {
-                fill(g, closed(29, 1, 31.5, 7, 38, 5, 33.5, 10, 39, 15, 32, 14.5, 30, 20, 27, 14, 21, 15, 25, 10, 21, 5, 27, 7),
-                        YELLOW);
-                lit(g, new RoundRectangle2D.Double(3, 14, 30, 23, 4, 4), new Color(0xE3A25A), new Color(0x8E5420));
-                fill(g, new Rectangle2D.Double(8, 14, 3, 23), DEEP);
-                fill(g, new Rectangle2D.Double(25, 14, 3, 23), DEEP);
-                fill(g, new RoundRectangle2D.Double(12.5, 19, 11, 9, 2, 2), DEEP);
-                fill(g, new Rectangle2D.Double(14.5, 21, 3, 5), RED);
-                fill(g, new Rectangle2D.Double(19, 21, 3, 5), RED);
-                stroke(g, curve(17, 14, 15, 7, 22, 6), RED, 1.8);
-            },
-            "force_push", (Consumer<Graphics2D>) g -> {
-                for (int wave = 0; wave < 3; wave++) {
-                    double radius = 9 + wave * 5.5;
-                    stroke(g, new Arc2D.Double(12 - radius, 20 - radius, 2 * radius, 2 * radius, -45, 90, Arc2D.OPEN),
-                            wave == 0 ? new Color(0xBFE3FF) : BLUE, 2.6);
-                }
-                var hand = new Area(new RoundRectangle2D.Double(3, 15, 13, 17, 5, 5));
-                double[][] fingers = {{3, 7}, {6.5, 4}, {10, 5}, {13.5, 8}};
-                for (var finger : fingers) {
-                    hand.add(new Area(new RoundRectangle2D.Double(finger[0], finger[1], 3.2, 16 - finger[1] + 4, 3, 3)));
-                }
-                hand.add(new Area(new BasicStroke(3.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND)
-                        .createStrokedShape(path(15, 26, 19, 21))));
-                lit(g, hand, LIGHT, SHADE);
-            },
-            "saber_throw", (Consumer<Graphics2D>) g -> {
-                stroke(g, new Arc2D.Double(3, 3, 34, 34, 110, 110, Arc2D.OPEN), LIGHT, 2.4);
-                fill(g, closed(3, 25, 9, 29, 3, 31), LIGHT);
-                stroke(g, path(13, 27, 33, 7), new Color(0x7FE2FF), 6);
-                stroke(g, path(13, 27, 33, 7), Color.WHITE, 2.6);
-                stroke(g, path(7, 33, 13, 27), STEEL, 5);
-                stroke(g, path(9.5, 30.5, 11, 29), SHADE, 5);
-            },
-            "force_grip", (Consumer<Graphics2D>) g -> {
-                var aura = new Color(0xC9A8FF);
-                fill(g, new Ellipse2D.Double(11, 34, 18, 4.5), new Color(0x9A0B0F17, true));
-                for (int side = -1; side <= 1; side += 2) {
-                    stroke(g, new Arc2D.Double(20 - 15, 4, 30, 30, side < 0 ? 140 : -40, 80, Arc2D.OPEN), aura, 2);
-                    stroke(g, new Arc2D.Double(20 - 19, 2, 38, 34, side < 0 ? 150 : -30, 60, Arc2D.OPEN), VIOLET, 1.6);
-                }
-                var body = new Area(new Ellipse2D.Double(16.5, 3, 8, 8));
-                body.add(new Area(new RoundRectangle2D.Double(15, 12, 11, 12, 5, 5)));
-                var limbs = new Path2D.Double();
-                limbs.append(path(18, 22, 17, 30), false);
-                limbs.append(path(23, 22, 24.5, 30), false);
-                limbs.append(path(15.5, 15, 13.5, 21), false);
-                limbs.append(path(25.5, 15, 27.5, 21), false);
-                body.add(new Area(new BasicStroke(3.4f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND).createStrokedShape(limbs)));
-                lit(g, body, LIGHT, SHADE);
-                stroke(g, new Ellipse2D.Double(14, 9.5, 13, 4), VIOLET, 2.2);
-            },
-            "force_lightning", (Consumer<Graphics2D>) g -> {
-                stroke(g, path(16, 19, 8, 24, 5, 31), new Color(0xD7C2FF), 1.6);
-                stroke(g, path(25, 23, 33, 26, 35, 33), new Color(0xD7C2FF), 1.6);
-                var bolt = closed(17, 1, 8, 20, 17, 20, 11, 39, 32, 15, 22, 15, 29, 1);
-                lit(g, bolt, new Color(0xF4EDFF), VIOLET);
-                stroke(g, path(20, 5, 15, 17), Color.WHITE, 1.5);
-            },
-            "jetpack", (Consumer<Graphics2D>) g -> {
-                flame(g, 13.5, 27, 6, 12);
-                flame(g, 26.5, 27, 6, 12);
-                fill(g, closed(20, 1, 23, 7, 17, 7), RED);
-                lit(g, new RoundRectangle2D.Double(8, 6, 11, 20, 6, 6), LIGHT, SHADE);
-                lit(g, new RoundRectangle2D.Double(21, 6, 11, 20, 6, 6), LIGHT, SHADE);
-                fill(g, new Rectangle2D.Double(17, 10, 6, 5), STEEL);
-                fill(g, closed(10, 25, 17, 25, 16, 29, 11, 29), DEEP);
-                fill(g, closed(23, 25, 30, 25, 29, 29, 24, 29), DEEP);
-            },
-            "wrist_rocket", (Consumer<Graphics2D>) g -> {
-                fill(g, new Ellipse2D.Double(1, 30, 7, 7), new Color(0x8C96A6));
-                fill(g, new Ellipse2D.Double(5, 26, 6, 6), new Color(0xA7B0BE));
-                g.translate(21, 19);
-                g.rotate(-Math.PI / 4);
-                var exhaust = new Path2D.Double();
-                exhaust.moveTo(-8, -3.5);
-                exhaust.quadTo(-16, -3, -19, 0);
-                exhaust.quadTo(-16, 3, -8, 3.5);
-                exhaust.closePath();
-                fill(g, exhaust, ORANGE);
-                fill(g, closed(-8, -2, -14, 0, -8, 2), YELLOW);
-                fill(g, closed(-8, -4, -3, -4, -6, -9), SHADE);
-                fill(g, closed(-8, 4, -3, 4, -6, 9), SHADE);
-                lit(g, new RoundRectangle2D.Double(-8, -4, 17, 8, 3, 3), LIGHT, SHADE);
-                fill(g, closed(8, -4, 16, 0, 8, 4), RED);
-            },
-            "grapple", (Consumer<Graphics2D>) g -> {
-                var rope = new Path2D.Double();
-                rope.moveTo(3, 38);
-                rope.curveTo(5, 30, 12, 31, 16.5, 23.5);
-                stroke(g, rope, SHADE, 2.2);
-                stroke(g, new Ellipse2D.Double(14.5, 21.5, 5, 5), LIGHT, 1.8);
-                var hook = new Path2D.Double();
-                hook.append(path(18.5, 21.5, 31, 9), false);
-                hook.append(curve(28, 12, 35, 16, 30, 21), false);
-                hook.append(curve(28, 12, 24, 5, 19, 10), false);
-                stroke(g, hook, LIGHT, 3.8);
-                fill(g, closed(29, 18, 33, 23, 27.5, 22), LIGHT);
-                fill(g, closed(22, 7, 17, 11, 18, 5.5), LIGHT);
-                fill(g, closed(31, 4, 36, 4, 33.5, 9.5), LIGHT);
-            },
-            "orbital_strike", (Consumer<Graphics2D>) g -> {
-                fill(g, new Ellipse2D.Double(4, 27, 32, 11), new Color(0x60FF4B3E, true));
-                stroke(g, new Ellipse2D.Double(4, 27, 32, 11), RED, 2.4);
-                stroke(g, path(1, 32.5, 6, 32.5), RED, 2);
-                stroke(g, path(34, 32.5, 39, 32.5), RED, 2);
-                g.setPaint(new GradientPaint(0, 0, YELLOW, 0, 32, ORANGE));
-                g.fill(closed(15, 0, 25, 0, 24, 31, 16, 31));
-                fill(g, new Rectangle2D.Double(18.5, 0, 3, 31), Color.WHITE);
-                fill(g, new Ellipse2D.Double(11, 27.5, 18, 7), YELLOW);
-                fill(g, new Ellipse2D.Double(15, 29, 10, 4), Color.WHITE);
-            },
-            "rally", (Consumer<Graphics2D>) g -> {
-                lit(g, new RoundRectangle2D.Double(7, 4, 4, 34, 2, 2), LIGHT, SHADE);
-                fill(g, new Ellipse2D.Double(6, 1, 6, 6), LIGHT);
-                var flag = new Path2D.Double();
-                flag.moveTo(11, 6);
-                flag.curveTo(18, 2, 24, 10, 36, 6);
-                flag.lineTo(36, 21);
-                flag.curveTo(24, 25, 18, 17, 11, 21);
-                flag.closePath();
-                lit(g, flag, new Color(0xFFE38A), new Color(0xE08E1A));
-                stroke(g, path(17, 17, 23, 11, 29, 17), new Color(0xFFFBEA), 2.6);
-            },
-            "leap", (Consumer<Graphics2D>) g -> {
-                stroke(g, curve(3, 38, 6, 22, 19, 23), new Color(0x7FC8FF), 2.4);
-                stroke(g, curve(9, 38, 11, 28, 18, 28), new Color(0x4FA5F2), 1.8);
-                fill(g, new Ellipse2D.Double(25, 2, 8, 8), LIGHT);
-                var body = new Path2D.Double();
-                body.append(path(27, 11, 21, 21), false);
-                body.append(path(21, 21, 29, 24, 26, 32), false);
-                body.append(path(21, 21, 14, 27, 9, 25), false);
-                body.append(path(26, 13, 34, 17), false);
-                body.append(path(25, 13, 17, 10), false);
-                var figure = new Area(new BasicStroke(4.2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND).createStrokedShape(body));
-                lit(g, figure, LIGHT, SHADE);
-            });
+    /**
+     * One icon per ability, in the order of Sternenfront's {@code AbilityIcon}, drawn as Minecraft draws an item: sixteen
+     * pixels square, one texel per GUI pixel, a few flat colours lit from the upper left inside a dark outline.
+     * '.' is transparent and every other letter a colour of {@link #ICON_PALETTE}.
+     */
+    private static final Map<String, String[]> ABILITY_ICONS = linked(
+            "grenade", new String[] {
+                    "......oooo......",
+                    ".....oLLLSo.....",
+                    ".....oSSSSo.....",
+                    "....ooLLLLoo....",
+                    "...oLLLLLLLLo...",
+                    "..oLWWWLLLLLLo..",
+                    ".oLLWWWLLLLLLLo.",
+                    ".oLLWWWLLLLLLLo.",
+                    ".oLLLLLLLLLLLSo.",
+                    ".oKOKKOKKOKKOKo.",
+                    ".oKyKKyKKyKKyKo.",
+                    ".oLLLLLLLLSSSDo.",
+                    ".oLLLLLLLSSSDDo.",
+                    "..oLLLLLSSSDDo..",
+                    "...oLLLSSSDDo...",
+                    "....ooSSSDoo...."},
+            "adrenaline", new String[] {
+                    "................",
+                    "...........oo...",
+                    "..........oLLo..",
+                    "...........oLLo.",
+                    ".........ooSoLo.",
+                    "........oWWo.o..",
+                    ".......oWWLo....",
+                    "......oWGLo.....",
+                    "...o.oWGgo......",
+                    "..oSoWGgo.......",
+                    "..oSSGgo........",
+                    "...oSSo.........",
+                    "..oSoSSo........",
+                    ".oSo.oo.........",
+                    "oSo.............",
+                    ".o.............."},
+            "shield_wall", new String[] {
+                    "................",
+                    ".Ro.............",
+                    "oRPo.oooooooo...",
+                    ".oRPoWWWWWWWWo..",
+                    "..oRPCCBBBBBBWo.",
+                    "..oWoCCBBBBBbWo.",
+                    "..oWCCBBBBBBbWo.",
+                    "..oWCBBBBBBbbWo.",
+                    "..oWCBBBBBBbbWo.",
+                    "..oWBBBBBBbbbWo.",
+                    "...oWBBBBBbbWo..",
+                    "...oWBBBBbbbWo..",
+                    "....oWBBbbbWo...",
+                    ".....oWbbbWo....",
+                    "......oWWWo.....",
+                    ".......ooo......"},
+            "jump_pack", new String[] {
+                    "...........o....",
+                    "..........oWo...",
+                    "..........oWWo..",
+                    "..........oWWWo.",
+                    "........ooWWWWWo",
+                    ".......oWWWWLLo.",
+                    "......oWWLoWLo..",
+                    ".....oWWoooWo...",
+                    "....oWWo...o....",
+                    "....oWWo........",
+                    "...oWWo.........",
+                    "...oWWo.........",
+                    "...oWWo.........",
+                    "...oWWo.........",
+                    "..oOYOo.........",
+                    "...oOo.........."},
+            "med_station", new String[] {
+                    "................",
+                    "......oooo......",
+                    ".....oHGGgo.....",
+                    "..o..oGGGgo..o..",
+                    ".oGo.oGGGgo.oGo.",
+                    "oGo.ooGGGgoo.oGo",
+                    "oGooHGGGGGGgooGo",
+                    "oGooGGGGGGGgooGo",
+                    "oGo.ogggGggg.oGo",
+                    ".oGo.ooGGgoo.oGo",
+                    "..o...oGGgo.oGo.",
+                    "......ogggo..o..",
+                    "....oooooooo....",
+                    "...oLLLLLLSSo...",
+                    "...oSSSSSDDDo...",
+                    "....oooooooo...."},
+            "siege_mode", new String[] {
+                    "................",
+                    "................",
+                    "...ooooooo......",
+                    "..oWWWWWLSoooooo",
+                    "..oWLLLLLSWWWWWo",
+                    "..oWLRLLLSoooooo",
+                    "..oWLLLLLSWWWWWo",
+                    "..oLSSSSSDoooooo",
+                    "...ooDDDoo......",
+                    "....oSDSo.......",
+                    "...oSDDDSo......",
+                    "..ooooooooo.....",
+                    ".oLLLLLLLLLo....",
+                    ".oSSSSSSSSDo....",
+                    "..ooooooooo.....",
+                    "................"},
+            "mining_charge", new String[] {
+                    "..........Y.....",
+                    ".........YoY....",
+                    "........oYYo....",
+                    ".......o.Y......",
+                    "......o.........",
+                    "....oo.oooo.....",
+                    "..ooooooMMoooo..",
+                    ".oMMMMMMMMMMNNo.",
+                    ".oMNNNNNNNNNNno.",
+                    ".oNNoooooNNNNno.",
+                    ".oNNoRRroNNNNno.",
+                    ".oNNoRrroNNNNno.",
+                    ".oNNoooooNNNNno.",
+                    ".oNNNNNNNNNNNno.",
+                    ".onnnnnnnnnnnno.",
+                    "..oooooooooooo.."},
+            "force_push", new String[] {
+                    "................",
+                    "....oo..........",
+                    "...oWWoo....o...",
+                    "...oWLWWoo...Bo.",
+                    "..ooWLWLWWo.o.Bo",
+                    ".oWWWLWLWLo..o.B",
+                    ".oWLWWLWLWo.Bo.B",
+                    ".oWLWLWLWLo.Bo.B",
+                    ".oWLWLWLWLo.Bo.B",
+                    "..oWWWWWWWo.Bo.B",
+                    "..oWWWWWWLo..o.B",
+                    "...oWWWWLLo.o.Bo",
+                    "...oWWWLLSo..Bo.",
+                    "....oLLLSo..o...",
+                    ".....ooooo......",
+                    "................"},
+            "saber_throw", new String[] {
+                    ".............o..",
+                    ".....oo.....oCo.",
+                    "....oCCo...oBWCo",
+                    "...oCoo...oBWBo.",
+                    "..oCo....oBWBo..",
+                    ".oCo....oBWBo...",
+                    ".oCo...oBWBo....",
+                    "oCo...oBWBo.....",
+                    "oCo..oBWBo......",
+                    "oCo.oDSBo.......",
+                    ".o.oLSDo........",
+                    "..oLSSo.........",
+                    "..oDSo..........",
+                    "...oo...........",
+                    "................",
+                    "................"},
+            "force_grip", new String[] {
+                    "................",
+                    ".......oo.......",
+                    "......oWWo......",
+                    "..o..oWLLSo..o..",
+                    ".oVo.oVVVVo.oVo.",
+                    ".oVo.oUVVvo.oVo.",
+                    "oVo.ooWLLSoo.oVo",
+                    "oVo.oWWLLLSo.oVo",
+                    "oVo.oWoLLoSo.oVo",
+                    "oVo.oWoLSoSo.oVo",
+                    ".oVo.ooLSoo.oVo.",
+                    ".oVo..oLSo..oVo.",
+                    "..o..oLooSo..o..",
+                    ".....oLo.So.....",
+                    ".....ooo.oo.....",
+                    "................"},
+            "force_lightning", new String[] {
+                    "........oooooo..",
+                    ".......oUUVVvo..",
+                    "......oUVVvoo...",
+                    ".....oUVVvo.....",
+                    "....oUVVvoooooo.",
+                    "...oUVVVVVVVVvo.",
+                    "..oUUUVVVVVVvo..",
+                    "..oooooVVVvoo...",
+                    "......oVVvo.....",
+                    ".....oVVvo......",
+                    "....oVVvo.......",
+                    "...oVvo.....o...",
+                    "..oVvo.....oVo..",
+                    "..oVo.....oVo...",
+                    "..oo.......o....",
+                    "................"},
+            "jetpack", new String[] {
+                    "....o......o....",
+                    "...oRo....oRo...",
+                    "..oWRWo..oWRWo..",
+                    "..oWLSo..oWLSo..",
+                    ".oWWLLSooWWLLSo.",
+                    ".oWLLLSDDWLLLSo.",
+                    ".oWLLLSDDWLLLSo.",
+                    ".oWLLLSKKWLLLSo.",
+                    ".oWLLLSDDWLLLSo.",
+                    ".oWLLLSDDWLLLSo.",
+                    ".oLSSSDooLSSSDo.",
+                    "..oDDDo..oDDDo..",
+                    "..oOYOo..oOYOo..",
+                    "...oYo....oYo...",
+                    "...oOo....oOo...",
+                    "....o......o...."},
+            "wrist_rocket", new String[] {
+                    "................",
+                    "................",
+                    "...........oo...",
+                    "..........oRRo..",
+                    ".........oWWRo..",
+                    "........oWWLo...",
+                    ".......oRRLo....",
+                    "....oooWWro.....",
+                    "...oSSWWLo......",
+                    "....oWWLo.......",
+                    "...oOYLSo.......",
+                    "..oOYOoSo.......",
+                    "..oOOo.o........",
+                    "...oo...........",
+                    "................",
+                    "................"},
+            "grapple", new String[] {
+                    ".........oo.....",
+                    "........oWLo....",
+                    ".......oWooLo...",
+                    ".......oLooLo...",
+                    "......oNoLLo....",
+                    ".....oNooWSo....",
+                    "....oNo.oWSo....",
+                    "...oNo..oWSo....",
+                    "..oNoo..oWSo..oo",
+                    ".oNoLWo.oWSo.oSD",
+                    "oNo.oWo.oWSo.oSo",
+                    "No..oWLooWSooDSo",
+                    "o....oWooWSooSo.",
+                    ".....oLWWWSSSDo.",
+                    "......oooWSooo..",
+                    ".........oo....."},
+            "orbital_strike", new String[] {
+                    ".....oYWWYo.....",
+                    ".....oYWWYo.....",
+                    ".....oYWWYo.....",
+                    ".....oYWWYo.....",
+                    ".....oYWWYo.....",
+                    ".....oYWWYo.....",
+                    ".....oYWWYo.....",
+                    "....oYYWWYYo....",
+                    "..oooYWWWWYooo..",
+                    ".oRRoYWWWWYoRRo.",
+                    "oRro.oYYYYo.orRo",
+                    "oRo..........oRo",
+                    "oRro........orRo",
+                    ".oRRooooooooRRo.",
+                    "..ooRRRRRRRRoo..",
+                    "....oooooooo...."},
+            "rally", new String[] {
+                    ".oo.............",
+                    "oWLo............",
+                    "oLSoooooooooo...",
+                    ".oSoYYYYYYYYYo..",
+                    ".oSoYYYYoYYYYYo.",
+                    ".oSoYYYoWoYYYYYo",
+                    ".oSoYYoWYWoYYyo.",
+                    ".oSoYoWYYYWoyo..",
+                    ".oSoYYYYYYyyyo..",
+                    ".oSoyyyyyyyyyyo.",
+                    ".oSooooooooooo..",
+                    ".oSo............",
+                    ".oSo............",
+                    ".oSo............",
+                    ".oDo............",
+                    "..o............."},
+            "leap", new String[] {
+                    "...........oo...",
+                    "..........oWWo..",
+                    ".........oWWWWo.",
+                    ".........oWWWWo.",
+                    "..........oWWoLo",
+                    "........ooWWLLo.",
+                    "BBC...ooLLWLoo..",
+                    ".....oLLWWoo....",
+                    "....oLooWWo.....",
+                    ".BC..ooWWo......",
+                    ".....ooLWWoo....",
+                    "..oooLLoooWWo...",
+                    ".oLLLoo...ooWo..",
+                    "B.ooo......oWWo.",
+                    "............oo..",
+                    "................"});
+    private static final Map<Character, Integer> ICON_PALETTE = Map.ofEntries(
+            Map.entry('o', 0xFF10141C), Map.entry('W', 0xFFF4F7FB), Map.entry('L', 0xFFC9D2DE), Map.entry('S', 0xFF8A96A8),
+            Map.entry('D', 0xFF4A5466), Map.entry('K', 0xFF262D3A), Map.entry('R', 0xFFFF5040), Map.entry('r', 0xFFB0281E),
+            Map.entry('P', 0xFFFFB4A4), Map.entry('O', 0xFFFF9D2E), Map.entry('Y', 0xFFFFE27A), Map.entry('y', 0xFFC88A1C),
+            Map.entry('G', 0xFF6FF08A), Map.entry('g', 0xFF2E9A4A), Map.entry('H', 0xFFD2FFDA), Map.entry('B', 0xFF4AA8FF),
+            Map.entry('b', 0xFF1E5FB8), Map.entry('C', 0xFFBDE6FF), Map.entry('V', 0xFFC09CFF), Map.entry('v', 0xFF7448C8),
+            Map.entry('U', 0xFFEFE6FF), Map.entry('N', 0xFFC07A40), Map.entry('n', 0xFF7A4522), Map.entry('M', 0xFFF0B070));
 
     private static <T> Map<String, T> linked(Object... namesAndArt) {
         var art = new LinkedHashMap<String, T>();
@@ -1377,7 +1341,7 @@ public final class HudArt {
     /** Every icon at four times its GUI size, ready and recharging, on its tile: the sheet to judge the set by. */
     private static BufferedImage contactSheet(BufferedImage icons, BufferedImage cooling) {
         int zoom = 4;
-        int cell = 2 * TILE * zoom / 2;
+        int cell = TILE * zoom;
         int columns = 6;
         int rows = (ABILITY_ICONS.size() + columns - 1) / columns;
         int labelHeight = 18;
@@ -1397,9 +1361,8 @@ public final class HudArt {
                 int left = x + state * (cell + 8);
                 g.drawImage(backing, left, y, cell, cell, null);
                 var source = state == 0 ? icons : cooling;
-                int iconLeft = left + 2 * zoom;
-                g.drawImage(source.getSubimage(index * 2 * ICON, 0, 2 * ICON, 2 * ICON), iconLeft, y + 2 * zoom, 2 * ICON * zoom / 2,
-                        2 * ICON * zoom / 2, null);
+                int inset = (TILE - ICON) / 2 * zoom;
+                g.drawImage(source.getSubimage(index * ICON, 0, ICON, ICON), left + inset, y + inset, ICON * zoom, ICON * zoom, null);
                 g.drawImage(tinted(frame, state == 0 ? 0xFFFFFFFF : 0xFF999999), left, y, cell, cell, null);
             }
             g.setColor(Color.WHITE);
