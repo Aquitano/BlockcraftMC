@@ -63,8 +63,22 @@ public final class ScreenEffects {
 
     /** Reddened screen edges on a channel of their own, so that a hit and an ability's accent do not erase each other. */
     public static void hurt(Player player, double intensity) {
+        stepped(player, "presentation/hurt/", intensity);
+    }
+
+    /** Darkened, desaturated screen edges in coarse dithered pixels, on a channel of their own beside the hurt redness. */
+    public static void suppressed(Player player, double intensity) {
+        stepped(player, "presentation/suppressed/", intensity);
+    }
+
+    /** A shaken, doubled picture with split colours, on a channel of its own. */
+    public static void rattled(Player player, double intensity) {
+        stepped(player, "presentation/rattled/", intensity);
+    }
+
+    private static void stepped(Player player, String prefix, double intensity) {
         int step = (int) Math.round((Double.isFinite(intensity) ? Math.clamp(intensity, 0, 1) : 0) * 8);
-        replace(player, "presentation/hurt/", step == 0 ? null : Key.key("blockcraft", "presentation/hurt/" + step));
+        replace(player, prefix, step == 0 ? null : Key.key("blockcraft", prefix + step));
     }
 
     public static void clearAtmosphere(Player player) {
