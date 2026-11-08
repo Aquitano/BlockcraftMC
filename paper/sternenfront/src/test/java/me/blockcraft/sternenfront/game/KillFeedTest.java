@@ -27,7 +27,7 @@ public class KillFeedTest {
         }
         var live = feed.live(ann, 40);
         assertEquals(KillFeed.ROWS, live.size());
-        assertEquals("CT-4", live.getFirst().other().orElseThrow().name());
+        assertEquals("CT-4", live.getFirst().opponent().orElseThrow().name());
 
         assertTrue(KillFeed.layout(feed.live(ann, 60), "Ann", 60).stream().noneMatch(glyph -> glyph.tint() == Tint.DIMMED));
         var fading = KillFeed.layout(feed.live(ann, 100), "Ann", 100);

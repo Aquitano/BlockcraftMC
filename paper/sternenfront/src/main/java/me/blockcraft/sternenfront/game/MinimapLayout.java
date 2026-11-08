@@ -62,8 +62,8 @@ final class MinimapLayout {
     enum Role {
         SOLDIER, HEAVY, SCOUT, MEDIC, HERO;
 
-        static Role of(CombatClass role) {
-            return switch (role) {
+        static Role of(CombatClass combatClass) {
+            return switch (combatClass) {
                 case SOLDIER -> SOLDIER;
                 case HEAVY -> HEAVY;
                 case SCOUT -> SCOUT;

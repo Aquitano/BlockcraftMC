@@ -3,7 +3,6 @@ package me.blockcraft.sternenfront.game;
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.game.ShotEvent;
 import me.blockcraft.sternenfront.bot.Bots;
-import me.blockcraft.sternenfront.combat.CombatHud;
 import me.blockcraft.sternenfront.game.HudPanel.Corner;
 import me.blockcraft.sternenfront.game.HudPanel.Glyph;
 import me.blockcraft.sternenfront.game.HudPanel.Tint;
@@ -32,19 +31,18 @@ import java.util.Objects;
 import java.util.UUID;
 
 /**
- * The map and the squad in the screen's top-left corner while a player with the pack is deployed, and their
- * {@link KillFeed} in the top-right while it has lines, on a boss bar line of their own that the pack's text shader
- * moves into both corners. It redraws every few ticks and sends nothing while nothing on it moved. An enemy shows only
- * for a while after it fired, and only if the player's client draws it at all.
+ * One boss bar line per player that carries two panels: the minimap with the squad under it, top-left while a player
+ * with the pack is deployed, and their {@link KillFeed}, top-right while it has lines; the pack's text shader moves each
+ * into its corner. It redraws every few ticks and sends nothing while nothing on it moved. An enemy shows only for a
+ * while after it fired, and only if the player's client draws it at all.
  */
 final class Minimap implements Listener {
 
     record Settings(double radius, int updateTicks, int enemyTicks) {
 
         static Settings from(ConfigurationSection config) {
-            return new Settings(Math.clamp(config.getDouble("minimap.radius", 48), 8, 256),
-                    Math.clamp(config.getInt("minimap.update-ticks", 4), 1, 20),
-                    Math.clamp(config.getInt("minimap.enemy-ticks", 60), 0, 600));
+            return new Settings(Math.clamp(config.getDouble("minimap.radius"), 8, 256), Math.clamp(config.getInt("minimap.update-ticks"), 1, 20),
+                    Math.clamp(config.getInt("minimap.enemy-ticks"), 0, 600));
         }
     }
 
@@ -78,7 +76,7 @@ final class Minimap implements Listener {
         }
         var field = game.combatants();
         for (var player : Bukkit.getOnlinePlayers()) {
-            boolean seen = game.isPlaying(player) && BlockcraftApi.get().resourcePack().applied(player) && !CombatHud.covered(player);
+            boolean seen = game.isPlaying(player) && BlockcraftApi.get().resourcePack().applied(player) && !CombatFeedback.covered(player);
             var map = seen && game.onField(player) ? map(player, field, tick) : List.<Glyph>of();
             var feed = seen ? KillFeed.layout(game.killFeed().live(player.getUniqueId(), tick), player.getName(), tick) : List.<Glyph>of();
             if (map.isEmpty() && feed.isEmpty()) {

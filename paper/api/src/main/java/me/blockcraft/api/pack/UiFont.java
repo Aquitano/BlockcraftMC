@@ -109,12 +109,12 @@ public final class UiFont {
     }
 
     /** {@code text} then empty space up to {@code width}, so what follows stays put however long {@code text} is. */
-    public static Component before(Component text, int width) {
+    public static Component leftAligned(Component text, int width) {
         return Component.empty().append(text).append(gap(width - width(text)));
     }
 
     /** Empty space up to {@code width}, then {@code text}, so what is before it stays put however long {@code text} is. */
-    public static Component after(Component text, int width) {
+    public static Component rightAligned(Component text, int width) {
         return Component.empty().append(gap(width - width(text))).append(text);
     }
 

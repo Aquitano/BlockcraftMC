@@ -1029,7 +1029,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
             summary.awardMobKill(player, config.rewards().botKill());
             awardPoints(player, points, CombatFeedback.Reward.KILL);
             fieldKills.merge(player.getUniqueId(), 1, Integer::sum);
-            feedback.hit(player, CombatFeedback.Marker.KILL);
+            feedback.hit(player, CombatFeedback.HitMarker.KILL);
             killBonuses(player, points, dealingHeadshot);
             if (onField(player) && streaks.botKill(player.getUniqueId())) {
                 earnStrike(player);
@@ -1334,14 +1334,14 @@ public final class SternenfrontGame implements RoundConnections.Seating {
             dealingHeadshot = false;
         }
         if (by instanceof Player player && player.isOnline() && !player.equals(victim) && !victim.isDead()) {
-            feedback.hit(player, headshot ? CombatFeedback.Marker.HEADSHOT : CombatFeedback.Marker.HIT);
+            feedback.hit(player, headshot ? CombatFeedback.HitMarker.HEADSHOT : CombatFeedback.HitMarker.HIT);
         }
     }
 
     /** A melee hit that landed, such as a lightsaber's swing, marks like a bolt. */
     public void landed(Player attacker, LivingEntity victim) {
         if (!dealing && !victim.isDead() && onField(attacker)) {
-            feedback.hit(attacker, CombatFeedback.Marker.HIT);
+            feedback.hit(attacker, CombatFeedback.HitMarker.HIT);
         }
     }
 
@@ -1470,7 +1470,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
             summary.awardKill(killer, victim, Defeat.RESPAWN);
             fieldKills.merge(killer.getUniqueId(), 1, Integer::sum);
             awardPoints(killer, heroes.config().points().kill(), CombatFeedback.Reward.KILL);
-            feedback.hit(killer, CombatFeedback.Marker.KILL);
+            feedback.hit(killer, CombatFeedback.HitMarker.KILL);
             killBonuses(killer, heroes.config().points().kill(), dealingHeadshot);
             deployment.killedBy(victim, killer);
             if (onField(killer) && streaks.kill(killer.getUniqueId())) {

@@ -2,7 +2,6 @@ package me.blockcraft.sternenfront.combat;
 
 import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.pack.UiFont;
-import me.blockcraft.api.scene.Scenes;
 import me.blockcraft.sternenfront.combat.AbilityPanel.Binding;
 import me.blockcraft.sternenfront.combat.AbilityPanel.Charges;
 import me.blockcraft.sternenfront.combat.AbilityPanel.Slot;
@@ -47,14 +46,8 @@ public final class CombatHud {
     /** A vent window's bracket over each cell of the meter's lower half. */
     private static final char FIRST_VENT_CELL = '\uE260';
 
-    /** Whether a dialogue, a screen effect or a scene has the screen, which the HUD then leaves to it. */
-    public static boolean covered(Player player) {
-        var api = BlockcraftApi.get();
-        return api.dialogues().active(player) || api.visuals().active(player) || Scenes.isViewing(player);
-    }
-
     public void show(Player player, Guard guard) {
-        if (covered(player)) return;
+        if (CombatFeedback.covered(player)) return;
         game.deployment().controlsChanged(player);
         var fighter = game.fighter(player);
         boolean blade = fighter.hero().filter(Hero::bladed).isPresent();
@@ -65,12 +58,12 @@ public final class CombatHud {
                         ? "combat.guarding" : "combat.guard" : venting ? "combat.venting" : hot ? "combat.hot" : "combat.heat",
                 Formatter.number("seconds", seconds(heat.ventTicks(game.tick()))));
         var meter = hud(UiFont.glyph(blade ? GUARD_ICON : HEAT_ICON), (blade ? bar(guard.level()) : venting ? vent(heat) : bar(heat.level()))
-                .color(hot || venting ? NamedTextColor.RED : NamedTextColor.GOLD), UiFont.before(state, STATE_WIDTH));
+                .color(hot || venting ? NamedTextColor.RED : NamedTextColor.GOLD), UiFont.leftAligned(state, STATE_WIDTH));
         int width = UiFont.width(hud(Component.empty(), Component.empty(), Component.empty()))
                 + METER_ICON_ADVANCE + METER_ADVANCE + Math.max(STATE_WIDTH, UiFont.width(state));
-        var corner = BlockcraftApi.get().resourcePack().applied(player)
+        var abilities = BlockcraftApi.get().resourcePack().applied(player)
                 ? AbilityPanel.render(slots(player, blade), game.factionOf(player).map(Tint::of).orElse(Tint.WHITE)) : Component.empty();
-        game.feedback().show(player, new CombatFeedback.Hud(meter, width, corner));
+        game.feedback().show(player, new CombatFeedback.ActionBar(meter, width, abilities));
     }
 
     private Component hud(Component icon, Component bar, Component state) {
