@@ -13,6 +13,10 @@ screen effects, and the Sternenfront intro.
   square of a card or toolbar button. The client has no per-screen switch, so this holds in every inventory. A menu
   item that needs a frame draws it in its own model, as Sternenfront's spawn markers do with `oversized_in_gui` so the
   frame can cover the slot's border.
+- **Boss bars.** `HudArt` blanks the `pink_*` and `notched_20_*` boss bar sprites, because Sternenfront's objective
+  line and minimap carry only text on a boss bar line. The client has no per-server switch, so on every server of the
+  network a pink bar or one with twenty notches shows its text and no bar. Any other plugin's boss bar needs another
+  colour and overlay.
 - **Items other players can see.** A held or worn item or a display keeps its vanilla item and asks for the pack's model
   through custom_model_data. The pack overrides the vanilla item in `assets/minecraft/items/<item>.json` with a `select`
   on that string, whose fallback is the item's own vanilla definition. So a client without the pack draws the vanilla
