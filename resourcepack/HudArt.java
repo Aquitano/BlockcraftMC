@@ -711,7 +711,8 @@ public final class HudArt {
      * The ability tiles' font in the screen's bottom-right corner, drawn at twice the resolution of its GUI size so a tile
      * shows finer detail at GUI scale 2 and up: a dark backing, a frame the shader tints by state, a fill that rises
      * while an ability recharges, every ability's icon in colour and in grey in the order of Sternenfront's
-     * {@code AbilityIcon}, the keys' badges, the cooldown's digits, charge pips and the label letters of the names.
+     * {@code AbilityIcon}, the keys' badges, the cooldown's digits, the digits that count stored uses and the label
+     * letters of the names.
      * Every glyph hangs from the line's top, which the text shader moves into the corner.
      */
     private static void abilities(Path root, Path contactSheet, String letters) throws Exception {
@@ -733,8 +734,9 @@ public final class HudArt {
         ImageIO.write(cooling, "PNG", root.resolve("ability_icons_cooling.png").toFile());
         ImageIO.write(keyBadges(), "PNG", root.resolve("ability_keys.png").toFile());
         ImageIO.write(cooldownDigits(), "PNG", root.resolve("ability_digits.png").toFile());
-        ImageIO.write(chargePips(), "PNG", root.resolve("ability_pips.png").toFile());
-        ImageIO.write(nameLetters(ImageIO.read(root.resolve("labels.png").toFile()), letters), "PNG", root.resolve("ability_letters.png").toFile());
+        var labels = ImageIO.read(root.resolve("labels.png").toFile());
+        ImageIO.write(countDigits(mapLetters(labels, letters), letters), "PNG", root.resolve("ability_count.png").toFile());
+        ImageIO.write(nameLetters(labels, letters), "PNG", root.resolve("ability_letters.png").toFile());
         Files.writeString(root.getParent().getParent().resolve("font/abilities.json"), String.join(",\n    ",
                 "{\n  \"providers\": [\n    {\"type\":\"space\",\"advances\":{\" \":4}}",
                 topAligned("ability_tile.png", TILE, run(0xE000, 1)),
@@ -744,7 +746,7 @@ public final class HudArt {
                 topAligned("ability_keys.png", BADGE, run(0xE050, BADGES.length)),
                 topAligned("ability_fill.png", TILE, run(0xE060, FILL_LEVELS)),
                 topAligned("ability_digits.png", DIGIT, run(0xE080, DIGITS.length)),
-                topAligned("ability_pips.png", CHARGE_PIP, run(0xE090, 2)),
+                topAligned("ability_count.png", COUNT_HEIGHT, run(0xE090, 10)),
                 topAligned("ability_letters.png", 7, letters)) + "\n  ]\n}\n");
         if (contactSheet != null) {
             Files.createDirectories(contactSheet.toAbsolutePath().getParent());
@@ -756,9 +758,9 @@ public final class HudArt {
     private static final int ICON = 20;
     private static final int BADGE = 9;
     private static final int DIGIT = 11;
-    /** A pip's cell is as tall as the line's ascent, which no bitmap may exceed, with the pip in its top four pixels. */
-    private static final int CHARGE_PIP = 7;
-    private static final int PIP_HEIGHT = 4;
+    /** A count digit's cell: a label digit with a pixel of rim on every side, and a column to spare for its advance. */
+    private static final int COUNT_WIDTH = 6;
+    private static final int COUNT_HEIGHT = 7;
     /** One fill per GUI pixel of the tile's inside, which the frame's pixel borders on every side. */
     private static final int FILL_LEVELS = TILE - 2;
     private static final Color LIGHT = new Color(0xF2F6FB);
@@ -920,23 +922,42 @@ public final class HudArt {
             {".####.", "##..##", "##..##", "##..##", ".####.", "##..##", "##..##", "##..##", ".####."},
             {".####.", "##..##", "##..##", "##..##", ".#####", "....##", "....##", "...##.", ".###.."}};
 
-    /** A charge held and one spent, each a short bar with a dark rim. */
-    private static BufferedImage chargePips() {
-        int width = 2 * PIP_WIDTH;
-        int height = 2 * PIP_HEIGHT;
-        var image = new BufferedImage(2 * width, 2 * CHARGE_PIP, BufferedImage.TYPE_INT_ARGB);
-        var g = smooth(image);
-        for (int pip = 0; pip < 2; pip++) {
-            g.setColor(new Color(OUTLINE, true));
-            g.fill(new RoundRectangle2D.Double(pip * width, 0, width, height, 3, 3));
-            g.setColor(pip == 0 ? LIGHT : new Color(0x3A4558));
-            g.fill(new RoundRectangle2D.Double(pip * width + 2, 2, width - 4, height - 4, 2, 2));
+    /**
+     * The uses an ability has stored, for a tile's corner as the hotbar counts a stack: the label digits from
+     * {@code letterSheet} at twice the resolution, white and ringed dark so they read over any icon.
+     */
+    private static BufferedImage countDigits(BufferedImage letterSheet, String letters) {
+        int cell = 2 * COUNT_WIDTH;
+        var image = new BufferedImage(cell * 10, 2 * COUNT_HEIGHT, BufferedImage.TYPE_INT_ARGB);
+        for (int digit = 0; digit < 10; digit++) {
+            int left = 3 * letters.indexOf((char) ('0' + digit));
+            for (int y = -1; y <= 5; y++) {
+                for (int x = -1; x <= 3; x++) {
+                    boolean ink = countInk(letterSheet, left, x, y);
+                    boolean rim = false;
+                    for (int dy = -1; dy <= 1; dy++) {
+                        for (int dx = -1; dx <= 1; dx++) {
+                            rim |= countInk(letterSheet, left, x + dx, y + dy);
+                        }
+                    }
+                    if (ink || rim) {
+                        for (int dy = 0; dy < 2; dy++) {
+                            for (int dx = 0; dx < 2; dx++) {
+                                image.setRGB(digit * cell + 2 * (x + 1) + dx, 2 * (y + 1) + dy, ink ? 0xFFFFFFFF : 0xE00B0F17);
+                            }
+                        }
+                    }
+                }
+            }
         }
         g.dispose();
         return image;
     }
 
-    private static final int PIP_WIDTH = 6;
+    /** Whether the label digit whose three columns start at {@code left} inks its pixel ({@code x}, {@code y}). */
+    private static boolean countInk(BufferedImage letterSheet, int left, int x, int y) {
+        return x >= 0 && x < 3 && y >= 0 && y < 5 && (letterSheet.getRGB(left + x, 2 + y) >>> 24) != 0;
+    }
 
     /**
      * The menu tiles' capitals at twice the resolution for the abilities' names, each in a cell wide enough for M, N
@@ -981,7 +1002,6 @@ public final class HudArt {
         var image = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
         var g = smooth(image);
         art.accept(g);
-        g.dispose();
         return image;
     }
 

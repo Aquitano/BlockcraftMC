@@ -43,7 +43,7 @@ final class AbilityPanel {
         record Armed() implements State { }
     }
 
-    /** {@code stored} of {@code capacity} uses, shown as pips under the name while the ability holds more than one. */
+    /** {@code stored} of {@code capacity} uses; an ability that holds several counts the stored ones on its tile. */
     record Charges(int stored, int capacity) {
         static final Charges ONE = new Charges(1, 1);
     }
@@ -67,7 +67,14 @@ final class AbilityPanel {
     /** The seconds centred on the tile, the odd pixel above them. */
     private static final int DIGIT_TOP = (TILE - DIGIT_HEIGHT + 1) / 2;
     private static final int MAX_SECONDS = 99;
-    private static final int PIP_ADVANCE = 7;
+    /** The count's digits, each ringed dark, the rims overlapping like the seconds'. */
+    private static final int COUNT_ADVANCE = 6;
+    private static final int COUNT_PITCH = 4;
+    private static final int COUNT_WIDTH = 5;
+    private static final int COUNT_HEIGHT = 7;
+    private static final int MAX_COUNT = 99;
+    /** The name's capitals level with the tile's middle. */
+    private static final int NAME_TOP = 8;
     /** The pack draws these capitals two pixels wider, so their diagonals show. */
     private static final String WIDE_LETTERS = "MNW";
     private static final int WIDE_LETTER_ADVANCE = 6;
@@ -79,8 +86,7 @@ final class AbilityPanel {
     static final char FIRST_BADGE = '\uE050';
     static final char FIRST_FILL = '\uE060';
     static final char FIRST_DIGIT = '\uE080';
-    static final char PIP_HELD = '\uE090';
-    private static final char PIP_SPENT = PIP_HELD + 1;
+    static final char FIRST_COUNT = '\uE090';
 
     private AbilityPanel() {
     }
@@ -120,8 +126,27 @@ final class AbilityPanel {
                 }
             }
         }
+        glyphs.addAll(count(slot.charges(), top));
         glyphs.add(glyph((char) (FIRST_BADGE + slot.binding().ordinal()), left, top, Tint.WHITE, slot.binding().advance));
         glyphs.addAll(label(slot, top));
+        return glyphs;
+    }
+
+    /**
+     * The uses stored, in the tile's bottom-right corner inside its frame as the hotbar counts a stack: only while the
+     * ability holds several and has one left, since an empty one shows the seconds to its next.
+     */
+    private static List<Glyph> count(Charges charges, int top) {
+        if (charges.capacity() <= 1 || charges.stored() <= 0) {
+            return List.of();
+        }
+        var digits = String.valueOf(Math.min(charges.stored(), MAX_COUNT));
+        int left = -1 - COUNT_WIDTH - (digits.length() - 1) * COUNT_PITCH;
+        var glyphs = new ArrayList<Glyph>();
+        for (int index = 0; index < digits.length(); index++) {
+            glyphs.add(glyph((char) (FIRST_COUNT + digits.charAt(index) - '0'), left + index * COUNT_PITCH, top + TILE - 1 - COUNT_HEIGHT,
+                    Tint.WHITE, COUNT_ADVANCE));
+        }
         return glyphs;
     }
 
@@ -132,26 +157,13 @@ final class AbilityPanel {
     }
 
     /**
-     * The name left of the tile, level with its middle, or above the pips when the ability holds several uses. It stays
-     * white while the tile recharges, because grey letters vanish against a bright floor.
+     * The name left of the tile, level with its middle. It stays white while the tile recharges, because grey letters
+     * vanish against a bright floor.
      */
     private static List<Glyph> label(Slot slot, int top) {
-        var glyphs = new ArrayList<Glyph>();
         var name = HudPanel.capitals(slot.name());
-        int right = -TILE - NAME_GAP;
-        var charges = slot.charges();
-        boolean pips = charges.capacity() > 1;
         int width = name.chars().map(letter -> WIDE_LETTERS.indexOf(letter) >= 0 ? WIDE_LETTER_ADVANCE : UiFont.LABEL_ADVANCE).sum();
-        if (!name.isEmpty()) {
-            glyphs.add(new Glyph(name, right - width, top + (pips ? 4 : 8), Tint.WHITE, true, width));
-        }
-        if (pips) {
-            int x = right - charges.capacity() * PIP_ADVANCE + 1;
-            for (int pip = 0; pip < charges.capacity(); pip++) {
-                glyphs.add(glyph(pip < charges.stored() ? PIP_HELD : PIP_SPENT, x + pip * PIP_ADVANCE, top + 14, Tint.WHITE, PIP_ADVANCE));
-            }
-        }
-        return glyphs;
+        return name.isEmpty() ? List.of() : List.of(new Glyph(name, -TILE - NAME_GAP - width, top + NAME_TOP, Tint.WHITE, true, width));
     }
 
     private static Glyph glyph(char glyph, int x, int y, Tint tint, int advance) {

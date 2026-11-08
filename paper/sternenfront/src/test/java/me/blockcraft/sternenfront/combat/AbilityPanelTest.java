@@ -33,7 +33,7 @@ public class AbilityPanelTest {
     public void everyStateOfEveryTileTakesNoRoomAndStaysInTheCorner() throws IOException {
         var states = List.of(new State.Ready(), new State.Cooling(1, 0), new State.Cooling(99, 0.5), new State.Cooling(7, 1),
                 new State.Armed());
-        var charges = List.of(Charges.ONE, new Charges(2, 2), new Charges(0, 3));
+        var charges = List.of(Charges.ONE, new Charges(2, 2), new Charges(0, 3), new Charges(12, 12));
         var bindings = Binding.values();
         var slots = new ArrayList<Slot>();
         for (var icon : AbilityIcon.values()) {
@@ -85,7 +85,24 @@ public class AbilityPanelTest {
         assertEquals(PackFonts.first("abilities", "ability_keys.png"), AbilityPanel.FIRST_BADGE);
         assertEquals(PackFonts.first("abilities", "ability_fill.png"), AbilityPanel.FIRST_FILL);
         assertEquals(PackFonts.first("abilities", "ability_digits.png"), AbilityPanel.FIRST_DIGIT);
-        assertEquals(PackFonts.first("abilities", "ability_pips.png"), AbilityPanel.PIP_HELD);
+        assertEquals(PackFonts.first("abilities", "ability_count.png"), AbilityPanel.FIRST_COUNT);
+    }
+
+    @Test
+    public void aTileCountsItsStoredUsesOnlyWhileItHoldsSeveralAndHasOneLeft() {
+        var counted = List.of(new Charges(2, 2), new Charges(1, 2), new Charges(12, 12));
+        for (var charges : counted) {
+            var glyphs = AbilityPanel.layout(List.of(new Slot(Binding.F, AbilityIcon.GRENADE, "Granate", new State.Ready(), charges)), Tint.REPUBLIC);
+            var count = glyphs.stream().map(glyph -> glyph.text().charAt(0)).filter(glyph -> glyph >= AbilityPanel.FIRST_COUNT
+                    && glyph < AbilityPanel.FIRST_COUNT + 10).map(glyph -> String.valueOf(glyph - AbilityPanel.FIRST_COUNT)).toList();
+            assertEquals(charges.toString(), String.valueOf(charges.stored()), String.join("", count));
+        }
+        for (var charges : List.of(Charges.ONE, new Charges(0, 2))) {
+            var state = charges.stored() > 0 ? new State.Ready() : new State.Cooling(5, 0.5);
+            var glyphs = AbilityPanel.layout(List.of(new Slot(Binding.F, AbilityIcon.GRENADE, "Granate", state, charges)), Tint.REPUBLIC);
+            assertTrue(charges.toString(), glyphs.stream().map(glyph -> glyph.text().charAt(0))
+                    .noneMatch(glyph -> glyph >= AbilityPanel.FIRST_COUNT && glyph < AbilityPanel.FIRST_COUNT + 10));
+        }
     }
 
     @Test
