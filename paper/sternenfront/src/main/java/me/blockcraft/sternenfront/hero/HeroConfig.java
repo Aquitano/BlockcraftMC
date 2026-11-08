@@ -23,7 +23,21 @@ public record HeroConfig(int cost, int perFaction, Points points, Map<Hero, Doub
 
     public record Throw(double range, double speed, double damage) { }
 
-    public record Grip(double range, int seconds, double damage, int pulseTicks) { }
+    public record Grip(double range, int seconds, double damage, int pulseTicks) {
+
+        public int ticks() {
+            return seconds * TICKS_PER_SECOND;
+        }
+
+        /** A grip strikes every {@code pulseTicks} while it holds, neither as it takes hold nor as it lets go. */
+        public boolean pulsesWith(long ticksLeft) {
+            return ticksLeft > 0 && ticksLeft < ticks() && ticksLeft % pulseTicks == 0;
+        }
+
+        public double damagePerPulse() {
+            return damage / Math.max(1, (ticks() - 1) / pulseTicks);
+        }
+    }
 
     public record Jetpack(int seconds, double thrust) { }
 

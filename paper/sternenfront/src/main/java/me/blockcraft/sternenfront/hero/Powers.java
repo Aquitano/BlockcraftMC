@@ -243,12 +243,12 @@ public final class Powers {
         if (hit == null || !(hit.getHitEntity() instanceof LivingEntity victim)) {
             return false;
         }
-        int ticks = grip.seconds() * 20;
+        int ticks = grip.ticks();
         victim.addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION, ticks, GRIP_LEVITATION_AMPLIFIER, false, false, false));
         victim.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, ticks, GRIP_SLOWNESS_AMPLIFIER, false, false, false));
         SoundCue.FORCE_GRIP.play(victim.getLocation(), 1.2f);
         grips.removeIf(each -> each.victim().equals(victim));
-        grips.add(new Grip(player, victim, tick + ticks, grip.damage() / Math.max(1, ticks / grip.pulseTicks())));
+        grips.add(new Grip(player, victim, tick + ticks, grip.damagePerPulse()));
         return true;
     }
 
@@ -419,7 +419,7 @@ public final class Powers {
             return true;
         }
         game.effects().grip(grip.gripper(), victim, tick);
-        if ((grip.endsAt() - tick) % config.grip().pulseTicks() == 0) {
+        if (config.grip().pulsesWith(grip.endsAt() - tick)) {
             game.strike(grip.gripper(), victim, grip.perPulse(), DamageType.MAGIC);
         }
         return false;
