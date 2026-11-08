@@ -1840,8 +1840,13 @@ public final class SternenfrontArt {
      * every droid card and the clone scout's and medic's.
      */
     private static BufferedImage portrait(Family family, int width, int height) {
+        return portrait(family, width, height, .92, 0, 0x29364B, 0x101925);
+    }
+
+    /** {@code span} blocks of the bust fill the height, raised by {@code lift} blocks, over a gradient from {@code top}. */
+    private static BufferedImage portrait(Family family, int width, int height, double span, double lift, int top, int bottom) {
         boolean heavy = family.name.equals("hegemonie_heavy");
-        boolean droid = family.name.startsWith("hegemonie");
+        boolean droid = family.name.startsWith("hegemonie") || family.name.equals("reinforcement_commando_droid");
         double scale = heavy ? 1.25 : 1;
         var boxes = new ArrayList<Box>();
         for (var model : family.models) {
@@ -1888,14 +1893,14 @@ public final class SternenfrontArt {
         int supersampling = 6;
         var large = new BufferedImage(width * supersampling, height * supersampling, BufferedImage.TYPE_INT_ARGB);
         var graphics = large.createGraphics();
-        graphics.setPaint(new java.awt.GradientPaint(0, 0, new java.awt.Color(0x29364B), 0, large.getHeight(), new java.awt.Color(0x101925)));
+        graphics.setPaint(new java.awt.GradientPaint(0, 0, new java.awt.Color(top), 0, large.getHeight(), new java.awt.Color(bottom)));
         graphics.fillRect(0, 0, large.getWidth(), large.getHeight());
-        double zoom = large.getHeight() / .92;
+        double zoom = large.getHeight() / span;
         for (var face : faces) {
             var polygon = new java.awt.Polygon();
             for (var point : face.points) {
                 polygon.addPoint((int) Math.round(large.getWidth() / 2.0 + point.x * zoom),
-                        (int) Math.round(large.getHeight() / 2.0 - point.y * zoom));
+                        (int) Math.round(large.getHeight() / 2.0 - (point.y - lift) * zoom));
             }
             graphics.setColor(new java.awt.Color(face.colour, true));
             graphics.fillPolygon(polygon);
@@ -1911,8 +1916,26 @@ public final class SternenfrontArt {
 
     private static void portraits(Path directory, Family family) throws IOException {
         Files.createDirectories(directory);
-        ImageIO.write(portrait(family, 50, 22), "png", directory.resolve(family.name + "_large.png").toFile());
-        ImageIO.write(portrait(family, 23, 14), "png", directory.resolve(family.name + "_wide.png").toFile());
+        if (family.name.startsWith("kolonien_") || family.name.startsWith("hegemonie_")) {
+            ImageIO.write(portrait(family, 50, 22), "png", directory.resolve(family.name + "_large.png").toFile());
+            ImageIO.write(portrait(family, 23, 14), "png", directory.resolve(family.name + "_wide.png").toFile());
+        }
+        boolean republic = family.name.startsWith("kolonien_") || family.name.equals("reinforcement_arc_trooper")
+                || family.name.equals("hero_commander") || family.name.equals("hero_jedi");
+        int top = republic ? 0x24456E : 0x5A2A2E;
+        int bottom = republic ? 0x0E1726 : 0x1E1013;
+        // The B2 stands a head taller and twice as broad, so its bust takes a wider shot.
+        double wide = family.name.equals("hegemonie_heavy") ? 1.5 : 1;
+        double lower = family.name.equals("hegemonie_heavy") ? .12 : 0;
+        ImageIO.write(portrait(family, 64, 64, 1.05 * wide, -.05 - lower, top, bottom), "png", directory.resolve(family.name + "_dossier.png").toFile());
+        ImageIO.write(portrait(family, 30, 32, .92 * wide, -lower, top, bottom), "png", directory.resolve(family.name + "_card.png").toFile());
+        ImageIO.write(portrait(family, 14, 14, .62 * wide, .2 - lower, top, bottom), "png", directory.resolve(family.name + "_mini.png").toFile());
+    }
+
+    /** Whom the deploy menu shows a portrait of: the classes, the reinforcements and the heroes. */
+    private static boolean portrayed(Family family) {
+        return family.name.startsWith("kolonien_") || family.name.startsWith("hegemonie_")
+                || family.name.startsWith("reinforcement_") || family.name.startsWith("hero_");
     }
 
     private record Tile(String key, Surface surface, Face face, int width, int height) { }
@@ -2088,7 +2111,7 @@ public final class SternenfrontArt {
         var root = Path.of(args.length == 0 ? "src" : args[0]).resolve("assets/blockcraft");
         for (var family : families()) {
             write(root, family);
-            if (family.name.startsWith("kolonien_") || family.name.startsWith("hegemonie_")) {
+            if (portrayed(family)) {
                 portraits(Path.of(args.length == 0 ? "src" : args[0]).resolveSibling("art/sternenfront"), family);
             }
         }

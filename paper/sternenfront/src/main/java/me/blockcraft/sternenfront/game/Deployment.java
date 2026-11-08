@@ -126,14 +126,10 @@ public final class Deployment {
     }
 
     public void openDeploy(Player player) {
-        openDeploy(player, false);
-    }
-
-    public void openDeploy(Player player, boolean tactical) {
         if (!game.choosing(player)) {
             return;
         }
-        var menu = new DeployMenu(game, player, tactical);
+        var menu = new DeployMenu(game, player);
         deployMenus.put(player.getUniqueId(), menu);
         menu.open(player);
     }

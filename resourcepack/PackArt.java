@@ -77,6 +77,7 @@ public final class PackArt {
         }
         TileArt.write(root);
         WeaponArt.write(root);
+        DeployArt.write(root);
     }
 
     static BufferedImage panel(int rows, boolean toolbar) {
@@ -2003,7 +2004,6 @@ public final class PackArt {
             }
             PackArt.write(classOverlay(false), textures.resolve("overlay_sternenfront_class.png"));
             PackArt.write(classOverlay(true), textures.resolve("overlay_sternenfront_class_with_bots.png"));
-            PackArt.write(deployOverlay(), textures.resolve("overlay_sternenfront_deploy.png"));
         }
 
         static int rowY(int row) {
@@ -2041,22 +2041,6 @@ public final class PackArt {
             return image;
         }
 
-        /** Hero and spawn rows, labelled on the left; their items answer clicks, so their frames stand out like tiles. */
-        static BufferedImage deployOverlay() {
-            var image = overlay(true);
-            heading(image, "ROLLE", rowY(1) + 9);
-            PackArt.fill(image, 7, rowY(4) - 2, 162, 1, PackArt.EDGE);
-            rowLabel(image, "SPEZIAL", rowY(4) + 6);
-            rowLabel(image, "EINSATZORT", rowY(5) + 6);
-            for (int column : new int[] {2, 4, 5}) {
-                raisedFrame(image, columnX(column) - 1, rowY(4) - 1);
-            }
-            for (int column = 4; column < 9; column++) {
-                raisedFrame(image, columnX(column) - 1, rowY(5) - 1);
-            }
-            return image;
-        }
-
         static void heading(BufferedImage image, String text, int y) {
             rowLabel(image, text, y);
             int end = columnX(0) + text.length() * 4 + 2;
@@ -2067,13 +2051,6 @@ public final class PackArt {
             for (int index = 0; index < text.length(); index++) {
                 letter(image, text.charAt(index), columnX(0) + index * 4, y, HEADING);
             }
-        }
-
-        static void raisedFrame(BufferedImage image, int x, int y) {
-            PackArt.fill(image, x, y, 18, 18, PackArt.BORDER);
-            PackArt.fill(image, x + 1, y + 1, 16, 16, 0xFF252E40);
-            PackArt.fill(image, x + 1, y + 1, 16, 1, 0xFF46536E);
-            PackArt.fill(image, x + 1, y + 16, 16, 1, 0xFF1A2130);
         }
 
         static void keyCap(BufferedImage image, char key, int x, int y) {

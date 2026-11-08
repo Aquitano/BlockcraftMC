@@ -72,42 +72,50 @@ class:
   kolonien:
     soldier:
       name: "<white>Klonsoldat"
+      short: "Soldat"
       lore:
         - "<muted>Solide auf jede Entfernung."
         - "<muted>Detonator und Adrenalinschub."
     heavy:
       name: "<white>Schwerer Klonsoldat"
+      short: "Schwer"
       lore:
         - "<muted>Viel Gesundheit, viele Bolzen."
         - "<muted>Energieschild und Sprengladung."
     scout:
       name: "<white>Klonaufklärer"
+      short: "Aufklärer"
       lore:
         - "<muted>Wenig Gesundheit, weite Wege."
         - "<muted>Kopftreffer und Sprungmodul."
     medic:
       name: "<white>Klonsanitäter"
+      short: "Sanitäter"
       lore:
         - "<muted>Hält die Klonsoldaten am Leben."
         - "<muted>Heilstation und Schnellfeuer."
   hegemonie:
     soldier:
       name: "<white>B1-Kampfdroide"
+      short: "B1-Droide"
       lore:
         - "<muted>Das Standardmodell der Linie."
         - "<muted>Ionengranate und Überlastung."
     heavy:
       name: "<white>B2-Superkampfdroide"
+      short: "B2-Droide"
       lore:
         - "<muted>Schwer gepanzert und langsam im Gang."
         - "<muted>Belagerungsmodus und Schildwand."
     scout:
       name: "<white>B1-Scharfschütze"
+      short: "Schütze"
       lore:
         - "<muted>Dunkle Markierungen und ein E-5s."
         - "<muted>Kopftreffer und Schubdüsen."
     medic:
       name: "<white>B1-Technikdroide"
+      short: "Technik"
       lore:
         - "<muted>Repariert die Linie mitten im Gefecht."
         - "<muted>Reparaturfeld und Schnellfeuer."
@@ -366,22 +374,6 @@ deploy:
   auto-free: "<muted>Ohne Bestätigung startet nur deine kostenlose Klasse."
   recommended: "<success>Empfohlener sicherer Einsatzort"
   post-own: "<success>Deine Fraktion hält diesen Posten."
-  map-title: "<arrow><sternenfront>Taktikkarte"
-  map-open: "<primary>Taktikkarte öffnen"
-  loadout: "<primary>Klassen, Elite-Einheiten und Helden"
-  loadout-lore:
-    - "<muted>Wähle deine Klasse, Elite-Einheit oder deinen Helden."
-    - "<muted>Bestätige danach deinen Einsatzort."
-  map-orientation: "<white>Norden oben <dark>· <white>Osten rechts"
-  map-lore:
-    - "<muted>Posten liegen wie auf dem Schlachtfeld."
-    - "<muted>Die Farbe zeigt den Besitzer."
-    - "<muted>Buchstaben entsprechen der Anzeige im Kampf."
-    - "<muted>Voll: bereit. Hohl mit Schloss: gesperrt. Blinkend: umkämpft."
-    - "<muted>Grüner Rahmen: bestätigt. Goldene Ecken: noch zu bestätigen."
-    - "<muted>Stern: empfohlen. Die Zahl zählt bis zu deiner Landung."
-    - "<muted>Zeige auf einen Posten für Name und Sperrgrund."
-    - "<muted>Die Landung unten führt zum benannten Posten."
   headquarters: "<white>Hauptquartier"
   post: "<white>Posten <accent><letter> <white><post>"
   choose: "<click>Hier einsetzen"
@@ -393,6 +385,42 @@ deploy:
   post-contested: "<error>Hier wird gerade gekämpft."
   dropship: "<white>Landungsschiff <dark>· <accent><letter> <white><post>"
   dropship-locked: "<error>Nur für die zurückliegende Fraktion."
+  screen:
+    loadout: "Ausrüstung"
+    weapon: "Waffe"
+    abilities: "Fähigkeiten"
+    ability-key: "Taste <key>"
+    points: "KP"
+    points-value: "<points> KP"
+    cost: "Kosten"
+    balance: "Guthaben"
+    free: "Kostenlos"
+    places: "Einsatzort"
+    places-legend: "Einsatzorte"
+    post: "<post>"
+    landing: "Landung bei <letter>"
+    legend: "Legende"
+    hint: "Ort anklicken: dort einsetzen"
+    orientation: "Norden oben · Osten rechts"
+    kind:
+      class: "Klasse"
+      hero: "Held"
+      reinforcement: "Elite"
+    stat:
+      health: "Gesundheit"
+      speed: "Tempo"
+      damage: "Schaden"
+      range: "Reichweite"
+    value:
+      hearts: "<value:'de-DE':'0.#'>"
+      percent: "<value> %"
+      metres: "<value> m"
+    key:
+      recommended: "Empfohlen"
+      pending: "Gewählt, noch bestätigen"
+      confirmed: "Bestätigt"
+      locked: "Gesperrt"
+      contested: "Blinkt: umkämpft"
 
 death:
   self-explosion: "<prefix><white><player> <muted>wurde von der eigenen Explosion erwischt."
@@ -458,11 +486,13 @@ scoreboard:
 reinforcement:
   arc-trooper:
     name: "<aqua>ARC-Truppler"
+    short: "ARC"
     lore:
       - "<muted>Republikanische Elite-Einheit für die Feuerlinie."
       - "<muted>Kühle Dreiersalven, Energieschild und Adrenalin."
   commando-droid:
     name: "<red>BX-Kommandodroide"
+    short: "BX"
     lore:
       - "<muted>Mobile Elite-Einheit der Separatisten."
       - "<muted>Nahkampfkarabiner, Schubdüsen und Ionengranate."
@@ -487,6 +517,7 @@ hero:
     - "<right>Halten zum Blocken <dark>· <muted>Zweimal springen für den Machtsprung"
   jedi:
     name: "<white>Obi-Wan Kenobi"
+    short: "Obi-Wan"
     weapon: "<white>Obi-Wans Lichtschwert"
     lore:
       - "<muted>Lichtschwert und die Macht."
@@ -495,12 +526,14 @@ hero:
       - "<right>Halten zum Blocken; gutes Timing lenkt Bolzen zurück."
   bounty-hunter:
     name: "<white>Jango Fett"
+    short: "Jango"
     lore:
       - "<muted>Zwei Pistolen, schnelle und genaue Bolzen."
       - "<muted>F startet den Raketenrucksack, Q feuert eine Handgelenkrakete."
       - "<error>Die Raketenexplosion verletzt auch dich."
   sith:
     name: "<white>Count Dooku"
+    short: "Dooku"
     weapon: "<white>Dookus Lichtschwert"
     lore:
       - "<muted>Rotes Lichtschwert und die dunkle Seite der Macht."
@@ -509,6 +542,7 @@ hero:
       - "<right>Halten zum Blocken; gutes Timing lenkt Bolzen zurück."
   commander:
     name: "<white>Captain Rex"
+    short: "Rex"
     lore:
       - "<muted>Zwei DC-17-Pistolen und die Rüstung der 501."
       - "<muted>Ruft einen Orbitalschlag und stärkt Verbündete."
