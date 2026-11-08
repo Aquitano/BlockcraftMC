@@ -67,7 +67,7 @@ public final class DeployMenu extends Menu {
         closeButton(ToolbarButton.LEFT);
         CLASS_CARDS.forEach(slot -> area(slot, 4, 2));
         SPECIALS.forEach(slot -> area(slot, 3, 1));
-        refresh();
+        draw();
     }
 
     @Override
@@ -75,7 +75,14 @@ public final class DeployMenu extends Menu {
         return shown.map(view -> DeployScreen.title(game.messages(), view));
     }
 
+    /** Shows what changed while the player looks at this menu; a closed one stays closed until they open it again. */
     public void refresh() {
+        if (viewer.getOpenInventory().getTopInventory().getHolder(false) == this) {
+            draw();
+        }
+    }
+
+    private void draw() {
         var faction = game.factionOf(viewer);
         if (faction.isEmpty()) {
             return;
