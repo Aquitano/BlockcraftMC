@@ -58,10 +58,12 @@ final class Minimap implements Listener {
     private final Map<UUID, Panel> panels = new HashMap<>();
     private final Map<UUID, Long> shots = new HashMap<>();
     private final Map<Integer, String> botNames = new HashMap<>();
+    private final String squadHeading;
 
     Minimap(SternenfrontGame game, Settings settings) {
         this.game = game;
         this.settings = settings;
+        squadHeading = PlainTextComponentSerializer.plainText().serialize(game.messages().get("minimap.squad"));
         Bukkit.getPluginManager().registerEvents(this, game.plugin());
     }
 
@@ -154,7 +156,7 @@ final class Minimap implements Listener {
         glyphs.addAll(squadDots);
         glyphs.addAll(enemies);
         glyphs.add(MinimapLayout.arrow(here.getYaw()));
-        glyphs.addAll(MinimapLayout.list(members(viewer, side, squadPlayers, squadmates)));
+        glyphs.addAll(MinimapLayout.list(squadHeading, members(viewer, side, squadPlayers, squadmates)));
         return glyphs;
     }
 

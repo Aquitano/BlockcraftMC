@@ -593,8 +593,9 @@ career:
 hud:
   objective: "<muted>Wir <own> <dark>‹ <posts><dark>› <enemy> <dark>│ <white><time>"
 
-# A bot in the squad list under the minimap, drawn in the menu tiles' capitals.
+# The squad list under the minimap and a bot in it, drawn in the menu tiles' capitals.
 minimap:
+  squad: "Trupp"
   bot:
     kolonien:
       soldier: "CT-<number>"

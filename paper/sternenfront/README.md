@@ -160,9 +160,10 @@ to its rim. It shows the posts with the combat HUD's letter badges and ownership
 arrow at the nearest of sixteen headings, their squad as gold dots and other allies as smaller dots of their side's colour.
 Posts beyond the radius stay on the rim along their bearing. Yellow corners frame the post to make for, as Redeployment describes. Headquarters and fighters beyond it are left out, so
 nothing on the rim hides a post's badge. An enemy shows for `minimap.enemy-ticks` after each shot it fires, and only
-while the player's client draws it, so a vanished player or a hidden body never shows. The list under the map names the
-player and their squad beside class marks, in the menu tiles' capitals, and dims anyone dead or choosing a spawn.
-`minimap.bot` in `messages.yml` names the bots.
+while the player's client draws it, so a vanished player or a hidden body never shows. The list under the map, headed by
+`minimap.squad`, names the player and their squad in the menu tiles' capitals and dims anyone dead or choosing a spawn.
+Each name follows a mark of what the fighter carries: a rifle for a soldier, a shield for a heavy, a crosshair for a scout,
+a cross for a medic and a crown for a hero. `minimap.bot` in `messages.yml` names the bots.
 
 A player's squad is the fireteam that last took their order (see Bots). It stays theirs while no other team takes it,
 and passes to the next team that does once it follows someone else or nobody. Other players with the same squad are listed.
@@ -223,11 +224,11 @@ stay steadier walking and the repeater wants a crouch. A sprint shows the lowere
 fire until its `sprint-recovery-ticks` after the sprint ends. The crosshair ticks use the same factors as the shot.
 A title's subtitle stays readable under the marks, which `UiFont.centredOn` keeps on the crosshair however long the line is. The sidebar stays hidden during a fight.
 
+A flame and a muted `Hitze` name the heat meter; a bladed hero's guard meter has a shield and `Deckung` instead.
 The heat meter turns red and shows `HEISS` at `heat.warning-level`, or when the next shot would overheat the weapon.
 Venting shows `Kühlt` until the weapon is ready, followed by a ready sound. A vent also brackets `heat.window-share` of the
 meter in cyan, somewhere in its lower half, and the meter then lights every cell the cooling heat has not left. The first
 fresh pull of the trigger while the last lit cell is inside the bracket ends the vent with a click and steam; one outside
-A flame and a muted `Hitze` name the heat meter; a bladed hero's guard meter has a shield and `Deckung` instead.
 it adds `heat.miss-penalty-share` of the vent and closes the window. A trigger held since the overheating shot counts for
 neither, and bots never try. `combat-feedback` tunes marker and
 popup durations and the hit, headshot, and kill volumes.

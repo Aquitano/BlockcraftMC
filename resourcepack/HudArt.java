@@ -310,10 +310,21 @@ public final class HudArt {
     private static final String[] DIAMOND = {"...#...", "..###..", ".#####.", "#######", ".#####.", "..###..", "...#..."};
     private static final int TARGET_ARM = 7;
     private static final String NORTH = "10011101101110011001";
-    /** Soldier, heavy, scout, medic and hero, five rows of five. */
-    private static final String[] CLASS_MARKS = {
-            "0010000100011100111011111", "1111111111111110111000100", "0010001010100010101000100",
-            "0010000100111110010000100", "0010001110111110111001010"};
+    /**
+     * Soldier, heavy, scout, medic and hero, each a picture of what the role carries at twice the resolution: a rifle, a
+     * shield, a scope's reticle, a medic's cross and a crown.
+     */
+    private static final String[][] CLASS_MARKS = {
+            {"..........", "..........", ".....###..", "##########", "#######...", "##.###....", "....##....", "....##....",
+                    "..........", ".........."},
+            {"##########", "##########", "####..####", "####..####", "####..####", ".###..###.", ".###..###.", "..##..##..",
+                    "...####...", "....##...."},
+            {"....##....", "..######..", ".#..##..#.", ".#..##..#.", "##########", "##########", ".#..##..#.", ".#..##..#.",
+                    "..######..", "....##...."},
+            {"...####...", "...####...", "...####...", "##########", "##########", "##########", "##########", "...####...",
+                    "...####...", "...####..."},
+            {"..........", "#...##...#", "##..##..##", "##.####.##", "##########", "##########", "##########", "..........",
+                    "##########", "##########"}};
 
     /** The letters of PackArt's label sheet, in the order its menu label fonts list them. */
     private static String labelLetters(Path fonts) throws Exception {
@@ -553,14 +564,18 @@ public final class HudArt {
 
     /** A class mark five pixels square in a cell as tall as a label letter, standing on the letters' baseline. */
     private static BufferedImage classMarks() {
-        var image = new BufferedImage(6 * CLASS_MARKS.length, 7, BufferedImage.TYPE_INT_ARGB);
+        int cell = 2 * 6;
+        var image = new BufferedImage(cell * CLASS_MARKS.length, 2 * 7, BufferedImage.TYPE_INT_ARGB);
         for (int mark = 0; mark < CLASS_MARKS.length; mark++) {
-            for (int index = 0; index < 25; index++) {
-                if (CLASS_MARKS[mark].charAt(index) == '1') {
-                    image.setRGB(mark * 6 + index % 5, 2 + index / 5, 0xFFFFFFFF);
+            var art = CLASS_MARKS[mark];
+            for (int y = 0; y < art.length; y++) {
+                for (int x = 0; x < art[y].length(); x++) {
+                    if (art[y].charAt(x) == '#') {
+                        image.setRGB(mark * cell + x, 2 * 2 + y, 0xFFFFFFFF);
+                    }
                 }
             }
-            padAdvance(image, mark * 6 + 5, 0, 7);
+            padAdvance(image, mark * cell + cell - 1, 0, image.getHeight());
         }
         return image;
     }
@@ -970,7 +985,6 @@ public final class HudArt {
                 }
             }
         }
-        g.dispose();
         return image;
     }
 
@@ -1022,6 +1036,7 @@ public final class HudArt {
         var image = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
         var g = smooth(image);
         art.accept(g);
+        g.dispose();
         return image;
     }
 

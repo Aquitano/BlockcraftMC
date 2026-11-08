@@ -13,6 +13,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -55,6 +56,15 @@ public class MinimapLayoutTest {
     }
 
     @Test
+    public void theSquadListIsHeadedAboveItsMembers() {
+        var glyphs = MinimapLayout.list("Trupp", List.of(new Member("CT-4", Role.MEDIC, Tint.SQUAD, true)));
+        var heading = glyphs.getFirst();
+        assertEquals("TRUPP", heading.text());
+        assertEquals(Tint.DIMMED, heading.tint());
+        assertTrue(glyphs.stream().skip(1).allMatch(glyph -> glyph.y() > heading.y()));
+    }
+
+    @Test
     public void deadOrRedeployingMembersAreDimmed() {
         var line = MinimapLayout.member(1, Role.MEDIC, Tint.SQUAD, "CT-4", false);
         assertTrue(line.stream().allMatch(glyph -> glyph.tint() == Tint.DIMMED));
@@ -88,7 +98,7 @@ public class MinimapLayoutTest {
             members.add(new Member("Ein_sehr_langer_Name", role, Tint.SQUAD, role.ordinal() % 2 == 0));
         }
         members.add(new Member("ÄÖÜ-.:!?/+& 0123456789", Role.HERO, Tint.WHITE, true));
-        glyphs.addAll(MinimapLayout.list(members));
+        glyphs.addAll(MinimapLayout.list("Trupp", members));
 
         var fonts = Map.of(Key.key("blockcraft", "ui"), PackFonts.advances("ui"), MinimapLayout.FONT, PackFonts.advances("minimap"));
         assertEquals(0, PackFonts.width(MinimapLayout.render(glyphs), fonts));

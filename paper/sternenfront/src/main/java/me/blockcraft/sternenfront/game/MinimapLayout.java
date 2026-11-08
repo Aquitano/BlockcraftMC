@@ -14,7 +14,7 @@ import java.util.stream.IntStream;
 
 /**
  * Where the top-left {@link HudPanel} draws what, in the pixels of the pack's {@code blockcraft:minimap} font: a disc 63
- * pixels across, north up around the player, and the squad's names under it.
+ * pixels across, north up around the player, and the squad under it, headed and named.
  */
 final class MinimapLayout {
 
@@ -149,12 +149,14 @@ final class MinimapLayout {
         return HudPanel.render(Corner.TOP_LEFT, FONT, glyphs);
     }
 
-    /** Rows in the order the panel stacks them, the viewer's own first. */
-    static List<Glyph> list(List<Member> members) {
+    /** {@code heading} greyed on the first row, then the members in the order the panel stacks them, the viewer's own first. */
+    static List<Glyph> list(String heading, List<Member> members) {
+        var label = label(heading);
         var glyphs = new ArrayList<Glyph>();
+        glyphs.add(new Glyph(label, 0, LIST_TOP, Tint.DIMMED, true, label.length() * UiFont.LABEL_ADVANCE));
         for (int row = 0; row < Math.min(ROWS, members.size()); row++) {
             var member = members.get(row);
-            glyphs.addAll(member(row, member.role(), member.mark(), member.name(), member.ready()));
+            glyphs.addAll(member(row + 1, member.role(), member.mark(), member.name(), member.ready()));
         }
         return glyphs;
     }
