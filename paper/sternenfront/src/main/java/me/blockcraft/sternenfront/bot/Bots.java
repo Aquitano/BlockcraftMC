@@ -52,6 +52,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public final class Bots implements Listener {
 
@@ -676,6 +677,9 @@ public final class Bots implements Listener {
                 soldier.guarding = -1;
             }
         }
+        team.outnumberedAt = everyone.stream().filter(Bots::deployed).map(soldier -> soldier.guarding).filter(post -> post >= 0)
+                .distinct().filter(post -> odds(team.faction, game.map().posts().get(post).center()).outnumbered())
+                .collect(Collectors.toUnmodifiableSet());
         var squad = everyone.stream().filter(Bots::deployed).filter(soldier -> soldier.guarding < 0).toList();
         if (squad.isEmpty()) {
             team.leader = -1;
@@ -939,7 +943,7 @@ public final class Bots implements Listener {
         boolean capturing = post != null && post.contains(here);
         var route = post == null ? null : post.routes().get(soldier.faction)
                 .get(soldier.navigation.route());
-        if (route != null && soldier.guarding >= 0 && odds(soldier.faction, post.center()).outnumbered()) {
+        if (route != null && soldier.guarding >= 0 && soldier.team != null && soldier.team.outnumberedAt.contains(soldier.guarding)) {
             soldier.guarding = -1;
             call(soldier, "cover", tick);
         }

@@ -9,6 +9,7 @@ import java.util.ArrayDeque;
 import java.util.Comparator;
 import java.util.Deque;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.IntStream;
 
@@ -33,6 +34,8 @@ final class Fireteam {
     Location alarm;
     long alarmUntil;
     int flanker = -1;
+    /** The posts this team's guards hold against more seen enemies than friends, as of its last command. */
+    Set<Integer> outnumberedAt = Set.of();
     /** The player whose order the team took when it last chose its objective, if it took one. */
     UUID following;
     final FallBack fallBack = new FallBack();
