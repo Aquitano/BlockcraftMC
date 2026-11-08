@@ -98,7 +98,7 @@ public class HeatTest {
     @Test
     public void aTriggerHeldThroughTheOverheatNeitherHitsNorMisses() {
         var heat = overheatedAt(10);
-        for (long tick = 14; tick <= 46; tick += 4) {
+        for (long tick : new long[] {14, 18, 25, 29, 36, 40, 46}) {
             assertEquals(Heat.Vent.NONE, heat.pull(tick));
         }
         assertTrue(heat.venting(46));

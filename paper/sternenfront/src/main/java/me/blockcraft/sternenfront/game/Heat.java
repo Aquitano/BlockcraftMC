@@ -25,8 +25,8 @@ public final class Heat {
 
     /** The meter shows heat in these cells, and a window covers whole cells so the HUD draws exactly what a pull must hit. */
     public static final int METER_CELLS = 10;
-    /** A held trigger pulls every 4 ticks, so a pull this long after the last one is a fresh one. */
-    private static final int RELEASED_AFTER_TICKS = 6;
+    /** A held trigger pulls every 4 ticks, and lag can stretch one gap to 7, so a pull this long after the last is fresh. */
+    private static final int RELEASED_AFTER_TICKS = 8;
     private static final double FULL = 100;
     private static final long LONG_AGO = Long.MIN_VALUE / 2;
 
