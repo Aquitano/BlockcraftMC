@@ -187,6 +187,10 @@ public final class BattleEffects {
         return eye.add(side).add(0, -HAND_DROP, 0).add(facing.multiply(HAND_REACH));
     }
 
+    public static Location chest(LivingEntity actor) {
+        return actor.getLocation().add(0, actor.getHeight() * 0.6, 0);
+    }
+
     /** Sparks at the emitter and a puff of the blade's colour where it grows out of the hilt. */
     public void ignite(Player hero, Color colour) {
         if (!enabled) {

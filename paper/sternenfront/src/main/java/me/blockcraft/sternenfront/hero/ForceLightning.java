@@ -41,7 +41,7 @@ final class ForceLightning {
     boolean use(Player player, Faction faction, long tick) {
         var cast = new Cast(player, faction, player.getWorld(), new LightningBurst(rules, tick), new ArrayList<>());
         casts.put(player.getUniqueId(), cast);
-        if (channel(cast, tick)) {
+        if (!channel(cast, tick)) {
             casts.remove(player.getUniqueId(), cast);
         }
         return true;
@@ -50,31 +50,31 @@ final class ForceLightning {
     void tick(long tick) {
         for (var cast : List.copyOf(casts.values())) {
             var id = cast.player().getUniqueId();
-            if (casts.get(id) == cast && channel(cast, tick)) {
+            if (casts.get(id) == cast && !channel(cast, tick)) {
                 casts.remove(id, cast);
             }
         }
     }
 
-    /** One tick of the channel: damage on its pulses, the bolts on every tick. True once it ended. */
+    /** One tick of the channel: damage on its pulses, the bolts on every tick. False once it ended. */
     private boolean channel(Cast cast, long tick) {
         var player = cast.player();
         if (!cast.burst().active(tick) || !game.onField(player) || player.isInsideVehicle()
                 || !player.getWorld().equals(cast.world()) || game.heroOf(player).filter(Hero.SITH::equals).isEmpty()) {
-            return true;
+            return false;
         }
-        if (cast.burst().pulse(tick) && pulse(cast)) {
-            return true;
+        if (cast.burst().pulse(tick) && !pulse(cast)) {
+            return false;
         }
         draw(cast, tick);
-        return false;
+        return true;
     }
 
     private void draw(Cast cast, long tick) {
         var player = cast.player();
         var hand = BattleEffects.hand(player, true);
         var ends = cast.struck().stream().filter(target -> game.onField(target) && target.getWorld().equals(cast.world()))
-                .map(target -> target.getLocation().add(0, target.getHeight() * 0.6, 0)).toList();
+                .map(BattleEffects::chest).toList();
         if (ends.isEmpty()) {
             var eye = player.getEyeLocation();
             var facing = eye.getDirection();
@@ -88,7 +88,7 @@ final class ForceLightning {
         game.effects().crackle(player, hand);
     }
 
-    /** Strikes what the cone holds now; true if the channel ended under it. */
+    /** Strikes what the cone holds now; false if the channel ended under it. */
     private boolean pulse(Cast cast) {
         var player = cast.player();
         var eye = player.getEyeLocation();
@@ -103,14 +103,13 @@ final class ForceLightning {
         cast.struck().clear();
         for (var target : targets) {
             if (casts.get(player.getUniqueId()) != cast || !game.onField(player)) {
-                return true;
+                return false;
             }
             if (!game.hittable(cast.faction(), target) || game.isProtected(target)) {
                 continue;
             }
             cast.struck().add(target);
-            var at = target.getLocation().add(0, target.getHeight() * 0.6, 0);
-            var incoming = at.toVector().subtract(eye.toVector());
+            var incoming = BattleEffects.chest(target).toVector().subtract(eye.toVector());
             incoming = incoming.lengthSquared() < 0.001 ? facing.clone() : incoming.normalize();
             var guard = target instanceof Player defender ? game.combat().block(defender, incoming, cast.burst().damage())
                     : Guard.Result.NONE;
@@ -119,7 +118,7 @@ final class ForceLightning {
             }
         }
         SoundCue.FORCE_LIGHTNING.play(eye, 0.7f);
-        return false;
+        return true;
     }
 
     private boolean inCone(Vector eye, Vector facing, BoundingBox target) {

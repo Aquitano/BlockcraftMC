@@ -273,7 +273,7 @@ public final class Combat {
             };
         }
         if (amount > 0 && game.strike(player, target, amount, DamageType.MAGIC)) {
-            SoundCue.SABER_HIT.play(target.getLocation().add(0, target.getHeight() * 0.6, 0), 0.8f);
+            SoundCue.SABER_HIT.play(BattleEffects.chest(target), 0.8f);
         }
     }
 
