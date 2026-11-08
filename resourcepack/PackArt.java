@@ -72,6 +72,12 @@ public final class PackArt {
         write(glyph(ICON_ERROR, ERROR), font.resolve("error.png"));
         write(hits(), font.resolve("hits.png"));
         write(display(), font.resolve("display.png"));
+        var accents = textAccents();
+        write(accents, font.resolve("text_accents.png"));
+        Files.writeString(root.resolve("assets/blockcraft/font/text.json"), "{\n  \"providers\": [\n    {\"type\":\"space\",\"advances\":{\" \":"
+                + TEXT_SPACE + "}},\n    " + String.join(",\n    ", textProviders(7)) + ",\n    {\"type\":\"reference\",\"id\":\"minecraft:default\"}\n  ]\n}\n");
+        Files.writeString(root.toAbsolutePath().getParent().resolveSibling("paper/api/src/main/resources/text-glyphs.properties"),
+                textAdvances(font.resolve("text.png"), accents));
         for (var icon : ICONS.entrySet()) {
             write(pixels(icon.getValue().rows(), icon.getValue().palette()), item.resolve(icon.getKey() + ".png"));
         }
@@ -332,6 +338,99 @@ public final class PackArt {
                 }
             }
         }
+    }
+
+    /**
+     * Text whose width the server counts draws from {@code text.png}, a copy of the vanilla letter sheet, because a
+     * player's own pack may replace {@code minecraft:font/ascii.png} with letters of other widths. The sheet's cells
+     * are mapped as the vanilla default font maps them; a NUL cell is empty.
+     */
+    static final List<String> TEXT_CHARS = List.of(
+            "\0".repeat(16), "\0".repeat(16), " !\"#$%&'()*+,-./", "0123456789:;<=>?", "@ABCDEFGHIJKLMNO", "PQRSTUVWXYZ[\\]^_",
+            "`abcdefghijklmno", "pqrstuvwxyz{|}~\0", "\0".repeat(16), "\0".repeat(12) + "£\0\0ƒ", "\0".repeat(6) + "ªº\0\0¬\0\0\0«»",
+            "░▒▓│┤╡╢╖╕╣║╗╝╜╛┐", "└┴┬├─┼╞╟╚╔╩╦╠═╬╧", "╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀", "\0".repeat(13) + "∅∈\0", "≡±≥≤⌠⌡÷≈°∙\0√ⁿ²■\0");
+    /** The letters German needs that the vanilla sheet lacks, in the order of {@code text_accents.png}. */
+    static final String TEXT_ACCENTS = "äöüÄÖÜß·…";
+    static final int TEXT_SPACE = 4;
+
+    /** The sheet and its accents, the sheet's letters standing {@code ascent} pixels above the baseline. */
+    static List<String> textProviders(int ascent) {
+        return List.of("{\"type\":\"bitmap\",\"file\":\"blockcraft:font/text.png\",\"ascent\":" + ascent + ",\"height\":8,\"chars\":["
+                        + String.join(",", TEXT_CHARS.stream().map(PackArt::json).toList()) + "]}",
+                "{\"type\":\"bitmap\",\"file\":\"blockcraft:font/text_accents.png\",\"ascent\":" + (ascent + 3)
+                        + ",\"height\":12,\"chars\":[" + json(TEXT_ACCENTS) + "]}");
+    }
+
+    /**
+     * The advance of every letter the text font draws from the pack, as the client measures it from the sheets: up to its
+     * last inked column, plus one. Paper's UiFont counts widths with these.
+     */
+    static String textAdvances(Path sheet, BufferedImage accents) throws IOException {
+        var letters = ImageIO.read(sheet.toFile());
+        var advances = new java.util.TreeMap<Integer, Integer>();
+        advances.put((int) ' ', TEXT_SPACE);
+        for (int row = 0; row < TEXT_CHARS.size(); row++) {
+            for (int column = 0; column < 16; column++) {
+                char letter = TEXT_CHARS.get(row).charAt(column);
+                if (letter != 0) {
+                    advances.putIfAbsent((int) letter, inkWidth(letters, column * 8, row * 8, 8, 8) + 1);
+                }
+            }
+        }
+        for (int index = 0; index < TEXT_ACCENTS.length(); index++) {
+            advances.putIfAbsent((int) TEXT_ACCENTS.charAt(index), inkWidth(accents, index * 8, 0, 8, accents.getHeight()) + 1);
+        }
+        var properties = new StringBuilder("# Written by resourcepack/PackArt.java from the pack's text sheets.\n");
+        advances.forEach((letter, advance) -> properties.append(letter).append('=').append(advance).append('\n'));
+        return properties.toString();
+    }
+
+    static int inkWidth(BufferedImage image, int left, int top, int width, int height) {
+        int ink = 0;
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                if ((image.getRGB(left + x, top + y) >>> 24) != 0) {
+                    ink = x + 1;
+                }
+            }
+        }
+        return ink;
+    }
+
+    /** {@code text} as a JSON string, every letter outside printable ASCII escaped. */
+    static String json(String text) {
+        var escaped = new StringBuilder("\"");
+        text.chars().forEach(letter -> escaped.append(letter == '"' || letter == '\\' ? "\\" + (char) letter
+                : letter < ' ' || letter > '~' ? String.format(Locale.ROOT, "\\u%04x", letter) : String.valueOf((char) letter)));
+        return escaped.append('"').toString();
+    }
+
+    /**
+     * The letters the vanilla sheet lacks, drawn to its proportions: the capital's top in the cell's fourth row as in the
+     * client's accented sheet, dots two rows above the letter.
+     */
+    static BufferedImage textAccents() {
+        String[][] glyphs = {
+                {"", "", "", ".#.#.", "", ".###.", "....#", ".####", "#...#", ".####"},
+                {"", "", "", ".#.#.", "", ".###.", "#...#", "#...#", "#...#", ".###."},
+                {"", "", "", ".#.#.", "", "#...#", "#...#", "#...#", "#...#", ".####"},
+                {"", ".#.#.", "", ".###.", "#...#", "#####", "#...#", "#...#", "#...#", "#...#"},
+                {"", ".#.#.", "", ".###.", "#...#", "#...#", "#...#", "#...#", "#...#", ".###."},
+                {"", ".#.#.", "", "#...#", "#...#", "#...#", "#...#", "#...#", "#...#", ".###."},
+                {"", "", "", ".###.", "#...#", "#.##.", "#...#", "#...#", "#...#", "#.##.", "#...."},
+                {"", "", "", "", "", "", "#"},
+                {"", "", "", "", "", "", "", "", "", "#..#..#"}};
+        var image = new BufferedImage(8 * glyphs.length, 12, BufferedImage.TYPE_INT_ARGB);
+        for (int index = 0; index < glyphs.length; index++) {
+            for (int y = 0; y < glyphs[index].length; y++) {
+                for (int x = 0; x < glyphs[index][y].length(); x++) {
+                    if (glyphs[index][y].charAt(x) == '#') {
+                        image.setRGB(index * 8 + x, y, WHITE);
+                    }
+                }
+            }
+        }
+        return image;
     }
 
     static void write(BufferedImage image, Path file) throws IOException {

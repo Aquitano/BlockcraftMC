@@ -4,9 +4,14 @@ import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
-import org.bukkit.map.MinecraftFont;
 
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Properties;
+import java.util.stream.Collectors;
 
 /**
  * The glyphs of the resource pack's {@code blockcraft:ui} font, mirrored from {@code resourcepack/src/assets/blockcraft/font/ui.json}.
@@ -17,6 +22,13 @@ import java.util.Locale;
 public final class UiFont {
 
     public static final Key KEY = Key.key("blockcraft", "ui");
+    /**
+     * The vanilla letters from the pack's own copy, with the vanilla font behind them for anything else. Text whose width
+     * the server counts draws in it, because a player's own pack may give {@code minecraft:font/ascii.png} other widths.
+     */
+    public static final Key TEXT = Key.key("blockcraft", "text");
+    /** The letters German needs that the vanilla sheet lacks, which the pack draws beside its copy; DeployScreen spells with them. */
+    public static final String TEXT_ACCENTS = "äöüÄÖÜß·…";
     /** The menu tiles' capitals, in the order the pack's label sheet draws them; Sternenfront's HUD fonts share them. */
     public static final String LABEL_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789ÄÖÜ-.:!?…/+&";
     /** A label letter's width with its spacing, the same in every font that draws them. */
@@ -42,6 +54,8 @@ public final class UiFont {
     private static final int TITLE_X = 8;
     private static final int GLYPH_SPACING = 1;
     private static final int UNKNOWN_ADVANCE = 6;
+    /** Each letter's advance in {@link #TEXT}, which {@code resourcepack/PackArt.java} measures from the pack's sheets. */
+    private static final Map<Integer, Integer> TEXT_ADVANCES = textAdvances();
     private static final int MAX_ROWS = 6;
 
     private static final char PANEL_BASE = '\uE100';
@@ -110,26 +124,42 @@ public final class UiFont {
 
     /** {@code text} then empty space up to {@code width}, so what follows stays put however long {@code text} is. */
     public static Component leftAligned(Component text, int width) {
-        return Component.empty().append(text).append(gap(width - width(text)));
+        return Component.empty().append(measured(text)).append(gap(width - width(text)));
     }
 
     /** Empty space up to {@code width}, then {@code text}, so what is before it stays put however long {@code text} is. */
     public static Component rightAligned(Component text, int width) {
-        return Component.empty().append(gap(width - width(text))).append(text);
+        return Component.empty().append(gap(width - width(text))).append(measured(text));
+    }
+
+    /** {@code text} in {@link #TEXT}, the font whose widths {@link #width} counts, unless a part of it names its own. */
+    public static Component measured(Component text) {
+        return Component.text().font(TEXT).append(text).build();
     }
 
     private static Component gap(int pixels) {
         return Component.text(shift(Math.max(0, pixels))).font(KEY);
     }
 
-    /** How wide the client draws {@code text}, which must be in the default font. */
+    /** How wide the client draws {@code text} in {@link #TEXT}; a letter the pack lacks counts as an average one. */
     public static int width(Component text) {
         return PlainTextComponentSerializer.plainText().serialize(text).codePoints().map(UiFont::advance).sum();
     }
 
     private static int advance(int character) {
-        var text = Character.toString(character);
-        return MinecraftFont.Font.isValid(text) ? MinecraftFont.Font.getWidth(text) + 1 : UNKNOWN_ADVANCE;
+        return TEXT_ADVANCES.getOrDefault(character, UNKNOWN_ADVANCE);
+    }
+
+    private static Map<Integer, Integer> textAdvances() {
+        var advances = new Properties();
+        try (var input = UiFont.class.getResourceAsStream("/text-glyphs.properties")) {
+            if (input == null) throw new IllegalStateException("Missing generated text glyph metrics");
+            advances.load(new InputStreamReader(input, StandardCharsets.UTF_8));
+        } catch (IOException failure) {
+            throw new IllegalStateException("Cannot load text glyph metrics", failure);
+        }
+        return advances.entrySet().stream().collect(Collectors.toUnmodifiableMap(
+                entry -> Integer.parseInt((String) entry.getKey()), entry -> Integer.parseInt((String) entry.getValue())));
     }
 
     /** A 32-pixel picture centred on whatever text follows it, which it leaves where it was. */
@@ -139,7 +169,7 @@ public final class UiFont {
 
     /** {@code marker}, which takes no room, moved to the middle of {@code line} and followed by it, as a centred line is drawn. */
     public static Component centredOn(Component line, Component marker) {
-        return centredOn(line, width(line), marker);
+        return centredOn(measured(line), width(line), marker);
     }
 
     /** As {@link #centredOn(Component, Component)} for a {@code line} with glyphs of the pack, whose width the caller knows. */

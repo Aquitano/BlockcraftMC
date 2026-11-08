@@ -1,7 +1,6 @@
 package me.blockcraft.sternenfront.menu;
 
 import com.google.gson.JsonParser;
-import me.blockcraft.api.pack.UiFont;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.sternenfront.game.AbilityIcon;
 import me.blockcraft.sternenfront.game.CombatClass;
@@ -49,7 +48,8 @@ public class DeployScreenTest {
 
     /**
      * Every part moves back to where the title started, by the width the pack's glyphs really take, so the title's
-     * own text ends up at the window's top-left whatever the screen shows. The client's own letters keep its widths.
+     * own text ends up at the window's top-left whatever the screen shows. Every letter is the pack's own, so a player's
+     * pack cannot change a width the server counted.
      */
     @Test
     public void everyPartReturnsTheCursorToTheTitlesStart() throws Exception {
@@ -163,7 +163,8 @@ public class DeployScreenTest {
         if (component instanceof TextComponent text && !text.content().isEmpty()) {
             var advances = own == null ? Map.<Integer, Integer>of() : advances(own, fonts);
             for (int character : text.content().codePoints().toArray()) {
-                width += advances.containsKey(character) ? advances.get(character) : UiFont.width(Component.text(Character.toString(character)));
+                assertTrue(own + " draws " + Character.toString(character), advances.containsKey(character));
+                width += advances.get(character);
             }
         }
         for (var child : component.children()) {
@@ -186,10 +187,10 @@ public class DeployScreenTest {
                         advances.putIfAbsent(entry.getKey().codePointAt(0), entry.getValue().getAsInt()));
                 continue;
             }
-            String file = provider.get("file").getAsString();
-            if (file.startsWith("minecraft:")) {
+            if (!provider.has("file")) {
                 continue;
             }
+            String file = provider.get("file").getAsString();
             var image = ImageIO.read(PACK.resolve("src/assets/blockcraft/textures/" + file.substring("blockcraft:".length())).toFile());
             var rows = provider.getAsJsonArray("chars");
             int columns = rows.get(0).getAsString().codePointCount(0, rows.get(0).getAsString().length());
@@ -199,6 +200,9 @@ public class DeployScreenTest {
             for (int row = 0; row < rows.size(); row++) {
                 int[] characters = rows.get(row).getAsString().codePoints().toArray();
                 for (int column = 0; column < characters.length; column++) {
+                    if (characters[column] == 0) {
+                        continue;
+                    }
                     int ink = 0;
                     for (int x = 0; x < cellWidth; x++) {
                         for (int y = 0; y < cellHeight; y++) {

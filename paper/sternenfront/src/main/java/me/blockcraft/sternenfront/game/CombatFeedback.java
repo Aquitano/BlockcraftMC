@@ -156,10 +156,10 @@ public final class CombatFeedback {
         Component compose(Component feedback, Optional<Component> course) {
             var line = UiFont.rightAligned(feedback, REWARD_WIDTH).append(Component.space());
             if (course.isPresent()) {
-                return line.append(course.get());
+                return UiFont.measured(line.append(course.get()));
             }
             int side = Math.max(REWARD_WIDTH, UiFont.width(feedback)) + UiFont.width(Component.space());
-            return UiFont.centredOn(line.append(actionBar.meter()).append(UiFont.space(side)), 2 * side + actionBar.meterWidth(),
+            return UiFont.centredOn(UiFont.measured(line.append(actionBar.meter()).append(UiFont.space(side))), 2 * side + actionBar.meterWidth(),
                     actionBar.abilities());
         }
     }

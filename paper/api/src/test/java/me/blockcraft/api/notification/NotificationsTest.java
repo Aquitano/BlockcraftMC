@@ -1,6 +1,7 @@
 package me.blockcraft.api.notification;
 
 import me.blockcraft.api.pack.ResourcePacks;
+import me.blockcraft.api.pack.UiFont;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
@@ -180,7 +181,7 @@ public class NotificationsTest {
     }
 
     @Test
-    public void aNoticeBesideAMarkerKeepsItsOwnFont() {
+    public void aNoticeBesideAMarkerDrawsInTheLettersWhoseWidthTheServerCounted() {
         var marker = Component.text("A").font(net.kyori.adventure.key.Key.key("blockcraft:ui"));
         var notice = Title.title(Component.empty(), Component.text("Captured"));
 
@@ -188,6 +189,6 @@ public class NotificationsTest {
 
         assertEquals(null, line.font());
         assertTrue(line.children().contains(marker));
-        assertEquals(notice.subtitle(), line.children().getLast());
+        assertEquals(UiFont.measured(notice.subtitle()), line.children().getLast());
     }
 }
