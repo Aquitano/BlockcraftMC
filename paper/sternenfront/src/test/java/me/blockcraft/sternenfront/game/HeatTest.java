@@ -17,7 +17,7 @@ public class HeatTest {
     private static Heat overheatedAt(long tick) {
         var heat = new Heat(RULES, LOWEST_WINDOW);
         heat.fire(tick - 1, 1, 60);
-        assertEquals(Heat.Shot.OVERHEATED, heat.fire(tick, 1, 60));
+        assertEquals(Heat.Trigger.OVERHEATED, heat.fire(tick, 1, 60));
         return heat;
     }
 
@@ -25,9 +25,9 @@ public class HeatTest {
     public void aGunFiresNoFasterThanItsShotIntervalAndHeatsWithEachShot() {
         var heat = new Heat(RULES);
 
-        assertEquals(Heat.Shot.FIRED, heat.fire(0, 4, 20));
-        assertEquals(Heat.Shot.TOO_SOON, heat.fire(3, 4, 20));
-        assertEquals(Heat.Shot.FIRED, heat.fire(4, 4, 20));
+        assertEquals(Heat.Trigger.FIRED, heat.fire(0, 4, 20));
+        assertEquals(Heat.Trigger.TOO_SOON, heat.fire(3, 4, 20));
+        assertEquals(Heat.Trigger.FIRED, heat.fire(4, 4, 20));
 
         assertEquals(0.4f, heat.level(), 1e-6);
     }
@@ -37,14 +37,14 @@ public class HeatTest {
         var heat = new Heat(RULES);
         heat.fire(0, 1, 60);
 
-        assertEquals(Heat.Shot.OVERHEATED, heat.fire(1, 1, 60));
-        assertEquals(Heat.Shot.VENTING, heat.fire(20, 1, 60));
-        heat.cool(21);
+        assertEquals(Heat.Trigger.OVERHEATED, heat.fire(1, 1, 60));
+        assertEquals(Heat.Trigger.VENTING, heat.fire(20, 1, 60));
+        heat.tick(21);
         assertEquals(0.5f, heat.level(), 1e-6);
 
-        heat.cool(41);
+        heat.tick(41);
         assertFalse(heat.venting(41));
-        assertEquals(Heat.Shot.FIRED, heat.fire(41, 1, 10));
+        assertEquals(Heat.Trigger.FIRED, heat.fire(41, 1, 10));
     }
 
     @Test
@@ -52,9 +52,9 @@ public class HeatTest {
         var heat = new Heat(RULES);
         heat.fire(0, 1, 50);
 
-        heat.cool(9);
+        heat.tick(9);
         assertEquals(0.5f, heat.level(), 1e-6);
-        heat.cool(10);
+        heat.tick(10);
         assertEquals(0.45f, heat.level(), 1e-6);
     }
 
@@ -78,20 +78,20 @@ public class HeatTest {
         assertEquals(Optional.of(new Heat.Window(0, 2)), heat.window(10));
 
         assertEquals(2, heat.litCells(45));
-        assertEquals(Heat.Vent.HIT, heat.pull(45));
+        assertEquals(Heat.VentCatch.CAUGHT, heat.pull(45));
         assertFalse(heat.venting(45));
         assertEquals(0f, heat.level(), 1e-6);
-        assertEquals(Heat.Shot.FIRED, heat.fire(45, 1, 10));
+        assertEquals(Heat.Trigger.FIRED, heat.fire(45, 1, 10));
     }
 
     @Test
     public void aMissLengthensTheVentOnceAndUsesUpTheTry() {
         var heat = overheatedAt(10);
 
-        assertEquals(Heat.Vent.MISS, heat.pull(20));
+        assertEquals(Heat.VentCatch.MISSED, heat.pull(20));
         assertEquals(40, heat.ventTicks(20));
         assertEquals(Optional.empty(), heat.window(20));
-        assertEquals(Heat.Vent.NONE, heat.pull(52));
+        assertEquals(Heat.VentCatch.NOT_COUNTED, heat.pull(52));
         assertTrue(heat.venting(52));
     }
 
@@ -99,7 +99,7 @@ public class HeatTest {
     public void aTriggerHeldThroughTheOverheatNeitherHitsNorMisses() {
         var heat = overheatedAt(10);
         for (long tick : new long[] {14, 18, 25, 29, 36, 40, 46}) {
-            assertEquals(Heat.Vent.NONE, heat.pull(tick));
+            assertEquals(Heat.VentCatch.NOT_COUNTED, heat.pull(tick));
         }
         assertTrue(heat.venting(46));
         assertEquals(Optional.of(new Heat.Window(0, 2)), heat.window(46));

@@ -352,7 +352,7 @@ public final class Bots implements Listener {
                 soldier.deployAt = tick + game.config().respawn().seconds() * 20L;
                 continue;
             }
-            soldier.heat.cool(tick);
+            soldier.heat.tick(tick);
             if (soldier.recovery.expired(game.map().outsideBattlefield(soldier.body.getLocation()), tick,
                     config.boundaryGraceTicks())) {
                 soldier.body.setHealth(0);
@@ -1290,7 +1290,7 @@ public final class Bots implements Listener {
         var stats = game.firing(soldier.body, blaster);
         int pace = tuning.shotTicks() * stats.cooldownTicks() / game.config().stats(blaster).cooldownTicks();
         var fired = soldier.heat.fire(tick, Math.max(pace, stats.cooldownTicks()), stats.heat());
-        if (fired != Heat.Shot.FIRED && fired != Heat.Shot.OVERHEATED) {
+        if (fired != Heat.Trigger.FIRED && fired != Heat.Trigger.OVERHEATED) {
             return;
         }
         soldier.protectedUntil = 0;

@@ -855,7 +855,7 @@ public final class SternenfrontGame implements RoundConnections.Seating {
                 if (player.isSprinting()) {
                     fighter.sprinted(tick);
                 }
-                fighter.heat().cool(tick);
+                fighter.heat().tick(tick);
                 player.setExp(fighter.heat().level());
                 scope(player, fighter);
                 combat.tick(player);
@@ -1103,9 +1103,9 @@ public final class SternenfrontGame implements RoundConnections.Seating {
             case TOO_SOON -> false;
             case VENTING -> {
                 switch (fighter.heat().pull(tick)) {
-                    case HIT -> vented(player);
-                    case MISS -> ventMissed(player);
-                    case NONE -> { }
+                    case CAUGHT -> vented(player);
+                    case MISSED -> ventMissed(player);
+                    case NOT_COUNTED -> { }
                 }
                 yield false;
             }
