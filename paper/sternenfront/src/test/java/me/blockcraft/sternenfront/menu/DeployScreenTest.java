@@ -4,12 +4,18 @@ import com.google.gson.JsonParser;
 import me.blockcraft.api.pack.UiFont;
 import me.blockcraft.common.message.Messages;
 import me.blockcraft.sternenfront.game.AbilityIcon;
+import me.blockcraft.sternenfront.game.CombatClass;
 import me.blockcraft.sternenfront.game.Faction;
+import me.blockcraft.sternenfront.game.Spawn;
+import me.blockcraft.sternenfront.hero.Hero;
+import me.blockcraft.sternenfront.reinforcement.Reinforcement;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import org.junit.Test;
 
 import javax.imageio.ImageIO;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -56,14 +62,60 @@ public class DeployScreenTest {
     }
 
     @Test
-    public void portraitsAreInTheOrderOfThePacksSheets() throws Exception {
-        var matcher = Pattern.compile("UNITS = List\\.of\\(([^)]*)\\)", Pattern.DOTALL)
-                .matcher(Files.readString(PACK.resolve("DeployArt.java")));
-        assertTrue(matcher.find());
-        var units = Arrays.stream(matcher.group(1).split(",")).map(unit -> unit.strip().replace("\"", "")).toList();
+    public void portraitsAreInTheOrderOfThePacksSheets() {
+        var units = generator("UNITS").stream().map(unit -> unit.replace("\"", "")).toList();
         var portraits = Arrays.stream(DeployScreen.Portrait.values()).map(portrait -> portrait.name().toLowerCase(Locale.ROOT)).toList();
 
         assertEquals(units.stream().map(unit -> unit.replaceFirst("^(reinforcement|hero)_", "")).toList(), portraits);
+    }
+
+    @Test
+    public void everyRoleTheMenuOffersHasAPortrait() {
+        for (var faction : Faction.values()) {
+            Arrays.stream(CombatClass.values()).forEach(combatClass -> DeployScreen.Portrait.of(faction, combatClass));
+            DeployScreen.Portrait.of(Reinforcement.of(faction));
+            Hero.of(faction).forEach(DeployScreen.Portrait::of);
+        }
+    }
+
+    /** The pack's window has its cards and map where the menu's slots are, and the screen draws over both. */
+    @Test
+    public void thePacksWindowHasItsCardsAndMapWhereTheSlotsAre() {
+        assertEquals(DeployScreen.CLASS_CARDS.stream().map(String::valueOf).toList(), generator("CLASS_CARDS"));
+        assertEquals(DeployScreen.SPECIALS.stream().map(String::valueOf).toList(), generator("SPECIALS"));
+        var sizes = Map.of("CLASS_CARD_COLUMNS", DeployScreen.CLASS_CARD_COLUMNS, "CLASS_CARD_ROWS", DeployScreen.CLASS_CARD_ROWS,
+                "SPECIAL_COLUMNS", DeployScreen.SPECIAL_COLUMNS, "MAP_COLUMNS", TacticalLayout.COLUMNS, "MAP_ROWS", TacticalLayout.ROWS);
+        sizes.forEach((name, size) -> assertEquals(name, List.of(String.valueOf(size)), generator(name)));
+    }
+
+    /** The icons are numbered by their order, so both sides must list them alike. */
+    @Test
+    public void iconsAreInTheOrderOfThePacksSheet() {
+        var matcher = Pattern.compile("new Icon\\(\"(\\w+)\"").matcher(source());
+        var icons = new java.util.ArrayList<String>();
+        while (matcher.find()) {
+            icons.add(matcher.group(1));
+        }
+
+        assertEquals(Arrays.stream(DeployScreen.Icon.values()).map(icon -> icon.name().toLowerCase(Locale.ROOT)).toList(), icons);
+    }
+
+    @Test
+    public void everyAbilityIconHasAGlyphOnEveryLine() throws Exception {
+        var line = JsonParser.parseString(Files.readString(PACK.resolve("src/assets/" + DeployScreen.line(144).asString()
+                .replace(":", "/font/") + ".json"))).getAsJsonObject();
+        var abilities = line.getAsJsonArray("providers").asList().stream().map(provider -> provider.getAsJsonObject())
+                .filter(provider -> provider.has("file") && provider.get("file").getAsString().endsWith("/ability_icons.png"))
+                .findFirst().orElseThrow();
+
+        assertEquals(AbilityIcon.values().length, abilities.getAsJsonArray("chars").get(0).getAsString().length());
+    }
+
+    /** The values of {@code name} in the standalone generator, which shares no code with the plugin. */
+    private static List<String> generator(String name) {
+        var matcher = Pattern.compile("\\b" + name + " = (?:List\\.of\\()?([^);]*)\\)?;", Pattern.DOTALL).matcher(source());
+        assertTrue(name, matcher.find());
+        return Arrays.stream(matcher.group(1).split(",")).map(String::strip).toList();
     }
 
     private DeployScreen.View view(int places) {
@@ -75,13 +127,21 @@ public class DeployScreenTest {
                 List.of(new DeployScreen.Stat("Kosten", "Kostenlos", false), new DeployScreen.Stat("Guthaben", "340 KP", false)));
         var card = new DeployScreen.ClassCard("Soldat", DeployScreen.Portrait.KOLONIEN_SOLDIER, List.of(AbilityIcon.GRENADE, AbilityIcon.RALLY), true);
         var special = new DeployScreen.Special("ARC", DeployScreen.Portrait.ARC_TROOPER, 250, true, true);
-        var spawns = new java.util.ArrayList<DeployScreen.Place>(List.of(new DeployScreen.Place.Headquarters("Hauptquartier")));
+        var spawns = new java.util.ArrayList<>(List.of(new DeployScreen.Place(new Spawn.Headquarters(), "Hauptquartier")));
         for (int post = 0; post < places - 2; post++) {
-            spawns.add(new DeployScreen.Place.Post(post, "Posten"));
+            spawns.add(new DeployScreen.Place(new Spawn.Post(post), "Posten"));
         }
-        spawns.add(new DeployScreen.Place.Landing("Landung bei A"));
+        spawns.add(new DeployScreen.Place(new Spawn.Dropship(), "Landung bei A"));
         return new DeployScreen.View(Faction.HEGEMONIE, Component.empty(), role, List.of(card, card, card, card),
                 List.of(special, special, special), 340, spawns.subList(0, places));
+    }
+
+    private static String source() {
+        try {
+            return Files.readString(PACK.resolve("DeployArt.java"));
+        } catch (IOException failed) {
+            throw new UncheckedIOException(failed);
+        }
     }
 
     private static int width(Component component, String font, Map<String, Map<Integer, Integer>> fonts) throws Exception {

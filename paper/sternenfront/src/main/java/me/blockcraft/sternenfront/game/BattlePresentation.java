@@ -87,7 +87,7 @@ final class BattlePresentation implements AutoCloseable {
         var location = switch (spawn) {
             case Spawn.Headquarters ignored -> game.messages().get("deploy.headquarters");
             case Spawn.Post post -> game.messages().get("deploy.post", game.posts().name(post.index()));
-            case Spawn.Dropship ignored -> game.messages().get("deploy.landing");
+            case Spawn.Dropship ignored -> game.messages().get("deploy.dropship-plain");
         };
         int ticks = Math.clamp(game.plugin().getConfig().getInt("presentation.deployment.banner-ticks"), 1, 100);
         BlockcraftApi.get().notifications().important(player, Title.title(Component.empty(),

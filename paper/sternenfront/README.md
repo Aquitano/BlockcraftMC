@@ -143,11 +143,11 @@ The deploy menu is one screen. The pack draws a window wider and taller than the
 and range, weapon, both abilities with their keys, the cost and the player's battle points. Right of them it names the
 spawns and explains the markers. In the chest are the four class cards, then the reinforcement and both heroes with their
 costs, in red while the player cannot pay or no slot is free. The chest's title draws that window, so it cannot change
-while the chest is open; a choice, a change in battle points or in what the player can pay for, or a landing coming or
+while the chest is open; a choice, a change in battle points or in what the player can pay for, or the dropship coming or
 going opens the menu again with a new one. The countdowns and the spawns' states are items and change in place.
 
 The spawns stand on a map in the player's own inventory, which the menu borrows while it is open: north up, east right,
-the current map's posts and headquarters at one scale, overlapping markers moved apart. The landing has the bottom-right
+the current map's posts and headquarters at one scale, overlapping markers moved apart. The dropship has the bottom-right
 cell. While a dead player chooses, that inventory holds only the deploy item. The menu gives each slot back whatever
 closes it, when it closes, the player dies, quits, is kicked or the server stops, unless something else changed the slot
 meanwhile, as deploying does. Each item the menu lays there carries the one it replaced, so when a crash saved the
@@ -159,7 +159,7 @@ slot's border: gold corners while it waits for a confirmation, a green frame and
 recommended spawn and a padlock a locked one. The spawn the player will land at shows the seconds left as its count: the
 wait once confirmed, otherwise the automatic deployment. The confirmation button names its target and shows the wait or
 automatic deployment countdown. Hovering shows the post name, recommendation, selection, and for a locked spawn
-`Gesperrt` with the reason. The landing names its target post.
+`Gesperrt` with the reason. The dropship names the post it lands beside.
 
 After spawning, the minimap frames the post to make for in yellow corners: the assault's priority post, or the nearest
 objective outside the assault. When all posts are safe, it frames the post nearest the enemy HQ for defence.

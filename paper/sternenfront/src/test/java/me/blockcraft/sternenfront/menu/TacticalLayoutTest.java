@@ -13,7 +13,7 @@ import static org.junit.Assert.*;
 public class TacticalLayoutTest {
 
     private static final int FIRST = 54;
-    private static final int LANDING = FIRST + 26;
+    private static final int DROPSHIP = FIRST + TacticalLayout.DROPSHIP_CELL;
 
     @Test
     public void equallySpacedPostsKeepTheirMiddlePostCentred() {
@@ -35,16 +35,16 @@ public class TacticalLayoutTest {
         var moved = points.stream().map(marker -> new TacticalLayout.Marker(marker.spawn(),
                 new Point(marker.point().x() * 3 + 1000, marker.point().z() * 3 - 900))).toList();
         assertEquals(slots, TacticalLayout.project(moved, FIRST));
-        assertTrue(slots.values().stream().allMatch(slot -> slot >= FIRST && slot < LANDING));
+        assertTrue(slots.values().stream().allMatch(slot -> slot >= FIRST && slot < DROPSHIP));
     }
 
     @Test
-    public void overlappingMarkersRemainClickableAndKeepOffTheLanding() {
+    public void overlappingMarkersRemainClickableAndKeepOffTheDropship() {
         var points = IntStream.range(0, 8).mapToObj(index -> new TacticalLayout.Marker(new Spawn.Post(index), new Point(1, 1))).toList();
         var slots = TacticalLayout.project(points, FIRST);
         assertEquals(8, new HashSet<>(slots.values()).size());
         assertEquals(slots, TacticalLayout.project(points, FIRST));
-        assertTrue(slots.values().stream().allMatch(slot -> slot >= FIRST && slot < LANDING));
+        assertTrue(slots.values().stream().allMatch(slot -> slot >= FIRST && slot < DROPSHIP));
         assertTrue(TacticalLayout.project(List.of(), FIRST).isEmpty());
     }
 }

@@ -26,6 +26,26 @@ public final class DeployArt {
     static final int BOTTOM = 230;
     static final int CHEST_WIDTH = 176;
 
+    /**
+     * Chest slots, as Sternenfront's DeployScreen and TacticalLayout number them; DeployScreenTest keeps the two in step.
+     * A card covers its slot and the ones right of and below it.
+     */
+    static final List<Integer> CLASS_CARDS = List.of(9, 14, 27, 32);
+    static final int CLASS_CARD_COLUMNS = 4;
+    static final int CLASS_CARD_ROWS = 2;
+    static final List<Integer> SPECIALS = List.of(45, 48, 51);
+    static final int SPECIAL_COLUMNS = 3;
+    static final int MAP_COLUMNS = 9;
+    static final int MAP_ROWS = 3;
+
+    static final int SLOT = 18;
+    static final int COLUMNS = 9;
+    /** Where the chest's first slot draws its item. */
+    static final int SLOT_LEFT = 8;
+    static final int SLOT_TOP = 18;
+    /** Where the player's inventory below the six-row chest draws its first item. */
+    static final int INVENTORY_TOP = 139;
+
     /** Tops of the server's text lines; Sternenfront's DeployScreen draws on no others. */
     static final int[] LINES = {-3, 21, 22, 23, 25, 32, 34, 35, 38, 39, 40, 47, 48, 49, 50, 52, 54, 55, 62, 64, 65, 70, 71, 72, 74, 75, 76, 77, 79, 80, 86, 87, 92, 94, 95, 99, 107, 109, 110, 111, 112, 114, 115, 118, 122, 124, 125, 130, 134, 144, 153, 154, 155, 164, 166, 168, 175, 177, 178, 186, 188, 196, 197, 199, 202, 206, 214};
 
@@ -56,21 +76,37 @@ public final class DeployArt {
             '%', "101001010100101", ',', "000000000001010", '(', "001010010010001", ')', "100010010010100",
             '·', "000000010000000");
     static final String UMLAUTS = "äöüÄÖÜß·…";
+    static final int PORTRAIT_WELL = 30;
 
-    /** Small pictures for the text lines, nine pixels square, in the order of their glyphs from U+E100. */
-    static final List<String[]> ICONS = List.of(
-            keycap('F'), keycap('Q'),
-            new String[] {".........", ".##...##.", "####.####", "#########", "#########", ".#######.", "..#####..", "...###...", "....#...."},
-            new String[] {"....#....", "...###...", "..#####..", ".#######.", "#########", ".#######.", "..#####..", "...###...", "....#...."},
-            new String[] {"....#....", "....#....", "#########", ".#######.", "..#####..", ".###.###.", "##.....##", ".........", "........."},
-            new String[] {"###...###", "#.......#", "#.......#", ".........", ".........", ".........", "#.......#", "#.......#", "###...###"},
-            new String[] {"#########", "#.......#", "#.......#", "#.......#", "#.......#", "#.......#", "#.......#", "#.......#", "#########"},
-            new String[] {"...###...", "..#...#..", "..#...#..", ".#######.", ".#######.", ".###.###.", ".###.###.", ".#######.", "........."},
-            new String[] {"#.#.#.#.#", ".........", "#.......#", ".........", "#.......#", ".........", "#.......#", ".........", "#.#.#.#.#"},
-            new String[] {"#####....", "#####....", "#####....", "#........", "#........", "#........", "#........", "#........", "###......"},
-            new String[] {"....#....", "...###...", "...###...", "..#####..", "..#####..", "..##.##..", ".##...##.", ".#.###.#.", "...#.#..."},
-            new String[] {".........", ".........", "..#####..", "..#####..", "..#####..", "..#####..", "..#####..", ".........", "........."},
-            new String[] {".........", ".........", "..#####..", "..#...#..", "..#...#..", "..#...#..", "..#####..", ".........", "........."});
+    /** The first glyph of each run the art font and the line fonts hold; DeployScreen draws from the same numbers. */
+    static final int WINDOW = 0xE000;
+    static final int DOSSIERS = 0xE010;
+    static final int CARD_PORTRAITS = 0xE030;
+    static final int MINIS = 0xE050;
+    static final int CLASS_SELECTION = 0xE060;
+    static final int SPECIAL_SELECTION = 0xE062;
+    static final int LABEL_GLYPHS = 0xE000;
+    static final int ICON_GLYPHS = 0xE100;
+    static final int ABILITY_GLYPHS = 0xE120;
+    static final int BADGE_GLYPHS = 0xE140;
+    static final int ICON_SIZE = 9;
+    static final int ABILITY_SIZE = 16;
+    static final int BADGE_SIZE = 13;
+
+    /** A small picture for the text lines, nine pixels square. */
+    record Icon(String name, String... rows) { }
+
+    /** In the order of their glyphs from U+E100, which DeployScreen's own Icon names in the same order. */
+    static final List<Icon> ICONS = List.of(
+            new Icon("heart", ".........", ".##...##.", "####.####", "#########", "#########", ".#######.", "..#####..", "...###...", "....#...."),
+            new Icon("points", "....#....", "...###...", "..#####..", ".#######.", "#########", ".#######.", "..#####..", "...###...", "....#...."),
+            new Icon("recommended", "....#....", "....#....", "#########", ".#######.", "..#####..", ".###.###.", "##.....##", ".........", "........."),
+            new Icon("pending", "###...###", "#.......#", "#.......#", ".........", ".........", ".........", "#.......#", "#.......#", "###...###"),
+            new Icon("confirmed", "#########", "#.......#", "#.......#", "#.......#", "#.......#", "#.......#", "#.......#", "#.......#", "#########"),
+            new Icon("locked", "...###...", "..#...#..", "..#...#..", ".#######.", ".#######.", ".###.###.", ".###.###.", ".#######.", "........."),
+            new Icon("contested", "#.#.#.#.#", ".........", "#.......#", ".........", "#.......#", ".........", "#.......#", ".........", "#.#.#.#.#"),
+            new Icon("headquarters", "#####....", "#####....", "#####....", "#........", "#........", "#........", "#........", "#........", "###......"),
+            new Icon("dropship", "....#....", "...###...", "...###...", "..#####..", "..#####..", "..##.##..", ".##...##.", ".#.###.#.", "...#.#..."));
 
     private DeployArt() {
     }
@@ -96,26 +132,32 @@ public final class DeployArt {
                 var copy = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB);
                 copy.createGraphics().drawImage(image, 0, 0, null);
                 PackArt.write(copy, textures.resolve(file));
-                artGlyphs.add(bitmap("deploy/" + file, TOP, BOTTOM - TOP, escape(0xE000 + faction * 3 + piece)));
+                artGlyphs.add(bitmap("deploy/" + file, TOP, BOTTOM - TOP, escape(WINDOW + faction * pieces.length + piece)));
             }
         }
         PackArt.write(sheet(art, "_dossier.png", 64, 64), textures.resolve("dossiers.png"));
-        artGlyphs.add(bitmap("deploy/dossiers.png", 31, 64, run(0xE010, UNITS.size())));
-        PackArt.write(sheet(art, "_card.png", 30, 32), textures.resolve("cards.png"));
-        artGlyphs.add(bitmap("deploy/cards.png", 37, 32, run(0xE030, UNITS.size())));
-        artGlyphs.add(bitmap("deploy/cards.png", 73, 32, run(0xE040, UNITS.size())));
-        PackArt.write(sheet(art, "_mini.png", 14, 14), textures.resolve("minis.png"));
-        artGlyphs.add(bitmap("deploy/minis.png", 109, 14, run(0xE050, UNITS.size())));
-        PackArt.write(selection(72, 36), textures.resolve("selected_class.png"));
-        artGlyphs.add(bitmap("deploy/selected_class.png", 35, 36, escape(0xE060)));
-        artGlyphs.add(bitmap("deploy/selected_class.png", 71, 36, escape(0xE061)));
-        PackArt.write(selection(54, 18), textures.resolve("selected_special.png"));
-        artGlyphs.add(bitmap("deploy/selected_special.png", 107, 18, escape(0xE062)));
+        artGlyphs.add(bitmap("deploy/dossiers.png", 31, 64, run(DOSSIERS, UNITS.size())));
+        PackArt.write(sheet(art, "_card.png", PORTRAIT_WELL, span(CLASS_CARD_ROWS) - 2), textures.resolve("cards.png"));
+        var cardRows = cardRows();
+        for (int row = 0; row < cardRows.size(); row++) {
+            artGlyphs.add(bitmap("deploy/cards.png", cardRows.get(row) + 1, span(CLASS_CARD_ROWS) - 2, run(CARD_PORTRAITS + row * 0x10, UNITS.size())));
+        }
+        int specialTop = slotY(SPECIALS.getFirst());
+        PackArt.write(sheet(art, "_mini.png", span(1) - 2, span(1) - 2), textures.resolve("minis.png"));
+        artGlyphs.add(bitmap("deploy/minis.png", specialTop + 1, span(1) - 2, run(MINIS, UNITS.size())));
+        PackArt.write(selection(span(CLASS_CARD_COLUMNS) + 2, span(CLASS_CARD_ROWS) + 2), textures.resolve("selected_class.png"));
+        for (int row = 0; row < cardRows.size(); row++) {
+            artGlyphs.add(bitmap("deploy/selected_class.png", cardRows.get(row) - 1, span(CLASS_CARD_ROWS) + 2, escape(CLASS_SELECTION + row)));
+        }
+        PackArt.write(selection(span(SPECIAL_COLUMNS) + 2, span(1) + 2), textures.resolve("selected_special.png"));
+        artGlyphs.add(bitmap("deploy/selected_special.png", specialTop - 1, span(1) + 2, escape(SPECIAL_SELECTION)));
         Files.writeString(fonts.resolve("art.json"), font(artGlyphs));
 
         PackArt.write(labels(), textures.resolve("labels.png"));
         PackArt.write(umlauts(), textures.resolve("umlauts.png"));
         PackArt.write(icons(), textures.resolve("icons.png"));
+        int abilities = squares(textures.resolveSibling("ability_icons.png"));
+        int badges = squares(textures.resolveSibling("objective_pips.png"));
         for (int top : LINES) {
             var providers = new ArrayList<String>();
             providers.add("{\"type\":\"space\",\"advances\":{\" \":4}}");
@@ -124,11 +166,11 @@ public final class DeployArt {
                 providers.add("{\"type\":\"bitmap\",\"file\":\"minecraft:font/ascii.png\",\"ascent\":" + (13 - top) + ",\"chars\":" + ASCII + "}");
                 providers.add(bitmap("deploy/umlauts.png", top - 3, 12, escapeAll(UMLAUTS)));
             }
-            providers.add(bitmap("deploy/labels.png", top - 2, 32, run(0xE000, LABELS.length())));
+            providers.add(bitmap("deploy/labels.png", top - 2, 32, run(LABEL_GLYPHS, LABELS.length())));
             if (top >= 4) {
-                providers.add(bitmap("deploy/icons.png", top, 9, run(0xE100, ICONS.size())));
-                providers.add(bitmap("ability_icons.png", top, 16, run(0xE120, 17)));
-                providers.add(bitmap("objective_pips.png", top, 13, run(0xE140, 10)));
+                providers.add(bitmap("deploy/icons.png", top, ICON_SIZE, run(ICON_GLYPHS, ICONS.size())));
+                providers.add(bitmap("ability_icons.png", top, ABILITY_SIZE, run(ABILITY_GLYPHS, abilities)));
+                providers.add(bitmap("objective_pips.png", top, BADGE_SIZE, run(BADGE_GLYPHS, badges)));
             }
             Files.writeString(fonts.resolve("line_" + top + ".json"), font(providers));
         }
@@ -169,18 +211,17 @@ public final class DeployArt {
         canvas.fill(117, 19, 50, 14, 0xFF15171D);
         canvas.fill(117, 19, 50, 1, 0xFF2A2E38);
 
-        for (int row = 0; row < 2; row++) {
-            for (int column = 0; column < 2; column++) {
-                card(canvas, 8 + column * 90, 36 + row * 36, accent);
-            }
+        for (int slot : CLASS_CARDS) {
+            card(canvas, slotX(slot), slotY(slot), accent);
         }
         canvas.fill(87, 38, 2, 66, 0xFF20242D);
-        for (int special = 0; special < 3; special++) {
-            int x = 8 + special * 54;
-            canvas.fill(x, 108, 52, 16, BORDER);
-            canvas.fill(x + 1, 109, 50, 14, CARD);
-            canvas.fill(x + 1, 109, 50, 1, CARD_EDGE);
-            canvas.fill(x + 1, 109, 14, 14, WELL);
+        for (int slot : SPECIALS) {
+            int x = slotX(slot);
+            int y = slotY(slot);
+            canvas.fill(x, y, span(SPECIAL_COLUMNS), span(1), BORDER);
+            canvas.fill(x + 1, y + 1, span(SPECIAL_COLUMNS) - 2, span(1) - 2, CARD);
+            canvas.fill(x + 1, y + 1, span(SPECIAL_COLUMNS) - 2, 1, CARD_EDGE);
+            canvas.fill(x + 1, y + 1, span(1) - 2, span(1) - 2, WELL);
         }
 
         canvas.fill(7, 126, 162, 1, 0xFF2A2A2A);
@@ -188,23 +229,29 @@ public final class DeployArt {
         canvas.fill(7, 137, 162, 1, 0xFF262626);
         canvas.fill(122, 127, 3, 10, accent);
 
-        canvas.fill(6, 137, 164, 56, BORDER);
-        canvas.fill(7, 138, 162, 54, MAP);
-        for (int column = 1; column < 9; column++) {
-            canvas.fill(7 + column * 18, 138, 1, 54, MAP_LINE);
+        int mapLeft = SLOT_LEFT - 1;
+        int mapTop = INVENTORY_TOP - 1;
+        int mapWidth = MAP_COLUMNS * SLOT;
+        int mapHeight = MAP_ROWS * SLOT;
+        canvas.fill(mapLeft - 1, mapTop - 1, mapWidth + 2, mapHeight + 2, BORDER);
+        canvas.fill(mapLeft, mapTop, mapWidth, mapHeight, MAP);
+        for (int column = 1; column < MAP_COLUMNS; column++) {
+            canvas.fill(mapLeft + column * SLOT, mapTop, 1, mapHeight, MAP_LINE);
         }
-        for (int row = 1; row < 3; row++) {
-            canvas.fill(7, 138 + row * 18, 162, 1, MAP_LINE);
+        for (int row = 1; row < MAP_ROWS; row++) {
+            canvas.fill(mapLeft, mapTop + row * SLOT, mapWidth, 1, MAP_LINE);
         }
-        for (int column = 1; column < 9; column++) {
-            for (int row = 1; row < 3; row++) {
-                int x = 7 + column * 18;
-                int y = 138 + row * 18;
+        for (int column = 1; column < MAP_COLUMNS; column++) {
+            for (int row = 1; row < MAP_ROWS; row++) {
+                int x = mapLeft + column * SLOT;
+                int y = mapTop + row * SLOT;
                 canvas.fill(x - 1, y, 3, 1, MAP_CROSS);
                 canvas.fill(x, y - 1, 1, 3, MAP_CROSS);
             }
         }
-        for (int[] corner : new int[][] {{7, 138, 1, 1}, {168, 138, -1, 1}, {7, 191, 1, -1}, {168, 191, -1, -1}}) {
+        int mapRight = mapLeft + mapWidth - 1;
+        int mapBottom = mapTop + mapHeight - 1;
+        for (int[] corner : new int[][] {{mapLeft, mapTop, 1, 1}, {mapRight, mapTop, -1, 1}, {mapLeft, mapBottom, 1, -1}, {mapRight, mapBottom, -1, -1}}) {
             canvas.fill(Math.min(corner[0], corner[0] + corner[2] * 5), corner[1], 6, 1, accent);
             canvas.fill(corner[0], Math.min(corner[1], corner[1] + corner[3] * 5), 1, 6, accent);
         }
@@ -212,17 +259,37 @@ public final class DeployArt {
             double angle = Math.PI * 2 * dot / 16;
             canvas.fill(160 + (int) Math.round(Math.cos(angle) * 6), 183 + (int) Math.round(Math.sin(angle) * 6), 1, 1, MAP_CROSS);
         }
-        canvas.fill(7, 195, 162, 1, EDGE);
+        canvas.fill(mapLeft, mapBottom + 4, mapWidth, 1, EDGE);
         return image;
     }
 
     /** A class card: a sunk well for the portrait on the left, the name and abilities on the right. */
     static void card(Canvas canvas, int x, int y, int accent) {
-        canvas.fill(x, y, 70, 34, BORDER);
-        canvas.fill(x + 1, y + 1, 68, 32, CARD);
-        canvas.fill(x + 1, y + 1, 30, 32, WELL);
-        canvas.fill(x + 31, y + 1, 38, 1, mix(accent, CARD, .45));
-        canvas.fill(x + 31, y + 32, 38, 1, 0xFF1A1F2A);
+        int width = span(CLASS_CARD_COLUMNS);
+        int height = span(CLASS_CARD_ROWS);
+        canvas.fill(x, y, width, height, BORDER);
+        canvas.fill(x + 1, y + 1, width - 2, height - 2, CARD);
+        canvas.fill(x + 1, y + 1, PORTRAIT_WELL, height - 2, WELL);
+        canvas.fill(x + 1 + PORTRAIT_WELL, y + 1, width - 2 - PORTRAIT_WELL, 1, mix(accent, CARD, .45));
+        canvas.fill(x + 1 + PORTRAIT_WELL, y + height - 2, width - 2 - PORTRAIT_WELL, 1, 0xFF1A1F2A);
+    }
+
+    static int slotX(int slot) {
+        return SLOT_LEFT + slot % COLUMNS * SLOT;
+    }
+
+    static int slotY(int slot) {
+        return SLOT_TOP + slot / COLUMNS * SLOT;
+    }
+
+    /** How wide or tall {@code slots} slots are from the first's item to the last's, without the borders outside them. */
+    static int span(int slots) {
+        return slots * SLOT - 2;
+    }
+
+    /** The tops of the class cards' rows, in order. */
+    static List<Integer> cardRows() {
+        return CLASS_CARDS.stream().map(DeployArt::slotY).distinct().toList();
     }
 
     static void outline(Canvas canvas) {
@@ -323,37 +390,29 @@ public final class DeployArt {
     }
 
     static BufferedImage icons() {
-        var image = new BufferedImage(9 * ICONS.size(), 9, BufferedImage.TYPE_INT_ARGB);
+        var image = new BufferedImage(ICON_SIZE * ICONS.size(), ICON_SIZE, BufferedImage.TYPE_INT_ARGB);
         for (int index = 0; index < ICONS.size(); index++) {
-            var rows = ICONS.get(index);
+            var rows = ICONS.get(index).rows();
             for (int y = 0; y < rows.length; y++) {
                 for (int x = 0; x < rows[y].length(); x++) {
                     char pixel = rows[y].charAt(x);
                     if (pixel != '.') {
-                        image.setRGB(index * 9 + x, y, pixel == 'k' ? 0xFF1B1E26 : PackArt.WHITE);
+                        image.setRGB(index * ICON_SIZE + x, y, PackArt.WHITE);
                     }
                 }
             }
-            if (image.getRGB(index * 9 + 8, 8) == 0) {
-                image.setRGB(index * 9 + 8, 8, 0x01000000);
+            int corner = index * ICON_SIZE + ICON_SIZE - 1;
+            if (image.getRGB(corner, ICON_SIZE - 1) == 0) {
+                image.setRGB(corner, ICON_SIZE - 1, 0x01000000);
             }
         }
         return image;
     }
 
-    static String[] keycap(char key) {
-        String[] rows = {"#########", "#kkkkkkk#", "#kkkkkkk#", "#kkkkkkk#", "#kkkkkkk#", "#kkkkkkk#", "#kkkkkkk#", "#kkkkkkk#", "#########"};
-        String pixels = PackArt.TileArt.LETTER_PIXELS.get(key);
-        for (int y = 0; y < 5; y++) {
-            var row = rows[2 + y].toCharArray();
-            for (int x = 0; x < 3; x++) {
-                if (pixels.charAt(y * 3 + x) == '1') {
-                    row[3 + x] = '#';
-                }
-            }
-            rows[2 + y] = new String(row);
-        }
-        return rows;
+    /** How many square cells a sheet another generator writes holds side by side. */
+    static int squares(Path sheet) throws IOException {
+        var image = ImageIO.read(sheet.toFile());
+        return image.getWidth() / image.getHeight();
     }
 
     /** The client's own ASCII sheet, cell for cell as its default font reads it. */

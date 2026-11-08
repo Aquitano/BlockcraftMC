@@ -11,6 +11,7 @@ import me.blockcraft.sternenfront.hero.Hero;
 import me.blockcraft.sternenfront.reinforcement.Reinforcement;
 import me.blockcraft.sternenfront.reinforcement.ReinforcementRoster;
 import me.blockcraft.sternenfront.menu.DeployMenu;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
@@ -33,7 +34,8 @@ public final class Deployment {
     private static final long TICKS_PER_SECOND = 20;
     private static final int DEPLOY_SLOT = 4;
     private static final long KILLER_FOCUS_TICKS = 2;
-    private static final List<String> CONTROL_KEYS = List.of("F", "Q");
+    /** The keys a role's first and second ability sit on. */
+    public static final List<String> CONTROL_KEYS = List.of("F", "Q");
 
     private final SternenfrontGame game;
     private final SpawnSpots spawnSpots;
@@ -178,15 +180,25 @@ public final class Deployment {
         return enemies.stream().noneMatch(site::contains) && SpawnSpots.hasClearSpawn(site.spawns(), enemies, clearance);
     }
 
-    /** Ticks until the player may deploy, 0 once they may. */
-    public long waitTicks(Player player) {
-        return game.fighterIfAny(player).flatMap(Fighter::choosing)
-                .map(choosing -> Math.max(0, choosing.readyTick() - game.tick())).orElse(0L);
+    /** Seconds until the player may deploy, 0 once they may. */
+    public long waitSeconds(Player player) {
+        return game.fighterIfAny(player).flatMap(Fighter::choosing).map(choosing -> seconds(choosing.readyTick() - game.tick())).orElse(0L);
     }
 
-    public long autoTicks(Player player) {
-        return game.fighterIfAny(player).flatMap(Fighter::choosing)
-                .map(choosing -> Math.max(0, choosing.autoTick() - game.tick())).orElse(0L);
+    /** Seconds until the player deploys without confirming. */
+    public long autoSeconds(Player player) {
+        return game.fighterIfAny(player).flatMap(Fighter::choosing).map(choosing -> seconds(choosing.autoTick() - game.tick())).orElse(0L);
+    }
+
+    /** When the player deploys: after the wait once confirmed, else when they may or when the timer deploys them. */
+    public Component status(Player player) {
+        var messages = game.messages();
+        var choosing = game.fighterIfAny(player).flatMap(Fighter::choosing);
+        long wait = waitSeconds(player);
+        return choosing.filter(Fighter.Choosing::confirmed).isPresent()
+                ? messages.get("deploy.status-queued", Formatter.number("seconds", wait)) : wait > 0
+                ? messages.get("deploy.status-waiting", Formatter.number("seconds", wait))
+                : messages.get("deploy.status-ready", Formatter.number("seconds", autoSeconds(player)));
     }
 
     public Spawn recommended(Player player) {
@@ -240,13 +252,7 @@ public final class Deployment {
         if (fighter.isEmpty() || fighter.get().choosing().isEmpty() || player.getGameMode() == GameMode.SPECTATOR) {
             return;
         }
-        var choosing = fighter.get().choosing().get();
-        long waiting = choosing.readyTick() - game.tick();
-        var status = choosing.confirmed()
-                ? game.messages().get("deploy.status-queued", Formatter.number("seconds", seconds(waiting))) : waiting > 0
-                ? game.messages().get("deploy.waiting", Formatter.number("seconds", seconds(waiting)))
-                : game.messages().get("deploy.ready", Formatter.number("seconds", seconds(choosing.autoTick() - game.tick())));
-        BlockcraftApi.get().notifications().status(player, status);
+        BlockcraftApi.get().notifications().status(player, status(player));
         refreshMenu(player);
     }
 
