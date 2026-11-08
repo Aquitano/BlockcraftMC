@@ -65,22 +65,17 @@ public final class BodyRigs implements Listener, AutoCloseable {
         }
         var animatedBodies = game.plugin().getConfig().getStringList("appearance.animated-bodies");
         // Without the plugin every body stays a BodyRig, so a server that lacks it still plays the round.
+        var outlines = TargetOutlines.Rule.from(game);
         animated = animatedBodies.isEmpty() || !plugin.getServer().getPluginManager().isPluginEnabled("BetterModel") ? Optional.empty()
-                : Optional.of(new AnimatedBodies(animatedBodies, this::outlined, hurtTint.asRGB(), plugin.getLogger()));
+                : Optional.of(new AnimatedBodies(animatedBodies,
+                (viewer, actor) -> outlines.outline(viewer, actor).filter(TargetOutlines.Outline.ENEMY::equals).isPresent(),
+                hurtTint.asRGB(), plugin.getLogger()));
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
         task = plugin.getServer().getScheduler().runTaskTimer(plugin, this::tick, 1L, 1L);
     }
 
     public static BodyRigs start(Plugin plugin, SternenfrontGame game, Set<Faction> riggedSides) {
         return new BodyRigs(plugin, game, riggedSides);
-    }
-
-    private boolean outlined(Player viewer, LivingEntity actor) {
-        var config = plugin.getConfig();
-        return config.getBoolean("outlines.enabled", true) && game.onField(viewer) && BlockcraftApi.get().resourcePack().applied(viewer)
-                && game.factionOf(viewer).isPresent() && !game.factionOf(viewer).equals(game.factionOf(actor))
-                && actor.getWorld().equals(viewer.getWorld())
-                && TargetOutlines.inRange(viewer.getEyeLocation(), actor, config.getDouble("outlines.range", 64));
     }
 
     public Optional<LivingEntity> actor(Entity clicked) {
@@ -118,7 +113,7 @@ public final class BodyRigs implements Listener, AutoCloseable {
             var insignia = new Insignia(unitColours.colourOf(faction, squad.map(Bots.Squad::fireteam).orElse(0)),
                     squad.filter(Bots.Squad::leads).isPresent());
             if (animated.filter(bodies -> !(actor instanceof Player) && bodies.draws(body)).isPresent()) {
-                animated.get().draw(actor, body, insignia, game.effects().blasters().recoil(actor), plugin.getServer().getOnlinePlayers());
+                animated.get().draw(actor, body, insignia, game.effects().blasters().recoil(actor), actor.getWorld().getPlayers());
                 continue;
             }
             var existing = rigs.get(id);

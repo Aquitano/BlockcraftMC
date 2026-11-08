@@ -26,19 +26,43 @@ import java.util.UUID;
 @SuppressWarnings("deprecation")
 public final class TargetOutlines implements Listener, AutoCloseable {
 
+    public enum Outline { ALLY, ENEMY }
+
+    /**
+     * Who sees whom outlined: a fighter on the field with the pack sees enemies within {@code range}, and allies too with
+     * {@code allies}. The {@code outlines} section of config.yml; the body rigs choose a model by the same rule.
+     */
+    public record Rule(SternenfrontGame game, boolean enabled, double range, boolean allies) {
+
+        public static Rule from(SternenfrontGame game) {
+            var config = game.plugin().getConfig();
+            return new Rule(game, config.getBoolean("outlines.enabled"), Math.clamp(config.getDouble("outlines.range"), 1, 256),
+                    config.getBoolean("outlines.allies"));
+        }
+
+        public Optional<Outline> outline(Player viewer, LivingEntity actor) {
+            var api = BlockcraftApi.get();
+            var faction = game.factionOf(viewer);
+            if (!enabled || actor.equals(viewer) || faction.isEmpty() || !actor.isValid() || !game.onField(viewer)
+                    || !actor.getWorld().equals(viewer.getWorld()) || !api.resourcePack().applied(viewer)
+                    || actor instanceof Player player && api.isVanished(player) || !inRange(viewer.getEyeLocation(), actor, range)) {
+                return Optional.empty();
+            }
+            return game.factionOf(actor).equals(faction) ? Optional.of(Outline.ALLY).filter(ignored -> allies) : Optional.of(Outline.ENEMY);
+        }
+    }
+
     private final SternenfrontGame game;
     private final Optional<BodyRigs> bodies;
+    private final Rule rule;
     private final GlowingEntities glowing;
     private final Map<UUID, Map<Entity, ChatColor>> shown = new HashMap<>();
     private final BukkitTask task;
-    private final double range;
-    private final boolean allies;
 
     public TargetOutlines(Plugin plugin, SternenfrontGame game, Optional<BodyRigs> bodies) {
         this.game = game;
         this.bodies = bodies;
-        range = Math.clamp(plugin.getConfig().getDouble("outlines.range", 64), 1, 256);
-        allies = plugin.getConfig().getBoolean("outlines.allies", false);
+        rule = Rule.from(game);
         glowing = new GlowingEntities(plugin);
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
         task = plugin.getServer().getScheduler().runTaskTimer(plugin, this::tick, 1, 1);
@@ -48,22 +72,13 @@ public final class TargetOutlines implements Listener, AutoCloseable {
         var actors = game.combatants();
         for (var viewer : game.plugin().getServer().getOnlinePlayers()) {
             var wanted = new HashMap<Entity, ChatColor>();
-            if (game.onField(viewer) && BlockcraftApi.get().resourcePack().applied(viewer)) {
-                var eye = viewer.getEyeLocation();
-                var faction = game.factionOf(viewer);
-                for (var actor : actors) {
-                    if (!actor.equals(viewer) && actor.isValid() && actor.getWorld().equals(eye.getWorld())
-                            && (!(actor instanceof Player player) || !BlockcraftApi.get().isVanished(player)) && inRange(eye, actor, range)) {
-                        boolean ally = game.factionOf(actor).equals(faction);
-                        if (ally && !allies) {
-                            continue;
-                        }
-                        var colour = ally ? ChatColor.DARK_AQUA : ChatColor.DARK_RED;
-                        var parts = bodies.map(rigs -> rigs.outlineParts(actor, viewer))
-                                .orElseGet(() -> viewer.canSee(actor) ? List.of(actor) : List.of());
-                        parts.forEach(part -> wanted.put(part, colour));
-                    }
-                }
+            for (var actor : actors) {
+                rule.outline(viewer, actor).ifPresent(outline -> {
+                    var colour = outline == Outline.ALLY ? ChatColor.DARK_AQUA : ChatColor.DARK_RED;
+                    var parts = bodies.map(rigs -> rigs.outlineParts(actor, viewer))
+                            .orElseGet(() -> viewer.canSee(actor) ? List.of(actor) : List.of());
+                    parts.forEach(part -> wanted.put(part, colour));
+                });
             }
             update(viewer, wanted);
         }

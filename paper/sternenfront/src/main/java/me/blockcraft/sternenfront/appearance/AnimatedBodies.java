@@ -26,8 +26,8 @@ import java.util.logging.Logger;
  * Bots whose bodies BetterModel draws and animates, from the models resourcepack/RigModels.py writes, instead of a
  * {@link BodyRig}. The {@code appearance.animated-bodies} list in config.yml chooses which. BetterModel plays idle, walk
  * and death by itself. Its parts exist only as packets and a tracker has one glow for all its viewers, so each body is
- * two trackers: an outlined model for viewers who get an outline by the rules of {@link TargetOutlines}, and a plain one
- * for everyone else. A body's markings and a leader's pauldrons are bones of their own, which take the unit colour as a tint.
+ * two trackers: an outlined model for viewers who see the actor outlined as an enemy by {@link TargetOutlines.Rule}, and
+ * a plain one for everyone else. A body's markings and a leader's pauldrons are bones of their own, which take the unit colour as a tint.
  */
 final class AnimatedBodies implements AutoCloseable {
 
