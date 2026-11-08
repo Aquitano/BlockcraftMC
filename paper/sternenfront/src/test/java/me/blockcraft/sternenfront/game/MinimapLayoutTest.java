@@ -105,14 +105,4 @@ public class MinimapLayoutTest {
             }
         }
     }
-
-    @Test
-    public void theNamesReadTheMenuLabelsLettersInTheirOrder() throws IOException {
-        var labels = PackFonts.providers("label_wide_0").get(1).getAsJsonObject();
-        var minimap = PackFonts.providers("minimap");
-        var ours = minimap.asList().stream().map(provider -> provider.getAsJsonObject())
-                .filter(provider -> provider.has("file") && provider.get("file").getAsString().endsWith("minimap_letters.png"))
-                .findFirst().orElseThrow();
-        assertEquals(labels.get("chars"), ours.get("chars"));
-    }
 }

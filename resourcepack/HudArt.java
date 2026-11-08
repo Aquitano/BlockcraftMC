@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.regex.Pattern;
 
 public final class HudArt {
 
@@ -217,8 +218,9 @@ public final class HudArt {
         spawnMarkers(root.getParent().getParent());
         ImageIO.write(onTheCrosshair(crosshairMarks(), true), "PNG", root.resolve("crosshair_marks.png").toFile());
         ImageIO.write(onTheCrosshair(spreadTicks(), true), "PNG", root.resolve("spread_ticks.png").toFile());
-        minimap(root);
-        abilities(root, args.length > 1 ? Path.of(args[1]) : null);
+        var letters = labelLetters(root.getParent().getParent().resolve("font"));
+        minimap(root, letters);
+        abilities(root, args.length > 1 ? Path.of(args[1]) : null, letters);
         var hidden = new BufferedImage(182, 5, BufferedImage.TYPE_INT_ARGB);
         var sprites = root.getParent().getParent().getParent().resolve("minecraft/textures/gui/sprites/boss_bar");
         Files.createDirectories(sprites);
@@ -232,12 +234,12 @@ public final class HudArt {
      * letters, every glyph with its top at the line's top. The text shader moves the line into the corner and finds the
      * boss bar line it came from by where a glyph lies inside it, so no glyph may reach more than 16 pixels down.
      */
-    private static void minimap(Path root) throws Exception {
+    private static void minimap(Path root, String letters) throws Exception {
         ImageIO.write(minimapDisc(), "PNG", root.resolve("minimap_disc.png").toFile());
         ImageIO.write(minimapMarks(), "PNG", root.resolve("minimap_marks.png").toFile());
         ImageIO.write(minimapTarget(), "PNG", root.resolve("minimap_target.png").toFile());
         ImageIO.write(feedMarks(), "PNG", root.resolve("minimap_feed.png").toFile());
-        ImageIO.write(mapLetters(ImageIO.read(root.resolve("labels.png").toFile())), "PNG", root.resolve("minimap_letters.png").toFile());
+        ImageIO.write(mapLetters(ImageIO.read(root.resolve("labels.png").toFile()), letters), "PNG", root.resolve("minimap_letters.png").toFile());
         ImageIO.write(classMarks(), "PNG", root.resolve("minimap_classes.png").toFile());
         var underscore = new BufferedImage(3, 7, BufferedImage.TYPE_INT_ARGB);
         for (int x = 0; x < 3; x++) {
@@ -256,7 +258,7 @@ public final class HudArt {
                 topAligned("minimap_target.png", TARGET, run(0xE034, 1)),
                 topAligned("minimap_feed.png", FEED_MARK, run(0xE050, 3)),
                 topAligned("minimap_classes.png", 7, run(0xE040, CLASS_MARKS.length)),
-                topAligned("minimap_letters.png", 7, LABEL_LETTERS),
+                topAligned("minimap_letters.png", 7, letters),
                 topAligned("minimap_underscore.png", 7, "_")) + "\n  ]\n}\n");
     }
 
@@ -287,13 +289,21 @@ public final class HudArt {
             ".............."};
     private static final String[] DIAMOND = {"...#...", "..###..", ".#####.", "#######", ".#####.", "..###..", "...#..."};
     private static final int TARGET_ARM = 7;
-    /** PackArt's label letters, in the order its sheet draws them. */
-    private static final String LABEL_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789ÄÖÜ-.:!?…/+&";
     private static final String NORTH = "10011101101110011001";
     /** Soldier, heavy, scout, medic and hero, five rows of five. */
     private static final String[] CLASS_MARKS = {
             "0010000100011100111011111", "1111111111111110111000100", "0010001010100010101000100",
             "0010000100111110010000100", "0010001110111110111001010"};
+
+    /** The letters of PackArt's label sheet, in the order its menu label fonts list them. */
+    private static String labelLetters(Path fonts) throws Exception {
+        var chars = Pattern.compile("labels\\.png\"[^}]*\"chars\":\\[\"([^\"]*)\"").matcher(Files.readString(fonts.resolve("label_wide_0.json")));
+        if (!chars.find()) {
+            throw new IllegalStateException("label_wide_0.json lists no label letters; run PackArt first");
+        }
+        return Pattern.compile("\\\\u([0-9a-fA-F]{4})").matcher(chars.group(1))
+                .replaceAll(escape -> String.valueOf((char) Integer.parseInt(escape.group(1), 16)));
+    }
 
     private static String run(int first, int count) {
         var glyphs = new StringBuilder();
@@ -412,10 +422,10 @@ public final class HudArt {
      * The menu tiles' capitals for the minimap's names and call signs, with a 1 that has its stem in the middle: the
      * menus' 1 reads as a J, which turns B1-11 into BJ-JJ.
      */
-    private static BufferedImage mapLetters(BufferedImage labels) {
+    private static BufferedImage mapLetters(BufferedImage labels, String letters) {
         var image = new BufferedImage(labels.getWidth(), labels.getHeight(), BufferedImage.TYPE_INT_ARGB);
         image.createGraphics().drawImage(labels, 0, 0, null);
-        int left = 3 * LABEL_LETTERS.indexOf('1');
+        int left = 3 * letters.indexOf('1');
         for (int y = 0; y < labels.getHeight(); y++) {
             for (int x = 0; x < 3; x++) {
                 int row = y - (labels.getHeight() - ONE.length);
@@ -704,7 +714,7 @@ public final class HudArt {
      * {@code AbilityIcon}, the keys' badges, the cooldown's digits, charge pips and the label letters of the names.
      * Every glyph hangs from the line's top, which the text shader moves into the corner.
      */
-    private static void abilities(Path root, Path contactSheet) throws Exception {
+    private static void abilities(Path root, Path contactSheet, String letters) throws Exception {
         var icons = new BufferedImage(2 * ICON * ABILITY_ICONS.size(), 2 * ICON, BufferedImage.TYPE_INT_ARGB);
         var cooling = new BufferedImage(icons.getWidth(), icons.getHeight(), BufferedImage.TYPE_INT_ARGB);
         int left = 0;
@@ -724,7 +734,7 @@ public final class HudArt {
         ImageIO.write(keyBadges(), "PNG", root.resolve("ability_keys.png").toFile());
         ImageIO.write(cooldownDigits(), "PNG", root.resolve("ability_digits.png").toFile());
         ImageIO.write(chargePips(), "PNG", root.resolve("ability_pips.png").toFile());
-        ImageIO.write(nameLetters(ImageIO.read(root.resolve("labels.png").toFile())), "PNG", root.resolve("ability_letters.png").toFile());
+        ImageIO.write(nameLetters(ImageIO.read(root.resolve("labels.png").toFile()), letters), "PNG", root.resolve("ability_letters.png").toFile());
         Files.writeString(root.getParent().getParent().resolve("font/abilities.json"), String.join(",\n    ",
                 "{\n  \"providers\": [\n    {\"type\":\"space\",\"advances\":{\" \":4}}",
                 topAligned("ability_tile.png", TILE, run(0xE000, 1)),
@@ -735,7 +745,7 @@ public final class HudArt {
                 topAligned("ability_fill.png", TILE, run(0xE060, FILL_LEVELS)),
                 topAligned("ability_digits.png", DIGIT, run(0xE080, DIGITS.length)),
                 topAligned("ability_pips.png", CHARGE_PIP, run(0xE090, 2)),
-                topAligned("ability_letters.png", 7, LABEL_LETTERS)) + "\n  ]\n}\n");
+                topAligned("ability_letters.png", 7, letters)) + "\n  ]\n}\n");
         if (contactSheet != null) {
             Files.createDirectories(contactSheet.toAbsolutePath().getParent());
             ImageIO.write(contactSheet(icons, cooling), "PNG", contactSheet.toFile());
@@ -932,12 +942,12 @@ public final class HudArt {
      * The menu tiles' capitals at twice the resolution for the abilities' names, each in a cell wide enough for M, N
      * and W, which take five pixels instead of three so their diagonals show; a three-pixel M reads as an N.
      */
-    private static BufferedImage nameLetters(BufferedImage labels) {
+    private static BufferedImage nameLetters(BufferedImage labels, String letters) {
         int cell = 2 * 5;
         int height = 2 * labels.getHeight();
-        var image = new BufferedImage(cell * LABEL_LETTERS.length(), height, BufferedImage.TYPE_INT_ARGB);
-        for (int letter = 0; letter < LABEL_LETTERS.length(); letter++) {
-            var wide = WIDE_LETTERS.get(LABEL_LETTERS.charAt(letter));
+        var image = new BufferedImage(cell * letters.length(), height, BufferedImage.TYPE_INT_ARGB);
+        for (int letter = 0; letter < letters.length(); letter++) {
+            var wide = WIDE_LETTERS.get(letters.charAt(letter));
             for (int y = 0; y < height; y++) {
                 for (int x = 0; x < cell; x++) {
                     boolean ink = wide != null ? y >= height - wide.length && wide[y - (height - wide.length)].charAt(x) == '#'

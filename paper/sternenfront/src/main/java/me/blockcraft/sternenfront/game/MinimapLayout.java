@@ -1,5 +1,6 @@
 package me.blockcraft.sternenfront.game;
 
+import me.blockcraft.api.pack.UiFont;
 import me.blockcraft.sternenfront.game.HudPanel.Corner;
 import me.blockcraft.sternenfront.game.HudPanel.Glyph;
 import me.blockcraft.sternenfront.game.HudPanel.Tint;
@@ -32,13 +33,12 @@ final class MinimapLayout {
     private static final int BADGE_HALF = 5;
     private static final int BADGE_ADVANCE = 11;
     private static final int CLASS_ADVANCE = 7;
-    private static final int LETTER_ADVANCE = 4;
     static final int HEADINGS = 16;
     private static final int LIST_TOP = MAP + 3;
     private static final int ROW = 8;
     static final int ROWS = 6;
     private static final int NAME_X = CLASS_ADVANCE;
-    private static final int NAME_LETTERS = (MAP - NAME_X) / LETTER_ADVANCE;
+    private static final int NAME_LETTERS = (MAP - NAME_X) / UiFont.LABEL_ADVANCE;
 
     static final char DISC = '\uE000';
     static final char BADGE = '\uE010';
@@ -136,7 +136,7 @@ final class MinimapLayout {
         var label = label(name);
         var tint = ready ? Tint.WHITE : Tint.DIMMED;
         return List.of(new Glyph(String.valueOf((char) (CLASS_MARK + role.ordinal())), 0, y, ready ? mark : Tint.DIMMED, true, CLASS_ADVANCE),
-                new Glyph(label, NAME_X, y, tint, true, label.length() * LETTER_ADVANCE));
+                new Glyph(label, NAME_X, y, tint, true, label.length() * UiFont.LABEL_ADVANCE));
     }
 
     /** The name in the menu tiles' capitals, cut to the panel's width, with a question mark for any letter they lack. */

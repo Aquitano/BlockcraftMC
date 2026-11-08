@@ -1,5 +1,6 @@
 package me.blockcraft.sternenfront.combat;
 
+import me.blockcraft.api.pack.UiFont;
 import me.blockcraft.sternenfront.game.AbilityIcon;
 import me.blockcraft.sternenfront.game.HudPanel;
 import me.blockcraft.sternenfront.game.HudPanel.Corner;
@@ -65,7 +66,6 @@ final class AbilityPanel {
     private static final int DIGIT_HEIGHT = 11;
     private static final int MAX_SECONDS = 99;
     private static final int PIP_ADVANCE = 7;
-    private static final int LETTER_ADVANCE = 4;
     /** The pack draws these capitals two pixels wider, so their diagonals show. */
     private static final String WIDE_LETTERS = "MNW";
     private static final int WIDE_LETTER_ADVANCE = 6;
@@ -137,7 +137,7 @@ final class AbilityPanel {
         int right = -TILE - NAME_GAP;
         var charges = slot.charges();
         boolean pips = charges.capacity() > 1;
-        int width = name.chars().map(letter -> WIDE_LETTERS.indexOf(letter) >= 0 ? WIDE_LETTER_ADVANCE : LETTER_ADVANCE).sum();
+        int width = name.chars().map(letter -> WIDE_LETTERS.indexOf(letter) >= 0 ? WIDE_LETTER_ADVANCE : UiFont.LABEL_ADVANCE).sum();
         if (!name.isEmpty()) {
             glyphs.add(new Glyph(name, right - width, top + (pips ? 4 : 8), Tint.WHITE, true, width));
         }

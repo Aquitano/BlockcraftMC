@@ -45,7 +45,7 @@ public final class HudPanel {
 
     static final int FIRST_TINT = 176;
     /** The menu tiles' capitals, which the panels' fonts share, with an underscore and a space of the panels' own. */
-    private static final String CAPITALS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789ÄÖÜ-.:!?…/+&_ ";
+    private static final String CAPITALS = UiFont.LABEL_LETTERS + "_ ";
 
     private HudPanel() {
     }

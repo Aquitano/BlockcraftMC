@@ -1,5 +1,6 @@
 package me.blockcraft.sternenfront.game;
 
+import me.blockcraft.api.pack.UiFont;
 import me.blockcraft.sternenfront.PackFonts;
 import me.blockcraft.sternenfront.game.HudPanel.Corner;
 import me.blockcraft.sternenfront.game.HudPanel.Tint;
@@ -37,5 +38,15 @@ public class HudPanelTest {
         assertEquals(PackFonts.first("minimap", "minimap_target.png"), MinimapLayout.TARGET);
         assertEquals(PackFonts.first("minimap", "minimap_classes.png"), MinimapLayout.CLASS_MARK);
         assertEquals(PackFonts.first("minimap", "minimap_feed.png"), KillFeed.SKULL);
+    }
+
+    @Test
+    public void everyHudFontDrawsTheMenuLabelsLettersInTheirOrder() throws IOException {
+        for (var font : new String[] {"label_wide_0", "minimap", "abilities"}) {
+            var letters = PackFonts.providers(font).asList().stream().map(provider -> provider.getAsJsonObject())
+                    .filter(provider -> provider.has("file") && provider.get("file").getAsString().matches(".*(labels|_letters)\\.png"))
+                    .findFirst().orElseThrow();
+            assertEquals(font, UiFont.LABEL_LETTERS, letters.getAsJsonArray("chars").get(0).getAsString());
+        }
     }
 }

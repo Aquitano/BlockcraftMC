@@ -1,5 +1,6 @@
 package me.blockcraft.sternenfront.game;
 
+import me.blockcraft.api.pack.UiFont;
 import me.blockcraft.sternenfront.game.HudPanel.Glyph;
 import me.blockcraft.sternenfront.game.HudPanel.Tint;
 import org.bukkit.configuration.ConfigurationSection;
@@ -31,7 +32,6 @@ final class KillFeed {
     static final int ROW = 9;
     private static final int FADE_TICKS = 20;
     private static final int GAP = 3;
-    private static final int LETTER_ADVANCE = 4;
     static final char SKULL = '\uE050';
     private static final char HOLLOW_SKULL = SKULL + 1;
     /** The skull with the crosshair's headshot diamond at its corner. */
@@ -110,6 +110,6 @@ final class KillFeed {
 
     private static Glyph name(Named named, int y) {
         var label = MinimapLayout.label(named.name());
-        return new Glyph(label, 0, y, named.tint(), true, label.length() * LETTER_ADVANCE);
+        return new Glyph(label, 0, y, named.tint(), true, label.length() * UiFont.LABEL_ADVANCE);
     }
 }
