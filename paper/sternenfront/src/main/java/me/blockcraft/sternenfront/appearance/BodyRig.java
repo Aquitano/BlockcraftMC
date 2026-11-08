@@ -215,10 +215,6 @@ final class BodyRig implements AutoCloseable {
         return entity;
     }
 
-    void tick() {
-        tick(0);
-    }
-
     void tick(double recoil) {
         var at = actor.getLocation();
         double moved = Math.hypot(at.getX() - previous.getX(), at.getZ() - previous.getZ());

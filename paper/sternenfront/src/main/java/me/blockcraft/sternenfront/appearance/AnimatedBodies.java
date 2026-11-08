@@ -42,12 +42,12 @@ final class AnimatedBodies implements AutoCloseable {
 
     private static final class Trackers {
         private final LivingEntity actor;
-        private final Shown plain;
-        private final Shown outlined;
+        private final EntityTracker plain;
+        private final EntityTracker outlined;
         private Insignia insignia;
         private int calmFrom;
 
-        Trackers(LivingEntity actor, Shown plain, Shown outlined, Insignia insignia) {
+        Trackers(LivingEntity actor, EntityTracker plain, EntityTracker outlined, Insignia insignia) {
             this.actor = actor;
             this.plain = plain;
             this.outlined = outlined;
@@ -71,14 +71,32 @@ final class AnimatedBodies implements AutoCloseable {
             }
         }
 
+        void showTo(PlatformPlayer viewer, boolean outlinedView) {
+            toggle(outlined, viewer, outlinedView);
+            toggle(plain, viewer, !outlinedView);
+        }
+
+        private static void toggle(EntityTracker tracker, PlatformPlayer viewer, boolean visible) {
+            if (visible) {
+                tracker.show(viewer);
+            } else {
+                tracker.hide(viewer);
+            }
+        }
+
+        void shoot() {
+            plain.animate("shoot", AnimationModifier.DEFAULT_WITH_PLAY_ONCE);
+            outlined.animate("shoot", AnimationModifier.DEFAULT_WITH_PLAY_ONCE);
+        }
+
         private void update(TrackerUpdateAction action, Predicate<RenderedBone> bones) {
-            plain.tracker().update(action, bones);
-            outlined.tracker().update(action, bones);
+            plain.update(action, bones);
+            outlined.update(action, bones);
         }
 
         void close() {
-            plain.tracker().close();
-            outlined.tracker().close();
+            plain.close();
+            outlined.close();
         }
     }
 
@@ -88,17 +106,6 @@ final class AnimatedBodies implements AutoCloseable {
 
     private static boolean pauldron(RenderedBone bone) {
         return bone.name().name().endsWith(PAULDRON);
-    }
-
-    private record Shown(EntityTracker tracker) {
-
-        void ifVisible(boolean visible, PlatformPlayer viewer) {
-            if (visible) {
-                tracker.show(viewer);
-            } else {
-                tracker.hide(viewer);
-            }
-        }
     }
 
     AnimatedBodies(Collection<String> families, BiPredicate<Player, LivingEntity> outlined, int hurtTint, Logger logger) {
@@ -131,14 +138,10 @@ final class AnimatedBodies implements AutoCloseable {
         var trackers = drawn.computeIfAbsent(actor.getUniqueId(), id -> spawn(actor, body, insignia));
         trackers.wear(insignia, actor.getServer().getCurrentTick());
         for (var viewer : viewers) {
-            var platform = BukkitAdapter.adapt(viewer);
-            boolean showOutlined = outlined.test(viewer, actor);
-            trackers.outlined.ifVisible(showOutlined, platform);
-            trackers.plain.ifVisible(!showOutlined, platform);
+            trackers.showTo(BukkitAdapter.adapt(viewer), outlined.test(viewer, actor));
         }
         if (recoil >= 1) {
-            trackers.plain.tracker().animate("shoot", AnimationModifier.DEFAULT_WITH_PLAY_ONCE);
-            trackers.outlined.tracker().animate("shoot", AnimationModifier.DEFAULT_WITH_PLAY_ONCE);
+            trackers.shoot();
         }
     }
 
@@ -158,7 +161,7 @@ final class AnimatedBodies implements AutoCloseable {
         });
         plain.damageTintValue(hurtTint);
         glowing.damageTintValue(hurtTint);
-        return new Trackers(actor, new Shown(plain), new Shown(glowing), insignia);
+        return new Trackers(actor, plain, glowing, insignia);
     }
 
     /** A dead body keeps its trackers until BetterModel has played the death animation and closed them; nothing closes those of a bot removed alive. */

@@ -97,10 +97,6 @@ public final class BodyRigs implements Listener, AutoCloseable {
         return rig != null && rig.shownTo(viewer) ? rig.torso() : actor;
     }
 
-    public static String family(Faction faction, CombatClass role) {
-        return RigBody.of(faction, role).family();
-    }
-
     public List<Entity> outlineParts(LivingEntity actor, Player viewer) {
         var rig = rigs.get(actor.getUniqueId());
         return rig != null && rig.shownTo(viewer) ? rig.outlineParts() : viewer.canSee(actor) ? List.of(actor) : List.of();
@@ -132,9 +128,7 @@ public final class BodyRigs implements Listener, AutoCloseable {
             var rig = rigs.computeIfAbsent(id, ignored -> {
                 var created = new BodyRig(plugin, actor, body, game::isPlaying,
                         () -> game.bots().aim(actor).orElseGet(() -> actor.getEyeLocation().getDirection()), turnDegrees,
-                        hero.isPresent() ? Optional.empty() : Optional.of(motions.get(unit
-                                .map(chosen -> chosen == Reinforcement.ARC_TROOPER ? CombatClass.HEAVY : CombatClass.SCOUT)
-                                .orElseGet(() -> game.combatClassOf(actor)))), insignia,
+                        hero.isPresent() ? Optional.empty() : body.gait().map(motions::get), insignia,
                         actor instanceof Player player ? () -> game.combat().stance(player) : Optional::empty);
                 byHitBox.put(created.hitBoxId(), created);
                 return created;

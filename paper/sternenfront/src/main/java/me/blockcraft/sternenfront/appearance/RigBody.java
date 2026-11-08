@@ -19,7 +19,7 @@ import java.util.Optional;
  * A rigged fighter's model family and how its parts hang together, as rig-bodies.yml gives it. Offsets are in unscaled
  * model space; the rig scales them.
  */
-enum RigBody {
+public enum RigBody {
 
     HEGEMONIE_SOLDIER(Faction.HEGEMONIE),
     HEGEMONIE_HEAVY(Faction.HEGEMONIE, false, "arm_left"),
@@ -90,7 +90,7 @@ enum RigBody {
         return number.floatValue();
     }
 
-    static RigBody of(Faction faction, CombatClass role) {
+    public static RigBody of(Faction faction, CombatClass role) {
         return switch (faction) {
             case HEGEMONIE -> switch (role) {
                 case SOLDIER -> HEGEMONIE_SOLDIER;
@@ -129,7 +129,7 @@ enum RigBody {
         return Arrays.stream(values()).filter(body -> body.family().equals(family)).findFirst();
     }
 
-    String family() {
+    public String family() {
         return name().toLowerCase(Locale.ROOT);
     }
 
@@ -151,6 +151,17 @@ enum RigBody {
 
     float gripTurn() {
         return gripTurn;
+    }
+
+    /** The appearance.motion profile the body walks with; a hero keeps its own movement. */
+    Optional<CombatClass> gait() {
+        return switch (this) {
+            case HEGEMONIE_SOLDIER, KOLONIEN_SOLDIER -> Optional.of(CombatClass.SOLDIER);
+            case HEGEMONIE_HEAVY, KOLONIEN_HEAVY, REINFORCEMENT_ARC_TROOPER -> Optional.of(CombatClass.HEAVY);
+            case HEGEMONIE_SCOUT, KOLONIEN_SCOUT, REINFORCEMENT_COMMANDO_DROID -> Optional.of(CombatClass.SCOUT);
+            case HEGEMONIE_MEDIC, KOLONIEN_MEDIC -> Optional.of(CombatClass.MEDIC);
+            case HERO_JEDI, HERO_COMMANDER, HERO_SITH, HERO_BOUNTY_HUNTER -> Optional.empty();
+        };
     }
 
     boolean showsWeapon() {
