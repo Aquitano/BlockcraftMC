@@ -398,8 +398,8 @@ def hero(client, run, hero_name="jedi"):
     client("click", slot=choice["slot"])
     run.report["hero_card"] = choice.get("lore")
     settle(client, 6)
-    home = next(slot for slot in client("screen")["slots"] if slot.get("name", "").startswith("Hauptquartier"))
-    client("click", slot=home["slot"])
+    deploy = next(slot for slot in client("screen")["slots"] if slot.get("name", "").startswith("Einsetzen"))
+    client("click", slot=deploy["slot"])
     client.until("the hero on the field", lambda: client("status")["gamemode"] == "adventure" and not client("status")["screen"]
                  and client("status")["y"] < 100, 60, 0.5)
     settle(client, 10)

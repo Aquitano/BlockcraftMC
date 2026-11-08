@@ -91,7 +91,10 @@ public final class Sabers {
         return itemAtStage(owner, hero, lit ? saber(hero).stages().size() - 1 : 0);
     }
 
-    /** The saber at {@code stage} of its ignition; only the last, the whole blade, cuts. */
+    /**
+     * The saber at {@code stage} of its ignition; only the last, the whole blade, cuts and blocks. The server refuses a
+     * guard with anything less, and a hilt the client raised anyway would show the block pose until that refusal arrives.
+     */
     private ItemStack itemAtStage(Player owner, Hero hero, int stage) {
         var stages = saber(hero).stages();
         var model = stages.get(stage);
@@ -108,7 +111,9 @@ public final class Sabers {
                         AttributeModifier.Operation.ADD_NUMBER, EquipmentSlotGroup.MAINHAND))
                 .build());
         item.editMeta(meta -> meta.getPersistentDataContainer().set(LIT, PersistentDataType.BOOLEAN, lit));
-        makeBlockable(item);
+        if (lit) {
+            makeBlockable(item);
+        }
         return SternenfrontItem.SABER.tag(item);
     }
 
