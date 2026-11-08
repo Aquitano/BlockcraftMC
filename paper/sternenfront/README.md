@@ -186,6 +186,25 @@ are an item in one of its slots, which picks the slot that centres the line best
 Hovering a marker shows the post name, recommendation, selection, and for a locked spawn `Gesperrt` with the reason.
 The dropship names the post it lands beside, and its cell stays empty while there is none.
 
+### Landing
+
+A deployment at headquarters or a post lands the player from their side's craft once the fade turns black: the Republic
+gunship slides its side doors aft and the Separatist lander folds its hatches down into ramps, both from
+`resourcepack/SternenfrontArt.java`. The player rides in its bay facing the open door, the craft comes down beside the
+spot, and its door opens onto it. The craft sets them down on the spot, or over stalls and walls up to six blocks high it
+hovers and drops them, and a drop does not hurt. Their look turns as far as the door was from the spot's facing, so
+looking out of the door leaves them facing the way the spot does. The craft tries the door towards the spot's facing
+first, then the sides, then the far side. Under a roof it comes straight down from just below the roof. Where there is no
+room for that, and at the assault's dropship, the plain fade stays. Teammates who deploy at the same spawn within
+`share-ticks` ride along and step out beside each other. Bots keep the plain deployment.
+
+`presentation.landing` in `config.yml` switches it off and sets its height, glide and timing. The ride is part of the
+deployment: the rider stays hidden and unhurt, the menu takes no choices, and the spawn's lock is checked again when the
+craft sets them down, as after the fade. A rider leaves only when the craft sets them down: sneaking does nothing. Dying
+or quitting removes their craft at once if no one else rides in it, and the round's end removes every craft. The craft is display entities
+and blocks nobody. It comes down in one move that the client draws, because Grim counts every teleport of a vehicle
+under a rider as a refused teleport. For the same reason riders leave the vehicle a tick before they are set down.
+
 After spawning, the minimap frames the post to make for in yellow corners: the assault's priority post, or the nearest
 objective outside the assault. When all posts are safe, it frames the post nearest the enemy HQ for defence. The top
 line frames the assault's priority post in the same corners. The first deployment of a round ends its chat lines with

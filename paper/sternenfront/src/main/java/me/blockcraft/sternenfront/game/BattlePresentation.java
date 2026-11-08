@@ -7,6 +7,7 @@ import me.blockcraft.api.presentation.ScreenEffects;
 import me.blockcraft.api.scene.Scenes;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -15,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Consumer;
 import java.util.function.DoubleConsumer;
 
 final class BattlePresentation implements AutoCloseable {
@@ -25,9 +27,11 @@ final class BattlePresentation implements AutoCloseable {
     private final SternenfrontGame game;
     private final Map<UUID, PresentationScope> deployments = new HashMap<>();
     private final Map<Integer, PresentationScope> captures = new HashMap<>();
+    private final DropshipLanding landing;
 
     BattlePresentation(SternenfrontGame game) {
         this.game = game;
+        landing = new DropshipLanding(game, DropshipLanding.Settings.from(game.plugin().getConfig()));
     }
 
     void arrive(Player player, Runnable deploy) {
@@ -39,7 +43,7 @@ final class BattlePresentation implements AutoCloseable {
     }
 
     private void transition(Player player, Runnable deploy, boolean arrival) {
-        if (deployments.containsKey(player.getUniqueId())) return;
+        if (deploying(player)) return;
         int fadeTicks = Math.clamp(game.plugin().getConfig().getInt("presentation.deployment.fade-ticks"), 0, 40);
         if (fadeTicks == 0 || !game.plugin().getConfig().getBoolean("presentation.effects")
                 || !BlockcraftApi.get().resourcePack().applied(player) || busy(player)) {
@@ -82,6 +86,11 @@ final class BattlePresentation implements AutoCloseable {
             }
         }.runTaskTimer(game.plugin(), 1, 1);
         scope.own(task::cancel);
+    }
+
+    /** See {@link DropshipLanding#board}. */
+    boolean land(Player player, Faction faction, Spawn spawn, Location spot, Consumer<Location> setDown) {
+        return landing.board(player, faction, spawn, spot, setDown);
     }
 
     void deployed(Player player, Spawn spawn) {
@@ -138,18 +147,21 @@ final class BattlePresentation implements AutoCloseable {
         return Scenes.isViewing(player) || api.dialogues().active(player) || api.visuals().active(player);
     }
 
+    /** From the fade to their deployment until the player stands on their spawn, through any landing. */
     boolean deploying(Player player) {
-        return deployments.containsKey(player.getUniqueId());
+        return deployments.containsKey(player.getUniqueId()) || landing.riding(player);
     }
 
     void cancel(Player player) {
         var scope = deployments.remove(player.getUniqueId());
         if (scope != null) scope.close();
+        landing.cancel(player);
     }
 
     @Override
     public void close() {
         for (var scope : deployments.values().toArray(PresentationScope[]::new)) scope.close();
         for (var scope : captures.values().toArray(PresentationScope[]::new)) scope.close();
+        landing.close();
     }
 }

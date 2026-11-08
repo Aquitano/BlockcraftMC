@@ -301,7 +301,8 @@ public final class Deployment {
 
     void showChoosing(Player player) {
         var fighter = game.fighterIfAny(player);
-        if (fighter.isEmpty() || fighter.get().choosing().isEmpty() || player.getGameMode() == GameMode.SPECTATOR) {
+        if (fighter.isEmpty() || fighter.get().choosing().isEmpty() || player.getGameMode() == GameMode.SPECTATOR
+                || presentation.deploying(player)) {
             return;
         }
         BlockcraftApi.get().notifications().status(player, status(player));
@@ -325,32 +326,56 @@ public final class Deployment {
     }
 
     private void deploy(Player player, Spawn wanted, boolean arrival) {
-        if (game.intro().running() || game.phase() != GamePhase.INGAME || !game.isPlaying(player)
-                || !player.isOnline() || player.isDead()) return;
+        if (!deployable(player)) return;
         if (deployMenus.remove(player.getUniqueId()) != null) Menu.close(player);
-        if (arrival) presentation.arrive(player, () -> deployNow(player, wanted));
-        else presentation.deploy(player, () -> deployNow(player, wanted));
+        if (arrival) presentation.arrive(player, () -> deployNow(player, wanted, Optional.empty()));
+        else presentation.deploy(player, () -> board(player, wanted));
     }
 
-    private void deployNow(Player player, Spawn wanted) {
+    /** Where a lander set the player down, which stands in for a spot of the spawn it came down at. */
+    private record Landed(Spawn spawn, Location spot) { }
+
+    /**
+     * Into a lander bound for the spawn the player would get now, which sets them down there, or onto that spawn at once
+     * where none can come down. Their deployment checks the spawn again when the lander sets them down.
+     */
+    private void board(Player player, Spawn wanted) {
         var faction = game.factionOf(player);
-        if (game.intro().running() || faction.isEmpty() || !player.isOnline() || player.isDead()
-                || game.phase() != GamePhase.INGAME || !game.isPlaying(player)) {
+        if (!deployable(player) || faction.isEmpty()) {
+            return;
+        }
+        var spawn = BattlePlan.resolve(wanted, candidate -> available(faction.get(), candidate), recommended(player));
+        if (!presentation.land(player, faction.get(), spawn, spot(faction.get(), spawn),
+                spot -> deployNow(player, wanted, Optional.of(new Landed(spawn, spot))))) {
+            deployNow(player, wanted, Optional.empty());
+        }
+    }
+
+    private boolean deployable(Player player) {
+        return !game.intro().running() && player.isOnline() && !player.isDead() && game.phase() == GamePhase.INGAME && game.isPlaying(player);
+    }
+
+    private Location spot(Faction faction, Spawn spawn) {
+        return switch (spawn) {
+            case Spawn.Headquarters ignored -> spawnSpots.farthestFromEnemies(game.map().headquarters().get(faction).spawns(), faction);
+            case Spawn.Post post -> spawnSpots.farthestFromEnemies(game.map().posts().get(post.index()).spawns(), faction);
+            case Spawn.Dropship ignored -> spawnSpots.leastCrowded(spawnSpots.dropshipSpots(game.front().orElseThrow()));
+        };
+    }
+
+    private void deployNow(Player player, Spawn wanted, Optional<Landed> landed) {
+        var faction = game.factionOf(player);
+        if (faction.isEmpty() || !deployable(player)) {
             return;
         }
         var messages = game.messages();
-        var map = game.map();
         game.combat().forget(player);
         player.leaveVehicle();
         var spawn = BattlePlan.resolve(wanted, candidate -> available(faction.get(), candidate), recommended(player));
         if (!spawn.equals(wanted)) {
             player.sendMessage(messages.get("deploy.lost"));
         }
-        var spot = switch (spawn) {
-            case Spawn.Headquarters ignored -> spawnSpots.farthestFromEnemies(map.headquarters().get(faction.get()).spawns(), faction.get());
-            case Spawn.Post post -> spawnSpots.farthestFromEnemies(map.posts().get(post.index()).spawns(), faction.get());
-            case Spawn.Dropship ignored -> spawnSpots.leastCrowded(spawnSpots.dropshipSpots(game.front().orElseThrow()));
-        };
+        var spot = landed.filter(at -> at.spawn().equals(spawn)).map(Landed::spot).orElseGet(() -> spot(faction.get(), spawn));
         var picked = game.fighter(player).choosing().flatMap(Fighter.Choosing::confirmedReinforcement);
         if (picked.isPresent()) {
             var unit = picked.get();

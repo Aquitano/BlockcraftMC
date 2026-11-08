@@ -362,6 +362,7 @@ deploy:
   status-waiting: "<muted>Einsatz möglich in <accent><seconds> s"
   status-ready: "<success>Einsatzbereit <dark>· <muted>automatisch in <accent><seconds> s"
   status-queued: "<success>Einsatz bestätigt <dark>· <muted>in <accent><seconds> s"
+  landing: "<muted>Landeanflug <dark>· <muted>die Türen öffnen sich gleich"
   close: "<white>Schließen"
   close-lore:
     - "<muted>Du schaust weiter von oben zu, der Countdown läuft."
