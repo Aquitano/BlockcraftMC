@@ -10,6 +10,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
@@ -90,12 +91,31 @@ enum RigBody {
     }
 
     static RigBody of(Faction faction, CombatClass role) {
-        return valueOf(faction.name() + "_" + role.name());
+        return switch (faction) {
+            case HEGEMONIE -> switch (role) {
+                case SOLDIER -> HEGEMONIE_SOLDIER;
+                case HEAVY -> HEGEMONIE_HEAVY;
+                case SCOUT -> HEGEMONIE_SCOUT;
+                case MEDIC -> HEGEMONIE_MEDIC;
+            };
+            case KOLONIEN -> switch (role) {
+                case SOLDIER -> KOLONIEN_SOLDIER;
+                case HEAVY -> KOLONIEN_HEAVY;
+                case SCOUT -> KOLONIEN_SCOUT;
+                case MEDIC -> KOLONIEN_MEDIC;
+            };
+        };
     }
 
+    /** The champion keeps its side's soldier body, which shows the relic blade. */
     static RigBody of(Faction faction, CombatClass role, Optional<Hero> hero) {
-        return hero.filter(chosen -> chosen != Hero.CHAMPION).map(chosen -> valueOf("HERO_" + chosen.name()))
-                .orElseGet(() -> of(faction, hero.isPresent() ? CombatClass.SOLDIER : role));
+        return hero.map(chosen -> switch (chosen) {
+            case JEDI -> HERO_JEDI;
+            case COMMANDER -> HERO_COMMANDER;
+            case SITH -> HERO_SITH;
+            case BOUNTY_HUNTER -> HERO_BOUNTY_HUNTER;
+            case CHAMPION -> of(faction, CombatClass.SOLDIER);
+        }).orElseGet(() -> of(faction, role));
     }
 
     static RigBody of(Reinforcement unit) {
@@ -103,6 +123,10 @@ enum RigBody {
             case ARC_TROOPER -> REINFORCEMENT_ARC_TROOPER;
             case COMMANDO_DROID -> REINFORCEMENT_COMMANDO_DROID;
         };
+    }
+
+    static Optional<RigBody> ofFamily(String family) {
+        return Arrays.stream(values()).filter(body -> body.family().equals(family)).findFirst();
     }
 
     String family() {

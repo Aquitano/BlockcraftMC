@@ -25,6 +25,7 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.server.ServerLoadEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -65,7 +66,7 @@ public final class BodyRigs implements Listener, AutoCloseable {
         var animatedBodies = game.plugin().getConfig().getStringList("appearance.animated-bodies");
         // Without the plugin every body stays a BodyRig, so a server that lacks it still plays the round.
         animated = animatedBodies.isEmpty() || !plugin.getServer().getPluginManager().isPluginEnabled("BetterModel") ? Optional.empty()
-                : Optional.of(new AnimatedBodies(animatedBodies, this::outlined, hurtTint.asRGB()));
+                : Optional.of(new AnimatedBodies(animatedBodies, this::outlined, hurtTint.asRGB(), plugin.getLogger()));
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
         task = plugin.getServer().getScheduler().runTaskTimer(plugin, this::tick, 1L, 1L);
     }
@@ -153,6 +154,11 @@ public final class BodyRigs implements Listener, AutoCloseable {
         return actor.isValid() && game.onField(actor) && actor.getWorld().equals(game.map().world())
                 && game.factionOf(actor).filter(riggedSides::contains).isPresent()
                 && (!(actor instanceof Player player) || !BlockcraftApi.get().buildMode().isEnabled(player));
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onServerLoad(ServerLoadEvent event) {
+        animated.ifPresent(bodies -> bodies.dropBodiesWithoutModels(plugin.getLogger()));
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)

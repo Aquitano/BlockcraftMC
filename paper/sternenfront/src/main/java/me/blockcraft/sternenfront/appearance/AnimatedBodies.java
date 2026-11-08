@@ -12,12 +12,14 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
+import java.util.logging.Logger;
 
 /**
  * Bots whose bodies BetterModel draws and animates, from the models resourcepack/RigModels.py writes, instead of a
@@ -33,7 +35,7 @@ final class AnimatedBodies implements AutoCloseable {
     private static final String MARKS = "_marks";
     private static final String PAULDRON = "_pauldron";
 
-    private final Set<String> families;
+    private final Set<RigBody> bodies = EnumSet.noneOf(RigBody.class);
     private final BiPredicate<Player, LivingEntity> outlined;
     private final int hurtTint;
     private final Map<UUID, Trackers> drawn = new HashMap<>();
@@ -99,14 +101,30 @@ final class AnimatedBodies implements AutoCloseable {
         }
     }
 
-    AnimatedBodies(Collection<String> families, BiPredicate<Player, LivingEntity> outlined, int hurtTint) {
-        this.families = Set.copyOf(families);
+    AnimatedBodies(Collection<String> families, BiPredicate<Player, LivingEntity> outlined, int hurtTint, Logger logger) {
+        for (var family : families) {
+            RigBody.ofFamily(family).ifPresentOrElse(bodies::add,
+                    () -> logger.severe("appearance.animated-bodies lists " + family + ", which is no body; it is ignored"));
+        }
         this.outlined = outlined;
         this.hurtTint = hurtTint;
     }
 
+    /** BetterModel registers its models once the server has loaded, after every plugin has enabled. */
+    void dropBodiesWithoutModels(Logger logger) {
+        bodies.removeIf(body -> {
+            boolean modelled = BetterModel.model(body.family()).isPresent() && BetterModel.model(body.family() + OUTLINED).isPresent();
+            if (!modelled) {
+                logger.severe("BetterModel has no " + body.family() + " or " + body.family() + OUTLINED + " model, so that body"
+                        + " in appearance.animated-bodies stays a plain rig. Generate it with resourcepack/RigModels.py and"
+                        + " dev/verify/verify.py models.");
+            }
+            return !modelled;
+        });
+    }
+
     boolean draws(RigBody body) {
-        return families.contains(body.family());
+        return bodies.contains(body);
     }
 
     void draw(LivingEntity actor, RigBody body, Insignia insignia, double recoil, Collection<? extends Player> viewers) {

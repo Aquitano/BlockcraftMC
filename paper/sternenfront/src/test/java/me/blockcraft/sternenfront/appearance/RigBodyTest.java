@@ -4,19 +4,24 @@ import me.blockcraft.sternenfront.game.CombatClass;
 import me.blockcraft.sternenfront.game.Faction;
 import me.blockcraft.sternenfront.hero.Hero;
 import me.blockcraft.sternenfront.reinforcement.Reinforcement;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.junit.Test;
 
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class RigBodyTest {
 
     private static final Path MODELS = Path.of("../../resourcepack/src/assets/blockcraft/items/sternenfront/body");
+    private static final Path ANIMATED = Path.of("../../resourcepack/bettermodel");
 
     @Test
     public void everyFactionAndRoleHasABodyWhosePartsThePackDraws() {
@@ -56,6 +61,21 @@ public class RigBodyTest {
             assertTrue(body.showsWeapon());
             for (var part : List.of("torso", "head", "arm", "leg")) {
                 assertTrue(Files.exists(MODELS.resolve(body.family()).resolve(part + ".json")));
+            }
+        }
+    }
+
+    @Test
+    public void everyBundledAnimatedBodyIsABodyWithPlainAndOutlinedModels() throws Exception {
+        try (var reader = new InputStreamReader(getClass().getResourceAsStream("/config.yml"), StandardCharsets.UTF_8)) {
+            var families = YamlConfiguration.loadConfiguration(reader).getStringList("appearance.animated-bodies");
+            assertFalse(families.isEmpty());
+            for (var family : families) {
+                assertTrue(family, RigBody.ofFamily(family).isPresent());
+                for (var model : List.of(family, family + "_outlined")) {
+                    assertTrue(model + " is missing; run python3 resourcepack/RigModels.py",
+                            Files.exists(ANIMATED.resolve(model + ".bbmodel")));
+                }
             }
         }
     }
