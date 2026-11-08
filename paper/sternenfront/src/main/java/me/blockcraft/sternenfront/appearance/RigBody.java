@@ -37,6 +37,7 @@ public enum RigBody {
     HERO_BOUNTY_HUNTER(Faction.HEGEMONIE);
 
     static final float WEAPON_SCALE = number(Layout.FILE, "weapon-scale");
+    static final float LEFT_ARM_DROP = number(Layout.FILE, "left-arm-drop");
 
     record Joints(float shoulderX, float shoulderY, float shoulderZ, float hipX, float hipY, float torsoY, float torsoLean,
                   float headY, float headZ, float weaponX, float weaponY, float weaponZ) {

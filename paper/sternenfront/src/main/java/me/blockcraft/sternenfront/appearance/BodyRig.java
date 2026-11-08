@@ -42,7 +42,6 @@ final class BodyRig implements AutoCloseable {
     private static final float CROUCH_DROP = 0.28f;
     private static final float CROUCH_LEAN = 0.15f;
     private static final float AIRBORNE_STEP = 0.2f;
-    private static final float LEFT_ARM_DROP = 0.05f;
     private static final float MAX_PITCH_DEGREES = 65;
     /** A hero has no appearance.motion profile: its walk cycle advances with distance and its legs swing with speed. */
     private static final double HERO_STRIDE_CAP_BLOCKS = 0.5;
@@ -269,7 +268,7 @@ final class BodyRig implements AutoCloseable {
         limbs = wanted;
         int blendTicks = Math.max(1, wanted.blendTicks() - sinceStance);
         pose(leftArm, at, yaw, facing - kind.gripTurn() + wanted.leftTurn(), shoulderX, shoulderY, shoulderZ, 0,
-                pitch + wanted.leftLift() + LEFT_ARM_DROP + recoilPitch, 0, scale, blendTicks);
+                pitch + wanted.leftLift() + RigBody.LEFT_ARM_DROP + recoilPitch, 0, scale, blendTicks);
         pose(rightArm, at, yaw, facing + wanted.rightTurn(), -shoulderX, shoulderY, shoulderZ, 0,
                 pitch + wanted.rightLift() + recoilPitch, 0, scale, blendTicks);
         pose(weapon, at, yaw, facing + wanted.bladeTurn(), joints.weaponX() * scale + wanted.bladeX(),

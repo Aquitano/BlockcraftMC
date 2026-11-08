@@ -139,7 +139,7 @@ def still(x=0, y=0, z=0):
     return {0: (x, y, z)}
 
 
-def animations(family, grip_degrees):
+def animations(family, grip_degrees, inward_degrees):
     profile = motion(family)
     cycle = int(profile["cycle-ticks"]) / 20
     leg, bob = profile["leg-degrees"], profile["bob-height"] * 16
@@ -147,8 +147,8 @@ def animations(family, grip_degrees):
     kick, back = profile["recoil-degrees"], profile["recoil-blocks"] * 16
     recovery = int(profile["recoil-ticks"]) / 20
     grip = {"rotation": still(x=grip_degrees)}
-    across = grip_degrees + 8
-    support = {"rotation": still(x=across, y=22)}
+    across = grip_degrees + round(math.degrees(RIG["left-arm-drop"]))
+    support = {"rotation": still(x=across, y=inward_degrees)}
     return [
         animation(family, "idle", "loop", 2.4, {
             "torso": {"position": {0: (0, 0, 0), 1.2: (0, -0.2, 0), 2.4: (0, 0, 0)}},
@@ -167,7 +167,8 @@ def animations(family, grip_degrees):
         animation(family, "shoot", "once", recovery, {
             "hi_right_arm": {"rotation": {0: (grip_degrees, 0, 0), 0.05: (grip_degrees - kick, 0, 0), recovery: (grip_degrees, 0, 0)},
                              "position": {0: (0, 0, 0), 0.05: (0, 0, -back), recovery: (0, 0, 0)}},
-            "hi_left_arm": {"rotation": {0: (across, 22, 0), 0.05: (across - kick, 22, 0), recovery: (across, 22, 0)},
+            "hi_left_arm": {"rotation": {0: (across, inward_degrees, 0), 0.05: (across - kick, inward_degrees, 0),
+                                          recovery: (across, inward_degrees, 0)},
                            "position": {0: (0, 0, 0), 0.05: (0, 0, -back), recovery: (0, 0, 0)}},
             "torso": {"rotation": {0: (0, 0, 0), 0.05: (-kick / 3, 0, 0), recovery: (0, 0, 0)}},
         }),
@@ -179,7 +180,7 @@ def animations(family, grip_degrees):
             "root": {"rotation": {0: (0, 0, 0), 0.25: (-18, 0, 4), 0.7: (-86, 0, 8), 0.9: (-84, 0, 8)},
                      "position": {0: (0, 0, 0), 0.7: (0, -3, -4), 0.9: (0, -3, -4)}},
             "hi_right_arm": {"rotation": {0: (grip_degrees, 0, 0), 0.5: (-20, 0, -25)}},
-            "hi_left_arm": {"rotation": {0: (across, 22, 0), 0.5: (-30, 0, 30)}},
+            "hi_left_arm": {"rotation": {0: (across, inward_degrees, 0), 0.5: (-30, 0, 30)}},
             "right_leg": {"rotation": {0: (0, 0, 0), 0.6: (22, 0, 0)}},
             "left_leg": {"rotation": {0: (0, 0, 0), 0.6: (-12, 0, 0)}},
         }),
@@ -191,6 +192,8 @@ def build(family, gun):
     joints = RIG["joints"][body["joints"]]
     scale = body.get("scale", 1)
     grip_degrees = round(math.degrees(body["arm-lift"]))
+    # BetterModel turns a left arm's positive y away from the body, so the turn in to the fore-end is negative.
+    inward_degrees = -round(math.degrees(body["grip-turn"]))
     shoulder = tuple(joints["shoulder"][axis] * scale for axis in "xyz")
     hip = (joints["hip"]["x"] * scale, joints["hip"]["y"] * scale, 0)
     torso_at = (0, joints["torso"]["y"] * scale, 0)
@@ -241,7 +244,7 @@ def build(family, gun):
     return dict(meta=dict(format_version="5.0", model_format="free", box_uv=False), name=family, model_identifier="", visible_box=[1, 1, 0],
                 variable_placeholders="", variable_placeholder_buttons=[], timeline_setups=[], unhandled_root_fields={},
                 resolution=dict(width=size["width"], height=size["height"]), elements=model.elements, groups=model.groups(),
-                outliner=[model.outline(model.bones["root"])], textures=textures, animations=animations(family, grip_degrees))
+                outliner=[model.outline(model.bones["root"])], textures=textures, animations=animations(family, grip_degrees, inward_degrees))
 
 
 def main():

@@ -5,8 +5,10 @@
 # Joints are in blocks above the feet before the body's scale, facing +z with the body's left at +x. Bodies built
 # alike share a set. torso.lean hunches the torso forward from the waist; arm-lift raises both aiming arms from
 # hanging straight down; grip-turn turns the left arm in to the weapon's fore-end. All three are in radians.
-# weapon-scale sizes the held item, whatever the body's scale.
+# weapon-scale sizes the held item, whatever the body's scale. left-arm-drop lowers the supporting arm below the aiming
+# one, in radians.
 weapon-scale: 0.65
+left-arm-drop: 0.05
 joints:
   b1-droid:
     shoulder: {x: 0.25, y: 1.47, z: 0}
