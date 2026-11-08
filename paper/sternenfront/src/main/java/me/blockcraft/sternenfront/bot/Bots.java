@@ -75,6 +75,8 @@ public final class Bots implements Listener {
     private static final int PRESS_TICKS = 100;
     private static final double EYE_HEIGHT = 1.6;
     private static final int PUSH_RETRY_TICKS = 200;
+    /** A fallen bot keeps its side this long, for its bolts still in flight and its grenades still to go off. */
+    private static final int IDENTITY_AFTER_DEATH_TICKS = 200;
     /** Inside the head and arm reach BetterModel gives a body, about 75 degrees either side, with room to spare. */
     private static final double FIRE_ARC_DEGREES = 60;
     private static final float TURN_TO_FIRE_DEGREES = 20;
@@ -167,6 +169,7 @@ public final class Bots implements Listener {
     private final List<Soldier> soldiers = new ArrayList<>();
     private final Map<UUID, Soldier> bodies = new HashMap<>();
     private final Map<UUID, Faction> identities = new HashMap<>();
+    private final Map<UUID, Long> identitiesUntil = new HashMap<>();
     private final List<Fireteam> teams = new ArrayList<>();
     private final Map<UUID, Fireteam> squads = new HashMap<>();
     private double sightShare = 1;
@@ -333,6 +336,13 @@ public final class Bots implements Listener {
         }
         if (tick % 20 == 1) {
             fill();
+            identitiesUntil.entrySet().removeIf(entry -> {
+                if (tick < entry.getValue()) {
+                    return false;
+                }
+                identities.remove(entry.getKey());
+                return true;
+            });
         }
         if (tick % ROUTE_TICKS == 0) {
             teams.forEach(team -> command(team, tick));
@@ -1538,6 +1548,7 @@ public final class Bots implements Listener {
         if (soldier.body != null) {
             game.support().removed(soldier.body);
             bodies.remove(soldier.body.getUniqueId());
+            identitiesUntil.put(soldier.body.getUniqueId(), game.tick() + IDENTITY_AFTER_DEATH_TICKS);
             soldier.body.remove();
             soldier.body = null;
         }
@@ -1568,5 +1579,6 @@ public final class Bots implements Listener {
         squads.clear();
         bodies.clear();
         identities.clear();
+        identitiesUntil.clear();
     }
 }
