@@ -5,6 +5,7 @@ import me.blockcraft.api.BlockcraftApi;
 import me.blockcraft.api.presentation.ScreenEffects;
 import me.blockcraft.sternenfront.appearance.Displays;
 import me.blockcraft.sternenfront.combat.BattleEffects;
+import me.blockcraft.sternenfront.combat.CombatArc;
 import me.blockcraft.sternenfront.combat.Stance;
 import me.blockcraft.sternenfront.game.Blast;
 import me.blockcraft.sternenfront.game.Faction;
@@ -383,7 +384,7 @@ public final class Powers {
         for (var target : game.targets()) {
             if (!target.getWorld().equals(position.getWorld()) || !game.hittable(flight.faction(), target)
                     || flight.struck().contains(target.getUniqueId())
-                    || !SaberSweep.hits(position.toVector(), next.toVector(), target.getBoundingBox(), SABER_REACH)) {
+                    || !CombatArc.sweeps(position.toVector(), next.toVector(), target.getBoundingBox(), SABER_REACH)) {
                 continue;
             }
             var toward = target.getLocation().add(0, target.getHeight() / 2, 0).toVector().subtract(position.toVector());

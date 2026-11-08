@@ -34,6 +34,16 @@ public class CombatArcTest {
     }
 
     @Test
+    public void aThrownBladeHitsAnEnemyCrossedBetweenTicksWithoutExtendingTheFlight() {
+        var target = new BoundingBox(2, 0, -0.3, 2.6, 1.8, 0.3);
+        var start = new Vector(0, 1, 0);
+        assertTrue(CombatArc.sweeps(start, new Vector(5, 1, 0), target, 0.6));
+        assertFalse(CombatArc.sweeps(start, new Vector(1, 1, 0), target, 0.6));
+        assertFalse(CombatArc.sweeps(start, new Vector(-5, 1, 0), target, 0.6));
+        assertFalse(CombatArc.sweeps(new Vector(0, 1, 2), new Vector(5, 1, 2), target, 0.6));
+    }
+
+    @Test
     public void verticalAimKeepsTheFullArcAndReverseUsesTheSamePath() {
         var facing = new Vector(0, 1, 0);
         var side = new Vector(1, 0, 0);
