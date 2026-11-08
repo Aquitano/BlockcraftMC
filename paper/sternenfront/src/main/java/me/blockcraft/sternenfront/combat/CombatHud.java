@@ -48,7 +48,6 @@ public final class CombatHud {
 
     public void show(Player player, Guard guard) {
         if (CombatFeedback.covered(player)) return;
-        game.deployment().controlsChanged(player);
         var fighter = game.fighter(player);
         boolean blade = fighter.hero().filter(Hero::bladed).isPresent();
         var heat = fighter.heat();

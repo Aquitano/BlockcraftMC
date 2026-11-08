@@ -421,7 +421,7 @@ public final class Deployment {
         return true;
     }
 
-    public void controlsChanged(Player player) {
+    void controlsChanged(Player player) {
         if (!game.onField(player)) return;
         var fighter = game.fighter(player);
         var faction = game.factionOf(player);
