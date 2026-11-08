@@ -14,7 +14,10 @@ import java.awt.image.BufferedImage;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.Locale;
+import java.util.Map;
 
 public final class HudArt {
 
@@ -172,6 +175,8 @@ public final class HudArt {
         g.drawOval(51, 3, 4, 5);
         g.drawLine(54, 7, 56, 9);
         g.dispose();
+        // The flame takes the shield's advance, so the meter after either starts at the same place.
+        padAdvance(icons, 21, 0, 12);
         ImageIO.write(icons, "PNG", root.resolve("combat_icons.png").toFile());
         var bars = new BufferedImage(462, 12, BufferedImage.TYPE_INT_ARGB);
         g = bars.createGraphics();
@@ -208,6 +213,7 @@ public final class HudArt {
         ImageIO.write(onTheCrosshair(crosshairMarks(), true), "PNG", root.resolve("crosshair_marks.png").toFile());
         ImageIO.write(onTheCrosshair(spreadTicks(), true), "PNG", root.resolve("spread_ticks.png").toFile());
         minimap(root);
+        abilities(root);
         var hidden = new BufferedImage(182, 5, BufferedImage.TYPE_INT_ARGB);
         var sprites = root.getParent().getParent().getParent().resolve("minecraft/textures/gui/sprites/boss_bar");
         Files.createDirectories(sprites);
@@ -447,4 +453,485 @@ public final class HudArt {
             }
         }
     }
+
+    /**
+     * The ability tiles' font in the screen's bottom-right corner: a tile, an icon for every ability in the order of
+     * Sternenfront's {@code AbilityIcon}, two keycaps, the cooldown's digits and the keys' symbols, and the small digits
+     * of a charge count. Every glyph hangs from the line's top, which the text shader moves into the corner.
+     */
+    private static void abilities(Path root) throws Exception {
+        ImageIO.write(abilityTile(), "PNG", root.resolve("ability_tile.png").toFile());
+        var icons = new BufferedImage(ICON * ABILITY_ICONS.size(), ICON, BufferedImage.TYPE_INT_ARGB);
+        int left = 0;
+        for (var art : ABILITY_ICONS.values()) {
+            drawIcon(icons, left, art);
+            padAdvance(icons, left + ICON - 1, 0, ICON);
+            left += ICON;
+        }
+        ImageIO.write(icons, "PNG", root.resolve("ability_icons.png").toFile());
+        ImageIO.write(abilityKeys(), "PNG", root.resolve("ability_keys.png").toFile());
+        ImageIO.write(pixelRow(SYMBOLS, 5, 0xFFFFFFFF), "PNG", root.resolve("ability_symbols.png").toFile());
+        ImageIO.write(outlinedCounts(), "PNG", root.resolve("ability_counts.png").toFile());
+        Files.writeString(root.getParent().getParent().resolve("font/abilities.json"), String.join(",\n    ",
+                "{\n  \"providers\": [",
+                topAligned("ability_tile.png", TILE, run(0xE000, 1)),
+                topAligned("ability_icons.png", ICON, run(0xE010, ABILITY_ICONS.size())),
+                topAligned("ability_keys.png", KEY_HEIGHT, run(0xE030, KEY_WIDTHS.length)),
+                topAligned("ability_symbols.png", 7, run(0xE040, SYMBOLS.length)),
+                topAligned("ability_counts.png", 7, run(0xE050, COUNTS.length))).replace("[,", "[") + "\n  ]\n}\n");
+    }
+
+    private static final int TILE = 20;
+    private static final int ICON = 16;
+    private static final int[] KEY_WIDTHS = {9, 15};
+    private static final int KEY_HEIGHT = 9;
+    private static final int OUTLINE = 0xFF0F141D;
+
+    /** A rounded tile in light grey on dark glass, which the shader dims while its ability cools down. */
+    private static BufferedImage abilityTile() {
+        var image = new BufferedImage(TILE, TILE, BufferedImage.TYPE_INT_ARGB);
+        for (int y = 0; y < TILE; y++) {
+            for (int x = 0; x < TILE; x++) {
+                boolean edgeX = x == 0 || x == TILE - 1;
+                boolean edgeY = y == 0 || y == TILE - 1;
+                if (edgeX && edgeY) {
+                    continue;
+                }
+                boolean rim = edgeX || edgeY;
+                boolean bevel = !rim && (x == 1 || y == 1 || x == TILE - 2 || y == TILE - 2);
+                image.setRGB(x, y, rim ? 0xFFB8C4D6 : bevel ? 0xE0263042 : 0xC8101722);
+            }
+        }
+        return image;
+    }
+
+    /** A keycap for one symbol and one for two, light with a dark rim so a dark letter reads on any sky. */
+    private static BufferedImage abilityKeys() {
+        var image = new BufferedImage(KEY_WIDTHS[1] * KEY_WIDTHS.length, KEY_HEIGHT, BufferedImage.TYPE_INT_ARGB);
+        for (int key = 0; key < KEY_WIDTHS.length; key++) {
+            int width = KEY_WIDTHS[key];
+            for (int y = 0; y < KEY_HEIGHT; y++) {
+                for (int x = 0; x < width; x++) {
+                    boolean rim = x == 0 || y == 0 || x == width - 1 || y == KEY_HEIGHT - 1;
+                    boolean corner = (x == 0 || x == width - 1) && (y == 0 || y == KEY_HEIGHT - 1);
+                    if (!corner) {
+                        image.setRGB(key * KEY_WIDTHS[1] + x, y, rim ? OUTLINE : y == KEY_HEIGHT - 2 ? 0xFFAEB8C6 : 0xFFE6ECF4);
+                    }
+                }
+            }
+        }
+        return image;
+    }
+
+    /** The charge count's digits and slash, three pixels by five in white, ringed dark so they read over any icon. */
+    private static BufferedImage outlinedCounts() {
+        var image = new BufferedImage(5 * COUNTS.length, 7, BufferedImage.TYPE_INT_ARGB);
+        for (int glyph = 0; glyph < COUNTS.length; glyph++) {
+            for (int y = 0; y < 7; y++) {
+                for (int x = 0; x < 5; x++) {
+                    if (countInk(glyph, x - 1, y - 1)) {
+                        image.setRGB(glyph * 5 + x, y, 0xFFFFFFFF);
+                    } else if (nearCountInk(glyph, x - 1, y - 1)) {
+                        image.setRGB(glyph * 5 + x, y, OUTLINE);
+                    }
+                }
+            }
+        }
+        return image;
+    }
+
+    private static boolean nearCountInk(int glyph, int x, int y) {
+        for (int dy = -1; dy <= 1; dy++) {
+            for (int dx = -1; dx <= 1; dx++) {
+                if (countInk(glyph, x + dx, y + dy)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static boolean countInk(int glyph, int x, int y) {
+        return x >= 0 && y >= 0 && x < 3 && y < 5 && COUNTS[glyph][y].charAt(x) == '#';
+    }
+
+    /** Glyphs drawn as rows of {@code #}, each {@code width} wide, in one colour; the last column fixes every advance. */
+    private static BufferedImage pixelRow(String[][] glyphs, int width, int colour) {
+        var image = new BufferedImage(width * glyphs.length, glyphs[0].length, BufferedImage.TYPE_INT_ARGB);
+        for (int glyph = 0; glyph < glyphs.length; glyph++) {
+            for (int y = 0; y < glyphs[glyph].length; y++) {
+                for (int x = 0; x < width; x++) {
+                    if (glyphs[glyph][y].charAt(x) == '#') {
+                        image.setRGB(glyph * width + x, y, colour);
+                    }
+                }
+            }
+            padAdvance(image, glyph * width + width - 1, 0, glyphs[glyph].length);
+        }
+        return image;
+    }
+
+    /** {@code art}'s letters in their colours at {@code left}, ringed by a dark outline wherever ink meets a clear side. */
+    private static void drawIcon(BufferedImage image, int left, String[] art) {
+        for (int y = 0; y < ICON; y++) {
+            for (int x = 0; x < ICON; x++) {
+                char ink = art[y].charAt(x);
+                if (ink != '.') {
+                    image.setRGB(left + x, y, INK.get(ink));
+                }
+            }
+        }
+        var rim = new ArrayList<int[]>();
+        for (int y = 0; y < ICON; y++) {
+            for (int x = 0; x < ICON; x++) {
+                if (art[y].charAt(x) == '.' && (inked(art, x - 1, y) || inked(art, x + 1, y) || inked(art, x, y - 1) || inked(art, x, y + 1))) {
+                    rim.add(new int[] {x, y});
+                }
+            }
+        }
+        rim.forEach(texel -> image.setRGB(left + texel[0], texel[1], OUTLINE));
+    }
+
+    private static boolean inked(String[] art, int x, int y) {
+        return x >= 0 && y >= 0 && x < ICON && y < ICON && art[y].charAt(x) != '.';
+    }
+
+    private static final Map<Character, Integer> INK = Map.ofEntries(
+            Map.entry('k', OUTLINE), Map.entry('w', 0xFFFFFFFF), Map.entry('l', 0xFFD9E0EA), Map.entry('m', 0xFF9AA6B8),
+            Map.entry('d', 0xFF5A667A), Map.entry('e', 0xFF323B4C), Map.entry('r', 0xFFFF5B4B), Map.entry('R', 0xFFB0342C),
+            Map.entry('o', 0xFFFFA53A), Map.entry('y', 0xFFFFE680), Map.entry('g', 0xFF74E37E), Map.entry('G', 0xFF2E9C47),
+            Map.entry('c', 0xFFA6F3FF), Map.entry('C', 0xFF3FC3EE), Map.entry('B', 0xFF2273B8), Map.entry('p', 0xFFE0C4FF),
+            Map.entry('P', 0xFF9B6BFF), Map.entry('V', 0xFF5C37C0), Map.entry('u', 0xFFFFD447), Map.entry('U', 0xFFC48A12),
+            Map.entry('n', 0xFFA8743F), Map.entry('N', 0xFF6A4524));
+
+    /** One icon per ability on a native 16-pixel grid, lit from the upper left; a dark outline is added round each. */
+    private static final Map<String, String[]> ABILITY_ICONS = linked(
+            "grenade", new String[] {
+                    "................",
+                    ".......lm.......",
+                    ".......md.......",
+                    ".....mlllmd.....",
+                    "....mlwwllmd....",
+                    "...mlwwlllmmd...",
+                    "...llwllllmmd...",
+                    "..eeeeeeeeeeee..",
+                    "..eoeyeoeyeoee..",
+                    "..mmmmmmmmmddd..",
+                    "...mmmmmmmddd...",
+                    "...dmmmmmdddd...",
+                    "....ddmmdddd....",
+                    ".....dddddd.....",
+                    "................",
+                    "................"},
+            "adrenaline", new String[] {
+                    "................",
+                    "............rl..",
+                    "...........rrm..",
+                    "..........wrR...",
+                    ".........wlRR...",
+                    "........wlmR....",
+                    ".......wgmd.....",
+                    "......wgGd......",
+                    ".....wgGd.......",
+                    "....wgGd........",
+                    "....lGd.........",
+                    "...dmd..........",
+                    "...dd...........",
+                    "..l.............",
+                    ".l..............",
+                    "................"},
+            "shield_wall", new String[] {
+                    "................",
+                    "................",
+                    "..cccccccccccC..",
+                    "..cwcccccccCCB..",
+                    "..ccCCCCCCCCCB..",
+                    "..cCCCCCCCCCCB..",
+                    "..cCcccccccCCB..",
+                    "..cCCCCCCCCCBB..",
+                    "..cCCCCCCCCCBB..",
+                    "...cCcccccCBB...",
+                    "...cCCCCCCCBB...",
+                    "....cCCCCCBB....",
+                    ".....cCCCBB.....",
+                    "......cCBB......",
+                    ".......BB.......",
+                    "................"},
+            "jump_pack", new String[] {
+                    "................",
+                    "................",
+                    ".......wwwwwww..",
+                    "........wllllm..",
+                    ".........wlllm..",
+                    ".........wlllm..",
+                    "........wllmlm..",
+                    ".......wlm..mm..",
+                    "......wlm....m..",
+                    ".....wlm........",
+                    "....wlm.........",
+                    "...wlm..........",
+                    ".oolm...........",
+                    ".yym............",
+                    ".oyo............",
+                    "................"},
+            "med_station", new String[] {
+                    "................",
+                    "......wwww......",
+                    "......wggw......",
+                    "......wggw......",
+                    "...wwwwggwwww...",
+                    "...wggggggggw...",
+                    "...wgggggggGw...",
+                    "...wwwwggwwww...",
+                    "......wgGw......",
+                    "......wgGw......",
+                    "......wwww......",
+                    "................",
+                    "...llllllllll...",
+                    "..mmmmmmmmmmmm..",
+                    "..dddddddddddd..",
+                    "................"},
+            "siege_mode", new String[] {
+                    "................",
+                    "................",
+                    "............dd..",
+                    ".llllllllllldd..",
+                    ".mmmmmmmmmmmddy.",
+                    "...dmmmmd...dd..",
+                    "...deeeed.......",
+                    "....dddd........",
+                    ".....dd.........",
+                    "....dddd........",
+                    "...dd.dd.d......",
+                    "..dd..dd..d.....",
+                    ".dd...dd...d....",
+                    ".mmm.mmmm.mmm...",
+                    "................",
+                    "................"},
+            "mining_charge", new String[] {
+                    "................",
+                    "...........r....",
+                    "...........d....",
+                    "..........d.....",
+                    "..........d.....",
+                    "..llllllllllll..",
+                    "..lrlmmmmmmmmd..",
+                    "..lmmmmmmmmmmd..",
+                    "..yyeeyyeeyyed..",
+                    "..yeeyyeeyyeed..",
+                    "..lmmmmmmmmmmd..",
+                    "..mmmmmmmmmmmd..",
+                    "..dddddddddddd..",
+                    "................",
+                    "................",
+                    "................"},
+            "force_push", new String[] {
+                    "................",
+                    "...l.l..........",
+                    "..ll.ll.l.......",
+                    "..ll.ll.ll...c..",
+                    "..ll.ll.ll....c.",
+                    "..lllllllll...c.",
+                    ".llllllllll.c.c.",
+                    ".lwlllllllm.c.c.",
+                    ".llllllllmm.c.c.",
+                    "..lllllllmm...c.",
+                    "...llllmmm....c.",
+                    "....lmmmm....c..",
+                    "................",
+                    "................",
+                    "................",
+                    "................"},
+            "saber_throw", new String[] {
+                    "................",
+                    ".............c..",
+                    "............cwc.",
+                    "...........cwc..",
+                    "..........cwc...",
+                    ".........cwc..l.",
+                    "........cwc...l.",
+                    ".......cwc....l.",
+                    "......cwc.....l.",
+                    ".....cwc.....l..",
+                    "....dwc.....ll..",
+                    "...mkd......l...",
+                    "..mkd.....ll....",
+                    "..dd.....ll.....",
+                    "....llll........",
+                    "................"},
+            "force_grip", new String[] {
+                    "................",
+                    ".....pppppp.....",
+                    "...ppp....ppp...",
+                    "..pp........PP..",
+                    "..p....ww....P..",
+                    ".pp....ww....PP.",
+                    ".p....wwww....P.",
+                    ".p...w.ww.w...P.",
+                    ".p.....ww.....P.",
+                    ".p....w..w....P.",
+                    ".pp...w..w...PP.",
+                    "..p..........P..",
+                    "..pp........PP..",
+                    "...PPP....PPP...",
+                    ".....PPPPPP.....",
+                    "................"},
+            "force_lightning", new String[] {
+                    "................",
+                    "........ppppp...",
+                    ".......pwwwP....",
+                    "......pwwwP.....",
+                    ".....pwwwP......",
+                    "....pwwwwpppp...",
+                    "...pppppwwwwP...",
+                    "........pwwP....",
+                    ".......pwwP.....",
+                    "......pwwP......",
+                    ".....pwwP.......",
+                    "....pwP.........",
+                    "...pP...........",
+                    "..P.............",
+                    "................",
+                    "................"},
+            "jetpack", new String[] {
+                    "................",
+                    "....ll....ll....",
+                    "...llll..llll...",
+                    "...lwlm..lwlm...",
+                    "...lwlmddlwlm...",
+                    "...lllmddlllm...",
+                    "...mmmmddmmmm...",
+                    "...mmmmddmmmm...",
+                    "...dmmdddmmmd...",
+                    "...ddddddddd....",
+                    "....dd...dd.....",
+                    "....oo...oo.....",
+                    "....yo...yo.....",
+                    "....oy...oy.....",
+                    ".....o....o.....",
+                    "................"},
+            "wrist_rocket", new String[] {
+                    "................",
+                    "................",
+                    "................",
+                    "................",
+                    ".....dd.........",
+                    ".....dlllllllr..",
+                    "..oy.wllllllllr.",
+                    ".oyy.mmmmmmmmRR.",
+                    "..oy.dmmmmmmmR..",
+                    ".....dd.........",
+                    "................",
+                    "................",
+                    "................",
+                    "................",
+                    "................",
+                    "................"},
+            "grapple", new String[] {
+                    "................",
+                    ".nN.............",
+                    "..nN............",
+                    "...nN...........",
+                    "....nN...mm.....",
+                    ".....nNNlm.m....",
+                    ".........mmm....",
+                    ".........l......",
+                    ".........l......",
+                    ".........l......",
+                    "...l.....l.....l",
+                    "...l....lll....l",
+                    "...ll..lmlml..ll",
+                    "....lllm...mlll.",
+                    ".....mm.....mm..",
+                    "................"},
+            "orbital_strike", new String[] {
+                    "......oyyo......",
+                    "......oyyo......",
+                    "......oyyo......",
+                    "......oyyo......",
+                    "......oyyo......",
+                    "......oyyo......",
+                    ".....ooyyoo.....",
+                    ".....oywwyo.....",
+                    "..rrroywwyoRRR..",
+                    ".r...ooyyoo...R.",
+                    "r......oo......R",
+                    "r..............R",
+                    ".r............R.",
+                    "..rrr......RRR..",
+                    ".....RRRRRR.....",
+                    "................"},
+            "rally", new String[] {
+                    "................",
+                    "..l.............",
+                    "..luuuuuu.......",
+                    "..luuuuuuuuu....",
+                    "..luuUuuuuuuuu..",
+                    "..luuUUuuuuuu...",
+                    "..luuUuuuuuUU...",
+                    "..luuuuuuUU.....",
+                    "..lUUU..........",
+                    "..m.............",
+                    "..m.............",
+                    "..m.............",
+                    "..m.............",
+                    ".dmd............",
+                    ".ddd............",
+                    "................"},
+            "leap", new String[] {
+                    "................",
+                    "................",
+                    ".......ww.......",
+                    "......wwww......",
+                    ".....ww..ww.....",
+                    "....ww....ww....",
+                    "...ww......ww...",
+                    "................",
+                    ".......cc.......",
+                    "......cccc......",
+                    ".....cc..cc.....",
+                    "....cc....cc....",
+                    "...cc......cc...",
+                    "................",
+                    "................",
+                    "................"});
+
+    private static Map<String, String[]> linked(Object... namesAndArt) {
+        var art = new LinkedHashMap<String, String[]>();
+        for (int index = 0; index < namesAndArt.length; index += 2) {
+            var rows = (String[]) namesAndArt[index + 1];
+            if (rows.length != ICON || Arrays.stream(rows).anyMatch(row -> row.length() != ICON)) {
+                throw new IllegalStateException(namesAndArt[index] + " is not 16 by 16");
+            }
+            art.put((String) namesAndArt[index], rows);
+        }
+        return art;
+    }
+
+    /** Zero to nine and a slash, three pixels wide. */
+    private static final String[][] COUNTS = {
+            {"###", "#.#", "#.#", "#.#", "###"}, {".#.", "##.", ".#.", ".#.", "###"}, {"###", "..#", "###", "#..", "###"},
+            {"###", "..#", ".##", "..#", "###"}, {"#.#", "#.#", "###", "..#", "..#"}, {"###", "#..", "###", "..#", "###"},
+            {"###", "#..", "###", "#.#", "###"}, {"###", "..#", "..#", ".#.", ".#."}, {"###", "#.#", "###", "#.#", "###"},
+            {"###", "#.#", "###", "..#", "###"}, {"..#", "..#", ".#.", "#..", "#.."}};
+
+    /**
+     * The cooldown's digits, five pixels wide like the vanilla ones, then F, Q, shift as an outlined arrow up, and two
+     * chevrons for the double jump.
+     */
+    private static final String[][] SYMBOLS = {
+            {".###.", "#...#", "#..##", "#.#.#", "##..#", "#...#", ".###."},
+            {"..#..", ".##..", "..#..", "..#..", "..#..", "..#..", ".###."},
+            {".###.", "#...#", "....#", "..##.", ".#...", "#....", "#####"},
+            {".###.", "#...#", "....#", "..##.", "....#", "#...#", ".###."},
+            {"...#.", "..##.", ".#.#.", "#..#.", "#####", "...#.", "...#."},
+            {"#####", "#....", "####.", "....#", "....#", "#...#", ".###."},
+            {"..##.", ".#...", "#....", "####.", "#...#", "#...#", ".###."},
+            {"#####", "....#", "...#.", "..#..", "..#..", "..#..", "..#.."},
+            {".###.", "#...#", "#...#", ".###.", "#...#", "#...#", ".###."},
+            {".###.", "#...#", "#...#", ".####", "....#", "...#.", ".##.."},
+            {"#####", "#....", "#....", "####.", "#....", "#....", "#...."},
+            {".###.", "#...#", "#...#", "#...#", "#.#.#", "#..#.", ".##.#"},
+            {"..#..", ".#.#.", "#...#", "##.##", ".#.#.", ".#.#.", ".###."},
+            {"..#..", ".#.#.", "#...#", ".....", "..#..", ".#.#.", "#...#"}};
 }

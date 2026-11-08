@@ -142,9 +142,12 @@ Marked text shadows are suppressed. Ordinary text must avoid these reserved colo
 
 GUI text in RGB `(231, row, 176 + tint)` is the HUD panel in the screen's top-left corner, which Sternenfront's minimap
 draws on a boss bar line. `hud_panel.glsl` hangs each glyph `row` pixels below the panel's top and colours it from its
-tint table; shadows carry the same row. The line must take no width, because the shader expects it to start in the
-screen's middle. The shader finds a glyph's boss bar line from where the glyph lies in it, so every glyph of `HudArt`'s
+tint table; shadows carry the same row. The panel must take no width and start in the screen's middle, where the shader
+expects it. The shader finds a glyph's boss bar line from where the glyph lies in it, so every glyph of `HudArt`'s
 `blockcraft:minimap` font hangs from the line's top and is at most 16 pixels tall. `MinimapLayoutTest` checks both.
+Red 232 instead moves a panel on the action bar to the bottom-right corner, with every glyph left of the panel's start;
+Sternenfront's ability tiles use it with `HudArt`'s `blockcraft:abilities` font. The action bar holds other text, so the
+server places the panel at that line's middle; `AbilityPanelTest` and `CombatFeedbackTest` check the widths involved.
 
 Sternenfront target outlines reserve scoreboard colors `DARK_AQUA` and `DARK_RED`. Its server sends those colors only
 to combat viewers with the pack applied. The outline shader stores logarithmic reversed-Z depth in the RGB bytes and
