@@ -25,9 +25,9 @@ screen effects, and the Sternenfront intro.
   `blockcraft:text` or a deploy line font. `PackArt` writes the letters' advances to
   `paper/api/src/main/resources/text-glyphs.properties`, which `UiFont.width` counts with.
 - **Crosshair marks.** The client centres a subtitle by the advances it measures from each glyph's last inked column, and
-  draws a font pixel there two GUI pixels wide. `HudArt` therefore draws the marks, arcs and spread ticks at twice the
-  resolution, centred between the middle texels, with a nearly clear texel in each cell's last column; `UiFontTest`
-  checks that each still takes no room.
+  draws a font pixel there two GUI pixels wide. `HudArt` therefore draws the marks, arcs, spread ticks and readiness
+  marks at twice the resolution, centred between the middle texels, with a nearly clear texel in each cell's last
+  column; `UiFontTest` checks that each still takes no room.
 - **Sounds.** World sounds must be mono, because the client places only mono sounds in the world. Each script replaces
   only its own entries in `sounds.json`.
 - **Portraits.** `SternenfrontArt.java` renders the role cards into `resourcepack/art/sternenfront` from the class

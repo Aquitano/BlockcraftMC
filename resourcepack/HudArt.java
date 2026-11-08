@@ -117,6 +117,38 @@ public final class HudArt {
     }
 
     /**
+     * Under the crosshair, where the spread ticks give way to it: a grey chevron pointing down while a sprint keeps the gun
+     * lowered, and a white one pointing up for the moment it can fire again.
+     */
+    private static BufferedImage readiness() {
+        var image = new BufferedImage(64, 32, BufferedImage.TYPE_INT_ARGB);
+        int[] colours = {0xE0A9B2BF, 0xF0FFFFFF};
+        for (int cell = 0; cell < colours.length; cell++) {
+            int middle = cell * 32 + 16;
+            var ink = new ArrayList<int[]>();
+            for (int step = -3; step <= 3; step++) {
+                int rise = 3 - Math.abs(step);
+                int y = cell == 0 ? 7 + rise : 10 - rise;
+                ink.add(new int[] {middle + step, 16 + y});
+                ink.add(new int[] {middle + step, 16 + y + 1});
+            }
+            for (var pixel : ink) {
+                for (int[] near : new int[][] {{-1, 0}, {1, 0}, {0, -1}, {0, 1}}) {
+                    int x = pixel[0] + near[0];
+                    int y = pixel[1] + near[1];
+                    if (image.getRGB(x, y) == 0) {
+                        image.setRGB(x, y, 0x90000000);
+                    }
+                }
+            }
+            for (var pixel : ink) {
+                image.setRGB(pixel[0], pixel[1], colours[cell]);
+            }
+        }
+        return image;
+    }
+
+    /**
      * For each cell of the heat meter's lower half, where a vent window lies, a bracket above and below it, in white so a
      * text colour tints it. Adjacent
      * cells' brackets join into one window. A nearly clear texel in the last column gives each glyph the meter's advance,
@@ -220,6 +252,7 @@ public final class HudArt {
         spawnMarkers(root.getParent().getParent());
         ImageIO.write(onTheCrosshair(crosshairMarks(), true), "PNG", root.resolve("crosshair_marks.png").toFile());
         ImageIO.write(onTheCrosshair(spreadTicks(), true), "PNG", root.resolve("spread_ticks.png").toFile());
+        ImageIO.write(onTheCrosshair(readiness(), true), "PNG", root.resolve("readiness.png").toFile());
         var letters = labelLetters(root.getParent().getParent().resolve("font"));
         minimap(root, letters);
         abilities(root, args.length > 1 ? Path.of(args[1]) : null, letters);
