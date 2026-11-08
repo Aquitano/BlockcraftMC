@@ -224,6 +224,7 @@ The heat meter turns red and shows `HEISS` at `heat.warning-level`, or when the 
 Venting shows `Kühlt` until the weapon is ready, followed by a ready sound. A vent also brackets `heat.window-share` of the
 meter in cyan, somewhere in its lower half, and the meter then lights every cell the cooling heat has not left. The first
 fresh pull of the trigger while the last lit cell is inside the bracket ends the vent with a click and steam; one outside
+A flame and a muted `Hitze` name the heat meter; a bladed hero's guard meter has a shield and `Deckung` instead.
 it adds `heat.miss-penalty-share` of the vent and closes the window. A trigger held since the overheating shot counts for
 neither, and bots never try. `combat-feedback` tunes marker and
 popup durations and the hit, headshot, and kill volumes.

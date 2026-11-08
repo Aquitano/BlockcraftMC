@@ -33,7 +33,7 @@ public final class CombatHud {
     }
 
     /** Wide enough for the longest state, so the line does not slide when one appears. */
-    static final int STATE_WIDTH = 30;
+    static final int STATE_WIDTH = 41;
     /** A meter glyph's width with its spacing, which each vent window glyph laid over it shares. */
     static final int METER_ADVANCE = 42;
     /** The flame's and the shield's width with their spacing. */

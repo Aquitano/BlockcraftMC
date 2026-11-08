@@ -171,7 +171,13 @@ public final class HudArt {
         g.fillRect(2, 3, 3, 3);
         g.fillRect(6, 3, 3, 3);
         g.fillPolygon(new int[] {2, 9, 5}, new int[] {5, 5, 10}, 3);
-        g.fillPolygon(new int[] {18, 15, 15, 21, 21, 19, 19}, new int[] {1, 6, 9, 9, 6, 8, 4}, 7);
+        for (int y = 0; y < FLAME.length; y++) {
+            for (int x = 0; x < FLAME[y].length(); x++) {
+                if (FLAME[y].charAt(x) == '#') {
+                    icons.setRGB(14 + x, y, 0xFFFFFFFF);
+                }
+            }
+        }
         g.drawPolygon(new int[] {26, 33, 33, 30, 26}, new int[] {2, 2, 7, 10, 7}, 5);
         g.drawRect(37, 1, 9, 9);
         g.drawLine(40, 3, 40, 8);
@@ -228,6 +234,20 @@ public final class HudArt {
             ImageIO.write(hidden, "PNG", sprites.resolve(sprite + ".png").toFile());
         }
     }
+
+    /** The heat meter's flame, with the inner flame cut out so it reads as fire and not as a warning sign. */
+    private static final String[] FLAME = {
+            "...#....",
+            "...##...",
+            "..###...",
+            "..####.#",
+            ".#####.#",
+            ".######.",
+            "###.####",
+            "##...###",
+            "##....##",
+            ".##..##.",
+            "..####.."};
 
     /**
      * The minimap's font: the disc in strips, the HUD's post badges, map marks, class marks and the menu tiles'
