@@ -161,6 +161,11 @@ combat:
   # can then hit an enemy who has just stepped behind cover on their own screen; max-ms bounds how far behind that can be.
   # Walls, shields, guard and parry are judged in the present, and bots' shots entirely so.
   lag-compensation: {enabled: true, max-ms: 200, interpolation-ms: 100}
+  # A bolt pushes whoever it hits, bots included, along its flight: per-damage blocks a tick for each point of damage, at
+  # most max. Ground friction stops it within about 2.2 times that in blocks, so 0.2 carries about 0.45 blocks. Only
+  # someone standing on the ground is pushed, and only where ground goes on under the spot the push carries them to,
+  # so it never takes anyone over an edge. A headshot throws a bot's aim off as a fresh target does.
+  hit-push: {per-damage: 0.025, max: 0.2}
 speeders:
   enabled: true
   health: 60
@@ -488,6 +493,14 @@ combat-feedback:
   # of its own base spread. Aiming is 0.5 and shows the tightest step, standing still and cold is 1 and shows the next;
   # combat.handling sets how far walking, jumping and heat open it.
   spread-steps: [0.8, 1.0, 1.25, 1.55]
+  # An enemy bolt, a bot's too, that passes within radius blocks of a player's eyes without hitting them whizzes past at
+  # up to volume, louder and higher the nearer it came. Each pass also darkens the edges of their screen in coarse grey
+  # pixels by up to suppression of the darkest step, by how near it came, to at most max-suppression; it fades from the
+  # darkest over fade-ticks. The middle of the screen stays clear.
+  near-miss: {radius: 3.0, volume: 0.8, suppression: 0.35, max-suppression: 0.75, fade-ticks: 20}
+  # A headshot rings the victim's helmet at volume, tilts their view back from the hit's own tilt and shakes the picture
+  # for ticks. Their aim stays where it was.
+  headshot-rattle: {ticks: 8, volume: 0.8}
 
 intro:
   enabled: true
